@@ -152,7 +152,7 @@ void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKLBW_PqQd: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -183,7 +183,7 @@ void BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKLWD_PqQd: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -211,7 +211,7 @@ void BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKLDQ_PqQd: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -245,7 +245,7 @@ void BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PACKSSWB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -279,7 +279,7 @@ void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PCMPGTB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -309,7 +309,7 @@ void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PCMPGTW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -337,7 +337,7 @@ void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PCMPGTD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -371,7 +371,7 @@ void BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PACKUSWB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -405,7 +405,7 @@ void BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKHBW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -435,7 +435,7 @@ void BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKHWD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -463,7 +463,7 @@ void BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKHDQ_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -493,7 +493,7 @@ void BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PACKSSDW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -519,7 +519,7 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("MOVD_PqEd: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -544,7 +544,7 @@ void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("MOVQ_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -575,7 +575,7 @@ void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PSHUFW_PqQqIb: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -608,7 +608,7 @@ void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PCMPEQB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -638,7 +638,7 @@ void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PCMPEQW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -666,7 +666,7 @@ void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PCMPEQD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -687,7 +687,7 @@ void BX_CPU_C::EMMS(bxInstruction_c *i)
   MMX_SWD &= 0xc7ff;  /*    executed, the TOS value is set to 000b */
 
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("EMMS: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -708,7 +708,7 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
     write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
   }
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("MOVD_EdPd: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -729,7 +729,7 @@ void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
     write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("MOVQ_QqPq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -765,7 +765,7 @@ void BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRLW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -799,7 +799,7 @@ void BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRLD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -831,7 +831,7 @@ void BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRLQ_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -858,7 +858,7 @@ void BX_CPU_C::PADDQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDQ_PqQq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -880,10 +880,10 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  Bit32u product1 = (Bit32u)(MMXUW0(op1)) * (Bit32u)(MMXUW0(op2));
-  Bit32u product2 = (Bit32u)(MMXUW1(op1)) * (Bit32u)(MMXUW1(op2));
-  Bit32u product3 = (Bit32u)(MMXUW2(op1)) * (Bit32u)(MMXUW2(op2));
-  Bit32u product4 = (Bit32u)(MMXUW3(op1)) * (Bit32u)(MMXUW3(op2));
+  Bit32u product1 = Bit32u(MMXUW0(op1)) * Bit32u(MMXUW0(op2));
+  Bit32u product2 = Bit32u(MMXUW1(op1)) * Bit32u(MMXUW1(op2));
+  Bit32u product3 = Bit32u(MMXUW2(op1)) * Bit32u(MMXUW2(op2));
+  Bit32u product4 = Bit32u(MMXUW3(op1)) * Bit32u(MMXUW3(op2));
 
   MMXUW0(result) = product1 & 0xffff;
   MMXUW1(result) = product2 & 0xffff;
@@ -893,7 +893,7 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PMULLW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -929,7 +929,7 @@ void BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSUBUSB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -961,7 +961,7 @@ void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSUBUSW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -995,7 +995,7 @@ void BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PMINUB_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1022,7 +1022,7 @@ void BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PAND_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1056,7 +1056,7 @@ void BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PADDUSB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1086,7 +1086,7 @@ void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PADDUSW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1120,7 +1120,7 @@ void BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PMAXUB_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1147,7 +1147,7 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PANDN_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1181,7 +1181,7 @@ void BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PAVGB_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1226,7 +1226,7 @@ void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRAW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1268,7 +1268,7 @@ void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRAD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1298,7 +1298,7 @@ void BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PAVGW_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1320,10 +1320,10 @@ void BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  Bit32u product1 = (Bit32u)(MMXUW0(op1)) * (Bit32u)(MMXUW0(op2));
-  Bit32u product2 = (Bit32u)(MMXUW1(op1)) * (Bit32u)(MMXUW1(op2));
-  Bit32u product3 = (Bit32u)(MMXUW2(op1)) * (Bit32u)(MMXUW2(op2));
-  Bit32u product4 = (Bit32u)(MMXUW3(op1)) * (Bit32u)(MMXUW3(op2));
+  Bit32u product1 = Bit32u(MMXUW0(op1)) * Bit32u(MMXUW0(op2));
+  Bit32u product2 = Bit32u(MMXUW1(op1)) * Bit32u(MMXUW1(op2));
+  Bit32u product3 = Bit32u(MMXUW2(op1)) * Bit32u(MMXUW2(op2));
+  Bit32u product4 = Bit32u(MMXUW3(op1)) * Bit32u(MMXUW3(op2));
 
   MMXUW0(result) = (Bit16u)(product1 >> 16);
   MMXUW1(result) = (Bit16u)(product2 >> 16);
@@ -1333,7 +1333,7 @@ void BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PMULHUW_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1355,20 +1355,20 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  Bit32s product1 = (Bit32s)(MMXSW0(op1)) * (Bit32s)(MMXSW0(op2));
-  Bit32s product2 = (Bit32s)(MMXSW1(op1)) * (Bit32s)(MMXSW1(op2));
-  Bit32s product3 = (Bit32s)(MMXSW2(op1)) * (Bit32s)(MMXSW2(op2));
-  Bit32s product4 = (Bit32s)(MMXSW3(op1)) * (Bit32s)(MMXSW3(op2));
+  Bit32s product1 = Bit32s(MMXSW0(op1)) * Bit32s(MMXSW0(op2));
+  Bit32s product2 = Bit32s(MMXSW1(op1)) * Bit32s(MMXSW1(op2));
+  Bit32s product3 = Bit32s(MMXSW2(op1)) * Bit32s(MMXSW2(op2));
+  Bit32s product4 = Bit32s(MMXSW3(op1)) * Bit32s(MMXSW3(op2));
 
-  MMXUW0(result) = (Bit16u)(product1 >> 16);
-  MMXUW1(result) = (Bit16u)(product2 >> 16);
-  MMXUW2(result) = (Bit16u)(product3 >> 16);
-  MMXUW3(result) = (Bit16u)(product4 >> 16);
+  MMXUW0(result) = Bit16u(product1 >> 16);
+  MMXUW1(result) = Bit16u(product2 >> 16);
+  MMXUW2(result) = Bit16u(product3 >> 16);
+  MMXUW3(result) = Bit16u(product4 >> 16);
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PMULHW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1402,7 +1402,7 @@ void BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSUBSB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1432,7 +1432,7 @@ void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSUBSW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1462,7 +1462,7 @@ void BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PMINSW_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1489,7 +1489,7 @@ void BX_CPU_C::POR_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("POR_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1523,7 +1523,7 @@ void BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PADDSB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1553,7 +1553,7 @@ void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PADDSW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1583,7 +1583,7 @@ void BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PMAXSW_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1610,7 +1610,7 @@ void BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PXOR_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1646,7 +1646,7 @@ void BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSLLW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1680,7 +1680,7 @@ void BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSLLD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1712,7 +1712,7 @@ void BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSLLQ_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1739,7 +1739,7 @@ void BX_CPU_C::PMULUDQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMULUDQ_PqQq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1778,7 +1778,7 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PMADDWD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1815,7 +1815,7 @@ void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PSADBW_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1849,7 +1849,7 @@ void BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSUBB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1879,7 +1879,7 @@ void BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSUBW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1907,7 +1907,7 @@ void BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSUBD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1934,7 +1934,7 @@ void BX_CPU_C::PSUBQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBQ_PqQq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1969,7 +1969,7 @@ void BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PADDB_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1999,7 +1999,7 @@ void BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PADDW_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2027,7 +2027,7 @@ void BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PADDD_PqQq: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2053,7 +2053,7 @@ void BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRLW_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2088,7 +2088,7 @@ void BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRAW_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2114,11 +2114,10 @@ void BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSLLW_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
-
 
 /* 0F 72 GrpA 010 */
 void BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
@@ -2139,7 +2138,7 @@ void BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRLD_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2171,7 +2170,7 @@ void BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), result);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRAD_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2195,7 +2194,7 @@ void BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSLLD_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2219,7 +2218,7 @@ void BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSRLQ_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2243,7 +2242,7 @@ void BX_CPU_C::PSLLQ_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX instruction set not supported in current configuration"));
+  BX_INFO(("PSLLQ_PqIb: MMX not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
