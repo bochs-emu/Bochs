@@ -61,7 +61,7 @@ void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 
   BX_MXCSR_REGISTER = new_mxcsr;
 #else
-  BX_INFO(("LDMXCSR: SSE not supported in current configuration"));
+  BX_INFO(("LDMXCSR: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -75,7 +75,7 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
   Bit32u mxcsr = BX_MXCSR_REGISTER & MXCSR_MASK;
   write_virtual_dword(i->seg(), RMAddr(i), &mxcsr);
 #else
-  BX_INFO(("STMXCSR: SSE not supported in current configuration"));
+  BX_INFO(("STMXCSR: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -157,7 +157,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   /* do not touch reserved fields */
 #else
-  BX_INFO(("FXSAVE: SSE not supported in current configuration"));
+  BX_INFO(("FXSAVE: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -285,7 +285,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   }
 
 #else
-  BX_INFO(("FXRSTOR: SSE not supported in current configuration"));
+  BX_INFO(("FXRSTOR: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -319,7 +319,7 @@ void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVUPS_VpsWps: SSE not supported in current configuration"));
+  BX_INFO(("MOVUPS_VpsWps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -343,7 +343,7 @@ void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
     writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 #else
-  BX_INFO(("MOVUPS_WpsVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVUPS_WpsVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -371,7 +371,7 @@ void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVAPS_VpsWps: SSE not supported in current configuration"));
+  BX_INFO(("MOVAPS_VpsWps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -395,7 +395,7 @@ void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
     writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 #else
-  BX_INFO(("MOVAPS_WpsVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVAPS_WpsVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -431,7 +431,7 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MOVSS_VssWss: SSE not supported in current configuration"));
+  BX_INFO(("MOVSS_VssWss: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -461,7 +461,7 @@ void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
     write_virtual_dword(i->seg(), RMAddr(i), &(op1.xmm32u(0)));
   }
 #else
-  BX_INFO(("MOVSS_WssVss: SSE not supported in current configuration"));
+  BX_INFO(("MOVSS_WssVss: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -497,7 +497,7 @@ void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MOVSD_VsdWsd: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVSD_VsdWsd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -527,7 +527,7 @@ void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
     write_virtual_qword(i->seg(), RMAddr(i), &(op1.xmm64u(0)));
   }
 #else
-  BX_INFO(("MOVSD_WsdVsd: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVSD_WsdVsd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -560,7 +560,7 @@ void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MOVLPS_VpsMq: SSE not supported in current configuration"));
+  BX_INFO(("MOVLPS_VpsMq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -584,7 +584,7 @@ void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i), &v64);
 
 #else
-  BX_INFO(("MOVLPS_MqVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVLPS_MqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -617,7 +617,7 @@ void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MOVHPS_VpsMq: SSE not supported in current configuration"));
+  BX_INFO(("MOVHPS_VpsMq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -641,7 +641,7 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i), &v64);
 
 #else
-  BX_INFO(("MOVHPS_MqVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVHPS_MqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -651,7 +651,7 @@ void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_PANIC(("MASKMOVQ_PqPRq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("MASKMOVQ_PqPRq: SSE not supported in current configuration"));
+  BX_INFO(("MASKMOVQ_PqPRq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -663,7 +663,7 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 
   BX_PANIC(("MASKMOVDQU_VdqVRdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("MASKMOVDQU_VdqVRdq: SSE2 not supported in current configuration"));
+  BX_INFO(("MASKMOVDQU_VdqVRdq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -684,7 +684,7 @@ void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REG(i->rm(), val32);
 #else
-  BX_INFO(("MOVMSKPS_GdVRps: SSE not supported in current configuration"));
+  BX_INFO(("MOVMSKPS_GdVRps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -703,7 +703,7 @@ void BX_CPU_C::MOVMSKPD_EdVRpd(bxInstruction_c *i)
  
   BX_WRITE_32BIT_REG(i->rm(), val32);
 #else
-  BX_INFO(("MOVMSKPD_EdVRpd: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVMSKPD_EdVRpd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -753,7 +753,7 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MOVD_VdqEd: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVD_VdqEd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -795,7 +795,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
     }
   }
 
-  BX_INFO(("MOVD_EdVd: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVD_EdVd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -824,7 +824,7 @@ void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVQ_VqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVQ_VqWq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -846,7 +846,7 @@ void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
     write_virtual_qword(i->seg(), RMAddr(i), &(op.xmm64u(0)));
   }
 #else
-  BX_INFO(("MOVQ_WqVq: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVQ_WqVq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -867,7 +867,7 @@ void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->rm(), mm);
 #else
-  BX_INFO(("MOVDQ2Q_PqVRq: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVDQ2Q_PqVRq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -889,7 +889,7 @@ void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
-  BX_INFO(("MOVQ2DQ_VdqQq: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVQ2DQ_VdqQq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -924,7 +924,7 @@ void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("SHUFPS_VpsWpsIb: SSE not supported in current configuration"));
+  BX_INFO(("SHUFPS_VpsWpsIb: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -953,7 +953,7 @@ void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("SHUFPD_VpdWpdIb: SSE2 not supported in current configuration"));
+  BX_INFO(("SHUFPD_VpdWpdIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -995,7 +995,7 @@ void BX_CPU_C::PUNPCKLBW_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKLBW_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("PUNPCKLBW_VdqWq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1029,7 +1029,7 @@ void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKLWD_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("PUNPCKLWD_VdqWq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1061,7 +1061,7 @@ void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKLDQ_VdqWq: SSE not supported in current configuration"));
+  BX_INFO(("PUNPCKLDQ_VdqWq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1103,7 +1103,7 @@ void BX_CPU_C::PUNPCKHBW_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKHBW_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("PUNPCKHBW_VdqWq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1137,7 +1137,7 @@ void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKHWD_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("PUNPCKHWD_VdqWq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1169,7 +1169,7 @@ void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKHDQ_VdqWq: SSE not supported in current configuration"));
+  BX_INFO(("PUNPCKHDQ_VdqWq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1198,7 +1198,7 @@ void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PUNPCKLQDQ_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("PUNPCKLQDQ_VdqWq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1228,7 +1228,7 @@ void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKHQDQ_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("PUNPCKHQDQ_VdqWq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1259,7 +1259,7 @@ void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PSHUFD_VdqWdqIb: SSE2 not supported in current configuration"));
+  BX_INFO(("PSHUFD_VdqWdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1291,7 +1291,7 @@ void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PSHUFHW_VqWqIb: SSE2 not supported in current configuration"));
+  BX_INFO(("PSHUFHW_VqWqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1323,7 +1323,7 @@ void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PSHUFLW_VqWqIb: SSE not supported in current configuration"));
+  BX_INFO(("PSHUFLW_VqWqIb: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1356,7 +1356,7 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
   }
 
 #else
-  BX_INFO(("MOVNTI_MdGd: SSE2 not supported in current configuration"));
+  BX_INFO(("MOVNTI_MdGd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1379,7 +1379,7 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
   writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *)(&val128));
 
 #else
-  BX_INFO(("MOVNTPS_MdqVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVNTPS_MdqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);                      
 #endif
 }
