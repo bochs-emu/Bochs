@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.24 2001-11-26 07:26:55 vruppert Exp $
+// $Id: rombios.c,v 1.25 2001-12-05 20:38:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -273,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.24 $";
-static char bios_date_string[] = "$Date: 2001-11-26 07:26:55 $";
+static char bios_cvs_version_string[] = "$Revision: 1.25 $";
+static char bios_date_string[] = "$Date: 2001-12-05 20:38:32 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.24 2001-11-26 07:26:55 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.25 2001-12-05 20:38:32 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -4773,6 +4773,8 @@ int16_handler:
   pusha
 
   cmp   ah, #0x00
+  je    int16_F00
+  cmp   ah, #0x10
   je    int16_F00
 
   mov  bx, #0xf000
