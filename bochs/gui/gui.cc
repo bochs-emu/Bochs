@@ -29,7 +29,7 @@
 #include "gui/bitmaps/reset.h"
 #include "gui/bitmaps/power.h"
 #include "gui/bitmaps/snapshot.h"
-#ifdef macintosh
+#if BX_WITH_MACOS
 #  include <Disks.h>
 #endif
 
@@ -128,9 +128,9 @@ bx_gui_c::floppyA_handler(void)
   if (BX_GUI_THIS floppyA_status)
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
   else {
-#ifdef macintosh
+#if BX_WITH_MACOS
     // If we are using the Mac floppy driver, eject the disk
-    // from the floppy drive
+    // from the floppy drive.  This doesn't work in MacOS X.
     if (!strcmp(bx_options.floppya.Opath->get (), SuperDrive))
       DiskEject(1);
 #endif
