@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.129 2002-09-03 04:54:27 kevinlawton Exp $
+// $Id: main.cc,v 1.130 2002-09-03 05:34:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -687,7 +687,7 @@ void bx_init_options ()
       "romaddr",
       "The address at which the ROM image should be loaded",
       0, BX_MAX_INT, 
-      0);
+      0xf0000);
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
   bx_options.rom.Oaddress->set_base (16);
 
