@@ -89,7 +89,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #if HAVE_ASSERT_H
 #  include <assert.h>
 #else
-#  define assert(arg)	((void) 0)
+#  warning using my own assert
+#  define assert(cond)   while (!(cond)) { fprintf (stderr, "Assert failed at %s:%d: '%s'\n", __FILE__, __LINE__, #cond); abort(); }
 #endif
 
 #include "ltdl.h"
@@ -1944,7 +1945,13 @@ tryall_dlopen_module (handle, prefix, dirname, dlname)
   int      error	= 0;
   char     *filename	= 0;
   size_t   filename_len	= 0;
+#warning dirname could be null
   size_t   dirname_len	= LT_STRLEN (dirname);
+
+  if (dirname == NULL) {
+    fprintf (stderr, "LTDL_DEBUG: leaving tryall_dlopen_module early because dirname is NULL\n");
+    return 1;
+  }
 
   assert (handle);
   assert (dirname);
@@ -2580,9 +2587,12 @@ try_dlopen (phandle, filename)
       dir[dirlen] = LT_EOS_CHAR;
 
       ++base_name;
+      fprintf (stderr, "LTDL_DEBUG: in base_name not NULL section. dir='%s', base_name='%s', canonical='%s'\n", dir, base_name, canonical);
     }
-  else
+  else {
     LT_DLMEM_REASSIGN (base_name, canonical);
+    fprintf (stderr, "LTDL_DEBUG: in base_name=NULL section. dir=NULL, base_name='%s', canonical='%s'\n", base_name, canonical);
+  }
 
   assert (base_name && *base_name);
 
@@ -2666,6 +2676,7 @@ try_dlopen (phandle, filename)
       if (!file)
 	{
 	  file = fopen (filename, LT_READTEXT_MODE);
+#warning dir is still NULL
 	}
 
       /* If we didn't find the file by now, it really isn't there.  Set
