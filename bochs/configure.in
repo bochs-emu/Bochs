@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.140 2002-09-30 20:31:14 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.141 2002-10-01 23:37:50 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1220,6 +1220,7 @@ AC_ARG_ENABLE(sb16,
          SB16_OBJS='$(SB16_WIN_OBJS)'
          AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
          AC_MSG_RESULT(win)
+		 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
          ;;
        *)
          echo " "
@@ -1350,6 +1351,7 @@ OFP="-o "
 MAKELIB="ar rv \$@"
 RMCOMMAND="rm -f "
 LINK="\$(CXX) -o \$@ \$(CXXFLAGS)"
+LINK_CONSOLE="\$(CXX) -o \$@ \$(CXXFLAGS_CONSOLE)"
 EXE=""
 COMMAND_SEPARATOR="&& \\"
 CD_UP_ONE="echo done"
@@ -1405,7 +1407,10 @@ elif test "$with_beos" = yes; then
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
 elif test "$with_sdl" = yes; then
   AC_MSG_RESULT(sdl)
-  CFLAGS="$CFLAGS \`sdl-config --cflags\`"
+  # GUI_*FLAGS are added to the compilation of every bochs file, not just
+  # the files in gui/*.cc.
+  GUI_CFLAGS="$CFLAGS \`sdl-config --cflags\`"
+  GUI_CXXFLAGS="$CXXFLAGS \`sdl-config --cflags\`"
   AC_DEFINE(BX_WITH_SDL, 1)
   GUI_OBJS='$(GUI_OBJS_SDL) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_SDL)'
@@ -1472,9 +1477,11 @@ elif test "$with_wx" = yes; then
     WX_CFLAGS="$WX_CFLAGS \`gtk-config --cflags\`"
     WX_CXXFLAGS="$WX_CXXFLAGS \`gtk-config --cflags\`"
   fi
+  # GUI_*FLAGS are added to the compilation of every bochs file, not just
+  # the files in gui/*.cc.
+  GUI_CFLAGS="$CFLAGS $WX_CFLAGS"
+  GUI_CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS"
   # wxwindows is the only one without control.o in GUI_OBJS
-  CFLAGS="$CFLAGS $WX_CFLAGS"
-  CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS"
   GUI_OBJS='$(GUI_OBJS_WX)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
   # using debugger with readline is failing due to thread/signal handler
@@ -1493,6 +1500,8 @@ else
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
 fi
 
+AC_SUBST(GUI_CFLAGS)
+AC_SUBST(GUI_CXXFLAGS)
 AC_SUBST(WX_CFLAGS)
 AC_SUBST(WX_CXXFLAGS)
 
@@ -1520,6 +1529,7 @@ case "$target" in
     #L_OPT="/debug"    # for debugging
     L_OPT=""           # no debug info
     LINK="link $L_OPT /nologo /subsystem:console /incremental:no /machine:I386 /out:\$@ BINMODE.OBJ"
+    LINK_CONSOLE=$LINK
     EXE=".exe"
     PRIMARY_TARGET="bochs.exe"
     # also compile niclist if networking is on
@@ -1802,6 +1812,7 @@ AC_SUBST(INSTALL_TARGET)
 AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
 AC_SUBST(RFB_LIBS)
 AC_SUBST(GUI_OBJS)
+AC_SUBST(DEVICE_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS_TERM)
 AC_SUBST(GUI_LINK_OPTS_WX)
@@ -1813,6 +1824,7 @@ AC_SUBST(OFP)
 AC_SUBST(MAKELIB)
 AC_SUBST(RMCOMMAND)
 AC_SUBST(LINK)
+AC_SUBST(LINK_CONSOLE)
 AC_SUBST(EXE)
 AC_SUBST(PRIMARY_TARGET)
 AC_SUBST(COMMAND_SEPARATOR)

@@ -30,9 +30,9 @@ SHELL = /bin/sh
 @SET_MAKE@
 
 CC       = @CC@
-CFLAGS   = @CFLAGS@
+CFLAGS   = @CFLAGS@ @GUI_CFLAGS@
 CXX      = @CXX@
-CXXFLAGS = @CXXFLAGS@
+CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
 
 #CFLAGS  = -Wall -Wstrict-prototypes -fomit-frame-pointer -fno-strict-aliasing -pipe -fno-strength-reduce -mpreferred-stack-boundary=2 -DCPU=686 -march=i686
 
