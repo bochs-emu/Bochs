@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.17.4.5 2002-10-17 17:29:08 bdenney Exp $
+// $Id: keyboard.h,v 1.17.4.6 2002-10-18 16:41:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -154,7 +154,7 @@ private:
 	    break;
 
 	  default:
-	    pluginKeyboard->panic("mouse: invalid resolution_cpmm");
+	    genlog->panic("mouse: invalid resolution_cpmm");
 	  };
 	  return ret;
 	}
