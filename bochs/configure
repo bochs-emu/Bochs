@@ -623,7 +623,7 @@ else
 fi
 
 
-# From configure.in Id: configure.in,v 1.98 2002/09/13 02:56:14 kevinlawton Exp 
+# From configure.in Id: configure.in,v 1.99 2002/09/13 15:53:21 kevinlawton Exp 
 
 
 VERSION="1.4.cvs"
@@ -5333,7 +5333,11 @@ SLASH="/"
 CXXFP=""
 CFP=""
 OFP="-o "
-MAKELIB="ar rv \$@"
+# (KPL) Changed following. Loader was not finding symbols between
+# cpu and cpu64 directory due to circular dependencies.
+#MAKELIB="ar rv \$@"
+MAKELIB="ld -i -o \$@"
+RANLIB="echo"
 RMCOMMAND="rm -f "
 LINK="\$(CXX) -o \$@ \$(CXXFLAGS)"
 EXE=""
@@ -5345,10 +5349,10 @@ INSTALL_TARGET=install_unix
 INSTALL_LIST_FOR_PLATFORM=
 
 echo $ac_n "checking for default gui on this platform""... $ac_c" 1>&6
-echo "configure:5349: checking for default gui on this platform" >&5
+echo "configure:5353: checking for default gui on this platform" >&5
 echo "$ac_t""$DEFAULT_GUI" 1>&6
 echo $ac_n "checking for gui library to use""... $ac_c" 1>&6
-echo "configure:5352: checking for gui library to use" >&5
+echo "configure:5356: checking for gui library to use" >&5
 
 # the $with_* variable tells the gui library to use, but does NOT necessarily
 # indicate the platform.  Settings that depend on the platform should be
@@ -5558,7 +5562,7 @@ esac
 
 if test "$use_curses" = yes; then
   echo $ac_n "checking for mvaddch in -lcurses""... $ac_c" 1>&6
-echo "configure:5562: checking for mvaddch in -lcurses" >&5
+echo "configure:5566: checking for mvaddch in -lcurses" >&5
 ac_lib_var=`echo curses'_'mvaddch | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5566,7 +5570,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcurses  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5570 "configure"
+#line 5574 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -5577,7 +5581,7 @@ int main() {
 mvaddch()
 ; return 0; }
 EOF
-if { (eval echo configure:5581: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5585: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -5598,7 +5602,7 @@ else
 fi
 
   echo $ac_n "checking for mvaddch in -lncurses""... $ac_c" 1>&6
-echo "configure:5602: checking for mvaddch in -lncurses" >&5
+echo "configure:5606: checking for mvaddch in -lncurses" >&5
 ac_lib_var=`echo ncurses'_'mvaddch | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5606,7 +5610,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lncurses  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5610 "configure"
+#line 5614 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -5617,7 +5621,7 @@ int main() {
 mvaddch()
 ; return 0; }
 EOF
-if { (eval echo configure:5621: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5625: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -5638,7 +5642,7 @@ else
 fi
 
   echo $ac_n "checking for mvaddch in -ltermlib""... $ac_c" 1>&6
-echo "configure:5642: checking for mvaddch in -ltermlib" >&5
+echo "configure:5646: checking for mvaddch in -ltermlib" >&5
 ac_lib_var=`echo termlib'_'mvaddch | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5646,7 +5650,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ltermlib  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5650 "configure"
+#line 5654 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -5657,7 +5661,7 @@ int main() {
 mvaddch()
 ; return 0; }
 EOF
-if { (eval echo configure:5661: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5665: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -5699,17 +5703,17 @@ acx_pthread_ok=no
 # If it isn't, don't bother looking for the threads libraries.
 ac_safe=`echo "pthread.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for pthread.h""... $ac_c" 1>&6
-echo "configure:5703: checking for pthread.h" >&5
+echo "configure:5707: checking for pthread.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5708 "configure"
+#line 5712 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5713: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5717: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5746,9 +5750,9 @@ if test x"$PTHREAD_LIBS$PTHREAD_CFLAGS" != x; then
 	save_LIBS="$LIBS"
 	LIBS="$PTHREAD_LIBS $LIBS"
 	echo $ac_n "checking for pthread_join in LIBS=$PTHREAD_LIBS with CFLAGS=$PTHREAD_CFLAGS""... $ac_c" 1>&6
-echo "configure:5750: checking for pthread_join in LIBS=$PTHREAD_LIBS with CFLAGS=$PTHREAD_CFLAGS" >&5
+echo "configure:5754: checking for pthread_join in LIBS=$PTHREAD_LIBS with CFLAGS=$PTHREAD_CFLAGS" >&5
 	cat > conftest.$ac_ext <<EOF
-#line 5752 "configure"
+#line 5756 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -5759,7 +5763,7 @@ int main() {
 pthread_join()
 ; return 0; }
 EOF
-if { (eval echo configure:5763: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5767: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   acx_pthread_ok=yes
 else
@@ -5821,18 +5825,18 @@ for flag in $acx_pthread_flags; do
 	case $flag in
 		none)
 		echo $ac_n "checking whether pthreads work without any flags""... $ac_c" 1>&6
-echo "configure:5825: checking whether pthreads work without any flags" >&5
+echo "configure:5829: checking whether pthreads work without any flags" >&5
 		;;
 
 		-*)
 		echo $ac_n "checking whether pthreads work with $flag""... $ac_c" 1>&6
-echo "configure:5830: checking whether pthreads work with $flag" >&5
+echo "configure:5834: checking whether pthreads work with $flag" >&5
 		PTHREAD_CFLAGS="$flag"
 		;;
 
 		*)
 		echo $ac_n "checking for the pthreads library -l$flag""... $ac_c" 1>&6
-echo "configure:5836: checking for the pthreads library -l$flag" >&5
+echo "configure:5840: checking for the pthreads library -l$flag" >&5
 		PTHREAD_LIBS="-l$flag"
 		;;
 	esac
@@ -5852,7 +5856,7 @@ echo "configure:5836: checking for the pthreads library -l$flag" >&5
 	# functions on Solaris that doesn't have a non-functional libc stub.
 	# We try pthread_create on general principles.
 	cat > conftest.$ac_ext <<EOF
-#line 5856 "configure"
+#line 5860 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 int main() {
@@ -5861,7 +5865,7 @@ pthread_t th; pthread_join(th, 0);
 		     pthread_create(0,0,0,0); pthread_cleanup_pop(0); 
 ; return 0; }
 EOF
-if { (eval echo configure:5865: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5869: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   acx_pthread_ok=yes
 else
@@ -5893,16 +5897,16 @@ if test "x$acx_pthread_ok" = xyes; then
 	# Detect AIX lossage: threads are created detached by default
 	# and the JOINABLE attribute has a nonstandard name (UNDETACHED).
 	echo $ac_n "checking for joinable pthread attribute""... $ac_c" 1>&6
-echo "configure:5897: checking for joinable pthread attribute" >&5
+echo "configure:5901: checking for joinable pthread attribute" >&5
 	cat > conftest.$ac_ext <<EOF
-#line 5899 "configure"
+#line 5903 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 int main() {
 int attr=PTHREAD_CREATE_JOINABLE;
 ; return 0; }
 EOF
-if { (eval echo configure:5906: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5910: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ok=PTHREAD_CREATE_JOINABLE
 else
@@ -5914,14 +5918,14 @@ fi
 rm -f conftest*
 	if test x"$ok" = xunknown; then
 		cat > conftest.$ac_ext <<EOF
-#line 5918 "configure"
+#line 5922 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 int main() {
 int attr=PTHREAD_CREATE_UNDETACHED;
 ; return 0; }
 EOF
-if { (eval echo configure:5925: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5929: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ok=PTHREAD_CREATE_UNDETACHED
 else
@@ -5944,7 +5948,7 @@ EOF
 	fi
 
 	echo $ac_n "checking if more special flags are required for pthreads""... $ac_c" 1>&6
-echo "configure:5948: checking if more special flags are required for pthreads" >&5
+echo "configure:5952: checking if more special flags are required for pthreads" >&5
 	flag=no
 	case "${host_cpu}-${host_os}" in
 		*-aix* | *-freebsd*)     flag="-D_THREAD_SAFE";;
@@ -5962,7 +5966,7 @@ echo "configure:5948: checking if more special flags are required for pthreads" 
 	# Extract the first word of "cc_r", so it can be a program name with args.
 set dummy cc_r; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:5966: checking for $ac_word" >&5
+echo "configure:5970: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_PTHREAD_CC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -6076,7 +6080,7 @@ if test ! -d build/linux; then mkdir build/linux; fi
 # Extract the first word of "gzip", so it can be a program name with args.
 set dummy gzip; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:6080: checking for $ac_word" >&5
+echo "configure:6084: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_GZIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -6111,7 +6115,7 @@ fi
 # Extract the first word of "tar", so it can be a program name with args.
 set dummy tar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:6115: checking for $ac_word" >&5
+echo "configure:6119: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.9 2002-09-09 16:11:24 bdenney Exp $
+// $Id: fetchdecode.cc,v 1.10 2002-09-13 23:59:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1439,6 +1439,9 @@ BX_CPU_C::FetchDecode(Bit8u *iptr, BxInstruction_t *instruction,
   unsigned imm_mode, offset;
 
   instruction->os_32 = instruction->as_32 = is_32;
+#if BX_SUPPORT_X86_64
+  instruction->os_64 = instruction->as_64 = instruction->extend8bit = 0;
+#endif
   instruction->ResolveModrm = NULL;
   instruction->seg = BX_SEG_REG_NULL;
   instruction->rep_used = 0;
@@ -1450,6 +1453,12 @@ fetch_b1:
 another_byte:
   offset = instruction->os_32 << 9; // * 512
   instruction->attr = attr = BxOpcodeInfo[b1+offset].Attr;
+
+#if BX_SUPPORT_X86_64
+#warning "KPL: hacked because simple instructions that used to depend on b1"
+#warning "KPL: now look at i->nnn"
+instruction->nnn = (b1 & 7);
+#endif
 
   if ( !(attr & BxAnother) ) {
     // Opcode does not require a MODRM byte.

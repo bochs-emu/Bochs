@@ -51,7 +51,7 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # been synced yet.
 OBJS32 = \
 	init.o \
-	cpu.o fetchdecode.o \
+	cpu.o \
 	exception.o \
 	ctrl_xfer_pro.o \
 	flag_ctrl_pro.o \
@@ -78,6 +78,7 @@ OBJS32 = \
 # are used for either compile.
 OBJSXX = \
 	resolve32.o \
+	fetchdecode.o \
 	access.o \
 	shift16.o \
 	logical16.o \
