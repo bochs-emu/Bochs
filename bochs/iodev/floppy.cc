@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.42 2002-07-16 19:36:40 vruppert Exp $
+// $Id: floppy.cc,v 1.43 2002-07-20 19:53:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,9 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.42 2002-07-16 19:36:40 vruppert Exp $"));
+  Bit8u i;
+
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.43 2002-07-20 19:53:50 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -104,6 +106,10 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   BX_FD_THIS s.num_supported_floppies = 0;
 
+  for (i=0; i<4; i++) {
+    BX_FD_THIS s.media[i].type = BX_FLOPPY_NONE;
+    }
+
   //
   // Floppy A setup
   //
@@ -111,10 +117,8 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_FD_THIS s.media[0].tracks            = 0;
   BX_FD_THIS s.media[0].heads             = 0;
   BX_FD_THIS s.media[0].sectors           = 0;
-  BX_FD_THIS s.media[0].type              = BX_FLOPPY_NONE;
   BX_FD_THIS s.media[0].fd = -1;
   BX_FD_THIS s.media_present[0] = 0;
-
 
   switch (bx_options.floppya.Otype->get ()) {
     case BX_FLOPPY_NONE:
@@ -142,6 +146,8 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
       if (evaluate_media(bx_options.floppya.Otype->get (), bx_options.floppya.Opath->getptr (),
                    & BX_FD_THIS s.media[0]))
         BX_FD_THIS s.media_present[0] = 1;
+      else
+	bx_options.floppya.Oinitial_status->set(BX_EJECTED);
 #define MED (BX_FD_THIS s.media[0])
     	BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppya.Opath->getptr(),
 			MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
@@ -157,7 +163,6 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_FD_THIS s.media[1].tracks            = 0;
   BX_FD_THIS s.media[1].heads             = 0;
   BX_FD_THIS s.media[1].sectors           = 0;
-  BX_FD_THIS s.media[1].type              = BX_FLOPPY_NONE;
   BX_FD_THIS s.media[1].fd = -1;
   BX_FD_THIS s.media_present[1] = 0;
 
@@ -187,6 +192,8 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
       if (evaluate_media(bx_options.floppyb.Otype->get (), bx_options.floppyb.Opath->getptr (),
                    & BX_FD_THIS s.media[1]))
         BX_FD_THIS s.media_present[1] = 1;
+      else
+	bx_options.floppyb.Oinitial_status->set(BX_EJECTED);
 #define MED (BX_FD_THIS s.media[1])
     	BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppyb.Opath->getptr(),
 			MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
@@ -430,10 +437,8 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
           (unsigned) normal_operation));
         BX_DEBUG(("  drive_select=%02x",
           (unsigned) drive_select));
-      if (drive_select>1) {
-	BX_DEBUG(("WARNING: applying mod(2) on drive_select"));
-	drive_select &= 0x01;
-	BX_DEBUG(("new drive_select=%d", (unsigned) drive_select));
+      if (BX_FD_THIS s.media[drive_select].type == BX_FLOPPY_NONE) {
+        BX_DEBUG(("WARNING: not existing drive selected"));
         }
       break;
 
@@ -593,6 +598,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 
     case 0x04: // get status
       drive = (BX_FD_THIS s.command[1] & 0x03);
+      BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
       BX_FD_THIS s.result[0] = 0x28 | (BX_FD_THIS s.head[drive]<<2) | drive
         | (BX_FD_THIS s.media[drive].write_protected ? 0x40 : 0x00);
       if (BX_FD_THIS s.cylinder[drive] == 0) BX_FD_THIS s.result[0] |= 0x10;
@@ -608,9 +614,6 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.DOR |= drive;
       BX_DEBUG(("floppy_command(): recalibrate drive %u",
         (unsigned) drive));
-      if (drive > 1)
-        BX_PANIC(("floppy_command(): drive > 1"));
-      //motor_on = BX_FD_THIS s.DOR & 0xf0;
       motor_on = ( (BX_FD_THIS s.DOR>>(drive+4))
                      & 0x01 );
       if (motor_on == 0) {
@@ -620,7 +623,6 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.DOR |= 0x10; // turn on MOTA
       else
         BX_FD_THIS s.DOR |= 0x20; // turn on MOTB
-      BX_FD_THIS s.cylinder[drive] = 0;
       bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
         bx_options.Ofloppy_command_delay->get (), 0 );
       /* command head to track 0
@@ -628,8 +630,8 @@ bx_floppy_ctrl_c::floppy_command(void)
        * error condition noted in Status reg 0's equipment check bit
        * seek end bit set to 1 in Status reg 0 regardless of outcome
        */
-      /* data reg not ready, controller busy */
-      BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+      /* data reg not ready, drive busy */
+      BX_FD_THIS s.main_status_reg = (1 << drive);
       BX_FD_THIS s.pending_command = 0x07; // recalibrate pending
       return;
       break;
@@ -650,7 +652,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       else {
         if (BX_FD_THIS s.reset_sensei > 0) {
           drive = 4 - BX_FD_THIS s.reset_sensei;
-          BX_FD_THIS s.status_reg0 &= 0xfc;
+          BX_FD_THIS s.status_reg0 &= 0xf8;
           BX_FD_THIS s.status_reg0 |= (BX_FD_THIS s.head[drive] << 2) | drive;
           BX_FD_THIS s.reset_sensei--;
 	  }
@@ -659,7 +661,6 @@ bx_floppy_ctrl_c::floppy_command(void)
         }
       BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
       BX_FD_THIS s.result_index = 0;
-      if (!BX_FD_THIS s.reset_sensei) BX_FD_THIS s.status_reg0 = 0;
 
       /* read ready */
       BX_FD_THIS s.main_status_reg &= 0x0f;
@@ -684,20 +685,21 @@ bx_floppy_ctrl_c::floppy_command(void)
 
       BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
       BX_FD_THIS s.cylinder[drive] = BX_FD_THIS s.command[2];
-      if (drive > 1)
-        BX_PANIC(("floppy_command(): seek: drive>1"));
       /* ??? should also check cylinder validity */
       bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
         bx_options.Ofloppy_command_delay->get (), 0 );
-      /* data reg not ready, controller busy */
-      BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+      /* data reg not ready, drive busy */
+      BX_FD_THIS s.main_status_reg = (1 << drive);
       BX_FD_THIS s.pending_command = 0x0f; /* seek pending */
       return;
       break;
 
     case 0x13: // Configure
-      BX_DEBUG(("io: configure (mode=%02xh, pretrack=%02xh)",
-(unsigned)(BX_FD_THIS s.command[2]), (unsigned)(BX_FD_THIS s.command[3]) ));
+      BX_DEBUG(("configure (eis     = 0x%02x)", BX_FD_THIS s.command[2] & 0x40 ));
+      BX_DEBUG(("configure (efifo   = 0x%02x)", BX_FD_THIS s.command[2] & 0x20 ));
+      BX_DEBUG(("configure (no poll = 0x%02x)", BX_FD_THIS s.command[2] & 0x10 ));
+      BX_DEBUG(("configure (fifothr = 0x%02x)", BX_FD_THIS s.command[2] & 0x0f ));
+      BX_DEBUG(("configure (pretrk  = 0x%02x)", BX_FD_THIS s.command[3] ));
       BX_FD_THIS s.result_size = 0;
       BX_FD_THIS s.result_index = 0;
       BX_FD_THIS s.pending_command = 0;
@@ -717,8 +719,8 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
         return;
         }
-      if (drive > 1)
-        BX_PANIC(("io: 4a: bad drive #"));
+      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+        BX_PANIC(("floppy_command(): read ID: bad drive #%d", drive));
       BX_FD_THIS s.result_size = 7;
       BX_FD_THIS s.result_index = 0;
       // setting result[0] in timer handler
@@ -748,8 +750,8 @@ bx_floppy_ctrl_c::floppy_command(void)
         sector_size = BX_FD_THIS s.command[2];
         BX_FD_THIS s.format_count = BX_FD_THIS s.command[3];
         BX_FD_THIS s.format_fillbyte = BX_FD_THIS s.command[5];
-        if (drive > 1)
-          BX_PANIC(("format track: bad drive #%d", drive));
+        if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+          BX_PANIC(("floppy_command(): format track: bad drive #%d", drive));
 
         if (sector_size != 0x02) { // 512 bytes
           BX_PANIC(("format track: sector_size not 512"));
@@ -829,10 +831,8 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_DEBUG(("  cylinder = %u", (unsigned) cylinder));
       BX_DEBUG(("  sector   = %u", (unsigned) sector));
       BX_DEBUG(("  eot      = %u", (unsigned) eot));
-      if (drive > 1)
-        BX_PANIC(("io: bad drive #"));
-      if (head > 1)
-        BX_PANIC(("io: bad head #"));
+      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+        BX_PANIC(("floppy_command(): read/write: bad drive #%d", drive));
 
       // check that head number in command[1] bit two matches the head
       // reported in the head number field.  Real floppy drives are
@@ -865,7 +865,7 @@ bx_floppy_ctrl_c::floppy_command(void)
                      (unsigned) BX_FD_THIS s.media[drive].sectors_per_track));
         BX_FD_THIS s.result_size = 7;
         BX_FD_THIS s.result_index = 0;
-        BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
+        BX_FD_THIS s.status_reg0 = 0x60 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
         BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
         BX_FD_THIS s.result[1] = 0x25; // 0010 0101
         BX_FD_THIS s.result[2] = 0x31; // 0011 0001
@@ -988,8 +988,8 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
 {
   int ret;
 
-  if (drive > 1)
-    BX_PANIC(("floppy_xfer: drive > 1"));
+  if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+    BX_PANIC(("floppy_xfer: bad drive #%d", drive));
 
   if (bx_dbg.floppy) {
     BX_INFO(("drive=%u", (unsigned) drive));
@@ -1064,8 +1064,17 @@ bx_floppy_ctrl_c::timer()
     case 0x07: // recal
       BX_FD_THIS s.pending_command = 0;
       /* write ready, not busy */
+      BX_FD_THIS s.cylinder[drive] = 0;
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
+      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE) {
+        BX_FD_THIS s.status_reg0 |= 0x50;
+        }
+      else if (BX_FD_THIS s.media_present[drive] == 0) {
+        BX_FD_THIS s.status_reg0 |= 0x40;
+        BX_FD_THIS s.status_reg1 = 0x25;
+        BX_FD_THIS s.status_reg2 = 0x31;
+        }
       raise_interrupt();
       goto reset_changeline;
       break;
@@ -1075,6 +1084,14 @@ bx_floppy_ctrl_c::timer()
       /* write ready, not busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
+      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE) {
+        BX_FD_THIS s.status_reg0 |= 0x50;
+        }
+      else if (BX_FD_THIS s.media_present[drive] == 0) {
+        BX_FD_THIS s.status_reg0 |= 0x40;
+        BX_FD_THIS s.status_reg1 = 0x25;
+        BX_FD_THIS s.status_reg2 = 0x31;
+        }
       raise_interrupt();
       goto reset_changeline;
       break;
@@ -1083,7 +1100,6 @@ bx_floppy_ctrl_c::timer()
       BX_FD_THIS s.pending_command = 0;
       /* read ready, busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO;
-      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
       BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
       raise_interrupt();
       break;
@@ -1463,6 +1479,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     if (media->fd < 0) {
       // failed to open read-only too
       BX_INFO(( "tried to open %s read only: %s",path,strerror(errno) ));
+      media->type = type;
       return(0);
     }
   }
