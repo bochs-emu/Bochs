@@ -192,6 +192,7 @@ bx_bochs_init(int argc, char *argv[])
   bx_pc_system.start_timers();
 #endif
 
+  bx_printf ("bx_bochs_init is setting signal handlers\n");
 // if not using debugger, then we can take control of SIGINT.
 // If using debugger, it needs control of this.
 #if BX_DEBUGGER==0
