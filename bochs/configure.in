@@ -446,6 +446,10 @@ AC_ARG_ENABLE(ne2000,
     AC_CHECK_HEADER(linux/netlink.h, [
         NE2K_OBJS="$NE2K_OBJS eth_tap.o"
         AC_DEFINE(HAVE_ETHERTAP, 1)
+      ], [], 
+      [
+	#include <asm/types.h>
+	#include <sys/socket.h>
       ])
     if test "$with_win32" = yes; then
       NE2K_OBJS="$NE2K_OBJS eth_win32.o"
