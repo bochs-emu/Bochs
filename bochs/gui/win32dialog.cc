@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.20 2004-02-26 19:25:00 vruppert Exp $
+// $Id: win32dialog.cc,v 1.21 2004-05-23 10:47:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -303,10 +303,13 @@ void RuntimeDlgSetTab(HWND hDlg, int tabnum)
   ShowWindow(GetDlgItem(hDlg, IDMISCLBL1), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDMISCLBL2), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDMISCLBL3), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDMISCLBL4), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDMISCLBL5), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDVGAUPDATE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDMOUSE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDKBDPASTE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDUSERBTN), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDSBLOGLEV), (tabnum == 2) ? SW_SHOW : SW_HIDE);
 }
 
 void RuntimeDlgSetStdLogOpt(HWND hDlg)
@@ -437,6 +440,8 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
         SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_SETCHECK, BST_CHECKED, 0);
       }
       SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXP_USER_SHORTCUT)->getptr());
+      SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXP_SB16_DMATIMER)->get(), FALSE);
+      SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXP_SB16_LOGLEVEL)->get(), FALSE);
       EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
       advanced = FALSE;
       changed = 0;
@@ -461,6 +466,8 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             case IDVGAUPDATE:
             case IDKBDPASTE:
             case IDUSERBTN:
+            case IDSB16TIMER:
+            case IDSBLOGLEV:
               changed |= 0x04;
               break;
           }
@@ -569,6 +576,10 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 SIM->get_param_num(BXP_MOUSE_ENABLED)->set(value==BST_CHECKED);
                 GetDlgItemText(hDlg, IDUSERBTN, buffer, sizeof(buffer));
                 SIM->get_param_string(BXP_USER_SHORTCUT)->set(buffer);
+                value = GetDlgItemInt(hDlg, IDSB16TIMER, NULL, FALSE);
+                SIM->get_param_num(BXP_SB16_DMATIMER)->set(value);
+                value = GetDlgItemInt(hDlg, IDSBLOGLEV, NULL, FALSE);
+                SIM->get_param_num(BXP_SB16_LOGLEVEL)->set(value);
               }
               EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
               changed = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.274 2004-04-09 15:34:56 sshwarts Exp $
+// $Id: main.cc,v 1.275 2004-05-23 10:46:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1405,7 +1405,7 @@ void bx_init_options ()
       0, 3,
       0);
   bx_options.sb16.Ologlevel = new bx_param_num_c (BXP_SB16_LOGLEVEL,
-      "Log mode",
+      "Log level",
       "Controls how verbose the SB16 emulation is (0 = no log, 5 = all errors and infos).",
       0, 5,
       0);
@@ -1420,6 +1420,8 @@ void bx_init_options ()
   bx_options.sb16.Owavemode->set_options (bx_param_num_c::USE_SPIN_CONTROL);
   bx_options.sb16.Ologlevel->set_options (bx_param_num_c::USE_SPIN_CONTROL);
 #endif
+  bx_options.sb16.Odmatimer->set_runtime_param (1);
+  bx_options.sb16.Ologlevel->set_runtime_param (1);
   bx_param_c *sb16_init_list[] = {
     bx_options.sb16.Opresent,
     bx_options.sb16.Omidimode,

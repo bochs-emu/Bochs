@@ -103,6 +103,10 @@ BEGIN
     EDITTEXT        IDKBDPASTE, 95, 75, 70, 14, ES_NUMBER
     LTEXT           "Userbutton shortcut", IDMISCLBL3, 20, 97, 70, 14
     EDITTEXT        IDUSERBTN, 95, 95, 70, 14
+    LTEXT           "SB16 DMA timer", IDMISCLBL4, 20, 117, 70, 14
+    EDITTEXT        IDSB16TIMER, 95, 115, 70, 14, ES_NUMBER
+    LTEXT           "SB16 loglevel", IDMISCLBL5, 20, 137, 70, 14
+    EDITTEXT        IDSBLOGLEV, 95, 135, 70, 14, ES_NUMBER
     DEFPUSHBUTTON   "Continue simulation", IDOK, 15, 190, 70, 14
     PUSHBUTTON      "Quit simulation", IDCANCEL, 95, 190, 70, 14
     PUSHBUTTON      "Apply", IDAPPLY, 175, 190, 70, 14

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.103 2004-02-15 12:40:06 vruppert Exp $
+// $Id: wxmain.cc,v 1.104 2004-05-23 10:47:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -606,6 +606,7 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_SB16);
   dlg.SetTitle (list->get_name ());
   dlg.AddParam (list);
+  dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.ShowModal ();
 }
 
@@ -915,7 +916,6 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   }
   menuEdit->Enable( ID_Edit_Boot, canConfigure);
   menuEdit->Enable( ID_Edit_Memory, canConfigure);
-  menuEdit->Enable( ID_Edit_Sound, canConfigure);
   menuEdit->Enable( ID_Edit_Timing, canConfigure);
   menuEdit->Enable( ID_Edit_Network, canConfigure);
   menuEdit->Enable( ID_Edit_Serial_Parallel, canConfigure);
@@ -928,12 +928,6 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   menuEdit->Enable (ID_Edit_FD_0, canConfigure || param->get_enabled ());
   param = SIM->get_param(BXP_FLOPPYB);
   menuEdit->Enable (ID_Edit_FD_1, canConfigure || param->get_enabled ());
-  /*
-  // this menu item removed, since you can configure the cdrom from the
-  // ATA controller menu items instead.
-  param = SIM->get_first_cdrom ();
-  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || (param&&param->get_enabled ()));
-  */
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)
