@@ -1,0 +1,1015 @@
+----------------------------------------------------------------------
+Patch name: patch.kbd-cbothamy
+Author: christophe Bothamy <cbothamy@free.fr>
+Date: 2 Dec 2001
+
+Detailed description:
+
+. Architecture
+ - A bx_keymap_c object is created. It offers the GUIs a way to remap
+   the physical keyboard in a standard us keyboard.
+ - The object is GUI implementation independant, and lets the 
+   GUI use key symbols, raw keycodes, or anything
+ - It is optional, GUIs must use it explicitely, and keyboardmapping
+   must be enabled in the configuration file. 
+   If disabled the old behavior is used.
+ - The object could be used by two categories of GUIs 
+   - GUIs that provide their own translation function (like carbon). 
+     In that case the object can be used to get the right keymap table
+   - GUIs that do the mapping to BX_KEY. In that case the object
+     can map the physical key to the right BX_KEY
+
+
+. Implementation
+ Methods of bx_keymap_c :
+  - void   addTable(const char *mapName, const void *table, Bit32u size);
+    Adds the table named "mapName" to the keymap list
+    Size should be the number of entries in the
+
+  - void   setDefault(const char *mapName);
+    Sets the default keymap
+
+  - void*  getTable(char *mapName);
+    Returns the table named "mapName"
+
+  - void*  getTable(void);
+    Returns the table specified in the conf file
+
+  - Bit32u getBXKey(char *mapName, Bit32u key);
+    Returns the BX_KEY for the key and the table "mapName"
+
+  - Bit32u getBXKey(Bit32u key);
+    Returns the BX_KEY for the key and the table specified in
+    the conf file.
+
+ Format of the table
+  - if the GUI provide its own translation function, the format
+    of the keymap table is free and the number of elements
+    should be set to 0. This GUI should also use the getTable
+    functions.
+  - if the GUI wants the keymap object do the translation to
+    BX_KEYs then the format of the table is Bit32u table[N][2].
+    Each entry should contain the physical constant and the 
+    associated BX_KEY
+ 
+. Table writing
+ Each GUI should provide at least one table, the standard 'us'
+ keyboard one. Then they should provide additional table for
+ each country specific keyboard, as a diff to the standard one.
+
+ Please refer to x.cc for explainations on how to write 
+ a keymap table
+
+
+. Pros 
+ not gui specific (X, macintosh...)
+. Cons
+ a table must be written for each keyboard and GUI
+
+
+. Changes
+ - gui/keymap.cc and gui/keymap.h contains the implementation
+   of the new object
+ - bochs.h includes keymap.h
+ - main.cc manages "keyboardmapping" options of the conf file
+ - gui/siminterface.h 
+ - gui/x.cc implements us and fr tables based on keysym
+
+
+. Usage
+ Add a line :
+  keyboardmapping: enabled=1, map=LANG
+ at the end of conf file to use the keyboard mapping.
+ For now LANG must be us or fr.
+
+
+. Todo
+ I only modified x.cc to provide us and fr tables. 
+ More table should be implemented. Check if other gui
+ need mapping.
+ Tables look-up should be optimised. 
+ For now up to 10 different map can be uploaded to the object
+ The table size should be increased/dynamic.
+
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  cvs checked out on 2 Dec 2001
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -urN bochs/gui/Makefile.in bochs-keymap/gui/Makefile.in
+--- bochs/gui/Makefile.in	Sun Dec  2 23:25:28 2001
++++ bochs-keymap/gui/Makefile.in	Sat Dec  1 13:03:41 2001
+@@ -51,7 +51,7 @@
+ GUI_OBJS_TERM  = term.o
+ GUI_OBJS_RFB = rfb.o
+ GUI_OBJS_AMIGAOS = amigaos.o
+-GUI_OBJS = gui.o control.o siminterface.o @GUI_OBJS@
++GUI_OBJS = keymap.o gui.o control.o siminterface.o @GUI_OBJS@
+ 
+ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
+ LOCAL_CXXFLAGS =
+@@ -90,7 +90,6 @@
+ 
+ beos.@CPP_SUFFIX@cc: gui.h
+ 
+-
+ clean:
+ 	@RMCOMMAND@ *.o
+ 	@RMCOMMAND@ *.a
+@@ -146,6 +145,7 @@
+  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h \
+  ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
+  ../gui/bitmaps/snapshot.h ../gui/bitmaps/configbutton.h
++keymap.o: keymap.@CPP_SUFFIX@ ../bochs.h keymap.h
+ macintosh.o: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../cpu/cpu.h ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h \
+Binary files bochs/gui/control.o and bochs-keymap/gui/control.o differ
+diff -urN bochs/gui/gui.h bochs-keymap/gui/gui.h
+--- bochs/gui/gui.h	Sun Dec  2 23:25:28 2001
++++ bochs-keymap/gui/gui.h	Sat Dec  1 23:35:57 2001
+@@ -102,6 +102,8 @@
+ #define BX_KEY_PRESSED  0x00000000
+ #define BX_KEY_RELEASED 0x80000000
+ 
++#define BX_KEY_UNHANDLED 0x10000000
++
+ #define BX_KEY_CTRL_L   0
+ #define BX_KEY_SHIFT_L  1
+ 
+@@ -176,7 +178,6 @@
+ 
+ #define BX_KEY_LEFT_BRACKET  64
+ #define BX_KEY_BACKSLASH     65
+-#define BX_KEY_LEFT_BACKSLASH 72
+ #define BX_KEY_RIGHT_BRACKET 66
+ #define BX_KEY_MINUS         67
+ #define BX_KEY_GRAVE         68
+@@ -185,6 +186,12 @@
+ #define BX_KEY_ENTER         70
+ #define BX_KEY_TAB           71
+ 
++#define BX_KEY_LEFT_BACKSLASH 72
++
++#define BX_KEY_PRINT        73
++#define BX_KEY_SCRL_LOCK    74
++#define BX_KEY_PAUSE        75
++
+ #define BX_KEY_INSERT        76
+ #define BX_KEY_DELETE        77
+ #define BX_KEY_HOME          78
+@@ -214,7 +221,3 @@
+ #define BX_KEY_KP_ENTER      99
+ #define BX_KEY_KP_MULTIPLY  100
+ #define BX_KEY_KP_DIVIDE    101
+-
+-#define BX_KEY_PRINT        73
+-#define BX_KEY_SCRL_LOCK    74
+-#define BX_KEY_PAUSE        75
+Binary files bochs/gui/gui.o and bochs-keymap/gui/gui.o differ
+diff -urN bochs/gui/keymap.cc bochs-keymap/gui/keymap.cc
+--- bochs/gui/keymap.cc	Thu Jan  1 01:00:00 1970
++++ bochs-keymap/gui/keymap.cc	Sun Dec  2 22:52:36 2001
+@@ -0,0 +1,145 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: $
++/////////////////////////////////////////////////////////////////////////
++//
++//  Copyright (C) 2001  Christophe Bothamy
++//
++//  This library is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU Lesser General Public
++//  License as published by the Free Software Foundation; either
++//  version 2 of the License, or (at your option) any later version.
++//
++//  This library is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++//  Lesser General Public License for more details.
++//
++//  You should have received a copy of the GNU Lesser General Public
++//  License along with this library; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++
++
++
++#include "bochs.h"
++
++bx_keymap_c bx_keymap;
++
++#define LOG_THIS bx_keymap.
++
++bx_keymap_c::bx_keymap_c(void)
++{
++        put("KMAP");
++        nbKeymaps=0;
++        defaultKeymap=BX_KEYMAP_MAX_TABLES;
++}
++
++bx_keymap_c::~bx_keymap_c(void)
++{
++}
++
++
++	void
++bx_keymap_c::addTable(const char *mapName, const void *keymap, Bit32u size)
++{
++	if(nbKeymaps<BX_KEYMAP_MAX_TABLES) {
++	 	keymaps[nbKeymaps]=keymap;
++		mapNames[nbKeymaps]=mapName;
++		mapSizes[nbKeymaps]=size;
++
++		BX_INFO(("Added keymap '%s' at position %d (%d entries)",mapName,nbKeymaps,size));
++
++                nbKeymaps++;
++		}
++	else {
++		BX_PANIC(("No space to add keymap '%s'",mapName));
++		}
++}
++
++	void
++bx_keymap_c::setDefault(const char *mapName)
++{
++	Bit32u i;
++
++	for(i=0;i<nbKeymaps;i++){
++		if(strcmp(mapName,mapNames[i])==0){
++			defaultKeymap=i;
++			BX_INFO(("Default keymap set to '%s'",mapNames[i]));
++			return;
++			}
++		}
++	BX_ERROR(("Unknown keymap %s",mapName));
++}
++
++	void*
++bx_keymap_c::getTable(char *mapName)
++{
++	Bit32u i;
++
++	for(i=0;i<nbKeymaps;i++){
++		if(strcmp(mapName,mapNames[i])==0){
++			return(&keymaps[i]);
++			}
++		}
++	BX_ERROR(("Unknown keymap %s",mapName));
++}
++
++	void*
++bx_keymap_c::getTable(void)
++{
++	char* localKeymap;
++
++        localKeymap=bx_options.keyboard.Okeymap->getptr();
++	return(getTable(localKeymap));
++}
++
++	Bit32u
++bx_keymap_c::getBXKey(char* mapName, Bit32u key)
++{
++        Bit32u i,mapIndex;
++        Bit32u *keymap,size;
++
++	// First we browse through the specific keymap
++        mapIndex=BX_KEYMAP_MAX_TABLES;
++        for(i=0; i<nbKeymaps; i++){
++                if(strcmp(mapName,mapNames[i])==0){
++                        mapIndex=i;
++                        break;
++                        }
++                }
++        if(mapIndex<BX_KEYMAP_MAX_TABLES){
++		keymap=(Bit32u*)(keymaps[mapIndex]);
++		size=mapSizes[mapIndex];
++		for(i=0; i<size; i++){
++			if(keymap[i*2]==key)
++				return(keymap[i*2+1]);
++			}
++		}
++	else BX_ERROR(("Unknown keymap %s",mapName));
++
++        // Then, if not found, search into the default keymap
++        if((defaultKeymap<BX_KEYMAP_MAX_TABLES)
++         &&(defaultKeymap!=mapIndex)){
++		keymap=(Bit32u*)keymaps[defaultKeymap];
++		size=mapSizes[defaultKeymap];
++		for(i=0;i <size; i++){
++			if(keymap[i*2]==key)
++				return(keymap[i*2+1]);
++			}
++		}
++
++        // Return default
++	return BX_KEY_UNHANDLED;
++}
++
++	Bit32u
++bx_keymap_c::getBXKey(Bit32u key)
++{
++        Bit32u i,mapIndex;
++        Bit32u *keymap,size;
++	char* localKeymap;
++
++        localKeymap=bx_options.keyboard.Okeymap->getptr();
++
++        return(getBXKey(localKeymap,key));
++}
++
+diff -urN bochs/gui/keymap.h bochs-keymap/gui/keymap.h
+--- bochs/gui/keymap.h	Thu Jan  1 01:00:00 1970
++++ bochs-keymap/gui/keymap.h	Sun Dec  2 22:43:36 2001
+@@ -0,0 +1,43 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: $
++/////////////////////////////////////////////////////////////////////////
++//
++//  Copyright (C) 2001  Christophe Bothamy
++//
++//  This library is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU Lesser General Public
++//  License as published by the Free Software Foundation; either
++//  version 2 of the License, or (at your option) any later version.
++//
++//  This library is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++//  Lesser General Public License for more details.
++//
++//  You should have received a copy of the GNU Lesser General Public
++//  License along with this library; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++
++#define BX_KEYMAP_MAX_TABLES 10
++
++class bx_keymap_c : public logfunctions {
++public:
++  bx_keymap_c(void);
++  ~bx_keymap_c(void);
++
++  void   addTable(const char *mapName, const void *table, Bit32u size);
++  void   setDefault(const char *mapName);
++  void*  getTable(char *mapName);
++  void*  getTable(void);
++  Bit32u getBXKey(char *mapName, Bit32u key);
++  Bit32u getBXKey(Bit32u key);
++
++private:
++  const char*   mapNames[BX_KEYMAP_MAX_TABLES];
++  const void*   keymaps[BX_KEYMAP_MAX_TABLES];
++  Bit32u        mapSizes[BX_KEYMAP_MAX_TABLES];
++  Bit32u        defaultKeymap;
++  Bit32u        nbKeymaps;
++};
++
++extern bx_keymap_c bx_keymap;
+Binary files bochs/gui/keymap.o and bochs-keymap/gui/keymap.o differ
+Binary files bochs/gui/libgui.a and bochs-keymap/gui/libgui.a differ
+diff -urN bochs/gui/siminterface.h bochs-keymap/gui/siminterface.h
+--- bochs/gui/siminterface.h	Sun Dec  2 23:25:28 2001
++++ bochs-keymap/gui/siminterface.h	Sat Dec  1 23:38:57 2001
+@@ -102,6 +102,9 @@
+   BXP_PARPORT1_OUTFILE,
+   BXP_PARPORT2_ENABLE,
+   BXP_PARPORT2_OUTFILE,
++  BXP_KEYBOARD_USEMAPPING,
++  BXP_KEYBOARD_MAP,
++  BXP_KEYBOARD,
+   BXP_THIS_IS_THE_LAST    // used to determine length of list
+ } bx_id;
+ 
+Binary files bochs/gui/siminterface.o and bochs-keymap/gui/siminterface.o differ
+diff -urN bochs/gui/x.cc bochs-keymap/gui/x.cc
+--- bochs/gui/x.cc	Sun Dec  2 23:25:28 2001
++++ bochs-keymap/gui/x.cc	Sun Dec  2 22:43:47 2001
+@@ -232,6 +232,283 @@
+   BX_KEY_GRAVE
+   };
+ 
++/* US key mapping. Also the default */
++Bit32u keymap_us[][2] = {
++  { XK_space               , BX_KEY_SPACE },
++  { XK_exclam              , BX_KEY_1 },
++  { XK_quotedbl            , BX_KEY_SINGLE_QUOTE },
++  { XK_numbersign          , BX_KEY_3 },
++  { XK_dollar              , BX_KEY_4 },
++  { XK_percent             , BX_KEY_5 },
++  { XK_ampersand           , BX_KEY_7 },
++  { XK_apostrophe          , BX_KEY_SINGLE_QUOTE },
++  { XK_parenleft           , BX_KEY_9 },
++  { XK_parenright          , BX_KEY_0 },
++  { XK_asterisk            , BX_KEY_8 },
++  { XK_plus                , BX_KEY_EQUALS },
++  { XK_comma               , BX_KEY_COMMA },
++  { XK_minus               , BX_KEY_MINUS },
++  { XK_period              , BX_KEY_PERIOD },
++  { XK_slash               , BX_KEY_SLASH },
++  { XK_0                   , BX_KEY_0 },
++  { XK_1                   , BX_KEY_1 },
++  { XK_2                   , BX_KEY_2 },
++  { XK_3                   , BX_KEY_3 },
++  { XK_4                   , BX_KEY_4 },
++  { XK_5                   , BX_KEY_5 },
++  { XK_6                   , BX_KEY_6 },
++  { XK_7                   , BX_KEY_7 },
++  { XK_8                   , BX_KEY_8 },
++  { XK_9                   , BX_KEY_9 },
++  { XK_colon               , BX_KEY_SEMICOLON },
++  { XK_semicolon           , BX_KEY_SEMICOLON },
++  { XK_less                , BX_KEY_COMMA },
++  { XK_equal               , BX_KEY_EQUALS },
++  { XK_greater             , BX_KEY_PERIOD },
++  { XK_question            , BX_KEY_SLASH },
++  { XK_at                  , BX_KEY_2 },
++  { XK_A                   , BX_KEY_A },
++  { XK_B                   , BX_KEY_B },
++  { XK_C                   , BX_KEY_C },
++  { XK_D                   , BX_KEY_D },
++  { XK_E                   , BX_KEY_E },
++  { XK_F                   , BX_KEY_F },
++  { XK_G                   , BX_KEY_G },
++  { XK_H                   , BX_KEY_H },
++  { XK_I                   , BX_KEY_I },
++  { XK_J                   , BX_KEY_J },
++  { XK_K                   , BX_KEY_K },
++  { XK_L                   , BX_KEY_L },
++  { XK_M                   , BX_KEY_M },
++  { XK_N                   , BX_KEY_N },
++  { XK_O                   , BX_KEY_O },
++  { XK_P                   , BX_KEY_P },
++  { XK_Q                   , BX_KEY_Q },
++  { XK_R                   , BX_KEY_R },
++  { XK_S                   , BX_KEY_S },
++  { XK_T                   , BX_KEY_T },
++  { XK_U                   , BX_KEY_U },
++  { XK_V                   , BX_KEY_V },
++  { XK_W                   , BX_KEY_W },
++  { XK_X                   , BX_KEY_X },
++  { XK_Y                   , BX_KEY_Y },
++  { XK_Z                   , BX_KEY_Z },
++  { XK_bracketleft         , BX_KEY_LEFT_BRACKET },
++  { XK_backslash           , BX_KEY_BACKSLASH },
++  { XK_bracketright        , BX_KEY_RIGHT_BRACKET },
++  { XK_asciicircum         , BX_KEY_6 },
++  { XK_underscore          , BX_KEY_MINUS },
++  { XK_grave               , BX_KEY_GRAVE },
++  { XK_a                   , BX_KEY_A },
++  { XK_b                   , BX_KEY_B },
++  { XK_c                   , BX_KEY_C },
++  { XK_d                   , BX_KEY_D },
++  { XK_e                   , BX_KEY_E },
++  { XK_f                   , BX_KEY_F },
++  { XK_g                   , BX_KEY_G },
++  { XK_h                   , BX_KEY_H },
++  { XK_i                   , BX_KEY_I },
++  { XK_j                   , BX_KEY_J },
++  { XK_k                   , BX_KEY_K },
++  { XK_l                   , BX_KEY_L },
++  { XK_m                   , BX_KEY_M },
++  { XK_n                   , BX_KEY_N },
++  { XK_o                   , BX_KEY_O },
++  { XK_p                   , BX_KEY_P },
++  { XK_q                   , BX_KEY_Q },
++  { XK_r                   , BX_KEY_R },
++  { XK_s                   , BX_KEY_S },
++  { XK_t                   , BX_KEY_T },
++  { XK_u                   , BX_KEY_U },
++  { XK_v                   , BX_KEY_V },
++  { XK_w                   , BX_KEY_W },
++  { XK_x                   , BX_KEY_X },
++  { XK_y                   , BX_KEY_Y },
++  { XK_z                   , BX_KEY_Z },
++  { XK_braceleft           , BX_KEY_LEFT_BRACKET },
++  { XK_bar                 , BX_KEY_BACKSLASH },
++  { XK_braceright          , BX_KEY_RIGHT_BRACKET },
++  { XK_asciitilde          , BX_KEY_GRAVE },
++  { XK_KP_1                , BX_KEY_KP_END },
++#ifdef XK_KP_End
++  { XK_KP_End              , BX_KEY_KP_END },
++#endif
++  { XK_KP_2                , BX_KEY_KP_DOWN },
++#ifdef XK_KP_Down
++  { XK_KP_Down             , BX_KEY_KP_DOWN },
++#endif
++  { XK_KP_3                , BX_KEY_KP_PAGE_DOWN },
++#ifdef XK_KP_Page_Down
++  { XK_KP_Page_Down        , BX_KEY_KP_PAGE_DOWN },
++#endif
++  { XK_KP_4                , BX_KEY_KP_LEFT },
++#ifdef XK_KP_Left
++  { XK_KP_Left             , BX_KEY_KP_LEFT },
++#endif
++  { XK_KP_5                , BX_KEY_KP_5 },
++  { XK_KP_6                , BX_KEY_KP_RIGHT },
++#ifdef XK_KP_Right
++  { XK_KP_Right            , BX_KEY_KP_RIGHT },
++#endif
++  { XK_KP_7                , BX_KEY_KP_HOME },
++#ifdef XK_KP_Home
++  { XK_KP_Home             , BX_KEY_KP_HOME },
++#endif
++  { XK_KP_8                , BX_KEY_KP_UP },
++#ifdef XK_KP_Up
++  { XK_KP_Up               , BX_KEY_KP_UP },
++#endif
++  { XK_KP_9                , BX_KEY_KP_PAGE_UP },
++#ifdef XK_KP_Page_Up
++  { XK_KP_Page_Up          , BX_KEY_KP_PAGE_UP },
++#endif
++  { XK_KP_0                , BX_KEY_KP_INSERT },
++#ifdef XK_KP_Insert
++  { XK_KP_Insert           , BX_KEY_KP_INSERT },
++#endif
++  { XK_KP_Decimal          , BX_KEY_KP_DELETE },
++#ifdef XK_KP_Delete
++  { XK_KP_Delete           , BX_KEY_KP_DELETE },
++#endif
++#ifdef XK_KP_Enter
++  { XK_KP_Enter            , BX_KEY_KP_ENTER },
++#endif
++  { XK_KP_Subtract         , BX_KEY_KP_SUBTRACT },
++  { XK_KP_Add              , BX_KEY_KP_ADD },
++  { XK_KP_Multiply         , BX_KEY_KP_MULTIPLY },
++  { XK_KP_Divide           , BX_KEY_KP_DIVIDE },
++  { XK_Up                  , BX_KEY_UP },
++  { XK_Down                , BX_KEY_DOWN },
++  { XK_Left                , BX_KEY_LEFT },
++  { XK_Right               , BX_KEY_RIGHT },
++  { XK_Delete              , BX_KEY_DELETE },
++  { XK_BackSpace           , BX_KEY_BACKSPACE },
++  { XK_Tab                 , BX_KEY_TAB },
++  { XK_Return              , BX_KEY_ENTER },
++  { XK_Escape              , BX_KEY_ESC },
++  { XK_F1                  , BX_KEY_F1 },
++  { XK_F2                  , BX_KEY_F2 },
++  { XK_F3                  , BX_KEY_F3 },
++  { XK_F4                  , BX_KEY_F4 },
++  { XK_F5                  , BX_KEY_F5 },
++  { XK_F6                  , BX_KEY_F6 },
++  { XK_F7                  , BX_KEY_F7 },
++  { XK_F8                  , BX_KEY_F8 },
++  { XK_F9                  , BX_KEY_F9 },
++  { XK_F10                 , BX_KEY_F10 },
++  { XK_F11                 , BX_KEY_F11 },
++  { XK_F12                 , BX_KEY_F12 },
++  { XK_Control_L           , BX_KEY_CTRL_L },
++  { XK_Shift_L             , BX_KEY_SHIFT_L },
++  { XK_Shift_R             , BX_KEY_SHIFT_R },
++  { XK_Caps_Lock           , BX_KEY_CAPS_LOCK },
++  { XK_Num_Lock            , BX_KEY_NUM_LOCK },
++  { XK_Alt_L               , BX_KEY_ALT_L },
++  { XK_Insert              , BX_KEY_INSERT },
++  { XK_Home                , BX_KEY_HOME },
++  { XK_End                 , BX_KEY_END },
++  { XK_Page_Up             , BX_KEY_PAGE_UP },
++  { XK_Page_Down           , BX_KEY_PAGE_DOWN },
++  };
++
++/* 
++  =====================================
++  How to write your own mapping table :
++  =====================================
++
++  Just look at each key of the US Keyboard, and write down
++  what you see on your real keyboard 
++  This gives you the XK_* symbol (your keyboard) 
++  and the BX_KEY_* symbol (US keyboard)
++
++  NB : you may have to add your country specific X11 keysyms 
++  and don't forget to add a line for every symbol you can type
++  on each key
++*/
++
++/*
++US Keyboard looks like this:
++
++Top Row from left to right 
++Esc F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 
++
++2nd row from left to right
++` 1 2 3 4 5 6 7 8 9 0 - = \ Back
++
++3rd row from left to right
++Tab Q W E R T Y U I O P [ ] Enter
++
++4rd row from left to right
++Caps A S D F G H J K L ; '
++
++5rd row from left to right
++lShift l\ Z X C V B N M , . / rShift
++
++6rd row from left to right
++lCtrl lAlt Space rAlt rCtrl
++*/
++
++
++/* French key mapping. Applied as a diff to the default */
++Bit32u keymap_fr[][2] = {
++  { XK_twosuperior         , BX_KEY_GRAVE },
++  { XK_ampersand           , BX_KEY_1 },
++  { XK_eacute              , BX_KEY_2 },
++  { XK_asciitilde          , BX_KEY_2 },
++  { XK_quotedbl            , BX_KEY_3 },
++  { XK_numbersign          , BX_KEY_3 },
++  { XK_apostrophe          , BX_KEY_4 },
++  { XK_braceleft           , BX_KEY_4 },
++  { XK_parenleft           , BX_KEY_5 },
++  { XK_bracketleft         , BX_KEY_5 },
++  { XK_minus               , BX_KEY_6 },
++  { XK_bar                 , BX_KEY_6 },
++  { XK_egrave              , BX_KEY_7 },
++  { XK_grave               , BX_KEY_7 },
++  { XK_underscore          , BX_KEY_8 },
++  { XK_backslash           , BX_KEY_8 },
++  { XK_ccedilla            , BX_KEY_9 },
++  { XK_asciicircum         , BX_KEY_9 },
++  { XK_agrave              , BX_KEY_0 },
++  { XK_at                  , BX_KEY_0 },
++  { XK_parenright          , BX_KEY_MINUS },
++  { XK_degree              , BX_KEY_MINUS },
++  { XK_bracketright        , BX_KEY_MINUS },
++  { XK_equal               , BX_KEY_EQUALS },
++  { XK_plus                , BX_KEY_EQUALS },
++  { XK_braceright          , BX_KEY_EQUALS },
++  { XK_asterisk            , BX_KEY_BACKSLASH  },
++  { XK_mu                  , BX_KEY_BACKSLASH  },
++  { XK_A                   , BX_KEY_Q },
++  { XK_a                   , BX_KEY_Q },
++  { XK_Z                   , BX_KEY_W },
++  { XK_z                   , BX_KEY_W },
++  { XK_dead_circumflex     , BX_KEY_LEFT_BRACKET },
++  { XK_dead_diaeresis      , BX_KEY_LEFT_BRACKET },
++  { XK_dollar              , BX_KEY_RIGHT_BRACKET },
++  { XK_sterling            , BX_KEY_RIGHT_BRACKET },
++  { XK_currency            , BX_KEY_RIGHT_BRACKET },
++  { XK_Q                   , BX_KEY_A },
++  { XK_q                   , BX_KEY_A },
++  { XK_M                   , BX_KEY_SEMICOLON },
++  { XK_m                   , BX_KEY_SEMICOLON },
++  { XK_ugrave              , BX_KEY_SINGLE_QUOTE },
++  { XK_percent             , BX_KEY_SINGLE_QUOTE },
++  { XK_less                , BX_KEY_LEFT_BACKSLASH },
++  { XK_greater             , BX_KEY_LEFT_BACKSLASH },
++  { XK_W                   , BX_KEY_Z },
++  { XK_w                   , BX_KEY_Z },
++  { XK_comma               , BX_KEY_M },
++  { XK_question            , BX_KEY_M },
++  { XK_semicolon           , BX_KEY_COMMA },
++  { XK_period              , BX_KEY_COMMA },
++  { XK_colon               , BX_KEY_PERIOD },
++  { XK_slash               , BX_KEY_PERIOD },
++  { XK_exclam              , BX_KEY_SLASH },
++  { XK_section             , BX_KEY_SLASH },
++
++  };
++
+ extern Bit8u graphics_snapshot[32 * 1024];
+ 
+ 
+@@ -506,6 +783,9 @@
+     BX_PANIC(("vga_x: bits_per_pixel < depth ?"));
+     }
+ 
++  bx_keymap.addTable("us",&keymap_us,sizeof(keymap_us)/(sizeof(Bit32u)*2));
++  bx_keymap.addTable("fr",&keymap_fr,sizeof(keymap_fr)/(sizeof(Bit32u)*2));
++  bx_keymap.setDefault("us");
+ }
+ 
+   curr_background = 0;
+@@ -799,132 +1079,138 @@
+   Bit32u key_event;
+ 
+ 
++  /* Old (no mapping) behavior */
++  if(!bx_options.keyboard.OuseMapping->get()){
+ 
+-
+-
+-  // this depends on the fact that the X11 keysyms which
+-  // correspond to the ascii characters space .. tilde
+-  // are in consequtive order.
+-  if ((keysym >= XK_space) && (keysym <= XK_asciitilde)) {
+-    key_event = ascii_to_key_event[keysym - XK_space];
+-    }
+-  else switch (keysym) {
+-    case XK_KP_1:
++    // this depends on the fact that the X11 keysyms which
++    // correspond to the ascii characters space .. tilde
++    // are in consequtive order.
++    if ((keysym >= XK_space) && (keysym <= XK_asciitilde)) {
++      key_event = ascii_to_key_event[keysym - XK_space];
++      }
++    else switch (keysym) {
++      case XK_KP_1:
+ #ifdef XK_KP_End
+-    case XK_KP_End:
++      case XK_KP_End:
+ #endif
+-      key_event = BX_KEY_KP_END; break;
++        key_event = BX_KEY_KP_END; break;
+ 
+-    case XK_KP_2:
++      case XK_KP_2:
+ #ifdef XK_KP_Down
+-    case XK_KP_Down:
++      case XK_KP_Down:
+ #endif
+-      key_event = BX_KEY_KP_DOWN; break;
++        key_event = BX_KEY_KP_DOWN; break;
+ 
+-    case XK_KP_3:
++      case XK_KP_3:
+ #ifdef XK_KP_Page_Down
+-    case XK_KP_Page_Down:
++      case XK_KP_Page_Down:
+ #endif
+-      key_event = BX_KEY_KP_PAGE_DOWN; break;
++        key_event = BX_KEY_KP_PAGE_DOWN; break;
+ 
+-    case XK_KP_4:
++      case XK_KP_4:
+ #ifdef XK_KP_Left
+-    case XK_KP_Left:
++      case XK_KP_Left:
+ #endif
+-      key_event = BX_KEY_KP_LEFT; break;
++        key_event = BX_KEY_KP_LEFT; break;
+ 
+-    case XK_KP_5:
+-      key_event = BX_KEY_KP_5; break;
++      case XK_KP_5:
++        key_event = BX_KEY_KP_5; break;
+ 
+-    case XK_KP_6:
++      case XK_KP_6:
+ #ifdef XK_KP_Right
+-    case XK_KP_Right:
++      case XK_KP_Right:
+ #endif
+-      key_event = BX_KEY_KP_RIGHT; break;
++        key_event = BX_KEY_KP_RIGHT; break;
+ 
+-    case XK_KP_7:
++      case XK_KP_7:
+ #ifdef XK_KP_Home
+-    case XK_KP_Home:
++      case XK_KP_Home:
+ #endif
+-      key_event = BX_KEY_KP_HOME; break;
++        key_event = BX_KEY_KP_HOME; break;
+ 
+-    case XK_KP_8:
++      case XK_KP_8:
+ #ifdef XK_KP_Up
+-    case XK_KP_Up:
++      case XK_KP_Up:
+ #endif
+-      key_event = BX_KEY_KP_UP; break;
++        key_event = BX_KEY_KP_UP; break;
+ 
+-    case XK_KP_9:
++      case XK_KP_9:
+ #ifdef XK_KP_Page_Up
+-    case XK_KP_Page_Up:
++      case XK_KP_Page_Up:
+ #endif
+-      key_event = BX_KEY_KP_PAGE_UP; break;
++        key_event = BX_KEY_KP_PAGE_UP; break;
+ 
+-    case XK_KP_0:
++      case XK_KP_0:
+ #ifdef XK_KP_Insert
+-    case XK_KP_Insert:
+-      key_event = BX_KEY_KP_INSERT; break;
++      case XK_KP_Insert:
+ #endif
++        key_event = BX_KEY_KP_INSERT; break;
+ 
+-    case XK_KP_Decimal:
++      case XK_KP_Decimal:
+ #ifdef XK_KP_Delete
+-    case XK_KP_Delete:
+-      key_event = BX_KEY_KP_DELETE; break;
++      case XK_KP_Delete:
+ #endif
++        key_event = BX_KEY_KP_DELETE; break;
+ 
+ #ifdef XK_KP_Enter
+-    case XK_KP_Enter:
+-      key_event = BX_KEY_KP_ENTER; break;
++      case XK_KP_Enter:
++        key_event = BX_KEY_KP_ENTER; break;
+ #endif
+ 
+-    case XK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
+-    case XK_KP_Add:      key_event = BX_KEY_KP_ADD; break;
++      case XK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
++      case XK_KP_Add:      key_event = BX_KEY_KP_ADD; break;
+ 
+-    case XK_KP_Multiply: key_event = BX_KEY_KP_MULTIPLY; break;
+-    case XK_KP_Divide:   key_event = BX_KEY_KP_DIVIDE; break;
+-
+-
+-    case XK_Up:          key_event = BX_KEY_UP; break;
+-    case XK_Down:        key_event = BX_KEY_DOWN; break;
+-    case XK_Left:        key_event = BX_KEY_LEFT; break;
+-    case XK_Right:       key_event = BX_KEY_RIGHT; break;
+-
+-
+-    case XK_Delete:      key_event = BX_KEY_DELETE; break;
+-    case XK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
+-    case XK_Tab:         key_event = BX_KEY_TAB; break;
+-    case XK_Return:      key_event = BX_KEY_ENTER; break;
+-    case XK_Escape:      key_event = BX_KEY_ESC; break;
+-    case XK_F1:          key_event = BX_KEY_F1; break;
+-    case XK_F2:          key_event = BX_KEY_F2; break;
+-    case XK_F3:          key_event = BX_KEY_F3; break;
+-    case XK_F4:          key_event = BX_KEY_F4; break;
+-    case XK_F5:          key_event = BX_KEY_F5; break;
+-    case XK_F6:          key_event = BX_KEY_F6; break;
+-    case XK_F7:          key_event = BX_KEY_F7; break;
+-    case XK_F8:          key_event = BX_KEY_F8; break;
+-    case XK_F9:          key_event = BX_KEY_F9; break;
+-    case XK_F10:         key_event = BX_KEY_F10; break;
+-    case XK_F11:         key_event = BX_KEY_F11; break;
+-    case XK_F12:         key_event = BX_KEY_F12; break;
+-    case XK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+-    case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
+-    case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
+-    case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
+-    case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
+-    case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+-
+-    case XK_Insert:      key_event = BX_KEY_INSERT; break;
+-    case XK_Home:        key_event = BX_KEY_HOME; break;
+-    case XK_End:         key_event = BX_KEY_END; break;
+-    case XK_Page_Up:     key_event = BX_KEY_PAGE_UP; break;
+-    case XK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
+-
+-    default:
+-      BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
+-      return;
++      case XK_KP_Multiply: key_event = BX_KEY_KP_MULTIPLY; break;
++      case XK_KP_Divide:   key_event = BX_KEY_KP_DIVIDE; break;
++
++
++      case XK_Up:          key_event = BX_KEY_UP; break;
++      case XK_Down:        key_event = BX_KEY_DOWN; break;
++      case XK_Left:        key_event = BX_KEY_LEFT; break;
++      case XK_Right:       key_event = BX_KEY_RIGHT; break;
++
++
++      case XK_Delete:      key_event = BX_KEY_DELETE; break;
++      case XK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
++      case XK_Tab:         key_event = BX_KEY_TAB; break;
++      case XK_Return:      key_event = BX_KEY_ENTER; break;
++      case XK_Escape:      key_event = BX_KEY_ESC; break;
++      case XK_F1:          key_event = BX_KEY_F1; break;
++      case XK_F2:          key_event = BX_KEY_F2; break;
++      case XK_F3:          key_event = BX_KEY_F3; break;
++      case XK_F4:          key_event = BX_KEY_F4; break;
++      case XK_F5:          key_event = BX_KEY_F5; break;
++      case XK_F6:          key_event = BX_KEY_F6; break;
++      case XK_F7:          key_event = BX_KEY_F7; break;
++      case XK_F8:          key_event = BX_KEY_F8; break;
++      case XK_F9:          key_event = BX_KEY_F9; break;
++      case XK_F10:         key_event = BX_KEY_F10; break;
++      case XK_F11:         key_event = BX_KEY_F11; break;
++      case XK_F12:         key_event = BX_KEY_F12; break;
++      case XK_Control_L:   key_event = BX_KEY_CTRL_L; break;
++      case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
++      case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
++      case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
++      case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
++      case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
++
++      case XK_Insert:      key_event = BX_KEY_INSERT; break;
++      case XK_Home:        key_event = BX_KEY_HOME; break;
++      case XK_End:         key_event = BX_KEY_END; break;
++      case XK_Page_Up:     key_event = BX_KEY_PAGE_UP; break;
++      case XK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
++
++      default:
++        BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
++        return;
+       break;
++      }
+     }
++  else /* use mapping */
++   if((key_event=bx_keymap.getBXKey(keysym))==BX_KEY_UNHANDLED){
++        BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
++        return;
++        }
+ 
+   if (press_release)
+     key_event |= BX_KEY_RELEASED;
+Binary files bochs/gui/x.o and bochs-keymap/gui/x.o differ
+--- bochs/bochs.h	Sun Dec  2 23:25:28 2001
++++ bochs-keymap/bochs.h	Sat Dec  1 13:08:19 2001
+@@ -493,6 +493,7 @@
+ 
+ #include "gui/gui.h"
+ #include "gui/control.h"
++#include "gui/keymap.h"
+ extern bx_gui_c   bx_gui;
+ #include "iodev/iodev.h"
+ 
+@@ -590,6 +591,11 @@
+   bx_param_num_c *Odmatimer;
+   } bx_sb16_options;
+ 
++typedef struct {
++  bx_param_bool_c *OuseMapping;
++  bx_param_string_c *Okeymap;
++  } bx_keyboard_options;
++
+ #define BX_BOOT_FLOPPYA 0
+ #define BX_BOOT_DISKC   1
+ 
+@@ -622,6 +628,7 @@
+   bx_param_bool_c   *OnewHardDriveSupport;
+   bx_load32bitOSImage_t load32bitOSImage;
+   bx_log_options    log;
++  bx_keyboard_options keyboard;
+   } bx_options_t;
+ 
+ extern bx_options_t bx_options;
+--- bochs/main.cc	Sun Dec  2 23:24:03 2001
++++ bochs-keymap/main.cc	Sat Dec  1 13:08:46 2001
+@@ -97,6 +97,7 @@
+   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
+   // log options: ignore debug, report info and error, crash on panic.
+   { NULL, { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_ASK } },
++  { NULL, NULL }, // KeyboardMapping
+   };
+ 
+ static void parse_line_unformatted(char *context, char *line);
+@@ -736,6 +737,14 @@
+       "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
+       0, BX_MAX_INT,
+       0);
++  bx_options.keyboard.OuseMapping = new bx_param_bool_c(BXP_KEYBOARD_USEMAPPING,
++      "Use keyboard mapping",
++      NULL,
++      0);
++  bx_options.keyboard.Okeymap = new bx_param_string_c (BXP_KEYBOARD_MAP,
++      "Map name",
++      NULL,
++      "", 10);
+   bx_param_c *other_init_list[] = {
+     bx_options.Okeyboard_serial_delay,
+       bx_options.Ofloppy_command_delay,
+@@ -744,6 +753,8 @@
+       bx_options.cmos.Opath,
+       bx_options.cmos.Otime0,
+       SIM->get_param (BXP_LOAD32BITOS),
++      bx_options.keyboard.OuseMapping,
++      bx_options.keyboard.Okeymap,
+       NULL
+   };
+   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
+@@ -1774,6 +1785,18 @@
+       }
+     }
+ 
++  else if (!strcmp(params[0], "keyboardmapping")) {
++    for (i=1; i<num_params; i++) {
++      if (!strncmp(params[i], "enabled=", 8)) {
++        bx_options.keyboard.OuseMapping->set (atol(&params[i][8]));
++        }
++      else if (!strncmp(params[i], "map=", 4)) {
++        bx_options.keyboard.Okeymap->set (strdup(&params[i][4]));
++        }
++    }
++  }
++
++
+   else {
+     BX_PANIC(( "%s: directive '%s' not understood", context, params[0]));
+     }
+@@ -1939,6 +1962,13 @@
+   return 0;
+ }
+ 
++int
++bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
++{
++  fprintf (fp, "keyboardmapping: enabled=%d, map=%s\n", opt->OuseMapping->get(), opt->Okeymap->getptr());
++  return 0;
++}
++
+ // return values:
+ //   0: written ok
+ //  -1: failed
+@@ -1994,6 +2024,7 @@
+   fprintf (fp, "newharddrivesupport: enabled=%d\n", bx_options.OnewHardDriveSupport->get ());
+   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
+   bx_write_log_options (fp, &bx_options.log);
++  bx_write_keyboard_options (fp, &bx_options.keyboard);
+   fclose (fp);
+   return 0;
+ }
