@@ -1161,7 +1161,7 @@ bx_ne2k_c::init(bx_devices_c *d)
     // Read in values from config file
     BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
     BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
-    memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.macaddr, 6);
+    memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
 
     BX_NE2K_THIS s.tx_timer_index =
       bx_pc_system.register_timer(this, tx_timer_handler, 0,
@@ -1213,7 +1213,7 @@ bx_ne2k_c::init(bx_devices_c *d)
     // Attach to the simulated ethernet dev
     BX_NE2K_THIS ethdev = eth_locator_c::create(bx_options.ne2k.Oethmod->getptr (), 
 						bx_options.ne2k.Oethdev->getptr (),
-				    (const char *) bx_options.ne2k.macaddr,
+				    (const char *) bx_options.ne2k.Omacaddr->getptr (),
 						rx_handler, 
 						this);
     
@@ -1222,7 +1222,7 @@ bx_ne2k_c::init(bx_devices_c *d)
 		bx_options.ne2k.Oethmod->getptr ()));
       
       BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
-				    (const char *) bx_options.ne2k.macaddr,
+				    (const char *) bx_options.ne2k.Omacaddr->getptr (),
 						  rx_handler, 
 						  this);
       if (BX_NE2K_THIS ethdev == NULL)

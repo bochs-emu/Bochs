@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.26 2001-06-21 14:55:38 bdenney Exp $
+ * $Id: siminterface.cc,v 1.27 2001-06-21 19:27:05 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -433,6 +433,8 @@ bx_param_string_c::bx_param_string_c (bx_id id,
   this->maxsize = maxsize;
   strncpy (this->val, initial_val, maxsize);
   strncpy (this->initial_val, initial_val, maxsize);
+  this->options = new bx_param_num_c (BXP_NULL,
+      "stringoptions", NULL, 0, BX_MAX_INT, 0);
   set (initial_val);
 }
 
@@ -452,7 +454,10 @@ bx_param_string_c::set_handler (param_string_event_handler handler)
 Bit32s
 bx_param_string_c::get (char *buf, int len)
 {
-  strncpy (buf, val, len);
+  if (options->get () & BX_RAW_BYTES)
+    memcpy (buf, val, len);
+  else
+    strncpy (buf, val, len);
   if (handler) {
     // the handler can choose to replace the value in val/len.  Also its
     // return value is passed back as the return value of get.
@@ -468,7 +473,10 @@ bx_param_string_c::set (char *buf)
     // the handler can return a different char* to be copied into the value
     buf = (*handler)(this, 1, buf, -1);
   }
-  strncpy (val, buf, maxsize);
+  if (options->get () & BX_RAW_BYTES)
+    memcpy (val, buf, maxsize);
+  else
+    strncpy (val, buf, maxsize);
 }
 
 #if 0

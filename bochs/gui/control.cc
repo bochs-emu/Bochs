@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.26 2001-06-21 18:34:50 bdenney Exp $
+ * $Id: control.cc,v 1.27 2001-06-21 19:27:05 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -217,6 +217,9 @@ ask_yn (char *prompt, Bit32u the_default, Bit32u *out)
   }
 }
 
+// returns -1 on error (stream closed or  something)
+// returns 0 if default was taken
+// returns 1 if value changed
 int 
 ask_string (char *prompt, char *the_default, char *out)
 {
@@ -234,7 +237,7 @@ ask_string (char *prompt, char *the_default, char *out)
     return 0;
   }
   strcpy (out, clean);
-  return 0;
+  return 1;
 }
 
 /******************************************************************/
@@ -682,12 +685,28 @@ bx_param_enum_c::text_print (FILE *fp)
 void
 bx_param_string_c::text_print (FILE *fp)
 {
-  //fprintf (fp, "string parameter, id=%u, name=%s\n", get_id (), get_name ());
-  //fprintf (fp, "value=%s\n", getptr ());
+  char *value = getptr ();
+  int opts = options->get ();
+  if (opts & BX_RAW_BYTES) {
+    char buffer[1024];
+    buffer[0] = 0;
+    char sep_string[2];
+    sep_string[0] = separator;
+    sep_string[1] = 0;
+    for (int i=0; i<maxsize; i++) {
+      char eachbyte[16];
+      sprintf (eachbyte, "%s%02x", (i>0)?sep_string : "", (unsigned int)0xff&val[i]);
+      strncat (buffer, eachbyte, sizeof(buffer));
+    }
+    if (strlen (buffer) > sizeof(buffer)-4) {
+      assert (0); // raw byte print buffer is probably overflowing. increase the max or make it dynamic
+    }
+    value = buffer;
+  }
   if (get_format ()) {
-    fprintf (fp, get_format (), getptr ());
+    fprintf (fp, get_format (), value);
   } else {
-    fprintf (fp, "%s: %s", get_name (), getptr ());
+    fprintf (fp, "%s: %s", get_name (), value);
   }
 }
 
@@ -775,6 +794,29 @@ bx_param_enum_c::text_ask (FILE *fpin, FILE *fpout)
   return 0;
 }
 
+int parse_raw_bytes (char *dest, char *src, int destsize, char separator)
+{
+  printf ("parsing src='%s'\n", src);
+  int i;
+  unsigned int n;
+  for (i=0; i<destsize; i++) 
+    dest[i] = 0;
+  for (i=0; i<destsize; i++) {
+    while (*src == separator)
+      src++;
+    if (*src == 0) break;
+    // try to read a byte of hex
+    if (sscanf (src, "%02x", &n) == 1) {
+      printf ("found a byte %02x\n", n);
+      dest[i] = n;
+      src+=2;
+    } else {
+      return -1;
+    }
+  }
+  return 0;
+}
+
 int 
 bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
 {
@@ -787,12 +829,24 @@ bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
     fprintf (fpout, "\n");
     prompt = "Enter a new value, or press return for no change.\n";
   }
-  //FIXME
-  char buffer[1024];
-  status = ask_string (prompt, getptr(), buffer);
-  if (status < 0) return status;
-  set (buffer);
-  return 0;
+  while (1) {
+    char buffer[1024];
+    status = ask_string (prompt, getptr(), buffer);
+    if (status < 0) return status;
+    int opts = options->get ();
+    char buffer2[1024];
+    strcpy (buffer2, buffer);
+    if (status == 1 && opts & BX_RAW_BYTES) {
+      // copy raw hex into buffer
+      status = parse_raw_bytes (buffer, buffer2, maxsize, separator);
+      if (status < 0) {
+	fprintf (fpout, "Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
+	continue;
+      }
+    }
+    set (buffer);
+    return 0;
+  }
 }
 
 int

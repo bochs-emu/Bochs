@@ -594,7 +594,7 @@ typedef struct {
   bx_param_bool_c *Ovalid;
   bx_param_num_c *Oioaddr;
   bx_param_num_c *Oirq;
-  unsigned char macaddr[6];
+  bx_param_string_c *Omacaddr;
   bx_param_string_c *Oethmod;
   bx_param_string_c *Oethdev;
   } bx_ne2k_options;

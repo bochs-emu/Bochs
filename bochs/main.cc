@@ -83,7 +83,7 @@ bx_options_t bx_options = {
   NULL,       // default private_colormap
   NULL,          // default i440FXSupport
   {NULL, NULL},  // cmos path, cmos image boolean
-  { 0, 0, 0, {0,0,0,0,0,0}, NULL, NULL }, // ne2k
+  { NULL, NULL, NULL, NULL, NULL, NULL }, // ne2k
   NULL,          // newHardDriveSupport
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
   // log options: ignore debug, report info and error, crash on panic.
@@ -496,6 +496,12 @@ void bx_init_options ()
       "to be written",
       0, 15,
       0);
+  bx_options.ne2k.Omacaddr = new bx_param_string_c (BXP_NE2K_MACADDR,
+      "MAC Address",
+      "to be written",
+      "", 6);
+  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->BX_RAW_BYTES);
+  bx_options.ne2k.Omacaddr->set_separator (':');
   bx_options.ne2k.Oethmod = new bx_param_string_c (BXP_NE2K_ETHMOD,
       "Ethernet module",
       "to be written",
@@ -508,8 +514,7 @@ void bx_init_options ()
     bx_options.ne2k.Ovalid,
     bx_options.ne2k.Oioaddr,
     bx_options.ne2k.Oirq,
-#warning cannot set mac address with this interface
-    // mac address needs work
+    bx_options.ne2k.Omacaddr,
     bx_options.ne2k.Oethmod,
     bx_options.ne2k.Oethdev,
     NULL
@@ -1421,6 +1426,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
 #endif
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
+    char tmpchar[6];
     bx_options.ne2k.Ovalid->set (0);
     if ((num_params < 4) || (num_params > 6)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
@@ -1448,7 +1454,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
       return;
       }
     for (i=0;i<6;i++)
-      bx_options.ne2k.macaddr[i] = tmp[i];
+      tmpchar[i] = (unsigned char)tmp[i];
+    bx_options.ne2k.Omacaddr->set (tmpchar);
     if (num_params > 4) {
       if (strncmp(params[4], "ethmod=", 7)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
@@ -1575,15 +1582,16 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
     fprintf (fp, "# no ne2k\n");
     return 0;
   }
+  char *ptr = opt->Omacaddr->getptr ();
   fprintf (fp, "ne2k: ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s\n",
       opt->Oioaddr->get (), 
       opt->Oirq->get (),
-      opt->macaddr[0],
-      opt->macaddr[1],
-      opt->macaddr[2],
-      opt->macaddr[3],
-      opt->macaddr[4],
-      opt->macaddr[5],
+      (unsigned int)ptr[0],
+      (unsigned int)ptr[1],
+      (unsigned int)ptr[2],
+      (unsigned int)ptr[3],
+      (unsigned int)ptr[4],
+      (unsigned int)ptr[5],
       opt->Oethmod->getptr (),
       opt->Oethdev->getptr ());
   return 0;
