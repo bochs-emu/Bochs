@@ -86,7 +86,8 @@ OBJS = \
 	segment_ctrl.o \
 	soft_int.o \
 	string.o \
-	bcd.o
+	bcd.o \
+	apic.o
 
 BX_INCLUDES = ../bochs.h ../config.h
 
