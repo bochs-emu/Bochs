@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.13 2002-09-20 23:17:51 kevinlawton Exp $
+// $Id: stack16.cc,v 1.14 2003-03-17 00:41:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,7 +67,7 @@ BX_CPU_C::POP_Ew(bxInstruction_c *i)
     // If used, the value of ESP after the pop is used to calculate
     // the address.
     if (i->as32L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
-      BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
+      BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
       }
     write_virtual_word(i->seg(), RMAddr(i), &val16);
     }

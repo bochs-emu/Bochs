@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.10 2003-02-08 05:48:01 ptrumpet Exp $
+// $Id: stack64.cc,v 1.11 2003-03-17 00:41:01 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ BX_CPU_C::POP_Eq(bxInstruction_c *i)
     // the address.
     if (i->as64L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
-      BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
+      BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
       }
     write_virtual_qword(i->seg(), RMAddr(i), &val64);
     }

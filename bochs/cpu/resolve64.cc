@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.5 2002-11-19 05:47:43 bdenney Exp $
+// $Id: resolve64.cc,v 1.6 2003-03-17 00:41:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,157 +36,157 @@
 #if BX_SUPPORT_X86_64
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm0(bxInstruction_c *i)
 {
   RMAddr(i) = RAX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm1(bxInstruction_c *i)
 {
   RMAddr(i) = RCX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm2(bxInstruction_c *i)
 {
   RMAddr(i) = RDX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm3(bxInstruction_c *i)
 {
   RMAddr(i) = RBX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm5(bxInstruction_c *i)
 {
   // eip hasn't been bumped yet when this is called.  must choose the saved value.
   RMAddr(i) = BX_CPU_THIS_PTR prev_eip + i->ilen() + (Bit32s)i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm6(bxInstruction_c *i)
 {
   RMAddr(i) = RSI;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm7(bxInstruction_c *i)
 {
   RMAddr(i) = RDI;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm8(bxInstruction_c *i)
 {
   RMAddr(i) = R8;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm9(bxInstruction_c *i)
 {
   RMAddr(i) = R9;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm10(bxInstruction_c *i)
 {
   RMAddr(i) = R10;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm11(bxInstruction_c *i)
 {
   RMAddr(i) = R11;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm12(bxInstruction_c *i)
 {
   RMAddr(i) = R12;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm13(bxInstruction_c *i)
 {
   RMAddr(i) = R13;
 }
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm14(bxInstruction_c *i)
 {
   RMAddr(i) = R14;
 }
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm15(bxInstruction_c *i)
 {
   RMAddr(i) = R15;
 }
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm0(bxInstruction_c *i)
 {
   RMAddr(i) = RAX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm1(bxInstruction_c *i)
 {
   RMAddr(i) = RCX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm2(bxInstruction_c *i)
 {
   RMAddr(i) = RDX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm3(bxInstruction_c *i)
 {
   RMAddr(i) = RBX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm5(bxInstruction_c *i)
 {
   RMAddr(i) = RBP + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm6(bxInstruction_c *i)
 {
   RMAddr(i) = RSI + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm7(bxInstruction_c *i)
 {
   RMAddr(i) = RDI + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm8(bxInstruction_c *i)
 {
   RMAddr(i) = R8 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm9(bxInstruction_c *i)
 {
   RMAddr(i) = R9 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm10(bxInstruction_c *i)
 {
   RMAddr(i) = R10 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm11(bxInstruction_c *i)
 {
   RMAddr(i) = R11 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm12(bxInstruction_c *i)
 {
   RMAddr(i) = R12 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm13(bxInstruction_c *i)
 {
   RMAddr(i) = R13 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm14(bxInstruction_c *i)
 {
   RMAddr(i) = R14 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm15(bxInstruction_c *i)
 {
   RMAddr(i) = R15 + (Bit32s) i->displ32u();
@@ -194,7 +194,7 @@ BX_CPU_C::Resolve64Mod1or2Rm15(bxInstruction_c *i)
 
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base0(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -202,7 +202,7 @@ BX_CPU_C::Resolve64Mod0Base0(bxInstruction_c *i)
   else
     RMAddr(i) = RAX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base1(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -210,7 +210,7 @@ BX_CPU_C::Resolve64Mod0Base1(bxInstruction_c *i)
   else
     RMAddr(i) = RCX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base2(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -218,7 +218,7 @@ BX_CPU_C::Resolve64Mod0Base2(bxInstruction_c *i)
   else
     RMAddr(i) = RDX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base3(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -226,7 +226,7 @@ BX_CPU_C::Resolve64Mod0Base3(bxInstruction_c *i)
   else
     RMAddr(i) = RBX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base4(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -234,7 +234,7 @@ BX_CPU_C::Resolve64Mod0Base4(bxInstruction_c *i)
   else
     RMAddr(i) = RSP;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base5(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4) {
@@ -243,7 +243,7 @@ BX_CPU_C::Resolve64Mod0Base5(bxInstruction_c *i)
   else
     RMAddr(i) = (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base6(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -251,7 +251,7 @@ BX_CPU_C::Resolve64Mod0Base6(bxInstruction_c *i)
   else
     RMAddr(i) = RSI;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base7(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -259,7 +259,7 @@ BX_CPU_C::Resolve64Mod0Base7(bxInstruction_c *i)
   else
     RMAddr(i) = RDI;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base8(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -267,7 +267,7 @@ BX_CPU_C::Resolve64Mod0Base8(bxInstruction_c *i)
   else
     RMAddr(i) = R8;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base9(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -275,7 +275,7 @@ BX_CPU_C::Resolve64Mod0Base9(bxInstruction_c *i)
   else
     RMAddr(i) = R9;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base10(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -283,7 +283,7 @@ BX_CPU_C::Resolve64Mod0Base10(bxInstruction_c *i)
   else
     RMAddr(i) = R10;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base11(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -291,7 +291,7 @@ BX_CPU_C::Resolve64Mod0Base11(bxInstruction_c *i)
   else
     RMAddr(i) = R11;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base12(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -299,7 +299,7 @@ BX_CPU_C::Resolve64Mod0Base12(bxInstruction_c *i)
   else
     RMAddr(i) = R12;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base13(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -307,7 +307,7 @@ BX_CPU_C::Resolve64Mod0Base13(bxInstruction_c *i)
   else
     RMAddr(i) = R13;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base14(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -315,7 +315,7 @@ BX_CPU_C::Resolve64Mod0Base14(bxInstruction_c *i)
   else
     RMAddr(i) = R14;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base15(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -327,7 +327,7 @@ BX_CPU_C::Resolve64Mod0Base15(bxInstruction_c *i)
 
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base0(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -335,7 +335,7 @@ BX_CPU_C::Resolve64Mod1or2Base0(bxInstruction_c *i)
   else
     RMAddr(i) = RAX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base1(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -343,7 +343,7 @@ BX_CPU_C::Resolve64Mod1or2Base1(bxInstruction_c *i)
   else
     RMAddr(i) = RCX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base2(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -351,7 +351,7 @@ BX_CPU_C::Resolve64Mod1or2Base2(bxInstruction_c *i)
   else
     RMAddr(i) = RDX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base3(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -359,7 +359,7 @@ BX_CPU_C::Resolve64Mod1or2Base3(bxInstruction_c *i)
   else
     RMAddr(i) = RBX + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base4(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -367,7 +367,7 @@ BX_CPU_C::Resolve64Mod1or2Base4(bxInstruction_c *i)
   else
     RMAddr(i) = RSP + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base5(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -375,7 +375,7 @@ BX_CPU_C::Resolve64Mod1or2Base5(bxInstruction_c *i)
   else
     RMAddr(i) = RBP + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base6(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -383,7 +383,7 @@ BX_CPU_C::Resolve64Mod1or2Base6(bxInstruction_c *i)
   else
     RMAddr(i) = RSI + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base7(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -391,7 +391,7 @@ BX_CPU_C::Resolve64Mod1or2Base7(bxInstruction_c *i)
   else
     RMAddr(i) = RDI + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base8(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -399,7 +399,7 @@ BX_CPU_C::Resolve64Mod1or2Base8(bxInstruction_c *i)
   else
     RMAddr(i) = R8 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base9(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -407,7 +407,7 @@ BX_CPU_C::Resolve64Mod1or2Base9(bxInstruction_c *i)
   else
     RMAddr(i) = R9 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base10(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -415,7 +415,7 @@ BX_CPU_C::Resolve64Mod1or2Base10(bxInstruction_c *i)
   else
     RMAddr(i) = R10 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base11(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -423,7 +423,7 @@ BX_CPU_C::Resolve64Mod1or2Base11(bxInstruction_c *i)
   else
     RMAddr(i) = R11 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base12(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -431,7 +431,7 @@ BX_CPU_C::Resolve64Mod1or2Base12(bxInstruction_c *i)
   else
     RMAddr(i) = R12 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base13(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -439,7 +439,7 @@ BX_CPU_C::Resolve64Mod1or2Base13(bxInstruction_c *i)
   else
     RMAddr(i) = R13 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base14(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)
@@ -447,7 +447,7 @@ BX_CPU_C::Resolve64Mod1or2Base14(bxInstruction_c *i)
   else
     RMAddr(i) = R14 + (Bit32s) i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base15(bxInstruction_c *i)
 {
   if (i->sibIndex() != 4)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.44 2003-02-13 15:04:00 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.45 2003-03-17 00:40:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ static unsigned BxMemRegsUsed16[8] = {
   };
 #endif
 
-static BxExecutePtr_t BxResolve16Mod0[8] = {
+static BxExecutePtr_tR BxResolve16Mod0[8] = {
   &BX_CPU_C::Resolve16Mod0Rm0,
   &BX_CPU_C::Resolve16Mod0Rm1,
   &BX_CPU_C::Resolve16Mod0Rm2,
@@ -98,7 +98,7 @@ static BxExecutePtr_t BxResolve16Mod0[8] = {
   &BX_CPU_C::Resolve16Mod0Rm7
   };
 
-static BxExecutePtr_t BxResolve16Mod1or2[8] = {
+static BxExecutePtr_tR BxResolve16Mod1or2[8] = {
   &BX_CPU_C::Resolve16Mod1or2Rm0,
   &BX_CPU_C::Resolve16Mod1or2Rm1,
   &BX_CPU_C::Resolve16Mod1or2Rm2,
@@ -109,7 +109,7 @@ static BxExecutePtr_t BxResolve16Mod1or2[8] = {
   &BX_CPU_C::Resolve16Mod1or2Rm7
   };
 
-static BxExecutePtr_t BxResolve32Mod0[8] = {
+static BxExecutePtr_tR BxResolve32Mod0[8] = {
   &BX_CPU_C::Resolve32Mod0Rm0,
   &BX_CPU_C::Resolve32Mod0Rm1,
   &BX_CPU_C::Resolve32Mod0Rm2,
@@ -120,7 +120,7 @@ static BxExecutePtr_t BxResolve32Mod0[8] = {
   &BX_CPU_C::Resolve32Mod0Rm7
   };
 
-static BxExecutePtr_t BxResolve32Mod1or2[8] = {
+static BxExecutePtr_tR BxResolve32Mod1or2[8] = {
   &BX_CPU_C::Resolve32Mod1or2Rm0,
   &BX_CPU_C::Resolve32Mod1or2Rm1,
   &BX_CPU_C::Resolve32Mod1or2Rm2,
@@ -131,7 +131,7 @@ static BxExecutePtr_t BxResolve32Mod1or2[8] = {
   &BX_CPU_C::Resolve32Mod1or2Rm7
   };
 
-static BxExecutePtr_t BxResolve32Mod0Base[8] = {
+static BxExecutePtr_tR BxResolve32Mod0Base[8] = {
   &BX_CPU_C::Resolve32Mod0Base0,
   &BX_CPU_C::Resolve32Mod0Base1,
   &BX_CPU_C::Resolve32Mod0Base2,
@@ -142,7 +142,7 @@ static BxExecutePtr_t BxResolve32Mod0Base[8] = {
   &BX_CPU_C::Resolve32Mod0Base7,
   };
 
-static BxExecutePtr_t BxResolve32Mod1or2Base[8] = {
+static BxExecutePtr_tR BxResolve32Mod1or2Base[8] = {
   &BX_CPU_C::Resolve32Mod1or2Base0,
   &BX_CPU_C::Resolve32Mod1or2Base1,
   &BX_CPU_C::Resolve32Mod1or2Base2,
@@ -2793,7 +2793,7 @@ modrm_done:
         else {
            BxOpcodeInfo_t *OpcodeInfoPtr = BxOpcodeInfo[b1+offset].AnotherArray;
            instruction->execute = OpcodeInfoPtr[op].ExecutePtr;
-           attr |= OpcodeInfoPtr[op].Attr; 
+           attr |= OpcodeInfoPtr[op].Attr;
         }
       }
       // (See note immediately above for comment)
@@ -2975,7 +2975,7 @@ BX_CPU_C::BxError(bxInstruction_c *i)
   BX_CPU_THIS_PTR UndefinedOpcode(i);
 }
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolveError(bxInstruction_c *i)
 {
   BX_PANIC(("BxResolveError: instruction with op1=0x%x", i->b1()));

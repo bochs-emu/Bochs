@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.16 2002-09-24 00:44:56 kevinlawton Exp $
+// $Id: stack32.cc,v 1.17 2003-03-17 00:41:01 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ BX_CPU_C::POP_Ed(bxInstruction_c *i)
     // the address.
     if (i->as32L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
-      BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
+      BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
       }
     write_virtual_dword(i->seg(), RMAddr(i), &val32);
     }

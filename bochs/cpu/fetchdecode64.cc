@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.41 2003-03-13 00:45:44 ptrumpet Exp $
+// $Id: fetchdecode64.cc,v 1.42 2003-03-17 00:40:59 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -101,7 +101,7 @@ static unsigned BxMemRegsUsed16[8] = {
   };
 #endif
 
-static BxExecutePtr_t BxResolve32Mod0[8] = {
+static BxExecutePtr_tR BxResolve32Mod0[8] = {
   &BX_CPU_C::Resolve32Mod0Rm0,
   &BX_CPU_C::Resolve32Mod0Rm1,
   &BX_CPU_C::Resolve32Mod0Rm2,
@@ -112,7 +112,7 @@ static BxExecutePtr_t BxResolve32Mod0[8] = {
   &BX_CPU_C::Resolve32Mod0Rm7
   };
 
-static BxExecutePtr_t BxResolve32Mod1or2[8] = {
+static BxExecutePtr_tR BxResolve32Mod1or2[8] = {
   &BX_CPU_C::Resolve32Mod1or2Rm0,
   &BX_CPU_C::Resolve32Mod1or2Rm1,
   &BX_CPU_C::Resolve32Mod1or2Rm2,
@@ -123,7 +123,7 @@ static BxExecutePtr_t BxResolve32Mod1or2[8] = {
   &BX_CPU_C::Resolve32Mod1or2Rm7
   };
 
-static BxExecutePtr_t BxResolve32Mod0Base[8] = {
+static BxExecutePtr_tR BxResolve32Mod0Base[8] = {
   &BX_CPU_C::Resolve32Mod0Base0,
   &BX_CPU_C::Resolve32Mod0Base1,
   &BX_CPU_C::Resolve32Mod0Base2,
@@ -134,7 +134,7 @@ static BxExecutePtr_t BxResolve32Mod0Base[8] = {
   &BX_CPU_C::Resolve32Mod0Base7,
   };
 
-static BxExecutePtr_t BxResolve32Mod1or2Base[8] = {
+static BxExecutePtr_tR BxResolve32Mod1or2Base[8] = {
   &BX_CPU_C::Resolve32Mod1or2Base0,
   &BX_CPU_C::Resolve32Mod1or2Base1,
   &BX_CPU_C::Resolve32Mod1or2Base2,
@@ -145,7 +145,7 @@ static BxExecutePtr_t BxResolve32Mod1or2Base[8] = {
   &BX_CPU_C::Resolve32Mod1or2Base7,
   };
 
-static BxExecutePtr_t BxResolve64Mod0[16] = {
+static BxExecutePtr_tR BxResolve64Mod0[16] = {
   &BX_CPU_C::Resolve64Mod0Rm0,
   &BX_CPU_C::Resolve64Mod0Rm1,
   &BX_CPU_C::Resolve64Mod0Rm2,
@@ -164,7 +164,7 @@ static BxExecutePtr_t BxResolve64Mod0[16] = {
   &BX_CPU_C::Resolve64Mod0Rm15
   };
 
-static BxExecutePtr_t BxResolve64Mod1or2[16] = {
+static BxExecutePtr_tR BxResolve64Mod1or2[16] = {
   &BX_CPU_C::Resolve64Mod1or2Rm0,
   &BX_CPU_C::Resolve64Mod1or2Rm1,
   &BX_CPU_C::Resolve64Mod1or2Rm2,
@@ -183,7 +183,7 @@ static BxExecutePtr_t BxResolve64Mod1or2[16] = {
   &BX_CPU_C::Resolve64Mod1or2Rm15
   };
 
-static BxExecutePtr_t BxResolve64Mod0Base[16] = {
+static BxExecutePtr_tR BxResolve64Mod0Base[16] = {
   &BX_CPU_C::Resolve64Mod0Base0,
   &BX_CPU_C::Resolve64Mod0Base1,
   &BX_CPU_C::Resolve64Mod0Base2,
@@ -202,7 +202,7 @@ static BxExecutePtr_t BxResolve64Mod0Base[16] = {
   &BX_CPU_C::Resolve64Mod0Base15,
   };
 
-static BxExecutePtr_t BxResolve64Mod1or2Base[16] = {
+static BxExecutePtr_tR BxResolve64Mod1or2Base[16] = {
   &BX_CPU_C::Resolve64Mod1or2Base0,
   &BX_CPU_C::Resolve64Mod1or2Base1,
   &BX_CPU_C::Resolve64Mod1or2Base2,

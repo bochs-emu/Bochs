@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve32.cc,v 1.8 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: resolve32.cc,v 1.9 2003-03-17 00:41:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,81 +35,81 @@
 
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Rm0(bxInstruction_c *i)
 {
   RMAddr(i) = EAX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Rm1(bxInstruction_c *i)
 {
   RMAddr(i) = ECX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Rm2(bxInstruction_c *i)
 {
   RMAddr(i) = EDX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Rm3(bxInstruction_c *i)
 {
   RMAddr(i) = EBX;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Rm5(bxInstruction_c *i)
 {
   RMAddr(i) = i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Rm6(bxInstruction_c *i)
 {
   RMAddr(i) = ESI;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Rm7(bxInstruction_c *i)
 {
   RMAddr(i) = EDI;
 }
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Rm0(bxInstruction_c *i)
 {
   RMAddr(i) = EAX + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Rm1(bxInstruction_c *i)
 {
   RMAddr(i) = ECX + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Rm2(bxInstruction_c *i)
 {
   RMAddr(i) = EDX + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Rm3(bxInstruction_c *i)
 {
   RMAddr(i) = EBX + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Rm5(bxInstruction_c *i)
 {
   RMAddr(i) = EBP + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Rm6(bxInstruction_c *i)
 {
   RMAddr(i) = ESI + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Rm7(bxInstruction_c *i)
 {
   RMAddr(i) = EDI + i->displ32u();
 }
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base0(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -120,7 +120,7 @@ BX_CPU_C::Resolve32Mod0Base0(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = EAX + scaled_index;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base1(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -131,7 +131,7 @@ BX_CPU_C::Resolve32Mod0Base1(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = ECX + scaled_index;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base2(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -142,7 +142,7 @@ BX_CPU_C::Resolve32Mod0Base2(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = EDX + scaled_index;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base3(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -153,7 +153,7 @@ BX_CPU_C::Resolve32Mod0Base3(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = EBX + scaled_index;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base4(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -164,7 +164,7 @@ BX_CPU_C::Resolve32Mod0Base4(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = ESP + scaled_index;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base5(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -175,7 +175,7 @@ BX_CPU_C::Resolve32Mod0Base5(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = i->displ32u() + scaled_index;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base6(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -186,7 +186,7 @@ BX_CPU_C::Resolve32Mod0Base6(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = ESI + scaled_index;
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod0Base7(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -201,7 +201,7 @@ BX_CPU_C::Resolve32Mod0Base7(bxInstruction_c *i)
 
 
 
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base0(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -212,7 +212,7 @@ BX_CPU_C::Resolve32Mod1or2Base0(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = EAX + scaled_index + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base1(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -223,7 +223,7 @@ BX_CPU_C::Resolve32Mod1or2Base1(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = ECX + scaled_index + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base2(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -234,7 +234,7 @@ BX_CPU_C::Resolve32Mod1or2Base2(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = EDX + scaled_index + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base3(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -245,7 +245,7 @@ BX_CPU_C::Resolve32Mod1or2Base3(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = EBX + scaled_index + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base4(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -256,7 +256,7 @@ BX_CPU_C::Resolve32Mod1or2Base4(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = ESP + scaled_index + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base5(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -267,7 +267,7 @@ BX_CPU_C::Resolve32Mod1or2Base5(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = EBP + scaled_index + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base6(bxInstruction_c *i)
 {
   Bit32u scaled_index;
@@ -278,7 +278,7 @@ BX_CPU_C::Resolve32Mod1or2Base6(bxInstruction_c *i)
     scaled_index = 0;
   RMAddr(i) = ESI + scaled_index + i->displ32u();
 }
-  void
+  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve32Mod1or2Base7(bxInstruction_c *i)
 {
   Bit32u scaled_index;

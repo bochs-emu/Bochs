@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.75 2003-02-28 02:37:18 ptrumpet Exp $
+// $Id: cpu.cc,v 1.76 2003-03-17 00:40:57 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -208,15 +208,15 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
     // iCache hit.  Instruction is already decoded and stored in
     // the instruction cache.
-    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
+    BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
 
     execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
-      BX_CPU_CALL_METHOD(resolveModRM, (i));
+      BX_CPU_CALL_METHODR(resolveModRM, (i));
     }
 #if BX_INSTRUMENTATION
     // An instruction was found in the iCache.
-    BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased, 
+    BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
           i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 #endif
     }
@@ -260,7 +260,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
       ret = fetchDecode(fetchPtr, i, maxFetch);
       }
 
-    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get function pointers early.
+    BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get function pointers early.
     if (ret==0) {
 #if BX_SupportICache
       // Invalidate entry, since fetch-decode failed with partial updates
@@ -282,7 +282,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 #endif
     execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
-      BX_CPU_CALL_METHOD(resolveModRM, (i));
+      BX_CPU_CALL_METHODR(resolveModRM, (i));
       }
     }
   }
