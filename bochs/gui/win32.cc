@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.22 2001-12-21 19:33:18 bdenney Exp $
+// $Id: win32.cc,v 1.23 2002-02-24 17:20:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -83,6 +83,9 @@ static HDC MemoryDC = NULL;
 static RECT updated_area;
 static BOOL updated_area_valid = FALSE;
 static Bit32u *VideoBits;
+
+// Textmode cursor
+HBITMAP cursorBmp;
 
 // Headerbar stuff
 unsigned bx_bitmap_entries = 0;
@@ -225,6 +228,7 @@ void terminateEmul(int reason) {
 
   for (unsigned c=0; c<256; c++)
     if (vgafont[c]) DeleteObject(vgafont[c]);
+  DeleteObject(cursorBmp);
 
   switch (reason) {
   case EXIT_GUI_SHUTDOWN:
@@ -288,6 +292,8 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 
   for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
   create_vga_font();
+  cursorBmp = CreateBitmap(8,16,1,1,NULL);
+  if (!cursorBmp) terminateEmul(EXIT_FONT_BITMAP_ERROR);
 
   bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+
     256*sizeof(RGBQUAD)];
@@ -687,11 +693,12 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   HDC hdc;
   unsigned char cChar;
   unsigned i, x, y;
-  Bit8u cursor_start, cursor_end;
+  Bit8u cs_start, cs_end;
   unsigned nchars;
+  unsigned char data[32];
 
-  cursor_start = cursor_state >> 8;
-  cursor_end = cursor_state & 0xff;
+  cs_start = cursor_state >> 8;
+  cs_end = cursor_state & 0xff;
 
   if (!stInfo.UIinited) return;
 	
@@ -726,13 +733,17 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if (((cursor_y*80 + cursor_x) < nchars ) && (cursor_start <= cursor_end)) {
+  if (((cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end)) {
     cChar = new_text[(cursor_y*80 + cursor_x)*2];
-	//reverse background and foreground colors
-	char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
-	cAttr = ((cAttr>>4)&0xf)+((cAttr&0xf)<<4);
-    DrawBitmap(hdc, vgafont[cChar], cursor_x*8, cursor_y*16 + bx_headerbar_y,
-	           SRCCOPY, cAttr);
+    memset(data, 0, sizeof(data));
+    for (unsigned i=0; i<16; i++) {
+      data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
+      if ((i >= cs_start) && (i <= cs_end))
+        data[i*2] = 255 - data[i*2];
+    }
+    SetBitmapBits(cursorBmp, 32, data);
+    DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16 + bx_headerbar_y,
+	           SRCCOPY, new_text[((cursor_y*80 + cursor_x)*2)+1]);
   }
 
   ReleaseDC(stInfo.hwnd, hdc);
