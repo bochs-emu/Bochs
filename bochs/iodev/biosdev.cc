@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.6 2003-07-31 15:29:34 vruppert Exp $
+// $Id: biosdev.cc,v 1.7 2003-12-08 19:36:23 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,7 +30,6 @@
 //  0x0400 : rombios Panic port with message
 //  0x0401 : rombios Panic port with line number
 //  0x0402 : rombios Info port with message
-//  0xfff0 : rombios Info port with message (legacy port)
 //  0x0403 : rombios Debug port with message
 //
 //  0x0500 : vgabios Info port with message
@@ -100,7 +99,6 @@ bx_biosdev_c::init(void)
   DEV_register_iowrite_handler(this, write_handler, 0x0401, "Bios Panic Port 2", 3);
   DEV_register_iowrite_handler(this, write_handler, 0x0403, "Bios Debug Port", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x0402, "Bios Info Port", 1);
-  DEV_register_iowrite_handler(this, write_handler, 0xfff0, "Bios Info Port (legacy)", 1);
 
   DEV_register_iowrite_handler(this, write_handler, 0x0501, "VGABios Panic Port 1", 3);
   DEV_register_iowrite_handler(this, write_handler, 0x0502, "VGABios Panic Port 2", 3);
@@ -151,10 +149,8 @@ bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
       bioslog->panic("BIOS panic at rombios.c, line %d", value);
       break;
 
-    // 0xfff0 is used as the info port for the rombios
     // 0x0402 is used as the info port for the rombios
     // 0x0403 is used as the debug port for the rombios
-    case 0xfff0:
     case 0x0402:
     case 0x0403:
       BX_BIOS_THIS s.bios_message[BX_BIOS_THIS s.bios_message_i] =
