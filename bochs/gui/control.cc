@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.36 2001-10-07 18:16:01 bdenney Exp $
+// $Id: control.cc,v 1.37 2001-11-10 00:40:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.36 2001-10-07 18:16:01 bdenney Exp $
+ * $Id: control.cc,v 1.37 2001-11-10 00:40:40 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -316,7 +316,7 @@ static char *runtime_menu_prompt =
 "1. Floppy disk 0: %s\n"
 "2. Floppy disk 1: %s\n"
 "3. CDROM: %s\n"
-"4. Emulated instructions per second (IPS): %u\n"
+"4. (not implemented)\n"
 "5. Log options for all devices\n"
 "6. Log options for individual devices\n"
 "7. VGA Update Interval: %d\n"
@@ -449,7 +449,10 @@ int bx_control_panel (int menu)
        case 1: do_menu (BXP_FLOPPYA); break;
        case 2: do_menu (BXP_FLOPPYB); break;
        case 3: do_menu (BXP_CDROMD); break;
-       case 4: askparam (BXP_IPS); break;
+       case 4: // not implemented yet because I would have to mess with
+	       // resetting timers and pits and everything on the fly.
+               // askparam (BXP_IPS);
+	       break;
        case 5: bx_log_options (0); break;
        case 6: bx_log_options (1); break;
        case 7: askparam (BXP_VGA_UPDATE_INTERVAL); break;
