@@ -15,6 +15,7 @@ variants of: INSW, OUTSW, MOVSB, MOVSW, STOSB.
 These diffs rely slightly on the previous segment 
 type access check redundancy elimination diffs I 
 set a couple days ago, so you need those first. 
+[ YOU MUST USE patch.seg-checks TOO OR THIS WON'T EVEN COMPILE. -bbd]
 
 -Kevin 
 
@@ -44,7 +45,7 @@ area, since I needed to read it.
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
-  current cvs
+  current cvs WITH patch.seg-checks applied
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
