@@ -3,31 +3,6 @@ fill in blanks.
 -Bryce
 
 REMINDER(bryce): add instructions for setting up networking to the docbook docs.
-REMINDER(bryce): merge Volker's changes list to this file.
-
-Compile instructions for sdl, after we apply patch.check-platform.
-For most platforms:
-  configure --with-sdl
-  tested on linux only
-
-For VC++, since you have to configure on a different system.
-  configure --target=pentium-windows --with-sdl
-  make win32_snap
-  load up workspace called bochs.dsw
-  double click "gui files"
-  double click on "source files" under gui files
-  right click source files and choose add files to folder.  Add gui/sdl.cc.
-  delete win32.cpp
-  Edit the settings of "gui files".  Under C/C++ tab, category=preprocessor,
-    additional include directories, add the directory where SDL/SDL.h can be
-    found.  
-  Edit the settings of the "bochs files" project.  Under the Link tab, 
-    category=General, add SDL.lib to object/library modules list.  Then
-    in category=Input, add the path of SDL.lib to additional library path.
-    Click ok.
-  press F7 or select Build:Build Bochs.exe
-  
-
 
 -------------------------------------------------------------------------
 Changes in 1.4 (FIXME(bdenney):change to release date):
