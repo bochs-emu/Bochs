@@ -22,45 +22,38 @@ a summary.
 <li> CPU optimizations boost simulation speed by around 2x. (Kevin Lawton)
 <li> Bochs now supports up to 8 hard drives, or 8 CDROMs, or any combination
 (Christophe Bothamy)
-<li> wxWindows interface has grown so that you can edit all bochsrc 
+<li> The wxWindows interface has grown so that you can edit all bochsrc 
 parameters using menus and dialog boxes (Bryce Denney)
-<li> Bochs can now emulate the AMD x86-64 instruction set used in their Hammer processor (Peter Tattam)
-<li> Bochs can now emulate MMX instructions (Stanislav Shwartzman).
+<li> Added support for the AMD x86-64 instruction set used in their Hammer processor (Peter Tattam)
+<li> Added support for MMX instructions (Stanislav Shwartzman)
+<li> Added support for SSE and SSE2 instructions (Stanislav Shwartzman)
 <li> Remote GDB stub support (Johan Rydberg, Stu Grossman)
-<li> IN PROGRESS: Stanislav is currently working on SSE/SSE2 support.
-<li> IN PROGRESS: Christophe and Bryce are working on plugin support, so that
-you can compile in support for many more options and enable them at runtime.
-For example, you could compile in support for 4 different gui libraries 
-(X11, SDL, RFB, wxWindows) and select between them in your bochsrc.
+<li> Added plugin support for Linux, Solaris, MacOS X, and Cygwin.  Plugins
+allow you to compile Bochs with support for many options and load the
+pieces that you want at runtime.
 </ul> 
 
 <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>The Release
 Process </b></font><BR>
+
 Before the 2.0 release is finalized, a few things need to happen.  First, the
-developers will declare a feature freeze, during which only bug fixes will be
-added to the CVS.  This has not begun quite yet because there are a few
-important features (e.g. plugins, SSE) that aren't quite ready to be merged into
-the main trunk. <p>
+developers declare a feature freeze, during which only bug fixes will be
+added to the CVS.  The feature freeze began around the first of November,
+and will continue until the release is ready.  During the feature freeze, we
+focus on testing Bochs in all sorts of configurations, fixing bugs, updating
+documentation, and generally cleaning things up.  The freeze will last until we
+have some confidence that the most critical bugs have been fixed or worked
+around, and that Bochs will compile and work on all supported platforms.  <p>
 
-When the feature freeze begins, we can focus on testing Bochs in all sorts of
-configurations, fixing bugs, updating documentation, and cleaning things up.
-This will last until we have some confidence that the most critical bugs have
-been fixed or worked around, and that Bochs will compile and work on all
-supported platforms.  The documentation should cover all the new features and
-options.  Bryce hopes that the feature freeze will last about 2 weeks, but 
-really it will last until the developers think the code has been adequately
-debugged and tested.<p>
-
-During this time, the Source Forge bug/feature/patch trackers are very important
-and very useful.  Any bug that we intend to fix before the 2.0 release should be
-marked with Group="to be fixed in v2.0".  At the time of release, there will be
-no more open bugs, features, or patches marked for v2.0.  All items that are
-marked for v2.0 will be either fixed (and closed), or postponed by changing
-their Group marking to something else like "long range goal".  Using
-the bug database helps to ensure that nothing important gets forgotten. 
-When you're looking at the Source Forge database, you can click on the Group
-box and select just the items that are selected for v2.0.
-<p>
+During this time, the Source Forge bug/feature/patch trackers are very
+important and very useful.  Any bug that we intend to fix before the 2.0
+release should be marked with Group="to be fixed in v2.0".  At the time of
+release, there will be no more open bugs, features, or patches marked for v2.0.
+All items that are marked for v2.0 will be either fixed (and closed), or
+postponed by changing their Group marking to something else like "long range
+goal".  Using the bug database helps to ensure that nothing important gets
+forgotten.  When you're looking at the Source Forge database, you can click on
+the Group box and select just the items that are selected for v2.0.  <p>
 
 Click to see <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Report+a+Bug&url=http://sourceforge.net/tracker/qmrkgroup_ideq12580ampatideq112580">Bug Reports</a>.  <br>
 Click to see <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Request+a+Feature&url=http://sourceforge.net/tracker/qmrkatideq362580ampgroup_ideq12580ampfunceqbrowse">Feature Requests</a>.  <br>
