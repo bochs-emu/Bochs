@@ -110,7 +110,6 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
 
 main_cpu_loop:
-  //bx_printf ("in %s at %04x:%08x\n", name, sregs[BX_SEG_REG_CS].selector.value, EIP);
 
   // ???
   BX_CPU_THIS_PTR EXT = 0;
