@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.6 2002-10-09 06:10:38 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.147.2.7 2002-10-09 06:23:07 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -283,6 +283,8 @@ AC_ARG_ENABLE(idle-hack,
     ]
   )
 AC_SUBST(BX_USE_IDLE_HACK)
+
+AC_CHECK_HEADER(dlfcn.h, AC_DEFINE(BX_HAVE_DLFCN_H, 1))
 
 AC_MSG_CHECKING(for plugins support)
 AC_ARG_ENABLE(plugins,

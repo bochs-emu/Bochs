@@ -190,7 +190,9 @@ extern class bx_keyb_stub_c *pluginKeyboard;
 #define BX_KBD_PASTE_DELAY_CHANGED() \
     (pluginKeyboard->paste_delay_changed())
 
+#if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
+#endif
 
 typedef Bit32u (*ioReadHandler_t)(void *, Bit32u, unsigned);
 typedef void   (*ioWriteHandler_t)(void *, Bit32u, Bit32u, unsigned);
