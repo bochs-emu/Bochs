@@ -1,6 +1,11 @@
 Readme for BRANCH-cpanel branch
-updated Thu Mar 14 16:51:10  2002
+updated Sun Mar 17 01:08:40  2002
 Bryce Denney
+
+-------------
+Mar 17: This code now has all the changes from the main branch up to
+the latest release 1.4.pre2.
+-------------
 
 wxWindows Configuration Interface
 
