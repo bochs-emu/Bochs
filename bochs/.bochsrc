@@ -101,8 +101,9 @@ ips:  1000000
 mouse: enabled=0
 private_colormap: enabled=0
 i440fxsupport: enabled=0
-newharddrivesupport: enabled=1
 #cmosimage: pathname
+# As of cvs version on 5/17/2001, newharddrivesupport is on by default.
+#newharddrivesupport: enabled=1
 
 #=======================================================================
 # ROMIMAGE:
