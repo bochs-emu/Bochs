@@ -219,7 +219,7 @@ Patches applied:
   #707931  Support EGA/VGA write mode 2 and others                     (???)
            already applied: disable IME, split screen, write mode 2
   #856506  Patch to fix compile-time iodev/cd-rom.cc error             (alden.dima at nist.gov)
-           see below
+           Correct patch provided in SF bug report #843433
   #856510  Missing patch file for 856506                               (alden.dima at nist.gov)
            supplied patch would have broken the code
 
@@ -237,6 +237,7 @@ Patches applied:
 - these S.F. bugs were fixed 
 // CB : I ran the request on SF, these bugs have definitely been closed 
 // since 2.0.2). There might have been others, during 2.0 to 2.0.2 times
+   #843433 cdrom.cc on MacOSX: wrong const names
    #851331 .cvsignore files in tarball
    #787005 Some MOV instructions are not implemented!!!
    #837416 V2 OS not compatible !?
