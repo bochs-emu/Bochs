@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.6 2002-09-01 20:12:09 kevinlawton Exp $
+// $Id: string.cc,v 1.7 2002-09-02 18:44:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -88,6 +88,7 @@ BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
     si = SI;
     di = DI;
 
+#if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time.
@@ -206,6 +207,7 @@ BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
         }
       }
 #endif
+#endif  // BX_SupportRepeatSpeedups
 
 noAcceleration16:
 
@@ -256,6 +258,7 @@ BX_CPU_C::MOVSW_XvYv(BxInstruction_t *i)
 
     if (i->os_32) {
 
+#if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
 #if (defined(__i386__) && __i386__)
     /* If conditions are right, we can transfer IO to physical memory
@@ -376,6 +379,7 @@ BX_CPU_C::MOVSW_XvYv(BxInstruction_t *i)
       }
 #endif // __i386__
 #endif
+#endif  // BX_SupportRepeatSpeedups
 
 noAcceleration32:
 
@@ -452,6 +456,7 @@ doIncr32:
       { /* 16 bit opsize mode */
       Bit16u  temp16;
 
+#if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
 #if (defined(__i386__) && __i386__)
     /* If conditions are right, we can transfer IO to physical memory
@@ -572,6 +577,7 @@ doIncr32:
       }
 #endif // __i386__
 #endif
+#endif  // BX_SupportRepeatSpeedups
 
 noAcceleration16:
 
@@ -988,6 +994,7 @@ BX_CPU_C::STOSB_YbAL(BxInstruction_t *i)
   al  = AL;
 
 
+#if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time.
@@ -1086,6 +1093,7 @@ BX_CPU_C::STOSB_YbAL(BxInstruction_t *i)
         }
       }
 #endif
+#endif  // BX_SupportRepeatSpeedups
 
 noAcceleration16:
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.35 2002-09-01 23:02:36 kevinlawton Exp $
+// $Id: cpu.cc,v 1.36 2002-09-02 18:44:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,6 @@
 #define this (BX_CPU(0))
 #endif
 
-//unsigned counter[2] = { 0, 0 };
 
 
 #if BX_SIM_ID == 0   // only need to define once
@@ -105,15 +104,12 @@ extern void REGISTER_IADDR(Bit32u addr);
 BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
   unsigned ret;
-  BxInstruction_t *i;
-  unsigned maxisize;
-  Bit8u *fetch_ptr;
-  Boolean is_32;
+  //BxInstruction_t *i;
 
   // Need to look into whether to change this back to:
-  //   BxInstruction_t i;
-  BxInstruction_t bxinstruction_dummy;
-  i = &bxinstruction_dummy;
+  BxInstruction_t i;
+  //BxInstruction_t bxinstruction_dummy;
+  //i = &bxinstruction_dummy;
 
 
 #if BX_DEBUGGER
@@ -126,15 +122,16 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
 
-  // not sure if these two are used during the async handling... --bbd
+  // We get here either by a normal function call, or by a longjmp
+  // back from an exception() call.  In either case, commit the
+  // new EIP/ESP, and set up other environmental fields.  This code
+  // mirrors similar code below, after the interrupt() call.
   BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
   BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
-
-main_cpu_loop:
-
-  // ???
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR errorno = 0;
+
+main_cpu_loop:
 
   // First check on events which occurred for previous instructions
   // (traps) and ones which are asynchronous to the CPU
@@ -199,32 +196,40 @@ async_events_processed:
     if ((n & 0xffffff) == 0) {
       Bit32u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
       Bit32u eip = BX_CPU_THIS_PTR prev_eip;
-      fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\n", n, bx_pc_system.time_ticks (), cs, eip, fetch_ptr);
+      fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\n", n, bx_pc_system.time_ticks (), cs, eip, BX_CPU_THIS_PTR fetch_ptr);
     }
     n++;
   }
 #endif
 
-  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  {
+  Bit32u eipBiased;
+  Bit32u remainingInPage;
+  unsigned maxFetch;
+  Bit8u *fetchPtr;
 
-  if (BX_CPU_THIS_PTR bytesleft == 0) {
+  eipBiased = EIP + BX_CPU_THIS_PTR eipPageBias;
+
+  if ( eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize ) {
     prefetch();
+    eipBiased = EIP + BX_CPU_THIS_PTR eipPageBias;
     }
-  fetch_ptr = BX_CPU_THIS_PTR fetch_ptr;
 
-  maxisize = 16;
-  if (BX_CPU_THIS_PTR bytesleft < 16) {
-    maxisize = BX_CPU_THIS_PTR bytesleft;
-    }
-  ret = FetchDecode(fetch_ptr, i, maxisize, is_32);
+  remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+  maxFetch = 15;
+  if (remainingInPage < 15)
+    maxFetch = remainingInPage;
+  fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+
+  ret = FetchDecode(fetchPtr, &i, maxFetch,
+                    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
+  }
 
   if (ret) {
-    if (i->ResolveModrm) {
+    if (i.ResolveModrm) {
       // call method on BX_CPU_C object
-      BX_CPU_CALL_METHOD(i->ResolveModrm, (i));
+      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
       }
-    BX_CPU_THIS_PTR fetch_ptr += i->ilen;
-    BX_CPU_THIS_PTR bytesleft -= i->ilen;
 fetch_decode_OK:
 
 #if BX_DEBUGGER
@@ -238,34 +243,48 @@ fetch_decode_OK:
     }
 #endif
 
-    if (i->rep_used && (i->attr & BxRepeatable)) {
+    if ( !(i.rep_used && (i.attr & BxRepeatable)) ) {
+      // non repeating instruction
+      EIP += i.ilen;
+      BX_CPU_CALL_METHOD(i.execute, (&i));
+
+      BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+      BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
+#ifdef REGISTER_IADDR
+      REGISTER_IADDR(EIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
+#endif
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
+
+    else {
 repeat_loop:
-      if (i->attr & BxRepeatableZF) {
-        if (i->as_32) {
+      if (i.attr & BxRepeatableZF) {
+        if (i.as_32) {
           if (ECX != 0) {
-            BX_CPU_CALL_METHOD(i->execute, (i));
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             ECX -= 1;
             }
-          if ((i->rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
-          if ((i->rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
+          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
           if (ECX == 0) goto repeat_done;
           goto repeat_not_done;
           }
         else {
           if (CX != 0) {
-            BX_CPU_CALL_METHOD(i->execute, (i));
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             CX -= 1;
             }
-          if ((i->rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
-          if ((i->rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
+          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
           if (CX == 0) goto repeat_done;
           goto repeat_not_done;
           }
         }
       else { // normal repeat, no concern for ZF
-        if (i->as_32) {
+        if (i.as_32) {
           if (ECX != 0) {
-            BX_CPU_CALL_METHOD(i->execute, (i));
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             ECX -= 1;
             }
           if (ECX == 0) goto repeat_done;
@@ -273,7 +292,7 @@ repeat_loop:
           }
         else { // 16bit addrsize
           if (CX != 0) {
-            BX_CPU_CALL_METHOD(i->execute, (i));
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             CX -= 1;
             }
           if (CX == 0) goto repeat_done;
@@ -283,7 +302,7 @@ repeat_loop:
       // shouldn't get here from above
 repeat_not_done:
 #ifdef REGISTER_IADDR
-      REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
+      REGISTER_IADDR(EIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
@@ -301,21 +320,16 @@ repeat_not_done:
 
 
 repeat_done:
-      BX_CPU_THIS_PTR eip += i->ilen;
-      }
-    else {
-      // non repeating instruction
-      BX_CPU_THIS_PTR eip += i->ilen;
-      BX_CPU_CALL_METHOD(i->execute, (i));
-      }
+      EIP += i.ilen;
 
-    BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
-    BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
+      BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+      BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
 #ifdef REGISTER_IADDR
-    REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
+      REGISTER_IADDR(EIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
 
-    BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
 
 debugger_check:
 
@@ -384,45 +398,55 @@ debugger_check:
     goto main_cpu_loop;
     }
   else {
-    unsigned remain, j;
-static Bit8u FetchBuffer[16];
-    Bit8u *temp_ptr;
+    unsigned j;
+    Bit8u fetchBuffer[16]; // Really only need 15
+    Bit32u eipBiased, remainingInPage;
+    Bit8u *fetchPtr;
 
-    // read all leftover bytes in current page
-    for (j=0; j<BX_CPU_THIS_PTR bytesleft; j++) {
-      FetchBuffer[j] = *fetch_ptr++;
+    eipBiased = EIP + BX_CPU_THIS_PTR eipPageBias;
+    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+    if (remainingInPage > 15) {
+      BX_PANIC(("fetch_decode: remaining > max ilen"));
+      }
+    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+
+    // Read all leftover bytes in current page up to boundary.
+    for (j=0; j<remainingInPage; j++) {
+      fetchBuffer[j] = *fetchPtr++;
       }
 
-    // get remaining bytes for prefetch in next page
-    // prefetch() needs eip current
-    BX_CPU_THIS_PTR eip += BX_CPU_THIS_PTR bytesleft;
-    remain = BX_CPU_THIS_PTR bytesleft;
+    // The 2nd chunk of the instruction is on the next page.
+    // Set EIP to the 0th byte of the 2nd page, and force a
+    // prefetch so direct access of that physical page is possible, and
+    // all the associated info is updated.
+    EIP += remainingInPage;
     prefetch();
-
-    if (BX_CPU_THIS_PTR bytesleft < 16) {
-      // make sure (bytesleft - remain) below doesn't go negative
-      BX_PANIC(("fetch_decode: bytesleft==0 after prefetch"));
+    if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
+      BX_PANIC(("fetch_decode: small window size after prefetch"));
       }
-    temp_ptr = fetch_ptr = BX_CPU_THIS_PTR fetch_ptr;
+
+    // We can fetch straight from the 0th byte, which is eipFetchPtr;
+    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
 
     // read leftover bytes in next page
-    for (; j<16; j++) {
-      FetchBuffer[j] = *temp_ptr++;
+    for (; j<15; j++) {
+      fetchBuffer[j] = *fetchPtr++;
       }
-    ret = FetchDecode(FetchBuffer, i, 16, is_32);
+    ret = FetchDecode(fetchBuffer, &i, 15,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
+    // Restore EIP since we fudged it to start at the 2nd page boundary.
+    EIP = BX_CPU_THIS_PTR prev_eip;
     if (ret==0)
       BX_PANIC(("fetchdecode: cross boundary: ret==0"));
-    if (i->ResolveModrm) {
-      BX_CPU_CALL_METHOD(i->ResolveModrm, (i));
+    if (i.ResolveModrm) {
+      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
       }
-    remain = i->ilen - remain;
 
-    // note: eip has already been advanced to beginning of page
-    BX_CPU_THIS_PTR fetch_ptr = fetch_ptr + remain;
-    BX_CPU_THIS_PTR bytesleft -= remain;
-
-    //BX_CPU_THIS_PTR eip += remain;
-    BX_CPU_THIS_PTR eip = BX_CPU_THIS_PTR prev_eip;
+// Since we cross an instruction boundary, note that we need a prefetch()
+// again on the next instruction.  Perhaps we can optimize this to
+// eliminate the extra prefetch() since we do it above, but have to
+// think about repeated instructions, etc.
+BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
     goto fetch_decode_OK;
     }
 
@@ -535,11 +559,16 @@ handle_async_event:
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT   = 1; /* external event */
     interrupt(vector, 0, 0, 0);
-    BX_INSTR_HWINTERRUPT(vector, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
-    // added so that all debugging/tracing code uses the correct EIP even in the
-    // instruction just after a trap/interrupt.
+    BX_INSTR_HWINTERRUPT(vector, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+    // Set up environment, as would be when this main cpu loop gets
+    // invoked.  At the end of normal instructions, we always commmit
+    // the new EIP/ESP values.  But here, we call interrupt() much like
+    // it was a sofware interrupt instruction, and need to effect the
+    // commit here.  This code mirrors similar code above.
     BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
     BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
+    BX_CPU_THIS_PTR EXT = 0;
+    BX_CPU_THIS_PTR errorno = 0;
     }
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
     // NOTE: similar code in ::take_dma()
@@ -606,15 +635,17 @@ BX_CPU_C::prefetch(void)
 {
   // cs:eIP
   // prefetch QSIZE byte quantity aligned on corresponding boundary
-  Bit32u new_linear_addr;
-  Bit32u new_phy_addr;
+  Bit32u laddr;
+  Bit32u paddr;
   Bit32u temp_eip, temp_limit;
+  Bit32u laddrPageOffset0, eipPageOffset0;
 
-  temp_eip   = BX_CPU_THIS_PTR eip;
+  temp_eip   = EIP;
   temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
 
-  new_linear_addr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + temp_eip;
-  BX_CPU_THIS_PTR prev_linear_page = new_linear_addr & 0xfffff000;
+  laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base +
+                    temp_eip;
+
   if (temp_eip > temp_limit) {
     BX_PANIC(("prefetch: EIP > CS.limit"));
     }
@@ -622,42 +653,38 @@ BX_CPU_C::prefetch(void)
 #if BX_SUPPORT_PAGING
   if (BX_CPU_THIS_PTR cr0.pg) {
     // aligned block guaranteed to be all in one page, same A20 address
-    new_phy_addr = itranslate_linear(new_linear_addr, CPL==3);
-    new_phy_addr = A20ADDR(new_phy_addr);
+    paddr = itranslate_linear(laddr, CPL==3);
+    paddr = A20ADDR(paddr);
     }
   else
 #endif // BX_SUPPORT_PAGING
     {
-    new_phy_addr = A20ADDR(new_linear_addr);
+    paddr = A20ADDR(laddr);
     }
-
-  if ( new_phy_addr >= BX_CPU_THIS_PTR mem->len ) {
-    // don't take this out if dynamic translation enabled,
-    // otherwise you must make a check to see if bytesleft is 0 after
-    // a call to prefetch() in the dynamic code.
-    BX_ERROR(("prefetch: running in bogus memory"));
-    }
-
-  // max physical address as confined by page boundary
-  BX_CPU_THIS_PTR prev_phy_page = new_phy_addr & 0xfffff000;
-  BX_CPU_THIS_PTR max_phy_addr = BX_CPU_THIS_PTR prev_phy_page | 0x00000fff;
 
   // check if segment boundary comes into play
   //if ((temp_limit - temp_eip) < 4096) {
   //  }
 
-#if BX_PCI_SUPPORT
-  if ((new_phy_addr >= 0x000C0000) && (new_phy_addr <= 0x000FFFFF)) {
-    BX_CPU_THIS_PTR bytesleft = 0x4000 - (new_phy_addr & 0x3FFF);
-    BX_CPU_THIS_PTR fetch_ptr = BX_CPU_THIS_PTR mem->pci_fetch_ptr(new_phy_addr);
-  } else {
-    BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
-    BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
-  }
-#else
-  BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
-  BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
-#endif
+  // Linear address at the beginning of the page.
+  laddrPageOffset0 = laddr & 0xfffff000;
+  // Calculate EIP at the beginning of the page.
+  eipPageOffset0 = EIP - (laddr - laddrPageOffset0);
+  BX_CPU_THIS_PTR eipPageBias = - eipPageOffset0;
+  BX_CPU_THIS_PTR eipPageWindowSize = 4096; // FIXME:
+  BX_CPU_THIS_PTR eipFetchPtr =
+      BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(paddr & 0xfffff000), BX_READ);
+
+  // Sanity checks
+  if ( !BX_CPU_THIS_PTR eipFetchPtr ) {
+    if ( paddr >= BX_CPU_THIS_PTR mem->len ) {
+      BX_ERROR(("prefetch: running in bogus memory"));
+      }
+    else {
+      BX_ERROR(("prefetch: getHostMemAddr vetoed direct read, paddr=0x%x.",
+                paddr));
+      }
+    }
 }
 
 
@@ -667,39 +694,23 @@ BX_CPU_C::prefetch(void)
   void
 BX_CPU_C::revalidate_prefetch_q(void)
 {
-  Bit32u new_linear_addr, new_linear_page, new_linear_offset;
-  Bit32u new_phy_addr;
+  Bit32u eipBiased;
 
-  new_linear_addr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR eip;
-
-  new_linear_page = new_linear_addr & 0xfffff000;
-  if (new_linear_page == BX_CPU_THIS_PTR prev_linear_page) {
-    // same linear address, old linear->physical translation valid
-    new_linear_offset = new_linear_addr & 0x00000fff;
-    new_phy_addr = BX_CPU_THIS_PTR prev_phy_page | new_linear_offset;
-#if BX_PCI_SUPPORT
-    if ((new_phy_addr >= 0x000C0000) && (new_phy_addr <= 0x000FFFFF)) {
-      BX_CPU_THIS_PTR bytesleft = 0x4000 - (new_phy_addr & 0x3FFF);
-      BX_CPU_THIS_PTR fetch_ptr = BX_CPU_THIS_PTR mem->pci_fetch_ptr(new_phy_addr);
-      }
-    else {
-      BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
-      BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
-      }
-#else
-    BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
-    BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
-#endif
+  eipBiased = EIP + BX_CPU_THIS_PTR eipPageBias;
+  if ( eipBiased < BX_CPU_THIS_PTR eipPageWindowSize ) {
+    // Good, EIP still within prefetch window.
     }
   else {
-    BX_CPU_THIS_PTR bytesleft = 0; // invalidate prefetch Q
+    // EIP has branched outside the prefetch window.  Mark the
+    // prefetch info as invalid, and requiring update.
+    BX_CPU_THIS_PTR eipPageWindowSize = 0;
     }
 }
 
   void
 BX_CPU_C::invalidate_prefetch_q(void)
 {
-  BX_CPU_THIS_PTR bytesleft = 0;
+  BX_CPU_THIS_PTR eipPageWindowSize = 0;
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.6 2002-09-01 20:12:09 kevinlawton Exp $
+// $Id: io.cc,v 1.7 2002-09-02 18:44:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,6 +123,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
         }
       }
 
+#if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
 #if (defined(__i386__) && __i386__)
     /* If conditions are right, we can transfer IO to physical memory
@@ -218,6 +219,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
       }
 #endif // __i386__
 #endif
+#endif  // #if BX_SupportRepeatSpeedups
 
 noAcceleration:
 
@@ -336,6 +338,7 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
         }
       }
 
+#if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
 #if (defined(__i386__) && __i386__)
     /* If conditions are right, we can transfer IO to physical memory
@@ -431,6 +434,7 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
       }
 #endif // __i386__
 #endif
+#endif  // #if BX_SupportRepeatSpeedups
 
 noAcceleration:
 

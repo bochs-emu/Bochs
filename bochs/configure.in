@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.90 2002-09-01 20:12:09 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.91 2002-09-02 18:44:35 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -578,6 +578,23 @@ AC_ARG_ENABLE(guest2host-tlb,
     ]
   )
 AC_SUBST(BX_SupportGuest2HostTLB)
+
+AC_MSG_CHECKING(for repeated IO and mem copy speedups)
+AC_ARG_ENABLE(repeat-speedups,
+  [  --enable-repeat-speedups          support repeated IO and mem copy speedups],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SupportRepeatSpeedups, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SupportRepeatSpeedups, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SupportRepeatSpeedups, 0)
+    ]
+  )
+AC_SUBST(BX_SupportRepeatSpeedups)
 
 
 AC_MSG_CHECKING(for port e9 hack)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.24 2002-09-01 23:02:36 kevinlawton Exp $
+// $Id: cpu.h,v 1.25 2002-09-02 18:44:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -853,12 +853,11 @@ public: // for now...
   Bit32u           save_eip;
   Bit32u           save_esp;
 
-  // For prefetch'ing instructions
-  Bit32u bytesleft;
-  Bit8u *fetch_ptr;
-  Bit32u prev_linear_page;
-  Bit32u prev_phy_page;
-  Bit32u max_phy_addr;
+
+  // Boundaries of current page, based on EIP
+  Bit32u eipPageBias;
+  Bit32u eipPageWindowSize;
+  Bit8u *eipFetchPtr;
 
 #if BX_DEBUGGER
   Bit32u watchpoint;

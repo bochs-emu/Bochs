@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.17 2002-09-01 23:02:36 kevinlawton Exp $
+// $Id: init.cc,v 1.18 2002-09-02 18:44:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ BX_CPU_C::BX_CPU_C()
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.17 2002-09-01 23:02:36 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.18 2002-09-02 18:44:35 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -569,11 +569,9 @@ BX_CPU_C::reset(unsigned source)
 #endif // BX_USE_TLB
 #endif // BX_SUPPORT_PAGING
 
-  BX_CPU_THIS_PTR bytesleft = 0;
-  BX_CPU_THIS_PTR fetch_ptr = NULL;
-  BX_CPU_THIS_PTR prev_linear_page = 0;
-  BX_CPU_THIS_PTR prev_phy_page = 0;
-  BX_CPU_THIS_PTR max_phy_addr = 0;
+  BX_CPU_THIS_PTR eipPageBias = 0;
+  BX_CPU_THIS_PTR eipPageWindowSize = 0;
+  BX_CPU_THIS_PTR eipFetchPtr = NULL;
 
 #if BX_DEBUGGER
 #ifdef MAGIC_BREAKPOINT
