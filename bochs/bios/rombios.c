@@ -3688,14 +3688,14 @@ mp_config_table:
   db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
   dw (mp_config_end-mp_config_table)  ;; table length
   db 4 ;; spec rev
-  db 0x5b ;; checksum
+  db 0x55 ;; checksum
   db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
   db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
   db 0x20, 0x20, 0x20, 0x20 
   db 0x20, 0x20, 0x20, 0x20
   dw 0,0 ;; oem table ptr
   dw 0 ;; oem table size
-  dw 4 ;; entry count
+  dw 5 ;; entry count
   dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
   dw 0 ;; extended table length
   db 0 ;; extended table checksum
@@ -3736,9 +3736,44 @@ mp_config_proc3:
   dw 0x201,0 ;; feature flags
   dw 0,0 ;; reserved
   dw 0,0 ;; reserved
+mp_config_isa_bus:
+  db 1 ;; entry type=bus
+  db 0 ;; bus ID
+  db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
+mp_config_ioapic:
+  db 2 ;; entry type=I/O APIC
+  db 4 ;; apic id=2. linux will set.
+  db 0x11 ;; I/O APIC version number
+  db 1 ;; flags=1=enabled
+  dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
+mp_config_irqs:
+  db 3 ;; entry type=I/O interrupt
+  db 0 ;; interrupt type=vectored interrupt
+  db 0,0 ;; flags po=0, el=0 (linux uses as default)
+  db 0 ;; source bus ID is ISA
+  db 0 ;; source bus IRQ
+  db 4 ;; destination I/O APIC ID
+  db 0 ;; destination I/O APIC interrrupt in
+  ;; repeat pattern for interrupts 0-15
+  db 3,0,0,0,1,0,4,1
+  db 3,0,0,0,2,0,4,2
+  db 3,0,0,0,3,0,4,3
+  db 3,0,0,0,4,0,4,4
+  db 3,0,0,0,5,0,4,5
+  db 3,0,0,0,6,0,4,6
+  db 3,0,0,0,7,0,4,7
+  db 3,0,0,0,8,0,4,8
+  db 3,0,0,0,9,0,4,9
+  db 3,0,0,0,10,0,4,10
+  db 3,0,0,0,11,0,4,11
+  db 3,0,0,0,12,0,4,12
+  db 3,0,0,0,13,0,4,13
+  db 3,0,0,0,14,0,4,14
+  db 3,0,0,0,15,0,4,15
 mp_config_end:
   dw 0,0
 
+.align 16
 mp_floating_pointer_structure:
 db 0x5f, 0x4d, 0x50, 0x5f   ; "_MP_" signature
 dw mp_config_table, 0xf ;; pointer to MP configuration table
