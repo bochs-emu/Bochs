@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.232 2003-11-28 15:07:28 danielg4 Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.233 2003-12-07 23:32:45 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2130,6 +2130,7 @@ case "$target" in
     AC_DEFINE(BX_NO_EMPTY_STRUCTS, 1)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(BX_HAVE_HASH_MAP, 0)
+    AC_DEFINE(BX_HAVE_HASH_MAP_H, 0)
     AC_DEFINE(BX_HAVE_STRTOULL, 0)
     AC_DEFINE(BX_HAVE_STRTOUQ, 0)
     AC_DEFINE(HAVE_LIBREADLINE, 0)
