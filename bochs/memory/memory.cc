@@ -41,6 +41,8 @@ BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
 
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_WRITE(a20addr, len);
+  if ((addr & 0xfee00000) == 0xfee00000)
+    bx_printf ("write_physical to APIC address %08x\n", addr);
 
 #if BX_DEBUGGER
   // (mch) Check for physical write break points, TODO
@@ -216,6 +218,16 @@ inc_one:
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
+#if BX_APIC_SUPPORT
+    bx_apic_c *apic = &BX_CPU.local_apic;
+    if ((a20addr & ~0xfff) == (apic->get_base ())) {
+      if ((addr & 0xf != 0) || (len != 4))
+        bx_printf ("warning: misaligned or wrong-size APIC write");
+      apic->write_handler (addr, (Bit32u *)data, len);
+      return;
+    }
+    else 
+#endif
     for (i = 0; i < len; i++) {
       if (a20addr < BX_MEM_THIS len) {
         BX_MEM.vector[a20addr] = *data_ptr;
@@ -245,6 +257,8 @@ BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
 
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_READ(a20addr, len);
+  if ((addr & 0xfee00000) == 0xfee00000)
+    bx_printf ("read_physical from APIC address %08x\n", addr);
 
 #if BX_DEBUGGER
   // (mch) Check for physical read break points, TODO
@@ -398,6 +412,26 @@ inc_one:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
+#if BX_APIC_SUPPORT
+    bx_apic_c *apic = &BX_CPU.local_apic;
+    if ((a20addr & ~0xfff) == (apic->get_base ())) {
+      Bit32u value;
+      apic->read_handler (addr, &value, 4);
+      if ((addr & ~0xf) != ((addr+len-1) & ~0xf))
+        bx_panic ("APIC read spans 32-bit boundary");
+      Bit8u bytes[4];
+      bytes[0] = value & 0xff;
+      bytes[1] = (value >> 8) & 0xff;
+      bytes[2] = (value >> 16) & 0xff;
+      bytes[3] = (value >> 24) & 0xff;
+      Bit8u *p1 = bytes+(addr&3);
+      Bit8u *p2 = (Bit8u *)data;
+      for (int i=0; i<len; i++) {
+        bx_printf ("Copying byte %02x\n", (unsigned int) *p1);
+        *p2++ = *p1++;
+      }
+    }
+#endif
     for (i = 0; i < len; i++) {
 #if BX_PCI_SUPPORT == 0
       if (a20addr < BX_MEM_THIS len)
@@ -430,7 +464,7 @@ inc_one:
           bx_printf ("Reading from Norm %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
           }
         }
-      else
+      else 
         *data_ptr = 0xff;
 #endif  // BX_PCI_SUPPORT == 0
       addr++;
