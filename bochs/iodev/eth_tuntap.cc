@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.10 2004-01-17 02:13:36 danielg4 Exp $
+// $Id: eth_tuntap.cc,v 1.11 2004-01-17 11:47:12 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,7 +111,9 @@
 #include <linux/if_tun.h>
 #else
 #include <net/if.h>
+#ifndef __APPLE__
 #include <net/if_tap.h>
+#endif
 #endif
 #include <assert.h>
 #include <fcntl.h>
