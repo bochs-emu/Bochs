@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.170 2002-10-29 22:26:31 yakovlev Exp $
+// $Id: main.cc,v 1.171 2002-10-30 18:30:29 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2741,7 +2741,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: ips directive: wrong # args.", context));
       }
     bx_options.Oips->set (atol(params[1]));
-    if (bx_options.Oips->get () < 200000) {
+    if (bx_options.Oips->get () < BX_MIN_IPS) {
       BX_ERROR(("%s: WARNING: ips is AWFULLY low!", context));
       }
     }

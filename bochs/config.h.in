@@ -202,6 +202,11 @@
 // gui definition so that they don't waste their time trying.
 #define BX_USE_IDLE_HACK 0
 
+// Minimum Emulated IPS.
+// This is used in the realtime PIT as well as for checking the
+// IPS value set in the config file.
+#define BX_MIN_IPS 200000
+
 // Use Static Member Funtions to eliminate 'this' pointer passing
 // If you want the efficiency of 'C', you can make all the
 // members of the C++ CPU class to be static.

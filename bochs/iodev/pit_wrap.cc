@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.35 2002-10-29 22:26:32 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.36 2002-10-30 18:30:29 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,10 +80,15 @@ bx_pit_c bx_pit;
 #define DEBUG_GETTIMEOFDAY_WITH_PRINTF 0
 
 
+#define USEC_PER_SECOND (1000000)
+
 #define TIME_DIVIDER (1)
 #define TIME_MULTIPLIER (1)
 #define TIME_HEADSTART (1)
+#define MIN_USEC_PER_SECOND (((((Bit64u)USEC_PER_SECOND)*((Bit64u)BX_MIN_IPS))/((Bit64u)(bx_options.Oips->get())))+(Bit64u)1)
+#if 0
 #define MIN_USEC_PER_SECOND (150000)
+#endif
 //USEC_ALPHA is multiplier for the past.
 //USEC_ALPHA_B is 1-USEC_ALPHA, or multiplier for the present.
 #define USEC_ALPHA ((double)(.8))
@@ -102,7 +107,6 @@ bx_pit_c bx_pit;
 //1.193181MHz Clock
 //1193/1000 Ticks Per usecond.
 #define TICKS_PER_SECOND (1193181)
-#define USEC_PER_SECOND (1000000)
 #define TIME_MULT 1.193
 #define REAL_TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
 #define REAL_USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
