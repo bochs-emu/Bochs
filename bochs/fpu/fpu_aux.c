@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_aux.c                                                                |
- |  $Id: fpu_aux.c,v 1.3 2003-05-15 16:19:38 sshwarts Exp $
+ |  $Id: fpu_aux.c,v 1.4 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | Code to implement some of the FPU auxiliary instructions.                 |
  |                                                                           |
@@ -18,13 +18,11 @@
 #include "control_w.h"
 
 
-static void fnop(void)
-{
-}
+static void fnop(void) { }
 
 void fclex(void)
 {
-  partial_status &= ~(SW_Backward|SW_Summary|SW_Stack_Fault|SW_Precision|
+  FPU_partial_status &= ~(SW_Backward|SW_Summary|SW_Stack_Fault|SW_Precision|
 		   SW_Underflow|SW_Overflow|SW_Zero_Div|SW_Denorm_Op|
 		   SW_Invalid);
   no_ip_update = 1;
@@ -33,17 +31,17 @@ void fclex(void)
 /* Needs to be externally visible */
 void finit()
 {
-  control_word = 0x037f;
-  partial_status = 0;
-  top = 0;            /* We don't keep top in the status word internally. */
-  fpu_tag_word = 0xffff;
+  FPU_control_word = 0x037f;
+  FPU_partial_status = 0;
+  FPU_tos = 0;            /* We don't keep top in the status word internally. */
+  FPU_tag_word = 0xffff;
   /* The behaviour is different from that detailed in
      Section 15.1.6 of the Intel manual */
-  operand_address.offset = 0;
-  operand_address.selector = 0;
-  instruction_address.offset = 0;
-  instruction_address.selector = 0;
-  instruction_address.opcode = 0;
+  FPU_operand_address.offset = 0;
+  FPU_operand_address.selector = 0;
+  FPU_instruction_address.offset = 0;
+  FPU_instruction_address.selector = 0;
+  FPU_instruction_address.opcode = 0;
   no_ip_update = 1;
 }
 
@@ -113,7 +111,7 @@ void fld_i_()
     }
   else
     {
-      if ( control_word & CW_Invalid )
+      if ( FPU_control_word & CW_Invalid )
 	{
 	  /* The masked response */
 	  FPU_stack_underflow();
@@ -131,8 +129,8 @@ void fxch_i()
   FPU_REG t;
   int i = FPU_rm;
   FPU_REG *st0_ptr = &st(0), *sti_ptr = &st(i);
-  s32 tag_word = fpu_tag_word;
-  int regnr = top & 7, regnri = ((regnr + i) & 7);
+  s32 tag_word = FPU_tag_word;
+  int regnr = FPU_tos & 7, regnri = ((regnr + i) & 7);
   u_char st0_tag = (tag_word >> (regnr*2)) & 3;
   u_char sti_tag = (tag_word >> (regnri*2)) & 3;
 
@@ -144,7 +142,7 @@ void fxch_i()
 	  FPU_stack_underflow_i(i);
 	  return;
 	}
-      if ( control_word & CW_Invalid )
+      if ( FPU_control_word & CW_Invalid )
 	{
 	  /* Masked response */
 	  FPU_copy_to_reg0(sti_ptr, sti_tag);
@@ -154,7 +152,7 @@ void fxch_i()
     }
   if ( sti_tag == TAG_Empty )
     {
-      if ( control_word & CW_Invalid )
+      if ( FPU_control_word & CW_Invalid )
 	{
 	  /* Masked response */
 	  FPU_copy_to_regi(st0_ptr, st0_tag, i);
@@ -170,7 +168,7 @@ void fxch_i()
 
   tag_word &= ~(3 << (regnr*2)) & ~(3 << (regnri*2));
   tag_word |= (sti_tag << (regnr*2)) | (st0_tag << (regnri*2));
-  fpu_tag_word = tag_word;
+  FPU_tag_word = tag_word;
 }
 
 

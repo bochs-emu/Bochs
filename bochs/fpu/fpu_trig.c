@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_trig.c                                                               |
- |  $Id: fpu_trig.c,v 1.6 2003-05-15 16:19:39 sshwarts Exp $
+ |  $Id: fpu_trig.c,v 1.7 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | Implementation of the FPU "transcendental" functions.                     |
  |                                                                           |
@@ -36,20 +36,20 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
   FPU_REG tmp;
   u_char tmptag;
   u64 q;
-  int old_cw = control_word, saved_status = partial_status;
+  int old_cw = FPU_control_word, saved_status = FPU_partial_status;
   int tag, st0_tag = TAG_Valid;
 
   if ( exponent(st0_ptr) >= 63 )
     {
-      partial_status |= SW_C2;     /* Reduction incomplete. */
+      FPU_partial_status |= SW_C2;     /* Reduction incomplete. */
       return -1;
     }
 
   if ( flags & FPTAN )
     st0_ptr->exp ++;         /* Effectively base the following upon pi/4 */
 
-  control_word &= ~CW_RC;
-  control_word |= RC_CHOP;
+  FPU_control_word &= ~CW_RC;
+  FPU_control_word |= RC_CHOP;
 
   setpositive(st0_ptr);
   tag = FPU_u_div(st0_ptr,
@@ -159,8 +159,8 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 #endif /* BETTER_THAN_486 */
 
   FPU_settag0(st0_tag);
-  control_word = old_cw;
-  partial_status = saved_status & ~SW_C2;     /* Reduction complete. */
+  FPU_control_word = old_cw;
+  FPU_partial_status = saved_status & ~SW_C2;     /* Reduction complete. */
 
   if ( flags & FPTAN )
     {
@@ -227,7 +227,7 @@ static void single_arg_2_error(FPU_REG *st0_ptr, u_char st0_tag)
       if ( isNaN && !(st0_ptr->sigh & 0x40000000) )   /* Signaling ? */
 	{
 	  EXCEPTION(EX_Invalid);
-	  if ( control_word & CW_Invalid )
+	  if ( FPU_control_word & CW_Invalid )
 	    {
 	      /* The masked response */
 	      /* Convert to a QNaN */
@@ -246,7 +246,7 @@ static void single_arg_2_error(FPU_REG *st0_ptr, u_char st0_tag)
 	{
 	  /* pseudoNaN or other unsupported */
 	  EXCEPTION(EX_Invalid);
-	  if ( control_word & CW_Invalid )
+	  if ( FPU_control_word & CW_Invalid )
 	    {
 	      /* The masked response */
 	      FPU_copy_to_reg0(&CONST_QNaN, TAG_Special);
@@ -324,7 +324,7 @@ static void fptan(FPU_REG *st0_ptr, u_char st0_tag)
   if ( st0_tag == TAG_Empty )
     {
       FPU_stack_underflow();  /* Puts a QNaN in st(0) */
-      if ( control_word & CW_Invalid )
+      if ( FPU_control_word & CW_Invalid )
 	{
 	  st_new_ptr = &st(-1);
 	  push();
@@ -478,7 +478,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
   else if ( st0_tag == TAG_Empty )
     {
       /* Is this the correct behaviour? */
-      if ( control_word & EX_Invalid )
+      if ( FPU_control_word & EX_Invalid )
 	{
 	  FPU_stack_underflow();
 	  push();
@@ -497,13 +497,13 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
 static void fdecstp(void)
 {
   clear_C1();
-  top--;
+  FPU_tos--;
 }
 
 static void fincstp(void)
 {
   clear_C1();
-  top++;
+  FPU_tos++;
 }
 
 
@@ -531,7 +531,7 @@ static void fsqrt_(FPU_REG *st0_ptr, u_char st0_tag)
       setexponent16(st0_ptr, (expon & 1));
 
       /* Do the computation, the sign of the result will be positive. */
-      tag = wm_sqrt(st0_ptr, 0, 0, control_word, SIGN_POS);
+      tag = wm_sqrt(st0_ptr, 0, 0, FPU_control_word, SIGN_POS);
       addexponent(st0_ptr, expon >> 1);
       FPU_settag0(tag);
       return;
@@ -796,7 +796,7 @@ static void fsincos(FPU_REG *st0_ptr, u_char st0_tag)
   if ( st0_tag == TAG_Empty )
     {
       FPU_stack_underflow();  /* Puts a QNaN in st(0) */
-      if ( control_word & CW_Invalid )
+      if ( FPU_control_word & CW_Invalid )
 	{
 	  st_new_ptr = &st(-1);
 	  push();
@@ -930,14 +930,14 @@ static void do_fprem(FPU_REG *st0_ptr, u_char st0_tag, int round)
       st1_sign = FPU_to_exp16(st1_ptr, &st1);
       expdif = exponent16(&st0) - exponent16(&st1);
 
-      old_cw = control_word;
+      old_cw = FPU_control_word;
       cc = 0;
 
       /* We want the status following the denorm tests, but don't want
 	 the status changed by the arithmetic operations. */
-      saved_status = partial_status;
-      control_word &= ~CW_RC;
-      control_word |= RC_CHOP;
+      saved_status = FPU_partial_status;
+      FPU_control_word &= ~CW_RC;
+      FPU_control_word |= RC_CHOP;
 
       if ( expdif < 64 )
 	{
@@ -999,7 +999,7 @@ static void do_fprem(FPU_REG *st0_ptr, u_char st0_tag, int round)
 	    }
 	  else
 	    {
-	      control_word = old_cw;
+	      FPU_control_word = old_cw;
 	      setcc(0);
 	      return;
 	    }
@@ -1047,8 +1047,8 @@ static void do_fprem(FPU_REG *st0_ptr, u_char st0_tag, int round)
 	  if ( !(tmp.sigh | tmp.sigl) )
 	    {
 	      /* The result is zero */
-	      control_word = old_cw;
-	      partial_status = saved_status;
+	      FPU_control_word = old_cw;
+	      FPU_partial_status = saved_status;
 	      FPU_copy_to_reg0(&CONST_Z, TAG_Zero);
 	      setsign(&st0, st0_sign);
 #ifdef PECULIAR_486
@@ -1061,15 +1061,15 @@ static void do_fprem(FPU_REG *st0_ptr, u_char st0_tag, int round)
 	  cc = SW_C2;
 	}
 
-      control_word = old_cw;
-      partial_status = saved_status;
+      FPU_control_word = old_cw;
+      FPU_partial_status = saved_status;
       tag = FPU_normalize_nuo(&tmp, 0);
       reg_copy(&tmp, st0_ptr);
 
       /* The only condition to be looked for is underflow,
 	 and it can occur here only if underflow is unmasked. */
       if ( (exponent16(&tmp) <= EXP_UNDER) && (tag != TAG_Zero)
-	  && !(control_word & CW_Underflow) )
+	  && !(FPU_control_word & CW_Underflow) )
 	{
 	  setcc(cc);
 	  tag = arith_underflow(st0_ptr);
@@ -1713,7 +1713,7 @@ static void fscale(FPU_REG *st0_ptr, u_char st0_tag)
 {
   FPU_REG *st1_ptr = &st(1);
   u_char st1_tag = FPU_gettagi(1);
-  int old_cw = control_word;
+  int old_cw = FPU_control_word;
   u_char sign = getsign(st0_ptr);
 
   clear_C1();
@@ -1745,18 +1745,18 @@ static void fscale(FPU_REG *st0_ptr, u_char st0_tag)
 	  return;
 	}
 
-      control_word &= ~CW_RC;
-      control_word |= RC_CHOP;
+      FPU_control_word &= ~CW_RC;
+      FPU_control_word |= RC_CHOP;
       reg_copy(st1_ptr, &tmp);
       FPU_round_to_int(&tmp, st1_tag);      /* This can never overflow here */
-      control_word = old_cw;
+      FPU_control_word = old_cw;
       scale = signnegative(st1_ptr) ? -tmp.sigl : tmp.sigl;
       scale += exponent16(st0_ptr);
 
       setexponent16(st0_ptr, scale);
 
       /* Use FPU_round() to properly detect under/overflow etc */
-      FPU_round(st0_ptr, 0, 0, control_word, sign);
+      FPU_round(st0_ptr, 0, 0, FPU_control_word, sign);
 
       return;
     }

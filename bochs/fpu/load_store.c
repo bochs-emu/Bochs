@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
- |  $Id: load_store.c,v 1.9 2003-07-31 18:54:48 sshwarts Exp $
+ |  $Id: load_store.c,v 1.10 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |
@@ -31,7 +31,7 @@
 #define _PUSH_ 3   /* Need to check for space to push onto stack */
 #define _null_ 4   /* Function illegal or not implemented */
 
-#define pop_0()	{ FPU_settag0(TAG_Empty); top++; }
+#define pop_0()	{ FPU_settag0(TAG_Empty); FPU_tos++; }
 
 
 static u_char const type_table[32] = {
@@ -105,7 +105,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
       {
 	if ( FPU_gettagi(-1) != TAG_Empty )
 	  { FPU_stack_overflow(); return 0; }
-	top--;
+	FPU_tos--;
 	st0_ptr = &st(0);
       }
       break;
@@ -128,7 +128,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 	   && isNaN(&loaded_data)
 	   && (real_1op_NaN(&loaded_data) < 0) )
 	{
-	  top++;
+	  FPU_tos++;
 	  break;
 	}
       FPU_copy_to_reg0(&loaded_data, loaded_tag);
@@ -141,11 +141,11 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
     case 002:      /* fld m64real */
       clear_C1();
       loaded_tag = FPU_load_double(data_address, &loaded_data);
-      if ( (loaded_tag == TAG_Special)
+      if ((loaded_tag == TAG_Special)
 	   && isNaN(&loaded_data)
-	   && (real_1op_NaN(&loaded_data) < 0) )
+	   && (real_1op_NaN(&loaded_data) < 0))
 	{
-	  top++;
+	  FPU_tos++;
 	  break;
 	}
       FPU_copy_to_reg0(&loaded_data, loaded_tag);
@@ -213,14 +213,14 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
     case 024:     /* fldcw */
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_READ, data_address, 2);
-      FPU_get_user(control_word, data_address, 2);
+      FPU_get_user(FPU_control_word, data_address, 2);
       RE_ENTRANT_CHECK_ON;
-      if ( partial_status & ~control_word & CW_Exceptions )
-	partial_status |= (SW_Summary | SW_Backward);
+      if ( FPU_partial_status & ~FPU_control_word & CW_Exceptions )
+	FPU_partial_status |= (SW_Summary | SW_Backward);
       else
-	partial_status &= ~(SW_Summary | SW_Backward);
+	FPU_partial_status &= ~(SW_Summary | SW_Backward);
 #ifdef PECULIAR_486
-      control_word |= 0x40;  /* An 80486 appears to always set this bit */
+      FPU_control_word |= 0x40;  /* An 80486 appears to always set this bit */
 #endif /* PECULIAR_486 */
       return 1;
     case 025:      /* fld m80real */
@@ -248,7 +248,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
     case 034:      /* fstcw m16int */
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE,data_address,2);
-      FPU_put_user(control_word, data_address, 2);
+      FPU_put_user(FPU_control_word, data_address, 2);
       RE_ENTRANT_CHECK_ON;
       return 1;
     case 035:      /* fstp m80real */

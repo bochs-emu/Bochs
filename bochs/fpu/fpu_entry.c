@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.13 2003-07-31 18:54:48 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.14 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -149,13 +149,13 @@ math_emulate(fpu_addr_modes addr_modes,
   no_ip_update = 0;
 
   if (byte1 == FWAIT_OPCODE) {
-    if (partial_status & SW_Summary)
+    if (FPU_partial_status & SW_Summary)
       goto do_the_FPU_interrupt;
     else
       goto FPU_fwait_done;
     }
 
-  if (partial_status & SW_Summary) {
+  if (FPU_partial_status & SW_Summary) {
     /* Ignore the error for now if the current instruction is a no-wait
        control instruction */
     /* The 80486 manual contradicts itself on this topic,
@@ -185,7 +185,7 @@ do_the_FPU_interrupt:
       /* All of these instructions use the mod/rm byte to get a data address */
 
       if (!(byte1 & 1)) {
-          u16 status1 = partial_status;
+          u16 status1 = FPU_partial_status;
 
           st0_ptr = &st(0);
           st0_tag = FPU_gettag0();
@@ -235,13 +235,13 @@ do_the_FPU_interrupt:
                 {
                   /* Restore the status word; we might have loaded a
                      denormal. */
-                  partial_status = status1;
+                  FPU_partial_status = status1;
                   if ((FPU_modrm & 0x30) == 0x10)
                     {
                       /* fcom or fcomp */
                       EXCEPTION(EX_Invalid);
                       setcc(SW_C3 | SW_C2 | SW_C0);
-                      if ((FPU_modrm & 0x08) && (control_word & CW_Invalid))
+                      if ((FPU_modrm & 0x08) && (FPU_control_word & CW_Invalid))
                         FPU_pop();             /* fcomp, masked, so we pop. */
                     }
                   else
@@ -279,8 +279,8 @@ do_the_FPU_interrupt:
                                  exception in the loaded data was for a
                                  denormal operand */
                               /* Restore the state of the denormal op bit */
-                              partial_status &= ~SW_Denorm_Op;
-                              partial_status |= status1 & SW_Denorm_Op;
+                              FPU_partial_status &= ~SW_Denorm_Op;
+                              FPU_partial_status |= status1 & SW_Denorm_Op;
                             }
                           else
                             setsign(st0_ptr, getsign(&loaded_data));
@@ -293,11 +293,11 @@ do_the_FPU_interrupt:
                 {
                 case 0:         /* fadd */
                   clear_C1();
-                  FPU_add(&loaded_data, loaded_tag, 0, control_word);
+                  FPU_add(&loaded_data, loaded_tag, 0, FPU_control_word);
                   break;
                 case 1:         /* fmul */
                   clear_C1();
-                  FPU_mul(&loaded_data, loaded_tag, 0, control_word);
+                  FPU_mul(&loaded_data, loaded_tag, 0, FPU_control_word);
                   break;
                 case 2:         /* fcom */
                   FPU_compare_st_data(&loaded_data, loaded_tag);
@@ -311,22 +311,22 @@ do_the_FPU_interrupt:
                   break;
                 case 4:         /* fsub */
                   clear_C1();
-                  FPU_sub(LOADED|loaded_tag, &loaded_data, control_word);
+                  FPU_sub(LOADED|loaded_tag, &loaded_data, FPU_control_word);
                   break;
                 case 5:         /* fsubr */
                   clear_C1();
-                  FPU_sub(REV|LOADED|loaded_tag, &loaded_data, control_word);
+                  FPU_sub(REV|LOADED|loaded_tag, &loaded_data, FPU_control_word);
                   break;
                 case 6:         /* fdiv */
                   clear_C1();
-                  FPU_div(LOADED|loaded_tag, &loaded_data, control_word);
+                  FPU_div(LOADED|loaded_tag, &loaded_data, FPU_control_word);
                   break;
                 case 7:         /* fdivr */
                   clear_C1();
                   if (st0_tag == TAG_Zero)
-                    partial_status = status1;  /* Undo any denorm tag,
+                    FPU_partial_status = status1;  /* Undo any denorm tag,
                                                   zero-divide has priority. */
-                  FPU_div(REV|LOADED|loaded_tag, &loaded_data, control_word);
+                  FPU_div(REV|LOADED|loaded_tag, &loaded_data, FPU_control_word);
                   break;
                 }
             }
@@ -337,21 +337,21 @@ do_the_FPU_interrupt:
                   /* The instruction is fcom or fcomp */
                   EXCEPTION(EX_StackUnder);
                   setcc(SW_C3 | SW_C2 | SW_C0);
-                  if ((FPU_modrm & 0x08) && (control_word & CW_Invalid))
+                  if ((FPU_modrm & 0x08) && (FPU_control_word & CW_Invalid))
                     FPU_pop();             /* fcomp */
                 }
               else
                 FPU_stack_underflow();
             }
         reg_mem_instr_done:
-          operand_address = data_sel_off;
+          FPU_operand_address = data_sel_off;
         }
       else {
           if (!(no_ip_update =
                  FPU_load_store(((FPU_modrm & 0x38) | (byte1 & 6)) >> 1,
                                 addr_modes, data_address)))
             {
-              operand_address = data_sel_off;
+              FPU_operand_address = data_sel_off;
             }
         }
     }
@@ -362,8 +362,8 @@ do_the_FPU_interrupt:
 #ifdef PECULIAR_486
       /* This is supposed to be undefined, but a real 80486 seems
          to do this: */
-      operand_address.offset = 0;
-      operand_address.selector = FPU_DS;
+      FPU_operand_address.offset = 0;
+      FPU_operand_address.selector = FPU_DS;
 #endif /* PECULIAR_486 */
 
       st0_ptr = &st(0);
@@ -416,7 +416,7 @@ FPU_instruction_done:
     }
 
   if (! no_ip_update)
-    instruction_address = entry_sel_off;
+    FPU_instruction_address = entry_sel_off;
 
 FPU_fwait_done:
 

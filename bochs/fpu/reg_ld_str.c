@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.13 2003-07-25 08:59:45 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.14 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -409,7 +409,7 @@ FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
 
   /* Empty register (stack underflow) */
   EXCEPTION(EX_StackUnder);
-  if (control_word & CW_Invalid)
+  if (FPU_control_word & CW_Invalid)
     {
       /* The masked response */
       /* Put out the QNaN indefinite */
@@ -434,7 +434,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
   u32 increment = 0;	/* avoid gcc warnings */
   int precision_loss;
   int exp;
-  int rc = control_word & CW_RC;
+  int rc = FPU_control_word & CW_RC;
   FPU_REG tmp;
 
   if (st0_tag == TAG_Valid)
@@ -462,11 +462,11 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
 		  EXCEPTION(EX_Underflow);
 		  /* This is a special case: see sec 16.2.5.1 of
 		     the 80486 book */
-		  if (!(control_word & CW_Underflow))
+		  if (!(FPU_control_word & CW_Underflow))
 		    return 0;
 		}
 	      EXCEPTION(precision_loss);
-	      if (!(control_word & CW_Precision))
+	      if (!(FPU_control_word & CW_Precision))
 		return 0;
 	    }
 	  l[0] = tmp.sigl;
@@ -534,10 +534,10 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
 	    {
 	    overflow:
 	      EXCEPTION(EX_Overflow);
-	      if (!(control_word & CW_Overflow))
+	      if (!(FPU_control_word & CW_Overflow))
 		return 0;
 	      set_precision_flag_up();
-	      if (!(control_word & CW_Precision))
+	      if (!(FPU_control_word & CW_Precision))
 		return 0;
 
          /* This is a special case: see sec 16.2.5.1 of the 80486 book */
@@ -594,7 +594,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
 	  /* An 80486 is supposed to be able to generate
 	     a denormal exception here, but... */
 	  /* Underflow has priority. */
-	  if (control_word & CW_Underflow)
+	  if (FPU_control_word & CW_Underflow)
 	    denormal_operand();
 #endif /* PECULIAR_486 */
 	  reg_copy(st0_ptr, &tmp);
@@ -618,7 +618,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
 		{
 		  /* It is a signalling NaN */
 		  EXCEPTION(EX_Invalid);
-		  if (!(control_word & CW_Invalid))
+		  if (!(FPU_control_word & CW_Invalid))
 		    return 0;
 		  l[1] |= (0x40000000 >> 11);
 		}
@@ -628,7 +628,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
 	    {
 	      /* It is an unsupported data type */
 	      EXCEPTION(EX_Invalid);
-	      if (!(control_word & CW_Invalid))
+	      if (!(FPU_control_word & CW_Invalid))
 		return 0;
 	      l[0] = 0;
 	      l[1] = 0xfff80000;
@@ -639,7 +639,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
     {
       /* Empty register (stack underflow) */
       EXCEPTION(EX_StackUnder);
-      if (control_word & CW_Invalid)
+      if (FPU_control_word & CW_Invalid)
 	{
 	  /* The masked response */
 	  /* Put out the QNaN indefinite */
@@ -674,7 +674,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
   u32 increment = 0;     	/* avoid gcc warnings */
   int precision_loss;
   int exp;
-  int rc = control_word & CW_RC;
+  int rc = FPU_control_word & CW_RC;
   FPU_REG tmp;
 
   if (st0_tag == TAG_Valid)
@@ -703,11 +703,11 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 		  EXCEPTION(EX_Underflow);
 		  /* This is a special case: see sec 16.2.5.1 of
 		     the 80486 book */
-		  if (!(control_word & CW_Underflow))
+		  if (!(FPU_control_word & CW_Underflow))
 		    return 0;
 		}
 	      EXCEPTION(precision_loss);
-	      if (!(control_word & CW_Precision))
+	      if (!(FPU_control_word & CW_Precision))
 		return 0;
 	    }
 	  templ = tmp.sigl;
@@ -773,10 +773,10 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 	    {
 	    overflow:
 	      EXCEPTION(EX_Overflow);
-	      if (!(control_word & CW_Overflow))
+	      if (!(FPU_control_word & CW_Overflow))
 		return 0;
 	      set_precision_flag_up();
-	      if (!(control_word & CW_Precision))
+	      if (!(FPU_control_word & CW_Precision))
 		return 0;
 
          /* This is a special case: see sec 16.2.5.1 of the 80486 book. */
@@ -820,7 +820,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 	  /* An 80486 is supposed to be able to generate
 	     a denormal exception here, but... */
 	  /* Underflow has priority. */
-	  if (control_word & CW_Underflow)
+	  if (FPU_control_word & CW_Underflow)
 	    denormal_operand();
 #endif /* PECULIAR_486 */
 	  goto denormal_arg;
@@ -840,7 +840,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 		{
 		  /* It is a signalling NaN */
 		  EXCEPTION(EX_Invalid);
-		  if (!(control_word & CW_Invalid))
+		  if (!(FPU_control_word & CW_Invalid))
 		    return 0;
 		  templ |= (0x40000000 >> 8);
 		}
@@ -850,7 +850,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 	    {
 	      /* It is an unsupported data type */
 	      EXCEPTION(EX_Invalid);
-	      if (!(control_word & CW_Invalid))
+	      if (!(FPU_control_word & CW_Invalid))
 		return 0;
 	      templ = 0xffc00000;
 	    }
@@ -867,7 +867,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
     {
       /* Empty register (stack underflow) */
       EXCEPTION(EX_StackUnder);
-      if (control_word & EX_Invalid)
+      if (FPU_control_word & EX_Invalid)
 	{
 	  /* The masked response */
 	  /* Put out the QNaN indefinite */
@@ -941,7 +941,7 @@ FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
       EXCEPTION(EX_Invalid);
       /* This is a special case: see sec 16.2.5.1 of the 80486 book */
     invalid_operand:
-      if (control_word & EX_Invalid)
+      if (FPU_control_word & EX_Invalid)
 	{
 	  /* Produce something like QNaN "indefinite" */
 	  tll = BX_CONST64(0x8000000000000000);
@@ -1000,7 +1000,7 @@ FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
       EXCEPTION(EX_Invalid);
       /* This is a special case: see sec 16.2.5.1 of the 80486 book */
     invalid_operand:
-      if (control_word & EX_Invalid)
+      if (FPU_control_word & EX_Invalid)
 	{
 	  /* Produce something like QNaN "indefinite" */
 	  t.sigl = 0x80000000;
@@ -1058,7 +1058,7 @@ FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
       EXCEPTION(EX_Invalid);
       /* This is a special case: see sec 16.2.5.1 of the 80486 book */
     invalid_operand:
-      if (control_word & EX_Invalid)
+      if (FPU_control_word & EX_Invalid)
 	{
 	  /* Produce something like QNaN "indefinite" */
 	  t.sigl = 0x8000;
@@ -1121,7 +1121,7 @@ FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
       EXCEPTION(EX_Invalid);
       /* This is a special case: see sec 16.2.5.1 of the 80486 book */
     invalid_operand:
-      if (control_word & CW_Invalid)
+      if (FPU_control_word & CW_Invalid)
 	{
 	  /* Produce the QNaN "indefinite" */
 	  RE_ENTRANT_CHECK_OFF;
@@ -1199,7 +1199,7 @@ FPU_round_to_int(FPU_REG *r, u_char tag)
 #define	half_or_more	(eax & 0x80000000)
 #define	frac_part	(eax)
 #define more_than_half  (eax > 0x80000000)
-  switch (control_word & CW_RC)
+  switch (FPU_control_word & CW_RC)
     {
     case RC_RND:
       if (more_than_half               	/* nearest */
@@ -1249,48 +1249,48 @@ fldenv(fpu_addr_modes addr_modes, bx_address s)
     {
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_READ, s, 0x0e);
-      FPU_get_user(control_word, s, 2);
-      FPU_get_user(partial_status, (s+2), 2);
+      FPU_get_user(FPU_control_word, s, 2);
+      FPU_get_user(FPU_partial_status, (s+2), 2);
       FPU_get_user(tag_word, (s+4), 2);
-      FPU_get_user(instruction_address.offset, (s+6), 2);
-      FPU_get_user(instruction_address.selector, (s+8), 2);
-      FPU_get_user(operand_address.offset, (s+0x0a), 2);
-      FPU_get_user(operand_address.selector, (s+0x0c), 2);
+      FPU_get_user(FPU_instruction_address.offset, (s+6), 2);
+      FPU_get_user(FPU_instruction_address.selector, (s+8), 2);
+      FPU_get_user(FPU_operand_address.offset, (s+0x0a), 2);
+      FPU_get_user(FPU_operand_address.selector, (s+0x0c), 2);
       RE_ENTRANT_CHECK_ON;
       s += 0x0e;
       if (addr_modes.default_mode == VM86)
 	{
-	  instruction_address.offset
-	    += (instruction_address.selector & 0xf000) << 4;
-	  operand_address.offset += (operand_address.selector & 0xf000) << 4;
+	  FPU_instruction_address.offset
+	    += (FPU_instruction_address.selector & 0xf000) << 4;
+	  FPU_operand_address.offset += (FPU_operand_address.selector & 0xf000) << 4;
 	}
     }
   else
     {
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_READ, s, 0x1c);
-      FPU_get_user(control_word, s, 2);
-      FPU_get_user(partial_status, (s+4), 2);
+      FPU_get_user(FPU_control_word, s, 2);
+      FPU_get_user(FPU_partial_status, (s+4), 2);
       FPU_get_user(tag_word, (s+8), 2);
-      FPU_get_user(instruction_address.offset, (s+0x0c), 4);
-      FPU_get_user(instruction_address.selector, (s+0x10), 2);
-      FPU_get_user(instruction_address.opcode, (s+0x12), 2);
-      FPU_get_user(operand_address.offset, (s+0x14), 4);
-      FPU_get_user(operand_address.selector, (s+0x18), 4);
+      FPU_get_user(FPU_instruction_address.offset, (s+0x0c), 4);
+      FPU_get_user(FPU_instruction_address.selector, (s+0x10), 2);
+      FPU_get_user(FPU_instruction_address.opcode, (s+0x12), 2);
+      FPU_get_user(FPU_operand_address.offset, (s+0x14), 4);
+      FPU_get_user(FPU_operand_address.selector, (s+0x18), 4);
       RE_ENTRANT_CHECK_ON;
       s += 0x1c;
     }
 
 #ifdef PECULIAR_486
-  control_word &= ~0xe080;
+  FPU_control_word &= ~0xe080;
 #endif /* PECULIAR_486 */
 
-  top = (partial_status >> SW_Top_Shift) & 7;
+  FPU_tos = (FPU_partial_status >> SW_Top_Shift) & 7;
 
-  if (partial_status & ~control_word & CW_Exceptions)
-    partial_status |= (SW_Summary | SW_Backward);
+  if (FPU_partial_status & ~FPU_control_word & CW_Exceptions)
+    FPU_partial_status |= (SW_Summary | SW_Backward);
   else
-    partial_status &= ~(SW_Summary | SW_Backward);
+    FPU_partial_status &= ~(SW_Summary | SW_Backward);
 
   for (i = 0; i < 8; i++)
     {
@@ -1333,7 +1333,7 @@ frstor(fpu_addr_modes addr_modes, bx_address data_address)
 {
   int i, regnr;
   bx_address s = fldenv(addr_modes, data_address);
-  int offset = (top & 7) * sizeof(FPU_REG), other = 8*sizeof(FPU_REG) - offset;
+  int offset = (FPU_tos & 7) * sizeof(FPU_REG), other = 8*sizeof(FPU_REG) - offset;
 
   /* Copy all registers in stack order. */
   RE_ENTRANT_CHECK_OFF;
@@ -1341,7 +1341,7 @@ frstor(fpu_addr_modes addr_modes, bx_address data_address)
   {
   FPU_REG *fpu_reg_p;
 
-  fpu_reg_p = (FPU_REG *) (register_base+offset);
+  fpu_reg_p = (FPU_REG *) (FPU_register_base+offset);
   while (other>0) {
     FPU_get_user(fpu_reg_p->sigl, (s+0), 4);
     FPU_get_user(fpu_reg_p->sigh, (s+4), 4);
@@ -1350,7 +1350,7 @@ frstor(fpu_addr_modes addr_modes, bx_address data_address)
     s += 10;
     other -= sizeof(FPU_REG);
     }
-  fpu_reg_p = (FPU_REG *) register_base;
+  fpu_reg_p = (FPU_REG *) FPU_register_base;
   while (offset>0) {
     FPU_get_user(fpu_reg_p->sigl, (s+0), 4);
     FPU_get_user(fpu_reg_p->sigh, (s+4), 4);
@@ -1364,7 +1364,7 @@ frstor(fpu_addr_modes addr_modes, bx_address data_address)
 
   for (i = 0; i < 8; i++)
     {
-      regnr = (i+top) & 7;
+      regnr = (i+FPU_tos) & 7;
       if (FPU_gettag(regnr) != TAG_Empty)
 	/* The loaded data over-rides all other cases. */
 	FPU_settag(regnr, FPU_tagof(&st(i)));
@@ -1383,25 +1383,25 @@ fstenv(fpu_addr_modes addr_modes, bx_address d)
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE,d,14);
 #ifdef PECULIAR_486
-      FPU_put_user(control_word & ~0xe080, d, 4);
+      FPU_put_user(FPU_control_word & ~0xe080, d, 4);
 #else
-      FPU_put_user(control_word, d,2);
+      FPU_put_user(FPU_control_word, d,2);
 #endif /* PECULIAR_486 */
       FPU_put_user(status_word(), (d+2), 2);
-      FPU_put_user(fpu_tag_word,  (d+4), 2);
-      FPU_put_user(instruction_address.offset, (d+6), 2);
-      FPU_put_user(operand_address.offset, (d+0x0a), 2);
+      FPU_put_user(FPU_tag_word,  (d+4), 2);
+      FPU_put_user(FPU_instruction_address.offset, (d+6), 2);
+      FPU_put_user(FPU_operand_address.offset, (d+0x0a), 2);
       if (addr_modes.default_mode == VM86)
 	{
-	  FPU_put_user((instruction_address.offset & 0xf0000) >> 4,
+	  FPU_put_user((FPU_instruction_address.offset & 0xf0000) >> 4,
 		      (d+8), 2);
-	  FPU_put_user((operand_address.offset & 0xf0000) >> 4,
+	  FPU_put_user((FPU_operand_address.offset & 0xf0000) >> 4,
 		      (d+0x0c), 2);
 	}
       else
 	{
-	  FPU_put_user(instruction_address.selector, (d+8), 2);
-	  FPU_put_user(operand_address.selector, (d+0x0c), 2);
+	  FPU_put_user(FPU_instruction_address.selector, (d+8), 2);
+	  FPU_put_user(FPU_operand_address.selector, (d+0x0c), 2);
 	}
       RE_ENTRANT_CHECK_ON;
       d += 0x0e;
@@ -1411,11 +1411,11 @@ fstenv(fpu_addr_modes addr_modes, bx_address d)
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE, d, 7*4);
 #ifdef PECULIAR_486
-      control_word &= ~0xe080;
+      FPU_control_word &= ~0xe080;
       /* An 80486 sets nearly all of the reserved bits to 1. */
-      control_word |= 0xffff0040;
-      partial_status = status_word() | 0xffff0000;
-      fpu_tag_word |= 0xffff0000;
+      FPU_control_word |= 0xffff0040;
+      FPU_partial_status = status_word() | 0xffff0000;
+      FPU_tag_word |= 0xffff0000;
       i387.fcs &= ~0xf8000000;
       i387.fos |= 0xffff0000;
 #endif /* PECULIAR_486 */
@@ -1430,8 +1430,8 @@ fstenv(fpu_addr_modes addr_modes, bx_address d)
       d += 0x1c;
     }
 
-  control_word |= CW_Exceptions;
-  partial_status &= ~(SW_Summary | SW_Backward);
+  FPU_control_word |= CW_Exceptions;
+  FPU_partial_status &= ~(SW_Summary | SW_Backward);
 
   return d;
 }
@@ -1441,7 +1441,7 @@ void  BX_CPP_AttrRegparmN(2)
 fsave(fpu_addr_modes addr_modes, bx_address data_address)
 {
   bx_address d;
-  int offset = (top & 7) * sizeof(FPU_REG), other = 8*sizeof(FPU_REG) - offset;
+  int offset = (FPU_tos & 7) * sizeof(FPU_REG), other = 8*sizeof(FPU_REG) - offset;
 
   d = fstenv(addr_modes, data_address);
 
@@ -1452,7 +1452,7 @@ fsave(fpu_addr_modes addr_modes, bx_address data_address)
   {
   FPU_REG *fpu_reg_p;
 
-  fpu_reg_p = (FPU_REG *) (register_base+offset);
+  fpu_reg_p = (FPU_REG *) (FPU_register_base+offset);
   while (other>0) {
     FPU_put_user(fpu_reg_p->sigl, (d+0), 4);
     FPU_put_user(fpu_reg_p->sigh, (d+4), 4);
@@ -1461,7 +1461,7 @@ fsave(fpu_addr_modes addr_modes, bx_address data_address)
     d += 10;
     other -= sizeof(FPU_REG);
     }
-  fpu_reg_p = (FPU_REG *) register_base;
+  fpu_reg_p = (FPU_REG *) FPU_register_base;
   while (offset>0) {
     FPU_put_user(fpu_reg_p->sigl, (d+0), 4);
     FPU_put_user(fpu_reg_p->sigh, (d+4), 4);

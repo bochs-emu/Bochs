@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.12 2003-07-31 17:39:24 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.13 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -20,13 +20,6 @@
  * spec...
  */
 #define PECULIAR_486
-
-/*
- * change a pointer to an int, with type conversions that make it legal.
- * On machines with 64-bit pointers, compilers complain when you typecast
- * a 64-bit pointer into a 32-bit integer. 
- */
-#define PTR2INT(x) ((bx_ptr_equiv_t)(void *)(x))
 
 #define EXP_BIAS	(0)
 #define EXP_OVER	(0x4000)    /* smallest invalid large exponent */
@@ -90,25 +83,6 @@ extern u_char emulating;
 #define OP_SIZE_PREFIX 0x66
 #define ADDR_SIZE_PREFIX 0x67
 
-#ifndef USE_WITH_CPU_SIM
-#define PREFIX_CS 0x2e
-#define PREFIX_DS 0x3e
-#define PREFIX_ES 0x26
-#define PREFIX_SS 0x36
-#define PREFIX_FS 0x64
-#define PREFIX_GS 0x65
-#define PREFIX_REPE 0xf3
-#define PREFIX_REPNE 0xf2
-#define PREFIX_LOCK 0xf0
-#define PREFIX_CS_ 1
-#define PREFIX_DS_ 2
-#define PREFIX_ES_ 3
-#define PREFIX_FS_ 4
-#define PREFIX_GS_ 5
-#define PREFIX_SS_ 6
-#define PREFIX_DEFAULT 7
-#endif
-
 struct address {
   bx_address offset;
 #ifdef EMU_BIG_ENDIAN
@@ -165,12 +139,14 @@ struct fpu__reg {
 typedef void (*FUNC)(void);
 typedef struct fpu__reg FPU_REG;
 typedef void (*FUNC_ST0)(FPU_REG *st0_ptr, u_char st0_tag);
+
 typedef struct { u_char address_size, operand_size, segment; }
         GCC_ATTRIBUTE((packed)) overrides;
 /* This structure is 32 bits: */
 typedef struct { overrides override;
 		 u_char default_mode; } 
     GCC_ATTRIBUTE((packed)) fpu_addr_modes;
+
 /* PROTECTED has a restricted meaning in the emulator; it is used
    to signal that the emulator needs to do special things to ensure
    that protection is respected in a segmented model. */
@@ -184,9 +160,8 @@ typedef struct { overrides override;
 extern u_char const data_sizes_16[32];
 #endif
 
-#define register_base ((u_char *) registers )
-#define fpu_register(x)  ( * ((FPU_REG *)( register_base + sizeof(FPU_REG) * (x & 7) )) )
-#define	st(x)      ( * ((FPU_REG *)( register_base + sizeof(FPU_REG) * ((top+x) & 7) )) )
+#define fpu_register(x)  ( * ((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * (x & 7) )))
+#define	st(x)      ( * ((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * ((FPU_tos+x) & 7) )))
 
 #define	STACK_OVERFLOW	(FPU_stackoverflow(&st_new_ptr))
 #define	NOT_EMPTY(i)	(!FPU_empty_i(i))
@@ -194,7 +169,7 @@ extern u_char const data_sizes_16[32];
 #define	NOT_EMPTY_ST0	(st0_tag ^ TAG_Empty)
 
 /* push() does not affect the tags */
-#define push()	{ top--; }
+#define push()	{ FPU_tos--; }
 
 #define getsign(a) (signbyte(a) & 0x80)
 #define setsign(a,b) { if (b) signbyte(a) |= 0x80; else signbyte(a) &= 0x7f; }

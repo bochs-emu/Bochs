@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_constant.c                                                           |
- |  $Id: reg_constant.c,v 1.4 2003-05-15 16:19:39 sshwarts Exp $
+ |  $Id: reg_constant.c,v 1.5 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | All of the constant FPU_REGs                                              |
  |                                                                           |
@@ -116,5 +116,5 @@ static FUNC_RC constants_table[] = {
 
 void fconst(void)
 {
-  (constants_table[FPU_rm])(control_word & CW_RC);
+  (constants_table[FPU_rm])(FPU_control_word & CW_RC);
 }

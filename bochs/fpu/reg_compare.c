@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_compare.c                                                            |
- |  $Id: reg_compare.c,v 1.4 2003-07-31 17:39:24 sshwarts Exp $
+ |  $Id: reg_compare.c,v 1.5 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  | Compare two floating point registers                                      |
  |                                                                           |
@@ -225,7 +225,7 @@ static int compare_st_st(int nr)
       setcc(SW_C3 | SW_C2 | SW_C0);
       /* Stack fault */
       EXCEPTION(EX_StackUnder);
-      return !(control_word & CW_Invalid);
+      return !(FPU_control_word & CW_Invalid);
     }
 
   st_ptr = &st(nr);
@@ -234,7 +234,7 @@ static int compare_st_st(int nr)
     {
       setcc(SW_C3 | SW_C2 | SW_C0);
       EXCEPTION(EX_Invalid);
-      return !(control_word & CW_Invalid);
+      return !(FPU_control_word & CW_Invalid);
     }
   else
     switch (c & 7)
@@ -277,7 +277,7 @@ static int compare_u_st_st(int nr)
       setcc(SW_C3 | SW_C2 | SW_C0);
       /* Stack fault */
       EXCEPTION(EX_StackUnder);
-      return !(control_word & CW_Invalid);
+      return !(FPU_control_word & CW_Invalid);
     }
 
   st_ptr = &st(nr);
@@ -289,7 +289,7 @@ static int compare_u_st_st(int nr)
 				  un-ordered and ordinary comparisons */
 	{
 	  EXCEPTION(EX_Invalid);
-	  return !(control_word & CW_Invalid);
+	  return !(FPU_control_word & CW_Invalid);
 	}
       return 0;
     }

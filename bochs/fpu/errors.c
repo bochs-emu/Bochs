@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.7 2003-07-31 18:54:47 sshwarts Exp $
+ |  $Id: errors.c,v 1.8 2003-07-31 21:07:38 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -33,46 +33,6 @@
 #undef PRINT_MESSAGES
 /* */
 
-
-#ifndef USE_WITH_CPU_SIM
-void Un_impl(void)
-{
-  u_char byte1, FPU_modrm;
-  u32 address = FPU_ORIG_EIP;
-
-  RE_ENTRANT_CHECK_OFF;
-  /* No need to verify_area(), we have previously fetched these bytes. */
-  printk("Unimplemented FPU Opcode at eip=%p : ", (void *) address);
-  if ( FPU_CS == __USER_CS )
-    {
-      while ( 1 )
-	{
-	  FPU_get_user(byte1, (u_char *) address);
-	  if ( (byte1 & 0xf8) == 0xd8 ) break;
-	  printk("[%02x]", byte1);
-	  address++;
-	}
-      printk("%02x ", byte1);
-      FPU_get_user(FPU_modrm, 1 + (u_char *) address);
-      
-      if (FPU_modrm >= 0300)
-	printk("%02x (%02x+%d)\n", FPU_modrm, FPU_modrm & 0xf8, FPU_modrm & 7);
-      else
-	printk("/%d\n", (FPU_modrm >> 3) & 7);
-    }
-  else
-    {
-      printk("cs selector = %04x\n", FPU_CS);
-    }
-
-  RE_ENTRANT_CHECK_ON;
-
-  EXCEPTION(EX_Invalid);
-
-}
-#endif
-
-
 /*
    Called for opcodes which are illegal and which are known to result in a
    SIGILL with a real 80486.
@@ -81,7 +41,6 @@ void FPU_illegal(void)
 {
   math_abort(NULL, SIGILL);
 }
-
 
 
 #ifndef USE_WITH_CPU_SIM
@@ -95,7 +54,6 @@ void FPU_printall(void)
 
   RE_ENTRANT_CHECK_OFF;
   /* No need to verify_area(), we have previously fetched these bytes. */
-  printk("At %p:", (void *) address);
   if ( FPU_CS == __USER_CS )
     {
 #define MAX_PRINTED_BYTES 20
@@ -111,7 +69,7 @@ void FPU_printall(void)
 	  address++;
 	}
       if ( i == MAX_PRINTED_BYTES )
-	printk(" [more..]\n");
+	printk((" [more..]\n"));
       else
 	{
 	  FPU_get_user(FPU_modrm, 1 + (u_char *) address);
@@ -119,8 +77,8 @@ void FPU_printall(void)
 	  if (FPU_modrm >= 0300)
 	    printk(" %02x (%02x+%d)\n", FPU_modrm, FPU_modrm & 0xf8, FPU_modrm & 7);
 	  else
-	    printk(" /%d, mod=%d rm=%d\n",
-		   (FPU_modrm >> 3) & 7, (FPU_modrm >> 6) & 3, FPU_modrm & 7);
+	    printk(" /%d, mod=%d rm=%d\n", (FPU_modrm >> 3) & 7, 
+				(FPU_modrm >> 6) & 3, FPU_modrm & 7);
 	}
     }
   else
@@ -128,28 +86,28 @@ void FPU_printall(void)
       printk("%04x\n", FPU_CS);
     }
 
-  partial_status = status_word();
+  FPU_partial_status = status_word();
 
 
   printk(" SW: b=%d st=%ld es=%d sf=%d cc=%d%d%d%d ef=%d%d%d%d%d%d\n",
-	 partial_status & 0x8000 ? 1 : 0,   /* busy */
-	 (partial_status & 0x3800) >> 11,   /* stack top pointer */
-	 partial_status & 0x80 ? 1 : 0,     /* Error summary status */
-	 partial_status & 0x40 ? 1 : 0,     /* Stack flag */
-	 partial_status & SW_C3?1:0, partial_status & SW_C2?1:0, /* cc */
-	 partial_status & SW_C1?1:0, partial_status & SW_C0?1:0, /* cc */
-	 partial_status & SW_Precision?1:0, partial_status & SW_Underflow?1:0,
-	 partial_status & SW_Overflow?1:0, partial_status & SW_Zero_Div?1:0,
-	 partial_status & SW_Denorm_Op?1:0, partial_status & SW_Invalid?1:0);
+	 FPU_partial_status & 0x8000 ? 1 : 0,   /* busy */
+	 (FPU_partial_status & 0x3800) >> 11,   /* stack top pointer */
+	 FPU_partial_status & 0x80 ? 1 : 0,     /* Error summary status */
+	 FPU_partial_status & 0x40 ? 1 : 0,     /* Stack flag */
+	 FPU_partial_status & SW_C3?1:0, FPU_partial_status & SW_C2?1:0, /* cc */
+	 FPU_partial_status & SW_C1?1:0, FPU_partial_status & SW_C0?1:0, /* cc */
+	 FPU_partial_status & SW_Precision?1:0, FPU_partial_status & SW_Underflow?1:0,
+	 FPU_partial_status & SW_Overflow?1:0, FPU_partial_status & SW_Zero_Div?1:0,
+	 FPU_partial_status & SW_Denorm_Op?1:0, FPU_partial_status & SW_Invalid?1:0);
   
 printk(" CW: ic=%d rc=%ld%ld pc=%ld%ld iem=%d     ef=%d%d%d%d%d%d\n",
-	 control_word & 0x1000 ? 1 : 0,
-	 (control_word & 0x800) >> 11, (control_word & 0x400) >> 10,
-	 (control_word & 0x200) >> 9, (control_word & 0x100) >> 8,
-	 control_word & 0x80 ? 1 : 0,
-	 control_word & SW_Precision?1:0, control_word & SW_Underflow?1:0,
-	 control_word & SW_Overflow?1:0, control_word & SW_Zero_Div?1:0,
-	 control_word & SW_Denorm_Op?1:0, control_word & SW_Invalid?1:0);
+	 FPU_control_word & 0x1000 ? 1 : 0,
+	 (FPU_control_word & 0x800) >> 11, (FPU_control_word & 0x400) >> 10,
+	 (FPU_control_word & 0x200) >> 9, (FPU_control_word & 0x100) >> 8,
+	 FPU_control_word & 0x80 ? 1 : 0,
+	 FPU_control_word & SW_Precision?1:0, FPU_control_word & SW_Underflow?1:0,
+	 FPU_control_word & SW_Overflow?1:0, FPU_control_word & SW_Zero_Div?1:0,
+	 FPU_control_word & SW_Denorm_Op?1:0, FPU_control_word & SW_Invalid?1:0);
 
   for ( i = 0; i < 8; i++ )
     {
@@ -278,7 +236,7 @@ static struct {
 	      0x240  in div_Xsig.S
 	      0x241  in div_Xsig.S
 	      0x242  in div_Xsig.S
- */
+*/
 
 void FPU_exception(int n)
 {
@@ -290,28 +248,28 @@ void FPU_exception(int n)
       int_type = n - EX_INTERNAL;
       n = EX_INTERNAL;
       /* Set lots of exception bits! */
-      partial_status |= (SW_Exc_Mask | SW_Summary | SW_Backward);
+      FPU_partial_status |= (SW_Exc_Mask | SW_Summary | SW_Backward);
     }
   else
     {
       /* Extract only the bits which we use to set the status word */
       n &= (SW_Exc_Mask);
       /* Set the corresponding exception bit */
-      partial_status |= n;
+      FPU_partial_status |= n;
       /* Set summary bits iff exception isn't masked */
-      if ( partial_status & ~control_word & CW_Exceptions )
-	partial_status |= (SW_Summary | SW_Backward);
+      if ( FPU_partial_status & ~FPU_control_word & CW_Exceptions )
+	FPU_partial_status |= (SW_Summary | SW_Backward);
       if ( n & (SW_Stack_Fault | EX_Precision) )
 	{
 	  if ( !(n & SW_C1) )
 	    /* This bit distinguishes over- from underflow for a stack fault,
 	       and roundup from round-down for precision loss. */
-	    partial_status &= ~SW_C1;
+	    FPU_partial_status &= ~SW_C1;
 	}
     }
 
   RE_ENTRANT_CHECK_OFF;
-  if ( (~control_word & n & CW_Exceptions) || (n == EX_INTERNAL) )
+  if ( (~FPU_control_word & n & CW_Exceptions) || (n == EX_INTERNAL) )
     {
       /* Get a name string for error reporting */
       for (i=0; exception_names[i].type; i++)
@@ -344,8 +302,6 @@ void FPU_exception(int n)
        */
     }
   RE_ENTRANT_CHECK_ON;
-
-
 }
 
 
@@ -365,18 +321,18 @@ int real_1op_NaN(FPU_REG *a)
     {
       if ( !isNaN )  /* pseudo-NaN, or other unsupported? */
 	{
-	  if ( control_word & CW_Invalid )
+	  if ( FPU_control_word & CW_Invalid )
 	    {
 	      /* Masked response */
 	      reg_copy(&CONST_QNaN, a);
 	    }
 	  EXCEPTION(EX_Invalid);
-	  return (!(control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
+	  return (!(FPU_control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
 	}
       return TAG_Special;
     }
 
-  if ( control_word & CW_Invalid )
+  if ( FPU_control_word & CW_Invalid )
     {
       /* The masked response */
       if ( !(a->sigh & 0x80000000) )  /* pseudo-NaN ? */
@@ -389,7 +345,7 @@ int real_1op_NaN(FPU_REG *a)
 
   EXCEPTION(EX_Invalid);
 
-  return (!(control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
+  return (!(FPU_control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
 }
 
 
@@ -417,13 +373,13 @@ int real_2op_NaN(FPU_REG const *b, u_char tagb,
 	&& !((exponent(b) == EXP_OVER) && (b->sigh & 0x80000000)));
   if ( unsupported )
     {
-      if ( control_word & CW_Invalid )
+      if ( FPU_control_word & CW_Invalid )
 	{
 	  /* Masked response */
 	  FPU_copy_to_regi(&CONST_QNaN, TAG_Special, deststnr);
 	}
       EXCEPTION(EX_Invalid);
-      return (!(control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
+      return (!(FPU_control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
     }
 
   if (taga == TW_NaN)
@@ -464,7 +420,7 @@ int real_2op_NaN(FPU_REG const *b, u_char tagb,
     }
 #endif /* PARANOID */
 
-  if ( (!signalling) || (control_word & CW_Invalid) )
+  if ( (!signalling) || (FPU_control_word & CW_Invalid) )
     {
       if ( ! x )
 	x = b;
@@ -483,7 +439,7 @@ int real_2op_NaN(FPU_REG const *b, u_char tagb,
 
   EXCEPTION(EX_Invalid);
 
-  return (!(control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
+  return (!(FPU_control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Special;
 }
 
 
@@ -491,17 +447,15 @@ int real_2op_NaN(FPU_REG const *b, u_char tagb,
 /* Returns < 0 if the exception is unmasked */
 asmlinkage int arith_invalid(int deststnr)
 {
-
   EXCEPTION(EX_Invalid);
   
-  if ( control_word & CW_Invalid )
+  if ( FPU_control_word & CW_Invalid )
     {
       /* The masked response */
       FPU_copy_to_regi(&CONST_QNaN, TAG_Special, deststnr);
     }
   
-  return (!(control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Valid;
-
+  return (!(FPU_control_word & CW_Invalid) ? FPU_Exception : 0) | TAG_Valid;
 }
 
 
@@ -511,7 +465,7 @@ asmlinkage int FPU_divide_by_zero(int deststnr, u_char sign)
   FPU_REG *dest = &st(deststnr);
   int tag = TAG_Valid;
 
-  if ( control_word & CW_ZeroDiv )
+  if ( FPU_control_word & CW_ZeroDiv )
     {
       /* The masked response */
       FPU_copy_to_regi(&CONST_INF, TAG_Special, deststnr);
@@ -521,18 +475,17 @@ asmlinkage int FPU_divide_by_zero(int deststnr, u_char sign)
  
   EXCEPTION(EX_ZeroDiv);
 
-  return (!(control_word & CW_ZeroDiv) ? FPU_Exception : 0) | tag;
-
+  return (!(FPU_control_word & CW_ZeroDiv) ? FPU_Exception : 0) | tag;
 }
 
 
 /* This may be called often, so keep it lean */
 int set_precision_flag(int flags)
 {
-  if ( control_word & CW_Precision )
+  if ( FPU_control_word & CW_Precision )
     {
-      partial_status &= ~(SW_C1 & flags);
-      partial_status |= flags;   /* The masked response */
+      FPU_partial_status &= ~(SW_C1 & flags);
+      FPU_partial_status |= flags;   /* The masked response */
       return 0;
     }
   else
@@ -546,8 +499,8 @@ int set_precision_flag(int flags)
 /* This may be called often, so keep it lean */
 asmlinkage void set_precision_flag_up(void)
 {
-  if ( control_word & CW_Precision )
-    partial_status |= (SW_Precision | SW_C1);   /* The masked response */
+  if ( FPU_control_word & CW_Precision )
+    FPU_partial_status |= (SW_Precision | SW_C1);   /* The masked response */
   else
     EXCEPTION(EX_Precision | SW_C1);
 }
@@ -556,10 +509,10 @@ asmlinkage void set_precision_flag_up(void)
 /* This may be called often, so keep it lean */
 asmlinkage void set_precision_flag_down(void)
 {
-  if ( control_word & CW_Precision )
+  if ( FPU_control_word & CW_Precision )
     {   /* The masked response */
-      partial_status &= ~SW_C1;
-      partial_status |= SW_Precision;
+      FPU_partial_status &= ~SW_C1;
+      FPU_partial_status |= SW_Precision;
     }
   else
     EXCEPTION(EX_Precision);
@@ -568,9 +521,9 @@ asmlinkage void set_precision_flag_down(void)
 
 asmlinkage int denormal_operand(void)
 {
-  if ( control_word & CW_Denormal )
+  if ( FPU_control_word & CW_Denormal )
     {   /* The masked response */
-      partial_status |= SW_Denorm_Op;
+      FPU_partial_status |= SW_Denorm_Op;
       return TAG_Special;
     }
   else
@@ -585,7 +538,7 @@ asmlinkage int arith_overflow(FPU_REG *dest)
 {
   int tag = TAG_Valid;
 
-  if ( control_word & CW_Overflow )
+  if ( FPU_control_word & CW_Overflow )
     {
       /* The masked response */
       reg_copy(&CONST_INF, dest);
@@ -598,7 +551,7 @@ asmlinkage int arith_overflow(FPU_REG *dest)
     }
 
   EXCEPTION(EX_Overflow);
-  if ( control_word & CW_Overflow )
+  if ( FPU_control_word & CW_Overflow )
     {
       /* The overflow exception is masked. */
       /* By definition, precision is lost.
@@ -609,7 +562,6 @@ asmlinkage int arith_overflow(FPU_REG *dest)
     }
 
   return tag;
-
 }
 
 
@@ -618,11 +570,11 @@ asmlinkage int arith_round_overflow(FPU_REG *dest, u8 sign)
   int tag = TAG_Valid;
   int largest;
 
-  if ( control_word & CW_Overflow )
+  if ( FPU_control_word & CW_Overflow )
     {
       /* The masked response */
       /* The response here depends upon the rounding mode */
-      switch ( control_word & CW_RC )
+      switch ( FPU_control_word & CW_RC )
 	{
 	case RC_CHOP:		/* Truncate */
 	  largest = 1;
@@ -645,7 +597,7 @@ asmlinkage int arith_round_overflow(FPU_REG *dest, u8 sign)
       else
 	{
 	  dest->exp = EXTENDED_Ebias+EXP_OVER-1;
-	  switch ( control_word & CW_PC )
+	  switch ( FPU_control_word & CW_PC )
 	    {
 	    case 01:
 	    case PR_64_BITS:
@@ -668,7 +620,7 @@ asmlinkage int arith_round_overflow(FPU_REG *dest, u8 sign)
     }
 
   EXCEPTION(EX_Overflow);
-  if ( control_word & CW_Overflow )
+  if ( FPU_control_word & CW_Overflow )
     {
       /* The overflow exception is masked. */
       if ( largest )
@@ -686,7 +638,6 @@ asmlinkage int arith_round_overflow(FPU_REG *dest, u8 sign)
     }
 
   return tag;
-
 }
 
 
@@ -694,13 +645,13 @@ asmlinkage int arith_underflow(FPU_REG *dest)
 {
   int tag = TAG_Valid;
 
-  if ( control_word & CW_Underflow )
+  if ( FPU_control_word & CW_Underflow )
     {
       /* The masked response */
       if ( exponent16(dest) <= EXP_UNDER - 63 )
 	{
 	  reg_copy(&CONST_Z, dest);
-	  partial_status &= ~SW_C1;       /* Round down. */
+	  FPU_partial_status &= ~SW_C1;       /* Round down. */
 	  tag = TAG_Zero;
 	}
       else
@@ -715,7 +666,7 @@ asmlinkage int arith_underflow(FPU_REG *dest)
     }
 
   EXCEPTION(EX_Underflow);
-  if ( control_word & CW_Underflow )
+  if ( FPU_control_word & CW_Underflow )
     {
       /* The underflow exception is masked. */
       EXCEPTION(EX_Precision);
@@ -723,63 +674,49 @@ asmlinkage int arith_underflow(FPU_REG *dest)
     }
 
   return tag;
-
 }
 
 
 void FPU_stack_overflow(void)
 {
-
- if ( control_word & CW_Invalid )
+ if ( FPU_control_word & CW_Invalid )
     {
       /* The masked response */
-      top--;
+      FPU_tos--;
       FPU_copy_to_reg0(&CONST_QNaN, TAG_Special);
     }
 
   EXCEPTION(EX_StackOver);
-
-  return;
-
 }
 
 
 void FPU_stack_underflow(void)
 {
-
- if ( control_word & CW_Invalid )
+ if ( FPU_control_word & CW_Invalid )
     {
       /* The masked response */
       FPU_copy_to_reg0(&CONST_QNaN, TAG_Special);
     }
 
   EXCEPTION(EX_StackUnder);
-
-  return;
-
 }
 
 
 void FPU_stack_underflow_i(int i)
 {
-
- if ( control_word & CW_Invalid )
+ if ( FPU_control_word & CW_Invalid )
     {
       /* The masked response */
       FPU_copy_to_regi(&CONST_QNaN, TAG_Special, i);
     }
 
   EXCEPTION(EX_StackUnder);
-
-  return;
-
 }
 
 
 void FPU_stack_underflow_pop(int i)
 {
-
- if ( control_word & CW_Invalid )
+ if ( FPU_control_word & CW_Invalid )
     {
       /* The masked response */
       FPU_copy_to_regi(&CONST_QNaN, TAG_Special, i);
@@ -787,8 +724,4 @@ void FPU_stack_underflow_pop(int i)
     }
 
   EXCEPTION(EX_StackUnder);
-
-  return;
-
 }
-
