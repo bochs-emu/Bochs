@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.57 2002-08-27 18:11:13 bdenney Exp $
+// $Id: control.cc,v 1.58 2002-08-28 03:14:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -623,9 +623,6 @@ config_interface_notify_callback (void *unused, BxEvent *event)
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       fprintf (stderr, "BX_SYNC_EVT_ASK_PARAM\n");
-      return event;
-    case BX_ASYNC_EVT_SHUTDOWN_GUI:
-      fprintf (stderr, "BX_ASYNC_EVT_SHUTDOWN_GUI\n");
       return event;
     case BX_SYNC_EVT_LOG_ASK:
     {

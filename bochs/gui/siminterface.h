@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.48 2002-08-27 18:11:13 bdenney Exp $
+// $Id: siminterface.h,v 1.49 2002-08-28 03:14:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -313,7 +313,6 @@ typedef enum {
   BX_ASYNC_EVT_SET_PARAM,         // CUI -> simulator
   BX_ASYNC_EVT_LOG_MSG,           // simulator -> CUI
   BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> CUI
-  BX_ASYNC_EVT_SHUTDOWN_GUI,      // simulator -> CUI
   BX_ASYNC_EVT_TOOLBAR            // CUI -> simulator
 } BxEventType;
 
