@@ -95,11 +95,6 @@
  * rather than a kernel (ported by Kevin Lawton)
  * ------------------------------------------------------------ */
 
-#include <linux/kernel.h>
-#include <linux/mm.h>
-#include <asm/math_emu.h>
-#include <linux/types.h>
-
 /* Get data sizes from config.h generated from simulator's
  * configure script
  */
@@ -112,6 +107,12 @@ typedef Bit32u u32;
 typedef Bit32s s32;
 typedef Bit64u u64;
 typedef Bit64s s64;
+
+/* bbd: include ported linux headers after config.h for GCC_ATTRIBUTE macro */
+#include <linux/kernel.h>
+#include <linux/mm.h>
+#include <asm/math_emu.h>
+#include <linux/types.h>
 
 #ifndef WORDS_BIGENDIAN
 #error "WORDS_BIGENDIAN not defined in config.h"
@@ -135,6 +136,9 @@ extern void fpu_set_ax(u16);
 #ifndef __ASSEMBLY__
 
 struct info {
+#ifdef BX_NO_EMPTY_STRUCTS
+  unsigned char donotindexme;
+#endif
   };
 
 #define FPU_info ((struct info *) NULL)
@@ -159,7 +163,7 @@ typedef struct {
     unsigned char   no_update;
     unsigned char   rm;
     unsigned char   alimit;
-    } __attribute__ ((aligned(16), packed)) soft;
+    } GCC_ATTRIBUTE((aligned(16), packed)) soft;
   } i387_t;
 
 extern i387_t i387;
@@ -198,5 +202,17 @@ extern i387_t i387;
 #define FPU_DS  (fpu_get_ds())
 
 #endif  /* USE_WITH_CPU_SIM */
+
+// bbd: Change a pointer to an int, with type conversions that make it legal.
+// First make it a void pointer, then convert to an integer of the same
+// size as the pointer.  Otherwise, on machines with 64-bit pointers, 
+// compilers complain when you typecast a 64-bit pointer into a 32-bit integer.
+#define PTR2INT(x) ((bx_ptr_equiv_t)(void *)(x))
+
+// bbd: Change an int to a pointer, with type conversions that make it legal.
+// Same strategy as PTR2INT: change to bx_ptr_equiv_t which is an integer
+// type of the same size as FPU_REG*.  Then the conversion to pointer
+// is legal.
+#define REGNO2PTR(x)		((FPU_REG*)((bx_ptr_equiv_t)(x)))
 
 #endif

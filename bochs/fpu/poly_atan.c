@@ -123,7 +123,7 @@ void	poly_atan(FPU_REG *st0_ptr, u_char st0_tag,
 	      EXCEPTION(EX_INTERNAL|0x104);  /* There must be a logic error */
 	      return;
 	    }
-#endif PARANOID
+#endif /* PARANOID */
 	  argSignif.msw = 0;   /* Make the transformed arg -> 0.0 */
 	}
       else

@@ -67,7 +67,7 @@ int	poly_2xm1(u_char sign, FPU_REG *arg, FPU_REG *result)
       EXCEPTION(EX_INTERNAL|0x127);
       return 1;
     }
-#endif PARANOID
+#endif /* PARANOID */
 
   argSignif.lsw = 0;
   XSIG_LL(argSignif) = Xll = significand(arg);

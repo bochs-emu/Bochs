@@ -24,16 +24,17 @@
  | entry points for wm-FPU-emu.                                              |
  +---------------------------------------------------------------------------*/
 
-#include <linux/signal.h>
-
-#include <asm/uaccess.h>
-#include <asm/desc.h>
-
 #include "fpu_system.h"
 #include "fpu_emu.h"
 #include "exception.h"
 #include "control_w.h"
 #include "status_w.h"
+
+#include <linux/signal.h>
+
+#include <asm/uaccess.h>
+#include <asm/desc.h>
+
 
 #define __BAD__ FPU_illegal   /* Illegal on an 80486, causes SIGILL */
 
@@ -78,7 +79,7 @@ static FUNC const st_instr_table[64] = {
   fdivr_,   FPU_trigb,  __BAD__, __BAD__, fdiv_i,  __BAD__, fdivp_,  __BAD__,
 };
 
-#endif NO_UNDOC_CODE
+#endif /* NO_UNDOC_CODE */
 
 
 #define _NONE_ 0   /* Take no special action */
@@ -120,7 +121,7 @@ static u_char const type_table[64] = {
   _REGI_, _NONE_, _null_, _null_, _REGIi, _null_, _REGIp, _null_
 };
 
-#endif NO_UNDOC_CODE
+#endif /* NO_UNDOC_CODE */
 
 
 #ifndef USE_WITH_CPU_SIM
@@ -128,7 +129,7 @@ static u_char const type_table[64] = {
 
 #ifdef RE_ENTRANT_CHECKING
 u_char emulating=0;
-#endif RE_ENTRANT_CHECKING
+#endif /* RE_ENTRANT_CHECKING */
 
 static int valid_prefix(u_char *Byte, u_char **fpu_eip,
 			overrides *override);
@@ -155,7 +156,7 @@ asmlinkage void math_emulate(long arg)
       printk("ERROR: wm-FPU-emu is not RE-ENTRANT!\n");
     }
   RE_ENTRANT_CHECK_ON;
-#endif RE_ENTRANT_CHECKING
+#endif /* RE_ENTRANT_CHECKING */
 
   if (!current->used_math)
     {
@@ -254,7 +255,7 @@ do_another_FPU_instruction:
 #ifdef PARANOID
       EXCEPTION(EX_INTERNAL|0x128);
       math_abort(FPU_info,SIGILL);
-#endif PARANOID
+#endif /* PARANOID */
     }
 
   RE_ENTRANT_CHECK_OFF;
@@ -344,7 +345,7 @@ do_another_FPU_instruction:
 		  unmasked &= ~0xff;
 		  break;
 		case 1:
-		  loaded_tag = FPU_load_int32((u32 *)data_address, &loaded_data);
+		  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data); // bad: was (u32*)
 		  break;
 		case 2:
 		  unmasked = FPU_load_double((double *)data_address,
@@ -389,7 +390,7 @@ do_another_FPU_instruction:
 			/* fdiv or fsub */
 			real_2op_NaN(&loaded_data, loaded_tag, 0, &loaded_data);
 		      else
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 			/* fadd, fdivr, fmul, or fsubr */
 			real_2op_NaN(&loaded_data, loaded_tag, 0, st0_ptr);
 		    }
@@ -444,22 +445,25 @@ do_another_FPU_instruction:
 		  break;
 		case 4:         /* fsub */
 		  clear_C1();
-		  FPU_sub(LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  // bbd: loaded_data used to be typecast to an int, but 
+		  // this corrupted the pointer on 64-bit machines.
+		  // Now FPU_sub and similar take a FPU_REG* here instead. 
+		  FPU_sub(LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		case 5:         /* fsubr */
 		  clear_C1();
-		  FPU_sub(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  FPU_sub(REV|LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		case 6:         /* fdiv */
 		  clear_C1();
-		  FPU_div(LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  FPU_div(LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		case 7:         /* fdivr */
 		  clear_C1();
 		  if ( st0_tag == TAG_Zero )
 		    partial_status = status1;  /* Undo any denorm tag,
 						  zero-divide has priority. */
-		  FPU_div(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  FPU_div(REV|LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		}
 	    }
@@ -500,7 +504,7 @@ do_another_FPU_instruction:
 	 to do this: */
       operand_address.offset = 0;
       operand_address.selector = FPU_DS;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 
       st0_ptr = &st(0);
       st0_tag = FPU_gettag0();
@@ -666,7 +670,7 @@ void math_abort(struct info * info, unsigned int signal)
 	__asm__("movl %0,%%esp ; ret": :"g" (((long) info)-4));
 #ifdef PARANOID
       printk("ERROR: wm-FPU-emu math_abort failed!\n");
-#endif PARANOID
+#endif /* PARANOID */
 }
 
 
@@ -736,7 +740,7 @@ int save_i387_soft(void *s387, struct _fpstate * buf)
   S387->twd |= 0xffff0000;
   S387->fcs &= ~0xf8000000;
   S387->fos |= 0xffff0000;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
   __copy_to_user(d, &S387->cwd, 7*4);
   RE_ENTRANT_CHECK_ON;
 
@@ -848,7 +852,7 @@ do_the_FPU_interrupt:
                   unmasked &= ~0xff;
                   break;
                 case 1:
-                  loaded_tag = FPU_load_int32((u32 *)data_address, &loaded_data);
+                  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);  // bbd: was (u32 *)
                   break;
                 case 2:
                   unmasked = FPU_load_double((double *)data_address,
@@ -893,7 +897,7 @@ do_the_FPU_interrupt:
                         /* fdiv or fsub */
                         real_2op_NaN(&loaded_data, loaded_tag, 0, &loaded_data);
                       else
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
                         /* fadd, fdivr, fmul, or fsubr */
                         real_2op_NaN(&loaded_data, loaded_tag, 0, st0_ptr);
                     }
@@ -942,28 +946,30 @@ do_the_FPU_interrupt:
                   FPU_compare_st_data(&loaded_data, loaded_tag);
                   break;
                 case 3:         /* fcomp */
+		  // bbd: used to typecase to int first, but this corrupted the
+		  // pointer on 64 bit machines.
                   if ( !FPU_compare_st_data(&loaded_data, loaded_tag)
                        && !unmasked )
                     FPU_pop();
                   break;
                 case 4:         /* fsub */
                   clear_C1();
-                  FPU_sub(LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_sub(LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 case 5:         /* fsubr */
                   clear_C1();
-                  FPU_sub(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_sub(REV|LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 case 6:         /* fdiv */
                   clear_C1();
-                  FPU_div(LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_div(LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 case 7:         /* fdivr */
                   clear_C1();
                   if ( st0_tag == TAG_Zero )
                     partial_status = status1;  /* Undo any denorm tag,
                                                   zero-divide has priority. */
-                  FPU_div(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_div(REV|LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 }
             }
@@ -1001,7 +1007,7 @@ do_the_FPU_interrupt:
          to do this: */
       operand_address.offset = 0;
       operand_address.selector = FPU_DS;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 
       st0_ptr = &st(0);
       st0_tag = FPU_gettag0();
@@ -1059,7 +1065,10 @@ FPU_fwait_done:
 
 #ifdef DEBUG
   FPU_printall();
-#endif DEBUG
+#endif /* DEBUG */
+#ifdef BX_NO_BLANK_LABELS
+  if(0);
+#endif
 }
 
 #endif  /* #ifndef USE_WITH_CPU_SIM */

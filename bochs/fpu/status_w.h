@@ -48,9 +48,11 @@
 
 #define status_word() \
   ((partial_status & ~SW_Top & 0xffff) | ((top << SW_Top_Shift) & SW_Top))
-#define setcc(cc) ({ \
+// bbd: use do {...} while (0) structure instead of using curly brackets
+// inside parens, which most compilers do not like.
+#define setcc(cc) do { \
   partial_status &= ~(SW_C0|SW_C1|SW_C2|SW_C3); \
-  partial_status |= (cc) & (SW_C0|SW_C1|SW_C2|SW_C3); })
+  partial_status |= (cc) & (SW_C0|SW_C1|SW_C2|SW_C3); } while(0)
 
 #ifdef PECULIAR_486
    /* Default, this conveys no information, but an 80486 does it. */
@@ -58,8 +60,8 @@
 #  define clear_C1()  { partial_status &= ~SW_C1; }
 # else
 #  define clear_C1()
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 
-#endif __ASSEMBLY__
+#endif /* __ASSEMBLY__ */
 
-#endif _STATUS_H_
+#endif /* _STATUS_H_ */

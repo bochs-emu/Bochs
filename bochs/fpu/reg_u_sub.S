@@ -54,7 +54,7 @@ ENTRY(FPU_u_sub)
 
 	testl	$0x80000000,SIGH(%esi)
 	je	L_bugged_2
-#endif PARANOID
+#endif /* PARANOID */
 
 /*--------------------------------------+
  |	Form a register holding the     |
@@ -165,7 +165,7 @@ L_subtr:
 #ifdef PARANOID
 	/* We can never get a borrow */
 	jc	L_bugged
-#endif PARANOID
+#endif /* PARANOID */
 
 /*--------------------------------------+
  |	Normalize the result		|
@@ -199,7 +199,7 @@ L_must_be_zero:
 #ifdef PARANOID
 	orl	%edx,%edx
 	jnz	L_bugged_3
-#endif PARANOID
+#endif /* PARANOID */
 
 	/* The result is zero */
 	movw	$0,EXP(%edi)		/* exponent */
@@ -262,7 +262,7 @@ L_bugged:
 L_error_exit:
 	movl	$-1,%eax
 
-#endif PARANOID
+#endif /* PARANOID */
 
 L_exit:
 	popl	%ebx

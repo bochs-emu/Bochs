@@ -101,7 +101,7 @@ extern void poly_cos(FPU_REG *st0_ptr);
 extern void poly_tan(FPU_REG *st0_ptr, int flag);
 /* reg_add_sub.c */
 extern int FPU_add(FPU_REG const *b, u_char tagb, int destrnr, u16 control_w);
-extern int FPU_sub(int flags, int rm, u16 control_w);
+extern int FPU_sub(int flags, FPU_REG *rm, u16 control_w);   // bbd: changed arg2 from int to FPU_REG*
 /* reg_compare.c */
 extern int FPU_compare_st_data(FPU_REG const *loaded_data, u_char loaded_tag);
 extern void fcom_st(void);
@@ -137,7 +137,7 @@ extern int FPU_tagof(FPU_REG *ptr);
 /* reg_mul.c */
 extern int FPU_mul(FPU_REG const *b, u_char tagb, int deststnr, int control_w);
 
-extern int FPU_div(int flags, int regrm, int control_w);
+extern int FPU_div(int flags, FPU_REG *regrm, int control_w); // bbd: changed arg2 from int to FPU_REG*
 /* reg_convert.c */
 extern int FPU_to_exp16(FPU_REG const *a, FPU_REG *x);
 #endif /* _FPU_PROTO_H */

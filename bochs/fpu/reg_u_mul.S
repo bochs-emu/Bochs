@@ -40,7 +40,7 @@ FPU_accum_0:
 	.long	0
 FPU_accum_1:
 	.long	0
-#endif NON_REENTRANT_FPU
+#endif /* NON_REENTRANT_FPU */
 
 
 .text
@@ -49,7 +49,7 @@ ENTRY(FPU_u_mul)
 	movl	%esp,%ebp
 #ifndef NON_REENTRANT_FPU
 	subl	$8,%esp
-#endif NON_REENTRANT_FPU
+#endif /* NON_REENTRANT_FPU */
 
 	pushl	%esi
 	pushl	%edi
@@ -63,7 +63,7 @@ ENTRY(FPU_u_mul)
 	jz	L_bugged
 	testl	$0x80000000,SIGH(%edi)
 	jz	L_bugged
-#endif PARANOID
+#endif /* PARANOID */
 
 	xorl	%ecx,%ecx
 	xorl	%ebx,%ebx
@@ -144,5 +144,5 @@ L_exit:
 	popl	%esi
 	leave
 	ret
-#endif PARANOID
+#endif /* PARANOID */
 

@@ -23,17 +23,19 @@
 
 /*
   Divide one register by another and put the result into a third register.
+bbd: arg2 used to be an int, see comments on FPU_sub.
   */
-int FPU_div(int flags, int rm, int control_w)
+int FPU_div(int flags, FPU_REG *rm, int control_w)
 {
   FPU_REG x, y;
   FPU_REG const *a, *b, *st0_ptr, *st_ptr;
   FPU_REG *dest;
   u_char taga, tagb, signa, signb, sign, saved_sign;
   int tag, deststnr;
+  int rmint = (int)rm;
 
   if ( flags & DEST_RM )
-    deststnr = rm;
+    deststnr = rmint;
   else
     deststnr = 0;
 
@@ -44,14 +46,14 @@ int FPU_div(int flags, int rm, int control_w)
       tagb = FPU_gettag0();
       if ( flags & LOADED )
 	{
-	  a = (FPU_REG *)rm;
+	  a = rm;
 	  taga = flags & 0x0f;
 	}
       else
 	{
-	  a = &st(rm);
+	  a = &st(rmint);
 	  st_ptr = a;
-	  taga = FPU_gettagi(rm);
+	  taga = FPU_gettagi(rmint);
 	}
     }
   else
@@ -61,14 +63,14 @@ int FPU_div(int flags, int rm, int control_w)
       taga = FPU_gettag0();
       if ( flags & LOADED )
 	{
-	  b = (FPU_REG *)rm;
+	  b = rm;
 	  tagb = flags & 0x0f;
 	}
       else
 	{
-	  b = &st(rm);
+	  b = &st(rmint);
 	  st_ptr = b;
-	  tagb = FPU_gettagi(rm);
+	  tagb = FPU_gettagi(rmint);
 	}
     }
 
@@ -154,15 +156,15 @@ int FPU_div(int flags, int rm, int control_w)
 	  tag = FPU_gettag0();
 	  if ( tag == TAG_Special )
 	    tag = FPU_Special(st0_ptr);
-	  return real_2op_NaN(st0_ptr, tag, rm, (flags & REV) ? st0_ptr : &st(rm));
+	  return real_2op_NaN(st0_ptr, tag, rmint, (flags & REV) ? st0_ptr : &st(rmint));
 	}
       else
 	{
 	  int tag;
-	  tag = FPU_gettagi(rm);
+	  tag = FPU_gettagi(rmint);
 	  if ( tag == TAG_Special )
-	    tag = FPU_Special(&st(rm));
-	  return real_2op_NaN(&st(rm), tag, 0, (flags & REV) ? st0_ptr : &st(rm));
+	    tag = FPU_Special(&st(rmint));
+	  return real_2op_NaN(&st(rmint), tag, 0, (flags & REV) ? st0_ptr : &st(rmint));
 	}
     }
   else if (taga == TW_Infinity)
@@ -201,6 +203,6 @@ int FPU_div(int flags, int rm, int control_w)
       EXCEPTION(EX_INTERNAL|0x102);
       return FPU_Exception;
     }
-#endif PARANOID
+#endif /* PARANOID */
 
 }

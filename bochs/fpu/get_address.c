@@ -143,7 +143,7 @@ static u32 vm86_segment(u_char segment,
       EXCEPTION(EX_INTERNAL|0x130);
       math_abort(FPU_info,SIGSEGV);
     }
-#endif PARANOID
+#endif /* PARANOID */
   addr->selector = VM86_REG_(segment);
   return (u32)VM86_REG_(segment) << 4;
 }
@@ -165,7 +165,7 @@ static s32 pm_address(u_char FPU_modrm, u_char segment,
       EXCEPTION(EX_INTERNAL|0x132);
       math_abort(FPU_info,SIGSEGV);
     }
-#endif PARANOID
+#endif /* PARANOID */
 
   switch ( segment )
     {

@@ -10,7 +10,7 @@ extern struct desc_struct *idt, *gdt;
 
 struct Xgt_desc_struct {
 	unsigned short size;
-	unsigned long address __attribute__((packed));
+	unsigned long address GCC_ATTRIBUTE((packed));
 };
 
 #define idt_descr (*(struct Xgt_desc_struct *)((char *)&idt - 2))

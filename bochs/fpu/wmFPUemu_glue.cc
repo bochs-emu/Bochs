@@ -143,12 +143,12 @@ fpu_verify_area(unsigned what, void *ptr, unsigned n)
   seg = &BX_CPU_THIS_PTR sregs[fpu_iptr->seg];
 
   if (what == VERIFY_READ) {
-    BX_CPU.read_virtual_checks(seg, (Bit32u) ptr, n);
+    BX_CPU.read_virtual_checks(seg, PTR2INT(ptr), n);
     }
   else {  // VERIFY_WRITE
-    BX_CPU.write_virtual_checks(seg, (Bit32u) ptr, n);
+    BX_CPU.write_virtual_checks(seg, PTR2INT(ptr), n);
     }
-//fprintf(stderr, "verify_area: 0x%x\n", (Bit32u) ptr);
+//fprintf(stderr, "verify_area: 0x%x\n", PTR2INT(ptr));
 }
 
 
@@ -168,15 +168,15 @@ fpu_get_user(void *ptr, unsigned len)
 
   switch (len) {
     case 1:
-      BX_CPU.read_virtual_byte(fpu_iptr->seg, (Bit32u) ptr, &val8);
+      BX_CPU.read_virtual_byte(fpu_iptr->seg, PTR2INT(ptr), &val8);
       val32 = val8;
       break;
     case 2:
-      BX_CPU.read_virtual_word(fpu_iptr->seg, (Bit32u) ptr, &val16);
+      BX_CPU.read_virtual_word(fpu_iptr->seg, PTR2INT(ptr), &val16);
       val32 = val16;
       break;
     case 4:
-      BX_CPU.read_virtual_dword(fpu_iptr->seg, (Bit32u) ptr, &val32);
+      BX_CPU.read_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
       bx_panic("fpu_get_user: len=%u\n", len);
@@ -194,15 +194,15 @@ fpu_put_user(unsigned val, void *ptr, unsigned len)
   switch (len) {
     case 1:
       val8 = val;
-      BX_CPU.write_virtual_byte(fpu_iptr->seg, (Bit32u) ptr, &val8);
+      BX_CPU.write_virtual_byte(fpu_iptr->seg, PTR2INT(ptr), &val8);
       break;
     case 2:
       val16 = val;
-      BX_CPU.write_virtual_word(fpu_iptr->seg, (Bit32u) ptr, &val16);
+      BX_CPU.write_virtual_word(fpu_iptr->seg, PTR2INT(ptr), &val16);
       break;
     case 4:
       val32 = val;
-      BX_CPU.write_virtual_dword(fpu_iptr->seg, (Bit32u) ptr, &val32);
+      BX_CPU.write_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
       bx_panic("fpu_put_user: len=%u\n", len);

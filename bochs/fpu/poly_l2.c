@@ -157,7 +157,7 @@ int	poly_l2p1(u_char sign0, u_char sign1,
 #else
 	  if ( arith_invalid(1) < 0 )
 	    return 1;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 	}
 
       /* 80486 appears to do this */
@@ -243,7 +243,7 @@ static void log2_kernel(FPU_REG const *arg, u_char argsign, Xsig *accum_result,
 	  /* The argument is too large */
 	}
     }
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 
   arg_signif.lsw = argSignif.lsw; XSIG_LL(arg_signif) = XSIG_LL(argSignif);
   adj = norm_Xsig(&argSignif);

@@ -126,6 +126,6 @@ int FPU_mul(FPU_REG const *b, u_char tagb, int deststnr, int control_w)
       EXCEPTION(EX_INTERNAL|0x102);
       return FPU_Exception;
     }
-#endif PARANOID
+#endif /* PARANOID */
 
 }

@@ -68,7 +68,7 @@ static void ftst_(FPU_REG *st0_ptr, u_char st0tag)
 	      /* This is weird! */
 	      if (getsign(st0_ptr) == SIGN_POS)
 		setcc(SW_C3);
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 	      return;
 	    }
 	  break;
