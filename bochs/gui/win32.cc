@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.56 2003-05-13 18:44:23 vruppert Exp $
+// $Id: win32.cc,v 1.57 2003-05-13 20:38:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -950,7 +950,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char data[64];
   unsigned char *old_line, *new_line, *new_start;
   unsigned char cAttr, cChar;
-  unsigned int ncols = dimension_x / 8;
+  unsigned int ncols = dimension_x / xChar;
   unsigned int hchars, rows, x, y;
   BOOL forceUpdate = FALSE;
 
@@ -962,9 +962,10 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
         memset(data, 0, sizeof(data));
+        BOOL gfxchar = tm_info.line_graphics && ((c & 0xE0) == 0xC0);
         for (unsigned i=0; i<32; i++) {
           data[i*2] = vga_charmap[c*32+i];
-          if ((tm_info.line_graphics) && ((c & 0xE0) == 0xC0)) {
+          if (gfxchar) {
             data[i*2+1] = (data[i*2] << 7);
           }
         }
