@@ -30,6 +30,8 @@
 #include <windows.h>
 #include <process.h>
 
+#define LOG_THIS bx_gui.
+
 #ifdef __MINGW32__
 #if BX_SHOW_IPS
 #include <windows32/CommonFunctions.h>
