@@ -36,7 +36,9 @@ extern "C" {
 extern "C" {
 #include <stdio.h>
 #include <readline/readline.h>
+#if READLINE_NEEDS_HISTORY_H
 #include <readline/history.h>
+#endif
 }
 #endif
 
@@ -926,10 +928,10 @@ bx_dbg_playback_command(char* path_quoted)
 void
 bx_dbg_modebp_command(char* dummy)
 {
-      BX_CPU_THIS_PTR debug_vm == BX_CPU_THIS_PTR eflags.vm;
-      BX_CPU_THIS_PTR mode_break = !BX_CPU_THIS_PTR mode_break;
+      BX_CPU[dbg_cpu]->debug_vm == BX_CPU[dbg_cpu]->eflags.vm;
+      BX_CPU[dbg_cpu]->mode_break = !BX_CPU[dbg_cpu]->mode_break;
       fprintf(stderr," mode switch break %s\n", 
-	      BX_CPU_THIS_PTR mode_break ? "enabled" : "disabled");
+	      BX_CPU[dbg_cpu]->mode_break ? "enabled" : "disabled");
 }
 
 // where
@@ -938,11 +940,11 @@ bx_dbg_modebp_command(char* dummy)
 void
 bx_dbg_where_command()
 {
-      if (!BX_CPU_THIS_PTR protected_mode()) {
+      if (!BX_CPU[dbg_cpu]->protected_mode()) {
 	    fprintf(stderr, "'where' only supported in protected mode\n");
 	    return;
       }
-      if (BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.base != 0) {
+      if (BX_CPU[dbg_cpu]->sregs[BX_SREG_SS].cache.u.segment.base != 0) {
 	    fprintf(stderr, "non-zero stack base\n");
 	    return;
       }
@@ -1096,10 +1098,10 @@ void bx_dbg_show_command(char* arg)
 	    dbg_show_mask |= 0x1f;
 	    
       fprintf(stderr," show mask is 0x%x, cleared show_flag\n", dbg_show_mask);
-      BX_CPU_THIS_PTR show_flag = 0;
-      last_cr3 = BX_CPU_THIS_PTR cr3;
-      last_pe = BX_CPU_THIS_PTR cr0.pe;
-      last_vm = BX_CPU_THIS_PTR eflags.vm;
+      BX_CPU[dbg_cpu]->show_flag = 0;
+      last_cr3 = BX_CPU[dbg_cpu]->cr3;
+      last_pe = BX_CPU[dbg_cpu]->cr0.pe;
+      last_vm = BX_CPU[dbg_cpu]->eflags.vm;
 
       fprintf(stderr,"%10lld: address %04x:%08x %08x\n\n", 
 	      bx_pc_system.time_ticks(),
@@ -1161,8 +1163,8 @@ void
 bx_dbg_print_stack_command(int nwords)
 {
 	// Get linear address for stack top
-	Bit32u sp = (BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.d_b) ? ESP : SP;
-	Bit32u linear_sp = sp + BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.base;
+	Bit32u sp = (BX_CPU[dbg_cpu]->sregs[BX_SREG_SS].cache.u.segment.d_b) ? ESP : SP;
+	Bit32u linear_sp = sp + BX_CPU[dbg_cpu]->sregs[BX_SREG_SS].cache.u.segment.base;
 	Bit8u buf[8];
 
 	for (int i = 0; i < nwords; i++) {
@@ -1298,12 +1300,12 @@ bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
       
       context_t* cntx = (global)
 	    ? context_t::get_context(0)
-	    : context_t::get_context((BX_CPU_THIS_PTR cr3) >> 12);
+	    : context_t::get_context((BX_CPU[dbg_cpu]->cr3) >> 12);
 
       if (!cntx)
 	    cntx = (global)
 		  ? new context_t(0)
-		  : new context_t((BX_CPU_THIS_PTR cr3) >> 12);
+		  : new context_t((BX_CPU[dbg_cpu]->cr3) >> 12);
 
       FILE* fp = fopen(filename, "r");
       if (!fp) {
@@ -1423,10 +1425,10 @@ bx_dbg_continue_command(void)
 			BX_CPU[cpu]->guard_found.guard_found = 0;
 			BX_CPU[cpu]->guard_found.icount = 0;
 			bx_guard.icount = quantum;
-			BX_CPU[cpu]->cpu_loop ();
+			BX_CPU[cpu]->cpu_loop (-1);
 			// set stop flag if a guard found other than icount or halted
 			unsigned long found = BX_CPU[cpu]->guard_found.guard_found;
-			stop_reason_t reason = BX_CPU[cpu]->stop_reason;
+			stop_reason_t reason = (stop_reason_t) BX_CPU[cpu]->stop_reason;
 			if (found & BX_DBG_GUARD_ICOUNT) {
 				// I expected this guard, don't stop
 			} else if (found!=0) {
@@ -1482,7 +1484,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
       bx_guard.interrupt_requested = 0;
 			BX_CPU[cpu]->guard_found.guard_found = 0;
 			BX_CPU[cpu]->guard_found.icount = 0;
-			BX_CPU[cpu]->cpu_loop();
+			BX_CPU[cpu]->cpu_loop(-1);
 		}
 		BX_TICK1 ();
 	}
@@ -1545,7 +1547,7 @@ if (doit) fprintf(stderr, "requesting run of master for %u\n",
   // save A20 value before master run
   pre_A20  = bx_pc_system.get_enable_a20();
 
-  BX_MEM[master]->cpu_loop();
+  BX_MEM[master]->cpu_loop(-1);
   post_A20  = bx_pc_system.get_enable_a20(); // A20 after master run
   master_icount = bx_guard_found[master].icount;
   slave_icount = 0;
@@ -1600,7 +1602,7 @@ if (doit) fprintf(stderr, "requesting run of slave for %u\n",
 	      bx_guard_found[slave].icount = curr_icount;
 	      bx_guard_found[slave].guard_found = BX_DBG_GUARD_ICOUNT;
       } else {
-	      BX_MEM[slave]->cpu_loop();
+	      BX_MEM[slave]->cpu_loop(-1);
       }
       }
     slave_icount += bx_guard_found[slave].icount;
@@ -1946,26 +1948,26 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
             BX_CPU[sim]->guard_found.laddr);
     }
 #endif
-	else if (BX_CPU_THIS_PTR stop_reason == STOP_CPU_HALTED) {
+	else if (BX_CPU[sim]->stop_reason == STOP_CPU_HALTED) {
 		/* returned early because processor is in halt state */
 	}
-  else if (BX_CPU_THIS_PTR stop_reason == STOP_MAGIC_BREAK_POINT) {
+  else if (BX_CPU[sim]->stop_reason == STOP_MAGIC_BREAK_POINT) {
 	fprintf(stderr, "(%u) Magic breakpoint\n", sim);
-  } else if (BX_CPU_THIS_PTR stop_reason == STOP_TRACE) {
+  } else if (BX_CPU[sim]->stop_reason == STOP_TRACE) {
 	/* Nothing */
-  } else if (BX_CPU_THIS_PTR stop_reason == STOP_TIME_BREAK_POINT) {
+  } else if (BX_CPU[sim]->stop_reason == STOP_TIME_BREAK_POINT) {
 	fprintf(stderr, "(%u) Caught time breakpoint\n", sim);
-  } else if (BX_CPU_THIS_PTR stop_reason == STOP_MODE_BREAK_POINT) {
+  } else if (BX_CPU[sim]->stop_reason == STOP_MODE_BREAK_POINT) {
 	fprintf(stderr, "(%u) Caught vm mode switch breakpoint to %s mode\n",
-		sim, BX_CPU_THIS_PTR eflags.vm ? "virtual 86" : "protected");
-  } else if (BX_CPU_THIS_PTR stop_reason == STOP_READ_WATCH_POINT) {
+		sim, BX_CPU[sim]->eflags.vm ? "virtual 86" : "protected");
+  } else if (BX_CPU[sim]->stop_reason == STOP_READ_WATCH_POINT) {
 	fprintf(stderr, "(%u) Caught read watch point\n", sim);
-  } else if (BX_CPU_THIS_PTR stop_reason == STOP_WRITE_WATCH_POINT) {
+  } else if (BX_CPU[sim]->stop_reason == STOP_WRITE_WATCH_POINT) {
 	fprintf(stderr, "(%u) Caught write watch point\n", sim);
   }
   else {
     fprintf(stderr, "Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n", 
-	    sim, BX_CPU_THIS_PTR stop_reason);
+	    sim, BX_CPU[sim]->stop_reason);
     }
 
 
@@ -1987,7 +1989,7 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
         fprintf(stderr, "(%u) %04x:%08x (%s): ", sim,
                 (unsigned) BX_CPU[sim]->guard_found.cs,
                 (unsigned) BX_CPU[sim]->guard_found.eip,
-		bx_dbg_symbolic_address((BX_CPU_THIS_PTR cr3) >> 12, BX_CPU[sim]->guard_found.eip, BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base));
+		bx_dbg_symbolic_address((BX_CPU[sim]->cr3) >> 12, BX_CPU[sim]->guard_found.eip, BX_CPU[sim]->sregs[BX_SREG_CS].cache.u.segment.base));
         }
       else {
         fprintf(stderr, "(%u) %04x:%04x: ", sim,
@@ -4169,52 +4171,52 @@ bx_dbg_symbolic_output(void)
 {
 
       /* modes & address spaces */
-      if(BX_CPU_THIS_PTR cr0.pe != last_pe) {
+      if(BX_CPU[dbg_cpu]->cr0.pe != last_pe) {
 	    fprintf(stderr,"%10lld: Switched %s protected mode\n", 
 		    bx_pc_system.time_ticks(),
 		    last_pe ? "from" : "to");
 	    last_pe = !last_pe;
       }
 
-      if(last_vm != BX_CPU_THIS_PTR eflags.vm) {
+      if(last_vm != BX_CPU[dbg_cpu]->eflags.vm) {
 	    fprintf(stderr,"%10lld: %s V86 mode\n", 
 		    bx_pc_system.time_ticks(), 
 		    last_vm ? "Exited" : "Entered");
 	    last_vm = !last_vm;
       }
 
-      if(last_cr3 != BX_CPU_THIS_PTR cr3)
+      if(last_cr3 != BX_CPU[dbg_cpu]->cr3)
 	    fprintf(stderr,"\n%10lld: Address space switched since last trigger. CR3: 0x%08x\n", 
-		    bx_pc_system.time_ticks(), BX_CPU_THIS_PTR cr3);
+		    bx_pc_system.time_ticks(), BX_CPU[dbg_cpu]->cr3);
 
       /* interrupts */
       if (dbg_show_mask & 0x40) {
-	    if(BX_CPU_THIS_PTR show_flag & 0x4) {
+	    if(BX_CPU[dbg_cpu]->show_flag & 0x4) {
 		  fprintf(stderr,"%10lld:  softint %04x:%08x %08x\n", 
 			  bx_pc_system.time_ticks(),
 			  BX_CPU[dbg_cpu]->guard_found.cs,
 			  BX_CPU[dbg_cpu]->guard_found.eip,
 			  BX_CPU[dbg_cpu]->guard_found.laddr);
 	    }
-	    if((BX_CPU_THIS_PTR show_flag & 0x10) && !(BX_CPU_THIS_PTR show_flag & 0x4)) {
+	    if((BX_CPU[dbg_cpu]->show_flag & 0x10) && !(BX_CPU[dbg_cpu]->show_flag & 0x4)) {
 		  fprintf(stderr,"\n%10lld:  exception (not softint) %04x:%08x %08x\n", 
 			  bx_pc_system.time_ticks(),
 			  BX_CPU[dbg_cpu]->guard_found.cs,
 			  BX_CPU[dbg_cpu]->guard_found.eip,
 			  BX_CPU[dbg_cpu]->guard_found.laddr);
 	    }
-	    if(BX_CPU_THIS_PTR show_flag & 0x8) {
+	    if(BX_CPU[dbg_cpu]->show_flag & 0x8) {
 		  fprintf(stderr,"%10lld:  iret %04x:%08x %08x (from %08x)\n\n", 
 			  bx_pc_system.time_ticks(),
 			  BX_CPU[dbg_cpu]->guard_found.cs,
 			  BX_CPU[dbg_cpu]->guard_found.eip,
 			  BX_CPU[dbg_cpu]->guard_found.laddr,
-			  BX_CPU_THIS_PTR show_eip);
+			  BX_CPU[dbg_cpu]->show_eip);
 	    }
       }
 	
       /* calls */
-      if(BX_CPU_THIS_PTR show_flag & 0x1) {
+      if(BX_CPU[dbg_cpu]->show_flag & 0x1) {
 	    Bit32u phy = 0;
 	    Boolean valid;
 
@@ -4229,7 +4231,7 @@ bx_dbg_symbolic_output(void)
 			  BX_CPU[dbg_cpu]->guard_found.eip,
 			  BX_CPU[dbg_cpu]->guard_found.laddr,
 			  phy,
-			  bx_dbg_symbolic_address(BX_CPU_THIS_PTR cr3,
+			  bx_dbg_symbolic_address(BX_CPU[dbg_cpu]->cr3,
 						  BX_CPU[dbg_cpu]->guard_found.eip,
 						  BX_CPU[dbg_cpu]->guard_found.laddr - BX_CPU[dbg_cpu]->guard_found.eip) );
 		  if(!valid)
@@ -4242,14 +4244,14 @@ bx_dbg_symbolic_output(void)
 		  symbol_level = 10;
       }
 
-      if (BX_CPU_THIS_PTR show_flag & 0x2) {
+      if (BX_CPU[dbg_cpu]->show_flag & 0x2) {
 	    symbol_level--;
 	    if(symbol_level < 0)
 		  symbol_level = 0;
       }
 
-      BX_CPU_THIS_PTR show_flag = 0;
-      last_cr3 = BX_CPU_THIS_PTR cr3;
+      BX_CPU[dbg_cpu]->show_flag = 0;
+      last_cr3 = BX_CPU[dbg_cpu]->cr3;
       return 0;
 }
 #endif
@@ -4319,12 +4321,12 @@ static void dbg_dump_table(Boolean all)
 
   Bit32u start_lina, start_phy;	// start of a valid translation interval
 
-  if (BX_CPU_THIS_PTR cr0.pg == 0) {
+  if (BX_CPU[dbg_cpu]->cr0.pg == 0) {
 	printf("paging off\n");
 	return;
   }
 
-  printf("cr3: %08x \n", BX_CPU_THIS_PTR cr3);
+  printf("cr3: %08x \n", BX_CPU[dbg_cpu]->cr3);
 
   lina = 0; 
   start_lina = 1;
