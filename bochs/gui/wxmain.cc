@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.13 2002-08-29 14:59:37 bdenney Exp $
+// $Id: wxmain.cc,v 1.14 2002-08-29 23:18:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -146,8 +146,8 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
   // toolbar events
-  EVT_TOOL(ID_Toolbar_FloppyA, MyFrame::OnToolbarClick)
-  EVT_TOOL(ID_Toolbar_FloppyB, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_CdromD, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Reset, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Power, MyFrame::OnToolbarClick)
@@ -176,8 +176,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuConfiguration->Append (ID_Quit, "&Quit");
 
   menuEdit = new wxMenu;
-  menuEdit->Append( ID_Toolbar_FloppyA, "Floppy Disk &0..." );
-  menuEdit->Append( ID_Toolbar_FloppyB, "Floppy Disk &1..." );
+  menuEdit->Append( ID_Edit_FD_0, "Floppy Disk &0..." );
+  menuEdit->Append( ID_Edit_FD_1, "Floppy Disk &1..." );
   menuEdit->Append( ID_Edit_HD_0, "Hard Disk 0..." );
   menuEdit->Append( ID_Edit_HD_1, "Hard Disk 1..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
@@ -228,8 +228,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 #define BX_ADD_TOOL(id, xpm_name, tooltip) \
     do {tb->AddTool(id, wxBitmap(xpm_name), wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, tooltip);  currentX += 34; } while (0)
 
-  BX_ADD_TOOL(ID_Toolbar_FloppyA, floppya_xpm, "Change Floppy A");
-  BX_ADD_TOOL(ID_Toolbar_FloppyB, floppyb_xpm, "Change Floppy B");
+  BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, "Change Floppy A");
+  BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, "Change Floppy B");
   BX_ADD_TOOL(ID_Toolbar_CdromD, cdromd_xpm, "Change CDROM");
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, "Reset the system");
   BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, "Turn power on/off");
@@ -285,8 +285,6 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
   switch (change) {
     case Start:  // running
-      menuConfiguration->Enable (ID_Config_New, FALSE);
-      menuConfiguration->Enable (ID_Config_Read, FALSE);
       menuSimulate->Enable (ID_Simulate_Start, FALSE);
       menuSimulate->Enable (ID_Simulate_PauseResume, TRUE);
       menuSimulate->Enable (ID_Simulate_Stop, TRUE);
@@ -312,6 +310,26 @@ void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
       menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
       break;
   }
+  bool canConfigure = (change == Stop);
+  menuConfiguration->Enable (ID_Config_New, canConfigure);
+  menuConfiguration->Enable (ID_Config_Read, canConfigure);
+  menuEdit->Enable (ID_Edit_HD_0, canConfigure);
+  menuEdit->Enable (ID_Edit_HD_1, canConfigure);
+  menuEdit->Enable( ID_Edit_Boot, canConfigure);
+  menuEdit->Enable( ID_Edit_Vga, canConfigure);
+  menuEdit->Enable( ID_Edit_Memory, canConfigure);
+  menuEdit->Enable( ID_Edit_Sound, canConfigure);
+  menuEdit->Enable( ID_Edit_Network, canConfigure);
+  menuEdit->Enable( ID_Edit_Keyboard, canConfigure);
+  menuEdit->Enable( ID_Edit_Other, canConfigure);
+  // during simulation, certain menu options like the floppy disk
+  // can be modified under some circumstances.  A floppy drive can
+  // only be edited if it was enabled at boot time.
+  bx_param_c *floppy;
+  floppy = SIM->get_param(BXP_FLOPPYA);
+  menuEdit->Enable (ID_Edit_FD_0, canConfigure || floppy->get_enabled ());
+  floppy = SIM->get_param(BXP_FLOPPYB);
+  menuEdit->Enable (ID_Edit_FD_1, canConfigure || floppy->get_enabled ());
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
@@ -591,7 +609,8 @@ void MyFrame::editFloppyConfig (int drive)
     wxLogError ("floppy params have wrong type");
     return;
   }
-  dlg.AddRadio ("None/Disabled", "none");
+  dlg.AddRadio ("Not Present", "none");
+  dlg.AddRadio ("Ejected", "none");
   dlg.AddRadio ("Physical floppy drive /dev/fd0", "/dev/fd0");
   dlg.AddRadio ("Physical floppy drive /dev/fd1", "/dev/fd1");
   dlg.SetCapacity (disktype->get () - disktype->get_min ());
@@ -651,11 +670,11 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
   switch (id) {
     case ID_Toolbar_Power:which = BX_TOOLBAR_POWER; break;
     case ID_Toolbar_Reset: which = BX_TOOLBAR_RESET; break;
-    case ID_Toolbar_FloppyA: 
+    case ID_Edit_FD_0: 
       // floppy config dialog box
       editFloppyConfig (0);
       break;
-    case ID_Toolbar_FloppyB: 
+    case ID_Edit_FD_1: 
       // floppy config dialog box
       editFloppyConfig (1);
       break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.8 2002-08-29 21:00:27 bdenney Exp $
+// $Id: wxdialog.cc,v 1.9 2002-08-29 23:18:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -73,12 +73,12 @@ LogMsgAskDialog::LogMsgAskDialog(
 {
   for (int i=0; i<N_BUTTONS; i++) enabled[i] = TRUE;
   vertSizer = new wxBoxSizer(wxVERTICAL);
-  context = new wxStaticText (this, -1, "Context: ");
+  context = new wxStaticText (this, -1, "");
   wxFont font = context->GetFont ();
   font.SetWeight (wxBOLD);
   font.SetPointSize (2 + font.GetPointSize ());
   context->SetFont (font);
-  message = new wxStaticText (this, -1, "Message: ");
+  message = new wxStaticText (this, -1, "");
   message->SetFont (font);
   dontAsk = new wxCheckBox (this, -1, LOG_MSG_DONT_ASK_STRING);
   btnSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -93,13 +93,13 @@ LogMsgAskDialog::LogMsgAskDialog(
 
 void LogMsgAskDialog::SetContext (char *s) {
   wxString text;
-  text.Printf ("Context: %s", s);
+  text.Printf (LOG_MSG_CONTEXT, s);
   ChangeStaticText (vertSizer, context, text);
 }
 
 void LogMsgAskDialog::SetMessage (char *s) {
   wxString text;
-  text.Printf ("Message: %s", s);
+  text.Printf (LOG_MSG_MSG, s);
   ChangeStaticText (vertSizer, message, text);
 }
 
@@ -146,7 +146,7 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
 
 void LogMsgAskDialog::ShowHelp ()
 {
-  wxMessageBox("No help is available yet.", "No Help", wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -406,7 +406,7 @@ void FloppyConfigDialog::CreateImage ()
 
 void FloppyConfigDialog::ShowHelp ()
 {
-  wxMessageBox("No help is available yet.", "No Help", wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -427,8 +427,8 @@ void FloppyConfigDialog::ShowHelp ()
 //       " sectors/track "
 //       geom[2] = spt control
 //     hsizer[2]:
-//       "Size in MB: "
-//       megs text control
+//       megs = "Size in MB: NUMBER"
+//       compute geometry button
 //     buttonSizer:
 //       help
 //       cancel
@@ -448,7 +448,6 @@ HDConfigDialog::HDConfigDialog(
   : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
-  computeMegs = TRUE;
   static char *geomNames[] = HD_CONFIG_GEOM_NAMES;
   vertSizer = new wxBoxSizer (wxVERTICAL);
   enable = new wxCheckBox (this, ID_Enable, "Enabled");
@@ -480,17 +479,19 @@ HDConfigDialog::HDConfigDialog(
     hsizer[1]->Add (geom[i]);
   }
   // contents of hsizer[2]
-  text = new wxStaticText (this, ID_Megs, HD_CONTROL_MEGS);  // size in megs
-  hsizer[2]->Add (text);
-  megs = new wxTextCtrl (this, -1);
+  megs = new wxStaticText (this, ID_Megs, "");  // size in megs
   hsizer[2]->Add (megs);
+  computeGeom = new wxButton (this, ID_ComputeGeometry, HD_CONFIG_COMPUTE_TEXT);
+  hsizer[2]->Add (computeGeom, 0, wxLEFT, 20);
   // contents of buttonSizer
-  btn = new wxButton (this, wxHELP, "Help");
+  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton (this, wxID_CANCEL, "Cancel");
+  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, "Ok");
+  btn = new wxButton (this, ID_Create, BTNLABEL_CREATE_IMG);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, BTNLABEL_OK);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // lay it out!
   SetAutoLayout(TRUE);
@@ -514,18 +515,21 @@ void HDConfigDialog::SetGeom (int n, int value) {
   printf ("setting geom[%d] to %d\n", n, value);
   geom[n]->SetValue (value); 
   printf ("now geom[%d] has value %d\n", n, geom[n]->GetValue ());
-  if (computeMegs) ComputeMegs ();
+  UpdateMegs ();
 }
 
-void HDConfigDialog::ComputeMegs () {
+float
+HDConfigDialog::UpdateMegs () {
   float meg = 512.0 
     * geom[0]->GetValue () 
     * geom[1]->GetValue () 
     * geom[2]->GetValue ()
     / (1024.0*1024.0);
   wxString text;
-  text.Printf ("%.1f", meg);
-  megs->SetValue (text);
+  text.Printf (HD_CONFIG_MEGS, meg);
+  ChangeStaticText (hsizer[2], megs, text);
+  Layout ();
+  return meg;
 }
 
 void HDConfigDialog::Init()
@@ -560,17 +564,33 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
     case ID_Cylinders:
     case ID_Heads:
     case ID_SPT:
-      if (computeMegs) ComputeMegs ();
+      UpdateMegs ();
+      break;
+    case ID_ComputeGeometry:
+      EnterSize ();
+      break;
+    case ID_Create:
+      {
+	int cyl = geom[0]->GetValue ();
+	int heads = geom[1]->GetValue ();
+	int spt = geom[2]->GetValue ();
+	int sectors = cyl*heads*spt;
+	char name[1024];
+	strncpy (name, filename->GetValue ().c_str (), sizeof(name));
+	CreateImage (1, sectors, name);
+	wxString msg;
+	msg.Printf ("Created a %d megabyte disk image called '%s'.",
+	    sectors*512, name);
+	wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION);
+      }
       break;
     case ID_Enable:
       {
 	bool en = enable->GetValue ();
         filename->Enable (en);
 	for (int i=0; i<3; i++) geom[i]->Enable (en);
-	megs->Enable (en);
+	computeGeom->Enable (en);
       }
-      break;
-    case ID_Megs:
       break;
     case wxOK:
       // probably should validate before allowing ok
@@ -595,9 +615,54 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
   }
 }
 
+void HDConfigDialog::EnterSize ()
+{
+  int initval = (int) (0.5 + UpdateMegs ());
+  int target_megs = wxGetNumberFromUser (HD_CONFIG_COMPUTE_INSTR, HD_CONFIG_COMPUTE_PROMPT, HD_CONFIG_COMPUTE_CAPTION, initval, 0, 32255);
+  if (target_megs<0) return;
+  // this calculate copied from misc/bximage.c
+  int cyl, heads=16, spt=63;
+  cyl = (int) (target_megs*1024.0*1024.0/16.0/63.0/512.0);
+  wxASSERT (cyl < 65536);
+  geom[0]->SetValue (cyl);
+  geom[1]->SetValue (heads);
+  geom[2]->SetValue (spt);
+  UpdateMegs ();
+}
+
+bool
+HDConfigDialog::CreateImage (int harddisk, int sectors, const char *filename)
+{
+  if (sectors<1) {
+    wxMessageBox("The disk size is invalid.", "Invalid Size", wxOK | wxICON_ERROR );
+    return false;
+  }
+  wxLogDebug ("filename = '%s'\n", filename);
+  if (strlen (filename) < 1) {
+    wxMessageBox("You must type a file name for the new disk image.", "Bad Filename", wxOK | wxICON_ERROR );
+    return false;
+  }
+  // try first with overwrite flag = 0
+  int ret = SIM->create_disk_image (filename, sectors, 0);
+  if (ret == -1) {  // already exists
+    int answer = wxMessageBox ("File exists.  Do you want to overwrite it?",
+      "File exists", wxYES_NO | wxCENTER);
+    if (answer == wxYES)
+      ret = SIM->create_disk_image (filename, sectors, 1);
+    else 
+      return false;  // wxNO
+  }
+  if (ret == -2) {
+    wxMessageBox("I could not create the disk image. Check for permission problems or available disk space.", "Failed", wxOK | wxICON_ERROR );
+    return false;
+  }
+  wxASSERT (ret==0);
+  return true;
+}
+
 void HDConfigDialog::ShowHelp ()
 {
-  wxMessageBox("No help is available yet.", "No Help", wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
 /////////////////////////////////////////////////////////////////

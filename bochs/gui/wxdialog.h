@@ -1,10 +1,20 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.7 2002-08-29 22:09:55 bdenney Exp $
+// $Id: wxdialog.h,v 1.8 2002-08-29 23:18:10 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
 
 #include "wx/spinctrl.h"
+
+////////////////////////////////////////////////////////////////////
+// text messages used in several places
+////////////////////////////////////////////////////////////////////
+#define MSG_NO_HELP "No help is available yet."
+#define MSG_NO_HELP_CAPTION "No help"
+#define BTNLABEL_HELP "Help"
+#define BTNLABEL_CANCEL "Cancel"
+#define BTNLABEL_OK "Ok"
+#define BTNLABEL_CREATE_IMG "Create Image"
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
@@ -38,6 +48,8 @@ public:
   { "Continue", "Die", "Dump Core", "Debugger", "Help" }
 #define LOG_MSG_DONT_ASK_STRING \
   "Don't ask about future messages like this"
+#define LOG_MSG_CONTEXT "Context: %s"
+#define LOG_MSG_MSG "Message: %s"
 private:
   wxStaticText *context, *message;
   wxCheckBox *dontAsk;
@@ -171,11 +183,12 @@ DECLARE_EVENT_TABLE()
 // +-----Configure Hard Disk-------------------------------------------+
 // |                                                                   |
 // |  [ ] Enable                                                       |
-// |  Disk image: [______________________________]      [Browse]       |
-// |  Geometry:  cylinders [____]  heads [____]  sectors/track [____]  |
-// |  Size in Megabytes: _____                                         |
 // |                                                                   |
-// |                                       [ Help ] [ Cancel ]  [ Ok ] |
+// |  Disk image: [______________________________]  [Browse]           |
+// |  Geometry:  cylinders [____]  heads [____]  sectors/track [____]  |
+// |  Size in Megabytes: 38.2    [Enter size/Compute Geometry]         |
+// |                                                                   |
+// |                       [ Help ] [ Cancel ] [ Create image ] [ Ok ] |
 // +-------------------------------------------------------------------+
 // 
 // To use this dialog:
@@ -198,12 +211,16 @@ private:
   wxCheckBox *enable;
   wxTextCtrl *filename;
   wxSpinCtrl *geom[3];
-  wxTextCtrl *megs;
+  wxStaticText *megs;
+  wxButton *computeGeom;
   enum geomfields_t { CYL, HEADS, SPT };
 #define HD_CONFIG_GEOM_NAMES \
   { "Geometry: cylinders", " heads ", " sectors/track " }
-#define HD_CONTROL_MEGS "Size in Megabytes: "
-  bool computeMegs;
+#define HD_CONFIG_MEGS "Size in Megabytes: %.1f"
+#define HD_CONFIG_COMPUTE_TEXT "<-- Enter Size/Compute Geometry"
+#define HD_CONFIG_COMPUTE_INSTR "Enter size of the hard disk image in megabytes.  Between 1 and 32255 please!"
+#define HD_CONFIG_COMPUTE_PROMPT "Size in megs: "
+#define HD_CONFIG_COMPUTE_CAPTION "Choose Disk Size"
 public:
   HDConfigDialog(wxWindow* parent, wxWindowID id);
   void OnEvent (wxCommandEvent& event);
@@ -214,8 +231,10 @@ public:
   void SetGeom (int n, int value);
   int GetGeom (int n) { return geom[n]->GetValue (); }
   void SetGeomRange (int n, int min, int max) { geom[n]->SetRange (min, max); }
-  void ComputeMegs ();
+  float UpdateMegs ();
   void SetEnable (bool val) { enable->SetValue (val); }
   bool GetEnable () { return enable->GetValue (); }
+  void EnterSize ();
+  bool CreateImage (int harddisk, int sectors, const char *filename);
 DECLARE_EVENT_TABLE()
 };
