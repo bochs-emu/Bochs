@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.74 2002-10-16 21:37:06 bdenney Exp $
+// $Id: siminterface.cc,v 1.75 2002-10-21 01:05:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -733,7 +733,7 @@ void bx_param_num_c::set_dependent_list (bx_list_c *l) {
 }
 
 Bit64s 
-bx_param_num_c::get ()
+bx_param_num_c::get64 ()
 {
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
@@ -756,7 +756,7 @@ bx_param_num_c::set (Bit64s newval)
     val.number = newval;
   }
   if (val.number < min || val.number > max) 
-    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), val.number, min, max));
+    BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), val.number, min, max));
   if (dependent_list != NULL) update_dependents ();
 }
 
@@ -910,7 +910,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
 }
 
 Bit64s
-bx_shadow_num_c::get () {
+bx_shadow_num_c::get64 () {
   Bit64u current;
   switch (varsize) {
     case 8: current = *(val.p8bit);  break;
@@ -934,7 +934,7 @@ bx_shadow_num_c::set (Bit64s newval)
 {
   Bit64u tmp;
   if (newval < min || newval > max)
-    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), newval, min, max));
+    BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), newval, min, max));
   switch (varsize) {
     case 8: 
       tmp = (*(val.p8bit) >> lowbit) & mask;
@@ -987,7 +987,7 @@ bx_shadow_bool_c::bx_shadow_bool_c (bx_id id,
 }
 
 Bit64s
-bx_shadow_bool_c::get () {
+bx_shadow_bool_c::get64 () {
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
     Bit64s ret = (*handler)(this, 0, (Bit64s) *(val.pbool));
