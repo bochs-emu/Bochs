@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.6 2004-02-28 21:28:28 vruppert Exp $
+// $Id: serial_raw.h,v 1.7 2004-03-08 21:51:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -25,14 +25,18 @@ class serial_raw : public logfunctions {
     void set_stop_bits (int);
     void set_parity_mode (int mode);
     void set_break (int mode);
+    void set_modem_control (int ctrl);
+    int get_modem_status ();
     void transmit (int byte);
-    void send_hangup ();
     int ready_transmit ();
     int ready_receive ();
     int receive ();
+
   private:
+    void setup_port ();
     bx_bool present;
 #ifdef WIN32
+    HANDLE hCOM;
     DCB dcb;
     BOOL DCBchanged;
 #endif

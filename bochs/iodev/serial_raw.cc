@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.8 2004-02-28 21:28:28 vruppert Exp $
+// $Id: serial_raw.cc,v 1.9 2004-03-08 21:51:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -50,12 +50,17 @@ serial_raw::serial_raw (char *devname)
   dcb.fBinary = 1;
   dcb.fDtrControl = DTR_CONTROL_ENABLE;
   dcb.fRtsControl = RTS_CONTROL_ENABLE;
-  dcb.fOutxCtsFlow = TRUE;
-  dcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
   DCBchanged = FALSE;
   if (lstrlen(devname) > 0) {
     wsprintf(portstr, "\\\\.\\%s", devname);
-    present = 0;
+    hCOM = CreateFile(portstr, GENERIC_READ|GENERIC_WRITE, 0, NULL,
+                      OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+    if (hCOM != INVALID_HANDLE_VALUE) {
+      present = 1;
+    } else {
+      present = 0;
+      BX_ERROR(("Raw device '%s' not present", devname));
+    }
   } else {
     present = 0;
   }
@@ -66,7 +71,11 @@ serial_raw::serial_raw (char *devname)
 
 serial_raw::~serial_raw (void)
 {
-  // nothing here yet
+  if (present) {
+#ifdef WIN32
+    CloseHandle(hCOM);
+#endif
+  }
 }
 
 void 
@@ -153,18 +162,73 @@ void
 serial_raw::set_break (int mode)
 {
   BX_DEBUG (("set break %s", mode?"on":"off"));
+#ifdef WIN32
+  if (mode) {
+    SetCommBreak(hCOM);
+  } else {
+    ClearCommBreak(hCOM);
+  }
+#endif
+}
+
+void 
+serial_raw::set_modem_control (int ctrl)
+{
+  BX_DEBUG (("set modem control 0x%02x", ctrl));
+#ifdef WIN32
+  EscapeCommFunction(hCOM, (ctrl & 0x01)?SETDTR:CLRDTR);
+  EscapeCommFunction(hCOM, (ctrl & 0x02)?SETRTS:CLRRTS);
+#endif
+}
+
+int 
+serial_raw::get_modem_status ()
+{
+#ifdef WIN32
+  DWORD mstat;
+#endif
+  int status = 0;
+
+#ifdef WIN32
+  GetCommModemStatus(hCOM, &mstat);
+  if (mstat & MS_CTS_ON) status = 0x01;
+  if (mstat & MS_DSR_ON) status |= 0x02;
+  if (mstat & MS_RING_ON) status |= 0x04;
+  if (mstat & MS_RLSD_ON) status |= 0x08;
+#endif
+  BX_DEBUG (("get modem status returns 0x%02x", status));
+  return status;
+}
+
+void 
+serial_raw::setup_port ()
+{
+#ifdef WIN32
+  DWORD DErr;
+  COMMTIMEOUTS ctmo;
+
+  ClearCommError(hCOM, &DErr, NULL);
+  SetupComm(hCOM, 2048, 2048);
+  PurgeComm(hCOM, PURGE_TXABORT | PURGE_RXABORT |
+            PURGE_TXCLEAR | PURGE_RXCLEAR);
+  memset(&ctmo, 0, sizeof(ctmo));
+  SetCommTimeouts(hCOM, &ctmo);
+  SetCommState(hCOM, &dcb);
+  SetCommMask(hCOM, 0);
+#endif
 }
 
 void 
 serial_raw::transmit (int val)
 {
   BX_DEBUG (("transmit %d", val));
-}
-
-void 
-serial_raw::send_hangup ()
-{
-  BX_DEBUG (("send_hangup"));
+  if (present) {
+#ifdef WIN32
+    if (DCBchanged) {
+      setup_port();
+    }
+#endif
+  }
 }
 
 int 
@@ -185,7 +249,16 @@ int
 serial_raw::receive ()
 {
   BX_DEBUG (("receive returning 'A'"));
-  return (int)'A';
+  if (present) {
+#ifdef WIN32
+    if (DCBchanged) {
+      setup_port();
+    }
+    return (int)'A';
+#endif
+  } else {
+    return (int)'A';
+  }
 }
 
 #endif

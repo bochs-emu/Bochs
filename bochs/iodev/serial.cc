@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.48 2004-02-28 22:06:36 vruppert Exp $
+// $Id: serial.cc,v 1.49 2004-03-08 21:51:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -321,6 +321,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_SER_SMF
+  bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
   Bit8u offset, val;
   Bit8u port = 0;
 
@@ -440,6 +441,28 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
 
     case BX_SER_MSR: /* MODEM status register */
+      prev_cts = BX_SER_THIS s[port].modem_status.cts;
+      prev_dsr = BX_SER_THIS s[port].modem_status.dsr;
+      prev_ri  = BX_SER_THIS s[port].modem_status.ri;
+      prev_dcd = BX_SER_THIS s[port].modem_status.dcd;
+#if USE_RAW_SERIAL
+      val = BX_SER_THIS s[port].raw->get_modem_status();
+      BX_SER_THIS s[port].modem_status.cts = val & 0x01;
+      BX_SER_THIS s[port].modem_status.dsr = (val & 0x02) >> 1;
+      BX_SER_THIS s[port].modem_status.ri  = (val & 0x04) >> 2;
+      BX_SER_THIS s[port].modem_status.dcd = (val & 0x08) >> 3;
+      if (BX_SER_THIS s[port].modem_status.cts != prev_cts) {
+        BX_SER_THIS s[port].modem_status.delta_cts = 1;
+      }
+      if (BX_SER_THIS s[port].modem_status.dsr != prev_dsr) {
+        BX_SER_THIS s[port].modem_status.delta_dsr = 1;
+      }
+      if ((BX_SER_THIS s[port].modem_status.ri == 0) && (prev_ri == 1))
+        BX_SER_THIS s[port].modem_status.ri_trailedge = 1;
+      if (BX_SER_THIS s[port].modem_status.dcd != prev_dcd) {
+        BX_SER_THIS s[port].modem_status.delta_dcd = 1;
+      }
+#endif
       val = BX_SER_THIS s[port].modem_status.delta_cts |
             (BX_SER_THIS s[port].modem_status.delta_dsr    << 1) |
             (BX_SER_THIS s[port].modem_status.ri_trailedge << 2) |
@@ -494,6 +517,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
   bx_bool new_rx_ien, new_tx_ien, new_ls_ien, new_ms_ien;
   bx_bool new_wordlen, new_stopbits, new_break, new_dlab;
+  bx_bool prev_dtr, prev_rts;
   bx_bool gen_int = 0;
   Bit8u offset, new_parity;
 #if USE_RAW_SERIAL
@@ -721,11 +745,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case BX_SER_MCR: /* MODEM control register */
-      if ((value & 0x01) == 0) {
-#if USE_RAW_SERIAL
-        BX_SER_THIS s[port].raw->send_hangup();
-#endif
-      }
+      prev_dtr = BX_SER_THIS s[port].modem_cntl.dtr;
+      prev_rts = BX_SER_THIS s[port].modem_cntl.rts;
 
       BX_SER_THIS s[port].modem_cntl.dtr  = value & 0x01;
       BX_SER_THIS s[port].modem_cntl.rts  = (value & 0x02) >> 1;
@@ -760,11 +781,18 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         raise_interrupt(port, BX_SER_INT_MODSTAT);
       } else {
+#if USE_RAW_SERIAL
+        if ((BX_SER_THIS s[port].modem_cntl.dtr != prev_dtr) ||
+            (BX_SER_THIS s[port].modem_cntl.rts != prev_rts)) {
+          BX_SER_THIS s[port].raw->set_modem_control(value & 0x03);
+        }
+#else
         /* set these to 0 for the time being */
         BX_SER_THIS s[port].modem_status.cts = 0;
         BX_SER_THIS s[port].modem_status.dsr = 0;
         BX_SER_THIS s[port].modem_status.ri  = 0;
         BX_SER_THIS s[port].modem_status.dcd = 0;
+#endif
       }
       break;
 
