@@ -23,8 +23,8 @@ Changes to next release:
 - FPU
   - totally rewritten all FPU code based on softfloat library 
     (Stanislav Shwartsman)
-  - significantly improved accuracy of floating point all
-    floating point instructions.
+  - significantly improved accuracy of all floating point
+    instructions.
   - implemented all missed P6 and PNI floating point instructions.
   - hundreds of bug fixes in FPU code.
 
