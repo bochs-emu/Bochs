@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.15 2002-08-27 19:54:46 bdenney Exp $
+// $Id: keyboard.h,v 1.16 2002-09-24 23:52:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -190,9 +190,24 @@ private:
   // The paste buffer does NOT exist in the hardware.  It is a bochs
   // construction that allows the user to "paste" arbitrary length sequences of
   // keystrokes into the emulated machine.  Since the hardware buffer is only
-  // 16 bytes, a very amount of data can be added to the hardware buffer at a
-  // time.  The paste buffer keeps track of the bytes that have not yet been
-  // pasted.
+  // 16 bytes, a very small amount of data can be added to the hardware buffer
+  // at a time.  The paste buffer keeps track of the bytes that have not yet
+  // been pasted.
+  //
+  // Lifetime of a paste buffer: The paste data comes from the system
+  // clipboard, which must be accessed using platform independent code in the
+  // gui.  Because every gui has its own way of managing the clipboard memory
+  // (in X windows, you're supposed to call Xfree for example), in the platform
+  // specific code we make a copy of the clipboard buffer with 
+  // "new Bit8u[length]".  Then the pointer is passed into
+  // bx_keyb_c::paste_bytes, along with the length.  The gui code never touches
+  // the pastebuf again, and does not free it.  The keyboard code is
+  // responsible for deallocating the paste buffer using delete [] buf.  The
+  // paste buffer is binary data, and it is probably NOT null terminated.  
+  //
+  // Summary: A paste buffer is allocated (new) in the platform-specific gui
+  // code, passed to the keyboard model, and is freed (delete[]) when it is no
+  // longer needed.
   Bit8u *pastebuf;   // ptr to bytes to be pasted, or NULL if none in progress
   Bit32u pastebuf_len; // length of pastebuf
   Bit32u pastebuf_ptr; // ptr to next byte to be added to hw buffer
