@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.35 2003-09-14 20:16:25 vruppert Exp $
+// $Id: serial.cc,v 1.36 2003-10-12 10:51:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,13 +28,10 @@
 // Peter Grehan (grehan@iprg.nokia.com) coded most of this
 // serial emulation.  Here's some notes from his implementation:
 
-// New files. Implement a single 8250, and allow terminal input/output
-// to stdout on FreeBSD. 16550/16550a/16552 should be easy: just add code
+// Implement a single 16450, and allow terminal input/output to stdout
+// on some platforms. 16550/16550a/16552 should be easy: just add code
 // to handle a FIFO. I only did what was needed to get console output.
 
-
-// define USE_TTY_HACK to connect an xterm or similar (depends on tty.c)
-// to the serial port /AM
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE 
@@ -153,16 +150,6 @@ bx_serial_c::init(void)
 #endif // USE_RAW_SERIAL
 
   DEV_register_irq(4, "Serial Port 1");
-
-#if defined (USE_TTY_HACK)
-  tty_id = tty_alloc("Bx Serial Console, Your Window to the 8250");
-  if (tty_id > 0)
-    BX_INFO(("TTY allocated fd = %d", tty_get_fd(tty_id)));
-  else
-    BX_INFO(("TTY allocation failed"));
-#else
-  //BX_INFO(("TTY not used, serial port is not connected"));
-#endif
 
   /*
    * Put the UART registers into their RESET state
@@ -600,13 +587,14 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_SER_THIS s[0].line_cntl.dlab &&
 	  !((value & 0x80) >> 7)) {
 	// Start the receive polling process if not already started
-	// and there is a valid baudrate. Poll every 4 bit times
+	// and there is a valid baudrate.
 	if (BX_SER_THIS s[0].rx_pollstate == BX_SER_RXIDLE &&
 	    BX_SER_THIS s[0].baudrate != 0) {
 	  BX_SER_THIS s[0].rx_pollstate = BX_SER_RXPOLL;
 	  bx_pc_system.activate_timer(BX_SER_THIS s[0].rx_timer_index,
-		      (int) (1000000.0 / (BX_SER_THIS s[0].baudrate / 4)),
-				      0); /* not continuous */
+		      (int) (1000000.0 / BX_SER_THIS s[0].baudrate *
+                      (BX_SER_THIS s[0].line_cntl.wordlen_sel + 5)),
+                      0); /* not continuous */
 	}
 	BX_DEBUG(("baud rate set - %d", BX_SER_THIS s[0].baudrate));
       }
@@ -718,9 +706,7 @@ bx_serial_c::tx_timer(void)
       }
     }
   } else {
-#if defined (USE_TTY_HACK)
-    tty(tty_id, 0, & BX_SER_THIS s[0].tsrbuffer);
-#elif USE_RAW_SERIAL
+#if USE_RAW_SERIAL
     if (!BX_SER_THIS raw->ready_transmit())
 	  BX_PANIC(("Not ready to transmit"));
     BX_SER_THIS raw->transmit(BX_SER_THIS s[0].tsrbuffer);
@@ -774,7 +760,7 @@ bx_serial_c::rx_timer(void)
   fd_set fds;
 #endif
 #endif
-  int bdrate = BX_SER_THIS s[0].baudrate / 8;
+  int bdrate = BX_SER_THIS s[0].baudrate / (BX_SER_THIS s[0].line_cntl.wordlen_sel + 5);
   unsigned char chbuf = 0;
 
 #if BX_HAVE_SELECT
@@ -791,10 +777,7 @@ bx_serial_c::rx_timer(void)
   if (tty_id >= 0) FD_SET(tty_id, &fds);
 
   if (BX_SER_THIS s[0].line_status.rxdata_ready == 0) {
-#if defined (USE_TTY_HACK)
-    if (tty_prefetch_char(tty_id)) {
-      tty(tty_id, 1, &chbuf);
-#elif USE_RAW_SERIAL
+#if USE_RAW_SERIAL
     bx_bool rdy;
     uint16 data;
     if ((rdy = BX_SER_THIS raw->ready_receive())) {
@@ -806,11 +789,11 @@ bx_serial_c::rx_timer(void)
       }
     }
     if (rdy) {
-	  chbuf = data;
+      chbuf = data;
 #elif defined(SERIAL_ENABLE)
     if ((tty_id >= 0) && (select(tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
       (void) read(tty_id, &chbuf, 1);
-	  BX_DEBUG(("read: '%c'",chbuf));
+      BX_DEBUG(("read: '%c'",chbuf));
 #else
     if (0) {
 #endif
