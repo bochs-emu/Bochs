@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.29 2002-12-22 15:15:56 bdenney Exp $
+// $Id: apic.cc,v 1.30 2003-01-22 21:43:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -698,7 +698,7 @@ void bx_local_apic_c::print_status () {
       BX_INFO(("vec 0x%x: irr=%d, isr=%d", vec, (int)irr[vec], (int)isr[vec]));
     }
   }
-  BX_INFO(("}", cpu->name));
+  BX_INFO(("}"));
 }
 
 bx_bool bx_local_apic_c::match_logical_addr (Bit8u address) 
