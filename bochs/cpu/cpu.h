@@ -517,7 +517,7 @@ typedef enum {
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
 
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
 class bx_generic_apic_c : public logfunctions {
 protected:
   Bit32u base_addr;
@@ -616,7 +616,7 @@ public:
 
 #define APIC_MAX_ID 16
 extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
-#endif // if BX_APIC_SUPPORT
+#endif // if BX_SUPPORT_APIC
 
 
 #if BX_USE_CPU_SMF == 0
@@ -1505,7 +1505,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Boolean protected_mode(void);
   BX_SMF BX_CPP_INLINE Boolean v8086_mode(void);
 #endif
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
   Boolean int_from_local_apic;
 #endif
@@ -1520,7 +1520,13 @@ public: // for now...
 #endif
 
 
+#if BX_SMP_PROCESSORS==1
+// single processor simulation, so there's one of everything
+extern BX_CPU_C       bx_cpu;
+#else
+// multiprocessor simulation, we need an array of cpus and memories
 extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
+#endif
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
