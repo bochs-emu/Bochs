@@ -1,0 +1,671 @@
+----------------------------------------------------------------------
+Patch name: patch.textmode-dimensions
+Author: Volker Ruppert <Volker.Ruppert@t-online.de>
+Date: Sat Apr 20 00:35:00 CEST 2002
+
+Detailed description:
+  This patch improves the function dimension_update() in text mode
+  and the text_update() function.
+
+  - The emulated vga card issues a dimension_update() using the real
+    screen dimensions and the real font height.
+
+  - The gui selects a font with the requested height or it recalculates
+    the screen height if the font height is not available.
+
+  - The text_update() function uses a new variable 'ncols' instead of the
+    fixed value of 80 for the number of text columns.
+
+  I have tested the changes with X11/Linux, SDL, wxGTK and win32. The changes
+  in the other guis are not tested yet.
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  cvs checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -urN ../bochs/gui/amigaos.cc ./gui/amigaos.cc
+--- ../bochs/gui/amigaos.cc	Sat Mar 16 12:30:05 2002
++++ ./gui/amigaos.cc	Fri Apr 19 18:26:31 2002
+@@ -384,21 +384,23 @@
+ {
+ int i;
+ int	cursori;
+-unsigned nchars;
++unsigned nchars, ncols;
+ unsigned char achar;
+ char string[80];
+ int	x, y;
+ static int previ;
+ unsigned int fgcolor, bgcolor;
+ 
+-//current cursor position
+-	cursori = (cursor_y*80 + cursor_x)*2;
++	ncols = w/8;
++
++	//current cursor position
++	cursori = (cursor_y*ncols + cursor_x)*2;
+ 
+ 	// Number of characters on screen, variable number of rows
+-	nchars = 80*nrows;
++	nchars = ncols*nrows;
+ 
+     
+-for (i=0; i<nchars*2; i+=2)
++	for (i=0; i<nchars*2; i+=2)
+ 	{
+ 		if ( i == cursori || i == previ || new_text[i] != old_text[i] || new_text[i+1] != old_text[i+1])
+ 		{
+@@ -418,13 +420,13 @@
+             }
+ 
+ 
+-            x = ((i/2) % 80)*window->RPort->TxWidth;
+-			y = ((i/2) / 80)*window->RPort->TxHeight;
++            x = ((i/2) % ncols)*window->RPort->TxWidth;
++            y = ((i/2) / ncols)*window->RPort->TxHeight;
+ 
+             Move(window->RPort, bx_borderleft + x, bx_bordertop + bx_headerbar_y + y + window->RPort->TxBaseline);
+             Text(window->RPort, &achar, 1);
+             }
+-    }
++	}
+ 
+     previ = cursori;
+ }
+@@ -486,8 +488,14 @@
+ 
+ 
+   void
+-bx_gui_c::dimension_update(unsigned x, unsigned y)
++bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
++        if (fheight > 0) {
++          if (fheight != 16) {
++            y = y * 16 / fheight;
++          }
++        }
++
+         if(!bx_options.Ofullscreen->get () && (x != w || y != h))
+         {
+             ChangeWindowBox(window, window->LeftEdge, window->TopEdge, x + bx_borderleft + bx_borderright, y + bx_bordertop + bx_borderbottom + bx_headerbar_y);
+diff -urN ../bochs/gui/beos.cc ./gui/beos.cc
+--- ../bochs/gui/beos.cc	Sat Mar 16 12:30:05 2002
++++ ./gui/beos.cc	Fri Apr 19 18:20:01 2002
+@@ -337,16 +337,17 @@
+   unsigned i, x, y;
+   BPoint point;
+   unsigned char achar;
+-  unsigned nchars;
++  unsigned nchars, ncols;
+ 
+   aWindow->Lock();
+ 
+   // Number of characters on screen, variable number of rows
+-  nchars = 80*nrows;
++  ncols = dimension_x/8;
++  nchars = ncols*nrows;
+ 
+   // first draw over character at original block cursor location
+-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars ) {
+-    achar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
++  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars ) {
++    achar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
+     point.Set(prev_block_cursor_x*8, prev_block_cursor_y*16 + bx_headerbar_y);
+     aView->DrawBitmap(vgafont[achar], point );
+     }
+@@ -357,8 +358,8 @@
+ 
+       achar = new_text[i];
+ 
+-      x = (i/2) % 80;
+-      y = (i/2) / 80;
++      x = (i/2) % ncols;
++      y = (i/2) / ncols;
+ 
+       point.Set(x*8, y*16 + bx_headerbar_y);
+       aView->DrawBitmap(vgafont[achar], point );
+@@ -369,8 +370,8 @@
+   prev_block_cursor_y = cursor_y;
+ 
+   // now draw character at new block cursor location in reverse
+-  if ( (cursor_y*80 + cursor_x) < nchars ) {
+-    achar = new_text[(cursor_y*80 + cursor_x)*2];
++  if ( (cursor_y*ncols + cursor_x) < nchars ) {
++    achar = new_text[(cursor_y*ncols + cursor_x)*2];
+     point.Set(cursor_x*8, cursor_y*16 + bx_headerbar_y);
+     aView->set_inv_text_colors();
+     aView->DrawBitmap(vgafont[achar], point );
+@@ -420,8 +421,13 @@
+ 
+ 
+   void
+-bx_gui_c::dimension_update(unsigned x, unsigned y)
++bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
++  if (fheight > 0) {
++    if (fheight != 16) {
++      y = y * 16 / fheight;
++    }
++  }
+   aWindow->Lock();
+   aWindow->ResizeTo(x, y + bx_headerbar_y);
+   aWindow->Unlock();
+diff -urN ../bochs/gui/carbon.cc ./gui/carbon.cc
+--- ../bochs/gui/carbon.cc	Sat Mar 16 12:30:05 2002
++++ ./gui/carbon.cc	Fri Apr 19 18:21:35 2002
+@@ -1023,17 +1023,19 @@
+ 	RGBColor	fgColor, bgColor;
+ 	GrafPtr		oldPort;
+         GrafPtr winGrafPtr = GetWindowPort(win);
+-	unsigned nchars;
++	unsigned nchars, ncols;
+ 	
+ 	GetPort(&oldPort);
+ 	
+ 	SetPort(GetWindowPort(win));
+ 
+-//current cursor position
+-	cursori = (cursor_y*80 + cursor_x)*2;
++	ncols = width/8;
++
++	//current cursor position
++	cursori = (cursor_y*ncols + cursor_x)*2;
+ 
+ 	// Number of characters on screen, variable number of rows
+-	nchars = 80*nrows;
++	nchars = ncols*nrows;
+ 	
+ 	for (i=0; i<nchars*2; i+=2)
+ 	{
+@@ -1061,8 +1063,8 @@
+ 				RGBBackColor(&bgColor);
+ 			}
+ 			
+-			x = ((i/2) % 80)*FONT_WIDTH;
+-			y = ((i/2) / 80)*FONT_HEIGHT;
++			x = ((i/2) % ncols)*FONT_WIDTH;
++			y = ((i/2) / ncols)*FONT_HEIGHT;
+ 
+ 			SetRect(&destRect, x, y,
+ 				x+FONT_WIDTH, y+FONT_HEIGHT);
+@@ -1194,8 +1196,13 @@
+ // x: new VGA x size
+ // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+ 
+-void bx_gui_c::dimension_update(unsigned x, unsigned y)
++void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
++  if (fheight > 0) {
++    if (fheight != 16) {
++      y = y * 16 / fheight;
++    }
++  }
+ 	if (x != width || y != height)
+ 	{
+ #if 1
+diff -urN ../bochs/gui/gui.h ./gui/gui.h
+--- ../bochs/gui/gui.h	Sun Mar 17 21:57:54 2002
++++ ./gui/gui.h	Fri Apr 19 16:19:01 2002
+@@ -41,7 +41,7 @@
+   static void flush(void);
+   static void clear_screen(void);
+   static Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
+-  static void dimension_update(unsigned x, unsigned y);
++  static void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
+   static unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
+   static unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
+   static void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
+diff -urN ../bochs/gui/macintosh.cc ./gui/macintosh.cc
+--- ../bochs/gui/macintosh.cc	Sat Mar 16 12:30:06 2002
++++ ./gui/macintosh.cc	Fri Apr 19 18:19:23 2002
+@@ -801,17 +801,19 @@
+ 	Rect			destRect;
+ 	RGBColor	fgColor, bgColor;
+ 	GrafPtr		oldPort;
+-	unsigned nchars;
++	unsigned nchars, ncols;
+ 	
+ 	GetPort(&oldPort);
+ 	
+ 	SetPort(win);
+ 
+-//current cursor position
+-	cursori = (cursor_y*80 + cursor_x)*2;
++	ncols = width/8;
++
++	//current cursor position
++	cursori = (cursor_y*ncols + cursor_x)*2;
+ 
+ 	// Number of characters on screen, variable number of rows
+-	nchars = 80*nrows;
++	nchars = ncols*nrows;
+ 	
+ 	for (i=0; i<nchars*2; i+=2)
+ 	{
+@@ -839,8 +841,8 @@
+ 				RGBBackColor(&bgColor);
+ 			}
+ 			
+-			x = ((i/2) % 80)*FONT_WIDTH;
+-			y = ((i/2) / 80)*FONT_HEIGHT;
++			x = ((i/2) % ncols)*FONT_WIDTH;
++			y = ((i/2) / ncols)*FONT_HEIGHT;
+ 
+ 			SetRect(&destRect, x, y,
+ 				x+FONT_WIDTH, y+FONT_HEIGHT);
+@@ -967,8 +969,13 @@
+ // x: new VGA x size
+ // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+ 
+-void bx_gui_c::dimension_update(unsigned x, unsigned y)
++void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
++  if (fheight > 0) {
++    if (fheight != 16) {
++      y = y * 16 / fheight;
++    }
++  }
+ 	if (x != width || y != height)
+ 	{
+ 		SizeWindow(win, x, y, false);
+diff -urN ../bochs/gui/nogui.cc ./gui/nogui.cc
+--- ../bochs/gui/nogui.cc	Sat Mar 16 12:30:06 2002
++++ ./gui/nogui.cc	Fri Apr 19 17:55:42 2002
+@@ -216,10 +216,11 @@
+ // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+ 
+   void
+-bx_gui_c::dimension_update(unsigned x, unsigned y)
++bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
+   UNUSED(x);
+   UNUSED(y);
++  UNUSED(fheight);
+ }
+ 
+ 
+diff -urN ../bochs/gui/rfb.cc ./gui/rfb.cc
+--- ../bochs/gui/rfb.cc	Sat Mar 16 12:30:06 2002
++++ ./gui/rfb.cc	Fri Apr 19 17:55:14 2002
+@@ -623,10 +623,11 @@
+ // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+ 
+   void
+-bx_gui_c::dimension_update(unsigned x, unsigned y)
++bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
+   UNUSED(x);
+   UNUSED(y);
++  UNUSED(fheight);
+ }
+ 
+ 
+diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
+--- ../bochs/gui/sdl.cc	Tue Mar 19 20:59:44 2002
++++ ./gui/sdl.cc	Fri Apr 19 18:18:54 2002
+@@ -75,7 +75,7 @@
+ SDL_Event sdl_event;
+ int sdl_fullscreen_toggle;
+ int sdl_grab;
+-int res_x, res_y;
++unsigned res_x, res_y;
+ int headerbar_height;
+ static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
+ static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
+@@ -586,32 +586,37 @@
+ 
+ void bx_gui_c::dimension_update(
+     unsigned x,
+-    unsigned y)
++    unsigned y,
++    unsigned fheight)
+ {
+-  int i=headerbar_height;
+-
+   // TODO: remove this stupid check whenever the vga driver is fixed
+   if( y == 208 ) y = 200;
+-  // TODO: remove this stupid check whenever 80x50 font is properly handled
+-  if( y > x )
++
++  if( fheight > 0 )
+   {
+-    y = y>>1;
+-    if( font != &sdl_font8x8[0][0] )
++    if( fheight == 8 )
+     {
+-      bx_gui.clear_screen();
+-      font = &sdl_font8x8[0][0];
+-      fontheight = 8;
+-      fontwidth = 8;
++      if( font != &sdl_font8x8[0][0] )
++      {
++        bx_gui.clear_screen();
++        font = &sdl_font8x8[0][0];
++        fontheight = 8;
++        fontwidth = 8;
++      }
+     }
+-  }
+-  else
+-  {
+-    if( font != &sdl_font8x16[0][0] )
++    else
+     {
+-      bx_gui.clear_screen();
+-      font = &sdl_font8x16[0][0];
+-      fontheight = 16;
+-      fontwidth = 8;
++      if( fheight != 16 )
++      {
++        y = y * 16 / fheight;
++      }
++      if( font != &sdl_font8x16[0][0] )
++      {
++        bx_gui.clear_screen();
++        font = &sdl_font8x16[0][0];
++        fontheight = 16;
++        fontwidth = 8;
++      }
+     }
+   }
+ 
+@@ -658,8 +663,11 @@
+   }
+   res_x = x;
+   res_y = y;
+-  textres_x = x / fontwidth;
+-  textres_y = y / fontheight;
++  if( fheight > 0 )
++  {
++    textres_x = x / fontwidth;
++    textres_y = y / fontheight;
++  }
+   bx_gui.show_headerbar();
+ }
+ 
+diff -urN ../bochs/gui/term.cc ./gui/term.cc
+--- ../bochs/gui/term.cc	Sat Mar 16 12:30:06 2002
++++ ./gui/term.cc	Fri Apr 19 17:57:24 2002
+@@ -483,10 +483,11 @@
+ // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+ 
+ 	void
+-bx_gui_c::dimension_update(unsigned x, unsigned y)
++bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
+ 	UNUSED(x);
+ 	UNUSED(y);
++	UNUSED(fheight);
+ }
+ 
+ 
+diff -urN ../bochs/gui/win32.cc ./gui/win32.cc
+--- ../bochs/gui/win32.cc	Sun Apr  7 20:07:20 2002
++++ ./gui/win32.cc	Fri Apr 19 18:17:29 2002
+@@ -715,7 +715,7 @@
+   unsigned char cChar;
+   unsigned i, x, y;
+   Bit8u cs_start, cs_end;
+-  unsigned nchars;
++  unsigned nchars, ncols;
+   unsigned char data[32];
+ 
+   cs_start = (cursor_state >> 8) & 0x3f;
+@@ -727,19 +727,21 @@
+ 
+   hdc = GetDC(stInfo.hwnd);
+ 
++  ncols = dimension_x/8;
++
+   // Number of characters on screen, variable number of rows
+-  nchars = 80*nrows;
++  nchars = ncols*nrows;
+ 
+-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars) {
+-    cChar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
++  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars) {
++    cChar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
+     if (yChar >= 16) {
+       DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
+ 	              prev_block_cursor_y*16 + bx_headerbar_y, SRCCOPY,
+-				  new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
++				  new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1]);
+     } else {
+       DrawChar(hdc, cChar, prev_block_cursor_x*8,
+                prev_block_cursor_y*yChar + bx_headerbar_y,
+-               new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1], 1, 0);
++               new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1], 1, 0);
+     }
+   }
+ 
+@@ -749,8 +751,8 @@
+ 
+       cChar = new_text[i];
+ 
+-      x = (i/2) % 80;
+-      y = (i/2) / 80;
++      x = (i/2) % ncols;
++      y = (i/2) / ncols;
+       if(yChar>=16) {
+         DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
+       } else {
+@@ -763,8 +765,8 @@
+   prev_block_cursor_y = cursor_y;
+ 
+   // now draw character at new block cursor location in reverse
+-  if (((cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end)) {
+-    cChar = new_text[(cursor_y*80 + cursor_x)*2];
++  if (((cursor_y*ncols + cursor_x) < nchars ) && (cs_start <= cs_end)) {
++    cChar = new_text[(cursor_y*ncols + cursor_x)*2];
+     if (yChar>=16)
+     {
+       memset(data, 0, sizeof(data));
+@@ -775,9 +777,9 @@
+       }
+       SetBitmapBits(cursorBmp, 32, data);
+       DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16 + bx_headerbar_y,
+-	         SRCCOPY, new_text[((cursor_y*80 + cursor_x)*2)+1]);
++	         SRCCOPY, new_text[((cursor_y*ncols + cursor_x)*2)+1]);
+     } else {
+-      char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
++      char cAttr = new_text[((cursor_y*ncols + cursor_x)*2)+1];
+       DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar + bx_headerbar_y, cAttr, cs_start, cs_end);
+     }
+   }
+@@ -890,8 +892,23 @@
+ // x: new VGA x size
+ // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+ 
+-void bx_gui_c::dimension_update(unsigned x, unsigned y) {
+-if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
++void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
++{
++  if (fheight > 0) {
++    if (fheight >= 16) {
++      FontId = 2;
++      yChar = 16;
++    } else if (fheight > 12) {
++      FontId = 1;
++      yChar = 14;
++    } else {
++      FontId = 0;
++      yChar = 12;
++    }
++    y = y * yChar / fheight;
++  }
++
++  if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
+     return;
+   dimension_x = x;
+   dimension_y = y + bx_headerbar_y;
+@@ -903,21 +920,6 @@
+     stretched_x *= 2;
+     stretched_y *= 2;
+     stretch_factor *= 2;
+-  }
+-
+-  FontId = 2;
+-  yChar = 16;
+-  if(y>600)
+-  {
+-    FontId = 0;
+-    yChar = 12;
+-    dimension_y = y * yChar / 16 + bx_headerbar_y;
+-    stretched_y = dimension_y * stretch_factor;
+-  } else if (y>480) {
+-    FontId = 1;
+-    yChar = 14;
+-    dimension_y = y * yChar / 16 + bx_headerbar_y;
+-    stretched_y = dimension_y * stretch_factor;
+   }
+ 
+   SetWindowPos(stInfo.hwnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
+diff -urN ../bochs/gui/wx.cc ./gui/wx.cc
+--- ../bochs/gui/wx.cc	Thu Apr 18 20:36:02 2002
++++ ./gui/wx.cc	Fri Apr 19 18:18:17 2002
+@@ -749,26 +749,27 @@
+ 	Bit8u cs_start = (cursor_state >> 8) & 0x3f;
+ 	Bit8u cs_end = cursor_state & 0x1f;
+ 	unsigned char cChar;
+-	unsigned int nchars = 80 * nrows;
+-	if((wxCursorY * 80 + wxCursorX) < nchars) {
+-		cChar = new_text[(wxCursorY * 80 + wxCursorX) * 2];
+-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * 80 + wxCursorX) * 2) + 1]);
++	unsigned int ncols = wxScreenX / 8;
++	unsigned int nchars = ncols * nrows;
++	if((wxCursorY * ncols + wxCursorX) < nchars) {
++		cChar = new_text[(wxCursorY * ncols + wxCursorX) * 2];
++		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1]);
+ 	}
+ 	
+ 	for(int i = 0; i < nchars * 2; i += 2) {
+ 		if((old_text[i] != new_text[i]) || (old_text[i+1] != new_text[i+1])) {
+ 			cChar = new_text[i];
+-			int x = (i / 2) % 80;
+-			int y = (i / 2) / 80;
++			int x = (i / 2) % ncols;
++			int y = (i / 2) / ncols;
+ 			DrawBochsBitmap(x * 8, y * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i+1]);
+ 		}
+ 	}
+ 	wxCursorX = cursor_x;
+ 	wxCursorY = cursor_y;
+ 
+-	if(((cursor_y * 80 + cursor_x) < nchars) && (cs_start <= cs_end)) {
+-		cChar = new_text[(cursor_y * 80 + cursor_x) * 2];
+-		char cAttr = new_text[((cursor_y * 80 + cursor_x) * 2) + 1];
++	if(((cursor_y * ncols + cursor_x) < nchars) && (cs_start <= cs_end)) {
++		cChar = new_text[(cursor_y * ncols + cursor_x) * 2];
++		char cAttr = new_text[((cursor_y * ncols + cursor_x) * 2) + 1];
+ 		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
+ 		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr);
+ 	}
+@@ -826,10 +827,15 @@
+ // x: new VGA x size
+ // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+ 
+-void bx_gui_c::dimension_update(unsigned x, unsigned y)
++void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
+   IFDBG_VGA (wxLogDebug ("dimension_update"));
+   wxCriticalSectionLocker lock(wxScreen_lock);
++  if (fheight > 0) {
++    if (fheight != 16) {
++      y = y * 16 / fheight;
++    }
++  }
+   wxScreenX = x;
+   wxScreenY = y;
+   wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
+diff -urN ../bochs/gui/x.cc ./gui/x.cc
+--- ../bochs/gui/x.cc	Thu Apr 18 16:53:14 2002
++++ ./gui/x.cc	Fri Apr 19 18:17:56 2002
+@@ -1015,7 +1015,7 @@
+   unsigned new_foreground, new_background;
+   Bit8u string[1];
+   Bit8u cs_start, cs_end;
+-  unsigned nchars;
++  unsigned nchars, ncols;
+ 
+   cs_start = (cursor_state >> 8) & 0x3f;
+   cs_end = cursor_state & 0x1f;
+@@ -1023,11 +1023,12 @@
+   font_height = font_info->ascent + font_info->descent;
+ 
+   // Number of characters on screen, variable number of rows
+-  nchars = 80*nrows;
++  ncols = dimension_x/8;
++  nchars = ncols*nrows;
+ 
+   // first draw over character at original block cursor location
+-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars ) {
+-    curs = (prev_block_cursor_y*80 + prev_block_cursor_x)*2;
++  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars ) {
++    curs = (prev_block_cursor_y*ncols + prev_block_cursor_x)*2;
+     string[0] = new_text[curs];
+     if (string[0] == 0) string[0] = ' '; // convert null to space
+     XSetForeground(bx_x_display, gc, col_vals[new_text[curs+1] & 0x0f]);
+@@ -1055,8 +1056,8 @@
+ //XSetForeground(bx_x_display, gc, white_pixel);
+ //XSetBackground(bx_x_display, gc, black_pixel);
+ 
+-      x = (i/2) % 80;
+-      y = (i/2) / 80;
++      x = (i/2) % ncols;
++      y = (i/2) / ncols;
+ 
+       XDrawImageString(bx_x_display, win,
+         gc,
+@@ -1074,7 +1075,7 @@
+   XSetBackground(bx_x_display, gc, black_pixel);
+ 
+   // now draw character at new block cursor location in reverse
+-  if ( ( (cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
++  if ( ( (cursor_y*ncols + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
+     for (unsigned i = cs_start; i <= cs_end; i++)
+       XDrawLine(bx_x_display, win,
+ 	gc_inv,
+@@ -1211,8 +1212,13 @@
+ 
+ 
+   void
+-bx_gui_c::dimension_update(unsigned x, unsigned y)
++bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+ {
++  if (fheight > 0) {
++    if (fheight != 16) {
++      y = y * 16 / fheight;
++    }
++  }
+   if ( (x != dimension_x) || (y != (dimension_y-bx_headerbar_y)) ) {
+     XSizeHints hints;
+     long supplied_return;
+diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
+--- ../bochs/iodev/vga.cc	Sun Apr 14 10:57:24 2002
++++ ./iodev/vga.cc	Fri Apr 19 15:56:43 2002
+@@ -1458,7 +1458,7 @@
+ 	iHeight = 16*25;
+ 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+ 	{
+-	  bx_gui.dimension_update(iWidth, iHeight);
++	  bx_gui.dimension_update(iWidth, iHeight, 16);
+ 	  old_iWidth = iWidth;
+ 	  old_iHeight = iHeight;
+ 	}
+@@ -1499,10 +1499,10 @@
+         if (rows > BX_MAX_TEXT_LINES)
+           BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
+ 	iWidth = 8 * (BX_VGA_THIS s.CRTC.reg[1] + 1);
+-	iHeight = 16*rows; // TODO: should use font size
++	iHeight = VDE+1;
+ 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+ 	{
+-	  bx_gui.dimension_update(iWidth, iHeight);
++	  bx_gui.dimension_update(iWidth, iHeight, MSL+1);
+ 	  old_iWidth = iWidth;
+ 	  old_iHeight = iHeight;
+ 	}
