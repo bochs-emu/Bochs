@@ -1,12 +1,32 @@
-? disasm.patch
-Index: dis_decode.cc
+----------------------------------------------------------------------
+Patch name: patches/patch.disasm-luizshiguno
+Author: Luiz Henrique Shigunov (
+Date: Tue Jan 21 10:44:27 CET 2003
+
+Detailed description:
+I've implemented functions ALOb(), ObAL(), YbAL(),
+ALXb() and eAXXv() from dis_groups.cc.
+
+I've also changed dis_decode.cc to print cmpsd if code
+is 32 bits and cmpsw if code is 16 bits. The same with
+stosd, lodsd and scasd.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on Tue Jan 21 10:44:27 CET 2003
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: disasm/dis_decode.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/disasm/dis_decode.cc,v
-retrieving revision 1.9
-diff -u -r1.9 dis_decode.cc
---- dis_decode.cc	20 Sep 2002 15:34:55 -0000	1.9
-+++ dis_decode.cc	21 Sep 2002 12:43:34 -0000
-@@ -801,16 +801,54 @@
+retrieving revision 1.12
+diff -u -r1.12 dis_decode.cc
+--- disasm/dis_decode.cc	19 Nov 2002 05:47:44 -0000	1.12
++++ disasm/dis_decode.cc	21 Jan 2003 09:42:54 -0000
+@@ -960,16 +960,54 @@
          goto done;
  
        case 0xA6: dis_sprintf("cmpsb "); XbYb(); goto done;
@@ -66,61 +86,15 @@ diff -u -r1.9 dis_decode.cc
  
        case 0xB0: dis_sprintf("mov AL, "); Ib(); goto done;
        case 0xB1: dis_sprintf("mov CL, "); Ib(); goto done;
-Index: dis_groups.cc
+Index: disasm/dis_groups.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/disasm/dis_groups.cc,v
-retrieving revision 1.5
-diff -u -r1.5 dis_groups.cc
---- dis_groups.cc	20 Sep 2002 15:34:55 -0000	1.5
-+++ dis_groups.cc	21 Sep 2002 12:43:35 -0000
-@@ -187,8 +187,24 @@
- bx_disassemble_c::XBTS(void) {dis_sprintf("*** XBTS() unfinished ***");}
-   void
- bx_disassemble_c::IBTS(void) {dis_sprintf("*** IBTS() unfinished ***");}
-+
-   void
--bx_disassemble_c::ALOb(void) {dis_sprintf("*** ALOb() unfinished ***");}
-+bx_disassemble_c::ALOb(void)
-+{
-+  dis_sprintf("AL, ");
-+  if (db_32bit_addrsize) {
-+    Bit32u imm32;
-+
-+    imm32 = fetch_dword();
-+    dis_sprintf("[%08x]", (unsigned) imm32);
-+    }
-+  else {
-+    Bit16u imm16;
-+
-+    imm16 = fetch_word();
-+    dis_sprintf("[%04x]", (unsigned) imm16);
-+    }
-+}
- 
-   void
- bx_disassemble_c::eAXOv(void)
-@@ -264,14 +280,76 @@
+retrieving revision 1.7
+diff -u -r1.7 dis_groups.cc
+--- disasm/dis_groups.cc	19 Nov 2002 05:47:44 -0000	1.7
++++ disasm/dis_groups.cc	21 Jan 2003 09:42:57 -0000
+@@ -337,11 +337,57 @@
  }
- 
-   void
--bx_disassemble_c::ObAL(void) {dis_sprintf("*** ObAL() unfinished ***");}
-+bx_disassemble_c::ObAL(void)
-+{
-+  if (db_32bit_addrsize) {
-+    Bit32u imm32;
-+
-+    imm32 = fetch_dword();
-+    dis_sprintf("[%08x], ", (unsigned) imm32);
-+    }
-+  else {
-+    Bit16u imm16;
-+
-+    imm16 = fetch_word();
-+    dis_sprintf("[%04x], ", (unsigned) imm16);
-+    }
-+
-+  dis_sprintf("AL");
-+}
  
    void
 -bx_disassemble_c::YbAL(void) {dis_sprintf("*** YbAL() unfinished ***");}
@@ -176,7 +150,7 @@ diff -u -r1.5 dis_groups.cc
 +
 +  dis_sprintf("%s, [%s]", eax, esi);
 +}
-+
++ 
    void
  bx_disassemble_c::Es(void) {dis_sprintf("*** Es() unfinished ***");}
    void
