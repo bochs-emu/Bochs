@@ -49,7 +49,6 @@ BX_MEM_C::BX_MEM_C(void)
 {
   setprefix("[MEM ]",__FILE__,__LINE__);
   settype(MEMLOG);
-  setio(SAFE_GET_IOFUNC());
 
   BX_MEM.vector = NULL;
   BX_MEM.len    = 0;

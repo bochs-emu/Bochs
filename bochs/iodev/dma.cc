@@ -43,7 +43,6 @@ bx_dma_c::bx_dma_c(void)
 {
 	setprefix("[DMA ]",__FILE__,__LINE__);
 	settype(DMALOG);
-	setio(SAFE_GET_IOFUNC());
 }
 
 bx_dma_c::~bx_dma_c(void)

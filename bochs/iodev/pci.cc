@@ -43,7 +43,6 @@ bx_pci_c::bx_pci_c(void)
 {
 	setprefix("[PCI ]",__FILE__,__LINE__);
 	settype(PCILOG);
-	setio(SAFE_GET_IOFUNC());
 }
 
 bx_pci_c::~bx_pci_c(void)

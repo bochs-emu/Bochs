@@ -37,7 +37,6 @@ BX_CPU_C::BX_CPU_C(void)
   char cpu[8];
   snprintf(cpu, 8, "[CPU%d]",BX_SIM_ID);
 
-  BX_CPU_THIS_PTR setio(SAFE_GET_IOFUNC());
   BX_CPU_THIS_PTR setprefix(cpu, __FILE__, __LINE__);
   BX_INFO(( "(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID));
 

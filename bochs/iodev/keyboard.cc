@@ -52,7 +52,6 @@ bx_keyb_c::bx_keyb_c(void)
 {
   setprefix("[KBD ]",__FILE__,__LINE__);
   settype(KBDLOG);
-  setio(SAFE_GET_IOFUNC());
   // constructor
   // should zero out state info here???
   memset( &s, 0, sizeof(s) );

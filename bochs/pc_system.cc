@@ -45,7 +45,6 @@ const Bit64u bx_pc_system_c::COUNTER_INTERVAL = 100000;
   // constructor
 bx_pc_system_c::bx_pc_system_c(void)
 {
-  this->setio(io);
   this->setprefix("[SYS ]", __FILE__, __LINE__);
 
   num_timers = 0;

@@ -57,8 +57,6 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
 	setprefix("[FDD ]",__FILE__,__LINE__);
 	settype(FDLOG);
-	setio(SAFE_GET_IOFUNC());
-	BX_FD_THIS info("Hello, Floppy World\n");
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)

@@ -36,7 +36,6 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
   setprefix("[NE2K]",__FILE__,__LINE__);
   settype(NE2KLOG);
-  setio(SAFE_GET_IOFUNC());
   // nothing for now
 }
 

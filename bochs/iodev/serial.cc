@@ -69,7 +69,6 @@ bx_serial_c::bx_serial_c(void)
 {
   setprefix("[SER ]",__FILE__,__LINE__);
   settype(SERLOG);
-  setio(SAFE_GET_IOFUNC());
 #ifdef __FreeBSD__
   tcgetattr(0, &term_orig);
   bcopy((caddr_t) &term_orig, (caddr_t) &term_new, sizeof(struct termios));

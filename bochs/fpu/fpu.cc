@@ -23,6 +23,7 @@
 
 #include "bochs.h"
 
+#define LOG_THIS genlog->
 
 // Nomenclature used to signify argument types
 //

@@ -45,7 +45,6 @@ bx_cmos_c::bx_cmos_c(void)
 {
 	setprefix("[CMOS]",__FILE__,__LINE__);
 	settype(CMOSLOG);
-	setio(SAFE_GET_IOFUNC());
 }
 
 bx_cmos_c::~bx_cmos_c(void)

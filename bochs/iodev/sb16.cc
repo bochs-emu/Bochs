@@ -50,7 +50,6 @@ bx_sb16_c::bx_sb16_c(void)
 {
   setprefix("[SB16]",__FILE__,__LINE__);
   settype(SB16LOG);
-  setio(SAFE_GET_IOFUNC());
 }
 
 bx_sb16_c::~bx_sb16_c(void)

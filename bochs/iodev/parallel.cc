@@ -39,7 +39,6 @@ bx_parallel_c::bx_parallel_c(void)
 {
   setprefix("[PAR ]",__FILE__,__LINE__);
   settype(PARLOG);
-  setio(SAFE_GET_IOFUNC());
   // nothing for now
 }
 

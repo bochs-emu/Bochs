@@ -45,7 +45,6 @@ bx_gui_c::bx_gui_c(void)
 {
   setprefix("[GUI ]",__FILE__,__LINE__);
   settype(GUILOG);
-  setio(SAFE_GET_IOFUNC());
 }
 
   void

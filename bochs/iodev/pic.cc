@@ -38,7 +38,6 @@ bx_pic_c::bx_pic_c(void)
 {
 	setprefix("[PIC ]",__FILE__,__LINE__);
 	settype(PICLOG);
-	setio(SAFE_GET_IOFUNC());
 }
 
 bx_pic_c::~bx_pic_c(void)

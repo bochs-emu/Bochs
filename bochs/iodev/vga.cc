@@ -42,7 +42,6 @@ bx_vga_c::bx_vga_c(void)
   BX_VGA_THIS s.vga_mem_updated = 0;
   BX_VGA_THIS s.x_tilesize = X_TILESIZE;
   BX_VGA_THIS s.y_tilesize = Y_TILESIZE;
-  BX_VGA_THIS setio(SAFE_GET_IOFUNC());
   BX_VGA_THIS setprefix("[VGA ]", __FILE__, __LINE__);
 }
 

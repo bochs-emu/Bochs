@@ -35,7 +35,6 @@ bx_g2h_c::bx_g2h_c(void)
 {
   setprefix("[G2H ]",__FILE__,__LINE__);
   settype(G2HLOG);
-  setio(SAFE_GET_IOFUNC());
   unsigned i;
 
   for (i=0; i<BX_MAX_G2H_CHANNELS; i++) {

@@ -66,7 +66,6 @@ bx_hard_drive_c::bx_hard_drive_c(void)
 {
       setprefix("[HD  ]",__FILE__,__LINE__);
       settype(HDLOG);
-      setio(SAFE_GET_IOFUNC());
 #if EXTERNAL_DISK_SIMULATOR
       s[0].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();
       s[1].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();

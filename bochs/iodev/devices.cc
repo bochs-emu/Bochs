@@ -46,7 +46,6 @@ bx_devices_c::bx_devices_c(void)
 {
   setprefix("[DEV ]",__FILE__,__LINE__);
   settype(DEVLOG);
-  setio(SAFE_GET_IOFUNC());
   unsigned i;
 
 #if BX_PCI_SUPPORT

@@ -137,7 +137,6 @@ bx_pit_c::bx_pit_c( void )
 {
   setprefix("[PIT ]",__FILE__,__LINE__);
   settype(PITLOG);
-  setio(SAFE_GET_IOFUNC());
   memset(&s, 0, sizeof(s));
 
   /* 8254 PIT (Programmable Interval Timer) */

@@ -83,7 +83,6 @@ cdrom_interface::cdrom_interface(char *dev)
 {
   setprefix("[CD  ]",__FILE__,__LINE__);
   settype(CDLOG);
-  setio(SAFE_GET_IOFUNC());
   fd = -1; // File descriptor not yet allocated
 
   if ( dev == NULL )
