@@ -9,3 +9,4 @@
 # level of the new working directory when using the `cvs checkout'
 # command.
 #TopLevelAdmin=no
+tag=bochs
