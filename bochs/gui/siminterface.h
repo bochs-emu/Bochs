@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.6 2001-06-11 14:03:35 bdenney Exp $
+ * $Id: siminterface.h,v 1.7 2001-06-11 20:27:23 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -56,7 +56,7 @@ class bx_simulator_interface_c {
 public:
   bx_simulator_interface_c ();
   int get_init_done () { return init_done; }
-  int set_init_done (int n) { init_done = n; }
+  int set_init_done (int n) { init_done = n; return 0;}
 
   virtual int getips () {return -1;}
   virtual void setips (int ips) {}
@@ -72,10 +72,10 @@ public:
   virtual void quit_sim (int clean) {}
   virtual int get_mouse_enabled () {return -1;}
   virtual void set_mouse_enabled (int en) {}
-  virtual int get_default_rc (char *path, int len) {}
+  virtual int get_default_rc (char *path, int len) {return -1;}
   virtual int read_rc (char *path) {return -1;}
   virtual int write_rc (char *rc, int overwrite) {return -1;}
-  virtual int get_log_file (char *path, int len) {}
+  virtual int get_log_file (char *path, int len) {return -1;}
   virtual int set_log_file (char *path) {return -1;}
   virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}
   virtual int set_floppy_options (int drive, bx_floppy_options *in) {return -1;}
@@ -104,7 +104,7 @@ public:
   // methods marked LOCAL should only be called by the simulator, not
   // from the control panel.
 #define NOTIFY_CODE_LOGMSG  0x101
-  virtual int LOCAL_notify (int code) {}
+  virtual int LOCAL_notify (int code) {return -1;}
   virtual int LOCAL_log_msg (char *prefix, int level, char *msg) {return -1;}
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len) {return -1;}
 };
