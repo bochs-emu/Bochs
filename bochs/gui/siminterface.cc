@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.68 2002-09-24 17:57:48 bdenney Exp $
+// $Id: siminterface.cc,v 1.69 2002-09-25 22:54:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -439,14 +439,14 @@ bx_real_sim_c::sim_to_ci_event (BxEvent *event)
 int 
 bx_real_sim_c::log_msg (const char *prefix, int level, const char *msg)
 {
-  BxEvent *be = new BxEvent ();
-  be->type = BX_SYNC_EVT_LOG_ASK;
-  be->u.logmsg.prefix = prefix;
-  be->u.logmsg.level = level;
-  be->u.logmsg.msg = msg;
+  BxEvent be;
+  be.type = BX_SYNC_EVT_LOG_ASK;
+  be.u.logmsg.prefix = prefix;
+  be.u.logmsg.level = level;
+  be.u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
-  BxEvent *response = sim_to_ci_event (be);
-  return response? response->retcode : -1;
+  sim_to_ci_event (&be);
+  return be.retcode;
 }
 
 // Called by simulator whenever it needs the user to choose a new value
@@ -459,11 +459,11 @@ bx_real_sim_c::ask_param (bx_id param)
   bx_param_c *paramptr = SIM->get_param(param);
   BX_ASSERT (paramptr != NULL);
   // create appropriate event
-  BxEvent *event = new BxEvent ();
-  event->type = BX_SYNC_EVT_ASK_PARAM;
-  event->u.param.param = paramptr;
-  BxEvent *response = sim_to_ci_event (event);
-  return response->retcode;
+  BxEvent event;
+  event.type = BX_SYNC_EVT_ASK_PARAM;
+  event.u.param.param = paramptr;
+  sim_to_ci_event (&event);
+  return event.retcode;
 }
 
 int
@@ -477,8 +477,7 @@ bx_real_sim_c::ask_filename (char *filename, int maxlen, char *prompt, char *the
   param.get_options()->set (flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = &param;
-  BxEvent *response = sim_to_ci_event (&event);
-  BX_ASSERT ((response == &event));
+  sim_to_ci_event (&event);
   if (event.retcode >= 0)
     memcpy (filename, param.getptr(), maxlen);
   return event.retcode;
@@ -489,13 +488,10 @@ bx_real_sim_c::periodic ()
 {
   // give the GUI a chance to do periodic things on the bochs thread. in 
   // particular, notice if the thread has been asked to die.
-  BxEvent *tick = new BxEvent ();
-  tick->type = BX_SYNC_EVT_TICK;
-  BxEvent *response = sim_to_ci_event (tick);
-  int retcode = response->retcode;
-  BX_ASSERT (response == tick);
-  delete tick;
-  if (retcode < 0) {
+  BxEvent tick;
+  tick.type = BX_SYNC_EVT_TICK;
+  sim_to_ci_event (&tick);
+  if (tick.retcode < 0) {
     BX_INFO (("Bochs thread has been asked to quit."));
     bx_atexit ();
     quit_sim (0);
@@ -577,10 +573,14 @@ bx_real_sim_c::create_disk_image (
 }
 
 void bx_real_sim_c::refresh_ci () {
-  BxEvent *refresh = new BxEvent ();
-  refresh->type = BX_ASYNC_EVT_REFRESH;
-  sim_to_ci_event (refresh);
-  // the event will be freed by the recipient
+#if BX_WITH_WX
+  // presently, only wxWindows interface uses these events
+  // It's an async event, so allocate a pointer and send it.
+  // The event will be freed by the recipient.
+  BxEvent *event = new BxEvent ();
+  event->type = BX_ASYNC_EVT_REFRESH;
+  sim_to_ci_event (event);
+#endif
 }
 
 bx_param_c *
@@ -624,9 +624,8 @@ char *bx_real_sim_c::debug_get_next_command ()
   BxEvent event;
   event.type = BX_SYNC_EVT_GET_DBG_COMMAND;
   BX_INFO (("asking for next debug command"));
-  BxEvent *response = sim_to_ci_event (&event);
+  sim_to_ci_event (&event);
   BX_INFO (("received next debug command: '%s'", event.u.debugcmd.command));
-  BX_ASSERT ((response == &event));
   if (event.retcode >= 0)
     return event.u.debugcmd.command;
   return NULL;
@@ -635,12 +634,14 @@ char *bx_real_sim_c::debug_get_next_command ()
 void bx_real_sim_c::debug_puts (const char *text)
 {
 #if BX_WITH_WX
-  // send message to the GUI
+  // send message to the wxWindows debugger
   BxEvent *event = new BxEvent ();
   event->type = BX_ASYNC_EVT_DBG_MSG;
   event->u.logmsg.msg = text;
   sim_to_ci_event (event);
+  // the event will be freed by the recipient
 #else
+  // text mode debugger: just write to console
   fputs (text, stderr);
 #endif
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.62 2002-09-22 20:56:11 cbothamy Exp $
+// $Id: control.cc,v 1.63 2002-09-25 22:54:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -672,8 +672,9 @@ ask:
     }
     return event;
   case BX_ASYNC_EVT_REFRESH:
-    // ignore refresh events
-    return event;
+  case BX_ASYNC_EVT_DBG_MSG:
+    // The text mode interface does not use these events, so I commented
+    // out the code that produces them in siminterface.cc.
   default:
     fprintf (stderr, "Control panel: notify callback called with event type %04x\n", event->type);
     return event;

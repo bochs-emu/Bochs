@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.58 2002-09-25 19:05:01 bdenney Exp $
+// $Id: wxmain.cc,v 1.59 2002-09-25 22:54:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -188,19 +188,25 @@ MyApp::DefaultCallback2 (BxEvent *event)
       wxString text;
       text.Printf ("Error: %s", event->u.logmsg.msg);
       wxMessageBox (text, "Error", wxOK | wxICON_ERROR );
-      //theFrame->OnLogMsg (event);
+      // maybe I can make OnLogMsg display something that looks appropriate.
+      // theFrame->OnLogMsg (event);
       event->retcode = BX_LOG_ASK_CHOICE_CONTINUE;
       // There is only one thread at this point.  if I choose DIE here, it will
       // call fatal() and kill the whole app.
       break;
     }
     case BX_ASYNC_EVT_REFRESH:
-    case BX_SYNC_EVT_ASK_PARAM:
     case BX_ASYNC_EVT_DBG_MSG:
+      break;  // ignore
+    case BX_SYNC_EVT_ASK_PARAM:
     case BX_SYNC_EVT_GET_DBG_COMMAND:
-      break;
+      break;  // ignore
     default:
       wxLogDebug ("unknown event type %d", event->type);
+  }
+  if (BX_EVT_IS_ASYNC(event-type)) {
+    delete event;
+    event = NULL;
   }
   return event;
 }
@@ -1126,30 +1132,27 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
   // response.  async event handlers MUST delete the event.
   switch (be->type) {
   case BX_ASYNC_EVT_REFRESH:
-    delete be;
     RefreshDialogs ();
-    return;
+    break;
   case BX_SYNC_EVT_ASK_PARAM:
     wxLogDebug ("before HandleAskParam");
     be->retcode = HandleAskParam (be);
     wxLogDebug ("after HandleAskParam");
-    // sync must return something; just return a copy of the event.
+    // return a copy of the event back to the sender.
     sim_thread->SendSyncResponse(be);
     wxLogDebug ("after SendSyncResponse");
-    return;
+    break;
 #if BX_DEBUGGER
   case BX_ASYNC_EVT_DBG_MSG:
     showDebugLog->AppendText (be->u.logmsg.msg);
     // free the char* which was allocated in dbg_printf
     delete [] ((char*) be->u.logmsg.msg);
-    // free the whole event
-    delete be;
-    return;
+    break;
 #endif
   case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
     OnLogMsg (be);
-    return;
+    break;
   case BX_SYNC_EVT_GET_DBG_COMMAND:
     wxLogDebug ("BX_SYNC_EVT_GET_DBG_COMMAND received");
     if (debugCommand == NULL) {
@@ -1172,21 +1175,18 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
       be->retcode = 1;
       sim_thread->SendSyncResponse (be);
     }
-    return;
+    break;
   default:
     wxLogDebug ("OnSim2CIEvent: event type %d ignored", (int)be->type);
-    if (BX_EVT_IS_ASYNC(be->type)) {
-      delete be;
-    } else {
-      // assume it's a synchronous event and send back a response, to avoid
-      // potential deadlock.
+    if (!BX_EVT_IS_ASYNC(be->type)) {
+      // if it's a synchronous event, and we fail to send back a response,
+      // the sim thread will wait forever.  So send something!
       sim_thread->SendSyncResponse(be);
     }
-    return;
+    break;
   }
-  // it is critical to send a response back eventually since the sim thread
-  // is blocking.
-  wxASSERT_MSG (0, "switch stmt should have returned");
+  if (BX_EVT_IS_ASYNC(be->type))
+    delete be;
 }
 
 void MyFrame::OnLogMsg (BxEvent *be) {
@@ -1194,13 +1194,10 @@ void MyFrame::OnLogMsg (BxEvent *be) {
       be->u.logmsg.level,
       be->u.logmsg.prefix,
       be->u.logmsg.msg);
-  if (be->type == BX_ASYNC_EVT_LOG_MSG) {
-    // don't ask for user response
-    delete be;  // because it was async
-    return;
-  } else {
+  if (be->type == BX_ASYNC_EVT_LOG_MSG)
+    return;  // we don't have any place to display log messages
+  else
     wxASSERT (be->type == BX_SYNC_EVT_LOG_ASK);
-  }
   wxString levelName (SIM->get_log_level_name (be->u.logmsg.level));
   LogMsgAskDialog dlg (this, -1, levelName);  // panic, error, etc.
 #if !BX_DEBUGGER
