@@ -158,16 +158,6 @@
 #define BX_DEFAULT_MEM_MEGS 4
 
 
-//
-// x86 hardware tasking.  There is some tasking support now.
-// I'm trying to get Linux to boot.  The default for this
-// is now 1, but if you don't need x86 tasking (DOS, Win'95),
-// then set this to 0.
-//
-
-#define BX_SUPPORT_TASKING    1
-
-
 // CPU level emulation.  Default level is set in
 // the configure script.  BX_CPU_LEVEL defines the CPU level
 // to emulate.  BX_CPU_LEVEL_HACKED is a hack to define the

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.9 2001-11-11 04:57:05 bdenney Exp $
+// $Id: tasking.cc,v 1.10 2002-09-09 19:48:58 uid94540 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,8 +33,6 @@
 
 
 
-
-#if BX_SUPPORT_TASKING
 
 #if BX_CPU_LEVEL >= 2
 
@@ -958,29 +956,3 @@ BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     }
 }
 #endif
-
-
-
-#else  // BX_SUPPORT_TASKING
-
-
-// for non-support of hardware tasking
-
-#if BX_CPU_LEVEL >= 2
-  /* corresponds to SWITCH_TASKS algorithm in Intel documentation */
-  void
-BX_CPU_C::task_switch(bx_selector_t *selector,
-                 bx_descriptor_t *descriptor, unsigned source,
-                 Bit32u dword1, Bit32u dword2)
-{
-  UNUSED(selector);
-  UNUSED(descriptor);
-  UNUSED(source);
-  UNUSED(dword1);
-  UNUSED(dword2);
-
-  BX_INFO(("task_switch(): not complete"));
-}
-#endif
-
-#endif // BX_SUPPORT_TASKING
