@@ -8,7 +8,6 @@ set echo
 #./configure --with-win32-vcpp --enable-disasm
 
 ./configure --target=pentium-windows \
-            --with-wx \
             --enable-cdrom \
 	    --enable-sb16=win \
 	    --enable-ne2000 \
