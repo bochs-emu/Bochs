@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.49 2002-12-29 18:39:21 vruppert Exp $
+// $Id: win32.cc,v 1.50 2003-01-02 09:49:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1016,6 +1016,7 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
   SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
               stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
                SWP_NOMOVE | SWP_NOZORDER);
+  MoveWindow(hwndTB, 0, 0, stretched_x, bx_headerbar_y, TRUE);
   MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
 }
 
