@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.26 2002-11-19 05:47:43 bdenney Exp $
+// $Id: apic.cc,v 1.27 2002-11-19 05:51:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -180,6 +180,7 @@ bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 bx_bool
 bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
 {
+  int bit;
   // return false if we can't deliver for any reason, so that the caller
   // knows not to clear its IRR.
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
@@ -221,7 +222,7 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
       return true;
     case 6:  // Start Up (local apic only)
       BX_ASSERT (get_type () == APIC_TYPE_LOCAL_APIC);
-      for (int bit=0; bit<APIC_MAX_ID; bit++)
+      for (bit=0; bit<APIC_MAX_ID; bit++)
         if (deliver_bitmask & (1<<bit))
           apic_index[bit]->startup_msg (vector);
       return true;
@@ -235,7 +236,7 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
   // Fixed delivery mode
   if (bx_dbg.apic)
     BX_INFO(("delivering vector=0x%02x to bitmask=%04x", (int)vector, deliver_bitmask));
-  for (int bit=0; bit<APIC_MAX_ID; bit++) {
+  for (bit=0; bit<APIC_MAX_ID; bit++) {
     if (deliver_bitmask & (1<<bit)) {
       if (apic_index[bit] == NULL)
         BX_INFO(("IOAPIC: delivering int0x%x to nonexistent id=%d!", (unsigned)vector, bit));

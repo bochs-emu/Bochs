@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.26 2002-11-19 05:47:45 bdenney Exp $
+// $Id: pci.cc,v 1.27 2002-11-19 05:51:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,33 +71,33 @@ bx_pci_c::~bx_pci_c(void)
 bx_pci_c::init(void)
 {
   // called once when bochs initializes
-
+  unsigned i;
   BX_PCI_THIS num_pci_handles = 0;
 
   /* set unused elements to appropriate values */
-  for (unsigned i=0; i < BX_MAX_PCI_DEVICES; i++) {
+  for (i=0; i < BX_MAX_PCI_DEVICES; i++) {
     BX_PCI_THIS pci_handler[i].read  = NULL;
     BX_PCI_THIS pci_handler[i].write = NULL;
     }
 
-  for (unsigned i=0; i < 0x100; i++) {
+  for (i=0; i < 0x100; i++) {
     BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
   }
 
   DEV_register_ioread_handler(this, read_handler, 0x0CF8, "i440FX", 4);
-  for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
+  for (i=0x0CFC; i<=0x0CFF; i++) {
     DEV_register_ioread_handler(this, read_handler, i, "i440FX", 7);
   }
 
   DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "i440FX", 4);
-  for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
+  for (i=0x0CFC; i<=0x0CFF; i++) {
     DEV_register_iowrite_handler(this, write_handler, i, "i440FX", 7);
   }
 
   DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
                             0x00, "440FX Host bridge");
 
-  for (unsigned i=0; i<256; i++)
+  for (i=0; i<256; i++)
     BX_PCI_THIS s.i440fx.pci_conf[i] = 0x0;
   // readonly registers
   BX_PCI_THIS s.i440fx.pci_conf[0x00] = 0x86;
