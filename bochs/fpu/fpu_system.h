@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.4 2002-09-09 16:11:25 bdenney Exp $
+ |  $Id: fpu_system.h,v 1.5 2003-01-23 18:33:35 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -64,7 +64,7 @@
 #define control_word		(I387.soft.cwd)
 #define fpu_tag_word		(I387.soft.twd)
 #define registers		(I387.soft.st_space)
-#define top			(I387.soft.ftop)
+#define top			(I387.soft.tos)
 
 #define instruction_address	(*(struct address *)&I387.soft.fip)
 #define operand_address		(*(struct address *)&I387.soft.foo)
@@ -157,7 +157,7 @@ extern i387_t *current_i387;
 #define control_word            (I387.soft.cwd)
 #define fpu_tag_word            (I387.soft.twd)
 #define registers               (I387.soft.st_space)
-#define top                     (I387.soft.ftop)
+#define top                     (I387.soft.tos)
 
 #define instruction_address     (*(struct address *)&I387.soft.fip)
 #define operand_address         (*(struct address *)&I387.soft.foo)

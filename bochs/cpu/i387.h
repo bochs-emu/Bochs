@@ -44,7 +44,7 @@ struct BxFpuRegisters {
     s32      fos;
     u32      fill0; /* to make sure the following aligns on an 8byte boundary */
     u64      st_space[16];   /* 8*16 bytes per FP-reg (aligned) = 128 bytes */
-    unsigned char   ftop;
+    unsigned char   tos;
     unsigned char   no_update;
     unsigned char   rm;
     unsigned char   alimit;
@@ -193,6 +193,7 @@ typedef union FpuMmxRegisters
 
 #define FPU_TWD                (BX_CPU_THIS_PTR the_i387.soft.twd)
 #define FPU_SWD                (BX_CPU_THIS_PTR the_i387.soft.swd)
+#define FPU_TOS                (BX_CPU_THIS_PTR the_i387.soft.tos)
 
 #define BX_READ_MMX_REG(index) \
     (BX_CPU_THIS_PTR the_i387.mmx.mmx[index].packed_mmx_register)
@@ -202,8 +203,6 @@ typedef union FpuMmxRegisters
    BX_CPU_THIS_PTR the_i387.mmx.mmx[index].packed_mmx_register = value; \
    BX_CPU_THIS_PTR the_i387.mmx.mmx[index].exp = 0xffff;                \
 }                                                      
-
-#define FPU_TOS                (BX_CPU_THIS_PTR the_i387.soft.ftop)
 
 #endif
 

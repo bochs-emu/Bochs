@@ -86,10 +86,14 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BxPackedXmmRegister xmm;
   Bit16u twd = BX_CPU_THIS_PTR the_i387.soft.twd, tag_byte = 0;
+  Bit16u status_w = BX_CPU_THIS_PTR the_i387.soft.swd;
+  Bit16u tos = BX_CPU_THIS_PTR the_i387.soft.tos;
   unsigned index;
 
-  xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.soft.cwd;
-  xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.soft.swd;
+#define SW_TOP (0x3800)
+
+  xmm.xmm16u(0) = (BX_CPU_THIS_PTR the_i387.soft.cwd);
+  xmm.xmm16u(1) = (status_w & ~SW_TOP & 0xffff) | ((tos << 11) & SW_TOP);
 
   if(twd & 0x0003 != 0x0003) tag_byte |= 0x0100;
   if(twd & 0x000c != 0x000c) tag_byte |= 0x0200;
@@ -168,8 +172,8 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   
   BX_CPU_THIS_PTR the_i387.soft.cwd = xmm.xmm16u(0);
   BX_CPU_THIS_PTR the_i387.soft.swd = xmm.xmm16u(1);
+  BX_CPU_THIS_PTR the_i387.soft.tos = (xmm.xmm16u(1) >> 11) & 0x07;
 
-  /* TOS restore still not implemented */
   /* FOO/FPU IP restore still not implemented */
 
   tag_byte = xmm.xmm16u(2);

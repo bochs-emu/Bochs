@@ -3,11 +3,6 @@
 
 /* XMM REGISTER */
 
-#if 0 // does not seem to be used
-typedef Bit32u Float32;
-typedef Bit64u Float64;
-#endif
-
 typedef union bx_xmm_reg_t {
    Bit8s   _sbyte[16];
    Bit16s  _s16[8];
@@ -44,10 +39,6 @@ typedef union bx_xmm_reg_t {
 #define xmm32u(i)   _u32[(i)]
 #define xmm64u(i)   _u64[(i)]
 #endif
-
-/* floating point representation: single and double precission */
-#define xmm32f(i)   xmm32u(i)
-#define xmm64f(i)   xmm64u(i)
 
 #define BX_READ_XMM_REG(index) (BX_CPU_THIS_PTR xmm[index])
 #define BX_WRITE_XMM_REG(index, reg) { BX_CPU_THIS_PTR xmm[index] = reg; }
