@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.19 2002-09-01 23:02:36 kevinlawton Exp $
+// $Id: memory.cc,v 1.20 2002-09-05 02:31:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
 #if BX_PROVIDE_CPU_MEMORY
 
   void
-BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
+BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
   Bit32u a20addr;
@@ -86,11 +86,11 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
           * ((Bit8u *) (&vector[a20addr]))         = data32; data32 >>= 8;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          * ((Bit8u *) (&vector[A20ADDR(addr+1)])) = data32; data32 >>= 8;
-          * ((Bit8u *) (&vector[A20ADDR(addr+2)])) = data32; data32 >>= 8;
-          * ((Bit8u *) (&vector[A20ADDR(addr+3)])) = data32;
+          * ((Bit8u *) (&vector[addr+1])) = data32; data32 >>= 8;
+          * ((Bit8u *) (&vector[addr+2])) = data32; data32 >>= 8;
+          * ((Bit8u *) (&vector[addr+3])) = data32;
           // worst case, last byte is in different page; possible extra dirty page
-          BX_DBG_DIRTY_PAGE(A20ADDR(addr+3) >> 12);
+          BX_DBG_DIRTY_PAGE((addr+3) >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
           return;
           }
@@ -116,8 +116,8 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
           * ((Bit8u *) (&vector[a20addr])) = (Bit8u) data16;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          * ((Bit8u *) (&vector[A20ADDR(a20addr+1)])) = (data16 >> 8);
-          BX_DBG_DIRTY_PAGE(A20ADDR(a20addr+1) >> 12);
+          * ((Bit8u *) (&vector[a20addr+1])) = (data16 >> 8);
+          BX_DBG_DIRTY_PAGE((a20addr+1) >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
           return;
           }
@@ -150,7 +150,7 @@ inc_one:
       if (len == 1) return;
       len--;
       addr++;
-      a20addr = A20ADDR(addr);
+      a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -206,7 +206,7 @@ inc_one:
           BX_DEBUG(("Write to ROM ignored: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
           goto inc_one;
         default:
-          BX_PANIC(("write_physical: default case"));
+          BX_PANIC(("writePhysicalPage: default case"));
           goto inc_one;
         }
       }
@@ -242,7 +242,7 @@ inc_one:
         
         // otherwise ignore byte, since it overruns memory
         addr++;
-        a20addr = A20ADDR(addr);
+        a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN
         data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -275,7 +275,7 @@ inc_one:
         }
       // otherwise ignore byte, since it overruns memory
       addr++;
-      a20addr = A20ADDR(addr);
+      a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -288,7 +288,7 @@ inc_one:
 
 
   void
-BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
+BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
   Bit32u a20addr;
@@ -331,9 +331,9 @@ BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
         else {
           Bit32u data32;
 
-          data32  = * ((Bit8u *) (&vector[A20ADDR(addr+3)])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&vector[A20ADDR(addr+2)])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&vector[A20ADDR(addr+1)])); data32 <<= 8;
+          data32  = * ((Bit8u *) (&vector[addr+3])); data32 <<= 8;
+          data32 |= * ((Bit8u *) (&vector[addr+2])); data32 <<= 8;
+          data32 |= * ((Bit8u *) (&vector[addr+1])); data32 <<= 8;
           data32 |= * ((Bit8u *) (&vector[a20addr]));
 
           * (Bit32u *) data = data32;
@@ -356,7 +356,7 @@ BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
         else {
           Bit16u data16;
 
-          data16  = * ((Bit8u *) (&vector[A20ADDR(addr+1)])); data16 <<= 8;
+          data16  = * ((Bit8u *) (&vector[addr+1])); data16 <<= 8;
           data16 |= * ((Bit8u *) (&vector[a20addr]));
 
           * (Bit16u *) data = data16;
@@ -390,7 +390,7 @@ inc_one:
       if (len == 1) return;
       len--;
       addr++;
-      a20addr = A20ADDR(addr);
+      a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -439,7 +439,7 @@ inc_one:
           //BX_INFO(("Reading from ROM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
           goto inc_one;
         default:
-          BX_PANIC(("::read_physical: default case"));
+          BX_PANIC(("::readPhysicalPage: default case"));
         }
       }
     goto inc_one;
@@ -472,7 +472,7 @@ inc_one:
         
         // otherwise ignore byte, since it overruns memory
         addr++;
-        a20addr = A20ADDR(addr);
+        a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN
         data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -519,7 +519,7 @@ inc_one:
                 BX_INFO(("Reading from ShadowRAM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
                 break;
               default:
-                BX_PANIC(("read_physical: default case"));
+                BX_PANIC(("readPhysicalPage: default case"));
               } // Switch
             }
           }
@@ -532,7 +532,7 @@ inc_one:
         *data_ptr = 0xff;
 #endif  // BX_PCI_SUPPORT == 0
       addr++;
-      a20addr = A20ADDR(addr);
+      a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN

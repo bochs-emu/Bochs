@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.86 2002-09-03 08:34:17 bdenney Exp $
+// $Id: bochs.h,v 1.87 2002-09-05 02:31:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -150,9 +150,9 @@ extern "C" {
 #define BX_HRQ                      (bx_pc_system.HRQ)
 #define BX_RAISE_HLDA()             bx_dma.raise_HLDA()
 #define BX_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
-  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, len, ptr)
+  BX_MEM(0)->readPhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 #define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
-  BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, len, ptr)
+  BX_MEM(0)->writePhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 // macro for PCI handling
 #define BX_REGISTER_PCI_HANDLERS(this_ptr, pci_read, pci_write, devfunc, name) \
   bx_pci.register_pci_handlers(this_ptr, pci_read, pci_write, devfunc, name)

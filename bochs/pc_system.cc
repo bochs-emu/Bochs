@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.21 2002-08-27 21:30:48 bdenney Exp $
+// $Id: pc_system.cc,v 1.22 2002-09-05 02:31:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,6 +135,8 @@ bx_pc_system_c::set_enable_a20(Bit8u value)
 #else
 
 #if BX_SUPPORT_A20
+  unsigned old_enable_a20 = enable_a20;
+
   if (value) {
     enable_a20 = 1;
 #if BX_CPU_LEVEL == 2
@@ -151,6 +153,14 @@ bx_pc_system_c::set_enable_a20(Bit8u value)
   BX_DBG_A20_REPORT(value);
 
   BX_DEBUG(("A20: set() = %u", (unsigned) enable_a20));
+
+  // If there has been a transition, we need to notify the CPUs so
+  // they can potentially invalidate certain cache info based on
+  // A20-line-applied physical addresses.
+  if (old_enable_a20 != enable_a20) {
+    for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+      BX_CPU(i)->pagingA20Changed();
+    }
 #else
   BX_DEBUG(("set_enable_a20: ignoring: SUPPORT_A20 = 0"));
 #endif  // #if BX_SUPPORT_A20

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.28 2002-09-04 20:23:54 kevinlawton Exp $
+// $Id: cpu.h,v 1.29 2002-09-05 02:31:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1484,6 +1484,8 @@ public: // for now...
   BX_SMF void disable_paging(void);
   BX_SMF void CR3_change(Bit32u value32);
   BX_SMF void pagingWPChanged(void);
+  BX_SMF void pagingA20Changed(void);
+
   BX_SMF void reset(unsigned source);
 
   BX_SMF void jump_protected(BxInstruction_t *, Bit16u cs, Bit32u disp32);

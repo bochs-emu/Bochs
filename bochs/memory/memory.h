@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.9 2002-09-04 02:11:33 bdenney Exp $
+// $Id: memory.h,v 1.10 2002-09-05 02:31:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,8 +62,10 @@ public:
   ~BX_MEM_C(void);
   BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment);
   BX_MEM_SMF void    init_memory(int memsize);
-  BX_MEM_SMF void    read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
-  BX_MEM_SMF void    write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
+  BX_MEM_SMF void    readPhysicalPage(BX_CPU_C *cpu, Bit32u addr,
+                                      unsigned len, void *data);
+  BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, Bit32u addr,
+                                       unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
 #if BX_PCI_SUPPORT

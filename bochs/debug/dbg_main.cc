@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.49 2002-08-27 21:32:03 bdenney Exp $
+// $Id: dbg_main.cc,v 1.50 2002-09-05 02:31:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -4523,7 +4523,7 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   // Get page dir entry
   pde_addr = (cpu->cr3 & 0xfffff000) |
              ((laddress & 0xffc00000) >> 20);
-  BX_MEM(0)->read_physical(cpu, pde_addr, 4, &pde);
+  BX_MEM(0)->readPhysicalPage(cpu, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
     // Page Directory Entry NOT present
     goto page_fault;
@@ -4532,7 +4532,7 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
-  BX_MEM(0)->read_physical(cpu, pte_addr, 4, &pte);
+  BX_MEM(0)->readPhysicalPage(cpu, pte_addr, 4, &pte);
   if ( !(pte & 0x01) ) {
     // Page Table Entry NOT present
     goto page_fault;
