@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.36 2003-05-11 15:07:53 vruppert Exp $
+// $Id: sdl.cc,v 1.37 2003-05-18 15:38:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ unsigned half_res_x, half_res_y;
 int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
-int textres_x, textres_y;
+int text_cols = 80, text_rows = 25;
 Bit8u h_panning = 0, v_panning = 0;
 int fontwidth = 8, fontheight = 16;
 unsigned tilewidth, tileheight;
@@ -218,6 +218,8 @@ void bx_sdl_gui_c::specific_init(
 
   put("SDL");
 
+  UNUSED(bochs_icon_bits);
+
   tilewidth = x_tilesize;
   tileheight = y_tilesize;
   headerbar_height = header_bar_y;
@@ -271,11 +273,11 @@ void bx_sdl_gui_c::text_update(
     unsigned long cursor_x,
     unsigned long cursor_y,
     bx_vga_tminfo_t tm_info,
-    unsigned rows)
+    unsigned nrows)
 {
   unsigned char *pfont_row, *old_line, *new_line;
   unsigned long x,y;
-  int hchars,fontrows,fontpixels;
+  int rows,hchars,fontrows,fontpixels;
   int fgcolor_ndx;
   int bgcolor_ndx;
   Uint32 fgcolor;
@@ -286,6 +288,7 @@ void bx_sdl_gui_c::text_update(
   Bit8u cs_line, cfwidth, cfheight;
   bx_bool gfxcharw9, invert, forceUpdate;
 
+  UNUSED(nrows);
   forceUpdate = 0;
   if(charmap_updated)
   {
@@ -308,13 +311,14 @@ void bx_sdl_gui_c::text_update(
     disp = sdl_fullscreen->pitch/4;
     buf_row = (Uint32 *)sdl_fullscreen->pixels;
   }
+  rows = text_rows;
   if (v_panning) rows++;
   y = 0;
   
   do
   {
     buf = buf_row;
-    hchars = textres_x;
+    hchars = text_cols;
     if (h_panning) hchars++;
     cfheight = fontheight;
     if (v_panning)
@@ -336,7 +340,7 @@ void bx_sdl_gui_c::text_update(
       cfwidth = fontwidth;
       if (h_panning)
       {
-        if (hchars > textres_x)
+        if (hchars > text_cols)
         {
           cfwidth -= h_panning;
         }
@@ -382,7 +386,7 @@ void bx_sdl_gui_c::text_update(
 	  {
 	    font_row <<= 1;
 	  }
-	  if (hchars > textres_x)
+	  if (hchars > text_cols)
 	  {
 	    font_row <<= h_panning;
 	  }
@@ -881,8 +885,8 @@ void bx_sdl_gui_c::dimension_update(
   {
     fontheight = fheight;
     fontwidth = fwidth;
-    textres_x = x / fontwidth;
-    textres_y = y / fontheight;
+    text_cols = x / fontwidth;
+    text_rows = y / fontheight;
   }
 
   if( (x == res_x) && (y == res_y )) return;
