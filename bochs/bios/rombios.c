@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.19 2001-10-06 08:48:28 bdenney Exp $
+// $Id: rombios.c,v 1.20 2001-11-12 01:33:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -246,6 +246,7 @@ static void           int13_function();
 static void           int13_diskette_function();
 static void           int15_function();
 static void           int16_function();
+static void           int17_function();
 static void           int1a_function();
 static void           int70_function();
 static void           int74_function();
@@ -271,7 +272,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.19 2001-10-06 08:48:28 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.20 2001-11-12 01:33:01 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -3174,6 +3175,48 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
 }
 
   void
+int17_function(regs, ds, iret_addr)
+  pusha_regs_t regs; // regs pushed from PUSHA instruction
+  Bit16u ds; // previous DS:, DS set to 0x0000 by asm wrapper
+  iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
+{
+  Bit16u addr;
+  Bit8u timeout,val8;
+
+  #asm
+  sti
+  #endasm
+
+  if ((regs.u.r8.ah < 3) && (regs.u.r16.dx == 0)) {
+    addr = read_word(0x0040, 0x0008);
+    timeout = read_byte(0x0040, 0x0078);
+    if (regs.u.r8.ah == 0) {
+      outb(addr, regs.u.r8.al);
+      val8 = inb(addr+2);
+      val8 |= 0x01;
+      outb(addr+2, val8); // send strobe
+      // one microsecond pause should be here
+      outb(addr+2, val8 & 0xFE);
+      while ((timeout--) && ((inb(addr+1) & 0x40) == 0x40)) {}
+    }
+    if (regs.u.r8.ah == 1) {
+      val8 = inb(addr+2);
+      val8 &= 0xFB;
+      outb(addr+2, val8); // send init
+      outb(addr+2, val8 | 0x04);
+    }
+    regs.u.r8.ah = inb(addr+1);
+    val8 = (~regs.u.r8.ah & 0x48);
+    regs.u.r8.ah &= 0xB7;
+    regs.u.r8.ah |= val8;
+    if (!timeout) regs.u.r8.ah |= 0x01;
+    ClearCF(iret_addr.flags);
+  } else {
+    SetCF(iret_addr.flags); // Unsupported
+  }
+}
+
+  void
 int1a_function(regs, ds, iret_addr)
   pusha_regs_t regs; // regs pushed from PUSHA instruction
   Bit16u ds; // previous DS:, DS set to 0x0000 by asm wrapper
@@ -4207,13 +4250,17 @@ post_default_ints:
   SET_INT_VECTOR(0x0F, #0xF000, #dummy_iret_handler)
   mov ax, #0x0000
   mov ds, ax
-  mov 0x408, AX ; Parallel I/O address, port 1
+  mov 0x408, #0x378 ; Parallel I/O address, port 1
   mov 0x40A, AX ; Parallel I/O address, port 2
   mov 0x40C, AX ; Parallel I/O address, port 3
-  mov 0x478, AL ; Parallel printer 1 timeout
-  mov 0x479, AL ; Parallel printer 2 timerout
-  mov 0x47A, AL ; Parallel printer 3 timerout
-  mov 0x47B, AL ; Parallel printer 4 timerout
+  mov 0x478, #0x14 ; Parallel printer 1 timeout
+  mov 0x479, AL ; Parallel printer 2 timeout
+  mov 0x47A, AL ; Parallel printer 3 timeout
+  mov 0x47B, AL ; Parallel printer 4 timeout
+  mov AX, 0x410   ; Equipment word bits 14..15 determing # parallel ports
+  and AX, #0x3fff
+  or  AX, #0x4000 ; one parallel port
+  mov 0x410, AX
 
   ;; Serial setup
   SET_INT_VECTOR(0x0C, #0xF000, #dummy_iret_handler)
@@ -4607,7 +4654,14 @@ db  0x01 ;; most systems default to 8
 ;----------------------------------------
 .org 0xefd2
 int17_handler:
-  iret ;; for now...
+  push ds
+  pusha
+  mov  ax, #0x0000
+  mov  ds, ax
+  call _int17_function
+  popa
+  pop  ds
+  iret
 
 .org 0xf045 ; INT 10 Functions 0-Fh Entry Point
   HALT(__LINE__)
