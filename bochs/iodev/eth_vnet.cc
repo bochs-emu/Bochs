@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.11 2004-10-13 19:42:25 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.12 2004-10-24 12:49:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -42,6 +42,7 @@ static const Bit8u broadcast_ipv4addr[3][4] =
 
 #define ICMP_ECHO_PACKET_MAX  128
 #define LAYER4_LISTEN_MAX  128
+#define DEFAULT_LEASE_TIME 28800
 
 static Bit8u    packet_buffer[BX_PACKET_BUFSIZE];
 static unsigned packet_len;
@@ -255,8 +256,8 @@ bx_vnet_pktmover_c::pktmover_init(
   memcpy(&guest_macaddr[0], macaddr, 6);
   host_macaddr[5] = (host_macaddr[5] & (~0x01)) ^ 0x02;
 
-  memcpy(&host_ipv4addr[0], &default_host_ipv4addr[0], 6);
-  memcpy(&guest_ipv4addr[0], &broadcast_ipv4addr[0][0], 6);
+  memcpy(&host_ipv4addr[0], &default_host_ipv4addr[0], 4);
+  memcpy(&guest_ipv4addr[0], &broadcast_ipv4addr[0][0], 4);
 
   l4data_used = 0;
 
@@ -844,6 +845,7 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
         break;
       if (!memcmp(extdata,default_guest_ipv4addr,4)) {
         found_guest_ipaddr = true;
+        memcpy(guest_ipv4addr,default_guest_ipv4addr,4);
       }
       break;
     default:
@@ -859,6 +861,7 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   replybuf[2] = 6;
   memcpy(&replybuf[4],&data[4],4);
   memcpy(&replybuf[16],default_guest_ipv4addr,4);
+  memcpy(&replybuf[20],host_ipv4addr,4);
   memcpy(&replybuf[28],&data[28],6);
   replybuf[44] = 'v';
   replybuf[45] = 'n';
@@ -889,7 +892,6 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
       *replyopts ++ = 1;
       *replyopts ++ = DHCPACK;
       opts_len -= 3;
-      memcpy(guest_ipv4addr,default_guest_ipv4addr,4);
       dhcpreqparam_default[0] = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
       if (!found_serverid) {
         dhcpreqparam_default[1] = BOOTPOPT_SERVER_IDENTIFIER;
@@ -977,10 +979,10 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
         opts_len -= 6;
         *replyopts ++ = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
         *replyopts ++ = 4;
-        if (leasetime < 900) {
+        if (leasetime < DEFAULT_LEASE_TIME) {
           put_net4(replyopts, leasetime);
         } else {
-          put_net4(replyopts, 900);
+          put_net4(replyopts, DEFAULT_LEASE_TIME);
         }
         replyopts += 4;
         break;
