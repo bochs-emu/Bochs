@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.22 2002-09-20 04:42:25 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.23 2002-09-20 23:10:55 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,40 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+//Realtime Algorithm (with gettimeofday)
+//  HAVE:
+//    Real number of usec.
+//    Emulated number of usec.
+//  WANT:
+//    Number of ticks to use.
+//    Number of emulated usec to wait until next try.
+//
+//  ticks=number of ticks needed to match total real usec.
+//  if(desired ticks > max ticks for elapsed real time)
+//     ticks = max ticks for elapsed real time.
+//  if(desired ticks > max ticks for elapsed emulated usec)
+//     ticks = max ticks for emulated usec.
+//  next wait ticks = number of ticks until next event.
+//  next wait real usec = (current ticks + next wait ticks) * usec per ticks
+//  next wait emulated usec = next wait real usec * emulated usec / real usec
+//  if(next wait emulated usec < minimum emulated usec for next wait ticks)
+//     next wait emulated usec = minimum emulated usec for next wait ticks.
+//  if(next wait emulated usec > max emulated usec wait)
+//     next wait emulated usec = max emulated usec wait.
+//
+//  How to calculate elapsed real time:
+//    store an unused time value whenever no ticks are used in a given time.
+//    add this to the current elapsed time.
+//  How to calculate elapsed emulated time:
+//    same as above.
+//  Above can be done by not updating last_usec and last_sec.
+//
+//  How to calculate emulated usec/real usec:
+//    Each time there are actual ticks:
+//      Alpha_product(old emulated usec, emulated usec);
+//      Alpha_product(old real usec, real usec);
+//    Divide resulting values.
+
 
 #include "bochs.h"
 
@@ -43,7 +77,8 @@ bx_pit_c bx_pit;
 #endif
 
 #define DEBUG_REALTIME_WITH_PRINTF 0
-#define BX_HAVE_GETTIMEOFDAY 0
+#define BX_HAVE_GETTIMEOFDAY 1
+
 
 #define TIME_DIVIDER (1)
 #define TIME_MULTIPLIER (1)
@@ -55,7 +90,7 @@ bx_pit_c bx_pit;
 #define USEC_ALPHA_B ((double)(((double)1)-USEC_ALPHA))
 #define USEC_ALPHA2 ((double)(.5))
 #define USEC_ALPHA2_B ((double)(((double)1)-USEC_ALPHA2))
-#define ALPHA_LOWER(old,new) ((Bit64u)((old<new)?((USEC_ALPHA*old)+(USEC_ALPHA_B*new):((USEC_ALPHA2*old)+(USEC_ALPHA2_B*new))))
+#define ALPHA_LOWER(old,new) ((Bit64u)((old<new)?((USEC_ALPHA*((double)(old)))+(USEC_ALPHA_B*((double)new))):((USEC_ALPHA2*((double)old))+(USEC_ALPHA2_B*((double)new)))))
 #define MIN_MULT (0.9)
 #define MIN_MULT_FLOOR (0.75)
 #define MAX_MULT (1.25)
@@ -69,6 +104,8 @@ bx_pit_c bx_pit;
 #define TICKS_PER_SECOND (1193181)
 #define USEC_PER_SECOND (1000000)
 #define TIME_MULT 1.193
+#define REAL_TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
+#define REAL_USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
 #if BX_USE_REALTIME_PIT
 #  define TICKS_TO_USEC(a) ( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second )
 #  define USEC_TO_TICKS(a) ( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second )
@@ -80,6 +117,16 @@ bx_pit_c bx_pit;
 #else
 #  define TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
 #  define USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
+#endif
+
+#if BX_HAVE_GETTIMEOFDAY
+Bit64u getrealtime64 (void) {
+  timeval thetime;
+  gettimeofday(&thetime,0);
+  Bit64u mytime;
+  mytime=(Bit64u)thetime.tv_sec*1000000ll+(Bit64u)thetime.tv_usec;
+  return mytime;
+}
 #endif
 
 bx_pit_c::bx_pit_c( void )
@@ -143,14 +190,9 @@ bx_pit_c::init( bx_devices_c *d )
   BX_PIT_THIS s.usec_per_second=USEC_PER_SECOND;
   BX_PIT_THIS s.ticks_per_second=TICKS_PER_SECOND;
   BX_PIT_THIS s.total_sec=0;
+  BX_PIT_THIS s.stored_delta=0;
 #if BX_HAVE_GETTIMEOFDAY
-  {
-  timeval thetime;
-  gettimeofday(&thetime,0);
-  unsigned long long mytime;
-  mytime=(unsigned long long)thetime.tv_sec*1000000ll+(unsigned long long)thetime.tv_usec;
-  BX_PIT_THIS s.last_time=((mytime*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
-  }
+  BX_PIT_THIS s.last_time=((getrealtime64()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
 #else
   BX_PIT_THIS s.last_time=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART)*USEC_PER_SECOND;
 #endif
@@ -423,6 +465,37 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 #endif
 
 #if BX_USE_REALTIME_PIT
+#if BX_HAVE_GETTIMEOFDAY
+  Bit64u real_time_delta = getrealtime64() - BX_PIT_THIS s.last_time;
+  Bit64u real_time_total = real_time_delta + BX_PIT_THIS s.total_sec;
+  Bit64u em_time_delta = (Bit64u)usec_delta + (Bit64u)BX_PIT_THIS s.stored_delta;
+  BX_PIT_THIS s.ticks_per_second = TICKS_PER_SECOND;
+
+  ticks_delta = REAL_USEC_TO_TICKS(real_time_total) - BX_PIT_THIS s.total_ticks;
+  if(ticks_delta > REAL_USEC_TO_TICKS(MAX_MULT * real_time_delta)) {
+    ticks_delta = REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta));
+    BX_PIT_THIS s.ticks_per_second = (Bit64u)(MAX_MULT * TICKS_PER_SECOND);
+  }
+  if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
+    ticks_delta = em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND;
+  }
+
+  if(ticks_delta) {
+    BX_PIT_THIS s.last_time += real_time_delta;
+    BX_PIT_THIS s.total_sec += real_time_delta;
+    BX_PIT_THIS s.last_sec_usec += em_time_delta;
+    //    BX_PIT_THIS s.total_usec += em_time_delta;
+    BX_PIT_THIS s.stored_delta = 0;
+  } else {
+    BX_PIT_THIS s.stored_delta = em_time_delta;
+  }
+
+  Bit64u a,b;
+  a=(BX_PIT_THIS s.usec_per_second);
+  b=((Bit64u)1000000 * em_time_delta / real_time_delta);
+
+  BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(a,b);
+#else
   ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));
   if((BX_PIT_THIS s.total_ticks + ticks_delta) < (BX_PIT_THIS s.max_ticks)) {
     BX_PIT_THIS s.total_ticks += ticks_delta;
@@ -435,6 +508,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     }
   }
   second_update_data();
+#endif
 #else
   BX_PIT_THIS s.total_usec += usec_delta;
   ticks_delta=(Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
@@ -477,13 +551,7 @@ void
 bx_pit_c::second_update_data(void) {
   Bit64u timediff;
 #if BX_HAVE_GETTIMEOFDAY
-  if(1) {
-  timeval thetime;
-  gettimeofday(&thetime,0);
-  unsigned long long mytime;
-  mytime=(unsigned long long)thetime.tv_sec*1000000ll+(unsigned long long)thetime.tv_usec;
-  timediff=((mytime*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))-(Bit64u)BX_PIT_THIS s.last_time;
-  }
+  timediff=((getrealtime64()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))-(Bit64u)BX_PIT_THIS s.last_time;
 #else
   timediff=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)*USEC_PER_SECOND)-BX_PIT_THIS s.last_time;
 #endif
