@@ -1,3 +1,25 @@
-Sat May 12 12:03:15 EDT 2001
+Sun Jun 17 00:30:54 EDT 2001
 
-First try at creating a new checkout called sfsite in the bochs CVS area.
+I checked in most parts of the Bochs web site.  Some subdirs are omitted
+for various reasons.  For example the "data" directory (collection of
+tech specs) and guestos directory (disk images) are not checked into 
+CVS because they are so large.  If the files are big, binary, and
+are hardly ever revised, what's the point of version control on them?
+It will just clog up SF server and make updates take longer!
+
+Directories included in CVS:
+- docs-html              (actually a checkout of bochs/docs-html)
+- images
+- includes
+- networking
+- testing-forms
+
+
+Directories not included in CVS:
+- xcf             (what's that)
+- doc             (updated by Michael when he does make webinst)
+- screenshot      (contains screen shots)
+- tmp             (misc stuff)
+- data            (tech spcs)
+- images/.pics    (not sure)
+- images/.xvpics  (not sure)
