@@ -34,6 +34,101 @@ const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 extern bx_hard_drive_c *theHardDrive;
 #define LOG_THIS theHardDrive->
 
+#define DTOH32_HEADER(field) (header.field = (dtoh32(header.field)))
+#define HTOD32_HEADER(field) (header.field = (htod32(header.field)))
+
+int vmware3_image_t::read_header(int fd, COW_Header & header) 
+{
+    int res;
+
+    if((res = ::read(fd, &header, sizeof(COW_Header))) < 0)
+      return res;
+
+    DTOH32_HEADER(header_version);
+    DTOH32_HEADER(flags);
+    DTOH32_HEADER(total_sectors);
+    DTOH32_HEADER(tlb_size_sectors);
+    DTOH32_HEADER(flb_offset_sectors);
+    DTOH32_HEADER(flb_count);
+    DTOH32_HEADER(next_sector_to_allocate);
+    DTOH32_HEADER(cylinders);
+    DTOH32_HEADER(heads);
+    DTOH32_HEADER(sectors);
+    DTOH32_HEADER(last_modified_time);
+    DTOH32_HEADER(last_modified_time_save);
+    DTOH32_HEADER(chain_id);
+    DTOH32_HEADER(number_of_chains);
+    DTOH32_HEADER(cylinders_in_disk);
+    DTOH32_HEADER(heads_in_disk);
+    DTOH32_HEADER(sectors_in_disk);
+    DTOH32_HEADER(total_sectors_in_disk);
+    DTOH32_HEADER(vmware_version);
+
+    return res;
+}
+
+int vmware3_image_t::write_header(int fd, COW_Header & hostHeader) 
+{
+    COW_Header header;
+
+    memcpy(&header, &hostHeader, sizeof(COW_Header));
+
+    HTOD32_HEADER(header_version);
+    HTOD32_HEADER(flags);
+    HTOD32_HEADER(total_sectors);
+    HTOD32_HEADER(tlb_size_sectors);
+    HTOD32_HEADER(flb_offset_sectors);
+    HTOD32_HEADER(flb_count);
+    HTOD32_HEADER(next_sector_to_allocate);
+    HTOD32_HEADER(cylinders);
+    HTOD32_HEADER(heads);
+    HTOD32_HEADER(sectors);
+    HTOD32_HEADER(last_modified_time);
+    HTOD32_HEADER(last_modified_time_save);
+    HTOD32_HEADER(chain_id);
+    HTOD32_HEADER(number_of_chains);
+    HTOD32_HEADER(cylinders_in_disk);
+    HTOD32_HEADER(heads_in_disk);
+    HTOD32_HEADER(sectors_in_disk);
+    HTOD32_HEADER(total_sectors_in_disk);
+    HTOD32_HEADER(vmware_version);
+
+    return ::write(fd, &header, sizeof(COW_Header));
+}
+
+#undef DTOH32_HEADER
+#undef HTOD32_HEADER
+
+int vmware3_image_t::read_ints(int fd, Bit32u *buffer, size_t count)
+{
+    int res;
+    size_t i;
+    Bit32u *p;
+
+    res=::read(fd, (void*)buffer, count * 4);
+    for (p = buffer, i=0; i<count; p++, i++)
+      *p=dtoh32(*p);
+
+    return res;
+}
+
+int vmware3_image_t::write_ints(int fd, Bit32u *buffer, size_t count)
+{
+    int res;
+    size_t i;
+    Bit32u *p;
+
+    for (p = buffer, i=0; i<count; p++, i++)
+      *p=htod32(*p);
+
+    res=::write(fd, (void*)buffer, count * 4);
+
+    for (p = buffer, i=0; i<count; p++, i++)
+      *p=dtoh32(*p);
+
+    return res;
+}
+
 bool vmware3_image_t::is_valid_header(COW_Header & header)
 {
     if(header.id[0] != 'C' || header.id[1] != 'O' || header.id[2] != 'W' ||
@@ -95,6 +190,9 @@ int vmware3_image_t::open(const char * pathname)
     flags |= O_BINARY;
 #endif
 
+    // Set so close doesn't segfault, in case something goes wrong
+    images = NULL;
+
     /* Open the virtual disk */
     file = ::open(pathname, flags);
 
@@ -102,7 +200,7 @@ int vmware3_image_t::open(const char * pathname)
         return -1;
 
     /* Read the header */
-    if(::read(file, &header, sizeof(COW_Header)) < 0)
+    if(read_header(file, header) < 0)
         BX_PANIC(("unable to read vmware3 COW Disk header from file '%s'", pathname));
 
     /* Make sure it's a valid header */
@@ -113,10 +211,15 @@ int vmware3_image_t::open(const char * pathname)
 
     tlb_size  = header.tlb_size_sectors * 512;
     slb_count = (1 << FL_SHIFT) / tlb_size;
-    images = new COW_Image [header.number_of_chains];
+    
+    // we must have at least one chain
+    unsigned count = header.number_of_chains;
+    if (count < 1) count = 1;
+
+    images = new COW_Image [count];
 
     off_t offset = 0;
-    for (unsigned i = 0; i < header.number_of_chains; ++i)
+    for (unsigned i = 0; i < count; ++i)
     {
         char * filename = generate_cow_name(pathname, i);
         current = &images[i];
@@ -125,7 +228,7 @@ int vmware3_image_t::open(const char * pathname)
         if(current->fd < 0)
             BX_PANIC(("unable to open vmware3 COW Disk file '%s'", filename));
 
-        if(::read(current->fd, &current->header, sizeof(COW_Header)) < 0)
+        if(read_header(current->fd, current->header) < 0)
             BX_PANIC(("unable to read header or invalid header in vmware3 COW Disk file '%s'", filename));
 
         if(!is_valid_header(current->header))
@@ -147,14 +250,14 @@ int vmware3_image_t::open(const char * pathname)
                 BX_PANIC(("cannot allocate %d bytes for slb[] in vmware3 COW Disk '%s'", slb_count * 4, filename));
         }
 
-        current->tlb = new char [tlb_size];
+        current->tlb = new Bit8u [tlb_size];
         if(current->tlb == 0)
             BX_PANIC(("cannot allocate %d bytes for tlb in vmware3 COW Disk '%s'", tlb_size, filename));
         
         if(::lseek(current->fd, current->header.flb_offset_sectors * 512, SEEK_SET) < 0)
             BX_PANIC(("unable to seek vmware3 COW Disk file '%s'", filename));
 
-        if(::read(current->fd, (char*)current->flb, current->header.flb_count * 4) < 0)
+        if(read_ints(current->fd, current->flb, current->header.flb_count) < 0)
             BX_PANIC(("unable to read flb from vmware3 COW Disk file '%s'", filename));
 
         for(j = 0; j < current->header.flb_count; ++j)
@@ -162,7 +265,7 @@ int vmware3_image_t::open(const char * pathname)
             {
                 if(::lseek(current->fd, current->flb[j] * 512, SEEK_SET) < 0)
                     BX_PANIC(("unable to seek vmware3 COW Disk file '%s'", filename));
-                if(::read(current->fd, (char*)current->slb[j], slb_count * 4) < 0)
+                if(read_ints(current->fd, current->slb[j], slb_count) < 0)
                     BX_PANIC(("unable to read slb from vmware3 COW Disk file '%s'", filename));
             }
 
@@ -176,9 +279,17 @@ int vmware3_image_t::open(const char * pathname)
     }
     current = &images[0];
     requested_offset = 0;
-    cylinders = header.cylinders_in_disk;
-    heads = header.heads_in_disk;
-    sectors = header.sectors_in_disk;
+    if (header.total_sectors_in_disk!=0) {
+        cylinders = header.cylinders_in_disk;
+        heads = header.heads_in_disk;
+        sectors = header.sectors_in_disk;
+    }
+    else {
+        cylinders = header.cylinders;
+        heads = header.heads;
+        sectors = header.sectors;
+    }
+
     return 1;
 }
 
@@ -281,7 +392,7 @@ bool vmware3_image_t::sync()
                 BX_DEBUG(("could not seek vmware3 COW image to flb on sync"));
                 return false;
             }
-            if(::write(current->fd, current->flb, current->header.flb_count * 4) < 0)
+            if(write_ints(current->fd, current->flb, current->header.flb_count) < 0)
             {
                 BX_DEBUG(("could not re-write flb to vmware3 COW image on sync"));
                 return false;
@@ -296,7 +407,7 @@ bool vmware3_image_t::sync()
             BX_DEBUG(("could not seek vmware3 COW image to slb on sync"));
             return false;
         }
-        if(::write(current->fd, current->slb[i], slb_count * 4) < 0)
+        if(write_ints(current->fd, current->slb[i], slb_count) < 0)
         {
             BX_DEBUG(("could not re-write slb to vmware3 COW image on sync"));
             return false;
@@ -309,7 +420,7 @@ bool vmware3_image_t::sync()
             BX_DEBUG(("could not seek to vmware3 COW image to offset 0 on sync"));
             return false;
         }
-        if(::write(current->fd, &current->header, sizeof(COW_Header)) < 0)
+        if(write_header(current->fd, current->header) < 0)
         {
             BX_DEBUG(("could not re-write header to vmware3 COW image on sync"));
             return false;
@@ -384,16 +495,21 @@ void vmware3_image_t::close()
         return;
 
     unsigned count = current->header.number_of_chains;
+    if (count < 1) count = 1;
     for(unsigned i = 0; i < count; ++i)
     {
-        current = &images[i];
-        for(unsigned j = 0; j < current->header.flb_count; ++j)
-            delete[] current->slb[j];
-        delete[] current->flb;
-        delete[] current->slb;
-        delete[] current->tlb;
-        ::close(current->fd);
+        if (images != NULL)
+        {
+            current = &images[i];
+            for(unsigned j = 0; j < current->header.flb_count; ++j)
+                delete[] current->slb[j];
+            delete[] current->flb;
+            delete[] current->slb;
+            delete[] current->tlb;
+            ::close(current->fd);
+        delete[] images;
+        images = NULL;
+        }
     }
-    delete[] images;
     current = 0;
 }
