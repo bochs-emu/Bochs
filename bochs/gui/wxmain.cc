@@ -1,6 +1,6 @@
 //
 // gui/wxmain.cc
-// $Id: wxmain.cc,v 1.6 2002-08-25 15:51:45 vruppert Exp $
+// $Id: wxmain.cc,v 1.7 2002-08-25 20:35:19 vruppert Exp $
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -324,6 +324,8 @@ void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
   // set up callback for events from simulator thread
   SIM->set_notify_callback (&SimThread::SiminterfaceCallback, sim_thread);
   // fix up menu choices
+  menuConfiguration->Enable (ID_Config_New, FALSE);
+  menuConfiguration->Enable (ID_Config_Read, FALSE);
   menuSimulate->Enable (ID_Simulate_Start, FALSE);
   menuSimulate->Enable (ID_Simulate_PauseResume, TRUE);
   menuSimulate->Enable (ID_Simulate_Stop, TRUE);
