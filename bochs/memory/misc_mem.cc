@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.19 2002-04-18 00:22:20 bdenney Exp $
+// $Id: misc_mem.cc,v 1.20 2002-07-03 17:13:29 mlerwill Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.19 2002-04-18 00:22:20 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.20 2002-07-03 17:13:29 mlerwill Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -129,6 +129,8 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   int fd, ret;
   unsigned long size, offset;
 
+  if (*path == '\0')
+    return;
   // read in ROM BIOS image file
   fd = open(path, O_RDONLY
 #ifdef O_BINARY
