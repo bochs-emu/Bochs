@@ -498,7 +498,7 @@ typedef struct {
 
 #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 void bx_signal_handler (int signum);
-void bx_atexit(void);
+int bx_atexit(void);
 extern bx_debug_t bx_dbg;
 
 
