@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.47 2004-10-05 20:25:06 sshwarts Exp $
+// $Id: paging.cc,v 1.48 2004-10-21 18:20:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -120,10 +120,13 @@
 // Page Table Entry format when P=1 (4-Kbyte Page):
 // ================================================
 //
+//   63..63: NX                  \
+//   62..52: available           | Long mode
+//   51..32: page base address   /
 //   31..12: page base address
 //   11.. 9: available
 //        8: G (Pentium Pro+), 0=reserved otherwise
-//        7: 0=reserved
+//        7: PAT
 //        6: D   (386+)
 //        5: A   (386+)
 //        4: PCD (486+), 0=reserved otherwise
@@ -134,6 +137,16 @@
 
 // Page Directory/Table Entry Fields Defined:
 // ==========================================
+// NX: No Execute
+//   This bit controls the ability to execute code from all physical
+//   pages mapped by the table entry.
+//     0: Code can be executed from the mapped physical pages
+//     1: Code cannot be executed
+//   The NX bit can only be set when the no-execute page-protection
+//   feature is enabled by setting EFER.NXE=1, If EFER.NXE=0, the 
+//   NX bit is treated as reserved. In this case, #PF occurs if the 
+//   NX bit is not cleared to zero.
+//
 // G: Global flag
 //   Indiciates a global page when set.  When a page is marked
 //   global and the PGE flag in CR4 is set, the page table or
@@ -148,7 +161,14 @@
 //   size is 4KBytes and the page directory entry points to a
 //   page table.  When PS=1, the page size is 4MBytes for
 //   normal 32-bit addressing and 2MBytes if extended physical
-//   addressing
+//   addressing.
+//
+// PAT: Page-Attribute Table
+//   This bit is only present in the lowest level of the page
+//   translation hierarchy. The PAT bit is the high-order bit 
+//   of a 3-bit index into the PAT register. The other two 
+//   bits involved in forming the index are the PCD and PWT 
+//   bits.
 //
 // D: Dirty bit:
 //   Processor sets the Dirty bit in the 2nd-level page table before a
@@ -440,9 +460,8 @@ BX_CPU_C::TLB_init(void)
   unsigned i;
   unsigned wp, us_combined, rw_combined, us_current, rw_current;
 
-  for (i=0; i<BX_TLB_SIZE; i++) {
+  for (i=0; i<BX_TLB_SIZE; i++)
     BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
-    }
 
   //
   // Setup privilege check matrix.
@@ -515,7 +534,6 @@ BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 void BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
 #if BX_CPU_LEVEL >= 4
-  Bit32u   TLB_index;
   bx_address laddr;
 
   invalidate_prefetch_q();
@@ -563,7 +581,7 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 
 #if BX_USE_TLB
   laddr = BX_CPU_THIS_PTR sregs[i->seg()].cache.u.segment.base + RMAddr(i);
-  TLB_index = BX_TLB_INDEX_OF(laddr);
+  Bit32u TLB_index = BX_TLB_INDEX_OF(laddr);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
   InstrTLB_Increment(tlbEntryInvlpg);
 #endif // BX_USE_TLB
@@ -583,12 +601,15 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
   Bit32u BX_CPP_AttrRegparmN(3)
 BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 {
-  bx_address   lpf;
-  Bit32u   ppf, poffset, TLB_index, error_code, paddress;
+  bx_address lpf;
+  Bit32u   ppf, poffset, error_code, paddress;
   Bit32u   pde, pde_addr;
   bx_bool  isWrite;
   Bit32u   accessBits, combined_access;
   unsigned priv_index;
+#if BX_USE_TLB
+  Bit32u   TLB_index;
+#endif
 
   InstrTLB_Increment(tlbLookups);
   InstrTLB_Stats();
@@ -599,24 +620,27 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
     lpf       = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
     poffset   = laddr & 0x00000fff; // physical offset
-    TLB_index = BX_TLB_INDEX_OF(lpf);
-
-    isWrite = (rw>=BX_WRITE); // write or r-m-w
+    isWrite   = (rw>=BX_WRITE); // write or r-m-w
 
     //BX_DEBUG (("poffset: %-8x laddr: %-8x lpf: %-8x",poffset,laddr,lpf));
 
-    if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
+#if BX_USE_TLB
+    TLB_index = BX_TLB_INDEX_OF(lpf);
+
+    if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) 
+    {
       paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
       accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
-      if (accessBits & (1 << ((isWrite<<1) | pl)) ) {
+
+      if (accessBits & (1 << ((isWrite<<1) | pl)))
         return(paddress);
-        }
 
       // The current access does not have permission according to the info
       // in our TLB cache entry.  Re-walk the page tables, in case there is
       // updated information in the memory image, and let the long path code
       // generate an exception if one is warranted.
-      }
+    }
+#endif
 
     InstrTLB_Increment(tlbMisses);
 
@@ -625,7 +649,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR msr.lma) {
-      Bit32u   pml4, pml4_addr;
+      Bit32u pml4, pml4_addr;
       // Get PML4 entry
       pml4_addr = BX_CPU_THIS_PTR cr3_masked |
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
@@ -650,7 +674,6 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       pdp_addr = BX_CPU_THIS_PTR cr3_masked |
                ((laddr & 0xc0000000) >> 27);
       }
-
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(this, pdp_addr, 4, &pdp);
     if ( !(pdp & 0x01) ) {
@@ -764,8 +787,10 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
     // Calculate physical memory address and fill in TLB cache entry
     paddress = ppf | poffset;
+#if BX_USE_TLB
     BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
     BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
+#endif
 
     if ( combined_access & 4 ) { // User
       accessBits = 0x3; // User priv; read from {user,sys} OK.
@@ -782,8 +807,8 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 #if BX_SupportGlobalPages
     accessBits |= combined_access & 0x100; // Global bit
 #endif
+#if BX_USE_TLB
     BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
-
 #if BX_SupportGuest2HostTLB
     // Attempt to get a host pointer to this physical page.  Put that
     // pointer in the TLB cache.  Note if the request is vetoed, NULL
@@ -791,32 +816,33 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
         (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(this, A20ADDR(ppf), rw);
 #endif
-
+#endif
     return(paddress);
-    }
+  }
 #endif  // #if BX_SupportPAE
-
 
   // CR4.PAE==0 (and MSR.LMA==0)
 
   lpf       = laddr & 0xfffff000; // linear page frame
   poffset   = laddr & 0x00000fff; // physical offset
+  isWrite   = (rw>=BX_WRITE); // write or r-m-w
+
+#if BX_USE_TLB
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
-  isWrite = (rw>=BX_WRITE); // write or r-m-w
-
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
+  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf))
+  {
     paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
     accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
-    if (accessBits & (1 << ((isWrite<<1) | pl)) ) {
+    if (accessBits & (1 << ((isWrite<<1) | pl)))
       return(paddress);
-      }
 
     // The current access does not have permission according to the info
     // in our TLB cache entry.  Re-walk the page tables, in case there is
     // updated information in the memory image, and let the long path code
     // generate an exception if one is warranted.
-    }
+  }
+#endif
 
   InstrTLB_Increment(tlbMisses);
 
@@ -942,8 +968,10 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
+#if BX_USE_TLB
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_TLB_LPF_VALUE(lpf);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
+#endif
 
 // 1 << ((W<<1) | U)
 // b0: Read  Sys   OK
@@ -965,14 +993,15 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 #if BX_SupportGlobalPages
   accessBits |= combined_access & 0x100; // Global bit
 #endif
+#if BX_USE_TLB
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
-
 #if BX_SupportGuest2HostTLB
   // Attempt to get a host pointer to this physical page.  Put that
   // pointer in the TLB cache.  Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
   BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
       (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(this, A20ADDR(ppf), rw);
+#endif
 #endif
 
   return(paddress);
@@ -984,15 +1013,17 @@ page_fault_not_present:
   error_code |= (pl << 2) | (isWrite << 1);
   BX_CPU_THIS_PTR cr2 = laddr;
   // Invalidate TLB entry.
+#if BX_USE_TLB
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
+#endif
 #if BX_EXTERNAL_DEBUGGER
 #if BX_SUPPORT_X86_64
   printf("page fault for address %08x%08x @ %08x%08x\n",
                (Bit32u)(laddr >> 32),(Bit32u)(laddr & 0xffffffff),
                (Bit32u)(RIP >> 32),(Bit32u)(RIP & 0xffffffff));
-  
 #else
-  //printf("page fault for address %08x\n",laddr);
+  printf("page fault for address %08x:%08x\n",
+               (Bit32u)(laddr >> 32),(Bit32u)(laddr & 0xffffffff));
 #endif
 #endif
   exception(BX_PF_EXCEPTION, error_code, 0);
@@ -1037,12 +1068,14 @@ BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, bx_bool *valid)
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
   // see if page is in the TLB first
+#if BX_USE_TLB
   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
     paddress        = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
     *phy = paddress;
     *valid = 1;
     return;
-    }
+  }
+#endif
 
   // Get page dir entry
   pde_addr = BX_CPU_THIS_PTR cr3_masked |
@@ -1360,26 +1393,9 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 }
 
 
-
-
-
-
-
-
 #else   // BX_SUPPORT_PAGING
 
 // stub functions for non-support of paging
-  void
-BX_CPU_C::enable_paging(void)
-{
-  BX_PANIC(("enable_paging(): not implemented"));
-}
-
-  void
-BX_CPU_C::disable_paging(void)
-{
-  BX_PANIC(("disable_paging() called"));
-}
 
   void
 BX_CPU_C::CR3_change(Bit32u value32)
@@ -1387,7 +1403,6 @@ BX_CPU_C::CR3_change(Bit32u value32)
   BX_INFO(("CR3_change(): flush TLB cache"));
   BX_INFO(("Page Directory Base %08x", (unsigned) value32));
 }
-
 
   void
 BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,

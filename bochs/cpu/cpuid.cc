@@ -263,7 +263,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
 #if 0
 #if BX_CPU_LEVEL >= 6
     case 2:
-      RAX = 0;	// cache and TLB information (still not implemented)
+      RAX = 0;  // cache and TLB information (still not implemented)
       RBX = 0;  // cache and TLB information (still not implemented)
       RCX = 0;  // cache and TLB information (still not implemented)
       RDX = 0;  // cache and TLB information (still not implemented)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.180 2004-09-21 20:19:18 sshwarts Exp $
+// $Id: cpu.h,v 1.181 2004-10-21 18:20:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -617,6 +617,7 @@ typedef struct {
   bx_bool sce;		// system call extensions
   bx_bool lme;		// long mode enable
   bx_bool lma;		// long mode active
+  bx_bool nxe;		// no-execute enable
   bx_bool ffxsr;	// fast FXSAVE/FXRSTOR
 
   Bit64u star;
@@ -1049,7 +1050,7 @@ class BOCHSAPI bxICache_c {
       }
     }
 
-  BX_CPP_INLINE void decWriteStamp(BX_CPU_C *cpu, Bit32u a20Addr);
+  BX_CPP_INLINE void decWriteStamp(Bit32u a20Addr);
 
   BX_CPP_INLINE void clear(void) {
     memset(this, 0, sizeof(*this));
@@ -2962,42 +2963,45 @@ public: // for now...
 };
 
 #if BX_SUPPORT_ICACHE
-BX_CPP_INLINE void bxICache_c::decWriteStamp(BX_CPU_C *cpu, Bit32u a20Addr) {
+BX_CPP_INLINE void bxICache_c::decWriteStamp(Bit32u a20Addr)
+{
   // Increment page write stamp, so iCache entries with older stamps
   // are effectively invalidated.
   Bit32u pageIndex = a20Addr >> 12;
-  Bit32u writeStamp = cpu->iCache.pageWriteStampTable[pageIndex];
-  if ( writeStamp & 0x20000000 ) {
+  Bit32u writeStamp = this->pageWriteStampTable[pageIndex];
+  if (writeStamp & 0x20000000)
+  {
     // Page possibly contains iCache code.
-    if ( writeStamp & ICacheWriteStampMask ) {
+    if (writeStamp & ICacheWriteStampMask) {
       // Short case: there is room to decrement the generation counter.
-      cpu->iCache.pageWriteStampTable[pageIndex]--;
-      }
+      this->pageWriteStampTable[pageIndex]--;
+    }
     else {
       // Long case: there is no more room to decrement.  We have dump
       // all iCache entries which can possibly hash to this page since
       // we don't keep track of individual entries.
 
       // Take the hash of the 0th page offset.
-      unsigned iCacheHash = cpu->iCache.hash(a20Addr & 0xfffff000);
+      unsigned iCacheHash = this->hash(a20Addr & 0xfffff000);
       for (unsigned o=0; o<4096; o++) {
-        cpu->iCache.entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
+        this->entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
         iCacheHash = (iCacheHash + 1) % BxICacheEntries;
-        }
+      }
       // Reset write stamp to highest value to begin the decrementing process
       // again.
-      cpu->iCache.pageWriteStampTable[pageIndex] = ICacheWriteStampInvalid;
-      }
+      this->pageWriteStampTable[pageIndex] = ICacheWriteStampInvalid;
     }
   }
+}
 
-BX_CPP_INLINE Bit32u bxICache_c::createFetchModeMask(BX_CPU_C *cpu) {
+BX_CPP_INLINE Bit32u bxICache_c::createFetchModeMask(BX_CPU_C *cpu)
+{
   return (cpu->sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
 #if BX_SUPPORT_X86_64
          | ((cpu->cpu_mode == BX_MODE_LONG_64)<<30)
 #endif
          | (1<<29); // iCache code.
-  }
+}
 
 #endif
 

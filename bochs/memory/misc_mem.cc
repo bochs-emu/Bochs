@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.50 2004-09-02 18:24:50 vruppert Exp $
+// $Id: misc_mem.cc,v 1.51 2004-10-21 18:20:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,22 +27,16 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
 #include "iodev/iodev.h"
 #define LOG_THIS BX_MEM(0)->
 
-
-
 #if BX_PROVIDE_CPU_MEMORY
+
 Bit32u BX_MEM_C::get_memory_in_k(void)
 {
   return(BX_MEM_THIS megabytes * 1024);
 }
-#endif // #if BX_PROVIDE_CPU_MEMORY
 
-
-#if BX_PROVIDE_CPU_MEMORY
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(void)
 {
@@ -58,10 +52,7 @@ BX_MEM_C::BX_MEM_C(void)
 
   memory_handlers = NULL;
 }
-#endif // #if BX_PROVIDE_CPU_MEMORY
 
-
-#if BX_PROVIDE_CPU_MEMORY
 void BX_CPP_AttrRegparmN(2)
 BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
 {
@@ -84,10 +75,7 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
   BX_INFO (("allocated memory at %p. after alignment, vector=%p", 
 	actual_vector, vector));
 }
-#endif
 
-
-#if BX_PROVIDE_CPU_MEMORY
 // BX_MEM_C destructor
 BX_MEM_C::~BX_MEM_C(void)
 {
@@ -102,16 +90,12 @@ BX_MEM_C::~BX_MEM_C(void)
     BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!", BX_SIM_ID));
     }
 }
-#endif // #if BX_PROVIDE_CPU_MEMORY
 
-
-#if BX_PROVIDE_CPU_MEMORY
-  void
-BX_MEM_C::init_memory(int memsize)
+void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.50 2004-09-02 18:24:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.51 2004-10-21 18:20:40 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -137,16 +121,15 @@ BX_MEM_C::init_memory(int memsize)
 #endif
 
 }
-#endif // #if BX_PROVIDE_CPU_MEMORY
 
+//
+// Values for type:
+//   0 : System Bios
+//   1 : VGA Bios
+//   2 : Optional ROM Bios
+//
 
-#if BX_PROVIDE_CPU_MEMORY
-  void
-  // Values for type :
-  // 0 : System Bios
-  // 1 : VGA Bios
-  // 2 : Optional ROM Bios
-BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
+void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 {
   struct stat stat_buf;
   int fd, ret, i, start_idx, end_idx;
@@ -353,7 +336,6 @@ BX_MEM_C::dbg_crc32(unsigned long (*f)(unsigned char *buf, int len),
   return(1);
 }
 
-
   Bit8u * BX_CPP_AttrRegparmN(3)
 BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
   // Return a host address corresponding to the guest physical memory
@@ -371,6 +353,14 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
   if (op == BX_READ) {
     if ( (a20Addr > 0x9ffff) && (a20Addr < 0xc0000) )
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
+#if BX_SUPPORT_APIC
+    bx_generic_apic_c *local_apic = &cpu->local_apic;
+    if (local_apic->get_base () == (a20Addr & ~0xfff))
+      return(NULL); // Vetoed!  APIC address space
+    bx_generic_apic_c *ioapic = bx_devices.ioapic;
+    if (ioapic->get_base () == (a20Addr & ~0xfff))
+      return(NULL); // Vetoed!  IOAPIC address space
+#endif
 #if !BX_SUPPORT_PCI
     return( (Bit8u *) & vector[a20Addr] );
 #else
@@ -392,10 +382,17 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     }
   else { // op == {BX_WRITE, BX_RW}
     Bit8u *retAddr;
-
-    if ( (a20Addr < 0xa0000) || (a20Addr > 0xfffff) ) {
+#if BX_SUPPORT_APIC
+    bx_generic_apic_c *local_apic = &cpu->local_apic;
+    if (local_apic->get_base () == (a20Addr & ~0xfff))
+      return(NULL); // Vetoed!  APIC address space
+    bx_generic_apic_c *ioapic = bx_devices.ioapic;
+    if (ioapic->get_base () == (a20Addr & ~0xfff))
+      return(NULL); // Vetoed!  IOAPIC address space
+#endif
+    if ((a20Addr < 0xa0000) || (a20Addr > 0xfffff)) {
       retAddr = (Bit8u *) & vector[a20Addr];
-      }
+    }
 #if !BX_SUPPORT_PCI
     else
       return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
@@ -411,13 +408,12 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
 #endif
 
 #if BX_SUPPORT_ICACHE
-    cpu->iCache.decWriteStamp(cpu, a20Addr);
+    cpu->iCache.decWriteStamp(a20Addr);
 #endif
 
     return(retAddr);
     }
 }
-
 
 /*
  * One needs to provide both a read_handler and a write_handler.
@@ -447,7 +443,6 @@ BX_MEM_C::registerMemoryHandlers(memory_handler_t read_handler, void *read_param
 	}
 	return true;
 }
-
 
   bx_bool 
 BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler, 
