@@ -163,11 +163,16 @@ void disassembler::print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry)
     dis_sprintf("x");
     break;
 
-  case 'O':  // string
+  case 'S':  // string
     if (i32bit_opsize)
       dis_sprintf("d");
     else
       dis_sprintf("w");
+    break;
+
+  case 'D':
+    if (i32bit_opsize)
+      dis_sprintf("d");
     break;
 
   default:
@@ -227,13 +232,7 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
     dis_sprintf("w");
     break;
 
-  case 'O':
-    if (i32bit_opsize)
-      dis_sprintf("d");
-    else
-      dis_sprintf("w");
-    break;
-
+  case 'S':
   case 'V':
     if (i32bit_opsize)
       dis_sprintf("l");
@@ -278,6 +277,11 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
     }
     else
       printf("Internal disassembler error !\n");
+    break;
+
+  case 'D':
+    if (i32bit_opsize)
+      dis_sprintf("l");
     break;
 
   default:

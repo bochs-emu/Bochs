@@ -164,16 +164,18 @@
 // B - print 'b' suffix for this instruction (in AT&T syntax mode)
 // W - print 'w' suffix for this instruction (in AT&T syntax mode)
 // L - print 'l' suffix for this instruction (in AT&T syntax mode)
-// V - print 'w' or 'l' suffix for this instruction dependent on
-//     its operands size (in AT&T syntax mode)
+// V - print 'w' or 'l' suffix for this instruction depending on
+//     operands size (in AT&T syntax mode)
 // Q - print 'q' suffix for this instruction (in AT&T syntax mode)
-// O - print 'w' or 'd' suffix for this instruction dependent on
+// S - print 'w' or 'd' suffix for this instruction depending on
 //     its operands size (for string instructions)
 // T - print 't' suffix for this instruction (in AT&T syntax mode)
 // X - print 'bl', 'bw', "wl", "bq", "wq" or 'lq' suffix for this
-//     instruction dependent on its operands size in AT&T syntax 
+//     instruction depending on its operands sizes in AT&T syntax 
 //     mode and 'x' suffix in Intel syntax mode (for movsx and 
 //     movzx instructions)
+// D - print 'd' for 32-bit operand size in Intel syntax mode or
+//     'l' AT&T syntax mode and 'q' for 64-bit operand size.
 //
 
 /* ************************************************************************ */
@@ -2247,8 +2249,8 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 5D */  { "popV",      0, eBP,  XX, XX },
   /* 5E */  { "popV",      0, eSI,  XX, XX },
   /* 5F */  { "popV",      0, eDI,  XX, XX },
-  /* 60 */  { "pushad",    0,  XX,  XX, XX },
-  /* 61 */  { "popad",     0,  XX,  XX, XX },
+  /* 60 */  { "pushaD",    0,  XX,  XX, XX },
+  /* 61 */  { "popaD",     0,  XX,  XX, XX },
   /* 62 */  { "boundW",    0,  Gv,  Mx, XX },
   /* 63 */  { "arplW",     0,  Ew,  Rw, XX },
   /* 64 */  { PREFIX_FS },      // FS:
@@ -2260,9 +2262,9 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 6A */  { "pushV",     0, sIb,  XX, XX },   // sign extended immediate
   /* 6B */  { "imulV",     0,  Gv,  Ev, sIb },   
   /* 6C */  { "insb",      0,  Yb,  DX, XX },
-  /* 6D */  { "insO",      0,  Yv,  DX, XX },
+  /* 6D */  { "insS",      0,  Yv,  DX, XX },
   /* 6E */  { "outsb",     0,  DX,  Xb, XX },
-  /* 6F */  { "outsO",     0,  DX,  Xv, XX },
+  /* 6F */  { "outsS",     0,  DX,  Xv, XX },
   /* 70 */  { "jo",        0,  Jb,  XX, Cond_Jump },
   /* 71 */  { "jno",       0,  Jb,  XX, Cond_Jump },
   /* 72 */  { "jb",        0,  Jb,  XX, Cond_Jump },
@@ -2307,8 +2309,8 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 99 */  { "cwd|cdq",   0,  XX,  XX, XX },
   /* 9A */  { "call far",  0,  Ap,  XX, XX },
   /* 9B */  { "fwait",     0,  XX,  XX, XX },
-  /* 9C */  { "pushf",     0,  XX,  XX, XX },
-  /* 9D */  { "popf",      0,  XX,  XX, XX },
+  /* 9C */  { "pushfD",    0,  XX,  XX, XX },
+  /* 9D */  { "popfD",     0,  XX,  XX, XX },
   /* 9E */  { "sahf",      0,  XX,  XX, XX },
   /* 9F */  { "lahf",      0,  XX,  XX, XX },
   /* A0 */  { "movB",      0,  AL,  Ob, XX },
@@ -2316,17 +2318,17 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* A2 */  { "movB",      0,  Ob,  AL, XX },
   /* A3 */  { "movV",      0,  Ov, eAX, XX },
   /* A4 */  { "movsb",     0,  Yb,  Xb, XX },
-  /* A5 */  { "movsO",     0,  Yv,  Xv, XX },
+  /* A5 */  { "movsS",     0,  Yv,  Xv, XX },
   /* A6 */  { "cmpsb",     0,  Yb,  Xb, XX },
-  /* A7 */  { "cmpsO",     0,  Yv,  Xv, XX },
+  /* A7 */  { "cmpsS",     0,  Yv,  Xv, XX },
   /* A8 */  { "testB",     0,  AL,  Ib, XX },
   /* A9 */  { "testV",     0, eAX,  Iv, XX },
   /* AA */  { "stosb",     0,  Yb,  AL, XX },
-  /* AB */  { "stosO",     0,  Yv, eAX, XX },
+  /* AB */  { "stosS",     0,  Yv, eAX, XX },
   /* AC */  { "lodsb",     0,  AL,  Xb, XX },
-  /* AD */  { "lodsO",     0, eAX,  Xv, XX },
+  /* AD */  { "lodsS",     0, eAX,  Xv, XX },
   /* AE */  { "scasb",     0,  Yb,  AL, XX },
-  /* AF */  { "scasO",     0,  Yv, eAX, XX },
+  /* AF */  { "scasS",     0,  Yv, eAX, XX },
   /* B0 */  { "movB",      0,  AL,  Ib, XX },
   /* B1 */  { "movB",      0,  CL,  Ib, XX },
   /* B2 */  { "movB",      0,  DL,  Ib, XX },
@@ -2358,7 +2360,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* CC */  { "int3",      0,  XX,  XX, XX },
   /* CD */  { "int",       0,  Ib,  XX, XX },
   /* CE */  { "into",      0,  XX,  XX, XX },
-  /* CF */  { "iret",      0,  XX,  XX, XX },
+  /* CF */  { "iretD",     0,  XX,  XX, XX },
   /* D0 */  { GRPN(G2Eb1) },
   /* D1 */  { GRPN(G2Ev1) },
   /* D2 */  { GRPN(G2EbCL) },

@@ -234,15 +234,10 @@ void disassembler::Ew (unsigned attr)
 
 void disassembler::Ev (unsigned attr) 
 {
-  if (mod == 3)
-  {
-    if (i32bit_opsize)
-      dis_sprintf("%s", general_32bit_reg_name[rm]);
-    else
-      dis_sprintf("%s", general_16bit_reg_name[rm]);
-  }
+  if (i32bit_opsize)
+    Ed(attr);
   else
-    (this->*resolve_modrm)(V_SIZE);
+    Ew(attr);
 }
 
 void disassembler::Ed (unsigned attr) 
