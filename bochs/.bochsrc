@@ -48,7 +48,7 @@ megs: 32
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
-#vgaromimage: bios/VGABIOS-lgpl-0.3a
+#vgaromimage: bios/VGABIOS-lgpl-latest
 vgaromimage: bios/VGABIOS-elpin-2.40
 
 #=======================================================================
