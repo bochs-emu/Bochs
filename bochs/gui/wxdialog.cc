@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.54 2003-01-04 11:46:59 vruppert Exp $
+// $Id: wxdialog.cc,v 1.55 2003-08-23 15:28:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -2001,7 +2001,13 @@ void ParamDialog::AddParam (
 	  idHash->Put (pstr->id, pstr);
 	  paramHash->Put (pstr->param->get_id (), pstr);
 	} else {
-	  wxStaticBox *box = new wxStaticBox (context->parent, -1, prompt);
+          wxString boxTitle;
+          if (list->get_options()->get () & bx_list_c::USE_BOX_TITLE) {
+            boxTitle = prompt;
+          } else {
+            boxTitle = "";
+          }
+          wxStaticBox *box = new wxStaticBox (context->parent, -1, boxTitle);
 	  wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
 	  AddParamContext newcontext;
 	  newcontext.depth = 1 + context->depth;
@@ -2613,7 +2619,6 @@ wxChoice *makeLogOptionChoiceBox (wxWindow *parent,
 {
   static char *choices[] = LOG_OPTS_CHOICES;
   static int integers[LOG_OPTS_N_CHOICES] = {0, 1, 2, 3, 4};
-  static const wxString stupid[2] = { "little1", "little2" };
   wxChoice *control = new wxChoice (parent, id, wxDefaultPosition, wxDefaultSize);
   int lastChoice = 0;  // remember index of last choice
   int nchoice = includeNoChange? LOG_OPTS_N_CHOICES : LOG_OPTS_N_CHOICES_NORMAL;

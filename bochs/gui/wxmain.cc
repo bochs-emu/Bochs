@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.92 2003-08-23 09:52:26 vruppert Exp $
+// $Id: wxmain.cc,v 1.93 2003-08-23 15:28:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -644,8 +644,7 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
   ParamDialog dlg (this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_SB16);
   dlg.SetTitle (list->get_name ());
-  for (int i=0; i<list->get_size (); i++)
-    dlg.AddParam (list->get (i));
+  dlg.AddParam (list);
   dlg.ShowModal ();
 }
 
@@ -664,8 +663,7 @@ void MyFrame::OnEditTiming(wxCommandEvent& WXUNUSED(event))
   dlg.AddParam (SIM->get_param (BXP_IPS));
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_CLOCK);
   dlg.SetTitle (list->get_name ());
-  for (int i=0; i<list->get_size (); i++)
-    dlg.AddParam (list->get (i));
+  dlg.AddParam (list);
   dlg.ShowModal ();
 }
 
@@ -731,12 +729,9 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
-  dlg.SetTitle ("Configure Keyboard");
-  dlg.AddParam (SIM->get_param (BXP_KBD_TYPE));
-  dlg.AddParam (SIM->get_param (BXP_KBD_SERIAL_DELAY));
-  dlg.AddParam (SIM->get_param (BXP_KBD_PASTE_DELAY));
-  dlg.AddParam (SIM->get_param (BXP_KEYBOARD_USEMAPPING));
-  dlg.AddParam (SIM->get_param (BXP_KEYBOARD_MAP));
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_KEYBOARD);
+  dlg.SetTitle (list->get_name ());
+  dlg.AddParam (list);
   dlg.ShowModal ();
 }
 
@@ -745,8 +740,7 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_SERIAL_PARALLEL);
   dlg.SetTitle (list->get_name ());
-  for (int i=0; i<list->get_size (); i++)
-    dlg.AddParam (list->get (i));
+  dlg.AddParam (list);
   dlg.ShowModal ();
 }
 
@@ -755,8 +749,7 @@ void MyFrame::OnEditLoadHack(wxCommandEvent& WXUNUSED(event))
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_LOAD32BITOS);
   dlg.SetTitle (list->get_name ());
-  for (int i=0; i<list->get_size (); i++)
-    dlg.AddParam (list->get (i));
+  dlg.AddParam (list);
   dlg.ShowModal ();
 }
 
@@ -769,7 +762,6 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
   dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
   dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
   dlg.AddParam (SIM->get_param (BXP_MOUSE_ENABLED));
-  dlg.AddParam (SIM->get_param (BXP_USER_SHORTCUT));
   dlg.AddParam (SIM->get_param (BXP_FLOPPYSIGCHECK));
   dlg.AddParam (SIM->get_param (BXP_FLOPPY_CMD_DELAY));
   dlg.AddParam (SIM->get_param (BXP_NEWHARDDRIVESUPPORT));

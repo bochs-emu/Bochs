@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.105 2003-08-22 01:00:58 cbothamy Exp $
+// $Id: siminterface.h,v 1.106 2003-08-23 15:28:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -354,6 +354,7 @@ typedef enum {
   BXP_MENU_DISK,
   BXP_MENU_SERIAL_PARALLEL,
   BXP_MENU_SOUND,
+  BXP_MENU_KEYBOARD,
   BXP_MENU_MISC,
   BXP_MENU_RUNTIME,
   BXP_MAX_IPS,
@@ -1102,11 +1103,15 @@ public:
     // related questions.  This bit suggests to the CI that the series of
     // questions format is preferred.
     SERIES_ASK = (1<<1),
-    // When a bx_list_c is displayed in a dialog, BX_USE_TAB_WINDOW suggests
+    // When a bx_list_c is displayed in a dialog, USE_TAB_WINDOW suggests
     // to the CI that each item in the list should be shown as a separate
     // tab.  This would be most appropriate when each item is another list
     // of parameters.
-    USE_TAB_WINDOW = (1<<2)
+    USE_TAB_WINDOW = (1<<2),
+    // When a bx_list_c is displayed in a dialog, the list name is used as the
+    // label of the group box if USE_BOX_TITLE is set. This is only necessary if
+    // more than one list appears in a dialog box.
+    USE_BOX_TITLE = (1<<3)
   } bx_listopt_bits;
   bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
