@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.6 2002-01-18 16:33:47 vruppert Exp $
+// $Id: dma.h,v 1.6.2.1 2002-06-10 21:22:02 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,9 +28,6 @@
 #ifndef _PCDMA_H
 #define _PCDMA_H
 
-
-#define BX_KBD_ELEMENTS 16
-#define BX_MOUSE_BUFF_SIZE 48
 
 
 #if BX_USE_DMA_SMF
