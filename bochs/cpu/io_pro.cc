@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.13 2003-08-24 23:14:52 cbothamy Exp $
+// $Id: io_pro.cc,v 1.14 2004-02-03 02:03:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,12 +168,13 @@ BX_INFO(("CPL is %u", CPL));
 BX_INFO(("IOPL is %u", BX_CPU_THIS_PTR get_IOPL ()));
 BX_INFO(("addr is %u", addr));
 BX_INFO(("len is %u", len));
-    BX_PANIC(("allow_io(): TR:io_base <= 103"));
+    BX_PANIC(("allow_io(): TR:io_base (%u) <= 103",io_base));
+    return(0);
     }
 
-  if ( (Bit16s) (addr/8) > (BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled - io_base)) {
-    BX_INFO(("allow_io(): IO adr %x outside TSS IO permission map (max port=%x) #GP(0)",
-      addr, 8*(BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled - io_base) ));
+  if ( (Bit32s) (addr/8) >= (Bit32s) (BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled - io_base)) {
+    BX_INFO(("allow_io(): IO addr %x (len %d) outside TSS IO permission map (base=%x, limit=%x) #GP(0)",
+      addr, len, io_base, BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled));
     return(0);
    }
 
