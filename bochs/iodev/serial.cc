@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.49 2004-03-08 21:51:19 vruppert Exp $
+// $Id: serial.cc,v 1.50 2004-03-09 21:58:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -434,6 +434,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
             (BX_SER_THIS s[port].line_status.tsr_empty      << 6) |
             (BX_SER_THIS s[port].line_status.fifo_error     << 7);
       BX_SER_THIS s[port].line_status.overrun_error = 0;
+      BX_SER_THIS s[port].line_status.framing_error = 0;
       BX_SER_THIS s[port].line_status.break_int = 0;
       BX_SER_THIS s[port].ls_interrupt = 0;
       BX_SER_THIS s[port].ls_ipending = 0;
@@ -515,12 +516,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_SER_SMF
   bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
-  bx_bool new_rx_ien, new_tx_ien, new_ls_ien, new_ms_ien;
-  bx_bool new_wordlen, new_stopbits, new_break, new_dlab;
-  bx_bool prev_dtr, prev_rts;
+  bx_bool new_b0, new_b1, new_b2, new_b3;
+  bx_bool new_b4, new_b5, new_b6, new_b7;
   bx_bool gen_int = 0;
-  Bit8u offset, new_parity;
+  Bit8u offset, new_wordlen;
 #if USE_RAW_SERIAL
+  bx_bool mcr_changed;
   Bit8u p_mode;
 #endif
   Bit8u port = 0;
@@ -534,6 +535,14 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x03e8: port = 2; break;
     case 0x02e8: port = 3; break;
   }
+  new_b0 = value & 0x01;
+  new_b1 = (value & 0x02) >> 1;
+  new_b2 = (value & 0x04) >> 2;
+  new_b3 = (value & 0x08) >> 3;
+  new_b4 = (value & 0x10) >> 4;
+  new_b5 = (value & 0x20) >> 5;
+  new_b6 = (value & 0x40) >> 6;
+  new_b7 = (value & 0x80) >> 7;
 
   switch (offset) {
     case BX_SER_THR: /* transmit buffer, or divisor latch LSB if DLAB set */
@@ -597,12 +606,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                          BX_SER_THIS s[port].divisor_lsb)));
         }
       } else {
-        new_rx_ien = value & 0x01;
-        new_tx_ien = (value & 0x02) >> 1;
-        new_ls_ien = (value & 0x04) >> 2;
-        new_ms_ien = (value & 0x08) >> 3;
-        if (new_ms_ien != BX_SER_THIS s[port].int_enable.modstat_enable) {
-          BX_SER_THIS s[port].int_enable.modstat_enable  = new_ms_ien;
+        if (new_b3 != BX_SER_THIS s[port].int_enable.modstat_enable) {
+          BX_SER_THIS s[port].int_enable.modstat_enable  = new_b3;
           if (BX_SER_THIS s[port].int_enable.modstat_enable == 1) {
             if (BX_SER_THIS s[port].ms_ipending == 1) {
               BX_SER_THIS s[port].ms_interrupt = 1;
@@ -617,8 +622,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             }
           }
         }
-        if (new_tx_ien != BX_SER_THIS s[port].int_enable.txhold_enable) {
-          BX_SER_THIS s[port].int_enable.txhold_enable  = new_tx_ien;
+        if (new_b1 != BX_SER_THIS s[port].int_enable.txhold_enable) {
+          BX_SER_THIS s[port].int_enable.txhold_enable  = new_b1;
           if (BX_SER_THIS s[port].int_enable.txhold_enable == 1) {
             BX_SER_THIS s[port].tx_interrupt = BX_SER_THIS s[port].line_status.thr_empty;
             if (BX_SER_THIS s[port].tx_interrupt) gen_int = 1;
@@ -627,8 +632,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             lower_interrupt(port);
           }
         }
-        if (new_rx_ien != BX_SER_THIS s[port].int_enable.rxdata_enable) {
-          BX_SER_THIS s[port].int_enable.rxdata_enable  = new_rx_ien;
+        if (new_b0 != BX_SER_THIS s[port].int_enable.rxdata_enable) {
+          BX_SER_THIS s[port].int_enable.rxdata_enable  = new_b0;
           if (BX_SER_THIS s[port].int_enable.rxdata_enable == 1) {
             if (BX_SER_THIS s[port].fifo_ipending == 1) {
               BX_SER_THIS s[port].fifo_interrupt = 1;
@@ -653,8 +658,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             }
           }
         }
-        if (new_ls_ien != BX_SER_THIS s[port].int_enable.rxlstat_enable) {
-          BX_SER_THIS s[port].int_enable.rxlstat_enable  = new_ls_ien;
+        if (new_b2 != BX_SER_THIS s[port].int_enable.rxlstat_enable) {
+          BX_SER_THIS s[port].int_enable.rxlstat_enable  = new_b2;
           if (BX_SER_THIS s[port].int_enable.rxlstat_enable == 1) {
             if (BX_SER_THIS s[port].ls_ipending == 1) {
               BX_SER_THIS s[port].ls_interrupt = 1;
@@ -674,16 +679,16 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case BX_SER_FCR: /* FIFO control register */
-      if (!BX_SER_THIS s[port].fifo_cntl.enable && (value & 0x01)) {
+      if (new_b0 && !BX_SER_THIS s[port].fifo_cntl.enable) {
         BX_INFO(("com%d: FIFO enabled", port+1));
         BX_SER_THIS s[port].rx_fifo_end = 0;
         BX_SER_THIS s[port].tx_fifo_end = 0;
       }
-      BX_SER_THIS s[port].fifo_cntl.enable = value & 0x01;
-      if (value & 0x02) {
+      BX_SER_THIS s[port].fifo_cntl.enable = new_b0;
+      if (new_b1) {
         BX_SER_THIS s[port].rx_fifo_end = 0;
       }
-      if (value & 0x04) {
+      if (new_b2) {
         BX_SER_THIS s[port].tx_fifo_end = 0;
       }
       BX_SER_THIS s[port].fifo_cntl.rxtrigger = (value & 0xc0) >> 6;
@@ -691,41 +696,44 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case BX_SER_LCR: /* Line control register */
       new_wordlen = value & 0x03;
-      new_stopbits = (value & 0x04) >> 2;
-      new_parity = (value & 0x38) >> 3;
-      new_break = (value & 0x40) >> 6;
-      new_dlab = (value & 0x80) >> 7;
 #if USE_RAW_SERIAL
       if (BX_SER_THIS s[port].line_cntl.wordlen_sel != new_wordlen) {
         BX_SER_THIS s[port].raw->set_data_bits(new_wordlen + 5);
       }
-      if (BX_SER_THIS s[port].line_cntl.stopbits != new_stopbits) {
-        BX_SER_THIS s[port].raw->set_stop_bits(new_stopbits ? 2 : 1);
+      if (new_b2 != BX_SER_THIS s[port].line_cntl.stopbits) {
+        BX_SER_THIS s[port].raw->set_stop_bits(new_b2 ? 2 : 1);
       }
-      if ((BX_SER_THIS s[port].line_cntl.parity_enable != (bx_bool)(new_parity & 0x1)) ||
-          (BX_SER_THIS s[port].line_cntl.evenparity_sel != (bx_bool)((new_parity & 0x2) >> 1)) ||
-          (BX_SER_THIS s[port].line_cntl.stick_parity != (bx_bool)((new_parity & 0x4) >> 2))) {
-        if ((new_parity & 0x1) == 0) {
+      if ((new_b3 != BX_SER_THIS s[port].line_cntl.parity_enable) ||
+          (new_b4 != BX_SER_THIS s[port].line_cntl.evenparity_sel) ||
+          (new_b5 != BX_SER_THIS s[port].line_cntl.stick_parity)) {
+        if (new_b3 == 0) {
           p_mode = P_NONE;
         } else {
-          p_mode = (new_parity >> 1) + 1;
+          p_mode = ((value & 0x30) >> 4) + 1;
         }
         BX_SER_THIS s[port].raw->set_parity_mode(p_mode);
       }
-      if (BX_SER_THIS s[port].line_cntl.break_cntl != new_break) {
-        BX_SER_THIS s[port].raw->set_break(new_break);
+      if ((new_b6 != BX_SER_THIS s[port].line_cntl.break_cntl) &&
+          (!BX_SER_THIS s[port].modem_cntl.local_loopback)) {
+        BX_SER_THIS s[port].raw->set_break(new_b6);
       }
 #endif // USE_RAW_SERIAL
 
       BX_SER_THIS s[port].line_cntl.wordlen_sel = new_wordlen;
       /* These are ignored, but set them up so they can be read back */
-      BX_SER_THIS s[port].line_cntl.stopbits = new_stopbits;
-      BX_SER_THIS s[port].line_cntl.parity_enable = new_parity & 0x01;
-      BX_SER_THIS s[port].line_cntl.evenparity_sel = (new_parity & 0x02) >> 1;
-      BX_SER_THIS s[port].line_cntl.stick_parity = (new_parity & 0x04) >> 2;
-      BX_SER_THIS s[port].line_cntl.break_cntl = new_break;
+      BX_SER_THIS s[port].line_cntl.stopbits = new_b2;
+      BX_SER_THIS s[port].line_cntl.parity_enable = new_b3;
+      BX_SER_THIS s[port].line_cntl.evenparity_sel = new_b4;
+      BX_SER_THIS s[port].line_cntl.stick_parity = new_b5;
+      BX_SER_THIS s[port].line_cntl.break_cntl = new_b6;
+      if (BX_SER_THIS s[port].modem_cntl.local_loopback &&
+          BX_SER_THIS s[port].line_cntl.break_cntl) {
+        BX_SER_THIS s[port].line_status.break_int = 1;
+        BX_SER_THIS s[port].line_status.framing_error = 1;
+        rx_fifo_enq(port, 0x00);
+      }
       /* used when doing future writes */
-      if (BX_SER_THIS s[port].line_cntl.dlab && !new_dlab) {
+      if (!new_b7 && BX_SER_THIS s[port].line_cntl.dlab) {
         // Start the receive polling process if not already started
         // and there is a valid baudrate.
         if (BX_SER_THIS s[port].rx_pollstate == BX_SER_RXIDLE &&
@@ -741,18 +749,47 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif // USE_RAW_SERIAL
         BX_DEBUG(("com%d: baud rate set - %d", port+1, BX_SER_THIS s[port].baudrate));
       }
-      BX_SER_THIS s[port].line_cntl.dlab = new_dlab;
+      BX_SER_THIS s[port].line_cntl.dlab = new_b7;
       break;
 
     case BX_SER_MCR: /* MODEM control register */
-      prev_dtr = BX_SER_THIS s[port].modem_cntl.dtr;
-      prev_rts = BX_SER_THIS s[port].modem_cntl.rts;
+#if USE_RAW_SERIAL
+      mcr_changed = (BX_SER_THIS s[port].modem_cntl.dtr != new_b0) |
+                    (BX_SER_THIS s[port].modem_cntl.rts != new_b1);
+#endif
+      BX_SER_THIS s[port].modem_cntl.dtr  = new_b0;
+      BX_SER_THIS s[port].modem_cntl.rts  = new_b1;
+      BX_SER_THIS s[port].modem_cntl.out1 = new_b2;
+      BX_SER_THIS s[port].modem_cntl.out2 = new_b3;
 
-      BX_SER_THIS s[port].modem_cntl.dtr  = value & 0x01;
-      BX_SER_THIS s[port].modem_cntl.rts  = (value & 0x02) >> 1;
-      BX_SER_THIS s[port].modem_cntl.out1 = (value & 0x04) >> 2;
-      BX_SER_THIS s[port].modem_cntl.out2 = (value & 0x08) >> 3;
-      BX_SER_THIS s[port].modem_cntl.local_loopback = (value & 0x10) >> 4;
+      if (new_b7 != BX_SER_THIS s[port].modem_cntl.local_loopback) {
+        BX_SER_THIS s[port].modem_cntl.local_loopback = new_b4;
+        if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
+          /* transition to loopback mode */
+#if USE_RAW_SERIAL
+          if (BX_SER_THIS s[port].modem_cntl.dtr ||
+              BX_SER_THIS s[port].modem_cntl.rts) {
+            BX_SER_THIS s[port].raw->set_modem_control(0);
+          }
+#endif
+          if (BX_SER_THIS s[port].line_cntl.break_cntl) {
+#if USE_RAW_SERIAL
+            BX_SER_THIS s[port].raw->set_break(0);
+#endif
+            BX_SER_THIS s[port].line_status.break_int = 1;
+            BX_SER_THIS s[port].line_status.framing_error = 1;
+            rx_fifo_enq(port, 0x00);
+          }
+        } else {
+          /* transition to normal mode */
+#if USE_RAW_SERIAL
+          mcr_changed = 1;
+          if (BX_SER_THIS s[port].line_cntl.break_cntl) {
+            BX_SER_THIS s[port].raw->set_break(0);
+          }
+#endif
+        }
+      }
 
       if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
         prev_cts = BX_SER_THIS s[port].modem_status.cts;
@@ -782,8 +819,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         raise_interrupt(port, BX_SER_INT_MODSTAT);
       } else {
 #if USE_RAW_SERIAL
-        if ((BX_SER_THIS s[port].modem_cntl.dtr != prev_dtr) ||
-            (BX_SER_THIS s[port].modem_cntl.rts != prev_rts)) {
+        if (mcr_changed) {
           BX_SER_THIS s[port].raw->set_modem_control(value & 0x03);
         }
 #else

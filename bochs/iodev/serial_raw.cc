@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.9 2004-03-08 21:51:19 vruppert Exp $
+// $Id: serial_raw.cc,v 1.10 2004-03-09 21:58:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -254,8 +254,8 @@ serial_raw::receive ()
     if (DCBchanged) {
       setup_port();
     }
-    return (int)'A';
 #endif
+    return (int)'A';
   } else {
     return (int)'A';
   }
