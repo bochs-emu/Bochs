@@ -57,7 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.32 2001-09-21 02:46:17 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.33 2001-10-02 18:38:02 fries Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,7 +92,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.32 2001-09-21 02:46:17 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.33 2001-10-02 18:38:02 fries Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -516,7 +516,7 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
 
         case 0xd3: // write mouse output buffer
 	  //FIXME: Why was this a panic?
-          BX_ERROR(("io write 0x64: command = 0xD3(write mouse outb)"));
+          BX_DEBUG(("io write 0x64: command = 0xD3(write mouse outb)"));
 	  // following byte to port 60h written to output port as mouse write.
           BX_KEY_THIS s.kbd_controller.expecting_port60h = 1;
           break;
@@ -1019,7 +1019,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       break;
 
     case 0xff:  // reset: internal keyboard reset and afterwards the BAT
-      BX_INFO(("rest command received"));
+      BX_DEBUG(("rest command received"));
       kbd_enQ(0xFA); // send ACK
       kbd_enQ(0xAA); // BAT test passed
       return;

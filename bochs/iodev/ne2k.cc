@@ -37,7 +37,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.20 2001-09-29 19:16:34 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.21 2001-10-02 18:38:03 fries Exp $"));
 	// nothing for now
 }
 
@@ -224,7 +224,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  BX_ERROR(("out-of-bounds chipmem read, %04X", address));
+  BX_DEBUG(("out-of-bounds chipmem read, %04X", address));
 
   return (0xff);
 }
@@ -240,7 +240,7 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
     if (io_len == 2)
       BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
   } else
-    BX_ERROR(("out-of-bounds chipmem write, %04X", address));
+    BX_DEBUG(("out-of-bounds chipmem write, %04X", address));
 }
 
 //
@@ -336,9 +336,12 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
 {
   BX_DEBUG(("page 0 read from port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
-  if (io_len > 1)
-    BX_PANIC(("bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
-             (unsigned) io_len));
+  if (io_len > 1) {
+    BX_ERROR(("bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
+             (unsigned) io_len)); /* encountered with win98 hardware probe */
+	return 0;
+  }
+
 
   switch (offset) {
   case 0x0:  // CR
@@ -439,9 +442,12 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   BX_DEBUG(("page 0 write to port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
-  if (io_len > 1)
-    BX_PANIC(("bad length! page 0 write to port %04x, len=%u", (unsigned) offset,
-             (unsigned) io_len));
+  if (io_len > 1) {
+    BX_ERROR(("bad length! page 0 write to port %04x, len=%u", (unsigned) offset,
+            (unsigned) io_len));
+    return;
+  }
+	
   
   switch (offset) {
   case 0x0:  // CR
@@ -1160,7 +1166,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.20 2001-09-29 19:16:34 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.21 2001-10-02 18:38:03 fries Exp $"));
   BX_NE2K_THIS devices = d;
 
 
@@ -1192,9 +1198,9 @@ bx_ne2k_c::init(bx_devices_c *d)
 						      addr, 
 						      "ne2000 NIC");
     }
-	BX_INFO(("irq %d, ioport 0x%x, mac %02x:%02x:%02x:%02x:%02x:%02x",
-				BX_NE2K_THIS s.base_irq,
+	BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
 				BX_NE2K_THIS s.base_address,
+				BX_NE2K_THIS s.base_irq,
 				BX_NE2K_THIS s.physaddr[0],
 				BX_NE2K_THIS s.physaddr[1],
 				BX_NE2K_THIS s.physaddr[2],

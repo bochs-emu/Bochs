@@ -31,7 +31,7 @@
 
 // Support varying number of rows of text.  This used to
 // be limited to only 25 lines.
-#define BX_MAX_TEXT_LINES 50
+#define BX_MAX_TEXT_LINES 260
 
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static

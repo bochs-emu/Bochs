@@ -1340,7 +1340,7 @@ bx_vga_c::update(void)
         MSL = bx_vga.s.CRTC.reg[0x09] & 0x1f;
         rows = (VDE+1)/(MSL+1);
         if (rows > BX_MAX_TEXT_LINES)
-          BX_PANIC(("text rows>50"));
+          BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
         bx_gui.dimension_update(8*80, 16*rows); // ??? should use font size
         // pass old text snapshot & new VGA memory contents
         start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
