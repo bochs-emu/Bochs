@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.123 2004-12-07 21:06:32 vruppert Exp $
+// $Id: rombios.c,v 1.124 2004-12-20 17:00:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -912,10 +912,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.123 $";
-static char bios_date_string[] = "$Date: 2004-12-07 21:06:32 $";
+static char bios_cvs_version_string[] = "$Revision: 1.124 $";
+static char bios_date_string[] = "$Date: 2004-12-20 17:00:19 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.123 2004-12-07 21:06:32 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.124 2004-12-20 17:00:19 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2883,8 +2883,11 @@ ata_packet_in_before_16:
         jmp  ata_packet_no_before
 
 ata_packet_in_before_32:
+        push eax
+ata_packet_in_before_32_loop:
         in   eax, dx
-        loop ata_packet_in_before_32
+        loop ata_packet_in_before_32_loop
+        pop  eax
 
 ata_packet_no_before:
         mov  cx, _ata_cmd_packet.lcount + 2[bp] 
@@ -2921,8 +2924,11 @@ ata_packet_in_after_16:
         jmp  ata_packet_done
 
 ata_packet_in_after_32:
+        push eax
+ata_packet_in_after_32_loop:
         in   eax, dx
-        loop ata_packet_in_after_32
+        loop ata_packet_in_after_32_loop
+        pop  eax
 
 ata_packet_done:
         pop  bp
