@@ -35,7 +35,8 @@ Changes to next release:
     ! improve performance of transcendential instructions.
 
 - Disassembler
-  - fixed MOV opcode 0x88, has exchanged the operands (h.johansson)
+  - fixed MOV opcode 0x88, had exchanged the operands (h.johansson)
+  - fixed MOV opcode 0xA3, had wrong operand size (h.johansson)
 
 - I/O devices
   - general

@@ -2304,7 +2304,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* A0 */  { "mov",       0,  AL,  Ob, XX },
   /* A1 */  { "mov",       0, eAX,  Ov, XX },
   /* A2 */  { "mov",       0,  Ob,  AL, XX },
-  /* A3 */  { "mov",       0,  Ov,  AX, XX },
+  /* A3 */  { "mov",       0,  Ov, eAX, XX },
   /* A4 */  { "movsb",     0,  Yb,  Xb, XX },
   /* A5 */  { "movs",      0,  Yv,  Xv, XX },
   /* A6 */  { "cmpsb",     0,  Xb,  Yb, XX },
