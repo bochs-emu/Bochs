@@ -1,0 +1,10 @@
+README for bochs-testing
+updated Fri Oct 11 10:36:50 EDT 2002
+
+Bryce created this cvs area on October 11, 2002 as a place to work on
+Bochs test code without cluttering up the source tree.
+
+The first thing I plan to put here is a series of tests for shared library
+support, to help figure out which platforms will be able to support plugins.
+Having this code in cvs makes it very easy to distribute to all the different
+places where I need to try it out.
