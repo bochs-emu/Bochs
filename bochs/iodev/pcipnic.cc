@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.2 2004-02-10 23:47:31 danielg4 Exp $
+// $Id: pcipnic.cc,v 1.3 2004-03-24 18:16:27 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -169,8 +169,8 @@ bx_pcipnic_c::reset(unsigned type)
     { 0x06, 0x80 }, { 0x07, 0x02 },	// status
     { 0x08, 0x01 },                 // revision number
     { 0x09, 0x00 },                 // interface
-    { 0x0a, 0x03 },                 // class_sub  PNIC Host Controller
-    { 0x0b, 0x0c },                 // class_base Serial Bus Controller
+    { 0x0a, 0x00 },                 // class_sub
+    { 0x0b, 0x02 },                 // class_base Network Controller
     { 0x0D, 0x20 },                 // bus latency
     { 0x0e, 0x00 },                 // header_type_generic
     // address space 0x20 - 0x23
