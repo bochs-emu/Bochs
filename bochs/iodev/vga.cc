@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.109 2004-08-16 08:02:15 vruppert Exp $
+// $Id: vga.cc,v 1.110 2004-08-23 18:47:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -278,12 +278,12 @@ bx_vga_c::init(void)
     DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
     DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
   }    
-#if !BX_SUPPORT_PCIUSB
-  for (addr=VBE_DISPI_IOPORT_INDEX_OLD; addr<=VBE_DISPI_IOPORT_DATA_OLD; addr++) {
-    DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
-    DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-  }    
-#endif
+  if (!BX_SUPPORT_PCIUSB || !bx_options.usb[0].Oenabled->get()) {
+    for (addr=VBE_DISPI_IOPORT_INDEX_OLD; addr<=VBE_DISPI_IOPORT_DATA_OLD; addr++) {
+      DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
+      DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
+    }    
+  }
   DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
                                theVga, VBE_DISPI_LFB_PHYSICAL_ADDRESS,
                                VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
@@ -1976,6 +1976,10 @@ bx_vga_c::mem_read(Bit32u addr)
   {
         return vbe_mem_read(addr);
   }
+  else if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  {
+        return 0xff;
+  }
 #endif  
 
 #if defined(VGA_TRACE_FEATURE)
@@ -2117,6 +2121,10 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
   if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
         vbe_mem_write(addr,value);
+        return;
+  }
+  else if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  {
         return;
   }
 #endif
