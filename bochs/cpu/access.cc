@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.17 2002-09-05 02:31:24 kevinlawton Exp $
+// $Id: access.cc,v 1.18 2002-09-05 04:56:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -346,7 +346,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-              *hostAddr = *data;
+              WriteHostWordToLittleEndian(hostAddr, *data);
               return;
               }
             }
@@ -400,7 +400,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-              *hostAddr = *data;
+              WriteHostDWordToLittleEndian(hostAddr, *data);
               return;
               }
             }
@@ -506,7 +506,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-              *data = *hostAddr;
+              ReadHostWordFromLittleEndian(hostAddr, *data);
               return;
               }
             }
@@ -561,7 +561,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-              *data = *hostAddr;
+              ReadHostDWordFromLittleEndian(hostAddr, *data);
               return;
               }
             }
@@ -677,7 +677,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-              *data = *hostAddr;
+              ReadHostWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.paddress1 =
                 BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
               BX_CPU_THIS_PTR address_xlation.pages = 1;
@@ -733,7 +733,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-              *data = *hostAddr;
+              ReadHostDWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.paddress1 =
                 BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
               BX_CPU_THIS_PTR address_xlation.pages = 1;
@@ -856,7 +856,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-              *hostAddr = *data;
+              WriteHostQWordToLittleEndian(hostAddr, *data);
               return;
               }
             }
@@ -910,7 +910,7 @@ accessOK:
             hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
               hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-              *data = *hostAddr;
+              ReadHostQWordFromLittleEndian(hostAddr, *data);
               return;
               }
             }

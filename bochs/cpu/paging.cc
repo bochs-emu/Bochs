@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.14 2002-09-05 03:09:59 kevinlawton Exp $
+// $Id: paging.cc,v 1.15 2002-09-05 04:56:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -672,7 +672,7 @@ pageTableWalk:
   // will be returned, and it's OK to OR zero in anyways.
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits |=
       (Bit32u) BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(ppf), rw);
-#endif  // BX_SupportGuest2HostTLB
+#endif
 
   return(paddress);
 
@@ -846,7 +846,7 @@ pageTableWalk:
 #if BX_SupportGuest2HostTLB
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits |=
     (Bit32u) BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(ppf), BX_READ);
-#endif  // BX_SupportGuest2HostTLB
+#endif
 
   return(paddress);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.87 2002-09-05 02:31:23 kevinlawton Exp $
+// $Id: bochs.h,v 1.88 2002-09-05 04:56:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -673,5 +673,76 @@ void bx_center_print (FILE *file, char *line, int maxwidth);
 int bx_init_hardware ();
 
 #include "instrument.h"
+
+
+// These are some convenience macros which abstract out accesses between
+// a variable in native byte ordering to/from guest (x86) memory, which is
+// always in little endian format.  You must deal with alignment (if your
+// system cares) and endian rearranging.  Don't assume anything.  You could
+// put some platform specific asm() statements here, to make use of native
+// instructions to help perform these operations more efficiently than C++.
+
+
+#ifdef __i386__
+
+#define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) \
+    *(hostPtr) = (nativeVar16)
+#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) \
+    *(hostPtr) = (nativeVar32)
+#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) \
+    *(hostPtr) = (nativeVar64)
+#define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) \
+    (nativeVar16) = *(hostPtr)
+#define ReadHostDWordFromLittleEndian(hostPtr, nativeVar32) \
+    (nativeVar32) = *(hostPtr)
+#define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) \
+    (nativeVar64) = *(hostPtr)
+
+#else
+
+#define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) { \
+    ((Bit8u *)(hostPtr))[0] = (Bit8u)  (nativeVar16); \
+    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar16)>>8); \
+    }
+#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) { \
+    ((Bit8u *)(hostPtr))[0] = (Bit8u)  (nativeVar32); \
+    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar32)>>8); \
+    ((Bit8u *)(hostPtr))[2] = (Bit8u) ((nativeVar32)>>16); \
+    ((Bit8u *)(hostPtr))[3] = (Bit8u) ((nativeVar32)>>24); \
+    }
+#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) { \
+    ((Bit8u *)(hostPtr))[0] = (Bit8u)  (nativeVar64); \
+    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar64)>>8); \
+    ((Bit8u *)(hostPtr))[2] = (Bit8u) ((nativeVar64)>>16); \
+    ((Bit8u *)(hostPtr))[3] = (Bit8u) ((nativeVar64)>>24); \
+    ((Bit8u *)(hostPtr))[4] = (Bit8u) ((nativeVar64)>>32); \
+    ((Bit8u *)(hostPtr))[5] = (Bit8u) ((nativeVar64)>>40); \
+    ((Bit8u *)(hostPtr))[6] = (Bit8u) ((nativeVar64)>>48); \
+    ((Bit8u *)(hostPtr))[7] = (Bit8u) ((nativeVar64)>>56); \
+    }
+#define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) { \
+    (nativeVar16) =  ((Bit16u) ((Bit8u *)(hostPtr))[0]) | \
+                    (((Bit16u) ((Bit8u *)(hostPtr))[1])<<8) ; \
+    }
+#define ReadHostDWordFromLittleEndian(hostPtr, nativeVar32) { \
+    (nativeVar32) =  ((Bit32u) ((Bit8u *)(hostPtr))[0]) | \
+                    (((Bit32u) ((Bit8u *)(hostPtr))[1])<<8) | \
+                    (((Bit32u) ((Bit8u *)(hostPtr))[2])<<16) | \
+                    (((Bit32u) ((Bit8u *)(hostPtr))[3])<<24); \
+    }
+#define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) { \
+    (nativeVar64) =  ((Bit64u) ((Bit8u *)(hostPtr))[0]) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[1])<<8) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[2])<<16) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[3])<<24) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[4])<<32) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[5])<<40) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[6])<<48) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[7])<<56); \
+    }
+
+#endif
+
+
 
 #endif  /* BX_BOCHS_H */
