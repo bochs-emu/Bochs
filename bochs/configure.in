@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.145 2002-10-03 02:26:32 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.146 2002-10-03 05:23:20 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1240,6 +1240,27 @@ AC_ARG_ENABLE(sb16,
     ]
   )
 AC_SUBST(SB16_OBJS)
+
+
+AC_MSG_CHECKING(for gdb stub enable)
+AC_ARG_ENABLE(gdb-stub,
+  [  --enable-gdb-stub                 enable gdb stub support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_GDBSTUB, 1)
+    GDBSTUB_VAR='$(GDBSTUB_OBJS)'
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_GDBSTUB, 0)
+    GDBSTUB_VAR=''
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_GDBSTUB, 0)
+    GDBSTUB_VAR=''
+    ]
+  )
+AC_SUBST(GDBSTUB_VAR)
 
 
 AC_ARG_ENABLE(hga-dumps,
