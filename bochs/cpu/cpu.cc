@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.22 2001-11-14 01:39:22 bdenney Exp $
+// $Id: cpu.cc,v 1.23 2002-02-15 22:58:06 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -229,6 +229,15 @@ async_events_processed:
     BX_CPU_THIS_PTR bytesleft -= i.ilen;
 fetch_decode_OK:
 
+#if BX_DEBUGGER
+    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that is about to be executed.
+//      fprintf(stderr, "begin about to execute:\n");
+      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+//      fprintf(stderr, "  end about to execute:\n");
+    }
+#endif
+
     if (i.rep_used && (i.attr & BxRepeatable)) {
 repeat_loop:
       if (i.attr & BxRepeatableZF) {
@@ -278,10 +287,10 @@ repeat_not_done:
 #endif
 
 #if BX_DEBUGGER
-    if (BX_CPU_THIS_PTR trace) {
+//    if (BX_CPU_THIS_PTR trace) {
       // print the instruction that was just executed.
-      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
-    }
+//      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+//    }
 #endif
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
@@ -313,10 +322,10 @@ repeat_done:
 #endif
 
 #if BX_DEBUGGER
-    if (BX_CPU_THIS_PTR trace) {
+//    if (BX_CPU_THIS_PTR trace) {
       // print the instruction that was just executed.
-      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
-    }
+//      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+//    }
 #endif
     BX_TICK1_IF_SINGLE_PROCESSOR();
 

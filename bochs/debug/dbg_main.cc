@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.36 2001-11-28 18:38:32 instinc Exp $
+// $Id: dbg_main.cc,v 1.37 2002-02-15 22:58:06 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2069,25 +2069,6 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
 				 bx_disasm_ibuf, bx_disasm_tbuf);
 
-    if (print_time)
-      fprintf (stderr, "(%u).[%lld] ", which_cpu, bx_pc_system.time_ticks());
-    else
-      fprintf (stderr, "(%u) ", which_cpu);
-    if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
-      fprintf(stderr, "%04x:%08x (%s): ", 
-	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
-	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
-      }
-    else {
-      fprintf(stderr, "%04x:%04x: ", 
-	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
-	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
-      }
-    for (unsigned j=0; j<ilen; j++)
-      fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
-    fprintf(stderr, ": %s\n", bx_disasm_tbuf);
-
     // Note: it would be nice to display only the modified registers here, the easy
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
     // in each cpu description (see cpu/cpu.h) and update/compare those "prev" values
@@ -2117,6 +2098,26 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 		BX_CPU(which_cpu)->eflags.rf,
 		BX_CPU(which_cpu)->eflags.vm
 		);
+
+    if (print_time)
+      fprintf (stderr, "(%u).[%lld] ", which_cpu, bx_pc_system.time_ticks());
+    else
+      fprintf (stderr, "(%u) ", which_cpu);
+    if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
+      fprintf(stderr, "%04x:%08x (%s): ", 
+	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
+	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
+      }
+    else {
+      fprintf(stderr, "%04x:%04x: ", 
+	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
+      }
+    for (unsigned j=0; j<ilen; j++)
+      fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
+    fprintf(stderr, ": %s\n", bx_disasm_tbuf);
+
     
     }
   else {
