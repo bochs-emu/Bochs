@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.112 2004-07-04 17:07:47 vruppert Exp $
+// $Id: rombios.c,v 1.113 2004-08-20 09:59:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -916,10 +916,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.112 $";
-static char bios_date_string[] = "$Date: 2004-07-04 17:07:47 $";
+static char bios_cvs_version_string[] = "$Revision: 1.113 $";
+static char bios_date_string[] = "$Date: 2004-08-20 09:59:49 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.112 2004-07-04 17:07:47 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.113 2004-08-20 09:59:49 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3309,9 +3309,32 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
 
   switch (regs.u.r8.ah) {
     case 0x24: /* A20 Control */
-      BX_INFO("int15: Func 24h, subfunc %02xh, A20 gate control not supported\n", (unsigned) regs.u.r8.al);
-      SET_CF();
-      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+      switch (regs.u.r8.al) {
+        case 0x00:
+          set_enable_a20(0);
+          CLEAR_CF();
+          regs.u.r8.ah = 0;
+          break;
+        case 0x01:
+          set_enable_a20(1);
+          CLEAR_CF();
+          regs.u.r8.ah = 0;
+          break;
+        case 0x02:
+          regs.u.r8.al = (inb(0x92) >> 1) & 0x01;
+          CLEAR_CF();
+          regs.u.r8.ah = 0;
+          break;
+        case 0x03:
+          CLEAR_CF();
+          regs.u.r8.ah = 0;
+          regs.u.r16.bx = 3;
+          break;
+        default:
+          BX_INFO("int15: Func 24h, subfunc %02xh, A20 gate control not supported\n", (unsigned) regs.u.r8.al);
+          SET_CF();
+          regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+      }
       break;
 
     case 0x41:
@@ -3791,6 +3814,10 @@ BX_DEBUG_INT15("case default:\n");
           SET_CF();
         }
 #endif
+      break;
+
+    case 0xd8:
+      bios_printf(BIOS_PRINTF_DEBUG, "EISA BIOS not present\n");
       break;
 
     case 0xe8:
@@ -8796,6 +8823,60 @@ no_serial:
   pop  dx
   ret
 
+rom_scan:
+  ;; Scan for existence of valid expansion ROMS.
+  ;;   Video ROM:   from 0xC0000..0xC7FFF in 2k increments
+  ;;   General ROM: from 0xC8000..0xDFFFF in 2k increments
+  ;;   System  ROM: only 0xE0000
+  ;;
+  ;; Header:
+  ;;   Offset    Value
+  ;;   0         0x55
+  ;;   1         0xAA
+  ;;   2         ROM length in 512-byte blocks
+  ;;   3         ROM initialization entry point (FAR CALL)
+
+  mov  cx, #0xc000
+rom_scan_loop:
+  mov  ds, cx
+  mov  ax, #0x0004 ;; start with increment of 4 (512-byte) blocks = 2k
+  cmp [0], #0xAA55 ;; look for signature
+  jne  rom_scan_increment
+  mov  al, [2]  ;; change increment to ROM length in 512-byte blocks
+
+  ;; We want our increment in 512-byte quantities, rounded to
+  ;; the nearest 2k quantity, since we only scan at 2k intervals.
+  test al, #0x03
+  jz   block_count_rounded
+  and  al, #0xfc ;; needs rounding up
+  add  al, #0x04
+block_count_rounded:
+
+  xor  bx, bx   ;; Restore DS back to 0000:
+  mov  ds, bx
+  push ax       ;; Save AX
+  ;; Push addr of ROM entry point
+  push cx       ;; Push seg
+  push #0x0003  ;; Push offset
+  mov  bp, sp   ;; Call ROM init routine using seg:off on stack
+  db   0xff     ;; call_far ss:[bp+0]
+  db   0x5e
+  db   0
+  cli           ;; In case expansion ROM BIOS turns IF on
+  add  sp, #2   ;; Pop offset value
+  pop  cx       ;; Pop seg value (restore CX)
+  pop  ax       ;; Restore AX
+rom_scan_increment:
+  shl  ax, #5   ;; convert 512-bytes blocks to 16-byte increments
+                ;; because the segment selector is shifted left 4 bits.
+  add  cx, ax
+  cmp  cx, #0xe000
+  jbe  rom_scan_loop
+
+  xor  ax, ax   ;; Restore DS back to 0000:
+  mov  ds, ax
+  ret
+
 ;; for 'C' strings and other data, insert them here with
 ;; a the following hack:
 ;; DATA_SEG_DEFS_HERE
@@ -8901,6 +8982,10 @@ post_default_ints:
   inc  bx
   inc  bx
   loop post_default_ints
+
+  ;; set vector 0x79 to zero
+  ;; this is used by 'gardian angel' protection system
+  SET_INT_VECTOR(0x79, #0, #0)
 
   ;; base memory in K 40:13 (word)
   mov  ax, #BASE_MEM_IN_K
@@ -9064,58 +9149,7 @@ post_default_ints:
 #endif
   out  0xa1, AL ;slave  pic: unmask IRQ 12, 13, 14
 
-
-  ;; Scan for existence of valid expansion ROMS.
-  ;;   Video ROM:   from 0xC0000..0xC7FFF in 2k increments
-  ;;   General ROM: from 0xC8000..0xDFFFF in 2k increments
-  ;;   System  ROM: only 0xE0000
-  ;;
-  ;; Header:
-  ;;   Offset    Value
-  ;;   0         0x55
-  ;;   1         0xAA
-  ;;   2         ROM length in 512-byte blocks
-  ;;   3         ROM initialization entry point (FAR CALL)
-
-  mov  cx, #0xc000
-rom_scan_loop:
-  mov  ds, cx
-  mov  ax, #0x0004 ;; start with increment of 4 (512-byte) blocks = 2k
-  cmp [0], #0xAA55 ;; look for signature
-  jne  rom_scan_increment
-  mov  al, [2]  ;; change increment to ROM length in 512-byte blocks
-
-  ;; We want our increment in 512-byte quantities, rounded to
-  ;; the nearest 2k quantity, since we only scan at 2k intervals.
-  test al, #0x03
-  jz   block_count_rounded
-  and  al, #0xfc ;; needs rounding up
-  add  al, #0x04
-block_count_rounded:
-
-  xor  bx, bx   ;; Restore DS back to 0000:
-  mov  ds, bx
-  push ax       ;; Save AX
-  ;; Push addr of ROM entry point
-  push cx       ;; Push seg
-  push #0x0003  ;; Push offset
-  mov  bp, sp   ;; Call ROM init routine using seg:off on stack
-  db   0xff     ;; call_far ss:[bp+0]
-  db   0x5e
-  db   0
-  cli           ;; In case expansion ROM BIOS turns IF on
-  add  sp, #2   ;; Pop offset value
-  pop  cx       ;; Pop seg value (restore CX)
-  pop  ax       ;; Restore AX
-rom_scan_increment:
-  shl  ax, #5   ;; convert 512-bytes blocks to 16-byte increments
-                ;; because the segment selector is shifted left 4 bits.
-  add  cx, ax
-  cmp  cx, #0xe000
-  jbe  rom_scan_loop
-
-  xor  ax, ax   ;; Restore DS back to 0000:
-  mov  ds, ax
+  call rom_scan
 
   call _print_bios_banner 
 
