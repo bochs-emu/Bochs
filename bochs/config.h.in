@@ -692,9 +692,12 @@ typedef
 
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_MMX 0
+#define BX_SUPPORT_3DNOW 0
 #define BX_SUPPORT_SSE 0
+#define BX_SUPPORT_DAZ 0
 #define BX_SUPPORT_SEP 0
 #define BX_SUPPORT_4MEG_PAGES 0
+
 #define BX_SupportGuest2HostTLB 0
 #define BX_SupportRepeatSpeedups 0
 #define BX_SupportGlobalPages 0
@@ -740,10 +743,12 @@ typedef
 #error "MMX cannot be compiled without FPU support"
 #endif
 
-#if BX_SUPPORT_SSE
-#if (!BX_SUPPORT_FPU) || (!BX_SUPPORT_MMX)
-#error "SSE cannot be compiled without FPU+MMX support"
+#if (BX_SUPPORT_3DNOW && !BX_SUPPORT_MMX)
+#error "3DNow! cannot be compiled without MMX support"
 #endif
+
+#if (BX_SUPPORT_SSE && !BX_SUPPORT_MMX)
+#error "SSE cannot be compiled without FPU+MMX support"
 #endif
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_SEP)
@@ -758,6 +763,9 @@ typedef
 #endif
 #if (BX_SUPPORT_SSE<2)
 #error X86-64 requires SSE2
+#endif
+#if (!BX_SUPPORT_3DNOW)
+#error X86-64 requires 3DNOW
 #endif
 #if !BX_SupportPAE
 #error X86-64 requires Physical Address Extensions (PAE)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.138 2003-05-10 22:25:48 kevinlawton Exp $
+// $Id: cpu.h,v 1.139 2003-05-15 16:41:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -261,7 +261,7 @@
 #define BX_MF_EXCEPTION  16
 #define BX_AC_EXCEPTION  17
 #define BX_MC_EXCEPTION  18
-#define BX_XF_EXCEPTION  19
+#define BX_XM_EXCEPTION  19
 
 /* MSR registers */
 #define BX_MSR_P5_MC_ADDR        0x0000
@@ -469,8 +469,18 @@ typedef struct {
     return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12);                         \
     }
 
-#define EFlagsOSZAPCMask 0x000008d5
-#define EFlagsOSZAPMask  0x000008d4
+#define EFlagsCFMask     0x00000001
+#define EFlagsPFMask     0x00000004
+#define EFlagsAFMask     0x00000010
+#define EFlagsZFMask     0x00000040
+#define EFlagsSFMask     0x00000080
+#define EFlagsOFMask     0x00000800
+
+#define EFlagsOSZAPCMask \
+    (EFlagsCFMask | EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
+
+#define EFlagsOSZAPMask  \
+    (EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
 
   } bx_flags_reg_t;
 
@@ -2063,11 +2073,40 @@ union {
 
 #if BX_SUPPORT_MMX || BX_SUPPORT_SSE
   BX_SMF void prepareMMX(void);
+  /* cause transition from FPU to MMX technology state */
+  BX_SMF void prepareFPU2MMX(void);
   BX_SMF void printMmxRegisters(void);
 #endif
 
 #if BX_SUPPORT_SSE
   BX_SMF void prepareSSE(void);
+  BX_SMF void check_exceptionsSSE(int);
+#endif
+
+#if BX_SUPPORT_3DNOW
+  BX_SMF void PFPNACC_PqQq(bxInstruction_c *i);
+  BX_SMF void PI2FW_PqQq(bxInstruction_c *i);
+  BX_SMF void PI2FD_PqQq(bxInstruction_c *i);
+  BX_SMF void PF2IW_PqQq(bxInstruction_c *i);
+  BX_SMF void PF2ID_PqQq(bxInstruction_c *i);
+  BX_SMF void PFNACC_PqQq(bxInstruction_c *i);
+  BX_SMF void PFCMPGE_PqQq(bxInstruction_c *i);
+  BX_SMF void PFMIN_PqQq(bxInstruction_c *i);
+  BX_SMF void PFRCP_PqQq(bxInstruction_c *i);
+  BX_SMF void PFRSQRT_PqQq(bxInstruction_c *i);
+  BX_SMF void PFSUB_PqQq(bxInstruction_c *i);
+  BX_SMF void PFADD_PqQq(bxInstruction_c *i);
+  BX_SMF void PFCMPGT_PqQq(bxInstruction_c *i);
+  BX_SMF void PFMAX_PqQq(bxInstruction_c *i);
+  BX_SMF void PFRCPIT1_PqQq(bxInstruction_c *i);
+  BX_SMF void PFRSQIT1_PqQq(bxInstruction_c *i);
+  BX_SMF void PFSUBR_PqQq(bxInstruction_c *i);
+  BX_SMF void PFACC_PqQq(bxInstruction_c *i);
+  BX_SMF void PFCMPEQ_PqQq(bxInstruction_c *i);
+  BX_SMF void PFMUL_PqQq(bxInstruction_c *i);
+  BX_SMF void PFRCPIT2_PqQq(bxInstruction_c *i);
+  BX_SMF void PMULHRW_PqQq(bxInstruction_c *i);
+  BX_SMF void PSWAPD_PqQq(bxInstruction_c *i);
 #endif
 
   /* SSE */
@@ -2403,12 +2442,8 @@ union {
 
   BX_SMF void IRET64(bxInstruction_c *);
 
-  //BX_SMF void IN_eAXIb(bxInstruction_c *);
-  //BX_SMF void OUT_IbeAX(bxInstruction_c *);
   BX_SMF void CALL_Aq(bxInstruction_c *);
   BX_SMF void JMP_Jq(bxInstruction_c *);
-  //BX_SMF void IN_eAXDX(bxInstruction_c *);
-  //BX_SMF void OUT_DXeAX(bxInstruction_c *);
 
   BX_SMF void MOV_CqRq(bxInstruction_c *);
   BX_SMF void MOV_DqRq(bxInstruction_c *);
@@ -2731,7 +2766,6 @@ union {
   BX_SMF void writeVirtualDQword(unsigned s, bx_address off, Bit8u *data);
   BX_SMF void writeVirtualDQwordAligned(unsigned s, bx_address off, Bit8u *data);
 #endif
-
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
                      unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
@@ -3161,7 +3195,6 @@ BX_CPU_C::set_PF_base(Bit8u val) {
     /* ??? could also mark other bits undefined here */ \
     }
 
-
 IMPLEMENT_EFLAGS_ACCESSORS()
 IMPLEMENT_EFLAG_ACCESSOR   (DF, 10)
 IMPLEMENT_EFLAG_ACCESSOR   (ID, 21)
@@ -3180,16 +3213,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 
 
 
-
 #define BX_REPE_PREFIX  10
 #define BX_REPNE_PREFIX 11
-
-
 
 #define BX_TASK_FROM_JUMP         10
 #define BX_TASK_FROM_CALL_OR_INT  11
 #define BX_TASK_FROM_IRET         12
-
 
 //
 // For decoding...
@@ -3251,21 +3280,21 @@ typedef enum _show_flags {
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
-
-#define setEFlagsOSZAPC(flags32) { \
-  BX_CPU_THIS_PTR eflags.val32 = \
+#define setEFlagsOSZAPC(flags32) {                       \
+  BX_CPU_THIS_PTR eflags.val32 =                         \
     (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | \
-    (flags32 & EFlagsOSZAPCMask); \
-  BX_CPU_THIS_PTR lf_flags_status = 0; \
+    (flags32 & EFlagsOSZAPCMask);                        \
+  BX_CPU_THIS_PTR lf_flags_status = 0;                   \
   }
 
-#define setEFlagsOSZAP(flags32) { \
-  BX_CPU_THIS_PTR eflags.val32 = \
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) | \
-    (flags32 & EFlagsOSZAPMask); \
-  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f; \
+#define setEFlagsOSZAP(flags32) {                        \
+  BX_CPU_THIS_PTR eflags.val32 =                         \
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) |  \
+    (flags32 & EFlagsOSZAPMask);                         \
+  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;           \
   }
+
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
 
 // This section defines some convience inline functions which do the
 // dirty work of asm() statements for arithmetic instructions on x86 hosts. 

@@ -19,7 +19,6 @@
 //
 
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
@@ -104,6 +103,12 @@ void BX_CPU_C::prepareMMX(void)
   if(BX_CPU_THIS_PTR cr0.em)
     exception(BX_UD_EXCEPTION, 0, 0);
 
+  /* cause transition from FPU to MMX technology state */
+  BX_CPU_THIS_PTR prepareFPU2MMX();
+}
+
+void BX_CPU_C::prepareFPU2MMX(void)
+{
   /* check SW_Summary bit for a pending FPU exceptions */
 #define FPU_SW_SUMMARY 0x0080
   if(FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
@@ -114,7 +119,6 @@ void BX_CPU_C::prepareMMX(void)
 }
 
 #endif
-
 
 /* 0F 60 */
 void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
@@ -247,7 +251,7 @@ void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -258,17 +262,17 @@ void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB0(result) = (MMXSB0(op1) > MMXSB0(op2)) ? 0xff : 0;
-  MMXUB1(result) = (MMXSB1(op1) > MMXSB1(op2)) ? 0xff : 0;
-  MMXUB2(result) = (MMXSB2(op1) > MMXSB2(op2)) ? 0xff : 0;
-  MMXUB3(result) = (MMXSB3(op1) > MMXSB3(op2)) ? 0xff : 0;
-  MMXUB4(result) = (MMXSB4(op1) > MMXSB4(op2)) ? 0xff : 0;
-  MMXUB5(result) = (MMXSB5(op1) > MMXSB5(op2)) ? 0xff : 0;
-  MMXUB6(result) = (MMXSB6(op1) > MMXSB6(op2)) ? 0xff : 0;
-  MMXUB7(result) = (MMXSB7(op1) > MMXSB7(op2)) ? 0xff : 0;
+  MMXUB0(op1) = (MMXSB0(op1) > MMXSB0(op2)) ? 0xff : 0;
+  MMXUB1(op1) = (MMXSB1(op1) > MMXSB1(op2)) ? 0xff : 0;
+  MMXUB2(op1) = (MMXSB2(op1) > MMXSB2(op2)) ? 0xff : 0;
+  MMXUB3(op1) = (MMXSB3(op1) > MMXSB3(op2)) ? 0xff : 0;
+  MMXUB4(op1) = (MMXSB4(op1) > MMXSB4(op2)) ? 0xff : 0;
+  MMXUB5(op1) = (MMXSB5(op1) > MMXSB5(op2)) ? 0xff : 0;
+  MMXUB6(op1) = (MMXSB6(op1) > MMXSB6(op2)) ? 0xff : 0;
+  MMXUB7(op1) = (MMXSB7(op1) > MMXSB7(op2)) ? 0xff : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPGTB_PqQq: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
@@ -281,7 +285,7 @@ void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -292,13 +296,13 @@ void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUW0(result) = (MMXSW0(op1) > MMXSW0(op2)) ? 0xffff : 0;
-  MMXUW1(result) = (MMXSW1(op1) > MMXSW1(op2)) ? 0xffff : 0;
-  MMXUW2(result) = (MMXSW2(op1) > MMXSW2(op2)) ? 0xffff : 0;
-  MMXUW3(result) = (MMXSW3(op1) > MMXSW3(op2)) ? 0xffff : 0;
+  MMXUW0(op1) = (MMXSW0(op1) > MMXSW0(op2)) ? 0xffff : 0;
+  MMXUW1(op1) = (MMXSW1(op1) > MMXSW1(op2)) ? 0xffff : 0;
+  MMXUW2(op1) = (MMXSW2(op1) > MMXSW2(op2)) ? 0xffff : 0;
+  MMXUW3(op1) = (MMXSW3(op1) > MMXSW3(op2)) ? 0xffff : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPGTW_PqQq: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
@@ -311,7 +315,7 @@ void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -322,11 +326,11 @@ void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUD0(result) = (MMXSD0(op1) > MMXSD0(op2)) ? 0xffffffff : 0;
-  MMXUD1(result) = (MMXSD1(op1) > MMXSD1(op2)) ? 0xffffffff : 0;
+  MMXUD0(op1) = (MMXSD0(op1) > MMXSD0(op2)) ? 0xffffffff : 0;
+  MMXUD1(op1) = (MMXSD1(op1) > MMXSD1(op2)) ? 0xffffffff : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPGTD_PqQq: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
@@ -560,7 +564,7 @@ void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
 /* 0F 70 */
 void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op, result;
@@ -583,7 +587,7 @@ void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("PSHUFW_PqQqIb: required SSE, use --enable-sse option"));
+  BX_INFO(("PSHUFW_PqQqIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -594,7 +598,7 @@ void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -605,17 +609,17 @@ void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB0(result) = (MMXUB0(op1) == MMXUB0(op2)) ? 0xff : 0;
-  MMXUB1(result) = (MMXUB1(op1) == MMXUB1(op2)) ? 0xff : 0;
-  MMXUB2(result) = (MMXUB2(op1) == MMXUB2(op2)) ? 0xff : 0;
-  MMXUB3(result) = (MMXUB3(op1) == MMXUB3(op2)) ? 0xff : 0;
-  MMXUB4(result) = (MMXUB4(op1) == MMXUB4(op2)) ? 0xff : 0;
-  MMXUB5(result) = (MMXUB5(op1) == MMXUB5(op2)) ? 0xff : 0;
-  MMXUB6(result) = (MMXUB6(op1) == MMXUB6(op2)) ? 0xff : 0;
-  MMXUB7(result) = (MMXUB7(op1) == MMXUB7(op2)) ? 0xff : 0;
+  MMXUB0(op1) = (MMXUB0(op1) == MMXUB0(op2)) ? 0xff : 0;
+  MMXUB1(op1) = (MMXUB1(op1) == MMXUB1(op2)) ? 0xff : 0;
+  MMXUB2(op1) = (MMXUB2(op1) == MMXUB2(op2)) ? 0xff : 0;
+  MMXUB3(op1) = (MMXUB3(op1) == MMXUB3(op2)) ? 0xff : 0;
+  MMXUB4(op1) = (MMXUB4(op1) == MMXUB4(op2)) ? 0xff : 0;
+  MMXUB5(op1) = (MMXUB5(op1) == MMXUB5(op2)) ? 0xff : 0;
+  MMXUB6(op1) = (MMXUB6(op1) == MMXUB6(op2)) ? 0xff : 0;
+  MMXUB7(op1) = (MMXUB7(op1) == MMXUB7(op2)) ? 0xff : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPEQB_PqQq: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
@@ -628,7 +632,7 @@ void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -639,13 +643,13 @@ void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUW0(result) = (MMXUW0(op1) == MMXUW0(op2)) ? 0xffff : 0;
-  MMXUW1(result) = (MMXUW1(op1) == MMXUW1(op2)) ? 0xffff : 0;
-  MMXUW2(result) = (MMXUW2(op1) == MMXUW2(op2)) ? 0xffff : 0;
-  MMXUW3(result) = (MMXUW3(op1) == MMXUW3(op2)) ? 0xffff : 0;
+  MMXUW0(op1) = (MMXUW0(op1) == MMXUW0(op2)) ? 0xffff : 0;
+  MMXUW1(op1) = (MMXUW1(op1) == MMXUW1(op2)) ? 0xffff : 0;
+  MMXUW2(op1) = (MMXUW2(op1) == MMXUW2(op2)) ? 0xffff : 0;
+  MMXUW3(op1) = (MMXUW3(op1) == MMXUW3(op2)) ? 0xffff : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPEQW_PqQq: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
@@ -658,7 +662,7 @@ void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -669,11 +673,11 @@ void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUD0(result) = (MMXUD0(op1) == MMXUD0(op2)) ? 0xffffffff : 0;
-  MMXUD1(result) = (MMXUD1(op1) == MMXUD1(op2)) ? 0xffffffff : 0;
+  MMXUD0(op1) = (MMXUD0(op1) == MMXUD0(op2)) ? 0xffffffff : 0;
+  MMXUD1(op1) = (MMXUD1(op1) == MMXUD1(op2)) ? 0xffffffff : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPEQD_PqQq: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
@@ -683,7 +687,7 @@ void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
 /* 0F 77 */
 void BX_CPU_C::EMMS(bxInstruction_c *i)
 {
-#if BX_SUPPORT_MMX
+#if BX_SUPPORT_MMX || BX_SUPPORT_3DNOW
   BX_CPU_THIS_PTR prepareMMX();
   FPU_TWD  = 0xffff;
 #else
@@ -753,7 +757,7 @@ void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
 /* 0F C4 */
 void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn());
@@ -788,7 +792,7 @@ void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PINSRW_PqEdIb: required SSE, use --enable-sse option"));
+  BX_INFO(("PINSRW_PqEdIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -796,7 +800,7 @@ void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
 /* 0F C5 */
 void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
@@ -805,7 +809,7 @@ void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REG(i->nnn(), result);
 #else
-  BX_INFO(("PEXTRW_PqEdIb: required SSE, use --enable-sse option"));
+  BX_INFO(("PEXTRW_PqEdIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -977,7 +981,7 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 /* 0F D7 */
 void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
@@ -996,7 +1000,7 @@ void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
   BX_WRITE_32BIT_REG(i->nnn(), result);
   
 #else
-  BX_INFO(("PMOVMSKB_GdPRq: required SSE, use --enable-sse option"));
+  BX_INFO(("PMOVMSKB_GdPRq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1072,7 +1076,7 @@ void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
 /* 0F DA */
 void BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1098,7 +1102,7 @@ void BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
-  BX_INFO(("PMINUB_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PMINUB_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1197,7 +1201,7 @@ void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
 /* 0F DE */
 void BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1223,7 +1227,7 @@ void BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
-  BX_INFO(("PMAXUB_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PMAXUB_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1258,10 +1262,10 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 /* 0F E0 */
 void BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1272,19 +1276,19 @@ void BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB0(result) = (MMXUB0(op1) + MMXUB0(op2) + 1) >> 1;
-  MMXUB1(result) = (MMXUB1(op1) + MMXUB1(op2) + 1) >> 1;
-  MMXUB2(result) = (MMXUB2(op1) + MMXUB2(op2) + 1) >> 1;
-  MMXUB3(result) = (MMXUB3(op1) + MMXUB3(op2) + 1) >> 1;
-  MMXUB4(result) = (MMXUB4(op1) + MMXUB4(op2) + 1) >> 1;
-  MMXUB5(result) = (MMXUB5(op1) + MMXUB5(op2) + 1) >> 1;
-  MMXUB6(result) = (MMXUB6(op1) + MMXUB6(op2) + 1) >> 1;
-  MMXUB7(result) = (MMXUB7(op1) + MMXUB7(op2) + 1) >> 1;
+  MMXUB0(op1) = (MMXUB0(op1) + MMXUB0(op2) + 1) >> 1;
+  MMXUB1(op1) = (MMXUB1(op1) + MMXUB1(op2) + 1) >> 1;
+  MMXUB2(op1) = (MMXUB2(op1) + MMXUB2(op2) + 1) >> 1;
+  MMXUB3(op1) = (MMXUB3(op1) + MMXUB3(op2) + 1) >> 1;
+  MMXUB4(op1) = (MMXUB4(op1) + MMXUB4(op2) + 1) >> 1;
+  MMXUB5(op1) = (MMXUB5(op1) + MMXUB5(op2) + 1) >> 1;
+  MMXUB6(op1) = (MMXUB6(op1) + MMXUB6(op2) + 1) >> 1;
+  MMXUB7(op1) = (MMXUB7(op1) + MMXUB7(op2) + 1) >> 1;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
-  BX_INFO(("PAVGB_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PAVGB_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1389,10 +1393,10 @@ void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 /* 0F E3 */
 void BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1403,15 +1407,15 @@ void BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUW0(result) = (MMXUW0(op1) + MMXUW0(op2) + 1) >> 1;
-  MMXUW1(result) = (MMXUW1(op1) + MMXUW1(op2) + 1) >> 1;
-  MMXUW2(result) = (MMXUW2(op1) + MMXUW2(op2) + 1) >> 1;
-  MMXUW3(result) = (MMXUW3(op1) + MMXUW3(op2) + 1) >> 1;
+  MMXUW0(op1) = (MMXUW0(op1) + MMXUW0(op2) + 1) >> 1;
+  MMXUW1(op1) = (MMXUW1(op1) + MMXUW1(op2) + 1) >> 1;
+  MMXUW2(op1) = (MMXUW2(op1) + MMXUW2(op2) + 1) >> 1;
+  MMXUW3(op1) = (MMXUW3(op1) + MMXUW3(op2) + 1) >> 1;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
-  BX_INFO(("PAVGW_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PAVGW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1419,7 +1423,7 @@ void BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
 /* 0F E4 */
 void BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -1446,7 +1450,7 @@ void BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PMULHUW_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PMULHUW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1489,7 +1493,7 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 /* 0F E7 */
 void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   if (i->modC0()) {
@@ -1501,7 +1505,7 @@ void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &reg);
 
 #else
-  BX_INFO(("MOVNTQ_MqPq: required SSE, use --enable-sse option"));
+  BX_INFO(("MOVNTQ_MqPq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1573,7 +1577,7 @@ void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
 /* 0F EA */
 void BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1595,7 +1599,7 @@ void BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
-  BX_INFO(("PMINSW_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PMINSW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1694,7 +1698,7 @@ void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
 /* 0F EE */
 void BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1716,7 +1720,7 @@ void BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
-  BX_INFO(("PMAXSW_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PMAXSW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1919,7 +1923,7 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 /* 0F F6 */
 void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -1948,7 +1952,7 @@ void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
-  BX_INFO(("PSADBW_PqQq: required SSE, use --enable-sse option"));
+  BX_INFO(("PSADBW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1956,7 +1960,7 @@ void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
 /* 0F F7 */
 void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   if (! i->modC0()) {
@@ -1964,37 +1968,43 @@ void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
     UndefinedOpcode(i);
   }
 
-  Bit32u edi;
+  bx_address rdi;
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn()), 
     mask = BX_READ_MMX_REG(i->rm());
 
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) { 	/* 64 bit operand size mode */
+      rdi = RDI;
+  } 
+  else
+#endif
   if (i->as32L()) {
-      edi = EDI;
+      rdi = EDI;
   }
-  else {   /* 16 bit address mode */
-      edi = DI;
+  else {   		/* 16 bit address mode */
+      rdi = DI;
   }
 
   /* partial write, no data will be written to memory if mask is all 0s */
   if(MMXUB0(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+0, &MMXUB0(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+0, &MMXUB0(op));
   if(MMXUB1(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+1, &MMXUB1(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+1, &MMXUB1(op));
   if(MMXUB2(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+2, &MMXUB2(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+2, &MMXUB2(op));
   if(MMXUB3(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+3, &MMXUB3(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+3, &MMXUB3(op));
   if(MMXUB4(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+4, &MMXUB4(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+4, &MMXUB4(op));
   if(MMXUB5(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+5, &MMXUB5(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+5, &MMXUB5(op));
   if(MMXUB6(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+6, &MMXUB6(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+6, &MMXUB6(op));
   if(MMXUB7(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, edi+7, &MMXUB7(op));
+      write_virtual_byte(BX_SEG_REG_DS, rdi+7, &MMXUB7(op));
 
 #else
-  BX_INFO(("MASKMOVQ_PqPRq: required SSE, use --enable-sse option"));
+  BX_INFO(("MASKMOVQ_PqPRq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }

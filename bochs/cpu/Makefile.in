@@ -62,6 +62,8 @@ OBJS = \
 	ctrl_xfer32.o \
 	ctrl_xfer16.o \
 	mmx.o \
+	3dnow.o \
+        softfloat.o \
         fpu.o \
 	sse.o \
 	sse_move.o \
@@ -524,6 +526,19 @@ fpu.o: fpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h \
  ../instrument/stubs/instrument.h
 mmx.o: mmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
+ ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
+ ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+ ../gui/keymap.h ../iodev/iodev.h ../iodev/vga.h ../iodev/biosdev.h \
+ ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
+ ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
+ ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../instrument/stubs/instrument.h
+softfloat.o: softfloat.cc ../config.h ../cpu/softfloat-macros.h \
+ ../cpu/softfloat-specialize.h ../cpu/softfloat.h
+3dnow.o: 3dnow.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
  ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
