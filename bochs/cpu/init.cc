@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.54 2004-10-13 20:58:16 sshwarts Exp $
+// $Id: init.cc,v 1.55 2004-10-16 10:18:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.54 2004-10-13 20:58:16 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.55 2004-10-16 10:18:01 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -465,17 +465,13 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 #endif
 }
 
-
 BX_CPU_C::~BX_CPU_C(void)
 {
   BX_INSTR_SHUTDOWN(BX_CPU_ID);
   BX_DEBUG(( "Exit."));
 }
 
-
-
-  void
-BX_CPU_C::reset(unsigned source)
+void BX_CPU_C::reset(unsigned source)
 {
   UNUSED(source); // either BX_RESET_HARDWARE or BX_RESET_SOFTWARE
 
@@ -696,25 +692,19 @@ BX_CPU_C::reset(unsigned source)
 #endif
 
 
-  /* GDTR (Global Descriptor Table Register) */
 #if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR gdtr.base         = 0x00000000;  /* undefined */
-  BX_CPU_THIS_PTR gdtr.limit        =     0x0000;  /* undefined */
-  /* ??? AR=Present, Read/Write */
-#endif
+  /* GDTR (Global Descriptor Table Register) */
+  BX_CPU_THIS_PTR gdtr.base         = 0x00000000;
+  BX_CPU_THIS_PTR gdtr.limit        =     0xFFFF;
 
   /* IDTR (Interrupt Descriptor Table Register) */
-#if BX_CPU_LEVEL >= 2
   BX_CPU_THIS_PTR idtr.base         = 0x00000000;
-  BX_CPU_THIS_PTR idtr.limit        =     0x03FF; /* always byte granular */ /* ??? */
-  /* ??? AR=Present, Read/Write */
-#endif
+  BX_CPU_THIS_PTR idtr.limit        =     0xFFFF; /* always byte granular */
 
   /* LDTR (Local Descriptor Table Register) */
-#if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR ldtr.selector.value =     0x0000;
-  BX_CPU_THIS_PTR ldtr.selector.index =     0x0000;
-  BX_CPU_THIS_PTR ldtr.selector.ti = 0;
+  BX_CPU_THIS_PTR ldtr.selector.value = 0x0000;
+  BX_CPU_THIS_PTR ldtr.selector.index = 0x0000;
+  BX_CPU_THIS_PTR ldtr.selector.ti  = 0;
   BX_CPU_THIS_PTR ldtr.selector.rpl = 0;
 
   BX_CPU_THIS_PTR ldtr.cache.valid   = 0; /* not valid */
@@ -725,11 +715,8 @@ BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.base      = 0x00000000;
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit     =     0xFFFF;
-#endif
 
-  /* TR (Task Register) */
-#if BX_CPU_LEVEL >= 2
-  /* ??? I don't know what state the TR comes up in */
+  /* TR (Task Register) */   /* ??? I don't know what state the TR comes up in */
   BX_CPU_THIS_PTR tr.selector.value =     0x0000;
   BX_CPU_THIS_PTR tr.selector.index =     0x0000; /* undefined */
   BX_CPU_THIS_PTR tr.selector.ti    =     0;
@@ -740,8 +727,8 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0;
   BX_CPU_THIS_PTR tr.cache.type     = 0; /* invalid */
-  BX_CPU_THIS_PTR tr.cache.u.tss286.base             = 0x00000000; /* undefined */
-  BX_CPU_THIS_PTR tr.cache.u.tss286.limit            =     0x0000; /* undefined */
+  BX_CPU_THIS_PTR tr.cache.u.tss286.base     = 0x00000000; /* undefined */
+  BX_CPU_THIS_PTR tr.cache.u.tss286.limit    =     0x0000; /* undefined */
 #endif
 
   // DR0 - DR7 (Debug Registers)
@@ -890,9 +877,7 @@ BX_CPU_C::reset(unsigned source)
   BX_INSTR_RESET(BX_CPU_ID);
 }
 
-
-  void
-BX_CPU_C::sanity_checks(void)
+void BX_CPU_C::sanity_checks(void)
 {
   Bit8u al, cl, dl, bl, ah, ch, dh, bh;
   Bit16u ax, cx, dx, bx, sp, bp, si, di;
@@ -971,8 +956,7 @@ BX_CPU_C::sanity_checks(void)
 }
 
 
-  void
-BX_CPU_C::set_INTR(bx_bool value)
+void BX_CPU_C::set_INTR(bx_bool value)
 {
   BX_CPU_THIS_PTR INTR = value;
   BX_CPU_THIS_PTR async_event = 1;
