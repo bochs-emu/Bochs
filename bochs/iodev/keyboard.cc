@@ -31,7 +31,7 @@
 #include "bochs.h"
 
 
-
+#define VERBOSE_KBD_DEBUG 0
 
 
 #define MOUSE_MODE_RESET  10
@@ -1303,8 +1303,10 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
   if ( (delta_y < -1) || (delta_y > 1) )
     delta_y /= 2;
 
-  //fprintf(stderr, "# MOUSE: Dx=%d Dy=%d\n",
-  //  delta_x, delta_y);
+#ifdef VERBOSE_KBD_DEBUG
+  if (delta_x != 0 || delta_y != 0)
+    bx_printf("[mouse] Dx=%d Dy=%d\n", delta_x, delta_y);
+#endif  /* ifdef VERBOSE_KBD_DEBUG */
 
   b1 = (button_state & 0x0f) | 0x08; // bit3 always set
 
