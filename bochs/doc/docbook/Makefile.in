@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.15 2003-11-14 00:38:54 cbothamy Exp $
+# $Id: Makefile.in,v 1.16 2003-12-07 23:36:58 cbothamy Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -72,7 +72,7 @@ $(TARGZ): all copy_from_srcdir fixperm
 	tar cf - $(INSTALL_LIST) --exclude=CVS --exclude=*.dbk | gzip > $(TARGZ)
 
 install: all copy_from_srcdir
-	for i in $(DESTDIR)$(docdir); do if test ! -d $$i; then mkdir $$i; fi; done
+	for i in $(DESTDIR)$(docdir); do if test ! -d $$i; then mkdir -p $$i; fi; done
 	#for i in $(INSTALL_LIST); do cp -r $$i $(DESTDIR)$(docdir); done
 	for i in $(INSTALL_LIST); do tar cf - --exclude=CVS $$i | ( cd $(DESTDIR)$(docdir); tar xf - ); done
 
