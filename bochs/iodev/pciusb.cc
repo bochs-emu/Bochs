@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.16 2004-12-24 21:38:00 vruppert Exp $
+// $Id: pciusb.cc,v 1.17 2004-12-26 09:28:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -314,13 +314,13 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
       val = BX_USB_THIS hub[0].usb_sof.sof_timing;
       break;
 
-    case 0x14: // port2 non existant, but linux systems check it to see if there are more than 2
-      BX_ERROR(("read from non existant port 0x14 (port 2)"));
-      val = 0xFF7F;  //TODO: if non existant, does it return 0xFF7F
+    case 0x14: // port #3 non existant, but linux systems check it to see if there are more than 2
+      BX_ERROR(("read from non existant offset 0x14 (port #3)"));
+      val = 0xFF7F;
       break;
 
-    case 0x10: // port0
-    case 0x12: // port1
+    case 0x10: // port #1
+    case 0x12: // port #2
       port = (offset & 0x0F) >> 1;
       if (port < USB_NUM_PORTS) {
         val = BX_USB_THIS hub[0].usb_port[port].suspend << 12
@@ -485,22 +485,22 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
        BX_USB_THIS hub[0].usb_sof.sof_timing = value;
        break;
 
-    case 0x14: // port2 non existant, but linux systems check it to see if there are more than 2
-      BX_ERROR(("write from non existant port 0x14 (port 2)"));
+    case 0x14: // port #3 non existant, but linux systems check it to see if there are more than 2
+      BX_ERROR(("write to non existant offset 0x14 (port #3)"));
       break;
 
-    case 0x10: // port0
-    case 0x12: // port1
+    case 0x10: // port #1
+    case 0x12: // port #2
       port = (offset & 0x0F) >> 1;
       if (port < USB_NUM_PORTS) {
         if (value & ((1<<5) | (1<<4) | (1<<0)))
-          BX_DEBUG(("write to one or more read-only bits in port%d register: 0x%04x", port, value));
+          BX_DEBUG(("write to one or more read-only bits in port #%d register: 0x%04x", port+1, value));
         if (!(value & (1<<7)))
-          BX_DEBUG(("write to port%d register bit 7 = 0", port));
+          BX_DEBUG(("write to port #%d register bit 7 = 0", port+1));
         if (value & (1<<8))
-          BX_DEBUG(("write to bit 8 in port%d register ignored", port));
+          BX_DEBUG(("write to bit 8 in port #%d register ignored", port+1));
         if ((value & (1<<12)) && BX_USB_THIS hub[0].usb_command.suspend)
-          BX_DEBUG(("write to port%d register bit 12 when in Global-Suspend", port));
+          BX_DEBUG(("write to port #%d register bit 12 when in Global-Suspend", port+1));
 
         BX_USB_THIS hub[0].usb_port[port].suspend = (value & (1<<12)) ? 1 : 0;
         BX_USB_THIS hub[0].usb_port[port].reset = (value & (1<<9)) ? 1 : 0;
@@ -520,7 +520,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
           // are we are currently connected/disconnected
           BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].connect_status = 0;
           usb_set_connect_status(BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].dev_type, 1);
-          BX_DEBUG(("Port Reset"));
+          BX_DEBUG(("Port #%d: Reset", port+1));
         }
         break;
       }
@@ -780,6 +780,10 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
               break;
 
             case 2:  // mouse
+              if (!BX_USB_THIS mouse_x && !BX_USB_THIS mouse_y) {
+                // if there's no new movement, handle delayed one
+                BX_USB_THIS usb_mouse_enq(0, 0, BX_USB_THIS mouse_z, BX_USB_THIS b_state);
+              }
               device_buffer[0] = (Bit8u) BX_USB_THIS b_state;
               device_buffer[1] = (Bit8s) BX_USB_THIS mouse_x;
               device_buffer[2] = (Bit8s) BX_USB_THIS mouse_y;
@@ -787,7 +791,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
               BX_USB_THIS b_state = 0;
               BX_USB_THIS mouse_x = 0;
               BX_USB_THIS mouse_y = 0;
-              BX_USB_THIS mouse_z = 0;  // if wheel mouse
+              BX_USB_THIS mouse_z = 0;
               BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
               break;
