@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.96 2005-01-13 19:03:37 sshwarts Exp $
+// $Id: cpu.cc,v 1.97 2005-02-05 20:56:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -103,8 +103,6 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   bxInstruction_c iStorage BX_CPP_AlignN(32);
   bxInstruction_c *i = &iStorage;
 
-  BxExecutePtr_t execute;
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
 #if BX_MAGIC_BREAKPOINT
@@ -159,8 +157,8 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
     if (handleAsyncEvent()) {
       // If request to return to caller ASAP.
       return;
-      }
     }
+  }
 
 #if BX_DEBUGGER
   {
@@ -199,12 +197,8 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
   if ((cache_entry->pAddr == pAddr) &&
       (cache_entry->writeStamp == pageWriteStamp))
   {
-    // iCache hit. Instruction is already decoded and stored in
-    // the instruction cache.
-    BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
-    execute = i->execute; // fetch as soon as possible for speculation.
-    if (resolveModRM)
-      BX_CPU_CALL_METHODR(resolveModRM, (i));
+    // iCache hit. Instruction is already decoded and stored in the
+    // instruction cache.
 
 #if BX_INSTRUMENTATION
     // An instruction was found in the iCache.
@@ -265,12 +259,12 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
                   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 #endif
     }
-
-    BxExecutePtr_tR resolveModRM = i->ResolveModrm;
-    execute = i->execute; // fetch as soon as possible for speculation.
-    if (resolveModRM)
-      BX_CPU_CALL_METHODR(resolveModRM, (i));
   }
+
+  BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation
+  BxExecutePtr_t execute = i->execute; // fetch as soon as possible for speculation
+  if (resolveModRM)
+    BX_CPU_CALL_METHODR(resolveModRM, (i));
 
   // An instruction will have been fetched using either the normal case,
   // or the boundary fetch (across pages), by this point.
@@ -709,19 +703,20 @@ BX_CPU_C::prefetch(void)
 
   if (((Bit32u)temp_rip) > temp_limit) {
     BX_PANIC(("prefetch: RIP > CS.limit"));
-    }
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
 #if BX_SUPPORT_PAGING
   if (BX_CPU_THIS_PTR cr0.pg) {
     // aligned block guaranteed to be all in one page, same A20 address
     pAddr = itranslate_linear(laddr, CPL==3);
     pAddr = A20ADDR(pAddr);
-    }
+  }
   else
 #endif // BX_SUPPORT_PAGING
-    {
+  {
     pAddr = A20ADDR(laddr);
-    }
+  }
 
   // check if segment boundary comes into play
   //if ((temp_limit - (Bit32u)temp_rip) < 4096) {
@@ -777,15 +772,16 @@ BX_CPU_C::boundaryFetch(bxInstruction_c *i)
 
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-    if (remainingInPage > 15) {
-      BX_PANIC(("fetch_decode: remaining > max ilen"));
-      }
+    if (remainingInPage >= 15) {
+      BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
     fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
     // Read all leftover bytes in current page up to boundary.
     for (j=0; j<remainingInPage; j++) {
       fetchBuffer[j] = *fetchPtr++;
-      }
+    }
 
     // The 2nd chunk of the instruction is on the next page.
     // Set RIP to the 0th byte of the 2nd page, and force a
@@ -795,7 +791,7 @@ BX_CPU_C::boundaryFetch(bxInstruction_c *i)
     prefetch();
     if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
       BX_PANIC(("fetch_decode: small window size after prefetch"));
-      }
+    }
 
     // We can fetch straight from the 0th byte, which is eipFetchPtr;
     fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
@@ -803,20 +799,24 @@ BX_CPU_C::boundaryFetch(bxInstruction_c *i)
     // read leftover bytes in next page
     for (; j<15; j++) {
       fetchBuffer[j] = *fetchPtr++;
-      }
+    }
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
       ret = fetchDecode64(fetchBuffer, i, 15);
-      }
+    }
     else
 #endif
-      {
+    {
       ret = fetchDecode(fetchBuffer, i, 15);
-      }
+    }
+
+    if (ret==0) {
+      BX_INFO(("fetchDecode #GP(0): cross boundary"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
     // Restore EIP since we fudged it to start at the 2nd page boundary.
     RIP = BX_CPU_THIS_PTR prev_eip;
-    if (ret==0)
-      BX_PANIC(("fetchDecode: cross boundary: ret==0"));
 
 // Since we cross an instruction boundary, note that we need a prefetch()
 // again on the next instruction.  Perhaps we can optimize this to
