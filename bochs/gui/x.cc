@@ -1246,6 +1246,7 @@ headerbar_click(int x, int y)
   void
 bx_gui_c::exit(void)
 {
+  XCloseDisplay (bx_x_display);
   BX_INFO(("Exit."));
 }
 
