@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.10 2004-03-09 21:58:37 vruppert Exp $
+// $Id: serial_raw.cc,v 1.11 2004-03-12 14:33:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -221,12 +221,29 @@ serial_raw::setup_port ()
 void 
 serial_raw::transmit (int val)
 {
+#ifdef WIN32
+  DWORD DErr, Len2;
+  OVERLAPPED tx_ovl;
+#endif
+
   BX_DEBUG (("transmit %d", val));
   if (present) {
 #ifdef WIN32
     if (DCBchanged) {
       setup_port();
+    } else {
+      ClearCommError(hCOM, &DErr, NULL);
     }
+    memset(&tx_ovl, 0, sizeof(OVERLAPPED));
+    tx_ovl.hEvent = CreateEvent(NULL,TRUE,TRUE,"transmit");
+    if (!WriteFile(hCOM, &val, 1, &Len2, &tx_ovl)) {
+      if (GetLastError() == ERROR_IO_PENDING) {
+        if (WaitForSingleObject(tx_ovl.hEvent, 100) == WAIT_OBJECT_0) {
+          GetOverlappedResult(hCOM, &tx_ovl, &Len2, FALSE);
+        }
+      }
+    }
+    if (Len2 != 1) BX_ERROR(("transmit failed: len = %d", Len2));
 #endif
   }
 }
