@@ -2,7 +2,7 @@ Changes in 2.1 (January 9, 2004):
 
 Brief summary :
 - New disassembler
-- 3DNow/SSE/SSE2/PNI instruction support
+- 3DNow!/SSE/SSE2/PNI instruction support
 - Vmware3/Sparse/Undoable/Growing harddisk images support
 - No more X11 vga font required
 
@@ -57,13 +57,12 @@ Detailed change log :
         - floatx80_to_float64, floatx80_round_to_int
         - floatx80_add,        floatx80_sub, 
         - floatx80_mul,        floatx80_div
-  - 64-bit addressing support for x86-64 mode (Peter)
   - implemented FCMOVcc instructions (Stanislav)
-  - fixed 64bit addresses FPU problem (Peter)
+  - 64-bit addressing support for x86-64 mode (Peter)
 
 - Disassembler
   - replaced Bochs disassember. New table-based disassembler fully supports
-    all IA-32 instruction sets including FPU/MMX/XMM/SSE/SSE2/SSE3 opcodes.
+    all IA-32 instruction sets including all FPU/MMX/SSE/SSE2/SSE3 opcodes.
     (Stanislav)
 
 - I/O devices
