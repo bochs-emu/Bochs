@@ -154,6 +154,9 @@ struct bx_mxcsr_t
 {
   Bit32u mxcsr;
 
+  bx_mxcsr_t (Bit32u val)
+	: mxcsr(val) {}
+
 #define IMPLEMENT_MXCSR_ACCESSOR(name, bitmask, bitnum)        \
   int get_##name () const {                                    \
     return (mxcsr & (bitmask)) >> (bitnum);                    \

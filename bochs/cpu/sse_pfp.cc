@@ -41,9 +41,9 @@ void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
   }
 }
 
-static void mxcsr_to_softfloat_status_word(softfloat_status_word_t &status, bx_mxcsr_t mxcsr)
+static void mxcsr_to_softfloat_status_word(softfloat_status_word_t &status, bx_mxcsr_t mxcsr, unsigned precision = 32)
 {
-  status.float_precision = 32; // affects only float32 and float80 operations
+  status.float_precision = precision; // affects only float32 and float80 operations
   status.float_detect_tininess = float_tininess_before_rounding;
   status.float_exception_flags = 0; // clear exceptions before execution
   status.float_nan_handling_mode = float_first_operand_nan;
@@ -53,21 +53,15 @@ static void mxcsr_to_softfloat_status_word(softfloat_status_word_t &status, bx_m
        (mxcsr.get_flush_masked_underflow() && mxcsr.get_UM()) ? 1 : 0;
 }
 
-static void approx_prepare_softfloat_status_word(softfloat_status_word_t &status)
+BX_CPP_INLINE Float32 convert_to_QNaN(Float32 op)
 {
-  status.float_precision = 12;
-  status.float_detect_tininess = float_tininess_before_rounding;
-  status.float_exception_flags = 0; // clear exceptions before execution
-  status.float_nan_handling_mode = float_first_operand_nan;
-  status.float_rounding_mode = float_round_nearest_even;
-  status.flush_underflow_to_zero = 1;
+  return op | 0x00400000;
 }
 
 // approximate reciprocal of scalar single precision FP
 static Float32 approximate_reciprocal(Float32 op)
 {
   softfloat_status_word_t status_word;
-  approx_prepare_softfloat_status_word(status_word);
   float_class_t op_class = float32_class(op);
 
   static const Float32 one = 0x3F800000;
@@ -75,7 +69,7 @@ static Float32 approximate_reciprocal(Float32 op)
 
   if (op_class == float_NaN)
   {
-    result = op | 0x00400000;
+    return convert_to_QNaN(op);
   } 
   else {
     if (op_class == float_denormal)
@@ -97,6 +91,9 @@ static Float32 approximate_reciprocal(Float32 op)
      *  12th bit after the decimal point by round-to-nearest, regardless
      *  of the current rounding mode. 
     */
+
+    mxcsr_to_softfloat_status_word(status_word, 
+            bx_mxcsr_t(MXCSR_FLUSH_MASKED_UNDERFLOW | MXCSR_UM), 12);
 
     result = float32_div(one, op, status_word);
   }
@@ -1540,8 +1537,8 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op);
   }
 
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), 
-                       approximate_reciprocal(op));
+  Float32 result = approximate_reciprocal(op);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
 
 #else
   BX_INFO(("RCPSS_VssWss: required SSE, use --enable-sse option"));
