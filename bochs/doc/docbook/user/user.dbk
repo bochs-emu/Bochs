@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.155 2004-11-24 20:18:36 vruppert Exp $
+$Id: user.dbk,v 1.156 2004-12-25 09:31:09 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -374,12 +374,11 @@ currently work with.
     </entry>
   </row>
   <row>
-    <entry>VESA (Display) Support</entry>
+    <entry>VBE (VESA) Support</entry>
     <entry>Yes</entry>
     <entry>Currently resolutions up to 1024x768x32bpp are supported.
-    You must compile Bochs with vbe enabled and use the LGPL'd VGABIOS.
-    For more information see section <link linkend="vesa-notes">Notes
-    about VESA usage</link>.
+    You must compile Bochs with VBE enabled and use the LGPL'd VGABIOS.
+    For more information see <xref linkend="vesa-notes">.
     </entry>
   </row>
   <row>
@@ -394,8 +393,8 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates up to 4 ATA channels. Up to 8 ATA/ATAPI emulated devices can be attached,
     two per ATA channel.
-    So you can have eight hard disks or seven hard disks and a cdrom or four hard disks and four cdroms, or one
-    hard disk and seven cdroms, etc...
+    So you can have eight hard disks or seven hard disks and a CD-ROM or four hard
+    disks and four CD-ROMs, or one hard disk and seven CD-ROMs, etc...
     </entry>
   </row>
   <row>
@@ -407,21 +406,21 @@ currently work with.
     </entry>
   </row>
   <row>
-    <entry>CDROM</entry>
+    <entry>CD-ROM</entry>
     <entry>Yes</entry>
-    <entry>Emulates ATAPI-4/IDE CDROM.  The CDROMs can read from an ISO disk image
-    on any platform.  On Windows (9x/ME/NT/2000/XP), Linux, SunOS, FreeBSD,
+    <entry>Emulates ATAPI-4/IDE CD-ROM.  The CD-ROMs can read from an ISO disk image
+    on any platform. On Windows (9x/ME/NT/2000/XP), Linux, SunOS, FreeBSD,
     NetBSD, OpenBSD, Amiga/MorphOS, MacOSX and BeOS, Bochs can read from the
-    physical cdrom. Starting with version 1.4, Bochs is even able to boot from
-    a bootable cd or bootable iso image.
+    physical CD-ROM drive. Starting with version 1.4, Bochs is even able to boot from
+    a bootable CD or bootable ISO image.
     </entry>
   </row>
   <row>
     <entry>Keyboard</entry>
     <entry>Yes</entry>
     <entry>Emulates a PS/2 keyboard with North American key mappings. Optional keyboard layout
-    remapping files are provided to support localized keyboard in X11 (german, french, italian, spanish,
-    danish, swedish)
+    remapping files are provided to support localized keyboard in X11 (German, French, Italian, Spanish,
+    Danish, Swedish).
     </entry>
   </row>
   <row>
@@ -520,8 +519,8 @@ currently work with.
     <entry>Dynamic Translation/Virtualization</entry>
     <entry>No</entry>
     <entry>Because Bochs is designed to be portable, it does not attempt
-    to do any dynamic code translation or virtualization.  See 
-    <link linkend="whatisbochs">What is Bochs?</link> for details.
+    to do any dynamic code translation or virtualization. See
+    <xref linkend="whatisbochs"> for details.
     </entry>
   </row>
   <row>
@@ -529,7 +528,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Bochs can be configured to simulate up to 15 processors.  This
     feature is still experimental, but it can boot Linux 2.2 kernels with SMP
-    support.  Please note that this does NOT mean that bochs can run
+    support.  Please note that this does NOT mean that Bochs can run
     faster on a physical SMP machine.
     </entry>
   </row>
@@ -625,7 +624,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
     <row>
       <entry>Macintosh</entry>
       <entry>David Batterham drbatter@socs.uts.edu.au or drbatter@yahoo.com
-      ported bochs to the Mac.  He compiled with CodeWarrior Pro R1 (CW12).  To
+      ported Bochs to the Mac.  He compiled with CodeWarrior Pro R1 (CW12).  To
       compile, you have to build headers and Makefiles on a Unix machine using
       "configure --with-macos".  Check out David's MacBochs website.  David has
       not had time to maintain the page or the Mac port since early 2000. If
@@ -651,7 +650,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
       <entry> Nick Behnken used PE2LX to translate David Ross' Win32
       port to an OS/2 program.  This hasn't been updated in more than
       a year, and Nick Behnken's page seems to be inactive.
-      Also, Craig Ballantyne ported bochs to OS/2, but his web page has
+      Also, Craig Ballantyne ported Bochs to OS/2, but his web page has
       disappeared and his port has not been updated since March 2000.
       If you want to bring the OS/2 port up to date, contact the &devlist;.
       </entry>
@@ -684,7 +683,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
   <qandaentry>
      <question>
-       <para>How do you pronounce "bochs"?</para>
+       <para>How do you pronounce "Bochs"?</para>
      </question>
      <answer>
        <para>
@@ -695,11 +694,11 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
   <qandaentry>
      <question>
-       <para>Who is the author of bochs?</para>
+       <para>Who is the author of Bochs?</para>
      </question>
      <answer>
        <para>
-       Kevin Lawton is the primary author of bochs. There have been bug fixes,
+       Kevin Lawton is the primary author of Bochs. There have been bug fixes,
        enhancements, and code contributions from some few hundred people, so
        it is not possible to list them all.  Recently, Kevin has been working
        on a PC virtualization project called <ulink
@@ -712,11 +711,11 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
   <qandaentry>
      <question><para>
-     Who maintains bochs now?
+     Who maintains Bochs now?
      </para></question>
      <answer><para>
       With Kevin's help, in April 2001, the members of the bochs-developers
-      mailing list set up a new official bochs site hosted by <ulink
+      mailing list set up a new official Bochs site hosted by <ulink
       url="http://sourcefourge.net">Source Forge</ulink>. The admins on this
       project are Greg Alexander, Don Becker, Christophe Bothamy, and Bryce
       Denney.
@@ -725,12 +724,12 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
   <qandaentry>
      <question><para>
-     Tell me about performance when running bochs.
+     Tell me about performance when running Bochs.
      </para></question>
      <answer><para>
      Because Bochs emulates every x86 instruction and all the devices in a PC
      system, it does not reach high emulation speeds. Kevin reported
-     approximately 1.5MIPS using bochs on a 400Mhz PII Linux machine. Users
+     approximately 1.5MIPS using Bochs on a 400MHz PII Linux machine. Users
      who have an x86 processor and want the highest emulation speeds may want
      to consider PC virtualization software such as plex86 (free software) 
      or VMware (proprietary and commercial). 
@@ -739,7 +738,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
   <qandaentry>
      <question><para>
-     Does bochs use a disk partition to install the OS? 
+     Does Bochs use a disk partition to install the OS? 
      </para></question>
      <answer><para>
      No. You use a disk image file, which is simply a large file, like any other file, on your platform's disk. 
@@ -757,20 +756,20 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
   <qandaentry>
      <question><para>
-     Is there a developer's email list for bochs?
+     Is there a developer's email list for Bochs?
      </para></question>
      <answer><para>
      Yes.  For instructions on joining, refer to 
-     <xref linkend="mailinglist">
+     <xref linkend="mailinglist">.
      </para></answer>
   </qandaentry>
 
   <qandaentry>
      <question><para>
-     Is there an irc channel for bochs?
+     Is there an IRC channel for Bochs?
      </para></question>
      <answer><para>
-     Yes. You will usually find Bochs developers and users on irc at irc.freenode.net:6667, channel #bochs
+     Yes. You will usually find Bochs developers and users on IRC at irc.freenode.net:6667, channel #bochs.
      </para></answer>
   </qandaentry>
 
@@ -779,24 +778,24 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      Do you know of any snapshots of Bochs running Win95?
      </para></question>
      <answer><para>
-     Yes!  Look for "screen shots" on the <ulink url="http://bochs.sourceforge.net">Bochs home page</ulink> or on other Bochs sites.
+     Yes! Look for "screen shots" on &bochs-sf-net; or on other Bochs sites.
      </para></answer>
   </qandaentry>
 
   <qandaentry>
      <question><para>
-     Does bochs support a CDROM?
+     Does Bochs support a CD-ROM?
      </para></question>
      <answer><para>
-     Yes, a CDROM is supported in Linux, Windows, BeOS, and OpenBSD.  The
-CDROM drivers for bochs allow the guest operating system to access the
-host operating system's CDROM data directly.
+     Yes, a CD-ROM is supported in Linux, Windows, BeOS, and OpenBSD.  The
+CD-ROM drivers for Bochs allow the guest operating system to access the
+host operating system's CD-ROM data directly.
      </para></answer>
   </qandaentry>
 
   <qandaentry>
      <question><para>
-     Does bochs support a sound device?
+     Does Bochs support a sound device?
      </para></question>
      <answer><para>
      Yes, there is Sound Blaster emulation support for Windows, Linux and FreeBSD.
@@ -805,7 +804,7 @@ host operating system's CDROM data directly.
 
   <qandaentry>
      <question><para>
-     Does bochs support a network card?
+     Does Bochs support a network card?
      </para></question>
      <answer><para>
      Yes.  Bochs contains a model of an NE2000 compatible network card.
@@ -816,17 +815,17 @@ host operating system's CDROM data directly.
 
   <qandaentry>
      <question><para>
-     What applications are known to run inside of bochs?
+     What applications are known to run inside of Bochs?
      </para></question>
      <answer><para>
-     Well, lot's of different OS's run inside of bochs, so
-   thousands.  I'm assuming your asking about Windows programs.
+     Well, lot's of different OS's run inside of Bochs, so
+   thousands.  I'm assuming you are asking about Windows programs.
    To give you a few, the following ones from the Winstone'98 tests
    worked: Access 97, CorelDRAW! 7, Excel 97, Lotus 1-2-3 97, Word 97,
    PowerPoint 97, Quattro Pro 7, WordPerfect 7.
 </para>
 
-     <para>Also, I've compiled an entire OS kernel inside bochs before.  Not
+     <para>Also, I've compiled an entire OS kernel inside Bochs before.  Not
 to mention, running DOOM, though at then-pathetic speeds.
      </para></answer>
   </qandaentry>
@@ -2916,7 +2915,7 @@ Put this on top of your config file if the global configuration is stored in /et
 </para>
 
 <para>
-The section below lists all the supported bochsrc options.
+The section below lists all the supported <filename>bochsrc</filename> options.
 </para>
 
 <section><title>romimage</title>
@@ -3185,9 +3184,11 @@ Examples:
   boot: floppy
   boot: disk
   boot: cdrom
+  boot: cdrom, floppy, disk
 </screen>
-This defines your boot drive. You can  either boot from 'floppy', 'disk' or 'cdrom'.
-'c' and 'a' are also accepted for historical reasons.
+This defines the boot sequence. You can specify up to 3 boot drives,
+which can be 'floppy', 'disk' or 'cdrom'.
+'a' and 'c' are also accepted for historical reasons.
 </para>
 </section>
 
@@ -3564,10 +3565,10 @@ speed.</para></footnote>.
   </row>
 </thead>
   <tbody>
-<row><entry>650Mhz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
-<row><entry>400Mhz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
-<row><entry>166Mhz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75 million</entry></row>
-<row><entry>200Mhz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5 million</entry></row>
+<row><entry>650MHz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
+<row><entry>400MHz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
+<row><entry>166MHz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75 million</entry></row>
+<row><entry>200MHz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5 million</entry></row>
 </tbody>
 </tgroup>
 </table>
@@ -4642,7 +4643,7 @@ file yet.
     <para>
       You can tell Bochs what to do in case of a panic, by re-configuring the
       <link linkend="bochsopt-debug-info-error-panic">panic option</link>. If
-      you change the action to "ask", Bochs reports what has happend and asks
+      you change the action to "ask", Bochs reports what has happened and asks
       you what to do. The appearance of the "ask" feature depends on the display
       library used and the platform. Some display libraries don't support it at all.
     </para>
@@ -5692,12 +5693,15 @@ To use the debugger, you must configure bochs with the
 <screen>
   ./configure --enable-debugger --enable-disasm
 </screen>
-
-NOTE: You must use flex version 2.5.4 or greater.  I have heard that
-version 2.5.2 will not work.
 </para>
+
+<note><para>
+You must use flex version 2.5.4 or greater.  I have heard that
+version 2.5.2 will not work.
+</para></note>
+
 <para>
-When you first start up bochs, you will see the command line prompt
+When you first start up Bochs, you will see the command line prompt
 
 <screen>
   bochs:1>
@@ -6602,10 +6606,10 @@ Since Bochs version 1.4 it's possible to use VESA graphics. There are some limit
 but in general it should work ok (we have run several test programs, the XFree86 VESA display driver, etc)
 </para>
 
-<para>
-NOTE: you will need to use the <ulink url="http://savannah.nongnu.org/projects/vgabios">LGPL'd VGABIOS</ulink>
+<note><para>
+You will need to use the <ulink url="http://savannah.nongnu.org/projects/vgabios">LGPL'd VGABIOS</ulink>
 in order for application to correctly detect VESA support.
-</para>
+</para></note>
 
 <para>
 Current limitations:
@@ -6630,9 +6634,9 @@ Interesting Facts:
 <screen>
 Instructions for Win95/98:
 ==========================
-I can only confirm that scitech finally made a vbe driver
-for windows. It works out of the box, at least with win95
-as guest os, provided you use Bochs 2.1 with the LGPL 
+I can only confirm that SciTech finally made a VBE driver
+for Windows. It works out of the box, at least with win95
+as guest OS, provided you use Bochs 2.1 with the LGPL 
 vgabios.
 
 Here is how I did it :
@@ -9701,7 +9705,7 @@ Parts/Attachments:
 
    There is another main issue that must be handled
 
-   WinMe requires a 150Mhz computer as a minimum. If you try to run
+   WinMe requires a 150MHz computer as a minimum. If you try to run
    the WinMe setup, you will receive a message telling you so, and the
    installation will stop.
 
@@ -9712,15 +9716,15 @@ Parts/Attachments:
       ips: 500000000
 
    This this IPS value, the keyboard and mouse are updated each
-   100 seconds. This makes very dificult to type the CD-KEY numbers,
+   100 seconds. This makes very difficult to type the CD-KEY numbers,
    select type of instalation, etc.
 
    One way to solve this is to lower the vga_update_interval and
    the keyboard_serial_delay. I lower the value until 
-      - I have a minimum respons from keyboard and mouse (say 
+      - I have a minimum response from keyboard and mouse (say 
         1 second delay between keypress/mousemove and the
         screen update)
-      - I still pass the 150 Mhz check 
+      - I still pass the 150 MHz check 
    
    The values I used are    
    
