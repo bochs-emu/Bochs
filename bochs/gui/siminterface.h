@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.22.2.11 2002-03-25 18:27:24 bdenney Exp $
+// $Id: siminterface.h,v 1.22.2.12 2002-03-25 21:42:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.11 2002-03-25 18:27:24 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.12 2002-03-25 21:42:54 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -148,6 +148,20 @@ typedef enum {
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
+typedef enum {
+  BX_TOOLBAR_UNDEFINED,
+  BX_TOOLBAR_FLOPPYA,
+  BX_TOOLBAR_FLOPPYB,
+  BX_TOOLBAR_CDROMD,
+  BX_TOOLBAR_RESET,
+  BX_TOOLBAR_POWER,
+  BX_TOOLBAR_COPY,
+  BX_TOOLBAR_PASTE,
+  BX_TOOLBAR_SNAPSHOT,
+  BX_TOOLBAR_CONFIG,
+  BX_TOOLBAR_MOUSE_EN
+} bx_toolbar_buttons;
+
 ///////////////////////////////////////////////////////////////////
 // event structure for communication between simulator and gui
 ///////////////////////////////////////////////////////////////////
@@ -168,6 +182,7 @@ typedef enum {
   BX_ASYNC_EVT_LOG_MSG,           // simulator -> cpanel
   BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> cpanel
   BX_ASYNC_EVT_SHUTDOWN_GUI,      // simulator -> cpanel
+  BX_ASYNC_EVT_TOOLBAR            // cpanel -> simulator
 } BxEventType;
 
 typedef union {
@@ -275,6 +290,17 @@ typedef struct {
   char *msg;
 } BxLogMsgEvent;
 
+// Event type: BX_EVT_TOOLBAR
+// Asynchronous event from the GUI to the simulator, sent when the user
+// clicks on a toolbar button.  This may one day become something more 
+// general, like a command event, but at the moment it's only needed for
+// the toolbar events.
+typedef struct {
+  bx_toolbar_buttons button;
+  bool on;   // for toggling buttons, on=true means the toolbar button is
+             // pressed. on=false means it is not pressed.
+} BxToolbarEvent;
+
 // The BxEvent structure should be used for all events.  Every event has
 // a type and a spot for a return code (only used for synchronous events).
 typedef struct {
@@ -282,9 +308,10 @@ typedef struct {
   Bit32s retcode;   // sucess or failure. only used for synchronous events.
   union {
     BxKeyEvent key;
-	BxMouseEvent mouse;
-	BxParamEvent param;
-	BxLogMsgEvent logmsg;
+    BxMouseEvent mouse;
+    BxParamEvent param;
+    BxLogMsgEvent logmsg;
+    BxToolbarEvent toolbar;
   } u;
 } BxEvent;
 
