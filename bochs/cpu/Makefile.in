@@ -51,7 +51,6 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # been synced yet.
 OBJS32 = \
 	paging.o \
-	bit.o \
 	string.o \
 	$(EXT_DEBUG_OBJS) \
 
@@ -104,6 +103,7 @@ OBJSXX = \
 	ctrl_xfer_pro.o \
 	segment_ctrl_pro.o \
 	io.o \
+	bit.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
