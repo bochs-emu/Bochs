@@ -126,10 +126,10 @@ bochs000   490.10    85.23%    1.2: no args
 bochs001   467.61    89.33%    1.2: turn off SMF for CPU only (WHY BETTER!?)
 bochs002   527.61    79.17%    1.2: turn off SMF for all
 bochs004   472.87    88.34%    1.2: --with-nogui
-bochs005   490.86    85.10%    1.2: --enable-debugger
+bochs005   650.44    64.23%    1.2: debugger
 bochs006   660.06    63.29%    1.2: cdrom, sb16, debugger
 bochs006a  486.59    85.85%    1.2: cdrom
-bochs006b  716.34    58.31%    1.2: sb16=linux
+bochs006b  487.76    85.65%    1.2: sb16=linux
 bochs006c  497.91    83.90%    1.2: cdrom, sb16=linux
 bochs006d  493.88    84.58%    1.2: none, same as bochs000
 bochs006e  691.04    60.45%    1.2: cdrom, debugger
@@ -144,5 +144,19 @@ bochs015   554.39    75.35%    1.2: 4 processors
 bochs016   693.52    60.23%    1.2: 4 processors + debugger
 bochs020   417.76   100.00%    1.1.2: with no args
 bochs021   552.67    75.58%    1.1.2: --enable-debugger
+bochs040   396.59   105.33%    no-cpu-array: no args
+bochs040   404.18   103.36%    no-cpu-array: no args
+bochs041   464.13    90.01%    no-cpu-array: disable SMF in CPU only
+bochs041   475.07    87.94%    no-cpu-array: disable SMF in CPU only
+bochs042   431.51    96.81%    no-cpu-array: disable SMF in all but CPU
+bochs042   438.55    95.26%    no-cpu-array: disable SMF in all but CPU
+bochs043   435.83    95.85%    no-cpu-array: disable all SMF
+bochs043   438.05    95.37%    no-cpu-array: disable all SMF
+bochs045   491.15    85.06%    no-cpu-array: 2 processors
+bochs046   673.29    62.05%    no-cpu-array: 2 processors + debugger
+bochs047   576.93    72.41%    no-cpu-array: 4 processors
+bochs048   679.53    61.48%    no-cpu-array: 4 processors + debugger
 bochs091   450.86    92.65%    cvs: stay-in-cpu-loop-for-1proc
 bochs092   417.04   100.17%    cvs: no-cpu-array-for-1proc     (CURRENT)
+
+

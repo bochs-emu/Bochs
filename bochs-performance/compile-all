@@ -8,11 +8,16 @@ echo Checking out in $CVSPATH
 cvs -q checkout -d $CVSPATH bochs
 
 function Buildone {
-  BIN=$1; TAG=$2; CONFIG_ARGS=$3; PATCH=$4
+  BIN=$1; TAG=$2; CONFIG_ARGS=$3; PATCHLIST=$4
   cvs checkout -d $CVSPATH -r $TAG bochs
-  if test -n "$PATCH"; then patch -p0 < $PATCH; fi
+  for P in $PATCHLIST; do
+    patch -p0 < $P
+  done
+
   (cd $CVSPATH; ./configure $CONFIG_ARGS && make && cp bochs ../$BIN; make dist-clean)
-  if test -n "$PATCH"; then patch -p0 -R < $PATCH; fi
+  for P in $PATCHLIST; do
+    patch -p0 -R < $P
+  done
 }
 
 # See notes for some results from running these different binaries.
@@ -21,7 +26,7 @@ Buildone bochs000 REL_1_2_FINAL ""
 Buildone bochs001 REL_1_2_FINAL "" patch.disable-smf-cpu
 Buildone bochs002 REL_1_2_FINAL "" patch.disable-smf
 Buildone bochs004 REL_1_2_FINAL "--with-nogui"
-Buildone bochs005 REL_1_2_FINAL "--with-debugger"
+Buildone bochs005 REL_1_2_FINAL "--enable-debugger"
 Buildone bochs006 REL_1_2_FINAL "--enable-cdrom --enable-sb16=linux --enable-debugger"
 Buildone bochs006a REL_1_2_FINAL "--enable-cdrom"
 Buildone bochs006b REL_1_2_FINAL "--enable-sb16=linux"
@@ -45,5 +50,12 @@ Buildone bochs020 REL_1_1_2_BASE ""
 Buildone bochs021 REL_1_1_2_BASE "--enable-debugger"
 Buildone bochs030 REL-bochs-2000-03-25 "--enable-fpu"
 Buildone bochs031 REL-bochs-2000-03-25 "--enable-fpu --enable-debugger --enable-disas"
-Buildone bochs091 stay-in-cpu-loop-for-1proc "" "patch.make-reset-panic"
-Buildone bochs092 no-cpu-array-for-1proc "" "patch.make-reset-panic"
+Buildone bochs040 no-cpu-array-for-1proc "" "patch.make-reset-panic"
+Buildone bochs041 no-cpu-array-for-1proc "" "patch.make-reset-panic patch.disable-smf-cpu"
+Buildone bochs042 no-cpu-array-for-1proc "" "patch.make-reset-panic patch.disable-smf-other"
+Buildone bochs043 no-cpu-array-for-1proc "" "patch.make-reset-panic patch.disable-smf-cpu patch.disable-smf-other"
+Buildone bochs044 no-cpu-array-for-1proc "--enable-debugger" "patch.make-reset-panic"
+Buildone bochs045 no-cpu-array-for-1proc "--enable-processors=2" "patch.make-reset-panic"
+Buildone bochs046 no-cpu-array-for-1proc "--enable-processors=2 --enable-debugger" "patch.make-reset-panic"
+Buildone bochs047 no-cpu-array-for-1proc "--enable-processors=4" "patch.make-reset-panic"
+Buildone bochs048 no-cpu-array-for-1proc "--enable-processors=4 --enable-debugger" "patch.make-reset-panic patch.boost-logfns"
