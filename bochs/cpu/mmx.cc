@@ -40,7 +40,7 @@
    MMX_REGFILE.mmx[index].exp = 0xffff; \
 }                                                      
 
-static Bit8s SaturateWordSToByteS(Bit16s value)
+Bit8s SaturateWordSToByteS(Bit16s value)
 {
 /*
   SaturateWordSToByteS   converts   a signed 16-bit value to a
@@ -53,7 +53,7 @@ static Bit8s SaturateWordSToByteS(Bit16s value)
   return value;
 }
 
-static Bit16s SaturateDwordSToWordS(Bit32s value)
+Bit16s SaturateDwordSToWordS(Bit32s value)
 {
 /*
   SaturateDwordSToWordS  converts  a  signed 32-bit value to a
@@ -67,7 +67,7 @@ static Bit16s SaturateDwordSToWordS(Bit32s value)
   return value;
 }
 
-static Bit8u SaturateWordSToByteU(Bit16s value)
+Bit8u SaturateWordSToByteU(Bit16s value)
 {
 /*
   SaturateWordSToByteU  converts a signed 16-bit value to an
@@ -80,7 +80,7 @@ static Bit8u SaturateWordSToByteU(Bit16s value)
   return value;
 }
 
-static Bit16u SaturateDwordSToWordU(Bit32s value)
+Bit16u SaturateDwordSToWordU(Bit32s value)
 {
 /*
   SaturateDwordSToWordU  converts  a signed 32-bit value

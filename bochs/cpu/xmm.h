@@ -88,4 +88,40 @@ struct bx_mxcsr_t {
 #define MXCSR_MASK  0x00ff  /* reset reserved bits */
 #define MXCSR_RESET 0x1f80  /* reset value of the MXCSR register */
 
+/* INTEGER SATURATION */
+
+/*
+  SaturateWordSToByteS   converts   a signed 16-bit value to a
+  signed  8-bit  value. If the signed 16-bit value is less than -128, it
+  is  represented  by  the saturated value -128 (0x80). If it is greater
+  than 127, it is represented by the saturated value 127 (0x7F).
+*/
+Bit8s SaturateWordSToByteS(Bit16s value);
+
+/*
+  SaturateDwordSToWordS  converts  a  signed 32-bit value to a
+  signed  16-bit  value. If the signed 32-bit value is less than -32768,
+  it  is  represented  by  the saturated value -32768 (0x8000). If it is
+  greater  than  32767,  it  is represented by the saturated value 32767
+  (0x7FFF).
+*/
+Bit16s SaturateDwordSToWordS(Bit32s value);
+
+/*
+  SaturateWordSToByteU  converts a signed 16-bit value to an
+  unsigned  8-bit value. If the signed 16-bit value is less than zero it
+  is  represented  by  the  saturated value zero (0x00).If it is greater
+  than 255 it is represented by the saturated value 255 (0xFF).
+*/
+Bit8u SaturateWordSToByteU(Bit16s value);
+
+/*
+  SaturateDwordSToWordU  converts  a signed 32-bit value
+  to  an  unsigned  16-bit value. If the signed 32-bit value is less
+  than   zero,   it   is  represented  by  the saturated value 65535
+  (0x0000).  If  it  is greater  than  65535,  it  is represented by
+  the saturated value 65535 (0xFFFF).
+*/
+Bit16u SaturateDwordSToWordU(Bit32s value);
+
 #endif
