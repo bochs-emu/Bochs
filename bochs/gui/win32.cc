@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.39 2002-09-05 15:57:37 bdenney Exp $
+// $Id: win32.cc,v 1.40 2002-09-08 16:41:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -304,7 +304,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 
   for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
   create_vga_font();
-  cursorBmp = CreateBitmap(8,16,1,1,NULL);
+  cursorBmp = CreateBitmap(8,32,1,1,NULL);
   if (!cursorBmp) terminateEmul(EXIT_FONT_BITMAP_ERROR);
 
   bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+
@@ -782,7 +782,17 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned i, x, y;
   Bit8u cs_start, cs_end;
   unsigned nchars, ncols;
-  unsigned char data[32];
+  unsigned char data[64];
+
+  if (bx_gui.charmap_changed) {
+    for (unsigned c = 0; c<256; c++) {
+      memset(data, 0, sizeof(data));
+      for (unsigned i=0; i<32; i++)
+        data[i*2] = bx_gui.vga_charmap[c*32+i];
+      SetBitmapBits(vgafont[c], 64, data);
+    }
+    bx_gui.charmap_changed = 0;
+  }
 
   cs_start = (cursor_state >> 8) & 0x3f;
   cs_end = cursor_state & 0x1f;
@@ -800,9 +810,9 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars) {
     cChar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
-    if (yChar >= 16) {
+    if (yChar >= 14) {
       DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
-	              prev_block_cursor_y*16, SRCCOPY,
+	              prev_block_cursor_y*yChar, SRCCOPY,
 				  new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1]);
     } else {
       DrawChar(hdc, cChar, prev_block_cursor_x*8,
@@ -819,8 +829,8 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
       x = (i/2) % ncols;
       y = (i/2) / ncols;
-      if(yChar>=16) {
-        DrawBitmap(hdc, vgafont[cChar], x*8, y*16, SRCCOPY, new_text[i+1]);
+      if(yChar>=14) {
+        DrawBitmap(hdc, vgafont[cChar], x*8, y*yChar, SRCCOPY, new_text[i+1]);
       } else {
         DrawChar(hdc, cChar, x*8, y*yChar, new_text[i+1], 1, 0);
       }
@@ -833,16 +843,16 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   // now draw character at new block cursor location in reverse
   if (((cursor_y*ncols + cursor_x) < nchars ) && (cs_start <= cs_end)) {
     cChar = new_text[(cursor_y*ncols + cursor_x)*2];
-    if (yChar>=16)
+    if (yChar>=14)
     {
       memset(data, 0, sizeof(data));
-      for (unsigned i=0; i<16; i++) {
+      for (unsigned i=0; i<32; i++) {
         data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
         if ((i >= cs_start) && (i <= cs_end))
           data[i*2] = 255 - data[i*2];
       }
-      SetBitmapBits(cursorBmp, 32, data);
-      DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16,
+      SetBitmapBits(cursorBmp, 64, data);
+      DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*yChar,
 	         SRCCOPY, new_text[((cursor_y*ncols + cursor_x)*2)+1]);
     } else {
       char cAttr = new_text[((cursor_y*ncols + cursor_x)*2)+1];
@@ -960,9 +970,9 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0) {
 void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   if (fheight > 0) {
-    if (fheight >= 16) {
+    if (fheight >= 14) {
       FontId = 2;
-      yChar = 16;
+      yChar = fheight;
     } else if (fheight > 12) {
       FontId = 1;
       yChar = 14;
@@ -1144,18 +1154,16 @@ void bx_gui_c::exit(void) {
 
 
 void create_vga_font(void) {
-  HDC hdc;
-  unsigned char data[32];
+  unsigned char data[64];
 
   // VGA font is 8wide x 16high
-  hdc = GetDC(stInfo.simWnd);
   for (unsigned c = 0; c<256; c++) {
-    vgafont[c] = CreateBitmap(8,16,1,1,NULL);
+    vgafont[c] = CreateBitmap(8,32,1,1,NULL);
     if (!vgafont[c]) terminateEmul(EXIT_FONT_BITMAP_ERROR);
-    memset(data, 0, 16);
+    memset(data, 0, sizeof(data));
     for (unsigned i=0; i<16; i++)
       data[i*2] = reverse_bitorder(bx_vgafont[c].data[i]);
-    SetBitmapBits(vgafont[c], 32, data);
+    SetBitmapBits(vgafont[c], 64, data);
   }
 }
 
@@ -1193,7 +1201,7 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
   GetObject (hBitmap, sizeof (BITMAP), (LPVOID) &bm);
 
   ptSize.x = bm.bmWidth;
-  ptSize.y = bm.bmHeight;
+  ptSize.y = yChar;
 
   DPtoLP (hdc, &ptSize, 1);
 
