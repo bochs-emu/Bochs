@@ -68,6 +68,20 @@ TO DO:
     errors += lt_dlloader_add (lt_dlloader_next (0), &sys_dld, "dld");
     #endir
     errors += lt_dlloader_add (lt_dlloader_next (0), &presym, "dlpreload");
+
+  GOOD info on MacOS X bug fixes for libtool 1.4.2
+  http://fink.sourceforge.net/doc/porting/libtool.php
+  this may solve the problems I have been seeing.
+
+  Also see side note: The libltdl library included with all libtool versions
+  will only work on Darwin when dlcompat is installed. 
+
+  dlcompat IS installed on SF compile farm in /sw/include and /sw/lib.
+  the next problem is this:
+  lt_dlsym error: dlcompat: dyld: uselib multiple definitions of symbol _module_init
+  but the libtool manual has some ideas about changing the symbol names
+  to avoid exactly this problem.
+
 - Solaris: it does not appear to call constructors of global objects that
   are loaded in a plugin.  I expect that if we link the plugins with the
   correct C++ library and linker options, it will call them.  However I'm
