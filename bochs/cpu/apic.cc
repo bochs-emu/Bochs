@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.22 2002-10-04 17:04:31 kevinlawton Exp $
+// $Id: apic.cc,v 1.23 2002-10-05 10:25:30 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -10,7 +10,7 @@
 bx_generic_apic_c *apic_index[APIC_MAX_ID];
 
 
-bx_generic_apic_c::bx_generic_apic_c () 
+bx_generic_apic_c::bx_generic_apic_c ()
 {
   id = APIC_UNKNOWN_ID;
   put("APIC?");
@@ -280,6 +280,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
 {
   cpu = mycpu;
   hwreset ();
+  INTR = 0;
 }
 
 void
@@ -626,7 +627,7 @@ void bx_local_apic_c::service_local_apic ()
     BX_INFO(("service_local_apic()"));
     print_status ();
   }
-  if (cpu->INTR) return;  // INTR already up; do nothing
+  if (INTR) return;  // INTR already up; do nothing
   // find first interrupt in irr.
   int first_irr = highest_priority_int (irr);
   int first_isr = highest_priority_int (isr);
@@ -640,8 +641,8 @@ void bx_local_apic_c::service_local_apic ()
   // acknowledges, we will run highest_priority_int again and
   // return it.
   BX_DEBUG(("service_local_apic(): setting INTR=1 for vector 0x%02x", first_irr));
-  cpu->set_INTR (1);
-  cpu->int_from_local_apic = 1;
+  INTR = 1;
+  cpu->async_event = 1;
 }
 
 void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from)
@@ -665,9 +666,9 @@ Bit8u
 bx_local_apic_c::acknowledge_int ()
 {
   // CPU calls this when it is ready to service one interrupt
-  if (!cpu->INTR)
+  if (!INTR)
     BX_PANIC(("%s: acknowledged an interrupt, but INTR=0", cpu->name));
-  BX_ASSERT (cpu->int_from_local_apic);
+  BX_ASSERT (INTR);
   int vector = highest_priority_int (irr);
   BX_ASSERT (irr[vector] == 1);
   BX_DEBUG(("%s: acknowledge_int returning vector 0x%x", cpu->name, vector));
@@ -679,8 +680,8 @@ bx_local_apic_c::acknowledge_int ()
     BX_INFO(("Status after setting isr:"));
     print_status ();
   }
-  cpu->set_INTR (0);
-  cpu->int_from_local_apic = 0;
+  INTR = 0;
+  cpu->async_event = 1;
   service_local_apic ();  // will set INTR again if another is ready
   return vector;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.96 2002-10-05 06:33:10 kevinlawton Exp $
+// $Id: cpu.h,v 1.97 2002-10-05 10:25:31 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -328,11 +328,17 @@ typedef Bit32u bx_address;
 #define BX_MODE_LONG_COMPAT     0x1
 #define BX_MODE_LONG_64         0x2
 
+#if BX_SUPPORT_APIC
+#define BX_CPU_INTR             (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
+#else
+#define BX_CPU_INTR             BX_CPU_THIS_PTR INTR
+#endif
+
 class BX_CPU_C;
 
 #if BX_USE_CPU_SMF == 0
 // normal member functions.  This can ONLY be used within BX_CPU_C classes.
-// Anyone on the outside should use the BX_CPU macro (defined in bochs.h) 
+// Anyone on the outside should use the BX_CPU macro (defined in bochs.h)
 // instead.
 #  define BX_CPU_THIS_PTR  this->
 #  define BX_CPU_THIS      this
@@ -1209,7 +1215,7 @@ class bx_local_apic_c : public bx_generic_apic_c {
   // cleared when the interrupt is acknowledged by the processor.
   Bit8u irr[BX_LOCAL_APIC_MAX_INTS];
   // ISR=in-service register.  When an IRR bit is cleared, the corresponding
-  // bit in ISR is set.  The ISR bit is cleared when 
+  // bit in ISR is set.  The ISR bit is cleared when
   Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
   Bit32u arb_id, arb_priority, task_priority, log_dest, dest_format, spurious_vec;
   Bit32u lvt[6];
@@ -1236,6 +1242,7 @@ class bx_local_apic_c : public bx_generic_apic_c {
   Bit64u ticksInitial; // System ticks count when APIC timer is started.
 
 public:
+  Boolean INTR;
   bx_local_apic_c(BX_CPU_C *mycpu);
   virtual ~bx_local_apic_c(void);
   BX_CPU_C *cpu;
@@ -2654,7 +2661,6 @@ union {
   BX_SMF BX_CPP_INLINE Boolean v8086_mode(void);
 #if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
-  Boolean int_from_local_apic;
 #endif
   };
 

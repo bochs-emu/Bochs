@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.61 2002-10-04 17:04:31 kevinlawton Exp $
+// $Id: cpu.cc,v 1.62 2002-10-05 10:25:30 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -500,7 +500,7 @@ BX_CPU_C::handleAsyncEvent(void)
     while (1)
 #endif
       {
-      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF ()) {
+      if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
         break;
         }
       if (BX_CPU_THIS_PTR async_event == 0) {
@@ -514,7 +514,7 @@ BX_CPU_C::handleAsyncEvent(void)
     // must give the others a chance to simulate.  If an interrupt has 
     // arrived, then clear the HALT condition; otherwise just return from
     // the CPU loop with stop_reason STOP_CPU_HALTED.
-    if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF ()) {
+    if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
       // interrupt ends the HALT condition
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
@@ -575,13 +575,13 @@ BX_CPU_C::handleAsyncEvent(void)
     // an opportunity to check interrupts on the next instruction
     // boundary.
     }
-  else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () &&
+  else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () &&
            BX_DBG_ASYNC_INTR) {
     Bit8u vector;
 
     // NOTE: similar code in ::take_irq()
 #if BX_SUPPORT_APIC
-    if (BX_CPU_THIS_PTR int_from_local_apic)
+    if (BX_CPU_THIS_PTR local_apic.INTR)
       vector = BX_CPU_THIS_PTR local_apic.acknowledge_int ();
     else
       vector = BX_IAC(); // may set INTR with next interrupt
@@ -680,7 +680,7 @@ BX_CPU_C::handleAsyncEvent(void)
   // will be processed on the next boundary.
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  if ( !(BX_CPU_THIS_PTR INTR ||
+  if ( !(BX_CPU_INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
          BX_CPU_THIS_PTR get_TF ()) )
@@ -1015,7 +1015,7 @@ BX_CPU_C::dbg_take_irq(void)
 
   // NOTE: similar code in ::cpu_loop()
 
-  if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () ) {
+  if ( BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () ) {
     if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
       // normal return from setjmp setup
       vector = BX_IAC(); // may set INTR with next interrupt
