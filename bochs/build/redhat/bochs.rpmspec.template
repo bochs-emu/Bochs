@@ -32,8 +32,8 @@ and other OS's, all on your workstation.
 	make install install_dlx
 	# fix up symlinks that point to buildroot
         cd $RPM_BUILD_ROOT/usr/local/bin
-        rm bochs; ln -sf /usr/local/bochs/@VERSION@/bochs .
-        rm bximage; ln -sf /usr/local/bochs/@VERSION@/bximage .
+        rm -f bochs; ln -sf /usr/local/bochs/@VERSION@/bochs .
+        rm -f bximage; ln -sf /usr/local/bochs/@VERSION@/bximage .
 
 %files
 	/usr/local/bin/bochs
