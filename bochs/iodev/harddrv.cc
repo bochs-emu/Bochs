@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.4 2002-10-10 13:10:52 cbothamy Exp $
+// $Id: harddrv.cc,v 1.77.2.5 2002-10-10 17:04:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ bx_hard_drive_c::bx_hard_drive_c(void)
 {
 
 #if BX_PLUGINS
-
+    pluginHardDrive = this;
     pluginHDReadHandler = read_handler;
     pluginHDWriteHandler = write_handler;
     pluginHDGetFirstCDHandle = get_first_cd_handle;
@@ -196,7 +196,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.4 2002-10-10 13:10:52 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.5 2002-10-10 17:04:35 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {

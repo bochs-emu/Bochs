@@ -58,7 +58,7 @@ extern "C" {
 #define BX_GET_CMOS_REG(b) pluginGetCMOSReg(b)
 #define BX_SET_CMOS_REG(b,c) pluginSetCMOSReg(b,c)
 #define BX_CMOS_CHECKSUM() pluginCMOSChecksum()
-#define BX_GET_CMOS_TIMEVAL(a) pluginGetCMOSTimeval()
+#define BX_GET_CMOS_TIMEVAL() pluginGetCMOSTimeval()
 
 #define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
 #define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
@@ -72,8 +72,8 @@ extern "C" {
 
 #define BX_FLOPPY_PRESENT() (pluginDevicePresent(BX_PLUGIN_FLOPPY))
 
-#define BX_HD_READ_HANDLER(a, b, c) pluginHDReadHandler(NULL, b, c)
-#define BX_HD_WRITE_HANDLER(a, b, c, d) pluginHDWriteHandler(NULL, b, c, d)
+#define BX_HD_READ_HANDLER(a, b, c) pluginHDReadHandler(pluginHardDrive, b, c)
+#define BX_HD_WRITE_HANDLER(a, b, c, d) pluginHDWriteHandler(pluginHardDrive, b, c, d)
 #define BX_HD_GET_FIRST_CD_HANDLE() pluginHDGetFirstCDHandle()
 #define BX_HD_GET_DEVICE_HANDLE(a,b) pluginHDGetDeviceHandle(a,b)
 #define BX_HD_GET_CD_MEDIA_STATUS(handle) pluginHDGetCDMediaStatus(handle)
@@ -133,10 +133,10 @@ extern "C" {
 
 #define BX_FLOPPY_PRESENT() (bx_devices.floppy)
 
-#define BX_HD_READ_HANDLER(b, c) \
-    (bx_devices.hard_drive->read_handler(bx_devices.hard_drive, b, c))
-#define BX_HD_WRITE_HANDLER(b, c, d) \
-    (bx_devices.hard_drive->write_handler(bx_devices.hard_drive, b, c, d))
+#define BX_HD_READ_HANDLER(a, b, c) \
+    (bx_devices.hard_drive->read_handler(a, b, c))
+#define BX_HD_WRITE_HANDLER(a, b, c, d) \
+    (bx_devices.hard_drive->write_handler(a, b, c, d))
 #define BX_HD_GET_FIRST_CD_HANDLE() \
     (bx_devices.hard_drive->get_first_cd_handle())
 #define BX_HD_GET_DEVICE_HANDLE(a,b) \
@@ -305,6 +305,7 @@ extern unsigned (* pluginDMAGetTC)(void);
 extern void     (* pluginDMARaiseHLDA)(void);
 
 /* === Hard drive / floppy port sharing hack === */
+extern class bx_hard_drive_c *pluginHardDrive;  // some macros require this
 extern Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len);
 extern void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len);
 extern Bit32u   (* pluginHDGetFirstCDHandle)(void);

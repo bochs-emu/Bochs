@@ -48,6 +48,7 @@ void     (* pluginDMASetDRQ)(unsigned channel, Boolean val) = 0;
 unsigned (* pluginDMAGetTC)(void) = 0;
 void     (* pluginDMARaiseHLDA)(void) = 0;
 
+bx_hard_drive_c *pluginHardDrive = 0;
 Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len) = 0;
 void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len) = 0;
 Bit32u   (* pluginHDGetDeviceHandle)(Bit8u, Bit8u) = 0;

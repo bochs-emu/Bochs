@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.5 2002-10-10 13:10:50 cbothamy Exp $
+// $Id: floppy.cc,v 1.51.2.6 2002-10-10 17:04:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -117,7 +117,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.5 2002-10-10 13:10:50 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.6 2002-10-10 17:04:27 bdenney Exp $"));
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
   BX_REGISTER_IRQ(6, "Floppy Drive");
@@ -386,7 +386,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       
     case 0x3F6: // Reserved for future floppy controllers
                 // This address shared with the hard drive controller
-      value = BX_HD_READ_HANDLER(BX_FD_THIS, address, io_len);
+      value = BX_HD_READ_HANDLER(bx_devices.hard_drive, address, io_len);
       return( value );
       break;
 
@@ -394,7 +394,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       // This address shared with the hard drive controller:
       //   Bit  7   : floppy
       //   Bits 6..0: hard drive
-      value = BX_HD_READ_HANDLER(BX_FD_THIS, address, io_len);
+      value = BX_HD_READ_HANDLER(bx_devices.hard_drive, address, io_len);
       value &= 0x7f;
       // add in diskette change line
       value |= (BX_FD_THIS s.DIR[BX_FD_THIS s.DOR & 0x03] & 0x80);
@@ -569,7 +569,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3F6: /* diskette controller (reserved) */
       BX_DEBUG(("io_write: reserved register unsupported"));
       // this address shared with the hard drive controller
-      BX_HD_WRITE_HANDLER(BX_FD_THIS, address, value, io_len);
+      BX_HD_WRITE_HANDLER(bx_devices.hard_drive, address, value, io_len);
       break;
 
 #if BX_DMA_FLOPPY_IO

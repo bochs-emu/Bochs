@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.27.2.4 2002-10-09 00:21:26 bdenney Exp $
+// $Id: pc_system.cc,v 1.27.2.5 2002-10-10 17:04:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -229,7 +229,7 @@ bx_pc_system_c::exit(void)
   if (BX_HARD_DRIVE_PRESENT())
     BX_HD_CLOSE_HARDDRIVE();
 
-  BX_INFO(("Last time is %d", BX_GET_CMOS_TIMEVAL(bx_devices.)));
+  BX_INFO(("Last time is %d", BX_GET_CMOS_TIMEVAL()));
 
   if (bx_gui) bx_gui->exit();
 }
