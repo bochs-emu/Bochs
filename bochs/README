@@ -37,26 +37,24 @@ will help at merge time.
 
 
 TO DO:
-- toplevel makefile does "make -C subdir libsomething.a" which does
-  not cause the plugins in that directory to be remade.  Maybe it
-  should do make -C subdir all
-- it looks like each plugin's plugin_init gets called twice, once
-  when plugin_load calls plugin_init_one, and then again in
-  plugin_init_all.  Shouldn't we just call it once?
+- dlopen() is not portable.  Use libtool's portable ltdl library instead.
+  The present test case is MacOSX which doesn't have dlopen at all.
 - wxWindows gui as a plugin will not start up.  Normally wxWindows
   takes over your main() function and inserts its own app init code.
   We'll have to figure out what that app init code does and put it
   in plugin_init.
 - Bryce is experimenting with using classes with virtual functions
   to make the plugin interface cleaner.  He doesn't know yet if it 
-  will be an improvement or not.
+  will be an improvement or not.  
+- convert remaining devices and guis
+- make plugin CPU???
 
 DONE:
 - applied patch.plugins5
-- all gui references to I/O devices are turned into macros now
 - updated makefile dependencies now that plugin.h is in there
-- 5 guis are converted to plugins
+- all guis converted to plugins
 - 8 I/O devices are converted to plugins
+- make the Makefile use libtool to build dynamic libraries
 
 -----------------------------------------------
 random notes:
