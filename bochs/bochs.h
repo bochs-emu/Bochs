@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.85 2002-09-03 05:38:09 bdenney Exp $
+// $Id: bochs.h,v 1.86 2002-09-03 08:34:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -238,6 +238,12 @@ extern Bit8u DTPageDirty[];
 #endif
 
 #define MAGIC_LOGNUM 0x12345678
+
+
+#define DEFAULT_LOG_ACTIONS(level) \
+  (level<=LOGLEV_INFO ? ACT_IGNORE \
+   : level==LOGLEV_ERROR ? ACT_REPORT \
+   : ACT_ASK)
 
 typedef class logfunctions {
 	char *prefix;
@@ -612,19 +618,22 @@ typedef struct {
 #define BX_KBD_AT_TYPE        1
 #define BX_KBD_MF_TYPE        2 
 
+#define BX_N_OPTROM_IMAGES 4
+#define BX_N_SERIAL_PORTS 1
+#define BX_N_PARALLEL_PORTS 1
+
 typedef struct {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
   bx_disk_options   diskc;
   bx_disk_options   diskd;
-  bx_serial_options com[4];
+  bx_serial_options com[BX_N_SERIAL_PORTS];
   bx_cdrom_options  cdromd; 
   bx_rom_options    rom;
   bx_vgarom_options vgarom;
-#define BX_N_OPTROM_IMAGES 4
   bx_rom_options    optrom[BX_N_OPTROM_IMAGES]; // Optional rom images 
   bx_mem_options    memory;
-  bx_parport_options par[2]; // parallel port #1 / #2
+  bx_parport_options par[BX_N_PARALLEL_PORTS]; // parallel ports
   bx_sb16_options   sb16;
   bx_param_num_c    *Obootdrive;  
   bx_param_bool_c   *OfloppySigCheck;
