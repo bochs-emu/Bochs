@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.114 2003-02-03 17:10:05 cbothamy Exp $
+$Id: user.dbk,v 1.115 2003-02-07 22:01:23 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -5601,7 +5601,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
 Setting a specific CHS translation should be done if you use a disk dump
 of an actual disk, or use a real disk as a block device. You need to
 know which geometry was used to format the disk, and which translation 
-was used.
+was used. You must not set the translation to 'auto'.
         </para>
 
         <note>
