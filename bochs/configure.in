@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.91 2002-09-02 18:44:35 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.92 2002-09-05 15:12:10 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1257,14 +1257,15 @@ elif test "$with_term" = yes; then
 elif test "$with_wx" = yes; then
   AC_MSG_RESULT(wxWindows)
   AC_DEFINE(BX_WITH_WX, 1)
-  CFLAGS="$CFLAGS `wx-config --cflags`"
-  CXXFLAGS="$CFLAGS `wx-config --cxxflags`"
+  WX_CFLAGS="\`$WX_CONFIG --cflags\`"
+  WX_CXXFLAGS="\`$WX_CONFIG --cxxflags\`"
+  GUI_LINK_OPTS_WX="\`$WX_CONFIG --libs\`"
   # if gtk-config exists, then add it to the cflags.
   gtkconf=`gtk-config --cflags`
   if test $? = 0; then
     # gtk-config was found and returned 0, so it must return valid output
-    CFLAGS="$CFLAGS `gtk-config --cflags`"
-    CXXFLAGS="$CXXFLAGS `gtk-config --cflags`"
+    WX_CFLAGS="$WX_CFLAGS \`gtk-config --cflags\`"
+    WX_CXXFLAGS="$WX_CXXFLAGS \`gtk-config --cflags\`"
   fi
   # wxwindows is the only one without control.o in GUI_OBJS
   GUI_OBJS='$(GUI_OBJS_WX)'
@@ -1275,6 +1276,9 @@ else
   GUI_OBJS='$(GUI_OBJS_NOGUI) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
 fi
+
+AC_SUBST(WX_CFLAGS)
+AC_SUBST(WX_CXXFLAGS)
 
 # modify settings based on target platform
 case "$target" in
@@ -1571,6 +1575,7 @@ AC_SUBST(RFB_LIBS)
 AC_SUBST(GUI_OBJS)
 AC_SUBST(GUI_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS_TERM)
+AC_SUBST(GUI_LINK_OPTS_WX)
 AC_SUBST(DASH)
 AC_SUBST(SLASH)
 AC_SUBST(CXXFP)

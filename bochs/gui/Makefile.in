@@ -33,7 +33,7 @@ SHELL = /bin/sh
 @SET_MAKE@
 
 CXX = @CXX@
-CXXFLAGS = @CXXFLAGS@  `wx-config --cxxflags`
+CXXFLAGS = @CXXFLAGS@ 
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -41,6 +41,7 @@ X_CFLAGS = @X_CFLAGS@
 BEOS_CFLAGS = -Wno-multichar
 RFB_CFLAGS =
 SDL_CFLAGS = `sdl-config --cflags`
+WX_CXXFLAGS = @WX_CXXFLAGS@
 RANLIB = @RANLIB@
 
 GUI_OBJS_X11  = x.o
@@ -93,9 +94,14 @@ sdl.o: sdl.@CPP_SUFFIX@ sdl.h
 rfb.o: rfb.@CPP_SUFFIX@ rfb.h rfbproto.h
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(RFB_CFLAGS) $<
 
-x.@CPP_SUFFIX@cc: gui.h
+wx.o: wx.@CPP_SUFFIX@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(WX_CXXFLAGS) $<
 
-beos.@CPP_SUFFIX@cc: gui.h
+wxmain.o: wxmain.@CPP_SUFFIX@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(WX_CXXFLAGS) $<
+
+wxdialog.o: wxdialog.@CPP_SUFFIX@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(WX_CXXFLAGS) $<
 
 clean:
 	@RMCOMMAND@ *.o
