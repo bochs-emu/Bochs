@@ -31,7 +31,7 @@ and other OS's, all on your workstation.
 %install
 	pwd
 	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
-	for i in "" usr usr/bin usr/lib usr/share usr/share/doc usr/share/man; do 
+	for i in "" usr usr/bin usr/lib usr/share usr/share/doc %{_mandir}; do 
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
 	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
@@ -44,7 +44,7 @@ and other OS's, all on your workstation.
 #	/usr/lib/*
 	/usr/share/bochs/*
 	/usr/share/doc/*
-	/usr/share/man/*
+	%{_mandir}/*
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	if test "/" != $RPM_BUILD_ROOT; then
