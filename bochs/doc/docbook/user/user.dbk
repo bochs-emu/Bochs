@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.146 2004-03-26 06:16:09 bdenney Exp $
+$Id: user.dbk,v 1.147 2004-05-27 08:58:24 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4889,6 +4889,60 @@ http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html</ulink>
 </para>
 </section>
 
+<section> <title>Ben Lunt's MTOOLs for Bochs and Win32 and/or DOS</title>
+<para>
+Ben Lunt wrote a set of utilities for Dos/Win32 to manipulate flat disk images.
+</para>
+<para>
+You can find it at 
+<ulink url="http://www.cybertrails.com/~fys/mtools.htm">
+http://www.cybertrails.com/~fys/mtools.htm</ulink>
+</para>
+<para>
+These utilities includes :
+<itemizedlist>
+<listitem><para> 
+        BOCHSRC.EXE "Bochs Resource"  
+        A utility to create/modify a bochs resource file.
+</para></listitem>
+<listitem><para> 
+        MKDOSFS.EXE  "Make DOS FS" 
+        A utility to create a FAT disk image of specified size.
+</para></listitem>
+<listitem><para> 
+        MCOPYF.EXE  "Copy From"
+        A utility to copy an existing file from a FAT disk image to the current
+        directory.  
+</para></listitem>
+<listitem><para> 
+        MDEL.EXE  "Delete file"
+        A utility to delete an existing file from a FAT disk image.
+</para></listitem>
+<listitem><para> 
+        MDIREX.EXE  "Directory Extended"
+        A utility to view a FAT disk images directory and FAT contents.
+</para></listitem>
+<listitem><para> 
+        MGETIMG.EXE  "Get Disk Image"
+        A utility to create a disk image from a floppy (multiple formats).
+</para></listitem>
+<listitem><para> 
+        MBOOTCD.EXE  "Create a CDROM Image with boot options"
+        Create a CDROM image capable of booting with only a ROOT and a single file.
+</para></listitem>
+<listitem><para> 
+        MGETCD.EXE  "Get Disk Image of Physical CD"
+        A utility to create a disk image from a CD.
+</para></listitem>
+<listitem><para> 
+        MCDINFO.EXE  "Get CD Info"  
+        A utility to the info from a CD.  Not much yet, but a little.
+</para></listitem>
+</itemizedlist>
+
+</para>
+</section>
+
 </section>
 
 <section id="xcolormap"><title>X Windows: Color allocation problems</title>
@@ -9555,7 +9609,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.146 2004-03-26 06:16:09 bdenney Exp $
+        $Id: user.dbk,v 1.147 2004-05-27 08:58:24 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
