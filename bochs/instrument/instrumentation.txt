@@ -157,6 +157,13 @@ The  callback  is  called  each time, when Bochs simulator starts a new repeat
 iteration.
 
 
+	void bx_instr_mem_code(unsigned cpu, bx_address linear, unsigned len);
+	void bx_instr_mem_data(unsigned cpu, bx_address linear, unsigned len, unsigned rw);
+
+The  callback  is called each time, when Bochs simulator executes code or data
+memory access. Possible access types are: BX_READ, BX_WRITE and BX_RW.
+
+
 	void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len);
 	void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned len);
 
@@ -185,11 +192,9 @@ These callback functions are a feedback from various system devices.
 -----------------------------------------------------------------------------
 Known problems:
 
-1. BX_INSTR_MEM_DATA callback doesn't work for RMW requests 
-   (substitutes physical address instead of linear).
-2. BX_INSTR_MEM_CODE never called from Bochs's code.
-3. BX_INSTR_LIN_READ doesn't work when Guest-To-Host-TLB feature is enabled.
-4. BX_INSTR_LIN_WRITE doesn't work when Guest-To-Host-TLB feature is enabled.
+1. BX_INSTR_MEM_CODE never called from Bochs's code.
+2. BX_INSTR_LIN_READ doesn't work when Guest-To-Host-TLB feature is enabled.
+3. BX_INSTR_LIN_WRITE doesn't work when Guest-To-Host-TLB feature is enabled.
 
 
 Feature requests:

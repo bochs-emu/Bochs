@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.7 2003-02-13 15:04:10 sshwarts Exp $
+// $Id: instrument.h,v 1.8 2003-02-28 20:51:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ public:
   struct {
     bx_address laddr; // linear address
     bx_address paddr; // physical address
-    unsigned op;      // BX_READ or BX_WRITE
+    unsigned op;      // BX_READ, BX_WRITE or BX_RW
     unsigned size;    // 1 .. 8
   } data_access[MAX_DATA_ACCESSES];
 
