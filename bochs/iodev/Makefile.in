@@ -82,6 +82,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   vga.o \
   biosdev.o \
   cmos.o \
+  console.o \
   harddrv.o \
   dma.o \
   unmapped.o \
@@ -240,6 +241,7 @@ cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
+console.o: console.@CPP_SUFFIX@ console.h
 crc32.o: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \

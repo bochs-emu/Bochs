@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.17 2003-08-19 00:10:38 cbothamy Exp $
+// $Id: pit_wrap.h,v 1.18 2004-01-16 16:30:46 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,7 @@
 #if BX_USE_NEW_PIT
 
 #include "pit82c54.h"
+#include "console.h"
 
 #if BX_USE_PIT_SMF
 #  define BX_PIT_SMF  static
@@ -55,7 +56,10 @@ public:
 
   BX_PIT_SMF int SaveState( class state_file *fd );
   BX_PIT_SMF int LoadState( class state_file *fd );
-
+  bx_console_c *console;
+  Bit16u get_timer(int Timer) {
+      return s.timer.get_inlatch(Timer);
+  }
 private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);

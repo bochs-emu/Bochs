@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.23 2003-06-29 17:24:52 vruppert Exp $
+// $Id: pit82c54.cc,v 1.24 2004-01-16 16:30:46 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -890,4 +890,8 @@ Bit32u pit_82C54::get_next_event_time(void) {
   if(time2 && (time2<out))
     out=time2;
   return out;
+}
+
+Bit16u pit_82C54::get_inlatch(int counternum) {
+    return counter[counternum].inlatch;
 }

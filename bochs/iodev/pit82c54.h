@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.h,v 1.12 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: pit82c54.h,v 1.13 2004-01-16 16:30:46 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -126,6 +126,7 @@ public:
 
   Bit32u get_clock_event_time(Bit8u cnum);
   Bit32u get_next_event_time(void);
+  Bit16u get_inlatch(int countnum);
 
   void print_cnum(Bit8u cnum);
 

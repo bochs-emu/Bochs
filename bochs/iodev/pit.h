@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.h,v 1.10 2002-10-25 11:44:40 bdenney Exp $
+// $Id: pit.h,v 1.11 2004-01-16 16:30:46 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,7 +73,7 @@ public:
 
   BX_PIT_SMF int SaveState( class state_file *fd );
   BX_PIT_SMF int LoadState( class state_file *fd );
-
+  bx_console_c *console;
 private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
