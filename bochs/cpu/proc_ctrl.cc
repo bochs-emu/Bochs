@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.60 2002-10-25 11:44:35 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.61 2002-10-27 22:26:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -96,7 +96,7 @@ BX_CPU_C::HLT(bxInstruction_c *i)
   // is met.
 
 #if BX_USE_IDLE_HACK  
-  bx_gui.sim_is_idle ();
+  bx_gui->sim_is_idle ();
 #endif /* BX_USE_IDLE_HACK */  
 }
 
