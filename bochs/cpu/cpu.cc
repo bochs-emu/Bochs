@@ -71,7 +71,7 @@ extern void REGISTER_IADDR(Bit32u addr);
 
 #if BX_DYNAMIC_TRANSLATION == 0
   void
-BX_CPU_C::cpu_loop(void)
+BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
   unsigned ret;
   BxInstruction_t i;
@@ -302,6 +302,17 @@ debugger_check:
     }
 #endif
 
+    // if maximum instructions have been executed, return.  This is 
+    // equivalent to the icount in the bx_guard structure, but is not
+    // specific to the debugger code.
+    if (max_instr_count < 0) {
+      // no limit on number of instructions
+    } else {
+      max_instr_count--;
+      if (max_instr_count == 0)
+	return;
+    }
+
 #if BX_DEBUGGER
     {
     Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
@@ -369,30 +380,16 @@ handle_async_event:
 
   if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
     // I made up the bitmask above to mean HALT state.
-#if 0
-/* single processor simulation: halt until time event wakes us up.
-   After wakeup, debug_trap and inhibit_mask are cleared. */
-    BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
-    BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
-    // Need to fix this for cosimulation.
-    while (1) {
-      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
-        break;
-        }
-      BX_TICK1();
-      }
-#endif
-    /* for SMP simulation, there's no guarantee that debug_trap will be
-       cleared. */
     if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
-      /* HALT condition has gone away */
+      // interrupt ends the HALT condition
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
       bx_printf ("halt condition has been cleared in %s\n", name);
     } else {
-      /* HALT condition remains. just increment time */
-      //bx_printf ("doing nothing in halted processor %s\n", name);
+      // HALT condition remains, return so other CPUs have a chance
+#if BX_DEBUGGER
       BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
+#endif
       return;
     }
   }
