@@ -621,6 +621,18 @@ Example:
   i440fxsupport: enabled=1
 
 .TP
+.I "pcidev:"
+Enables the mapping of a host PCI hardware device within the PCI subsystem of
+the Bochs x86 emulator. This feature requires Linux as a host OS.
+
+Example:
+  pcidev: vendor=0x1234, device=0x5678
+
+The vendor and device arguments should contain the vendor ID respectively the
+device ID of the PCI device you want to map within Bochs.
+.B The PCI mapping is still very experimental.
+
+.TP
 .I "ne2k:"
 Defines the characteristics of an attached ne2000 isa card :
    ioaddr=IOADDR,
