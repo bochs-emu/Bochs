@@ -149,7 +149,7 @@ plugins: $(BX_IODEV_SO_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 $(BX_OBJS): $(BX_INCLUDES)
 
 clean:
-	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

@@ -114,7 +114,7 @@ wx.dll: $(GUI_OBJS_WX)
 plugins: $(GUI_SO_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
 clean:
-	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o
+	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o *.dll
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile
