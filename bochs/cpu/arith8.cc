@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.34 2004-08-18 21:29:07 sshwarts Exp $
+// $Id: arith8.cc,v 1.35 2005-04-02 18:49:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -486,12 +486,12 @@ BX_CPU_C::NEG_Eb(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    diff_8 = 0 - op1_8;
+    diff_8 = -op1_8;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
   }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
-    diff_8 = 0 - op1_8;
+    diff_8 = -op1_8;
     Write_RMW_virtual_byte(diff_8);
   }
 

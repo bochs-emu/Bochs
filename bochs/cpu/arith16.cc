@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.38 2004-08-18 21:29:06 sshwarts Exp $
+// $Id: arith16.cc,v 1.39 2005-04-02 18:49:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -622,12 +622,12 @@ BX_CPU_C::NEG_Ew(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
-    diff_16 = 0 - op1_16;
+    diff_16 = -op1_16;
     BX_WRITE_16BIT_REG(i->rm(), diff_16);
     }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    diff_16 = 0 - op1_16;
+    diff_16 = -op1_16;
     Write_RMW_virtual_word(diff_16);
     }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.45 2005-03-20 18:33:02 sshwarts Exp $
+// $Id: apic.cc,v 1.46 2005-04-02 18:49:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -457,7 +457,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0xd0: // logical destination
       log_dest = (value >> 24) & APIC_ID_MASK;
-      BX_DEBUG (("set logical destiation to %02x", log_dest));
+      BX_DEBUG (("set logical destination to %02x", log_dest));
       break;
     case 0xe0: // destination format
       dest_format = (value >> 28) & 0xf;

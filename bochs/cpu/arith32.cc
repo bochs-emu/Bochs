@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.43 2004-09-26 20:29:04 sshwarts Exp $
+// $Id: arith32.cc,v 1.44 2005-04-02 18:49:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,35 +41,35 @@
   void
 BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
+  unsigned opcodeReg = i->opcodeReg();
+
 #if defined(BX_HostAsm_Inc32)
   Bit32u flags32;
-  asmInc32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
+  asmInc32(BX_CPU_THIS_PTR gen_reg[opcodeReg].dword.erx, flags32);
   setEFlagsOSZAP(flags32);
 #else
-  Bit32u erx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
+  Bit32u erx = ++ BX_CPU_THIS_PTR gen_reg[opcodeReg].dword.erx;
   SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_INC32);
 #endif
 
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
-#endif
+  BX_CLEAR_64BIT_HIGH(opcodeReg);
 }
 
   void
 BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
+  unsigned opcodeReg = i->opcodeReg();
+
 #if defined(BX_HostAsm_Dec32)
   Bit32u flags32;
-  asmDec32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
+  asmDec32(BX_CPU_THIS_PTR gen_reg[opcodeReg].dword.erx, flags32);
   setEFlagsOSZAP(flags32);
 #else
-  Bit32u erx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
+  Bit32u erx = -- BX_CPU_THIS_PTR gen_reg[opcodeReg].dword.erx;
   SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_DEC32);
 #endif
 
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
-#endif
+  BX_CLEAR_64BIT_HIGH(opcodeReg);
 }
 
   void
@@ -637,12 +637,12 @@ BX_CPU_C::NEG_Ed(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    diff_32 = 0 - op1_32;
+    diff_32 = -op1_32;
     BX_WRITE_32BIT_REGZ(i->rm(), diff_32);
     }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    diff_32 = 0 - op1_32;
+    diff_32 = -op1_32;
     Write_RMW_virtual_dword(diff_32);
     }
 
