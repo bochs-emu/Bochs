@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.6 2002-10-25 18:26:28 sshwarts Exp $
+// $Id: logical64.cc,v 1.7 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_X86_64
 
 
 
@@ -437,3 +438,5 @@ BX_CPU_C::TEST_EqId(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_TEST64);
 }
+
+#endif /* if BX_SUPPORT_X86_64 */

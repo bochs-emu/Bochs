@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.4 2002-09-18 08:00:40 kevinlawton Exp $
+// $Id: resolve64.cc,v 1.5 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
+#if BX_SUPPORT_X86_64
 
 
   void
@@ -455,3 +456,4 @@ BX_CPU_C::Resolve64Mod1or2Base15(bxInstruction_c *i)
     RMAddr(i) = R15 + (Bit32s) i->displ32u();
 }
 
+#endif /* if BX_SUPPORT_X86_64 */

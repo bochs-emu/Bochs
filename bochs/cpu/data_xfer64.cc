@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.12 2002-10-25 18:26:27 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.13 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_X86_64
 
 
   void
@@ -470,3 +471,4 @@ BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
   BX_PANIC(("cmov_gded called"));
 #endif
 }
+#endif /* if BX_SUPPORT_X86_64 */

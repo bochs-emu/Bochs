@@ -106,6 +106,8 @@ parser.c: parser.y
 	$(YACC) -p bx -d $<
 	@/bin/mv -f y.tab.c parser.c
 	@/bin/mv -f y.tab.h parser.h
+	@echo '#endif  /* if BX_DEBUGGER */' >> parser.c
+	@echo '/* The #endif is appended by the makefile after running yacc. */' >> parser.c
 
 lexer.c: lexer.l
 	$(LEX) -Pbx -t $< > lexer.c

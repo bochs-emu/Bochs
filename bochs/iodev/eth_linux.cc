@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.10 2002-10-24 21:07:25 bdenney Exp $
+// $Id: eth_linux.cc,v 1.11 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 //
 
 #include "bochs.h"
-#ifdef ETH_LINUX
+#if BX_NE2K_SUPPORT && defined (ETH_LINUX)
 #define LOG_THIS bx_ne2k.
 
 extern "C" {
@@ -277,4 +277,4 @@ bx_linux_pktmover_c::rx_timer(void)
     (*rxh)(rxarg, rxbuf, nbytes);
 //  }
 }
-#endif
+#endif /* if BX_NE2K_SUPPORT && defined ETH_LINUX */

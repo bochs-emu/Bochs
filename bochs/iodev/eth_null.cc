@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_null.cc,v 1.10 2002-10-24 21:07:28 bdenney Exp $
+// $Id: eth_null.cc,v 1.11 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,8 @@
 // rfc0903: rarp
 
 #include "bochs.h"
+#if BX_NE2K_SUPPORT
+
 #define LOG_THIS bx_ne2k.
 
 
@@ -153,3 +155,5 @@ void bx_null_pktmover_c::rx_timer_handler (void *this_ptr)
   }
 #endif
 }
+
+#endif /* if BX_NE2K_SUPPORT */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.50 2002-11-18 02:40:31 bdenney Exp $
+// $Id: wx.cc,v 1.51 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -36,6 +36,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include "bochs.h"
+#if BX_WITH_WX
+
 // For compilers that support precompilation, includes <wx/wx.h>.
 #include <wx/wxprec.h>
 #ifdef __BORLANDC__
@@ -47,7 +50,6 @@
 #include <wx/image.h>
 #include <wx/clipbrd.h>
 
-#include "bochs.h"
 #include "gui/icon_bochs.h"
 #include "osdep.h"
 #include "font/vga.bitmap.h"
@@ -1259,3 +1261,5 @@ static Bit32u convertStringToGDKKey (const char *string)
     return((Bit32u)keysym);
 }
 #endif
+
+#endif /* if BX_WITH_WX */

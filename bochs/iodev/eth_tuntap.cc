@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.4 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: eth_tuntap.cc,v 1.5 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,6 +82,8 @@
 // 
 
 #include "bochs.h"
+#if BX_NE2K_SUPPORT
+
 #define LOG_THIS bx_ne2k.
 
 #include <signal.h>
@@ -421,3 +423,5 @@ int execute_script( char* scriptname, char* arg1 )
   }
   return WEXITSTATUS(status);
 }
+
+#endif /* if BX_NE2K_SUPPORT */

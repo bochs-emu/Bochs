@@ -1,8 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.14 2002-11-18 17:27:40 bdenney Exp $
+// $Id: iodebug.cc,v 1.15 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
+#if BX_IODEBUG_SUPPORT
 
 
 
@@ -350,3 +351,4 @@ void bx_iodebug_c::add_range( Bit32u addr_start, Bit32u addr_end )
   }
 //  fprintf(stderr, "IODEBUG unable to register memory range, all slots taken\n");
 }
+#endif /* if BX_IODEBUG_SUPPORT */

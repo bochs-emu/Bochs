@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.20 2002-10-26 21:03:21 bdenney Exp $
+// $Id: beos.cc,v 1.21 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include "bochs.h"
+#if BX_WITH_BEOS
+
 #include <app/Application.h>
 #include <interface/Window.h>
 #include <interface/View.h>
@@ -43,7 +46,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "bochs.h"
 //#include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 
@@ -1227,3 +1229,5 @@ bx_beos_gui_c::mouse_enabled_changed_specific (bx_bool val)
   }
 }
 //IRA=> End
+
+#endif /* if BX_WITH_BEOS */

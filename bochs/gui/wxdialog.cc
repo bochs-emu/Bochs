@@ -1,11 +1,14 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.49 2002-11-16 22:44:09 bdenney Exp $
+// $Id: wxdialog.cc,v 1.50 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE 
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
+
+#include "config.h"              // definitions based on configure script
+#if BX_WITH_WX
 
 // For compilers that support precompilation, includes <wx/wx.h>.
 #include <wx/wxprec.h>
@@ -20,7 +23,6 @@
 #include <wx/confbase.h>
 #include <wx/notebook.h>
 
-#include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/siminterface.h"    // interface to the simulator
 #include "bxversion.h"           // get version string
@@ -2576,3 +2578,5 @@ wxChoice *makeLogOptionChoiceBox (wxWindow *parent,
   control->SetSelection (lastChoice-1);
   return control;
 }
+
+#endif /* if BX_WITH_WX */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.5 2002-10-25 11:44:35 bdenney Exp $
+// $Id: mult64.cc,v 1.6 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_X86_64
 
 unsigned partial_add(Bit32u *sum,Bit32u b)
 {
@@ -489,3 +490,5 @@ BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
       }
 #endif
 }
+
+#endif /* if BX_SUPPORT_X86_64 */

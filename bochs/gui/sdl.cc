@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.29 2002-10-25 11:44:37 bdenney Exp $
+// $Id: sdl.cc,v 1.30 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,12 +31,14 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include "bochs.h"
+#if BX_WITH_SDL
+
 #include <stdlib.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_endian.h>
 #include <SDL/SDL_thread.h>
 
-#include "bochs.h"
 #include "icon_bochs.h"
 #include "sdl.h"
 
@@ -1150,3 +1152,5 @@ static Bit32u convertStringToSDLKey (const char *string)
   }
   return BX_KEYMAP_UNKNOWN;
 }
+
+#endif /* if BX_WITH_SDL */

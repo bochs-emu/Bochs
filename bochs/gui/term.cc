@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.23 2002-10-25 11:44:37 bdenney Exp $
+// $Id: term.cc,v 1.24 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -32,6 +32,8 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#if BX_WITH_TERM
+
 #include "icon_bochs.h"
 
 extern "C" {
@@ -715,3 +717,4 @@ bx_term_gui_c::exit(void)
 bx_term_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
+#endif /* if BX_WITH_TERM */

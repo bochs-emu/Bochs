@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.44 2002-11-18 17:16:07 vruppert Exp $
+// $Id: ne2k.cc,v 1.45 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,6 +29,8 @@
 
 
 #include "bochs.h"
+#if BX_NE2K_SUPPORT
+
 #define LOG_THIS bx_ne2k.
 
 bx_ne2k_c bx_ne2k;
@@ -41,7 +43,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
   put("NE2K");
   settype(NE2KLOG);
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.44 2002-11-18 17:16:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.45 2002-11-19 05:47:45 bdenney Exp $"));
   BX_NE2K_THIS s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -1247,7 +1249,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.44 2002-11-18 17:16:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.45 2002-11-19 05:47:45 bdenney Exp $"));
 
 
   if (bx_options.ne2k.Opresent->get ()) {
@@ -1573,3 +1575,5 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
 }
 
 #endif
+
+#endif /* if BX_NE2K_SUPPORT */

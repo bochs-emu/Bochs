@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.29 2002-11-13 18:39:40 vruppert Exp $
+// $Id: sb16.cc,v 1.30 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,6 +32,8 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#if BX_SUPPORT_SB16
+
 #define LOG_THIS theSB16Device->
 
 bx_sb16_c *theSB16Device = NULL;
@@ -3509,3 +3511,5 @@ int bx_sound_output_c::closewaveoutput()
 {
   return BX_SOUND_OUTPUT_OK;
 }
+
+#endif /* if BX_SUPPORT_SB16 */

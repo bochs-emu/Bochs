@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.6 2002-09-28 06:29:55 ptrumpet Exp $
+// $Id: dis_groups.cc,v 1.7 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 
 #include "bochs.h"
+#if BX_DISASM
 
 
 
@@ -837,3 +838,5 @@ bx_disassemble_c::eDI(void)
     dis_sprintf("DI");
     }
 }
+
+#endif /* if BX_DISASM */

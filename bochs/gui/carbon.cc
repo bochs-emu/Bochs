@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.16 2002-11-14 01:40:11 bdenney Exp $
+// $Id: carbon.cc,v 1.17 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,6 +41,9 @@
 
 // BOCHS INCLUDES
 #include "bochs.h"
+
+#if BX_WITH_CARBON
+
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 #include "bxversion.h"
@@ -1993,3 +1996,4 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
 #endif
   return event;
 }
+#endif /* if BX_WITH_CARBON */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.10 2002-10-25 11:44:36 bdenney Exp $
+// $Id: amigaos.cc,v 1.11 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#if BX_WITH_AMIGAOS
 #include "icon_bochs.h"
 #include "amigagui.h"
 
@@ -697,3 +698,4 @@ bx_amigaos_gui_c::mouse_enabled_changed_specific (bx_bool val)
     show_pointer();
   }
 }
+#endif /* if BX_WITH_AMIGAOS */

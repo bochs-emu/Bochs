@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.17 2002-10-25 11:44:34 bdenney Exp $
+// $Id: ctrl_xfer64.cc,v 1.18 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
+#if BX_SUPPORT_X86_64
 
 
 
@@ -584,3 +585,4 @@ BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
 #endif
     }
 }
+#endif /* if BX_SUPPORT_X86_64 */

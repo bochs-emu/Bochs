@@ -1,11 +1,18 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.7 2002-10-04 14:57:35 bdenney Exp $
+// $Id: parser.y,v 1.8 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
 #include <stdio.h>
 #include <stdlib.h>
 #include "debug.h"
+
+#if BX_DEBUGGER
+/*
+NOTE: The #if comes from parser.y.  The makefile will add the matching #endif
+at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
+*/
+
 // %left '-' '+'
 // %left '*' '/'
 // %right

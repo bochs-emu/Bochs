@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.50 2002-11-01 16:36:26 bdenney Exp $
+// $Id: cdrom.cc,v 1.51 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,6 +38,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#if BX_SUPPORT_CDROM
 
 #define LOG_THIS /* no SMF tricks here, not needed */
 
@@ -454,7 +455,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.50 2002-11-01 16:36:26 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.51 2002-11-19 05:47:44 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -1291,3 +1292,4 @@ cdrom_interface::read_block(uint8* buf, int lba)
     }
 }
 
+#endif /* if BX_SUPPORT_CDROM */

@@ -1,12 +1,15 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.9 2002-10-04 14:57:34 bdenney Exp $
+// $Id: lexer.l,v 1.10 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
 #include <string.h>
 #include "debug.h"
+#if BX_DEBUGGER
+
 #include "parser.h"
+
 
 int bx_yyinput(char *buf, int max_size);
 #undef YY_INPUT
@@ -170,3 +173,5 @@ bx_add_lex_input(char *buf)
 
   bx_flush_buffer( YY_CURRENT_BUFFER );
 }
+
+#endif /* if BX_DEBUGGER */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.23 2002-10-24 21:07:24 bdenney Exp $
+// $Id: eth_fbsd.cc,v 1.24 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,7 +49,8 @@
 //
 
 #include "bochs.h"
-#ifdef ETH_FBSD
+#if BX_NE2K_SUPPORT && defined(ETH_FBSD)
+
 #define LOG_THIS bx_ne2k.
 
 extern "C" {
@@ -374,5 +375,6 @@ bx_fbsd_pktmover_c::rx_timer(void)
 	bhdr = (struct bpf_hdr*) ((char*) bhdr + BPF_WORDALIGN(bhdr->bh_hdrlen + bhdr->bh_caplen));
   }  
 }
-#endif
+
+#endif /* if BX_NE2K_SUPPORT && defined(ETH_FBSD) */
 

@@ -1,9 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.25 2002-10-25 11:44:34 bdenney Exp $
+// $Id: apic.cc,v 1.26 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#if BX_SUPPORT_APIC
 
 #define LOG_THIS this->
 
@@ -795,3 +796,4 @@ bx_local_apic_c::periodic(void) // KPL: changed prototype
     bx_pc_system.deactivate_timer(timer_handle); // Make sure.
     }
 }
+#endif /* if BX_SUPPORT_APIC */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.12 2002-04-18 00:59:58 bdenney Exp $
+// $Id: eth.cc,v 1.13 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,8 @@
 // NE2000/ether stuff.
 
 #include "bochs.h"
+#if BX_NE2K_SUPPORT
+
 #define LOG_THIS /* not needed */
 
 eth_locator_c *eth_locator_c::all;
@@ -141,3 +143,5 @@ eth_locator_c::create(const char *type, const char *netif,
 
   return (NULL);
 }
+
+#endif /* if BX_NE2K_SUPPORT */

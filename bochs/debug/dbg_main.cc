@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.87 2002-11-15 22:11:24 cbothamy Exp $
+// $Id: dbg_main.cc,v 1.88 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,8 @@ extern "C" {
 }
 
 #include "bochs.h"
+#if BX_DEBUGGER
+
 #define LOG_THIS genlog->
 
 #if HAVE_LIBREADLINE
@@ -4954,3 +4956,4 @@ bx_dbg_help_command(char* command)
   return;
 }
 
+#endif /* if BX_DEBUGGER */

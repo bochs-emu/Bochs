@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc.cc,v 1.2 2001-10-03 13:10:37 bdenney Exp $
+// $Id: crc.cc,v 1.3 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  I grabbed these CRC routines from the following source:
@@ -28,6 +28,7 @@
 
 
 #include "bochs.h"
+#if BX_DEBUGGER
 
 unsigned long crc32_table[256];
 /* Initialized first time "crc32()" is called. If you prefer, you can
@@ -68,3 +69,4 @@ init_crc32(void)
                 crc32_table[i] = c;
         }
 }
+#endif /* if BX_DEBUGGER */

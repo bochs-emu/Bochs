@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.8 2002-10-24 21:05:54 bdenney Exp $
+// $Id: stack64.cc,v 1.9 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,8 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_X86_64
 
 #if BX_USE_CPU_SMF
 #define this (BX_CPU(0))
@@ -315,3 +317,5 @@ BX_CPU_C::LEAVE64(bxInstruction_c *i)
   RBP = temp64;
   }
 }
+
+#endif /* if BX_SUPPORT_X86_64 */

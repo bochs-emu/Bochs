@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.4 2001-10-03 13:10:38 bdenney Exp $
+// $Id: soundlnx.cc,v 1.5 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,9 +26,9 @@
 
 // This file (SOUNDLNX.CC) written and donated by Josef Drexler
 
-#if defined(linux)
 
 #include "bochs.h"
+#if defined(linux) && BX_SUPPORT_SB16
 #define LOG_THIS bx_sb16.
 
 #include <errno.h>

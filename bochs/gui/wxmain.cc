@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.77 2002-11-18 17:16:07 vruppert Exp $
+// $Id: wxmain.cc,v 1.78 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -42,6 +42,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include "config.h"              // definitions based on configure script
+#if BX_WITH_WX
+
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 #ifdef __BORLANDC__
@@ -53,7 +56,6 @@
 #include <wx/image.h>
 #include <wx/clipbrd.h>
 
-#include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/siminterface.h"    // interface to the simulator
 #include "bxversion.h"           // get version string
@@ -1645,4 +1647,4 @@ safeWxStrcpy (char *dest, wxString src, int destlen)
   dest[destlen-1] = 0;
 }
 
-
+#endif /* if BX_WITH_WX */

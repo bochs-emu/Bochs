@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.19 2002-10-25 11:44:37 bdenney Exp $
+// $Id: rfb.cc,v 1.20 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -27,6 +27,8 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#if BX_WITH_RFB
+
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 
@@ -1325,3 +1327,5 @@ void rfbMouseMove(int x, int y, int bmask)
 bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
+
+#endif /* if BX_WITH_RFB */

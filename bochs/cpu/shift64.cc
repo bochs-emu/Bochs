@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.8 2002-10-25 18:26:29 sshwarts Exp $
+// $Id: shift64.cc,v 1.9 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_X86_64
 
   void
 BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
@@ -463,3 +464,5 @@ BX_CPU_C::SAR_Eq(bxInstruction_c *i)
       set_OF(0);
     set_PF_base(result_64);
 }
+
+#endif /* if BX_SUPPORT_X86_64 */

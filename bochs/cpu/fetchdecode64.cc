@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.30 2002-11-15 12:44:39 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.31 2002-11-19 05:47:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,8 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_X86_64
 
 #if 0
 // KPL.  A number of cases are testing field values after they have
@@ -3685,3 +3687,4 @@ BX_INFO(("b1 was %x", b1));
   return(1);
 }
 
+#endif /* if BX_SUPPORT_X86_64 */

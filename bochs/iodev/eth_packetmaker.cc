@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.6 2002-10-25 11:44:39 bdenney Exp $
+// $Id: eth_packetmaker.cc,v 1.7 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
 
-#ifdef ETH_ARPBACK
+#if BX_NE2K_SUPPORT && defined(ETH_ARPBACK)
 
 #include "eth_packetmaker.h"
 
@@ -176,5 +176,4 @@ eth_ARPmaker::sendpacket(const eth_packet& outpacket) {
   }
 }
 
-#endif
-
+#endif /* if BX_NE2K_SUPPORT && defined(ETH_ARPBACK) */

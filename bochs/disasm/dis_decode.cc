@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.11 2002-10-25 11:44:35 bdenney Exp $
+// $Id: dis_decode.cc,v 1.12 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,6 +35,8 @@
 #define BX_DISASM_LOWER_CASE_REG_NAME 0
 
 #include "bochs.h"
+#if BX_DISASM
+
 #define LOG_THIS bx_disassemble.
 
 bx_disassemble_c bx_disassemble;
@@ -1829,3 +1831,4 @@ bx_disassemble_c::out_16bit_index(int index)
   if (index_name16[index])
     dis_sprintf("[%s]", index_name16[index]);
 }
+#endif /* if BX_DISASM */

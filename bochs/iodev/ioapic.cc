@@ -1,9 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.10 2002-10-25 11:44:40 bdenney Exp $
+// $Id: ioapic.cc,v 1.11 2002-11-19 05:47:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
 #include  "bochs.h"
+#if BX_SUPPORT_APIC
 
 class bx_ioapic_c bx_ioapic;
 #define LOG_THIS  bx_ioapic.
@@ -170,3 +171,5 @@ void bx_ioapic_c::service_ioapic ()
     }
   }
 }
+
+#endif /* if BX_SUPPORT_APIC */

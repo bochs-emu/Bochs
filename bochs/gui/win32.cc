@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.46 2002-10-25 11:44:37 bdenney Exp $
+// $Id: win32.cc,v 1.47 2002-11-19 05:47:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,8 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#if BX_WITH_WIN32
+
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 // windows.h is included by bochs.h
@@ -1400,3 +1402,4 @@ void DestroyFont(void)
     DeleteObject(hFont[i]);
   }
 }
+#endif /* if BX_WITH_WIN32 */
