@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.43 2002-12-08 04:48:52 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.44 2003-01-05 01:37:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -239,7 +239,7 @@ bx_pit_c::init( void )
 
   BX_DEBUG(("pit: finished init"));
 
-  BX_DEBUG(("s.last_usec=%d",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec=%llu",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%d",BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
@@ -285,7 +285,7 @@ bx_pit_c::handle_timer() {
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec=%d",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec=%llu",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
@@ -446,7 +446,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec=%d",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec=%llu",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
