@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.121 2002-08-26 18:05:16 bdenney Exp $
+// $Id: main.cc,v 1.122 2002-08-27 16:43:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1180,6 +1180,7 @@ bx_init_main (int argc, char *argv[])
 #endif
 }
 
+#if !BX_WITH_WX
 static void
 bx_do_text_config_interface (int argc, char *argv[])
 {
@@ -1246,11 +1247,10 @@ bx_do_text_config_interface (int argc, char *argv[])
       io->set_log_action (level, action);
     }
     // Display the pre-simulation configuration interface.
-#if !BX_WITH_WX
     bx_config_interface (BX_CI_START_MENU);
-#endif
   }
 }
+#endif
 
 int
 bx_continue_after_config_interface (int argc, char *argv[])
