@@ -1,0 +1,320 @@
+----------------------------------------------------------------------
+Patch name: patch.convert-cmos-plugin
+Author: Bryce Denney
+Date: Fri Oct 18 16:00:57 EDT 2002
+
+Detailed description:
+
+This patch shows how to convert the function pointers associated with
+an object into virtual methods, using the cmos plugin as an example.
+Here's what I did:
+- create a stub class bx_cmos_stub_c which is derived from bx_devmodel_c.
+  The bx_cmos_c class will now derive from bx_cmos_stub_c.  For every
+  function pointer associated with the cmos device, I made a virtual
+  method in the stub class.  I used the STUBFUNC macro to put a panic
+  into each function call in case someone calls the stub instead of the
+  real object.  This seems better than doing nothing, or segfaulting
+  because the object is NULL.
+- made bx_devices.pluginCmosDevice into a bx_cmos_stub_c, when it used
+  to be a generic bx_devmodel_c.  Now we will be able to call the stub's
+  virtual methods from the plugin.h macros.  bx_devices.pluginCmosDevice
+  is initialized pointing to an instance of the stub class, so that
+  the virtual functions will panic if the plugin is not installed.
+  When the plugin IS installed, it will replace bx_devices.pluginCmosDevice
+  with a pointer to the real device object.
+- in the cmos header file, I change the base class to point to the stub.
+  The cmos class will override the stub's virtual methods, so these
+  methods must be changed to "virtual" for this to work.  Some of the
+  methods (get_reg,set_reg,etc.) were trivial so I defined them right
+  in the header file.  The checksum method was more significant so I
+  just changed its declaration to virtual and that was enough.
+- then the fun part: cleaning up all the junk that we don't need anymore:
+  - eliminate the setting of function pointers in the constructor of cmos
+  - in plugin.h in the #if BX_PLUGIN..#else...#endif section, remove
+    the two macro definitions (BX_GET_CMOS_REG, BX_SET_CMOS_REG, etc.)
+    Instead put them outside the ifdef because only one definition is
+    necessary for each macro.  These macros should now call the virtual methods
+    on bx_devices.pluginCmosDevice.
+  - remove declaration of the function pointers (pluginGetCMOSReg, 
+    pluginSetCMOSReg, etc.)
+  - remove definition of the function pointers
+  - remove the builtin functions that those pointers used to point to
+  - remove the init code that set the function pointers to the builtin funcs
+
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: iodev/iodev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
+retrieving revision 1.18.4.15
+diff -u -r1.18.4.15 iodev.h
+--- iodev/iodev.h	18 Oct 2002 19:37:10 -0000	1.18.4.15
++++ iodev/iodev.h	18 Oct 2002 20:26:33 -0000
+@@ -151,6 +151,22 @@
+   }
+ };
+ 
++class bx_cmos_stub_c : public bx_devmodel_c {
++  public:
++  virtual Bit32u get_reg(unsigned reg) {
++    STUBFUNC(cmos, get_reg); return 0;
++  }
++  virtual void set_reg(unsigned reg, Bit32u val) {
++    STUBFUNC(cmos, set_reg);
++  }
++  virtual time_t get_timeval() {
++    STUBFUNC(cmos, get_timeval); return 0;
++  }
++  virtual void checksum_cmos(void) {
++    STUBFUNC(cmos, checksum);
++  }
++};
++
+ class bx_devices_c : public logfunctions {
+ public:
+   bx_devices_c(void);
+@@ -193,7 +209,7 @@
+   bx_devmodel_c *pluginParallelDevice;
+   bx_devmodel_c *pluginUnmapped;
+   bx_devmodel_c *pluginBiosDevice;
+-  bx_devmodel_c *pluginCmosDevice;
++  bx_cmos_stub_c *pluginCmosDevice;
+   bx_devmodel_c *pluginDmaDevice;
+   bx_devmodel_c *pluginPicDevice;
+   bx_devmodel_c *pluginVgaDevice;
+@@ -201,6 +217,7 @@
+ 
+   // stub classes that the pointers (above) can point to until a plugin is
+   // loaded
++  bx_cmos_stub_c stubCmos;
+   bx_keyb_stub_c stubKeyboard;
+   bx_hard_drive_stub_c stubHardDrive;
+ 
+Index: iodev/devices.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/devices.cc,v
+retrieving revision 1.34.2.14
+diff -u -r1.34.2.14 devices.cc
+--- iodev/devices.cc	18 Oct 2002 19:37:08 -0000	1.34.2.14
++++ iodev/devices.cc	18 Oct 2002 20:26:34 -0000
+@@ -62,7 +62,7 @@
+   pluginParallelDevice = NULL;
+   pluginUnmapped = NULL;
+   pluginBiosDevice = NULL;
+-  pluginCmosDevice = NULL;
++  pluginCmosDevice = &stubCmos;
+   pluginDmaDevice = NULL;
+   pluginPicDevice = NULL;
+   pluginVgaDevice = NULL;
+Index: iodev/cmos.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cmos.h,v
+retrieving revision 1.6.4.2
+diff -u -r1.6.4.2 cmos.h
+--- iodev/cmos.h	18 Oct 2002 19:37:07 -0000	1.6.4.2
++++ iodev/cmos.h	18 Oct 2002 20:26:34 -0000
+@@ -37,14 +37,24 @@
+ #endif
+ 
+ 
+-class bx_cmos_c : public bx_devmodel_c {
++class bx_cmos_c : public bx_cmos_stub_c {
+ public:
+   bx_cmos_c(void);
+   ~bx_cmos_c(void);
+ 
+   virtual void init(void);
+-  BX_CMOS_SMF void checksum_cmos(void);
++  virtual void checksum_cmos(void);
+   virtual void reset(unsigned type);
++
++  virtual Bit32u get_reg(unsigned reg) {
++    return s.reg[reg];
++  }
++  virtual void set_reg(unsigned reg, Bit32u val) {
++    s.reg[reg] = val;
++  }
++  virtual time_t get_timeval() {
++    return s.timeval;
++  }
+ 
+   struct {
+     int     periodic_timer_index;
+Index: iodev/cmos.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cmos.cc,v
+retrieving revision 1.20.2.7
+diff -u -r1.20.2.7 cmos.cc
+--- iodev/cmos.cc	18 Oct 2002 19:37:07 -0000	1.20.2.7
++++ iodev/cmos.cc	18 Oct 2002 20:26:34 -0000
+@@ -42,24 +42,6 @@
+ #endif
+ 
+ 
+-  static Bit32u
+-cmosGetReg(unsigned reg)
+-{
+-  return( BX_CMOS_THIS s.reg[reg] );
+-}
+-
+-  static void
+-cmosSetReg(unsigned reg, Bit32u val)
+-{
+-  BX_CMOS_THIS s.reg[reg] = val;
+-}
+-
+-  static time_t
+-cmosGetTimeval()
+-{
+-  return( BX_CMOS_THIS s.timeval );
+-}
+-
+   int
+ libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+ {
+@@ -76,11 +58,6 @@
+ 
+ bx_cmos_c::bx_cmos_c(void)
+ {
+-  pluginGetCMOSReg = cmosGetReg;
+-  pluginSetCMOSReg = cmosSetReg;
+-  pluginCMOSChecksum = checksum_cmos;
+-  pluginGetCMOSTimeval = cmosGetTimeval;
+-
+   put("CMOS");
+   settype(CMOSLOG);
+ 
+Index: plugin.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Attic/plugin.h,v
+retrieving revision 1.1.2.22
+diff -u -r1.1.2.22 plugin.h
+--- plugin.h	18 Oct 2002 19:37:05 -0000	1.1.2.22
++++ plugin.h	18 Oct 2002 20:26:36 -0000
+@@ -58,11 +58,6 @@
+ #define BX_REGISTER_IRQ(b,c) pluginRegisterIRQ(b,c)
+ #define BX_UNREGISTER_IRQ(b) pluginUnregisterIRQ(b)
+ 
+-#define BX_GET_CMOS_REG(b) pluginGetCMOSReg(b)
+-#define BX_SET_CMOS_REG(b,c) pluginSetCMOSReg(b,c)
+-#define BX_CMOS_CHECKSUM() pluginCMOSChecksum()
+-#define BX_GET_CMOS_TIMEVAL() pluginGetCMOSTimeval()
+-
+ #define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
+ #define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
+ #define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
+@@ -107,11 +102,6 @@
+ #define BX_REGISTER_IRQ(b,c) bx_devices.register_irq(b,c)
+ #define BX_UNREGISTER_IRQ(b) bx_devices.unregister_irq(b)
+ 
+-#define BX_GET_CMOS_REG(b) pluginGetCMOSReg(b)
+-#define BX_SET_CMOS_REG(b,c) pluginSetCMOSReg(b,c)
+-#define BX_CMOS_CHECKSUM() pluginCMOSChecksum()
+-#define BX_GET_CMOS_TIMEVAL() pluginGetCMOSTimeval()
+-
+ #define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
+ #define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
+ #define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
+@@ -149,6 +139,11 @@
+ // FIXME Do we really need pluginRegisterTimer ?
+ #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
+ 
++///////// CMOS macros
++#define BX_GET_CMOS_REG(a) (bx_devices.pluginCmosDevice->get_reg(a))
++#define BX_SET_CMOS_REG(a,b) (bx_devices.pluginCmosDevice->set_reg(a,b))
++#define BX_CMOS_CHECKSUM() (bx_devices.pluginCmosDevice->checksum_cmos())
++#define BX_GET_CMOS_TIMEVAL() (bx_devices.pluginCmosDevice->get_timeval())
+ 
+ ///////// keyboard macros
+ #define DEV_mouse_motion(dx, dy, state) \
+@@ -266,18 +261,6 @@
+ extern void  (*pluginRaiseIRQ)(unsigned irq);
+ extern void  (*pluginLowerIRQ)(unsigned irq);
+ extern Bit8u (*pluginPicIAC)(void);
+-
+-
+-/* === CMOS query/set stuff === */
+-
+-/* These are function pointers.  At startup time, they are set to
+- * builtin default handlers which will cause an abort if called.
+- * A CMOS plugin should set these pointers to real handler functions.
+- */
+-extern Bit32u (* pluginGetCMOSReg)(unsigned reg);
+-extern void   (* pluginSetCMOSReg)(unsigned reg, Bit32u val);
+-extern void   (* pluginCMOSChecksum)(void);
+-extern time_t (* pluginGetCMOSTimeval)(void);
+ 
+ 
+ /* === A20 enable line stuff === */
+Index: plugin.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Attic/plugin.cc,v
+retrieving revision 1.1.2.26
+diff -u -r1.1.2.26 plugin.cc
+--- plugin.cc	18 Oct 2002 19:37:05 -0000	1.1.2.26
++++ plugin.cc	18 Oct 2002 20:26:36 -0000
+@@ -26,11 +26,6 @@
+ #define PLUGIN_FINI  "plugin_fini"
+ 
+ 
+-Bit32u   (* pluginGetCMOSReg)(unsigned reg) = 0;
+-void     (* pluginSetCMOSReg)(unsigned reg, Bit32u val) = 0;
+-void     (* pluginCMOSChecksum)(void) = 0;
+-time_t   (* pluginGetCMOSTimeval)(void) = 0;
+-
+ unsigned (* pluginRegisterDMA8Channel)(
+                 unsigned channel,
+                 void (* dma_read)(Bit8u *data_byte),
+@@ -118,33 +113,6 @@
+ /* Builtins declarations                                                */
+ /************************************************************************/
+ 
+-  static Bit32u
+-builtinGetCMOSReg(unsigned reg)
+-{
+-  pluginlog->panic("builtinGetCMOSReg called, not overloaded by CMOS plugin?");
+-  return 0;
+-}
+-
+-  static void
+-builtinSetCMOSReg(unsigned reg, Bit32u val)
+-{
+-  pluginlog->panic("builtinSetCMOSReg called, not overloaded by CMOS plugin?");
+-  return;
+-}
+-
+-  static void
+-builtinCMOSChecksum(void)
+-{
+-  pluginlog->panic("builtinCMOSChecksum called, no CMOS plugin loaded?");
+-}
+-
+-  static time_t
+-builtinGetCMOSTimeval(void)
+-{
+-  pluginlog->panic("builtinGetCMOSTimeval called, no CMOS plugin loaded?");
+-  return 0;
+-}
+-
+   static unsigned
+ builtinRegisterDMA8Channel(
+   unsigned channel,
+@@ -567,10 +535,6 @@
+   void
+ plugin_startup(void)
+ {
+-  pluginGetCMOSReg   = builtinGetCMOSReg;
+-  pluginSetCMOSReg   = builtinSetCMOSReg;
+-  pluginCMOSChecksum = builtinCMOSChecksum;
+-  pluginGetCMOSTimeval  = builtinGetCMOSTimeval;
+   pluginRegisterDMA8Channel = builtinRegisterDMA8Channel;
+   pluginRegisterDMA16Channel = builtinRegisterDMA16Channel;
+   pluginUnregisterDMAChannel = builtinUnregisterDMAChannel;
