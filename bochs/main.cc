@@ -80,7 +80,8 @@ bx_options_t bx_options = {
   {NULL, 0},  // cmos path, cmos image boolean
   { 0, 0, 0, {0,0,0,0,0,0}, NULL, NULL }, // ne2k
   1,          // newHardDriveSupport
-  { 0, NULL, NULL, NULL } // load32bitOSImage hack stuff
+  { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
+  { 0, 1, 1, 2 }  // ignore debugs, report infos and errors, crash on panics.
   };
 
 static char bochsrc_path[512];
@@ -239,10 +240,10 @@ logfunctions::logfunctions(void)
 		io = new iofunc_t(stderr);
 	}
 	setio(io);
-	onoff[LOGLEV_DEBUG]=0;
-	onoff[LOGLEV_ERROR]=1;
-	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
-	onoff[LOGLEV_INFO]=1;
+	// BUG: unfortunately this can be called before the bochsrc is read,
+	// which means that the bochsrc has no effect on the actions.
+	for (int i=0; i<MAX_LOGLEV; i++)
+	  onoff[i] = bx_options.log_actions[i];
 }
 
 logfunctions::logfunctions(iofunc_t *iofunc)
@@ -250,10 +251,10 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 	setprefix("[GEN ]");
 	settype(GENLOG);
 	setio(iofunc);
-	onoff[LOGLEV_DEBUG]=0;
-	onoff[LOGLEV_ERROR]=1;
-	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
-	onoff[LOGLEV_INFO]=1;
+	// BUG: unfortunately this can be called before the bochsrc is read,
+	// which means that the bochsrc has no effect on the actions.
+	for (int i=0; i<MAX_LOGLEV; i++)
+	  onoff[i] = bx_options.log_actions[i];
 }
 
 logfunctions::~logfunctions(void)
@@ -293,6 +294,8 @@ logfunctions::info(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
 	va_end(ap);
+
+	if (onoff[LOGLEV_INFO] > 1) crash ();
 }
 
 void
@@ -310,7 +313,9 @@ logfunctions::error(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
 	va_end(ap);
+	if (onoff[LOGLEV_ERROR] > 1) crash ();
 }
+
 void
 logfunctions::panic(char *fmt, ...)
 {
@@ -324,29 +329,10 @@ logfunctions::panic(char *fmt, ...)
 
 		va_start(ap, fmt);
 		this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
-#if BX_PANIC_IS_FATAL
-		// we're about to crash anyway, so we should print the 
-		// panic to stderr so that it's easy to find.
-#endif    
 		va_end(ap);
 
 	}
-
-#if !BX_PANIC_IS_FATAL
-  return;
-#endif    
-
-  bx_atexit();
-
-#if !BX_DEBUGGER
-  exit(1);
-#else
-  static Boolean dbg_exit_called = 0;
-  if (dbg_exit_called == 0) {
-    dbg_exit_called = 1;
-    bx_dbg_exit(1);
-    }
-#endif
+	if (onoff[LOGLEV_PANIC] > 1) crash ();
 }
 
 void
@@ -364,6 +350,23 @@ logfunctions::ldebug(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
 	va_end(ap);
+	if (onoff[LOGLEV_DEBUG] > 1) crash ();
+}
+
+void
+logfunctions::crash (void)
+{
+  bx_atexit();
+
+#if !BX_DEBUGGER
+  exit(1);
+#else
+  static Boolean dbg_exit_called = 0;
+  if (dbg_exit_called == 0) {
+    dbg_exit_called = 1;
+    bx_dbg_exit(1);
+    }
+#endif
 }
 
 iofunc_t *io = NULL;
@@ -828,6 +831,90 @@ parse_line_formatted(int num_params, char *params[])
       exit(1);
       }
     strcpy(logfilename, params[1]);
+    }
+  else if (!strcmp(params[0], "panic")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_PANIC] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_PANIC] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_PANIC] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      exit(1);
+      }
+    }
+  else if (!strcmp(params[0], "error")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_ERROR] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_ERROR] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_ERROR] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      exit(1);
+      }
+    }
+  else if (!strcmp(params[0], "info")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_INFO] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_INFO] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_INFO] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      exit(1);
+      }
+    }
+  else if (!strcmp(params[0], "debug")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_DEBUG] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_DEBUG] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_DEBUG] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      exit(1);
+      }
     }
   else if (!strcmp(params[0], "romimage")) {
     if (num_params != 3) {

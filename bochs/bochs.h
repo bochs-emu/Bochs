@@ -224,6 +224,7 @@ public:
 	void error(char *fmt, ...);
 	void panic(char *fmt, ...);
 	void ldebug(char *fmt, ...);
+	void crash ();
 	void setprefix(char *);
 	void settype(int);
 	void setio(class iofunctions *);
@@ -240,16 +241,17 @@ class iofunctions {
 		static char *loglevel[] = {
 			"DEBUG",
 			"INFO",
-			"PANIC",
 			"ERROR",
+			"PANIC",
 		};
 		return loglevel[i];
 	}
 // Log Level defines
 #define LOGLEV_DEBUG 0
 #define LOGLEV_INFO  1
-#define LOGLEV_PANIC 2
-#define LOGLEV_ERROR 3
+#define LOGLEV_ERROR 2
+#define LOGLEV_PANIC 3
+#define MAX_LOGLEV   4
 	char *getclass(int i) {
 		char *logclass[] = {
 		  "IO  ",
@@ -552,6 +554,9 @@ typedef struct {
   bx_ne2k_options   ne2k;
   Boolean           newHardDriveSupport;
   bx_load32bitOSImage_t load32bitOSImage;
+         // one array item for each log level, indexed by LOGLEV_*.
+	 // values: 0=ignore event, 1=report event in log, 2=crash
+  unsigned char log_actions[4];  
   } bx_options_t;
 
 extern bx_options_t bx_options;

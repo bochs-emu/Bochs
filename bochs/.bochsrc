@@ -12,6 +12,24 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 # examples.  Leave only one of each directive uncommented,
 # if any.
 
+# Bochs now has four severity levels for event logging.
+#   panic: cannot proceed.  If you choose to continue after a panic, 
+#          don't be surprised if you get unstable behavior.
+#   error: something went wrong, but it is probably safe to continue the
+#          simulation.
+#   info: interesting or useful messages, not 1000's per second.
+#   debug: messages useful only when debugging the code.  This may
+#          spit out thousands per second.
+#
+# For events of each level, you can choose to crash, report, or ignore.
+# TODO: allow choice based on the facility: e.g. report debug messages
+#       from the cdrom but ignore debug messages from everything else.
+panic: action=crash
+error: action=report
+info: action=report
+debug: action=ignore
+
+
 #vgaromimage: :bios:VGABIOS-elpin-2.20
 #romimage: file=:bios:BIOS-bochs-981222a, address=0xf0000
 #floppya: 1_44=[fd:], status=inserted
