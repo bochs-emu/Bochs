@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.7 2001-10-09 13:45:17 bdenney Exp $
+// $Id: ctrl_xfer32.cc,v 1.8 2002-02-22 05:33:36 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -555,6 +555,7 @@ BX_CPU_C::IRET32(BxInstruction_t *i)
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
     BX_CPU_THIS_PTR eip = eip;
+    //FIXME: this should do (eflags & 0x257FD5) | (EFLAGS | 0x1A0000)
     write_eflags(eflags, /* change IOPL? */ 1, /* change IF? */ 1, 0, 1);
 
 done:
