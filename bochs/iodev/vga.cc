@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.64 2003-04-21 19:03:45 vruppert Exp $
+// $Id: vga.cc,v 1.65 2003-04-25 18:51:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -322,13 +322,15 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
 
     if ( BX_VGA_THIS s.sequencer.chain_four )
       {
-      *piWidth = 320;
-      *piHeight = 200;
+      *piWidth = h;
+      *piHeight = v;
+      BX_VGA_THIS s.scan_bits = BX_VGA_THIS s.CRTC.reg[19] << 3;
       }
     else
       {
       *piWidth = h;
       *piHeight = v;
+      BX_VGA_THIS s.scan_bits = BX_VGA_THIS s.CRTC.reg[19] << 1;
       }
     }
   else
@@ -559,6 +561,10 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
       RETURN(BX_VGA_THIS s.pel.dac_state);
       break;
 
+    case 0x03c8: /* PEL address write mode */
+      RETURN(BX_VGA_THIS s.pel.write_data_register);
+      break;
+
     case 0x03c9: /* PEL Data Register, colors 00..FF */
       if (BX_VGA_THIS s.pel.dac_state == 0x03) {
         switch (BX_VGA_THIS s.pel.read_data_cycle) {
@@ -675,7 +681,6 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
 
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03cb: /* not sure but OpenBSD reads it a lot */
-    case 0x03c8: /* */
     default:
       BX_INFO(("*** io read from vga port %x", (unsigned) address));
       RETURN(0); /* keep compiler happy */
@@ -1496,6 +1501,7 @@ bx_vga_c::update(void)
 	    old_iWidth = iWidth;
 	  }
 
+          start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
           y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
 
           for (yti=0; yti<y_tiles; yti++)
@@ -1505,12 +1511,10 @@ bx_vga_c::update(void)
                   for (c=0; c<X_TILESIZE; c++) {
                     pixely = ((yti*Y_TILESIZE) + r);
                     if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
-                    pixelx = ((xti*X_TILESIZE) + c);
+                    pixelx = ((xti*X_TILESIZE) + c) >> 1;
                     plane  = (pixelx % 4);
-                    byte_offset = (plane * 65536) +
-                                  (pixely * 320) + (pixelx & ~0x03);
-// simulate wrap of upper two address bits into low order bits
-//byte_offset |= ((byte_offset & 0xc000) >> 14);
+                    byte_offset = start_addr + (plane * 65536) +
+                                  (pixely * BX_VGA_THIS s.scan_bits) + (pixelx & ~0x03);
                     color = BX_VGA_THIS s.vga_memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                     }
@@ -1541,10 +1545,10 @@ bx_vga_c::update(void)
 		for (c=0; c<X_TILESIZE; c++) {
 		  pixely = ((yti*Y_TILESIZE) + r);
 		  if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
-		  pixelx = ((xti*X_TILESIZE) + c) / 2;
+		  pixelx = ((xti*X_TILESIZE) + c) >> 1;
 		  plane  = (pixelx % 4);
 		  byte_offset = (plane * 65536) +
-				(pixely * (BX_VGA_THIS s.CRTC.reg[0x13]<<1))
+				(pixely * BX_VGA_THIS s.scan_bits)
 				+ (pixelx >> 2);
 		  color = BX_VGA_THIS s.vga_memory[start_addr + byte_offset];
 		  BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
@@ -1919,8 +1923,12 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 
       BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] = value;
       // 320 x 200 256 color mode: chained pixel representation
-      y_tileno = (offset / 320) / Y_TILESIZE;
-      x_tileno = (offset % 320) / X_TILESIZE;
+      if (BX_VGA_THIS s.y_doublescan) {
+        y_tileno = (offset / BX_VGA_THIS s.scan_bits) / (Y_TILESIZE/2);
+      } else {
+        y_tileno = (offset / BX_VGA_THIS s.scan_bits) / Y_TILESIZE;
+      }
+      x_tileno = (offset % BX_VGA_THIS s.scan_bits) / (X_TILESIZE/2);
       BX_VGA_THIS s.vga_mem_updated = 1;
       SET_TILE_UPDATED (x_tileno, y_tileno, 1);
       return;
@@ -2134,6 +2142,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 
     unsigned x_tileno, y_tileno;
 
+    offset -= ((BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d]);
     x_tileno = (offset % (BX_VGA_THIS s.scan_bits/8)) / (X_TILESIZE / 8);
     if (BX_VGA_THIS s.y_doublescan) {
       y_tileno = (offset / (BX_VGA_THIS s.scan_bits/8)) / (Y_TILESIZE / 2);
