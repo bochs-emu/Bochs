@@ -17,7 +17,6 @@
    MMX_REGFILE.mmx[index].exp = 0xFFFF;		       \
 }                                                      
 
-#endif
 
 static Bit8s SaturateWordSToByteS(Bit16s value)
 {
@@ -73,7 +72,6 @@ static Bit16u SaturateDwordSToWordU(Bit32s value)
   return value;
 }
 
-#if BX_SUPPORT_MMX
 void BX_CPU_C::PrintMmxRegisters(void)
 {
   for(int i=0;i<8;i++) {
