@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.158 2004-01-31 13:43:25 sshwarts Exp $
+// $Id: cpu.h,v 1.159 2004-02-11 23:47:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -737,7 +737,7 @@ public:
   // and a function to execute the instruction after resolving
   // the memory address (if any).
 #if BX_USE_CPU_SMF
-  void (*ResolveModrm)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  void  ( BX_CPP_AttrRegparmN(1) *ResolveModrm )(bxInstruction_c *);
   void (*execute)(bxInstruction_c *);
 #else
   void (BX_CPU_C::*ResolveModrm)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -981,7 +981,7 @@ public:
 
 #if BX_USE_CPU_SMF
 typedef void (*BxExecutePtr_t)(bxInstruction_c *);
-typedef void (*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+typedef void (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
 #else
 typedef void (BX_CPU_C::*BxExecutePtr_t)(bxInstruction_c *);
 typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1347,7 +1347,10 @@ union {
   bx_segment_reg_t save_ss;
   Bit32u           save_eip;
   Bit32u           save_esp;
-
+  // This help for OS/2
+  bx_bool          except_chk;
+  Bit16u           except_cs;
+  Bit16u           except_ss;
 
   // Boundaries of current page, based on EIP
   bx_address eipPageBias;

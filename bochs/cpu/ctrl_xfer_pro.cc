@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.23 2003-08-17 18:15:04 akrisak Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.24 2004-02-11 23:47:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -282,7 +282,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
 
       case  5: // task gate
-//BX_INFO(("jump_pro: task gate"));
+        //BX_INFO(("jump_pro: task gate"));
 
         // gate descriptor DPL must be >= CPL else #GP(gate selector)
         if (descriptor.dpl < CPL) {
@@ -787,8 +787,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           Bit32u   parameter_dword[32];
           Bit32u   temp_ESP;
 
-//BX_INFO(("CALL: Call Gate: to more priviliged level"));
+          // BX_INFO(("CALL: Call Gate: to more priviliged level"));
 
+          // Help for OS/2
+          BX_CPU_THIS_PTR except_chk = 1;  
+          BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+          BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+          
           // get new SS selector for new privilege level from TSS
           get_SS_ESP_from_TSS(cs_descriptor.dpl,
                               &SS_for_cpl_x, &ESP_for_cpl_x);
@@ -814,7 +819,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           // selector's RPL must equal DPL of code segment,
           //   else #TS(SS selector)
           if (ss_selector.rpl != cs_descriptor.dpl) {
-            BX_PANIC(("call_protected: SS selector.rpl != CS descr.dpl"));
+            BX_DEBUG(("call_protected: SS selector.rpl != CS descr.dpl"));
             exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
             return;
             }
@@ -966,6 +971,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
             push_32(return_EIP);
             }
 
+          // Help for OS/2
+          BX_CPU_THIS_PTR except_chk= 0;
           return;
           }
 
@@ -1269,8 +1276,9 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     /* segment must be present else #NP(selector) */
     if (cs_descriptor.p==0) {
-      BX_PANIC(("return_protected: segment not present"));
+      BX_INFO(("return_protected: segment not present"));
       /* #NP(selector) */
+      exception(BX_NP_EXCEPTION, raw_cs_selector, 0);
       return;
       }
 
@@ -2033,19 +2041,31 @@ raw_cs_selector, dword1, dword2));
   void
 BX_CPU_C::validate_seg_regs(void)
 {
-  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl<CPL ) {
+  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl<
+//  CPL )
+       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl )
+    {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
     }
-  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl<CPL ) {
+  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl<
+//  CPL ) 
+       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl )
+    {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0;
     }
-  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl<CPL ) {
+  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl<
+//  CPL ) 
+       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl )
+    {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0;
     }
-  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl<CPL ) {
+  if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl<
+//  CPL ) 
+       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl )
+    {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0;
     }

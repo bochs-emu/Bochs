@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.35 2003-08-28 00:10:40 cbothamy Exp $
+// $Id: exception.cc,v 1.36 2004-02-11 23:47:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -637,9 +637,21 @@ BX_CPU_THIS_PTR save_esp = ESP;
           // set RPL of CS to CPL
           load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
           EIP = gate_dest_offset;
+          
+          Bit32u eflags = read_eflags();
+          Bit16u flags = read_flags();
+          int is_v8086_mode = v8086_mode();
+          
+          // if INTERRUPT GATE set IF to 0
+          if ( !(gate_descriptor.type & 1) ) // even is int-gate
+            BX_CPU_THIS_PTR clear_IF ();
+          BX_CPU_THIS_PTR clear_TF ();
+          BX_CPU_THIS_PTR clear_VM ();
+          BX_CPU_THIS_PTR clear_RF ();
+          BX_CPU_THIS_PTR clear_NT ();
 
           if (gate_descriptor.type>=14) { // 386 int/trap gate
-            if (v8086_mode()) {
+            if (is_v8086_mode) {
               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
@@ -658,7 +670,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
             push_32(old_ESP);
 
             // push EFLAGS
-            push_32(read_eflags());
+            push_32(eflags);
 
             // push long pointer to return address onto new stack
             push_32(old_CS);
@@ -668,7 +680,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
               push_32(error_code);
             }
           else { // 286 int/trap gate
-            if (v8086_mode()) {
+            if (is_v8086_mode) {
               BX_PANIC(("286 int/trap gate, VM"));
               }
             // push long pointer to old stack onto new stack
@@ -676,7 +688,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
             push_16(old_ESP); // ignores upper 16bits
 
             // push FLAGS
-            push_16(read_flags());
+            push_16(flags);
 
             // push return address onto new stack
             push_16(old_CS);
@@ -686,13 +698,6 @@ BX_CPU_THIS_PTR save_esp = ESP;
               push_16(error_code);
             }
 
-          // if INTERRUPT GATE set IF to 0
-          if ( !(gate_descriptor.type & 1) ) // even is int-gate
-            BX_CPU_THIS_PTR clear_IF ();
-          BX_CPU_THIS_PTR clear_TF ();
-          BX_CPU_THIS_PTR clear_VM ();
-          BX_CPU_THIS_PTR clear_RF ();
-          BX_CPU_THIS_PTR clear_NT ();
           return;
           }
 
@@ -982,6 +987,12 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       BX_CPU_THIS_PTR assert_RF ();
       break;
     case 14: // page fault
+      if (BX_CPU_THIS_PTR except_chk) // Help with OS/2
+      {
+            BX_CPU_THIS_PTR except_chk = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR except_cs;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR except_ss;
+      }
       push_error = 1;
       exception_type = BX_ET_PAGE_FAULT;
       // ??? special format error returned
