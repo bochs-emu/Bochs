@@ -1,8 +1,10 @@
 ---------------------------
 TO DO LIST:
 - (DONE) check logs in debug
-- check logs in cpu (Bryce is working on this)
+- (DONE) check logs in cpu
 - check logs in gui
+  - (DONE) carbon.cc
+  - everyting else
 - check logs in iodev (Christophe is working on this, done biosdev to dma)
 - (DONE) check logs in main directory
   - (DONE) check logs of configure.in
@@ -190,17 +192,17 @@ I'm listing them here to remind us about them:
     files (Volker)
 
 - CPU
-  - speed optimizations from Kevin Lawton
+  - speed optimizations from Kevin Lawton, yielding around 2x speedup
     - guest2host_tlb : for entries in the paging TLB which point to normal
       physical memory pages, a pointer to the host address of the emulated
       physical memory (from malloc()) page is stored in the TLB entry.  In
       many cases, this pointer can be used in memory accesses to directly
       read/write the guest memory address.  In exceptional cases, the physical
-      memory access routines are used.
+      memory access routines are used.  Turn on with --enable-guest2host-tlb.
     - repeat IO/string : for some variants of repeatable IO and string
       instructions, the segmentation and paging checks are done in batch along
       with the data transfers, constrained within page boundaries and the
-      segment limits.
+      segment limits.  Turn on with --enable-repeat-speedups.
     - icache : The structure holding instruction decode information was
       reduced to 32 bytes.  24 bytes for the actual decode data, and 4 each
       for pointers to the address resolution routine (not always needed) and
@@ -208,28 +210,30 @@ I'm listing them here to remind us about them:
       per-instruction decode size, an instruction cache (iCache) was created,
       which is simply a hash table.  The main cpu loop looks in the table
       first; if the instruction has already been decoded, execution can begin
-      immediately without decoding.
+      immediately without decoding.  Turn on with --enable-icache.
     - host specific asm : when compiling on an x86 platform, use of
       x86-specific asms can be enabled to accelerate several facets of
       emulating instructions.  For example, the EFLAGS values are much more
       efficient to calculate when the actual x86 instructions are used to
-      generate the EFLAGS values.
-  - add support for AMD's x86-64 instruction set.  To enable, configure
-    with --enable-x86-64.  The AMD x86-64 support is about 90% done and is
+      generate the EFLAGS values.  Turn on with --enable-host-specific-asms.
+      (Kevin, with help from Jas Sandys-Lumsdaine)
+  - add support for AMD's x86-64 instruction set.  To enable, configure with
+    --enable-x86-64.  The AMD x86-64 support is about 90% complete and is
     still experimental.  We've implemented the core x86-64 instruction set and
     the changes to the rest of bochs necessary to operate in long mode, but
     we've still to implement checking for canonical 64 bit addresses. The code
     has been tested on a limited number of test programs.  It has been able to
     successfully boot the x86-64 kernel, but hasn't quite been able to run a
-    64 bit userland application yet.  It has also successfully run a dos based
-    64 bit protected mode test application. (Peter)
+    64 bit userland application yet.  It has also successfully run a DOS based
+    64 bit protected mode test application. (Peter Tattam, with merge/bugfix
+    help from Kevin and Bryce)
   - add MMX support. To enable, configure with --enable-mmx. (Stanislav)
   - add SSE and SSE2 support. To enable, configure with --enable-sse=1
     or --enable-sse=2. (Stanislav)
   - fixed the behaviour of the bcd instructions AAM, AAD and DAA based on
     SF patch #537146 (Volker)
-  - in VERR / VERW function: changed BX_ERROR to BX_DEBUG. According to the
-    i386 opcode description there is no error present. (Volker)
+  - stop printing an error for VERR/VERW. According to the i386 opcode
+    description there is no error present. (Volker)
   - fix bug [ 625878 ] reset doesn't reset something(?). Fix cpu reset
     when executing a rep instruction (Christophe)
   - use accessors methods for CFLAGS and several other registers, so that
@@ -237,7 +241,16 @@ I'm listing them here to remind us about them:
   - add support for PSE = page size extension, also known as 4meg pages (Kevin)
   - add support for PGE = page global extension (Kevin)
   - add support for PAE = physical address extensions (Peter)
-  
+  - implement RDMSR and WRMSR. not all MSRs are supported (Zwane)
+  - new configure option --enable-ignore-bad-msr, which makes unrecognized
+    MSR reads and writes into just a warning. (Kevin,Bryce)
+  - fix PIC/APIC interrupt problem that caused Linux 2.4.19 to hang 
+    during boot (Peter)
+  - CMPXCHG8B patch (Michael Hohmuth)
+  - EFLAGS are stored differently, now reachable by accessor methods
+    (Kevin, Bryce)
+  - instrumentation code updated (Stanislav)
+
 - FPU
   - fixed bug [ 452275 ] fprem emulation bug (Volker)
   - fixed bug [ 648579 ] Mac OSX >>PANIC<< FPU_printall. There was an 
