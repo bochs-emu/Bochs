@@ -954,6 +954,7 @@ elif test "$with_carbon" = yes; then
   AC_DEFINE(BX_WITH_CARBON, 1)
   GUI_OBJS='$(GUI_OBJS_CARBON)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_CARBON)'
+  PRIMARY_TARGET=bochs.app/.build
 elif test "$with_term" = yes; then
   AC_MSG_RESULT(term)
   AC_DEFINE(BX_WITH_TERM, 1)
