@@ -2,6 +2,7 @@
 Patch name: patch.usb-fys
 Author: Ben Lunt, updated by cbothamy and vruppert
 Date: Wed Jan 22 19:26:40 CET 2003
+Status: applied to main code
 
 Detailed description:
 
@@ -340,10 +341,10 @@ diff -urN ../bochs/iodev/iodev.h ./iodev/iodev.h
  #if BX_SUPPORT_APIC
 diff -urN ../bochs/iodev/pciusb.cc ./iodev/pciusb.cc
 --- ../bochs/iodev/pciusb.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/pciusb.cc	2003-01-25 16:33:57.000000000 +0100
-@@ -0,0 +1,666 @@
++++ ./iodev/pciusb.cc	2003-02-06 20:09:24.000000000 +0100
+@@ -0,0 +1,668 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.usb-fys,v 1.4 2003-01-25 16:04:48 vruppert Exp $
++// $Id: patch.usb-fys,v 1.5 2003-02-16 18:08:27 vruppert Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2003  MandrakeSoft S.A.
@@ -432,7 +433,7 @@ diff -urN ../bochs/iodev/pciusb.cc ./iodev/pciusb.cc
 +  BX_USB_THIS hub[0].timer_index =
 +                   bx_pc_system.register_timer(this, usb_timer_handler, 1000, 1,1, "usb.timer");
 +
-+  for (unsigned addr=base_ioaddr; addr<=(unsigned)(base_ioaddr+0x14); addr++) {
++  for (unsigned addr=base_ioaddr; addr<(unsigned)(base_ioaddr+0x14); addr++) {
 +    BX_DEBUG(("register read/write: 0x%04x", addr));
 +    DEV_register_ioread_handler(this, read_handler, addr, "USB Hub #1", 7);
 +    DEV_register_iowrite_handler(this, write_handler, addr, "USB Hub #1", 7);
@@ -455,6 +456,8 @@ diff -urN ../bochs/iodev/pciusb.cc ./iodev/pciusb.cc
 +  void
 +bx_pciusb_c::reset(unsigned type)
 +{
++  unsigned i;
++
 +  static const struct reset_vals_t {
 +    unsigned      addr;
 +    unsigned char val;
@@ -479,7 +482,7 @@ diff -urN ../bochs/iodev/pciusb.cc ./iodev/pciusb.cc
 +    { 0xc1, 0x20 }                  // PIRQ enable
 +
 +  };
-+  for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
++  for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
 +      BX_USB_THIS hub[0].pci_conf[reset_vals[i].addr] = reset_vals[i].val;
 +  }
 +
@@ -487,7 +490,7 @@ diff -urN ../bochs/iodev/pciusb.cc ./iodev/pciusb.cc
 +  BX_USB_THIS global_reset = 0;
 +
 +  // Put the USB registers into their RESET state
-+  for (unsigned i=0; i<BX_USB_CONFDEV; i++) {
++  for (i=0; i<BX_USB_CONFDEV; i++) {
 +    BX_USB_THIS hub[i].usb_command.max_packet_size = 0;
 +    BX_USB_THIS hub[i].usb_command.configured = 0;
 +    BX_USB_THIS hub[i].usb_command.debug = 0;
@@ -1013,7 +1016,7 @@ diff -urN ../bochs/iodev/pciusb.h ./iodev/pciusb.h
 +++ ./iodev/pciusb.h	2003-01-25 14:12:43.000000000 +0100
 @@ -0,0 +1,195 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.usb-fys,v 1.4 2003-01-25 16:04:48 vruppert Exp $
++// $Id: patch.usb-fys,v 1.5 2003-02-16 18:08:27 vruppert Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2003  MandrakeSoft S.A.
