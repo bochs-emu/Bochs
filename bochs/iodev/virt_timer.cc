@@ -385,7 +385,9 @@ bx_virt_timer_c::timer_handler(void) {
     }
     if(ticks_delta + total_ticks - last_realtime_ticks > (F2I(MAX_MULT * I2F(last_realtime_delta)))) {
       //This keeps us from going too fast in relation to real time.
+#if 0
       ticks_delta = (F2I(MAX_MULT * I2F(last_realtime_delta))) + last_realtime_ticks - total_ticks;
+#endif
       ticks_per_second = F2I(MAX_MULT * I2F(USEC_PER_SECOND));
     }
     if(ticks_delta > system_time_delta * USEC_PER_SECOND / MIN_USEC_PER_SECOND) {
