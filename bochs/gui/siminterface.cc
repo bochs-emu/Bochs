@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.91 2002-12-16 06:43:02 bdenney Exp $
+// $Id: siminterface.cc,v 1.92 2002-12-17 03:36:53 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -335,7 +335,7 @@ bx_real_sim_c::quit_sim (int code) {
     // just a single thread.  Use exit() to stop the application.
     if (!code)
       BX_PANIC (("Quit simulation command"));
-    ::exit (0);
+    ::exit (exit_code);
   }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.113 2002-12-14 08:51:36 bdenney Exp $
+// $Id: bochs.h,v 1.114 2002-12-17 03:36:53 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -261,8 +261,9 @@ public:
 	void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
 	void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
 	void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+	void pass(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
 	void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
-	void fatal (const char *prefix, const char *fmt, va_list ap);
+	void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
 	void ask (int level, const char *prefix, const char *fmt, va_list ap);
 	void put(char *);
 	void settype(int);
@@ -327,11 +328,12 @@ public:
 	void add_logfn (logfunc_t *fn);
 	void set_log_action (int loglevel, int action);
 	const char *getlevel(int i) {
-		static const char *loglevel[4] = {
+		static const char *loglevel[5] = {
 			"DEBUG",
 			"INFO",
 			"ERROR",
 			"PANIC"
+			"PASS"
 		};
                 if (i>=0 && i<4) return loglevel[i];
 		else return "?";
@@ -365,6 +367,7 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 #define BX_DEBUG(x) (LOG_THIS ldebug) x
 #define BX_ERROR(x) (LOG_THIS error) x
 #define BX_PANIC(x) (LOG_THIS panic) x
+#define BX_PASS(x) (LOG_THIS pass) x
 
 #else
 
@@ -374,6 +377,7 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 #define BX_DEBUG(x) EMPTY
 #define BX_ERROR(x) EMPTY
 #define BX_PANIC(x) (LOG_THIS panic) x
+#define BX_PASS(x) (LOG_THIS pass) x
 
 #endif
 

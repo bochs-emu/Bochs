@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.62 2002-12-16 02:49:55 yakovlev Exp $
+// $Id: gui.cc,v 1.63 2002-12-17 03:36:53 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -374,7 +374,7 @@ bx_gui_c::snapshot_checker(void * this_ptr)
     fread(compare_snapshot, 1, len, fp);
     fclose(fp);
     if(!memcmp(text_snapshot,compare_snapshot,len)) {
-      BX_PANIC(("Test Passed."));
+      BX_PASS(("Test Passed."));
     }
   }
   free(compare_snapshot);

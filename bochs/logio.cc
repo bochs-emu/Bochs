@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.38 2002-12-06 19:34:27 bdenney Exp $
+// $Id: logio.cc,v 1.39 2002-12-17 03:36:53 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -154,6 +154,7 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 	switch(l) {
 		case LOGLEV_INFO: c='i'; break;
 		case LOGLEV_PANIC: c='p'; break;
+		case LOGLEV_PASS: c='s'; break;
 		case LOGLEV_ERROR: c='e'; break;
 		case LOGLEV_DEBUG: c='d'; break;
 		default: break;
@@ -199,6 +200,8 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 
 	if(l==LOGLEV_PANIC)
 		fprintf(logfd, ">>PANIC<< ");
+	if(l==LOGLEV_PASS)
+		fprintf(logfd, ">>PASS<< ");
 
 	vfprintf(logfd, fmt, ap);
 	fprintf(logfd, "\n");
@@ -244,10 +247,11 @@ int logfunctions::default_onoff[N_LOGLEV] = {
   ACT_REPORT,  // report info
   ACT_REPORT,  // report error
 #if BX_WITH_WX
-  ACT_ASK      // on panic, ask user what to do
+  ACT_ASK,      // on panic, ask user what to do
 #else
-  ACT_FATAL    // on panic, quit
+  ACT_FATAL,    // on panic, quit
 #endif
+  ACT_FATAL
 };
 
 logfunctions::logfunctions(void)
@@ -349,7 +353,7 @@ logfunctions::info(const char *fmt, ...)
 	if (onoff[LOGLEV_INFO] == ACT_ASK) 
 	  ask (LOGLEV_INFO, this->prefix, fmt, ap);
 	if (onoff[LOGLEV_INFO] == ACT_FATAL) 
-	  fatal (this->prefix, fmt, ap);
+	  fatal (this->prefix, fmt, ap, 1);
 	va_end(ap);
 
 }
@@ -369,7 +373,7 @@ logfunctions::error(const char *fmt, ...)
 	if (onoff[LOGLEV_ERROR] == ACT_ASK) 
 	  ask (LOGLEV_ERROR, this->prefix, fmt, ap);
 	if (onoff[LOGLEV_ERROR] == ACT_FATAL) 
-	  fatal (this->prefix, fmt, ap);
+	  fatal (this->prefix, fmt, ap, 1);
 	va_end(ap);
 }
 
@@ -395,7 +399,33 @@ logfunctions::panic(const char *fmt, ...)
 	if (onoff[LOGLEV_PANIC] == ACT_ASK) 
 	  ask (LOGLEV_PANIC, this->prefix, fmt, ap);
 	if (onoff[LOGLEV_PANIC] == ACT_FATAL) 
-	  fatal (this->prefix, fmt, ap);
+	  fatal (this->prefix, fmt, ap, 1);
+	va_end(ap);
+}
+
+void
+logfunctions::pass(const char *fmt, ...)
+{
+	va_list ap;
+
+	assert (this != NULL);
+	assert (this->logio != NULL);
+
+	// Special case for panics since they are so important.  Always print
+	// the panic to the log, no matter what the log action says.
+	//if(!onoff[LOGLEV_PASS]) return;
+
+	va_start(ap, fmt);
+	this->logio->out(this->type,LOGLEV_PASS,this->prefix, fmt, ap);
+
+	// This fixes a funny bug on linuxppc where va_list is no pointer but a struct
+	va_end(ap);
+	va_start(ap, fmt);
+
+	if (onoff[LOGLEV_PASS] == ACT_ASK) 
+	  ask (LOGLEV_PASS, this->prefix, fmt, ap);
+	if (onoff[LOGLEV_PASS] == ACT_FATAL) 
+	  fatal (this->prefix, fmt, ap, 101);
 	va_end(ap);
 }
 
@@ -414,7 +444,7 @@ logfunctions::ldebug(const char *fmt, ...)
 	if (onoff[LOGLEV_DEBUG] == ACT_ASK) 
 	  ask (LOGLEV_DEBUG, this->prefix, fmt, ap);
 	if (onoff[LOGLEV_DEBUG] == ACT_FATAL) 
-	  fatal (this->prefix, fmt, ap);
+	  fatal (this->prefix, fmt, ap, 1);
 	va_end(ap);
 }
 
@@ -455,7 +485,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       break;
     case BX_LOG_ASK_CHOICE_DIE:
       in_ask_already = 0;  // because fatal will longjmp out
-      fatal (prefix, fmt, ap);
+      fatal (prefix, fmt, ap, 1);
       // should never get here
       BX_PANIC (("in ask(), fatal() should never return!"));
       break;
@@ -495,7 +525,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 }
 
 void
-logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
+logfunctions::fatal (const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
   bx_atexit();
 #if !BX_WITH_WX
@@ -516,12 +546,12 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
   fgets (buf, 8, stdin);
 #endif
 #if !BX_DEBUGGER
-  BX_EXIT(1);
+  BX_EXIT(exit_status);
 #else
   static bx_bool dbg_exit_called = 0;
   if (dbg_exit_called == 0) {
     dbg_exit_called = 1;
-    bx_dbg_exit(1);
+    bx_dbg_exit(exit_status);
     }
 #endif
   // not safe to use BX_* log functions in here.

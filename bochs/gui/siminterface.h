@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.95 2002-12-16 06:43:01 bdenney Exp $
+// $Id: siminterface.h,v 1.96 2002-12-17 03:36:53 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -440,6 +440,7 @@ typedef enum {
   LOGLEV_INFO,
   LOGLEV_ERROR,
   LOGLEV_PANIC,
+  LOGLEV_PASS,
   N_LOGLEV
 } bx_log_levels;
 

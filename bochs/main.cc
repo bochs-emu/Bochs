@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.210 2002-12-16 06:43:01 bdenney Exp $
+// $Id: main.cc,v 1.211 2002-12-17 03:36:53 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2960,6 +2960,26 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: panic directive malformed.", context));
       }
     }
+  else if (!strcmp(params[0], "pass")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: pass directive malformed.", context));
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      PARSE_ERR(("%s: pass directive malformed.", context));
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "fatal"))
+      SIM->set_default_log_action (LOGLEV_PASS, ACT_FATAL);
+    else if (!strcmp (action, "report"))
+      SIM->set_default_log_action (LOGLEV_PASS, ACT_REPORT);
+    else if (!strcmp (action, "ignore"))
+      SIM->set_default_log_action (LOGLEV_PASS, ACT_IGNORE);
+    else if (!strcmp (action, "ask"))
+      SIM->set_default_log_action (LOGLEV_PASS, ACT_ASK);
+    else {
+      PARSE_ERR(("%s: pass directive malformed.", context));
+      }
+    }
   else if (!strcmp(params[0], "error")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: error directive malformed.", context));
@@ -3691,6 +3711,8 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
       io->getaction(logfunctions::get_default_action (LOGLEV_INFO)));
   fprintf (fp, "debug: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_DEBUG)));
+  fprintf (fp, "debug: action=%s\n",
+      io->getaction(logfunctions::get_default_action (LOGLEV_PASS)));
   return 0;
 }
 
