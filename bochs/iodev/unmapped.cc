@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.16 2002-07-29 12:44:47 cbothamy Exp $
+// $Id: unmapped.cc,v 1.17 2002-07-30 08:48:03 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,6 +41,7 @@ bx_unmapped_c::bx_unmapped_c(void)
   settype(UNMAPLOG);
   s.port80 = 0x00;
   s.port8e = 0x00;
+  s.shutdown = 0;
 }
 
 bx_unmapped_c::~bx_unmapped_c(void)

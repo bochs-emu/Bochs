@@ -22,7 +22,15 @@ retrieving revision 1.15
 diff -u -r1.15 unmapped.cc
 --- iodev/unmapped.cc	1 Apr 2002 21:53:23 -0000	1.15
 +++ iodev/unmapped.cc	29 Jul 2002 12:12:46 -0000
-@@ -237,6 +237,25 @@
+@@ -41,6 +41,7 @@
+   settype(UNMAPLOG);
+   s.port80 = 0x00;
+   s.port8e = 0x00;
++  s.shutdown = 0;
+ }
+ 
+ bx_unmapped_c::~bx_unmapped_c(void)
+@@ -237,6 +238,25 @@
  	    // address, value));
        break;
      
