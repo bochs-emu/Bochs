@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.9 2001-10-03 13:10:38 bdenney Exp $
+// $Id: memory.cc,v 1.10 2002-04-01 04:43:26 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,6 +54,7 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   // (bbd) Each breakpoint should have an associated CPU#, TODO
   for (int i = 0; i < num_write_watchpoints; i++)
         if (write_watchpoint[i] == a20addr) {
+	      BX_CPU(0)->watchpoint = a20addr;
               BX_CPU(0)->break_point = BREAK_POINT_WRITE;
               break;
         }
@@ -275,6 +276,7 @@ BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   // (bbd) Each breakpoint should have an associated CPU#, TODO
   for (int i = 0; i < num_read_watchpoints; i++)
         if (read_watchpoint[i] == a20addr) {
+	      BX_CPU(0)->watchpoint = a20addr;
               BX_CPU(0)->break_point = BREAK_POINT_READ;
               break;
         }
