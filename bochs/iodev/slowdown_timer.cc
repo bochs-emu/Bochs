@@ -3,6 +3,8 @@
 
 #ifdef BX_USE_SLOWDOWN_TIMER
 
+#define BX_HAVE_USLEEP 1
+
 //These need to stay printfs because they are useless in the log file.
 #define BX_SLOWDOWN_PRINTF_FEEDBACK 0
 
@@ -115,7 +117,7 @@ bx_slowdown_timer_c::handle_timer() {
   //Diagnostic info:
   if(wanttime > (totaltime+REALTIME_Q)) {
     if(totaltime > total_emu_time) {
-      if(1) printf("Solving OpenBSD problem.\n");
+      if(0) printf("Solving OpenBSD problem.\n");
     } else {
       if(0) printf("too fast.\n");
     }
