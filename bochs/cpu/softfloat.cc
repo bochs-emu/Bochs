@@ -851,13 +851,6 @@ static float32 addFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     bSig = extractFloat32Frac(b);
     bExp = extractFloat32Exp(b);
 
-    if ((aExp == 0) && aSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-    if ((bExp == 0) && bSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-
     expDiff = aExp - bExp;
     aSig <<= 6;
     bSig <<= 6;
@@ -865,9 +858,14 @@ static float32 addFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     if (0 < expDiff) {
         if (aExp == 0xFF) {
             if (aSig) return propagateFloat32NaN(a, b, status);
+            if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
             return a;
         }
+        if ((aExp == 0) && aSig) {
+            float_raise(status, float_flag_denormal);
+        }
         if (bExp == 0) {
+            if (bSig) float_raise(status, float_flag_denormal);
             --expDiff;
         }
         else {
@@ -879,9 +877,14 @@ static float32 addFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     else if (expDiff < 0) {
         if (bExp == 0xFF) {
             if (bSig) return propagateFloat32NaN(a, b, status);
+            if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
             return packFloat32(zSign, 0xFF, 0);
         }
+        if ((bExp == 0) && bSig) {
+            float_raise(status, float_flag_denormal);
+        }
         if (aExp == 0) {
+            if (aSig) float_raise(status, float_flag_denormal);
             ++expDiff;
         }
         else {
@@ -895,7 +898,10 @@ static float32 addFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
             if (aSig | bSig) return propagateFloat32NaN(a, b, status);
             return a;
         }
-        if (aExp == 0) return packFloat32(zSign, 0, (aSig + bSig)>>6);
+        if (aExp == 0) {
+            if (aSig | bSig) float_raise(status, float_flag_denormal);
+            return packFloat32(zSign, 0, (aSig + bSig)>>6);
+        }
         zSig = 0x40000000 + aSig + bSig;
         zExp = aExp;
         goto roundAndPack;
@@ -930,13 +936,6 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     bSig = extractFloat32Frac(b);
     bExp = extractFloat32Exp(b);
 
-    if ((aExp == 0) && aSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-    if ((bExp == 0) && bSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-
     expDiff = aExp - bExp;
     aSig <<= 7;
     bSig <<= 7;
@@ -948,6 +947,7 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
         return float32_default_nan;
     }
     if (aExp == 0) {
+        if (aSig | bSig) float_raise(status, float_flag_denormal);
         aExp = 1;
         bExp = 1;
     }
@@ -957,9 +957,14 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
  bExpBigger:
     if (bExp == 0xFF) {
         if (bSig) return propagateFloat32NaN(a, b, status);
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat32(zSign ^ 1, 0xFF, 0);
     }
+    if ((bExp == 0) && bSig) {
+        float_raise(status, float_flag_denormal);
+    }
     if (aExp == 0) {
+        if (aSig) float_raise(status, float_flag_denormal);
         ++expDiff;
     }
     else {
@@ -975,9 +980,14 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
  aExpBigger:
     if (aExp == 0xFF) {
         if (aSig) return propagateFloat32NaN(a, b, status);
+        if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         return a;
     }
+    if ((aExp == 0) && aSig) {
+        float_raise(status, float_flag_denormal);
+    }
     if (bExp == 0) {
+        if (bSig) float_raise(status, float_flag_denormal);
         --expDiff;
     }
     else {
@@ -1857,22 +1867,20 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     bSig = extractFloat64Frac(b);
     bExp = extractFloat64Exp(b);
 
-    if ((aExp == 0) && aSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-    if ((bExp == 0) && bSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-
     expDiff = aExp - bExp;
     aSig <<= 9;
     bSig <<= 9;
     if (0 < expDiff) {
         if (aExp == 0x7FF) {
             if (aSig) return propagateFloat64NaN(a, b, status);
+            if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
             return a;
         }
+        if ((aExp == 0) && aSig) {
+            float_raise(status, float_flag_denormal);
+        }
         if (bExp == 0) {
+            if (bSig) float_raise(status, float_flag_denormal);
             --expDiff;
         }
         else {
@@ -1884,9 +1892,14 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     else if (expDiff < 0) {
         if (bExp == 0x7FF) {
             if (bSig) return propagateFloat64NaN(a, b, status);
+            if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
             return packFloat64(zSign, 0x7FF, 0);
         }
+        if ((bExp == 0) && bSig) {
+            float_raise(status, float_flag_denormal);
+        }
         if (aExp == 0) {
+            if (aSig) float_raise(status, float_flag_denormal);
             ++expDiff;
         }
         else {
@@ -1900,7 +1913,10 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
             if (aSig | bSig) return propagateFloat64NaN(a, b, status);
             return a;
         }
-        if (aExp == 0) return packFloat64(zSign, 0, (aSig + bSig)>>9);
+        if (aExp == 0) {
+            if (aSig | bSig) float_raise(status, float_flag_denormal);
+            return packFloat64(zSign, 0, (aSig + bSig)>>9);
+        }
         zSig = BX_CONST64(0x4000000000000000) + aSig + bSig;
         zExp = aExp;
         goto roundAndPack;
@@ -1935,13 +1951,6 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     bSig = extractFloat64Frac(b);
     bExp = extractFloat64Exp(b);
 
-    if ((aExp == 0) && aSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-    if ((bExp == 0) && bSig) {
-        float_raise(status, float_flag_denormal);
-    }    
-
     expDiff = aExp - bExp;
     aSig <<= 10;
     bSig <<= 10;
@@ -1953,6 +1962,7 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
         return float64_default_nan;
     }
     if (aExp == 0) {
+        if (aSig | bSig) float_raise(status, float_flag_denormal);
         aExp = 1;
         bExp = 1;
     }
@@ -1962,9 +1972,14 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
  bExpBigger:
     if (bExp == 0x7FF) {
         if (bSig) return propagateFloat64NaN(a, b, status);
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat64(zSign ^ 1, 0x7FF, 0);
     }
+    if ((bExp == 0) && bSig) {
+        float_raise(status, float_flag_denormal);
+    }
     if (aExp == 0) {
+        if (aSig) float_raise(status, float_flag_denormal);
         ++expDiff;
     }
     else {
@@ -1980,9 +1995,14 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
  aExpBigger:
     if (aExp == 0x7FF) {
         if (aSig) return propagateFloat64NaN(a, b, status);
+        if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         return a;
     }
+    if ((aExp == 0) && aSig) {
+        float_raise(status, float_flag_denormal);
+    }
     if (bExp == 0) {
+        if (bSig) float_raise(status, float_flag_denormal);
         --expDiff;
     }
     else {
