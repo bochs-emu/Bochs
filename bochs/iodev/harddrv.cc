@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.87 2002-10-27 21:25:33 cbothamy Exp $
+// $Id: harddrv.cc,v 1.88 2002-11-08 22:14:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.87 2002-10-27 21:25:33 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.88 2002-11-08 22:14:55 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -794,6 +794,9 @@ if ( quantumsMax == 0)
 			      case 0x28: // read (10)
 			      case 0xa8: // read (12)
 #ifdef LOWLEVEL_CDROM
+				    if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
+				      BX_PANIC(("Read with CDROM not ready"));
+				    } 
 				    BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(BX_SELECTED_CONTROLLER(channel).buffer,
 									BX_SELECTED_DRIVE(channel).cdrom.next_lba);
 				    BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
