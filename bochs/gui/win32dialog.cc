@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.14 2004-02-01 01:40:14 vruppert Exp $
+// $Id: win32dialog.cc,v 1.15 2004-02-01 19:22:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -274,16 +274,63 @@ void RuntimeDlgSetTab(HWND hDlg, int tabnum)
   ShowWindow(GetDlgItem(hDlg, IDSTATUS2), (tabnum == 0) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDSTATUS3), (tabnum == 0) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDSTATUS4), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDINFO), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGOPT1), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGOPT2), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLABEL5), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLABEL6), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLABEL7), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGLBL1), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGLBL2), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGLBL3), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGLBL4), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGLBL5), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGEVT1), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGEVT2), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGEVT3), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGEVT4), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGEVT5), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDLOGINFO), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDADVLOGOPT), (tabnum == 1) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDMISCLBL1), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDMISCLBL2), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDMISCLBL3), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDVGAUPDATE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDMOUSE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDKBDPASTE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDUSERBTN), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+}
+
+void RuntimeDlgInitLogOpt(HWND hDlg)
+{
+  char choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
+  int level, idx;
+  int defchoice[5];
+
+  for (level=0; level<5; level++) {
+    int mod = 0;
+    int first = SIM->get_log_action (mod, level);
+    BOOL consensus = true;
+    // now compare all others to first.  If all match, then use "first" as
+    // the initial value.
+    for (mod=1; mod<SIM->get_n_log_modules (); mod++) {
+      if (first != SIM->get_log_action (mod, level)) {
+        consensus = false;
+        break;
+      }
+    }
+    if (consensus)
+      defchoice[level] = first;
+    else
+      defchoice[level] = 4;
+  }
+  for (level=0; level<5; level++) {
+    idx = 0;
+    for (int action=0; action<5; action++) {
+      if (((level > 1) && (action > 0)) || ((level < 2) && ((action < 2) || (action > 3)))) {
+        SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_ADDSTRING, 0, (LPARAM)choices[action]);
+        SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_SETITEMDATA, idx, action);
+        if (action == defchoice[level]) {
+          SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_SETCURSEL, idx, 0);
+        }
+        idx++;
+      }
+    }
+  }
 }
 
 static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -295,7 +342,7 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
   long noticode;
   static BOOL changed;
   BOOL old_changed;
-  int value;
+  int idx, level, value;
   char buffer[32];
   static bx_atadevice_options cdromop[4];
   static char origpath[4][MAX_PATH];
@@ -333,6 +380,7 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
           devcount++;
         }
       }
+      RuntimeDlgInitLogOpt(hDlg);
       SetDlgItemInt(hDlg, IDVGAUPDATE, SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->get(), FALSE);
       SetDlgItemInt(hDlg, IDKBDPASTE, SIM->get_param_num(BXP_KBD_PASTE_DELAY)->get(), FALSE);
       if (SIM->get_param_num(BXP_MOUSE_ENABLED)->get()) {
@@ -378,10 +426,16 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_SETCHECK, BST_CHECKED, 0);
               }
               break;
-            case IDLOGOPT1:
-              EndDialog(hDlg, 8);
+            case IDLOGEVT1:
+            case IDLOGEVT2:
+            case IDLOGEVT3:
+            case IDLOGEVT4:
+            case IDLOGEVT5:
+              if (HIWORD(wParam) == CBN_SELCHANGE) {
+                changed = TRUE;
+              }
               break;
-            case IDLOGOPT2:
+            case IDADVLOGOPT:
               EndDialog(hDlg, 9);
               break;
             case IDSTATUS2:
@@ -405,6 +459,16 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                   lstrcpy(path, "none");
                 }
                 cdromop[device].Opath->set(path);
+              }
+              for (level=0; level<5; level++) {
+                idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
+                value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
+                if (value < 4) {
+                  // set new default
+                  SIM->set_default_log_action (level, value);
+                  // apply that action to all modules (devices)
+                  SIM->set_log_action (-1, level, value);
+                }
               }
               value = GetDlgItemInt(hDlg, IDVGAUPDATE, NULL, FALSE);
               SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->set(value);
