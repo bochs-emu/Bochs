@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.18 2002-03-03 06:03:29 bdenney Exp $
+// $Id: serial.cc,v 1.19 2002-03-05 15:40:23 grossman Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -797,7 +797,7 @@ bx_serial_c::rx_timer(void)
         }
       }
     } else {
-      bdrate = (int) (1000000.0 / 100); // Poll frequency is 100ms
+      bdrate = (int) (1000000.0 / 100000); // Poll frequency is 100ms
     }
   } else {
     // Poll at 4x baud rate to see if the next-char can
