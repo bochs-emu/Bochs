@@ -549,11 +549,36 @@ typedef
 #define BX_CPP_INLINE inline
 
 #ifdef __GNUC__
-// KPL: We need to enhance this for other compilers that know about
-// aligning variables/fields.
+
+// Some helpful compiler hints for compilers that allow them; GCC for now.
+//
+// BX_CPP_AlignN(n):
+//   Align a construct on an n-byte boundary.
+//
+// BX_CPP_AttrPrintf(formatArg, firstArg):
+//   This function takes printf-like arguments, so the compiler can check
+//   the consistency of the format string and the matching arguments.
+//   'formatArg' is the parameter number (starting from 1) of the format
+//   string argument.  'firstArg' is the parameter number of the 1st argument
+//   to check against the string argument.  NOTE: For non-static member
+//   functions, the this-ptr is argument number 1 but is invisible on
+//   the function prototype declaration - but you still have to count it.
+//
+// BX_CPP_AttrNoReturn():
+//   This function never returns.  The compiler can optimize-out following
+//   code accordingly.
+
 #define BX_CPP_AlignN(n) __attribute__ ((aligned (n)))
+#define BX_CPP_AttrPrintf(formatArg, firstArg) \
+                          __attribute__ ((format (printf, formatArg, firstArg)))
+#define BX_CPP_AttrNoReturn() __attribute__ ((noreturn))
+
 #else
-#define BX_CPP_AlignN(n) /* not supported */
+
+#define BX_CPP_AlignN(n) /* Not supported. */
+#define BX_CPP_AttrPrintf(formatArg, firstArg)  /* Not supported. */
+#define BX_CPP_AttrNoReturn() /* Not supported. */
+
 #endif
 
 #define BX_DEBUGGER 0

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99 2002-10-03 21:06:58 bdenney Exp $
+// $Id: bochs.h,v 1.100 2002-10-06 14:16:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -267,10 +267,10 @@ public:
 	logfunctions(class iofunctions *);
 	~logfunctions(void);
 
-	void info(const char *fmt, ...);
-	void error(const char *fmt, ...);
-	void panic(const char *fmt, ...);
-	void ldebug(const char *fmt, ...);
+	void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
+	void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+	void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+	void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
 	void fatal (const char *prefix, const char *fmt, va_list ap);
 	void ask (int level, const char *prefix, const char *fmt, va_list ap);
 	void put(char *);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.21 2002-09-29 15:06:58 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.22 2002-10-06 14:16:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -301,7 +301,6 @@ BailBigRSP("CALL_Ed");
   if (protected_mode()) {
     if (op1_32 >
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_DEBUG(("call_ev: EIP out of CS limits! at %s:%d"));
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
