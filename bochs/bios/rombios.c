@@ -253,6 +253,8 @@ static Boolean        set_enable_a20();
 static void           debugger_on();
 static void           debugger_off();
 static void           keyboard_panic();
+static void           print_bios_banner();
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.8 2001-05-31 15:21:25 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -805,6 +807,14 @@ cli()
 keyboard_panic()
 {
   panic("Keyboard RESET error\n");
+}
+
+void
+print_bios_banner()
+{
+  bios_printf(0, bios_version_string);
+  bios_printf(0, "\n");
+  panic ("oh crap");
 }
 
 
@@ -3506,7 +3516,7 @@ hard_drive_post:
   and  al, #0xf0
   cmp  al, #0xf0
   je   post_d0_extended
-  HALT(__LINE__)
+  jmp check_for_hd1
 post_d0_extended:
   mov  al, #0x19
   out  #0x70, al
@@ -4134,6 +4144,8 @@ normal_post:
   mov  cx, #0x0100    ;; counter (256 interrupts)
   mov  ax, #dummy_iret_handler
   mov  dx, #0xF000
+
+  call _print_bios_banner
 
 post_default_ints:
   mov  [bx], ax
