@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.12 2001-06-28 13:43:36 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.13 2001-06-28 14:52:49 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -133,7 +133,8 @@ MyFrame::ReadConfiguration (int ask_name)
     oldrc_cstr[0] = 0;
   }
   wxString oldrc (oldrc_cstr), newrc = oldrc;
-  if (ask_name || !found_default) {
+  if (!found_default) {
+    if (!ask_name) return -1;
     newrc = ::wxFileSelector ("Load which configuration file?", 
 	"", oldrc, "", "", wxOPEN);
   }
@@ -341,6 +342,7 @@ MyPanel::MyPanel (MyFrame *frame, wxWindow *parent, wxWindowID id, const wxPoint
   //wxChoice *choice1 = new wxChoice (this, ID_Choice1, wxPoint (10, 80), wxSize (80, 30), 3, choices);
   //wxComboBox *combo1 = new wxComboBox (this, ID_Combo1, "Default Combo String", wxPoint (10, 130), wxSize (180, 80), 3, choices);
   //text1 = new wxStaticText (this, ID_Text1, "no text yet", wxPoint (0, 160));
+  frame->ReadConfiguration (0);
   buildParamList (10, 40);
   // grab all the settings from siminterface into the GUI
   forAllEditors (ID_RevertAction, paramEditorsById);
