@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.45 2002-09-23 14:33:49 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.46 2002-09-23 14:38:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1384,7 +1384,9 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [24]    FXSR: FSAVE/FXRSTOR
       //   [25]    SSE: SSE Extensions
       //   [26]    SSE2: SSE2 Extensions
+      //   [28]    Reserved
       //   [29]    TM: Therm Monitor
+      //   [31:30] Reserved
 
       features = 0; // start with none
       type = 0; // OEM
