@@ -37,6 +37,7 @@
 // such as tracing all system calls.
 
 #define USE_READLINE 1
+#define READLINE_NEEDS_HISTORY_H 0
 // adds support for the GNU readline library in the debugger command 
 // prompt.
 
