@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.13 2002-09-05 02:31:24 kevinlawton Exp $
+// $Id: paging.cc,v 1.14 2002-09-05 03:09:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -289,37 +289,47 @@
 //    |  |  +--+------> u/s,r/w combined of page dir & table (cached)
 //    |  +------------> u/s of current access
 //    +---------------> Current CR0.wp value
-//
-// The TLB cache holds the following info, from which the above
-// fields can efficiently be extracted to facilitate a privilege check:
-//
-//   |4 |3 |2 |1 |0 |
-//   |  |  |us|rw|D |
-//          |  |  |
-//          |  |  +---> Dirty bit from PTE (not used for privilege check)
-//          +--+------> u/s,r/w combined of page dir & table
-//
-//
-// The rest of the fields are taken from current access parameters
-// and the write-protect field:
-//
-//   |4 |3 |2 |1 |0 |
-//   |wp|us|  |  |rw|
-//    |  |        |
-//    |  |        +---> r/w of current access
-//    |  |
-//    |  +------------> u/s of current access
-//    +---------------> Current CR0.wp value
 
 
+// Each entry in the TLB cache has 3 entries:
+//   lpf:         Linear Page Frame (page aligned linear address of page)
+//   ppf:         Physical Page Frame (page aligned phy address of page)
+//   accessBits:
+//     bits 32..11: Host Page Frame address used for direct access to
+//                  the mem.vector[] space allocated for the guest physical
+//                  memory.  If this is zero, it means that a pointer
+//                  to the host space could not be generated, likely because
+//                  that page of memory is not standard memory (it might
+//                  be memory mapped IO, ROM, etc).
+//     bits 10..4:  (currently unused)
+//
+//       The following 4 bits are used for a very efficient permissions
+//       check.  The goal is to be able, using only the current privilege
+//       level and access type, to determine if the page tables allow the
+//       access to occur or at least should rewalk the page tables.  On
+//       the first read access, permissions are set to only read, so a
+//       rewalk is necessary when a subsequent write fails the tests.
+//       This allows for the dirty bit to be set properly, but for the
+//       test to be efficient.  Note that the CR0.WP flag is not present.
+//       The values in the following flags is based on the current CR0.WP
+//       value, necessitating a TLB flush when CR0.WP changes.
+//
+//       The test is:
+//         OK = 1 << ( (W<<1) | U )   [W:1=write, 0=read, U:1=CPL3,0=CPL0-2]
+//       
+//       Thus for reads, it's simply:
+//         OK = 1 << (          U )
+//
+//     bit 3:       a Write from User   privilege is OK
+//     bit 2:       a Write from System privilege is OK
+//     bit 1:       a Read  from User   privilege is OK
+//     bit 0:       a Read  from System privilege is OK
 
-
-#define ReadSysOK         0x01
-#define ReadUserOK        0x02
-#define WriteSysOK        0x04
 #define WriteUserOK       0x08
-#define AccessBitsRVetoed 0x10
-#define AccessBitsWVetoed 0x20
+#define WriteSysOK        0x04
+#define ReadUserOK        0x02
+#define ReadSysOK         0x01
+
 
 
 #ifndef _MSC_VER
@@ -1071,13 +1081,7 @@ BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
           // Direct write vetoed.  Try requesting only direct reads.
           BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = (Bit32u)
               BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(lpf), BX_READ);
-          if (!BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits) {
-            // No permissions, both R & W direct accesses vetoed.  Accesses
-            // will fall through to this function always.
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
-                (AccessBitsWVetoed | AccessBitsRVetoed);
-            }
-          else {
+          if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits) {
             // Got direct read pointer OK.
             BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits |=
                 (ReadSysOK | ReadUserOK);
@@ -1112,12 +1116,7 @@ BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
         // Request a direct write pointer so we can do either R or W.
         BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = (Bit32u)
             BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(lpf), BX_WRITE);
-        if (!BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits) {
-          // Direct write vetoed.  Try requesting only direct reads.
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
-              (AccessBitsWVetoed | AccessBitsRVetoed);
-          }
-        else {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits) {
           // Got direct write pointer OK.  Mark for any operation to succeed.
           BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits |=
               (ReadSysOK | ReadUserOK | WriteSysOK | WriteUserOK);
