@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.36 2002-11-11 14:10:24 bdenney Exp $
+// $Id: logio.cc,v 1.37 2002-12-02 21:19:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,6 +387,11 @@ logfunctions::panic(const char *fmt, ...)
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
+
+	// This fixes a funny bug on linuxppc where va_list is no pointer but a struct
+	va_end(ap);
+	va_start(ap, fmt);
+
 	if (onoff[LOGLEV_PANIC] == ACT_ASK) 
 	  ask (LOGLEV_PANIC, this->prefix, fmt, ap);
 	if (onoff[LOGLEV_PANIC] == ACT_FATAL) 
