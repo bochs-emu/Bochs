@@ -1070,7 +1070,19 @@ void BX_CPU_C::MOVDQU_VdqWdq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVDQU_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVDQU_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1229,12 +1241,21 @@ void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F 7F */
 void BX_CPU_C::MOVDQA_WdqVdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVDQA_WdqVdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_XMM_REG(i->rm(), op);
+  }
+  else {
+    writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
 #else
   BX_INFO(("MOVDQA_WdqVdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1246,7 +1267,15 @@ void BX_CPU_C::MOVDQU_WdqVdq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVDQU_WdqVdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_XMM_REG(i->rm(), op);
+  }
+  else {
+    writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
 #else
   BX_INFO(("MOVDQU_WdqVdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1835,8 +1864,8 @@ void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  result.xmm64u(0) = ~(op1.xmm64u(0) & op2.xmm64u(0));
-  result.xmm64u(1) = ~(op1.xmm64u(1) & op2.xmm64u(1));
+  result.xmm64u(0) = ~(op1.xmm64u(0)) & op2.xmm64u(0);
+  result.xmm64u(1) = ~(op1.xmm64u(1)) & op2.xmm64u(1);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
