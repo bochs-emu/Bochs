@@ -57,7 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.31 2001-09-11 16:49:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.32 2001-09-21 02:46:17 yakovlev Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,7 +92,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.31 2001-09-11 16:49:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.32 2001-09-21 02:46:17 yakovlev Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -1391,6 +1391,17 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
     BX_KEY_THIS s.mouse.delayed_dy+=256;
     }
   mouse_enQ_packet(b1, b2, b3);
+}
+
+
+void
+bx_keyb_c::mouse_enabled_changed(bool enabled) {
+  if(BX_KEY_THIS s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy) {
+    create_mouse_packet(1);
+  }
+  BX_KEY_THIS s.mouse.delayed_dx=0;
+  BX_KEY_THIS s.mouse.delayed_dy=0;
+  BX_DEBUG(("Keyboard mouse disable called."));
 }
 
   void

@@ -110,8 +110,10 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       break;
     case BXP_MOUSE_ENABLED:
       // if after init, notify the GUI
-      if (set && SIM->get_init_done ())
+      if (set && SIM->get_init_done ()) {
 	bx_gui.mouse_enabled_changed (val!=0);
+        bx_keyboard.mouse_enabled_changed (val!=0);
+      }
       break;
     case BXP_SB16_PRESENT:
       if (set) {
