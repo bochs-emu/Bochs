@@ -1000,7 +1000,7 @@ void BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1011,17 +1011,17 @@ void BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB0(result) = (MMXUB0(op1) < MMXUB0(op2)) ? MMXUB0(op1) : MMXUB0(op2);
-  MMXUB1(result) = (MMXUB1(op1) < MMXUB1(op2)) ? MMXUB1(op1) : MMXUB1(op2);
-  MMXUB2(result) = (MMXUB2(op1) < MMXUB2(op2)) ? MMXUB2(op1) : MMXUB2(op2);
-  MMXUB3(result) = (MMXUB3(op1) < MMXUB3(op2)) ? MMXUB3(op1) : MMXUB3(op2);
-  MMXUB4(result) = (MMXUB4(op1) < MMXUB4(op2)) ? MMXUB4(op1) : MMXUB4(op2);
-  MMXUB4(result) = (MMXUB5(op1) < MMXUB5(op2)) ? MMXUB5(op1) : MMXUB5(op2);
-  MMXUB5(result) = (MMXUB6(op1) < MMXUB6(op2)) ? MMXUB6(op1) : MMXUB6(op2);
-  MMXUB6(result) = (MMXUB7(op1) < MMXUB7(op2)) ? MMXUB7(op1) : MMXUB7(op2);
+  if(MMXUB0(op2) < MMXUB0(op1)) MMXUB0(op1) = MMXUB0(op2);
+  if(MMXUB1(op2) < MMXUB1(op1)) MMXUB1(op1) = MMXUB1(op2);
+  if(MMXUB2(op2) < MMXUB2(op1)) MMXUB2(op1) = MMXUB2(op2);
+  if(MMXUB3(op2) < MMXUB3(op1)) MMXUB3(op1) = MMXUB3(op2);
+  if(MMXUB4(op2) < MMXUB4(op1)) MMXUB4(op1) = MMXUB4(op2);
+  if(MMXUB5(op2) < MMXUB5(op1)) MMXUB5(op1) = MMXUB5(op2);
+  if(MMXUB6(op2) < MMXUB6(op1)) MMXUB6(op1) = MMXUB6(op2);
+  if(MMXUB7(op2) < MMXUB7(op1)) MMXUB7(op1) = MMXUB7(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
   BX_INFO(("PMINUB_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1125,7 +1125,7 @@ void BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1136,17 +1136,17 @@ void BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB0(result) = (MMXUB0(op1) > MMXUB0(op2)) ? MMXUB0(op1) : MMXUB0(op2);
-  MMXUB1(result) = (MMXUB1(op1) > MMXUB1(op2)) ? MMXUB1(op1) : MMXUB1(op2);
-  MMXUB2(result) = (MMXUB2(op1) > MMXUB2(op2)) ? MMXUB2(op1) : MMXUB2(op2);
-  MMXUB3(result) = (MMXUB3(op1) > MMXUB3(op2)) ? MMXUB3(op1) : MMXUB3(op2);
-  MMXUB4(result) = (MMXUB4(op1) > MMXUB4(op2)) ? MMXUB4(op1) : MMXUB4(op2);
-  MMXUB4(result) = (MMXUB5(op1) > MMXUB5(op2)) ? MMXUB5(op1) : MMXUB5(op2);
-  MMXUB5(result) = (MMXUB6(op1) > MMXUB6(op2)) ? MMXUB6(op1) : MMXUB6(op2);
-  MMXUB6(result) = (MMXUB7(op1) > MMXUB7(op2)) ? MMXUB7(op1) : MMXUB7(op2);
+  if(MMXUB0(op2) > MMXUB0(op1)) MMXUB0(op1) = MMXUB0(op2);
+  if(MMXUB1(op2) > MMXUB1(op1)) MMXUB1(op1) = MMXUB1(op2);
+  if(MMXUB2(op2) > MMXUB2(op1)) MMXUB2(op1) = MMXUB2(op2);
+  if(MMXUB3(op2) > MMXUB3(op1)) MMXUB3(op1) = MMXUB3(op2);
+  if(MMXUB4(op2) > MMXUB4(op1)) MMXUB4(op1) = MMXUB4(op2);
+  if(MMXUB5(op2) > MMXUB5(op1)) MMXUB5(op1) = MMXUB5(op2);
+  if(MMXUB6(op2) > MMXUB6(op1)) MMXUB6(op1) = MMXUB6(op2);
+  if(MMXUB7(op2) > MMXUB7(op1)) MMXUB7(op1) = MMXUB7(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
   BX_INFO(("PMAXUB_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1491,7 +1491,7 @@ void BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1502,13 +1502,13 @@ void BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXSW0(result) = (MMXSW0(op1) < MMXSW0(op2)) ? MMXSW0(op1) : MMXSW0(op2);
-  MMXSW1(result) = (MMXSW1(op1) < MMXSW1(op2)) ? MMXSW1(op1) : MMXSW1(op2);
-  MMXSW2(result) = (MMXSW2(op1) < MMXSW2(op2)) ? MMXSW2(op1) : MMXSW2(op2);
-  MMXSW3(result) = (MMXSW3(op1) < MMXSW3(op2)) ? MMXSW3(op1) : MMXSW3(op2);
+  if(MMXSW0(op2) < MMXSW0(op1)) MMXSW0(op1) = MMXSW0(op2);
+  if(MMXSW1(op2) < MMXSW1(op1)) MMXSW1(op1) = MMXSW1(op2);
+  if(MMXSW2(op2) < MMXSW2(op1)) MMXSW2(op1) = MMXSW2(op2);
+  if(MMXSW3(op2) < MMXSW3(op1)) MMXSW3(op1) = MMXSW3(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
   BX_INFO(("PMINSW_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1612,7 +1612,7 @@ void BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1623,13 +1623,13 @@ void BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXSW0(result) = (MMXSW0(op1) > MMXSW0(op2)) ? MMXSW0(op1) : MMXSW0(op2);
-  MMXSW1(result) = (MMXSW1(op1) > MMXSW1(op2)) ? MMXSW1(op1) : MMXSW1(op2);
-  MMXSW2(result) = (MMXSW2(op1) > MMXSW2(op2)) ? MMXSW2(op1) : MMXSW2(op2);
-  MMXSW3(result) = (MMXSW3(op1) > MMXSW3(op2)) ? MMXSW3(op1) : MMXSW3(op2);
+  if(MMXSW0(op2) > MMXSW0(op1)) MMXSW0(op1) = MMXSW0(op2);
+  if(MMXSW1(op2) > MMXSW1(op1)) MMXSW1(op1) = MMXSW1(op2);
+  if(MMXSW2(op2) > MMXSW2(op1)) MMXSW2(op1) = MMXSW2(op2);
+  if(MMXSW3(op2) > MMXSW3(op1)) MMXSW3(op1) = MMXSW3(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
   BX_INFO(("PMAXSW_PqQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
