@@ -630,7 +630,7 @@ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 // object->*(fnptr)(arg, ...);
 // Since this is different from when SMF=1, encapsulate it in a macro.
 #  define BX_CPU_CALL_METHOD(func, args) \
-    do { \ 
+    do { \
       BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
       (this->*((BxExecutePtr_t) (func))) args \
       BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
