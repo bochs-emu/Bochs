@@ -1072,6 +1072,7 @@ float32 float32_mul(float32 a, float32 b, float_status_t &status)
             float_raise(status, float_flag_invalid);
             return float32_default_nan;
         }
+        if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat32(zSign, 0xFF, 0);
     }
     if (bExp == 0xFF) {
@@ -1080,10 +1081,14 @@ float32 float32_mul(float32 a, float32 b, float_status_t &status)
             float_raise(status, float_flag_invalid);
             return float32_default_nan;
         }
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat32(zSign, 0xFF, 0);
     }
     if (aExp == 0) {
-        if (aSig == 0) return packFloat32(zSign, 0, 0);
+        if (aSig == 0) {
+            if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
+            return packFloat32(zSign, 0, 0);
+        }
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
     }
@@ -1130,10 +1135,12 @@ float32 float32_div(float32 a, float32 b, float_status_t &status)
             float_raise(status, float_flag_invalid);
             return float32_default_nan;
         }
+        if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat32(zSign, 0xFF, 0);
     }
     if (bExp == 0xFF) {
         if (bSig) return propagateFloat32NaN(a, b, status);
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat32(zSign, 0, 0);
     }
     if (bExp == 0) {
@@ -1198,6 +1205,7 @@ float32 float32_rem(float32 a, float32 b, float_status_t &status)
     }
     if (bExp == 0xFF) {
         if (bSig) return propagateFloat32NaN(a, b, status);
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return a;
     }
     if (bExp == 0) {
@@ -2085,6 +2093,7 @@ float64 float64_mul(float64 a, float64 b, float_status_t &status)
             float_raise(status, float_flag_invalid);
             return float64_default_nan;
         }
+        if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat64(zSign, 0x7FF, 0);
     }
     if (bExp == 0x7FF) {
@@ -2093,10 +2102,14 @@ float64 float64_mul(float64 a, float64 b, float_status_t &status)
             float_raise(status, float_flag_invalid);
             return float64_default_nan;
         }
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat64(zSign, 0x7FF, 0);
     }
     if (aExp == 0) {
-        if (aSig == 0) return packFloat64(zSign, 0, 0);
+        if (aSig == 0) {
+            if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
+            return packFloat64(zSign, 0, 0);
+        }
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(aSig, &aExp, &aSig);
     }
@@ -2145,10 +2158,12 @@ float64 float64_div(float64 a, float64 b, float_status_t &status)
             float_raise(status, float_flag_invalid);
             return float64_default_nan;
         }
+        if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat64(zSign, 0x7FF, 0);
     }
     if (bExp == 0x7FF) {
         if (bSig) return propagateFloat64NaN(a, b, status);
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return packFloat64(zSign, 0, 0);
     }
     if (bExp == 0) {
@@ -2217,6 +2232,7 @@ float64 float64_rem(float64 a, float64 b, float_status_t &status)
     }
     if (bExp == 0x7FF) {
         if (bSig) return propagateFloat64NaN(a, b, status);
+        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
         return a;
     }
     if (bExp == 0) {
