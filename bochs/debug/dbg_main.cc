@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.34 2001-10-06 23:14:42 bdenney Exp $
+// $Id: dbg_main.cc,v 1.35 2001-11-11 04:55:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3593,11 +3593,24 @@ void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8], int verbose)
     if (type_names[type] == undef)  {
       fprintf (fp, "descriptor hi=%08x, lo=%08x", hi, lo);
     } else {
-      fprintf (fp, "target=%04x:%08x, DPL=%d", segment, offset, dpl);
       // for call gates, print segment:offset and parameter count p.4-15
       // for task gate, only present,dpl,TSS segment selector exist. p.5-13
       // for interrupt gate, segment:offset,p,dpl
       // for trap gate, segment:offset,p,dpl
+      // for TSS, base address and segment limit
+      switch (type) {
+	case 1: case 3:  // 16-bit TSS
+	case 9: case 11: // 32-bit TSS
+	  limit = (hi&0x000f0000) | (lo&0xffff);
+	  fprintf (fp, "at %08x, length 0x%x", base, limit);
+	  break;
+	case 2:
+	  // it's an LDT. not much to print.
+	  break;
+	default:
+	  // task, int, trap, or call gate.
+	  fprintf (fp, "target=%04x:%08x, DPL=%d", segment, offset, dpl);
+      }
     }
     fprintf (fp, "\n");
   }
