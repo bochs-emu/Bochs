@@ -344,6 +344,7 @@
 #ifdef __MINGW32__
   typedef unsigned long long Bit64u;
   typedef   signed long long Bit64s;
+  typedef             Bit32s ssize_t;
 #else
   typedef unsigned __int64   Bit64u;
   typedef   signed __int64   Bit64s;
