@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 1 "The Bochs Project           bochsrc            2 Jun 2001"
+.TH bochsrc 5 "29 Jun 2002" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -112,6 +112,15 @@ Example:
   com1: dev=/dev/ttyp7
 
 .TP
+.I "parport1:"
+Point this to the pathname of an output file or device.
+When turned on, the emulated printer port sends characters
+printed by the guest OS into an output file.
+
+Example:
+  parport1: enable=1, file=parport.out
+
+.TP
 .I "cdromd:"
 Point this to a pathname of a raw CD-ROM device.
 There is no cdromc option, only cdromd.
@@ -139,7 +148,7 @@ Example:
 .TP
 .I "boot:"
 This defines  your boot drive. You can  either
-boot from 'a' or 'c'.
+boot from 'a', 'c' or 'cdrom'.
 
 Example:
   boot: c
@@ -408,7 +417,7 @@ Example:
 This program  is distributed  under the terms of the  GNU
 Lesser General Public License as published  by  the  Free
 Software  Foundation.  See  the  COPYING file located  in
-/usr/local/bochs/@VERSION@/ for details on the license and
+/usr/local/share/doc/bochs/ for details on the license and
 the lack of warrantee.
 .\"SKIP_SECTION"
 .SH AVAILABILITY
@@ -423,7 +432,7 @@ The Bochs IA-32 Emulator site on the World Wide Web:
         http://bochs.sourceforge.net
 
 The Getting Started Guide for Bochs on Linux:
-        /usr/local/bochs/@VERSION@/DOC-linux.html
+        /usr/local/share/doc/bochs/DOC-linux.html
 .fi
 .\"SKIP_SECTION"
 .SH AUTHORS
