@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # install-x11-fonts
-# $Id: install-x11-fonts.in,v 1.5 2001-12-02 04:24:11 bdenney Exp $
+# $Id: install-x11-fonts.in,v 1.6 2001-12-08 15:18:28 bdenney Exp $
 #
 # This is designed help people to get the Bochs fonts installed on their 
 # system.
@@ -79,23 +79,19 @@ fi
 
 added_font=0
 for f in $FONTS; do
-  echo $ac_n "Installing $f... "
+  echo $ac_n "Installing $f as ${f}.gz ... "
   if test ! -f $FONT_SOURCE_PATH/$f; then
     echo FAILED
     echo "ERROR: $f is on the list of fonts to install, and it wasn't found "
     echo "       in $FONT_SOURCE_PATH"
     die
-  elif test ! -f $fontpath/misc/$f; then
+  elif test ! -f $fontpath/misc/${f}.gz; then
     echo ok
     added_font=1
-    cp $FONT_SOURCE_PATH/$f  $fontpath/misc/$f
-    if test ! $? = 0; then
-      echo ERROR: Copy failed; die
-    fi
-    echo Compressing the font with gzip...
-    gzip $fontpath/misc/$f
-    if test ! $? = 0; then
-      echo ERROR: Failed to gzip the font.; die
+    rm -rf $fontpath/misc/${f}.gz
+    gzip -c $FONT_SOURCE_PATH/$f > $fontpath/misc/$f.gz
+    if test $? != 0; then
+      echo ERROR: compressing and installing the font failed; die
     fi
   else
     echo "ok    (it was already there)"
