@@ -1444,7 +1444,7 @@ bx_dbg_continue_command(void)
 			// cpus set stop, too bad.
 		}
 		// increment time tick only after all processors have had their chance.
-		BX_TICK1();
+		BX_TICKN(quantum);
 	}
 #endif
 
