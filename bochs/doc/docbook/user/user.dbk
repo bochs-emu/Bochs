@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.24 2001-11-17 17:20:29 bdenney Exp $
+$Id: user.dbk,v 1.25 2001-11-17 22:04:33 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -705,7 +705,6 @@ version.  If you trying to get things working for the first time, a release
 version is recommended since it has been tested the most.  The development
 versions (sometimes called snapshots) may have some newer bug fixes and new
 features, but have not been tested as much as the releases.
-See the <link linkend="linuxrpm">Linux RPM Section</link> for more information.
 </para>
 
 <para>
@@ -715,9 +714,9 @@ install, and most include a small demo of a guest operating system called DLX
 Linux to get you started.  However, some features can only be enabled if you
 compile Bochs yourself, for example the Bochs debugger.  For multiuser systems,
 you will probably need system administrator privileges (root) to install a
-binary package.  If you decide to get a binary, download it to your hard disk
-and then go to the section called <link linkend="install-binary">Installing a
-Binary</link> for more information.
+binary package.  If you decide to get a binary, download it to your hard disk,
+uncompress it, then go to the section called <link
+linkend="install-binary">Installing a Binary</link> for more information.
 </para>
 
 <para>
@@ -731,7 +730,12 @@ A TAR file is a single file that contains many files packed inside.  Bochs
 TAR files are compressed with a program called gzip, and another program
 called gunzip is used to uncompress them.
 </para>
-</footnote>, type
+</footnote> on a Unix machine<footnote>
+<para>
+On Windows, look for software called WinZip to unpack the TAR.
+</para>
+</footnote>
+, type
 <screen>
   gunzip -c bochs-<replaceable>version</replaceable>.tar.gz | tar -xvf -
 </screen>
@@ -739,8 +743,7 @@ This creates a directory called
 <filename>bochs-<replaceable>version</replaceable></filename> full of
 files.  This directory will be referred to as &bochsdir;.  Go into
 &bochsdir; and you are ready to compile.  Instructions for compiling 
-Bochs are in
-<xref linkend="compiling">.
+Bochs are in the section, <link linkend="compiling">Compiling Bochs</link>.
 </para>
 
 <para>
@@ -1099,6 +1102,18 @@ need to compile Bochs in your home directory.
 </para>
 </note>
 
+<tip>
+<para>
+If RPM installation fails, try running <command>rpm -e bochs</command> first to
+erase any old bochs RPMs.  
+
+VGA Font failure?  For now, look at old bochs docs for now for instructions on
+installing the VGA font by hand. &FIXME;
+
+Missing RPM dependencies?  Try --nodeps option.
+</para>
+</tip>
+
 <para>
 The Bochs RPM installs three new commands and associated manual pages: bochs,
 bochs-dlx, and bximage.  First, let's try out the DLX Linux demo by typing
@@ -1144,37 +1159,30 @@ Point to all the files that get installed with the RPM: binaries,
 BIOSes, DLX linux, HTML docs and man pages, etc.
 </para>
 
-<tip>
-<para>
-&FIXME; not complete!
-If RPM installation fails.... Try rpm -e bochs to erase any old bochs RPMs.
-font failure? look at old bochs docs for now for instructions on installing
-the VGA font by hand.  Missing RPM dependencies?  Try --nodeps option.
-</para>
-</tip>
-
 </section> <!-- end of Installing a Binary:Linux section -->
 
 </section> <!-- end of Installing a Binary -->
 
 <section id="compiling"><title>Compiling Bochs</title>
 
-  <section><title>Instructions for Unix</title>
+  <section><title>Standard Compile</title>
 <para>
-Bochs is written in C++, so you need a C++ compiler to compile.  Most platforms
-have been tested with GNU gcc/g++, but other compilers should work as well.
-By now, you should have unpacked your source TAR file or checked out Bochs
-from CVS.  If not, you can return to <link linkend="downloading">Downloading
+Bochs is written in C++, so you need a C++ compiler on your system.  Most
+platforms have been tested with GNU gcc/g++, but other compilers also work.
+By now, you should have unpacked your source TAR file or checked out Bochs from
+CVS.  If not, you can return to <link linkend="downloading">Downloading
 Bochs</link> for details.  The top level directory of the source code will be
 referred to as &bochsdir;.  (&bochsdir; contains the files
-<filename>bochs.h</filename> and <filename>main.cc</filename> and 
-subdirectories <filename>cpu</filename> and <filename>bios</filename>.)
+<filename>bochs.h</filename> and <filename>main.cc</filename> and
+subdirectories <filename>cpu</filename> and <filename>bios</filename>.) 
 </para>
 
 <para>
-The compile process has three basic steps: configure, make, and make install.
-The next three sections describe each of the steps.  A fourth section is
-a transcript of a successful compilation from start to finish.
+The standard compile process has three basic steps:
+<command>configure</command>, <command>make</command>, and <command>make
+install</command>.  Each step is described in a separate section below.  The
+standard compile process is used on all Unix machines, MacOS X, BeOS, and Win32
+with Cygwin.  There are separate instructions for <link linkend="compiling-win32">compiling for Win32 with Microsoft VC++</link>.
 </para>
 
 <section id="configure"><title>Configure</title>
@@ -1184,24 +1192,30 @@ There is a script called <command>configure</command> which tests your
 machine, C/C++ compiler and libraries to discover what settings should work on
 your system.  If you run <command>configure</command> with no arguments after
 it, defaults will be used for all settings.  To change the settings, you can
-run <command>configure</command> again with options that override the 
+run <command>configure</command> with options that override the 
 defaults.  You can get a list of valid configure options by typing
 <command>configure --help</command>.  All configure options are documented in a
-<link linkend="config-opts">later section</link>.  </para>
+<link linkend="config-opts">later section</link>.  One useful configure
+option is --prefix=<replaceable>directory</replaceable>, which sets
+the directory in which Bochs will be installed.
+
+</para>
 
 <para>
 Among other things, the configure script tries to guess your compiler and
 a set of compile options that work.  If you want to control this,
 set these environment variables before running configure:
 <varname>CC</varname>, <varname>CXX</varname>, <varname>CFLAGS</varname>,
-<varname>CXXFLAGS</varname>.  The bash/ksh<footnote>
+<varname>CXXFLAGS</varname>.  Here is an example that sets the environment
+variables, using bash/ksh<footnote>
 <para>
-In csh and variants, use the syntax <command>setenv <replaceable>VARIABLE</replaceable> <replaceable>value</replaceable></command> to change environment 
-variables.
+The syntax for bash and ksh is given.  In csh and variants, use the syntax
+<command>setenv <replaceable>VARIABLE</replaceable>
+<replaceable>value</replaceable></command> to change environment variables.
+Do not use an equal sign for csh!
 </para>
 </footnote>
-commands for setting the
-environment variables are:
+syntax:
 <screen>
   export CC=egcs
   export CXX="$CC"
@@ -1217,26 +1231,43 @@ it creates a Makefile in every source code directory, and creates
 as preprocessor #defines.  The sources are ready to compile.
 </para>
 
-<section><title>Configure Shortcut Scripts (optional)</title>
+<section><title>Configure Shortcut Scripts</title>
 <para>
-In the Bochs sources, there are a series of scripts called
+In the Bochs source directory, there is a series of scripts called
 <filename>.conf.<replaceable>platform</replaceable></filename>.
 These scripts run <command>configure</command> script for you, with a set of
-options that appropriate for that platform.  Examples include
-<filename>.conf.linux</filename>,
-<filename>.conf.win32-vcpp</filename>,
-<filename>.conf.win32-cygwin</filename>,
-<filename>.conf.AIX.4.3.1</filename>, and
-<filename>.conf.beos-x86-R4</filename>.
+options that appropriate for that platform.  On some platforms, configure
+cannot guess all the right options, so it is necessary to use the shortcut
+scripts instead of a plain configure command.  If a
+<filename>.conf.<replaceable>platform</replaceable></filename> file exists for
+your platform, you should probably use it.
+
+<tip>
+<para>
+If a shortcut script is "almost right" for you, just edit it and then run it!
+If you use a shortcut script, you don't need to run configure manually.  
+</para>
+</tip>
+
 Run a shortcut script using Bourne shell, like this:
 <screen>
   sh .conf.win32-vcpp
 </screen>
-If you use a shortcut script, you don't need to run configure manually.
-If a shortcut script is "almost right" for you, just edit it and then run
-it!
+
+These <filename>.conf.<replaceable>platform</replaceable></filename> have 
+been tested in recent Bochs versions:
+<screen>
+  .conf.linux
+  .conf.sparc
+  .conf.macosx
+  .conf.win32-vcpp
+  .conf.win32-cygwin
+  .conf.AIX.4.3.1
+  .conf.beos-x86-R4
+</screen>
 </para>
-</section>
+
+</section> <!-- end of Configure Shortcut Scripts -->
 
 </section> <!-- end of Compiling:Unix:Configure -->
 
@@ -1304,62 +1335,269 @@ other required files into a public place so that all users can use it.
 </para>
 </section>
 
-<section><title>Compile Problems</title>
-<para>
-&FIXME;
-</para>
+</section>  <!-- end of Compiling:Unix section -->
+
+<section><title>Transcript of Successful Compilation</title>
 <para>
 <screen>
-what if configure fails?
-- tar up config.* and send to bochs-testing@tlw.com
-- report the problem with a source forge bug report.
-
-what if make fails?
-- try make dist-clean, and run configure and make again
-- use configure options to disable options.  For example, if errors in 
-fpu/fpu_system.h, you could try --disable-fpu.
-- search for the error on the Bochs website (bug reports, patches)
-- if familiar with C++, many minor problems can be corrected
-- move to more stable code.  if it's CVS, see if a release version will
-  compile.  Report problem to bochs-developers.
-- report the problem with a source forge bug report.
+  user$ <command>ls -l bochs-1.2.1.tar.gz</command>
+  -rw-rw-r--    1 user     user       887993 Sep 15 23:24 bochs-1.2.1.tar.gz
+  user$ <command>gunzip -c bochs-1.2.1.tar.gz | tar -xvf -</command>
+  bochs-1.2.1/
+  bochs-1.2.1/bios/
+  bochs-1.2.1/bios/BIOS-bochs-2-processors
+  bochs-1.2.1/bios/Makefile.in
+    .
+    .
+    .
+  bochs-1.2.1/patches/NOTES
+  bochs-1.2.1/patches/patch.4meg-pages
+  bochs-1.2.1/patches/patch.goswin-changes
+  user$ <command>cd bochs-1.2.1</command>
+  user$ <command>./configure --enable-cdrom</command>
+  creating cache ./config.cache
+  checking for gcc... gcc
+  checking whether the C compiler (gcc  ) works... yes
+  checking whether the C compiler (gcc  ) is a cross-compiler... no
+  checking whether we are using GNU C... yes
+  checking whether gcc accepts -g... yes
+    .
+    .
+    .
+  creating misc/Makefile
+  creating dynamic/Makefile
+  creating fpu/Makefile
+  creating config.h
+  user$ <command>make</command>
+  cd iodev && \
+  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
+  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
+  c++ -c -g -O2    -I.. -I../instrument/stubs devices.cc -o devices.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs pic.cc -o pic.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs pit.cc -o pit.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs unmapped.cc -o unmapped.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs cmos.cc -o cmos.o
+    .
+    .
+    .
+  echo done
+  done
+  c++ -o bochs -g -O2   main.o load32bitOShack.o state_file.o pc_system.o osdep.o \
+     iodev/libiodev.a \
+     cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+     fpu/libfpu.a \
+     -L/usr/X11R6/lib -lSM -lICE -lX11
+  gcc -c -g -O2    -I. -Iinstrument/stubs misc/bximage.c -o misc/bximage.o
+  c++ -o bximage -g -O2   misc/bximage.o
+  user$ <command>su</command>
+  root# <command>make install</command>
+  cd iodev && \
+  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
+  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
+    .
+    .
+    .
+  /usr/local/bochs/1.2.1/install-x11-fonts
+  Looking for fonts to install... font/
+  Looking for X11 Font Path... /usr/lib/X11/fonts
+  Installing vga.pcf... ok    (it was already there)
+  Running mkfontdir...
+  Done installing Bochs fonts for X11.
+  root# <command>exit</command>
+  user$ _
 </screen>
+</para>
+</section> <!-- end of Transcript -->
 
+
+<section id="compiling-win32"><title>Compiling on Win32 with Microsoft VC++</title>
+<para>
+The standard compile uses the configure script, but the Windows platform
+cannot run the configure script natively.
+The currently solution to this problem is that the Bochs
+configure script can be run on a different platform that does support
+shell scripts, with options that cause it to configure for a Win32 
+platform instead of the native one.  Many people have access to a UNIX
+machine that could run the configure script, or you can use Cygwin to
+run the configure script
+<footnote>
+<para>
+Because Bochs depends so much on the configure script, if you are doing
+much win32 Bochs development, you should consider downloading cygwin
+so that you can run the configure step natively.
+</para>
+</footnote>.
+</para>
+
+<para>
+Download the Bochs sources on a machine that can run shell scripts.
+Edit the configure shortcut script <filename>.conf.win32-vcpp</filename>
+if you want to adjust configure options.  Then type these commands
+in the Bochs source directory:
+<screen>
+  sh .conf.win32-vcpp
+  make win32_snap
+</screen>
+These commands will run the configure step, produce VC++ makefiles and 
+workspace files, and pack it all into a .zip file in the directory above the
+source directory <footnote>
+<para>
+If the source directory is <filename>/home/joe/bochs-win32</filename>, the
+resulting .zip file is in <filename>/home/joe/bochs-win32.zip</filename>.
+</para>
+</footnote>.  The .zip file is all ready to transfer to the target Windows
+machine to be unzipped and compiled.  Or, if you run the sh/make steps in
+Cygwin, you are already on the target machine so you don't need the .zip
+file.
+</para>
+
+<para>
+When you have the Win32 sources transferred to a Windows machine with VC++,
+find the workspace file called <filename>bochs.dsw</filename> and load it in
+VC++.  Choose <command>Project:Set Active Project</command> and be sure that
+"bochs" is selected.  Then choose <command>Build:Build bochs.exe</command>.
+This will build all the required libraries (iodev, cpu, etc.) and the
+auxilliary programs <filename>bximage.exe</filename> and
+<filename>niclist.exe</filename>.  The workspace compile method is new
+in version 1.3, so it has not had very long to be tested and tuned.  Using
+workspaces is easy and intuitive, but there is one caveat.  The workspaces
+are not currently integrated with configure.  Some configure options such
+as --enable-debugger need to add additional source files to the Makefile to be
+compiled, but they do not alter the workspace file.  If you add configure
+options and start having compile problems, try the nmake method (below)
+instead.  These problems should be fixed in future versions.
+</para>
+
+<tip>
+<para>
+To compile with the debugger enabled, add "--enable-debugger" to the
+configure line in <filename>.conf.win32-vcpp</filename> before running it.
+Then when you have loaded the workspace file, you must add the debug and disasm
+libraries to the project dependency list.  Choose
+<command>Project:Dependencies</command> and make sure that debug and disasm are
+checked.
+</para> </tip>
+
+<para>
+An alternative way to compile is to run <filename>nmake.exe</filename> in an
+MS-DOS window.  Instead of using the workspace files, nmake uses the Bochs
+makefiles that are generated by configure.  The workspace file is new in
+version 1.3; before that, nmake was the only way to compile Bochs in VC++.
+If you are having trouble with the workspace, try the nmake compile instead.
+</para>
+
+<para>
+The <command>make install</command> for Win32 is presently broken.  In the
+future, a <command>make install</command> that runs in Cygwin may be provided.
+</para>
+
+</section>  <!-- end of Compiling:win32 -->
+
+<section id="compile-cygwin"><title>Compiling on Win32 with Cygwin</title>
+<para>
+<para>Cygwin is a free Unix-like environment for Windows written by
+Steve Chamberlain and now maintained by RedHat, Inc.  You can download
+it from <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.  Because
+Cygwin supports the configure script and uses GNU gcc/g++, you can use the
+standard compile process.  A few compiler options are needed, so it is
+best to use the configure shortcut script called
+<filename>.conf.win32-cygwin</filename>.  Edit the shortcut script if you
+want to modify the configure options.  Then, to compile in Cygwin, just type:
+<screen>
+  sh .conf.win32-cygwin
+  make
+</screen>
+These options are known to work in cygwin, so they are enabled in the configure shortcut file:
+<screen>
+  --enable-cdrom 
+  --enable-sb16=win 
+</screen>
+</para>
+</section>  <!-- end of cygwin -->
+
+<section><title>Compiling on MacOS 9 with CodeWarrior</title>
+<para>
+Possibly hasn't been tried since 1999.  In theory, you run 
+<filename>sh .conf.macos</filename> on a unix box to build the 
+makefiles and headers, copy the whole thing over to a Mac, and then
+use CodeWarrior to compile.  Since it hasn't been tested in so long,
+it is quite likely that some work is needed to bring the Mac port up 
+to date.
 </para>
 </section>
 
-<section><title>Building an RPM</title>
-<para> &FIXME; </para>
+<section><title>Compiling on MacOS X</title>
 <para>
-How to build an RPM in Linux
+The port to MacOS X with Carbon API by Emmanuel Mailliard is quite new, and the
+configure and makefile support was added by Bryce Denney.  You need to install
+the compiler and libraries from the development tools CD.  It should configure
+and compile ok if you use the <filename>.conf.macosx</filename> configure
+shortcut script.  MacOS X has a special format for an application bundle, which
+looks like a directory that contains the required resource files and binaries.
+The Makefile currently creates this application bundle "by hand" using mkdir
+and copy, which is surely the wrong way to do it.  Bryce doesn't know the
+official way to create an application from a Makefile, so this hack will remain
+until a real Mac developer helps to clean it up.
+<screen>
+  sh .conf.macosx
+  make
+</screen>
 </para>
-</section> <!-- end of Other -->
 
-</section>  <!-- end of Compiling:Unix section -->
+<note>
+<para>
+If you have X windows installed, you should also be able to build Bochs
+with X windows GUI.  To try it, just run <command>configure</command>
+instead of the <filename>.conf.macosx</filename> shortcut script.
+</para>
+</note>
+
+</section>
+
+<section><title>Compiling on BeOS</title>
+<para>
+Kevin Lawton ported Bochs to BeOS.  Bernd Korz has taken over the port,
+and is working on raw cdrom and raw floppy support.  It should compile if you
+configure with --with-beos or use the <filename>.conf.beos-x86-R4</filename>
+script.
+</para>
+</section> <!-- end BeOS -->
+
+<section><title>Compiling on Amiga/MorphOS</title>
+<para>
+Nicholai Benalal created this port to MorphOS running on Amiga.  It should
+compile with <screen>
+  ./configure --with-amigaos; make
+</screen>
+Bryce also made an (untested) <filename>.conf.amigaos</filename> script that
+enables FPU and CDROM.
+</para>
+</section> <!-- end Amiga/MorphOS -->
+
+<section><title>Building an RPM on Linux</title>
+<para>
+Linux is based on Unix, so it uses the standard compile.  Several
+Linux distributions use the Redhat Package Manager (RPM) to make it
+easier to install and uninstall software.  If you want to build an
+RPM of Bochs, here are the commands.  Edit .conf.linux first if you want
+to adjust the configure options.
+
+<screen>
+  su root
+  Password:     <replaceable>type root password</replaceable>
+  sh .conf.linux
+  make rpm
+</screen>
+
+When this command completes, you will have a source RPM and a binary RPM
+of Bochs, probably under <filename>/usr/src/redhat/RPMS</filename>.  The
+output of the <command>make rpm</command> will tell you the exact location
+of these new files.  Instructions for installing an RPM are <link
+linkend="linuxrpm">here</link>.
+</para>
+</section> <!-- end of Building an RPM -->
 
 
-  <section id="compiling-win32"><title>Instructions for win32 VC++</title>
-  <para> &FIXME; </para>
-  <para>
-  <screen>
-  Getting the makefiles
-    Download them from web site in a zip, install them on top
-      of the source directory
-    Run configure on a unix box, copy the Makefiles and config.h
-      to your windows machine
-    RUN CONFIGURE IN BOCHS!  This would be awesome.
-    Cygwin?
-  Building it with NMAKE
-  Installation? Maybe download an existing windows binary package
-    and drop in your new binary.  There is no make install, though
-    this may be added some day.
-    </screen>
-    </para>
-    </section>  <!-- end of Compiling:win32 -->
-
-<section><title>Instructions for cygwin?</title>
-   <para>&FIXME;</para>
-</section>  <!-- end of Compiling:Instructions for cygwin? -->
 
 <section id="config-opts"><title>Configure Options</title>
 <para>
@@ -1770,77 +2008,31 @@ turn it off.
 
 </section> <!-- end of Configure Options -->
 
-<section><title>Transcript of Successful Compilation</title>
+<section><title>Compile Problems</title>
+<para>
+&FIXME;
+</para>
 <para>
 <screen>
-  user$ <command>ls -l bochs-1.2.1.tar.gz</command>
-  -rw-rw-r--    1 user     user       887993 Sep 15 23:24 bochs-1.2.1.tar.gz
-  user$ <command>gunzip -c bochs-1.2.1.tar.gz | tar -xvf -</command>
-  bochs-1.2.1/
-  bochs-1.2.1/bios/
-  bochs-1.2.1/bios/BIOS-bochs-2-processors
-  bochs-1.2.1/bios/Makefile.in
-    .
-    .
-    .
-  bochs-1.2.1/patches/NOTES
-  bochs-1.2.1/patches/patch.4meg-pages
-  bochs-1.2.1/patches/patch.goswin-changes
-  user$ <command>cd bochs-1.2.1</command>
-  user$ <command>./configure --enable-cdrom</command>
-  creating cache ./config.cache
-  checking for gcc... gcc
-  checking whether the C compiler (gcc  ) works... yes
-  checking whether the C compiler (gcc  ) is a cross-compiler... no
-  checking whether we are using GNU C... yes
-  checking whether gcc accepts -g... yes
-    .
-    .
-    .
-  creating misc/Makefile
-  creating dynamic/Makefile
-  creating fpu/Makefile
-  creating config.h
-  user$ <command>make</command>
-  cd iodev && \
-  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
-  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
-  c++ -c -g -O2    -I.. -I../instrument/stubs devices.cc -o devices.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs pic.cc -o pic.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs pit.cc -o pit.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs unmapped.cc -o unmapped.o
-  c++ -c -g -O2    -I.. -I../instrument/stubs cmos.cc -o cmos.o
-    .
-    .
-    .
-  echo done
-  done
-  c++ -o bochs -g -O2   main.o load32bitOShack.o state_file.o pc_system.o osdep.o \
-     iodev/libiodev.a \
-     cpu/libcpu.a memory/libmemory.a gui/libgui.a \
-     fpu/libfpu.a \
-     -L/usr/X11R6/lib -lSM -lICE -lX11
-  gcc -c -g -O2    -I. -Iinstrument/stubs misc/bximage.c -o misc/bximage.o
-  c++ -o bximage -g -O2   misc/bximage.o
-  user$ <command>su</command>
-  root# <command>make install</command>
-  cd iodev && \
-  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
-  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
-    .
-    .
-    .
-  /usr/local/bochs/1.2.1/install-x11-fonts
-  Looking for fonts to install... font/
-  Looking for X11 Font Path... /usr/lib/X11/fonts
-  Installing vga.pcf... ok    (it was already there)
-  Running mkfontdir...
-  Done installing Bochs fonts for X11.
-  root# <command>exit</command>
-  user$ _
+what if configure fails?
+- tar up config.* and send to bochs-testing@tlw.com
+- report the problem with a source forge bug report.
+
+what if make fails?
+- try make dist-clean, and run configure and make again
+- use configure options to disable options.  For example, if errors in 
+fpu/fpu_system.h, you could try --disable-fpu.
+- search for the error on the Bochs website (bug reports, patches)
+- if familiar with C++, many minor problems can be corrected
+- move to more stable code.  if it's CVS, see if a release version will
+  compile.  Report problem to bochs-developers.
+- report the problem with a source forge bug report.
 </screen>
+
 </para>
-</section> <!-- end of Transcript -->
+</section>
+
+
 
 </section> <!-- end of Compiling Bochs -->
 
