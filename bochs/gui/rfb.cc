@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.22 2003-05-11 15:07:53 vruppert Exp $
+// $Id: rfb.cc,v 1.23 2003-06-04 20:35:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -128,8 +128,10 @@ static unsigned long  rfbCursorY = 0;
 static unsigned long  rfbOriginLeft  = 0;
 static unsigned long  rfbOriginRight = 0;
 
-static unsigned long ServerThread   = 0;
-static unsigned long ServerThreadID = 0;
+static unsigned int text_rows=25, text_cols=80;
+
+//static unsigned long ServerThread   = 0;
+//static unsigned long ServerThreadID = 0;
 
 static SOCKET sGlobal;
 
@@ -185,6 +187,7 @@ static const int rfbEndianTest = 1;
 
 void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight, unsigned headerbar_y)
 {
+	UNUSED(bochs_icon_bits);
 	rfbHeaderbarY = headerbar_y;
 	rfbDimensionX = 640;
 	rfbDimensionY = 480 + rfbHeaderbarY;
@@ -544,10 +547,9 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
 	unsigned char cChar;
 	unsigned int  nchars;
 	unsigned int  i, x, y;
-	bool updated = false;
 
 	nchars = 80 * nrows;
-	if((rfbCursorY * 80 + rfbCursorX) < nchars) {
+	if ( (rfbCursorY < text_rows) && (rfbCursorX < text_cols) ) {
 		cChar = new_text[(rfbCursorY * 80 + rfbCursorX) * 2];
 		DrawBitmap(rfbCursorX * 8, rfbCursorY * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((rfbCursorY * 80 + rfbCursorX) * 2) + 1], false);
 	}
@@ -569,10 +571,10 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
 	rfbCursorX = cursor_x;
 	rfbCursorY = cursor_y;
 
-	if((cursor_y * 80 + cursor_x) < nchars) {
+	if ( (cursor_y < text_rows) && (cursor_x < text_cols ) && (tm_info.cs_start <= tm_info.cs_end) ) {
 		char cAttr = new_text[((cursor_y * 80 + cursor_x) * 2) + 1];
 		cChar = new_text[(cursor_y * 80 + cursor_x) * 2];
-		//cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
+		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
 		DrawBitmap(rfbCursorX * 8, rfbCursorY * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr, false);
 	}
 }
@@ -642,10 +644,10 @@ void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   void
 bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
-  UNUSED(x);
-  UNUSED(y);
-  UNUSED(fheight);
-  UNUSED(fwidth);
+  if (fheight > 0) {
+    text_cols = x / fwidth;
+    text_rows = y / fheight;
+  }
 }
 
 
@@ -1309,7 +1311,6 @@ void rfbMouseMove(int x, int y, int bmask)
 {
 	static int oldx = -1;
 	static int oldy = -1;
-	int buttons = 0;
 
 	if (oldx == oldy == -1) {
 		oldx = x;
