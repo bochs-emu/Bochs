@@ -1,10 +1,12 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.11 2004-01-26 04:24:55 danielg4 Exp $
+// $Id: win32dialog.cc,v 1.12 2004-01-29 18:50:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
-#ifdef WIN32
-
 #include "config.h"
+
+#if BX_USE_TEXTCONFIG && defined(WIN32)
+
+#ifdef WIN32
 
 extern "C" {
 #include <stdio.h>
@@ -257,4 +259,4 @@ int FloppyDialog(bx_param_filename_c *param)
                         (DLGPROC)FloppyDlgProc, (LPARAM)param);
 }
 
-#endif // WIN32
+#endif // BX_USE_TEXTCONFIG && defined(WIN32)

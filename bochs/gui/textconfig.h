@@ -1,7 +1,12 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.h,v 1.1 2002-10-29 20:16:04 bdenney Exp $
+// $Id: textconfig.h,v 1.2 2004-01-29 18:50:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
+
+#include "config.h"
+
+#if BX_USE_TEXTCONFIG
+
 enum {
   BX_CI_INIT,
   BX_CI_START_MENU,
@@ -17,3 +22,5 @@ enum {
 };
 
 int init_text_config_interface ();
+
+#endif

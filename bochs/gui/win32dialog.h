@@ -1,8 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.5 2003-09-01 17:47:57 vruppert Exp $
+// $Id: win32dialog.h,v 1.6 2004-01-29 18:50:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
-#ifdef WIN32
+#include "config.h"
+
+#if BX_USE_TEXTCONFIG && defined(WIN32)
 
 extern "C" {
 #include <windows.h>

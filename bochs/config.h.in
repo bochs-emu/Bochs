@@ -397,6 +397,10 @@
 #define BX_WITH_SVGA 0
 #define BX_WITH_WX 0
 
+// BX_USE_TEXTCONFIG should be set to 1 unless Bochs is compiled
+// for wxWindows only.
+#define BX_USE_TEXTCONFIG 1
+
 // add special export symbols for win32 DLL building.  The main code must
 // have __declspec(dllexport) on variables, functions, or classes that the
 // plugins can access.  The plugins should #define PLUGGABLE which will 

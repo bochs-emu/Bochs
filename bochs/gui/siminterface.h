@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.115 2004-01-15 02:08:34 danielg4 Exp $
+// $Id: siminterface.h,v 1.116 2004-01-29 18:50:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -81,9 +81,9 @@
 
 
 //////////////////////////////////////////////////////
-// BX_UI_TEXT should be set to 1 when the text mode configuration interface
+// BX_USE_TEXTCONFIG should be set to 1 when the text mode configuration interface
 // is compiled in.  This gives each type of parameter a text_print and text_ask
-// method (defined in gui/control.cc) so that you can call text_ask() on any
+// method (defined in gui/textconfig.cc) so that you can call text_ask() on any
 // kind of parameter to ask the user to edit the value.
 //
 // I have been considering whether to use the same strategy for the
@@ -101,7 +101,6 @@
 // implementations for example).  This argues for keeping UI-specific
 // structures out of the simulator interface.  It certainly works ok for the
 // text interface, but that's because FILE* is standard and portable.
-#define BX_UI_TEXT 1
 
 //////////////////////////////////////////////////////
 
@@ -873,7 +872,7 @@ public:
   static const char* set_default_format (const char *f);
   static const char *get_default_format () { return default_text_format; }
   virtual bx_list_c *get_dependent_list () { return NULL; }
-#if BX_UI_TEXT
+#if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *fp) {}
   virtual int text_ask (FILE *fpin, FILE *fpout) {return -1;}
 #endif
@@ -933,7 +932,7 @@ public:
   static Bit32u get_default_base () { return default_base; }
   void set_options (Bit32u options) { this->options = options; }
   Bit32u get_options () { return options; }
-#if BX_UI_TEXT
+#if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
@@ -1010,7 +1009,7 @@ public:
       char *name,
       char *description,
       Bit64s initial_val);
-#if BX_UI_TEXT
+#if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
@@ -1044,7 +1043,7 @@ public:
   char *get_choice (int n) { return choices[n]; }
   int find_by_name (const char *string);
   bool set_by_name (const char *string);
-#if BX_UI_TEXT
+#if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
@@ -1085,7 +1084,7 @@ public:
   void set_separator (char sep) {separator = sep; }
   char get_separator () {return separator; }
   int get_maxsize () {return maxsize; }
-#if BX_UI_TEXT
+#if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
@@ -1157,7 +1156,7 @@ public:
   bx_param_string_c *get_title () { return title; }
   void set_parent (bx_param_c *newparent) { parent = newparent; }
   bx_param_c *get_parent () { return parent; }
-#if BX_UI_TEXT
+#if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *);
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif

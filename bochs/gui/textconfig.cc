@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.19 2004-01-17 08:36:29 danielg4 Exp $
+// $Id: textconfig.cc,v 1.20 2004-01-29 18:50:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -13,6 +13,8 @@
 //
 
 #include "config.h"
+
+#if BX_USE_TEXTCONFIG
 
 extern "C" {
 #include <stdio.h>
@@ -997,3 +999,5 @@ int init_text_config_interface ()
   SIM->register_configuration_interface ("textconfig", ci_callback, NULL);
   return 0;  // success
 }
+
+#endif
