@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.88 2003-07-31 19:51:42 vruppert Exp $
+// $Id: vga.cc,v 1.89 2003-10-04 15:58:21 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -261,7 +261,7 @@ bx_vga_c::init(void)
   // The following is for the vbe display extension
   // FIXME: change 0xff80 & 0xff81 into some nice constants
   
-  for (addr=0xff80; addr<=0xff81; addr++) {
+  for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
     DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
     DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
   }    
