@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.15 2003-12-29 21:20:58 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.16 2004-02-26 19:17:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,15 +26,11 @@
 
 
 
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_X86_64
-
 
   void
 BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
@@ -70,7 +66,6 @@ BX_CPU_C::MOV_EqGq(bxInstruction_c *i)
       }
 }
 
-
   void
 BX_CPU_C::MOV_GqEq(bxInstruction_c *i)
 {
@@ -90,7 +85,6 @@ BX_CPU_C::MOV_GqEq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->nnn(), op2_64);
 }
 
-
   void
 BX_CPU_C::LEA_GqM(bxInstruction_c *i)
 {
@@ -104,14 +98,11 @@ BX_CPU_C::LEA_GqM(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->nnn(), RMAddr(i));
 }
 
-
   void
 BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
 {
   Bit8u temp_8;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from memory address */
 
@@ -131,9 +122,7 @@ BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
 BX_CPU_C::MOV_OqAL(bxInstruction_c *i)
 {
   Bit8u temp_8;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from register */
   temp_8 = AL;
@@ -151,12 +140,9 @@ BX_CPU_C::MOV_OqAL(bxInstruction_c *i)
 BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
 {
   Bit16u temp_16;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from memory address */
-
   if (!BX_NULL_SEG_REG(i->seg())) {
     read_virtual_word(i->seg(), addr, &temp_16);
     }
@@ -173,9 +159,7 @@ BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
 BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
 {
   Bit16u temp_16;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from register */
   temp_16 = AX;
@@ -193,9 +177,7 @@ BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
 BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
 {
   Bit32u temp_32;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from memory address */
 
@@ -215,9 +197,7 @@ BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
 BX_CPU_C::MOV_OqEAX(bxInstruction_c *i)
 {
   Bit32u temp_32;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from register */
   temp_32 = EAX;
@@ -235,12 +215,9 @@ BX_CPU_C::MOV_OqEAX(bxInstruction_c *i)
 BX_CPU_C::MOV_RAXOq(bxInstruction_c *i)
 {
   Bit64u temp_64;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from memory address */
-
   if (!BX_NULL_SEG_REG(i->seg())) {
     read_virtual_qword(i->seg(), addr, &temp_64);
     }
@@ -257,9 +234,7 @@ BX_CPU_C::MOV_RAXOq(bxInstruction_c *i)
 BX_CPU_C::MOV_OqRAX(bxInstruction_c *i)
 {
   Bit64u temp_64;
-  bx_address addr;
-
-  addr = i->Iq();
+  bx_address addr = i->Iq();
 
   /* read from register */
   temp_64 = RAX;
@@ -273,14 +248,10 @@ BX_CPU_C::MOV_OqRAX(bxInstruction_c *i)
     }
 }
 
-
-
   void
 BX_CPU_C::MOV_EqId(bxInstruction_c *i)
 {
-    Bit64u op2_64;
-
-    op2_64 = (Bit32s) i->Id();
+    Bit64u op2_64 = (Bit32s) i->Id();
 
     /* now write sum back to destination */
     if (i->modC0()) {
@@ -290,7 +261,6 @@ BX_CPU_C::MOV_EqId(bxInstruction_c *i)
       write_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 }
-
 
   void
 BX_CPU_C::MOVZX_GqEb(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.27 2004-01-29 17:49:03 mcb30 Exp $
+// $Id: data_xfer16.cc,v 1.28 2004-02-26 19:17:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,15 +50,10 @@ BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx = temp16;
 }
 
-
   void
 BX_CPU_C::MOV_EEwGw(bxInstruction_c *i)
 {
-  Bit16u op2_16;
-
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-
-  write_virtual_word(i->seg(), RMAddr(i), &op2_16);
+  write_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
 }
 
   void
@@ -70,7 +65,6 @@ BX_CPU_C::MOV_EGwGw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->rm(), op2_16);
 }
-
 
   void
 BX_CPU_C::MOV_GwEGw(bxInstruction_c *i)
@@ -86,10 +80,8 @@ BX_CPU_C::MOV_GwEGw(bxInstruction_c *i)
 BX_CPU_C::MOV_GwEEw(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a memory operand, Ew.
-  Bit16u op2_16;
 
-  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-  BX_WRITE_16BIT_REG(i->nnn(), op2_16);
+  read_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
 }
 
   void
@@ -165,53 +157,31 @@ BX_CPU_C::LEA_GwM(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
 {
-  Bit16u temp_16;
-  bx_address addr;
-
-  addr = i->Id();
-
   /* read from memory address */
-
   if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_word(i->seg(), addr, &temp_16);
+    read_virtual_word(i->seg(), i->Id(), &AX);
     }
   else {
-    read_virtual_word(BX_SEG_REG_DS, addr, &temp_16);
+    read_virtual_word(BX_SEG_REG_DS, i->Id(), &AX);
     }
-
-  /* write to register */
-  AX = temp_16;
 }
-
 
   void
 BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
 {
-  Bit16u temp_16;
-  bx_address addr;
-
-  addr = i->Id();
-
-  /* read from register */
-  temp_16 = AX;
-
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_word(i->seg(), addr, &temp_16);
+    write_virtual_word(i->seg(), i->Id(), &AX);
     }
   else {
-    write_virtual_word(BX_SEG_REG_DS, addr, &temp_16);
+    write_virtual_word(BX_SEG_REG_DS, i->Id(), &AX);
     }
 }
-
-
 
   void
 BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
 {
-    Bit16u op2_16;
-
-    op2_16 = i->Iw();
+    Bit16u op2_16 = i->Iw();
 
     /* now write sum back to destination */
     if (i->modC0()) {
@@ -221,7 +191,6 @@ BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
       write_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 }
-
 
   void
 BX_CPU_C::MOVZX_GwEb(bxInstruction_c *i)
@@ -338,7 +307,6 @@ BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 }
 
-
   void
 BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
 {
@@ -385,7 +353,7 @@ BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
     }
 #else
-  BX_INFO(("cmov_gwew called"));
+  BX_INFO(("CMOV_GwEw: required P6 support, use --enable-cpu-level=6 option"));
   UndefinedOpcode(i);
 #endif
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.17 2003-05-08 17:56:48 cbothamy Exp $
+// $Id: data_xfer8.cc,v 1.18 2004-02-26 19:17:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,23 +46,16 @@ BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->b1() & 0x03].word.byte.rh = i->Ib();
 }
 
-
   void
 BX_CPU_C::MOV_EEbGb(bxInstruction_c *i)
 {
-  Bit8u op2;
-
-  op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
-
-  write_virtual_byte(i->seg(), RMAddr(i), &op2);
+  write_virtual_byte(i->seg(), RMAddr(i), &BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL()));
 }
 
   void
 BX_CPU_C::MOV_EGbGb(bxInstruction_c *i)
 {
-  Bit8u op2;
-
-  op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
+  Bit8u op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
 }
@@ -71,44 +64,29 @@ BX_CPU_C::MOV_EGbGb(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_GbEEb(bxInstruction_c *i)
 {
-  Bit8u op2;
-
-  read_virtual_byte(i->seg(), RMAddr(i), &op2);
-
-  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op2);
+  read_virtual_byte(i->seg(), RMAddr(i), &BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL()));
 }
 
   void
 BX_CPU_C::MOV_GbEGb(bxInstruction_c *i)
 {
-  Bit8u op2;
-
-  op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+  Bit8u op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op2);
 }
 
-
-
   void
 BX_CPU_C::MOV_ALOb(bxInstruction_c *i)
 {
-  Bit8u  temp_8;
-  bx_address addr;
+  bx_address addr = i->Id();
 
-  addr = i->Id();
-
-  /* read from memory address */
+  /* read from memory address and write to register */
   if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_byte(i->seg(), addr, &temp_8);
+    read_virtual_byte(i->seg(), addr, &AL);
     }
   else {
-    read_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
+    read_virtual_byte(BX_SEG_REG_DS, addr, &AL);
     }
-
-
-  /* write to register */
-  AL = temp_8;
 }
 
 
@@ -116,31 +94,22 @@ BX_CPU_C::MOV_ALOb(bxInstruction_c *i)
 BX_CPU_C::MOV_ObAL(bxInstruction_c *i)
 {
   Bit8u  temp_8;
-  bx_address addr;
+  bx_address addr = i->Id();
 
-  addr = i->Id();
-
-  /* read from register */
-  temp_8 = AL;
-
-  /* write to memory address */
+  /* write to memory address and write to register */
   if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_byte(i->seg(), addr, &temp_8);
+    write_virtual_byte(i->seg(), addr, &AL);
     }
   else {
-    write_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
+    write_virtual_byte(BX_SEG_REG_DS, addr, &AL);
     }
 }
-
 
   void
 BX_CPU_C::MOV_EbIb(bxInstruction_c *i)
 {
-  Bit8u op2;
+  Bit8u op2 = i->Ib();
 
-  op2 = i->Ib();
-
-  /* now write op2 back to destination */
   if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
     }
@@ -149,14 +118,10 @@ BX_CPU_C::MOV_EbIb(bxInstruction_c *i)
     }
 }
 
-
-
   void
 BX_CPU_C::XLAT(bxInstruction_c *i)
 {
   Bit32u offset_32;
-  Bit8u  al;
-
 
 #if BX_CPU_LEVEL >= 3
   if (i->as32L()) {
@@ -169,12 +134,11 @@ BX_CPU_C::XLAT(bxInstruction_c *i)
     }
 
   if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_byte(i->seg(), offset_32, &al);
+    read_virtual_byte(i->seg(), offset_32, &AL);
     }
   else {
-    read_virtual_byte(BX_SEG_REG_DS, offset_32, &al);
+    read_virtual_byte(BX_SEG_REG_DS, offset_32, &AL);
     }
-  AL = al;
 }
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.160 2004-02-15 17:57:44 cbothamy Exp $
+// $Id: cpu.h,v 1.161 2004-02-26 19:17:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -210,6 +210,9 @@
 #define BX_WRITE_64BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].rrx = val; \
   }
+#define BX_CLEAR_64BIT_HIGH(index) {\
+  BX_CPU_THIS_PTR gen_reg[index].dword.hrx = 0; \
+  }
 
 #else
 
@@ -229,6 +232,8 @@
 #define BX_WRITE_32BIT_REGZ(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = (Bit32u) val; \
   }
+
+#define BX_CLEAR_64BIT_HIGH(index)
 
 #endif
 

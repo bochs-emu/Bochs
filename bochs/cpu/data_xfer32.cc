@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.25 2003-12-29 21:20:58 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.26 2004-02-26 19:17:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,31 +63,21 @@ BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EEdGd(bxInstruction_c *i)
 {
-  Bit32u op2_32;
-
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-  write_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+  write_virtual_dword(i->seg(), RMAddr(i), &BX_READ_32BIT_REG(i->nnn()));
 }
 
   void
 BX_CPU_C::MOV_EGdGd(bxInstruction_c *i)
 {
-  Bit32u op2_32;
-
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
-
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->nnn());
   BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
 }
-
 
   void
 BX_CPU_C::MOV_GdEGd(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a general register Gd.
-  Bit32u op2_32;
-
-  op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
   BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
 }
 
@@ -95,10 +85,10 @@ BX_CPU_C::MOV_GdEGd(bxInstruction_c *i)
 BX_CPU_C::MOV_GdEEd(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a memory operand, Ed.
-  Bit32u op2_32;
 
-  read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-  BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
+  BX_CLEAR_64BIT_HIGH(i->nnn());
+
+  read_virtual_dword(i->seg(), RMAddr(i), &BX_READ_32BIT_REG(i->nnn()));
 }
 
   void
@@ -118,46 +108,26 @@ BX_CPU_C::LEA_GdM(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EAXOd(bxInstruction_c *i)
 {
-  Bit32u temp_32;
-  bx_address addr;
-
-  addr = i->Id();
+  BX_CLEAR_64BIT_HIGH(BX_32BIT_REG_EAX);   /* RAX register */
 
   /* read from memory address */
-
   if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_dword(i->seg(), addr, &temp_32);
-    }
+    read_virtual_dword(i->seg(), i->Id(), &EAX);
+  }
   else {
-    read_virtual_dword(BX_SEG_REG_DS, addr, &temp_32);
-    }
-
-  /* write to register */
-#if BX_SUPPORT_X86_64
-  RAX = temp_32;
-#else
-  EAX = temp_32;
-#endif
+    read_virtual_dword(BX_SEG_REG_DS, i->Id(), &EAX);
+  }
 }
-
 
   void
 BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
 {
-  Bit32u temp_32;
-  bx_address addr;
-
-  addr = i->Id();
-
-  /* read from register */
-  temp_32 = EAX;
-
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_dword(i->seg(), addr, &temp_32);
+    write_virtual_dword(i->seg(), i->Id(), &EAX);
     }
   else {
-    write_virtual_dword(BX_SEG_REG_DS, addr, &temp_32);
+    write_virtual_dword(BX_SEG_REG_DS, i->Id(), &EAX);
     }
 }
 
@@ -166,9 +136,7 @@ BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EdId(bxInstruction_c *i)
 {
-    Bit32u op2_32;
-
-    op2_32 = i->Id();
+    Bit32u op2_32 = i->Id();
 
     /* now write sum back to destination */
     if (i->modC0()) {
@@ -178,7 +146,6 @@ BX_CPU_C::MOV_EdId(bxInstruction_c *i)
       write_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 }
-
 
   void
 BX_CPU_C::MOVZX_GdEb(bxInstruction_c *i)
