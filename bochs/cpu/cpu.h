@@ -368,6 +368,7 @@ typedef struct {
   } bx_segment_reg_t;
 
 typedef void * (*BxVoidFPtr_t)(void);
+class BX_CPU_C;
 
 typedef struct BxInstruction_tag {
   // prefix stuff here...
@@ -395,11 +396,11 @@ typedef struct BxInstruction_tag {
   unsigned ilen; // instruction length
   unsigned os_32, as_32; // OperandSize/AddressSize is 32bit
   unsigned flags_in, flags_out; // flags needed, flags modified
-  void (*ResolveModrm)(BxInstruction_tag *);
+  void (BX_CPU_C::*ResolveModrm)(BxInstruction_tag *);
 #if BX_DYNAMIC_TRANSLATION
   BxVoidFPtr_t DTResolveModrm;
 #endif
-  void (*execute)(BxInstruction_tag *);
+  void (BX_CPU_C::*execute)(BxInstruction_tag *);
 #if BX_DYNAMIC_TRANSLATION
   unsigned DTAttr;
   Bit8u *   (*DTFPtr)(Bit8u *, BxInstruction_tag *);
@@ -407,7 +408,9 @@ typedef struct BxInstruction_tag {
 #endif
   } BxInstruction_t;
 
-typedef void (*BxExecutePtr_t)(BxInstruction_t *);
+typedef void (BX_CPU_C::*BxExecutePtr_t)(BxInstruction_t *);
+
+
 #if BX_DYNAMIC_TRANSLATION
 typedef Bit8u * (*BxDTASResolveModrm_t)(Bit8u *, BxInstruction_t *,
   unsigned, unsigned);
@@ -488,11 +491,19 @@ typedef struct {
 
 
 #if BX_USE_SMF == 0
-   // normal member functions, use this pointer
-#  define BX_CPU_THIS_PTR  this->
+// normal member functions. In methods of the class BX_CPU_C, you can use
+// the this pointer.  Outside the class, you need to use "BX_CPU." again.
+// To distinguish, check BX_IN_CPU_METHOD, which is defined to be 1 at
+// the top of every file in the cpu subdir.
+#ifdef BX_IN_CPU_METHOD
+#  define BX_CPU_THIS_PTR  this->     /* for cpu/*.cc */
+#else
+#  define BX_CPU_THIS_PTR  BX_CPU[0].    /* for all others */
+#endif
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
 #else
+#error BX_USE_SMF==1 will not work for a while
    // static member functions, use direct access
 #  define BX_CPU_THIS_PTR  BX_CPU.
 #  define BX_SMF           static
@@ -500,6 +511,8 @@ typedef struct {
 #endif
 
 typedef void (*BxDTShim_t)(void);
+
+class BX_MEM_C;
 
 class BX_CPU_C {
 
@@ -595,6 +608,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 4
   Bit32u    cr4;
 #endif
+
+  // pointer to the address space that this processor uses.
+  BX_MEM_C *mem;
 
   Boolean EXT; /* 1 if processing external interrupt or exception
                 * or if not related to current instruction,
@@ -1346,6 +1362,9 @@ public: // for now...
   BX_SMF inline Bit16u get_CX(void);
   BX_SMF inline Bit16u get_DX(void);
 
+  // error handling
+  BX_SMF void BxError(BxInstruction_t *);
+
 #if BX_CPU_LEVEL >= 2
   BX_SMF inline Boolean real_mode(void);
 #endif
@@ -1367,8 +1386,7 @@ public: // for now...
 #endif
 
 
-extern BX_CPU_C       BX_CPU;
-
+extern BX_CPU_C       BX_CPU[BX_SMP_PROCESSORS];
 
 BX_SMF inline void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
 BX_SMF inline void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; };
