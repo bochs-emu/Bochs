@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.93 2002-12-30 17:12:16 cbothamy Exp $
+// $Id: harddrv.cc,v 1.94 2003-01-05 03:22:03 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.93 2002-12-30 17:12:16 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.94 2003-01-05 03:22:03 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1396,7 +1396,8 @@ if ( quantumsMax == 0)
 							      BX_SELECTED_CONTROLLER(channel).buffer[9] = 0x12;
 							      BX_SELECTED_CONTROLLER(channel).buffer[10] = 0x00;
 							      BX_SELECTED_CONTROLLER(channel).buffer[11] = 0x00;
-							      BX_SELECTED_CONTROLLER(channel).buffer[12] = 0x00;
+							      // Multisession, Mode 2 Form 2, Mode 2 Form 1
+							      BX_SELECTED_CONTROLLER(channel).buffer[12] = 0x70; 
 							      BX_SELECTED_CONTROLLER(channel).buffer[13] = (3 << 5);
 							      BX_SELECTED_CONTROLLER(channel).buffer[14] = (unsigned char)
 (1 |
