@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.79 2004-05-10 21:05:50 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.80 2004-06-03 17:57:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -604,15 +604,9 @@ void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
   msw |= (BX_CPU_THIS_PTR cr0.ts << 3) |
          (BX_CPU_THIS_PTR cr0.em << 2) |
          (BX_CPU_THIS_PTR cr0.mp << 1) |
-         BX_CPU_THIS_PTR cr0.pe;
+         (BX_CPU_THIS_PTR cr0.pe);
 #else /* 386+ */
-  /* reserved bits 0 ??? */
-  /* should NE bit be included here ??? */
-  // should ET bit be included here (AW)
-  msw =  (BX_CPU_THIS_PTR cr0.ts << 3) |
-         (BX_CPU_THIS_PTR cr0.em << 2) |
-         (BX_CPU_THIS_PTR cr0.mp << 1) |
-         BX_CPU_THIS_PTR cr0.pe;
+  msw = BX_CPU_THIS_PTR cr0.val32 & 0xffff;
 #endif
 
   if (i->modC0()) {

@@ -18,6 +18,7 @@ Changes to next release:
   - change BX_PANIC messages to BX_INFO when behaviour exactly 
     matches Intel docs
   - fixed using invalid segment register for MOV instruction (h.johansson)
+  - fixed ET bit mismatch between CR0 and SMSW instruction
 
 - FPU
   - fixed #NM exception on when FPU is disabled for FPU opcodes
@@ -75,8 +76,22 @@ Changes to next release:
   [903465] SEGV in iodev/ne2k.cc line 1211 on Alpha architecture by Christian Lestrade
   [903332] copy the bximage result to clipboard, etc by Lukewarm
   [950905] Do not PANIC on rare, bad input from user-mode by h.johansson
+  [924428] ET bit mismatch between CR0 and MSW
 
 - these S.F. bugs were closed 
+  #716116 Direct floppy access
+  #962919 Mac: iodev/cdrom.cc disordered
+  #954751 Two FPU.CPP in project
+  #954359 Compile faile is 3dnow support is selected without SSE support
+  #906412 FreeSCO error
+  #942060 FDC Controller not conforming to specifications
+  #938522 Win XP installation fails
+  #923613 BOUND instruction exception handling is broken
+  #923223 memtest86 errors
+  #593342 autoconf script doesn't regenerate clean
+  #616116 Crash on exit...
+  #922042 shutdown through port 92 does not work
+  #891633 02839990390p[CPU0 ] >>PANIC<< RDMSR: Unknown register 0x17
   #923653 DAA instruction is broken
   #911225 obscure AAA / AAS bugs
   #837206 Problems with numerical keys
