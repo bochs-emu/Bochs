@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.245 2003-08-30 13:10:51 vruppert Exp $
+// $Id: main.cc,v 1.246 2003-08-31 10:53:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -472,7 +472,7 @@ void bx_init_options ()
       BX_EJECTED);
   bx_options.floppya.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppya.Opath->set_format ("%s");
-  bx_options.floppya.Otype->set_format (", size=%s, ");
+  bx_options.floppya.Otype->set_format ("size=%s");
   bx_options.floppya.Ostatus->set_format ("%s");
   bx_param_c *floppya_init_list[] = {
     // if the order "path,type,status" changes, corresponding changes must
@@ -515,9 +515,8 @@ void bx_init_options ()
       BX_INSERTED,
       BX_EJECTED);
   bx_options.floppyb.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
-  bx_options.floppyb.Ostatus->set_format ("%s");
   bx_options.floppyb.Opath->set_format ("%s");
-  bx_options.floppyb.Otype->set_format (", size=%s, ");
+  bx_options.floppyb.Otype->set_format ("size=%s");
   bx_options.floppyb.Ostatus->set_format ("%s");
   bx_param_c *floppyb_init_list[] = {
     bx_options.floppyb.Opath,
@@ -586,7 +585,7 @@ void bx_init_options ()
 
     ata[channel]->add (bx_options.ata[channel].Oirq = new bx_param_num_c ((bx_id)(BXP_ATAx_IRQ(channel)),
       "ata:irq",
-      "IRQ of ata ",
+      "IRQ used by this ata channel",
       0, 15,
       ata_default_irq[channel]));
 
@@ -612,26 +611,26 @@ void bx_init_options ()
 
       menu->add (bx_options.atadevice[channel][slave].Otype = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_TYPE(channel,slave)),
           "ata-device:type",
-          "Type of ATA device",
+          "Type of ATA device (disk or cdrom)",
           atadevice_type_names,
           BX_ATA_DEVICE_DISK,
           BX_ATA_DEVICE_DISK));
 
       menu->add (bx_options.atadevice[channel][slave].Opath = new bx_param_filename_c ((bx_id)(BXP_ATAx_DEVICE_PATH(channel,slave)),
           "ata-device:path",
-          "Pathname of the image",
+          "Pathname of the image or physical device (cdrom only)",
           "", BX_PATHNAME_LEN));
 
       menu->add (bx_options.atadevice[channel][slave].Omode = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_MODE(channel,slave)),
           "ata-device:mode",
-          "Type of ATA device",
+          "Mode of the ATA harddisk",
           atadevice_mode_names,
           BX_ATA_MODE_FLAT,
           BX_ATA_MODE_FLAT));
 
       menu->add (bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_STATUS(channel,slave)),
        "ata-device:status",
-       "Inserted or ejected",
+       "CD-ROM media status (inserted / ejected)",
        atadevice_status_names,
        BX_INSERTED,
        BX_EJECTED));
@@ -659,7 +658,7 @@ void bx_init_options ()
       
       menu->add (bx_options.atadevice[channel][slave].Omodel = new bx_param_string_c ((bx_id)(BXP_ATAx_DEVICE_MODEL(channel,slave)),
        "ata-device:model",
-       "Model name",
+       "String returned by the 'identify device' command",
        "Generic 1234", 40));
 
       menu->add (bx_options.atadevice[channel][slave].Obiosdetect = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_BIOSDETECT(channel,slave)),
@@ -718,9 +717,9 @@ void bx_init_options ()
     bx_options.ata[channel].Oirq->set_label ("IRQ:");
 #else
     bx_options.ata[channel].Opresent->set_format ("enabled: %s");
-    bx_options.ata[channel].Oioaddr1->set_format (", ioaddr1: 0x%x");
-    bx_options.ata[channel].Oioaddr2->set_format (", ioaddr2: 0x%x");
-    bx_options.ata[channel].Oirq->set_format (", irq: %d");
+    bx_options.ata[channel].Oioaddr1->set_format ("ioaddr1: 0x%x");
+    bx_options.ata[channel].Oioaddr2->set_format ("ioaddr2: 0x%x");
+    bx_options.ata[channel].Oirq->set_format ("irq: %d");
 #endif
     bx_options.ata[channel].Oioaddr1->set_base (16);
     bx_options.ata[channel].Oioaddr2->set_base (16);
@@ -779,17 +778,17 @@ void bx_init_options ()
           "Path of journal file:");
 #else
       bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
-      bx_options.atadevice[channel][slave].Otype->set_format (", %s");
-      bx_options.atadevice[channel][slave].Omode->set_format (", mode %s");
-      bx_options.atadevice[channel][slave].Opath->set_format (" on '%s'");
-      bx_options.atadevice[channel][slave].Ocylinders->set_format (", %d cylinders");
-      bx_options.atadevice[channel][slave].Oheads->set_format (", %d heads");
-      bx_options.atadevice[channel][slave].Ospt->set_format (", %d sectors/track");
-      bx_options.atadevice[channel][slave].Ostatus->set_format (", %s");
-      bx_options.atadevice[channel][slave].Omodel->set_format (", model '%s'");
-      bx_options.atadevice[channel][slave].Otranslation->set_format (", translation '%s'");
-      bx_options.atadevice[channel][slave].Obiosdetect->set_format (", biosdetect '%s'");
-      bx_options.atadevice[channel][slave].Ojournal->set_format (", journal is '%s'");
+      bx_options.atadevice[channel][slave].Otype->set_format ("type %s");
+      bx_options.atadevice[channel][slave].Omode->set_format ("mode %s");
+      bx_options.atadevice[channel][slave].Opath->set_format ("path '%s'");
+      bx_options.atadevice[channel][slave].Ocylinders->set_format ("%d cylinders");
+      bx_options.atadevice[channel][slave].Oheads->set_format ("%d heads");
+      bx_options.atadevice[channel][slave].Ospt->set_format ("%d sectors/track");
+      bx_options.atadevice[channel][slave].Ostatus->set_format ("%s");
+      bx_options.atadevice[channel][slave].Omodel->set_format ("model '%s'");
+      bx_options.atadevice[channel][slave].Otranslation->set_format ("translation '%s'");
+      bx_options.atadevice[channel][slave].Obiosdetect->set_format ("biosdetect '%s'");
+      bx_options.atadevice[channel][slave].Ojournal->set_format ("journal is '%s'");
 #endif
 
       bx_options.atadevice[channel][slave].Otype->set_handler (bx_param_handler);
@@ -873,10 +872,11 @@ void bx_init_options ()
   // parallel ports
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
         sprintf (name, "Enable parallel port #%d", i+1);
+        sprintf (descr, "Controls whether parallel port #%d is installed or not", i+1);
         bx_options.par[i].Oenabled = new bx_param_bool_c (
                 BXP_PARPORTx_ENABLED(i+1), 
                 strdup(name), 
-                "",
+                strdup(descr), 
                 (i==0)? 1 : 0);  // only enable #1 by default
         sprintf (name, "Parallel port #%d output file", i+1);
         sprintf (descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
@@ -904,10 +904,11 @@ void bx_init_options ()
                 strdup(descr), 
                 (i==0)?1 : 0);  // only enable the first by default
         sprintf (name, "Pathname of the serial device for COM%d", i+1);
+        sprintf (descr, "The path can be a real serial device or a pty (X/Unix only)");
         bx_options.com[i].Odev = new bx_param_filename_c (
                 BXP_COMx_PATH(i+1),
                 strdup(name), 
-                "",
+                strdup(descr), 
                 "", BX_PATHNAME_LEN);
         deplist = new bx_list_c (BXP_NULL, 1);
         deplist->add (bx_options.com[i].Odev);
@@ -931,13 +932,13 @@ void bx_init_options ()
         bx_options.usb[i].Oioaddr = new bx_param_num_c (
                 BXP_USBx_IOADDR(i+1),
                 "usb:ioaddr",
-                "IO base adress of USB hub",
+                "I/O base adress of USB hub",
                 0, 0xffe0,
                 (i==0)?0xff40 : 0);
         bx_options.usb[i].Oirq = new bx_param_num_c (
                 BXP_USBx_IRQ(i+1),
                 "usb:irq",
-                "IRQ of USB hub",
+                "IRQ used by USB hub",
                 0, 15,
                 (i==0)?9 : 0);
         deplist = new bx_list_c (BXP_NULL, 2);
@@ -1061,12 +1062,12 @@ void bx_init_options ()
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
   bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
       "Enable the mouse",
-      "Controls whether the mouse sends events to bochs",
+      "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
       0);
   bx_options.Omouse_enabled->set_handler (bx_param_handler);
   bx_options.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
-      "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
+      "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       1, BX_MAX_BIT32U,
       500000);
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
@@ -1075,7 +1076,7 @@ void bx_init_options ()
       0);
   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
       "Use a private colormap",
-      "Request that the GUI create and use it's own non-shared colormap.  This colormap will be used when in the bochs window.  If not enabled, a shared colormap scheme may be used.  Not implemented on all GUI's.",
+      "Request that the GUI create and use it's own non-shared colormap. This colormap will be used when in the bochs window. If not enabled, a shared colormap scheme may be used. Not implemented on all GUI's.",
       0);
 #if BX_WITH_AMIGAOS
   bx_options.Ofullscreen = new bx_param_bool_c (BXP_FULLSCREEN,
@@ -1178,18 +1179,18 @@ void bx_init_options ()
       0);
   bx_options.ne2k.Oioaddr = new bx_param_num_c (BXP_NE2K_IOADDR,
       "NE2K I/O Address",
-      "to be written",
+      "I/O base address of the emulated NE2K device",
       0, 0xffff,
       0);
   bx_options.ne2k.Oioaddr->set_base (16);
   bx_options.ne2k.Oirq = new bx_param_num_c (BXP_NE2K_IRQ,
       "NE2K Interrupt",
-      "to be written",
+      "IRQ used by the NE2K device",
       0, 15,
       0);
   bx_options.ne2k.Omacaddr = new bx_param_string_c (BXP_NE2K_MACADDR,
       "MAC Address",
-      "to be written",
+      "MAC address of the NE2K device. Don't use an address of a machine on your net.",
       "", 6);
   bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
   bx_options.ne2k.Omacaddr->set_separator (':');
@@ -1217,18 +1218,18 @@ void bx_init_options ()
   };
   bx_options.ne2k.Oethmod = new bx_param_enum_c (BXP_NE2K_ETHMOD,
       "Ethernet module",
-      "to be written",
+      "Module used for the connection to the real net.",
        eth_module_list,
        0,
        0);
   bx_options.ne2k.Oethmod->set_by_name ("null");
   bx_options.ne2k.Oethdev = new bx_param_string_c (BXP_NE2K_ETHDEV,
       "Ethernet device",
-      "to be written",
+      "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
       "xl0", BX_PATHNAME_LEN);
   bx_options.ne2k.Oscript = new bx_param_string_c (BXP_NE2K_SCRIPT,
       "Device configuration script",
-      "to be written",
+      "Name of the script that is executed after Bochs initializes the network interface (optional).",
       "none", BX_PATHNAME_LEN);
 #if !BX_WITH_WX
   bx_options.ne2k.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
@@ -1257,35 +1258,35 @@ void bx_init_options ()
       "Enables the SB16 emulation",
       0);
   bx_options.sb16.Omidifile = new bx_param_filename_c (BXP_SB16_MIDIFILE,
-      "Midi file",
-      "to be written",
+      "MIDI file",
+      "The filename is where the MIDI data is sent. This can be device or just a file.",
       "", BX_PATHNAME_LEN);
   bx_options.sb16.Owavefile = new bx_param_filename_c (BXP_SB16_WAVEFILE,
       "Wave file",
-      "to be written",
+      "This is the device/file where the wave output is stored",
       "", BX_PATHNAME_LEN);
   bx_options.sb16.Ologfile = new bx_param_filename_c (BXP_SB16_LOGFILE,
       "Log file",
-      "to be written",
+      "The file to write the SB16 emulator messages to.",
       "", BX_PATHNAME_LEN);
   bx_options.sb16.Omidimode = new bx_param_num_c (BXP_SB16_MIDIMODE,
       "Midi mode",
-      "to be written",
+      "Controls the MIDI output format.",
       0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Owavemode = new bx_param_num_c (BXP_SB16_WAVEMODE,
       "Wave mode",
-      "to be written",
+      "Controls the wave output format.",
       0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Ologlevel = new bx_param_num_c (BXP_SB16_LOGLEVEL,
       "Log mode",
-      "to be written",
+      "Controls how verbose the SB16 emulation is (0 = no log, 5 = all errors and infos).",
       0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Odmatimer = new bx_param_num_c (BXP_SB16_DMATIMER,
       "DMA timer",
-      "to be written",
+      "Microseconds per second for a DMA cycle.",
       0, BX_MAX_BIT32U,
       0);
   bx_param_c *sb16_init_list[] = {
@@ -1335,15 +1336,15 @@ void bx_init_options ()
       Load32bitOSNone);
   bx_options.load32bitOSImage.Opath = new bx_param_filename_c (BXP_LOAD32BITOS_PATH,
       "Pathname of OS to load",
-      NULL,
+      "Pathname of the 32-bit OS to load",
       "", BX_PATHNAME_LEN);
   bx_options.load32bitOSImage.Oiolog = new bx_param_filename_c (BXP_LOAD32BITOS_IOLOG,
       "Pathname of I/O log file",
-      NULL,
+      "I/O logfile used for initializing the hardware",
       "", BX_PATHNAME_LEN);
   bx_options.load32bitOSImage.Oinitrd = new bx_param_filename_c (BXP_LOAD32BITOS_INITRD,
       "Pathname of initrd",
-      NULL,
+      "Pathname of the initial ramdisk",
       "", BX_PATHNAME_LEN);
   bx_param_c *loader_init_list[] = {
     bx_options.load32bitOSImage.OwhichOS,
@@ -1353,9 +1354,9 @@ void bx_init_options ()
     NULL
   };
   bx_options.load32bitOSImage.OwhichOS->set_format ("os=%s");
-  bx_options.load32bitOSImage.Opath->set_format (", path=%s");
-  bx_options.load32bitOSImage.Oiolog->set_format (", iolog=%s");
-  bx_options.load32bitOSImage.Oinitrd->set_format (", initrd=%s");
+  bx_options.load32bitOSImage.Opath->set_format ("path=%s");
+  bx_options.load32bitOSImage.Oiolog->set_format ("iolog=%s");
+  bx_options.load32bitOSImage.Oinitrd->set_format ("initrd=%s");
   bx_options.load32bitOSImage.OwhichOS->set_ask_format ("Enter OS to load: [%s] ");
   bx_options.load32bitOSImage.Opath->set_ask_format ("Enter pathname of OS: [%s]");
   bx_options.load32bitOSImage.Oiolog->set_ask_format ("Enter pathname of I/O log: [%s] ");
@@ -1384,7 +1385,7 @@ void bx_init_options ()
   };
 #if !BX_WITH_WX
   bx_options.clock.Osync->set_format ("sync=%s");
-  bx_options.clock.Otime0->set_format (", Initial time=%d");
+  bx_options.clock.Otime0->set_format ("initial time=%d");
 #endif
   bx_options.clock.Otime0->set_ask_format ("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
   bx_options.clock.Osync->set_ask_format ("Enter Synchronisation method: [%s] ");
@@ -1412,15 +1413,15 @@ void bx_init_options ()
       50000);
   bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
       "PCI i440FX Support",
-      "Controls whether to emulate PCI I440FX",
+      "Controls whether to emulate the i440FX PCI chipset",
       0);
   bx_options.cmos.OcmosImage = new bx_param_bool_c (BXP_CMOS_IMAGE,
       "Use a CMOS image",
-      NULL,
+      "Controls the usage of a CMOS image",
       0);
   bx_options.cmos.Opath = new bx_param_filename_c (BXP_CMOS_PATH,
       "Pathname of CMOS image",
-      NULL,
+      "Pathname of CMOS image",
       "", BX_PATHNAME_LEN);
   deplist = new bx_list_c (BXP_NULL, 1);
   deplist->add (bx_options.cmos.Opath);
@@ -1429,11 +1430,11 @@ void bx_init_options ()
   // Keyboard mapping
   bx_options.keyboard.OuseMapping = new bx_param_bool_c(BXP_KEYBOARD_USEMAPPING,
       "Use keyboard mapping",
-      NULL,
+      "Controls whether to use the keyboard mapping feature",
       0);
   bx_options.keyboard.Okeymap = new bx_param_filename_c (BXP_KEYBOARD_MAP,
       "Keymap filename",
-      NULL,
+      "Pathname of the keymap file used",
       "", BX_PATHNAME_LEN);
   deplist = new bx_list_c (BXP_NULL, 1);
   deplist->add (bx_options.keyboard.Okeymap);
@@ -1442,7 +1443,7 @@ void bx_init_options ()
  // Keyboard type
   bx_options.Okeyboard_type = new bx_param_enum_c (BXP_KBD_TYPE,
       "Keyboard type",
-      "Keyboard type",
+      "Keyboard type reported by the 'identify keyboard' command",
       keyboard_type_names,
       BX_KBD_MF_TYPE,
       BX_KBD_XT_TYPE);
