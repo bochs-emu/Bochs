@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.14 2002-06-16 15:02:27 vruppert Exp $
+// $Id: iodev.h,v 1.15 2002-08-01 12:19:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,6 +80,7 @@ public:
   bx_devices_c(void);
   ~bx_devices_c(void);
   void init(BX_MEM_C *);
+  void reset(void);
   BX_MEM_C *mem;  // address space associated with these devices
   Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
   Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.26 2002-06-16 15:02:27 vruppert Exp $
+// $Id: devices.cc,v 1.27 2002-08-01 12:19:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -103,7 +103,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.26 2002-06-16 15:02:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.27 2002-08-01 12:19:01 vruppert Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -114,7 +114,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // PCI logic (i440FX)
   pci = & bx_pci;
   pci->init(this);
-  pci->reset();
 #endif
 
 #if BX_SUPPORT_APIC
@@ -144,7 +143,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   //--- FLOPPY ---
   floppy = &bx_floppy;
   floppy->init(this, cmos);
-  floppy->reset(BX_RESET_HARDWARE);
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
@@ -227,6 +225,16 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   timer_handle = bx_pc_system.register_timer( this, timer_handler,
     (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1);
+}
+
+
+  void
+bx_devices_c::reset(void)
+{
+#if BX_PCI_SUPPORT
+  pci->reset();
+#endif
+  floppy->reset(BX_RESET_HARDWARE);
 }
 
 
