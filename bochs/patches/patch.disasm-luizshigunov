@@ -1,0 +1,182 @@
+? disasm.patch
+Index: dis_decode.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/dis_decode.cc,v
+retrieving revision 1.9
+diff -u -r1.9 dis_decode.cc
+--- dis_decode.cc	20 Sep 2002 15:34:55 -0000	1.9
++++ dis_decode.cc	21 Sep 2002 12:43:34 -0000
+@@ -801,16 +801,54 @@
+         goto done;
+ 
+       case 0xA6: dis_sprintf("cmpsb "); XbYb(); goto done;
+-      case 0xA7: dis_sprintf("cmpsw "); XvYv(); goto done;
++
++      case 0xA7:
++        if (db_32bit_opsize) {
++          dis_sprintf("cmpsd ");
++          }
++        else {
++          dis_sprintf("cmpsw ");
++          }
++        XvYv();
++        goto done;
++
+       case 0xA8: dis_sprintf("test AL, "); Ib(); goto done;
+       case 0xA9: dis_sprintf("test "); eAX(); dis_sprintf(", "); Iv(); goto done;
+       case 0xAA: dis_sprintf("stosb "); YbAL(); goto done;
+-      case 0xAB: dis_sprintf("stosw "); YveAX(); goto done;
++
++      case 0xAB:
++        if (db_32bit_opsize) {
++          dis_sprintf("stosd ");
++          }
++        else {
++          dis_sprintf("stosw ");
++          }
++        YveAX();
++        goto done;
++
+       case 0xAC: dis_sprintf("lodsb "); ALXb(); goto done;
+-      case 0xAD: dis_sprintf("lodsw "); eAXXv(); goto done;
+-      case 0xAE: dis_sprintf("scasb "); ALXb(); goto done;
+-      case 0xAF: dis_sprintf("scasw "); eAXXv(); goto done;
+ 
++      case 0xAD:
++        if (db_32bit_opsize) {
++          dis_sprintf("lodsd ");
++          }
++        else {
++          dis_sprintf("lodsw ");
++          }
++        eAXXv();
++        goto done;
++
++      case 0xAE: dis_sprintf("scasb "); YbAL(); goto done;
++
++      case 0xAF:
++        if (db_32bit_opsize) {
++          dis_sprintf("scasd ");
++          }
++        else {
++          dis_sprintf("scasw ");
++          }
++        YveAX();
++        goto done;
+ 
+       case 0xB0: dis_sprintf("mov AL, "); Ib(); goto done;
+       case 0xB1: dis_sprintf("mov CL, "); Ib(); goto done;
+Index: dis_groups.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/dis_groups.cc,v
+retrieving revision 1.5
+diff -u -r1.5 dis_groups.cc
+--- dis_groups.cc	20 Sep 2002 15:34:55 -0000	1.5
++++ dis_groups.cc	21 Sep 2002 12:43:35 -0000
+@@ -187,8 +187,24 @@
+ bx_disassemble_c::XBTS(void) {dis_sprintf("*** XBTS() unfinished ***");}
+   void
+ bx_disassemble_c::IBTS(void) {dis_sprintf("*** IBTS() unfinished ***");}
++
+   void
+-bx_disassemble_c::ALOb(void) {dis_sprintf("*** ALOb() unfinished ***");}
++bx_disassemble_c::ALOb(void)
++{
++  dis_sprintf("AL, ");
++  if (db_32bit_addrsize) {
++    Bit32u imm32;
++
++    imm32 = fetch_dword();
++    dis_sprintf("[%08x]", (unsigned) imm32);
++    }
++  else {
++    Bit16u imm16;
++
++    imm16 = fetch_word();
++    dis_sprintf("[%04x]", (unsigned) imm16);
++    }
++}
+ 
+   void
+ bx_disassemble_c::eAXOv(void)
+@@ -264,14 +280,76 @@
+ }
+ 
+   void
+-bx_disassemble_c::ObAL(void) {dis_sprintf("*** ObAL() unfinished ***");}
++bx_disassemble_c::ObAL(void)
++{
++  if (db_32bit_addrsize) {
++    Bit32u imm32;
++
++    imm32 = fetch_dword();
++    dis_sprintf("[%08x], ", (unsigned) imm32);
++    }
++  else {
++    Bit16u imm16;
++
++    imm16 = fetch_word();
++    dis_sprintf("[%04x], ", (unsigned) imm16);
++    }
++
++  dis_sprintf("AL");
++}
+ 
+   void
+-bx_disassemble_c::YbAL(void) {dis_sprintf("*** YbAL() unfinished ***");}
++bx_disassemble_c::YbAL(void)
++{
++  char *edi;
++
++  if (db_32bit_addrsize) {
++    edi = "EDI";
++    }
++  else {
++    edi = "DI";
++    }
++
++  dis_sprintf("ES:[%s], AL", edi);
++}
++
+   void
+-bx_disassemble_c::ALXb(void) {dis_sprintf("*** ALXb() unfinished ***");}
++bx_disassemble_c::ALXb(void)
++{
++  char *esi;
++
++  if (db_32bit_addrsize) {
++    esi = "ESI";
++    }
++  else {
++    esi = "SI";
++    }
++
++  dis_sprintf("AL, [%s]", esi);
++}
++
+   void
+-bx_disassemble_c::eAXXv(void) { dis_sprintf("*** eAXXv() unfinished ***"); }
++bx_disassemble_c::eAXXv(void)
++{
++  char *eax, *esi;
++
++  if (db_32bit_opsize) {
++    eax = "EAX";
++    }
++  else {
++    eax = "AX";
++    }
++
++  if (db_32bit_addrsize) {
++    esi = "ESI";
++    }
++  else {
++    esi = "SI";
++    }
++
++  dis_sprintf("%s, [%s]", eax, esi);
++}
++
+   void
+ bx_disassemble_c::Es(void) {dis_sprintf("*** Es() unfinished ***");}
+   void
