@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.68 2002-09-22 01:52:21 kevinlawton Exp $
+// $Id: cpu.h,v 1.69 2002-09-22 02:53:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1472,7 +1472,7 @@ union {
   BX_SMF Boolean get_##flag##Lazy(void); \
   BX_SMF Boolean get_##flag##(void) { \
     if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
-         (BX_LF_INDEX_KNOWN<<lfMaskShift) ) \
+         ((Bit32u)(BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
       return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
     else \
       return get_##flag##Lazy(); \
