@@ -92,8 +92,8 @@ AC_ARG_ENABLE(new-pit,
     AC_DEFINE(BX_USE_NEW_PIT, 0)
    fi],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_NEW_PIT, 0)
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_USE_NEW_PIT, 1)
     ]
   )
 AC_SUBST(BX_USE_NEW_PIT)
