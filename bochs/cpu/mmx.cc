@@ -1816,7 +1816,7 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
     MMXUD0(result) = Bit32s(MMXSW0(op1))*Bit32s(MMXSW0(op2)) + Bit32s(MMXSW1(op1))*Bit32s(MMXSW1(op2));
   }
 
-  if(MMXUD2(op1) == 0x80008000 && MMXUD2(op2) == 0x80008000) {
+  if(MMXUD1(op1) == 0x80008000 && MMXUD1(op2) == 0x80008000) {
     MMXUD1(result) = 0x80000000;
   }
   else {
