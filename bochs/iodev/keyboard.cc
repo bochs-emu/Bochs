@@ -57,7 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.28 2001-08-23 13:04:14 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.29 2001-08-24 13:48:05 yakovlev Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,7 +92,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.28 2001-08-23 13:04:14 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.29 2001-08-24 13:48:05 yakovlev Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -150,6 +150,8 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
   BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_RESET;
   BX_KEY_THIS s.mouse.enable          = 0;
+  BX_KEY_THIS s.mouse.delayed_dx      = 0;
+  BX_KEY_THIS s.mouse.delayed_dy      = 0;
 
   for (i=0; i<BX_KBD_CONTROLLER_QSIZE; i++)
     BX_KEY_THIS s.controller_Q[i] = 0;
@@ -1092,26 +1094,29 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
     if (BX_KEY_THIS s.kbd_controller.allow_irq1)
       BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
     }
-  else if (BX_KEY_THIS s.kbd_controller.aux_clock_enabled && BX_KEY_THIS s.mouse_internal_buffer.num_elements) {
+  else { 
+    create_mouse_packet(0);
+    if (BX_KEY_THIS s.kbd_controller.aux_clock_enabled && BX_KEY_THIS s.mouse_internal_buffer.num_elements) {
 //BX_DEBUG(( "#   servicing mouse code");
-    BX_DEBUG(("service_keyboard: key(from mouse) in internal buffer waiting"));
-    BX_KEY_THIS s.kbd_controller.aux_output_buffer =
-      BX_KEY_THIS s.mouse_internal_buffer.buffer[BX_KEY_THIS s.mouse_internal_buffer.head];
+      BX_DEBUG(("service_keyboard: key(from mouse) in internal buffer waiting"));
+      BX_KEY_THIS s.kbd_controller.aux_output_buffer =
+	BX_KEY_THIS s.mouse_internal_buffer.buffer[BX_KEY_THIS s.mouse_internal_buffer.head];
 
     //    BX_INFO(("kbd: %04d outb 1 auxb 1",__LINE__)); //das
-    BX_KEY_THIS s.kbd_controller.outb = 1;
-    BX_KEY_THIS s.kbd_controller.auxb = 1;
+      BX_KEY_THIS s.kbd_controller.outb = 1;
+      BX_KEY_THIS s.kbd_controller.auxb = 1;
 //BX_DEBUG(( "# ___kbd:periodic aux");
-    BX_KEY_THIS s.mouse_internal_buffer.head = (BX_KEY_THIS s.mouse_internal_buffer.head + 1) %
-      BX_MOUSE_BUFF_SIZE;
-    BX_KEY_THIS s.mouse_internal_buffer.num_elements--;
+      BX_KEY_THIS s.mouse_internal_buffer.head = (BX_KEY_THIS s.mouse_internal_buffer.head + 1) %
+	BX_MOUSE_BUFF_SIZE;
+      BX_KEY_THIS s.mouse_internal_buffer.num_elements--;
 //BX_DEBUG(( "#   allow12 = %u", (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12);
-    if (BX_KEY_THIS s.kbd_controller.allow_irq12)
-      BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
+      if (BX_KEY_THIS s.kbd_controller.allow_irq12)
+	BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
     }
-  else {
-    BX_DEBUG(("service_keyboard(): no keys waiting"));
+    else {
+      BX_DEBUG(("service_keyboard(): no keys waiting"));
     }
+  }
   return(retval);
 }
 
@@ -1321,10 +1326,78 @@ BX_DEBUG(("  aux_clock_enabled = %u",
  }
 }
 
+void
+bx_keyb_c::create_mouse_packet(bool force_enq) {
+  Bit8u   b1, b2, b3;
+
+  //  BX_DEBUG("Calling create_mouse_packet: force_enq=%d\n",force_enq);
+
+  if(BX_KEY_THIS s.mouse_internal_buffer.num_elements && !force_enq)
+    return;
+
+  //  BX_DEBUG("Got to first milestone: force_enq=%d\n",force_enq);
+
+  Bit16s delta_x = BX_KEY_THIS s.mouse.delayed_dx;
+  Bit16s delta_y = BX_KEY_THIS s.mouse.delayed_dy;
+  Bit8u button_state=BX_KEY_THIS s.mouse.button_status | 0x08;
+
+  if(!force_enq && !delta_x && !delta_y) {
+    return;
+  }
+
+  //  BX_DEBUG("Got to second milestone: delta_x=%d, delta_y=%d\n",delta_x,delta_y);
+
+  if(delta_x>254) delta_x=254;
+  if(delta_x<-254) delta_x=-254;
+  if(delta_y>254) delta_y=254;
+  if(delta_y<-254) delta_y=-254;
+
+  b1 = (button_state & 0x0f) | 0x08; // bit3 always set
+
+  if ( (delta_x>=0) && (delta_x<=255) ) {
+    b2 = delta_x;
+    BX_KEY_THIS s.mouse.delayed_dx-=delta_x;
+    }
+  else if ( delta_x > 255 ) {
+    b2 = 0xff;
+    BX_KEY_THIS s.mouse.delayed_dx-=255;
+    }
+  else if ( delta_x >= -256 ) {
+    b2 = delta_x;
+    b1 |= 0x10;
+    BX_KEY_THIS s.mouse.delayed_dx-=delta_x;
+    }
+  else {
+    b2 = 0x00;
+    b1 |= 0x10;
+    BX_KEY_THIS s.mouse.delayed_dx+=256;
+    }
+
+  if ( (delta_y>=0) && (delta_y<=255) ) {
+    b3 = delta_y;
+    BX_KEY_THIS s.mouse.delayed_dy-=delta_y;
+    }
+  else if ( delta_y > 255 ) {
+    b3 = 0xff;
+    BX_KEY_THIS s.mouse.delayed_dy-=255;
+    }
+  else if ( delta_y >= -256 ) {
+    b3 = delta_y;
+    b1 |= 0x20;
+    BX_KEY_THIS s.mouse.delayed_dy-=delta_y;
+    }
+  else {
+    b3 = 0x00;
+    b1 |= 0x20;
+    BX_KEY_THIS s.mouse.delayed_dy+=256;
+    }
+  mouse_enQ_packet(b1, b2, b3);
+}
+
   void
 bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
 {
-  Bit8u   b1, b2, b3;
+  bool force_enq=0;
 
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
@@ -1354,46 +1427,34 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
     BX_DEBUG(("[mouse] Dx=%d Dy=%d", delta_x, delta_y));
 #endif  /* ifdef VERBOSE_KBD_DEBUG */
 
-  b1 = (button_state & 0x0f) | 0x08; // bit3 always set
-
   if( (delta_x==0) && (delta_y==0) && (BX_KEY_THIS s.mouse.button_status == button_state & 0x3) ) {
     BX_DEBUG(("Ignoring useless mouse_motion call:\n"));
     BX_DEBUG(("This should be fixed in the gui code.\n"));
     return;
   }
 
+  if(BX_KEY_THIS s.mouse.button_status != (button_state & 0x3)) {
+    force_enq=1;
+  }
+
   BX_KEY_THIS s.mouse.button_status = button_state & 0x3;
 
-  if ( (delta_x>=0) && (delta_x<=255) ) {
-    b2 = delta_x;
-    }
-  else if ( delta_x > 255 ) {
-    b2 = 0xff;
-    }
-  else if ( delta_x >= -256 ) {
-    b2 = delta_x;
-    b1 |= 0x10;
-    }
-  else {
-    b2 = 0x00;
-    b1 |= 0x10;
-    }
+  if(delta_x>255) delta_x=255;
+  if(delta_y>255) delta_y=255;
+  if(delta_x<-256) delta_x=-256;
+  if(delta_y<-256) delta_y=-256;
 
-  if ( (delta_y>=0) && (delta_y<=255) ) {
-    b3 = delta_y;
-    }
-  else if ( delta_y > 255 ) {
-    b3 = 0xff;
-    }
-  else if ( delta_y >= -256 ) {
-    b3 = delta_y;
-    b1 |= 0x20;
-    }
-  else {
-    b3 = 0x00;
-    b1 |= 0x20;
-    }
-  mouse_enQ_packet(b1, b2, b3);
+  BX_KEY_THIS s.mouse.delayed_dx+=delta_x;
+  BX_KEY_THIS s.mouse.delayed_dy+=delta_y;
+
+  if((BX_KEY_THIS s.mouse.delayed_dx>255)||
+     (BX_KEY_THIS s.mouse.delayed_dx<-256)||
+     (BX_KEY_THIS s.mouse.delayed_dy>255)||
+     (BX_KEY_THIS s.mouse.delayed_dy<-256)) {
+    force_enq=1;
+  }
+
+  create_mouse_packet(force_enq);
 }
 
 

@@ -51,6 +51,7 @@ public:
   BX_KEY_SMF void     gen_scancode(Bit32u   scancode);
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
   BX_KEY_SMF void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
+  BX_KEY_SMF void     create_mouse_packet(bool force_enq);
   BX_KEY_SMF void     mouse_button(unsigned mouse_state);
   BX_KEY_SMF int      SaveState( class state_file *fd );
   BX_KEY_SMF int      LoadState( class state_file *fd );
@@ -146,6 +147,8 @@ private:
 	}
 
       Bit8u button_status;
+      Bit16s delayed_dx;
+      Bit16s delayed_dy;
       } mouse;
 
     struct {
