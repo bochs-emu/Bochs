@@ -120,7 +120,7 @@ bx_gui_c::floppyA_handler(void)
 #if USE_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
-  int ret = SIM->vga_gui_button_pressed (GUI_BUTTON_FLOPPYA);
+  int ret = SIM->vga_gui_button_pressed (BXP_FLOPPYA_PATH);
   // try set status to 1.  If the path is invalid or something, the
   // return value will be 0.
   new_status = bx_devices.floppy->set_media_status(0, 0);
@@ -157,7 +157,7 @@ bx_gui_c::floppyB_handler(void)
 #if USE_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
-  int ret = SIM->vga_gui_button_pressed (GUI_BUTTON_FLOPPYB);
+  int ret = SIM->vga_gui_button_pressed (BXP_FLOPPYB_PATH);
   // try set status to 1.  If the path is invalid or something, the
   // return value will be 0.
   new_status = bx_devices.floppy->set_media_status(1, 0);
@@ -203,7 +203,8 @@ bx_gui_c::power_handler(void)
 bx_gui_c::snapshot_handler(void)
 {
 #if BX_USE_CONTROL_PANEL
-  bx_control_panel (BX_CPANEL_RUNTIME);
+  fprintf (stderr, "text control panel disabled because the wxWindows one will take its place.\n");
+  //bx_control_panel (BX_CPANEL_RUNTIME);
 #else
   BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
 #endif
