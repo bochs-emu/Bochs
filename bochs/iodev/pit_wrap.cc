@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.17 2002-02-08 22:27:51 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.18 2002-05-20 21:53:25 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,10 +51,15 @@ bx_pit_c bx_pit;
 //USEC_ALPHA_B is 1-USEC_ALPHA, or multiplier for the present.
 #define USEC_ALPHA ((double)(.8))
 #define USEC_ALPHA_B ((double)(((double)1)-USEC_ALPHA))
+#define USEC_ALPHA2 ((double)(.5))
+#define USEC_ALPHA2_B ((double)(((double)1)-USEC_ALPHA2))
+#define ALPHA_LOWER(old,new) ((Bit64u)((old<new)?((USEC_ALPHA*old)+(USEC_ALPHA_B*new):((USEC_ALPHA2*old)+(USEC_ALPHA2_B*new))))
 #define MIN_MULT (0.9)
 #define MIN_MULT_FLOOR (0.75)
 #define MAX_MULT (1.25)
 #define MAX_MULT_CEILING (1.5)
+#define MAX(a,b) ( ((a)>(b))?(a):(b) )
+#define MIN(a,b) ( ((a)>(b))?(b):(a) )
 
 //How many timer ticks per usecond.
 //1.193181MHz Clock
@@ -65,11 +70,15 @@ bx_pit_c bx_pit;
 #if BX_USE_REALTIME_PIT
 #  define TICKS_TO_USEC(a) ( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second )
 #  define USEC_TO_TICKS(a) ( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second )
+#if 0
+#  define AHEAD_CEILING (MIN((Bit64u)(TICKS_PER_SECOND*MAX_MULT),(Bit64u)((TICKS_PER_SECOND*2)-(TICKS_PER_SECOND*MIN_MULT)-10)))
+#else
+#  define AHEAD_CEILING ((Bit64u)(TICKS_PER_SECOND*2))
+#endif
 #else
 #  define TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
 #  define USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
 #endif
-#define MAX(a,b) ( ((a)>(b))?(a):(b) )
 
 bx_pit_c::bx_pit_c( void )
 {
@@ -133,6 +142,7 @@ bx_pit_c::init( bx_devices_c *d )
   BX_PIT_THIS s.ticks_per_second=TICKS_PER_SECOND;
   BX_PIT_THIS s.total_sec=0;
   BX_PIT_THIS s.last_time=(time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART;
+  BX_PIT_THIS s.max_ticks = AHEAD_CEILING;
 #else
   BX_PIT_THIS s.total_usec=0;
 #endif
@@ -390,9 +400,16 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   Bit32u ticks_delta = 0;
 
 #if BX_USE_REALTIME_PIT
-  if(BX_PIT_THIS s.total_ticks < (MAX_MULT_CEILING*TICKS_PER_SECOND + (TICKS_PER_SECOND * BX_PIT_THIS s.total_sec))) {
-    ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));
+  ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));
+  if((BX_PIT_THIS s.total_ticks + ticks_delta) < (BX_PIT_THIS s.max_ticks)) {
     BX_PIT_THIS s.total_ticks += ticks_delta;
+  } else {
+    if(BX_PIT_THIS s.total_ticks              >= (BX_PIT_THIS s.max_ticks)) {
+      ticks_delta = 0;
+    } else {
+      ticks_delta =                              (BX_PIT_THIS s.max_ticks) - BX_PIT_THIS s.total_ticks;
+      BX_PIT_THIS s.total_ticks += ticks_delta;
+    }
   }
   second_update_data();
 #else
@@ -442,6 +459,8 @@ bx_pit_c::second_update_data(void) {
 
     BX_PIT_THIS s.total_sec += timediff;
 
+    BX_PIT_THIS s.max_ticks = MIN( ((BX_PIT_THIS s.total_sec)*(Bit64u)(TICKS_PER_SECOND)) + AHEAD_CEILING , BX_PIT_THIS s.total_ticks + (Bit64u)(TICKS_PER_SECOND*MAX_MULT) );
+
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("timediff: %lld, total_sec: %lld, total_ticks: %lld\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
 #endif
@@ -457,28 +476,38 @@ bx_pit_c::second_update_data(void) {
 
     if(tickstemp > (TICKS_PER_SECOND*MAX_MULT)) {
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("Running WAY too slow. tps:%lld\n",tickstemp);
+      if (tickstemp>(2*TICKS_PER_SECOND)) {
+	printf("Running WAY too slow. tps:%lld\n",tickstemp);
+      } else {
+	printf("Running slow.         tps:%lld\n",tickstemp);
+      }
 #endif
-      tickstemp = TICKS_PER_SECOND*MAX_MULT_CEILING;
+      tickstemp = (Bit64u)(TICKS_PER_SECOND*MAX_MULT);
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("..................... tps:%lld\n",tickstemp);
+      printf("..................new tps:%lld\n",tickstemp);
 #endif
     } else if(tickstemp < (TICKS_PER_SECOND*MIN_MULT)) {
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("Running WAY too fast. tps:%lld\n",tickstemp);
+      if(tickstemp<0) {
+        printf("Running WAY too fast. tps:%lld\n",tickstemp);
+      } else {
+        printf("Running fast.         tps:%lld\n",tickstemp);
+      }
 #endif
-      tickstemp = TICKS_PER_SECOND*MIN_MULT_FLOOR;
+      tickstemp = (Bit64u)(TICKS_PER_SECOND*MIN_MULT);
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("..................... tps:%lld\n",tickstemp);
+      printf("..................new tps:%lld\n",tickstemp);
 #endif
     }
 
     BX_PIT_THIS s.ticks_per_second = tickstemp;
 
-    BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff)*USEC_ALPHA_B + USEC_ALPHA*BX_PIT_THIS s.usec_per_second;
+    //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff));
+    BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff);
     BX_PIT_THIS s.last_sec_usec = bx_pc_system.time_usec();
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("Parms: ticks_per_second=%lld, usec_per_second=%lld\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
+    printf("total_usec: %lld\n", bx_pc_system.time_usec());
 #endif
   }
 }

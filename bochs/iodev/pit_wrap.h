@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.8 2002-02-07 21:22:55 yakovlev Exp $
+// $Id: pit_wrap.h,v 1.9 2002-05-20 21:53:26 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,6 +78,7 @@ private:
     Bit64u total_sec;
     Bit64u last_time;
     Bit64u last_sec_usec;
+    Bit64u max_ticks;
 #else
     Bit64u total_usec;
 #endif
