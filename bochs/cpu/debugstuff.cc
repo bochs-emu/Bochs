@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.21 2002-09-28 06:29:55 ptrumpet Exp $
+// $Id: debugstuff.cc,v 1.22 2002-10-04 17:04:32 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ BX_CPU_C::debug(Bit32u offset)
     BX_CPU_THIS_PTR cr3,
     BX_CPU_THIS_PTR cr4.getRegister()));
 #endif
-	
+
 
 #if 0
   /* (mch) Hack to display the area round EIP and prev_EIP */
@@ -156,8 +156,9 @@ BX_CPU_C::debug(Bit32u offset)
                        &phy_addr, &valid);
   if (valid) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
-    isize = bx_disassemble.disasm(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-	EIP, instr_buf, char_buf);
+    isize = bx_disassemble.disasm(
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+        EIP, instr_buf, char_buf);
     for (unsigned j=0; j<isize; j++)
       BX_INFO((">> %02x", (unsigned) instr_buf[j]));
     BX_INFO((">> : %s", char_buf));

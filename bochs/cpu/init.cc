@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.36 2002-09-30 22:18:53 bdenney Exp $
+// $Id: init.cc,v 1.37 2002-10-04 17:04:33 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,10 +98,10 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
       CASE_SEG_REG_SET (GS, val);
       case BXP_CPU_SEG_LDTR:
         BX_CPU(0)->panic("setting LDTR not implemented");
-	break;
+        break;
       case BXP_CPU_SEG_TR:
         BX_CPU(0)->panic ("setting TR not implemented");
-	break;
+        break;
       CASE_LAZY_EFLAG_SET (OF, val);
       CASE_LAZY_EFLAG_SET (SF, val);
       CASE_LAZY_EFLAG_SET (ZF, val);
@@ -166,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.36 2002-09-30 22:18:53 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.37 2002-10-04 17:04:33 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -378,11 +378,11 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     param->set_format (fmt16);
 #define DEFPARAM_GLOBAL_SEG_REG(name,field) \
     list->add (param = new bx_shadow_num_c (BXP_CPU_##name##_BASE,  \
-	  #name" base", \
-	  & BX_CPU_THIS_PTR field.base)); \
+        #name" base", \
+        & BX_CPU_THIS_PTR field.base)); \
     list->add (param = new bx_shadow_num_c (BXP_CPU_##name##_LIMIT, \
-	  #name" limit", \
-	  & BX_CPU_THIS_PTR field.limit));
+        #name" limit", \
+        & BX_CPU_THIS_PTR field.limit));
 
     DEFPARAM_SEG_REG(CS);
     DEFPARAM_SEG_REG(DS);
@@ -398,22 +398,22 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 
 #if BX_SUPPORT_X86_64==0
     list->add (param = new bx_shadow_num_c (BXP_CPU_EFLAGS, "EFLAGS",
-    &BX_CPU_THIS_PTR eflags.val32));
+        &BX_CPU_THIS_PTR eflags.val32));
 #endif
 
     // flags implemented in lazy_flags.cc must be done with a handler
     // that calls their get function, to force them to be computed.
 #define DEFPARAM_EFLAG(name) \
     list->add ( \
-	param = new bx_param_bool_c ( \
-	  BXP_CPU_EFLAGS_##name, \
-	  #name, "", get_##name())); \
+        param = new bx_param_bool_c ( \
+            BXP_CPU_EFLAGS_##name, \
+            #name, "", get_##name())); \
     param->set_handler (cpu_param_handler);
 #define DEFPARAM_LAZY_EFLAG(name) \
     list->add ( \
-	param = new bx_param_bool_c ( \
-	  BXP_CPU_EFLAGS_##name, \
-	  #name, "", get_##name())); \
+        param = new bx_param_bool_c ( \
+            BXP_CPU_EFLAGS_##name, \
+            #name, "", get_##name())); \
     param->set_handler (cpu_param_handler);
 
 #if BX_CPU_LEVEL >= 4
@@ -430,11 +430,11 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     DEFPARAM_EFLAG(NT);
     // IOPL is a special case because it is 2 bits wide.
     list->add (
-	param = new bx_shadow_num_c (
-	  BXP_CPU_EFLAGS_IOPL,
-	  "IOPL", "", 0, 3, 
-	  &eflags.val32,
-	  12, 13));
+        param = new bx_shadow_num_c (
+            BXP_CPU_EFLAGS_IOPL,
+            "IOPL", "", 0, 3, 
+            &eflags.val32,
+            12, 13));
 #if BX_SUPPORT_X86_64==0
     param->set_format ("%d");
 #endif
@@ -862,12 +862,12 @@ BX_CPU_C::reset(unsigned source)
   {
     // boot normally
     BX_CPU_THIS_PTR bsp = 1;
-    BX_CPU_THIS_PTR msr.apicbase |= 0x0100;	/* set bit 8 BSP */
+    BX_CPU_THIS_PTR msr.apicbase |= 0x0100; /* set bit 8 BSP */
     BX_INFO(("CPU[%d] is the bootstrap processor", apic_id));
   } else {
     // it's an application processor, halt until IPI is heard.
     BX_CPU_THIS_PTR bsp = 0;
-    BX_CPU_THIS_PTR msr.apicbase &= ~0x0100;	/* clear bit 8 BSP */
+    BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
     debug_trap |= 0x80000000;
     async_event = 1;

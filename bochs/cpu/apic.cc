@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.21 2002-10-03 15:47:12 kevinlawton Exp $
+// $Id: apic.cc,v 1.22 2002-10-04 17:04:31 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -37,8 +37,8 @@ void bx_generic_apic_c::init ()
 void bx_local_apic_c::update_msr_apicbase(Bit32u newbase)
 {
   Bit64u val64;
-  val64 = newbase << 12;	/* push the APIC base address to bits 12:35 */
-  val64 += cpu->msr.apicbase & 0x0900;	/* don't modify other apicbase or reserved bits */
+  val64 = newbase << 12; /* push the APIC base address to bits 12:35 */
+  val64 += cpu->msr.apicbase & 0x0900; /* don't modify other apicbase or reserved bits */
   cpu->msr.apicbase = val64;
 }
 
@@ -168,7 +168,7 @@ bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
     if (dest == 0) return 0;
     for (int i=0; i<APIC_MAX_ID; i++) {
       if (apic_index[i] && apic_index[i]->match_logical_addr(dest))
-	mask |= (1<<i);
+        mask |= (1<<i);
     }
   }
   if (bx_dbg.apic)
@@ -192,37 +192,37 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
       break;
     case 1:  // lowest priority of destinations
       {
-	// find lowest priority of apics in the mask
-	int lowest_priority = 0x100, lowest_mask = -1;
-	for (int bit=0; bit<APIC_MAX_ID; bit++) {
-	  if (deliver_bitmask & (1<<bit)) {
-	    bx_local_apic_c *apic = (bx_local_apic_c *)apic_index[bit];
-	    if (apic->get_ppr () < lowest_priority) {
-	      lowest_priority = apic->get_ppr (); lowest_mask = 1<<bit;
-	    }
-	  }
-	}
-	deliver_bitmask = lowest_mask;
-	BX_ASSERT (deliver_bitmask >= 0);
+        // find lowest priority of apics in the mask
+        int lowest_priority = 0x100, lowest_mask = -1;
+        for (int bit=0; bit<APIC_MAX_ID; bit++) {
+          if (deliver_bitmask & (1<<bit)) {
+            bx_local_apic_c *apic = (bx_local_apic_c *)apic_index[bit];
+            if (apic->get_ppr () < lowest_priority) {
+              lowest_priority = apic->get_ppr (); lowest_mask = 1<<bit;
+            }
+          }
+        }
+        deliver_bitmask = lowest_mask;
+        BX_ASSERT (deliver_bitmask >= 0);
       }
       break;
     case 5:  // INIT
       {
-	// NOTE: special behavior of local apics is handled in
-	// bx_local_apic_c::deliver.
-	
-	// normal INIT. initialize the local apics in the delivery mask.
-	for (int bit=0; bit<APIC_MAX_ID; bit++) {
-	  if (deliver_bitmask & (1<<bit)) 
-	    apic_index[bit]->init ();
-	}
+        // NOTE: special behavior of local apics is handled in
+        // bx_local_apic_c::deliver.
+        
+        // normal INIT. initialize the local apics in the delivery mask.
+        for (int bit=0; bit<APIC_MAX_ID; bit++) {
+          if (deliver_bitmask & (1<<bit)) 
+            apic_index[bit]->init ();
+        }
       }
       return true;
     case 6:  // Start Up (local apic only)
       BX_ASSERT (get_type () == APIC_TYPE_LOCAL_APIC);
       for (int bit=0; bit<APIC_MAX_ID; bit++)
-	if (deliver_bitmask & (1<<bit))
-	  apic_index[bit]->startup_msg (vector);
+        if (deliver_bitmask & (1<<bit))
+          apic_index[bit]->startup_msg (vector);
       return true;
     case 2:  // SMI
     case 3:  // reserved
@@ -237,11 +237,11 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
   for (int bit=0; bit<APIC_MAX_ID; bit++) {
     if (deliver_bitmask & (1<<bit)) {
       if (apic_index[bit] == NULL)
-	BX_INFO(("IOAPIC: delivering int0x%x to nonexistent id=%d!", (unsigned)vector, bit));
+        BX_INFO(("IOAPIC: delivering int0x%x to nonexistent id=%d!", (unsigned)vector, bit));
       else {
         if (bx_dbg.apic)
-	  BX_INFO(("IOAPIC: delivering int0x%x to apic#%d", (unsigned)vector, bit));
-	apic_index[bit]->trigger_irq (vector, id);
+          BX_INFO(("IOAPIC: delivering int0x%x to apic#%d", (unsigned)vector, bit));
+        apic_index[bit]->trigger_irq (vector, id);
       }
     }
   }
@@ -265,8 +265,8 @@ bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8
       // arbitration ID to their APIC ID.
       BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
       for (int bit=0; bit<APIC_MAX_ID; bit++) {
-	if (apic_index[bit])
-	  apic_index[bit]->set_arb_id (apic_index[bit]->get_id ());
+        if (apic_index[bit])
+          apic_index[bit]->set_arb_id (apic_index[bit]->get_id ());
       }
       return true;
     }
@@ -322,7 +322,7 @@ bx_local_apic_c::init ()
   // KPL
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
-	    BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
+            BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
 }
 
 BX_CPU_C 
@@ -387,17 +387,17 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0xb0: // EOI
       {
-	BX_DEBUG(("%s: Wrote 0x%04x to EOI", cpu->name, *data));
-	int vec = highest_priority_int (isr);
-	if (vec < 0) {
-	  BX_INFO(("EOI written without any bit in ISR"));
-	} else {
-	  BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
-	  isr[vec] = 0; 
-	  service_local_apic ();
-	}
-	if (bx_dbg.apic)
-	  print_status ();
+        BX_DEBUG(("%s: Wrote 0x%04x to EOI", cpu->name, *data));
+        int vec = highest_priority_int (isr);
+        if (vec < 0) {
+          BX_INFO(("EOI written without any bit in ISR"));
+        } else {
+          BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
+          isr[vec] = 0; 
+          service_local_apic ();
+        }
+        if (bx_dbg.apic)
+          print_status ();
       }
       break;
     case 0xd0: // logical destination
@@ -422,22 +422,22 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0x300: // interrupt command reg 0-31
       {
-	icr_low = *data & ~(1<<12);  // force delivery status bit = 0 (idle)
-	int dest = (icr_high >> 24) & 0xff;
-	int trig_mode = (icr_low >> 15) & 1;
-	int level = (icr_low >> 14) & 1;
-	int dest_mode = (icr_low >> 11) & 1;
-	int delivery_mode = (icr_low >> 8) & 7;
-	int vector = (icr_low & 0xff);
-	//
-	// deliver will call get_delivery_bitmask to decide who to send to.
-	// This local_apic class redefines get_delivery_bitmask to 
-	// implement the destination shorthand field, which doesn't exist
-	// for all APICs.
-	Boolean accepted = 
-	   deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
-	if (!accepted)
-	  err_status |= APIC_ERR_TX_ACCEPT_ERR;
+        icr_low = *data & ~(1<<12);  // force delivery status bit = 0 (idle)
+        int dest = (icr_high >> 24) & 0xff;
+        int trig_mode = (icr_low >> 15) & 1;
+        int level = (icr_low >> 14) & 1;
+        int dest_mode = (icr_low >> 11) & 1;
+        int delivery_mode = (icr_low >> 8) & 7;
+        int vector = (icr_low & 0xff);
+        //
+        // deliver will call get_delivery_bitmask to decide who to send to.
+        // This local_apic class redefines get_delivery_bitmask to 
+        // implement the destination shorthand field, which doesn't exist
+        // for all APICs.
+        Boolean accepted = 
+           deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
+        if (!accepted)
+          err_status |= APIC_ERR_TX_ACCEPT_ERR;
       }
       break;
     case 0x310: // interrupt command reg 31-63
@@ -730,7 +730,7 @@ bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
   // prune nonexistents and I/O apics from list
   for (int bit=0; bit<APIC_MAX_ID; bit++) {
     if (!apic_index[bit] 
-	|| (apic_index[bit]->get_type () != APIC_TYPE_LOCAL_APIC))
+        || (apic_index[bit]->get_type () != APIC_TYPE_LOCAL_APIC))
       mask &= ~(1<<bit);
   }
   BX_DEBUG (("local::get_delivery_bitmask returning 0x%04x", mask));

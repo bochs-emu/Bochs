@@ -11,10 +11,10 @@
 #define MMX_TOS                (MMX_REGFILE.tos)
 #define BX_READ_MMX_REG(index) (MMX_REGFILE.mmx[index].packed_mmx_register)
 
-#define BX_WRITE_MMX_REG(index, value)		       \
+#define BX_WRITE_MMX_REG(index, value) \
 {                                                      \
    MMX_REGFILE.mmx[index].packed_mmx_register = value; \
-   MMX_REGFILE.mmx[index].exp = 0xFFFF;		       \
+   MMX_REGFILE.mmx[index].exp = 0xFFFF; \
 }                                                      
 
 
@@ -83,7 +83,7 @@ void BX_CPU_C::PrintMmxRegisters(void)
 void BX_CPU_C::PrepareMmxInstruction(void)
 {
   MMX_TWD = 0;
-  MMX_TOS = 0;	      /* Each time an MMX instruction is           */
+  MMX_TOS = 0; /* Each time an MMX instruction is           */
   MMX_SWD &= 0xC7FF;  /*    executed, the TOS value is set to 000B */
 
   if(BX_CPU_THIS_PTR cr0.em)
@@ -625,7 +625,7 @@ void BX_CPU_C::EMMS(bxInstruction_c *i)
     exception(BX_NM_EXCEPTION, 0, 0);
 
   MMX_TWD = 0xFFFFFFFF;
-  MMX_TOS = 0;	      /* Each time an MMX instruction is           */
+  MMX_TOS = 0; /* Each time an MMX instruction is           */
   MMX_SWD &= 0xC7FF;  /*    executed, the TOS value is set to 000B */
 
 #else

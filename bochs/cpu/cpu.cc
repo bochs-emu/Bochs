@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.60 2002-10-04 16:26:09 kevinlawton Exp $
+// $Id: cpu.cc,v 1.61 2002-10-04 17:04:31 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -422,36 +422,37 @@ debugger_check:
 
     // (mch) Read/write, time break point support
     if (BX_CPU_THIS_PTR break_point) {
-	  switch (BX_CPU_THIS_PTR break_point) {
-		case BREAK_POINT_TIME:
-		      BX_INFO(("[%lld] Caught time breakpoint", bx_pc_system.time_ticks()));
-		      BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
-		      return;
-		case BREAK_POINT_READ:
-		      BX_INFO(("[%lld] Caught read watch point", bx_pc_system.time_ticks()));
-		      BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
-		      return;
-		case BREAK_POINT_WRITE:
-		      BX_INFO(("[%lld] Caught write watch point", bx_pc_system.time_ticks()));
-		      BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
-		      return;
-		default:
-		      BX_PANIC(("Weird break point condition"));
-	  }
-    }
+      switch (BX_CPU_THIS_PTR break_point) {
+        case BREAK_POINT_TIME:
+          BX_INFO(("[%lld] Caught time breakpoint", bx_pc_system.time_ticks()));
+          BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
+          return;
+        case BREAK_POINT_READ:
+          BX_INFO(("[%lld] Caught read watch point", bx_pc_system.time_ticks()));
+          BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
+          return;
+        case BREAK_POINT_WRITE:
+          BX_INFO(("[%lld] Caught write watch point", bx_pc_system.time_ticks()));
+          BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
+          return;
+        default:
+          BX_PANIC(("Weird break point condition"));
+        }
+      }
 #ifdef MAGIC_BREAKPOINT
     // (mch) Magic break point support
     if (BX_CPU_THIS_PTR magic_break) {
-	  if (bx_dbg.magic_break_enabled) {
-		BX_DEBUG(("Stopped on MAGIC BREAKPOINT"));
-		BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
-		return;
-	  } else {
-		BX_CPU_THIS_PTR magic_break = 0;
-		BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
-		BX_DEBUG(("Ignoring MAGIC BREAKPOINT"));
-	  }
-    }
+      if (bx_dbg.magic_break_enabled) {
+        BX_DEBUG(("Stopped on MAGIC BREAKPOINT"));
+        BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
+        return;
+        }
+      else {
+        BX_CPU_THIS_PTR magic_break = 0;
+        BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
+        BX_DEBUG(("Ignoring MAGIC BREAKPOINT"));
+        }
+      }
 #endif
 
     {
@@ -469,11 +470,10 @@ debugger_check:
 #endif  // #if BX_DEBUGGER
 #if BX_GDBSTUB
     {
-      unsigned int reason;
-      if ((reason = bx_gdbstub_check(EIP)) != GDBSTUB_STOP_NO_REASON)
-  	{
-	  return;
-        }
+    unsigned int reason;
+    if ((reason = bx_gdbstub_check(EIP)) != GDBSTUB_STOP_NO_REASON) {
+      return;
+      }
     }
 #endif
 

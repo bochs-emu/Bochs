@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.19 2002-10-03 05:10:24 bdenney Exp $
+// $Id: segment_ctrl_pro.cc,v 1.20 2002-10-04 17:04:33 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -607,7 +607,8 @@ BX_INFO(("-----------------------------------"));
       }
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
       BX_PANIC(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
-		(selector->index*8 + 7), selector->index, BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
+          (selector->index*8 + 7), selector->index,
+          BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
       return;
       }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.93 2002-10-04 16:26:10 kevinlawton Exp $
+// $Id: cpu.h,v 1.94 2002-10-04 17:04:31 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,42 +276,42 @@ typedef Bit32u bx_address;
 #define BX_XF_EXCEPTION  19
 
 /* MSR registers */
-#define BX_MSR_P5_MC_ADDR	0x0000
-#define BX_MSR_MC_TYPE		0x0001
-#define BX_MSR_TSC		0x0010
-#define BX_MSR_CESR		0x0011
-#define BX_MSR_CTR0		0x0012
-#define BX_MSR_CTR1		0x0013
-#define BX_MSR_APICBASE		0x001b
-#define BX_MSR_EBL_CR_POWERON	0x002a
-#define BX_MSR_TEST_CTL		0x0033
-#define BX_MSR_BIOS_UPDT_TRIG	0x0079
-#define BX_MSR_BBL_CR_D0	0x0088
-#define BX_MSR_BBL_CR_D1	0x0089
-#define BX_MSR_BBL_CR_D2	0x008a
-#define BX_MSR_BBL_CR_D3	0x008b	/* = BIOS_SIGN */
-#define BX_MSR_PERFCTR0		0x00c1
-#define BX_MSR_PERFCTR1		0x00c2
-#define BX_MSR_MTRRCAP		0x00fe
-#define BX_MSR_BBL_CR_ADDR	0x0116
-#define BX_MSR_BBL_DECC		0x0118
-#define BX_MSR_BBL_CR_CTL	0x0119
-#define BX_MSR_BBL_CR_TRIG	0x011a
-#define BX_MSR_BBL_CR_BUSY	0x011b
-#define BX_MSR_BBL_CR_CTL3	0x011e
-#define BX_MSR_MCG_CAP		0x0179
-#define BX_MSR_MCG_STATUS	0x017a
-#define BX_MSR_MCG_CTL		0x017b
-#define BX_MSR_EVNTSEL0		0x0186
-#define BX_MSR_EVNTSEL1		0x0187
-#define BX_MSR_DEBUGCTLMSR	0x01d9
-#define BX_MSR_LASTBRANCHFROMIP	0x01db
-#define BX_MSR_LASTBRANCHTOIP	0x01dc
-#define BX_MSR_LASTINTOIP	0x01dd
-#define BX_MSR_ROB_CR_BKUPTMPDR6	0x01e0
-#define BX_MSR_MTRRPHYSBASE0	0x0200
-#define BX_MSR_MTRRPHYSMASK0	0x0201
-#define BX_MSR_MTRRPHYSBASE1	0x0202
+#define BX_MSR_P5_MC_ADDR        0x0000
+#define BX_MSR_MC_TYPE           0x0001
+#define BX_MSR_TSC               0x0010
+#define BX_MSR_CESR              0x0011
+#define BX_MSR_CTR0              0x0012
+#define BX_MSR_CTR1              0x0013
+#define BX_MSR_APICBASE          0x001b
+#define BX_MSR_EBL_CR_POWERON    0x002a
+#define BX_MSR_TEST_CTL          0x0033
+#define BX_MSR_BIOS_UPDT_TRIG    0x0079
+#define BX_MSR_BBL_CR_D0         0x0088
+#define BX_MSR_BBL_CR_D1         0x0089
+#define BX_MSR_BBL_CR_D2         0x008a
+#define BX_MSR_BBL_CR_D3         0x008b /* = BIOS_SIGN */
+#define BX_MSR_PERFCTR0          0x00c1
+#define BX_MSR_PERFCTR1          0x00c2
+#define BX_MSR_MTRRCAP           0x00fe
+#define BX_MSR_BBL_CR_ADDR       0x0116
+#define BX_MSR_BBL_DECC          0x0118
+#define BX_MSR_BBL_CR_CTL        0x0119
+#define BX_MSR_BBL_CR_TRIG       0x011a
+#define BX_MSR_BBL_CR_BUSY       0x011b
+#define BX_MSR_BBL_CR_CTL3       0x011e
+#define BX_MSR_MCG_CAP           0x0179
+#define BX_MSR_MCG_STATUS        0x017a
+#define BX_MSR_MCG_CTL           0x017b
+#define BX_MSR_EVNTSEL0          0x0186
+#define BX_MSR_EVNTSEL1          0x0187
+#define BX_MSR_DEBUGCTLMSR       0x01d9
+#define BX_MSR_LASTBRANCHFROMIP  0x01db
+#define BX_MSR_LASTBRANCHTOIP    0x01dc
+#define BX_MSR_LASTINTOIP        0x01dd
+#define BX_MSR_ROB_CR_BKUPTMPDR6 0x01e0
+#define BX_MSR_MTRRPHYSBASE0     0x0200
+#define BX_MSR_MTRRPHYSMASK0     0x0201
+#define BX_MSR_MTRRPHYSBASE1     0x0202
 
 #if BX_SUPPORT_X86_64
 #define BX_MSR_EFER             0xc0000080
@@ -1162,7 +1162,7 @@ typedef enum {
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
 
-#define APIC_BASE_ADDR	0xfee00000	// default APIC address
+#define APIC_BASE_ADDR 0xfee00000 // default APIC address
 
 #if BX_SUPPORT_APIC
 class bx_generic_apic_c : public logfunctions {
@@ -1410,7 +1410,7 @@ union {
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  bx_regs_msr_t	msr;  
+  bx_regs_msr_t msr;  
 #endif
 
   i387_t the_i387;
@@ -1487,10 +1487,10 @@ union {
   Bit8u stop_reason;
   Bit8u trace;
   Bit8u trace_reg;
-  Bit8u mode_break;		/* BW */
-  Boolean debug_vm;		/* BW contains current mode*/
-  Bit8u show_eip;		/* BW record eip at special instr f.ex eip */
-  Bit8u show_flag;		/* BW shows instr class executed */
+  Bit8u mode_break; /* BW */
+  Boolean debug_vm; /* BW contains current mode*/
+  Bit8u show_eip;   /* BW record eip at special instr f.ex eip */
+  Bit8u show_flag;  /* BW shows instr class executed */
   bx_guard_found_t guard_found;
 #endif
 

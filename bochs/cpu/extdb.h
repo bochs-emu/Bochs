@@ -1,8 +1,8 @@
 typedef struct {
-	Bit64u base;
-	Bit16u limit;
-	Bit16u fill[3];
-	} descbase;
+  Bit64u base;
+  Bit16u limit;
+  Bit16u fill[3];
+  } descbase;
 
 typedef struct {
         Bit64u rax,rcx,rdx,rbx,rsp,rbp,rsi,rdi,
