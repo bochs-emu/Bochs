@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.17 2004-01-18 00:18:44 vruppert Exp $
+// $Id: serial.h,v 1.18 2004-01-18 11:58:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -103,7 +103,9 @@ typedef struct {
 
   int tty_id;
 
-#ifdef SERIAL_ENABLE
+#if USE_RAW_SERIAL
+  serial_raw* raw;
+#elif defined(SERIAL_ENABLE)
   struct termios term_orig, term_new;
 #endif
 
@@ -186,9 +188,6 @@ public:
   ~bx_serial_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
-#if USE_RAW_SERIAL
-  serial_raw* raw;
-#endif // USE_RAW_SERIAL
 
 private:
   bx_serial_t s[BX_SERIAL_MAXDEV];

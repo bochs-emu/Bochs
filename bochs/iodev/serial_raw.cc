@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.5 2004-01-18 01:30:14 vruppert Exp $
+// $Id: serial_raw.cc,v 1.6 2004-01-18 11:58:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -36,10 +36,15 @@
 
 #define LOG_THIS bx_devices.pluginSerialDevice->
 
-serial_raw::serial_raw (char *ttypath, int signal)
+serial_raw::serial_raw (char *devname)
 {
   put ("SERR");
   settype (SERRLOG);
+}
+
+serial_raw::~serial_raw (void)
+{
+  // nothing here yet
 }
 
 void 
