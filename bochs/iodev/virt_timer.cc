@@ -112,7 +112,7 @@ bx_virt_timer_c::periodic(Bit64u time_passed) {
   //Starting timer handler calls.
   in_timer_handler = 1;
   //Otherwise, cause any events to occur that should.
-  int i;
+  unsigned i;
   for(i=0;i<numTimers;i++) {
     if( timer[i].inUse && timer[i].active ) {
       //Assert that we haven't skipped any timers.
@@ -238,8 +238,8 @@ bx_virt_timer_c::unregisterTimer(int timerID) {
   BX_ASSERT(timerID >= 0);
   BX_ASSERT(timerID < BX_MAX_VIRTUAL_TIMERS);
 
-  if (timer[i].active) {
-    BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[i].id));
+  if (timer[timerID].active) {
+    BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[timerID].id));
     return(0); // Fail.
     }
 
