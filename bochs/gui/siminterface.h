@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.89 2002-11-19 09:27:39 bdenney Exp $
+// $Id: siminterface.h,v 1.90 2002-12-02 21:26:05 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -278,6 +278,7 @@ typedef enum {
   BXP_NEWHARDDRIVESUPPORT,
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
+  BXP_DEBUGGER_LOG_FILENAME,
   BXP_CMOS_PATH,
   BXP_CMOS_IMAGE,
   BXP_CMOS_TIME0,
@@ -1194,6 +1195,8 @@ public:
   virtual int set_log_file (char *path) {return -1;}
   virtual int get_log_prefix (char *prefix, int len) {return -1;}
   virtual int set_log_prefix (char *prefix) {return -1;}
+  virtual int get_debugger_log_file (char *path, int len) {return -1;}
+  virtual int set_debugger_log_file (char *path) {return -1;}
   virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}
   virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *where = NULL) {return -1;}
   virtual char *get_floppy_type_name (int type) {return NULL;}

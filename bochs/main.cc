@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.200 2002-12-02 20:32:13 vruppert Exp $
+// $Id: main.cc,v 1.201 2002-12-02 21:26:03 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1128,6 +1128,12 @@ void bx_init_options ()
       "%t%e%d", BX_PATHNAME_LEN);
   bx_options.log.Oprefix->set_ask_format ("Enter log prefix: [%s] ");
 
+  bx_options.log.Odebugger_filename = new bx_param_filename_c (BXP_DEBUGGER_LOG_FILENAME,
+      "Debugger Log filename",
+      "Pathname of debugger log file",
+      "-", BX_PATHNAME_LEN);
+  bx_options.log.Odebugger_filename->set_ask_format ("Enter debugger log filename: [%s] ");
+
   // loader
   bx_options.load32bitOSImage.OwhichOS = new bx_param_enum_c (BXP_LOAD32BITOS_WHICH,
       "Which operating system?",
@@ -1350,6 +1356,7 @@ void bx_reset_options ()
   // logfile
   bx_options.log.Ofilename->reset();
   bx_options.log.Oprefix->reset();
+  bx_options.log.Odebugger_filename->reset();
 
   // loader
   bx_options.load32bitOSImage.OwhichOS->reset();
@@ -2884,6 +2891,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     bx_options.log.Oprefix->set (params[1]);
     }
+  else if (!strcmp(params[0], "debugger_log")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: debugger_log directive has wrong # args.", context));
+      }
+    bx_options.log.Odebugger_filename->set (params[1]);
+    }
   else if (!strcmp(params[0], "panic")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: panic directive malformed.", context));
@@ -3614,6 +3627,7 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
 {
   fprintf (fp, "log: %s\n", opt->Ofilename->getptr ());
   fprintf (fp, "logprefix: %s\n", opt->Oprefix->getptr ());
+  fprintf (fp, "debugger_log: %s\n", opt->Odebugger_filename->getptr ());
   fprintf (fp, "panic: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_PANIC)));
   fprintf (fp, "error: action=%s\n",

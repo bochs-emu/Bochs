@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.109 2002-11-18 17:16:07 vruppert Exp $
+// $Id: bochs.h,v 1.110 2002-12-02 21:26:03 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -589,6 +589,7 @@ typedef struct {
 typedef struct {
   bx_param_string_c *Ofilename;
   bx_param_string_c *Oprefix;
+  bx_param_string_c *Odebugger_filename;
 } bx_log_options;
 
 typedef struct {

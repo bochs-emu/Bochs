@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.93 2002-11-21 18:22:03 bdenney Exp $
+// $Id: dbg_main.cc,v 1.94 2002-12-02 21:26:04 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,6 +79,7 @@ static bx_bool  bx_dbg_compare_sim_memory(void);
 static void     bx_dbg_journal_a20_event(unsigned val);
 #endif
 
+static FILE *debugger_log = NULL;
 
 static struct {
 #if BX_NUM_SIMULATORS >= 2
@@ -225,6 +226,10 @@ void dbg_printf (const char *fmt, ...)
   char *buf = new char[1024];
   vsprintf (buf, fmt, ap);
   va_end(ap);
+  if (debugger_log != NULL) {
+    fprintf(debugger_log,"%s", buf);
+    fflush(debugger_log);
+    }
   SIM->debug_puts (buf); // send to debugger, which will free buf when done.
 }
 
@@ -349,6 +354,19 @@ process_sim2:
     (void) bx_nest_infile(bx_debug_rc_fname);
     }
 
+  // Open debugger log file if needed
+  if (strcmp(bx_options.log.Odebugger_filename->getptr(), "-") != 0) {
+    debugger_log = fopen (bx_options.log.Odebugger_filename->getptr(), "w");
+    if (!debugger_log) {
+      BX_PANIC(("Can not open debugger log file '%s'",
+        bx_options.log.Odebugger_filename->getptr()));
+      }
+    else {
+      BX_INFO(("Using debugger log file %s",
+        bx_options.log.Odebugger_filename->getptr()));
+      }
+    }
+
 #if BX_DISASM
   memset(bx_disasm_ibuf, 0, sizeof(bx_disasm_ibuf));
 #endif
@@ -426,6 +444,9 @@ process_sim2:
   bx_dbg_disassemble_current (-1, 0);  // all cpus, don't print time
 
   bx_dbg_user_input_loop();
+
+  if (debugger_log != NULL)
+    fclose(debugger_log);
 
   bx_dbg_exit(0);
   return(0); // keep compiler happy
@@ -578,6 +599,11 @@ dbg_printf ( "intr request was %u\n", bx_guard.interrupt_requested);
     bx_dbg_exit(1);
     }
   tmp_buf_ptr = &tmp_buf[0];
+
+  if (debugger_log != NULL) {
+    fprintf(debugger_log, "%s", tmp_buf);
+    fflush(debugger_log);
+    }
 
   // look for first non-whitespace character
   while ( ((*tmp_buf_ptr == ' ') || (*tmp_buf_ptr == '\t')) &&
