@@ -322,9 +322,10 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
       command  = value >> 4;
       mode     = (value >> 1) & 0x07;
       bcd_mode = value & 0x01;
-#if 0
-bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
-  (unsigned) command, (unsigned) mode, (unsigned) bcd_mode);
+#if 1
+      if (bx_dbg.pit)
+	bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
+	  (unsigned) command, (unsigned) mode, (unsigned) bcd_mode);
 #endif
 
       if ( (mode > 5) || (command > 0x0e) )
