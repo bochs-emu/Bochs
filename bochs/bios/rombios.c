@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.40 2002-03-24 23:04:58 cbothamy Exp $
+// $Id: rombios.c,v 1.41 2002-03-26 13:17:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -455,18 +455,24 @@ typedef unsigned long  Bit32u;
   ;; cmp function
   lcmpl:
   lcmpul:
-    cmp	bx,2[di]
-    je	lcmp_firstw_equal
-    ret
-  lcmp_firstw_equal:
-    cmp	ax,[di]
-    jb    lcmp_below
-    jge   lcmp_exit
-    inc   bx
-  lcmp_exit:
-    ret
-  lcmp_below:
-    dec   bx
+  ;;  cmp	bx,2[di]
+  ;;  je	lcmp_firstw_equal
+  ;;  ret
+  ;;lcmp_firstw_equal:
+  ;;  cmp	ax,[di]
+  ;;  jb    lcmp_below
+  ;;  jge   lcmp_exit
+  ;;  inc   bx
+  ;;lcmp_exit:
+  ;;  ret
+  ;;lcmp_below:
+  ;;  dec   bx
+
+    and eax, #0x0000FFFF
+    shl ebx, #16
+    add eax, ebx
+    shr ebx, #16
+    cmp eax, dword ptr [di]
     ret
   
   ;; sub function
@@ -479,26 +485,35 @@ typedef unsigned long  Bit32u;
   ;; mul function
   lmull:
   lmulul:
-    mov	cx,ax
-    mul	word ptr 2[di]
-    xchg	ax,bx
-    mul	word ptr [di]
-    add	bx,ax
-    mov	ax,ptr [di]
-    mul	cx
-    add	bx,dx
+    ;; mov	cx,ax
+    ;; mul	word ptr 2[di]
+    ;; xchg	ax,bx
+    ;; mul	word ptr [di]
+    ;; add	bx,ax
+    ;; mov	ax,ptr [di]
+    ;; mul	cx
+    ;; add	bx,dx
+
+    and eax, #0x0000FFFF
+    shl ebx, #16
+    add eax, ebx
+    mul eax, dword ptr [di]
+    mov ebx, eax
+    shr ebx, #16
     ret
   
   ;; dec function
   ldecl:
   ldecul:
-    cmp	word ptr [bx],*0
-    je	ldec_both
-    dec	word ptr [bx]
-    ret
-  ldec_both:
-    dec	word ptr [bx]
-    dec	word ptr 2[bx]
+  ;;  cmp	word ptr [bx],*0
+  ;;  je	ldec_both
+  ;;  dec	word ptr [bx]
+  ;;  ret
+  ;;ldec_both:
+  ;;  dec	word ptr [bx]
+  ;;  dec	word ptr 2[bx]
+
+    dec dword ptr [bx]
     ret
   
   ;; or function
@@ -511,60 +526,93 @@ typedef unsigned long  Bit32u;
   ;; inc function
   lincl:
   lincul:
-    inc	word ptr [bx]
-    je	linc_hword
-    ret
-  linc_hword:
-    inc	word ptr 2[bx]
+  ;;  inc	word ptr [bx]
+  ;;  je	linc_hword
+  ;;  ret
+  ;;linc_hword:
+  ;;  inc	word ptr 2[bx]
+
+    inc dword ptr [bx]
     ret
   
   ;; tst function
   ltstl:
   ltstul:
-  	test	bx,bx
-  	je	ltst_firstw_equal
-  	ret
-  ltst_firstw_equal:
-  	test	ax,ax
-  	js	ltst_sign
-  	ret
-  ltst_sign:
-  	inc	bx
-  	ret
+  ;;  test	bx,bx
+  ;;  je	ltst_firstw_equal
+  ;;  ret
+  ;;ltst_firstw_equal:
+  ;;  test	ax,ax
+  ;;  js	ltst_sign
+  ;;  ret
+  ;;ltst_sign:
+  ;;  inc	bx
+
+    and eax, #0x0000FFFF
+    shl ebx, #16
+    add eax, ebx
+    shr ebx, #16
+    test eax, eax
+    ret
   
   ;; sr function
   lsrul:
-    mov	cx,di
-    jcxz	lsru_exit
-    cmp	cx,*32
-    jae	lsru_zero
-  lsru_loop:
-    shr	bx,*1
-    rcr	ax,*1
-    loop	lsru_loop
-  lsru_exit:
-    ret
-  lsru_zero:
-    xor	ax,ax
-    mov	bx,ax
+  ;;  mov	cx,di
+  ;;  jcxz	lsru_exit
+  ;;  cmp	cx,*32
+  ;;  jae	lsru_zero
+  ;;lsru_loop:
+  ;;  shr	bx,*1
+  ;;  rcr	ax,*1
+  ;;  loop	lsru_loop
+  ;;lsru_exit:
+  ;;  ret
+  ;;lsru_zero:
+  ;;  xor	ax,ax
+  ;;  mov	bx,ax
+
+    mov  cx,di
+    jcxz lsr_exit
+    and  eax, #0x0000FFFF
+    shl  ebx, #16
+    add  eax, ebx
+  lsr_loop:
+    shr  eax, #1
+    loop lsr_loop
+    mov  ebx, eax
+    shr  ebx, #16
+  lsr_exit:
     ret
   
   ;; sl function
   lsll:
   lslul:
-    mov	cx,di
-    jcxz	lsl_exit
-    cmp	cx,*32
-    jae	lsl_zero
-  lsl_loop:
-    shl	ax,*1
-    rcl	bx,*1
-    loop	lsl_loop
-    lsl_exit:
-    ret
-  lsl_zero:
-    xor	ax,ax
-    mov	bx,ax
+  ;;  mov	cx,di
+  ;;  jcxz	lsl_exit
+  ;;  cmp	cx,*32
+  ;;  jae	lsl_zero
+  ;;lsl_loop:
+  ;;  shl	ax,*1
+  ;;  rcl	bx,*1
+  ;;  loop	lsl_loop
+  ;;  lsl_exit:
+  ;;  ret
+  ;;lsl_zero:
+  ;;  xor	ax,ax
+  ;;  mov	bx,ax
+  ;;  ret
+
+    mov  cx,di
+    jcxz lsl_exit
+    and  eax, #0x0000FFFF
+    shl  ebx, #16
+    add  eax, ebx
+  lsl_loop: 
+    shl  eax, #1
+    loop lsl_loop
+    mov  ebx, eax
+    shr  ebx, #16
+  lsl_exit:
     ret
   
   #endasm
@@ -995,10 +1043,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.40 $";
-static char bios_date_string[] = "$Date: 2002-03-24 23:04:58 $";
+static char bios_cvs_version_string[] = "$Revision: 1.41 $";
+static char bios_date_string[] = "$Date: 2002-03-26 13:17:43 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.40 2002-03-24 23:04:58 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.41 2002-03-26 13:17:43 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
