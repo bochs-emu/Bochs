@@ -83,8 +83,6 @@ What works right now (September 2002):
   Both dialog boxes are updated periodically during simulation.
 
 To do:
-- configure script must be able to check that wxwindows is actually 
-  installed.
 - if you stop and start a second simulation, tons of parameters get 
   redefined and it's a big mess.
 - now that ParamDialog works, I may rewrite some of the other dialogs 
