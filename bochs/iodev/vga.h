@@ -33,7 +33,6 @@
 // be limited to only 25 lines.
 #define BX_MAX_TEXT_LINES 50
 
-
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static
 #  define BX_VGA_THIS bx_vga.
@@ -41,8 +40,7 @@
 #  define BX_VGA_SMF
 #  define BX_VGA_THIS this->
 #endif
-
-
+#define LOG_THIS BX_VGA_THIS
 
 class bx_vga_c : logfunctions {
 public:
