@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35.2.10 2002-10-23 19:31:50 bdenney Exp $
+// $Id: wx.cc,v 1.35.2.11 2002-10-24 17:41:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -164,7 +164,7 @@ void MyPanel::ToggleMouse (bool fromToolbar)
   static bool first_enable = true;
   bx_param_bool_c *enable = SIM->get_param_bool (BXP_MOUSE_ENABLED);
   bool en = ! enable->get ();
-  bool needmutex = isSimThread();
+  bool needmutex = SIM->is_sim_thread ();
   if (needmutex) wxMutexGuiEnter();
   if (fromToolbar && first_enable && en) {
     // only show this help if you click on the toolbar.  If they already
