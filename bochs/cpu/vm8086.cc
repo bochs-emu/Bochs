@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: vm8086.cc,v 1.7 2001-10-09 12:23:15 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,10 +125,11 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   void
 BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
 {
-  //BX_INFO(("stack_return_from_v86:"));
-  exception(BX_GP_EXCEPTION, 0, 0);
+  BX_ERROR(("stack_return_from_v86 may not be implemented right!"));
+  BX_PANIC(("Please report that you have found a test case for stack_return_from_v86"));
+  //exception(BX_GP_EXCEPTION, 0, 0);
 
-#if 0
+#if 1
   if (IOPL != 3) {
     // trap to virtual 8086 monitor
     BX_INFO(("stack_return_from_v86: IOPL != 3"));
