@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.1 2004-08-16 08:03:46 vruppert Exp $
+// $Id: svga_cirrus.h,v 1.2 2004-08-16 15:23:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -150,6 +150,7 @@ private:
 #endif // !BX_USE_CIRRUS_SMF
   BX_CIRRUS_SMF void svga_patterncopy();
   BX_CIRRUS_SMF void svga_simplebitblt();
+  BX_CIRRUS_SMF void svga_solidfill();
   BX_CIRRUS_SMF void svga_patterncopy_memsrc();
   BX_CIRRUS_SMF void svga_simplebitblt_memsrc();
   BX_CIRRUS_SMF void svga_simplebitblt_transp_memsrc();
@@ -211,6 +212,7 @@ private:
     Bit8u bltrop;
     Bit8u *dst;
     const Bit8u *src;
+    Bit32u srcaddr;
 #if BX_USE_CIRRUS_SMF
     void (*bitblt_ptr)();
 #else
