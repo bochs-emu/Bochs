@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.6 2002-03-15 15:04:29 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.7 2002-03-17 02:58:38 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -14,7 +14,7 @@
  *
  */
 
-#define BX_UI_TEXT 1
+#define BX_UI_TEXT 0
 
 //////////////////////////////////////////////////////
 
@@ -103,6 +103,56 @@ typedef enum {
   BXT_PARAM_STRING,
   BXT_LIST
 } bx_objtype;
+
+///////////////////////////////////////////////////////////////////
+// event structure for communication between simulator and gui
+///////////////////////////////////////////////////////////////////
+
+typedef enum {
+  BX_ASYNC_EVT_KEY_PRESS = 2000,  // vga gui -> simulator
+  BX_ASYNC_EVT_KEY_RELEASE,       // vga gui -> simulator
+  BX_ASYNC_EVT_MOUSE,             // vga gui -> simulator
+  BX_SYNC_EVT_GET_PARAM,          // cpanel -> simulator -> cpanel
+  BX_ASYNC_EVT_SET_PARAM,         // cpanel -> simulator
+  BX_ASYNC_EVT_LOG_MSG,           // simulator -> cpanel
+  BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> cpanel
+  BX_SYNC_EVT_ASK_PARAM,          // simulator -> cpanel -> simulator
+  BX_SYNC_EVT_TICK,               // simulator -> cpanel, wait for response.
+  BX_ASYNC_EVT_SHUTDOWN_GUI,      // simulator -> cpanel
+} BxEventType;
+
+typedef union {
+  Bit32s s32;
+  char *charptr;
+} AnyParamVal;
+
+typedef struct {
+  BxEventType type;
+  Bit32s retcode;   // for success or failure codes
+  union {
+    struct {
+      // type is BX_EVT_KEY_PRESS or BX_EVT_KEY_RELEASE
+      Bit16u scancode;
+    } key;
+    struct {
+      // type is BX_EVT_MOUSE
+      Bit16u x, y;
+      Bit8u buttons;
+    } mouse;
+    struct {
+      // type is BX_EVT_GET_PARAM, BX_EVT_SET_PARAM, BX_EVT_ASK
+      bx_id id;         // id number of parameter
+      AnyParamVal val;
+    } param;
+    struct {
+      // type is BX_EVT_LOG_MSG
+      Bit8u level;
+      char *prefix;
+      char *msg;
+    } logmsg;
+  } u;
+} BxEvent;
+
 
 ////////////////////////////////////////////////////////////////////
 class bx_object_c {
@@ -362,35 +412,29 @@ public:
   // At present, the standard floppy disk buttons, power button, etc are under
   // control of Bochs, NOT the control panel.  Bochs uses the callback to tell
   // the control panel that one of these buttons has been pressed.
-  typedef int (*sim_interface_callback_t)(void *theclass, int code);
+  typedef BxEvent* (*sim_interface_callback_t)(void *theclass, BxEvent *event);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg) {}
-
-  // called by the control panel
-  virtual int notify_return (int retcode) {return -1;}
 
   // methods marked LOCAL should only be called by the simulator, not
   // from the control panel.
-#define NOTIFY_CODE_LOGMSG  0x101
-#define NOTIFY_CODE_VGA_GUI_BUTTON 0x102
-#define NOTIFY_CODE_SHUTDOWN 0x103
   // called by bochs to inform the gui that something has happened
-  virtual int LOCAL_notify (int code) {return -1;}
+  virtual BxEvent* LOCAL_notify (BxEvent *event) {return NULL;}
 
   // this "notify arg" passing is very ugly and Bryce needs to clean it up!
   virtual int LOCAL_log_msg (char *prefix, int level, char *msg) {return -1;}
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len) {return -1;}
   // called by gui.cc event handler when a button is pressed.
-  virtual int vga_gui_button_pressed (int which) {return -1;}
+  virtual int vga_gui_button_pressed (bx_id param) {return -1;}
   virtual int notify_get_int_arg (int which) {return -1;}
   virtual char *notify_get_string_arg (int which) {return NULL;}
 
   virtual int get_enabled () {return -1;}
   virtual void set_enabled (int enabled) {}
+  // called at a regular interval, currently by the keyboard handler.
+  virtual void periodic () {}
 };
 
 extern bx_simulator_interface_c *SIM;
 
 extern void siminterface_init ();
 extern int bx_continue_after_control_panel (int argc, char *argv[]);
-
-#include "hacks.h"
