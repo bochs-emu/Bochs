@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.14 2002-06-05 21:51:30 yakovlev Exp $
+// $Id: memory.cc,v 1.15 2002-06-06 23:03:09 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,6 +61,8 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   //   before the write because there COULD be programs which use
   //   jump-in-the-middle-of-an-instruction schemes (esp. copyprotection
   //   schemes)
+
+
   Bit32u rpn_start = addr >> 12;
   Bit32u rpn_end = (addr+len-1) >> 12;
   Bit32u rpn = rpn_start;
@@ -69,11 +71,14 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
     Bit32u old_rpn = cpu->fdcache_rpn[rpn_sel];
     if(rpn==old_rpn) {
       Bit32u index = cpu->fdcache_rpn_start[rpn_sel];
-      for(;index!=0xFFFFFFFF;index=cpu->fdcache_rpn_list[index].next) {
+     //FIXME: We shouldn't need to and this with BX_FDCACHE_MASK
+      for(;index!=0xFFFFFFFF;index=cpu->fdcache_rpn_list[index & BX_FDCACHE_MASK].next) {
 	cpu->fdcache_ip[index] = 0xFFFFFFFF;
+       //FIXME: This shouldn't be necessary.
+        cpu->fdcache_rpn_list[index].prev = 0xFFFFFFFF;
       }
       cpu->fdcache_rpn[rpn_sel] = 0xFFFFFFFF;
-      cpu->fdcache_rpn_start[rpn_sel] = 0xFFFFFFFF;
+//      cpu->fdcache_rpn_start[rpn_sel] = 0xFFFFFFFF;
     }
   }
 
