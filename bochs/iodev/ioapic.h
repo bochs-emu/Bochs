@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.6 2004-07-06 19:59:10 vruppert Exp $
+// $Id: ioapic.h,v 1.7 2004-10-16 19:34:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
+
 extern class bx_ioapic_c bx_ioapic;
 
 #define BX_IOAPIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.33 2004-10-13 20:58:15 sshwarts Exp $
+// $Id: apic.cc,v 1.34 2004-10-16 19:34:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -25,8 +25,7 @@ bx_generic_apic_c::~bx_generic_apic_c ()
 
 void bx_generic_apic_c::set_arb_id (int new_arb_id)
 {
-  // politely ignore it.  This gets sent to every APIC, regardless of its
-  // type.
+  // politely ignore it. This gets sent to every APIC, regardless of its type.
 }
 
 // init is called during RESET and when an INIT message is delivered.
@@ -115,41 +114,9 @@ bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
   }
 }
 
-void bx_generic_apic_c::read_aligned (Bit32u address, Bit32u *data, unsigned len)
-{
-  BX_PANIC(("read_aligned not implemented in base class bx_generic_apic_c"));
-}
-
-void bx_generic_apic_c::write(Bit32u address, Bit32u *value, unsigned len)
-{
-  BX_PANIC(("write not implemented in base class bx_generic_apic_c"));
-}
-
 void bx_generic_apic_c::startup_msg (Bit32u vector)
 {
   BX_PANIC(("startup message sent to an I/O APIC"));
-}
-
-void bx_generic_apic_c::trigger_irq (unsigned num, unsigned from)
-{
-  BX_PANIC(("trigger_irq called on base class"));
-}
-
-void bx_generic_apic_c::untrigger_irq (unsigned num, unsigned from)
-{
-  BX_PANIC(("untrigger_irq called on base class"));
-}
-
-bx_bool bx_generic_apic_c::match_logical_addr (Bit8u address)
-{
-  BX_PANIC(("match_logical_addr called on base class"));
-  return false;
-}
-
-bx_apic_type_t bx_generic_apic_c::get_type ()
-{
-  BX_PANIC(("get_type called on base class"));
-  return APIC_TYPE_NONE;
 }
 
 /* apic_mask is the bitmask of apics allowed to arbitrate here */
@@ -987,4 +954,5 @@ void bx_local_apic_c::periodic(void) // KPL: changed prototype
     bx_pc_system.deactivate_timer(timer_handle); // Make sure.
   }
 }
+
 #endif /* if BX_SUPPORT_APIC */

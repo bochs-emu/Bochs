@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.88 2004-09-15 21:48:56 sshwarts Exp $
+// $Id: cpu.cc,v 1.89 2004-10-16 19:34:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,12 +76,6 @@ BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 
 
 // notes:
-//
-// check limit of CS?
-
-#ifdef REGISTER_IADDR
-extern void REGISTER_IADDR(bx_addr addr);
-#endif
 
 // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
 // instructions and then return so that the other processors have a chance to
@@ -189,8 +183,6 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
   }
 #endif
 
-  {
-  Bit8u *fetchPtr;
   bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
   if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
@@ -199,25 +191,23 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
   }
 
 #if BX_SUPPORT_ICACHE
-  Bit32u pAddr, pageWriteStamp;
-
-  pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
+  Bit32u pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
   unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
-  i = & BX_CPU_THIS_PTR iCache.entry[iCacheHash].i;
+  bxICacheEntry_c *cache_entry = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
+  i = &(cache_entry->i);
 
-  pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
+  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
 
-  if ((BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr == pAddr) &&
-      (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp == pageWriteStamp))
+  if ((cache_entry->pAddr == pAddr) &&
+      (cache_entry->writeStamp == pageWriteStamp))
   {
-    // iCache hit.  Instruction is already decoded and stored in
+    // iCache hit. Instruction is already decoded and stored in
     // the instruction cache.
     BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
-
     execute = i->execute; // fetch as soon as possible for speculation.
-    if (resolveModRM) {
+    if (resolveModRM)
       BX_CPU_CALL_METHODR(resolveModRM, (i));
-    }
+
 #if BX_INSTRUMENTATION
     // An instruction was found in the iCache.
     BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
@@ -234,12 +224,11 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
     remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
     unsigned maxFetch = 15;
     if (remainingInPage < 15) maxFetch = remainingInPage;
-    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+    Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
 #if BX_SUPPORT_ICACHE
     // The entry will be marked valid if fetchdecode will succeed
-    BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = 
-      ICacheWriteStampInvalid;
+    cache_entry->writeStamp = ICacheWriteStampInvalid;
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -249,13 +238,11 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 #endif
       ret = fetchDecode(fetchPtr, i, maxFetch);
 
-    BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get function pointers early.
     if (ret==0) {
 #if BX_SUPPORT_ICACHE
       i = &iStorage;	// Leave entry invalid
 #endif
       boundaryFetch(i);
-      resolveModRM = i->ResolveModrm;
     }
     else
     {
@@ -267,12 +254,12 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
       // willing to dump all iCache entries which can hash to this page.
       // Therefore, in either case, we can keep the counter as-is and
       // replace the fetch mode bits.
-      Bit32u fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
+      Bit32u fetchModeMask = BX_CPU_THIS_PTR iCache.fetchModeMask;
       pageWriteStamp &= 0x1fffffff;    // Clear out old fetch mode bits.
       pageWriteStamp |= fetchModeMask; // Add in new ones.
       BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
-      BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr = pAddr;
-      BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = pageWriteStamp;
+      cache_entry->pAddr = pAddr;
+      cache_entry->writeStamp = pageWriteStamp;
 #endif
 #if BX_INSTRUMENTATION
       // An instruction was either fetched, or found in the iCache.
@@ -281,26 +268,26 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 #endif
     }
 
+    BxExecutePtr_tR resolveModRM = i->ResolveModrm;
     execute = i->execute; // fetch as soon as possible for speculation.
-    if (resolveModRM){
+    if (resolveModRM)
       BX_CPU_CALL_METHODR(resolveModRM, (i));
-      }
-    }
+
   }
 
-    // An instruction will have been fetched using either the normal case,
-    // or the boundary fetch (across pages), by this point.
-    BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
+  // An instruction will have been fetched using either the normal case,
+  // or the boundary fetch (across pages), by this point.
+  BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
 #if BX_DEBUGGER
-    if (BX_CPU_THIS_PTR trace) {
-      // print the instruction that is about to be executed.
-      bx_dbg_disassemble_current (BX_CPU_ID, 1);  // only one cpu, print time stamp
-    }
+  if (BX_CPU_THIS_PTR trace) {
+    // print the instruction that is about to be executed.
+    bx_dbg_disassemble_current (BX_CPU_ID, 1);  // only one cpu, print time stamp
+  }
 #endif
 
-    // decoding instruction compeleted -> continue with execution
-    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
+  // decoding instruction compeleted -> continue with execution
+  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
 
     if ( !(i->repUsedL() && i->repeatableL()) ) {
       // non repeating instruction
@@ -308,12 +295,8 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
       BX_CPU_CALL_METHOD(execute, (i));
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID);
-
-#ifdef REGISTER_IADDR
-      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
-#endif
-
       BX_TICK1_IF_SINGLE_PROCESSOR();
     }
     else {
@@ -386,11 +369,6 @@ repeat_loop:
       // shouldn't get here from above
 repeat_not_done:
       BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
-
-#ifdef REGISTER_IADDR
-      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
-#endif
-
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -410,11 +388,6 @@ repeat_done:
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
       BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID);
-
-#ifdef REGISTER_IADDR
-      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
-#endif
-
       BX_TICK1_IF_SINGLE_PROCESSOR();
     }
 
@@ -482,8 +455,8 @@ debugger_check:
       return;
       }
     }
-
 #endif  // #if BX_DEBUGGER
+
 #if BX_GDBSTUB
     {
     unsigned int reason;

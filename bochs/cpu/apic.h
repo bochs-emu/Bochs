@@ -61,17 +61,13 @@ public:
   virtual char *get_name();
   bx_bool is_selected (Bit32u addr, Bit32u len);
   void read (Bit32u addr, void *data, unsigned len);
-  virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
-  virtual void write(Bit32u address, Bit32u *value, unsigned len);
+  virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len) = 0;
+  virtual void write(Bit32u address, Bit32u *value, unsigned len) = 0;
   virtual void startup_msg (Bit32u vector);
-  // on local APIC, trigger means deliver to the CPU.
-  // on I/O APIC, trigger means direct to another APIC according to table.
-  virtual void trigger_irq (unsigned num, unsigned from);
-  virtual void untrigger_irq (unsigned num, unsigned from);
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
-  virtual bx_bool match_logical_addr (Bit8u address);
-  virtual bx_apic_type_t get_type ();
+  virtual bx_bool match_logical_addr (Bit8u address) = 0;
+  virtual bx_apic_type_t get_type () = 0;
   virtual void set_arb_id (int newid);  // only implemented on local apics
   int apic_bus_arbitrate(Bit32u apic_mask);
   int apic_bus_arbitrate_lowpri(Bit32u apic_mask);
@@ -153,11 +149,11 @@ public:
   virtual void write (Bit32u addr, Bit32u *data, unsigned len);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
   virtual void startup_msg (Bit32u vector);
-  // on local APIC, trigger means raise the CPU's INTR line.  For now
+  // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  virtual void trigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
-  virtual void untrigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
+  void trigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
+  void untrigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
   Bit8u acknowledge_int ();  // only the local CPU should call this
   int highest_priority_int (Bit8u *array);
   void service_local_apic ();
