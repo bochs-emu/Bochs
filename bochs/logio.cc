@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.10 2001-10-06 22:23:10 bdenney Exp $
+// $Id: logio.cc,v 1.11 2001-10-07 00:35:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -356,8 +356,21 @@ logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
       break;
     case 2:   // user chose die
       fatal (prefix, fmt, ap);
+    case 3: // user chose abort
+      fprintf (stderr, "User chose to dump core...\n");
+#if BX_HAVE_ABORT
+      abort ();
+#else
+      // do something highly illegal that should kill the process.
+      // Hey, this is fun!
+      {
+      char *crashptr = (char *)0; char c = *crashptr;
+      }
+      fprintf (stderr, "Sorry, I couldn't find your abort() function.  Exiting.");
+      exit (0);
+#endif
 #if BX_DEBUGGER
-    case 3:
+    case 4:
       // user chose debugger.  To "drop into the debugger" we just set the
       // interrupt_requested bit and continue execution.  Before the next
       // instruction, it should notice the user interrupt and return to

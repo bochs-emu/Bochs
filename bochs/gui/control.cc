@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.34 2001-10-06 22:31:31 bdenney Exp $
+// $Id: control.cc,v 1.35 2001-10-07 00:35:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.34 2001-10-06 22:31:31 bdenney Exp $
+ * $Id: control.cc,v 1.35 2001-10-07 00:35:35 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -584,8 +584,8 @@ int bx_write_rc (char *rc)
   }
 }
 
-char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "debug" };
-int log_action_n_choices = 3 + (BX_DEBUGGER?1:0);
+char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
+int log_action_n_choices = 4 + (BX_DEBUGGER?1:0);
 
 int control_panel_notify_callback (int code)
 {
@@ -605,14 +605,18 @@ int control_panel_notify_callback (int code)
       fprintf (stderr, "  alwayscont - continue execution, and don't ask again.\n");
       fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), prefix);
       fprintf (stderr, "  die        - stop execution now\n");
+      fprintf (stderr, "  abort      - dump core %s\n", 
+	  BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
       fprintf (stderr, "  debug      - continue and return to bochs debugger\n");
 #endif
       int choice;
-      if (ask_menu ("Choose cont, alwayscont, or die. [%s] ", 
+ask:
+      if (ask_menu ("Choose one of the actions above: [%s] ", 
 	    log_action_n_choices, log_action_ask_choices, 2, &choice) < 0) 
 	return SIM->notify_return(-1);
       // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
+      if (!BX_HAVE_ABORT && choice==3) goto ask;
       SIM->notify_return(choice);
     }
     break;
