@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.107 2002-07-24 17:52:34 cbothamy Exp $
+// $Id: main.cc,v 1.108 2002-08-01 07:34:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1632,6 +1632,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
 	bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_720K);
         }
+      else if (!strncmp(params[i], "360k=", 5)) {
+	bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Otype->set (BX_FLOPPY_360K);
+        }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppya.Oinitial_status->set (BX_EJECTED);
         }
@@ -1662,6 +1666,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strncmp(params[i], "720k=", 5)) {
 	bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_720K);
+        }
+      else if (!strncmp(params[i], "360k=", 5)) {
+	bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Otype->set (BX_FLOPPY_360K);
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppyb.Oinitial_status->set (BX_EJECTED);
@@ -2335,7 +2343,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
 }
 
 static char *fdtypes[] = {
-  "none", "1_2", "1_44", "2_88", "720k"
+  "none", "1_2", "1_44", "2_88", "720k", "360k"
 };
 
 int 

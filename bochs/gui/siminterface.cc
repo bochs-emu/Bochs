@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.42 2002-06-26 14:42:35 cbothamy Exp $
+// $Id: siminterface.cc,v 1.43 2002-08-01 07:34:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.42 2002-06-26 14:42:35 cbothamy Exp $
+ * $Id: siminterface.cc,v 1.43 2002-08-01 07:34:59 vruppert Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -324,8 +324,8 @@ bx_real_sim_c::get_cdrom_options (int drive, bx_cdrom_options *out)
   return 0;
 }
 
-char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", NULL };
-int n_floppy_type_names = 5;
+char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", NULL };
+int n_floppy_type_names = 6;
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
 int n_floppy_status_names = 2;
 char *floppy_bootdisk_names[] = { "floppy", "hard","cdrom", NULL };
@@ -338,7 +338,7 @@ int n_keyboard_type_names = 3;
 char *
 bx_real_sim_c::get_floppy_type_name (int type)
 {
-  BX_ASSERT (type >= BX_FLOPPY_NONE && type <= BX_FLOPPY_720K);
+  BX_ASSERT (type >= BX_FLOPPY_NONE && type <= BX_FLOPPY_LAST);
   type -= BX_FLOPPY_NONE;
   return floppy_type_names[type];
 }

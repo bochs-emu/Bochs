@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.60 2002-07-23 18:45:26 vruppert Exp $
+// $Id: rombios.c,v 1.61 2002-08-01 07:34:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1067,10 +1067,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.60 $";
-static char bios_date_string[] = "$Date: 2002-07-23 18:45:26 $";
+static char bios_cvs_version_string[] = "$Revision: 1.61 $";
+static char bios_date_string[] = "$Date: 2002-08-01 07:34:58 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.60 2002-07-23 18:45:26 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.61 2002-08-01 07:34:58 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3853,10 +3853,16 @@ floppy_media_sense(drive)
     drive_type >>= 4;
   else
     drive_type &= 0x0f;
-  if ( drive_type == 2 ) {
+  if ( drive_type == 1 ) {
+    // 360K 5.25" drive
+    config_data = 0x00; // 0000 0000
+    media_state = 0x25; // 0010 0101
+    retval = 1;
+    }
+  else if ( drive_type == 2 ) {
     // 1.2 MB 5.25" drive
     config_data = 0x00; // 0000 0000
-    media_state = 0x25; // 0001 0101
+    media_state = 0x25; // 0010 0101
     retval = 1;
     }
   else if ( drive_type == 3 ) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.73 2002-07-29 09:52:03 cbothamy Exp $
+// $Id: bochs.h,v 1.74 2002-08-01 07:34:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -479,7 +479,8 @@ extern bx_debug_t bx_dbg;
 #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
 #define BX_FLOPPY_2_88   13 // 2.88M 3.5"
 #define BX_FLOPPY_720K   14 // 720K  3.5"
-#define BX_FLOPPY_LAST   14 // last one
+#define BX_FLOPPY_360K   15 // 360K  5.25"
+#define BX_FLOPPY_LAST   15 // last one
 
 
 #define BX_READ    10

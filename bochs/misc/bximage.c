@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.7 2002-05-21 07:23:09 cbothamy Exp $
+ * $Id: bximage.c,v 1.8 2002-08-01 07:35:00 vruppert Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -14,7 +14,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.7 2002-05-21 07:23:09 cbothamy Exp $";
+char *rcsid = "$Id: bximage.c,v 1.8 2002-08-01 07:35:00 vruppert Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -23,9 +23,9 @@ char *fdhd_choices[] = { "fd", "hd" };
 int fdhd_n_choices = 2;
 
 /* menu data for choosing floppy size */
-char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.72, 1.2, 1.44, or 2.88. [1.44] ";
-char *fdsize_choices[] = { "0.72","1.2","1.44","2.88" };
-int fdsize_n_choices = 4;
+char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.36, 0.72, 1.2, 1.44, or 2.88. [1.44] ";
+char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
+int fdsize_n_choices = 5;
 
 /* stolen from main.cc */
 void bx_center_print (FILE *file, char *line, int maxwidth)
@@ -267,13 +267,14 @@ int main()
   } else {
     int fdsize, cyl=0, heads=0, spt=0;
     char *name = NULL;
-    if (ask_menu (fdsize_menu, fdsize_n_choices, fdsize_choices, 2, &fdsize) < 0)
+    if (ask_menu (fdsize_menu, fdsize_n_choices, fdsize_choices, 3, &fdsize) < 0)
       fatal (EOF_ERR);
     switch (fdsize) {
-    case 0: name="720k"; cyl=80; heads=2; spt=9; break;   /* 0.72 meg */
-    case 1: name="1_2"; cyl=80; heads=2; spt=15; break;   /* 1.2 meg */
-    case 2: name="1_44"; cyl=80; heads=2; spt=18; break;   /* 1.44 meg */
-    case 3: name="2_88"; cyl=80; heads=2; spt=36; break;   /* 2.88 meg */
+    case 0: name="360k"; cyl=40; heads=2; spt=9; break;   /* 0.36 meg */
+    case 1: name="720k"; cyl=80; heads=2; spt=9; break;   /* 0.72 meg */
+    case 2: name="1_2"; cyl=80; heads=2; spt=15; break;   /* 1.2 meg */
+    case 3: name="1_44"; cyl=80; heads=2; spt=18; break;   /* 1.44 meg */
+    case 4: name="2_88"; cyl=80; heads=2; spt=36; break;   /* 2.88 meg */
     default: 
       fatal ("ERROR: fdsize out of range");
     }
