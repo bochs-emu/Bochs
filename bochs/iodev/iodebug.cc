@@ -148,6 +148,7 @@ void bx_iodebug_c::write( Bit32u addr, Bit32u dvalue, unsigned int io_len )
 
 #if BX_DEBUGGER
     case( 0x8AE0 ):
+      fprintf( stdout, "request return to dbg prompt received, 0x8AE0 command (iodebug)\n");
       bx_guard.interrupt_requested=1;
       break;
 #endif
@@ -185,7 +186,7 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
   {
     area--;
 #if BX_DEBUGGER
-  fprintf( stdout, "%s @ eip: %8X wrote at monitored memory location %8X\n", cpu->name, cpu->eip, addr);
+  fprintf( stdout, "%s @ eip: %08X wrote at monitored memory location %8X\n", cpu->name, cpu->eip, addr);
   bx_guard.interrupt_requested=1;
 #else
     fprintf( stderr,
