@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.209 2003-05-21 20:33:23 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.210 2003-05-23 16:06:42 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1830,6 +1830,13 @@ if test "$with_sdl" = yes; then
   GUI_CFLAGS="$GUI_CFLAGS \`sdl-config --cflags\`"
   GUI_CXXFLAGS="$GUI_CXXFLAGS \`sdl-config --cflags\`"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
+  if test "$with_win32" != yes; then
+    case $target in
+      *-cygwin* | *-mingw32*)
+         EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+         ;;
+    esac
+  fi
 fi
 
 if test "$with_svga" = yes; then
