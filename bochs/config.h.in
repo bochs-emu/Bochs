@@ -1,18 +1,24 @@
-// Copyright Notice
-// ================
-// BOCHS is Copyright 1994-2000 by Kevin P. Lawton.
+//  Copyright (C) 2001  MandrakeSoft S.A.
 //
-// BOCHS is commercial software.
+//    MandrakeSoft S.A.
+//    43, rue d'Aboukir
+//    75002 Paris - France
+//    http://www.linux-mandrake.com/
+//    http://www.mandrakesoft.com/
 //
-// For more information, read the file 'LICENSE' included in the bochs
-// distribution.  If you don't have access to this file, or have questions
-// regarding the licensing policy, the author may be contacted via:
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-//     US Mail:  Kevin Lawton
-//               439 Marrett Rd.
-//               Lexington, MA 02421-7714
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
 //
-//     EMail:    kevin@bochs.com
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 //
 // config.h.in is distributed in the source TAR file.  When you run
