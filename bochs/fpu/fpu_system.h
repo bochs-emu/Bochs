@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.20 2003-11-01 18:36:19 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.21 2004-02-20 01:30:52 danielg4 Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -26,7 +26,9 @@ typedef Bit32s s32;
 typedef Bit64u u64;
 typedef Bit64s s64;
 
+#ifndef __APPLE__
 typedef Bit8u u_char;
+#endif
 
 /* -----------------------------------------------------------
  * Slimmed down version used to compile against a CPU simulator
