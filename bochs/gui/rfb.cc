@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.24 2003-06-28 08:04:31 vruppert Exp $
+// $Id: rfb.cc,v 1.25 2003-07-05 16:08:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -129,6 +129,7 @@ static unsigned long  rfbOriginLeft  = 0;
 static unsigned long  rfbOriginRight = 0;
 
 static unsigned int text_rows=25, text_cols=80;
+static unsigned int font_height=16, font_width=8;
 
 //static unsigned long ServerThread   = 0;
 //static unsigned long ServerThreadID = 0;
@@ -140,7 +141,8 @@ void HandleRfbClient(SOCKET sClient);
 int  ReadExact(int sock, char *buf, int len);
 int  WriteExact(int sock, char *buf, int len);
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client);
-void UpdateScreen(char *newBits, int x, int y, int width, int height, bool update_client);
+void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color);
+void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client);
 void SendUpdate(int x, int y, int width, int height);
 void StartThread();
 void rfbKeyPressed(Bit32u key, int press_release);
@@ -187,35 +189,50 @@ static const int rfbEndianTest = 1;
 
 void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight, unsigned headerbar_y)
 {
-	UNUSED(bochs_icon_bits);
-	rfbHeaderbarY = headerbar_y;
-	rfbDimensionX = 640;
-	rfbDimensionY = 480 + rfbHeaderbarY;
-	rfbStretchedX = rfbDimensionX;
-	rfbStretchedY = rfbDimensionY;
-	rfbTileX      = tilewidth;
-	rfbTileY      = tileheight;
+  unsigned char fc, vc;
 
-	rfbScreen = (char *)malloc(rfbDimensionX * rfbDimensionY); 
-	memset(&rfbPallet, 0, sizeof(rfbPallet));
-	rfbPallet[63] = (char)0xFF;
+  UNUSED(bochs_icon_bits);
 
-	rfbUpdateRegion.x = rfbDimensionX;
-	rfbUpdateRegion.y = rfbDimensionY;
-	rfbUpdateRegion.width  = 0;
-	rfbUpdateRegion.height = 0;
-	rfbUpdateRegion.updated = false;
-	
-	keep_alive = true;
-	StartThread();
-	
+  rfbHeaderbarY = headerbar_y;
+  rfbDimensionX = 640;
+  rfbDimensionY = 480 + rfbHeaderbarY;
+  rfbStretchedX = rfbDimensionX;
+  rfbStretchedY = rfbDimensionY;
+  rfbTileX      = tilewidth;
+  rfbTileY      = tileheight;
+
+  for(int i = 0; i < 256; i++) {
+    for(int j = 0; j < 16; j++) {
+      vc = bx_vgafont[i].data[j];
+      fc = 0;
+      for (int b = 0; b < 8; b++) {
+        fc |= (vc & 0x01) << (7 - b);
+        vc >>= 1;
+      }
+      vga_charmap[i*32+j] = fc;
+    }
+  }
+
+  rfbScreen = (char *)malloc(rfbDimensionX * rfbDimensionY); 
+  memset(&rfbPallet, 0, sizeof(rfbPallet));
+  rfbPallet[63] = (char)0xFF;
+
+  rfbUpdateRegion.x = rfbDimensionX;
+  rfbUpdateRegion.y = rfbDimensionY;
+  rfbUpdateRegion.width  = 0;
+  rfbUpdateRegion.height = 0;
+  rfbUpdateRegion.updated = false;
+
+  keep_alive = true;
+  StartThread();
+
 #ifdef WIN32
-	Sleep(1000);
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+  Sleep(1000);
+  SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
-	if (bx_options.Oprivate_colormap->get ()) {
-		BX_ERROR(( "private_colormap option ignored." ));
-	}
+  if (bx_options.Oprivate_colormap->get ()) {
+    BX_ERROR(( "private_colormap option ignored." ));
+  }
 }
 
 bool InitWinsock()
@@ -544,39 +561,70 @@ void bx_rfb_gui_c::clear_screen(void)
 
 void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t tm_info, unsigned nrows)
 {
-	unsigned char cChar;
-	unsigned int  nchars;
-	unsigned int  i, x, y;
+  unsigned char *old_line, *new_line;
+  unsigned char cAttr, cChar;
+  unsigned int  curs, hchars, offset, rows, x, y, xc, yc;
+  bx_bool force_update=0;
 
-	nchars = 80 * nrows;
-	if ( (rfbCursorY < text_rows) && (rfbCursorX < text_cols) ) {
-		cChar = new_text[(rfbCursorY * 80 + rfbCursorX) * 2];
-		DrawBitmap(rfbCursorX * 8, rfbCursorY * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((rfbCursorY * 80 + rfbCursorX) * 2) + 1], false);
-	}
+  UNUSED(nrows);
 
-	for(i = 0; i < nchars * 2; i += 2) {
-		if((old_text[i] != new_text[i]) || (old_text[i+1] != new_text[i+1])) {
-			cChar = new_text[i];
-			x = (i / 2) % 80;
-			y = (i / 2) / 80;
-			DrawBitmap(x * 8, y * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i + 1], false);
-			if((y * 16 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y * 16 + rfbHeaderbarY;
-			if(((y * 16 + rfbHeaderbarY + 16) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = ((y * 16 + rfbHeaderbarY + 16) - rfbUpdateRegion.y);
-			if((x * 8) < rfbUpdateRegion.x) rfbUpdateRegion.x = x * 8;
-			if(((x * 8 + 8) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x * 8 + 8) - rfbUpdateRegion.x);
-			rfbUpdateRegion.updated = true;
-		}
-	}
+  if(charmap_updated) {
+    force_update = 1;
+    charmap_updated = 0;
+  }
 
-	rfbCursorX = cursor_x;
-	rfbCursorY = cursor_y;
+  // first invalidate character at previous and new cursor location
+  if ( (rfbCursorY < text_rows) && (rfbCursorX < text_cols) ) {
+    curs = rfbCursorY * tm_info.line_offset + rfbCursorX * 2;
+    old_text[curs] = ~new_text[curs];
+  }
+  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < font_height) &&
+     (cursor_y < text_rows) && (cursor_x < text_cols)) {
+    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  } else {
+    curs = 0xffff;
+  }
 
-	if ( (cursor_y < text_rows) && (cursor_x < text_cols ) && (tm_info.cs_start <= tm_info.cs_end) ) {
-		char cAttr = new_text[((cursor_y * 80 + cursor_x) * 2) + 1];
-		cChar = new_text[(cursor_y * 80 + cursor_x) * 2];
-		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-		DrawBitmap(rfbCursorX * 8, rfbCursorY * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr, false);
-	}
+  rows = text_rows;
+  y = 0;
+  do {
+    hchars = text_cols;
+    new_line = new_text;
+    old_line = old_text;
+    offset = y * tm_info.line_offset;
+    yc = y * font_height + rfbHeaderbarY;
+    x = 0;
+    do {
+      if (force_update || (old_text[0] != new_text[0])
+          || (old_text[1] != new_text[1])) {
+        cChar = new_text[0];
+        cAttr = new_text[1];
+        xc = x * 8;
+        DrawChar(xc, yc, 8, font_height, 0, (char *)&vga_charmap[cChar<<5], cAttr);
+        if(yc < rfbUpdateRegion.y) rfbUpdateRegion.y = yc;
+        if((yc + font_height - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = (yc + font_height - rfbUpdateRegion.y);
+        if(xc < rfbUpdateRegion.x) rfbUpdateRegion.x = xc;
+        if((xc + 8 - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = (xc + 8 - rfbUpdateRegion.x);
+        rfbUpdateRegion.updated = true;
+	if (offset == curs) {
+          cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
+          DrawChar(xc, yc + tm_info.cs_start, 8, tm_info.cs_end - tm_info.cs_start + 1,
+                   tm_info.cs_start, (char *)&vga_charmap[cChar<<5], cAttr);
+        }
+      }
+      x++;
+      new_text+=2;
+      old_text+=2;
+      offset+=2;
+    } while (--hchars);
+    y++;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+  } while (--rows);
+
+  rfbCursorX = cursor_x;
+  rfbCursorY = cursor_y;
 }
 
   int
@@ -622,7 +670,7 @@ bx_bool bx_rfb_gui_c::palette_change(unsigned index, unsigned red, unsigned gree
 //       left of the window.
 void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-	UpdateScreen((char *)tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
+	UpdateScreen(tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
 	if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
 	if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
 	if(((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y);
@@ -651,8 +699,14 @@ bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigne
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
   if (fheight > 0) {
+    font_height = fheight;
+    font_width = fwidth;
     text_cols = x / fwidth;
     text_rows = y / fheight;
+  } else {
+    if ((x > 640) || (y > 480)) {
+      BX_PANIC(("dimension_update(): RFB doesn't support graphics modes > 640x480 (%dx%d)", x, y));
+    }
   }
 }
 
@@ -731,16 +785,21 @@ unsigned bx_rfb_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, vo
 
 void bx_rfb_gui_c::show_headerbar(void)
 {
-	unsigned int i, xorigin;
+  char *newBits;
+  unsigned int i, xorigin;
 
-	for(i = 0; i < rfbHeaderbarBitmapCount; i++) {
-		if(rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT) {
-			xorigin = rfbHeaderbarBitmaps[i].xorigin;
-		} else {
-			xorigin = rfbDimensionX - rfbHeaderbarBitmaps[i].xorigin;
-		}
-		DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap, (char)0x0F, false);
-	}
+  newBits = (char *)malloc(rfbDimensionX * rfbHeaderbarY);
+  memset(newBits, 0, (rfbDimensionX * rfbHeaderbarY));
+  DrawBitmap(0, 0, rfbDimensionX, rfbHeaderbarY, newBits, (char)0xf0, false);
+  for(i = 0; i < rfbHeaderbarBitmapCount; i++) {
+    if(rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT) {
+      xorigin = rfbHeaderbarBitmaps[i].xorigin;
+    } else {
+      xorigin = rfbDimensionX - rfbHeaderbarBitmaps[i].xorigin;
+    }
+    DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap, (char)0xf0, false);
+  }
+  free(newBits);
 }
 
 
@@ -830,7 +889,7 @@ int WriteExact(int sock, char *buf, int len)
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client)
 {
 	int  i;
-	char *newBits;
+	unsigned char *newBits;
 	char fgcolor, bgcolor;
 	char vgaPallet[] = { (char)0x00, //Black 
 						 (char)0x01, //Dark Blue
@@ -852,7 +911,7 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, boo
 
 	bgcolor = vgaPallet[(color >> 4) & 0xF];
 	fgcolor = vgaPallet[color & 0xF];
-	newBits = (char *)malloc(width * height);
+	newBits = (unsigned char *)malloc(width * height);
 	memset(newBits, 0, (width * height));
 	for(i = 0; i < (width * height) / 8; i++) {
 		newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
@@ -869,9 +928,48 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, boo
 	free(newBits);
 }
 
+void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color)
+{
+  static unsigned char newBits[8 * 32];
+  unsigned char mask;
+  int bytes = width * height;
+  char fgcolor, bgcolor;
+  char vgaPallet[] = { (char)0x00, //Black
+                       (char)0x01, //Dark Blue
+                       (char)0x02, //Dark Green
+                       (char)0x03, //Dark Cyan
+                       (char)0x04, //Dark Red
+                       (char)0x05, //Dark Magenta
+                       (char)0x06, //Brown
+                       (char)0x07, //Light Gray
+                       (char)0x38, //Dark Gray
+                       (char)0x09, //Light Blue
+                       (char)0x12, //Green
+                       (char)0x1B, //Cyan
+                       (char)0x24, //Light Red
+                       (char)0x2D, //Magenta
+                       (char)0x36, //Yellow
+                       (char)0x3F  //White
+                     };
+
+  bgcolor = vgaPallet[(color >> 4) & 0xF];
+  fgcolor = vgaPallet[color & 0xF];
+
+  for(int i = 0; i < bytes; i+=width) {
+    mask = 0x80;
+    for(int j = 0; j < width; j++) {
+      newBits[i + j] = (bmap[fonty] & mask) ? fgcolor : bgcolor;
+      mask >>= 1;
+    }
+    fonty++;
+  }
+  UpdateScreen(newBits, x, y, width, height, false);
+  //DrawColorPallet();
+}
+
 void DrawColorPallet()
 {
-	char bits[100];
+	unsigned char bits[100];
 	int x = 0, y = 0, c;
 	for(c = 0; c < 256; c++) {
 		memset(&bits, rfbPallet[c], 100);
@@ -884,7 +982,7 @@ void DrawColorPallet()
 	}
 }
 
-void UpdateScreen(char *newBits, int x, int y, int width, int height, bool update_client)
+void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client)
 {
 	int i, c;
 	for(i = 0; i < height; i++) {
@@ -1080,255 +1178,310 @@ void StartThread()
 #define XK_Alt_L		0xFFE9
 #define XK_Alt_R		0xFFEA
 
-char rfbAsciiKey[0x5f] = {
+Bit32u ascii_to_key_event[0x5f] = {
   //  !"#$%&'
-  0x39,
-  0x02,
+  BX_KEY_SPACE,
+  BX_KEY_1,
   BX_KEY_SINGLE_QUOTE,
-  0x04,
-  0x05,
-  0x06,
-  0x07,
-  0x08,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_7,
+  BX_KEY_SINGLE_QUOTE,
 
   // ()*+,-./
-  0x0A,
-  0x0B,
-  0x09,
-  0x0D,
-  0x33,
-  0x0C,
-  0x34,
-  0x35,
+  BX_KEY_9,
+  BX_KEY_0,
+  BX_KEY_8,
+  BX_KEY_EQUALS,
+  BX_KEY_COMMA,
+  BX_KEY_MINUS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
 
   // 01234567
-  0x0B,
-  0x02,
-  0x03,
-  0x04,
-  0x05,
-  0x06,
-  0x07,
-  0x08,
+  BX_KEY_0,
+  BX_KEY_1,
+  BX_KEY_2,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_6,
+  BX_KEY_7,
 
   // 89:;<=>?
-  0x09,
-  0x0A,
-  0x27,
-  0x27,
-  0x33,
-  0x0D,
-  0x34,
-  0x35,
+  BX_KEY_8,
+  BX_KEY_9,
+  BX_KEY_SEMICOLON,
+  BX_KEY_SEMICOLON,
+  BX_KEY_COMMA,
+  BX_KEY_EQUALS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
 
   // @ABCDEFG
-  0x03,
-  0x1E,
-  0x30,
-  0x2E,
-  0x20,
-  0x12,
-  0x21,
-  0x22,
+  BX_KEY_2,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
 
 
   // HIJKLMNO
-  0x23,
-  0x17,
-  0x24,
-  0x25,
-  0x26,
-  0x32,
-  0x31,
-  0x18,
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
 
 
   // PQRSTUVW
-  0x19,
-  0x10,
-  0x13,
-  0x1F,
-  0x14,
-  0x16,
-  0x2F,
-  0x11,
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
 
   // XYZ[\]^_
-  0x2D,
-  0x15,
-  0x2C,
-  0x1A,
-  0x2B,
-  0x1B,
-  0x07,
-  0x29,
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_6,
+  BX_KEY_MINUS,
 
   // `abcdefg
-  0x29,
-  0x1E,
-  0x30,
-  0x2E,
-  0x20,
-  0x12,
-  0x21,
-  0x22,
+  BX_KEY_GRAVE,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
 
   // hijklmno
-  0x23,
-  0x17,
-  0x24,
-  0x25,
-  0x26,
-  0x32,
-  0x31,
-  0x18,
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
 
   // pqrstuvw
-  0x19,
-  0x10,
-  0x13,
-  0x1F,
-  0x14,
-  0x16,
-  0x2F,
-  0x11,
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
 
   // xyz{|}~
-  0x2D,
-  0x15,
-  0x2C,
-  0x1A,
-  0x2B,
-  0x1B,
-  0x29
-};
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_GRAVE
+  };
 
 void rfbKeyPressed(Bit32u key, int press_release)
 {
-	unsigned char key_event;
+  Bit32u key_event;
 
-	if((key >= XK_space) && (key <= XK_asciitilde)) {
-		key_event = rfbAsciiKey[key - XK_space];
-	} else switch (key) {
-		case XK_KP_1:
+  if((key >= XK_space) && (key <= XK_asciitilde)) {
+    key_event = ascii_to_key_event[key - XK_space];
+  } else {
+    switch (key) {
+      case XK_KP_1:
 #ifdef XK_KP_End
-		case XK_KP_End:
+      case XK_KP_End:
 #endif
-		key_event = 0x4F; break;
+        key_event = BX_KEY_KP_END; break;
 
-		case XK_KP_2:
+      case XK_KP_2:
 #ifdef XK_KP_Down
-		case XK_KP_Down:
+      case XK_KP_Down:
 #endif
-		key_event = 0x50; break;
-		
-		case XK_KP_3:
+        key_event = BX_KEY_KP_DOWN; break;
+
+      case XK_KP_3:
 #ifdef XK_KP_Page_Down
-		case XK_KP_Page_Down:
+      case XK_KP_Page_Down:
 #endif
-		key_event = 0x51; break;
-		
-		case XK_KP_4:
+        key_event = BX_KEY_KP_PAGE_DOWN; break;
+
+      case XK_KP_4:
 #ifdef XK_KP_Left
-		case XK_KP_Left:
+      case XK_KP_Left:
 #endif
-		key_event = 0x4B; break;
-		
-		case XK_KP_5:
-		key_event = 0x4C; break;
-		
-		case XK_KP_6:
+        key_event = BX_KEY_KP_LEFT; break;
+
+      case XK_KP_5:
+#ifdef XK_KP_Begin
+      case XK_KP_Begin:
+#endif
+        key_event = BX_KEY_KP_5; break;
+
+      case XK_KP_6:
 #ifdef XK_KP_Right
-		case XK_KP_Right:
+      case XK_KP_Right:
 #endif
-		key_event = 0x4D; break;
+        key_event = BX_KEY_KP_RIGHT; break;
 
-		case XK_KP_7:
+      case XK_KP_7:
 #ifdef XK_KP_Home
-		case XK_KP_Home:
+      case XK_KP_Home:
 #endif
-		key_event = 0x47; break;
+        key_event = BX_KEY_KP_HOME; break;
 
-		case XK_KP_8:
+      case XK_KP_8:
 #ifdef XK_KP_Up
-		case XK_KP_Up:
+      case XK_KP_Up:
 #endif
-		key_event = 0x48; break;
+        key_event = BX_KEY_KP_UP; break;
 
-		case XK_KP_9:
+      case XK_KP_9:
 #ifdef XK_KP_Page_Up
-		case XK_KP_Page_Up:
+      case XK_KP_Page_Up:
 #endif
-		key_event = 0x49; break;
+        key_event = BX_KEY_KP_PAGE_UP; break;
 
-		case XK_KP_0:
+      case XK_KP_0:
 #ifdef XK_KP_Insert
-		case XK_KP_Insert:
-		key_event = 0x52; break;
+      case XK_KP_Insert:
 #endif
+        key_event = BX_KEY_KP_INSERT; break;
 
-		case XK_KP_Decimal:
+      case XK_KP_Decimal:
 #ifdef XK_KP_Delete
-		case XK_KP_Delete:
-		key_event = 0x53; break;
+      case XK_KP_Delete:
+#endif
+        key_event = BX_KEY_KP_DELETE; break;
+
+#ifdef XK_KP_Enter
+      case XK_KP_Enter:    key_event = BX_KEY_KP_ENTER; break;
 #endif
 
-		case XK_KP_Subtract: key_event = 0x4A; break;
-		case XK_KP_Add:      key_event = 0x4E; break;
+      case XK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
+      case XK_KP_Add:      key_event = BX_KEY_KP_ADD; break;
 
-		case XK_Up:          key_event = 0x48; break;
-		case XK_Down:        key_event = 0x50; break;
-		case XK_Left:        key_event = 0x4B; break;
-	    case XK_Right:       key_event = 0x4D; break;
+      case XK_KP_Multiply: key_event = BX_KEY_KP_MULTIPLY; break;
+      case XK_KP_Divide:   key_event = BX_KEY_KP_DIVIDE; break;
 
-		case XK_BackSpace:   key_event = 0x0E; break;
-		case XK_Tab:         key_event = 0x0F; break;
-		case XK_Return:      key_event = 0x1C; break;
-		case XK_Escape:      key_event = 0x01; break;
-		case XK_F1:          key_event = 0x3B; break;
-		case XK_F2:          key_event = 0x3C; break;
-		case XK_F3:          key_event = 0x3D; break;
-		case XK_F4:          key_event = 0x3E; break;
-		case XK_F5:          key_event = 0x3F; break;
-		case XK_F6:          key_event = 0x40; break;
-		case XK_F7:          key_event = 0x41; break;
-		case XK_F8:          key_event = 0x42; break;
-		case XK_F9:          key_event = 0x43; break;
-		case XK_F10:         key_event = 0x44; break;
-		case XK_Control_L:   key_event = 0x1D; break;
-		case XK_Control_R:   key_event = 0x1D; break;
-		case XK_Shift_L:     key_event = 0x2A; break;
-		case XK_Shift_R:     key_event = 0x36; break;
-		case XK_Num_Lock:    key_event = 0x45; break;
-		case XK_Alt_L:       key_event = 0x38; break;
-		case XK_Alt_R:       key_event = 0x38; break;
-	
-		default:
-			fprintf(stderr, "# RFB: rfbKeyPress(): key %x unhandled!\n", (unsigned) key);
-			return;
-			break;
-	}
 
-	if (press_release) key_event |= 0x80;
-	DEV_kbd_put_scancode((unsigned char *)&key_event, 1);
+      case XK_Up:          key_event = BX_KEY_UP; break;
+      case XK_Down:        key_event = BX_KEY_DOWN; break;
+      case XK_Left:        key_event = BX_KEY_LEFT; break;
+      case XK_Right:       key_event = BX_KEY_RIGHT; break;
+
+
+      case XK_Delete:      key_event = BX_KEY_DELETE; break;
+      case XK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
+      case XK_Tab:         key_event = BX_KEY_TAB; break;
+#ifdef XK_ISO_Left_Tab
+      case XK_ISO_Left_Tab: key_event = BX_KEY_TAB; break;
+#endif
+      case XK_Return:      key_event = BX_KEY_ENTER; break;
+      case XK_Escape:      key_event = BX_KEY_ESC; break;
+      case XK_F1:          key_event = BX_KEY_F1; break;
+      case XK_F2:          key_event = BX_KEY_F2; break;
+      case XK_F3:          key_event = BX_KEY_F3; break;
+      case XK_F4:          key_event = BX_KEY_F4; break;
+      case XK_F5:          key_event = BX_KEY_F5; break;
+      case XK_F6:          key_event = BX_KEY_F6; break;
+      case XK_F7:          key_event = BX_KEY_F7; break;
+      case XK_F8:          key_event = BX_KEY_F8; break;
+      case XK_F9:          key_event = BX_KEY_F9; break;
+      case XK_F10:         key_event = BX_KEY_F10; break;
+      case XK_F11:         key_event = BX_KEY_F11; break;
+      case XK_F12:         key_event = BX_KEY_F12; break;
+      case XK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+#ifdef XK_Control_R
+      case XK_Control_R:   key_event = BX_KEY_CTRL_R; break;
+#endif
+      case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
+      case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
+      case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+#ifdef XK_Alt_R
+      case XK_Alt_R:       key_event = BX_KEY_ALT_R; break;
+#endif
+      case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
+      case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
+#ifdef XK_Scroll_Lock
+      case XK_Scroll_Lock: key_event = BX_KEY_SCRL_LOCK; break;
+#endif
+#ifdef XK_Print
+      case XK_Print:       key_event = BX_KEY_PRINT; break;
+#endif
+#ifdef XK_Pause
+      case XK_Pause:       key_event = BX_KEY_PAUSE; break;
+#endif
+
+      case XK_Insert:      key_event = BX_KEY_INSERT; break;
+      case XK_Home:        key_event = BX_KEY_HOME; break;
+      case XK_End:         key_event = BX_KEY_END; break;
+      case XK_Page_Up:     key_event = BX_KEY_PAGE_UP; break;
+      case XK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
+
+      default:
+        BX_ERROR(("rfbKeyPress(): key %04x unhandled!", key));
+        fprintf(stderr, "RFB: rfbKeyPress(): key %04x unhandled!\n", key);
+        return;
+        break;
+    }
+  }
+
+  if (press_release) key_event |= BX_KEY_RELEASED;
+  DEV_kbd_gen_scancode(key_event);
 }
 
 void rfbMouseMove(int x, int y, int bmask)
 {
-	static int oldx = -1;
-	static int oldy = -1;
+  static int oldx = -1;
+  static int oldy = -1;
+  int xorigin;
 
-	if (oldx == oldy == -1) {
-		oldx = x;
-		oldy = y;
-		return;
-	}
-	if(y > rfbHeaderbarY) {
-		//DEV_mouse_motion(x, y - rfbHeaderbarY, buttons);
-		DEV_mouse_motion(x - oldx, oldy - y, bmask);
-		oldx = x;
-		oldy = y;
-	}
+  if (oldx == oldy == -1) {
+    oldx = x;
+    oldy = y;
+    return;
+  }
+  if(y > rfbHeaderbarY) {
+    //DEV_mouse_motion(x, y - rfbHeaderbarY, buttons);
+    DEV_mouse_motion(x - oldx, oldy - y, bmask);
+    oldx = x;
+    oldy = y;
+  } else {
+    if (bmask == 1) {
+      for (unsigned i=0; i<rfbHeaderbarBitmapCount; i++) {
+        if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT)
+          xorigin = rfbHeaderbarBitmaps[i].xorigin;
+        else
+          xorigin = rfbDimensionX - rfbHeaderbarBitmaps[i].xorigin;
+        if ( (x>=xorigin) && (x<(xorigin+int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim))) ) {
+          rfbHeaderbarBitmaps[i].f();
+          return;
+        }
+      }
+    }
+  }
 }
 
   void
