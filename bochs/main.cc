@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.58.2.15 2002-04-10 05:55:25 bdenney Exp $
+// $Id: main.cc,v 1.58.2.16 2002-04-10 06:45:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_options_t bx_options = {
 static void parse_line_unformatted(char *context, char *line);
 static void parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
-static void bx_do_text_config_interface ();
+static void bx_do_text_config_interface (int argc, char *argv[]);
 
 static Bit32s
 bx_param_handler (bx_param_c *param, int set, Bit32s val)
