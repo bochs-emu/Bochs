@@ -62,53 +62,53 @@ other wxwindows versions, you will have to change some of the names
 of the libraries to include.  Use the samples that came with that
 version of wxwindows for reference.
 
-What works right now (August 2002):
-- cd to a directory with a bochsrc and disk images in it (I use dlxlinux)
+What works right now (September 2002):
+- cd to a directory with a bochsrc and disk images in it
 - start up bochs.  You get a small window with a File, Edit, Simulate,
   Debug, Log, Help menus.  The empty black rectangle is where the
   simulation will be displayed.
 - choose File:Read Configuration and select the bochsrc file you want
   to read.
-- use Edit:Floppy Disk * or Edit:Hard Disk * to tweak settings.
-  These are the only dialogs that have been written so far.
-  Eventually you should be able to edit all settings using dialogs.
+- use the choices on the Edit menu to adjust settings.
 - choose "Start" on the Simulate menu.  Bochs starts running in the
   You can pause it, resume it, or kill it on the Simulate menu.
-  Most toolbar buttons work.  Mouse support does not exist yet,
-  and the configure button doesn't do anything and should be removed.
+  Most toolbar buttons work, but mouse support does not exist yet.
 - You can pause, resume, and stop the simulation too.  If you start
-  a new simulation, be aware that may not work quite right.  The
-  initialization and re-initialization process needs work.
-- That's all.  The other menu options are not implemented except for quit.
+  a new simulation, it's possible that things may not work quite right.  
+  The initialization and re-initialization process needs work.
+- Debug:Show CPU displays all the CPU registers.  When Bochs is compiled
+  with debugging support, this screen has Continue, Stop, and Step 
+  buttons to let you control the simulation.  Debug:Show Keyboard shows 
+  some of the internal state of the Bochs keyboard in a dialog box.
+  Both dialog boxes are updated periodically during simulation.
 
 To do:
-- sketch the GUI pieces that need to be made, with text description of
-  basically what they should do.  Later in this file you'll find lots
-  of examples of this.
-- have a few people look over the sketches so that we don't waste lots of
-  time building dialogs that people will hate.
-- code some dialog boxes in wxwindows.  Just get it looking right at first, and
-  Bryce can help you to get it connected to the simulator using the event
-  infrastructure that he has made.  Again, after one or two is done there will
-  be some good examples to look at.
-- implement ASK_PARAM gui event for all types of parameters.  Currently only
-  string params are supported, meaning that when you call ask_param() on
-  a string parameter, the GUI gives the user a chance to edit that parameter's
-  value.  We will need to implement boolean, enum, numerical parameters, and
-  lists.  Lists should probably be displayed as a table or a dialog box
-  with several things to select.
-- debugger interface.  There's lots of demand for a debugger interface
-  to Bochs, probably more demand than for a configuration interface.  We
-  should talk about what this will look like, and when we have a plan we
-  can start sketching and coding dialogs for the debugger interface too.
+- log events
+  - allow viewing of current log messages.  Maybe this is a dialog that
+    we append to, or maybe it should periodically display the last 1K of the
+    log file (might be faster in high volume situations)
+  - be able to enable/disable each type of event from each device.
+  - should we allow multiple log files with different settings? for example
+    dump cpu events to cpulog.txt and keyboard events to keyboardlog.txt?
+- debugger
+  - probably the layout will be similar to BFE at first
+  - need to show disassembly of the next instruction to be executed
+  - have a text box where you can type debugger commands, and a scrolling
+    log window where the commands and their result is displayed.
+    To implement this, write a varargs function to be used for all
+    text output of the debugger in dbg_main.cc.  With a text debugger,
+    this will map onto stdout/stderr.  When configured for wxWindows, the
+    output of this function will be sent via events to the wxWindows 
+    interface.
+    I have a scrolling debug log box, and a blank to type commands into.
+    Now make the commands go to the actual debugger.  (Enter handling would
+    be nice.)  And redirect the debugger's text output back to the dialog.
 - clean up the biggest memory leaks and init/cleanup code.  The gui allows you
   to kill the simulator and restart, but it doesn't do well after the first
   time.  Valgrind should help with memory leak debugging, though until
   recently it couldn't run multithreaded programes.
 - disk change dialogs for floppy and cdrom need work.
   http://sourceforge.net/tracker/index.php?func=detail&aid=545414&group_id=12580&atid=112580
-- with --with-wx and debugger, control-C in the terminal window kills the
-  process instead of just interrupting the simulation.
 - mouse events not implemented
 -------------
 
