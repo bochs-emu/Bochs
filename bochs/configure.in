@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.119 2002-09-23 03:46:47 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.120 2002-09-23 05:15:06 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -34,8 +34,16 @@ case "$target" in
     DEFAULT_GUI=win32                 # default to win32 gui
     ;;
   *-pc-cygwin* | *-pc-mingw32*)
-    ADD_FLAGS="-mno-cygwin -DWIN32"   # required for cygwin compile
-    DEFAULT_GUI=win32                 # default to win32 gui
+    if test "$with_term" = yes; then
+      # ncurses won't compile with -mno-cygwin or -DWIN32
+      # also, I can't get it to link without this -DBROKEN_LINKER=1 hack.
+      # see /usr/include/curses.h for details.
+      ADD_FLAGS="-DBROKEN_LINKER=1"
+    else
+      # default case
+      ADD_FLAGS="-mno-cygwin -DWIN32"   # required for cygwin compile+win32 gui
+      DEFAULT_GUI=win32                 # default to win32 gui
+    fi
     ;;
   *-macosx* | *-darwin*)
     ADD_FLAGS="-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh"      # required for macosx compile
