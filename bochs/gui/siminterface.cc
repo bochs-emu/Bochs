@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.30 2001-06-21 21:24:05 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31 2001-06-22 13:37:08 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -129,6 +129,7 @@ bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
   BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
   int index = (int)id - BXP_NULL;
   this->param_registry[index] = it;
+  return 0;
 }
 
 int 
@@ -155,7 +156,7 @@ void
 bx_real_sim_c::set_log_action (int mod, int level, int action)
 {
   logfunc_t *logfn = io->get_logfn (mod);
-  return logfn->setonoff (level, action);
+  logfn->setonoff (level, action);
 }
 
 char *

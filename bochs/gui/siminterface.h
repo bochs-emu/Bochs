@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.21 2001-06-21 21:24:05 bdenney Exp $
+ * $Id: siminterface.h,v 1.22 2001-06-22 13:37:08 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -143,7 +143,7 @@ public:
   int getint () {return -1;}
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp) {}
-  virtual int text_ask (FILE *fpin, FILE *fpout) {}
+  virtual int text_ask (FILE *fpin, FILE *fpout) {return -1;}
 #endif
 };
 
