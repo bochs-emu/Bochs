@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.23 2002-10-22 23:48:41 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.24 2002-10-23 21:02:16 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,7 +85,7 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 // Child classes do not need to implement all of them, because in this 
 // definition they are defined as empty, as opposed to being pure 
 // virtual (= 0).
-class bx_devmodel_c : public logfunctions {
+class BOCHSAPI bx_devmodel_c : public logfunctions {
   public:
   virtual ~bx_devmodel_c () {}
   virtual void init_mem(BX_MEM_C *) {}
