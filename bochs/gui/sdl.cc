@@ -1,6 +1,7 @@
 #define _MULTI_THREAD
 
 #include <iostream>
+#include <vector>
 
 #include <stdlib.h>
 #include <SDL/SDL.h>
@@ -13,7 +14,20 @@
 
 #define LOG_THIS bx_gui.
 
+#define _SDL_DEBUG_ME_
 
+#ifdef _SDL_DEBUG_ME_
+void we_are_here(void)
+{
+  return;
+}
+#endif
+
+struct bitmaps {
+  SDL_Surface *surface;
+  SDL_Rect src,dst;
+  void (*cb)(void);
+};
 
 SDL_Thread *sdl_thread;
 SDL_Surface *sdl_screen, *sdl_fullscreen;
@@ -22,6 +36,7 @@ int sdl_fullscreen_toggle;
 int sdl_grab;
 int res_x, res_y;
 int headerbar_height;
+int headerbar_offset;
 int textres_x, textres_y;
 int fontwidth = 8, fontheight = 16;
 unsigned tilewidth, tileheight;
@@ -32,6 +47,7 @@ Uint32 headerbar_fg, headerbar_bg;
 Bit8u old_mousebuttons=0, new_mousebuttons=0;
 int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
+vector<bitmaps> sdl_bitmaps;
 
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 #define SWAP16(X)    (X)
@@ -319,7 +335,7 @@ void bx_gui_c::handle_events(void)
 	new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02));
 	bx_devices.keyboard->mouse_motion(
 	    sdl_event.motion.xrel,
-	    sdl_event.motion.yrel,
+	    -sdl_event.motion.yrel,
 	    new_mousebuttons );
 	old_mousebuttons = new_mousebuttons;
 	old_mousex = (int)(sdl_event.motion.x);
@@ -357,7 +373,7 @@ void bx_gui_c::handle_events(void)
 	// send motion information
 	bx_devices.keyboard->mouse_motion(
 	    new_mousex - old_mousex,
-	    new_mousey - old_mousey,
+	    -(new_mousey - old_mousey),
 	    new_mousebuttons );
 	// mark current state to diff with next packet
 	old_mousebuttons = new_mousebuttons;
@@ -493,15 +509,23 @@ void bx_gui_c::dimension_update(
   if( y > x )
   {
     y = y>>1;
-    font = &sdl_font8x8[0][0];
-    fontheight = 8;
-    fontwidth = 8;
+    if( font != &sdl_font8x8[0][0] )
+    {
+      bx_gui.clear_screen();
+      font = &sdl_font8x8[0][0];
+      fontheight = 8;
+      fontwidth = 8;
+    }
   }
   else
   {
-    font = &sdl_font8x16[0][0];
-    fontheight = 16;
-    fontwidth = 8;
+    if( font != &sdl_font8x16[0][0] )
+    {
+      bx_gui.clear_screen();
+      font = &sdl_font8x16[0][0];
+      fontheight = 16;
+      fontwidth = 8;
+    }
   }
 
   if( (x == res_x) && (y == res_y )) return;
@@ -558,8 +582,71 @@ unsigned bx_gui_c::create_bitmap(
     unsigned xdim,
     unsigned ydim)
 {
-  cout << "sdl: create bitmap" <<endl;
-  return 0;
+  bitmaps *tmp = new bitmaps;
+  Uint32 *buf, *buf_row;
+  Uint32 disp;
+  unsigned char pixels;
+
+  tmp->surface = SDL_CreateRGBSurface(
+      SDL_SWSURFACE,
+      xdim,
+      ydim,
+      32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+      0xff000000,
+      0x00ff0000,
+      0x0000ff00,
+      0x000000ff
+#else
+      0x000000ff,
+      0x0000ff00,
+      0x00ff0000,
+      0xff000000
+#endif
+      );
+  if( !tmp->surface )
+  {
+    delete tmp;
+    bx_gui.exit();
+    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
+    BX_PANIC (("Unable to create requested bitmap"));
+  }
+  tmp->src.w = xdim;
+  tmp->src.h = ydim;
+  tmp->src.x = 0;
+  tmp->src.y = 0;
+  tmp->dst.x = -1;
+  tmp->dst.y = 0;
+  tmp->dst.w = xdim;
+  tmp->dst.h = ydim;
+  tmp->cb = NULL;
+  buf = (Uint32 *)tmp->surface->pixels;
+  disp = tmp->surface->pitch/4;
+  do
+  {
+    buf_row = buf;
+    xdim = tmp->src.w / 8;
+    do
+    {
+      pixels = *bmap++;
+      for(unsigned i=0;i<8;i++)
+      {
+	if( (pixels & 0x80) == 0 )
+	  *buf++ = headerbar_bg;
+	else
+	  *buf++ = headerbar_fg;
+	pixels = pixels << 1;
+      }
+    } while( --xdim );
+    buf = buf_row + disp;
+  } while( --ydim );
+  SDL_UpdateRect(
+      tmp->surface,
+      0, 0,
+      tmp->src.w,
+      tmp->src.h );
+  sdl_bitmaps.push_back(*tmp);
+  return sdl_bitmaps.size()-1;
 }
 
 
@@ -568,8 +655,26 @@ unsigned bx_gui_c::headerbar_bitmap(
     unsigned alignment,
     void (*f)(void))
 {
-  cout << "sdl: headerbar bitmap" <<endl;
-  return 0;
+  if( bmap_id >= sdl_bitmaps.size() ) return 0;
+
+  sdl_bitmaps[bmap_id].dst.x = headerbar_offset;
+  headerbar_offset + sdl_bitmaps[bmap_id].src.w;
+  sdl_bitmaps[bmap_id].cb = f;
+  if( sdl_screen )
+  {
+    SDL_BlitSurface(
+	sdl_bitmaps[bmap_id].surface,
+	&sdl_bitmaps[bmap_id].src,
+	sdl_screen,
+	&sdl_bitmaps[bmap_id].dst);
+    SDL_UpdateRect(
+	sdl_screen,
+	sdl_bitmaps[bmap_id].dst.x,
+	sdl_bitmaps[bmap_id].dst.y,
+	sdl_bitmaps[bmap_id].src.w,
+	sdl_bitmaps[bmap_id].src.h);
+  }
+  return bmap_id;
 }
 
 
@@ -577,7 +682,10 @@ void bx_gui_c::replace_bitmap(
     unsigned hbar_id,
     unsigned bmap_id)
 {
-  cout << "sdl: replace bitmap" << endl;
+  sdl_bitmaps[bmap_id].dst.x = sdl_bitmaps[hbar_id].dst.x;
+  sdl_bitmaps[bmap_id].cb = sdl_bitmaps[hbar_id].cb;
+  sdl_bitmaps[hbar_id].dst.x = -1;
+  sdl_bitmaps[hbar_id].cb = NULL;
 }
 
 
@@ -585,12 +693,16 @@ void bx_gui_c::show_headerbar(void)
 {
   Uint32 *buf;
   Uint32 *buf_row;
+  Uint32 disp;
   int rowsleft = headerbar_height;
   int colsleft;
+  int bitmapscount = sdl_bitmaps.size();
 
   if( !sdl_screen ) return;
+  disp = sdl_screen->pitch/4;
   buf = (Uint32 *)sdl_screen->pixels;
 
+  // draw headerbar background
   do
   {
     colsleft = res_x;
@@ -599,15 +711,29 @@ void bx_gui_c::show_headerbar(void)
     {
       *buf++ = headerbar_bg;
     } while( --colsleft );
-    buf = buf_row + sdl_screen->pitch/4;
+    buf = buf_row + disp;
   } while( --rowsleft );
-  SDL_UpdateRect(sdl_screen,0,0,res_x,headerbar_height);
-}
+  SDL_UpdateRect( sdl_screen, 0,0,res_x,headerbar_height);
 
-
-void update_floppy_status_buttons (void)
-{
-  cout << "sdl: update floppy status buttons" <<endl;
+  we_are_here();
+  // go thru the bitmaps and display the active ones
+  while( bitmapscount-- )
+  {
+    if( sdl_bitmaps[bitmapscount].dst.x != -1 )
+    {
+      SDL_BlitSurface(
+	  sdl_bitmaps[bitmapscount].surface,
+	  &sdl_bitmaps[bitmapscount].src,
+	  sdl_screen,
+	  &sdl_bitmaps[bitmapscount].dst);
+      SDL_UpdateRect(
+	  sdl_screen,
+	  sdl_bitmaps[bitmapscount].dst.x,
+	  sdl_bitmaps[bitmapscount].dst.y,
+	  sdl_bitmaps[bitmapscount].src.w,
+	  sdl_bitmaps[bitmapscount].src.h );
+    }
+  }
 }
 
 
@@ -621,45 +747,12 @@ void bx_gui_c::exit(void)
 {
   if( sdl_screen )
     SDL_FreeSurface(sdl_screen);
-}
-
-
-void init_signal_handlers ()
-{
-  cout << "sdl: init signal handlers" <<endl;
-}
-
-
-void key_event(Bit32u key)
-{
-  cout << "sdl: key event" << endl;
-}
-
-
-void init(
-    int argc,
-    char **argv,
-    unsigned x_tilesize,
-    unsigned y_tilesize)
-{
-  cout << "sdl: init" <<endl;
-}
-
-
-void sim_is_idle(void)
-{
-  cout << "sdl: sim is idle" <<endl;
-}
-
-
-Bit32u get_sighandler_mask ()
-{
-  cout << "sdl: get sighandler mask" <<endl;
-}
-
-
-void sighandler (int sig)
-{
-  cout << "sdl: sighandler" <<endl;
+  if( sdl_fullscreen )
+    SDL_FreeSurface(sdl_fullscreen);
+  while( sdl_bitmaps.size() )
+  {
+    SDL_FreeSurface( sdl_bitmaps[sdl_bitmaps.size()-1].surface );
+    sdl_bitmaps.pop_back();
+  }
 }
 
