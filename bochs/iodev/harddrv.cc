@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.43 2002-01-20 12:38:35 vruppert Exp $
+// $Id: harddrv.cc,v 1.44 2002-01-27 21:58:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.43 2002-01-20 12:38:35 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.44 2002-01-27 21:58:41 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -208,6 +208,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 	      } else {		    
 		    BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
 		    BX_HD_THIS s[1].cdrom.ready = 0;
+		    bx_options.cdromd.Oinserted->set(BX_EJECTED);
 	      }
 	} else {
 #endif
