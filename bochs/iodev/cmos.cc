@@ -416,44 +416,40 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x0c: // Control Register C
         case 0x0d: // Control Register D
-          BX_PANIC(("cmos: write to control register 0x%x (read-only)\n",
+          BX_ERROR(("cmos: write to control register 0x%x (read-only)\n",
                    BX_CMOS_THIS s.cmos_mem_address));
           break;
 
         case 0x0e: // diagnostic status
-          BX_INFO(("write register 0Eh: %02x\n", (unsigned) value));;
+          BX_DEBUG(("write register 0Eh: %02x\n", (unsigned) value));;
           break;
 
 	case 0x0f: // shutdown status
           switch (value) {
             case 0x00: /* proceed with normal POST (soft reset) */
-              if (bx_dbg.reset)
-                BX_INFO(("Reg 0F set to 0: shutdown action = normal POST\n"));;
+              BX_DEBUG(("Reg 0F set to 0: shutdown action = normal POST\n"));;
               break;
             case 0x02: /* shutdown after memory test */
-              if (bx_dbg.reset)
-                BX_INFO(("Reg 0Fh: request to change shutdown action"
+              BX_DEBUG(("Reg 0Fh: request to change shutdown action"
                              " to shutdown after memory test\n"));
               break;
             case 0x03:
-              BX_INFO(("Reg 0Fh(03) : Shutdown after memory test !\n"));;
+              BX_DEBUG(("Reg 0Fh(03) : Shutdown after memory test !\n"));;
               break;
             case 0x04: /* jump to disk bootstrap routine */
-              BX_INFO(("Reg 0Fh: request to change shutdown action "
+              BX_DEBUG(("Reg 0Fh: request to change shutdown action "
                              "to jump to disk bootstrap routine.\n"));
               break;
             case 0x06:
-              BX_INFO(("Reg 0Fh(06) : Shutdown after memory test !\n"));;
+              BX_DEBUG(("Reg 0Fh(06) : Shutdown after memory test !\n"));;
               break;
             case 0x09: /* return to BIOS extended memory block move
                        (interrupt 15h, func 87h was in progress) */
-              if (bx_dbg.reset)
-                BX_INFO(("Reg 0Fh: request to change shutdown action "
+              BX_DEBUG(("Reg 0Fh: request to change shutdown action "
                              "to return to BIOS extended memory block move.\n"));
               break;
             case 0x0a: /* jump to DWORD pointer at 40:67 */
-              if (bx_dbg.reset)
-                BX_INFO(("Reg 0Fh: request to change shutdown action"
+              BX_DEBUG(("Reg 0Fh: request to change shutdown action"
                              " to jump to DWORD at 40:67\n"));
               break;
             default:
@@ -464,7 +460,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          BX_INFO(("write reg %02xh: value = %02xh\n",
+          BX_DEBUG(("write reg %02xh: value = %02xh\n",
             (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value));
           break;
         }

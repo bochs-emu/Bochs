@@ -97,12 +97,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
         }
       else { /* LDT */
         if (BX_CPU_THIS_PTR ldtr.cache.valid==0) { /* ??? */
-          BX_INFO(("load_seg_reg: LDT invalid\n"));
+          BX_ERROR(("load_seg_reg: LDT invalid\n"));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
         if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
-          BX_INFO(("load_seg_reg ss: LDT: index > limit\n"));
+          BX_ERROR(("load_seg_reg ss: LDT: index > limit\n"));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
@@ -114,7 +114,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       /* selector's RPL must = CPL, else #GP(selector) */
       if (rpl != CPL) {
-        BX_INFO(("load_seg_reg(): rpl != CPL\n"));
+        BX_ERROR(("load_seg_reg(): rpl != CPL\n"));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -122,7 +122,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       parse_descriptor(dword1, dword2, &descriptor);
 
       if (descriptor.valid==0) {
-        BX_INFO(("load_seg_reg(): valid bit cleared\n"));
+        BX_ERROR(("load_seg_reg(): valid bit cleared\n"));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -131,19 +131,19 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if ( (descriptor.segment==0) ||
            descriptor.u.segment.executable ||
            descriptor.u.segment.r_w==0 ) {
-        BX_INFO(("load_seg_reg(): not writable data segment\n"));
+        BX_ERROR(("load_seg_reg(): not writable data segment\n"));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         }
 
       /* DPL in the AR byte must equal CPL else #GP(selector) */
       if (descriptor.dpl != CPL) {
-        BX_INFO(("load_seg_reg(): dpl != CPL\n"));
+        BX_ERROR(("load_seg_reg(): dpl != CPL\n"));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         }
 
       /* segment must be marked PRESENT else #SS(selector) */
       if (descriptor.p == 0) {
-        BX_INFO(("load_seg_reg(): not present\n"));
+        BX_ERROR(("load_seg_reg(): not present\n"));
         exception(BX_SS_EXCEPTION, new_value & 0xfffc, 0);
         }
 
@@ -199,7 +199,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       if (ti == 0) { /* GDT */
         if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
-          BX_INFO(("load_seg_reg: GDT: %s: index(%04x) > limit(%06x)\n",
+          BX_ERROR(("load_seg_reg: GDT: %s: index(%04x) > limit(%06x)\n",
             BX_CPU_THIS_PTR strseg(seg), (unsigned) index, (unsigned) BX_CPU_THIS_PTR gdtr.limit));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
@@ -211,12 +211,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
         }
       else { /* LDT */
         if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-          BX_INFO(("load_seg_reg: LDT invalid\n"));
+          BX_ERROR(("load_seg_reg: LDT invalid\n"));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
         if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
-          BX_INFO(("load_seg_reg ds,es: LDT: index > limit\n"));
+          BX_ERROR(("load_seg_reg ds,es: LDT: index > limit\n"));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
@@ -229,7 +229,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       parse_descriptor(dword1, dword2, &descriptor);
 
       if (descriptor.valid==0) {
-        BX_INFO(("load_seg_reg(): valid bit cleared\n"));
+        BX_ERROR(("load_seg_reg(): valid bit cleared\n"));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -238,7 +238,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if ( descriptor.segment==0 ||
            (descriptor.u.segment.executable==1 &&
             descriptor.u.segment.r_w==0) ) {
-        BX_INFO(("load_seg_reg(): not data or readable code\n"));
+        BX_ERROR(("load_seg_reg(): not data or readable code\n"));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -248,7 +248,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if ( descriptor.u.segment.executable==0 ||
            descriptor.u.segment.c_ed==0 ) {
         if ((rpl > descriptor.dpl) || (CPL > descriptor.dpl)) {
-          BX_INFO(("load_seg_reg: RPL & CPL must be <= DPL\n"));
+          BX_ERROR(("load_seg_reg: RPL & CPL must be <= DPL\n"));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
@@ -256,7 +256,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       /* segment must be marked PRESENT else #NP(selector) */
       if (descriptor.p == 0) {
-        BX_INFO(("load_seg_reg: segment not present\n"));
+        BX_ERROR(("load_seg_reg: segment not present\n"));
         exception(BX_NP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }

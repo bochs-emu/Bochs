@@ -35,8 +35,6 @@
   Bit32u
 BX_MEM_C::get_memory_in_k(void)
 {
-  BX_INFO(("%uKB\n", (unsigned)(BX_MEM_THIS megabytes*1024)));
-
   return(BX_MEM_THIS megabytes * 1024);
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY

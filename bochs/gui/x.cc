@@ -468,12 +468,12 @@ if (bx_options.private_colormap) {
   XMapWindow(bx_x_display, win);
   XSync(bx_x_display, /* no discard */ 0);
 
-  BX_INFO(("waiting for MapNotify\n"));
+  BX_DEBUG(("waiting for MapNotify\n"));
   while (1) {
     XNextEvent(bx_x_display, &report);
     if (report.type == MapNotify) break;
     }
-  BX_INFO(("MapNotify found.\n"));
+  BX_DEBUG(("MapNotify found.\n"));
 
 {
   char *imagedata;

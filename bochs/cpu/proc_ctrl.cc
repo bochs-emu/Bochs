@@ -37,12 +37,8 @@
   void
 BX_CPU_C::UndefinedOpcode(BxInstruction_t *i)
 {
-  if (i->b1 != 0x63) {
-    // Windows hits the ARPL command a bunch of times.
-    // Too much spew...
-    BX_INFO(("UndefinedOpcode: %02x causes exception 6\n",
+  BX_DEBUG(("UndefinedOpcode: %02x causes exception 6\n",
               (unsigned) i->b1));
-    }
   exception(BX_UD_EXCEPTION, 0, 0);
 }
 

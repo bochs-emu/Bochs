@@ -1081,8 +1081,8 @@ BX_CPU_C::return_protected(BxInstruction_t *i, Bit16u pop_bytes)
                        stack_cs_offset, 2, CPL==3, BX_READ, &raw_cs_selector);
   parse_selector(raw_cs_selector, &cs_selector);
   if ( cs_selector.rpl < CPL ) {
-    BX_INFO(("return_protected: CS.rpl < CPL\n"));
-    BX_INFO(("  CS.rpl=%u CPL=%u\n", (unsigned) cs_selector.rpl,
+    BX_ERROR(("return_protected: CS.rpl < CPL\n"));
+    BX_ERROR(("  CS.rpl=%u CPL=%u\n", (unsigned) cs_selector.rpl,
       (unsigned) CPL));
     exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
     return;
@@ -1132,7 +1132,7 @@ BX_CPU_C::return_protected(BxInstruction_t *i, Bit16u pop_bytes)
 
     // code segment must be present, else #NP(selector)
     if (cs_descriptor.p==0) {
-      BX_INFO(("return_protected: not present\n"));
+      BX_ERROR(("return_protected: not present\n"));
       exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
       }

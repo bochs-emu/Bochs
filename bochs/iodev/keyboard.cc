@@ -1101,11 +1101,11 @@ bx_keyb_c::activate_timer(void)
   void
 bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
 {
-BX_INFO(("MOUSE: kbd_ctrl_to_mouse(%02xh)\n", (unsigned) value));
-BX_INFO(("  enable = %u\n", (unsigned) BX_KEY_THIS s.mouse.enable));
-BX_INFO(("  allow_irq12 = %u\n",
+BX_DEBUG(("MOUSE: kbd_ctrl_to_mouse(%02xh)\n", (unsigned) value));
+BX_DEBUG(("  enable = %u\n", (unsigned) BX_KEY_THIS s.mouse.enable));
+BX_DEBUG(("  allow_irq12 = %u\n",
   (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
-BX_INFO(("  aux_clock_enabled = %u\n",
+BX_DEBUG(("  aux_clock_enabled = %u\n",
   (unsigned) BX_KEY_THIS s.kbd_controller.aux_clock_enabled));
 //BX_DEBUG(( "MOUSE: kbd_ctrl_to_mouse(%02xh)\n", (unsigned) value));
 
