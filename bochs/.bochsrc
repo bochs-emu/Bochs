@@ -176,18 +176,17 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 #   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
 #   
-# Point this at a hard disk image file, cdrom iso file,
-# or physical cdrom device.  
-# To create a hard disk image, try running bximage.  
-# It will help you choose the size and then suggest a line that 
-# works with it.
+# Point this at a hard disk image file, cdrom iso file, or physical cdrom
+# device.  To create a hard disk image, try running bximage.  It will help you
+# choose the size and then suggest a line that works with it.
 #
 # In UNIX it may be possible to use a raw device as a Bochs hard disk, 
 # but WE DON'T RECOMMEND IT.  In Windows there is no easy way.
 #
 # In windows, the drive letter + colon notation should be used for cdroms.
 # Depending on versions of windows and drivers, you may only be able to 
-# access the "first" cdrom in the system.
+# access the "first" cdrom in the system.  On MacOSX, use path="drive"
+# to access the physical drive.
 #
 # The path, cylinders, heads, and spt are mandatory for type=disk
 # The path is mandatory for type=cdrom
@@ -210,6 +209,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
 #ata0-slave: type=cdrom, path=D:, status=inserted
 #ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
+#ata0-slave: type=cdrom, path="drive", status=inserted
 
 #=======================================================================
 #
@@ -255,14 +255,16 @@ ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
 # cdromd: dev=/dev/cdrom, status=ejected
 # cdromd: dev=e:, status=ejected
 #
-# In windows, the drive letter + colon notation should be used.  Depending
-# on versions of windows and drivers, you may only be able to access the
-# "first" cdrom in the system.
+# In windows, the drive letter + colon notation should be used for cdroms.
+# Depending on versions of windows and drivers, you may only be able to 
+# access the "first" cdrom in the system.  On MacOSX, use path="drive"
+# to access the physical drive.
 #
 # NOTE: diskd and cdromd must not be used together!
 #=======================================================================
 #cdromd: dev=D:, status=inserted
 #cdromd: dev=/dev/cdrom, status=inserted
+#cdromd: dev="drive", status=inserted
 
 #=======================================================================
 # NEWHARDDRIVESUPPORT: enabled=[0|1]
