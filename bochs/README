@@ -1,5 +1,5 @@
 Readme for BRANCH-cpanel branch
-updated Sun Mar 17 01:08:40  2002
+updated Mon Mar 18 15:56:58  2002
 Bryce Denney
 
 -------------
@@ -9,22 +9,22 @@ the latest release 1.4.pre2.
 
 wxWindows Configuration Interface
 
-This branch began in June 2001 when the most recent bochs version was
-1.2.1.  Dave Poirier and Bryce Denney started adding a wxWindows 
-configuration interface.  So far, it uses the platform's native
-interface to show the vga screen and the traditional bitmap buttons.
-The wxWindows window is a separate window, and eventually it will let
-you choose between different configurations, manage all the bochsrc options,
-create new disk images (?), and then start a simulation.
+This branch began in June 2001 when the most recent bochs version was 1.2.1.
+Dave Poirier and Bryce Denney started adding a wxWindows configuration
+interface.  Since then, Bryce merged in all the changes made between 1.2.1 and
+1.4.pre2, so it is very current now.  At present, it uses the platform's native
+interface to show the vga screen and the traditional bitmap buttons.  The
+wxWindows window is a separate window, and eventually it will let you choose
+between different configurations, manage all the bochsrc options, create new
+disk images (?), and then start a simulation.
 
-Right now, the wxWindows window appears first.  This will be where
-you can choose a preset configuration or create one from scratch, then
-edit the bochsrc options using the GUI.  Then, by clicking on Simulate:Start, 
-you can start up the Bochs simulation.  For now, the simulation
-creates its own window for vga display and the traditional buttons, which
-still use the platform-dependent gui code (not wxwindows).  However,
-Psyon's screen shot shows that he's very close to having a wxwindows
-vga display too.
+The wxWindows window appears first.  This will be where you can choose a preset
+configuration or create one from scratch, then edit the bochsrc options using
+the GUI.  Then, by clicking on Simulate:Start, you can start up the Bochs
+simulation.  For now, the simulation creates its own window for vga display and
+the traditional buttons, which still use the platform-dependent gui code (not
+wxwindows).  However, Psyon's screen shot shows that he's very close to having
+a wxwindows vga display too.
 
 WARNING: Don't expect stable or complete code yet!
 
