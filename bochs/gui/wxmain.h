@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.7 2002-08-28 15:27:26 bdenney Exp $
+// $Id: wxmain.h,v 1.8 2002-08-29 14:59:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -46,7 +46,7 @@ enum
   ID_Log_Prefs,
   ID_Log_PrefsDevice,
   ID_Help_About,
-  ID_Sim2Cui_Event,
+  ID_Sim2CI_Event,
   // ids for Bochs toolbar
   ID_Toolbar_FloppyA,
   ID_Toolbar_FloppyB,
@@ -125,7 +125,7 @@ public:
   void OnStartSim(wxCommandEvent& event);
   void OnPauseResumeSim(wxCommandEvent& event);
   void OnKillSim(wxCommandEvent& event);
-  void OnSim2CuiEvent(wxCommandEvent& event);
+  void OnSim2CIEvent(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);

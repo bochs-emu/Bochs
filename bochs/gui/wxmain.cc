@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.12 2002-08-28 15:27:25 bdenney Exp $
+// $Id: wxmain.cc,v 1.13 2002-08-29 14:59:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -15,12 +15,12 @@
 // the top of siminterface for the rationale behind this separation.
 //
 // The separation between wxmain.cc and wx.cc is as follows:
-// - wxmain.cc implements a Bochs configuration user interface (CUI),
+// - wxmain.cc implements a Bochs configuration interface (CI),
 //   which is the wxWindows equivalent of control.cc.  wxmain creates
 //   a frame with several menus and a toolbar, and allows the user to
 //   choose the machine configuration and start the simulation.  Note
 //   that wxmain.cc does NOT include bochs.h.  All interactions
-//   between the CUI and the simulator are through the siminterface
+//   between the CI and the simulator are through the siminterface
 //   object.
 // - wx.cc implements a VGA display screen using wxWindows.  It is 
 //   is the wxWindows equivalent of x.cc, win32.cc, macos.cc, etc.
@@ -142,7 +142,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_Start, MyFrame::OnStartSim)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
-  EVT_MENU(ID_Sim2Cui_Event, MyFrame::OnSim2CuiEvent)
+  EVT_MENU(ID_Sim2CI_Event, MyFrame::OnSim2CIEvent)
   EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
   // toolbar events
@@ -492,11 +492,11 @@ MyFrame::HandleAskParam (BxEvent *event)
   return -1;  // could not display
 }
 
-// This is called from the wxWindows GUI thread, when a Sim2Cui event
+// This is called from the wxWindows GUI thread, when a Sim2CI event
 // is found.  (It got there via wxPostEvent in SiminterfaceCallback2, which is
 // executed in the simulator Thread.)
 void 
-MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
+MyFrame::OnSim2CIEvent (wxCommandEvent& event)
 {
   wxLogDebug ("received a bochs event in the GUI thread");
   BxEvent *be = (BxEvent *) event.GetEventObject ();
@@ -547,7 +547,7 @@ MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
     return;
     }
   default:
-    wxLogDebug ("OnSim2CuiEvent: event type %d ignored", (int)be->type);
+    wxLogDebug ("OnSim2CIEvent: event type %d ignored", (int)be->type);
 	// assume it's a synchronous event and send back a response, to avoid
 	// potential deadlock.
     sim_thread->SendSyncResponse(be);
@@ -769,7 +769,7 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
   }
 
   //encapsulate the bxevent in a wxwindows event
-  wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Sim2Cui_Event);
+  wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Sim2CI_Event);
   wxevent.SetEventObject ((wxEvent *)event);
   wxLogDebug ("Sending an event to the window");
   wxPostEvent (frame, wxevent);

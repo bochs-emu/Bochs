@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.46 2002-08-27 18:11:13 bdenney Exp $
+// $Id: siminterface.cc,v 1.47 2002-08-29 14:59:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -67,7 +67,7 @@ public:
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
   virtual char *get_floppy_type_name (int type);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
-  virtual BxEvent* sim_to_cui_event (BxEvent *event);
+  virtual BxEvent* sim_to_ci_event (BxEvent *event);
   virtual int log_msg (const char *prefix, int level, char *msg);
   virtual int ask_param (bx_id which);
   // ask the user for a pathname
@@ -329,7 +329,7 @@ bx_real_sim_c::set_notify_callback (sim_interface_callback_t func, void *arg)
 }
 
 BxEvent *
-bx_real_sim_c::sim_to_cui_event (BxEvent *event)
+bx_real_sim_c::sim_to_ci_event (BxEvent *event)
 {
   if (callback == NULL) {
     BX_ERROR (("notify called, but no callback function is registered"));
@@ -349,13 +349,13 @@ bx_real_sim_c::log_msg (const char *prefix, int level, char *msg)
   be->u.logmsg.level = level;
   be->u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
-  BxEvent *response = sim_to_cui_event (be);
+  BxEvent *response = sim_to_ci_event (be);
   return response? response->retcode : -1;
 }
 
 // Called by simulator whenever it needs the user to choose a new value
 // for a registered parameter.  Create a synchronous ASK_PARAM event, 
-// send it to the CUI, and wait for the response.  The CUI will call the
+// send it to the CI, and wait for the response.  The CI will call the
 // set() method on the parameter if the user changes the value.
 int 
 bx_real_sim_c::ask_param (bx_id param)
@@ -366,7 +366,7 @@ bx_real_sim_c::ask_param (bx_id param)
   BxEvent *event = new BxEvent ();
   event->type = BX_SYNC_EVT_ASK_PARAM;
   event->u.param.param = paramptr;
-  BxEvent *response = sim_to_cui_event (event);
+  BxEvent *response = sim_to_ci_event (event);
   return response->retcode;
 }
 
@@ -381,7 +381,7 @@ bx_real_sim_c::ask_filename (char *filename, int maxlen, char *prompt, char *the
   param.get_options()->set (flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = &param;
-  BxEvent *response = sim_to_cui_event (&event);
+  BxEvent *response = sim_to_ci_event (&event);
   BX_ASSERT ((response == &event));
   if (event.retcode >= 0)
     memcpy (filename, param.getptr(), maxlen);
@@ -395,7 +395,7 @@ bx_real_sim_c::periodic ()
   // particular, notice if the thread has been asked to die.
   BxEvent *tick = new BxEvent ();
   tick->type = BX_SYNC_EVT_TICK;
-  BxEvent *response = sim_to_cui_event (tick);
+  BxEvent *response = sim_to_ci_event (tick);
   int retcode = response->retcode;
   BX_ASSERT (response == tick);
   delete tick;

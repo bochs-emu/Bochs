@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.7 2002-08-26 15:31:21 bdenney Exp $
+// $Id: wx.cc,v 1.8 2002-08-29 14:59:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -9,12 +9,12 @@
 // this is not a requirement.
 //
 // The separation between wxmain.cc and wx.cc is as follows:
-// - wxmain.cc implements a Bochs configuration user interface (CUI),
+// - wxmain.cc implements a Bochs configuration interface (CI),
 //   which is the wxWindows equivalent of control.cc.  wxmain creates
 //   a frame with several menus and a toolbar, and allows the user to
 //   choose the machine configuration and start the simulation.  Note
 //   that wxmain.cc does NOT include bochs.h.  All interactions
-//   between the CUI and the simulator are through the siminterface
+//   between the CI and the simulator are through the siminterface
 //   object.
 // - wx.cc implements a VGA display screen using wxWindows.  It is 
 //   is the wxWindows equivalent of x.cc, win32.cc, macos.cc, etc.
