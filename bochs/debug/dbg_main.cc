@@ -355,6 +355,8 @@ process_sim2:
   // initialize hardware
   bx_init_hardware();   // doesn't this duplicate things?
 
+  SIM->set_init_done (1);
+
 #if BX_NUM_SIMULATORS >= 2
   bx_debugger.compare_at_sync.cpu    = 0;
   bx_debugger.compare_at_sync.memory = 0;
