@@ -50,7 +50,7 @@ LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 SB16_DUMMY_OBJS = sb16.o
 SB16_LINUX_OBJS = sb16.o soundlnx.o
 SB16_WIN_OBJS   = sb16.o soundwin.o
-
+SLOWDOWN_OBJS = slowdown_timer.o
 
 
 BX_HW_IODEV_OBJS = \
@@ -71,6 +71,7 @@ BX_HW_IODEV_OBJS = \
   @NE2K_OBJS@ \
   @CDROM_OBJS@ \
   @SB16_OBJS@ \
+  @SLOWDOWN_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
 
