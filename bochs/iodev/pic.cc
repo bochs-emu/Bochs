@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.25 2002-03-29 09:13:02 vruppert Exp $
+// $Id: pic.cc,v 1.26 2002-04-20 16:19:42 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -246,7 +246,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.master_pic.init.in_init = 1;
         BX_PIC_THIS s.master_pic.init.requires_4 = (value & 0x01);
         BX_PIC_THIS s.master_pic.init.byte_expected = 2; /* operation command 2 */
-        BX_PIC_THIS s.master_pic.imr           = 0xFF; /* all IRQ's initially masked */
+        BX_PIC_THIS s.master_pic.imr           = 0x00; /* all IRQ's initially masked */
         BX_PIC_THIS s.master_pic.isr           = 0x00; /* no IRQ's in service */
         BX_PIC_THIS s.master_pic.irr           = 0x00; /* no IRQ's requested */
         BX_PIC_THIS s.master_pic.lowest_priority = 7;
@@ -425,7 +425,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.slave_pic.init.in_init = 1;
         BX_PIC_THIS s.slave_pic.init.requires_4 = (value & 0x01);
         BX_PIC_THIS s.slave_pic.init.byte_expected = 2; /* operation command 2 */
-        BX_PIC_THIS s.slave_pic.imr           = 0xFF; /* all IRQ's initially masked */
+        BX_PIC_THIS s.slave_pic.imr           = 0x00; /* clear irq mask */
         BX_PIC_THIS s.slave_pic.isr           = 0x00; /* no IRQ's in service */
         BX_PIC_THIS s.slave_pic.irr           = 0x00; /* no IRQ's requested */
         BX_PIC_THIS s.slave_pic.lowest_priority = 7;
