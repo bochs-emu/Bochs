@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.49 2002-03-26 13:51:48 bdenney Exp $
+// $Id: keyboard.cc,v 1.50 2002-03-26 13:59:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.49 2002-03-26 13:51:48 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.50 2002-03-26 13:59:35 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.49 2002-03-26 13:51:48 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.50 2002-03-26 13:59:35 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -179,7 +179,7 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS pastebuf = NULL;
   BX_KEY_THIS pastebuf_len = 0;
   BX_KEY_THIS pastebuf_ptr = 0;
-  BX_KEY_THIS pastedelay = bx_options.Okeyboard_paste_delay->get()/TIMER_DELTA;
+  BX_KEY_THIS pastedelay = bx_options.Okeyboard_paste_delay->get()/BX_IODEV_HANDLER_PERIOD;
   BX_INFO(("will paste characters every %d keyboard ticks",BX_KEY_THIS pastedelay));
 
   // mouse port installed on system board

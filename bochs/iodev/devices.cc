@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.21 2002-03-26 13:51:48 bdenney Exp $
+// $Id: devices.cc,v 1.22 2002-03-26 13:59:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,7 +102,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.21 2002-03-26 13:51:48 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.22 2002-03-26 13:59:35 bdenney Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -221,7 +221,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   cmos->checksum_cmos();
 
   timer_handle = bx_pc_system.register_timer( this, timer_handler,
-    (unsigned) TIMER_DELTA, 1, 1);
+    (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1);
 }
 
 
@@ -297,14 +297,14 @@ bx_devices_c::timer()
   unsigned retval;
 
 #if (BX_USE_NEW_PIT==0)
-  if ( pit->periodic( TIMER_DELTA ) ) {
+  if ( pit->periodic( BX_IODEV_HANDLER_PERIOD ) ) {
     // This is a hack to make the IRQ0 work
     pic->lower_irq(0);
     pic->raise_irq(0);
     }
 #endif
 
-  retval = keyboard->periodic( TIMER_DELTA );
+  retval = keyboard->periodic( BX_IODEV_HANDLER_PERIOD );
   if (retval & 0x01)
     pic->raise_irq(1);
 
@@ -314,7 +314,7 @@ bx_devices_c::timer()
 #if BX_SUPPORT_APIC
   // update local APIC timers
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->local_apic.periodic (TIMER_DELTA);
+    BX_CPU(i)->local_apic.periodic (BX_IODEV_HANDLER_PERIOD);
   }
 #endif
 }
