@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.23 2002-04-05 18:10:21 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.24 2002-04-06 21:46:12 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -37,8 +37,9 @@ extern "C" {
 // to show debug messages, change these defines to x.  To hide them,
 // change the defines to return nothing.
 #define IFDBG_VGA(x) /* nothing */
-#define IFDBG_KEY(x) /* nothing */
 //#define IFDBG_VGA(x) x
+
+#define IFDBG_KEY(x) /* nothing */
 //#define IFDBG_KEY(x) x
 
 #include "gui/wx_toolbar.h"
@@ -80,9 +81,9 @@ private:
 
 class MyPanel: public wxPanel
 {
-  Bit32u convertToBXKey (wxKeyEvent& event);  // for all platforms
-  Bit32u convertToBXKey_MSW (wxKeyEvent& event);
-  Bit32u convertToBXKey_GTK (wxKeyEvent& event);
+  Boolean fillBxKeyEvent (wxKeyEvent& event, BxKeyEvent& bxev, Boolean release);  // for all platforms
+  Boolean fillBxKeyEvent_MSW (wxKeyEvent& event, BxKeyEvent& bxev, Boolean release);
+  Boolean fillBxKeyEvent_GTK (wxKeyEvent& event, BxKeyEvent& bxev, Boolean release);
 public:
   MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = "panel")
       : wxPanel (parent, id, pos, size, style, name)
@@ -636,7 +637,7 @@ void MyPanel::OnKeyDown(wxKeyEvent& event)
 	wxCriticalSectionLocker lock(event_thread_lock);
 	if(num_events < MAX_EVENTS) {
 		event_queue[num_events].type = BX_ASYNC_EVT_KEY;
-		event_queue[num_events].u.key.bx_key = convertToBXKey (event);
+		fillBxKeyEvent (event, event_queue[num_events].u.key, false);
 		num_events++;
 	}
 }
@@ -646,8 +647,7 @@ void MyPanel::OnKeyUp(wxKeyEvent& event)
 	wxCriticalSectionLocker lock(event_thread_lock);
 	if(num_events < MAX_EVENTS) {
 		event_queue[num_events].type = BX_ASYNC_EVT_KEY;
-		event_queue[num_events].u.key.bx_key = 
-		  (convertToBXKey (event) | BX_KEY_RELEASED);
+		fillBxKeyEvent (event, event_queue[num_events].u.key, true);
 		num_events++;
 	}
 }
@@ -933,13 +933,25 @@ char wxAsciiKey[0x5f] = {
 };
 
 // MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode1 & 2.
-Bit32u
-MyPanel::convertToBXKey_MSW (wxKeyEvent& event)
+Boolean
+MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 {
 #if defined(wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXMSW__)
-  IFDBG_KEY(wxLogDebug ("convertToBXKey_MSW. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2));
+  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_MSW. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode1, wxev.m_rawCode2));
+  // this code was grabbed from gui/win32.cpp
+  Bit32u lParam = wxev.m_rawCode2;
+  Bit32u key = HIWORD (lParam) & 0x01FF;
+  bxev.bx_key = 0x0000;
+  if (((key & 0x0100) && ((key & 0x01ff) != 0x0145)) | ((key & 0x01ff) == 0x45)) {
+	// Its an extended key
+	bxev.bx_key = 0xE000;
+  }
+  // Its a key
+  bxev.bx_key |= (key & 0x00FF) | (release? 0x80 : 0x00);
+  bxev.raw_scancode = true;
+  return true;
 #else
-  return BX_KEY_UNHANDLED;
+  return false;
 #endif
 }
 
@@ -949,13 +961,13 @@ MyPanel::convertToBXKey_MSW (wxKeyEvent& event)
 #endif
 
 // GTK specific key mapping, which uses wxKeyEvent::m_rawCode1.
-Bit32u
-MyPanel::convertToBXKey_GTK (wxKeyEvent& event)
+Boolean
+MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 {
 #if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
-  IFDBG_KEY(wxLogDebug ("convertToBXKey_GTK. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2));
+  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_GTK. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode1, wxev.m_rawCode2));
   // GTK has only 16bit key codes
-  Bit16u keysym = (Bit32u) event.m_rawCode1;
+  Bit16u keysym = (Bit32u) wxev.m_rawCode1;
   Bit32u bx_key = 0;
   // since the GDK_* symbols are very much like the X11 symbols (possibly
   // identical), I'm using code that is copied from gui/x.cc.
@@ -1075,129 +1087,133 @@ MyPanel::convertToBXKey_GTK (wxKeyEvent& event)
       case GDK_Page_Down:   bx_key = BX_KEY_PAGE_DOWN; break;
 
       default:
-        wxLogError( "convertToBXKey_GTK(): keysym %x unhandled!", (unsigned) keysym );
+        wxLogError( "fillBxKeyEvent_GTK(): keysym %x unhandled!", (unsigned) keysym );
         return BX_KEY_UNHANDLED;
   }
-  return bx_key;
+  bxev.bx_key = bx_key | (release? BX_KEY_RELEASED : BX_KEY_PRESSED);
+  bxev.raw_scancode = false;
+  return true;
 #else   // if GTK toolkit
-  return BX_KEY_UNHANDLED;
+  return false;
 #endif
 }
 
-Bit32u 
-MyPanel::convertToBXKey (wxKeyEvent& event)
+Boolean
+MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 {
-  // raw codes are a nonstandard addition to the wxWindows library.  At 
-  // present, the only way to use the "RAW_CODES" mode is to apply a
-  // patch to the wxWindows sources and recompile.  Our changes might 
-  // appear in future wxWindows versions, making the patch unnecessary.
+  // Use raw codes if they are available.  Raw codes are a nonstandard addition
+  // to the wxWindows library.  At present, the only way to use the "RAW_CODES"
+  // mode is to apply Bryce's "patch.wx-raw-keycodes" patch to the wxWindows
+  // sources and recompile.  This patch, or something like it, should appear in
+  // future wxWindows versions.
 
-  // use raw codes if they are available
 #if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXMSW__)
-  return convertToBXKey_MSW (event);
+  return fillBxKeyEvent_MSW (wxev, bxev, release);
 #endif
 
 #if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
-  return convertToBXKey_GTK (event);
+  return fillBxKeyEvent_GTK (wxev, bxev, release);
 #endif
 
   // otherwise fall back to using portable WXK_* keycodes.  Not all keys
   // can be mapped correctly using WXK_* codes but it should be usable.
-  IFDBG_KEY (wxLogDebug ("convertToBXKey. key code %d", event.m_keyCode));
-  Bit32u key = event.m_keyCode;
-	Bit32u bx_key;
-	
-	if(key >= WXK_SPACE && key < WXK_DELETE) {
-		bx_key = wxAsciiKey[key - WXK_SPACE];
-	} else {
-		// handle extended keys here
-		switch(key) {
-		case WXK_BACK:		bx_key = BX_KEY_BACKSPACE;    break;
-		case WXK_TAB:		bx_key = BX_KEY_TAB;          break;
-		case WXK_RETURN:	bx_key = BX_KEY_ENTER;        break;
-		case WXK_ESCAPE:	bx_key = BX_KEY_ESC;          break;
-		case WXK_DELETE:	bx_key = BX_KEY_DELETE;       break;
-		case WXK_SHIFT:		bx_key = BX_KEY_SHIFT_L;      break;
-		case WXK_CONTROL:	bx_key = BX_KEY_CTRL_L;       break;
-		case WXK_ALT:		bx_key = BX_KEY_ALT_L;        break;
-		case WXK_MENU:		bx_key = BX_KEY_MENU;         break;
-		case WXK_PAUSE:		bx_key = BX_KEY_PAUSE;        break;
-		case WXK_PRIOR:		bx_key = BX_KEY_PAGE_UP;      break;
-		case WXK_NEXT:		bx_key = BX_KEY_PAGE_DOWN;    break;
-		case WXK_END:		bx_key = BX_KEY_END;          break;
-		case WXK_HOME:		bx_key = BX_KEY_HOME;         break;
-		case WXK_LEFT:		bx_key = BX_KEY_LEFT;         break;
-		case WXK_UP:		bx_key = BX_KEY_UP;           break;
-		case WXK_RIGHT:		bx_key = BX_KEY_RIGHT;        break;
-		case WXK_DOWN:		bx_key = BX_KEY_DOWN;         break;
-		case WXK_INSERT:	bx_key = BX_KEY_INSERT;       break;
-		case WXK_NUMPAD0:	bx_key = BX_KEY_KP_INSERT;    break;
-		case WXK_NUMPAD1:	bx_key = BX_KEY_KP_END;       break;
-		case WXK_NUMPAD2:	bx_key = BX_KEY_KP_DOWN;      break;
-		case WXK_NUMPAD3:	bx_key = BX_KEY_KP_PAGE_DOWN; break;
-		case WXK_NUMPAD4:	bx_key = BX_KEY_KP_LEFT;      break;
-		case WXK_NUMPAD5:	bx_key = BX_KEY_KP_5;         break;
-		case WXK_NUMPAD6:	bx_key = BX_KEY_KP_RIGHT;     break;
-		case WXK_NUMPAD7:	bx_key = BX_KEY_KP_HOME;      break;
-		case WXK_NUMPAD8:	bx_key = BX_KEY_KP_UP;        break;
-		case WXK_NUMPAD9:	bx_key = BX_KEY_KP_PAGE_UP;   break;
-		case WXK_F1:		bx_key = BX_KEY_F1;           break;
-		case WXK_F2:		bx_key = BX_KEY_F2;           break;
-		case WXK_F3:		bx_key = BX_KEY_F3;           break;
-		case WXK_F4:		bx_key = BX_KEY_F4;           break;
-		case WXK_F5:		bx_key = BX_KEY_F5;           break;
-		case WXK_F6:		bx_key = BX_KEY_F6;           break;
-		case WXK_F7:		bx_key = BX_KEY_F7;           break;
-		case WXK_F8:		bx_key = BX_KEY_F8;           break;
-		case WXK_F9:		bx_key = BX_KEY_F9;           break;
-		case WXK_F10:		bx_key = BX_KEY_F10;          break;
-		case WXK_F11:		bx_key = BX_KEY_F11;          break;
-		case WXK_F12:		bx_key = BX_KEY_F12;          break;
-		case WXK_NUMLOCK:	bx_key = BX_KEY_NUM_LOCK;     break;
-		case WXK_SCROLL:	bx_key = BX_KEY_SCRL_LOCK;    break;
-		case WXK_DECIMAL:	bx_key = BX_KEY_PERIOD;       break;
-		case WXK_SUBTRACT:	bx_key = BX_KEY_MINUS;        break; 
-		case WXK_ADD:		bx_key = BX_KEY_EQUALS;       break;
-		case WXK_MULTIPLY:	bx_key = BX_KEY_KP_MULTIPLY;  break;
-		case WXK_DIVIDE:	bx_key = BX_KEY_KP_DIVIDE;    break;
+  IFDBG_KEY (wxLogDebug ("fillBxKeyEvent. key code %d", wxev.m_keyCode));
+  Bit32u key = wxev.m_keyCode;
+  Bit32u bx_key;
+  
+  if(key >= WXK_SPACE && key < WXK_DELETE) {
+	  bx_key = wxAsciiKey[key - WXK_SPACE];
+  } else {
+	  // handle extended keys here
+	  switch(key) {
+	  case WXK_BACK:		bx_key = BX_KEY_BACKSPACE;    break;
+	  case WXK_TAB:		bx_key = BX_KEY_TAB;          break;
+	  case WXK_RETURN:	bx_key = BX_KEY_ENTER;        break;
+	  case WXK_ESCAPE:	bx_key = BX_KEY_ESC;          break;
+	  case WXK_DELETE:	bx_key = BX_KEY_DELETE;       break;
+	  case WXK_SHIFT:		bx_key = BX_KEY_SHIFT_L;      break;
+	  case WXK_CONTROL:	bx_key = BX_KEY_CTRL_L;       break;
+	  case WXK_ALT:		bx_key = BX_KEY_ALT_L;        break;
+	  case WXK_MENU:		bx_key = BX_KEY_MENU;         break;
+	  case WXK_PAUSE:		bx_key = BX_KEY_PAUSE;        break;
+	  case WXK_PRIOR:		bx_key = BX_KEY_PAGE_UP;      break;
+	  case WXK_NEXT:		bx_key = BX_KEY_PAGE_DOWN;    break;
+	  case WXK_END:		bx_key = BX_KEY_END;          break;
+	  case WXK_HOME:		bx_key = BX_KEY_HOME;         break;
+	  case WXK_LEFT:		bx_key = BX_KEY_LEFT;         break;
+	  case WXK_UP:		bx_key = BX_KEY_UP;           break;
+	  case WXK_RIGHT:		bx_key = BX_KEY_RIGHT;        break;
+	  case WXK_DOWN:		bx_key = BX_KEY_DOWN;         break;
+	  case WXK_INSERT:	bx_key = BX_KEY_INSERT;       break;
+	  case WXK_NUMPAD0:	bx_key = BX_KEY_KP_INSERT;    break;
+	  case WXK_NUMPAD1:	bx_key = BX_KEY_KP_END;       break;
+	  case WXK_NUMPAD2:	bx_key = BX_KEY_KP_DOWN;      break;
+	  case WXK_NUMPAD3:	bx_key = BX_KEY_KP_PAGE_DOWN; break;
+	  case WXK_NUMPAD4:	bx_key = BX_KEY_KP_LEFT;      break;
+	  case WXK_NUMPAD5:	bx_key = BX_KEY_KP_5;         break;
+	  case WXK_NUMPAD6:	bx_key = BX_KEY_KP_RIGHT;     break;
+	  case WXK_NUMPAD7:	bx_key = BX_KEY_KP_HOME;      break;
+	  case WXK_NUMPAD8:	bx_key = BX_KEY_KP_UP;        break;
+	  case WXK_NUMPAD9:	bx_key = BX_KEY_KP_PAGE_UP;   break;
+	  case WXK_F1:		bx_key = BX_KEY_F1;           break;
+	  case WXK_F2:		bx_key = BX_KEY_F2;           break;
+	  case WXK_F3:		bx_key = BX_KEY_F3;           break;
+	  case WXK_F4:		bx_key = BX_KEY_F4;           break;
+	  case WXK_F5:		bx_key = BX_KEY_F5;           break;
+	  case WXK_F6:		bx_key = BX_KEY_F6;           break;
+	  case WXK_F7:		bx_key = BX_KEY_F7;           break;
+	  case WXK_F8:		bx_key = BX_KEY_F8;           break;
+	  case WXK_F9:		bx_key = BX_KEY_F9;           break;
+	  case WXK_F10:		bx_key = BX_KEY_F10;          break;
+	  case WXK_F11:		bx_key = BX_KEY_F11;          break;
+	  case WXK_F12:		bx_key = BX_KEY_F12;          break;
+	  case WXK_NUMLOCK:	bx_key = BX_KEY_NUM_LOCK;     break;
+	  case WXK_SCROLL:	bx_key = BX_KEY_SCRL_LOCK;    break;
+	  case WXK_DECIMAL:	bx_key = BX_KEY_PERIOD;       break;
+	  case WXK_SUBTRACT:	bx_key = BX_KEY_MINUS;        break; 
+	  case WXK_ADD:		bx_key = BX_KEY_EQUALS;       break;
+	  case WXK_MULTIPLY:	bx_key = BX_KEY_KP_MULTIPLY;  break;
+	  case WXK_DIVIDE:	bx_key = BX_KEY_KP_DIVIDE;    break;
 
-		case WXK_NUMPAD_ENTER:		bx_key = BX_KEY_KP_ENTER;     break;
-		case WXK_NUMPAD_HOME:		bx_key = BX_KEY_KP_HOME;      break;
-		case WXK_NUMPAD_LEFT:		bx_key = BX_KEY_KP_LEFT;      break;
-		case WXK_NUMPAD_UP:			bx_key = BX_KEY_KP_UP;        break;
-		case WXK_NUMPAD_RIGHT:		bx_key = BX_KEY_KP_RIGHT;     break;
-		case WXK_NUMPAD_DOWN:		bx_key = BX_KEY_KP_DOWN;      break;
-		case WXK_NUMPAD_PRIOR:		bx_key = BX_KEY_KP_PAGE_UP;   break;
-		case WXK_NUMPAD_PAGEUP:		bx_key = BX_KEY_KP_PAGE_UP;   break;
-		case WXK_NUMPAD_NEXT:		bx_key = BX_KEY_KP_PAGE_DOWN; break;
-		case WXK_NUMPAD_PAGEDOWN:	bx_key = BX_KEY_KP_PAGE_DOWN; break;
-		case WXK_NUMPAD_END:		bx_key = BX_KEY_KP_END;       break;
-		case WXK_NUMPAD_BEGIN:		bx_key = BX_KEY_KP_HOME;      break;
-		case WXK_NUMPAD_INSERT:		bx_key = BX_KEY_KP_INSERT;    break;
-		case WXK_NUMPAD_DELETE:		bx_key = BX_KEY_KP_DELETE;    break;
-		case WXK_NUMPAD_EQUAL:		bx_key = BX_KEY_KP_ENTER;     break;
-		case WXK_NUMPAD_MULTIPLY:	bx_key = BX_KEY_KP_MULTIPLY;  break;
-		case WXK_NUMPAD_SUBTRACT:	bx_key = BX_KEY_KP_SUBTRACT;  break;
-		case WXK_NUMPAD_DECIMAL:	bx_key = BX_KEY_KP_DELETE;    break;
-		case WXK_NUMPAD_DIVIDE:		bx_key = BX_KEY_KP_DIVIDE;    break;
+	  case WXK_NUMPAD_ENTER:		bx_key = BX_KEY_KP_ENTER;     break;
+	  case WXK_NUMPAD_HOME:		bx_key = BX_KEY_KP_HOME;      break;
+	  case WXK_NUMPAD_LEFT:		bx_key = BX_KEY_KP_LEFT;      break;
+	  case WXK_NUMPAD_UP:			bx_key = BX_KEY_KP_UP;        break;
+	  case WXK_NUMPAD_RIGHT:		bx_key = BX_KEY_KP_RIGHT;     break;
+	  case WXK_NUMPAD_DOWN:		bx_key = BX_KEY_KP_DOWN;      break;
+	  case WXK_NUMPAD_PRIOR:		bx_key = BX_KEY_KP_PAGE_UP;   break;
+	  case WXK_NUMPAD_PAGEUP:		bx_key = BX_KEY_KP_PAGE_UP;   break;
+	  case WXK_NUMPAD_NEXT:		bx_key = BX_KEY_KP_PAGE_DOWN; break;
+	  case WXK_NUMPAD_PAGEDOWN:	bx_key = BX_KEY_KP_PAGE_DOWN; break;
+	  case WXK_NUMPAD_END:		bx_key = BX_KEY_KP_END;       break;
+	  case WXK_NUMPAD_BEGIN:		bx_key = BX_KEY_KP_HOME;      break;
+	  case WXK_NUMPAD_INSERT:		bx_key = BX_KEY_KP_INSERT;    break;
+	  case WXK_NUMPAD_DELETE:		bx_key = BX_KEY_KP_DELETE;    break;
+	  case WXK_NUMPAD_EQUAL:		bx_key = BX_KEY_KP_ENTER;     break;
+	  case WXK_NUMPAD_MULTIPLY:	bx_key = BX_KEY_KP_MULTIPLY;  break;
+	  case WXK_NUMPAD_SUBTRACT:	bx_key = BX_KEY_KP_SUBTRACT;  break;
+	  case WXK_NUMPAD_DECIMAL:	bx_key = BX_KEY_KP_DELETE;    break;
+	  case WXK_NUMPAD_DIVIDE:		bx_key = BX_KEY_KP_DIVIDE;    break;
 
-		// Keys not handled by wxMSW
-		case 192: bx_key = BX_KEY_GRAVE;         break; // `~
-		case 219: bx_key = BX_KEY_LEFT_BRACKET;  break; // [{
-		case 221: bx_key = BX_KEY_RIGHT_BRACKET; break; // ]}
-		case 220: bx_key = BX_KEY_BACKSLASH;     break; // \|
-		case 186: bx_key = BX_KEY_SEMICOLON;     break; // ;:
-		case 222: bx_key = BX_KEY_SINGLE_QUOTE;  break; // '"
-		case 188: bx_key = BX_KEY_COMMA;         break; // ,<
-		case 191: bx_key = BX_KEY_SLASH;         break; // /?
+	  // Keys not handled by wxMSW
+	  case 192: bx_key = BX_KEY_GRAVE;         break; // `~
+	  case 219: bx_key = BX_KEY_LEFT_BRACKET;  break; // [{
+	  case 221: bx_key = BX_KEY_RIGHT_BRACKET; break; // ]}
+	  case 220: bx_key = BX_KEY_BACKSLASH;     break; // \|
+	  case 186: bx_key = BX_KEY_SEMICOLON;     break; // ;:
+	  case 222: bx_key = BX_KEY_SINGLE_QUOTE;  break; // '"
+	  case 188: bx_key = BX_KEY_COMMA;         break; // ,<
+	  case 191: bx_key = BX_KEY_SLASH;         break; // /?
 
-		default:
-			wxLogMessage("Unhandled key event: %i (0x%x)", key, key);
-			return 0;
-		}
-	}
-	IFDBG_KEY (wxLogDebug ("convertToBXKey: after remapping, key=%d", bx_key));
-	return bx_key;
+	  default:
+		  wxLogMessage("Unhandled key event: %i (0x%x)", key, key);
+		  return 0;
+	  }
+  }
+  IFDBG_KEY (wxLogDebug ("fillBxKeyEvent: after remapping, key=%d", bx_key));
+  bxev.bx_key = bx_key | (release? BX_KEY_RELEASED : BX_KEY_PRESSED);
+  bxev.raw_scancode = false;
+  return true;
 }
 
 // ::HANDLE_EVENTS()
@@ -1230,10 +1246,22 @@ void bx_gui_c::handle_events(void)
         break;
       case BX_ASYNC_EVT_KEY:
         bx_key = event_queue[i].u.key.bx_key;
-        IFDBG_KEY (
-          wxLogDebug ("sending key %s event to bochs, bx_key=0x%08x",
-            (bx_key&BX_KEY_RELEASED)? "up  " : "down", bx_key));
-        bx_devices.keyboard->gen_scancode(bx_key);
+		if (event_queue[i].u.key.raw_scancode) {
+		  // event contains raw scancodes: use put_scancode
+		  Bit8u scancode;
+		  if (bx_key & 0xFF00) { // for extended keys
+		    scancode = 0xFF & (bx_key>>8);
+			IFDBG_KEY (wxLogDebug ("sending raw scancode 0x%02x (extended key)", (int)scancode));
+		    bx_devices.keyboard->put_scancode (&scancode, 1);
+		  }
+		  scancode = 0xFF & bx_key;
+		  IFDBG_KEY (wxLogDebug ("sending raw scancode 0x%02x", (int)scancode));
+		  bx_devices.keyboard->put_scancode (&scancode, 1);
+		} else {
+		  // event contains BX_KEY_* codes: use gen_scancode
+		  IFDBG_KEY (wxLogDebug ("sending key event 0x%02x", bx_key));
+		  bx_devices.keyboard->gen_scancode(bx_key);
+		}
         break;
       default:
         wxLogError ("handle_events received unhandled event type %d in queue", (int)event_queue[i].type);
