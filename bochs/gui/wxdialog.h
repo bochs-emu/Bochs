@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.24 2002-09-04 12:29:04 bdenney Exp $
+// $Id: wxdialog.h,v 1.25 2002-09-04 18:39:20 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -106,7 +106,7 @@ DECLARE_EVENT_TABLE()
 // |    [ ]  None/Disabled                                         |
 // |    [X]  Physical floppy drive A:                              |
 // |    [ ]  Physical floppy drive B:                              |
-// |    [ ]  Disk image file: [________________________] [Browse]  |
+// |    [ ]  Disk image: [_____________________________] [Browse]  |
 // |                                                               |
 // | What is the capacity of this disk? [1.44 MB]                  |
 // |                                                               |
@@ -146,7 +146,7 @@ DECLARE_EVENT_TABLE()
 // | |                                                         |   |
 // | |  [X]  Physical floppy drive A:                          |   |
 // | |  [ ]  Physical floppy drive B:                          |   |
-// | |  [ ]  Disk image file: [____________________] [Browse]  |   |
+// | |  [ ]  Disk image: [_________________________] [Browse]  |   |
 // | |                                                         |   |
 // | | Media size [1.44 MB]                                    |   |
 // | |                                                         |   |
@@ -166,7 +166,7 @@ public:
 #define FLOPPY_CONFIG_INSTRS "Select the device or image to use when simulating %s."
 #define FLOPPY_CONFIG_CAP "What is the capacity of this disk?"
 #define FLOPPY_CONFIG_HINT "To create a disk image, choose the file name and capacity, then click on \"Create Image\"."
-#define FLOPPY_CONFIG_DISKIMG "Disk image file: "
+#define FLOPPY_CONFIG_DISKIMG "Disk image: "
 private:
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
@@ -284,7 +284,7 @@ DECLARE_EVENT_TABLE()
 // | |                                                         |   |
 // | |  [X]  Ejected                                           |   |
 // | |  [ ]  Physical CD-ROM drive /dev/cdrom                  |   |
-// | |  [ ]  Disk image file: [____________________] [Browse]  |   |
+// | |  [ ]  Disk image: [_________________________] [Browse]  |   |
 // | |                                                         |   |
 // | |                                        [ Create Image ] |   |
 // | +---------------------------------------------------------+   |
@@ -737,7 +737,7 @@ Or if you choose the CD-ROM, you get to edit the settings for it.
 |  | |                  |  |                                             |  |
 |  | |-IDE controller   |  |   [X]  Ejected                              |  |
 |  | | |-Hard Drive 0   |  |   [ ]  Physical CD-ROM drive /dev/cdrom     |  |
-|  |*****CD-ROM drive***|  |   [ ]  Disk image file: [________] [Browse] |  |
+|  |*****CD-ROM drive***|  |   [ ]  Disk image: [_____________] [Browse] |  |
 |  | |                  |  |                                             |  |
 |  | |-Keyboard         |  +---------------------------------------------+  |
 |  | |                  |                                                   |
@@ -761,7 +761,7 @@ CD-ROM button on the toolbar at runtime.
 |                                             |
 |   [X]  Ejected                              |
 |   [ ]  Physical CD-ROM drive /dev/cdrom     |
-|   [ ]  Disk image file: [________] [Browse] |
+|   [ ]  Disk image: [_____________] [Browse] |
 |                                             |
 |                                             |
 |                       [Help] [Cancel] [Ok]  |
