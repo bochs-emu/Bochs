@@ -98,7 +98,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.13 2001-06-28 19:48:04 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.14 2001-08-18 03:28:23 yakovlev Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -157,6 +157,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pit = & bx_pit;
   pit->init(this);
 
+#ifdef BX_USE_SLOWDOWN_TIMER
+  bx_slowdown_timer.init();
+#endif
 
   dma = &bx_dma;
   dma->init(this);
@@ -284,9 +287,11 @@ bx_devices_c::timer()
 {
   unsigned retval;
 
+#if (BX_USE_NEW_PIT==0)
   if ( pit->periodic( TIMER_DELTA ) ) {
     pic->trigger_irq(0);
     }
+#endif
 
   retval = keyboard->periodic( TIMER_DELTA );
   if (retval & 0x01) {

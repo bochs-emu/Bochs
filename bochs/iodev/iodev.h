@@ -162,3 +162,4 @@ private:
 #include "iodev/eth.h"
 #include "iodev/ne2k.h"
 #include "iodev/guest2host.h"
+#include "iodev/slowdown_timer.h"

@@ -65,9 +65,14 @@ private:
     Bit8u   speaker_data_on;
     Boolean refresh_clock_div2;
     int  timer_handle[3];
+    Bit64u last_usec;
+    Bit32u last_next_event_time;
     } s;
 
   bx_devices_c *devices;
+
+  static void timer_handler(void *this_ptr);
+  BX_PIT_SMF void handle_timer();
 
   BX_PIT_SMF void  write_count_reg( Bit8u   value, unsigned timerid );
   BX_PIT_SMF Bit8u read_counter( unsigned timerid );

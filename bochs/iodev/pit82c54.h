@@ -106,6 +106,8 @@ private:
 
   void clock(Bit8u cnum);
 
+  void print_counter(counter_type & thisctr);
+
 public:
   void init (void);
   pit_82C54 (void);

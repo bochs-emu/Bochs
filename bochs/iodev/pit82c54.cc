@@ -29,6 +29,16 @@
 #include "pit82c54.h"
 #define LOG_THIS this->
 
+void pit_82C54::print_counter(counter_type & thisctr) {
+#if 0
+  BX_INFO(("Printing Counter"));
+  BX_INFO(("count: %x",thisctr.count));
+  BX_INFO(("count_binary: %x",thisctr.count_binary));
+  BX_INFO(("next_change_time: %x",thisctr.next_change_time));
+  BX_INFO(("End Counter Printout"));
+#endif
+}
+
   void pit_82C54::latch_counter(counter_type & thisctr) {
     if(thisctr.count_LSB_latched || thisctr.count_MSB_latched) {
       //Do nothing because previous latch has not been read.;
@@ -233,6 +243,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	}
       }
     }
+    print_counter(thisctr);
   }
 }
 
@@ -247,7 +258,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  if(thisctr.null_count) {
 	    set_count(thisctr, thisctr.inlatch);
 	    if(thisctr.GATE) {
-	      thisctr.next_change_time=thisctr.count_binary;
+	      thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	    } else {
 	      thisctr.next_change_time=0;
 	    }
@@ -256,7 +267,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    if(thisctr.GATE && (thisctr.write_state!=MSByte_multiple)) {
 	      decrement(thisctr);
 	      if(!thisctr.OUT) {
-		thisctr.next_change_time=thisctr.count_binary;
+		thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 		if(!thisctr.count) {
 		  set_OUT(thisctr,1);
 		}
@@ -276,7 +287,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	if(thisctr.count_written) {
 	  if(thisctr.triggerGATE) {
 	    set_count(thisctr, thisctr.inlatch);
-	    thisctr.next_change_time=thisctr.count_binary;
+	    thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	    thisctr.null_count=0;
 	    set_OUT(thisctr,0);
 	    if(thisctr.write_state==MSByte_multiple) {
@@ -285,7 +296,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  } else {
 	    decrement(thisctr);
 	    if(!thisctr.OUT) {
-	      thisctr.next_change_time=thisctr.count_binary;
+	      thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	      if(thisctr.count==0) {
 		set_OUT(thisctr,1);
 	      }
@@ -302,7 +313,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	if(thisctr.count_written) {
 	  if(thisctr.triggerGATE || thisctr.first_pass) {
 	    set_count(thisctr, thisctr.inlatch);
-	    thisctr.next_change_time=thisctr.count_binary-1;
+	    thisctr.next_change_time=(thisctr.count_binary-1) & 0xFFFF;
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
 	      BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2."));
@@ -317,7 +328,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  } else {
 	    if(thisctr.GATE) {
 	      decrement(thisctr);
-	      thisctr.next_change_time=thisctr.count_binary-1;
+	      thisctr.next_change_time=(thisctr.count_binary-1) & 0xFFFF;
 	      if(thisctr.count==1) {
 		thisctr.next_change_time=1;
 		set_OUT(thisctr,0);
@@ -339,9 +350,9 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    set_count(thisctr, thisctr.inlatch & 0xFFFE);
 	    thisctr.state_bit_1=thisctr.inlatch & 0x1;
 	    if( (!thisctr.OUT) || (!(thisctr.state_bit_1))) {
-	      thisctr.next_change_time=(thisctr.count_binary/2)-1;
+	      thisctr.next_change_time=((thisctr.count_binary/2)-1) & 0xFFFF;
 	    } else {
-	      thisctr.next_change_time=thisctr.count_binary/2;
+	      thisctr.next_change_time=(thisctr.count_binary/2) & 0xFFFF;
 	    }
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
@@ -362,9 +373,9 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	      decrement(thisctr);
 	      decrement(thisctr);
 	      if( (!thisctr.OUT) || (!(thisctr.state_bit_1))) {
-		thisctr.next_change_time=(thisctr.count_binary/2)-1;
+		thisctr.next_change_time=((thisctr.count_binary/2)-1) & 0xFFFF;
 	      } else {
-		thisctr.next_change_time=thisctr.count_binary/2;
+		thisctr.next_change_time=(thisctr.count_binary/2) & 0xFFFF;
 	      }
 	      if(thisctr.count==0) {
 		thisctr.state_bit_2=1;
@@ -393,7 +404,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  if(thisctr.null_count) {
 	    set_count(thisctr, thisctr.inlatch);
 	    if(thisctr.GATE) {
-	      thisctr.next_change_time=thisctr.count_binary;
+	      thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	    } else {
 	      thisctr.next_change_time=0;
 	    }
@@ -406,7 +417,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    if(thisctr.GATE) {
 	      decrement(thisctr);
 	      if(thisctr.first_pass) {
-		thisctr.next_change_time=thisctr.count_binary;
+		thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 		if(!thisctr.count) {
 		  set_OUT(thisctr,0);
 		  thisctr.next_change_time=1;
@@ -431,7 +442,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  }
 	  if(thisctr.triggerGATE) {
 	    set_count(thisctr, thisctr.inlatch);
-	    thisctr.next_change_time=thisctr.count_binary;
+	    thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	    thisctr.null_count=0;
 	    if(thisctr.write_state==MSByte_multiple) {
 	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
@@ -440,7 +451,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  } else {
 	    decrement(thisctr);
 	    if(thisctr.first_pass) {
-	      thisctr.next_change_time=thisctr.count_binary;
+	      thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	      if(!thisctr.count) {
 		set_OUT(thisctr,0);
 		thisctr.next_change_time=1;
@@ -686,7 +697,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	      if( (!thisctr.OUT) &&
 		  (thisctr.write_state!=MSByte_multiple)
 		  ) {
-		thisctr.next_change_time=thisctr.count_binary;
+		thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	      } else {
 		thisctr.next_change_time=0;
 	      }
@@ -735,7 +746,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  } else {
 	    if(data && thisctr.count_written) {
 	      if(thisctr.first_pass) {
-		thisctr.next_change_time=thisctr.count_binary;
+		thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	      } else {
 		thisctr.next_change_time=0;
 	      }

@@ -371,6 +371,7 @@ bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
 
   // convert useconds to number of instructions
   instructions = (Bit64u) (double(useconds) * m_ips);
+  if((useconds!=0) && (instructions==0)) instructions = 1;
 
   return register_timer_ticks(this_ptr, funct, instructions, continuous, active);
 }
@@ -506,6 +507,7 @@ bx_pc_system_c::activate_timer( unsigned timer_index,
   else {
     // convert useconds to number of instructions
     instructions = (Bit64u) (double(useconds) * m_ips);
+    if(instructions==0) instructions = 1;
     timer[timer_index].period = instructions;
     }
 

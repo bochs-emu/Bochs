@@ -48,6 +48,7 @@ bx_pit_c::bx_pit_c( void )
 
   BX_PIT_THIS s.timer_handle[1] = BX_NULL_TIMER_HANDLE;
   BX_PIT_THIS s.timer_handle[2] = BX_NULL_TIMER_HANDLE;
+  BX_PIT_THIS s.timer_handle[0] = BX_NULL_TIMER_HANDLE;
 }
 
 bx_pit_c::~bx_pit_c( void )
@@ -72,14 +73,75 @@ bx_pit_c::init( bx_devices_c *d )
   BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0043, "8254 PIT");
   BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0061, "8254 PIT");
 
+  BX_DEBUG(("pit: starting init"));
+
   BX_PIT_THIS s.speaker_data_on = 0;
   BX_PIT_THIS s.refresh_clock_div2 = 0;
 
   BX_PIT_THIS s.timer.init();
 
+  BX_PIT_THIS s.timer_handle[0] = bx_pc_system.register_timer(this, timer_handler, (unsigned) 100 , 1, 1);
+  BX_DEBUG(("pit: RESETting timer."));
+  bx_pc_system.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
+  BX_DEBUG(("deactivated timer."));
+  if(BX_PIT_THIS s.timer.get_next_event_time()) {
+    bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+				BX_PIT_THIS s.timer.get_next_event_time(),
+				0);
+    BX_DEBUG(("activated timer."));
+  }
+  BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
+  BX_PIT_THIS s.last_usec=bx_pc_system.time_usec();
+
+  BX_DEBUG(("pit: finished init"));
+
+  BX_DEBUG(("s.last_usec=%d",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
+  BX_DEBUG(("s.timer.get_next_event_time=%d",BX_PIT_THIS s.timer.get_next_event_time()));
+  BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
+
   return(1);
 }
 
+
+void
+bx_pit_c::timer_handler(void *this_ptr) {
+  bx_pit_c * class_ptr = (bx_pit_c *) this_ptr;
+
+  class_ptr->handle_timer();
+}
+
+void
+bx_pit_c::handle_timer() {
+  Bit64u time_passed = bx_pc_system.time_usec()-BX_PIT_THIS s.last_usec;
+  Bit32u time_passed32 = time_passed;
+
+  BX_DEBUG(("pit: entering timer handler"));
+
+  if(time_passed32 && periodic(time_passed32)) {
+    bx_pic.trigger_irq(0);
+  }
+  BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
+  if(time_passed ||
+     (BX_PIT_THIS s.last_next_event_time
+      != BX_PIT_THIS s.timer.get_next_event_time())
+     ) {
+    BX_DEBUG(("pit: RESETting timer."));
+    bx_pc_system.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
+    BX_DEBUG(("deactivated timer."));
+    if(BX_PIT_THIS s.timer.get_next_event_time()) {
+      bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+				  BX_PIT_THIS s.timer.get_next_event_time(),
+				  0);
+      BX_DEBUG(("activated timer."));
+    }
+    BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
+  }
+  BX_DEBUG(("s.last_usec=%d",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
+  BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
+  BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
+}
 
 
   // static IO port read callback handler
@@ -101,6 +163,10 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
+  BX_DEBUG(("pit: entering read handler"));
+
+  handle_timer();
+
   if (io_len > 1)
     BX_PANIC(("pit: io read from port %04x, len=%u", (unsigned) address,
              (unsigned) io_len));
@@ -134,7 +200,7 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 
     default:
       BX_PANIC(("pit: unsupported io read from port %04x", address));
-    }
+  }
   return(0); /* keep compiler happy */
 }
 
@@ -159,6 +225,15 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
   Bit8u   value;
+  Bit64u time_passed = bx_pc_system.time_usec()-BX_PIT_THIS s.last_usec;
+  Bit32u time_passed32 = time_passed;
+
+  BX_DEBUG(("pit: entering write handler"));
+
+  if(time_passed32 && periodic(time_passed32)) {
+    bx_pic.trigger_irq(0);
+  }
+  BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
 
   value = (Bit8u  ) dvalue;
 
@@ -185,6 +260,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
 
     case 0x43: /* timer 0-2 mode control */
       BX_PIT_THIS s.timer.write( 3,value );
+      break;
 
     case 0x61:
       BX_PIT_THIS s.speaker_data_on = (value >> 1) & 0x01;
@@ -199,7 +275,28 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
     default:
       BX_PANIC(("pit: unsupported io write to port %04x = %02x",
         (unsigned) address, (unsigned) value));
+  }
+
+  if(time_passed ||
+     (BX_PIT_THIS s.last_next_event_time
+      != BX_PIT_THIS s.timer.get_next_event_time())
+     ) {
+    BX_DEBUG(("pit: RESETting timer."));
+    bx_pc_system.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
+    BX_DEBUG(("deactivated timer."));
+    if(BX_PIT_THIS s.timer.get_next_event_time()) {
+      bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+				  BX_PIT_THIS s.timer.get_next_event_time(),
+				  0);
+      BX_DEBUG(("activated timer."));
     }
+    BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
+  }
+  BX_DEBUG(("s.last_usec=%d",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
+  BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
+  BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
+
 }
 
 
