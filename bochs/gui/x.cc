@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.38 2002-03-19 23:38:08 bdenney Exp $
+// $Id: x.cc,v 1.39 2002-04-03 04:22:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -596,7 +596,9 @@ load_font(void)
   /* Load font and get font information structure. */
   if ((font_info = XLoadQueryFont(bx_x_display,"bochsvga")) == NULL) {
     if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
-      BX_PANIC(("Could not open vga font. See docs-html/install.html"));
+      if ((font_info = XLoadQueryFont(bx_x_display,"-*-vga-*")) == NULL) {
+	BX_PANIC(("Could not open vga font. See docs-html/install.html"));
+      }
     }
   }
 }
