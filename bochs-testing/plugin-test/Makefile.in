@@ -14,4 +14,4 @@ clean:
 
 dist-clean: clean
 	cd libltdl; make distclean
-	rm -rf Makefile */Makefile config.h config.log config.status libtool testscript
+	rm -rf Makefile */Makefile config.h config.log config.status config.cache libtool testscript
