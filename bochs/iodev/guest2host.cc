@@ -37,7 +37,7 @@ bx_g2h_c::bx_g2h_c(void)
     s.callback[i].f = NULL;
     s.callback[i].used = 0;
     }
-  BX_DEBUG(("Init."));
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.7 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_g2h_c::~bx_g2h_c(void)

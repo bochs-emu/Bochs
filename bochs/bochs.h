@@ -331,53 +331,6 @@ public:
 	logfunc_t *get_logfn (int index) { return logfn_list[index]; }
 	void add_logfn (logfunc_t *fn);
 	void set_log_action (int loglevel, int action);
-	char *getclass(int i) {
-		char *logclass[] = {
-		  "IO  ",
-		  "FD  ",
-		  "GEN ",
-		  "CMOS",
-		  "CD  ",
-		  "DMA ",
-		  "ETH ",
-		  "G2H ",
-		  "HD  ",
-		  "KBD ",
-		  "NE2K",
-		  "PAR ",
-		  "PCI ",
-		  "PIC ",
-		  "PIT ",
-		  "SB16",
-		  "SER ",
-		  "VGA ",
-		  "ST  ",
-		  "DEV ",
-		  "MEM ",
-		  "DIS ",
-		  "GUI ",
-		  "IOAP",
-		  "APIC",
-		  "CPU0",
-		  "CPU1",
-		  "CPU2",
-		  "CPU3",
-		  "CPU4",
-		  "CPU5",
-		  "CPU6",
-		  "CPU7",
-		  "CPU8",
-		  "CPU9",
-		  "CPUa",
-		  "CPUb",
-		  "CPUc",
-		  "CPUd",
-		  "CPUe",
-		  "CPUf",
-		  "CTRL"
-		};
-		return logclass[i];
-	}
 	char *getlevel(int i) {
 		static char *loglevel[] = {
 			"DEBUG",

@@ -4,7 +4,9 @@
 
 #include "crc32.h"
 
-CRC_Generator::CRC_Generator() { init(); }
+CRC_Generator::CRC_Generator() {
+	init();
+}
 
 void CRC_Generator::init(void) {
   Bit32u POLYNOMIAL = 0x04c11db7;

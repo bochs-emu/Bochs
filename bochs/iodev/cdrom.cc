@@ -187,17 +187,22 @@ cdrom_interface::cdrom_interface(char *dev)
     path = NULL;
   else {
     path = strdup(dev);
-    BX_INFO(("Init, file = '%s'",dev));
   }
   using_file=0;
+}
+void
+cdrom_interface::init(void) {
+    BX_DEBUG(("Init $Id: cdrom.cc,v 1.18 2001-06-27 20:11:10 fries Exp $"));
+	BX_INFO(("file = '%s'",path));
 }
 
 cdrom_interface::~cdrom_interface(void)
 {
-  if (fd >= 0)
-    close(fd);
-  if (path)
-    free(path);
+	if (fd >= 0)
+		close(fd);
+	if (path)
+		free(path);
+	BX_DEBUG(("Exit"));
 }
 
   bool

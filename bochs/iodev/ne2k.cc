@@ -35,9 +35,10 @@ bx_ne2k_c bx_ne2k;
 
 bx_ne2k_c::bx_ne2k_c(void)
 {
-  put("NE2K");
-  settype(NE2KLOG);
-  // nothing for now
+	put("NE2K");
+	settype(NE2KLOG);
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.17 2001-06-27 20:11:10 fries Exp $"));
+	// nothing for now
 }
 
 

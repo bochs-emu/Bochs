@@ -81,7 +81,7 @@ bx_hard_drive_c::bx_hard_drive_c(void)
 #endif
 
 #endif
-	BX_DEBUG(("Init."));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.24 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_hard_drive_c::~bx_hard_drive_c(void)

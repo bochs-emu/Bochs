@@ -57,6 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.26 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)

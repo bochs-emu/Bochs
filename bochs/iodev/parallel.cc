@@ -37,9 +37,9 @@ bx_parallel_c bx_parallel;
 
 bx_parallel_c::bx_parallel_c(void)
 {
-  put("PAR");
-  settype(PARLOG);
-  // nothing for now
+	put("PAR");
+	settype(PARLOG);
+	BX_DEBUG(("Init $Id: parallel.cc,v 1.6 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_parallel_c::~bx_parallel_c(void)

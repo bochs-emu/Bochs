@@ -69,7 +69,7 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
 	put("FDD");
 	settype(FDLOG);
-	BX_DEBUG(("Init."));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.15 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)

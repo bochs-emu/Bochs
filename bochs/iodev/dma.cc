@@ -43,7 +43,7 @@ bx_dma_c::bx_dma_c(void)
 {
 	put("DMA");
 	settype(DMALOG);
-	BX_DEBUG(("Init."));
+	BX_DEBUG(("Init $Id: dma.cc,v 1.9 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_dma_c::~bx_dma_c(void)
