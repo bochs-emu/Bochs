@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.13 2004-10-09 08:13:35 vruppert Exp $
+$Id: documentation.dbk,v 1.14 2004-11-22 17:23:14 vruppert Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -118,6 +118,16 @@ To make a link to any URL, use the syntax:
 <programlisting>
 &lt;<ulink url="http://www.docbook.org/tdg/en/html/ulink.html">ulink</ulink> url="<replaceable>URL</replaceable>"&gt;<replaceable>text of the hyperlink</replaceable>&lt;/ulink&gt;
 </programlisting>
+
+However, if you like to link to another target inside the same document,
+for example to a section, use something like that:
+<programlisting>
+&lt;section id="<replaceable>unique identifier</replaceable>"&gt;
+  <replaceable>All stuff that is needed here...</replaceable>
+&lt;/section&gt;
+<replaceable>...</replaceable>
+&lt;<ulink url="http://www.docbook.org/tdg/en/html/link.html">link</ulink> linkend="<replaceable>unique identifier to link to</replaceable>"&gt;<replaceable>text of hyperlink</replaceable>&lt;/link&gt;
+</programlisting>
 </para>
 
 <para>
@@ -190,6 +200,62 @@ whatever package your OS uses, use that instead.
 Put a &amp;FIXME; near things that need to be fixed up.  A &amp;FIXME; causes
 the under construction symbol to appear, like this &FIXME;.
 </para>
+
+<para>
+A &amp;NEEDHELP; indicates, that you need someone's help in order to document
+something, you don't know for sure. This is mostly the case if you need inside
+information from a developer. The symbol looks like this: &NEEDHELP;.
+</para>
+
+<para>
+Don't get confused because &amp;FIXME; looks the same as &amp;NEEDHELP; -
+this is just for the moment. When you like to use one of them, think of what
+it should mean, instead of how it looks like: Take &amp;FIXME; if you have
+great ideas of what to document, but have no time or no knowledge about it, or
+just noticed something wrong or outdated. &amp;NEEDHELP; instead should be used
+to request help on something (see above).
+</para>
+
+<para>
+This is just a first try to clearify the difference between
+&amp;NEEDHELP; and &amp;FIXME;.
+</para>
+
+<para>
+To maintain a consistent spelling, some "problem words" are mentioned here,
+along with a hint on how to spell them.
+<table>
+  <title>list of problem words</title>
+  <tgroup cols="2">
+  <tbody>
+    <row>
+      <entry>Bochs</entry>
+      <entry>Bochs is written with a leading capital letter.</entry>
+    </row>
+    <row>
+      <entry><filename>bochsrc</filename></entry>
+      <entry>
+        This is what the Bochs configuration file should be refered as. It is a good
+        compromise between what is common on Unix and what is possible on Windows
+        (file names starting with a dot aren't easy to create). Remember to use
+        &lt;<ulink url="http://www.docbook.org/tdg/en/html/filename.html">filename</ulink>&gt;bochsrc&lt;/filename&gt;.
+       </entry>
+    </row>
+    <row>
+      <entry>CD-ROM</entry>
+      <entry>This abbreviation is written in all capital letters, with a hyphen in between.</entry>
+    </row>
+    <row>
+      <entry>Unix</entry>
+      <entry>
+        Unix is written using a leading capital letter, followed by all lower-case letters.
+        See the <ulink url="http://en.wikipedia.org/wiki/Unix#Branding">Unix entry in Wikipedia</ulink>.
+      </entry>
+    </row>
+  </tbody>
+</table>
+</para>
+
 <para>
 &FIXME; SGML docbook...lower case elements...indentation...remarks...master document/include files
 </para>
