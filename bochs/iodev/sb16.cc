@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.37 2003-11-15 14:56:30 vruppert Exp $
+// $Id: sb16.cc,v 1.38 2003-12-20 17:04:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ bx_sb16_c::~bx_sb16_c(void)
 
 void bx_sb16_c::init(void)
 {
-  unsigned addr;
+  unsigned addr, i;
 
   if ( (strlen(bx_options.sb16.Ologfile->getptr ()) < 1) )
     bx_options.sb16.Ologlevel->set (0);
@@ -220,9 +220,14 @@ void bx_sb16_c::init(void)
 
   BX_SB16_IRQ = -1; // will be initialized later by the mixer reset
 
+  for (i=0; i<BX_SB16_MIX_REG; i++)
+    MIXER.reg[i] = 0xff;
+  MIXER.reg[0x00] = 0;  // reset register
   MIXER.reg[0x80] = 2;  // IRQ 5
   MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
   MIXER.reg[0x82] = 0;  // no IRQ pending
+  MIXER.reg[0xfd] = 16; // ???
+  MIXER.reg[0xfe] = 6;  // ???
   set_irq_dma();        // set the IRQ and DMA
 
   // call the mixer reset
@@ -1283,47 +1288,159 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
 {
   int i;
 
-  if (MIXER.regindex >= BX_SB16_MIX_REG)
-    return;   // index out of range
-
-  // store the value
-  MIXER.reg[MIXER.regindex] = value;
-
   // do some action depending on what register was written
   switch (MIXER.regindex) 
     {
     case 0:  // initialize mixer
 
       writelog(BOTHLOG(4), "Initializing mixer...");
-      for (i=0; i<0x80; i++)
-	MIXER.reg[i] = 0;
+      MIXER.reg[0x04] = 0xcc;
+      MIXER.reg[0x0a] = 0x00;
+      MIXER.reg[0x22] = 0xcc;
+      MIXER.reg[0x26] = 0xcc;
+      MIXER.reg[0x28] = 0x00;
+      MIXER.reg[0x2e] = 0x00;
+      MIXER.reg[0x3c] = 0x1f;
+      MIXER.reg[0x3d] = 0x15;
+      MIXER.reg[0x3e] = 0x0b;
+      for (i=0x30; i<=0x35; i++)
+	MIXER.reg[i] = 0xc0;
+      for (i=0x36; i<=0x3b; i++)
+	MIXER.reg[i] = 0x00;
+      for (i=0x3f; i<=0x43; i++)
+	MIXER.reg[i] = 0x00;
+      for (i=0x44; i<=0x47; i++)
+	MIXER.reg[i] = 0x80;
 
       MIXER.regindex = 0;   // next mixer register read is register 0
+      return;
+      break;
+
+    case 0x04: // DAC level
+      MIXER.reg[0x32] = (value & 0xf0) | 0x08;
+      MIXER.reg[0x33] = ((value & 0x0f) << 4) | 0x08;
+      break;
+
+    case 0x0a: // microphone level
+      MIXER.reg[0x3a] = (value << 5) | 0x18;
+      break;
+
+    case 0x22: // master volume
+      MIXER.reg[0x30] = (value & 0xf0) | 0x08;
+      MIXER.reg[0x31] = ((value & 0x0f) << 4) | 0x08;
+      break;
+
+    case 0x26: // FM level
+      MIXER.reg[0x34] = (value & 0xf0) | 0x08;
+      MIXER.reg[0x35] = ((value & 0x0f) << 4) | 0x08;
+      break;
+
+    case 0x28: // CD audio level
+      MIXER.reg[0x36] = (value & 0xf0) | 0x08;
+      MIXER.reg[0x37] = ((value & 0x0f) << 4) | 0x08;
+      break;
+
+    case 0x2e: // line in level
+      MIXER.reg[0x38] = (value & 0xf0) | 0x08;
+      MIXER.reg[0x39] = ((value & 0x0f) << 4) | 0x08;
+      break;
+
+    case 0x30: // master volume left
+      MIXER.reg[0x22] &= 0x0f;
+      MIXER.reg[0x22] |= (value & 0xf0);
+      break;
+
+    case 0x31: // master volume right
+      MIXER.reg[0x22] &= 0xf0;
+      MIXER.reg[0x22] |= (value >> 4);
+      break;
+
+    case 0x32: // DAC level left
+      MIXER.reg[0x04] &= 0x0f;
+      MIXER.reg[0x04] |= (value & 0xf0);
+      break;
+
+    case 0x33: // DAC level right
+      MIXER.reg[0x04] &= 0xf0;
+      MIXER.reg[0x04] |= (value >> 4);
+      break;
+
+    case 0x34: // FM level left
+      MIXER.reg[0x26] &= 0x0f;
+      MIXER.reg[0x26] |= (value & 0xf0);
+      break;
+
+    case 0x35: // FM level right
+      MIXER.reg[0x26] &= 0xf0;
+      MIXER.reg[0x26] |= (value >> 4);
+      break;
+
+    case 0x36: // CD audio level left
+      MIXER.reg[0x28] &= 0x0f;
+      MIXER.reg[0x28] |= (value & 0xf0);
+      break;
+
+    case 0x37: // CD audio level right
+      MIXER.reg[0x28] &= 0xf0;
+      MIXER.reg[0x28] |= (value >> 4);
+      break;
+
+    case 0x38: // line in level left
+      MIXER.reg[0x2e] &= 0x0f;
+      MIXER.reg[0x2e] |= (value & 0xf0);
+      break;
+
+    case 0x39: // line in level right
+      MIXER.reg[0x2e] &= 0xf0;
+      MIXER.reg[0x2e] |= (value >> 4);
+      break;
+
+    case 0x3a: // microphone level
+      MIXER.reg[0x0a] = (value >> 5);
+      break;
+
+    case 0x3b:
+    case 0x3c:
+    case 0x3d:
+    case 0x3e:
+    case 0x3f:
+    case 0x40:
+    case 0x41:
+    case 0x42:
+    case 0x43:
+    case 0x44:
+    case 0x45:
+    case 0x46:
+    case 0x47:
       break;
 
     case 0x80: // IRQ mask
     case 0x81: // DMA mask
+      MIXER.reg[MIXER.regindex] = value;
       set_irq_dma(); // both 0x80 and 0x81 handled
+      return;
       break;
 
-    // Note: some registers are bit-mapped to others. This should be
-    // reflected here, in case somebody uses this to find out the
-    // version of the DSP
-    // These registers are 0x04, 0x0a, 0x22, 0x26, 0x28, 0x2e
-
+    default: // ignore read-only registers
+      return;
     }
+  // store the value
+  MIXER.reg[MIXER.regindex] = value;
+
+  writelog(BOTHLOG(4), "mixer register %02x set to %02x",
+	   MIXER.regindex, MIXER.reg[MIXER.regindex]);
 }
 
 Bit32u bx_sb16_c::mixer_readdata()
 {
+  writelog(BOTHLOG(4), "read from mixer register %02x returns %02x",
+	   MIXER.regindex, MIXER.reg[MIXER.regindex]);
   return(MIXER.reg[MIXER.regindex]);
 }
 
 void bx_sb16_c::mixer_writeregister(Bit32u value)
 {
   MIXER.regindex = value;
-  writelog(BOTHLOG(4), "Mixer register %02x set to %02x",
-	   MIXER.regindex, MIXER.reg[MIXER.regindex]);
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.15 2003-11-15 14:56:30 vruppert Exp $
+// $Id: sb16.h,v 1.16 2003-12-20 17:04:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,7 +91,7 @@
              // it should not be too large to avoid lag, and not too
              // small to avoid unnecessary overhead.
 
-#define BX_SB16_MIX_REG  0x90         // total number of mixer registers
+#define BX_SB16_MIX_REG  0x100        // total number of mixer registers
 
 // The array containing an instrument/bank remapping
 struct bx_sb16_ins_map {
