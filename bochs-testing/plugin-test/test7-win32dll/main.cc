@@ -34,10 +34,10 @@ void print_last_error (char *fmtstring)
 	LocalFree (lpMsgBuf);
 }
 
-int load_module (const char *fmt, const char *name)
+int load_module (const char *fmt, const char *modname)
 {
   char buf[512];
-  sprintf (buf, fmt, name);
+  sprintf (buf, fmt, modname);
   printf ("loading module from VARIES{%s}\n", buf);
   HMODULE handle = LoadLibrary(buf);
   printf ("handle is VARIES{0x%p}\n", handle);

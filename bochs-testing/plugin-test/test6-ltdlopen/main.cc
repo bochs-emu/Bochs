@@ -18,10 +18,10 @@ int register_module (const char *name)
   return 0;
 }
 
-int load_module (const char *fmt, const char *name)
+int load_module (const char *fmt, const char *modname)
 {
   char buf[512];
-  sprintf (buf, fmt, name);
+  sprintf (buf, fmt, modname);
   printf ("loading module from VARIES{%s}\n", buf);
   lt_dlhandle handle = lt_dlopenext (buf);
   printf ("handle is VARIES{%p}\n", handle);
@@ -29,7 +29,9 @@ int load_module (const char *fmt, const char *name)
     printf ("lt_dlopen error: %s\n", lt_dlerror ());
     return -1;
   }
-  modload_func func = (modload_func) lt_dlsym (handle, "module_init");
+  char sym[1024];
+  sprintf (sym, "%s_LTX_%s", modname, "module_init");
+  modload_func func = (modload_func) lt_dlsym (handle, sym);
   printf ("module_init function is at VARIES{%p}\n", func);
   if (func != NULL) {
     printf ("Calling module_init\n");
