@@ -2,8 +2,9 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.10 2002-10-17 16:18:01 bdenney Exp $]])
-AC_CONFIG_HEADER(config.h ltdlconf.h)
+AC_REVISION([[$Id: configure.in,v 1.147.2.11 2002-10-18 15:58:01 bdenney Exp $]])
+AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
@@ -308,7 +309,7 @@ AC_ARG_ENABLE(plugins,
     GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE)'
     GUI_PLUGINS_OBJ='$(GUI_OBJS_PLUGINABLE)'
     LIBS="$LIBS $LIBADD_DL"
-    PLUGIN_VAR='plugin.o ltdl.o'
+    PLUGIN_VAR='ltdl.o'
    else
     AC_MSG_RESULT(no)
     bx_plugins=0
