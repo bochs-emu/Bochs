@@ -1,0 +1,367 @@
+From darkelf@newmail.ru Fri Oct  4 09:22:27 2002
+Date: Fri, 4 Oct 2002 10:58:56 +0300
+From: DarkElf <darkelf@newmail.ru>
+To: Bryce Denney <bdenney@users.sourceforge.net>
+Subject: bochs help command patch
+
+Hello Bryce,
+
+  I'm wrote some patch that implement "help" debugger command in bochs.
+  I'm hope it will be useful as short online help for debugging.
+  I know english not well, can you check correctness of messages,
+  please?
+  
+  This patch was sent to Greg Alexender, but seems, that he isn't
+  reading his mail.
+
+  Is published diff files between versions of bochs?
+  1.4.1 vs 1.4, and etc. It's will be useful for downloading only
+  changes between version, not entire project.
+
+----------------------------------------------------------------------
+Patch name:patch.help-command
+Author: Alexander Krisak darkelf@newmail.ru
+Date: September 30, 2002
+RCS Id: $Id: patch.debug-help,v 1.1 2002-10-04 14:38:16 bdenney Exp $
+
+Detailed description:
+  Implements help debugger command, which show short online help.
+Insert short modebp and show command descriptions in docs-html/debugger.html.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -u bochs-1.4.1/debug/dbg_main.cc bochs-1.4.1de/debug/dbg_main.cc
+--- debug/dbg_main.cc   2002-06-24 01:19:44.000000000 +0300
++++ debug/dbg_main.cc   2002-09-30 22:14:32.000000000 +0300
+@@ -4612,5 +4612,226 @@
+               start_lina, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lina));
+ }
+ 
+-      
++void
++bx_dbg_help_command(char* command)
++{ char* p;
++
++  if (command == NULL)
++  {
++    fprintf(stderr, "help - show list of debugger commands\n");
++    fprintf(stderr, "help \"command\" - show short command description\n");
++    fprintf(stderr, "debugger commands are:\n");
++    fprintf(stderr, "help, quit, q, c, stepi, si, step, s, vbreak, v, lbreak, lb, pbreak, pb, break\n");
++    fprintf(stderr, "b, delete, del, d, xp, x, setpmem, crc, info, set, dump_cpu, set_cpu, disas\n");
++    fprintf(stderr, "disassemble, instrument, trace-on, trace-off, ptime, sb, sba, record, playback\n");
++    fprintf(stderr, "print-stack, watch, unwatch, load-symbols, show, modebp\n");
++  }
++  else
++  {
++    p = command;
++    for (; *p != 0 && *p != '\"'; p++); p++;
++    for (; *p != 0 && *p != '\"'; p++); *p = 0;
++    p = command;
++    for (; *p != 0 && *p != '\"'; p++); p++;
++
++    fprintf(stderr, "help %s\n", p);
++
++    if (strcmp(p, "help") == 0)
++    { 
++      bx_dbg_help_command(NULL);
++    }
++    else
++    if ((strcmp(p, "quit") == 0) ||
++        (strcmp(p, "q") == 0))
++    {
++      fprintf(stderr, "%s - quit debugger and execution\n", p);
++    }
++    else
++    if (strcmp(p, "c") == 0)
++    {
++      fprintf(stderr, "%s - continue executing\n", p);
++    }
++    else
++    if ((strcmp(p, "stepi") == 0) ||
++        (strcmp(p, "step") == 0) ||
++        (strcmp(p, "si") == 0) ||
++       (strcmp(p, "s") == 0))
++    {
++      fprintf(stderr, "%s [count] - execute count instructions, default is 1\n", p);
++    }
++    else
++    if ((strcmp(p, "vbreak") == 0) ||
++        (strcmp(p, "vb") == 0))
++    {
++      fprintf(stderr, "%s seg:off - set a virtual address instruction breakpoint\n", p);
++    }
++    else
++    if ((strcmp(p, "lbreak") == 0) ||
++        (strcmp(p, "lb") == 0))
++    {
++      fprintf(stderr, "%s addr - set a linear address instruction breakpoint\n", p);
++    }
++    else
++    if ((strcmp(p, "pbreak") == 0) ||
++        (strcmp(p, "break") == 0) ||
++       (strcmp(p, "pb") == 0) ||
++       (strcmp(p, "b") == 0))
++    {
++       fprintf(stderr, "%s [*] addr - set a physical address instruction preakpoint\n", p);
++    }
++    else
++    if ((strcmp(p, "delete") == 0) ||
++        (strcmp(p, "del") == 0) ||
++       (strcmp(p, "d") == 0))
++    {
++      fprintf(stderr, "%s n - delete a breakpoint\n", p);
++    }
++    else
++    if (strcmp(p, "xp") == 0)
++    {
++      fprintf(stderr, "%s /nuf addr - examine memory at physical address\n", p);
++    }
++    else
++    if (strcmp(p, "x") == 0)
++    {
++      fprintf(stderr, "%s /nuf addr - examine memory at linear address\n", p);
++    }
++    else
++    if (strcmp(p, "setpmem") == 0)
++    {
++      fprintf(stderr, "%s addr datasize val - set physical memory location of size datasize to value val\n", p);
++    }
++    else
++    if (strcmp(p, "crc") == 0)
++    {
++      fprintf(stderr, "%s addr1 addr2 - show CRC for physical memory range addr1..addr2\n", p);
++    }
++    else
++    if (strcmp(p, "info") == 0)
++    {
++      fprintf(stderr, "%s break - show information about current breakpoint status\n", p);
++      fprintf(stderr, "%s dirty - show physical pages dirtied (written to) since last display\n", p);
++      fprintf(stderr, "%s program - execution status of the program\n", p);
++      fprintf(stderr, "%s registers - list of CPU integer registers and their contents\n", p);
++    }
++    else
++    if (strcmp(p, "set") == 0)
++    {
++      fprintf(stderr, "%s $reg = val - change CPU register to value val\n", p);
++      fprintf(stderr, "%s $disassemble_size = n - tell debugger what segment size [16|32] to use\n", p);
++      fprintf(stderr, "when \"disassemble\" command is used. Default is 32\n");
++      fprintf(stderr, "%s $auto_disassemble = n - cause debugger to disassemble current instruction\n", p);
++      fprintf(stderr, "every time execution stops if n = 1. Default is 0\n");
++    }
++    else
++    if (strcmp(p, "dump_cpu") == 0)
++    {
++      fprintf(stderr, "%s - dump complete cpu state\n", p);
++    }
++    else
++    if (strcmp(p, "set_cpu") == 0)
++    {
++      fprintf(stderr, "%s - set complete cpu state\n", p);
++    }
++    else
++    if ((strcmp(p, "disassemble") == 0) ||
++        (strcmp(p, "disas") == 0))
++    {
++      fprintf(stderr, "%s start end - disassemble instructions for given linear adress\n", p);
++    }
++    else
++    if (strcmp(p, "instrument") == 0)
++    {
++      fprintf(stderr, "%s start - calls bx_instr_start()\n", p);
++      fprintf(stderr, "%s stop  - calls bx_instr_stop()\n", p);
++      fprintf(stderr, "%s reset - calls bx_instr_reset()\n", p);
++      fprintf(stderr, "%s print - calls bx_instr_print()\n", p);
++    }
++    else
++    if (strcmp(p, "trace-on") == 0)
++    {
++      fprintf(stderr, "%s - disassemble every executed instruction\n", p);
++    }
++    else
++    if (strcmp(p, "trace-off") == 0)
++    {
++      fprintf(stderr, "%s - disable tracing\n", p);
++    }
++    else
++    if (strcmp(p, "ptime") == 0)
++    {
++      fprintf(stderr, "%s - print current time (number of ticks since start of simulation)\n", p);
++    }
++    else
++    if (strcmp(p, "sb") == 0)
++    {
++      fprintf(stderr, "%s delta - insert a time breakpoint delta instruction into the future\n", p);
++    }
++    else
++    if (strcmp(p, "sba") == 0)
++    {
++      fprintf(stderr, "%s time - insert a time breakpoint at time\n", p);
++    }
++    else
++    if (strcmp(p, "record") == 0)
++    {
++      fprintf(stderr, "%s filename - record console input to file filename\n", p);
++    }
++    else
++    if (strcmp(p, "playback") == 0)
++    {
++      fprintf(stderr, "%s filename - playbackconsole input from file filename\n", p);
++    }
++    else
++    if (strcmp(p, "print-stack") == 0)
++    {
++      fprintf(stderr, "%s [num_words] - print the num_words top 16 bit words on the stack\n", p);
++    }
++    else
++    if (strcmp(p, "watch") == 0)
++    {
++      fprintf(stderr, "%s - print current watch point status\n", p);
++      fprintf(stderr, "%s stop - stop simulation whena watchpoint is encountred\n", p);
++      fprintf(stderr, "%s continue - do not stop the simulation when watch point is encountred\n", p);
++      fprintf(stderr, "%s read addr - insert a read watch point at physical address addr\n", p);
++      fprintf(stderr, "%s write addr - insert a write watch point at physical address addr\n", p);
++    }
++    else
++    if (strcmp(p, "unwatch") == 0)
++    {
++      fprintf(stderr, "%s - remove all watch points\n", p);
++      fprintf(stderr, "%s read addr - remove a read watch point at physical address addr\n", p);
++      fprintf(stderr, "%s write addr - remove a write watch point at physical address addr\n", p);
++    }
++    else
++    if (strcmp(p, "load-symbols") == 0)
++    {
++      fprintf(stderr, "%s [global] filename [offset] - load symbols from file filename\n", p);
++    }
++    else
++    if (strcmp(p, "modebp") == 0)
++    {
++      fprintf(stderr, "%s - toggles vm86 mode switch breakpoint\n", p);
++    }
++    else
++    if (strcmp(p, "show") == 0)
++    {
++      fprintf(stderr, "%s [string] - toggles show symbolic info (calls to begin with)\n", p);
++      fprintf(stderr, "%s - shows current show mode\n", p);
++      fprintf(stderr, "%s \"mode\" - show, when processor switch mode\n", p);
++      fprintf(stderr, "%s \"int\" - show, when interrupt is happens\n", p);
++      fprintf(stderr, "%s \"call\" - show, when call is happens\n", p);
++      fprintf(stderr, "%s \"ret\" - show, when iret is happens\n", p);
++      fprintf(stderr, "%s \"off\" - toggles off symbolic info\n", p);
++      fprintf(stderr, "%s \"dbg-all\" - turn on all show flags\n", p);
++      fprintf(stderr, "%s \"none\" - turn off all show flags\n", p);
++      fprintf(stderr, "%s \"tab\" - show page tables\n", p);
++    }
++    else
++    {
++      fprintf(stderr, "%s - unknow command, try help\n", p);
++    }
++  }
++  return;
++}
+ 
+diff -u bochs-1.4.1/debug/debug.h bochs-1.4.1de/debug/debug.h
+--- debug/debug.h       2002-03-12 11:16:41.000000000 +0200
++++ debug/debug.h       2002-09-29 01:49:51.000000000 +0300
+@@ -140,6 +140,7 @@
+ extern Boolean watchpoint_continue;
+ void bx_dbg_linux_syscall ();
+ void bx_dbg_info_ne2k(int page, int reg);
++void bx_dbg_help_command(char* command);
+ 
+ #ifdef __cplusplus
+ }
+diff -u bochs-1.4.1/debug/lexer.l bochs-1.4.1de/debug/lexer.l
+--- debug/lexer.l       2001-11-28 20:39:19.000000000 +0200
++++ debug/lexer.l       2002-09-29 23:02:37.000000000 +0300
+@@ -120,6 +120,7 @@
+ gs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GS); }
+ force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
+ v2l             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_V2L); }
++help            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
+ \"[^\"\n]*\"    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STRING); }
+ \/[0-9]*[xduotcsibhwg][xduotcsibhwg] { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+ \/[0-9]*[xduotcsibhwg]              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+diff -u bochs-1.4.1/debug/parser.y bochs-1.4.1de/debug/parser.y
+--- debug/parser.y      2001-11-28 20:35:21.000000000 +0200
++++ debug/parser.y      2002-09-29 23:00:56.000000000 +0300
+@@ -109,6 +109,7 @@
+ %token <sval> BX_TOKEN_V2L
+ %token <sval> BX_TOKEN_TRACEREGON
+ %token <sval> BX_TOKEN_TRACEREGOFF
++%token <sval> BX_TOKEN_HELP
+ %type <uval> segment_register
+ %type <uval> optional_numeric
+ %type <uval_range> numeric_range optional_numeric_range
+@@ -153,6 +154,7 @@
+     | v2l_command
+     | trace_reg_on_command
+     | trace_reg_off_command
++    | help_command
+     | 
+     | '\n'
+       {
+@@ -784,4 +786,17 @@
+        }
+     ;
+ 
++help_command:
++       BX_TOKEN_HELP BX_TOKEN_STRING '\n'
++         {
++         bx_dbg_help_command($2);
++         free($1);free($2);
++         }
++       | BX_TOKEN_HELP '\n'
++         {
++         bx_dbg_help_command(0);
++         free($1);
++         }
++    ;
++
+ %%
+diff -u bochs-1.4.1/docs-html/debugger.html bochs-1.4.1de/docs-html/debugger.html
+--- docs-html/debugger.html     2001-09-11 01:12:59.000000000 +0300
++++ docs-html/debugger.html     2002-09-30 22:01:20.000000000 +0300
+@@ -329,7 +329,7 @@
+ 
+ <h3>modebp [<i>string</i>]</h3>
+ 
+-Insert documentation here.
++Toggles vm86 mode switch breakpoint.
+ 
+ <h3>load-symbols [global] <i>filename</i> [<i>offset</i>]</h3>
+ 
+@@ -344,7 +344,17 @@
+ 
+ <h3>show [<i>string</i>]</h3>
+ 
+-Insert documentation here.
++<PRE>
++  Toggles show symbolic info (calls to begin with).
++  show - shows current show mode
++  show "mode" - show, when processor switch mode
++  show "int" - show, when interrupt is happens
++  show "call" - show, when call is happens
++  show "ret" - show, when iret is happens
++  show "off" - toggles off symbolic info
++  show "dbg-all" - turn on all show flags
++  show "none" - turn off all show flags
++</PRE>
+ 
+ <p>&nbsp;
+ <p>&nbsp;
+----------------------------------------------------------------------
+
+-- 
+Best regards,
+ DarkElf                          mailto:darkelf@newmail.ru
+
+
+
