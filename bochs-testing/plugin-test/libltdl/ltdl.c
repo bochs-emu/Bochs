@@ -2915,6 +2915,12 @@ lt_dlopen (filename)
   if (try_dlopen (&handle, filename) != 0)
     return 0;
 
+  // If we're going to return a handle, be sure that has its loader
+  // field filled in.  This is in response to some bugs in which dlopen()
+  // would return valid-looking handle with NULL loader, causing crashes
+  // later.
+  if (handle) assert (handle->loader != NULL);
+
   return handle;
 }
 
@@ -2985,6 +2991,13 @@ lt_dlopenext (filename)
   if (handle || ((errors > 0) && file_not_found ()))
     {
       LT_DLFREE (tmp);
+
+      // If we're going to return a handle, be sure that has its loader
+      // field filled in.  This is in response to some bugs in which dlopen()
+      // would return valid-looking handle with NULL loader, causing crashes
+      // later.
+      if (handle) assert (handle->loader != NULL);
+
       return handle;
     }
 
@@ -3012,6 +3025,11 @@ lt_dlopenext (filename)
   if (handle || ((errors > 0) && file_not_found ()))
     {
       LT_DLFREE (tmp);
+      // If we're going to return a handle, be sure that has its loader
+      // field filled in.  This is in response to some bugs in which dlopen()
+      // would return valid-looking handle with NULL loader, causing crashes
+      // later.
+      if (handle) assert (handle->loader != NULL);
       return handle;
     }
 #endif
@@ -3349,11 +3367,10 @@ lt_dlsym (handle, symbol)
       return 0;
     }
 
-  if (!handle->loader)
-    {
-      LT_DLMUTEX_SETERROR (LT_DLSTRERROR (INVALID_LOADER));
-      return 0;
-    }
+  // Due to bugs in lt_dlopen*, some handles were being returned that have a
+  // NULL loader field.  If we continue into the LT_STRLEN, you will get
+  // an unexplained segfault.
+  assert (handle->loader);
 
   lensym = LT_STRLEN (symbol) + LT_STRLEN (handle->loader->sym_prefix)
 					+ LT_STRLEN (handle->info.name);
