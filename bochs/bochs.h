@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.61.4.1 2002-09-10 16:58:32 bdenney Exp $
+// $Id: bochs.h,v 1.61.4.2 2002-09-10 18:12:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -255,7 +255,7 @@ public:
 	void panic(const char *fmt, ...);
 	void ldebug(const char *fmt, ...);
 	void fatal (const char *prefix, const char *fmt, va_list ap);
-	void ask (int level, const char *prefix, const char *fmt, va_list ap);
+	virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
 	void put(char *);
 	void settype(int);
 	void setio(class iofunctions *);
