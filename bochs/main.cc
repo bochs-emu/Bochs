@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.249 2003-09-05 22:07:53 vruppert Exp $
+// $Id: main.cc,v 1.250 2003-09-06 11:17:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1314,31 +1314,37 @@ void bx_init_options ()
   bx_options.sb16.Omidimode = new bx_param_num_c (BXP_SB16_MIDIMODE,
       "Midi mode",
       "Controls the MIDI output format.",
-      0, BX_MAX_BIT32U,
+      0, 3,
       0);
   bx_options.sb16.Owavemode = new bx_param_num_c (BXP_SB16_WAVEMODE,
       "Wave mode",
       "Controls the wave output format.",
-      0, BX_MAX_BIT32U,
+      0, 3,
       0);
   bx_options.sb16.Ologlevel = new bx_param_num_c (BXP_SB16_LOGLEVEL,
       "Log mode",
       "Controls how verbose the SB16 emulation is (0 = no log, 5 = all errors and infos).",
-      0, BX_MAX_BIT32U,
+      0, 5,
       0);
   bx_options.sb16.Odmatimer = new bx_param_num_c (BXP_SB16_DMATIMER,
       "DMA timer",
       "Microseconds per second for a DMA cycle.",
       0, BX_MAX_BIT32U,
       0);
+
+#if BX_WITH_WX
+  bx_options.sb16.Omidimode->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+  bx_options.sb16.Owavemode->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+  bx_options.sb16.Ologlevel->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+#endif
   bx_param_c *sb16_init_list[] = {
     bx_options.sb16.Opresent,
-    bx_options.sb16.Omidifile,
-    bx_options.sb16.Owavefile,
-    bx_options.sb16.Ologfile,
     bx_options.sb16.Omidimode,
+    bx_options.sb16.Omidifile,
     bx_options.sb16.Owavemode,
+    bx_options.sb16.Owavefile,
     bx_options.sb16.Ologlevel,
+    bx_options.sb16.Ologfile,
     bx_options.sb16.Odmatimer,
     NULL
   };
@@ -1528,6 +1534,7 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
 
+#if BX_WITH_WX
   bx_param_c *other_init_list2[] = {
 //    bx_options.Osel_config,
 //    bx_options.Osel_displaylib,
@@ -1547,7 +1554,6 @@ void bx_init_options ()
       bx_options.cmos.Opath,
       NULL
   };
-#if BX_WITH_WX
   menu = new bx_list_c (BXP_MENU_MISC_2, "Other options", "", other_init_list2);
 #endif
 }
