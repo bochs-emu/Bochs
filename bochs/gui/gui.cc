@@ -51,7 +51,6 @@ bx_gui_c::bx_gui_c(void)
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 {
   specific_init(&bx_gui, argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
-  init_siminterface ();
 
   // Define some bitmaps to use in the headerbar
   BX_GUI_THIS floppyA_bmap_id = create_bitmap(bx_floppya_bmap,
@@ -95,8 +94,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_LEFT, floppyB_handler);
 
   // Mouse button
-  BX_GUI_THIS mouse_status = gui_get_mouse_enable();
-  if (BX_GUI_THIS mouse_status)
+  if (bx_options.mouse_enabled)
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS mouse_bmap_id,
                           BX_GRAVITY_LEFT, mouse_handler);
   else
@@ -176,20 +174,14 @@ bx_gui_c::power_handler(void)
   void
 bx_gui_c::snapshot_handler(void)
 {
-  bx_control_panel_main ();
+  bx_control_panel (BX_CPANEL_RUNTIME);
 }
 
   void
 bx_gui_c::mouse_handler(void)
 {
-  BX_GUI_THIS mouse_status = ! BX_GUI_THIS mouse_status;
-
-  if (BX_GUI_THIS mouse_status)
-    replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
-  else
-    replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS nomouse_bmap_id);
-
-  gui_set_mouse_enable(BX_GUI_THIS mouse_status);
+  int old = gui_get_mouse_enable ();
+  gui_set_mouse_enable (!old);
 }
 
   Boolean
@@ -202,6 +194,11 @@ bx_gui_c::gui_get_mouse_enable(void)
 bx_gui_c::gui_set_mouse_enable(Boolean val)
 {
   bx_options.mouse_enabled = val;
+  BX_DEBUG (("maybe this should happen only if window has been created"));
+  if (bx_options.mouse_enabled)
+    replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
+  else
+    replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS nomouse_bmap_id);
 }
 
 void 

@@ -82,7 +82,9 @@ extern "C" {
 #include "debug/debug.h"
 #include "bxversion.h"
 
+#if BX_USE_CONTROL_PANEL
 #include "gui/siminterface.h"
+#endif
 
 //
 // some macros to interface the CPU and memory to external environment
@@ -502,7 +504,7 @@ typedef struct {
   void* record_io;
   } bx_debug_t;
 
-#define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%s\n", #x, __FILE__, __LINE__));} while (0)
+#define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 void bx_signal_handler (int signum);
 void bx_atexit(void);
 extern bx_debug_t bx_dbg;
@@ -555,8 +557,16 @@ extern bx_devices_c   bx_devices;
 #define BX_RESET_SOFTWARE 10
 #define BX_RESET_HARDWARE 11
 
+
+char *bx_find_bochsrc (void);
+int bx_read_configuration (char *rcfile, int argc, char *argv[]);
+
+#if BX_USE_CONTROL_PANEL==0
+// with control panel enabled, this is defined in gui/siminterface.h instead.
+
 #define BX_PATHNAME_LEN 512
 
+// for control panel, I moved these into gui/siminterface.h. BBD
 typedef struct {
   char path[BX_PATHNAME_LEN];
   unsigned type;
@@ -577,6 +587,7 @@ struct bx_cdrom_options
   char dev[BX_PATHNAME_LEN];
   Boolean inserted;
 };
+#endif    /* if BX_USE_CONTROL_PANEL==0 */
 
 typedef struct {
   char *path;
@@ -652,6 +663,7 @@ typedef struct {
          // one array item for each log level, indexed by LOGLEV_*.
 	 // values: 0=ignore event, 1=report event in log, 2=fatal
   unsigned char log_actions[MAX_LOGLEV];  
+  char logfilename[BX_PATHNAME_LEN];
   } bx_options_t;
 
 extern bx_options_t bx_options;
@@ -665,7 +677,7 @@ extern bx_options_t bx_options;
 
 #define BX_USE_PS2_MOUSE 1
 
-int bx_bochs_init(int argc, char *argv[]);
+int bx_init_hardware ();
 
 #include "instrument.h"
 

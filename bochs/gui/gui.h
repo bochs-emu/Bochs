@@ -77,7 +77,6 @@ private:
   unsigned power_bmap_id,    power_hbar_id;
   unsigned reset_bmap_id,    reset_hbar_id;
   unsigned snapshot_bmap_id, snapshot_hbar_id;
-  Boolean  mouse_status;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   };
 

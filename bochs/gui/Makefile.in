@@ -61,7 +61,7 @@ BX_GUI_OBJS = $(GUI_OBJS)
 
 BX_INCLUDES = iodev.h control.h siminterface.h
 
-.@CPP_SUFFIX@.o:
+.@CPP_SUFFIX@.o: $(BX_INCLUDES)
 	$(CXX) @DASH@c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
 
