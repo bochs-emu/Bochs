@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.212 2003-05-25 09:48:11 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.213 2003-05-30 08:57:25 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1451,6 +1451,28 @@ elif test "$support_sse" = 1; then
 else
   AC_DEFINE(BX_SUPPORT_SSE,  0)
 fi
+
+AC_MSG_CHECKING(for DAZ support)
+AC_ARG_ENABLE(daz,
+  [  --enable-daz                      denormals-are-zeroes support],
+  [if test "$enableval" = yes; then     
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_DAZ, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_DAZ, 0)
+   fi
+   ],
+  [
+    if test "$support_sse" = 2; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_DAZ, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_DAZ, 0)
+    fi
+    ]
+  )
 
 AC_MSG_CHECKING(for SEP support)
 AC_ARG_ENABLE(sep,
