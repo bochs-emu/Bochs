@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.52 2005-02-28 18:56:02 sshwarts Exp $
+// $Id: access.cc,v 1.53 2005-03-03 20:24:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -275,6 +275,14 @@ BX_CPU_C::strseg(bx_segment_reg_t *seg)
     BX_ERROR(("undefined segment passed to strseg()!"));
     return("??");
   }
+}
+
+int BX_CPU_C::int_number(bx_segment_reg_t *seg)
+{
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS])
+    return(BX_SS_EXCEPTION);
+  else
+    return(BX_GP_EXCEPTION);
 }
 
   void BX_CPP_AttrRegparmN(3)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.57 2005-02-28 18:56:04 sshwarts Exp $
+// $Id: paging.cc,v 1.58 2005-03-03 20:24:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -429,7 +429,7 @@ BX_CPU_C::CR3_change(bx_address value)
   if (bx_dbg.paging) {
     BX_INFO(("CR3_change(): flush TLB cache"));
     BX_INFO(("Page Directory Base %08x", (unsigned) value));
-    }
+  }
 
   // flush TLB even if value does not change
   TLB_flush(0); // 0 = Don't flush Global entries.
@@ -478,7 +478,7 @@ BX_CPU_C::TLB_init(void)
         priv_check[i] = 0;
       else
         priv_check[i] = 1;
-      }
+    }
     else { // when write protect off
       if (us_current == 0) // Supervisor mode access, anything goes
         priv_check[i] = 1;
@@ -490,9 +490,9 @@ BX_CPU_C::TLB_init(void)
           priv_check[i] = 0;
         else
           priv_check[i] = 1;
-        }
       }
     }
+  }
 
 #if BX_USE_QUICK_TLB_INVALIDATE
   BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
@@ -520,12 +520,12 @@ BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
       if ( invalidateGlobal ||
            !(BX_CPU_THIS_PTR TLB.entry[i].accessBits & 0x100) )
 #endif
-        {
+      {
         BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
         InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
-        }
       }
     }
+  }
 #endif  // #if BX_USE_TLB
 }
 
@@ -556,8 +556,8 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
       if ((i->rm() == 0) && (i->nnn() == 7)) {
         BX_CPU_THIS_PTR SWAPGS(i);
         return;
-        }
       }
+    }
 
 #endif
 
@@ -574,8 +574,8 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
     if (CPL!=0) {
       BX_INFO(("INVLPG: CPL!=0"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
 
 #if BX_USE_TLB
   laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
@@ -599,7 +599,7 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
 {
   bx_address lpf;
-  Bit32u   accessBits, combined_access, error_code = 0;
+  Bit32u   accessBits, combined_access = 0, error_code = 0;
   unsigned priv_index;
 #if BX_USE_TLB
   Bit32u TLB_index;
@@ -765,16 +765,18 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       if ( !(pte & 0x01) ) {
         goto page_fault_not_present; 
       }
+
 #if BX_SUPPORT_X86_64
-    if (pte & PAGE_DIRECTORY_NX_BIT) {
-      if (! BX_CPU_THIS_PTR msr.nxe)
-        goto page_fault_reserved;
-      else if (access_type == CODE_ACCESS)
-        goto page_fault_access;
-    }
+      if (pte & PAGE_DIRECTORY_NX_BIT) {
+        if (! BX_CPU_THIS_PTR msr.nxe)
+          goto page_fault_reserved;
+        else if (access_type == CODE_ACCESS)
+          goto page_fault_access;
+      }
 #endif
 
-      combined_access  = (pde & pte) & 0x06; // U/S and R/W
+      combined_access = (pde & pte) & 0x06; // U/S and R/W
+
       // Make up the physical page frame address.
       ppf = pte & 0xfffff000;
 
@@ -823,6 +825,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     {
       paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
       accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
+
       if (accessBits & (1 << ((isWrite<<1) | pl)))
         return(paddress);
 
@@ -856,7 +859,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       // the future).
 
       // Combined access is just access from the pde (no pte involved).
-      combined_access  = pde & 0x006; // {US,RW}
+      combined_access = pde & 0x006; // {US,RW}
       // make up the physical frame number
       ppf = (pde & 0xFFC00000) | (laddr & 0x003FF000);
 
@@ -956,20 +959,26 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
 #endif
 
-// b0: Read  Sys   OK
-// b1: Read  User  OK
-// b2: Write Sys   OK
 // b3: Write User  OK
+// b2: Write Sys   OK
+// b1: Read  User  OK
+// b0: Read  Sys   OK
   if ( combined_access & 4 ) { // User
     accessBits = 0x3;    // User priv; read from {user,sys} OK.
-    if ( isWrite ) {     // Current operation is a write (Dirty bit updated)
-      accessBits |= 0xc; // write from {user,sys} OK.
+    if ( isWrite )       // Current operation is a write (Dirty bit updated)
+    {
+      if (combined_access & 2) {
+        accessBits |= 0x8; // R/W access from {user,sys} OK.
+      }
+      else {
+        accessBits |= 0x4; // read only page, only {sys} write allowed
+      }
     }
   }
   else { // System
     accessBits = 0x1;    // System priv; read from {sys} OK.
     if ( isWrite ) {     // Current operation is a write (Dirty bit updated)
-      accessBits |= 4;   // write from {sys} OK.
+      accessBits |= 0x4; // write from {sys} OK.
     }
   }
 #if BX_SupportGlobalPages
