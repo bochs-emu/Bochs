@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.82 2003-07-15 13:05:20 vruppert Exp $
+// $Id: vga.cc,v 1.83 2003-07-16 17:56:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -279,6 +279,7 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.vbe_bpp_multiplier=1;
   BX_VGA_THIS s.vbe_virtual_start=0;
   BX_VGA_THIS s.vbe_line_byte_width=640;
+  BX_VGA_THIS s.vbe_lfb_enabled=0;
 
   
   BX_INFO(("VBE Bochs Display Extension Enabled"));
@@ -2842,8 +2843,15 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // check for max bank nr
           if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB /64))
           {
-            BX_DEBUG(("VBE set bank to %d", value));
-            BX_VGA_THIS s.vbe_bank=value;
+            if (!BX_VGA_THIS s.vbe_lfb_enabled)
+            {
+              BX_DEBUG(("VBE set bank to %d", value));
+              BX_VGA_THIS s.vbe_bank=value;
+            }
+            else
+            {
+              BX_ERROR(("VBE set bank in LFB mode ignored"));
+            }
           }
           else
           {
@@ -2916,6 +2924,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
             if (depth > 4)
             {
+              BX_VGA_THIS s.vbe_lfb_enabled=(bx_bool)(value & VBE_DISPI_LFB_ENABLED);
               if ((value & VBE_DISPI_NOCLEARMEM) == 0)
               {
                 memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
@@ -2941,6 +2950,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           else
           {
             BX_INFO(("VBE disabling"));
+            BX_VGA_THIS s.vbe_lfb_enabled=0;
           }     
           BX_VGA_THIS s.vbe_enabled=(bx_bool)(value & VBE_DISPI_ENABLED);
         } break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.33 2003-07-09 20:15:38 vruppert Exp $
+// $Id: vga.h,v 1.34 2003-07-16 17:56:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,6 +61,7 @@
   #define VBE_DISPI_DISABLED              0x00
   #define VBE_DISPI_ENABLED               0x01
   #define VBE_DISPI_NOCLEARMEM            0x80
+  #define VBE_DISPI_LFB_ENABLED           0x40
 
   #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
 
@@ -256,9 +257,10 @@ private:
     Bit16u  vbe_offset_y;		 /**< Virtual screen y start (in pixels) */
     Bit16u  vbe_virtual_xres;
     Bit16u  vbe_virtual_yres;
-    Bit16u	vbe_line_byte_width; /**< For dealing with bpp>8, this is they width of a line in bytes. */
-    Bit32u	vbe_virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
-    Bit8u	vbe_bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
+    Bit16u  vbe_line_byte_width; /**< For dealing with bpp>8, this is they width of a line in bytes. */
+    Bit32u  vbe_virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
+    Bit8u   vbe_bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
+    bx_bool vbe_lfb_enabled;
 #endif    
     } s;  // state information
 
