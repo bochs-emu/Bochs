@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.38 2002-12-04 19:51:51 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.39 2002-12-05 17:43:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,6 +73,13 @@
 #define TICKS_PER_SECOND (1193181)
 
 
+// define a macro to convert floating point numbers into 64-bit integers.
+// In MSVC++ you can convert a 64-bit float into a 64-bit signed integer,
+// but it will not convert a 64-bit float into a 64-bit unsigned integer.
+// This macro works around that.
+#define F2I(x)  ((Bit64u)(Bit64s) (x))
+#define I2F(x)  ((double)(Bit64s) (x))
+
 //CONFIGURATION #defines:
 
 
@@ -141,7 +148,7 @@ bx_pit_c bx_pit;
 #define USEC_ALPHA_B ((double)(((double)1)-USEC_ALPHA))
 #define USEC_ALPHA2 ((double)(.5))
 #define USEC_ALPHA2_B ((double)(((double)1)-USEC_ALPHA2))
-#define ALPHA_LOWER(old,new) ((Bit64u)((old<new)?((USEC_ALPHA*((double)(old)))+(USEC_ALPHA_B*((double)new))):((USEC_ALPHA2*((double)old))+(USEC_ALPHA2_B*((double)new)))))
+#define ALPHA_LOWER(old,new) ((Bit64u)((old<new)?((USEC_ALPHA*(I2F(old)))+(USEC_ALPHA_B*(I2F(new)))):((USEC_ALPHA2*(I2F(old)))+(USEC_ALPHA2_B*(I2F(new))))))
 
 
 //PIT tick to usec conversion functions:
@@ -506,10 +513,10 @@ bx_pit_c::periodic( Bit32u   usec_delta )
       //  probably only an issue on startup, but it solves some problems.
       ticks_delta = 0;
     }
-    if(ticks_delta > REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta))) {
+    if(ticks_delta > REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(real_time_delta)))) {
       //This keeps us from going too fast in relation to real time.
-      ticks_delta = REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta));
-      BX_PIT_THIS s.ticks_per_second = (Bit64u)(MAX_MULT * TICKS_PER_SECOND);
+      ticks_delta = REAL_USEC_TO_TICKS(F2I (MAX_MULT * I2F(real_time_delta)));
+      BX_PIT_THIS s.ticks_per_second = F2I(MAX_MULT * I2F(TICKS_PER_SECOND));
     }
     if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
       //This keeps us from having too few instructions between ticks.
