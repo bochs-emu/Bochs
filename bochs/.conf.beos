@@ -18,4 +18,5 @@ export CXXFLAGS
 ./configure --with-beos \
    --enable-cdrom \
    --enable-ne2000 \
-   --enable-sb16=dummy
+   --enable-sb16=dummy \
+   --enable-guest2host-tlb
