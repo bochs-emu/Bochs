@@ -67,7 +67,7 @@ BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
           data32 = (data32 << 24) | (data32 >> 24) |
             ((data32&0x00ff0000)>>8) | ((data32&0x0000ff00)<<8);
 #endif
-          * ((Bit32u *) (&BX_MEM.vector[a20addr])) = data32;
+          * ((Bit32u *) (&vector[a20addr])) = data32;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
           return;
@@ -76,12 +76,12 @@ BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
           Bit32u data32;
 
           data32 = * (Bit32u *) data;
-          * ((Bit8u *) (&BX_MEM.vector[a20addr]))         = data32; data32 >>= 8;
+          * ((Bit8u *) (&vector[a20addr]))         = data32; data32 >>= 8;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          * ((Bit8u *) (&BX_MEM.vector[A20ADDR(addr+1)])) = data32; data32 >>= 8;
-          * ((Bit8u *) (&BX_MEM.vector[A20ADDR(addr+2)])) = data32; data32 >>= 8;
-          * ((Bit8u *) (&BX_MEM.vector[A20ADDR(addr+3)])) = data32;
+          * ((Bit8u *) (&vector[A20ADDR(addr+1)])) = data32; data32 >>= 8;
+          * ((Bit8u *) (&vector[A20ADDR(addr+2)])) = data32; data32 >>= 8;
+          * ((Bit8u *) (&vector[A20ADDR(addr+3)])) = data32;
           // worst case, last byte is in different page; possible extra dirty page
           BX_DBG_DIRTY_PAGE(A20ADDR(addr+3) >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
@@ -97,7 +97,7 @@ BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
 #ifdef BX_BIG_ENDIAN
           data16 = (data16 >> 8) | (data16 << 8);
 #endif
-          * ((Bit16u *) (&BX_MEM.vector[a20addr])) = data16;
+          * ((Bit16u *) (&vector[a20addr])) = data16;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
           return;
@@ -106,10 +106,10 @@ BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
           Bit16u data16;
 
           data16 = * (Bit16u *) data;
-          * ((Bit8u *) (&BX_MEM.vector[a20addr])) = (Bit8u) data16;
+          * ((Bit8u *) (&vector[a20addr])) = (Bit8u) data16;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          * ((Bit8u *) (&BX_MEM.vector[A20ADDR(a20addr+1)])) = (data16 >> 8);
+          * ((Bit8u *) (&vector[A20ADDR(a20addr+1)])) = (data16 >> 8);
           BX_DBG_DIRTY_PAGE(A20ADDR(a20addr+1) >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
           return;
@@ -119,7 +119,7 @@ BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
         Bit8u data8;
 
         data8 = * (Bit8u *) data;
-        * ((Bit8u *) (&BX_MEM.vector[a20addr])) = data8;
+        * ((Bit8u *) (&vector[a20addr])) = data8;
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         BX_DYN_DIRTY_PAGE(a20addr >> 12);
         return;
@@ -136,7 +136,7 @@ BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
 write_one:
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
       // addr *not* in range 00080000 .. 000FFFFF
-      BX_MEM.vector[a20addr] = *data_ptr;
+      vector[a20addr] = *data_ptr;
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
       BX_DYN_DIRTY_PAGE(a20addr >> 12);
 inc_one:
@@ -156,7 +156,7 @@ inc_one:
 
     if (a20addr <= 0x0009ffff) {
       // regular memory 80000 .. 9FFFF
-      BX_MEM.vector[a20addr] = *data_ptr;
+      vector[a20addr] = *data_ptr;
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
       BX_DYN_DIRTY_PAGE(a20addr >> 12);
       goto inc_one;
@@ -177,7 +177,7 @@ inc_one:
 #if BX_PCI_SUPPORT == 0
 #if BX_SHADOW_RAM
     // Write it since its in shadow RAM
-    BX_MEM.vector[a20addr] = *data_ptr;
+    vector[a20addr] = *data_ptr;
     BX_DBG_DIRTY_PAGE(a20addr >> 12);
     BX_DYN_DIRTY_PAGE(a20addr >> 12);
 #else
@@ -187,16 +187,16 @@ inc_one:
     // Write Based on 440fx Programming
     if (bx_options.i440FXSupport &&
         ((a20addr >= 0xC0000) && (a20addr <= 0xFFFFF))) {
-      switch (bx_pci.wr_memType(a20addr & 0xFC000)) {
+      switch (bx_devices.pci->wr_memType(a20addr & 0xFC000)) {
         case 0x0:   // Writes to ShadowRAM
 //        bx_printf ("Writing to ShadowRAM %08x, len %u ! \n", (unsigned) a20addr, (unsigned) len);
-          BX_MEM.vector[a20addr] = *data_ptr;
+          vector[a20addr] = *data_ptr;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
           goto inc_one;
 
         case 0x1:   // Writes to ROM, Inhibit
-//        bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)] = *data_ptr;
+//        bx_devices.pci->s.i440fx.shadow[(a20addr - 0xc0000)] = *data_ptr;
 //        bx_printf ("Writing to ROM %08x, Data %02x ! \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
         default:
@@ -219,7 +219,8 @@ inc_one:
 #endif
 
 #if BX_APIC_SUPPORT
-    bx_apic_c *apic = &BX_CPU.local_apic;
+#warning CPU# hardcoded to 0
+    bx_apic_c *apic = &BX_CPU[0].local_apic;
     if ((a20addr & ~0xfff) == (apic->get_base ())) {
       if ((addr & 0xf != 0) || (len != 4))
         bx_printf ("warning: misaligned or wrong-size APIC write");
@@ -230,7 +231,7 @@ inc_one:
 #endif
     for (i = 0; i < len; i++) {
       if (a20addr < BX_MEM_THIS len) {
-        BX_MEM.vector[a20addr] = *data_ptr;
+        vector[a20addr] = *data_ptr;
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         BX_DYN_DIRTY_PAGE(a20addr >> 12);
         }
@@ -277,7 +278,7 @@ BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
           // read 4-byte data from aligned memory location
           Bit32u data32;
 
-          data32 = * ((Bit32u *) (&BX_MEM.vector[a20addr]));
+          data32 = * ((Bit32u *) (&vector[a20addr]));
 #ifdef BX_BIG_ENDIAN
           data32 = (data32 << 24) | (data32 >> 24) |
                    ((data32&0x00ff0000)>>8) | ((data32&0x0000ff00)<<8);
@@ -288,10 +289,10 @@ BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
         else {
           Bit32u data32;
 
-          data32  = * ((Bit8u *) (&BX_MEM.vector[A20ADDR(addr+3)])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&BX_MEM.vector[A20ADDR(addr+2)])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&BX_MEM.vector[A20ADDR(addr+1)])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&BX_MEM.vector[a20addr]));
+          data32  = * ((Bit8u *) (&vector[A20ADDR(addr+3)])); data32 <<= 8;
+          data32 |= * ((Bit8u *) (&vector[A20ADDR(addr+2)])); data32 <<= 8;
+          data32 |= * ((Bit8u *) (&vector[A20ADDR(addr+1)])); data32 <<= 8;
+          data32 |= * ((Bit8u *) (&vector[a20addr]));
 
           * (Bit32u *) data = data32;
           return;
@@ -302,7 +303,7 @@ BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
           // read 2-byte data from aligned memory location
           Bit16u data16;
 
-          data16 = * ((Bit16u *) (&BX_MEM.vector[a20addr]));
+          data16 = * ((Bit16u *) (&vector[a20addr]));
 #ifdef BX_BIG_ENDIAN
           data16 = (data16 >> 8) | (data16 << 8);
 #endif
@@ -313,8 +314,8 @@ BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
         else {
           Bit16u data16;
 
-          data16  = * ((Bit8u *) (&BX_MEM.vector[A20ADDR(addr+1)])); data16 <<= 8;
-          data16 |= * ((Bit8u *) (&BX_MEM.vector[a20addr]));
+          data16  = * ((Bit8u *) (&vector[A20ADDR(addr+1)])); data16 <<= 8;
+          data16 |= * ((Bit8u *) (&vector[a20addr]));
 
           * (Bit16u *) data = data16;
           return;
@@ -323,7 +324,7 @@ BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
       if (len == 1) {
         Bit8u data8;
 
-        data8 = * ((Bit8u *) (&BX_MEM.vector[a20addr]));
+        data8 = * ((Bit8u *) (&vector[a20addr]));
         * (Bit8u *) data = data8;
         return;
         }
@@ -342,7 +343,7 @@ BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
 read_one:
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
       // addr *not* in range 00080000 .. 000FFFFF
-      *data_ptr = BX_MEM.vector[a20addr];
+      *data_ptr = vector[a20addr];
 inc_one:
       if (len == 1) return;
       len--;
@@ -360,7 +361,7 @@ inc_one:
 #if BX_PCI_SUPPORT == 0
     if ((a20addr <= 0x0009ffff) || (a20addr >= 0x000c0000) ) {
       // regular memory 80000 .. 9FFFF, C0000 .. F0000
-      *data_ptr = BX_MEM.vector[a20addr];
+      *data_ptr = vector[a20addr];
       goto inc_one;
       }
     // VGA memory A0000 .. BFFFF
@@ -369,7 +370,7 @@ inc_one:
     goto inc_one;
 #else   // #if BX_PCI_SUPPORT == 0
     if (a20addr <= 0x0009ffff) {
-      *data_ptr = BX_MEM.vector[a20addr];
+      *data_ptr = vector[a20addr];
       goto inc_one;
       }
     if (a20addr <= 0x000BFFFF) {
@@ -381,18 +382,18 @@ inc_one:
 
     // a20addr in C0000 .. FFFFF
     if (!bx_options.i440FXSupport) {
-      *data_ptr = BX_MEM.vector[a20addr];
+      *data_ptr = vector[a20addr];
       goto inc_one;
       }
     else {
-      switch (bx_pci.rd_memType(a20addr & 0xFC000)) {
+      switch (bx_devices.pci->rd_memType(a20addr & 0xFC000)) {
         case 0x0:   // Read from ShadowRAM
-          *data_ptr = BX_MEM.vector[a20addr];
+          *data_ptr = vector[a20addr];
           bx_printf ("Reading from ShadowRAM %08x, Data %02x \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
 
         case 0x1:   // Read from ROM
-          *data_ptr = bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)];
+          *data_ptr = bx_devices.pci->s.i440fx.shadow[(a20addr - 0xc0000)];
           //bx_printf ("Reading from ROM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
         default:
@@ -413,7 +414,8 @@ inc_one:
 #endif
 
 #if BX_APIC_SUPPORT
-    bx_apic_c *apic = &BX_CPU.local_apic;
+#warning always CPU=0
+    bx_apic_c *apic = &BX_CPU[0].local_apic;
     if ((a20addr & ~0xfff) == (apic->get_base ())) {
       Bit32u value;
       apic->read_handler (addr, &value, 4);
@@ -436,23 +438,23 @@ inc_one:
     for (i = 0; i < len; i++) {
 #if BX_PCI_SUPPORT == 0
       if (a20addr < BX_MEM_THIS len)
-        *data_ptr = BX_MEM.vector[a20addr];
+        *data_ptr = vector[a20addr];
       else
         *data_ptr = 0xff;
 #else   // BX_PCI_SUPPORT == 0
       if (a20addr < BX_MEM_THIS len) {
         if ((a20addr >= 0x000C0000) && (a20addr <= 0x000FFFFF)) {
           if (!bx_options.i440FXSupport)
-            *data_ptr = BX_MEM.vector[a20addr];
+            *data_ptr = vector[a20addr];
           else {
-            switch (bx_pci.rd_memType(a20addr & 0xFC000)) {
+            switch (bx_devices.pci->rd_memType(a20addr & 0xFC000)) {
               case 0x0:   // Read from ROM
-                *data_ptr = BX_MEM.vector[a20addr];
+                *data_ptr = vector[a20addr];
                 //bx_printf ("Reading from ROM %08x, Data %02x \n", (unsigned) a20addr, *data_ptr);
                 break;
 
               case 0x1:   // Read from Shadow RAM
-                *data_ptr = bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)];
+                *data_ptr = bx_devices.pci->s.i440fx.shadow[(a20addr - 0xc0000)];
                 bx_printf ("Reading from ShadowRAM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
                 break;
               default:
@@ -461,7 +463,7 @@ inc_one:
             }
           }
         else {
-          *data_ptr = BX_MEM.vector[a20addr];
+          *data_ptr = vector[a20addr];
           bx_printf ("Reading from Norm %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
           }
         }
