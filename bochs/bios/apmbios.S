@@ -1,6 +1,9 @@
 //  APM BIOS support for the Bochs BIOS
 //  Copyright (C) 2004 Fabrice Bellard
 //
+//  Debugging extensions, 16-bit interface and extended power options
+//  Copyright (C) 2005 Struan Bartlett
+//
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
 //  License as published by the Free Software Foundation; either
@@ -25,27 +28,41 @@
 #error unsupported APM mode
 #endif
 
-#if DEBUG_APM
-APMSYM(put_str):      
+APMSYM(out_str):      
   push eax
   push ebx
-  push edx
   mov ebx, eax
-  mov dx, #INFO_PORT
-APMSYM(put_str1):
+APMSYM(out_str1):
   SEG CS
   mov al, byte ptr [bx]
   cmp al, #0
-  je APMSYM(put_str2)
+  je APMSYM(out_str2)
   outb dx, al
   inc ebx
-  jmp APMSYM(put_str1)
-APMSYM(put_str2):
-  pop edx
+  jmp APMSYM(out_str1)
+APMSYM(out_str2):
   pop ebx
   pop eax
   ret
-
+  
+APMSYM(07_poweroff_str):
+  .ascii "Shutdown"
+  db 0
+APMSYM(07_suspend_str):
+  .ascii "Suspend"
+  db 0
+APMSYM(07_standby_str):
+  .ascii "Standby"
+  db 0
+  
+#if DEBUG_APM
+APMSYM(put_str):      
+  push edx
+  mov dx, #INFO_PORT
+  call APMSYM(out_str)
+  pop edx
+  ret
+  
 ; print the hex number in eax
 APMSYM(put_num):      
   push eax
@@ -67,17 +84,62 @@ APMSYM(put_num2):
   shl ecx, #4
   dec bx
   jne APMSYM(put_num1)
-  mov al, #0x0a
-  outb dx, al
   pop edx
   pop ecx
   pop ebx
   pop eax
   ret
 
-APMSYM(msg_ax):
-  .ascii "APM: EAX="
-  db 0
+APMSYM(put_reg):
+  outb dx, al
+  shr eax, #8
+  outb dx, al
+  shr eax, #8
+  outb dx, al
+  shr eax, #8
+  outb dx, al
+  
+  mov eax,ebx
+  call APMSYM(put_num)
+  
+  mov al, #0x3b
+  outb dx,al
+  mov al, #0x20
+  outb dx,al
+  ret  
+
+APMSYM(put_regs):
+  push eax
+  push edx
+  push ebx
+  mov dx, #INFO_PORT
+  
+  mov ebx, eax
+  mov eax, #0x3d584145 // 'EAX='
+  call APMSYM(put_reg)
+  pop ebx
+  push ebx
+  mov eax, #0x3d584245 // 'EBX='
+  call APMSYM(put_reg)
+  mov ebx, ecx
+  mov eax, #0x3d584345 // 'ECX='
+  call APMSYM(put_reg)
+  mov ebx, edx
+  mov eax, #0x3d584445 // 'EDX='
+  call APMSYM(put_reg)
+  mov ebx, esi
+  mov eax, #0x3d495345 // 'ESI='
+  call APMSYM(put_reg)
+  mov ebx, edi
+  mov eax, #0x3d494445 // 'EDI='
+  call APMSYM(put_reg)
+  
+  mov al, #0x0a
+  outb dx, al
+  pop ebx
+  pop edx
+  pop eax
+  ret
 #endif
 
 #if defined(APM_PROT32)
@@ -87,16 +149,13 @@ _apm32_entry:
 _apm16_entry:
 #endif
   pushf
+  
 #if defined(APM_REAL)
 _apmreal_entry:
 #endif
 
 #if DEBUG_APM
-  push eax
-  mov eax, #APMSYM(msg_ax)
-  call APMSYM(put_str)
-  pop eax
-  call APMSYM(put_num)
+  call APMSYM(put_regs)
 #endif
 
 #if defined(APM_REAL)
@@ -105,20 +164,37 @@ _apmreal_entry:
 APMSYM(00):
   cmp al, #0x00
   jne APMSYM(01)
+
   mov ah, #1 // APM major version
   mov al, #2 // APM minor version
+  
   mov bh, #0x50 // 'P'
   mov bl, #0x4d // 'M'
+  
   // bit 0 : 16 bit interface supported
   // bit 1 : 32 bit interface supported
-  mov cx, #0x2 
+  mov cx, #0x3
   jmp APMSYM(ok)
   
 ;-----------------
 ; APM real mode interface connect
 APMSYM(01):
   cmp al, #0x01
+  jne APMSYM(02)
+  jmp APMSYM(ok)
+
+;-----------------
+; APM 16 bit protected mode interface connect
+APMSYM(02):
+  cmp al, #0x02
   jne APMSYM(03)
+
+  mov bx, #_apm16_entry
+  
+  mov ax, #0xf000 // 16 bit code segment base
+  mov si, #0xfff0 // 16 bit code segment size
+  mov cx, #0xf000 // data segment address
+  mov di, #0xfff0 // data segment length
   jmp APMSYM(ok)
 
 ;-----------------
@@ -135,7 +211,6 @@ APMSYM(03):
   mov dx, #0xf000 // data segment address
   mov di, #0xfff0 // data segment length
   jmp APMSYM(ok)
-
 #endif
 
 ;-----------------
@@ -150,33 +225,47 @@ APMSYM(04):
 APMSYM(07):
   cmp al, #0x07
   jne APMSYM(0a)
+  
   cmp bx, #1
   jne APMSYM(ok)
+  
   cmp cx, #3
+  je APMSYM(07_poweroff)
+  
+  cmp cx, #2
+  je APMSYM(07_suspend)
+  
+  cmp cx, #1
+  je APMSYM(07_standby)
+  
   jne APMSYM(ok)
-// send power off event to emulator
+  
+APMSYM(07_poweroff):  
+  // send power off event to emulator
   cli
   mov dx, #0x8900
-  mov al, #0x53 // 'S'
-  out dx, al
-  mov al, #0x68 // 'h'
-  out dx, al
-  mov al, #0x75 // 'u'
-  out dx, al
-  mov al, #0x74 // 't'
-  out dx, al
-  mov al, #0x64 // 'd'
-  out dx, al
-  mov al, #0x6f // 'o'
-  out dx, al
-  mov al, #0x77 // 'w'
-  out dx, al
-  mov al, #0x6e // 'n'
-  out dx, al
+  mov ax, #APMSYM(07_poweroff_str)
+  call APMSYM(out_str)
 
 APMSYM(07_1):
   hlt
   jmp APMSYM(07_1)
+
+APMSYM(07_suspend):
+  push edx
+  mov dx, #0x8900
+  mov ax, #APMSYM(07_suspend_str)
+  call APMSYM(out_str)
+  pop edx
+  jmp APMSYM(ok)
+
+APMSYM(07_standby):
+  push edx
+  mov dx, #0x8900
+  mov ax, #APMSYM(07_standby_str)
+  call APMSYM(out_str)
+  pop edx
+  jmp APMSYM(ok)
 
 ;-----------------
 ; Get Power Status
@@ -184,11 +273,16 @@ APMSYM(0a):
   cmp al, #0x0a
   jne APMSYM(0b)
   mov bh, #0x01 // on line
+  // mov bh, #0x02 // battery
   mov bl, #0xff // unknown battery status
+  // mov bl, #0x03 // charging
   mov ch, #0x80 // no system battery
+  // mov ch, #0x8 // charging
   mov cl, #0xff // unknown remaining time
+  // mov cl, #50
   mov dx, #0xffff // unknown remaining time 
   mov si, #0      // zero battery
+  // mov si, #1      // one battery
   jmp APMSYM(ok)
 
 ;-----------------
@@ -204,8 +298,10 @@ APMSYM(0b):
 APMSYM(0e):
   cmp al, #0x0e
   jne APMSYM(unimplemented)
-  mov ah, ch
-  mov al, cl
+  
+  mov ah, #1
+  mov al, #2
+  
   jmp APMSYM(ok)
 
 ;-----------------
