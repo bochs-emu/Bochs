@@ -1,0 +1,586 @@
+----------------------------------------------------------------------
+Patch name: patch.disasm
+Author:  Kernel Panic (rzhevskiy@hetnet.nl)
+Date: March 5th, 2002
+
+Detailed description:
+
+  Changed some parts in the disassembler so that it shows
+  relative jumps as all regular disassemblers do (that is, writes an
+  absolute location), shows "mov [mem], al" as it should.
+
+  The various hexadecimal values are now also displayed in capital
+  letters.
+
+Apply patch to:
+  bochs cvs on march 5th 2002 12:00GMT
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+--- debug/dbg_main.cc.old	Tue Mar  5 11:36:07 2002
++++ debug/dbg_main.cc	Tue Mar  5 11:36:56 2002
+@@ -2067,7 +2067,7 @@
+ 
+     BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
+     ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
+-				 bx_disasm_ibuf, bx_disasm_tbuf);
++      BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
+ 
+     // Note: it would be nice to display only the modified registers here, the easy
+     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
+@@ -3253,7 +3253,7 @@
+     if (paddr_valid) {
+       BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
+       ilen = bx_disassemble.disasm(bx_debugger.disassemble_size==32,
+-                                   bx_disasm_ibuf, bx_disasm_tbuf);
++        range.from, bx_disasm_ibuf, bx_disasm_tbuf);
+ 
+       fprintf(stderr, "%08x: ", (unsigned) range.from);
+       for (unsigned j=0; j<ilen; j++)
+--- disasm/dis_decode.cc.old	Tue Mar  5 11:40:14 2002
++++ disasm/dis_decode.cc	Tue Mar  5 11:38:41 2002
+@@ -182,7 +182,7 @@
+ 
+ 
+   unsigned
+-bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
++bx_disassemble_c::disasm(Boolean is_32, Bit32u ip, Bit8u *instr, char *disbuf)
+ {
+   int byte_count;
+   Bit8u next_byte;
+@@ -190,6 +190,7 @@
+ 
+   db_32bit_opsize = is_32;
+   db_32bit_addrsize = is_32;
++  db_eip = ip;
+   instruction_begin = instruction = instr;
+ 
+   seg_override = NULL;
+@@ -570,7 +571,7 @@
+       case 0x25: dis_sprintf("and "); eAX(); dis_sprintf(", "); Iv(); goto done;
+       case 0x26:
+         seg_override = "ES";
+-        dis_sprintf("ES: ");
++//        dis_sprintf("ES: ");
+         break;
+       case 0x27: dis_sprintf("daa"); goto done;
+       case 0x28: dis_sprintf("sub "); EbGb(); goto done;
+@@ -581,7 +582,7 @@
+       case 0x2D: dis_sprintf("sub "); eAX(); dis_sprintf(", "); Iv(); goto done;
+       case 0x2E:
+         seg_override = "CS";
+-        dis_sprintf("CS: ");
++//        dis_sprintf("CS: ");
+         break;
+       case 0x2F: dis_sprintf("das"); goto done;
+ 
+@@ -593,7 +594,7 @@
+       case 0x35: dis_sprintf("xor "); eAX(); dis_sprintf(", "); Iv(); goto done;
+       case 0x36:
+         seg_override = "SS";
+-        dis_sprintf("SS: ");
++//        dis_sprintf("SS: ");
+         break;
+       case 0x37: dis_sprintf("aaa"); goto done;
+       case 0x38: dis_sprintf("cmp "); EbGb(); goto done;
+@@ -604,7 +605,7 @@
+       case 0x3D: dis_sprintf("cmp "); eAX(); dis_sprintf(", "); Iv(); goto done;
+       case 0x3E:
+         seg_override = "DS";
+-        dis_sprintf("DS: ");
++//        dis_sprintf("DS: ");
+         break;
+       case 0x3F: dis_sprintf("aas"); goto done;
+ 
+@@ -650,19 +651,19 @@
+       case 0x63: dis_sprintf("arpl "); EwRw(); goto done;
+       case 0x64:
+         seg_override = "FS";
+-        dis_sprintf("FS: ");
++//        dis_sprintf("FS: ");
+         break;
+       case 0x65:
+         seg_override = "GS";
+-        dis_sprintf("GS: ");
++//        dis_sprintf("GS: ");
+         break;
+       case 0x66:
+         db_32bit_opsize = !db_32bit_opsize;
+-        dis_sprintf("OPSIZE: ");
++//        dis_sprintf("OPSIZE: ");
+         break;
+       case 0x67:
+         db_32bit_addrsize = !db_32bit_addrsize;
+-        dis_sprintf("ADDRSIZE: ");
++//        dis_sprintf("ADDRSIZE: ");
+         break;
+       case 0x68: dis_sprintf("push "); Iv(); goto done;
+       case 0x69: dis_sprintf("imul "); GvEv(); dis_sprintf(", "); Iv(); goto done;
+@@ -1401,7 +1402,7 @@
+ 
+     /* use 32bit addressing modes.  orthogonal base & index registers,
+        scaling available, etc. */
+-    dis_sprintf("|MOD%d|REG%d|RM%d| ", (int) mod, (int) ttt, (int) rm);
++//    dis_sprintf("|MOD%d|REG%d|RM%d| ", (int) mod, (int) ttt, (int) rm);
+ 
+ 
+     if (mod == 3) { /* mod, reg, reg */
+@@ -1418,7 +1419,7 @@
+               mod_rm_seg_reg = "DS";
+             if (rm == 5) { /* no reg, 32-bit displacement */
+               mod_rm_addr = fetch_dword();
+-              dis_sprintf("%s:%08x", mod_rm_seg_reg, mod_rm_addr);
++              dis_sprintf("%s:%08X", mod_rm_seg_reg, mod_rm_addr);
+               }
+             else {
+               dis_sprintf("%s:[%s]", mod_rm_seg_reg,
+@@ -1432,7 +1433,7 @@
+               mod_rm_seg_reg = sreg_mod01_rm32[rm];
+             /* reg, 8-bit displacement, sign extend */
+             displ8 = fetch_byte();
+-            dis_sprintf("%s:[%s + %02x]", mod_rm_seg_reg,
++            dis_sprintf("%s:[%s + %02X]", mod_rm_seg_reg,
+               general_32bit_reg_name[rm], (unsigned) displ8);
+             break;
+           case 2:
+@@ -1442,7 +1443,7 @@
+               mod_rm_seg_reg = sreg_mod10_rm32[rm];
+             /* reg, 32-bit displacement */
+             displ32 = fetch_dword();
+-            dis_sprintf("%s:[%s + %08x]", mod_rm_seg_reg,
++            dis_sprintf("%s:[%s + %08X]", mod_rm_seg_reg,
+               general_32bit_reg_name[rm], (unsigned) displ32);
+             break;
+           } /* switch (mod) */
+@@ -1452,8 +1453,8 @@
+         ss = sib >> 6;
+         index = (sib >> 3) & 0x07;
+         base = sib & 0x07;
+-        dis_sprintf("|SS%u|IND%u|BASE%u| ", (unsigned) ss,
+-                  (unsigned) index, (unsigned) base);
++/*        dis_sprintf("|SS%u|IND%u|BASE%u| ", (unsigned) ss,
++                  (unsigned) index, (unsigned) base);*/
+ 
+         switch (mod) {
+           case 0:
+@@ -1466,7 +1467,7 @@
+               dis_sprintf("%s", general_32bit_reg_name[base]);
+             else {
+               displ32 = fetch_dword();
+-              dis_sprintf("%08x", (unsigned) displ32);
++              dis_sprintf("%08X", (unsigned) displ32);
+               }
+ 
+             if (index != 4)
+@@ -1484,7 +1485,7 @@
+ 
+             if (index != 4)
+               dis_sprintf(" + %s<<%u", index_name32[index], ss);
+-            dis_sprintf(" + %02x]", (unsigned) displ8);
++            dis_sprintf(" + %02X]", (unsigned) displ8);
+             break;
+           case 2:
+             if (seg_override)
+@@ -1535,7 +1536,7 @@
+             break;
+           case 6: // DS:d16
+             displ16 = fetch_word();
+-            dis_sprintf("%s:%04x", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:%04X", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 7: // DS:[BX]
+             dis_sprintf("%s:[BX]", mod_rm_seg_reg);
+@@ -1551,28 +1552,28 @@
+           mod_rm_seg_reg = sreg_mod01_rm16[rm];
+         switch (rm) {
+           case 0: // DS:[BX+SI+d8]
+-            dis_sprintf("%s:[BX+SI+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[BX+SI+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           case 1: // DS:[BX+DI+d8]
+-            dis_sprintf("%s:[BX+DI+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[BX+DI+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           case 2: // SS:[BP+SI+d8]
+-            dis_sprintf("%s:[BP+SI+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[BP+SI+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           case 3: // SS:[BP+DI+d8]
+-            dis_sprintf("%s:[BP+DI+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[BP+DI+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           case 4: // DS:[SI+d8]
+-            dis_sprintf("%s:[SI+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[SI+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           case 5: // DS:[DI+d8]
+-            dis_sprintf("%s:[DI+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[DI+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           case 6: // SS:[BP+d8]
+-            dis_sprintf("%s:[BP+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[BP+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           case 7: // DS:[BX+d8]
+-            dis_sprintf("%s:[BX+%02x]", mod_rm_seg_reg, (unsigned) displ8);
++            dis_sprintf("%s:[BX+%02X]", mod_rm_seg_reg, (unsigned) displ8);
+             break;
+           }
+         break;
+@@ -1585,28 +1586,28 @@
+           mod_rm_seg_reg = sreg_mod10_rm16[rm];
+         switch (rm) {
+           case 0: // DS:[BX+SI+d16]
+-            dis_sprintf("%s:[BX+SI+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[BX+SI+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 1: // DS:[BX+DI+d16]
+-            dis_sprintf("%s:[BX+DI+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[BX+DI+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 2: // SS:[BP+SI+d16]
+-            dis_sprintf("%s:[BP+SI+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[BP+SI+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 3: // SS:[BP+DI+d16]
+-            dis_sprintf("%s:[BP+DI+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[BP+DI+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 4: // DS:[SI+d16]
+-            dis_sprintf("%s:[SI+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[SI+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 5: // DS:[DI+d16]
+-            dis_sprintf("%s:[DI+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[DI+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 6: // SS:[BP+d16]
+-            dis_sprintf("%s:[BP+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[BP+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           case 7: // DS:[BX+d16]
+-            dis_sprintf("%s:[BX+%04x]", mod_rm_seg_reg, (unsigned) displ16);
++            dis_sprintf("%s:[BX+%04X]", mod_rm_seg_reg, (unsigned) displ16);
+             break;
+           }
+         break;
+--- disasm/dis_groups.cc.old	Tue Mar  5 11:41:06 2002
++++ disasm/dis_groups.cc	Tue Mar  5 11:41:18 2002
+@@ -104,12 +104,41 @@
+ bx_disassemble_c::DXXb(void) {dis_sprintf("*** DXXb() unfinished ***");}
+   void
+ bx_disassemble_c::DXXv(void) {dis_sprintf("*** DXXv() unfinished ***");}
++
+   void
+-bx_disassemble_c::ALOb(void) {dis_sprintf("*** ALOb() unfinished ***");}
++bx_disassemble_c::ALOb(void) 
++{
++  char *seg;
++
++  if (seg_override)
++    seg = seg_override;
++  else
++    seg = "DS";
++
++  if (db_32bit_addrsize) {
++    Bit32u imm32;
++
++    imm32 = fetch_dword();
++    dis_sprintf("AL, [%s:%08X]", seg, (unsigned) imm32);
++    }
++  else {
++    Bit16u imm16;
++
++    imm16 = fetch_word();
++    dis_sprintf("AL, [%s:%04X]", seg, (unsigned) imm16);
++    }
++}
+ 
+   void
+ bx_disassemble_c::eAXOv(void)
+ {
++  char *seg;
++
++  if (seg_override)
++    seg = seg_override;
++  else
++    seg = "DS";
++
+   if (db_32bit_opsize) {
+     dis_sprintf("EAX, ");
+     }
+@@ -121,30 +150,37 @@
+     Bit32u imm32;
+ 
+     imm32 = fetch_dword();
+-    dis_sprintf("[%08x]", (unsigned) imm32);
++    dis_sprintf("[%s:%08X]", seg, (unsigned) imm32);
+     }
+   else {
+     Bit16u imm16;
+ 
+     imm16 = fetch_word();
+-    dis_sprintf("[%04x]", (unsigned) imm16);
++    dis_sprintf("[%s:%04X]", seg, (unsigned) imm16);
+     }
+ }
+ 
+   void
+ bx_disassemble_c::OveAX(void)
+ {
++  char *seg;
++
++  if (seg_override)
++    seg = seg_override;
++  else
++    seg = "DS";
++
+   if (db_32bit_addrsize) {
+     Bit32u imm32;
+ 
+     imm32 = fetch_dword();
+-    dis_sprintf("[%08x], ", (unsigned) imm32);
++    dis_sprintf("[%s:%08X], ", seg, (unsigned) imm32);
+     }
+   else {
+     Bit16u imm16;
+ 
+     imm16 = fetch_word();
+-    dis_sprintf("[%04x], ", (unsigned) imm16);
++    dis_sprintf("[%s:%04X], ", seg, (unsigned) imm16);
+     }
+ 
+   if (db_32bit_opsize) {
+@@ -181,7 +217,30 @@
+ }
+ 
+   void
+-bx_disassemble_c::ObAL(void) {dis_sprintf("*** ObAL() unfinished ***");}
++bx_disassemble_c::ObAL(void) 
++{
++  char *seg;
++
++  if (seg_override)
++    seg = seg_override;
++  else
++    seg = "DS";
++
++#if BX_CPU_LEVEL > 2
++  if (db_32bit_opsize)
++  {
++    Bit32u imm32;
++    imm32 = fetch_dword();
++    dis_sprintf("[%s:%08X], AL", seg, imm32);
++  }
++  else
++#endif /* BX_CPU_LEVEL > 2 */
++  {
++    Bit16u imm16;
++    imm16 = fetch_word();
++    dis_sprintf("[%s:%04X], AL", seg, imm16);
++  }
++}
+ 
+   void
+ bx_disassemble_c::YbAL(void) {dis_sprintf("*** YbAL() unfinished ***");}
+@@ -218,14 +277,14 @@
+ bx_disassemble_c::Av(void)
+ {
+   if (db_32bit_opsize) {
+-    Bit32u imm32;
++    Bit32s imm32;
+     imm32 = fetch_dword();
+-    dis_sprintf("%08x", (unsigned) imm32);
++    dis_sprintf("%08X", (unsigned) (imm32 + db_eip));
+     }
+   else {
+-    Bit16u imm16;
++    Bit16s imm16;
+     imm16 = fetch_word();
+-    dis_sprintf("%04x", (unsigned) imm16);
++    dis_sprintf("%04X", (unsigned) ((imm16 + db_eip) & 0xFFFF));
+     }
+ }
+ 
+@@ -262,7 +321,7 @@
+   Bit16u imm16;
+ 
+   imm16 = fetch_word();
+-  dis_sprintf("#%04x", (unsigned) imm16);
++  dis_sprintf("%04X", (unsigned) imm16);
+ }
+ 
+ 
+@@ -326,7 +385,7 @@
+     Bit32u imm32;
+ 
+     imm32 = fetch_dword();
+-    dis_sprintf("+#%08x", (unsigned) imm32);
++    dis_sprintf("%08X", (unsigned) (imm32 + db_eip));
+     }
+   else
+ #endif
+@@ -334,7 +393,7 @@
+     Bit16u imm16;
+ 
+     imm16 = fetch_word();
+-    dis_sprintf("+#%04x", (unsigned) imm16);
++    dis_sprintf("%04X", (unsigned) ((imm16 + db_eip) & 0xFFFF));
+     }
+ }
+ 
+@@ -348,13 +407,13 @@
+   if (db_32bit_opsize) {
+     decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
+     imm8 = fetch_byte();
+-    dis_sprintf(", #%02x", (unsigned) imm8);
++    dis_sprintf(", %02X", (unsigned) imm8);
+     }
+   else {
+ #endif /* BX_CPU_LEVEL > 2 */
+     decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
+     imm8 = fetch_byte();
+-    dis_sprintf(", #%02x", (unsigned) imm8);
++    dis_sprintf(", %02X", (unsigned) imm8);
+ #if BX_CPU_LEVEL > 2
+     }
+ #endif /* BX_CPU_LEVEL > 2 */
+@@ -368,13 +427,13 @@
+     Bit32u imm32;
+ 
+     imm32 = fetch_dword();
+-    dis_sprintf("#%08x", (unsigned) imm32);
++    dis_sprintf("%08X", (unsigned) imm32);
+     }
+   else {
+     Bit16u imm16;
+ 
+     imm16 = fetch_word();
+-    dis_sprintf("#%04x", (unsigned) imm16);
++    dis_sprintf("%04X", (unsigned) imm16);
+     }
+ }
+ 
+@@ -385,7 +444,7 @@
+   Bit8u imm8;
+ 
+   imm8 = fetch_byte();
+-  dis_sprintf("#%02x", imm8);
++  dis_sprintf("%02X", imm8);
+ }
+ 
+ 
+@@ -395,7 +454,15 @@
+   Bit8u imm8;
+ 
+   imm8 = fetch_byte();
+-  dis_sprintf("+#%02x", (unsigned) imm8);
++#if BX_CPU_LEVEL > 2
++  if (db_32bit_opsize) {
++    dis_sprintf("%08X", (unsigned) (imm8 + db_eip));
++    }
++  else
++#endif
++  {
++    dis_sprintf("%04X", (unsigned) ((imm8 + db_eip) & 0xFFFF));
++  }
+ }
+ 
+   void
+@@ -405,7 +472,7 @@
+ 
+   decode_exgx(BX_GENERAL_8BIT_REG, BX_NO_REG_TYPE);
+   imm8 = fetch_byte();
+-  dis_sprintf(", #%02x", (unsigned) imm8);
++  dis_sprintf(", %02X", (unsigned) imm8);
+ }
+ 
+   void
+@@ -419,13 +486,13 @@
+ 
+     decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
+     imm32 = fetch_dword();
+-    dis_sprintf(", #%08x", (unsigned) imm32);
++    dis_sprintf(", %08X", (unsigned) imm32);
+     }
+   else {
+ #endif /* BX_CPU_LEVEL > 2 */
+     decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
+     imm16 = fetch_word();
+-    dis_sprintf(", #%04x", (unsigned) imm16);
++    dis_sprintf(", %04X", (unsigned) imm16);
+ #if BX_CPU_LEVEL > 2
+     }
+ #endif /* BX_CPU_LEVEL > 2 */
+@@ -480,7 +547,7 @@
+ 
+     imm32 = fetch_dword();
+     cs_selector = fetch_word();
+-    dis_sprintf("%04x:%08x", (unsigned) cs_selector, (unsigned) imm32);
++    dis_sprintf("%04X:%08X", (unsigned) cs_selector, (unsigned) imm32);
+     }
+   else
+ #endif /* BX_CPU_LEVEL > 2 */
+@@ -490,7 +557,7 @@
+ 
+     imm16 = fetch_word();
+     cs_selector = fetch_word();
+-    dis_sprintf("%04x:%04x", (unsigned) cs_selector, (unsigned) imm16);
++    dis_sprintf("%04X:%04X", (unsigned) cs_selector, (unsigned) imm16);
+     }
+ }
+ 
+--- cpu/debugstuff.cc.old	Tue Oct  9 17:15:14 2001
++++ cpu/debugstuff.cc	Tue Mar  5 12:03:47 2002
+@@ -141,7 +141,7 @@
+   if (valid) {
+     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
+     isize = bx_disassemble.disasm(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+-                        instr_buf, char_buf);
++	BX_CPU_THIS_PTR eip, instr_buf, char_buf);
+     for (unsigned j=0; j<isize; j++)
+       BX_INFO((">> %02x", (unsigned) instr_buf[j]));
+     BX_INFO((">> : %s", char_buf));
+--- disasm/disasm.h	Wed Oct  3 09:10:37 2001
++++ ../../bochs/disasm/disasm.h	Tue Mar  5 11:50:45 2002
+@@ -40,13 +40,14 @@
+ class bx_disassemble_c : public logfunctions {
+ public:
+   bx_disassemble_c(void);
+-  unsigned disasm(Boolean is_32, Bit8u *instr, char *disbuf);
++  unsigned disasm(Boolean is_32, Bit32u ip, Bit8u *instr, char *disbuf);
+ 
+ private:
+   Boolean db_32bit_opsize;
+   Boolean db_32bit_addrsize;
+   Boolean db_rep_prefix;
+   Boolean db_repne_prefix;
++  Bit32u db_eip;
+   Bit8u *instruction_begin;  // keep track of where instruction starts
+   Bit8u *instruction;        // for fetching of next byte of instruction
+ 
+@@ -74,6 +75,7 @@
+   char *index_name32[8];
+ 
+   BX_CPP_INLINE Bit8u  fetch_byte(void) {
++    db_eip++;
+     return(*instruction++);
+     };
+   BX_CPP_INLINE Bit8u  peek_byte(void) {
+@@ -87,6 +89,7 @@
+     b0 = * (Bit8u *) instruction++;
+     b1 = * (Bit8u *) instruction++;
+     ret16 = (b1<<8) | b0;
++    db_eip += 2;
+     return(ret16);
+     };
+ 
+@@ -99,6 +102,7 @@
+     b2 = * (Bit8u *) instruction++;
+     b3 = * (Bit8u *) instruction++;
+     ret32 = (b3<<24) | (b2<<16) | (b1<<8) | b0;
++    db_eip += 4;
+     return(ret32);
+     };
+ 
