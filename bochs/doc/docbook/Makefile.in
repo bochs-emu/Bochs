@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.4 2002-12-13 19:17:22 bdenney Exp $
+# $Id: Makefile.in,v 1.5 2002-12-13 19:26:11 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -8,6 +8,7 @@
 ###################################################################
 
 prefix          = @prefix@
+srcdir          = @srcdir@
 docdir          = $(prefix)/share/doc/bochs
 DOCBOOK2HTML = @DOCBOOK2HTML@
 
@@ -16,7 +17,7 @@ SECTIONS=user documentation development
 SECTION_HTML=$(SECTIONS:%=%/book1.html)
 
 # these files get installed in addition to the sections
-EXTRAS=README index.html
+EXTRAS=$(srcdir)/README $(srcdir)/index.html
 
 # complete list of what to install
 INSTALL_LIST=$(SECTIONS) $(EXTRAS)
@@ -34,12 +35,15 @@ SSH=ssh -x
 
 all: $(SECTION_HTML)
 
-user/book1.html: user/user.dbk
-	cd user; $(DOCBOOK2HTML) user.dbk
-documentation/book1.html: documentation/documentation.dbk
-	cd documentation; $(DOCBOOK2HTML) documentation.dbk
-development/book1.html: development/development.dbk
-	cd development; $(DOCBOOK2HTML) development.dbk
+user/book1.html: $(srcdir)/user/user.dbk
+	-mkdir user
+	$(DOCBOOK2HTML) -o user $(srcdir)/user/user.dbk
+documentation/book1.html: $(srcdir)/documentation/documentation.dbk
+	-mkdir documentation
+	$(DOCBOOK2HTML) -o documentation $(srcdir)/documentation/documentation.dbk 
+development/book1.html: $(srcdir)/development/development.dbk
+	-mkdir development
+	$(DOCBOOK2HTML) -o development $(srcdir)/development/development.dbk
 
 fixperm::
 	# fix permissions locally so that tar will install things right
@@ -71,4 +75,4 @@ clean:
 	done
 
 dist-clean: clean
-	@RMCOMMAND@ Makefile
+	rm -f  Makefile
