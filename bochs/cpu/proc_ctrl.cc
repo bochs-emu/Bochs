@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.37 2002-09-14 23:17:55 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.38 2002-09-15 15:10:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1581,7 +1581,6 @@ BX_CPU_C::SetCR4(Bit32u val_32)
 
 
 #if BX_SUPPORT_X86_64
-#warning "KPL: SetCR4: should config with x86-64 force PSE support?"
   //  need to GPF #0 if LME=1 and PAE=0
   if (   (BX_CPU_THIS_PTR msr.lme)
       && (!(val_32 >> 5) & 1)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.12 2002-09-15 02:55:34 kevinlawton Exp $
+// $Id: io.cc,v 1.13 2002-09-15 15:10:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,9 +115,6 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
   bx_address edi;
   unsigned int incr;
 
-#if BX_SUPPORT_X86_64
-#warning "KPL: Changed  if (i->as_32)  to  if (i->as_64) below.  Typo?"
-#endif
   if (i->as_64)  // This was coded as   if (i->as_64) ???
     edi = RDI;
   else if (i->as_32)
@@ -587,9 +584,6 @@ doIncr:
 #endif
 #endif
 
-#if BX_SUPPORT_X86_64
-#warning "KPL: Changed  if (i->as_32)  to  if (i->as_64) below.  Typo?"
-#endif
   if (i->as_64) { // Was coded as  if (i->as_32)
     if (BX_CPU_THIS_PTR get_DF ())
       RSI = RSI - incr;

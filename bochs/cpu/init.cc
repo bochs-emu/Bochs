@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.28 2002-09-15 11:01:36 bdenney Exp $
+// $Id: init.cc,v 1.29 2002-09-15 15:10:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,7 +157,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.28 2002-09-15 11:01:36 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.29 2002-09-15 15:10:21 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -310,7 +310,6 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sreg_mod1or2_base32[12] = BX_SEG_REG_DS;
   sreg_mod1or2_base32[13] = BX_SEG_REG_DS;
   sreg_mod1or2_base32[14] = BX_SEG_REG_DS;
-#warning "KPL: The following was 14, I changed to 15.  Typo?"
   sreg_mod1or2_base32[15] = BX_SEG_REG_DS;
 #endif
 

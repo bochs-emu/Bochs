@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.1 2002-09-13 15:53:22 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.2 2002-09-15 15:10:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -427,9 +427,8 @@ BX_CPU_C::JMP64_Ep(BxInstruction_t *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
-#warning "KPL: should this instr macro pass 64-bit RIP?"
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
   return;
 }
 
@@ -440,7 +439,6 @@ BX_CPU_C::IRET64(BxInstruction_t *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
-#warning "KPL: why was this show_rip?"
   BX_CPU_THIS_PTR show_eip = BX_CPU_THIS_PTR rip;
 #endif
 

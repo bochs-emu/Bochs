@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.103 2002-09-15 13:52:22 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.104 2002-09-15 15:10:20 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -732,12 +732,12 @@ AC_ARG_ENABLE(debugger,
 AC_SUBST(DEBUGGER_VAR)
 
 AC_MSG_CHECKING(for external debugger)
+EXT_DEBUG_OBJS=''
 AC_ARG_ENABLE(external-debugger,
   [  --enable-external-debugger        enable external debugger support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_EXTERNAL_DEBUGGER, 1)
-    EXT_DEBUG_LIB=libextdb.a
     EXT_DEBUG_OBJS=extdb.o
    else
     AC_MSG_RESULT(no)
@@ -1185,7 +1185,6 @@ AC_SUBST(IODEV_LIB_VAR)
 AC_SUBST(NONINLINE_VAR)
 AC_SUBST(INLINE_VAR)
 AC_SUBST(EXTERNAL_DEPENDENCY)
-AC_SUBST(EXT_DEBUG_LIB)
 AC_SUBST(EXT_DEBUG_OBJS)
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.42 2002-09-14 03:01:05 kevinlawton Exp $
+// $Id: cpu.cc,v 1.43 2002-09-15 15:10:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -211,11 +211,6 @@ async_events_processed:
   if (regs.debug_state != debug_run) {
     bx_external_debugger(this);
   }
-#endif
-
-#if BX_SUPPORT_X86_64
-// I noticed while merging cpu64/cpu.cc, the code above was repeated?
-#warning "Why were there 2 calls to bx_external_debugger for cpu64?"
 #endif
 
   {
