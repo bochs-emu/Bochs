@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.55 2002-11-05 18:11:04 bdenney Exp $
+$Id: user.dbk,v 1.56 2002-11-05 22:11:57 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -24,6 +24,7 @@ This is the top level file for the Bochs Users Manual.
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
    <editor><firstname>Vasudeva</firstname></editor>
    <editor><firstname>N. David</firstname><surname>Guarneri</surname></editor>
+   <editor><firstname>Christophe</firstname><surname>Bothamy</surname></editor>
    </authorgroup>
 </bookinfo>
 
@@ -396,17 +397,7 @@ currently work with.
     OS can talk to any machine on the network BUT NOT the host machine.
     On linux, with the tuntap interface, there is no such limitations, and 
     the host machine may even be configured as a router so the guest os has access
-    to the internet (see <xref linkend="linux-config-tuntap"> for configuration instructions).
-    </entry>
-  </row>
-  <row>
-    <entry>CDROM</entry>
-    <entry>Yes</entry>
-    <entry>Emulates an IDE CDROM.  The CDROM can read from an ISO disk image
-    on any platform.  On Windows (95/98/NT/2000), Linux, SunOS, FreeBSD, 
-    NetBSD, Amiga/MorphOS, and BeOS<footnote><para>Coming soon, hopefully in
-    v1.3</para></footnote>, Bochs can read from the physical cdrom.
-    When the CDROM is enabled, only one hard disk can be used.
+    to the internet (see <xref linkend="config-tuntap"> for configuration instructions).
     </entry>
   </row>
   <row>
@@ -492,7 +483,7 @@ currently work with.
 
 <section><title>Supported Platforms</title>
 <para>
-	&FIXME; should add a column with supported display library (X11, SDL, wx, etc...)
+       &FIXME; should add a column with supported display library (X11, SDL, wx, etc...)
 </para>
 <table><title>Supported platforms</title>
    <tgroup cols=2 align=left colsep=1 rowsep=1>
@@ -967,57 +958,57 @@ below.
   <tgroup cols="3">
     <thead>
       <row>
-	<entry>Letter</entry>
-	<entry>Meaning</entry>
-	<entry>Description</entry>
+        <entry>Letter</entry>
+        <entry>Meaning</entry>
+        <entry>Description</entry>
       </row>
     </thead>
     <tbody>
       <row>
-	<entry>?</entry>
-	<entry>unknown</entry>
-	<entry>
-	This file is in your bochs directory, but CVS does not know anything
-	about it.  For example, when you compile Bochs, any files created
-	during the build process appear as ?.
-	</entry>
+        <entry>?</entry>
+        <entry>unknown</entry>
+        <entry>
+        This file is in your bochs directory, but CVS does not know anything
+        about it.  For example, when you compile Bochs, any files created
+        during the build process appear as ?.
+        </entry>
       </row>
       <row>
-	<entry>U</entry>
-	<entry>update</entry>
-	<entry>
-	cvs downloaded a new version of this file because it changed on the
-	server, usually because someone else did a checkin.
-	</entry>
+        <entry>U</entry>
+        <entry>update</entry>
+        <entry>
+        cvs downloaded a new version of this file because it changed on the
+        server, usually because someone else did a checkin.
+        </entry>
       </row>
       <row>
-	<entry>P</entry>
-	<entry>-</entry>
-	<entry>
-	P is the same as U, as far as I can tell
-	</entry>
+        <entry>P</entry>
+        <entry>-</entry>
+        <entry>
+        P is the same as U, as far as I can tell
+        </entry>
       </row>
       <row>
-	<entry>M</entry>
-	<entry>modified</entry>
-	<entry>
-	You have changed this file on your disk, so it no longer matches the
-	version on the server.  This is not a problem; it's just for your 
-	information.  If you want, you can discard your changes and
-	get a fresh copy by deleting the file and running cvs update again.
-	</entry>
+        <entry>M</entry>
+        <entry>modified</entry>
+        <entry>
+        You have changed this file on your disk, so it no longer matches the
+        version on the server.  This is not a problem; it's just for your 
+        information.  If you want, you can discard your changes and
+        get a fresh copy by deleting the file and running cvs update again.
+        </entry>
       </row>
       <row>
-	<entry>C</entry>
-	<entry>conflict</entry>
-	<entry>
-	You have changed this file on your disk, but this change conflicts with
-	a change that was checked in.  Conflicts occur when two people change
-	the same line of code in different ways.  You need to edit the
-	conflicting file(s) and clean it up by hand.  Or, sometimes it's
-	easiest to discard your own edits and download a fresh copy, by
-	deleting the conflicting file and running cvs update again.
-	</entry>
+        <entry>C</entry>
+        <entry>conflict</entry>
+        <entry>
+        You have changed this file on your disk, but this change conflicts with
+        a change that was checked in.  Conflicts occur when two people change
+        the same line of code in different ways.  You need to edit the
+        conflicting file(s) and clean it up by hand.  Or, sometimes it's
+        easiest to discard your own edits and download a fresh copy, by
+        deleting the conflicting file and running cvs update again.
+        </entry>
       </row>
     </tbody>
    </tgroup>
@@ -1046,50 +1037,50 @@ The tag tells which release you want, and it can be one of the following:
   <tgroup cols="2">
     <thead>
       <row>
-	<entry>Bochs version</entry>
-	<entry>Release tag for CVS</entry>
+        <entry>Bochs version</entry>
+        <entry>Release tag for CVS</entry>
       </row>
     </thead>
     <tbody>
       <row>
-	<entry>1.4.1 (bugfix1)</entry>
-	<entry>REL_1_4_1_FINAL</entry>
+        <entry>1.4.1 (bugfix1)</entry>
+        <entry>REL_1_4_1_FINAL</entry>
       </row>
       <row>
-	<entry>1.4</entry>
-	<entry>REL_1_4_FINAL</entry>
+        <entry>1.4</entry>
+        <entry>REL_1_4_FINAL</entry>
       </row>
       <row>
-	<entry>1.3</entry>
-	<entry>REL_1_3_FINAL</entry>
+        <entry>1.3</entry>
+        <entry>REL_1_3_FINAL</entry>
       </row>
       <row>
-	<entry>1.2.1 (bugfix1)</entry>
-	<entry>REL_1_2_1_FINAL</entry>
+        <entry>1.2.1 (bugfix1)</entry>
+        <entry>REL_1_2_1_FINAL</entry>
       </row>
       <row>
-	<entry>1.2</entry>
-	<entry>REL_1_2_FINAL</entry>
+        <entry>1.2</entry>
+        <entry>REL_1_2_FINAL</entry>
       </row>
       <row>
-	<entry>1.1 (bugfix1)</entry>
-	<entry>REL_1_1_BASE</entry>
+        <entry>1.1 (bugfix1)</entry>
+        <entry>REL_1_1_BASE</entry>
       </row>
       <row>
-	<entry>1.1.2 (bugfix3)</entry>
-	<entry>REL_1_1_2_BASE</entry>
+        <entry>1.1.2 (bugfix3)</entry>
+        <entry>REL_1_1_2_BASE</entry>
       </row>
       <row>
-	<entry>1.1.1 (bugfix2)</entry>
-	<entry>REL_1_1_1_BASE</entry>
+        <entry>1.1.1 (bugfix2)</entry>
+        <entry>REL_1_1_1_BASE</entry>
       </row>
       <row>
-	<entry>1.1 (bugfix1)</entry>
-	<entry>REL_1_1_BASE</entry>
+        <entry>1.1 (bugfix1)</entry>
+        <entry>REL_1_1_BASE</entry>
       </row>
       <row>
-	<entry>March 25, 2000</entry>
-	<entry>REL-bochs-2000-03-25</entry>
+        <entry>March 25, 2000</entry>
+        <entry>REL-bochs-2000-03-25</entry>
       </row>
     </tbody>
    </tgroup>
@@ -1892,11 +1883,11 @@ In Bochs 1.3 and before, the X11 gui was always the default.
     <row>
       <entry>--with-win32-vcpp</entry>
       <entry>Use Win32 GUI/Visual C++ environment.  This is for running
-	  configure on a platform which supports running configure, so
-	  that you may then transfer the configured code over to
-	  an MS Win32/Visual C++ environment.  See 
-	  <xref linkend="compiling-win32"> for details.
-	  </entry>
+          configure on a platform which supports running configure, so
+          that you may then transfer the configured code over to
+          an MS Win32/Visual C++ environment.  See 
+          <xref linkend="compiling-win32"> for details.
+          </entry>
     </row>
     <row>
       <entry>--with-win32</entry>
@@ -1953,14 +1944,14 @@ In Bochs 1.3 and before, the X11 gui was always the default.
       <entry>--with-macos</entry>
       <entry>Use Macintosh/CodeWarrior environment.  This is for running
         configure on a platform which supports running configure, so that
-	you may then transfer the configured code over to the
-	real compile environment.  (Hasn't been tested in a long time.)
-	</entry>
+        you may then transfer the configured code over to the
+        real compile environment.  (Hasn't been tested in a long time.)
+        </entry>
     </row>
     <row>
       <entry>--with-nogui</entry>
       <entry>No native GUI; just use blank stubs.  This is if you don't
-	  care about having video output, but are just running tests. 
+          care about having video output, but are just running tests. 
       </entry>
     </row>
   </tbody>
@@ -2080,7 +2071,7 @@ turn it off.
       <entry>--enable-vga</entry>
       <entry>yes</entry>
       <entry>Use VGA emulation.  VGA is the only supported option and
-	  since it's the default, you don't need to include this option.</entry>
+          since it's the default, you don't need to include this option.</entry>
     </row>
     <row>
       <entry>--enable-vbe</entry>
@@ -2094,8 +2085,8 @@ turn it off.
       <entry>--enable-fpu</entry>
       <entry>yes</entry>
       <entry>If you want to compile bochs to make use of the FPU emulator
-	  written by Bill Metzenthen (the one used by the Linux kernel),
-	  use this option.
+          written by Bill Metzenthen (the one used by the Linux kernel),
+          use this option.
       </entry>
     </row>
     <row>
@@ -2115,23 +2106,23 @@ turn it off.
       <entry>--enable-debugger</entry>
       <entry>no</entry>
       <entry>
-	Compile in support for Bochs internal command-line debugger.  This has
-	nothing to do with x86 hardware debug support.  It is a more powerful
-	and non-intrusive native debugger.  Enabling this will of course slow
-	down the emulation.  You only need this option if you know you need it.
-	After you have run ./configure, you may want to edit 'config.h' to
-	customize the debugger further.  Look at the section entitled 'OPTIONAL
-	DEBUGGER SECTION'.  &FIXME; add cross references
+        Compile in support for Bochs internal command-line debugger.  This has
+        nothing to do with x86 hardware debug support.  It is a more powerful
+        and non-intrusive native debugger.  Enabling this will of course slow
+        down the emulation.  You only need this option if you know you need it.
+        After you have run ./configure, you may want to edit 'config.h' to
+        customize the debugger further.  Look at the section entitled 'OPTIONAL
+        DEBUGGER SECTION'.  &FIXME; add cross references
       </entry>
     </row>
     <row>
       <entry>--enable-disasm</entry>
       <entry>no</entry>
       <entry>Compile in support for built-in disassembler.  Bochs has
-	  a built-in disassembler, which is useful if you either
-	  run the built-in debugger (--enable-debugger), or want
-	  disassembly of the current instruction when there is a
-	  panic in bochs.  You don't need this option.</entry>
+          a built-in disassembler, which is useful if you either
+          run the built-in debugger (--enable-debugger), or want
+          disassembly of the current instruction when there is a
+          panic in bochs.  You don't need this option.</entry>
     </row>
     <row>
       <entry>--enable-cpp</entry>
@@ -2174,22 +2165,22 @@ turn it off.
       <entry>--enable-x86-debugger</entry>
       <entry>no</entry>
       <entry>X86 debugger support.  If the software you run in bochs
-	  needs to use the x86 hardware debugging facilities such as
-	  DR0..DR8, instruction and data breakpoints etc., then you
-	  should use this option.  Otherwise don't use it, as it
-	  will slow down the emulation.</entry>
+          needs to use the x86 hardware debugging facilities such as
+          DR0..DR8, instruction and data breakpoints etc., then you
+          should use this option.  Otherwise don't use it, as it
+          will slow down the emulation.</entry>
     </row>
     <row>
       <entry>--enable-pci</entry>
       <entry>no</entry>
       <entry>Enable limited i440FX PCI support.  This is not complete.
-	  Don't use this option.</entry>
+          Don't use this option.</entry>
     </row>
     <row>
       <entry>--enable-port-e9-hack</entry>
       <entry>no</entry>
       <entry>Writes to port e9 go to console.  Unless you know you want
-	  this option, you don't.</entry>
+          this option, you don't.</entry>
     </row>
     <row>
       <entry>--enable-processors={<option>1,2,3,...,15</option>}</entry>
@@ -2272,7 +2263,7 @@ turn it off.
       <entry>--enable-hga-dumps=<option>Nmicroseconds</option></entry>
       <entry>no</entry>
       <entry>Copy memory to HGA video buffer every N useconds.  A
-	  deprecated option, don't use.</entry>
+          deprecated option, don't use.</entry>
     </row>
   </tbody>
 </tgroup>
@@ -2314,15 +2305,15 @@ fpu/fpu_system.h, you could try --disable-fpu.
    <section><title>What does Bochs need?</title>
      <para> &FIXME; </para>
       <para>
-	<screen>
+        <screen>
         - bochsrc, BIOS, VGABIOS, VGA font, disk images.
-	- (DONE) table of bochsrc options and what they do
-	- BIOS/VGABIOS, what do they do?
-	- VGA font, how to install it
-	- disk images
-	  - where to find one pre-made
-	  - make a blank one with bximage
-	  - grab one from a real hard disk
+        - (DONE) table of bochsrc options and what they do
+        - BIOS/VGABIOS, what do they do?
+        - VGA font, how to install it
+        - disk images
+          - where to find one pre-made
+          - make a blank one with bximage
+          - grab one from a real hard disk
       </screen>
       </para>
    </section>
@@ -2397,8 +2388,6 @@ F0000-FFFFF) and the videobios (located at C0000-C7FFF).
 </para>
 <para>
 Those ROM images will be initialized by the bios if they contain
-</para>
-<para>
 the right signature (0x55AA).
 </para>
 <para>
@@ -3293,10 +3282,10 @@ SourceForge
     <para>
     <screen>
         What's a panic?  How to report it to bug tracker, how to make
-	  it non-fatal.
+          it non-fatal.
         Mouse behavior, enabling and disabling
-	Keyboard mapping problems
-	[...]
+        Keyboard mapping problems
+        [...]
     </screen>
     </para>
 </chapter>
@@ -3839,9 +3828,181 @@ your name server as shown.
 </para>
 </section>
 
-<section id="linux-config-tuntap"><title>Linux: Configuring and using a tuntap network interface</title>
+<section id="config-tuntap"><title>Configuring and using a tuntap network interface</title>
 <para>
+If you use linux (optionnaly FreeBSD and Solaris, not tested), 
+you may want to access the network through a tuntap interface. The main
+advantage of this interface, is that the guest has access to the host. The guest can even
+have access to the whole network if the host routes or masquerades the guest requests.
+No extra IP address is needed, all can be done using private IP addresses.
 </para>
+
+<para>
+You'll find here instructions to set up Linux/Bochs to provide network access to the guest OS
+through a tuntap interface and private IP network. We're going to see howto :
+<itemizedlist>
+<listitem> <para>enable the tuntap interface in the Linux Kernel </para> </listitem>
+<listitem> <para>configure Bochs to use the tuntap interface </para> </listitem>
+<listitem> <para>set up the private network between the host and the guest </para> </listitem>
+<listitem> <para>set up the host to masquerade the guest network accesses </para> </listitem>
+</itemizedlist>
+</para>
+<section>
+        <title>Tuntap description</title>
+<para>
+From the <ulink url="http://www.kernel.org/pub/linux/kernel/people/marcelo/linux-2.4/Documentation/networking/tuntap.txt">
+tuntap.txt</ulink> file in the Linux kernel tree :
+<screen>
+  TUN/TAP provides packet reception and transmission for user space programs. 
+  It can be viewed as a simple Point-to-Point or Ethernet device, which 
+  instead of receiving packets from a physical media, receives them from 
+  user space program and instead of sending packets via physical media 
+  writes them to the user space program. 
+
+  When a program opens /dev/net/tun, driver creates and registers corresponding
+  net device tunX or tapX. After a program closed above devices, driver will 
+  automatically delete tunXX or tapXX device and all routes corresponding to it.
+</screen>
+</para>
+</section> <!-- Tuntap description -->
+
+<section>
+        <title>Set up the linux Kernel
+        <footnote><para>much of the information of the following section is taken from 
+        <ulink url="http://maconlinux.org/lists/mol-general/August01/0056.html">
+        this email from Samuel Rydh of the Mac-On-Linux list</ulink></para></footnote></title>
+<para>
+First make sure the tuntap module is included in the kernel :
+<itemizedlist>
+<listitem> 
+        <para>if you use a recent distribution, chances are that the needed modules are already build</para> 
+        <para>Make sure that "Kernel module loader" - module auto-loading support is enabled in your kernel.</para>
+        <para>Add following line to the /etc/modules.conf: <screen> alias char-major-10-200 tun </screen> </para>
+        <para>Run: <screen> depmod -a</screen> The driver will be automatically loaded when application access /dev/net/tun.</para>
+</listitem>
+<listitem> 
+        <para>Otherwise, recompile the kernel, including the configuration option
+        <screen> CONFIG_TUN (Network device support -> Universal TUN/TAP device driver support) </screen>
+        </para> 
+</listitem>
+</itemizedlist>
+<note>
+<para>
+Make sure there is a /dev/net/tun device.
+(Can be created with '<command>mkdir /dev/net ; mknod /dev/net/tun c 10 200'</command>).
+</para>
+</note>
+</para>
+<para>
+In the same way, to use masquerading, you need a kernel wth the following options :
+<screen>
+ CONFIG_IP_NF_CONNTRACK (Connection tracking)
+ CONFIG_IP_NF_IPTABLES (IP tables support)
+ CONFIG_IP_NF_NAT (Full NAT)
+</screen>
+<note>
+<para>
+Some of the other options in this group is probably also needed,
+(but the default setting should be OK).
+</para>
+</note>
+</para>
+</section> <!-- Set up the linux Kernel -->
+ 
+<section>
+        <title>Configure Bochs to use the tuntap interface</title>
+        <para>Make sure Bochs has ne2000 support. If you have to recompile Bochs, 
+                <command>--enable-ne2000</command> when running <command>./configure</command> 
+                (see <xref linkend="compiling">)
+        </para>
+        <para>edit your <replaceable>.bochsrc</replaceable> configuration file and add something like :
+                <screen>  ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, 
+                          ethmod=tuntap, ethdev=tun0, script=<replaceable>/path/to/tunconfig</replaceable>
+                </screen>
+        </para>
+        <para>
+                Since the tuntap interface cannot be configured until a process opens it,
+                Bochs may run a script file for you. In this case 
+                <replaceable>/path/to/tunconfig</replaceable> should be changed to match
+                the actual place where you'll create this script.
+        </para>
+</section> <!-- Configure Bochs to use the tuntap interface -->
+
+<section> 
+<title>Set up the private network between the host and the guest </title> 
+        <para>
+        We'll set up a private network between the host and the guest with the following parameters:
+        <screen>
+                Host IP : 192.168.1.1
+                Guest IP : 192.168.1.2
+        </screen>
+        If your parameters are different, adapt the rest of the section to suit your needs.
+        </para>
+        <para>
+        Create the <replaceable>/path/to/tunconfig</replaceable> script :
+        <screen>
+        #!/bin/bash
+        /sbin/ifconfig $1 192.168.1.1
+        </screen>
+        The script get the interface name as the first parameter. Linux
+        will forward incoming packets between interfaces.
+        </para>
+        <para>
+        Make it executable :<screen>chmod 755 <replaceable>/path/to/tunconfig</replaceable></screen>
+        </para>
+        <para>
+        Run Bochs, install the guest OS, and set the following network parameters :
+        <screen>
+        IP: 192.168.1.2
+        netmask: 255.255.255.0
+        gateway: 192.168.1.1
+        nameserver: whatever is used in linux
+        </screen>
+        <note>
+        <para>
+        Bochs must be started by root (at least for now - the
+        script won't have root privileges otherwise).
+        </para>
+        </note>
+        You may also have to edit /etc/hosts.allow and add :
+        <screen>
+        ALL: 192.168.1.2
+        </screen>
+        Don't forget to set up the route on the guest.
+        </para>
+        <para>
+        At this point, you should be able to ping/telnet/ftp/ssh the guest from the host
+        and vice-versa.
+        </para>
+</section> <!-- Set up the private network between the host and the guest -->
+
+<section> 
+<title>Set up the host to masquerade the guest network accesses</title>
+        <para>
+        We are going to set up standard masquerading configuration. Edit
+        the  <replaceable>/path/to/tunconfig</replaceable> script ans add :
+        <screen>
+        /sbin/iptables -D POSTROUTING -t nat -s 192.168.1.0/24 -d ! 192.168.1.0/24 -j MASQUERADE >& /dev/null
+        /sbin/iptables -t nat -s 192.168.1.0/24 -d ! 192.168.1.0/24 -A POSTROUTING -j MASQUERADE
+        echo 1 > /proc/sys/net/ipv4/ip_forward
+        </screen>
+        <note>
+        <para>
+        The configuration assumes the default policy is
+        ACCEPT (can be examined by doing '<command>/sbin/iptables -L</command>'.
+        </para>
+        </note>
+        <note><para> The iptables package must be installed. </para> </note>
+        And voila... The host should forward the packets of the guest to the rest of your network.
+        You could even have acces to the internet...
+        &FIXME; add nice screenshot
+        <note>
+        <para>
+        You may need to load other modules if you want to use other fancy protocols (ftp,etc...)
+        </para>
+        </note>
+        </para>
+</section> <!-- Set up the host to masquerade the guest network accesses -->
 </section>
 
 <section id="internal-debugger">
@@ -4137,32 +4298,32 @@ Disable tracing.
 Print the current time (number of ticks since start of simulation
 (modulo 2^32)).
 
-<screen>sb <replaceable>delta</replaceable></screen>
+<screen>sb <varname>delta</varname></screen>
 
 Insert a time break point "delta" instructions into the future.
 
-<screen>sba <replaceable>time"</replaceable></screen>
+<screen>sba <varname>time</varname></screen>
 
 Insert a time break point at "time".
 
-<screen>record <replaceable>filename</replaceable></screen>
+<screen>record <varname>filename</varname></screen>
 
-Record console input to file <replaceable>filename</replaceable>. The file consists of
+Record console input to file <varname>filename</varname>. The file consists of
 zero or more lines of the form "%s %d %x", where the first word is the
 event type, the second is a time stamp and the third is event specific
 data.
 
-<screen>playback <replaceable>filename</replaceable></screen>
+<screen>playback <varname>filename</varname></screen>
 
-Playback console input from file <replaceable>filename</replaceable>. Additional input can
+Playback console input from file <varname>filename</varname>. Additional input can
 be given directly in the console window. Events in the file will be
 played back at times relative to the time when the playback command
 was executed.
 
-<screen>print-stack [<replaceable>num words</replaceable>]</screen>
+<screen>print-stack [<varname>num words</varname>]</screen>
 
-Print the <replaceable>num words</replaceable> top 16-bit words on the stack. <replaceable>Num
-words</replaceable> defaults to 16. Only works reliably in protected mode when
+Print the <varname>num words</varname> top 16-bit words on the stack. <varname>Num
+words</varname> defaults to 16. Only works reliably in protected mode when
 the base address of the stack segment is zero.
 
 <screen>watch stop</screen>
@@ -4183,31 +4344,31 @@ Print current watch point status.
 
 Remove all watch points.
 
-<screen>watch read <replaceable>address</replaceable></screen>
+<screen>watch read <varname>address</varname></screen>
 
-Insert a read watch point at physical address <replaceable>address</replaceable>.
+Insert a read watch point at physical address <varname>address</varname>.
 
 <screen>watch write address</screen>
 
-Insert a write watch point at physical address <replaceable>address</replaceable>.
+Insert a write watch point at physical address <varname>address</varname>.
 
-<screen>unwatch read <replaceable>address</replaceable></screen>
+<screen>unwatch read <varname>address</varname></screen>
 
-Remove read watch point from physical address <replaceable>address</replaceable>.
+Remove read watch point from physical address <varname>address</varname>.
 
-<screen>unwatch write <replaceable>address</replaceable></screen>
+<screen>unwatch write <varname>address</varname></screen>
 
-Remove write watch point from physical address <replaceable>address</replaceable>.
+Remove write watch point from physical address <varname>address</varname>.
 
-<screen>modebp [<replaceable>string</replaceable>]</screen>
+<screen>modebp [<varname>string</varname>]</screen>
 
 Toggles vm86 mode switch breakpoint.
 
-<screen>load-symbols [global] <replaceable>filename</replaceable> [<replaceable>offset</replaceable>]</screen>
+<screen>load-symbols [global] <varname>filename</varname> [<varname>offset</varname>]</screen>
 
-Load symbols from file <replaceable>filename</replaceable>. If the global keyword is
+Load symbols from file <varname>filename</varname>. If the global keyword is
 added, then the the symbols will be visible in all contexts for which
-symbols have not been loaded. <replaceable>Offset</replaceable> (default is 0) is added to
+symbols have not been loaded. <varname>Offset</varname> (default is 0) is added to
 every symbol entry. The symbols are loaded in the current (executing)
 context.
 </para>
@@ -4215,7 +4376,7 @@ context.
 <para>
 The symbol file consists of zero or more lines of the format <screen>"%x %s"</screen>.
 
-<screen>show [<replaceable>string</replaceable>]</screen>
+<screen>show [<varname>string</varname>]</screen>
 
 <screen>
   Toggles show symbolic info (calls to begin with).
@@ -4237,19 +4398,19 @@ Resource file extensions
 </title>
 <para>
 
-<screen>time0: <replaceable>time</replaceable></screen>
+<screen>time0: <varname>time</varname></screen>
 
 Specifies the start (boot) time of the virtual machine. Use a
-<replaceable>time</replaceable> value as returned by the time(2) system call. <replaceable>Time</replaceable>
+<varname>time</varname> value as returned by the time(2) system call. <varname>Time</varname>
 equal to 1 is a special case which starts the virtual machine at the
 current time of the simulator host.
 
-<screen>cdromd: dev=<replaceable>device</replaceable>, status=(inserted|ejected)</screen>
+<screen>cdromd: dev=<varname>device</varname>, status=(inserted|ejected)</screen>
 
 LoseNT needs a CD in order to boot properly. Our simulated CD-ROM unit
-communicates directly with the CD-ROM driver in Linux. <replaceable>Device</replaceable>
+communicates directly with the CD-ROM driver in Linux. <varname>Device</varname>
 is a device special file to which the CD-ROM driver is connected
-(typically /dev/hdc). <replaceable>Device</replaceable> is ignored if status=ejected.
+(typically /dev/hdc). <varname>Device</varname> is ignored if status=ejected.
 </para>
 
 </section>
@@ -4268,15 +4429,83 @@ Related links
 </section> 
 </section> <!-- Using Bochs internal debugger -->
 
+<section id="debugging-with-gdb">
+<title>
+Using Bochs and the remote GDB stub
+</title>
+<para>
+This section covers how you can use Bochs with a remote GDB stub to debug your kernel.
+</para>
+
+<section>
+<title>
+Configurating Bochs
+</title>
+<para>
+The GDB stub is not active in standard Bochs binary package.  So you must recompile Bochs. 
+Download the Bochs source package, untar it and run the configure script 
+with the <command>`--enable-gdb-stub'</command> argument.
+
+<screen>
+  $ ./configure --enable-gdb-stub
+</screen>
+
+After that, just run make and you should have a Bochs binary that contain a GDB stub in your directory.
+</para>
+</section>
+
+<section>
+<title>
+Running Bochs
+</title>
+<para>
+Just start Bochs as normal. Bochs will stop and wait for GDB to connect to the stub.
+</para>
+</section>
+
+<section>
+<title>
+Running GDB
+</title>
+<para>
+Bochs GDB stub waits for a connection on port 1234 on localhost (127.0.0.1). Just start GDB like this;
+
+<screen>
+  $ gdb YOUR-KERNEL
+  .
+  .
+  .
+  (gdb) target remote localhost:1234
+  Remote debugging using localhost:1234
+  0x0000fff0 in ?? ()
+  (gdb) 
+</screen>
+
+You are now connected to the remote GDB stub in Bochs. You are now able to set breakpoints. 
+Use the continue (c) command to continue the simulation.
+
+Hitting ^C works. Example;
+
+<screen>
+  Program received signal 0, Signal 0.
+  syscall_testsuite_result (aux=0x1f11fe4) at ../rtmk/syscalls.c:33
+  33     {
+  (gdb) 
+</screen>
+</para>
+</section>
+
+</section>
+
 <section> 
 <title>Bios Tips</title>
-	<section> 
-	<title>CD Boot error codes</title>
-	<para>
+        <section> 
+        <title>CD Boot error codes</title>
+        <para>
 When failing to boot from CDROM, the bios outputs 
 the reason of the failure as
 an error code, in the log file, and on the screen.
-Here are the menaning of the errors:
+Here are the meaning of the errors:
 
 <table><title>CD Boot error codes</title>
 <tgroup cols=2 align=left colsep=1 rowsep=1>
@@ -4302,14 +4531,14 @@ Here are the menaning of the errors:
 </tbody>
 </tgroup>
 </table>
-	</para>
-	</section>
+        </para>
+        </section>
 
-	<section> 
-	<title>Disk translation</title>
-	<para>
-	</para>
-	</section>
+        <section> 
+        <title>Disk translation</title>
+        <para>
+        </para>
+        </section>
 </section>
 
 </chapter>
@@ -4318,35 +4547,353 @@ Here are the menaning of the errors:
 
 
 <chapter><title>Guest operating systems</title>
+        <section><title>Linux</title>
+           <para>
+           <screen>
+            What disk images are available.
+            Installing from scratch.
+            What works
+            Known problems
+           </screen>
+           </para>
+        </section>
         <section> <title>Minix</title>
                   <para>
                   </para>
         </section>
-	<section><title>Linux</title>
-           <para>
-	    What disk images are available.
-	    Installing from scratch.
-	    What works
-	    Known problems
-            </para>
-          </section>
-	  <section><title>OpenBSD</title>
+          <section><title>OpenBSD</title>
              <para>
              </para>
           </section>
-	  <section><title>FreeBSD</title>
+          <section><title>FreeBSD</title>
              <para>
              </para>
           </section>
-	  <section><title>FreeDOS</title>
+          <section><title>FreeDOS</title>
              <para>
              </para>
           </section>
-	  <section><title>The Hurd</title>
-             <para>
-             </para>
-          </section>
-	  <section><title>DOS</title>
+          <section><title>The Hurd</title>
+
+<section>
+<title>Installing the Hurd</title>
+<para>
+This has been contributed by Bruno Bonfils (asyd at debian-fr dot org) 
+</para>
+
+<section>
+<title>Introduction</title>
+<para>
+Since I don't have enough computers to dedicate a box to the Hurd, I'm trying
+to do my own harddrive image disk. I thougt there was
+some documentation about how to do that. But since I didn't find
+anything and I decided to write a small doc. I hope this document will be
+useful for some people who wants to try the Hurd.
+</para>
+</section>
+
+<section> 
+<title>The testing box</title>
+<para>
+<screen>
+Debian (Sid) GNU/Linux 2.4.19 
+
+ii  bochs          1.4.1.no.elpin IA-32 (x86) PC emulator
+ii  bochs-x        1.4.1.no.elpin Bochs binary with X interface.
+ii  grub           0.92+cvs200209 GRand Unified Bootloader
+ii  gcc-i386-gnu   1.7-8          Cheap cross-compiler for GNU/Hurd.
+ii  mig-i386-gnu   1.2-1          The GNU distribution of the Mach 3.0 interface
+</screen>
+
+If you don't have time and if you trust me, you can download here
+<footnote>
+<para>
+<ulink url="http://plouc.net/~asyd/hurd/hurd.img.gz">My own harddisk Image File (~20Mo)</ulink>
+</para>
+</footnote>
+my own image file. (You don't need to run native-install)
+</para>
+</section>
+
+<section>
+<title> Creating the image</title>
+
+<note>
+<para>
+In this example, I use a 112 MB image disk, but I think you
+can use any size without some problem.
+</para>
+</note>
+
+<para>
+Use createdisk command like this :
+
+<screen>
+# createdisk hurd.img 112 
+
+Disk Geometry:
+C: 227
+H: 16
+S: 63
+Total size: 117153792 bytes
+</screen>
+</para>
+
+<para>
+Note on a paper or on your memory the disk geometry. Then, use the
+losetup command to create a loopback on the whole disk.
+<screen>
+# losetup /dev/loop1 hurd.img
+</screen>
+</para>
+
+<para>
+Now, call fdisk on /dev/loop1. Go into expert mode, and modify the
+disk geometry using the c, h, s commands. Return in normal mode, and
+create an unique primary partition which uses the whole disk. Then,
+detach the /dev/loop1 using :
+
+<screen># losetup -d /dev/loop1</screen>
+</para>
+</section>
+
+<section>
+<title> Installing GNU/Hurd</title>
+
+<itemizedlist>
+<listitem>
+<para> Attach the partition</para>
+
+<para> 
+First of all, you need to create a filesystem on the disk. Use the
+command losetup and -o &lt;offset&gt; option to attach /dev/loop1 on the first
+partition of an image disk. Offset is computed like this :
+</para> 
+
+<para> 
+offset = sector * block_size (512)
+
+<screen># losetup -o 32256 /dev/loop1 hurd.img</screen>
+</para>
+</listitem>
+
+<listitem>
+<para> Preparing the filesystem</para>
+
+<para>According to The Hurd Installation Guide
+<footnote>
+<para>
+<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
+<para>
+</footnote>
+, use mke2fs to create a filesystem.
+
+<screen># mke2fs -o hurd /dev/loop1</screen>
+
+Just mount /dev/loop1 like a typical dev.
+
+<screen># mount /dev/loop1 /mnt/gnu</screen>
+</para>
+</listitem>
+
+<listitem>
+<para> Finish the installation</para>
+
+<para>
+Download a GNU/Hurd archive as indicated in the Hurd Installation Guide, and decompress it in /mnt/gnu.
+
+<screen>
+# cd /mnt/gnu
+# tar --same-owner -xvzpf ~/gnu-latest.tar.gz
+</screen>
+</para>
+</listitem>
+
+</itemizedlist>
+</section>
+
+<section>
+<title> Bochs Configuration</title>
+
+<para>
+Copy default configuration (<replaceable>/usr/share/doc/bochs/examples/bochsrc.gz</replaceable> on debian) 
+on your home directory and edit it with your favorite editor (GNU Emacs, i hope ;).
+</para>
+
+<para>For my image file I have the following configuration :
+
+<screen>
+romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xf0000
+megs: 128
+vgaromimage: /usr/share/vgabios/vgabios.bin
+floppya: 1_44=/dev/fd0, status=ejected
+diskc: file="/home/asyd/travail/hurd/hurd.img", cyl=227, heads=16, spt=63 # edit me
+cdromd: dev=/dev/cdrom, status=inserted
+boot: c
+log: /dev/stdout
+panic: action=ask
+error: action=report
+info: action=report
+debug: action=ignore
+vga_update_interval: 300000
+keyboard_serial_delay: 250
+keyboard_paste_delay: 100000
+floppy_command_delay: 500
+ips: 1000000
+mouse: enabled=0
+private_colormap: enabled=0
+fullscreen: enabled=0
+screenmode: name="sample"
+ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+keyboard_mapping: enabled=0, map=
+keyboard_type: xt
+i440fxsupport: enabled=0
+</screen>
+
+note most of them are actually in the default Debian example file. If you use
+these lines, don't forget to read the Networking section.
+</para>
+</section>
+
+<section>
+<title> Note on GNU Mach</title>
+
+<para>
+Remember that the Hurd is not an OS, it's just a collection of libraries
+and programs, so we can't actually boot the Hurd. We boot GNU Mach, and
+then launch the base servers.
+</para>
+
+<para>
+The default GNU Mach which is provided by the default GNU/Hurd archive 
+contains some modules / drivers which are not needed in bochs 
+environment. If you use it, you'll probably have some kernel panic 
+while booting. Don't be afraid and just say alwayscont.
+</para>
+
+<note>
+<para>
+in my archive, I use a recompiled GNU Mach which contains only the
+drivers which are needed (--enable-floppy --enable-ide --enable-kmsg
+--enable-ne2000). If you want more informations on how to compile your own
+GNU Mach, just send me a mail and I'll add the section in this
+document.
+</para>
+</note>
+
+</section>
+
+<section>
+<title> Final Step</title>
+
+<para>
+Create a grub floppy disk or use my floppy image 
+<footnote>
+<para>
+Grub Floppy image : (coming soon)
+<para>
+</footnote>
+Adapt your bochsrc
+file according to your choice. If you want install Grub on the image disk,
+remember to copy stage1, stage2 Grub's files into /mnt/gnu/boot/grub.
+</para>
+<para>Launch bochs - as root if you want networking (using sudo for example).</para>
+
+<para>If you have stage1 and stage2 file, you can install Grub on the MBR.
+<screen>
+&lt;grub&gt; root (hd0,0)
+&lt;grub&gt; setup (hd0)
+</screen>
+</para>
+
+<para>Finally, booting GNU mach
+
+<screen>
+&lt;grub&gt; root (hd0,0)
+&lt;grub&gt; kernel /boot/gnumach.gz root=hd0s1
+&lt;grub&gt; module /boot/serverboot.gz
+&lt;grub&gt; boot
+</screen>
+
+Now, you can read the official Hurd Installation Guide
+<footnote>
+<para>
+<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
+<para>
+</footnote>
+.
+</para>
+</section>
+
+<section>
+<title>Networking</title>
+
+<para>
+You can try to test networking between the GNU/Linux (host OS) and the GNU/Hurd.
+First of all, please read 
+<footnote>
+<para>
+<ulink url="http://www.geocrawler.com/archives/3/11758/2002/3/350/8049674/">new ethertap interface for linux, by Bryce Denney</ulink>
+</para>
+</footnote>
+, I currently have the *same* problem.
+<footnote>
+<para>
+This can be solved by using the tuntap interface (see <xref linkend="config-tuntap">)
+</para>
+</footnote>
+</para>
+
+<para>
+Verify your kernel configuration, you need to have :
+
+<screen>
+CONFIG_NETLINK_DEV=m
+CONFIG_ETHERTAP=m
+</screen>
+
+(or y instead or m). Check if /dev/tap0 file exist, else create it
+with
+
+<screen>
+# mknod /dev/tap0 c 36 16
+</screen>
+
+and run this command on the guest os :
+
+<screen>
+# ifconfig tap0 192.168.100.1 netmask 255.255.255.0
+</screen>
+
+Use ip 196.168.100.10 on the GNU/Hurd and you can ping 192.168.100.1
+</para>
+
+</section>
+
+<section>
+<title> Thanks</title>
+
+<para>
+<itemizedlist>
+<listitem> <para> Mmenal</para> </listitem>
+<listitem> <para> #hurdfr, #hurd, #bochs channels (Freenode network)</para> </listitem>
+<listitem> <para> All people who help me everyday on IRC</para> </listitem>
+</itemizedlist>
+</para>
+
+<para> Copyright (c) Bruno Bonfils</para>
+<para>
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.1
+or any later version published by the Free Software Foundation.
+</para>
+</section>
+
+</section> <!-- Installing the Hurd -->
+
+          </section> <!-- The Hurd -->
+
+          <section><title>DOS</title>
 <section><title>Accessing your CDROM</title>
 <para>
 To access your CDROM in DOS, you must download an IDE CDROM driver.  
@@ -4396,7 +4943,7 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
           </section>
 
 <section>
-	<title>Windows 95</title>
+        <title>Windows 95</title>
 
 <section><title>How to Install Windows 95 with floppies</title>
 <para>Using Windows95 for PCs without Windows, 1.44M floppy distribution</para>
@@ -4999,37 +5546,91 @@ and fire it up.
 
 </section><!-- end of Installing Windows 95 with floppies -->
 
+        <section>
+                <title>Installing a Japanese version of Windows 95</title>
+                        <para>
+It is possible to install a japanese version of Windows 95. However, a 
+patch to the VGA card is needed (VGA Write Mode 2). 
+                        </para>
+                        <para>
+&FIXME; we have to make
+sure that the patch is or not included in Bochs 2.0.
+                        </para>
+                        <para>
+The following has been contributed by  dohzono at hf dot rim dot or dot jpa :
 
+<screen>
+Here is a tip for installing Japanese win95 (requires "VGA write mode
+2" patch). 
 
-	<section>
-		<title>Installing a Japanese version of win95</title>
-       	 	<para>
-		  &FIXME;
-       	 	</para>
-	</section>
-	<section>
-		<title>32 bits disk access support and Promise DC23000 VLB</title>
-       	 	<para>
-		  &FIXME;
-       	 	</para>
-	</section>
+                    *
+
+I made a boot floppy and installed the W95 disk image. I used "CD for
+new machines" (not an upgrade version). Host OS is FreeBSD-4.0R. It
+seems working.
+
+When you make a boot floppy with W95(J), there is a line containing
+
+  DEVICE=JDISP.SYS /HS=LC
+
+in the config.sys (Highspeed Scroll?). jdisp.sys can have options:
+
+        /HS=ON
+        /HS=LC
+        /HS=OFF
+
+and bochs runs with /HS=OFF option (I've heard that VMware requires
+/HS=LC option).
+
+# If you choose /HS=ON, you can read usual Japanese messages on the
+# screen, but it doesn't scroll (the cursor goes downward and out of
+# the screen). If you choose /HS=LC, you can see some images
+# (corrupted messages), and also it doesn't scroll.
+
+Here is my boot floppy's config.sys. I just changed the option like
+above (/HS=OFF), and added a line for the CD driver.
+
+  DEVICE=BILING.SYS
+  DEVICE=JFONT.SYS /MSG=OFF
+  DEVICE=JDISP.SYS /HS=OFF
+  DEVICE=JKEYB.SYS
+  device=gscdrom.sys /d:mscd000 /v
+
+After installing to the HD image, I made a change to the line of
+c:/config.sys
+
+  DEVICE=JDISP.SYS
+
+to
+
+  DEVICE=JDISP.SYS /HS=OFF
+                   ^^^^^^^
+</screen>
+                        </para>
+        </section>
+        <section>
+                <title>32 bits disk access support and Promise DC23000 VLB</title>
+                        <para>
++ 		  &FIXME;
+                        </para>
+        </section>
 </section>
 <section>
-	<title>Windows NT 4.0</title>
+        <title>Windows NT 4.0</title>
         <para>
         </para>
 </section>
 <section>
-	<title>Windows 98</title>
+        <title>Windows 98</title>
         <para>
         </para>
 </section>
 <section>
-	<title>Windows ME</title>
+        <title>Windows ME</title>
         <para>
-	
-		<section><title>Installing Windows ME</title>
-		<para>
+        
+                <section><title>Installing Windows ME</title>
+                <para>
 
 This has been contributed by Sancho Roberto :
 
@@ -5137,7 +5738,7 @@ Parts/Attachments:
 
    /it - This switch bypasses checking for the presence of "dirty" or "deadly" 
          terminate-and-stay-resident programs (TSRs) that are known to 
-	 cause problems with Windows Setup.
+         cause problems with Windows Setup.
          Maybe not necessary. Just in case
 
    /p b;g=3
@@ -5265,16 +5866,16 @@ Some bugs i've found
   as it was time ago.
 </screen>
 
-		</para>
-		</section> <!-- end of Installing Windows ME -->
+                </para>
+                </section> <!-- end of Installing Windows ME -->
 </section>
 <section>
-	<title>Windows 2000</title>
+        <title>Windows 2000</title>
         <para>
         </para>
 </section>
 <section>
-	<title>Windows XP</title>
+        <title>Windows XP</title>
         <para>
         </para>
 </section>
