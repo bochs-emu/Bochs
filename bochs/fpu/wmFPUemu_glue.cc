@@ -138,6 +138,7 @@ fpu_get_ds(void)
 fpu_set_ax(unsigned short val16)
 {
 // define to set AX in the current CPU -- not ideal.
+#undef AX
 #define AX (fpu_cpu_ptr->gen_reg[0].word.rx)
   AX = val16;
 #undef AX
