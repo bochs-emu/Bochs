@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.69 2002-08-27 19:54:46 bdenney Exp $
+// $Id: harddrv.cc,v 1.70 2002-09-09 16:56:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.69 2002-08-27 19:54:46 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.70 2002-09-09 16:56:56 kevinlawton Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -421,17 +421,41 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
             BX_PANIC(("IO read(1f0): buffer_index >= 512"));
 
-          value32 = 0L;
-          switch(io_len){
-            case 4:
-              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] << 24);
-              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] << 16);
-            case 2:
-              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] << 8);
-              value32 |=  BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index];
-            }
+#if BX_SupportRepeatSpeedups
+          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+            unsigned transferLen, quantumsMax;
 
-          BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            quantumsMax =
+              (512 - BX_SELECTED_CONTROLLER.buffer_index) / io_len;
+if ( quantumsMax == 0)
+  BX_PANIC(("IO read(1f0): not enough space for read"));
+            BX_HD_THIS devices->bulkIOQuantumsTransferred =
+                BX_HD_THIS devices->bulkIOQuantumsRequested;
+            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
+              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
+            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
+            memcpy((Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+              &BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index], 
+              transferLen);
+            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+            BX_SELECTED_CONTROLLER.buffer_index += transferLen;
+            value32 = 0; // Value returned not important;
+            }
+          else
+#endif
+            {
+            value32 = 0L;
+            switch(io_len){
+              case 4:
+                value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] << 24);
+                value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] << 16);
+              case 2:
+                value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] << 8);
+                value32 |=  BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index];
+              }
+
+            BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            }
 
           // if buffer completely read
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512) {
@@ -881,16 +905,40 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
             BX_PANIC(("IO write(1f0): buffer_index >= 512"));
 
-          switch(io_len){
-            case 4:
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] = (Bit8u)(value >> 24);
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] = (Bit8u)(value >> 16);
-            case 2:
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (Bit8u)(value >> 8);
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index]   = (Bit8u) value;
-            }
+#if BX_SupportRepeatSpeedups
+          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+            unsigned transferLen, quantumsMax;
 
-          BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            quantumsMax =
+              (512 - BX_SELECTED_CONTROLLER.buffer_index) / io_len;
+if ( quantumsMax == 0)
+  BX_PANIC(("IO write(1f0): not enough space for write"));
+            BX_HD_THIS devices->bulkIOQuantumsTransferred =
+                BX_HD_THIS devices->bulkIOQuantumsRequested;
+            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
+              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
+            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
+            memcpy(
+              &BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index], 
+              (Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+              transferLen);
+            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+            BX_SELECTED_CONTROLLER.buffer_index += transferLen;
+            }
+          else
+#endif
+            {
+            switch(io_len){
+              case 4:
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] = (Bit8u)(value >> 24);
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] = (Bit8u)(value >> 16);
+              case 2:
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (Bit8u)(value >> 8);
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index]   = (Bit8u) value;
+              }
+
+            BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            }
 
           /* if buffer completely writtten */
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.9 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: io.cc,v 1.10 2002-09-09 16:56:54 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,8 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+
 
 
 
@@ -141,7 +143,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
         Bit32u laddrDst, paddrDst, wordsFitDst;
         Bit8u *hostAddrDst;
         bx_segment_reg_t *dstSegPtr;
-        unsigned pointerDelta;
+        int pointerDelta;
 
         dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SREG_ES];
 
@@ -172,7 +174,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
             if ( (paddrDst & 0xfff) > 0xffe )
               goto noAcceleration;
             wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
-            pointerDelta = (unsigned) -2;
+            pointerDelta = -2;
             }
           else {
             // Counting upward.
@@ -224,23 +226,33 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
 
             for (j=0; j<wordCount; ) {
               Bit16u temp16;
-              if (j) {
-                // Complete a tick for the last iteration, terminating
-                // with one less tick than iterations, since the main cpu
-                // loop also decrements one.  Probably a little anal...
-                BX_TICK1();
+              bx_devices.bulkIOQuantumsTransferred = 0;
+              if ( GetEFlagsDFLogical()==0 ) { // Only do accel for DF=0
+                bx_devices.bulkIOHostAddr = (Bit32u) hostAddrDst;
+                bx_devices.bulkIOQuantumsRequested = (wordCount - j);
                 }
+              else
+                bx_devices.bulkIOQuantumsRequested = 0;
               temp16 = BX_INP(DX, 2);
-              * (Bit16u *) hostAddrDst = temp16;
-              hostAddrDst += pointerDelta;
-              j++;
+              if ( bx_devices.bulkIOQuantumsTransferred ) {
+                hostAddrDst =  (Bit8u*) bx_devices.bulkIOHostAddr;
+                j += bx_devices.bulkIOQuantumsTransferred;
+                }
+              else {
+                * (Bit16u *) hostAddrDst = temp16;
+                hostAddrDst += pointerDelta;
+                j++;
+                }
               // Terminate early if there was an event.
               if ( BX_CPU_THIS_PTR async_event )
                 break;
               }
+            // Reset for next non-bulk IO.
+            bx_devices.bulkIOQuantumsRequested = 0;
             wordCount = j;
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
+            BX_TICKN(j-1); // Main cpu loop also decrements one more.
             if (i->as_32)
               ECX -= (wordCount-1);
             else
@@ -478,23 +490,33 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
 
             for (j=0; j<wordCount; ) {
               Bit16u temp16;
-              if (j) {
-                // Complete a tick for the last iteration, terminating
-                // with one less tick than iterations, since the main cpu
-                // loop also decrements one.  Probably a little anal...
-                BX_TICK1();
+              bx_devices.bulkIOQuantumsTransferred = 0;
+              if ( GetEFlagsDFLogical()==0 ) { // Only do accel for DF=0
+                bx_devices.bulkIOHostAddr = (Bit32u) hostAddrSrc;
+                bx_devices.bulkIOQuantumsRequested = (wordCount - j);
                 }
+              else
+                bx_devices.bulkIOQuantumsRequested = 0;
               temp16 = * (Bit16u *) hostAddrSrc;
-              hostAddrSrc += pointerDelta;
               BX_OUTP(DX, temp16, 2);
-              j++;
+              if ( bx_devices.bulkIOQuantumsTransferred ) {
+                hostAddrSrc =  (Bit8u*) bx_devices.bulkIOHostAddr;
+                j += bx_devices.bulkIOQuantumsTransferred;
+                }
+              else {
+                hostAddrSrc += pointerDelta;
+                j++;
+                }
               // Terminate early if there was an event.
               if ( BX_CPU_THIS_PTR async_event )
                 break;
               }
+            // Reset for next non-bulk IO.
+            bx_devices.bulkIOQuantumsRequested = 0;
             wordCount = j;
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
+            BX_TICKN(j-1); // Main cpu loop also decrements one more.
             if (i->as_32)
               ECX -= (wordCount-1);
             else

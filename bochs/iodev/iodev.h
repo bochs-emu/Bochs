@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.16 2002-08-27 19:54:46 bdenney Exp $
+// $Id: iodev.h,v 1.17 2002-09-09 16:56:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -119,6 +119,17 @@ public:
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c	   *iodebug;
 #endif
+
+  // Some info to pass to devices which can handled bulk IO.  This allows
+  // the interface to remain the same for IO devices which can't handle
+  // bulk IO.  We should probably implement special INPBulk() and OUTBulk()
+  // functions which stick these values in the bx_devices_c class, and
+  // then call the normal functions rather than having gross globals
+  // variables.
+  Bit32u   bulkIOHostAddr;
+  unsigned bulkIOQuantumsRequested;
+  unsigned bulkIOQuantumsTransferred;
+
 
 private:
   Bit8u                 read_handler_id[0x10000];  // 64K
