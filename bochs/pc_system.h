@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.25 2003-03-02 23:59:08 cbothamy Exp $
+// $Id: pc_system.h,v 1.26 2004-01-17 15:51:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
+//  Copyright (C) 2004  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -67,6 +67,7 @@ private:
     } timer[BX_MAX_TIMERS];
 
   unsigned   numTimers;  // Number of currently allocated timers.
+  unsigned   triggeredTimer;  // ID of the actually triggered timer.
   Bit32u     currCountdown; // Current countdown ticks value (decrements to 0).
   Bit32u     currCountdownPeriod; // Length of current countdown period.
   Bit64u     ticksTotal; // Num ticks total since start of emulator execution.
@@ -105,6 +106,9 @@ public:
   void   activate_timer( unsigned timer_index, Bit32u useconds,
                          bx_bool continuous );
   void   deactivate_timer( unsigned timer_index );
+  unsigned triggeredTimerID(void) {
+    return triggeredTimer;
+  }
   static BX_CPP_INLINE void tick1(void) {
 #if BX_SHOW_IPS
   {

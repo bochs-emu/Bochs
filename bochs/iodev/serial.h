@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.15 2003-11-16 08:21:10 vruppert Exp $
+// $Id: serial.h,v 1.16 2004-01-17 15:51:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
+//  Copyright (C) 2004  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -47,6 +47,17 @@
 #define  BX_SER_RXIDLE  0
 #define  BX_SER_RXPOLL  1
 #define  BX_SER_RXWAIT  2
+
+#define BX_SER_THR  0
+#define BX_SER_RBR  0
+#define BX_SER_IER  1
+#define BX_SER_IIR  2
+#define BX_SER_FCR  2
+#define BX_SER_LCR  3
+#define BX_SER_MCR  4
+#define BX_SER_LSR  5
+#define BX_SER_MSR  6
+#define BX_SER_SCR  7
 
 enum {
   BX_SER_INT_IER,
