@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.18 2002-10-11 01:11:11 kevinlawton Exp $
+// $Id: protect_ctrl.cc,v 1.19 2002-10-13 15:34:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -646,7 +646,7 @@ BX_CPU_C::VERR_Ew(bxInstruction_c *i)
       return;
       }
     set_ZF(1); /* accessible */
-    BX_ERROR(("VERR: data segment OK"));
+    BX_DEBUG(("VERR: data segment OK"));
     return;
     }
 }
@@ -719,7 +719,7 @@ BX_CPU_C::VERW_Ew(bxInstruction_c *i)
       return;
       }
     set_ZF(1); /* accessible */
-    BX_ERROR(("VERW: data seg writable"));
+    BX_DEBUG(("VERW: data seg writable"));
     return;
     }
 
