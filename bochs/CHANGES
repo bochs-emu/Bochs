@@ -85,8 +85,10 @@ Changes to next release:
     - serial port i/o mode option added (modes: null, file, term, raw, mouse)
   - parallel
     - multiple parallel port support added (2 ports now available)
-  - serial mouse support (Volker)
-  - PS/2 and serial wheel mouse support (Ben Lunt)
+  - mouse
+    - serial mouse support (Volker)
+    - PS/2 and serial wheel mouse support (Ben Lunt)
+    - USB mouse support (Ben Lunt)
   - vga
     - VBE 8 bit DAC support added
     - VBE memory now registered using DEV_register_memory_handlers()
@@ -113,8 +115,8 @@ Changes to next release:
 - display libraries
   - status bar with indicators for cdrom, floppy, harddisk and keyboard added
     (done in rfb, sdl, win32, wx and x)
-  - 3rd (middle) mouse button now supported (sdl, win32, wx, x)
-  - mouse wheel support (win32, x)
+  - 3rd (middle) mouse button now supported (rfb, sdl, win32, wx, x)
+  - mouse wheel support (sdl, win32, x)
   - CTRL key + middle mouse button now used to toggle the mouse capture mode
     (sdl, win32, wx, x)
   - text mode split screen feature added (sdl, win32, wx, x)
@@ -173,7 +175,8 @@ Changes to next release:
  [1021740] Turn gdb stub into a runtime option by Charles Duffy
  [1063329] RFB key press/release bug fix by Remko van der Vossen
  [1079240] Wheel Mouse by Ben Lunt
- [1087537] Fix for Win9X CD Boot
+ [1087537] Fix for Win9x CD boot by lukewarm
+ [1083218] Start of wheel for USB #2 by Ben Lunt
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
