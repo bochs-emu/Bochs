@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.74 2002-11-27 21:25:56 ndavidg Exp $
+$Id: user.dbk,v 1.75 2002-11-30 08:58:49 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -53,7 +53,7 @@ have to be clear in our terminology to avoid confusion.  The host platform is
 the machine that runs the Bochs software.  The guest platform is the operating
 system and applications that Bochs is simulating.
 </para>
-</footnote>, including x86, PPS, Alpha, Sun, and MIPS.  No matter what the
+</footnote>, including x86, PPC, Alpha, Sun, and MIPS.  No matter what the
 host platform is, Bochs still simulates x86 software.  In other words, it
 does not depend on the native instructions of the host machine at all.
 This is both a strength and a weakness, and it's the major difference between
@@ -425,7 +425,7 @@ currently work with.
   <row>
     <entry>Serial Port</entry>
     <entry>Not quite</entry>
-    <entry>The serial port (single 8259 UART emulation) is not really usable
+    <entry>The serial port (single 16450 UART emulation) is not really usable
     yet.  The interface to the emulated CPU is mostly working, but it needs
     some work before it can talk to a raw serial port or to a pseudo terminal.
     </entry>
@@ -686,7 +686,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      Does bochs support a CDROM?
      </para></question>
      <answer><para>
-     Yes, a CDROM is supported in Linux, Windows, and OpenBSD.  The
+     Yes, a CDROM is supported in Linux, Windows, BeOS, and OpenBSD.  The
 CDROM drivers for bochs allow the guest operating system to access the
 host operating system's CDROM data directly.
      </para></answer>
@@ -1986,7 +1986,7 @@ turn it off.
     </row>
     <row>
       <entry>--enable-cdrom</entry>
-      <entry>no</entry>
+      <entry>yes</entry>
       <entry>
       Enable use of a real CDROM.  The cdrom emulation is always present, and
       emulates a drive without media by default.  You can use this option to
@@ -2067,12 +2067,6 @@ turn it off.
       Exception: Under most circumstances, Bochs can talk to the local host
       on Windows, and in the ethertap interface for Linux.
       </entry>
-    </row>
-    <row>
-      <entry>--enable-vga</entry>
-      <entry>yes</entry>
-      <entry>Use VGA emulation.  VGA is the only supported option and
-          since it's the default, you don't need to include this option.</entry>
     </row>
     <row>
       <entry>--enable-vbe</entry>
@@ -2179,7 +2173,7 @@ turn it off.
     </row>
     <row>
       <entry>--enable-port-e9-hack</entry>
-      <entry>no</entry>
+      <entry>yes</entry>
       <entry>Writes to port e9 go to console.  Unless you know you want
           this option, you don't.</entry>
     </row>
@@ -2259,12 +2253,6 @@ turn it off.
       option, the CMOS clock uses a time0 based on the value of time(NULL),
       which is probably what you want.
       </entry>
-    </row>
-    <row>
-      <entry>--enable-hga-dumps=<option>Nmicroseconds</option></entry>
-      <entry>no</entry>
-      <entry>Copy memory to HGA video buffer every N useconds.  A
-          deprecated option, don't use.</entry>
     </row>
   </tbody>
 </tgroup>
@@ -3031,8 +3019,9 @@ Examples:
   user_shortcut: keys=ctrlaltesc
 </screen>
 This defines the keyboard shortcut to be sent when you press the "user"
-button in the headerbar. These shortcuts are currently recognized:
-ctrlaltdel, ctrlaltesc, ctrlaltf1, alttab
+button in the headerbar. The shortcut string can be a combination of
+these key names: "alt", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
+Up to 3 keys can be pressed at a time.
 </para>
 </section>
 
@@ -5278,10 +5267,10 @@ Setup your '.bochsrc' file.  For example:
   boot: c
   diskc: file=62M, cyl=940, heads=8, spt=17
   floppya: 1_44=1.44, status=inserted
-  vgaromimage: bios/VGABIOS-elpin-2.00A
-  romimage: bios/BIOS-bochs-980118a (use newest one)
+  vgaromimage: bios/VGABIOS-elpin-2.40
+  romimage: bios/BIOS-bochs-latest (use newest one)
   log: ./bochs.out
-  hga_update_interval: 300000
+  vga_update_interval: 300000
   keyboard_serial_delay: 200
   floppy_command_delay: 500
 </programlisting>
@@ -6128,7 +6117,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.74 2002-11-27 21:25:56 ndavidg Exp $
+        $Id: user.dbk,v 1.75 2002-11-30 08:58:49 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6404,7 +6393,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.74 2002-11-27 21:25:56 ndavidg Exp $
+        $Id: user.dbk,v 1.75 2002-11-30 08:58:49 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
