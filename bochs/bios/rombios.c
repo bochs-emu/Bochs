@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.35 2002-02-06 20:57:05 cbothamy Exp $
+// $Id: rombios.c,v 1.36 2002-03-09 01:50:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,7 +89,7 @@
 //     the pci-dma, isa-dma, interrupt and trace functions
 //   - The driver makes use of EBDA segment. 
 //     I used memory starting at 0x5D in the segment (used for 2nd ide 
-//     interface in usual AMI bios)
+//     interface in usual AMI bios). 
 //     It can easily be moved, look in EbdaData definition
 //     The filler in this structure can be splitted in members if needed
 //   - if performance tests are ok, the ATA driver could be used to handle
@@ -100,37 +100,36 @@
 //   - CD-ROM booting is only available if ATA/ATAPI Driver is available
 //   - El-Torito booting can be deactivated with 
 //     #define BX_ELTORITO_BOOT 0
-//   - Current code is only able to boot at segment 07C0. This should be ok 
-//     for most cds. The bios will panic otherwise
 //   - Current code is only able to boot mono-session cds 
 //   - Current code can not boot and emulate a hard-disk
 //     the bios will panic otherwise
 //   - Current code also use memory in EBDA segement. It's only 14+6 bytes so
 //     it could be moved in segment 0x40 (0x40:0xC0 seems to be available)
 //   - I used cmos byte 0x3D to store extended information on boot-device
-//   - Code can easily modified to handle multiple cdrom/harddrives
+//   - Code has to be modified modified to handle to handle multiple cdrom drives
 //   - Here are the cdrom boot failure codes:
 //       1 : no atapi device found
 //       2 : no atapi cdrom found
-//       3 : can not read BRVD
+//       3 : can not read cd - BRVD
 //       4 : cd is not eltorito (BRVD)
 //       5 : cd is not eltorito (ISO TAG)
 //       6 : cd is not eltorito (ELTORITO TAG)
-//       7 : can not read boot catalog
+//       7 : can not read cd - boot catalog
 //       8 : boot catalog : bad header
 //       9 : boot catalog : bad platform
 //      10 : boot catalog : bad signature
 //      11 : boot catalog : bootable flag not set
-//      12 : can not read boot image
-//      14 : boot image : bad signature
+//      12 : can not read cd - boot image
 //
 // El-Torito TODO :
 //   - Emulate a Hard-disk (currently only diskette can be emulated) see "FIXME ElTorito Harddisk"
-//   - Ability to boot at another address (0000:7C00 is mandatory now) see "FIXME ElTorito Bootsegment"
 //   - Implement remaining int13_cdemu functions (as defined by El-Torito specs)
-//   - Implement int13 for cdrom with 2048bytes sector-size (as defined by El-Torito specs)
+//   - Implement int13 for cdrom with 2048bytes sector-size (as defined by El-Torito specs) (started)
 //   - cdrom drive is hardcoded to ide 0 device 1 in several places. see "FIXME ElTorito Hardcoded"
-//   - find out why OAK driver init makes "unit ready test" fail. see "FIXME ElTorito Win98"
+//   - Int13 functions 4Ah -> 4Dh sould be handled separatly, as DL is not the disk drive 
+//   - int13 Fix DL when emulating a cd. In that case DL is decremented before calling real int13.
+//     This is ok. But DL should be reincremented afterwards. Maybe int13 has to be reworked as well
+//   - Fix all "FIXME ElTorito Various"
 
 #define BX_CPU           3
 #define BX_USE_PS2_MOUSE 1
@@ -139,18 +138,20 @@
 #define BX_SUPPORT_FLOPPY 1
 #define BX_PCIBIOS       1
 
+#define BX_USE_ATADRV		0
+#define BX_ELTORITO_BOOT	0
+
+#define BX_MAX_ATA_DEVICES	2
+
    /* model byte 0xFC = AT */
 #define SYS_MODEL_ID     0xFC
 #define SYS_SUBMODEL_ID  0x00
 #define BIOS_REVISION    1
-#define BIOS_CONFIG_TABLE 0xe6f5
+#define BIOS_CONFIG_TABLE 0xe716
   // 1K of base memory used for Extended Bios Data Area (EBDA)
   // EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
 #define BASE_MEM_IN_K   (640 - 1)
 #define EBDA_SEG           0x9FC0
-
-#define BX_USE_ATADRV		0
-#define BX_ELTORITO_BOOT	0
 
   // Sanity Checks
 #if BX_USE_ATADRV && BX_CPU<3
@@ -432,6 +433,7 @@ typedef unsigned long  Bit32u;
     pop  bp
   #endasm
   }
+#endif //BX_USE_ATADRV
   
   // Bit32u (unsigned long) and long helper functions
   #asm
@@ -567,8 +569,6 @@ typedef unsigned long  Bit32u;
   
   #endasm
 
-#endif // BX_USE_ATADRV
-
 // for access to RAM area which is used by interrupt vectors
 // and BIOS Data Area
 
@@ -690,12 +690,11 @@ typedef struct {
   #define CMD_WRITE_SECTORS                0x30
   #define CMD_WRITE_VERIFY                 0x3C
   
-  #define REG_CONFIG_TYPE_NONE  0
-  #define REG_CONFIG_TYPE_UNKN  1
-  #define REG_CONFIG_TYPE_ATA   2
-  #define REG_CONFIG_TYPE_ATAPI 3
+  #define REG_CONFIG_TYPE_NONE  0x00
+  #define REG_CONFIG_TYPE_UNKN  0x01
+  #define REG_CONFIG_TYPE_ATA   0x02
+  #define REG_CONFIG_TYPE_ATAPI 0x03
 
-  #define ATAPI_TYPE_CDR	0x04
   #define ATAPI_TYPE_CDROM	0x05
   
   #define DELAY400NS  { atapio_inbyte( CB_ASTAT ); atapio_inbyte( CB_ASTAT );  \
@@ -746,13 +745,13 @@ typedef struct {
     
     // Configuration data for device 0 and 1
     // returned by the reg_config() function.
-    Bit16u reg_config_info[2];
+    Bit8u  reg_config_info[BX_MAX_ATA_DEVICES];
 
     // Type of atapi device 0 and 1
-    Bit8u  atapi_device_type[2];
+    Bit8u  atapi_device_type[BX_MAX_ATA_DEVICES];
     
     // no delay if the flag is zero.
-    Bit16u reg_atapi_delay_flag;
+    Bit8u  reg_atapi_delay_flag;
     
     // the values in these variables are placed into the Feature,
     // Sector Count, Sector Number and Device/Head register by
@@ -775,14 +774,14 @@ typedef struct {
     // can set this to the caller's buffer size minus the
     // maximum DRQ packet size so that the packet command
     // does not overrun the caller's buffer in memory.
-    // this is set to 32768 at the end of each packet command.
+    // this is set to 65536 at the end of each packet command.
     Bit32u reg_atapi_max_bytes;
     
     // last ATAPI command packet size and data
     Bit16u reg_atapi_cp_size;
     Bit8u  reg_atapi_cp_data[16];
     
-    // Public data in ATAIOTMR.C
+    // Public timeout data 
     Bit32u tmr_time_out;          // current time to timeout
     Bit8u  tmr_timeout_delay;     // command time out in seconds
     } atadrv_data_t;
@@ -816,6 +815,21 @@ typedef struct {
     } ebda_data_t;
   
   #define EbdaData ((ebda_data_t *) 0)
+
+  // for access to a int13ext structure
+  typedef struct {
+    Bit8u  size;
+    Bit8u  filler1;
+    Bit8u  count;
+    Bit8u  filler2;
+    Bit16u offset;
+    Bit16u segment;
+    Bit32u lba1;
+    Bit32u lba2;
+    } int13ext_t;
+ 
+  #define Int13Ext ((int13ext_t *) 0)
+
 #endif // BX_USE_ATADRV
 
 typedef struct {
@@ -882,12 +896,14 @@ static void           set_kbd_command_byte();
 
 static void           int09_function();
 static void           int13_function();
+static void           int13_cdrom();
 static void           int13_cdemu();
 static void           int13_diskette_function();
 static void           int14_function();
 static void           int15_function();
 static void           int16_function();
 static void           int17_function();
+static Bit32u         int19_function();
 static void           int1a_function();
 static void           int70_function();
 static void           int74_function();
@@ -918,101 +934,71 @@ static void           print_bios_banner();
 void   atadrv_init();
 
 void   atapio_init(  );
-void   atapio_set_iobase_addr( /* unsigned */ /* int */ base1, /* unsigned */ /* int */ base2 );
-void   atapio_set_memory_addr( /* unsigned */ /* int */ seg );
-Bit8u  atapio_inbyte( /* unsigned */ /* int */ addr );
-void   atapio_outbyte( /* unsigned */ /* int */ addr, /* unsigned */ /* char */ data );
-Bit16u atapio_inword( /* unsigned */ /* int */ addr );
-void   atapio_outword( /* unsigned */ /* int */ addr, /* unsigned */ /* int */ data );
-void   atapio_rep_inbyte( /* unsigned */ /* int */ addrDataReg,
-                            /* unsigned */ /* int */ bufSeg, /* unsigned */ /* int */ bufOff,
-                            /* Bit32u */ byteCnt );
-void   atapio_rep_outbyte( /* unsigned */ /* int */ addrDataReg,
-                             /* unsigned */ /* int */ bufSeg, /* unsigned */ /* int */ bufOff,
-                             /* Bit32u */ byteCnt );
-void   atapio_rep_inword( /* unsigned */ /* int */ addrDataReg,
-                            /* unsigned */ /* int */ bufSeg, /* unsigned */ /* int */ bufOff,
-                            /* unsigned */ /* int */ wordCnt );
-void   atapio_rep_outword( /* unsigned */ /* int */ addrDataReg,
-                             /* unsigned */ /* int */ bufSeg, /* unsigned */ /* int */ bufOff,
-                             /* unsigned */ /* int */ wordCnt );
-void   atapio_rep_indword( /* unsigned */ /* int */ addrDataReg,
-                             /* unsigned */ /* int */ bufSeg, /* unsigned */ /* int */ bufOff,
-                             /* unsigned */ /* int */ dwordCnt );
-void   atapio_rep_outdword( /* unsigned */ /* int */ addrDataReg,
-                              /* unsigned */ /* int */ bufSeg, /* unsigned */ /* int */ bufOff,
-                              /* unsigned */ /* int */ dwordCnt );
-void   atareg_init(  );
-Bit16u atareg_config( /* void */ );
-Bit16u atareg_reset( /* int */ skipFlag, /* int */ devRtrn );
-Bit16u atareg_non_data_lba( /* int */ dev, /* int */ cmd,
-                             /* int */ fr, /* int */ sc,
-                             /* Bit32u */ lba );
-Bit16u atareg_non_data( /* int */ dev, /* int */ cmd,
-                           /* int */ fr, /* int */ sc,
-                           /* unsigned */ /* int */ cyl, /* int */ head, /* int */ sect );
-Bit16u atareg_pio_data_in_lba( /* int */ dev, /* int */ cmd,
-                                /* int */ fr, /* int */ sc,
-                                /* Bit32u */ lba,
-                                /* unsigned */ seg, /* unsigned */ off,
-                                /* int */ numSect, /* int */ multiCnt );
-Bit16u atareg_pio_data_in( /* int */ dev, /* int */ cmd,
-                            /* int */ fr, /* int */ sc,
-                            /* unsigned */ /* int */ cyl, /* int */ head, /* int */ sect,
-                            /* unsigned */ seg, /* unsigned */ off,
-                            /* int */ numSect, /* int */ multiCnt );
-Bit16u atareg_pio_data_out_lba( /* int */ dev, /* int */ cmd,
-                                 /* int */ fr, /* int */ sc,
-                                 /* Bit32u */ lba,
-                                 /* unsigned */ seg, /* unsigned */ off,
-                                 /* int */ numSect, /* int */ multiCnt );
-Bit16u atareg_pio_data_out( /* int */ dev, /* int */ cmd,
-                             /* int */ fr, /* int */ sc,
-                             /* unsigned */ /* int */ cyl, /* int */ head, /* int */ sect,
-                             /* unsigned */ seg, /* unsigned */ off,
-                             /* int */ numSect, /* int */ multiCnt );
-Bit16u etareg_packet( /* int */ dev,
-                       /* unsigned */ /* int */ cpbc,
-                       /* unsigned */ /* int */ cpseg, /* unsigned */ /* int */ cpoff,
-                       /* int */ dir,
-                       /* Bit32u */ dpbc, /* Bit16u */ head, /* Bit16u */ tail,
-                       /* unsigned */ /* int */ dpseg, /* unsigned */ /* int */ dpoff );
+void   atapio_set_iobase_addr();
+void   atapio_set_memory_addr();
+Bit8u  atapio_inbyte();
+void   atapio_outbyte();
+Bit16u atapio_inword();
+void   atapio_outword();
+void   atapio_rep_inbyte();
+void   atapio_rep_outbyte();
+void   atapio_rep_inword();
+void   atapio_rep_outword();
+void   atapio_rep_indword();
+void   atapio_rep_outdword();
 
-void   atatmr_init(  );
-Bit32u atatmr_read_bios_timer( /* void */ );
-void   atatmr_set_timeout( /* void */ );
-Bit16u atatmr_chk_timeout( /* void */ );
+void   atareg_init();
+Bit16u atareg_config();
+Bit16u atareg_reset();
+Bit16u atareg_non_data_lba();
+Bit16u atareg_non_data();
+Bit16u atareg_pio_data_in_lba();
+Bit16u atareg_pio_data_in();
+Bit16u atareg_pio_data_out_lba();
+Bit16u atareg_pio_data_out();
+Bit16u etareg_packet();
 
-void   atasub_init(  );
-void   atasub_zero_return_data( /* void */ );
-void   atasub_trace_command( /* void */ );
-Bit16u atasub_select( /* int */ dev );
-void   atasub_atapi_delay( /* int */ dev );
-void   atasub_xfer_delay( /* void */ );
+void   atatmr_init();
+Bit32u atatmr_read_bios_timer();
+void   atatmr_set_timeout();
+Bit16u atatmr_chk_timeout();
+
+void   atasub_init();
+void   atasub_zero_return_data();
+void   atasub_trace_command();
+Bit16u atasub_select();
+void   atasub_atapi_delay();
+void   atasub_xfer_delay();
+
+void   ata_clear_buffer();
+Bit16u atapi_get_sense();
+Bit16u atapi_is_ready();
+Bit16u atapi_is_cdrom();
+Bit16u atapi_read_sectors2048();
+Bit16u atapi_read_sectors512();
+Bit16u atapi_read_sectors();
+void   ata_read_atapi_device_types();
+void   ata_show_devices();
+Bit16u ata_is_ata();
+Bit16u ata_is_atapi();
 
 #endif // BX_USE_ATADRV
 
 #if BX_ELTORITO_BOOT
 
-void  ata_clear_buffer(bufseg,bufoff,size);
-Bit8u atapi_get_sense(device);
-Bit8u atapi_test_ready(device);
-Bit8u atapi_read_sectors2048(device,count,lba,bufseg,bufoff);
-Bit8u atapi_read_sectors512(device,count,lba,before,after,bufseg,bufoff);
-Bit8u atapi_read_sectors(device,count,lba,head,tail,bufseg,bufoff);
-void  ata_read_atapi_device_types( );
-void  ata_show_devices( );
-
 Bit8u  cdemu_isactive();
 Bit8u  cdemu_emulated_drive();
-Bit16u cdemu_boot();
+
+void   boot_from_msg();
+void   cdrom_bootfailed_msg();
+Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.35 $";
-static char bios_date_string[] = "$Date: 2002-02-06 20:57:05 $";
+static char bios_cvs_version_string[] = "$Revision: 1.36 $";
+static char bios_date_string[] = "$Date: 2002-03-09 01:50:52 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.35 2002-02-06 20:57:05 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.36 2002-03-09 01:50:52 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1652,29 +1638,27 @@ keyboard_panic()
   panic("Keyboard RESET error");
 }
 
+static char drivetypes[][10]={"Floppy","Hard Disk","CD-Rom"};
+
 /*
-This is called when the boot fails to print an appropriate message.
-If bit 9 is 0, boot from floppy or hard drive was attempted
-If bit 9 is 1, boot from cdrom was attempted
-If bit 8 is 0, the disk was not readable.
-If bit 8 is 1, the disk was readable but didn't have the boot signature.
-If bit 7 is 0, it tried to boot a real/emulated floppy disk.
-If bit 7 is 1, it tried to boot a real/emulated hard disk.
-Bits 6-0 are the drive number, usually just a 0 or 1.
+cdboot: 1 if boot from cd, 0 otherwise
+drive : drive number
+reason: 0 signature check failed, 1 read error
 */
   void
-boot_failure_msg(drive)
-  Bit16u drive;
+boot_failure_msg(cdboot, drive, reason)
+  Bit8u cdboot; Bit8u drive;
 {
   Bit16u drivenum = drive&0x7f;
-  //bios_printf(BIOS_PRINTF_SCREEN, "boot_failure_msg(%x)\n", drive);
-  if (drive & 0x200)
-    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from cdrom failed\n", drivenum);
+
+  if (cdboot)
+    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from %s failed\n",drivetypes[2]);
   else if (drive & 0x80)
-    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from hard disk %d failed\n", drivenum);
+    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from %s %d failed\n", drivetypes[1],drivenum);
   else
-    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from floppy disk %d failed\n", drivenum);
-  if (drive & 0x100)
+    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from %s %d failed\n", drivetypes[0],drivenum);
+
+  if (reason==0)
     panic("Not a bootable disk\n");
   else
     panic("Could not read the boot disk\n");
@@ -2251,27 +2235,11 @@ printf("case default:\n");
       break;
 
     case 0xC4:
+    case 0xD8:
+    case 0xe0:
+    default:
       printf("BIOS: *** int 15h function AX=%04x, BX=%04x not yet supported!\n",
         (unsigned) AX, (unsigned) BX);
-      SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
-      break;
-
-    case 0xD8:
-      printf("BIOS: *** int 15h function AX=D8 not yet supported!\n");
-      SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
-      break;
-
-    case 0xe0:
-      printf("BIOS: *** int 15h function AH=e0 not yet supported!\n");
-      SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
-      break;
-
-    default:
-      printf("BIOS: *** int 15h function AH=%02x not yet supported!\n",
-        (unsigned) GET_AH());
       SET_CF();
       SET_AH(UNSUPPORTED_FUNCTION);
       break;
@@ -2381,7 +2349,7 @@ dequeue_key(scan_code, ascii_code, incr)
     }
 }
 
-
+static char panic_msg_keyb_buffer_full[] = "%s: keyboard input buffer full";
 
   Bit8u
 inhibit_mouse_int_and_events()
@@ -2390,14 +2358,14 @@ inhibit_mouse_int_and_events()
 
   // Turn off IRQ generation and aux data line
   if ( inb(0x64) & 0x02 )
-    panic("inhibmouse: keyboard input buffer full");
+    panic(panic_msg_keyb_buffer_full,"inhibmouse");
   outb(0x64, 0x20); // get command byte
   while ( (inb(0x64) & 0x01) != 0x01 );
   prev_command_byte = inb(0x60);
   command_byte = prev_command_byte;
   //while ( (inb(0x64) & 0x02) );
   if ( inb(0x64) & 0x02 )
-    panic("inhibmouse, keyboard input buffer full");
+    panic(panic_msg_keyb_buffer_full,"inhibmouse");
   command_byte &= 0xfd; // turn off IRQ 12 generation
   command_byte |= 0x20; // disable mouse serial clock line
   outb(0x64, 0x60); // write command byte
@@ -2412,13 +2380,13 @@ enable_mouse_int_and_events()
 
   // Turn on IRQ generation and aux data line
   if ( inb(0x64) & 0x02 )
-    panic("enabmouse: keyboard input buffer full");
+    panic(panic_msg_keyb_buffer_full,"enabmouse");
   outb(0x64, 0x20); // get command byte
   while ( (inb(0x64) & 0x01) != 0x01 );
   command_byte = inb(0x60);
   //while ( (inb(0x64) & 0x02) );
   if ( inb(0x64) & 0x02 )
-    panic("enabmouse, keyboard input buffer full");
+    panic(panic_msg_keyb_buffer_full,"enabmouse");
   command_byte |= 0x02; // turn on IRQ 12 generation
   command_byte &= 0xdf; // enable mouse serial clock line
   outb(0x64, 0x60); // write command byte
@@ -2433,7 +2401,7 @@ send_to_mouse_ctrl(sendbyte)
 
   // wait for chance to write to ctrl
   if ( inb(0x64) & 0x02 )
-    panic("sendmouse, keyboard input buffer full");
+    panic(panic_msg_keyb_buffer_full,"sendmouse");
   outb(0x64, 0xD4);
   outb(0x60, sendbyte);
   return(0);
@@ -2462,7 +2430,8 @@ set_kbd_command_byte(command_byte)
   Bit8u command_byte;
 {
   if ( inb(0x64) & 0x02 )
-    panic("setkbdcomm, input buffer full");
+    panic(panic_msg_keyb_buffer_full,"setkbdcomm");
+  outb(0x64, 0xD4);
 
   outb(0x64, 0x60); // write command byte
   outb(0x60, command_byte);
@@ -2790,10 +2759,9 @@ outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
 #endasm
 }
 
-
   void
-int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS;
+int13_function(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
+  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
 {
   Bit8u    drive, num_sectors, sector, head, status, mod;
   Bit8u    drive_map;
@@ -2806,7 +2774,8 @@ int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit8u    sector_count;
   unsigned int i;
   Bit16u   tempbx;
-  Bit16u   lba;
+  Bit16u   dpsize;
+  Bit8u    checksum;
 
   printf("BIOS: int13 harddisk: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
 
@@ -3152,6 +3121,7 @@ printf("int13_f05\n");
 
     case 0x08: /* read disk drive parameters */
 printf("int13_f08\n");
+      
       drive = GET_DL ();
       get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 
@@ -3187,6 +3157,7 @@ printf("int13_f08\n");
       SET_AH(0);
       set_disk_ret_status(0);
       CLEAR_CF(); /* successful */
+
       return;
       break;
 
@@ -3290,6 +3261,7 @@ printf("int13_f14\n");
       break;
 
     case 0x18: /* */
+    // FIXME when adding IBM/MS extensions
     case 0x41: // IBM/MS installation check
     case 0x42: // IBM/MS extended read
     case 0x43: // IBM/MS extended write
@@ -3297,9 +3269,16 @@ printf("int13_f14\n");
     case 0x45: // IBM/MS lock/unlock drive
     case 0x46: // IBM/MS eject media
     case 0x47: // IBM/MS extended seek
-    case 0x48: // IBM/MS get drive parameters
+    case 0x48: // IBM/MS extended seek
     case 0x49: // IBM/MS extended media change
-printf("int13_f18,41-49\n");
+    case 0x4a: // ElTorito - Initiate disk emu
+    case 0x4b: // ElTorito - Terminate disk emu
+    case 0x4c: // ElTorito - Initiate disk emu and boot
+    case 0x4d: // ElTorito - Return boot catalog
+    case 0x4e: // ? - set hardware configuration
+    case 0x50: // ? - send packet command
+    case 0x66: // 
+printf("int13_f18,41-50\n");
       SET_AH(1);  // code=invalid function in AH or invalid parameter
       set_disk_ret_status(1);
       SET_CF(); /* unsuccessful */
@@ -3313,6 +3292,170 @@ printf("int13_f18,41-49\n");
 }
 
 #if BX_ELTORITO_BOOT
+
+// ---------------------------------------------------------------------------
+// Start of int13 for cdrom
+// ---------------------------------------------------------------------------
+
+  void
+int13_cdrom(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
+  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
+{
+  Bit8u  device, status;
+  Bit16u error;
+  Bit32u lba;
+  Bit16u count,segment,offset, i;
+
+  printf("BIOS: int13 cdrom: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  printf("BIOS: int13 cdrom: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
+  
+  device=GET_DL();
+
+  set_disk_ret_status(0x00);
+
+  /* basic check : device should be 0x80+ */
+  if(device<0x80) {
+    SET_AH(0x01);
+    set_disk_ret_status(0x01);
+    SET_CF(); /* error occurred */
+    return;
+    }
+  else device -= 0x80;
+
+  /* basic check : device should be an ATAPI cdrom */
+  if((!ata_is_atapi(device))||(!atapi_is_cdrom(device))) {
+    SET_AH(0x01);
+    set_disk_ret_status(0x01);
+    SET_CF(); /* error occurred */
+    return;
+    }
+  
+  switch (GET_AH()) {
+
+    // all those functions return SUCCESS
+    case 0x00: /* disk controller reset */
+    case 0x09: /* initialize drive parameters */
+    case 0x0c: /* seek to specified cylinder */
+    case 0x0d: /* alternate disk reset */  
+    case 0x10: /* check drive ready */    
+    case 0x11: /* recalibrate */      
+    case 0x14: /* controller internal diagnostic */
+    case 0x16: /* detect disk change */
+    case 0x45: // IBM/MS lock/unlock drive
+    case 0x46: // IBM/MS eject media
+    case 0x47: // IBM/MS extended seek
+    case 0x49: // IBM/MS extended media change
+    case 0x4e: // ? - set hardware configuration
+      SET_AH(0x00);
+      set_disk_ret_status(0x00);
+      CLEAR_CF(); /* successful */
+      return;
+      break;
+
+    // all those functions return disk write-protected
+    case 0x03: /* write disk sectors */
+    case 0x05: /* format disk track */
+    case 0x43: // IBM/MS extended write
+      SET_AH(0x03);
+      set_disk_ret_status(0x03);
+      SET_CF(); /* error occurred */
+      return;
+      break;
+
+    case 0x01: /* read disk status */
+      status=read_byte(0x0040, 0x0074);
+      SET_AH(status);
+      if(status==0x00)
+        CLEAR_CF();
+      else
+        SET_CF();
+      return;
+      break;
+
+    case 0x15: /* read disk drive size */
+      SET_AH(0x02);
+      set_disk_ret_status(0x00); 
+      CLEAR_CF(); 
+      return;
+      break;
+
+    case 0x41: // IBM/MS installation check
+      BX=0xaa55;     // install check
+      SET_AH(0x30);  // EDD 3.0
+      CX=0x0007;     // ext disk access and edd
+      CLEAR_CF(); 
+      return;
+      break;
+
+    case 0x42: // IBM/MS extended read
+    case 0x44: // IBM/MS verify sectors
+       
+      count=read_word(DS,SI+(Bit16u)&Int13Ext->count);
+      lba=read_dword(DS,SI+(Bit16u)&Int13Ext->lba1);
+      segment=read_word(DS,SI+(Bit16u)&Int13Ext->segment);
+      offset=read_word(DS,SI+(Bit16u)&Int13Ext->offset);
+
+      if((error=atapi_read_sectors2048(device,count,lba,segment,offset))!=0) {
+        SET_AH(0x0c);
+        set_disk_ret_status(0x0c);
+        SET_CF(); /* error */
+        return;
+        }
+      
+      // count stays the same in Int13Ext struct
+      SET_AH(0x00);
+      set_disk_ret_status(0x00); 
+      CLEAR_CF(); 
+      return;
+      break;
+
+    case 0x48: // IBM/MS get drive parameters  
+      // FIXME
+      return;
+      break;
+
+    // all those functions return unimplemented
+    case 0x02: /* read sectors */
+    case 0x04: /* verify sectors */
+    case 0x08: /* read disk drive parameters */
+    case 0x0a: /* read disk sectors with ECC */
+    case 0x0b: /* write disk sectors with ECC */
+    case 0x18: /* set media type for format */
+    case 0x50: // ? - send packet command
+      SET_AH(0x01);  // code=invalid function in AH or invalid parameter
+      set_disk_ret_status(0x01);
+      SET_CF(); /* unsuccessful */
+      return;
+      break;
+
+    // FIXME ElTorito Various. Should be implemented
+    case 0x4a: // ElTorito - Initiate disk emu
+    case 0x4c: // ElTorito - Initiate disk emu and boot
+    case 0x4d: // ElTorito - Return Boot catalog
+      panic("Int13 cdrom call with AX=%04x. Please report\n",AX);
+      SET_AH(0x01);  // code=invalid function in AH or invalid parameter
+      set_disk_ret_status(0x01);
+      SET_CF(); /* unsuccessful */
+      return;
+      break;
+
+    // all those functions should not be called when not emulating a device
+    case 0x4b: // ElTorito - Terminate disk emu
+      SET_AH(0x01);  
+      set_disk_ret_status(0x01);
+      SET_CF(); 
+      return;
+      break;
+
+    default:
+      panic("case 0x%x found in int13_cdrom()", (unsigned) GET_AH());
+      break;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// End of int13 for cdrom
+// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Start of int13 when emulating a device from the cd
@@ -3332,7 +3475,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit16u error;
 
   printf("BIOS: int13 cdemu: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  // printf("BIOS: int13 cdemu: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), get_DS(), ES, DI, SI);
+  //printf("BIOS: int13 cdemu: SS=%04x ES=%04x DI=%04x SI=%04x\n", get_SS(), ES, DI, SI);
   
   /* at this point, we are emulating a floppy/harddisk */
   // FIXME ElTorito Harddisk. Harddisk emulation is not implemented
@@ -3352,15 +3495,8 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   
   switch (GET_AH()) {
 
-    case 0x00: /* disk controller reset */
-      atareg_reset(0,device);
-      SET_AH(0x00);
-      set_disk_ret_status(0x00);
-      CLEAR_CF(); /* successful */
-      return;
-      break;
-
     // all those functions return SUCCESS
+    case 0x00: /* disk controller reset */
     case 0x09: /* initialize drive parameters */
     case 0x0c: /* seek to specified cylinder */
     case 0x0d: /* alternate disk reset */  // FIXME ElTorito Various. should really reset ?
@@ -3420,23 +3556,16 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
 
       // calculate the virtual lba inside the image
       vlba=((((Bit32u)cylinder*(Bit32u)vheads)+(Bit32u)head)*(Bit32u)vsectors)+((Bit32u)(sector-1));
-/*
-      vlba=(Bit32u)cylinder;
-      vlba*=(Bit32u)vheads;
-      vlba+=(Bit32u)head;
-      vlba*=(Bit32u)vsectors;
-      vlba+=(Bit32u)(sector-1);
-*/
  
       // In advance so we don't loose the count
       SET_AL(nbsectors);
 
       // start lba on cd
-      slba=(Bit16u)vlba/4;                  // FIXME ElTorito Harddisk. should allow bigger image size - needs compiler helper function
+      slba=(Bit16u)vlba/4;               // FIXME ElTorito Harddisk. should allow Bit32u image size - needs compiler helper function
       before=(Bit16u)vlba%4;
 
       // end lba on cd
-      elba=(Bit16u)(vlba+nbsectors-1)/4;    // FIXME ElTorito Harddisk. should allow bigger image size - needs compiler helper function
+      elba=(Bit16u)(vlba+nbsectors-1)/4; // FIXME ElTorito Harddisk. should allow Bit32u image size - needs compiler helper function
       after=3-((Bit16u)(vlba+nbsectors-1)%4);
       
       if((error=atapi_read_sectors512(device,(Bit16u)(elba-slba+1),ilba+slba,before,after,segment,offset))!=0) {
@@ -3487,10 +3616,10 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       return;
       break;
 
-    // all those functions return unimplented
-    case 0x18: /* set media type for format */
+    // all those functions return unimplemented
     case 0x0a: /* read disk sectors with ECC */
     case 0x0b: /* write disk sectors with ECC */
+    case 0x18: /* set media type for format */
     case 0x41: // IBM/MS installation check
     case 0x42: // IBM/MS extended read
     case 0x43: // IBM/MS extended write
@@ -3500,7 +3629,8 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
     case 0x47: // IBM/MS extended seek
     case 0x48: // IBM/MS get drive parameters  // FIXME ElTorito Various. should be handled for ElTorito
     case 0x49: // IBM/MS extended media change
-      panic("Int13 cdemu call with AX=%04x. Please report\n",AX);
+    case 0x4e: // ? - set hardware configuration
+    case 0x50: // ? - send packet command
       SET_AH(0x01);  // code=invalid function in AH or invalid parameter
       set_disk_ret_status(0x01);
       SET_CF(); /* unsuccessful */
@@ -3518,9 +3648,8 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       return;
       break;
 
-    // all those functions should not be called when emulating a device
+    // FIXME ElTorito Various. Should be handled accordingly to spec
     case 0x4b: // ElTorito - Terminate disk emu
-      bios_printf(BIOS_PRINTF_DEBUG, "Int13 cdemu ElTorito bye bye AX=%04x\n",AX);
       write_byte(ebda_seg,&EbdaData->cdemu_data.active, 0x00); // bye bye
       SET_AH(0x00);  
       set_disk_ret_status(0x00);
@@ -4380,6 +4509,7 @@ printf("floppy f15\n");
         }
 
 #if BX_ELTORITO_BOOT
+      // This is mandatory. Otherwise Win98 does not boot
       if((cdemu_isactive()!=00)&&(cdemu_emulated_drive()==drive))
         DX+=0x0001;
 #endif
@@ -4521,7 +4651,8 @@ determine_floppy_media(drive)
 #endif
 }
 
-
+static char panic_msg_reg12h[] = "HD%d cmos reg 12h not type F";
+static char panic_msg_reg19h[] = "HD%d cmos reg %02xh not user definable type 47";
 
   void
 get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
@@ -4539,18 +4670,18 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
   if (drive == 0x80) {
     hd_type = inb_cmos(0x12) & 0xf0;
     if (hd_type != 0xf0)
-      panic("HD0 cmos reg 12h not type F");
+      panic(panic_msg_reg12h,0);
     hd_type = inb_cmos(0x19); // HD0: extended type
     if (hd_type != 47)
-      panic("HD0 cmos reg 19h not user definable type 47");
+      panic(panic_msg_reg19h,0,0x19);
     iobase = 0x1b;
   } else {
     hd_type = inb_cmos(0x12) & 0x0f;
     if (hd_type != 0x0f)
-      panic("HD1 cmos reg 12h not type F");
+      panic(panic_msg_reg12h,1);
     hd_type = inb_cmos(0x1a); // HD0: extended type
     if (hd_type != 47)
-      panic("HD1 cmos reg 1ah not user definable type 47");
+      panic(panic_msg_reg19h,0,0x1a);
     iobase = 0x24;
   }
 
@@ -4610,6 +4741,129 @@ int17_function(regs, ds, iret_addr)
   } else {
     SetCF(iret_addr.flags); // Unsupported
   }
+}
+
+// returns bootsegment in ax, drive in bl
+  Bit32u 
+int19_function()
+{
+  Bit16u ebda_seg=read_word(0x40,0x0E);
+  Bit8u  bootseq;
+  Bit8u  bootdrv;
+  Bit8u  bootcd;
+  Bit8u  bootchk;
+  Bit16u bootseg;
+  Bit16u status;
+
+  // if BX_ELTORITO_BOOT is not defined, old behavior
+  //   check bit 5 in CMOS reg 0x2d.  load either 0x00 or 0x80 into DL
+  //   in preparation for the intial INT 13h (0=floppy A:, 0x80=C:)
+  //     0: system boot sequence, first drive C: then A:
+  //     1: system boot sequence, first drive A: then C:
+  // else BX_ELTORITO_BOOT is defined
+  //   CMOS reg 0x3D contains the boot device :
+  //     0x01 : floppy 
+  //     0x02 : harddrive
+  //     0x03 : cdrom
+  //     else : floppy for now.
+
+  // Get the boot sequence
+#if BX_ELTORITO_BOOT
+  outb(0x70, 0x3d);
+  bootseq=inb(0x71);
+
+  bootdrv=0x00; bootcd=0;
+  switch(bootseq) {
+    case 0x01: bootdrv=0x00; bootcd=0; break;
+    case 0x02: bootdrv=0x80; bootcd=0; break;
+    case 0x03: bootdrv=0x00; bootcd=1; break;
+    }
+#else
+  outb(0x70, 0x2d);
+  bootseq=inb(0x71);
+
+  bootdrv=0x00; bootcd=0;
+  if((bootseq&0x20)==0) bootdrv=0x80;
+#endif // BX_ELTORITO_BOOT
+
+#if BX_ELTORITO_BOOT
+  // We have to boot from cd
+  if (bootcd!=0) {
+    status=cdrom_boot();
+
+    // If failure
+    if ((status&0x00ff)!=0) {
+      cdrom_bootfailed_msg(status);
+      boot_failure_msg(bootcd, bootdrv, 1);
+      return 0x00000000;
+      }
+
+    // FIXME bootseg hardcoded;
+    bootseg=read_word(ebda_seg,&EbdaData->cdemu_data.load_segment);
+    bootdrv=(Bit8u)(status>>8);
+    }
+
+#endif // BX_ELTORITO_BOOT
+
+  // We have to boot from harddisk or floppy
+  if (bootcd==0) {
+    bootseg=0x07c0;
+
+#asm
+    push bp
+    mov  bp, sp
+
+    mov  ax, #0x0000
+    mov  _int19_function.status + 2[bp], ax
+    mov  dl, _int19_function.bootdrv + 2[bp]
+    mov  ax, _int19_function.bootseg + 2[bp]
+    mov  es, ax         ;; segment
+    mov  bx, #0x0000    ;; offset
+    mov  ah, #0x02      ;; function 2, read diskette sector
+    mov  al, #0x01      ;; read 1 sector
+    mov  ch, #0x00      ;; track 0
+    mov  cl, #0x01      ;; sector 1
+    mov  dh, #0x00      ;; head 0
+    int #0x13           ;; read sector
+    jnc  int19_load_done
+    mov  ax, #0x0001
+    mov  _int19_function.status + 2[bp], ax
+
+int19_load_done:
+    pop  bp
+#endasm
+    
+    if (status!=0) {
+      boot_failure_msg(bootcd, bootdrv, 1);
+      return 0x00000000;
+      }
+    }
+
+  // check signature
+  // FIXME the signature check could be made conditionnal
+  // by a cmos register
+  bootchk=1;
+
+#if BX_ELTORITO_BOOT
+  // if cdboot and no emulation : no check (ex win2000)
+  if (read_byte(ebda_seg,&EbdaData->cdemu_data.media)==0)
+    bootchk=0;
+#endif // BX_ELTORITO_BOOT
+
+  if (bootchk) {
+    if (read_word(bootseg,0x1fe) != 0xaa55) {
+      boot_failure_msg(bootcd, bootdrv, 0);
+      return 0x00000000;
+      }
+    }
+  
+#if BX_ELTORITO_BOOT
+  // Print out the boot string
+  boot_from_msg(bootcd, bootdrv);
+#endif // BX_ELTORITO_BOOT
+
+  // return the boot segment
+  return (((Bit32u)bootdrv)<<16)+bootseg;
 }
 
   void
@@ -4993,7 +5247,7 @@ void atasub_init( )
   Bit16u ebda_seg=read_word(0x40,0x0E);
 
   atasub_zero_return_data();
-  write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0000);
+  write_byte(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x00);
 }
 
 //*************************************************************
@@ -5050,7 +5304,7 @@ int dev;
    // just select that device, skip all status checking and return.
    // We assume the caller knows what they are doing!
 
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ dev ]) < REG_CONFIG_TYPE_ATA )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ dev ]) < REG_CONFIG_TYPE_ATA )
    {
       // select the device and return
 
@@ -5099,7 +5353,7 @@ int dev;
    while ( 1 )
    {
       status = atapio_inbyte( CB_STAT );
-      if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ dev ]) == REG_CONFIG_TYPE_ATA )
+      if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ dev ]) == REG_CONFIG_TYPE_ATA )
       {
            if ( ( status & ( CB_STAT_BSY | CB_STAT_RDY | CB_STAT_SKC ) )
                      == ( CB_STAT_RDY | CB_STAT_SKC ) )
@@ -5143,9 +5397,9 @@ int dev;
    int ndx;
    long lw;
 
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[dev]) != REG_CONFIG_TYPE_ATAPI )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[dev]) != REG_CONFIG_TYPE_ATAPI )
       return;
-   if ( ! read_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag) )
+   if ( ! read_byte(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag) )
       return;
    for ( ndx = 0; ndx < 3; ndx ++ )
    {
@@ -5827,7 +6081,7 @@ Bit16u addrDataReg,bufSeg,bufOff,wordCnt;
 void atareg_init()
 {
   Bit16u ebda_seg=read_word(0x40,0x0E);
-  write_dword(ebda_seg,&EbdaData->atadrv_data.reg_atapi_max_bytes, 32768L);
+  write_dword(ebda_seg,&EbdaData->atadrv_data.reg_atapi_max_bytes, 65536L);
   write_word(ebda_seg,&EbdaData->atadrv_data.reg_slow_xfer_flag, 0);
 }
 
@@ -5918,8 +6172,8 @@ Bit16u atareg_config( /* void */ )
 
    // assume there are no devices
 
-   write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_NONE);
-   write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_NONE);
+   write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_NONE);
+   write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_NONE);
 
    // set up Device Control register
 
@@ -5938,7 +6192,7 @@ Bit16u atareg_config( /* void */ )
    sc = atapio_inbyte( CB_SC );
    sn = atapio_inbyte( CB_SN );
    if ( ( sc == 0x55 ) && ( sn == 0xaa ) )
-      write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_UNKN);
+      write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_UNKN);
 
    // lets see if there is a device 1
 
@@ -5953,7 +6207,7 @@ Bit16u atareg_config( /* void */ )
    sc = atapio_inbyte( CB_SC );
    sn = atapio_inbyte( CB_SN );
    if ( ( sc == 0x55 ) && ( sn == 0xaa ) )
-      write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_UNKN);
+      write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_UNKN);
 
    // now we think we know which devices, if any are there,
    // so lets try a soft reset (ignoring any errors).
@@ -5971,15 +6225,15 @@ Bit16u atareg_config( /* void */ )
    sn = atapio_inbyte( CB_SN );
    if ( ( sc == 0x01 ) && ( sn == 0x01 ) )
    {
-      write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_UNKN);
+      write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_UNKN);
       cl = atapio_inbyte( CB_CL );
       ch = atapio_inbyte( CB_CH );
       st = atapio_inbyte( CB_STAT );
       if ( ( cl == 0x14 ) && ( ch == 0xeb ) )
-         write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_ATAPI);
+         write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_ATAPI);
       else
          if ( ( cl == 0x00 ) && ( ch == 0x00 ) && ( st != 0x00 ) )
-            write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_ATA);
+            write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0], REG_CONFIG_TYPE_ATA);
    }
 
    // lets check device 1 again, is device 1 really there?
@@ -5991,26 +6245,26 @@ Bit16u atareg_config( /* void */ )
    sn = atapio_inbyte( CB_SN );
    if ( ( sc == 0x01 ) && ( sn == 0x01 ) )
    {
-      write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_UNKN);
+      write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_UNKN);
       cl = atapio_inbyte( CB_CL );
       ch = atapio_inbyte( CB_CH );
       st = atapio_inbyte( CB_STAT );
       if ( ( cl == 0x14 ) && ( ch == 0xeb ) )
-         write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_ATAPI);
+         write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_ATAPI);
       else
          if ( ( cl == 0x00 ) && ( ch == 0x00 ) && ( st != 0x00 ) )
-            write_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_ATA);
+            write_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1], REG_CONFIG_TYPE_ATA);
    }
 
    // If possible, select a device that exists, try device 0 first.
 
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) != REG_CONFIG_TYPE_NONE )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) != REG_CONFIG_TYPE_NONE )
    {
       atapio_outbyte( CB_DH, CB_DH_DEV1 );
       DELAY400NS;
       numDev ++ ;
    }
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) != REG_CONFIG_TYPE_NONE )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) != REG_CONFIG_TYPE_NONE )
    {
       atapio_outbyte( CB_DH, CB_DH_DEV0 );
       DELAY400NS;
@@ -6062,7 +6316,7 @@ Bit16u skipFlag, devRtrn;
    }
 
    // If there is a device 0, wait for device 0 to set BSY=0.
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) != REG_CONFIG_TYPE_NONE )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) != REG_CONFIG_TYPE_NONE )
    {
       atasub_atapi_delay( 0 );
       while ( 1 )
@@ -6081,7 +6335,7 @@ Bit16u skipFlag, devRtrn;
 
    // If there is a device 1, wait until device 1 allows
    // register access.
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) != REG_CONFIG_TYPE_NONE )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) != REG_CONFIG_TYPE_NONE )
    {
       atasub_atapi_delay( 1 );
       while ( 1 )
@@ -6124,12 +6378,12 @@ Bit16u skipFlag, devRtrn;
    // If possible, select a device that exists,
    // try device 0 first.
 
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) != REG_CONFIG_TYPE_NONE )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) != REG_CONFIG_TYPE_NONE )
    {
       atapio_outbyte( CB_DH, CB_DH_DEV1 );
       DELAY400NS;
    }
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) != REG_CONFIG_TYPE_NONE )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) != REG_CONFIG_TYPE_NONE )
    {
       atapio_outbyte( CB_DH, CB_DH_DEV0 );
       DELAY400NS;
@@ -6265,9 +6519,9 @@ Bit16u dev, cmd, fr, sc, cyl, head, sect;
 
    DELAY400NS;
 
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) == REG_CONFIG_TYPE_ATAPI )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) == REG_CONFIG_TYPE_ATAPI )
       atasub_atapi_delay( 0 );
-   if ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) == REG_CONFIG_TYPE_ATAPI )
+   if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]) == REG_CONFIG_TYPE_ATAPI )
       atasub_atapi_delay( 1 );
 
    // IF
@@ -6288,7 +6542,7 @@ Bit16u dev, cmd, fr, sc, cyl, head, sect;
 
    if ( ( cmd == CMD_EXECUTE_DEVICE_DIAGNOSTIC )
         &&
-        ( read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) == REG_CONFIG_TYPE_NONE )
+        ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[0]) == REG_CONFIG_TYPE_NONE )
       )
    {
       while ( 1 )
@@ -7000,7 +7254,7 @@ Bit32u dpbc;
    if ( atasub_select( dev ) )
    {
       atasub_trace_command();
-      write_dword(ebda_seg,&EbdaData->atadrv_data.reg_atapi_max_bytes, 32768L);    // reset max bytes
+      write_dword(ebda_seg,&EbdaData->atadrv_data.reg_atapi_max_bytes, 65536L);    // reset max bytes
       return 1;
    }
 
@@ -7339,7 +7593,7 @@ Bit32u dpbc;
       if ( dir )
       {
          if((headCnt!=0)||(tailCnt!=0))
-           panic("ATA driver: head or tail not allowed in write access\n");
+           panic("");
 
          atapio_rep_outword( CB_DATA, dpseg, dpoff, wordCnt );
       }
@@ -7406,7 +7660,7 @@ Bit32u dpbc;
    // For interrupt mode, restore the INT 7x vector.
    // int_restore_int_vect();
 
-   write_dword(ebda_seg,&EbdaData->atadrv_data.reg_atapi_max_bytes, 32768L);    // reset max bytes
+   write_dword(ebda_seg,&EbdaData->atadrv_data.reg_atapi_max_bytes, 65536L);    // reset max bytes
    if ( read_byte(ebda_seg,&EbdaData->atadrv_data.reg_cmd_info.ec) )
       return 1;
    return 0;
@@ -7427,69 +7681,93 @@ ata_clear_buffer(bufseg,bufoff,size)
   memsetb(bufseg,bufoff,0,size);
 }
 
-  Bit8u 
+  Bit16u 
 ata_identify(device, bufseg, bufoff)
   Bit16u device, bufseg, bufoff;
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit16u status;
-  Bit16u atatype=read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device]);
+  Bit8u  atatype=read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device]);
 
   if(atatype==REG_CONFIG_TYPE_ATAPI) {
-    // write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0001);
+    // write_byte(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x01);
     status=atareg_pio_data_in_lba(device,CMD_IDENTIFY_DEVICE_PACKET, 0, 0, 0L, bufseg,bufoff, 1, 0);
     }
   else if(atatype==REG_CONFIG_TYPE_ATA) {
     status=atareg_pio_data_in_lba(device,CMD_IDENTIFY_DEVICE, 0, 0, 0L, bufseg,bufoff, 1, 0);
     }
-  else return 1;
+  else return 0x0001;
 
-  return 0;
+  return 0x0000;
 }
 
-  Bit8u 
+  Bit16u 
 atapi_get_sense(device)
   Bit16u device;
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit8u  atacmd[12];
   Bit8u  buffer[128];
+  Bit8u i;
 
   // Request SENSE
   ata_clear_buffer(get_SS(),atacmd,12);
-  //write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0001);
+  //write_byte(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x01);
   atacmd[0]=0x03;    
   atacmd[4]=0x20;    
   if(atareg_packet(device,12,get_SS(),atacmd,0, 128L, 0,0, get_SS(), buffer)!=0)
-    return 2;
+    return 0x0002;
   if((buffer[0]&0x7e)==0x70){
-    // FIXME ElTorito Win98. Win98 is failing here after OAK driver inits
-    if((buffer[2]&0x0f)==2)return(0); // this is a ack. have to look why it's failing
-
-    return buffer[2]&0x0f;
+    
+    return (((Bit16u)buffer[2]&0x0f)*0x100)+buffer[12];
     }
 
   return 0;
 }
 
-  Bit8u 
-atapi_test_ready(device)
+  Bit16u 
+atapi_is_ready(device)
   Bit16u device;
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit8u  atacmd[12];
   Bit8u  buffer[128];
 
-  // No OPERATION
+  // Test Unit Ready
   ata_clear_buffer(get_SS(),atacmd,12);
-  //write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0001);
+  //write_byte(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x01);
   if(atareg_packet(device,12,get_SS(),atacmd,0, 128L, 0,0, get_SS(), buffer)!=0)
-    return 0x0f;
-  return atapi_get_sense(device);
+    return 0x000f;
+  if(atapi_get_sense(device)!=0){
+    // try to send Test Unit Ready again
+    ata_clear_buffer(get_SS(),atacmd,12);
+    if(atareg_packet(device,12,get_SS(),atacmd,0, 128L, 0,0, get_SS(), buffer)!=0)
+      return 0x000f;
+    return atapi_get_sense(device);
+    }
+  return 0;
 }
 
+  Bit16u
+atapi_is_cdrom(device)
+  Bit8u device;
+{
+  Bit16u ebda_seg = read_word(0x0040, 0x000E);
+  Bit8u  ldev = device & 0x7f;  
 
-  Bit8u 
+  if(ldev>=BX_MAX_ATA_DEVICES)
+    return 0;
+
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ldev])!=REG_CONFIG_TYPE_ATAPI)
+    return 0;
+
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.atapi_device_type[ldev])!=ATAPI_TYPE_CDROM)
+    return 0;
+
+  return 1;
+}
+
+  Bit16u 
 atapi_read_sectors2048(device,count,lba,bufseg,bufoff)
   Bit16u device,bufseg,bufoff,count;
   Bit32u lba;
@@ -7501,7 +7779,7 @@ atapi_read_sectors2048(device,count,lba,bufseg,bufoff)
 // lba : lba on cd
 // before : # 512B blocks to forget before reading
 // after : # 512B blocks to forget after reading
-  Bit8u 
+  Bit16u 
 atapi_read_sectors512(device,count,lba,before,after,bufseg,bufoff)
   Bit16u device,count,bufseg,bufoff,before,after;
   Bit32u lba;
@@ -7509,7 +7787,7 @@ atapi_read_sectors512(device,count,lba,before,after,bufseg,bufoff)
   return (atapi_read_sectors(device,count,lba,before*0x200,after*0x200,bufseg,bufoff));
 }
 
-  Bit8u 
+  Bit16u 
 atapi_read_sectors(device,count,lba,head,tail,bufseg,bufoff)
   Bit16u device,bufseg,bufoff,count,head,tail;
   Bit32u lba;
@@ -7518,28 +7796,63 @@ atapi_read_sectors(device,count,lba,head,tail,bufseg,bufoff)
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit8u  atacmd[12];
   Bit16u status;
+  Bit16u lcount,lhead,ltail;
+  Bit32u llba;
 
-  // test if unit ready
-  if((status=atapi_test_ready(device))!=0) {
-    return 1;
+  // We set the maximum transfer size to 32K -> 0x10 sectors
+  // Bigger transfer size are split in 32K chunks
+  llba=lba;
+  while(count>0) {
+
+    // Maximum 0x10 sectors
+    if(count>0x10) lcount=0x10;
+    else lcount=count;
+
+    // New count. Now we have to read lcount
+    count-=lcount;
+
+    // test if unit ready
+    if((status=atapi_is_ready(device))!=0) {
+      return 1;
+      }
+    //write_byte(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x01);
+
+    ata_clear_buffer(get_SS(),atacmd,12);
+    atacmd[0]=0x28;                // READ command
+    atacmd[7]=(lcount&0xff00)>>8;  // Sectors
+    atacmd[8]=(lcount&0x00ff);     // Sectors
+    atacmd[2]=(llba&0xff000000)>>24;
+    atacmd[3]=(llba&0x00ff0000)>>16;
+    atacmd[4]=(llba&0x0000ff00)>>8;
+    atacmd[5]=(llba&0x000000ff);
+
+    // We have to take the tail bytes into account only if last read
+    if(count==0)ltail=tail;
+    else ltail=0;
+
+    // We have to take the tail bytes into account only if first read
+    if(llba==lba)lhead=head;
+    else lhead=0;
+
+    // Read sectors
+    if(atareg_packet(device,12,get_SS(),atacmd,0, (Bit32u)lcount*2048L, lhead, ltail, bufseg, bufoff)!=0)
+      return 2;
+
+    // Check if all sectors read
+    if(read_dword(ebda_seg,&EbdaData->atadrv_data.reg_cmd_info.totalBytesXfer)!=((Bit32u)lcount*2048L))
+      return 3;
+
+    // increment lba
+    llba+=lcount;
+
+    // increment pointer by number of read bytes
+    bufoff+=(lcount*2048)-lhead;
+    // and normalize
+    bufseg+=(bufoff/16);
+    bufoff%=16;
     }
-  //write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0001);
 
-  ata_clear_buffer(get_SS(),atacmd,12);
-  atacmd[0]=0x28;  // READ command
-  atacmd[7]=(count&0xff00)>>8;  // Sectors
-  atacmd[8]=(count&0x00ff);  // Sectors
-  atacmd[2]=(lba&0xff000000)>>24;
-  atacmd[3]=(lba&0x00ff0000)>>16;
-  atacmd[4]=(lba&0x0000ff00)>>8;
-  atacmd[5]=(lba&0x000000ff);
-
-  if(atareg_packet(device,12,get_SS(),atacmd,0, (Bit32u)count*2048L, head, tail, bufseg, bufoff)!=0)
-    return 2;
-
-  // Check if all sectors read
-  if(read_dword(ebda_seg,&EbdaData->atadrv_data.reg_cmd_info.totalBytesXfer)!=((Bit32u)count*2048L))
-    return 3;
+  return 0;
 }
 
   void 
@@ -7553,7 +7866,7 @@ ata_read_atapi_device_types( )
   atareg_reset(0,0);
 
   for(device=0;device<2;device++) {
-    if(read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device])==REG_CONFIG_TYPE_ATAPI) {
+    if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device])==REG_CONFIG_TYPE_ATAPI) {
       ata_clear_buffer(get_SS(),buffer,0x800);
       ata_identify(device,get_SS(),buffer);
       
@@ -7565,7 +7878,39 @@ ata_read_atapi_device_types( )
     }
 }
 
-static char device_types[][10]={"Hard-Disk","CD-R","CD-ROM","Unknown"};
+  Bit16u
+ata_is_ata(device)
+  Bit8u device;
+{
+  Bit16u ebda_seg = read_word(0x0040, 0x000E);
+  Bit8u  ldev = device & 0x7f;  
+  
+  if(ldev>=BX_MAX_ATA_DEVICES)
+    return 0;
+
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ldev])!=REG_CONFIG_TYPE_ATA)
+    return 0;
+
+  return 1;
+}
+
+  Bit16u
+ata_is_atapi(device)
+  Bit8u device;
+{
+  Bit16u ebda_seg = read_word(0x0040, 0x000E);
+  Bit8u  ldev = device & 0x7f;  
+
+  if(ldev>=BX_MAX_ATA_DEVICES)
+    return 0;
+
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ldev])!=REG_CONFIG_TYPE_ATAPI)
+    return 0;
+
+  return 1;
+}
+
+static char device_types[][10]={"Hard-Disk","CD-ROM","Unknown"};
 static char ata_atapi[][8]={"None","Unknown","ATA","ATAPI"};
 
   void 
@@ -7573,13 +7918,13 @@ ata_show_devices( )
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit8u  buffer[0x800],model[41],version;
-  Bit8u  atapidev;
-  Bit16u i, device, atatype, type, ataversion;
+  Bit8u  atapidev, atatype;
+  Bit16u i, device, type, ataversion;
  
   atareg_reset(0,0);
 
   for(device=0;device<2;device++) {
-    atatype=read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device]);
+    atatype=read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device]);
     atapidev=read_byte(ebda_seg,&EbdaData->atadrv_data.atapi_device_type[device]);
     if(atatype>REG_CONFIG_TYPE_NONE){
       if(atatype>REG_CONFIG_TYPE_UNKN){
@@ -7605,9 +7950,8 @@ ata_show_devices( )
             }
 
           if(atatype==REG_CONFIG_TYPE_ATA)type=0;
-          else if(atapidev==ATAPI_TYPE_CDR)type=1;
-          else if(atapidev==ATAPI_TYPE_CDROM)type=2;
-          else type=3;
+          else if(atapidev==ATAPI_TYPE_CDROM)type=1;
+          else type=2;
 
           bios_printf(BIOS_PRINTF_SCREEN, "IDE0-%d: ",device);
           i=0; while(model[i]) bios_printf(BIOS_PRINTF_SCREEN, "%c",model[i++]);
@@ -7633,24 +7977,22 @@ ata_show_devices( )
 // Start of El-Torito boot functions
 // ---------------------------------------------------------------------------
 
-static char drivename[][10]={"Floppy","Hard Disk","CD-Rom"};
-
 //
-// Low byte of drive contains real/emulated boot drive
-// High byte bit 2 of drive contains boot from cd / real drive
+// cdboot contains 0 if floppy/harddisk, 1 otherwise
+// drive contains real/emulated boot drive
 //
   void
-boot_from_msg(drive)
+boot_from_msg(cdboot, drive)
   Bit16u drive;
 {
   Bit8u i;
 
-  if((drive&0x0200)==0x0200)i=2;    // CD-Rom
-  else if((drive&0x00FF)==0x00)i=0; // Floppy
-  else if((drive&0x00FF)==0x80)i=1; // Hard drive
+  if(cdboot)i=2;                    // CD-Rom
+  else if((drive&0x0080)==0x00)i=0; // Floppy
+  else if((drive&0x0080)==0x80)i=1; // Hard drive
   else return;
   
-  bios_printf(BIOS_PRINTF_SCREEN, "Booting from %s...\n",drivename[i]);
+  bios_printf(BIOS_PRINTF_SCREEN, "Booting from %s...\n",drivetypes[i]);
 }
 
   void
@@ -7667,6 +8009,8 @@ cdemu_isactive()
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
 
+  // printf("cdemu_isactive %02x\n",read_byte(ebda_seg,&EbdaData->cdemu_data.active));
+
   return(read_byte(ebda_seg,&EbdaData->cdemu_data.active));
 }
 
@@ -7675,11 +8019,13 @@ cdemu_emulated_drive()
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
 
+  // printf("cdemu_emulated_drive %02x\n",read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive));
+
   return(read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive));
 }
 
   void
-cdemu_bootfailed( code )
+cdrom_bootfailed_msg( code )
   Bit16u code;
 {
   bios_printf(BIOS_PRINTF_SCREEN, "CDROM boot failure code : %04x\n",code);
@@ -7693,25 +8039,20 @@ static char eltorito[24]="EL TORITO SPECIFICATION";
 // Returns ah: emulated drive, al: error code
 //
   Bit16u 
-cdemu_boot()
+cdrom_boot()
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
-
-  // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 1. Should be fixed if two ide interface
-  Bit16u atatype = read_word(ebda_seg,&EbdaData->atadrv_data.reg_config_info[1]);
-  Bit8u  atapidev= read_byte(ebda_seg,&EbdaData->atadrv_data.atapi_device_type[1]);
   Bit8u  buffer[2048];
   Bit32u lba;
-  Bit16u boot_segment, nbsectors, i;
+  Bit16u boot_segment, nbsectors, i, error;
 
   // Basic types checks
-  if(atatype!=REG_CONFIG_TYPE_ATAPI)return 1;
-  if((atapidev!=ATAPI_TYPE_CDR)
-   &&(atapidev!=ATAPI_TYPE_CDROM))
-    return 2;
+  // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 1. Should be fixed if two ide interface
+  if(!ata_is_atapi(1))   return 1;
+  if(!atapi_is_cdrom(1)) return 2;
 
   // Read the Boot Record Volume Descriptor
-  if(atapi_read_sectors2048(1,1,0x11L,get_SS(),buffer)!=0)
+  if((error=atapi_read_sectors2048(1,1,0x11L,get_SS(),buffer))!=0)
     return 3;
 
   // Validity checks
@@ -7772,10 +8113,6 @@ cdemu_boot()
   if(atapi_read_sectors512(1,1+(nbsectors-1)/4,lba,0,3-((nbsectors-1)%4),boot_segment,0)!=0)
     return 12;
 
-  // Check for a valid signature
-  if(read_word(boot_segment,0x1fe)!=0xAA55)
-   return 14;
- 
   // Remeber the media type
   switch(read_byte(ebda_seg,&EbdaData->cdemu_data.media)) {
     case 0x01:  // 1.2M floppy
@@ -7796,21 +8133,31 @@ cdemu_boot()
    }
 
   // Increase bios installed hardware number of floppy, booted from floppy
-  if(read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive)==0x00)
-    write_byte(0x40,0x10,read_byte(0x40,0x10)|0x41);
+  if(read_byte(ebda_seg,&EbdaData->cdemu_data.media)!=0)
+    if(read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive)==0x00)
+      write_byte(0x40,0x10,read_byte(0x40,0x10)|0x41);
   
   // everything is ok, so from now on, the emulation is active
   if(read_byte(ebda_seg,&EbdaData->cdemu_data.media)!=0)
     write_byte(ebda_seg,&EbdaData->cdemu_data.active,0x01);
 
-  // Return emulated drive + noerror 
-  return (read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive)*0x100)+0;
+  // if we are emulating a device
+  if(read_byte(ebda_seg,&EbdaData->cdemu_data.media)!=0) {
+    // Return emulated drive + noerror 
+    return (read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive)*0x100)+0;
+    }
+  else {
+    // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 0x81. 
+    // Return boot device + noerror. Win2000 cd boot needs this
+    return 0x8100;
+    }
 }
 
 // ---------------------------------------------------------------------------
 // End of El-Torito boot functions
 // ---------------------------------------------------------------------------
 #endif // BX_ELTORITO_BOOT
+
 
 #asm
 ;------------------------------------------
@@ -7883,6 +8230,8 @@ int13_relocated:
 
 // check if access to the emulated drive
   call  _cdemu_emulated_drive
+  pop dx
+  push dx
   cmp   al,dl                ;; int13 on emulated drive
   je    int13_cdemu
 
@@ -7913,12 +8262,35 @@ int13_legacy:
   test  dl, #0x80
   jz    int13_floppy
 
+#if BX_ELTORITO_BOOT
+int13_disk_or_cdrom:
+    push  ax
+    push  bx
+    push  cx
+    push  dx
+
+    push  dx
+    call  _atapi_is_cdrom
+    pop   dx
+    cmp   al, #0x00
+
+    pop   dx
+    pop   cx
+    pop   bx
+    pop   ax
+    jne   int13_cdrom
+#endif // BX_ELTORITO_BOOT
+
 int13_disk:
   ;; pushf already done
   push  es
+  push  ds
+  push  ss
+  pop   ds
   pusha
   call  _int13_function
   popa
+  pop   ds
   pop   es
   popf
   //  JMPL(iret_modify_cf)
@@ -7929,7 +8301,26 @@ int13_floppy:
   // JMPL(int13_diskette)
   jmp int13_diskette
 
+
 #if BX_ELTORITO_BOOT
+int13_cdrom:
+  ;; pushf already done
+  ;; popf
+  ;; pushf
+  push  es
+  push  ds
+  push  ss
+  pop   ds
+  pusha
+  call  _int13_cdrom
+  popa
+  pop   ds
+  pop   es
+  popf
+ 
+  //  JMPL(iret_modify_cf)
+  jmp iret_modify_cf
+
 int13_cdemu:
   pop   dx
   pop   cx
@@ -7951,112 +8342,6 @@ int13_cdemu:
   pop   ds
   jmp iret_modify_cf
 #endif // BX_ELTORITO_BOOT
-
-
-;----------------------
-;- INT19h (relocated) -
-;----------------------
-int19_relocated:
-  ;; if BX_ELTORITO_BOOT is not defined, old behavior
-  ;;   check bit 5 in CMOS reg 0x2d.  load either 0x00 or 0x80 into DL
-  ;;   in preparation for the intial INT 13h (0=floppy A:, 0x80=C:)
-  ;;     0: system boot sequence, first drive C: then A:
-  ;;     1: system boot sequence, first drive A: then C:
-  ;; else BX_ELTORITO_BOOT is defined
-  ;;   CMOS reg 0x3D contains the boot device :
-  ;;     0x01 : floppy 
-  ;;     0x02 : harddrive
-  ;;     0x03 : cdrom
-  ;;     else : floppy
-
-  xor  dx, dx
-#if BX_ELTORITO_BOOT
-
-  mov  al, #0x3d
-  out  0x70, al
-  in   al, 0x71
-
-  cmp  al, #0x03
-  je   int19_usecdrom
-  cmp  al, #0x02
-  je   int19_usedisk
-  jmp  int19_usefloppy
-
-int19_usecdrom:
-  call _cdemu_boot
-  clc
-  mov  dh, #0x02   ;; remember we tried to boot from cd
-  mov  dl, ah      ;; high byte is emulated device. (boot code at 0x07C0 needs it)
-  cmp  al, #0x00   ;; Did we fail ?
-  je   int19_eltorito_checked
-  push dx
-  push ax
-  call _cdemu_bootfailed
-  pop  ax
-  pop  dx
-  stc
-
-int19_eltorito_checked:
-  jmp  int19_loaded
-
-#else 
-
-int19_use_floppy_or_harddisk:
-  mov  al, #0x2d
-  out  0x70, al
-  in   al, 0x71
-  and  al, #0x20
-  jz   int19_usedisk
-
-#endif // BX_ELTORITO_BOOT
-
-int19_usefloppy:
-  mov  dl, #0x00
-  jmp  int19_loadsector
-
-int19_usedisk:
-  mov  dl, #0x80
-
-int19_loadsector:
-  mov  ax, #0x0000
-  mov  es, ax         ;; seg = 0000
-  mov  bx, #0x7c00    ;; load boot sector into 0000:7c000
-  mov  ah, #0x02      ;; function 2, read diskette sector
-  mov  al, #0x01      ;; read 1 sector
-  mov  ch, #0x00      ;; track 0
-  mov  cl, #0x01      ;; sector 1
-  mov  dh, #0x00      ;; head 0
-  int #0x13
-  mov  dh, #0x00      
-int19_loaded:
-  jc int19_load_failed
-  ;; read sector ok.  now check floppy signature.
-  or  dh, #0x01
-  cmp WORD [0x7DFE], #0xAA55
-  jne bootstrap_problem
-
-#if BX_ELTORITO_BOOT
-  ;; save dx
-  push dx
-
-  ;; dl contains real or emulated boot disk (0x00 or 0x80)
-  ;; if dh=xxxx xx0x, boot from floppy/harddisk.  if dh=xxxx xx1x, boot from cdrom
-  call _boot_from_msg
-
-  ;; restore dx
-  pop dx
-
-#endif //BX_ELTORITO_BOOT
-
-  JMP_AP(0x0000, 0x7c00)  ;; sig ok.  Now execute the code.
-int19_load_failed:
-  and dh,#0xfe
-bootstrap_problem:
-  ;; if dh=xxxx xxx0, load failed.  if dh=xxxx xxx1, signature check failed.
-  ;; if dh=xxxx xx0x, boot from floppy/harddisk.  if dh=xxxx xx1x, boot from cdrom
-  push dx
-  call _boot_failure_msg
-  hlt
 
 ;----------
 ;- INT18h -
@@ -8860,24 +9145,6 @@ rom_scan_increment:
 
   call _print_bios_banner
 
-  
-#if BX_USE_ATADRV
-  ;;
-  ;; ATA/ATAPI driver setup
-  ;;
-  call _atadrv_init
-  call _atareg_config
-  call _ata_read_atapi_device_types
-  call _ata_show_devices
-#endif
-
-#if BX_ELTORITO_BOOT
-  ;;
-  ;; floppy/harddisk cd emulation
-  ;;
-  call _cdemu_init
-#endif // BX_ELTORITO_BOOT
- 
   ;;
   ;; Hard Drive setup
   ;;
@@ -8888,6 +9155,23 @@ rom_scan_increment:
   ;;
   call floppy_drive_post
 
+#if BX_USE_ATADRV
+  ;;
+  ;; ATA/ATAPI driver setup
+  ;;
+  call _atadrv_init
+  call _atareg_config
+  call _ata_read_atapi_device_types
+  call _ata_show_devices
+#endif // BX_USE_ATADRV
+
+#if BX_ELTORITO_BOOT
+  ;;
+  ;; floppy/harddisk cd emulation
+  ;;
+  call _cdemu_init
+#endif // BX_ELTORITO_BOOT
+ 
   int  #0x19
   //JMP_EP(0x0064) ; INT 19h location
 
@@ -8912,8 +9196,42 @@ int13_handler:
 ;----------
 .org 0xe6f2 ; INT 19h Boot Load Service Entry Point
 int19_handler:
-  //JMPL(int19_relocated)
-  jmp int19_relocated
+
+  ;; int19 was beginning to be really complex, so now it
+  ;; just calls an C function, that does the work
+  ;; it returns in BL the boot drive, and in AX the boot segment
+  ;; the boot segment will be 0x0000 if something has failed
+
+  push bp
+  mov  bp, sp
+
+  ;; drop ds
+  xor  ax, ax
+  mov  ds, ax
+
+  call _int19_function
+  ;; bl contains the boot drive
+  ;; ax contains the boot segment or 0 if failure
+
+  cmp ax, 0x0000
+  je  int19_fail
+
+  mov dl, bl       ;; set drive so guest os find it
+  mov 4[bp], ax    ;; set cs
+  xor ax, ax
+  mov 2[bp], ax    ;; set ip
+  mov [bp], ax     ;; set bp
+  mov ax, #0xaa55  ;; set ok flag
+
+  pop bp
+  iret             ;; Beam me up Scotty
+
+int19_fail:
+  hlt
+
+;; take care, there is no space between
+;; int19 and the System BIOS Configuration Data Table
+
 ;-------------------------------------------
 ;- System BIOS Configuration Data Table
 ;-------------------------------------------
