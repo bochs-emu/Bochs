@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.58.2.11 2002-04-08 06:17:18 bdenney Exp $
+// $Id: main.cc,v 1.58.2.12 2002-04-08 06:28:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1048,7 +1048,7 @@ int main (int argc, char *argv[])
 int
 bx_continue_after_control_panel (int arg, int argc, char *argv[])
 {
-  if (!enable_control_panel && !BX_WITH_WX) {
+  if (!enable_control_panel || BX_WITH_WX) {
     /* parse configuration file and command line arguments */
     char *bochsrc = bx_find_bochsrc ();
     if (bochsrc)
