@@ -25,6 +25,7 @@
 #define PLUGIN_INIT  "plugin_init"
 #define PLUGIN_FINI  "plugin_fini"
 
+
 Bit32u   (* pluginGetCMOSReg)(unsigned reg) = 0;
 void     (* pluginSetCMOSReg)(unsigned reg, Bit32u val) = 0;
 void     (* pluginCMOSChecksum)(void) = 0;
@@ -801,17 +802,17 @@ int bx_load_plugins (void)
   plugin_startup();
 
 #if BX_PLUGINS
-  bx_load_plugin("unmapped.so");
-  bx_load_plugin("biosdev.so");
-  bx_load_plugin("cmos.so");
-  bx_load_plugin("dma.so");
-  bx_load_plugin("pic.so");
-  bx_load_plugin("vga.so");
-  bx_load_plugin("floppy.so");
-  bx_load_plugin("parallel.so");
-  bx_load_plugin("serial.so");
-  bx_load_plugin("keyboard.so");
-  bx_load_plugin("harddrv.so");
+  bx_load_plugin("libunmapped.so");
+  bx_load_plugin("libbiosdev.so");
+  bx_load_plugin("libcmos.so");
+  bx_load_plugin("libdma.so");
+  bx_load_plugin("libpic.so");
+  bx_load_plugin("libvga.so");
+  bx_load_plugin("libfloppy.so");
+  bx_load_plugin("libparallel.so");
+  bx_load_plugin("libserial.so");
+  bx_load_plugin("libkeyboard.so");
+  bx_load_plugin("libharddrv.so");
 
 
   // quick and dirty gui plugin selection
@@ -836,7 +837,7 @@ int bx_load_plugins (void)
     fprintf (stderr, "--> ");
   } while (scanf ("%d", &which) != 1 || !(which>=0 && which<imax));
   char soname[64];
-  sprintf (soname, "%s.so", gui_names[which]);
+  sprintf (soname, "lib%s.so", gui_names[which]);
   bx_load_plugin (soname);
 
   if (bx_gui == NULL) {
@@ -905,4 +906,3 @@ void bx_reset_plugins(unsigned signal)
       }
     }
 }
-
