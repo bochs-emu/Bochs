@@ -10,7 +10,7 @@
 
 MAKENSIS='c:/Program Files/NSIS/makensis'
 
-VERSION=2.0.pre2
+VERSION=@VERSION@
 TARGET=Bochs-${VERSION}.exe
 
 ${TARGET}: bochs.nsi
