@@ -30,15 +30,19 @@ Here's the outline that the docbooks are organized by, basically.
 Title Pages
 Contents
 Bochs Users Guide
-  What is Bochs?
-    portable x86 emulator, etc.
+  Introduction to Bochs
+    What is Bochs?
+      portable x86 emulator, etc.
+    Who uses Bochs?
+      run more than one operating system without rebooting
+      OS developers use Bochs to system software without endangering
+	their development machine or rebooting.
+      students use Bochs to learn about how PC hardware works
+      hardware designers use bochs to help test new hardware
+    Will it work for me?
+      platforms supported (brief list)
+      speed issues.  if speed is top priority, maybe look elsewhere
     Licensing
-  Why do people use Bochs anyway?
-    run more than one operating system without rebooting
-    OS developers use Bochs to system software without endangering
-      their development machine or rebooting.
-    students use Bochs to learn about how PC hardware works
-    hardware designers use bochs to help test new hardware
   FAQ
   Installation
     How to get it
