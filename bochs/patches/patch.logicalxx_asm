@@ -1,0 +1,397 @@
+----------------------------------------------------------------------
+Patch name: patch.logicalxx_asm
+Author: Jas Sandys-Lumsdaine
+Date: Thu Sep 26 18:45:15 GMT 2002
+
+Detailed description:
+Several asm inline statements in the logical*.cc files were
+not in the optimum position - more specifically, unlike the
+versions in arith*.cc, they were being used solely for eflags
+calculation and the result calculation was still being done
+in C. Now, the asm does both the result and eflag calculation.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on Sep 26
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/logical16.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/logical16.cc,v
+retrieving revision 1.11
+diff -u -r1.11 logical16.cc
+--- cpu/logical16.cc	23 Sep 2002 17:59:17 -0000	1.11
++++ cpu/logical16.cc	26 Sep 2002 17:55:19 -0000
+@@ -289,15 +289,6 @@
+     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+     }
+ 
+-  result_16 = op1_16 & op2_16;
+-
+-  if (i->modC0()) {
+-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+-    }
+-  else {
+-    Write_RMW_virtual_word(result_16);
+-    }
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -313,6 +304,17 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_16 = op1_16 & op2_16;
++#endif
++
++  if (i->modC0()) {
++    BX_WRITE_16BIT_REG(i->rm(), result_16);
++    }
++  else {
++    Write_RMW_virtual_word(result_16);
++    }
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+ #endif
+ }
+@@ -332,10 +334,6 @@
+     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+     }
+ 
+-  result_16 = op1_16 & op2_16;
+-
+-  BX_WRITE_16BIT_REG(i->nnn(), result_16);
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -351,6 +349,12 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_16 = op1_16 & op2_16;
++#endif
++
++  BX_WRITE_16BIT_REG(i->nnn(), result_16);
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+ #endif
+ }
+@@ -365,10 +369,6 @@
+ 
+   op2_16 = i->Iw();
+ 
+-  result_16 = op1_16 & op2_16;
+-
+-  AX = result_16;
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -384,6 +384,12 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_16 = op1_16 & op2_16;
++#endif
++
++  AX = result_16;
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+ #endif
+ }
+@@ -402,15 +408,6 @@
+     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+     }
+ 
+-  result_16 = op1_16 & op2_16;
+-
+-  if (i->modC0()) {
+-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+-    }
+-  else {
+-    Write_RMW_virtual_word(result_16);
+-    }
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -426,6 +423,17 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_16 = op1_16 & op2_16;
++#endif
++
++  if (i->modC0()) {
++    BX_WRITE_16BIT_REG(i->rm(), result_16);
++    }
++  else {
++    Write_RMW_virtual_word(result_16);
++    }
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+ #endif
+ }
+Index: cpu/logical32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/logical32.cc,v
+retrieving revision 1.12
+diff -u -r1.12 logical32.cc
+--- cpu/logical32.cc	23 Sep 2002 17:59:17 -0000	1.12
++++ cpu/logical32.cc	26 Sep 2002 17:55:21 -0000
+@@ -294,15 +294,6 @@
+     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+     }
+ 
+-  result_32 = op1_32 & op2_32;
+-
+-  if (i->modC0()) {
+-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+-    }
+-  else {
+-    Write_RMW_virtual_dword(result_32);
+-    }
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -318,6 +309,17 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_32 = op1_32 & op2_32;
++#endif
++
++  if (i->modC0()) {
++    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
++    }
++  else {
++    Write_RMW_virtual_dword(result_32);
++    }
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+ #endif
+ }
+@@ -337,10 +339,6 @@
+     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+     }
+ 
+-  result_32 = op1_32 & op2_32;
+-
+-  BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -356,6 +354,12 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_32 = op1_32 & op2_32;
++#endif
++
++  BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+ #endif
+ }
+@@ -370,14 +374,6 @@
+ 
+   op2_32 = i->Id();
+ 
+-  result_32 = op1_32 & op2_32;
+-
+-#if BX_SUPPORT_X86_64
+-  RAX = result_32;
+-#else
+-  EAX = result_32;
+-#endif
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -393,6 +389,16 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_32 = op1_32 & op2_32;
++#endif
++
++#if BX_SUPPORT_X86_64
++  RAX = result_32;
++#else
++  EAX = result_32;
++#endif
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+ #endif
+ }
+@@ -412,15 +418,6 @@
+     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+     }
+ 
+-  result_32 = op1_32 & op2_32;
+-
+-  if (i->modC0()) {
+-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+-    }
+-  else {
+-    Write_RMW_virtual_dword(result_32);
+-    }
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -436,6 +433,17 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result_32 = op1_32 & op2_32;
++#endif
++
++  if (i->modC0()) {
++    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
++    }
++  else {
++    Write_RMW_virtual_dword(result_32);
++    }
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+ #endif
+ }
+Index: cpu/logical8.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/logical8.cc,v
+retrieving revision 1.13
+diff -u -r1.13 logical8.cc
+--- cpu/logical8.cc	23 Sep 2002 17:59:18 -0000	1.13
++++ cpu/logical8.cc	26 Sep 2002 17:55:23 -0000
+@@ -290,15 +290,6 @@
+     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+     }
+ 
+-  result = op1 & op2;
+-
+-  if (i->modC0()) {
+-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
+-    }
+-  else {
+-    Write_RMW_virtual_byte(result);
+-    }
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -314,6 +305,17 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result = op1 & op2;
++#endif
++
++  if (i->modC0()) {
++    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
++    }
++  else {
++    Write_RMW_virtual_byte(result);
++    }
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+ #endif
+ }
+@@ -333,10 +335,6 @@
+     read_virtual_byte(i->seg(), RMAddr(i), &op2);
+     }
+ 
+-  result = op1 & op2;
+-
+-  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -352,6 +350,12 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result = op1 & op2;
++#endif
++
++  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+ #endif
+ }
+@@ -367,10 +371,6 @@
+ 
+   op2 = i->Ib();
+ 
+-  result = op1 & op2;
+-
+-  AL = result;
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -386,6 +386,12 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result = op1 & op2;
++#endif
++
++  AL = result;
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+ #endif
+ }
+@@ -408,15 +414,6 @@
+     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+     }
+ 
+-  result = op1 & op2;
+-
+-  if (i->modC0()) {
+-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
+-    }
+-  else {
+-    Write_RMW_virtual_byte(result);
+-    }
+-
+ #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   Bit32u flags32;
+   asm (
+@@ -432,6 +429,17 @@
+     (flags32 & EFlagsOSZAPCMask);
+   BX_CPU_THIS_PTR lf_flags_status = 0;
+ #else
++  result = op1 & op2;
++#endif
++
++  if (i->modC0()) {
++    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
++    }
++  else {
++    Write_RMW_virtual_byte(result);
++    }
++
++#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+ #endif
+ }
