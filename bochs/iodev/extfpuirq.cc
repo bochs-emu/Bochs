@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.cc,v 1.1 2003-01-06 02:20:47 cbothamy Exp $
+// $Id: extfpuirq.cc,v 1.2 2003-01-07 08:17:15 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,7 +71,6 @@ bx_extfpuirq_c::init(void)
 {
   // called once when bochs initializes
   DEV_register_iowrite_handler(this, write_handler, 0x00F0, "External FPU IRQ", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x00F0, "External FPU IRQ", 7);
   DEV_register_irq(13, "External FPU IRQ");
 }
 
@@ -80,33 +79,6 @@ bx_extfpuirq_c::reset(unsigned type)
 {
   // We should handle IGNNE here
   DEV_pic_lower_irq(13);
-}
-
-
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_extfpuirq_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
-{
-#if !BX_USE_EFI_SMF
-  bx_extfpuirq_c *class_ptr = (bx_extfpuirq_c *) this_ptr;
-
-  return( class_ptr->read(address, io_len) );
-}
-
-
-  Bit32u
-bx_extfpuirq_c::read(Bit32u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_EFI_SMF
-
-  // We should handle IGNNE here
-  DEV_pic_lower_irq(13);
-
-  return(0x0);
 }
 
 

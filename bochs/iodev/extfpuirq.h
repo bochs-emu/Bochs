@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.h,v 1.1 2003-01-06 02:20:47 cbothamy Exp $
+// $Id: extfpuirq.h,v 1.2 2003-01-07 08:17:15 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,10 +44,8 @@ public:
 
 private:
 
-  static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_EFI_SMF
-  Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
   };
