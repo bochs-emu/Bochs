@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
-#include "disasm.h"
+#include "../bochs.h"
 
 //////////////////
 // Intel STYLE

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.2 2003-12-07 23:34:48 cbothamy Exp $
+// $Id: dbg_main.cc,v 1.3 2004-01-04 13:13:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,6 +42,7 @@ extern "C" {
 #endif
 }
 #endif
+
 
 static unsigned doit = 0;
 
@@ -2381,6 +2382,8 @@ bx_dbg_compare_sim_memory(void)
 #endif
 
 
+static disassembler bx_disassemble;
+
 void bx_dbg_disassemble_current (int which_cpu, int print_time)
 {
   Bit32u phy;
@@ -2407,6 +2410,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     else {
      Base=BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value<<4;
     }
+
 
     ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
       Base, BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
