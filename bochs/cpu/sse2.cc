@@ -1262,7 +1262,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
-  Bit32u val32 = op.xmm16u(0);
+  Bit32u val32 = op.xmm32u(0);
 
   /* destination is a register or memory reference */
   if (i->modC0()) {
