@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.80 2002-08-26 15:31:16 bdenney Exp $
+// $Id: bochs.h,v 1.81 2002-08-30 06:47:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -520,13 +520,6 @@ extern bx_gui_c   bx_gui;
 #if ( BX_PROVIDE_DEVICE_MODELS==1 )
 extern bx_devices_c   bx_devices;
 #endif
-
-#define BX_EJECTED   10
-#define BX_INSERTED  11
-
-
-#define BX_RESET_SOFTWARE 10
-#define BX_RESET_HARDWARE 11
 
 void bx_init_before_config_interface ();
 
