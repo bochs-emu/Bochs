@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.107 2003-08-24 10:08:49 vruppert Exp $
+// $Id: siminterface.h,v 1.108 2003-08-25 15:21:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1060,6 +1060,8 @@ public:
   bx_bool equals (const char *buf);
   bx_param_num_c *get_options () { return options; }
   void set_separator (char sep) {separator = sep; }
+  char get_separator () {return separator; }
+  int get_maxsize () {return maxsize; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.57 2003-08-24 10:08:49 vruppert Exp $
+// $Id: wxdialog.cc,v 1.58 2003-08-25 15:21:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1547,7 +1547,21 @@ void ParamDialog::AddParam (
 	if (!plain) ADD_LABEL (prompt);
 	bool isFilename = param->get_options ()->get () & param->IS_FILENAME;
 	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : normalTextSize);
-	txtctrl->SetValue (param->getptr ());
+        if (param->get_options()->get () & param->RAW_BYTES) {
+          char *value = param->getptr ();
+          wxString buffer;
+          char sep_string[2];
+          sep_string[0] = param->get_separator ();
+          sep_string[1] = 0;
+          for (int i=0; i<param->get_maxsize (); i++) {
+            wxString eachbyte;
+            eachbyte.Printf ("%s%02x", (i>0)?sep_string : "", (unsigned int)0xff&value[i]);
+            buffer += eachbyte;
+          }
+          txtctrl->SetValue (buffer);
+        } else {
+          txtctrl->SetValue (param->getptr ());
+        }
 	sizer->Add (txtctrl);
 	if (!plain) {
 	  if (isFilename) {
@@ -1676,7 +1690,29 @@ bool ParamDialog::CopyGuiToParam ()
         bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
 	char buf[1024];
 	wxString tmp(pstr->u.text->GetValue ());
-	strncpy (buf, tmp.c_str(), sizeof(buf));
+        if (stringp->get_options()->get () & stringp->RAW_BYTES) {
+          char src[1024];
+          int i, p = 0;
+          unsigned int n;
+          strcpy(src, tmp.c_str());
+          for (i=0; i<stringp->get_maxsize (); i++) 
+            buf[i] = 0;
+          for (i=0; i<stringp->get_maxsize (); i++) {
+            while (src[p] == stringp->get_separator ())
+              p++;
+            if (src[p] == 0) break;
+            // try to read a byte of hex
+            if (sscanf (src+p, "%02x", &n) == 1) {
+              buf[i] = n;
+              p+=2;
+            } else {
+              wxMessageBox("Illegal raw byte format", "Error", wxOK | wxICON_ERROR, this );
+              return false;
+            }
+          }
+        } else {
+          strncpy (buf, tmp.c_str(), sizeof(buf));
+        }
 	buf[sizeof(buf)-1] = 0;
 	if (!stringp->equals (buf)) stringp->set (buf);
 	break;
