@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: osdep.cc,v 1.7 2002-09-23 02:20:51 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -272,3 +272,22 @@ int fd_stat(struct stat *buf)
 	return result;
 }
 #endif /* BX_WITH_MACOS */
+
+
+
+//////////////////////////////////////////////////////////////////////
+// New functions to replace library functions
+//   with OS-independent versions
+//////////////////////////////////////////////////////////////////////
+
+#if BX_HAVE_REALTIME_USEC
+#  if BX_HAVE_GETTIMEOFDAY
+Bit64u bx_get_realtime64_usec (void) {
+  timeval thetime;
+  gettimeofday(&thetime,0);
+  Bit64u mytime;
+  mytime=(Bit64u)thetime.tv_sec*(Bit64u)1000000+(Bit64u)thetime.tv_usec;
+  return mytime;
+}
+#  endif
+#endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.26 2002-09-22 01:56:18 bdenney Exp $
+// $Id: pit_wrap.cc,v 1.27 2002-09-23 02:20:52 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,16 +110,6 @@ bx_pit_c bx_pit;
 #define TICKS_TO_USEC(a) ((BX_USE_REALTIME_PIT)?( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second ):( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND ))
 #define USEC_TO_TICKS(a) ((BX_USE_REALTIME_PIT)?( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second ):( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND ))
 
-#if BX_HAVE_GETTIMEOFDAY
-Bit64u getrealtime64 (void) {
-  timeval thetime;
-  gettimeofday(&thetime,0);
-  Bit64u mytime;
-  mytime=(Bit64u)thetime.tv_sec*1000000ll+(Bit64u)thetime.tv_usec;
-  return mytime;
-}
-#endif
-
 bx_pit_c::bx_pit_c( void )
 {
   put("PIT");
@@ -182,8 +172,8 @@ bx_pit_c::init( bx_devices_c *d )
     BX_PIT_THIS s.ticks_per_second=TICKS_PER_SECOND;
     BX_PIT_THIS s.total_sec=0;
     BX_PIT_THIS s.stored_delta=0;
-#if BX_HAVE_GETTIMEOFDAY
-    BX_PIT_THIS s.last_time=((getrealtime64()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
+#if BX_HAVE_REALTIME_USEC
+    BX_PIT_THIS s.last_time=((bx_get_realtime64_usec()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
 #else
     BX_PIT_THIS s.last_time=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART)*USEC_PER_SECOND;
 #endif
@@ -456,8 +446,8 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 #endif
 
   if (BX_USE_REALTIME_PIT) {
-#if BX_HAVE_GETTIMEOFDAY
-    Bit64u real_time_delta = getrealtime64() - BX_PIT_THIS s.last_time;
+#if BX_HAVE_REALTIME_USEC
+    Bit64u real_time_delta = bx_get_realtime64_usec() - BX_PIT_THIS s.last_time;
     Bit64u real_time_total = real_time_delta + BX_PIT_THIS s.total_sec;
     Bit64u em_time_delta = (Bit64u)usec_delta + (Bit64u)BX_PIT_THIS s.stored_delta;
     BX_PIT_THIS s.ticks_per_second = TICKS_PER_SECOND;
@@ -564,8 +554,8 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 void
 bx_pit_c::second_update_data(void) {
   Bit64u timediff;
-#if BX_HAVE_GETTIMEOFDAY
-  timediff=((getrealtime64()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))-(Bit64u)BX_PIT_THIS s.last_time;
+#if BX_HAVE_REALTIME_USEC
+  timediff=((bx_get_realtime64_usec()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))-(Bit64u)BX_PIT_THIS s.last_time;
 #else
   timediff=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)*USEC_PER_SECOND)-BX_PIT_THIS s.last_time;
 #endif
