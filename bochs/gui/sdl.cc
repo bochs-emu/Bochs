@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.38 2003-06-10 20:22:37 vruppert Exp $
+// $Id: sdl.cc,v 1.39 2003-06-15 07:33:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -277,7 +277,7 @@ void bx_sdl_gui_c::text_update(
 {
   unsigned char *pfont_row, *old_line, *new_line;
   unsigned long x,y;
-  unsigned int curs, hchars;
+  unsigned int curs, hchars, offset;
   int rows,fontrows,fontpixels;
   int fgcolor_ndx;
   int bgcolor_ndx;
@@ -287,7 +287,7 @@ void bx_sdl_gui_c::text_update(
   Uint32 disp;
   Bit16u font_row, mask;
   Bit8u cs_line, cfwidth, cfheight;
-  bx_bool gfxcharw9, invert, forceUpdate;
+  bx_bool cursor_visible, gfxcharw9, invert, forceUpdate;
 
   UNUSED(nrows);
   forceUpdate = 0;
@@ -321,7 +321,9 @@ void bx_sdl_gui_c::text_update(
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
-  
+  curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+  cursor_visible = (tm_info.cs_start < tm_info.cs_end);
+
   do
   {
     buf = buf_row;
@@ -342,6 +344,7 @@ void bx_sdl_gui_c::text_update(
     new_line = new_text;
     old_line = old_text;
     x = 0;
+    offset = y * tm_info.line_offset;
     do
     {
       cfwidth = fontwidth;
@@ -359,7 +362,7 @@ void bx_sdl_gui_c::text_update(
       // check if char needs to be updated
       if(forceUpdate || (old_text[0] != new_text[0])
 	  || (old_text[1] != new_text[1])
-	  || ((y == cursor_y) && (x == cursor_x)) )
+	  || (offset == curs) )
       {
 
 	// Get Foreground/Background pixel colors
@@ -367,7 +370,7 @@ void bx_sdl_gui_c::text_update(
 	bgcolor_ndx = DEV_vga_get_actl_pal_idx((new_text[1] >> 4) & 0x0F);
 	fgcolor = palette[fgcolor_ndx];
 	bgcolor = palette[bgcolor_ndx];
-	invert = ( (y == cursor_y) && (x == cursor_x) && (tm_info.cs_start < tm_info.cs_end) );
+	invert = ( (offset == curs) && (cursor_visible) );
 	gfxcharw9 = ( (tm_info.line_graphics) && ((new_text[0] & 0xE0) == 0xC0) );
 
 	// Display this one char
@@ -420,12 +423,13 @@ void bx_sdl_gui_c::text_update(
       }
       // move to next char location on screen
       buf += cfwidth;
-      
+
       // select next char in old/new text
       new_text+=2;
       old_text+=2;
+      offset+=2;
       x++;
-	
+
     // process one entire horizontal row
     } while( --hchars );
 
