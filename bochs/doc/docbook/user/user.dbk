@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.102 2002-12-25 10:08:24 vruppert Exp $
+$Id: user.dbk,v 1.103 2002-12-27 12:44:39 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2530,7 +2530,8 @@ just reboot.
 <section><title>Option 2: Installing VGA font in local font directory</title>
 <screen>
    # NOTE1: Make sure your DISPLAY variable points to local machine.
-   # NOTE2: The "xset" command needs to be run for each X session.
+   # NOTE2: The "xset" command needs to be run for each X session (you may
+   # add it to your ~/.xinitrc ).
    user-> mkfontdir bochs-YYMMDD/font
    user-> xset fp+ [full-path]/bochs-YYMMDD/font
 </screen>
@@ -5537,7 +5538,7 @@ Interesting Facts:
 
 
 <chapter id="guests"><title>Guest operating systems</title>
-        <section><title>Linux</title>
+        <section id="guest-linux"><title>Linux</title>
            <para>
            <screen>
             What disk images are available.
@@ -5547,26 +5548,26 @@ Interesting Facts:
            </screen>
            </para>
         </section>
-        <section id="minix"> <title>Minix</title>
+        <section id="guest-minix"> <title>Minix</title>
                   <para>
                   </para>
         </section>
-          <section id="openbsd"><title>OpenBSD</title>
+          <section id="guest-openbsd"><title>OpenBSD</title>
              <para>
              </para>
           </section>
-          <section id="freebsd"><title>FreeBSD</title>
+          <section id="guest-freebsd"><title>FreeBSD</title>
              <para>
              </para>
           </section>
-          <section id="freedos"><title>FreeDOS</title>
+          <section id="guest-freedos"><title>FreeDOS</title>
              <para>
              </para>
           </section>
-          <section id="hurd"><title>The Hurd</title>
+          <section id="guest-gnu"><title>GNU (Also known as GNU/Hurd)</title>
 
 <section>
-<title>Installing the Hurd</title>
+<title>Installing GNU</title>
 <para>
 This has been contributed by Bruno Bonfils (asyd at debian-fr dot org) 
 </para>
@@ -5574,11 +5575,11 @@ This has been contributed by Bruno Bonfils (asyd at debian-fr dot org)
 <section>
 <title>Introduction</title>
 <para>
-Since I don't have enough computers to dedicate a box to the Hurd, I'm trying
+Since I don't have enough computers to dedicate a box to GNU, I'm trying
 to do my own harddrive image disk. I thougt there was
 some documentation about how to do that. But since I didn't find
 anything and I decided to write a small doc. I hope this document will be
-useful for some people who wants to try the Hurd.
+useful for some people who wants to try the GNU/Hurd.
 </para>
 </section>
 
@@ -5619,7 +5620,7 @@ can use any size without some problem.
 Use createdisk command like this :
 
 <screen>
-# createdisk hurd.img 112 
+# createdisk gnu.img 112 
 
 Disk Geometry:
 C: 227
@@ -5633,7 +5634,7 @@ Total size: 117153792 bytes
 Note on a paper or on your memory the disk geometry. Then, use the
 losetup command to create a loopback on the whole disk.
 <screen>
-# losetup /dev/loop1 hurd.img
+# losetup /dev/loop1 gnu.img
 </screen>
 </para>
 
@@ -5648,7 +5649,7 @@ detach the /dev/loop1 using :
 </section>
 
 <section>
-<title> Installing GNU/Hurd</title>
+<title> Installing GNU</title>
 
 <itemizedlist>
 <listitem>
@@ -5663,17 +5664,17 @@ partition of an image disk. Offset is computed like this :
 <para> 
 offset = sector * block_size (512)
 
-<screen># losetup -o 32256 /dev/loop1 hurd.img</screen>
+<screen># losetup -o 32256 /dev/loop1 gnu.img</screen>
 </para>
 </listitem>
 
 <listitem>
 <para> Preparing the filesystem</para>
 
-<para>According to The Hurd Installation Guide
+<para>According to the GNU/Hurd Installation Guide
 <footnote>
 <para>
-<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
+<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">GNU/Hurd Installation guide</ulink>
 </para>
 </footnote>
 , use mke2fs to create a filesystem.
@@ -5690,7 +5691,7 @@ Just mount /dev/loop1 like a typical dev.
 <para> Finish the installation</para>
 
 <para>
-Download a GNU/Hurd archive as indicated in the Hurd Installation Guide, and decompress it in /mnt/gnu.
+Download a GNU archive as indicated in the Hurd Installation Guide, and decompress it in /mnt/gnu.
 
 <screen>
 # cd /mnt/gnu
@@ -5717,7 +5718,7 @@ romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xf0000
 megs: 128
 vgaromimage: /usr/share/vgabios/vgabios.bin
 floppya: 1_44=/dev/fd0, status=ejected
-diskc: file="/home/asyd/travail/hurd/hurd.img", cyl=227, heads=16, spt=63 # edit me
+diskc: file="/home/asyd/travail/hurd/gnu.img", cyl=227, heads=16, spt=63 # edit me
 cdromd: dev=/dev/cdrom, status=inserted
 boot: c
 log: /dev/stdout
@@ -5749,13 +5750,13 @@ these lines, don't forget to read the Networking section.
 <title> Note on GNU Mach</title>
 
 <para>
-Remember that the Hurd is not an OS, it's just a collection of libraries
+Remember that the Hurd is not a kernel, it's just a collection of libraries
 and programs, so we can't actually boot the Hurd. We boot GNU Mach, and
 then launch the base servers.
 </para>
 
 <para>
-The default GNU Mach which is provided by the default GNU/Hurd archive 
+The default GNU Mach which is provided by the default GNU archive 
 contains some modules / drivers which are not needed in bochs 
 environment. If you use it, you'll probably have some kernel panic 
 while booting. Don't be afraid and just say alwayscont.
@@ -5805,10 +5806,10 @@ remember to copy stage1, stage2 Grub's files into /mnt/gnu/boot/grub.
 &lt;grub&gt; boot
 </screen>
 
-Now, you can read the official Hurd Installation Guide
+Now, you can read the official GNU/Hurd Installation Guide
 <footnote>
 <para>
-<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
+<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">GNU/Hurd Installation guide</ulink>
 </para>
 </footnote>
 .
@@ -5879,11 +5880,11 @@ or any later version published by the Free Software Foundation.
 </para>
 </section>
 
-</section> <!-- Installing the Hurd -->
+</section> <!-- Installing GNU -->
 
-          </section> <!-- The Hurd -->
+          </section> <!-- GNU -->
 
-          <section id="dos"><title>DOS</title>
+          <section id="guest-dos"><title>DOS</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install or use MS-DOS, OS2, DR-DOS, or any other DOS as a guest OS in Bochs.</para>
 <section><title>Accessing your CDROM</title>
@@ -5933,7 +5934,7 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 </section>
           </section>
 
-<section id="win95">
+<section id="guest-win95">
         <title>Windows 95</title>
 
 <section><title>How to Install Windows 95 with floppies</title>
@@ -6655,7 +6656,7 @@ to
         </section>
 </section>
 
-<section id="winnt4">
+<section id="guest-winnt4">
         <title>Windows NT 4.0</title>
 <para>
 You must read the message regarding software licenses in 
@@ -6690,7 +6691,7 @@ user_shortcut: keys=ctrlaltdel
 
 <!-- Win98 Section Starts Here -->
 
-<section id="win98"><title>Windows 98</title>
+<section id="guest-win98"><title>Windows 98</title>
 
 <para>
 You must read the message regarding software licenses in 
@@ -7502,7 +7503,7 @@ D:\WIN98>setup
 
 
 
-<section id="winme">
+<section id="guest-winme">
         <title>Windows ME</title>
         <para>
 </para>
@@ -7750,7 +7751,7 @@ Some bugs i've found
                 </para>
                 </section> <!-- end of Installing Windows ME -->
 </section>
-<section id="win2k">
+<section id="guest-win2k">
         <title>Windows 2000</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install Windows 2000 as a guest OS in Bochs.</para>
@@ -7758,13 +7759,13 @@ Some bugs i've found
         </para>
 
 </section>
-<section id="win2k-server">
+<section id="guest-win2k-server">
 <title>Windows 2000 Server</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install Windows 2000 Server as a guest OS in Bochs.</para>
 </section>
 
-<section id="winxp">
+<section id="guest-winxp">
         <title>Windows XP</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install Windows XP as a guest OS in Bochs.</para>
