@@ -186,6 +186,7 @@
 #define BX_USE_NEW_PIT 0
 
 #define BX_USE_SLOWDOWN_TIMER 0
+#define BX_HAVE_SLEEP 0
 #define BX_HAVE_USLEEP 0
 #define BX_HAVE_NANOSLEEP 0
 
@@ -519,7 +520,6 @@ typedef unsigned int Boolean;
 #define BX_HAVE_STRTOUQ 0
 #define BX_HAVE_STRDUP 0
 #define BX_HAVE_STRUCT_TIMEVAL 0
-#define BX_HAVE_WSPRINTF 0
 
 // set if your compiler does not permit an empty struct
 #define BX_NO_EMPTY_STRUCTS 0

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.8 2001-10-05 06:07:00 bdenney Exp $
+// $Id: osdep.h,v 1.9 2001-10-05 13:52:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,10 +76,6 @@ extern "C" {
 // If you're considering implementing a missing library function, note 
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
-
-#if !BX_HAVE_WSPRINTF
-#define wsprintf sprintf
-#endif
 
 #if !BX_HAVE_SNPRINTF
 #define snprintf bx_snprintf
