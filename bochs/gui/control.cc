@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.7 2001-06-10 03:53:43 yakovlev Exp $
+ * $Id: control.cc,v 1.8 2001-06-10 05:30:27 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -499,6 +499,24 @@ int bx_control_panel (int menu)
        }
      }
      break;
+   case BX_CPANEL_START_OPTS_DISK:
+     {
+       char prompt[1024];
+       build_disk_options_prompt (startup_disk_options_prompt, prompt, 1024);
+       if (ask_int (prompt, 0, 7, 0, &choice) < 0) return -1;
+       switch (choice) {
+	 case 0: return 0;
+	 case 1: bx_edit_floppy (0); break;
+	 case 2: bx_edit_floppy (1); break;
+	 case 3: bx_edit_hard_disk (0); break;
+	 case 4: bx_edit_hard_disk (1); break;
+	 case 5: bx_edit_cdrom (); break;
+	 case 6: bx_newhd_support (); break;
+	 case 7: bx_boot_from (); break;
+	 default: BAD_OPTION(menu, choice);
+       }
+     }
+   break;
    case BX_CPANEL_RUNTIME:
      if (ask_int (runtime_menu_prompt, 1, 9, 8, &choice) < 0) return -1;
      switch (choice) {
