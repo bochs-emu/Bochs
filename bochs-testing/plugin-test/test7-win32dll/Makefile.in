@@ -5,34 +5,25 @@ VPATH = @srcdir@
 
 CXX=@CXX@
 CXXFLAGS=@CXXFLAGS@ @INCLTDL@
-LDFLAGS=@LDFLAGS@ @LT_LDFLAGS@
-LIBS=@LIBS@ @LIBLTDL@
 
-LIBTOOL=@LIBTOOL@
-RPATH=`pwd`/lib
+all: uselib module1.dll module2.dll
 
-all: uselib libmodule1.la libmodule2.la
+uselib: main.cc main.h
+	$(CXX) $(CXXFLAGS) -c -o main.o main.cc
+	dlltool --export-all --output-def uselib.def main.o
+	dlltool --dllname uselib.exe --def uselib.def --output-lib uselib.a
+	dlltool --dllname uselib.exe --output-exp uselib.exp --def uselib.def
+	$(CXX) $(CXXFLAGS) -o uselib uselib.exp main.o 
+	rm uselib.exp uselib.def
 
-uselib: libmain.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o uselib libmain.la $(LIBS)
+module1.dll: module1.cc main.h
+	$(CXX) $(CXXFLAGS) -shared -o module1.dll module1.cc uselib.a
 
-libmain.la: main.lo
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmain.la main.lo -rpath ${RPATH} $(LIBS)
-	mkdir -p lib bin
-	$(LIBTOOL) cp libmain.la ${RPATH}
+module2.dll: module2.cc main.h
+	$(CXX) $(CXXFLAGS) -shared -o module2.dll module2.cc uselib.a
 
-libmodule1.la: module1.lo libmain.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule1.la module1.lo -rpath ${RPATH} libmain.la
-	mkdir -p lib bin
-	$(LIBTOOL) cp libmodule1.la ${RPATH}
-
-libmodule2.la: module2.lo libmain.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule2.la module2.lo -rpath ${RPATH} libmain.la
-	mkdir -p lib bin
-	$(LIBTOOL) cp libmodule2.la ${RPATH}
-
-%.lo: %.cc
-	$(LIBTOOL) $(CXX) $(CXXFLAGS) -c $<
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c $<
 
 test:
 	@echo "*** Running test in `pwd`"
@@ -41,5 +32,5 @@ test:
 
 clean:
 	-$(LIBTOOL) rm libmodule1.la module1.lo libmodule2.la module2.lo
-	rm -rf *.o *.lo *.la uselib.exe bin lib uselib uselib.exe
-	rm -rf .libs
+	-rm -rf *.o *.lo *.la *.dll uselib.exe bin lib uselib uselib.exe
+	-rm -rf .libs
