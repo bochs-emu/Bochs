@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.30 2002-12-06 22:22:32 bdenney Exp $
+// $Id: cmos.cc,v 1.31 2002-12-06 22:36:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,6 +38,32 @@
 #define LOG_THIS theCmosDevice->
 
 bx_cmos_c *theCmosDevice = NULL;
+
+// CMOS register definitions from Ralf Brown's interrupt list v6.1, in a file
+// called cmos.lst.  In cases where there are multiple uses for a given
+// register in the interrupt list, I only listed the purpose that Bochs
+// actually uses it for, but I wrote "alternatives" next to it.
+#define  REG_SEC                     0x00
+#define  REG_SEC_ALARM               0x01
+#define  REG_MIN                     0x02
+#define  REG_MIN_ALARM               0x03
+#define  REG_HOUR                    0x04
+#define  REG_HOUR_ALARM              0x05
+#define  REG_WEEK_DAY                0x06
+#define  REG_MONTH_DAY               0x07
+#define  REG_MONTH                   0x08
+#define  REG_YEAR                    0x09
+#define  REG_STAT_A                  0x0a
+#define  REG_STAT_B                  0x0b
+#define  REG_STAT_C                  0x0c
+#define  REG_STAT_D                  0x0d
+#define  REG_DIAGNOSTIC_STATUS       0x0e  /* alternatives */
+#define  REG_SHUTDOWN_STATUS         0x0f
+#define  REG_EQUIPMENT_BYTE          0x14
+#define  REG_CSUM_HIGH               0x2e
+#define  REG_CSUM_LOW                0x2f
+#define  REG_IBM_CENTURY_BYTE        0x32  /* alternatives */
+#define  REG_IBM_PS2_CENTURY_BYTE    0x37  /* alternatives */
 
 // check that BX_NUM_CMOS_REGS is 64 or 128
 #if (BX_NUM_CMOS_REGS == 64)
@@ -82,7 +108,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.30 2002-12-06 22:22:32 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.31 2002-12-06 22:36:48 bdenney Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -158,12 +184,12 @@ bx_cmos_c::init(void)
     }
   else {
     // CMOS values generated
-    BX_CMOS_THIS s.reg[0x0a] = 0x26;
-    BX_CMOS_THIS s.reg[0x0b] = 0x02;
-    BX_CMOS_THIS s.reg[0x0c] = 0x00;
-    BX_CMOS_THIS s.reg[0x0d] = 0x80;
+    BX_CMOS_THIS s.reg[REG_STAT_A] = 0x26;
+    BX_CMOS_THIS s.reg[REG_STAT_B] = 0x02;
+    BX_CMOS_THIS s.reg[REG_STAT_C] = 0x00;
+    BX_CMOS_THIS s.reg[REG_STAT_D] = 0x80;
 #if BX_SUPPORT_FPU == 1
-    BX_CMOS_THIS s.reg[0x14] |= 0x02;
+    BX_CMOS_THIS s.reg[REG_EQUIPMENT_BYTE] |= 0x02;
 #endif
     }
 }
@@ -178,8 +204,8 @@ bx_cmos_c::reset(unsigned type)
   //  CRB: bits 4,5,6 forced to 0
   //  CRC: bits 4,5,6,7 forced to 0
   //  CRD: no effects
-  BX_CMOS_THIS s.reg[0x0b] &= 0x8f;
-  BX_CMOS_THIS s.reg[0x0c] = 0;
+  BX_CMOS_THIS s.reg[REG_STAT_B] &= 0x8f;
+  BX_CMOS_THIS s.reg[REG_STAT_C] = 0;
 
   // One second timer for updating clock & alarm functions
   bx_pc_system.activate_timer(BX_CMOS_THIS s.one_second_timer_index,
@@ -195,7 +221,7 @@ bx_cmos_c::CRA_change(void)
   unsigned nibble;
 
   // Periodic Interrupt timer
-  nibble = BX_CMOS_THIS s.reg[0x0a] & 0x0f;
+  nibble = BX_CMOS_THIS s.reg[REG_STAT_A] & 0x0f;
   if (nibble == 0) {
     // No Periodic Interrupt Rate when 0, deactivate timer
     bx_pc_system.deactivate_timer(BX_CMOS_THIS s.periodic_timer_index);
@@ -209,7 +235,7 @@ bx_cmos_c::CRA_change(void)
      (32768.0L / (1 << (nibble - 1))));
 
     // if Periodic Interrupt Enable bit set, activate timer
-    if ( BX_CMOS_THIS s.reg[0x0b] & 0x40 )
+    if ( BX_CMOS_THIS s.reg[REG_STAT_B] & 0x40 )
       bx_pc_system.activate_timer(BX_CMOS_THIS s.periodic_timer_index,
      BX_CMOS_THIS s.periodic_interval_usec, 1);
     else
@@ -262,8 +288,8 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
 
       ret8 = BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address];
       // all bits of Register C are cleared after a read occurs.
-      if (BX_CMOS_THIS s.cmos_mem_address == 0x0c) {
-        BX_CMOS_THIS s.reg[0x0c] = 0x00;
+      if (BX_CMOS_THIS s.cmos_mem_address == REG_STAT_C) {
+        BX_CMOS_THIS s.reg[REG_STAT_C] = 0x00;
         DEV_pic_lower_irq(8);
         }
       return(ret8);
@@ -322,18 +348,18 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
      return;
      }
       switch (BX_CMOS_THIS s.cmos_mem_address) {
-     case 0x00: // seconds
-     case 0x01: // seconds alarm
-     case 0x02: // minutes
-     case 0x03: // minutes alarm
-     case 0x04: // hours
-     case 0x05: // hours alarm
-     case 0x06: // day of the week
-     case 0x07: // day of the month
-     case 0x08: // month
-     case 0x09: // year
-     case 0x32: // century (IBM)
-     case 0x37: // century (IBM PS/2)
+     case REG_SEC:                   // seconds
+     case REG_SEC_ALARM:             // seconds alarm
+     case REG_MIN:                   // minutes
+     case REG_MIN_ALARM:             // minutes alarm
+     case REG_HOUR:                  // hours
+     case REG_HOUR_ALARM:            // hours alarm
+     case REG_WEEK_DAY:              // day of the week
+     case REG_MONTH_DAY:             // day of the month
+     case REG_MONTH:                 // month
+     case REG_YEAR:                  // year
+     case REG_IBM_CENTURY_BYTE:      // century
+     case REG_IBM_PS2_CENTURY_BYTE:  // century (PS/2)
        //BX_INFO(("write reg 0x%02x: value = 0x%02x",
        //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
        BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
@@ -341,7 +367,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        return;
        break;
 
-     case 0x0a: // Control Register A
+     case REG_STAT_A: // Control Register A
        // bit 7: Update in Progress (read-only)
        //   1 = signifies time registers will be updated within 244us
        //   0 = time registers will not occur before 244us
@@ -378,12 +404,12 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        if (dcc != 0x02) {
        BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
        }
-       BX_CMOS_THIS s.reg[0x0a] = value & 0x7f;
+       BX_CMOS_THIS s.reg[REG_STAT_A] = value & 0x7f;
        BX_CMOS_THIS CRA_change();
        return;
        break;
 
-     case 0x0b: // Control Register B
+     case REG_STAT_B: // Control Register B
        // bit 0: Daylight Savings Enable
        //   1 = enable daylight savings
        //   0 = disable daylight savings
@@ -421,8 +447,8 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        value &= 0xef;
 
        unsigned prev_CRB;
-       prev_CRB = BX_CMOS_THIS s.reg[0x0b];
-       BX_CMOS_THIS s.reg[0x0b] = value;
+       prev_CRB = BX_CMOS_THIS s.reg[REG_STAT_B];
+       BX_CMOS_THIS s.reg[REG_STAT_B] = value;
        if ( (prev_CRB & 0x40) != (value & 0x40) ) {
        // Periodic Interrupt Enabled changed
        if (prev_CRB & 0x40) {
@@ -433,7 +459,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        else {
          // transition from 0 to 1
          // if rate select is not 0, activate timer
-         if ( (BX_CMOS_THIS s.reg[0x0a] & 0x0f) != 0 ) {
+         if ( (BX_CMOS_THIS s.reg[REG_STAT_A] & 0x0f) != 0 ) {
            bx_pc_system.activate_timer(
              BX_CMOS_THIS s.periodic_timer_index,
              BX_CMOS_THIS s.periodic_interval_usec, 1);
@@ -443,17 +469,17 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        return;
        break;
 
-     case 0x0c: // Control Register C
-     case 0x0d: // Control Register D
+     case REG_STAT_C: // Control Register C
+     case REG_STAT_D: // Control Register D
        BX_ERROR(("write to control register 0x%02x (read-only)",
               BX_CMOS_THIS s.cmos_mem_address));
        break;
 
-     case 0x0e: // diagnostic status
+     case REG_DIAGNOSTIC_STATUS:
        BX_DEBUG(("write register 0x0e: 0x%02x", (unsigned) value));;
        break;
 
-  case 0x0f: // shutdown status
+     case REG_SHUTDOWN_STATUS:
        switch (value) {
        case 0x00: /* proceed with normal POST (soft reset) */
          BX_DEBUG(("Reg 0Fh(00): shutdown action = normal POST"));;
@@ -534,8 +560,8 @@ bx_cmos_c::checksum_cmos(void)
   for (i=0x10; i<=0x2d; i++) {
     sum += BX_CMOS_THIS s.reg[i];
     }
-  BX_CMOS_THIS s.reg[0x2e] = (sum >> 8) & 0xff; /* checksum high */
-  BX_CMOS_THIS s.reg[0x2f] = (sum & 0xff);      /* checksum low */
+  BX_CMOS_THIS s.reg[REG_CSUM_HIGH] = (sum >> 8) & 0xff; /* checksum high */
+  BX_CMOS_THIS s.reg[REG_CSUM_LOW] = (sum & 0xff);      /* checksum low */
 }
 
   void
@@ -551,8 +577,8 @@ bx_cmos_c::periodic_timer()
 {
   // if periodic interrupts are enabled, trip IRQ 8, and
   // update status register C
-  if (BX_CMOS_THIS s.reg[0x0b] & 0x40) {
-    BX_CMOS_THIS s.reg[0x0c] |= 0xc0; // Interrupt Request, Periodic Int
+  if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x40) {
+    BX_CMOS_THIS s.reg[REG_STAT_C] |= 0xc0; // Interrupt Request, Periodic Int
     DEV_pic_raise_irq(8);
     }
 }
@@ -573,39 +599,39 @@ bx_cmos_c::one_second_timer()
 
   // Dont update CMOS user copy of time/date if CRB bit7 is 1
   // Nothing else do to
-  if (BX_CMOS_THIS s.reg[0x0b] & 0x80)
+  if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x80)
     return;
 
   update_clock();
 
   // if update interrupts are enabled, trip IRQ 8, and
   // update status register C
-  if (BX_CMOS_THIS s.reg[0x0b] & 0x10) {
-    BX_CMOS_THIS s.reg[0x0c] |= 0x90; // Interrupt Request, Update Ended
+  if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x10) {
+    BX_CMOS_THIS s.reg[REG_STAT_C] |= 0x90; // Interrupt Request, Update Ended
     DEV_pic_raise_irq(8);
     }
 
   // compare CMOS user copy of time/date to alarm time/date here
-  if (BX_CMOS_THIS s.reg[0x0b] & 0x20) {
+  if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x20) {
     // Alarm interrupts enabled
     bx_bool alarm_match = 1;
-    if ( (BX_CMOS_THIS s.reg[0x01] & 0xc0) != 0xc0 ) {
+    if ( (BX_CMOS_THIS s.reg[REG_SEC_ALARM] & 0xc0) != 0xc0 ) {
       // seconds alarm not in dont care mode
-      if (BX_CMOS_THIS s.reg[0x00] != BX_CMOS_THIS s.reg[0x01])
+      if (BX_CMOS_THIS s.reg[REG_SEC] != BX_CMOS_THIS s.reg[REG_SEC_ALARM])
      alarm_match = 0;
       }
-    if ( (BX_CMOS_THIS s.reg[0x03] & 0xc0) != 0xc0 ) {
+    if ( (BX_CMOS_THIS s.reg[REG_MIN_ALARM] & 0xc0) != 0xc0 ) {
       // minutes alarm not in dont care mode
-      if (BX_CMOS_THIS s.reg[0x02] != BX_CMOS_THIS s.reg[0x03])
+      if (BX_CMOS_THIS s.reg[REG_MIN] != BX_CMOS_THIS s.reg[REG_MIN_ALARM])
      alarm_match = 0;
       }
-    if ( (BX_CMOS_THIS s.reg[0x05] & 0xc0) != 0xc0 ) {
+    if ( (BX_CMOS_THIS s.reg[REG_HOUR_ALARM] & 0xc0) != 0xc0 ) {
       // hours alarm not in dont care mode
-      if (BX_CMOS_THIS s.reg[0x04] != BX_CMOS_THIS s.reg[0x05])
+      if (BX_CMOS_THIS s.reg[REG_HOUR] != BX_CMOS_THIS s.reg[REG_HOUR_ALARM])
      alarm_match = 0;
       }
     if (alarm_match) {
-      BX_CMOS_THIS s.reg[0x0c] |= 0xa0; // Interrupt Request, Alarm Int
+      BX_CMOS_THIS s.reg[REG_STAT_C] |= 0xa0; // Interrupt Request, Alarm Int
       DEV_pic_raise_irq(8);
       }
     }
@@ -625,41 +651,43 @@ bx_cmos_c::update_clock()
   val_bcd =
      ((time_calendar->tm_sec  / 10) << 4) |
      (time_calendar->tm_sec % 10);
-  BX_CMOS_THIS s.reg[0x00] = val_bcd;
+  BX_CMOS_THIS s.reg[REG_SEC] = val_bcd;
 
   // update minutes
   val_bcd =
      ((time_calendar->tm_min  / 10) << 4) |
      (time_calendar->tm_min % 10);
-  BX_CMOS_THIS s.reg[0x02] = val_bcd;
+  BX_CMOS_THIS s.reg[REG_MIN] = val_bcd;
 
   // update hours
   val_bcd =
      ((time_calendar->tm_hour  / 10) << 4) |
      (time_calendar->tm_hour % 10);
-  BX_CMOS_THIS s.reg[0x04] = val_bcd;
+  BX_CMOS_THIS s.reg[REG_HOUR] = val_bcd;
 
   // update day of the week
   day = time_calendar->tm_wday + 1; // 0..6 to 1..7
-  BX_CMOS_THIS s.reg[0x06] = ((day / 10) << 4) | (day % 10);
+  BX_CMOS_THIS s.reg[REG_WEEK_DAY] = ((day / 10) << 4) | (day % 10);
 
   // update day of the month
   day = time_calendar->tm_mday;
-  BX_CMOS_THIS s.reg[0x07] = ((day / 10) << 4) | (day % 10);
+  BX_CMOS_THIS s.reg[REG_MONTH_DAY] = ((day / 10) << 4) | (day % 10);
 
   // update month
   month   = time_calendar->tm_mon + 1;
-  BX_CMOS_THIS s.reg[0x08] = ((month / 10) << 4) | (month % 10);
+  BX_CMOS_THIS s.reg[REG_MONTH] = ((month / 10) << 4) | (month % 10);
 
   // update year
   year = time_calendar->tm_year % 100;
-  BX_CMOS_THIS s.reg[0x09] = ((year  / 10) << 4) | (year % 10);
+  BX_CMOS_THIS s.reg[REG_YEAR] = ((year  / 10) << 4) | (year % 10);
 
   // update century
   century = (time_calendar->tm_year / 100) + 19;
-  BX_CMOS_THIS s.reg[0x32] = ((century  / 10) << 4) | (century % 10);
+  BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = 
+    ((century  / 10) << 4) | (century % 10);
 
-  // Raul Hudea pointed out that some bioses also use reg 0x37 for the century
-  // byte.  Tony Heller says this is critical in getting WinXP to run.
-  BX_CMOS_THIS s.reg[0x37] = BX_CMOS_THIS s.reg[0x32];
+  // Raul Hudea pointed out that some bioses also use reg 0x37 for the 
+  // century byte.  Tony Heller says this is critical in getting WinXP to run.
+  BX_CMOS_THIS s.reg[REG_IBM_PS2_CENTURY_BYTE] = 
+    BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE];
 }
