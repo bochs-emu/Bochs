@@ -1,4 +1,4 @@
-Summary: Bochs Project X86 PC Emulator
+Summary: Bochs Project x86 PC Emulator
 Name: bochs
 Version: @VERSION@
 Release: 1
@@ -24,8 +24,9 @@ and other OS's, all on your workstation.
 	make install
 %files
 	/usr/local/bin/bochs
-	/usr/local/bin/bochs-@VERSION@
 	/usr/local/bin/bochs-docs
 	/usr/local/bin/bochs-dlx
+	/usr/local/bin/bximage
 	/usr/local/bochs/@VERSION@
 	/usr/local/bochs/dlxlinux
+	/usr/local/bochs/latest
