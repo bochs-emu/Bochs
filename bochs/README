@@ -44,26 +44,17 @@ changes:
 
 TO DO BEFORE MERGE:
 
-- decide between DEV_function_name() macros and BX_DEV_FUNCTION_NAME() macros
-  and make it consistent.  Bryce would like some feedback on this, and
-  then maybe some help with the massive search&replace that may follow.
-
-- (assigned to Bryce)
-  some plugins require multiple object files, like harddrv needs cdrom, 
-  and keyboard needs scancodes.  In fact on win32 which is really picky
-  when linking DLLs you aren't even allowed to compile them separately.
-  We have two categories for .o files: pluggable or nonpluggable.  Maybe
-  we need a third category for files like scancodes.cc that are part of a
-  plugin, but we shouldn't try to make a separate shared library for them.
-
-  Right now I think we are building a scancodes plugin, but then never
-  using it.
+- change to DEV_function_name() macros.
+  Bryce is writing a massive sed script to attempt this one.
 
 - clean up the diffs:
   cvs diff -u -r BRANCH_PLUGINS_BASE2
   - mostly done
   - (assigned to Bryce) I removed more than he needed to from gui/Makefile.in.
     Maybe restore sdl, rfb targets?  very minor.
+
+- copy useful information from this README into patch.plugins
+  - need platform specific notes, for example
 
 TO DO BEFORE RELEASE 2.0:
 - convert remaining devices
