@@ -1,3 +1,11 @@
+Known bugs in 2.0 which will be fixed in 2.0.1:
+- the "save configuration file" feature is broken in two ways.
+  - It prints a line like "realtime_pit: disabled" instead of the correct
+    format "pit: realtime=0".
+  - It writes a line "debug: action=fatal" which should be 
+    "pass: action=fatal"
+- On FreeBSD, cannot compile with SB16 enabled.
+
 Changes in 2.0 (December 2002):
 
 Since the change log is hundreds of lines long, here is a very brief summary.
