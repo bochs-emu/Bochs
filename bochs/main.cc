@@ -200,6 +200,8 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
 	BX_INFO (("Screen mode changed to %s", val));
       }
       break;
+    default:
+        BX_PANIC (("bx_string_handler called with unexpected parameter %d", param->get_id()));
   }
   return val;
 }
@@ -1816,11 +1818,11 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
   fprintf (fp, "boot: %c\n", (bootdrive==BX_BOOT_FLOPPYA) ? 'a' : 'c');
-  fprintf (fp, "vga_update_interval: %lu\n", bx_options.Ovga_update_interval->get ());
-  fprintf (fp, "keyboard_serial_delay: %lu\n", bx_options.Okeyboard_serial_delay->get ());
-  fprintf (fp, "floppy_command_delay: %lu\n", bx_options.Ofloppy_command_delay->get ());
-  fprintf (fp, "ips: %lu\n", bx_options.Oips->get ());
-  fprintf (fp, "max_ips: %lu\n", bx_options.Omax_ips->get ());
+  fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
+  fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
+  fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
+  fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
+  fprintf (fp, "max_ips: %u\n", bx_options.Omax_ips->get ());
   fprintf (fp, "system_clock_sync: enabled=%d\n", bx_options.Osystem_clock_sync->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
