@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.43 2003-07-09 20:15:38 vruppert Exp $
+// $Id: sdl.cc,v 1.44 2004-02-13 21:45:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,6 +47,7 @@ public:
   bx_sdl_gui_c (void);
   DECLARE_GUI_VIRTUAL_METHODS()
   virtual void set_display_mode (disp_mode_t newmode);
+  virtual void statusbar_setitem(int element, bx_bool active);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -63,6 +64,12 @@ void we_are_here(void)
 {
   return;
 }
+#endif
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+const Uint32 status_led_green = 0x00ff0000;
+#else
+const Uint32 status_led_green = 0x0000ff00;
 #endif
 
 static unsigned prev_cursor_x=0;
@@ -108,6 +115,11 @@ int old_mousey=0, new_mousey=0;
 bx_bool just_warped = false;
 bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
+int statusbar_height = 18;
+static unsigned statusitem_pos[12] = {
+  0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
+};
+static bx_bool statusitem_active[12];
 
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 #define SWAP16(X)    (X)
@@ -151,10 +163,10 @@ void switch_to_windowed(void)
   SDL_FreeSurface(sdl_fullscreen);
   sdl_fullscreen = NULL;
 
-  sdl_screen = SDL_SetVideoMode(res_x,res_y+headerbar_height,32, SDL_SWSURFACE);
+  sdl_screen = SDL_SetVideoMode(res_x,res_y+headerbar_height+statusbar_height,32, SDL_SWSURFACE);
   dst.y = headerbar_height;
   SDL_BlitSurface(tmp,&src,sdl_screen,&dst);
-  SDL_UpdateRect(tmp,0,0,res_x,res_y+headerbar_height);
+  SDL_UpdateRect(tmp,0,0,res_x,res_y+headerbar_height+statusbar_height);
   SDL_FreeSurface(tmp);
 
   SDL_ShowCursor(1);
@@ -265,6 +277,47 @@ void bx_sdl_gui_c::specific_init(
   // load keymap for sdl
   if(bx_options.keyboard.OuseMapping->get()) {
     bx_keymap.loadKeymap(convertStringToSDLKey);
+  }
+}
+
+void sdl_set_status(int element, bx_bool active)
+{
+  Uint32 *buf;
+  Uint32 *buf_row;
+  Uint32 disp, color;
+  int rowsleft = statusbar_height - 2;
+  int colsleft;
+  int xleft, xsize;
+
+  statusitem_active[element] = active;
+  if( !sdl_screen ) return;
+  disp = sdl_screen->pitch/4;
+  xleft = statusitem_pos[element] + 2;
+  xsize = statusitem_pos[element+1] - xleft - 1;
+  buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 1) * disp + xleft;
+  rowsleft = statusbar_height - 2;
+  color = active?status_led_green:headerbar_bg;
+  do
+  {
+    colsleft = xsize;
+    buf_row = buf;
+    do
+    {
+      *buf++ = color;
+    } while( --colsleft );
+    buf = buf_row + disp;
+  } while( --rowsleft );
+  SDL_UpdateRect( sdl_screen, xleft,res_y+headerbar_height+1,xsize,statusbar_height-2);
+}
+
+void bx_sdl_gui_c::statusbar_setitem(int element, bx_bool active)
+{
+  if (element < 0) {
+    for (unsigned i = 0; i < statusitem_count; i++) {
+      sdl_set_status(i+1, active);
+    }
+  } else if ((unsigned)element < statusitem_count) {
+    sdl_set_status(element+1, active);
   }
 }
 
@@ -749,7 +802,7 @@ void bx_sdl_gui_c::handle_events(void)
     {
       case SDL_VIDEOEXPOSE:
 	if( sdl_fullscreen_toggle == 0 )
-	  SDL_UpdateRect( sdl_screen, 0,0, res_x, res_y+headerbar_height );
+	  SDL_UpdateRect( sdl_screen, 0,0, res_x, res_y+headerbar_height+statusbar_height );
 	else
 	  SDL_UpdateRect( sdl_screen, 0,headerbar_height, res_x, res_y );
 	break;
@@ -1002,7 +1055,7 @@ void bx_sdl_gui_c::dimension_update(
 
   if( sdl_fullscreen_toggle == 0 )
   {
-    sdl_screen = SDL_SetVideoMode( x, y+headerbar_height, 32, SDL_SWSURFACE );
+    sdl_screen = SDL_SetVideoMode( x, y+headerbar_height+statusbar_height, 32, SDL_SWSURFACE );
     if( !sdl_screen )
     {
       LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
@@ -1181,9 +1234,9 @@ void bx_sdl_gui_c::show_headerbar(void)
   Uint32 *buf_row;
   Uint32 disp;
   int rowsleft = headerbar_height;
-  int colsleft;
+  int colsleft, sb_item;
   int bitmapscount = bx_headerbar_entries;
-  unsigned current_bmp;
+  unsigned current_bmp, pos_x;
   SDL_Rect hb_dst;
 
   if( !sdl_screen ) return;
@@ -1226,6 +1279,34 @@ void bx_sdl_gui_c::show_headerbar(void)
 	  sdl_bitmaps[current_bmp]->src.w,
 	  sdl_bitmaps[current_bmp]->src.h );
     }
+  }
+  // draw statusbar background
+  rowsleft = statusbar_height;
+  buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height) * disp;
+  do
+  {
+    colsleft = res_x;
+    buf_row = buf;
+    sb_item = 1;
+    pos_x = 0;
+    do
+    {
+      if (pos_x == statusitem_pos[sb_item])
+      {
+        *buf++ = headerbar_fg;
+        if (sb_item < 11) sb_item++;
+      }
+      else
+      {
+        *buf++ = headerbar_bg;
+      }
+      pos_x++;
+    } while( --colsleft );
+    buf = buf_row + disp;
+  } while( --rowsleft );
+  SDL_UpdateRect( sdl_screen, 0,res_y+headerbar_height,res_x,statusbar_height);
+  for (unsigned i=1; i<=statusitem_count; i++) {
+    sdl_set_status(i, statusitem_active[i]);
   }
 }
 
