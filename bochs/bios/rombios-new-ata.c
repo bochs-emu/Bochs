@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios-new-ata.c,v 1.5 2002-09-13 13:37:50 cbothamy Exp $
+// $Id: rombios-new-ata.c,v 1.6 2002-09-23 12:47:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -114,8 +114,6 @@
 //   - EBDA segment. 
 //     I used memory starting at 0x5D in the segment (used for 2nd ide 
 //     interface in usual AMI bios). 
-//     The EBDA structure should conform with 
-//     http://www.cybertrails.com/~fys/rombios.htm document
 //   - should handle the translation bit (to be defined)
 //   - should handle the "don't detect" bit (to be defined)
 //   - could send the multiple-sector read/write commands
@@ -137,7 +135,7 @@
 #define DEBUG_ATA          0
 #define DEBUG_INT13_HD     1
 #define DEBUG_INT13_CD     1
-#define DEBUG_INT13_ET     1
+#define DEBUG_INT13_ET     0
 #define DEBUG_INT13_FL     0
 #define DEBUG_INT15        0
 #define DEBUG_INT16        0
@@ -164,8 +162,9 @@
 
   // 1K of base memory used for Extended Bios Data Area (EBDA)
   // EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
-#define BASE_MEM_IN_K   (640 - 1)
 #define EBDA_SEG           0x9FC0
+#define EBDA_SIZE          1              // In KiB
+#define BASE_MEM_IN_K   (640 - EBDA_SIZE)
 
   // Define the application NAME
 #ifdef PLEX86
@@ -686,12 +685,17 @@ typedef struct {
 #endif // BX_ELTORITO_BOOT
   
   // for access to EBDA area
+  //     The EBDA structure should conform to 
+  //     http://www.cybertrails.com/~fys/rombios.htm document
+  //     I made the ata and cdemu structs begin at 0x121 in the EBDA seg
   typedef struct {
-    unsigned char filler[0x3D];
+    unsigned char filler1[0x3D];
 
     // FDPT - Can be splitted in data members if needed
     unsigned char fdpt0[0x10];
     unsigned char fdpt1[0x10];
+
+    unsigned char filler2[0xC4];
 
     // ATA Driver data
     ata_t   ata;
@@ -841,6 +845,7 @@ static Boolean        set_enable_a20();
 static void           debugger_on();
 static void           debugger_off();
 static void           keyboard_panic();
+static void           shutdown_status_panic();
 static void           nmi_handler_msg();
 
 static void           print_bios_banner();
@@ -876,10 +881,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.5 $";
-static char bios_date_string[] = "$Date: 2002-09-13 13:37:50 $";
+static char bios_cvs_version_string[] = "$Revision: 1.6 $";
+static char bios_date_string[] = "$Date: 2002-09-23 12:47:24 $";
 
-static char CVSID[] = "$Id: rombios-new-ata.c,v 1.5 2002-09-13 13:37:50 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios-new-ata.c,v 1.6 2002-09-23 12:47:24 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1516,7 +1521,7 @@ bios_printf(action, s)
     // forever, you are certain to see the panic message on screen.
     // After a few more versions have passed, we can turn this back into
     // a halt or something.
-    do {} while (1);
+    // do {} while (1);
 ASM_START
     HALT2(__LINE__)
 ASM_END
@@ -1531,10 +1536,24 @@ ASM_START
 ASM_END
 }
 
+//--------------------------------------------------------------------------
+// keyboard_panic
+//--------------------------------------------------------------------------
   void
 keyboard_panic()
 {
   BX_PANIC("Keyboard RESET error\n");
+}
+
+//--------------------------------------------------------------------------
+// shutdown_status_panic
+//   called when the shutdown statsu is not implemented, displays the status
+//--------------------------------------------------------------------------
+  void
+shutdown_status_panic(status)
+  Bit16u status;
+{
+  BX_PANIC("Unimplemented shutdown status: %02x\n",(Bit8u)status);
 }
 
 //--------------------------------------------------------------------------
@@ -3026,6 +3045,8 @@ int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
   Bit8u   ret, mouse_data1, mouse_data2, mouse_data3;
   Bit8u   comm_byte, mf2_state;
 
+BX_DEBUG_INT15("int15 AX=%04x\n",AX);
+
   switch (GET_AH()) {
     case 0x24: /* A20 Control */
       BX_INFO("int15: Func 24h, subfunc %02xh, A20 gate control not supported\n", (unsigned) GET_AL());
@@ -3125,7 +3146,7 @@ ASM_START
 
       // since we need to set SS:SP, save them to the BDA
       // for future restore
-      mov ax, #0x00
+      xor ax, ax
       mov ds, ax
       mov 0x0469, ss
       mov 0x0467, sp
@@ -3175,7 +3196,7 @@ real_mode:
         lidt [rmode_IDT_info]
 
       // restore SS:SP from the BDA
-      mov ax, #0x00
+      xor ax, ax
       mov ds, ax
       mov ss, 0x0469
       mov sp, 0x0467
@@ -4201,7 +4222,7 @@ ASM_END
       break;
 
     case 0x48: // IBM/MS get drive parameters
-      size=read_word(DS,SI+(Bit16u)&Int13Ext->size);
+      size=read_word(DS,SI+(Bit16u)&Int13DPT->size);
 
       // Buffer is too small
       if(size < 0x1a) 
@@ -4283,7 +4304,7 @@ ASM_END
         write_byte(DS, SI+(Bit16u)&Int13DPT->reserved1, 0);
         write_word(DS, SI+(Bit16u)&Int13DPT->reserved2, 0);
 
-	if (iface=ATA_IFACE_ISA) {
+	if (iface==ATA_IFACE_ISA) {
           write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[0], 'I');
           write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[1], 'S');
           write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[2], 'A');
@@ -4297,7 +4318,7 @@ ASM_END
         write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
         write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 0);
 
-	if (iface=ATA_IFACE_ISA) {
+	if (iface==ATA_IFACE_ISA) {
           write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
           write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[2], 0);
           write_dword(DS, SI+(Bit16u)&Int13DPT->iface_path[4], 0L);
@@ -4632,7 +4653,7 @@ int13_cdrom_rme_end:
         write_byte(DS, SI+(Bit16u)&Int13DPT->reserved1, 0);
         write_word(DS, SI+(Bit16u)&Int13DPT->reserved2, 0);
 
-	if (iface=ATA_IFACE_ISA) {
+	if (iface==ATA_IFACE_ISA) {
           write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[0], 'I');
           write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[1], 'S');
           write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[2], 'A');
@@ -4646,7 +4667,7 @@ int13_cdrom_rme_end:
         write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
         write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 0);
 
-	if (iface=ATA_IFACE_ISA) {
+	if (iface==ATA_IFACE_ISA) {
           write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
           write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[2], 0);
           write_dword(DS, SI+(Bit16u)&Int13DPT->iface_path[4], 0L);
@@ -7651,6 +7672,36 @@ hd1_post_checksum_loop:
 
   ret
 
+;--------------------
+;- POST: EBDA segment
+;--------------------
+; relocated here because the primary POST area isnt big enough.
+ebda_post:
+#if BX_USE_EBDA
+  mov ax, #EBDA_SEG
+  mov ds, ax
+  mov byte ptr [0x0], #EBDA_SIZE
+#endif
+  xor ax, ax            ; mov EBDA seg into 40E
+  mov ds, ax
+  mov word ptr [0x40E], #EBDA_SEG
+  ret;;
+
+;--------------------
+;- POST: EOI + jmp via [0x40:67)
+;--------------------
+; relocated here because the primary POST area isnt big enough.
+eoi_jmp_post:
+  mov al, #0x20
+  out 0xA0, al   ;; send EOI to PIC
+  out 0x20, al   ;; send EOI to PIC
+
+  xor ax, ax
+  mov ds, ax
+
+  jmp far ptr [0x467]
+
+;--------------------
 BcdToBin:
   ;; in:  AL in BCD format
   ;; out: AL in binary format, AH will always be 0
@@ -7663,6 +7714,7 @@ BcdToBin:
   add  al, bl    ;;   then add low digit
   ret
 
+;--------------------
 timer_tick_post:
   ;; Setup the Timer Ticks Count (0x46C:dword) and
   ;;   Timer Ticks Roller Flag (0x470:byte)
@@ -7742,7 +7794,7 @@ timer_tick_post:
   mov  0x470, al  ;; Timer Ticks Rollover Flag
   ret
 
-
+;--------------------
 int76_handler:
   ;; record completion in BIOS task complete flag
   push  ax
@@ -7757,6 +7809,7 @@ int76_handler:
   pop   ax
   iret
 
+;--------------------
 #if BX_PCIBIOS
 use32 386
 .align 16
@@ -7822,7 +7875,7 @@ pci_pro_devloop:
 pci_pro_nextdev:
   inc bx
   cmp bx, #0x0100
-  jnb pci_pro_devloop
+  jne pci_pro_devloop
   mov ah, #0x86
   jmp pci_pro_fail
 pci_pro_f08: ;; read configuration byte
@@ -7902,7 +7955,7 @@ pci_pro_select_reg:
   and di,  #0xff
   or  ax,  di
   and al,  #0xfc
-  mov edx, #0x0cf8
+  mov dx, #0x0cf8
   out dx,  eax
   ret
 
@@ -7955,7 +8008,7 @@ pci_real_devloop:
 pci_real_nextdev:
   inc bx
   cmp bx, #0x0100
-  jnb pci_real_devloop
+  jne pci_real_devloop
   mov dx, cx
   shr ecx, #16
   mov ah, #0x86
@@ -8033,7 +8086,7 @@ pci_real_select_reg:
   and di,  #0xff
   or  ax,  di
   and al,  #0xfc
-  mov edx, #0x0cf8
+  mov dx, #0x0cf8
   out dx,  eax
   ret
 #endif
@@ -8049,19 +8102,48 @@ pci_real_select_reg:
 .org 0xe05b ; POST Entry Point
 post:
 
+  ;; first reset the DMA controllers
+  xor ax, ax
+  out 0x0d,al
+  out 0xda,al
+
+  ;; then initialize the DMA controllers
+  mov al, #0xC0
+  out 0xD6, al ; cascade mode of channel 4 enabled
+  mov al, #0x00
+  out 0xD4, al ; unmask channel 4
+
   ;; Examine CMOS shutdown status.
-  ;;    0 = normal startup
+  ;; 0x00 = normal startup
   mov AL, #0x0f
   out 0x70, AL
   in  AL, 0x71
   cmp AL, #0x00
   jz normal_post
-  HALT(__LINE__)
-  ;
+  cmp AL, #0x0d
+  jae normal_post
+
+  ;; backup status
+  mov bl, al
+
+  ;; Reset CMOS shutdown status.
   mov AL, #0x0f
   out 0x70, AL          ; select CMOS register Fh
   mov AL, #0x00
   out 0x71, AL          ; set shutdown action to normal
+
+  ;; Examine CMOS shutdown status.
+  ;; 0x05 = eoi + jmp via [0x40:0x67] jump
+  cmp bl, #0x05
+  je  eoi_jmp_post
+
+  ;; Examine CMOS shutdown status.
+  ;;  0x01,0x02,0x03,0x04,0x06,0x07,0x08,0x09, 0x0a, 0x0b, 0x0c = Unimplemented shutdown status.
+  push bx
+  call _shutdown_status_panic
+
+#if 0 
+  HALT(__LINE__)
   ;
   ;#if 0
   ;  0xb0, 0x20,       /* mov al, #0x20 */
@@ -8072,6 +8154,7 @@ post:
   pop ds
   popa
   iret
+#endif
 
 normal_post:
   ; case 0: normal startup
@@ -8142,9 +8225,8 @@ post_default_ints:
   ;; System Services
   SET_INT_VECTOR(0x15, #0xF000, #int15_handler)
 
-  mov ax, #0x0000       ; mov EBDA seg into 40E
-  mov ds, ax
-  mov 0x40E, #EBDA_SEG
+  ;; EBDA setup
+  call ebda_post
 
   ;; PIT setup
   SET_INT_VECTOR(0x08, #0xF000, #int08_handler)
@@ -8159,8 +8241,8 @@ post_default_ints:
   SET_INT_VECTOR(0x09, #0xF000, #int09_handler)
   SET_INT_VECTOR(0x16, #0xF000, #int16_handler)
 
-  mov ax, #0x0000
-  mov ds, ax
+  xor  ax, ax
+  mov  ds, ax
   mov  0x0417, al /* keyboard shift flags, set 1 */
   mov  0x0418, al /* keyboard shift flags, set 2 */
   mov  0x0419, al /* keyboard alt-numpad work area */
@@ -8210,15 +8292,9 @@ keyboard_ok:
   mov  0x0410, ax
 
 
-  ;; DMA
-  mov al, #0xC0
-  out 0xD6, al ; cascade mode of channel 4 enabled
-  mov al, #0x00
-  out 0xD4, al ; unmask channel 4
-
   ;; Parallel setup
   SET_INT_VECTOR(0x0F, #0xF000, #dummy_iret_handler)
-  mov ax, #0x0000
+  xor ax, ax
   mov ds, ax
   mov 0x408, #0x378 ; Parallel I/O address, port 1
   mov 0x478, #0x14 ; Parallel printer 1 timeout
@@ -8823,7 +8899,18 @@ int1a_handler:
   cmp  ah, #0xb1
   jne  int1a_normal
   call pcibios_real
-  jb   pcibios_error
+  jc   pcibios_error
+  push ax
+  mov  ax, ss
+  push ds
+  mov  ds, ax
+  push bp
+  mov  bp, sp
+  lahf
+  mov  [bp+10], ah
+  pop bp
+  pop ds
+  pop ax
   iret
 pcibios_error:
   mov  al, ah
@@ -8860,7 +8947,7 @@ int08_handler:
   sti
   push eax
   push ds
-  mov ax, #0x0000
+  xor ax, ax
   mov ds, ax
   mov eax, 0x046c ;; get ticks dword
   inc eax
