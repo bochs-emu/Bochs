@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.135 2002-09-27 20:06:57 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.136 2002-09-30 02:02:05 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -605,14 +605,14 @@ AC_ARG_ENABLE(guest2host-tlb,
   [  --enable-guest2host-tlb           support guest to host addr TLB for speed],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportGuest2HostTLB, 1)
+    speedup_guest2host_tlb=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportGuest2HostTLB, 0)
+    speedup_guest2host_tlb=0
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportGuest2HostTLB, 0)
+    speedup_guest2host_tlb=0
     ]
   )
 
@@ -621,14 +621,14 @@ AC_ARG_ENABLE(repeat-speedups,
   [  --enable-repeat-speedups          support repeated IO and mem copy speedups],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportRepeatSpeedups, 1)
+    speedup_repeat=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportRepeatSpeedups, 0)
+    speedup_repeat=0
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportRepeatSpeedups, 0)
+    speedup_repeat=0
     ]
   )
 
@@ -637,14 +637,14 @@ AC_ARG_ENABLE(icache,
   [  --enable-icache                   support instruction cache (runs faster)],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportICache, 1)
+    speedup_iCache=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportICache, 0)
+    speedup_iCache=0
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportICache, 0)
+    speedup_iCache=0
     ]
   )
 
@@ -675,14 +675,14 @@ AC_ARG_ENABLE(host-specific-asms,
   [  --enable-host-specific-asms       support for host specific inline assembly],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportHostAsms, 1)
+    speedup_host_specific_asms=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportHostAsms, 0)
+    speedup_host_specific_asms=0
    fi],
   [
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportHostAsms, 1)
+    speedup_host_specific_asms=1
     ]
   )
 
@@ -832,6 +832,62 @@ AC_ARG_ENABLE(disasm,
     ]
   )
 AC_SUBST(DISASM_VAR)
+
+AC_MSG_CHECKING(for ALL optimizations enabled)
+AC_ARG_ENABLE(all-optimizations,
+  [  --enable-all-optimizations        compile in all possible optimizations],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    speedups_all=1
+   else
+    AC_MSG_RESULT(no)
+    speedups_all=0
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    speedups_all=0
+    ]
+  )
+
+#
+# Optimizations section.  Decide what the status of various optimizations
+# should be based on configure choices and other factors.
+#
+
+if test "$speedups_all" = 1; then
+  # Configure requested to force all options enabled.
+  speedup_guest2host_tlb=1
+  speedup_repeat=1
+  speedup_iCache=1
+  speedup_host_specific_asms=1
+fi
+
+if test "$speedup_guest2host_tlb" = 1; then
+  AC_DEFINE(BX_SupportGuest2HostTLB, 1)
+else
+  AC_DEFINE(BX_SupportGuest2HostTLB, 0)
+fi
+
+if test "$speedup_repeat" = 1; then
+  AC_DEFINE(BX_SupportRepeatSpeedups, 1)
+else
+  AC_DEFINE(BX_SupportRepeatSpeedups, 0)
+fi
+
+if test "$speedup_iCache" = 1; then
+  AC_DEFINE(BX_SupportICache, 1)
+else
+  AC_DEFINE(BX_SupportICache, 0)
+fi
+
+if test "$speedup_host_specific_asms" = 1; then
+  AC_DEFINE(BX_SupportHostAsms, 1)
+else
+  AC_DEFINE(BX_SupportHostAsms, 0)
+fi
+
+
 
 READLINE_LIB=""
 rl_without_curses_ok=no
