@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.37 2002-03-19 18:43:22 bdenney Exp $
+// $Id: x.cc,v 1.38 2002-03-19 23:38:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -246,13 +246,47 @@ static void xkeypress(KeySym keysym, int press_release);
 #define ROUNDUP(nbytes, pad) ((((nbytes) + ((pad)-1)) / (pad)) * ((pad)>>3))
 
 
+#define MAX_VGA_COLORS 256
 
-unsigned long col_vals[256]; // 256 VGA colors
+unsigned long col_vals[MAX_VGA_COLORS]; // 256 VGA colors
 unsigned curr_foreground, curr_background;
 
 static unsigned x_tilesize, y_tilesize;
 
 
+// Try to allocate NCOLORS at once in the colormap provided.  If it can
+// be done, return true.  If not, return false.  (In either case, free
+// up the color cells so that we don't add to the problem!)  This is used
+// to determine whether Bochs should use a private colormap even when the
+// user did not specify it.
+static Boolean
+test_alloc_colors (Colormap cmap, Bit32u n_tries) {
+  XColor color;
+  unsigned long pixel[MAX_VGA_COLORS];
+  Boolean pixel_valid[MAX_VGA_COLORS];
+  Bit32u n_allocated = 0;
+  Bit32u i;
+  color.flags = DoRed | DoGreen | DoBlue;
+  for (i=0; i<n_tries; i++) {
+    // choose wierd color values that are unlikely to already be in the 
+    // colormap.
+    color.red   = ((i+41)%MAX_VGA_COLORS) << 8;
+    color.green = ((i+42)%MAX_VGA_COLORS) << 8;
+    color.blue  = ((i+43)%MAX_VGA_COLORS) << 8;
+    pixel_valid[i] = false;
+    if (XAllocColor (bx_x_display, cmap, &color)) {
+      pixel[i] = color.pixel;
+      pixel_valid[i] = true;
+      n_allocated++;
+    }
+  }
+  BX_INFO (("test_alloc_colors: %d colors available out of %d colors tried", n_allocated, n_tries));
+  // now free them all
+  for (i=0; i<n_tries; i++) {
+    if (pixel_valid[i]) XFreeColors (bx_x_display, cmap, &pixel[i], 1, 0);
+  }
+  return (n_allocated == n_tries);
+}
 
 
   void
@@ -289,10 +323,6 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
   th->put("XGUI");
   UNUSED(th);
-
-if (bx_options.Oprivate_colormap->get ()) {
-  BX_ERROR(( "Oprivate_colormap option not handled yet." ));
-  }
 
   x_tilesize = tilewidth;
   y_tilesize = tileheight;
@@ -347,11 +377,29 @@ if (bx_options.Oprivate_colormap->get ()) {
   default_depth  = DefaultDepth(bx_x_display, bx_x_screen_num);
   default_visual = DefaultVisual(bx_x_display, bx_x_screen_num);
 
+  if (!bx_options.Oprivate_colormap->get ()) {
+    default_cmap = DefaultColormap(bx_x_display, bx_x_screen_num);
+    // try to use default colormap.  If not enough colors are available,
+    // then switch to private colormap despite the user setting.  There
+    // are too many cases when no colors are available and Bochs simply
+    // draws everything in black on black.
+    if (!test_alloc_colors (default_cmap, 16)) {
+      BX_ERROR (("I can't even allocate 16 colors!  Switching to a private colormap"));
+      bx_options.Oprivate_colormap->set (1);
+    }
+    col_vals[0]  = BlackPixel(bx_x_display, bx_x_screen_num);
+    col_vals[15] = WhitePixel(bx_x_display, bx_x_screen_num);
+    for (i = 1; i < MAX_VGA_COLORS; i++) {
+      if (i==15) continue;
+      col_vals[i] = col_vals[0];
+    }
+  }
+
   if (bx_options.Oprivate_colormap->get ()) {
     default_cmap = XCreateColormap(bx_x_display, DefaultRootWindow(bx_x_display),
                                    default_visual, AllocNone);
     if (XAllocColorCells(bx_x_display, default_cmap, False,
-                         plane_masks_return, 0, col_vals, 256) == 0) {
+                         plane_masks_return, 0, col_vals, MAX_VGA_COLORS) == 0) {
       BX_PANIC(("XAllocColorCells returns error."));
       }
 
@@ -360,7 +408,7 @@ if (bx_options.Oprivate_colormap->get ()) {
 
     color.flags = DoRed | DoGreen | DoBlue;
 
-    for (i=0; i < 256; i++) {
+    for (i=0; i < MAX_VGA_COLORS; i++) {
       color.pixel = i;
       if (i==15) {
         color.red   = 0xffff;
@@ -373,15 +421,6 @@ if (bx_options.Oprivate_colormap->get ()) {
         color.blue  = 0;
         }
       XStoreColor(bx_x_display, default_cmap, &color);
-      }
-    }
-  else {
-    default_cmap = DefaultColormap(bx_x_display, bx_x_screen_num);
-    col_vals[0]  = BlackPixel(bx_x_display, bx_x_screen_num);
-    col_vals[15] = WhitePixel(bx_x_display, bx_x_screen_num);
-    for (i = 1; i < 256; i++) {
-      if (i==15) continue;
-      col_vals[i] = col_vals[0];
       }
     }
 
