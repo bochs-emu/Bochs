@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.64 2004-05-10 21:05:48 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.65 2004-05-11 16:44:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -742,6 +742,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 04 */  { 0, &BX_CPU_C::BxError },
 #if BX_SUPPORT_X86_64
   /* 0F 05 */  { 0, &BX_CPU_C::SYSCALL },
+#elif BX_CPU_LEVEL == 2
+  /* 0F 05 */  { 0, &BX_CPU_C::LOADALL },
 #else
   /* 0F 05 */  { 0, &BX_CPU_C::BxError },
 #endif
@@ -1288,6 +1290,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 04 */  { 0, &BX_CPU_C::BxError },
 #if BX_SUPPORT_X86_64
   /* 0F 05 */  { 0, &BX_CPU_C::SYSCALL },
+#elif BX_CPU_LEVEL == 2
+  /* 0F 05 */  { 0, &BX_CPU_C::LOADALL },
 #else
   /* 0F 05 */  { 0, &BX_CPU_C::BxError },
 #endif
