@@ -24,6 +24,8 @@ Detailed description:
   * implement the other parts of the i440FX chipset (PCI-to-ISA bridge,
     PCI IDE controller, USB controller)
 
+  The changes are present in CVS now (June 4th).
+
 Patch was created with:
   diff -u
 Apply patch to what version:
