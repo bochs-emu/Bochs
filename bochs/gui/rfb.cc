@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.25 2003-07-05 16:08:00 vruppert Exp $
+// $Id: rfb.cc,v 1.26 2003-07-06 20:51:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -70,6 +70,7 @@ typedef int SOCKET;
 #include "rfbproto.h"
 
 static bool keep_alive;
+static bool client_connected;
 
 #define BX_RFB_PORT_MIN 5900
 #define BX_RFB_PORT_MAX 5949
@@ -191,7 +192,11 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
 {
   unsigned char fc, vc;
 
+  put("RFB");
   UNUSED(bochs_icon_bits);
+
+  // the ask menu doesn't work on the client side
+  io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
   rfbHeaderbarY = headerbar_y;
   rfbDimensionX = 640;
@@ -224,6 +229,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   rfbUpdateRegion.updated = false;
 
   keep_alive = true;
+  client_connected = false;
   StartThread();
 
 #ifdef WIN32
@@ -233,6 +239,15 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   if (bx_options.Oprivate_colormap->get ()) {
     BX_ERROR(( "private_colormap option ignored." ));
   }
+  int counter = 30;
+  while ((!client_connected) && (counter--)) {
+#ifdef WIN32
+    Sleep(1000);
+#else
+    sleep(1);
+#endif
+  }
+  if (counter < 0) BX_PANIC(("timeout! no client present"));
 }
 
 bool InitWinsock()
@@ -323,6 +338,7 @@ void HandleRfbClient(SOCKET sClient)
 	rfbClientInitMsg cim;
 	rfbServerInitMsg sim;
 
+	client_connected = true;
 	setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
 	fprintf(stderr, "# RFB: accepted client connection.\n");
 	sprintf(pv, rfbProtocolVersionFormat, rfbProtocolMajorVersion, rfbProtocolMinorVersion);
