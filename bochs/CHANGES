@@ -1,10 +1,74 @@
 Changes in 2.1 (July ??, 2003):
 
 - Stanislav's changes...
+  --------------------------------------------------------------------------
+
++ Added emulation of AMD 3DNow! instructions set.
+
+  Bochs now could decode all AMD 3DNow! instructions. 
+  Most of instructions still not implemented, but the basis already presents.
+  Configure --enable-3dnow to enable 3DNow! support.
+
+  TODO: 
+
+     Close all still not implemented instructions:
+
+  	PFPNACC_PqQq, PI2FW_PqQq, PI2FD_PqQq, PF2IW_PqQq, PF2ID_PqQq,
+	PFNACC_PqQq, PFCMPGE_PqQq, PFMIN_PqQq, PFRCP_PqQq, PFRSQRT_PqQq,
+	PFSUB_PqQq, PFADD_PqQq, PFCMPGT_PqQq, PFMAX_PqQq, PFRCPIT1_PqQq,
+	PFRSQIT1_PqQq, PFSUBR_PqQq, PFACC_PqQq, PFCMPEQ_PqQq, PFMUL_PqQq,
+	PFRCPIT2_PqQq
+ 
+     CPUID still could not report 3DNow! instruction set.
+
++ Added emulation of SSE/SSE2 floating point instructions
+
+  Alsmost all SSE/SSE2 floating point instructions are fully implemented 
+  using free softfloat library (including DAZ support and floating point
+  exceptions).  Correctness of the emulation checked with heavily random 
+  testing. 
+
+  TODO: 
+
+     Close 4 last still not implemented instructions:
+
+	RSQRTSS_VssWss, RSQRTPS_VpsWps, RCPPS_VpsWps, RCPSS_VssWss
+
++ Fixed: Unallowed lock prefix cases must cause #UD exception
+
++ Fixed FXSAVE/FXRSTOR instructions
+
++ Fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
+  in 32bit mode.
+
++ Hundreds of bugfixes in FPU emulation after checking of the emulation
+  with testfloat. Fixed cases:
+
+	floatx80_to_int32
+	floatx80_to_float32
+	floatx80_to_float64
+	floatx80_round_to_int
+	floatx80_add
+	floatx80_sub
+	floatx80_mul
+	floatx80_div
+
+  Thanks to Scott Duplichan for fixing the bugs.
+  --------------------------------------------------------------------------
+
 - Christophe's changes...
 - Volker's changes...
 - Peter's changes...
 - patches by X, Y, and Z were added...
+
+	added rombios patch by Dirk Thierbach
+	added rombios patch by Kory Markevich
+
+	I think these already could be committed:
+        
+		added disassembler patch by Dirk Thierbach
+		added FPU 64-bit addresses patch
+
 - these S.F. bugs were fixed...
 
 -------------------------------------------------------------------------
