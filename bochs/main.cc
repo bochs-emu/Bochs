@@ -729,6 +729,30 @@ void bx_print_header ()
   fprintf (stderr, "%s\n", divider);
 }
 
+#ifdef BX_WITH_CARBON
+/* Original code by Darrell Walisser - dwaliss1@purdue.edu */
+
+static void setupWorkingDirectory (char *path)
+{
+    char parentdir[MAXPATHLEN];
+    char *c;
+    
+    strncpy ( parentdir, path, MAXPATHLEN );
+    c = (char*) parentdir;
+    
+    while (*c != '\0')     /* go to end */
+        c++;
+    
+    while (*c != '/')      /* back up to parent */
+        c--;
+    
+    *c = '\0';             /* cut off last part (binary name) */
+    
+    assert ( chdir (parentdir) == 0 );   /* chdir to the binary app's parent */
+    assert ( chdir ("../../../") == 0 ); /* chdir to the .app's parent */
+}
+#endif
+
 int
 main(int argc, char *argv[])
 {
@@ -743,6 +767,15 @@ main(int argc, char *argv[])
 
   bx_print_header ();
   bx_init_bx_dbg ();
+
+#ifdef BX_WITH_CARBON
+    /* This is passed if we are launched by double-clicking */
+   if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 )
+        argc = 1;
+        
+    setupWorkingDirectory (argv[0]);
+#endif
+
 
   int read_rc_already = 0;
   init_siminterface ();
@@ -1024,7 +1057,7 @@ bx_find_bochsrc ()
     case 1: strcpy (rcfile, "bochsrc"); break;
     case 2: strcpy (rcfile, "bochsrc.txt"); break;
     case 3:
-#if (!defined(WIN32) && !defined(macintosh))
+#if (!defined(WIN32)) && !defined(BX_WITH_MACOS)
       // only try this on unix
       {
       char *ptr = getenv("HOME");
