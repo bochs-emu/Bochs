@@ -145,7 +145,7 @@ gui.o: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../instrument/stubs/instrument.h ../gui/bitmaps/floppya.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h \
  ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
- ../gui/bitmaps/snapshot.h
+ ../gui/bitmaps/snapshot.h ../gui/bitmaps/configbutton.h
 macintosh.o: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h \

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.23 2001-10-03 13:10:37 bdenney Exp $
+// $Id: gui.cc,v 1.24 2001-11-09 22:17:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #include "gui/bitmaps/reset.h"
 #include "gui/bitmaps/power.h"
 #include "gui/bitmaps/snapshot.h"
+#include "gui/bitmaps/configbutton.h"
 #if BX_WITH_MACOS
 #  include <Disks.h>
 #endif
@@ -74,6 +75,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS power_bmap_id = create_bitmap(bx_power_bmap, BX_POWER_BMAP_X, BX_POWER_BMAP_Y);
   BX_GUI_THIS reset_bmap_id = create_bitmap(bx_reset_bmap, BX_RESET_BMAP_X, BX_RESET_BMAP_Y);
   BX_GUI_THIS snapshot_bmap_id = create_bitmap(bx_snapshot_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
+  BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
 
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
@@ -114,6 +116,9 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   // Snapshot button
   BX_GUI_THIS snapshot_hbar_id = headerbar_bitmap(BX_GUI_THIS snapshot_bmap_id,
                           BX_GRAVITY_RIGHT, snapshot_handler);
+  // Configure button
+  BX_GUI_THIS config_hbar_id = headerbar_bitmap(BX_GUI_THIS config_bmap_id,
+                          BX_GRAVITY_RIGHT, config_handler);
 
   show_headerbar();
 }
@@ -190,10 +195,16 @@ bx_gui_c::power_handler(void)
   void
 bx_gui_c::snapshot_handler(void)
 {
+  BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
+}
+
+  void
+bx_gui_c::config_handler(void)
+{
 #if BX_USE_CONTROL_PANEL
   bx_control_panel (BX_CPANEL_RUNTIME);
 #else
-  BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
+  BX_INFO(( "# CONFIG callback (unimplemented)." ));
 #endif
 }
 
