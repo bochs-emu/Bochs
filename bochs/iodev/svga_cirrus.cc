@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.12 2005-03-29 19:42:02 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.13 2005-03-30 19:47:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -2864,6 +2864,7 @@ bx_svga_cirrus_c::svga_patterncopy()
   int x,y, pattern_y;
   int tilewidth;
   int patternbytes = 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
+  int pattern_pitch = patternbytes;
   int bltbytes = BX_CIRRUS_THIS bitblt.bltwidth * BX_CIRRUS_THIS bitblt.pixelwidth;
   unsigned bits, bits_xor, bitmask;
   int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
@@ -2910,6 +2911,10 @@ bx_svga_cirrus_c::svga_patterncopy()
       BX_CIRRUS_THIS bitblt.src = work_colorexp;
       BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_COLOREXPAND;
     }
+  } else {
+    if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+      pattern_pitch = 32;
+    }
   }
   if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_PATTERNCOPY) {
     BX_ERROR(("PATTERNCOPY: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
@@ -2921,7 +2926,7 @@ bx_svga_cirrus_c::svga_patterncopy()
   pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
   src = (Bit8u *)BX_CIRRUS_THIS bitblt.src;
   for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
-    srcc = src + pattern_y * patternbytes;
+    srcc = src + pattern_y * pattern_pitch;
     dstc = dst;
     for (x = 0; x < bltbytes; x += patternbytes) {
       tilewidth = BX_MIN(patternbytes,bltbytes - x);
