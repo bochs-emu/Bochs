@@ -16,6 +16,63 @@
 
 <br>
 <li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.tar.gz">Version 1.2</a> (6/3/2001)
+</h2>
+This version is the first feature release from the Bochs project on Sourceforge.
+The following list describes the changes since 1.2.pre1.
+
+  <ul>
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=427259">#427259</a>  ] rombios HALT calls don't print <br>
+  Fixed bios/rombios.c HALT macro so that it writes the line number of the
+  panic to the PANIC_PORT (port 0x400) and then does NOT do a halt 
+  instruction.  Also changed iodev/unmapped.cc so that the line number written
+  to PANIC_PORT is displayed as a BX_PANIC message.  Because the HALT
+  macro now triggers the normal panic behavior, it can be controlled by
+  the bochsrc.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429016">#429016</a>  ] crash if no hard drive <br>
+  rombios used to call HALT macro if no hard drive was found. Now it only
+  calls HALT if a hard drive has an illegal geometry.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=425388">#425388</a>  ] include source for simple disk img tool <br>
+  [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428478">#428478</a>  ] mkimg tool creates image 1 byte too big
+  Added bximage tool, which makes empty floppy and hard disk images.
+  It is now included in the top level Makefile, so it will get built
+  by default on all platforms.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=426036">#426036</a>  ] eth_fbsd.cc compile problem on solaris26 <br>
+  added configure test so that "configure --enable-ne2000" only
+  includes the Berkeley Packet Filter code (eth_fbsd) if the header
+  file <net/bpf.h> can be found.  If you don't have BPF the ne2000
+  will not actually move packets, but at least it will compile clean now.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428214">#428214</a>  ] 1.2.pre1 need documentation for binaries <br>
+  Write windows and linux specific documentation to be installed in
+  binary releases.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429258">#429258</a>  ] disable RESET for version 1.2 <br>
+  Since soft reset was not completely working, I reverted the reset patch.
+  Now it does panics on reset instead of trying to reboot, as the old
+  bochs versions did.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428222">#428222</a>  ] Should the linux RPM install vga font? <br>
+  now font/vga.pcf will be installed in the RPM package
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429020">#429020</a>  ] stop renaming the BIOS!!! <br>
+  new BIOS changes are now in BIOS-bochs-latest, instead of a BIOS 
+  whose name changes every time we change anything!  To help distinguish
+  different BIOS versions, the BIOS now prints its RCS Id into the
+  log file.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428625">#428625</a>  ] compile problem if SHOW_IPS is on <br>
+  removed extra paren that broke SHOW_IPS
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428219">#428219</a>  ] PCI doesn't compile with SMF=1
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429375">#429375</a>  ] pthreads detection broken
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429073">#429073</a>  ] configure: if no X11, makes bad config
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429229">#429229</a>  ] install current .bochsrc in binary rels
+<li> install Tim's man pages on linux RPM
+<li> BIOS prints messages in log in case of boot failure
+<li> rewrote instructions for compiling in win32 (win32.txt)
+<li> fixed link in HTML changelog.html to point to the real sources on SF.
+<li> added missing LOG_THIS definition to gui/nogui.cc and gui/rfb.cc
+<li> added additional check for null pointer in debugger exit routine
+<li> added diskd to .bochsrc
+  </ul>
+
+<br>
+<li><h2>
 <a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.pre1.tar.gz">Version 1.2-pre1</a> (5/25/2001)
 </h2>
   This version is the first feature release from the Bochs project on Sourceforge.  It is marked "pre1" because some of the new features have not had widespread testing yet.  When more features/platforms/OSes have been tested (and bugs fixed) we will make a real 1.2 release.
@@ -83,7 +140,7 @@
   <li> since dataseghack is checked in as non-executable, invoke it with
     "csh dataseghack"
   <li> double fault patch from Thomas Petazzoni &lt; <a href="mailto:thomas.petazzoni@ifrance.com">thomas.petazzoni@ifrance.com</a> &gt;,
-    sourceforge patch <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=423726&group_id=12580&atid=312580">#423726</a>.  
+    sourceforge patch <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=423726">#423726</a>.  
   <li> removed -fno-builtin from fpu makefiles
   <li> redefine u_char, u_short, etc. in order to not conflict with system
     definitions of these same types.
@@ -98,7 +155,7 @@
        <li> removed panic on "kbd_ctrl_to_kbd(): got value of 0x??"
        <li> implement mouse command 0xf6 (set defaults)
      </ul>
-  <li> apply Suboner@aol.com's Xwindows timing patch, SF <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=418730&group_id=12580&atid=312580">#418730</a>.
+  <li> apply Suboner@aol.com's Xwindows timing patch, <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=418730">#418730</a>.
   <li> remove all patches from patches subdir which have already been applied.
     The remaining ones are under consideration but not applied.
   </ul>
@@ -118,7 +175,7 @@
 </h2>
   <ul>
   <li>This was the first SourceForge release by Bryce Denney, with patches from many sources on the bochs-developers list.
-  <li>add BX_PANIC_IS_FATAL option.  <br>WARNING: Due to a implementation bug, nonfatal panics can create problems.  If you need to use BX_PANIC_IS_FATAL=0, move the bx_atexit() after the return line.  This problem was corrected in CVS after 5/2/2001 but has not made it into a bugfix release yet.
+  <li>add BX_PANIC_IS_FATAL option.  <br>WARNING: Due to a implementation bug, nonfatal panics can create problems.  If you need to use BX_PANIC_IS_FATAL=0, move the bx_atexit() after the return line.  This problem was corrected in CVS after 5/2/2001, and appears in version 1.1.2 and later.
   <li>win32:
     <ul>
     <li>CDROM drive letter is no longer hardcoded
