@@ -12,7 +12,9 @@ test2-dynamic: with same code, build a shared library and link against it
 test3-twomodules: build 2 shared libs and link against them
 test4-interdep: build 2 shared libs, one depends on the other, and link
 test5-execsymbols: can a shared lib can access a symbol from the executable?
-
+test6-ltdlopen: use ltdl library to dlopen modules, should work on many
+  platforms, but doesn't seem to work on win32.
+test7-win32dll: same as test6-ltdlopen but specific to win32 DLLs
 
 
 
@@ -30,6 +32,9 @@ libtool makes an import library when you link against a DLL
 dlltool --as=as --dllname cygmodule2-0.dll --def .libs/cygmodule2-0.dll-def --output-lib .libs/libimp-cygmodule2-0.a
 
 the dll-def file is created at the time that the DLL is created.
+
+Exporting a class from a DLL...
+http://www.codeguru.com/win32/dyndllclass.shtml
 
 
 
