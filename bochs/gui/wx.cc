@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.70 2004-06-19 15:20:10 sshwarts Exp $
+// $Id: wx.cc,v 1.71 2004-08-15 19:27:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -66,6 +66,7 @@ class bx_wx_gui_c : public bx_gui_c {
 public:
   bx_wx_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
+  DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void statusbar_setitem(int element, bx_bool active);
 };
 
@@ -90,8 +91,8 @@ static char *wxScreen = NULL;
 wxCriticalSection wxScreen_lock;
 static long wxScreenX = 0;
 static long wxScreenY = 0;
-static long wxTileX = 0;
-static long wxTileY = 0;
+static unsigned wxTileX = 0;
+static unsigned wxTileY = 0;
 static unsigned long wxCursorX = 0;
 static unsigned long wxCursorY = 0;
 static unsigned long wxFontX = 0;
@@ -909,6 +910,8 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
 #else
     bx_keymap.loadKeymap(NULL);
 #endif
+
+  new_gfx_api = 1;
 }
 
 // ::HANDLE_EVENTS()
@@ -1408,9 +1411,59 @@ bx_wx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsign
 void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   IFDBG_VGA (wxLogDebug (wxT ("graphics_tile_update")));
-  //static Bit32u counter = 0;
-  //BX_INFO (("graphics_tile_update executed %d times", ++counter));
   UpdateScreen(tile, x0, y0, wxTileX, wxTileY);
+  thePanel->MyRefresh ();
+}
+
+  bx_svga_tileinfo_t *
+bx_wx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+{
+  if (!info) {
+    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
+    if (!info) {
+      return NULL;
+    }
+  }
+
+  info->bpp = 24;
+  info->pitch = wxScreenX * 3;
+  info->red_shift = 8;
+  info->green_shift = 16;
+  info->blue_shift = 24;
+  info->red_mask = 0x0000ff;
+  info->green_mask = 0x00ff00;
+  info->blue_mask = 0xff0000;
+  info->is_indexed = 0;
+  info->is_little_endian = 1;
+
+  return info;
+};
+
+  Bit8u *
+bx_wx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+                            unsigned *w, unsigned *h)
+{
+  if (x0+wxTileX > (unsigned)wxScreenX) {
+    *w = wxScreenX - x0;
+  }
+  else {
+    *w = wxTileX;
+  }
+
+  if (y0+wxTileY > (unsigned)wxScreenY) {
+    *h = wxScreenY - y0;
+  }
+  else {
+    *h = wxTileY;
+  }
+
+  return (Bit8u *)wxScreen + y0 * wxScreenX * 3 + x0 * 3;
+}
+
+  void
+bx_wx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+                                        unsigned w, unsigned h)
+{
   thePanel->MyRefresh ();
 }
 

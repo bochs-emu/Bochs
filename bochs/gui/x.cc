@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.84 2004-06-19 15:20:10 sshwarts Exp $
+// $Id: x.cc,v 1.85 2004-08-15 19:27:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,6 +59,7 @@ class bx_x_gui_c : public bx_gui_c {
 public:
   bx_x_gui_c (void);
   DECLARE_GUI_VIRTUAL_METHODS()
+  DECLARE_GUI_NEW_VIRTUAL_METHODS()
 #if BX_USE_IDLE_HACK
   virtual void sim_is_idle(void);
 #endif
@@ -82,6 +83,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(x)
  * additional source files, they would be declared extern there. */
 Display *bx_x_display;
 int bx_x_screen_num;
+static Visual *default_visual;
 static Colormap default_cmap;
 static unsigned long white_pixel=0, black_pixel=0;
 
@@ -366,7 +368,6 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   /* create GC for text and drawing */
   unsigned long valuemask = 0; /* ignore XGCvalues and use defaults */
   XGCValues values;
-  Visual  *default_visual;
   int      default_depth;
   XEvent report;
   XSetWindowAttributes win_attr;
@@ -622,7 +623,6 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   strcpy(bx_status_info_text, "CTRL + 3rd button enables mouse");
 
   x_init_done = true;
-
 }
 
   curr_background = 0;
@@ -639,6 +639,8 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   if(bx_options.keyboard.OuseMapping->get()) {
     bx_keymap.loadKeymap(convertStringToXKeysym);
     }
+
+  new_gfx_api = 1;
 }
 
   void
@@ -1617,6 +1619,111 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
             x_tilesize, y_size);
 }
 
+  bx_svga_tileinfo_t *
+bx_x_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+{
+  if (!info) {
+    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
+    if (!info) {
+      return NULL;
+    }
+  }
+
+  info->bpp = ximage->bits_per_pixel;
+  info->pitch = ximage->bytes_per_line;
+  info->red_shift = 0;
+  info->green_shift = 0;
+  info->blue_shift = 0;
+  info->red_mask = ximage->red_mask;
+  info->green_mask = ximage->green_mask;
+  info->blue_mask = ximage->blue_mask;
+
+  int i, rf, gf, bf;
+  unsigned long red, green, blue;
+
+  i = rf = gf = bf = 0;
+  red = ximage->red_mask;
+  green = ximage->green_mask;
+  blue = ximage->blue_mask;
+
+  while (red || rf || green || gf || blue || bf) {
+    if (rf) {
+      if (!(red & 1)) {
+        info->red_shift = i;
+        rf = 0;
+      }
+    }
+    else {
+      if (red & 1) {
+        rf = 1;
+      }
+    }
+
+    if (gf) {
+      if (!(green & 1)) {
+        info->green_shift = i;
+        gf = 0;
+      }
+    }
+    else {
+      if (green & 1) {
+        gf = 1;
+      }
+    }
+
+    if (bf) {
+      if (!(blue & 1)) {
+        info->blue_shift = i;
+        bf = 0;
+      }
+    }
+    else {
+      if (blue & 1) {
+        bf = 1;
+      }
+    }
+
+    i++;
+    red >>= 1;
+    green >>= 1;
+    blue >>= 1;
+  }
+
+  info->is_indexed = (default_visual->c_class != TrueColor) &&
+                     (default_visual->c_class != DirectColor);
+  info->is_little_endian = (ximage->byte_order == LSBFirst);
+
+  return info;
+}
+
+  Bit8u *
+bx_x_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+                          unsigned *w, unsigned *h)
+{
+  if (x0+x_tilesize > dimension_x) {
+    *w = dimension_x - x0;
+  }
+  else {
+    *w = x_tilesize;
+  }
+
+  if (y0+y_tilesize > dimension_y) {
+    *h = dimension_y - y0;
+  }
+  else {
+    *h = y_tilesize;
+  }
+
+  return (Bit8u *)ximage->data + ximage->xoffset*ximage->bits_per_pixel/8;
+}
+
+  void
+bx_x_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+                                      unsigned w, unsigned h)
+{
+  XPutImage(bx_x_display, win, gc, ximage, 0, 0,
+            x0, y0+bx_headerbar_y, w, h);
+}
 
   bx_bool
 bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
@@ -1671,7 +1778,7 @@ bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned 
     XResizeWindow(bx_x_display, win, x, y+bx_headerbar_y+bx_statusbar_y);
     dimension_x = x;
     dimension_y = y;
-    }
+  }
 }
 
 

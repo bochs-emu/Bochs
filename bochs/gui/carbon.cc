@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.26 2004-06-19 15:20:09 sshwarts Exp $
+// $Id: carbon.cc,v 1.27 2004-08-15 19:27:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1458,6 +1458,10 @@ void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
   }
         
   windowUpdatesPending = true;
+
+  host_xres = x;
+  host_yres = y;
+  host_bpp = bpp;
 }
 
 

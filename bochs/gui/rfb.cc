@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.36 2004-06-19 15:20:09 sshwarts Exp $
+// $Id: rfb.cc,v 1.37 2004-08-15 19:27:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -45,6 +45,7 @@ class bx_rfb_gui_c : public bx_gui_c {
 public:
   bx_rfb_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
+  DECLARE_GUI_NEW_VIRTUAL_METHODS()
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   void statusbar_setitem(int element, bx_bool active);
 };
@@ -132,7 +133,7 @@ struct {
 static char  *rfbScreen;
 static char  rfbPalette[256];
 
-static long  rfbWindowX, rfbWindowY;
+static unsigned rfbWindowX, rfbWindowY;
 static unsigned rfbDimensionX, rfbDimensionY;
 static long  rfbHeaderbarY;
 static long  rfbTileX = 0;
@@ -270,6 +271,8 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
 #endif
   }
   if (timeout < 0) BX_PANIC(("timeout! no client present"));
+
+  new_gfx_api = 1;
 }
 
 void rfbSetStatus(int element, bx_bool active)
@@ -793,6 +796,62 @@ void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 }
 
 
+  bx_svga_tileinfo_t *
+bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+{
+  if (!info) {
+    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
+    if (!info) {
+      return NULL;
+    }
+  }
+
+  info->bpp = 8;
+  info->pitch = rfbWindowX;
+  info->red_shift = 3;
+  info->green_shift = 6;
+  info->blue_shift = 8;
+  info->red_mask = 0x07;
+  info->green_mask = 0x38;
+  info->blue_mask = 0xc0;
+  info->is_indexed = 0;
+  info->is_little_endian = 1;
+
+  return info;
+}
+
+  Bit8u *
+bx_rfb_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+                            unsigned *w, unsigned *h)
+{
+  if (x0+rfbTileX > rfbDimensionX) {
+    *w = rfbDimensionX - x0;
+  }
+  else {
+    *w = rfbTileX;
+  }
+
+  if (y0+rfbTileY > rfbDimensionY) {
+    *h = rfbDimensionY - y0;
+  }
+  else {
+    *h = rfbTileY;
+  }
+
+  return (Bit8u *)rfbScreen + (rfbHeaderbarY + y0) * rfbWindowX + x0;
+}
+
+  void
+bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+                                        unsigned w, unsigned h)
+{
+  if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
+  if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
+  if(((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y);
+  if(((x0 + w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + h) - rfbUpdateRegion.x);
+  rfbUpdateRegion.updated = true;
+}
+
 
 // ::DIMENSION_UPDATE()
 //
@@ -1174,7 +1233,7 @@ void SendUpdate(int x, int y, int width, int height)
     char *newBits;
     int  i;
 
-    if(x < 0 || y < 0 || (x + width) > rfbWindowX || (y + height) > rfbWindowY) {
+    if(x < 0 || y < 0 || (x + width) > (int)rfbWindowX || (y + height) > (int)rfbWindowY) {
         BX_ERROR(("Dimensions out of bounds.  x=%i y=%i w=%i h=%i", x, y, width, height));
     }
     if(sGlobal != INVALID_SOCKET) {

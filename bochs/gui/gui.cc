@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.79 2004-07-06 19:59:10 vruppert Exp $
+// $Id: gui.cc,v 1.80 2004-08-15 19:27:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,15 +53,24 @@ bx_gui_c::bx_gui_c(void)
   put("GUI"); // Init in specific_init
   settype(GUILOG);
   statusitem_count = 0;
+  framebuffer = NULL;
 }
 
 bx_gui_c::~bx_gui_c()
 {
+  if (framebuffer != NULL) {
+    delete [] framebuffer;
+  }
 }
 
   void
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 {
+  BX_GUI_THIS new_gfx_api = 0;
+  BX_GUI_THIS host_xres = 640;
+  BX_GUI_THIS host_yres = 480;
+  BX_GUI_THIS host_bpp = 8;
+
   specific_init(argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
 
   // Define some bitmaps to use in the headerbar
@@ -169,6 +178,9 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 
   BX_GUI_THIS charmap_updated = 0;
 
+  if (!BX_GUI_THIS new_gfx_api) {
+    BX_GUI_THIS framebuffer = new Bit8u[BX_MAX_XRES * BX_MAX_YRES * 4];
+  }
   show_headerbar();
 }
 
@@ -617,4 +629,112 @@ bx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   *xres = 1024;
   *yres = 768;
   *bpp = 32;
+}
+
+  bx_svga_tileinfo_t *
+bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+{
+  if (!info) {
+    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
+    if (!info) {
+      return NULL;
+    }
+  }
+
+  BX_GUI_THIS host_pitch = BX_GUI_THIS host_xres * ((BX_GUI_THIS host_bpp + 1) >> 3);
+
+  info->bpp = BX_GUI_THIS host_bpp;
+  info->pitch = BX_GUI_THIS host_pitch;
+  switch (info->bpp) {
+    case 15:
+      info->red_shift = 15;
+      info->green_shift = 10;
+      info->blue_shift = 5;
+      info->red_mask = 0x7c00;
+      info->green_mask = 0x03e0;
+      info->blue_mask = 0x001f;
+      break;
+    case 16:
+      info->red_shift = 16;
+      info->green_shift = 11;
+      info->blue_shift = 5;
+      info->red_mask = 0xf800;
+      info->green_mask = 0x07e0;
+      info->blue_mask = 0x001f;
+      break;
+    case 24:
+    case 32:
+      info->red_shift = 24;
+      info->green_shift = 16;
+      info->blue_shift = 8;
+      info->red_mask = 0xff0000;
+      info->green_mask = 0x00ff00;
+      info->blue_mask = 0x0000ff;
+      break;
+  }
+  info->is_indexed = (BX_GUI_THIS host_bpp == 8);
+#ifdef BX_LITTLE_ENDIAN
+  info->is_little_endian = 1;
+#else
+  info->is_little_endian = 0;
+#endif
+
+  return info;
+}
+
+  Bit8u *
+bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+                            unsigned *w, unsigned *h)
+{
+  if (x0+X_TILESIZE > BX_GUI_THIS host_xres) {
+    *w = BX_GUI_THIS host_xres - x0;
+  }
+  else {
+    *w = X_TILESIZE;
+  }
+
+  if (y0+Y_TILESIZE > BX_GUI_THIS host_yres) {
+    *h = BX_GUI_THIS host_yres - y0;
+  }
+  else {
+    *h = Y_TILESIZE;
+  }
+
+  return (Bit8u *)framebuffer + y0 * BX_GUI_THIS host_pitch +
+                  x0 * ((BX_GUI_THIS host_bpp + 1) >> 3);
+}
+
+  void
+bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+                                        unsigned w, unsigned h)
+{
+  Bit8u tile[X_TILESIZE * Y_TILESIZE * 4];
+  Bit8u *tile_ptr, *fb_ptr;
+  Bit16u xc, yc, fb_pitch, tile_pitch;
+  Bit8u r, diffx, diffy;
+
+  diffx = (x0 % X_TILESIZE);
+  diffy = (y0 % Y_TILESIZE);
+  if (diffx > 0) {
+    x0 -= diffx;
+    w += diffx;
+  }
+  if (diffy > 0) {
+    y0 -= diffy;
+    h += diffy;
+  }
+  fb_pitch = BX_GUI_THIS host_pitch;
+  tile_pitch = X_TILESIZE * ((BX_GUI_THIS host_bpp + 1) >> 3);
+  for (yc=y0; yc<(y0+h); yc+=Y_TILESIZE) {
+    for (xc=x0; xc<(x0+w); xc+=X_TILESIZE) {
+      fb_ptr = BX_GUI_THIS framebuffer + (yc * fb_pitch + xc * ((BX_GUI_THIS host_bpp + 1) >> 3));
+      tile_ptr = &tile[0];
+      for (r=0; r<h; r++) {
+        memcpy(tile_ptr, fb_ptr, tile_pitch);
+        fb_ptr += fb_pitch;
+        tile_ptr += tile_pitch;
+      }
+      BX_GUI_THIS graphics_tile_update(tile, xc, yc);
+    }
+  }
 }

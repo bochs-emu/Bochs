@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.44 2004-04-09 15:04:53 vruppert Exp $
+// $Id: gui.h,v 1.45 2004-08-15 19:27:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,6 +38,13 @@ typedef struct {
   bx_bool split_hpanning;
 } bx_vga_tminfo_t;
 
+typedef struct {
+  Bit16u bpp, pitch;
+  Bit8u red_shift, green_shift, blue_shift;
+  Bit8u is_indexed, is_little_endian;
+  unsigned long red_mask, green_mask, blue_mask;
+} bx_svga_tileinfo_t;
+
 
 BOCHSAPI extern class bx_gui_c *bx_gui;
 
@@ -56,6 +63,9 @@ public:
                           unsigned long cursor_x, unsigned long cursor_y,
                           bx_vga_tminfo_t tm_info, unsigned rows) = 0;
   virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
+  virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
+  virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
+  virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h);
   virtual void handle_events(void) = 0;
   virtual void flush(void) = 0;
   virtual void clear_screen(void) = 0;
@@ -143,6 +153,12 @@ protected:
   unsigned statusitem_count;
   char statusitem_text[BX_MAX_STATUSITEMS][8];
   disp_mode_t disp_mode;
+  bx_bool new_gfx_api;
+  Bit16u host_xres;
+  Bit16u host_yres;
+  Bit16u host_pitch;
+  Bit8u host_bpp;
+  Bit8u *framebuffer;
   };
 
 
@@ -155,13 +171,13 @@ protected:
 //      DECLARE_GUI_VIRTUAL_METHODS()
 //    };
 // Then, each method must be defined later in the file.
-#define DECLARE_GUI_VIRTUAL_METHODS()                                         \
+#define DECLARE_GUI_VIRTUAL_METHODS()                                       \
 virtual void specific_init(int argc, char **argv,                           \
-         unsigned x_tilesize, unsigned y_tilesize,                    \
-         unsigned header_bar_y);                                      \
+         unsigned x_tilesize, unsigned y_tilesize,                      \
+         unsigned header_bar_y);                                        \
 virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
-                  unsigned long cursor_x, unsigned long cursor_y,     \
-                  bx_vga_tminfo_t tm_info, unsigned rows);            \
+                  unsigned long cursor_x, unsigned long cursor_y,       \
+                  bx_vga_tminfo_t tm_info, unsigned rows);              \
 virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
 virtual void handle_events(void);                                           \
 virtual void flush(void);                                                   \
@@ -169,7 +185,7 @@ virtual void clear_screen(void);                                            \
 virtual bx_bool palette_change(unsigned index,                              \
 unsigned red, unsigned green, unsigned blue);                           \
 virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
-                        unsigned fwidth=0, unsigned bpp=8);           \
+                          unsigned fwidth=0, unsigned bpp=8);           \
 virtual unsigned create_bitmap(const unsigned char *bmap,                   \
 unsigned xdim, unsigned ydim);                                          \
 virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \
@@ -181,6 +197,14 @@ virtual int set_clipboard_text(char *snapshot, Bit32u len);                 \
 virtual void mouse_enabled_changed_specific (bx_bool val);                  \
 virtual void exit(void);                                                    \
 /* end of DECLARE_GUI_VIRTUAL_METHODS */
+
+#define DECLARE_GUI_NEW_VIRTUAL_METHODS()                                   \
+virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);   \
+virtual Bit8u *graphics_tile_get(unsigned x, unsigned y,                    \
+                             unsigned *w, unsigned *h);                 \
+virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
+                                       unsigned w, unsigned h);
+/* end of DECLARE_GUI_NEW_VIRTUAL_METHODS */
 
 #define BX_MAX_PIXMAPS 16
 #define BX_MAX_HEADERBAR_ENTRIES 11

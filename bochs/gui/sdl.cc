@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.53 2004-08-06 15:49:53 vruppert Exp $
+// $Id: sdl.cc,v 1.54 2004-08-15 19:27:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,6 +47,7 @@ class bx_sdl_gui_c : public bx_gui_c {
 public:
   bx_sdl_gui_c (void);
   DECLARE_GUI_VIRTUAL_METHODS()
+  DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode (disp_mode_t newmode);
   virtual void statusbar_setitem(int element, bx_bool active);
 };
@@ -284,6 +285,8 @@ void bx_sdl_gui_c::specific_init(
       }
     }
   }
+
+  new_gfx_api = 1;
 }
 
 void sdl_set_status_text(int element, const char *text, bx_bool active)
@@ -702,6 +705,84 @@ void bx_sdl_gui_c::graphics_tile_update(
         buf = buf_row + disp;
       } while( --i);
   }
+}
+
+  bx_svga_tileinfo_t *
+bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+{
+  if (!info) {
+    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
+    if (!info) {
+      return NULL;
+    }
+  }
+
+  if (sdl_screen) {
+    info->bpp = sdl_screen->format->BitsPerPixel;
+    info->pitch = sdl_screen->pitch;
+    info->red_shift = sdl_screen->format->Rshift + 8 - sdl_screen->format->Rloss;
+    info->green_shift = sdl_screen->format->Gshift + 8 - sdl_screen->format->Gloss;
+    info->blue_shift = sdl_screen->format->Bshift + 8 - sdl_screen->format->Bloss;
+    info->red_mask = sdl_screen->format->Rmask;
+    info->green_mask = sdl_screen->format->Gmask;
+    info->blue_mask = sdl_screen->format->Bmask;
+    info->is_indexed = (sdl_screen->format->palette != NULL);
+  }
+  else {
+    info->bpp = sdl_fullscreen->format->BitsPerPixel;
+    info->pitch = sdl_fullscreen->pitch;
+    info->red_shift = sdl_fullscreen->format->Rshift + 8 - sdl_screen->format->Rloss;
+    info->green_shift = sdl_fullscreen->format->Gshift + 8 - sdl_screen->format->Gloss;
+    info->blue_shift = sdl_fullscreen->format->Bshift + 8 - sdl_screen->format->Bloss;
+    info->red_mask = sdl_fullscreen->format->Rmask;
+    info->green_mask = sdl_fullscreen->format->Gmask;
+    info->blue_mask = sdl_fullscreen->format->Bmask;
+    info->is_indexed = (sdl_screen->format->palette != NULL);
+  }
+
+#ifdef BX_LITTLE_ENDIAN
+  info->is_little_endian = 1;
+#else
+  info->is_little_endian = 0;
+#endif
+
+  return info;
+}
+
+  Bit8u *
+bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+                            unsigned *w, unsigned *h)
+{
+  if (x0+tilewidth > res_x) {
+    *w = res_x - x0;
+  }
+  else {
+    *w = tilewidth;
+  }
+
+  if (y0+tileheight > res_y) {
+    *h = res_y - y0;
+  }
+  else {
+    *h = tileheight;
+  }
+
+  if (sdl_screen) {
+    return (Bit8u *)sdl_screen->pixels +
+           sdl_screen->pitch*(headerbar_height+y0) +
+           sdl_screen->format->BytesPerPixel*x0;
+  }
+  else {
+    return (Bit8u *)sdl_fullscreen->pixels +
+           sdl_fullscreen->pitch*(headerbar_height+y0) +
+           sdl_fullscreen->format->BytesPerPixel*x0;
+  }
+}
+
+  void
+bx_sdl_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+                                        unsigned w, unsigned h)
+{
 }
 
 static Bit32u sdl_sym_to_bx_key (SDLKey sym)
