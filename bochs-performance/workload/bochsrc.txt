@@ -15,10 +15,10 @@ floppyb: 1_44=floppyb.img, status=inserted
 newharddrivesupport: enabled=1
 
 # 1. workload
-#diskc: file=workload.img, cyl=306, heads=4, spt=17
+diskc: file=workload.img, cyl=306, heads=4, spt=17
 # or 2. editing
-diskc: file=normal.img, cyl=306, heads=4, spt=17
-diskd: file=workload.img, cyl=306, heads=4, spt=17
+#diskc: file=normal.img, cyl=306, heads=4, spt=17
+#diskd: file=workload.img, cyl=306, heads=4, spt=17
 
 # choose the boot disk.
 boot: c
