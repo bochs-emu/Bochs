@@ -22,7 +22,7 @@ Changes to next release:
   - fixed using invalid segment register for MOV instruction (h.johansson)
   - fixed ET bit mismatch between CR0 and SMSW instruction
   - fixed possible simulator #DIVZERO fault when executing IDIV instruction
-  - fixed undocumented flags handling for BTS, BTR, SHR, MUL and IMUL
+  - fixed undocumented flags handling for BTS, BTR, SHR, SHLD, MUL and IMUL
     instructions (Stanislav Shwartsman)
   - fixed CF flag handling for SHL instruction in x86-64 mode
     (Stanislav Shwartsman)
