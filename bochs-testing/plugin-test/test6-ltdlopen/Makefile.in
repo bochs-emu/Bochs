@@ -5,21 +5,28 @@ VPATH = @srcdir@
 CXX=@CXX@
 CXXFLAGS=@CXXFLAGS@
 LDFLAGS=@LDFLAGS@ @LT_LDFLAGS@
+LIBS=-L`pwd`/../ltdl -lltdl
+
 LIBTOOL=@LIBTOOL@
 RPATH=`pwd`/lib
 
-all: uselib
+all: uselib libmodule1.la libmodule2.la
 
-uselib: uselib.cc libmodule1.la libmodule2.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o uselib $(srcdir)/uselib.cc libmodule1.la libmodule2.la
+uselib: libmain.la
+	$(LIBTOOL) $(CXX) $(LDFLAGS) -o uselib libmain.la $(LIBS)
 
-libmodule1.la: module1.lo libmodule2.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule1.la module1.lo -rpath ${RPATH} libmodule2.la
+libmain.la: main.lo
+	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmain.la main.lo -rpath ${RPATH} $(LIBS)
+	mkdir -p lib bin
+	$(LIBTOOL) cp libmain.la ${RPATH}
+
+libmodule1.la: module1.lo libmain.la
+	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule1.la module1.lo -rpath ${RPATH} libmain.la
 	mkdir -p lib bin
 	$(LIBTOOL) cp libmodule1.la ${RPATH}
 
-libmodule2.la: module2.lo
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule2.la module2.lo -rpath ${RPATH}
+libmodule2.la: module2.lo libmain.la
+	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule2.la module2.lo -rpath ${RPATH} libmain.la
 	mkdir -p lib bin
 	$(LIBTOOL) cp libmodule2.la ${RPATH}
 
@@ -33,5 +40,5 @@ test:
 
 clean:
 	-$(LIBTOOL) rm libmodule1.la module1.lo libmodule2.la module2.lo
-	rm -rf *.o uselib.exe bin lib uselib uselib.exe
+	rm -rf *.o *.lo *.la uselib.exe bin lib uselib uselib.exe
 	rm -rf .libs
