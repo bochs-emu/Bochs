@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.64 2002-10-06 02:37:27 bdenney Exp $
+// $Id: control.cc,v 1.65 2002-10-14 13:37:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -229,25 +229,19 @@ static char *startup_menu_prompt =
 "------------------------------\n"
 "\n"
 "This is the Bochs Configuration Interface, where you can describe the\n"
-"machine that you want to simulate.  The first choice, \"Read options\n"
-"from...\", lets you read in a saved machine configuration from a file.\n"
-"The second choice lets you edit the present configuration.  The\n"
-"third choice saves the current configuration to a file so that you\n"
-"can use it again next time.  When you are satisfied with the config-\n"
-"uration, go ahead and start the simulation.\n"
-"\n"
-"Most people will want to read options from a file called .bochsrc,\n"
-"then immediately start the simulation.  A quick way to do this is to\n"
-"press return three times to accept the default choices (shown in\n"
-"square brackets).\n"
+"machine that you want to simulate.  Bochs has already searched for a\n"
+"configuration file (typically called bochsrc.txt) and loaded it if it\n"
+"could be found.  When you are satisfied with the configuration, go\n"
+"ahead and start the simulation.\n"
 "\n"
 "You can also start bochs with the -q option to skip these menus.\n"
 "\n"
-"1. Read options from...\n"
-"2. Edit options\n"
-"3. Save options to...\n"
-"4. Begin simulation\n"
-"5. Quit now\n"
+"1. Restore factory default configuration\n"
+"2. Read options from...\n"
+"3. Edit options\n"
+"4. Save options to...\n"
+"5. Begin simulation\n"
+"6. Quit now\n"
 "\n"
 "Please choose one: [%d] ";
 
@@ -412,15 +406,23 @@ int bx_config_interface (int menu)
    case BX_CI_START_MENU:
      {
        static int read_rc = 0;
-       Bit32u default_choice = 1;
-       default_choice = read_rc ? 4 : 1;
-       if (ask_uint (startup_menu_prompt, 1, 5, default_choice, &choice, 10) < 0) return -1;
+       Bit32u default_choice = 5;
+       if (ask_uint (startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
        switch (choice) {
-	 case 1: if (bx_read_rc (NULL) >= 0) read_rc=1; break;
-	 case 2: bx_config_interface (BX_CI_START_OPTS); break;
-	 case 3: bx_write_rc (NULL); break;
-	 case 4: return 0;   // return from menu
-	 case 5: SIM->quit_sim (1); return -1;
+	 case 1:
+	   SIM->reset_all_param ();
+	   break;
+	 case 2: 
+	   // Before reading a new configuration, reset every option to its
+	   // original state.
+	   SIM->reset_all_param ();
+	   if (bx_read_rc (NULL) >= 0)
+	     read_rc=1; 
+	   break;
+	 case 3: bx_config_interface (BX_CI_START_OPTS); break;
+	 case 4: bx_write_rc (NULL); break;
+	 case 5: return 0;   // return from menu
+	 case 6: SIM->quit_sim (1); return -1;
 	 default: BAD_OPTION(menu, choice);
        }
      }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.158 2002-10-06 19:21:05 bdenney Exp $
+// $Id: main.cc,v 1.159 2002-10-14 13:37:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,7 +43,6 @@
 #endif
 #endif
 
-int enable_config_interface = 1;
 int bochsrc_include_count = 0;
 
 extern "C" {
@@ -83,12 +82,13 @@ class state_file state_stuff("state_file.out", "options");
 bx_debug_t bx_dbg;
 
 bx_options_t bx_options; // initialized in bx_init_options()
+char *bochsrc_filename = NULL;
 
 static Bit32s parse_line_unformatted(char *context, char *line);
 static Bit32s parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
 #if !BX_WITH_WX
-static void bx_do_text_config_interface (int argc, char *argv[]);
+static void bx_do_text_config_interface (int first_arg, int argc, char *argv[]);
 #endif
 
 static Bit32s
@@ -1340,8 +1340,11 @@ int main (int argc, char *argv[])
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
     if (bx_init_main (argc, argv) < 0) return 0;
-    bx_do_text_config_interface (argc, argv);
     bx_config_interface (BX_CI_INIT);
+    if (! SIM->get_param_bool(BXP_QUICK_START)->get ()) {
+      // Display the pre-simulation configuration interface.
+      bx_config_interface (BX_CI_START_MENU);
+    }
     bx_continue_after_config_interface (argc, argv);
     // function returned normally
   } else {
@@ -1352,15 +1355,26 @@ int main (int argc, char *argv[])
 }
 #endif
 
+void
+print_usage ()
+{
+  fprintf(stderr, 
+    "Usage: bochs [flags] [bochsrc options]\n\n"
+    "  -q               quickstart with default configuration file\n"
+    "  -f configfile    specify configuration file\n"
+    "  -qf configfile   quickstart with specified configuration file\n"
+    "  --help           display this help and exit\n\n"
+    "For information on Bochs configuration file arguments, see the\n"
+#if (!defined(WIN32)) && !BX_WITH_MACOS
+    "bochsrc section in the user documentation or the man page of bochsrc.\n");
+#else
+    "bochsrc section in the user documentation.\n");
+#endif
+}
+
 int
 bx_init_main (int argc, char *argv[])
 {
-  int help = 0;
-#if BX_WITH_WX
-  int arg = 1;
-  char *bochsrc = NULL;
-#endif
-
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
   // constructors or functions called by constructors.  The macros test for
@@ -1372,143 +1386,88 @@ bx_init_main (int argc, char *argv[])
   SAFE_GET_IOFUNC();  // never freed
   SAFE_GET_GENLOG();  // never freed
 
-  if ((argc > 1) && (!strcmp ("--help", argv[1]))) {
-    fprintf(stderr, "Usage: bochs [options] [bochsrc options]\n\n"
-                    "  -q               quickstart with default configuration file\n"
-                    "  -qf configfile   quickstart with specified configuration file\n"
-                    "  --help           display this help and exit\n\n"
-                    "For information on Bochs configuration file arguments, see the\n"
-#if (!defined(WIN32)) && !BX_WITH_MACOS
-		    "bochsrc section in the user documentation or the man page of bochsrc.\n");
-#else
-                    "bochsrc section in the user documentation.\n");
-#endif
-    help = 1;
-  } else {
-#if !BX_WITH_WX
-    bx_print_header ();
-#endif
-  }
+  // initalization must be done early because some destructors expect
+  // the bx_options to exist by the time they are called.
   bx_init_bx_dbg ();
   bx_init_options ();
-  if (help) exit(0);
+
+  if (!BX_WITH_WX) bx_print_header ();
+
+#if !BX_USE_CONFIG_INTERFACE
+  // this allows people to get quick start behavior by default
+  SIM->get_param_bool(BXP_QUICK_START)->set (1);
+#endif
+
+  // interpret the args that start with -, like -q, -f, etc.
+  int arg = 1;
+  while (arg < argc) {
+    // parse next arg
+    if (!strcmp ("--help", argv[arg]) || !strncmp ("-h", argv[arg], 2)) {
+      print_usage();
+      SIM->quit_sim (0);
+    }
+    else if (!strcmp ("-q", argv[arg])) {
+      SIM->get_param_bool(BXP_QUICK_START)->set (1);
+    }
+    else if (!strcmp ("-f", argv[arg])) {
+      if (++arg >= argc) BX_PANIC(("-f must be followed by a filename"));
+      else bochsrc_filename = argv[arg];
+    }
+    else if (!strcmp ("-qf", argv[arg])) {
+      SIM->get_param_bool(BXP_QUICK_START)->set (1);
+      if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
+      else bochsrc_filename = argv[arg];
+    }
 #if BX_WITH_CARBON
-    /* "-psn" is passed if we are launched by double-clicking */
-   if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 ) {
-     // ugly hack.  I don't know how to open a window to print messages in,
-     // so put them in /tmp/early-bochs-out.txt.  Sorry. -bbd
-     io->init_log("/tmp/early-bochs-out.txt");
-     BX_INFO (("I was launched by double clicking.  Fixing home directory."));
-     argc = 1; // ignore all other args.
-     setupWorkingDirectory (argv[0]);
-     // there is no stdin/stdout so disable the text-based config interface.
-     enable_config_interface = 0;
-   }
-   // if it was started from command line, there could be some args still.
-   for (int a=0; a<argc; a++) {
-     BX_INFO (("argument %d is %s", a, argv[a]));
-   }
-        
-  char cwd[MAXPATHLEN];
-  getwd (cwd);
-  BX_INFO (("Now my working directory is %s", cwd));
+    else if (!strncmp ("-psn", argv[arg], 4)) {
+      // "-psn" is passed if we are launched by double-clicking
+      // ugly hack.  I don't know how to open a window to print messages in,
+      // so put them in /tmp/early-bochs-out.txt.  Sorry. -bbd
+      io->init_log("/tmp/early-bochs-out.txt");
+      BX_INFO (("I was launched by double clicking.  Fixing home directory."));
+      arg = argc; // ignore all other args.
+      setupWorkingDirectory (argv[0]);
+      // there is no stdin/stdout so disable the text-based config interface.
+      SIM->get_param_bool(BXP_QUICK_START)->set (1);
+      char cwd[MAXPATHLEN];
+      getwd (cwd);
+      BX_INFO (("Now my working directory is %s", cwd));
+      // if it was started from command line, there could be some args still.
+      for (int a=0; a<argc; a++) {
+        BX_INFO (("argument %d is %s", a, argv[a]));
+      }
+    }
 #endif
-#if BX_WITH_WX
-  // detect -q or -qf
-  if ((argc > 1) && (!strncmp ("-q", argv[1], 2))) {
-    SIM->get_param_bool(BXP_QUICK_START)->set (1);  // used in wxmain.cc
+    else if (argv[arg][0] == '-') {
+      print_usage();
+      BX_PANIC (("command line arg '%s' was not understood", argv[arg]));
+    }
+    else {
+      // the arg did not start with -, so stop interpreting flags
+      break;
+    }
     arg++;
-    if ((argc > 2) && (!strcmp(argv[1], "-qf"))) {
-      bochsrc = argv[arg];
-      arg++;
-    }
-    else if ((argc > 3) && (!strcmp ("-f", argv[arg]))) {
-      bochsrc = argv[arg+1];
-      arg += 2;
-    }
-    if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
-    if (bochsrc) {
-      if (bx_read_configuration (bochsrc) < 0)
-	return -1;   // read config failed
-    }
   }
-  // parse cmdline after bochsrc so that it can override things
-  bx_parse_cmdline (arg, argc, argv);
-#endif
+  int norcfile = 1;
+  /* always parse configuration file and command line arguments */
+  if (bochsrc_filename == NULL) bochsrc_filename = bx_find_bochsrc ();
+  if (bochsrc_filename)
+    norcfile = bx_read_configuration (bochsrc_filename);
+  if (norcfile) {
+    // No configuration was loaded, so the current settings are unusable.
+    // Switch off quick start so that we will drop into the configuration
+    // interface.
+    SIM->get_param_bool(BXP_QUICK_START)->set (0);
+  }
+  // parse the rest of the command line.  This is done after reading the
+  // configuration file so that the command line arguments can override
+  // the settings from the file.
+  if (bx_parse_cmdline (arg, argc, argv)) {
+    BX_PANIC(("There were errors while parsing the command line"));
+    return -1;
+  }
   return 0;
 }
-
-#if !BX_WITH_WX
-static void
-bx_do_text_config_interface (int argc, char *argv[])
-{
-  char *bochsrc = NULL;
-  int norcfile = 1;
-
-  // detect -q, -qf argument before anything else
-  int arg = 1;
-  if ((argc > 1) && !strncmp ("-q", argv[1], 2)) {
-    // skip the configuration interface
-    arg++;
-    enable_config_interface = 0;
-    if ((argc > 2) && (!strcmp(argv[1], "-qf"))) {
-      bochsrc = argv[arg];
-      arg++;
-    }
-    else if ((argc > 3) && (!strcmp ("-f", argv[arg]))) {
-      bochsrc = argv[arg+1];
-      arg += 2;
-    }
-  }
-#if !BX_USE_CONFIG_INTERFACE
-  enable_config_interface = 0;
-#endif
-
-  if (!enable_config_interface || BX_WITH_WX) {
-    /* parse configuration file and command line arguments */
-    if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
-    if (bochsrc)
-      norcfile = bx_read_configuration (bochsrc);
-
-    if (norcfile && arg>=argc) {
-      // no bochsrc used.  This is legal since they may have everything on the
-      // command line.  However if they have no arguments then give them some
-      // friendly advice.
-      fprintf (stderr, "%s\n", divider);
-      fprintf (stderr, "Before running Bochs, you should cd to a directory which contains\n");
-      fprintf (stderr, "a .bochsrc file and a disk image.  If you downloaded a binary package,\n");
-      fprintf (stderr, "all the necessary files are already on your disk.\n");
-#if defined(WIN32)
-      fprintf (stderr, "\nFor Windows installations, go to the dlxlinux direectory and\n");
-      fprintf (stderr, "double-click on the start.bat script.\n");
-#elif !defined(macintosh)
-      fprintf (stderr, "\nFor UNIX installations, try running \"bochs-dlx\" for a demo.  This script\n");
-      fprintf (stderr, "is basically equivalent to typing:\n");
-      fprintf (stderr, "   cd /usr/share/bochs/dlxlinux\n");
-      fprintf (stderr, "   bochs\n");
-#endif
-      BX_EXIT(1);
-    }
-  }
-
-  // parse the rest of the command line.
-  if (bx_parse_cmdline (arg, argc, argv)) {
-    fprintf (stderr, "There were errors while parsing the command line.\n");
-    fprintf (stderr, "Bochs is exiting.\n");
-    exit (1);
-  }
-
-  if (enable_config_interface) {
-    // update log actions before starting configuration interface
-    for (int level=0; level<N_LOGLEV; level++) {
-      int action = SIM->get_default_log_action (level);
-      io->set_log_action (level, action);
-    }
-    // Display the pre-simulation configuration interface.
-    bx_config_interface (BX_CI_START_MENU);
-  }
-}
-#endif
 
 int
 bx_continue_after_config_interface (int argc, char *argv[])
@@ -1571,15 +1530,13 @@ bx_read_configuration (char *rcfile)
   // parse rcfile first, then parse arguments in order.
   BX_INFO (("reading configuration from %s", rcfile));
   if (parse_bochsrc(rcfile) < 0) {
-    BX_ERROR (("reading from %s failed", rcfile));
+    BX_PANIC (("reading from %s failed", rcfile));
     return -1;
   }
-  // update log actions if configuration interface is enabled
-  if (enable_config_interface) {
-    for (int level=0; level<N_LOGLEV; level++) {
-      int action = SIM->get_default_log_action (level);
-      io->set_log_action (level, action);
-    }
+  // update log actions
+  for (int level=0; level<N_LOGLEV; level++) {
+    int action = SIM->get_default_log_action (level);
+    io->set_log_action (level, action);
   }
   return 0;
 }
@@ -1593,6 +1550,11 @@ int bx_parse_cmdline (int arg, int argc, char *argv[])
     parse_line_unformatted("cmdline args", argv[arg]);
     arg++;
   }
+  // update log actions
+  for (int level=0; level<N_LOGLEV; level++) {
+    int action = SIM->get_default_log_action (level);
+    io->set_log_action (level, action);
+  }
   return 0;
 }
 
@@ -1601,7 +1563,7 @@ bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-  if (!enable_config_interface) {
+  if (SIM->get_param_bool(BXP_QUICK_START)->get ()) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = SIM->get_default_log_action (level);
 #if !BX_USE_CONFIG_INTERFACE
