@@ -20076,6 +20076,7 @@ if test "${enable_sb16+set}" = set; then
      echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
      SB16_OBJS=''
+     SOUNDLOW_OBJS=''
      cat >>confdefs.h <<\_ACEOF
 #define BX_SUPPORT_SB16 0
 _ACEOF
@@ -20083,7 +20084,7 @@ _ACEOF
    else
      case "$enableval" in
        dummy)
-         SB16_OBJS='$(SB16_DUMMY_OBJS)'
+         SOUNDLOW_OBJS=''
          cat >>confdefs.h <<\_ACEOF
 #define BX_SOUND_OUTPUT_C bx_sound_output_c
 _ACEOF
@@ -20092,7 +20093,7 @@ _ACEOF
 echo "${ECHO_T}dummy" >&6
          ;;
        freebsd|linux)
-         SB16_OBJS='$(SB16_LINUX_OBJS)'
+         SOUNDLOW_OBJS='soundlnx.o'
          cat >>confdefs.h <<\_ACEOF
 #define BX_SOUND_OUTPUT_C bx_sound_linux_c
 _ACEOF
@@ -20101,7 +20102,7 @@ _ACEOF
 echo "${ECHO_T}linux" >&6
          ;;
        win)
-         SB16_OBJS='$(SB16_WIN_OBJS)'
+         SOUNDLOW_OBJS='soundwin.o'
          cat >>confdefs.h <<\_ACEOF
 #define BX_SOUND_OUTPUT_C bx_sound_windows_c
 _ACEOF
@@ -20116,6 +20117,7 @@ echo "${ECHO_T}win" >&6
          echo "You must pass one of dummy, linux, win, freebsd to --enable-sb16"
          exit 1 ;;
      esac
+     SB16_OBJS='sb16.o'
      cat >>confdefs.h <<\_ACEOF
 #define BX_SUPPORT_SB16 1
 _ACEOF
@@ -20126,6 +20128,7 @@ else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     SB16_OBJS=''
+    SOUNDLOW_OBJS=''
     cat >>confdefs.h <<\_ACEOF
 #define BX_SUPPORT_SB16 0
 _ACEOF
@@ -22430,6 +22433,7 @@ s,@FPU_VAR@,$FPU_VAR,;t t
 s,@FPU_GLUE_OBJ@,$FPU_GLUE_OBJ,;t t
 s,@CDROM_OBJS@,$CDROM_OBJS,;t t
 s,@SB16_OBJS@,$SB16_OBJS,;t t
+s,@SOUNDLOW_OBJS@,$SOUNDLOW_OBJS,;t t
 s,@GDBSTUB_VAR@,$GDBSTUB_VAR,;t t
 s,@IODEBUG_OBJS@,$IODEBUG_OBJS,;t t
 s,@IODEV_LIB_VAR@,$IODEV_LIB_VAR,;t t
