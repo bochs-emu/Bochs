@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: make_cmos_image.cc,v 1.2.8.2 2002-03-17 08:57:03 bdenney Exp $
+// $Id: make_cmos_image.cc,v 1.2.8.3 2002-04-05 18:30:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,7 +79,7 @@ main(int argc, char *argv[])
 
   if (argc != 2) {
     fprintf(stderr, "usage: %s pathname\n", argv[0]);
-    BX_EXIT(1);
+    exit(1);
     }
 
   fd = open(argv[1], O_WRONLY | O_CREAT
@@ -90,13 +90,13 @@ main(int argc, char *argv[])
            );
   if (fd < 0) {
     perror("trying to open cmos image file to write.\n");
-    BX_EXIT(1);
+    exit(1);
     }
 
   ret = write(fd, cmos, sizeof(cmos));
   if (ret != sizeof(cmos)) {
     perror("write() did not write all CMOS data.\n");
-    BX_EXIT(1);
+    exit(1);
     }
   printf("CMOS data successfuly written to file '%s'.\n", argv[1]);
 }

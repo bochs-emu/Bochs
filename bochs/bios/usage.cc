@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usage.cc,v 1.2.8.2 2002-03-17 08:57:01 bdenney Exp $
+// $Id: usage.cc,v 1.2.8.3 2002-04-05 18:30:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ main(int argc, char *argv[])
 
   if (argc !=3 ) {
     fprintf(stderr, "Usage: usage bios-file org-file\n");
-    BX_EXIT(1);
+    exit(1);
     }
 
   bios_file = open(argv[1], O_RDONLY);
@@ -53,7 +53,7 @@ main(int argc, char *argv[])
 
   if ( (bios_file<0) | (org_file==NULL) ) {
     fprintf(stderr, "problems opening files.\n");
-    BX_EXIT(1);
+    exit(1);
     }
 
   printf("files opened OK\n");
@@ -64,7 +64,7 @@ main(int argc, char *argv[])
     retval = read(bios_file, &bios[index], to_read);
     if (retval <= 0) {
       fprintf(stderr, "problem reading bios file\n");
-      BX_EXIT(1);
+      exit(1);
       }
     to_read -= retval;
     index   += retval;
