@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.16 2002-03-18 21:21:19 vruppert Exp $
+// $Id: sdl.cc,v 1.17 2002-03-19 19:59:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -399,6 +399,7 @@ void bx_gui_c::graphics_tile_update(
 void bx_gui_c::handle_events(void)
 {
   Bit32u key_event;
+  Bit8u mouse_state;
 
   while( SDL_PollEvent(&sdl_event) )
   {
@@ -423,7 +424,7 @@ void bx_gui_c::handle_events(void)
 	break;
 
       case SDL_MOUSEBUTTONDOWN:
-	if( (sdl_event.button.button == SDL_BUTTON(2))
+	if( (sdl_event.button.button == SDL_BUTTON_MIDDLE)
 	    && (sdl_fullscreen_toggle == 0) )
 	{
 	  if( sdl_grab == 0 )
@@ -447,10 +448,12 @@ void bx_gui_c::handle_events(void)
 	// figure out mouse state
 	new_mousex = (int)(sdl_event.button.x);
 	new_mousey = (int)(sdl_event.button.y);
+	// SDL_GetMouseState() returns the state of all buttons
+	mouse_state = SDL_GetMouseState(NULL, NULL);
 	new_mousebuttons =
-	  (sdl_event.button.state & 0x01)	|
-	  ((sdl_event.button.state>>1)&0x02)	|
-	  ((sdl_event.button.state<<1)&0x04)	;
+	  (mouse_state & 0x01)    |
+	  ((mouse_state>>1)&0x02) |
+	  ((mouse_state<<1)&0x04) ;
 	// filter out middle button if not fullscreen
 	if( sdl_fullscreen_toggle == 0 )
 	  new_mousebuttons &= 0x03;
