@@ -225,16 +225,16 @@ math_abort(struct info *info, unsigned int signal)
     case SIGFPE:
       if (BX_CPU.cr0.ne == 0) {
         // MSDOS compatibility external interrupt (IRQ13)
-        BX_PANIC ("math_abort: MSDOS compatibility not supported yet\n");
+        BX_PANIC (("math_abort: MSDOS compatibility not supported yet\n"));
         }
       BX_CPU.exception(BX_MF_EXCEPTION, 0, 0);
       // execution does not reach here
 
     case SIGILL:
-      BX_PANIC ("math_abort: SIGILL not implemented yet.\n");
+      BX_PANIC (("math_abort: SIGILL not implemented yet.\n"));
       break;
     case SIGSEGV:
-      BX_PANIC ("math_abort: SIGSEGV not implemented yet.\n");
+      BX_PANIC (("math_abort: SIGSEGV not implemented yet.\n"));
       break;
     }
 
