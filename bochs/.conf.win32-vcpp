@@ -2,8 +2,8 @@
 
 set echo
 
-export CC=cl
-export CXX=cl
+#export CC=cl
+#export CXX=cl
 
 #./configure --with-win32-vcpp --enable-port-e9-hack
 #./configure --with-win32-vcpp --enable-debugger --enable-disasm --enable-instrumentation="instrument/example0"
