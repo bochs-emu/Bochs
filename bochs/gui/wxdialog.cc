@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.5 2002-08-29 20:09:54 bdenney Exp $
+// $Id: wxdialog.cc,v 1.6 2002-08-29 20:13:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -162,6 +162,7 @@ void LogMsgAskDialog::ShowHelp ()
 //         disk image file
 //         filename
 //         browse button
+//         create button
 //     capacitySizer (horizontal):
 //       capacity text
 //       capacity choice box
@@ -210,6 +211,8 @@ FloppyConfigDialog::FloppyConfigDialog(
   btn = new wxButton (this, wxHELP, "Help");
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, wxCANCEL, "Cancel");
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, ID_Create, "Create Image");
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, wxOK, "Ok");
   buttonSizer->Add (btn, 0, wxALL, 5);
@@ -339,6 +342,16 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
 	SetFilename (fdialog->GetPath().c_str ());
       }
       break;
+    case ID_Create:
+      // create disk image with name and capacity determined by the filename
+      // and capacity fields of this dialog.  Call 
+      // SIM->create_image (filename, sectors, overwrite=0) first which
+      // will create the file if it doesn't already exist.  If it exists,
+      // it will return a code that says so, and we can ask the user
+      // "are you sure you want to overwrite?".  If so call again with
+      // overwrite=1.
+      CreateImage ();
+      break;
     case wxCANCEL:
       EndModal (-1);
       break;
@@ -346,6 +359,48 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       ShowHelp(); 
       break;
   }
+}
+
+void FloppyConfigDialog::CreateImage () 
+{
+  int cap = capacity->GetSelection ();
+  wxLogDebug ("capacity=%d\n", cap);
+  wxLogDebug ("capacity string=%s\n", capacity->GetString (cap).c_str());
+  if (capacity->GetString (cap).Cmp ("none") == 0
+      || !(cap>=0 && cap<n_floppy_type_names)) {
+    wxMessageBox("You must choose a valid capacity for the new disk image", "Bad Capacity", wxOK | wxICON_ERROR );
+    return;
+  }
+
+  char name[1024];
+  strncpy (name, 
+      filename->GetValue ().c_str (),
+      filename->GetValue ().Length ());
+  wxLogDebug ("filename = '%s'\n", name);
+  if (strlen (name) < 1) {
+    wxMessageBox("You must type a file name for the new disk image.", "Bad Filename", wxOK | wxICON_ERROR );
+    return;
+  }
+  // try first with overwrite flag = 0
+  int ret = SIM->create_disk_image (name, floppy_type_n_sectors[cap], 0);
+  if (ret == -1) {  // already exists
+    int answer = wxMessageBox ("File exists.  Do you want to overwrite it?",
+      "File exists", wxYES_NO | wxCENTER);
+    if (answer == wxYES)
+      ret = SIM->create_disk_image (name, floppy_type_n_sectors[cap], 1);
+    else 
+      return;  // wxNO
+  }
+  if (ret == -2) {
+    wxMessageBox("I could not create the disk image. Check for permission problems or available disk space.", "Failed", wxOK | wxICON_ERROR );
+    return;
+  }
+  wxASSERT (ret==0);
+  wxString s;
+  s.Printf ("Created a %s disk image called '%s'.",
+      capacity->GetString (cap).c_str (), 
+      filename->GetValue ().c_str ());
+  wxMessageBox(s, "Image Created", wxOK | wxICON_INFORMATION);
 }
 
 void FloppyConfigDialog::ShowHelp ()

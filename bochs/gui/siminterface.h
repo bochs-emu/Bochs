@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.50 2002-08-29 14:59:37 bdenney Exp $
+// $Id: siminterface.h,v 1.51 2002-08-29 20:13:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -700,6 +700,7 @@ public:
 #define BX_FLOPPY_GUESS  20 // decide based on image size
 
 extern char *floppy_type_names[];
+extern int floppy_type_n_sectors[];
 extern int n_floppy_type_names;
 extern char *floppy_status_names[];
 extern int n_floppy_status_names;
@@ -810,6 +811,7 @@ public:
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags) {return -1;}
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic () {}
+  virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite) {return -3;}
 };
 
 extern bx_simulator_interface_c *SIM;

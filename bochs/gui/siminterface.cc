@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.47 2002-08-29 14:59:37 bdenney Exp $
+// $Id: siminterface.cc,v 1.48 2002-08-29 20:13:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -74,6 +74,7 @@ public:
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
+  virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite);
 };
 
 bx_param_c *
@@ -303,6 +304,7 @@ bx_real_sim_c::get_cdrom_options (int drive, bx_cdrom_options *out)
 }
 
 char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", NULL };
+int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9 };
 int n_floppy_type_names = 6;
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
 int n_floppy_status_names = 2;
@@ -410,6 +412,65 @@ bx_real_sim_c::periodic ()
   BX_INFO(("memory allocation at %p", memcheck));
   delete memcheck;
 #endif
+}
+
+// create a disk image file called filename, size=512 bytes * sectors.
+// If overwrite is true and the file exists, returns -1 without changing it.
+// Otherwise, opens up the image and starts writing.  Returns -2 if
+// the image could not be opened, or -3 if there are failures during
+// write, e.g. disk full.
+// 
+// wxWindows: This may be called from the gui thread.
+int 
+bx_real_sim_c::create_disk_image (
+    const char *filename,
+    int sectors,
+    Boolean overwrite) 
+{
+  FILE *fp;
+  if (!overwrite) {
+    // check for existence first
+    fp = fopen (filename, "r");
+    if (fp) {
+      // yes it exists
+      fclose (fp);
+      return -1;
+    }
+  }
+  fp = fopen (filename, "w");
+  if (fp == NULL) {
+#ifdef HAVE_PERROR
+    char buffer[1024];
+    sprintf (buffer, "while opening '%s' for writing", filename);
+    perror (buffer);
+    // not sure how to get this back into the CI
+#endif
+    return -2;
+  }
+  int sec = sectors;
+  /*
+   * seek to sec*512-1 and write a single character.
+   * can't just do: fseek(fp, 512*sec-1, SEEK_SET)
+   * because 512*sec may be too large for signed int.
+   */
+  while (sec > 0)
+  {
+    /* temp <-- min(sec, 4194303)
+     * 4194303 is (int)(0x7FFFFFFF/512)
+     */
+    int temp = ((sec < 4194303) ? sec : 4194303);
+    fseek(fp, 512*temp, SEEK_CUR);
+    sec -= temp;
+  }
+
+  fseek(fp, -1, SEEK_CUR);
+  if (fputc('\0', fp) == EOF)
+  {
+    fclose (fp);
+    return -3;
+  }
+  fclose (fp);
+  return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////

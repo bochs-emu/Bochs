@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.5 2002-08-29 20:09:54 bdenney Exp $
+// $Id: wxdialog.h,v 1.6 2002-08-29 20:13:05 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -77,7 +77,7 @@ DECLARE_EVENT_TABLE()
 // | Hint: To create a disk image, choose the name and capacity    |
 // | above, then click Ok.                                         |
 // |                                                               |
-// |                                 [ Help ] [ Cancel ]  [ Ok ]   |
+// |                   [ Help ] [ Cancel ] [ Create Image ] [ Ok ] |
 // +---------------------------------------------------------------+
 // To use this dialog:
 // After constructor, use AddRadio () to add radio buttons, SetFilename()
@@ -97,7 +97,7 @@ public:
 #define FLOPPY_CONFIG_TITLE "Configure %s"
 #define FLOPPY_CONFIG_INSTRS "Select the device or image to use when simulating %s."
 #define FLOPPY_CONFIG_CAP "What is the capacity of this disk?"
-#define FLOPPY_CONFIG_HINT "Hint: To create a disk image, choose the name and capacity above, then click Ok."
+#define FLOPPY_CONFIG_HINT "To create a disk image, choose the file name and capacity, then click on \"Create Image\"."
 #define FLOPPY_CONFIG_DISKIMG "Disk image file: "
 private:
   void Init ();  // called automatically by ShowModal()
@@ -128,6 +128,7 @@ public:
   void SetDriveName (const char *name);
   void SetValidateFunc (validateFunc_t v) { validate = v; }
   void AddRadio (char *description, char *filename);
+  void CreateImage ();
 DECLARE_EVENT_TABLE()
 };
 
