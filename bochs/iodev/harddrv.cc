@@ -67,8 +67,16 @@ bx_hard_drive_c::bx_hard_drive_c(void)
       s[0].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();
       s[1].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();
 #else
+
+#if BX_SPLIT_HD_SUPPORT
+      // use new concatenated image object
+      s[0].hard_drive = new concat_image_t();
+      s[1].hard_drive = new concat_image_t();
+#else
       s[0].hard_drive = new default_image_t();
       s[1].hard_drive = new default_image_t();
+#endif
+
 #endif
 }
 
@@ -2375,6 +2383,143 @@ ssize_t default_image_t::write (const void* buf, size_t count)
 {
       return ::write(fd, buf, count);
 }
+
+#if BX_SPLIT_HD_SUPPORT
+/*** concat_image_t function definitions ***/
+
+void concat_image_t::increment_string (char *str)
+{
+  // find the last character of the string, and increment it.
+  char *p = str;
+  while (*p != 0) p++;
+  assert (p>str);  // choke on zero length strings
+  p--;  // point to last character of the string
+  ++(*p);  // increment to next ascii code.
+  if (bx_dbg.disk)
+    bx_printf ("concat_image.increment string returning '%s'\n", str);
+}
+
+int concat_image_t::open (const char* pathname0)
+{
+  char *pathname = strdup (pathname0);
+  bx_printf ("concat_image_t.open\n");
+  ssize_t start_offset = 0;
+  for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
+    fd_table[i] = ::open(pathname, O_RDWR
+#ifdef O_BINARY
+		| O_BINARY
+#endif
+	  );
+    if (fd_table[i] < 0) {
+      // open failed.
+      // if no FD was opened successfully, return -1 (fail).
+      if (i==0) return -1;
+      // otherwise, it only means that all images in the series have 
+      // been opened.  Record the number of fds opened successfully.
+      maxfd = i; 
+      break;
+    }
+    if (bx_dbg.disk)
+      bx_printf ("concat_image: open image %s, fd[%d] = %d\n", pathname, i, fd_table[i]);
+    /* look at size of image file to calculate disk geometry */
+    struct stat stat_buf;
+    int ret = fstat(fd_table[i], &stat_buf);
+    if (ret) {
+	  perror("fstat'ing hard drive image file");
+	  bx_panic("fstat() returns error!\n");
+    }
+    if ((stat_buf.st_size % 512) != 0) {
+      bx_panic ("[HDD] size of disk image must be multiple of 512 bytes");
+    }
+    length_table[i] = stat_buf.st_size;
+    start_offset_table[i] = start_offset;
+    start_offset += stat_buf.st_size;
+    increment_string (pathname);
+  }
+  // start up with first image selected
+  index = 0;
+  fd = fd_table[0];
+  thismin = 0;
+  thismax = length_table[0]-1;
+  seek_was_last_op = 0;
+  return 0; // success.
+}
+
+void concat_image_t::close ()
+{
+  bx_printf ("concat_image_t.close\n");
+  if (fd > -1) {
+    ::close(fd);
+  }
+}
+
+off_t concat_image_t::lseek (off_t offset, int whence)
+{
+  if ((offset % 512) != 0) 
+    bx_panic ("lseek HD with offset not multiple of 512");
+  if (bx_dbg.disk)
+    bx_printf ("concat_image_t.lseek(%d)\n", whence);
+  // is this offset in this disk image?
+  if (offset < thismin) {
+    // no, look at previous images
+    for (int i=index-1; i>=0; i--) {
+      if (offset >= start_offset_table[i]) {
+	index = i;
+	fd = fd_table[i];
+	thismin = start_offset_table[i];
+	thismax = thismin + length_table[i] - 1;
+	if (bx_dbg.disk)
+	  bx_printf ("concat_image_t.lseek to earlier image, index=%d\n", index);
+	break;
+      }
+    }
+  } else if (offset > thismax) {
+    // no, look at later images
+    for (int i=index+1; i<maxfd; i++) {
+      if (offset < start_offset_table[i] + length_table[i]) {
+	index = i;
+	fd = fd_table[i];
+	thismin = start_offset_table[i];
+	thismax = thismin + length_table[i] - 1;
+	if (bx_dbg.disk)
+	  bx_printf ("concat_image_t.lseek to earlier image, index=%d\n", index);
+	break;
+      }
+    }
+  }
+  // now offset should be within the current image.
+  offset -= start_offset_table[index];
+  if (offset < 0 || offset >= length_table[index])
+    bx_panic ("concat_image_t.lseek to byte %ld failed\n", (long)offset);
+
+  seek_was_last_op = 1;
+  return ::lseek(fd, offset, whence);
+}
+
+ssize_t concat_image_t::read (void* buf, size_t count)
+{
+  if (bx_dbg.disk)
+    bx_printf ("concat_image_t.read %ld bytes\n", (long)count);
+  // notice if anyone does sequential read or write without seek in between.
+  // This can be supported pretty easily, but needs additional checks for
+  // end of a partial image.
+  if (!seek_was_last_op) 
+    bx_panic ("disk: no seek before read");
+  return ::read(fd, buf, count);
+}
+
+ssize_t concat_image_t::write (const void* buf, size_t count)
+{
+  if (bx_dbg.disk)
+    bx_printf ("concat_image_t.write %ld bytes\n", (long)count);
+  // notice if anyone does sequential read or write without seek in between.
+  // This can be supported pretty easily, but needs additional checks for
+  // end of a partial image.
+  if (!seek_was_last_op) 
+    bx_panic ("disk: no seek before write");
+  return ::write(fd, buf, count);
+}
+#endif   /* BX_SPLIT_HD_SUPPORT */
 
 error_recovery_t::error_recovery_t ()
 {

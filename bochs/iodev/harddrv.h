@@ -86,6 +86,50 @@ class default_image_t : public device_image_t
       
 };
 
+#if BX_SPLIT_HD_SUPPORT
+class concat_image_t : public device_image_t
+{
+  public:
+      // Open a image. Returns non-negative if successful.
+      int open (const char* pathname);
+
+      // Close the image.
+      void close ();
+
+      // Position ourselves. Return the resulting offset from the
+      // beginning of the file.
+      off_t lseek (off_t offset, int whence);
+
+      // Read count bytes to the buffer buf. Return the number of
+      // bytes read (count).
+      ssize_t read (void* buf, size_t count);
+
+      // Write count bytes from buf. Return the number of bytes
+      // written (count).
+      ssize_t write (const void* buf, size_t count);
+
+  private:
+#define BX_CONCAT_MAX_IMAGES 8
+      int fd_table[BX_CONCAT_MAX_IMAGES];
+      ssize_t start_offset_table[BX_CONCAT_MAX_IMAGES];
+      ssize_t length_table[BX_CONCAT_MAX_IMAGES];
+      void increment_string (char *str);
+      int maxfd;  // number of entries in tables that are valid
+
+      // notice if anyone does sequential read or write without seek in between.
+      // This can be supported pretty easily, but needs additional checks.
+      // 0=something other than seek was last operation
+      // 1=seek was last operation
+      int seek_was_last_op;
+
+      // the following variables tell which partial image file to use for
+      // the next read and write.
+      int index;  // index into table
+      int fd;     // fd to use for reads and writes
+      int thismin, thismax; // byte offset boundary of this image
+};
+#endif /* BX_SPLIT_HD_SUPPORT */
+
 #if EXTERNAL_DISK_SIMULATOR
 #include "external-disk-simulator.h"
 #endif
