@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.59 2003-01-11 21:41:20 vruppert Exp $
+// $Id: vga.cc,v 1.60 2003-01-21 17:39:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1296,6 +1296,8 @@ bx_vga_c::update(void)
         }
       }
     
+    old_iWidth = iWidth;
+    old_iHeight = iHeight;
     BX_VGA_THIS s.vga_mem_updated = 0;
     // after a vbe display update, don't try to do any 'normal vga' updates anymore
     return;
