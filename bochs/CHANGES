@@ -1,14 +1,63 @@
 
 Changes in 2.0 (December 2002):
 
-- configure script/compile/porting to other OSes
+- configure script/compile/porting to other OSes/installation
   - added plugin architecture (Bryce, Christophe, Volker)
+    - Plugins are shared libraries that can be loaded on demand.  Example:
+      the serial device is implemented as a plugin.  In UNIX, the
+      serial plugin is called libbx_serial.so.  When Bochs reads its
+      configuration file, if the serial device is enabled it loads
+      libbx_serial.so.
+    - plugins supported on Linux, Solaris, MacOS X using libtool,
+      Cygwin using dlltool.
+    - the Linux binary RPMs are built with plugin support
+    - to compile with plugins, configure with --enable-plugins
   - add #if's around all files which are conditionally compiled such
     as cdrom.cc and sb16.cc.  This makes it possible to compile every
     source file all the time, which has the potential to simplify the
     configure script and makefiles.  At present we only take advantage
     of this capability in the win32 VC++ workspace.
   - the MacOS9 port has been updated so that it works again (Christophe)
+  - better support for FHS standard (Robert Millan, Volker)
+    See patches 551811 and 650066.
+
+- command line
+  - fixed up our command line options (Volker, Bryce, Christophe)
+      Usage: bochs [flags] [bochsrc options]
+      -n               no configuration file
+      -f configfile    specify configuration file
+      -q               quick start (skip configuration interface)
+      --help           display this help and exit
+
+documentation
+- manpages updated (Volker)
+
+- configuration file (bochsrc)
+  - there are several new options:
+    config_interface: select text mode menus or wxWindows for configuration
+    display_library: select which display lib to use
+    optromimage: load optional rom images
+    ataN (N=0,1,2,3): up to 4 ATA controllers for hard disks, cdroms
+    ataN-master, ataN-slave, N=0,1,2,3: defines a hard disk or cdrom
+    floppy_bootsig_check: control the 0xaa55 signature check on boot floppies
+    logprefix: lets you change the format of log messages
+    debugger_log: log all output from bochs debugger
+    user_shortcut: allow you to type key combinations like Ctrl-Alt-Del
+    pit: control the PIT model, including realtime option to try to
+         keep in sync with real time.
+  - since v1.3 we've been able to use environment variables in pathnames
+    in the bochsrc file.  Now, a few variables have default values, set at
+    compile time, that are used if the user does not set a value.  If Bochs 
+    is installed correctly, the defaults will be correct and the user will 
+    not need to override them.
+    - $LTDL_LIBRARY_PATH is the path name where the plugins can be found.
+      The default value comes from $(plugdir) in the makefile.  (This is only
+      important if plugins are enabled.)
+    - $BXSHARE is the path where the BIOSes and keymaps are installed.
+      The default value comes from $(sharedir) in the makefile.  Disk
+      images on the Bochs website will begin to use BIOS pathnames like
+      $BXSHARE/BIOS-bios-latest.
+  - new option to reset all settings to initial defaults (Volker)
 
 - CPU
   - speed optimizations (Kevin)
@@ -18,42 +67,93 @@ Changes in 2.0 (December 2002):
   - add MMX support. To enable, configure with --enable-mmx. (Stanislav)
   - add SSE and SSE2 support. To enable, configure with --enable-sse=1
     or --enable-sse=2. (Stanislav)
+  - fixed the behaviour of the bcd instructions AAM, AAD and DAA based on
+    SF patch #537146 (Volker)
+  - in VERR / VERW function: changed BX_ERROR to BX_DEBUG. According to the
+    i386 opcode description there is no error present. (Volker)
+
+- FPU
+  - fixed bug [ 452275 ] fprem emulation bug (Volker)
 
 - I/O devices
   - biosdev
     - FIXME
+  - cdrom
+    - implementation of the function READ TOC for cdrom image files. (Volker)
+    - function capacity() for win32 fixed. Now it returns the number of blocks
+      instead of bytes. (Volker)
+    - added multiple cdrom support for win32 (NT/2000 version untested). The
+      ASPI version uses the cdrom drives in the system's order. Drive letters
+      are not used by ASPI. (Volker)
+    - FIXME
   - cmos
     - FIXME
   - dma
+    - DMA register and unregister functions for DMA channels added and macros
+      for DMA functions defined. The changes are based on the Plex86 functions.
+      (Volker)
+    - implementation of the DMA controller reset (Volker)
+    - the value of the command register must be always 0x00 (BX_ERROR fixed)
     - FIXME
   - floppy
+    - added support for 360k floppy images
+    - the skip flag (SK) in command 'read sector' is ignored now
+    - floppy read and write function do not set the 'seek end' bit in status
+      register 0 (fixes SF bug #553377)
+    - minor changes to most of the floppy commands
+    - the status of the 'disk changed' line depends on the selected drive.
+      The digital input register is now an array (DIR[4]).
+    - apply patch [ 635021 ] floppy cleanup by Alex Thiel  (Volker)
     - FIXME
-  - harddrv
+  - hard drive
+    - missing conditions for lower_irq() added (Volker)
+    - several noncritical pancis replaced with BX_ERRORS and the controller
+      returns an error code until we implement the features (Volker)
     - FIXME
   - ioapic
     - FIXME
   - iodebug
     - FIXME
-  - keyboard
+  - keyboard and mouse
+    - in function mouse_motion(): added parentheses to fix compilation problems
+      with MSVC. See SF bug #575301. (Volker)
+    - added missing register_irq() for the PS/2 mouse IRQ12 (Volker)
     - FIXME
-  - ne2k
+  - NE2000
+    - function reset() clears the IRQ line (Volker)
     - FIXME
   - parallel
+    - parport1 enable/disable support added (Volker)
     - FIXME
-  - pci
+  - PCI (Volker)
+    - implementation of the PCI device register mechanism
+    - PCI memory handling moved to the memory code
+    - replaced memcpy() in pci_read() by a more portable code. Problems with
+      PCI on big-endian machines are fixed now (SF bug #638481).
+    - implementation of the PCI-to-ISA bridge started (still incomplete)
+  - PIC
     - FIXME
-  - pic
+  - PIT
     - FIXME
-  - pit
-    - FIXME
-  - Sound Blaster 16 emulation
+  - Sound Blaster 16
+    - it used to enable itself all the time; now only when you ask
     - FIXME
   - serial
+    - don't cause problems when serial device is disabled (Volker)
     - FIXME
   - unmapped
     - FIXME
   - vga
-    - FIXME
+    - FIXME: these are great cvs log msgs, summarize them...
+    - add charmap change support added (used by SDL, win32 and wxWindows gui)
+    - byte offset for modeX fixed (use value of CRT register 0x13)
+    - calculation of the screen size for some graphics modes fixed
+    - use the start address when calculating the byte offset for standard
+      EGA/VGA modes
+    - sequencer reset with bits 'reset1' and 'reset2' implemented
+    - do a dimension update in text mode when the maximum scan line register
+      has changed. This changes the font height of the gui.
+    - missing VBE support added in function redraw_area()
 
 - ROM BIOS
   - improve compile process. Now bioses for 1, 2, 4 and 8 processors 
@@ -102,6 +202,20 @@ Changes in 2.0 (December 2002):
   - simplify 8 processors BIOS for operating systems which don't do 
     paranoia/sanity checks (Zwane)
 
+wxWindows
+- wxWindows is a cross-platform C++ user interface library which you can
+  download for free at http://wxwindows.org.  wxWindows provides C++
+  classes for all sorts of GUI controls (buttons, menubars, etc.) and
+  implements all of them using the native controls on the platform.
+- The wxWindows port of Bochs provides both a graphical configuration
+  interface (for editing bochsrc options) and a display.  It was
+  written by Bryce Denney, Don Becker, Dave Poirier, and Volker Ruppert.
+- In release 2.0, we concentrated on making the wxWindows port as stable
+  and functional as the other interfaces.  wxWindows provides a great
+  toolbox that we can use to make Bochs easier to learn and use.
+- To compile Bochs with wxWindows, you should install wxWindows 2.3.3
+  or later.  Then configure Bochs with --with-wx.
+
 - configuration interface
   - wxWindows config interface now allows you to change every bochsrc
     option using menus and dialog boxes.  There is also the beginning of
@@ -110,18 +224,37 @@ Changes in 2.0 (December 2002):
   - renamed "control.cc" to "textconfig.cc"
 
 - display libraries
-  - "display library" is a new term in release 2.0.  In the gui directory,
-    Bochs has a number of different C++ files which you can choose from to
-    display the text and graphics on the simulated monitor.  Each of these
-    implements a display library.  Examples: x, win32, sdl, carbon.
+  - Even though we've had them for years, the term "display library" is new in
+    release 2.0.  In the gui directory, Bochs has a number of different C++
+    files which you can select to display the text and graphics on the
+    simulated monitor.  Each of these is a display library.  The display
+    libraries are:
+      x          use X windows interface, cross platform
+      win32      use native win32 libraries
+      carbon     use Carbon library (for MacOS X)
+      beos       use native BeOS libraries
+      macintosh  use MacOS pre-10
+      amigaos    use native AmigaOS libraries
+      sdl        use SDL library, cross platform
+      svga       use SVGALIB library for Linux, allows graphics without X
+      term       text only, uses curses/ncurses library, cross platform
+      rfb        provides an interface to AT&T's VNC viewer, cross platform
+      wx         use wxWindows library, cross platform
+      nogui      no display at all
   - it is now possible to compile Bochs with support for many different
-    display libraries and select the one to use at runtime.  See the
-    display_library directive in .bochsrc.
+    display libraries and select the one to use at runtime (even without
+    plugins).  See the display_library directive in .bochsrc.
   - add new svgalib display library by Igor Popik
   - fix bug [ 614724 ] SDL can get stuck in full screen mode
     display libraries such as SDL which have a full screen mode can be
     dangerous, if Bochs does not switch back to normal display mode at
     the right time.  This is fixed for SDL and the new svga.
+  - keymap support added in SDL interface (Bryce, Volker)
+  - new keymap files: SDL keymaps for US and DE keyboards,  X11 keymap
+    for Danish keyboard.
+  - use keyboard mapping for keyup messages too
+  - term display library:
+    - support for color terminal, function keys, clear screen (Volker)
 
 - Bochs debugger
   - [ 609616 ] remote GDB stub
@@ -129,20 +262,46 @@ Changes in 2.0 (December 2002):
   - add hooks for external debugger for win32.  The external debugger 
     that connects to Bochs is distributed in 
     build/win32/tattam-external-debugger.zip in binary form.
-- 
 
+-----from Volker, to be merged (Bryce is working on it)-----
+Here is my list of the most important changes:
+
+- general
+  - new bochsrc option 'user_shortcut' and new 'user' button in the headerbar.
+    Now the user can send keypresses to the guest if he clicks on the button.
+  - update the vga screen in the ask() function before executing the dialog
+
+- win32 gui
+  - standard headerbar replaced by a real win32 toolbar using the existing
+    bitmaps. The bochs window now consists of 3 windows: the main window and
+    it's child windows simulation window and toolbar window.
+  - DrawBitmap and DrawChar() now use the system color palette instead of 
+fixed
+    RGB values
+
+- wxWindows gui
+  - in function DrawBochsBitmap(): use the system palette instead of fixed
+    values
+  - text mode cursor size feature implemented
+  - the "AltGr" key on European keyboards works now (wxbochs on win32 only)
+  - wx gui menu functions "Read Configuration" and "Save Configuration"
+    implemented
+  - implementation of the keyboard mapping feature for wxbochs (wxGTK version)
+
+-------------------
 
 ----list of closed bugs since 1.4.1----
 We don't want a line of changelog for each of these, but it 
 should help us to remember what has been fixed, and summarize.
-If someone wants a list of 176 bug fixes they can go to source
-forge.  We should categorize and summarize them rather than 
-simply list them all.
+If someone wants a list of hundreds of bug fixes they can go 
+to source forge.  For the changelong we should categorize 
+and summarize them rather than simply list them all.
 
 Also, some are closed with no resolution, so we can't be totally
 sure that they all have been fixed!
 
-bug [ 622769 ] bx_shadow_param needs 64 bit support
+
+
 bug [ 654123 ] $BXSHARE not working in win32
 bug [ 653861 ] Win32 build bug
 bug [ 653868 ] change $BXBIOS to $BXSHARE
@@ -151,21 +310,14 @@ bug [ 648385 ] rpm dependency errors: glibc_2.3 not found
 bug [ 652957 ] install docbook docs instead of HTML
 bug [ 642031 ] FATAL: Keyboard RESET error:993
 bug [ 653016 ] bios makefile should not rm bioses
-bug [ 545414 ] wxwin: drive change dialogs need work
-bug [ 627826 ] wx: can you do all runtime things?
-bug [ 652358 ] wx: middle button before sim freezes
-bug [ 613976 ] wxWindows: need config time dialog
 bug [ 528018 ] linux/X11 files always installed
 bug [ 642324 ] MacOSX: Silent failure when run from GUI
 bug [ 648579 ] Mac OSX >>PANIC<< FPU_printall
 bug [ 651508 ] not all configurd hd devices are usable
 bug [ 534546 ] CMOS read error
-bug [ 624317 ] wx: debug console never discards lines
-bug [ 616139 ] wx: boot hd/cd must be in ata0 interface
 bug [ 625645 ] Font causes PANIC
 bug [ 644209 ] Password for RedHat
 bug [ 632034 ] win32: mingw plugins fail
-bug [ 614724 ] SDL can get stuck in full screen mode
 bug [ 618974 ] 32bpp fails:XAllocColorCells error
 bug [ 646438 ] display+configuration lib. setting bugs
 bug [ 643238 ] PANIC: SuSE 8.1 Kernel needs Pentim+
@@ -180,13 +332,11 @@ bug [ 639873 ] get_first_cd_handle called before init
 bug [ 625696 ] text config menu: default can be wrong
 bug [ 640014 ] WinNT doesn't boot anymore in 2.0.pre1
 bug [ 642598 ] >>PANIC<< numerical parameter GDTR base
-bug [ 628955 ] wx: with x86-64, can't simulate
 bug [ 640867 ] solaris needs -lm to compile
 bug [ 640829 ] macosx: osacompile requires local access
 bug [ 625878 ] reset doesn't reset something(?)
 bug [ 630865 ] CDRom icon in toolbar initiall 'ejected'
 bug [ 626840 ] no 'sin_len' in 'struct sockaddr_in'
-bug [ 640549 ] dbg fails if wx configured but not on
 bug [ 638600 ] need default plugin search path
 bug [ 635223 ] VGA tiles array access out of bounds
 bug [ 639016 ] win32: osdep.h should not #define off_t
@@ -203,7 +353,6 @@ bug [ 629615 ] keybord not initialized properly
 bug [ 632169 ] no docs for TUN/TAP
 bug [ 625901 ] rename control to textconfig
 bug [ 628806 ] debug: x/c prints unprintable chars
-bug [ 628667 ] don't build plugin for wxdialog, wxmain
 bug [ 624853 ] Dos crashes with 256 heads disk
 bug [ 628957 ] realtime pit spits out lots of printfs
 bug [ 626261 ] About Box is awkwardly outdated
@@ -225,17 +374,10 @@ bug [ 622782 ] interpreting cmdline is a mess
 bug [ 619885 ] on beos, fd_set not found
 bug [ 620989 ] logical8.cc fails to compile
 bug [ 487758 ] bximage fails on file creation >2048meg
-bug [ 619220 ] wx: g_main_iterate: main loop already...
 bug [ 493981 ] resetting/cd-rom bug
-bug [ 619320 ] wx: clicking mouse enable btn different
-bug [ 615617 ] wxWindows port won't compile in cygwin
-bug [ 619285 ] wx: restart causes timer reregistration
 bug [ 619283 ] SDL: os mouse pointer leaves the window
 bug [ 554949 ] INACCESSIBLE_BOOT_DEVICE on NT4 install
 bug [ 431804 ] [Wheel] mouse doesn't seem to work
-bug [ 619076 ] wx: all wxChoices need wxADJUST_MINSIZE
-bug [ 619074 ] wx: ATA interface editor too tall
-bug [ 618462 ] wx: 256 color modes not working properly
 bug [ 618388 ] Unable to boot under MacOS X
 bug [ 561181 ] Error in CPU core of Bochs 1.4
 bug [ 618697 ] trace-reg-on has bugs
@@ -243,8 +385,6 @@ bug [ 597737 ] info gdt broken: incorrect segment length
 bug [ 614192 ] sdl keyboard inconsistent on platforms
 bug [ 618178 ] include "pic.h" in pci.cc
 bug [ 539764 ] MacOS/MacOS X missing headerbar icons
-bug [ 616154 ] wx: link, resource, compile flags
-bug [ 613975 ] wxWindows: params redefined on restart
 bug [ 561156 ] --with-x11 does not work on OS X
 bug [ 529585 ] MDK8.0 install problem
 bug [ 594723 ] MacOSX: Doesn't compile --with-debugger
@@ -309,8 +449,6 @@ bug [ 580247 ] CD supp. in 1.4.1 not compiling for OSX
 bug [ 481170 ] beos cdrom support
 bug [ 533889 ] 80x43 text mode non-functional
 bug [ 533112 ] compile error in gui/siminterface.h
-bug [ 452275 ] fprem emulation bug
-bug [ 575301 ] Operator precedence bug
 bug [ 575349 ] Mac OS X cdrom_interface compile error
 bug [ 430982 ] HD lost ?
 bug [ 549452 ] bochsrc manpage belongs in section 5
@@ -318,6 +456,8 @@ bug [ 419415 ] netbsd 1.5 rescue disk won't boot
 bug [ 503154 ] Very slow when no network activity
 bug [ 555562 ] gui.cc includes X windows headers
 bug [ 549821 ] warning proc_ctrl.cc line 1273: left-shift count >= type width
+
+
 
 feature [ 621298 ] id descending order by default
 feature [ 427349 ] win32 installer package
@@ -381,8 +521,6 @@ feature [ 423361 ] need for support reboot
 feature [ 538579 ] SVGA Emulation
 feature [ 500368 ] Possibility to cut text output
 
-patch [ 650066 ] use standard lib directory
-patch [ 635021 ] floppy cleanup
 patch [ 645559 ] Set ownership in RPM package
 patch [ 643874 ] MacOSX: diskimage.pl fix
 patch [ 642397 ] Applescript:Fix to handle spaces in path
@@ -430,8 +568,6 @@ patch [ 563607 ] sysenter/sysexit pt 3of3
 patch [ 590421 ] additions to the MAC OS X build scripts
 patch [ 539678 ] ne2k odd count causes PANIC
 patch [ 580063 ] support for -D_FILE_OFFSET_BITS=64
-patch [ 551811 ] Location for files breaks FHS
-patch [ 537146 ] Two changes to bcd instructions
 patch [ 551109 ] PATCH: Add EIP to log file timestamp
 
 ------
