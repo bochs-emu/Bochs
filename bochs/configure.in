@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.218 2003-07-06 11:46:31 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.219 2003-07-13 23:30:55 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1862,7 +1862,7 @@ if test "$with_sdl" = yes; then
   GUI_CFLAGS="$GUI_CFLAGS \`sdl-config --cflags\`"
   GUI_CXXFLAGS="$GUI_CXXFLAGS \`sdl-config --cflags\`"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
-  if test "$with_win32" != yes; then
+  if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
       *-pc-windows*)
          RC_CMD="rc /fo"
@@ -1907,13 +1907,17 @@ if test "$with_win32" = yes; then
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WIN32)"
   case $target in
     *-pc-windows*)
-       RC_CMD="rc /fo"
-       EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+       if test "$with_wx" != yes; then
+         RC_CMD="rc /fo"
+         EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+       fi
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32_VCPP)"
        ;;
     *-cygwin* | *-mingw32*)
-       RC_CMD="windres -o "
-       EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+       if test "$with_wx" != yes; then
+         RC_CMD="windres -o "
+         EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+       fi
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32)"
        ;;
     *) echo Unsupported compile setup: GUI library is win32, but target is neither windows nor cygwin.
