@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.31 2002-09-25 18:40:15 bdenney Exp $
+// $Id: wxmain.h,v 1.31.4.1 2002-10-20 13:57:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -143,6 +143,7 @@ public:
   void OnMouse(wxMouseEvent& event);
   void MyRefresh ();
   void ToggleMouse ();
+  static void OnPluginInit ();
 private:
   wxCursor *blankCursor;
   bool needRefresh;

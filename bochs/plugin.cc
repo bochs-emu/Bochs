@@ -465,7 +465,6 @@ plugin_load (char *name, char *args, plugintype_t type)
     // be called from either dlopen (global constructors) or plugin_init.
     BX_ASSERT (current_plugin_context == NULL);
     current_plugin_context = plugin;
-
     plugin->handle = lt_dlopen (name);
     BX_INFO (("lt_dlhandle is %p", plugin->handle));
     if (!plugin->handle)
@@ -730,6 +729,7 @@ int bx_load_plugin (const char *name, plugintype_t type)
   if (!handle) {
     pluginlog->error("could not open plugin %s", plugin_filename);
     pluginlog->panic("dlopen error: %s", lt_dlerror ());
+    return -1;
   }
   pluginlog->info("loaded plugin %s",plugin_filename);
   return 0;
@@ -745,40 +745,7 @@ int bx_load_plugins (void)
   pluginlog->put("PLGIN");
   pluginlog->settype(PLUGINLOG);
 
-#if BX_PLUGINS
-  // quick and dirty gui plugin selection
-  static char *gui_names[] = {
-    "amigaos", "beos", "carbon", "macintosh", "nogui", 
-    "rfb", "sdl", "term", "win32", "wx", "x", 
-    NULL
-  };
-  fprintf (stderr, 
-      "--Quick and dirty gui selector--\n"
-      "The library that you configured with should work fine.\n"
-      "If you get undefined symbols when you choose term, relink with -lncurses.\n"
-      "If you get undefined symbols when you choose sdl, relink with -lSDL -pthread.\n"
-      "Good luck!\n\n");
-  fprintf (stderr, "Choose your gui.\n");
-  int i;
-  for (i=0; gui_names[i] != NULL; i++)
-    fprintf (stderr, "%d. %s\n", i, gui_names[i]);
-  int imax = i;
-  int which = -1;
-  char line[256];
-  do {
-    fprintf (stderr, "--> ");
-    if (!fgets (line, sizeof(line), stdin)) break;
-  } while (sscanf (line, "%d", &which) != 1 || !(which>=0 && which<imax));
-  bx_load_plugin (gui_names[which], PLUGTYPE_OPTIONAL);
-
-  if (bx_gui == NULL) {
-    BX_PANIC (("No gui has been loaded.  It is not safe to continue. Exiting."));
-    exit(1);
-  }
-
-  //// each one has already been init'ed by bx_load_plugin
-  //plugin_init_all();
-#else
+#if !BX_PLUGINS
   pluginlog->info("plugins deactivated");
 #endif
 

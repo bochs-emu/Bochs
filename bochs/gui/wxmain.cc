@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.61.4.1 2002-10-19 15:17:00 bdenney Exp $
+// $Id: wxmain.cc,v 1.61.4.2 2002-10-20 13:57:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -54,6 +54,7 @@
 #include "bxversion.h"           // get version string
 #include "wxdialog.h"            // custom dialog boxes
 #include "wxmain.h"              // wxwindows shared stuff
+#include "extplugin.h"
 
 // include XPM icons
 #include "bitmaps/cdromd.xpm"
@@ -131,34 +132,71 @@ public:
 
 
 //////////////////////////////////////////////////////////////////////
+// wxWindows startup
+//////////////////////////////////////////////////////////////////////
+
+static int ci_callback (void *userdata, ci_command_t command)
+{
+  switch (command)
+  {
+    case CI_START: {
+      //fprintf (stderr, "wxmain.cc: start\n");
+      char *argv[] = {"manufactured-argv"};
+      wxEntry (1, argv);
+      break;
+      }
+    case CI_RUNTIME_CONFIG:
+      fprintf (stderr, "wxmain.cc: runtime config not implemented\n");
+      break;
+    case CI_SHUTDOWN:
+      fprintf (stderr, "wxmain.cc: shutdown not implemented\n");
+      break;
+  }
+  return 0;
+}
+
+extern "C" int libwx_LTX_plugin_init (plugin_t *plugin, plugintype_t type,
+  int argc, char *argv[])
+{
+  wxLogDebug ("plugin_init for wxmain.cc");
+  wxLogDebug ("installing wxWindows as the configuration interface");
+  SIM->register_configuration_interface ("wx", ci_callback, NULL);
+  wxLogDebug ("installing %s as the Bochs GUI", "wxWindows");
+  MyPanel::OnPluginInit ();
+  return 0; // success
+}
+
+extern "C" void libwx_LTX_plugin_fini ()
+{
+  //fprintf (stderr, "plugin_fini for wxmain.cc\n");
+}
+
+
+//////////////////////////////////////////////////////////////////////
 // MyApp: the wxWindows application
 //////////////////////////////////////////////////////////////////////
 
-IMPLEMENT_APP(MyApp)
+IMPLEMENT_APP_NO_MAIN(MyApp)
 
+// this is the entry point of the wxWindows code.  It is called as follows:
+// 1. main() loads the wxWindows plugin (if necessary) and calls 
+// libwx_LTX_plugin_init, which installs a function pointer to the
+// ci_callback() function.
+// 2. main() calls SIM->configuration_interface.
+// 3. bx_real_sim_c::configuration_interface calls the function pointer that
+//    points to ci_callback() in this file, with command=CI_START.
+// 4. ci_callback() calls wxEntry() in the wxWindows library
+// 5. wxWindows library creates the app and calls OnInit().
+//
+// Before this code is called, the command line has already been parsed, and a
+// .bochsrc has been loaded if it could be found.  See main() for details.
 bool MyApp::OnInit()
 {
   //wxLog::AddTraceMask (_T("mime"));
 #ifdef __WXDEBUG__
   wxLog::SetActiveTarget (new wxLogStderr ());
 #endif
-  bx_init_siminterface ();
-  // Install callback function to handle anything that occurs before the
-  // simulation begins.  This is responsible for displaying any error
-  // dialogs during bochsrc and command line processing.
   SIM->set_notify_callback (&MyApp::DefaultCallback, this);
-  static jmp_buf context;
-  if (setjmp (context) == 0) {
-    SIM->set_quit_context (&context);
-    if (bx_init_main (argc, argv) < 0) {
-      // init failed. Don't even start the interface.
-      return FALSE;
-    }
-  } else {
-    // quit unexpectedly via longjmp
-    return FALSE;
-  }
-  SIM->set_quit_context (NULL);
   MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
   theFrame = frame;  // hack alert
   frame->Show( TRUE );
@@ -679,6 +717,8 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   dlg.SetTitle ("Other Options");
+  dlg.AddParam (SIM->get_param (BXP_SEL_VGA_LIBRARY));
+  dlg.AddParam (SIM->get_param (BXP_SEL_CONFIG_INTERFACE));
   dlg.AddParam (SIM->get_param (BXP_IPS));
   dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
   dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
@@ -963,6 +1003,22 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
 	"You have already started the simulator once this session. Due to memory leaks and bugs in init code, you may get unstable behavior.",
 	"2nd time warning", wxOK | wxICON_WARNING);
   }
+  // check that vga library is set to wx.  If not, give a warning and change it
+  // to wx.  It is technically possible to use other vga libraries with the wx
+  // config interface, but there are still some significant problems.
+  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_VGA_LIBRARY);
+  char *gui_name = gui_param->get_choice (gui_param->get ());
+  if (strcmp (gui_name, "wx") != 0) {
+    wxMessageBox (
+      "The VGA library setting was not set to wxWindows.  When you use the\n"
+      "wxWindows menus, you must also use wxWindows for the VGA screen.\n"
+      "I will change it to 'wx' now.",
+      "VGA library error", wxOK | wxICON_WARNING);
+    if (!gui_param->set_by_name ("wx")) {
+      wxASSERT (0 && "Could not set VGA library setting to 'wx");
+    }
+  }
+
   num_events = 0;  // clear the queue of events for bochs to handle
   sim_thread = new SimThread (this);
   sim_thread->Create ();
@@ -1395,10 +1451,10 @@ SimThread::Entry (void)
     SIM->set_quit_context (&context);
     int argc=1;
     char *argv[] = {"bochs"};
-    bx_continue_after_config_interface (argc, argv);
-    wxLogDebug ("in SimThread, bx_continue_after_config_interface exited normally");
+    SIM->begin_simulation (argc, argv);
+    wxLogDebug ("in SimThread, SIM->begin_simulation() exited normally");
   } else {
-    wxLogDebug ("in SimThread, bx_continue_after_config_interface exited by longjmp");
+    wxLogDebug ("in SimThread, SIM->begin_simulation() exited by longjmp");
   }
   // it is possible that the whole interface has already been shut down.
   // If so, we must end immediately.
@@ -1538,3 +1594,5 @@ safeWxStrcpy (char *dest, wxString src, int destlen)
   strncpy (dest, tmp.c_str (), destlen);
   dest[destlen-1] = 0;
 }
+
+

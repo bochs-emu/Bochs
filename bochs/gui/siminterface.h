@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.74 2002-09-25 19:05:00 bdenney Exp $
+// $Id: siminterface.h,v 1.74.4.1 2002-10-20 13:57:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -101,7 +101,7 @@
 // implementations for example).  This argues for keeping UI-specific
 // structures out of the simulator interface.  It certainly works ok for the
 // text interface, but that's because FILE* is standard and portable.
-#define BX_UI_TEXT (!BX_WITH_WX)
+#define BX_UI_TEXT 1
 
 //////////////////////////////////////////////////////
 
@@ -396,6 +396,8 @@ typedef enum {
   // This is only modified by debugger code, not by the user.
   BXP_DEBUG_RUNNING,
 #endif
+  BXP_SEL_CONFIG_INTERFACE,
+  BXP_SEL_VGA_LIBRARY,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -912,6 +914,8 @@ public:
       Bit32s initial_val,
       Bit32s value_base = 0);
   char *get_choice (int n) { return choices[n]; }
+  int find_by_name (const char *string);
+  bool set_by_name (const char *string);
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -1095,6 +1099,9 @@ typedef struct {
 
 #include <setjmp.h>
 
+enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
+typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
+
 class bx_simulator_interface_c {
 public:
   bx_simulator_interface_c ();
@@ -1148,9 +1155,9 @@ public:
   // etc.) are displayed and handled by gui.cc, not by the CI or siminterface.
   // gui.cc uses its own callback functions to implement the behavior of
   // the buttons.  Some of these implementations call the siminterface.
-  typedef BxEvent* (*sim_interface_callback_t)(void *theclass, BxEvent *event);
-  virtual void set_notify_callback (sim_interface_callback_t func, void *arg) {}
-  virtual void get_notify_callback (sim_interface_callback_t *func, void **arg) {}
+  typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
+  virtual void set_notify_callback (bxevent_handler func, void *arg) {}
+  virtual void get_notify_callback (bxevent_handler *func, void **arg) {}
 
   // send an event from the simulator to the CI.
   virtual BxEvent* sim_to_ci_event (BxEvent *event) {return NULL;}
@@ -1188,16 +1195,21 @@ public:
   virtual char *debug_get_next_command () {return NULL;}
   virtual void debug_puts (const char *text) {}
 #endif
+  virtual void register_configuration_interface (
+    const char* name, 
+    config_interface_callback_t callback,
+    void *userdata) {}
+  virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
+  virtual int begin_simulation (int argc, char *argv[]) {return -1;}
+  typedef bool (*is_sim_thread_func_t)();
+  is_sim_thread_func_t is_sim_thread_func;
+  virtual void set_sim_thread_func (is_sim_thread_func_t func) {
+    is_sim_thread_func = func;
+  }
+  virtual bool is_sim_thread () {return true;}
 };
 
 extern bx_simulator_interface_c *SIM;
 
 extern void bx_init_siminterface ();
 extern int bx_init_main (int argc, char *argv[]);
-extern int bx_continue_after_config_interface (int argc, char *argv[]);
-
-#if BX_WITH_WX
-// returns true if called from the simulator thread.
-// defined in wxmain.cc, usable anywhere.
-bool isSimThread ();
-#endif

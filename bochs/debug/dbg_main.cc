@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.75.2.2 2002-10-18 19:58:50 bdenney Exp $
+// $Id: dbg_main.cc,v 1.75.2.3 2002-10-20 13:57:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -648,7 +648,7 @@ bx_debug_ctrlc_handler(int signum)
   // Otherwise the BX_PANIC() below can be called in multiple threads at
   // once, leading to multiple threads trying to display a dialog box,
   // leading to GUI deadlock.
-  if (!isSimThread ()) {
+  if (!SIM->is_sim_thread ()) {
     BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
     return;
   }

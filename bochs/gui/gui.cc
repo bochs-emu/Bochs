@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.10 2002-10-18 19:37:06 bdenney Exp $
+// $Id: gui.cc,v 1.49.4.11 2002-10-20 13:57:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -396,11 +396,7 @@ bx_gui_c::paste_handler(void)
   void
 bx_gui_c::config_handler(void)
 {
-#if BX_USE_CONFIG_INTERFACE && !BX_WITH_WX
-  bx_config_interface (BX_CI_RUNTIME);
-#else
-  BX_ERROR(( "# CONFIG callback (unimplemented)." ));
-#endif
+  SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
 }
 
   void
@@ -485,7 +481,7 @@ void
 bx_gui_c::init_signal_handlers ()
 {
 #if BX_GUI_SIGHANDLER
-  Bit32u mask = get_sighandler_mask ();
+  Bit32u mask = bx_gui->get_sighandler_mask ();
   for (Bit32u sig=0; sig<32; sig++)
   {
     if (mask & (1<<sig))

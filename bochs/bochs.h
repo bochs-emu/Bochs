@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.9 2002-10-09 05:12:57 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.10 2002-10-20 13:57:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -83,6 +83,9 @@ extern "C" {
 #include "bxversion.h"
 
 #include "gui/siminterface.h"
+
+// prototypes
+int bx_begin_simulation (int argc, char *argv[]);
 
 //
 // some macros to interface the CPU and memory to external environment
@@ -650,6 +653,8 @@ typedef struct {
   bx_keyboard_options keyboard;
   bx_param_string_c *Ouser_shortcut;
   bx_gdbstub_t      gdbstub;
+  bx_param_enum_c *Osel_config;
+  bx_param_enum_c *Osel_vgalib;
   } bx_options_t;
 
 extern bx_options_t bx_options;

@@ -769,13 +769,7 @@ sizeof(opt));
 
 void bx_gdbstub_init(int argc, char* argv[])
 {
-   int portn;
-      
-   /* Do bochs init */
-   // parse any remaining args in the usual way
-   bx_parse_cmdline (1, argc, argv);
-   
-   portn = bx_options.gdbstub.port;
+   int portn= bx_options.gdbstub.port;
    printf("Communicating with gdb on port %d\n", portn);
 
    bx_init_hardware();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.13 2002-10-19 15:16:59 bdenney Exp $
+// $Id: main.cc,v 1.156.2.14 2002-10-20 13:57:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,9 +89,6 @@ char *bochsrc_filename = NULL;
 static Bit32s parse_line_unformatted(char *context, char *line);
 static Bit32s parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
-#if !BX_WITH_WX
-static void bx_do_text_config_interface (int first_arg, int argc, char *argv[]);
-#endif
 
 static Bit32s
 bx_param_handler (bx_param_c *param, int set, Bit32s val)
@@ -903,7 +900,75 @@ void bx_init_options ()
       "", BX_PATHNAME_LEN);
   bx_options.Oscreenmode->set_handler (bx_param_string_handler);
 #endif
+  static char *config_interface_list[] = {
+    "control",
+#if BX_WITH_WX
+    "wx",
+#endif
+    NULL
+  };
+  bx_options.Osel_config = new bx_param_enum_c (
+    BXP_SEL_CONFIG_INTERFACE,
+    "Configuration interface",
+    "Select configuration interface",
+    config_interface_list,
+    0,
+    0);
+  bx_options.Osel_config->set_by_name (BX_DEFAULT_CONFIG_INTERFACE);
+  bx_options.Osel_config->set_format ("Configuration interface: %s");
+  bx_options.Osel_config->set_ask_format ("Choose which configuration interface to use: [%s] ");
+  // this is a list of gui libraries that are known to be available at
+  // compile time.  The one that is listed first will be the default,
+  // which is used unless the user overrides it on the command line or
+  // in a configuration file.
+  static char *vga_library_list[] = {
+#if BX_WITH_X11
+    "x",
+#endif
+#if BX_WITH_WIN32
+    "win32",
+#endif
+#if BX_WITH_CARBON
+    "carbon",
+#endif
+#if BX_WITH_BEOS
+    "beos",
+#endif
+#if BX_WITH_MACOS
+    "macos",
+#endif
+#if BX_WITH_AMIGAOS
+    "amigaos",
+#endif
+#if BX_WITH_SDL
+    "sdl",
+#endif
+#if BX_WITH_TERM
+    "term",
+#endif
+#if BX_WITH_RFB
+    "rfb",
+#endif
+#if BX_WITH_WX
+    "wx",
+#endif
+#if BX_WITH_NOGUI
+    "nogui",
+#endif
+    NULL
+  };
+  bx_options.Osel_vgalib = new bx_param_enum_c (BXP_SEL_VGA_LIBRARY,
+    "VGA Display Library",
+    "Select VGA Display Library",
+    vga_library_list,
+    0,
+    0);
+  bx_options.Osel_vgalib->set_by_name (BX_DEFAULT_VGA_LIBRARY);
+  bx_options.Osel_vgalib->set_format ("VGA display libarary: %s");
+  bx_options.Osel_vgalib->set_ask_format ("Choose which libary to use for the VGA display: [%s] ");
   bx_param_c *interface_init_list[] = {
+    bx_options.Osel_config,
+    bx_options.Osel_vgalib,
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
     bx_options.Oips,
@@ -1166,9 +1231,6 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
-
-
-
 }
 
 void bx_reset_options ()
@@ -1325,29 +1387,34 @@ static void setupWorkingDirectory (char *path)
 }
 #endif
 
-#if !BX_WITH_WX
-// main() is the entry point for all configurations, except for
-// wxWindows.
-int main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
   bx_init_siminterface ();   // create the SIM object
   static jmp_buf context;
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
     if (bx_init_main (argc, argv) < 0) return 0;
-    bx_config_interface (BX_CI_INIT);
-    if (! SIM->get_param_bool(BXP_QUICK_START)->get ()) {
-      // Display the pre-simulation configuration interface.
-      bx_config_interface (BX_CI_START_MENU);
+    // read a param to decide which config interface to start.
+    // If one exists, start it.  If not, just begin.
+    bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
+    char *ci_name = ci_param->get_choice (ci_param->get ());
+    if (!strcmp(ci_name, "control")) {
+      init_text_config_interface ();
     }
-    bx_continue_after_config_interface (argc, argv);
-    // function returned normally
+#if BX_WITH_WX
+    else if (!strcmp(ci_name, "wx")) {
+      BX_LOAD_PLUGIN(wx, PLUGTYPE_CORE);
+    }
+#endif
+    else {
+      BX_PANIC (("unsupported configuration interface '%s'", ci_name));
+    }
+    SIM->configuration_interface (ci_name, CI_START);
+    // user quit the config interface, so just quit
   } else {
     // quit via longjmp
   }
   return 0;
 }
-#endif
 
 void
 print_usage ()
@@ -1460,23 +1527,49 @@ bx_init_main (int argc, char *argv[])
     BX_PANIC(("There were errors while parsing the command line"));
     return -1;
   }
+  // initialize plugin system. This must happen before we attempt to
+  // load any modules.
+  plugin_startup();
   return 0;
 }
 
 int
-bx_continue_after_config_interface (int argc, char *argv[])
+bx_begin_simulation (int argc, char *argv[])
 {
+  // deal with gui selection
+  if (bx_gui == NULL) {
+    bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_VGA_LIBRARY);
+    char *gui_name = gui_param->get_choice (gui_param->get ());
+    if (!strcmp (gui_name, "wx")) {
+      BX_PANIC (("to use wxWindows, it must be used as the configuration interface and the VGA library"));
+      return 1;
+    }
+#if BX_PLUGINS
+    BX_INFO (("loading plugin for '%s' gui", gui_name));
+    if (bx_load_plugin (gui_name, PLUGTYPE_OPTIONAL) != 0) {
+      BX_PANIC (("gui plugin load failed"));
+      return 1;
+    }
+#endif
+    BX_ASSERT (bx_gui != NULL);
+  } else {
+    // bx_gui has already been installed.  This happens when you start
+    // the simulation for the second time.
+    // Also, if you load wxWindows as the configuration interface.  Its
+    // plugin_init also installs wxWindows as the bx_gui.
+  }
+
 #if BX_GDBSTUB
+  // If using gdbstub, it will take control and call
+  // bx_init_hardware() and cpu_loop()
   bx_gdbstub_init (argc, argv);
 #elif BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
   bx_dbg_main(argc, argv);
 #else
-
-  // Default builtins are used even in non-plugin mode
-  plugin_startup();
 #if BX_PLUGINS
+#warning bx_load_plugins doesnt do much anymore and should maybe be removed
   bx_load_plugins ();
 #endif
 
@@ -2892,6 +2985,20 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
       }
     }
+  else if (!strcmp(params[0], "config_interface")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: config_interface directive: wrong # args.", context));
+      }
+    if (!bx_options.Osel_config->set_by_name (params[1]))
+      PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
+    }
+  else if (!strcmp(params[0], "vga_library")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: vga_library directive: wrong # args.", context));
+      }
+    if (!bx_options.Osel_vgalib->set_by_name (params[1]))
+      PARSE_ERR(("%s: VGA library '%s' not available", context, params[1]));
+    }
   else {
     PARSE_ERR(( "%s: directive '%s' not understood", context, params[0]));
     }
@@ -3158,18 +3265,16 @@ bx_write_configuration (char *rc, int overwrite)
   void
 bx_signal_handler( int signum)
 {
-#if BX_WITH_WX
   // in a multithreaded environment, a signal such as SIGINT can be sent to all
   // threads.  This function is only intended to handle signals in the
   // simulator thread.  It will simply return if called from any other thread.
   // Otherwise the BX_PANIC() below can be called in multiple threads at
   // once, leading to multiple threads trying to display a dialog box,
   // leading to GUI deadlock.
-  if (!isSimThread ()) {
+  if (!SIM->is_sim_thread ()) {
     BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
     return;
   }
-#endif
 #if BX_GUI_SIGHANDLER
   // GUI signal handler gets first priority, if the mask says it's wanted
   if ((1<<signum) & bx_gui->get_sighandler_mask ()) {

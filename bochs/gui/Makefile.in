@@ -57,7 +57,7 @@ GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o wxmain.o wxdialog.o
-GUI_OBJS_NON_PLUGINABLE = keymap.o gui.o siminterface.o
+GUI_OBJS_NON_PLUGINABLE = keymap.o gui.o siminterface.o control.o
 GUI_OBJS_PLUGINABLE = @GUI_OBJS@
 GUI_OBJS_EXTERNAL =
 

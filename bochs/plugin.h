@@ -20,7 +20,7 @@
 #ifndef __PLUGIN_H
 #define __PLUGIN_H
 
-#include <ltdl.h>
+#include "extplugin.h"
 
 class bx_devices_c;
 extern logfunctions  *pluginlog;
@@ -134,7 +134,8 @@ extern "C" {
 
 #endif // #if BX_PLUGINS
 
-#define BX_IOAPIC_PRESENT() (bx_devices.hard_drive)
+//////////// FIXME: it's clearly wrong to check hard_drive here.
+#define BX_IOAPIC_PRESENT() (must_fix_this_BX_IOAPIC_PRESENT_macro && bx_devices.hard_drive)
 
 // FIXME Do we really need pluginRegisterTimer ?
 #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
@@ -182,28 +183,6 @@ extern "C" {
 
 typedef Bit32u (*ioReadHandler_t)(void *, Bit32u, unsigned);
 typedef void   (*ioWriteHandler_t)(void *, Bit32u, Bit32u, unsigned);
-
-#define MAX_ARGC 10
-
-enum plugintype_t {
-  PLUGTYPE_NULL=100,
-  PLUGTYPE_CORE,
-  PLUGTYPE_OPTIONAL,
-  PLUGTYPE_USER
-};
-
-typedef struct _plugin_t
-{
-    plugintype_t type;
-    int  initialized;
-    lt_dlhandle handle;
-    int  argc;
-    char *name, *args, *argv[MAX_ARGC];
-    int  (*plugin_init)(struct _plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
-    void (*plugin_fini)(void);
-
-    struct _plugin_t *next;
-} plugin_t;
 
 extern plugin_t *plugins;
 
@@ -345,6 +324,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(vga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(floppy)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(wx)
 
 
 #ifdef __cplusplus
