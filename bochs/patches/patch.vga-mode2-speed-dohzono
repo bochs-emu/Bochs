@@ -155,12 +155,12 @@ Instructions:
 Index: iodev/vga.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/vga.cc,v
-retrieving revision 1.52
-diff -u -r1.52 vga.cc
---- iodev/vga.cc	Sat Nov 16 18:30:22 2002
-+++ iodev/vga.cc	Thu Nov 28 21:13:05 2002
-@@ -39,6 +39,9 @@
-  * support map mask (3c5 reg 02)
+retrieving revision 1.60
+diff -u -r1.60 vga.cc
+--- iodev/vga.cc	2003-01-21 18:39:47.000000000 +0100
++++ iodev/vga.cc	2003-01-26 10:05:25.000000000 +0100
+@@ -47,6 +47,9 @@
+  * This would fix the gentoo bug.
   */
  
 +#include "vga_tables.h"
@@ -169,7 +169,7 @@ diff -u -r1.52 vga.cc
  // (mch)
  #define VGA_TRACE_FEATURE
  
-@@ -173,6 +176,7 @@
+@@ -182,6 +185,7 @@
    BX_VGA_THIS s.graphics_ctrl.enable_set_reset = 0;
    BX_VGA_THIS s.graphics_ctrl.color_compare = 0;
    BX_VGA_THIS s.graphics_ctrl.data_rotate = 0;
@@ -177,7 +177,7 @@ diff -u -r1.52 vga.cc
    BX_VGA_THIS s.graphics_ctrl.raster_op    = 0;
    BX_VGA_THIS s.graphics_ctrl.read_map_select = 0;
    BX_VGA_THIS s.graphics_ctrl.write_mode = 0;
-@@ -1107,6 +1111,7 @@
+@@ -1111,6 +1115,7 @@
            break;
          case 3: /* Data Rotate */
            BX_VGA_THIS s.graphics_ctrl.data_rotate = value & 0x07;
@@ -185,7 +185,7 @@ diff -u -r1.52 vga.cc
            /* ??? is this bits 3..4 or 4..5 */
            BX_VGA_THIS s.graphics_ctrl.raster_op    = (value >> 3) & 0x03; /* ??? */
            break;
-@@ -1255,7 +1260,6 @@
+@@ -1259,7 +1264,6 @@
    {
      // specific VBE code display update code
      // this is partly copied/modified from the 320x200x8 update more below
@@ -193,7 +193,7 @@ diff -u -r1.52 vga.cc
      Bit8u color;
      unsigned r, c;
      unsigned long byte_offset;
-@@ -1266,32 +1270,31 @@
+@@ -1270,32 +1274,31 @@
  
      // incl virtual xres correction
      Bit32u start_offset = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_virtual_xres)) + BX_VGA_THIS s.vbe_offset_x;
@@ -235,10 +235,10 @@ diff -u -r1.52 vga.cc
 -    
 +
 +
+     old_iWidth = iWidth;
+     old_iHeight = iHeight;
      BX_VGA_THIS s.vga_mem_updated = 0;
-     // after a vbe display update, don't try to do any 'normal vga' updates anymore
-     return;
-@@ -1313,7 +1316,6 @@
+@@ -1319,7 +1322,6 @@
      Bit8u color;
      unsigned bit_no, r, c;
      unsigned long byte_offset;
@@ -246,7 +246,7 @@ diff -u -r1.52 vga.cc
  
  
  //BX_DEBUG(("update: shiftreg=%u, chain4=%u, mapping=%u",
-@@ -1339,16 +1341,15 @@
+@@ -1345,16 +1347,15 @@
  	}
  
          start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
@@ -267,7 +267,7 @@ diff -u -r1.52 vga.cc
                    attribute =
                      (((BX_VGA_THIS s.vga_memory[0*65536 + byte_offset] >> bit_no) & 0x01) << 0) |
                      (((BX_VGA_THIS s.vga_memory[1*65536 + byte_offset] >> bit_no) & 0x01) << 1) |
-@@ -1376,9 +1377,8 @@
+@@ -1382,9 +1383,8 @@
                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                    }
                  }
@@ -278,7 +278,7 @@ diff -u -r1.52 vga.cc
                }
              }
          break; // case 0
-@@ -1395,22 +1395,20 @@
+@@ -1401,22 +1401,20 @@
  	  old_iHeight = iHeight;
  	}
  
@@ -307,7 +307,7 @@ diff -u -r1.52 vga.cc
                    palette_reg_val = (BX_VGA_THIS s.vga_memory[byte_offset]) >> attribute;
                    palette_reg_val &= 3;
                    palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics << 2;
-@@ -1419,9 +1417,8 @@
+@@ -1425,9 +1423,8 @@
                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                  }
                }
@@ -318,7 +318,7 @@ diff -u -r1.52 vga.cc
              }
            }
          /* CGA 320x200x4 end */
-@@ -1446,15 +1443,13 @@
+@@ -1452,15 +1449,13 @@
  	    old_iWidth = iWidth;
  	  }
  
@@ -338,7 +338,7 @@ diff -u -r1.52 vga.cc
                      plane  = (pixelx % 4);
                      byte_offset = (plane * 65536) +
                                    (pixely * 320) + (pixelx & ~0x03);
-@@ -1464,12 +1459,11 @@
+@@ -1470,12 +1465,11 @@
                      BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                      }
                    }
@@ -353,7 +353,7 @@ diff -u -r1.52 vga.cc
  
          else { // chain_four == 0, modeX
            unsigned long pixely, pixelx, plane, start_addr;
-@@ -1482,14 +1476,13 @@
+@@ -1488,14 +1482,13 @@
  	  }
  
            start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
@@ -366,13 +366,13 @@ diff -u -r1.52 vga.cc
  	      for (r=0; r<Y_TILESIZE; r++) {
  		for (c=0; c<X_TILESIZE; c++) {
 -		  pixely = ((yti*Y_TILESIZE) + r);
--		  pixelx = ((xti*X_TILESIZE) + c);
+-		  pixelx = ((xti*X_TILESIZE) + c) / 2;
 +                  pixely = (yc + r);
-+                  pixelx = (xc + c);
++                  pixelx = (xc + c) / 2;
  		  plane  = (pixelx % 4);
  		  byte_offset = (plane * 65536) +
  				(pixely * (BX_VGA_THIS s.CRTC.reg[0x13]<<1))
-@@ -1498,9 +1491,8 @@
+@@ -1504,9 +1497,8 @@
  		  BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
  		  }
  		}
@@ -383,7 +383,7 @@ diff -u -r1.52 vga.cc
  	      }
  	    }
            }
-@@ -1520,7 +1512,6 @@
+@@ -1526,7 +1518,6 @@
      unsigned long cursor_address, cursor_x, cursor_y;
      Bit16u cursor_state;
  
@@ -391,7 +391,7 @@ diff -u -r1.52 vga.cc
      switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
        case 0: // 128K @ A0000
        case 1: // 64K @ A0000
-@@ -1602,7 +1593,48 @@
+@@ -1608,7 +1599,48 @@
            BX_ERROR(("character height = 1, skipping text update"));
            return;
          }
@@ -440,7 +440,7 @@ diff -u -r1.52 vga.cc
          if (rows > BX_MAX_TEXT_LINES)
            BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
  	iWidth = 8 * (BX_VGA_THIS s.CRTC.reg[1] + 1);
-@@ -1708,7 +1740,6 @@
+@@ -1714,7 +1746,6 @@
        // Mode 13h: 320 x 200 256 color mode: chained pixel representation
        return( BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] );
        }
@@ -448,7 +448,7 @@ diff -u -r1.52 vga.cc
      }
    else {
      switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
-@@ -1731,47 +1762,46 @@
+@@ -1737,47 +1768,46 @@
        return(BX_VGA_THIS s.vga_memory[offset]);
      }
  
@@ -533,7 +533,7 @@ diff -u -r1.52 vga.cc
      }
  }
  
-@@ -1779,7 +1809,7 @@
+@@ -1785,7 +1815,7 @@
  bx_vga_c::mem_write(Bit32u addr, Bit8u value)
  {
    Bit32u offset;
@@ -542,7 +542,7 @@ diff -u -r1.52 vga.cc
  
  #if BX_SUPPORT_VBE
    // if in a vbe enabled mode, write to the vbe_memory
-@@ -1818,15 +1848,14 @@
+@@ -1824,15 +1854,14 @@
        offset = addr - 0xA0000;
        }
      else if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // 0xB8000 .. 0xBFFFF
@@ -560,7 +560,7 @@ diff -u -r1.52 vga.cc
          y_tileno = offset - 0x2000;
          y_tileno /= (320/4);
          y_tileno <<= 1; //2 * y_tileno;
-@@ -1864,7 +1893,6 @@
+@@ -1870,7 +1899,6 @@
        SET_TILE_UPDATED (x_tileno, y_tileno, 1);
        return;
        }
@@ -568,7 +568,7 @@ diff -u -r1.52 vga.cc
      }
    else {
      switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
-@@ -1885,197 +1913,278 @@
+@@ -1891,197 +1919,278 @@
        }
      }
  
@@ -1026,15 +1026,14 @@ diff -u -r1.52 vga.cc
      }
  }
  
-@@ -2178,9 +2287,8 @@
-     BX_VGA_THIS s.vga_mem_updated = 1;
-     x1 = x0 + width  - 1;
-     y1 = y0 + height - 1;
--
--    for (yi=0; yi<480; yi+=Y_TILESIZE) {
--      for (xi=0; xi<640; xi+=X_TILESIZE) {
-+    for (unsigned yti=0,yi=0; yi<480; yi+=Y_TILESIZE,yti++) {
-+      for (unsigned xti=0,xi=0; xi<640; xi+=X_TILESIZE,xti++) {
+@@ -2202,8 +2311,8 @@
+       ymax = BX_VGA_THIS s.vbe_yres;
+     }
+ #endif
+-    for (yi=0; yi<ymax; yi+=Y_TILESIZE) {
+-      for (xi=0; xi<xmax; xi+=X_TILESIZE) {
++    for (unsigned yti=0,yi=0; yi<ymax; yi+=Y_TILESIZE,yti++) {
++      for (unsigned xti=0,xi=0; xi<xmax; xi+=X_TILESIZE,xti++) {
          // is redraw rectangle outside x boundaries of this tile?
          if (x1 < xi) continue;
          if (x0 > (xi+X_TILESIZE-1)) continue;
@@ -1042,7 +1041,7 @@ diff -u -r1.52 vga.cc
 +++ iodev/vga_tables.h	Thu Oct 31 00:44:08 2002
 @@ -0,0 +1,313 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.vga-mode2-speed-dohzono,v 1.2 2002-11-28 20:33:57 vruppert Exp $
++// $Id: patch.vga-mode2-speed-dohzono,v 1.3 2003-01-26 09:48:38 vruppert Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2002  MandrakeSoft S.A.
