@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.92 2003-11-02 16:34:10 vruppert Exp $
+// $Id: vga.cc,v 1.93 2003-11-06 18:48:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2895,7 +2895,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           }
           else
           {
-            BX_INFO(("VBE disabling"));
+            if (BX_VGA_THIS s.vbe_enabled) BX_INFO(("VBE disabling"));
             BX_VGA_THIS s.vbe_lfb_enabled=0;
           }     
           BX_VGA_THIS s.vbe_enabled=(bx_bool)(value & VBE_DISPI_ENABLED);
