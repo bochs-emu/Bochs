@@ -66,6 +66,48 @@ Patches applied:
   --------------------------------------------------------------------------
 
 - Christophe's changes...
+  --------------------------------------------------------------------------
+- I/O devices
+  - harddisks 
+    - per device selectable Harddisk modes :
+      - undoable, volatile, growing, z-undoable, z-volatile disks support
+      - sparse disks support (contributed by justinSB)
+      - vmware3 disks support (contributed by Sharvil Nanavati)
+    - fix non detection of hard drives by minix2
+    - implement atapi command 0xA8 read (12)
+    - mode sense command updated (contributed by Hartmut Birr)
+  - sb16 
+    - opl2 support enhanced (contributed by James E. Flemer)
+  - ne2k
+    - tap support for FreeBSD (contributed by Ronald Klop and Gen Otsuji)
+    - fix when booting with grub (contributed by Keir Fraser)
+  - add experimental PCI VGA card (contributed by Mike Nordell)
+- display libraries
+  - X11
+    - onboard vgacard charmap usage (no need for external X11 vga font any more)
+    - vgacard charmap change support
+    - fix black stripes on partial exposes (contributed by Dirk Thierbach)
+    - headerbar redraw optimizations (contributed by Dirk Thierbach)
+- support tools
+  - bximage : added support for 
+    - growing disks
+    - sparse disks (contributed by justinSB)
+  - created bxcommit tool for undoable disk images
+- Rombios :
+  - fixed int15 function e801 (get memory size)
+  - added int75_handler for FPU Dos Exceptions
+  - added support for ElTorito Harddisk emulation
+- MacOS port
+  - small configure fixes
+- documentation
+  - user documentation updated and extended :
+    - disk modes
+    - LBA translation 
+    - cdboot error codes
+    - SCO OpenServer install section (contributed by Carl Sopchak)
+    - MacOS-X DMG install guide (contributed by Aard Vark)
+    - update Win98 install guide (contributed by Dirk Thierbach)
+  --------------------------------------------------------------------------
 
 - Volker's changes...
   --------------------------------------------------------------------------
@@ -126,7 +168,11 @@ Patches applied:
 - Peter's changes...
 
 - SF patches applied
+  #658950  Bug in FPU                               (???)
+  #678117  build fail due to bad SGML punctuation   (???)
   #671873  minimal USB support (UHCI)               (Ben Lunt)
+  #682539  Fix CapsLock and NumLock behavior        (rock at gimp.org)
+  #720776  REX MOVB immediate broken for x86_64     (Arnd Bergmann)
   #729450  new keymap x11-pc-be.map                 (Wouter Verhelst)
   #735990  Limited patches for VC++                 (???)
   #742670  fix library dependencies in GUI plugins  (Robert Millan)
@@ -136,13 +182,67 @@ Patches applied:
   #707931  Support EGA/VGA write mode 2 and others  (???)
            already applied: disable IME, split screen, write mode 2
 
-- patches by X, Y, and Z were added...
+- patches applied
+  - patch.highmem by Zwane Mwaikambo (memory allocation)
+  - patch.floppy-160k-180k-320k-benlunt by Ben Lunt (exotic floppies)
+  - patch.perf-regparm-cclark by Conn Clark (performance)
 
+- patches by X, Y, and Z were added...
+// CB : I think Bryce meant patches that were applied to the main trunk here
 	added rombios patch by Dirk Thierbach
 	added rombios patch by Kory Markevich
 	added patches collection by Vitaly Vorobyov
 
-- these S.F. bugs were fixed...
+- these S.F. bugs were fixed 
+// CB : I ran the request on SF, these bugs have definitely been closed 
+// since 2.0.2). There might have been others, during 2.0 to 2.0.2 times
+   #656026  error when trying to run some stuff
+   #614202  HD: non-byte IO read to 01f4
+   #777357  Strange FPU compiler error
+   #583758  gag bootloader doesn't run
+   #658639  ne2k panics with MS lanman Client/DOS62 
+   #536711  problem running smart bootmanager
+   #741433  Disabling all ata# results in HD error.
+   #753200  lock instruction doesn't do an illegal instruction trap
+   #679389  libbx_wx.so.0: undefined symbol
+   #758936  Problem Installing Bochs
+   #742580  I configured fants but bochs still give me the same error
+   #772242  iodev/vga.cc wrong memory access.
+   #739222  Cannot change resultion
+   #693344  libwx_gtk2.3.so.2 RedHat linux 8.0
+   #639320  sparc: needs -lm to compile
+   #587422  Windows 95j doesn't boot
+   #547817  sparc: rfb needs -lsocket
+   #480963  RFB: option to wait for client
+   #763894  i've got problems with a "libvga.so.1" and another file
+   #766490  Documentation mistake
+   #766481  Bochs 2.0.2 Fails to compile on YDL3.0
+   #626144  %lld is not portable
+   #752241  lock prefix erronously allowed for some instructions
+   #743305  fetchdecode.c probs
+   #658707  Automatic exit?
+   #696758  BeOS can't mount image disk, won't complete boot.
+   #737048  Enabling keyboard resets controllers translation mode
+   #717713  Bochs panics on startup on RH 9
+   #738808  VGA PANIC
+   #730922  seg fault on "bochs boot: cdrom"
+   #658905  VGA read write error
+   #564218  Panic on vga_mem_write
+   #614231  X11 doesn't support charmap change
+   #708311  Missing CGA low-res emulation
+   #720776  REX MOVB immediate broken for x86_64
+   #643296  lock prefix, unallowed cases
+   #716964  [sb16] OPL.timer_running not initialized
+   #662074  little mistake in the default config example
+   #470701  CD-ROM on Win2K needs FILE_SHARE_READ
+   #706454  bug??
+   #653861  Win32 build bug
+   #421155  panic on vga read 0x3c7,0x3cb
+   #666434  VGA BIOS: Incompatible mode reporting
+   #681819  Incorrent return value from cdrom reads
+   #648222  Lotus Agenda futuristic dates off
+   #657455  doesn't boot plan9
+   #658938  SGDT in VM8086
 
 -------------------------------------------------------------------------
 Changes in 2.0.2 (January 21, 2003):
