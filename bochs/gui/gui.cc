@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.57 2002-11-24 14:57:43 cbothamy Exp $
+// $Id: gui.cc,v 1.58 2002-12-12 03:41:51 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -345,7 +345,7 @@ bx_gui_c::copy_handler(void)
   if (!BX_GUI_THIS set_clipboard_text(text_snapshot, len)) {
     // platform specific code failed, use portable code instead
     FILE *fp = fopen("copy.txt", "w");
-    fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+    fwrite(text_snapshot, 1, len, fp);
     fclose(fp);
   }
   free(text_snapshot);
@@ -376,7 +376,7 @@ bx_gui_c::snapshot_handler(void)
     strcpy (filename, "snapshot.txt");
   }
   FILE *fp = fopen(filename, "wb");
-  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+  fwrite(text_snapshot, 1, len, fp);
   fclose(fp);
   free(text_snapshot);
 }
