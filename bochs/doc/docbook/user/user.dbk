@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.98 2002-12-21 18:37:40 bdenney Exp $
+$Id: user.dbk,v 1.99 2002-12-21 18:58:28 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2562,7 +2562,26 @@ settings you need to change.
 </para>
 
 <para>
-
+Starting with version 1.3, you can use environment variables in
+the bochsrc file, for example: 
+<screen>
+  diskc: file="$IMAGES/30M.sample", cyl=615, heads=6, spt=17
+  boot: c
+</screen>
+Starting with version 2.0, two environment variables have a built-in
+default value which is set at compile time.  $BXSHARE points to the
+"share" directory which is typically /usr/local/share/bochs on UNIX
+machines.  See the $(sharedir) variable in the Makefile for the exact
+value.  $BXSHARE is used by disk images to locate the directory where 
+the BIOS images and keymaps can be found.  If $BXSHARE is not defined, Bochs
+will supply the default value.  Also, $LTDL_LIBRARY_PATH points to a list of
+directories (separated by colons if more than one) to search in for Bochs
+plugins.  A compile-time default is provided if this variable is not defined
+by the user.  On Win32 and MacOSX, the default for the share directory is
+determined by a platform-specific specific algorithm.  On Win32, we use the
+registry to see what directory Bochs and its support files were installed in.
+On MacOSX, the share directory is the directory where the application is
+located.
 </para>
 
 <para>
