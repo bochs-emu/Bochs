@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.20 2002-09-25 12:54:40 ptrumpet Exp $
+// $Id: exception.cc,v 1.21 2002-09-27 03:33:13 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1264,6 +1264,8 @@ SYSRET_NON_64BIT_MODE:
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
+  invalidate_prefetch_q();
+  
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     if (i->os64L()) { // Return to 64-bit mode.
 
