@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.14 2004-08-31 19:43:58 sshwarts Exp $
+// $Id: mult64.cc,v 1.15 2005-02-03 18:43:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,8 +82,8 @@ void long_imul(Bit128s *product, Bit64s op1, Bit64s op2)
 {
   unsigned s1,s2;
 
-  if (s1 = (op1 < 0)) op1 = -op1;
-  if (s2 = (op2 < 0)) op2 = -op2;
+  if ((s1 = (op1 < 0))) op1 = -op1;
+  if ((s2 = (op2 < 0))) op2 = -op2;
   long_mul((Bit128u*)product,(Bit64u)op1,(Bit64u)op2);
   if (s1 ^ s2)
     long_neg(product);
@@ -192,10 +192,10 @@ void long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divi
   Bit128s temp;
 
   temp = *dividend;
-  if (s1 = (temp.hi < 0)) {
+  if ((s1 = (temp.hi < 0))) {
     long_neg(&temp);
   }
-  if (s2 = (divisor < 0)) divisor = -divisor;
+  if ((s2 = (divisor < 0))) divisor = -divisor;
   long_div((Bit128u*)quotient,(Bit64u*)remainder,(Bit128u*)&temp,divisor);
   if (s1 ^ s2) {
     long_neg(quotient);

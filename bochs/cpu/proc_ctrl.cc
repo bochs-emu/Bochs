@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.92 2005-02-03 18:25:10 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.93 2005-02-03 18:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1302,7 +1302,9 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
 
   bx_bool prev_pe = BX_CPU_THIS_PTR cr0.pe;
+#if BX_SUPPORT_X86_64
   bx_bool prev_pg = BX_CPU_THIS_PTR cr0.pg;
+#endif
 
   BX_CPU_THIS_PTR cr0.pe = pe;
   BX_CPU_THIS_PTR cr0.mp = (val_32 >> 1) & 0x01;
@@ -1402,11 +1404,11 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
   //   [1]     PVI: Protected-Mode Virtual Interrupts R/W
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
-  allowMask |= (1<<3);   /* DE  */
-
 #if BX_CPU_LEVEL >= 5
   allowMask |= (1<<2);   /* TSD */
 #endif
+
+  allowMask |= (1<<3);   /* DE  */
 
 #if BX_SUPPORT_4MEG_PAGES
   allowMask |= (1<<4);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.90 2005-01-19 18:21:30 sshwarts Exp $
+// $Id: win32.cc,v 1.91 2005-02-03 18:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -578,7 +578,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
                                    tilewidth, unsigned tileheight,
                                    unsigned headerbar_y)
 {
-  unsigned i;
+  int i;
 
   put("WGUI");
   static RGBQUAD black_quad={ 0, 0, 0, 0};
