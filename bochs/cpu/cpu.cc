@@ -376,7 +376,7 @@ handle_async_event:
     BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     // Need to fix this for cosimulation.
     while (1) {
-      if (BX_INTR && BX_CPU_THIS_PTR eflags.if_) {
+      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
         break;
         }
       BX_TICK1();
@@ -384,7 +384,7 @@ handle_async_event:
 #endif
     /* for SMP simulation, there's no guarantee that debug_trap will be
        cleared. */
-    if (BX_INTR && BX_CPU_THIS_PTR eflags.if_) {
+    if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
       /* HALT condition has gone away */
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
@@ -440,11 +440,15 @@ handle_async_event:
     // an opportunity to check interrupts on the next instruction
     // boundary.
     }
-  else if (BX_INTR && BX_CPU_THIS_PTR eflags.if_ && BX_DBG_ASYNC_INTR) {
+  else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_ && BX_DBG_ASYNC_INTR) {
     Bit8u vector;
 
     // NOTE: similar code in ::take_irq()
+#if BX_APIC_SUPPORT
+    vector = local_apic.acknowledge_int ();
+#else
     vector = BX_IAC(); // may set INTR with next interrupt
+#endif
     //if (bx_dbg.interrupts) bx_printf("decode: interrupt %u\n",
     //                                   (unsigned) vector);
     BX_CPU_THIS_PTR errorno = 0;
@@ -490,7 +494,7 @@ handle_async_event:
     BX_CPU_THIS_PTR debug_trap |= 0x00004000; // BS flag in DR6
     }
 
-  if ( !(BX_INTR ||
+  if ( !(BX_CPU_THIS_PTR INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
          BX_CPU_THIS_PTR eflags.tf) )
@@ -721,7 +725,7 @@ BX_CPU_C::dbg_take_irq(void)
 
   // NOTE: similar code in ::cpu_loop()
 
-  if ( BX_INTR && BX_CPU_THIS_PTR eflags.if_ ) {
+  if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_ ) {
     if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
       // normal return from setjmp setup
       vector = BX_IAC(); // may set INTR with next interrupt
