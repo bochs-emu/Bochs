@@ -1,0 +1,6 @@
+test9-modclass
+
+Try to put a class definition in a module, and call it from the
+executable.  The definition of ModuleGadget is ONLY defined in
+module1, and no class is defined in module2.  I was just trying
+to keep it simple, and take one step at a time.
