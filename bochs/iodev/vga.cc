@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.116 2005-03-18 14:52:29 vruppert Exp $
+// $Id: vga.cc,v 1.117 2005-03-27 08:02:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1883,6 +1883,7 @@ bx_vga_c::update(void)
 
       case 2: // output the data eight bits at a time from the 4 bit plane
               // (format for VGA mode 13 hex)
+      case 3: // FIXME: is this really the same ???
 
         if ( BX_VGA_THIS s.sequencer.chain_four ) {
           unsigned long pixely, pixelx, plane;
@@ -2012,11 +2013,11 @@ bx_vga_c::update(void)
       cursor_x = ((cursor_address - start_address)/2) % (iWidth/cWidth);
       cursor_y = ((cursor_address - start_address)/2) / (iWidth/cWidth);
     }
-    bx_gui->text_update(&BX_VGA_THIS s.text_snapshot[start_address],
+    bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                         &BX_VGA_THIS s.vga_memory[start_address],
                         cursor_x, cursor_y, tm_info, rows);
     // screen updated, copy new VGA memory contents into text snapshot
-    memcpy(&BX_VGA_THIS s.text_snapshot[start_address],
+    memcpy(BX_VGA_THIS s.text_snapshot,
            &BX_VGA_THIS s.vga_memory[start_address],
            2*cols*rows);
     BX_VGA_THIS s.vga_mem_updated = 0;
