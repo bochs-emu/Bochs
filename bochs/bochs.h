@@ -69,10 +69,10 @@ extern "C" {
 // VCPP includes also are missing these
 #  define off_t long
 #  define ssize_t int
-#endif
 
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
+#endif
 
 #endif
 
@@ -144,9 +144,15 @@ extern "C" {
 #define BX_INTR                     bx_pc_system.INTR
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
 #define BX_CPU_C                    bx_cpu_c
-#define BX_CPU(x)                   (bx_cpu_array[x])
 #define BX_MEM_C                    bx_mem_c
+#if BX_SMP_PROCESSORS==1
+#define BX_CPU(x)                   (&bx_cpu)
+#define BX_MEM(x)                   (&bx_mem)
+#else
+#define BX_CPU(x)                   (bx_cpu_array[x])
 #define BX_MEM(x)                   (bx_mem_array[x])
+#endif
+
 #define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 
@@ -378,7 +384,7 @@ public:
 	void set_log_action (int loglevel, int action);
 protected:
 	int n_logfn;
-#define MAX_LOGFNS 32
+#define MAX_LOGFNS 64
 	logfunc_t *logfn_list[MAX_LOGFNS];
 	char *logfn;
 };
@@ -466,7 +472,7 @@ typedef struct {
 #ifdef MAGIC_BREAKPOINT
   Boolean magic_break_enabled;
 #endif /* MAGIC_BREAKPOINT */
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   Boolean apic;
   Boolean ioapic;
 #endif
