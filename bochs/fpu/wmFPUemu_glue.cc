@@ -45,7 +45,7 @@ extern "C" {
 static BxInstruction_t *fpu_iptr = NULL;
 static BX_CPU_C *fpu_cpu_ptr = NULL;
 
-i387_t i387;
+i387_t *current_i387;
 
 extern "C" void
 math_emulate2(fpu_addr_modes addr_modes,
@@ -62,6 +62,7 @@ extern "C" void printfp(char *s, FPU_REG *r);
   void
 BX_CPU_C::fpu_init(void)
 {
+  current_i387 = &(BX_CPU_THIS_PTR the_i387);
   finit();
 }
 
@@ -76,6 +77,7 @@ BX_CPU_C::fpu_execute(BxInstruction_t *i)
 
   fpu_iptr = i;
   fpu_cpu_ptr = this;
+  current_i387 = &(BX_CPU_THIS_PTR the_i387);
 
 #if 0
   addr_modes.default_mode = VM86;

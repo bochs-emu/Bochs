@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.31 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.32 2002-09-09 16:11:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1035,6 +1035,9 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
 #  if BX_SUPPORT_FPU
       features |= 0x01;
 #  endif
+#  if BX_SUPPORT_MMX
+      features |= (1<<23);  // support MMX
+#  endif
 
 #elif BX_CPU_LEVEL == 6
       family = 6;
@@ -1047,6 +1050,9 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
 #  endif
 #  if BX_SUPPORT_FPU
       features |= 0x01;     // has FPU
+#  endif
+#  if BX_SUPPORT_MMX
+      features |= (1<<23);  // support MMX
 #  endif
 #else
       BX_PANIC(("CPUID: not implemented for > 6"));

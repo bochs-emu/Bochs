@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: fpu_system.h,v 1.4 2002-09-09 16:11:25 bdenney Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -96,18 +96,7 @@
  * rather than a kernel (ported by Kevin Lawton)
  * ------------------------------------------------------------ */
 
-/* Get data sizes from config.h generated from simulator's
- * configure script
- */
-#include "config.h"
-typedef Bit8u  u8;
-typedef Bit8s  s8;
-typedef Bit16u u16;
-typedef Bit16s s16;
-typedef Bit32u u32;
-typedef Bit32s s32;
-typedef Bit64u u64;
-typedef Bit64s s64;
+#include <cpu/i387.h>
 
 /* bbd: include ported linux headers after config.h for GCC_ATTRIBUTE macro */
 #include <linux/kernel.h>
@@ -144,36 +133,13 @@ struct info {
 
 #define FPU_info ((struct info *) NULL)
 
-
-//
-// Minimal i387 structure, pruned from the linux headers.  Only
-// the fields which were necessary are included.
-//
-typedef struct {
-  struct {
-    s32      cwd;
-    s32      swd;
-    s32      twd;
-    s32      fip;
-    s32      fcs;
-    s32      foo;
-    s32      fos;
-    u32      fill0; /* to make sure the following aligns on an 8byte boundary */
-    u64      st_space[16];   /* 8*16 bytes per FP-reg (aligned) = 128 bytes */
-    unsigned char   ftop;
-    unsigned char   no_update;
-    unsigned char   rm;
-    unsigned char   alimit;
-    } GCC_ATTRIBUTE((aligned(16), packed)) soft;
-  } i387_t;
-
-extern i387_t i387;
-
-
 #endif
 
 #define SIGSEGV  11
 
+extern i387_t *current_i387;
+
+#define i387     (*current_i387)
 #define I387     i387
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.37 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: cpu.h,v 1.38 2002-09-09 16:11:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -729,6 +729,8 @@ typedef void (*BxDTShim_t)(void);
 
 class BX_MEM_C;
 
+#include "cpu/i387.h"
+
 class BX_CPU_C : public logfunctions {
 
 public: // for now...
@@ -828,6 +830,8 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bx_regs_msr_t	msr;  
 #endif
+
+  i387_t the_i387;
 
   // pointer to the address space that this processor uses.
   BX_MEM_C *mem;
@@ -1303,6 +1307,71 @@ public: // for now...
   BX_SMF void ESC6(BxInstruction_t *);
   BX_SMF void ESC7(BxInstruction_t *);
 
+  /* MMX */
+  BX_SMF void PUNPCKLBW_PqQd(BxInstruction_t *i);
+  BX_SMF void PUNPCKLWD_PqQd(BxInstruction_t *i);
+  BX_SMF void PUNPCKLDQ_PqQd(BxInstruction_t *i);
+  BX_SMF void PACKSSWB_PqQq(BxInstruction_t *i);
+  BX_SMF void PCMPGTB_PqQq(BxInstruction_t *i);
+  BX_SMF void PCMPGTW_PqQq(BxInstruction_t *i);
+  BX_SMF void PCMPGTD_PqQq(BxInstruction_t *i);
+  BX_SMF void PACKUSWB_PqQq(BxInstruction_t *i);
+  BX_SMF void PUNPCKHBW_PqQq(BxInstruction_t *i);
+  BX_SMF void PUNPCKHWD_PqQq(BxInstruction_t *i);
+  BX_SMF void PUNPCKHDQ_PqQq(BxInstruction_t *i);
+  BX_SMF void PACKSSDW_PqQq(BxInstruction_t *i);
+  BX_SMF void MOVD_PqEd(BxInstruction_t *i);
+  BX_SMF void MOVQ_PqQq(BxInstruction_t *i);
+  BX_SMF void PCMPEQB_PqQq(BxInstruction_t *i);
+  BX_SMF void PCMPEQW_PqQq(BxInstruction_t *i);
+  BX_SMF void PCMPEQD_PqQq(BxInstruction_t *i);
+  BX_SMF void EMMS(BxInstruction_t *i);
+  BX_SMF void MOVD_EdPd(BxInstruction_t *i);
+  BX_SMF void MOVQ_QqPq(BxInstruction_t *i);
+  BX_SMF void PSRLW_PqQq(BxInstruction_t *i);
+  BX_SMF void PSRLD_PqQq(BxInstruction_t *i);
+  BX_SMF void PSRLQ_PqQq(BxInstruction_t *i);
+  BX_SMF void PMULLW_PqQq(BxInstruction_t *i);
+  BX_SMF void PSUBUSB_PqQq(BxInstruction_t *i);
+  BX_SMF void PSUBUSW_PqQq(BxInstruction_t *i);
+  BX_SMF void PAND_PqQq(BxInstruction_t *i);
+  BX_SMF void PADDUSB_PqQq(BxInstruction_t *i);
+  BX_SMF void PADDUSW_PqQq(BxInstruction_t *i);
+  BX_SMF void PANDN_PqQq(BxInstruction_t *i);
+  BX_SMF void PSRAW_PqQq(BxInstruction_t *i);
+  BX_SMF void PSRAD_PqQq(BxInstruction_t *i);
+  BX_SMF void PMULHW_PqQq(BxInstruction_t *i);
+  BX_SMF void PSUBSB_PqQq(BxInstruction_t *i);
+  BX_SMF void PSUBSW_PqQq(BxInstruction_t *i);
+  BX_SMF void POR_PqQq(BxInstruction_t *i);
+  BX_SMF void PADDSB_PqQq(BxInstruction_t *i);
+  BX_SMF void PADDSW_PqQq(BxInstruction_t *i);
+  BX_SMF void PXOR_PqQq(BxInstruction_t *i);
+  BX_SMF void PSLLW_PqQq(BxInstruction_t *i);
+  BX_SMF void PSLLD_PqQq(BxInstruction_t *i);
+  BX_SMF void PSLLQ_PqQq(BxInstruction_t *i);
+  BX_SMF void PMADDWD_PqQq(BxInstruction_t *i);
+  BX_SMF void PSUBB_PqQq(BxInstruction_t *i);
+  BX_SMF void PSUBW_PqQq(BxInstruction_t *i);
+  BX_SMF void PSUBD_PqQq(BxInstruction_t *i);
+  BX_SMF void PADDB_PqQq(BxInstruction_t *i);
+  BX_SMF void PADDW_PqQq(BxInstruction_t *i);
+  BX_SMF void PADDD_PqQq(BxInstruction_t *i);
+  BX_SMF void PSRLW_PqIb(BxInstruction_t *i);
+  BX_SMF void PSRAW_PqIb(BxInstruction_t *i);
+  BX_SMF void PSLLW_PqIb(BxInstruction_t *i);
+  BX_SMF void PSRLD_PqIb(BxInstruction_t *i);
+  BX_SMF void PSRAD_PqIb(BxInstruction_t *i);
+  BX_SMF void PSLLD_PqIb(BxInstruction_t *i);
+  BX_SMF void PSRLQ_PqIb(BxInstruction_t *i);
+  BX_SMF void PSLLQ_PqIb(BxInstruction_t *i);
+  /* MMX */
+
+#if BX_SUPPORT_MMX
+  BX_SMF void PrepareMmxInstruction(void);
+  BX_SMF void PrintMmxRegisters(void);
+#endif
+
   BX_SMF void fpu_execute(BxInstruction_t *i);
   BX_SMF void fpu_init(void);
   BX_SMF void fpu_print_regs (void);
@@ -1634,6 +1703,8 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit8u  get_CPL(void);
   BX_SMF BX_CPP_INLINE Bit32u get_EIP(void);
 
+  BX_SMF BX_CPP_INLINE int which_cpu(void);
+
 #if BX_CPU_LEVEL >= 2
   BX_SMF BX_CPP_INLINE Boolean real_mode(void);
 #endif
@@ -1655,6 +1726,14 @@ public: // for now...
 #define BX_HWDebugMemRW         0x03
 #endif
 
+BX_SMF BX_CPP_INLINE int BX_CPU_C_PREFIX which_cpu(void)
+{ 
+#if (BX_SMP_PROCESSORS==1)
+   return 0;
+#else
+   return local_apic.get_id();
+#endif
+}
 
 #if BX_SMP_PROCESSORS==1
 // single processor simulation, so there's one of everything
@@ -1939,7 +2018,13 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 #define BxGroup7          BxGroupN
 #define BxGroup8          BxGroupN
 #define BxGroup9          BxGroupN
-#define BxGroupa          BxGroupN
+#define BxGroupA          BxGroupN
+
+#if BX_SUPPORT_MMX
+#define BxAnotherMMX      BxAnother
+#else
+#define BxAnotherMMX      (0)
+#endif
 
 #if BX_DEBUGGER
 typedef enum _show_flags {
