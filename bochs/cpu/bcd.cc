@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.12 2004-03-26 12:43:19 sshwarts Exp $
+// $Id: bcd.cc,v 1.13 2004-08-14 19:34:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 BX_CPU_C::AAA(bxInstruction_c *)
 {
   /* 
-   *  Note: This istruction incorrectly documented in Intel's materials.
+   *  Note: This instruction incorrectly documented in Intel's materials.
    *        The right description is:
    *
    *    IF (((AL and 0FH) > 9) or (AF==1)

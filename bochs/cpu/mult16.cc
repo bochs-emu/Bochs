@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.12 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: mult16.cc,v 1.13 2004-08-14 19:34:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -227,7 +227,7 @@ BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
      *   result exactly fits within r16
      */
 
-    if (product_32 > -32768  && product_32 < 32767) {
+    if (product_32 > -32768 && product_32 < 32767) {
       SET_FLAGS_OxxxxC(0, 0);
       }
     else {
@@ -265,7 +265,7 @@ BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
      *   result exactly fits within r16
      */
 
-    if (product_32 > -32768  && product_32 < 32767) {
+    if (product_32 > -32768 && product_32 < 32767) {
       SET_FLAGS_OxxxxC(0, 0);
       }
     else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.170 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: cpu.h,v 1.171 2004-08-14 19:34:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1457,15 +1457,13 @@ union {
 #define ArithmeticalFlag(flag, lfMaskShift, eflagsBitShift) \
   BX_SMF bx_bool get_##flag##Lazy(void); \
   BX_SMF bx_bool getB_##flag(void) { \
-    if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
-         ((Bit32u) (BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
+    if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == 0) \
       return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
     else \
       return get_##flag##Lazy(); \
     } \
   BX_SMF bx_bool get_##flag(void) { \
-    if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
-         ((Bit32u) (BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
+    if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == 0) \
       return BX_CPU_THIS_PTR eflags.val32 & (1<<eflagsBitShift); \
     else \
       return get_##flag##Lazy(); \
@@ -1691,7 +1689,6 @@ union {
   BX_SMF void CLD(bxInstruction_c *);
   BX_SMF void STD(bxInstruction_c *);
 
-
   BX_SMF void LAR_GvEw(bxInstruction_c *);
   BX_SMF void LSL_GvEw(bxInstruction_c *);
   BX_SMF void CLTS(bxInstruction_c *);
@@ -1733,7 +1730,6 @@ union {
   BX_SMF void BT_EvGv(bxInstruction_c *);
   BX_SMF void SHLD_EdGd(bxInstruction_c *);
   BX_SMF void SHLD_EwGw(bxInstruction_c *);
-
 
   BX_SMF void BTS_EvGv(bxInstruction_c *);
 
@@ -2645,7 +2641,6 @@ union {
 
 #if BX_SUPPORT_X86_64
   // 64 bit addressing
-
   BX_SMF void Resolve64Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void Resolve64Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void Resolve64Mod0Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2997,8 +2992,7 @@ BX_CPP_INLINE Bit32u bxICache_c::createFetchModeMask(BX_CPU_C *cpu) {
 #if BX_SUPPORT_X86_64
          | ((cpu->cpu_mode == BX_MODE_LONG_64)<<30)
 #endif
-         | (1<<29) // iCache code.
-         ;
+         | (1<<29); // iCache code.
   }
 
 #endif
@@ -3093,7 +3087,6 @@ BX_CPU_C::set_SF(bx_bool val) {
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<7);
     BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<7;
     }
-
 
     BX_CPP_INLINE void
 BX_CPU_C::set_OF(bx_bool val) {

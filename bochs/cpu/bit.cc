@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.18 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: bit.cc,v 1.19 2004-08-14 19:34:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -461,7 +461,8 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       op1_64++;
       op2_64 >>= 1;
     }
-    set_ZF(0);
+
+    SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
 
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
@@ -491,7 +492,8 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       op1_32++;
       op2_32 >>= 1;
     }
-    set_ZF(0);
+
+    SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
 
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
@@ -518,7 +520,8 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       op1_16++;
       op2_16 >>= 1;
     }
-    set_ZF(0);
+
+    SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
 
     /* now write result back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
@@ -558,7 +561,8 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       op1_64--;
       op2_64 <<= 1;
     }
-    set_ZF(0);
+
+    SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
   
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
@@ -588,7 +592,8 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       op1_32--;
       op2_32 <<= 1;
     }
-    set_ZF(0);
+
+    SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
 
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
@@ -615,7 +620,8 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       op1_16--;
       op2_16 <<= 1;
     }
-    set_ZF(0);
+
+    SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
 
     /* now write result back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
