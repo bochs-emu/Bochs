@@ -108,6 +108,7 @@ Changes to next release:
   [950905] Do not PANIC on rare, bad input from user-mode by h.johansson
   [924428] ET bit mismatch between CR0 and MSW
   [869822] a real SVGA implementation by m_suzu
+  [867045] fix for compiler errors on VC++ by m_suzu
 
 - these S.F. bugs were closed 
   #522111 Host os SIGILL, booting grub from hd
