@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.2 2001-06-24 17:38:59 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.3 2001-06-24 18:19:45 instinc Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -24,6 +24,7 @@ extern "C" {
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
+#include <wx/scrolwin.h>
 
 #ifdef __BORLANDC__
 #pragma hdrstop
@@ -56,7 +57,7 @@ private:
   DECLARE_EVENT_TABLE()
 };
 
-class MyPanel: public wxPanel
+class MyPanel: public wxScrolledWindow
 {
 private:
   DECLARE_EVENT_TABLE()
@@ -67,6 +68,7 @@ private:
 public:
   MyPanel (wxFrame *frame, int x, int y, int w, int h);
 };
+
 
 class BochsEventHandler: public wxEvtHandler {
 public:
@@ -187,7 +189,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
   CreateStatusBar();
   SetStatusText( "Bochs Controls" );
-  MyPanel *panel = new MyPanel (this, -1, -1, -1, -1);
+  MyPanel *panel = new MyPanel ( this, -1, -1, -1, -1 );
 }
 
 
@@ -212,8 +214,11 @@ BochsThread::Entry (void)
 }
 
 MyPanel::MyPanel (wxFrame *frame, int x, int y, int w, int h)
-  : wxPanel( frame, -1, wxPoint(x, y), wxSize(w, h) )
+  : wxScrolledWindow( frame, -1, wxPoint(x, y), wxSize(w, h), wxVSCROLL, "Bochs Controls" )
 {
+  SetScrollbars( 0, 40, 0, 1000);
+  EnableScrolling( FALSE, TRUE );
+
   // the parent constructor makes this panel a child of frame, with 
   // proper size.
   bochsThread = NULL;
