@@ -24,7 +24,9 @@ test12-modglobalconstr2: work around lack of global constructors, if needed
 -----------------------------------------------------------------------
 Results of platform testing:
 
-Linux: ...
+x86 Linux:
+passing: 1,2,3,4,5,6,8,9,10,11,12.
+This platform will support plugins.
    
 Cygwin with these environment variables (Mingw):
   export CPPFLAGS=-mno-cygwin; 
@@ -32,15 +34,37 @@ Cygwin with these environment variables (Mingw):
   export CXXFLAGS=-mno-cygwin; 
   export LDFLAGS=-mno-cygwin
 passing 1,6,7,8,9,10,11,12.
-This is how Bochs usually compiles.  This platform will support plugins.
+When compiling in Cygwin, Bochs always compiles with -mno-cygwin, so
+this is the normal build environment.  This platform will support plugins.
 
 Cygwin without -mno-cygwin:
 passing: 1,2,3,4.  failing 5-12.
 This platform will NOT support plugins yet.
 
-Solaris: ...
+Solaris:
+passing: 1,2,3,4,5,6,8,9,10,12.
+This platform will support plugins.
+NOTE: Global constructors in shared modules are not executed when
+the module is loaded.  That is why test 11 fails.  As long as we don't depend
+on global constructors, Solaris plugins should work fine.
 
-MacOS X: ...
+MacOS X:
+passing: 1,2,3,4,5,6,8,9,10,11,12.
+This platform will support plugins.
+NOTE: You must have the dlcompat library installed where configure can
+find it.  On the SF compile farm, I use these commands before configure:
+   export LIBS='-L/sw/lib'
+   export CFLAGS='-I/sw/include'
+   export CPPFLAGS='-I/sw/include'
+   export CXXFLAGS='-I/sw/include'
+NOTE: On MacOS X we cannot have the same symbol name in two different
+modules; we must name the symbols so that the symbol names are unique.  In
+tests 6,7-12, the modules.h file uses #defines to rename each global symbol
+to something unique.
+
+No other platform data is available.
+To check for plugin support on other platforms, run "do_tests.sh" and
+send the results to Bryce.
 -----------------------------------------------------------------------
 
 
