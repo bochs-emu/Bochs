@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.2 2002-04-24 07:39:47 cbothamy Exp $
+// $Id: biosdev.cc,v 1.3 2002-04-24 11:52:13 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -146,6 +146,7 @@ bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
     // 0xfff0 is used as the info port for the rombios
     // 0x0402 is used as the info port for the rombios
     // 0x0403 is used as the debug port for the rombios
+    case 0xfff0:
     case 0x0402:
     case 0x0403:
       BX_BIOS_THIS s.bios_message[BX_BIOS_THIS s.bios_message_i] =
