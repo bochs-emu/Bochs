@@ -83,12 +83,12 @@ beos.o: beos.@CPP_SUFFIX@
 x.o: x.@CPP_SUFFIX@
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(X_CFLAGS) $<
 
-rfb.o: rfb.cc rfb.h rfbproto.h
+rfb.o: rfb.@CPP_SUFFIX@ rfb.h rfbproto.h
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(RFB_CFLAGS) $<
 
-x.cc: gui.h
+x.@CPP_SUFFIX@cc: gui.h
 
-beos.cc: gui.h
+beos.@CPP_SUFFIX@cc: gui.h
 
 
 clean:
