@@ -103,14 +103,14 @@ libbx_wx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
 	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libbx_wx.la `wx-config --cxxflags` -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
-%.dll: %.o
+bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY) -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
-wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
-	$(CXX) $(CXXFLAGS) -shared -o wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
+	$(CXX) $(CXXFLAGS) -shared -o bx_wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
-sdl.dll: $(GUI_OBJS_SDL) 
-	$(CXX) $(CXXFLAGS) -shared -o sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) `sdl-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+bx_sdl.dll: $(GUI_OBJS_SDL) 
+	$(CXX) $(CXXFLAGS) -shared -o bx_sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) `sdl-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
 # no need to build DLLs for beos.o
 # no need to build DLLs for x.o
