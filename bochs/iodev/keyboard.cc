@@ -1051,6 +1051,7 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   if ( ++multiple==10)
   {
     multiple=0;
+	SIM->periodic ();
     bx_gui.handle_events();
   }
   retval = BX_KEY_THIS s.kbd_controller.irq1_requested | (BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
