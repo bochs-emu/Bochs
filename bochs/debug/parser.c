@@ -2328,7 +2328,7 @@ case 214:
 break;
 case 215:
 #line 985 "parser.y"
-{ yyval.ulval = yyvsp[-2].ulval / yyvsp[0].ulval; }
+{ yyval.ulval = (yyvsp[0].ulval != 0) ? yyvsp[-2].ulval / yyvsp[0].ulval : 0; }
 break;
 case 216:
 #line 986 "parser.y"

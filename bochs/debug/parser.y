@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.10 2003-08-04 16:03:09 akrisak Exp $
+// $Id: parser.y,v 1.11 2003-08-10 14:19:03 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -982,7 +982,7 @@ expression:
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }
    | expression '*' expression       { $$ = $1 * $3; }
-   | expression '/' expression       { $$ = $1 / $3; }
+   | expression '/' expression       { $$ = ($3 != 0) ? $1 / $3 : 0; }
    | expression BX_TOKEN_RSHIFT expression { $$ = $1 >> $3; }
    | expression BX_TOKEN_LSHIFT expression { $$ = $1 << $3; }
    | expression '|' expression       { $$ = $1 | $3; }
