@@ -1,0 +1,214 @@
+----------------------------------------------------------------------
+Patch name: patch.rcfile.builtin-vars
+Author: Tal Benavidor
+Date: 11-06-2002
+RCS Id: $Id: patch.rcfile-builtin-vars,v 1.1 2002-08-12 15:19:19 cbothamy Exp $
+Patch Version: 1
+
+Detailed description:
+   this patch gives you built in "environment variables" which help to
+   make ".bochsrc" files more portable.
+   example bochrc line:
+       floppya: 1_44=$BX_FLOPPY, status=inserted
+   
+   under linux, the above line becomes:
+       floppya: 1_44=/dev/fd0, status=inserted
+
+   while under windows, the above line is changed into:
+       floppya: 1_44=a:, status=inserted
+
+   for a complete list of builtin variables, see .bochrc in
+   bochs distribution main directory.
+
+TODOs, known problems:
+   this patch is a very incomplete.
+   
+     for mac, i did not put any support. i don't know anything 
+   about macs.
+   
+     for linux, i hard coded the value "/usr/local/bochs" as bochs
+   root directory. i should have used $prefix/bochs which comes 
+   from the configure script, as is done in the makefile. problem
+   is that i don't really know how to do it. NEED HELP!
+   
+     for windows, i simply hard coded a directory i made up, "c:\\bochs".
+   i never used bochs on windows, altough i am very familiar with that
+   platform.    again, i need some help, figuring the correct path.
+   maybe its even possible to support pathe given by an installation
+   program?
+   
+     should also update bochrc-1.4/doc/man/bochsrc.1
+     
+     convert all the preinstalled images available for download from
+   bochs web site, to use the new built in variable.
+     
+Patch was created with:
+  cvs diff -u
+
+Apply patch to what version:
+  cvs checked out on August 12th 2002
+
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+  Type "autoconf"
+  Type "./configure"
+  You may now build as usual: "make"
+----------------------------------------------------------------------
+Index: .bochsrc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/.bochsrc,v
+retrieving revision 1.45
+diff -u -r1.45 .bochsrc
+--- .bochsrc	9 Aug 2002 06:16:42 -0000	1.45
++++ .bochsrc	12 Aug 2002 15:16:55 -0000
+@@ -1,6 +1,31 @@
+ # You many now use double quotes around pathnames, in case
+ # your pathname includes spaces.
+ 
++# built in environment variables, that can be used in bochrc
++# ----------------------------------------------------------
++# these variables make it possible to write portable
++#   BX_SEP -  "\" on windows, "/" on unix.
++#   BX_ROOT - master root directory for bochs. this directory
++#             contains one subdirectory for each bochs installed
++#             bochs version.
++#             this value include a traling separator.
++#   BX_ROOT_LATEST - root directory for bochs latest version.
++#                    bochs version.
++#                    this value include a traling separator.
++#   BX_FLOPPY - file name for floppy device which may be given
++#               in "floppya:" line.
++#   BX_BIOS - this is the a file name of the latest stable rom bios.
++#   BX_VGABIOS - this is a file name of a stable vga bios.
++#
++#   to concat strings, add spaces. two exaples follow.
++#   under linux, the following two lines are equivalent:
++#     romimage: file=$BX_ROOT 1.4 $BX_SEP BIOS-bochs-970717a, address=0xf0000
++#     romimage: /usr/local/bochs/1.4/BIOS-bochs-970717a, address=0xf0000
++#
++#   again, under linux, the following two lines are equivalent:
++#     diskc: file=$BX_ROOT_LATEST 30M.sample, cyl=615, heads=6, spt=17
++#     diskc: file=/usr/local/bochs/latest/30M.sample, cyl=615, heads=6, spt=17
++
+ #=======================================================================
+ # ROMIMAGE:
+ # You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
+@@ -8,8 +33,9 @@
+ # support.  Normally, you can use a precompiled BIOS in the bios/
+ # directory, named BIOS-bochs-latest. 
+ #=======================================================================
++romimage: file=$BX_BIOS, address=0xf0000
+ #romimage: bios/BIOS-bochs-970717a
+-romimage: file=bios/BIOS-bochs-latest, address=0xf0000
++#romimage: file=bios/BIOS-bochs-latest, address=0xf0000
+ #romimage: file=bios/BIOS-bochs-2-processors, address=0xf0000
+ #romimage: file=bios/BIOS-bochs-4-processors, address=0xf0000
+ #romimage: file=bios/rombios.bin, address=0xf0000
+@@ -48,8 +74,9 @@
+ # VGAROMIMAGE
+ # You now need to load a VGA ROM BIOS into C0000.
+ #=======================================================================
++vgaromimage: $BX_VGABIOS
+ #vgaromimage: bios/VGABIOS-lgpl-0.3a
+-vgaromimage: bios/VGABIOS-elpin-2.40
++#vgaromimage: bios/VGABIOS-elpin-2.40
+ 
+ #=======================================================================
+ # FLOPPYA:
+@@ -69,8 +96,8 @@
+ # drive letters such as a: or b: as the path.  Raw floppy access is not
+ # supported on Windows 95 and 98.
+ #=======================================================================
+-floppya: 1_44=/dev/fd0, status=inserted
+-#floppya: file=../1.44, status=inserted
++floppya: 1_44=$BX_FLOPPY, status=inserted
++#floppya: 1_44=/dev/fd0, status=inserted
+ #floppya: 1_44=/dev/fd0H1440, status=inserted
+ #floppya: 1_2=../1_2, status=inserted
+ #floppya: 1_44=a:, status=inserted             # for win32
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.50
+diff -u -r1.50 config.h.in
+--- config.h.in	5 Jun 2002 03:59:30 -0000	1.50
++++ config.h.in	12 Aug 2002 15:16:56 -0000
+@@ -560,6 +560,7 @@
+ #define BX_SUPPORT_FPU 0
+ 
+ #define BX_HAVE_GETENV 0
++#define BX_HAVE_PUTENV 0
+ #define BX_HAVE_SELECT 0
+ #define BX_HAVE_SNPRINTF 0
+ #define BX_HAVE_STRTOULL 0
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure.in,v
+retrieving revision 1.84
+diff -u -r1.84 configure.in
+--- configure.in	11 Aug 2002 11:42:09 -0000	1.84
++++ configure.in	12 Aug 2002 15:16:56 -0000
+@@ -94,6 +94,7 @@
+ AC_CHECK_SIZEOF(unsigned long long)
+ AC_CHECK_SIZEOF(int *)
+ AC_CHECK_FUNCS(getenv, AC_DEFINE(BX_HAVE_GETENV))
++AC_CHECK_FUNCS(putenv, AC_DEFINE(BX_HAVE_PUTENV))
+ AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
+ AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
+ AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.112
+diff -u -r1.112 main.cc
+--- main.cc	12 Aug 2002 14:55:21 -0000	1.112
++++ main.cc	12 Aug 2002 15:16:56 -0000
+@@ -1539,6 +1539,47 @@
+   char *ret;
+   char line[512];
+ 
++	/*
++	 * built in environment variables, that can be used in bochrc
++	 *   BX_SEP -  "\" on windows, "/" on unix.
++	 *   BX_ROOT - master root directory for bochs. this directory
++	 *             contains one subdirectory for each bochs installed
++	 *             bochs version.
++	 *             this value include a traling separator.
++	 *   BX_ROOT_LATEST - root directory for bochs latest version.
++	 *             bochs version.
++	 *             this value include a traling separator.
++	 *   BX_FLOPPY - file name for floppy device which may be given
++	 *               in "floppya:" line.
++	 *   BX_BIOS - this is the a file name of the latest stable rom bios.
++	 *   BX_VGABIOS - this is a file name of a stable vga bios.
++	 *
++	 *   if you change something here, plese update the more detailed
++	 *   description in ".bochsrc" in this directory.
++	 *   you should also update doc/man/bochsrc.1.
++	 */
++
++#if BX_HAVE_GETENV && BX_HAVE_PUTENV
++#  if defined(WIN32)	// windows
++	putenv("BX_SEP=\\");
++	putenv("BX_ROOT=c:\\bochs\\");
++	putenv("BX_ROOT_LATEST=c:\\bochs\\latest\\");
++	putenv("BX_FLOPPY=a:");
++	putenv("BX_BIOS=c:\\bochs\\latest\\BIOS-bochs-latest");
++	putenv("BX_VGABIOS=c:\\bochs\\latest\\VGABIOS-elpin-2.40");
++#  elif BX_WITH_MACOS   // mac
++	// don't know anything about mac...
++#  else			// unix
++	putenv("BX_SEP=/");
++	putenv("BX_ROOT=/usr/local/bochs/");
++	putenv("BX_ROOT_LATEST=/usr/local/bochs/latest/");
++	putenv("BX_FLOPPY=/dev/fd0");
++	putenv("BX_BIOS=/usr/local/bochs/latest/BIOS-bochs-latest");
++	putenv("BX_VGABIOS=/usr/local/bochs/latest/VGABIOS-elpin-2.40");
++#  endif
++#endif // #if BX_HAVE_GETENV
++
++
+   // try several possibilities for the bochsrc before giving up
+ 
+   fd = fopen (rcfile, "r");
