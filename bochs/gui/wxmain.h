@@ -37,6 +37,8 @@ public:
   void OnKeyUp(wxKeyEvent& event);
   void OnPaint(wxPaintEvent& event);
   void MyRefresh ();
+  void ReadConfiguration ();
+  void SaveConfiguration ();
 private:
   DECLARE_EVENT_TABLE()
 };
@@ -47,6 +49,8 @@ class MyFrame: public wxFrame
   MyPanel *panel;
 public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
+  void OnConfigRead(wxCommandEvent& event);
+  void OnConfigSave(wxCommandEvent& event);
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);
   void OnStartSim(wxCommandEvent& event);

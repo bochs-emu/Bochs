@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.5 2002-08-09 06:16:43 vruppert Exp $
+// $Id: wx.cc,v 1.6 2002-08-25 15:51:45 vruppert Exp $
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
 // wxPanel called a MyPanel, which has methods to display
@@ -114,6 +114,32 @@ MyPanel::MyRefresh ()
 	wxPaintEvent event;
 	wxPostEvent (this, event);
 #endif
+}
+
+void 
+MyPanel::ReadConfiguration ()
+{
+  char *bochsrc;
+  long style = wxOPEN;
+  wxFileDialog *fdialog = new wxFileDialog (this, "Read configuration", "", "", "*.*", style);
+  if (fdialog->ShowModal() == wxID_OK) {
+    bochsrc = (char *)fdialog->GetPath().c_str ();
+    bx_read_configuration(bochsrc);
+  }
+  delete fdialog;
+}
+
+void 
+MyPanel::SaveConfiguration ()
+{
+  char *bochsrc;
+  long style = wxSAVE | wxOVERWRITE_PROMPT;
+  wxFileDialog *fdialog = new wxFileDialog (this, "Save configuration", "", "", "*.*", style);
+  if (fdialog->ShowModal() == wxID_OK) {
+    bochsrc = (char *)fdialog->GetPath().c_str ();
+    bx_write_configuration(bochsrc, 1);
+  }
+  delete fdialog;
 }
 
 void MyPanel::OnKeyDown(wxKeyEvent& event)

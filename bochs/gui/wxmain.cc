@@ -1,6 +1,6 @@
 //
 // gui/wxmain.cc
-// $Id: wxmain.cc,v 1.5 2002-08-25 09:54:05 vruppert Exp $
+// $Id: wxmain.cc,v 1.6 2002-08-25 15:51:45 vruppert Exp $
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -159,6 +159,8 @@ bool MyApp::OnInit()
 //////////////////////////////////////////////////////////////////////
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
+  EVT_MENU(ID_Config_Read, MyFrame::OnConfigRead)
+  EVT_MENU(ID_Config_Save, MyFrame::OnConfigSave)
   EVT_MENU(ID_Quit, MyFrame::OnQuit)
   EVT_MENU(ID_Help_About, MyFrame::OnAbout)
   EVT_MENU(ID_Simulate_Start, MyFrame::OnStartSim)
@@ -269,6 +271,16 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   SetSizer (sz);
 
   thePanel = panel;
+}
+
+void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
+{
+  panel->ReadConfiguration ();
+}
+
+void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
+{
+  panel->SaveConfiguration ();
 }
 
 void MyFrame::OnQuit(wxCommandEvent& event)

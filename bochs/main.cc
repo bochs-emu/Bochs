@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.117 2002-08-25 08:31:15 vruppert Exp $
+// $Id: main.cc,v 1.118 2002-08-25 15:51:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1107,6 +1107,10 @@ void
 bx_init_main (int argc, char *argv[])
 {
   int help = 0;
+#if BX_WITH_WX
+  int arg = 1;
+  char *bochsrc = NULL;
+#endif
 
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
@@ -1156,6 +1160,24 @@ bx_init_main (int argc, char *argv[])
   getwd (cwd);
   BX_INFO (("Now my working directory is %s", cwd));
 #endif
+#if BX_WITH_WX
+  // detect -q or -qf
+  if ((argc > 1) && (!strncmp ("-q", argv[1], 2))) {
+    arg++;
+    if ((argc > 2) && (!strcmp(argv[1], "-qf"))) {
+      bochsrc = argv[arg];
+      arg++;
+    }
+    else if ((argc > 3) && (!strcmp ("-f", argv[arg]))) {
+      bochsrc = argv[arg+1];
+      arg += 2;
+    }
+  }
+  if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
+  if (bochsrc)
+    bx_read_configuration (bochsrc);
+  bx_parse_cmdline (arg, argc, argv);
+#endif
 }
 
 static void
@@ -1164,7 +1186,7 @@ bx_do_text_config_interface (int argc, char *argv[])
   char *bochsrc = NULL;
   int norcfile = 1;
 
-  // detect -f, -nocontrolpanel or -nocp argument before anything else
+  // detect -q, -qf, -nocontrolpanel or -nocp argument before anything else
   int arg = 1;
   if ((argc > 1) && 
        ((!strcmp ("-nocontrolpanel", argv[1]))
@@ -1238,20 +1260,6 @@ bx_do_text_config_interface (int argc, char *argv[])
 int
 bx_continue_after_control_panel (int argc, char *argv[])
 {
-#if BX_WITH_WX
-  // FIXME: load default bochsrc right now.  When the wxWindows interface
-  // is more complete, you will be able to load a bochsrc using the
-  // interface.
-  char *bochsrc = bx_find_bochsrc ();
-  if (bochsrc) {
-    bx_read_configuration (bochsrc);
-    free (bochsrc);
-  } else {
-    BX_PANIC (("Could not load a .bochsrc"));
-  }
-#endif
-
-
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
