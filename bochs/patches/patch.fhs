@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.fhs
 Author: Robert Millan
-Date: May, 4th 2002
+Date: May, 16th 2002
 
 Detailed description:
   see patch [ 551811 ]
@@ -16,15 +16,15 @@ Detailed description:
 Patch was created with:
   diff -u
 Apply patch to what version:
-  Seems to be Bochs v1.4
+  CVS as May, 16th 2002
 Instructions:
   To patch, go to main bochs directory.
-  Type "patch -p1 < THIS_PATCH_FILE".
+  Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-diff -ur bochs-1.4rel.old/Makefile.in bochs-1.4rel/Makefile.in
---- bochs-1.4rel.old/Makefile.in	Thu Mar 28 01:28:42 2002
-+++ bochs-1.4rel/Makefile.in	Fri May  3 08:59:37 2002
-@@ -30,16 +30,19 @@
+diff -u -r1.68 Makefile.in
+--- Makefile.in	18 Apr 2002 00:22:18 -0000	1.68
++++ Makefile.in	15 May 2002 09:06:13 -0000
+@@ -30,19 +30,21 @@
  bindir          = @bindir@
  mandir          = @mandir@
  man1dir         = $(mandir)/man1
@@ -42,12 +42,15 @@ diff -ur bochs-1.4rel.old/Makefile.in bochs-1.4rel/Makefile.in
 -INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bochsdbg bximage @INSTALL_LIST_FOR_PLATFORM@
 +INSTALL_LIST_SHARE=bios/BIOS-* bios/VGABIOS* @INSTALL_LIST_FOR_PLATFORM@
 +INSTALL_LIST_DOC=CHANGES COPYING README
-+INSTALL_LIST_BIN=bochs bochsdbg bximage
++INSTALL_LIST_BIN=bochs bochsdbg bximage $(srcdir)/build/linux/bochs-docs
 +INSTALL_LIST=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN)
  INSTALL_LIST_X11=install-x11-fonts test-x11-fonts
  INSTALL_LIST_SED=DOC-linux.html
- BOCHS_SCRIPTS=bochs-docs
-@@ -58,7 +61,7 @@
+-BOCHS_SCRIPTS=bochs-docs
+ CP=cp
+ CAT=cat
+ RM=rm
+@@ -58,7 +60,7 @@
  RMDIR=rmdir
  TAR=tar
  CHMOD=chmod
@@ -56,7 +59,7 @@ diff -ur bochs-1.4rel.old/Makefile.in bochs-1.4rel/Makefile.in
  GUNZIP=gunzip
  ZIP=zip
  UNIX2DOS=unix2dos
-@@ -286,35 +289,32 @@
+@@ -287,35 +289,31 @@
  # install target for unix
  #####################################################################
  
@@ -97,7 +100,6 @@ diff -ur bochs-1.4rel.old/Makefile.in bochs-1.4rel/Makefile.in
 +
 +install_doc::
 +	for i in $(DESTDIR)$(docdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
-+	for i in bochs-docs; do install -m755 $(srcdir)/build/linux/$$i $(DESTDIR)$(docdir)/$$i; done
 +	for i in $(INSTALL_LIST_SED); do install -m644 $(srcdir)/build/linux/$$i $(DESTDIR)$(docdir)/$$i; done
 +	for i in $(INSTALL_LIST_DOC); do if test -f $$i; then cp $$i $(DESTDIR)$(docdir); else cp $(srcdir)/$$i $(DESTDIR)$(docdir); fi; done
 +	$(CP) -r $(srcdir)/docs-html $(DESTDIR)$(docdir)
@@ -108,11 +110,11 @@ diff -ur bochs-1.4rel.old/Makefile.in bochs-1.4rel/Makefile.in
  install_man::
  	-mkdir -p $(DESTDIR)$(man1dir)
 -	for i in $(MAN_PAGE_LIST); do cat $(srcdir)/doc/man/$$i.1 | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(DESTDIR)$(man1dir)/$$i.1; chmod 644 $(DESTDIR)$(man1dir)/$$i.1; done
-+	for i in $(MAN_PAGE_LIST); do cat $(srcdir)/doc/man/$$i.1 | $(SED) -e 's/@VERSION@/$(VERSION)/g' | $(GZIP) -c >  $(DESTDIR)$(man1dir)/$$i.1.gz; chmod 644 $(DESTDIR)$(man1dir)/$$i.1.gz; done
++	for i in $(MAN_PAGE_LIST); do cat $(srcdir)/doc/man/$$i.1 | $(SED) 's/@VERSION@/$(VERSION)/g' | $(GZIP) -c >  $(DESTDIR)$(man1dir)/$$i.1.gz; chmod 644 $(DESTDIR)$(man1dir)/$$i.1.gz; done
  
  download_dlx: $(DLXLINUX_TAR)
  
-@@ -330,20 +330,18 @@
+@@ -331,20 +329,18 @@
  	(cd dlxlinux; $(MV) bochsrc.txt bochsrc.txt.orig; $(SED) -e "s/1\.1\.2/$(VERSION)/g"  -e 's,/usr/local,$(prefix),g' < bochsrc.txt.orig > bochsrc.txt; rm -f bochsrc.txt.orig)
  
  install_dlx:
