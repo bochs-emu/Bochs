@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.63 2003-07-12 23:03:06 vruppert Exp $
+// $Id: wx.cc,v 1.64 2003-07-13 16:31:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -420,6 +420,106 @@ wxAsciiKey[0x5f] = {
   BX_KEY_GRAVE
 };
 
+// copied from gui/win32.cc
+Bit32u
+wxMSW_to_bx_key[0x59] = {
+  /* 0x00 - 0x0f */
+  0,
+  BX_KEY_ESC,
+  BX_KEY_1,
+  BX_KEY_2,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_6,
+  BX_KEY_7,
+  BX_KEY_8,
+  BX_KEY_9,
+  BX_KEY_0,
+  BX_KEY_MINUS,
+  BX_KEY_EQUALS,
+  BX_KEY_BACKSPACE,
+  BX_KEY_TAB,
+  /* 0x10 - 0x1f */
+  BX_KEY_Q,
+  BX_KEY_W,
+  BX_KEY_E,
+  BX_KEY_R,
+  BX_KEY_T,
+  BX_KEY_Y,
+  BX_KEY_U,
+  BX_KEY_I,
+  BX_KEY_O,
+  BX_KEY_P,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_ENTER,
+  BX_KEY_CTRL_L,
+  BX_KEY_A,
+  BX_KEY_S,
+  /* 0x20 - 0x2f */
+  BX_KEY_D,
+  BX_KEY_F,
+  BX_KEY_G,
+  BX_KEY_H,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_SEMICOLON,
+  BX_KEY_SINGLE_QUOTE,
+  BX_KEY_GRAVE,
+  BX_KEY_SHIFT_L,
+  BX_KEY_BACKSLASH,
+  BX_KEY_Z,
+  BX_KEY_X,
+  BX_KEY_C,
+  BX_KEY_V,
+  /* 0x30 - 0x3f */
+  BX_KEY_B,
+  BX_KEY_N,
+  BX_KEY_M,
+  BX_KEY_COMMA,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+  BX_KEY_SHIFT_R,
+  BX_KEY_KP_MULTIPLY,
+  BX_KEY_ALT_L,
+  BX_KEY_SPACE,
+  BX_KEY_CAPS_LOCK,
+  BX_KEY_F1,
+  BX_KEY_F2,
+  BX_KEY_F3,
+  BX_KEY_F4,
+  BX_KEY_F5,
+  /* 0x40 - 0x4f */
+  BX_KEY_F6,
+  BX_KEY_F7,
+  BX_KEY_F8,
+  BX_KEY_F9,
+  BX_KEY_F10,
+  BX_KEY_PAUSE,
+  BX_KEY_SCRL_LOCK,
+  BX_KEY_KP_HOME,
+  BX_KEY_KP_UP,
+  BX_KEY_KP_PAGE_UP,
+  BX_KEY_KP_SUBTRACT,
+  BX_KEY_KP_LEFT,
+  BX_KEY_KP_5,
+  BX_KEY_KP_RIGHT,
+  BX_KEY_KP_ADD,
+  BX_KEY_KP_END,
+  /* 0x50 - 0x58 */
+  BX_KEY_KP_DOWN,
+  BX_KEY_KP_PAGE_DOWN,
+  BX_KEY_KP_INSERT,
+  BX_KEY_KP_DELETE,
+  0,
+  0,
+  BX_KEY_LEFT_BACKSLASH,
+  BX_KEY_F11,
+  BX_KEY_F12
+};
+
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
 // get windows specific definitions. At present the only thing needed
 // is the definition of HIWORD.
@@ -437,8 +537,6 @@ MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release
   Bit32u lParam = wxev.m_rawFlags;
   Bit32u key = HIWORD (lParam) & 0x01FF;
   bxev.bx_key = 0x0000;
-  // Swap the scancodes of "numlock" and "pause"
-  if ((key & 0xff)==0x45) key ^= 0x100;
   if (key & 0x0100) {
     // Its an extended key
     bxev.bx_key = 0xE000;
@@ -846,26 +944,75 @@ void bx_wx_gui_c::handle_events(void)
       case BX_ASYNC_EVT_KEY:
         bx_key = event_queue[i].u.key.bx_key;
         if (event_queue[i].u.key.raw_scancode) {
-          // event contains raw scancodes: use put_scancode
-          Bit8u scancode;
+          // event contains raw scancodes: convert to BX_KEY values first
+          bx_bool released = ((bx_key & 0x80) > 0);
           if (bx_key & 0xFF00) { // for extended keys
-            // This makes the "AltGr" key on European keyboards work
-            if (bx_key==0xE038) {
-              scancode = 0x9d; // left control key released
-              DEV_kbd_put_scancode (&scancode, 1);
+            switch (bx_key & 0x7f) {
+              case 0x1C:
+                bx_key = BX_KEY_KP_ENTER;
+                break;
+              case 0x1D:
+                bx_key = BX_KEY_CTRL_R;
+                break;
+              case 0x35:
+                bx_key = BX_KEY_KP_DIVIDE;
+                break;
+              case 0x38:
+                // This makes the "AltGr" key on European keyboards work
+                DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+                bx_key = BX_KEY_ALT_R;
+                break;
+              case 0x45:
+                bx_key = BX_KEY_NUM_LOCK;
+                break;
+              case 0x47:
+                bx_key = BX_KEY_HOME;
+                break;
+              case 0x48:
+                bx_key = BX_KEY_UP;
+                break;
+              case 0x49:
+                bx_key = BX_KEY_PAGE_UP;
+                break;
+              case 0x4B:
+                bx_key = BX_KEY_LEFT;
+                break;
+              case 0x4D:
+                bx_key = BX_KEY_RIGHT;
+                break;
+              case 0x4F:
+                bx_key = BX_KEY_END;
+                break;
+              case 0x50:
+                bx_key = BX_KEY_DOWN;
+                break;
+              case 0x51:
+                bx_key = BX_KEY_PAGE_DOWN;
+                break;
+              case 0x52:
+                bx_key = BX_KEY_INSERT;
+                break;
+              case 0x53:
+                bx_key = BX_KEY_DELETE;
+                break;
+              case 0x5B:
+                bx_key = BX_KEY_WIN_L;
+                break;
+              case 0x5C:
+                bx_key = BX_KEY_WIN_R;
+                break;
+              case 0x5D:
+                bx_key = BX_KEY_MENU;
+                break;
             }
-            scancode = 0xFF & (bx_key>>8);
-            IFDBG_KEY (wxLogDebug (wxT ("sending raw scancode 0x%02x (extended key))", (int)scancode)));
-            DEV_kbd_put_scancode(&scancode, 1);
+          } else {
+            bx_key = wxMSW_to_bx_key[bx_key & 0x7f];
           }
-          scancode = 0xFF & bx_key;
-          IFDBG_KEY (wxLogDebug (wxT ("sending raw scancode 0x%02x", (int))scancode));
-          DEV_kbd_put_scancode(&scancode, 1);
-        } else {
-          // event contains BX_KEY_* codes: use gen_scancode
-          IFDBG_KEY (wxLogDebug (wxT ("sending key event 0x%02x", bx_key)));
-          DEV_kbd_gen_scancode(bx_key);
+          if (released) bx_key |= BX_KEY_RELEASED;
         }
+        // event contains BX_KEY_* codes: use gen_scancode
+        IFDBG_KEY (wxLogDebug (wxT ("sending key event 0x%02x", bx_key)));
+        DEV_kbd_gen_scancode(bx_key);
         break;
       case BX_ASYNC_EVT_MOUSE:
         DEV_mouse_motion(
