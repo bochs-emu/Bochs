@@ -135,7 +135,7 @@ BX_CPU_C::LAR_GvEw(BxInstruction_t *i)
 
   if (descriptor.valid==0) {
     set_ZF(0);
-    //BX_INFO(("lar(): descriptor valid bit cleared\n"));
+    //BX_DEBUG(("lar(): descriptor valid bit cleared\n"));
     return;
     }
 
@@ -179,7 +179,7 @@ BX_CPU_C::LAR_GvEw(BxInstruction_t *i)
         break;
       default: /* rest not accepted types to LAR */
         set_ZF(0);
-        BX_INFO(("lar(): not accepted type\n"));
+        BX_DEBUG(("lar(): not accepted type\n"));
         return;
         break;
       }
@@ -396,7 +396,7 @@ BX_CPU_C::LLDT_Ew(BxInstruction_t *i)
 
     // #GP(selector) if the selector operand does not point into GDT
     if (selector.ti != 0) {
-      BX_INFO(("LLDT: selector.ti != 0\n"));
+      BX_ERROR(("LLDT: selector.ti != 0\n"));
       exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
       }
 
@@ -417,18 +417,18 @@ BX_CPU_C::LLDT_Ew(BxInstruction_t *i)
     if ( (descriptor.valid==0) ||
         descriptor.segment  ||
         (descriptor.type!=2) ) {
-      BX_INFO(("lldt: doesn't point to an LDT descriptor!\n"));
+      BX_ERROR(("lldt: doesn't point to an LDT descriptor!\n"));
       exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
       }
 
     /* #NP(selector) if LDT descriptor is not present */
     if (descriptor.p==0) {
-      BX_INFO(("lldt: LDT descriptor not present!\n"));
+      BX_ERROR(("lldt: LDT descriptor not present!\n"));
       exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
       }
 
     if (descriptor.u.ldt.limit < 7) {
-      BX_INFO(("lldt: ldtr.limit < 7\n"));
+      BX_ERROR(("lldt: ldtr.limit < 7\n"));
       }
 
     BX_CPU_THIS_PTR ldtr.selector = selector;
@@ -565,7 +565,7 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
   /* if selector null, clear ZF and done */
   if ( (raw_selector & 0xfffc) == 0 ) {
     set_ZF(0);
-    BX_INFO(("VERR: null selector\n"));
+    BX_ERROR(("VERR: null selector\n"));
     return;
     }
 
@@ -577,7 +577,7 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
   if ( !fetch_raw_descriptor2(&selector, &dword1, &dword2) ) {
     /* not within descriptor table */
     set_ZF(0);
-    BX_INFO(("VERR: not in table\n"));
+    BX_ERROR(("VERR: not in table\n"));
     return;
     }
 
@@ -585,7 +585,7 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
 
   if ( descriptor.segment==0 ) { /* system or gate descriptor */
     set_ZF(0); /* inaccessible */
-    BX_INFO(("VERR: system descriptor\n"));
+    BX_ERROR(("VERR: system descriptor\n"));
     return;
     }
 
@@ -660,7 +660,7 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
   /* if selector null, clear ZF and done */
   if ( (raw_selector & 0xfffc) == 0 ) {
     set_ZF(0);
-    BX_INFO(("VERW: null selector\n"));
+    BX_ERROR(("VERW: null selector\n"));
     return;
     }
 
@@ -672,7 +672,7 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
   if ( !fetch_raw_descriptor2(&selector, &dword1, &dword2) ) {
     /* not within descriptor table */
     set_ZF(0);
-    BX_INFO(("VERW: not in table\n"));
+    BX_ERROR(("VERW: not in table\n"));
     return;
     }
 
@@ -681,7 +681,7 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
   /* rule out system segments & code segments */
   if ( descriptor.segment==0 || descriptor.u.segment.executable ) {
     set_ZF(0);
-    BX_INFO(("VERW: system seg or code\n"));
+    BX_ERROR(("VERW: system seg or code\n"));
     return;
     }
 
@@ -699,7 +699,7 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
       return;
       }
     set_ZF(1); /* accessible */
-    BX_INFO(("VERW: data seg writable\n"));
+    BX_ERROR(("VERW: data seg writable\n"));
     return;
     }
 

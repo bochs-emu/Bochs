@@ -145,12 +145,11 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
   Bit8u channel;
 
   if (io_len > 1) {
-    BX_PANIC(("dma: io read from address %08x, len=%u\n",
+    BX_PANIC(("io read from address %08x, len=%u\n",
              (unsigned) address, (unsigned) io_len));
     }
 
-  if (bx_dbg.dma)
-    BX_INFO(("dma: read addr=%04x\n", (unsigned) address));
+  BX_DEBUG(("read addr=%04x\n", (unsigned) address));
 
 #if BX_DMA_FLOPPY_IO < 1
   /* if we're not supporting DMA/floppy IO just return a bogus value */
@@ -221,7 +220,7 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
     case 0x008b: // DMA-2 page register, channel 5
     case 0x008f: // DMA-2 page register, channel 4
       channel = channelindex[address - 0x89] + 4;
-      BX_INFO(("dma: read: unsupported address=%04x (channel %d)\n", 
+      BX_ERROR(("read: unsupported address=%04x (channel %d)\n", 
 		(unsigned) address, channel));
       return( 0x00 );
 
@@ -241,12 +240,12 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
     case 0x00da:
     case 0x00dc:
     case 0x00de:
-      BX_INFO(("dma: read: unsupported address=%04x\n", (unsigned) address));
+      BX_ERROR(("read: unsupported address=%04x\n", (unsigned) address));
       return(0x0000);
       break;
 
     default:
-      BX_PANIC(("dma: read: unsupported address=%04x\n", (unsigned) address));
+      BX_PANIC(("read: unsupported address=%04x\n", (unsigned) address));
       return(0);
     }
 }
@@ -287,12 +286,11 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       return;
       }
 
-    BX_PANIC(("dma: io write to address %08x, len=%u\n",
+    BX_PANIC(("io write to address %08x, len=%u\n",
              (unsigned) address, (unsigned) io_len));
     }
 
-  if (bx_dbg.dma)
-    BX_INFO(("\ndma: write: address=%04x value=%02x\n",
+  BX_DEBUG(("\ndma: write: address=%04x value=%02x\n",
       (unsigned) address, (unsigned) value));
 
 #if BX_DMA_FLOPPY_IO < 1
@@ -306,8 +304,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x04:
     case 0x06:
       channel = address >> 1;
-      if (bx_dbg.dma)
-        BX_INFO(("  DMA-1 base and current address, channel %d\n", channel));
+      BX_DEBUG(("  DMA-1 base and current address, channel %d\n", channel));
       if (BX_DMA_THIS s.flip_flop==0) { /* 1st byte */
         BX_DMA_THIS s.chan[channel].base_address = value;
         BX_DMA_THIS s.chan[channel].current_address = value;
@@ -315,12 +312,10 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       else { /* 2nd byte */
         BX_DMA_THIS s.chan[channel].base_address |= (value << 8);
         BX_DMA_THIS s.chan[channel].current_address |= (value << 8);
-        if (bx_dbg.dma) {
-          BX_INFO(("    base = %04x\n",
+          BX_DEBUG(("    base = %04x\n",
             (unsigned) BX_DMA_THIS s.chan[channel].base_address));
-          BX_INFO(("    curr = %04x\n",
+          BX_DEBUG(("    curr = %04x\n",
             (unsigned) BX_DMA_THIS s.chan[channel].current_address));
-          }
         }
       BX_DMA_THIS s.flip_flop = !BX_DMA_THIS s.flip_flop;
       return;
@@ -331,8 +326,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x05:
     case 0x07:
       channel = address >> 1;
-      if (bx_dbg.dma)
-        BX_INFO(("  DMA-1 base and current count, channel %d\n", channel));
+      BX_DEBUG(("  DMA-1 base and current count, channel %d\n", channel));
       if (BX_DMA_THIS s.flip_flop==0) { /* 1st byte */
         BX_DMA_THIS s.chan[channel].base_count = value;
         BX_DMA_THIS s.chan[channel].current_count = value;
@@ -340,12 +334,10 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       else { /* 2nd byte */
         BX_DMA_THIS s.chan[channel].base_count |= (value << 8);
         BX_DMA_THIS s.chan[channel].current_count |= (value << 8);
-        if (bx_dbg.dma) {
-          BX_INFO(("    base = %04x\n",
+        BX_DEBUG(("    base = %04x\n",
             (unsigned) BX_DMA_THIS s.chan[channel].base_count));
-          BX_INFO(("    curr = %04x\n",
+        BX_DEBUG(("    curr = %04x\n",
             (unsigned) BX_DMA_THIS s.chan[channel].current_count));
-          }
         }
       BX_DMA_THIS s.flip_flop = !BX_DMA_THIS s.flip_flop;
       return;
@@ -353,14 +345,14 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
 
     case 0x08: /* DMA-1: command register */
       if (value != 0x04)
-        BX_INFO(("DMA: write to 0008: value(%02xh) not 04h\n",
+        BX_ERROR(("DMA: write to 0008: value(%02xh) not 04h\n",
           (unsigned) value));
       BX_DMA_THIS s.command_reg = value;
       return;
       break;
 
     case 0x09: // DMA-1: request register
-      BX_INFO(("DMA-1: write to request register (%02x)\n", (unsigned) value));
+      BX_ERROR(("DMA-1: write to request register (%02x)\n", (unsigned) value));
       // note: write to 0x0d clears this register
       if (value & 0x04) {
         // set request bit
@@ -371,7 +363,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
         // clear request bit
         channel = value & 0x03;
         BX_DMA_THIS s.status_reg &= ~(1 << (channel+4));
-        BX_INFO(("dma-1: cleared request bit for channel %u\n", (unsigned) channel));
+        BX_DEBUG(("dma-1: cleared request bit for channel %u\n", (unsigned) channel));
         }
       return;
       break;
@@ -380,8 +372,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       set_mask_bit = value & 0x04;
       channel = value & 0x03;
       BX_DMA_THIS s.mask[channel] = (set_mask_bit > 0);
-      if (bx_dbg.dma)
-        BX_INFO(("DMA1: set_mask_bit=%u, channel=%u, mask now=%02xh\n",
+      BX_DEBUG(("DMA1: set_mask_bit=%u, channel=%u, mask now=%02xh\n",
           (unsigned) set_mask_bit, (unsigned) channel, (unsigned) BX_DMA_THIS s.mask[channel]));
       return;
       break;
@@ -392,24 +383,22 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s.chan[channel].mode.address_decrement = (value >> 5) & 0x01;
       BX_DMA_THIS s.chan[channel].mode.autoinit_enable = (value >> 4) & 0x01;
       BX_DMA_THIS s.chan[channel].mode.transfer_type = (value >> 2) & 0x03;
-//BX_INFO(("DMA1: mode register[%u] = %02x\n",
+//BX_DEBUG(("DMA1: mode register[%u] = %02x\n",
 //(unsigned) channel, (unsigned) value));
-      if (bx_dbg.dma)
-        BX_INFO(("DMA1: mode register[%u] = %02x\n",
+      BX_DEBUG(("DMA1: mode register[%u] = %02x\n",
           (unsigned) channel, (unsigned) value));
       return;
       break;
 
     case 0x0c: /* dma-1 clear byte flip/flop */
-      if (bx_dbg.dma)
-        BX_INFO(("DMA1: clear flip/flop\n"));
+      BX_DEBUG(("DMA1: clear flip/flop\n"));
       BX_DMA_THIS s.flip_flop = 0;
       return;
       break;
 
     case 0x0d: // dma-1: master disable
       /* ??? */
-      BX_INFO(("dma: master disable\n"));
+      BX_DEBUG(("master disable\n"));
       // writing any value to this port resets DMA controller 1
       // same action as a hardware reset
       // mask register is set (chan 0..3 disabled)
@@ -427,7 +416,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       break;
 
     case 0x0e: // dma-1: clear mask register
-      BX_INFO(("dma-1: clear mask register\n"));
+      BX_DEBUG(("dma-1: clear mask register\n"));
       BX_DMA_THIS s.mask[0] = 0;
       BX_DMA_THIS s.mask[1] = 0;
       BX_DMA_THIS s.mask[2] = 0;
@@ -436,7 +425,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       break;
 
     case 0x0f: // dma-1: write all mask bits
-      BX_INFO(("dma-1: write all mask bits\n"));
+      BX_DEBUG(("dma-1: write all mask bits\n"));
       BX_DMA_THIS s.mask[0] = value & 0x01; value >>= 1;
       BX_DMA_THIS s.mask[1] = value & 0x01; value >>= 1;
       BX_DMA_THIS s.mask[2] = value & 0x01; value >>= 1;
@@ -451,8 +440,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       /* address bits A16-A23 for DMA channel */
       channel = channelindex[address - 0x81];
       BX_DMA_THIS s.chan[channel].page_reg = value;
-      if (bx_dbg.dma)
-        BX_INFO(("DMA1: page register %d = %02x\n", channel, (unsigned) value));
+      BX_DEBUG(("DMA1: page register %d = %02x\n", channel, (unsigned) value));
       return;
       break;
 
@@ -462,7 +450,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
 
     //case 0xd0: /* DMA-2 command register */
     //  if (value != 0x04)
-    //    BX_INFO(("DMA2: write command register: value(%02xh)!=04h\n",
+    //    BX_DEBUG(("DMA2: write command register: value(%02xh)!=04h\n",
     //      (unsigned) value));
     //  return;
     //  break;
@@ -483,14 +471,14 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x00da:
     case 0x00dc:
     case 0x00de:
-      BX_INFO(("DMA(ignored): write: %04xh = %04xh\n",
+      BX_DEBUG(("DMA(ignored): write: %04xh = %04xh\n",
         (unsigned) address, (unsigned) value));
       return;
       break;
 
 
     default:
-      BX_INFO(("DMA(ignored): write: %04xh = %02xh\n",
+      BX_ERROR(("DMA(ignored): write: %04xh = %02xh\n",
         (unsigned) address, (unsigned) value));
     }
 }
@@ -510,7 +498,7 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
 	     channel));
 #endif
   if (!val) {
-    //BX_INFO(("bx_dma_c::DRQ(): val == 0\n"));
+    //BX_DEBUG(("bx_dma_c::DRQ(): val == 0\n"));
     // clear bit in status reg
     // deassert HRQ if not pending DRQ's ?
     // etc.
@@ -551,14 +539,13 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
   dma_base = (BX_DMA_THIS s.chan[channel].page_reg << 16) | BX_DMA_THIS s.chan[channel].base_address;
   dma_roof = dma_base + BX_DMA_THIS s.chan[channel].base_count;
   if ( (dma_base & 0xffff0000) != (dma_roof & 0xffff0000) ) {
-BX_INFO(("dma_base = %08x\n", (unsigned) dma_base));
-BX_INFO(("dma_base_count = %08x\n", (unsigned) BX_DMA_THIS s.chan[channel].base_count));
-BX_INFO(("dma_roof = %08x\n", (unsigned) dma_roof));
-    BX_PANIC(("dma: DMA request outside 64k boundary\n"));
-    }
+	BX_INFO(("dma_base = %08x\n", (unsigned) dma_base));
+	BX_INFO(("dma_base_count = %08x\n", (unsigned) BX_DMA_THIS s.chan[channel].base_count));
+	BX_INFO(("dma_roof = %08x\n", (unsigned) dma_roof));
+    BX_PANIC(("request outside 64k boundary\n"));
+  }
 
-
-  //BX_INFO(("DRQ set up for single mode, increment, auto-init disabled, write\n"));
+  //BX_DEBUG(("DRQ set up for single mode, increment, auto-init disabled, write\n"));
   // should check mask register VS DREQ's in status register here?
   // assert Hold ReQuest line to CPU
   bx_pc_system.set_HRQ(1);
@@ -584,7 +571,7 @@ bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
     return;
     }
 
-  //BX_INFO(("hlda: OK in response to DRQ(%u)\n", (unsigned) channel));
+  //BX_DEBUG(("hlda: OK in response to DRQ(%u)\n", (unsigned) channel));
   phy_addr = (BX_DMA_THIS s.chan[channel].page_reg << 16) |
              BX_DMA_THIS s.chan[channel].current_address;
 

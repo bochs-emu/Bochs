@@ -571,7 +571,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 
 if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
     BX_VGA_THIS s.graphics_ctrl.shift_reg)
-  BX_INFO(("read 3cf: reg 05 = %02x\n", (unsigned) retval));
+  	BX_DEBUG(("read 3cf: reg 05 = %02x\n", (unsigned) retval));
           RETURN(retval);
           break;
         case 6: /* Miscellaneous */

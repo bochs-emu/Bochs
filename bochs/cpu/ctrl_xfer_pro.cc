@@ -510,7 +510,7 @@ BX_CPU_C::call_protected(BxInstruction_t *i, Bit16u cs_raw, Bit32u disp32)
 
     // segment must be present, else #NP(code seg selector)
     if (cs_descriptor.p == 0) {
-      BX_INFO(("call_protected: cs.p = 0\n"));
+      BX_ERROR(("call_protected: cs.p = 0\n"));
       exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
       }
 

@@ -44,11 +44,11 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
 
   if ( protected_mode() ) {
     if ( seg->cache.valid==0 ) {
-      BX_INFO(("seg = %s\n", BX_CPU_THIS_PTR strseg(seg)));
-      BX_INFO(("seg->selector.value = %04x\n", (unsigned) seg->selector.value));
-      BX_INFO(("write_virtual_checks: valid bit = 0\n"));
-	  BX_INFO(("CS: %04x\n", (unsigned) BX_CPU_THIS_PTR sregs[1].selector.value));
-	  BX_INFO(("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip));
+      BX_ERROR(("seg = %s\n", BX_CPU_THIS_PTR strseg(seg)));
+      BX_ERROR(("seg->selector.value = %04x\n", (unsigned) seg->selector.value));
+      BX_ERROR(("write_virtual_checks: valid bit = 0\n"));
+	  BX_ERROR(("CS: %04x\n", (unsigned) BX_CPU_THIS_PTR sregs[1].selector.value));
+	  BX_ERROR(("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -115,17 +115,12 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
 
   if ( protected_mode() ) {
     if ( seg->cache.valid==0 ) {
-      BX_CPU_THIS_PTR info("seg = %s\n", BX_CPU_THIS_PTR strseg(seg));
-      BX_CPU_THIS_PTR info("seg->selector.value = %04x\n", (unsigned) seg->selector.value);
-      //BX_CPU_THIS_PTR info("read_virtual_checks: valid bit = 0\n");
-      //BX_CPU_THIS_PTR info("CS: %04x\n", (unsigned)
-      //BX_CPU_THIS_PTR sregs[1].selector.value);
-      BX_INFO(("seg = %s\n", BX_CPU_THIS_PTR strseg(seg)));
-      BX_INFO(("seg->selector.value = %04x\n", (unsigned) seg->selector.value));
-      //BX_INFO(("read_virtual_checks: valid bit = 0\n"));
-      //BX_INFO(("CS: %04x\n", (unsigned)
+      BX_ERROR(("seg = %s\n", BX_CPU_THIS_PTR strseg(seg)));
+      BX_ERROR(("seg->selector.value = %04x\n", (unsigned) seg->selector.value));
+      //BX_ERROR(("read_virtual_checks: valid bit = 0\n"));
+      //BX_ERROR(("CS: %04x\n", (unsigned)
       //   BX_CPU_THIS_PTR sregs[1].selector.value));
-      //BX_INFO(("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip));
+      //BX_ERROR(("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip));
       //debug(BX_CPU_THIS_PTR eip);
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
@@ -197,8 +192,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
 
   else { /* real mode */
     if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
-      //BX_CPU_THIS_PTR info("read_virtual_checks() SEG EXCEPTION:  %x:%x + %x\n",
-      //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length);
+      //BX_ERROR(("read_virtual_checks() SEG EXCEPTION:  %x:%x + %x\n",
+      //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
       if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
       else exception(BX_GP_EXCEPTION, 0, 0);
       }
@@ -219,7 +214,7 @@ BX_CPU_C::strseg(bx_segment_reg_t *seg)
   else if (seg == &BX_CPU_THIS_PTR sregs[4]) return("FS");
   else if (seg == &BX_CPU_THIS_PTR sregs[5]) return("GS");
   else {
-    BX_INFO(("undefined segment passed to strseg()!\n"));
+    BX_ERROR(("undefined segment passed to strseg()!\n"));
     return("??");
     }
 }
