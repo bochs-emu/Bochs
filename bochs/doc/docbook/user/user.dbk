@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.68 2002-11-20 20:19:34 bdenney Exp $
+$Id: user.dbk,v 1.69 2002-11-20 20:27:53 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -407,11 +407,11 @@ currently work with.
     <entry>Emulates an NE2000 compatible network card.  On Windows NT/2000,
     Linux, FreeBSD, and NetBSD, Bochs will forward packets to and from the
     operating system so that the guest OS can talk on the physical network.
-    Unfortunately, with the current implementation (except linux), the guest 
-    OS can talk to any machine on the network BUT NOT the host machine.
-    On linux, with the tuntap interface, there is no such limitations, and 
-    the host machine may even be configured as a router so the guest os has access
-    to the internet (see <xref linkend="config-tuntap"> for configuration instructions).
+    Unfortunately, on some platforms the guest OS can talk to any machine on
+    the network BUT NOT the host machine.  On Windows and on systems that
+    allow the TAP or TUN/TAP interface, there is no such limitation.  Often
+    the host machine may be configured so the guest OS has access to the
+    internet.
     </entry>
   </row>
   <row>
