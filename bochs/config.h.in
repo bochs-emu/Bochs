@@ -191,14 +191,10 @@
 #define BX_HAVE_NANOSLEEP 0
 #define BX_HAVE_ABORT 0
 
-// This turns on Roland Mainz's idle hack.  Presently it is specific to 
-// X windows.  If people try to enable it elsewhere, give a compile error
-// so that they don't waste their time trying.
+// This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
+// gui. If people try to enable it elsewhere, give a compile error after the
+// gui definition so that they don't waste their time trying.
 #define BX_USE_IDLE_HACK 0
-#if (BX_USE_IDLE_HACK && !BX_WITH_X11)
-#  error IDLE_HACK will only work with the X11 gui. Correct configure args and retry.
-#endif
-
 
 // Use Static Member Funtions to eliminate 'this' pointer passing
 // If you want the efficiency of 'C', you can make all the
@@ -338,6 +334,13 @@
 #define BX_WITH_RFB 0
 #define BX_WITH_AMIGAOS 0
 
+
+// Roland Mainz's idle hack is presently specific to X11. If people try to
+// enable it elsewhere, give a compile error so that they don't waste their
+// time trying.
+#if (BX_USE_IDLE_HACK && !BX_WITH_X11)
+#  error IDLE_HACK will only work with the X11 gui. Correct configure args and retry.
+#endif
 
 #define WORDS_BIGENDIAN 0
 
