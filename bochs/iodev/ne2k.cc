@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.35 2002-08-27 19:54:46 bdenney Exp $
+// $Id: ne2k.cc,v 1.36 2002-08-28 16:55:16 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.35 2002-08-27 19:54:46 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.36 2002-08-28 16:55:16 bdenney Exp $"));
 	// nothing for now
 }
 
@@ -318,7 +318,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0xf:  // Reset register
-    reset(BX_RESET_HARDWARE);
+    reset(BX_RESET_SOFTWARE);
     break;
 
   default:
@@ -365,7 +365,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0xf:  // Reset register
-    reset(BX_RESET_HARDWARE);
+    reset(BX_RESET_SOFTWARE);
     break;
 
   default: // this is invalid, but happens under win95 device detection
@@ -1245,7 +1245,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.35 2002-08-27 19:54:46 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.36 2002-08-28 16:55:16 bdenney Exp $"));
   BX_NE2K_THIS devices = d;
 
 
