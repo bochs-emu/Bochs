@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.31 2001-10-03 13:10:37 bdenney Exp $
+// $Id: control.cc,v 1.32 2001-10-06 05:51:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.31 2001-10-03 13:10:37 bdenney Exp $
+ * $Id: control.cc,v 1.32 2001-10-06 05:51:34 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -594,15 +594,8 @@ int bx_write_rc (char *rc)
   }
 }
 
-/*
-A panic has occurred.  Do you want to:
-  cont       - continue execution
-  alwayscont - continue execution, and do not ask again
-  die        - stop execution now
-*/
-
-char *log_action_ask_choices[] = { "cont", "alwayscont", "die" };
-int log_action_n_choices = 3;
+char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "debug" };
+int log_action_n_choices = 3 + (BX_DEBUGGER?1:0);
 
 int control_panel_notify_callback (int code)
 {
@@ -622,11 +615,14 @@ int control_panel_notify_callback (int code)
       fprintf (stderr, "  alwayscont - continue execution, and don't ask again.\n");
       fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), prefix);
       fprintf (stderr, "  die        - stop execution now\n");
+#if BX_DEBUGGER
+      fprintf (stderr, "  debug      - continue and return to debugger\n");
+#endif
       int choice;
-      if (ask_menu ("Choose cont, alwayscont, or die. [%s] ", 3, 
-	    log_action_ask_choices, 2, &choice) < 0) 
+      if (ask_menu ("Choose cont, alwayscont, or die. [%s] ", 
+	    log_action_n_choices, log_action_ask_choices, 2, &choice) < 0) 
 	return SIM->notify_return(-1);
-      // return 0 for continue, 1 for alwayscontinue, 2 for die.
+      // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
       SIM->notify_return(choice);
     }
     break;

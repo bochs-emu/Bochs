@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: logio.cc,v 1.8 2001-10-06 05:51:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -354,6 +354,17 @@ logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
       break;
     case 2:   // user chose die
       fatal (prefix, fmt, ap);
+#if BX_DEBUGGER
+    case 3:
+      // user chose debugger.  To "drop into the debugger" we just set the
+      // interrupt_requested bit and continue execution.  Before the next
+      // instruction, it should notice the user interrupt and return to
+      // the debugger.
+      bx_guard.interrupt_requested = 1;
+      break;
+#endif
+    default:
+      fprintf (stderr, "WARNING: LOCAL_log_msg returned unexpected value %d\n", val);
   }
 }
 
