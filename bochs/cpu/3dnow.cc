@@ -31,7 +31,6 @@ static void prepare_softfloat_status_word
   status.float_nan_handling_mode = float_first_operand_nan;
   status.float_rounding_mode = rounding_mode;
   status.flush_underflow_to_zero = 0;
-  status.float_precision_lost_up = 0;
 }
 
 void BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)

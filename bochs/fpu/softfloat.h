@@ -87,6 +87,10 @@ enum float_exception_flag_t {
     float_flag_inexact   = 0x20
 };
 
+#ifdef FLOATX80
+#define RAISE_SW_C1 0x0200
+#endif
+
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point ordering relations
 *----------------------------------------------------------------------------*/
@@ -104,7 +108,6 @@ struct float_status_t
 {
 #ifdef FLOATX80
     int float_rounding_precision;	/* floatx80 only */
-    int float_precision_lost_up;	/* flag register, floatx80 only */
 #endif
     int float_rounding_mode;
     int float_exception_flags;
@@ -159,7 +162,7 @@ BX_CPP_INLINE int get_float_nan_handling_mode(float_status_t &status)
 #ifdef FLOATX80
 BX_CPP_INLINE void set_float_rounding_up(float_status_t &status)
 {
-    status.float_precision_lost_up = 1;
+    status.float_exception_flags |= (float_flag_inexact | RAISE_SW_C1);
 }
 #endif
 
@@ -291,18 +294,11 @@ floatx80 int32_to_floatx80(Bit32s);
 floatx80 int64_to_floatx80(Bit64s);
 
 /*----------------------------------------------------------------------------
-| Software IEC/IEEE single-precision conversion routines.
-*----------------------------------------------------------------------------*/
-floatx80 float32_to_floatx80(float32, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE double-precision conversion routines.
-*----------------------------------------------------------------------------*/
-floatx80 float64_to_floatx80(float64, float_status_t &status);
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision conversion routines.
 *----------------------------------------------------------------------------*/
+floatx80 float32_to_floatx80(float32, float_status_t &status);
+floatx80 float64_to_floatx80(float64, float_status_t &status);
+
 Bit32s floatx80_to_int32(floatx80, float_status_t &status);
 Bit32s floatx80_to_int32_round_to_zero(floatx80, float_status_t &status);
 Bit64s floatx80_to_int64(floatx80, float_status_t &status);

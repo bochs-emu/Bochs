@@ -32,8 +32,6 @@ Changes to next release:
     ! Unmasked underflow/overflow should correct the result 
       by magic number for all operations, including float32 
       and float64.
-    ! set SW_C1 according to PRECISION_UP or PRECISION_DOWN 
-      conditions.
     ! improve performance of transcendential instructions.
 
 - Disassembler
