@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.59 2002-06-29 08:54:11 vruppert Exp $
+// $Id: harddrv.cc,v 1.60 2002-07-07 18:51:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.59 2002-06-29 08:54:11 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.60 2002-07-07 18:51:49 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1106,8 +1106,12 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 						      case 0x0d: // CD-ROM
 						      case 0x0e: // CD-ROM audio control
 						      case 0x3f: // all
-							    BX_PANIC(("cdrom: MODE SENSE (curr), code=%x",
+							    BX_ERROR(("cdrom: MODE SENSE (curr), code=%x"
+								      " not implemented yet",
 								     PageCode));
+							    atapi_cmd_error(SENSE_ILLEGAL_REQUEST,
+									    ASC_INV_FIELD_IN_CMD_PACKET);
+							    raise_interrupt();
 							    break;
 
 						      default:
