@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.206 2002-12-12 18:31:18 bdenney Exp $
+// $Id: main.cc,v 1.207 2002-12-14 22:18:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1828,12 +1828,12 @@ bx_init_main (int argc, char *argv[])
 	  BX_PLUGIN_PATH));
     setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
   }
-  if (getenv("BXBIOS") != NULL) {
-    BX_INFO (("BXBIOS is set to '%s'", getenv("BXBIOS")));
+  if (getenv("BXSHARE") != NULL) {
+    BX_INFO (("BXSHARE is set to '%s'", getenv("BXSHARE")));
   } else {
-    BX_INFO (("BXBIOS not set. using compile time default '%s'", 
-	  BX_BIOS_DEFAULT_PATH));
-    setenv("BXBIOS", BX_BIOS_DEFAULT_PATH, 1);
+    BX_INFO (("BXSHARE not set. using compile time default '%s'", 
+	  BX_SHARE_PATH));
+    setenv("BXSHARE", BX_SHARE_PATH, 1);
   }
 #else
   // we don't have getenv or setenv.  Do nothing.
@@ -2330,7 +2330,7 @@ parse_bochsrc(char *rcfile)
   static char *
 get_builtin_variable(char *varname)
 {
-#ifdef BX_BIOS_DEFAULT_PATH
+#ifdef BX_SHARE_PATH
 
 #ifdef WIN32
   int code;
@@ -2343,7 +2343,7 @@ get_builtin_variable(char *varname)
 
   if (strlen(varname)<1) return NULL;
   else {
-    if (!strcmp(varname, "BXBIOS")) {
+    if (!strcmp(varname, "BXSHARE")) {
 #ifdef WIN32
       wsprintf(keyname, "Software\\Bochs %s", VER_STRING);
       code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyname, 0, KEY_READ, &hkey);
@@ -2362,7 +2362,7 @@ get_builtin_variable(char *varname)
         return NULL;
       }
 #else
-      return BX_BIOS_DEFAULT_PATH;
+      return BX_SHARE_PATH;
 #endif
     }
     return NULL;
