@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "main.h"
+#define _buildsym(sym) libmodule2_LTX_##sym
 #include "modules.h"
 
 int n_operations = 0;
