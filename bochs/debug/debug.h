@@ -101,6 +101,8 @@ void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
 void bx_dbg_info_registers_command(void);
 void bx_dbg_info_dirty_command(void);
+void bx_dbg_info_control_regs_command(void);
+void bx_dbg_info_linux_command(void);
 void bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
                     Bit32u addr, Boolean addr_passed, int simulator);
 void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
@@ -118,6 +120,7 @@ void bx_dbg_maths_command(char *command, int data1, int data2);
 void bx_dbg_maths_expression_command(char *expr);
 void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
 extern Boolean watchpoint_continue;
+void bx_dbg_linux_syscall ();
 
 #ifdef __cplusplus
 }
@@ -368,6 +371,7 @@ typedef struct {
                    Bit32u addr1, Bit32u addr2, Bit32u *crc);
   } bx_dbg_callback_t;
 
+extern bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
 
 void BX_SIM1_INIT(bx_dbg_callback_t *, int argc, char *argv[]);
 #ifdef BX_SIM2_INIT
