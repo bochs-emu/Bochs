@@ -68,6 +68,8 @@ private:
     bool first_pass; //Whether or not this is the first loaded count.
     bool state_bit_1; //Miscelaneous state bits.
     bool state_bit_2;
+    Bit32u next_change_time; //Next time something besides count changes.
+                             //0 means never.
   };
 
   counter_type counter[3];
@@ -86,23 +88,26 @@ private:
 
   void decrement (counter_type & thisctr);
 
-public:
-  void init (void);
-
-  pit_82C54 (void);
+  void decrement_multiple(counter_type & thisctr, Bit32u cycles);
 
   void clock(Bit8u cnum);
 
-  void clock_all(void);
+public:
+  void init (void);
+  pit_82C54 (void);
+
+  void clock_all(Bit32u cycles);
+  void clock_multiple(Bit8u cnum, Bit32u cycles);
 
   Bit8u read(Bit8u address);
-
   void write(Bit8u address, Bit8u data);
 
   void set_GATE(Bit8u cnum, bool data);
+  bool read_GATE(Bit8u cnum);
 
   bool read_OUT(Bit8u cnum);
 
-  bool read_GATE(Bit8u cnum);
+  Bit32u get_clock_event_time(Bit8u cnum);
+  Bit32u get_next_event_time(void);
 
 };

@@ -236,16 +236,22 @@ bx_kbd_port61h_write(Bit8u   value)
   Boolean
 bx_pit2_c::periodic( Bit32u   usec_delta )
 {
-  Bit32u i;
+  Bit32u i=0;
   Boolean prev_timer0_out = BX_PIT2_THIS s.timer.read_OUT(0);
   Boolean want_interrupt = 0;
 
-  for(i=0; i<usec_delta; i++) {
-    BX_PIT2_THIS s.timer.clock_all();
+  while(usec_delta>0) {
+    Bit32u maxchange=BX_PIT2_THIS s.timer.get_next_event_time();
+    Bit32u timedelta=maxchange;
+    if((maxchange==0) || (maxchange>usec_delta)) {
+      timedelta=usec_delta;
+    }
+    BX_PIT2_THIS s.timer.clock_all(timedelta);
     if ( (prev_timer0_out==0) && ((BX_PIT2_THIS s.timer.read_OUT(0))==1) ) {
       want_interrupt=1;
     }
     prev_timer0_out=BX_PIT2_THIS s.timer.read_OUT(0);
+    usec_delta-=timedelta;
   }
 
   return(want_interrupt);

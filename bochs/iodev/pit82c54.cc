@@ -138,6 +138,98 @@
     init();
   }
 
+void pit_82C54::decrement_multiple(counter_type & thisctr, Bit32u cycles) {
+  while(cycles>0) {
+    if(cycles<=thisctr.count_binary) {
+      thisctr.count_binary-=cycles;
+      cycles-=cycles;
+      set_count_to_binary(thisctr);
+    } else {
+      cycles-=(thisctr.count_binary+1);
+      thisctr.count_binary-=thisctr.count_binary;
+      set_count_to_binary(thisctr);
+      decrement(thisctr);
+    }
+  }
+}
+
+void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
+  if(cnum>MAX_COUNTER) {
+    BX_ERROR(("Counter number too high in clock"));
+  } else {
+    counter_type & thisctr = counter[cnum];
+    while(cycles>0) {
+      if(thisctr.next_change_time==0) {
+	if(thisctr.count_written) {
+	  switch(thisctr.mode) {
+	  case 0:
+	    if(thisctr.GATE && (thisctr.write_state!=MSByte_multiple)) {
+	      decrement_multiple(thisctr, cycles);
+	    }
+	    break;
+	  case 1:
+	    decrement_multiple(thisctr, cycles);
+	    break;
+	  case 2:
+	    if( (!thisctr.first_pass) && thisctr.GATE ) {
+	      decrement_multiple(thisctr, cycles);
+	    }
+	    break;
+	  case 3:
+	    if( (!thisctr.first_pass) && thisctr.GATE ) {
+	      decrement_multiple(thisctr, 2*cycles);
+	    }
+	    break;
+	  case 4:
+	    if(thisctr.GATE) {
+	      decrement_multiple(thisctr, cycles);
+	    }
+	    break;
+	  case 5:
+	    decrement_multiple(thisctr, cycles);
+	    break;
+	  default:
+	    break;
+	  }
+	}
+	cycles-=cycles;
+      } else {
+	switch(thisctr.mode) {
+	case 0:
+	case 1:
+	case 2:
+	case 4:
+	case 5:
+	  if( thisctr.next_change_time > cycles ) {
+	    decrement_multiple(thisctr,cycles);
+	    thisctr.next_change_time-=cycles;
+	    cycles-=cycles;
+	  } else {
+	    decrement_multiple(thisctr,(thisctr.next_change_time-1));
+	    cycles-=thisctr.next_change_time;
+	    clock(cnum);
+	  }
+	  break;
+	case 3:
+	  if( thisctr.next_change_time > cycles ) {
+	    decrement_multiple(thisctr,cycles*2);
+	    thisctr.next_change_time-=cycles;
+	    cycles-=cycles;
+	  } else {
+	    decrement_multiple(thisctr,(thisctr.next_change_time-1)*2);
+	    cycles-=thisctr.next_change_time;
+	    clock(cnum);
+	  }
+	  break;
+	default:
+	  cycles-=cycles;
+	  break;
+	}
+      }
+    }
+  }
+}
+
   void pit_82C54::clock(Bit8u cnum) {
     if(cnum>MAX_COUNTER) {
       BX_ERROR(("Counter number too high in clock"));
@@ -148,15 +240,29 @@
 	if(thisctr.count_written) {
 	  if(thisctr.null_count) {
 	    set_count(thisctr, thisctr.inlatch);
+	    if(thisctr.GATE) {
+	      thisctr.next_change_time=thisctr.count_binary;
+	    } else {
+	      thisctr.next_change_time=0;
+	    }
 	    thisctr.null_count=0;
 	  } else {
 	    if(thisctr.GATE && (thisctr.write_state!=MSByte_multiple)) {
 	      decrement(thisctr);
-	      if((!thisctr.count) && (!thisctr.OUT)) {
-		set_OUT(thisctr,1);
+	      if(!thisctr.OUT) {
+		thisctr.next_change_time=thisctr.count_binary;
+		if(!thisctr.count) {
+		  set_OUT(thisctr,1);
+		}
+	      } else {
+		thisctr.next_change_time=0;
 	      }
+	    } else {
+	      thisctr.next_change_time=0; //if the clock isn't moving.
 	    }
 	  }
+	} else {
+	  thisctr.next_change_time=0; //default to 0.
 	}
 	thisctr.triggerGATE=0;
 	break;
@@ -164,6 +270,7 @@
 	if(thisctr.count_written) {
 	  if(thisctr.triggerGATE) {
 	    set_count(thisctr, thisctr.inlatch);
+	    thisctr.next_change_time=thisctr.count_binary;
 	    thisctr.null_count=0;
 	    set_OUT(thisctr,0);
 	    if(thisctr.write_state==MSByte_multiple) {
@@ -171,10 +278,17 @@
 	    }
 	  } else {
 	    decrement(thisctr);
-	    if((thisctr.count==0) && (!thisctr.OUT)) {
-	      set_OUT(thisctr,1);
+	    if(!thisctr.OUT) {
+	      thisctr.next_change_time=thisctr.count_binary;
+	      if(thisctr.count==0) {
+		set_OUT(thisctr,1);
+	      }
+	    } else {
+	      thisctr.next_change_time=0;
 	    }
 	  }
+	} else {
+	  thisctr.next_change_time=0; //default to 0.
 	}
 	thisctr.triggerGATE=0;
 	break;
@@ -182,6 +296,7 @@
 	if(thisctr.count_written) {
 	  if(thisctr.triggerGATE || thisctr.first_pass) {
 	    set_count(thisctr, thisctr.inlatch);
+	    thisctr.next_change_time=thisctr.count_binary-1;
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
 	      BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2."));
@@ -196,12 +311,18 @@
 	  } else {
 	    if(thisctr.GATE) {
 	      decrement(thisctr);
+	      thisctr.next_change_time=thisctr.count_binary-1;
 	      if(thisctr.count==1) {
+		thisctr.next_change_time=1;
 		set_OUT(thisctr,0);
 		thisctr.first_pass=1;
 	      }
+	    } else {
+	      thisctr.next_change_time=0;
 	    }
 	  }
+	} else {
+	  thisctr.next_change_time=0;
 	}
 	thisctr.triggerGATE=0;
 	break;
@@ -209,8 +330,13 @@
 	if(thisctr.count_written) {
 	  if( (thisctr.triggerGATE || thisctr.first_pass
 	     || thisctr.state_bit_2) && thisctr.GATE ) {
-	    set_count(thisctr, thisctr.inlatch);
+	    set_count(thisctr, thisctr.inlatch & 0xFFFE);
 	    thisctr.state_bit_1=thisctr.inlatch & 0x1;
+	    if( (!thisctr.OUT) || (!(thisctr.state_bit_1))) {
+	      thisctr.next_change_time=(thisctr.count_binary/2)-1;
+	    } else {
+	      thisctr.next_change_time=thisctr.count_binary/2;
+	    }
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
 	      BX_ERROR(("Count of 1 is invalid in pit mode 3."));
@@ -229,16 +355,27 @@
 	    if(thisctr.GATE) {
 	      decrement(thisctr);
 	      decrement(thisctr);
+	      if( (!thisctr.OUT) || (!(thisctr.state_bit_1))) {
+		thisctr.next_change_time=(thisctr.count_binary/2)-1;
+	      } else {
+		thisctr.next_change_time=thisctr.count_binary/2;
+	      }
 	      if(thisctr.count==0) {
 		thisctr.state_bit_2=1;
+		thisctr.next_change_time=1;
 	      }
 	      if( (thisctr.count==2) &&
 		 ( (!thisctr.OUT) || (!(thisctr.state_bit_1)))
 		 ) {
 		thisctr.state_bit_2=1;
+		thisctr.next_change_time=1;
 	      }
+	    } else {
+	      thisctr.next_change_time=0;
 	    }
 	  }
+	} else {
+	  thisctr.next_change_time=0;
 	}
 	thisctr.triggerGATE=0;
 	break;
@@ -249,6 +386,11 @@
 	  }
 	  if(thisctr.null_count) {
 	    set_count(thisctr, thisctr.inlatch);
+	    if(thisctr.GATE) {
+	      thisctr.next_change_time=thisctr.count_binary;
+	    } else {
+	      thisctr.next_change_time=0;
+	    }
 	    thisctr.null_count=0;
 	    if(thisctr.write_state==MSByte_multiple) {
 	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
@@ -257,12 +399,22 @@
 	  } else {
 	    if(thisctr.GATE) {
 	      decrement(thisctr);
-	      if( (!thisctr.count) && thisctr.first_pass) {
-		set_OUT(thisctr,0);
-		thisctr.first_pass=0;
+	      if(thisctr.first_pass) {
+		thisctr.next_change_time=thisctr.count_binary;
+		if(!thisctr.count) {
+		  set_OUT(thisctr,0);
+		  thisctr.next_change_time=1;
+		  thisctr.first_pass=0;
+		}
+	      } else {
+		thisctr.next_change_time=0;
 	      }
+	    } else {
+	      thisctr.next_change_time=0;
 	    }
 	  }
+	} else {
+	  thisctr.next_change_time=0;
 	}
 	thisctr.triggerGATE=0;
 	break;
@@ -273,35 +425,43 @@
 	  }
 	  if(thisctr.triggerGATE) {
 	    set_count(thisctr, thisctr.inlatch);
+	    thisctr.next_change_time=thisctr.count_binary;
 	    thisctr.null_count=0;
 	    if(thisctr.write_state==MSByte_multiple) {
 	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
 	    }
 	    thisctr.first_pass=1;
 	  } else {
-	    if(thisctr.GATE) {
-	      decrement(thisctr);
-	      if( (!thisctr.count) && thisctr.first_pass) {
+	    decrement(thisctr);
+	    if(thisctr.first_pass) {
+	      thisctr.next_change_time=thisctr.count_binary;
+	      if(!thisctr.count) {
 		set_OUT(thisctr,0);
+		thisctr.next_change_time=1;
 		thisctr.first_pass=0;
 	      }
+	    } else {
+	      thisctr.next_change_time=0;
 	    }
 	  }
+	} else {
+	  thisctr.next_change_time=0;
 	}
 	thisctr.triggerGATE=0;
 	break;
       default:
 	BX_ERROR(("Mode not implemented."));
+	thisctr.next_change_time=0;
 	thisctr.triggerGATE=0;
 	break;
       }
     }
   }
 
-  void pit_82C54::clock_all(void) {
-    clock(0);
-    clock(1);
-    clock(2);
+  void pit_82C54::clock_all(Bit32u cycles) {
+    clock_multiple(0,cycles);
+    clock_multiple(1,cycles);
+    clock_multiple(2,cycles);
   }
 
   Bit8u pit_82C54::read(Bit8u address) {
@@ -442,6 +602,7 @@
 	  } else {
 	    set_OUT(thisctr, 0);
 	  }
+	  thisctr.next_change_time=0;
 	}
       }
     } else {
@@ -473,18 +634,28 @@
 	if(thisctr.write_state==MSByte_multiple) {
 	  set_OUT(thisctr,0);
 	}
+	thisctr.next_change_time=1;
 	break;
       case 1:
+	if(thisctr.triggerGATE) { //for initial writes, if already saw trigger.
+	  thisctr.next_change_time=1;
+	} //Otherwise, no change.
 	break;
       case 6:
       case 2:
+	thisctr.next_change_time=1; //FIXME: this could be loosened.
 	break;
       case 7:
       case 3:
+	thisctr.next_change_time=1; //FIXME: this could be loosened.
 	break;
       case 4:
+	thisctr.next_change_time=1;
 	break;
       case 5:
+	if(thisctr.triggerGATE) { //for initial writes, if already saw trigger.
+	  thisctr.next_change_time=1;
+	} //Otherwise, no change.
 	break;
       }
     }
@@ -495,24 +666,86 @@
       BX_ERROR(("Counter number incorrect in 82C54 set_GATE"));
     } else {
       counter_type & thisctr = counter[cnum];
-      if((!thisctr.GATE)&&data) {
-	thisctr.triggerGATE=1;
-      }
-      thisctr.GATE=data;
-      switch(thisctr.mode) {
-      case 2:
-	if(!data) {
-	  set_OUT(thisctr,1);
+      if( (thisctr.GATE&&data) || (!(thisctr.GATE||data)) ) {
+	thisctr.GATE=data;
+	if(thisctr.GATE) {
+	  thisctr.triggerGATE=1;
 	}
-	break;
-      case 3:
-	if(!data) {
-	  set_OUT(thisctr,1);
-	  thisctr.first_pass=1;
+	switch(thisctr.mode) {
+	case 0:
+	  if(data && thisctr.count_written) {
+	    if(thisctr.null_count) {
+	      thisctr.next_change_time=1;
+	    } else {
+	      if( (!thisctr.OUT) &&
+		  (thisctr.write_state!=MSByte_multiple)
+		  ) {
+		thisctr.next_change_time=thisctr.count_binary;
+	      } else {
+		thisctr.next_change_time=0;
+	      }
+	    }
+	  } else {
+	    if(thisctr.null_count) {
+	      thisctr.next_change_time=1;
+	    } else {
+	      thisctr.next_change_time=0;
+	    }
+	  }
+	  break;
+	case 1:
+	  if(data && thisctr.count_written) { //only triggers cause a change.
+	    thisctr.next_change_time=1;
+	  }
+	  break;
+	case 2:
+	  if(!data) {
+	    set_OUT(thisctr,1);
+	    thisctr.next_change_time=0;
+	  } else {
+	    if(thisctr.count_written) {
+	      thisctr.next_change_time=1;
+	    } else {
+	      thisctr.next_change_time=0;
+	    }
+	  }
+	  break;
+	case 3:
+	  if(!data) {
+	    set_OUT(thisctr,1);
+	    thisctr.first_pass=1;
+	    thisctr.next_change_time=0;
+	  } else {
+	    if(thisctr.count_written) {
+	      thisctr.next_change_time=1;
+	    } else {
+	      thisctr.next_change_time=0;
+	    }
+	  }
+	  break;
+	case 4:
+	  if(!thisctr.OUT || thisctr.null_count) {
+	    thisctr.next_change_time=1;
+	  } else {
+	    if(data && thisctr.count_written) {
+	      if(thisctr.first_pass) {
+		thisctr.next_change_time=thisctr.count_binary;
+	      } else {
+		thisctr.next_change_time=0;
+	      }
+	    } else {
+	      thisctr.next_change_time=0;
+	    }
+	  }
+	  break;
+	case 5:
+	  if(data && thisctr.count_written) { //only triggers cause a change.
+	    thisctr.next_change_time=1;
+	  }
+	  break;
+	default:
+	  break;
 	}
-	break;
-      default:
-	break;
       }
     }
   }
@@ -535,3 +768,24 @@
     }
   }
 
+Bit32u pit_82C54::get_clock_event_time(Bit8u cnum) {
+  if(cnum>MAX_COUNTER) {
+    BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
+    return 0;
+  } else {
+    return counter[cnum].next_change_time;
+  }
+}
+
+Bit32u pit_82C54::get_next_event_time(void) {
+  Bit32u out;
+  Bit32u time0=get_clock_event_time(0);
+  Bit32u time1=get_clock_event_time(1);
+  Bit32u time2=get_clock_event_time(2);
+
+  out=time0;
+  if(time1 && (time1<out))
+    out=time1;
+  if(time2 && (time2<out))
+    out=time2;
+}
