@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.37 2003-04-25 21:48:11 cbothamy Exp $
+// $Id: cmos.cc,v 1.38 2003-07-31 15:29:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,13 +118,13 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.37 2003-04-25 21:48:11 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.38 2003-07-31 15:29:34 vruppert Exp $"));
   // CMOS RAM & RTC
 
-  DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x0071, "CMOS RAM", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0070, "CMOS RAM", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0071, "CMOS RAM", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x0071, "CMOS RAM", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0070, "CMOS RAM", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0071, "CMOS RAM", 1);
   DEV_register_irq(8, "CMOS RTC"); 
   if (BX_CMOS_THIS s.periodic_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_CMOS_THIS s.periodic_timer_index =
@@ -280,10 +280,6 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
 #endif
   Bit8u ret8;
 
-  if (io_len > 1)
-    BX_PANIC(("io read from address 0x%04x len=%u",
-        (unsigned) address, (unsigned) io_len));
-
   if (bx_dbg.cmos)
     BX_INFO(("CMOS read of CMOS register 0x%02x",
       (unsigned) BX_CMOS_THIS s.cmos_mem_address));
@@ -338,10 +334,6 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_CMOS_SMF
-
-  if (io_len > 1)
-    BX_PANIC(("io write to address 0x%04x len=%u",
-        (unsigned) address, (unsigned) io_len));
 
   if (bx_dbg.cmos)
     BX_INFO(("CMOS write to address: 0x%04x = 0x%02x",

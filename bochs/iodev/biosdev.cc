@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.5 2002-10-24 21:07:08 bdenney Exp $
+// $Id: biosdev.cc,v 1.6 2003-07-31 15:29:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -96,16 +96,16 @@ bx_biosdev_c::~bx_biosdev_c(void)
   void
 bx_biosdev_c::init(void)
 {
-  DEV_register_iowrite_handler(this, write_handler, 0x0400, "Bios Panic Port 1", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0401, "Bios Panic Port 2", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0403, "Bios Debug Port", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0402, "Bios Info Port", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0xfff0, "Bios Info Port (legacy)", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0400, "Bios Panic Port 1", 3);
+  DEV_register_iowrite_handler(this, write_handler, 0x0401, "Bios Panic Port 2", 3);
+  DEV_register_iowrite_handler(this, write_handler, 0x0403, "Bios Debug Port", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0402, "Bios Info Port", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0xfff0, "Bios Info Port (legacy)", 1);
 
-  DEV_register_iowrite_handler(this, write_handler, 0x0501, "VGABios Panic Port 1", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0502, "VGABios Panic Port 2", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0503, "VGABios Debug Port", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0500, "VGABios Info Port", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0501, "VGABios Panic Port 1", 3);
+  DEV_register_iowrite_handler(this, write_handler, 0x0502, "VGABios Panic Port 2", 3);
+  DEV_register_iowrite_handler(this, write_handler, 0x0503, "VGABios Debug Port", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0500, "VGABios Info Port", 1);
 }
 
   void
