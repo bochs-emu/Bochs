@@ -290,7 +290,6 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RDX = features | (1 << 29) | (1 << 11);
       RBX = 0;
       RCX = 0;
-      RDX = 0; // Reserved, undefined
       break;
 
     case 0x80000008:
