@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.68 2002-09-24 18:33:38 kevinlawton Exp $
+// $Id: dbg_main.cc,v 1.69 2002-09-24 20:41:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2170,7 +2170,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 		BX_CPU(which_cpu)->get_IOPL (),
 		BX_CPU(which_cpu)->get_NT (),
 		BX_CPU(which_cpu)->get_RF (),
-		BX_CPU(which_cpu)->get_BVM ());
+		BX_CPU(which_cpu)->getB_VM ());
 
     if (print_time)
       dbg_printf ( "(%u).[%lld] ", which_cpu, bx_pc_system.time_ticks());
