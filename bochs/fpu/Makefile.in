@@ -64,7 +64,7 @@ C_OBJS = fpu_entry.o errors.o reg_ld_str.o load_store.o \
 
 # From 80x86 assembler sources:
 A_OBJS =reg_u_add.o reg_u_div.o reg_u_mul.o reg_u_sub.o \
-	div_small.o reg_norm.o reg_round.o \
+	reg_norm.o reg_round.o \
 	wm_shrx.o wm_sqrt.o \
 	div_Xsig.o polynom_Xsig.o round_Xsig.o \
 	shr_Xsig.o mul_Xsig.o
@@ -107,7 +107,6 @@ dist-clean: clean
 ###########################################
 div_Xsig.o: div_Xsig.c exception.h fpu_emu.h fpu_system.h fpu_proto.h \
  poly.h
-div_small.o: div_small.c fpu_emu.h fpu_system.h fpu_proto.h
 errors.o: errors.c fpu_emu.h fpu_system.h fpu_proto.h exception.h \
  status_w.h control_w.h reg_constant.h version.h
 fpu_arith.o: fpu_arith.c fpu_system.h fpu_emu.h fpu_proto.h \

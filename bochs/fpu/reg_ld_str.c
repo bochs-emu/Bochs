@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.14 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.15 2003-10-03 17:39:04 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -35,6 +35,15 @@
 #define SINGLE_Ebias 127
 #define SINGLE_Emin (-126)       /* smallest valid exponent */
 
+static u32 FPU_div_small(u64 *x, u32 y)
+{
+  u32 retval;
+
+  retval = *x % y;
+  *x /= y;
+
+  return retval;
+}
 
 static u_char  BX_CPP_AttrRegparmN(3)
 normalize_no_excep(FPU_REG *r, int exp, int sign)
