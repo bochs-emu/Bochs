@@ -7,7 +7,7 @@ build_libltdl:
 	cd libltdl; make all
 
 test: all
-	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make test; echo Leaving $$i;); done
+	sh ./testscript
 
 clean:
 	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make clean; echo Leaving $$i;); done
