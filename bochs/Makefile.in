@@ -294,7 +294,7 @@ install_bin::
 	test -w $(DESTDIR)$(VERSIONDIR)
 	for i in bochs-docs; do cat $(srcdir)/build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(DESTDIR)$(bindir)/$$i; $(CHMOD) 755 $(DESTDIR)$(bindir)/$$i; done
 	for i in $(INSTALL_LIST_SED); do cat $(srcdir)/build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(DESTDIR)$(VERSIONDIR)/$$i; $(CHMOD) 644 $(DESTDIR)$(VERSIONDIR)/$$i; done
-	for i in $(INSTALL_LIST); do if test -f $$i then cp $$i $(DESTDIR)$(VERSIONDIR); else cp $(srcdir)/$$i $(DESTDIR)$(VERSIONDIR); fi; done
+	for i in $(INSTALL_LIST); do if test -f $$i; then cp $$i $(DESTDIR)$(VERSIONDIR); else cp $(srcdir)/$$i $(DESTDIR)$(VERSIONDIR); fi; done
 	$(LN_S) $(VERSIONDIR)/bochs $(DESTDIR)$(bindir)/bochs
 	$(LN_S) $(VERSIONDIR)/bximage $(DESTDIR)$(bindir)/bximage
 	$(CP) -r $(srcdir)/docs-html $(DESTDIR)$(VERSIONDIR)
