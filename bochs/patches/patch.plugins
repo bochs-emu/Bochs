@@ -39,7 +39,29 @@ USING PLUGINS
   To choose between them use "display_library: name" in the bochsrc
 - add new configure options --with-all-libs which tries to detect all the
   display libraries that can be compiled on your machine, and enables them
-  all.
+  all.  If the detection fails, you can always write a bunch of 
+  --with-PACKAGE options yourself.
+- when you run Bochs, it needs to know where to find its plugins.  For now
+  if the plugins are not stored in a default system library path, you need to
+  set the LTDL_LIBRARY_PATH environment to a colon-separated list of
+  directories to search in to find the plugins.  When you first build
+  Bochs, all the plugins are in gui/* and iodev/*.  So this command would
+  work (sh syntax):
+      LTDL_LIBRARY_PATH=`pwd`/gui:`pwd`/iodev;  export LTDL_LIBRARY_PATH
+  There is a slight variation for win32: use a semicolon instead of a 
+  colon to separate the directories in the list, and the directories should
+  start with a drive letter and colon.  Example
+      d:/bochs/plugins;d:/bochs-2.0/plugins
+
+PLATFORMS
+- on Win32 platforms, plugins currently work in Cygwin/MinGW but some more
+  work is needed to support VC++.  The makefiles build .DLL files for
+  the plugins using gcc and a program called dlltool.  Remember to
+  use semicolons to separate dir names in LTDL_LIBRARY_PATH, and to
+  list absolute directories starting with a drive letter.
+- on MacOS X, plugins will only work correctly if you install the 
+  "dlcompat" library.  Dlcompat is part of the OpenDarwin project.
+- Bochs plugins work on Linux and Solaris without any extra work.
 
 CONFIGURE AND MAKE
 - makefiles in gui and iodev directories have some new options and targets
