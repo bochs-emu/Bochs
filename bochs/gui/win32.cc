@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.84 2004-08-15 19:27:14 vruppert Exp $
+// $Id: win32.cc,v 1.85 2004-08-18 09:03:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -91,6 +91,7 @@ static int ms_savedx=0, ms_savedy=0;
 static BOOL mouseCaptureMode, mouseCaptureNew, mouseToggleReq;
 static unsigned long workerThread = 0;
 static DWORD workerThreadID = 0;
+static int mouse_buttons = 3;
 
 // Graphics screen stuff
 static unsigned x_tilesize = 0, y_tilesize = 0;
@@ -122,7 +123,7 @@ static unsigned bx_hb_separator;
 
 // Status Bar stuff
 #define SIZE_OF_SB_ELEMENT        40
-#define SIZE_OF_SB_FIRST_ELEMENT 160
+#define SIZE_OF_SB_FIRST_ELEMENT 200 /* 160 */
 long SB_Edges[BX_MAX_STATUSITEMS+2];
 char SB_Text[BX_MAX_STATUSITEMS][10];
 bx_bool SB_Active[BX_MAX_STATUSITEMS];
@@ -147,6 +148,9 @@ static HFONT hFont[3];
 static int FontId = 2;
 #endif
 
+static char *szMouseEnable = "CTRL + 3rd button enables mouse ";
+static char *szMouseDisable = "CTRL + 3rd button disables mouse";
+
 static char szAppName[] = "Bochs for Windows";
 static char szWindowName[] = "Bochs for Windows - Display";
 
@@ -168,6 +172,7 @@ sharedThreadInfo stInfo;
 LRESULT CALLBACK mainWndProc (HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK simWndProc (HWND, UINT, WPARAM, LPARAM);
 VOID UIThread(PVOID);
+void SetStatusText(int Num, const char *Text, bx_bool active);
 void terminateEmul(int);
 void create_vga_font(void);
 static unsigned char reverse_bitorder(unsigned char);
@@ -589,7 +594,31 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   mouseCaptureMode = FALSE;
   mouseCaptureNew = FALSE;
   mouseToggleReq = FALSE;
-
+  
+  mouse_buttons = GetSystemMetrics(SM_CMOUSEBUTTONS);
+  BX_INFO(("Number of Mouse Buttons = %d", mouse_buttons));
+  if (mouse_buttons == 2) {
+    szMouseEnable = "CTRL + Lbutton + Rbutton enables mouse ";
+    szMouseDisable = "CTRL + Lbutton + Rbutton disables mouse";
+  }
+  
+  // parse win32 specific options
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      BX_INFO(("option %d %s", argc, argv));
+      if (!strcmp(argv[i], "legacyF12")) {
+        legacyF12 = TRUE;
+      } else {
+        BX_PANIC(("Unknown win32 option '%s'", argv[i]));
+      }
+    }
+  }
+  
+  if (legacyF12) {
+    szMouseEnable = "Press F12 to enable mouse ";
+    szMouseDisable = "Press F12 to disable mouse";
+  }
+  
   stInfo.hInstance = GetModuleHandle(NULL);
 
   UNUSED(headerbar_y);
@@ -650,16 +679,6 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     bx_keymap.loadKeymap(NULL);  // I have no function to convert X windows symbols
     }
 
-  // parse win32 specific options
-  if (argc > 1) {
-    for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "legacyF12")) {
-        legacyF12 = TRUE;
-      } else {
-        BX_PANIC(("Unknown win32 option '%s'", argv[i]));
-      }
-    }
-  }
 }
 
 
@@ -720,7 +739,7 @@ VOID UIThread(PVOID pvoid) {
     SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
     SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
     ShowWindow(hwndTB, SW_SHOW);
-    hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, " CTRL + 3rd button enables mouse",
+    hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "",
                                 stInfo.mainWnd, 0x7712);
     if (hwndSB) {
       int elements;
@@ -730,6 +749,7 @@ VOID UIThread(PVOID pvoid) {
       SB_Edges[elements] = -1;
       SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+2, (long)&SB_Edges);
     }
+    SetStatusText(0, szMouseEnable, TRUE);
     GetClientRect(hwndTB, &wndRect2);
     bx_headerbar_y = wndRect2.bottom;
     GetClientRect(hwndSB, &wndRect2);
@@ -840,9 +860,9 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_CREATE:
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     if (mouseCaptureMode)
-      SetStatusText(0, "CTRL + 3rd button disables mouse", TRUE);
+      SetStatusText(0, szMouseDisable, TRUE);
     else
-      SetStatusText(0, "CTRL + 3rd button enables mouse", TRUE);
+      SetStatusText(0, szMouseEnable, TRUE);
     return 0;
 
   case WM_COMMAND:
@@ -899,9 +919,9 @@ void SetMouseCapture()
   SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
   cursorWarped();
   if (mouseCaptureMode)
-    SetStatusText(0, "CTRL + 3rd button disables mouse", TRUE);
+    SetStatusText(0, szMouseDisable, TRUE);
   else
-    SetStatusText(0, "CTRL + 3rd button enables mouse", TRUE);
+    SetStatusText(0, szMouseEnable, TRUE);
 }
 
 LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -970,6 +990,18 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_LBUTTONDOWN:
   case WM_LBUTTONDBLCLK:
   case WM_LBUTTONUP:
+    if (mouse_buttons == 2) {
+      if (wParam == (MK_CONTROL | MK_LBUTTON | MK_RBUTTON)) {
+        mouseCaptureMode = !mouseCaptureMode;
+        SetMouseCapture();
+        mouseModeChange = TRUE;
+      } else if (mouseModeChange && (iMsg == WM_LBUTTONUP)) {
+        mouseModeChange = FALSE;
+      } else {
+        processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 1);
+      }
+      return 0;
+    }
     processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 1);
     return 0;
 
@@ -990,6 +1022,18 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_RBUTTONDOWN:
   case WM_RBUTTONDBLCLK:
   case WM_RBUTTONUP:
+    if (mouse_buttons == 2) {
+      if (wParam == (MK_CONTROL | MK_LBUTTON | MK_RBUTTON)) {
+        mouseCaptureMode = !mouseCaptureMode;
+        SetMouseCapture();
+        mouseModeChange = TRUE;
+      } else if (mouseModeChange && (iMsg == WM_RBUTTONUP)) {
+        mouseModeChange = FALSE;
+      } else {
+        processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 2);
+      }
+      return 0;
+    }
     processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 2);
     return 0;
 
