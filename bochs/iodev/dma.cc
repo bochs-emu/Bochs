@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.25 2002-10-25 11:44:38 bdenney Exp $
+// $Id: dma.cc,v 1.26 2002-11-04 17:29:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.25 2002-10-25 11:44:38 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.26 2002-11-04 17:29:12 vruppert Exp $"));
 
   /* 8237 DMA controller */
 
@@ -447,8 +447,8 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x08: /* DMA-1: command register */
     case 0xd0: /* DMA-2: command register */
       ma_sl = (address == 0xd0);
-      if (value != 0x04)
-        BX_ERROR(("DMA: write to 0x%02x: value(%02xh) not 04h", address,
+      if (value != 0x00)
+        BX_ERROR(("write to command register: value(%02xh) not 0x00",
           (unsigned) value));
       BX_DMA_THIS s[ma_sl].command_reg = value;
       return;
