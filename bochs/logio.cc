@@ -83,9 +83,7 @@ iofunctions::init_log(char *fn)
 			newfn = strdup(fn);
 			BX_DEBUG(("Opened log file '%s'.", fn ));
 		} else {
-			BX_DEBUG(("Log file '%s' not there?", fn));
-			newfd = NULL;
-			logfn = "(none)";
+		  	BX_PANIC(("Couldn't open log file: %s", fn));
 		}
 	}
 	logfd = newfd;
