@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.128 2003-02-13 15:03:57 sshwarts Exp $
+// $Id: cpu.h,v 1.129 2003-02-13 15:51:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -237,6 +237,12 @@
 #define CPL  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
 #endif
 
+#if BX_SMP_PROCESSORS==1
+#define BX_CPU_ID 0
+#else
+#define BX_CPU_ID (BX_CPU_THIS_PTR bx_cpuid)
+#endif
+
 #endif  // defined(NEED_CPU_REG_SHORTCUTS)
 
 #define BX_DE_EXCEPTION   0 // Divide Error (fault)
@@ -353,14 +359,6 @@ BOCHSAPI extern BX_CPU_C       bx_cpu;
 // multiprocessor simulation, we need an array of cpus and memories
 BOCHSAPI extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 #endif
-
-
-#if BX_SMP_PROCESSORS==1
-#define BX_CPU_ID 0
-#else
-#define BX_CPU_ID (BX_CPU_THIS - BX_CPU(0))
-#endif
-
 
 typedef struct {
   /* 31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16
@@ -1291,6 +1289,8 @@ public: // for now...
 
   char name[64];
 
+  unsigned bx_cpuid;
+
   // General register set
   // eax: accumulator
   // ebx: base
@@ -1588,6 +1588,7 @@ union {
   ArithmeticalFlag(PF,  4,  2);
   ArithmeticalFlag(CF,  0,  0);
 
+  void set_cpu_id(unsigned id);
 
   // constructors & destructors...
   BX_CPU_C();
@@ -2815,7 +2816,7 @@ union {
                                  unsigned opa, unsigned opb);
 #endif
 
-  BX_CPP_INLINE unsigned which_cpu(void);
+  BX_CPP_INLINE unsigned which_cpu(void) { return bx_cpuid; }
   BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }
 
   DECLARE_EFLAGS_ACCESSORS()
@@ -2955,14 +2956,13 @@ IMPLEMENT_32BIT_REGISTER_ACCESSORS(EBP);
 IMPLEMENT_32BIT_REGISTER_ACCESSORS(ESI);
 IMPLEMENT_32BIT_REGISTER_ACCESSORS(EDI);
 
+BX_CPP_INLINE void BX_CPU_C::set_cpu_id(unsigned id) {
+   BX_CPU_THIS_PTR bx_cpuid = id;
+}
 
 BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CPL(void) { 
    return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); 
 } 
-
-BX_CPP_INLINE unsigned BX_CPU_C::which_cpu(void) {
-   return (BX_CPU_ID);
-}
 
 BX_CPP_INLINE Bit32u BX_CPU_C::get_EIP(void) {
    return (BX_CPU_THIS_PTR dword.eip); 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.222 2003-02-06 23:16:51 cbothamy Exp $
+// $Id: main.cc,v 1.223 2003-02-13 15:51:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2196,10 +2196,11 @@ bx_init_hardware()
   BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
 
   BX_CPU(0)->init (BX_MEM(0));
+  BX_CPU(0)->set_cpu_id(0);
 #if BX_SUPPORT_APIC
   BX_CPU(0)->local_apic.set_id (0);
-  BX_INSTR_INIT(0);
 #endif
+  BX_INSTR_INIT(0);
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
   // SMP initialization
@@ -2222,10 +2223,11 @@ bx_init_hardware()
   bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
 
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i) = new BX_CPU_C ();
+    BX_CPU(i) = new BX_CPU_C;
     BX_CPU(i)->init (bx_mem_array[0]);
     // assign apic ID from the index of this loop
     // if !BX_SUPPORT_APIC, this will not compile.
+    BX_CPU(i)->set_cpu_id(i);
     BX_CPU(i)->local_apic.set_id (i);
     BX_INSTR_INIT(i);
     BX_CPU(i)->reset(BX_RESET_HARDWARE);

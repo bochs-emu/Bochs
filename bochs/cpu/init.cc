@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.45 2003-02-13 15:04:02 sshwarts Exp $
+// $Id: init.cc,v 1.46 2003-02-13 15:51:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,9 +36,9 @@
 #define BX_DEVICE_ID     3
 #define BX_STEPPING_ID   0
 
-BX_CPU_C::BX_CPU_C()
+BX_CPU_C::BX_CPU_C(): bx_cpuid(0)
 #if BX_SUPPORT_APIC
-   : local_apic (this)
+   ,local_apic (this)
 #endif
 {
   // in case of SMF, you cannot reference any member data
@@ -168,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.45 2003-02-13 15:04:02 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.46 2003-02-13 15:51:22 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
