@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.44 2005-03-19 20:44:00 sshwarts Exp $
+// $Id: apic.cc,v 1.45 2005-03-20 18:33:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -11,7 +11,9 @@
 bx_generic_apic_c *apic_index[APIC_MAX_ID];
 bx_local_apic_c *local_apic_index[BX_LOCAL_APIC_NUM];
 
-#define APIC_ALL_MASK 0xff
+#define APIC_ALL_MASK (0xff)
+
+#define LOCAL_APIC_ALL_MASK ((1<<BX_LOCAL_APIC_NUM) - 1)
 
 bx_generic_apic_c::bx_generic_apic_c ()
 {
@@ -285,7 +287,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
   // the base class.
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   int found_focus = 0;
-  int broadcast = (deliver_bitmask == APIC_ALL_MASK);
+  int broadcast = (deliver_bitmask == LOCAL_APIC_ALL_MASK);
   int bit;
 
   if (broadcast)
@@ -811,13 +813,19 @@ Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
     mask = (1<<id);
     break;
   case 2:  // all including self
-    mask = (APIC_ALL_MASK);
+    mask = (LOCAL_APIC_ALL_MASK);
     break;
   case 3:  // all but self
-    mask = (APIC_ALL_MASK) & ~(1<<id);
+    mask = (LOCAL_APIC_ALL_MASK) & ~(1<<id);
     break;
   default:
     BX_PANIC(("Invalid desination shorthand %#x\n", dest_shorthand));
+  }
+
+  // prune nonexistents apics from list
+  for (int bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
+  {
+    if (!local_apic_index[bit]) mask &= ~(1<<bit);
   }
 
   BX_DEBUG (("local::get_delivery_bitmask returning 0x%04x shorthand=%#x", mask, dest_shorthand));
