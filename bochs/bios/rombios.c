@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.88 2003-01-14 17:59:52 cbothamy Exp $
+// $Id: rombios.c,v 1.89 2003-01-14 18:03:31 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,12 +95,6 @@
 //   - the translation policy is defined in cmos regs 0x39 & 0x3a
 //
 // TODO :
-//   int09
-//     - I think the extended key check should really be done in
-//       int09, and int15/4f should be empty. I did not see any
-//       bug, but maybe some code hooking int15/4f could be 
-//       disoriented when receiving extented E0 scancode.
-//       I've got a patch for this to be applied after Bochs2.0
 //
 //   int74 
 //     - needs to be reworked.  Uses direct [bp] offsets. (?)
@@ -934,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.88 $";
-static char bios_date_string[] = "$Date: 2003-01-14 17:59:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.89 $";
+static char bios_date_string[] = "$Date: 2003-01-14 18:03:31 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.88 2003-01-14 17:59:52 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.89 2003-01-14 18:03:31 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3348,11 +3342,7 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
 #if BX_CPU < 2
       regs.u.r8.ah = UNSUPPORTED_FUNCTION;
 #else
-      if (regs.u.r8.al == 0xE0) {
-        mf2_state = read_byte(0x0040, 0x96);
-        write_byte(0x0040, 0x96, mf2_state | 0x01);
-        regs.u.r8.al = inb(0x60);
-        }
+      // nop
 #endif
       SET_CF();
       break;
@@ -9089,8 +9079,23 @@ int09_handler:
   //test al, #0x80            ;;look for key release
   //jnz  int09_process_key    ;; dont pass releases to intercept?
 
+  ;; check for extended key
+  cmp  al, #0xe0
+  jne int09_call_int15_4f
+  
+  push ds
+  xor  ax, ax
+  mov  ds, ax
+  mov  al, BYTE [0x496]     ;; mf2_state |= 0x01
+  or   al, #0x01
+  mov  BYTE [0x496], al
+  pop  ds
+  
+  in  al, #0x60             ;;read another key from keyboard controller
+
   sti
 
+int09_call_int15_4f:
 #ifdef BX_CALL_INT15_4F
   mov  ah, #0x4f     ;; allow for keyboard intercept
   stc
