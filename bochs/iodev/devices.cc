@@ -98,7 +98,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.12 2001-06-27 20:27:49 fries Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.13 2001-06-28 19:48:04 bdenney Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -475,6 +475,7 @@ bx_devices_c::inp(Bit16u addr, unsigned io_len)
   handle = read_handler_id[addr];
   ret = (* io_read_handler[handle].funct)(io_read_handler[handle].this_ptr,
                            (Bit32u) addr, io_len);
+  BX_INSTR_INP2(addr, io_len, ret);
   BX_DBG_IO_REPORT(addr, io_len, BX_READ, ret);
   return(ret);
 }
@@ -490,6 +491,7 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   Bit8u handle;
 
   BX_INSTR_OUTP(addr, io_len);
+  BX_INSTR_OUTP2(addr, io_len, value);
 
   BX_DBG_IO_REPORT(addr, io_len, BX_WRITE, value);
   handle = write_handler_id[addr];
