@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.5 2001-10-06 17:30:19 bdenney Exp $
+// $Id: eth_linux.cc,v 1.6 2002-03-06 15:56:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -222,7 +222,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
 
   this->rxh   = rxh;
   this->rxarg = rxarg;
-  BX_INFO(("eth_linux: enabled NE2K emulation on interface %s\n", netif));
+  BX_INFO(("eth_linux: enabled NE2K emulation on interface %s", netif));
 }
 
 // the output routine - called with pre-formatted ethernet frame.
