@@ -71,6 +71,8 @@ libgui.a: $(BX_GUI_OBJS)
 	@MAKELIB@ $(BX_GUI_OBJS)
 	$(RANLIB) libgui.a
 
+$(BX_GUI_OBJS) : $(BX_INCLUDES)
+
 beos.o: beos.@CPP_SUFFIX@
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(BEOS_CFLAGS) beos.@CPP_SUFFIX@
 
