@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.19 2002-09-07 05:21:28 kevinlawton Exp $
+// $Id: paging.cc,v 1.20 2002-09-10 00:01:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -684,7 +684,7 @@ pageTableWalk:
   // Attempt to get a host pointer to this physical page.  Put that
   // pointer in the TLB cache.  Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits |=
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
       (Bit32u) BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(ppf), rw);
 #endif
 
@@ -858,7 +858,7 @@ pageTableWalk:
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 
 #if BX_SupportGuest2HostTLB
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits |=
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
     (Bit32u) BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(ppf), BX_READ);
 #endif
 
@@ -1089,21 +1089,23 @@ BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
         BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf = BX_TLB_LPF_VALUE(lpf);
         BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf = lpf;
         // Request a direct write pointer so we can do either R or W.
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = (Bit32u)
+        BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr = (Bit32u)
             BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(lpf), BX_WRITE);
-        if (!BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits) {
+        if (!BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr) {
           // Direct write vetoed.  Try requesting only direct reads.
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = (Bit32u)
+          BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr = (Bit32u)
               BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(lpf), BX_READ);
-          if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits) {
+          if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr) {
             // Got direct read pointer OK.
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits |=
+            BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
                 (ReadSysOK | ReadUserOK);
             }
+          else
+            BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = 0;
           }
         else {
           // Got direct write pointer OK.  Mark for any operation to succeed.
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits |=
+          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
               (ReadSysOK | ReadUserOK | WriteSysOK | WriteUserOK);
           }
 #endif  // BX_SupportGuest2HostTLB
@@ -1128,13 +1130,15 @@ BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
         BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf = lpf;
         // TLB.entry[tlbIndex].ppf field not used for PG==0.
         // Request a direct write pointer so we can do either R or W.
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = (Bit32u)
+        BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr = (Bit32u)
             BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(lpf), BX_WRITE);
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr) {
           // Got direct write pointer OK.  Mark for any operation to succeed.
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits |=
+          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
               (ReadSysOK | ReadUserOK | WriteSysOK | WriteUserOK);
           }
+        else
+          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = 0;
 #endif  // BX_SupportGuest2HostTLB
 
         BX_CPU_THIS_PTR mem->writePhysicalPage(this, laddr, length, data);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.22 2002-09-06 21:54:55 kevinlawton Exp $
+// $Id: access.cc,v 1.23 2002-09-10 00:01:00 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -282,17 +282,17 @@ accessOK:
       lpf = laddr & 0xfffff000;
       if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
         Bit32u accessBits;
+        Bit32u hostPageAddr;
+        Bit8u *hostAddr;
 
         // See if the TLB entry privilege level allows us write access
         // from this CPL.
+        hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+        hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
         accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
         if ( accessBits & (1 << (2 | pl)) ) {
           // Current write access has privilege.
-          Bit32u hostPageAddr;
-          Bit8u *hostAddr;
-          hostPageAddr = accessBits & 0xfffff000;
           if (hostPageAddr) {
-            hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
             *hostAddr = *data;
             return;
             }
@@ -335,17 +335,17 @@ accessOK:
         lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
+          Bit32u  hostPageAddr;
+          Bit16u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
           // from this CPL.
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
             // Current write access has privilege.
-            Bit32u  hostPageAddr;
-            Bit16u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
               WriteHostWordToLittleEndian(hostAddr, *data);
               return;
               }
@@ -389,17 +389,17 @@ accessOK:
         lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
+          Bit32u  hostPageAddr;
+          Bit32u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
           // from this CPL.
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
             // Current write access has privilege.
-            Bit32u  hostPageAddr;
-            Bit32u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
               WriteHostDWordToLittleEndian(hostAddr, *data);
               return;
               }
@@ -444,14 +444,14 @@ accessOK:
         // See if the TLB entry privilege level allows us read access
         // from this CPL.
         Bit32u accessBits;
+        Bit32u hostPageAddr;
+        Bit8u *hostAddr;
 
+        hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+        hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
         accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
         if ( accessBits & (1<<pl) ) { // Read this pl OK.
-          Bit32u hostPageAddr;
-          Bit8u *hostAddr;
-          hostPageAddr = accessBits & 0xfffff000;
           if (hostPageAddr) {
-            hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
             *data = *hostAddr;
             return;
             }
@@ -498,14 +498,14 @@ accessOK:
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
+          Bit32u hostPageAddr;
+          Bit16u *hostAddr;
 
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1<<pl) ) { // Read this pl OK.
-            Bit32u hostPageAddr;
-            Bit16u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
               ReadHostWordFromLittleEndian(hostAddr, *data);
               return;
               }
@@ -553,14 +553,14 @@ accessOK:
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
+          Bit32u hostPageAddr;
+          Bit32u *hostAddr;
 
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1<<pl) ) { // Read this pl OK.
-            Bit32u hostPageAddr;
-            Bit32u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
               ReadHostDWordFromLittleEndian(hostAddr, *data);
               return;
               }
@@ -608,17 +608,17 @@ accessOK:
       lpf = laddr & 0xfffff000;
       if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
         Bit32u accessBits;
+        Bit32u hostPageAddr;
+        Bit8u *hostAddr;
 
         // See if the TLB entry privilege level allows us write access
         // from this CPL.
+        hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+        hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
         accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
         if ( accessBits & (1 << (2 | pl)) ) {
           // Current write access has privilege.
-          Bit32u hostPageAddr;
-          Bit8u *hostAddr;
-          hostPageAddr = accessBits & 0xfffff000;
           if (hostPageAddr) {
-            hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
             *data = *hostAddr;
             BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
             return;
@@ -664,17 +664,17 @@ accessOK:
         lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
+          Bit32u  hostPageAddr;
+          Bit16u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
           // from this CPL.
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
             // Current write access has privilege.
-            Bit32u  hostPageAddr;
-            Bit16u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
               ReadHostWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
               return;
@@ -718,17 +718,17 @@ accessOK:
         lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
+          Bit32u  hostPageAddr;
+          Bit32u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
           // from this CPL.
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
             // Current write access has privilege.
-            Bit32u  hostPageAddr;
-            Bit32u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
               ReadHostDWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
               return;
@@ -856,17 +856,17 @@ accessOK:
         lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
+          Bit32u  hostPageAddr;
+          Bit64u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
           // from this CPL.
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
             // Current write access has privilege.
-            Bit32u  hostPageAddr;
-            Bit64u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
               WriteHostQWordToLittleEndian(hostAddr, *data);
               return;
               }
@@ -913,14 +913,14 @@ accessOK:
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
+          Bit32u hostPageAddr;
+          Bit64u *hostAddr;
 
+          hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
+          hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1<<pl) ) { // Read this pl OK.
-            Bit32u hostPageAddr;
-            Bit64u *hostAddr;
-            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
               ReadHostQWordFromLittleEndian(hostAddr, *data);
               return;
               }

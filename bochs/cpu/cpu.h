@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.38 2002-09-09 16:11:23 bdenney Exp $
+// $Id: cpu.h,v 1.39 2002-09-10 00:01:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -543,6 +543,7 @@ typedef struct {
     Bit32u lpf; // linear page frame
     Bit32u ppf; // physical page frame
     Bit32u accessBits;
+    Bit32u hostPageAddr;
     } bx_TLB_entry;
 #endif  // #if BX_USE_TLB
 
@@ -898,7 +899,15 @@ public: // for now...
   // for paging
 #if BX_USE_TLB
   struct {
-    bx_TLB_entry entry[BX_TLB_SIZE];
+    bx_TLB_entry entry[BX_TLB_SIZE]
+#ifdef __GNUC__
+        // Preferably, entries are aligned so that an access to
+        // one never crosses a cache line.  Since they are currently
+        // 16-bytes in size, align to 16 if the compiler knows how.  I only
+        // know how to do this in GCC.  (KPL)
+        __attribute__ ((aligned (16)))
+#endif
+        ;
 #if BX_USE_QUICK_TLB_INVALIDATE
 #  define BX_TLB_LPF_VALUE(lpf) (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)
     Bit32u tlb_invalidate;
