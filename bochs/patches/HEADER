@@ -5,9 +5,11 @@ Date:
 
 Detailed description:
 
-Apply patch to:
-  NAMEGOESHERE
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
 Instructions:
   To patch, go to main bochs directory.
-  Type "patch -p1 < THIS_PATCH_FILE".
+  Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
