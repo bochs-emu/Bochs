@@ -28,9 +28,10 @@
 // rfc0903: rarp
 
 #include "bochs.h"
+#include "crc32.h"
 #define LOG_THIS bx_ne2k.
 
-static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x00, 0x00, 0x02, 0x00};
+static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
 static const Bit8u broadcast_mac[]={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
 
@@ -53,6 +54,7 @@ private:
   Bit8u arpbuf[MAX_FRAME_SIZE];
   Bit32u buflen;
   Boolean bufvalid;
+  CRC_Generator mycrc;
 };
 
 
@@ -111,6 +113,7 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   if(io_len<MAX_FRAME_SIZE) {
     if((!memcmp(buf, external_mac, 6)) || (!memcmp(buf, broadcast_mac, 6)) ) {
+      Bit32u tempcrc;
       memcpy(arpbuf,buf,io_len); //move to temporary buffer
       memcpy(arpbuf, arpbuf+6, 6); //set destination to sender
       memcpy(arpbuf+6, external_mac, 6); //set sender to us
@@ -118,7 +121,9 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
       memcpy(arpbuf+22, external_mac, 6); //set sender to us
       memcpy(arpbuf+28, external_ip, 4); //set sender to us
       arpbuf[21]=2; //make this a reply and not a request
-      buflen=io_len;
+      tempcrc=mycrc.get_CRC(arpbuf,io_len);
+      memcpy(arpbuf+io_len, &tempcrc, 4);
+      buflen=io_len+4;
       bufvalid=1;
     }
   }
