@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.196 2002-11-25 21:28:19 vruppert Exp $
+// $Id: main.cc,v 1.197 2002-11-26 18:15:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1506,23 +1506,17 @@ int bxmain () {
     // quit via longjmp
   }
   SIM->set_quit_context (NULL);
+#if defined(WIN32)
+  // ask user to press ENTER before exiting, so that they can read messages
+  // before the console window is closed.
+  fprintf (stderr, "\nBochs is exiting. Press ENTER when you're ready to close this window.\n");
+  char buf[16];
+  fgets (buf, sizeof(buf), stdin);
+#endif
   return 0;
 }
 
-#if !defined(__WXMSW__)
-// normal main function, presently in for all cases except for
-// wxWindows under win32.
-int main (int argc, char *argv[])
-{
-  bx_startup_flags.argc = argc;
-  bx_startup_flags.argv = argv;
-  return bxmain ();
-}
-#else
-
-// special WinMain function for wxWindows under win32
-
-#define MAX_ARGLEN 128
+#if defined(__WXMSW__)
 
 // win32 applications get the whole command line in one long string.
 // This function is used to split up the string into argc and argv,
@@ -1608,7 +1602,9 @@ int split_string_into_argv (
   *argc_out = argc;
   return 0;
 }
+#endif /* if defined(__WXMSW__) */
 
+#if defined(__WXMSW__) || (BX_WITH_SDL && defined(WIN32))
 // The RedirectIOToConsole() function is copied from an article called "Adding
 // Console I/O to a Win32 GUI App" in Windows Developer Journal, December 1997.
 // It creates a console window.
@@ -1616,20 +1612,13 @@ int split_string_into_argv (
 // NOTE: It could probably be written so that it can safely be called for all
 // win32 builds.  Right now it appears to have absolutely no error checking:
 // for example if AllocConsole returns false we should probably return early.
-#define MAX_CONSOLE_LINES 30
 void RedirectIOToConsole ()
 {
   int hConHandle;
   long lStdHandle;
-  CONSOLE_SCREEN_BUFFER_INFO coninfo;
   FILE *fp;
   // allocate a console for this app
   AllocConsole();
-  // set the screen buffer to be big enough to let us scroll text
-  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),
-  &coninfo);
-  coninfo.dwSize.Y = MAX_CONSOLE_LINES;
-//  SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
   // redirect unbuffered STDOUT to the console
   lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
@@ -1649,7 +1638,9 @@ void RedirectIOToConsole ()
   *stderr = *fp;
   setvbuf( stderr, NULL, _IONBF, 0 );
 }
+#endif  /* if defined(__WXMSW__) || (BX_WITH_SDL && defined(WIN32)) */
 
+#if defined(__WXMSW__)
 // only used for wxWindows/win32.
 // This works ok in Cygwin with a standard wxWindows compile.  In
 // VC++ wxWindows must be compiled with -DNOMAIN=1.
@@ -1666,11 +1657,22 @@ int WINAPI WinMain(
   int max_argv = 20;
   bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
   split_string_into_argv (m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
-  int status = bxmain ();
-  fprintf (stderr, "\nBochs is exiting. Press ENTER when you're ready to close this window.\n");
-  char buf[16];
-  fgets (buf, sizeof(buf), stdin);
-  return status;
+  return bxmain ();
+}
+#endif
+
+#if !defined(__WXMSW__)
+// normal main function, presently in for all cases except for
+// wxWindows under win32.
+int main (int argc, char *argv[])
+{
+  bx_startup_flags.argc = argc;
+  bx_startup_flags.argv = argv;
+#if BX_WITH_SDL && defined(WIN32)
+  // if SDL/win32, try to create a console window.
+  RedirectIOToConsole ();
+#endif
+  return bxmain ();
 }
 #endif
 
