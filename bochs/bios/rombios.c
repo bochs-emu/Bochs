@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.92 2003-03-08 22:59:17 cbothamy Exp $
+// $Id: rombios.c,v 1.93 2003-04-25 22:13:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.92 $";
-static char bios_date_string[] = "$Date: 2003-03-08 22:59:17 $";
+static char bios_cvs_version_string[] = "$Revision: 1.93 $";
+static char bios_date_string[] = "$Date: 2003-04-25 22:13:24 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.92 2003-03-08 22:59:17 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.93 2003-04-25 22:13:24 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3879,20 +3879,29 @@ BX_DEBUG_INT15("case default:\n");
 	    }
             break;
 
-        case 0x01: // coded by Hartmut Birr
-          regs.u.r8.al = inb_cmos(0x34);
-          regs.u.r8.ah = inb_cmos(0x35);
-          if(regs.u.r16.ax)
+        case 0x01: 
+          // do we have any reason to fail here ?
+          CLEAR_CF();
+
+          // my real system sets ax and bx to 0
+          // this is confirmed by Ralph Brown list
+          regs.u.r16.ax = 0;
+          regs.u.r16.bx = 0;
+
+          // Get the amount of extended memory (above 1M)
+          regs.u.r8.cl = inb_cmos(0x30);
+          regs.u.r8.ch = inb_cmos(0x31);
+          
+          // limit to 15M
+          if(regs.u.r16.cx > 0x3c00)
           {
-            regs.u.r16.bx = regs.u.r16.ax;
-            regs.u.r16.ax = 0x3c00;
-            regs.u.r16.cx = regs.u.r16.ax;
-            regs.u.r16.dx = regs.u.r16.bx;
-            CLEAR_CF();
-            break;
+            regs.u.r16.cx = 0x3c00;
           }
-          regs.u.r8.ah = 0xe8;
-          regs.u.r8.al = 0x01;
+
+          // Get the amount of extended memory above 16M in 64k blocs
+          regs.u.r8.dl = inb_cmos(0x34);
+          regs.u.r8.dh = inb_cmos(0x35);
+
           break;
 	default:  /* AH=0xE8?? but not implemented */
 	  goto int15_unimplemented;
