@@ -1036,23 +1036,25 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
 //how to implement that so for now it's just implemented as color.
 //Note: it is also possible to program the VGA controller to have the
 //high bit for the foreground color enable blinking characters.
-	const COLORREF crPal[16] = { 
-									RGB(0 ,0 ,0 ),	//0 black 
-									RGB(0 ,0 ,0x80 ),	//1 dark blue 
-									RGB(0 ,0x80 ,0 ),	//2 dark green 
-									RGB(0 ,0x80 ,0x80 ),		//3 dark cyan 
-									RGB(0x80 ,0 ,0 ),	//4 dark red 
-									RGB(0x80 ,0 ,0x80 ),		//5 dark magenta 
-									RGB(0x80 ,0x80 ,0 ),		//6 brown
-									RGB(0xC0 ,0xC0 ,0xC0 ),	//7 light gray 
-									RGB(0x80 ,0x80 ,0x80 ),	//8 dark gray 
-									RGB(0 ,0 ,0xFF ),	//9 light blue 
-									RGB(0 ,0xFF ,0 ),	//10 green 
-									RGB(0 ,0xFF ,0xFF ),		//11 cyan 
-									RGB(0xFF ,0 ,0 ),	//12 light red 
-									RGB(0xFF ,0 ,0xFF ),		//13 magenta 
-									RGB(0xFF ,0xFF ,0 ),		//14 yellow 
-									RGB(0xFF ,0xFF ,0xFF )};	//15 white 
+
+	const COLORREF crPal[16] = {
+	RGB(0 ,0 ,0 ), //0 black 
+	RGB(0 ,0 ,0xA8 ), //1 dark blue 
+	RGB(0 ,0xA8 ,0 ), //2 dark green 
+	RGB(0 ,0xA8 ,0xA8 ), //3 dark cyan 
+	RGB(0xA8 ,0 ,0 ), //4 dark red 
+	RGB(0xA8 ,0 ,0xA8 ), //5 dark magenta 
+	RGB(0xA8 ,0xA8 ,0 ), //6 brown 
+	RGB(0xA8 ,0xA8 ,0xA8 ), //7 light gray 
+	RGB(0x54 ,0x54 ,0x54 ), //8 dark gray 
+	RGB(0x54 ,0x54 ,0xFC ), //9 light blue 
+	RGB(0x54 ,0xFC ,0x54 ), //10 green 
+	RGB(0x54 ,0xFC ,0xFC ), //11 cyan 
+	RGB(0xFC ,0x54 ,0x54 ), //12 light red 
+	RGB(0xFC ,0x54 ,0xFC ), //13 magenta 
+	RGB(0xFC ,0xFC ,0x54 ), //14 yellow 
+	RGB(0xFC ,0xFC ,0xFC ) //15 white 
+	};
 
 	COLORREF crFore = SetTextColor(MemoryDC, crPal[(cColor>>4)&0xf]);
 	COLORREF crBack = SetBkColor(MemoryDC, crPal[cColor&0xf]);
