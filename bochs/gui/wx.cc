@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.10 2001-06-25 07:09:25 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.11 2001-06-28 04:01:26 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -138,7 +138,7 @@ MyFrame::ReadConfiguration (int ask_name)
 	"", oldrc, "", "", wxOPEN);
   }
   if (newrc.IsEmpty () || (newrc == "none")) return 0;
-  if (SIM->read_rc (newrc.c_str ()) < 0) {
+  if (SIM->read_rc ((char *)newrc.c_str ()) < 0) {
     wxMessageBox ("Error loading configuration file");
     return -1;
   }
@@ -161,12 +161,68 @@ MyFrame::WriteConfiguration (int ask_name)
 	"", oldrc, "", "", wxSAVE | wxOVERWRITE_PROMPT);
   }
   if (newrc.IsEmpty () || (newrc == "none")) return 0;
-  if (SIM->write_rc (newrc.c_str (), 1) < 0) {
+  if (SIM->write_rc ((char *)newrc.c_str (), 1) < 0) {
     wxMessageBox ("Error while saving configuration file");
     return -1;
   }
   return 0;
 }
+
+// static function version that can be referred to by function pointer
+int 
+MyFrame::ProcessBochsEvent (void *class_ptr, int id)
+{
+  printf ("MyFrame::ProcessBochsEvent\n");
+  MyFrame *f = (MyFrame *)class_ptr;
+  f->ProcessBochsEvent2 (id);
+}
+
+int 
+MyFrame::ProcessBochsEvent2 (int code)
+{
+  printf ("MyFrame::ProcessBochsEvent2\n");
+  switch (code)
+  {
+  case NOTIFY_CODE_LOGMSG:
+    if (0) {
+      // dumb static choices for now, eventually replace with an enum
+      // parameter or something.
+      // this code works if the gui thread calls it, but it's doing bad
+      // things when it gets called from the bochs thread.
+      wxMutexGuiEnter();
+      static wxString choices[] = { "1", "2", "3" };
+      int choice = ::wxGetSingleChoiceIndex (
+	  wxString ("The message"), wxString ("The caption"), 3, choices);
+      wxMutexGuiLeave();
+      printf ("you chose %d\n", choice);
+    } else {
+      int level;
+      char prefix[512], msg[512];
+      assert (SIM->log_msg_2 (prefix, &level, msg, sizeof(msg)) >= 0);
+      fprintf (stderr, "========================================================================\n");
+      fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
+      fprintf (stderr, "Device: %s\n", prefix);
+      fprintf (stderr, "Message: %s\n\n", msg);
+      fprintf (stderr, "A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
+      fprintf (stderr, "  cont       - continue execution\n");
+      fprintf (stderr, "  alwayscont - continue execution, and don't ask again.\n");
+      fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), prefix);
+      fprintf (stderr, "  die        - stop execution now\n");
+      int choice;
+#if 0
+      if (ask_menu ("Choose cont, alwayscont, or die. [%s] ", 3,  
+	    log_action_ask_choices, 2, &choice) < 0) 
+	return SIM->notify_return(-1);
+#endif
+      // return 0 for continue, 1 for alwayscontinue, 2 for die.
+      SIM->notify_return(choice);
+    }
+    break;
+  default:
+    fprintf (stderr, "Control panel: notify callback called with unknown code %04x\n", code);
+  }
+}
+
 
 void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
@@ -196,6 +252,7 @@ bool BochsApp::OnInit()
   // do bochs initialization first
   siminterface_init ();
   MyFrame *frame = new MyFrame( "Bochs Control Panel", wxPoint(50,50), wxSize(450,340) );
+  SIM->set_notify_callback (frame->ProcessBochsEvent, frame);
   bochsEventHandler = new BochsEventHandler ();
   frame->Show( TRUE );
   SetTopWindow( frame );
@@ -417,11 +474,11 @@ void
 ParamEditorString::Action (int evt_id)
 {
   bx_param_string_c *param = (bx_param_string_c *) get_param ();
-  char *string;
+  const char *string;
   switch (evt_id) {
     case ID_ApplyAction:
       string = component->GetValue ().c_str ();
-      param->set (string);
+      param->set ((char *)string);
       break;
     case ID_RevertAction:
       component->SetValue (wxString (param->getptr ()));
