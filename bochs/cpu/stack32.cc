@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: stack32.cc,v 1.8 2002-03-05 15:50:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -325,6 +325,7 @@ BX_CPU_C::ENTER_IwIb(BxInstruction_t *i)
   Bit32u frame_ptr32;
   Bit16u frame_ptr16;
   Bit8u level;
+  static Bit8u first_time = 1;
 
   level = i->Ib2;
 
@@ -332,7 +333,10 @@ BX_CPU_C::ENTER_IwIb(BxInstruction_t *i)
 
   level %= 32;
 /* ??? */
-if (level) BX_PANIC(("enter(): level > 0"));
+  if (first_time && level>0) {
+    BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
+    first_time = 0;
+  }
 //if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os_32==0) {
 //  BX_INFO(("enter(): stacksize!=opsize: I'm unsure of the code for this"));
 //  BX_PANIC(("         The Intel manuals are a mess on this one!"));
