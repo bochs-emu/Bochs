@@ -4,6 +4,8 @@ Author: Dieter Mittelmaier <dieter.mittelmaier@freenet.de>
 Date: Thu, 21 Jun 2001 23:07:37 +0200
 Patch Updated: Mon Jun 25 09:32:07 EDT 2001
                by Bryce to make it apply cleanly
+Patch Updated: Mon Jun 25 09:50:46 EDT 2001
+               by Bryce to add left backslash code
 
 Detailed description:
   I mapped your BX_KEY-defines in gui.h to values from XFree 
@@ -32,10 +34,11 @@ Index: gui/gui.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/gui.h,v
 retrieving revision 1.7
-diff -u -r1.7 gui.h
+retrieving revision 1.9
+diff -u -r1.7 -r1.9
 --- gui/gui.h	2001/06/23 03:18:14	1.7
-+++ gui/gui.h	2001/06/25 13:23:05
-@@ -92,114 +92,114 @@
++++ gui/gui.h	2001/06/25 13:39:10	1.9
+@@ -92,114 +92,115 @@
  #define BX_KEY_PRESSED  0x00000000
  #define BX_KEY_RELEASED 0x80000000
  
@@ -216,6 +219,7 @@ diff -u -r1.7 gui.h
 -#define BX_KEY_KP_DIVIDE    101
 +#define BX_KEY_LEFT_BRACKET  34
 +#define BX_KEY_BACKSLASH     51
++#define BX_KEY_LEFT_BACKSLASH  94
 +#define BX_KEY_RIGHT_BRACKET 35
 +#define BX_KEY_MINUS         20
 +#define BX_KEY_GRAVE         49
@@ -257,9 +261,10 @@ Index: gui/x.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/x.cc,v
 retrieving revision 1.13
-diff -u -r1.13 x.cc
+retrieving revision 1.14
+diff -u -r1.13 -r1.14
 --- gui/x.cc	2001/06/23 03:18:14	1.13
-+++ gui/x.cc	2001/06/25 13:23:05
++++ gui/x.cc	2001/06/25 13:35:51	1.14
 @@ -102,137 +102,11 @@
  static void headerbar_click(int x, int y);
  static void send_keyboard_mouse_status(void);
@@ -566,3 +571,19 @@ diff -u -r1.13 x.cc
  
    if (press_release)
      key_event |= BX_KEY_RELEASED;
+Index: iodev/keyboard.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.cc,v
+retrieving revision 1.22
+retrieving revision 1.23
+diff -u -r1.22 -r1.23
+--- iodev/keyboard.cc	2001/06/20 14:01:39	1.22
++++ iodev/keyboard.cc	2001/06/25 13:39:10	1.23
+@@ -646,6 +646,7 @@
+ 
+     case BX_KEY_LEFT_BRACKET:  scancode = 0x1a; break;
+     case BX_KEY_BACKSLASH:     scancode = 0x2b; break;
++    case BX_KEY_LEFT_BACKSLASH: scancode = 0x56; break;
+     case BX_KEY_RIGHT_BRACKET: scancode = 0x1b; break;
+     case BX_KEY_MINUS:         scancode = 0x0c; break;
+     case BX_KEY_GRAVE:         scancode = 0x29; break;
