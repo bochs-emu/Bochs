@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.53 2003-07-30 10:45:13 vruppert Exp $
+// $Id: ne2k.cc,v 1.54 2003-07-31 12:04:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1272,7 +1272,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.53 2003-07-30 10:45:13 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.54 2003-07-31 12:04:48 vruppert Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
@@ -1290,8 +1290,8 @@ bx_ne2k_c::init(void)
   for (unsigned addr = BX_NE2K_THIS s.base_address; 
        addr <= BX_NE2K_THIS s.base_address + 0x20; 
        addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "ne2000 NIC", 1);
-    DEV_register_iowrite_handler(this, write_handler, addr, "ne2000 NIC", 1);
+    DEV_register_ioread_handler(this, read_handler, addr, "ne2000 NIC", 3);
+    DEV_register_iowrite_handler(this, write_handler, addr, "ne2000 NIC", 3);
   }
   BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
            BX_NE2K_THIS s.base_address,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.7 2003-07-10 20:26:05 vruppert Exp $
+// $Id: plugin.cc,v 1.8 2003-07-31 12:04:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -38,13 +38,13 @@ void (*pluginSetHRQ)(unsigned val) = 0;
 void (*pluginSetHRQHackCallback)( void (*callback)(void) ) = 0;
 
 int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
-                            unsigned base, const char *name, unsigned len) = 0;
+                            unsigned base, const char *name, Bit8u mask) = 0;
 int (*pluginRegisterIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
-                             unsigned base, const char *name, unsigned len) = 0;
+                             unsigned base, const char *name, Bit8u mask) = 0;
 int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
-                            const char *name, unsigned len) = 0;
+                            const char *name, Bit8u mask) = 0;
 int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
-                             const char *name, unsigned len) = 0;
+                             const char *name, Bit8u mask) = 0;
 int (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
 			Bit32u useconds, bx_bool continuous, 
 			bx_bool active, const char* name) = 0;
@@ -114,40 +114,40 @@ builtinResetSignal( unsigned )
 
   static int
 builtinRegisterIOReadHandler(void *thisPtr, ioReadHandler_t callback,
-                            unsigned base, const char *name, unsigned len)
+                            unsigned base, const char *name, Bit8u mask)
 {
-  BX_ASSERT (len<8);
-  bx_devices.register_io_read_handler (thisPtr, callback, base, name);
+  BX_ASSERT (mask<8);
+  bx_devices.register_io_read_handler (thisPtr, callback, base, name, mask);
   pluginlog->ldebug("plugin %s registered I/O read address at %04x", name, base);
   return 0;
 }
 
   static int
 builtinRegisterIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
-                             unsigned base, const char *name, unsigned len)
+                             unsigned base, const char *name, Bit8u mask)
 {
-  BX_ASSERT (len<8);
-  bx_devices.register_io_write_handler (thisPtr, callback, base, name);
+  BX_ASSERT (mask<8);
+  bx_devices.register_io_write_handler (thisPtr, callback, base, name, mask);
   pluginlog->ldebug("plugin %s registered I/O write address at %04x", name, base);
   return 0;
 }
 
   static int
 builtinRegisterDefaultIOReadHandler(void *thisPtr, ioReadHandler_t callback,
-                            const char *name, unsigned len)
+                            const char *name, Bit8u mask)
 {
-  BX_ASSERT (len<8);
-  bx_devices.register_default_io_read_handler (thisPtr, callback, name);
+  BX_ASSERT (mask<8);
+  bx_devices.register_default_io_read_handler (thisPtr, callback, name, mask);
   pluginlog->ldebug("plugin %s registered default I/O read ", name);
   return 0;
 }
 
   static int
 builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
-                             const char *name, unsigned len)
+                             const char *name, Bit8u mask)
 {
-  BX_ASSERT (len<8);
-  bx_devices.register_default_io_write_handler (thisPtr, callback, name);
+  BX_ASSERT (mask<8);
+  bx_devices.register_default_io_write_handler (thisPtr, callback, name, mask);
   pluginlog->ldebug("plugin %s registered default I/O write ", name);
   return 0;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.14 2002-10-26 03:57:19 bdenney Exp $
+// $Id: pit.cc,v 1.15 2003-07-31 12:04:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -161,17 +161,17 @@ bx_pit_c::~bx_pit_c( void )
 bx_pit_c::init( void )
 {
   DEV_register_irq(0, "8254 PIT");
-  DEV_register_ioread_handler(this, read_handler, 0x0040, "8254 PIT", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x0041, "8254 PIT", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x0042, "8254 PIT", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x0043, "8254 PIT", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x0061, "8254 PIT", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x0040, "8254 PIT", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x0041, "8254 PIT", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x0042, "8254 PIT", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x0043, "8254 PIT", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x0061, "8254 PIT", 1);
 
-  DEV_register_iowrite_handler(this, write_handler, 0x0040, "8254 PIT", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0041, "8254 PIT", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0042, "8254 PIT", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0043, "8254 PIT", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0061, "8254 PIT", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0040, "8254 PIT", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0041, "8254 PIT", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0042, "8254 PIT", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0043, "8254 PIT", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0061, "8254 PIT", 1);
 
   BX_PIT_THIS s.speaker_data_on = 0;
   BX_PIT_THIS s.refresh_clock_div2 = 0;
@@ -243,10 +243,6 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
-  if (io_len > 1)
-    BX_PANIC(("pit: io read from port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
-
   if (bx_dbg.pit)
     BX_INFO(("pit: io read from port %04x", (unsigned) address));
 
@@ -298,10 +294,6 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   Bit8u   value;
 
   value = (Bit8u  ) dvalue;
-
-  if (io_len > 1)
-    BX_PANIC(("pit: io write to port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
 
   if (bx_dbg.pit)
     BX_INFO(("pit: write to port %04x = %02x",

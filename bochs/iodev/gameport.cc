@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.1 2003-06-21 12:55:19 vruppert Exp $
+// $Id: gameport.cc,v 1.2 2003-07-31 12:04:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -81,8 +81,8 @@ bx_gameport_c::init(void)
 {
   // Allocate the gameport IO address range 0x200..0x207
   for (unsigned addr=0x200; addr<0x208; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "Gameport", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "Gameport", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "Gameport", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "Gameport", 1);
   }
 
   BX_GAMEPORT_THIS port = 0xf0;
@@ -161,10 +161,6 @@ bx_gameport_c::read(Bit32u address, unsigned io_len)
 #endif // !BX_USE_GAME_SMF
   Bit64u usec;
 
-  if (io_len > 1)
-    BX_PANIC(("io read from port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
-
   if (BX_GAMEPORT_THIS joyfd >= 0) {
     poll_joydev();
     usec = bx_pc_system.time_usec();
@@ -205,9 +201,6 @@ bx_gameport_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_GAME_SMF
-  if (io_len > 1)
-    BX_PANIC(("io write to port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
 
   BX_GAMEPORT_THIS write_usec = bx_pc_system.time_usec();
   BX_GAMEPORT_THIS timer_x = 1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.34 2003-07-13 19:51:20 vruppert Exp $
+// $Id: iodev.h,v 1.35 2003-07-31 12:04:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -277,10 +277,10 @@ public:
   // power-on, hardware, or software.
   void reset(unsigned type);
   BX_MEM_C *mem;  // address space associated with these devices
-  bx_bool register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
-  bx_bool register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
-  bx_bool register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name );
-  bx_bool register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name );
+  bx_bool register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name, Bit8u mask );
+  bx_bool register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name, Bit8u mask );
+  bx_bool register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name, Bit8u mask );
+  bx_bool register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name, Bit8u mask );
   bx_bool register_irq(unsigned irq, const char *name);
   bx_bool unregister_irq(unsigned irq, const char *name);
   void iodev_init(void);
@@ -345,6 +345,7 @@ private:
     bx_read_handler_t funct;
     void             *this_ptr;
     const char       *handler_name;  // name of device
+    Bit8u             mask;          // io_len mask
     } io_read_handler[BX_MAX_IO_DEVICES];
   unsigned              num_read_handles;
 
@@ -353,6 +354,7 @@ private:
     bx_write_handler_t funct;
     void              *this_ptr;
     const char        *handler_name;  // name of device
+    Bit8u              mask;          // io_len mask
     } io_write_handler[BX_MAX_IO_DEVICES];
   unsigned              num_write_handles;
 
