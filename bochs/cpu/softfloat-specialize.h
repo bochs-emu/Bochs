@@ -103,16 +103,6 @@ typedef struct {
 */
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the single-precision floating-point value `a' is a zero;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-flag float32_is_zero(float32 a)
-{
-    return ! ((Bit32u)(a<<1));
-}
-
-/*----------------------------------------------------------------------------
 | Returns 1 if the single-precision floating-point value `a' is a NaN;
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
@@ -203,16 +193,6 @@ static float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status)
 /*                in another version
 #define float64_default_nan BX_CONST64(0x7FFFFFFFFFFFFFFF)
 */
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the double-precision floating-point value `a' is a zero;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-flag float64_is_zero(float64 a)
-{
-    return ! ((Bit64u)(a<<1));
-}
 
 /*----------------------------------------------------------------------------
 | Returns 1 if the double-precision floating-point value `a' is a NaN;

@@ -176,7 +176,6 @@ int float32_compare_quiet(float32, float32, float_status_t &status);
 
 float_class_t float32_class(float32);
 int float32_is_signaling_nan(float32);
-int float32_is_zero(float32);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision conversion routines.
@@ -211,4 +210,3 @@ int float64_compare_quiet(float64, float64, float_status_t &status);
 
 float_class_t float64_class(float64);
 int float64_is_signaling_nan(float64);
-int float64_is_zero(float64);
