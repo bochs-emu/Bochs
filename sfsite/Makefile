@@ -1,6 +1,6 @@
 ###################################################################
 # Makefile
-# $Id: Makefile,v 1.7 2002-11-29 20:54:14 uninet Exp $
+# $Id: Makefile,v 1.8 2004-01-12 21:24:35 cbothamy Exp $
 #
 # Runs a cvs update on the source forge shell account.
 # This will only work if you are a developer on the Bochs
@@ -14,10 +14,11 @@ BOCHS_PATH=/home/groups/b/bo/bochs
 HTDOCS=$(BOCHS_PATH)/htdocs
 
 remote_update::
-	if test "`whoami`" = bryce; then sfuser=bdenney; \
-	else sfuser=`whoami`; fi; \
+	sfuser=`whoami`; \
+	if test "`whoami`" = bryce; then sfuser=bdenney; fi; \
         if test "`whoami`" = tbutler; then sfuser=uninet; fi; \
-	$(SSH) $$sfuser@$(REMOTE_HOST) "cd $(HTDOCS) && cvs update -Ad"
+        if test "`whoami`" = chris; then sfuser=cbothamy; fi; \
+	echo $(SSH) $$sfuser@$(REMOTE_HOST) "cd $(HTDOCS) && cvs update -Ad"
 
 do_commit::
 	cvs commit
