@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.133 2004-01-27 21:38:51 vruppert Exp $
+// $Id: bochs.h,v 1.134 2004-01-29 17:49:01 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -450,9 +450,9 @@ typedef struct {
   bx_bool unsupported_io;
   bx_bool serial;
   bx_bool cdrom;
-#ifdef MAGIC_BREAKPOINT
+#if BX_MAGIC_BREAKPOINT
   bx_bool magic_break_enabled;
-#endif /* MAGIC_BREAKPOINT */
+#endif /* BX_MAGIC_BREAKPOINT */
 #if BX_SUPPORT_APIC
   bx_bool apic;
   bx_bool ioapic;

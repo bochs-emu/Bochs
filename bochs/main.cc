@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.261 2004-01-27 21:38:51 vruppert Exp $
+// $Id: main.cc,v 1.262 2004-01-29 17:49:02 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2623,7 +2623,7 @@ bx_init_bx_dbg (void)
   bx_dbg.record_io = 0;
   bx_dbg.serial = 0;
   bx_dbg.cdrom = 0;
-#ifdef MAGIC_BREAKPOINT
+#if BX_MAGIC_BREAKPOINT
   bx_dbg.magic_break_enabled = 0;
 #endif
 
@@ -3963,7 +3963,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
-#ifdef MAGIC_BREAKPOINT
+#if BX_MAGIC_BREAKPOINT
   else if (!strcmp(params[0], "magic_break")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: magic_break directive: wrong # args.", context));

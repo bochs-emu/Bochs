@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.156 2004-01-17 08:36:29 danielg4 Exp $
+// $Id: cpu.h,v 1.157 2004-01-29 17:49:03 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1367,7 +1367,7 @@ union {
 #if BX_DEBUGGER
   Bit32u watchpoint;
   Bit8u break_point;
-#ifdef MAGIC_BREAKPOINT
+#if BX_MAGIC_BREAKPOINT
   Bit8u magic_break;
 #endif
   Bit8u stop_reason;

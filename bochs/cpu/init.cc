@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.49 2003-12-30 22:12:45 cbothamy Exp $
+// $Id: init.cc,v 1.50 2004-01-29 17:49:03 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.49 2003-12-30 22:12:45 cbothamy Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.50 2004-01-29 17:49:03 mcb30 Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -856,7 +856,7 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR eipFetchPtr = NULL;
 
 #if BX_DEBUGGER
-#ifdef MAGIC_BREAKPOINT
+#if BX_MAGIC_BREAKPOINT
   BX_CPU_THIS_PTR magic_break = 0;
 #endif
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
