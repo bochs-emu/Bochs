@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.3 2001-06-09 20:01:12 bdenney Exp $
+ * $Id: control.cc,v 1.4 2001-06-09 21:12:16 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -70,9 +70,13 @@ extern "C" {
 #define BX_PANIC(x) printf x
 
 /* functions for changing particular options */
+void bx_edit_mem ();
+void bx_edit_rom_addr ();
 void bx_edit_floppy (int drive);
 void bx_edit_hard_disk (int drive);
 void bx_edit_cdrom ();
+void bx_edit_rom_path (int vga);
+void bx_edit_rom_addr ();
 void bx_newhd_support ();
 void bx_boot_from ();
 void bx_ips_change ();
@@ -285,7 +289,7 @@ Bochs Disk Options\n\
 5. CDROM: %s\n\
 6. New Hard Drive Support: %s\n\
 7. Boot from: %s\n\
-\n\
+%s\n\
 Please choose one: [0] ";
 
 static char *startup_sound_options_prompt =
@@ -356,7 +360,7 @@ void build_disk_options_prompt (char *format, char *buf, int size)
   bx_floppy_options floppyop;
   bx_disk_options diskop;
   bx_cdrom_options cdromop;
-  char buffer[6][128];
+  char buffer[7][128];
   for (int i=0; i<2; i++) {
     SIM->get_floppy_options (i, &floppyop);
     sprintf (buffer[i], "%s, size=%s, %s", floppyop.path,
@@ -366,7 +370,7 @@ void build_disk_options_prompt (char *format, char *buf, int size)
     SIM->get_disk_options (i, &diskop);
     sprintf (buffer[2+i], "%s, %d cylinders, %d heads, %d sectors/track", 
 	diskop.path, diskop.cylinders, diskop.heads, diskop.spt);
-    if (!diskop.path[0]) strcpy (buffer[2+i], "none");
+    if (!diskop.present) strcpy (buffer[2+i], "none");
   }
   SIM->get_cdrom_options (0, &cdromop);
   sprintf (buffer[4], "%s, %spresent, %s",
@@ -375,7 +379,11 @@ void build_disk_options_prompt (char *format, char *buf, int size)
   if (!cdromop.dev[0]) strcpy (buffer[4], "none");
   sprintf (buffer[5], "%s", SIM->get_newhd_support () ? "yes":"no");
   sprintf (buffer[6], "%s", SIM->get_boot_hard_disk () ? "hard drive":"floppy drive");
-  snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6]);
+  // check if diskd and cdromd are on at once
+  SIM->get_disk_options (1, &diskop);
+  int conflict = (diskop.present && cdromop.present);
+  char *diskd_cdromd_conflict_msg = "\nERROR:\nThis configuration has both a cdrom and a hard disk enabled.\nYou cannot have both!";
+  snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], conflict? diskd_cdromd_conflict_msg : "");
 }
 
 // return value of bx_control_panel:
@@ -431,7 +439,7 @@ int bx_control_panel (int menu)
        char oldpath[512];
        assert (SIM->get_log_file (oldpath, 512) >= 0);
        sprintf (prompt, startup_options_prompt, oldpath);
-       if (ask_int (prompt, 0, 7, 0, &choice) < 0) return -1;
+       if (ask_int (prompt, 0, 8, 0, &choice) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: bx_log_file (); break;
@@ -448,23 +456,30 @@ int bx_control_panel (int menu)
      break;
    case BX_CPANEL_START_OPTS_BOOT:
      {
-       char prompt[512];
-       build_disk_options_prompt (startup_boot_options_prompt, prompt, 512);
+       char prompt[512], vgapath[512], rompath[512];
+       if (SIM->get_rom_path (rompath, 512) < 0)
+	 strcpy (rompath, "none");
+       if (SIM->get_vga_path (vgapath, 512) < 0)
+	 strcpy (vgapath, "none");
+       sprintf (prompt, startup_boot_options_prompt, 
+	  SIM->get_mem_size (),
+	  vgapath, rompath,
+	  SIM->get_rom_address ());
        if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
-	 case 1: NOT_IMPLEMENTED (choice); break;
-	 case 2: NOT_IMPLEMENTED (choice); break;
-	 case 3: NOT_IMPLEMENTED (choice); break;
-	 case 4: NOT_IMPLEMENTED (choice); break;
+	 case 1: bx_edit_mem (); break;
+	 case 2: bx_edit_rom_path (1); break;
+	 case 3: bx_edit_rom_path (0); break;
+	 case 4: bx_edit_rom_addr (); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
      break;
    case BX_CPANEL_START_OPTS_DISK:
      {
-       char prompt[512];
-       build_disk_options_prompt (startup_disk_options_prompt, prompt, 512);
+       char prompt[1024];
+       build_disk_options_prompt (startup_disk_options_prompt, prompt, 1024);
        if (ask_int (prompt, 0, 7, 0, &choice) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
@@ -531,8 +546,8 @@ void bx_edit_hard_disk (int drive)
   fprintf (stderr, "Changing options for hard drive %d\n", drive);
   if (ask_string ("Enter new pathname, or type 'none' for no disk: [%s] ", opt.path, newopt.path) < 0)
     return;
-  if (!strcmp (newopt.path, "none")) newopt.path[0] = 0;
-  if (newopt.path[0]) {  // skip if "none" is the path.
+  newopt.present = (strcmp (newopt.path, "none") != 0);
+  if (newopt.present) {  // skip if "none" is the path.
     // ask cyl, head, sec.
     int n;
     if (ask_int ("How many cylinders? [%d] ", 1, 65535, opt.cylinders, &n) < 0)
@@ -567,6 +582,22 @@ void bx_edit_cdrom ()
   }
 }
 
+void bx_edit_rom_path (int vga)
+{
+  char oldpath[512], newpath[512];
+  if (vga) {
+    if (SIM->get_vga_path (oldpath, 512) < 0) return;
+    if (ask_string ("Enter pathname of the VGA ROM image: [%s] ", oldpath, newpath) < 0)
+      return;
+    SIM->set_vga_path (newpath);
+  } else {
+    if (SIM->get_rom_path (oldpath, 512) < 0) return;
+    if (ask_string ("Enter pathname of the ROM image: [%s] ", oldpath, newpath) < 0)
+      return;
+    SIM->set_rom_path (newpath);
+  }
+}
+
 void bx_newhd_support ()
 {
   int newval, oldval = SIM->get_newhd_support ();
@@ -582,6 +613,14 @@ void bx_boot_from ()
   if (ask_menu ("Boot floppy disk or hard disk?  Type hd or fd. [%s] ",
 	 2, choices, oldval, &newval) < 0) return;
   SIM->set_boot_hard_disk (newval);
+}
+
+void bx_edit_mem ()
+{
+  int newval, oldval = SIM->get_mem_size ();
+  if (ask_int ("How much memory (megabytes) in the simulated machine? [%d] ", 1, 1<<30, oldval, &newval) < 0)
+    return;
+  SIM->set_mem_size (newval);
 }
 
 void bx_ips_change ()
@@ -696,3 +735,20 @@ void bx_log_file ()
   if (ask_string ("Enter log file name: [%s] ", oldpath, newpath) < 0) return;
   SIM->set_log_file (newpath);
 }
+
+void bx_edit_rom_addr ()
+{
+  char oldval[256], newval[256];
+  sprintf (oldval, "%05x", SIM->get_rom_address ());
+  while (1) {
+    if (ask_string ("Enter the ROM BIOS address: [%s] ", oldval, newval) < 0)
+      return;
+    int val;
+    if (1==sscanf (newval, "%x", &val)) {
+      SIM->set_rom_address (val);
+      return;
+    }
+    fprintf (stderr, "The value should be in hex, as in 'e0000'.\n");
+  }
+}
+
