@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.82 2002-12-11 22:35:45 bdenney Exp $
+// $Id: wxmain.cc,v 1.83 2002-12-11 22:55:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -97,6 +97,7 @@ MyPanel *thePanel = NULL;
 bool wxBochsClosing = false;
 
 bool isSimThread () {
+  if (wxThread::IsMain()) return false;
   wxThread *current = wxThread::This ();
   if (current == (wxThread*) theFrame->GetSimThread ()) {
     //wxLogDebug ("isSimThread? yes");
