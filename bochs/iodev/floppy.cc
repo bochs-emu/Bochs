@@ -1,5 +1,5 @@
-  /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.37 2002-04-11 01:07:34 instinc Exp $
+  ///////////////////////////////////////////////////////////////////////////
+// $Id: floppy.cc,v 1.38 2002-04-11 02:21:59 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.37 2002-04-11 01:07:34 instinc Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.38 2002-04-11 02:21:59 instinc Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -325,6 +325,20 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       break;
 #endif  // #if BX_DMA_FLOPPY_IO
 
+    case 0x3F3: // Tape Drive Register
+      // see http://www.smsc.com/main/datasheets/37c93x.pdf page 18 for more details
+
+      switch( BX_FD_THIS s.DOR & 0x03 )
+      {
+	case 0x00:
+	  if( (BX_FD_THIS s.DOR & 0x10) == 0) break;
+	  return(2);
+	case 0x01:
+	  if( (BX_FD_THIS s.DOR & 0x20) == 0) break;
+	  return(1);
+      }
+      return(3);
+      
     case 0x3F6: // Reserved for future floppy controllers
                 // This address shared with the hard drive controller
       value = BX_FD_THIS devices->hard_drive->read_handler(BX_FD_THIS devices->hard_drive, address, io_len);
@@ -417,9 +431,8 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
           (unsigned) drive_select));
       if (drive_select>1) {
 	BX_DEBUG(("WARNING: applying mod(2) on drive_select"));
-	drive_select = drive_select & 0x01;
-	BX_DEBUG(("new drive_select=%02x",
-	  (unsigned) drive_select));
+	drive_select &= 0x01;
+	BX_DEBUG(("new drive_select=%d", (unsigned) drive_select));
         }
       break;
 
