@@ -598,7 +598,7 @@ struct bx_cdrom_options
 #endif    /* if BX_USE_CONTROL_PANEL==0 */
 
 typedef struct {
-  char *path;
+  bx_param_string_c *path;
   unsigned long address;
   } bx_rom_options;
 
@@ -665,11 +665,11 @@ typedef struct {
   bx_mem_options    memory;
   bx_sb16_options   sb16;
   char              bootdrive[2];
-  unsigned long     vga_update_interval;
+  bx_param_num_c    *vga_update_interval;
   unsigned long     keyboard_serial_delay;
   unsigned long     floppy_command_delay;
-  unsigned long     ips;
-  Boolean           mouse_enabled;
+  bx_param_num_c    *ips;
+  bx_param_num_c    *mouse_enabled;
   Boolean           private_colormap;
   Boolean           i440FXSupport;
   bx_cmos_options   cmos;

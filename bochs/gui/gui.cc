@@ -94,7 +94,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_LEFT, floppyB_handler);
 
   // Mouse button
-  if (bx_options.mouse_enabled)
+  if (bx_options.mouse_enabled->get ())
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS mouse_bmap_id,
                           BX_GRAVITY_LEFT, mouse_handler);
   else
@@ -188,22 +188,15 @@ bx_gui_c::snapshot_handler(void)
   void
 bx_gui_c::mouse_handler(void)
 {
-  int old = gui_get_mouse_enable ();
-  gui_set_mouse_enable (!old);
-}
-
-  Boolean
-bx_gui_c::gui_get_mouse_enable(void)
-{
-  return(bx_options.mouse_enabled);
+  int old = bx_options.mouse_enabled->get ();
+  bx_options.mouse_enabled->set (!old);
 }
 
   void
-bx_gui_c::gui_set_mouse_enable(Boolean val)
+bx_gui_c::mouse_enabled_changed (Boolean val)
 {
-  bx_options.mouse_enabled = val;
   BX_DEBUG (("maybe this should happen only if window has been created"));
-  if (bx_options.mouse_enabled)
+  if (val)
     replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
   else
     replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS nomouse_bmap_id);

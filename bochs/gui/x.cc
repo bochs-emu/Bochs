@@ -610,7 +610,7 @@ bx_gui_c::handle_events(void)
 
 	      // (mch) Hack for easier mouse handling (toggle mouse enable)
 	      mouse_handler();
-	      if (bx_options.mouse_enabled) {
+	      if (bx_options.mouse_enabled->get ()) {
 		    BX_INFO(("[x] Mouse on"));
 		    mouse_enable_x = current_x;
 		    mouse_enable_y = current_y;
@@ -1241,7 +1241,7 @@ bx_gui_c::exit(void)
 
 static void warp_cursor (int dx, int dy)
 {
-      if (bx_options.mouse_enabled) {
+      if (bx_options.mouse_enabled->get ()) {
 	    warp_dx = dx;
 	    warp_dy = dy;
 	    XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);

@@ -69,14 +69,14 @@ bx_options_t bx_options = {
   { 0, "", 0 },                         // cdromd
   { NULL, 0 },                          // rom
   { NULL },                             // vgarom
-  { NULL /*BX_DEFAULT_MEM_MEGS*/ },              // memory
+  { NULL },              // memory
   { 0, NULL, NULL, NULL, 0, 0, 0, 0 },  // SB16
   "a",                                  // boot drive
-  300000,                               // vga update interval
+  NULL,                               // vga update interval
   20000,  // default keyboard serial path delay (usec)
   50000,  // default floppy command delay (usec)
-  500000,  // default ips (instructions-per-second)
-  0,       // default mouse_enabled
+  NULL,    // ips
+  NULL,    // default mouse_enabled
   0,       // default private_colormap
   0,          // default i440FXSupport
   {NULL, 0},  // cmos path, cmos image boolean
@@ -452,9 +452,57 @@ void bx_print_header ()
   fprintf (stderr, "%s\n", divider);
 }
 
+
+
+static Bit32s
+bx_param_handler (bx_param_c *param, int set, Bit32s val)
+{
+  switch (param->get_id ()) {
+    case BXP_VGA_UPDATE_INTERVAL:
+      // if after init, notify the vga device to change its timer.
+      if (set && SIM->get_init_done ())
+	bx_vga.set_update_interval (val);
+      break;
+    case BXP_MOUSE_ENABLED:
+      // if after init, notify the GUI
+      if (set && SIM->get_init_done ())
+	bx_gui.mouse_enabled_changed (val!=0);
+      break;
+    default:
+      BX_PANIC (("bx_param_handler called with unknown parameter"));
+      return -1;
+  }
+  return val;
+}
+
 void bx_init_options ()
 {
-  bx_options.memory.size = new bx_param_num_c (BXP_MEM_SIZE, "megs", "Amount of RAM in megabytes", 1, 1<<31, 4);
+  bx_options.memory.size = new bx_param_num_c (BXP_MEM_SIZE,
+      "megs",
+      "Amount of RAM in megabytes",
+      1, 1<<31,
+      BX_DEFAULT_MEM_MEGS);
+  bx_options.ips = new bx_param_num_c (BXP_IPS, 
+      "ips",
+      "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
+      1, 1<<31,
+      500000);
+  bx_options.vga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
+      "vga_update_interval",
+      "Number of microseconds between VGA updates",
+      1, 1<<31,
+      30000);
+  bx_options.vga_update_interval->set_handler (bx_param_handler);
+  bx_options.mouse_enabled = new bx_param_num_c (BXP_MOUSE_ENABLED,
+      "mouse_enabled",
+      "Controls whether the mouse sends events to bochs",
+      0, 1, 
+      0);
+  bx_options.mouse_enabled->set_handler (bx_param_handler);
+  bx_options.rom.path = new bx_param_string_c (BXP_ROM_PATH,
+      "romimage",
+      "Pathname of ROM image to load",
+      BX_PATHNAME_LEN, "");
 }
 
 int
@@ -587,7 +635,7 @@ bx_init_hardware()
   for (int level=0; level<N_LOGLEV; level++)
     io->set_log_action (level, bx_options.log.actions[level]);
 
-  bx_pc_system.init_ips(bx_options.ips);
+  bx_pc_system.init_ips(bx_options.ips->get ());
 
   if(bx_options.log.filename[0]!='-') {
     BX_INFO (("using log file %s", bx_options.log.filename));
@@ -601,7 +649,7 @@ bx_init_hardware()
 
 #if BX_SMP_PROCESSORS==1
   BX_MEM(0)->init_memory(bx_options.memory.size->get () * 1024*1024);
-  BX_MEM(0)->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  BX_MEM(0)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address);
   BX_MEM(0)->load_ROM(bx_options.vgarom.path, 0xc0000);
   BX_CPU(0)->init (BX_MEM(0));
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
@@ -609,7 +657,7 @@ bx_init_hardware()
   // SMP initialization
   bx_mem_array[0] = new BX_MEM_C ();
   bx_mem_array[0]->init_memory(bx_options.memory.size->get () * 1024*1024);
-  bx_mem_array[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  bx_mem_array[0]->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address);
   bx_mem_array[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C ();
@@ -1045,7 +1093,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (strncmp(params[2], "address=", 8)) {
       BX_PANIC(("%s: romimage directive malformed.", context));
       }
-    bx_options.rom.path    = strdup(&params[1][5]);
+    bx_options.rom.path->set (&params[1][5]);
     if ( (params[2][8] == '0') && (params[2][9] == 'x') )
       bx_options.rom.address = strtoul(&params[2][8], NULL, 16);
     else
@@ -1061,9 +1109,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (num_params != 2) {
       BX_PANIC(("%s: vga_update_interval directive: wrong # args.", context));
       }
-    bx_options.vga_update_interval = atol(params[1]);
-    if (bx_options.vga_update_interval < 50000) {
-      BX_PANIC(("%s: vga_update_interval not big enough!", context));
+    bx_options.vga_update_interval->set (atol(params[1]));
+    if (bx_options.vga_update_interval->get () < 50000) {
+      BX_INFO(("%s: vga_update_interval seems awfully small!", context));
       }
     }
   else if (!strcmp(params[0], "keyboard_serial_delay")) {
@@ -1094,8 +1142,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (num_params != 2) {
       BX_PANIC(("%s: ips directive: wrong # args.", context));
       }
-    bx_options.ips = atol(params[1]);
-    if (bx_options.ips < 200000) {
+    bx_options.ips->set (atol(params[1]));
+    if (bx_options.ips->get () < 200000) {
       BX_INFO(("%s: WARNING: ips is AWFULLY low!", context));
       }
     }
@@ -1107,13 +1155,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (strncmp(params[1], "enabled=", 8)) {
       BX_PANIC(("%s: mouse directive malformed.", context));
       }
-    if (params[1][8] == '0')
-      bx_options.mouse_enabled = 0;
-    else if (params[1][8] == '1')
-      bx_options.mouse_enabled = 1;
-    else {
+    if (params[1][8] == '0' || params[1][8] == '1')
+      bx_options.mouse_enabled->set (params[1][8] - '0');
+    else
       BX_PANIC(("%s: mouse directive malformed.", context));
-      }
     }
   else if (!strcmp(params[0], "private_colormap")) {
     if (num_params != 2) {
@@ -1475,8 +1520,8 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_disk_options (fp, 0, &bx_options.diskc);
   bx_write_disk_options (fp, 1, &bx_options.diskd);
   bx_write_cdrom_options (fp, 0, &bx_options.cdromd);
-  if (bx_options.rom.path)
-    fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.path, (unsigned int)bx_options.rom.address);
+  if (strlen (bx_options.rom.path->getptr ()) < 1)
+    fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.path->getptr(), (unsigned int)bx_options.rom.address);
   else
     fprintf (fp, "# no romimage\n");
   if (bx_options.vgarom.path)
@@ -1486,11 +1531,11 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "megs: %d\n", bx_options.memory.size->get ());
   bx_write_sb16_options (fp, &bx_options.sb16);
   fprintf (fp, "boot: %s\n", bx_options.bootdrive);
-  fprintf (fp, "vga_update_interval: %lu\n", bx_options.vga_update_interval);
+  fprintf (fp, "vga_update_interval: %lu\n", bx_options.vga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %lu\n", bx_options.keyboard_serial_delay);
   fprintf (fp, "floppy_command_delay: %lu\n", bx_options.floppy_command_delay);
   fprintf (fp, "ips: %lu\n", bx_options.ips);
-  fprintf (fp, "mouse: enabled=%d\n", bx_options.mouse_enabled);
+  fprintf (fp, "mouse: enabled=%d\n", bx_options.mouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.private_colormap);
   fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.i440FXSupport);
   fprintf (fp, "time0: %u\n", bx_options.cmos.time0);

@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.10 2001-06-16 19:29:59 bdenney Exp $
+ * $Id: siminterface.h,v 1.11 2001-06-16 23:08:32 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -67,10 +67,11 @@ typedef enum {
 } bx_id;
 
 typedef enum {
-  BXT_OBJECT,
+  BXT_OBJECT = 201,
   BXT_NODE,
   BXT_PARAM,
-  BXT_PARAM_NUM
+  BXT_PARAM_NUM,
+  BXT_PARAM_STRING
 } bx_objtype;
 
 
@@ -142,18 +143,18 @@ public:
   void set (bx_any val);
 };
 
-typedef Bit32s (*param_num_event_handler)(class bx_param_c *, int set, Bit32s val);
+typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
 
 class bx_param_num_c : public bx_param_c {
   Bit32s min, max, val, initial_val;
-  param_num_event_handler handler;
+  param_event_handler handler;
 public:
   bx_param_num_c (bx_id id,
       char *name,
       char *description,
       Bit32s min, Bit32s max, Bit32s initial_val);
   void reset ();
-  void set_handler (param_num_event_handler handler) { this->handler = handler; }
+  void set_handler (param_event_handler handler) { this->handler = handler; }
   Bit32s get ();
   void set (Bit32s val);
 };
@@ -199,10 +200,7 @@ public:
 
   virtual bx_param_c *get_param (bx_id id) {return NULL;}
   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
-  bx_param_num_c *ips;
-  bx_param_num_c *mouse_enabled;
-  bx_param_num_c *vga_update_interval;
-  bx_param_string_c *rom_path;
+  virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}
   virtual int get_n_log_modules () {return -1;}
   virtual char *get_prefix (int mod) {return 0;}
   virtual int get_log_action (int mod, int level) {return -1;}

@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.19 2001-06-16 19:29:59 bdenney Exp $
+ * $Id: control.cc,v 1.20 2001-06-16 23:08:32 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -479,7 +479,8 @@ int bx_control_panel (int menu)
      {
        char prompt[CPANEL_PATH_LEN], vgapath[CPANEL_PATH_LEN], rompath[CPANEL_PATH_LEN];
        bx_param_num_c *memsize = SIM->get_param_num (BXP_MEM_SIZE);
-       if (SIM->rom_path->get (rompath, CPANEL_PATH_LEN) < 0)
+       bx_param_string_c *rom_path = SIM->get_param_string (BXP_ROM_PATH);
+       if (rom_path->get (rompath, CPANEL_PATH_LEN) < 0)
 	 strcpy (rompath, "none");
        if (SIM->get_vga_path (vgapath, CPANEL_PATH_LEN) < 0)
 	 strcpy (vgapath, "none");
@@ -638,10 +639,11 @@ void bx_edit_rom_path (int vga)
       return;
     SIM->set_vga_path (newpath);
   } else {
-    if (SIM->rom_path->get (oldpath, CPANEL_PATH_LEN) < 0) return;
+    bx_param_string_c *rom_path = SIM->get_param_string (BXP_ROM_PATH);
+    if (rom_path->get (oldpath, CPANEL_PATH_LEN) < 0) return;
     if (ask_string ("Enter pathname of the ROM image: [%s] ", oldpath, newpath) < 0)
       return;
-    SIM->rom_path->set (newpath);
+    rom_path->set (newpath);
   }
 }
 

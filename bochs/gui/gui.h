@@ -49,8 +49,7 @@ public:
 
   static void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
-  static Boolean  gui_get_mouse_enable(void);
-  static void     gui_set_mouse_enable(Boolean val);
+  static void     mouse_enabled_changed (Boolean val);
   static void     exit(void);
   static void init_signal_handlers ();
 #if BX_GUI_SIGHANDLER
