@@ -5,14 +5,18 @@ thousand votes.
 
 
 Menus:
-- Configure
+- Configuration
   +----------------------+
   | New Configuration    |
   | Read Configuration   |
   | Save Configuration   |
   +----------------------+
-  | Boot              -----------> Floppy, Hard disk, or Cdrom
+  | Quit                 |
+  +----------------------+
+- Edit
+  +----------------------+
   | Disks...             |
+  | Boot              -----------> Floppy, Hard disk, or Cdrom
   | VGA...               |
   | Memory...            |
   | Sound...             |
@@ -39,6 +43,10 @@ Menus:
   | View                 |
   | Preferences...       |
   | By Device...         |
+  +----------------------+
+- Help
+  +----------------------+
+  | About Bochs...       |
   +----------------------+
 
 What should show up on the control panel when it first comes up?
@@ -69,6 +77,8 @@ ChooseConfigScreen:
 |                                                        |
 |    ??      Create new configuration                    |
 |                                                        |
+|                                                        |
+|                        [                               |
 +--------------------------------------------------------+
 
 ConfigDisksScreen:

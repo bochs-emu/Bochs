@@ -55,6 +55,23 @@ What works right now:
   good floppy disk.  If you type "none" or choose an unreadable file,
   the floopy icon will show a disk with an X through it.
 - That's all.  Nothing else works except for quit.
+------------------------------------------------------
+
+Added some sketches in README.gui-sketch.  I'm thinking that the control
+panel will be able to basically show one of these screens at a time.  When
+you first start you would see ChooseConfigScreen which chooses between the
+configurations that you have loaded recently (which it would remember
+by the pathname of their bochsrc).  Whether you choose an existing 
+configuration to be loaded or a new one, when you click Ok you go to
+the first configuration screen, ConfigDiskScreen.
+
+Each of the configuration screens takes up the whole control panel window.
+We could use tabs on the top and/or "<-Prev" and "Next->" buttons to make
+it quick to navigate the configuration screens.  Each screen should
+probably have a Prev, Next, Revert to Saved, and Accept button.
+The menu choices like Disk..., VGA..., etc. just switch directly to
+that tab.
+
 
 ------------------------------------------------------
 Notes:
