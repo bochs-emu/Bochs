@@ -60,10 +60,9 @@
 
 #=======================================================================
 # ROMIMAGE:
-# You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
-# out most of the BIOS hooks, and replace them with real BIOS
-# support.  Normally, you can use a precompiled BIOS in the bios/
-# directory of the source tree, named BIOS-bochs-latest. 
+# You now need to load a ROM BIOS into F0000-FFFFF. Normally, you can
+# use a precompiled BIOS in the bios/ directory of the source tree,
+# named BIOS-bochs-latest.
 # You can also use the environment variable $BXSHARE to specify the
 # location of the BIOS.
 #=======================================================================

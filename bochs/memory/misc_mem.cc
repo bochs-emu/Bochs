@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.40 2003-08-06 08:24:14 cbothamy Exp $
+// $Id: misc_mem.cc,v 1.41 2003-09-10 16:34:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -129,7 +129,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.40 2003-08-06 08:24:14 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.41 2003-09-10 16:34:56 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -260,12 +260,10 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
     return(0); // error, beyond limits of memory
     }
   for (; len>0; len--) {
-#if BX_SUPPORT_VGA
     if ( (addr & 0xfffe0000) == 0x000a0000 ) {
       *buf = DEV_vga_mem_read(addr);
       }
     else {
-#endif
 #if BX_PCI_SUPPORT == 0
       *buf = vector[addr];
 #else
@@ -304,12 +302,10 @@ BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
     return(0); // error, beyond limits of memory
     }
   for (; len>0; len--) {
-#if BX_SUPPORT_VGA
     if ( (addr & 0xfffe0000) == 0x000a0000 ) {
       DEV_vga_mem_write(addr, *buf);
       }
     else
-#endif
       vector[addr] = *buf;
     buf++;
     addr++;
