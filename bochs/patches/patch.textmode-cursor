@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.textmode-cursor
 Author: Volker Ruppert <Volker.Ruppert@t-online.de>
-Date: Sun Dec  2 13:22:00 CET 2001
+Date: Sun Dec  8 16:57:00 CET 2001
 
 Detailed description:
   This is an improvement for the textmode cursor.
@@ -12,8 +12,9 @@ Detailed description:
   okay.
 
   TODO:
-    - cursor size feature for win32
-    - implentation for other GUIs
+    - fix the color of the cursor in X (it should use the foreground color)
+    - cursor size feature for win32 (InvertRect() doesn't work properly)
+    - implementation for other GUIs
 
 Patch was created with:
   diff -u
@@ -23,9 +24,9 @@ Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-diff -u ../bochs/gui/amigaos.cc gui/amigaos.cc
+diff -urN ../bochs/gui/amigaos.cc ./gui/amigaos.cc
 --- ../bochs/gui/amigaos.cc	Wed Oct  3 15:10:37 2001
-+++ gui/amigaos.cc	Sun Dec  2 09:47:56 2001
++++ ./gui/amigaos.cc	Wed Dec 12 18:04:56 2001
 @@ -380,7 +380,7 @@
    void
  bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
@@ -35,10 +36,10 @@ diff -u ../bochs/gui/amigaos.cc gui/amigaos.cc
  {
  int i;
  int	cursori;
-diff -u ../bochs/gui/beos.cc gui/beos.cc
---- ../bochs/gui/beos.cc	Wed Oct  3 15:10:37 2001
-+++ gui/beos.cc	Sun Dec  2 09:48:22 2001
-@@ -302,7 +302,7 @@
+diff -urN ../bochs/gui/beos.cc ./gui/beos.cc
+--- ../bochs/gui/beos.cc	Fri Dec  7 22:10:17 2001
++++ ./gui/beos.cc	Wed Dec 12 18:04:56 2001
+@@ -332,7 +332,7 @@
    void
  bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                        unsigned long cursor_x, unsigned long cursor_y,
@@ -47,9 +48,9 @@ diff -u ../bochs/gui/beos.cc gui/beos.cc
  {
    unsigned i, x, y;
    BPoint point;
-diff -u ../bochs/gui/carbon.cc gui/carbon.cc
+diff -urN ../bochs/gui/carbon.cc ./gui/carbon.cc
 --- ../bochs/gui/carbon.cc	Wed Oct  3 15:10:37 2001
-+++ gui/carbon.cc	Sun Dec  2 09:51:28 2001
++++ ./gui/carbon.cc	Wed Dec 12 18:04:56 2001
 @@ -796,7 +796,7 @@
  
  void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
@@ -59,9 +60,9 @@ diff -u ../bochs/gui/carbon.cc gui/carbon.cc
  {
  	int				i;
  	unsigned char		achar;
-diff -u ../bochs/gui/gui.h gui/gui.h
+diff -urN ../bochs/gui/gui.h ./gui/gui.h
 --- ../bochs/gui/gui.h	Mon Nov 26 10:54:12 2001
-+++ gui/gui.h	Sat Dec  1 18:17:23 2001
++++ ./gui/gui.h	Wed Dec 12 18:04:56 2001
 @@ -34,7 +34,7 @@
                   unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
    static void text_update(Bit8u *old_text, Bit8u *new_text,
@@ -71,9 +72,9 @@ diff -u ../bochs/gui/gui.h gui/gui.h
    static void graphics_update(Bit8u *snapshot);
    static void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
    static void handle_events(void);
-diff -u ../bochs/gui/macintosh.cc gui/macintosh.cc
+diff -urN ../bochs/gui/macintosh.cc ./gui/macintosh.cc
 --- ../bochs/gui/macintosh.cc	Wed Oct  3 15:10:37 2001
-+++ gui/macintosh.cc	Sun Dec  2 09:52:19 2001
++++ ./gui/macintosh.cc	Wed Dec 12 18:04:56 2001
 @@ -791,7 +791,7 @@
  
  void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
@@ -83,9 +84,9 @@ diff -u ../bochs/gui/macintosh.cc gui/macintosh.cc
  {
  	int				i;
  	unsigned char		achar;
-diff -u ../bochs/gui/nogui.cc gui/nogui.cc
+diff -urN ../bochs/gui/nogui.cc ./gui/nogui.cc
 --- ../bochs/gui/nogui.cc	Wed Oct  3 15:10:37 2001
-+++ gui/nogui.cc	Sun Dec  2 09:53:13 2001
++++ ./gui/nogui.cc	Wed Dec 12 18:04:56 2001
 @@ -136,12 +136,13 @@
    void
  bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
@@ -101,9 +102,9 @@ diff -u ../bochs/gui/nogui.cc gui/nogui.cc
    UNUSED(nrows);
  }
  
-diff -u ../bochs/gui/rfb.cc gui/rfb.cc
+diff -urN ../bochs/gui/rfb.cc ./gui/rfb.cc
 --- ../bochs/gui/rfb.cc	Mon Nov 12 18:56:47 2001
-+++ gui/rfb.cc	Sun Dec  2 09:54:31 2001
++++ ./gui/rfb.cc	Wed Dec 12 18:04:56 2001
 @@ -522,7 +522,7 @@
  // cursor_x: new x location of cursor
  // cursor_y: new y location of cursor
@@ -113,9 +114,9 @@ diff -u ../bochs/gui/rfb.cc gui/rfb.cc
  {
  	unsigned char cChar;
  	unsigned int  nchars;
-diff -u ../bochs/gui/term.cc gui/term.cc
+diff -urN ../bochs/gui/term.cc ./gui/term.cc
 --- ../bochs/gui/term.cc	Wed Oct  3 15:10:37 2001
-+++ gui/term.cc	Sun Dec  2 10:05:39 2001
++++ ./gui/term.cc	Wed Dec 12 18:04:56 2001
 @@ -395,8 +395,10 @@
  	void
  bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
@@ -128,9 +129,9 @@ diff -u ../bochs/gui/term.cc gui/term.cc
  	unsigned ncols = 4000/nrows/2;
  	// XXX There has GOT to be a better way of doing this
  	for(int i=0;i<4001;i+=2) {
-diff -u ../bochs/gui/win32.cc gui/win32.cc
+diff -urN ../bochs/gui/win32.cc ./gui/win32.cc
 --- ../bochs/gui/win32.cc	Mon Nov 26 08:24:16 2001
-+++ gui/win32.cc	Sun Dec  2 13:21:12 2001
++++ ./gui/win32.cc	Wed Dec 12 18:04:56 2001
 @@ -683,12 +683,16 @@
  
  void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
@@ -158,9 +159,9 @@ diff -u ../bochs/gui/win32.cc gui/win32.cc
      cChar = new_text[(cursor_y*80 + cursor_x)*2];
  	//reverse background and foreground colors
  	char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
-diff -u ../bochs/gui/x.cc gui/x.cc
---- ../bochs/gui/x.cc	Mon Nov 12 01:45:09 2001
-+++ gui/x.cc	Sun Dec  2 13:22:02 2001
+diff -urN ../bochs/gui/x.cc ./gui/x.cc
+--- ../bochs/gui/x.cc	Sat Dec  8 16:37:33 2001
++++ ./gui/x.cc	Wed Dec 12 18:04:56 2001
 @@ -461,7 +461,7 @@
  
    XSetState(bx_x_display, gc, white_pixel, black_pixel, GXcopy,AllPlanes);
@@ -170,7 +171,7 @@ diff -u ../bochs/gui/x.cc gui/x.cc
  
    XSetState(bx_x_display, gc_headerbar, black_pixel, white_pixel, GXcopy,AllPlanes);
  
-@@ -945,14 +945,18 @@
+@@ -946,14 +946,18 @@
    void
  bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                        unsigned long cursor_x, unsigned long cursor_y,
@@ -190,7 +191,7 @@ diff -u ../bochs/gui/x.cc gui/x.cc
    font_height = font_info->ascent + font_info->descent;
  
    // Number of characters on screen, variable number of rows
-@@ -1007,15 +1011,15 @@
+@@ -1008,15 +1012,15 @@
    XSetBackground(bx_x_display, gc, black_pixel);
  
    // now draw character at new block cursor location in reverse
@@ -215,9 +216,9 @@ diff -u ../bochs/gui/x.cc gui/x.cc
      }
  
    XFlush(bx_x_display);
-diff -u ../bochs/iodev/vga.cc iodev/vga.cc
+diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
 --- ../bochs/iodev/vga.cc	Wed Oct  3 15:10:38 2001
-+++ iodev/vga.cc	Sun Dec  2 12:25:01 2001
++++ ./iodev/vga.cc	Wed Dec 12 18:04:56 2001
 @@ -1305,6 +1305,7 @@
    else { // text mode
      unsigned long start_address;
