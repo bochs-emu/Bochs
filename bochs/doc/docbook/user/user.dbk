@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.88 2002-12-11 19:16:19 bdenney Exp $
+$Id: user.dbk,v 1.89 2002-12-13 19:47:40 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1307,7 +1307,7 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/bochsrc-sample.txt</entry> <entry> sample Bochs configuration file </entry> </row>
 <row><entry>/usr/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx and bximage </entry> </row>
 <row><entry>/usr/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
-<row><entry>/usr/share/doc/bochs/alldocs.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/alldocs.html">Online copy</ulink> )</entry> </row>
+<row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/bochs/BIOS-* </entry> <entry> ROM BIOS images for Bochs.  Normally you would only use BIOS-bochs-latest unless you are simulating multiple processors.  </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-* </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
