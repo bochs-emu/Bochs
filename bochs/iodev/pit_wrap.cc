@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.11 2002-01-29 17:20:11 vruppert Exp $
+// $Id: pit_wrap.cc,v 1.12 2002-01-31 17:18:38 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,11 +43,11 @@ bx_pit_c bx_pit;
 #endif
 
 //How many timer ticks per usecond.
-//1.193MHz Clock
+//1.193181MHz Clock
 //1193/1000 Ticks Per usecond.
 #define TIME_MULT 1.193
-#define TICKS_TO_USEC(a) ( ((a)*1000)/1193 )
-#define USEC_TO_TICKS(a) ( ((a)*1193)/1000 )
+#define TICKS_TO_USEC(a) ( ((a)*1000000)/1193181 )
+#define USEC_TO_TICKS(a) ( ((a)*1193181)/1000000 )
 #define MAX(a,b) ( ((a)>(b))?(a):(b) )
 
 bx_pit_c::bx_pit_c( void )
@@ -105,6 +105,9 @@ bx_pit_c::init( bx_devices_c *d )
   BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   BX_PIT_THIS s.last_usec=bx_pc_system.time_usec();
 
+  BX_PIT_THIS s.total_usec=0;
+  BX_PIT_THIS s.total_ticks=0;
+
   BX_DEBUG(("pit: finished init"));
 
   BX_DEBUG(("s.last_usec=%d",BX_PIT_THIS s.last_usec));
@@ -130,10 +133,8 @@ bx_pit_c::handle_timer() {
 
   BX_DEBUG(("pit: entering timer handler"));
 
-  if(time_passed32 && periodic(time_passed32)) {
-    // This is a hack to make the IRQ0 work
-    bx_pic.lower_irq(0);
-    bx_pic.raise_irq(0);
+  if(time_passed32) {
+    periodic(time_passed32);
   }
   BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
   if(time_passed ||
@@ -244,10 +245,8 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
 
   BX_DEBUG(("pit: entering write handler"));
 
-  if(time_passed32 && periodic(time_passed32)) {
-    // This is a hack to make the IRQ0 work
-    bx_pic.lower_irq(0);
-    bx_pic.raise_irq(0);
+  if(time_passed32) {
+    periodic(time_passed32);
   }
   BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
 
@@ -291,6 +290,12 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
     default:
       BX_PANIC(("pit: unsupported io write to port %04x = %02x",
         (unsigned) address, (unsigned) value));
+  }
+
+  if ((BX_PIT_THIS s.timer.read_OUT(0))==1) {
+    bx_pic.raise_irq(0);
+  } else {
+    bx_pic.lower_irq(0);
   }
 
   if(time_passed ||
@@ -353,7 +358,16 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 {
   Boolean prev_timer0_out = BX_PIT_THIS s.timer.read_OUT(0);
   Boolean want_interrupt = 0;
-  Bit32u ticks_delta=(Bit32u)(USEC_TO_TICKS((Bit64u)(usec_delta)));
+  Bit32u ticks_delta = 0;
+
+  BX_PIT_THIS s.total_usec += usec_delta;
+  ticks_delta=(Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
+  BX_PIT_THIS s.total_ticks += ticks_delta;
+
+  while ((BX_PIT_THIS s.total_ticks >= 1193181) && (BX_PIT_THIS s.total_usec >= 1000000)) {
+    BX_PIT_THIS s.total_ticks -= 1193181;
+    BX_PIT_THIS s.total_usec  -= 1000000;
+  }
 
   while(ticks_delta>0) {
     Bit32u maxchange=BX_PIT_THIS s.timer.get_next_event_time();
@@ -362,8 +376,12 @@ bx_pit_c::periodic( Bit32u   usec_delta )
       timedelta=ticks_delta;
     }
     BX_PIT_THIS s.timer.clock_all(timedelta);
-    if ( (prev_timer0_out==0) && ((BX_PIT_THIS s.timer.read_OUT(0))==1) ) {
-      want_interrupt=1;
+    if ( (prev_timer0_out==0) ) {
+      if ((BX_PIT_THIS s.timer.read_OUT(0))==1)
+        bx_pic.raise_irq(0);
+    } else {
+      if ((BX_PIT_THIS s.timer.read_OUT(0))==0)
+        bx_pic.lower_irq(0);
     }
     prev_timer0_out=BX_PIT_THIS s.timer.read_OUT(0);
     ticks_delta-=timedelta;
