@@ -439,26 +439,6 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
 #endif // BX_DEBUGGER
 
 
-// (mch) Wait for an event. This routine is broken, but the idea is nice...
-void
-bx_pc_system_c::wait_for_event()
-{
-      Bit64u ticks_left = bx_pc_system.num_cpu_ticks_left;
-      // sec = instr / instr_per_sec
-#ifdef PROVIDE_M_IPS
-      int usecs = (int)(double((Bit64s)ticks_left) / double(m_ips));
-#else
-      int usecs = (int)(double((Bit64s)ticks_left) /
-        double(bx_pc_system.m_ips));
-#endif
-      struct timeval tv;
-      tv.tv_sec = 0;
-      tv.tv_usec = usecs;
-      select(0, NULL, NULL, NULL, &tv);
-      bx_pc_system.num_cpu_ticks_left = 1;
-      BX_TICK1();
-}
-
   Bit64u
 bx_pc_system_c::time_ticks()
 {
