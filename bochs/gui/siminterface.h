@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22 2001-06-22 13:37:08 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.1 2001-06-24 06:25:00 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -320,6 +320,7 @@ public:
   bx_simulator_interface_c ();
   virtual int get_init_done () { return -1; }
   virtual int set_init_done (int n) {return -1;}
+  virtual void get_param_id_range (int *min, int *max) {}
   virtual int register_param (bx_id id, bx_param_c *it) {return -1;}
   virtual bx_param_c *get_param (bx_id id) {return NULL;}
   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}

@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31 2001-06-22 13:37:08 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.1 2001-06-24 06:25:00 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -30,6 +30,10 @@ public:
   bx_real_sim_c ();
   virtual int get_init_done () { return init_done; }
   virtual int set_init_done (int n) { init_done = n; return 0;}
+  virtual void get_param_id_range (int *min, int *max) {
+    *min = BXP_NULL;
+    *max = BXP_THIS_IS_THE_LAST-1;
+  }
   virtual int register_param (bx_id id, bx_param_c *it);
   virtual bx_param_c *get_param (bx_id id);
   virtual bx_param_num_c *get_param_num (bx_id id);
