@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.80 2004-02-22 13:02:56 vruppert Exp $
+// $Id: x.cc,v 1.81 2004-02-27 18:42:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -406,7 +406,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   win = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
     x, y,
     dimension_x,
-    dimension_y,
+    dimension_y + bx_statusbar_y,
     border_width,
     BlackPixel(bx_x_display, bx_x_screen_num),
     BlackPixel(bx_x_display, bx_x_screen_num));
@@ -498,7 +498,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 
   size_hints.flags = PPosition | PSize | PMinSize | PMaxSize;
   size_hints.max_width = size_hints.min_width = dimension_x;
-  size_hints.max_height = size_hints.min_height = dimension_y;
+  size_hints.max_height = size_hints.min_height = dimension_y + bx_statusbar_y;
 
   {
   XWMHints wm_hints;
@@ -616,7 +616,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
       bx_status_led_green = 0;
       bx_status_graytext = 0;
   }
-  set_status_text(0, "CTRL + 3rd button enables mouse", 0);
+  strcpy(bx_status_info_text, "CTRL + 3rd button enables mouse");
 
   x_init_done = true;
 
@@ -646,7 +646,9 @@ set_status_text(int element, const char *text, bx_bool active)
   xleft = bx_statusitem_pos[element] + 2;
   xsize = bx_statusitem_pos[element+1] - xleft;
   if (element < 1) {
-    strcpy(bx_status_info_text, text);
+    if (strcmp(bx_status_info_text, text)) {
+      strcpy(bx_status_info_text, text);
+    }
     XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, dimension_y+2, xsize, bx_statusbar_y-2);
     XDrawString(bx_x_display, win, gc_headerbar, xleft, dimension_y+bx_statusbar_y-2,
                 text, strlen(text));
@@ -1333,18 +1335,23 @@ bx_x_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   void
 bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-  unsigned x, y;
+  unsigned x, y, y_size;
   unsigned color, offset;
   Bit8u b0, b1, b2, b3;
 
+  if ((y0 + y_tilesize) > (dimension_y - bx_headerbar_y)) {
+    y_size = dimension_y - bx_headerbar_y - y0;
+  } else {
+    y_size = y_tilesize;
+  }
   Bit16u *tile16 = (Bit16u *)tile;
   switch (vga_bpp) {
     case 32:  // 32 bits per pixel
       if (ximage->byte_order == LSBFirst) {
-        memcpy(&ximage->data[0], tile, x_tilesize*y_tilesize*4);
+        memcpy(&ximage->data[0], tile, x_tilesize*y_size*4);
         }
       else { // MSBFirst
-        for (y=0; y<y_tilesize; y++) {
+        for (y=0; y<y_size; y++) {
           for (x=0; x<x_tilesize; x++) {
             offset = imWide*y + 4*x;
             ximage->data[offset + 0] = tile[(y*x_tilesize + x)*4 + 3];
@@ -1356,7 +1363,7 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
         }
       break;
     case 24:  // 24 bits per pixel
-      for (y=0; y<y_tilesize; y++) {
+      for (y=0; y<y_size; y++) {
         for (x=0; x<x_tilesize; x++) {
           switch (imBPP) {
             case 24:  // 24 bits per pixel
@@ -1392,7 +1399,7 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
         }
       break;
     case 16:  // 16 bits per pixel
-      for (y=0; y<y_tilesize; y++) {
+      for (y=0; y<y_size; y++) {
         for (x=0; x<x_tilesize; x++) {
           switch (imBPP) {
             case 16:  // 16 bits per pixel
@@ -1445,7 +1452,7 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
         }
       break;
     case 15:  // 15 bits per pixel
-      for (y=0; y<y_tilesize; y++) {
+      for (y=0; y<y_size; y++) {
         for (x=0; x<x_tilesize; x++) {
           switch (imBPP) {
             case 16:  // 16 bits per pixel
@@ -1501,7 +1508,7 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
         }
       break;
     default:  // 8 bits per pixel
-      for (y=0; y<y_tilesize; y++) {
+      for (y=0; y<y_size; y++) {
         for (x=0; x<x_tilesize; x++) {
           color = col_vals[tile[y*x_tilesize + x]];
           switch (imBPP) {
@@ -1565,7 +1572,7 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
         }
     }
   XPutImage(bx_x_display, win, gc, ximage, 0, 0, x0, y0+bx_headerbar_y,
-            x_tilesize, y_tilesize);
+            x_tilesize, y_size);
 }
 
 
