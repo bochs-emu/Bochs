@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.112 2002-09-16 21:55:56 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.113 2002-09-17 21:45:48 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -873,28 +873,6 @@ AC_SUBST(READLINE_LIB)
 AC_CHECK_HEADER(readline/history.h,
   AC_DEFINE(HAVE_READLINE_HISTORY_H)
   )
-
-AC_MSG_CHECKING(for loader support)
-AC_ARG_ENABLE(loader,
-  [  --enable-loader                   support calling external loader from debugger],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_LOADER, 1)
-    BX_LOADER_OBJS='bx_loader.o loader.o'
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_LOADER, 0)
-    BX_LOADER_OBJS=''
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_LOADER, 0)
-    BX_LOADER_OBJS=''
-    ]
-  )
-AC_SUBST(BX_LOADER_OBJS)
-
-
 
 INSTRUMENT_DIR='instrument/stubs'
 

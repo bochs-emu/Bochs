@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.45 2002-08-24 10:20:34 vruppert Exp $
+$Id: user.dbk,v 1.46 2002-09-17 21:45:51 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2142,12 +2142,6 @@ turn it off.
       processor and "yes" when there is more than one processor.  Normally,
       the default is correct and you would never need to type this option.
       </entry>
-    </row>
-    <row>
-      <entry>--enable-loader</entry>
-      <entry>no</entry>
-      <entry>Support calling external loader from debugger.  This
-	  is an unsupported option. Don't use it.</entry>
     </row>
     <row>
       <entry>--enable-instrumentation=<option>directory</option></entry>
