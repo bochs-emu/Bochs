@@ -33,3 +33,4 @@ form-00022.txt:1.2.pre1:Solaris sparc gcc:DOS:green
 form-00023.txt:1.2:IRIX:Linux console:green
 form-00024.txt:1.2:Win32 VC++:Linux console:green
 form-00025.txt:cvs 02-Jun-01:Linux x86:Linux console:green
+form-00026.txt:1.2.1:Win32 VC++:QNX:green
