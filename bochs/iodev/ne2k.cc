@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.55 2003-08-25 16:46:18 vruppert Exp $
+// $Id: ne2k.cc,v 1.56 2003-12-25 16:58:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -445,6 +445,8 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     break;
     
   case 0x6:  // FIFO
+    // reading FIFO is only valid in loopback mode
+    BX_ERROR(("reading FIFO not supported yet"));
     return (BX_NE2K_THIS s.fifo);
     break;
 
@@ -634,7 +636,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     // Test loop mode (not supported)
     if (value & 0x06) {
       BX_NE2K_THIS s.TCR.loop_cntl = (value & 0x6) >> 1;
-	    BX_INFO(("TCR write, loop mode %d not supported", BX_NE2K_THIS s.TCR.loop_cntl));
+      BX_INFO(("TCR write, loop mode %d not supported", BX_NE2K_THIS s.TCR.loop_cntl));
     } else {
       BX_NE2K_THIS s.TCR.loop_cntl = 0;
     }
@@ -652,13 +654,10 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0xe:  // DCR
-    // Don't allow loopback mode to be set
+    // the loopback mode is not suppported yet
     if (!(value & 0x08)) {
       BX_ERROR(("DCR write, loopback mode selected"));
-	  // XXX This is a HACK, lets fix this right!
-	  value -= 8;
-	}
-
+    }
     // It is questionable to set longaddr and auto_rx, since they
     // aren't supported on the ne2000. Print a warning and continue
     if (value & 0x04)
@@ -670,6 +669,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     BX_NE2K_THIS s.DCR.wdsize   = ((value & 0x01) == 0x01);
     BX_NE2K_THIS s.DCR.endian   = ((value & 0x02) == 0x02);
     BX_NE2K_THIS s.DCR.longaddr = ((value & 0x04) == 0x04); // illegal ?
+    BX_NE2K_THIS s.DCR.loop     = ((value & 0x08) == 0x08);
     BX_NE2K_THIS s.DCR.auto_rx  = ((value & 0x10) == 0x10); // also illegal ?
     BX_NE2K_THIS s.DCR.fifo_size = (value & 0x50) >> 5;
     break;
@@ -1161,7 +1161,8 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
   if ((BX_NE2K_THIS s.CR.stop != 0) ||
       (BX_NE2K_THIS s.page_start == 0) ||
-      (BX_NE2K_THIS s.TCR.loop_cntl != 0)) {
+      ((BX_NE2K_THIS s.DCR.loop == 0) &&
+       (BX_NE2K_THIS s.TCR.loop_cntl != 0))) {
 
     return;
   }
@@ -1272,7 +1273,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.55 2003-08-25 16:46:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.56 2003-12-25 16:58:17 vruppert Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
