@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.15 2002-09-28 00:54:04 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.16 2002-09-29 15:06:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -332,7 +332,7 @@ BX_CPU_C::JCC_Jq(bxInstruction_c *i)
     }
 #if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
     }
 #endif
 }
@@ -461,7 +461,7 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
     }
@@ -475,7 +475,7 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
   }
@@ -497,7 +497,7 @@ BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
     }
@@ -511,7 +511,7 @@ BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
     }
@@ -531,7 +531,7 @@ BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
     }
@@ -545,7 +545,7 @@ BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
     }
@@ -565,7 +565,7 @@ BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
     }
@@ -579,7 +579,7 @@ BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
       }
 #endif
     }

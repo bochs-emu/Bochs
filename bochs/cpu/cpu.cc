@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.55 2002-09-29 14:16:30 sshwarts Exp $
+// $Id: cpu.cc,v 1.56 2002-09-29 15:06:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -263,7 +263,15 @@ async_events_processed:
 #endif
       boundaryFetch(i);
       resolveModRM = i->ResolveModrm; // Get function pointers as early
-      }
+    }
+#if BX_INSTRUMENTATION
+    else
+    {
+      // An instruction was either fetched, or found in the iCache.
+      BX_INSTR_OPCODE(CPU_ID, fetchPtr, i->ilen(),
+                  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
+    }
+#endif
 
     // An instruction will have been fetched using either the normal case,
     // or the boundary fetch (across pages), by this point.
@@ -275,11 +283,6 @@ async_events_processed:
       }
     }
   }
-
-  // An instruction was either fetched, or found in the iCache.
-  BX_INSTR_OPCODE(CPU_ID, fetchPtr, i->ilen(),
-                  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
-
 
 #if BX_DEBUGGER
     if (BX_CPU_THIS_PTR trace) {
