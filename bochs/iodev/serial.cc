@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.52 2004-03-13 17:17:16 vruppert Exp $
+// $Id: serial.cc,v 1.53 2004-03-28 12:41:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -448,10 +448,10 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       prev_dcd = BX_SER_THIS s[port].modem_status.dcd;
 #if USE_RAW_SERIAL
       val = BX_SER_THIS s[port].raw->get_modem_status();
-      BX_SER_THIS s[port].modem_status.cts = val & 0x01;
-      BX_SER_THIS s[port].modem_status.dsr = (val & 0x02) >> 1;
-      BX_SER_THIS s[port].modem_status.ri  = (val & 0x04) >> 2;
-      BX_SER_THIS s[port].modem_status.dcd = (val & 0x08) >> 3;
+      BX_SER_THIS s[port].modem_status.cts = (val & 0x10) >> 4;
+      BX_SER_THIS s[port].modem_status.dsr = (val & 0x20) >> 5;
+      BX_SER_THIS s[port].modem_status.ri  = (val & 0x40) >> 6;
+      BX_SER_THIS s[port].modem_status.dcd = (val & 0x80) >> 7;
       if (BX_SER_THIS s[port].modem_status.cts != prev_cts) {
         BX_SER_THIS s[port].modem_status.delta_cts = 1;
       }
@@ -1015,13 +1015,39 @@ bx_serial_c::rx_timer(void)
       (BX_SER_THIS s[port].fifo_cntl.enable)) {
 #if USE_RAW_SERIAL
     bx_bool rdy;
-    uint16 data;
+    int data;
     if ((rdy = BX_SER_THIS s[port].raw->ready_receive())) {
       data = BX_SER_THIS s[port].raw->receive();
-      if (data == C_BREAK) {
-        BX_DEBUG(("com%d: got BREAK", port+1));
-        BX_SER_THIS s[port].line_status.break_int = 1;
+      if (data < 0 ) {
         rdy = 0;
+        switch (data) {
+          case RAW_EVENT_BREAK:
+            BX_SER_THIS s[port].line_status.break_int = 1;
+            raise_interrupt(port, BX_SER_INT_RXLSTAT);
+            break;
+          case RAW_EVENT_FRAME:
+            BX_SER_THIS s[port].line_status.framing_error = 1;
+            raise_interrupt(port, BX_SER_INT_RXLSTAT);
+            break;
+          case RAW_EVENT_OVERRUN:
+            BX_SER_THIS s[port].line_status.overrun_error = 1;
+            raise_interrupt(port, BX_SER_INT_RXLSTAT);
+            break;
+          case RAW_EVENT_PARITY:
+            BX_SER_THIS s[port].line_status.parity_error = 1;
+            raise_interrupt(port, BX_SER_INT_RXLSTAT);
+            break;
+          case RAW_EVENT_CTS_ON:
+          case RAW_EVENT_CTS_OFF:
+          case RAW_EVENT_DSR_ON:
+          case RAW_EVENT_DSR_OFF:
+          case RAW_EVENT_RING_ON:
+          case RAW_EVENT_RING_OFF:
+          case RAW_EVENT_RLSD_ON:
+          case RAW_EVENT_RLSD_OFF:
+            raise_interrupt(port, BX_SER_INT_MODSTAT);
+            break;
+        }
       }
     }
     if (rdy) {

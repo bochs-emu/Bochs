@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.9 2004-03-20 12:42:13 vruppert Exp $
+// $Id: serial_raw.h,v 1.10 2004-03-28 12:41:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -14,7 +14,19 @@
 #define P_EVEN  2
 #define P_HIGH  3
 #define P_LOW   4
-#define C_BREAK 201
+
+#define RAW_EVENT_BREAK    -1
+#define RAW_EVENT_CTS_ON   -2
+#define RAW_EVENT_CTS_OFF  -3
+#define RAW_EVENT_DSR_ON   -4
+#define RAW_EVENT_DSR_OFF  -5
+#define RAW_EVENT_RING_ON  -6
+#define RAW_EVENT_RING_OFF -7
+#define RAW_EVENT_RLSD_ON  -8
+#define RAW_EVENT_RLSD_OFF -9
+#define RAW_EVENT_FRAME   -10
+#define RAW_EVENT_OVERRUN -11
+#define RAW_EVENT_PARITY  -12
 
 class serial_raw : public logfunctions {
   public:
@@ -30,7 +42,7 @@ class serial_raw : public logfunctions {
     void transmit (Bit8u byte);
     bx_bool ready_transmit ();
     bx_bool ready_receive ();
-    Bit8u receive ();
+    int receive ();
 
   private:
     void setup_port ();
