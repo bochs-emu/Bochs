@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.7 2001-09-15 16:27:26 bdenney Exp $
+$Id: user.dbk,v 1.8 2001-09-16 06:44:58 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -439,6 +439,12 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <section><title>Platforms</title>
 
+<para>
+&FIXME;
+Add information about what features are supported on what platforms.
+Example: networking on *bsd, linux only.  cdrom on ....
+</para>
+
 
 <table><title>Supported platforms</title>
    <tgroup cols=2 align=left colsep=1 rowsep=1>
@@ -506,15 +512,15 @@ to mention, running DOOM, though at then-pathetic speeds.
 </table>
 </section>  <!-- End Platforms section -->
 
-<section><title>Downloading Bochs</title>
+<section id="downloading"><title>Downloading Bochs</title>
 
 <para>
 You can download Bochs from our web site at &bochs-sf-net;.  First, you
-need to choose what version to get: latest release or a development version.
-If you trying to get things working for the first time, a release version is
-recommended since it has been tested the most.  The development versions
-(sometimes called snapshots) may have some newer bug fixes and new features,
-but have not been tested as much as the releases.
+need to choose what version to get: a recent release or a development
+version.  If you trying to get things working for the first time, a release
+version is recommended since it has been tested the most.  The development
+versions (sometimes called snapshots) may have some newer bug fixes and new
+features, but have not been tested as much as the releases.
 See the <link linkend="linuxrpm">Linux RPM Section</link> for more information.
 </para>
 
@@ -525,13 +531,37 @@ install, and most include a small demo of a guest operating system called DLX
 Linux to get you started.  However, some features can only be enabled if you
 compile Bochs yourself, for example the Bochs debugger.  For multiuser systems,
 you will probably need system administrator privileges (root) to install a
-binary package.  If you only have a user account you can compile Bochs in your
-home directory.
+binary package.  If you decide to get a binary, download it to your hard disk
+and then go to the section called <link linkend="install-binary">Installing a
+Binary</link> for more information.
 </para>
 
 <para>
-For those familiar with CVS software, you can also obtain the sources for any
-version using CVS.  See the <link linkend="get-src-cvs">CVS instructions</link> for details.
+If you are going to compile Bochs yourself, you need the gzipped tarball
+containing the source code, called
+<filename>bochs-<replaceable>version</replaceable>.tar.gz</filename>.  For
+Windows and Mac, the prebuilt Makefiles are separate, so also get
+the Makefiles for your platform.  To unpack a compressed TAR file<footnote>
+<para>
+A TAR file is a single file that contains many files packed inside.  Bochs
+TAR files are compressed with a program called gzip, and another program
+called gunzip is used to uncompress them.
+</para>
+</footnote>, type
+<screen>
+  gunzip -c bochs-<replaceable>version</replaceable>.tar.gz | tar -xvf -
+</screen>
+This creates a directory called
+<filename>bochs-<replaceable>version</replaceable></filename> full of
+files.  This directory will be referred to as &bochsdir;.  Go into
+&bochsdir; and you are ready to compile.  Instructions for compiling 
+Bochs are in
+<xref linkend="compiling">.
+</para>
+
+<para>
+Alternatively, you can also obtain the sources for any Bochs version using CVS.
+See the <link linkend="get-src-cvs">CVS instructions</link> for details.
 </para>
 </section>  <!-- End of Installation:Downloading Bochs section -->
 
@@ -549,11 +579,13 @@ You can download CVS software and documentation from
 </footnote>.
 </para>
 
+<section><title>Checking out Bochs</title>
 <para>
 When you have CVS installed, the first step is to do a login and checkout.  The
 initial checkout command is long and ugly, but usually you only have to do it
 once.  The example below shows the CVS checkout process in UNIX.  On the
-Windows platform, you can use CVS within Cygwin<footnote>
+Windows platform, you can download a CVS client from cvshome.com, or
+use CVS within Cygwin<footnote>
 <para>
 Cygwin is an open source UNIX-like environment for Windows platforms,
 available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
@@ -607,10 +639,11 @@ command is different for you.  See the Developers Guide<footnote>
 
 <tip>
 <para>
-If you use remote CVS for other projects, you might have set
-the environment variable <varname>CVS_RSH</varname>.  For this
-type of CVS checkout to work, the <varname>CVS_RSH</varname> variable
-should either be empty or set to <constant>rsh</constant>.
+If you use remote CVS for other projects, you might have already set
+the environment variable <varname>CVS_RSH</varname> in your configuration
+files.  For the CVS checkout to work as shown above, the
+<varname>CVS_RSH</varname> variable should either be empty or set to
+<constant>rsh</constant>.
 </para>
 </tip>
 
@@ -621,65 +654,204 @@ as &bochsdir;.  In each subdirectory directory there's also a
 directory called "CVS" which tells the cvs software where the code was checked
 out, what version you have, and where to go for future updates.
 </para>
+</section>
 
 <section><title>Getting the Latest Version</title>
 <para>
-Most developers use CVS to always give them the latest source code.  The
-minute that any developer checks in a change, they are available to you
-with CVS.  You just have to type <command>cvs update</command> in the 
-&bochsdir; directory, and CVS will retrieve any files that have been changed 
-since you did a checkout.  If you update regularly, each update takes a short
-time because it only downloads the files that changed.  
-</para>
+Most developers use CVS to always give them the latest source code.  The minute
+that any developer checks in a change, they are available to everyone else
+through  CVS.  You just have to type <command>cvs update -d -A</command> in the
+&bochsdir; directory, and CVS will retrieve any files and directories that have
+been changed since you did a checkout.  If you update regularly, each update
+takes a short time because it downloads only the files that changed.  The
+<command>-d</command> option tells cvs to download new directories that
+have been checked in, not just files.  The <command>-A</command> option means
+to get the most recent version of each file, as opposed to a release version.
+See <link linkend="cvs-release-version">Getting a release version</link>
+Both <command>-d</command> and <command>-A</command> can be omitted in many
+cases, once you are familiar with the process.  </para>
+
 <para>
-The <command>cvs update</command> command tells you if any new files have
-been downloaded from the server, and it also tells you if you have modified
-any of the CVS-controlled files.  As it checks through the source directories,
-it will list files that have changed with a single letter before the name
-that tells the status of that file.
-<screen>
-  ?   "unknown"  This file is in your local copy, but CVS does not know 
-                 anything about it.  For example, when you compile Bochs,
-                 any files created during the build process appear as ?.
-  U   "update"   cvs downloaded a new version of this file because it changed
-                 on the server
-  P   same as U, as far as I can tell
-  M   "modified" You have changed this file on your disk, so it no longer
-                 matches the version on the server.  This is not a problem.
-  C   "conflict" You have changed this file on your disk, but this change
-                 conflicts with a change that was checked in.  Conflicts
-                 occur when two people change the same line of code in
-                 different ways.  You need to edit the conflicting file(s)
-                 and clean it up by hand.  Or, sometimes it's easiest to 
-                 discard your own edits and just download a fresh copy,
-                 by deleting the conflicting file and running cvs update again.
-</screen>
+The <command>cvs update -A -d</command> command tells you if any new files have
+been downloaded from the server, and it also tells you if you have modified any
+of the CVS-controlled files.  As it checks through the source directories, it
+will list files that have changed, with a single letter before the name that
+tells the status of that file.  The most common status letters are listed
+below.
+
+<table frame="all">
+<title>Status letters in a CVS update</title>
+  <tgroup cols="3">
+    <thead>
+      <row>
+	<entry>Letter</entry>
+	<entry>Mnemonic</entry>
+	<entry>Description</entry>
+      </row>
+    </thead>
+    <tbody>
+      <row>
+	<entry>?</entry>
+	<entry>unknown</entry>
+	<entry>
+	This file is in your bochs directory, but CVS does not know anything
+	about it.  For example, when you compile Bochs, any files created
+	during the build process appear as ?.
+	</entry>
+      </row>
+      <row>
+	<entry>U</entry>
+	<entry>update</entry>
+	<entry>
+	cvs downloaded a new version of this file because it changed on the
+	server, usually because someone else did a checkin.
+	</entry>
+      </row>
+      <row>
+	<entry>P</entry>
+	<entry>-</entry>
+	<entry>
+	P is the same as U, as far as I can tell
+	</entry>
+      </row>
+      <row>
+	<entry>M</entry>
+	<entry>modified</entry>
+	<entry>
+	You have changed this file on your disk, so it no longer matches the
+	version on the server.  This is not a problem; it's just for your 
+	information.  If you want, you can discard your changes and
+	get a fresh copy by deleting the file and running cvs update again.
+	</entry>
+      </row>
+      <row>
+	<entry>C</entry>
+	<entry>conflict</entry>
+	<entry>
+	You have changed this file on your disk, but this change conflicts with
+	a change that was checked in.  Conflicts occur when two people change
+	the same line of code in different ways.  You need to edit the
+	conflicting file(s) and clean it up by hand.  Or, sometimes it's
+	easiest to discard your own edits and download a fresh copy, by
+	deleting the conflicting file and running cvs update again.
+	</entry>
+      </row>
+    </tbody>
+   </tgroup>
+</table>
 </para>
 
 <para>
-If you have been using cvs update with "sticky tags" to retrieve other
-versions, described later, cvs will remember which version you were looking at.
-In this case, a <command>cvs update</command> will keep your sources consistent
-with that version.  If you want to get back to looking at the
-latest code again, add the <command>-A</command> option.
-This clears the sticky tags.
-</para>
-
-<!-- maybe we should mention cvs -d as well. -->
+If you have been using <command>cvs update</command> with "sticky tags" to
+retrieve other versions, as described later, cvs will remember which version
+you were looking at.  In this case, a <command>cvs update</command> will keep
+your sources consistent with that version.  If you want to get back to looking
+at the latest code again, be sure to use the <command>-A</command> option to
+clears the sticky tags.  </para>
 
 </section>
 
-<section><title>Getting a Release Version</title>
+<section id="cvs-release-version"><title>Getting a Release Version</title>
 <para>
-a
+Once you have a CVS checkout, you can also use the update command to
+get the Bochs source code for any release since March 2000.  The command
+is <command>cvs update -d -r <replaceable>tagname</replaceable></command>.
+The tag tells which release you want, and it can be one of the following:
+
+<table frame="all">
+<title>CVS Release Tags</title>
+  <tgroup cols="2">
+    <thead>
+      <row>
+	<entry>Bochs version</entry>
+	<entry>Release tag for CVS</entry>
+      </row>
+    </thead>
+    <tbody>
+      <row>
+	<entry>1.2.1 (bugfix1)</entry>
+	<entry>REL_1_2_1_FINAL</entry>
+      </row>
+      <row>
+	<entry>1.2</entry>
+	<entry>REL_1_2_FINAL</entry>
+      </row>
+      <row>
+	<entry>1.1 (bugfix1)</entry>
+	<entry>REL_1_1_BASE</entry>
+      </row>
+      <row>
+	<entry>1.1.2 (bugfix3)</entry>
+	<entry>REL_1_1_2_BASE</entry>
+      </row>
+      <row>
+	<entry>1.1.1 (bugfix2)</entry>
+	<entry>REL_1_1_1_BASE</entry>
+      </row>
+      <row>
+	<entry>1.1 (bugfix1)</entry>
+	<entry>REL_1_1_BASE</entry>
+      </row>
+      <row>
+	<entry>March 25, 2000</entry>
+	<entry>REL-bochs-2000-03-25</entry>
+      </row>
+    </tbody>
+   </tgroup>
+</table>
+
+<tip>
+<para>
+To get a complete list of allowed tags, type <command>cvs stat -v README</command>.  Many of the tags are not generally useful.
 </para>
+</tip>
+
+Once you have done an update with <command>-r <replaceable>tagname</replaceable></command>, you have made a "sticky tag."  The stickiness refers to the fact
+that CVS remembers which tag you have used most recently.  The tag is stored
+in the CVS subdirectory, so it stays around even if you log off and
+return later.  After creating a sticky tag, any future cvs updates will
+try to keep your directory in sync with the version you chose.  In other
+words, when developers check in changes you will not
+see them because your directory is "stuck" looking at an old version.
+To clear the sticky tag, use <command>cvs update -A</command>.
+</para>
+
+<para>
+A variation on the sticky tag concept is a sticky date<footnote>
+<para>
+According to some sources, this is when you eat dinner with someone, and
+accidently spill a drink on him/her.
+</para>
+</footnote>.  If some feature was working at some time in the past, but
+is no longer working, you can ask CVS to give you the sources from any
+date.  <command>cvs update -D 2001-06-14</command> will download the
+Bochs source as they were on June 14, 2001.  Again, use <command>-A</command>
+to clear the sticky date and track the current sources.
+</para>
+</section>
+
+<section><title>More about CVS</title>
+<para>
+Entire books have been written on CVS, so there's no sense in duplicating
+it all here in the Bochs documentation.  Some sources of additional
+information are listed below.
+</para>
+<itemizedlist>
+<listitem><para>The <ulink url="http://www.cvshome.org">cvshome.com
+site</ulink> has tons of CVS FAQs and documentation, including the official CVS
+manual by Per Cederqvist.</para></listitem>
+<listitem><para>
+Another <ulink url="http://www.cs.utah.edu/dept/old/texinfo/cvs/FAQ.txt">CVS FAQ</ulink> is available at University of Utah.
+</para></listitem>
+</itemizedlist>
+
 </section>
 
 
 </section> <!-- End of Installation:Getting the source code with CVS -->
 
 
-<section><title>Installing a Binary</title>
+<section id="install-binary"><title>Installing a Binary</title>
 
 <para>
 This section is divided up by platform, since installing a binary package
@@ -692,6 +864,10 @@ unzip into some directory.  Look for DOC-win32.html
 for more instructions.  Quick start: find dlxlinux/start.bat and
 double click
 </para>
+<para>
+&FIXME;
+Someone needs to write this.
+</para>
 </section> <!-- end of Installing a Binary:Windows -->
 
 <section id="linuxrpm">
@@ -700,11 +876,11 @@ double click
 RPM stands for "RedHat Package Manager."  An RPM is a compressed file
 containing files to be installed on your system.  Many Linux distributions,
 not just RedHat ones, can install files from an RPM.  Debian packages are
-available as well, but this section talks deals with RPMs.  First, download the
-Bochs RPM for your architecture to your computer.  If you have an
-Intel-compatible computer, be sure to get the RPM that says "for Linux x86
-distributions."  Once you have the package on your local disk, you should be
-able to install it as follows<footnote>
+available for Bochs as well, but this section talks deals with RPMs.  First,
+download the Bochs RPM for your architecture to your computer.  For example, if
+you have an Intel-compatible computer, be sure to get the RPM that says "for
+Linux x86 distributions."  Once you have the package on your local disk, you
+should be able to install it as follows<footnote>
 <para>
 Many distributions have their own RPM installer program, often graphical, and
 they should work as well.  It is helpful to be able to see the text output from
@@ -712,6 +888,8 @@ RPM, so if you use a fancy RPM installer, be sure to find the text output and
 check that it looks correct.
 </para>
 </footnote>:
+
+<figure><title>Installing an RPM in Linux</title>
 <screen>
   user$ <command>su</command>
   Password: 
@@ -726,6 +904,7 @@ check that it looks correct.
   root# exit
   user$ _
 </screen>
+</figure>
 </para>
 
 <note>
@@ -770,34 +949,121 @@ DLX linux.
 </para>
 
 <para>
-&FIXME;
-Look for <filename>/usr/local/bochs/latest/DOC-linux.html</filename>, man pages for
-bochs.
+If you get the DLX Linux screen, your Bochs installation is working 
+correctly.  This documentation will assume that everything is working
+as expected, then there are some tips at the end in case any step goes wrong.
 </para>
+
+<para>
+&FIXME;
+Point to all the files that get installed with the RPM: binaries,
+BIOSes, DLX linux, HTML docs and man pages, etc.
+</para>
+
+<tip>
+<para>
+&FIXME; not complete!
+If RPM installation fails.... Try rpm -e bochs to erase any old bochs RPMs.
+font failure? look at old bochs docs for now for instructions on installing
+the VGA font by hand.  Missing RPM dependencies?  Try --nodeps option.
+</para>
+</tip>
+
 </section> <!-- end of Installing a Binary:Linux section -->
 
+</section> <!-- end of Installing a Binary -->
+
+<section id="compiling"><title>Compiling Bochs</title>
+
+  <section><title>Instructions for Unix</title>
+<para>
+Bochs is written in C++, so you need a C++ compiler to compile.  Most platforms
+have been tested with GNU gcc/g++, but other compilers should work as well.
+By now, you should have unpacked your source TAR file or checked out Bochs
+from CVS.  If not, you can return to <link linkend="downloading">Downloading
+Bochs</link> for details.  The top level directory of the source code will be
+referred to as &bochsdir;.  (&bochsdir; contains the files
+<filename>bochs.h</filename> and <filename>main.cc</filename> and 
+subdirectories <filename>cpu</filename> and <filename>bios</filename>.)
+</para>
+
+<para>
+The compile process has three basic steps: configure, make, and make install.
+The next three sections describe each of the steps.  A fourth section is
+a transcript of a successful compilation from start to finish.
+</para>
+
+<section id="configure"><title>Configure</title>
+
+<para>
+There is a script called <command>configure</command> which tests your
+machine, C/C++ compiler and libraries to automatically configure Bochs
+on your system.  If you run <command>configure</command> with no arguments
+after it, defaults will be used for all settings.  To change the
+settings, you can run <command>configure</command> again with more options to
+override the usual defaults.  You can get a list of valid configure options
+by typing <command>configure --help</command>.  All configure options
+are documented in a <link linkend="config-opts">later section</link>.
+</para>
+
+<para>
+Among other things, the configure script tries to guess your compiler and
+a set of compile options that work.  If you want to control this,
+set these environment variables before running configure:
+<varname>CC</varname>, <varname>CXX</varname>, <varname>CFLAGS</varname>,
+<varname>CXXFLAGS</varname>.  The bash commands for setting the
+environment variables are:
+<screen>
+  export CC=egcs
+  export CXX="$CC"
+  export CFLAGS="-Wall -O2 -m486 -fomit-frame-pointer -pipe"
+  export CXXFLAGS="$CFLAGS"
+</screen>
+</para>
+
+<para>
+Once the <command>configure</command> script knows what options are selected,
+it creates a Makefile in every source code directory, and creates 
+<filename>$BOCHS/config.h</filename> with all the option values written
+as preprocessor #defines.  The sources are ready to compile.
+</para>
+
+</section> <!-- end of Compiling:Unix:Configure -->
+
+<section><title>Configure Shortcut Scripts (optional)</title>
+<para>
+In the Bochs sources, there are a series of scripts called
+<filename>.conf.<replaceable>platform</replaceable></filename>.
+These scripts run the configure script for you, with a set of 
+options that appropriate for that platform.  Examples include
+<filename>.conf.linux</filename>,
+<filename>.conf.win32-vcpp</filename>,
+<filename>.conf.AIX.4.3.1</filename>, and
+<filename>.conf.beos-x86-R4</filename>.
+Run a shortcut script using Bourne shell, like this:
+<screen>
+  sh .conf.win32-vcpp
+</screen>
+If you use a shortcut script, the script does the configure step for you.
+</para>
 </section>
 
-<section><title>Compiling from source</title>
+<section><title>make</title>
+<para>
+The <command>make</command> command reads the &Makefile; in each source
+directory to know how to build Bochs.  A &Makefile; tells which files 
+depend on which other files, what commands to use to compile and link
+the code, and more.  After you have run <command>configure</command>,
+just type <command>make</command> to build the source code.
+</para>
+</section>
 
-  <section><title>Unix</title>
-  <para>
-  All releases are gzip'd tar files. That means the whole Bochs source code directory has been consolidated into one file using the Unix command 'tar', then compressed to save space with GNU 'gzip'. To extract the source code, you'll need both 'tar' and 'gzip/gunzip'. All files are contained within one subdirectory named 'bochs-YYMMDDv'. 
-  <screen>
-  <userinput>
-    cd /path/parent-directory
-    gzip -dc bochs-YYMMDDv.tar.gz | tar -xvf -
-    cd bochs-YYMMDDv
-  </userinput>
-  </screen>
-  </para>
-  <para>
-  Run configure to make the Makefiles
-  List of configure arguments
-  Option of using .conf.* scripts
+<section><title>Other</title>
+<para>
+<screen>
+Things to not forget:
   What to report if configure fails: Tar up config.* and send to
     bochs-testing@tlw.com
-  Make
   What to try if make fails: turn off configure options,
     look at SF bugs and patches section to see if it's a known
     problem, try to fix it yourself, if using CVS version try
@@ -808,8 +1074,11 @@ bochs.
     /usr/man/man1/bochs*.1 (and bximage.1)
     make install_dlx option
   How to build an RPM in Linux
-  </para>
-  </section>
+</screen>
+</para>
+</section> <!-- end of Other -->
+
+</section>  <!-- end of Compiling:Unix section -->
 
 
   <section><title>Instructions for win32 VC++</title>
@@ -826,11 +1095,384 @@ bochs.
     and drop in your new binary.  There is no make install, though
     this may be added some day.
     </para>
-    </section>
+    </section>  <!-- end of Compiling:win32 -->
+
 <section><title>Instructions for cygwin?</title>
    <para>I have no idea.</para>
-</section>
-</section>
+</section>  <!-- end of Compiling:Instructions for cygwin? -->
+
+<section id="config-opts"><title>Configure Options</title>
+<para>
+This section describes the configure options for Bochs.  The first, 
+and perhaps most important option is <option>--help</option>, since it
+gives you a list of all the other options.  The options in the first table 
+choose which GUI library to use.  The default is <option>--with-x11</option>
+so if you don't include <option>--with-*</option> it will try to compile for X
+windows.
+
+<table><title>Configure Options to select the GUI</title>
+<tgroup cols=3>
+  <thead>
+    <row>
+      <entry>Option</entry>
+      <entry>Default</entry>
+      <entry>Comments</entry>
+   </row>
+  </thead>
+  <tbody>
+    <row>
+      <entry>--with-x11</entry>
+      <entry>yes</entry>
+      <entry>Use X11 GUI.  This is the default and you don't need
+	  this option if you are using X11.</entry>
+    </row>
+    <row>
+      <entry>--with-win32-vcpp</entry>
+      <entry>no</entry>
+      <entry>Use Win32 GUI/Visual C++ environment.  This is for running
+	  configure on a platform which supports running configure, so
+	  that you may then transfer the configured code over to
+	  an MS Win32/Visual C++ environment.</entry>
+    </row>
+    <row>
+      <entry>--with-rfb</entry>
+      <entry>no</entry>
+      <entry>Use RFB protocol to talk to AT&amp;T's <ulink
+      url="http://www.uk.research.att.com/vnc/">VNC Viewer</ulink>.  The RFB
+      code was written by Don Becker <email>mailto:x-odus@iname.com</email>,
+      who has a Bochs-RFB web page on his site, 
+      <ulink url="http://www.psyon.org/bochs-rfb/">http://www.psyon.org/bochs-rfb</ulink>.
+      </entry>
+      </row>
+    <row>
+      <entry>--with-beos</entry>
+      <entry>no</entry>
+      <entry>Use BeOS GUI.  The configure script will run natively
+	  on BeOS; use this option when doing so.</entry>
+    </row>
+    <row>
+      <entry>--with-term</entry>
+      <entry>no</entry>
+      <entry>Use text-only gui with curses library.
+      </entry>
+    </row>
+    <row>
+      <entry>--with-macos</entry>
+      <entry>no</entry>
+      <entry>Use Macintosh/CodeWarrior environment</entry>
+    </row>
+    <row>
+      <entry>--with-win32</entry>
+      <entry>no</entry>
+      <entry>Use Win32 GUI.  I think this option was similar to
+	  --with-win32-vcpp, but for targeting a Win32/gcc
+	  environment. Deprecated option.</entry>
+    </row>
+    <row>
+      <entry>--with-nogui</entry>
+      <entry>no</entry>
+      <entry>No native GUI, just use blank stubs.  This is if you don't
+	  care about having video output, but are just running tests.
+	  This option may not be up-to-date, but can be made so
+	  easily.</entry>
+    </row>
+  </tbody>
+</tgroup>
+</table>
+
+<table><title>Frequently Used Configure Options</title>
+<tgroup cols=3>
+  <thead>
+    <row>
+      <entry>Option</entry>
+      <entry>Default</entry>
+      <entry>Comments</entry>
+   </row>
+  </thead>
+  <tbody>
+    <row>
+      <entry>--enable-cpu-level={<option>3,4,5,6</option>}</entry>
+      <entry>5</entry>
+      <entry>
+      Select which CPU level to emulate.  Choices are 3,4,5,6 which mean target
+      386, 486, Pentium, or Pentium Pro emulation.  Pentium Pro support is
+      quite incomplete.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-processors={<option>1,2,3,...,15</option>}</entry>
+      <entry>1</entry>
+      <entry>
+      By changing to more than 1 processor, you enable SMP simulation.  This
+      allows you to boot Linux and maybe other OSes in SMP mode, and bochs will
+      simulate all the different CPUs and communication between them.  Do not
+      expect this option to speed up your simulation!  On the contrary, it has
+      to spend extra time simulating the different CPUs (even if they're mostly
+      idle) and the communication between them.  Use it to try out an SMP OS if
+      you don't have an SMP machine, or to debug your SMP OS drivers.  Click
+      here &FIXME; for more details on SMP in Bochs.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-cdrom</entry>
+      <entry>no</entry>
+      <entry>
+      Enable use of a real CDROM.  The cdrom emulation is always present, and
+      emulates a drive without media by default.  You can use this option to
+      compile in support for accessing the media in your workstation's cdrom
+      drive.  The supported platforms are Linux, Solaris, OpenBSD, and Windows.
+      For other platforms, a small amount of code specific to your platform
+      must be written.  The module iodev/cdrom.cc is the place to add more
+      support.  For the most part, you need to figure out the right set of
+      ioctl() calls.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-sb16={<option>dummy, win, linux</option>}</entry>
+      <entry>no</entry>
+      <entry>
+      Enable Sound Blaster emulation.  SB16 output is only supported for
+      Windows or Linux.  The <constant>dummy</constant> option means to support
+      an SB16, but don't use an output device.  So for example, you might use
+      <option>--enable-sb16=linux</option>. Check out &FIXME; sound.html for
+      more info.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-debugger</entry>
+      <entry>no</entry>
+      <entry>
+	Compile in support for Bochs internal command-line debugger.  This has
+	nothing to do with x86 hardware debug support.  It is a more powerful
+	and non-intrusive native debugger.  Enabling this will of course slow
+	down the emulation.  You only need this option if you know you need it.
+	After you have run ./configure, you may want to edit 'config.h' to
+	customize the debugger further.  Look at the section entitled 'OPTIONAL
+	DEBUGGER SECTION'.  &FIXME; add cross references
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-disasm</entry>
+      <entry>no</entry>
+      <entry>Compile in support for built-in disassembler.  Bochs has
+	  a built-in disassembler, which is useful if you either
+	  run the built-in debugger (--enable-debugger), or want
+	  disassembly of the current instruction when there is a
+	  panic in bochs.  You don't need this option.</entry>
+    </row>
+    <row>
+      <entry>--enable-vga</entry>
+      <entry>yes</entry>
+      <entry>Use VGA emulation.  VGA is the only supported option and
+	  since it's the default, you don't need to include this option.</entry>
+    </row>
+    <row>
+      <entry>--enable-fpu</entry>
+      <entry>yes</entry>
+      <entry>If you want to compile bochs to make use of the FPU emulator
+	  written by Bill Metzenthen (the one used by the Linux kernel),
+	  use this option.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-ne2000</entry>
+      <entry>no</entry>
+      <entry>Enable NE2000 network card support.  This requires a
+      low-level component to be written for each OS.  The NE2000
+      option is only supported on FreeBSD, OpenBSD, and Linux<footnote>
+      <para> Windows network support coming soon!  </para>
+      </footnote>.  When enabled and configured, the NE2000 device model
+      can talk to any computer on the network EXCEPT FOR the local host.
+      </entry>
+    </row>
+  </tbody>
+</tgroup>
+</table>
+
+<table>
+<title>Less Used Configure Options</title>
+<tgroup cols=3>
+  <thead>
+    <row>
+      <entry>Option</entry>
+      <entry>Default</entry>
+      <entry>Comments</entry>
+    </row>
+  </thead>
+  <tbody>
+    <row>
+      <entry>--enable-cpp</entry>
+      <entry>no</entry>
+      <entry>
+      Use .cpp as C++ suffix.  Moves all the .cc files to .cpp for use with
+      compilers which want that, like MS C++ compilers.  Don't use this option
+      unless you know you need it.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-x86-debugger</entry>
+      <entry>no</entry>
+      <entry>X86 debugger support.  If the software you run in bochs
+	  needs to use the x86 hardware debugging facilities such as
+	  DR0..DR8, instruction and data breakpoints etc., then you
+	  should use this option.  Otherwise don't use it, as it
+	  will slow down the emulation.</entry>
+    </row>
+    <row>
+      <entry>--enable-pci</entry>
+      <entry>no</entry>
+      <entry>Enable limited i440FX PCI support.  This is not complete.
+	  Don't use this option.</entry>
+    </row>
+    <row>
+      <entry>--enable-port-e9-hack</entry>
+      <entry>no</entry>
+      <entry>Writes to port e9 go to console.  Unless you know you want
+	  this option, you don't.</entry>
+    </row>
+    <row>
+      <entry>--enable-loader</entry>
+      <entry>no</entry>
+      <entry>Support calling external loader from debugger.  This
+	  is an unsupported option. Don't use it.</entry>
+    </row>
+    <row>
+      <entry>--enable-instrumentation=<option>directory</option></entry>
+      <entry>no</entry>
+      <entry>
+      Compile in support for instrumentation.  This allows you to collect
+      instrumentation data from bochs as it executes code.  You have to create your
+      own instrumentation library and define the instrumentation macros (hooks in
+      bochs) to either call your library functions or not, depending upon whether
+      you want to collect each piece of data.  [Kevin wrote: I broke some of the
+      hooks when I recoded the fetch/decode loop.]
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-simid={0, 1}</entry>
+      <entry>0
+      <entry>
+      CPU simulator ID.  You likely don't need this option.  If you are using bochs
+      to cosimulate, that is to run multiple simulators in parallel so that you can
+      compare results and check for divergence, each simulator needs an ID.  When
+      you only have one CPU simulator (as usual) the default of 0 is fine.  [Kevin
+      wrote: I use this option occasionally to run 2 versions of bochs against each
+      other and check for divergence, to find bugs etc.  This option gets broken
+      more than not due to architectural changes, and I usually end of fixing it
+      each time I use it.]
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-num-sim={1, 2}</entry>
+      <entry>1</entry>
+      <entry>
+      Number of CPU simulators.  The default of 1 is likely what you want, so don't
+      use this option.  It is for assigning an ID to the simulator, for
+      cosimulation described above.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-time0=n</entry>
+      <entry>no</entry>
+      <entry>
+      Start CMOS clock at at time0 of n instead of using time().  You likely don't
+      want this option.  When debugging, it is very helpful to have deterministic
+      execution, and the clock is something that can skew determinism.  If you
+      supply this option, pass it a value returned by the time(NULL) call, relating
+      to the time you want bochs to start the CMOS clock from.  For instance,
+      '--enable-time0=917385580'.  If you use this option but don't provide a
+      value, configure uses a default value.  Note that the time0 option in
+      .bochsrc will override this value.  Without this option, the CMOS clock uses
+      a time0 based on the value of time(NULL), which is probably what you want.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-hga-dumps=<option>Nmicroseconds</option></entry>
+      <entry>no</entry>
+      <entry>Copy memory to HGA video buffer every N useconds.  A
+	  deprecated option, don't use.</entry>
+    </row>
+  </tbody>
+</tgroup>
+</table>
+
+</para>
+</section> <!-- end of Configure Options -->
+
+<section><title>Transcript of Successful Compilation</title>
+<para>
+<screen>
+  user$ <command>ls -l bochs-1.2.1.tar.gz</command>
+  -rw-rw-r--    1 user     user       887993 Sep 15 23:24 bochs-1.2.1.tar.gz
+  user$ <command>gunzip -c bochs-1.2.1.tar.gz | tar -xvf -</command>
+  bochs-1.2.1/
+  bochs-1.2.1/bios/
+  bochs-1.2.1/bios/BIOS-bochs-2-processors
+  bochs-1.2.1/bios/Makefile.in
+    .
+    .
+    .
+  bochs-1.2.1/patches/NOTES
+  bochs-1.2.1/patches/patch.4meg-pages
+  bochs-1.2.1/patches/patch.goswin-changes
+  user$ <command>cd bochs-1.2.1</command>
+  user$ <command>./configure --enable-cdrom</command>
+  creating cache ./config.cache
+  checking for gcc... gcc
+  checking whether the C compiler (gcc  ) works... yes
+  checking whether the C compiler (gcc  ) is a cross-compiler... no
+  checking whether we are using GNU C... yes
+  checking whether gcc accepts -g... yes
+    .
+    .
+    .
+  creating misc/Makefile
+  creating dynamic/Makefile
+  creating fpu/Makefile
+  creating config.h
+  user$ <command>make</command>
+  cd iodev && \
+  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
+  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
+  c++ -c -g -O2    -I.. -I../instrument/stubs devices.cc -o devices.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs pic.cc -o pic.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs pit.cc -o pit.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs unmapped.cc -o unmapped.o
+  c++ -c -g -O2    -I.. -I../instrument/stubs cmos.cc -o cmos.o
+    .
+    .
+    .
+  echo done
+  done
+  c++ -o bochs -g -O2   main.o load32bitOShack.o state_file.o pc_system.o osdep.o \
+     iodev/libiodev.a \
+     cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+     fpu/libfpu.a \
+     -L/usr/X11R6/lib -lSM -lICE -lX11
+  gcc -c -g -O2    -I. -Iinstrument/stubs misc/bximage.c -o misc/bximage.o
+  c++ -o bximage -g -O2   misc/bximage.o
+  user$ <command>su</command>
+  root# <command>make install</command>
+  cd iodev && \
+  make CC="gcc" CXX="c++" CFLAGS="-g -O2  " CXXFLAGS="-g -O2  " LDFLAGS="" LIBS="" X_LIBS="-L/usr/X11R6/lib" X_PRE_LIBS="-lSM -lICE" prefix="/usr/local" exec_prefix="/usr/local" bindir="/usr/local/bin" infodir="" libiodev.a
+  make[1]: Entering directory `/tmp/bochs-1.2.1/iodev'
+    .
+    .
+    .
+  /usr/local/bochs/1.2.1/install-x11-fonts
+  Looking for fonts to install... font/
+  Looking for X11 Font Path... /usr/lib/X11/fonts
+  Installing vga.pcf... ok    (it was already there)
+  Running mkfontdir...
+  Done installing Bochs fonts for X11.
+  root# <command>exit</command>
+  user$ _
+</screen>
+</para>
+</section> <!-- end of Transcript -->
+
+</section> <!-- end of Compiling Bochs -->
+
 </chapter>
 
 <chapter><title>Setup</title>
