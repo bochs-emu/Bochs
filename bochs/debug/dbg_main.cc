@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.66 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: dbg_main.cc,v 1.67 2002-09-23 17:53:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1081,7 +1081,7 @@ bx_dbg_print_string_command(Bit32u start_addr)
       dbg_printf ( "0x%08x: ", start_addr);
       for (int i = 0; ; i++) {
 	    Bit32u paddr;
-	    Bit32u paddr_valid;
+	    Boolean paddr_valid;
 	    Bit8u buf[1];
 	    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(start_addr+i, &paddr, &paddr_valid);
 	    if (paddr_valid) {
@@ -3723,7 +3723,8 @@ bx_dbg_info_idt_command(bx_num_range range) {
   if (print_table)
     dbg_printf ( "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
   for (n = range.from; n<=range.to; n++) {
-    Bit32u paddr, paddr_valid;
+    Bit32u paddr;
+    Boolean paddr_valid;
     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.idtr.base + 8*n, &paddr, &paddr_valid);
     if (!paddr_valid) {
       dbg_printf ( "error: IDTR+8*%d points to invalid linear address %p\n",
@@ -3753,7 +3754,8 @@ bx_dbg_info_gdt_command(bx_num_range range) {
   if (print_table)
     dbg_printf ( "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
   for (n = range.from; n<=range.to; n++) {
-    Bit32u paddr, paddr_valid;
+    Bit32u paddr;
+    Boolean paddr_valid;
     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.gdtr.base + 8*n, &paddr, &paddr_valid);
     if (!paddr_valid) {
       dbg_printf ( "error: GDTR+8*%d points to invalid linear address %p\n",
