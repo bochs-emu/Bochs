@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.176 2002-11-21 19:26:06 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.177 2002-11-22 06:44:43 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1732,6 +1732,7 @@ if test "$with_carbon" = yes; then
   else
     PRIMARY_TARGET=bochs.app/.build   # only for carbon application
   fi
+  INSTALL_TARGET='install_macosx'
 fi
 
 if test "$with_term" = yes; then
