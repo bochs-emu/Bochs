@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.14 2002-09-01 15:27:32 bdenney Exp $
+// $Id: wxdialog.cc,v 1.15 2002-09-01 19:38:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -337,7 +337,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       // probably should validate before allowing ok
       if (validate!=NULL && !(*validate)(this))
 	return;  // validation failed, don't leave yet
-      EndModal (0);
+      EndModal (wxOK);
       break;
     case ID_Browse:
       {
@@ -367,7 +367,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       }
       break;
     case wxID_CANCEL:
-      EndModal (-1);
+      EndModal (wxCANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -548,7 +548,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
       break;
     case wxOK:
       // probably should validate before allowing ok
-      EndModal (0);
+      EndModal (wxOK);
       break;
     case ID_Browse:
       {
@@ -559,7 +559,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
       }
       break;
     case wxID_CANCEL:
-      EndModal (-1);
+      EndModal (wxCANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -753,7 +753,7 @@ void CdromConfigDialog::OnEvent(wxCommandEvent& event)
       break;
     case wxOK:
       // probably should validate before allowing ok
-      EndModal (0);
+      EndModal (wxOK);
       break;
     case ID_Browse:
       {
@@ -764,7 +764,7 @@ void CdromConfigDialog::OnEvent(wxCommandEvent& event)
       }
       break;
     case wxID_CANCEL:
-      EndModal (-1);
+      EndModal (wxCANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -778,6 +778,175 @@ void CdromConfigDialog::ShowHelp ()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
+
+
+//////////////////////////////////////////////////////////////////////
+// NetConfigDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   mainSizer: 
+//     vertSizer:
+//       prompt
+//       gridSizer 2 columns:
+//         "enable networking"
+//         enable = checkbox
+//         "i/o addr"
+//         io = wxTextCtrl
+//         "irq"
+//         irq = wxSpinCtrl
+//         "mac"
+//         mac = wxTextCtrl
+//         "conn"
+//         conn = wxChoice
+//         "phys"
+//         phys = wxTextCtrl
+//         "script"
+//         script = wxTextCtrl
+//     buttonSizer:
+//       help
+//       cancel
+//       ok
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(NetConfigDialog, wxDialog)
+  EVT_BUTTON(-1, NetConfigDialog::OnEvent)
+  EVT_CHECKBOX(-1, NetConfigDialog::OnEvent)
+  EVT_TEXT(-1, NetConfigDialog::OnEvent)
+END_EVENT_TABLE()
+
+
+NetConfigDialog::NetConfigDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  SetTitle (NET_CONFIG_TITLE);
+  // top level objects
+  mainSizer = new wxBoxSizer (wxVERTICAL);
+  wxBoxSizer *vertSizer = new wxBoxSizer (wxVERTICAL);
+  mainSizer->Add (vertSizer, 1, wxGROW|wxALIGN_LEFT);
+  wxBoxSizer *buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+
+  // vertSizer contents
+  wxStaticText *text;
+  text = new wxStaticText (this, -1, NET_CONFIG_PROMPT);
+  vertSizer->Add (text, 0, wxLEFT|wxRIGHT|wxTOP, 20);
+  wxFlexGridSizer *gridSizer = new wxFlexGridSizer (2);
+  vertSizer->Add (gridSizer, 1, wxALL|wxGROW, 30);
+
+  // gridSizer contents
+  gridSizer->AddGrowableCol (1);
+#define add(x) gridSizer->Add (x, 0, wxALL, 5)
+#define add_grow(x) gridSizer->Add (x, 1, wxALL|wxGROW, 5)
+#define label(x) (new wxStaticText (this, -1, x))
+  add (label (NET_CONFIG_EN));
+  add (enable = new wxCheckBox (this, ID_Enable, ""));
+  gridSizer->Add (30, 30);
+  gridSizer->Add (30, 30);
+  add (label (NET_CONFIG_IO));
+  add (io = new wxTextCtrl (this, -1));
+  add (label (NET_CONFIG_IRQ));
+  add (irq = new wxSpinCtrl (this, -1));
+  add (label (NET_CONFIG_MAC));
+  add (mac = new wxTextCtrl (this, -1));
+  add (label (NET_CONFIG_CONN));
+  add (conn = new wxChoice (this, -1));
+  add (label (NET_CONFIG_PHYS));
+  add (phys = new wxTextCtrl (this, -1));
+  add (label (NET_CONFIG_SCRIPT));
+  add_grow (script = new wxTextCtrl (this, -1));
+#undef label()
+#undef add()
+
+  irq->SetRange (0, 15);
+  mac->SetSizeHints (200, mac->GetSize ().GetHeight ());
+  script->SetSizeHints (200, script->GetSize ().GetHeight ());
+
+  // buttonSizer contents
+  wxButton *btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+}
+
+void NetConfigDialog::Init()
+{
+  EnableChanged ();
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(mainSizer);
+  mainSizer->Fit (this);
+  wxSize size = mainSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+void NetConfigDialog::EnableChanged ()
+{
+  bool en = enable->GetValue ();
+  io->Enable (en);
+  irq->Enable (en);
+  mac->Enable (en);
+  conn->Enable (en);
+  phys->Enable (en);
+  script->Enable (en);
+}
+
+
+int NetConfigDialog::GetIO () {
+  char buf[1024];
+  wxString string(io->GetValue ());
+  string.Trim ();
+  strncpy (buf, string, sizeof(buf));
+  int n = strtol (string, NULL, 0);
+  if (n<0 || n>0xffff) {
+    wxMessageBox("I/O address out of range. Try 0x200-0x400.", "Bad I/O address", wxOK | wxICON_ERROR );
+    return -1;
+  }
+  return n;
+}
+
+void NetConfigDialog::SetIO (int addr) {
+  wxString text;
+  text.Printf ("0x%03x", addr);
+  io->SetValue (text);
+}
+
+void NetConfigDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("you pressed button id=%d\n", id);
+  switch (id) {
+    case ID_Enable:
+      EnableChanged ();  // enable/disable fields that depend on this
+      break;
+    case wxOK:
+      // probably should validate before allowing ok
+      EndModal (wxOK);
+      break;
+    case wxID_CANCEL:
+      EndModal (wxCANCEL);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void NetConfigDialog::ShowHelp ()
+{
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+}
+
 
 /////////////////////////////////////////////////////////////////
 // utility

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.20 2002-09-01 15:27:33 bdenney Exp $
+// $Id: wxmain.cc,v 1.21 2002-09-01 19:38:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -148,6 +148,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
+  EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -365,6 +366,14 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   bx_param_enum_c *bootdevice = (bx_param_enum_c *) 
     SIM->get_param(BXP_BOOTDRIVE);
   bootdevice->set (which);
+}
+
+void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
+{
+  NetConfigDialog dlg (this, -1);
+  int n = dlg.ShowModal ();
+  if (n==wxOK) {
+  }
 }
 
 void MyFrame::OnQuit(wxCommandEvent& event)
@@ -732,7 +741,7 @@ void MyFrame::editFloppyConfig (int drive)
   }
   int n = dlg.ShowModal ();
   printf ("floppy config returned %d\n", n);
-  if (n==0) {
+  if (n==wxID_OK) {
     char filename[1024];
     wxString fn (dlg.GetFilename ());
     strncpy (filename, fn.c_str (), sizeof(filename));
@@ -772,7 +781,7 @@ void MyFrame::editHDConfig (int drive)
   dlg.SetEnable (present->get ());
   int n = dlg.ShowModal ();
   printf ("HD config returned %d\n", n);
-  if (n==0) {
+  if (n==wxID_OK) {
     char filename[1024];
     wxString fn (dlg.GetFilename ());
     strncpy (filename, fn.c_str (), sizeof (filename));
@@ -817,7 +826,7 @@ void MyFrame::editCdromConfig ()
   dlg.SetEjected (status->get () == BX_EJECTED);
   int n = dlg.ShowModal ();
   printf ("cdrom config returned %d\n", n);
-  if (n==0) {
+  if (n==wxID_OK) {
     char filename[1024];
     wxString fn (dlg.GetFilename ());
     strncpy (filename, fn.c_str (), sizeof(filename));

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.14 2002-09-01 15:27:33 bdenney Exp $
+// $Id: wxdialog.h,v 1.15 2002-09-01 19:38:07 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -95,8 +95,8 @@ DECLARE_EVENT_TABLE()
 // To use this dialog:
 // After constructor, use AddRadio () to add radio buttons, SetFilename()
 // to fill in the disk image filename, SetCapacity() to set the capacity. 
-// Then call ShowModal() to display it.  Return value is 0 for ok or -1
-// for cancel.  If you set a validation function, then it will be called
+// Then call ShowModal() to display it.  Return value is wxOK or wxCANCEL.
+// If you set a validation function, then it will be called
 // when ok is pressed, and will get a chance to veto the "Ok" if it
 // returns false.  After ShowModal() returns, use GetFilename and
 // GetCapacity to see what the user did.  If the validation function
@@ -273,8 +273,8 @@ DECLARE_EVENT_TABLE()
 // After constructor, use SetEnabled(), SetFilename() to fill in the
 // disk image filename, AddRadio() to add radio buttons (the disk
 // image file radio button will be added automatically).  Then call
-// ShowModal() to display it.  Return value is 0 for ok or -1 for
-// cancel.  After ShowModal() returns, use GetFilename() and
+// ShowModal() to display it.  Return value is wxOK or wxCANCEL.
+// After ShowModal() returns, use GetFilename() and
 // GetEnabled().
 
 class CdromConfigDialog: public wxDialog
@@ -315,6 +315,71 @@ public:
   bool GetEjected () { return rbtn[0]->GetValue (); }
 DECLARE_EVENT_TABLE()
 };
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigNetworkDialog allows the user to change the settings for 
+// the emulated NE2000 network card.
+////////////////////////////////////////////////////////////////////////////
+// +--- Configure Networking --------------------------------------+
+// |                                                               |
+// |  Bochs can emulate an NE2000-compatible network card.  Would  |
+// |  you like to enable it?                                       |
+// |                                                               |
+// |      Enable networking?  [X]                                  |
+// |                                                               |
+// |      NE2000 I/O address: [ 0x280 ]                            |
+// |                     IRQ: [   9   ]                            |
+// |             MAC address: [ b0:c4:00:00:00:00 ]                |
+// |    Connection to the OS: [ Linux Packet Filter ]              |
+// |     Physical NIC to use: [ eth0 ]                             |
+// |            Setup script: [_________________]                  |
+// |                                                               |
+// |                                    [ Help ] [ Cancel ] [ Ok ] |
+// +---------------------------------------------------------------+
+// To use this dialog:
+// After constructor, use AddConn() to add values to the choice box 
+// called "Connection to the OS".  Then use SetEnable, SetIO, SetIrq, SetMac,
+// SetConn, SetNic, and SetDebug to fill in the current values.  Then call
+// ShowModal(), which will return wxOK or wxCANCEL.  Then use the Get* methods
+// to retrieve the values that were chosen.
+class NetConfigDialog: public wxDialog
+{
+private:
+#define NET_CONFIG_TITLE "Configure Networking"
+#define NET_CONFIG_PROMPT "Bochs can emulate an NE2000-compatible network card.  Would you like to enable it?"
+#define NET_CONFIG_EN "Enable networking?"
+#define NET_CONFIG_IO "I/O address (hex): "
+#define NET_CONFIG_IRQ "IRQ: "
+#define NET_CONFIG_MAC "MAC address: "
+#define NET_CONFIG_CONN "Connection to OS: "
+#define NET_CONFIG_PHYS "Physical NIC to use: "
+#define NET_CONFIG_SCRIPT "Setup script: "
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *mainSizer, *vertSizer, *buttonSizer;
+  wxCheckBox *enable;
+  wxTextCtrl *io, *mac, *phys, *script;
+  wxSpinCtrl *irq;
+  wxChoice *conn;
+  void EnableChanged ();
+public:
+  NetConfigDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void SetIO (int addr);
+  int GetIO ();
+  void SetIrq (int addr) { irq->SetValue (addr); }
+  int GetIrq () { return irq->GetValue (); }
+  void SetMac (unsigned char addr[6]);
+  void GetMac (unsigned char addr[6]);
+  void SetConn (int i) { conn->SetSelection (i); }
+  int GetConn () { return conn->GetSelection (); }
+  void AddConn (wxString name);  // add to list of choices
+  void SetPhys (wxString s) { phys->SetValue (s); }
+  wxString GetPhys () { return phys->GetValue (); }
+DECLARE_EVENT_TABLE()
+};
+
 
 /**************************************************************************
 Everything else in here is a comment!
@@ -515,27 +580,6 @@ let you go right to the configure screen for that disk drive.
 |           /   \   D Drive                             +----+  |
 | [    ]   |  O  |  ISO CD Image                        |Edit|  |
 |           \___/   C:\Bochs\Images\BootCD.img          +----+  |
-|                                                               |
-|                                    [ Help ] [ Cancel ] [ Ok ] |
-+---------------------------------------------------------------+
-
-////////////////////////////////////////////////////////////////////////////
-// ConfigNetworkDialog
-////////////////////////////////////////////////////////////////////////////
-Edit network settings
-+---------------------------------------------------------------+
-|                                                               |
-|  Bochs can emulate an NE2000-compatible network card.  Would  |
-|  you like to enable it?                                       |
-|                                                               |
-|      Enable networking?  [X]                                  |
-|                                                               |
-|      NE2000 I/O address: [ 0x280 ]                            |
-|                     IRQ: [   9   ]                            |
-|             MAC address: [ b0:c4:00:00:00:00 ]                |
-|    Connection to the OS: [ Linux Packet Filter ]              |
-|     Physical NIC to use: [ eth0 ]                             |
-|   NE2000 Debug messages: [ ]                                  |
 |                                                               |
 |                                    [ Help ] [ Cancel ] [ Ok ] |
 +---------------------------------------------------------------+
