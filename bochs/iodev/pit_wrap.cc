@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.33 2002-10-27 06:02:47 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.34 2002-10-28 05:55:47 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -107,8 +107,8 @@ bx_pit_c bx_pit;
 #define REAL_TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
 #define REAL_USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
 #define AHEAD_CEILING ((Bit64u)(TICKS_PER_SECOND*2))
-#define TICKS_TO_USEC(a) ((BX_USE_REALTIME_PIT)?( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second ):( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND ))
-#define USEC_TO_TICKS(a) ((BX_USE_REALTIME_PIT)?( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second ):( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND ))
+#define TICKS_TO_USEC(a) ((BX_PIT_THIS s.use_realtime)?( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second ):( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND ))
+#define USEC_TO_TICKS(a) ((BX_PIT_THIS s.use_realtime)?( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second ):( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND ))
 
 bx_pit_c::bx_pit_c( void )
 {
@@ -148,6 +148,8 @@ bx_pit_c::init( void )
   BX_PIT_THIS s.speaker_data_on = 0;
   BX_PIT_THIS s.refresh_clock_div2 = 0;
 
+  BX_PIT_THIS s.use_realtime = BX_USE_REALTIME_PIT;
+
   BX_PIT_THIS s.timer.init();
 
   if (BX_PIT_THIS s.timer_handle[0] == BX_NULL_TIMER_HANDLE) {
@@ -167,7 +169,7 @@ bx_pit_c::init( void )
 
   BX_PIT_THIS s.total_ticks=0;
 
-  if (BX_USE_REALTIME_PIT) {
+  if (BX_PIT_THIS s.use_realtime) {
     BX_PIT_THIS s.usec_per_second=USEC_PER_SECOND;
     BX_PIT_THIS s.ticks_per_second=TICKS_PER_SECOND;
     BX_PIT_THIS s.total_sec=0;
@@ -445,7 +447,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   }
 #endif
 
-  if (BX_USE_REALTIME_PIT) {
+  if (BX_PIT_THIS s.use_realtime) {
 #if BX_HAVE_REALTIME_USEC
     Bit64u real_time_delta = bx_get_realtime64_usec() - BX_PIT_THIS s.last_time;
     Bit64u real_time_total = real_time_delta + BX_PIT_THIS s.total_sec;
