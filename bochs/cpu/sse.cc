@@ -24,7 +24,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE || BX_SUPPORT_SSE2
 
 void BX_CPU_C::prepareSSE(void)
 {
