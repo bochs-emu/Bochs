@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.58.2.8 2002-03-17 08:57:01 bdenney Exp $
+// $Id: main.cc,v 1.58.2.9 2002-03-18 20:03:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -257,11 +257,15 @@ void bx_init_options ()
   bx_list_c *menu;
 
   // floppya
-  bx_options.floppya.Opath = new bx_param_string_c (BXP_FLOPPYA_PATH,
+  bx_options.floppya.Opath = new bx_param_filename_c (BXP_FLOPPYA_PATH,
       "Floppy A image",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
+#if USE_WX
+  bx_options.floppya.Opath->set_ask_format ("Filename of first floppy image");
+#else
   bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
+#endif
   bx_options.floppya.Otype = new bx_param_enum_c (BXP_FLOPPYA_TYPE,
       "floppya:type",
       "Type of floppy disk",
@@ -290,11 +294,15 @@ void bx_init_options ()
   bx_options.floppya.Opath->set_handler (bx_param_string_handler);
   bx_options.floppya.Opath->set ("none");
 
-  bx_options.floppyb.Opath = new bx_param_string_c (BXP_FLOPPYB_PATH,
+  bx_options.floppyb.Opath = new bx_param_filename_c (BXP_FLOPPYB_PATH,
       "floppyb:path",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
+#if USE_WX
+  bx_options.floppyb.Opath->set_ask_format ("Filename of second floppy image");
+#else
   bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
+#endif
   bx_options.floppyb.Otype = new bx_param_enum_c (BXP_FLOPPYB_TYPE,
       "floppyb:type",
       "Type of floppy disk",
@@ -329,7 +337,7 @@ void bx_init_options ()
       "diskc:present",
       "Controls whether diskc is installed or not",
       0);
-  bx_options.diskc.Opath = new bx_param_string_c (BXP_DISKC_PATH,
+  bx_options.diskc.Opath = new bx_param_filename_c (BXP_DISKC_PATH,
       "",
       "Pathname of the hard drive image",
       "", BX_PATHNAME_LEN);
@@ -375,7 +383,7 @@ void bx_init_options ()
       "diskd:present",
       "Controls whether diskd is installed or not",
       0);
-  bx_options.diskd.Opath = new bx_param_string_c (BXP_DISKD_PATH,
+  bx_options.diskd.Opath = new bx_param_filename_c (BXP_DISKD_PATH,
       "diskd:path",
       "Pathname of the hard drive image",
       "", BX_PATHNAME_LEN);
@@ -420,7 +428,7 @@ void bx_init_options ()
 						  "",
 						  0);
 
-  bx_options.com1.Odev = new bx_param_string_c (BXP_COM1_PATH,
+  bx_options.com1.Odev = new bx_param_filename_c (BXP_COM1_PATH,
 						 "Pathname of the serial device for COM1",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -432,7 +440,7 @@ void bx_init_options ()
 						  "Controls whether com2 is installed or not",
 						  0);
 
-  bx_options.com2.Odev = new bx_param_string_c (BXP_COM2_PATH,
+  bx_options.com2.Odev = new bx_param_filename_c (BXP_COM2_PATH,
 						 "",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -443,7 +451,7 @@ void bx_init_options ()
 						  "",
 						  0);
 
-  bx_options.com3.Odev = new bx_param_string_c (BXP_COM3_PATH,
+  bx_options.com3.Odev = new bx_param_filename_c (BXP_COM3_PATH,
 						 "Pathname of the serial device for COM3",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -454,7 +462,7 @@ void bx_init_options ()
 						  "",
 						  0);
 
-  bx_options.com4.Odev = new bx_param_string_c (BXP_COM4_PATH,
+  bx_options.com4.Odev = new bx_param_filename_c (BXP_COM4_PATH,
 						 "Pathname of the serial device for COM4",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -466,12 +474,14 @@ void bx_init_options ()
       "CDROM is present",
       "Controls whether cdromd is installed or not",
       0);
-  bx_options.cdromd.Opath = new bx_param_string_c (BXP_CDROM_PATH,
+  bx_options.cdromd.Opath = new bx_param_filename_c (BXP_CDROM_PATH,
       "CDROM image filename",
       "Pathname of the cdrom device or image",
       "", BX_PATHNAME_LEN);
   bx_options.cdromd.Opath->set_format ("%s");
+#if BX_UI_TEXT
   bx_options.cdromd.Opath->set_ask_format ("Enter new filename, or 'none' for no CDROM: [%s] ");
+#endif
   bx_options.cdromd.Oinserted = new bx_param_enum_c (BXP_CDROM_INSERTED,
       "Is the CDROM inserted or ejected",
       "Inserted or ejected",
@@ -531,7 +541,7 @@ void bx_init_options ()
       "Enables the first parallel port",
       0);
   bx_options.par1.Oenable->set_handler (bx_param_handler);
-  bx_options.par1.Ooutfile = new bx_param_string_c (BXP_PARPORT1_OUTFILE,
+  bx_options.par1.Ooutfile = new bx_param_filename_c (BXP_PARPORT1_OUTFILE,
       "Parallel port #1 output file",
       "Data written to parport#1 by the guest OS is written to this file",
       "parport.out", BX_PATHNAME_LEN);
@@ -541,7 +551,7 @@ void bx_init_options ()
       "Enables the second parallel port",
       0);
   bx_options.par2.Oenable->set_handler (bx_param_handler);
-  bx_options.par2.Ooutfile = new bx_param_string_c (BXP_PARPORT2_OUTFILE,
+  bx_options.par2.Ooutfile = new bx_param_filename_c (BXP_PARPORT2_OUTFILE,
       "Parallel port #2 output file",
       "Data written to parport#2 by the guest OS is written to this file",
       "parport2.out", BX_PATHNAME_LEN);
@@ -564,7 +574,7 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL, "Serial and Parallel Port Options", "serial_parallel_menu", parport_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
-  bx_options.rom.Opath = new bx_param_string_c (BXP_ROM_PATH,
+  bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
       "romimage",
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
@@ -576,7 +586,7 @@ void bx_init_options ()
       0);
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
   bx_options.rom.Oaddress->set_base (16);
-  bx_options.vgarom.Opath = new bx_param_string_c (BXP_VGA_ROM_PATH,
+  bx_options.vgarom.Opath = new bx_param_filename_c (BXP_VGA_ROM_PATH,
       "vgaromimage",
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
@@ -687,15 +697,15 @@ void bx_init_options ()
       "SB16 is present",
       "to be written",
       0);
-  bx_options.sb16.Omidifile = new bx_param_string_c (BXP_SB16_MIDIFILE,
+  bx_options.sb16.Omidifile = new bx_param_filename_c (BXP_SB16_MIDIFILE,
       "Midi file",
       "to be written",
       "", BX_PATHNAME_LEN);
-  bx_options.sb16.Owavefile = new bx_param_string_c (BXP_SB16_WAVEFILE,
+  bx_options.sb16.Owavefile = new bx_param_filename_c (BXP_SB16_WAVEFILE,
       "Wave file",
       "to be written",
       "", BX_PATHNAME_LEN);
-  bx_options.sb16.Ologfile = new bx_param_string_c (BXP_SB16_LOGFILE,
+  bx_options.sb16.Ologfile = new bx_param_filename_c (BXP_SB16_LOGFILE,
       "Log file",
       "to be written",
       "", BX_PATHNAME_LEN);
@@ -735,7 +745,7 @@ void bx_init_options ()
   bx_options.sb16.Opresent->set_handler (bx_param_handler);
   bx_options.sb16.Opresent->set (0);
 
-  bx_options.log.Ofilename = new bx_param_string_c (BXP_LOG_FILENAME,
+  bx_options.log.Ofilename = new bx_param_filename_c (BXP_LOG_FILENAME,
       "log:filename",
       "Pathname of bochs log file",
       "-", BX_PATHNAME_LEN);
@@ -748,15 +758,15 @@ void bx_init_options ()
       loader_os_names,
       Load32bitOSNone,
       Load32bitOSNone);
-  bx_options.load32bitOSImage.Opath = new bx_param_string_c (BXP_LOAD32BITOS_PATH,
+  bx_options.load32bitOSImage.Opath = new bx_param_filename_c (BXP_LOAD32BITOS_PATH,
       "Pathname of OS to load",
       NULL,
       "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oiolog = new bx_param_string_c (BXP_LOAD32BITOS_IOLOG,
+  bx_options.load32bitOSImage.Oiolog = new bx_param_filename_c (BXP_LOAD32BITOS_IOLOG,
       "Pathname of I/O log file",
       NULL,
       "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oinitrd = new bx_param_string_c (BXP_LOAD32BITOS_INITRD,
+  bx_options.load32bitOSImage.Oinitrd = new bx_param_filename_c (BXP_LOAD32BITOS_INITRD,
       "Pathname of initrd",
       NULL,
       "", BX_PATHNAME_LEN);
@@ -799,7 +809,7 @@ void bx_init_options ()
       "Use a CMOS image",
       NULL,
       0);
-  bx_options.cmos.Opath = new bx_param_string_c (BXP_CMOS_PATH,
+  bx_options.cmos.Opath = new bx_param_filename_c (BXP_CMOS_PATH,
       "Pathname of CMOS image",
       NULL,
       "", BX_PATHNAME_LEN);
@@ -814,7 +824,7 @@ void bx_init_options ()
       "Use keyboard mapping",
       NULL,
       0);
-  bx_options.keyboard.Okeymap = new bx_param_string_c (BXP_KEYBOARD_MAP,
+  bx_options.keyboard.Okeymap = new bx_param_filename_c (BXP_KEYBOARD_MAP,
       "Keymap filename",
       NULL,
       "", BX_PATHNAME_LEN);
