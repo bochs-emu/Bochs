@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.1 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: dbg_main.cc,v 1.2 2003-12-07 23:34:48 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1391,7 +1391,7 @@ bx_dbg_lbreakpoint_symbol_command(char *Symbol)
 }
 
 Bit32u
-bx_dbg_get_symbol_value(const char *Symbol)
+bx_dbg_get_symbol_value(char *Symbol)
 {
  return 0;
 }
