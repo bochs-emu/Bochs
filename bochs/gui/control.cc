@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.61 2002-09-20 18:14:27 bdenney Exp $
+// $Id: control.cc,v 1.62 2002-09-22 20:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -302,19 +302,22 @@ static char *runtime_menu_prompt =
 "---------------------\n"
 "1. Floppy disk 0: %s\n"
 "2. Floppy disk 1: %s\n"
-"3. CDROM: %s\n"
-"4. (not implemented)\n"
-"5. Log options for all devices\n"
-"6. Log options for individual devices\n"
-"7. VGA Update Interval: %d\n"
-"8. Mouse: %s\n"
-"9. Keyboard paste delay: %d\n"
-"10. Userbutton shortcut: %s\n"
-"11. Instruction tracing: off (doesn't exist yet)\n"
-"12. Continue simulation\n"
-"13. Quit now\n"
+"3. 1st CDROM: %s\n"
+"4. 2nd CDROM: %s\n"
+"5. 3rd CDROM: %s\n"
+"6. 4th CDROM: %s\n"
+"7. (not implemented)\n"
+"8. Log options for all devices\n"
+"9. Log options for individual devices\n"
+"10. VGA Update Interval: %d\n"
+"11. Mouse: %s\n"
+"12. Keyboard paste delay: %d\n"
+"13. Userbutton shortcut: %s\n"
+"14. Instruction tracing: off (doesn't exist yet)\n"
+"15. Continue simulation\n"
+"16. Quit now\n"
 "\n"
-"Please choose one:  [12] ";
+"Please choose one:  [15] ";
 
 char *menu_prompt_list[BX_CI_N_MENUS] = {
   NULL,
@@ -338,9 +341,9 @@ char *menu_prompt_list[BX_CI_N_MENUS] = {
 void build_runtime_options_prompt (char *format, char *buf, int size)
 {
   bx_floppy_options floppyop;
-  bx_cdrom_options cdromop;
+  bx_atadevice_options cdromop;
 /*  bx_param_num_c *ips = SIM->get_param_num (BXP_IPS); */
-  char buffer[3][128];
+  char buffer[6][128];
   for (int i=0; i<2; i++) {
     SIM->get_floppy_options (i, &floppyop);
     if (floppyop.Odevtype->get () == BX_FLOPPY_NONE)
@@ -352,14 +355,20 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
       if (!floppyop.Opath->getptr ()[0]) strcpy (buffer[i], "none");
     }
   }
-  SIM->get_cdrom_options (0, &cdromop);
-  if (!cdromop.Opresent->get ())
-    sprintf (buffer[2], "(not present)");
-  else
-    sprintf (buffer[2], "%s, %s",
-      cdromop.Opath->getptr (),
-      (cdromop.Ostatus->get () == BX_INSERTED)? "inserted" : "ejected");
+
+  // 4 cdroms supported at run time
+  int device;
+  for (Bit8u cdrom=0; cdrom<4; cdrom++) {
+    if (!SIM->get_cdrom_options (cdrom, &cdromop, &device) || !cdromop.Opresent->get ())
+      sprintf (buffer[2+cdrom], "(not present)");
+    else
+      sprintf (buffer[2+cdrom], "(%s on ata%d) %s, %s",
+        device&1?"slave":"master", device/2, cdromop.Opath->getptr (),
+        (cdromop.Ostatus->get () == BX_INSERTED)? "inserted" : "ejected");
+    }
+
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
+      buffer[3], buffer[4], buffer[5],
       /* ips->get (), */
       SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
       SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled",
@@ -452,9 +461,9 @@ int bx_config_interface (int menu)
    case BX_CI_RUNTIME:
      char prompt[1024];
      bx_floppy_options floppyop;
-     bx_cdrom_options cdromop;
+     bx_atadevice_options cdromop;
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
-     if (ask_uint (prompt, 1, 13, 12, &choice, 10) < 0) return -1;
+     if (ask_uint (prompt, 1, 16, 15, &choice, 10) < 0) return -1;
      switch (choice) {
        case 1: 
          SIM->get_floppy_options (0, &floppyop);
@@ -465,22 +474,31 @@ int bx_config_interface (int menu)
 	 if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYB);
 	 break;
        case 3:
-         SIM->get_cdrom_options (0, &cdromop);
-	 if (cdromop.Opresent->get ()) do_menu (BXP_CDROMD);
+       case 4:
+       case 5:
+       case 6:
+	 int device;
+         if (SIM->get_cdrom_options (choice - 3, &cdromop, &device) && cdromop.Opresent->get ()) {
+	   // disable type selection
+	   SIM->get_param((bx_id)(BXP_ATA0_MASTER_TYPE + device))->set_enabled(0);
+	   SIM->get_param((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled(0);
+	   SIM->get_param((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled(0);
+           do_menu ((bx_id)(BXP_ATA0_MASTER + device));
+           }
 	 break;
-       case 4: // not implemented yet because I would have to mess with
+       case 7: // not implemented yet because I would have to mess with
 	       // resetting timers and pits and everything on the fly.
                // askparam (BXP_IPS);
 	       break;
-       case 5: bx_log_options (0); break;
-       case 6: bx_log_options (1); break;
-       case 7: askparam (BXP_VGA_UPDATE_INTERVAL); break;
-       case 8: askparam (BXP_MOUSE_ENABLED); break;
-       case 9: askparam (BXP_KBD_PASTE_DELAY); break;
-       case 10: askparam (BXP_USER_SHORTCUT); break;
-       case 11: NOT_IMPLEMENTED (choice); break;
-       case 12: fprintf (stderr, "Continuing simulation\n"); return 0;
-       case 13:
+       case 8: bx_log_options (0); break;
+       case 9: bx_log_options (1); break;
+       case 10: askparam (BXP_VGA_UPDATE_INTERVAL); break;
+       case 11: askparam (BXP_MOUSE_ENABLED); break;
+       case 12: askparam (BXP_KBD_PASTE_DELAY); break;
+       case 13: askparam (BXP_USER_SHORTCUT); break;
+       case 14: NOT_IMPLEMENTED (choice); break;
+       case 15: fprintf (stderr, "Continuing simulation\n"); return 0;
+       case 16:
 	 fprintf (stderr, "You chose quit on the configuration interface.\n");
 	 SIM->quit_sim (1);
 	 return -1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.69 2002-09-20 17:56:22 bdenney Exp $
+// $Id: siminterface.h,v 1.70 2002-09-22 20:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -128,12 +128,12 @@ typedef enum {
   BXP_ROM_ADDRESS,
   BXP_VGA_ROM_PATH,
   BXP_OPTROM1_PATH,
-  BXP_OPTROM1_ADDRESS,
   BXP_OPTROM2_PATH,
-  BXP_OPTROM2_ADDRESS,
   BXP_OPTROM3_PATH,
-  BXP_OPTROM3_ADDRESS,
   BXP_OPTROM4_PATH,
+  BXP_OPTROM1_ADDRESS,
+  BXP_OPTROM2_ADDRESS,
+  BXP_OPTROM3_ADDRESS,
   BXP_OPTROM4_ADDRESS,
   BXP_KBD_SERIAL_DELAY,
   BXP_KBD_PASTE_DELAY,
@@ -149,18 +149,114 @@ typedef enum {
   BXP_FLOPPYB_TYPE,
   BXP_FLOPPYB_STATUS,
   BXP_FLOPPYB,
-  BXP_DISKC_PRESENT,
-  BXP_DISKC_PATH,
-  BXP_DISKC_CYLINDERS,
-  BXP_DISKC_HEADS,
-  BXP_DISKC_SPT,
-  BXP_DISKC,
-  BXP_DISKD_PRESENT,
-  BXP_DISKD_PATH,
-  BXP_DISKD_CYLINDERS,
-  BXP_DISKD_HEADS,
-  BXP_DISKD_SPT,
-  BXP_DISKD,
+  BXP_ATA0,
+  BXP_ATA1,
+  BXP_ATA2,
+  BXP_ATA3,
+  BXP_ATA0_PRESENT,
+  BXP_ATA1_PRESENT,
+  BXP_ATA2_PRESENT,
+  BXP_ATA3_PRESENT,
+  BXP_ATA0_IOADDR1,
+  BXP_ATA1_IOADDR1,
+  BXP_ATA2_IOADDR1,
+  BXP_ATA3_IOADDR1,
+  BXP_ATA0_IOADDR2,
+  BXP_ATA1_IOADDR2,
+  BXP_ATA2_IOADDR2,
+  BXP_ATA3_IOADDR2,
+  BXP_ATA0_IRQ,
+  BXP_ATA1_IRQ,
+  BXP_ATA2_IRQ,
+  BXP_ATA3_IRQ,
+  BXP_ATA0_MASTER,
+  BXP_ATA0_SLAVE,
+  BXP_ATA1_MASTER,
+  BXP_ATA1_SLAVE,
+  BXP_ATA2_MASTER,
+  BXP_ATA2_SLAVE,
+  BXP_ATA3_MASTER,
+  BXP_ATA3_SLAVE,
+  BXP_ATA0_MASTER_PRESENT,
+  BXP_ATA0_SLAVE_PRESENT,
+  BXP_ATA1_MASTER_PRESENT,
+  BXP_ATA1_SLAVE_PRESENT,
+  BXP_ATA2_MASTER_PRESENT,
+  BXP_ATA2_SLAVE_PRESENT,
+  BXP_ATA3_MASTER_PRESENT,
+  BXP_ATA3_SLAVE_PRESENT,
+  BXP_ATA0_MASTER_TYPE,
+  BXP_ATA0_SLAVE_TYPE,
+  BXP_ATA1_MASTER_TYPE,
+  BXP_ATA1_SLAVE_TYPE,
+  BXP_ATA2_MASTER_TYPE,
+  BXP_ATA2_SLAVE_TYPE,
+  BXP_ATA3_MASTER_TYPE,
+  BXP_ATA3_SLAVE_TYPE,
+  BXP_ATA0_MASTER_PATH,
+  BXP_ATA0_SLAVE_PATH,
+  BXP_ATA1_MASTER_PATH,
+  BXP_ATA1_SLAVE_PATH,
+  BXP_ATA2_MASTER_PATH,
+  BXP_ATA2_SLAVE_PATH,
+  BXP_ATA3_MASTER_PATH,
+  BXP_ATA3_SLAVE_PATH,
+  BXP_ATA0_MASTER_CYLINDERS,
+  BXP_ATA0_SLAVE_CYLINDERS,
+  BXP_ATA1_MASTER_CYLINDERS,
+  BXP_ATA1_SLAVE_CYLINDERS,
+  BXP_ATA2_MASTER_CYLINDERS,
+  BXP_ATA2_SLAVE_CYLINDERS,
+  BXP_ATA3_MASTER_CYLINDERS,
+  BXP_ATA3_SLAVE_CYLINDERS,
+  BXP_ATA0_MASTER_HEADS,
+  BXP_ATA0_SLAVE_HEADS,
+  BXP_ATA1_MASTER_HEADS,
+  BXP_ATA1_SLAVE_HEADS,
+  BXP_ATA2_MASTER_HEADS,
+  BXP_ATA2_SLAVE_HEADS,
+  BXP_ATA3_MASTER_HEADS,
+  BXP_ATA3_SLAVE_HEADS,
+  BXP_ATA0_MASTER_SPT,
+  BXP_ATA0_SLAVE_SPT,
+  BXP_ATA1_MASTER_SPT,
+  BXP_ATA1_SLAVE_SPT,
+  BXP_ATA2_MASTER_SPT,
+  BXP_ATA2_SLAVE_SPT,
+  BXP_ATA3_MASTER_SPT,
+  BXP_ATA3_SLAVE_SPT,
+  BXP_ATA0_MASTER_STATUS,
+  BXP_ATA0_SLAVE_STATUS,
+  BXP_ATA1_MASTER_STATUS,
+  BXP_ATA1_SLAVE_STATUS,
+  BXP_ATA2_MASTER_STATUS,
+  BXP_ATA2_SLAVE_STATUS,
+  BXP_ATA3_MASTER_STATUS,
+  BXP_ATA3_SLAVE_STATUS,
+  BXP_ATA0_MASTER_MODEL,
+  BXP_ATA0_SLAVE_MODEL,
+  BXP_ATA1_MASTER_MODEL,
+  BXP_ATA1_SLAVE_MODEL,
+  BXP_ATA2_MASTER_MODEL,
+  BXP_ATA2_SLAVE_MODEL,
+  BXP_ATA3_MASTER_MODEL,
+  BXP_ATA3_SLAVE_MODEL,
+  BXP_ATA0_MASTER_BIOSDETECT,
+  BXP_ATA0_SLAVE_BIOSDETECT,
+  BXP_ATA1_MASTER_BIOSDETECT,
+  BXP_ATA1_SLAVE_BIOSDETECT,
+  BXP_ATA2_MASTER_BIOSDETECT,
+  BXP_ATA2_SLAVE_BIOSDETECT,
+  BXP_ATA3_MASTER_BIOSDETECT,
+  BXP_ATA3_SLAVE_BIOSDETECT,
+  BXP_ATA0_MASTER_TRANSLATION,
+  BXP_ATA0_SLAVE_TRANSLATION,
+  BXP_ATA1_MASTER_TRANSLATION,
+  BXP_ATA1_SLAVE_TRANSLATION,
+  BXP_ATA2_MASTER_TRANSLATION,
+  BXP_ATA2_SLAVE_TRANSLATION,
+  BXP_ATA3_MASTER_TRANSLATION,
+  BXP_ATA3_SLAVE_TRANSLATION,
 #define BXP_PARAMS_PER_SERIAL_PORT 2
   BXP_COM1_ENABLED,
   BXP_COM1_PATH,
@@ -170,10 +266,6 @@ typedef enum {
   BXP_COM3_PATH,
   BXP_COM4_ENABLED,
   BXP_COM4_PATH,
-  BXP_CDROM_PRESENT,
-  BXP_CDROM_PATH,
-  BXP_CDROM_STATUS,
-  BXP_CDROMD,
   BXP_PRIVATE_COLORMAP,
   BXP_FULLSCREEN,
   BXP_SCREENMODE,
@@ -670,11 +762,12 @@ public:
   char *get_name () { return name; }
   char *get_description () { return description; }
   int get_enabled () { return enabled; }
-  void set_enabled (int enabled) { this->enabled = enabled; }
+  virtual void set_enabled (int enabled) { this->enabled = enabled; }
   void reset () {}
   int getint () {return -1;}
   static const char* set_default_format (const char *f);
   static const char *get_default_format () { return default_text_format; }
+  virtual bx_list_c *get_dependent_list () { return NULL; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp) {}
   virtual int text_ask (FILE *fpin, FILE *fpout) {return -1;}
@@ -709,14 +802,16 @@ public:
       Bit32s min, Bit32s max, Bit32s initial_val);
   void reset ();
   void set_handler (param_event_handler handler);
-  bx_list_c *get_dependent_list () { return dependent_list; }
+  virtual bx_list_c *get_dependent_list () { return dependent_list; }
   void set_dependent_list (bx_list_c *l) {
     dependent_list = l; 
     update_dependents ();
   }
+  virtual void set_enabled (int enabled);
   virtual Bit32s get ();
   virtual void set (Bit32s val);
   void set_base (int base) { this->base = base; }
+  void set_initial_val (Bit32s initial_val) { this->val.number = this->initial_val = initial_val;}
   int get_base () { return base; }
   Bit32s get_min () { return min; }
   Bit32s get_max () { return max; }
@@ -897,13 +992,16 @@ public:
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
   bx_list_c (bx_id id, char *name, char *description, int maxsize);
   virtual ~bx_list_c();
+  bx_list_c *clone ();
   void add (bx_param_c *param);
   bx_param_c *get (int index);
   int get_size () { return size; }
   bx_param_num_c *get_options () { return options; }
+  void set_options (bx_param_num_c *newopt) { options = newopt; }
   bx_param_num_c *get_choice () { return choice; }
   bx_param_string_c *get_title () { return title; }
-  void set_parent (bx_param_c *parent);
+  void set_parent (bx_param_c *newparent) { parent = newparent; }
+  bx_param_c *get_parent () { return parent; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -922,6 +1020,19 @@ public:
 #define BX_FLOPPY_LAST   15 // last legal value of floppy type
 #define BX_FLOPPY_GUESS  20 // decide based on image size
 
+#define BX_ATA_DEVICE_DISK      0
+#define BX_ATA_DEVICE_CDROM     1
+#define BX_ATA_DEVICE_LAST      1
+
+#define BX_ATA_BIOSDETECT_NONE      0
+#define BX_ATA_BIOSDETECT_AUTO      1
+#define BX_ATA_BIOSDETECT_CMOS      2
+
+#define BX_ATA_TRANSLATION_NONE      0
+#define BX_ATA_TRANSLATION_LBA       1
+#define BX_ATA_TRANSLATION_LARGE     2
+#define BX_ATA_TRANSLATION_LAST      2
+
 extern char *floppy_type_names[];
 extern int floppy_type_n_sectors[];
 extern int n_floppy_type_names;
@@ -933,6 +1044,14 @@ extern char *loader_os_names[];
 extern int n_loader_os_names;
 extern char *keyboard_type_names[];
 extern int n_keyboard_type_names;
+extern char *atadevice_type_names[];
+extern int n_atadevice_type_names;
+extern char *atadevice_status_names[];
+extern int n_atadevice_status_names;
+extern char *atadevice_biosdetect_names[];
+extern int n_atadevice_biosdetect_names;
+extern char *atadevice_translation_names[];
+extern int n_atadevice_translation_names;
 
 typedef struct {
   bx_param_enum_c *Odevtype;
@@ -942,24 +1061,23 @@ typedef struct {
   } bx_floppy_options;
 
 typedef struct {
+  bx_list_c *Omenu;
   bx_param_bool_c *Opresent;
+  bx_param_enum_c *Otype;
   bx_param_string_c *Opath;
   bx_param_num_c *Ocylinders;
   bx_param_num_c *Oheads;
   bx_param_num_c *Ospt;
-  } bx_disk_options;
+  bx_param_enum_c *Ostatus;
+  bx_param_string_c *Omodel;
+  bx_param_enum_c *Obiosdetect;
+  bx_param_enum_c *Otranslation;
+  } bx_atadevice_options;
 
 typedef struct {
   bx_param_bool_c *Oenabled;
   bx_param_string_c *Odev;
   } bx_serial_options;
-
-struct bx_cdrom_options
-{
-  bx_param_bool_c *Opresent;
-  bx_param_string_c *Opath;
-  bx_param_enum_c *Ostatus;
-};
 
 
 ////////////////////////////////////////////////////////////////////
@@ -982,6 +1100,7 @@ public:
   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}
   virtual bx_param_bool_c *get_param_bool (bx_id id) {return NULL;}
+  virtual bx_param_enum_c *get_param_enum (bx_id id) {return NULL;}
   virtual int get_n_log_modules () {return -1;}
   virtual char *get_prefix (int mod) {return 0;}
   virtual int get_log_action (int mod, int level) {return -1;}
@@ -1008,7 +1127,7 @@ public:
   virtual int get_log_prefix (char *prefix, int len) {return -1;}
   virtual int set_log_prefix (char *prefix) {return -1;}
   virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}
-  virtual int get_cdrom_options (int drive, bx_cdrom_options *out) {return -1;}
+  virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *where = NULL) {return -1;}
   virtual char *get_floppy_type_name (int type) {return NULL;}
 
   // The CI calls set_notify_callback to register its event handler function.
@@ -1043,6 +1162,8 @@ public:
   // changed.  The CI will reread the parameters and change its display if it's
   // appropriate.  Maybe later: mention which params have changed to save time.
   virtual void refresh_ci () {}
+  // return first cdrom in ATA interface
+  bx_param_c *get_first_cdrom () {return NULL;}
 #if BX_DEBUGGER
   // for debugger: same behavior as pressing control-C
   virtual void debug_break () {}

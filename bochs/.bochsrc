@@ -84,6 +84,79 @@ floppya: 1_44=/dev/fd0, status=inserted
 floppyb: 1_44=b.img, status=inserted
 
 #=======================================================================
+# ATA[0-3]: enabled=[0|1], ioaddr1=, ioaddr2=, irq=
+# 
+# These options enables up to 4 ata channels. For each channel
+# the two base io address and the irq must be specified.
+# 
+# ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+#
+# Examples:
+#   ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+#   ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
+#   ata2: enabled=1, ioaddr1=0x1e8, ioaddr2=0x3e8, irq=12
+#   ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x368, irq=11
+#=======================================================================
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata1: enabled=0, ioaddr1=0x170, ioaddr2=0x370, irq=15
+ata2: enabled=0, ioaddr1=0x1e8, ioaddr2=0x3e8, irq=12
+ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=11
+
+#=======================================================================
+#
+# ATA[0-3]-MASTER: 
+# ATA[0-3]-SLAVE:
+#
+# This defines the type and characteristics of all attached ata devices:
+#   type=       type of attached device [disk|cdrom] 
+#   path=       path of the image
+#   cylinders=  only valid for disks
+#   heads=      only valid for disks
+#   spt=        only valid for disks
+#   status=     only valid for cdroms [inserted|ejected]
+#   biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
+#   translation=type of transation of the bios, only for disks [none|lba|large]
+#   model=      string returned by identify device command
+#   
+# Point this at a 10M, 20M, or 30M hard disk image file, cdrom iso file,
+# or physical cdrom device.  
+# To create # a hard disk image, try running bximage.  
+# It will help you choose the size and then suggest a line that 
+# works with it.
+#
+# In UNIX it may be possible to use a raw device as a Bochs hard disk, 
+# but WE DON'T RECOMMEND IT.  In Windows there is no easy way.
+#
+# In windows, the drive letter + colon notation should be used for cdroms.
+# Depending on versions of windows and drivers, you may only be able to 
+# access the "first" cdrom in the system.
+#
+# The path, cylinders, heads, and spt are mandatory for type=disk
+# The path is mandatory for type=cdrom
+#
+# Default values are:
+#   biosdetect=auto, translation=lba, model="Generic 1234"
+#
+# The biosdetect and translation options have currently no effect on the bios
+#
+# Examples:
+#   ata0-master: type=disk, path=10M.sample, cylinders=306, heads=4, spt=17
+#   ata0-slave:  type=disk, path=20M.sample, cylinders=615, heads=4, spt=17
+#   ata1-master: type=disk, path=30M.sample, cylinders=615, heads=6, spt=17
+#   ata1-slave:  type=disk, path=46M.sample, cylinders=940, heads=6, spt=17
+#   ata2-master: type=disk, path=62M.sample, cylinders=940, heads=8, spt=17
+#   ata2-slave:  type=disk, path=112M.sample, cylinders=900, heads=15, spt=17
+#   ata3-master: type=disk, path=483M.sample, cylinders=1024, heads=15, spt=63
+#   ata3-slave:  type=cdrom, path=iso.sample, status=inserted
+#=======================================================================
+ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
+#ata0-slave: dev=D:, status=inserted             # for win32
+#ata0-slave: dev=/dev/cdrom, status=inserted
+
+#=======================================================================
+#
+# The DISKC option is deprecated. Use ATA* options instead.
+#
 # DISKC: file=, cyl=, heads=, spt=
 # Point this at a 10M, 20M, or 30M hard disk image file.  To create 
 # a hard disk image, try running bximage.  It will help you choose the
@@ -101,9 +174,12 @@ floppyb: 1_44=b.img, status=inserted
 #   diskc: file=112M.sample, cyl=900, heads=15, spt=17
 #   diskc: file=483M.sample, cyl=1024, heads=15, spt=63
 #=======================================================================
-diskc: file="30M.sample", cyl=615, heads=6, spt=17
+#diskc: file="30M.sample", cyl=615, heads=6, spt=17
 
 #=======================================================================
+#
+# The DISKD option is deprecated. Use ATA* options instead.
+#
 # DISKD:
 # See DISKC above for syntax
 #
@@ -112,7 +188,10 @@ diskc: file="30M.sample", cyl=615, heads=6, spt=17
 #diskd: file="diskd.img", cyl=615, heads=6, spt=17
 
 #=======================================================================
-# CDROM
+#
+# The CDROMD option is deprecated. Use ATA* options instead.
+#
+# CDROMD:
 #
 # cdromd: dev=/dev/cdrom, status=inserted
 # cdromd: dev=/dev/cdrom, status=ejected

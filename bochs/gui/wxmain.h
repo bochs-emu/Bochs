@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.29 2002-09-20 21:25:09 bdenney Exp $
+// $Id: wxmain.h,v 1.30 2002-09-22 20:56:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -28,9 +28,11 @@ enum
   ID_Config_Save,
   ID_Edit_FD_0,
   ID_Edit_FD_1,
-  ID_Edit_HD_0,
-  ID_Edit_HD_1,
-  ID_Edit_Cdrom,
+  ID_Edit_ATA0,
+  ID_Edit_ATA1,
+  ID_Edit_ATA2,
+  ID_Edit_ATA3,
+  ID_Edit_Cdrom,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
   ID_Edit_Boot,
   ID_Edit_Memory,
   ID_Edit_Sound,
@@ -197,8 +199,7 @@ public:
 #endif
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);
-  void editHDConfig (int drive);
-  void editCdromConfig ();
+  void editATAConfig (int channel);
   void OnToolbarClick(wxCommandEvent& event);
   int HandleAskParam (BxEvent *event);
   int HandleAskParamString (bx_param_string_c *param);

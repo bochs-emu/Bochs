@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.13 2002-09-12 06:49:04 bdenney Exp $
+// $Id: harddrv.h,v 1.14 2002-09-22 20:56:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -184,7 +184,6 @@ typedef struct {
     Boolean err;
     } status;
   Bit8u    error_register;
-  // Bit8u    drive_select; this field was moved :^(
   Bit8u    head_no;
   union {
     Bit8u    sector_count;
@@ -282,12 +281,8 @@ struct atapi_t
 #  define BX_HD_THIS this->
 #endif
 
-#define BX_SELECTED_HD BX_HD_THIS s[BX_HD_THIS drive_select]
-#define CDROM_SELECTED (BX_HD_THIS s[BX_HD_THIS drive_select].device_type == IDE_CDROM)
-#define DEVICE_TYPE_STRING ((CDROM_SELECTED) ? "CD-ROM" : "DISK")
-
 typedef enum {
-      IDE_DISK, IDE_CDROM
+      IDE_NONE, IDE_DISK, IDE_CDROM
 } device_type_t;
 
 class bx_hard_drive_c : public logfunctions {
@@ -298,8 +293,10 @@ public:
   BX_HD_SMF void   close_harddrive(void);
   BX_HD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
   BX_HD_SMF void   reset(unsigned type);
-  BX_HD_SMF unsigned get_cd_media_status(void);
-  BX_HD_SMF unsigned set_cd_media_status(unsigned status);
+  BX_HD_SMF Bit32u   get_device_handle(Bit8u channel, Bit8u device);
+  BX_HD_SMF Bit32u   get_first_cd_handle(void);
+  BX_HD_SMF unsigned get_cd_media_status(Bit32u handle);
+  BX_HD_SMF unsigned set_cd_media_status(Bit32u handle, unsigned status);
 
 #if !BX_USE_HD_SMF
   Bit32u read(Bit32u address, unsigned io_len);
@@ -311,36 +308,46 @@ public:
 
 private:
 
-  BX_HD_SMF Boolean calculate_logical_address(Bit32u *sector);
-  BX_HD_SMF void increment_address();
-  BX_HD_SMF void identify_drive(unsigned drive);
-  BX_HD_SMF void identify_ATAPI_drive(unsigned drive);
-  BX_HD_SMF void command_aborted(unsigned command);
+  BX_HD_SMF Boolean calculate_logical_address(Bit8u channel, Bit32u *sector);
+  BX_HD_SMF void increment_address(Bit8u channel);
+  BX_HD_SMF void identify_drive(Bit8u channel);
+  BX_HD_SMF void identify_ATAPI_drive(Bit8u channel);
+  BX_HD_SMF void command_aborted(Bit8u channel, unsigned command);
 
-  BX_HD_SMF void init_send_atapi_command(Bit8u command, int req_length, int alloc_length, bool lazy = false);
-  BX_HD_SMF void ready_to_send_atapi();
-  BX_HD_SMF void raise_interrupt();
-  BX_HD_SMF void atapi_cmd_error(sense_t sense_key, asc_t asc);
-  BX_HD_SMF void init_mode_sense_single(const void* src, int size);
-  BX_HD_SMF void atapi_cmd_nop();
+  BX_HD_SMF void init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bool lazy = false);
+  BX_HD_SMF void ready_to_send_atapi(Bit8u channel);
+  BX_HD_SMF void raise_interrupt(Bit8u channel);
+  BX_HD_SMF void atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc);
+  BX_HD_SMF void init_mode_sense_single(Bit8u channel, const void* src, int size);
+  BX_HD_SMF void atapi_cmd_nop(Bit8u channel);
 
-  struct sStruct {
-    device_image_t* hard_drive;
-    device_type_t device_type;
-    // 512 byte buffer for ID drive command
-    // These words are stored in native word endian format, as
-    // they are fetched and returned via a return(), so
-    // there's no need to keep them in x86 endian format.
-    Bit16u id_drive[256];
+  // FIXME:
+  // For each ATA channel we should have one controller struct
+  // and an array of two drive structs
+  struct channel_t {
+    struct drive_t {
+      device_image_t* hard_drive;
+      device_type_t device_type;
+      // 512 byte buffer for ID drive command
+      // These words are stored in native word endian format, as
+      // they are fetched and returned via a return(), so
+      // there's no need to keep them in x86 endian format.
+      Bit16u id_drive[256];
 
-    controller_t controller;
-    cdrom_t cdrom;
-    sense_info_t sense;
-    atapi_t atapi;
+      controller_t controller;
+      cdrom_t cdrom;
+      sense_info_t sense;
+      atapi_t atapi;
 
-    } s[2];
+      Bit8u model_no[41];
+      } drives[2];
+    unsigned drive_select;
 
-  unsigned drive_select;
+    Bit16u ioaddr1;
+    Bit16u ioaddr2;
+    Bit8u  irq;
+
+    } channels[BX_MAX_ATA_CHANNEL];
 
   bx_devices_c *devices;
   };

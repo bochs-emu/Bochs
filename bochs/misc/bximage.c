@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.10 2002-09-05 16:50:03 bdenney Exp $
+ * $Id: bximage.c,v 1.11 2002-09-22 20:56:11 cbothamy Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -14,7 +14,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.10 2002-09-05 16:50:03 bdenney Exp $";
+char *rcsid = "$Id: bximage.c,v 1.11 2002-09-22 20:56:11 cbothamy Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -261,7 +261,7 @@ int main()
     printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
     if (ask_string ("\nWhat should I name the image?\n[c.img] ", "c.img", filename) < 0)
       fatal (EOF_ERR);
-    sprintf (bochsrc_line, "diskc: file=\"%s\", cyl=%d, heads=%d, spt=%d", filename, cyl, heads, spt);
+    sprintf (bochsrc_line, "ata0-master: type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d", filename, cyl, heads, spt);
   } else {
     int fdsize, cyl=0, heads=0, spt=0;
     char *name = NULL;

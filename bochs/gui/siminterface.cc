@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.64 2002-09-20 17:56:21 bdenney Exp $
+// $Id: siminterface.cc,v 1.65 2002-09-22 20:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -50,6 +50,7 @@ public:
   virtual bx_param_num_c *get_param_num (bx_id id);
   virtual bx_param_string_c *get_param_string (bx_id id);
   virtual bx_param_bool_c *get_param_bool (bx_id id);
+  virtual bx_param_enum_c *get_param_enum (bx_id id);
   virtual int get_n_log_modules ();
   virtual char *get_prefix (int mod);
   virtual int get_log_action (int mod, int level);
@@ -72,7 +73,7 @@ public:
   virtual int get_log_prefix (char *prefix, int len);
   virtual int set_log_prefix (char *prefix);
   virtual int get_floppy_options (int drive, bx_floppy_options *out);
-  virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
+  virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *device = NULL);
   virtual char *get_floppy_type_name (int type);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
   virtual BxEvent* sim_to_ci_event (BxEvent *event);
@@ -84,6 +85,7 @@ public:
   virtual void periodic ();
   virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite);
   virtual void refresh_ci ();
+  bx_param_c *get_first_cdrom ();
 #if BX_DEBUGGER
   virtual void debug_break ();
   virtual void debug_interpret_cmd (char *cmd);
@@ -140,6 +142,19 @@ bx_real_sim_c::get_param_bool (bx_id id) {
   if (generic->get_type () == BXT_PARAM_BOOL)
     return (bx_param_bool_c *)generic;
   BX_PANIC (("get_param_bool %u could not find a bool parameter with that id", id));
+  return NULL;
+}
+
+bx_param_enum_c *
+bx_real_sim_c::get_param_enum (bx_id id) {
+  bx_param_c *generic = get_param(id);
+  if (generic==NULL) {
+    BX_PANIC (("get_param_enum(%u) could not find a parameter", id));
+    return NULL;
+  }
+  if (generic->get_type () == BXT_PARAM_ENUM)
+    return (bx_param_enum_c *)generic;
+  BX_PANIC (("get_param_enum %u could not find a enum parameter with that id", id));
   return NULL;
 }
 
@@ -340,10 +355,20 @@ bx_real_sim_c::get_floppy_options (int drive, bx_floppy_options *out)
 }
 
 int 
-bx_real_sim_c::get_cdrom_options (int drive, bx_cdrom_options *out)
+bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *where = NULL)
 {
-  BX_ASSERT (drive == 0);
-  *out = bx_options.cdromd;
+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+    for (Bit8u device=0; device<2; device++) {
+      if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
+        if (level==0) {
+          *out = bx_options.atadevice[channel][device];
+	  if (where != NULL) *where=(channel*2)+device;
+          return 1;
+          }
+        else level--;
+	}
+      }
+    }
   return 0;
 }
 
@@ -358,6 +383,14 @@ char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
 int n_loader_os_names = 3;
 char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
 int n_keyboard_type_names = 3;
+char *atadevice_type_names[] = { "hard disk", "cdrom", NULL };
+int n_atadevice_type_names = 2;
+char *atadevice_status_names[] = { "ejected", "inserted", NULL };
+int n_atadevice_status_names = 2;
+char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
+int n_atadevice_biosdetect_names = 3;
+char *atadevice_translation_names[] = { "none", "lba", "large", NULL };
+int n_atadevice_translation_names = 3;
 
 char *
 bx_real_sim_c::get_floppy_type_name (int type)
@@ -533,6 +566,23 @@ void bx_real_sim_c::refresh_ci () {
   // the event will be freed by the recipient
 }
 
+bx_param_c *
+bx_real_sim_c::get_first_cdrom ()
+{
+  for (int channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+    if (!bx_options.ata[channel].Opresent->get ())
+      continue;
+    for (int slave=0; slave<2; slave++) {
+      Bit32u present = bx_options.atadevice[channel][slave].Opresent->get ();
+      Bit32u type = bx_options.atadevice[channel][slave].Otype->get ();
+      if (present && type == BX_ATA_DEVICE_CDROM) {
+	return bx_options.atadevice[channel][slave].Omenu;
+      }
+    }
+  }
+  return NULL;
+}
+
 #if BX_DEBUGGER
 
 // this can be safely called from either thread.
@@ -688,10 +738,20 @@ bx_param_num_c::set (Bit32s newval)
 void bx_param_num_c::update_dependents ()
 {
   if (dependent_list) {
-    int en = val.number? 1 : 0;
-    for (int i=0; i<dependent_list->get_size (); i++)
-      dependent_list->get (i)->set_enabled (en);
+    int en = val.number && enabled;
+    for (int i=0; i<dependent_list->get_size (); i++) {
+      bx_param_c *param = dependent_list->get (i);
+      if (param != this)
+	param->set_enabled (en);
+    }
   }
+}
+
+void
+bx_param_num_c::set_enabled (int en)
+{
+  bx_param_c::set_enabled (en);
+  update_dependents ();
 }
 
 bx_shadow_num_c::bx_shadow_num_c (bx_id id,
@@ -1042,6 +1102,17 @@ bx_list_c::init ()
   this->parent = NULL;
 }
 
+bx_list_c *
+bx_list_c::clone ()
+{
+  bx_list_c *newlist = new bx_list_c (BXP_NULL, name, description, maxsize);
+  for (int i=0; i<get_size (); i++)
+    newlist->add (get(i));
+  newlist->set_options (get_options ());
+  newlist->set_parent (get_parent ());
+  return newlist;
+}
+
 void
 bx_list_c::add (bx_param_c *param)
 {
@@ -1058,8 +1129,3 @@ bx_list_c::get (int index)
   return list[index];
 }
 
-void
-bx_list_c::set_parent (bx_param_c *parent)
-{
-  this->parent = parent;
-}

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.95 2002-09-21 11:38:12 vruppert Exp $
+// $Id: bochs.h,v 1.96 2002-09-22 20:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -491,6 +491,7 @@ extern bx_debug_t bx_dbg;
 
 
 
+/* Already in gui/siminterface.h ??? 
 #define BX_FLOPPY_NONE   10 // floppy not present
 #define BX_FLOPPY_1_2    11 // 1.2M  5.25"
 #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
@@ -498,6 +499,7 @@ extern bx_debug_t bx_dbg;
 #define BX_FLOPPY_720K   14 // 720K  3.5"
 #define BX_FLOPPY_360K   15 // 360K  5.25"
 #define BX_FLOPPY_LAST   15 // last one
+*/
 
 
 #define BX_READ    0
@@ -547,6 +549,13 @@ int bx_write_configuration (char *rcfile, int overwrite);
 void bx_reset_options (void);
 
 #define BX_PATHNAME_LEN 512
+
+typedef struct {
+  bx_param_bool_c *Opresent;
+  bx_param_num_c *Oioaddr1;
+  bx_param_num_c *Oioaddr2;
+  bx_param_num_c *Oirq;
+  } bx_ata_options;
 
 typedef struct {
   bx_param_string_c *Opath;
@@ -630,10 +639,12 @@ typedef struct {
 typedef struct {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
-  bx_disk_options   diskc;
-  bx_disk_options   diskd;
+  bx_ata_options    ata[BX_MAX_ATA_CHANNEL];
+  bx_atadevice_options  atadevice[BX_MAX_ATA_CHANNEL][2];
+  // bx_disk_options   diskc;
+  // bx_disk_options   diskd;
+  // bx_cdrom_options  cdromd; 
   bx_serial_options com[BX_N_SERIAL_PORTS];
-  bx_cdrom_options  cdromd; 
   bx_rom_options    rom;
   bx_vgarom_options vgarom;
   bx_rom_options    optrom[BX_N_OPTROM_IMAGES]; // Optional rom images 

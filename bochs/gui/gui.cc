@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.48 2002-09-21 19:38:47 vruppert Exp $
+// $Id: gui.cc,v 1.49 2002-09-22 20:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,9 +108,9 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_LEFT, floppyB_handler);
 
   // CDROM
-  BX_GUI_THIS cdromD_status =
-    bx_devices.hard_drive->get_cd_media_status()
-    && bx_options.cdromd.Opresent->get ();
+  Bit32u handle = bx_devices.hard_drive->get_first_cd_handle();
+  BX_GUI_THIS cdromD_status = bx_devices.hard_drive->get_cd_media_status(handle);
+
   if (BX_GUI_THIS cdromD_status)
     BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_bmap_id,
                           BX_GRAVITY_LEFT, cdromD_handler);
@@ -162,9 +162,8 @@ bx_gui_c::update_drive_status_buttons (void) {
   BX_GUI_THIS floppyB_status = 
       bx_devices.floppy->get_media_status (1)
       && bx_options.floppyb.Ostatus->get ();
-  BX_GUI_THIS cdromD_status =
-    bx_devices.hard_drive->get_cd_media_status()
-    && bx_options.cdromd.Opresent->get ();
+  Bit32u handle = bx_devices.hard_drive->get_first_cd_handle();
+  BX_GUI_THIS cdromD_status = bx_devices.hard_drive->get_cd_media_status(handle);
   if (BX_GUI_THIS floppyA_status)
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
   else {
@@ -243,22 +242,29 @@ bx_gui_c::floppyB_handler(void)
   void
 bx_gui_c::cdromD_handler(void)
 {
+  Bit32u handle = bx_devices.hard_drive->get_first_cd_handle();
 #if BX_WITH_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
-  int ret = SIM->ask_param (BXP_CDROM_PATH);
+  // BBD: for now, find the first cdrom and call ask_param on that.
+  // Since we could have multiple cdroms now, maybe we should be adding
+  // one cdrom button for each?
+  bx_param_c *cdrom = SIM->get_first_cdrom ();
+  if (cdrom == NULL)
+    return;  // no cdrom found
+  int ret = SIM->ask_param (cdrom->get_id ());
   if (ret < 0) return;  // cancelled
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
-  unsigned status = bx_devices.hard_drive->set_cd_media_status(0);
+  unsigned status = bx_devices.hard_drive->set_cd_media_status(handle, 0);
   printf ("eject disk, new_status is %d\n", status);
-  status = bx_devices.hard_drive->set_cd_media_status(1);
+  status = bx_devices.hard_drive->set_cd_media_status(handle, 1);
   printf ("insert disk, new_status is %d\n", status);
   fflush (stdout);
   BX_GUI_THIS cdromD_status = status;
 #else
   BX_GUI_THIS cdromD_status =
-    bx_devices.hard_drive->set_cd_media_status(!BX_GUI_THIS cdromD_status);
+    bx_devices.hard_drive->set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
 #endif
   BX_GUI_THIS update_drive_status_buttons ();
 }

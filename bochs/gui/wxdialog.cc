@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.42 2002-09-20 21:25:09 bdenney Exp $
+// $Id: wxdialog.cc,v 1.43 2002-09-22 20:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1709,6 +1709,7 @@ void DebugLogDialog::OnKeyEvent(wxKeyEvent& event)
 BEGIN_EVENT_TABLE(ParamDialog, wxDialog)
   EVT_BUTTON(-1, ParamDialog::OnEvent)
   EVT_CHECKBOX(-1, ParamDialog::OnEvent)
+  EVT_CHOICE(-1, ParamDialog::OnEvent)
   EVT_TEXT(-1, ParamDialog::OnEvent)
 END_EVENT_TABLE()
 
@@ -1817,14 +1818,14 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
   pstr->id = genId ();
   pstr->param = param_generic;
   int type = param_generic->get_type ();
-#define ADD_LABEL(x) sizer->Add (new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
+  char *prompt = pstr->param->get_ask_format ();
+  if (!prompt) prompt = pstr->param->get_name ();
+  wxASSERT (prompt != NULL);
+#define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
   switch (type) {
     case BXT_PARAM_BOOL: {
 	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
-	if (!plain) {
-	  char *prompt = param->get_name ();
-	  ADD_LABEL (prompt);
-	}
+	if (!plain) ADD_LABEL (prompt);
 	wxCheckBox *ckbx = new wxCheckBox (this, pstr->id, "");
 	ckbx->SetValue (param->get ());
 	sizer->Add (ckbx);
@@ -1836,10 +1837,7 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
       }
     case BXT_PARAM_NUM: {
 	bx_param_num_c *param = (bx_param_num_c*) param_generic;
-	if (!plain) {
-	  char *prompt = param->get_name ();
-	  ADD_LABEL (prompt);
-	}
+	if (!plain) ADD_LABEL (prompt);
 	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
 	const char *format = param->get_format ();
 	if (!format)
@@ -1854,10 +1852,7 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
       }
     case BXT_PARAM_ENUM: {
 	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
-	if (!plain) {
-	  char *prompt = param->get_name ();
-	  ADD_LABEL (prompt);
-	}
+	if (!plain) ADD_LABEL (prompt);
 	wxChoice *choice = new wxChoice (this, pstr->id);
 	sizer->Add (choice);
 	if (!plain) sizer->Add (1, 1);  // spacer
@@ -1874,10 +1869,7 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
       }
     case BXT_PARAM_STRING: {
 	bx_param_string_c *param = (bx_param_string_c*) param_generic;
-	if (!plain) {
-	  char *prompt = param->get_name ();
-	  ADD_LABEL (prompt);
-	}
+	if (!plain) ADD_LABEL (prompt);
 	bool isFilename = param->get_options ()->get () & param->BX_IS_FILENAME;
 	wxTextCtrl *txtctrl = new wxTextCtrl (this, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : wxDefaultSize);
 	txtctrl->SetValue (param->getptr ());
@@ -1901,20 +1893,24 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
       }
     case BXT_LIST: {
       bx_list_c *list = (bx_list_c*) param_generic;
-      wxStaticBox *box = new wxStaticBox (this, -1, list->get_name ());
+      wxStaticBox *box = new wxStaticBox (this, -1, prompt);
       wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
       wxFlexGridSizer *gridSz = new wxFlexGridSizer (3);
-      boxsz->Add (gridSz, 1, wxGROW|wxALL, 20);
+      boxsz->Add (gridSz, 1, wxGROW|wxALL, 10);
       // put all items in the list inside the boxsz sizer.
       for (int i=0; i<list->get_size (); i++) {
         bx_param_c *child = list->get (i);
 	AddParam (child, gridSz);
       }
       // add the boxsz to mainSizer
-      mainSizer->Add (boxsz, 0, wxALL, 10);
+      mainSizer->Add (boxsz, 0, wxALL|wxGROW, 10);
       // clear gridSizer variable so that any future parameters force
       // creation of a new one.
       gridSizer = NULL;
+      // add to hashes
+      pstr->u.staticbox = box;
+      idHash->Put (pstr->id, pstr);
+      paramHash->Put (pstr->param->get_id (), pstr);
       break;
       }
     default:
@@ -1974,26 +1970,108 @@ void ParamDialog::EnableChanged ()
     ParamStruct *pstr = (ParamStruct*) node->GetData ();
     if (pstr->param->get_type () == BXT_PARAM_BOOL)
       EnableChanged (pstr);
+    // special cases that can't be handled in the usual way
   }
 }
 
 void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
 {
+  wxLogDebug ("EnableChanged on checkbox %s", pstrOfCheckbox->param->get_name ());
   bx_param_bool_c *enableParam = (bx_param_bool_c*) pstrOfCheckbox->param;
   wxASSERT (enableParam->get_type () == BXT_PARAM_BOOL); // or we wouldn't be here
-  // if nothing depends on this "enableParam", then we're done
-  bx_list_c *list = enableParam->get_dependent_list ();
-  if (list == NULL) return;
-  // Now we know the object has dependents. Step through the list of
-  // dependents, use the paramHash table to find their ParamStruct,
-  // and enable/disable them as needed.
   bool en = pstrOfCheckbox->u.checkbox->GetValue ();
+  EnableChangedRecursive (enableParam->get_dependent_list (), en, pstrOfCheckbox);
+}
+
+void ParamDialog::EnableChangedRecursive (
+    bx_list_c *list,
+    bool en,
+    ParamStruct *pstrOfCheckbox)
+{
+  if (list==NULL) return;
   for (int i=0; i<list->get_size (); i++) {
     bx_param_c *param = list->get(i);
     ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
     if (pstr) {
+      if (param == pstrOfCheckbox->param) {
+	wxLogDebug ("not setting enable on checkbox '%s' that triggered the enable change", pstrOfCheckbox->param->get_name ());
+	continue;
+      }
       wxLogDebug ("setting enable for param '%s' to %d", pstr->param->get_name (), en?1:0);
-      pstr->u.window->Enable (en);
+      if (en != pstr->u.window->IsEnabled ()) {
+	EnableParam (pstr->param->get_id (), en);
+	//pstr->u.window->Enable (en);
+	//if (pstr->browseButton) pstr->browseButton->Enable (en);
+	//if (pstr->label) pstr->label->Enable (en);
+	bx_list_c *deps = pstr->param->get_dependent_list ();
+	if (deps) {
+	  wxLogDebug ("recursing on dependent list of %s", list->get_name ());
+	  wxASSERT (pstr->param->get_type () == BXT_PARAM_BOOL);
+          bool dep_en = pstr->u.window->IsEnabled () && pstr->u.checkbox->GetValue ();
+	  EnableChangedRecursive (deps, dep_en, pstr);
+	}
+      }
+    }
+  }
+  // if any enums changed, give them a chance to update
+  for (int i=0; i<list->get_size (); i++) {
+    bx_param_c *param = list->get(i);
+    ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
+    if (pstr) {
+      if (pstr->param->get_type () == BXT_PARAM_ENUM)
+	EnumChanged (pstr);
+    }
+  }
+}
+
+void ParamDialog::EnableParam (int param_id, bool enabled)
+{
+  ParamStruct *pstr = (ParamStruct*) paramHash->Get (param_id);
+  if (!pstr) return;
+  if (pstr->label) pstr->label->Enable (enabled);
+  if (pstr->browseButton) pstr->browseButton->Enable (enabled);
+  if (pstr->u.window) pstr->u.window->Enable (enabled);
+}
+
+void ParamDialog::EnumChanged (ParamStruct *pstr)
+{
+  wxLogDebug ("EnumChanged");
+  int id = pstr->param->get_id ();
+  switch (id) {
+    case BXP_ATA0_MASTER_TYPE:
+    case BXP_ATA0_SLAVE_TYPE:
+    case BXP_ATA1_MASTER_TYPE:
+    case BXP_ATA1_SLAVE_TYPE:
+    case BXP_ATA2_MASTER_TYPE:
+    case BXP_ATA2_SLAVE_TYPE:
+    case BXP_ATA3_MASTER_TYPE:
+    case BXP_ATA3_SLAVE_TYPE: {
+      int delta = id - BXP_ATA0_MASTER_TYPE;
+      // find out if "present" checkbox is checked
+      bx_id present_id = (bx_id) (BXP_ATA0_MASTER_PRESENT+delta);
+      ParamStruct *present = (ParamStruct*) paramHash->Get (present_id);
+      wxASSERT (present && present->param->get_type () == BXT_PARAM_BOOL);
+      if (!present->u.checkbox->GetValue ())
+	break;  // device not enabled, leave it alone
+      if (!present->u.checkbox->IsEnabled ())
+	break;  // enable button for the device is not enabled
+      wxASSERT (pstr->param->get_type () == BXT_PARAM_ENUM);
+      int type = pstr->u.choice->GetSelection ();
+      if (type == BX_ATA_DEVICE_DISK) {
+	// enable cylinders, heads, spt
+	wxLogDebug ("enabling disk parameters");
+	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 1);
+	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 1);
+	EnableParam (BXP_ATA0_MASTER_SPT+delta, 1);
+	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 0);
+      } else {
+	// enable inserted
+	wxLogDebug ("enabling cdrom parameters");
+	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 0);
+	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 0);
+	EnableParam (BXP_ATA0_MASTER_SPT+delta, 0);
+	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 1);
+      }
     }
   }
 }
@@ -2041,7 +2119,7 @@ void ParamDialog::CopyParamToGui ()
 void ParamDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  //wxLogMessage ("event was from id=%d", id);
+  wxLogMessage ("event was from id=%d", id);
   if (isGeneratedId (id)) {
     ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
     if (pstr == NULL) {
@@ -2050,10 +2128,13 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
     }
     if (id == pstr->id) {
       IFDBG_DLG (wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ()));
-      if (pstr->param->get_type () == BXT_PARAM_BOOL) {
-	// we know that a wxCheckBox changed state.  We don't yet know
-	// if that checkbox was enabling anything.
-	EnableChanged (pstr);
+      switch (pstr->param->get_type ()) {
+	case BXT_PARAM_BOOL:
+	  EnableChanged (pstr);
+	  break;
+	case BXT_PARAM_ENUM:
+	  EnumChanged (pstr);
+	  break;
       }
       return;
     }

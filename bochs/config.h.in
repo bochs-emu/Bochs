@@ -270,6 +270,13 @@
 // [[Provide example of partitioning]]
 #define BX_SPLIT_HD_SUPPORT 0
 
+// This option defines the number of supported ATA channels.
+// There are up to two drives per ATA channel.
+#define BX_MAX_ATA_CHANNEL 4
+
+#if (BX_MAX_ATA_CHANNEL>4 || BX_MAX_ATA_CHANNEL<1)
+#  error "BX_MAX_ATA_CHANNEL should be between 1 and 4"
+#endif
 
 // =================================================================
 // BEGIN: OPTIONAL DEBUGGER SECTION

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.55 2002-09-22 04:36:09 bdenney Exp $
+// $Id: wxmain.cc,v 1.56 2002-09-22 20:56:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -168,9 +168,10 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
   EVT_MENU(ID_Sim2CI_Event, MyFrame::OnSim2CIEvent)
-  EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
-  EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
-  EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_ATA0, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_ATA1, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_ATA2, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_ATA3, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
@@ -279,9 +280,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit = new wxMenu;
   menuEdit->Append( ID_Edit_FD_0, "Floppy Disk &0..." );
   menuEdit->Append( ID_Edit_FD_1, "Floppy Disk &1..." );
-  menuEdit->Append( ID_Edit_HD_0, "Hard Disk 0..." );
-  menuEdit->Append( ID_Edit_HD_1, "Hard Disk 1..." );
-  menuEdit->Append( ID_Edit_Cdrom, "Cdrom..." );
+  menuEdit->Append( ID_Edit_ATA0, "ATA Controller 0..." );
+  menuEdit->Append( ID_Edit_ATA1, "ATA Controller 1..." );
+  menuEdit->Append( ID_Edit_ATA2, "ATA Controller 2..." );
+  menuEdit->Append( ID_Edit_ATA3, "ATA Controller 3..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
   menuEdit->Append( ID_Edit_Sound, "&Sound..." );
@@ -402,24 +404,22 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   int bootDevices = 0;
   wxString devices[MAX_BOOT_DEVICES];
   int dev_id[MAX_BOOT_DEVICES];
-  bx_param_bool_c *floppy = (bx_param_bool_c *)
-    SIM->get_param (BXP_FLOPPYA_DEVTYPE);
-  bx_param_bool_c *hd = (bx_param_bool_c *)
-    SIM->get_param (BXP_DISKC_PRESENT);
-  bx_param_bool_c *cdrom = (bx_param_bool_c *)
-    SIM->get_param (BXP_CDROM_PRESENT);
-  wxASSERT (floppy->get_type () == BXT_PARAM_ENUM
-      && hd->get_type () == BXT_PARAM_BOOL
-      && cdrom->get_type () == BXT_PARAM_BOOL);
+  bx_param_enum_c *floppy = SIM->get_param_enum (BXP_FLOPPYA_DEVTYPE);
+  bx_param_bool_c *ata0_mpres = SIM->get_param_bool (BXP_ATA0_MASTER_PRESENT);
+  bx_param_enum_c *ata0_mtype = SIM->get_param_enum (BXP_ATA0_MASTER_TYPE);
+  bx_param_bool_c *ata0_spres = SIM->get_param_bool (BXP_ATA0_SLAVE_PRESENT);
+  bx_param_enum_c *ata0_stype = SIM->get_param_enum (BXP_ATA0_SLAVE_TYPE);
   if (floppy->get () != BX_FLOPPY_NONE) {
     devices[bootDevices] = wxT("First floppy drive");
     dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
   }
-  if (hd->get ()) {
+#warning wxwindows interface will only allow booting from hard disk if it is on ATA0 master
+  if (ata0_mpres->get() && ata0_mtype->get() == BX_ATA_DEVICE_DISK) {
     devices[bootDevices] = wxT("First hard drive");
     dev_id[bootDevices++] = BX_BOOT_DISKC;
   }
-  if (cdrom->get ()) {
+#warning wxwindows interface will only allow booting from cdrom if it is on ATA0 slave
+  if (ata0_spres->get() && ata0_stype->get() == BX_ATA_DEVICE_CDROM) {
     devices[bootDevices] = wxT("CD-ROM drive");
     dev_id[bootDevices++] = BX_BOOT_CDROM;
   }
@@ -834,8 +834,11 @@ void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
   bool canConfigure = (change == Stop);
   menuConfiguration->Enable (ID_Config_New, canConfigure);
   menuConfiguration->Enable (ID_Config_Read, canConfigure);
-  menuEdit->Enable (ID_Edit_HD_0, canConfigure);
-  menuEdit->Enable (ID_Edit_HD_1, canConfigure);
+#warning For now, leave ATA devices so that you configure them during runtime. Otherwise you cannot change the CD image at runtime.
+  //menuEdit->Enable (ID_Edit_ATA0, canConfigure);
+  //menuEdit->Enable (ID_Edit_ATA1, canConfigure);
+  //menuEdit->Enable (ID_Edit_ATA2, canConfigure);
+  //menuEdit->Enable (ID_Edit_ATA3, canConfigure);
   menuEdit->Enable( ID_Edit_Boot, canConfigure);
   menuEdit->Enable( ID_Edit_Memory, canConfigure);
   menuEdit->Enable( ID_Edit_Sound, canConfigure);
@@ -853,8 +856,12 @@ void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
   menuEdit->Enable (ID_Edit_FD_0, canConfigure || param->get_enabled ());
   param = SIM->get_param(BXP_FLOPPYB);
   menuEdit->Enable (ID_Edit_FD_1, canConfigure || param->get_enabled ());
-  param = SIM->get_param(BXP_CDROMD);
-  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || param->get_enabled ());
+  /*
+  // this menu item removed, since you can configure the cdrom from the
+  // ATA controller menu items instead.
+  param = SIM->get_first_cdrom ();
+  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || (param&&param->get_enabled ()));
+  */
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)
@@ -1152,9 +1159,12 @@ MyFrame::OnOtherEvent (wxCommandEvent& event)
   int id = event.GetId ();
   wxLogMessage ("event id=%d", id);
   switch (id) {
-    case ID_Edit_HD_0: editHDConfig (0); break;
-    case ID_Edit_HD_1: editHDConfig (1); break;
-    case ID_Edit_Cdrom: editCdromConfig (); break;
+    case ID_Edit_ATA0: 
+    case ID_Edit_ATA1: 
+    case ID_Edit_ATA2: 
+    case ID_Edit_ATA3: 
+      editATAConfig (id - ID_Edit_ATA0);
+      break;
   }
 }
 
@@ -1217,106 +1227,14 @@ void MyFrame::editFloppyConfig (int drive)
   }
 }
 
-void MyFrame::editHDConfig (int drive)
+void MyFrame::editATAConfig (int channel)
 {
-  HDConfigDialog dlg (this, -1);
-  dlg.SetDriveName (drive==0? BX_HARD_DISK0_NAME : BX_HARD_DISK1_NAME);
-  bx_list_c *list = (bx_list_c*) SIM->get_param ((drive==0)? BXP_DISKC : BXP_DISKD);
-  if (!list) { wxLogError ("HD object param is null"); return; }
-  bx_param_filename_c *fname = (bx_param_filename_c*) list->get(0);
-  bx_param_num_c *cyl = (bx_param_num_c *) list->get(1);
-  bx_param_num_c *heads = (bx_param_num_c *) list->get(2);
-  bx_param_num_c *spt = (bx_param_num_c *) list->get(3);
-  bx_param_bool_c *present = (bx_param_bool_c *)
-    SIM->get_param (drive==0? BXP_DISKC_PRESENT : BXP_DISKD_PRESENT);
-  wxASSERT (fname->get_type () == BXT_PARAM_STRING
-      && cyl->get_type () == BXT_PARAM_NUM 
-      && heads->get_type () == BXT_PARAM_NUM 
-      && spt->get_type() == BXT_PARAM_NUM
-      && present->get_type() == BXT_PARAM_BOOL);
-  dlg.SetFilename (fname->getptr ());
-  dlg.SetGeomRange (0, cyl->get_min(), cyl->get_max ());
-  dlg.SetGeomRange (1, heads->get_min(), heads->get_max ());
-  dlg.SetGeomRange (2, spt->get_min(), spt->get_max ());
-  dlg.SetGeom (0, cyl->get ());
-  dlg.SetGeom (1, heads->get ());
-  dlg.SetGeom (2, spt->get ());
-  dlg.SetEnable (present->get ());
-  int n = dlg.ShowModal ();
-  wxLogMessage ("HD config returned %d", n);
-  if (n==wxID_OK) {
-    char filename[1024];
-    wxString fn (dlg.GetFilename ());
-    strncpy (filename, fn.c_str (), sizeof (filename));
-    wxLogMessage ("filename is '%s'", filename);
-    fname->set (filename);
-    cyl->set (dlg.GetGeom (0));
-    heads->set (dlg.GetGeom (1));
-    spt->set (dlg.GetGeom (2));
-    present->set (dlg.GetEnable ());
-    wxLogMessage ("present=%d cyl=%d heads=%d spt=%d", present->get (), cyl->get(), heads->get(), spt->get());
-    if (drive==1 && present->get ()) {
-      // check that diskD and cdrom are not enabled at the same time
-      bx_param_bool_c *cdromd = (bx_param_bool_c*)
-	SIM->get_param(BXP_CDROM_PRESENT);
-      if (cdromd->get ()) {
-	wxString msg;
-	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
-	    BX_HARD_DISK1_NAME, BX_CDROM_NAME, BX_CDROM_NAME);
-	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
-	cdromd->set (0);
-      }
-    }
-  }
-}
-
-void MyFrame::editCdromConfig ()
-{
-  CdromConfigDialog dlg (this, -1);
-  dlg.SetDriveName (BX_CDROM_NAME);
-  bx_param_filename_c *fname = 
-    (bx_param_filename_c*) SIM->get_param(BXP_CDROM_PATH);
-  bx_param_bool_c *present =
-    (bx_param_bool_c*) SIM->get_param(BXP_CDROM_PRESENT);
-  bx_param_enum_c *status =
-    (bx_param_enum_c*) SIM->get_param(BXP_CDROM_STATUS);
-  wxASSERT (fname->get_type () == BXT_PARAM_STRING
-      && present->get_type () == BXT_PARAM_BOOL
-      && status->get_type () == BXT_PARAM_ENUM);
-#if defined(__linux__)
-  dlg.AddRadio ("Physical CD-ROM drive /dev/cdrom", "/dev/cdrom");
-#elif defined (WIN32)
-  dlg.AddRadio ("Physical CD-ROM drive D:", "D:");
-#else
-  // add your favorite operating system here
-#endif
-  dlg.SetEnable (present->get () ? TRUE : FALSE);
-  dlg.SetFilename (fname->getptr ());
-  dlg.SetEjected (status->get () == BX_EJECTED);
-  int n = dlg.ShowModal ();
-  wxLogMessage ("cdrom config returned %d", n);
-  if (n==wxID_OK) {
-    char filename[1024];
-    wxString fn (dlg.GetFilename ());
-    strncpy (filename, fn.c_str (), sizeof(filename));
-    fname->set (filename);
-    present->set (dlg.GetEnable ());
-    status->set (dlg.GetEjected () ? BX_EJECTED : BX_INSERTED);
-    wxLogMessage ("filename is '%s'", filename);
-    wxLogMessage ("enabled=%d ejected=%d", present->get(), status->get());
-    // cdrom and hard disk D cannot both be enabled.
-    if (present->get ()) {
-      bx_param_bool_c *diskd = (bx_param_bool_c*)
-	SIM->get_param(BXP_DISKD_PRESENT);
-      if (diskd->get ()) {
-	wxString msg;
-	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
-	    BX_CDROM_NAME, BX_HARD_DISK1_NAME, BX_HARD_DISK1_NAME);
-	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
-	diskd->set (0);
-      }
-    }
-  }
+  ParamDialog dlg (this, -1);
+  dlg.SetTitle ("Configure ATA0");
+  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0+channel)));
+  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MASTER+channel*2)));
+  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_SLAVE+channel*2)));
+  dlg.ShowModal ();
 }
 
 void MyFrame::OnToolbarClick(wxCommandEvent& event)

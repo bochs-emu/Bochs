@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.39 2002-09-22 04:52:55 bdenney Exp $
+// $Id: wxdialog.h,v 1.40 2002-09-22 20:56:12 cbothamy Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -728,11 +728,13 @@ DECLARE_EVENT_TABLE()
 struct ParamStruct : public wxObject {
   bx_param_c *param;
   int id;
+  wxStaticText *label;
   union _u_tag {
     wxWindow *window;
     wxChoice *choice;
     wxTextCtrl *text;
     wxCheckBox *checkbox;
+    wxStaticBox *staticbox;
   } u;
   int browseButtonId;  // only for filename params
   wxButton *browseButton;  // only for filename params
@@ -760,6 +762,9 @@ protected:
   // map parameter ID (BXP_*) onto ParamStruct.
   wxHashTable *paramHash;
   virtual void EnableChanged ();
+  void EnableParam (int param_id, bool enabled);
+  void EnumChanged (ParamStruct *pstr);
+  void EnableChangedRecursive (bx_list_c *list, bool en, ParamStruct *pstrOfCheckbox);
   void EnableChanged (ParamStruct *pstr);
   bool CopyGuiToParam ();
 public:

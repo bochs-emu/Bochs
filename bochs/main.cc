@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.143 2002-09-20 18:14:25 bdenney Exp $
+// $Id: main.cc,v 1.144 2002-09-22 20:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -113,9 +113,18 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 	SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
       }
       break;
-    case BXP_CDROM_STATUS:
+    case BXP_ATA0_MASTER_STATUS:
+    case BXP_ATA0_SLAVE_STATUS:
+    case BXP_ATA1_MASTER_STATUS:
+    case BXP_ATA1_SLAVE_STATUS:
+    case BXP_ATA2_MASTER_STATUS:
+    case BXP_ATA2_SLAVE_STATUS:
+    case BXP_ATA3_MASTER_STATUS:
+    case BXP_ATA3_SLAVE_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-        bx_devices.hard_drive->set_cd_media_status(val == BX_INSERTED);
+	Bit8u device = id - BXP_ATA0_MASTER_STATUS;
+	Bit32u handle = bx_devices.hard_drive->get_device_handle (device/2, device%2);
+        bx_devices.hard_drive->set_cd_media_status(handle, val == BX_INSERTED);
         bx_gui.update_drive_status_buttons ();
       }
       break;
@@ -144,6 +153,42 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_KBD_PASTE_DELAY:
       if (set) bx_keyboard.paste_delay_changed ();
       break;
+    case BXP_ATA0_MASTER_TYPE:
+    case BXP_ATA0_SLAVE_TYPE:
+    case BXP_ATA1_MASTER_TYPE:
+    case BXP_ATA1_SLAVE_TYPE:
+    case BXP_ATA2_MASTER_TYPE:
+    case BXP_ATA2_SLAVE_TYPE:
+    case BXP_ATA3_MASTER_TYPE:
+    case BXP_ATA3_SLAVE_TYPE:
+      if (set) {
+        int device = id - BXP_ATA0_MASTER_TYPE;
+	switch (val) {
+          case BX_ATA_DEVICE_DISK:
+            SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_CYLINDERS + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_HEADS + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_SPT + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_enabled (0);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_TRANSLATION + device))->set_enabled (1);
+            break;
+          case BX_ATA_DEVICE_CDROM:
+            SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_CYLINDERS + device))->set_enabled (0);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_HEADS + device))->set_enabled (0);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_SPT + device))->set_enabled (0);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_TRANSLATION + device))->set_enabled (0);
+            break;
+          }
+        }
+      break;
     default:
       BX_PANIC (("bx_param_handler called with unknown id %d", id));
       return -1;
@@ -153,12 +198,14 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 
 char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int maxlen)
 {
+  bx_id id = param->get_id ();
+
   int empty = 0;
   if ((strlen(val) < 1) || !strcmp ("none", val)) {
     empty = 1;
     val = "none";
   }
-  switch (param->get_id ()) {
+  switch (id) {
     case BXP_FLOPPYA_PATH:
       if (set==1) {
         if (SIM->get_init_done ()) {
@@ -209,46 +256,44 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         }
       }
       break;
-    case BXP_DISKC_PATH:
+
+    case BXP_ATA0_MASTER_PATH:
+    case BXP_ATA0_SLAVE_PATH:
+    case BXP_ATA1_MASTER_PATH:
+    case BXP_ATA1_SLAVE_PATH:
+    case BXP_ATA2_MASTER_PATH:
+    case BXP_ATA2_SLAVE_PATH:
+    case BXP_ATA3_MASTER_PATH:
+    case BXP_ATA3_SLAVE_PATH:
       if (set==1) {
-	SIM->get_param_num(BXP_DISKC_PRESENT)->set (!empty);
-	SIM->get_param_num(BXP_DISKC_CYLINDERS)->set_enabled (!empty);
-	SIM->get_param_num(BXP_DISKC_HEADS)->set_enabled (!empty);
-	SIM->get_param_num(BXP_DISKC_SPT)->set_enabled (!empty);
-      }
-      break;
-    case BXP_DISKD_PATH:
-      if (set==1) {
-	SIM->get_param_num(BXP_DISKD_PRESENT)->set (!empty);
-	SIM->get_param_num(BXP_DISKD_CYLINDERS)->set_enabled (!empty);
-	SIM->get_param_num(BXP_DISKD_HEADS)->set_enabled (!empty);
-	SIM->get_param_num(BXP_DISKD_SPT)->set_enabled (!empty);
-      }
-      break;
-    case BXP_CDROM_PATH:
-      if (set==1) {
+        Bit8u device = id - BXP_ATA0_MASTER_PATH;
+	Bit32u handle = bx_devices.hard_drive->get_device_handle(device/2, device%2);
+
         if (SIM->get_init_done ()) {
           if (empty) {
-            bx_devices.hard_drive->set_cd_media_status(0);
+            bx_devices.hard_drive->set_cd_media_status(handle, 0);
             bx_gui.update_drive_status_buttons ();
           } else {
-            if (!SIM->get_param_num(BXP_CDROM_PRESENT)->get ()) {
+            if (!SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->get ()) {
               BX_ERROR(("Cannot add a cdrom drive at runtime"));
-              bx_options.cdromd.Opath->set ("none");
+              bx_options.atadevice[device/2][device%2].Opresent->set (0);
+            }
+            if (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get () != BX_ATA_DEVICE_CDROM) {
+              BX_ERROR(("Device is not a cdrom drive"));
+              bx_options.atadevice[device/2][device%2].Opresent->set (0);
             }
           }
           if ((bx_devices.hard_drive) &&
-              (SIM->get_param_num(BXP_CDROM_STATUS)->get () == BX_INSERTED)) {
+              (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_STATUS + device))->get () == BX_INSERTED) &&
+              (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get () == BX_ATA_DEVICE_CDROM)) {
             // tell the device model that we removed, then inserted the cd
-            bx_devices.hard_drive->set_cd_media_status(0);
-            bx_devices.hard_drive->set_cd_media_status(1);
+            bx_devices.hard_drive->set_cd_media_status(handle, 0);
+            bx_devices.hard_drive->set_cd_media_status(handle, 1);
           }
-        } else {
-          SIM->get_param_num(BXP_CDROM_PRESENT)->set (!empty);
-          SIM->get_param_num(BXP_CDROM_STATUS)->set_enabled (!empty);
         }
       }
       break;
+    
     case BXP_SCREENMODE:
       if (set==1) {
 	BX_INFO (("Screen mode changed to %s", val));
@@ -259,7 +304,6 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
   }
   return val;
 }
-
 
 void bx_init_options ()
 {
@@ -370,127 +414,229 @@ void bx_init_options ()
   bx_options.floppyb.Otype->set_handler (bx_param_handler);
   bx_options.floppyb.Ostatus->set_handler (bx_param_handler);
 
-  // diskc options
-  bx_options.diskc.Opresent = new bx_param_bool_c (BXP_DISKC_PRESENT,
-      "diskc:present",
-      "Controls whether diskc is installed or not",
-      0);
-  bx_options.diskc.Opath = new bx_param_filename_c (BXP_DISKC_PATH,
-      "",
-      "Pathname of the hard drive image",
-      "", BX_PATHNAME_LEN);
-  bx_options.diskc.Ocylinders = new bx_param_num_c (BXP_DISKC_CYLINDERS,
-      "diskc:cylinders",
-      "Number of cylinders",
-      0, 65535,
-      0);
-  bx_options.diskc.Oheads = new bx_param_num_c (BXP_DISKC_HEADS,
-      "diskc:heads",
-      "Number of heads",
-      0, 65535,
-      0);
-  bx_options.diskc.Ospt = new bx_param_num_c (BXP_DISKC_SPT,
-      "diskc:spt",
-      "Number of sectors per track",
-      0, 65535,
-      0);
-  bx_options.diskc.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
-  bx_options.diskc.Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
-  bx_options.diskc.Oheads->set_ask_format ("Enter number of heads: [%d] ");
-  bx_options.diskc.Ospt->set_ask_format ("Enter number of sectors per track: [%d] ");
-  bx_options.diskc.Opath->set_format ("%s");
-  bx_options.diskc.Ocylinders->set_format (", %d cylinders, ");
-  bx_options.diskc.Oheads->set_format ("%d heads, ");
-  bx_options.diskc.Ospt->set_format ("%d sectors/track");
-  bx_param_c *diskc_init_list[] = {
-    bx_options.diskc.Opath,
-    bx_options.diskc.Ocylinders,
-    bx_options.diskc.Oheads,
-    bx_options.diskc.Ospt,
-    NULL
-  };
-  menu = new bx_list_c (BXP_DISKC, "Hard disk 0", "All options for hard disk 0", diskc_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
-  // if path is the word "none", then do not ask the other options and
-  // set present=0.
-  bx_options.diskc.Opath->set_handler (bx_param_string_handler);
-  bx_options.diskc.Opath->set ("none");
+  // disk options
 
-  // diskd options
-  bx_options.diskd.Opresent = new bx_param_bool_c (BXP_DISKD_PRESENT,
-      "diskd:present",
-      "Controls whether diskd is installed or not",
-      0);
-  bx_options.diskd.Opath = new bx_param_filename_c (BXP_DISKD_PATH,
-      "diskd:path",
-      "Pathname of the hard drive image",
-      "", BX_PATHNAME_LEN);
-  bx_options.diskd.Ocylinders = new bx_param_num_c (BXP_DISKD_CYLINDERS,
-      "diskd:cylinders",
-      "Number of cylinders",
-      0, 65535,
-      0);
-  bx_options.diskd.Oheads = new bx_param_num_c (BXP_DISKD_HEADS,
-      "diskd:heads",
-      "Number of heads",
-      0, 65535,
-      0);
-  bx_options.diskd.Ospt = new bx_param_num_c (BXP_DISKD_SPT,
-      "diskd:spt",
-      "Number of sectors per track",
-      0, 65535,
-      0);
-  bx_options.diskd.Opath->set_ask_format ("Enter new filename, or none for no disk: [%s] ");
-  bx_options.diskd.Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
-  bx_options.diskd.Oheads->set_ask_format ("Enter number of heads: [%d] ");
-  bx_options.diskd.Ospt->set_ask_format ("Enter number of sectors per track: [%d] ");
-  bx_options.diskd.Opath->set_format ("%s");
-  bx_options.diskd.Ocylinders->set_format (", %d cylinders, ");
-  bx_options.diskd.Oheads->set_format ("%d heads, ");
-  bx_options.diskd.Ospt->set_format ("%d sectors/track");
-  bx_param_c *diskd_init_list[] = {
-    bx_options.diskd.Opath,
-    bx_options.diskd.Ocylinders,
-    bx_options.diskd.Oheads,
-    bx_options.diskd.Ospt,
-    NULL
+  // FIXME use descr and name
+  char *s_atachannel[] = {
+    "ATA channel 0",
+    "ATA channel 1",
+    "ATA channel 2",
+    "ATA channel 3",
+    };
+  char *s_atadevice[4][2] = {
+    { "Master ATA device on channel 0",
+      "Slave ATA device on channel 0" },
+    { "Master ATA device on channel 1",
+    "Slave ATA device on channel 1" },
+    { "Master ATA device on channel 2",
+    "Slave ATA device on channel 2" },
+    { "Master ATA device on channel 3",
+    "Slave ATA device on channel 3" }
+    };
+  Bit16u ata_default_ioaddr1[BX_MAX_ATA_CHANNEL] = {
+    0x1f0, 0x170, 0x1e8, 0x168 
   };
-  menu = new bx_list_c (BXP_DISKD, "Hard disk 1", "All options for hard disk 1", diskd_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
-  bx_options.diskd.Opath->set_handler (bx_param_string_handler);
-  bx_options.diskd.Opath->set ("none");
+  Bit8u ata_default_irq[BX_MAX_ATA_CHANNEL] = { 
+    14, 15, 12, 11 
+  };
 
-  // cdrom options
-  bx_options.cdromd.Opresent = new bx_param_bool_c (BXP_CDROM_PRESENT,
-      "CDROM is present",
-      "Controls whether cdromd is installed or not",
-      0);
-  bx_options.cdromd.Opath = new bx_param_filename_c (BXP_CDROM_PATH,
-      "CDROM image filename",
-      "Pathname of the cdrom device or image",
-      "", BX_PATHNAME_LEN);
-  bx_options.cdromd.Opath->set_format ("%s");
-#if BX_UI_TEXT
-  bx_options.cdromd.Opath->set_ask_format ("Enter new filename, or 'none' for no CDROM: [%s] ");
+  bx_list_c *ata[BX_MAX_ATA_CHANNEL];
+
+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
+
+    ata[channel] = new bx_list_c ((bx_id)(BXP_ATA0+channel), s_atachannel[channel], s_atachannel[channel], 8);
+    ata[channel]->get_options ()->set (ata[channel]->BX_SERIES_ASK);
+
+    ata[channel]->add (bx_options.ata[channel].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_PRESENT+channel),
+      "ata:present",                                
+      "Controls whether ata channel is installed or not",
+      0));
+
+    ata[channel]->add (bx_options.ata[channel].Oioaddr1 = new bx_param_num_c ((bx_id)(BXP_ATA0_IOADDR1+channel),
+      "ata:ioaddr1",
+      "IO adress of ata command block",
+      0, 0xffff,
+      ata_default_ioaddr1[channel]));
+
+    ata[channel]->add (bx_options.ata[channel].Oioaddr2 = new bx_param_num_c ((bx_id)(BXP_ATA0_IOADDR2+channel),
+      "ata:ioaddr2",
+      "IO adress of ata control block",
+      0, 0xffff,
+      ata_default_ioaddr1[channel] + 0x200));
+
+    ata[channel]->add (bx_options.ata[channel].Oirq = new bx_param_num_c ((bx_id)(BXP_ATA0_IRQ+channel),
+      "ata:irq",
+      "IRQ of ata ",
+      0, 15,
+      ata_default_irq[channel]));
+
+    // all items in the ata[channel] menu depend on the present flag.
+    // The menu list is complete, but a few dependent_list items will
+    // be added later.  Use clone() to make a copy of the dependent_list
+    // so that it can be changed without affecting the menu.
+    bx_options.ata[channel].Opresent->set_dependent_list (
+	ata[channel]->clone());
+
+    for (Bit8u slave=0; slave<2; slave++) {
+
+      menu = bx_options.atadevice[channel][slave].Omenu = new bx_list_c ((bx_id)(BXP_ATA0_MASTER+channel*2+slave),
+	  s_atadevice[channel][slave], 
+          s_atadevice[channel][slave],
+	  12 /* list max size */);
+      menu->get_options ()->set (menu->BX_SERIES_ASK);
+
+      menu->add (bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_MASTER_PRESENT+channel*2+slave),
+        "ata-device:present",                                
+        "Controls whether ata device is installed or not",  
+        0));
+
+      menu->add (bx_options.atadevice[channel][slave].Otype = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_TYPE+channel*2+slave),
+          "ata-device:type",
+          "Type of ATA device",
+          atadevice_type_names,
+          BX_ATA_DEVICE_DISK,
+          BX_ATA_DEVICE_DISK));
+
+      menu->add (bx_options.atadevice[channel][slave].Opath = new bx_param_filename_c ((bx_id)(BXP_ATA0_MASTER_PATH+channel*2+slave),
+          "ata-device:path",
+          "Pathname of the image",
+          "", BX_PATHNAME_LEN));
+
+      menu->add (bx_options.atadevice[channel][slave].Ocylinders = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_CYLINDERS+channel*2+slave),
+          "ata-device:cylinders",
+          "Number of cylinders",
+          0, 65535,
+          0));
+      menu->add (bx_options.atadevice[channel][slave].Oheads = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_HEADS+channel*2+slave),
+          "ata-device:heads",
+          "Number of heads",
+          0, 65535,
+          0));
+      menu->add (bx_options.atadevice[channel][slave].Ospt = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_SPT+channel*2+slave),
+          "ata-device:spt",
+          "Number of sectors per track",
+          0, 65535,
+          0));
+      
+      menu->add (bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_STATUS+channel*2+slave),
+       "ata-device:status",
+       "Inserted or ejected",
+       atadevice_status_names,
+       BX_INSERTED,
+       BX_EJECTED));
+
+      menu->add (bx_options.atadevice[channel][slave].Omodel = new bx_param_string_c ((bx_id)(BXP_ATA0_MASTER_MODEL+channel*2+slave),
+       "ata-device:model",
+       "Model name",
+       "Generic 1234", 40));
+
+      menu->add (bx_options.atadevice[channel][slave].Obiosdetect = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT+channel*2+slave),
+       "ata-device:biosdetect",
+       "Type of bios detection",
+       atadevice_biosdetect_names,
+       BX_ATA_BIOSDETECT_AUTO,
+       BX_ATA_BIOSDETECT_NONE));
+
+      menu->add (bx_options.atadevice[channel][slave].Otranslation = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_TRANSLATION+channel*2+slave),
+       "How the ata-disk translation is done by the bios",
+       "Type of translation",
+       atadevice_translation_names,
+       BX_ATA_TRANSLATION_LBA,
+       BX_ATA_TRANSLATION_NONE));
+
+      bx_options.atadevice[channel][slave].Opresent->set_dependent_list (
+	  menu->clone ());
+      // the menu and all items on it depend on the Opresent flag
+      bx_options.atadevice[channel][slave].Opresent->get_dependent_list()->add(menu);
+      // the present flag depends on the ATA channel's present flag
+      bx_options.ata[channel].Opresent->get_dependent_list()->add (
+	  bx_options.atadevice[channel][slave].Opresent);
+      }
+    }
+
+  // Enable first ata interface by default, disable the others.
+  bx_options.ata[0].Opresent->set_initial_val(1);
+
+  // now that the dependence relationships are established, call set() on
+  // the ata device present params to set all enables correctly.
+  for (i=0; i<BX_MAX_ATA_CHANNEL; i++)
+    bx_options.ata[i].Opresent->set (i==0);
+
+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
+
+    bx_options.ata[channel].Opresent->set_ask_format (
+	BX_WITH_WX? "Enable?"
+	: "Channel is enabled: [%s] ");
+    bx_options.ata[channel].Oioaddr1->set_ask_format (
+	BX_WITH_WX? "I/O Address 1:"
+	: "Enter new ioaddr1: [0x%x] ");
+    bx_options.ata[channel].Oioaddr2->set_ask_format (
+	BX_WITH_WX? "I/O Address 2:"
+	: "Enter new ioaddr2: [0x%x] ");
+    bx_options.ata[channel].Oirq->set_ask_format (
+	BX_WITH_WX? "IRQ:"
+	: "Enter new IRQ: [%d] ");
+#if !BX_WITH_WX
+    bx_options.ata[channel].Opresent->set_format ("enabled: %s");
+    bx_options.ata[channel].Oioaddr1->set_format (", ioaddr1: 0x%x");
+    bx_options.ata[channel].Oioaddr2->set_format (", ioaddr2: 0x%x");
+    bx_options.ata[channel].Oirq->set_format (", irq: %d");
 #endif
-  bx_options.cdromd.Ostatus = new bx_param_enum_c (BXP_CDROM_STATUS,
-      "Is the CDROM inserted or ejected",
-      "Inserted or ejected",
-      floppy_status_names,
-      BX_INSERTED,
-      BX_EJECTED);
-  bx_options.cdromd.Ostatus->set_format (", %s");
-  bx_options.cdromd.Ostatus->set_ask_format ("Is the CDROM inserted or ejected? [%s] ");
-  bx_param_c *cdromd_init_list[] = {
-    bx_options.cdromd.Opath,
-    bx_options.cdromd.Ostatus,
-    NULL
-  };
-  menu = new bx_list_c (BXP_CDROMD, "CDROM", "Options for the CDROM", cdromd_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
-  bx_options.cdromd.Opath->set_handler (bx_param_string_handler);
-  bx_options.cdromd.Opath->set ("none");
-  bx_options.cdromd.Ostatus->set_handler (bx_param_handler);
+    bx_options.ata[channel].Oioaddr1->set_base (16);
+    bx_options.ata[channel].Oioaddr2->set_base (16);
+
+    for (Bit8u slave=0; slave<2; slave++) {
+
+      bx_options.atadevice[channel][slave].Opresent->set_ask_format (
+	  BX_WITH_WX? "Enable?"
+	  : "Device is enabled: [%s] ");
+      bx_options.atadevice[channel][slave].Otype->set_ask_format (
+	  BX_WITH_WX? "Type of ATA device:"
+	  : "Enter type of ATA device, disk or cdrom: [%s] ");
+      bx_options.atadevice[channel][slave].Opath->set_ask_format (
+	  BX_WITH_WX? "Path or physical device name:"
+	  : "Enter new filename: [%s] ");
+      bx_options.atadevice[channel][slave].Ocylinders->set_ask_format (
+	  BX_WITH_WX? "Cylinders:"
+	  : "Enter number of cylinders: [%d] ");
+      bx_options.atadevice[channel][slave].Oheads->set_ask_format (
+	  BX_WITH_WX? "Heads:"
+	  : "Enter number of heads: [%d] ");
+      bx_options.atadevice[channel][slave].Ospt->set_ask_format (
+	  BX_WITH_WX? "Sectors per track:"
+	  : "Enter number of sectors per track: [%d] ");
+      bx_options.atadevice[channel][slave].Ostatus->set_ask_format (
+	  BX_WITH_WX? "Inserted?"
+	  : "Is the device inserted or ejected? [%s] ");
+      bx_options.atadevice[channel][slave].Omodel->set_ask_format (
+	  BX_WITH_WX? "Model name:"
+	  : "Enter new model name: [%s]");
+      bx_options.atadevice[channel][slave].Otranslation->set_ask_format (
+	  BX_WITH_WX? "Translation type:"
+	  : "Enter translation type: [%s]");
+      bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format (
+	  BX_WITH_WX? "BIOS Detection:"
+	  : "Enter bios detection type: [%s]");
+
+#if !BX_WITH_WX
+      bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
+      bx_options.atadevice[channel][slave].Otype->set_format (", %s");
+      bx_options.atadevice[channel][slave].Opath->set_format (" on '%s'");
+      bx_options.atadevice[channel][slave].Ocylinders->set_format (", %d cylinders");
+      bx_options.atadevice[channel][slave].Oheads->set_format (", %d heads");
+      bx_options.atadevice[channel][slave].Ospt->set_format (", %d sectors/track");
+      bx_options.atadevice[channel][slave].Ostatus->set_format (", %s");
+      bx_options.atadevice[channel][slave].Omodel->set_format (", model '%s'");
+      bx_options.atadevice[channel][slave].Otranslation->set_format (", translation '%s'");
+      bx_options.atadevice[channel][slave].Obiosdetect->set_format (", biosdetect '%s'");
+#endif
+
+      bx_options.atadevice[channel][slave].Otype->set_handler (bx_param_handler);
+      
+      bx_options.atadevice[channel][slave].Ostatus->set_handler (bx_param_handler);
+      bx_options.atadevice[channel][slave].Opath->set_handler (bx_param_string_handler);
+      }
+    }
 
   bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
       "New hard drive support",
@@ -515,9 +661,27 @@ void bx_init_options ()
   bx_param_c *disk_menu_init_list[] = {
     SIM->get_param (BXP_FLOPPYA),
     SIM->get_param (BXP_FLOPPYB),
-    SIM->get_param (BXP_DISKC),
-    SIM->get_param (BXP_DISKD),
-    SIM->get_param (BXP_CDROMD),
+    //SIM->get_param (BXP_DISKC),
+    //SIM->get_param (BXP_DISKD),
+    //SIM->get_param (BXP_CDROMD),
+    SIM->get_param (BXP_ATA0),
+    SIM->get_param (BXP_ATA0_MASTER),
+    SIM->get_param (BXP_ATA0_SLAVE),
+#if BX_MAX_ATA_CHANNEL>1
+    SIM->get_param (BXP_ATA1),
+    SIM->get_param (BXP_ATA1_MASTER),
+    SIM->get_param (BXP_ATA1_SLAVE),
+#endif
+#if BX_MAX_ATA_CHANNEL>2
+    SIM->get_param (BXP_ATA2),
+    SIM->get_param (BXP_ATA2_MASTER),
+    SIM->get_param (BXP_ATA2_SLAVE),
+#endif
+#if BX_MAX_ATA_CHANNEL>3
+    SIM->get_param (BXP_ATA3),
+    SIM->get_param (BXP_ATA3_MASTER),
+    SIM->get_param (BXP_ATA3_SLAVE),
+#endif
     SIM->get_param (BXP_NEWHARDDRIVESUPPORT),
     SIM->get_param (BXP_BOOTDRIVE),
     SIM->get_param (BXP_FLOPPYSIGCHECK),
@@ -990,19 +1154,26 @@ void bx_reset_options ()
   bx_options.floppyb.Odevtype->reset();
   bx_options.floppyb.Otype->reset();
   bx_options.floppyb.Ostatus->reset();
-  bx_options.diskc.Opresent->reset();
-  bx_options.diskc.Opath->reset();
-  bx_options.diskc.Ocylinders->reset();
-  bx_options.diskc.Oheads->reset();
-  bx_options.diskc.Ospt->reset();
-  bx_options.diskd.Opresent->reset();
-  bx_options.diskd.Opath->reset();
-  bx_options.diskd.Ocylinders->reset();
-  bx_options.diskd.Oheads->reset();
-  bx_options.diskd.Ospt->reset();
-  bx_options.cdromd.Opresent->reset();
-  bx_options.cdromd.Opath->reset();
-  bx_options.cdromd.Ostatus->reset();
+
+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+    bx_options.ata[channel].Opresent->reset();
+    bx_options.ata[channel].Oioaddr1->reset();
+    bx_options.ata[channel].Oioaddr2->reset();
+    bx_options.ata[channel].Oirq->reset();
+
+    for (Bit8u slave=0; slave<2; slave++) {
+      bx_options.atadevice[channel][slave].Opresent->reset();
+      bx_options.atadevice[channel][slave].Otype->reset();
+      bx_options.atadevice[channel][slave].Opath->reset();
+      bx_options.atadevice[channel][slave].Ocylinders->reset();
+      bx_options.atadevice[channel][slave].Oheads->reset();
+      bx_options.atadevice[channel][slave].Ospt->reset();
+      bx_options.atadevice[channel][slave].Ostatus->reset();
+      bx_options.atadevice[channel][slave].Omodel->reset();
+      bx_options.atadevice[channel][slave].Obiosdetect->reset();
+      bx_options.atadevice[channel][slave].Otranslation->reset();
+      }
+    }
   bx_options.OnewHardDriveSupport->reset();
 
   // boot & memory
@@ -1822,7 +1993,168 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     }
 
+  else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) == 4)) {
+    Bit8u channel = params[0][3];
+
+    if ((channel < '0') || (channel > '9')) {
+      BX_PANIC(("%s: ataX directive malformed.", context));
+      }
+    channel-='0';
+    if (channel >= BX_MAX_ATA_CHANNEL) {
+      BX_PANIC(("%s: ataX directive malformed.", context));
+      }
+
+    if ((num_params < 2) || (num_params > 5)) {
+      BX_PANIC(("%s: ataX directive malformed.", context));
+      }
+
+    if (strncmp(params[1], "enabled=", 8)) {
+      BX_PANIC(("%s: ataX directive malformed.", context));
+      }
+    else {
+      bx_options.ata[channel].Opresent->set (atol(&params[1][8]));
+      }
+
+    if (num_params > 2) {
+      if (strncmp(params[2], "ioaddr1=", 8)) {
+        BX_PANIC(("%s: ataX directive malformed.", context));
+        }
+      else {
+        if ( (params[2][8] == '0') && (params[2][9] == 'x') )
+          bx_options.ata[channel].Oioaddr1->set (strtoul (&params[2][8], NULL, 16));
+        else
+          bx_options.ata[channel].Oioaddr1->set (strtoul (&params[2][8], NULL, 10));
+        }
+      }
+
+    if (num_params > 3) {
+      if (strncmp(params[3], "ioaddr2=", 8)) {
+        BX_PANIC(("%s: ataX directive malformed.", context));
+        }
+      else {
+        if ( (params[3][8] == '0') && (params[3][9] == 'x') )
+          bx_options.ata[channel].Oioaddr2->set (strtoul (&params[3][8], NULL, 16));
+        else
+          bx_options.ata[channel].Oioaddr2->set (strtoul (&params[3][8], NULL, 10));
+        }
+      }
+
+    if (num_params > 4) {
+      if (strncmp(params[4], "irq=", 4)) {
+        BX_PANIC(("%s: ataX directive malformed.", context));
+        }
+      else {
+        bx_options.ata[channel].Oirq->set (atol(&params[4][4]));
+        }
+      }
+    }
+
+  // ataX-master, ataX-slave
+  else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
+    Bit8u channel = params[0][3], slave = 0;
+
+    if ((channel < '0') || (channel > '9')) {
+      BX_PANIC(("%s: ataX-master/slave directive malformed.", context));
+      }
+    channel-='0';
+    if (channel >= BX_MAX_ATA_CHANNEL) {
+      BX_PANIC(("%s: ataX-master/slave directive malformed.", context));
+      }
+
+    if ((strcmp(&params[0][4], "-slave")) &&
+        (strcmp(&params[0][4], "-master"))) {
+      BX_PANIC(("%s: ataX-master/slave directive malformed.", context));
+      }
+
+    if (!strcmp(&params[0][4], "-slave")) {
+      slave = 1;
+      }
+
+    if (bx_options.atadevice[channel][slave].Opresent->get()) {
+      BX_PANIC(("%s: %s device of ata channel %d already defined.", context, slave?"slave":"master",channel));
+      }
+
+    for (i=1; i<num_params; i++) {
+      if (!strcmp(params[i], "type=disk")) {
+        bx_options.atadevice[channel][slave].Otype->set (BX_ATA_DEVICE_DISK);
+        }
+      else if (!strcmp(params[i], "type=cdrom")) {
+        bx_options.atadevice[channel][slave].Otype->set (BX_ATA_DEVICE_CDROM);
+        }
+      else if (!strncmp(params[i], "path=", 5)) {
+        bx_options.atadevice[channel][slave].Opath->set (&params[i][5]);
+        }
+      else if (!strncmp(params[i], "cylinders=", 10)) {
+        bx_options.atadevice[channel][slave].Ocylinders->set (atol(&params[i][10]));
+        }
+      else if (!strncmp(params[i], "heads=", 6)) {
+        bx_options.atadevice[channel][slave].Oheads->set (atol(&params[i][6]));
+        }
+      else if (!strncmp(params[i], "spt=", 4)) {
+        bx_options.atadevice[channel][slave].Ospt->set (atol(&params[i][4]));
+        }
+      else if (!strncmp(params[i], "model=", 6)) {
+	bx_options.atadevice[channel][slave].Omodel->set(&params[i][6]);
+        }
+      else if (!strcmp(params[i], "biosdetect=none")) {
+	bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_NONE);
+        }
+      else if (!strcmp(params[i], "biosdetect=cmos")) {
+	bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_CMOS);
+        }
+      else if (!strcmp(params[i], "biosdetect=auto")) {
+	bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_AUTO);
+        }
+      else if (!strcmp(params[i], "translation=none")) {
+	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_NONE);
+        }
+      else if (!strcmp(params[i], "translation=lba")) {
+	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LBA);
+        }
+      else if (!strcmp(params[i], "translation=large")) {
+	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
+        }
+      else if (!strcmp(params[i], "status=ejected")) {
+	bx_options.atadevice[channel][slave].Ostatus->set(BX_EJECTED);
+        }
+      else if (!strcmp(params[i], "status=inserted")) {
+	bx_options.atadevice[channel][slave].Ostatus->set(BX_INSERTED);
+        }
+      else {
+        BX_PANIC(("%s: ataX-master/slave directive malformed.", context));
+        }
+      }
+
+    // Enables the ata device
+    bx_options.atadevice[channel][slave].Opresent->set(1);
+
+    // if enabled check if device ok
+    if (bx_options.atadevice[channel][slave].Opresent->get() == 1) {
+      if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_DISK) {
+        if ((strlen(bx_options.atadevice[channel][slave].Opath->getptr()) ==0) ||
+            (bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
+            (bx_options.atadevice[channel][slave].Oheads->get() ==0 ) ||
+            (bx_options.atadevice[channel][slave].Ospt->get() == 0)) {
+          BX_PANIC(("%s: ataX-master/slave directive malformed.", context));
+          }
+        }
+      else if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_CDROM) {
+        if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) == 0) {
+          BX_PANIC(("%s: ataX-master/slave directive malformed.", context));
+          }
+        }
+      else {
+        BX_PANIC(("%s: ataX-master/slave: type sould be specified ", context));
+        }
+      }
+
+    }
+
+  // Legacy disk options emulation
   else if (!strcmp(params[0], "diskc")) {
+    if (bx_options.atadevice[0][0].Opresent->get()) {
+      BX_PANIC(("%s: master device of ata channel 0 already defined.", context));
+      }
     if (num_params != 5) {
       BX_PANIC(("%s: diskc directive malformed.", context));
       }
@@ -1832,13 +2164,18 @@ parse_line_formatted(char *context, int num_params, char *params[])
         strncmp(params[4], "spt=", 4)) {
       BX_PANIC(("%s: diskc directive malformed.", context));
       }
-    bx_options.diskc.Opath->set (&params[1][5]);
-    bx_options.diskc.Ocylinders->set (atol(&params[2][4]));
-    bx_options.diskc.Oheads->set     (atol(&params[3][6]));
-    bx_options.diskc.Ospt->set       (atol(&params[4][4]));
-    bx_options.diskc.Opresent->set (1);
+    bx_options.ata[0].Opresent->set(1);
+    bx_options.atadevice[0][0].Otype->set (BX_ATA_DEVICE_DISK);
+    bx_options.atadevice[0][0].Opath->set (&params[1][5]);
+    bx_options.atadevice[0][0].Ocylinders->set (atol(&params[2][4]));
+    bx_options.atadevice[0][0].Oheads->set     (atol(&params[3][6]));
+    bx_options.atadevice[0][0].Ospt->set       (atol(&params[4][4]));
+    bx_options.atadevice[0][0].Opresent->set (1);
     }
   else if (!strcmp(params[0], "diskd")) {
+    if (bx_options.atadevice[0][1].Opresent->get()) {
+      BX_PANIC(("%s: slave device of ata channel 0 already defined.", context));
+      }
     if (num_params != 5) {
       BX_PANIC(("%s: diskd directive malformed.", context));
       }
@@ -1848,11 +2185,47 @@ parse_line_formatted(char *context, int num_params, char *params[])
         strncmp(params[4], "spt=", 4)) {
       BX_PANIC(("%s: diskd directive malformed.", context));
       }
-    bx_options.diskd.Opath->set (&params[1][5]);
-    bx_options.diskd.Ocylinders->set (atol( &params[2][4]));
-    bx_options.diskd.Oheads->set     (atol( &params[3][6] ));
-    bx_options.diskd.Ospt->set       (atol( &params[4][4] ));
-    bx_options.diskd.Opresent->set (1);
+    bx_options.ata[0].Opresent->set(1);
+    bx_options.atadevice[0][1].Otype->set (BX_ATA_DEVICE_DISK);
+    bx_options.atadevice[0][1].Opath->set (&params[1][5]);
+    bx_options.atadevice[0][1].Ocylinders->set (atol( &params[2][4]));
+    bx_options.atadevice[0][1].Oheads->set     (atol( &params[3][6]));
+    bx_options.atadevice[0][1].Ospt->set       (atol( &params[4][4]));
+    bx_options.atadevice[0][1].Opresent->set (1);
+    }
+  else if (!strcmp(params[0], "cdromd")) {
+    if (bx_options.atadevice[0][1].Opresent->get()) {
+      BX_PANIC(("%s: slave device of ata channel 0 already defined.", context));
+      }
+    if (num_params != 3) {
+      BX_PANIC(("%s: cdromd directive malformed.", context));
+      }
+    if (strncmp(params[1], "dev=", 4) || strncmp(params[2], "status=", 7)) {
+      BX_PANIC(("%s: cdromd directive malformed.", context));
+      }
+    bx_options.ata[0].Opresent->set(1);
+    bx_options.atadevice[0][1].Otype->set (BX_ATA_DEVICE_CDROM);
+    bx_options.atadevice[0][1].Opath->set (&params[1][4]);
+    if (!strcmp(params[2], "status=inserted"))
+      bx_options.atadevice[0][1].Ostatus->set (BX_INSERTED);
+    else if (!strcmp(params[2], "status=ejected"))
+      bx_options.atadevice[0][1].Ostatus->set (BX_EJECTED);
+    else {
+      BX_PANIC(("%s: cdromd directive malformed.", context));
+      }
+    bx_options.atadevice[0][1].Opresent->set (1);
+    }
+
+  else if (!strcmp(params[0], "boot")) {
+    if (!strcmp(params[1], "a")) {
+      bx_options.Obootdrive->set (BX_BOOT_FLOPPYA);
+    } else if (!strcmp(params[1], "c")) {
+      bx_options.Obootdrive->set (BX_BOOT_DISKC);
+    } else if (!strcmp(params[1], "cdrom")) {
+      bx_options.Obootdrive->set (BX_BOOT_CDROM);
+    } else {
+      BX_PANIC(("%s: boot directive with unknown boot device '%s'.  use 'a', 'c' or 'cdrom'.", context, params[1]));
+      }
     }
 
   else if (!strcmp(params[0], "com1")) {
@@ -1914,35 +2287,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
 #endif
 
-  else if (!strcmp(params[0], "cdromd")) {
-    if (num_params != 3) {
-      BX_PANIC(("%s: cdromd directive malformed.", context));
-      }
-    if (strncmp(params[1], "dev=", 4) || strncmp(params[2], "status=", 7)) {
-      BX_PANIC(("%s: cdromd directive malformed.", context));
-      }
-    bx_options.cdromd.Opath->set (&params[1][4]);
-    if (!strcmp(params[2], "status=inserted"))
-      bx_options.cdromd.Ostatus->set (BX_INSERTED);
-    else if (!strcmp(params[2], "status=ejected"))
-      bx_options.cdromd.Ostatus->set (BX_EJECTED);
-    else {
-      BX_PANIC(("%s: cdromd directive malformed.", context));
-      }
-    bx_options.cdromd.Opresent->set (1);
-    }
-
-  else if (!strcmp(params[0], "boot")) {
-    if (!strcmp(params[1], "a")) {
-      bx_options.Obootdrive->set (BX_BOOT_FLOPPYA);
-    } else if (!strcmp(params[1], "c")) {
-      bx_options.Obootdrive->set (BX_BOOT_DISKC);
-    } else if (!strcmp(params[1], "cdrom")) {
-      bx_options.Obootdrive->set (BX_BOOT_CDROM);
-    } else {
-      BX_PANIC(("%s: boot directive with unknown boot device '%s'.  use 'a', 'c' or 'cdrom'.", context, params[1]));
-      }
-    }
   else if (!strcmp(params[0], "floppy_bootsig_check")) {
     if (num_params != 2) {
       BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
@@ -2503,15 +2847,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if(!strncmp(params[1], "keys=", 4)) {
       bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
       }
-  }
-
-
+    }
   else {
     BX_PANIC(( "%s: directive '%s' not understood", context, params[0]));
     }
 
-  if (bx_options.diskd.Opresent->get () && bx_options.cdromd.Opresent->get ())
-    BX_PANIC(("At present, using both diskd and cdromd at once is not supported."));
 }
 
 static char *fdtypes[] = {
@@ -2536,32 +2876,64 @@ bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)
 }
 
 int 
-bx_write_disk_options (FILE *fp, int drive, bx_disk_options *opt)
+bx_write_ata_options (FILE *fp, Bit8u channel, bx_ata_options *opt)
 {
-  if (!opt->Opresent->get ()) {
-    fprintf (fp, "# no disk%c\n", (char)'c'+drive);
-    return 0;
-  }
-  fprintf (fp, "disk%c: file=\"%s\", cyl=%d, heads=%d, spt=%d\n",
-     (char)'c'+drive,
-     opt->Opath->getptr (),
-     opt->Ocylinders->get (),
-     opt->Oheads->get (),
-     opt->Ospt->get ());
+  fprintf (fp, "ata%d: enabled=%d", channel, opt->Opresent->get());
+
+  if (opt->Opresent->get()) {
+    fprintf (fp, ", ioaddr1=0x%x, ioaddr2=0x%x, irq=%d", opt->Oioaddr1->get(), 
+      opt->Oioaddr2->get(), opt->Oirq->get());
+    }
+
+  fprintf (fp, "\n");
   return 0;
 }
 
 int 
-bx_write_cdrom_options (FILE *fp, int drive, bx_cdrom_options *opt)
+bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_options *opt)
 {
-  BX_ASSERT (drive == 0);
-  if (!opt->Opresent->get ()) {
-    fprintf (fp, "# no cdromd\n");
-    return 0;
+  if (opt->Opresent->get()) {
+    fprintf (fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
+
+    if (opt->Otype->get() == BX_ATA_DEVICE_DISK) {
+      fprintf (fp, "type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d",
+          opt->Opath->getptr(), opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
+
+      switch(opt->Otranslation->get()) {
+        case BX_ATA_TRANSLATION_NONE:
+          fprintf (fp, ", translation=none");
+          break;
+        case BX_ATA_TRANSLATION_LBA:
+          fprintf (fp, ", translation=lba");
+          break;
+        case BX_ATA_TRANSLATION_LARGE:
+          fprintf (fp, ", translation=large");
+          break;
+        }
+      }
+    else if (opt->Otype->get() == BX_ATA_DEVICE_CDROM) {
+      fprintf (fp, "type=cdrom, path=\"%s\", status=%s", 
+        opt->Opath->getptr(), 
+        opt->Ostatus->get ()==BX_EJECTED ? "ejected" : "inserted");
+      }
+
+    switch(opt->Obiosdetect->get()) {
+      case BX_ATA_BIOSDETECT_NONE:
+        fprintf (fp, ", biosdetect=none");
+        break;
+      case BX_ATA_BIOSDETECT_CMOS:
+        fprintf (fp, ", biosdetect=cmos");
+        break;
+      case BX_ATA_BIOSDETECT_AUTO:
+        fprintf (fp, ", biosdetect=auto");
+        break;
+      }
+    if (strlen(opt->Omodel->getptr())>0) {
+        fprintf (fp, ", model=\"%s\"", opt->Omodel->getptr());
+      }
+
+    fprintf (fp, "\n");
   }
-  fprintf (fp, "cdromd: dev=%s, status=%s\n",
-    opt->Opath->getptr (),
-    opt->Ostatus->get ()==BX_INSERTED ? "inserted" : "ejected");
   return 0;
 }
 
@@ -2682,9 +3054,11 @@ bx_write_configuration (char *rc, int overwrite)
   // the structs like bx_floppy_options::print or something.
   bx_write_floppy_options (fp, 0, &bx_options.floppya);
   bx_write_floppy_options (fp, 1, &bx_options.floppyb);
-  bx_write_disk_options (fp, 0, &bx_options.diskc);
-  bx_write_disk_options (fp, 1, &bx_options.diskd);
-  bx_write_cdrom_options (fp, 0, &bx_options.cdromd);
+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+    bx_write_ata_options (fp, channel, &bx_options.ata[channel]);
+    bx_write_atadevice_options (fp, channel, 0, &bx_options.atadevice[channel][0]);
+    bx_write_atadevice_options (fp, channel, 1, &bx_options.atadevice[channel][1]);
+    }
   if (strlen (bx_options.rom.Opath->getptr ()) > 0)
     fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.Opath->getptr(), (unsigned int)bx_options.rom.Oaddress->get ());
   else
