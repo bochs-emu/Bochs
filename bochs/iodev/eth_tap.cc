@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.11 2002-11-20 19:06:23 bdenney Exp $
+// $Id: eth_tap.cc,v 1.12 2003-02-16 19:35:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -266,7 +266,7 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   // dump packet in hex into an ascii log file
   fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
-  for (n=0; n<io_len; n++) {
+  for (n=0; n<(int)io_len; n++) {
     if (((n % 16) == 0) && n>0)
       fprintf (txlog_txt, "\n");
     fprintf (txlog_txt, "%02x ", charbuf[n]);

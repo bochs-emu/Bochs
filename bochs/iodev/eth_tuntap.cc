@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.7 2002-11-20 19:06:23 bdenney Exp $
+// $Id: eth_tuntap.cc,v 1.8 2003-02-16 19:35:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,11 +160,11 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 				       void *rxarg)
 {
   int flags;
-  char filename[BX_PATHNAME_LEN];
   if (strncmp (netif, "tun", 3) != 0) {
     BX_PANIC (("eth_tuntap: interface name (%s) must be tun", netif));
   }
 #ifdef NEVERDEF
+  char filename[BX_PATHNAME_LEN];
   sprintf (filename, "/dev/net/%s", netif);
 
   // check if the TUN/TAP devices is running, and turn on ARP.  This is based
