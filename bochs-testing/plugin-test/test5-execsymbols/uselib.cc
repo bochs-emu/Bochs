@@ -21,5 +21,5 @@ int main ()
   printf ("operate(%d,%d) = %d\n", a, c, d);
   printf ("stop\n");
   printf ("at end, n_operations = %d\n", n_operations);
-  return 0;
+  exit(77);
 }

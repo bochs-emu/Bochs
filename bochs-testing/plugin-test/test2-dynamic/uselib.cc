@@ -9,5 +9,5 @@ int main ()
   int c = operate (a, b);
   printf ("operate(%d,%d) = %d\n", a, b, c);
   printf ("stop\n");
-  return 0;
+  exit(77);
 }

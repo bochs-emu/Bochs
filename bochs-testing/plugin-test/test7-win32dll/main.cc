@@ -74,5 +74,5 @@ int main (int argc, char **argv)
   }
 
   printf ("stop\n");
-  return 0;
+  exit(77);
 }

@@ -18,13 +18,13 @@ int load_module (const char *fmt, const char *name)
   sprintf (buf, fmt, name);
   printf ("loading module from %s\n", buf);
   lt_dlhandle handle = lt_dlopenext (buf);
-  printf ("handle is %p\n", handle);
+  printf ("handle is VARIES{%p}\n", handle);
   if (!handle) {
     printf ("lt_dlopen error: %s\n", lt_dlerror ());
     return -1;
   }
   modload_func func = (modload_func) lt_dlsym (handle, "module_init");
-  printf ("module_init function is at %p\n", func);
+  printf ("module_init function is at VARIES{%p}\n", func);
   if (func != NULL) {
     printf ("Calling module_init\n");
     (*func)();
@@ -63,5 +63,5 @@ int main (int argc, char **argv)
   }
 
   printf ("stop\n");
-  return 0;
+  exit (77);
 }
