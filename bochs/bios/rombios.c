@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.54 2002-04-24 07:52:07 cbothamy Exp $
+// $Id: rombios.c,v 1.55 2002-04-24 13:49:26 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -172,12 +172,12 @@
 #endif
 
   
+#define DEBUG_ROMBIOS 0
+
 #define PANIC_PORT  0x400
 #define PANIC_PORT2 0x401
 #define INFO_PORT   0x402
 #define DEBUG_PORT  0x403
-
-#define DEBUG_ROMBIOS 0
 
 // #20  is dec 20
 // #$20 is hex 20 = 32
@@ -1061,10 +1061,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.54 $";
-static char bios_date_string[] = "$Date: 2002-04-24 07:52:07 $";
+static char bios_cvs_version_string[] = "$Revision: 1.55 $";
+static char bios_date_string[] = "$Date: 2002-04-24 13:49:26 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.54 2002-04-24 07:52:07 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.55 2002-04-24 13:49:26 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1887,7 +1887,7 @@ int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
 
   switch (GET_AH()) {
     case 0x24: /* A20 Control */
-      BX_INFO("BIOS: int15: Func 24h, subfunc %02xh, A20 gate control not supported\n", (unsigned) GET_AL());
+      BX_INFO("int15: Func 24h, subfunc %02xh, A20 gate control not supported\n", (unsigned) GET_AL());
       SET_CF();
       SET_AH(UNSUPPORTED_FUNCTION);
       break;
@@ -2066,7 +2066,7 @@ real_mode:
       break;
 
     case 0xbf:
-      BX_INFO("BIOS: *** int 15h function AH=bf not yet supported!\n");
+      BX_INFO("*** int 15h function AH=bf not yet supported!\n");
       SET_CF();
       SET_AH(UNSUPPORTED_FUNCTION);
       break;
@@ -2313,7 +2313,7 @@ BX_DEBUG("case default:\n");
     case 0xD8:
     case 0xe0:
     default:
-      BX_INFO("BIOS: *** int 15h function AX=%04x, BX=%04x not yet supported!\n",
+      BX_INFO("*** int 15h function AX=%04x, BX=%04x not yet supported!\n",
         (unsigned) AX, (unsigned) BX);
       SET_CF();
       SET_AH(UNSUPPORTED_FUNCTION);
@@ -2328,6 +2328,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
 {
   Bit8u scan_code, ascii_code, shift_flags;
 
+  //BX_DEBUG("int16: AX=%04x BX=%04x CX=%04x DX=%04x \n", AX, BX, CX, DX);
 
   switch (GET_AH()) {
     case 0x00: /* read keyboard input */
@@ -2335,6 +2336,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       if ( !dequeue_key(&scan_code, &ascii_code, 1) ) {
         BX_PANIC("KBD: int16h: out of keyboard input");
         }
+      if (ascii_code == 0xE0) ascii_code = 0;
       AX = (scan_code << 8) | ascii_code;
       break;
 
@@ -2343,6 +2345,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
         SET_ZF();
         return;
         }
+      if (ascii_code == 0xE0) ascii_code = 0;
       AX = (scan_code << 8) | ascii_code;
       CLEAR_ZF();
       break;
@@ -2350,6 +2353,27 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
     case 0x02: /* get shift flag status */
       shift_flags = read_byte(0x0040, 0x17);
       SET_AL(shift_flags);
+      break;
+
+    case 0x09: /* GET KEYBOARD FUNCTIONALITY */
+      // bit Bochs Description     
+      //  7    0   reserved
+      //  6    0   INT 16/AH=20h-22h supported (122-key keyboard support)
+      //  5    1   INT 16/AH=10h-12h supported (enhanced keyboard support)
+      //  4    1   INT 16/AH=0Ah supported
+      //  3    0   INT 16/AX=0306h supported
+      //  2    0   INT 16/AX=0305h supported
+      //  1    0   INT 16/AX=0304h supported
+      //  0    0   INT 16/AX=0300h supported
+      //
+      SET_AL(0x30);
+      break;
+
+    case 0x0A: /* GET KEYBOARD ID */
+      // translated
+      BX=0x41AB;
+      // passthru (FIXME)
+      // BX=0x83AB;
       break;
 
     case 0x10: /* read MF-II keyboard input */
@@ -2376,6 +2400,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       SET_AL(shift_flags);
       shift_flags = read_byte(0x0040, 0x18);
       SET_AH(shift_flags);
+      BX_DEBUG("int16: func 12 sending %04x\n",AX);
       break;
 
     case 0x92: /* keyboard capability check called by DOS 5.0+ keyb */
@@ -2383,7 +2408,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       break;
 
     case 0xA2: /* 122 keys capability check called by DOS 5.0+ keyb */
-      SET_AH(0xFF); // function int16 ah=0x20-0x22 NOT supported
+      // don't change AH : function int16 ah=0x20-0x22 NOT supported
       break;
 
     default:
@@ -2862,7 +2887,7 @@ int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   Bit16u   dpsize;
   Bit8u    checksum;
 
-  BX_DEBUG("BIOS: int13 harddisk: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  BX_DEBUG("int13 harddisk: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
 
   write_byte(0x0040, 0x008e, 0);  // clear completion flag
 
@@ -3396,8 +3421,8 @@ int13_cdrom(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   Bit16u count,segment,offset, i;
   Bit16u ebda_seg=read_word(0x40,0x0E);
 
-  BX_DEBUG("BIOS: int13 cdrom: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  // BX_DEBUG("BIOS: int13 cdrom: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
+  BX_DEBUG("int13 cdrom: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  // BX_DEBUG("int13 cdrom: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
   
   set_disk_ret_status(0x00);
 
@@ -3538,8 +3563,8 @@ int13_eltorito(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
 {
   Bit16u ebda_seg=read_word(0x40,0x0E);
 
-  BX_DEBUG("BIOS: int13 eltorito: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  // BX_DEBUG("BIOS: int13 eltorito: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
+  BX_DEBUG("int13 eltorito: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  // BX_DEBUG("int13 eltorito: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
   
   switch (GET_AH()) {
 
@@ -3612,8 +3637,8 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit16u segment,offset;
   Bit16u error;
 
-  BX_DEBUG("BIOS: int13 cdemu: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  //BX_DEBUG("BIOS: int13 cdemu: SS=%04x ES=%04x DI=%04x SI=%04x\n", get_SS(), ES, DI, SI);
+  BX_DEBUG("int13 cdemu: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  //BX_DEBUG("int13 cdemu: SS=%04x ES=%04x DI=%04x SI=%04x\n", get_SS(), ES, DI, SI);
   
   /* at this point, we are emulating a floppy/harddisk */
   // FIXME ElTorito Harddisk. Harddisk emulation is not implemented
@@ -3988,8 +4013,8 @@ int13_diskette_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit8u  drive_type, num_floppies, ah;
   Bit16u es, last_addr;
 
-  BX_DEBUG("BIOS: int13 diskette: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  // BX_DEBUG("BIOS: int13 diskette: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), get_DS(), ES, DI, SI);
+  BX_DEBUG("int13 diskette: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  // BX_DEBUG("int13 diskette: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), get_DS(), ES, DI, SI);
 
   ah = GET_AH();
 
@@ -9423,7 +9448,14 @@ db (0 << 7) | \
 ; b2: 1=non-8042 kb controller
 ; b1: 1=data streaming supported
 ; b0: reserved
-db 0x00
+db (0 << 7) | \
+   (1 << 6) | \
+   (0 << 5) | \
+   (0 << 4) | \
+   (0 << 3) | \
+   (0 << 2) | \
+   (0 << 1) | \
+   (0 << 0)
 ; Feature byte 3
 ; b7: not used
 ; b6: reserved
