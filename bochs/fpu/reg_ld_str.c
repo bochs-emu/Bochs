@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.12 2003-05-15 16:19:39 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.13 2003-07-25 08:59:45 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -88,15 +88,15 @@ FPU_tagof(FPU_REG *ptr)
 
 /* Get a long double from user memory */
 int  BX_CPP_AttrRegparmN(2)
-FPU_load_extended(long double *s, int stnr)
+FPU_load_extended(bx_address s, int stnr)
 {
   FPU_REG *sti_ptr = &st(stnr);
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, s, 10);
-  FPU_get_user(sti_ptr->sigl, (u32*)(((u8*)s)+0));
-  FPU_get_user(sti_ptr->sigh, (u32*)(((u8*)s)+4));
-  FPU_get_user(sti_ptr->exp,  (u16*)(((u8*)s)+8));
+  FPU_get_user(sti_ptr->sigl, s+0, 4);
+  FPU_get_user(sti_ptr->sigh, s+4, 4);
+  FPU_get_user(sti_ptr->exp,  s+8, 2);
   RE_ENTRANT_CHECK_ON;
 
   return FPU_tagof(sti_ptr);
@@ -105,15 +105,15 @@ FPU_load_extended(long double *s, int stnr)
 
 /* Get a double from user memory */
 int  BX_CPP_AttrRegparmN(2)
-FPU_load_double(double *dfloat, FPU_REG *loaded_data)
+FPU_load_double(bx_address dfloat, FPU_REG *loaded_data)
 {
   int exp, tag, negative;
   u32 m64, l64;
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, dfloat, 8);
-  FPU_get_user(m64, 1 + (u32 *) dfloat);
-  FPU_get_user(l64, (u32 *) dfloat);
+  FPU_get_user(m64, dfloat+4, 4);
+  FPU_get_user(l64, dfloat,   4);
   RE_ENTRANT_CHECK_ON;
 
   negative = (m64 & 0x80000000) ? SIGN_Negative : SIGN_Positive;
@@ -178,14 +178,14 @@ FPU_load_double(double *dfloat, FPU_REG *loaded_data)
 
 /* Get a float from user memory */
 int  BX_CPP_AttrRegparmN(2)
-FPU_load_single(float *single, FPU_REG *loaded_data)
+FPU_load_single(bx_address single, FPU_REG *loaded_data)
 {
   u32 m32;
   int exp, tag, negative;
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, single, 4);
-  FPU_get_user(m32, (u32 *) single);
+  FPU_get_user(m32, single, 4);
   RE_ENTRANT_CHECK_ON;
 
   negative = (m32 & 0x80000000) ? SIGN_Negative : SIGN_Positive;
@@ -243,7 +243,7 @@ FPU_load_single(float *single, FPU_REG *loaded_data)
 
 /* Get a 64bit quantity from user memory */
 int  BX_CPP_AttrRegparmN(1)
-FPU_load_int64(s64 *_s)
+FPU_load_int64(bx_address _s)
 {
   s64 s;
   int sign;
@@ -253,8 +253,8 @@ FPU_load_int64(s64 *_s)
   FPU_verify_area(VERIFY_READ, _s, 8);
   {
   u32 chunk0, chunk1;
-  FPU_get_user(chunk0, (u32*)(((u8*)_s)+0));
-  FPU_get_user(chunk1, (u32*)(((u8*)_s)+4));
+  FPU_get_user(chunk0, _s+0, 4);
+  FPU_get_user(chunk1, _s+4, 4);
   s = chunk0;
   s |= (((u64)chunk1) << 32);
   }
@@ -282,14 +282,14 @@ FPU_load_int64(s64 *_s)
 
 /* Get a long from user memory */
 int  BX_CPP_AttrRegparmN(2)
-FPU_load_int32(s32 *_s, FPU_REG *loaded_data)
+FPU_load_int32(bx_address _s, FPU_REG *loaded_data)
 {
   s32 s;
   int negative;
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, _s, 4);
-  FPU_get_user(s, _s);
+  FPU_get_user(s, _s, 4);
   RE_ENTRANT_CHECK_ON;
 
   if (s == 0)
@@ -312,14 +312,14 @@ FPU_load_int32(s32 *_s, FPU_REG *loaded_data)
 
 /* Get a short from user memory */
 int  BX_CPP_AttrRegparmN(1)
-FPU_load_int16(s16 *_s, FPU_REG *loaded_data)
+FPU_load_int16(bx_address _s, FPU_REG *loaded_data)
 {
   s16 s, negative;
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, _s, 2);
   /* Cast as short to get the sign extended. */
-  FPU_get_user(s, _s);
+  FPU_get_user(s, _s, 2);
   RE_ENTRANT_CHECK_ON;
 
   if (s == 0)
@@ -342,7 +342,7 @@ FPU_load_int16(s16 *_s, FPU_REG *loaded_data)
 
 /* Get a packed bcd array from user memory */
 int  BX_CPP_AttrRegparmN(1)
-FPU_load_bcd(u_char *s)
+FPU_load_bcd(bx_address s)
 {
   FPU_REG *st0_ptr = &st(0);
   int pos;
@@ -357,7 +357,7 @@ FPU_load_bcd(u_char *s)
     {
       l *= 10;
       RE_ENTRANT_CHECK_OFF;
-      FPU_get_user(bcd, (u_char *) s+pos);
+      FPU_get_user(bcd, s+pos, 1);
       RE_ENTRANT_CHECK_ON;
       l += bcd >> 4;
       l *= 10;
@@ -365,7 +365,7 @@ FPU_load_bcd(u_char *s)
     }
  
   RE_ENTRANT_CHECK_OFF;
-  FPU_get_user(sign, (u_char *) s+9);
+  FPU_get_user(sign, s+9, 1);
   sign = sign & 0x80 ? SIGN_Negative : SIGN_Positive;
   RE_ENTRANT_CHECK_ON;
 
@@ -386,7 +386,7 @@ FPU_load_bcd(u_char *s)
 
 /* Put a long double into user memory */
 int  BX_CPP_AttrRegparmN(3)
-FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, long double *d)
+FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
 {
   /*
     The only exception raised by an attempt to store to an
@@ -399,9 +399,9 @@ FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, long double *d)
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE, d, 10);
 
-      FPU_put_user(st0_ptr->sigl, (u32 *) d);
-      FPU_put_user(st0_ptr->sigh, (u32 *) ((u_char *)d + 4));
-      FPU_put_user(exponent16(st0_ptr), (u16 *) ((u_char *)d + 8));
+      FPU_put_user(st0_ptr->sigl, d, 4);
+      FPU_put_user(st0_ptr->sigh, d + 4, 4);
+      FPU_put_user(exponent16(st0_ptr), d + 8, 2);
       RE_ENTRANT_CHECK_ON;
 
       return 1;
@@ -415,9 +415,9 @@ FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, long double *d)
       /* Put out the QNaN indefinite */
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE,d,10);
-      FPU_put_user(0, (u32 *) d);
-      FPU_put_user(0xc0000000, 1 + (u32 *) d);
-      FPU_put_user(0xffff, 4 + (s16 *) d);
+      FPU_put_user(0,          d, 4);
+      FPU_put_user(0xc0000000, d + 4, 4);
+      FPU_put_user(0xffff,     d + 8, 2);
       RE_ENTRANT_CHECK_ON;
       return 1;
     }
@@ -428,7 +428,7 @@ FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, long double *d)
 
 /* Put a double into user memory */
 int  BX_CPP_AttrRegparmN(3)
-FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat)
+FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat)
 {
   u32 l[2];
   u32 increment = 0;	/* avoid gcc warnings */
@@ -644,9 +644,9 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat)
 	  /* The masked response */
 	  /* Put out the QNaN indefinite */
 	  RE_ENTRANT_CHECK_OFF;
-	  FPU_verify_area(VERIFY_WRITE,(void *)dfloat,8);
-	  FPU_put_user(0, (u32 *) dfloat);
-	  FPU_put_user(0xfff80000, 1 + (u32 *) dfloat);
+	  FPU_verify_area(VERIFY_WRITE,dfloat,8);
+	  FPU_put_user(0,          dfloat,   4);
+	  FPU_put_user(0xfff80000, dfloat+4, 4);
 	  RE_ENTRANT_CHECK_ON;
 	  return 1;
 	}
@@ -657,9 +657,9 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat)
     l[1] |= 0x80000000;
 
   RE_ENTRANT_CHECK_OFF;
-  FPU_verify_area(VERIFY_WRITE,(void *)dfloat,8);
-  FPU_put_user(l[0], (u32 *)dfloat);
-  FPU_put_user(l[1], 1 + (u32 *)dfloat);
+  FPU_verify_area(VERIFY_WRITE,dfloat,8);
+  FPU_put_user(l[0], dfloat,   4);
+  FPU_put_user(l[1], dfloat+4, 4);
   RE_ENTRANT_CHECK_ON;
 
   return 1;
@@ -668,7 +668,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat)
 
 /* Put a float into user memory */
 int  BX_CPP_AttrRegparmN(3)
-FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single)
+FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 {
   s32 templ;
   u32 increment = 0;     	/* avoid gcc warnings */
@@ -872,8 +872,8 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single)
 	  /* The masked response */
 	  /* Put out the QNaN indefinite */
 	  RE_ENTRANT_CHECK_OFF;
-	  FPU_verify_area(VERIFY_WRITE,(void *)single,4);
-	  FPU_put_user(0xffc00000, (u32 *) single);
+	  FPU_verify_area(VERIFY_WRITE,single,4);
+	  FPU_put_user(0xffc00000, single, 4);
 	  RE_ENTRANT_CHECK_ON;
 	  return 1;
 	}
@@ -891,8 +891,8 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single)
     templ |= 0x80000000;
 
   RE_ENTRANT_CHECK_OFF;
-  FPU_verify_area(VERIFY_WRITE,(void *)single,4);
-  FPU_put_user(templ,(u32 *) single);
+  FPU_verify_area(VERIFY_WRITE,single,4);
+  FPU_put_user(templ,single, 4);
   RE_ENTRANT_CHECK_ON;
 
   return 1;
@@ -901,7 +901,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single)
 
 /* Put a 64bit quantity into user memory */
 int  BX_CPP_AttrRegparmN(3)
-FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d)
+FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
 {
   FPU_REG t;
   s64 tll;
@@ -958,9 +958,9 @@ FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d)
     }
 
   RE_ENTRANT_CHECK_OFF;
-  FPU_verify_area(VERIFY_WRITE,(void *)d,8);
-  FPU_put_user((u32) tll,       (u32*)(((u8 *)d)+0));
-  FPU_put_user((u32) (tll>>32), (u32*)(((u8 *)d)+4));
+  FPU_verify_area(VERIFY_WRITE,d,8);
+  FPU_put_user((u32) tll,       d+0, 4);
+  FPU_put_user((u32) (tll>>32), d+4, 4);
   RE_ENTRANT_CHECK_ON;
 
   return 1;
@@ -969,7 +969,7 @@ FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d)
 
 /* Put a long into user memory */
 int  BX_CPP_AttrRegparmN(3)
-FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d)
+FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
 {
   FPU_REG t;
   int precision_loss;
@@ -1018,7 +1018,7 @@ FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d)
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_WRITE,d,4);
-  FPU_put_user(t.sigl, (u32 *) d);
+  FPU_put_user(t.sigl, d, 4);
   RE_ENTRANT_CHECK_ON;
 
   return 1;
@@ -1027,7 +1027,7 @@ FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d)
 
 /* Put a short into user memory */
 int  BX_CPP_AttrRegparmN(3)
-FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d)
+FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
 {
   FPU_REG t;
   int precision_loss;
@@ -1076,7 +1076,7 @@ FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d)
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_WRITE,d,2);
-  FPU_put_user((s16)t.sigl,(s16 *) d);
+  FPU_put_user((s16)t.sigl,d,2);
   RE_ENTRANT_CHECK_ON;
 
   return 1;
@@ -1085,7 +1085,7 @@ FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d)
 
 /* Put a packed bcd array into user memory */
 int  BX_CPP_AttrRegparmN(3)
-FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d)
+FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
 {
   FPU_REG t;
   u64 ll;
@@ -1126,11 +1126,11 @@ FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d)
 	  /* Produce the QNaN "indefinite" */
 	  RE_ENTRANT_CHECK_OFF;
 	  FPU_verify_area(VERIFY_WRITE,d,10);
-	  for (i = 0; i < 7; i++)
-	    FPU_put_user(0, (u_char *) d+i); /* These bytes "undefined" */
-	  FPU_put_user(0xc0, (u_char *) d+7); /* This byte "undefined" */
-	  FPU_put_user(0xff, (u_char *) d+8);
-	  FPU_put_user(0xff, (u_char *) d+9);
+	  for ( i = 0; i < 7; i++)
+	    FPU_put_user(0, d+i,1); /* These bytes "undefined" */
+	  FPU_put_user(0xc0, d+7,1); /* This byte "undefined" */
+	  FPU_put_user(0xff, d+8,1);
+	  FPU_put_user(0xff, d+9,1);
 	  RE_ENTRANT_CHECK_ON;
 	  return 1;
 	}
@@ -1151,11 +1151,11 @@ FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d)
       b = FPU_div_small(&ll, 10);
       b |= (FPU_div_small(&ll, 10)) << 4;
       RE_ENTRANT_CHECK_OFF;
-      FPU_put_user(b,(u_char *) d+i);
+      FPU_put_user(b,d+i,1);
       RE_ENTRANT_CHECK_ON;
     }
   RE_ENTRANT_CHECK_OFF;
-  FPU_put_user(sign,(u_char *) d+9);
+  FPU_put_user(sign,d+9,1);
   RE_ENTRANT_CHECK_ON;
 
   return 1;
@@ -1236,8 +1236,8 @@ FPU_round_to_int(FPU_REG *r, u_char tag)
 
 /*===========================================================================*/
 
-u_char  BX_CPP_AttrRegparmN(2)
-*fldenv(fpu_addr_modes addr_modes, u_char *s)
+bx_address  BX_CPP_AttrRegparmN(2)
+fldenv(fpu_addr_modes addr_modes, bx_address s)
 {
   u16 tag_word = 0;
   u_char tag;
@@ -1249,13 +1249,13 @@ u_char  BX_CPP_AttrRegparmN(2)
     {
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_READ, s, 0x0e);
-      FPU_get_user(control_word, (u16 *) s);
-      FPU_get_user(partial_status, (u16 *) (s+2));
-      FPU_get_user(tag_word, (u16 *) (s+4));
-      FPU_get_user(instruction_address.offset, (u16 *) (s+6));
-      FPU_get_user(instruction_address.selector, (u16 *) (s+8));
-      FPU_get_user(operand_address.offset, (u16 *) (s+0x0a));
-      FPU_get_user(operand_address.selector, (u16 *) (s+0x0c));
+      FPU_get_user(control_word, s, 2);
+      FPU_get_user(partial_status, (s+2), 2);
+      FPU_get_user(tag_word, (s+4), 2);
+      FPU_get_user(instruction_address.offset, (s+6), 2);
+      FPU_get_user(instruction_address.selector, (s+8), 2);
+      FPU_get_user(operand_address.offset, (s+0x0a), 2);
+      FPU_get_user(operand_address.selector, (s+0x0c), 2);
       RE_ENTRANT_CHECK_ON;
       s += 0x0e;
       if (addr_modes.default_mode == VM86)
@@ -1269,14 +1269,14 @@ u_char  BX_CPP_AttrRegparmN(2)
     {
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_READ, s, 0x1c);
-      FPU_get_user(control_word, (u16 *) s);
-      FPU_get_user(partial_status, (u16 *) (s+4));
-      FPU_get_user(tag_word, (u16 *) (s+8));
-      FPU_get_user(instruction_address.offset, (u32 *) (s+0x0c));
-      FPU_get_user(instruction_address.selector, (u16 *) (s+0x10));
-      FPU_get_user(instruction_address.opcode, (u16 *) (s+0x12));
-      FPU_get_user(operand_address.offset, (u32 *) (s+0x14));
-      FPU_get_user(operand_address.selector, (u32 *) (s+0x18));
+      FPU_get_user(control_word, s, 2);
+      FPU_get_user(partial_status, (s+4), 2);
+      FPU_get_user(tag_word, (s+8), 2);
+      FPU_get_user(instruction_address.offset, (s+0x0c), 4);
+      FPU_get_user(instruction_address.selector, (s+0x10), 2);
+      FPU_get_user(instruction_address.opcode, (s+0x12), 2);
+      FPU_get_user(operand_address.offset, (s+0x14), 4);
+      FPU_get_user(operand_address.selector, (s+0x18), 4);
       RE_ENTRANT_CHECK_ON;
       s += 0x1c;
     }
@@ -1329,10 +1329,10 @@ u_char  BX_CPP_AttrRegparmN(2)
 
 
 void  BX_CPP_AttrRegparmN(2)
-frstor(fpu_addr_modes addr_modes, u_char *data_address)
+frstor(fpu_addr_modes addr_modes, bx_address data_address)
 {
   int i, regnr;
-  u_char *s = fldenv(addr_modes, data_address);
+  bx_address s = fldenv(addr_modes, data_address);
   int offset = (top & 7) * sizeof(FPU_REG), other = 8*sizeof(FPU_REG) - offset;
 
   /* Copy all registers in stack order. */
@@ -1343,18 +1343,18 @@ frstor(fpu_addr_modes addr_modes, u_char *data_address)
 
   fpu_reg_p = (FPU_REG *) (register_base+offset);
   while (other>0) {
-    FPU_get_user(fpu_reg_p->sigl, (u32*)(s+0));
-    FPU_get_user(fpu_reg_p->sigh, (u32*)(s+4));
-    FPU_get_user(fpu_reg_p->exp,  (u16*)(s+8));
+    FPU_get_user(fpu_reg_p->sigl, (s+0), 4);
+    FPU_get_user(fpu_reg_p->sigh, (s+4), 4);
+    FPU_get_user(fpu_reg_p->exp,  (s+8), 2);
     fpu_reg_p++;
     s += 10;
     other -= sizeof(FPU_REG);
     }
   fpu_reg_p = (FPU_REG *) register_base;
   while (offset>0) {
-    FPU_get_user(fpu_reg_p->sigl, (u32*)(s+0));
-    FPU_get_user(fpu_reg_p->sigh, (u32*)(s+4));
-    FPU_get_user(fpu_reg_p->exp,  (u16*)(s+8));
+    FPU_get_user(fpu_reg_p->sigl, (s+0), 4);
+    FPU_get_user(fpu_reg_p->sigh, (s+4), 4);
+    FPU_get_user(fpu_reg_p->exp,  (s+8), 2);
     fpu_reg_p++;
     s += 10;
     offset -= sizeof(FPU_REG);
@@ -1373,8 +1373,8 @@ frstor(fpu_addr_modes addr_modes, u_char *data_address)
 }
 
 
-u_char  BX_CPP_AttrRegparmN(2)
-*fstenv(fpu_addr_modes addr_modes, u_char *d)
+bx_address  BX_CPP_AttrRegparmN(2)
+fstenv(fpu_addr_modes addr_modes, bx_address d)
 {
   if ((addr_modes.default_mode == VM86) ||
       ((addr_modes.default_mode == PM16)
@@ -1383,25 +1383,25 @@ u_char  BX_CPP_AttrRegparmN(2)
       RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE,d,14);
 #ifdef PECULIAR_486
-      FPU_put_user(control_word & ~0xe080, (u32 *) d);
+      FPU_put_user(control_word & ~0xe080, d, 4);
 #else
-      FPU_put_user(control_word, (u16 *) d);
+      FPU_put_user(control_word, d,2);
 #endif /* PECULIAR_486 */
-      FPU_put_user(status_word(), (u16 *) (d+2));
-      FPU_put_user(fpu_tag_word, (u16 *) (d+4));
-      FPU_put_user(instruction_address.offset, (u16 *) (d+6));
-      FPU_put_user(operand_address.offset, (u16 *) (d+0x0a));
+      FPU_put_user(status_word(), (d+2), 2);
+      FPU_put_user(fpu_tag_word,  (d+4), 2);
+      FPU_put_user(instruction_address.offset, (d+6), 2);
+      FPU_put_user(operand_address.offset, (d+0x0a), 2);
       if (addr_modes.default_mode == VM86)
 	{
 	  FPU_put_user((instruction_address.offset & 0xf0000) >> 4,
-		      (u16 *) (d+8));
+		      (d+8), 2);
 	  FPU_put_user((operand_address.offset & 0xf0000) >> 4,
-		      (u16 *) (d+0x0c));
+		      (d+0x0c), 2);
 	}
       else
 	{
-	  FPU_put_user(instruction_address.selector, (u16 *) (d+8));
-	  FPU_put_user(operand_address.selector, (u16 *) (d+0x0c));
+	  FPU_put_user(instruction_address.selector, (d+8), 2);
+	  FPU_put_user(operand_address.selector, (d+0x0c), 2);
 	}
       RE_ENTRANT_CHECK_ON;
       d += 0x0e;
@@ -1419,17 +1419,17 @@ u_char  BX_CPP_AttrRegparmN(2)
       i387.fcs &= ~0xf8000000;
       i387.fos |= 0xffff0000;
 #endif /* PECULIAR_486 */
-      FPU_put_user((u32) i387.cwd, (u32*)(((u8 *)d)+0));
-      FPU_put_user((u32) i387.swd, (u32*)(((u8 *)d)+4));
-      FPU_put_user((u32) i387.twd, (u32*)(((u8 *)d)+8));
-      FPU_put_user((u32) i387.fip, (u32*)(((u8 *)d)+12));
-      FPU_put_user((u32) i387.fcs, (u32*)(((u8 *)d)+16));
-      FPU_put_user((u32) i387.foo, (u32*)(((u8 *)d)+20));
-      FPU_put_user((u32) i387.fos, (u32*)(((u8 *)d)+24));
+      FPU_put_user((u32) i387.cwd, d+0, 4);
+      FPU_put_user((u32) i387.swd, d+4, 4);
+      FPU_put_user((u32) i387.twd, d+8, 4);
+      FPU_put_user((u32) i387.fip, d+12, 4);
+      FPU_put_user((u32) i387.fcs, d+16, 4);
+      FPU_put_user((u32) i387.foo, d+20, 4);
+      FPU_put_user((u32) i387.fos, d+24, 4);
       RE_ENTRANT_CHECK_ON;
       d += 0x1c;
     }
-  
+
   control_word |= CW_Exceptions;
   partial_status &= ~(SW_Summary | SW_Backward);
 
@@ -1438,9 +1438,9 @@ u_char  BX_CPP_AttrRegparmN(2)
 
 
 void  BX_CPP_AttrRegparmN(2)
-fsave(fpu_addr_modes addr_modes, u_char *data_address)
+fsave(fpu_addr_modes addr_modes, bx_address data_address)
 {
-  u_char *d;
+  bx_address d;
   int offset = (top & 7) * sizeof(FPU_REG), other = 8*sizeof(FPU_REG) - offset;
 
   d = fstenv(addr_modes, data_address);
@@ -1454,18 +1454,18 @@ fsave(fpu_addr_modes addr_modes, u_char *data_address)
 
   fpu_reg_p = (FPU_REG *) (register_base+offset);
   while (other>0) {
-    FPU_put_user(fpu_reg_p->sigl, (u32*)(d+0));
-    FPU_put_user(fpu_reg_p->sigh, (u32*)(d+4));
-    FPU_put_user(fpu_reg_p->exp,  (u16*)(d+8));
+    FPU_put_user(fpu_reg_p->sigl, (d+0), 4);
+    FPU_put_user(fpu_reg_p->sigh, (d+4), 4);
+    FPU_put_user(fpu_reg_p->exp,  (d+8), 2);
     fpu_reg_p++;
     d += 10;
     other -= sizeof(FPU_REG);
     }
   fpu_reg_p = (FPU_REG *) register_base;
   while (offset>0) {
-    FPU_put_user(fpu_reg_p->sigl, (u32*)(d+0));
-    FPU_put_user(fpu_reg_p->sigh, (u32*)(d+4));
-    FPU_put_user(fpu_reg_p->exp,  (u16*)(d+8));
+    FPU_put_user(fpu_reg_p->sigl, (d+0), 4);
+    FPU_put_user(fpu_reg_p->sigh, (d+4), 4);
+    FPU_put_user(fpu_reg_p->exp,  (d+8), 2);
     fpu_reg_p++;
     d += 10;
     offset -= sizeof(FPU_REG);

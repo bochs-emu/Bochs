@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.9 2003-04-12 21:02:07 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.10 2003-07-25 08:59:45 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -116,7 +116,7 @@ extern u_char emulating;
 #define PREFIX_DEFAULT 7
 
 struct address {
-  u32 offset;
+  bx_address offset;
 #ifdef EMU_BIG_ENDIAN
   u32 empty:5;
   u32 opcode:11;

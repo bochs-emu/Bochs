@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.9 2003-04-20 19:20:07 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.10 2003-07-25 08:59:45 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -47,10 +47,11 @@ typedef Bit64s s64;
 #endif
 
 
-extern unsigned fpu_get_user(void *ptr, unsigned len) BX_CPP_AttrRegparmN(2);
-extern void fpu_put_user(unsigned val, void *ptr, unsigned len) BX_CPP_AttrRegparmN(2);
+extern unsigned fpu_get_user(bx_address ptr, unsigned len) BX_CPP_AttrRegparmN(2);
+extern void fpu_put_user(unsigned val, bx_address ptr, unsigned len) BX_CPP_AttrRegparmN(2);
 
-extern void fpu_verify_area(unsigned what, void *ptr, unsigned n) BX_CPP_AttrRegparmN(3);
+extern void fpu_verify_area(unsigned what, bx_address ptr, unsigned n) BX_CPP_AttrRegparmN(3);
+extern void math_emulate_init(void);
 extern unsigned fpu_get_ds(void);
 extern void fpu_set_ax(u16);
 
@@ -86,9 +87,9 @@ extern struct i387_t *current_i387;
 #define instruction_address     (*(struct address *)&i387.fip)
 #define operand_address         (*(struct address *)&i387.foo)
 
-#define FPU_verify_area(x,y,z)	fpu_verify_area((x),(y),(z))
-#define FPU_get_user(x,y)       ((x) = fpu_get_user((y), sizeof(*(y))))
-#define FPU_put_user(val,ptr)   fpu_put_user((val),(ptr),sizeof(*(ptr)))
+#define FPU_verify_area(x,y,z)	fpu_verify_area(x,(bx_address)(y),z)
+#define FPU_get_user(val,ptr,len)       ((val) = fpu_get_user((ptr), (len)))
+#define FPU_put_user(val,ptr,len)   fpu_put_user((val),(ptr),(len))
 
 #define FPU_DS  (fpu_get_ds())
 

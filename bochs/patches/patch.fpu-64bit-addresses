@@ -1,10 +1,21 @@
-? fpu/fpu_system.~h
-? fpu/wmFPUemu_glue.~cc
-? fpu/fpu_entry.~c
-? fpu/reg_ld_str.~c
-? fpu/load_store.~c
-? fpu/fpu_proto.~h
-? fpu/fpu_emu.~h
+----------------------------------------------------------------------
+Patch name: patch.fpu-64bit-addresses 
+Author: ???
+Date: ???
+Status: applied top main code
+
+Detailed description:
+	64bit address support for FPU emulation
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+
+----------------------------------------------------------------------
 Index: fpu/fpu_emu.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/fpu/fpu_emu.h,v

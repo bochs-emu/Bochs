@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_proto.h,v 1.7 2003-04-22 20:21:34 sshwarts Exp $
+// $Id: fpu_proto.h,v 1.8 2003-07-25 08:59:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ extern void FPU_triga(void);
 extern void FPU_trigb(void);
 /* load_store.c */
 extern int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
-			    void *data_address);
+			    bx_address data_address);
 /* poly_2xm1.c */
 extern int poly_2xm1(u_char sign, FPU_REG *arg, FPU_REG *result);
 /* poly_atan.c */
@@ -140,26 +140,26 @@ extern void fucompp(void);
 /* reg_constant.c */
 extern void fconst(void);
 /* reg_ld_str.c */
-extern int FPU_load_extended(long double *s, int stnr) BX_CPP_AttrRegparmN(2);
-extern int FPU_load_double(double *dfloat, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
-extern int FPU_load_single(float *single, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
-extern int FPU_load_int64(s64 *_s) BX_CPP_AttrRegparmN(1);
-extern int FPU_load_int32(s32 *_s, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
-extern int FPU_load_int16(s16 *_s, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
-extern int FPU_load_bcd(u_char *s) BX_CPP_AttrRegparmN(1);
+extern int FPU_load_extended(bx_address s, int stnr) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_double(bx_address dfloat, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_single(bx_address single, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_int64(bx_address _s) BX_CPP_AttrRegparmN(1);
+extern int FPU_load_int32(bx_address _s, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_int16(bx_address _s, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_bcd(bx_address s) BX_CPP_AttrRegparmN(1);
 extern int FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag,
-			      long double *d) BX_CPP_AttrRegparmN(3);
-extern int FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat) BX_CPP_AttrRegparmN(3);
-extern int FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single) BX_CPP_AttrRegparmN(3);
-extern int FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d) BX_CPP_AttrRegparmN(3);
-extern int FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d) BX_CPP_AttrRegparmN(3);
-extern int FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d) BX_CPP_AttrRegparmN(3);
-extern int FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d) BX_CPP_AttrRegparmN(3);
+			      bx_address d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, bx_address dfloat) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, bx_address d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, bx_address d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, bx_address d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, bx_address d) BX_CPP_AttrRegparmN(3);
 extern int FPU_round_to_int(FPU_REG *r, u_char tag) BX_CPP_AttrRegparmN(2);
-extern u_char *fldenv(fpu_addr_modes addr_modes, u_char *s) BX_CPP_AttrRegparmN(2);
-extern void frstor(fpu_addr_modes addr_modes, u_char *data_address) BX_CPP_AttrRegparmN(2);
-extern u_char *fstenv(fpu_addr_modes addr_modes, u_char *d) BX_CPP_AttrRegparmN(2);
-extern void fsave(fpu_addr_modes addr_modes, u_char *data_address) BX_CPP_AttrRegparmN(2);
+extern bx_address fldenv(fpu_addr_modes addr_modes, bx_address s) BX_CPP_AttrRegparmN(2);
+extern void frstor(fpu_addr_modes addr_modes, bx_address data_address) BX_CPP_AttrRegparmN(2);
+extern bx_address fstenv(fpu_addr_modes addr_modes, bx_address d) BX_CPP_AttrRegparmN(2);
+extern void fsave(fpu_addr_modes addr_modes, bx_address data_address) BX_CPP_AttrRegparmN(2);
 extern int FPU_tagof(FPU_REG *ptr) BX_CPP_AttrRegparmN(1);
 /* reg_mul.c */
 extern int FPU_mul(FPU_REG const *b, u_char tagb, int deststnr, int control_w);

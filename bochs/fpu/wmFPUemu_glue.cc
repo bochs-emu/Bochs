@@ -58,7 +58,7 @@ extern "C" void
 math_emulate(fpu_addr_modes addr_modes,
               u_char  FPU_modrm,
               u_char byte1,
-              void *data_address,
+              bx_address data_address,
               struct address data_sel_off,
               struct address entry_sel_off);
 
@@ -77,7 +77,7 @@ BX_CPU_C::fpu_init(void)
 BX_CPU_C::fpu_execute(bxInstruction_c *i)
 {
   fpu_addr_modes addr_modes;
-  void *data_address;
+  bx_address data_address;
   struct address data_sel_off;
   struct address entry_sel_off;
   bx_bool is_32;
@@ -125,7 +125,7 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
   entry_sel_off.selector = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
 // should set these fields to 0 if mem operand not used
-  data_address = (void *) RMAddr(i);
+  data_address = RMAddr(i);
   data_sel_off.offset = RMAddr(i);
   data_sel_off.selector = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
 
@@ -183,17 +183,17 @@ fpu_set_ax(unsigned short val16)
 }
 
   void BX_CPP_AttrRegparmN(3)
-fpu_verify_area(unsigned what, void *ptr, unsigned n)
+fpu_verify_area(unsigned what, bx_address ptr, unsigned n)
 {
   bx_segment_reg_t *seg;
 
   seg = &fpu_cpu_ptr->sregs[fpu_iptr->seg()];
 
   if (what == VERIFY_READ) {
-    fpu_cpu_ptr->read_virtual_checks(seg, PTR2INT(ptr), n);
+    fpu_cpu_ptr->read_virtual_checks(seg, ptr, n);
     }
   else {  // VERIFY_WRITE
-    fpu_cpu_ptr->write_virtual_checks(seg, PTR2INT(ptr), n);
+    fpu_cpu_ptr->write_virtual_checks(seg, ptr, n);
     }
 }
 
@@ -206,7 +206,7 @@ FPU_printall(void)
 
 
   unsigned BX_CPP_AttrRegparmN(2)
-fpu_get_user(void *ptr, unsigned len)
+fpu_get_user(bx_address ptr, unsigned len)
 {
   Bit32u val32;
   Bit16u val16;
@@ -214,15 +214,15 @@ fpu_get_user(void *ptr, unsigned len)
 
   switch (len) {
     case 1:
-      fpu_cpu_ptr->read_virtual_byte(fpu_iptr->seg(), PTR2INT(ptr), &val8);
+      fpu_cpu_ptr->read_virtual_byte(fpu_iptr->seg(), ptr, &val8);
       val32 = val8;
       break;
     case 2:
-      fpu_cpu_ptr->read_virtual_word(fpu_iptr->seg(), PTR2INT(ptr), &val16);
+      fpu_cpu_ptr->read_virtual_word(fpu_iptr->seg(), ptr, &val16);
       val32 = val16;
       break;
     case 4:
-      fpu_cpu_ptr->read_virtual_dword(fpu_iptr->seg(), PTR2INT(ptr), &val32);
+      fpu_cpu_ptr->read_virtual_dword(fpu_iptr->seg(), ptr, &val32);
       break;
     default:
       BX_PANIC(("fpu_get_user: len=%u", len));
@@ -231,7 +231,7 @@ fpu_get_user(void *ptr, unsigned len)
 }
 
   void BX_CPP_AttrRegparmN(2)
-fpu_put_user(unsigned val, void *ptr, unsigned len)
+fpu_put_user(unsigned val, bx_address ptr, unsigned len)
 {
   Bit32u val32;
   Bit16u val16;
@@ -240,15 +240,15 @@ fpu_put_user(unsigned val, void *ptr, unsigned len)
   switch (len) {
     case 1:
       val8 = val;
-      fpu_cpu_ptr->write_virtual_byte(fpu_iptr->seg(), PTR2INT(ptr), &val8);
+      fpu_cpu_ptr->write_virtual_byte(fpu_iptr->seg(), ptr, &val8);
       break;
     case 2:
       val16 = val;
-      fpu_cpu_ptr->write_virtual_word(fpu_iptr->seg(), PTR2INT(ptr), &val16);
+      fpu_cpu_ptr->write_virtual_word(fpu_iptr->seg(), ptr, &val16);
       break;
     case 4:
       val32 = val;
-      fpu_cpu_ptr->write_virtual_dword(fpu_iptr->seg(), PTR2INT(ptr), &val32);
+      fpu_cpu_ptr->write_virtual_dword(fpu_iptr->seg(), ptr, &val32);
       break;
     default:
       BX_PANIC(("fpu_put_user: len=%u", len));
