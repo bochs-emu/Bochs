@@ -1,0 +1,598 @@
+/*
+ *
+ * $Id: blur-opcode.c,v 1.1 2002-04-17 02:31:36 bdenney Exp $
+ *
+ */
+
+#include <stdio.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <assert.h>
+
+#define MAX 128
+int array[MAX][MAX];
+int array2[MAX][MAX];
+#define BLUR_SIZE 3
+#define BLUR_WINDOW_HALF 1
+
+#define DEFAULT_TIMES 1000
+
+typedef enum {
+  OP_MOVE_REL,           // 2 args delta_x and delta_y
+  OP_SET_ACCUM,          // 1 arg, sets accum to that arg
+  OP_ADD_DATA,           // add data from *load_ptr
+  OP_SUBTRACT_DATA,      // sub data from *load_ptr
+  OP_MULTIPLY_DATA,      // mul data from *load_ptr
+  OP_STORE_DATA,         // store accum to *store_ptr
+  OP_END,                // stop
+  N_OPS  // must be last
+} Opcode;
+
+// this opcode sequence implements the blur filter, just like all the others.
+int blur_instructions[] = {
+  OP_MOVE_REL, -1, -1,
+  OP_SET_ACCUM, 0,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 0, 1,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 0, 1,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 1, -2,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 0, 1,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 0, 1,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 1, -2,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 0, 1,
+  OP_ADD_DATA,
+  OP_MOVE_REL, 0, 1,
+  OP_ADD_DATA,
+  OP_STORE_DATA,
+  OP_END
+};
+
+typedef struct {
+  int x, y;
+  int accum;
+  int *load_ptr;
+  int *store_ptr;
+  int done;
+} State;
+
+void print_state (State *state)
+{
+  printf ("state={x=%d, y=%d, accum=%d, load_ptr=%p, store_ptr=%p\n",
+      state->x,
+      state->y,
+      state->accum,
+      state->load_ptr,
+      state->store_ptr);
+}
+
+void blur_simple()
+{
+  int sum;
+  int x,y,x2,y2;
+  for (x=1; x<MAX-1; x++)
+    for (y=1; y<MAX-1; y++)
+    {
+      sum = 0;
+      for (x2=x-BLUR_WINDOW_HALF; x2<=x+BLUR_WINDOW_HALF; x2++)
+	for (y2=y-BLUR_WINDOW_HALF; y2<=y+BLUR_WINDOW_HALF; y2++) {
+	  sum += array[x2][y2];
+	}
+      array2[x][y] = sum;
+    }
+}
+
+#ifdef BLUR_USE_SWITCH
+void blur_opcode_switch ()
+{
+  int sum;
+  int x,y,x2,y2;
+  Opcode *opc;
+  State state;
+  for (x=1; x<MAX-1; x++)
+    for (y=1; y<MAX-1; y++)
+    {
+      int *pc;
+      int done = 0;
+      sum = 0;
+      pc = &blur_instructions[0];
+      // set up state 
+      state.x = x;
+      state.y = y;
+      state.accum = 0xfab28342;   // start with trash in accum
+      state.load_ptr = &array[x][y];
+      state.store_ptr = &array2[x][y];
+      while (!done) {
+	//print_state (&state);
+	switch (*pc++)
+	{
+	  case OP_MOVE_REL:
+	    state.x += *pc++;
+	    state.y += *pc++;
+	    state.load_ptr = &array[state.x][state.y];
+	    break;
+	  case OP_SET_ACCUM:
+	    state.accum = *pc++;
+	    break;
+	  case OP_ADD_DATA:
+	    state.accum += *state.load_ptr;
+	    break;
+	  case OP_SUBTRACT_DATA:
+	    state.accum -= *state.load_ptr;
+	    break;
+	  case OP_MULTIPLY_DATA:
+	    state.accum *= *state.load_ptr;
+	    break;
+	  case OP_STORE_DATA:
+	    *state.store_ptr = state.accum;
+	    break;
+	  case OP_END:
+	    done = 1;
+	    break;
+	  default:
+	    assert (0);
+	}
+      }
+    }
+}
+#endif // ifdef BLUR_USE_SWITCH
+
+#ifdef BLUR_USE_FNPTR
+typedef void (*opfunc)(State *state);
+
+int *pc = NULL;
+
+void op_move_rel (State *state) {
+  state->x += *pc++;
+  state->y += *pc++;
+  state->load_ptr = &array[state->x][state->y];
+}
+void op_set_accum (State *state) {
+  state->accum = *pc++;
+}
+void op_add_data (State *state) {
+  state->accum += *state->load_ptr;
+}
+void op_subtract_data (State *state) {
+  state->accum -= *state->load_ptr;
+}
+void op_multiply_data (State *state) {
+  state->accum *= *state->load_ptr;
+}
+void op_store_data (State *state) {
+  *state->store_ptr = state->accum;
+}
+void op_end (State *state) {
+  state->done = 1;
+}
+
+opfunc op_table[N_OPS] = {
+  op_move_rel, op_set_accum, op_add_data, op_subtract_data, op_multiply_data, op_store_data, op_end
+};
+
+void blur_opcode_fnptr ()
+{
+  int x,y;
+  opfunc fnptr;
+  State state;
+  for (x=1; x<MAX-1; x++)
+    for (y=1; y<MAX-1; y++)
+    {
+      // pc is global here
+      pc = &blur_instructions[0];
+      // set up state 
+      state.x = x;
+      state.y = y;
+      state.accum = 0xfab28342;   // start with trash in accum
+      state.load_ptr = &array[x][y];
+      state.store_ptr = &array2[x][y];
+      state.done = 0;
+      while (!state.done) {
+	//print_state (&state);
+	fnptr = op_table[*pc++];
+	(*fnptr)(&state);
+      }
+    }
+}
+#endif // ifdef BLUR_USE_FNPTR
+
+#ifdef BLUR_TRANSLATED1
+// in BLUR_TRANSLATED1, I pasted the implementation of each opcode into
+// the source (substituting arguments).  This is significantly better than
+// having to go through a switch statement or an indirect function call.
+// In fact it is about 5x faster than the switch, and about 9x faster than
+// the indirect function call.  However, because all the statements operate
+// on the "state" object which is in memory, the compiler will not assign
+// fields of state into registers.  Also, the translated function is called
+// many times, creating noticeable overhead.
+void blur_instructions_translated (State *state)
+{
+//  OP_MOVE_REL, -1, -1,
+	    state->x += -1;
+	    state->y += -1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_SET_ACCUM, 0,
+	    state->accum = 0;
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 1, -2,
+	    state->x += 1;
+	    state->y += -2;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 1, -2,
+	    state->x += 1;
+	    state->y += -2;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_STORE_DATA,
+	    *(state->store_ptr++) = state->accum;
+//  OP_END
+}
+
+void blur_opcode_translated ()
+{
+  int sum;
+  int x,y,x2,y2;
+  State state;
+  for (x=1; x<MAX-1; x++)
+    for (y=1; y<MAX-1; y++)
+    {
+      int *pc;
+      int done = 0;
+      sum = 0;
+      // set up state
+      state.x = x;
+      state.y = y;
+      state.accum = 0xfab28342;   // start with trash in accum
+      state.load_ptr = &array[x][y];
+      state.store_ptr = &array2[x][y];
+      // call translated function
+      blur_instructions_translated (&state);
+    }
+}
+
+#endif // ifdef BLUR_TRANSLATED1
+
+
+#ifdef BLUR_TRANSLATED2
+// in BLUR_TRANSLATED2, I have rewritten the code that calls the translated
+// function, so that the code can be pasted into the translated function 
+// itself.  This is a very slight improvement.  Still, all operations
+// require a load and store, and no state fields are optimized into registers.
+#define BEFORE_EXEC() do { \
+      /* set up state */ \
+      state->accum = 0xfab28342;   /* start with trash in accum */ \
+      state->load_ptr = &array[state->x][state->y]; \
+      state->store_ptr = &array2[state->x][state->y]; \
+  } while (0)
+
+#define AFTER_EXEC() do { \
+    /* post-loop */ \
+    state->y++; \
+    if (!(state->y<MAX-1)) { \
+      state->y=1; \
+      state->x++; \
+      if (!(state->x<MAX-1)) { \
+	/* printf ("DONE!\n"); */ \
+	done=1; \
+      } \
+    } \
+  } while (0)
+
+void blur_instructions_translated2 (State *state)
+{
+  int done = 0;
+  while (!done) {
+    BEFORE_EXEC();
+//  OP_MOVE_REL, -1, -1,
+	    state->x += -1;
+	    state->y += -1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_SET_ACCUM, 0,
+	    state->accum = 0;
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 1, -2,
+	    state->x += 1;
+	    state->y += -2;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 1, -2,
+	    state->x += 1;
+	    state->y += -2;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    state->x += 0;
+	    state->y += 1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_ADD_DATA,
+	    state->accum += *state->load_ptr++;
+//  OP_STORE_DATA,
+	    *(state->store_ptr++) = state->accum;
+//  OP_MOVE_REL, -1, -1
+	    state->x += -1;
+	    state->y += -1;
+	    state->load_ptr = &array[state->x][state->y];
+//  OP_END
+    AFTER_EXEC();
+  }
+}
+
+void blur_opcode_translated2 ()
+{
+  State state;
+  state.x = 1;
+  state.y = 1;
+  blur_instructions_translated2 (&state);
+}
+
+#endif // ifdef BLUR_TRANSLATED2
+
+#ifdef BLUR_TRANSLATED3
+// In BLUR_TRANSLATED3, I added local variable assignments for the most
+// frequently used state fields (well, actually all of them).  Then at the end
+// of the function it sets the state field back to the final value of the local
+// variable.  This technique encourages the compiler to load the state fields
+// into registers and keep them there as long as it is useful.
+#define BEFORE_EXEC() do { \
+      /* set up state */ \
+      accum = 0xfab28342;   /* start with trash in accum */ \
+      state->load_ptr = &array[x][y]; \
+      state->store_ptr = &array2[x][y]; \
+  } while (0)
+
+#define AFTER_EXEC() do { \
+    /* post-loop */ \
+    y++; \
+    if (!(y<MAX-1)) { \
+      y=1; \
+      x++; \
+      if (!(x<MAX-1)) { \
+	/* printf ("DONE!\n"); */ \
+	done=1; \
+      } \
+    } \
+  } while (0)
+
+void blur_instructions_translated3 (State *state)
+{
+  int done = 0;
+  int x=state->x;
+  int y=state->y;
+  int accum=state->accum;
+  int *load_ptr=state->load_ptr;
+  int *store_ptr=state->store_ptr;
+  while (!done) {
+    BEFORE_EXEC();
+//  OP_MOVE_REL, -1, -1,
+	    x += -1;
+	    y += -1;
+	    state->load_ptr = &array[x][y];
+//  OP_SET_ACCUM, 0,
+	    accum = 0;
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    x += 0;
+	    y += 1;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    x += 0;
+	    y += 1;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 1, -2,
+	    x += 1;
+	    y += -2;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    x += 0;
+	    y += 1;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    x += 0;
+	    y += 1;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 1, -2,
+	    x += 1;
+	    y += -2;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    x += 0;
+	    y += 1;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_MOVE_REL, 0, 1,
+	    x += 0;
+	    y += 1;
+	    state->load_ptr = &array[x][y];
+//  OP_ADD_DATA,
+	    accum += *state->load_ptr++;
+//  OP_STORE_DATA,
+	    *(state->store_ptr++) = accum;
+//  OP_MOVE_REL, -1, -1
+	    x += -1;
+	    y += -1;
+	    state->load_ptr = &array[state->x][y];
+//  OP_END
+    AFTER_EXEC();
+  }
+  state->x = x;
+  state->y = y;
+  state->accum = accum;
+  state->load_ptr = load_ptr;
+  state->store_ptr = store_ptr;
+}
+
+void blur_opcode_translated3 ()
+{
+  State state;
+  state.x = 1;
+  state.y = 1;
+  blur_instructions_translated3 (&state);
+}
+
+#endif // ifdef BLUR_TRANSLATED3
+
+
+void fill_array()
+{
+  int x,y;
+  for (x=0; x<MAX; x++)
+    for (y=0; y<MAX; y++)
+      array[x][y] = (x*17+y*31)%29;
+}
+
+void dump_array (FILE *fp, int ptr[MAX][MAX])
+{
+  int x,y;
+  for (x=0; x<MAX; x++) {
+    for (y=0; y<MAX; y++) {
+      fprintf (fp, "%3d ", ptr[x][y]);
+    }
+    fprintf (fp, "\n");
+  }
+}
+
+struct timeval start, stop;
+#define start_timer() gettimeofday (&start, NULL);
+#define stop_timer() gettimeofday (&stop, NULL);
+
+void report_time (FILE *fp, int iters)
+{
+  int usec_duration = 
+    (stop.tv_sec*1000000 + stop.tv_usec)
+    - (start.tv_sec*1000000 + start.tv_usec);
+  double sec = (double)usec_duration / 1.0e3;
+  double sec_per_iter = sec / (double)iters;
+  fprintf (fp, "Total time elapsed = %f msec\n", sec);
+  fprintf (fp, "Iterations = %d\n", iters);
+  fprintf (fp, "Time per iteration = %f msec\n", sec_per_iter);
+}
+
+int main (int argc, char *argv[])
+{
+  int i;
+  int times = 0;
+  FILE *out;
+  if (argc>1) {
+    assert (sscanf (argv[1], "%d", &times) == 1);
+  } else {
+    times = DEFAULT_TIMES;
+  }
+  fill_array();
+  //dump_array (stderr);
+  start_timer();
+  for (i=0; i<times; i++)  {
+#if defined BLUR_USE_SWITCH
+    blur_opcode_switch();
+#elif defined BLUR_USE_FNPTR
+    blur_opcode_fnptr();
+#elif defined BLUR_TRANSLATED1
+    blur_opcode_translated();
+#elif defined BLUR_TRANSLATED2
+    blur_opcode_translated2();
+#elif defined BLUR_TRANSLATED3
+    blur_opcode_translated3();
+#else
+    blur_simple();
+#endif
+  }
+  stop_timer();
+  report_time (stdout, times);
+  //fprintf (stderr, "-----------------------------------\n");
+  out = fopen ("blur.out", "w");
+  assert (out != NULL);
+  dump_array (out, array2);
+  fclose (out);
+  return 0;
+}
