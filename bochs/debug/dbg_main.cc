@@ -3297,16 +3297,16 @@ bx_dbg_instrument_command(char *comm)
 {
 #if BX_INSTRUMENTATION
   if ( !strcmp(comm, "start") ) {
-    BX_CPU(0)->instr_start();
+    BX_INSTR_START ();
     }
   else if ( !strcmp(comm, "stop") ) {
-    BX_CPU(0)->instr_stop();
+    BX_INSTR_STOP ();
     }
   else if ( !strcmp(comm, "reset") ) {
-    BX_CPU(0)->instr_reset();
+    BX_INSTR_RESET ();
     }
   else if ( !strcmp(comm, "print") ) {
-    BX_CPU(0)->instr_print();
+    BX_INSTR_PRINT ();
     }
   else {
     fprintf(stderr, "Error: command instrument %s not implemented.\n", comm);
