@@ -5,7 +5,7 @@ TO DO LIST:
 - check logs in gui
   - (DONE) carbon.cc
   - everything else
-- check logs in iodev (Christophe is working on this, done biosdev to pic)
+- (DONE) check logs in iodev 
 - (DONE) check logs in main directory
   - (DONE) check logs of configure.in
   - (DONE) Makefile.in
@@ -353,23 +353,23 @@ I'm listing them here to remind us about them:
     - Added realtime PIT support (Greg)
   - Sound Blaster 16
     - it used to enable itself all the time; now only when you ask
-    - FIXME
+    - fix memory leaks (Bryce)
   - serial
     - don't cause problems when serial device is disabled (Volker)
-    - FIXME
   - unmapped
-    - FIXME
+    - add programmatic shutdown feature at port 0x8900 (Christophe)
   - vga
-    - FIXME: these are great cvs log msgs, summarize them...
-    - add charmap change support added (used by SDL, win32 and wxWindows gui)
-    - byte offset for modeX fixed (use value of CRT register 0x13)
-    - calculation of the screen size for some graphics modes fixed
+    - VBE fixes (Jeroen, Volker)
+    - CRTC fixes (Volker)
+    - sequencer reset with bits 'reset1' and 'reset2' implemented (Volker)
+    - add charmap change support (used by SDL, win32 and wxWindows gui) (Volker)
+    - screen dimensions / updates for some graphics and text modes fixed (Volker)
     - use the start address when calculating the byte offset for standard
-      EGA/VGA modes
-    - sequencer reset with bits 'reset1' and 'reset2' implemented
-    - do a dimension update in text mode when the maximum scan line register
-      has changed. This changes the font height of the gui.
-    - missing VBE support added in function redraw_area()
+      EGA/VGA modes (Volker)
+    - byte offset for modeX fixed (use value of CRT register 0x13) (Volker)
+    - text mode memory mappings 0 and 1 support (Christophe)
+    - fix bug [ 612741 ] VBE mem conflicts w/ local APIC address (Jeroen)
+    - fix bug #635223: VGA tiles array access out of bounds (Bryce)
 
 - ROM BIOS
   - improve compile process. Now bioses for 1, 2, 4 and 8 processors 
