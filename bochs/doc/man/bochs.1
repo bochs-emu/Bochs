@@ -4,22 +4,13 @@
 .SH NAME
 bochs \- Portable x86 Emulator.
 .\"SKIP_SECTION"
-.SH USAGE
-.B bochs [bochsrc syntax]
-.LP
-When you run bochs,  it will search for a  configuration
-file  called .bochsrc in  the current directory and your
-home directory.  You can override the settings from this
-configuration  file  with  command line arguments, using
-the  same  syntax  as the bochsrc file. If you have  any
-spaces in your command line  arguments, they should   be
-enclosed  in  single quotes.  For  more information, see
-.B bochsrc(5).
-
-Example:
-  bochs         (just read configuration file)
-  bochs 'boot:a' 'floppya: 1_44=a.img, status=inserted'
-
+.SH SYNOPSIS
+.B bochs
+.RB [\| \-q \|]
+.RB [\| \-qf
+.IR configfile \|]
+.RI \|[ bochsrc
+.IR syntax \|]
 .\"SKIP_SECTION"
 .SH DESCRIPTION
 .LP
@@ -29,10 +20,27 @@ emulator,  it  can  run  many operating systems including
 Linux and Microsoft(R) Windows(R).
 .\".\"DONT_SPLIT"
 .SH OPTIONS
-For   information    on    Bochs   command    line    and
-configuration  file   arguments,   see   the   man   page
-bochsrc(5).
-.PP
+.TP
+.BI \-q
+When you run bochs with this option, it will skip the start
+menu and search for a configuration file called .bochsrc in
+the current directory and your home directory.
+.TP
+.BI \-qf\ configfile
+When you run bochs with this option, it will skip the start
+menu and use the specified configuration file.
+.LP
+You can override the settings from the configuration file 
+with command line arguments, using the  same  syntax  as the
+bochsrc file. If you have  any spaces in your command line
+arguments, they should be enclosed  in  single quotes.
+For information on Bochs command line and configuration
+file arguments, see the man page
+.B bochsrc(5).
+
+Example:
+  bochs -q 'boot:a' 'floppya: 1_44=a.img, status=inserted'
+
 .\"SKIP_SECTION"
 .SH LICENSE
 This program  is distributed  under the terms of the  GNU
@@ -67,7 +75,7 @@ can see a current roster of members at:
 .SH BUGS
 Please  report all  bugs to the bug tracker  on  our  web
 site. Just go to http://bochs.sourceforge.net, and click
-"Bug Reports" on the sidebar under "Features."
+"Bug Reports" on the sidebar under "Feedback".
 .PP
 Provide a detailed description of the bug, the version of
 the program you are running, the operating system you are
