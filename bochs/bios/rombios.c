@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.56 2002-05-04 16:09:38 cbothamy Exp $
+// $Id: rombios.c,v 1.57 2002-05-11 13:43:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -169,6 +169,9 @@
 #endif
 #if BX_ELTORITO_BOOT && !BX_USE_ATADRV
 #    error El-Torito Boot can only be use if ATA/ATAPI Driver is available
+#endif
+#if BX_PCIBIOS && BX_CPU<3
+#    error PCI BIOS can only be used with 386+ cpu
 #endif
 
   
@@ -1064,10 +1067,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.56 $";
-static char bios_date_string[] = "$Date: 2002-05-04 16:09:38 $";
+static char bios_cvs_version_string[] = "$Revision: 1.57 $";
+static char bios_date_string[] = "$Date: 2002-05-11 13:43:44 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.56 2002-05-04 16:09:38 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.57 2002-05-11 13:43:44 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1233,7 +1236,7 @@ ASM_START
 ASM_END
 }
 
-#if BX_PCIBIOS
+#if BX_PCIBIOS || BX_USE_ATADRV
   Bit16u
 inw(port)
   Bit16u port;
@@ -1274,7 +1277,7 @@ ASM_START
 ASM_END
 }
 
-#if BX_PCIBIOS
+#if BX_PCIBIOS || BX_USE_ATADRV
   void
 outw(port, val)
   Bit16u port;
@@ -5208,7 +5211,8 @@ int1a_function(regs, ds, iret_addr)
 	  case 0x01: // Installation check
 	    regs.u.r8.ah = 0;
 	    regs.u.r8.al = 1;
-	    regs.u.r8.bh = 1;
+	    regs.u.r8.bh = 0x02;
+	    regs.u.r8.bl = 0x10;
 	    regs.u.r8.cl = 0;
 	    ClearCF(iret_addr.flags);
 	    break;
@@ -5227,6 +5231,7 @@ int1a_function(regs, ds, iret_addr)
 	    break;
 	  default:
 	    BX_INFO("unsupported PCI BIOS function 0x%02x\n", regs.u.r8.al);
+	    regs.u.r8.ah = 0x81;
 	    SetCF(iret_addr.flags);
 	}
       }
