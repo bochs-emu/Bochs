@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.94 2002-10-04 17:04:31 kevinlawton Exp $
+// $Id: cpu.h,v 1.95 2002-10-04 22:25:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -393,7 +393,7 @@ typedef struct {
 #define DECLARE_EFLAG_ACCESSOR(name,bitnum)                                  \
   BX_CPP_INLINE void    assert_##name ();                                    \
   BX_CPP_INLINE void    clear_##name ();                                     \
-  BX_CPP_INLINE Boolean get_##name ();                                       \
+  BX_CPP_INLINE Bit32u  get_##name ();                                       \
   BX_CPP_INLINE Boolean getB_##name ();                                      \
   BX_CPP_INLINE void    set_##name (Bit8u val);
 
@@ -407,7 +407,7 @@ typedef struct {
   BX_CPP_INLINE Boolean BX_CPU_C::getB_##name () {                           \
     return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);                     \
   }                                                                          \
-  BX_CPP_INLINE Boolean BX_CPU_C::get_##name () {                            \
+  BX_CPP_INLINE Bit32u  BX_CPU_C::get_##name () {                            \
     return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);                     \
   }                                                                          \
   BX_CPP_INLINE void BX_CPU_C::set_##name (Bit8u val) {                      \
@@ -418,7 +418,7 @@ typedef struct {
 #define DECLARE_EFLAG_ACCESSOR_VM(bitnum)                                    \
   BX_CPP_INLINE void    assert_VM();                                         \
   BX_CPP_INLINE void    clear_VM();                                          \
-  BX_CPP_INLINE Boolean get_VM();                                            \
+  BX_CPP_INLINE Bit32u  get_VM();                                            \
   BX_CPP_INLINE Boolean getB_VM();                                           \
   BX_CPP_INLINE void    set_VM(Bit32u val);
 
@@ -439,7 +439,7 @@ typedef struct {
       BX_CPU_THIS_PTR v8086Mode = 0;                                         \
       }                                                                      \
     }                                                                        \
-  BX_CPP_INLINE Boolean BX_CPU_C::get_VM() {                                 \
+  BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                                 \
     return BX_CPU_THIS_PTR eflags.VM_cached;                                 \
     }                                                                        \
   BX_CPP_INLINE Boolean BX_CPU_C::getB_VM() {                                \
@@ -457,14 +457,14 @@ typedef struct {
 
 #define DECLARE_EFLAG_ACCESSOR_IOPL(bitnum)                                  \
   BX_CPP_INLINE void set_IOPL(Bit32u val);                                   \
-  BX_CPP_INLINE Boolean get_IOPL(void);
+  BX_CPP_INLINE Bit32u  get_IOPL(void);
 
 #define IMPLEMENT_EFLAG_ACCESSOR_IOPL(bitnum)                                \
   BX_CPP_INLINE void BX_CPU_C::set_IOPL(Bit32u val) {                        \
     BX_CPU_THIS_PTR eflags.val32 &= ~(3<<12);                                \
     BX_CPU_THIS_PTR eflags.val32 |= ((3&val) << 12);                         \
     }                                                                        \
-  BX_CPP_INLINE Boolean BX_CPU_C::get_IOPL() {                               \
+  BX_CPP_INLINE Bit32u  BX_CPU_C::get_IOPL() {                               \
     return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12);                         \
     }
 
@@ -584,7 +584,7 @@ typedef struct {
   IMPLEMENT_CR4_ACCESSORS(PCE, 8);
   IMPLEMENT_CR4_ACCESSORS(OSFXSR, 9);
   IMPLEMENT_CR4_ACCESSORS(OSXMMEXCPT, 10);
-  BX_CPP_INLINE Boolean getRegister() { return registerValue; }
+  BX_CPP_INLINE Bit32u  getRegister() { return registerValue; }
   BX_CPP_INLINE void    setRegister(Bit32u r) { registerValue = r; }
   } bx_cr4_t;
 #endif  // #if BX_CPU_LEVEL >= 4
