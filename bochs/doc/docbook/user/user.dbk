@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.165 2005-03-22 18:12:52 vruppert Exp $
+$Id: user.dbk,v 1.166 2005-03-25 08:50:34 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -439,9 +439,9 @@ currently work with.
   <row>
     <entry>Sound Blaster</entry>
     <entry>Yes</entry>
-    <entry>Emulates a Sound Blaster 16 card.  On Windows, Linux, and FreeBSD
-    you can send the output to your host computer's sound system.
-    On MacOSX, this is not supported yet.
+    <entry>Emulates a Sound Blaster 16 card. On Windows, Linux, FreeBSD, MacOS 9 and
+    MacOSX, the output can be sent to the host computer's sound system, see
+    <xref linkend="sb16-emulation"> for details.
     </entry>
   </row>
   <row>
@@ -740,8 +740,9 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      system, it does not reach high emulation speeds. Kevin reported
      approximately 1.5MIPS using Bochs on a 400MHz PII Linux machine. Users
      who have an x86 processor and want the highest emulation speeds may want
-     to consider PC virtualization software such as plex86 (free software) 
-     or VMware (proprietary and commercial). 
+     to consider PC virtualization software such as plex86 (free software)
+     or VMware (proprietary and commercial). Another related project is
+     <ulink url="http://fabrice.bellard.free.fr/qemu/">QEMU</ulink>.
      </para></answer>
   </qandaentry>
 
@@ -837,6 +838,16 @@ host operating system's CD-ROM data directly.
      <para>Also, I've compiled an entire OS kernel inside Bochs before.  Not
 to mention, running DOOM, though at then-pathetic speeds.
      </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+    <question><para>
+      I am new to Bochs, how do I start?
+    </para></question>
+    <answer><para>
+      You should read <xref linkend="setup"> first. Next, you can check <xref linkend="guests">
+      if there are already instructions on how to install your (guest) OS inside of Bochs.
+    </para></answer>
   </qandaentry>
 
 <!-- ......................................................
@@ -964,10 +975,10 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 
 <figure><title>Checking out Bochs in CVS</title>
 <screen>
-  user$ <command>cvs -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs login</command>
-  (Logging in to anonymous@cvs.bochs.sourceforge.net)
+  user$ <command>cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs login</command>
+  (Logging in to anonymous@cvs.sourceforge.net)
   CVS password:    <replaceable>(there is no password, just press Enter)</replaceable>
-  user$ <command>cvs -z3 -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
+  user$ <command>cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
   cvs server: Updating bochs
   U bochs/.bochsrc
   U bochs/.conf.AIX.4.3.1
@@ -995,6 +1006,10 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 </figure>
 </para>
 
+<note><para>
+  This is just an example output of a checkout of an older version of Bochs.
+  You most likely will see more/other files.
+</para></note>
 
 <tip>
 <para>
@@ -2085,9 +2100,8 @@ turn it off.
     <row>
       <entry>--enable-vbe</entry>
       <entry>no</entry>
-      <entry>Use VGA BIOS Extensions (VBE) by Jeroen Janssen.  To take
-      advantage of the VBE, you must tell Bochs to use the LGPL'd VGA BIOS
-      version 0.4c or higher as <link linkend="bochsopt-vgaromimage">vgaromimage option</link> in your <filename>bochsrc</filename> file.
+      <entry>Use VGA BIOS Extensions (VBE) by Jeroen Janssen, see <xref linkend="vesa-notes">
+      for more information.
       </entry>
     </row>
     <row>
@@ -2278,7 +2292,7 @@ turn it off.
     <row>
       <entry>--enable-pci</entry>
       <entry>no</entry>
-      <entry>Enable limited i440FX PCI support. THis is still incomplete, but usable.
+      <entry>Enable limited i440FX PCI support. This is still incomplete, but usable.
       </entry>
     </row>
     <row>
@@ -3050,6 +3064,7 @@ Examples:
 <screen>
   vgaromimage: file=bios/VGABIOS-elpin-2.40
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
 </screen>
 You also need to load a VGA ROM BIOS at 0xC0000.
 </para>
@@ -3169,7 +3184,7 @@ This defines the type and characteristics of all attached ata devices:
 
 <para>
   You have to tell the type of the attached device. For Bochs 2.0 or later, it can be
-  <parameter>disk</parameter> or <parameter>cdrom </parameter>.
+  <parameter>disk</parameter> or <parameter>cdrom</parameter>.
 </para>
 
 <para>
@@ -3181,8 +3196,8 @@ then suggest a line that works with it.
 </para>
 
 <para>
-In UNIX it is possible to use a raw device as a Bochs hard disk,
-but WE DON'T RECOMMEND IT for safety reasons.
+In Unix it is possible to use a raw device as a Bochs hard disk,
+but WE DON'T RECOMMEND IT for safety reasons. In Windows, there is no easy way.
 </para>
 
 <para>
@@ -3515,24 +3530,25 @@ win32 platforms).
 
 <section id="sb16line"><title>sb16</title>
 <para>
-Examples:
+Example:
 <screen>
   sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, 
         loglevel=2, log=sb16.log, dmatimer=600000
 </screen>
 <note><para>
-The  example is  wrapped onto several lines for formatting  reasons, but  it
-should all be on one line in the actual bochsrc file.
+The example is wrapped onto several lines for formatting reasons, but it
+should all be on one line in the actual <filename>bochsrc</filename> file.
 </para></note>
 
-The sb16 line defines Sound Blaster 16 emulation.  It can have several of
-the following properties.  All properties are in the usual "property=value"
-format.
+This defines the Sound Blaster 16 emulation, see <xref linkend="sb16-emulation">
+for more information. It can have several of the following properties. All properties
+are in the usual "property=value" format.
 
  <itemizedlist>
    <listitem><para>
-   midi: The  filename is where the midi data is  sent.  This
-   can  be  a device  or just a file if  you want to record the midi data.
+   midi: The filename is where the midi data is sent to. This
+   can be a device or just a file if you want to record the midi data.
+   On a Windows host, you should use "midi" as filename.
    </para></listitem>
    
    <listitem><para>
@@ -3548,6 +3564,7 @@ format.
    
    <listitem><para>
    wave: This is the device/file where wave output is stored.
+   On a Windows host, you should use "wave" as filename.
    </para></listitem>
    
    <listitem><para>
@@ -3574,15 +3591,16 @@ format.
    4 = All errors plus all port accesses.
    5 = All errors and port accesses plus a lot of extra information.
    </screen>
+   It is possible to change the loglevel at runtime.
    </para></listitem>
 
    <listitem><para>
    dmatimer: Microseconds per second for a DMA cycle. Make it smaller to fix
    non-continuous sound. 750000 is usually a good value. This needs a reasonably
-   correct setting for IPS (see below).
+   correct setting for the <link linkend="bochsopt-ips">ips option</link>. It is
+   possible to adjust the dmatimer value at runtime.
    </para></listitem>
- </itemizedlist>  
-
+ </itemizedlist>
 </para>
 </section>
 
@@ -3594,9 +3612,9 @@ Examples:
 </screen>
 Video memory is scanned for updates and screen updated every so many virtual
 seconds. The default is 300000, about 3Hz. This is generally plenty.
-Keep in mind that you must tweak the 'ips:' directive to be as close to the
-number of emulated instructions-per-second your workstation can do, for
-this to be accurate.
+Keep in mind that you must tweak the <link linkend="bochsopt-ips">ips option</link>
+to be as close to the number of emulated instructions-per-second your workstation
+can do, for this to be accurate.
 </para>
 </section>
 
@@ -3646,7 +3664,7 @@ Examples:
 </screen>
 Emulated Instructions Per Second.  This is the number of IPS that Bochs is
 capable of running on your machine.  You can recompile Bochs with
---enable-show-ips option enabled, to find your workstation's capability.
+<option>--enable-show-ips</option> option enabled, to find your workstation's capability.
 Measured IPS value will then be logged into your <link linkend="bochsopt-log">log file</link>.
 </para>
 
@@ -4076,10 +4094,10 @@ current time of the simulator host.
 
 <para>
 This section is a detailed description for configuring Sound Blaster 16 from
-source.  I you have a binary and all you need to know is what to put in your
-.bochsrc file, see keyword <link linkend="sb16line">sb16</link> in the bochsrc
-section.
+source. If you have a binary and all you want to know is what to put in your
+<filename>bochsrc</filename> file, see <link linkend="sb16line">sb16 option</link>.
 </para>
+
 <para>
 Sound Blaster 16 (SB16) emulation for Bochs was written and donated by
 Josef Drexler, who has a
@@ -4120,14 +4138,13 @@ sox for example.
 <section><title>Output to a sound card</title>
 
 <para>
-Output is supported on Linux and Windows 95 at the moment.
-On Linux, the output goes to any file or device. If you have a
-wavetable synthesizer, midi can go to /dev/midi00, otherwise you may need
-a midi interpreter. For example, the midid program from the
-DosEmu project would work. Wave output should go to /dev/dsp.
-These devices are assumed to be OSS devices, if they're not
-some of the ioctl's might fail.
-On Windows, midi and output goes to the midi mapper and the wave mapper,
+Output is supported on Windows, Linux, FreeBSD, MacOS 9 and MacOSX at the moment.
+On Linux, the output goes to any file or device. If you have a wavetable synthesizer,
+midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise you may need
+a midi interpreter. For example, the midid program from the DosEmu project would work.
+Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
+are assumed to be OSS devices, if they're not some of the ioctl's might fail.
+On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
 respectively. A future version might have selectable output devices.
 </para>
 </section>
@@ -4139,16 +4156,21 @@ respectively. A future version might have selectable output devices.
 </para>
 
 <para>
-A wavetable synthesizer on /dev/midi00 and a working /dev/dsp if you want real time music and sound, otherwise output to midi and wave files is also possible. 
-Optionally, you can use a software midi interpreter, such as the midid program from the DosEmu project instead of /dev/midi00. 
+A wavetable synthesizer on <filename class="devicefile">/dev/midi00</filename>
+and a working <filename class="devicefile">/dev/dsp</filename> if you want real
+time music and sound, otherwise output to midi and wave files is also possible.
+Optionally, you can use a software midi interpreter, such as the midid program
+from the DosEmu project instead of <filename class="devicefile">/dev/midi00</filename>.
 </para>
 </section>
 
-<section><title>Configuring bochs</title>
+<section><title>Configuring Bochs</title>
 
 <para>
-There are a few values in config.h that are relevant to the sound functions.
-Edit config.h after running configure, but before compiling.
+You need to <command>configure</command> Bochs using the <option>--enable-sb16</option>
+option.
+There are a few values in <filename>config.h</filename> that are relevant to the sound functions.
+Edit <filename>config.h</filename> after running configure, but before compiling.
 </para>
 
 <para>
@@ -4178,8 +4200,8 @@ The following are supported at the moment:
 </programlisting>
 
 <para>
-Setup the SB16 emulation in your .bochsrc, according to instructions
-in that file.
+Setup the SB16 emulation in your <filename>bochsrc</filename>, according to instructions
+in that file (see <link linkend="sb16line">sb16 option</link>).
 </para>
 </section>
 
@@ -5422,8 +5444,8 @@ files with the bochs disk images.  This is what I found out:
 This section was contributed by Alexander Schuch.
 </para>
 <para>
-The following example mounts a Windows 95 hard disk image called "Windows 95 B
-(2031-16-63)" into the FreeBSD file system.  It is specific to FreeBSD 5.x; for
+The following example mounts a Windows 95 hard disk image called <filename>Windows 95 B (2031-16-63)</filename>
+into the FreeBSD file system. It is specific to FreeBSD 5.x; for
 hints on how to do the same task on FreeBSD 4.x, or for more information in
 general, check the proper section of the FreeBSD handbook:
 <ulink url="http://www.freebsd.org/doc/en/books/handbook/disks-virtual.html">Network, Memory, and File-Backed File Systems</ulink>.
@@ -5432,8 +5454,12 @@ You can use the same procedure for mounting floppy disk images.
 
 <para>
 <screen>
-# mdconfig -a -t vnode -f "Windows 95 B (2031-16-63)"
-# mount -t msdosfs /dev/md0s1 /mnt
+<prompt>#</prompt> <userinput>mdconfig -a -t vnode -f "Windows 95 B (2031-16-63)"</userinput>
+md0
+</screen>
+mdconfig returns the device, your file now is accessable from.
+<screen>
+<prompt>#</prompt> <userinput>mount -t msdosfs /dev/md0s1 /mnt</userinput>
 </screen>
 If you already have other md devices configured, you need to substitute md0s1
 with, for example, md6s1.
@@ -5442,15 +5468,15 @@ with, for example, md6s1.
 <para>
 Once you are done working with the image, unmount the md device and detach it.
 <screen>
-# umount /mnt
-# mdconfig -d -u 0
+<prompt>#</prompt> <userinput>umount /mnt</userinput>
+<prompt>#</prompt> <userinput>mdconfig -d -u 0</userinput>
 </screen>
 And again, if there are other md devices configured, use the proper device
-number.  In case you forgot the number, just ask mdconfig, like:
+number. In case you forgot the number, just ask <command>mdconfig</command>, like:
 <screen>
-# mdconfig -l
+<prompt>#</prompt> <userinput>mdconfig -l</userinput>
 md7
-# mdconfig -d -u 7
+<prompt>#</prompt> <userinput>mdconfig -d -u 7</userinput>
 </screen>
 </para>
 
@@ -6768,6 +6794,11 @@ when you press the user button in the <link linkend="headerbar">headerbar</link>
     The VGABIOS is already included in the Bochs release, so no separate download is necessary.
   </para></note>
 
+  <note><para>
+    To take advantage of the VBE, you must tell Bochs to use the LGPL'd VGA BIOS
+    version 0.4c or higher. A current version of the VGA BIOS will work.
+  </para></note>
+
 <para>
 Current limitations:
 <itemizedlist>
@@ -7675,9 +7706,9 @@ Known problems
 
     <para>
       Knoppix is a live CD (700M) based on Debian GNU/Linux, with lots of ready-to-run programs
-      (web browser, office suite, a few games, and more). It can be booted directly from CD, without
-      any installation needed. You can download it from
-      <ulink url="http://www.knoppix.org/">knoppix.org</ulink>.
+      (web browser, office suite, a few games, and more), using <abbrev>KDE</abbrev> as desktop
+      environment. It can be booted directly from CD, without any installation needed. You can
+      download it from <ulink url="http://www.knoppix.org/">knoppix.org</ulink>.
     </para>
   </section>
 
@@ -7757,8 +7788,9 @@ Please see the <ulink url="http://minix1.hampshire.edu/faq/bxmxhowto.html">Minix
     <title>Preparing Bochs</title>
 
     <para>
-      Create a new hard disk image using bximage tool (see <xref linkend="using-bximage">) with
-      a size of at least 350M, as the standard installation uses 280M on its own.
+      Create a new hard disk image using <command>bximage</command> (see
+      <xref linkend="using-bximage">) with a size of at least 350M, as the standard
+      installation uses 280M on its own.
     </para>
 
     <para>
@@ -8037,7 +8069,7 @@ Download a GNU archive as indicated in the Hurd Installation Guide, and decompre
 </section>
 
 <section>
-<title> Bochs Configuration</title>
+<title>Bochs Configuration</title>
 
 <para>
 Copy default configuration (<replaceable>/usr/share/doc/bochs/examples/bochsrc.gz</replaceable> on debian) 
@@ -8265,16 +8297,24 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 </para>
 
 </section>
-          </section>
+</section>
 
 <section id="guest-win95">
-        <title>Windows 95</title>
+  <title>Windows 95</title>
+
+  <para>
+    You must read the message regarding software licenses in <xref linkend="thirdparty">
+    before you install Windows 95 as a guest OS in Bochs.
+  </para>
+
+  <tip><para>
+    If you want to use higher screen resolutions than 640x480 with more than 16 colours,
+    you should enable the Cirrus video card, see <xref linkend="cirrus-notes">, as Windows 95
+    comes with drivers for that video card.
+  </para></tip>
 
 <section><title>How to Install Windows 95 with floppies</title>
 <para>Using Windows95 for PCs without Windows, 1.44M floppy distribution</para>
-
-<para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install Windows 95 as a guest OS in Bochs.</para>
 
 <para>Preparing for the install</para>
 
@@ -8726,7 +8766,7 @@ time anyhow!
 </programlisting>
 
 <para>
-Bochs printing support varies from host OS to host OS.  Parallel port emulation was added in Bochs 1.3 for Unix platforms.  Check to see if printing is supported for your host OS in <xref linkend="features" /> or the forums.  You can skip this part during installation and set up printing features later.  Cancel print setup in this manner:
+Bochs printing support varies from host OS to host OS.  Parallel port emulation was added in Bochs 1.3 for Unix platforms.  Check to see if printing is supported for your host OS in <xref linkend="features"> or the forums.  You can skip this part during installation and set up printing features later.  Cancel print setup in this manner:
 </para>
 
 <programlisting>
@@ -8874,22 +8914,13 @@ and fire it up.
 
 </section><!-- end of Installing Windows 95 with floppies -->
 
-        <section>
-                <title>Installing a Japanese version of Windows 95</title>
-                        <para>
-It is possible to install a japanese version of Windows 95. However, a 
-patch to the VGA card is needed (VGA Write Mode 2). 
-                        </para>
-                        <para>
-&FIXME; we have to make
-sure that the patch is or not included in Bochs 2.0.
-                        </para>
-                        <para>
+<section>
+  <title>Installing a Japanese version of Windows 95</title>
+<para>
 The following has been contributed by  dohzono at hf dot rim dot or dot jpa :
 
 <screen>
-Here is a tip for installing Japanese win95 (requires "VGA write mode
-2" patch). 
+Here is a tip for installing Japanese win95.
 
                     *
 
