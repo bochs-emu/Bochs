@@ -1,3 +1,8 @@
+Changes since 1.2-pre1:
+- fixed link in HTML changelog.html to point to the real sources on SF.
+- added missing LOG_THIS definition to gui/nogui.cc
+- now iodev/pci.cc will compile with SMF=1.
+
 Changes in version 1.2-pre1 (5/25/2001):
 - major cleanup of .bochsrc
 - major cleanup of stderr output: prints bochs version information when
