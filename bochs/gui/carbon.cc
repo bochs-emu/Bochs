@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.10 2002-04-20 07:19:35 vruppert Exp $
+// $Id: carbon.cc,v 1.11 2002-09-30 14:03:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,8 @@
 // written by David Batterham <drbatter@progsoc.uts.edu.au>
 // with contributions from Tim Senecal
 // port to Carbon API by Emmanuel Maillard <e.rsz@libertysurf.fr>
+// slight overhaul of Carbon key event, graphics and window handling
+//		and SIM->notify alert support by Chris Thomas <cjack@cjack.com>
 
 // BOCHS INCLUDES
 #include "bochs.h"
@@ -135,8 +137,10 @@ pascal OSStatus CEvtHandleApplicationMenuClick  (EventHandlerCallRef nextHandler
 pascal OSStatus CEvtHandleApplicationMenus      (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
 
 // Event handlers
-BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState);
-BX_CPP_INLINE void HandleToolClick(Point where);
+OSStatus HandleKey(EventRef theEvent, Bit32u keyState);
+void HandleToolClick(Point where);
+static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event);
+
 
 // Show/hide UI elements
 void HidePointer(void);
@@ -149,8 +153,6 @@ void ShowMenubar(void);
 // void ShowConsole(void);
 
 // Initialisation
-void FixWindow(void);
-void MacPanic(void);
 void InitToolbox(void);
 void CreateTile(void);
 void CreateMenus(void);
@@ -199,15 +201,14 @@ pascal OSStatus CEvtHandleWindowBackdropUpdate (EventHandlerCallRef nextHandler,
     void* userData)
 {
 	Rect	box;
-	Pattern qdBlackPattern;
         
         WindowRef myWindow;
 	GetEventParameter (theEvent, kEventParamDirectObject, typeWindowRef,
             NULL, sizeof(WindowRef), NULL, &myWindow);
 
-        GetQDGlobalsBlack(&qdBlackPattern);
 	GetWindowPortBounds(myWindow, &box);
-        FillRect(&box, &qdBlackPattern);
+        BackColor(blackColor);
+        EraseRect(&box);
 
 	return noErr; // Report success
 }
@@ -255,31 +256,22 @@ pascal OSStatus CEvtHandleWindowEmulatorKeys (EventHandlerCallRef nextHandler,
     EventRef theEvent,
     void* userData)
 {
-	EventRecord event;
-	int oldMods=0;
-
-	if(ConvertEventRefToEventRecord(theEvent, &event))
-	{
-            int key = event.message & charCodeMask;
-
-            switch(event.what)
-            {
-                case keyDown:
-                case autoKey:
-                        oldMods = event.modifiers;
-                        HandleKey(&event, BX_KEY_PRESSED);
-                        break;
-                        
-                case keyUp:
-                        event.modifiers = oldMods;
-                        HandleKey(&event, BX_KEY_RELEASED);
-                        break;
-            }
-	}
-	else
-            BX_PANIC(("Can't convert keyboard event"));
-
-	return noErr; 
+    UInt32	kind;
+    OSStatus	outStatus = eventNotHandledErr;
+    
+    kind = GetEventKind(theEvent);
+    switch(kind)
+    {
+        case kEventRawKeyDown:
+        case kEventRawKeyRepeat:
+            outStatus = HandleKey(theEvent, BX_KEY_PRESSED);
+            break;
+        case kEventRawKeyUp:
+            outStatus = HandleKey(theEvent, BX_KEY_RELEASED);
+            break;
+    }
+    
+    return outStatus; 
 }
 
 #if 0
@@ -381,7 +373,7 @@ pascal OSStatus CEvtHandleApplicationMenus (EventHandlerCallRef nextHandler,
                 break;
 
             case kHICommandQuit:
-                BX_PANIC(("User terminated"));
+                BX_EXIT(0);
                 break;
 
             case kCommandFloppy:
@@ -442,43 +434,6 @@ pascal OSStatus CEvtHandleApplicationMenus (EventHandlerCallRef nextHandler,
         }
         
 	return noErr; // Report success
-}
-
-//this routine moves the initial window position so that it is entirely onscreen
-//it is needed for os 8.x with appearance managaer
-void FixWindow(void)
-{
-  RgnHandle wStruct;
-  Rect wRect;
-  RgnHandle tStruct;
-  Rect tRect;
-  short MinVal;
-
-  wStruct = NewRgn();
-  tStruct = NewRgn();
-  
-  GetWindowRegion(win, kWindowStructureRgn, wStruct);
-  GetRegionBounds(wStruct, &wRect);
-  GetWindowRegion(toolwin, kWindowStructureRgn, tStruct);
-  GetRegionBounds(tStruct, &tRect);
-  
-  if (wRect.left < 2)
-  {
-    gLeft = gLeft + (2 - wRect.left);
-  }
-  
-  MinVal = tRect.bottom+2;
-//MinVal = MinVal + GetMBarHeight();
-  
-  if (wRect.top < MinVal)
-  {
-//  gMinTop = gMinTop + (MinVal - wRect.top);
-    gMaxTop = gMaxTop + (MinVal - wRect.top);
-  }
-
-  MoveWindow(win, gLeft, gMaxTop, false);
-  DisposeRgn(wStruct);
-  DisposeRgn(tStruct);
 }
 
 void MacPanic(void)
@@ -586,10 +541,10 @@ void CreateMenus(void)
 
 void CreateWindows(void)
 {
-	int l, t, r, b;
 	Rect winRect;
-	Rect screenBitsBounds;
-        
+	Rect screenBounds;
+	Rect positioningBounds;
+
 	EventTypeSpec eventClick =  { kEventClassWindow, kEventWindowHandleContentClick };
 	EventTypeSpec eventUpdate = { kEventClassWindow, kEventWindowDrawContent };
 	EventTypeSpec keyboardEvents[3] = {
@@ -597,8 +552,13 @@ void CreateWindows(void)
             { kEventClassKeyboard, kEventRawKeyUp }};
 
 	// Create a backdrop window for fullscreen mode
-        GetRegionBounds(GetGrayRgn(), &screenBitsBounds);
-	SetRect(&winRect, 0, 0, screenBitsBounds.right, screenBitsBounds.bottom + GetMBarHeight());
+//        GetRegionBounds(GetGrayRgn(), &screenBounds);
+
+	// Fullscreen mode only really wants to be on one screen
+	screenBounds = (**GetMainDevice()).gdRect;
+	GetAvailableWindowPositioningBounds(GetMainDevice(), &positioningBounds);
+	
+	SetRect(&winRect, 0, 0, screenBounds.right, screenBounds.bottom + GetMBarHeight());
 	CreateNewWindow(kDocumentWindowClass, (kWindowStandardHandlerAttribute ), &winRect, &backdrop);
 	if (backdrop == NULL)
 		{BX_PANIC(("mac: can't create backdrop window"));}
@@ -608,27 +568,33 @@ void CreateWindows(void)
 	
 	width = 640;
 	height = 480;
-	gLeft = 4;
-	gMinTop = 44;
-	gMaxTop = 44 + gheaderbar_y;
-	
-	l = (screenBitsBounds.right - width) /2;  //(qd.screenBits.bounds.right - width)/2;
-	r = l + width;
-	t = (screenBitsBounds.bottom - height)/2;
-	b = t + height;
-	
+	gLeft = positioningBounds.left;
+	gMinTop = positioningBounds.top;
+	gMaxTop = gMinTop + gheaderbar_y;
+
 	// Create a moveable tool window for the "headerbar"
-	SetRect(&winRect, 0, 20, screenBitsBounds.right , 22+gheaderbar_y); //qd.screenBits.bounds.right, 22+gheaderbar_y);
-	CreateNewWindow(kFloatingWindowClass, kWindowStandardHandlerAttribute ,&winRect, &toolwin);
+	winRect.top		= positioningBounds.top + 10;
+	winRect.left	= positioningBounds.left;
+	winRect.bottom	= winRect.top + gheaderbar_y;
+	winRect.right	= positioningBounds.right;
+
+	CreateNewWindow(kFloatingWindowClass, kWindowStandardHandlerAttribute, &winRect, &toolwin);
 	if (toolwin == NULL)
 		{BX_PANIC(("mac: can't create tool window"));}
 
-	SetWindowTitleWithCFString (toolwin, CFSTR("MacBochs 586")); // Set title
+	// Use an Aqua-savvy window background
+	SetThemeWindowBackground(toolwin, kThemeBrushUtilityWindowBackgroundActive, false);
+
+	SetWindowTitleWithCFString (toolwin, CFSTR("MacBochs Hardware Controls")); // Set title
 	InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolClick),  1, &eventClick, NULL, NULL);
 	InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolUpdate), 1, &eventUpdate, NULL, NULL);
 
 	// Create the emulator window for full screen mode
-	SetRect(&winRect, l, t, r, b);
+	winRect.left	= (screenBounds.right - width) /2;  //(qd.screenBits.bounds.right - width)/2;
+	winRect.right	= winRect.left + width;
+	winRect.top		= (screenBounds.bottom - height)/2;
+	winRect.bottom	= winRect.top + height;
+
 	CreateNewWindow(kPlainWindowClass, (kWindowStandardHandlerAttribute), &winRect, &fullwin);
 	if (fullwin == NULL)
 		BX_PANIC(("mac: can't create fullscreen emulator window"));
@@ -637,14 +603,18 @@ void CreateWindows(void)
 	InstallWindowEventHandler(fullwin, NewEventHandlerUPP(CEvtHandleWindowEmulatorClick), 1, &eventClick, NULL, NULL);	InstallWindowEventHandler(fullwin, NewEventHandlerUPP(CEvtHandleWindowEmulatorKeys), 3, keyboardEvents, 0, NULL);
 
 	// Create the regular emulator window
-	SetRect(&winRect, gLeft, gMaxTop, gLeft+width, gMaxTop+height);
+	winRect.left	= gLeft;
+	winRect.top		= gMaxTop;
+	winRect.right	= winRect.left + width;
+	winRect.bottom	= winRect.top + height;
+
 	CreateNewWindow(kDocumentWindowClass,
             (kWindowStandardHandlerAttribute | kWindowCollapseBoxAttribute),
             &winRect, &win);
 	if (win == NULL)
 		BX_PANIC(("mac: can't create emulator window"));
 	
-	SetWindowTitleWithCFString (win, CFSTR("MacBochs 586")); // Set title
+	SetWindowTitleWithCFString (win, CFSTR("MacBochs x86 PC")); // Set title
 	InstallWindowEventHandler(win, NewEventHandlerUPP(CEvtHandleWindowEmulatorUpdate), 1, &eventUpdate, NULL, NULL);
 	InstallWindowEventHandler(win, NewEventHandlerUPP(CEvtHandleWindowEmulatorClick), 1, &eventClick, NULL, NULL);
 	InstallWindowEventHandler(win, NewEventHandlerUPP(CEvtHandleWindowEmulatorKeys), 3, keyboardEvents, 0, NULL);
@@ -663,15 +633,14 @@ void CreateWindows(void)
 	SetWindowGroup(fullwin, fullwinGroup);
 	SetWindowGroup(backdrop, fullwinGroup);
 
-	FixWindow();
+	RepositionWindow( win, NULL, kWindowCenterOnMainScreen );
 
 	hidden = fullwin;
 	
 	ShowWindow(toolwin);
 	ShowWindow(win);
-	HiliteWindow(win, true);
 	
-	SetPort(GetWindowPort(win));
+	SetPortWindowPort(win);
 }
 
 // ::SPECIFIC_INIT()
@@ -697,10 +666,6 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 {	
 	th->put("MGUI");
 	InitToolbox();
-	
-	//SouixWin = FrontWindow();
-	
-	atexit(MacPanic);
 	
 	thisGUI = th;
 	gheaderbar_y = headerbar_y;
@@ -729,70 +694,87 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
         GetCurrentProcess(&gProcessSerNum);
         
 	GetMouse(&prevPt);
+
+	SIM->set_notify_callback(CarbonSiminterfaceCallback, NULL);
 	
 	UNUSED(argc);
 	UNUSED(argv);
 
-	//HideWindow(SouixWin);
-	
 }
 
 // HandleKey()
 //
 // Handles keyboard-related events.
 
-BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
+OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
 {
-	int	key;
-	UInt32 trans;
-	static UInt32 transState = 0;
-	
-	key = event->message & charCodeMask;
-	
-//	if (event->modifiers & cmdKey)
-//	{
-//                // Like MenuSelect, MenuKey also triggers a cascade of
-//                // events that results in sending a command event
-//                MenuKey(key);
-//	}	
-//	else if (FrontWindow() == SouixWin)
-//	{
-//		SIOUXHandleOneEvent(event);
-//	}
-//	else
-//	{		
-		if (event->modifiers & shiftKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | keyState);
-		if (event->modifiers & controlKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | keyState);
-		if (event->modifiers & optionKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | keyState);
-		
-		key = (event->message & keyCodeMask) >> 8;
-		
-		trans = KeyTranslate(KCHR, key, &transState);
-		
-		// KeyTranslate maps Mac virtual key codes to any type of character code
-		// you like (in this case, Bochs key codes). Much nicer than a huge switch
-		// statement!
-		
-		if (trans > 0)
-			bx_devices.keyboard->gen_scancode(trans | keyState);
-
-		if (event->modifiers & shiftKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
-		if (event->modifiers & controlKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
-		if (event->modifiers & optionKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
-//	}		
+    UInt32		key;
+    UInt32		trans;
+    OSStatus		status;
+    UInt32		modifiers;
+    
+    static UInt32	transState = 0;
+    
+    status = GetEventParameter (theEvent,
+                                kEventParamKeyModifiers,
+                                typeUInt32, NULL,
+                                sizeof(UInt32), NULL,
+                                &modifiers);
+    if( status == noErr )
+    {
+        status = GetEventParameter (theEvent,
+                                    kEventParamKeyCode,
+                                    typeUInt32, NULL,
+                                    sizeof(UInt32), NULL,
+                                    &key);
+        if( status == noErr )
+        {
+    
+    //            key = event->message & charCodeMask;
+            
+            // Let our menus process command keys
+            if( modifiers & cmdKey )
+            {
+                status = eventNotHandledErr;
+            }
+            else
+            {
+                if (modifiers & shiftKey)
+                        bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | keyState);
+                if (modifiers & controlKey)
+                        bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | keyState);
+                if (modifiers & optionKey)
+                        bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | keyState);
+                
+        //            key = (event->message & keyCodeMask) >> 8;
+                
+                trans = KeyTranslate(KCHR, key, &transState);
+                
+                // KeyTranslate maps Mac virtual key codes to any type of character code
+                // you like (in this case, Bochs key codes). Much nicer than a huge switch
+                // statement!
+                
+                if (trans > 0)
+                        bx_devices.keyboard->gen_scancode(trans | keyState);
+        
+                if (modifiers & shiftKey)
+                        bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
+                if (modifiers & controlKey)
+                        bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+                if (modifiers & optionKey)
+                        bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
+            }
+        }
+    }
+    
+    return status;
 }
 
 // HandleToolClick()
 //
 // Handles mouse clicks in the Bochs tool window
 
-BX_CPP_INLINE void HandleToolClick(Point where)
+void HandleToolClick(Point where)
 {
 	unsigned i;
 	int xorigin;
@@ -801,7 +783,7 @@ BX_CPP_INLINE void HandleToolClick(Point where)
         
 	GetWindowPortBounds (toolwin, &toolwinRect);
         
-	SetPort(GetWindowPort(toolwin));
+	SetPortWindowPort(toolwin);
 	GlobalToLocal(&where);
 	for (i=0; i<toolPixMaps; i++)
 	{
@@ -885,7 +867,7 @@ void bx_gui_c::handle_events(void)
         if(isSameProcess && !IsWindowCollapsed(win))
         {
             GetPort(&oldport);
-            SetPort(GetWindowPort(win));
+            SetPortWindowPort(win);
             
             GetMouse(&mousePt);
             
@@ -975,16 +957,13 @@ void bx_gui_c::flush(void)
 void bx_gui_c::clear_screen(void)
 {
         Rect r;
-        Pattern qdBlackPattern;
         
-        GetQDGlobalsBlack(&qdBlackPattern);
-        
-	SetPort(GetWindowPort(win));
+	SetPortWindowPort(win);
 	
 	RGBForeColor(&black);
 	RGBBackColor(&white);
 	GetWindowPortBounds(win, &r);
-        FillRect (&r, &qdBlackPattern);
+        PaintRect (&r);
         
 	windowUpdatesPending = true;
 }
@@ -1027,7 +1006,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	
 	GetPort(&oldPort);
 	
-	SetPort(GetWindowPort(win));
+	SetPortWindowPort(win);
 
 	ncols = width/8;
 
@@ -1172,7 +1151,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 	SetGWorld(gOffWorld, NULL);	*/
         
 	// SetPort - Otherwise an update happens to the headerbar and ooomph, we're drawing weirdly on the screen
-	SetPort(GetWindowPort(win));
+	SetPortWindowPort(win);
 	destRect = srcTileRect;
 	OffsetRect(&destRect, x0, y0);
 	
@@ -1311,9 +1290,10 @@ void bx_gui_c::show_headerbar(void)
         
         GetQDGlobalsBlack(&qdBlackPattern);
         
-	SetPort(GetWindowPort(toolwin));
-	RGBForeColor(&medGrey);
-	FillRect(&r, &qdBlackPattern); //&qd.black);
+	SetPortWindowPort(toolwin);
+        
+//	RGBForeColor(&medGrey);
+//	FillRect(&r, &qdBlackPattern); //&qd.black);
         
 	for (i=0; i<toolPixMaps; i++)
 	{
@@ -1371,7 +1351,7 @@ void bx_gui_c::snapshot_handler(void)
 	PicHandle	ScreenShot;
 	long val;
 	
-	SetPort(GetWindowPort(win));
+	SetPortWindowPort(win);
 	
 	ScreenShot = OpenPicture(&win->portRect);
 	
@@ -1397,7 +1377,7 @@ void HidePointer()
 {
 	HiliteMenu(0);
 	HideCursor();
-	SetPort(GetWindowPort(win));
+	SetPortWindowPort(win);
 	SetPt(&scrCenter, 300, 240);
 	LocalToGlobal(&scrCenter);
 	ResetPointer();
@@ -1425,6 +1405,7 @@ void ShowPointer()
 void HideTools()
 {
 	HideWindow(toolwin);
+#if 0
 	if (menubarVisible)
 	{
 		MoveWindow(win, gLeft, gMinTop, false);
@@ -1433,6 +1414,7 @@ void HideTools()
 	{
 		MoveWindow(hidden, gLeft, gMinTop, false);
 	}
+#endif
 	CheckMenuItem(GetMenuHandle(mBochs), iTool, false);
 	HiliteWindow(win, true);
 }
@@ -1443,6 +1425,7 @@ void HideTools()
 
 void ShowTools()
 {
+#if 0
 	if (menubarVisible)
 	{
 		MoveWindow(win, gLeft, gMaxTop, false);
@@ -1451,10 +1434,8 @@ void ShowTools()
 	{
 		MoveWindow(hidden, gLeft, gMaxTop, false);
 	}
+#endif
 	ShowWindow(toolwin);
-	BringToFront(toolwin);
-	SelectWindow(toolwin);
-	HiliteWindow(win, true);
 //	thisGUI->show_headerbar();
 	CheckMenuItem(GetMenuHandle(mBochs), iTool, true);
 	HiliteWindow(win, true);
@@ -1500,14 +1481,14 @@ void ShowMenubar()
 
 void HideConsole()
 {
-	HideWindow(SouixWin);
+//	HideWindow(SouixWin);
 	CheckMenuItem(GetMenuHandle(mBochs), iConsole, false);
 }
 
 void ShowConsole()
 {
-	ShowWindow(SouixWin);
-	SelectWindow(SouixWin);
+//	ShowWindow(SouixWin);
+//	SelectWindow(SouixWin);
 	CheckMenuItem(GetMenuHandle(mBochs), iConsole, true);
 }
 
@@ -1755,4 +1736,70 @@ unsigned char reverse_bitorder(unsigned char b)
   void
 bx_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
+}
+
+
+// we need to handle "ask" events so that PANICs are properly reported
+static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
+{
+    event->retcode = 0;  // default return code
+    
+    if( event->type == BX_ASYNC_EVT_LOG_MSG )
+    {
+		DialogRef						alertDialog;
+        CFStringRef						title;
+        CFStringRef						exposition;
+		DialogItemIndex					index;
+        AlertStdCFStringAlertParamRec	alertParam = {0};
+
+		if( event->u.logmsg.prefix != NULL )
+		{
+			title		= CFStringCreateWithCString(NULL, event->u.logmsg.prefix, kCFStringEncodingASCII);
+			exposition	= CFStringCreateWithCString(NULL, event->u.logmsg.msg, kCFStringEncodingASCII);
+		}
+		else
+		{
+			title		= CFStringCreateWithCString(NULL, event->u.logmsg.msg, kCFStringEncodingASCII);
+			exposition	= NULL;
+		}
+		
+		alertParam.version			= kStdCFStringAlertVersionOne;
+		alertParam.defaultText		= CFSTR("Continue");
+		alertParam.cancelText		= CFSTR("Quit");
+		alertParam.position			= kWindowDefaultPosition;
+		alertParam.defaultButton	= kAlertStdAlertOKButton;
+		alertParam.cancelButton		= kAlertStdAlertCancelButton;
+
+		CreateStandardAlert(
+					  kAlertCautionAlert,
+					  title,
+					  exposition,       /* can be NULL */
+					  &alertParam,             /* can be NULL */
+					  &alertDialog);
+		
+		RunStandardAlert(
+				   alertDialog,
+				   NULL,       /* can be NULL */
+				   &index);
+
+		CFRelease( title );
+
+		if( exposition != NULL )
+		{
+			CFRelease( exposition );
+		}
+		
+		// continue
+		if( index == kAlertStdAlertOKButton )
+		{
+			event->retcode = 0;
+		}
+		// quit
+		else if( index == kAlertStdAlertCancelButton )
+		{
+			event->retcode = 2;
+		}
+    }
+
+    return event;
 }
