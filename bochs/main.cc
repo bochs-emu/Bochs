@@ -741,7 +741,7 @@ bx_continue_after_control_panel (int argc, char *argv[])
       fprintf (stderr, "   cd /usr/local/bochs/dlxlinux\n");
       fprintf (stderr, "   bochs\n");
 #endif
-      exit(1);
+      BX_EXIT(1);
     }
   }
 
@@ -754,7 +754,7 @@ bx_continue_after_control_panel (int argc, char *argv[])
   if (bx_parse_cmdline (argc, argv)) {
     fprintf (stderr, "There were errors while parsing the command line.\n");
     fprintf (stderr, "Bochs is exiting.\n");
-    exit (1);
+    BX_EXIT (1);
   }
 
   bx_init_hardware();

@@ -133,19 +133,19 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
            );
   if (fd < 0) {
     BX_INFO(( "ROM: couldn't open ROM image file '%s'.", path));
-    exit(1);
+    BX_EXIT(1);
     }
   ret = fstat(fd, &stat_buf);
   if (ret) {
     BX_INFO(( "ROM: couldn't stat ROM image file '%s'.", path));
-    exit(1);
+    BX_EXIT(1);
     }
 
   size = stat_buf.st_size;
 
   if ( (romaddress + size) > BX_MEM_THIS len ) {
     BX_INFO(( "ROM: ROM address range > physical memsize!"));
-    exit(1);
+    BX_EXIT(1);
     }
 
   offset = 0;

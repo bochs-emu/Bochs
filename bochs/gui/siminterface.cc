@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.2 2001-06-24 15:03:24 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.3 2001-06-24 21:29:09 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -192,7 +192,7 @@ void
 bx_real_sim_c::quit_sim (int clean) {
   if (!clean)
     BX_PANIC (("Quit simulation command"));
-  ::exit (0);
+  BX_EXIT (0);
 }
 
 int

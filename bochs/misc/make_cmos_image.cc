@@ -75,7 +75,7 @@ main(int argc, char *argv[])
 
   if (argc != 2) {
     fprintf(stderr, "usage: %s pathname\n", argv[0]);
-    exit(1);
+    BX_EXIT(1);
     }
 
   fd = open(argv[1], O_WRONLY | O_CREAT
@@ -86,13 +86,13 @@ main(int argc, char *argv[])
            );
   if (fd < 0) {
     perror("trying to open cmos image file to write.\n");
-    exit(1);
+    BX_EXIT(1);
     }
 
   ret = write(fd, cmos, sizeof(cmos));
   if (ret != sizeof(cmos)) {
     perror("write() did not write all CMOS data.\n");
-    exit(1);
+    BX_EXIT(1);
     }
   printf("CMOS data successfuly written to file '%s'.\n", argv[1]);
 }

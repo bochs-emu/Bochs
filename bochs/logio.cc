@@ -367,7 +367,7 @@ logfunctions::fatal (char *prefix, char *fmt, va_list ap)
   fgets (buf, 8, stdin);
 #endif
 #if !BX_DEBUGGER
-  exit(1);
+  BX_EXIT(1);
 #else
   static Boolean dbg_exit_called = 0;
   if (dbg_exit_called == 0) {

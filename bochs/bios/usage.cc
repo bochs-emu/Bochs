@@ -41,7 +41,7 @@ main(int argc, char *argv[])
 
   if (argc !=3 ) {
     fprintf(stderr, "Usage: usage bios-file org-file\n");
-    exit(1);
+    BX_EXIT(1);
     }
 
   bios_file = open(argv[1], O_RDONLY);
@@ -49,7 +49,7 @@ main(int argc, char *argv[])
 
   if ( (bios_file<0) | (org_file==NULL) ) {
     fprintf(stderr, "problems opening files.\n");
-    exit(1);
+    BX_EXIT(1);
     }
 
   printf("files opened OK\n");
@@ -60,7 +60,7 @@ main(int argc, char *argv[])
     retval = read(bios_file, &bios[index], to_read);
     if (retval <= 0) {
       fprintf(stderr, "problem reading bios file\n");
-      exit(1);
+      BX_EXIT(1);
       }
     to_read -= retval;
     index   += retval;

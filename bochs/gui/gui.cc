@@ -172,7 +172,7 @@ bx_gui_c::power_handler(void)
   BX_PANIC (("POWER button turned off."));
   // shouldn't reach this point, but if you do, QUIT!!!
   fprintf (stderr, "Bochs is exiting because you pressed the power button.\n");
-  ::exit (1);
+  BX_EXIT (1);
 }
 
   void
