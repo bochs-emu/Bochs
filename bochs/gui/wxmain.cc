@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.28 2002-09-03 16:03:50 bdenney Exp $
+// $Id: wxmain.cc,v 1.29 2002-09-03 17:50:12 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -298,11 +298,11 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
   CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
   wxToolBar *tb = GetToolBar();
-  tb->SetToolBitmapSize(wxSize(16, 16));
+  tb->SetToolBitmapSize(wxSize(32, 32));
 
-  int currentX = 5;
-#define BX_ADD_TOOL(id, xpm_name, tooltip) \
-    do {tb->AddTool(id, wxBitmap(xpm_name), wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, tooltip);  currentX += 34; } while (0)
+#define BX_ADD_TOOL(id, xpm_name, tooltip) do { \
+    tb->AddTool(id, wxBitmap(xpm_name), tooltip); \
+  } while (0)
 
   BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, "Change Floppy A");
   BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, "Change Floppy B");
@@ -314,7 +314,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, "Paste from clipboard");
   BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, "Save screen snapshot");
   BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
-  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, "Mouse Enable/Disable");
+  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, "(Mouse Not Implemented Yet!)");
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, "Keyboard shortcut");
 
   tb->Realize();
