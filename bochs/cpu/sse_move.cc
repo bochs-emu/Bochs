@@ -1315,8 +1315,19 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
     UndefinedOpcode(i);
   }
 
-  Bit32u val32 = BX_READ_32BIT_REG(i->nnn());
-  write_virtual_dword(i->seg(), RMAddr(i), &val32);
+#if BX_SUPPORT_X86_64 
+  if (i->os64L()) {
+    Bit64u val64 = BX_READ_64BIT_REG(i->nnn());
+    write_virtual_qword(i->seg(), RMAddr(i), &val64);
+    }
+  else {
+    Bit32u val32 = BX_READ_32BIT_REG(i->nnn());
+    write_virtual_dword(i->seg(), RMAddr(i), &val32);
+    }
+#else
+    Bit32u val32 = BX_READ_32BIT_REG(i->nnn());
+    write_virtual_dword(i->seg(), RMAddr(i), &val32);
+#endif
 
 #else
   BX_INFO(("MOVNTI_MdGd: SSE2 not supported in current configuration"));
