@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.26.2.5 2002-10-18 16:15:46 bdenney Exp $
+// $Id: serial.cc,v 1.26.2.6 2002-10-18 16:43:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,6 +74,7 @@ bx_serial_c *theSerialDevice = NULL;
 libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSerialDevice = new bx_serial_c ();
+  bx_devices.pluginSerialDevice = theSerialDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
   return(0); // Success
 }

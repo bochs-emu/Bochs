@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.12 2002-10-18 16:15:44 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.13 2002-10-18 16:43:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,10 +60,12 @@ bx_keyb_c *theKeyboard = NULL;
   int
 libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  // Create one instance of the keyboard device object.
+  theKeyboard = new bx_keyb_c ();
   // Before this plugin was loaded, pluginKeyboard pointed to a stub.
   // Now make it point to the real thing.
-  theKeyboard = new bx_keyb_c ();
-  pluginKeyboard = theKeyboard;
+  bx_devices.pluginKeyboard = theKeyboard;
+  // Register this device.
   BX_REGISTER_DEVICE_DEVMODEL (plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
   return(0); // Success
 }
@@ -120,7 +122,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.12 2002-10-18 16:15:44 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.13 2002-10-18 16:43:01 bdenney Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");

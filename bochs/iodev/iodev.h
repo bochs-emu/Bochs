@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.13 2002-10-18 16:15:44 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.14 2002-10-18 16:43:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,10 +151,6 @@ class bx_hard_drive_stub_c : public bx_devmodel_c {
   }
 };
 
-extern class bx_keyb_stub_c *pluginKeyboard;
-extern class bx_hard_drive_stub_c *pluginHardDrive;
-//////////////
-
 class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -200,6 +196,10 @@ public:
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c	   *iodebug;
 #endif
+  bx_keyb_stub_c *pluginKeyboard;
+  bx_hard_drive_stub_c *pluginHardDrive;
+  bx_devmodel_c *pluginSerialDevice;
+  bx_devmodel_c *pluginParallelDevice;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle

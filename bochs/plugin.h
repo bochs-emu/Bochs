@@ -156,17 +156,17 @@ extern "C" {
 
 ///////// keyboard macros
 #define DEV_mouse_motion(dx, dy, state) \
-    (pluginKeyboard->mouse_motion(dx, dy, state))
+    (bx_devices.pluginKeyboard->mouse_motion(dx, dy, state))
 #define DEV_kbd_gen_scancode(scancode) \
-    (pluginKeyboard->gen_scancode(scancode))
+    (bx_devices.pluginKeyboard->gen_scancode(scancode))
 #define DEV_kbd_put_scancode(scancode, count) \
-    (pluginKeyboard->put_scancode(scancode, count))
+    (bx_devices.pluginKeyboard->put_scancode(scancode, count))
 #define DEV_kbd_paste_bytes(bytes, count) \
-    (pluginKeyboard->paste_bytes(bytes,count))
+    (bx_devices.pluginKeyboard->paste_bytes(bytes,count))
 #define DEV_kbd_paste_delay_changed() \
-    (pluginKeyboard->paste_delay_changed())
+    (bx_devices.pluginKeyboard->paste_delay_changed())
 #define DEV_mouse_enabled_changed(val) \
-    (pluginKeyboard->mouse_enabled_changed(val))
+    (bx_devices.pluginKeyboard->mouse_enabled_changed(val))
 
 ///////// hard drive macros
 #define BX_HD_READ_HANDLER(a, b, c) \
@@ -174,15 +174,15 @@ extern "C" {
 #define BX_HD_WRITE_HANDLER(a, b, c, d) \
     (bx_hard_drive_c::write_handler(a, b, c, d))
 #define BX_HD_GET_FIRST_CD_HANDLE() \
-    (pluginHardDrive->get_first_cd_handle())
+    (bx_devices.pluginHardDrive->get_first_cd_handle())
 #define BX_HD_GET_DEVICE_HANDLE(a,b) \
-    (pluginHardDrive->get_device_handle(a,b))
+    (bx_devices.pluginHardDrive->get_device_handle(a,b))
 #define BX_HD_GET_CD_MEDIA_STATUS(handle) \
-    (pluginHardDrive->get_cd_media_status(handle))
+    (bx_devices.pluginHardDrive->get_cd_media_status(handle))
 #define BX_HD_SET_CD_MEDIA_STATUS(handle, status) \
-    (pluginHardDrive->set_cd_media_status(handle, status))
-#define BX_HD_CLOSE_HARDDRIVE()  pluginHardDrive->close_harddrive()
-#define BX_HARD_DRIVE_PRESENT() (pluginHardDrive)
+    (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
+#define BX_HD_CLOSE_HARDDRIVE()  bx_devices.pluginHardDrive->close_harddrive()
+#define BX_HARD_DRIVE_PRESENT() (bx_devices.pluginHardDrive)
 
 
 #if BX_HAVE_DLFCN_H

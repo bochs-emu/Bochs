@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.8 2002-10-18 16:15:42 bdenney Exp $
+// $Id: harddrv.cc,v 1.77.2.9 2002-10-18 16:43:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,7 +97,7 @@ bx_hard_drive_c *theHardDrive = NULL;
 libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theHardDrive = new bx_hard_drive_c ();
-  pluginHardDrive = theHardDrive;
+  bx_devices.pluginHardDrive = theHardDrive;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHardDrive, BX_PLUGIN_HARDDRV);
   return(0); // Success
 }
@@ -169,7 +169,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.8 2002-10-18 16:15:42 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.9 2002-10-18 16:43:00 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {

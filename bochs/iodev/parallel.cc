@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.5 2002-10-18 16:15:44 bdenney Exp $
+// $Id: parallel.cc,v 1.20.4.6 2002-10-18 16:43:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,6 +41,7 @@ bx_parallel_c *theParallelDevice = NULL;
 libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theParallelDevice = new bx_parallel_c ();
+  bx_devices.pluginParallelDevice = theParallelDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
   return(0); // Success
 }
@@ -66,7 +67,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.5 2002-10-18 16:15:44 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.6 2002-10-18 16:43:01 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
