@@ -11,6 +11,8 @@ export CXXFLAGS
 
 ./configure --enable-cdrom \
 	    --enable-vbe \
-	    --enable-all-optimizations
+	    --enable-all-optimizations \
+	    --with-carbon --with-sdl \
+	    --enable-plugins
 
 unset echo
