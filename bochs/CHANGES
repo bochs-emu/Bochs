@@ -1,3 +1,36 @@
+I've marked several items with FIXME so that we can check the details.
+-Bryce
+
+-------------------------------------------------------------------------
+Changes in 1.4 (FIXME(bdenney):change to release date):
+- Christophe Bothamy added El Torito support in rombios.c, which allows Bochs
+  to boot cdroms.  To use this, you must set the rombios line in your bochsrc
+  to point to BIOS-bochs-eltorito, and the boot line must say "cdrom".
+  Example:
+    romimage: file=bios/BIOS-bochs-eltorito, address=0xf0000
+    boot: cdrom
+- updated Christophe Bothamy's free vga bios to version 0.2b.  The only
+  change is a bug fix for function ah=13.
+- keyboard changes by Christophe Bothamy. FIXME(cbothamy): need details.
+  - keyboard mapping?
+  - keyboard type?
+- keyboard changes by Volker Ruppert. FIXME(vruppert): need details.
+- new SDL interface by Dave Poirier.  FIXME(eks): need compile instructions for
+  different platforms.  Possibly this will require configure.in improvements
+  that Bryce can help with.
+- fixed bug [ #468340 ] pic:slave: OCW3 not implemented.  Now the slave PIC
+  supports all the modes that the master PIC does, and nobody will see this
+  message again.
+- text mode cursor is improved (Volker Ruppert)
+- improve mouse motion in RFB mode, from patch #457968
+- serial port emulation improvements by Volker Ruppert
+- serial port emulation improvements for FreeBSD and OpenBSD by Stu Grossman
+- fix some memory leaks (patch from Darko Tominac)
+- you can now change the cdrom at runtime.  To notify Bochs that you have
+  changed it, you must click the (new) cdrom icon on the header bar.
+  (Volker Ruppert)
+
+
 -------------------------------------------------------------------------
 Changes in 1.3 (December 10, 2001):
 - networking works on Windows and Linux platforms
