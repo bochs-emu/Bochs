@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.127 2004-10-16 15:44:00 vruppert Exp $
+// $Id: harddrv.cc,v 1.128 2005-02-03 21:01:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -163,7 +163,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.127 2004-10-16 15:44:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.128 2005-02-03 21:01:01 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -581,7 +581,7 @@ bx_hard_drive_c::init(void)
 
     // Set the "extended" boot sequence, bytes 0x38 and 0x3D (needed for cdrom booting)
     BX_INFO(("Using boot sequence %s, %s, %s",
-             bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get ()),
+             bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get () - 1),
              bx_options.Obootdrive[1]->get_choice(bx_options.Obootdrive[1]->get ()),
              bx_options.Obootdrive[2]->get_choice(bx_options.Obootdrive[2]->get ())
 	     ));
@@ -1817,47 +1817,59 @@ if (channel == 0) {
 			      }
 			      break;
 
-			      case 0x28: // read (10)
-			      case 0xa8: // read (12)
-			                 { 
+              case 0x28: // read (10)
+              case 0xa8: // read (12)
+                { 
+                  Bit32s transfer_length;
 
-				    uint32 transfer_length;
-				    if (atapi_command == 0x28)
-				          transfer_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
-				    else
-				          transfer_length = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 6);
+                  if (atapi_command == 0x28)
+                    transfer_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+                  else
+                    transfer_length = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 6);
 
-				    uint32 lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
+                  Bit32u lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
 
-				    if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
-					  atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT);
-					  raise_interrupt(channel);
-					  break;
-				    }
+                  if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
+                    atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT);
+                    raise_interrupt(channel);
+                    break;
+                  }
 
-				    if (transfer_length == 0) {
-					  atapi_cmd_nop(channel);
-					  raise_interrupt(channel);
-					  BX_INFO(("READ(%d) with transfer length 0, ok", atapi_command==0x28?10:12));
-					  break;
-				    }
+                  // Ben: see comment below
+                  if (lba + transfer_length > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
+                    transfer_length = (BX_SELECTED_DRIVE(channel).cdrom.capacity - lba);
+                  }
 
-				    if (lba + transfer_length > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
-					  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR);
-					  raise_interrupt(channel);
-					  break;
-				    }
+                  //if (transfer_length == 0) {
+                  if (transfer_length <= 0) {
+                    atapi_cmd_nop(channel);
+                    raise_interrupt(channel);
+                    BX_INFO(("READ(%d) with transfer length <= 0, ok (%i)", atapi_command==0x28?10:12, transfer_length));
+                    break;
+                  }
 
-				    BX_DEBUG(("cdrom: READ (%d) LBA=%d LEN=%d", atapi_command==0x28?10:12, lba, transfer_length));
+/* Ben: I commented this out and added the three lines above.  I am not sure this is the correct thing
+        to do, but it seems to work.
+        FIXME: I think that if the transfer_length is more than we can transfer, we should return
+        some sort of flag/error/bitrep stating so.  I haven't read the atapi specs enough to know
+        what needs to be done though.
 
-				    // handle command
-				    init_send_atapi_command(channel, atapi_command, transfer_length * 2048,
-							    transfer_length * 2048, true);
-				    BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
-				    BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-				    ready_to_send_atapi(channel);
-			      }
-			      break;
+                  if (lba + transfer_length > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
+                    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR);
+                    raise_interrupt(channel);
+                    break;
+                  }
+*/
+                  BX_DEBUG(("cdrom: READ (%d) LBA=%d LEN=%d", atapi_command==0x28?10:12, lba, transfer_length));
+
+                  // handle command
+                  init_send_atapi_command(channel, atapi_command, transfer_length * 2048,
+                                          transfer_length * 2048, true);
+                  BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
+                  BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
+                  ready_to_send_atapi(channel);
+                }
+                break;
 
 				case 0x2b: { // seek
 					uint32 lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
