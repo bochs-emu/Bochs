@@ -74,7 +74,7 @@ If no, what error messages do you see on the console or in the log file?
 [__]
 
 What applications worked under this guest operating system?
-[__]
+[IE40, TweakUI]
 
 What applications failed under this guest operating system?  Did the
 application function incorrectly, crash Bochs, or what?  If you got a
@@ -88,16 +88,15 @@ used.  If you tried out the feature, move the X to the "works" or
 
                   Not       Works    
 		  tested    ok      Fails   Comments?
-floppy disk        [ ]      [X]     [ ]     [__]
+floppy disk        [ ]      [X]     [ ]     [compatibility mode only]
 raw floppy disk    [X]      [ ]     [ ]     [__]
-hard disk          [ ]      [X]     [ ]     [__]
+hard disk          [ ]      [X]     [ ]     [compatibility mode only]
 floating point     [X]      [ ]     [ ]     [__]
 mouse              [X]      [ ]     [ ]     [__]
 cdrom              [ ]      [ ]     [X]     [not detected]
 sb16               [X]      [ ]     [ ]     [__]
 ne2000             [X]      [ ]     [ ]     [__]
-i440FX pci         [X]      [ ]     [ ]     [compialtion with PCI support 
-fails]
+i440FX pci         [X]      [ ]     [ ]     [compilation with PCI support fails]
 debugger           [X]      [ ]     [ ]     [__]
 external loader    [X]      [ ]     [ ]     [__]
 VGA                [ ]      [X]     [ ]     [__]
