@@ -483,9 +483,8 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       BX_PANIC(("MOV_CdRd: CR1 not implemented yet"));
       break;
     case 2: /* CR2 */
-      BX_INFO(("MOV_CdRd: CR2 not implemented yet"));
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_CdRd: CR2 = reg"));
+      BX_DEBUG(("MOV_CdRd: CR2 not implemented yet"));
+	  BX_DEBUG(("MOV_CdRd: CR2 = reg"));
       BX_CPU_THIS_PTR cr2 = val_32;
       break;
     case 3: // CR3
