@@ -443,7 +443,7 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
 
 Bit64u
 bx_pc_system_c::time_usec() {
-  return (Bit64u) (double(Bit64s(time_ticks())) / m_ips );
+  return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips );
 }
 
   Bit64u
