@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.11 2002-04-03 16:48:15 japj Exp $
+// $Id: vga.h,v 1.12 2002-04-29 13:06:06 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,9 +42,14 @@
   #define VBE_DISPI_INDEX_BPP             0x3
   #define VBE_DISPI_INDEX_ENABLE          0x4
   #define VBE_DISPI_INDEX_BANK            0x5
-  
+  #define VBE_DISPI_INDEX_VIRT_WIDTH      0x6
+  #define VBE_DISPI_INDEX_VIRT_HEIGHT     0x7
+  #define VBE_DISPI_INDEX_X_OFFSET        0x8
+  #define VBE_DISPI_INDEX_Y_OFFSET        0x9
+    
   #define VBE_DISPI_ID0                   0xB0C0
-  
+  #define VBE_DISPI_ID1                   0xB0C1
+    
   #define VBE_DISPI_BPP_8                 0x0
 // The following is not support yet, but just for reference available.  
 //  #define VBE_DISPI_BPP_RGB565            0x1
@@ -221,6 +226,7 @@ private:
 
 #if BX_SUPPORT_VBE    
     Bit8u vbe_memory[VBE_DISPI_TOTAL_VIDEO_MEMORY_MB *1024 * 1024];
+    Bit16u  vbe_cur_dispi;
     Bit16u  vbe_xres;
     Bit16u  vbe_yres;
     Bit16u  vbe_bpp;
@@ -228,6 +234,10 @@ private:
     Boolean vbe_enabled;
     Bit16u  vbe_curindex;
     Bit32u  vbe_visable_screen_size; // in bytes
+    Bit16u  vbe_offset_x;
+    Bit16u  vbe_offset_y;
+    Bit16u  vbe_virtual_xres;
+    Bit16u  vbe_virtual_yres;
 #endif    
     } s;  // state information
 
