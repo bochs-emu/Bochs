@@ -50,11 +50,7 @@ static void ftst_(FPU_REG *st0_ptr, u_char st0tag)
       break;
     case TAG_Valid:
       if (getsign(st0_ptr) == SIGN_POS)
-#ifdef NO_PAREN_AROUND_BRACES
-        setcc(0)
-#else
         setcc(0);
-#endif
       else
         setcc(SW_C0);
       break;
@@ -63,11 +59,7 @@ static void ftst_(FPU_REG *st0_ptr, u_char st0tag)
 	{
 	case TW_Denormal:
 	  if (getsign(st0_ptr) == SIGN_POS)
-#ifdef NO_PAREN_AROUND_BRACES
-	    setcc(0)
-#else
 	    setcc(0);
-#endif
 	  else
 	    setcc(SW_C0);
 	  if ( denormal_operand() < 0 )
@@ -86,11 +78,7 @@ static void ftst_(FPU_REG *st0_ptr, u_char st0tag)
 	  break;
 	case TW_Infinity:
 	  if (getsign(st0_ptr) == SIGN_POS)
-#ifdef NO_PAREN_AROUND_BRACES
-	    setcc(0)
-#else
 	    setcc(0);
-#endif
 	  else
 	    setcc(SW_C0);
 	  break;
