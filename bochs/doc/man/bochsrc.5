@@ -408,6 +408,16 @@ Example:
   debug: action=ignore
 
 .TP
+.I "debugger_log:"
+Give the path of the log file you'd like Bochs to log debugger output.
+If you really don't want it, make it '/dev/null', or '-'.
+
+Example:
+  log: debugger.out
+  log: /dev/null              (unix only)
+  log: -
+
+.TP
 .I "sb16:"
 This  defines the SB16 sound emulation. It can
 have several of the  following properties. All

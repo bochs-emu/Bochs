@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.75 2002-11-30 08:58:49 vruppert Exp $
+$Id: user.dbk,v 1.76 2002-12-02 21:37:51 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2697,6 +2697,19 @@ Please report panic messages to the bochs-developers mailing list unless it is
 just a configuration problem like "could not find hard drive image."
 </para>
 </tip>
+</section>
+
+<section><title>debugger_log</title>
+<para>
+Examples:
+<screen>
+  log: debugger.out
+  log: /dev/null              (unix only)
+  log: -
+</screen>
+Give the path of the log file you'd like Bochs to log debugger output.
+If you really don't want it, make it '/dev/null', or '-'.
+</para>
 </section>
 
 <section><title>com1</title>
@@ -6117,7 +6130,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.75 2002-11-30 08:58:49 vruppert Exp $
+        $Id: user.dbk,v 1.76 2002-12-02 21:37:51 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6393,7 +6406,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.75 2002-11-30 08:58:49 vruppert Exp $
+        $Id: user.dbk,v 1.76 2002-12-02 21:37:51 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

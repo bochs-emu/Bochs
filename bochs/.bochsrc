@@ -352,15 +352,15 @@ debug: action=ignore
 
 #=======================================================================
 # DEBUGGER_LOG:
-# Give the path of the log file you'd like Bochs to log debugger output
-# If you really don't want it, make it /dev/null. :^(
+# Give the path of the log file you'd like Bochs to log debugger output.
+# If you really don't want it, make it /dev/null or '-'. :^(
 #
 # Examples:
-#   log: ./debugger.out
-#   log: /dev/tty
+#   debugger_log: ./debugger.out
 #=======================================================================
 #debugger_log: /dev/null
-debugger_log: debugout.txt
+#debugger_log: debugger.out
+debugger_log: -
 
 #=======================================================================
 # com1:
