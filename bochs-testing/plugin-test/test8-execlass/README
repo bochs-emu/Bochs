@@ -1,0 +1,4 @@
+test8-execlass
+
+Try to put a class definition in the main executable, and have the
+modules call it.

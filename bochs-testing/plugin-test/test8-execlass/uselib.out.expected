@@ -1,0 +1,21 @@
+start
+loading module1
+loading module from VARIES{xxx}
+handle is VARIES{xxx}
+module_init function is at VARIES{xxx}
+Calling module_init
+module1 init for main version uselib-test6-1.0
+register_module was called by module 'module1'
+module1 is examining widgets[2]
+module1: widgets[2] name is 'Mikhail'
+module1 will print every widget that it can find
+module1: widgets[0] is [Widget id=1, name='Fred', weight=1.0100]
+module1: widgets[1] is [Widget id=2, name='Erma', weight=0.7600]
+module1: widgets[2] is [Widget id=3, name='Mikhail', weight=2.2500]
+loading module from VARIES{xxx}
+handle is VARIES{xxx}
+module_init function is at VARIES{xxx}
+Calling module_init
+module2 init for main version uselib-test6-1.0
+register_module was called by module 'module2'
+stop
