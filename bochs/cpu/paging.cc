@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.55 2005-02-16 18:58:48 sshwarts Exp $
+// $Id: paging.cc,v 1.56 2005-02-23 21:18:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1039,8 +1039,7 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
 
-  void
-BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *valid)
+void BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *valid)
 {
   bx_address lpf, poffset, paddress;
   Bit32u TLB_index;
@@ -1068,7 +1067,7 @@ BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *valid)
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
     Bit64u pt_address;
     int levels = 3;
-#ifdef BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR msr.lme)
       levels = 4;
 #endif

@@ -33,13 +33,12 @@ typedef enum {
 
 #define APIC_BASE_ADDR    0xfee00000  // default APIC address
 
-#if BX_CPU_LEVEL > 5
-#  define APIC_VERSION_ID 0x00040011  // P6
+// todo: Pentium APIC_VERSION_ID (Pentium has 3 LVT entries)
+#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_SSE >= 2
+#  define APIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
 #else
-#  define APIC_VERSION_ID 0x00340011
+#  define APIC_VERSION_ID 0x00040010  // P6 has 4 LVT entries
 #endif
-
-#define IOAPIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC
 
 #if BX_SUPPORT_APIC
 
@@ -64,7 +63,7 @@ public:
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len) = 0;
   virtual void write(Bit32u address, Bit32u *value, unsigned len) = 0;
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
+  virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);
   virtual bx_bool match_logical_addr (Bit8u address) = 0;
   virtual bx_apic_type_t get_type () = 0;
   virtual void set_arb_id (int newid);  // only implemented on local apics
@@ -161,7 +160,7 @@ public:
   virtual bx_bool is_local_apic () const { return true; }
   virtual bx_apic_type_t get_type () { return APIC_TYPE_LOCAL_APIC; }
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
+  virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);
   Bit8u get_ppr ();
   Bit8u get_tpr ();
   void  set_tpr (Bit8u tpr);

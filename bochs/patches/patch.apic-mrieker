@@ -67,13 +67,10 @@ diff -u -r1.14 apic.cc
 @@ -169,32 +178,51 @@
  
  bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
-+
  {
    // return false if we can't deliver for any reason, so that the caller
    // knows not to clear its IRR.
-+
    Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
-+
    // mask must include ONLY local APICs, or we will have problems.
    if (!deliver_bitmask) {
      BX_PANIC(("deliver failed for vector %02x: no APICs in destination bitmask", vector));
@@ -127,18 +124,11 @@ diff -u -r1.14 apic.cc
        }
        return true;
      case 6:  // Start Up (local apic only)
--      BX_ASSERT (get_type () == APIC_TYPE_LOCAL_APIC);
--      for (int bit=0; bit<APIC_MAX_ID; bit++)
--	if (deliver_bitmask & (1<<bit))
--	  apic_index[bit]->startup_msg (vector);
--      return true;
-+      {
-+        BX_ASSERT (get_type () == APIC_TYPE_LOCAL_APIC);
-+        for (int bit=0; bit<APIC_MAX_ID; bit++)
-+  	if (deliver_bitmask & (1<<bit))
-+  	  apic_index[bit]->startup_msg (vector);
-+        return true;
-+      }
+      BX_ASSERT (get_type () == APIC_TYPE_LOCAL_APIC);
+      for (int bit=0; bit<APIC_MAX_ID; bit++)
+	if (deliver_bitmask & (1<<bit))
+	  apic_index[bit]->startup_msg (vector);
+      return true;
 +    case 4:  // NMI
 +      {
 +        BX_INFO (("APIC NMI deliver_bitmask %X", deliver_bitmask));
@@ -197,35 +187,6 @@ diff -u -r1.14 apic.cc
  	  service_local_apic ();
  	}
  	if (bx_dbg.apic)
-@@ -498,6 +547,10 @@
- 
- void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
- {
-+  Bit8u *bitarray;
-+  Bit32u bitlong;
-+  int i;
-+
-   assert (len == 4);
-   *data = 0;  // default value for unimplemented registers
-   Bit32u addr2 = addr & 0xff0;
-@@ -532,8 +585,15 @@
-   case 0x1c0: case 0x1d0: case 0x1e0: case 0x1f0:
-   case 0x200: case 0x210: case 0x220: case 0x230:
-   case 0x240: case 0x250: case 0x260: case 0x270:
--    *data = 0;
--    BX_INFO(("reading ISR,TMR,IRR not implemented"));
-+    if (addr2 & 0x200) bitarray = irr;		// 200-27F: irr
-+    else if (addr2 & 0x80) bitarray = tmr;	// 180-1FF: tmr
-+    else bitarray = isr;			// 100-17F: isr
-+    bitarray += ((addr2 << 1) & 0xE0) + 32;	// point just past desired group of 32 bits/bytes
-+    for (i = 32; -- i >= 0;) {			// loop through 32 times
-+      bitlong *= 2;				// make room for new bit
-+      bitlong |= *(-- bitarray);		// or in the bit (assumes irr,tmr,isr elements are only 0 or 1)
-+    }
-+    *data = bitlong;
-     break;
-   case 0x280: // error status reg
-     *data = err_status; break;
 @@ -568,30 +628,38 @@
  int 
  bx_local_apic_c::highest_priority_int (Bit8u *array)
@@ -280,8 +241,7 @@ diff -u -r1.14 apic.cc
 +  int vector, ppr;
 +
    // CPU calls this when it is ready to service one interrupt
--  if (!cpu->INTR)
-+  if (!cpu->INTR) 
+  if (!cpu->INTR)
      BX_PANIC(("%s: acknowledged an interrupt, but INTR=0", cpu->name));
 +
    BX_ASSERT (cpu->int_from_local_apic);
@@ -332,33 +292,6 @@ diff -u -r1.14 apic.cc
      }
    }
    BX_INFO(("}", cpu->name));
-@@ -667,18 +750,20 @@
- Bit32u 
- bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
- {
--  int dest_shorthand = (icr_low >> 18) & 3;
--  Bit32u all_mask = (1<<APIC_MAX_ID) - 1;
-   Bit32u mask;
--  switch (dest_shorthand) {
-+
-+  switch ((icr_low >> 18) & 3) {
-   case 0:  // no shorthand, use real destination value
--    return bx_generic_apic_c::get_delivery_bitmask (dest, dest_mode);
-+    mask = bx_generic_apic_c::get_delivery_bitmask (dest, dest_mode);
-+    break;
-   case 1:  // self
-     return (1<<id);
-   case 2:  // all including self
--    mask = all_mask;
-+    mask = (1<<APIC_MAX_ID) - 1;
-+    break;
-   case 3:  // all but self
--    mask = all_mask & ~(1<<id);
-+    mask = ((1<<APIC_MAX_ID) - 1) & ~(1<<id);
-+    break;
-   }
-   // prune nonexistents and I/O apics from list
-   for (int bit=0; bit<APIC_MAX_ID; bit++) {
 @@ -691,14 +776,14 @@
  }
  
@@ -420,7 +353,7 @@ diff -u -r1.32 cpu.cc
 +    BX_INSTR_HWINTERRUPT (2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 +  }
 +
-   else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_ && BX_DBG_ASYNC_INTR) {
+   else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR) {
      Bit8u vector;
  
 Index: cpu/cpu.h
@@ -460,8 +393,8 @@ diff -u -r1.16 init.cc
      BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
      debug_trap |= 0x80000000;
      async_event = 1;
-+    eflags.if_ = 0;				// apic code uses this to distinguish from a normal HLT instruction
-+						// ... normal HLT's should not be executed with interrupts inhibited
++    BX_CPU_THIS_PTR clear_IF();	// apic code uses this to distinguish from a normal HLT instruction
++					// ... normal HLT's should not be executed with interrupts inhibited
    }
  #endif
  }

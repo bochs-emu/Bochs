@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.40 2005-02-13 18:36:52 sshwarts Exp $
+// $Id: apic.cc,v 1.41 2005-02-23 21:18:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -193,7 +193,7 @@ Bit32u bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 }
 
 bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector,
-			    Bit8u polarity, Bit8u trig_mode)
+			    Bit8u level, Bit8u trig_mode)
 {
   // return false if we can't deliver for any reason, so that the caller
   // knows not to clear its IRR.
@@ -232,7 +232,11 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
 	  local_apic_index[i]->bypass_irr_isr = true;
        break;
     case APIC_DM_SMI:
+      BX_INFO(("APIC delivery mode SMI is not implemented"));
+      break;
     case APIC_DM_NMI:
+      BX_INFO(("APIC delivery mode NMI is not implemented"));
+      break;
     case 3:  // reserved
       break;
     default:
@@ -269,7 +273,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
 }
 
 bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode,
-				  Bit8u vector, Bit8u polarity, Bit8u trig_mode)
+				  Bit8u vector, Bit8u level, Bit8u trig_mode)
 {
   // In this function, implement only the behavior that is specific to
   // the local apic.  For general behavior of all apics, just send it to
@@ -277,6 +281,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   int found_focus = 0;
   int broadcast = (deliver_bitmask == BX_CPU_C::cpu_online_map);
+  int bit;
 
   if (broadcast)
     BX_INFO(("Broadcast IPI for vector %#x delivery_mode %#x", vector, delivery_mode));
@@ -297,36 +302,36 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
     if (!found_focus) dest = apic_bus_arbitrate_lowpri(0xff);
     else return false;
     break;
+
   case APIC_DM_INIT:
+    if (level == 0 && trig_mode == 1)
     {
-      int bit;
-      int trig_mode = (icr_low >> 15) & 1;
-      int level = (icr_low >> 14) & 1;
-      if (level == 0 && trig_mode == 1) {
-        // special mode in local apic.  See "INIT Level Deassert" in the
-        // Intel Soft. Devel. Guide Vol 3, page 7-34.  This magic code
-        // causes all APICs (regardless of dest address) to set their
-        // arbitration ID to their APIC ID.
-        BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
-        for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
-          local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
-        apic_index[bit]->set_arb_id(apic_index[bit]->get_id());	// HACK !!!
-        return true;
-      }
-      break;	// we'll fall through to generic_deliver:case INIT
+      // special mode in local apic.  See "INIT Level Deassert" in the
+      // Intel Soft. Devel. Guide Vol 3, page 7-34.  This magic code
+      // causes all APICs (regardless of dest address) to set their
+      // arbitration ID to their APIC ID. Not supported by Pentium 4
+      // and Intel Xeon processors.
+      BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
+      for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
+        local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
+      apic_index[bit]->set_arb_id(apic_index[bit]->get_id());	// HACK !!!
+      return true;
     }
+    break; // we'll fall through to generic_deliver:case INIT
+
   case APIC_DM_SIPI:  // Start Up (SIPI, local apic only)
-    for (int bit=0; bit<BX_LOCAL_APIC_NUM; bit++) {
+    for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++) {
       if (deliver_bitmask & (1<<bit))
         local_apic_index[bit]->startup_msg(vector);
     }
     return true;
+
   default:
     break;
   }
 
-   // not any special case behavior, just use generic apic code.
-   return bx_generic_apic_c::deliver (dest, dest_mode, delivery_mode, vector, polarity, trig_mode);
+  // not any special case behavior, just use generic apic code.
+  return bx_generic_apic_c::deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
 }
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
@@ -473,7 +478,10 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         int dest_mode = (icr_low >> 11) & 1;
         int delivery_mode = (icr_low >> 8) & 7;
         int vector = (icr_low & 0xff);
-        //
+#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_SSE >= 2
+        trig_mode = 0;  // these flags have no meaning for P4 processor
+        level = 1;
+#endif
         // deliver will call get_delivery_bitmask to decide who to send to.
         // This local_apic class redefines get_delivery_bitmask to 
         // implement the destination shorthand field, which doesn't exist
@@ -578,7 +586,7 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
   case 0x20: // local APIC id
     *data = (id) << 24; break;
   case 0x30: // local APIC version
-    *data = 0x00170011; break;
+    *data = APIC_VERSION_ID; break;
   case 0x80: // task priority
     *data = task_priority & 0xff; break;
   case 0x90: // arbitration priority
@@ -665,9 +673,9 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
 
 int bx_local_apic_c::highest_priority_int (Bit8u *array)
 {
-  for (int i=0; i<BX_LOCAL_APIC_MAX_INTS; i++)
-    if (array[i]) return i;
-  return -1;
+  int i; // scan bits from highest to lowest
+  for (i = BX_LOCAL_APIC_MAX_INTS; -- i >= 0;) if (array[i]) break;
+  return i;
 }
 
 void bx_local_apic_c::service_local_apic ()
