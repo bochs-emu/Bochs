@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.97 2003-08-01 01:20:00 cbothamy Exp $
+// $Id: siminterface.cc,v 1.98 2003-08-09 22:17:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -819,6 +819,7 @@ bx_param_num_c::bx_param_num_c (bx_id id,
   this->initial_val = initial_val;
   this->val.number = initial_val;
   this->handler = NULL;
+  this->enable_handler = NULL;
   this->base = default_base;
   // dependent_list must be initialized before the set(),
   // because set calls update_dependents().
@@ -846,6 +847,12 @@ bx_param_num_c::set_handler (param_event_handler handler)
   this->handler = handler; 
   // now that there's a handler, call set once to run the handler immediately
   //set (get ());
+}
+
+void 
+bx_param_num_c::set_enable_handler (param_enable_handler handler)
+{ 
+  this->enable_handler = handler; 
 }
 
 void bx_param_num_c::set_dependent_list (bx_list_c *l) {
@@ -906,6 +913,10 @@ void bx_param_num_c::update_dependents ()
 void
 bx_param_num_c::set_enabled (int en)
 {
+  // The enable handler may wish to allow/disallow the action
+  if (enable_handler) {
+    en = (*enable_handler) (this, en);
+    }
   bx_param_c::set_enabled (en);
   update_dependents ();
 }
@@ -1234,6 +1245,22 @@ bx_param_string_c::set_handler (param_string_event_handler handler)
   this->handler = handler; 
   // now that there's a handler, call set once to run the handler immediately
   //set (getptr ());
+}
+
+void 
+bx_param_string_c::set_enable_handler (param_enable_handler handler)
+{ 
+  this->enable_handler = handler; 
+}
+
+void
+bx_param_string_c::set_enabled (int en)
+{
+  // The enable handler may wish to allow/disallow the action
+  if (enable_handler) {
+    en = (*enable_handler) (this, en);
+    }
+  bx_param_c::set_enabled (en);
 }
 
 Bit32s

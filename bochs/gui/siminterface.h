@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.102 2003-08-01 01:20:00 cbothamy Exp $
+// $Id: siminterface.h,v 1.103 2003-08-09 22:17:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -151,30 +151,38 @@ typedef enum {
   BXP_FLOPPYB_TYPE,
   BXP_FLOPPYB_STATUS,
   BXP_FLOPPYB,
+
   BXP_ATA0_MENU,
   BXP_ATA1_MENU,
   BXP_ATA2_MENU,
   BXP_ATA3_MENU,
+#define BXP_ATAx_MENU(i) (BXP_ATA0_MENU + (i))
   BXP_ATA0,
   BXP_ATA1,
   BXP_ATA2,
   BXP_ATA3,
+#define BXP_ATAx(i) (BXP_ATA0 + (i))
   BXP_ATA0_PRESENT,
   BXP_ATA1_PRESENT,
   BXP_ATA2_PRESENT,
   BXP_ATA3_PRESENT,
+#define BXP_ATAx_PRESENT(i) (BXP_ATA0_PRESENT + (i))
   BXP_ATA0_IOADDR1,
   BXP_ATA1_IOADDR1,
   BXP_ATA2_IOADDR1,
   BXP_ATA3_IOADDR1,
+#define BXP_ATAx_IOADDR1(i) (BXP_ATA0_IOADDR1 + (i))
   BXP_ATA0_IOADDR2,
   BXP_ATA1_IOADDR2,
   BXP_ATA2_IOADDR2,
   BXP_ATA3_IOADDR2,
+#define BXP_ATAx_IOADDR2(i) (BXP_ATA0_IOADDR2 + (i))
   BXP_ATA0_IRQ,
   BXP_ATA1_IRQ,
   BXP_ATA2_IRQ,
   BXP_ATA3_IRQ,
+#define BXP_ATAx_IRQ(i) (BXP_ATA0_IRQ + (i))
+
   BXP_ATA0_MASTER,
   BXP_ATA0_SLAVE,
   BXP_ATA1_MASTER,
@@ -183,6 +191,10 @@ typedef enum {
   BXP_ATA2_SLAVE,
   BXP_ATA3_MASTER,
   BXP_ATA3_SLAVE,
+#define BXP_ATAx_DEVICE(i, s) (BXP_ATA0_MASTER + (2*(i)) + (s))
+
+#define BXP_PARAMS_PER_ATA_DEVICE 12
+
   BXP_ATA0_MASTER_PRESENT,
   BXP_ATA0_SLAVE_PRESENT,
   BXP_ATA1_MASTER_PRESENT,
@@ -191,6 +203,8 @@ typedef enum {
   BXP_ATA2_SLAVE_PRESENT,
   BXP_ATA3_MASTER_PRESENT,
   BXP_ATA3_SLAVE_PRESENT,
+#define BXP_ATAx_DEVICE_PRESENT(i, s) (BXP_ATA0_MASTER_PRESENT + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_TYPE,
   BXP_ATA0_SLAVE_TYPE,
   BXP_ATA1_MASTER_TYPE,
@@ -199,6 +213,8 @@ typedef enum {
   BXP_ATA2_SLAVE_TYPE,
   BXP_ATA3_MASTER_TYPE,
   BXP_ATA3_SLAVE_TYPE,
+#define BXP_ATAx_DEVICE_TYPE(i, s) (BXP_ATA0_MASTER_TYPE + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_MODE,
   BXP_ATA0_SLAVE_MODE,
   BXP_ATA1_MASTER_MODE,
@@ -207,6 +223,8 @@ typedef enum {
   BXP_ATA2_SLAVE_MODE,
   BXP_ATA3_MASTER_MODE,
   BXP_ATA3_SLAVE_MODE,
+#define BXP_ATAx_DEVICE_MODE(i, s) (BXP_ATA0_MASTER_MODE + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_PATH,
   BXP_ATA0_SLAVE_PATH,
   BXP_ATA1_MASTER_PATH,
@@ -215,6 +233,8 @@ typedef enum {
   BXP_ATA2_SLAVE_PATH,
   BXP_ATA3_MASTER_PATH,
   BXP_ATA3_SLAVE_PATH,
+#define BXP_ATAx_DEVICE_PATH(i, s) (BXP_ATA0_MASTER_PATH + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_CYLINDERS,
   BXP_ATA0_SLAVE_CYLINDERS,
   BXP_ATA1_MASTER_CYLINDERS,
@@ -223,6 +243,8 @@ typedef enum {
   BXP_ATA2_SLAVE_CYLINDERS,
   BXP_ATA3_MASTER_CYLINDERS,
   BXP_ATA3_SLAVE_CYLINDERS,
+#define BXP_ATAx_DEVICE_CYLINDERS(i, s) (BXP_ATA0_MASTER_CYLINDERS + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_HEADS,
   BXP_ATA0_SLAVE_HEADS,
   BXP_ATA1_MASTER_HEADS,
@@ -231,6 +253,8 @@ typedef enum {
   BXP_ATA2_SLAVE_HEADS,
   BXP_ATA3_MASTER_HEADS,
   BXP_ATA3_SLAVE_HEADS,
+#define BXP_ATAx_DEVICE_HEADS(i, s) (BXP_ATA0_MASTER_HEADS + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_SPT,
   BXP_ATA0_SLAVE_SPT,
   BXP_ATA1_MASTER_SPT,
@@ -239,6 +263,8 @@ typedef enum {
   BXP_ATA2_SLAVE_SPT,
   BXP_ATA3_MASTER_SPT,
   BXP_ATA3_SLAVE_SPT,
+#define BXP_ATAx_DEVICE_SPT(i, s) (BXP_ATA0_MASTER_SPT + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_STATUS,
   BXP_ATA0_SLAVE_STATUS,
   BXP_ATA1_MASTER_STATUS,
@@ -247,6 +273,8 @@ typedef enum {
   BXP_ATA2_SLAVE_STATUS,
   BXP_ATA3_MASTER_STATUS,
   BXP_ATA3_SLAVE_STATUS,
+#define BXP_ATAx_DEVICE_STATUS(i, s) (BXP_ATA0_MASTER_STATUS + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_MODEL,
   BXP_ATA0_SLAVE_MODEL,
   BXP_ATA1_MASTER_MODEL,
@@ -255,6 +283,8 @@ typedef enum {
   BXP_ATA2_SLAVE_MODEL,
   BXP_ATA3_MASTER_MODEL,
   BXP_ATA3_SLAVE_MODEL,
+#define BXP_ATAx_DEVICE_MODEL(i, s) (BXP_ATA0_MASTER_MODEL + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_BIOSDETECT,
   BXP_ATA0_SLAVE_BIOSDETECT,
   BXP_ATA1_MASTER_BIOSDETECT,
@@ -263,6 +293,8 @@ typedef enum {
   BXP_ATA2_SLAVE_BIOSDETECT,
   BXP_ATA3_MASTER_BIOSDETECT,
   BXP_ATA3_SLAVE_BIOSDETECT,
+#define BXP_ATAx_DEVICE_BIOSDETECT(i, s) (BXP_ATA0_MASTER_BIOSDETECT + (2*(i)) + (s))
+
   BXP_ATA0_MASTER_TRANSLATION,
   BXP_ATA0_SLAVE_TRANSLATION,
   BXP_ATA1_MASTER_TRANSLATION,
@@ -271,6 +303,18 @@ typedef enum {
   BXP_ATA2_SLAVE_TRANSLATION,
   BXP_ATA3_MASTER_TRANSLATION,
   BXP_ATA3_SLAVE_TRANSLATION,
+#define BXP_ATAx_DEVICE_TRANSLATION(i, s) (BXP_ATA0_MASTER_TRANSLATION + (2*(i)) + (s))
+
+  BXP_ATA0_MASTER_JOURNAL,
+  BXP_ATA0_SLAVE_JOURNAL,
+  BXP_ATA1_MASTER_JOURNAL,
+  BXP_ATA1_SLAVE_JOURNAL,
+  BXP_ATA2_MASTER_JOURNAL,
+  BXP_ATA2_SLAVE_JOURNAL,
+  BXP_ATA3_MASTER_JOURNAL,
+  BXP_ATA3_SLAVE_JOURNAL,
+#define BXP_ATAx_DEVICE_JOURNAL(i, s) (BXP_ATA0_MASTER_JOURNAL + (2*(i)) + (s))
+
 #define BXP_PARAMS_PER_SERIAL_PORT 2
   BXP_COM1_ENABLED,
   BXP_COM1_PATH,
@@ -814,6 +858,7 @@ public:
 };
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
+typedef int (*param_enable_handler)(class bx_param_c *, int en);
 
 class BOCHSAPI bx_param_num_c : public bx_param_c {
   BOCHSAPI_CYGONLY static Bit32u default_base;
@@ -834,6 +879,7 @@ protected:
     bx_bool *pbool;  // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
+  param_enable_handler enable_handler;
   int base;
 public:
   bx_param_num_c (bx_id id,
@@ -842,6 +888,7 @@ public:
       Bit64s min, Bit64s max, Bit64s initial_val);
   void reset ();
   void set_handler (param_event_handler handler);
+  void set_enable_handler (param_enable_handler handler);
   virtual bx_list_c *get_dependent_list () { return dependent_list; }
   void set_dependent_list (bx_list_c *l);
   virtual void set_enabled (int enabled);
@@ -979,6 +1026,7 @@ class BOCHSAPI bx_param_string_c : public bx_param_c {
   int maxsize;
   char *val, *initial_val;
   param_string_event_handler handler;
+  param_enable_handler enable_handler;
   bx_param_num_c *options;
   char separator;
 public:
@@ -997,6 +1045,8 @@ public:
   virtual ~bx_param_string_c ();
   void reset ();
   void set_handler (param_string_event_handler handler);
+  void set_enable_handler (param_enable_handler handler);
+  virtual void set_enabled (int enabled);
   Bit32s get (char *buf, int len);
   char *getptr () {return val; }
   void set (char *buf);
@@ -1176,6 +1226,7 @@ typedef struct {
   bx_param_enum_c *Otype;
   bx_param_enum_c *Omode;
   bx_param_string_c *Opath;
+  bx_param_string_c *Ojournal;
   bx_param_num_c *Ocylinders;
   bx_param_num_c *Oheads;
   bx_param_num_c *Ospt;
