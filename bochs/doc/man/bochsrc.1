@@ -17,199 +17,182 @@ home directory.
 .SH OPTIONS
 
 .TP
-.I "ROMIMAGE:"
+.I "romimage:"
 You need to load  a ROM BIOS into  F0000-FFFFF.
-Most of the BIOS hooks have been wiped out and
-replace them with real BIOS support. Normally,
-you can use a precompiled BIOS in  the
+The BIOS controls what the PC does when it first powers on.  Normally, you can
+use a precompiled BIOS in  the
 .B bios/
-directory,  named
-.B BIOS-bochs-yymmdd.
-Use the latest one in
-there.
+directory, named BIOS-bochs-latest.
 
 Example:
-        romimage: file=bios/BIOS-bochs-970717
+  romimage: file=bios/BIOS-bochs-970717
 
 .TP
-.I "MEGS:"
+.I "megs:"
 Set this to the default number of Megabytes of
 memory you want to emulate.  You may also pass
 the
-.B '-megs xyz'
+.B 'megs:N'
 option to bochs.  The  default
-is 32MB, most OS's won't need more than that.
+is 32MB, since most OS's won't need more than that.
 
 Example:
-        megs: 32
+  megs: 32
 
 .TP
-.I "VGAROMIMAGE:"
+.I "vgaromimage:"
 You  also  need to load a VGA  ROM  BIOS  into
-C0000 . You can use this setting to accomplish
-that.
+C0000.
 
 Example:
-        vgaromimage: bios/VGABIOS-elpin-2.40
+  vgaromimage: bios/VGABIOS-elpin-2.40
 
 .TP
-.I "FLOPPYx:"
-Point this to  the pathname of  a floppy image
-file  or device. This should be of a  bootable
-floppy (image/device)  if you're  booting from
-'a' . You should replace  "x" in the name with
-either  "A"  or  "B" to represent  the  floppy
-drive you wish to configure.
+.I "floppya/floppyb:"
+Point this to  the pathname of  a floppy image file or device.  Floppya is the
+first drive, and floppyb is the second drive.  If you're booting from a floppy,
+floppya should point to a bootable disk.
 
-You can set the initial status of the media to
-'ejected' or 'inserted'.
+You can set the initial status of the media to 'ejected' or 'inserted'.
+Usually you will probably want 'inserted'.
 
-Examples:
+Example:
 
 2.88M 3.5" Floppy:
-        floppya: 2_88=path, status=ejected
+  floppya: 2_88=path, status=ejected
 
 1.44M 3.5" Floppy:
-        floppya: 1_44=path, status=inserted
+  floppya: 1_44=path, status=inserted
 
 1.2M  5.25" Floppy:
-        floppya: 1_2=path, status=ejected
+  floppyb: 1_2=path, status=ejected
 
 720K  3.5" Floppy:
-        floppya: 720k=path, status=inserted
+  floppya: 720k=path, status=inserted
 
 .TP
-.I "FLOPPYB:"
-See FLOPPYA.
-
-.TP
-.I "DISKx:"
+.I "diskc/diskd:"
 Point  this at the disk image you want to  use
-as for a hard disk . If you use bximage(1)  to
+as for a hard disk. If you  use bximage(1)  to
 create   the  image,  it  will  give  you  the
-required  cyl,  head, and spt information. You
-should replace "x" in the name with either "C"
-or "D" to  represent  the hard disk drive  you
-wish to configure.
+required  cyl,  head, and spt information.
+diskc is the first hard drive, and diskd is the
+second hard drive.
 
 .B NOTE:
 You cannot use both diskd and cdromd together.
 
-Examples:
-   diskc: file=10M.i, cyl=306, heads=4, spt=17
- diskc: file=112M.i, cyl=900, heads=15, spt=17
- diskd: file=483.i, cyl=1024, heads=15, spt=63
-
+Example:
+  diskc: file=10M.i, cyl=306, heads=4, spt=17
+  diskc: file=112M.i, cyl=900, heads=15, spt=17
+  diskd: file=483.i, cyl=1024, heads=15, spt=63
 
 .TP
-.I "CDROMD:"
-Point  this  to a pathname  of a  CD-ROM image
-file  or  device.  Currently  only  drive  "D"
-is supported for this setting.
+.I "cdromd:"
+Point this to a pathname of a raw CD-ROM device.
+There is no cdromc option, only cdromd.
 
 .B NOTE:
 You cannot use both diskd and cdromd together.
 
 
-Examples:
-        cdromd: dev=/dev/cdrom, status=inserted
-        cdromd: dev=/dev/cdrom, status=ejected
+Example:
+  cdromd: dev=/dev/cdrom, status=inserted
+  cdromd: dev=/dev/cdrom, status=ejected
 
 .TP
-.I "NEWHARDDRIVESUPPORT:"
+.I "newharddrivesupport:"
 This  setting enables  support for large  hard
 disks,  better  CD  recognition,  and  various
 other  useful  functions.  You  can set it  to
-"enabled=0" (off)  or "enabled=0" (on).  It is
+"enabled=1" (on)  or "enabled=0" (off).  It is
 recommended  that  this  setting  is  left  on
 unless you are having trouble with it.
 
 Example:
-        newharddrivesupport: enabled=1
+  newharddrivesupport: enabled=1
 
 .TP
-.I "BOOT:"
+.I "boot:"
 This defines  your boot drive. You can  either
 boot from 'a' or 'c'.
 
 Example:
-        boot: c
+  boot: c
 
 .TP
-.I "LOG:"
+.I "log:"
 Give the path of the log file you'd like Bochs
 debug and misc. verbage to be written to .  If
 you really don't want it, make it /dev/null.
 
-Examples:
-        log: ./bochs.out
-        log: /dev/tty
-        log: /dev/null
+Example:
+  log: bochs.out
+  log: /dev/tty               (unix only)
+  log: /dev/null              (unix only)
 
 .TP
-.I "PANIC:"
-This  setting tells Bochs how to respond to  a
-panic in the  emulation.   You can set this to
-fatal  (terminate the session) , report (print
-information to the  console),  or  ignore  (do
-nothing).  If  you choose to continue  after a
-panic, don't be surprised if you get strange
-behavior or crashes.
+.I "panic:"
+If Bochs reaches a condition where it cannot emulate correctly, it does a
+panic.  This can be a configuration problem (like a misspelled bochsrc line) or
+an emulation problem (like an unsupported video mode).  The "panic" setting in
+bochsrc tells Bochs how to respond to  a panic.   You can set this to fatal
+(terminate the session), report  (print information to the  console),  or
+ignore  (do nothing).
+
+The safest setting is action=fatal.  If you are getting panics, you can try
+action=report instead.  If you allow Bochs to continue  after a panic, don't be
+surprised if you get strange behavior or crashes if a panic occurs.  Please
+report panic messages unless it is just a configuration problem like "could not
+find hard drive image."
 
 Example:
-        panic: action=fatal
+  panic: action=fatal
 
 
 .TP
-.I "ERROR:"
-This  setting tells Bochs how to respond to an
-error in the  emulation.   You can set this to
-fatal  (terminate the session) , report (print
-information to the  console),  or  ignore  (do
-nothing).  When this happens,  something  went
-wrong, but it is probably safe to continue the
-simulation.
+.I "error:"
+Bochs produces an an error message when it finds a condition that really
+shouldn't happen, but doesn't endanger the simulation.  An example of an 
+error might be if the emulated software produces an illegal disk command.
+
+The "error:"  setting tells Bochs how to respond to an error condition.   You
+can set this to fatal  (terminate the session) , report (print information to
+the  console),  or  ignore  (do nothing).
 
 Example:
-        error: action=report
+  error: action=report
 
 .TP
-.I "INFO:"
-This  setting  tells Bochs what to do when  an
-event  occurs  that  generates   informational
-messages .   You   can  set  this   to   fatal
-( terminate  the  session ) ,  report  ( print
-information to the  console),  or  ignore  (do
-nothing). For  general  usage ,  the  "report"
-option is probably a good choice.
+.I "info:"
+This setting tells Bochs what to do when an event occurs that generates
+informational messages.  You can set this to fatal (that would not be very
+smart though), report (print information to the console), or ignore (do
+nothing).  For general usage, the "report" option is probably a good choice.
 
 Example:
-        info: action=report
+  info: action=report
 
 .TP
-.I "DEBUG:"
-This  setting  tells Bochs what to do when  an
-event occurs  that generates messages intended
-to assist in debugging.  You  can set this  to
-fatal  (terminate the session),  report (print
-information to the  console),  or  ignore  (do
-nothing). You  should  generally  set  this to
-ignore,  these  messages  are useful only when
-debugging the code.
+.I "debug:"
+This  setting  tells Bochs what to do with messages intended to assist in
+debugging.  You  can set this  to fatal (but you shouldn't),  report (print
+information to the  console),  or  ignore  (do nothing).  You  should
+generally  set  this to ignore, unless you are trying to diagnose a particular
+problem.
 
-.B NOTE:
-This  may  spit  out  thousands  of
-messages per second.
+.B NOTE: When action=report, Bochs may spit out thousands of debug messages per
+second, which can impact performance and fill up your disk.
 
 Example:
-        debug: action=ignore
+  debug: action=ignore
 
 .TP
-.I "SB16:"
+.I "sb16:"
 This  defines the SB16 sound emulation. It can
 have several of the  following properties. All
 properties are in this format:
-         sb16: property=value
+  sb16: property=value
 
 
 .B PROPERTIES FOR sb16:
@@ -267,9 +250,9 @@ below).
 
 
 Example:
-        sb16: midimode=1, midi=/dev/midi00,
-        wavemode=1, wave=/dev/dsp, loglevel=2,
-        log=sb16.log, dmatimer=600000
+  sb16: midimode=1, midi=/dev/midi00,
+  wavemode=1, wave=/dev/dsp, loglevel=2,
+  log=sb16.log, dmatimer=600000
 
 .B NOTE:
 The  example is  wrapped onto three  lines for
@@ -277,7 +260,7 @@ formatting  reasons, but  it should all be  on
 one line in the actual bochsrc file.
 
 .TP
-.I "VGA_UPDATE_INTERVAL:"
+.I "vga_update_interval:"
 Video memory is scanned for updates and screen
 updated  every so many virtual  seconds.   The
 default  is  300000,   about  3Hz .   This  is
@@ -287,32 +270,32 @@ the number of emulated instructions-per-second
 your  workstation  can  do,  for  this  to  be
 accurate.
 
-Examples:
-        vga_update_interval: 250000
+Example:
+  vga_update_interval: 250000
 
 
 .TP
-.I "KEYBOARD_SERIAL_DELAY:"
+.I "keyboard_serial_delay:"
 Approximate time in microseconds that it takes
 one  character  to   be  transfered  from  the
 keyboard to controller over the serial path.
 
-Examples:
-        keyboard_serial_delay: 200
+Example:
+  keyboard_serial_delay: 200
 
 .TP
-.I "FLOPPY_COMMAND_DELAY:"
+.I "floppy_command_delay:"
 Time in microseconds to wait before completing
 some  floppy  commands  such  as read,  write,
 seek,  etc.,   which  normally  have  a  delay
 associated.  This was  previous  hardwired  to
 50,000.
 
-Examples:
-        floppy_command_delay: 50000
+Example:
+  floppy_command_delay: 50000
 
 .TP
-.I "IPS:"
+.I "ips:"
 Emulated Instructions Per Second.  This is the
 number of IPS that bochs is capable of running
 on your  machine.  You  can  recompile  Bochs,
@@ -320,32 +303,31 @@ using  instructions  included in  config.h (in
 the source code),  to find  your workstation's
 capability.
 
-IPS is  used to calibrate many  time-dependent
-events  within  the  bochs  simulation .   For
-example, changing IPS affects the frequency of
-VGA updates, the duration of time before a key
-starts to autorepeat,  and the measurement  of
+IPS is used to calibrate many time-dependent events within the bochs
+simulation. For example, changing IPS affects the frequency of VGA updates, the
+duration of time before a key starts to autorepeat, and the measurement of
 BogoMips and other benchmarks.
 
-Example Specifications*:
-        Machine                           Mips
+Example Specifications[1]
+  Machine                           Mips
 ---------------------------------------------------
 650Mhz Athlon K-7 with Linux 2.4.x    2 to 2.5
 400Mhz Pentium II with Linux 2.0.x    1 to 1.8
 166Mhz 64bit Sparc with Solaris 2.x       0.75
 200Mhz Pentium with Linux 2.x              0.5
- *  Mips  are  dependant on  OS  and  compiler
+
+ [1]  Mips  are  dependant on  OS  and  compiler
 configuration  in addition  to processor clock
 speed.
 
 Example:
-        ips: 1000000
+  ips: 1000000
 
 
 .TP
-.I "MOUSE:"
+.I "mouse:"
 This option prevents Bochs from creating mouse
-"events"  unless  a  mouse  is  enabled .  The
+"events"  unless  a  mouse  is  enabled.  The
 hardware emulation  itself is not disabled  by
 this. You  can  turn the mouse on  by  setting
 enabled to  1,  or  turn  it  off  by  setting
@@ -353,12 +335,12 @@ enabled to 0. Unless  you  have  a  particular
 reason  for enabling  the  mouse  by  default,
 it is recommended that you leave it off.
 
-Examples:
-        mouse: enabled=1
-        mouse: enabled=0
+Example:
+  mouse: enabled=1
+  mouse: enabled=0
 
 .TP
-.I "PRIVATE_COLORMAP:"
+.I "private_colormap:"
 Requests that the GUI create and use it's  own
 non-shared colormap.  This  colormap  will  be
 used when in the bochs window. If not enabled,
@@ -366,8 +348,8 @@ a shared  colormap  scheme  may be used.  Once
 again, enabled=1  turns on this feature  and 0
 turns it off.
 
-Examples:
-        private_colormap: enabled=1
+Example:
+  private_colormap: enabled=1
 
 .\"SKIP_SECTION"
 .SH LICENSE
@@ -379,14 +361,14 @@ the lack of warrantee.
 .\"SKIP_SECTION"
 .SH AVAILABILITY
 The latest version of this program can be found at:
-        http://bochs.sourceforge.net/getcurrent.html
+  http://bochs.sourceforge.net/getcurrent.html
 .\"SKIP_SECTION"
 .SH SEE ALSO
 bochs(1), bochs-dlx(1), bximage(1)
 .PP
 .nf
 The Bochs IA-32 Emulator site on the World Wide Web:
-        http://bochs.sourceforge.net
+  http://bochs.sourceforge.net
 .fi
 .\"SKIP_SECTION"
 .SH AUTHORS
@@ -394,7 +376,7 @@ The   Bochs  emulator  was   created   by  Kevin   Lawton
 (kevin@mandrakesoft.com),  and  is  currently  maintained
 by the  members of  the  Bochs x86 Emulator Project . You
 can see a current roster of members at:
-            http://bochs.sourceforge.net/getinvolved.html
+  http://bochs.sourceforge.net/getinvolved.html
 .\"SKIP_SECTION"
 .SH BUGS
 Please  report all  bugs to the bug tracker  on  our  web

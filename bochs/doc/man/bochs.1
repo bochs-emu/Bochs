@@ -1,16 +1,23 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochs 1 "The Bochs Project       bochs %VERSION%        2 Jun 2001"
+.TH bochs 1 "The Bochs Project       bochs @VERSION@        2 Jun 2001"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
 .\"SKIP_SECTION"
 .SH USAGE
-.B bochs
-[boot:c] [bochsrc syntax*]
+.B bochs [bochsrc syntax]
 .LP
-*You can use  any of the syntax  from the bochrc configur
-ation file as command line arguments see
+If you run bochs with no arguments, it will search for a configuration file
+called .bochsrc, bochsrc, bochsrc.txt, or $HOME/.bochsrc.  You can override
+the settings in the configuration file with command line arguments, with the
+same syntax of the bochsrc file.  If the bochsrc
+line has spaces, be sure to enclose the whole line in single quotes.  See also
 .B bochsrc(1).
+
+Example:
+  bochs         (just read configuration file)
+  bochs 'boot:a' 'floppya: 1_44=a.img, status=inserted'
+
 .\"SKIP_SECTION"
 .SH DESCRIPTION
 .LP
@@ -34,14 +41,14 @@ the lack of warrantee.
 .\"SKIP_SECTION"
 .SH AVAILABILITY
 The latest version of this program can be found at:
-        http://bochs.sourceforge.net/getcurrent.html
+	http://bochs.sourceforge.net/getcurrent.html
 .\"SKIP_SECTION"
 .SH SEE ALSO
 bochsrc(1), bochs-dlx(1), bximage(1)
 .PP
 .nf
 The Bochs IA-32 Emulator site on the World Wide Web:
-        http://bochs.sourceforge.net
+	http://bochs.sourceforge.net
 .fi
 .\"SKIP_SECTION"
 .SH AUTHORS
@@ -49,11 +56,12 @@ The   Bochs  emulator  was   created   by  Kevin   Lawton
 (kevin@mandrakesoft.com),  and  is  currently  maintained
 by the  members of  the  Bochs x86 Emulator Project . You
 can see a current roster of members at:
-            http://bochs.sourceforge.net/getinvolved.html
+
+	http://bochs.sourceforge.net/getinvolved.html
 .\"SKIP_SECTION"
 .SH BUGS
 Please  report all  bugs to the bug tracker  on  our  web
-site. Just go to http://bochs.sourceforge.net , and click
+site. Just go to http://bochs.sourceforge.net, and click
 "Bug Reports" on the sidebar under "Features."
 .PP
 Provide a detailed description of the bug, the version of
