@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.16 2001-10-03 13:10:38 bdenney Exp $
+// $Id: pit82c54.cc,v 1.17 2002-02-21 19:22:42 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -35,13 +35,23 @@
 
 
 void pit_82C54::print_counter(counter_type & thisctr) {
-#if 0
+#if 1
   BX_INFO(("Printing Counter"));
-  BX_INFO(("count: %x",thisctr.count));
+  BX_INFO(("count: %d",thisctr.count));
   BX_INFO(("count_binary: %x",thisctr.count_binary));
-  BX_INFO(("next_change_time: %x",thisctr.next_change_time));
+  BX_INFO(("counter gate: %x",thisctr.GATE));
+  BX_INFO(("counter OUT: %x",thisctr.OUTpin));
+  BX_INFO(("next_change_time: %d",thisctr.next_change_time));
   BX_INFO(("End Counter Printout"));
 #endif
+}
+
+void pit_82C54::print_cnum(Bit8u cnum) {
+  if((cnum>MAX_COUNTER) || (cnum<0)) {
+    BX_ERROR(("Bad counter index to print_cnum"));
+  } else {
+    print_counter(counter[cnum]);
+  }
 }
 
   void pit_82C54::latch_counter(counter_type & thisctr) {
@@ -257,7 +267,9 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	}
       }
     }
+#if 0
     print_counter(thisctr);
+#endif
   }
 }
 
@@ -712,7 +724,8 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
       BX_ERROR(("Counter number incorrect in 82C54 set_GATE"));
     } else {
       counter_type & thisctr = counter[cnum];
-      if( (thisctr.GATE&&data) || (!(thisctr.GATE||data)) ) {
+      if(!( (thisctr.GATE&&data) || (!(thisctr.GATE||data)) )) {
+        BX_INFO(("Changing GATE %d to: %d",cnum,data));
 	thisctr.GATE=data;
 	if(thisctr.GATE) {
 	  thisctr.triggerGATE=1;
