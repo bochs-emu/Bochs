@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.74 2003-05-09 15:32:28 vruppert Exp $
+// $Id: vga.cc,v 1.75 2003-05-10 12:00:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1620,6 +1620,14 @@ bx_vga_c::update(void)
     tm_info.line_compare = BX_VGA_THIS s.line_compare;
     tm_info.h_panning = BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning & 0x0f;
     tm_info.v_panning = BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f;
+    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics) {
+      if (tm_info.h_panning == 8)
+        tm_info.h_panning = 0;
+      else
+        tm_info.h_panning++;
+    }
+    // FIXME: this can be removed when we implement the char width switch
+    if (tm_info.h_panning == 8) tm_info.h_panning = 7;
 
     switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
       case 0: // 128K @ A0000
