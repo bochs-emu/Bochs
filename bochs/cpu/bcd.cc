@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.9 2004-03-10 20:14:56 sshwarts Exp $
+// $Id: bcd.cc,v 1.10 2004-03-13 19:37:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,16 +82,16 @@ BX_CPU_C::AAA(bxInstruction_c *)
    *        The right description is:
    *
    *    IF (((AL and 0FH) > 9) or (AF==1)
-   *    THEN {
+   *    THEN
    *        IF CPU<286 THEN {  AL <- AL+6 }
    *                   ELSE {  AX <- AX+6 }
    *        AH <- AH+1
    *        CF <- 1
    *        AF <- 1
-   *    } ELSE {
+   *    ELSE
    *        CF <- 0
    *        AF <- 0
-   *	}
+   *    ENDIF
    *	AL <- AL and 0Fh
    */	
 
@@ -112,6 +112,9 @@ BX_CPU_C::AAA(bxInstruction_c *)
   }
 
   AL = AL & 0x0f;
+
+  /* AAA affects also the following flags: Z,S,O,P */
+  /* modification of the flags is undocumented */
 }
 
   void
@@ -121,7 +124,7 @@ BX_CPU_C::AAS(bxInstruction_c *)
 
   if ( ((AL & 0x0F) > 0x09) || get_AF() )
   {
-    AL = AL - 6;	/* never borrow */
+    AL = AL - 6;
     AH = AH - 1;
     set_AF(1);
     set_CF(1);
@@ -132,6 +135,9 @@ BX_CPU_C::AAS(bxInstruction_c *)
   }
 
   AL = AL & 0x0f;
+
+  /* AAA affects also the following flags: Z,S,O,P */
+  /* modification of the flags is undocumented */
 }
 
   void
