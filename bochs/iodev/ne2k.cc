@@ -1154,13 +1154,13 @@ bx_ne2k_c::init(bx_devices_c *d)
 
   BX_DEBUG(("Init."));
 
-  if (bx_options.ne2k.valid) {
+  if (bx_options.ne2k.Ovalid->get ()) {
     // Bring the register state into power-up state
     reset_device();
 
     // Read in values from config file
-    BX_NE2K_THIS s.base_address = bx_options.ne2k.ioaddr;
-    BX_NE2K_THIS s.base_irq     = bx_options.ne2k.irq;
+    BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
+    BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
     memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.macaddr, 6);
 
     BX_NE2K_THIS s.tx_timer_index =
@@ -1211,15 +1211,15 @@ bx_ne2k_c::init(bx_devices_c *d)
       BX_NE2K_THIS s.macaddr[i] = 0x57;
     
     // Attach to the simulated ethernet dev
-    BX_NE2K_THIS ethdev = eth_locator_c::create(bx_options.ne2k.ethmod, 
-						bx_options.ne2k.ethdev,
+    BX_NE2K_THIS ethdev = eth_locator_c::create(bx_options.ne2k.Oethmod->getptr (), 
+						bx_options.ne2k.Oethdev->getptr (),
 				    (const char *) bx_options.ne2k.macaddr,
 						rx_handler, 
 						this);
     
     if (BX_NE2K_THIS ethdev == NULL) {
       BX_INFO(("could not find eth module %s - using null instead",
-		bx_options.ne2k.ethmod));
+		bx_options.ne2k.Oethmod->getptr ()));
       
       BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
 				    (const char *) bx_options.ne2k.macaddr,

@@ -591,12 +591,12 @@ typedef struct {
   } bx_cmos_options;
 
 typedef struct {
-  int       valid;
-  unsigned  ioaddr;
-  unsigned  irq;
+  bx_param_bool_c *Ovalid;
+  bx_param_num_c *Oioaddr;
+  bx_param_num_c *Oirq;
   unsigned char macaddr[6];
-  char      *ethmod;
-  char      *ethdev;
+  bx_param_string_c *Oethmod;
+  bx_param_string_c *Oethdev;
   } bx_ne2k_options;
 
 typedef struct {
@@ -622,10 +622,14 @@ typedef struct {
 } bx_log_options;
 
 typedef struct {
-  int present;
-  char *midifile, *wavefile, *logfile;
-  unsigned int midimode, wavemode, loglevel;
-  Bit32u dmatimer;
+  bx_param_bool_c *Opresent;
+  bx_param_string_c *Omidifile;
+  bx_param_string_c *Owavefile;
+  bx_param_string_c *Ologfile;
+  bx_param_num_c *Omidimode;
+  bx_param_num_c *Owavemode;
+  bx_param_num_c *Ologlevel;
+  bx_param_num_c *Odmatimer;
   } bx_sb16_options;
 
 #define BX_BOOT_FLOPPYA 0

@@ -27,11 +27,6 @@
 
 #include "bochs.h"
 
-#define WRITELOG        sb16->writelog
-#define BOTHLOG(x)      (x)
-#define MIDILOG(x)      ((bx_options.sb16.midimode>0?x:0x7f))
-#define WAVELOG(x)      ((bx_options.sb16.wavemode>0?x:0x7f))
-
 #define BX_SOUND_LINUX_BUFSIZE   BX_SOUND_OUTPUT_WAVEPACKETSIZE
 
 class bx_sound_linux_c : public bx_sound_output_c {

@@ -97,7 +97,8 @@ static int parse_bochsrc(char *rcfile);
 static Bit32s
 bx_param_handler (bx_param_c *param, int set, Bit32s val)
 {
-  switch (param->get_id ()) {
+  bx_id id = param->get_id ();
+  switch (id) {
     case BXP_VGA_UPDATE_INTERVAL:
       // if after init, notify the vga device to change its timer.
       if (set && SIM->get_init_done ())
@@ -108,8 +109,30 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       if (set && SIM->get_init_done ())
 	bx_gui.mouse_enabled_changed (val!=0);
       break;
+    case BXP_SB16_PRESENT:
+      if (set) {
+	int enable = (val != 0);
+	SIM->get_param (BXP_SB16_MIDIFILE)->set_enabled (enable);
+	SIM->get_param (BXP_SB16_WAVEFILE)->set_enabled (enable);
+	SIM->get_param (BXP_SB16_LOGFILE)->set_enabled (enable);
+	SIM->get_param (BXP_SB16_MIDIMODE)->set_enabled (enable);
+	SIM->get_param (BXP_SB16_WAVEMODE)->set_enabled (enable);
+	SIM->get_param (BXP_SB16_LOGLEVEL)->set_enabled (enable);
+	SIM->get_param (BXP_SB16_DMATIMER)->set_enabled (enable);
+      }
+      break;
+    case BXP_NE2K_VALID:
+      if (set) {
+	int enable = (val != 0);
+	SIM->get_param (BXP_NE2K_IOADDR)->set_enabled (enable);
+	SIM->get_param (BXP_NE2K_IRQ)->set_enabled (enable);
+	//SIM->get_param (BXP_NE2K_MACADDR)->set_enabled (enable);
+	SIM->get_param (BXP_NE2K_ETHMOD)->set_enabled (enable);
+	SIM->get_param (BXP_NE2K_ETHDEV)->set_enabled (enable);
+      }
+      break;
     default:
-      BX_PANIC (("bx_param_handler called with unknown parameter"));
+      BX_PANIC (("bx_param_handler called with unknown id %d", id));
       return -1;
   }
   return val;
@@ -457,6 +480,98 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
+  // NE2K options
+  bx_options.ne2k.Ovalid = new bx_param_bool_c (BXP_NE2K_VALID,
+      "NE2K is present",
+      "to be written",
+      0);
+  bx_options.ne2k.Oioaddr = new bx_param_num_c (BXP_NE2K_IOADDR,
+      "NE2K I/O Address",
+      "to be written",
+      0, 0xffff,
+      0);
+  bx_options.ne2k.Oioaddr->set_base (16);
+  bx_options.ne2k.Oirq = new bx_param_num_c (BXP_NE2K_IRQ,
+      "NE2K Interrupt",
+      "to be written",
+      0, 15,
+      0);
+  bx_options.ne2k.Oethmod = new bx_param_string_c (BXP_NE2K_ETHMOD,
+      "Ethernet module",
+      "to be written",
+      "null", 16);
+  bx_options.ne2k.Oethdev = new bx_param_string_c (BXP_NE2K_ETHDEV,
+      "Ethernet device",
+      "to be written",
+      "xl0", BX_PATHNAME_LEN);
+  bx_param_c *ne2k_init_list[] = {
+    bx_options.ne2k.Ovalid,
+    bx_options.ne2k.Oioaddr,
+    bx_options.ne2k.Oirq,
+#warning cannot set mac address with this interface
+    // mac address needs work
+    bx_options.ne2k.Oethmod,
+    bx_options.ne2k.Oethdev,
+    NULL
+  };
+  menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
+  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  bx_options.ne2k.Ovalid->set_handler (bx_param_handler);
+  bx_options.ne2k.Ovalid->set (0);
+
+  // SB16 options
+  bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,
+      "SB16 is present",
+      "to be written",
+      0);
+  bx_options.sb16.Omidifile = new bx_param_string_c (BXP_SB16_MIDIFILE,
+      "Midi file",
+      "to be written",
+      "", BX_PATHNAME_LEN);
+  bx_options.sb16.Owavefile = new bx_param_string_c (BXP_SB16_WAVEFILE,
+      "Wave file",
+      "to be written",
+      "", BX_PATHNAME_LEN);
+  bx_options.sb16.Ologfile = new bx_param_string_c (BXP_SB16_LOGFILE,
+      "Log file",
+      "to be written",
+      "", BX_PATHNAME_LEN);
+  bx_options.sb16.Omidimode = new bx_param_num_c (BXP_SB16_MIDIMODE,
+      "Midi mode",
+      "to be written",
+      0, BX_MAX_INT,
+      0);
+  bx_options.sb16.Owavemode = new bx_param_num_c (BXP_SB16_WAVEMODE,
+      "Wave mode",
+      "to be written",
+      0, BX_MAX_INT,
+      0);
+  bx_options.sb16.Ologlevel = new bx_param_num_c (BXP_SB16_LOGLEVEL,
+      "Log mode",
+      "to be written",
+      0, BX_MAX_INT,
+      0);
+  bx_options.sb16.Odmatimer = new bx_param_num_c (BXP_SB16_DMATIMER,
+      "DMA timer",
+      "to be written",
+      0, BX_MAX_INT,
+      0);
+  bx_param_c *sb16_init_list[] = {
+    bx_options.sb16.Opresent,
+    bx_options.sb16.Omidifile,
+    bx_options.sb16.Owavefile,
+    bx_options.sb16.Ologfile,
+    bx_options.sb16.Omidimode,
+    bx_options.sb16.Owavemode,
+    bx_options.sb16.Ologlevel,
+    bx_options.sb16.Odmatimer,
+    NULL
+  };
+  menu = new bx_list_c (BXP_SB16, "SB16 Configuration", "", sb16_init_list);
+  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  bx_options.sb16.Opresent->set_handler (bx_param_handler);
+  bx_options.sb16.Opresent->set (0);
+
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "keyboard_serial_delay",
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
@@ -506,6 +621,8 @@ void bx_init_options ()
       "load32bitOS:initrd",
       "Initrd",
       "", BX_PATHNAME_LEN);
+
+
 }
 
 void bx_print_header(void);
@@ -1213,27 +1330,27 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
   else if (!strcmp(params[0], "sb16")) {
     for (i=1; i<num_params; i++) {
-        bx_options.sb16.present = 1;
+        bx_options.sb16.Opresent->set (1);
       if (!strncmp(params[i], "midi=", 5)) {
-	bx_options.sb16.midifile = strdup(&params[i][5]);
+	bx_options.sb16.Omidifile->set (strdup(&params[i][5]));
         }
       else if (!strncmp(params[i], "midimode=", 9)) {
-	bx_options.sb16.midimode = atol(&params[i][9]);
+	bx_options.sb16.Omidimode->set (atol(&params[i][9]));
         }
       else if (!strncmp(params[i], "wave=", 5)) {
-	bx_options.sb16.wavefile = strdup(&params[i][5]);
+	bx_options.sb16.Owavefile->set (strdup(&params[i][5]));
         }
       else if (!strncmp(params[i], "wavemode=", 9)) {
-	bx_options.sb16.wavemode = atol(&params[i][9]);
+	bx_options.sb16.Owavemode->set (atol(&params[i][9]));
         }
       else if (!strncmp(params[i], "log=", 4)) {
-	bx_options.sb16.logfile = strdup(&params[i][4]);
+	bx_options.sb16.Ologfile->set (strdup(&params[i][4]));
         }
       else if (!strncmp(params[i], "loglevel=", 9)) {
-	bx_options.sb16.loglevel = atol(&params[i][9]);
+	bx_options.sb16.Ologlevel->set (atol(&params[i][9]));
         }
       else if (!strncmp(params[i], "dmatimer=", 9)) {
-	bx_options.sb16.dmatimer = atol(&params[i][9]);
+	bx_options.sb16.Odmatimer->set (atol(&params[i][9]));
         }
       }
     }
@@ -1304,12 +1421,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
 #endif
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
-    bx_options.ne2k.valid = 0;
+    bx_options.ne2k.Ovalid->set (0);
     if ((num_params < 4) || (num_params > 6)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
       return;
       }
-    bx_options.ne2k.ethmod = "null";
+    bx_options.ne2k.Oethmod->set ("null");
     if (strncmp(params[1], "ioaddr=", 7)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
       return;
@@ -1322,8 +1439,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_PANIC(("%s: ne2k directive malformed.", context));
       return;
       }
-    bx_options.ne2k.ioaddr = strtoul(&params[1][7], NULL, 16);
-    bx_options.ne2k.irq = atol(&params[2][4]);
+    bx_options.ne2k.Oioaddr->set (strtoul(&params[1][7], NULL, 16));
+    bx_options.ne2k.Oirq->set (atol(&params[2][4]));
     i = sscanf(&params[3][4], "%x:%x:%x:%x:%x:%x",
              &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
     if (i != 6) {
@@ -1337,16 +1454,16 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_PANIC(("%s: ne2k directive malformed.", context));
       return;
         }
-      bx_options.ne2k.ethmod = strdup(&params[4][7]);
+      bx_options.ne2k.Oethmod->set (strdup(&params[4][7]));
       if (num_params == 6) {
       if (strncmp(params[5], "ethdev=", 7)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
       return;
           }
-      bx_options.ne2k.ethdev = strdup(&params[5][7]);
+      bx_options.ne2k.Oethdev->set (strdup(&params[5][7]));
         }
       }
-    bx_options.ne2k.valid = 1;
+    bx_options.ne2k.Ovalid->set (1);
     }
 
   else if (!strcmp(params[0], "load32bitOSImage")) {
@@ -1443,32 +1560,32 @@ bx_write_cdrom_options (FILE *fp, int drive, bx_cdrom_options *opt)
 int
 bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
 {
-  if (!opt->present) {
+  if (!opt->Opresent->get ()) {
     fprintf (fp, "# no sb16\n");
     return 0;
   }
-  fprintf (fp, "sb16: midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d\n", opt->midimode, opt->midifile, opt->wavemode, opt->wavefile, opt->loglevel, opt->logfile, opt->dmatimer);
+  fprintf (fp, "sb16: midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d\n", opt->Omidimode->get (), opt->Omidifile->getptr (), opt->Owavemode->get (), opt->Owavefile->getptr (), opt->Ologlevel->get (), opt->Ologfile->getptr (), opt->Odmatimer->get ());
   return 0;
 }
 
 int
 bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
 {
-  if (!opt->valid) {
+  if (!opt->Ovalid->get ()) {
     fprintf (fp, "# no ne2k\n");
     return 0;
   }
   fprintf (fp, "ne2k: ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s\n",
-      opt->ioaddr, 
-      opt->irq,
+      opt->Oioaddr->get (), 
+      opt->Oirq->get (),
       opt->macaddr[0],
       opt->macaddr[1],
       opt->macaddr[2],
       opt->macaddr[3],
       opt->macaddr[4],
       opt->macaddr[5],
-      opt->ethmod,
-      opt->ethdev);
+      opt->Oethmod->getptr (),
+      opt->Oethdev->getptr ());
   return 0;
 }
 

@@ -27,12 +27,6 @@
 #include "bochs.h"
 #define LOG_THIS bx_sb16.
 
-#define WRITELOG        sb16->writelog
-#define BOTHLOG(x)      (x)
-#define MIDILOG(x)      ((bx_options.sb16.midimode>0?x:0x7f))
-#define WAVELOG(x)      ((bx_options.sb16.wavemode>0?x:0x7f))
-
-
 bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
   :bx_sound_output_c(sb16)
 {

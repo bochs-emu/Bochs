@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.25 2001-06-21 14:37:55 bdenney Exp $
+ * $Id: control.cc,v 1.26 2001-06-21 18:34:50 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -271,8 +271,9 @@ static char *startup_options_prompt =
 "4. Memory options\n"
 "5. Interface options\n"
 "6. Disk options\n"
-"7. Sound options\n"
-"8. Other options\n"
+"7. Sound Blaster 16 options\n"
+"8. NE2000 network card options\n"
+"9. Other options\n"
 "\n"
 "Please choose one: [0] ";
 
@@ -433,21 +434,16 @@ int bx_control_panel (int menu)
 	 case 1: askparam (BXP_LOG_FILENAME); break;
 	 case 2: bx_log_options (0); break;
 	 case 3: bx_log_options (1); break;
-	 case 4: bx_control_panel (BXP_MENU_MEMORY); break;
-	 case 5: bx_control_panel (BXP_MENU_INTERFACE); break;
-	 case 6: bx_control_panel (BX_CPANEL_START_OPTS_DISK); break;
-	 case 7: bx_control_panel (BX_CPANEL_START_OPTS_SOUND); break;
-	 case 8: bx_control_panel (BX_CPANEL_START_OPTS_MISC); break;
+	 case 4: do_menu (BXP_MENU_MEMORY); break;
+	 case 5: do_menu (BXP_MENU_INTERFACE); break;
+	 case 6: do_menu (BXP_MENU_DISK); break;
+	 case 7: do_menu (BXP_SB16); break;
+	 case 8: do_menu (BXP_NE2K); break;
+	 case 9: bx_control_panel (BX_CPANEL_START_OPTS_MISC); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
      break;
-   case BXP_MENU_MEMORY:
-     return do_menu (BXP_MENU_MEMORY);
-   case BXP_MENU_INTERFACE:
-     return do_menu (BXP_MENU_INTERFACE);
-   case BX_CPANEL_START_OPTS_DISK:
-     return do_menu (BXP_MENU_DISK);
    case BX_CPANEL_RUNTIME:
      char prompt[1024];
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
@@ -653,7 +649,7 @@ bx_param_num_c::text_print (FILE *fp)
   } else {
     char *format = "%s: %d"; 
     assert (base==10 || base==16);
-    if (base==16) format = "%s: 0x%x\n";
+    if (base==16) format = "%s: 0x%x";
     fprintf (fp, format, get_name (), get ());
   }
 }
