@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.16 2001-11-12 00:45:09 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.17 2001-11-18 16:32:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::HLT(BxInstruction_t *i)
 {
   // hack to panic if HLT comes from BIOS
   if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value == 0xf000 )
-    BX_PANIC(("HALT instruction encountered"));
+    BX_PANIC(("HALT instruction encountered in the BIOS ROM"));
 
   if (CPL!=0) {
     BX_INFO(("HLT(): CPL!=0"));
