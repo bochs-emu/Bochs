@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.132 2002-09-03 08:42:23 bdenney Exp $
+// $Id: main.cc,v 1.133 2002-09-03 15:59:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -263,6 +263,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
 
 void bx_init_options ()
 {
+  int i;
   bx_list_c *menu;
   bx_list_c *deplist;
   char name[1024], descr[1024];
@@ -533,13 +534,14 @@ void bx_init_options ()
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
 
   // initialize serial and parallel port options
-  int max = (BXP_PARAMS_PER_PARALLEL_PORT * BX_N_PARALLEL_PORTS)
-	        + (BXP_PARAMS_PER_SERIAL_PORT * BX_N_SERIAL_PORTS);
-  bx_param_c *par_ser_init_list[1+max];
+#define PAR_SER_INIT_LIST_MAX \
+  ((BXP_PARAMS_PER_PARALLEL_PORT * BX_N_PARALLEL_PORTS) \
+  + (BXP_PARAMS_PER_SERIAL_PORT * BX_N_SERIAL_PORTS))
+  bx_param_c *par_ser_init_list[1+PAR_SER_INIT_LIST_MAX];
   bx_param_c **par_ser_ptr = &par_ser_init_list[0];
 
   // parallel ports
-  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+  for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
 	sprintf (name, "Enable parallel port #%d", i+1);
 	bx_options.par[i].Oenabled = new bx_param_bool_c (
 		BXP_PARPORTx_ENABLED(i+1), 
@@ -562,7 +564,7 @@ void bx_init_options ()
   }
 
   // serial ports
-  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+  for (i=0; i<BX_N_SERIAL_PORTS; i++) {
 	// options for COM port
 	sprintf (name, "Enable serial port #%d (COM%d)", i+1, i+1);
 	sprintf (descr, "Controls whether COM%d is installed or not", i+1);
