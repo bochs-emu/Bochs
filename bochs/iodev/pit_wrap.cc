@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.9 2001-10-03 13:10:38 bdenney Exp $
+// $Id: pit_wrap.cc,v 1.10 2001-10-11 13:01:27 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,6 +41,14 @@ bx_pit_c bx_pit;
 #ifdef OUT
 #  undef OUT
 #endif
+
+//How many timer ticks per usecond.
+//1.193MHz Clock
+//1193/1000 Ticks Per usecond.
+#define TIME_MULT 1.193
+#define TICKS_TO_USEC(a) ( ((a)*1000)/1193 )
+#define USEC_TO_TICKS(a) ( ((a)*1193)/1000 )
+#define MAX(a,b) ( ((a)>(b))?(a):(b) )
 
 bx_pit_c::bx_pit_c( void )
 {
@@ -90,7 +98,7 @@ bx_pit_c::init( bx_devices_c *d )
   BX_DEBUG(("deactivated timer."));
   if(BX_PIT_THIS s.timer.get_next_event_time()) {
     bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				BX_PIT_THIS s.timer.get_next_event_time(),
+				MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				0);
     BX_DEBUG(("activated timer."));
   }
@@ -135,7 +143,7 @@ bx_pit_c::handle_timer() {
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
       bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				  BX_PIT_THIS s.timer.get_next_event_time(),
+				  MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
     }
@@ -290,7 +298,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
       bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				  BX_PIT_THIS s.timer.get_next_event_time(),
+				  MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
     }
@@ -342,19 +350,20 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   Bit32u i=0;
   Boolean prev_timer0_out = BX_PIT_THIS s.timer.read_OUT(0);
   Boolean want_interrupt = 0;
+  Bit32u ticks_delta=(Bit32u)(USEC_TO_TICKS((Bit64u)(usec_delta)));
 
-  while(usec_delta>0) {
+  while(ticks_delta>0) {
     Bit32u maxchange=BX_PIT_THIS s.timer.get_next_event_time();
     Bit32u timedelta=maxchange;
-    if((maxchange==0) || (maxchange>usec_delta)) {
-      timedelta=usec_delta;
+    if((maxchange==0) || (maxchange>ticks_delta)) {
+      timedelta=ticks_delta;
     }
     BX_PIT_THIS s.timer.clock_all(timedelta);
     if ( (prev_timer0_out==0) && ((BX_PIT_THIS s.timer.read_OUT(0))==1) ) {
       want_interrupt=1;
     }
     prev_timer0_out=BX_PIT_THIS s.timer.read_OUT(0);
-    usec_delta-=timedelta;
+    ticks_delta-=timedelta;
   }
 
   return(want_interrupt);

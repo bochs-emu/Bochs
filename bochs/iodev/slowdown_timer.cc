@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.7 2001-10-05 13:31:31 bdenney Exp $
+// $Id: slowdown_timer.cc,v 1.8 2001-10-11 13:01:27 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -16,7 +16,7 @@
 #define nsectousec(a) ((a)/1000)
 
 #if BX_HAVE_USLEEP
-#  define Qval 10000
+#  define Qval 1000
 #else
 #  define Qval SECINUSEC
 #endif
