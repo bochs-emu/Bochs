@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.22 2002-09-13 19:39:38 bdenney Exp $
+// $Id: wxmain.h,v 1.23 2002-09-15 11:21:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -47,6 +47,7 @@ enum
   ID_Simulate_Speed,
   ID_Debug_ShowCpu,
   ID_Debug_ShowKeyboard,
+  ID_Debug_Log,
   ID_Debug_ShowMemory,
   ID_Log_View,
   ID_Log_Prefs,
@@ -94,6 +95,8 @@ enum
   ID_Debug_Step,
   ID_Debug_Commit,
   ID_Close,
+  ID_Execute,
+  ID_DebugCommand,
   // that's all
   ID_LAST_USER_DEFINED
 };
@@ -173,7 +176,9 @@ public:
   void OnOtherEvent(wxCommandEvent& event);
   void OnShowCpu(wxCommandEvent& event);
   void OnShowKeyboard(wxCommandEvent& event);
+  void OnDebugLog(wxCommandEvent& event);
   void DebugBreak ();
+  void DebugCommand (wxString string);
   void DebugCommand (const char *cmd);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);
@@ -198,6 +203,7 @@ private:
   wxMenu *menuLog;
   wxMenu *menuHelp;
   ParamDialog *showCpu, *showKbd;
+  DebugLogDialog *showDebugLog;
   void RefreshDialogs ();
   char *debugCommand; // maybe need lock on this
   BxEvent *debugCommandEvent;  // maybe need lock on this

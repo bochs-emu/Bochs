@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.46 2002-09-13 21:53:37 bdenney Exp $
+// $Id: wxmain.cc,v 1.47 2002-09-15 11:21:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -177,6 +177,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   EVT_MENU(ID_Debug_ShowCpu, MyFrame::OnShowCpu)
   EVT_MENU(ID_Debug_ShowKeyboard, MyFrame::OnShowKeyboard)
+  EVT_MENU(ID_Debug_Log, MyFrame::OnDebugLog)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -294,6 +295,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuDebug = new wxMenu;
   menuDebug->Append (ID_Debug_ShowCpu, "Show &CPU");
   menuDebug->Append (ID_Debug_ShowKeyboard, "Show &Keyboard");
+  menuDebug->Append (ID_Debug_Log, "Show Log");
   menuDebug->Append (ID_Debug_ShowMemory, "Show &memory");
 
   menuLog = new wxMenu;
@@ -354,6 +356,13 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   SetSizer (sz);
 
   thePanel = panel;
+
+#if BX_DEBUGGER
+  // create the debug log dialog box immediately so that we can write output
+  // to it.
+  showDebugLog = new DebugLogDialog (this, -1);
+  showDebugLog->Init ();
+#endif
 }
 
 MyFrame::~MyFrame ()
@@ -692,6 +701,13 @@ void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
   showKbd->Show (TRUE);
 }
 
+void MyFrame::OnDebugLog(wxCommandEvent& WXUNUSED(event))
+{
+  wxASSERT (showDebugLog != NULL);
+  showDebugLog->Refresh ();
+  showDebugLog->Show (TRUE);
+}
+
 void
 MyFrame::DebugBreak ()
 {
@@ -700,14 +716,26 @@ MyFrame::DebugBreak ()
     delete debugCommand;
     debugCommand = NULL;
   }
+  wxASSERT (showDebugLog != NULL);
+  showDebugLog->AppendCommand ("*** break ***");
   SIM->debug_break ();
 #endif
+}
+
+void
+MyFrame::DebugCommand (wxString cmd)
+{
+  char buf[1024];
+  safeWxStrcpy (buf, cmd, sizeof(buf));
+  DebugCommand (buf);
 }
 
 void
 MyFrame::DebugCommand (const char *cmd)
 {
   wxLogDebug ("debugger command: %s", cmd);
+  wxASSERT (showDebugLog != NULL);
+  showDebugLog->AppendCommand (cmd);
   if (debugCommand != NULL) {
     // one is already waiting
     wxLogDebug ("multiple debugger commands, discarding the earlier one");
@@ -1013,6 +1041,13 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
     // sync must return something; just return a copy of the event.
     sim_thread->SendSyncResponse(be);
     wxLogDebug ("after SendSyncResponse");
+    return;
+  case BX_ASYNC_EVT_DBG_MSG:
+    showDebugLog->AppendText (be->u.logmsg.msg);
+    // free the char* which was allocated in dbg_printf
+    delete be->u.logmsg.msg;
+    // free the whole event
+    delete be;
     return;
   case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
@@ -1474,4 +1509,5 @@ safeWxStrcpy (char *dest, wxString src, int destlen)
 {
   wxString tmp (src);
   strncpy (dest, tmp.c_str (), destlen);
+  dest[destlen-1] = 0;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.58 2002-09-13 20:02:07 bdenney Exp $
+// $Id: siminterface.cc,v 1.59 2002-09-15 11:21:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -70,7 +70,7 @@ public:
   virtual char *get_floppy_type_name (int type);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
   virtual BxEvent* sim_to_ci_event (BxEvent *event);
-  virtual int log_msg (const char *prefix, int level, char *msg);
+  virtual int log_msg (const char *prefix, int level, const char *msg);
   virtual int ask_param (bx_id which);
   // ask the user for a pathname
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
@@ -82,6 +82,7 @@ public:
   virtual void debug_break ();
   virtual void debug_interpret_cmd (char *cmd);
   virtual char *debug_get_next_command ();
+  virtual void debug_fputs (const char *cmd);
 #endif
 };
 
@@ -372,11 +373,11 @@ bx_real_sim_c::sim_to_ci_event (BxEvent *event)
 
 // returns 0 for continue, 1 for alwayscontinue, 2 for die.
 int 
-bx_real_sim_c::log_msg (const char *prefix, int level, char *msg)
+bx_real_sim_c::log_msg (const char *prefix, int level, const char *msg)
 {
   BxEvent *be = new BxEvent ();
   be->type = BX_SYNC_EVT_LOG_ASK;
-  be->u.logmsg.prefix = (char *)prefix;
+  be->u.logmsg.prefix = prefix;
   be->u.logmsg.level = level;
   be->u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
@@ -548,6 +549,14 @@ char *bx_real_sim_c::debug_get_next_command ()
   if (event.retcode >= 0)
     return event.u.debugcmd.command;
   return NULL;
+}
+
+void bx_real_sim_c::debug_fputs (const char *cmd)
+{
+  BxEvent *event = new BxEvent ();
+  event->type = BX_ASYNC_EVT_DBG_MSG;
+  event->u.logmsg.msg = cmd;
+  sim_to_ci_event (event);
 }
 #endif
 

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.30 2002-09-13 22:03:05 bdenney Exp $
+// $Id: wxdialog.h,v 1.31 2002-09-15 11:21:34 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -22,7 +22,8 @@
 #define BTNLABEL_DEBUG_STOP "Stop"
 #define BTNLABEL_DEBUG_STEP "Step"
 #define BTNLABEL_DEBUG_COMMIT "Commit"
-#define BTNLABEL_DEBUG_CLOSE "Close"
+#define BTNLABEL_CLOSE "Close"
+#define BTNLABEL_EXECUTE "Execute"
 
 #if defined(WIN32)
 // On win32, apparantly the spinctrl depends on a native control which only
@@ -576,6 +577,49 @@ DECLARE_EVENT_TABLE()
 };
 
 ////////////////////////////////////////////////////////////////////////////
+// DebugLogDialog
+////////////////////////////////////////////////////////////////////////////
+// DebugLogDialog allows the user to decide how Bochs will
+// behave for each type of log event.
+//
+// +---- Debugger log ---------------------------------------+
+// |                                                         |
+// |  +--------------------------------------------------+   |
+// |  |(0) f000:fff0: ea5be000f0: jmp f000:e05b          |   |
+// |  |(0) 0010:00001868: 83fb10: cmp EBX, #10           |   |
+// |  |                                                  |   |
+// |  |                                                  |   |
+// |  |                                                  |   |
+// |  |                                                  |   |
+// |  +--------------------------------------------------+   |
+// |  Type a debugger command:                               |
+// |  +----------------------------------------+ +-------+   |
+// |  | step 1000                              | |Execute|   |
+// |  +----------------------------------------+ +-------+   |
+// |                                                         |
+// |                                              [ Close ]  |
+// +---------------------------------------------------------+
+class DebugLogDialog: public wxDialog
+{
+private:
+#define DEBUG_LOG_TITLE "Debugger log"
+#define DEBUG_CMD_PROMPT "Type a debugger command:"
+  wxBoxSizer *mainSizer, *commandSizer, *buttonSizer;
+  wxTextCtrl *log, *command;
+public:
+  DebugLogDialog(wxWindow* parent, wxWindowID id);
+  void Init ();  // called automatically by ShowModal()
+  void OnEvent (wxCommandEvent& event);
+  void OnEnterEvent (wxCommandEvent& event) { Execute(); }
+  void OnKeyEvent (wxKeyEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void Execute ();
+  void AppendCommand (const char *);
+  void AppendText (wxString text) { log->AppendText (text); }
+DECLARE_EVENT_TABLE()
+};
+
+////////////////////////////////////////////////////////////////////////////
 // ConfigSoundDialog
 ////////////////////////////////////////////////////////////////////////////
 // 
@@ -668,7 +712,7 @@ public:
   bool Show (bool val) { isShowing = val; return wxDialog::Show (val); }
   void AddParam (bx_param_c *param, wxFlexGridSizer *sizer = NULL, bool plain = false);
   void AddParamList (bx_id *idList, wxFlexGridSizer *sizer = NULL, bool plain = false);
-  void Refresh ();
+  virtual void Refresh ();
   bool IsShowing () { return isShowing; }
 DECLARE_EVENT_TABLE()
 };
@@ -762,8 +806,11 @@ public:
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   void AddFlag (bx_id paramId);
   void OnEvent (wxCommandEvent& event);
+  virtual void Refresh ();
   DECLARE_EVENT_TABLE()
 };
+
+
 
 
 /**************************************************************************

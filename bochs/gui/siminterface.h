@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.61 2002-09-13 19:39:38 bdenney Exp $
+// $Id: siminterface.h,v 1.62 2002-09-15 11:21:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -295,6 +295,9 @@ typedef enum {
   BXP_KBD_TIMER_PENDING,
   BXP_KBD_IRQ1_REQ,
   BXP_KBD_IRQ12_REQ,
+  // in debugger, is the simulation running (continue command) or waiting.
+  // This is only modified by debugger code, not by the user.
+  BXP_DEBUG_RUNNING,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -422,6 +425,7 @@ typedef enum {
   BX_ASYNC_EVT_MOUSE,             // vga window -> simulator
   BX_ASYNC_EVT_SET_PARAM,         // CI -> simulator
   BX_ASYNC_EVT_LOG_MSG,           // simulator -> CI
+  BX_ASYNC_EVT_DBG_MSG,           // simulator -> CI
   BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> CI
   BX_ASYNC_EVT_TOOLBAR,           // CI -> simulator
   BX_ASYNC_EVT_REFRESH            // simulator -> CI
@@ -533,9 +537,14 @@ typedef struct {
 // synchronizing threads, etc. for each.
 typedef struct {
   Bit8u level;
-  char *prefix;
-  char *msg;
+  const char *prefix;
+  const char *msg;
 } BxLogMsgEvent;
+
+// Event type: BX_ASYNC_EVT_DBG_MSG   (unused)
+//
+// Also uses BxLogMsgEvent, but this is a message to be displayed in
+// the debugger history window.
 
 // Event type: BX_SYNC_EVT_LOG_ASK
 //
@@ -1013,7 +1022,7 @@ public:
 
   // called from simulator when it hits serious errors, to ask if the user
   // wants to continue or not
-  virtual int log_msg (const char *prefix, int level, char *msg) {return -1;}
+  virtual int log_msg (const char *prefix, int level, const char *msg) {return -1;}
 
   // tell the CI to ask the user for the value of a parameter.
   virtual int ask_param (bx_id param) {return -1;}
@@ -1032,6 +1041,7 @@ public:
   virtual void debug_break () {}
   virtual void debug_interpret_cmd (char *cmd) {}
   virtual char *debug_get_next_command () {return NULL;}
+  virtual void debug_fputs (const char *cmd) {}
 #endif
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.34 2002-09-13 22:03:05 bdenney Exp $
+// $Id: wxdialog.cc,v 1.35 2002-09-15 11:21:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1372,6 +1372,122 @@ void ConfigMemoryDialog::ShowHelp ()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
+//////////////////////////////////////////////////////////////////////
+// DebugLogDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   mainSizer:
+//     wxTextCtrl log (multiline with vert scrollbar)
+//     "Type a debugger command"
+//     commandSizer:
+//       wxTextCtrl command
+//       Execute button
+//     buttonSizer:
+//       help
+//       cancel
+//       ok
+//
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(DebugLogDialog, wxDialog)
+  EVT_BUTTON(-1, DebugLogDialog::OnEvent)
+  EVT_CHECKBOX(-1, DebugLogDialog::OnEvent)
+  EVT_KEY_DOWN(DebugLogDialog::OnKeyEvent)
+  EVT_KEY_UP(DebugLogDialog::OnKeyEvent)
+  EVT_CHAR(DebugLogDialog::OnEvent)
+  EVT_TEXT(-1, DebugLogDialog::OnEvent)
+  EVT_TEXT_ENTER(-1, DebugLogDialog::OnEnterEvent)
+END_EVENT_TABLE()
+
+
+DebugLogDialog::DebugLogDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  SetTitle (DEBUG_LOG_TITLE);
+  mainSizer = new wxBoxSizer (wxVERTICAL);
+  log = new wxTextCtrl (this, -1, "",
+      wxDefaultPosition, wxSize(400, 300), 
+      wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY);
+  mainSizer->Add (log, 1, wxALL|wxGROW, 10);
+  wxStaticText *text = new wxStaticText (this, -1, DEBUG_CMD_PROMPT);
+  mainSizer->Add (text, 0, wxTOP|wxLEFT, 10);
+  commandSizer = new wxBoxSizer (wxHORIZONTAL);
+  mainSizer->Add (commandSizer, 0, wxALL|wxGROW, 5);
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+
+  // commandSizer contents
+  command = new wxTextCtrl (this, ID_DebugCommand, "", 
+      wxDefaultPosition, wxDefaultSize, 
+      wxTE_PROCESS_ENTER);
+  commandSizer->Add (command, 1, wxGROW);
+  wxButton *btn;
+  btn = new wxButton (this, ID_Execute, BTNLABEL_EXECUTE);
+  commandSizer->Add (btn, 0, wxALL, 5);
+
+  // buttonSizer contents
+  btn = new wxButton (this, wxID_OK, BTNLABEL_CLOSE);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+}
+
+void DebugLogDialog::Init()
+{
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(mainSizer);
+  mainSizer->Fit (this);
+  wxSize size = mainSizer->GetMinSize ();
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+void DebugLogDialog::Execute()
+{
+  // send to debugger
+  theFrame->DebugCommand (command->GetValue ());
+  // display what they typed on the log screen
+  command->Clear ();
+}
+
+void DebugLogDialog::AppendCommand (const char *cmd)
+{
+  log->AppendText (wxT(">>> "));
+  log->AppendText (wxString (cmd));
+  log->AppendText (wxT("\n"));
+}
+
+void DebugLogDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  wxLogMessage ("event was from id=%d, type=%d", id, (int)event.GetEventType ());
+  switch (id) {
+    case wxID_OK:
+      Show(FALSE);
+      break;
+    case ID_DebugCommand:
+      if (event.GetEventType() == wxEVT_COMMAND_ENTER) {
+	// fall through into ID_Execute case
+      } else {
+        break;
+      }
+    case ID_Execute:
+      Execute ();
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void DebugLogDialog::OnKeyEvent(wxKeyEvent& event)
+{
+  wxLogDebug ("key event");
+}
+
 /////////////////////////////////////////////////////////////////
 // ParamDialog
 /////////////////////////////////////////////////////////////////
@@ -1855,7 +1971,7 @@ CpuRegistersDialog::CpuRegistersDialog(
   stepButton = AddButton (ID_Debug_Step, BTNLABEL_DEBUG_STEP);
   //commitButton = AddButton (ID_Debug_Commit, BTNLABEL_DEBUG_COMMIT);
 #endif
-  AddButton (ID_Close, BTNLABEL_DEBUG_CLOSE);
+  AddButton (ID_Close, BTNLABEL_CLOSE);
 }
 
 void
@@ -1905,6 +2021,13 @@ CpuRegistersDialog::stateChanged (bool simRunning)
   stopButton->Enable (simRunning);
 }
 
+void 
+CpuRegistersDialog::Refresh ()
+{
+  ParamDialog::Refresh ();
+  stateChanged (SIM->get_param_bool (BXP_DEBUG_RUNNING)->get ());
+}
+
 // How am I going to communicate with the debugger?
 // 
 // The current model is that the debugger asks you for a command, and
@@ -1940,11 +2063,9 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
     case ID_Debug_Stop:
       wxLogDebug ("wxWindows triggered a break");
       theFrame->DebugBreak ();
-      stateChanged (false);
       break;
     case ID_Debug_Continue:
       theFrame->DebugCommand ("continue");
-      stateChanged (true);
       break;
     case ID_Debug_Step:
       theFrame->DebugCommand ("step 1");
