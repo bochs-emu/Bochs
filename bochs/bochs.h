@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.140 2004-06-19 15:20:06 sshwarts Exp $
+// $Id: bochs.h,v 1.141 2004-06-29 19:24:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -627,17 +627,16 @@ typedef struct {
 #define BX_N_SERIAL_PORTS 4
 #define BX_N_PARALLEL_PORTS 2
 #define BX_N_USB_HUBS 1
+#define BX_N_PCI_SLOTS 5
 
 typedef struct BOCHSAPI {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
   bx_ata_options    ata[BX_MAX_ATA_CHANNEL];
   bx_atadevice_options  atadevice[BX_MAX_ATA_CHANNEL][2];
-  // bx_disk_options   diskc;
-  // bx_disk_options   diskd;
-  // bx_cdrom_options  cdromd; 
   bx_serial_options com[BX_N_SERIAL_PORTS];
   bx_usb_options    usb[BX_N_USB_HUBS];
+  bx_pcislot_options pcislot[BX_N_PCI_SLOTS];
   bx_pnic_options   pnic;
   bx_rom_options    rom;
   bx_vgarom_options vgarom;

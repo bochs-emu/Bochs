@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.12 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pci2isa.cc,v 1.13 2004-06-29 19:24:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,8 +72,9 @@ bx_pci2isa_c::init(void)
 {
   // called once when bochs initializes
 
+  Bit8u devfunc = BX_PCI_DEVICE(1,0);
   DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                            BX_PCI_DEVICE(1,0), "PIIX3 PCI-to-ISA bridge");
+                            &devfunc, BX_PLUGIN_PCI2ISA, "PIIX3 PCI-to-ISA bridge");
 
   DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
@@ -211,11 +212,11 @@ bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
     case 0x04d0:
       BX_P2I_THIS s.elcr1 = (value & 0xf8);
-      BX_ERROR(("write: ELCR1 changes have no effect yet"));
+      BX_ERROR(("write: ELCR1 changes have no effect yet (value = 0x%02x)", BX_P2I_THIS s.elcr1));
       break;
     case 0x04d1:
       BX_P2I_THIS s.elcr2 = (value & 0xde);
-      BX_ERROR(("write: ELCR2 changes have no effect yet"));
+      BX_ERROR(("write: ELCR2 changes have no effect yet (value = 0x%02x)", BX_P2I_THIS s.elcr2));
       break;
     case 0x0cf9:
       BX_ERROR(("write: CPU reset register not supported yet"));

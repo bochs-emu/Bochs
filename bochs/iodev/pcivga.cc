@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.4 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pcivga.cc,v 1.5 2004-06-29 19:24:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -73,10 +73,11 @@ bx_pcivga_c::init(void)
 {
   // called once when bochs initializes
 
+  Bit8u devfunc = 0x00;
   DEV_register_pci_handlers(this,
                             pci_read_handler,
                             pci_write_handler,
-                            BX_PCI_DEVICE(2,0),
+                            &devfunc, BX_PLUGIN_PCIVGA,
                             "Experimental PCI VGA");
 
   for (unsigned i=0; i<256; i++) {

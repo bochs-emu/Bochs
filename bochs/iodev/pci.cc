@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.31 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pci.cc,v 1.32 2004-06-29 19:24:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,8 +95,9 @@ bx_pci_c::init(void)
     DEV_register_iowrite_handler(this, write_handler, i, "i440FX", 7);
   }
 
+  Bit8u devfunc = BX_PCI_DEVICE(0,0);
   DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                            BX_PCI_DEVICE(0,0), "440FX Host bridge");
+                            &devfunc, BX_PLUGIN_PCI, "440FX Host bridge");
 
   for (i=0; i<256; i++)
     BX_PCI_THIS s.i440fx.pci_conf[i] = 0x0;
@@ -439,13 +440,27 @@ bx_pci_c::print_i440fx_state()
 
   bx_bool
 bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
-                                 bx_pci_write_handler_t f2, Bit8u devfunc,
-                                 const char *name)
+                                 bx_pci_write_handler_t f2, Bit8u *devfunc,
+                                 const char *name, const char *descr)
 {
-  unsigned handle;
+  unsigned i, handle;
 
-  /* first check if device/function is available */
-  if (BX_PCI_THIS pci_handler_id[devfunc] == BX_MAX_PCI_DEVICES) {
+  if (strcmp(name, "pci") && strcmp(name, "pci2isa") && strcmp(name, "pci_ide")
+      && (*devfunc == 0x00)) {
+    for (i = 0; i < BX_N_PCI_SLOTS; i++) {
+      if (bx_options.pcislot[i].Oused->get() &&
+          !strcmp(name, bx_options.pcislot[i].Odevname->getptr())) {
+        *devfunc = (i + 2) << 3;
+        BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
+        break;
+      }
+    }
+    if (*devfunc == 0x00) {
+      BX_ERROR(("Plugin '%s'not connected to a PCI slot", name));
+    }
+  }
+  /* check if device/function is available */
+  if (BX_PCI_THIS pci_handler_id[*devfunc] == BX_MAX_PCI_DEVICES) {
     if (BX_PCI_THIS num_pci_handles >= BX_MAX_PCI_DEVICES) {
       BX_INFO(("too many PCI devices installed."));
       BX_PANIC(("  try increasing BX_MAX_PCI_DEVICES"));
@@ -455,9 +470,9 @@ bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
     BX_PCI_THIS pci_handler[handle].read  = f1;
     BX_PCI_THIS pci_handler[handle].write = f2;
     BX_PCI_THIS pci_handler[handle].this_ptr = this_ptr;
-    BX_PCI_THIS pci_handler_id[devfunc] = handle;
-    BX_INFO(("%s present at device %d, function %d", name, devfunc >> 3,
-             devfunc & 0x07));
+    BX_PCI_THIS pci_handler_id[*devfunc] = handle;
+    BX_INFO(("%s present at device %d, function %d", descr, *devfunc >> 3,
+             *devfunc & 0x07));
     return true; // device/function mapped successfully
     }
   else {
@@ -466,14 +481,18 @@ bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
 }
 
 
-  Bit8u
-bx_pci_c::find_free_devfunc()
+  bx_bool
+bx_pci_c::is_pci_device(const char *name)
 {
-	int devfunc;
-	for (devfunc = 0; devfunc < 0x100; devfunc += 8) // keep func = 0
-		if (BX_PCI_THIS pci_handler_id[devfunc] == BX_MAX_PCI_DEVICES)
-			return devfunc;
-	return 0; // error
+  unsigned i;
+
+  for (i = 0; i < BX_N_PCI_SLOTS; i++) {
+    if (bx_options.pcislot[i].Oused->get() &&
+        !strcmp(name, bx_options.pcislot[i].Odevname->getptr())) {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 #endif /* BX_PCI_SUPPORT */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.120 2004-05-30 08:28:51 vruppert Exp $
+// $Id: siminterface.h,v 1.121 2004-06-29 19:24:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -390,6 +390,17 @@ typedef enum {
   BXP_PARPORT1_OUTFILE,
   BXP_PARPORT2_ENABLED,
   BXP_PARPORT2_OUTFILE,
+#define BXP_PARAMS_PER_PCI_SLOT 2
+  BXP_PCI_SLOT1_USED,
+  BXP_PCI_SLOT1_DEVNAME,
+  BXP_PCI_SLOT2_USED,
+  BXP_PCI_SLOT2_DEVNAME,
+  BXP_PCI_SLOT3_USED,
+  BXP_PCI_SLOT3_DEVNAME,
+  BXP_PCI_SLOT4_USED,
+  BXP_PCI_SLOT4_DEVNAME,
+  BXP_PCI_SLOT5_USED,
+  BXP_PCI_SLOT5_DEVNAME,
   BXP_KEYBOARD_USEMAPPING,
   BXP_KEYBOARD_MAP,
   BXP_KEYBOARD,
@@ -496,6 +507,12 @@ typedef enum {
   (bx_id)(BXP_PARPORT1_ENABLED + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
 #define BXP_PARPORTx_OUTFILE(x) \
   (bx_id)(BXP_PARPORT1_OUTFILE + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
+
+// use x=1,2,3,4,5
+#define BXP_PCISLOTx_USED(x) \
+   (bx_id)(BXP_PCI_SLOT1_USED + (((x)-1)*BXP_PARAMS_PER_PCI_SLOT))
+#define BXP_PCISLOTx_DEVNAME(x) \
+   (bx_id)(BXP_PCI_SLOT1_DEVNAME + (((x)-1)*BXP_PARAMS_PER_PCI_SLOT))
 
 typedef enum {
   BX_TOOLBAR_UNDEFINED,
@@ -1310,6 +1327,11 @@ typedef struct {
   bx_param_string_c *Oethdev;
   bx_param_string_c *Oscript;
   } bx_pnic_options;
+
+typedef struct {
+  bx_param_bool_c *Oused;
+  bx_param_string_c *Odevname;
+  } bx_pcislot_options;
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

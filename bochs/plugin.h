@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.25 2004-06-09 20:55:58 vruppert Exp $
+// $Id: plugin.h,v 1.26 2004-06-29 19:24:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -172,10 +172,9 @@ extern "C" {
 #define DEV_vga_get_actl_pal_idx(index) (bx_devices.pluginVgaDevice->get_actl_palette_idx(index))
 
 ///////// PCI macros
-#define DEV_register_pci_handlers(b,c,d,e,f) \
-  (bx_devices.pluginPciBridge->register_pci_handlers(b,c,d,e,f))
-#define DEV_find_free_devfunc() \
-  (bx_devices.pluginPciBridge->find_free_devfunc())
+#define DEV_register_pci_handlers(b,c,d,e,f,g) \
+  (bx_devices.pluginPciBridge->register_pci_handlers(b,c,d,e,f,g))
+#define DEV_is_pci_device(name) bx_devices.pluginPciBridge->is_pci_device(name)
 #define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
 #define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
 #define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()
@@ -303,7 +302,7 @@ BOCHSAPI extern void     (*pluginResetSignal)(unsigned sig);
 BOCHSAPI extern bx_bool  (*pluginRegisterPCIDevice)(void *this_ptr,
                              Bit32u (*bx_pci_read_handler)(void *, Bit8u, unsigned),
                              void(*bx_pci_write_handler)(void *, Bit8u, Bit32u, unsigned),
-                             Bit8u devfunc, const char *name);
+                             Bit8u *devfunc, const char *name, const char *descr);
 BOCHSAPI extern Bit8u    (*pluginRd_memType)(Bit32u addr);
 BOCHSAPI extern Bit8u    (*pluginWr_memType)(Bit32u addr);
 

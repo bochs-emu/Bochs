@@ -197,10 +197,11 @@ bx_pcidev_c::init(void)
   BX_INFO(("vendor: %x; device: %x @ host %x:%x.%d", vendor, device,
 	find.bus, find.device, find.func));
   
+  Bit8u devfunc = 0x00;
   DEV_register_pci_handlers(this,
                             pci_read_handler,
                             pci_write_handler,
-                            DEV_find_free_devfunc(),
+                            &devfunc, BX_PLUGIN_PCIDEV,
                             pcidev_name);
 
   BX_PCIDEV_THIS irq = PCIDEV_IRQ; // initial irq value

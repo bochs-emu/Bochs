@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.2 2004-06-19 15:20:06 sshwarts Exp $
+// $Id: config.cc,v 1.3 2004-06-29 19:24:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -926,6 +926,27 @@ void bx_init_options ()
           "serial_parallel_menu",
           par_ser_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
+
+  // pci slots
+  for (i=0; i<BX_N_PCI_SLOTS; i++) {
+        sprintf (name, "Use PCI slot #%d", i+1);
+        sprintf (descr, "Controls whether PCI alot #%d is used or not", i+1);
+        bx_options.pcislot[i].Oused = new bx_param_bool_c (
+                BXP_PCISLOTx_USED(i+1), 
+                strdup(name), 
+                strdup(descr), 
+                0);
+        sprintf (name, "PCI slot #%d device", i+1);
+        sprintf (descr, "Name of the device connected to PCI slot #%d", i+1);
+        bx_options.pcislot[i].Odevname = new bx_param_string_c (
+                BXP_PCISLOTx_DEVNAME(i+1), 
+                strdup(name), 
+                strdup(descr),
+                "", BX_PATHNAME_LEN);
+        deplist = new bx_list_c (BXP_NULL, 1);
+        deplist->add (bx_options.pcislot[i].Odevname);
+        bx_options.pcislot[i].Oused->set_dependent_list (deplist);
+  }
 
   bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
       "romimage",
@@ -1989,7 +2010,7 @@ parse_line_unformatted(char *context, char *line)
   static Bit32s
 parse_line_formatted(char *context, int num_params, char *params[])
 {
-  int i;
+  int i, slot;
 
   if (num_params < 1) return 0;
   if (num_params < 2) {
@@ -2974,7 +2995,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
   }
 
   else if (!strcmp(params[0], "i440fxsupport")) {
-    if (num_params != 2) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: i440FXSupport directive malformed.", context));
       }
     if (strncmp(params[1], "enabled=", 8)) {
@@ -2986,6 +3007,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.Oi440FXSupport->set (1);
     else {
       PARSE_ERR(("%s: i440FXSupport directive malformed.", context));
+      }
+    if (num_params > 2) {
+      for (i=2; i<num_params; i++) {
+        if ((!strncmp(params[i], "slot", 4)) && (params[i][5] == '=')) {
+          slot = atol(&params[i][4]) - 1;
+          if ((slot >= 0) && (slot < 5)) {
+            bx_options.pcislot[slot].Odevname->set (strdup(&params[i][6]));
+            bx_options.pcislot[slot].Oused->set (strlen(params[i]) > 6);
+            }
+          else {
+            BX_ERROR(("%s: unknown pci slot number ignored.", context));
+            }
+          }
+        else {
+          BX_ERROR(("%s: unknown parameter for pci slot ignored.", context));
+          }
+        }
       }
     }
   else if (!strcmp(params[0], "pcidev")) {
