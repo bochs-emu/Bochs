@@ -21,4 +21,5 @@
   --enable-x86-debugger \
   --enable-cdrom \
   --enable-sb16=linux \
+  --enable-instrumentation \
   --enable-iodebug
