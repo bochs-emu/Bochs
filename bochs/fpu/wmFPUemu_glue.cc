@@ -92,7 +92,7 @@ BX_CPU_C::fpu_execute(BxInstruction_t *i)
   // Mark if instruction used opsize or addrsize prefixes
   // Actually, addr_modes.override.address_size is not used,
   // could delete that code.
-  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  is_32 = sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   if (i->as_32 == is_32)
     addr_modes.override.address_size = 0;
   else
@@ -110,14 +110,14 @@ access_limit = 0xff;
 
   // fill in orig eip here in offset
   // fill in CS in selector
-  entry_sel_off.offset = BX_CPU_THIS_PTR prev_eip;
+  entry_sel_off.offset = prev_eip;
   entry_sel_off.selector =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+    sregs[BX_SEG_REG_CS].selector.value;
 
 // should set these fields to 0 if mem operand not used
   data_address = (void *) i->rm_addr;
   data_sel_off.offset = i->rm_addr;
-  data_sel_off.selector = BX_CPU_THIS_PTR sregs[i->seg].selector.value;
+  data_sel_off.selector = sregs[i->seg].selector.value;
 
   math_emulate2(addr_modes, i->modrm, i->b1, data_address,
                 data_sel_off, entry_sel_off);
@@ -127,13 +127,16 @@ access_limit = 0xff;
   unsigned
 fpu_get_ds(void)
 {
-  return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+  return(fpu_cpu_ptr->sregs[BX_SEG_REG_DS].selector.value);
 }
 
   void
 fpu_set_ax(unsigned short val16)
 {
+// define to set AX in the current CPU -- not ideal.
+#define AX (fpu_cpu_ptr->gen_reg[0].word.rx)
   AX = val16;
+#undef AX
 //fprintf(stderr, "fpu_set_ax(0x%04x)\n", (unsigned) val16);
 }
 
@@ -142,7 +145,7 @@ fpu_verify_area(unsigned what, void *ptr, unsigned n)
 {
   bx_segment_reg_t *seg;
 
-  seg = &BX_CPU_THIS_PTR sregs[fpu_iptr->seg];
+  seg = &fpu_cpu_ptr->sregs[fpu_iptr->seg];
 
   if (what == VERIFY_READ) {
     fpu_cpu_ptr->read_virtual_checks(seg, (Bit32u) ptr, n);
