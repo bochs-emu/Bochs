@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.74 2002-09-25 19:05:00 bdenney Exp $
+// $Id: siminterface.h,v 1.75 2002-10-05 23:11:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -928,11 +928,11 @@ class bx_param_string_c : public bx_param_c {
   char separator;
 public:
   enum {
-    BX_RAW_BYTES = 1,          // use binary text editor, like MAC addr
-	BX_IS_FILENAME = 2,    // 1=yes it's a filename, 0=not a filename.
-	                       // Some guis have a file browser. This
-			       // bit suggests that they use it.
-	BX_SAVE_FILE_DIALOG = 4    // Use save dialog opposed to open file dialog
+    BX_RAW_BYTES = 1,         // use binary text editor, like MAC addr
+    BX_IS_FILENAME = 2,       // 1=yes it's a filename, 0=not a filename.
+                              // Some guis have a file browser. This
+                              // bit suggests that they use it.
+    BX_SAVE_FILE_DIALOG = 4   // Use save dialog opposed to open file dialog
   } bx_string_opt_bits;
   bx_param_string_c (bx_id id,
       char *name,
