@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34.2.25 2002-10-23 20:04:32 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.26 2002-10-24 03:08:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,23 +53,23 @@ bx_devices_c::bx_devices_c(void)
   pci2isa = NULL;
 #endif
   pit = NULL;
+  pluginKeyboard = &stubKeyboard;
+  pluginDmaDevice = &stubDma;
+  pluginFloppyDevice = &stubFloppy;
+  pluginBiosDevice = NULL;
+  pluginCmosDevice = &stubCmos;
+  pluginSerialDevice = NULL;
+  pluginParallelDevice = NULL;
+  pluginUnmapped = NULL;
+  pluginVgaDevice = &stubVga;
+  pluginPicDevice = &stubPic;
+  pluginHardDrive = &stubHardDrive;
   sb16 = NULL;
   ne2k = NULL;
   g2h = NULL;
 #if BX_IODEBUG_SUPPORT
   iodebug = NULL;
 #endif
-  pluginKeyboard = &stubKeyboard;
-  pluginHardDrive = &stubHardDrive;
-  pluginSerialDevice = NULL;
-  pluginParallelDevice = NULL;
-  pluginUnmapped = NULL;
-  pluginBiosDevice = NULL;
-  pluginCmosDevice = &stubCmos;
-  pluginDmaDevice = &stubDma;
-  pluginPicDevice = &stubPic;
-  pluginVgaDevice = &stubVga;
-  pluginFloppyDevice = &stubFloppy;
 }
 
 
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.25 2002-10-23 20:04:32 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.26 2002-10-24 03:08:13 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
