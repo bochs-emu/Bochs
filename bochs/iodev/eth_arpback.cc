@@ -29,12 +29,15 @@
 
 #include "bochs.h"
 #include "crc32.h"
+#include "eth_packetmaker.h"
 #define LOG_THIS bx_ne2k.
 
-static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
-static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
-static const Bit8u broadcast_mac[]={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-static const Bit8u ethtype_arp[]={0x08, 0x06, 0x00};
+
+//static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
+//static const Bit8u internal_mac[]={0xB0, 0xC4, 0x20, 0x00, 0x00, 0x00, 0x00};
+//static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
+//static const Bit8u broadcast_mac[]={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+//static const Bit8u ethtype_arp[]={0x08, 0x06, 0x00};
 
 #define MAX_FRAME_SIZE 2048
 
@@ -52,10 +55,11 @@ private:
   static void rx_timer_handler(void *);
   void rx_timer(void);
   FILE *txlog, *txlog_txt;
-  Bit8u arpbuf[MAX_FRAME_SIZE];
-  Bit32u buflen;
-  Boolean bufvalid;
-  CRC_Generator mycrc;
+  //Bit8u arpbuf[MAX_FRAME_SIZE];
+  //Bit32u buflen;
+  //Boolean bufvalid;
+  //CRC_Generator mycrc;
+  eth_ETHmaker packetmaker;
 };
 
 
@@ -90,7 +94,8 @@ bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
 				1, 1); // continuous, active
   this->rxh   = rxh;
   this->rxarg = rxarg;
-  bufvalid=0;
+  //bufvalid=0;
+  packetmaker.init();
 #if BX_ETH_NULL_LOGGING
   // Start the rx poll 
   // eventually Bryce wants txlog to dump in pcap format so that
@@ -113,6 +118,13 @@ void
 bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   if(io_len<MAX_FRAME_SIZE) {
+    eth_packet barney;
+    memcpy(barney.buf,buf,io_len);
+    barney.len=io_len;
+    if(packetmaker.ishandler(barney)) {
+      packetmaker.sendpacket(barney);
+    }
+    /*
     if(( (!memcmp(buf, external_mac, 6)) || (!memcmp(buf, broadcast_mac, 6)) )
        && (!memcmp(((Bit8u *)buf)+12, ethtype_arp, 2)) ) {
       Bit32u tempcrc;
@@ -125,9 +137,10 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
       arpbuf[21]=2; //make this a reply and not a request
       tempcrc=mycrc.get_CRC(arpbuf,io_len);
       memcpy(arpbuf+io_len, &tempcrc, 4);
-      buflen=io_len/*+4*/;
+      buflen=io_len;//+4
       bufvalid=1;
     }
+    */
   }
 #if BX_ETH_NULL_LOGGING
   BX_DEBUG (("sendpkt length %u", io_len));
@@ -164,11 +177,12 @@ void bx_arpback_pktmover_c::rx_timer (void)
 {
   int nbytes = 0;
   struct bpf_hdr *bhdr;
-
-  if(bufvalid) {
-    bufvalid=0;
-    void * buf=arpbuf;
-    unsigned io_len=buflen;
+  eth_packet rubble;
+  
+  if(packetmaker.getpacket(rubble)) {
+    //bufvalid=0;
+    void * buf=rubble.buf;
+    unsigned io_len=rubble.len;
     Bit32u n;
     fprintf (txlog_txt, "NE2K receiving a packet, length %u\n", io_len);
     Bit8u *charbuf = (Bit8u *)buf;
