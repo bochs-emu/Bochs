@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.81 2005-02-08 18:31:51 vruppert Exp $
+// $Id: devices.cc,v 1.82 2005-02-16 17:53:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.81 2005-02-08 18:31:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.82 2005-02-16 17:53:40 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -286,7 +286,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   // misc. CMOS
   Bit32u extended_memory_in_k = mem->get_memory_in_k() > 1024 ? (mem->get_memory_in_k() - 1024) : 0;
-  if (extended_memory_in_k > 0xffff) extended_memory_in_k = 0xffff;
+  if (extended_memory_in_k > 0xfc00) extended_memory_in_k = 0xfc00;
 
   DEV_cmos_set_reg(0x15, (Bit8u) BASE_MEMORY_IN_K);
   DEV_cmos_set_reg(0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
