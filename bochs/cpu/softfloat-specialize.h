@@ -29,7 +29,7 @@ these four paragraphs for those parts of this code that are retained.
 
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
- *            Stanislav Shwartsman (gate@fidonet.org.il)
+ *            Stanislav Shwartsman (gate at fidonet.org.il)
  * ==========================================================================*/ 
 
 #define int16_indefinite 0x8000
