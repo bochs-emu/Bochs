@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.17 2001-06-13 15:52:04 bdenney Exp $
+ * $Id: control.cc,v 1.18 2001-06-15 23:52:34 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -413,9 +413,9 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
      cdromop.dev, cdromop.present?"":"not ",
      cdromop.inserted?"inserted":"ejected");
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
-      SIM->getips (), 
-      SIM->get_vga_update_interval (), 
-      SIM->get_mouse_enabled () ? "enabled" : "disabled");
+      SIM->ips->get (),
+      SIM->vga_update_interval->get (), 
+      SIM->mouse_enabled->get () ? "enabled" : "disabled");
 }
 
 // return value of bx_control_panel:
@@ -482,7 +482,7 @@ int bx_control_panel (int menu)
        if (SIM->get_vga_path (vgapath, CPANEL_PATH_LEN) < 0)
 	 strcpy (vgapath, "none");
        sprintf (prompt, startup_mem_options_prompt, 
-	  SIM->get_mem_size (),
+	  SIM->memsize->get (),
 	  vgapath, rompath,
 	  SIM->get_rom_address ());
        if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
@@ -499,11 +499,11 @@ int bx_control_panel (int menu)
    case BX_CPANEL_START_OPTS_INTERFACE:
      {
        char prompt[1024];
-       int interval = SIM->get_vga_update_interval ();
+       int interval = SIM->vga_update_interval->get ();
        sprintf (prompt, startup_interface_options, 
 	 interval, 
-	 SIM->get_mouse_enabled () ? "enabled" : "disabled",
-	 SIM->getips (),
+	 SIM->mouse_enabled->get () ? "enabled" : "disabled",
+	 SIM->ips->get (),
 	 SIM->get_private_colormap () ? "enabled" : "disabled");
        if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
        switch (choice) {
@@ -670,32 +670,32 @@ void bx_boot_from ()
 
 void bx_edit_mem ()
 {
-  int newval, oldval = SIM->get_mem_size ();
+  int newval, oldval = SIM->memsize->get ();
   if (ask_int ("How much memory (megabytes) in the simulated machine? [%d] ", 1, 1<<30, oldval, &newval) < 0)
     return;
-  SIM->set_mem_size (newval);
+  SIM->memsize->set (newval);
 }
 
 void bx_ips_change ()
 {
   char prompt[1024];
-  int oldips = SIM->getips ();
+  int oldips = SIM->ips->get ();
   sprintf (prompt, "Type a new value for ips: [%d] ", oldips);
   int newips;
   if (ask_int (prompt, 1, 1<<30, oldips, &newips) < 0)
     return;
-  SIM->setips (newips);
+  SIM->ips->set (newips);
 }
 
 void bx_vga_update_interval ()
 {
   char prompt[1024];
-  int old = SIM->get_vga_update_interval ();
+  int old = SIM->vga_update_interval->get ();
   sprintf (prompt, "Type a new value for VGA update interval: [%d] ", old);
   int newinterval;
   if (ask_int (prompt, 1, 1<<30, old, &newinterval) < 0)
     return;
-  SIM->set_vga_update_interval (newinterval);
+  SIM->vga_update_interval->set (newinterval);
 }
 
 static void bx_print_log_action_table ()
@@ -761,10 +761,10 @@ void bx_log_options (int individual)
 
 void bx_mouse_enable ()
 {
-  int newval, oldval = SIM->get_mouse_enabled ();
+  int newval, oldval = SIM->mouse_enabled->get ();
   if (ask_yn ("Enable the mouse? [%s] ", oldval, &newval) < 0) return;
   if (newval == oldval) return;
-  SIM->set_mouse_enabled (newval);
+  SIM->mouse_enabled->set (newval);
 }
 
 int bx_read_rc (char *rc)

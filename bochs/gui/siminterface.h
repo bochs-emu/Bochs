@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.8 2001-06-11 20:48:12 bdenney Exp $
+ * $Id: siminterface.h,v 1.9 2001-06-15 23:52:34 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -48,6 +48,82 @@ struct bx_cdrom_options
   int inserted;
 };
 
+/* what do I want to know about an integer parameter?
+ * id number (comes from enum)
+ * string name
+ * description
+ * minimum and maximum allowed value
+ * default value
+ * what about behavior?  getValue method and setValue method?
+ */
+
+typedef enum {
+  BXP_IPS = 101,
+  BXP_VGA_UPDATE_INTERVAL,
+  BXP_MOUSE_ENABLED,
+  BXP_MEM_SIZE
+} bx_id;
+
+typedef enum {
+  BXT_OBJECT,
+  BXT_NODE,
+  BXT_PARAM,
+  BXT_PARAM_NUM
+} bx_objtype;
+
+class bx_object_c {
+private:
+  bx_id id;
+  Bit8u type;
+protected:
+  void set_type (Bit8u type);
+public:
+  bx_object_c (bx_id id);
+  bx_id get_id () { return id; }
+  Bit8u get_type () { return type; }
+};
+
+class bx_param_c : public bx_object_c {
+private:
+  char *name;
+  char *description;
+public:
+  bx_param_c (bx_id id,
+      char *name,
+      char *description);
+  char *get_name () { return name; }
+  char *get_description () { return description; }
+  void reset () {}
+};
+
+// make it only handle ints for now
+typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
+
+class bx_param_num_c : public bx_param_c {
+  Bit32s min, max, val, initial_val;
+  param_event_handler handler;
+public:
+  bx_param_num_c (bx_id id,
+      char *name,
+      char *description,
+      Bit32s min, Bit32s max, Bit32s initial_val);
+  void reset ();
+  void set_handler (param_event_handler handler) { this->handler = handler; }
+  Bit32s get ();
+  Bit32s set (Bit32s val);
+};
+
+class bx_node_c : public bx_object_c {
+private:
+  bx_object_c *car, *cdr;
+public:
+  bx_node_c (bx_id id);
+  bx_node_c (bx_id id, bx_object_c *car, bx_object_c *cdr);
+  bx_object_c *setcar (bx_object_c *ptr);
+  bx_object_c *setcdr (bx_object_c *ptr);
+  bx_object_c *getcar () { return car; }
+  bx_object_c *getcdr () { return cdr; }
+};
 
 class bx_simulator_interface_c {
   int init_done;
@@ -56,10 +132,10 @@ public:
   int get_init_done () { return init_done; }
   int set_init_done (int n) { init_done = n; return 0;}
 
-  virtual int getips () {return -1;}
-  virtual void setips (int ips) {}
-  virtual int get_vga_update_interval () {return -1;}
-  virtual void set_vga_update_interval (unsigned interval) {}
+  bx_param_num_c *ips;
+  bx_param_num_c *vga_update_interval;
+  bx_param_num_c *mouse_enabled;
+  bx_param_num_c *memsize;
   virtual int get_n_log_modules () {return -1;}
   virtual char *get_prefix (int mod) {return 0;}
   virtual int get_log_action (int mod, int level) {return -1;}
@@ -68,8 +144,6 @@ public:
   virtual char *get_log_level_name (int level) {return 0;}
   virtual int get_max_log_level () {return -1;}
   virtual void quit_sim (int clean) {}
-  virtual int get_mouse_enabled () {return -1;}
-  virtual void set_mouse_enabled (int en) {}
   virtual int get_default_rc (char *path, int len) {return -1;}
   virtual int read_rc (char *path) {return -1;}
   virtual int write_rc (char *rc, int overwrite) {return -1;}
@@ -86,8 +160,6 @@ public:
   virtual char *get_floppy_type_name (int type) {return NULL;}
   virtual int get_boot_hard_disk () {return -1;}
   virtual int set_boot_hard_disk (int val) {return -1;}
-  virtual int get_mem_size () {return -1;}
-  virtual int set_mem_size (int megs) {return -1;}
   virtual int get_rom_path (char *buf, int len) {return -1;}
   virtual int set_rom_path (char *path) {return -1;}
   virtual int get_vga_path (char *buf, int len) {return -1;}

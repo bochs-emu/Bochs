@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.12 2001-06-13 13:36:12 bdenney Exp $
+ * $Id: siminterface.cc,v 1.13 2001-06-15 23:52:34 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -25,10 +25,6 @@ class bx_real_sim_c : public bx_simulator_interface_c {
 #define NOTIFY_TYPE_STRING
 public:
   bx_real_sim_c ();
-  virtual int getips ();
-  virtual void setips (int ips);
-  virtual int get_vga_update_interval ();
-  virtual void set_vga_update_interval (unsigned interval);
   virtual int get_n_log_modules ();
   virtual char *get_prefix (int mod);
   virtual int get_log_action (int mod, int level);
@@ -37,8 +33,6 @@ public:
   virtual char *get_log_level_name (int level);
   virtual int get_max_log_level ();
   virtual void quit_sim (int clean);
-  virtual int get_mouse_enabled ();
-  virtual void set_mouse_enabled (int en);
   virtual int get_default_rc (char *path, int len);
   virtual int read_rc (char *path);
   virtual int write_rc (char *path, int overwrite);
@@ -55,8 +49,6 @@ public:
   virtual char *get_floppy_type_name (int type);
   virtual int get_boot_hard_disk ();
   virtual int set_boot_hard_disk (int val);
-  virtual int get_mem_size ();
-  virtual int set_mem_size (int megs);
   virtual int get_rom_path (char *buf, int len);
   virtual int set_rom_path (char *path);
   virtual int get_vga_path (char *buf, int len);
@@ -72,6 +64,48 @@ public:
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
 };
 
+Bit32s
+multipurpose_handler (bx_param_c *param, int set, Bit32s val)
+{
+  /* this function handles change events on several parameters */
+  switch (param->get_id ()) {
+    case BXP_IPS:
+      if (set)
+	return (bx_options.ips = val);
+      else
+	return bx_options.ips;
+    case BXP_VGA_UPDATE_INTERVAL:
+      if (set) {
+	bx_options.vga_update_interval = val;
+	if (SIM->get_init_done ())
+	  bx_vga.set_update_interval (val);
+	return val;
+      } else {
+	return bx_options.vga_update_interval;
+      }
+    case BXP_MOUSE_ENABLED:
+      if (set) {
+	bx_options.mouse_enabled = val;
+	if (SIM->get_init_done ())
+	  bx_gui.gui_set_mouse_enable (val!=0);
+	return val;
+      } else {
+	return bx_gui.gui_get_mouse_enable ();
+      }
+    case BXP_MEM_SIZE:
+      /* for simple stuff like mem size, you only need this handler because
+         the memory expects to find the value in bx_options.memory.megs.
+	 If instead it looked for the value here in SIM->memsize, then
+	 no handler is necessary. */
+      if (set)
+	return (bx_options.memory.megs = val);
+      else
+	return bx_options.memory.megs;
+    default:
+      BX_PANIC (("multipurpose_handler called with unknown parameter"));
+  }
+}
+
 void init_siminterface ()
 {
   siminterface_log = new logfunctions ();
@@ -79,6 +113,14 @@ void init_siminterface ()
   siminterface_log->settype(CTRLLOG);
   if (SIM == NULL) 
     SIM = new bx_real_sim_c();
+  SIM->ips = new bx_param_num_c (BXP_IPS, "ips", "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.", 1, 1<<31, 500000);
+  SIM->ips->set_handler (multipurpose_handler);
+  SIM->vga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL, "vga_update_interval", "Number of microseconds between VGA updates", 1, 1<<31, 30000);
+  SIM->vga_update_interval->set_handler (multipurpose_handler);
+  SIM->mouse_enabled = new bx_param_num_c (BXP_MOUSE_ENABLED, "mouse_enabled", "Controls whether the mouse sends events to bochs", 0, 1, 0);
+  SIM->mouse_enabled->set_handler (multipurpose_handler);
+  SIM->memsize = new bx_param_num_c (BXP_MEM_SIZE, "megs", "Amount of RAM in megabytes", 1, 1<<31, 4);
+  SIM->memsize->set_handler (multipurpose_handler);
 }
 
 bx_simulator_interface_c::bx_simulator_interface_c ()
@@ -89,19 +131,6 @@ bx_simulator_interface_c::bx_simulator_interface_c ()
 bx_real_sim_c::bx_real_sim_c ()
 {
   callback = NULL;
-}
-
-int 
-bx_real_sim_c::getips ()
-{
-  return bx_options.ips;
-}
-
-void 
-bx_real_sim_c::setips (int ips)
-{
-  BX_ERROR (("Changing ips during simulation doesn't really work yet.  We need to reschedule the timers or something."));
-  bx_options.ips = ips;
 }
 
 int 
@@ -154,28 +183,6 @@ bx_real_sim_c::quit_sim (int clean) {
   if (!clean)
     BX_PANIC (("Quit simulation command"));
   ::exit (0);
-}
-
-int 
-bx_real_sim_c::get_vga_update_interval () {
-  return bx_options.vga_update_interval;
-}
-
-void 
-bx_real_sim_c::set_vga_update_interval (unsigned interval) {
-  bx_options.vga_update_interval = interval;
-  if (get_init_done ())
-    bx_vga.set_update_interval (interval);
-}
-
-int bx_real_sim_c::get_mouse_enabled () {
-  return bx_gui.gui_get_mouse_enable ();
-}
-
-void bx_real_sim_c::set_mouse_enabled (int en) {
-  bx_options.mouse_enabled = en;
-  if (get_init_done ())
-    bx_gui.gui_set_mouse_enable (en!=0);
 }
 
 int
@@ -316,17 +323,6 @@ bx_real_sim_c::set_boot_hard_disk (int val)
 }
 
 int 
-bx_real_sim_c::get_mem_size () {
-  return bx_options.memory.megs;
-}
-
-int 
-bx_real_sim_c::set_mem_size (int megs) {
-  bx_options.memory.megs = megs;
-  return 0;
-}
-
-int 
 bx_real_sim_c::get_rom_path (char *buf, int len)
 {
   if (bx_options.rom.path)
@@ -436,4 +432,86 @@ bx_real_sim_c::log_msg_2 (char *prefix, int *level, char *msg, int len)
   return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////
+
+// new stuff
+
+bx_object_c::bx_object_c (bx_id id)
+{
+  this->id = id;
+  this->type = BXT_OBJECT;
+}
+
+void 
+bx_object_c::set_type (Bit8u type)
+{
+  this->type = type;
+}
+
+bx_param_c::bx_param_c (bx_id id, char *name, char *description)
+  : bx_object_c (id)
+{
+  set_type (BXT_PARAM);
+  this->name = name;
+  this->description = description;
+}
+
+bx_param_num_c::bx_param_num_c (bx_id id,
+    char *name,
+    char *description,
+    Bit32s min, Bit32s max, Bit32s initial_val)
+  : bx_param_c (id, name, description)
+{
+  set_type (BXT_PARAM_NUM);
+  this->min = min;
+  this->max = max;
+  this->initial_val = initial_val;
+  this->val = initial_val;
+  this->handler = NULL;
+}
+
+void 
+bx_param_num_c::reset ()
+{
+  this->val = initial_val;
+}
+
+Bit32s 
+bx_param_num_c::get ()
+{
+  int retval = val;
+  if (handler) {
+    retval = (*handler)(this, 0, val);
+  }
+  return retval;
+}
+
+Bit32s 
+bx_param_num_c::set (Bit32s newval)
+{
+  if (handler)
+    val = (*handler)(this, 1, newval);
+  else
+    val = newval;
+  return newval;
+}
+
+bx_node_c::bx_node_c (bx_id id)
+  : bx_object_c (id)
+{
+  set_type (BXT_NODE);
+  car = NULL;
+  cdr = NULL;
+}
+
+bx_node_c::bx_node_c (bx_id id, bx_object_c *car, bx_object_c *cdr)
+  : bx_object_c (id)
+{
+  set_type (BXT_NODE);
+  this->car = car;
+  this->cdr = cdr;
+}
+
 #endif  // if BX_USE_CONTROL_PANEL==1
+
+
