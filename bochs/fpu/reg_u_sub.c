@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_sub.c                                                              |
- |  $Id: reg_u_sub.c,v 1.6 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: reg_u_sub.c,v 1.7 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Core floating point subtraction routine.                                  |
  |                                                                           |
@@ -160,7 +160,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
       dest->exp = answ.exp;
       dest->sigh = answ.sigh;
       dest->sigl = answ.sigl;
-      return FPU_round(dest, extent, 0, control_w, sign);
+      return FPU_round(dest, extent, control_w, sign);
     }
 
   if (answ.sigh == 0)
@@ -194,7 +194,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
      if (arg1->sigh == 0x80000000 && arg2->sigh == 0x80000000)
          dest->exp++;
      dest->exp -= EXTENDED_Ebias;
-     return FPU_round(dest, extent, 0, control_w, sign);
+     return FPU_round(dest, extent, control_w, sign);
 	}
       else
 	{
@@ -220,5 +220,5 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
   dest->sigh = answ.sigh;
   dest->sigl = answ.sigl;
 
-  return FPU_round(dest, extent, 0, control_w, sign);
+  return FPU_round(dest, extent, control_w, sign);
 }

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  wm_sqrt.c                                                                |
- |  $Id: wm_sqrt.c,v 1.4 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: wm_sqrt.c,v 1.5 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Fixed point arithmetic square root evaluation.                            |
  |                                                                           |
@@ -35,7 +35,7 @@
 #define ERR_MARGIN 0x20
 
 
-int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
+int wm_sqrt(FPU_REG *n, u16 control_w, u8 sign)
 {
   u64 nn, guess, halfn, lowr, mid, upr, diff, uwork;
   s64 work;
@@ -71,7 +71,6 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
   guess32 = halfn / guess32 + (guess32 >> 1);
   guess32 = halfn / guess32 + (guess32 >> 1);
 
-
 /*
  * Now that an estimate accurate to about 30 bits has been obtained,
  * we improve it to 60 bits or so.
@@ -94,7 +93,6 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
 
   /* guess is now accurate to about 60 bits */
 
-
   if ( work > 0 )
     {
 #ifdef PARANOID
@@ -104,7 +102,7 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
 	}
 #endif
       /* We know the answer here. */
-      return FPU_round(n, 0x7fffffff, 0, control_w, sign);
+      return FPU_round(n, 0x7fffffff, control_w, sign);
     }
 
   /* Refine the guess to significantly more than 64 bits. */
@@ -206,7 +204,6 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
       /* The guess should now be good to about 90 bits */
     }
 
-
   setexponent16(n, 0);
 
   if ( guess32 >= (u32) -ERR_MARGIN )
@@ -220,7 +217,7 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
     {
       /* We have enough accuracy to decide rounding */
       significand(n) = guess;
-      return FPU_round(n, guess32, 0, control_w, sign);
+      return FPU_round(n, guess32, control_w, sign);
     }
 
   if ( (guess32 <= ERR_MARGIN) || (guess32 >= (u32) -ERR_MARGIN) )
@@ -264,30 +261,28 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
 	{
 	  /* guess is too large */
 	  significand(n) --;
-	  return FPU_round(n, 0xffffff00, 0, control_w, sign);
+	  return FPU_round(n, 0xffffff00, control_w, sign);
 	}
       else if ( (s32)work32 < 0 )
 	{
 	  /* guess is a little too small */
-	  return FPU_round(n, 0x000000ff, 0, control_w, sign);
+	  return FPU_round(n, 0x000000ff, control_w, sign);
 	}
 
       else if ( (u32)lowr != 0 )
        {
-
          /* guess is too large */
          significand(n) --;
-         return FPU_round(n, 0xffffff00, 0, control_w, sign);
+         return FPU_round(n, 0xffffff00, control_w, sign);
        }
 
       /* Our guess is precise. */
-      return FPU_round(n, 0, 0, control_w, sign);
+      return FPU_round(n, 0, control_w, sign);
     }
 
   /* Very similar to the case above, but the last bit is near 0.5.
      We handle this just like the case above but we shift everything
      by one bit. */
-
 
   uwork = guess;
   uwork <<= 1;
@@ -323,12 +318,12 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
   if ( (s32)work32 < 0 )
     {
       /* guess plus half bit is a little too small */
-      return FPU_round(n, 0x800000ff, 0, control_w, sign);
+      return FPU_round(n, 0x800000ff, control_w, sign);
     }
   else /* Note that the lower 64 bits of the product are not all zero */
     {
       /* guess plus half bit is too large */
-      return FPU_round(n, 0x7fffff00, 0, control_w, sign);
+      return FPU_round(n, 0x7fffff00, control_w, sign);
     }
 
   /*
@@ -338,4 +333,3 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
   */
 
 }
-

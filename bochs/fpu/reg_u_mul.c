@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_mul.c                                                              |
- |  $Id: reg_u_mul.c,v 1.6 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: reg_u_mul.c,v 1.7 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Core multiplication routine                                               |
  |                                                                           |
@@ -96,5 +96,5 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
   c->sigl = mu;
   c->sigh = mu >> 32;
 
-  return FPU_round(c, lh, 0, cw, sign);
+  return FPU_round(c, lh, cw, sign);
 }

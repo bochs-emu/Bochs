@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_round.c                                                              |
- |  $Id: reg_round.c,v 1.7 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: reg_round.c,v 1.8 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Rounding/truncation/etc for FPU basic arithmetic functions.               |
  |                                                                           |
@@ -140,7 +140,7 @@ static int truncate_24(FPU_REG *x)
   return LOST_DOWN;
 }
 
-int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
+int FPU_round(FPU_REG *x, u32 extent, u16 control_w, u8 sign)
 {
   u64 work;
   u32 leading;

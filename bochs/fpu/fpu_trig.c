@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_trig.c                                                               |
- |  $Id: fpu_trig.c,v 1.9 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: fpu_trig.c,v 1.10 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Implementation of the FPU "transcendental" functions.                     |
  |                                                                           |
@@ -361,7 +361,7 @@ static void fptan(FPU_REG *st0_ptr, u_char st0_tag)
 
 	  FPU_to_exp16(st0_ptr, st0_ptr);
       
-	  st0_tag = FPU_round(st0_ptr, 1, 0, FULL_PRECISION, arg_sign);
+	  st0_tag = FPU_round(st0_ptr, 1, FULL_PRECISION, arg_sign);
 	  FPU_settag0(st0_tag);
 	}
       FPU_push();
@@ -535,7 +535,7 @@ static void fsqrt_(FPU_REG *st0_ptr, u_char st0_tag)
       setexponent16(st0_ptr, (expon & 1));
 
       /* Do the computation, the sign of the result will be positive. */
-      tag = wm_sqrt(st0_ptr, 0, 0, FPU_control_word, SIGN_POS);
+      tag = wm_sqrt(st0_ptr, FPU_control_word, SIGN_POS);
       addexponent(st0_ptr, expon >> 1);
       FPU_settag0(tag);
       return;
@@ -678,7 +678,7 @@ static int fsin(FPU_REG *st0_ptr, u_char tag)
       /* Underflow may happen */
       FPU_to_exp16(st0_ptr, st0_ptr);
       
-      tag = FPU_round(st0_ptr, 1, 0, FULL_PRECISION, arg_sign);
+      tag = FPU_round(st0_ptr, 1, FULL_PRECISION, arg_sign);
 
       FPU_settag0(tag);
 
@@ -1090,7 +1090,7 @@ static void do_fprem(FPU_REG *st0_ptr, u_char st0_tag, int round)
 	}
       else
 	{
-	  tag = FPU_round(st0_ptr, 0, 0, FULL_PRECISION, st0_sign);
+	  tag = FPU_round(st0_ptr, 0, FULL_PRECISION, st0_sign);
 	}
       FPU_settag0(tag);
       setcc(cc);
@@ -1762,7 +1762,7 @@ static void fscale(FPU_REG *st0_ptr, u_char st0_tag)
       setexponent16(st0_ptr, scale);
 
       /* Use FPU_round() to properly detect under/overflow etc */
-      FPU_round(st0_ptr, 0, 0, FPU_control_word, sign);
+      FPU_round(st0_ptr, 0, FPU_control_word, sign);
 
       return;
     }

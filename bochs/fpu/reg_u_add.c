@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_add.c                                                              |
- |  $Id: reg_u_add.c,v 1.6 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: reg_u_add.c,v 1.7 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Add two valid (TAG_Valid) FPU_REG numbers, of the same sign, and put the  |
  |   result in a destination FPU_REG.                                        |
@@ -141,5 +141,5 @@ int  FPU_u_add(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *answ,
       answ->exp ++;
     }
 
-  return FPU_round(answ, extent, 0, control_w, sign);
+  return FPU_round(answ, extent, control_w, sign);
 }

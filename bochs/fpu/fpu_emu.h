@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.18 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.19 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -181,11 +181,10 @@ asmlinkage int FPU_u_div(FPU_REG const *arg1, FPU_REG const *arg2,
 asmlinkage int FPU_u_add(FPU_REG const *arg1, FPU_REG const *arg2,
 			 FPU_REG *answ, u16 control_w, u_char sign,
 			 s32 expa, s32 expb);
-asmlinkage int wm_sqrt(FPU_REG *n, int dummy1, int dummy2,
-		       u16 control_w, u_char sign);
+asmlinkage int wm_sqrt(FPU_REG *n, u16 control_w, u_char sign);
 asmlinkage u32 FPU_shrx(void *l, u32 x);
 asmlinkage u32 FPU_shrxs(void *v, u32 x);
-asmlinkage int FPU_round(FPU_REG *arg, u32 extent, int dummy,
+asmlinkage int FPU_round(FPU_REG *arg, u32 extent,
 			 u16 control_w, u_char sign);
 
 #ifndef MAKING_PROTO

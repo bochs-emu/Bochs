@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_atan.c                                                              |
- |  $Id: poly_atan.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: poly_atan.c,v 1.6 2003-10-05 12:26:11 sshwarts Exp $
  |                                                                           |
  | Compute the arctan of a FPU_REG, using a polynomial approximation.        |
  |                                                                           |
@@ -220,7 +220,7 @@ void	poly_atan(FPU_REG *st0_ptr, u_char st0_tag,
   significand(st1_ptr) = XSIG_LL(accumulator);
   setexponent16(st1_ptr, exponent);
 
-  tag = FPU_round(st1_ptr, 1, 0, FULL_PRECISION, sign2);
+  tag = FPU_round(st1_ptr, 1, FULL_PRECISION, sign2);
   FPU_settagi(1, tag);
 
 
