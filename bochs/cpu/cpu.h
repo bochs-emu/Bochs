@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.52 2002-09-14 17:29:47 kevinlawton Exp $
+// $Id: cpu.h,v 1.53 2002-09-14 19:21:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -481,28 +481,33 @@ typedef struct {
   } bx_cr0_t;
 #endif
 
-#if BX_SUPPORT_X86_64
 #if BX_CPU_LEVEL >= 4
 typedef struct {
-  Bit32u  val32; // 32bit value of register
+  Bit32u  registerValue; // 32bit value of register
 
-  // bitfields broken out for efficient access
-  Boolean vme; // bit 0  v86 mode extensions
-  Boolean pvi; // bit 1  protected mode virtual interrupts
-  Boolean tsd; // bit 2  time stamp disable
-  Boolean de;  // bit 3  debugging extensions
-  Boolean pse; // bit 4  page size extensions
-  Boolean pae; // bit 5  physical address extension
-  Boolean mce; // bit 6  machine check enable
-  Boolean pge; // bit 7  page global enable
-  Boolean pce; // bit 8  performance monitoring counter enable
-  Boolean osfxsr; // bit 9 OS fx save/restore supported
-  Boolean osxmmexcpt; // bit 10 OS unmasked SIMD exception support
-
-
+  // Accessors for all cr4 bitfields.
+#define IMPLEMENT_CR4_ACCESSORS(name,bitnum)                                 \
+  BX_CPP_INLINE Boolean get_##name () {                                      \
+    return 1 & (registerValue >> bitnum);                                    \
+    }                                                                        \
+  BX_CPP_INLINE void set_##name (Bit8u val) {                                \
+    registerValue = (registerValue&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
+    }
+  IMPLEMENT_CR4_ACCESSORS(VME, 0);
+  IMPLEMENT_CR4_ACCESSORS(PVI, 1);
+  IMPLEMENT_CR4_ACCESSORS(TSD, 2);
+  IMPLEMENT_CR4_ACCESSORS(DE,  3);
+  IMPLEMENT_CR4_ACCESSORS(PSE, 4);
+  IMPLEMENT_CR4_ACCESSORS(PAE, 5);
+  IMPLEMENT_CR4_ACCESSORS(MCE, 6);
+  IMPLEMENT_CR4_ACCESSORS(PGE, 7);
+  IMPLEMENT_CR4_ACCESSORS(PCE, 8);
+  IMPLEMENT_CR4_ACCESSORS(OSFXSR, 9);
+  IMPLEMENT_CR4_ACCESSORS(OSXMMEXCPT, 10);
+  BX_CPP_INLINE Boolean getRegister() { return registerValue; }
+  BX_CPP_INLINE void    setRegister(Bit32u r) { registerValue = r; }
   } bx_cr4_t;
-#endif
-#endif
+#endif  // #if BX_CPU_LEVEL >= 4
 
 #if BX_CPU_LEVEL >= 5
 typedef struct {
@@ -1077,11 +1082,7 @@ union {
 #endif
 
 #if BX_CPU_LEVEL >= 4
-#if BX_SUPPORT_X86_64
   bx_cr4_t cr4;
-#else
-  Bit32u    cr4;
-#endif
 #endif
 
 #if BX_CPU_LEVEL >= 5

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.35 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.36 2002-09-14 19:21:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -201,7 +201,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
+      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_DdRd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
@@ -227,7 +227,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
+      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions (CR4.DE) on
         BX_INFO(("MOV_DdRd: access to DR5 causes #UD"));
         UndefinedOpcode(i);
@@ -325,7 +325,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
+      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_RdDd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
@@ -339,7 +339,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
+      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_RdDd: access to DR5 causes #UD"));
         UndefinedOpcode(i);
@@ -508,7 +508,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       UndefinedOpcode(i);
 #else
       Bit32u allowMask = 0;
-      Bit32u oldCR4 = BX_CPU_THIS_PTR cr4;
+      Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
 
@@ -526,8 +526,8 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
         }
 
       val_32 = val_32 & allowMask; // Screen out unsupported bits.
-      BX_CPU_THIS_PTR cr4 = val_32;
-      pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4);
+      BX_CPU_THIS_PTR cr4.setRegister(val_32);
+      pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.getRegister());
 #endif
       }
       break;
@@ -597,7 +597,7 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
       UndefinedOpcode(i);
 #else
       BX_INFO(("MOV_RdCd: read of CR4"));
-      val_32 = BX_CPU_THIS_PTR cr4;
+      val_32 = BX_CPU_THIS_PTR cr4.getRegister();
 #endif
       break;
     default:
@@ -1159,7 +1159,7 @@ BX_CPU_C::RSM(BxInstruction_t *i)
 BX_CPU_C::RDTSC(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 5
-  Boolean tsd = (BX_CPU_THIS_PTR cr4 & 4)? 1 : 0;
+  Boolean tsd = BX_CPU_THIS_PTR cr4.get_TSD();
   Boolean cpl = CPL;
   if ((tsd==0) || (tsd==1 && cpl==0)) {
     // return ticks

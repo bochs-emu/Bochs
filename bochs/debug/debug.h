@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.12 2002-09-13 19:39:37 bdenney Exp $
+// $Id: debug.h,v 1.13 2002-09-14 19:21:41 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,7 +187,7 @@ typedef enum {
 
 
 
-void bx_debug_ctrlc_handler(int signum);
+static void bx_debug_ctrlc_handler(int signum);
 void bx_debug_break ();
 
 void bx_dbg_exit(int code);
