@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.20 2003-02-13 15:03:59 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.21 2003-03-13 00:43:00 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -399,7 +399,7 @@ BX_CPU_C::JMP_Eq(bxInstruction_c *i)
 BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
-  Bit64u op1_64;
+  Bit32u op1_32;
 
   invalidate_prefetch_q();
 
@@ -407,15 +407,15 @@ BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
     BX_PANIC(("JMP_Ep(): op1 is a register"));
     }
 
-  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
+  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
   if ( protected_mode() ) {
-    BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_64);
+    BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
     goto done;
     }
 
-  RIP = op1_64;
+  RIP = op1_32;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
