@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.62 2004-12-09 18:47:36 vruppert Exp $
+// $Id: serial.cc,v 1.63 2005-01-02 10:42:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -213,7 +213,7 @@ bx_serial_c::init(void)
       BX_SER_THIS s[i].baudrate = 115200;
 
       for (unsigned addr=ports[i]; addr<(unsigned)(ports[i]+8); addr++) {
-        BX_DEBUG(("com%d register read/write: 0x%04x",i+1, addr));
+        BX_DEBUG(("com%d initialize register for read/write: 0x%04x",i+1, addr));
         DEV_register_ioread_handler(this, read_handler, addr, name, 1);
         DEV_register_iowrite_handler(this, write_handler, addr, name, 1);
       }
@@ -378,8 +378,6 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
   bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
   Bit8u offset, val;
   Bit8u port = 0;
-
-  BX_DEBUG(("register read from address 0x%04x - ", address));
 
   offset = address & 0x07;
   switch (address & 0x03f8) {
@@ -547,7 +545,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
   }
 
-  BX_DEBUG(("val =  0x%02x", (unsigned) val));
+  BX_DEBUG(("com%d register read from address: 0x%04x = 0x%02x", port+1, address, val));
 
   return(val);
 }
@@ -582,8 +580,6 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif
   Bit8u port = 0;
 
-  BX_DEBUG(("write to address: 0x%04x = 0x%02x", address, value));
-
   offset = address & 0x07;
   switch (address & 0x03f8) {
     case 0x03f8: port = 0; break;
@@ -591,6 +587,9 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x03e8: port = 2; break;
     case 0x02e8: port = 3; break;
   }
+
+  BX_DEBUG(("com%d register write to  address: 0x%04x = 0x%02x", port+1, address, value));
+
   new_b0 = value & 0x01;
   new_b1 = (value & 0x02) >> 1;
   new_b2 = (value & 0x04) >> 2;
