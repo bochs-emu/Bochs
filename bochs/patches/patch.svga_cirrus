@@ -1,4 +1,3 @@
-----------------------------------------------------------------------
 Patch name: patch.svga_cirrus
 Author: m_suzu_abc@yahoo.co.jp
 Date: 2 Jan. 2004
@@ -12,21 +11,19 @@ Detailed description:
     Option "nolinear"
     Option "noaccel"
 
-  PCI SVGA support needs some modification,
-  because pci.cc must be initialized when
-  vga.cc is initialized.
-  You can run XFree86-4.1.0 (which only supports PCI cards)
-  if pci.cc or device.cc is modified.
-
-  To enable SVGA support, set
-    #define BX_SUPPORT_SVGA_CIRRUS 1
-    #define BX_SUPPORT_SVGA_CIRRUS_PCI 1
-  in your config.h. Disabled by default.
-  If enabled, you cannot compile bochs with plug-in support.
+  To enable SVGA support, configure with --enable-clgd54xx
 
   This patch includes following.
   config.h.in:
-    Added BX_SUPPORT_SVGA_CIRRUS and BX_SUPPORT_SVGA_CIRRUS_PCI.
+    Added BX_SUPPORT_CLGD54XX and BX_SUPPORT_CLGD54XX_PCI.
+  configure.in:
+    Added option, --enabled-clgd54xx
+  gui/gui.h:
+    Prototypes for new graphics API
+  gui/sdl.cc:
+    Implementation of new graphics API for SDL
+  gui/x.cc: 
+    Implementation of new graphics API for X11
   iodev/Makefile.in:
     Added svga_cirrus.o.
   iodev/svga_cirrus.h, iodev/svga_cirrus.cc:
@@ -50,7 +47,16 @@ Detailed description:
     - some vga register now support 16-bit reads
     - a bunch of updates sent by suzu295@melu.jp
     - ported write mode 4 + 5 and some bufixes from cirrus vga in qemu
-    - hardware cursor support for sdl added
+
+  Changes by komadori (Aug 4th 2004)
+    - implemented new graphics API
+    - implemented hardware cursor using new API
+    - added configure option for cirrus emulation
+
+  Changes by vruppert (Aug 10th 2004)
+    - wx now uses the new graphics API
+    - partial implementation of transparent bitblt
+    - partial support for bitblt write mask
 
 Patch was created with:
   diff -urN
@@ -58,11 +64,11 @@ Apply patch to what version:
   cvs snapshot on Aug 1st 2004
 Instructions:
   To patch, go to main bochs directory.
-  Type "patch -p0 < THIS_PATCH_FILE".
+  Type "patch -p1 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 diff -urN ../bochs/config.h.in ./config.h.in
---- ../bochs/config.h.in	2004-07-30 13:49:31.000000000 +0200
-+++ ./config.h.in	2004-07-30 15:34:13.000000000 +0200
+--- ../bochs/config.h.in	2004-08-06 17:48:19.000000000 +0200
++++ ./config.h.in	2004-08-06 18:31:07.000000000 +0200
 @@ -266,6 +266,7 @@
  #define BX_USE_NE2K_SMF    1  // NE2K
  #define BX_USE_EFI_SMF     1  // External FPU IRQ
@@ -89,142 +95,467 @@ diff -urN ../bochs/config.h.in ./config.h.in
  #define BX_PROVIDE_MAIN       1
  
  #define BX_INSTRUMENTATION    0
-@@ -696,6 +695,9 @@
+@@ -696,8 +695,19 @@
  // limited i440FX PCI support
- #define BX_PCI_SUPPORT 0
+ #define BX_SUPPORT_PCI 0
  
 +// Bochs VBE display interface
-+#define BX_SUPPORT_VBE        0
++#define BX_SUPPORT_VBE 0
++
++// CLGD54XX emulation
++#define BX_SUPPORT_CLGD54XX 0
++
++// CLGD54XX PCI emulation
++#define BX_SUPPORT_CLGD54XX_PCI 1
 +
  // Experimental VGA on PCI
- #define BX_PCI_VGA_SUPPORT 1
- 
-@@ -713,6 +715,19 @@
- #error To enable USB, you must also enable PCI
- #endif
- 
-+// Experimental SVGA CLGD54xx Support
-+#define BX_SUPPORT_SVGA_CIRRUS 0
-+// SVGA CLGD54xx on PCI
-+#define BX_SUPPORT_SVGA_CIRRUS_PCI 0
-+
-+#if (BX_SUPPORT_SVGA_CIRRUS && BX_SUPPORT_VBE)
-+#error With SVGA Cirrus support, you must disable Bochs VBE support
++#if !(BX_SUPPORT_CLGD54XX && BX_SUPPORT_CLGD54XX_PCI)
+ #define BX_SUPPORT_PCIVGA 1
 +#endif
-+
-+#if (BX_SUPPORT_SVGA_CIRRUS_PCI && BX_PCI_VGA_SUPPORT)
-+#error With SVGA Cirrus PCI support, you must disable PCI VGA support
-+#endif
-+
- // Promise VLBIDE DC2300 Support
- #define BX_PDC20230C_VLBIDE_SUPPORT 0
  
+ // Experimental host PCI device mapping
+ #define BX_SUPPORT_PCIDEV 0
+diff -urN ../bochs/configure.in ./configure.in
+--- ../bochs/configure.in	2004-08-06 17:49:52.000000000 +0200
++++ ./configure.in	2004-08-07 09:00:46.000000000 +0200
+@@ -1480,16 +1480,42 @@
+   [if test "$enableval" = yes; then
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(BX_SUPPORT_VBE, 1)
++    bx_support_vbe=1
+    else
+     AC_MSG_RESULT(no)
+     AC_DEFINE(BX_SUPPORT_VBE, 0)
++    bx_support_vbe=0
+    fi],
+   [
+     AC_MSG_RESULT(no)
+     AC_DEFINE(BX_SUPPORT_VBE, 0)
++    bx_support_vbe=0
+     ]
+   )
+ 
++AC_MSG_CHECKING(for CLGD54XX emulation)
++AC_ARG_ENABLE(clgd54xx,
++  [  --enable-clgd54xx                 enable CLGD54XX emulation],
++  [if test "$enableval" = yes; then
++    AC_MSG_RESULT(yes)
++    AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
++    bx_support_clgd54xx=1
++   else
++    AC_MSG_RESULT(no)
++    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
++    bx_support_clgd54xx=0
++   fi],
++  [
++    AC_MSG_RESULT(no)
++    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
++    bx_support_clgd54xx=0
++    ]
++  )
++
++if test "$bx_support_vbe" = 1 && test "$bx_suppot_clgd54xx" = 1; then
++  AC_MSG_ERROR([[--enable-vbe and --enable-clgd54xx are mutually exclusive]])
++fi
++
+ support_fpu=1
+ AC_MSG_CHECKING(for FPU emulation)
+ FPU_VAR=''
 diff -urN ../bochs/gui/gui.h ./gui/gui.h
 --- ../bochs/gui/gui.h	2004-04-09 17:04:53.000000000 +0200
-+++ ./gui/gui.h	2004-07-31 19:22:19.000000000 +0200
-@@ -56,6 +56,7 @@
++++ ./gui/gui.h	2004-08-06 14:17:14.000000000 +0200
+@@ -38,6 +38,13 @@
+   bx_bool split_hpanning;
+ } bx_vga_tminfo_t;
+ 
++typedef struct {
++  Bit16u bpp, pitch;
++  Bit8u red_shift, green_shift, blue_shift;
++  Bit8u is_indexed, is_little_endian;
++  unsigned long red_mask, green_mask, blue_mask;
++} bx_svga_tileinfo_t;
++
+ 
+ BOCHSAPI extern class bx_gui_c *bx_gui;
+ 
+@@ -56,6 +63,9 @@
                            unsigned long cursor_x, unsigned long cursor_y,
                            bx_vga_tminfo_t tm_info, unsigned rows) = 0;
    virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
-+  virtual void hardware_cursor_update(Bit8u *snapshot, unsigned x, unsigned y, unsigned xs, unsigned ys) {};
++  virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info) {return NULL;};
++  virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h) {return NULL;};
++  virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h) {};
    virtual void handle_events(void) = 0;
    virtual void flush(void) = 0;
    virtual void clear_screen(void) = 0;
+@@ -155,13 +165,13 @@
+ //      DECLARE_GUI_VIRTUAL_METHODS()
+ //    };
+ // Then, each method must be defined later in the file.
+-#define DECLARE_GUI_VIRTUAL_METHODS()                                         \
++#define DECLARE_GUI_VIRTUAL_METHODS()                                       \
+ virtual void specific_init(int argc, char **argv,                           \
+-         unsigned x_tilesize, unsigned y_tilesize,                    \
+-         unsigned header_bar_y);                                      \
++         unsigned x_tilesize, unsigned y_tilesize,                      \
++         unsigned header_bar_y);                                        \
+ virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
+-                  unsigned long cursor_x, unsigned long cursor_y,     \
+-                  bx_vga_tminfo_t tm_info, unsigned rows);            \
++                  unsigned long cursor_x, unsigned long cursor_y,       \
++                  bx_vga_tminfo_t tm_info, unsigned rows);              \
+ virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
+ virtual void handle_events(void);                                           \
+ virtual void flush(void);                                                   \
+@@ -169,7 +179,7 @@
+ virtual bx_bool palette_change(unsigned index,                              \
+ unsigned red, unsigned green, unsigned blue);                           \
+ virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
+-                        unsigned fwidth=0, unsigned bpp=8);           \
++                          unsigned fwidth=0, unsigned bpp=8);           \
+ virtual unsigned create_bitmap(const unsigned char *bmap,                   \
+ unsigned xdim, unsigned ydim);                                          \
+ virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \
+@@ -182,6 +192,14 @@
+ virtual void exit(void);                                                    \
+ /* end of DECLARE_GUI_VIRTUAL_METHODS */
+ 
++#define DECLARE_GUI_NEW_VIRTUAL_METHODS()                                   \
++virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);   \
++virtual Bit8u *graphics_tile_get(unsigned x, unsigned y,                    \
++                             unsigned *w, unsigned *h);                 \
++virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
++                                       unsigned w, unsigned h);
++/* end of DECLARE_GUI_NEW_VIRTUAL_METHODS */
++
+ #define BX_MAX_PIXMAPS 16
+ #define BX_MAX_HEADERBAR_ENTRIES 11
+ #define BX_HEADER_BAR_Y 32
 diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
---- ../bochs/gui/sdl.cc	2004-06-20 07:58:08.000000000 +0200
-+++ ./gui/sdl.cc	2004-08-01 10:18:35.000000000 +0200
-@@ -49,6 +49,7 @@
+--- ../bochs/gui/sdl.cc	2004-08-06 17:49:53.000000000 +0200
++++ ./gui/sdl.cc	2004-08-07 21:10:03.000000000 +0200
+@@ -47,6 +47,7 @@
+ public:
+   bx_sdl_gui_c (void);
    DECLARE_GUI_VIRTUAL_METHODS()
++  DECLARE_GUI_NEW_VIRTUAL_METHODS()
    virtual void set_display_mode (disp_mode_t newmode);
    virtual void statusbar_setitem(int element, bx_bool active);
-+  virtual void hardware_cursor_update(Bit8u *snapshot, unsigned x, unsigned y, unsigned xs, unsigned ys);
  };
- 
- // declare one instance of the gui object and call macro to insert the
-@@ -102,7 +103,7 @@
- static unsigned vga_bpp=8;
- unsigned tilewidth, tileheight;
- unsigned char menufont[256][8];
--Uint32 palette[256];
-+Uint32 palette[258];
- Uint32 headerbar_fg, headerbar_bg;
- Bit8u old_mousebuttons=0, new_mousebuttons=0;
- int old_mousex=0, new_mousex=0;
-@@ -704,6 +705,62 @@
+@@ -704,6 +705,84 @@
    }
  }
  
-+  void
-+bx_sdl_gui_c::hardware_cursor_update(
-+    Bit8u *snapshot,
-+    unsigned x,
-+    unsigned y,
-+    unsigned xs,
-+    unsigned ys)
++  bx_svga_tileinfo_t *
++bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 +{
-+  Uint32 *buf, disp;
-+  Uint32 *buf_row;
-+  Bit8u *snap_row;
-+  int i,j,hwc_x;
-+  
-+  if( sdl_screen )
-+  {
-+    disp = sdl_screen->pitch/4;
-+    buf = (Uint32 *)sdl_screen->pixels + (headerbar_height+y)*disp + x;
-+  }
-+  else
-+  {
-+    disp = sdl_fullscreen->pitch/4;
-+    buf = (Uint32 *)sdl_fullscreen->pixels + y*disp + x;
++  if (!info) {
++    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
++    if (!info) {
++      return NULL;
++    }
 +  }
 +
-+  hwc_x = xs;
-+  if ((x + xs) > res_x) xs = res_x - x;
-+  if ((y + ys) > res_y) ys = res_y - y;
-+  i = ys;
++  if (sdl_screen) {
++    info->bpp = sdl_screen->format->BitsPerPixel;
++    info->pitch = sdl_screen->pitch;
++    info->red_shift = sdl_screen->format->Rshift + 8 - sdl_screen->format->Rloss;
++    info->green_shift = sdl_screen->format->Gshift + 8 - sdl_screen->format->Gloss;
++    info->blue_shift = sdl_screen->format->Bshift + 8 - sdl_screen->format->Bloss;
++    info->red_mask = sdl_screen->format->Rmask;
++    info->green_mask = sdl_screen->format->Gmask;
++    info->blue_mask = sdl_screen->format->Bmask;
++    info->is_indexed = (sdl_screen->format->palette != NULL);
++  }
++  else {
++    info->bpp = sdl_fullscreen->format->BitsPerPixel;
++    info->pitch = sdl_fullscreen->pitch;
++    info->red_shift = sdl_fullscreen->format->Rshift + 8 - sdl_screen->format->Rloss;
++    info->green_shift = sdl_fullscreen->format->Gshift + 8 - sdl_screen->format->Gloss;
++    info->blue_shift = sdl_fullscreen->format->Bshift + 8 - sdl_screen->format->Bloss;
++    info->red_mask = sdl_fullscreen->format->Rmask;
++    info->green_mask = sdl_fullscreen->format->Gmask;
++    info->blue_mask = sdl_fullscreen->format->Bmask;
++    info->is_indexed = (sdl_screen->format->palette != NULL);
++  }
 +
-+  do
-+  {
-+    buf_row = buf;
-+    snap_row = snapshot;
-+    j = xs;
-+    do
-+    {
-+      switch (*snapshot++)
-+      {
-+        case 1:
-+          *buf++ ^= 0xffffffff;
-+          break;
-+        case 2:
-+          *buf++ = palette[0x100];
-+          break;
-+        case 3:
-+          *buf++ = palette[0x101];
-+          break;
-+        default:
-+          buf++;
-+      }
-+    } while( --j );
-+    buf = buf_row + disp;
-+    snapshot = snap_row + hwc_x;
-+  } while( --i);
++#ifdef BX_LITTLE_ENDIAN
++  info->is_little_endian = 1;
++#else
++  info->is_little_endian = 0;
++#endif
++
++  return info;
++};
++
++  Bit8u *
++bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
++                            unsigned *w, unsigned *h)
++{
++  if (x0+tilewidth > res_x) {
++    *w = res_x - x0;
++  }
++  else {
++    *w = tilewidth;
++  }
++
++  if (y0+tileheight > res_y) {
++    *h = res_y - y0;
++  }
++  else {
++    *h = tileheight;
++  }
++
++  if (sdl_screen) {
++    return (Bit8u *)sdl_screen->pixels +
++           sdl_screen->pitch*(headerbar_height+y0) +
++           sdl_screen->format->BytesPerPixel*x0;
++  }
++  else {
++    return (Bit8u *)sdl_fullscreen->pixels +
++           sdl_fullscreen->pitch*(headerbar_height+y0) +
++           sdl_fullscreen->format->BytesPerPixel*x0;
++  }
 +}
++
++  void
++bx_sdl_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
++                                        unsigned w, unsigned h)
++{
++};
 +
  static Bit32u sdl_sym_to_bx_key (SDLKey sym)
  {
    switch (sym)
-@@ -1092,7 +1149,7 @@
-   unsigned char palgreen = green & 0xFF;
-   unsigned char palblue = blue & 0xFF;
+diff -urN ../bochs/gui/wx.cc ./gui/wx.cc
+--- ../bochs/gui/wx.cc	2004-06-20 07:58:08.000000000 +0200
++++ ./gui/wx.cc	2004-08-07 21:10:48.000000000 +0200
+@@ -66,6 +66,7 @@
+ public:
+   bx_wx_gui_c (void) {}
+   DECLARE_GUI_VIRTUAL_METHODS()
++  DECLARE_GUI_NEW_VIRTUAL_METHODS()
+   virtual void statusbar_setitem(int element, bx_bool active);
+ };
  
--  if( index > 255 ) return 0;
-+  if( index > 257 ) return 0;
+@@ -90,8 +91,8 @@
+ wxCriticalSection wxScreen_lock;
+ static long wxScreenX = 0;
+ static long wxScreenY = 0;
+-static long wxTileX = 0;
+-static long wxTileY = 0;
++static unsigned wxTileX = 0;
++static unsigned wxTileY = 0;
+ static unsigned long wxCursorX = 0;
+ static unsigned long wxCursorY = 0;
+ static unsigned long wxFontX = 0;
+@@ -1408,12 +1409,62 @@
+ void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+ {
+   IFDBG_VGA (wxLogDebug (wxT ("graphics_tile_update")));
+-  //static Bit32u counter = 0;
+-  //BX_INFO (("graphics_tile_update executed %d times", ++counter));
+   UpdateScreen(tile, x0, y0, wxTileX, wxTileY);
+   thePanel->MyRefresh ();
+ }
  
-   if( sdl_screen )
-     palette[index] = SDL_MapRGB( sdl_screen->format, palred, palgreen, palblue );
++  bx_svga_tileinfo_t *
++bx_wx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
++{
++  if (!info) {
++    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
++    if (!info) {
++      return NULL;
++    }
++  }
++
++  info->bpp = 24;
++  info->pitch = wxScreenX * 3;
++  info->red_shift = 8;
++  info->green_shift = 16;
++  info->blue_shift = 24;
++  info->red_mask = 0x0000ff;
++  info->green_mask = 0x00ff00;
++  info->blue_mask = 0xff0000;
++  info->is_indexed = 0;
++  info->is_little_endian = 1;
++
++  return info;
++};
++
++  Bit8u *
++bx_wx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
++                            unsigned *w, unsigned *h)
++{
++  if (x0+wxTileX > (unsigned)wxScreenX) {
++    *w = wxScreenX - x0;
++  }
++  else {
++    *w = wxTileX;
++  }
++
++  if (y0+wxTileY > (unsigned)wxScreenY) {
++    *h = wxScreenY - y0;
++  }
++  else {
++    *h = wxTileY;
++  }
++
++  return (Bit8u *)wxScreen + y0 * wxScreenX * 3 + x0 * 3;
++}
++
++  void
++bx_wx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
++                                        unsigned w, unsigned h)
++{
++  thePanel->MyRefresh ();
++}
++
+ // ::DIMENSION_UPDATE()
+ //
+ // Called from the simulator when the VGA mode changes it's X,Y dimensions.
+diff -urN ../bochs/gui/x.cc ./gui/x.cc
+--- ../bochs/gui/x.cc	2004-06-20 07:58:09.000000000 +0200
++++ ./gui/x.cc	2004-08-06 14:17:14.000000000 +0200
+@@ -59,6 +59,7 @@
+ public:
+   bx_x_gui_c (void);
+   DECLARE_GUI_VIRTUAL_METHODS()
++  DECLARE_GUI_NEW_VIRTUAL_METHODS()
+ #if BX_USE_IDLE_HACK
+   virtual void sim_is_idle(void);
+ #endif
+@@ -82,6 +83,7 @@
+  * additional source files, they would be declared extern there. */
+ Display *bx_x_display;
+ int bx_x_screen_num;
++static Visual *default_visual;
+ static Colormap default_cmap;
+ static unsigned long white_pixel=0, black_pixel=0;
+ 
+@@ -366,7 +368,6 @@
+   /* create GC for text and drawing */
+   unsigned long valuemask = 0; /* ignore XGCvalues and use defaults */
+   XGCValues values;
+-  Visual  *default_visual;
+   int      default_depth;
+   XEvent report;
+   XSetWindowAttributes win_attr;
+@@ -1617,6 +1618,111 @@
+             x_tilesize, y_size);
+ }
+ 
++  bx_svga_tileinfo_t *
++bx_x_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
++{
++  if (!info) {
++    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
++    if (!info) {
++      return NULL;
++    }
++  }
++
++  info->bpp = ximage->bits_per_pixel;
++  info->pitch = ximage->bytes_per_line;
++  info->red_shift = 0;
++  info->green_shift = 0;
++  info->blue_shift = 0;
++  info->red_mask = ximage->red_mask;
++  info->green_mask = ximage->green_mask;
++  info->blue_mask = ximage->blue_mask;
++
++  int i, rf, gf, bf;
++  unsigned long red, green, blue;
++
++  i = rf = gf = bf = 0;
++  red = ximage->red_mask;
++  green = ximage->green_mask;
++  blue = ximage->blue_mask;
++
++  while (red || rf || green || gf || blue || bf) {
++    if (rf) {
++      if (!(red & 1)) {
++        info->red_shift = i;
++        rf = 0;
++      }
++    }
++    else {
++      if (red & 1) {
++        rf = 1;
++      }
++    }
++
++    if (gf) {
++      if (!(green & 1)) {
++        info->green_shift = i;
++        gf = 0;
++      }
++    }
++    else {
++      if (green & 1) {
++        gf = 1;
++      }
++    }
++
++    if (bf) {
++      if (!(blue & 1)) {
++        info->blue_shift = i;
++        bf = 0;
++      }
++    }
++    else {
++      if (blue & 1) {
++        bf = 1;
++      }
++    }
++
++    i++;
++    red >>= 1;
++    green >>= 1;
++    blue >>= 1;
++  }
++
++  info->is_indexed = (default_visual->c_class != TrueColor) &&
++                     (default_visual->c_class != DirectColor);
++  info->is_little_endian = (ximage->byte_order == LSBFirst);
++
++  return info;
++};
++
++  Bit8u *
++bx_x_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
++                          unsigned *w, unsigned *h)
++{
++  if (x0+x_tilesize > dimension_x) {
++    *w = dimension_x - x0;
++  }
++  else {
++    *w = x_tilesize;
++  }
++
++  if (y0+y_tilesize > dimension_y) {
++    *h = dimension_y - y0;
++  }
++  else {
++    *h = y_tilesize;
++  }
++
++  return (Bit8u *)ximage->data + ximage->xoffset*ximage->bits_per_pixel/8;
++}
++
++  void
++bx_x_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
++                                      unsigned w, unsigned h)
++{
++  XPutImage(bx_x_display, win, gc, ximage, 0, 0,
++            x0, y0+bx_headerbar_y, w, h);
++};
+ 
+   bx_bool
+ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
 --- ../bochs/iodev/Makefile.in	2004-02-18 19:29:33.000000000 +0100
-+++ ./iodev/Makefile.in	2004-06-06 13:09:58.000000000 +0200
++++ ./iodev/Makefile.in	2004-08-06 14:17:14.000000000 +0200
 @@ -95,6 +95,7 @@
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
    scancodes.o \
@@ -264,28 +595,20 @@ diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
    ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
 diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 --- ../bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.cc	2004-08-01 09:51:09.000000000 +0200
-@@ -0,0 +1,2959 @@
++++ ./iodev/svga_cirrus.cc	2004-08-10 10:30:35.000000000 +0200
+@@ -0,0 +1,3408 @@
 +//
-+// limited PCI/ISA CLGD5446 support.
++// limited PCI/ISA CLGD5446 support for Bochs
 +//
 +// Copyright (c) 2004 Makoto Suzuki (suzu)
-+//
-+// tested by XFree86-SVGA 3.3.6 with
-+//
-+//   Option "sw_cursor"
-+//   Option "no_mmio"
-+//   Option "nolinear"
-+//
-+// tested by XFree86 server 4.1.0 (without libint10.a).
-+// XFree86 4.1.0 probes Membase from PCI registers automatically.
-+// XFree86 4.x doesn't work without PCI support.
++//                    Volker Ruppert (vruppert)
++//                    Robin Kay (komadori)
 +//
 +// there are still many unimplemented features:
 +//
 +// - 1bpp/4bpp
 +// - painting minimal region
-+// - transparent compare.
++// - transparent compare not complete
 +// - some bitblt functions
 +// - ???
 +//
@@ -296,7 +619,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +#include "iodev.h"
 +
-+#if BX_SUPPORT_SVGA_CIRRUS
++#if BX_SUPPORT_CLGD54XX
 +
 +// Only reference the array if the tile numbers are within the bounds
 +// of the array.  If out of bounds, do nothing.
@@ -311,6 +634,25 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  ((((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))?           \
 +     BX_CIRRUS_THIS s.vga_tile_updated[(xtile)][(ytile)]                    \
 +     : 1)
++
++// Make colour
++#define MAKE_COLOUR(red, red_shiftfrom, red_shiftto, red_mask, \
++                    green, green_shiftfrom, green_shiftto, green_mask, \
++                    blue, blue_shiftfrom, blue_shiftto, blue_mask) \
++( \
++ ((((red_shiftto) > (red_shiftfrom)) ? \
++  (red) << ((red_shiftto) - (red_shiftfrom)) : \
++  (red) >> ((red_shiftfrom) - (red_shiftto))) & \
++  (red_mask)) | \
++ ((((green_shiftto) > (green_shiftfrom)) ? \
++  (green) << ((green_shiftto) - (green_shiftfrom)) : \
++  (green) >> ((green_shiftfrom) - (green_shiftto))) & \
++  (green_mask)) | \
++ ((((blue_shiftto) > (blue_shiftfrom)) ? \
++  (blue) << ((blue_shiftto) - (blue_shiftfrom)) : \
++  (blue) >> ((blue_shiftfrom) - (blue_shiftto))) & \
++  (blue_mask)) \
++)
 +
 +#define LOG_THIS BX_CIRRUS_THIS
 +
@@ -482,9 +824,6 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +static bx_svga_cirrus_c *theSvga = NULL;
 +
-+//  static bx_cirrus_bitblt_rop_t 
-+//cirrus_get_rop_handler(Bit8u rop);
-+
 +  int
 +libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 +{
@@ -530,13 +869,11 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      svga_timer_handler);
 +
 +  // initialize SVGA stuffs.
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  BX_CIRRUS_THIS pci_enabled = DEV_is_pci_device("cirrus");
-+#else
-+  BX_CIRRUS_THIS pci_enabled = 0;
 +#endif
 +  BX_CIRRUS_THIS svga_init_members();
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  if (BX_CIRRUS_THIS pci_enabled) {
 +    BX_CIRRUS_THIS svga_init_pcihandlers();
 +  }
@@ -580,6 +917,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +  BX_CIRRUS_THIS hw_cursor.x = 0;
 +  BX_CIRRUS_THIS hw_cursor.y = 0;
++  BX_CIRRUS_THIS hw_cursor.size = 0;
 +
 +  // memory allocation.
 +  BX_CIRRUS_THIS vidmem = new Bit8u[CIRRUS_VIDEO_MEMORY_BYTES];
@@ -589,7 +927,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +  BX_CIRRUS_THIS sequencer.reg[0x06] = 0x0f;
 +  BX_CIRRUS_THIS sequencer.reg[0x07] = 0x00; // 0xf0:linearbase(0x00 if disabled)
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  if (BX_CIRRUS_THIS pci_enabled) {
 +    BX_CIRRUS_THIS crtc.reg[0x27] = ID_CLGD5446;
 +    BX_CIRRUS_THIS sequencer.reg[0x1F] = 0x2d; // MemClock
@@ -597,6 +935,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    BX_CIRRUS_THIS sequencer.reg[0x0F] = 0x98;
 +    BX_CIRRUS_THIS sequencer.reg[0x17] = CIRRUS_BUSTYPE_PCI;
 +    BX_CIRRUS_THIS sequencer.reg[0x15] = 0x04; // memory size 4MB
++    BX_CIRRUS_THIS memsize = (4 << 20);
 +  } else
 +#endif
 +  {
@@ -605,6 +944,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    BX_CIRRUS_THIS sequencer.reg[0x0F] = CIRRUS_MEMSIZE_2M;
 +    BX_CIRRUS_THIS sequencer.reg[0x17] = CIRRUS_BUSTYPE_ISA;
 +    BX_CIRRUS_THIS sequencer.reg[0x15] = 0x03; // memory size 2MB
++    BX_CIRRUS_THIS memsize = (2 << 20);
 +  }
 +
 +  BX_CIRRUS_THIS hidden_dac.lockindex = 5;
@@ -613,7 +953,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  memset(BX_CIRRUS_THIS vidmem, 0xff, CIRRUS_VIDEO_MEMORY_BYTES);
 +  BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS vidmem;
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  if (BX_CIRRUS_THIS pci_enabled) {
 +    // This should be done by the PCI BIOS
 +    WriteHostDWordToLittleEndian(
@@ -725,7 +1065,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  }
 +}
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  bx_bool
 +bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned long len,
 +                                          void *data, void *param)
@@ -757,7 +1097,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    return BX_CIRRUS_THIS bx_vga_c::mem_read(addr);
 +    }
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  if (BX_CIRRUS_THIS pci_enabled) {
 +    if ((addr >= BX_CIRRUS_THIS pci_memaddr) &&
 +        (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256))) {
@@ -802,7 +1142,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      }
 +    }
 +  }
-+#endif // BX_SUPPORT_SVGA_CIRRUS_PCI
++#endif // BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +
 +  if (addr >= 0xA0000 && addr <= 0xAFFFF)
 +  {
@@ -856,7 +1196,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  return 0xff;
 +}
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  bx_bool
 +bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len,
 +                                           void *data, void *param)
@@ -889,7 +1229,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    return;
 +    }
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  if (BX_CIRRUS_THIS pci_enabled) {
 +    if ((addr >= BX_CIRRUS_THIS pci_memaddr) &&
 +        (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256))) {
@@ -943,7 +1283,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      return;
 +    }
 +  }
-+#endif // BX_SUPPORT_SVGA_CIRRUS_PCI
++#endif // BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +
 +  if (addr >= 0xA0000 && addr <= 0xAFFFF) {
 +    Bit32u bank, offset;
@@ -1172,15 +1512,6 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +        BX_CIRRUS_THIS hidden_dac.palette[index] = value;
 +        BX_CIRRUS_THIS s.pel.write_data_cycle ++;
 +        if (BX_CIRRUS_THIS s.pel.write_data_cycle >= 3) {
-+          if ((BX_CIRRUS_THIS s.pel.write_data_register & 0xf) == 0x0) {
-+            bx_gui->palette_change(0x100, BX_CIRRUS_THIS hidden_dac.palette[0x0]<<2,
-+                                   BX_CIRRUS_THIS hidden_dac.palette[0x1]<<2,
-+                                   BX_CIRRUS_THIS hidden_dac.palette[0x2]<<2);
-+          } else if ((BX_CIRRUS_THIS s.pel.write_data_register & 0xf) == 0xf) {
-+            bx_gui->palette_change(0x101, BX_CIRRUS_THIS hidden_dac.palette[0xf*3]<<2,
-+                                   BX_CIRRUS_THIS hidden_dac.palette[0xf*3+1]<<2,
-+                                   BX_CIRRUS_THIS hidden_dac.palette[0xf*3+2]<<2);
-+          }
 +          BX_CIRRUS_THIS s.pel.write_data_cycle = 0;
 +          BX_CIRRUS_THIS s.pel.write_data_register++;
 +        }
@@ -1279,6 +1610,120 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +}
 +
 +  void
++bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
++{
++  if (BX_CIRRUS_THIS hw_cursor.size &&
++      (xc < BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size) &&
++      (xc+X_TILESIZE > BX_CIRRUS_THIS hw_cursor.x) &&
++      (yc < BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size) &&
++      (yc+Y_TILESIZE > BX_CIRRUS_THIS hw_cursor.y)) {
++    int i;
++    unsigned w, h, pitch, cx, cy, cx0, cy0, cx1, cy1;
++
++    Bit8u * tile_ptr, * tile_ptr2;
++    Bit8u * plane0_ptr, *plane0_ptr2;
++    Bit8u * plane1_ptr, *plane1_ptr2;
++    unsigned long fgcol, bgcol;
++    Bit64u plane0, plane1;
++
++    cx0 = BX_CIRRUS_THIS hw_cursor.x > xc ? BX_CIRRUS_THIS hw_cursor.x : xc;
++    cy0 = BX_CIRRUS_THIS hw_cursor.y > yc ? BX_CIRRUS_THIS hw_cursor.y : yc;
++    cx1 = BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size < xc+X_TILESIZE ? BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size : xc+X_TILESIZE;
++    cy1 = BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size < yc+Y_TILESIZE ? BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size : yc+Y_TILESIZE;
++
++    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
++               info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
++    plane0_ptr = BX_CIRRUS_THIS vidmem + BX_CIRRUS_THIS memsize - 16384;
++
++    switch (BX_CIRRUS_THIS hw_cursor.size) {
++      case 32:
++        plane0_ptr += (BX_CIRRUS_THIS sequencer.reg[0x13] & 0x3f) * 256;
++        plane1_ptr = plane0_ptr + 128;
++        pitch = 4;
++        break;
++
++      case 64:
++        plane0_ptr += (BX_CIRRUS_THIS sequencer.reg[0x13] & 0x3c) * 256;
++        plane1_ptr = plane0_ptr + 8;
++        pitch = 16;
++        break;
++
++      default:
++        BX_ERROR(("unsupported hardware cursor size"));
++        return;
++        break;
++    }
++
++    fgcol = MAKE_COLOUR(
++      BX_CIRRUS_THIS hidden_dac.palette[45], 6, info->red_shift, info->red_mask,
++      BX_CIRRUS_THIS hidden_dac.palette[46], 6, info->green_shift, info->green_mask,
++      BX_CIRRUS_THIS hidden_dac.palette[47], 6, info->blue_shift, info->blue_mask);
++    bgcol = MAKE_COLOUR(
++      BX_CIRRUS_THIS hidden_dac.palette[0], 6, info->red_shift, info->red_mask,
++      BX_CIRRUS_THIS hidden_dac.palette[1], 6, info->green_shift, info->green_mask,
++      BX_CIRRUS_THIS hidden_dac.palette[2], 6, info->blue_shift, info->blue_mask);
++
++    plane0_ptr += pitch * (cy0 - BX_CIRRUS_THIS hw_cursor.y);
++    plane1_ptr += pitch * (cy0 - BX_CIRRUS_THIS hw_cursor.y);
++    for (cy=cy0; cy<cy1; cy++) {
++      tile_ptr2 = tile_ptr + (info->bpp/8) * (cx1 - cx0) - 1;
++      plane0_ptr2 = plane0_ptr;
++      plane1_ptr2 = plane1_ptr;
++      plane0 = plane1 = 0;
++      for (i=0; i<BX_CIRRUS_THIS hw_cursor.size; i+=8) {
++        plane0 = (plane0 << 8) | *(plane0_ptr2++);
++        plane1 = (plane1 << 8) | *(plane1_ptr2++);
++      }
++      plane0 >>= BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size - cx1;
++      plane1 >>= BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size - cx1;
++      for (cx=cx0; cx<cx1; cx++) {
++        if (plane0 & 1) {
++          if (plane1 & 1) {
++            if (info->is_little_endian) {
++              for (i=info->bpp-8; i>-8; i-=8) {
++                *(tile_ptr2--) = fgcol >> i;
++              }
++            }
++            else {
++              for (i=0; i<info->bpp; i+=8) {
++                *(tile_ptr2--) = fgcol >> i;
++              }
++            }
++          }
++          else {
++            for (i=0; i<info->bpp; i+=8) {
++              *(tile_ptr2--) ^= 0xff;
++            }
++          }
++        }
++        else {
++          if (plane1 & 1) {
++            if (info->is_little_endian) {
++              for (i=info->bpp-8; i>-8; i-=8) {
++                *(tile_ptr2--) = bgcol >> i;
++              }
++            }
++            else {
++              for (i=0; i<info->bpp; i+=8) {
++                *(tile_ptr2--) = bgcol >> i;
++              }
++            }
++          }
++          else {
++            tile_ptr2 -= (info->bpp/8);
++          }
++        }
++        plane0 >>= 1;
++        plane1 >>= 1;
++      }
++      tile_ptr += info->pitch;
++      plane0_ptr += pitch;
++      plane1_ptr += pitch;
++    }
++  }
++}
++
++  void
 +bx_svga_cirrus_c::svga_update(void)
 +{
 +  unsigned width, height, offset = 0;
@@ -1288,16 +1733,17 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      ! BX_CIRRUS_THIS s.sequencer.reset2 ||
 +      ! BX_CIRRUS_THIS s.attribute_ctrl.video_enabled) {
 +    return;
-+    }
++  }
 +
 +  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
 +    if (BX_CIRRUS_THIS svga_needs_update_mode) {
 +      BX_CIRRUS_THIS s.vga_mem_updated = 1;
 +      BX_CIRRUS_THIS svga_needs_update_mode = false;
-+      }
++    }
 +    BX_CIRRUS_THIS bx_vga_c::update();
 +    return;
-+  } else {
++  }
++  else {
 +    if (BX_CIRRUS_THIS svga_needs_update_mode) {
 +      svga_modeupdate();
 +    }
@@ -1314,148 +1760,361 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    bx_gui->dimension_update(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
 +    BX_CIRRUS_THIS svga_needs_update_mode = false;
 +    BX_CIRRUS_THIS svga_needs_update_dispentire = true;
-+    }
++  }
 +
 +  if (BX_CIRRUS_THIS svga_needs_update_dispentire) {
 +    BX_CIRRUS_THIS redraw_area(0,0,width,height);
 +    BX_CIRRUS_THIS svga_needs_update_dispentire = false;
-+    }
++  }
 +
-+  if (!BX_CIRRUS_THIS svga_needs_update_tile)
++  if (!BX_CIRRUS_THIS svga_needs_update_tile) {
 +    return;
++  }
 +  BX_CIRRUS_THIS svga_needs_update_tile = false;
 +
 +  unsigned xc, yc, xti, yti;
-+  unsigned r;
-+  Bit8u * vid_ptr;
-+  Bit8u * tile_ptr;
++  unsigned r, c, w, h;
++  int i;
++  unsigned long red, green, blue, colour;
++  Bit8u * vid_ptr, * vid_ptr2;
++  Bit8u * tile_ptr, * tile_ptr2;
++  bx_svga_tileinfo_t info;
 +
-+  // update dirty regions.
-+  switch (BX_CIRRUS_THIS svga_bpp) {
-+    case  4:
-+      BX_ERROR(("cannot draw 4bpp SVGA"));
-+      break;
-+    case  8:
-+      for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-+      {
-+        for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-+        {
-+          if (GET_TILE_UPDATED (xti, yti))
-+          {
-+            vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + xc);
-+            tile_ptr = BX_CIRRUS_THIS tilemem;
-+            for (r=0; r<Y_TILESIZE; r++)
-+            {
-+              memcpy(tile_ptr,vid_ptr,X_TILESIZE);
-+              vid_ptr  += offset;
-+              tile_ptr += X_TILESIZE;
++  if (bx_gui->graphics_tile_info(&info)) {
++    if (info.is_indexed) {
++      switch (BX_CIRRUS_THIS svga_dispbpp) {
++        case 4:
++          BX_ERROR(("cannot draw 4bpp SVGA"));
++          break;
++        case 8:
++        case 15:
++        case 16:
++        case 24:
++        case 32:
++          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
++            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
++              if (GET_TILE_UPDATED (xti, yti)) {
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + xc);
++                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
++                for (r=0; r<h; r++) {
++                  vid_ptr2  = vid_ptr;
++                  tile_ptr2 = tile_ptr;
++                  for (c=0; c<w; c++) {
++                    colour = 0;
++                    for (i=0; i<(int)BX_CIRRUS_THIS svga_bpp; i+=8) {
++                      colour |= *(vid_ptr2++) << i;
++                    }
++                    if (info.is_little_endian) {
++                      for (i=0; i<info.bpp; i+=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                    else {
++                      for (i=info.bpp-8; i>-8; i-=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                  }
++                  vid_ptr  += offset;
++                  tile_ptr += info.pitch;
++                }
++                // FIXME? hardware cursor unsupported
++                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
++                SET_TILE_UPDATED (xti, yti, 0);
 +              }
-+            bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-+            SET_TILE_UPDATED (xti, yti, 0);
 +            }
 +          }
-+        }
-+      break;
-+    case 16:
-+      for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-+      {
-+        for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-+        {
-+          if (GET_TILE_UPDATED (xti, yti))
-+          {
-+            vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc << 1));
-+            tile_ptr = BX_CIRRUS_THIS tilemem;
-+            for (r=0; r<Y_TILESIZE; r++)
-+            {
-+              memcpy(tile_ptr,vid_ptr,X_TILESIZE<<1);
-+              vid_ptr  += offset;
-+              tile_ptr += X_TILESIZE << 1;
-+              }
-+            bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-+            SET_TILE_UPDATED (xti, yti, 0);
-+            }
-+          }
-+        }
-+      break;
-+    case 24:
-+      for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-+      {
-+        for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-+        {
-+          if (GET_TILE_UPDATED (xti, yti))
-+          {
-+            vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc * 3));
-+            tile_ptr = BX_CIRRUS_THIS tilemem;
-+            for (r=0; r<Y_TILESIZE; r++)
-+            {
-+              memcpy(tile_ptr,vid_ptr,X_TILESIZE*3);
-+              vid_ptr  += offset;
-+              tile_ptr += X_TILESIZE * 3;
-+              }
-+            bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-+            SET_TILE_UPDATED (xti, yti, 0);
-+            }
-+          }
-+        }
-+      break;
-+    case 32:
-+      for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-+      {
-+        for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-+        {
-+          if (GET_TILE_UPDATED (xti, yti))
-+          {
-+            vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc << 2));
-+            tile_ptr = BX_CIRRUS_THIS tilemem;
-+            for (r=0; r<Y_TILESIZE; r++)
-+            {
-+              memcpy(tile_ptr,vid_ptr,X_TILESIZE<<2);
-+              vid_ptr  += offset;
-+              tile_ptr += X_TILESIZE << 2;
-+              }
-+            bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-+            SET_TILE_UPDATED (xti, yti, 0);
-+            }
-+          }
-+        }
-+      break;
-+    default:
-+      BX_PANIC(("unknown bpp %u",(unsigned)BX_CIRRUS_THIS svga_bpp));
-+      break;
-+    }
-+
-+  // hardware cursor
-+  Bit8u *hwc_plane0 = BX_CIRRUS_THIS vidmem + CIRRUS_VIDEO_MEMORY_BYTES - 16 * 1024;
-+  Bit8u *hwc_plane1;
-+  Bit8u hwc_size, hwc_size_y, hwc_offset_y, hwc_b0, hwc_b1;
-+
-+  if (BX_CIRRUS_THIS sequencer.reg[0x12] & CIRRUS_CURSOR_SHOW) {
-+    if (BX_CIRRUS_THIS sequencer.reg[0x12] & CIRRUS_CURSOR_LARGE) {
-+      hwc_size = 64;
-+      hwc_plane0 += (BX_CIRRUS_THIS sequencer.reg[0x13] & 0x3c) * 256;
-+      hwc_plane1 = hwc_plane0 + 8;
-+      hwc_offset_y = 16;
-+    } else {
-+      hwc_size = 32;
-+      hwc_plane0 += (BX_CIRRUS_THIS sequencer.reg[0x13] & 0x3f) * 256;
-+      hwc_plane1 = hwc_plane0 + 128;
-+      hwc_offset_y = 4;
-+    }
-+    if ((unsigned)(BX_CIRRUS_THIS hw_cursor.y + hwc_size) > BX_CIRRUS_THIS svga_yres) {
-+      hwc_size_y = BX_CIRRUS_THIS svga_yres - BX_CIRRUS_THIS hw_cursor.y;
-+    } else {
-+      hwc_size_y = hwc_size;
-+    }
-+
-+    for (yc=0; yc<hwc_size_y; yc++) {
-+      for (xc=0; xc<hwc_size; xc++) {
-+        hwc_b0 = (hwc_plane0[yc*hwc_offset_y + (xc>>3)] >> (7 - (xc & 0x7))) & 0x1;
-+        hwc_b1 = (hwc_plane1[yc*hwc_offset_y + (xc>>3)] >> (7 - (xc & 0x7))) & 0x1;
-+        BX_CIRRUS_THIS hw_cursor.tile[yc*hwc_size + xc] = hwc_b0 | (hwc_b1 << 1);
++          break;
 +      }
 +    }
-+    bx_gui->hardware_cursor_update(BX_CIRRUS_THIS hw_cursor.tile, BX_CIRRUS_THIS hw_cursor.x,
-+                                   BX_CIRRUS_THIS hw_cursor.y, hwc_size, hwc_size_y);
++    else {
++      switch (BX_CIRRUS_THIS svga_bpp) {
++        case 4:
++          BX_ERROR(("cannot draw 4bpp SVGA"));
++          break;
++        case 8:
++          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
++            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
++              if (GET_TILE_UPDATED (xti, yti)) {
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + xc);
++                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
++                for (r=0; r<h; r++) {
++                  vid_ptr2  = vid_ptr;
++                  tile_ptr2 = tile_ptr;
++                  for (c=0; c<w; c++) {
++                    colour = *(vid_ptr2++);
++                    colour = MAKE_COLOUR(
++                      BX_CIRRUS_THIS s.pel.data[colour].red, 6, info.red_shift, info.red_mask,
++                      BX_CIRRUS_THIS s.pel.data[colour].green, 6, info.green_shift, info.green_mask,
++                      BX_CIRRUS_THIS s.pel.data[colour].blue, 6, info.blue_shift, info.blue_mask);
++                    if (info.is_little_endian) {
++                      for (i=0; i<info.bpp; i+=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                    else {
++                      for (i=info.bpp-8; i>-8; i-=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                  }
++                  vid_ptr  += offset;
++                  tile_ptr += info.pitch;
++                }
++                draw_hardware_cursor(xc, yc, &info);
++                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
++                SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++          break;
++        case 15:
++          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
++            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
++              if (GET_TILE_UPDATED (xti, yti)) {
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc<<1));
++                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
++                for (r=0; r<h; r++) {
++                  vid_ptr2  = vid_ptr;
++                  tile_ptr2 = tile_ptr;
++                  for (c=0; c<w; c++) {
++                    colour = *(vid_ptr2++);
++                    colour |= *(vid_ptr2++) << 8;
++                    colour = MAKE_COLOUR(
++                      colour & 0x001f, 5, info.red_shift, info.red_mask,
++                      colour & 0x03e0, 10, info.green_shift, info.green_mask,
++                      colour & 0x7c00, 15, info.blue_shift, info.blue_mask);
++                    if (info.is_little_endian) {
++                      for (i=0; i<info.bpp; i+=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                    else {
++                      for (i=info.bpp-8; i>-8; i-=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                  }
++                  vid_ptr  += offset;
++                  tile_ptr += info.pitch; 
++                }
++                draw_hardware_cursor(xc, yc, &info);
++                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
++                SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++          break;
++        case 16:
++          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
++            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
++              if (GET_TILE_UPDATED (xti, yti)) {
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc<<1));
++                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
++                for (r=0; r<h; r++) {
++                  vid_ptr2  = vid_ptr;
++                  tile_ptr2 = tile_ptr;
++                  for (c=0; c<w; c++) {
++                    colour = *(vid_ptr2++);
++                    colour |= *(vid_ptr2++) << 8;
++                    colour = MAKE_COLOUR(
++                      colour & 0x001f, 5, info.red_shift, info.red_mask,
++                      colour & 0x07e0, 11, info.green_shift, info.green_mask,
++                      colour & 0xf800, 16, info.blue_shift, info.blue_mask);
++                    if (info.is_little_endian) {
++                      for (i=0; i<info.bpp; i+=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                    else {
++                      for (i=info.bpp-8; i>-8; i-=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                  }
++                  vid_ptr  += offset;
++                  tile_ptr += info.pitch; 
++                }
++                draw_hardware_cursor(xc, yc, &info);
++                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
++                SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++          break;
++        case 24:
++          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
++            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
++              if (GET_TILE_UPDATED (xti, yti)) {
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + 3*xc);
++                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
++                for (r=0; r<h; r++) {
++                  vid_ptr2  = vid_ptr;
++                  tile_ptr2 = tile_ptr;
++                  for (c=0; c<w; c++) {
++                    blue = *(vid_ptr2++);
++                    green = *(vid_ptr2++);
++                    red = *(vid_ptr2++);
++                    colour = MAKE_COLOUR(
++                      red, 8, info.red_shift, info.red_mask,
++                      green, 8, info.green_shift, info.green_mask,
++                      blue, 8, info.blue_shift, info.blue_mask);
++                    if (info.is_little_endian) {
++                      for (i=0; i<info.bpp; i+=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                    else {
++                      for (i=info.bpp-8; i>-8; i-=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                  }
++                  vid_ptr  += offset;
++                  tile_ptr += info.pitch; 
++                }
++                draw_hardware_cursor(xc, yc, &info);
++                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
++                SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++          break;
++        case 32:
++          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
++            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
++              if (GET_TILE_UPDATED (xti, yti)) {
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc<<2));
++                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
++                for (r=0; r<h; r++) {
++                  vid_ptr2  = vid_ptr;
++                  tile_ptr2 = tile_ptr;
++                  for (c=0; c<w; c++) {
++                    blue = *(vid_ptr2++);
++                    green = *(vid_ptr2++);
++                    red = *(vid_ptr2++);
++                    vid_ptr2++;
++                    colour = MAKE_COLOUR(
++                      red, 8, info.red_shift, info.red_mask,
++                      green, 8, info.green_shift, info.green_mask,
++                      blue, 8, info.blue_shift, info.blue_mask);
++                    if (info.is_little_endian) {
++                      for (i=0; i<info.bpp; i+=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                    else {
++                      for (i=info.bpp-8; i>-8; i-=8) {
++                        *(tile_ptr2++) = colour >> i;
++                      }
++                    }
++                  }
++                  vid_ptr  += offset;
++                  tile_ptr += info.pitch;
++                }
++                draw_hardware_cursor(xc, yc, &info);
++                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
++                SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++          break;
++      }
++    }
++  }
++  else {
++    switch (BX_CIRRUS_THIS svga_bpp) {
++      case  4:
++        BX_ERROR(("cannot draw 4bpp SVGA"));
++        break;
++      case  8:
++        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
++        {
++          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
++          {
++            if (GET_TILE_UPDATED (xti, yti))
++            {
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + xc);
++              tile_ptr = BX_CIRRUS_THIS tilemem;
++              for (r=0; r<Y_TILESIZE; r++)
++              {
++                memcpy(tile_ptr,vid_ptr,X_TILESIZE);
++                vid_ptr  += offset;
++                tile_ptr += X_TILESIZE;
++                }
++              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
++              SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++        break;
++      case 16:
++        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
++        {
++          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
++          {
++            if (GET_TILE_UPDATED (xti, yti))
++            {
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc << 1));
++              tile_ptr = BX_CIRRUS_THIS tilemem;
++              for (r=0; r<Y_TILESIZE; r++)
++              {
++                memcpy(tile_ptr,vid_ptr,X_TILESIZE<<1);
++                vid_ptr  += offset;
++                tile_ptr += X_TILESIZE << 1;
++                }
++              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
++              SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++        break;
++      case 24:
++        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
++        {
++          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
++          {
++            if (GET_TILE_UPDATED (xti, yti))
++            {
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc * 3));
++              tile_ptr = BX_CIRRUS_THIS tilemem;
++              for (r=0; r<Y_TILESIZE; r++)
++              {
++                memcpy(tile_ptr,vid_ptr,X_TILESIZE*3);
++                vid_ptr  += offset;
++                tile_ptr += X_TILESIZE * 3;
++                }
++              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
++              SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++        break;
++      case 32:
++        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
++        {
++          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
++          {
++            if (GET_TILE_UPDATED (xti, yti))
++            {
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc << 2));
++              tile_ptr = BX_CIRRUS_THIS tilemem;
++              for (r=0; r<Y_TILESIZE; r++)
++              {
++                memcpy(tile_ptr,vid_ptr,X_TILESIZE<<2);
++                vid_ptr  += offset;
++                tile_ptr += X_TILESIZE << 2;
++                }
++              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
++              SET_TILE_UPDATED (xti, yti, 0);
++              }
++            }
++          }
++        break;
++      default:
++        BX_PANIC(("unknown bpp %u",(unsigned)BX_CIRRUS_THIS svga_bpp));
++        break;
++      }
 +  }
 +}
 +
@@ -1670,6 +2329,13 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +{
 +  BX_DEBUG(("sequencer: index 0x%02x write 0x%02x", index, (unsigned)value));
 +
++  bx_bool update_cursor = 0;
++  Bit16u x, y, size;
++
++  x = BX_CIRRUS_THIS hw_cursor.x;
++  y = BX_CIRRUS_THIS hw_cursor.y;
++  size = BX_CIRRUS_THIS hw_cursor.size;
++
 +  switch (index) {
 +    case 0x00:  // VGA
 +    case 0x02:  // VGA
@@ -1718,9 +2384,9 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    case 0xd0:
 +    case 0xf0:
 +      BX_CIRRUS_THIS sequencer.reg[0x10] = value;
++      x = BX_CIRRUS_THIS hw_cursor.x;
 +      BX_CIRRUS_THIS hw_cursor.x = (value << 3) | (index >> 5);
-+      // FIXME - update only the cursor region.
-+      BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++      update_cursor = 1;
 +      break;
 +    case 0x11: // cursor ypos << 5 (index & 0x3f)
 +    case 0x31:
@@ -1731,14 +2397,27 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    case 0xd1:
 +    case 0xf1:
 +      BX_CIRRUS_THIS sequencer.reg[0x11] = value;
++      y = BX_CIRRUS_THIS hw_cursor.y;
 +      BX_CIRRUS_THIS hw_cursor.y = (value << 3) | (index >> 5);
-+      // FIXME - update only the cursor region.
-+      BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++      update_cursor = 1;
 +      break;
 +    case 0x12:
++      size = BX_CIRRUS_THIS hw_cursor.size;
++      if (value & CIRRUS_CURSOR_SHOW) {
++        if (value & CIRRUS_CURSOR_LARGE) {
++          BX_CIRRUS_THIS hw_cursor.size = 64;
++        }
++        else {
++         BX_CIRRUS_THIS hw_cursor.size = 32;
++        }
++      }
++      else {
++        BX_CIRRUS_THIS hw_cursor.size = 0;
++      }
++      update_cursor = 1;
++      break;
 +    case 0x13:
-+      // FIXME - update only the cursor region.
-+      BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++      update_cursor = 1;
 +      break;
 +    case 0x17:
 +      value = (BX_CIRRUS_THIS sequencer.reg[0x17] & 0x38) | (value & 0xc7);
@@ -1747,6 +2426,11 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      BX_INFO (("sequencer index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
 +      break;
 +    }
++
++  if (update_cursor) {
++    BX_CIRRUS_THIS redraw_area(x, y, size, size);
++    BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS hw_cursor.x, BX_CIRRUS_THIS hw_cursor.y, BX_CIRRUS_THIS hw_cursor.size, BX_CIRRUS_THIS hw_cursor.size);
++  }
 +
 +  if (index <= CIRRUS_SEQENCER_MAX) {
 +    BX_CIRRUS_THIS sequencer.reg[index] = value;
@@ -1904,7 +2588,9 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      value &= 0x3f;
 +      break;
 +    case 0x2f: // BLT WRITE MASK
-+      BX_ERROR(("BLT WRITE MASK is not implemented."));
++      if (value & 0x80) {
++        BX_ERROR(("BLT WRITE MASK support is not complete (value = 0x%02x)", value));
++      }
 +      break;
 +    case 0x30: // BLT MODE
 +      break;
@@ -2232,7 +2918,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +//
 +/////////////////////////////////////////////////////////////////////////
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +
 +  void
 +bx_svga_cirrus_c::svga_init_pcihandlers(void)
@@ -2380,7 +3066,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  }
 +}
 +
-+#endif // BX_SUPPORT_SVGA_CIRRUS_PCI
++#endif // BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +
 +/////////////////////////////////////////////////////////////////////////
 +//
@@ -2470,14 +3156,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                             CIRRUS_BLTMODE_PATTERNCOPY | 
 +                             CIRRUS_BLTMODE_COLOREXPAND)) == 
 +      (CIRRUS_BLTMODE_PATTERNCOPY | CIRRUS_BLTMODE_COLOREXPAND)) {
-+    svga_bitblt_fgcol();
-+    svga_bitblt_solidfill(dstaddr);
++    BX_PANIC(("SOLIDFILL is not implemented"));
 +  } else {
-+
-+    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
-+      BX_ERROR(("BLT: TRANSPARENTCOMP is not implemented"));
-+      goto ignoreblt;
-+    }
 +
 +    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_BACKWARDS) {
 +      BX_CIRRUS_THIS bitblt.dstpitch = -BX_CIRRUS_THIS bitblt.dstpitch;
@@ -2524,7 +3204,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    else {
 +      BX_CIRRUS_THIS bitblt.memsrc_needed = 8 * 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
 +      }
-+    BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_memsrc_static;
++    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
++      BX_ERROR(("BLT: patterncopy: TRANSPARENTCOMP is not implemented"));
++      }
++    else {
++      BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_memsrc_static;
++      }
 +    }
 +  else {
 +    BX_CIRRUS_THIS bitblt.memdst_bytesperline =
@@ -2539,7 +3224,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    BX_CIRRUS_THIS bitblt.memsrc_needed =
 +        BX_CIRRUS_THIS bitblt.memsrc_bytesperline * BX_CIRRUS_THIS bitblt.bltheight;
 +    BX_CIRRUS_THIS bitblt.memsrc_needed = (BX_CIRRUS_THIS bitblt.memsrc_needed + 3) & (~3);
-+    BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memsrc_static;
++    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
++      BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_transp_memsrc_static;
++      }
++    else {
++      BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memsrc_static;
++      }
 +    }
 +
 +  svga_asyncbitblt_next();
@@ -2652,7 +3342,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  Bit8u colors[2];
 +  unsigned bits;
 +  unsigned bitmask;
-+  int srcskipleft = 0;
++  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 +
 +  colors[0] = BX_CIRRUS_THIS control.shadow_reg0;
 +  colors[1] = BX_CIRRUS_THIS control.shadow_reg1;
@@ -2677,7 +3367,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  unsigned bits;
 +  unsigned bitmask;
 +  unsigned index;
-+  int srcskipleft = 0;
++  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 +
 +  colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
 +  colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2706,7 +3396,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  unsigned bits;
 +  unsigned bitmask;
 +  unsigned index;
-+  int srcskipleft = 0;
++  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 +
 +  colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
 +  colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2715,7 +3405,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  colors[1][1] = BX_CIRRUS_THIS control.reg[0x11];
 +  colors[1][2] = BX_CIRRUS_THIS control.reg[0x13];
 +
-+  bitmask = 0x80 << srcskipleft;
++  bitmask = 0x80 >> srcskipleft;
 +  bits = *src++;
 +  for (x = 0; x < count; x++) {
 +    if ((bitmask & 0xff) == 0) {
@@ -2738,7 +3428,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  unsigned bits;
 +  unsigned bitmask;
 +  unsigned index;
-+  int srcskipleft = 0;
++  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 +
 +  colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
 +  colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2749,7 +3439,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  colors[1][2] = BX_CIRRUS_THIS control.reg[0x13];
 +  colors[1][3] = BX_CIRRUS_THIS control.reg[0x15];
 +
-+  bitmask = 0x80 << srcskipleft;
++  bitmask = 0x80 >> srcskipleft;
 +  bits = *src++;
 +  for (x = 0; x < count; x++) {
 +    if ((bitmask & 0xff) == 0) {
@@ -2832,10 +3522,52 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  void
 +bx_svga_cirrus_c::svga_simplebitblt()
 +{
++  Bit8u color[4];
++  Bit8u work_colorexp[2048];
++  int x, y;
++  Bit8u *dst;
++  unsigned bits, bitmask;
++  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
++
 +  if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
-+    BX_ERROR(("SIMPLE BLT: COLOREXPAND is not implemented"));
-+    return;
++    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
++      color[0] = BX_CIRRUS_THIS control.shadow_reg1;
++      color[1] = BX_CIRRUS_THIS control.reg[0x11];
++      color[2] = BX_CIRRUS_THIS control.reg[0x13];
++      color[3] = BX_CIRRUS_THIS control.reg[0x15];
++
++      for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
++        dst = BX_CIRRUS_THIS bitblt.dst;
++        bitmask = 0x80 >> srcskipleft;
++        bits = *BX_CIRRUS_THIS bitblt.src++;
++        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x++) {
++          if ((bitmask & 0xff) == 0) {
++            bitmask = 0x80;
++            bits = *BX_CIRRUS_THIS bitblt.src++;
++          }
++          if (bits & bitmask) {
++            (*BX_CIRRUS_THIS bitblt.rop_handler)(
++              dst, &color[0], 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
++          }
++          dst += BX_CIRRUS_THIS bitblt.pixelwidth;
++          bitmask >>= 1;
++        }
++        BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
++      }
++      return;
++    } else {
++      for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
++        svga_colorexpand(work_colorexp,BX_CIRRUS_THIS bitblt.src,BX_CIRRUS_THIS bitblt.bltwidth,
++                         BX_CIRRUS_THIS bitblt.pixelwidth);
++        (*BX_CIRRUS_THIS bitblt.rop_handler)(
++          BX_CIRRUS_THIS bitblt.dst, work_colorexp, 0, 0,
++          BX_CIRRUS_THIS bitblt.bltwidth * BX_CIRRUS_THIS bitblt.pixelwidth, 1);
++        BX_CIRRUS_THIS bitblt.src += ((BX_CIRRUS_THIS bitblt.bltwidth + 7) / 8);
++        BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
++      }
++      return;
 +    }
++  }
 +  if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_BACKWARDS) {
 +    BX_ERROR(("SIMPLE BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
 +    return;
@@ -2938,6 +3670,84 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  BX_CIRRUS_THIS svga_needs_update_dispentire = true;
 +}
 +
++  void
++bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc()
++{
++  Bit8u color[4];
++  int srcavail = BX_CIRRUS_THIS bitblt.memsrc_ptr - &BX_CIRRUS_THIS bitblt.memsrc[0];
++  int bytesavail;
++  int bytesprocessed;
++  int x, total;
++  Bit8u *srcptr = &BX_CIRRUS_THIS bitblt.memsrc[0];
++  Bit8u *dst, *src;
++  int srccuravail;
++  unsigned bits, bitmask;
++  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
++
++  BX_DEBUG(("BLT, cpu-to-video, transparent"));
++
++  color[0] = BX_CIRRUS_THIS control.shadow_reg1;
++  color[1] = BX_CIRRUS_THIS control.reg[0x11];
++  color[2] = BX_CIRRUS_THIS control.reg[0x13];
++  color[3] = BX_CIRRUS_THIS control.reg[0x15];
++
++  total = 0;
++  while (1) {
++    bytesavail = BX_CIRRUS_THIS bitblt.memsrc_bytesperline - BX_CIRRUS_THIS bitblt.async_xbytes;
++    bytesavail = BX_MIN(bytesavail,srcavail);
++    if (bytesavail <= 0)
++      break;
++
++    bytesprocessed = bytesavail;
++    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
++      bytesprocessed = BX_MIN(256/32,bytesavail);
++      srccuravail = BX_MIN(
++          bytesprocessed * 8 * BX_CIRRUS_THIS bitblt.pixelwidth,
++          BX_CIRRUS_THIS bitblt.memdst_bytesperline - BX_CIRRUS_THIS bitblt.async_xbytes * 8 * BX_CIRRUS_THIS bitblt.pixelwidth);
++      src = srcptr;
++      dst = BX_CIRRUS_THIS bitblt.dst;
++      bitmask = 0x80 >> srcskipleft;
++      bits = *src++;
++      for (x = 0; x < bytesprocessed * 8; x++) {
++        if ((bitmask & 0xff) == 0) {
++          bitmask = 0x80;
++          bits = *src++;
++        }
++        if (bits & bitmask) {
++          (*BX_CIRRUS_THIS bitblt.rop_handler)(
++            dst, &color[0], 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
++        }
++        dst += BX_CIRRUS_THIS bitblt.pixelwidth;
++        bitmask >>= 1;
++      }
++    } else {
++      BX_ERROR(("cpu-to-video BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
++      return;
++    }
++
++    BX_CIRRUS_THIS bitblt.dst += srccuravail;
++    total += bytesprocessed;
++    srcptr += bytesprocessed;
++    srcavail -= bytesprocessed;
++    BX_CIRRUS_THIS bitblt.async_xbytes += bytesprocessed;
++    if (BX_CIRRUS_THIS bitblt.async_xbytes >= BX_CIRRUS_THIS bitblt.memsrc_bytesperline) {
++      BX_CIRRUS_THIS bitblt.dst +=
++         BX_CIRRUS_THIS bitblt.dstpitch - BX_CIRRUS_THIS bitblt.memdst_bytesperline;
++      BX_CIRRUS_THIS bitblt.async_y ++;
++      BX_CIRRUS_THIS bitblt.async_xbytes = 0;
++      if (BX_CIRRUS_THIS bitblt.async_y >= BX_CIRRUS_THIS bitblt.bltheight) {
++        total += srcavail;
++        srcavail = 0;
++        break;
++      }
++    }
++  }
++
++  BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[total];
++  // FIXME
++  BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++}
++
 +  bx_bool // true if finished, false otherwise
 +bx_svga_cirrus_c::svga_asyncbitblt_next()
 +{
@@ -2982,36 +3792,6 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +cleanup:
 +  svga_reset_bitblt();
 +  return true;
-+}
-+
-+  void
-+bx_svga_cirrus_c::svga_bitblt_fgcol()
-+{
-+  switch (BX_CIRRUS_THIS bitblt.pixelwidth) {
-+    case 1:
-+      BX_CIRRUS_THIS bitblt.fgcol = BX_CIRRUS_THIS control.shadow_reg1;
-+      break;
-+    case 2:
-+      BX_CIRRUS_THIS bitblt.fgcol = BX_CIRRUS_THIS control.shadow_reg1 |
-+          (BX_CIRRUS_THIS control.reg[0x11] << 8);
-+      break;
-+    case 3:
-+      BX_CIRRUS_THIS bitblt.fgcol = BX_CIRRUS_THIS control.shadow_reg1 |
-+          (BX_CIRRUS_THIS control.reg[0x11] << 8) | (BX_CIRRUS_THIS control.reg[0x13] << 16);
-+      break;
-+    default:
-+    case 4:
-+      BX_CIRRUS_THIS bitblt.fgcol = BX_CIRRUS_THIS control.shadow_reg1 |
-+          (BX_CIRRUS_THIS control.reg[0x11] << 8) | (BX_CIRRUS_THIS control.reg[0x13] << 16) |
-+          (BX_CIRRUS_THIS control.reg[0x15] << 24);
-+      break;
-+  }
-+}
-+
-+  void
-+bx_svga_cirrus_c::svga_bitblt_solidfill(Bit32u dstaddr)
-+{
-+  BX_PANIC(("SOLIDFILL is not implemented"));
 +}
 +
 +/////////////////////////////////////////////////////////////////////////
@@ -3224,17 +4004,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +}
 +
 +
-+#endif // BX_SUPPORT_SVGA_CIRRUS
++#endif // BX_SUPPORT_CLGD54XX
 diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 --- ../bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.h	2004-07-31 21:22:09.000000000 +0200
-@@ -0,0 +1,239 @@
-+#if BX_SUPPORT_SVGA_CIRRUS
-+
-+#if !BX_PCI_SUPPORT
-+#undef BX_SUPPORT_SVGA_CIRRUS_PCI
-+#define BX_SUPPORT_SVGA_CIRRUS_PCI 0
-+#endif // BX_PCI_SUPPORT
++++ ./iodev/svga_cirrus.h	2004-08-10 10:25:31.000000000 +0200
+@@ -0,0 +1,238 @@
++#if BX_SUPPORT_CLGD54XX
 +
 +#if BX_USE_CIRRUS_SMF
 +#  define BX_CIRRUS_SMF  static
@@ -3259,7 +4034,7 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +// Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
 +#define CIRRUS_BLT_CACHESIZE (2048 * 4)
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +#define CIRRUS_VIDEO_MEMORY_MB    4
 +#else
 +#define CIRRUS_VIDEO_MEMORY_MB    2
@@ -3305,6 +4080,8 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +  BX_CIRRUS_SMF void   svga_update(void);
 +
 +  BX_CIRRUS_SMF void   svga_init_members();
++
++  BX_CIRRUS_SMF void draw_hardware_cursor(unsigned, unsigned, bx_svga_tileinfo_t *);
 +
 +  // bank memory
 +  BX_CIRRUS_SMF void update_bank_ptr(Bit8u bank_index);
@@ -3352,22 +4129,23 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +  static void  svga_simplebitblt_static(void *this_ptr);
 +  static void  svga_patterncopy_memsrc_static(void *this_ptr);
 +  static void  svga_simplebitblt_memsrc_static(void *this_ptr);
++  static void  svga_simplebitblt_transp_memsrc_static(void *this_ptr);
 +#else
 +  #define svga_patterncopy_static svga_patterncopy
 +  #define svga_simplebitblt_static svga_simplebitblt
 +  #define svga_patterncopy_memsrc_static svga_patterncopy_memsrc
 +  #define svga_simplebitblt_memsrc_static svga_simplebitblt_memsrc
++  #define svga_simplebitblt_transp_memsrc_static svga_simplebitblt_transp_memsrc
 +#endif // !BX_USE_CIRRUS_SMF
 +  BX_CIRRUS_SMF void svga_patterncopy();
 +  BX_CIRRUS_SMF void svga_simplebitblt();
 +  BX_CIRRUS_SMF void svga_patterncopy_memsrc();
 +  BX_CIRRUS_SMF void svga_simplebitblt_memsrc();
++  BX_CIRRUS_SMF void svga_simplebitblt_transp_memsrc();
 +
 +  BX_CIRRUS_SMF bx_bool svga_asyncbitblt_next();
-+  BX_CIRRUS_SMF void svga_bitblt_fgcol();
-+  BX_CIRRUS_SMF void svga_bitblt_solidfill(Bit32u dstaddr);
 +  BX_CIRRUS_SMF bx_cirrus_bitblt_rop_t svga_get_fwd_rop_handler(Bit8u rop);
-+  BX_CIRRUS_SMF bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop);
++  BX_CIRRUS_SMF bx_cirrus_bitblt_rop_t svga_get_bkwd_rop_handler(Bit8u rop);
 +
 +  struct {
 +    Bit8u index;
@@ -3403,8 +4181,11 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +  Bit8u *tilemem;
 +  Bit32u bank_base[2];
 +  Bit32u bank_limit[2];
++  Bit32u memsize;
 +  Bit8u *disp_ptr;
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  bx_bool pci_enabled;
++#endif
 +
 +  struct {
 +    bx_cirrus_bitblt_rop_t rop_handler;
@@ -3439,9 +4220,7 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +    } bitblt;
 +
 +  struct {
-+    Bit16u x;
-+    Bit16u y;
-+    Bit8u tile[64 * 64];
++    Bit16u x, y, size;
 +    } hw_cursor;
 +
 +  bx_bool is_unlocked() { return svga_unlock_special; }
@@ -3449,7 +4228,7 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +  bx_bool banking_granularity_is_16k() { return !!(control.reg[0x0B] & 0x20); }
 +  bx_bool banking_is_dual() { return !!(control.reg[0x0B] & 0x01); }
 +
-+#if BX_SUPPORT_SVGA_CIRRUS_PCI
++#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +  BX_CIRRUS_SMF void svga_init_pcihandlers(void);
 +
 +  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
@@ -3464,24 +4243,24 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +  Bit8u pci_conf[256];
 +  Bit32u pci_memaddr;
 +  Bit32u pci_mmioaddr;
-+#endif // BX_SUPPORT_SVGA_CIRRUS_PCI
++#endif // BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 +};
 +
-+#endif // BX_SUPPORT_SVGA_CIRRUS
++#endif // BX_SUPPORT_CLGD54XX
 diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
---- ../bochs/iodev/vga.cc	2004-07-24 20:12:00.000000000 +0200
-+++ ./iodev/vga.cc	2004-07-25 19:14:49.000000000 +0200
+--- ../bochs/iodev/vga.cc	2004-08-06 17:49:55.000000000 +0200
++++ ./iodev/vga.cc	2004-08-07 09:07:14.000000000 +0200
 @@ -80,6 +80,13 @@
  
  unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0, old_BPP = 0;
  
-+#if BX_SUPPORT_SVGA_CIRRUS
++#if BX_SUPPORT_CLGD54XX
 +  void
 +libvga_set_smf_pointer(bx_vga_c *theVga_ptr)
 +{
 +  theVga = theVga_ptr;
 +}
-+#else // BX_SUPPORT_SVGA_CIRRUS
++#else // BX_SUPPORT_CLGD54XX
    int
  libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
  {
@@ -3489,7 +4268,7 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
  libvga_LTX_plugin_fini(void)
  {
  }
-+#endif // BX_SUPPORT_SVGA_CIRRUS
++#endif // BX_SUPPORT_CLGD54XX
  
  bx_vga_c::bx_vga_c(void)
  {
@@ -3528,9 +4307,9 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
 -    }
 +#endif
  
-+#if !BX_SUPPORT_SVGA_CIRRUS
++#if !BX_SUPPORT_CLGD54XX
 +  BX_VGA_THIS init_iohandlers(read_handler,write_handler);
-+#endif // !BX_SUPPORT_SVGA_CIRRUS
++#endif // !BX_SUPPORT_CLGD54XX
  
    DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
                                 theVga, 0xa0000, 0xbffff);
@@ -3543,9 +4322,9 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
 -    BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
 -       bx_options.Ovga_update_interval->get (), 1, 1, "vga");
 -  }
-+#if !BX_SUPPORT_SVGA_CIRRUS
++#if !BX_SUPPORT_CLGD54XX
 +  BX_VGA_THIS init_systemtimer(timer_handler);
-+#endif // !BX_SUPPORT_SVGA_CIRRUS
++#endif // !BX_SUPPORT_CLGD54XX
  
    /* video card with BIOS ROM */
    DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00); 
@@ -3660,12 +4439,12 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
  
 diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
 --- ../bochs/iodev/vga.h	2004-07-21 22:39:54.000000000 +0200
-+++ ./iodev/vga.h	2004-07-21 22:47:31.000000000 +0200
++++ ./iodev/vga.h	2004-08-06 14:17:14.000000000 +0200
 @@ -79,6 +79,11 @@
  #define BX_MAX_XRES VBE_DISPI_MAX_XRES
  #define BX_MAX_YRES VBE_DISPI_MAX_YRES
  
-+#elif BX_SUPPORT_SVGA_CIRRUS
++#elif BX_SUPPORT_CLGD54XX
 +
 +#define BX_MAX_XRES 1280
 +#define BX_MAX_YRES 1024
@@ -3696,8 +4475,8 @@ diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
                                                unsigned *piWidth);
    };
 +
-+#if BX_SUPPORT_SVGA_CIRRUS
++#if BX_SUPPORT_CLGD54XX
 +  void
 +libvga_set_smf_pointer(bx_vga_c *theVga_ptr);
 +#include "iodev/svga_cirrus.h"
-+#endif // BX_SUPPORT_SVGA_CIRRUS
++#endif // BX_SUPPORT_CLGD54XX
