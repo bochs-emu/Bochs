@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.43 2004-01-17 08:36:29 danielg4 Exp $
+// $Id: logio.cc,v 1.44 2004-02-08 11:02:42 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -466,7 +466,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
     return;
   }
   in_ask_already = 1;
-  vsprintf (buf1, fmt, ap);
+  vsnprintf (buf1, sizeof(buf1), fmt, ap);
   // FIXME: facility set to 0 because it's unknown.
 
   // update vga screen.  This is useful because sometimes useful messages
@@ -594,8 +594,8 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap, int exit_s
   {
     char buf1[1024];
     char buf2[1024];
-    vsprintf (buf1, fmt, ap);
-    sprintf (buf2, "Bochs startup error\n%s", buf1);
+    vsnprintf (buf1, sizeof(buf1), fmt, ap);
+    snprintf (buf2, sizeof(buf2), "Bochs startup error\n%s", buf1);
     carbonFatalDialog(buf2,
       "For more information, try running Bochs within Terminal by clicking on \"bochs.scpt\".");
   }
