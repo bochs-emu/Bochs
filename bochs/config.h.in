@@ -596,6 +596,9 @@ typedef
 #define BX_SupportHostAsms 0
 
 
+// if 1, don't do gpf on MSRs that we don't implement
+#define BX_IGNORE_BAD_MSR 0
+
 // ========================================================
 // These are some very temporary hacks I made to the 64-bit
 // support to help Peter with debugging etc.  They will be removed
