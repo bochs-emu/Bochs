@@ -9,7 +9,7 @@
 # directory, named BIOS-bochs-yymmdd.  Use the latest one in there.
 #=======================================================================
 #romimage: bios/BIOS-bochs-970717a
-romimage: file=bios/BIOS-bochs-2001_0517, address=0xf0000
+romimage: file=bios/BIOS-bochs-2001_0524, address=0xf0000
 #romimage: file=bios/BIOS-bochs-2-processors, address=0xf0000
 #romimage: file=bios/BIOS-bochs-4-processors, address=0xf0000
 #romimage: file=bios/rombios.bin, address=0xf0000
