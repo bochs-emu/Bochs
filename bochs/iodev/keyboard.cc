@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.86 2004-06-19 15:20:12 sshwarts Exp $
+// $Id: keyboard.cc,v 1.87 2004-06-21 10:39:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.86 2004-06-19 15:20:12 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.87 2004-06-21 10:39:24 cbothamy Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -460,7 +460,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             BX_SET_ENABLE_A20( (value & 0x02) != 0 );
             if (!(value & 0x01)) {
 	        BX_INFO(("write output port : processor reset requested!"));
-                bx_pc_system.ResetCpus( BX_RESET_HARDWARE);
+                bx_pc_system.Reset( BX_RESET_SOFTWARE);
             }
             break;
           case 0xd4: // Write to mouse
@@ -648,7 +648,7 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
         case 0xfe: // System (cpu?) Reset, transition to real mode
           BX_INFO(("io write 0x64: command 0xfe: reset cpu"));
           //bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
-          bx_pc_system.ResetCpus( BX_RESET_HARDWARE );
+          bx_pc_system.Reset( BX_RESET_SOFTWARE );
           break;
 
         default:

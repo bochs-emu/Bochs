@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.38 2004-06-19 15:20:07 sshwarts Exp $
+// $Id: exception.cc,v 1.39 2004-06-21 10:39:23 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -872,7 +872,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   if (BX_CPU_THIS_PTR errorno >= 3) {
 #if BX_RESET_ON_TRIPLE_FAULT
     BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector,  DEV_cmos_get_reg(0x0f)));
-    bx_pc_system.ResetCpus( BX_RESET_HARDWARE );
+    bx_pc_system.Reset( BX_RESET_SOFTWARE );
 #else
     BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
@@ -890,10 +890,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   if ( (BX_CPU_THIS_PTR errorno==2) && (BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT) ) {
 #if BX_RESET_ON_TRIPLE_FAULT
     BX_INFO(("exception(): triple fault encountered, shutdown status is %02xh, resetting", DEV_cmos_get_reg(0x0f)));
-    {
-    for (int i=0; i<BX_SMP_PROCESSORS; i++)
-      BX_CPU(i)->reset(BX_RESET_HARDWARE);
-    }
+    bx_pc_system.Reset( BX_RESET_SOFTWARE );
 #else
     BX_PANIC(("exception(): triple fault encountered"));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));

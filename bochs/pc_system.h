@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.27 2004-04-08 20:56:36 cbothamy Exp $
+// $Id: pc_system.h,v 1.28 2004-06-21 10:39:23 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -201,6 +201,5 @@ public:
   void    exit(void);
 
   // Cpu and System Reset
-  int ResetCpus( unsigned type );
-  int ResetSystem( unsigned type );
+  int Reset( unsigned type );
   };

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.68 2004-06-19 15:20:10 sshwarts Exp $
+// $Id: devices.cc,v 1.69 2004-06-21 10:39:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -106,7 +106,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.68 2004-06-19 15:20:10 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.69 2004-06-21 10:39:24 cbothamy Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -396,7 +396,7 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
   BX_DEBUG(("A20: now %u", (unsigned) BX_GET_ENABLE_A20()));
   if (value & 0x01) { /* high speed reset */
     BX_INFO(("iowrite to port0x92 : reset resquested"));
-    bx_pc_system.ResetCpus(BX_RESET_HARDWARE);
+    bx_pc_system.Reset(BX_RESET_SOFTWARE);
   }
 }
 
