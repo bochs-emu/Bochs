@@ -13,4 +13,5 @@ clean:
 	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make clean; echo Leaving $$i;); done
 
 dist-clean: clean
+	cd libltdl; make distclean
 	rm -rf Makefile */Makefile config.h config.log config.status libtool
