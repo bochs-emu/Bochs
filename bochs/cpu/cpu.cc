@@ -118,6 +118,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
 
+  // not sure if these two are used during the async handling... --bbd
   BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
   BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
 
@@ -134,7 +135,13 @@ main_cpu_loop:
     goto handle_async_event;
 
 async_events_processed:
-
+  // added so that all debugging/tracing code uses the correct EIP even in the
+  // instruction just after a trap/interrupt.  If you use the prev_eip that was
+  // set before handle_async_event, traces and breakpoints fail to show the
+  // first instruction of int/trap handlers.
+  BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+  BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
+  
   // Now we can handle things which are synchronous to instruction
   // execution.
   if (BX_CPU_THIS_PTR eflags.rf) {
@@ -189,9 +196,9 @@ async_events_processed:
   {
     int n=0;
     if ((n & 0xffffff) == 0) {
-      Bit32u cs = BX_CPU(0)->sregs[BX_SEG_REG_CS].selector.value;
-      Bit32u eip = BX_CPU(0)->prev_eip;
-      fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\s", n, bx_pc_system.time_ticks (), cs, eip, fetch_ptr);
+      Bit32u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+      Bit32u eip = BX_CPU_THIS_PTR prev_eip;
+      fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\n", n, bx_pc_system.time_ticks (), cs, eip, fetch_ptr);
     }
     n++;
   }
