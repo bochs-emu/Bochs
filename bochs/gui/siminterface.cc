@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.24 2001-06-20 14:01:39 bdenney Exp $
+ * $Id: siminterface.cc,v 1.25 2001-06-21 14:37:55 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -87,7 +87,7 @@ bx_real_sim_c::get_param_num (bx_id id) {
     return NULL;
   }
   int type = generic->get_type ();
-  if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL)
+  if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL || type == BXT_PARAM_ENUM)
     return (bx_param_num_c *)generic;
   BX_PANIC (("get_param_num %u could not find an integer parameter with that id", id));
   return NULL;
@@ -308,6 +308,8 @@ char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", NULL };
 int n_floppy_type_names = 5;
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
 int n_floppy_status_names = 2;
+char *floppy_bootdisk_names[] = { "floppy", "hard", NULL };
+int n_floppy_bootdisk_names = 2;
 
 char *
 bx_real_sim_c::get_floppy_type_name (int type)
@@ -437,6 +439,7 @@ bx_param_c::bx_param_c (bx_id id, char *name, char *description)
   this->text_format = NULL;
   this->ask_format = NULL;
   this->runtime_param = 0;
+  this->enabled = 1;
   SIM->register_param (id, this);
 }
 
@@ -453,12 +456,21 @@ bx_param_num_c::bx_param_num_c (bx_id id,
   this->val = initial_val;
   this->handler = NULL;
   this->base = 10;
+  set (initial_val);
 }
 
 void 
 bx_param_num_c::reset ()
 {
   this->val = initial_val;
+}
+
+void 
+bx_param_num_c::set_handler (param_event_handler handler)
+{ 
+  this->handler = handler; 
+  // now that there's a handler, call set once to run the handler immediately
+  //set (get ());
 }
 
 Bit32s 
@@ -483,6 +495,8 @@ bx_param_num_c::set (Bit32s newval)
     // just set the value.  This code does not check max/min.
     val = newval;
   }
+  if (val < min || val > max) 
+    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), val, min, max));
 }
 
 bx_param_bool_c::bx_param_bool_c (bx_id id,
@@ -492,6 +506,7 @@ bx_param_bool_c::bx_param_bool_c (bx_id id,
   : bx_param_num_c (id, name, description, 0, 1, initial_val)
 {
   set_type (BXT_PARAM_BOOL);
+  set (initial_val);
 }
 
 bx_param_enum_c::bx_param_enum_c (bx_id id, 
@@ -502,12 +517,16 @@ bx_param_enum_c::bx_param_enum_c (bx_id id,
       Bit32s value_base)
   : bx_param_num_c (id, name, description, value_base, BX_MAX_INT, initial_val)
 {
+  set_type (BXT_PARAM_ENUM);
   this->choices = choices;
-  this->value_base = value_base;
   // count number of choices, set max
   char **p = choices;
   while (*p != NULL) p++;
+  this->min = value_base;
+  // now that the max is known, replace the BX_MAX_INT sent to the parent
+  // class constructor with the real max.
   this->max = value_base + (p - choices - 1);
+  set (initial_val);
 }
 
 bx_param_string_c::bx_param_string_c (bx_id id,
@@ -526,6 +545,7 @@ bx_param_string_c::bx_param_string_c (bx_id id,
   this->maxsize = maxsize;
   strncpy (this->val, initial_val, maxsize);
   strncpy (this->initial_val, initial_val, maxsize);
+  set (initial_val);
 }
 
 void 
@@ -533,25 +553,37 @@ bx_param_string_c::reset () {
   strncpy (this->val, this->initial_val, maxsize);
 }
 
+void 
+bx_param_string_c::set_handler (param_string_event_handler handler)
+{
+  this->handler = handler; 
+  // now that there's a handler, call set once to run the handler immediately
+  //set (getptr ());
+}
+
 Bit32s
 bx_param_string_c::get (char *buf, int len)
 {
-  if (handler)
+  strncpy (buf, val, len);
+  if (handler) {
+    // the handler can choose to replace the value in val/len.  Also its
+    // return value is passed back as the return value of get.
     (*handler)(this, 0, buf, len);
-  else
-    strncpy (buf, val, len);
+  }
   return 0;
 }
 
 void 
 bx_param_string_c::set (char *buf)
 {
-  if (handler)
-    (*handler)(this, 1, buf, -1);
-  else
-    strncpy (val, buf, maxsize);
+  if (handler) {
+    // the handler can return a different char* to be copied into the value
+    buf = (*handler)(this, 1, buf, -1);
+  }
+  strncpy (val, buf, maxsize);
 }
 
+#if 0
 bx_list_c::bx_list_c (bx_id id, int maxsize)
   : bx_param_c (id, "list", "")
 {
@@ -561,9 +593,10 @@ bx_list_c::bx_list_c (bx_id id, int maxsize)
   this->list = new bx_param_c*  [maxsize];
   init ();
 }
+#endif
 
-bx_list_c::bx_list_c (bx_id id, bx_param_c **init_list)
-  : bx_param_c (id, "list", "")
+bx_list_c::bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list)
+  : bx_param_c (id, name, description)
 {
   set_type (BXT_LIST);
   this->size = 0;
@@ -579,15 +612,16 @@ bx_list_c::bx_list_c (bx_id id, bx_param_c **init_list)
 void
 bx_list_c::init ()
 {
-  this->title = new bx_param_string_c (BXP_LIST_TITLE,
-      "list_title",
-      "title of the bx_list",
-      "list", 80);
-  this->options = new bx_param_num_c (BXP_LIST_OPTIONS,
-      "list_option", "", 0, 1<<31,
+  // the title defaults to the name
+  this->title = new bx_param_string_c (BXP_NULL,
+      "title of list",
+      "",
+      get_name (), 80);
+  this->options = new bx_param_num_c (BXP_NULL,
+      "list_option", "", 0, BX_MAX_INT,
       0);
-  this->choice = new bx_param_num_c (BXP_LIST_CHOICE,
-      "list_choice", "", 0, 1<<31,
+  this->choice = new bx_param_num_c (BXP_NULL,
+      "list_choice", "", 0, BX_MAX_INT,
       1);
   this->parent = NULL;
 }

@@ -629,7 +629,7 @@ typedef struct {
   } bx_sb16_options;
 
 #define BX_BOOT_FLOPPYA 0
-#define BX_BOOT_DISKC 0x80
+#define BX_BOOT_DISKC   1
 
 typedef struct {
   bx_floppy_options floppya;

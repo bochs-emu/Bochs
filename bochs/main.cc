@@ -113,40 +113,124 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
   return val;
 }
 
+char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int maxlen)
+{
+  int empty = 0;
+  if ((strlen(val) < 1) || !strcmp ("none", val)) {
+    empty = 1;
+    val = "none";
+  }
+  switch (param->get_id ()) {
+    case BXP_FLOPPYA_PATH:
+      if (set==1) {
+	SIM->get_param_num(BXP_FLOPPYA_TYPE)->set_enabled (!empty);
+	SIM->get_param_num(BXP_FLOPPYA_STATUS)->set_enabled (!empty);
+      }
+      break;
+    case BXP_FLOPPYB_PATH:
+      if (set==1) {
+	SIM->get_param_num(BXP_FLOPPYB_TYPE)->set_enabled (!empty);
+	SIM->get_param_num(BXP_FLOPPYB_STATUS)->set_enabled (!empty);
+      }
+      break;
+    case BXP_DISKC_PATH:
+      if (set==1) {
+	SIM->get_param_num(BXP_DISKC_PRESENT)->set (!empty);
+	SIM->get_param_num(BXP_DISKC_CYLINDERS)->set_enabled (!empty);
+	SIM->get_param_num(BXP_DISKC_HEADS)->set_enabled (!empty);
+	SIM->get_param_num(BXP_DISKC_SPT)->set_enabled (!empty);
+      }
+      break;
+    case BXP_DISKD_PATH:
+      if (set==1) {
+	SIM->get_param_num(BXP_DISKD_PRESENT)->set (!empty);
+	SIM->get_param_num(BXP_DISKD_CYLINDERS)->set_enabled (!empty);
+	SIM->get_param_num(BXP_DISKD_HEADS)->set_enabled (!empty);
+	SIM->get_param_num(BXP_DISKD_SPT)->set_enabled (!empty);
+      }
+      break;
+    case BXP_CDROM_PATH:
+      if (set==1) {
+	SIM->get_param_num(BXP_CDROM_PRESENT)->set (!empty);
+	SIM->get_param_num(BXP_CDROM_INSERTED)->set_enabled (!empty);
+      }
+      break;
+  }
+  return val;
+}
+
+
 void bx_init_options ()
 {
+  bx_list_c *menu;
+
+  // floppya
   bx_options.floppya.Opath = new bx_param_string_c (BXP_FLOPPYA_PATH,
-      "floppya:path",
+      "Floppy A image",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
+  bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
   bx_options.floppya.Otype = new bx_param_enum_c (BXP_FLOPPYA_TYPE,
       "floppya:type",
       "Type of floppy disk",
-      floppy_status_names,
+      floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
+  bx_options.floppya.Otype->set_ask_format ("What type of floppy disk? [%s] ");
   bx_options.floppya.Oinitial_status = new bx_param_enum_c (BXP_FLOPPYA_STATUS,
-      "floppya:status",
+      "Is floppya inserted",
       "Inserted or ejected",
-      floppy_type_names,
-      BX_EJECTED,
+      floppy_status_names,
+      BX_INSERTED,
       BX_EJECTED);
+  bx_options.floppya.Oinitial_status->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
+  bx_options.floppya.Opath->set_format ("%s");
+  bx_options.floppya.Otype->set_format (", size=%s, ");
+  bx_options.floppya.Oinitial_status->set_format ("%s");
+  bx_param_c *floppya_init_list[] = {
+    bx_options.floppya.Opath,
+    bx_options.floppya.Otype,
+    bx_options.floppya.Oinitial_status,
+    NULL
+  };
+  menu = new bx_list_c (BXP_FLOPPYA, "Floppy Disk 0", "All options for first floppy disk", floppya_init_list);
+  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  bx_options.floppya.Opath->set_handler (bx_param_string_handler);
+  bx_options.floppya.Opath->set ("none");
+
   bx_options.floppyb.Opath = new bx_param_string_c (BXP_FLOPPYB_PATH,
       "floppyb:path",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
+  bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
   bx_options.floppyb.Otype = new bx_param_enum_c (BXP_FLOPPYB_TYPE,
       "floppyb:type",
       "Type of floppy disk",
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  bx_options.floppyb.Oinitial_status = new bx_param_enum_c (BXP_FLOPPYA_STATUS,
-      "floppyb:status",
+  bx_options.floppyb.Otype->set_ask_format ("What type of floppy disk? [%s] ");
+  bx_options.floppyb.Oinitial_status = new bx_param_enum_c (BXP_FLOPPYB_STATUS,
+      "Is floppyb inserted",
       "Inserted or ejected",
-      floppy_type_names,
-      BX_EJECTED,
+      floppy_status_names,
+      BX_INSERTED,
       BX_EJECTED);
+  bx_options.floppyb.Oinitial_status->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
+  bx_options.floppyb.Oinitial_status->set_format ("%s");
+  bx_options.floppyb.Opath->set_format ("%s");
+  bx_options.floppyb.Otype->set_format (", size=%s, ");
+  bx_options.floppyb.Oinitial_status->set_format ("%s");
+  bx_param_c *floppyb_init_list[] = {
+    bx_options.floppyb.Opath,
+    bx_options.floppyb.Otype,
+    bx_options.floppyb.Oinitial_status,
+    NULL
+  };
+  menu = new bx_list_c (BXP_FLOPPYB, "Floppy Disk 1", "All options for second floppy disk", floppyb_init_list);
+  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  bx_options.floppyb.Opath->set_handler (bx_param_string_handler);
+  bx_options.floppyb.Opath->set ("none");
 
   // diskc options
   bx_options.diskc.Opresent = new bx_param_bool_c (BXP_DISKC_PRESENT,
@@ -154,24 +238,45 @@ void bx_init_options ()
       "Controls whether diskc is installed or not",
       0);
   bx_options.diskc.Opath = new bx_param_string_c (BXP_DISKC_PATH,
-      "diskc:path",
+      "",
       "Pathname of the hard drive image",
       "", BX_PATHNAME_LEN);
   bx_options.diskc.Ocylinders = new bx_param_num_c (BXP_DISKC_CYLINDERS,
       "diskc:cylinders",
       "Number of cylinders",
       1, 65535,
-      0);
+      1);
   bx_options.diskc.Oheads = new bx_param_num_c (BXP_DISKC_HEADS,
       "diskc:heads",
       "Number of heads",
       1, 65535,
-      0);
+      1);
   bx_options.diskc.Ospt = new bx_param_num_c (BXP_DISKC_SPT,
       "diskc:spt",
       "Number of sectors per track",
       1, 65535,
-      0);
+      1);
+  bx_options.diskc.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
+  bx_options.diskc.Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
+  bx_options.diskc.Oheads->set_ask_format ("Enter number of heads: [%d] ");
+  bx_options.diskc.Ospt->set_ask_format ("Enter number of sectors per track: [%d] ");
+  bx_options.diskc.Opath->set_format ("%s");
+  bx_options.diskc.Ocylinders->set_format (", %d cylinders, ");
+  bx_options.diskc.Oheads->set_format ("%d heads, ");
+  bx_options.diskc.Ospt->set_format ("%d sectors/track");
+  bx_param_c *diskc_init_list[] = {
+    bx_options.diskc.Opath,
+    bx_options.diskc.Ocylinders,
+    bx_options.diskc.Oheads,
+    bx_options.diskc.Ospt,
+    NULL
+  };
+  menu = new bx_list_c (BXP_DISKC, "Hard disk 0", "All options for hard disk 0", diskc_init_list);
+  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  // if path is the word "none", then do not ask the other options and
+  // set present=0.
+  bx_options.diskc.Opath->set_handler (bx_param_string_handler);
+  bx_options.diskc.Opath->set ("none");
 
   // diskd options
   bx_options.diskd.Opresent = new bx_param_bool_c (BXP_DISKD_PRESENT,
@@ -186,31 +291,92 @@ void bx_init_options ()
       "diskd:cylinders",
       "Number of cylinders",
       1, 65535,
-      0);
+      1);
   bx_options.diskd.Oheads = new bx_param_num_c (BXP_DISKD_HEADS,
       "diskd:heads",
       "Number of heads",
       1, 65535,
-      0);
+      1);
   bx_options.diskd.Ospt = new bx_param_num_c (BXP_DISKD_SPT,
       "diskd:spt",
       "Number of sectors per track",
       1, 65535,
-      0);
+      1);
+  bx_options.diskd.Opath->set_ask_format ("Enter new filename, or none for no disk: [%s] ");
+  bx_options.diskd.Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
+  bx_options.diskd.Oheads->set_ask_format ("Enter number of heads: [%d] ");
+  bx_options.diskd.Ospt->set_ask_format ("Enter number of sectors per track: [%d] ");
+  bx_options.diskd.Opath->set_format ("%s");
+  bx_options.diskd.Ocylinders->set_format (", %d cylinders, ");
+  bx_options.diskd.Oheads->set_format ("%d heads, ");
+  bx_options.diskd.Ospt->set_format ("%d sectors/track");
+  bx_param_c *diskd_init_list[] = {
+    bx_options.diskd.Opath,
+    bx_options.diskd.Ocylinders,
+    bx_options.diskd.Oheads,
+    bx_options.diskd.Ospt,
+    NULL
+  };
+  menu = new bx_list_c (BXP_DISKD, "Hard disk 1", "All options for hard disk 1", diskd_init_list);
+  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  bx_options.diskd.Opath->set_handler (bx_param_string_handler);
+  bx_options.diskd.Opath->set ("none");
 
   // cdrom options
   bx_options.cdromd.Opresent = new bx_param_bool_c (BXP_CDROM_PRESENT,
-      "cdrom:present",
+      "CDROM is present",
       "Controls whether cdromd is installed or not",
       0);
   bx_options.cdromd.Opath = new bx_param_string_c (BXP_CDROM_PATH,
-      "cdrom:path",
+      "CDROM image filename",
       "Pathname of the cdrom device or image",
       "", BX_PATHNAME_LEN);
-  bx_options.cdromd.Oinserted = new bx_param_bool_c (BXP_CDROM_PRESENT,
-      "cdrom:present",
-      "Controls whether cdromd is installed or not",
-      0);
+  bx_options.cdromd.Opath->set_format ("%s");
+  bx_options.cdromd.Opath->set_ask_format ("Enter new filename, or 'none' for no CDROM: [%s] ");
+  bx_options.cdromd.Oinserted = new bx_param_enum_c (BXP_CDROM_INSERTED,
+      "Is the CDROM inserted or ejected",
+      "Inserted or ejected",
+      floppy_status_names,
+      BX_INSERTED,
+      BX_EJECTED);
+  bx_options.cdromd.Oinserted->set_format (", %s");
+  bx_options.cdromd.Oinserted->set_ask_format ("Is the CDROM inserted or ejected? [%s] ");
+  bx_param_c *cdromd_init_list[] = {
+    bx_options.cdromd.Opath,
+    bx_options.cdromd.Oinserted,
+    NULL
+  };
+  menu = new bx_list_c (BXP_CDROMD, "CDROM", "Options for the CDROM", cdromd_init_list);
+  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  bx_options.cdromd.Opath->set_handler (bx_param_string_handler);
+  bx_options.cdromd.Opath->set ("none");
+
+  bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
+      "New Hard Drive Support",
+      "Enables new features found on newer hard drives.",
+      1);
+
+  bx_options.Obootdrive = new bx_param_enum_c (BXP_BOOTDRIVE,
+      "bootdrive",
+      "Boot A or C",
+      floppy_bootdisk_names,
+      BX_BOOT_FLOPPYA,
+      BX_BOOT_FLOPPYA);
+  bx_options.Obootdrive->set_format ("Boot from: %s drive");
+  bx_options.Obootdrive->set_ask_format ("Boot from floppy drive or hard drive? [%s] ");
+  // disk menu
+  bx_param_c *disk_menu_init_list[] = {
+    SIM->get_param (BXP_FLOPPYA),
+    SIM->get_param (BXP_FLOPPYB),
+    SIM->get_param (BXP_DISKC),
+    SIM->get_param (BXP_DISKD),
+    SIM->get_param (BXP_CDROMD),
+    SIM->get_param (BXP_NEWHARDDRIVESUPPORT),
+    SIM->get_param (BXP_BOOTDRIVE),
+    NULL
+  };
+  menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "diskmenu", disk_menu_init_list);
+  menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
   // memory options menu
   bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
@@ -237,30 +403,47 @@ void bx_init_options ()
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
   bx_options.vgarom.Opath->set_format ("Name of VGA BIOS image: %s");
-  bx_param_c *init_list[] = {
+  bx_param_c *memory_init_list[] = {
     bx_options.memory.Osize,
     bx_options.vgarom.Opath,
     bx_options.rom.Opath,
     bx_options.rom.Oaddress,
     NULL
   };
-  bx_list_c *menu = new bx_list_c (BXP_MEMORY_OPTIONS_MENU, init_list);
-  menu->get_title ()->set ("Bochs Memory Options");
+  menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
-
-
-  bx_options.Oips = new bx_param_num_c (BXP_IPS, 
-      "ips",
-      "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
-      1, BX_MAX_INT,
-      500000);
   bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
-      "vga_update_interval",
+      "VGA Update Interval",
       "Number of microseconds between VGA updates",
       1, BX_MAX_INT,
       30000);
   bx_options.Ovga_update_interval->set_handler (bx_param_handler);
+  bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
+  bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
+      "Enable the mouse",
+      "Controls whether the mouse sends events to bochs",
+      0);
+  bx_options.Omouse_enabled->set_handler (bx_param_handler);
+  bx_options.Oips = new bx_param_num_c (BXP_IPS, 
+      "Emulated instructions per second (IPS)",
+      "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
+      1, BX_MAX_INT,
+      500000);
+  bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
+      "Use a private colormap",
+      "Request that the GUI create and use it's own non-shared colormap.  This colormap will be used when in the bochs window.  If not enabled, a shared colormap scheme may be used.  Not implemented on all GUI's.",
+      0);
+  bx_param_c *interface_init_list[] = {
+    bx_options.Ovga_update_interval,
+    bx_options.Omouse_enabled,
+    bx_options.Oips,
+    bx_options.Oprivate_colormap,
+    NULL
+  };
+  menu = new bx_list_c (BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
+  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "keyboard_serial_delay",
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
@@ -271,27 +454,15 @@ void bx_init_options ()
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
       1, BX_MAX_INT,
       50000);
-  bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
-      "mouse_enabled",
-      "Controls whether the mouse sends events to bochs",
-      0);
-  bx_options.Omouse_enabled->set_handler (bx_param_handler);
-  bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
-      "private_colormap",
-      "Request that the GUI create and use it's own non-shared colormap.  This colormap will be used when in the bochs window.  If not enabled, a shared colormap scheme may be used.  Not implemented on all GUI's.",
-      0);
   bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
       "i440FXSupport",
       "Controls whether to emulate PCI I440FX",
       0);
-  bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
-      "newharddrivesupport",
-      "Enables new features found on newer hard drives.",
-      1);
   bx_options.log.Ofilename = new bx_param_string_c (BXP_LOG_FILENAME,
       "log:filename",
       "Pathname of bochs log file",
       "-", BX_PATHNAME_LEN);
+  bx_options.log.Ofilename->set_ask_format ("Enter log filename: [%s] ");
   bx_options.cmos.Opath = new bx_param_string_c (BXP_CMOS_PATH,
       "cmos:path",
       "Pathname of CMOS image",
@@ -303,7 +474,7 @@ void bx_init_options ()
   bx_options.cmos.Otime0 = new bx_param_num_c (BXP_CMOS_TIME0,
       "cmos:time0",
       "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
-      1, BX_MAX_INT,
+      0, BX_MAX_INT,
       0);
   bx_options.load32bitOSImage.OwhichOS = new bx_param_num_c (BXP_LOAD32BITOS_WHICH,
       "load32bitOS:which",
@@ -322,11 +493,6 @@ void bx_init_options ()
       "load32bitOS:initrd",
       "Initrd",
       "", BX_PATHNAME_LEN);
-  bx_options.Obootdrive = new bx_param_num_c (BXP_BOOTDRIVE,
-      "bootdrive",
-      "Boot A or C",
-      BX_BOOT_FLOPPYA, BX_BOOT_DISKC,
-      BX_BOOT_FLOPPYA);
 }
 
 void bx_print_header(void);

@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.14 2001-06-20 14:01:39 bdenney Exp $
+ * $Id: siminterface.h,v 1.15 2001-06-21 14:37:55 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -27,31 +27,32 @@ typedef enum {
   BXP_ROM_PATH,
   BXP_ROM_ADDRESS,
   BXP_VGA_ROM_PATH,
-  BXP_LIST_TITLE,      //title field in any bx_list
-  BXP_LIST_OPTIONS,    //options field in any bx_list
-  BXP_LIST_CHOICE,     //choice field in any bx_list
-  BXP_MEMORY_OPTIONS_MENU,
   BXP_KBD_SERIAL_DELAY,
   BXP_FLOPPY_CMD_DELAY,
   BXP_FLOPPYA_PATH,
   BXP_FLOPPYA_TYPE,
   BXP_FLOPPYA_STATUS,
+  BXP_FLOPPYA,
   BXP_FLOPPYB_PATH,
   BXP_FLOPPYB_TYPE,
   BXP_FLOPPYB_STATUS,
+  BXP_FLOPPYB,
   BXP_DISKC_PRESENT,
   BXP_DISKC_PATH,
   BXP_DISKC_CYLINDERS,
   BXP_DISKC_HEADS,
   BXP_DISKC_SPT,
+  BXP_DISKC,
   BXP_DISKD_PRESENT,
   BXP_DISKD_PATH,
   BXP_DISKD_CYLINDERS,
   BXP_DISKD_HEADS,
   BXP_DISKD_SPT,
+  BXP_DISKD,
   BXP_CDROM_PRESENT,
   BXP_CDROM_PATH,
   BXP_CDROM_INSERTED,
+  BXP_CDROMD,
   BXP_PRIVATE_COLORMAP,
   BXP_I440FX_SUPPORT,
   BXP_NEWHARDDRIVESUPPORT,
@@ -64,6 +65,13 @@ typedef enum {
   BXP_LOAD32BITOS_IOLOG,
   BXP_LOAD32BITOS_INITRD,
   BXP_BOOTDRIVE,
+  BXP_MENU_MAIN,
+  BXP_MENU_MEMORY,
+  BXP_MENU_INTERFACE,
+  BXP_MENU_DISK,
+  BXP_MENU_SOUND,
+  BXP_MENU_MISC,
+  BXP_MENU_RUNTIME,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -79,26 +87,6 @@ typedef enum {
 } bx_objtype;
 
 ////////////////////////////////////////////////////////////////////
-
-// Abstract type. I haven't actually found a great use for this bx_any.
-
-struct bx_any {
-  Bit32u type;
-  union s {
-    int integer;
-    int boolean;
-    struct string {
-      char *val;
-      int alloc_len;
-    };
-    struct list {
-      Bit32u size;
-      bx_any *array;
-    };
-  };
-};
-
-////////////////////////////////////////////////////////////////////
 class bx_object_c {
 private:
   bx_id id;
@@ -112,12 +100,13 @@ public:
 };
 
 class bx_param_c : public bx_object_c {
-private:
+protected:
   char *name;
   char *description;
   char *text_format;  // printf format string. %d for ints, %s for strings, etc.
   char *ask_format;  // format string for asking for a new value
   int runtime_param;
+  int enabled;
 public:
   bx_param_c (bx_id id,
       char *name,
@@ -129,32 +118,14 @@ public:
   void set_runtime_param (int val) { runtime_param = val; }
   char *get_name () { return name; }
   char *get_description () { return description; }
+  int get_enabled () { return enabled; }
+  void set_enabled (int enabled) { this->enabled = enabled; }
   void reset () {}
   int getint () {return -1;}
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp) {}
   virtual int text_ask (FILE *fpin, FILE *fpout) {}
 #endif
-};
-
-typedef Bit32s (*param_any_event_handler)(class bx_param_any_c *, int set, bx_any val);
-
-class bx_param_any_c : public bx_param_c {
-  bx_any min, max, val, initial_val;
-  param_any_event_handler handler;
-public:
-  bx_param_any_c (bx_id id,
-      char *name,
-      char *description,
-      bx_any min, bx_any max, bx_any initial_val);
-  bx_param_any_c (bx_id id,
-      char *name,
-      char *description,
-      bx_any initial_val);
-  void reset ();
-  void set_handler (param_any_event_handler handler) { this->handler = handler; }
-  bx_any get ();
-  void set (bx_any val);
 };
 
 typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
@@ -170,7 +141,7 @@ public:
       char *description,
       Bit32s min, Bit32s max, Bit32s initial_val);
   void reset ();
-  void set_handler (param_event_handler handler) { this->handler = handler; }
+  void set_handler (param_event_handler handler);
   Bit32s get ();
   void set (Bit32s val);
   void set_base (int base) { this->base = base; }
@@ -193,7 +164,6 @@ public:
 };
 
 class bx_param_enum_c : public bx_param_num_c {
-  Bit32s value_base;
   char **choices;
 public:
   bx_param_enum_c (bx_id id, 
@@ -203,12 +173,12 @@ public:
       Bit32s initial_val,
       Bit32s value_base = 0);
 #if BX_UI_TEXT
-  //virtual void text_print (FILE *fp);
-  //virtual int text_ask (FILE *fpin, FILE *fpout);
+  virtual void text_print (FILE *fp);
+  virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
 };
 
-typedef Bit32s (*param_string_event_handler)(class bx_param_string_c *, int set, char *val, int maxlen);
+typedef char* (*param_string_event_handler)(class bx_param_string_c *, int set, char *val, int maxlen);
 
 class bx_param_string_c : public bx_param_c {
   int maxsize;
@@ -221,7 +191,7 @@ public:
       char *initial_val,
       int maxsize=-1);
   void reset ();
-  void set_handler (param_string_event_handler handler) { this->handler = handler; }
+  void set_handler (param_string_event_handler handler);
   Bit32s get (char *buf, int len);
   char *getptr () {return val; }
   void set (char *buf);
@@ -230,17 +200,6 @@ public:
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
 };
-
-// the BX_LISTOPT_* values define the bits in bx_list_c, that controls
-// the behavior of the bx_list_c.
-// When a bx_list_c is displayed as a menu, SHOW_PARENT controls whether 
-// or not the menu shows "0. Return to previous menu" or not.
-#define BX_LISTOPT_SHOW_PARENT   (1<<0)
-// Some lists are best displayed shown as menus, others as a series of related
-// questions.  Options is a bx_param so that if necessary the bx_list could
-// install a handler to cause get/set of options to have side effects.
-#define BX_LISTOPT_SERIES_ASK    (1<<1)
-
 
 class bx_list_c : public bx_param_c {
 private:
@@ -272,8 +231,8 @@ public:
     // related questions.  
     BX_SERIES_ASK = (1<<1)
   } bx_listopt_bits;
-  bx_list_c (bx_id id, int maxsize);
-  bx_list_c (bx_id id, bx_param_c **init_list);
+  //bx_list_c (bx_id id, int maxsize);
+  bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
   void add (bx_param_c *param);
   bx_param_c *get (int index);
   bx_param_num_c *get_options () { return options; }
@@ -301,6 +260,8 @@ extern char *floppy_type_names[];
 extern int n_floppy_type_names;
 extern char *floppy_status_names[];
 extern int n_floppy_status_names;
+extern char *floppy_bootdisk_names[];
+extern int n_floppy_bootdisk_names;
 
 typedef struct {
   bx_param_string_c *Opath;
@@ -320,7 +281,7 @@ struct bx_cdrom_options
 {
   bx_param_bool_c *Opresent;
   bx_param_string_c *Opath;
-  bx_param_bool_c *Oinserted;
+  bx_param_enum_c *Oinserted;
 };
 
 
