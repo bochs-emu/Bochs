@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.11 2004-09-07 18:02:29 vruppert Exp $
+// $Id: config.cc,v 1.12 2004-09-28 17:37:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2841,82 +2841,44 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "romimage")) {
     if (num_params != 3) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
-      }
-    if (strncmp(params[1], "file=", 5)) {
-      PARSE_ERR(("%s: romimage directive malformed.", context));
-      }
-    if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: romimage directive malformed.", context));
-      }
-    bx_options.rom.Opath->set (&params[1][5]);
-    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-      bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 16));
-    else
-      bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 10));
     }
-  else if (!strcmp(params[0], "optromimage1")) {
-    if (num_params != 3) {
-      PARSE_ERR(("%s: optromimage1 directive: wrong # args.", context));
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "file=", 5)) {
+        bx_options.rom.Opath->set (&params[i][5]);
+        }
+      else if (!strncmp(params[i], "address=", 8)) {
+        if ((params[i][8] == '0') && (params[2][9] == 'x'))
+          bx_options.rom.Oaddress->set (strtoul (&params[i][8], NULL, 16));
+        else
+          bx_options.rom.Oaddress->set (strtoul (&params[i][8], NULL, 10));
+        }
+      else {
+        PARSE_ERR(("%s: romimage directive malformed.", context));
+        }
       }
-    if (strncmp(params[1], "file=", 5)) {
-      PARSE_ERR(("%s: optromimage1 directive malformed.", context));
-      }
-    if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: optromimage1 directive malformed.", context));
-      }
-    bx_options.optrom[0].Opath->set (&params[1][5]);
-    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-      bx_options.optrom[0].Oaddress->set (strtoul (&params[2][8], NULL, 16));
-    else
-      bx_options.optrom[0].Oaddress->set (strtoul (&params[2][8], NULL, 10));
     }
-  else if (!strcmp(params[0], "optromimage2")) {
+  else if (!strncmp(params[0], "optromimage", 11)) {
+    int num = atoi(&params[0][11]);
+    if ((num < 1) || (num > 4)) {
+      PARSE_ERR(("%s: optromimage%d: not supported", context, num));
+      }
     if (num_params != 3) {
-      PARSE_ERR(("%s: optromimage2 directive: wrong # args.", context));
+      PARSE_ERR(("%s: optromimage%d directive: wrong # args.", context, num));
       }
-    if (strncmp(params[1], "file=", 5)) {
-      PARSE_ERR(("%s: optromimage2 directive malformed.", context));
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "file=", 5)) {
+        bx_options.optrom[num-1].Opath->set (&params[i][5]);
+        }
+      else if (!strncmp(params[i], "address=", 8)) {
+        if ((params[i][8] == '0') && (params[2][9] == 'x'))
+          bx_options.optrom[num-1].Oaddress->set (strtoul (&params[i][8], NULL, 16));
+        else
+          bx_options.optrom[num-1].Oaddress->set (strtoul (&params[i][8], NULL, 10));
+        }
+      else {
+        PARSE_ERR(("%s: optromimage%d directive malformed.", context, num));
+        }
       }
-    if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: optromimage2 directive malformed.", context));
-      }
-    bx_options.optrom[1].Opath->set (&params[1][5]);
-    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-      bx_options.optrom[1].Oaddress->set (strtoul (&params[2][8], NULL, 16));
-    else
-      bx_options.optrom[1].Oaddress->set (strtoul (&params[2][8], NULL, 10));
-    }
-  else if (!strcmp(params[0], "optromimage3")) {
-    if (num_params != 3) {
-      PARSE_ERR(("%s: optromimage3 directive: wrong # args.", context));
-      }
-    if (strncmp(params[1], "file=", 5)) {
-      PARSE_ERR(("%s: optromimage3 directive malformed.", context));
-      }
-    if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: optromimage3 directive malformed.", context));
-      }
-    bx_options.optrom[2].Opath->set (&params[1][5]);
-    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-      bx_options.optrom[2].Oaddress->set (strtoul (&params[2][8], NULL, 16));
-    else
-      bx_options.optrom[2].Oaddress->set (strtoul (&params[2][8], NULL, 10));
-    }
-  else if (!strcmp(params[0], "optromimage4")) {
-    if (num_params != 3) {
-      PARSE_ERR(("%s: optromimage4 directive: wrong # args.", context));
-      }
-    if (strncmp(params[1], "file=", 5)) {
-      PARSE_ERR(("%s: optromimage4 directive malformed.", context));
-      }
-    if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: optromimage4 directive malformed.", context));
-      }
-    bx_options.optrom[3].Opath->set (&params[1][5]);
-    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-      bx_options.optrom[3].Oaddress->set (strtoul (&params[2][8], NULL, 16));
-    else
-      bx_options.optrom[3].Oaddress->set (strtoul (&params[2][8], NULL, 10));
     }
   else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
@@ -2926,7 +2888,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.vgarom.Opath->set (&params[1][5]);
       }
     else {
-      BX_INFO(("WARNING: old-style syntax is deprecated, use 'vgaromimage: file=...' instead"));
+      BX_INFO(("WARNING: syntax has changed, please use 'vgaromimage: file=...' now"));
       bx_options.vgarom.Opath->set (params[1]);
       }
     }
@@ -3089,6 +3051,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       else if (!strncmp(params[i], "dmatimer=", 9)) {
         bx_options.sb16.Odmatimer->set (atol(&params[i][9]));
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for sb16 ignored.", context));
         }
       }
     if (bx_options.sb16.Odmatimer->get () > 0)
@@ -3547,7 +3512,7 @@ bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
 {
   fprintf (fp, "com%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
-    fprintf (fp, ", mode=\"%s\"", opt->Omode->get_choice(opt->Omode->get()));
+    fprintf (fp, ", mode=%s", opt->Omode->get_choice(opt->Omode->get()));
     fprintf (fp, ", dev=\"%s\"", opt->Odev->getptr ());
   }
   fprintf (fp, "\n");
@@ -3731,11 +3696,11 @@ bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, "\n");
   fprintf (fp, "megs: %d\n", bx_options.memory.Osize->get ());
   if (strlen (bx_options.rom.Opath->getptr ()) > 0)
-    fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.Opath->getptr(), (unsigned int)bx_options.rom.Oaddress->get ());
+    fprintf (fp, "romimage: file=\"%s\", address=0x%05x\n", bx_options.rom.Opath->getptr(), (unsigned int)bx_options.rom.Oaddress->get ());
   else
     fprintf (fp, "# no romimage\n");
   if (strlen (bx_options.vgarom.Opath->getptr ()) > 0)
-    fprintf (fp, "vgaromimage: file=%s\n", bx_options.vgarom.Opath->getptr ());
+    fprintf (fp, "vgaromimage: file=\"%s\"\n", bx_options.vgarom.Opath->getptr ());
   else
     fprintf (fp, "# no vgaromimage\n");
   int bootdrive = bx_options.Obootdrive->get ();
@@ -3749,14 +3714,11 @@ bx_write_configuration (char *rc, int overwrite)
     bx_write_atadevice_options (fp, channel, 0, &bx_options.atadevice[channel][0]);
     bx_write_atadevice_options (fp, channel, 1, &bx_options.atadevice[channel][1]);
     }
-  if (strlen (bx_options.optrom[0].Opath->getptr ()) > 0)
-    fprintf (fp, "optromimage1: file=%s, address=0x%05x\n", bx_options.optrom[0].Opath->getptr(), (unsigned int)bx_options.optrom[0].Oaddress->get ());
-  if (strlen (bx_options.optrom[1].Opath->getptr ()) > 0)
-    fprintf (fp, "optromimage2: file=%s, address=0x%05x\n", bx_options.optrom[1].Opath->getptr(), (unsigned int)bx_options.optrom[1].Oaddress->get ());
-  if (strlen (bx_options.optrom[2].Opath->getptr ()) > 0)
-    fprintf (fp, "optromimage3: file=%s, address=0x%05x\n", bx_options.optrom[2].Opath->getptr(), (unsigned int)bx_options.optrom[2].Oaddress->get ());
-  if (strlen (bx_options.optrom[3].Opath->getptr ()) > 0)
-    fprintf (fp, "optromimage4: file=%s, address=0x%05x\n", bx_options.optrom[3].Opath->getptr(), (unsigned int)bx_options.optrom[3].Oaddress->get ());
+  for (i=0; i<4; i++) {
+    if (strlen (bx_options.optrom[i].Opath->getptr ()) > 0)
+      fprintf (fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optrom[i].Opath->getptr(),
+               (unsigned int)bx_options.optrom[i].Oaddress->get ());
+  }
   // parallel ports
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
     bx_write_parport_options (fp, &bx_options.par[i], i+1);
