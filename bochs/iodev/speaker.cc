@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.3 2004-09-05 10:30:19 vruppert Exp $
+// $Id: speaker.cc,v 1.4 2005-01-29 12:08:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -103,9 +103,11 @@ void bx_speaker_c::beep_on(float frequency)
     this->info("pc speaker on with frequency %f", frequency);
     ioctl(consolefd, KIOCSOUND, (int)(clock_tick_rate/frequency));
   }
+#elif defined(WIN32)
+  usec_start = bx_pc_system.time_usec();
 #endif
    
-  // give the gui a chance to sognal beep off
+  // give the gui a chance to signal beep off
   bx_gui->beep_on(frequency);
 }
 
@@ -116,9 +118,13 @@ void bx_speaker_c::beep_off()
     if (consolefd != -1) {
       ioctl(consolefd, KIOCSOUND, 0);
     }
+#elif defined(WIN32)
+  // FIXME: sound should start at beep_on() and end here
+  Bit32u msec = (bx_pc_system.time_usec() - usec_start) / 1000;
+  Beep((Bit32u)beep_frequency, msec);
 #endif
 
-    // give the gui a chance to sognal beep off
+    // give the gui a chance to signal beep off
     bx_gui->beep_off();
     
     beep_frequency = 0.0;

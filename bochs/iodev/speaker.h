@@ -27,5 +27,7 @@ private:
     /* Do we have access?  If not, just skip everything else. */
     signed int consolefd;
     const static unsigned int clock_tick_rate = 1193180;
+#elif defined(WIN32)
+    Bit64u usec_start;
 #endif
 };
