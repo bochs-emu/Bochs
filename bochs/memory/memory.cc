@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.38 2004-12-04 13:48:53 vruppert Exp $
+// $Id: memory.cc,v 1.39 2005-01-15 13:10:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -70,6 +70,19 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
     cpu->iCache.decWriteStamp(a20addr);
 #endif
 
+#if BX_SUPPORT_APIC
+    bx_generic_apic_c *local_apic = &cpu->local_apic;
+    bx_generic_apic_c *ioapic = bx_devices.ioapic;
+    if (local_apic->is_selected (a20addr, len)) {
+      local_apic->write (a20addr, (Bit32u *)data, len);
+      return;
+    }
+    if (ioapic->is_selected (a20addr, len)) {
+      ioapic->write (a20addr, (Bit32u *)data, len);
+      return;
+    }
+#endif
+
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
     // all of data is within limits of physical memory
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
@@ -77,17 +90,17 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
         WriteHostDWordToLittleEndian(&vector[a20addr], *(Bit32u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
-        }
+      }
       if (len == 2) {
         WriteHostWordToLittleEndian(&vector[a20addr], *(Bit16u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
-        }
+      }
       if (len == 1) {
         * ((Bit8u *) (&vector[a20addr])) = * (Bit8u *) data;
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
-        }
+      }
       // len == other, just fall thru to special cases handling
       }
 
@@ -112,7 +125,7 @@ inc_one:
       data_ptr--;
 #endif
       goto write_one;
-      }
+    }
 
     // addr in range 00080000 .. 000FFFFF
 
@@ -121,7 +134,7 @@ inc_one:
       vector[a20addr] = *data_ptr;
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
       goto inc_one;
-      }
+    }
     // adapter ROM     C0000 .. DFFFF
     // ROM BIOS memory E0000 .. FFFFF
 #if BX_SUPPORT_PCI == 0
@@ -141,6 +154,7 @@ inc_one:
         case 0x0:   // Writes to ROM, Inhibit
           BX_DEBUG(("Write to ROM ignored: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
           goto inc_one;
+
         default:
           BX_PANIC(("writePhysicalPage: default case"));
           goto inc_one;
@@ -148,36 +162,21 @@ inc_one:
       }
 #endif
     goto inc_one;
-    }
-
+  }
   else {
     // some or all of data is outside limits of physical memory
-    unsigned i;
 
 #ifdef BX_LITTLE_ENDIAN
-  data_ptr = (Bit8u *) data;
+    data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
-  data_ptr = (Bit8u *) data + (len - 1);
+    data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-
-#if BX_SUPPORT_APIC
-    bx_generic_apic_c *local_apic = &cpu->local_apic;
-    bx_generic_apic_c *ioapic = bx_devices.ioapic;
-    if (local_apic->is_selected (a20addr, len)) {
-      local_apic->write (a20addr, (Bit32u *)data, len);
-      return;
-    } else if (ioapic->is_selected (a20addr, len)) {
-      ioapic->write (a20addr, (Bit32u *)data, len);
-      return;
-    }
-    else 
-#endif
-    for (i = 0; i < len; i++) {
+    for (unsigned i = 0; i < len; i++) {
       if (a20addr < BX_MEM_THIS len) {
         vector[a20addr] = *data_ptr;
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
-        }
+      }
       // otherwise ignore byte, since it overruns memory
       addr++;
       a20addr = (addr);
@@ -186,9 +185,9 @@ inc_one:
 #else // BX_BIG_ENDIAN
       data_ptr--;
 #endif
-      }
-    return;
     }
+    return;
+  }
 }
 
 
@@ -225,23 +224,36 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
         }
 #endif
 
+#if BX_SUPPORT_APIC
+  bx_generic_apic_c *local_apic = &cpu->local_apic;
+  bx_generic_apic_c *ioapic = bx_devices.ioapic;
+    if (local_apic->is_selected (addr, len)) {
+      local_apic->read (addr, data, len);
+      return;
+    }
+    if (ioapic->is_selected (addr, len)) {
+      ioapic->read (addr, data, len);
+      return;
+    }
+#endif
+
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
     // all of data is within limits of physical memory
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
       if (len == 4) {
         ReadHostDWordFromLittleEndian(&vector[a20addr], * (Bit32u*) data);
         return;
-        }
+      }
       if (len == 2) {
         ReadHostWordFromLittleEndian(&vector[a20addr], * (Bit16u*) data);
         return;
-        }
+      }
       if (len == 1) {
         * (Bit8u *) data =  * ((Bit8u *) (&vector[a20addr]));
         return;
-        }
-      // len == 3 case can just fall thru to special cases handling
       }
+      // len == 3 case can just fall thru to special cases handling
+    }
 
 
 #ifdef BX_LITTLE_ENDIAN
@@ -249,8 +261,6 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 #else // BX_BIG_ENDIAN
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
-
-
 
 read_one:
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
@@ -266,7 +276,7 @@ inc_one:
       data_ptr--;
 #endif
       goto read_one;
-      }
+    }
 
     // addr in range 00080000 .. 000FFFFF
 #if BX_SUPPORT_PCI
@@ -300,7 +310,6 @@ inc_one:
   }
   else
   {  // some or all of data is outside limits of physical memory
-    unsigned i;
 
 #ifdef BX_LITTLE_ENDIAN
     data_ptr = (Bit8u *) data;
@@ -308,19 +317,7 @@ inc_one:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-
-#if BX_SUPPORT_APIC
-    bx_generic_apic_c *local_apic = &cpu->local_apic;
-    bx_generic_apic_c *ioapic = bx_devices.ioapic;
-    if (local_apic->is_selected (addr, len)) {
-      local_apic->read (addr, data, len);
-      return;
-    } else if (ioapic->is_selected (addr, len)) {
-      ioapic->read (addr, data, len);
-      return;
-    }
-#endif
-    for (i = 0; i < len; i++) {
+    for (unsigned i = 0; i < len; i++) {
       if (a20addr < BX_MEM_THIS len)
         *data_ptr = vector[a20addr];
       else if (a20addr >= 0xfffe0000)
@@ -334,9 +331,9 @@ inc_one:
 #else // BX_BIG_ENDIAN
       data_ptr--;
 #endif
-      }
-    return;
     }
+    return;
+  }
 }
 
 #endif // #if BX_PROVIDE_CPU_MEMORY
