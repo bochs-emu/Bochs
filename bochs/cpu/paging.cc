@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.24 2002-09-16 21:01:55 kevinlawton Exp $
+// $Id: paging.cc,v 1.25 2002-09-16 21:10:31 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -502,8 +502,9 @@ BX_CPU_C::TLB_flush(Boolean invalidateGlobal)
     if (BX_CPU_THIS_PTR TLB.entry[i].lpf != BX_INVALID_TLB_ENTRY) {
 #if BX_SupportGlobalPages
       if ( invalidateGlobal ||
-           !(BX_CPU_THIS_PTR TLB.entry[i].accessBits & 0x100) ) {
+           !(BX_CPU_THIS_PTR TLB.entry[i].accessBits & 0x100) )
 #endif
+        {
         BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
         InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
         }
