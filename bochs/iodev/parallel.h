@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.5 2001-11-12 01:33:01 bdenney Exp $
+// $Id: parallel.h,v 1.6 2001-11-14 00:29:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,6 +62,8 @@ public:
 
 private:
   FILE *output;
+
+  Boolean initmode;
 
   bx_par_t s;
 
