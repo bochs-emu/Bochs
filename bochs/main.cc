@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.6 2002-10-07 19:47:57 bdenney Exp $
+// $Id: main.cc,v 1.156.2.7 2002-10-08 08:24:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -167,7 +167,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       }
       break;
     case BXP_KBD_PASTE_DELAY:
-      if (set) bx_keyboard.paste_delay_changed ();
+      if (set) BX_KBD_PASTE_DELAY_CHANGED ();
       break;
     case BXP_ATA0_MASTER_TYPE:
     case BXP_ATA0_SLAVE_TYPE:

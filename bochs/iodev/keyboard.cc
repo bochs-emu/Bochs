@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.2 2002-10-07 16:43:34 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.3 2002-10-08 08:24:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,17 +63,23 @@ bx_keyb_c bx_keyboard;
 #define this (&bx_keyboard)
 #endif
 
-  static void
-keybMouseMotion(int dx, int dy, unsigned mouse_button_state)
+#if BX_PLUGINS
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
-  BX_KEY_THIS mouse_motion( dx, dy, mouse_button_state);
+  bx_keyb_c        *kbd;
+
+  kbd = &bx_keyboard;
+
+  return(0); // Success
 }
 
-  static void
-keybGenScancode(Bit32u key_event)
+  void
+plugin_fini(void)
 {
-  BX_KEY_THIS gen_scancode(key_event);
 }
+
+#endif
 
 bx_keyb_c::bx_keyb_c(void)
 {
@@ -82,7 +88,17 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.2 2002-10-07 16:43:34 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.3 2002-10-08 08:24:26 bdenney Exp $"));
+#if BX_PLUGINS
+  pluginMouseMotion = bx_keyboard.mouse_motion;
+  pluginGenScancode = bx_keyboard.gen_scancode;
+  pluginPutScancode = bx_keyboard.put_scancode;
+  pluginKbdPasteBytes = bx_keyboard.paste_bytes;
+  pluginKbdPasteDelayChanged = bx_keyboard.paste_delay_changed;
+
+  // Register plugin basic entry points
+  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_KEYBOARD);
+#endif
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -122,22 +138,22 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.2 2002-10-07 16:43:34 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.3 2002-10-08 08:24:26 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
 
-  BX_KEY_THIS devices->register_irq(1, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_irq(12, "8042 Keyboard controller (PS/2 mouse)");
+  BX_REGISTER_IRQ(BX_KEY_THIS, 1, "8042 Keyboard controller");
+  BX_REGISTER_IRQ(BX_KEY_THIS, 12, "8042 Keyboard controller (PS/2 mouse)");
 
-  BX_KEY_THIS devices->register_io_read_handler(this, read_handler,
-                                      0x0060, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_io_read_handler(this, read_handler,
-                                      0x0064, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0060, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0064, "8042 Keyboard controller");
+  BX_REGISTER_IOREAD_HANDLER(BX_KEY_THIS, this, read_handler,
+                                      0x0060, "8042 Keyboard controller", 3);
+  BX_REGISTER_IOREAD_HANDLER(BX_KEY_THIS, this, read_handler,
+                                      0x0064, "8042 Keyboard controller", 3);
+  BX_REGISTER_IOWRITE_HANDLER(BX_KEY_THIS, this, write_handler,
+                                      0x0060, "8042 Keyboard controller", 3);
+  BX_REGISTER_IOWRITE_HANDLER(BX_KEY_THIS, this, write_handler,
+                                      0x0064, "8042 Keyboard controller", 3);
   BX_KEY_THIS timer_handle = bx_pc_system.register_timer( this, timer_handler,
                                  bx_options.Okeyboard_serial_delay->get(), 1, 1,
 				 "8042 Keyboard controller");

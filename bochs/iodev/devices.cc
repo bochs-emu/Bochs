@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.6 2002-10-07 22:15:42 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.7 2002-10-08 08:24:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,6 +55,7 @@ bx_devices_c::bx_devices_c(void)
   floppy = NULL;
   parallel = NULL;
   serial = NULL;
+  keyboard = NULL;
 #endif
 
   dma = NULL;
@@ -65,7 +66,6 @@ bx_devices_c::bx_devices_c(void)
 #endif
 
   pit = NULL;
-  keyboard = NULL;
   pic = NULL;
   hard_drive = NULL;
   sb16 = NULL;
@@ -89,7 +89,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.6 2002-10-07 22:15:42 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.7 2002-10-08 08:24:26 bdenney Exp $"));
   mem = newmem;
 
   devices=this;
@@ -176,7 +176,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
   serial = &bx_serial;
   serial->init(this);
 
+  keyboard = &bx_keyboard;
+  keyboard->init(this);
 #endif
+
 
   /*--- HARD DRIVE ---*/
   hard_drive = &bx_hard_drive;
@@ -199,9 +202,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.init(this);
 #endif
-
-  keyboard = &bx_keyboard;
-  keyboard->init(this);
 
 #if BX_IODEBUG_SUPPORT
   iodebug = &bx_iodebug;
@@ -283,6 +283,7 @@ bx_devices_c::reset(unsigned type)
   floppy->reset(type);
   parallel->reset(type);
   serial->reset(type);
+  keyboard->reset(type);
 #endif
 
   hard_drive->reset(type);
@@ -294,7 +295,6 @@ bx_devices_c::reset(unsigned type)
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.reset(type);
 #endif
-  keyboard->reset(type);
 #if BX_IODEBUG_SUPPORT
   iodebug->reset(type);
 #endif

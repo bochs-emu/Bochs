@@ -31,6 +31,7 @@ extern "C" {
 #define BX_PLUGIN_FLOPPY   "FLOPPY"
 #define BX_PLUGIN_PARALLEL "PARALLEL"
 #define BX_PLUGIN_SERIAL   "SERIAL"
+#define BX_PLUGIN_KEYBOARD "KEYBOARD"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 
@@ -118,16 +119,18 @@ extern "C" {
 
 
 #if BX_PLUGINS
-	/*
 #define BX_EVENT_MOUSE_MOTION(dx, dy, state) \
     ((*pluginMouseMotion)(dx, dy, state))
 #define BX_EVENT_GEN_SCANCODE(scancode) \
     ((*pluginGenScancode)(scancode))
-	*/
+#define BX_EVENT_PUT_SCANCODE(scancode, count) \
+    ((*pluginPutScancode)(scancode, count))
+#define BX_KBD_PASTE_BYTES(bytes, count) \
+    ((*pluginKbdPasteBytes)(bytes,count))
+#define BX_KBD_PASTE_DELAY_CHANGED() \
+    ((*pluginKbdPasteDelayChanged)())
 
 #else
-
-#endif
 
 #define BX_EVENT_MOUSE_MOTION(dx, dy, state) \
     (bx_devices.keyboard->mouse_motion(dx, dy, state))
@@ -137,6 +140,10 @@ extern "C" {
     (bx_devices.keyboard->put_scancode(scancode, count))
 #define BX_KBD_PASTE_BYTES(bytes, count) \
     (bx_devices.keyboard->paste_bytes(bytes, count))
+#define BX_KBD_PASTE_DELAY_CHANGED() \
+    (bx_devices.keyboard->paste_delay_changed ())
+
+#endif
 
 #define BX_HD_GET_FIRST_CD_HANDLE() \
     (bx_devices.hard_drive->get_first_cd_handle())
@@ -236,6 +243,9 @@ extern void     (*pluginSetA20E)(unsigned val);
 /* === Keyboard/Mouse input stuff === */
 extern void (* pluginMouseMotion)(int d_x, int d_y, unsigned button_state);
 extern void (* pluginGenScancode)(Bit32u scancode);
+extern void (* pluginPutScancode)(unsigned char *code, int count);
+extern void (* pluginKbdPasteBytes)(Bit8u *bytes, Bit32s length);
+extern void (* pluginKbdPasteDelayChanged)(void);
 
 
 /* === DMA stuff === */

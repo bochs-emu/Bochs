@@ -31,6 +31,9 @@ void     (* pluginCMOSChecksum)(void) = 0;
 time_t   (* pluginGetCMOSTimeval)(void) = 0;
 void     (* pluginMouseMotion)(int d_x, int d_y, unsigned button_state) = 0;
 void     (* pluginGenScancode)(Bit32u scancode) = 0;
+void     (* pluginPutScancode)(unsigned char *code, int count);
+void     (* pluginKbdPasteBytes)(Bit8u *bytes, Bit32s length);
+void     (* pluginKbdPasteDelayChanged)();
 
 unsigned (* pluginRegisterDMAChannel)(
                 unsigned channel,
@@ -144,6 +147,18 @@ builtinMouseMotion(int d_x, int d_y, unsigned button_state)
 builtinGenScancode(Bit32u scancode)
 {
   pluginlog->panic("builtinGenScancode called, not overloaded by keyboard plugin?");
+}
+
+void builtinPutScancode(unsigned char *code, int count) {
+  pluginlog->panic("builtinPutScancode called, not overloaded by keyboard plugin?");
+}
+
+void builtinKbdPasteBytes(Bit8u *bytes, Bit32s length) {
+  pluginlog->panic("builtinPutScancode called, not overloaded by keyboard plugin?");
+}
+
+void builtinKbdPasteDelayChanged() {
+  pluginlog->panic("builtinKbdPasteDelayChanged, not overloaded by keyboard plugin?");
 }
 
   static unsigned
@@ -549,6 +564,9 @@ plugin_startup(void)
   pluginGetCMOSTimeval  = builtinGetCMOSTimeval;
   pluginMouseMotion  = builtinMouseMotion;
   pluginGenScancode  = builtinGenScancode;
+  pluginPutScancode = builtinPutScancode;
+  pluginKbdPasteBytes = builtinKbdPasteBytes;
+  pluginKbdPasteDelayChanged = builtinKbdPasteDelayChanged;
   pluginRegisterDMAChannel = builtinRegisterDMAChannel;
   pluginDMASetDRQ    = builtinDMASetDRQ;
   pluginDMAGetTC     = builtinDMAGetTC;
@@ -686,6 +704,7 @@ int bx_load_plugins (void)
   bx_load_plugin("floppy.so");
   bx_load_plugin("parallel.so");
   bx_load_plugin("serial.so");
+  bx_load_plugin("keyboard.so");
 
   // quick and dirty gui plugin selection
   fprintf (stderr, 

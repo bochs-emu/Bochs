@@ -59,7 +59,6 @@ BX_IODEV_OBJS_NON_PLUGINABLE = \
   pic.o \
   pit.o \
   harddrv.o \
-  keyboard.o \
   pit82c54.o pit_wrap.o \
   scancodes.o \
   @IODEBUG_OBJS@ \
@@ -77,6 +76,7 @@ BX_IODEV_OBJS_PLUGINABLE = \
   serial.o \
   parallel.o \
   floppy.o \
+  keyboard.o \
   $(VIDEO_OBJS) \
   biosdev.o \
   cmos.o \
