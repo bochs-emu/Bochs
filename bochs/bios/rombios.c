@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.55 2002-04-24 13:49:26 cbothamy Exp $
+// $Id: rombios.c,v 1.56 2002-05-04 16:09:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -147,7 +147,7 @@
 #define SYS_MODEL_ID     0xFC
 #define SYS_SUBMODEL_ID  0x00
 #define BIOS_REVISION    1
-#define BIOS_CONFIG_TABLE 0xe71F
+#define BIOS_CONFIG_TABLE 0xe6f5
   // 1K of base memory used for Extended Bios Data Area (EBDA)
   // EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
 #define BASE_MEM_IN_K   (640 - 1)
@@ -193,8 +193,11 @@
 //   grep -i "mov[ ]*.s" rombios.c
 
 
+// This is for compiling with gcc2 and gcc3
+#define ASM_START #asm
+#define ASM_END   #endasm
 
-#asm
+ASM_START
 .rom
 
 .org 0x0000
@@ -240,7 +243,7 @@ MACRO SET_INT_VECTOR
   mov ?1*4+2, ax
 MEND
 
-#endasm
+ASM_END
 
 typedef unsigned char  Bit8u;
 typedef unsigned short Bit16u;
@@ -261,7 +264,7 @@ typedef unsigned long  Bit32u;
     Bit16u value;
     Bit16u count;
   {
-  #asm
+  ASM_START
     push bp
     mov  bp, sp
   
@@ -289,7 +292,7 @@ typedef unsigned long  Bit32u;
       pop ax
   
     pop bp
-  #endasm
+  ASM_END
   }
   
   // memcpy of count bytes
@@ -301,7 +304,7 @@ typedef unsigned long  Bit32u;
     Bit16u soffset;
     Bit16u count;
   {
-  #asm
+  ASM_START
     push bp
     mov  bp, sp
   
@@ -336,7 +339,7 @@ typedef unsigned long  Bit32u;
       pop ax
   
     pop bp
-  #endasm
+  ASM_END
   }
 
   // memcpy of count dword
@@ -348,7 +351,7 @@ typedef unsigned long  Bit32u;
     Bit16u soffset;
     Bit16u count;
   {
-  #asm
+  ASM_START
     push bp
     mov  bp, sp
   
@@ -383,7 +386,7 @@ typedef unsigned long  Bit32u;
       pop ax
   
     pop bp
-  #endasm
+  ASM_END
   }
 
   // read_dword and write_dword functions
@@ -395,7 +398,7 @@ typedef unsigned long  Bit32u;
     Bit16u seg;
     Bit16u offset;
   {
-  #asm
+  ASM_START
     push bp
     mov  bp, sp
   
@@ -414,7 +417,7 @@ typedef unsigned long  Bit32u;
       pop  bx
   
     pop  bp
-  #endasm
+  ASM_END
   }
   
     void
@@ -423,7 +426,7 @@ typedef unsigned long  Bit32u;
     Bit16u offset;
     Bit32u data;
   {
-  #asm
+  ASM_START
     push bp
     mov  bp, sp
   
@@ -444,12 +447,12 @@ typedef unsigned long  Bit32u;
       pop  ax
   
     pop  bp
-  #endasm
+  ASM_END
   }
 #endif //BX_USE_ATADRV
   
   // Bit32u (unsigned long) and long helper functions
-  #asm
+  ASM_START
   
   ;; and function
   landl:
@@ -628,7 +631,7 @@ typedef unsigned long  Bit32u;
   lsl_exit:
     ret
   
-  #endasm
+  ASM_END
 
 // for access to RAM area which is used by interrupt vectors
 // and BIOS Data Area
@@ -1061,10 +1064,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.55 $";
-static char bios_date_string[] = "$Date: 2002-04-24 13:49:26 $";
+static char bios_cvs_version_string[] = "$Revision: 1.56 $";
+static char bios_date_string[] = "$Date: 2002-05-04 16:09:38 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.55 2002-04-24 13:49:26 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.56 2002-05-04 16:09:38 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1217,7 +1220,7 @@ static struct {
 inb(port)
   Bit16u port;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1227,7 +1230,7 @@ inb(port)
     pop  dx
 
   pop  bp
-#endasm
+ASM_END
 }
 
 #if BX_PCIBIOS
@@ -1235,7 +1238,7 @@ inb(port)
 inw(port)
   Bit16u port;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1245,7 +1248,7 @@ inw(port)
     pop  dx
 
   pop  bp
-#endasm
+ASM_END
 }
 #endif
 
@@ -1255,7 +1258,7 @@ outb(port, val)
   Bit16u port;
   Bit8u  val;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1268,7 +1271,7 @@ outb(port, val)
     pop  ax
 
   pop  bp
-#endasm
+ASM_END
 }
 
 #if BX_PCIBIOS
@@ -1277,7 +1280,7 @@ outw(port, val)
   Bit16u port;
   Bit16u  val;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1290,7 +1293,7 @@ outw(port, val)
     pop  ax
 
   pop  bp
-#endasm
+ASM_END
 }
 #endif
 
@@ -1299,7 +1302,7 @@ outb_cmos(cmos_reg, val)
   Bit8u cmos_reg;
   Bit8u val;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1309,14 +1312,14 @@ outb_cmos(cmos_reg, val)
     out  0x71, al
 
   pop  bp
-#endasm
+ASM_END
 }
 
   Bit8u
 inb_cmos(cmos_reg)
   Bit8u cmos_reg;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1325,7 +1328,7 @@ inb_cmos(cmos_reg)
     in  al, 0x71
 
   pop  bp
-#endasm
+ASM_END
 }
 
   void
@@ -1365,7 +1368,7 @@ read_byte(seg, offset)
   Bit16u seg;
   Bit16u offset;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1380,7 +1383,7 @@ read_byte(seg, offset)
     pop  bx
 
   pop  bp
-#endasm
+ASM_END
 }
 
   Bit16u
@@ -1388,7 +1391,7 @@ read_word(seg, offset)
   Bit16u seg;
   Bit16u offset;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1403,7 +1406,7 @@ read_word(seg, offset)
     pop  bx
 
   pop  bp
-#endasm
+ASM_END
 }
 
   void
@@ -1412,7 +1415,7 @@ write_byte(seg, offset, data)
   Bit16u offset;
   Bit8u data;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1429,7 +1432,7 @@ write_byte(seg, offset, data)
     pop  ax
 
   pop  bp
-#endasm
+ASM_END
 }
 
   void
@@ -1438,7 +1441,7 @@ write_word(seg, offset, data)
   Bit16u offset;
   Bit16u data;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1455,7 +1458,7 @@ write_word(seg, offset, data)
     pop  ax
 
   pop  bp
-#endasm
+ASM_END
 }
 
 #if BX_PCIBIOS
@@ -1465,7 +1468,7 @@ setPCIaddr(bus, devfunc, regnum)
   Bit8u devfunc;
   Bit8u regnum;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
   push dx
@@ -1482,7 +1485,7 @@ setPCIaddr(bus, devfunc, regnum)
   pop  eax
   pop  dx
   pop  bp
-#endasm
+ASM_END
 }
 #endif
 
@@ -1492,7 +1495,7 @@ UDIV(a, b)
 {
   // divide a by b
   // return value in AX is:  AL=quotient, AH=remainder
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -1503,7 +1506,7 @@ UDIV(a, b)
     pop  bx
 
   pop  bp
-#endasm
+ASM_END
 }
 
 Bit16u
@@ -1511,7 +1514,7 @@ UDIV16(a, b)
   Bit16u a, b;
 {
   // divide a by b, discarding remainder
-#asm
+ASM_START
   push bp
   mov bp, sp
 
@@ -1524,22 +1527,22 @@ UDIV16(a, b)
     pop bx
     pop dx
   pop bp
-#endasm
+ASM_END
 }
 
 //  Bit16u
 //get_DS()
 //{
-//#asm
+//ASM_START
 //  mov  ax, ds
-//#endasm
+//ASM_END
 //}
 //
 //  void
 //set_DS(ds_selector)
 //  Bit16u ds_selector;
 //{
-//#asm
+//ASM_START
 //  push bp
 //  mov  bp, sp
 //
@@ -1549,22 +1552,22 @@ UDIV16(a, b)
 //    pop  ax
 //
 //  pop  bp
-//#endasm
+//ASM_END
 //}
 
   Bit16u
 get_SS()
 {
-#asm
+ASM_START
   mov  ax, ss
-#endasm
+ASM_END
 }
 
   void
 wrch(c)
   Bit8u  c;
 {
-  #asm
+  ASM_START
   push bp
   mov  bp, sp
 
@@ -1576,7 +1579,7 @@ wrch(c)
   pop  bx
 
   pop  bp
-  #endasm
+  ASM_END
 }
  
   void
@@ -1689,18 +1692,18 @@ bios_printf(action, s)
     // After a few more versions have passed, we can turn this back into
     // a halt or something.
     do {} while (1);
-#asm
+ASM_START
     HALT2(__LINE__)
-#endasm
+ASM_END
     }
 }
 
   void
 cli()
 {
-#asm
+ASM_START
   cli
-#endasm
+ASM_END
 }
 
   void
@@ -1801,9 +1804,9 @@ int14_function(regs, ds, iret_addr)
   Bit16u addr,timer,val16;
   Bit8u timeout;
 
-  #asm
+  ASM_START
   sti
-  #endasm
+  ASM_END
 
   addr = read_word(0x0040, 2 * regs.u.r16.dx);
   timeout = read_byte(0x0040, 0x007C + regs.u.r16.dx);
@@ -1970,7 +1973,7 @@ int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
       write_byte(ES, SI+0x28+5, 0x93);     // access
       write_word(ES, SI+0x28+6, 0x0000);   // base 31:24/reserved/limit 19:16
 
-#asm
+ASM_START
       // Compile generates locals offset info relative to SP.
       // Get CX (word count) from stack.
       mov  bx, sp
@@ -2033,7 +2036,7 @@ real_mode:
       mov ds, ax
       mov ss, 0x0469
       mov sp, 0x0467
-#endasm
+ASM_END
 
       set_enable_a20(prev_a20_enable);
       SET_AH(0);
@@ -2825,7 +2828,7 @@ outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
   Bit16u sector;
   Bit16u dl;
 {
-#asm
+ASM_START
   	push	bp
   	mov 	bp, sp
 	push	eax
@@ -2866,7 +2869,7 @@ outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
 	pop	ebx
 	pop	eax
   	pop	bp
-#endasm
+ASM_END
 }
 
   void
@@ -3020,12 +3023,12 @@ BX_DEBUG("CHS: %x %x %x\n", cylinder, head, sector);
       sector_count = 0;
       tempbx = BX;
 
-#asm
+ASM_START
   sti  ;; enable higher priority interrupts
-#endasm
+ASM_END
 
       while (1) {
-#asm
+ASM_START
         ;; store temp bx in real DI register
         push bp
         mov  bp, sp
@@ -3054,7 +3057,7 @@ i13_f02_done:
         mov  bp, sp
         mov  _int13_harddisk.tempbx + 2 [bp], di
         pop  bp
-#endasm
+ASM_END
 
         sector_count++;
         num_sectors--;
@@ -3160,12 +3163,12 @@ BX_DEBUG("CHS (write): %x %x %x\n", cylinder, head, sector);
       sector_count = 0;
       tempbx = BX;
 
-#asm
+ASM_START
   sti  ;; enable higher priority interrupts
-#endasm
+ASM_END
 
       while (1) {
-#asm
+ASM_START
         ;; store temp bx in real SI register
         push bp
         mov  bp, sp
@@ -3194,7 +3197,7 @@ i13_f03_no_adjust:
         mov  bp, sp
         mov  _int13_harddisk.tempbx + 2 [bp], si
         pop  bp
-#endasm
+ASM_END
 
         sector_count++;
         num_sectors--;
@@ -3348,7 +3351,7 @@ BX_DEBUG("int13_f14\n");
     case 0x15: /* read disk drive size */
       drive = GET_DL();
       get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
-#asm
+ASM_START
       push bp
       mov  bp, sp
       mov  al, _int13_harddisk.hd_heads + 2 [bp]
@@ -3363,7 +3366,7 @@ BX_DEBUG("int13_f14\n");
       mov  _int13_harddisk.CX + 2 [bp], dx
       mov  _int13_harddisk.DX + 2 [bp], ax
       pop  bp
-#endasm
+ASM_END
       SET_AH(3);  // hard disk accessible
       set_disk_ret_status(0); // ??? should this be 0
       CLEAR_CF(); // successful
@@ -3947,9 +3950,9 @@ floppy_drive_recal(drive)
   outb(0x03f5, drive); // 0=drive0, 1=drive1
 
  // turn on interrupts
-#asm
+ASM_START
   sti
-#endasm
+ASM_END
 
   // wait on 40:3e bit 7 to become 1
   val8 = (read_byte(0x0000, 0x043e) & 0x80);
@@ -3959,9 +3962,9 @@ floppy_drive_recal(drive)
 
  val8 = 0; // separate asm from while() loop
  // turn off interrupts
-#asm
+ASM_START
   cli
-#endasm
+ASM_END
 
   // set 40:3e bit 7 to 0, and calibrated bit
   val8 = read_byte(0x0000, 0x043e);
@@ -4187,9 +4190,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         outb(0x03f5, 0xff); // Gap length
 
        // turn on interrupts
-  #asm
+  ASM_START
         sti
-  #endasm
+  ASM_END
 
         // wait on 40:3e bit 7 to become 1
         val8 = (read_byte(0x0000, 0x043e) & 0x80);
@@ -4199,9 +4202,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
 
        val8 = 0; // separate asm from while() loop
        // turn off interrupts
-  #asm
+  ASM_START
         cli
-  #endasm
+  ASM_END
 
         // set 40:3e bit 7 to 0
         val8 = read_byte(0x0000, 0x043e);
@@ -4332,9 +4335,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         outb(0x03f5, 0xff); // Gap length
 
        // turn on interrupts
-  #asm
+  ASM_START
         sti
-  #endasm
+  ASM_END
 
         // wait on 40:3e bit 7 to become 1
         val8 = (read_byte(0x0000, 0x043e) & 0x80);
@@ -4344,9 +4347,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
 
        val8 = 0; // separate asm from while() loop
        // turn off interrupts
-  #asm
+  ASM_START
         cli
-  #endasm
+  ASM_END
 
         // set 40:3e bit 7 to 0
         val8 = read_byte(0x0000, 0x043e);
@@ -4502,9 +4505,9 @@ BX_DEBUG("floppy f05\n");
       outb(0x03f5, 0); // Gap length
       outb(0x03f5, 0xf6); // Fill byte
       // turn on interrupts
-  #asm
+  ASM_START
       sti
-  #endasm
+  ASM_END
       // wait on 40:3e bit 7 to become 1
       val8 = (read_byte(0x0000, 0x043e) & 0x80);
       while ( val8 == 0 ) {
@@ -4512,9 +4515,9 @@ BX_DEBUG("floppy f05\n");
         }
      val8 = 0; // separate asm from while() loop
      // turn off interrupts
-  #asm
+  ASM_START
       cli
-  #endasm
+  ASM_END
       // set 40:3e bit 7 to 0
       val8 = read_byte(0x0000, 0x043e);
       val8 &= 0x7f;
@@ -4860,9 +4863,9 @@ int17_function(regs, ds, iret_addr)
   Bit16u addr,timeout;
   Bit8u val8;
 
-  #asm
+  ASM_START
   sti
-  #endasm
+  ASM_END
 
   if ((regs.u.r8.ah < 3) && (regs.u.r16.dx == 0)) {
     addr = read_word(0x0040, 0x0008);
@@ -4871,9 +4874,9 @@ int17_function(regs, ds, iret_addr)
       outb(addr, regs.u.r8.al);
       val8 = inb(addr+2);
       outb(addr+2, val8 | 0x01); // send strobe
-      #asm
+      ASM_START
       nop
-      #endasm
+      ASM_END
       outb(addr+2, val8 & ~0x01);
       while (((inb(addr+1) & 0x40) == 0x40) && (timeout)) {
 	timeout--;
@@ -4882,9 +4885,9 @@ int17_function(regs, ds, iret_addr)
     if (regs.u.r8.ah == 1) {
       val8 = inb(addr+2);
       outb(addr+2, val8 & ~0x04); // send init
-      #asm
+      ASM_START
       nop
-      #endasm
+      ASM_END
       outb(addr+2, val8 | 0x04);
       }
     regs.u.r8.ah = inb(addr+1);
@@ -4961,7 +4964,7 @@ int19_function()
   if (bootcd==0) {
     bootseg=0x07c0;
 
-#asm
+ASM_START
     push bp
     mov  bp, sp
 
@@ -4983,7 +4986,7 @@ int19_function()
 
 int19_load_done:
     pop  bp
-#endasm
+ASM_END
     
     if (status!=0) {
       boot_failure_msg(bootcd, bootdrv, 1);
@@ -4992,16 +4995,18 @@ int19_load_done:
     }
 
   // check signature if instructed by cmos reg 0x38, only for floppy
-  if (bootdrv!=0) bootchk=1;
+  // bootchk = 1 : signature check disabled
+  // bootchk = 0 : signature check enabled
+  if (bootdrv!=0) bootchk=0;
   else bootchk=inb_cmos(0x38);
 
 #if BX_ELTORITO_BOOT
   // if boot from cd, no signature check
   if (bootcd != 0)
-    bootchk=0;
+    bootchk=1;
 #endif // BX_ELTORITO_BOOT
 
-  if (bootchk!=0) {
+  if (bootchk==0) {
     if (read_word(bootseg,0x1fe) != 0xaa55) {
       boot_failure_msg(bootcd, bootdrv, 0);
       return 0x00000000;
@@ -5025,36 +5030,36 @@ int1a_function(regs, ds, iret_addr)
 {
   Bit8u val8;
 
-  #asm
+  ASM_START
   sti
-  #endasm
+  ASM_END
 
   switch (regs.u.r8.ah) {
     case 0: // get current clock count
-      #asm
+      ASM_START
       cli
-      #endasm
+      ASM_END
       regs.u.r16.cx = BiosData->ticks_high;
       regs.u.r16.dx = BiosData->ticks_low;
       regs.u.r8.al  = BiosData->midnight_flag;
       BiosData->midnight_flag = 0; // reset flag
-      #asm
+      ASM_START
       sti
-      #endasm
+      ASM_END
       // AH already 0
       ClearCF(iret_addr.flags); // OK
       break;
 
     case 1: // Set Current Clock Count
-      #asm
+      ASM_START
       cli
-      #endasm
+      ASM_END
       BiosData->ticks_high = regs.u.r16.cx;
       BiosData->ticks_low  = regs.u.r16.dx;
       BiosData->midnight_flag = 0; // reset flag
-      #asm
+      ASM_START
       sti
-      #endasm
+      ASM_END
       regs.u.r8.ah = 0;
       ClearCF(iret_addr.flags); // OK
       break;
@@ -5248,22 +5253,22 @@ int70_function(regs, ds, iret_addr)
   if (val8 & 0x20) {
     // Alarm Flag indicates alarm time matches current time
     // call user INT 4Ah alarm handler
-#asm
+ASM_START
     sti
     //pushf
     //;; call_ep [ds:loc]
     //CALL_EP( 0x4a << 2 )
     int #0x4a
     cli
-#endasm
+ASM_END
     }
 
-#asm
+ASM_START
   ;; send EOI to slave & master PICs
   mov  al, #0x20
   out  #0xA0, al ;; slave  PIC EOI
   out  #0x20, al ;; master PIC EOI
-#endasm
+ASM_END
 }
 
 #if BX_USE_ATADRV
@@ -5315,10 +5320,10 @@ Bit32u atatmr_read_bios_timer( /* void */ )
      // otherwise it's locked up forever. The timer 0x40:0x6C
      // seems not to be updated. There must be something
      // with the interrupts. Can somebody explain ?
-#asm
+ASM_START
      mov ax,#0x0f00
      int #0x10
-#endasm
+ASM_END
 
       curTime = read_dword( 0x40, 0x6c );
    } while ( curTime != read_dword( 0x40, 0x6c ));
@@ -5717,7 +5722,7 @@ Bit16u addr,count;
         inb(regAddr);
      }
 */
-#asm
+ASM_START
     push bp
     mov  bp, sp
 
@@ -5735,7 +5740,7 @@ dummyinb_again:
       pop dx
 
     pop bp
-#endasm
+ASM_END
    }
 }
 
@@ -5784,7 +5789,7 @@ Bit16u addr,data;
 void atapio_repinsb(addr, count, seg, off)
 Bit16u addr, count, seg, off;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -5813,13 +5818,13 @@ Bit16u addr, count, seg, off;
       pop   ax
 
   pop  bp
-#endasm
+ASM_END
 }
 
 void atapio_repoutsb(addr, count, seg, off)
 Bit16u addr, count, seg, off;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -5848,12 +5853,12 @@ Bit16u addr, count, seg, off;
       pop   ax
 
   pop  bp
-#endasm
+ASM_END
 }
 void atapio_repinsw(addr, count, seg, off)
 Bit16u addr, count, seg, off;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -5882,12 +5887,12 @@ Bit16u addr, count, seg, off;
       pop   ax
 
   pop  bp
-#endasm
+ASM_END
 }
 void atapio_repoutsw(addr, count, seg, off)
 Bit16u addr, count, seg, off;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -5916,12 +5921,12 @@ Bit16u addr, count, seg, off;
       pop   ax
 
   pop  bp
-#endasm
+ASM_END
 }
 void atapio_repinsd(addr, count, seg, off)
 Bit16u addr, count, seg, off;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -5950,12 +5955,12 @@ Bit16u addr, count, seg, off;
       pop   ax
 
   pop  bp
-#endasm
+ASM_END
 }
 void atapio_repoutsd(addr, count, seg, off)
 Bit16u addr, count, seg, off;
 {
-#asm
+ASM_START
   push bp
   mov  bp, sp
 
@@ -5984,7 +5989,7 @@ Bit16u addr, count, seg, off;
       pop   ax
 
   pop  bp
-#endasm
+ASM_END
 }
 
 //*************************************************************
@@ -8320,7 +8325,7 @@ cdrom_boot()
 #endif // BX_ELTORITO_BOOT
 
 
-#asm
+ASM_START
 ;------------------------------------------
 ;- INT74h : PS/2 mouse hardware interrupt -
 ;------------------------------------------
@@ -8530,6 +8535,44 @@ int18_handler: ;; Boot Failure routing
   HALT(__LINE__)
   iret
 
+;----------
+;- INT19h -
+;----------
+int19_relocated: ;; Boot function, relocated
+
+  ;; int19 was beginning to be really complex, so now it
+  ;; just calls an C function, that does the work
+  ;; it returns in BL the boot drive, and in AX the boot segment
+  ;; the boot segment will be 0x0000 if something has failed
+
+  push bp
+  mov  bp, sp
+
+  ;; drop ds
+  xor  ax, ax
+  mov  ds, ax
+
+  call _int19_function
+  ;; bl contains the boot drive
+  ;; ax contains the boot segment or 0 if failure
+
+  test       ax, ax  ;; id ax is 0 call int18
+  jz         int18_handler
+
+  mov dl,    bl      ;; set drive so guest os find it
+  shl eax,   #0x04   ;; convert seg to ip
+  mov 2[bp], ax      ;; set ip
+
+  shr eax,   #0x04   ;; get cs back
+  and ax,    #0xF000 ;; remove what went in ip
+  mov 4[bp], ax      ;; set cs
+  xor ax,    ax
+  mov es,    ax      ;; set es to zero fixes [ 549815 ]
+  mov [bp],  ax      ;; set bp to zero
+  mov ax,    #0xaa55 ;; set ok flag
+
+  pop bp
+  iret               ;; Beam me up Scotty
 
 ;----------
 ;- INT1Ch -
@@ -9374,45 +9417,7 @@ int13_handler:
 .org 0xe6f2 ; INT 19h Boot Load Service Entry Point
 int19_handler:
 
-  ;; int19 was beginning to be really complex, so now it
-  ;; just calls an C function, that does the work
-  ;; it returns in BL the boot drive, and in AX the boot segment
-  ;; the boot segment will be 0x0000 if something has failed
-
-  push bp
-  mov  bp, sp
-
-  ;; drop ds
-  xor  ax, ax
-  mov  ds, ax
-
-  call _int19_function
-  ;; bl contains the boot drive
-  ;; ax contains the boot segment or 0 if failure
-
-  test ax, ax
-  jz  int19_fail
-
-  mov dl,    bl      ;; set drive so guest os find it
-  shl eax,   #0x04   ;; convert seg to ip
-  mov 2[bp], ax      ;; set ip
-
-  shr eax,   #0x04   ;; get cs back
-  and ax,    #0xF000 ;; remove what went in ip
-  mov 4[bp], ax      ;; set cs
-  xor ax,    ax
-  mov [bp],  ax      ;; set bp 
-  mov ax,    #0xaa55 ;; set ok flag
-
-  pop bp
-  iret               ;; Beam me up Scotty
-
-int19_fail:
-  hlt
-
-;; take care, there is no space between
-;; int19 and the System BIOS Configuration Data Table
-
+  jmp int19_relocated
 ;-------------------------------------------
 ;- System BIOS Configuration Data Table
 ;-------------------------------------------
@@ -10242,4 +10247,4 @@ db 0     ;; MP feature byte 1.  value 0 means look at the config table
 db 0,0,0,0     ;; MP feature bytes 2-5.
 #endif
 
-#endasm
+ASM_END
