@@ -78,13 +78,13 @@ static const unsigned char instruction_has_modrm[512] = {
  */
 
 unsigned disassembler::disasm(bx_bool is_32, 
-        Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf)
+        bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
 {
   i32bit_opsize = is_32;
   i32bit_addrsize = is_32;
   db_eip = ip;
   db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
-  instruction_begin = instruction = instr;
+  Bit8u *instruction_begin = instruction = instr;
   displacement.displ32 = 0;
 
   resolve_modrm = NULL;

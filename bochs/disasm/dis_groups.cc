@@ -9,21 +9,21 @@
 void disassembler::REG32 (unsigned attr)
 {
   if (i32bit_opsize)
-    dis_sprintf("%s", general_32bit_reg_name[attr]);
+    dis_sprintf("%s", general_32bit_regname[attr]);
   else
-    dis_sprintf("%s", general_16bit_reg_name[attr]);
+    dis_sprintf("%s", general_16bit_regname[attr]);
 }
 
 // 8-bit general purpose register
 void disassembler::REG8 (unsigned attr)
 {
-  dis_sprintf("%s", general_8bit_reg_name[attr]);
+  dis_sprintf("%s", general_8bit_regname[attr]);
 }
 
 // 16-bit general purpose register
 void disassembler::REG16 (unsigned attr)
 {
-  dis_sprintf("%s", general_16bit_reg_name[attr]);
+  dis_sprintf("%s", general_16bit_regname[attr]);
 }
 
 // segment register
@@ -88,9 +88,9 @@ void disassembler::OP_X (unsigned attr)
   const char *esi, *seg;
 
   if (i32bit_addrsize)
-    esi = general_32bit_reg_name[eSI_REG];
+    esi = general_32bit_regname[eSI_REG];
   else
-    esi = general_16bit_reg_name[eSI_REG];
+    esi = general_16bit_regname[eSI_REG];
   
   if (seg_override)
     seg = seg_override;
@@ -110,9 +110,9 @@ void disassembler::OP_Y (unsigned attr)
   const char *edi;
 
   if (i32bit_addrsize)
-    edi = general_32bit_reg_name[eDI_REG];
+    edi = general_32bit_regname[eDI_REG];
   else
-    edi = general_16bit_reg_name[eDI_REG];
+    edi = general_16bit_regname[eDI_REG];
   
   print_datasize(attr);
 
@@ -219,7 +219,7 @@ void disassembler::Ap (unsigned attr)
 void disassembler::Eb (unsigned attr) 
 {
   if (mod == 3)
-    dis_sprintf("%s", general_8bit_reg_name[rm]);
+    dis_sprintf("%s", general_8bit_regname[rm]);
   else
     (this->*resolve_modrm)(B_SIZE);
 }
@@ -227,7 +227,7 @@ void disassembler::Eb (unsigned attr)
 void disassembler::Ew (unsigned attr) 
 {
   if (mod == 3)
-    dis_sprintf("%s", general_16bit_reg_name[rm]);
+    dis_sprintf("%s", general_16bit_regname[rm]);
   else
     (this->*resolve_modrm)(W_SIZE);
 }
@@ -243,7 +243,7 @@ void disassembler::Ev (unsigned attr)
 void disassembler::Ed (unsigned attr) 
 {
   if (mod == 3)
-    dis_sprintf("%s", general_32bit_reg_name[rm]);
+    dis_sprintf("%s", general_32bit_regname[rm]);
   else
     (this->*resolve_modrm)(D_SIZE);
 }
@@ -251,32 +251,32 @@ void disassembler::Ed (unsigned attr)
 // general purpose register
 void disassembler::Gb (unsigned attr) 
 {
-  dis_sprintf("%s", general_8bit_reg_name[nnn]);
+  dis_sprintf("%s", general_8bit_regname[nnn]);
 }
 
 void disassembler::Gv (unsigned attr) 
 {
   if (i32bit_opsize)
-    dis_sprintf("%s", general_32bit_reg_name[nnn]);
+    dis_sprintf("%s", general_32bit_regname[nnn]);
   else
-    dis_sprintf("%s", general_16bit_reg_name[nnn]);
+    dis_sprintf("%s", general_16bit_regname[nnn]);
 }
 
 void disassembler::Gd (unsigned attr) 
 {
-  dis_sprintf("%s", general_32bit_reg_name[nnn]);
+  dis_sprintf("%s", general_32bit_regname[nnn]);
 }
 
 // 32-bit general purpose register
 void disassembler::Rd (unsigned attr)
 {
-  dis_sprintf("%s", general_32bit_reg_name[rm]);
+  dis_sprintf("%s", general_32bit_regname[rm]);
 }
 
 // 16-bit general purpose register
 void disassembler::Rw (unsigned attr)
 {
-  dis_sprintf("%s", general_16bit_reg_name[rm]);
+  dis_sprintf("%s", general_16bit_regname[rm]);
 }
 
 // segment register

@@ -3,6 +3,8 @@
 
 #include "config.h"
 
+#undef BX_SUPPORT_X86_64
+
 #if BX_SUPPORT_X86_64
 # define DISASM_REGISTERS 16
 #else
@@ -80,6 +82,7 @@ enum {
 	eDI_REG
 };
 
+#if BX_SUPPORT_X86_64
 enum {
 	rAX_REG,
 	rCX_REG,
@@ -90,6 +93,7 @@ enum {
 	rSI_REG,
 	rDI_REG
 };
+#endif
 
 enum {
 	ES_REG,
@@ -125,10 +129,11 @@ struct BxDisasmOpcodeInfo_t
 #define D_SIZE      0x0300
 #define V_SIZE      0x0400
 #define Q_SIZE      0x0500
-#define O_SIZE      0x0600
-#define T_SIZE      0x0700
-#define P_SIZE      0x0800
-#define S_SIZE      0x0900
+#define Z_SIZE      0x0600
+#define O_SIZE      0x0700
+#define T_SIZE      0x0800
+#define P_SIZE      0x0900
+#define S_SIZE      0x0A00
 
 // branch hint attribute 
 #define BRANCH_HINT 0x1000
@@ -136,7 +141,7 @@ struct BxDisasmOpcodeInfo_t
 class disassembler {
 public:
   disassembler() { set_syntax_intel(); }
-  unsigned disasm(bx_bool is_32, Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf);
+  unsigned disasm(bx_bool is_32, bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
 
   void set_syntax_intel();
   void set_syntax_att  ();
@@ -144,20 +149,20 @@ public:
 private:
   bx_bool intel_mode;
 
-  const char **general_16bit_reg_name;
-  const char **general_8bit_reg_name;
-  const char **general_32bit_reg_name;
+  const char **general_16bit_regname;
+  const char **general_8bit_regname;
+  const char **general_32bit_regname;
+#if BX_SUPPORT_X86_64
+  const char **general_8bit_regname_rex;
+  const char **general_64bit_regname;
+#endif
 
   const char **segment_name;
-
   const char **index16;
-  const char **index_name32;
 
   const char *sreg_mod01or10_rm32[8];
-
   const char *sreg_mod00_base32[8];
   const char *sreg_mod01or10_base32[8];
-
   const char *sreg_mod00_rm16[8];
   const char *sreg_mod01or10_rm16[8];
 
@@ -165,6 +170,10 @@ private:
 
   bx_bool i32bit_opsize;
   bx_bool i32bit_addrsize;
+#if BX_SUPPORT_X86_64
+  bx_bool i64bit_opsize;
+  bx_bool i64bit_addrsize;
+#endif
 
   Bit8u  modrm, mod, nnn, rm;
   Bit8u  sib, scale, sib_index, sib_base;
@@ -174,12 +183,10 @@ private:
      Bit32u displ32;
   } displacement;
 
-  Bit32u db_eip;
-  Bit32u db_base;
+  bx_address db_eip, db_base;
 
   unsigned n_prefixes;
 
-  Bit8u *instruction_begin;  // keep track of where instruction starts
   Bit8u *instruction;        // for fetching of next byte of instruction
 
   const char *seg_override;
@@ -191,11 +198,11 @@ private:
   BX_CPP_INLINE Bit8u  fetch_byte() {
     db_eip++;
     return(*instruction++);
-    };
+  };
 
   BX_CPP_INLINE Bit8u  peek_byte() {
     return(*instruction);
-    };
+  };
 
   BX_CPP_INLINE Bit16u fetch_word() {
     Bit8u b0 = * (Bit8u *) instruction++;
@@ -203,7 +210,7 @@ private:
     Bit16u ret16 = (b1<<8) | b0;
     db_eip += 2;
     return(ret16);
-    };
+  };
 
   BX_CPP_INLINE Bit32u fetch_dword() {
     Bit8u b0 = * (Bit8u *) instruction++;
@@ -213,7 +220,16 @@ private:
     Bit32u ret32 = (b3<<24) | (b2<<16) | (b1<<8) | b0;
     db_eip += 4;
     return(ret32);
-    };
+  };
+
+#if BX_SUPPORT_X86_64
+  BX_CPP_INLINE Bit64u fetch_qword() {
+    Bit64u d0 = fetch_dword();
+    Bit64u d1 = fetch_dword();
+    Bit64u ret64 = (d1<<32) | d0;
+    return(ret64);
+  };
+#endif
 
   void dis_sprintf(char *fmt, ...);
   void decode_modrm();
@@ -348,12 +364,16 @@ public:
  void OP_O (unsigned attribute);
 
  // immediate
+ void sIb (unsigned attribute);
  void  I1 (unsigned attribute);
  void  Ib (unsigned attribute);
  void  Iw (unsigned attribute); 
  void  Id (unsigned attribute);
  void  Iv (unsigned attribute);
- void sIb (unsigned attribute);
+#if BX_SUPPORT_X86_64
+ void  Iz (unsigned attribute);
+ void  Iq (unsigned attribute);
+#endif
 
  // general purpose register or memory
  void  Eb (unsigned attribute);

@@ -5,16 +5,42 @@
 // Intel STYLE
 //////////////////
 
-static const char *intel_general_8bit_reg_name[8] = {
-    "al",  "cl",  "dl",  "bl",  "ah",  "ch",  "dh",  "bh"
+#if BX_SUPPORT_X86_64
+
+static const char *intel_general_16bit_regname[16] = {
+    "ax",  "cx",  "dx",   "bx",   "sp",   "bp",   "si",   "di",
+    "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"
 };
 
-static const char *intel_general_16bit_reg_name[8] = {
+static const char *intel_general_32bit_regname[16] = {
+    "eax", "ecx", "edx",  "ebx",  "esp",  "ebp",  "esi",  "edi",
+    "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d"
+};
+
+static const char *intel_general_64bit_regname[16] = {
+    "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
+    "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15"
+};
+
+static const char *intel_general_8bit_regname_rex[16] = {
+    "al",  "cl",  "dl",   "bl",   "spl",  "bpl",  "sil",  "dil",
+    "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b"
+};
+
+#else
+
+static const char *intel_general_16bit_regname[8] = {
     "ax",  "cx",  "dx",  "bx",  "sp",  "bp",  "si",  "di"
 };
 
-static const char *intel_general_32bit_reg_name[8] = {
+static const char *intel_general_32bit_regname[8] = {
     "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi"
+};
+
+#endif
+
+static const char *intel_general_8bit_regname[8] = {
+    "al",  "cl",  "dl",  "bl",  "ah",  "ch",  "dh",  "bh"
 };
 
 static const char *intel_segment_name[8] = {
@@ -32,29 +58,51 @@ static const char *intel_index16[8] = {
     "bx"
 };
 
-static const char *intel_index_name32[8] = {
-    "eax", "ecx", "edx", "ebx", "???", "ebp", "esi", "edi"
-};
-
 
 //////////////////
 // AT&T STYLE
 //////////////////
 
-static const char *att_general_8bit_reg_name[8] = {
-    "%al",  "%cl",  "%dl",  "%bl",  "%ah",  "%ch",  "%dh",  "%bh"
+#if BX_SUPPORT_X86_64
+
+static const char *att_general_16bit_regname[16] = {
+    "%ax",  "%cx",  "%dx",   "%bx",   "%sp",   "%bp",   "%si",   "%di",
+    "%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w"
 };
 
-static const char *att_general_16bit_reg_name[8] = {
+static const char *att_general_32bit_regname[16] = {
+    "%eax", "%ecx", "%edx",  "%ebx",  "%esp",  "%ebp",  "%esi",  "%edi",
+    "%r8d", "%r9d", "%r10d", "%r11d", "%r12d", "%r13d", "%r14d", "%r15d"
+};
+
+static const char *att_general_64bit_regname[16] = {
+    "%rax", "%rcx", "%rdx", "%rbx", "%rsp", "%rbp", "%rsi", "%rdi",
+    "%r8",  "%r9",  "%r10", "%r11", "%r12", "%r13", "%r14", "%r15"
+};
+
+static const char *att_general_8bit_regname_rex[16] = {
+    "%al",  "%cl",  "%dl",   "%bl",   "%spl",  "%bpl",  "%sil",  "%dil",
+    "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b"
+};
+
+#else
+
+static const char *att_general_16bit_regname[8] = {
     "%ax",  "%cx",  "%dx",  "%bx",  "%sp",  "%bp",  "%si",  "%di"
 };
 
-static const char *att_general_32bit_reg_name[8] = {
+static const char *att_general_32bit_regname[8] = {
     "%eax", "%ecx", "%edx", "%ebx", "%esp", "%ebp", "%esi", "%edi"
 };
 
+#endif
+
+static const char *att_general_8bit_regname[8] = {
+    "%al",  "%cl",  "%dl",  "%bl",  "%ah",  "%ch",  "%dh",  "%bh"
+};
+
 static const char *att_segment_name[8] = {
-    "%es",  "%cs",  "%ss",  "%ds",  "%fs",  "%gs",  "???",  "???"
+    "%es",  "%cs",  "%ss",  "%ds",  "%fs",  "%gs",  "%??",  "%??"
 };
 
 static const char *att_index16[8] = {
@@ -66,10 +114,6 @@ static const char *att_index16[8] = {
     "%di", 
     "%bp", 
     "%bx"
-};
-
-static const char *att_index_name32[8] = {
-    "%eax", "%ecx", "%edx", "%ebx", "???", "%ebp", "%esi", "%edi"
 };
 
 #define NULL_SEGMENT_REGISTER 7
@@ -130,14 +174,16 @@ void disassembler::set_syntax_intel()
 {
   intel_mode = 1;
 
-  general_16bit_reg_name = intel_general_16bit_reg_name;
-  general_8bit_reg_name = intel_general_8bit_reg_name;
-  general_32bit_reg_name = intel_general_32bit_reg_name;
+  general_16bit_regname = intel_general_16bit_regname;
+  general_8bit_regname = intel_general_8bit_regname;
+  general_32bit_regname = intel_general_32bit_regname;
+#if BX_SUPPORT_X86_64
+  general_8bit_regname_rex = intel_general_8bit_regname_rex;
+  general_64bit_regname = intel_general_64bit_regname;
+#endif
 
   segment_name = intel_segment_name;
-
   index16 = intel_index16;
-  index_name32 = intel_index_name32;
 
   initialize_modrm_segregs();
 }
@@ -203,14 +249,16 @@ void disassembler::set_syntax_att()
 {
   intel_mode = 0;
 
-  general_16bit_reg_name = att_general_16bit_reg_name;
-  general_8bit_reg_name = att_general_8bit_reg_name;
-  general_32bit_reg_name = att_general_32bit_reg_name;
+  general_16bit_regname = att_general_16bit_regname;
+  general_8bit_regname = att_general_8bit_regname;
+  general_32bit_regname = att_general_32bit_regname;
+#if BX_SUPPORT_X86_64
+  general_8bit_regname_rex = att_general_8bit_regname_rex;
+  general_64bit_regname = att_general_64bit_regname;
+#endif
 
   segment_name = att_segment_name;
-
   index16 = att_index16;
-  index_name32 = att_index_name32;
 
   initialize_modrm_segregs();
 }

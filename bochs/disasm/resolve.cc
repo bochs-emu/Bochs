@@ -121,7 +121,7 @@ void disassembler::resolve32_mod0(unsigned mode)
   if (rm == 5) /* no reg, 32-bit displacement */
     print_memory_access32(mode, seg, NULL, NULL, 0, displacement.displ32);
   else
-    print_memory_access32(mode, seg, general_32bit_reg_name[rm], NULL, 0, 0);
+    print_memory_access32(mode, seg, general_32bit_regname[rm], NULL, 0, 0);
 }
 
 void disassembler::resolve32_mod1or2(unsigned mode)
@@ -134,7 +134,7 @@ void disassembler::resolve32_mod1or2(unsigned mode)
     seg = sreg_mod01or10_rm32[rm];
 
   print_memory_access32(mode, seg, 
-      general_32bit_reg_name[rm], NULL, 0, displacement.displ32);
+      general_32bit_regname[rm], NULL, 0, displacement.displ32);
 }
 
 void disassembler::resolve32_mod0_rm4(unsigned mode)
@@ -148,15 +148,14 @@ void disassembler::resolve32_mod0_rm4(unsigned mode)
     seg = sreg_mod00_base32[sib_base];
 
   if (sib_base != 5)
-    base = general_32bit_reg_name[sib_base];
+    base = general_32bit_regname[sib_base];
+  else
+    disp32 = displacement.displ32;
   
   if (sib_index != 4)
   {
-    index = index_name32[sib_index];
+    index = general_32bit_regname[sib_index];
   }
-
-  if (sib_base == 5)
-    disp32 = displacement.displ32;
     
   print_memory_access32(mode, seg, base, index, scale, disp32);
 }
@@ -172,11 +171,11 @@ void disassembler::resolve32_mod1or2_rm4(unsigned mode)
 
   if (sib_index != 4)
   {
-    index = index_name32[sib_index];
+    index = general_32bit_regname[sib_index];
   }
 
   print_memory_access32(mode, seg,
-      general_32bit_reg_name[sib_base], index, scale, displacement.displ32);
+      general_32bit_regname[sib_base], index, scale, displacement.displ32);
 }
 
 void disassembler::print_datasize(unsigned mode)
