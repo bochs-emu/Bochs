@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.4 2002-12-15 16:31:02 bdenney Exp $
+; $Id: bochs.nsi.in,v 1.5 2002-12-15 16:57:44 bdenney Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -85,11 +85,16 @@ SectionEnd
 
 Section "Documentation in HTML" SecDocs
   SectionIn 1 2 
-  SetOutPath "$INSTDIR"
+  SetOutPath "$INSTDIR\docs"
   File "${SRCDIR}\docs\index.html"
+  SetOutPath "$INSTDIR\docs\user"
   File "${SRCDIR}\docs\user\*"
+  SetOutPath "$INSTDIR\docs\development"
   File "${SRCDIR}\docs\development\*"
+  SetOutPath "$INSTDIR\docs\documentation"
   File "${SRCDIR}\docs\documentation\*"
+  SetOutPath "$INSTDIR\docs\images"
+  File "${SRCDIR}\docs\images\*"
 SectionEnd
 
 Section "DLX Linux Demo" SecDLX
@@ -335,12 +340,15 @@ Section "Uninstall"
   Delete "$INSTDIR\docs\user\*"
   Delete "$INSTDIR\docs\development\*"
   Delete "$INSTDIR\docs\documentation\*"
+  Delete "$INSTDIR\docs\images\*"
 
   RMDIR "$INSTDIR\keymaps"
   RMDIR "$INSTDIR\dlxlinux"
-  RMDIR "$INSTDIR\user"
-  RMDIR "$INSTDIR\development"
-  RMDIR "$INSTDIR\documentation"
+  RMDIR "$INSTDIR\docs\user"
+  RMDIR "$INSTDIR\docs\development"
+  RMDIR "$INSTDIR\docs\documentation"
+  RMDIR "$INSTDIR\docs\images"
+  RMDIR "$INSTDIR\docs"
   RMDIR "$INSTDIR"
 
   !insertmacro MUI_FINISHHEADER un.SetHeader
