@@ -1262,7 +1262,7 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
       static char buf[80];
       if (base != 0) {
-	    snprintf(buf, 80, "non-zero base");
+	    SNPRINTF0(buf, 80, "non-zero base");
 	    return buf;
       }
       // Look up this context
@@ -1271,17 +1271,17 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 	    // Try global context
 	    cntx = context_t::get_context(0);
 	    if (!cntx) {
-		  snprintf(buf, 80, "unknown context");
+		  SNPRINTF0(buf, 80, "unknown context");
 		  return buf;
 	    }
       }
 
       symbol_entry_t* entr = cntx->get_symbol_entry(eip);
       if (!entr) {
-	    snprintf(buf, 80, "no symbol");
+	    SNPRINTF0(buf, 80, "no symbol");
 	    return buf;
       }
-      snprintf(buf, 80, "%s+%x", entr->name, eip - entr->start);
+      SNPRINTF2(buf, 80, "%s+%x", entr->name, eip - entr->start);
       return buf;
 }
 
