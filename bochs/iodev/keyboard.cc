@@ -57,7 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.30 2001-08-31 22:02:29 fries Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.31 2001-09-11 16:49:54 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,7 +92,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.30 2001-08-31 22:02:29 fries Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.31 2001-09-11 16:49:54 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -233,7 +233,6 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
       }
     else if (BX_KEY_THIS s.kbd_controller.outb) { /* kbd byte available */
       val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
-      BX_KEY_THIS s.kbd_controller.kbd_output_buffer = 0;
       // BX_INFO(("kbd: %04d outb 0 auxb 0",__LINE__)); // das
       BX_KEY_THIS s.kbd_controller.outb = 0;
       BX_KEY_THIS s.kbd_controller.auxb = 0;
@@ -262,7 +261,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
     else {
         BX_DEBUG(("num_elements = %d", BX_KEY_THIS s.kbd_internal_buffer.num_elements));
         BX_DEBUG(("read from port 60h with outb empty"));
-      val = 0;
+        val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
       RETURN(val);
       }
     }
@@ -915,7 +914,7 @@ bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
   void
 bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 {
-  BX_DEBUG(("controller passed byte %02xh to keyboard"));
+  BX_DEBUG(("controller passed byte %02xh to keyboard", value));
 
   if (BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic) {
     BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic = 0;
