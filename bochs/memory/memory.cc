@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.21 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: memory.cc,v 1.22 2002-09-22 11:31:48 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -232,10 +232,10 @@ inc_one:
 #if BX_SUPPORT_VBE
     // Check VBE LFB support
     
-    if (a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    if ((a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS) &&
+        (a20addr <  (VBE_DISPI_LFB_PHYSICAL_ADDRESS +  VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)))
     {
       for (i = 0; i < len; i++) {
-        // FIXME: check for max VBE video memory size
         
         //if (a20addr < BX_MEM_THIS len) {
           //vector[a20addr] = *data_ptr;
@@ -462,10 +462,10 @@ inc_one:
 #if BX_SUPPORT_VBE
     // Check VBE LFB support
     
-    if (a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    if ((a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS) &&
+        (a20addr <  (VBE_DISPI_LFB_PHYSICAL_ADDRESS +  VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)))
     {
       for (i = 0; i < len; i++) {
-        // FIXME: check for max VBE video memory size
         
         //if (a20addr < BX_MEM_THIS len) {
           //vector[a20addr] = *data_ptr;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.41 2002-09-19 18:59:50 vruppert Exp $
+// $Id: vga.cc,v 1.42 2002-09-22 11:31:48 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2155,7 +2155,7 @@ bx_vga_c::vbe_mem_read(Bit32u addr)
   }
 
   // check for out of memory read
-  if (offset > sizeof(BX_VGA_THIS s.vbe_memory))
+  if (offset > VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
     return 0;
 
   return (BX_VGA_THIS s.vbe_memory[offset]);
@@ -2179,7 +2179,7 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   }
 
   // check for out of memory write
-  if (offset < sizeof(BX_VGA_THIS s.vbe_memory))
+  if (offset < VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
   {
     BX_VGA_THIS s.vbe_memory[offset]=value;
   }
@@ -2431,7 +2431,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         value=value & 0xff ; // FIXME lobyte = vbe bank A?
         
         // check for max bank nr
-        if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024 /64))
+        if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB /64))
         {
           BX_INFO(("VBE set bank to %d", value));
           BX_VGA_THIS s.vbe_bank=value;
