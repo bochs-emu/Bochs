@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.21 2004-02-10 00:23:12 danielg4 Exp $
+ |  $Id: fpu_emu.h,v 1.22 2004-02-11 19:40:25 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -63,19 +63,6 @@
 #define FPU_Exception   (0x80000000)   /* Added to tag returns. */
 
 #include "fpu_system.h"
-
-/*
-#define RE_ENTRANT_CHECKING
- */
-
-#ifdef RE_ENTRANT_CHECKING
-extern u_char emulating;
-#  define RE_ENTRANT_CHECK_OFF emulating = 0
-#  define RE_ENTRANT_CHECK_ON emulating = 1
-#else
-#  define RE_ENTRANT_CHECK_OFF
-#  define RE_ENTRANT_CHECK_ON
-#endif /* ifdef RE_ENTRANT_CHECKING */
 
 #define FWAIT_OPCODE 0x9b
 #define OP_SIZE_PREFIX 0x66

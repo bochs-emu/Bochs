@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
- |  $Id: load_store.c,v 1.12 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: load_store.c,v 1.13 2004-02-11 19:40:25 sshwarts Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |
@@ -174,10 +174,8 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
       FPU_settag0(loaded_tag);
       break;
     case 024:     /* fldcw */
-      RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_READ, data_address, 2);
       FPU_get_user(FPU_control_word, data_address, 2);
-      RE_ENTRANT_CHECK_ON;
       if ( FPU_partial_status & ~FPU_control_word & CW_Exceptions )
 	FPU_partial_status |= (SW_Summary | SW_Backward);
       else
@@ -209,10 +207,8 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 		     (see the 80486 manual p16-28) */
       break;
     case 034:      /* fstcw m16int */
-      RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE,data_address,2);
       FPU_put_user(FPU_control_word, data_address, 2);
-      RE_ENTRANT_CHECK_ON;
       return 1;
     case 035:      /* fstp m80real */
       clear_C1();
@@ -221,10 +217,8 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 		     (see the 80486 manual p16-28) */
       break;
     case 036:      /* fstsw m2byte */
-      RE_ENTRANT_CHECK_OFF;
       FPU_verify_area(VERIFY_WRITE,data_address,2);
       FPU_put_user(status_word(),data_address, 2);
-      RE_ENTRANT_CHECK_ON;
       return 1;
     case 037:      /* fistp m64int */
       clear_C1();
