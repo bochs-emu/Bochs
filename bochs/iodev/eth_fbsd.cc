@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.21 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: eth_fbsd.cc,v 1.22 2002-10-19 19:14:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,7 +149,6 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   struct bpf_program bp;
   u_int v;
 
-  put("BPF");
   memcpy(fbsd_macaddr, macaddr, 6);
 
   do {
