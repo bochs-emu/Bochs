@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.13 2002-09-18 08:00:42 kevinlawton Exp $
+// $Id: stack32.cc,v 1.14 2002-09-20 03:52:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::POP_Ed(bxInstruction_c *i)
 
   pop_32(&val32);
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_32BIT_REGZ(i->rm(), val32);
     }
   else {
@@ -59,7 +59,7 @@ BX_CPU_C::POP_Ed(bxInstruction_c *i)
     // is used, it is possible to use ESP in the modrm addressing.
     // If used, the value of ESP after the pop is used to calculate
     // the address.
-    if (i->as32L() && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
+    if (i->as32L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
       BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
       }
@@ -321,7 +321,7 @@ BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
     Bit32u op1_32;
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {

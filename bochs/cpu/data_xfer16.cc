@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.12 2002-09-18 08:00:35 kevinlawton Exp $
+// $Id: data_xfer16.cc,v 1.13 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,7 +73,7 @@ BX_CPU_C::MOV_EwGw(bxInstruction_c *i)
 
     /* op1_16 is a register or memory reference */
     /* now write op2 to op1 */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), op2_16);
       }
     else {
@@ -87,7 +87,7 @@ BX_CPU_C::MOV_GwEw(bxInstruction_c *i)
 {
     Bit16u op2_16;
 
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -109,7 +109,7 @@ BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
 
   seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     // ??? BX_WRITE_16BIT_REG(mem_addr, seg_reg);
     if ( i->os32L() ) {
       BX_WRITE_32BIT_REGZ(i->rm(), seg_reg);
@@ -132,7 +132,7 @@ BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
   BX_PANIC(("MOV_SwEw: incomplete for CPU < 3"));
 #endif
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -155,7 +155,7 @@ BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
   void
 BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 {
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_PANIC(("LEA_GvM: op2 is a register"));
     UndefinedOpcode(i);
     return;
@@ -217,7 +217,7 @@ BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
     op2_16 = i->Iw();
 
     /* now write sum back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), op2_16);
       }
     else {
@@ -234,7 +234,7 @@ BX_CPU_C::MOVZX_GwEb(bxInstruction_c *i)
 #else
   Bit8u  op2_8;
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -255,7 +255,7 @@ BX_CPU_C::MOVZX_GwEw(bxInstruction_c *i)
 #else
   Bit16u op2_16;
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -276,7 +276,7 @@ BX_CPU_C::MOVSX_GwEb(bxInstruction_c *i)
 #else
   Bit8u op2_8;
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -297,7 +297,7 @@ BX_CPU_C::MOVSX_GwEw(bxInstruction_c *i)
 #else
   Bit16u op2_16;
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -319,7 +319,7 @@ BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
 #ifdef MAGIC_BREAKPOINT
 #if BX_DEBUGGER
   // (mch) Magic break point
-  if (i->nnn() == 3 && i->mod() == 0xc0 && i->rm() == 3) {
+  if (i->nnn() == 3 && i->modC0() && i->rm() == 3) {
     BX_CPU_THIS_PTR magic_break = 1;
     }
 #endif
@@ -329,7 +329,7 @@ BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       BX_WRITE_16BIT_REG(i->rm(), op2_16);
       }
@@ -377,7 +377,7 @@ BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
       BX_PANIC(("CMOV_GwEw: default case"));
     }
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {

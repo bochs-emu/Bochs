@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.8 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: mult16.cc,v 1.9 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
     op1_16 = AX;
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -84,7 +84,7 @@ BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
     op1_16 = AX;
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -129,7 +129,7 @@ BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
     op1_32 = (((Bit32u) DX) << 16) | ((Bit32u) AX);
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -172,7 +172,7 @@ BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
     op1_32 = ((((Bit32u) DX) << 16) | ((Bit32u) AX));
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -221,7 +221,7 @@ BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
     op3_16 = i->Iw();
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -263,7 +263,7 @@ BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
     Bit32s product_32;
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {

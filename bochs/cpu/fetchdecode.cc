@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.15 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.16 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1558,6 +1558,7 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
     instruction->modRMForm.modRMData |= rm;
 
     if (mod == 0xc0) { // mod == 11b
+      instruction->modRMForm.modRMData |= (1<<28); // (modC0)
       goto modrm_done;
       }
     if (instruction->as32L()) {

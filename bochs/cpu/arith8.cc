@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.10 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: arith8.cc,v 1.11 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ BX_CPU_C::ADD_EbGb(bxInstruction_c *i)
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -55,7 +55,7 @@ BX_CPU_C::ADD_EbGb(bxInstruction_c *i)
   sum = op1 + op2;
 
   /* now write sum back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
     }
   else {
@@ -77,7 +77,7 @@ BX_CPU_C::ADD_GbEb(bxInstruction_c *i)
   op1 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op2 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -126,7 +126,7 @@ BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -138,7 +138,7 @@ BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
 
 
   /* now write sum back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
     }
   else {
@@ -162,7 +162,7 @@ BX_CPU_C::ADC_GbEb(bxInstruction_c *i)
   op1 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op2 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -216,7 +216,7 @@ BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
   op2_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -227,7 +227,7 @@ BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
 
   /* now write diff back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
     }
   else {
@@ -252,7 +252,7 @@ BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
   op1_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op2 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -304,7 +304,7 @@ BX_CPU_C::SBB_EbIb(bxInstruction_c *i)
   op2_8 = i->Ib();
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -315,7 +315,7 @@ BX_CPU_C::SBB_EbIb(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
 
   /* now write diff back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
     }
   else {
@@ -338,7 +338,7 @@ BX_CPU_C::SUB_EbGb(bxInstruction_c *i)
   op2_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -349,7 +349,7 @@ BX_CPU_C::SUB_EbGb(bxInstruction_c *i)
   diff_8 = op1_8 - op2_8;
 
   /* now write diff back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
     }
   else {
@@ -370,7 +370,7 @@ BX_CPU_C::SUB_GbEb(bxInstruction_c *i)
   op1_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op2 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -416,7 +416,7 @@ BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
   op2_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -439,7 +439,7 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
   op1_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op2 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -487,7 +487,7 @@ BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -498,7 +498,7 @@ BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
   sum = op1 + op2;
 
   /* now write sum back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     // and write destination into source
     // Note: if both op1 & op2 are registers, the last one written
     //       should be the sum, as op1 & op2 may be the same register.
@@ -529,7 +529,7 @@ BX_CPU_C::ADD_EbIb(bxInstruction_c *i)
   op2 = i->Ib();
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -540,7 +540,7 @@ BX_CPU_C::ADD_EbIb(bxInstruction_c *i)
   sum = op1 + op2;
 
   /* now write sum back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
     }
   else {
@@ -561,7 +561,7 @@ BX_CPU_C::ADC_EbIb(bxInstruction_c *i)
   op2 = i->Ib();
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -572,7 +572,7 @@ BX_CPU_C::ADC_EbIb(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
 
   /* now write sum back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
     }
   else {
@@ -593,7 +593,7 @@ BX_CPU_C::SUB_EbIb(bxInstruction_c *i)
   op2_8 = i->Ib();
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -604,7 +604,7 @@ BX_CPU_C::SUB_EbIb(bxInstruction_c *i)
   diff_8 = op1_8 - op2_8;
 
   /* now write diff back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
     }
   else {
@@ -622,7 +622,7 @@ BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
   op2_8 = i->Ib();
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -642,7 +642,7 @@ BX_CPU_C::NEG_Eb(bxInstruction_c *i)
   Bit8u op1_8, diff_8;
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -653,7 +653,7 @@ BX_CPU_C::NEG_Eb(bxInstruction_c *i)
   diff_8 = 0 - op1_8;
 
   /* now write diff back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
     }
   else {
@@ -670,7 +670,7 @@ BX_CPU_C::INC_Eb(bxInstruction_c *i)
   Bit8u  op1;
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -682,7 +682,7 @@ BX_CPU_C::INC_Eb(bxInstruction_c *i)
   op1++;
 
   /* now write sum back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1);
     }
   else {
@@ -699,7 +699,7 @@ BX_CPU_C::DEC_Eb(bxInstruction_c *i)
   Bit8u op1_8;
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -710,7 +710,7 @@ BX_CPU_C::DEC_Eb(bxInstruction_c *i)
   op1_8--;
 
   /* now write sum back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1_8);
     }
   else {
@@ -729,7 +729,7 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
 
 
   /* op1_8 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -747,7 +747,7 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
     // dest <-- src
     op2_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2_8);
       }
     else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.11 2002-09-18 08:00:41 kevinlawton Exp $
+// $Id: shift32.cc,v 1.12 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
     if (!count) return; /* NOP */
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -62,7 +62,7 @@ BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
     result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -99,7 +99,7 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -111,7 +111,7 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
     result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -149,7 +149,7 @@ BX_CPU_C::ROL_Ed(bxInstruction_c *i)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -161,7 +161,7 @@ BX_CPU_C::ROL_Ed(bxInstruction_c *i)
       result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
 
       /* now write result back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
         BX_WRITE_32BIT_REGZ(i->rm(), result_32);
         }
       else {
@@ -195,7 +195,7 @@ BX_CPU_C::ROR_Ed(bxInstruction_c *i)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -207,7 +207,7 @@ BX_CPU_C::ROR_Ed(bxInstruction_c *i)
       result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
 
       /* now write result back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
         BX_WRITE_32BIT_REGZ(i->rm(), result_32);
         }
       else {
@@ -242,7 +242,7 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -262,7 +262,7 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
       }
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -294,7 +294,7 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -314,7 +314,7 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
       }
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -347,7 +347,7 @@ BX_CPU_C::SHL_Ed(bxInstruction_c *i)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -360,7 +360,7 @@ BX_CPU_C::SHL_Ed(bxInstruction_c *i)
     result_32 = (op1_32 << count);
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -387,7 +387,7 @@ BX_CPU_C::SHR_Ed(bxInstruction_c *i)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -400,7 +400,7 @@ BX_CPU_C::SHR_Ed(bxInstruction_c *i)
     result_32 = (op1_32 >> count);
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -426,7 +426,7 @@ BX_CPU_C::SAR_Ed(bxInstruction_c *i)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -445,7 +445,7 @@ BX_CPU_C::SAR_Ed(bxInstruction_c *i)
       }
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {

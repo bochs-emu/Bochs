@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.29 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: paging.cc,v 1.30 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -523,7 +523,7 @@ BX_CPU_C::INVLPG(bxInstruction_c* i)
   invalidate_prefetch_q();
 
   // Operand must not be a register
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_INFO(("INVLPG: op is a register"));
     UndefinedOpcode(i);
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.4 2002-09-18 08:00:42 kevinlawton Exp $
+// $Id: stack64.cc,v 1.5 2002-09-20 03:52:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ BX_CPU_C::POP_Eq(bxInstruction_c *i)
 
   pop_64(&val64);
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_64BIT_REG(i->rm(), val64);
     }
   else {
@@ -52,7 +52,7 @@ BX_CPU_C::POP_Eq(bxInstruction_c *i)
     // is used, it is possible to use RSP in the modrm addressing.
     // If used, the value of RSP after the pop is used to calculate
     // the address.
-    if (i->as64L() && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
+    if (i->as64L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
       BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
       }
@@ -240,7 +240,7 @@ BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
     Bit64u op1_64;
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.9 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: mult32.cc,v 1.10 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
     op1_32 = EAX;
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -89,7 +89,7 @@ BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
     op1_32 = EAX;
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -134,7 +134,7 @@ BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
     op1_64 = (((Bit64u) EDX) << 32) + ((Bit64u) EAX);
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -173,7 +173,7 @@ BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
     op1_64 = (((Bit64u) EDX) << 32) | ((Bit64u) EAX);
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -217,7 +217,7 @@ BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
     op3_32 = i->Id();
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -258,7 +258,7 @@ BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
     Bit64s product_64;
 
     /* op2 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {

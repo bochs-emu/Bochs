@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.11 2002-09-18 08:00:33 kevinlawton Exp $
+// $Id: ctrl_xfer16.cc,v 1.12 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -281,7 +281,7 @@ BX_CPU_C::CALL_Ew(bxInstruction_c *i)
 
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -320,7 +320,7 @@ BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
 #endif
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_PANIC(("CALL_Ep: op1 is a register"));
       }
 
@@ -431,7 +431,7 @@ BX_CPU_C::JMP_Ew(bxInstruction_c *i)
 
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -465,7 +465,7 @@ BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
   Bit16u op1_16;
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       /* far indirect must specify a memory address */
       BX_PANIC(("JMP_Ep(): op1 is a register"));
       }

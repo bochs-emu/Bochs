@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.47 2002-09-19 19:17:19 kevinlawton Exp $
+// $Id: cpu.cc,v 1.48 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,41 +158,6 @@ main_cpu_loop:
     goto handle_async_event;
 
 async_events_processed:
-  // Now we can handle things which are synchronous to instruction
-  // execution.
-  if (BX_CPU_THIS_PTR get_RF ()) {
-    BX_CPU_THIS_PTR clear_RF ();
-    }
-#if BX_X86_DEBUGGER
-  else {
-    // only bother comparing if any breakpoints enabled
-    if ( BX_CPU_THIS_PTR dr7 & 0x000000ff ) {
-      Bit32u iaddr =
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base +
-        BX_CPU_THIS_PTR prev_eip;
-      Bit32u dr6_bits;
-      if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
-                                       BX_HWDebugInstruction)) ) {
-        // Add to the list of debug events thus far.
-        BX_CPU_THIS_PTR debug_trap |= dr6_bits;
-        BX_CPU_THIS_PTR async_event = 1;
-        // If debug events are not inhibited on this boundary,
-        // fire off a debug fault.  Otherwise handle it on the next
-        // boundary. (becomes a trap)
-        if ( !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG) ) {
-          // Commit debug events to DR6
-          BX_CPU_THIS_PTR dr6 = BX_CPU_THIS_PTR debug_trap;
-          exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-          }
-        }
-      }
-    }
-#endif
-
-  // We have ignored processing of external interrupts and
-  // debug events on this boundary.  Reset the mask so they
-  // will be processed on the next boundary.
-  BX_CPU_THIS_PTR inhibit_mask = 0;
 
 
 #if BX_DEBUGGER
@@ -680,7 +645,8 @@ handle_async_event:
     // an opportunity to check interrupts on the next instruction
     // boundary.
     }
-  else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () && BX_DBG_ASYNC_INTR) {
+  else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () &&
+           BX_DBG_ASYNC_INTR) {
     Bit8u vector;
 
     // NOTE: similar code in ::take_irq()
@@ -698,7 +664,8 @@ handle_async_event:
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT   = 1; /* external event */
     interrupt(vector, 0, 0, 0);
-    BX_INSTR_HWINTERRUPT(vector, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+    BX_INSTR_HWINTERRUPT(vector,
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
     // Set up environment, as would be when this main cpu loop gets
     // invoked.  At the end of normal instructions, we always commmit
     // the new EIP/ESP values.  But here, we call interrupt() much like
@@ -747,11 +714,48 @@ handle_async_event:
     BX_CPU_THIS_PTR debug_trap |= 0x00004000; // BS flag in DR6
     }
 
+  // Now we can handle things which are synchronous to instruction
+  // execution.
+  if (BX_CPU_THIS_PTR getL_RF ()) {
+    BX_CPU_THIS_PTR clear_RF ();
+    }
+#if BX_X86_DEBUGGER
+  else {
+    // only bother comparing if any breakpoints enabled
+    if ( BX_CPU_THIS_PTR dr7 & 0x000000ff ) {
+      Bit32u iaddr =
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base +
+        BX_CPU_THIS_PTR prev_eip;
+      Bit32u dr6_bits;
+      if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
+                                       BX_HWDebugInstruction)) ) {
+        // Add to the list of debug events thus far.
+        BX_CPU_THIS_PTR debug_trap |= dr6_bits;
+        BX_CPU_THIS_PTR async_event = 1;
+        // If debug events are not inhibited on this boundary,
+        // fire off a debug fault.  Otherwise handle it on the next
+        // boundary. (becomes a trap)
+        if ( !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG) ) {
+          // Commit debug events to DR6
+          BX_CPU_THIS_PTR dr6 = BX_CPU_THIS_PTR debug_trap;
+          exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
+          }
+        }
+      }
+    }
+#endif
+
+  // We have ignored processing of external interrupts and
+  // debug events on this boundary.  Reset the mask so they
+  // will be processed on the next boundary.
+  BX_CPU_THIS_PTR inhibit_mask = 0;
+
   if ( !(BX_CPU_THIS_PTR INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
          BX_CPU_THIS_PTR get_TF ()) )
     BX_CPU_THIS_PTR async_event = 0;
+
   goto async_events_processed;
 }
 #endif  // #if BX_DYNAMIC_TRANSLATION == 0

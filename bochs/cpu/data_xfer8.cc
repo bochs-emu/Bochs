@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.10 2002-09-18 08:00:35 kevinlawton Exp $
+// $Id: data_xfer8.cc,v 1.11 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ BX_CPU_C::MOV_EbGb(bxInstruction_c *i)
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* now write op2 to op1 */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
     }
   else {
@@ -70,7 +70,7 @@ BX_CPU_C::MOV_GbEb(bxInstruction_c *i)
 {
   Bit8u op2;
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -134,7 +134,7 @@ BX_CPU_C::MOV_EbIb(bxInstruction_c *i)
   op2 = i->Ib();
 
   /* now write op2 back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
     }
   else {
@@ -179,7 +179,7 @@ BX_CPU_C::XCHG_EbGb(bxInstruction_c *i)
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
     }

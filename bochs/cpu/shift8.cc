@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.10 2002-09-18 08:00:42 kevinlawton Exp $
+// $Id: shift8.cc,v 1.11 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ BX_CPU_C::ROL_Eb(bxInstruction_c *i)
   count &= 0x07; // use only lowest 3 bits
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -65,7 +65,7 @@ BX_CPU_C::ROL_Eb(bxInstruction_c *i)
     result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
@@ -103,7 +103,7 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
   count &= 0x07; /* use only bottom 3 bits */
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -115,7 +115,7 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
@@ -152,7 +152,7 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
 
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -166,7 +166,7 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
              (op1_8 >> (9 - count));
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
@@ -200,7 +200,7 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
   count = ( count & 0x1F ) % 9;
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -214,7 +214,7 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
              (op1_8 << (9 - count));
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
@@ -250,7 +250,7 @@ BX_CPU_C::SHL_Eb(bxInstruction_c *i)
   count &= 0x1F;
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -263,7 +263,7 @@ BX_CPU_C::SHL_Eb(bxInstruction_c *i)
   result_8 = (op1_8 << count);
 
   /* now write result back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
@@ -291,7 +291,7 @@ BX_CPU_C::SHR_Eb(bxInstruction_c *i)
   count &= 0x1F;
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -304,7 +304,7 @@ BX_CPU_C::SHR_Eb(bxInstruction_c *i)
   result_8 = (op1_8 >> count);
 
   /* now write result back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
@@ -333,7 +333,7 @@ BX_CPU_C::SAR_Eb(bxInstruction_c *i)
   count &= 0x1F;
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
@@ -361,7 +361,7 @@ BX_CPU_C::SAR_Eb(bxInstruction_c *i)
     }
 
   /* now write result back to destination */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {

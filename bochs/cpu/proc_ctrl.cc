@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.42 2002-09-18 08:00:39 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.43 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -176,7 +176,7 @@ BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_DdRd(): rm field not a register!"));
     }
 
@@ -303,7 +303,7 @@ BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_RdDd(): rm field not a register!"));
     UndefinedOpcode(i);
     }
@@ -382,7 +382,7 @@ BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_DqRq(): rm field not a register!"));
     }
 
@@ -507,7 +507,7 @@ BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_RqDq(): rm field not a register!"));
     UndefinedOpcode(i);
     }
@@ -594,7 +594,7 @@ BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
       }
     }
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     msw = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -640,7 +640,7 @@ BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
 #endif
 
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     if (i->os32L()) {
       BX_WRITE_32BIT_REGZ(i->rm(), msw);  // zeros out high 16bits
       }
@@ -675,7 +675,7 @@ BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_CdRd(): rm field not a register!"));
     }
 
@@ -755,7 +755,7 @@ BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_RdCd(): rm field not a register!"));
     }
 
@@ -828,7 +828,7 @@ BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_CqRq(): rm field not a register!"));
     }
 
@@ -916,7 +916,7 @@ BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod() != 0xc0) {
+  if (!i->modC0()) {
     BX_PANIC(("MOV_RqC(): rm field not a register!"));
     }
 

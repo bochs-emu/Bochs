@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.10 2002-09-18 08:00:40 kevinlawton Exp $
+// $Id: shift16.cc,v 1.11 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
     // count is 1..31
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -74,7 +74,7 @@ BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
     result_16 = result_32 >> 16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -114,7 +114,7 @@ BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
     // count is 1..31
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -133,7 +133,7 @@ BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
     result_16 = result_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -173,7 +173,7 @@ BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     count &= 0x0f; // only use bottom 4 bits
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -185,7 +185,7 @@ BX_CPU_C::ROL_Ew(bxInstruction_c *i)
       result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
 
       /* now write result back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
         BX_WRITE_16BIT_REG(i->rm(), result_16);
         }
       else {
@@ -221,7 +221,7 @@ BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     count &= 0x0f;  // use only 4 LSB's
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -233,7 +233,7 @@ BX_CPU_C::ROR_Ew(bxInstruction_c *i)
       result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
 
       /* now write result back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
         BX_WRITE_16BIT_REG(i->rm(), result_16);
         }
       else {
@@ -269,7 +269,7 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
   count &= 0x1F;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -295,7 +295,7 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
       }
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -329,7 +329,7 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   count = count & 0x1F;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -344,7 +344,7 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
 		(op1_16 << (17 - count));
 
       /* now write result back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
 	BX_WRITE_16BIT_REG(i->rm(), result_16);
 	}
       else {
@@ -380,7 +380,7 @@ BX_CPU_C::SHL_Ew(bxInstruction_c *i)
   count &= 0x1F; /* use only 5 LSB's */
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -393,7 +393,7 @@ BX_CPU_C::SHL_Ew(bxInstruction_c *i)
     result_16 = (op1_16 << count);
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -422,7 +422,7 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   count &= 0x1F; /* use only 5 LSB's */
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -436,7 +436,7 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
 
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -464,7 +464,7 @@ BX_CPU_C::SAR_Ew(bxInstruction_c *i)
   count &= 0x1F;  /* use only 5 LSB's */
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -494,7 +494,7 @@ BX_CPU_C::SAR_Ew(bxInstruction_c *i)
 
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.9 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: logical32.cc,v 1.10 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ BX_CPU_C::XOR_EdGd(bxInstruction_c *i)
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -57,7 +57,7 @@ BX_CPU_C::XOR_EdGd(bxInstruction_c *i)
     result_32 = op1_32 ^ op2_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -77,7 +77,7 @@ BX_CPU_C::XOR_GdEd(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -124,7 +124,7 @@ BX_CPU_C::XOR_EdId(bxInstruction_c *i)
     op2_32 = i->Id();
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -135,7 +135,7 @@ BX_CPU_C::XOR_EdId(bxInstruction_c *i)
     result_32 = op1_32 ^ op2_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -154,7 +154,7 @@ BX_CPU_C::OR_EdId(bxInstruction_c *i)
     op2_32 = i->Id();
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -165,7 +165,7 @@ BX_CPU_C::OR_EdId(bxInstruction_c *i)
     result_32 = op1_32 | op2_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -181,7 +181,7 @@ BX_CPU_C::NOT_Ed(bxInstruction_c *i)
     Bit32u op1_32, result_32;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -192,7 +192,7 @@ BX_CPU_C::NOT_Ed(bxInstruction_c *i)
     result_32 = ~op1_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -210,7 +210,7 @@ BX_CPU_C::OR_EdGd(bxInstruction_c *i)
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -221,7 +221,7 @@ BX_CPU_C::OR_EdGd(bxInstruction_c *i)
     result_32 = op1_32 | op2_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -240,7 +240,7 @@ BX_CPU_C::OR_GdEd(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -289,7 +289,7 @@ BX_CPU_C::AND_EdGd(bxInstruction_c *i)
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -300,7 +300,7 @@ BX_CPU_C::AND_EdGd(bxInstruction_c *i)
     result_32 = op1_32 & op2_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -319,7 +319,7 @@ BX_CPU_C::AND_GdEd(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -365,7 +365,7 @@ BX_CPU_C::AND_EdId(bxInstruction_c *i)
     op2_32 = i->Id();
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -376,7 +376,7 @@ BX_CPU_C::AND_EdId(bxInstruction_c *i)
     result_32 = op1_32 & op2_32;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
@@ -396,7 +396,7 @@ BX_CPU_C::TEST_EdGd(bxInstruction_c *i)
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
@@ -437,7 +437,7 @@ BX_CPU_C::TEST_EdId(bxInstruction_c *i)
     op2_32 = i->Id();
 
     /* op1_32 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {

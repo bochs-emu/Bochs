@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.65 2002-09-20 03:06:39 yakovlev Exp $
+// $Id: cpu.h,v 1.66 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -380,6 +380,7 @@ typedef struct {
   BX_CPP_INLINE void    assert_##name ();                                    \
   BX_CPP_INLINE void    clear_##name ();                                     \
   BX_CPP_INLINE Boolean get_##name ();                                       \
+  BX_CPP_INLINE Boolean getL_##name ();                                      \
   BX_CPP_INLINE void    set_##name (Bit8u val);
   // end of DECLARE_EFLAGS_ACCESSORS
 
@@ -392,6 +393,9 @@ typedef struct {
   }                                                                          \
   BX_CPP_INLINE Boolean BX_CPU_C::get_##name () {                            \
     return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);                     \
+  }                                                                          \
+  BX_CPP_INLINE Boolean BX_CPU_C::getL_##name () {                           \
+    return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);                     \
   }                                                                          \
   BX_CPP_INLINE void BX_CPU_C::set_##name (Bit8u val) {                      \
     BX_CPU_THIS_PTR eflags.val32 =                                           \
@@ -684,6 +688,7 @@ public:
     struct {
       //  Note: if you add more bits, mask the previously upper field,
       //        in the accessor.
+      //  28..28 mod==c0 (modrm)
       //  27..20 modRM   (modrm)
       //  19..16 index           (sib)
       //  15..12 base            (sib)
@@ -725,8 +730,15 @@ public:
 #endif
     };
 
-  BX_CPP_INLINE unsigned modrm() { return modRMForm.modRMData>>20; }
+  BX_CPP_INLINE unsigned modrm() { return (modRMForm.modRMData>>20) & 0xff; }
   BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData & 0xc0; }
+  BX_CPP_INLINE unsigned modC0()
+    {
+    // This is a cheaper way to test for modRM instructions where
+    // the mod field is 0xc0.  FetchDecode flags this condition since
+    // it is quite common to be tested for.
+    return modRMForm.modRMData & (1<<28);
+    }
   BX_CPP_INLINE unsigned nnn() {
       return (modRMForm.modRMData >> 8) & 0xf;
       }
@@ -770,12 +782,16 @@ public:
       metaInfo = (metaInfo & ~7) | val;
       }
 
+#if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned rex_b(void) {
       return metaInfo & (1<<3); // Returns 0 or 8 for upper 8 register accessing.
       }
   BX_CPP_INLINE void assertRex_b(void) {
       metaInfo |= (1<<3);
       }
+#else
+  BX_CPP_INLINE unsigned rex_b(void) { return 0; }
+#endif
 
   BX_CPP_INLINE unsigned os32L(void) {
       return metaInfo & (1<<4);
@@ -800,6 +816,7 @@ public:
       metaInfo = (metaInfo & ~(1<<5)) | (bit<<5);
       }
 
+#if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned os64L(void) {
       return metaInfo & (1<<6);
       }
@@ -809,20 +826,29 @@ public:
   BX_CPP_INLINE void assertOs64(void) {
       metaInfo |= (1<<6);
       }
+#else
+  BX_CPP_INLINE unsigned os64L(void) { return 0; }
+#endif
 
+#if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned as64L(void) {
       return metaInfo & (1<<7);
       }
   BX_CPP_INLINE void setAs64B(unsigned bit) {
       metaInfo = (metaInfo & ~(1<<7)) | (bit<<7);
       }
+#else
+  BX_CPP_INLINE unsigned as64L(void) { return 0; }
+#endif
 
+#if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned extend8bitL(void) {
       return metaInfo & (1<<8);
       }
   BX_CPP_INLINE void assertExtend8bit(void) {
       metaInfo |= (1<<8);
       }
+#endif
 
   BX_CPP_INLINE unsigned repUsedL(void) {
       return metaInfo & (3<<9);

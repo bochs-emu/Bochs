@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.10 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: soft_int.cc,v 1.11 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ BX_CPU_C::BOUND_GvMa(bxInstruction_c *i)
   BX_PANIC(("BOUND_GvMa: not supported on 8086!"));
 #else
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     /* undefined opcode exception */
     BX_PANIC(("bound: op2 must be mem ref"));
     UndefinedOpcode(i);

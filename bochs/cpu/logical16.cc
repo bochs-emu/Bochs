@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.8 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: logical16.cc,v 1.9 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -57,7 +57,7 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
     result_16 = op1_16 ^ op2_16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -76,7 +76,7 @@ BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -119,7 +119,7 @@ BX_CPU_C::XOR_EwIw(bxInstruction_c *i)
     op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -130,7 +130,7 @@ BX_CPU_C::XOR_EwIw(bxInstruction_c *i)
     result_16 = op1_16 ^ op2_16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -150,7 +150,7 @@ BX_CPU_C::OR_EwIw(bxInstruction_c *i)
     op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -161,7 +161,7 @@ BX_CPU_C::OR_EwIw(bxInstruction_c *i)
     result_16 = op1_16 | op2_16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -178,7 +178,7 @@ BX_CPU_C::NOT_Ew(bxInstruction_c *i)
     Bit16u op1_16, result_16;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -189,7 +189,7 @@ BX_CPU_C::NOT_Ew(bxInstruction_c *i)
     result_16 = ~op1_16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -208,7 +208,7 @@ BX_CPU_C::OR_EwGw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -219,7 +219,7 @@ BX_CPU_C::OR_EwGw(bxInstruction_c *i)
     result_16 = op1_16 | op2_16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -239,7 +239,7 @@ BX_CPU_C::OR_GwEw(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -286,7 +286,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -297,7 +297,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
     result_16 = op1_16 & op2_16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -317,7 +317,7 @@ BX_CPU_C::AND_GwEw(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -359,7 +359,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
     op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -370,7 +370,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
     result_16 = op1_16 & op2_16;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
@@ -391,7 +391,7 @@ BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -432,7 +432,7 @@ BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
     op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {

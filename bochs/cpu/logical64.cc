@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.3 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: logical64.cc,v 1.4 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -57,11 +57,11 @@ BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
     result_64 = op1_64 ^ op2_64;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_XOR64);
@@ -77,7 +77,7 @@ BX_CPU_C::XOR_GqEq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -120,7 +120,7 @@ BX_CPU_C::XOR_EqId(bxInstruction_c *i)
     op2_64 = (Bit32s) i->Id();
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -131,11 +131,11 @@ BX_CPU_C::XOR_EqId(bxInstruction_c *i)
     result_64 = op1_64 ^ op2_64;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_XOR64);
@@ -150,7 +150,7 @@ BX_CPU_C::OR_EqId(bxInstruction_c *i)
     op2_64 = (Bit32s) i->Id();
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -161,11 +161,11 @@ BX_CPU_C::OR_EqId(bxInstruction_c *i)
     result_64 = op1_64 | op2_64;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_OR64);
@@ -177,7 +177,7 @@ BX_CPU_C::NOT_Eq(bxInstruction_c *i)
     Bit64u op1_64, result_64;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -188,11 +188,11 @@ BX_CPU_C::NOT_Eq(bxInstruction_c *i)
     result_64 = ~op1_64;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 }
 
@@ -206,7 +206,7 @@ BX_CPU_C::OR_EqGq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -217,11 +217,11 @@ BX_CPU_C::OR_EqGq(bxInstruction_c *i)
     result_64 = op1_64 | op2_64;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_OR64);
@@ -236,7 +236,7 @@ BX_CPU_C::OR_GqEq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -281,7 +281,7 @@ BX_CPU_C::AND_EqGq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -292,11 +292,11 @@ BX_CPU_C::AND_EqGq(bxInstruction_c *i)
     result_64 = op1_64 & op2_64;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_AND64);
@@ -311,7 +311,7 @@ BX_CPU_C::AND_GqEq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -353,7 +353,7 @@ BX_CPU_C::AND_EqId(bxInstruction_c *i)
     op2_64 = (Bit32s) i->Id();
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -364,11 +364,11 @@ BX_CPU_C::AND_EqId(bxInstruction_c *i)
     result_64 = op1_64 & op2_64;
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_AND64);
@@ -384,7 +384,7 @@ BX_CPU_C::TEST_EqGq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -425,7 +425,7 @@ BX_CPU_C::TEST_EqId(bxInstruction_c *i)
     op2_64 = (Bit32s) i->Id();
 
     /* op1_64 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.14 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: protect_ctrl.cc,v 1.15 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,7 +49,7 @@ BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 
   if (protected_mode()) {
     /* op1_16 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -62,7 +62,7 @@ BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
     if ( (op1_16 & 0x03) < (op2_16 & 0x03) ) {
       op1_16 = (op1_16 & 0xfffc) | (op2_16 & 0x03);
       /* now write back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
         if (i->os32L()) {
           // if 32bit opsize, then 0xff3f is or'd into
           // upper 16bits of register
@@ -113,7 +113,7 @@ BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
     }
 
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -224,7 +224,7 @@ BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
     return;
     }
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -319,7 +319,7 @@ BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
     Bit16u val16;
 
     val16 = BX_CPU_THIS_PTR ldtr.selector.value;
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), val16);
       }
     else {
@@ -343,7 +343,7 @@ BX_CPU_C::STR_Ew(bxInstruction_c *i)
     Bit16u val16;
 
     val16 = BX_CPU_THIS_PTR tr.selector.value;
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), val16);
       }
     else {
@@ -381,7 +381,7 @@ BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
       return;
       }
 
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       raw_selector = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -469,7 +469,7 @@ BX_CPU_C::LTR_Ew(bxInstruction_c *i)
       return;
       }
 
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       raw_selector = BX_READ_16BIT_REG(i->rm());
       }
     else {
@@ -561,7 +561,7 @@ BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     return;
     }
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -656,7 +656,7 @@ BX_CPU_C::VERW_Ew(bxInstruction_c *i)
     return;
     }
 
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->rm());
     }
   else {
@@ -728,7 +728,7 @@ BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     /* undefined opcode exception */
     BX_PANIC(("SGDT_Ms: use of register is undefined opcode."));
     UndefinedOpcode(i);
@@ -775,7 +775,7 @@ BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
   if (v8086_mode()) BX_PANIC(("protect_ctrl: v8086 mode unsupported"));
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     /* undefined opcode exception */
     BX_PANIC(("SIDT: use of register is undefined opcode."));
     UndefinedOpcode(i);
@@ -830,7 +830,7 @@ BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
     }
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     BX_PANIC(("LGDT generating exception 6"));
     UndefinedOpcode(i);
     return;
@@ -903,7 +903,7 @@ BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
     }
 
   /* op1 is a register or memory reference */
-  if (i->mod() == 0xc0) {
+  if (i->modC0()) {
     /* undefined opcode exception */
     BX_PANIC(("LIDT generating exception 6"));
     UndefinedOpcode(i);

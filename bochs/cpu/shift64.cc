@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.4 2002-09-18 08:00:42 kevinlawton Exp $
+// $Id: shift64.cc,v 1.5 2002-09-20 03:52:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
     if (!count) return; /* NOP */
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -62,11 +62,11 @@ BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
     result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     /* set eflags:
@@ -99,7 +99,7 @@ BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -111,11 +111,11 @@ BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
     result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     /* set eflags:
@@ -149,7 +149,7 @@ BX_CPU_C::ROL_Eq(bxInstruction_c *i)
     count = CL & 0x3f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -161,11 +161,11 @@ BX_CPU_C::ROL_Eq(bxInstruction_c *i)
       result_64 = (op1_64 << count) | (op1_64 >> (64 - count));
 
       /* now write result back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
         BX_WRITE_64BIT_REG(i->rm(), result_64);
         }
       else {
-        write_RMW_virtual_qword(result_64);
+        Write_RMW_virtual_qword(result_64);
         }
 
       /* set eflags:
@@ -195,7 +195,7 @@ BX_CPU_C::ROR_Eq(bxInstruction_c *i)
     count = CL & 0x3f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -207,11 +207,11 @@ BX_CPU_C::ROR_Eq(bxInstruction_c *i)
       result_64 = (op1_64 >> count) | (op1_64 << (64 - count));
 
       /* now write result back to destination */
-      if (i->mod() == 0xc0) {
+      if (i->modC0()) {
         BX_WRITE_64BIT_REG(i->rm(), result_64);
         }
       else {
-        write_RMW_virtual_qword(result_64);
+        Write_RMW_virtual_qword(result_64);
         }
 
       /* set eflags:
@@ -242,7 +242,7 @@ BX_CPU_C::RCL_Eq(bxInstruction_c *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -262,11 +262,11 @@ BX_CPU_C::RCL_Eq(bxInstruction_c *i)
       }
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     /* set eflags:
@@ -294,7 +294,7 @@ BX_CPU_C::RCR_Eq(bxInstruction_c *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -314,11 +314,11 @@ BX_CPU_C::RCR_Eq(bxInstruction_c *i)
       }
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     /* set eflags:
@@ -347,7 +347,7 @@ BX_CPU_C::SHL_Eq(bxInstruction_c *i)
     count = CL & 0x3f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -360,11 +360,11 @@ BX_CPU_C::SHL_Eq(bxInstruction_c *i)
     result_64 = (op1_64 << count);
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHL64);
@@ -387,7 +387,7 @@ BX_CPU_C::SHR_Eq(bxInstruction_c *i)
     count = CL & 0x3f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -400,11 +400,11 @@ BX_CPU_C::SHR_Eq(bxInstruction_c *i)
     result_64 = (op1_64 >> count);
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHR64);
@@ -426,7 +426,7 @@ BX_CPU_C::SAR_Eq(bxInstruction_c *i)
     count = CL & 0x3f;
 
     /* op1 is a register or memory reference */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
@@ -445,11 +445,11 @@ BX_CPU_C::SAR_Eq(bxInstruction_c *i)
       }
 
     /* now write result back to destination */
-    if (i->mod() == 0xc0) {
+    if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     /* set eflags:
