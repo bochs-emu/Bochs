@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.26 2002-10-03 15:47:12 kevinlawton Exp $
+// $Id: pc_system.cc,v 1.27 2002-10-04 16:26:08 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,8 +75,8 @@ bx_pc_system_c::bx_pc_system_c(void)
   timer[0].continuous = 1;
   timer[0].funct      = nullTimer;
   timer[0].this_ptr   = this;
-  currCountdown       = timer[0].period;
-  currCountdownPeriod = timer[0].period;
+  currCountdown       = NullTimerInterval;
+  currCountdownPeriod = NullTimerInterval;
   numTimers = 1; // So far, only the nullTimer.
 }
 
@@ -275,7 +275,7 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
 
   i = numTimers;
   timer[i].period     = ticks;
-  timer[i].timeToFire = (ticksTotal + (currCountdownPeriod-currCountdown)) +
+  timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) +
                         ticks;
   timer[i].active     = active;
   timer[i].continuous = continuous;
@@ -285,12 +285,12 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
   timer[i].id[BxMaxTimerIDLen-1] = 0; // Null terminate if not already.
 
   if (active) {
-    if (ticks < currCountdown) {
+    if (ticks < Bit64u(currCountdown)) {
       // This new timer needs to fire before the current countdown.
       // Skew the current countdown and countdown period to be smaller
       // by the delta.
-      currCountdownPeriod -= (currCountdown - ticks);
-      currCountdown = ticks;
+      currCountdownPeriod -= (currCountdown - Bit32u(ticks));
+      currCountdown = Bit32u(ticks);
       }
     }
 
@@ -317,7 +317,7 @@ bx_pc_system_c::countdownEvent(void)
 
   // Increment global ticks counter by number of ticks which have
   // elapsed since the last update.
-  ticksTotal += currCountdownPeriod;
+  ticksTotal += Bit64u(currCountdownPeriod);
   minTimeToFire = (Bit64u) -1;
 
   for (i=0; i < numTimers; i++) {
@@ -355,7 +355,7 @@ bx_pc_system_c::countdownEvent(void)
   // any of the callbacks, as they may call timer features, which need
   // to be advanced to the next countdown cycle.
   currCountdown = currCountdownPeriod =
-      (minTimeToFire - ticksTotal);
+      Bit32u(minTimeToFire - ticksTotal);
 
   for (i=0; i < numTimers; i++) {
     // Call requested timer function.  It may request a different
@@ -440,17 +440,17 @@ bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, Boolean continuou
     }
 
   timer[i].period = ticks;
-  timer[i].timeToFire = (ticksTotal + (currCountdownPeriod-currCountdown)) +
+  timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) +
                         ticks;
   timer[i].active     = 1;
   timer[i].continuous = continuous;
 
-  if (ticks < currCountdown) {
+  if (ticks < Bit64u(currCountdown)) {
     // This new timer needs to fire before the current countdown.
     // Skew the current countdown and countdown period to be smaller
     // by the delta.
-    currCountdownPeriod -= (currCountdown - ticks);
-    currCountdown = ticks;
+    currCountdownPeriod -= (currCountdown - Bit32u(ticks));
+    currCountdown = Bit32u(ticks);
     }
 }
 

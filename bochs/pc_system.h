@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.16 2002-10-03 15:47:12 kevinlawton Exp $
+// $Id: pc_system.h,v 1.17 2002-10-04 16:26:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,8 +66,8 @@ private:
     } timer[BX_MAX_TIMERS];
 
   unsigned   numTimers;  // Number of currently allocated timers.
-  Bit64u     currCountdown; // Current countdown ticks value (decrements to 0).
-  Bit64u     currCountdownPeriod; // Length of current countdown period.
+  Bit32u     currCountdown; // Current countdown ticks value (decrements to 0).
+  Bit32u     currCountdownPeriod; // Length of current countdown period.
   Bit64u     ticksTotal; // Num ticks total since start of emulator execution.
 
   // A special null timer is always inserted in the timer[0] slot.  This
@@ -119,15 +119,15 @@ public:
   ips_count += n;
   }
 #endif
-    while (n >= bx_pc_system.currCountdown) {
-      n -= bx_pc_system.currCountdown;
+    while (n >= Bit64u(bx_pc_system.currCountdown)) {
+      n -= Bit64u(bx_pc_system.currCountdown);
       bx_pc_system.currCountdown = 0;
       bx_pc_system.countdownEvent();
       // bx_pc_system.currCountdown is adjusted to new value by countdownevent().
       };
     // 'n' is not (or no longer) >= the countdown size.  We can just decrement
     // the remaining requested ticks and continue.
-    bx_pc_system.currCountdown -= n;
+    bx_pc_system.currCountdown -= Bit32u(n);
     }
 
   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
@@ -137,13 +137,13 @@ public:
   Bit64u time_usec();
   static BX_CPP_INLINE Bit64u time_ticks() {
     return bx_pc_system.ticksTotal +
-      (bx_pc_system.currCountdownPeriod - bx_pc_system.currCountdown);
+      Bit64u(bx_pc_system.currCountdownPeriod - bx_pc_system.currCountdown);
     }
   static BX_CPP_INLINE Bit64u getTicksTotal(void) {
     return bx_pc_system.ticksTotal;
     }
 
-  static BX_CPP_INLINE Bit64u  getNumCpuTicksLeftNextEvent(void) {
+  static BX_CPP_INLINE Bit32u  getNumCpuTicksLeftNextEvent(void) {
     return bx_pc_system.currCountdown;
     }
 #if BX_DEBUGGER

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.59 2002-10-03 05:14:50 bdenney Exp $
+// $Id: cpu.cc,v 1.60 2002-10-04 16:26:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -104,7 +104,6 @@ extern void REGISTER_IADDR(bx_addr addr);
 #endif
 
 
-#if BX_DYNAMIC_TRANSLATION == 0
   void
 BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
@@ -141,16 +140,14 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR errorno = 0;
 
-main_cpu_loop:
+  while (1) {
 
   // First check on events which occurred for previous instructions
   // (traps) and ones which are asynchronous to the CPU
   // (hardware interrupts).
-  if (BX_CPU_THIS_PTR async_event)
-    goto handle_async_event;
-
-async_events_processed:
-
+  if (BX_CPU_THIS_PTR async_event) {
+    handleAsyncEvent();
+    }
 
 #if BX_DEBUGGER
   {
@@ -480,14 +477,15 @@ debugger_check:
     }
 #endif
 
-    goto main_cpu_loop;
+  }  // while (1)
+}
 
-
+  void
+BX_CPU_C::handleAsyncEvent(void)
+{
   //
   // This area is where we process special conditions and events.
   //
-
-handle_async_event:
 
   if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
     // I made up the bitmask above to mean HALT state.
@@ -687,10 +685,7 @@ handle_async_event:
          BX_HRQ ||
          BX_CPU_THIS_PTR get_TF ()) )
     BX_CPU_THIS_PTR async_event = 0;
-
-  goto async_events_processed;
 }
-#endif  // #if BX_DYNAMIC_TRANSLATION == 0
 
 
 
