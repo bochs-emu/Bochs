@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.102 2003-06-08 08:21:12 vruppert Exp $
+// $Id: harddrv.cc,v 1.103 2003-07-28 18:52:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.102 2003-06-08 08:21:12 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.103 2003-07-28 18:52:14 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -640,7 +640,12 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
     }
 
   if (channel == BX_MAX_ATA_CHANNEL) {
-    BX_PANIC(("Unable to find ATA channel, ioport=0x%04x", address));
+    if ((address < 0x03f6) || (address > 0x03f7)) {
+      BX_PANIC(("read: unable to find ATA channel, ioport=0x%04x", address));
+    } else {
+      channel = 0;
+      port = address - 0x03e0;
+    }
     }
 
 #if BX_PDC20230C_VLBIDE_SUPPORT
@@ -1179,8 +1184,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
 
   if (channel == BX_MAX_ATA_CHANNEL) {
-    BX_PANIC(("Unable to find ATA channel, ioport=0x%04x", address));
+    if (address != 0x03f6) {
+      BX_PANIC(("write: unable to find ATA channel, ioport=0x%04x", address));
+    } else {
+      channel = 0;
+      port = address - 0x03e0;
     }
+  }
 
 #if BX_PDC20230C_VLBIDE_SUPPORT
 // pdc20230c is only available for first ata channel
