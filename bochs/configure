@@ -601,9 +601,9 @@ fi
 
 
 
-VERSION="1.2.cvs"
-VER_STRING="cvs-snapshot"
-REL_STRING=""
+VERSION="1.3"
+VER_STRING="1.3"
+REL_STRING="December 8, 2001"
 
 
 
