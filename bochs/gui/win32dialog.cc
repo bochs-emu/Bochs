@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.19 2004-02-05 20:02:53 vruppert Exp $
+// $Id: win32dialog.cc,v 1.20 2004-02-26 19:25:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -154,10 +154,15 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       if (lstrlen(origpath) && lstrcmp(origpath, "none")) {
         SetWindowText(GetDlgItem(hDlg, IDPATH), origpath);
       }
-      return FALSE;
+      return TRUE;
+      break;
     case WM_CLOSE:
-      param->set(origpath);
+      GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
+      if (lstrcmp(path, origpath)) {
+        param->set(origpath);
+      }
       EndDialog(hDlg, -1);
+      return TRUE;
       break;
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
@@ -168,6 +173,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             SetWindowText(GetDlgItem(hDlg, IDPATH), param->getptr());
             SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
           }
+          return TRUE;
           break;
         case IDOK:
           if (SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_GETCHECK, 0, 0) == BST_CHECKED) {
@@ -184,10 +190,15 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           }
           param->set(path);
           EndDialog(hDlg, 1);
+          return TRUE;
           break;
         case IDCANCEL:
-          param->set(origpath);
+          GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
+          if (lstrcmp(path, origpath)) {
+            param->set(origpath);
+          }
           EndDialog(hDlg, -1);
+          return TRUE;
           break;
         case IDCREATE:
           GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
@@ -196,6 +207,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[cap], path);
             MessageBox(hDlg, mesg, "Image created", MB_OK);
           }
+          return TRUE;
           break;
       }
   }
