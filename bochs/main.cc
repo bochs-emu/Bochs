@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.127 2002-08-30 14:22:47 vruppert Exp $
+// $Id: main.cc,v 1.128 2002-08-30 21:41:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1233,9 +1233,11 @@ bx_init_main (int argc, char *argv[])
   // constructors or functions called by constructors.  The macros test for
   // NULL and create the object if necessary, then return it.  Ensure that io
   // and genlog get created, by making one reference to each macro right here.
-  // All other code can reference io and genlog directly.
-  SAFE_GET_IOFUNC();
-  SAFE_GET_GENLOG();
+  // All other code can reference io and genlog directly.  Because these
+  // objects are required for logging, and logging is so fundamental to
+  // knowing what the program is doing, they are never free()d.
+  SAFE_GET_IOFUNC();  // never freed
+  SAFE_GET_GENLOG();  // never freed
 
   if ((argc > 1) && (!strcmp ("--help", argv[1]))) {
     fprintf(stderr, "Usage: bochs [options] [bochsrc options]\n\n"
