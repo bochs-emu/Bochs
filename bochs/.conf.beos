@@ -1,13 +1,13 @@
 #!/bin/sh
 
 #
-# These are the steps I typically use to configure and compile Bochs,
-# on an x86 BeOS machine, using gcc
+# These options are suggested by Bernd Korz, who maintains the BeOS
+# port.  He says that SDL works better than the native BeOS gui.
 #
 
 CC=gcc
 CXX=$CC
-CFLAGS="-Wall -O2 -mpentium -fomit-frame-pointer -pipe"
+CFLAGS="-Wall -O9 -mpentium -fomit-frame-pointer -pipe"
 CXXFLAGS=$CFLAGS
 
 export CC
@@ -15,8 +15,8 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-beos \
+./configure --with-sdl \
    --enable-cdrom \
-   --enable-ne2000 \
    --enable-sb16=dummy \
-   --enable-guest2host-tlb
+   --enable-dc2300-vlb-ide \
+   --enable-all-optimizations 
