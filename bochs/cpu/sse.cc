@@ -86,14 +86,14 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.soft.cwd;
   xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.soft.swd;
 
-  if(twd & 0x0003 == 0x0003) tbd |= 0x010000;
-  if(twd & 0x000c == 0x000c) tbd |= 0x020000;
-  if(twd & 0x0030 == 0x0030) tbd |= 0x040000;
-  if(twd & 0x00c0 == 0x00c0) tbd |= 0x080000;
-  if(twd & 0x0300 == 0x0300) tbd |= 0x100000;
-  if(twd & 0x0c00 == 0x0c00) tbd |= 0x200000;
-  if(twd & 0x3000 == 0x3000) tbd |= 0x400000;
-  if(twd & 0xc000 == 0xc000) tbd |= 0x800000;
+  if(twd & 0x0003 == 0x0003) tbd |= 0x0100;
+  if(twd & 0x000c == 0x000c) tbd |= 0x0200;
+  if(twd & 0x0030 == 0x0030) tbd |= 0x0400;
+  if(twd & 0x00c0 == 0x00c0) tbd |= 0x0800;
+  if(twd & 0x0300 == 0x0300) tbd |= 0x1000;
+  if(twd & 0x0c00 == 0x0c00) tbd |= 0x2000;
+  if(twd & 0x3000 == 0x3000) tbd |= 0x4000;
+  if(twd & 0xc000 == 0xc000) tbd |= 0x8000;
 
   xmm.xmm16u(2) = tbd;
 
@@ -207,14 +207,14 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
    */                    /* still not implemented */
 
   tbd = xmm.xmm16u(2);
-  if(tbd & 0x010000) twd |= 0x0003;
-  if(tbd & 0x020000) twd |= 0x000c;
-  if(tbd & 0x040000) twd |= 0x0030;
-  if(tbd & 0x080000) twd |= 0x00c0;
-  if(tbd & 0x100000) twd |= 0x0300;
-  if(tbd & 0x200000) twd |= 0x0c00;
-  if(tbd & 0x400000) twd |= 0x3000;
-  if(tbd & 0x800000) twd |= 0xc000;
+  if(tbd & 0x0100) twd |= 0x0003;
+  if(tbd & 0x0200) twd |= 0x000c;
+  if(tbd & 0x0400) twd |= 0x0030;
+  if(tbd & 0x0800) twd |= 0x00c0;
+  if(tbd & 0x1000) twd |= 0x0300;
+  if(tbd & 0x2000) twd |= 0x0c00;
+  if(tbd & 0x4000) twd |= 0x3000;
+  if(tbd & 0x8000) twd |= 0xc000;
   BX_CPU_THIS_PTR the_i387.soft.twd = twd;
 
   readVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
