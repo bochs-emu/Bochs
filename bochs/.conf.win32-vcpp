@@ -8,15 +8,15 @@ set echo
 #./configure --with-win32-vcpp --enable-disasm
 
 ./configure --target=pentium-windows \
-            --enable-cdrom \
-	    --enable-sb16=win \
+	    --enable-cdrom \
 	    --enable-ne2000 \
 	    --enable-vbe \
-	    --enable-cpp \
-		--enable-all-optimizations \
-	    --disable-readline
+	    --enable-all-optimizations \
+	    --disable-readline \
+	    --enable-sb16=win
 
 unset echo
+exit
 
 # Fix up all makefiles so that nmake can handle them.
 for i in `find . -name Makefile`; do
