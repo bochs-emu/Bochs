@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.34 2002-03-11 15:04:58 bdenney Exp $
+// $Id: x.cc,v 1.35 2002-03-15 16:45:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -970,11 +970,11 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned i, x, y, curs;
   unsigned new_foreground, new_background;
   Bit8u string[1];
-  Bit8u cursor_start, cursor_end;
+  Bit8u cs_start, cs_end;
   unsigned nchars;
 
-  cursor_start = cursor_state >> 8;
-  cursor_end = cursor_state & 0xff;
+  cs_start = (cursor_state >> 8) & 0x3f;
+  cs_end = cursor_state & 0x1f;
 
   font_height = font_info->ascent + font_info->descent;
 
@@ -1030,8 +1030,8 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   XSetBackground(bx_x_display, gc, black_pixel);
 
   // now draw character at new block cursor location in reverse
-  if ( ( (cursor_y*80 + cursor_x) < nchars ) && (cursor_start <= cursor_end) ) {
-    for (unsigned i = cursor_start; i <= cursor_end; i++)
+  if ( ( (cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
+    for (unsigned i = cs_start; i <= cs_end; i++)
       XDrawLine(bx_x_display, win,
 	gc_inv,
 	cursor_x * font_info->max_bounds.width,
@@ -1042,6 +1042,15 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     }
 
   XFlush(bx_x_display);
+}
+
+  void
+bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+{
+  extern Display *bx_x_display;
+  // this writes data to the clipboard.
+  BX_INFO (("storing %d bytes to X windows clipboard", len));
+  XStoreBytes (bx_x_display, (char *)text_snapshot, len);
 }
 
 

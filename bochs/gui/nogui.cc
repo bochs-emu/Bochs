@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.13 2001-12-13 18:36:29 vruppert Exp $
+// $Id: nogui.cc,v 1.14 2002-03-15 16:45:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,6 +144,13 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   UNUSED(cursor_y);
   UNUSED(cursor_state);
   UNUSED(nrows);
+}
+
+  void
+bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+{
+  UNUSED(text_snapshot);
+  UNUSED(len);
 }
 
 

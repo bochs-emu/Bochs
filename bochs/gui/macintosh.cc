@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.10 2001-12-13 18:36:29 vruppert Exp $
+// $Id: macintosh.cc,v 1.11 2002-03-15 16:45:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -860,6 +860,11 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	previ = cursori;
 	
 	SetPort(oldPort);
+}
+
+  void
+bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+{
 }
 
 

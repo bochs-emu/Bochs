@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.35 2002-03-12 06:46:35 bdenney Exp $
+// $Id: gui.cc,v 1.36 2002-03-15 16:45:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -284,20 +284,8 @@ bx_gui_c::copy_handler(void)
     return;
   }
   // copy to clipboard using gui dependent code.
-#ifdef WIN32
-  if (OpenClipboard(NULL)) {
-    HANDLE hMem = GlobalAlloc(GMEM_ZEROINIT, len);
-    EmptyClipboard();
-    lstrcpy((char *)hMem, text_snapshot);
-    SetClipboardData(CF_TEXT, hMem);
-    CloseClipboard();
-    GlobalFree(hMem);
-  }
-#elif BX_WITH_X11
-  extern Display *bx_x_display;
-  // this writes data to the clipboard.
-  BX_INFO (("storing %d bytes to X windows clipboard", len));
-  XStoreBytes (bx_x_display, (char *)text_snapshot, len);
+#if ( defined(WIN32) || defined(BX_WITH_X11) )
+  set_clipboard_text(text_snapshot, len);
 #else
   FILE *fp = fopen("copy.txt", "w");
   fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
@@ -313,7 +301,7 @@ bx_gui_c::snapshot_handler(void)
   char *text_snapshot;
   Bit32u len;
   if (make_text_snapshot (&text_snapshot, &len) < 0) {
-    BX_ERROR(( "copy button failed, mode not implemented"));
+    BX_ERROR(( "snapshot button failed, mode not implemented"));
     return;
   }
   FILE *fp = fopen("snapshot.txt", "w");

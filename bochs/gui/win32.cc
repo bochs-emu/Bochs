@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.26 2002-03-15 10:55:48 mlerwill Exp $
+// $Id: win32.cc,v 1.27 2002-03-15 16:45:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -715,18 +715,18 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned nchars;
   unsigned char data[32];
 
-  cs_start = cursor_state >> 8;
-  cs_end = cursor_state & 0xff;
+  cs_start = (cursor_state >> 8) & 0x3f;
+  cs_end = cursor_state & 0x1f;
 
   if (!stInfo.UIinited) return;
-	
+
   EnterCriticalSection(&stInfo.drawCS);
 
   hdc = GetDC(stInfo.hwnd);
 
   // Number of characters on screen, variable number of rows
   nchars = 80*nrows;
-	
+
   if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars) {
     cChar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
     DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
@@ -767,6 +767,19 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   ReleaseDC(stInfo.hwnd, hdc);
 
   LeaveCriticalSection(&stInfo.drawCS);
+}
+
+  void
+bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+{
+  if (OpenClipboard(stInfo.hwnd)) {
+    HANDLE hMem = GlobalAlloc(GMEM_ZEROINIT, len);
+    EmptyClipboard();
+    lstrcpy((char *)hMem, text_snapshot);
+    SetClipboardData(CF_TEXT, hMem);
+    CloseClipboard();
+    GlobalFree(hMem);
+  }
 }
 
 
@@ -1031,12 +1044,12 @@ void create_vga_font(void) {
 
 unsigned char reverse_bitorder(unsigned char b) {
   unsigned char ret=0;
-	
+
   for (unsigned i=0; i<8; i++) {
     ret |= (b & 0x01) << (7-i);
     b >>= 1;
   }
-	
+
   return(ret);
 }
 
