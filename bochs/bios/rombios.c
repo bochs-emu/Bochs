@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.119 2004-10-02 12:27:09 vruppert Exp $
+// $Id: rombios.c,v 1.120 2004-10-04 19:28:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -916,10 +916,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.119 $";
-static char bios_date_string[] = "$Date: 2004-10-02 12:27:09 $";
+static char bios_cvs_version_string[] = "$Revision: 1.120 $";
+static char bios_date_string[] = "$Date: 2004-10-04 19:28:55 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.119 2004-10-02 12:27:09 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.120 2004-10-04 19:28:55 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -5512,8 +5512,8 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
         case 0x03: SET_BL( 0x06 ); break;
         }
 
-      DI = 0xefc7;
-      ES = 0xf000;
+      DI = read_word(0x00, 0x1e*4); // INT vector 0x1E
+      ES = read_word(0x00, 0x1e*4+2);
       goto int13_success;
       break;
 
@@ -7084,8 +7084,8 @@ BX_DEBUG_INT13_FL("floppy f08\n");
         }
 
       /* set es & di to point to 11 byte diskette param table in ROM */
-      DI = 0xefc7;
-      ES = 0xf000;
+      DI = read_word(0x00, 0x1e*4); // INT vector 0x1E
+      ES = read_word(0x00, 0x1e*4+2);
       CLEAR_CF(); // success
       /* disk status not changed upon success */
       return;
@@ -8002,7 +8002,7 @@ f1_missing:
   mov  al, #0x02
   out  #0x0a, al   ;; clear DMA-1 channel 2 mask bit
 
-  SET_INT_VECTOR(0x1E, #0xF000, #diskette_param_table)
+  SET_INT_VECTOR(0x1E, #0xF000, #diskette_param_table2)
   SET_INT_VECTOR(0x40, #0xF000, #int13_diskette)
   SET_INT_VECTOR(0x0E, #0xF000, #int0e_handler) ;; IRQ 6
 
@@ -9841,6 +9841,26 @@ int17_handler:
   popa
   pop  ds
   iret
+
+diskette_param_table2:
+;;  New diskette parameter table adding 3 parameters from IBM
+;;  Since no provisions are made for multiple drive types, most
+;;  values in this table are ignored.  I set parameters for 1.44M
+;;  floppy here
+db  0xAF
+db  0x02 ;; head load time 0000001, DMA used
+db  0x25
+db  0x02
+db    18
+db  0x1B
+db  0xFF
+db  0x6C
+db  0xF6
+db  0x0F
+db  0x08
+db    79 ;; maximum track
+db     0 ;; data transfer rate
+db     4 ;; drive type in cmos
 
 .org 0xf045 ; INT 10 Functions 0-Fh Entry Point
   HALT(__LINE__)
