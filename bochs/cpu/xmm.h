@@ -3,8 +3,10 @@
 
 /* XMM REGISTER */
 
+#if 0 // does not seem to be used
 typedef Bit32u Float32;
 typedef Bit64u Float64;
+#endif
 
 typedef union bx_xmm_reg_t {
    Bit8s   _sbyte[16];
