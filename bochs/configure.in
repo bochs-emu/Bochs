@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.246 2004-02-01 23:48:56 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.247 2004-02-08 10:22:18 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -136,6 +136,7 @@ AC_CHECK_FUNCS(getenv, AC_DEFINE(BX_HAVE_GETENV))
 AC_CHECK_FUNCS(setenv, AC_DEFINE(BX_HAVE_SETENV))
 AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
 AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
+AC_CHECK_FUNCS(vsnprintf, AC_DEFINE(BX_HAVE_VSNPRINTF))
 AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
 AC_CHECK_FUNCS(strtouq, AC_DEFINE(BX_HAVE_STRTOUQ))
 AC_CHECK_FUNCS(strdup, AC_DEFINE(BX_HAVE_STRDUP))

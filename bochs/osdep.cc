@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.15 2004-02-06 22:27:59 danielg4 Exp $
+// $Id: osdep.cc,v 1.16 2004-02-08 10:22:29 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,8 +55,15 @@ int bx_snprintf (char *s, size_t maxlen, const char *format, ...)
 
   return done;
 }
+
 #endif  /* !BX_HAVE_SNPRINTF */
 
+#if !BX_HAVE_VSNPRINTF
+int bx_vsnprintf (char *s, size_t maxlen, const char *format, va_list arg)
+{
+  return vsprintf (s, format, arg);
+}
+#endif /* !BX_HAVE_VSNPRINTF*/
 
 #if (!BX_HAVE_STRTOULL && !BX_HAVE_STRTOUQ)
 /* taken from glibc-2.2.2: strtod.c, and stripped down a lot.  There are 
