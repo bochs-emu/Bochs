@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.32 2002-09-16 15:28:19 bdenney Exp $
+// $Id: wxdialog.h,v 1.33 2002-09-16 16:04:15 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -610,12 +610,12 @@ public:
   DebugLogDialog(wxWindow* parent, wxWindowID id);
   void Init ();  // called automatically by ShowModal()
   void OnEvent (wxCommandEvent& event);
-  void OnEnterEvent (wxCommandEvent& event) { Execute(); }
+  void OnEnterEvent (wxCommandEvent& event) { Execute(true); }
   void OnKeyEvent (wxKeyEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void Execute ();
+  void Execute (bool clearCommand);
   void AppendCommand (const char *);
-  void AppendText (wxString text) { log->AppendText (text); }
+  void AppendText (wxString text);
 DECLARE_EVENT_TABLE()
 };
 

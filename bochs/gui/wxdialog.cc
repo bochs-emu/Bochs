@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.36 2002-09-16 15:28:19 bdenney Exp $
+// $Id: wxdialog.cc,v 1.37 2002-09-16 16:04:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1447,12 +1447,12 @@ void DebugLogDialog::Init()
   Center ();
 }
 
-void DebugLogDialog::Execute()
+void DebugLogDialog::Execute(bool clear)
 {
   // send to debugger
   theFrame->DebugCommand (command->GetValue ());
   // display what they typed on the log screen
-  command->Clear ();
+  if (clear) command->Clear ();
 }
 
 void DebugLogDialog::AppendCommand (const char *cmd)
@@ -1460,6 +1460,16 @@ void DebugLogDialog::AppendCommand (const char *cmd)
   log->AppendText (wxT(">>> "));
   log->AppendText (wxString (cmd));
   log->AppendText (wxT("\n"));
+  int n = log->GetLastPosition ();
+  if (n>0) n--;
+  log->ShowPosition (n);
+}
+
+void DebugLogDialog::AppendText (wxString text) {
+  log->AppendText (text);
+  int n = log->GetLastPosition ();
+  if (n>0) n--;
+  log->ShowPosition (n);
 }
 
 void DebugLogDialog::OnEvent(wxCommandEvent& event)
@@ -1470,14 +1480,8 @@ void DebugLogDialog::OnEvent(wxCommandEvent& event)
     case wxID_OK:
       Show(FALSE);
       break;
-    case ID_DebugCommand:
-      if (event.GetEventType() == wxEVT_COMMAND_ENTER) {
-	// fall through into ID_Execute case
-      } else {
-        break;
-      }
-    case ID_Execute:
-      Execute ();
+    case ID_Execute: // pressed execute button
+      Execute (false);
       break;
     default:
       event.Skip ();
@@ -1994,7 +1998,7 @@ CpuRegistersDialog::Init ()
   for (i=0; i<CPU_REGS_MAX_FLAGS; i++) {
     if (i<nflags) {
       bx_param_c *param = SIM->get_param (flagid[i]);
-      flagsSizer->Add (new wxStaticText (this, -1, param->get_name ()));
+      flagsSizer->Add (new wxStaticText (this, -1, param->get_name ()), 0, wxALL|wxALIGN_CENTER, 4);
     } else {
       flagsSizer->Add (0, 0);  // spacer
     }
