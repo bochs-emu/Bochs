@@ -776,7 +776,8 @@ bx_continue_after_control_panel (int argc, char *argv[])
     // only one processor, run as fast as possible by not messing with
     // quantums and loops.
     BX_CPU(0)->cpu_loop(1);
-    BX_PANIC (("cpu_loop should never return in a single-processor simulation"));
+	// for one processor, the only reason for cpu_loop to return is
+	// that kill_bochs_request was set by the GUI interface.
   } else {
     // SMP simulation: do a few instructions on each processor, then switch
     // to another.  Increasing quantum speeds up overall performance, but
@@ -787,12 +788,15 @@ bx_continue_after_control_panel (int argc, char *argv[])
       // do some instructions in each processor
       BX_CPU(processor)->cpu_loop(quantum);
       processor = (processor+1) % BX_SMP_PROCESSORS;
+	  if (BX_CPU(0)->kill_bochs_request) 
+	    break;
       if (processor == 0) 
-	BX_TICKN(quantum);
+	    BX_TICKN(quantum);
     }
   }
 #endif
-
+  BX_INFO (("cpu loop quit, shutting down simulator"));
+  bx_atexit ();
   return(0);
 }
 
