@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.32 2001-10-06 05:51:34 bdenney Exp $
+// $Id: control.cc,v 1.33 2001-10-06 08:45:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.32 2001-10-06 05:51:34 bdenney Exp $
+ * $Id: control.cc,v 1.33 2001-10-06 08:45:18 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -616,7 +616,7 @@ int control_panel_notify_callback (int code)
       fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), prefix);
       fprintf (stderr, "  die        - stop execution now\n");
 #if BX_DEBUGGER
-      fprintf (stderr, "  debug      - continue and return to debugger\n");
+      fprintf (stderr, "  debug      - continue and return to bochs debugger\n");
 #endif
       int choice;
       if (ask_menu ("Choose cont, alwayscont, or die. [%s] ", 
