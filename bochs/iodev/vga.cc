@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.105 2004-07-18 19:40:48 vruppert Exp $
+// $Id: vga.cc,v 1.106 2004-07-21 20:39:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -329,7 +329,6 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.vbe_virtual_yres=480;
   BX_VGA_THIS s.vbe_bpp_multiplier=1;
   BX_VGA_THIS s.vbe_virtual_start=0;
-  BX_VGA_THIS s.vbe_line_byte_width=640;
   BX_VGA_THIS s.vbe_lfb_enabled=0;
   BX_VGA_THIS s.vbe_get_capabilities=0;
   BX_VGA_THIS s.vbe_8bit_dac=0;
@@ -1591,6 +1590,7 @@ bx_vga_c::update(void)
       case 0:
         Bit8u attribute, palette_reg_val, DAC_regno;
         unsigned long line_compare;
+        Bit8u *plane0, *plane1, *plane2, *plane3;
 
         if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // CGA 640x200x2
 
@@ -1624,8 +1624,26 @@ bx_vga_c::update(void)
         } else { // output data in serial fashion with each display plane
                  // output on its associated serial output.  Standard EGA/VGA format
 
-          line_compare = BX_VGA_THIS s.line_compare;
-          if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
+#if BX_SUPPORT_VBE  
+          if (BX_VGA_THIS s.vbe_enabled)
+          {
+            plane0 = &BX_VGA_THIS s.vbe_memory[0<<20];
+            plane1 = &BX_VGA_THIS s.vbe_memory[1<<20];
+            plane2 = &BX_VGA_THIS s.vbe_memory[2<<20];
+            plane3 = &BX_VGA_THIS s.vbe_memory[3<<20];
+            start_addr = BX_VGA_THIS s.vbe_virtual_start;
+            line_compare = 0xffff;
+          }
+          else
+#endif
+          {
+            plane0 = &BX_VGA_THIS s.vga_memory[0<<16];
+            plane1 = &BX_VGA_THIS s.vga_memory[1<<16];
+            plane2 = &BX_VGA_THIS s.vga_memory[2<<16];
+            plane3 = &BX_VGA_THIS s.vga_memory[3<<16];
+            line_compare = BX_VGA_THIS s.line_compare;
+            if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
+          }
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -1645,10 +1663,10 @@ bx_vga_c::update(void)
                         (y * BX_VGA_THIS s.line_offset);
                     }
                     attribute =
-                      (((BX_VGA_THIS s.vga_memory[0*65536 + byte_offset] >> bit_no) & 0x01) << 0) |
-                      (((BX_VGA_THIS s.vga_memory[1*65536 + byte_offset] >> bit_no) & 0x01) << 1) |
-                      (((BX_VGA_THIS s.vga_memory[2*65536 + byte_offset] >> bit_no) & 0x01) << 2) |
-                      (((BX_VGA_THIS s.vga_memory[3*65536 + byte_offset] >> bit_no) & 0x01) << 3);
+                      (((plane0[byte_offset] >> bit_no) & 0x01) << 0) |
+                      (((plane1[byte_offset] >> bit_no) & 0x01) << 1) |
+                      (((plane2[byte_offset] >> bit_no) & 0x01) << 2) |
+                      (((plane3[byte_offset] >> bit_no) & 0x01) << 3);
 
                     attribute &= BX_VGA_THIS s.attribute_ctrl.color_plane_enable;
                     // undocumented feature ???: colors 0..7 high intensity, colors 8..15 blinking
@@ -1937,6 +1955,7 @@ bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
 bx_vga_c::mem_read(Bit32u addr)
 {
   Bit32u offset;
+  Bit8u *plane0, *plane1, *plane2, *plane3;
 
 #if BX_SUPPORT_VBE  
   // if in a vbe enabled mode, read from the vbe_memory
@@ -1990,13 +2009,30 @@ bx_vga_c::mem_read(Bit32u addr)
     return BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536];
     }
 
+#if BX_SUPPORT_VBE  
+  if (BX_VGA_THIS s.vbe_enabled)
+  {
+    plane0 = &BX_VGA_THIS s.vbe_memory[(0<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane1 = &BX_VGA_THIS s.vbe_memory[(1<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane2 = &BX_VGA_THIS s.vbe_memory[(2<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane3 = &BX_VGA_THIS s.vbe_memory[(3<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+  }
+  else
+#endif
+  {
+    plane0 = &BX_VGA_THIS s.vga_memory[0<<16];
+    plane1 = &BX_VGA_THIS s.vga_memory[1<<16];
+    plane2 = &BX_VGA_THIS s.vga_memory[2<<16];
+    plane3 = &BX_VGA_THIS s.vga_memory[3<<16];
+  }
+
   /* addr between 0xA0000 and 0xAFFFF */
   switch (BX_VGA_THIS s.graphics_ctrl.read_mode) {
     case 0: /* read mode 0 */
-      BX_VGA_THIS s.graphics_ctrl.latch[0] = BX_VGA_THIS s.vga_memory[          offset];
-      BX_VGA_THIS s.graphics_ctrl.latch[1] = BX_VGA_THIS s.vga_memory[1*65536 + offset];
-      BX_VGA_THIS s.graphics_ctrl.latch[2] = BX_VGA_THIS s.vga_memory[2*65536 + offset];
-      BX_VGA_THIS s.graphics_ctrl.latch[3] = BX_VGA_THIS s.vga_memory[3*65536 + offset];
+      BX_VGA_THIS s.graphics_ctrl.latch[0] = plane0[offset];
+      BX_VGA_THIS s.graphics_ctrl.latch[1] = plane1[offset];
+      BX_VGA_THIS s.graphics_ctrl.latch[2] = plane2[offset];
+      BX_VGA_THIS s.graphics_ctrl.latch[3] = plane3[offset];
       return(BX_VGA_THIS s.graphics_ctrl.latch[BX_VGA_THIS s.graphics_ctrl.read_map_select]);
       break;
 
@@ -2007,10 +2043,10 @@ bx_vga_c::mem_read(Bit32u addr)
 
       color_compare   = BX_VGA_THIS s.graphics_ctrl.color_compare & 0x0f;
       color_dont_care = BX_VGA_THIS s.graphics_ctrl.color_dont_care & 0x0f;
-      latch0 = BX_VGA_THIS s.graphics_ctrl.latch[0] = BX_VGA_THIS s.vga_memory[          offset];
-      latch1 = BX_VGA_THIS s.graphics_ctrl.latch[1] = BX_VGA_THIS s.vga_memory[1*65536 + offset];
-      latch2 = BX_VGA_THIS s.graphics_ctrl.latch[2] = BX_VGA_THIS s.vga_memory[2*65536 + offset];
-      latch3 = BX_VGA_THIS s.graphics_ctrl.latch[3] = BX_VGA_THIS s.vga_memory[3*65536 + offset];
+      latch0 = BX_VGA_THIS s.graphics_ctrl.latch[0] = plane0[offset];
+      latch1 = BX_VGA_THIS s.graphics_ctrl.latch[1] = plane1[offset];
+      latch2 = BX_VGA_THIS s.graphics_ctrl.latch[2] = plane2[offset];
+      latch3 = BX_VGA_THIS s.graphics_ctrl.latch[3] = plane3[offset];
 
       latch0 ^= ccdat[color_compare][0];
       latch1 ^= ccdat[color_compare][1];
@@ -2061,6 +2097,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
   Bit32u offset;
   Bit8u new_val[4];
   unsigned start_addr;
+  Bit8u *plane0, *plane1, *plane2, *plane3;
 
 #if BX_SUPPORT_VBE
   // if in a vbe enabled mode, write to the vbe_memory
@@ -2182,6 +2219,24 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     }
 
   /* addr between 0xA0000 and 0xAFFFF */
+
+#if BX_SUPPORT_VBE
+  if (BX_VGA_THIS s.vbe_enabled)
+  {
+    plane0 = &BX_VGA_THIS s.vbe_memory[(0<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane1 = &BX_VGA_THIS s.vbe_memory[(1<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane2 = &BX_VGA_THIS s.vbe_memory[(2<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane3 = &BX_VGA_THIS s.vbe_memory[(3<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+  }
+  else
+#endif
+  {
+    plane0 = &BX_VGA_THIS s.vga_memory[0<<16];
+    plane1 = &BX_VGA_THIS s.vga_memory[1<<16];
+    plane2 = &BX_VGA_THIS s.vga_memory[2<<16];
+    plane3 = &BX_VGA_THIS s.vga_memory[3<<16];
+  }
+
   switch (BX_VGA_THIS s.graphics_ctrl.write_mode) {
     unsigned i;
 
@@ -2428,18 +2483,18 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
   if (BX_VGA_THIS s.sequencer.map_mask & 0x0f) {
     BX_VGA_THIS s.vga_mem_updated = 1;
     if (BX_VGA_THIS s.sequencer.map_mask_bit[0])
-      BX_VGA_THIS s.vga_memory[0*65536 + offset] = new_val[0];
+      plane0[offset] = new_val[0];
     if (BX_VGA_THIS s.sequencer.map_mask_bit[1])
-      BX_VGA_THIS s.vga_memory[1*65536 + offset] = new_val[1];
+      plane1[offset] = new_val[1];
     if (BX_VGA_THIS s.sequencer.map_mask_bit[2]) {
       if ((!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) &&
           ((offset & 0xe000) == BX_VGA_THIS s.charmap_address)) {
         bx_gui->set_text_charbyte((offset & 0x1fff), new_val[2]);
         }
-      BX_VGA_THIS s.vga_memory[2*65536 + offset] = new_val[2];
+      plane2[offset] = new_val[2];
       }
     if (BX_VGA_THIS s.sequencer.map_mask_bit[3])
-      BX_VGA_THIS s.vga_memory[3*65536 + offset] = new_val[3];
+      plane3[offset] = new_val[3];
 
     unsigned x_tileno, y_tileno;
 
@@ -2698,7 +2753,7 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   offset-=BX_VGA_THIS s.vbe_virtual_start;
 
   // only update the UI when writing 'onscreen'
-  if (offset < BX_VGA_THIS s.vbe_visable_screen_size)
+  if (offset < BX_VGA_THIS s.vbe_visible_screen_size)
   {
     y_tileno = ((offset / BX_VGA_THIS s.vbe_bpp_multiplier) / BX_VGA_THIS s.vbe_virtual_xres) / Y_TILESIZE;
     x_tileno = ((offset / BX_VGA_THIS s.vbe_bpp_multiplier) % BX_VGA_THIS s.vbe_virtual_xres) / X_TILESIZE;
@@ -2955,9 +3010,9 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         case VBE_DISPI_INDEX_BANK: // set bank
         {
           value=value & 0xff ; // FIXME lobyte = vbe bank A?
-
+          unsigned divider = (BX_VGA_THIS s.vbe_bpp!=VBE_DISPI_BPP_4)?64:256;
           // check for max bank nr
-          if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB /64))
+          if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB / divider))
           {
             if (!BX_VGA_THIS s.vbe_lfb_enabled)
             {
@@ -2995,55 +3050,50 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               // Default pixel sizes
               case VBE_DISPI_BPP_8: 
                 BX_VGA_THIS s.vbe_bpp_multiplier = 1;
-                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres;
-                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres));
+                BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres;
                 depth=8;
                 break;
 
               case VBE_DISPI_BPP_4: 
                 BX_VGA_THIS s.vbe_bpp_multiplier = 1;
-                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres;
-                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres));
+                BX_VGA_THIS s.line_offset = (BX_VGA_THIS s.vbe_virtual_xres >> 3);
                 depth=4;
                 break;
 
               case VBE_DISPI_BPP_15:
                 BX_VGA_THIS s.vbe_bpp_multiplier = 2; 
-                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres * 2;
-                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) * 2;
+                BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres * 2;
                 depth=15;
                 break;        	          
 
               case VBE_DISPI_BPP_16:
                 BX_VGA_THIS s.vbe_bpp_multiplier = 2; 
-                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres * 2;
-                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) * 2;
+                BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres * 2;
                 depth=16;
                 break;        	          
 
               case VBE_DISPI_BPP_24: 
                 BX_VGA_THIS s.vbe_bpp_multiplier = 3; 
-                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres * 3;
-                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) * 3;
+                BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres * 3;
                 depth=24;
                 break;        	          
 
               case VBE_DISPI_BPP_32: 
                 BX_VGA_THIS s.vbe_bpp_multiplier = 4; 
-                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres << 2;
-                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) << 2;
+                BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres << 2;
                 depth=32;
                 break;        	          
             }
+            BX_VGA_THIS s.vbe_visible_screen_size = BX_VGA_THIS s.line_offset * BX_VGA_THIS s.vbe_yres;
 
-            BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp, BX_VGA_THIS s.vbe_visable_screen_size));
+            BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp, BX_VGA_THIS s.vbe_visible_screen_size));
 
             if (depth > 4)
             {
               BX_VGA_THIS s.vbe_lfb_enabled=(bx_bool)(value & VBE_DISPI_LFB_ENABLED);
               if ((value & VBE_DISPI_NOCLEARMEM) == 0)
               {
-                memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
+                memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visible_screen_size);
               }
               bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
               old_BPP = depth;
@@ -3103,8 +3153,12 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // BX_INFO(("VBE offset x %x",value));
           BX_VGA_THIS s.vbe_offset_x=(Bit16u)value;
 
-          BX_VGA_THIS s.vbe_virtual_start = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_line_byte_width)) +
-                                             ((BX_VGA_THIS s.vbe_offset_x) * (BX_VGA_THIS s.vbe_bpp_multiplier));
+          BX_VGA_THIS s.vbe_virtual_start = BX_VGA_THIS s.vbe_offset_y * BX_VGA_THIS s.line_offset;
+          if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
+            BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x * BX_VGA_THIS s.vbe_bpp_multiplier);
+          } else {
+            BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x >> 3);
+          }
 
           BX_VGA_THIS s.vga_mem_updated = 1;
           for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
@@ -3118,9 +3172,12 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         {
           // BX_INFO(("VBE offset y %x",value));
           BX_VGA_THIS s.vbe_offset_y=(Bit16u)value;
-          BX_VGA_THIS s.vbe_virtual_start = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_line_byte_width)) +
-                                             ((BX_VGA_THIS s.vbe_offset_x) * (BX_VGA_THIS s.vbe_bpp_multiplier));
-
+          BX_VGA_THIS s.vbe_virtual_start = BX_VGA_THIS s.vbe_offset_y * BX_VGA_THIS s.line_offset;
+          if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
+            BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x * BX_VGA_THIS s.vbe_bpp_multiplier);
+          } else {
+            BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x >> 3);
+          }
           BX_VGA_THIS s.vga_mem_updated = 1;
           for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
             for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
@@ -3147,7 +3204,12 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           //   else
           //        adjust result width based upon virt_height=yres
           Bit16u new_width=value;
-          Bit16u new_height=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_width;
+          Bit16u new_height;
+          if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
+            new_height=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_width;
+          } else {
+            new_height=(sizeof(BX_VGA_THIS s.vbe_memory) * 2) / new_width;
+          }
           if (new_height >=BX_VGA_THIS s.vbe_yres)
           {
             // we have a decent virtual width & new_height
@@ -3157,14 +3219,23 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           {
             // no decent virtual height: adjust width & height
             new_height=BX_VGA_THIS s.vbe_yres;
-            new_width=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_height;
+            if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
+              new_width=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_height;
+            } else {
+              new_width=(sizeof(BX_VGA_THIS s.vbe_memory) * 2) / new_height;
+            }
 
             BX_INFO(("VBE recalc virtual width %d height %d",new_width, new_height));
           }
 
           BX_VGA_THIS s.vbe_virtual_xres=new_width;
           BX_VGA_THIS s.vbe_virtual_yres=new_height;
-          BX_VGA_THIS s.vbe_visable_screen_size = (new_width * (BX_VGA_THIS s.vbe_yres)) * BX_VGA_THIS s.vbe_bpp_multiplier;
+          if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
+            BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres * BX_VGA_THIS s.vbe_bpp_multiplier;
+          } else {
+            BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres >> 3;
+          }
+          BX_VGA_THIS s.vbe_visible_screen_size = BX_VGA_THIS s.line_offset * BX_VGA_THIS s.vbe_yres;
 
         } break;
 	/*      
