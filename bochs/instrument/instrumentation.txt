@@ -1,0 +1,183 @@
+README-instrumentation
+
+To  use instrumentation features in bochs, you must compile in support for it.
+You  should  build a custom instrumentation library in a separate directory in
+the  "instrument/"  directory. To tell configure which instrumentation library
+you  want  to  use,  use  the  "--enable-instrumentation"  option. The default
+library consists of a set of stubs, and the following are equivalent:
+
+  ./configure [...] --enable-instrumentation
+  ./configure [...] --enable-instrumentation="instrument/stubs"
+
+You  could  make  a  separate  directory with your custom library, for example
+"instrument/myinstrument",   copy   the  contents  of  the  "instrument/stubs"
+directory to it, then customize it. Use:
+
+ ./configure [...] --enable-instrumentation="instrument/myinstrument"
+
+-----------------------------------------------------------------------------
+BOCHS instrumentation callbacks
+
+	void bx_instr_init(unsigned cpu);
+
+The  callback  is  called each time, when Bochs initializes the CPU object. It
+can  be  used for initialization of user's data, dynamic memory allocation and
+etc.
+
+
+	void bx_instr_shutdown(unsigned cpu);
+
+The  callback is called each time, when Bochs destructs the CPU object. It can
+be used for destruction of user's data, allocated by bx_instr_init callback.
+
+
+	void bx_instr_reset(unsigned cpu);
+
+The  callback  is called each time, when Bochs resets the CPU object. It would
+be  executed  once  at the start of simulation and each time that user presses
+RESET BUTTON on the simulator's control panel.
+
+
+	void bx_instr_new_instruction(unsigned cpu);
+
+The  callback  is  called  each  time,  when Bochs completes (commits) already
+finished instruction and starts a new one.
+
+
+	void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip);
+
+The  callback  is  called  each time, when currently executed instruction is a
+conditional near branch and it is taken.
+
+
+	void bx_instr_cnear_branch_not_taken(unsigned cpu);
+
+The  callback  is  called  each time, when currently executed instruction is a
+conditional near branch and it is not taken.
+
+
+	void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip);
+
+The  callback  is  called each time, when currently executed instruction is an
+unconditional near branch (always taken).
+
+
+	void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip);
+
+The  callback  is  called each time, when currently executed instruction is an
+unconditional far branch (always taken).
+
+
+	void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, Boolean is32);
+
+The  callback  is  called  each  time,  when  Bochs  starts  to  decode  a new
+instruction.  Through  this callback function Bochs could provide an opcode of
+the instruction, opcode length and an execution mode (16/32).
+
+
+	void bx_instr_fetch_decode_completed(unsigned cpu, bxInstruction_c *i);
+
+The  callback  is  called  each  time,  when  Bochs  finishes  decoding of new
+instruction.  Through  this  callback  function  Bochs  could provide decoding
+information  of the instruction. The bxInstruction_c argument of the callbacks
+it  is  a  Bochs internal structure that holds all necessary information about
+currently executed instruction, such as sib/modrm bytes, execution pointer and
+etc.
+
+
+	void bx_instr_prefix_as(unsigned cpu);
+	void bx_instr_prefix_os(unsigned cpu);
+	void bx_instr_prefix_rep(unsigned cpu);
+	void bx_instr_prefix_repne(unsigned cpu);
+	void bx_instr_prefix_lock(unsigned cpu);
+	void bx_instr_prefix_cs(unsigned cpu);
+	void bx_instr_prefix_ss(unsigned cpu);
+	void bx_instr_prefix_ds(unsigned cpu);
+	void bx_instr_prefix_es(unsigned cpu);
+	void bx_instr_prefix_fs(unsigned cpu);
+	void bx_instr_prefix_gs(unsigned cpu);
+
+These  callback  functions  are called by Bochs decoding stage each time, when
+corresponding prefix was decoded.
+
+
+	void bx_instr_interrupt(unsigned cpu, unsigned vector);
+
+The  callback  is called each time, when Bochs simulator executes an interrupt
+(software interrupt, hardware interrupt or an exception).
+
+
+	void bx_instr_exception(unsigned cpu, unsigned vector);
+
+The callback is called each time, when Bochs simulator executes an exception.
+
+
+	void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip);
+
+The  callback  is  called  each time, when Bochs simulator executes a hardware
+interrupt.
+
+
+	void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, Bit32u newval);
+	void bx_instr_cache_cntrl(unsigned cpu, unsigned what);
+
+The  callback  is  called each time, when Bochs simulator executes a cache/tlb
+control instruction.
+
+Possible instruction types, passed through bx_instr_tlb_cntrl:
+
+	#define BX_INSTR_MOV_CR3      	10
+	#define BX_INSTR_INVLPG       	11
+	#define BX_INSTR_TASKSWITCH   	12
+
+Possible instruction types, passed through bx_instr_cache_cntrl:
+
+	#define BX_INSTR_INVD         	20
+	#define BX_INSTR_WBINVD       	21
+
+
+	void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_address offset);
+
+The  callback  is  called  each time, when Bochs simulator executes a PREFETCH
+instruction.
+
+Possible PREFETCH types:
+
+	#define BX_INSTR_PREFETCH_NTA 	00
+	#define BX_INSTR_PREFETCH_T0  	01
+	#define BX_INSTR_PREFETCH_T1  	02
+	#define BX_INSTR_PREFETCH_T2  	03
+
+The seg/offset arguments indicate the address of the requested prefetch.
+
+
+	void bx_instr_repeat_iteration(unsigned cpu);
+
+The  callback  is  called  each time, when Bochs simulator starts a new repeat
+iteration.
+
+
+	void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len);
+	void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned len);
+
+The  callback  is  called  each  time,  when Bochs simulator executes a memory
+access.  Note  that  no  page  split  accesses will be generated because Bochs
+splits  page  split  accesses  to  two  different  memory  accesses during its
+execution flow.
+
+Currently the callbacks are not supported in case of guest-to-host-tlb feature
+enabled.
+
+
+	void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
+	void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
+
+These callback functions are a feedback from external memory system.
+
+
+	void bx_instr_inp(Bit16u addr, unsigned len);
+	void bx_instr_outp(Bit16u addr, unsigned len);
+	void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
+	void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val);
+
+These callback functions are a feedback from various system devices.
