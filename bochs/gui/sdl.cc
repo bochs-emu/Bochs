@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.25 2002-10-08 06:14:52 bdenney Exp $
+// $Id: sdl.cc,v 1.26 2002-10-10 18:02:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -699,7 +699,19 @@ void bx_gui_c::handle_events(void)
 	    && (sdl_event.key.keysym.sym < SDLK_LAST ))
 	{
 	  // convert sym->bochs code
-	  key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
+          if (!bx_options.keyboard.OuseMapping->get()) {
+            key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
+          } else {
+            /* use mapping */
+            BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
+            if (!entry) {
+              BX_ERROR(( "host key %d (0x%x) not mapped!", 
+		    (unsigned) sdl_event.key.keysym.sym,
+		    (unsigned) sdl_event.key.keysym.sym));
+              break;
+            }
+            key_event = entry->baseKey;
+          }
 	  if( key_event == BX_KEY_UNHANDLED ) break;
 	  bx_devices.keyboard->gen_scancode( key_event | BX_KEY_RELEASED );
 	}
