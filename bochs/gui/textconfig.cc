@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.13 2003-07-15 21:02:05 vruppert Exp $
+// $Id: textconfig.cc,v 1.14 2003-07-28 13:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -551,16 +551,18 @@ static void bx_print_log_action_table ()
 {
   // just try to print all the prefixes first.
   fprintf (stderr, "Current log settings:\n");
-  fprintf (stderr, "                 Debug      Info       Error       Panic\n");
-  fprintf (stderr, "ID    Device     Action     Action     Action      Action\n");
-  fprintf (stderr, "----  ---------  ---------  ---------  ----------  ----------\n");
+  fprintf (stderr, "                 Debug      Info       Error       Panic       Pass\n");
+  fprintf (stderr, "ID    Device     Action     Action     Action      Action      Action\n");
+  fprintf (stderr, "----  ---------  ---------  ---------  ----------  ----------  ----------\n");
   int i, j, imax=SIM->get_n_log_modules ();
   for (i=0; i<imax; i++) {
-    fprintf (stderr, "%3d.  %s ", i, SIM->get_prefix (i));
-    for (j=0; j<SIM->get_max_log_level (); j++) {
-      fprintf (stderr, "%10s ", SIM->get_action_name (SIM->get_log_action (i, j)));
+    if (strcmp(SIM->get_prefix(i), "[     ]")) {
+      fprintf (stderr, "%3d.  %s ", i, SIM->get_prefix (i));
+      for (j=0; j<SIM->get_max_log_level (); j++) {
+        fprintf (stderr, "%10s ", SIM->get_action_name (SIM->get_log_action (i, j)));
+      }
+      fprintf (stderr, "\n");
     }
-    fprintf (stderr, "\n");
   }
 }
 
