@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.67 2004-02-15 12:40:06 vruppert Exp $
+// $Id: wx.cc,v 1.68 2004-04-10 13:40:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -97,6 +97,7 @@ static unsigned long wxFontX = 0;
 static unsigned long wxFontY = 0;
 static unsigned int text_rows=25, text_cols=80;
 static Bit8u h_panning = 0, v_panning = 0;
+static Bit16u line_compare = 1023;
 static unsigned vga_bpp=8;
 struct {
   unsigned char red;
@@ -1210,11 +1211,12 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 {
   IFDBG_VGA(wxLogDebug (wxT ("text_update")));
 
-  unsigned char *old_line, *new_line;
-  unsigned char cAttr, cChar;
-  unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2;
+  Bit8u *old_line, *new_line, *text_base;
+  Bit8u cAttr, cChar;
+  unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2, cs_y;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
-  bx_bool forceUpdate = 0, gfxchar;
+  Bit8u split_textrow, split_fontrow;
+  bx_bool forceUpdate = 0, gfxchar, split_screen;
 
   UNUSED(nrows);
   if(charmap_updated) {
@@ -1226,6 +1228,10 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     forceUpdate = 1;
     h_panning = tm_info.h_panning;
     v_panning = tm_info.v_panning;
+  }
+  if(tm_info.line_compare != line_compare) {
+    forceUpdate = 1;
+    line_compare = tm_info.line_compare;
   }
 
   // first invalidate character at previous and new cursor location
@@ -1244,10 +1250,24 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
+  cs_y = 0;
+  text_base = new_text - tm_info.start_address;
+  split_textrow = (line_compare + v_panning) / wxFontY;
+  split_fontrow = ((line_compare + v_panning) % wxFontY) + 1;
+  split_screen = 0;
   do {
     hchars = text_cols;
     if (h_panning) hchars++;
-    if (v_panning) {
+    if (split_screen) {
+      yc = line_compare + cs_y * wxFontY + 1;
+      font_row = 0;
+      if (rows == 1) {
+        cfheight = (wxScreenY - line_compare - 1) % wxFontY;
+        if (cfheight == 0) cfheight = wxFontY;
+      } else {
+        cfheight = wxFontY;
+      }
+    } else if (v_panning) {
       if (y == 0) {
         yc = 0;
         font_row = v_panning;
@@ -1266,10 +1286,13 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       font_row = 0;
       cfheight = wxFontY;
     }
+    if (!split_screen && (y == split_textrow)) {
+      if (split_fontrow < cfheight) cfheight = split_fontrow;
+    }
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = y * tm_info.line_offset;
+    offset = cs_y * tm_info.line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1323,11 +1346,22 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       old_text+=2;
       offset+=2;
     } while (--hchars);
-    y++;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
+    if (!split_screen && (y == split_textrow)) {
+      new_text = text_base;
+      forceUpdate = 1;
+      cs_y = 0;
+      if (tm_info.split_hpanning) h_panning = 0;
+      rows = ((wxScreenY - line_compare + wxFontY - 2) / wxFontY) + 1;
+      split_screen = 1;
+    } else {
+      y++;
+      cs_y++;
+      new_text = new_line + tm_info.line_offset;
+      old_text = old_line + tm_info.line_offset;
+    }
   } while (--rows);
 
+  h_panning = tm_info.h_panning;
   wxCursorX = cursor_x;
   wxCursorY = cursor_y;
 
