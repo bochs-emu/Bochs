@@ -432,6 +432,9 @@ handle_async_event:
       return;
     }
 #endif
+  } else if (BX_CPU_THIS_PTR kill_bochs_request) {
+    // setting kill_bochs_request causes the cpu loop to return ASAP.
+    return;
   }
 
 
