@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.125 2003-08-09 17:52:35 vruppert Exp $
+$Id: user.dbk,v 1.126 2003-08-10 08:21:12 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -342,7 +342,7 @@ currently work with.
     <entry>VESA (Display) Support</entry>
     <entry>Yes</entry>
     <entry>Currently resolutions up to 1024x768x32bpp are supported.
-    You must enable vbe and use the LGPL'ed VGABIOS.
+    You must compile Bochs with vbe enabled and use the LGPL'ed VGABIOS.
     </entry>
   </row>
   <row>
@@ -3516,7 +3516,7 @@ Examples:
 <screen>
   usb1: enabled=1, ioaddr=0xFF40, irq=9
 </screen>
-Enables limited i440fx PCI USB root hub.
+Enables the i440fx PCI USB root hub. PCI support must be enabled, too.
 </para>
 </section>
 
@@ -4209,7 +4209,38 @@ Some of this features may not be implemented or work different on your host plat
 </section>
 <section><title>The runtime configuration</title>
 <para>
-&FIXME; not written yet.
+If you want to change certain settings at runtime, you have to press the "config" button in
+the headerbar. The simulation stops and the runtime menu appears on the console window / xterm.
+<screen>
+---------------------
+Bochs Runtime Options
+---------------------
+1. Floppy disk 0: /dev/fd0, size=1.44M, inserted
+2. Floppy disk 1: floppyb.img, size=1.44M, inserted
+3. 1st CDROM: (master on ata1) /dev/cdrom, ejected
+4. 2nd CDROM: (slave on ata1) /dev/cdrecorder, ejected
+5. 3rd CDROM: (not present)
+6. 4th CDROM: (not present)
+7. (not implemented)
+8. Log options for all devices
+9. Log options for individual devices
+10. VGA Update Interval: 100000
+11. Mouse: disabled
+12. Keyboard paste delay: 100000
+13. Userbutton shortcut: ctrlaltdel
+14. Instruction tracing: off (doesn't exist yet)
+15. Continue simulation
+16. Quit now
+
+Please choose one:  [15] 
+</screen>
+</para>
+<para>
+In the runtime configuration you can change the floppy/cdrom image or device,
+change the log options or adjust some other settings. If you have trouble with
+a specific device, you can change the log options for this device only to get
+more information (e.g. report debug messages). This cannot be done in the configuration
+file yet.
 </para>
 </section>
 </section>
@@ -6169,7 +6200,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.125 2003-08-09 17:52:35 vruppert Exp $
+      $Id: user.dbk,v 1.126 2003-08-10 08:21:12 vruppert Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8632,7 +8663,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.125 2003-08-09 17:52:35 vruppert Exp $
+        $Id: user.dbk,v 1.126 2003-08-10 08:21:12 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
