@@ -1642,12 +1642,12 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
   fprintf (fp, "ne2k: ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s\n",
       opt->Oioaddr->get (), 
       opt->Oirq->get (),
-      (unsigned int)ptr[0],
-      (unsigned int)ptr[1],
-      (unsigned int)ptr[2],
-      (unsigned int)ptr[3],
-      (unsigned int)ptr[4],
-      (unsigned int)ptr[5],
+      (unsigned int)(0xff & ptr[0]),
+      (unsigned int)(0xff & ptr[1]),
+      (unsigned int)(0xff & ptr[2]),
+      (unsigned int)(0xff & ptr[3]),
+      (unsigned int)(0xff & ptr[4]),
+      (unsigned int)(0xff & ptr[5]),
       opt->Oethmod->getptr (),
       opt->Oethdev->getptr ());
   return 0;
