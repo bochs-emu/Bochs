@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.56 2002-09-03 08:46:30 bdenney Exp $
+// $Id: siminterface.h,v 1.57 2002-09-05 07:01:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -224,6 +224,7 @@ typedef enum {
   BXP_KEYBOARD,
   BXP_USER_SHORTCUT,
   BXP_ASK_FOR_PATHNAME,   // for general file selection dialog
+  BXP_QUICK_START,        // read bochsrc and start simulation immediately
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -810,6 +811,7 @@ public:
   virtual bx_param_c *get_param (bx_id id) {return NULL;}
   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}
+  virtual bx_param_bool_c *get_param_bool (bx_id id) {return NULL;}
   virtual int get_n_log_modules () {return -1;}
   virtual char *get_prefix (int mod) {return 0;}
   virtual int get_log_action (int mod, int level) {return -1;}

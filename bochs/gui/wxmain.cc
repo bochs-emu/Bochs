@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.33 2002-09-04 18:39:20 bdenney Exp $
+// $Id: wxmain.cc,v 1.34 2002-09-05 07:01:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -127,6 +127,11 @@ bool MyApp::OnInit()
   theFrame = frame;  // hack alert
   frame->Show( TRUE );
   SetTopWindow( frame );
+  // if quickstart is enabled, kick off the simulation
+  if (SIM->get_param_bool(BXP_QUICK_START)->get ()) {
+    wxCommandEvent unusedEvent;
+    frame->OnStartSim (unusedEvent);
+  }
   return TRUE;
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.51 2002-09-03 16:00:50 bdenney Exp $
+// $Id: siminterface.cc,v 1.52 2002-09-05 07:01:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -49,6 +49,7 @@ public:
   virtual bx_param_c *get_param (bx_id id);
   virtual bx_param_num_c *get_param_num (bx_id id);
   virtual bx_param_string_c *get_param_string (bx_id id);
+  virtual bx_param_bool_c *get_param_bool (bx_id id);
   virtual int get_n_log_modules ();
   virtual char *get_prefix (int mod);
   virtual int get_log_action (int mod, int level);
@@ -113,6 +114,19 @@ bx_real_sim_c::get_param_string (bx_id id) {
   if (generic->get_type () == BXT_PARAM_STRING)
     return (bx_param_string_c *)generic;
   BX_PANIC (("get_param_string %u could not find an integer parameter with that id", id));
+  return NULL;
+}
+
+bx_param_bool_c *
+bx_real_sim_c::get_param_bool (bx_id id) {
+  bx_param_c *generic = get_param(id);
+  if (generic==NULL) {
+    BX_PANIC (("get_param_bool(%u) could not find a parameter", id));
+    return NULL;
+  }
+  if (generic->get_type () == BXT_PARAM_BOOL)
+    return (bx_param_bool_c *)generic;
+  BX_PANIC (("get_param_bool %u could not find a bool parameter with that id", id));
   return NULL;
 }
 
