@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.30 2002-03-20 01:24:15 bdenney Exp $
+// $Id: cdrom.cc,v 1.31 2002-04-10 05:38:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -203,7 +203,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.30 2002-03-20 01:24:15 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.31 2002-04-10 05:38:34 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -221,7 +221,6 @@ cdrom_interface::insert_cdrom(char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
   ssize_t ret;
-  struct stat stat_buf;
 
   // Load CD-ROM. Returns false if CD is not ready.
   if (dev != NULL) path = strdup(dev);
@@ -334,6 +333,7 @@ cdrom_interface::insert_cdrom(char *dev)
 	}
 #else
     // do fstat to determine if it's a file or a device, then set using_file.
+    struct stat stat_buf;
     ret = fstat (fd, &stat_buf);
     if (ret) {
       BX_PANIC (("fstat cdrom file returned error: %s", strerror (errno)));
