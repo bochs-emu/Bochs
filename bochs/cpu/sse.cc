@@ -24,7 +24,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_SSE || BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 1
 
 void BX_CPU_C::prepareSSE(void)
 {
@@ -45,7 +45,7 @@ void BX_CPU_C::prepareSSE(void)
 /* 0F AE Grp15 010 */
 void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   read_virtual_dword(i->seg(), RMAddr(i), &BX_MXCSR_REGISTER);
@@ -60,7 +60,7 @@ void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 /* 0F AE Grp15 011 */
 void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   Bit32u mxcsr = BX_MXCSR_REGISTER & MXCSR_MASK;
@@ -73,7 +73,7 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 
 void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_PANIC(("FXSAVE: SSE instruction still not implemented"));
 #else
   BX_INFO(("FXSAVE: SSE not supported in current configuration"));
@@ -83,7 +83,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
 void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_PANIC(("FXRSTOR : SSE instruction still not implemented"));
 #else
   BX_INFO(("FXRSTOR: SSE not supported in current configuration"));
@@ -93,7 +93,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
 void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVUPS_VpsWps: SSE instruction still not implemented"));
@@ -105,7 +105,7 @@ void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVSS_VssWss: SSE instruction still not implemented"));
@@ -117,7 +117,7 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVUPS_WpsVps: SSE instruction still not implemented"));
@@ -129,7 +129,7 @@ void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 
 void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVSS_WssVss: SSE instruction still not implemented"));
@@ -141,7 +141,7 @@ void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
 
 void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVLPS_VpsMq: SSE instruction still not implemented"));
@@ -153,7 +153,7 @@ void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVLPS_MqVps: SSE instruction still not implemented"));
@@ -165,7 +165,7 @@ void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 
 void BX_CPU_C::UNPCKLPS_VpsWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("UNPCKLPS_VpsWq: SSE instruction still not implemented"));
@@ -177,7 +177,7 @@ void BX_CPU_C::UNPCKLPS_VpsWq(bxInstruction_c *i)
 
 void BX_CPU_C::UNPCKHPS_VpsWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("UNPCKHPS_VpsWq: SSE instruction still not implemented"));
@@ -189,7 +189,7 @@ void BX_CPU_C::UNPCKHPS_VpsWq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVHPS_VpsMq: SSE instruction still not implemented"));
@@ -201,7 +201,7 @@ void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVHPS_MqVps: SSE instruction still not implemented"));
@@ -213,7 +213,7 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 
 void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVAPS_VpsWps: SSE instruction still not implemented"));
@@ -225,7 +225,7 @@ void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVAPS_WpsVps: SSE instruction still not implemented"));
@@ -237,7 +237,7 @@ void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPI2PS_VpsQq: SSE instruction still not implemented"));
@@ -249,7 +249,7 @@ void BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
 
 void BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTSI2SS_VssEd: SSE instruction still not implemented"));
@@ -261,7 +261,7 @@ void BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVNTPS_MdqVps: SSE instruction still not implemented"));
@@ -273,7 +273,7 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 
 void BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTTPS2PI_PqWps: SSE instruction still not implemented"));
@@ -285,7 +285,7 @@ void BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
 
 void BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTTSS2SI_GdWss: SSE instruction still not implemented"));
@@ -297,7 +297,7 @@ void BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPS2PI_PqWps: SSE instruction still not implemented"));
@@ -309,7 +309,7 @@ void BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
 
 void BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTSS2SI_GdWss: SSE instruction still not implemented"));
@@ -321,7 +321,7 @@ void BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
 
 void BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("UCOMISS_VssWss: SSE instruction still not implemented"));
@@ -333,7 +333,7 @@ void BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("COMISS_VpsWps: SSE instruction still not implemented"));
@@ -345,7 +345,7 @@ void BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVMSKPS_GdVRps: SSE instruction still not implemented"));
@@ -357,7 +357,7 @@ void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 
 void BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SQRTPS_VpsWps: SSE instruction still not implemented"));
@@ -369,7 +369,7 @@ void BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SQRTSS_VssWss: SSE instruction still not implemented"));
@@ -381,7 +381,7 @@ void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("RSQRTPS_VpsWps: SSE instruction still not implemented"));
@@ -393,7 +393,7 @@ void BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("RSQRTSS_VssWss: SSE instruction still not implemented"));
@@ -405,7 +405,7 @@ void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("RCPPS_VpsWps: SSE instruction still not implemented"));
@@ -417,7 +417,7 @@ void BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("RCPSS_VssWss: SSE instruction still not implemented"));
@@ -429,7 +429,7 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ANDPS_VpsWps: SSE instruction still not implemented"));
@@ -441,7 +441,7 @@ void BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ANDNPS_VpsWps: SSE instruction still not implemented"));
@@ -453,7 +453,7 @@ void BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ORPS_VpsWps: SSE instruction still not implemented"));
@@ -465,7 +465,7 @@ void BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("XORPS_VpsWps: SSE instruction still not implemented"));
@@ -477,7 +477,7 @@ void BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ADDPS_VpsWps: SSE instruction still not implemented"));
@@ -489,7 +489,7 @@ void BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ADDSS_VssWss: SSE instruction still not implemented"));
@@ -501,7 +501,7 @@ void BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MULPS_VpsWps: SSE instruction still not implemented"));
@@ -513,7 +513,7 @@ void BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MULSS_VssWss: SSE instruction still not implemented"));
@@ -525,7 +525,7 @@ void BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SUBPS_VpsWps: SSE instruction still not implemented"));
@@ -537,7 +537,7 @@ void BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SUBSS_VssWss: SSE instruction still not implemented"));
@@ -549,7 +549,7 @@ void BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::MINPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MINPS_VpsWps: SSE instruction still not implemented"));
@@ -561,7 +561,7 @@ void BX_CPU_C::MINPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MINSS_VssWss: SSE instruction still not implemented"));
@@ -573,7 +573,7 @@ void BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("DIVPS_VpsWps: SSE instruction still not implemented"));
@@ -585,7 +585,7 @@ void BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("DIVSS_VssWss: SSE instruction still not implemented"));
@@ -597,7 +597,7 @@ void BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::MAXPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MAXPS_VpsWps: SSE instruction still not implemented"));
@@ -609,7 +609,7 @@ void BX_CPU_C::MAXPS_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MAXSS_VssWss: SSE instruction still not implemented"));
@@ -621,7 +621,7 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("PSHUFLW_VqWqIb: SSE instruction still not implemented"));
@@ -633,7 +633,7 @@ void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
 
 void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CMPPS_VpsWpsIb: SSE instruction still not implemented"));
@@ -645,7 +645,7 @@ void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
 
 void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CMPSS_VssWssIb: SSE instruction still not implemented"));
@@ -657,7 +657,7 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 
 void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BX_PANIC(("PINSRW_PqEdIb: SSE instruction still not implemented"));
@@ -669,7 +669,7 @@ void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
 
 void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BX_PANIC(("PEXTRW_PqEdIb: SSE instruction still not implemented"));
@@ -681,7 +681,7 @@ void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
 
 void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SHUFPS_VpsWpsIb: SSE instruction still not implemented"));
@@ -693,7 +693,7 @@ void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
 
 void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_PANIC(("MASKMOVQ_PqPRq: SSE instruction still not implemented"));
 #else
   BX_INFO(("MASKMOVQ_PqPRq: SSE not supported in current configuration"));

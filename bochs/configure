@@ -19842,11 +19842,7 @@ fi;
 
 if test "$support_sse" = 2; then
   cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE 1
-_ACEOF
-
-  cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE2 1
+#define BX_SUPPORT_SSE 2
 _ACEOF
 
 elif test "$support_sse" = 1; then
@@ -19854,17 +19850,9 @@ elif test "$support_sse" = 1; then
 #define BX_SUPPORT_SSE 1
 _ACEOF
 
-  cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE2 0
-_ACEOF
-
 else
   cat >>confdefs.h <<\_ACEOF
 #define BX_SUPPORT_SSE 0
-_ACEOF
-
-  cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE2 0
 _ACEOF
 
 fi

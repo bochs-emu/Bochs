@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.162 2002-11-12 21:07:16 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.163 2002-11-13 21:00:02 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1314,14 +1314,11 @@ AC_ARG_ENABLE(sse,
   )
 
 if test "$support_sse" = 2; then
-  AC_DEFINE(BX_SUPPORT_SSE,  1)
-  AC_DEFINE(BX_SUPPORT_SSE2, 1)
+  AC_DEFINE(BX_SUPPORT_SSE,  2)
 elif test "$support_sse" = 1; then
   AC_DEFINE(BX_SUPPORT_SSE,  1)
-  AC_DEFINE(BX_SUPPORT_SSE2, 0)
 else
   AC_DEFINE(BX_SUPPORT_SSE,  0)
-  AC_DEFINE(BX_SUPPORT_SSE2, 0)
 fi
 
 AC_MSG_CHECKING(for x86 debugger support)

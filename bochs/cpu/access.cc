@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.34 2002-10-24 21:05:07 bdenney Exp $
+// $Id: access.cc,v 1.35 2002-11-13 21:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1158,7 +1158,7 @@ accessOK:
 }
 
 
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE != 0
 
 // Some macro defs to make things cleaner for endian-ness issues.
 // The following routines access a double qword, ie 16-bytes.

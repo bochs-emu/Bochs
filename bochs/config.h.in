@@ -670,8 +670,7 @@ typedef
 
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_MMX 0
-#define BX_SUPPORT_SSE  0
-#define BX_SUPPORT_SSE2 0
+#define BX_SUPPORT_SSE 0
 #define BX_SUPPORT_4MEG_PAGES 0
 #define BX_SupportGuest2HostTLB 0
 #define BX_SupportRepeatSpeedups 0

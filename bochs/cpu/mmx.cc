@@ -25,7 +25,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-#if BX_SUPPORT_MMX || BX_SUPPORT_SSE || BX_SUPPORT_SSE2
+#if BX_SUPPORT_MMX || BX_SUPPORT_SSE != 0
 
 #define MMX_REGFILE ((BX_CPU_THIS_PTR the_i387).mmx)
 
@@ -552,7 +552,7 @@ void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
 /* 0F 70 */
 void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op, result;
@@ -840,7 +840,7 @@ void BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
 /* 0F D4 */
 void BX_CPU_C::PADDQ_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -902,7 +902,7 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 /* 0F D7 */
 void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
@@ -997,7 +997,7 @@ void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
 /* 0F DA */
 void BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1122,7 +1122,7 @@ void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
 /* 0F DE */
 void BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1183,7 +1183,7 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 /* 0F E0 */
 void BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -1304,7 +1304,7 @@ void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 /* 0F E3 */
 void BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -1334,7 +1334,7 @@ void BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
 /* 0F E4 */
 void BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -1404,7 +1404,7 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 /* 0F E7 */
 void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   if (i->modC0()) {
@@ -1488,7 +1488,7 @@ void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
 /* 0F EA */
 void BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1609,7 +1609,7 @@ void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
 /* 0F EE */
 void BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
@@ -1768,7 +1768,7 @@ void BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
 /* 0F F4 */
 void BX_CPU_C::PMULUDQ_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -1834,7 +1834,7 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 /* 0F F6 */
 void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -1963,7 +1963,7 @@ void BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
 /* 0F FB */
 void BX_CPU_C::PSUBQ_PqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;

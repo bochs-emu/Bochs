@@ -26,7 +26,7 @@
 
 void BX_CPU_C::MOVUPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVUPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -38,7 +38,7 @@ void BX_CPU_C::MOVUPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -50,7 +50,7 @@ void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVUPD_WpdVpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVUPD_WpdVpd: SSE2 instruction still not implemented"));
@@ -62,7 +62,7 @@ void BX_CPU_C::MOVUPD_WpdVpd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVSD_WsdVsd: SSE2 instruction still not implemented"));
@@ -74,7 +74,7 @@ void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVLPD_VsdMq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVLPD_VsdMq: SSE2 instruction still not implemented"));
@@ -86,7 +86,7 @@ void BX_CPU_C::MOVLPD_VsdMq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVLPD_MqVsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVLPD_MqVsd: SSE2 instruction still not implemented"));
@@ -98,7 +98,7 @@ void BX_CPU_C::MOVLPD_MqVsd(bxInstruction_c *i)
 
 void BX_CPU_C::UNPCKLPD_VpdWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("UNPCKLPD_VpdWq: SSE2 instruction still not implemented"));
@@ -110,7 +110,7 @@ void BX_CPU_C::UNPCKLPD_VpdWq(bxInstruction_c *i)
 
 void BX_CPU_C::UNPCKHPD_VpdWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("UNPCKHPD_VpdWq: SSE2 instruction still not implemented"));
@@ -122,7 +122,7 @@ void BX_CPU_C::UNPCKHPD_VpdWq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVHPD_VpdMq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVHPD_VpdMq: SSE2 instruction still not implemented"));
@@ -134,7 +134,7 @@ void BX_CPU_C::MOVHPD_VpdMq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVHPD_MqVpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVHPD_MqVpd: SSE2 instruction still not implemented"));
@@ -146,7 +146,7 @@ void BX_CPU_C::MOVHPD_MqVpd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVAPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVAPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -158,7 +158,7 @@ void BX_CPU_C::MOVAPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVAPD_WpdVpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVAPD_WpdVpd: SSE2 instruction still not implemented"));
@@ -170,7 +170,7 @@ void BX_CPU_C::MOVAPD_WpdVpd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPI2PD_VpdQd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPI2PD_VpdQd: SSE2 instruction still not implemented"));
@@ -182,7 +182,7 @@ void BX_CPU_C::CVTPI2PD_VpdQd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTSI2SD_VsdEd: SSE2 instruction still not implemented"));
@@ -194,7 +194,7 @@ void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVNTPD_MdqVpd(bxInstruction_c *i)            	
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVNTPD_MdqVpd: SSE2 instruction still not implemented"));
@@ -206,7 +206,7 @@ void BX_CPU_C::MOVNTPD_MdqVpd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTTPD2PI_PqWpd: SSE2 instruction still not implemented"));
@@ -218,7 +218,7 @@ void BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTTSD2SI_GdWsd: SSE2 instruction still not implemented"));
@@ -230,7 +230,7 @@ void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPD2PI_PqWpd: SSE2 instruction still not implemented"));
@@ -242,7 +242,7 @@ void BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTSD2SI_GdWsd: SSE2 instruction still not implemented"));
@@ -254,7 +254,7 @@ void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)            	
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("UCOMISD_VsdWsd: SSE2 instruction still not implemented"));
@@ -266,7 +266,7 @@ void BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)   
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("COMISD_VpdWpd: SSE2 instruction still not implemented"));
@@ -278,7 +278,7 @@ void BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVMSKPD_EdVRpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVMSKPD_EdVRpd: SSE2 instruction still not implemented"));
@@ -290,7 +290,7 @@ void BX_CPU_C::MOVMSKPD_EdVRpd(bxInstruction_c *i)
 
 void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SQRTPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -302,7 +302,7 @@ void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SQRTSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -314,7 +314,7 @@ void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::ANDPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ANDPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -326,7 +326,7 @@ void BX_CPU_C::ANDPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::ANDNPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ANDNPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -338,7 +338,7 @@ void BX_CPU_C::ANDNPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::ORPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ORPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -350,7 +350,7 @@ void BX_CPU_C::ORPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::XORPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("XORPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -362,7 +362,7 @@ void BX_CPU_C::XORPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ADDPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -374,7 +374,7 @@ void BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("ADDSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -386,7 +386,7 @@ void BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MULPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -398,7 +398,7 @@ void BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MULSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -410,7 +410,7 @@ void BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPS2PD_VpsWps: SSE2 instruction still not implemented"));
@@ -422,7 +422,7 @@ void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPD2PS_VpdWpd: SSE2 instruction still not implemented"));
@@ -434,7 +434,7 @@ void BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTSD2SS_VsdWsd: SSE2 instruction still not implemented"));
@@ -446,7 +446,7 @@ void BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTSS2SD_VssWss: SSE2 instruction still not implemented"));
@@ -458,7 +458,7 @@ void BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
 
 void BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTDQ2PS_VpsWdq: SSE2 instruction still not implemented"));
@@ -470,7 +470,7 @@ void BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPS2DQ_VdqWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPS2DQ_VdqWps: SSE2 instruction still not implemented"));
@@ -482,7 +482,7 @@ void BX_CPU_C::CVTPS2DQ_VdqWps(bxInstruction_c *i)
 
 void BX_CPU_C::CVTTPS2DQ_VdqWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTTPS2DQ_VdqWps: SSE2 instruction still not implemented"));
@@ -494,7 +494,7 @@ void BX_CPU_C::CVTTPS2DQ_VdqWps(bxInstruction_c *i)
 
 void BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SUBPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -506,7 +506,7 @@ void BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SUBSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -518,7 +518,7 @@ void BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MINPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -530,7 +530,7 @@ void BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MINSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -542,7 +542,7 @@ void BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("DIVPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -554,7 +554,7 @@ void BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("DIVSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -566,7 +566,7 @@ void BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 
 void BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MAXPD_VpdWpd: SSE2 instruction still not implemented"));
@@ -578,7 +578,7 @@ void BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 
 void BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MAXSD_VsdWsd: SSE2 instruction still not implemented"));
@@ -591,7 +591,7 @@ void BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 /* 66 0F 60 */
 void BX_CPU_C::PUNPCKLBW_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -633,7 +633,7 @@ void BX_CPU_C::PUNPCKLBW_VdqWq(bxInstruction_c *i)
 /* 66 0F 61 */
 void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -667,7 +667,7 @@ void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
 /* 66 0F 62 */
 void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -697,7 +697,7 @@ void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
 /* 66 0F 63 */
 void BX_CPU_C::PACKSSWB_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -740,7 +740,7 @@ void BX_CPU_C::PACKSSWB_VdqWq(bxInstruction_c *i)
 /* 66 0F 64 */
 void BX_CPU_C::PCMPGTB_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -770,7 +770,7 @@ void BX_CPU_C::PCMPGTB_VdqWq(bxInstruction_c *i)
 /* 66 0F 65 */
 void BX_CPU_C::PCMPGTW_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -804,7 +804,7 @@ void BX_CPU_C::PCMPGTW_VdqWq(bxInstruction_c *i)
 /* 66 0F 66 */
 void BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -834,7 +834,7 @@ void BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
 /* 66 0F 67 */
 void BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -877,7 +877,7 @@ void BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 /* 66 0F 68 */
 void BX_CPU_C::PUNPCKHBW_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -919,7 +919,7 @@ void BX_CPU_C::PUNPCKHBW_VdqWq(bxInstruction_c *i)
 /* 66 0F 69 */
 void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -953,7 +953,7 @@ void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
 /* 66 0F 6A */
 void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -983,7 +983,7 @@ void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
 /* 66 0F 6B */
 void BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1018,7 +1018,7 @@ void BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 6C */
 void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1045,7 +1045,7 @@ void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
 /* 66 0F 6D */
 void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1073,7 +1073,7 @@ void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
 /* 66 0F 6E */
 void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -1103,7 +1103,7 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 /* 66 0F 6F */
 void BX_CPU_C::MOVDQA_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -1127,7 +1127,7 @@ void BX_CPU_C::MOVDQA_VdqWdq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVDQU_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVDQU_VdqWdq: SSE2 instruction still not implemented"));
@@ -1139,7 +1139,7 @@ void BX_CPU_C::MOVDQU_VdqWdq(bxInstruction_c *i)
 
 void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("PSHUFD_VdqWdqIb: SSE2 instruction still not implemented"));
@@ -1151,7 +1151,7 @@ void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 
 void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("PSHUFHW_VqWqIb: SSE2 instruction still not implemented"));
@@ -1164,7 +1164,7 @@ void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
 /* 66 0F 74 */
 void BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1194,7 +1194,7 @@ void BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
 /* 66 0F 75 */
 void BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1228,7 +1228,7 @@ void BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 76 */
 void BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1258,7 +1258,7 @@ void BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
 /* 66 0F 7E */
 void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
@@ -1279,7 +1279,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 
 void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVQ_VqWq: SSE2 instruction still not implemented"));
@@ -1291,7 +1291,7 @@ void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVDQA_WdqVdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVDQA_WdqVdq: SSE2 instruction still not implemented"));
@@ -1303,7 +1303,7 @@ void BX_CPU_C::MOVDQA_WdqVdq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVDQU_WdqVdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVDQU_WdqVdq: SSE2 instruction still not implemented"));
@@ -1315,7 +1315,7 @@ void BX_CPU_C::MOVDQU_WdqVdq(bxInstruction_c *i)
 
 void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CMPPD_VpdWpdIb: SSE2 instruction still not implemented"));
@@ -1327,7 +1327,7 @@ void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 
 void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CMPSD_VsdWsdIb: SSE2 instruction still not implemented"));
@@ -1340,7 +1340,7 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 /* 0F C3 */
 void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
 
   if (i->modC0()) {
     BX_PANIC(("MOVNTI_MdGd: must be memory reference"));
@@ -1358,7 +1358,7 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 
 void BX_CPU_C::PINSRW_VdqEdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("PINSRW_VdqEdIb: SSE2 instruction still not implemented"));
@@ -1370,7 +1370,7 @@ void BX_CPU_C::PINSRW_VdqEdIb(bxInstruction_c *i)
 
 void BX_CPU_C::PEXTRW_VdqEdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("PEXTRW_VdqEdIb: SSE2 instruction still not implemented"));
@@ -1382,7 +1382,7 @@ void BX_CPU_C::PEXTRW_VdqEdIb(bxInstruction_c *i)
 
 void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("SHUFPD_VpdWpdIb: SSE2 instruction still not implemented"));
@@ -1395,7 +1395,7 @@ void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
 /* 66 0F D1 */
 void BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1439,7 +1439,7 @@ void BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
 /* 66 0F D2 */
 void BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1479,7 +1479,7 @@ void BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
 /* 66 0F D3 */
 void BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1517,7 +1517,7 @@ void BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
 /* 66 0F D4 */
 void BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1545,7 +1545,7 @@ void BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
 /* 66 0F D5 */
 void BX_CPU_C::PMULLW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1587,7 +1587,7 @@ void BX_CPU_C::PMULLW_VdqWdq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVQ_WqVq: SSE2 instruction still not implemented"));
@@ -1599,7 +1599,7 @@ void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVDQ2Q_PqVRq: SSE2 instruction still not implemented"));
@@ -1611,7 +1611,7 @@ void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 
 void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MOVQ2DQ_VdqQq: SSE2 instruction still not implemented"));
@@ -1624,7 +1624,7 @@ void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 /* 66 0F D7 */
 void BX_CPU_C::PMOVMSKB_GdVRdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -1659,7 +1659,7 @@ void BX_CPU_C::PMOVMSKB_GdVRdq(bxInstruction_c *i)
 /* 66 0F D8 */
 void BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1694,7 +1694,7 @@ void BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 /* 66 0F D9 */
 void BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1729,7 +1729,7 @@ void BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F DA */
 void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1759,7 +1759,7 @@ void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 /* 66 0F DB */
 void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1787,7 +1787,7 @@ void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
 /* 66 0F DC */
 void BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1817,7 +1817,7 @@ void BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
 /* 66 0F DD */
 void BX_CPU_C::PADDUSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1851,7 +1851,7 @@ void BX_CPU_C::PADDUSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F DE */
 void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1881,7 +1881,7 @@ void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 /* 66 0F DF */
 void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1909,7 +1909,7 @@ void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
 /* 66 0F E0 */
 void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1939,7 +1939,7 @@ void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 /* 66 0F E1 */
 void BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1998,7 +1998,7 @@ void BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
 /* 66 0F E2 */
 void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2045,7 +2045,7 @@ void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 /* 66 0F E3 */
 void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2079,7 +2079,7 @@ void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 /* 66 0F E4 */
 void BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2122,7 +2122,7 @@ void BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
 /* 66 0F E5 */
 void BX_CPU_C::PMULHW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2164,7 +2164,7 @@ void BX_CPU_C::PMULHW_VdqWdq(bxInstruction_c *i)
 
 void BX_CPU_C::CVTTPD2DQ_VqWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTTPD2DQ_VqWpd: SSE2 instruction still not implemented"));
@@ -2176,7 +2176,7 @@ void BX_CPU_C::CVTTPD2DQ_VqWpd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTPD2DQ_VqWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTPD2DQ_VqWpd: SSE2 instruction still not implemented"));
@@ -2188,7 +2188,7 @@ void BX_CPU_C::CVTPD2DQ_VqWpd(bxInstruction_c *i)
 
 void BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("CVTDQ2PD_VpdWq: SSE2 instruction still not implemented"));
@@ -2201,7 +2201,7 @@ void BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 /* 66 0F E7 */
 void BX_CPU_C::MOVNTDQ_MdqVdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_INFO(("MOVNTDQ_MdqVdq: SSE2 not supported in current configuration"));
@@ -2214,7 +2214,7 @@ void BX_CPU_C::MOVNTDQ_MdqVdq(bxInstruction_c *i)
 /* 66 0F E8 */
 void BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2244,7 +2244,7 @@ void BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
 /* 66 0F E9 */
 void BX_CPU_C::PSUBSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2278,7 +2278,7 @@ void BX_CPU_C::PSUBSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F EA */
 void BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2312,7 +2312,7 @@ void BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F EB */
 void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2340,7 +2340,7 @@ void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
 /* 66 0F EC */
 void BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2370,7 +2370,7 @@ void BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
 /* 66 0F ED */
 void BX_CPU_C::PADDSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2403,7 +2403,7 @@ void BX_CPU_C::PADDSW_VdqWdq(bxInstruction_c *i)
 
 void BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2437,7 +2437,7 @@ void BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F EF */
 void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2465,7 +2465,7 @@ void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
 /* 66 0F F1 */
 void BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2509,7 +2509,7 @@ void BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
 /* 66 0F F2 */
 void BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2549,7 +2549,7 @@ void BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
 /* 66 0F F3 */
 void BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2587,7 +2587,7 @@ void BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
 /* 66 0F F4 */
 void BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2614,7 +2614,7 @@ void BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
 
 void BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("PMADDWD_VdqWdq: SSE2 instruction still not implemented"));
@@ -2627,7 +2627,7 @@ void BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
 /* 66 0F F6 */
 void BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2673,7 +2673,7 @@ void BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
 
 void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BX_PANIC(("MASKMOVDQU_VdqVRdq: SSE2 instruction still not implemented"));
@@ -2686,7 +2686,7 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 /* 66 0F F8 */
 void BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2716,7 +2716,7 @@ void BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
 /* 66 0F F9 */
 void BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2750,7 +2750,7 @@ void BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
 /* 66 0F FA */
 void BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2780,7 +2780,7 @@ void BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
 /* 66 0F FB */
 void BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2808,7 +2808,7 @@ void BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
 /* 66 0F FC */
 void BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2838,7 +2838,7 @@ void BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
 /* 66 0F FD */
 void BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2872,7 +2872,7 @@ void BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
 /* 66 0F FE */
 void BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2902,7 +2902,7 @@ void BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 /* 66 0F 71 Grp12 010 */
 void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
@@ -2928,7 +2928,7 @@ void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
 /* 0F 71 Grp12 100 */
 void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
@@ -2975,7 +2975,7 @@ void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
 /* 66 0F 71 Grp12 110 */
 void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
@@ -3001,7 +3001,7 @@ void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
 /* 66 0F 72 Grp13 010 */
 void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
@@ -3023,7 +3023,7 @@ void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
 /* 0F 72 Grp13 100 */
 void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
@@ -3058,7 +3058,7 @@ void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
 /* 66 0F 72 Grp13 110 */
 void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
@@ -3080,7 +3080,7 @@ void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
 /* 66 0F 73 Grp14 010 */
 void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
@@ -3099,7 +3099,7 @@ void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
 
 void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
@@ -3124,7 +3124,7 @@ void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
 /* 66 0F 73 Grp14 110 */
 void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
@@ -3144,7 +3144,7 @@ void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
 /* 66 0F 73 Grp14 111 */
 void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;

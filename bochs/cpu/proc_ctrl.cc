@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.62 2002-11-08 20:26:12 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.63 2002-11-13 21:00:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ BX_CPU_C::NOP(bxInstruction_c *i)
 
 void BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
+#if BX_SUPPORT_SSE != 0
   BX_INSTR_PREFETCH_HINT(CPU_ID, i->nnn(), i->seg(), RMAddr(i));
 #else
   UndefinedOpcode(i);
@@ -1443,11 +1443,11 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 #  if BX_SUPPORT_MMX
       features |= (1<<23);  // support MMX
 #  endif
-#  if BX_SUPPORT_SSE
+#  if BX_SUPPORT_SSE >= 1
       features |= (1<<24);  // support FSAVE/FXRSTOR
       features |= (1<<25);  // support SSE
 #  endif
-#  if BX_SUPPORT_SSE2
+#  if BX_SUPPORT_SSE >= 2
       features |= (1<<26);  // support SSE2
 #  endif
 
@@ -1633,7 +1633,7 @@ BX_CPU_C::SetCR4(Bit32u val_32)
   allowMask |= (1<<5);
 #endif
 
-#if BX_SUPPORT_SSE || BX_SUPPORT_SSE2
+#if BX_SUPPORT_SSE != 0
   allowMask |= (1<<9);   /* OSFXSR */
 #endif
 
