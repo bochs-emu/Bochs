@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.55 2002-12-13 15:28:55 bdenney Exp $
+// $Id: cdrom.cc,v 1.56 2003-01-10 22:59:44 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,6 +101,8 @@ extern "C" {
 #include <sys/cdio.h>
 #include <sys/ioctl.h>
 #include <sys/disklabel.h>
+// ntohl(x) et al have been moved out of sys/param.h in FreeBSD 5
+#include <netinet/in.h>
 
 // XXX
 #define BX_CD_FRAMESIZE 2048
@@ -468,7 +470,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.55 2002-12-13 15:28:55 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.56 2003-01-10 22:59:44 cbothamy Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -881,7 +883,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track)
     t.data_len = sizeof(tocentry);
     t.data = &tocentry;
 
-    if (ioctl (fd, CDIOREADTOCENTRYS, &tocentry) < 0)
+    if (ioctl (fd, CDIOREADTOCENTRYS, &t) < 0)
       BX_PANIC(("cdrom: read_toc: READTOCENTRY failed."));
 
     buf[len++] = 0; // Reserved
@@ -910,7 +912,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track)
   t.data_len = sizeof(tocentry);
   t.data = &tocentry;
 
-  if (ioctl (fd, CDIOREADTOCENTRYS, &tocentry) < 0)
+  if (ioctl (fd, CDIOREADTOCENTRYS, &t) < 0)
     BX_PANIC(("cdrom: read_toc: READTOCENTRY lead-out failed."));
 
   buf[len++] = 0; // Reserved
@@ -1123,9 +1125,8 @@ cdrom_interface::capacity()
   }
 #elif defined(__FreeBSD__)
   {
-  // Read the TOC to get the data size, since disklabel doesn't appear
-  // to work, sadly.
-  // Keith Jones, 16 January 2000
+  // Read the TOC to get the size of the data track.
+  // Keith Jones <freebsd.dev@blueyonder.co.uk>, 16 January 2000
 
 #define MAX_TRACKS 100
 
