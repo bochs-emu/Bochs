@@ -4,7 +4,7 @@ RCS file: /cvsroot/bochs/bochs/gui/sdl.cc,v
 retrieving revision 1.5
 diff -u -r1.5 sdl.cc
 --- gui/sdl.cc	16 Feb 2002 20:31:35 -0000	1.5
-+++ gui/sdl.cc	6 Mar 2002 19:35:53 -0000
++++ gui/sdl.cc	6 Mar 2002 19:56:28 -0000
 @@ -1,8 +1,5 @@
  #define _MULTI_THREAD
  
@@ -32,7 +32,19 @@ diff -u -r1.5 sdl.cc
  
  #if SDL_BYTEORDER == SDL_LIL_ENDIAN
  #define SWAP16(X)    (X)
-@@ -667,8 +666,8 @@
+@@ -609,6 +608,11 @@
+   Uint32 disp;
+   unsigned char pixels;
+ 
++  if (n_sdl_bitmaps >= MAX_SDL_BITMAPS) {
++    BX_PANIC (("too many SDL bitmaps. To fix, increase MAX_SDL_BITMAPS"));
++    return 0;
++  }
++
+   tmp->surface = SDL_CreateRGBSurface(
+       SDL_SWSURFACE,
+       xdim,
+@@ -667,8 +671,8 @@
        0, 0,
        tmp->src.w,
        tmp->src.h );
@@ -43,7 +55,7 @@ diff -u -r1.5 sdl.cc
  }
  
  
-@@ -677,24 +676,24 @@
+@@ -677,24 +681,24 @@
      unsigned alignment,
      void (*f)(void))
  {
@@ -79,7 +91,7 @@ diff -u -r1.5 sdl.cc
    }
    return bmap_id;
  }
-@@ -704,10 +703,10 @@
+@@ -704,10 +708,10 @@
      unsigned hbar_id,
      unsigned bmap_id)
  {
@@ -94,7 +106,7 @@ diff -u -r1.5 sdl.cc
  }
  
  
-@@ -718,7 +717,7 @@
+@@ -718,7 +722,7 @@
    Uint32 disp;
    int rowsleft = headerbar_height;
    int colsleft;
@@ -103,7 +115,7 @@ diff -u -r1.5 sdl.cc
  
    if( !sdl_screen ) return;
    disp = sdl_screen->pitch/4;
-@@ -741,19 +740,19 @@
+@@ -741,19 +745,19 @@
    // go thru the bitmaps and display the active ones
    while( bitmapscount-- )
    {
@@ -131,7 +143,7 @@ diff -u -r1.5 sdl.cc
      }
    }
  }
-@@ -761,7 +760,7 @@
+@@ -761,7 +765,7 @@
  
  void bx_gui_c::mouse_enabled_changed_specific (Boolean val)
  {
@@ -140,7 +152,7 @@ diff -u -r1.5 sdl.cc
  }
  
  
-@@ -771,10 +770,10 @@
+@@ -771,10 +775,10 @@
      SDL_FreeSurface(sdl_screen);
    if( sdl_fullscreen )
      SDL_FreeSurface(sdl_fullscreen);
