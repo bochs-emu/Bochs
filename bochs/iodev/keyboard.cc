@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.8 2002-10-10 13:10:53 cbothamy Exp $
+// $Id: keyboard.cc,v 1.67.2.9 2002-10-17 16:16:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,7 +58,7 @@
 #define LOG_THIS  pluginKeyboard->
 #define VERBOSE_KBD_DEBUG 0
 
-bx_keyb_c theKeyboard;
+bx_keyb_c *theKeyboard;
 
 #if BX_PLUGINS
   int
@@ -66,18 +66,20 @@ plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
   // Before this plugin was loaded, pluginKeyboard pointed to a stub.
   // Now make it point to the real thing.
-  pluginKeyboard = &theKeyboard;
+  theKeyboard = new bx_keyb_c ();
+  pluginKeyboard = theKeyboard;
   return(0); // Success
 }
 
   void
 plugin_fini(void)
 {
+  BX_INFO (("keyboard plugin_fini"));
 }
 #else
 // When plugins are turned off, provide the pluginKeyboard pointer which every
 // other object will use to reference this object.
-bx_keyb_stub_c *pluginKeyboard = &theKeyboard;
+bx_keyb_stub_c *pluginKeyboard = new bx_keyb_c ();
 
 // NOTE: It would be possible to put pluginKeyboard in plugin.cc all the time,
 // but when I did that I had a strange linking problem.  I tried to rely on the
@@ -94,10 +96,8 @@ bx_keyb_stub_c *pluginKeyboard = &theKeyboard;
 bx_keyb_c::bx_keyb_c(void)
 {
   // constructor
-  // should zero out state info here???
-  memset( &s, 0, sizeof(s) );
-  BX_KEY_THIS put("KBD");
-  BX_KEY_THIS settype(KBDLOG);
+  put("KBD");
+  settype(KBDLOG);
 #if BX_PLUGINS
   // Register plugin basic entry points
   BX_REGISTER_DEVICE_DEVMODEL (this, BX_PLUGIN_KEYBOARD);
@@ -141,7 +141,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.8 2002-10-10 13:10:53 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.9 2002-10-17 16:16:42 bdenney Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");

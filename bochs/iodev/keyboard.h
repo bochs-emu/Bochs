@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.17.4.3 2002-10-10 13:10:53 cbothamy Exp $
+// $Id: keyboard.h,v 1.17.4.4 2002-10-17 16:16:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 // these keywords should only be used in keyboard.cc
 #if BX_USE_KEY_SMF
 #  define BX_KEY_SMF  static
-#  define BX_KEY_THIS theKeyboard.
+#  define BX_KEY_THIS theKeyboard->
 #else
 #  define BX_KEY_SMF
 #  define BX_KEY_THIS 
