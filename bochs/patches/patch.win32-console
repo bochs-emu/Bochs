@@ -13,9 +13,14 @@ Instructions:
   To patch, go to main bochs directory.
   Type "patch -p1 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
---- clean-bochs-1.2.1\gui\win32.cc	Mon Jun 04 02:44:30 2001
-+++ bochs-1.2.1\gui\win32.cc	Thu Aug 16 15:25:40 2001
-@@ -112,6 +112,9 @@
+Index: gui/win32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/win32.cc,v
+retrieving revision 1.18
+diff -u -r1.18 win32.cc
+--- gui/win32.cc	2001/11/12 18:33:28	1.18
++++ gui/win32.cc	2001/11/12 18:39:42
+@@ -116,6 +116,9 @@
  static unsigned prev_block_cursor_y = 0;
  static HBITMAP vgafont[256];
  static unsigned x_edge=0, y_edge=0, y_caption=0;
@@ -25,20 +30,21 @@ Instructions:
  
  static char szAppName[] = "Bochs for Windows";
  static char szWindowName[] = "Bochs for Windows - Display";
-@@ -136,9 +139,11 @@
+@@ -140,10 +143,12 @@
  void create_vga_font(void);
  static unsigned char reverse_bitorder(unsigned char);
  void DrawBitmap (HDC, HBITMAP, int, int, DWORD, unsigned char cColor);
 +void DrawChar (HDC, unsigned char, int, int, unsigned char cColor);
  void updateUpdated(int,int,int,int);
  static void headerbar_click(int x);
--
 +void InitFont(void);
 +void DestroyFont(void);
  
+-
  /* Macro to convert WM_ button state to BX button state */
  
-@@ -277,7 +282,7 @@
+ #ifdef __MINGW32__
+@@ -281,7 +286,7 @@
  
    bx_headerbar_y = headerbar_y;
    dimension_x = 640;
@@ -47,7 +53,7 @@ Instructions:
    stretched_x = dimension_x;
    stretched_y = dimension_y;
    stretch_factor = 1;
-@@ -367,6 +372,9 @@
+@@ -371,6 +376,9 @@
  
    if (stInfo.hwnd) {
      ShowWindow (stInfo.hwnd, SW_SHOW);
@@ -57,15 +63,15 @@ Instructions:
      UpdateWindow (stInfo.hwnd);
  
      ShowCursor(!mouseCaptureMode);
-@@ -404,6 +412,7 @@
+@@ -408,6 +416,7 @@
  
    switch (iMsg) {
    case WM_CREATE:
 +    InitFont();
      SetTimer (hwnd, 1, 330, NULL);
+     bx_options.Omouse_enabled->set (mouseCaptureMode);
      if (mouseCaptureMode)
-       SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
-@@ -476,6 +485,7 @@
+@@ -477,6 +486,7 @@
    case WM_DESTROY:
      KillTimer (hwnd, 1);
      stInfo.UIinited = FALSE;
@@ -73,7 +79,7 @@ Instructions:
  
      PostQuitMessage (0);
      return 0;
-@@ -690,12 +700,21 @@
+@@ -692,12 +702,21 @@
  
    // Number of characters on screen, variable number of rows
    nchars = 80*nrows;
@@ -98,7 +104,7 @@ Instructions:
    }
  
    for (i=0; i<nchars*2; i+=2) {
-@@ -707,7 +726,14 @@
+@@ -709,7 +728,14 @@
        x = (i/2) % 80;
        y = (i/2) / 80;
  
@@ -114,7 +120,7 @@ Instructions:
      }
    }
  
-@@ -720,8 +746,15 @@
+@@ -722,8 +748,15 @@
  	//reverse background and foreground colors
  	char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
  	cAttr = ((cAttr>>4)&0xf)+((cAttr&0xf)<<4);
@@ -131,7 +137,7 @@ Instructions:
    }
  
    ReleaseDC(stInfo.hwnd, hdc);
-@@ -809,7 +842,22 @@
+@@ -811,7 +844,22 @@
      stretched_y *= 2;
      stretch_factor *= 2;
    }
@@ -155,7 +161,7 @@ Instructions:
    SetWindowPos(stInfo.hwnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
                stretched_y+ y_edge * 2 + y_caption,
                 SWP_NOMOVE | SWP_NOZORDER);
-@@ -1116,3 +1164,102 @@
+@@ -1120,6 +1168,105 @@
  }
  #endif
  #endif
@@ -258,3 +264,6 @@ Instructions:
 +    DeleteObject(hFont[i]);
 +  }
 +}
+ 
+   void
+ bx_gui_c::mouse_enabled_changed_specific (Boolean val)
