@@ -256,7 +256,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.11 2001-06-07 12:29:22 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.12 2001-06-07 13:33:32 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -4699,14 +4699,14 @@ mp_config_table:
   db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
   dw (mp_config_end-mp_config_table)  ;; table length
   db 4 ;; spec rev
-  db 0xdd ;; checksum
-  db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
+  db 0x65 ;; checksum
+  .ascii "BOCHSCPU"     ;; OEM id = "BOCHSCPU"
   db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
   db 0x20, 0x20, 0x20, 0x20 
   db 0x20, 0x20, 0x20, 0x20
   dw 0,0 ;; oem table ptr
   dw 0 ;; oem table size
-  dw 3 ;; entry count
+  dw 20 ;; entry count
   dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
   dw 0 ;; extended table length
   db 0 ;; extended table checksum
@@ -4771,14 +4771,14 @@ mp_config_table:
   db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
   dw (mp_config_end-mp_config_table)  ;; table length
   db 4 ;; spec rev
-  db 0x55 ;; checksum
-  db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
+  db 0xdd ;; checksum
+  .ascii "BOCHSCPU"     ;; OEM id = "BOCHSCPU"
   db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
   db 0x20, 0x20, 0x20, 0x20 
   db 0x20, 0x20, 0x20, 0x20
   dw 0,0 ;; oem table ptr
   dw 0 ;; oem table size
-  dw 5 ;; entry count
+  dw 22 ;; entry count
   dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
   dw 0 ;; extended table length
   db 0 ;; extended table checksum
