@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.10 2001-10-06 04:29:09 bdenney Exp $
+$Id: user.dbk,v 1.11 2001-11-08 06:44:23 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -285,7 +285,7 @@ top of every source code file in the Bochs distribution:
      Who maintains bochs now?
      </para></question>
      <answer><para>
-      With Kevin's help, in April 2001, the members of the bochs-developers mailing list set up a new official bochs site hosted by <ulink url="http://sourcefourge.net">Source Forge</ulink>. The current admins on this project are Bryce Denney and Greg Alexander.
+      With Kevin's help, in April 2001, the members of the bochs-developers mailing list set up a new official bochs site hosted by <ulink url="http://sourcefourge.net">Source Forge</ulink>. The current admins on this project are Bryce Denney, Greg Alexander, and Don Becker.
      </para></answer>
   </qandaentry>
 
@@ -464,11 +464,11 @@ Example: networking on *bsd, linux only.  cdrom on ....
 
    <row>
       <entry>Win32</entry>
-      <entry> This port was done by David Ross. I've enhanced
-      the build process
-      for Win32. You can compile with either the MS Visual C++ 5.0
-      or GNU-Win32 environments. Go to Compiling Bochs on Win32 </entry>
-   </row>
+      <entry> This port was done by David Ross. 
+      You can compile with either the MS Visual C++ 5.0 or 6.0, or
+      GNU-Win32 environments such as cygwin. 
+      See <xref linkend="compiling-win32">.
+      </entry> </row>
 
    <row>
       <entry>OS/2</entry>
@@ -478,10 +478,8 @@ Example: networking on *bsd, linux only.  cdrom on ....
    </row>
    <row>
       <entry>OS/2</entry>
-      <entry> Craig Ballantyne ported bochs to OS/2. I will 
-      integrate this back
-      into the main bochs source soon. Check out the guiSoft Corp.
-      home page.
+      <entry> Craig Ballantyne ported bochs to OS/2.
+      Check out the guiSoft Corp.  home page.
       </entry>
    </row>
 
@@ -1041,6 +1039,7 @@ These scripts run <command>configure</command> script for you, with a set of
 options that appropriate for that platform.  Examples include
 <filename>.conf.linux</filename>,
 <filename>.conf.win32-vcpp</filename>,
+<filename>.conf.win32-cygwin</filename>,
 <filename>.conf.AIX.4.3.1</filename>, and
 <filename>.conf.beos-x86-R4</filename>.
 Run a shortcut script using Bourne shell, like this:
@@ -1109,11 +1108,20 @@ at least to erase any files that it created.
 Once the program has been built, the next step is typically to run
 <command>make install</command> to copy the executables, documentation, and
 other required files into a public place so that all users can use it.
-&FIXME;
+<footnote><para>
+&FIXME; We should mention what gets installed, and where.
+    /usr/local/bochs/$VERSION/*
+    /usr/local/bin/bochs (and bximage)
+    /usr/man/man1/bochs*.1 (and bximage.1)
+    make install_dlx option
+</para></footnote>
 </para>
 </section>
 
 <section><title>Compile Problems</title>
+<para>
+&FIXME;
+</para>
 <para>
 <screen>
 what if configure fails?
@@ -1121,12 +1129,12 @@ what if configure fails?
 - report the problem with a source forge bug report.
 
 what if make fails?
-- try make all-clean and make again
+- try make dist-clean, and run configure and make again
 - use configure options to disable options.  For example, if errors in 
 fpu/fpu_system.h, you could try --disable-fpu.
 - search for the error on the Bochs website (bug reports, patches)
 - if familiar with C++, many minor problems can be corrected
-- move toward more stable code.  if it's CVS, see if a release version will
+- move to more stable code.  if it's CVS, see if a release version will
   compile.  Report problem to bochs-developers.
 - report the problem with a source forge bug report.
 </screen>
@@ -1134,29 +1142,20 @@ fpu/fpu_system.h, you could try --disable-fpu.
 </para>
 </section>
 
-<section><title>Other</title>
+<section><title>Building an RPM</title>
+<para> &FIXME; </para>
 <para>
-<screen>
-Things to not forget:
-  What to try if make fails: turn off configure options,
-    look at SF bugs and patches section to see if it's a known
-    problem, try to fix it yourself, if using CVS version try
-    a release source file instead, fix it yourself
-  Make install, what it installs and where
-    /usr/local/bochs/$VERSION/*
-    /usr/local/bin/bochs (and bximage)
-    /usr/man/man1/bochs*.1 (and bximage.1)
-    make install_dlx option
-  How to build an RPM in Linux
-</screen>
+How to build an RPM in Linux
 </para>
 </section> <!-- end of Other -->
 
 </section>  <!-- end of Compiling:Unix section -->
 
 
-  <section><title>Instructions for win32 VC++</title>
+  <section id="compiling-win32"><title>Instructions for win32 VC++</title>
+  <para> &FIXME; </para>
   <para>
+  <screen>
   Getting the makefiles
     Download them from web site in a zip, install them on top
       of the source directory
@@ -1168,6 +1167,7 @@ Things to not forget:
   Installation? Maybe download an existing windows binary package
     and drop in your new binary.  There is no make install, though
     this may be added some day.
+    </screen>
     </para>
     </section>  <!-- end of Compiling:win32 -->
 
@@ -1213,7 +1213,7 @@ windows.
       <entry>no</entry>
       <entry>Use RFB protocol to talk to AT&amp;T's <ulink
       url="http://www.uk.research.att.com/vnc/">VNC Viewer</ulink>.  The RFB
-      code was written by Don Becker <email>mailto:x-odus@iname.com</email>,
+      code was written by Don Becker <email>x-odus@iname.com</email>,
       who has a Bochs-RFB web page on his site, 
       <ulink url="http://www.psyon.org/bochs-rfb/">http://www.psyon.org/bochs-rfb</ulink>.
       </entry>
@@ -1238,15 +1238,15 @@ windows.
     <row>
       <entry>--with-win32</entry>
       <entry>no</entry>
-      <entry>Use Win32 GUI.  I think this option was similar to
-	  --with-win32-vcpp, but for targeting a Win32/gcc
-	  environment. Deprecated option.</entry>
+      <entry>Use Win32 GUI, but compile with a Win32/gcc
+          environment.  This is used with cygwin.
     </row>
     <row>
       <entry>--with-nogui</entry>
       <entry>no</entry>
-      <entry>No native GUI, just use blank stubs.  This is if you don't
-	  care about having video output, but are just running tests. </entry>
+      <entry>No native GUI; just use blank stubs.  This is if you don't
+	  care about having video output, but are just running tests. 
+      </entry>
     </row>
   </tbody>
 </tgroup>
@@ -1560,6 +1560,406 @@ windows.
 	  grab one from a real hard disk
           </para>
    </section>
+   <section>
+   <title>bochsrc</title>
+<para>
+Bochs uses a configuration file called a <filename>bochsrc</filename> to know
+where to look for disk images, how the Bochs emulation layer should work, etc.
+When you first start up Bochs, it looks around for its configuration file, and
+parses it.  Here are a few lines from a sample file:
+<screen>
+  diskc: file="30M.sample", cyl=615, heads=6, spt=17
+  boot: c
+</screen>
+The format is very strict, so be sure to put the right number of spaces and
+use lowercase letters.  As you can see, most lines have a keyword telling what
+is being configured, followed by a colon, followed by a few
+<varname>variable</varname>=<varname>value</varname> pairs, separated by
+commas.  For very simple options, sometimes just a single value is needed.  
+The source and binary distributions come with a sample
+<filename>bochsrc</filename>, so you can just copy the sample file and edit the
+settings you need to change.
+</para>
+
+<para>
+
+</para>
+
+<para>
+The section below lists all the supported bochsrc options.
+</para>
+
+<section><title>romimage</title>
+<para>
+Examples:
+<screen>
+  file=bios/BIOS-bochs-latest, address=0xf0000
+</screen>
+You need to load a ROM BIOS into addresses 0xf0000-0xfffff.  The BIOS controls
+what the PC does when it first powers on.  Normally, you can use a precompiled
+BIOS in the source or binary distribution called
+<filename>BIOS-bochs-latest</filename>.
+</para>
+</section>
+
+<section><title>megs</title>
+<para>
+Examples:
+<screen>
+  megs: 32
+  megs: 128
+</screen>
+Set this to the default number of megabytes of memory you want to emulate.  The
+default is 32, since most operating systems won't need more than that.
+</para>
+</section>
+
+<section><title>vgaromimage</title>
+<para>
+Examples:
+<screen>
+  vgaromimage: bios/VGABIOS-elpin-2.40
+</screen>
+You also need to load a VGA ROM BIOS at 0xC0000.  A VGA BIOS file from
+Elpin Systems, Inc. is provided in the source and binary distributions.
+</para>
+</section>
+
+<section><title>floppya/floppyb</title>
+<para>
+Examples:
+<screen>
+2.88M 3.5" Floppy:
+  floppya: 2_88=a:, status=inserted
+1.44M 3.5" Floppy:
+  floppya: 1_44=floppya.img, status=inserted
+1.2M  5.25" Floppy:
+  floppyb: 1_2=/dev/fd0, status=inserted
+720K  3.5" Floppy:
+  floppya: 720k=/usr/local/bochs/images/win95.img, status=inserted
+</screen>
+
+Floppya is the first drive, and floppyb is the second drive. If you're booting
+from a floppy, floppya should point to a bootable disk.  To read from a disk
+image, write the name of the image file.  In many operating systems Bochs can
+read directly from a raw floppy drive.  For raw disk access, use the device
+name (Unix systems) or the drive letter and a colon (Windows systems).
+
+You can set the initial status of the media to <constant>ejected</constant> 
+or <constant>inserted</constant>.  Usually you will want to use 
+<constant>inserted</constant>.  In fact Bryce can't think of any reason
+to ever write <constant>ejected</constant> in your bochsrc.
+</para>
+</section>
+
+<section><title>diskc/diskd</title>
+<para>
+Examples:
+<screen>
+  diskc: file=10M.img, cyl=306, heads=4, spt=17
+  diskc: file=112M.img, cyl=900, heads=15, spt=17
+  diskd: file=483.img, cyl=1024, heads=15, spt=63
+</screen>
+
+The diskc/diskd lines tell Bochs what disk image file to use as the constants
+of the emulated hard drive, and what geometry it should have.  Diskc is the
+first hard drive, and diskd is the second hard drive.  At present, using a raw
+hard drive is NOT SUPPORTED and dangerous to your data.  The file should be a
+disk image file, which must be exactly 512*cyl*heads*spt bytes long.  The
+geometry settings are cylinder (cyl), heads, and sectors per track (spt).  If
+you  use bximage  to create   the  image,  it  will give  you  the required
+cyl,  head, and spt information.
+
+<note><para>
+You cannot use both diskd and cdromd together.
+</para></note>
+
+</para>
+</section>
+
+<section><title>cdromd</title>
+<para>
+Examples:
+<screen>
+  cdromd: dev=/dev/cdrom, status=inserted         (Unix only)
+  cdromd: dev=e:, status=inserted                 (Windows only)
+  cdromd: dev=cdromimage.iso, status=inserted
+</screen>
+
+The cdromd line tells Bochs to emulate a CD-ROM device.  You cannot have
+both a diskd and a cdromd, and there is no cdromc option.  
+
+<note><para>
+You cannot use both diskd and cdromd together.
+</para></note>
+
+</para>
+</section>
+
+<section><title>newharddrivesupport</title>
+<para>
+Examples:
+<screen>
+  newharddrivesupport: enabled=1
+</screen>
+This  setting enables  support for large  hard disks,  better  CD  recognition,
+and  various other  useful  functions.  You  can set it  to "enabled=1" (on)
+or "enabled=0" (off).  It is recommended  that  this  setting  is  left  on
+unless you are having trouble with it.
+</para>
+</section>
+
+<section><title>boot</title>
+<para>
+Examples:
+<screen>
+  boot: a
+  boot: c
+</screen>
+This defines  your boot drive. You can  either boot from 'a' or 'c'.
+</para>
+</section>
+
+<section><title>log</title>
+<para>
+Examples:
+<screen>
+  log: bochs.out
+  log: /dev/tty               (unix only)
+  log: /dev/null              (unix only)
+</screen>
+Give the path of the log file you'd like Bochs debug and misc. verbage to be
+written to.   If you really don't want it, make it /dev/null.
+</para>
+</section>
+
+<section><title>debug/info/error/panic</title>
+<para>
+Examples:
+<screen>
+  debug: action=ignore
+  info: action=report
+  error: action=report
+  panic: action=ask
+</screen>
+
+During simulation, Bochs encounters certain events that the user might want to
+know about.  These events are divided into four levels of importance: debug,
+info, error, and panic.  Debug messages are usually only useful when writing
+Bochs code or when trying to locate a problem.  There may be thousands of debug
+messages per second, so be careful before turning them on.  Info messages tell
+about interesting events that don't happen that frequently.  Bochs produces an
+"error" message when it  finds a condition that really shouldn't happen,  but
+doesn't endanger the simulation.  An example of an error  might be  if the
+emulated  software produces an illegal disk command.  Panic messages mean that
+Bochs cannot simulate correctly and should probably shut down.
+A panic can be a configuration problem (like a misspelled bochsrc line) or an
+emulation problem (like an unsupported video mode).  
+</para>
+
+
+<para>
+The debug, info, error, and panic lines in the bochsrc control what Bochs will
+do when it encounters each type of event.  The allowed actions are: fatal
+(terminate bochs), ask (ask the user what to do), report (print information to
+the console or log file), or ignore (do nothing).  The recommended settings are
+listed in the sample above.
+</para>
+
+<tip>
+<para>
+The safest action for panics is "fatal" or "ask".  If you are getting lots of
+panics and get tired of telling it to continue each time, you can try
+action=report instead.  If you allow Bochs to continue after a panic, don't
+be surprised if you get strange behavior or crashes after a panic occurs.
+Please report panic messages to the bochs-developers mailing list unless it is
+just a configuration problem like "could not find hard drive image."
+</para>
+</tip>
+</section>
+
+<section><title>sb16</title>
+<para>
+Examples:
+<screen>
+  sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, 
+        loglevel=2, log=sb16.log, dmatimer=600000
+</screen>
+<note><para>
+The  example is  wrapped onto several lines for formatting  reasons, but  it
+should all be on one line in the actual bochsrc file.
+</para></note>
+
+The sb16 line defines Sound Blaster 16 emulation.  It can have several of
+the following properties.  All properties are in the usual "property=value"
+format.
+
+ <itemizedlist>
+   <listitem><para>
+   midi: The  filename is where the midi data is  sent.  This
+   can  be  a device  or just a file if  you want to record the midi data.
+   </para></listitem>
+   
+   <listitem><para>
+   midimode:
+   <screen>
+   0 = No data should be output.
+   1 = output to device (system dependent - midi denotes the device driver).
+   2 = SMF file output, including headers.
+   3 = Output the midi data stream to the file (no midi headers and no
+       delta times, just command and data bytes).
+   </screen>
+   </para></listitem>
+   
+   <listitem><para>
+   wave: This is the device/file where wave output is stored.
+   </para></listitem>
+   
+   <listitem><para>
+   wavemode:
+   <screen>
+   0 = no data
+   1 = output to device (system dependent - wave denotes the device driver).
+   2 = VOC file output, including headers.
+   3 = Output the raw wave stream to the file.
+   </screen>
+   </para></listitem>
+
+   <listitem><para>
+   log: The file to write the sb16 emulator messages to.
+   </para></listitem>
+
+   <listitem><para>
+   loglevel: 
+   <screen>
+   0 = No log.
+   1 = Only midi program and bank changes.
+   2 = Severe errors.
+   3 = All errors.
+   4 = All errors plus all port accesses.
+   5 = All errors and port accesses plus a lot of extra information.
+   </screen>
+   </para></listitem>
+
+   <listitem><para>
+   dmatimer: Microseconds per second for a DMA cycle. Make it smaller to fix
+   non-continous sound. 750000 is usually a good value. This needs a reasonably
+   correct setting for IPS (see below).
+   </para></listitem>
+ </itemizedlist>  
+
+</para>
+</section>
+
+<section><title>vga_update_interval</title>
+<para>
+Examples:
+<screen>
+  vga_update_interval: 250000
+</screen>
+Video memory is scanned for updates and screen updated every so many virtual
+seconds. The default is 300000, about 3Hz. This is generally plenty.
+Keep in mind that you must tweak the 'ips:' directive to be as close to the
+number of emulated instructions-per-second your workstation can do, for
+this to be accurate.
+</para>
+</section>
+
+<section><title>keyboard_serial_delay</title>
+<para>
+Example:
+  keyboard_serial_delay: 200
+<screen>
+</screen>
+Approximate time in microseconds that it takes one character to be
+transfered from the keyboard to controller over the serial path.
+</para>
+</section>
+
+<section><title>floppy_command_delay</title>
+<para>
+Examples:
+<screen>
+  floppy_command_delay: 50000
+</screen>
+Time in microseconds to wait before completing some  floppy  commands  such  as
+read,  write, seek,  etc.,   which  normally  have  a  delay associated.  This
+was  once  hardwired  to 50000 but now you can adjust it.
+</para>
+</section>
+
+<section><title>ips</title>
+<para>
+Examples:
+<screen>
+  ips: 1000000
+</screen>
+Emulated Instructions Per Second.  This is the number of IPS that bochs is
+capable of running on your  machine.  You  can  recompile  Bochs, using
+instructions  included in  config.h (in the source code),  to find  your
+workstation's capability.
+</para>
+
+<para>
+IPS is used to calibrate  many  time-dependent events   within   the  bochs
+simulation.  For example, changing IPS affects the frequency of VGA updates,
+the duration of time before a key starts to autorepeat, and the measurement
+of BogoMips and other benchmarks.  The table below lists some typical 
+IPS settings for different machines<footnote><para>IPS measurements depend on
+OS and compiler configuration  in addition  to processor clock
+speed.</para></footnote>.  
+</para>
+
+<table><title>Example IPS Settings</title>
+  <tgroup cols=3 align=left colsep=1 rowsep=1>
+<thead>
+  <row>
+    <entry>Speed</entry>
+    <entry>Machine</entry>
+    <entry>Typical IPS</entry>
+  </row>
+</thead>
+  <tbody>
+<row><entry>650Mhz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5</entry></row>
+<row><entry>400Mhz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8</entry></row>
+<row><entry>166Mhz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75</entry></row>
+<row><entry>200Mhz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5</entry></row>
+</tbody>
+</tgroup>
+</table>
+
+</section>
+
+<section><title>mouse</title>
+<para>
+Examples:
+<screen>
+  mouse: enabled=1
+  mouse: enabled=0
+</screen>
+This option prevents Bochs from creating mouse "events"  unless  a  mouse  is
+enabled.  The hardware emulation  itself is not disabled  by this. You  can
+turn the mouse on  by  setting enabled to  1,  or  turn  it  off  by  setting
+enabled to 0. Unless  you  have  a  particular reason  for enabling  the  mouse
+by  default, it is recommended that you leave it off.
+</para>
+</section>
+
+<section><title>private_colormap</title>
+<para>
+Examples:
+<screen>
+  private_colormap: enabled=1
+</screen>
+Requests that the GUI create and use it's  own non-shared colormap.  This
+colormap  will  be used when in the bochs window. If not enabled, a shared
+colormap  scheme  may be used.  Once again, enabled=1  turns on this feature
+and 0 turns it off.
+</section>
+
+</section> <!--end of bochsrc section-->
+
+
 </chapter>
 
 <chapter><title>Using Bochs</title>
