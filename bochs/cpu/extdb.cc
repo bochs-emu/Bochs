@@ -12,7 +12,6 @@ char debug_loaded = 0;
 
 void (*call_debugger)(TRegs *,Bit8u *, Bit32u);
 
-#if BX_SUPPORT_X86_64
 
 void bx_external_debugger(BX_CPU_C *cpu)
 {
@@ -64,7 +63,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
      regs.cr1 = cpu->cr1;
      regs.cr2 = cpu->cr2;
      regs.cr3 = cpu->cr3;
-     regs.cr4 = cpu->cr4.val32;
+     regs.cr4 = cpu->cr4.getRegister();
      //regs.cr5 = cpu->cr5;
      //regs.cr6 = cpu->cr6;
      //regs.cr7 = cpu->cr7;
@@ -86,61 +85,3 @@ void bx_external_debugger(BX_CPU_C *cpu)
        call_debugger(&regs,cpu->mem->vector,cpu->mem->len);
      }
 }
-
-#else  // x86-32
-
-void bx_external_debugger(BX_CPU_C *cpu)
-{
-     switch (regs.debug_state) {
-     case debug_run:
-       return;
-     case debug_count:
-       if (--regs.debug_counter) return;
-       regs.debug_state = debug_step;
-       break;
-     case debug_skip:
-       if (cpu->dword.eip != regs.debug_eip ||
-           cpu->sregs[1].selector.value != regs.debug_cs) return;
-       regs.debug_state = debug_step;
-       break;
-     }
-
-     regs.eax = cpu->gen_reg[0].dword.erx;
-     regs.ecx = cpu->gen_reg[1].dword.erx;
-     regs.edx = cpu->gen_reg[2].dword.erx;
-     regs.ebx = cpu->gen_reg[3].dword.erx;
-     regs.esp = cpu->gen_reg[4].dword.erx;
-     regs.ebp = cpu->gen_reg[5].dword.erx;
-     regs.esi = cpu->gen_reg[6].dword.erx;
-     regs.edi = cpu->gen_reg[7].dword.erx;
-     regs.eip = cpu->dword.eip;
-     regs.eflags = cpu->read_eflags();
-     regs.es = cpu->sregs[0].selector.value;
-     regs.cs = cpu->sregs[1].selector.value;
-     regs.ss = cpu->sregs[2].selector.value;
-     regs.ds = cpu->sregs[3].selector.value;
-     regs.fs = cpu->sregs[4].selector.value;
-     regs.gs = cpu->sregs[5].selector.value;
-     regs.gdt.base = cpu->gdtr.base;
-     regs.gdt.limit = cpu->gdtr.limit;
-     regs.idt.base = cpu->idtr.base;
-     regs.idt.limit = cpu->idtr.limit;
-     regs.ldt = cpu->ldtr.selector.value;
-     regs.cr0 = cpu->cr0.val32;
-     regs.cr1 = cpu->cr1;
-     regs.cr2 = cpu->cr2;
-     regs.cr3 = cpu->cr3;
-
-     if (debug_loaded == 0) {
-       HINSTANCE hdbg;
-
-       debug_loaded = 1;
-       hdbg = LoadLibrary("debug.dll");
-       call_debugger = (void (*)(TRegs *,Bit8u *, Bit32u)) GetProcAddress(hdbg,"call_debugger");
-
-       if (call_debugger != NULL) debug_loaded = 2;
-     }
-     if (debug_loaded == 2) call_debugger(&regs,cpu->mem->vector,cpu->mem->len);
-}
-
-#end   // #if BX_SUPPORT_X86_64
