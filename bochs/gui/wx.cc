@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.58 2003-05-14 16:09:53 vruppert Exp $
+// $Id: wx.cc,v 1.59 2003-05-20 18:53:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -95,6 +95,7 @@ static unsigned long wxCursorX = 0;
 static unsigned long wxCursorY = 0;
 static unsigned long wxFontX = 0;
 static unsigned long wxFontY = 0;
+static unsigned int text_rows=25, text_cols=80;
 struct {
   unsigned char red;
   unsigned char green;
@@ -911,10 +912,13 @@ UpdateScreen(unsigned char *newBits, int x, int y, int width, int height)
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen got lock. wxScreen=%p", wxScreen)));
   if(wxScreen != NULL) {
     for(int i = 0; i < height; i++) {
+      char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
       for(int c = 0; c < width; c++) {
-        wxScreen[(y * wxScreenX * 3) + ((x+c) * 3)] = wxBochsPalette[newBits[(i * width) + c]].red;
-        wxScreen[(y * wxScreenX * 3) + ((x+c) * 3) + 1] = wxBochsPalette[newBits[(i * width) + c]].green;
-        wxScreen[(y * wxScreenX * 3) + ((x+c) * 3) + 2] = wxBochsPalette[newBits[(i * width) + c]].blue;
+        unsigned pixel = (i * width) + c;
+        pwxScreen[0] = wxBochsPalette[newBits[pixel]].red;
+        pwxScreen[1] = wxBochsPalette[newBits[pixel]].green;
+        pwxScreen[2] = wxBochsPalette[newBits[pixel]].blue;
+        pwxScreen += 3;
       }
       y++;
       if(y >= wxScreenY) break;
@@ -938,7 +942,7 @@ DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int
   }
   unsigned char *newBits = (unsigned char *)malloc(width * height);
   memset(newBits, 0, (width * height));
-  for(int i = 0; i < (width * height); i+=wxFontX) {
+  for(int i = 0; i < (width * height); i+=width) {
     newBits[i + 0] = (bmap[j] & 0x80) ? fgcolor : bgcolor;
     newBits[i + 1] = (bmap[j] & 0x40) ? fgcolor : bgcolor;
     newBits[i + 2] = (bmap[j] & 0x20) ? fgcolor : bgcolor;
@@ -973,10 +977,12 @@ DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int
 //     This represents 80 characters wide by 25 high, with
 //     each character being 2 bytes.  The first by is the
 //     character value, the second is the attribute byte.
-//     I currently don't handle the attribute byte.
 //
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
+// tm_info:  this structure contains information for additional
+//           features in text mode (cursor shape, line offset,...)
+// nrows:    number of text rows (unused here)
 
 void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
@@ -986,14 +992,15 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   unsigned char *old_line, *new_line, *new_start;
   unsigned char cAttr, cChar;
-  unsigned int ncols = wxScreenX / wxFontX;
   unsigned int hchars, rows, x, y;
   bx_bool forceUpdate = 0, gfxchar;
+
+  UNUSED(nrows);
   if(charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
   }
-  if((wxCursorY < nrows) && (wxCursorX < ncols)) {
+  if((wxCursorY < text_rows) && (wxCursorX < text_cols)) {
     cChar = new_text[wxCursorY * tm_info.line_offset + wxCursorX * 2];
     gfxchar = tm_info.line_graphics && ((cChar & 0xE0) == 0xC0);
     cAttr = new_text[wxCursorY * tm_info.line_offset + wxCursorX * 2 + 1];
@@ -1002,10 +1009,10 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   }
 
   new_start = new_text;
-  rows = nrows;
+  rows = text_rows;
   y = 0;
   do {
-    hchars = ncols;
+    hchars = text_cols;
     new_line = new_text;
     old_line = old_text;
     x = 0;
@@ -1030,7 +1037,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   wxCursorX = cursor_x;
   wxCursorY = cursor_y;
 
-  if((cursor_y < nrows) && (cursor_x < ncols) && (tm_info.cs_start <= tm_info.cs_end)) {
+  if((cursor_y < text_rows) && (cursor_x < text_cols) && (tm_info.cs_start <= tm_info.cs_end)) {
     cChar = new_start[cursor_y * tm_info.line_offset + cursor_x * 2];
     cAttr = new_start[cursor_y * tm_info.line_offset + cursor_x * 2 + 1];
     cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
@@ -1092,8 +1099,10 @@ void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // Resize the window to this size, but you need to add on
 // the height of the headerbar to the Y value.
 //
-// x: new VGA x size
-// y: new VGA y size (add headerbar_y parameter from ::specific_init().
+// x:       new VGA x size
+// y:       new VGA y size
+// fheight: new VGA character height in text mode
+// fwidth : new VGA character width in text mode
 
 void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
@@ -1104,6 +1113,8 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   if (fheight > 0) {
     wxFontX = fwidth;
     wxFontY = fheight;
+    text_cols = x / wxFontX;
+    text_rows = y / wxFontY;
   }
   wxScreenX = x;
   wxScreenY = y;
@@ -1118,7 +1129,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   // native win32 function called by SetClientSize (below).  As with many
   // thread problems, it happened sporadically so it's hard to prove that this
   // really fixed it. -bbd
-  
+
   // this method is called from the simulation thread, so we must get the GUI
   // thread mutex first to be safe.
   wxMutexGuiEnter ();
