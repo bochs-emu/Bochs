@@ -68,7 +68,7 @@ Changes to next release:
     - new memory handler API for PCI i/o and memory handling (Frank Cornelis)
   - speaker emulation added (David N. Welton)
   - pci
-    - PCI slot configuration added for 5 slots
+    - PCI slot configuration added for 5 slots (Volker Ruppert)
     - PCI irq routing, irq sharing and level sensitive irq mode implemented
     - ne2k device appears as a Realtec 8029 NIC if connected to a PCI slot
     - PCI IDE controller dummy device added
@@ -77,9 +77,11 @@ Changes to next release:
   - serial
     - multiple serial port support added (4 ports now available)
     - partial raw serial support on win32 (transmit data)
-    - serial port i/o mode option added (modes: null, file, term, raw)
+    - serial port i/o mode option added (modes: null, file, term, raw, mouse)
   - parallel
     - multiple parallel port support added (2 ports now available)
+  - serial mouse support (Volker)
+  - PS/2 and serial wheel mouse support (Ben Lunt)
   - vga
     - VBE 8 bit DAC support added
     - VBE memory now registered using DEV_register_memory_handlers()
@@ -107,6 +109,7 @@ Changes to next release:
   - status bar with indicators for cdrom, floppy, harddisk and keyboard added
     (done in rfb, sdl, win32, wx and x)
   - 3rd (middle) mouse button now supported (sdl, win32, wx, x)
+  - mouse wheel support (win32, x)
   - CTRL key + middle mouse button now used to toggle the mouse capture mode
     (sdl, win32, wx, x)
   - text mode split screen feature added (sdl, win32, wx, x)
@@ -163,6 +166,8 @@ Changes to next release:
   [851332] DESTDIR support for install_dlx by Ville Skyttä
   [970929] gdbstub support for MinGW tool chains by Muranaka Masaki
  [1021740] Turn gdb stub into a runtime option by Charles Duffy
+ [1063329] RFB key press/release bug fix by Remko van der Vossen
+ [1079240] Wheel Mouse by Ben Lunt
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
