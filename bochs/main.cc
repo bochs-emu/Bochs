@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.186 2002-11-19 08:54:32 bdenney Exp $
+// $Id: main.cc,v 1.187 2002-11-20 13:08:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2055,6 +2055,9 @@ bx_init_hardware()
 #endif
   alarm( 1 );
 #endif
+
+  // update headerbar buttons since drive status can change during init
+  bx_gui->update_drive_status_buttons ();
 
   return(0);
 }
