@@ -35,8 +35,7 @@
   Bit32u
 BX_MEM_C::get_memory_in_k(void)
 {
-  BX_INFO(("(%u) get_memory_in_k() = %u\n", BX_SIM_ID, (unsigned)
-    (BX_MEM_THIS megabytes * 1024)));
+  BX_INFO(("%uKB\n", (unsigned)(BX_MEM_THIS megabytes*1024)));
 
   return(BX_MEM_THIS megabytes * 1024);
 }
@@ -47,7 +46,9 @@ BX_MEM_C::get_memory_in_k(void)
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(void)
 {
-  setprefix("[MEM ]");
+  char mem[8];
+  snprintf(mem, 8, "[MEM%d]", BX_SIM_ID);
+  setprefix(mem);
   settype(MEMLOG);
 
   BX_MEM.vector = NULL;
@@ -62,11 +63,10 @@ BX_MEM_C::BX_MEM_C(void)
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(size_t memsize)
 {
-  BX_INFO(("(%u) BX_MEM_C::BX_MEM_C(size_t) called\n", BX_SIM_ID));
-  BX_INFO(("(%u)   memsize = %u\n", BX_SIM_ID, (unsigned) memsize));
   vector = new Bit8u[memsize];
   len    = memsize;
   megabytes = len / (1024*1024);
+  BX_INFO(("Init(%uB == %.2f)\n",memsize, megabytes));
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
@@ -94,11 +94,10 @@ BX_MEM_C::init_memory(int memsize)
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
-    BX_INFO(("(%u) BX_MEM_C::init_memory(int): allocating memory.\n", BX_SIM_ID));
-    BX_INFO(("(%u)   memsize = %u\n", BX_SIM_ID, (unsigned) memsize));
     BX_MEM_THIS vector = new Bit8u[memsize];
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
+    BX_INFO(("Init(%uB == %.2fMB).\n", memsize, (float)(BX_MEM_THIS megabytes) ));
     }
   // initialize all memory to 0x00
   memset(BX_MEM_THIS vector, 0x00, BX_MEM_THIS len);
@@ -171,22 +170,19 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   close(fd);
 #if BX_PCI_SUPPORT
   if (bx_options.i440FXSupport)
-    BX_INFO(("(%u) ROM: BIOS in i440FX RAM 0x%08x/%u ('%s')\n",
-            BX_SIM_ID,
+    BX_INFO(("ROM: BIOS in i440FX RAM 0x%08x/%u ('%s')\n",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
   else
-    BX_INFO(("(%u) ROM: BIOS at 0x%08x/%u ('%s')\n",
-            BX_SIM_ID,
+    BX_INFO(("ROM: BIOS at 0x%08x/%u ('%s')\n",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
 #else  // #if BX_PCI_SUPPORT
-  BX_INFO(("(%u) ROM: BIOS at 0x%08x/%u ('%s')\n",
-			BX_SIM_ID,
+  BX_INFO(("ROM: BIOS at 0x%08x/%u ('%s')\n",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
  			path

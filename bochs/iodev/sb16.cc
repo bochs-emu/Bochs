@@ -106,7 +106,7 @@ void bx_sb16_c::init(bx_devices_c *d)
       LOGFILE = fopen(bx_options.sb16.logfile,"w"); // logfile for errors etc.
       if (LOGFILE == NULL)
 	{
-	  BX_INFO(("#SB16: Error opening file %s. Logging disabled.", bx_options.sb16.logfile));
+	  BX_ERROR(("Error opening file %s. Logging disabled.", bx_options.sb16.logfile));
 	  bx_options.sb16.loglevel = 0;
 	}
     }
@@ -158,7 +158,7 @@ void bx_sb16_c::init(bx_devices_c *d)
       bx_options.sb16.wavemode = 0;
     }
 
-  BX_INFO(("#SB16 options: midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d\n",
+  BX_INFO(("midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d\n",
 	    bx_options.sb16.midimode, bx_options.sb16.midifile,
 	    bx_options.sb16.wavemode, bx_options.sb16.wavefile,
 	    bx_options.sb16.loglevel, bx_options.sb16.logfile,
