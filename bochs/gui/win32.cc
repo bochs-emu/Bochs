@@ -546,7 +546,7 @@ QueueEvent* deq_key_event(void) {
   QueueEvent* key;
 
   if ( head == tail ) {
-    BX_ERROR(("deq_scancode: buffer empty\n")));
+    BX_ERROR(("deq_scancode: buffer empty\n"));
     return((QueueEvent*)0);
   }
   key = &keyevents[head];
