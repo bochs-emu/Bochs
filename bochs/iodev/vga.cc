@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.57 2003-01-01 21:21:29 vruppert Exp $
+// $Id: vga.cc,v 1.58 2003-01-11 11:18:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -174,6 +174,7 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.pel.write_data_cycle = 0;
   BX_VGA_THIS s.pel.read_data_register = 0;
   BX_VGA_THIS s.pel.read_data_cycle = 0;
+  BX_VGA_THIS s.pel.dac_state = 0x01;
   BX_VGA_THIS s.pel.mask = 0xff;
 
   BX_VGA_THIS s.graphics_ctrl.index = 0;
@@ -564,24 +565,33 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
       RETURN(BX_VGA_THIS s.pel.mask);
       break;
 
+    case 0x03c7: /* DAC state, read = 11b, write = 00b */
+      RETURN(BX_VGA_THIS s.pel.dac_state);
+      break;
+
     case 0x03c9: /* PEL Data Register, colors 00..FF */
-      switch (BX_VGA_THIS s.pel.read_data_cycle) {
-        case 0:
-          retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].red;
-          break;
-        case 1:
-          retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].green;
-          break;
-        case 2:
-          retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].blue;
-          break;
-        default:
-          retval = 0; // keep compiler happy
-        }
-      BX_VGA_THIS s.pel.read_data_cycle++;
-      if (BX_VGA_THIS s.pel.read_data_cycle >= 3) {
-        BX_VGA_THIS s.pel.read_data_cycle = 0;
-        BX_VGA_THIS s.pel.read_data_register++;
+      if (BX_VGA_THIS s.pel.dac_state == 0x03) {
+        switch (BX_VGA_THIS s.pel.read_data_cycle) {
+          case 0:
+            retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].red;
+            break;
+          case 1:
+            retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].green;
+            break;
+          case 2:
+            retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].blue;
+            break;
+          default:
+            retval = 0; // keep compiler happy
+          }
+        BX_VGA_THIS s.pel.read_data_cycle++;
+        if (BX_VGA_THIS s.pel.read_data_cycle >= 3) {
+          BX_VGA_THIS s.pel.read_data_cycle = 0;
+          BX_VGA_THIS s.pel.read_data_register++;
+          }
+	}
+      else {
+        retval = 0x3f;
         }
       RETURN(retval);
       break;
@@ -674,7 +684,6 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
       break;
 
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
-    case 0x03c7: /* not sure but OpenBSD reads it a lot */
     case 0x03cb: /* not sure but OpenBSD reads it a lot */
     case 0x03c8: /* */
     default:
@@ -1021,11 +1030,13 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
     case 0x03c7: // PEL address, read mode
       BX_VGA_THIS s.pel.read_data_register = value;
       BX_VGA_THIS s.pel.read_data_cycle    = 0;
+      BX_VGA_THIS s.pel.dac_state = 0x03;
       break;
 
     case 0x03c8: /* PEL address write mode */
       BX_VGA_THIS s.pel.write_data_register = value;
       BX_VGA_THIS s.pel.write_data_cycle    = 0;
+      BX_VGA_THIS s.pel.dac_state = 0x00;
       break;
 
     case 0x03c9: /* PEL Data Register, colors 00..FF */
