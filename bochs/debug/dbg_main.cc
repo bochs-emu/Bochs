@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.91 2002-11-19 18:56:38 vruppert Exp $
+// $Id: dbg_main.cc,v 1.92 2002-11-20 19:34:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -386,6 +386,10 @@ process_sim2:
   DEV_init_devices();
   DEV_reset_devices(BX_RESET_HARDWARE);
   SIM->set_init_done (1);
+
+  // update headerbar buttons since drive status can change during init
+  bx_gui->update_drive_status_buttons ();
+
 
   bx_gui->init_signal_handlers ();
   bx_pc_system.start_timers();
