@@ -95,6 +95,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   scancodes.o \
   serial_raw.o \
+  svga_cirrus.o \
   vmware3.o \
   $(CDROM_OBJS) \
   $(SOUNDLOW_OBJS) \
@@ -148,6 +149,9 @@ libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
 libbx_serial.la: serial.lo serial_raw.lo
 	$(LIBTOOL) --mode=link $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
 
+libbx_vga.la: vga.lo svga_cirrus.lo
+	$(LIBTOOL) --mode=link $(CXX) -module vga.lo svga_cirrus.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
+
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
@@ -173,6 +177,9 @@ bx_gameport.dll: gameport.o
 
 bx_serial.dll: serial.o serial_raw.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_serial.dll serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_vga.dll: vga.o svga_cirrus.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o svga_cirrus.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
@@ -810,7 +817,7 @@ unmapped.o: unmapped.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-vga.o: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+vga.o svga_cirrus.o: vga.@CPP_SUFFIX@ svga_cirrus.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \

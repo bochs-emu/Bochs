@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.41 2004-07-21 20:39:54 vruppert Exp $
+// $Id: vga.h,v 1.42 2004-08-16 08:02:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,6 +79,11 @@
 #define BX_MAX_XRES VBE_DISPI_MAX_XRES
 #define BX_MAX_YRES VBE_DISPI_MAX_YRES
 
+#elif BX_SUPPORT_CLGD54XX
+
+#define BX_MAX_XRES 1280
+#define BX_MAX_YRES 1024
+
 #else
 
 #define BX_MAX_XRES 800
@@ -130,7 +135,9 @@ public:
                                    unsigned *txWidth);
   virtual Bit8u  get_actl_palette_idx(Bit8u index);
 
-private:
+protected:
+  void init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write);
+  void init_systemtimer(bx_timer_handler_t f_timer);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -300,9 +307,15 @@ private:
   static void   timer_handler(void *);
   BX_VGA_SMF void   timer(void);
 
-  private:
+  protected:
   BX_VGA_SMF void   update(void);
   BX_VGA_SMF void   dump_status(void);
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight,
                                               unsigned *piWidth);
   };
+
+#if BX_SUPPORT_CLGD54XX
+  void
+libvga_set_smf_pointer(bx_vga_c *theVga_ptr);
+#include "iodev/svga_cirrus.h"
+#endif // BX_SUPPORT_CLGD54XX

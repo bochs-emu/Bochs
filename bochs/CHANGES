@@ -60,6 +60,7 @@ Changes to next release:
   - vga
     - VBE 8 bit DAC support added
     - VBE memory now registered using DEV_register_memory_handlers()
+    - CL-GD 54xx SVGA emulation added (Makato Suzuki)
   - floppy
     - raw floppy access now works on Win9x host (Ben Lunt)
 
@@ -83,6 +84,7 @@ Changes to next release:
     rfb:   timeout (time to wait for client connection)
     sdl:   fullscreen (startup in fullscreen mode)
     win32: legacyF12 (use F12 to toggle mouse)
+  - new graphics update API added (used by svga_cirrus) (Robin Kay)
 
 - configuration interface
   - win32: gui runtime dialogs replace textconfig runtime dialogs
@@ -106,6 +108,7 @@ Changes to next release:
   [903332] copy the bximage result to clipboard, etc by Lukewarm
   [950905] Do not PANIC on rare, bad input from user-mode by h.johansson
   [924428] ET bit mismatch between CR0 and MSW
+  [869822] a real SVGA implementation by m_suzu
 
 - these S.F. bugs were closed 
   #477043 math_abort panic in RH 7.1

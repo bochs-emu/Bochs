@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.108 2004-08-06 15:49:55 vruppert Exp $
+// $Id: vga.cc,v 1.109 2004-08-16 08:02:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,6 +80,13 @@ bx_vga_c *theVga = NULL;
 
 unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0, old_BPP = 0;
 
+#if BX_SUPPORT_CLGD54XX
+  void
+libvga_set_smf_pointer(bx_vga_c *theVga_ptr)
+{
+  theVga = theVga_ptr;
+}
+#else // BX_SUPPORT_CLGD54XX
   int
 libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -93,6 +100,7 @@ libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv
 libvga_LTX_plugin_fini(void)
 {
 }
+#endif // BX_SUPPORT_CLGD54XX
 
 bx_vga_c::bx_vga_c(void)
 {
@@ -122,35 +130,13 @@ bx_vga_c::init(void)
   char *argv[16];
   char *ptr;
   char string[512];
-  Bit8u io_mask[16] = {3, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
-
+#if BX_SUPPORT_VBE  
   unsigned addr;
-  for (addr=0x03B4; addr<=0x03B5; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
-    }
+#endif
 
-  for (addr=0x03BA; addr<=0x03BA; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
-    }
-
-  i = 0;
-  for (addr=0x03C0; addr<=0x03CF; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", io_mask[i++]);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
-    }
-
-  for (addr=0x03D4; addr<=0x03D5; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 3);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
-    }
-
-  for (addr=0x03DA; addr<=0x03DA; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
-    }
-
+#if !BX_SUPPORT_CLGD54XX
+  BX_VGA_THIS init_iohandlers(read_handler,write_handler);
+#endif // !BX_SUPPORT_CLGD54XX
 
   DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
                                theVga, 0xa0000, 0xbffff);
@@ -274,11 +260,9 @@ bx_vga_c::init(void)
     }
   }
 
-  BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));
-  if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
-    BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
-       bx_options.Ovga_update_interval->get (), 1, 1, "vga");
-  }
+#if !BX_SUPPORT_CLGD54XX
+  BX_VGA_THIS init_systemtimer(timer_handler);
+#endif // !BX_SUPPORT_CLGD54XX
 
   /* video card with BIOS ROM */
   DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00); 
@@ -339,6 +323,49 @@ bx_vga_c::init(void)
   
   BX_INFO(("VBE Bochs Display Extension Enabled"));
 #endif  
+}
+
+  void
+bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
+{
+  unsigned addr, i;
+  Bit8u io_mask[16] = {3, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
+  for (addr=0x03B4; addr<=0x03B5; addr++) {
+    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    }
+
+  for (addr=0x03BA; addr<=0x03BA; addr++) {
+    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    }
+
+  i = 0;
+  for (addr=0x03C0; addr<=0x03CF; addr++) {
+    DEV_register_ioread_handler(this, f_read, addr, "vga video", io_mask[i++]);
+    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    }
+
+  for (addr=0x03D4; addr<=0x03D5; addr++) {
+    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
+    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    }
+
+  for (addr=0x03DA; addr<=0x03DA; addr++) {
+    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    }
+
+}
+
+  void
+bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer)
+{
+  BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));
+  if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
+    BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, f_timer,
+       bx_options.Ovga_update_interval->get (), 1, 1, "vga");
+  }
 }
 
   void
@@ -1014,7 +1041,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           BX_DEBUG(("io write 0x3c5=0x%02x: clocking mode reg: ignoring",
                       (unsigned) value));
 #endif
-          BX_VGA_THIS s.sequencer.reg1 = value & 0x3f;
+          BX_VGA_THIS s.sequencer.reg1 = value & 0x3d;
           BX_VGA_THIS s.x_dotclockdiv2 = ((value & 0x08) > 0);
           break;
         case 2: /* sequencer: map mask register */
@@ -1023,7 +1050,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             BX_VGA_THIS s.sequencer.map_mask_bit[i] = (value >> i) & 0x01;
           break;
         case 3: /* sequencer: character map select register */
-          BX_VGA_THIS s.sequencer.char_map_select = value;
+          BX_VGA_THIS s.sequencer.char_map_select = value & 0x3f;
           charmap1 = value & 0x13;
           if (charmap1 > 3) charmap1 = (charmap1 & 3) + 4;
           charmap2 = (value & 0x2C) >> 2;
@@ -1150,8 +1177,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           break;
         case 3: /* Data Rotate */
           BX_VGA_THIS s.graphics_ctrl.data_rotate = value & 0x07;
-          /* ??? is this bits 3..4 or 4..5 */
-          BX_VGA_THIS s.graphics_ctrl.raster_op    = (value >> 3) & 0x03; /* ??? */
+          BX_VGA_THIS s.graphics_ctrl.raster_op    = (value >> 3) & 0x03;
           break;
         case 4: /* Read Map Select */
           BX_VGA_THIS s.graphics_ctrl.read_map_select = value & 0x03;
@@ -2191,19 +2217,20 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 
       // 320 x 200 256 color mode: chained pixel representation
       BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] = value;
-      offset -= start_addr;
-      x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE/2);
-      if (BX_VGA_THIS s.y_doublescan) {
-        y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE/2);
-      } else {
-        y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+      if (BX_VGA_THIS s.line_offset > 0) {
+        offset -= start_addr;
+        x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE/2);
+        if (BX_VGA_THIS s.y_doublescan) {
+          y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE/2);
+        } else {
+          y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+        }
+        BX_VGA_THIS s.vga_mem_updated = 1;
+        SET_TILE_UPDATED (x_tileno, y_tileno, 1);
       }
-      BX_VGA_THIS s.vga_mem_updated = 1;
-      SET_TILE_UPDATED (x_tileno, y_tileno, 1);
       return;
-      }
-
     }
+  }
 
   /* addr between 0xA0000 and 0xAFFFF */
 

@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.259 2004-08-11 11:05:10 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.260 2004-08-16 08:02:14 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1484,15 +1484,41 @@ AC_ARG_ENABLE(vbe,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_VBE, 1)
+    bx_support_vbe=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_VBE, 0)
+    bx_support_vbe=0
    fi],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_VBE, 0)
+    bx_support_vbe=0
     ]
   )
+
+AC_MSG_CHECKING(for CLGD54XX emulation)
+AC_ARG_ENABLE(clgd54xx,
+  [  --enable-clgd54xx                 enable CLGD54XX emulation],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
+    bx_support_clgd54xx=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
+    bx_support_clgd54xx=0
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_CLGD54XX, 0)
+    bx_support_clgd54xx=0
+    ]
+  )
+
+if test "$bx_support_vbe" = 1 && test "$bx_suppot_clgd54xx" = 1; then
+  AC_MSG_ERROR([[--enable-vbe and --enable-clgd54xx are mutually exclusive]])
+fi
 
 support_fpu=1
 AC_MSG_CHECKING(for FPU emulation)
