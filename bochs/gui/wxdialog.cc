@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.45 2002-10-06 02:37:28 bdenney Exp $
+// $Id: wxdialog.cc,v 1.46 2002-10-16 19:27:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1794,7 +1794,7 @@ void ParamDialog::AddParamList (bx_id *idList, wxFlexGridSizer *sizer, bool plai
 }
 
 // support "legacy" addparam functions. Easier than changing them.
-void ParamDialog::AddParam (bx_param_c *param, wxFlexGridSizer *sizer, bool plain = false)
+void ParamDialog::AddParam (bx_param_c *param, wxFlexGridSizer *sizer, bool plain)
 {
   AddParamContext context;
   context.depth = 0;
