@@ -393,12 +393,16 @@ plugin_init_all (void)
             *arg_ptr++ = '\0';
         }
 
+#if 0
+// BBD: plugin_init has already been called by plugin_load, so I commented
+// this call.
         /* initialize the plugin */
         if (plugin->plugin_init (plugin, plugin->argc, plugin->argv))
         {
             pluginlog->panic("Plugin initialization failed for %s", plugin->name);
             plugin_abort();
         }
+#endif
 
         plugin->initialized = 1;
     }
@@ -624,6 +628,32 @@ int bx_load_plugins (void)
   bx_load_plugin("biosdev.so");
   bx_load_plugin("cmos.so");
   bx_load_plugin("vga.so");
+
+  // quick and dirty gui plugin selection
+  fprintf (stderr, 
+      "--Quick and dirty gui selector--\n"
+      "The library that you configured with should work fine.\n"
+      "If you get undefined symbols when you choose term, relink with -lncurses.\n"
+      "If you get undefined symbols when you choose sdl, relink with -lSDL -pthread.\n"
+      "Good luck!\n\n");
+  fprintf (stderr, "Choose your gui.\n 1. X windows\n 2. SDL\n 3. Term\n--> ");
+  int which = -1;
+  while (scanf ("%d", &which) != 1 && !(which>=1 && which<=3)) {
+    fprintf (stderr, "--> ");
+  }
+  switch (which) {
+    case 1:
+      bx_load_plugin("x.so");
+      break;
+    case 2:
+      bx_load_plugin("sdl.so");
+      break;
+    case 3:
+      bx_load_plugin("term.so");
+      break;
+    default:
+      BX_ASSERT(0);
+  }
 
   plugin_init_all();
 #else

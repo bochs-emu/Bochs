@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.1 2002-10-06 23:17:51 cbothamy Exp $
+// $Id: harddrv.cc,v 1.77.2.2 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.1 2002-10-06 23:17:51 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.2 2002-10-07 16:43:34 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1249,7 +1249,7 @@ if ( quantumsMax == 0)
 #endif
 					    BX_SELECTED_DRIVE(channel).cdrom.ready = 0;
                                             bx_options.atadevice[channel][BX_SLAVE_SELECTED(channel)].Ostatus->set(BX_EJECTED);
-                                            bx_gui.update_drive_status_buttons();
+                                            bx_gui->update_drive_status_buttons();
                                           }
                                           raise_interrupt(channel);
 				    } else { // Load the disc

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.70.2.1 2002-10-07 12:55:29 cbothamy Exp $
+// $Id: siminterface.cc,v 1.70.2.2 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -92,7 +92,7 @@ public:
   }
   virtual void handle_events () {
     // maybe need to check if something has been initialized yet?
-    bx_gui.handle_events ();
+    bx_gui->handle_events ();
   }
   bx_param_c *get_first_cdrom ();
 #if BX_DEBUGGER

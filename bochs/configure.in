@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.1 2002-10-06 23:17:50 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.147.2.2 2002-10-07 16:43:32 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -285,25 +285,31 @@ AC_ARG_ENABLE(plugins,
   [  --enable-plugins                enable plugins],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
+    bx_plugins=1
     AC_DEFINE(BX_PLUGINS, 1)
     BX_IODEV_NON_PLUGINS_OBJ='$(BX_IODEV_OBJS_NON_PLUGINABLE)'
     BX_IODEV_PLUGINS_OBJ='$(BX_IODEV_OBJS_PLUGINABLE) $(BX_IODEV_OBJS_EXTERNAL)'
+    GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE)'
+    GUI_PLUGINS_OBJ='$(GUI_OBJS_PLUGINABLE) $(GUI_OBJS_EXTERNAL)'
    else
     AC_MSG_RESULT(no)
+    bx_plugins=0
     AC_DEFINE(BX_PLUGINS, 0)
     BX_IODEV_NON_PLUGINS_OBJ='$(BX_IODEV_OBJS_NON_PLUGINABLE) $(BX_IODEV_OBJS_PLUGINABLE) $(BX_IODEV_OBJS_EXTERNAL)'
     BX_IODEV_PLUGINS_OBJ=''
+    GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE) $(GUI_OBJS_PLUGINABLE) $(GUI_OBJS_EXTERNAL)'
+    GUI_PLUGINS_OBJ=''
    fi],
   [
     AC_MSG_RESULT(no)
+    bx_plugins=0
     AC_DEFINE(BX_PLUGINS, 0)
     BX_IODEV_NON_PLUGINS_OBJ='$(BX_IODEV_OBJS_NON_PLUGINABLE) $(BX_IODEV_OBJS_PLUGINABLE) $(BX_IODEV_OBJS_EXTERNAL)'
     BX_IODEV_PLUGINS_OBJ=''
+    GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE) $(GUI_OBJS_PLUGINABLE) $(GUI_OBJS_EXTERNAL)'
+    GUI_PLUGINS_OBJ=''
     ]
   )
-AC_SUBST(BX_PLUGINS)
-AC_SUBST(BX_IODEV_NON_PLUGINS_OBJ)
-AC_SUBST(BX_IODEV_PLUGINS_OBJ)
 
 
 AC_MSG_CHECKING(for number of processors)
@@ -1455,37 +1461,43 @@ if test "$with_x11" = yes; then
     exit 1
   fi
   AC_DEFINE(BX_WITH_X11, 1)
-  GUI_OBJS='$(GUI_OBJS_X11) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_X11)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
 elif test "$with_beos" = yes; then
   AC_MSG_RESULT(beos)
   AC_DEFINE(BX_WITH_BEOS, 1)
-  GUI_OBJS='$(GUI_OBJS_BEOS) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_BEOS)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
 elif test "$with_sdl" = yes; then
   AC_MSG_RESULT(sdl)
+  AC_DEFINE(BX_WITH_SDL, 1)
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_SDL)'
   # GUI_*FLAGS are added to the compilation of every bochs file, not just
   # the files in gui/*.cc.
   GUI_CFLAGS="$CFLAGS \`sdl-config --cflags\`"
   GUI_CXXFLAGS="$CXXFLAGS \`sdl-config --cflags\`"
-  AC_DEFINE(BX_WITH_SDL, 1)
-  GUI_OBJS='$(GUI_OBJS_SDL) control.o'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_SDL)'
 elif test "$with_rfb" = yes; then
   AC_MSG_RESULT(rfb)
   AC_DEFINE(BX_WITH_RFB, 1)
-  GUI_OBJS='$(GUI_OBJS_RFB) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_RFB)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_RFB)'
 elif test "$with_amigaos" = yes; then
   AC_MSG_RESULT(amigaos)
   AC_DEFINE(BX_WITH_AMIGAOS, 1)
-  GUI_OBJS='$(GUI_OBJS_AMIGAOS) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_AMIGAOS)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_AMIGAOS)'
 elif test "$with_win32" = yes; then
   AC_MSG_RESULT(win32)
   AC_DEFINE(BX_WITH_WIN32, 1)
-  GUI_OBJS='$(GUI_OBJS_WIN32) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_WIN32)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   case $target in
     *-pc-windows*)
        GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'  # native libs for win gui
@@ -1499,18 +1511,21 @@ elif test "$with_win32" = yes; then
 elif test "$with_macos" = yes; then
   AC_MSG_RESULT(macos)
   AC_DEFINE(BX_WITH_MACOS, 1)
-  GUI_OBJS='$(GUI_OBJS_MACOS) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_MACOS)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
 elif test "$with_carbon" = yes; then
   AC_MSG_RESULT(carbon)
   AC_DEFINE(BX_WITH_CARBON, 1)
-  GUI_OBJS='$(GUI_OBJS_CARBON) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_CARBON)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_CARBON)'
   PRIMARY_TARGET=bochs.app/.build   # only for carbon application
 elif test "$with_term" = yes; then
   AC_MSG_RESULT(term)
   AC_DEFINE(BX_WITH_TERM, 1)
-  GUI_OBJS='$(GUI_OBJS_TERM) control.o'
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_TERM)'
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_TERM)'
   use_curses=yes
 elif test "$with_wx" = yes; then
@@ -1525,6 +1540,8 @@ elif test "$with_wx" = yes; then
     fi
   fi
   AC_DEFINE(BX_WITH_WX, 1)
+  SPECIFIC_GUI_OBJS='$(GUI_OBJS_WX)'
+  # wxWindows is the only one that doesn't add control.o to GUI_NON_PLUGINS_OBJ
   WX_CFLAGS="\`$WX_CONFIG --cflags\`"
   WX_CXXFLAGS="\`$WX_CONFIG --cxxflags\`"
   GUI_LINK_OPTS_WX="\`$WX_CONFIG --libs\`"
@@ -1539,8 +1556,6 @@ elif test "$with_wx" = yes; then
   # the files in gui/*.cc.
   GUI_CFLAGS="$CFLAGS $WX_CFLAGS"
   GUI_CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS"
-  # wxwindows is the only one without control.o in GUI_OBJS
-  GUI_OBJS='$(GUI_OBJS_WX)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
   # using debugger with readline is failing due to thread/signal handler
   # problems.
@@ -1562,6 +1577,11 @@ else
   AC_DEFINE(BX_WITH_NOGUI, 1)
   GUI_OBJS='$(GUI_OBJS_NOGUI) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
+fi
+if test "$bx_plugins" = 1; then
+  GUI_PLUGINS_OBJ="$GUI_PLUGINS_OBJ $SPECIFIC_GUI_OBJS"
+else
+  GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ $SPECIFIC_GUI_OBJS"
 fi
 
 AC_SUBST(GUI_CFLAGS)
@@ -1899,6 +1919,11 @@ AC_SUBST(VERSION)
 AC_SUBST(VER_STRING)
 AC_SUBST(REL_STRING)
 AC_SUBST(EXTRA_LINK_OPTS)
+AC_SUBST(BX_PLUGINS)
+AC_SUBST(BX_IODEV_NON_PLUGINS_OBJ)
+AC_SUBST(BX_IODEV_PLUGINS_OBJ)
+AC_SUBST(GUI_NON_PLUGINS_OBJ)
+AC_SUBST(GUI_PLUGINS_OBJ)
 
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)

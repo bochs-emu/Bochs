@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49.2.3 2002-10-07 06:32:50 bdenney Exp $
+// $Id: x.cc,v 1.49.2.4 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,8 +38,34 @@ extern "C" {
 #include "bochs.h"
 #include "icon_bochs.h"
 
-#define LOG_THIS bx_gui.
+#define LOG_THIS bx_gui->
 
+class bx_x11_gui_c : public bx_gui_c {
+public:
+  bx_x11_gui_c (void);
+  // Define the following functions in the module for your
+  // particular GUI (x.cc, beos.cc, ...)
+  virtual void specific_init(bx_gui_c *th, int argc, char **argv,
+                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
+  virtual void text_update(Bit8u *old_text, Bit8u *new_text,
+                          unsigned long cursor_x, unsigned long cursor_y,
+                          Bit16u cursor_state, unsigned rows);
+  virtual void graphics_update(Bit8u *snapshot) {}
+  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
+  virtual void handle_events(void);
+  virtual void flush(void);
+  virtual void clear_screen(void);
+  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
+  virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
+  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
+  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
+  virtual void show_headerbar(void);
+  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
+  virtual int set_clipboard_text(char *snapshot, Bit32u len);
+  virtual void mouse_enabled_changed_specific (Boolean val);
+  virtual void exit(void);
+  };
 
 #define MAX_MAPPED_STRING_LENGTH 10
 
@@ -289,9 +315,11 @@ test_alloc_colors (Colormap cmap, Bit32u n_tries) {
   return (n_allocated == n_tries);
 }
 
+bx_x11_gui_c::bx_x11_gui_c () {
+}
 
   void
-bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_x11_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   unsigned i;
@@ -574,7 +602,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 // bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_x11_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
   BX_DEBUG (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {
@@ -606,7 +634,7 @@ load_font(void)
 
 
   void
-bx_gui_c::handle_events(void)
+bx_x11_gui_c::handle_events(void)
 {
   XEvent report;
   XKeyEvent *key_event;
@@ -839,7 +867,7 @@ send_keyboard_mouse_status(void)
 }
 
   void
-bx_gui_c::flush(void)
+bx_x11_gui_c::flush(void)
 {
   if (bx_x_display)
     XFlush(bx_x_display);
@@ -1016,7 +1044,7 @@ xkeypress(KeySym keysym, int press_release)
 
 
   void
-bx_gui_c::clear_screen(void)
+bx_x11_gui_c::clear_screen(void)
 {
   XClearArea(bx_x_display, win, 0, bx_headerbar_y, dimension_x, dimension_y-bx_headerbar_y, 0);
 }
@@ -1025,7 +1053,7 @@ bx_gui_c::clear_screen(void)
 
 
   void
-bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+bx_x11_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       Bit16u cursor_state, unsigned nrows)
 {
@@ -1107,7 +1135,7 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_x11_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   int len;
   Bit8u *tmp = (Bit8u *)XFetchBytes (bx_x_display, &len);
@@ -1123,7 +1151,7 @@ bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_x11_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   // this writes data to the clipboard.
   BX_INFO (("storing %d bytes to X windows clipboard", len));
@@ -1134,7 +1162,7 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 
 
   void
-bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+bx_x11_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   unsigned x, y;
   unsigned color, offset;
@@ -1212,7 +1240,7 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 
   Boolean
-bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_x11_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   // returns: 0=no screen update needed (color map change has direct effect)
   //          1=screen updated needed (redraw using current colormap)
@@ -1238,7 +1266,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_x11_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   if (fheight > 0) {
     font_height_orig = fheight;
@@ -1269,7 +1297,7 @@ bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 
 
   void
-bx_gui_c::show_headerbar(void)
+bx_x11_gui_c::show_headerbar(void)
 {
   unsigned xorigin;
   int xleft, xright;
@@ -1297,7 +1325,7 @@ bx_gui_c::show_headerbar(void)
 
 
   unsigned
-bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+bx_x11_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   if (bx_bitmap_entries >= BX_MAX_PIXMAPS) {
     BX_PANIC(("x: too many pixmaps, increase BX_MAX_PIXMAPS"));
@@ -1316,7 +1344,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 
 
   unsigned
-bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+bx_x11_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
   unsigned hb_index;
 
@@ -1345,7 +1373,7 @@ bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)
 }
 
   void
-bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+bx_x11_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   unsigned xorigin;
 
@@ -1381,7 +1409,7 @@ headerbar_click(int x, int y)
 }
 
   void
-bx_gui_c::exit(void)
+bx_x11_gui_c::exit(void)
 {
   if (bx_x_display)
     XCloseDisplay (bx_x_display);
@@ -1528,7 +1556,7 @@ Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *
 }
 
 
-void bx_gui_c::sim_is_idle () {
+void bx_x11_gui_c::sim_is_idle () {
   XEvent dummy;
   struct timeval   timeout;   
   timeout.tv_sec  = 0;
@@ -1536,3 +1564,18 @@ void bx_gui_c::sim_is_idle () {
   XPeekEventTimeout(bx_x_display, &dummy, &timeout);
 }
 #endif /* BX_USE_IDLE_HACK */  
+
+#if BX_PLUGINS
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  genlog->info("installing X11 gui as the bx_gui");
+  bx_gui = new bx_x11_gui_c ();
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+#endif

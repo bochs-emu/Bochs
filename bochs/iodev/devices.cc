@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.3 2002-10-07 12:55:30 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.4 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,7 +89,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.3 2002-10-07 12:55:30 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.4 2002-10-07 16:43:34 bdenney Exp $"));
   mem = newmem;
 
   devices=this;
@@ -380,13 +380,13 @@ bx_devices_c::timer()
 #endif
 
 
-  // separate calls to bx_gui.handle_events from the keyboard code.
+  // separate calls to bx_gui->handle_events from the keyboard code.
   {
     static int multiple=0;
     if ( ++multiple==10)
     {
       multiple=0;
-      bx_gui.handle_events();
+      bx_gui->handle_events();
     }
   }
 

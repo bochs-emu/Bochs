@@ -55,8 +55,15 @@ GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o wxmain.o wxdialog.o
-GUI_OBJS = keymap.o gui.o siminterface.o @GUI_OBJS@
+GUI_OBJS_NON_PLUGINABLE = keymap.o gui.o siminterface.o
+GUI_OBJS_PLUGINABLE = @GUI_OBJS@
+GUI_OBJS_EXTERNAL =
 
+GUI_OBJS_NON_PLUGINS=@GUI_NON_PLUGINS_OBJ@
+GUI_OBJS_PLUGINS=@GUI_PLUGINS_OBJ@
+GUI_OBJS = $(GUI_OBJS_NON_PLUGINS)
+GUI_SO_OBJS = $(GUI_OBJS_PLUGINS)
+OBJS = $(GUI_OBJS_NON_PLUGINS) $(GUI_OBJS_PLUGINS) $(GUI_OBJS_EXTERNAL)
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
@@ -74,6 +81,7 @@ BX_INCLUDES = ../iodev/iodev.h control.h siminterface.h
 	$(CXX) @DASH@c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
 
+all: libgui.a plugins
 
 libgui.a: $(BX_GUI_OBJS)
 	@RMCOMMAND@ libgui.a
@@ -87,6 +95,11 @@ beos.o: beos.@CPP_SUFFIX@
 
 x.o: x.@CPP_SUFFIX@
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(X_CFLAGS) $<
+
+%.so: %.o
+	$(CXX) -shared  $< -o $@
+	mkdir -p ../plugins
+	cp $@ ../plugins
 
 sdl.o: sdl.@CPP_SUFFIX@ sdl.h
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $<
@@ -102,6 +115,8 @@ wxmain.o: wxmain.@CPP_SUFFIX@
 
 wxdialog.o: wxdialog.@CPP_SUFFIX@
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $<
+
+plugins: $(GUI_SO_OBJS:.o=.so)
 
 clean:
 	@RMCOMMAND@ *.o

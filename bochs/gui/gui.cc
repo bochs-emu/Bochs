@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.3 2002-10-07 06:32:49 bdenney Exp $
+// $Id: gui.cc,v 1.49.4.4 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,9 +42,9 @@
 #  include <Disks.h>
 #endif
 
-bx_gui_c   bx_gui;
+bx_gui_c   *bx_gui = NULL;
 
-#define BX_GUI_THIS bx_gui.
+#define BX_GUI_THIS bx_gui->
 #define LOG_THIS BX_GUI_THIS
 
 bx_gui_c::bx_gui_c(void)
@@ -56,7 +56,7 @@ bx_gui_c::bx_gui_c(void)
   void
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 {
-  specific_init(&bx_gui, argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
+  specific_init(bx_gui, argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
 
   // Define some bitmaps to use in the headerbar
   BX_GUI_THIS floppyA_bmap_id = create_bitmap(bx_floppya_bmap,
@@ -331,7 +331,7 @@ bx_gui_c::copy_handler(void)
     BX_INFO(( "copy button failed, mode not implemented"));
     return;
   }
-  if (!set_clipboard_text(text_snapshot, len)) {
+  if (!BX_GUI_THIS set_clipboard_text(text_snapshot, len)) {
     // platform specific code failed, use portable code instead
     FILE *fp = fopen("copy.txt", "w");
     fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
@@ -380,7 +380,7 @@ bx_gui_c::paste_handler(void)
     BX_ERROR (("keyboard_mapping disabled, so paste cannot work"));
     return;
   }
-  if (!get_clipboard_text(&bytes, &nbytes)) {
+  if (!BX_GUI_THIS get_clipboard_text(&bytes, &nbytes)) {
     BX_ERROR (("paste not implemented on this platform"));
     return;
   }
@@ -468,13 +468,13 @@ bx_gui_c::mouse_enabled_changed (Boolean val)
   // value which is still in bx_options.Omouse_enabled->get ().
   BX_DEBUG (("replacing the mouse bitmaps"));
   if (val)
-    replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
+    BX_GUI_THIS replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
   else
-    replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS nomouse_bmap_id);
+    BX_GUI_THIS replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS nomouse_bmap_id);
   // give the GUI a chance to respond to the event.  Most guis will hide
   // the native mouse cursor and do something to trap the mouse inside the
   // bochs VGA display window.
-  mouse_enabled_changed_specific (val);
+  BX_GUI_THIS mouse_enabled_changed_specific (val);
 }
 
 void

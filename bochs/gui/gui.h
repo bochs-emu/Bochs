@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31 2002-09-21 19:38:47 vruppert Exp $
+// $Id: gui.h,v 1.31.4.1 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,50 +30,51 @@ public:
   bx_gui_c (void);
   // Define the following functions in the module for your
   // particular GUI (x.cc, beos.cc, ...)
-  static void specific_init(bx_gui_c *th, int argc, char **argv,
-                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
-  static void text_update(Bit8u *old_text, Bit8u *new_text,
+  virtual void specific_init(bx_gui_c *th, int argc, char **argv,
+                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
+  virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
-                          Bit16u cursor_state, unsigned rows);
-  static void graphics_update(Bit8u *snapshot);
-  static void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
-  static void handle_events(void);
-  static void flush(void);
-  static void clear_screen(void);
-  static Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
-  static void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
-  static unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
-  static unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
-  static void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
-  static void show_headerbar(void);
-  static int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
-  static int set_clipboard_text(char *snapshot, Bit32u len);
-  static void set_text_charmap(Bit8u *fbuffer);
-  static void set_text_charbyte(Bit16u address, Bit8u data);
+                          Bit16u cursor_state, unsigned rows) = 0;
+  virtual void graphics_update(Bit8u *snapshot) = 0;
+  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
+  virtual void handle_events(void) = 0;
+  virtual void flush(void) = 0;
+  virtual void clear_screen(void) = 0;
+  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue) = 0;
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0) = 0;
+  virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim) = 0;
+  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)) = 0;
+  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id) = 0;
+  virtual void show_headerbar(void) = 0;
+  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)  = 0;
+  virtual int set_clipboard_text(char *snapshot, Bit32u len) = 0;
+  virtual void mouse_enabled_changed_specific (Boolean val) = 0;
+  virtual void exit(void) = 0;
+
+  // These are only needed for the term gui. For all other guis they will
+  // have no effect.
+  // returns 32-bit bitmask in which 1 means the GUI should handle that signal
+  virtual Bit32u get_sighandler_mask () {return 0;}
+  // called when registered signal arrives
+  virtual void sighandler (int sig) {}
 
   // The following function(s) are defined already, and your
   // GUI code calls them
   static void key_event(Bit32u key);
+  static void set_text_charmap(Bit8u *fbuffer);
+  static void set_text_charbyte(Bit16u address, Bit8u data);
 
-  static void init(int argc, char **argv,
+  void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
   void update_drive_status_buttons (void);
   static void     mouse_enabled_changed (Boolean val);
-  static void     mouse_enabled_changed_specific (Boolean val);
-  static void     exit(void);
   static void init_signal_handlers ();
-#if BX_GUI_SIGHANDLER
-  // returns 32-bit bitmask in which 1 means the GUI should handle that signal
-  static Bit32u get_sighandler_mask ();
-  // called when registered signal arrives
-  static void sighandler (int sig);
-#endif
 #if BX_USE_IDLE_HACK
   static void sim_is_idle(void);
 #endif
 
 
-private:
+protected:
   // And these are defined and used privately in gui.cc
   static void floppyA_handler(void);
   static void floppyB_handler(void);

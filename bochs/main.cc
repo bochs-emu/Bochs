@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.3 2002-10-07 12:55:29 cbothamy Exp $
+// $Id: main.cc,v 1.156.2.4 2002-10-07 16:43:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,7 +104,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_MOUSE_ENABLED:
       // if after init, notify the GUI
       if (set && SIM->get_init_done ()) {
-	bx_gui.mouse_enabled_changed (val!=0);
+	bx_gui->mouse_enabled_changed (val!=0);
 	// FIXME: while adding plugin support, I'm not going to bother
 	// with this function for now.
         //bx_keyboard.mouse_enabled_changed (val!=0);
@@ -141,7 +141,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 	Bit8u device = id - BXP_ATA0_MASTER_STATUS;
 	Bit32u handle = bx_devices.hard_drive->get_device_handle (device/2, device%2);
         bx_devices.hard_drive->set_cd_media_status(handle, val == BX_INSERTED);
-        bx_gui.update_drive_status_buttons ();
+        bx_gui->update_drive_status_buttons ();
       }
       break;
     case BXP_FLOPPYA_TYPE:
@@ -152,7 +152,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_FLOPPYA_STATUS:
       if ((set) && (SIM->get_init_done ())) {
         bx_devices.floppy->set_media_status(0, val == BX_INSERTED);
-        bx_gui.update_drive_status_buttons ();
+        bx_gui->update_drive_status_buttons ();
       }
       break;
     case BXP_FLOPPYB_TYPE:
@@ -163,7 +163,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_FLOPPYB_STATUS:
       if ((set) && (SIM->get_init_done ())) {
         bx_devices.floppy->set_media_status(1, val == BX_INSERTED);
-        bx_gui.update_drive_status_buttons ();
+        bx_gui->update_drive_status_buttons ();
       }
       break;
     case BXP_KBD_PASTE_DELAY:
@@ -227,7 +227,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
           if (empty) {
             bx_devices.floppy->set_media_status(0, 0);
-            bx_gui.update_drive_status_buttons ();
+            bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYA_TYPE)->get_enabled()) {
               BX_ERROR(("Cannot add a floppy drive at runtime"));
@@ -252,7 +252,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
           if (empty) {
             bx_devices.floppy->set_media_status(1, 0);
-            bx_gui.update_drive_status_buttons ();
+            bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYB_TYPE)->get_enabled ()) {
               BX_ERROR(("Cannot add a floppy drive at runtime"));
@@ -288,7 +288,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
           if (empty) {
             bx_devices.hard_drive->set_cd_media_status(handle, 0);
-            bx_gui.update_drive_status_buttons ();
+            bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->get ()) {
               BX_ERROR(("Cannot add a cdrom drive at runtime"));
@@ -1673,7 +1673,7 @@ bx_init_hardware()
 #if BX_DEBUGGER == 0
   BX_INIT_DEVICES();
   BX_RESET_DEVICES(BX_RESET_HARDWARE);
-  bx_gui.init_signal_handlers ();
+  bx_gui->init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif
   BX_DEBUG(("bx_init_hardware is setting signal handlers"));
@@ -3201,8 +3201,8 @@ bx_signal_handler( int signum)
 #endif
 #if BX_GUI_SIGHANDLER
   // GUI signal handler gets first priority, if the mask says it's wanted
-  if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
-    bx_gui.sighandler (signum);
+  if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
+    bx_gui->sighandler (signum);
     return;
   }
 #endif
@@ -3222,8 +3222,8 @@ bx_signal_handler( int signum)
 #endif
 
 #if BX_GUI_SIGHANDLER
-  if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
-    bx_gui.sighandler (signum);
+  if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
+    bx_gui->sighandler (signum);
     return;
   }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.21.4.1 2002-10-07 06:32:49 bdenney Exp $
+// $Id: term.cc,v 1.21.4.2 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -34,7 +34,40 @@ extern "C" {
 #include <signal.h>
 };
 
-#define LOG_THIS bx_gui.
+#define LOG_THIS bx_gui->
+
+class bx_term_gui_c : public bx_gui_c {
+public:
+  bx_term_gui_c (void) {}
+  // Define the following functions in the module for your
+  // particular GUI (x.cc, beos.cc, ...)
+  virtual void specific_init(bx_gui_c *th, int argc, char **argv,
+                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
+  virtual void text_update(Bit8u *old_text, Bit8u *new_text,
+                          unsigned long cursor_x, unsigned long cursor_y,
+                          Bit16u cursor_state, unsigned rows);
+  virtual void graphics_update(Bit8u *snapshot) {}
+  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
+  virtual void handle_events(void);
+  virtual void flush(void);
+  virtual void clear_screen(void);
+  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
+  virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
+  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
+  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
+  virtual void show_headerbar(void);
+  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
+  virtual int set_clipboard_text(char *snapshot, Bit32u len);
+  virtual void mouse_enabled_changed_specific (Boolean val);
+  virtual void exit(void);
+
+  // returns 32-bit bitmask in which 1 means the GUI should handle that signal
+  virtual Bit32u get_sighandler_mask ();
+  // called when registered signal arrives
+  virtual void sighandler (int sig);
+
+  };
 
 Boolean initialized = 0;
 
@@ -80,7 +113,7 @@ do_scan(int key_event, int shift, int ctrl, int alt)
 }
 
 Bit32u 
-bx_gui_c::get_sighandler_mask ()
+bx_term_gui_c::get_sighandler_mask ()
 {
   return 
     (1<<SIGHUP)
@@ -92,7 +125,7 @@ bx_gui_c::get_sighandler_mask ()
 }
 
 void
-bx_gui_c::sighandler(int signo)
+bx_term_gui_c::sighandler(int signo)
 {
 	switch(signo) {
 	case SIGINT:
@@ -129,7 +162,7 @@ bx_gui_c::sighandler(int signo)
 //     it's height is defined by this parameter.
 
 	void
-bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_term_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 	unsigned headerbar_y)
 {
 	th->put("TGUI");
@@ -378,7 +411,7 @@ do_char(int character,int alt)
 // relevant events.
 
 	void
-bx_gui_c::handle_events(void)
+bx_term_gui_c::handle_events(void)
 {
 	int character;
 	while((character = getch()) != ERR) {
@@ -395,7 +428,7 @@ bx_gui_c::handle_events(void)
 // screen update requests.
 
 	void
-bx_gui_c::flush(void)
+bx_term_gui_c::flush(void)
 {
 	if (initialized)
 	  refresh();
@@ -408,7 +441,7 @@ bx_gui_c::flush(void)
 // clear the area that defines the headerbar.
 
 	void
-bx_gui_c::clear_screen(void)
+bx_term_gui_c::clear_screen(void)
 {
 	clear();
 }
@@ -489,7 +522,7 @@ get_term_char(Bit8u vga_char[])
 // cursor_y: new y location of cursor
 
 	void
-bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned long cursor_x, unsigned long cursor_y,
 	Bit16u cursor_state, unsigned nrows)
 {
@@ -531,13 +564,13 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_term_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
@@ -551,7 +584,7 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 //          1=screen updated needed (redraw using current colormap)
 
 	Boolean
-bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_term_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	BX_DEBUG(("color pallete request (%d,%d,%d,%d) ignored",
 		  index,red,green,blue));
@@ -575,7 +608,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 //       left of the window.
 
 	void
-bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+bx_term_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
 	UNUSED(tile);
 	UNUSED(x0);
@@ -594,7 +627,7 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
 	void
-bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
 	UNUSED(x);
 	UNUSED(y);
@@ -614,7 +647,7 @@ bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 // ydim: y dimension of bitmap
 
 	unsigned
-bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+bx_term_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
 	UNUSED(bmap);
 	UNUSED(xdim);
@@ -638,7 +671,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 //     the boundaries of this bitmap.
 
 	unsigned
-bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+bx_term_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
 	UNUSED(bmap_id);
 	UNUSED(alignment);
@@ -653,7 +686,7 @@ bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)
 // currently installed bitmaps.
 
 	void
-bx_gui_c::show_headerbar(void)
+bx_term_gui_c::show_headerbar(void)
 {
 }
 
@@ -672,7 +705,7 @@ bx_gui_c::show_headerbar(void)
 // bmap_id: bitmap ID
 
 	void
-bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+bx_term_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
 	UNUSED(hbar_id);
 	UNUSED(bmap_id);
@@ -685,7 +718,7 @@ bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // exit from the native GUI mechanism.
 
 	void
-bx_gui_c::exit(void)
+bx_term_gui_c::exit(void)
 {
 	if (!initialized) return;
 	clear();
@@ -695,6 +728,21 @@ bx_gui_c::exit(void)
 }
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_term_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
 }
+
+#if BX_PLUGINS
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  genlog->info("installing term gui as the bx_gui");
+  bx_gui = new bx_term_gui_c ();
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+#endif

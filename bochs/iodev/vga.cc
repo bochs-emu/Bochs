@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43.2.2 2002-10-07 12:55:30 cbothamy Exp $
+// $Id: vga.cc,v 1.43.2.3 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -224,7 +224,7 @@ bx_vga_c::init(bx_devices_c *d)
   {
   /* ??? should redo this to pass X args */
   char *argv[1] = { "bochs" };
-  bx_gui.init(1, &argv[0], BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
+  bx_gui->init(1, &argv[0], BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
   }
 
   BX_INFO(("interval=%lu", bx_options.Ovga_update_interval->get ()));
@@ -809,7 +809,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log)
                   (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled);
 #endif
         if (BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
-          bx_gui.clear_screen();
+          bx_gui->clear_screen();
         else if (!prev_video_enabled) {
 #if !defined(VGA_TRACE_FEATURE)
           BX_DEBUG(("found enable transition"));
@@ -975,7 +975,7 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
           if (charmap2 > 3) charmap2 = (charmap2 & 3) + 4;
 	  if (BX_VGA_THIS s.CRTC.reg[0x09] > 0) {
             BX_VGA_THIS s.charmap_address = (charmap1 << 13);
-            bx_gui.set_text_charmap(
+            bx_gui->set_text_charmap(
               & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
             }
           if (charmap2 != charmap1)
@@ -1046,14 +1046,14 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
               determine_screen_dimensions(&iHeight, &iWidth);
         	    if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	            {
-	              bx_gui.dimension_update(iWidth, iHeight);
+	              bx_gui->dimension_update(iWidth, iHeight);
 	              old_iWidth = iWidth;
 	              old_iHeight = iHeight;
 	            }
 	          }
           }
 
-          needs_update = bx_gui.palette_change(BX_VGA_THIS s.pel.write_data_register,
+          needs_update = bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red<<2,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].green<<2,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue<<2);
@@ -1230,7 +1230,7 @@ bx_vga_c::timer(void)
 #endif
 
   update();
-  bx_gui.flush();
+  bx_gui->flush();
 
 }
 
@@ -1281,7 +1281,7 @@ bx_vga_c::update(void)
               BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
             }
           }
-          bx_gui.graphics_tile_update(BX_VGA_THIS s.tile,
+          bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
             xti*X_TILESIZE, yti*Y_TILESIZE);
           BX_VGA_THIS s.vga_tile_updated[xti][yti] = 0;
         }
@@ -1327,7 +1327,7 @@ bx_vga_c::update(void)
         //BX_DEBUG(("update(): Mode 12h: 640x480x16colors"));
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui.dimension_update(iWidth, iHeight);
+	  bx_gui->dimension_update(iWidth, iHeight);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1369,7 +1369,7 @@ bx_vga_c::update(void)
                   BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                   }
                 }
-              bx_gui.graphics_tile_update(BX_VGA_THIS s.tile,
+              bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
                 xti*X_TILESIZE, yti*Y_TILESIZE);
               BX_VGA_THIS s.vga_tile_updated[xti][yti] = 0;
               }
@@ -1383,7 +1383,7 @@ bx_vga_c::update(void)
         iHeight=200; iWidth=320;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui.dimension_update(iWidth, iHeight);
+	  bx_gui->dimension_update(iWidth, iHeight);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1410,7 +1410,7 @@ bx_vga_c::update(void)
                   BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                 }
               }
-              bx_gui.graphics_tile_update(BX_VGA_THIS s.tile,
+              bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
                                          xti*X_TILESIZE, yti*Y_TILESIZE);
               BX_VGA_THIS s.vga_tile_updated[xti][yti] = 0;
             }
@@ -1432,7 +1432,7 @@ bx_vga_c::update(void)
 
 	  if( (iHeight != old_iHeight) || (iWidth != old_iWidth) )
 	  {
-	    bx_gui.dimension_update(iWidth, iHeight);
+	    bx_gui->dimension_update(iWidth, iHeight);
 	    old_iHeight = iHeight;
 	    old_iWidth = iWidth;
 	  }
@@ -1453,7 +1453,7 @@ bx_vga_c::update(void)
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                     }
                   }
-                bx_gui.graphics_tile_update(BX_VGA_THIS s.tile,
+                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
                   xti*X_TILESIZE, yti*Y_TILESIZE);
                 BX_VGA_THIS s.vga_tile_updated[xti][yti] = 0;
                 }
@@ -1465,7 +1465,7 @@ bx_vga_c::update(void)
 
 	  if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	  {
-	    bx_gui.dimension_update(iWidth, iHeight);
+	    bx_gui->dimension_update(iWidth, iHeight);
 	    old_iWidth = iWidth;
 	    old_iHeight = iHeight;
 	  }
@@ -1487,7 +1487,7 @@ bx_vga_c::update(void)
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                     }
                   }
-                bx_gui.graphics_tile_update(BX_VGA_THIS s.tile,
+                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
                   xti*X_TILESIZE, yti*Y_TILESIZE);
                 BX_VGA_THIS s.vga_tile_updated[xti][yti] = 0;
                 }
@@ -1517,7 +1517,7 @@ bx_vga_c::update(void)
 	iHeight = 16*25;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui.dimension_update(iWidth, iHeight, 16);
+	  bx_gui->dimension_update(iWidth, iHeight, 16);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1535,7 +1535,7 @@ bx_vga_c::update(void)
           cursor_y = ((cursor_address - start_address)/2) / 80;
           }
         cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
-        bx_gui.text_update(BX_VGA_THIS s.text_snapshot,
+        bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
                            cursor_x, cursor_y, cursor_state, 25);
         // screen updated, copy new VGA memory contents into text snapshot
@@ -1550,7 +1550,7 @@ bx_vga_c::update(void)
 	iHeight = 16*25;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui.dimension_update(iWidth, iHeight, 16);
+	  bx_gui->dimension_update(iWidth, iHeight, 16);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1568,7 +1568,7 @@ bx_vga_c::update(void)
           cursor_y = ((cursor_address - start_address)/2) / 80;
           }
         cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
-        bx_gui.text_update(BX_VGA_THIS s.text_snapshot,
+        bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
                            cursor_x, cursor_y, cursor_state, 25);
         // screen updated, copy new VGA memory contents into text snapshot
@@ -1594,7 +1594,7 @@ bx_vga_c::update(void)
 	iHeight = VDE+1;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui.dimension_update(iWidth, iHeight, MSL+1);
+	  bx_gui->dimension_update(iWidth, iHeight, MSL+1);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1611,7 +1611,7 @@ bx_vga_c::update(void)
           cursor_y = ((cursor_address - start_address)/2) / (iWidth/8);
           }
         cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
-        bx_gui.text_update(BX_VGA_THIS s.text_snapshot,
+        bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
                            cursor_x, cursor_y, cursor_state, rows);
         // screen updated, copy new VGA memory contents into text snapshot
@@ -2048,7 +2048,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     if (BX_VGA_THIS s.sequencer.map_mask_bit[2]) {
       if ((!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) &&
           ((offset & 0xe000) == BX_VGA_THIS s.charmap_address)) {
-        bx_gui.set_text_charbyte((offset & 0x1fff), new_val[2]);
+        bx_gui->set_text_charbyte((offset & 0x1fff), new_val[2]);
         }
       BX_VGA_THIS s.vga_memory[2*65536 + offset] = new_val[2];
       }
@@ -2509,7 +2509,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
           
           BX_INFO(("VBE enabling x %d, y %d, bpp %d (0=8bpp)", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
-          bx_gui.dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);
+          bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);
         }
         else
         {

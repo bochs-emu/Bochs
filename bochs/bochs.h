@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.4 2002-10-07 12:55:29 cbothamy Exp $
+// $Id: bochs.h,v 1.99.2.5 2002-10-07 16:43:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -507,7 +507,7 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 #include "gui/gui.h"
 #include "gui/control.h"
 #include "gui/keymap.h"
-extern bx_gui_c   bx_gui;
+extern bx_gui_c   *bx_gui;
 #include "iodev/iodev.h"
 #include "plugin.h"
 

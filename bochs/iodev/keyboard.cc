@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.1 2002-10-06 23:17:52 cbothamy Exp $
+// $Id: keyboard.cc,v 1.67.2.2 2002-10-07 16:43:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.1 2002-10-06 23:17:52 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.2 2002-10-07 16:43:34 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -122,7 +122,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.1 2002-10-06 23:17:52 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.2 2002-10-07 16:43:34 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -1179,7 +1179,7 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
     multiple=0;
 	SIM->periodic ();
 	if (BX_CPU(0)->kill_bochs_request) return 0;
-    // bx_gui.handle_events();
+    // bx_gui->handle_events();
   }
 
   if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled ) {
