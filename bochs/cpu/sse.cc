@@ -2086,14 +2086,22 @@ void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op.xmm16u(0) >>= shift;
-  op.xmm16u(1) >>= shift;
-  op.xmm16u(2) >>= shift;
-  op.xmm16u(3) >>= shift;
-  op.xmm16u(4) >>= shift;
-  op.xmm16u(5) >>= shift;
-  op.xmm16u(6) >>= shift;
-  op.xmm16u(7) >>= shift;
+  if(shift > 15)
+  {
+    op.xmm64u(0) = 0;
+    op.xmm64u(1) = 0;
+  }
+  else
+  {
+    op.xmm16u(0) >>= shift;
+    op.xmm16u(1) >>= shift;
+    op.xmm16u(2) >>= shift;
+    op.xmm16u(3) >>= shift;
+    op.xmm16u(4) >>= shift;
+    op.xmm16u(5) >>= shift;
+    op.xmm16u(6) >>= shift;
+    op.xmm16u(7) >>= shift;
+  }
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
@@ -2165,14 +2173,22 @@ void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op.xmm16u(0) <<= shift;
-  op.xmm16u(1) <<= shift;
-  op.xmm16u(2) <<= shift;
-  op.xmm16u(3) <<= shift;
-  op.xmm16u(4) <<= shift;
-  op.xmm16u(5) <<= shift;
-  op.xmm16u(6) <<= shift;
-  op.xmm16u(7) <<= shift;
+  if(shift > 15)
+  {
+    op.xmm64u(0) = 0;
+    op.xmm64u(1) = 0;
+  }
+  else
+  {
+    op.xmm16u(0) <<= shift;
+    op.xmm16u(1) <<= shift;
+    op.xmm16u(2) <<= shift;
+    op.xmm16u(3) <<= shift;
+    op.xmm16u(4) <<= shift;
+    op.xmm16u(5) <<= shift;
+    op.xmm16u(6) <<= shift;
+    op.xmm16u(7) <<= shift;
+  }
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
@@ -2191,10 +2207,18 @@ void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op.xmm32u(0) >>= shift;
-  op.xmm32u(1) >>= shift;
-  op.xmm32u(2) >>= shift;
-  op.xmm32u(3) >>= shift;
+  if(shift > 31)
+  {
+    op.xmm64u(0) = 0;
+    op.xmm64u(1) = 0;
+  }
+  else
+  {
+    op.xmm32u(0) >>= shift;
+    op.xmm32u(1) >>= shift;
+    op.xmm32u(2) >>= shift;
+    op.xmm32u(3) >>= shift;
+  }
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
@@ -2254,10 +2278,18 @@ void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op.xmm32u(0) <<= shift;
-  op.xmm32u(1) <<= shift;
-  op.xmm32u(2) <<= shift;
-  op.xmm32u(3) <<= shift;
+  if(shift > 31)
+  {
+    op.xmm64u(0) = 0;
+    op.xmm64u(1) = 0;
+  }
+  else
+  {
+    op.xmm32u(0) <<= shift;
+    op.xmm32u(1) <<= shift;
+    op.xmm32u(2) <<= shift;
+    op.xmm32u(3) <<= shift;
+  }
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
@@ -2276,8 +2308,16 @@ void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op.xmm64u(0) >>= shift;
-  op.xmm64u(1) >>= shift;
+  if(shift > 63)
+  {
+    op.xmm64u(0) = 0;
+    op.xmm64u(1) = 0;
+  }
+  else
+  {
+    op.xmm64u(0) >>= shift;
+    op.xmm64u(1) >>= shift;
+  }
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
@@ -2320,8 +2360,16 @@ void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op.xmm64u(0) <<= shift;
-  op.xmm64u(1) <<= shift;
+  if(shift > 63)
+  {
+    op.xmm64u(0) = 0;
+    op.xmm64u(1) = 0;
+  }
+  else
+  {
+    op.xmm64u(0) <<= shift;
+    op.xmm64u(1) <<= shift;
+  }
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
