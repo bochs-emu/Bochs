@@ -229,6 +229,8 @@
 #define BX_SOUND_OUTPUT_C  bx_sound_output_c
 #endif
 
+#define USE_RAW_SERIAL 0
+
 #define BX_USE_SPECIFIED_TIME0 0
 
 // This enables writing to port 0xe9 and the output

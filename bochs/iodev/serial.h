@@ -144,6 +144,9 @@ public:
   bx_serial_c(void);
   ~bx_serial_c(void);
   BX_SER_SMF void   init(bx_devices_c *);
+#if USE_RAW_SERIAL
+  serial_raw* raw;
+#endif // USE_RAW_SERIAL
 
 private:
     bx_serial_t s[BX_SERIAL_MAXDEV];
@@ -162,9 +165,6 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-#if USE_RAW_SERIAL
-  serial_raw* raw;
-#endif // USE_RAW_SERIAL
   };
 
 
