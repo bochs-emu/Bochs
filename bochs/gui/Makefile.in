@@ -53,7 +53,7 @@ GUI_OBJS_NOGUI = nogui.o
 GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
-GUI_OBJS = keymap.o gui.o control.o siminterface.o @GUI_OBJS@
+GUI_OBJS = keymap.o gui.o siminterface.o @GUI_OBJS@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
