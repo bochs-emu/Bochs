@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.5 2002-11-19 14:16:31 ndavidg Exp $
+$Id: development.dbk,v 1.6 2002-11-19 14:33:26 ndavidg Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -272,56 +272,12 @@ as an example.
       &FIXME;
       </para>
       </section>
-</chapter>
-
-<chapter><title>Debugger</title>
-      <section><title>compile with debugger support</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-      <section><title>get started in debugger</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-      <section><title>command reference</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-      <section><title>techniques</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-</chapter>
-
-<chapter><title>Coding</title>
-      <section><title>coding conventions</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-      <section><title>patches:</title>
-      <para>
-      &FIXME;
-      how to make, where to submit, what happens then?
-      </para
-      </section>
-
-      <section><title>life cycle of a CVS release</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-
 
 <section> <!-- start of SB16 section-->
 
 <title>Sound Blaster 16 Emulation</title>
 <para>
-This is Sound Blaster 16 (SB16) emulation for Bochs, written and donated by
+Sound Blaster 16 (SB16) emulation for Bochs was written and donated by
 Josef Drexler, who has a
 <ulink url="http://publish.uwo.ca/~jdrexler/bochs/">web page</ulink> on the topic.
   The entire set of his SB16 patches have been integrated into
@@ -993,6 +949,50 @@ the future.
 </section>
 
 </section> <!-- end of SB16 section-->
+
+</chapter>
+
+<chapter><title>Debugger</title>
+      <section><title>compile with debugger support</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+      <section><title>get started in debugger</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+      <section><title>command reference</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+      <section><title>techniques</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+</chapter>
+
+<chapter><title>Coding</title>
+      <section><title>coding conventions</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+      <section><title>patches:</title>
+      <para>
+      &FIXME;
+      how to make, where to submit, what happens then?
+      </para
+      </section>
+
+      <section><title>life cycle of a CVS release</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
 
 </chapter>
 </book>
