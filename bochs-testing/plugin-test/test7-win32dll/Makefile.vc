@@ -1,0 +1,4 @@
+all:
+        $(CXX) /nologo /Tpmain.cc
+        $(CXX) /nologo /LD /Tpmodule1.cc main.lib
+        $(CXX) /nologo /LD /Tpmodule2.cc main.lib
