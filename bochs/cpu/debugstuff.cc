@@ -963,6 +963,7 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
   UNUSED(argc);
   UNUSED(argv);
 
+#if 0
 #warning hardcoding mem[0] and cpu[0]
   callback->setphymem           = BX_MEM[0]->dbg_set_mem;
   callback->getphymem           = BX_MEM[0]->dbg_fetch_mem;
@@ -998,6 +999,7 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
   callback->loader              = bx_dbg_loader;
 #endif
   callback->crc32               = BX_MEM[0]->dbg_crc32;
+#endif
 }
 
 #endif  // #if BX_DEBUGGER
