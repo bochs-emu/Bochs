@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.18 2002-10-23 21:53:39 bdenney Exp $
+// $Id: main.cc,v 1.156.2.19 2002-10-24 03:35:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1544,7 +1544,7 @@ bx_init_main (int argc, char *argv[])
   return 0;
 }
 
-Boolean load_and_init_gui () {
+Boolean load_and_init_display_lib () {
   if (bx_gui != NULL) {
     // bx_gui has already been filled in.  This happens when you start
     // the simulation for the second time.
@@ -1616,7 +1616,7 @@ int
 bx_begin_simulation (int argc, char *argv[])
 {
   // deal with gui selection
-  if (!load_and_init_gui ()) {
+  if (!load_and_init_display_lib ()) {
     BX_PANIC (("no gui module was loaded"));
     return 0;
   }
