@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.44 2002-10-24 21:06:47 bdenney Exp $
+// $Id: wxdialog.h,v 1.45 2002-12-07 16:52:05 cbothamy Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -524,6 +524,8 @@ DECLARE_EVENT_TABLE()
 // | For additional control over how each device responds    |
 // | to events, press the "Advanced" button.                 |
 // |                                                         |
+// | Debugger log file is [____________________]  [ Browse ] |
+// |                                                         |
 // |                [ Advanced ]  [ Help ] [ Cancel ] [ Ok ] |
 // +---------------------------------------------------------+
 // To use this dialog:
@@ -539,6 +541,7 @@ class LogOptionsDialog: public wxDialog
 private:
 #define LOG_OPTS_TITLE "Configure Log Events"
 #define LOG_OPTS_LOGFILE "Log file is "
+#define LOG_OPTS_DEBUGGER_LOGFILE "Debugger log file is "
 #define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
 #define LOG_OPTS_TYPE_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: " }
 #define LOG_OPTS_N_TYPES 4
@@ -558,10 +561,11 @@ private:
 #define LOG_OPTS_ADV "For additional control over how each device responds to events, press the \"Advanced\" button."
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
-  wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
+  wxBoxSizer *vertSizer, *logfileSizer, *debuggerlogfileSizer, *buttonSizer;
   wxFlexGridSizer *gridSizer;
   wxButton *applyDefault;
   wxTextCtrl *logfile;
+  wxTextCtrl *debuggerlogfile;
   wxChoice *action[LOG_OPTS_N_TYPES];
 public:
   LogOptionsDialog(wxWindow* parent, wxWindowID id);
@@ -570,7 +574,9 @@ public:
   int GetAction (int evtype);
   void SetAction (int evtype, int action);
   void SetLogfile (wxString f) { logfile->SetValue (f); }
+  void SetDebuggerlogfile (wxString f) { debuggerlogfile->SetValue (f); }
   wxString GetLogfile () { return logfile->GetValue (); }
+  wxString GetDebuggerlogfile () { return debuggerlogfile->GetValue (); }
 DECLARE_EVENT_TABLE()
 };
 

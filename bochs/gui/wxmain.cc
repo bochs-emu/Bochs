@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.79 2002-12-01 16:11:12 vruppert Exp $
+// $Id: wxmain.cc,v 1.80 2002-12-07 16:52:06 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -783,6 +783,8 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   LogOptionsDialog dlg (this, -1);
   bx_param_string_c *logfile = SIM->get_param_string (BXP_LOG_FILENAME);
   dlg.SetLogfile (wxString (logfile->getptr ()));
+  bx_param_string_c *debuggerlogfile = SIM->get_param_string (BXP_DEBUGGER_LOG_FILENAME);
+  dlg.SetDebuggerlogfile (wxString (debuggerlogfile->getptr ()));
 
   // The inital values of the dialog are complicated.  If the panic action
   // for all modules is "ask", then clearly the inital value in the dialog
@@ -816,6 +818,8 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
     char buf[1024];
     safeWxStrcpy (buf, dlg.GetLogfile (), sizeof (buf));
     logfile->set (buf);
+    safeWxStrcpy (buf, dlg.GetDebuggerlogfile (), sizeof (buf));
+    debuggerlogfile->set (buf);
     for (level=0; level<nlevel; level++) {
       // ask the dialog what action the user chose for this type of event
       int action = dlg.GetAction (level);

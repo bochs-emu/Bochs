@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.36 2002-10-25 11:44:37 bdenney Exp $
+// $Id: wxmain.h,v 1.37 2002-12-07 16:52:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -84,6 +84,7 @@ enum
   ID_Filename,
   ID_FilenameText,
   ID_Browse,
+  ID_Browse2,
   ID_Create,
   // dialog box: HDConfigDialog
   ID_Enable,
