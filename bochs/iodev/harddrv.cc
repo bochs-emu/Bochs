@@ -633,21 +633,18 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
   return(0);
 
   return_value32:
-  if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
-    BX_INFO(("32-bit read from %04x = %08x {%s}",
-	      (unsigned) address, value32, DEVICE_TYPE_STRING));
+  BX_DEBUG(("32-bit read from %04x = %08x {%s}",
+	    (unsigned) address, value32, DEVICE_TYPE_STRING));
   return value32;
 
   return_value16:
-  if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
-    BX_INFO(("16-bit read from %04x = %04x {%s}",
-	      (unsigned) address, value16, DEVICE_TYPE_STRING));
+  BX_DEBUG(("16-bit read from %04x = %04x {%s}",
+	    (unsigned) address, value16, DEVICE_TYPE_STRING));
   return value16;
 
   return_value8:
-  if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
-    BX_INFO(("8-bit read from %04x = %02x {%s}",
-	      (unsigned) address, value8, DEVICE_TYPE_STRING));
+  BX_DEBUG(("8-bit read from %04x = %02x {%s}",
+	    (unsigned) address, value8, DEVICE_TYPE_STRING));
   return value8;
 }
 
