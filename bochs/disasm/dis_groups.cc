@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.4 2002-08-12 14:39:40 cbothamy Exp $
+// $Id: dis_groups.cc,v 1.5 2002-09-20 15:34:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,25 +149,44 @@ bx_disassemble_c::Ms(void)
     }
 }
 
+  void
+bx_disassemble_c::Mp(void)
+{
+    GvMp();
+}
+
+  void
+bx_disassemble_c::GvMa(void)
+{
+  Bit8u mod_rm_byte, mod, opcode, rm;
+  mod_rm_byte = peek_byte();
+  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+  // only memory operand is valid
+  if (mod == 0x3) {
+    dis_sprintf("Invalid Opcode");
+    fetch_byte();
+    }
+  else {
+    if (db_32bit_opsize) {
+      decode_gxex(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
+      }
+    else {
+      decode_gxex(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
+      }
+    }
+}
+
+  void
+bx_disassemble_c::EwRw(void)
+{
+  decode_exgx(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
+}
+
 // Other un-implemented operand signatures
   void
 bx_disassemble_c::XBTS(void) {dis_sprintf("*** XBTS() unfinished ***");}
   void
 bx_disassemble_c::IBTS(void) {dis_sprintf("*** IBTS() unfinished ***");}
-  void
-bx_disassemble_c::Mp(void) {dis_sprintf("*** Mp() unfinished ***");}
-  void
-bx_disassemble_c::GvMa(void) {dis_sprintf("*** GvMa() unfinished ***");}
-  void
-bx_disassemble_c::EwRw(void) {dis_sprintf("*** EwRw() unfinished ***");}
-  void
-bx_disassemble_c::YbDX(void) {dis_sprintf("*** YbDX() unfinished ***");}
-  void
-bx_disassemble_c::YvDX(void) {dis_sprintf("*** YvDX() unfinished ***");}
-  void
-bx_disassemble_c::DXXb(void) {dis_sprintf("*** DXXb() unfinished ***");}
-  void
-bx_disassemble_c::DXXv(void) {dis_sprintf("*** DXXv() unfinished ***");}
   void
 bx_disassemble_c::ALOb(void) {dis_sprintf("*** ALOb() unfinished ***");}
 
@@ -604,12 +623,22 @@ bx_disassemble_c::YveAX(void)
   void
 bx_disassemble_c::GvMp(void)
 {
+  Bit8u mod_rm_byte, mod, opcode, rm;
+  mod_rm_byte = peek_byte();
+  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+  // only memory operand is valid
+  if (mod == 0x3) {
+    dis_sprintf("Invalid Opcode");
+    fetch_byte();
+    }
+  else {
 #if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize)
-    decode_gxex(BX_GENERAL_32BIT_REG, BX_GENERAL_32BIT_REG);
-  else
+    if (db_32bit_opsize)
+      decode_gxex(BX_GENERAL_32BIT_REG, BX_GENERAL_32BIT_REG);
+    else
 #endif /* BX_CPU_LEVEL > 2 */
-    decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
+      decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
+    }
 }
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.8 2001-10-03 13:10:37 bdenney Exp $
+// $Id: dis_decode.cc,v 1.9 2002-09-20 15:34:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -668,10 +668,24 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
       case 0x69: dis_sprintf("imul "); GvEv(); dis_sprintf(", "); Iv(); goto done;
       case 0x6A: dis_sprintf("push "); Ib(); goto done;
       case 0x6B: dis_sprintf("imul "); GvEv(); dis_sprintf(", "); Ib(); goto done;
-      case 0x6C: dis_sprintf("insb "); YbDX(); goto done;
-      case 0x6D: dis_sprintf("insw "); YvDX(); goto done;
-      case 0x6E: dis_sprintf("outsb "); DXXb(); goto done;
-      case 0x6F: dis_sprintf("outsw "); DXXv(); goto done;
+      case 0x6C: dis_sprintf("insb"); goto done;
+      case 0x6D:
+        if (db_32bit_opsize) {
+          dis_sprintf("insd");
+          }
+        else {
+          dis_sprintf("insw");
+          }
+        goto done;
+      case 0x6E: dis_sprintf("outsb"); goto done;
+      case 0x6F:
+        if (db_32bit_opsize) {
+          dis_sprintf("outsd");
+          }
+        else {
+          dis_sprintf("outsw");
+          }
+        goto done;
 
 
       case 0x70: dis_sprintf("jo "); Jb(); goto done;

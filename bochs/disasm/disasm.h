@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: disasm.h,v 1.6 2002-09-20 15:34:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,10 +135,6 @@ private:
   void EwRw(void);
   void Iv(void);
   void Ib(void);
-  void YbDX(void);
-  void YvDX(void);
-  void DXXb(void);
-  void DXXv(void);
   void Jb(void);
   void EbIb(void);
   void EvIv(void);
