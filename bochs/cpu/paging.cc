@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.21 2002-09-10 03:52:32 kevinlawton Exp $
+// $Id: paging.cc,v 1.22 2002-09-16 13:14:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -632,7 +632,7 @@ pageTableWalk:
 #else // 486+
     combined_access  = (pde & pte) & 0x06; // U/S and R/W
 #if BX_SupportGlobalPages
-    if (BX_CPU_THIS_PTR cr4 & (1<<7)) // PGE==1
+    if (BX_CPU_THIS_PTR cr4.get_PGE ())
       combined_access |= (pte & 0x100); // G
 #endif
 #endif
@@ -828,7 +828,7 @@ pageTableWalk:
 #else // 486+
     combined_access  = (pde & pte) & 0x06; // U/S and R/W
 #if BX_SupportGlobalPages
-    if (BX_CPU_THIS_PTR cr4 & (1<<7)) // PGE==1
+    if (BX_CPU_THIS_PTR cr4.get_PGE ())
       combined_access |= (pte & 0x100); // G
 #endif
 #endif
