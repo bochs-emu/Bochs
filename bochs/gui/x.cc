@@ -958,6 +958,8 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars ) {
     curs = (prev_block_cursor_y*80 + prev_block_cursor_x)*2;
     string[0] = new_text[curs];
+    if (string[0] == 0) string[0] = ' '; // convert null to space
+    XSetForeground(bx_x_display, gc, col_vals[new_text[curs+1] & 0x0f]);
     XSetBackground(bx_x_display, gc, col_vals[(new_text[curs+1] & 0xf0) >> 4]);
     XDrawImageString(bx_x_display, win,
       gc,
@@ -1003,6 +1005,7 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   // now draw character at new block cursor location in reverse
   if ( (cursor_y*80 + cursor_x) < nchars ) {
     string[0] = new_text[(cursor_y*80 + cursor_x)*2];
+    if (string[0] == 0) string[0] = ' '; // convert null to space
     XDrawImageString(bx_x_display, win,
       gc_inv,
       cursor_x * font_info->max_bounds.width,
