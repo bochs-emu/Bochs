@@ -170,19 +170,19 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   close(fd);
 #if BX_PCI_SUPPORT
   if (bx_options.i440FXSupport)
-    BX_INFO(("ROM: BIOS in i440FX RAM 0x%08x/%u ('%s')\n",
+    BX_INFO(("rom in i440FX RAM 0x%06x/%u ('%s')\n",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
   else
-    BX_INFO(("ROM: BIOS at 0x%08x/%u ('%s')\n",
+    BX_INFO(("rom at 0x%06x/%u ('%s')\n",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
 #else  // #if BX_PCI_SUPPORT
-  BX_INFO(("ROM: BIOS at 0x%08x/%u ('%s')\n",
+  BX_INFO(("rom at 0x%06x/%u ('%s')\n",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
  			path
@@ -216,12 +216,12 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
         switch (bx_devices.pci->rd_memType (addr)) {
           case 0x0:  // Fetch from ShadowRAM
             *buf = vector[addr];
-//          BX_INFO(("Fetching from ShadowRAM %08x, len %u !\n", (unsigned)addr, (unsigned)len));
+//          BX_INFO(("Fetching from ShadowRAM %06x, len %u !\n", (unsigned)addr, (unsigned)len));
             break;
 
           case 0x1:  // Fetch from ROM
             *buf = bx_pci.s.i440fx.shadow[(addr - 0xC0000)];
-//          BX_INFO(("Fetching from ROM %08x, Data %02x \n", (unsigned)addr, *buf));
+//          BX_INFO(("Fetching from ROM %06x, Data %02x \n", (unsigned)addr, *buf));
             break;
           default:
             BX_PANIC(("dbg_fetch_mem: default case\n"));

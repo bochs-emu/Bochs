@@ -364,7 +364,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       motor_on_drive0 = value & 0x10;
       dma_and_interrupt_enable = value & 0x08;
       if (!dma_and_interrupt_enable)
-        BX_INFO(("DMA and interrupt capabilities disabled\n"));
+        BX_DEBUG(("DMA and interrupt capabilities disabled\n"));
       normal_operation = value & 0x04;
       drive_select = value & 0x03;
 

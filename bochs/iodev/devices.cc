@@ -174,7 +174,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
 #if BX_NE2K_SUPPORT
   // NE2000 NIC
-#warning ne2k
   ne2k = &bx_ne2k;
   ne2k->init(this);
   BX_DEBUG(("ne2k\n"));

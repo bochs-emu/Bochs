@@ -321,8 +321,7 @@ if (bx_options.private_colormap) {
   dimension_x = columns * font_width;
   dimension_y = rows * font_height + headerbar_y;
 
-  BX_INFO(("font_width = %u\n", (unsigned) font_width));
-  BX_INFO(("font_height = %u\n", (unsigned) font_height));
+  BX_INFO(("font %u wide x %u high\n", (unsigned) font_width, (unsigned) font_height));
 
   /* create opaque window */
   win = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
