@@ -25,6 +25,7 @@ AC_CHECK_SIZEOF(int *)
 AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
 AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
 AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
+AC_CHECK_FUNCS(strtouq, AC_DEFINE(BX_HAVE_STRTOUQ))
 AC_CHECK_FUNCS(strdup, AC_DEFINE(BX_HAVE_STRDUP))
 
 AC_MSG_CHECKING(if compiler allows empty structs)
@@ -546,7 +547,7 @@ AC_MSG_CHECKING(for FPU emulation)
 FPU_VAR=''
 FPU_GLUE_OBJ=''
 AC_ARG_ENABLE(fpu,
-  [  --enable-fpu                      pass dir of external FPU emulation],
+  [  --enable-fpu                      compile in FPU emulation],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
@@ -562,8 +563,10 @@ AC_ARG_ENABLE(fpu,
    fi
    ],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_FPU, 0)
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_FPU, 1)
+    FPU_VAR='$(FPU_LIB)'
+    FPU_GLUE_OBJ='$(FPU_GLUE_OBJ)'
     ]
   )
 AC_SUBST(FPU_VAR)
@@ -721,12 +724,17 @@ AC_ARG_WITH(nogui,
   [  --with-nogui                      no native GUI, just use blank stubs],
   )
 
+AC_ARG_WITH(term,
+  [  --with-term                       textmode terminal environment],
+  )
+
 dnl // make sure X Windows is default if no other chosen
 if (test "$with_x11" != yes) && \
    (test "$with_beos" != yes) && \
    (test "$with_win32" != yes) && \
    (test "$with_nogui" != yes) && \
    (test "$with_win32_vcpp" != yes) && \
+   (test "$with_term" != yes) && \
    (test "$with_macos" != yes); then
   with_x11=yes
 fi
@@ -797,13 +805,31 @@ elif test "$with_macos" = yes; then
   AC_DEFINE(BX_HAVE_STRDUP, 0)
   GUI_OBJS='$(GUI_OBJS_MACOS)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
+elif test "$with_term" = yes; then
+  AC_DEFINE(BX_WITH_TERM, 1)
+  GUI_OBJS='$(GUI_OBJS_TERM)'
+  GUI_LINK_OPTS='$(GUI_LINK_OPTS_TERM)'
+  use_curses=yes
 else
   AC_DEFINE(BX_WITH_NOGUI, 1)
   GUI_OBJS='$(GUI_OBJS_NOGUI)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
 fi
+
+if test "$use_curses" = yes; then
+  AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
+  AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM='-lncurses')
+  AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM='-ltermlib')
+  if test "$GUI_LINK_OPTS_TERM" = ""; then
+    echo Curses library not found: tried curses, ncurses, and termlib.
+    exit 1
+  fi
+fi
+
+
 AC_SUBST(GUI_OBJS)
 AC_SUBST(GUI_LINK_OPTS)
+AC_SUBST(GUI_LINK_OPTS_TERM)
 AC_SUBST(DASH)
 AC_SUBST(SLASH)
 AC_SUBST(CXXFP)

@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include  "bochs.h"
 
+class bx_ioapic_c bx_ioapic;
+#define LOG_THIS  bx_ioapic.
+
 void
 bx_io_redirect_entry_t::parse_value ()
 {
@@ -35,7 +38,7 @@ bx_ioapic_c::init ()
 {
   bx_generic_apic_c::init ();
   if (bx_dbg.ioapic)
-    bx_printf ("initializing I/O APIC\n");
+    BX_INFO(("initializing I/O APIC\n"));
   base_addr = 0xfec00000;
   ioregsel = 0;
   // all interrupts masked
@@ -50,15 +53,15 @@ void
 bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
 {
   if (bx_dbg.ioapic)
-    bx_printf ("I/O APIC read_aligned addr=%08x, len=%d\n", address, len);
-  bx_assert (len == 4);
+    BX_INFO( ("I/O APIC read_aligned addr=%08x, len=%d\n", address, len));
+  BX_ASSERT (len == 4);
   address &= 0xff;
   if (address == 0x00) {
     // select register
     *data = ioregsel;
     return;
   } else if (address != 0x10) {
-      bx_panic ("IOAPIC: read from unsupported address\n");
+      BX_PANIC(("IOAPIC: read from unsupported address\n"));
   }
   // only reached when reading data register
   switch (ioregsel) {
@@ -70,7 +73,7 @@ bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
             | (BX_IOAPIC_VERSION_ID & 0x0f);
     return;
   case 0x02:
-    bx_printf ("IOAPIC: arbitration ID unsupported, returned 0\n");
+    BX_INFO(("IOAPIC: arbitration ID unsupported, returned 0\n"));
     *data = 0;
     return;
   default:
@@ -80,7 +83,7 @@ bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
       *data = (ioregsel&1) ? entry->get_odd_word() : entry->get_even_word ();
       return;
     }
-    bx_panic ("IOAPIC: IOREGSEL points to undefined register %02x\n", ioregsel);
+    BX_PANIC(("IOAPIC: IOREGSEL points to undefined register %02x\n", ioregsel));
   }
 }
 
@@ -88,26 +91,26 @@ void
 bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
 {
   if (bx_dbg.ioapic)
-    bx_printf ("IOAPIC: write addr=%08x, data=%08x, len=%d\n", address, *value, len);
+    BX_INFO(("IOAPIC: write addr=%08x, data=%08x, len=%d\n", address, *value, len));
   address &= 0xff;
   if (address == 0x00)  {
     ioregsel = *value;
     return;
   } else if (address != 0x10) {
-    bx_panic ("IOAPIC: write to unsupported address\n");
+    BX_PANIC(("IOAPIC: write to unsupported address\n"));
   }
   // only reached when writing data register
   switch (ioregsel) {
     case 0x00: // set APIC ID
       {
 	Bit8u newid = (*value >> 24) & 0xf;
-	bx_printf ("IOAPIC: setting id to 0x%x\n", newid);
+	BX_INFO(("IOAPIC: setting id to 0x%x\n", newid));
 	set_id (newid);
 	return;
       }
     case 0x01: // version
     case 0x02: // arbitration id
-      bx_printf ("IOAPIC: could not write, IOREGSEL=0x%02x\n", ioregsel);
+      BX_INFO(("IOAPIC: could not write, IOREGSEL=0x%02x\n", ioregsel));
       return;
     default:
       int index = (ioregsel - 0x10) >> 1;
@@ -120,38 +123,38 @@ bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
 	char buf[1024];
 	entry->sprintf_self (buf);
         if (bx_dbg.ioapic)
-	  bx_printf ("IOAPIC: now entry[%d] is %s\n", index, buf);
+	  BX_INFO(("IOAPIC: now entry[%d] is %s\n", index, buf));
 	service_ioapic ();
 	return;
       }
-      bx_panic ("IOAPIC: IOREGSEL points to undefined register %02x\n", ioregsel);
+      BX_PANIC(("IOAPIC: IOREGSEL points to undefined register %02x\n", ioregsel));
   }
 }
 
 void bx_ioapic_c::trigger_irq (unsigned vector, unsigned from) 
 {
   if (bx_dbg.ioapic)
-    bx_printf ("IOAPIC: received interrupt %d\n", vector);
+    BX_INFO(("IOAPIC: received interrupt %d\n", vector));
   if (vector >= 0 && vector < BX_IOAPIC_NUM_PINS) {
     Bit32u bit = 1<<vector;
     if ((irr & bit) == 0) {
       irr |= bit;
       service_ioapic ();
     }
-  } else bx_panic ("IOAPIC: vector %d out of range\n", vector);
+  } else BX_PANIC(("IOAPIC: vector %d out of range\n", vector));
 }
 
 void bx_ioapic_c::untrigger_irq (unsigned num, unsigned from) 
 {
   if (bx_dbg.ioapic)
-    bx_printf ("IOAPIC: interrupt %d went away\n", num);
+    BX_INFO(("IOAPIC: interrupt %d went away\n", num));
 }
 
 void bx_ioapic_c::service_ioapic ()
 {
   // look in IRR and deliver any interrupts that are not masked.
   if (bx_dbg.ioapic)
-    bx_printf ("IOAPIC: servicing\n");
+    BX_INFO(("IOAPIC: servicing\n"));
   for (unsigned bit=0; bit < BX_IOAPIC_NUM_PINS; bit++) {
     if (irr & (1<<bit)) {
       bx_io_redirect_entry_t *entry = ioredtbl + bit;

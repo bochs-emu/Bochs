@@ -1,6 +1,7 @@
 #include "bochs.h"
 
 #if !BX_HAVE_SNPRINTF
+/* XXX use real snprintf */
 /* if they don't have snprintf, just use sprintf */
 int bx_snprintf (char *s, size_t maxlen, const char *format, ...)
 {
@@ -16,7 +17,7 @@ int bx_snprintf (char *s, size_t maxlen, const char *format, ...)
 #endif  /* !BX_HAVE_SNPRINTF */
 
 
-#if !BX_HAVE_STRTOULL
+#if (!BX_HAVE_STRTOULL && !BX_HAVE_STRTOUQ)
 /* taken from glibc-2.2.2: strtod.c, and stripped down a lot.  There are 
    still a few leftover references to decimal points and exponents, 
    but it seems to work for bases 10 and 16 */
@@ -158,6 +159,76 @@ int main (int argc, char **argv)
   }
   return 0;
 }
-#endif  /* defined BX_TEST_STRTOULL */
+#endif  /* BX_TEST_STRTOULL */
 
 #endif  /* !BX_HAVE_STRTOULL */
+
+#if !BX_HAVE_STRDUP
+/* XXX use real strdup */
+char *bx_strdup(const char *str)
+{
+	char *temp;
+	
+	temp = malloc(strlen(str));
+	sprintf(temp, "%s", str);
+	return temp;
+	
+	// Well, I'm sure this isn't how strdup is REALLY implemented,
+	// but it works...
+}
+#endif  /* !BX_HAVE_STRDUP */
+
+//////////////////////////////////////////////////////////////////////
+// Missing library functions, implemented for MacOS only
+//////////////////////////////////////////////////////////////////////
+
+#if BX_WITH_MACOS
+// these functions are part of MacBochs.  They are not intended to be
+// portable!
+#include <Files.h>
+#include <Disks.h>
+
+int fd_read(char *buffer, Bit32u offset, Bit32u bytes)
+{
+	OSErr err;
+	IOParam param;
+	
+	param.ioRefNum=-5; // Refnum of the floppy disk driver
+	param.ioVRefNum=1;
+	param.ioPosMode=fsFromStart;
+	param.ioPosOffset=offset;
+	param.ioBuffer=buffer;
+	param.ioReqCount=bytes;
+	err = PBReadSync((union ParamBlockRec *)(&param));
+	return param.ioActCount;
+}
+
+int fd_write(char *buffer, Bit32u offset, Bit32u bytes)
+{
+	OSErr		err;
+	IOParam	param;
+	
+	param.ioRefNum=-5; // Refnum of the floppy disk driver
+	param.ioVRefNum=1;
+	param.ioPosMode=fsFromStart;
+	param.ioPosOffset=offset;
+	param.ioBuffer=buffer;
+	param.ioReqCount=bytes;
+	err = PBWriteSync((union ParamBlockRec *)(&param));
+	return param.ioActCount;
+}
+
+int fd_stat(struct stat *buf)
+{
+	OSErr		err;
+	DrvSts	status;
+	int			result;
+	
+	result = 0;
+	err = DriveStatus(1, &status);
+	if (status.diskInPlace <1 || status.diskInPlace > 2)
+		result = -1;
+	buf->st_mode = S_IFCHR;
+	return result;
+}
+#endif /* BX_WITH_MACOS */

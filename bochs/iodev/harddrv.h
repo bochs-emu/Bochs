@@ -245,7 +245,7 @@ typedef enum {
       IDE_DISK, IDE_CDROM
 } device_type_t;
 
-class bx_hard_drive_c {
+class bx_hard_drive_c : public logfunctions {
 public:
 
   bx_hard_drive_c(void);
@@ -297,6 +297,4 @@ private:
   bx_devices_c *devices;
   };
 
-#if BX_USE_HD_SMF
 extern bx_hard_drive_c bx_hard_drive;
-#endif

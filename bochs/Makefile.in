@@ -50,6 +50,7 @@ GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
   comdlg32.lib comctl32.lib wsock32.lib
 GUI_LINK_OPTS_MACOS =
 GUI_LINK_OPTS_NOGUI =
+GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
 GUI_LINK_OPTS = @GUI_LINK_OPTS@
 RANLIB = @RANLIB@
 
@@ -189,7 +190,9 @@ tar: dist-clean
 
 clean:
 	@RMCOMMAND@ *.o
+	@RMCOMMAND@ */*.o
 	@RMCOMMAND@ *.a
+	@RMCOMMAND@ */*.a
 	@RMCOMMAND@ bochs@EXE@
 	@RMCOMMAND@ bochs.out
 

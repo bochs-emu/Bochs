@@ -32,7 +32,7 @@
 
 
 
-class bx_parallel_c {
+class bx_parallel_c : public logfunctions {
 public:
 
   bx_parallel_c(void);
@@ -56,6 +56,4 @@ private:
   };
 
 
-#if BX_USE_PAR_SMF
 extern bx_parallel_c bx_parallel;
-#endif

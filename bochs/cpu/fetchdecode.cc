@@ -23,6 +23,7 @@
 
 #define BX_IN_CPU_METHOD 1
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 ///////////////////////////
@@ -1458,7 +1459,7 @@ another_byte:
           break;
 
         default:
-bx_panic("fetch_decode: prefix default = 0x%02x\n", b1);
+BX_PANIC(("fetch_decode: prefix default = 0x%02x\n", b1));
         }
       }
     // opcode requires another byte
@@ -1867,8 +1868,8 @@ modrm_done:
           }
         break;
       default:
-bx_printf("b1 was %x\n", b1);
-        bx_panic("fetchdecode: imm_mode = %u\n", imm_mode);
+BX_INFO(("b1 was %x\n", b1));
+        BX_PANIC(("fetchdecode: imm_mode = %u\n", imm_mode));
       }
     }
 
@@ -1884,17 +1885,17 @@ bx_printf("b1 was %x\n", b1);
 BX_CPU_C::BxError(BxInstruction_t *i)
 {
   // extern void dump_core();
-  bx_printf("BxError: instruction with op1=0x%x\n", i->b1);
-  bx_printf("nnn was %u\n", i->nnn);
+  BX_INFO(("BxError: instruction with op1=0x%x\n", i->b1));
+  BX_INFO(("nnn was %u\n", i->nnn));
 
-  bx_printf("WARNING: Encountered an unknown instruction (signalling illegal instruction):\n");
+  BX_INFO(("WARNING: Encountered an unknown instruction (signalling illegal instruction):\n"));
   // dump_core();
 
   BX_CPU_THIS_PTR UndefinedOpcode(i);
 }
 
   void
-BxResolveError(BxInstruction_t *i)
+BX_CPU_C::BxResolveError(BxInstruction_t *i)
 {
-  bx_panic("BxResolveError: instruction with op1=0x%x\n", i->b1);
+  BX_PANIC(("BxResolveError: instruction with op1=0x%x\n", i->b1));
 }

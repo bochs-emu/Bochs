@@ -312,6 +312,7 @@
 #define BX_WITH_WIN32 0
 #define BX_WITH_MACOS 0
 #define BX_WITH_NOGUI 0
+#define BX_WITH_TERM 0
 
 
 #define WORDS_BIGENDIAN 0
@@ -429,6 +430,9 @@ typedef unsigned int Boolean;
 #endif
 #endif // BX_WITH_WIN32
 
+// for now only term.cc requires a GUI sighandler.
+#define BX_GUI_SIGHANDLER (BX_WITH_TERM)
+
 #define HAVE_SIGACTION 1
 
 // configure will change the definition of "inline" to the value
@@ -490,6 +494,7 @@ typedef unsigned int Boolean;
 #define BX_HAVE_SELECT 0
 #define BX_HAVE_SNPRINTF 0
 #define BX_HAVE_STRTOULL 0
+#define BX_HAVE_STRTOUQ 0
 #define BX_HAVE_STRDUP 0
 
 // set if your compiler does not permit an empty struct

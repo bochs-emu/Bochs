@@ -27,6 +27,7 @@
 
 #define BX_IN_CPU_METHOD 1
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
   void
@@ -87,7 +88,7 @@ BX_CPU_C::MOV_EwSw(BxInstruction_t *i)
   Bit16u seg_reg;
 
 #if BX_CPU_LEVEL < 3
-  bx_panic("MOV_EwSw: incomplete for CPU < 3\n");
+  BX_PANIC(("MOV_EwSw: incomplete for CPU < 3\n"));
 #endif
 
   seg_reg = BX_CPU_THIS_PTR sregs[i->nnn].selector.value;
@@ -112,7 +113,7 @@ BX_CPU_C::MOV_SwEw(BxInstruction_t *i)
   Bit16u op2_16;
 
 #if BX_CPU_LEVEL < 3
-  bx_panic("MOV_SwEw: incomplete for CPU < 3\n");
+  BX_PANIC(("MOV_SwEw: incomplete for CPU < 3\n"));
 #endif
 
   if (i->mod == 0xc0) {
@@ -139,7 +140,7 @@ BX_CPU_C::MOV_SwEw(BxInstruction_t *i)
 BX_CPU_C::LEA_GwM(BxInstruction_t *i)
 {
   if (i->mod == 0xc0) {
-    bx_panic("LEA_GvM: op2 is a register");
+    BX_PANIC(("LEA_GvM: op2 is a register"));
     UndefinedOpcode(i);
     return;
     }
@@ -213,7 +214,7 @@ BX_CPU_C::MOV_EwIw(BxInstruction_t *i)
 BX_CPU_C::MOVZX_GwEb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("MOVZX_GvEb: not supported on < 386\n");
+  BX_PANIC(("MOVZX_GvEb: not supported on < 386\n"));
 #else
   Bit8u  op2_8;
 
@@ -234,7 +235,7 @@ BX_CPU_C::MOVZX_GwEb(BxInstruction_t *i)
 BX_CPU_C::MOVZX_GwEw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("MOVZX_GvEw: not supported on < 386\n");
+  BX_PANIC(("MOVZX_GvEw: not supported on < 386\n"));
 #else
   Bit16u op2_16;
 
@@ -255,7 +256,7 @@ BX_CPU_C::MOVZX_GwEw(BxInstruction_t *i)
 BX_CPU_C::MOVSX_GwEb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("MOVSX_GvEb: not supported on < 386\n");
+  BX_PANIC(("MOVSX_GvEb: not supported on < 386\n"));
 #else
   Bit8u op2_8;
 
@@ -276,7 +277,7 @@ BX_CPU_C::MOVSX_GwEb(BxInstruction_t *i)
 BX_CPU_C::MOVSX_GwEw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("MOVSX_GvEw: not supported on < 386\n");
+  BX_PANIC(("MOVSX_GvEw: not supported on < 386\n"));
 #else
   Bit16u op2_16;
 
@@ -357,7 +358,7 @@ BX_CPU_C::CMOV_GwEw(BxInstruction_t *i)
     case 0x14F: condition = !get_ZF() && (get_SF() == get_OF()); break;
     default:
       condition = 0;
-      bx_panic("CMOV_GwEw: default case\n");
+      BX_PANIC(("CMOV_GwEw: default case\n"));
     }
 
   if (i->mod == 0xc0) {
@@ -372,6 +373,6 @@ BX_CPU_C::CMOV_GwEw(BxInstruction_t *i)
     BX_WRITE_16BIT_REG(i->nnn, op2_16);
     }
 #else
-  bx_panic("cmov_gwew called\n");
+  BX_PANIC(("cmov_gwew called\n"));
 #endif
 }

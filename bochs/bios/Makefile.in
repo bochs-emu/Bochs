@@ -32,7 +32,8 @@ SHELL = /bin/sh
 
 CXX = @CXX@
 CXXFLAGS = @CXXFLAGS@
-TOOLPATH = /dante2/bochs/bin
+TOOLPATH = /usr/users/bryce/tlw/bochs/bin
+
 AS86=$(TOOLPATH)/as86
 LD86=$(TOOLPATH)/ld86
 BCC_CC1=$(TOOLPATH)/bcc-cc1

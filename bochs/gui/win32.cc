@@ -30,6 +30,8 @@
 #include <windows.h>
 #include <process.h>
 
+#define LOG_THIS bx_gui.
+
 #ifdef __MINGW32__
 #if BX_SHOW_IPS
 #include <windows32/CommonFunctions.h>
@@ -157,7 +159,7 @@ static void processMouseXY( int x, int y, int windows_state, int implied_state_c
   if ( old_bx_state!=mouse_button_state)
   {
     /* Make up for missing message */
-    bx_printf( "&&&missing mouse state change\r\n");
+    BX_INFO(( "&&&missing mouse state change\r\n"));
     EnterCriticalSection( &stInfo.keyCS);
     enq_mouse_event();
     mouse_button_state=old_bx_state;
@@ -222,16 +224,16 @@ void terminateEmul(int reason) {
 
   switch (reason) {
   case EXIT_GUI_SHUTDOWN:
-    bx_panic("Window closed, exiting!\n");
+    BX_PANIC(("Window closed, exiting!\n"));
     break;
   case EXIT_GMH_FAILURE:
-    bx_panic("GetModuleHandle failure!\n");
+    BX_PANIC(("GetModuleHandle failure!\n"));
     break;
   case EXIT_FONT_BITMAP_ERROR:
-    bx_panic("Font bitmap creation failure!\n");
+    BX_PANIC(("Font bitmap creation failure!\n"));
     break;
   case EXIT_HEADER_BITMAP_ERROR:
-    bx_panic("Header bitmap creation failure!\n");
+    BX_PANIC(("Header bitmap creation failure!\n"));
     break;
   case EXIT_NORMAL:
     break;
@@ -260,6 +262,7 @@ void terminateEmul(int reason) {
 void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 			     tilewidth, unsigned tileheight,
 			     unsigned headerbar_y) {
+  th->setprefix("[WGUI]");
   static RGBQUAD black_quad={ 0, 0, 0, 0};
   stInfo.kill = 0;
   stInfo.UIinited = FALSE;
@@ -322,7 +325,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 
   if (bx_options.private_colormap)
-    fprintf(stderr, "# WARNING: WIN32: private_colormap option ignored.\n");
+    BX_INFO(( "private_colormap option ignored.\n"));
 }
 
 
@@ -514,7 +517,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
 
 void enq_key_event(Bit32u key, Bit32u press_release) {	
   if (((tail+1) % SCANCODE_BUFSIZE) == head) {
-    fprintf(stderr, "# enq_scancode: buffer full\n");
+    BX_ERROR(( "enq_scancode: buffer full\n"));
     return;
   }
   keyevents[tail].key_event = key | press_release;
@@ -527,7 +530,7 @@ void enq_mouse_event(void)
   if ( ms_xdelta || ms_ydelta)
   {
     if (((tail+1) % SCANCODE_BUFSIZE) == head) {
-      fprintf(stderr, "# enq_scancode: buffer full\n");
+      BX_ERROR(( "enq_scancode: buffer full\n" ));
       return;
     }
     QueueEvent& current=keyevents[tail];
@@ -545,7 +548,7 @@ QueueEvent* deq_key_event(void) {
   QueueEvent* key;
 
   if ( head == tail ) {
-    fprintf(stderr, "# deq_scancode: buffer empty\n");
+    BX_ERROR(("deq_scancode: buffer empty\n"));
     return((QueueEvent*)0);
   }
   key = &keyevents[head];

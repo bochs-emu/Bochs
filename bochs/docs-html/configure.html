@@ -37,8 +37,12 @@ I cheat and use script files to do this for me.  You can look
 in files such as ".conf.x86" to see what options I use, and how
 I invoke configure.
 
+<p>
+This table is divided into the options that most users will need and the
+more obscure options.
 
-<CENTER><H1>Configure Options</H1></CENTER>
+
+<CENTER><H1>Frequently Used Configure Options</H1></CENTER>
 <table border>
 <tr>
   <th>Option</th>
@@ -56,9 +60,10 @@ I invoke configure.
   <td>Enable use of a real CDROM.  The cdrom emulation is always
       present, and emulates a drive without media by default.
       You can use this option to compile in support for accessing
-      the media in your workstation's cdrom drive.  To use it,
-      a small amount of code specific to your platform must be
-      written.  So far, only Linux is supported.  The module
+      the media in your workstation's cdrom drive.  The supported
+      platforms are Linux, Solaris, OpenBSD, and Windows.
+      For other platforms, a small amount of code specific to 
+      your platform must be written.  The module
       iodev/cdrom.cc is the place to add more support.  For the
       most part, you need to figure out the right set of ioctl()
       calls.
@@ -67,35 +72,12 @@ I invoke configure.
   <td>--enable-sb16={<i>dummy, win, linux</i>}</td>
   <td>no
   <td>Enable Sound Blaster emulation. &nbsp;
-      The option <i>dummy</i> means support an SB16, but don't use an
-      output device. &nbsp;The other options, mean output goes
-      to a device on the corresponding platform. &nbsp;So for example,
-      you might use '--enable-sb16=linux'. &nbsp;You're platform may
-      not be supported yet. &nbsp;Check out <a href="sound.html">
-      sound.html</a> for more info.
+      SB16 output is only supported for Windows or Linux.  The <i>dummy</i> 
+      option means to support an SB16, but don't use
+      an output device.  So for example, you might use 
+      '--enable-sb16=linux'. Check out <a href="sound.html">sound.html</a> 
+      for more info.
       </td>
-<tr>
-  <td>--enable-dynamic</td>
-  <td>no
-  <td>Enable dynamic translation support.  Actually, this is
-      not an option currently.  I'm going to rehash the dynamic
-      translation support in the future.  Don't use this option.</td>
-<tr>
-  <td>--enable-ne2000</td>
-  <td>no
-  <td>Enable limited ne2000 support.  This requires a low-level
-      component to be written for each OS. One is written only
-      for FreeBSD so far.  Not complete yet. Don't use this option yet.</td>
-<tr>
-  <td>--enable-pci</td>
-  <td>no
-  <td>Enable limited i440FX PCI support.  This is not complete.
-      Don't use this option.</td>
-<tr>
-  <td>--enable-port-e9-hack</td>
-  <td>no
-  <td>Writes to port e9 go to console.  Unless you know you want
-      this option, you don't.</td>
 <tr>
   <td>--enable-cpp</td>
   <td>no
@@ -122,6 +104,79 @@ I invoke configure.
       disassembly of the current instruction when there is a
       panic in bochs.  You don't need this option.</td>
 <tr>
+  <td>--enable-vga</td>
+  <td>yes
+  <td>Use VGA emulation.  VGA is the only supported option and
+      since it's the default, you don't need to include this option.</td>
+<tr>
+  <td>--enable-fpu</td>
+  <td>no before bugfix2<br>yes for bugfix3 (5/16/2001) and after
+  <td>If you want to compile bochs to make use of the FPU emulator
+      written by Bill Metzenthen (the one used by the Linux kernel),
+      use this option.
+  </td>
+<tr>
+  <td>--enable-x86-debugger</td>
+  <td>no
+  <td>X86 debugger support.  If the software you run in bochs
+      needs to use the x86 hardware debugging facilities such as
+      DR0..DR8, instruction and data breakpoints etc., then you
+      should use this option.  Otherwise don't use it, as it
+      will slow down the emulation.</td>
+<tr>
+  <td>--with-x11</td>
+  <td>yes
+  <td>Use X11 GUI.  This is the default and you don't need
+      this option if you are using X11.</td>
+<tr>
+  <td>--with-beos</td>
+  <td>no
+  <td>Use BeOS GUI.  The configure script will run natively
+      on BeOS and use this option when doing so.</td>
+<tr>
+  <td>--with-win32-vcpp</td>
+  <td>no
+  <td>Use Win32 GUI/Visual C++ environment.  This is for running
+      configure on a platform which supports running configure, so
+      that you may then transfer the configured code over to
+      an MS Win32/Visual C++ environment.</td>
+<tr>
+  <td>--with-macos</td>
+  <td>no
+  <td>Use Macintosh/CodeWarrior environment</td>
+<tr>
+  <td>--with-nogui</td>
+  <td>no
+  <td>No native GUI, just use blank stubs.  This is if you don't
+      care about having video output, but are just running tests.
+      This option may not be up-to-date, but can be made so
+      easily.</td>
+</table>
+
+
+<CENTER><H1>Other Configure Options</H1></CENTER>
+<table border>
+<tr>
+  <th>Option</th>
+  <th>Defaults to</th>
+  <th>Comments</th>
+<tr>
+  <td>--enable-ne2000</td>
+  <td>no
+  <td>Enable limited ne2000 support.  This requires a low-level
+      component to be written for each OS. One is written only
+      for FreeBSD so far.  Not complete yet. Don't use this option yet.</td>
+<tr>
+  <td>--enable-pci</td>
+  <td>no
+  <td>Enable limited i440FX PCI support.  This is not complete.
+      Don't use this option.</td>
+<tr>
+  <td>--enable-port-e9-hack</td>
+  <td>no
+  <td>Writes to port e9 go to console.  Unless you know you want
+      this option, you don't.</td>
+<tr>
   <td>--enable-loader</td>
   <td>no
   <td>Support calling external loader from debugger.  This
@@ -135,9 +190,9 @@ I invoke configure.
       instrumentation library and define the instrumentation
       macros (hooks in bochs) to either call your library
       functions or not, depending upon whether you want
-      to collect each piece of data.  I broke some of
-      the hooks when I recoded the fetch/decode loop.
-      Contact me if you need this option.</td>
+      to collect each piece of data.  [Kevin wrote: I broke 
+      some of the hooks when I recoded the fetch/decode loop.
+      Contact me if you need this option.]</td>
 <tr>
   <td>--enable-simid={0, 1}</td>
   <td>0
@@ -151,10 +206,7 @@ I invoke configure.
       bochs against each other and check for divergence,
       to find bugs etc.  This option gets broken more than
       not due to architectural changes, and I usually end of fixing
-      it each time I use it.  <b>NOTE: if you use this to link with
-      another simulator, that is outside of the standard
-      license, and you need to negotiate a special one with me.</b>
-      </td>
+      it each time I use it.  </td>
 <tr>
   <td>--enable-num-sim={1, 2}</td>
   <td>1
@@ -178,68 +230,17 @@ I invoke configure.
       the value of time(NULL), which is probably what you want.
       </td>
 <tr>
-  <td>--enable-vga</td>
-  <td>yes
-  <td>Use VGA emulation.  VGA is the only supported option and
-      since it's the default, you don't need to include this option.</td>
-<tr>
-  <td>--enable-fpu</td>
-  <td>no
-  <td>If you want to compile bochs to make use of the FPU emulator
-      written by Bill Metzenthen (the one used by the Linux kernel),
-      use this option.  Since the emulator is now part of the main
-      bochs source code, you no longer need to pass any arguments
-      to this options.
-  </td>
-<tr>
-  <td>--enable-x86-debugger</td>
-  <td>no
-  <td>X86 debugger support.  If the software you run in bochs
-      needs to use the x86 hardware debugging facilities such as
-      DR0..DR8, instruction and data breakpoints etc., then you
-      should use this option.  Otherwise don't use it, as it
-      will slow down the emulation.</td>
-<tr>
   <td>--enable-hga-dumps=Nmicroseconds</td>
   <td>no
   <td>Copy memory to HGA video buffer every N useconds.  A
       deprecated option, don't use.</td>
-<tr>
-  <td>--with-x11</td>
-  <td>yes
-  <td>Use X11 GUI.  This is the default and you don't need
-      this option if you are using X11.</td>
-<tr>
-  <td>--with-beos</td>
-  <td>no
-  <td>Use BeOS GUI.  The configure script will run natively
-      on BeOS and use this option when doing so.</td>
 <tr>
   <td>--with-win32</td>
   <td>no
   <td>Use Win32 GUI.  I think this option was similar to
       --with-win32-vcpp, but for targeting a Win32/gcc
       environment. Deprecated option.</td>
-<tr>
-  <td>--with-win32-vcpp</td>
-  <td>no
-  <td>Use Win32 GUI/Visual C++ environment.  This is for running
-      configure on a platform which supports running configure, so
-      that you may then transfer the configured code over to
-      an MS Win32/Visual C++ environment.</td>
-<tr>
-  <td>--with-macos</td>
-  <td>no
-  <td>Use Macintosh/CodeWarrior environment</td>
-<tr>
-  <td>--with-nogui</td>
-  <td>no
-  <td>No native GUI, just use blank stubs.  This is if you don't
-      care about having video output, but are just running tests.
-      This option may not be up-to-date, but can be made so
-      easily.  If you need it let me know.</td>
 </table>
-
 
 
 </BODY>

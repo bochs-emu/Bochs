@@ -26,6 +26,7 @@
 // NE2000/ether stuff.
 
 #include "bochs.h"
+#define LOG_THIS /* not needed */
 
 eth_locator_c *eth_locator_c::all;
 

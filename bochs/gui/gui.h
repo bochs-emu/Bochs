@@ -21,8 +21,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-class bx_gui_c {
+class bx_gui_c : public logfunctions {
 public:
+  bx_gui_c (void);
   // Define the following functions in the module for your
   // particular GUI (x.cc, beos.cc, ...)
   static void specific_init(bx_gui_c *th, int argc, char **argv,
@@ -51,6 +52,14 @@ public:
   static Boolean  gui_get_mouse_enable(void);
   static void     gui_set_mouse_enable(Boolean val);
   static void     exit(void);
+  static void init_signal_handlers ();
+#if BX_GUI_SIGHANDLER
+  // returns 32-bit bitmask in which 1 means the GUI should handle that signal
+  static Bit32u get_sighandler_mask ();
+  // called when registered signal arrives
+  static void sighandler (int sig);
+#endif
+
 
 private:
   // And these are defined and used privately in gui.cc

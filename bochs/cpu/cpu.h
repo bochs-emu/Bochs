@@ -495,7 +495,7 @@ typedef enum {
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
 
-class bx_generic_apic_c {
+class bx_generic_apic_c : public logfunctions {
 protected:
   Bit32u base_addr;
   Bit8u id;
@@ -619,7 +619,7 @@ typedef void (*BxDTShim_t)(void);
 
 class BX_MEM_C;
 
-class BX_CPU_C {
+class BX_CPU_C : public logfunctions {
 
 public: // for now...
 
@@ -1255,6 +1255,8 @@ public: // for now...
   BX_SMF void dynamic_init(void);
   BX_SMF unsigned FetchDecode(Bit8u *, BxInstruction_t *, unsigned, Boolean);
   BX_SMF void UndefinedOpcode(BxInstruction_t *);
+  BX_SMF void BxError(BxInstruction_t *i);
+  BX_SMF void BxResolveError(BxInstruction_t *i);
 
   BX_SMF void Resolve16Mod0Rm0(BxInstruction_t *);
   BX_SMF void Resolve16Mod0Rm1(BxInstruction_t *);
@@ -1469,9 +1471,6 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit16u get_BX(void);
   BX_SMF BX_CPP_INLINE Bit16u get_CX(void);
   BX_SMF BX_CPP_INLINE Bit16u get_DX(void);
-
-  // error handling
-  BX_SMF void BxError(BxInstruction_t *);
 
 #if BX_CPU_LEVEL >= 2
   BX_SMF BX_CPP_INLINE Boolean real_mode(void);

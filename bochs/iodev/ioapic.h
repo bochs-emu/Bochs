@@ -1,3 +1,5 @@
+extern class bx_ioapic_c bx_ioapic;
+
 #define BX_IOAPIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC
 #define BX_IOAPIC_NUM_PINS 0x18
 

@@ -23,10 +23,14 @@ extern "C" {
 #endif
 
 #if BX_HAVE_STRTOULL
-#define bx_strtoull strtoull
+  // great, just use the usual function
+#elif BX_HAVE_STRTOUQ
+  // they have strtouq and not strtoull
+  #define strtoull strtouq
 #else
+  #define strtoull bx_strtoull
 extern "C" {
-  extern unsigned long long bx_strtoull (const char *nptr, char **endptr, int baseignore);
+  extern Bit64u bx_strtoull (const char *nptr, char **endptr, int baseignore);
 }
 #endif
 

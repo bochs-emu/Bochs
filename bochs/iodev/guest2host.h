@@ -38,7 +38,7 @@ typedef void (*bx_g2h_callback_t)(bx_guest_packet_t *);
 
 
 
-class bx_g2h_c {
+class bx_g2h_c : public logfunctions {
 public:
   bx_g2h_c(void);
   ~bx_g2h_c(void);

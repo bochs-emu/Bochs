@@ -21,15 +21,12 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #ifndef _PCKEY_H
 #define _PCKEY_H
 
 
 #define BX_KBD_ELEMENTS 16
 #define BX_MOUSE_BUFF_SIZE 48
-
-
 
 #if BX_USE_KEY_SMF
 #  define BX_KEY_SMF  static
@@ -39,9 +36,9 @@
 #  define BX_KEY_THIS this->
 #endif
 
+extern bx_keyb_c bx_keyboard;
 
-
-class bx_keyb_c {
+class bx_keyb_c : public logfunctions {
 public:
   bx_keyb_c(void);
   ~bx_keyb_c(void);
@@ -132,7 +129,10 @@ private:
 	    break;
 
 	  default:
-	    bx_panic("[mouse] invalid resolution_cpmm");
+	    extern bx_devices_c bx_devices;
+#define LOG_THIS bx_keyboard.
+	    BX_PANIC(("mouse: invalid resolution_cpmm"));
+#undef LOG_THIS
 	  };
 	  return ret;
 	}
@@ -178,8 +178,5 @@ private:
   BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
   };
 
-#if BX_USE_KEY_SMF
-extern bx_keyb_c bx_keyboard;
-#endif
 
 #endif  // #ifndef _PCKEY_H

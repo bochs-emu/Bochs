@@ -34,6 +34,7 @@
 
 #define BX_IN_CPU_METHOD 1
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 
@@ -316,23 +317,23 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 BX_CPU_C::enable_paging(void)
 {
   TLB_flush();
-  if (bx_dbg.paging) bx_printf("enable_paging():\n");
-//fprintf(stderr, "#(%u)enable_paging():-------------------------\n", BX_SIM_ID);
+  if (bx_dbg.paging) BX_INFO(("enable_paging():\n"));
+//BX_DEBUG(( "enable_paging():-------------------------\n" ));
 }
 
   void
 BX_CPU_C::disable_paging(void)
 {
   TLB_flush();
-  if (bx_dbg.paging) bx_printf("disable_paging():\n");
+  if (bx_dbg.paging) BX_INFO(("disable_paging():\n"));
 }
 
   void
 BX_CPU_C::CR3_change(Bit32u value32)
 {
   if (bx_dbg.paging) {
-    bx_printf("CR3_change(): flush TLB cache\n");
-    bx_printf("Page Directory Base %08x\n", (unsigned) value32);
+    BX_INFO(("CR3_change(): flush TLB cache\n"));
+    BX_INFO(("Page Directory Base %08x\n", (unsigned) value32));
     }
 
   // flush TLB even if value does not change
@@ -420,7 +421,7 @@ BX_CPU_C::INVLPG(BxInstruction_t* i)
 
   // Operand must not be a register
   if (i->mod == 0xc0) {
-    bx_printf("INVLPG: op is a register");
+    BX_INFO(("INVLPG: op is a register"));
     UndefinedOpcode(i);
     }
   // Can not be executed in v8086 mode
@@ -430,7 +431,7 @@ BX_CPU_C::INVLPG(BxInstruction_t* i)
   // Protected instruction: CPL0 only
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      bx_printf("INVLPG: CPL!=0\n");
+      BX_INFO(("INVLPG: CPL!=0\n"));
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -913,20 +914,20 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
   void
 BX_CPU_C::enable_paging(void)
 {
-  bx_panic("enable_paging(): not implemented\n");
+  BX_PANIC(("enable_paging(): not implemented\n"));
 }
 
   void
 BX_CPU_C::disable_paging(void)
 {
-  bx_panic("disable_paging() called\n");
+  BX_PANIC(("disable_paging() called\n"));
 }
 
   void
 BX_CPU_C::CR3_change(Bit32u value32)
 {
-  bx_printf("CR3_change(): flush TLB cache\n");
-  bx_printf("Page Directory Base %08x\n", (unsigned) value32);
+  BX_INFO(("CR3_change(): flush TLB cache\n"));
+  BX_INFO(("Page Directory Base %08x\n", (unsigned) value32));
 }
 
 
@@ -945,7 +946,7 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
     return;
     }
 
-  bx_panic("access_linear: paging not supported\n");
+  BX_PANIC(("access_linear: paging not supported\n"));
 }
 
 

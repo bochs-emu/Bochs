@@ -26,6 +26,7 @@
 
 #define BX_IN_CPU_METHOD 1
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 
@@ -33,7 +34,7 @@
 BX_CPU_C::SETO_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETO: not available on < 386\n");
+  BX_PANIC(("SETO: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -57,7 +58,7 @@ BX_CPU_C::SETO_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNO_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNO: not available on < 386\n");
+  BX_PANIC(("SETNO: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -81,7 +82,7 @@ BX_CPU_C::SETNO_Eb(BxInstruction_t *i)
 BX_CPU_C::SETB_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETB: not available on < 386\n");
+  BX_PANIC(("SETB: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -105,7 +106,7 @@ BX_CPU_C::SETB_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNB_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNB: not available on < 386\n");
+  BX_PANIC(("SETNB: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -129,7 +130,7 @@ BX_CPU_C::SETNB_Eb(BxInstruction_t *i)
 BX_CPU_C::SETZ_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETZ: not available on < 386\n");
+  BX_PANIC(("SETZ: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -153,7 +154,7 @@ BX_CPU_C::SETZ_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNZ_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNZ: not available on < 386\n");
+  BX_PANIC(("SETNZ: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -177,7 +178,7 @@ BX_CPU_C::SETNZ_Eb(BxInstruction_t *i)
 BX_CPU_C::SETBE_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETBE: not available on < 386\n");
+  BX_PANIC(("SETBE: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -201,7 +202,7 @@ BX_CPU_C::SETBE_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNBE_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNBE: not available on < 386\n");
+  BX_PANIC(("SETNBE: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -225,7 +226,7 @@ BX_CPU_C::SETNBE_Eb(BxInstruction_t *i)
 BX_CPU_C::SETS_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETS: not available on < 386\n");
+  BX_PANIC(("SETS: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -249,7 +250,7 @@ BX_CPU_C::SETS_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNS_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNL: not available on < 386\n");
+  BX_PANIC(("SETNL: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -273,7 +274,7 @@ BX_CPU_C::SETNS_Eb(BxInstruction_t *i)
 BX_CPU_C::SETP_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETP: not available on < 386\n");
+  BX_PANIC(("SETP: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -297,7 +298,7 @@ BX_CPU_C::SETP_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNP_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNP: not available on < 386\n");
+  BX_PANIC(("SETNP: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -321,7 +322,7 @@ BX_CPU_C::SETNP_Eb(BxInstruction_t *i)
 BX_CPU_C::SETL_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETL: not available on < 386\n");
+  BX_PANIC(("SETL: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -345,7 +346,7 @@ BX_CPU_C::SETL_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNL_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNL: not available on < 386\n");
+  BX_PANIC(("SETNL: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -369,7 +370,7 @@ BX_CPU_C::SETNL_Eb(BxInstruction_t *i)
 BX_CPU_C::SETLE_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETLE: not available on < 386\n");
+  BX_PANIC(("SETLE: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -393,7 +394,7 @@ BX_CPU_C::SETLE_Eb(BxInstruction_t *i)
 BX_CPU_C::SETNLE_Eb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("SETNLE: not available on < 386\n");
+  BX_PANIC(("SETNLE: not available on < 386\n"));
 #else
   Bit8u result_8;
 
@@ -418,7 +419,7 @@ BX_CPU_C::SETNLE_Eb(BxInstruction_t *i)
 BX_CPU_C::BSF_GvEv(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BSF_GvEv(): not supported on < 386\n");
+  BX_PANIC(("BSF_GvEv(): not supported on < 386\n"));
 #else
 
 
@@ -486,7 +487,7 @@ BX_CPU_C::BSF_GvEv(BxInstruction_t *i)
 BX_CPU_C::BSR_GvEv(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BSR_GvEv(): not supported on < 386\n");
+  BX_PANIC(("BSR_GvEv(): not supported on < 386\n"));
 #else
 
 
@@ -566,7 +567,7 @@ BX_CPU_C::BSWAP_EAX(BxInstruction_t *i)
 
   EAX = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_EAX: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_EAX: not implemented CPU <= 3\n"));
 #endif
 }
 
@@ -585,7 +586,7 @@ BX_CPU_C::BSWAP_ECX(BxInstruction_t *i)
 
   ECX = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_ECX: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_ECX: not implemented CPU <= 3\n"));
 #endif
 }
   void
@@ -603,7 +604,7 @@ BX_CPU_C::BSWAP_EDX(BxInstruction_t *i)
 
   EDX = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_EDX: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_EDX: not implemented CPU <= 3\n"));
 #endif
 }
   void
@@ -621,7 +622,7 @@ BX_CPU_C::BSWAP_EBX(BxInstruction_t *i)
 
   EBX = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_EBX: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_EBX: not implemented CPU <= 3\n"));
 #endif
 }
   void
@@ -639,7 +640,7 @@ BX_CPU_C::BSWAP_ESP(BxInstruction_t *i)
 
   ESP = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_ESP: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_ESP: not implemented CPU <= 3\n"));
 #endif
 }
   void
@@ -657,7 +658,7 @@ BX_CPU_C::BSWAP_EBP(BxInstruction_t *i)
 
   EBP = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_EBP: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_EBP: not implemented CPU <= 3\n"));
 #endif
 }
   void
@@ -675,7 +676,7 @@ BX_CPU_C::BSWAP_ESI(BxInstruction_t *i)
 
   ESI = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_ESI: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_ESI: not implemented CPU <= 3\n"));
 #endif
 }
   void
@@ -693,7 +694,7 @@ BX_CPU_C::BSWAP_EDI(BxInstruction_t *i)
 
   EDI = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
-  bx_panic("BSWAP_EDI: not implemented CPU <= 3\n");
+  BX_PANIC(("BSWAP_EDI: not implemented CPU <= 3\n"));
 #endif
 }
 
@@ -702,7 +703,7 @@ BX_CPU_C::BSWAP_EDI(BxInstruction_t *i)
 BX_CPU_C::BT_EvGv(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BT_EvGv: not available on <386\n");
+  BX_PANIC(("BT_EvGv: not available on <386\n"));
 #else
   Bit32u op1_addr;
 
@@ -762,7 +763,7 @@ BX_CPU_C::BT_EvGv(BxInstruction_t *i)
 BX_CPU_C::BTS_EvGv(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BTS_EvGv: not available on <386\n");
+  BX_PANIC(("BTS_EvGv: not available on <386\n"));
 #else
   Bit32u op1_addr;
 
@@ -840,7 +841,7 @@ BX_CPU_C::BTS_EvGv(BxInstruction_t *i)
 BX_CPU_C::BTR_EvGv(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BTR_EvGv: not available on <386\n");
+  BX_PANIC(("BTR_EvGv: not available on <386\n"));
 #else
   Bit32u op1_addr;
 
@@ -921,7 +922,7 @@ BX_CPU_C::BTR_EvGv(BxInstruction_t *i)
 BX_CPU_C::BTC_EvGv(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BTC_EvGv: not available on <386\n");
+  BX_PANIC(("BTC_EvGv: not available on <386\n"));
 #else
   Bit32u op1_addr;
 
@@ -995,7 +996,7 @@ BX_CPU_C::BTC_EvGv(BxInstruction_t *i)
 BX_CPU_C::BT_EvIb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BT_EvIb: not available on <386\n");
+  BX_PANIC(("BT_EvIb: not available on <386\n"));
 #else
 
   if (i->os_32) { /* 32 bit operand size mode */
@@ -1043,7 +1044,7 @@ BX_CPU_C::BT_EvIb(BxInstruction_t *i)
 BX_CPU_C::BTS_EvIb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BTS_EvIb: not available on <386\n");
+  BX_PANIC(("BTS_EvIb: not available on <386\n"));
 #else
 
   if (i->os_32) { /* 32 bit operand size mode */
@@ -1111,7 +1112,7 @@ BX_CPU_C::BTS_EvIb(BxInstruction_t *i)
 BX_CPU_C::BTC_EvIb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BTC_EvIb: not available on <386\n");
+  BX_PANIC(("BTC_EvIb: not available on <386\n"));
 #else
 
   if (i->os_32) { /* 32 bit operand size mode */
@@ -1182,7 +1183,7 @@ BX_CPU_C::BTC_EvIb(BxInstruction_t *i)
 BX_CPU_C::BTR_EvIb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("BTR_EvIb: not available on <386\n");
+  BX_PANIC(("BTR_EvIb: not available on <386\n"));
 #else
 
   if (i->os_32) { /* 32 bit operand size mode */
