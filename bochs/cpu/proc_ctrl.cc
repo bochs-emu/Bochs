@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.57 2002-10-16 17:37:34 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.58 2002-10-19 21:47:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2034,16 +2034,3 @@ BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
   return(0);
 }
 #endif
-
-/*
-  void
-BX_CPU_C::FXSAVE(bxInstruction_c *i)
-{
-  BX_ERROR(("FXSAVE is only a stub."));
-}
-  void
-BX_CPU_C::FXRSTOR(bxInstruction_c *i)
-{
-  BX_ERROR(("FXRSTOR is only a stub."));
-}
-*/
