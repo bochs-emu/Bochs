@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.46 2002-12-08 09:16:18 bdenney Exp $
+// $Id: wxdialog.h,v 1.47 2003-01-04 11:47:00 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -543,8 +543,8 @@ private:
 #define LOG_OPTS_LOGFILE "Log file is "
 #define LOG_OPTS_DEBUGGER_LOGFILE "Debugger log file is "
 #define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
-#define LOG_OPTS_TYPE_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: " }
-#define LOG_OPTS_N_TYPES 4
+#define LOG_OPTS_TYPE_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: ", "Pass events: " }
+#define LOG_OPTS_N_TYPES 5
 #define LOG_OPTS_CHOICES { "ignore", "log", "ask user", "end simulation", "no change" }
 #define LOG_OPTS_N_CHOICES_NORMAL 4
 #define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
@@ -617,8 +617,8 @@ private:
 "from a particular source.  For example if you are having problems with\n"    \
 "the keyboard, you could ask for debug and info events from the keyboard\n"   \
 "to be reported."
-#define ADVLOG_OPTS_TYPE_NAMES { "Debug", "Info", "Error", "Panic" }
-#define ADVLOG_OPTS_N_TYPES 4
+#define ADVLOG_OPTS_TYPE_NAMES { "Debug", "Info", "Error", "Panic", "Pass" }
+#define ADVLOG_OPTS_N_TYPES 5
 #define ADVLOG_DEFAULTS "Use defaults for all devices"
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();

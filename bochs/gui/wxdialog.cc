@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.53 2002-12-12 18:31:20 bdenney Exp $
+// $Id: wxdialog.cc,v 1.54 2003-01-04 11:46:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1218,7 +1218,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   // to get the scrollWin geometry right, first build everything on a wxPanel,
   // with gridSizer as the main sizer.
   scrollPanel = new wxPanel (scrollWin, -1);
-  gridSizer = new wxGridSizer (5);
+  gridSizer = new wxGridSizer (ADVLOG_OPTS_N_TYPES + 1);
   // add title row
   int typemax = ADVLOG_OPTS_N_TYPES;
   text = new wxStaticText (scrollPanel, -1, "Device");
