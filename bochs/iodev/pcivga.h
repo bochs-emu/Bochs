@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.h,v 1.2 2003-01-23 19:31:28 vruppert Exp $
+// $Id: pcivga.h,v 1.3 2003-01-27 21:11:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003  Mike Nordell
@@ -41,7 +41,7 @@ private:
 
   static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
   static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
-#if !BX_USE_P2I_SMF
+#if !BX_USE_PCIVGA_SMF
   Bit32u pci_read(Bit8u address, unsigned io_len);
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
