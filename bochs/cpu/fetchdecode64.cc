@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.43 2003-04-05 12:16:53 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.44 2003-04-06 19:08:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1612,7 +1612,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C0 */  { BxAnother | BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfo64G2Eb },
   /* C1 */  { BxAnother | BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfo64G2Ew },
   /* C2 */  { BxImmediate_Iw, &BX_CPU_C::RETnear16_Iw },
-  /* C3 */  { 0,             &BX_CPU_C::RETnear16 },
+  /* C3 */  { 0,              &BX_CPU_C::RETnear16 },
   /* C4 */  { 0, &BX_CPU_C::BxError },
   /* C5 */  { 0, &BX_CPU_C::BxError },
   /* C6 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::MOV_EbIb },
@@ -1698,7 +1698,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 15 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 */  { BxAnother | BxGroup16 | 0, NULL, BxOpcodeInfo64G16 },
+  /* 0F 18 */  { BxAnother | BxGroup16, NULL, BxOpcodeInfo64G16 },
   /* 0F 19 */  { 0, &BX_CPU_C::BxError },
   /* 0F 1A */  { 0, &BX_CPU_C::BxError },
   /* 0F 1B */  { 0, &BX_CPU_C::BxError },
@@ -2216,7 +2216,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 15 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 */  { BxAnother | BxGroup16 | 0, NULL, BxOpcodeInfo64G16 },
+  /* 0F 18 */  { BxAnother | BxGroup16, NULL, BxOpcodeInfo64G16 },
   /* 0F 19 */  { 0, &BX_CPU_C::BxError },
   /* 0F 1A */  { 0, &BX_CPU_C::BxError },
   /* 0F 1B */  { 0, &BX_CPU_C::BxError },
@@ -2731,7 +2731,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 15 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 */  { BxAnother | BxGroup16 | 0, NULL, BxOpcodeInfo64G16 },
+  /* 0F 18 */  { BxAnother | BxGroup16, NULL, BxOpcodeInfo64G16 },
   /* 0F 19 */  { 0, &BX_CPU_C::BxError },
   /* 0F 1A */  { 0, &BX_CPU_C::BxError },
   /* 0F 1B */  { 0, &BX_CPU_C::BxError },
@@ -3182,14 +3182,6 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
     instruction->modRMForm.modRMData |= mod;
     instruction->modRMForm.modRMData |= (nnn<<8);
 
-    if (lock) { // lock prefix
-      // lock prefix not allowed or destination operand is not memory
-      if ((mod == 0xc0) || !(attr & BxLockable)) {
-        BX_INFO(("LOCK prefix unallowed (op1=0x%x, nnn=%u)", b1, nnn));
-        UndefinedOpcode(instruction);
-      }
-    }
-
     if (mod == 0xc0) { // mod == 11b
       rm |= rex_b;
       instruction->modRMForm.modRMData |= rm;
@@ -3517,13 +3509,18 @@ ExtendedFieldCheck(nnn&8); // KPL
       // implemented; one for the mod=11b case (Reg-Reg), and one for
       // the other cases (Reg-Mem).  If this is one of those cases,
       // we need to dereference to get to the execute pointer.
-      else if (attr & BxSplitMod11b) {
-        OpcodeInfoPtr = OpcodeInfoPtr[nnn].AnotherArray;
-        instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
+      else {
+        if (attr & BxSplitMod11b) {
+          OpcodeInfoPtr = OpcodeInfoPtr[nnn].AnotherArray;
+          instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
+          attr |= OpcodeInfoPtr[mod==0xc0].Attr;
         }
-      else
-        instruction->execute = OpcodeInfoPtr[nnn].ExecutePtr;
+        else {
+          instruction->execute = OpcodeInfoPtr[nnn].ExecutePtr;
+          attr |= OpcodeInfoPtr[nnn].ExecutePtr;
+        }
       }
+    }
     else {
 #if BX_DYNAMIC_TRANSLATION
       instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
@@ -3539,14 +3536,19 @@ ExtendedFieldCheck(nnn&8); // KPL
         }
       }
       // (See note immediately above for comment)
-      else if (attr & BxSplitMod11b) {
-        BxOpcodeInfo_t *OpcodeInfoPtr = BxOpcodeInfo64[b1+offset].AnotherArray;
-        instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
+      else {
+        if (attr & BxSplitMod11b) {
+          BxOpcodeInfo_t *OpcodeInfoPtr = BxOpcodeInfo64[b1+offset].AnotherArray;
+          instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
+          attr |= OpcodeInfoPtr[mod==0xc0].ExecutePtr;
         }
-      else
-        instruction->execute = BxOpcodeInfo64[b1+offset].ExecutePtr;
+        else {
+          instruction->execute = BxOpcodeInfo64[b1+offset].ExecutePtr;
+          attr |= BxOpcodeInfo64[b1+offset].ExecutePtr;
+        }
       }
     }
+  }
   else {
     // Opcode does not require a MODRM byte.
     // Note that a 2-byte opcode (0F XX) will jump to before
@@ -3560,6 +3562,13 @@ ExtendedFieldCheck(nnn&8); // KPL
 #endif
     }
 
+  if (lock) { // lock prefix invalid opcode
+      // lock prefix not allowed or destination operand is not memory
+      if ((mod == 0xc0) || !(attr & BxLockable)) {
+        BX_INFO(("LOCK prefix unallowed (op1=0x%x, mod=%u, nnn=%u)", b1, mod, nnn));
+        UndefinedOpcode(instruction);
+      }
+  }
 
   imm_mode = attr & BxImmediate;
 

@@ -1377,7 +1377,6 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 
   BxPackedXmmRegister val128 = BX_READ_XMM_REG(i->nnn());
   writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *)(&val128));
-
 #else
   BX_INFO(("MOVNTPS_MdqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);                      

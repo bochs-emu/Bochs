@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.135 2003-04-05 16:40:55 sshwarts Exp $
+// $Id: cpu.h,v 1.136 2003-04-06 19:08:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3211,7 +3211,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 #define BxSplitMod11b     0x0040 // bit  6
 #define BxPrefixSSE       0x0080 // bit  7
 #define BxLockable        0x0200 // bit  9
-#define BxSuffix3DNOW     0x0401 // bit 10 (3DNOW suffix stored in Ib byte)
 #define BxRepeatable      0x0800 // bit 11 (pass through to metaInfo field)
 #define BxRepeatableZF    0x1000 // bit 12 (pass through to metaInfo field)
 #define BxGroupN          0x0100 // bits 8
