@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.114 2005-02-10 09:48:12 vruppert Exp $
+// $Id: vga.cc,v 1.115 2005-02-28 21:23:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1323,11 +1323,16 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           case 0x13:
           case 0x14:
           case 0x17:
-            // Line offset change
-            BX_VGA_THIS s.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 1;
-            if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) BX_VGA_THIS s.line_offset <<= 2;
-            else if ((BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) == 0) BX_VGA_THIS s.line_offset <<= 1;
-            needs_update = 1;
+#if BX_SUPPORT_VBE
+            if (!BX_VGA_THIS s.vbe_enabled)
+#endif
+            {
+              // Line offset change
+              BX_VGA_THIS s.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 1;
+              if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) BX_VGA_THIS s.line_offset <<= 2;
+              else if ((BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) == 0) BX_VGA_THIS s.line_offset <<= 1;
+              needs_update = 1;
+            }
             break;
           case 0x18:
             BX_VGA_THIS s.line_compare &= 0x300;
@@ -1436,6 +1441,7 @@ bx_vga_c::update(void)
     Bit8u * vid_ptr, * vid_ptr2;
     Bit8u * tile_ptr, * tile_ptr2;
     bx_svga_tileinfo_t info;
+    Bit8u dac_size = BX_VGA_THIS s.vbe_8bit_dac ? 8 : 6;
 
     iWidth=BX_VGA_THIS s.vbe_xres;
     iHeight=BX_VGA_THIS s.vbe_yres;
@@ -1505,9 +1511,9 @@ bx_vga_c::update(void)
                     for (c=0; c<w; c++) {
                       colour = *(vid_ptr2++);
                       colour = MAKE_COLOUR(
-                        BX_VGA_THIS s.pel.data[colour].red, 6, info.red_shift, info.red_mask,
-                        BX_VGA_THIS s.pel.data[colour].green, 6, info.green_shift, info.green_mask,
-                        BX_VGA_THIS s.pel.data[colour].blue, 6, info.blue_shift, info.blue_mask);
+                        BX_VGA_THIS s.pel.data[colour].red, dac_size, info.red_shift, info.red_mask,
+                        BX_VGA_THIS s.pel.data[colour].green, dac_size, info.green_shift, info.green_mask,
+                        BX_VGA_THIS s.pel.data[colour].blue, dac_size, info.blue_shift, info.blue_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
                           *(tile_ptr2++) = colour >> i;
@@ -3037,6 +3043,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  
   bx_bool new_vbe_8bit_dac;
+  bx_bool needs_update = 0;
   unsigned i;
 
 //  BX_INFO(("VBE_write %x = %x (len %x)", address, value, io_len));
@@ -3289,6 +3296,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_INFO(("DAC in standard mode"));
             }
             BX_VGA_THIS s.vbe_8bit_dac=new_vbe_8bit_dac;
+            needs_update = 1;
           }
         } break;
 
@@ -3303,13 +3311,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           } else {
             BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x >> 3);
           }
-
-          BX_VGA_THIS s.vga_mem_updated = 1;
-          for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
-            for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
-              SET_TILE_UPDATED (xti, yti, 1);
-            }
-          }
+          needs_update = 1;
         } break;
 
         case VBE_DISPI_INDEX_Y_OFFSET:
@@ -3322,12 +3324,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           } else {
             BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x >> 3);
           }
-          BX_VGA_THIS s.vga_mem_updated = 1;
-          for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
-            for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
-              SET_TILE_UPDATED (xti, yti, 1);
-            }
-          }
+          needs_update = 1;
         } break;
 
         case VBE_DISPI_INDEX_VIRT_WIDTH:
@@ -3394,6 +3391,14 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_PANIC(("VBE unknown data write index 0x%x",BX_VGA_THIS s.vbe_curindex));
         } break;      
       }        
+      if (needs_update) {
+        BX_VGA_THIS s.vga_mem_updated = 1;
+        for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
+          for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
+            SET_TILE_UPDATED (xti, yti, 1);
+          }
+        }
+      }
       break;
 	  
   } // end switch address
