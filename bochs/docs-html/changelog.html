@@ -16,7 +16,45 @@
 
 <br>
 <li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010409-beta.tar.gz">bugfix2</a> (4/9/2001)
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.1.2.tar.gz">Version 1.1.2 (bugfix3)</a> (5/16/2001)
+</h2>
+  <ul>
+  <li> updated Elpin VGA BIOS to version 2.40, and changed pointer in .bochsrc
+  <li> fixed .conf.x86 script so that it uses c++ instead of egcs for C++ files
+  <li> now Makefile targets that recurse into subdirectories use double colons,
+    so that it will always recurse into subdirectories.  Now a single make
+    command should notice a modified source file in a subdir.
+  <li> fixed bug in bx_panic.  If BX_PANIC_IS_FATAL==0 and a (non-fatal) panic 
+    occurs, it used to call bx_atexit() and then return.  It should never
+    call bx_atexit, which starts to shut down the simulator, unless it's
+    really going to quit!
+  <li> support 2.88 MB floppy disks (Todd Fries)
+  <li> since dataseghack is checked in as non-executable, invoke it with
+    "csh dataseghack"
+  <li> double fault patch from Thomas Petazzoni &lt; <a href="mailto:thomas.petazzoni@ifrance.com">thomas.petazzoni@ifrance.com</a> &gt;,
+    sourceforge patch <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=423726&group_id=12580&atid=312580">#423726</a>.  
+  <li> removed -fno-builtin from fpu makefiles
+  <li> redefine u_char, u_short, etc. in order to not conflict with system
+    definitions of these same types.
+  <li> in cdrom.cc, remove the extern "C" { } structure around some of the
+    header files.  This is no longer necessary.
+  <li> do not panic on hard disk command 0x1f2 (read sector count)
+  <li> in keyboard.cc:
+     <ul>
+       <li> apply Todd Fries' reset patch 
+       <li> recognize most of the "Grey" insert/delete/home/end/etc. keys the
+	same as keypad keys.
+       <li> removed panic on "kbd_ctrl_to_kbd(): got value of 0x??"
+       <li> implement mouse command 0xf6 (set defaults)
+     </ul>
+  <li> apply Suboner@aol.com's Xwindows timing patch, SF <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=418730&group_id=12580&atid=312580">#418730</a>.
+  <li> remove all patches from patches subdir which have already been applied.
+    The remaining ones are under consideration but not applied.
+  </ul>
+
+<br>
+<li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010409-beta.tar.gz">Version 1.1.1 (bugfix2)</a> (4/9/2001)
 </h2>
   <ul>
   <li> fixed type error in win32 soundwin.cc, added typecast to (LPWAVEFORMATEX)
@@ -25,7 +63,7 @@
 
 <br>
 <li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010406-beta.tar.gz">bugfix1</a> (4/6/2001)
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010406-beta.tar.gz">Version 1.1 bugfix1</a> (4/6/2001)
 </h2>
   <ul>
   <li>This was the first SourceForge release by Bryce Denney, with patches from many sources on the bochs-developers list.
