@@ -6,12 +6,22 @@ COMMENT  license, and trademark restrictions as the original font.  The
 COMMENT  authors and distributors of fstobdf disclaim all liability for
 COMMENT  misuse of the program or its output.
 COMMENT
-FONT vga
+FONT -misc-vga-medium-r-normal--16-160-75-75-m-103-iso8859-1
 SIZE 16 75 75
 FONTBOUNDINGBOX 8 16 0 -4
-STARTPROPERTIES 11
+STARTPROPERTIES 19
 POINT_SIZE 160
-FONT "vga"
+FONT "-misc-vga-medium-r-normal--16-160-75-75-m-103-iso8859-1"
+FAMILY_NAME "vga"
+FOUNDRY "misc"
+WEIGHT_NAME "medium"
+SETWIDTH_NAME "normal"
+SLANT "r"
+SPACING "p"
+CHARSET_REGISTRY "ISO8859"
+CHARSET_ENCODING "1"
+FONT_ASCENT 12
+FONT_DESCENT 4
 WEIGHT 10
 RESOLUTION 103
 RESOLUTION_X 75
@@ -19,8 +29,6 @@ RESOLUTION_Y 75
 X_HEIGHT -1
 QUAD_WIDTH 8
 DEFAULT_CHAR 0
-FONT_ASCENT 12
-FONT_DESCENT 4
 ENDPROPERTIES
 CHARS 256
 STARTCHAR C000
