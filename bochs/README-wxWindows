@@ -1,19 +1,11 @@
 Readme for wxWindows Interface
-updated Wed Apr 17 19:59:17 EDT 2002
-Bryce Denney
+updated Thu Aug 29 10:43:37 EDT 2002
 
--------------
-April 17, 2002: The wxwindows interface is now checked into the main
-branch.  Known problems
-
-TO DO:
-- disk change dialogs for floppy and cdrom need work.
-  http://sourceforge.net/tracker/index.php?func=detail&aid=545414&group_id=12580&atid=112580
-- with --with-wx and debugger, control-C in the terminal window kills the
-  process instead of just interrupting the simulation.
-- tons of dialogs need to be written
-- debugger interface
--------------
+Contributors to wxWindows port:
+  Don Becker (Psyon)
+  Bryce Denney
+  Dave Poirier
+  Volker Ruppert
 
 wxWindows Configuration Interface
 
@@ -32,12 +24,26 @@ simulation.  The VGA display is implemented in wxWindows.
 
 WARNING: Don't expect perfect code yet!
 
-Bryce has tested in linux, where a "configure --with-wx;make" should work fine.
-To build in VC++:
+Regarding wxWindows versions, we started out with 2.2.9 but then found
+a reason or two to switch to 2.3.2.  (I have forgotten exactly what
+they were.)  In addition, I made a keyboard patch to wxWindows itself,
+which they accepted for the next version, that allows us to get raw
+keycodes out of the library in addition to wxwindows translated keys.
+Bochs will work with or without it, but you'll find that the keyboard
+mapping is much better with the patch, which is called
+patches/patch.wx-raw-keycodes.
 
+So the ideal wxWindows version is 2.3.2+patch.wx-raw-keycodes.
+To apply the patch, go to the main wx____-2.3.2 directory and
+type "patch -p1 < THIS_PATCH_FILE".
+
+Bryce has been developing in linux, where a "configure --with-wx;make"
+should work fine.
+
+To build in MS VC++:
 - in cygwin, do "sh .conf.win32-vcpp".  If you want different configure
   options from the default, edit .conf.win32-vcpp first.
-- in cygwin, do "unzip build/win32/workspace.zip", or use winzip.  Now
+- in cygwin, do "unzip build/win32/wxworkspace.zip", or use winzip.  Now
   you should have bochs.dsw and bochs.dsp in the main directory.
 - open up bochs.dsw, the workspace file.
 - edit project settings so that VC++ can find the wxWindows include
@@ -53,22 +59,29 @@ other wxwindows versions, you will have to change some of the names
 of the libraries to include.  Use the samples that came with that
 version of wxwindows for reference.
 
-What works right now:
+What works right now (August 2002):
 - cd to a directory with a bochsrc and disk images in it (I use dlxlinux)
-- start up bochs.  You get a small wxwindows window with a File menu.
-- choose "Start" on the Simulate menu.
-- a new window pops up with is the normal bochs window.  Bochs starts running.
+- start up bochs.  You get a small window with a File, Edit, Simulate,
+  Debug, Log, Help menus.  The empty black rectangle is where the
+  simulation will be displayed.
+- choose File:Read Configuration and select the bochsrc file you want
+  to read.
+- use Edit:Floppy Disk * or Edit:Hard Disk * to tweak settings.
+  These are the only dialogs that have been written so far.
+  Eventually you should be able to edit all settings using dialogs.
+- choose "Start" on the Simulate menu.  Bochs starts running in the
   You can pause it, resume it, or kill it on the Simulate menu.
-- the only visible change is that I've made several of the toolbar
-  icons bring up wxwindows dialog boxes.  There is a lot going on behind
-  the scenes to make this possible--trust me!  The 2 floppy icons, CDROM
-  icon, and snapshot icon all bring up appropriate dialog boxes to let
-  you choose a file.
+  Most toolbar buttons work.  Mouse support does not exist yet,
+  and the configure button doesn't do anything and should be removed.
+- You can pause, resume, and stop the simulation too.  If you start
+  a new simulation, be aware that may not work quite right.  The
+  initialization and re-initialization process needs work.
 - That's all.  The other menu options are not implemented except for quit.
 
 To do:
 - sketch the GUI pieces that need to be made, with text description of
-  basically what they should do.  See README.gui-sketch for latest ideas.
+  basically what they should do.  Later in this file you'll find lots
+  of examples of this.
 - have a few people look over the sketches so that we don't waste lots of
   time building dialogs that people will hate.
 - code some dialog boxes in wxwindows.  Just get it looking right at first, and
@@ -82,18 +95,25 @@ To do:
   lists.  Lists should probably be displayed as a table or a dialog box
   with several things to select.
 - debugger interface.  There's lots of demand for a debugger interface
-  to Bochs: possibly more demand than for a configuration interface.  We
+  to Bochs, probably more demand than for a configuration interface.  We
   should talk about what this will look like, and when we have a plan we
   can start sketching and coding dialogs for the debugger interface too.
 - clean up the biggest memory leaks and init/cleanup code.  The gui allows you
   to kill the simulator and restart, but it doesn't do well after the first
-  time.  Valgrind should help with memory leak debugging, though it doesn't run
-  multithreaded programes.
+  time.  Valgrind should help with memory leak debugging, though until
+  recently it couldn't run multithreaded programes.
+- disk change dialogs for floppy and cdrom need work.
+  http://sourceforge.net/tracker/index.php?func=detail&aid=545414&group_id=12580&atid=112580
+- with --with-wx and debugger, control-C in the terminal window kills the
+  process instead of just interrupting the simulation.
+- mouse events not implemented
+-------------
+
 ------------------------------------------------------
 
 Random notes follow
 
-Added some sketches in README.gui-sketch.  I'm thinking that the control
+Added some sketches.  I'm thinking that the control
 panel will be able to basically show one of these screens at a time.  When
 you first start you would see ChooseConfigScreen which chooses between the
 configurations that you have loaded recently (which it would remember
