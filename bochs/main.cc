@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.125 2002-08-28 07:45:30 bdenney Exp $
+// $Id: main.cc,v 1.126 2002-08-28 20:01:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,9 @@ bx_options_t bx_options = {
 static void parse_line_unformatted(char *context, char *line);
 static void parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
+#if !BX_WITH_WX
 static void bx_do_text_config_interface (int argc, char *argv[]);
+#endif
 
 static Bit32s
 bx_param_handler (bx_param_c *param, int set, Bit32s val)
@@ -1181,10 +1183,10 @@ bx_init_main (int argc, char *argv[])
       bochsrc = argv[arg+1];
       arg += 2;
     }
+    if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
+    if (bochsrc)
+      bx_read_configuration (bochsrc);
   }
-  if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
-  if (bochsrc)
-    bx_read_configuration (bochsrc);
   bx_parse_cmdline (arg, argc, argv);
 #endif
 }
