@@ -488,6 +488,12 @@ typedef struct {
   } bx_gen_reg_t;
 #endif
 
+
+typedef enum {
+  APIC_TYPE_IOAPIC,
+  APIC_TYPE_LOCAL_APIC
+} bx_apic_type_t;
+
 class bx_generic_apic_c {
 protected:
   Bit32u base_addr;
@@ -498,6 +504,7 @@ public:
   bx_generic_apic_c ();
   ~bx_generic_apic_c ();
   virtual void init ();
+  virtual void hwreset () { }
   Bit32u get_base (void) { return base_addr; }
   void set_base (Bit32u newbase);
   void set_id (Bit8u newid);
@@ -512,6 +519,10 @@ public:
   // on I/O APIC, trigger means direct to another APIC according to table.
   virtual void trigger_irq (unsigned num, unsigned from);
   virtual void untrigger_irq (unsigned num, unsigned from);
+  virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
+  Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
+  virtual Boolean match_logical_addr (Bit8u address);
+  virtual bx_apic_type_t get_type ();
 };
 
 class bx_local_apic_c : public bx_generic_apic_c {
@@ -527,13 +538,24 @@ class bx_local_apic_c : public bx_generic_apic_c {
   // ISR=in-service register.  When an IRR bit is cleared, the corresponding
   // bit in ISR is set.  The ISR bit is cleared when 
   Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
-  Bit32u arb_priority, proc_priority, tpr, log_dest, dest_format, spurious_vec;
+  Bit32u arb_id, arb_priority, task_priority, log_dest, dest_format, spurious_vec;
   Bit32u lvt_timer, lvt_thermal, lvt_perf, lvt_lint0, lvt_lint1, lvt_err;
   Bit32u timer_initial, timer_current, timer_divide;
+  Bit32u apic_base_msr;
+  Bit32u icr_high, icr_low;
+  Bit32u err_status;
+#define APIC_ERR_ILLEGAL_ADDR    0x80
+#define APIC_ERR_RX_ILLEGAL_VEC  0x40
+#define APIC_ERR_TX_ILLEGAL_VEC  0x20
+#define APIC_ERR_RX_ACCEPT_ERR   0x08
+#define APIC_ERR_TX_ACCEPT_ERR   0x04
+#define APIC_ERR_RX_CHECKSUM     0x02
+#define APIC_ERR_TX_CHECKSUM     0x01
 public:
   bx_local_apic_c(BX_CPU_C *mycpu);
   ~bx_local_apic_c(void);
   BX_CPU_C *cpu;
+  virtual void hwreset ();
   virtual void init ();
   static BX_CPU_C *get_cpu (Bit8u id);
   void set_id (Bit8u newid);   // redefine to set cpu->name
@@ -549,10 +571,13 @@ public:
   Bit8u acknowledge_int ();  // only the local CPU should call this
   int highest_priority_int (Bit8u *array);
   void service_local_apic ();
-private:
-  Bit32u apic_base_msr;
-  Bit32u icr_high, icr_low;
-  Bit32u err_status;
+  void print_status ();
+  virtual Boolean match_logical_addr (Bit8u address);
+  virtual Boolean is_local_apic () { return true; }
+  virtual bx_apic_type_t get_type () { return APIC_TYPE_LOCAL_APIC; }
+  virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
+  Bit8u get_ppr ();
+  Bit8u get_apr ();
   };
 
 #define APIC_MAX_ID 16
@@ -1446,6 +1471,7 @@ public: // for now...
 #endif
 #if BX_APIC_SUPPORT
   bx_local_apic_c local_apic;
+  Boolean int_from_local_apic;
 #endif
   };
 
