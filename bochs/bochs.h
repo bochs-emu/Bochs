@@ -220,23 +220,59 @@ class iofunctions {
 		return loglevel[i];
 	}
 // Log Level defines
-#define DEBUG 0
-#define INFO  1
-#define PANIC 2
-#define ERROR 3
+#define LOGLEV_DEBUG 0
+#define LOGLEV_INFO  1
+#define LOGLEV_PANIC 2
+#define LOGLEV_ERROR 3
 	char *getclass(int i) {
 		char *logclass[] = {
-			"IO ",
-			"FD ",
-			"GEN",
+		  "IO  ",
+		  "FD  ",
+		  "GEN ",
+		  "CMOS",
+		  "CD  ",
+		  "DMA ",
+		  "ETH ",
+		  "G2H ",
+		  "HD  ",
+		  "KBD ",
+		  "NE2K",
+		  "PAR ",
+		  "PCI ",
+		  "PIC ",
+		  "PIT ",
+		  "SB  ",
+		  "SER ",
+		  "SNDL",
+		  "SNDW",
+		  "VGA ",
+		  "ST  "
 		};
 		return logclass[i];
 	}
 
 // Log Class defines
-#define IOLOG 0
-#define FDLOG 1
-#define GENLOG 2
+#define    IOLOG           0
+#define    FDLOG           1
+#define    GENLOG          2
+#define    CMOSLOG         3
+#define    CDLOG           4
+#define    DMALOG          5
+#define    ETHLOG          6
+#define    G2HLOG          7
+#define    HDLOG           8
+#define    KBDLOG          9
+#define    NE2KLOG         10
+#define    PARLOG          11
+#define    PCILOG          12
+#define    PICLOG          13
+#define    PITLOG          14
+#define    SBLOG           15
+#define    SERLOG          16
+#define    SNDLLOG         17
+#define    SNDWLOG         18
+#define    VGALOG          19
+#define    STLOG           20   // state_file.cc
 
 
 public:
@@ -252,9 +288,7 @@ public:
 	void init_log(int fd);
 	void init_log(FILE *fs);
 protected:
-	// FILE *logfd;
 	char *logfn;
-	//int showtick;
 };
 
 typedef class iofunctions iofunc_t;
@@ -265,6 +299,8 @@ typedef class logfunctions {
 	iofunc_t *logio;
 public:
 	logfunctions(void);
+	logfunctions(iofunc_t *);
+	~logfunctions(void);
 
 	void info(char *fmt, ...);
 	void error(char *fmt, ...);
@@ -274,6 +310,15 @@ public:
 	void settype(int);
 	void setio(iofunc_t *);
 } logfunc_t;
+
+#define SAFE_GET_IOFUNC() \
+  ((io==NULL)? (io=new iofunc_t("/dev/stderr")) : io)
+#define SAFE_GET_GENLOG() \
+  ((genlog==NULL)? (genlog=new logfunc_t(SAFE_GET_IOFUNC())) : genlog)
+#define BX_INFO(x)  (LOG_THIS info) x
+#define BX_DEBUG(x) (LOG_THIS ldebug) x
+#define BX_ERROR(x) (LOG_THIS error) x
+#define BX_PANIC(x) (LOG_THIS panic) x
 
 extern iofunc_t *io;
 extern logfunc_t *genlog;
