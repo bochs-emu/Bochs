@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.14 2002-02-07 21:22:55 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.15 2002-02-08 02:57:27 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ bx_pit_c bx_pit;
 #  undef OUT
 #endif
 
-#define TIME_DIVIDER (4)
+#define TIME_DIVIDER (1)
 #define TIME_MULTIPLIER (1)
 #define TIME_HEADSTART (1)
 //USEC_ALPHA is multiplier for the past.
