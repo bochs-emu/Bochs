@@ -505,7 +505,9 @@ bx_panic("kbd: OUTB set and command 0x%02x encountered\n", value);
           break;
 
         case 0xd3: // write mouse output buffer
-          bx_panic("KBD: io write 0x64: command = 0xD3(write mouse outb)\n");
+	  //FIXME: Why was this a panic?
+          bx_printf("KBD: io write 0x64: command = 0xD3(write mouse outb)\n");
+	  // following byte to port 60h written to output port as mouse write.
           BX_KEY_THIS s.kbd_controller.expecting_port60h = 1;
           break;
 
@@ -1264,7 +1266,19 @@ bx_printf("  aux_clock_enabled = %u\n",
 	    bx_printf("[mouse] Get mouse information\n");
       break;
 
+    case 0xeb: // Read Data (send a packet when in Remote Mode)
+      controller_enQ(0xFA, 1); // ACK
+      mouse_enQ_packet( ((BX_KEY_THIS s.mouse.button_status & 0x0f) | 0x08),
+			0x00, 0x00 ); // bit3 of first byte always set
+      //assumed we really aren't in polling mode, a rather odd assumption.
+      bx_printf("[mouse] Warning: Read Data command partially supported.\n");
+      break;
+
     default:
+      //EAh Set Stream Mode
+      //ECh Reset Wrap Mode
+      //EEh Set Wrap Mode
+      //F0h Set Remote Mode (polling mode, i.e. not stream mode.)
       bx_panic("MOUSE: kbd_ctrl_to_mouse(%02xh)\n", (unsigned) value);
     }
  }
