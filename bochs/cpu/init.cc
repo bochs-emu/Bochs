@@ -472,8 +472,11 @@ BX_CPU_C::reset(unsigned source)
 #elif BX_CPU_LEVEL == 5
   BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
   BX_CPU_THIS_PTR dr7 = 0x00000400;
+#elif BX_CPU_LEVEL == 6
+  BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
+  BX_CPU_THIS_PTR dr7 = 0x00000400;
 #else
-#  error "DR6,7: CPU > 5"
+#  error "DR6,7: CPU > 6"
 #endif
 
 #if 0
