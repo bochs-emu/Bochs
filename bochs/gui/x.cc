@@ -102,11 +102,137 @@ static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 static void headerbar_click(int x, int y);
 static void send_keyboard_mouse_status(void);
 
+
+
+
+Bit32u ascii_to_key_event[0x5f] = {
+  //  !"#$%&'
+  BX_KEY_SPACE,
+  BX_KEY_1,
+  BX_KEY_SINGLE_QUOTE,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_7,
+  BX_KEY_SINGLE_QUOTE,
+
+  // ()*+,-./
+  BX_KEY_9,
+  BX_KEY_0,
+  BX_KEY_8,
+  BX_KEY_EQUALS,
+  BX_KEY_COMMA,
+  BX_KEY_MINUS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+
+  // 01234567
+  BX_KEY_0,
+  BX_KEY_1,
+  BX_KEY_2,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_6,
+  BX_KEY_7,
+
+  // 89:;<=>?
+  BX_KEY_8,
+  BX_KEY_9,
+  BX_KEY_SEMICOLON,
+  BX_KEY_SEMICOLON,
+  BX_KEY_COMMA,
+  BX_KEY_EQUALS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+
+  // @ABCDEFG
+  BX_KEY_2,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
+
+
+  // HIJKLMNO
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
+
+
+  // PQRSTUVW
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
+
+  // XYZ[\]^_
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_6,
+  BX_KEY_MINUS,
+
+  // `abcdefg
+  BX_KEY_GRAVE,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
+
+  // hijklmno
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
+
+  // pqrstuvw
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
+
+  // xyz{|}~
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_GRAVE
+  };
+
 extern Bit8u graphics_snapshot[32 * 1024];
 
 
 static void load_font(void);
-static void xkeypress(KeyCode keycode, int press_release);
+static void xkeypress(KeySym keysym, int press_release);
 // extern "C" void select_visual(void);
 
 #define ROUNDUP(nbytes, pad) ((((nbytes) + ((pad)-1)) / (pad)) * ((pad)>>3))
@@ -429,7 +555,6 @@ bx_gui_c::handle_events(void)
   XEvent report;
   XKeyEvent *key_event;
   KeySym keysym;
-  KeyCode keycode;
   XComposeStatus compose;
   char buffer[MAX_MAPPED_STRING_LENGTH];
   int bufsize = MAX_MAPPED_STRING_LENGTH;
@@ -565,16 +690,13 @@ bx_gui_c::handle_events(void)
     case KeyPress:
       key_event = (XKeyEvent *) &report;
       charcount = XLookupString(key_event, buffer, bufsize, &keysym, &compose);
-      keycode = XKeysymToKeycode(bx_x_display, keysym);
-      BX_DEBUG (("key pressed, keysym=%d, keycode=%d", keysym, keycode));
-      xkeypress(keycode, 0);
+      xkeypress(keysym, 0);
       break;
 
     case KeyRelease:
       key_event = (XKeyEvent *) &report;
       charcount = XLookupString(key_event, buffer, bufsize, &keysym, &compose);
-      keycode = XKeysymToKeycode(bx_x_display, keysym);
-      xkeypress(keycode, 1);
+      xkeypress(keysym, 1);
       break;
 
     case MotionNotify:
@@ -668,10 +790,137 @@ bx_gui_c::flush(void)
 
 
   void
-xkeypress(KeyCode keycode, int press_release)
+xkeypress(KeySym keysym, int press_release)
 {
   Bit32u key_event;
-  key_event = (unsigned) keycode;
+
+
+
+
+
+  // this depends on the fact that the X11 keysyms which
+  // correspond to the ascii characters space .. tilde
+  // are in consequtive order.
+  if ((keysym >= XK_space) && (keysym <= XK_asciitilde)) {
+    key_event = ascii_to_key_event[keysym - XK_space];
+    }
+  else switch (keysym) {
+    case XK_KP_1:
+#ifdef XK_KP_End
+    case XK_KP_End:
+#endif
+      key_event = BX_KEY_KP_END; break;
+
+    case XK_KP_2:
+#ifdef XK_KP_Down
+    case XK_KP_Down:
+#endif
+      key_event = BX_KEY_KP_DOWN; break;
+
+    case XK_KP_3:
+#ifdef XK_KP_Page_Down
+    case XK_KP_Page_Down:
+#endif
+      key_event = BX_KEY_KP_PAGE_DOWN; break;
+
+    case XK_KP_4:
+#ifdef XK_KP_Left
+    case XK_KP_Left:
+#endif
+      key_event = BX_KEY_KP_LEFT; break;
+
+    case XK_KP_5:
+      key_event = BX_KEY_KP_5; break;
+
+    case XK_KP_6:
+#ifdef XK_KP_Right
+    case XK_KP_Right:
+#endif
+      key_event = BX_KEY_KP_RIGHT; break;
+
+    case XK_KP_7:
+#ifdef XK_KP_Home
+    case XK_KP_Home:
+#endif
+      key_event = BX_KEY_KP_HOME; break;
+
+    case XK_KP_8:
+#ifdef XK_KP_Up
+    case XK_KP_Up:
+#endif
+      key_event = BX_KEY_KP_UP; break;
+
+    case XK_KP_9:
+#ifdef XK_KP_Page_Up
+    case XK_KP_Page_Up:
+#endif
+      key_event = BX_KEY_KP_PAGE_UP; break;
+
+    case XK_KP_0:
+#ifdef XK_KP_Insert
+    case XK_KP_Insert:
+      key_event = BX_KEY_KP_INSERT; break;
+#endif
+
+    case XK_KP_Decimal:
+#ifdef XK_KP_Delete
+    case XK_KP_Delete:
+      key_event = BX_KEY_KP_DELETE; break;
+#endif
+
+#ifdef XK_KP_Enter
+    case XK_KP_Enter:
+      key_event = BX_KEY_KP_ENTER; break;
+#endif
+
+    case XK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
+    case XK_KP_Add:      key_event = BX_KEY_KP_ADD; break;
+
+    case XK_KP_Multiply: key_event = BX_KEY_KP_MULTIPLY; break;
+    case XK_KP_Divide:   key_event = BX_KEY_KP_DIVIDE; break;
+
+
+    case XK_Up:          key_event = BX_KEY_UP; break;
+    case XK_Down:        key_event = BX_KEY_DOWN; break;
+    case XK_Left:        key_event = BX_KEY_LEFT; break;
+    case XK_Right:       key_event = BX_KEY_RIGHT; break;
+
+
+    case XK_Delete:      key_event = BX_KEY_DELETE; break;
+    case XK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
+    case XK_Tab:         key_event = BX_KEY_TAB; break;
+    case XK_Return:      key_event = BX_KEY_ENTER; break;
+    case XK_Escape:      key_event = BX_KEY_ESC; break;
+    case XK_F1:          key_event = BX_KEY_F1; break;
+    case XK_F2:          key_event = BX_KEY_F2; break;
+    case XK_F3:          key_event = BX_KEY_F3; break;
+    case XK_F4:          key_event = BX_KEY_F4; break;
+    case XK_F5:          key_event = BX_KEY_F5; break;
+    case XK_F6:          key_event = BX_KEY_F6; break;
+    case XK_F7:          key_event = BX_KEY_F7; break;
+    case XK_F8:          key_event = BX_KEY_F8; break;
+    case XK_F9:          key_event = BX_KEY_F9; break;
+    case XK_F10:         key_event = BX_KEY_F10; break;
+    case XK_F11:         key_event = BX_KEY_F11; break;
+    case XK_F12:         key_event = BX_KEY_F12; break;
+    case XK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+    case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
+    case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
+    case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
+    case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
+    case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+
+    case XK_Insert:      key_event = BX_KEY_INSERT; break;
+    case XK_Home:        key_event = BX_KEY_HOME; break;
+    case XK_End:         key_event = BX_KEY_END; break;
+    case XK_Page_Up:     key_event = BX_KEY_PAGE_UP; break;
+    case XK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
+
+    default:
+      BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
+      return;
+      break;
+    }
 
   if (press_release)
     key_event |= BX_KEY_RELEASED;

@@ -646,7 +646,6 @@ bx_keyb_c::gen_scancode(Bit32u   key)
 
     case BX_KEY_LEFT_BRACKET:  scancode = 0x1a; break;
     case BX_KEY_BACKSLASH:     scancode = 0x2b; break;
-    case BX_KEY_LEFT_BACKSLASH: scancode = 0x56; break;
     case BX_KEY_RIGHT_BRACKET: scancode = 0x1b; break;
     case BX_KEY_MINUS:         scancode = 0x0c; break;
     case BX_KEY_GRAVE:         scancode = 0x29; break;
