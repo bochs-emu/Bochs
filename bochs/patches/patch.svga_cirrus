@@ -58,13 +58,18 @@ Detailed description:
     - partial implementation of transparent bitblt
     - partial support for bitblt write mask
 
+  Changes by vruppert (Aug 11th 2004)
+    - rfb now uses the new graphics API
+    - redrawing after bitblt operations optimized
+    - some bitblt fixes
+
 Patch was created with:
   diff -urN
 Apply patch to what version:
-  cvs snapshot on Aug 1st 2004
+  cvs snapshot on Aug 11th 2004
 Instructions:
   To patch, go to main bochs directory.
-  Type "patch -p1 < THIS_PATCH_FILE".
+  Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 diff -urN ../bochs/config.h.in ./config.h.in
 --- ../bochs/config.h.in	2004-08-06 17:48:19.000000000 +0200
@@ -231,9 +236,101 @@ diff -urN ../bochs/gui/gui.h ./gui/gui.h
  #define BX_MAX_PIXMAPS 16
  #define BX_MAX_HEADERBAR_ENTRIES 11
  #define BX_HEADER_BAR_Y 32
+diff -urN ../bochs/gui/rfb.cc ./gui/rfb.cc
+--- ../bochs/gui/rfb.cc	2004-06-20 07:58:08.000000000 +0200
++++ ./gui/rfb.cc	2004-08-11 11:03:33.000000000 +0200
+@@ -45,6 +45,7 @@
+ public:
+   bx_rfb_gui_c (void) {}
+   DECLARE_GUI_VIRTUAL_METHODS()
++  DECLARE_GUI_NEW_VIRTUAL_METHODS()
+   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
+   void statusbar_setitem(int element, bx_bool active);
+ };
+@@ -132,7 +133,7 @@
+ static char  *rfbScreen;
+ static char  rfbPalette[256];
+ 
+-static long  rfbWindowX, rfbWindowY;
++static unsigned rfbWindowX, rfbWindowY;
+ static unsigned rfbDimensionX, rfbDimensionY;
+ static long  rfbHeaderbarY;
+ static long  rfbTileX = 0;
+@@ -793,6 +794,62 @@
+ }
+ 
+ 
++  bx_svga_tileinfo_t *
++bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
++{
++  if (!info) {
++    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
++    if (!info) {
++      return NULL;
++    }
++  }
++
++  info->bpp = 8;
++  info->pitch = rfbWindowX;
++  info->red_shift = 3;
++  info->green_shift = 6;
++  info->blue_shift = 8;
++  info->red_mask = 0x07;
++  info->green_mask = 0x38;
++  info->blue_mask = 0xc0;
++  info->is_indexed = 0;
++  info->is_little_endian = 1;
++
++  return info;
++}
++
++  Bit8u *
++bx_rfb_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
++                            unsigned *w, unsigned *h)
++{
++  if (x0+rfbTileX > rfbDimensionX) {
++    *w = rfbDimensionX - x0;
++  }
++  else {
++    *w = rfbTileX;
++  }
++
++  if (y0+rfbTileY > rfbDimensionY) {
++    *h = rfbDimensionY - y0;
++  }
++  else {
++    *h = rfbTileY;
++  }
++
++  return (Bit8u *)rfbScreen + (rfbHeaderbarY + y0) * rfbWindowX + x0;
++}
++
++  void
++bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
++                                        unsigned w, unsigned h)
++{
++  if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
++  if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
++  if(((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y);
++  if(((x0 + w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + h) - rfbUpdateRegion.x);
++  rfbUpdateRegion.updated = true;
++}
++
+ 
+ // ::DIMENSION_UPDATE()
+ //
+@@ -1174,7 +1231,7 @@
+     char *newBits;
+     int  i;
+ 
+-    if(x < 0 || y < 0 || (x + width) > rfbWindowX || (y + height) > rfbWindowY) {
++    if(x < 0 || y < 0 || (x + width) > (int)rfbWindowX || (y + height) > (int)rfbWindowY) {
+         BX_ERROR(("Dimensions out of bounds.  x=%i y=%i w=%i h=%i", x, y, width, height));
+     }
+     if(sGlobal != INVALID_SOCKET) {
 diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
 --- ../bochs/gui/sdl.cc	2004-08-06 17:49:53.000000000 +0200
-+++ ./gui/sdl.cc	2004-08-07 21:10:03.000000000 +0200
++++ ./gui/sdl.cc	2004-08-11 10:04:52.000000000 +0200
 @@ -47,6 +47,7 @@
  public:
    bx_sdl_gui_c (void);
@@ -286,7 +383,7 @@ diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
 +#endif
 +
 +  return info;
-+};
++}
 +
 +  Bit8u *
 +bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
@@ -322,7 +419,7 @@ diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
 +bx_sdl_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 +                                        unsigned w, unsigned h)
 +{
-+};
++}
 +
  static Bit32u sdl_sym_to_bx_key (SDLKey sym)
  {
@@ -595,8 +692,8 @@ diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
    ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
 diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 --- ../bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.cc	2004-08-10 10:30:35.000000000 +0200
-@@ -0,0 +1,3408 @@
++++ ./iodev/svga_cirrus.cc	2004-08-11 12:30:46.000000000 +0200
+@@ -0,0 +1,3422 @@
 +//
 +// limited PCI/ISA CLGD5446 support for Bochs
 +//
@@ -1262,6 +1359,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          mem_write_mode4and5_16bpp(mode, offset, value);
 +        }
 +      }
++      // FIXME
 +      BX_CIRRUS_THIS svga_needs_update_dispentire = true;
 +      return;
 +    } else if ((addr >= (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256)) &&
@@ -1319,6 +1417,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          mem_write_mode4and5_16bpp(mode, offset, value);
 +        }
 +      }
++      // FIXME
 +      BX_CIRRUS_THIS svga_needs_update_dispentire = true;
 +    }
 +  } else if (addr >= 0xB8000 && addr <= 0xBFFFF) {
@@ -1828,7 +1927,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      }
 +    }
 +    else {
-+      switch (BX_CIRRUS_THIS svga_bpp) {
++      switch (BX_CIRRUS_THIS svga_dispbpp) {
 +        case 4:
 +          BX_ERROR(("cannot draw 4bpp SVGA"));
 +          break;
@@ -1881,9 +1980,9 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                    colour = *(vid_ptr2++);
 +                    colour |= *(vid_ptr2++) << 8;
 +                    colour = MAKE_COLOUR(
-+                      colour & 0x001f, 5, info.red_shift, info.red_mask,
++                      colour & 0x001f, 5, info.blue_shift, info.blue_mask,
 +                      colour & 0x03e0, 10, info.green_shift, info.green_mask,
-+                      colour & 0x7c00, 15, info.blue_shift, info.blue_mask);
++                      colour & 0x7c00, 15, info.red_shift, info.red_mask);
 +                    if (info.is_little_endian) {
 +                      for (i=0; i<info.bpp; i+=8) {
 +                        *(tile_ptr2++) = colour >> i;
@@ -1918,9 +2017,9 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                    colour = *(vid_ptr2++);
 +                    colour |= *(vid_ptr2++) << 8;
 +                    colour = MAKE_COLOUR(
-+                      colour & 0x001f, 5, info.red_shift, info.red_mask,
++                      colour & 0x001f, 5, info.blue_shift, info.blue_mask,
 +                      colour & 0x07e0, 11, info.green_shift, info.green_mask,
-+                      colour & 0xf800, 16, info.blue_shift, info.blue_mask);
++                      colour & 0xf800, 16, info.red_shift, info.red_mask);
 +                    if (info.is_little_endian) {
 +                      for (i=0; i<info.bpp; i+=8) {
 +                        *(tile_ptr2++) = colour >> i;
@@ -3096,6 +3195,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  Bit32u tmp32;
 +  Bit32u dstaddr;
 +  Bit32u srcaddr;
++  Bit32u offset;
 +
 +  ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x20],tmp16);
 +  BX_CIRRUS_THIS bitblt.bltwidth = ((int)tmp16 & (int)0x1fff) + 1;
@@ -3114,6 +3214,9 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  BX_CIRRUS_THIS bitblt.bltrop = BX_CIRRUS_THIS control.reg[0x32];
 +  BX_CIRRUS_THIS bitblt.async_xbytes = 0;
 +  BX_CIRRUS_THIS bitblt.async_y = 0;
++  offset = dstaddr - (BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS vidmem);
++  BX_CIRRUS_THIS bitblt.pos_x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
++  BX_CIRRUS_THIS bitblt.pos_y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
 +
 +  BX_INFO(("BLT: src:0x%08x,dst 0x%08x,block %ux%u,mode 0x%02x,ROP 0x%02x",
 +    (unsigned)srcaddr,(unsigned)dstaddr,
@@ -3123,6 +3226,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    (unsigned)BX_CIRRUS_THIS bitblt.srcpitch,
 +    (unsigned)BX_CIRRUS_THIS bitblt.dstpitch,
 +    (unsigned)BX_CIRRUS_THIS bitblt.bltmodeext));
++  BX_INFO(("BLT: dst x = %d, dst y = %d", BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y));
 +
 +  switch (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PIXELWIDTHMASK) {
 +    case CIRRUS_BLTMODE_PIXELWIDTH8:
@@ -3141,6 +3245,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      BX_PANIC(("unknown pixel width"));
 +      goto ignoreblt;
 +    }
++  BX_CIRRUS_THIS bitblt.bltwidth /= BX_CIRRUS_THIS bitblt.pixelwidth;
 +  BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_PIXELWIDTHMASK;
 +
 +  if ((BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST))
@@ -3279,8 +3384,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +  (*BX_CIRRUS_THIS bitblt.bitblt_ptr)();
 +  svga_reset_bitblt();
-+  // FIXME
-+  BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
++                             BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
 +}
 +
 +
@@ -3480,6 +3585,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  ((bx_svga_cirrus_c *)this_ptr)->svga_simplebitblt_memsrc();
 +}
 +
++  void
++bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc_static(void *this_ptr)
++{
++  ((bx_svga_cirrus_c *)this_ptr)->svga_simplebitblt_transp_memsrc();
++}
++
 +#endif // !BX_USE_CIRRUS_SMF
 +
 +  void
@@ -3591,14 +3702,14 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      BX_PANIC(("CIRRUS_BLT_CACHESIZE is too small"));
 +      BX_CIRRUS_THIS bitblt.memsrc_needed = 0;
 +      return;
-+      }
++    }
 +    BX_INFO(("svga_patterncopy_memsrc() - not tested"));
 +
 +    BX_CIRRUS_THIS bitblt.src = &BX_CIRRUS_THIS bitblt.memsrc[0];
 +    svga_patterncopy();
-+    // FIXME
-+    BX_CIRRUS_THIS svga_needs_update_dispentire = true;
-+    }
++    BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
++                               BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
++  }
 +}
 +
 +  void
@@ -3649,7 +3760,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +    BX_CIRRUS_THIS bitblt.dst += srccuravail;
 +    total += bytesprocessed;
-+    srcptr += bytesprocessed;
++    srcptr += ((bytesprocessed + 3) & ~3);
 +    srcavail -= bytesprocessed;
 +    BX_CIRRUS_THIS bitblt.async_xbytes += bytesprocessed;
 +    if (BX_CIRRUS_THIS bitblt.async_xbytes >= BX_CIRRUS_THIS bitblt.memsrc_bytesperline) {
@@ -3666,8 +3777,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    }
 +
 +  BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[total];
-+  // FIXME
-+  BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
++                             BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
 +}
 +
 +  void
@@ -3744,8 +3855,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  }
 +
 +  BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[total];
-+  // FIXME
-+  BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
++                             BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
 +}
 +
 +  bx_bool // true if finished, false otherwise
@@ -4007,8 +4118,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +#endif // BX_SUPPORT_CLGD54XX
 diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 --- ../bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.h	2004-08-10 10:25:31.000000000 +0200
-@@ -0,0 +1,238 @@
++++ ./iodev/svga_cirrus.h	2004-08-10 20:30:06.000000000 +0200
+@@ -0,0 +1,239 @@
 +#if BX_SUPPORT_CLGD54XX
 +
 +#if BX_USE_CIRRUS_SMF
@@ -4216,7 +4327,8 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +    int memdst_needed;
 +    Bit8u memsrc[CIRRUS_BLT_CACHESIZE];
 +    Bit8u memdst[CIRRUS_BLT_CACHESIZE];
-+    Bit32u fgcol;
++    Bit16u pos_x;
++    Bit16u pos_y;
 +    } bitblt;
 +
 +  struct {
