@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.5 2002-09-28 00:54:05 kevinlawton Exp $
+// $Id: instrument.cc,v 1.6 2002-09-29 16:10:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip) {}
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip) {}
 
 void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, Boolean is32) {}
-void bx_instr_fetch_decode_completed(unsigned cpu, bxInstruction *i) {}
+void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i) {}
 
 void bx_instr_prefix_as(unsigned cpu) {}
 void bx_instr_prefix_os(unsigned cpu) {}
