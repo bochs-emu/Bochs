@@ -1,3 +1,29 @@
+----------------------------------------------------------------------
+Patch name: patch.osx-cdrom
+Author: Scott Brumbaugh <scottcb@gte.net>
+Date: Fri, 7 Dec 2001 12:34:33 -0800 (PST)
+
+Detailed description:
+I have been using boch-1.3.pre1 on MacOSX 10.1 and found that
+native cdrom support was not present.  I found that the ioctls
+that are used to talk to the driver on linux, sun, bsd are not
+really usable on OSX.  I have prepared a patch that uses the
+OSX io-system (IOKit) to read from the cdrom.
+
+I felt that the changes were significant enough to warrant a new
+module in iodev/ called 'cdrom_osx.cc' which is enabled through
+configure with:
+
+ ./configure --enable-cdrom --with-osxcdrom
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  current cvs
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
 diff --exclude=configure -Naur bochs-1.3.pre1.org/Makefile.in bochs-1.3.pre1/Makefile.in
 --- bochs-1.3.pre1.org/Makefile.in	Fri Nov 16 06:19:36 2001
 +++ bochs-1.3.pre1/Makefile.in	Fri Dec  7 11:25:29 2001
