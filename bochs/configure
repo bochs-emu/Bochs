@@ -1434,9 +1434,9 @@ ac_config_headers="$ac_config_headers config.h"
 ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.0.pre3"
-VER_STRING="2.0.pre3"
-REL_STRING="Build from CVS snapshot on December 4, 2002"
+VERSION="2.0.pre4"
+VER_STRING="2.0.pre4"
+REL_STRING="Build from CVS snapshot on December 13, 2002"
 
 
 
