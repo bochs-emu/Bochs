@@ -324,11 +324,11 @@ install_dlx::
 	$(RM) -rf $(BOCHSDIR)/dlxlinux
 	$(GUNZIP) -c $(DLXLINUX_TAR) | (cd $(BOCHSDIR); tar -xvf -)
 	test -d $(BOCHSDIR)/dlxlinux
+	$(GZIP) $(BOCHSDIR)/dlxlinux/hd10meg.img
 	(cd $(BOCHSDIR)/dlxlinux; $(MV) bochsrc.txt bochsrc.txt.orig; $(SED) -e "s/1\.1\.2/$(VERSION)/g"< bochsrc.txt.orig > bochsrc.txt; rm -f bochsrc.txt.orig)
 	$(CHOWN) -R root.root $(BOCHSDIR)/dlxlinux
-	$(CHMOD) 777 $(BOCHSDIR)/dlxlinux
-	$(CHMOD) 666 $(BOCHSDIR)/dlxlinux/*
-	$(CHMOD) 644 $(BOCHSDIR)/dlxlinux/README
+	$(CHMOD) 755 $(BOCHSDIR)/dlxlinux
+	$(CHMOD) 644 $(BOCHSDIR)/dlxlinux/*
 	for i in bochs-dlx; do cat $(srcdir)/build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(bindir)/$$i; $(CHMOD) 755 $(bindir)/$$i; done
 
 uninstall::
