@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.11 2002-12-13 20:06:06 bdenney Exp $
+$Id: documentation.dbk,v 1.12 2002-12-23 22:15:30 vruppert Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -23,7 +23,7 @@ This is the top level file for the Bochs Documentation Manual.
    <author><firstname>Michael</firstname><surname>Calabrese</surname></author>
    </authorgroup>
 </bookinfo>
-<chapter><title>Layout of Bochs Documentation</title>
+<chapter id="layout"><title>Layout of Bochs Documentation</title>
 
 <para>
 The Bochs documentation is divided into three major divisions:
@@ -55,7 +55,7 @@ things like a table of contents, index, and glossary, when we learn how.
 
 </chapter>
 
-<chapter><title>Docbook Basics</title>
+<chapter id="basics"><title>Docbook Basics</title>
 <para>
 Some of the most commonly used docbook patterns are described here
 for quick reference.  For all the details (sometimes more than you
@@ -143,7 +143,7 @@ for more details.
 
 </section>   <!-- end of Docbook Basics:Small Tutorial section -->
 
-<section><title>References and Other Tutorials</title>
+<section id="references"><title>References and Other Tutorials</title>
 
 <para>
 Docbook was created more than 10 years ago, but since 1999, Docbook has been 
@@ -185,7 +185,7 @@ whatever package your OS uses, use that instead.
 
 </chapter>
 
-<chapter><title>Conventions</title>
+<chapter id="conventions"><title>Conventions</title>
 <para>
 Put a &amp;FIXME; near things that need to be fixed up.  A &amp;FIXME; causes
 the under construction symbol to appear, like this &FIXME;.
@@ -195,7 +195,7 @@ the under construction symbol to appear, like this &FIXME;.
 </para>
 </chapter>
 
-<chapter><title>Reading and Writing</title>
+<chapter id="reading-writing"><title>Reading and Writing</title>
 
 <para>
 The DocBook source code -- user.dbk, for example -- is a plain text file that 
@@ -385,7 +385,7 @@ other people call them <replaceable>NAME</replaceable>.sgm for SGML.
 </sect2>
 </sect1>
 
-<sect1> <title>Nsgmls</title>
+<sect1 id="nsgmls"> <title>Nsgmls</title>
 
 <para>
 The Bochs documentation is written in SGML docbook style, so any tool which can
