@@ -93,6 +93,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #  define assert(cond)   while (!(cond)) { fprintf (stderr, "Assert failed at %s:%d: '%s'\n", __FILE__, __LINE__, #cond); abort(); }
 #endif
 
+//#define LTDEBUG_PRINTF(x) /* debug output disabled */
+#define LTDEBUG_PRINTF(x) do{ printf("LT_DEBUG: "); printf x; } while (0)
+
 #include "ltdl.h"
 
 
@@ -1909,11 +1912,12 @@ tryall_dlopen (handle, filename)
   while (loader)
     {
       lt_user_data data = loader->dlloader_data;
-
+	  LTDEBUG_PRINTF(("Trying to open '%s' using loader '%s'\n", filename, loader->loader_name));
       cur->module = loader->module_open (data, filename);
 
       if (cur->module != 0)
 	{
+	  LTDEBUG_PRINTF(("Load '%s' succeeded.\n", filename));
 	  break;
 	}
       loader = loader->next;
@@ -1949,7 +1953,7 @@ tryall_dlopen_module (handle, prefix, dirname, dlname)
   size_t   dirname_len	= LT_STRLEN (dirname);
 
   if (dirname == NULL) {
-    fprintf (stderr, "LTDL_DEBUG: leaving tryall_dlopen_module early because dirname is NULL\n");
+    LTDEBUG_PRINTF(("leaving tryall_dlopen_module early because dirname is NULL\n"));
     return 1;
   }
 
@@ -2225,6 +2229,7 @@ find_file_callback (filename, data1, data2)
   if ((*pfile = fopen (filename, LT_READTEXT_MODE)))
     {
       char *dirend = strrchr (filename, '/');
+      LTDEBUG_PRINTF(("find_file_callback opening file '%s'...ok\n", filename));
 
       if (dirend > filename)
 	*dirend   = LT_EOS_CHAR;
@@ -2233,6 +2238,10 @@ find_file_callback (filename, data1, data2)
       *pdir   = lt_estrdup (filename);
       is_done = (*pdir == 0) ? -1 : 1;
     }
+	else
+	{
+      LTDEBUG_PRINTF(("find_file_callback opening file '%s'...failed\n", filename));
+	}
 
   return is_done;
 }
@@ -2258,6 +2267,7 @@ find_handle_callback (filename, data, ignored)
 {
   lt_dlhandle  *handle	= (lt_dlhandle *) data;
   int		found	= (0 == access (filename, R_OK));
+  LTDEBUG_PRINTF(("find_handle_callback searching for '%s'...%s\n", filename, found?"found":"not found"));
 
   /* Bail out if file cannot be read...  */
   if (!found)
@@ -2587,11 +2597,11 @@ try_dlopen (phandle, filename)
       dir[dirlen] = LT_EOS_CHAR;
 
       ++base_name;
-      fprintf (stderr, "LTDL_DEBUG: in base_name not NULL section. dir='%s', base_name='%s', canonical='%s'\n", dir, base_name, canonical);
+      LTDEBUG_PRINTF(("in base_name not NULL section. dir='%s', base_name='%s', canonical='%s'\n", dir, base_name, canonical));
     }
   else {
     LT_DLMEM_REASSIGN (base_name, canonical);
-    fprintf (stderr, "LTDL_DEBUG: in base_name=NULL section. dir=NULL, base_name='%s', canonical='%s'\n", base_name, canonical);
+    LTDEBUG_PRINTF(("in base_name=NULL section. dir=NULL, base_name='%s', canonical='%s'\n", base_name, canonical));
   }
 
   assert (base_name && *base_name);
@@ -2675,6 +2685,7 @@ try_dlopen (phandle, filename)
 	}
       if (!file)
 	{
+	  LTDEBUG_PRINTF(("try_dlopen opening file '%s'\n", filename));
 	  file = fopen (filename, LT_READTEXT_MODE);
 #warning dir is still NULL
 	}
