@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.16 2001-11-14 01:45:47 bdenney Exp $
+$Id: user.dbk,v 1.17 2001-11-14 02:40:55 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -27,7 +27,7 @@ This is the top level file for the Bochs Users Manual.
 
 <!-- *************************************************************** -->
 <chapter><title>Introduction to Bochs</title>
-<section><title>What is Bochs?</title>
+<section id="whatisbochs"><title>What is Bochs?</title>
 <para>
 Bochs is a program that simulates a complete Intel x86 computer.  It 
 can be configured to act like a 286, 386, 486, Pentium, or Pentium Pro.
@@ -68,7 +68,7 @@ Virtualization takes advantage of simulating x86 instructions on an
 x86 machine, allowing large portions of the simulation to take place
 at native hardware speed.  Whenever the simulated machine talks to the
 hardware or enters certain privileged modes (such as in kernel code),
-the simulator typically takes command and simulates that code in
+the simulator typically takes control and simulates that code in
 software at much slower speed, just like Bochs does.
 </para>
 </footnote>, but they are neither portable to non-x86 platforms nor open
@@ -253,7 +253,172 @@ top of every source code file in the Bochs distribution:
 
 </section>  <!-- end of Introduction:License section -->
 
-</chapter>  <!-- End of Introductino to Bochs -->
+<section><title>Features</title>
+<para>
+The following table shows the features of Bochs and which platforms they
+currently work with.
+</para>
+<table><title>Bochs Features</title>
+<tgroup cols=3 align=left colsep=1 rowsep=1>
+<thead>
+  <row>
+    <entry>Feature</entry>
+    <entry>Supported?</entry>
+    <entry>Description</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>configure script</entry>
+    <entry>Yes</entry>
+    <entry>Bochs uses GNU autoconf to configure Makefiles and headers.
+    Autoconf helps Bochs to compile on a wide variety of platforms.
+    </entry>
+  </row>
+  <row>
+    <entry>386,486,Pentium Emulation</entry>
+    <entry>Yes</entry>
+    <entry>Bochs can be configured to emulate on of several families of Intel hardware.  Some Pentium features are supported, such as the Time Stamp Counter.</entry>
+  </row>
+  <row>
+    <entry>Pentium Pro Emulation</entry>
+    <entry>Incomplete</entry>
+    <entry>A few Pentium Pro features are supported, such as an on-chip APIC for SMP simulation.
+    </entry>
+  </row>
+  <row>
+    <entry>Cmd Line Debugger</entry>
+    <entry>Yes</entry>
+    <entry>Powerful command line debugger (optional) that lets you stop
+    execution and examine registers and memory, set breakpoints, etc.
+    </entry>
+  </row>
+  <row>
+    <entry>Floating Point</entry>
+    <entry>Yes</entry>
+    <entry>Uses software floating point routines written by Bill Metzenthen
+    </entry>
+  </row>
+  <row>
+    <entry>VGA</entry>
+    <entry>Yes</entry>
+    <entry>VGA color graphics emulation in a window
+    </entry>
+  </row>
+  <row>
+    <entry>Floppy disk</entry>
+    <entry>Yes</entry>
+    <entry>Supports floppy disk images on all platforms: 1.44M 3.5", 1.2M 5.25", and 720K 3.5".  On Unix and Windows NT/2000, Bochs can access the physical floppy drive.
+    </entry>
+  </row>
+  <row>
+    <entry>Hard disk</entry>
+    <entry>Yes</entry>
+    <entry>Emulates one or two AT/IDE hard drives via image files.  No physical
+    hard disk access is supported, primarily for safety reasons.  Only two
+    IDE devices, total, are supported.  So you can have two hard disks,
+    or one hard disk and one CDROM.
+    </entry>
+  </row>
+  <row>
+    <entry>Keyboard</entry>
+    <entry>Yes</entry>
+    <entry>Emulates a PS/2 keyboard with North American key mappings.  Keyboards with other key mappings are reported to have problems with special keys and punctuation.
+    </entry>
+  </row>
+  <row>
+    <entry>Mouse</entry>
+    <entry>Yes</entry>
+    <entry>Emulates a PS/2 mouse with 3 buttons.
+    </entry>
+  </row>
+  <row>
+    <entry>Network card</entry>
+    <entry>Yes</entry>
+    <entry>Emulates an NE2000 compatible network card.  On Windows NT/2000,
+    Linux, FreeBSD, and NetBSD, Bochs will forward packets to and from the
+    operating system so that the guest OS can talk on the physical network.
+    Unfortuately, with the current implementation, the guest OS can talk
+    to any machine on the network BUT NOT the host machine.
+    </entry>
+  </row>
+  <row>
+    <entry>CDROM</entry>
+    <entry>Yes</entry>
+    <entry>Emulates an IDE CDROM.  The CDROM can read from an ISO disk image
+    on any platform.  On Windows (95/98/NT/2000), Linux, SunOS, FreeBSD, 
+    NetBSD, Amiga/MorphOS, and BeOS<footnote><para>Coming soon, hopefully in
+    v1.3</para></footnote>, Bochs can read from the physical cdrom.
+    When the CDROM is enabled, only one hard disk can be used.
+    </entry>
+  </row>
+  <row>
+    <entry>Parallel Port</entry>
+    <entry>Yes</entry>
+    <entry>Parallel port emulation was added by Volker Ruppert for Bochs 1.3.
+    Data that is sent to the parallel port by the guest OS can be saved into a
+    file or (on Unix only) sent directly into the parallel port device.
+    </entry>
+  </row>
+  <row>
+    <entry>Serial Port</entry>
+    <entry>Not quite</entry>
+    <entry>The serial port (single 8259 UART emulation) is not really usable
+    yet.  The interface to the emulated CPU is mostly working, but it needs
+    some work before it can talk to a raw serial port or to a pseudo terminal.
+    </entry>
+  </row>
+  <row>
+    <entry>16/32 bit addressing</entry>
+    <entry>Yes</entry>
+    <entry>16 or 32 bit operand sizes, stack size, and addressing</entry>
+  </row>
+  <row>
+    <entry>v8086/paging</entry>
+    <entry>Yes</entry>
+    <entry>Virtual-8086 mode and paging</entry>
+  </row>
+  <row>
+    <entry>PIC</entry>
+    <entry>Yes</entry>
+    <entry>Master and slave programmable interrupt controller.
+    </entry>
+  </row>
+  <row>
+    <entry>CMOS functions</entry>
+    <entry>Yes</entry>
+    <entry>CMOS functions</entry>
+  </row>
+  <row>
+    <entry>Dynamic Translation</entry>
+    <entry>No</entry>
+    <entry>Because Bochs is designed to be portable, it does not attempt
+    to do any dynamic code translation or virtualization.  See 
+    <link linkend="whatisbochs">What is Bochs?</link> for details.
+    </entry>
+  </row>
+  <row>
+    <entry>Simulate a Multiprocessor</entry>
+    <entry>Yes</entry>
+    <entry>Bochs can be configured to simulate up to 15 processors.  This
+    feature is still experimental, but it can boot Linux 2.2 kernels with SMP
+    support.  Please note that this does NOT mean that bochs can run
+    faster on a physical SMP machine.
+    </entry>
+  </row>
+  <row>
+    <entry>Take advantage of your SMP box</entry>
+    <entry>No</entry>
+    <entry>At present, Bochs does not use threads or parallel processing, so it
+    will not run any faster on multiprocessor hardware.
+    </entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
+</section>
+
+</chapter>  <!-- End of Introduction to Bochs -->
 
 <!-- *************************************************************** -->
 <chapter><title>FAQ</title>
