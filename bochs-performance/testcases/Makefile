@@ -6,9 +6,12 @@ blur: blur.c
 	gcc -o blur-no-opt blur.c
 	gcc -O2 -S blur.c -o blur-O2.s
 	gcc -O2 -o blur-O2 blur.c
+	gcc -O2 -pg -fprofile-arcs -ftest-coverage blur.c -o blur-profile
+	gcc -O2 -DBLUR_USE_FUNCTION_CALL -o blur-O2-func blur.c
+	gcc -O2 -DBLUR_USE_FUNCTION_CALL -o blur-O2-func.s -S blur.c
 
 clean::
-	rm -rf *.o blur-no-opt blur-O*
+	rm -rf *.o *.s blur-no-opt blur-O*
 
 # blur-no-opt: 11.98
 # blur-O1: 6.56
