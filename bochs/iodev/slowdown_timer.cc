@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.16 2003-08-26 20:24:36 cbothamy Exp $
+// $Id: slowdown_timer.cc,v 1.17 2003-10-01 02:06:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,8 +116,7 @@ bx_slowdown_timer_c::handle_timer() {
   if(totaltime > total_emu_time) {
     bx_pc_system.deactivate_timer(s.timer_handle);
     bx_pc_system.activate_timer(s.timer_handle,
-				(Bit32u)((Bit64u)
-					 (s.MAXmultiplier * (float)s.Q)),
+				(Bit32u)(s.MAXmultiplier * (float)((Bit64s)s.Q)),
 				0);
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
     printf("running at MAX speed\n");
