@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.8 2002-08-27 19:54:46 bdenney Exp $
+// $Id: cdrom.h,v 1.9 2002-08-28 16:45:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,7 +33,6 @@ public:
   cdrom_interface(char *dev);
   ~cdrom_interface(void);
   void init(void);
-  void reset (unsigned type);
 
   // Load CD-ROM. Returns false if CD is not ready.
   bool insert_cdrom(char *dev = NULL);
