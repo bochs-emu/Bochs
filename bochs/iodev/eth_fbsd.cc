@@ -98,7 +98,7 @@ private:
   void rx_timer(void);
   int rx_timer_index;
   struct bpf_insn filter[BX_BPF_INSNSIZ];
-  FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
+  FILE *ne2klog, *ne2klog_txt;
 };
 
 
@@ -247,30 +247,19 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   this->rxarg = rxarg;
 
 #if BX_ETH_FBSD_LOGGING
-  // eventually Bryce wants txlog to dump in pcap format so that
+  // eventually Bryce wants ne2klog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  txlog = fopen ("ne2k-tx.log", "wb");
-  if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
-  txlog_txt = fopen ("ne2k-txdump.txt", "wb");
-  if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
-  rxlog = fopen ("ne2k-rx.log", "wb");
-  if (!rxlog) BX_PANIC (("open ne2k-rx.log failed"));
-  rxlog_txt = fopen ("ne2k-rxdump.txt", "wb");
-  if (!rxlog_txt) BX_PANIC (("open ne2k-rxdump.txt failed"));
-  fprintf (txlog_txt, "null packetmover readable log file\n");
-  fprintf (txlog_txt, "net IF = %s\n", netif);
-  fprintf (txlog_txt, "MAC address = ");
-  fprintf (rxlog_txt, "null packetmover readable log file\n");
-  fprintf (rxlog_txt, "net IF = %s\n", netif);
-  fprintf (rxlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++)  {
-    fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-    fprintf (rxlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-  }
-  fprintf (txlog_txt, "\n--\n");
-  fflush (txlog_txt);
-  fprintf (rxlog_txt, "\n--\n");
-  fflush (rxlog_txt);
+  ne2klog = fopen ("ne2k.raw", "wb");
+  if (!ne2klog) BX_PANIC (("open ne2k-tx.log failed"));
+  ne2klog_txt = fopen ("ne2k.txt", "wb");
+  if (!ne2klog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
+  fprintf (ne2klog_txt, "null packetmover readable log file\n");
+  fprintf (ne2klog_txt, "net IF = %s\n", netif);
+  fprintf (ne2klog_txt, "MAC address = ");
+  for (int i=0; i<6; i++)
+    fprintf (ne2klog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf (ne2klog_txt, "\n--\n");
+  fflush (ne2klog_txt);
 #endif
 }
 
@@ -282,20 +271,20 @@ bx_fbsd_pktmover_c::sendpkt(void *buf, unsigned io_len)
   BX_DEBUG (("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
-  int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed", io_len));
+  int n = fwrite (buf, io_len, 1, ne2klog);
+  if (n != 1) BX_ERROR (("fwrite to ne2klog failed", io_len));
   // dump packet in hex into an ascii log file
-  fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+  fprintf (ne2klog_txt, "NE2K TX packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   for (n=0; n<io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (txlog_txt, "\n");
-    fprintf (txlog_txt, "%02x ", charbuf[n]);
+      fprintf (ne2klog_txt, "\n");
+    fprintf (ne2klog_txt, "%02x ", charbuf[n]);
   }
-  fprintf (txlog_txt, "\n--\n");
+  fprintf (ne2klog_txt, "\n--\n");
   // flush log so that we see the packets as they arrive w/o buffering
-  fflush (txlog);
-  fflush (txlog_txt);
+  fflush (ne2klog);
+  fflush (ne2klog_txt);
 #endif
   int status;
 
@@ -334,20 +323,20 @@ bx_fbsd_pktmover_c::rx_timer(void)
     BX_DEBUG (("receive packet length %u", nbytes));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
-    int n = fwrite (rxbuf, nbytes, 1, this->rxlog);
-    if (n != 1) BX_ERROR (("fwrite to rxlog failed", nbytes));
+    int n = fwrite (rxbuf, nbytes, 1, ne2klog);
+    if (n != 1) BX_ERROR (("fwrite to ne2klog failed", nbytes));
     // dump packet in hex into an ascii log file
-    fprintf (this->rxlog_txt, "NE2K transmitting a packet, length %u\n", nbytes);
+    fprintf (this->ne2klog_txt, "NE2K RX packet, length %u\n", nbytes);
     Bit8u *charrxbuf = (Bit8u *)rxbuf;
     for (n=0; n<nbytes; n++) {
       if (((n % 16) == 0) && n>0)
-	fprintf (this->rxlog_txt, "\n");
-      fprintf (this->rxlog_txt, "%02x ", rxbuf[n]);
+	fprintf (this->ne2klog_txt, "\n");
+      fprintf (this->ne2klog_txt, "%02x ", rxbuf[n]);
     }
-    fprintf (this->rxlog_txt, "\n--\n");
+    fprintf (this->ne2klog_txt, "\n--\n");
     // flush log so that we see the packets as they arrive w/o buffering
-    fflush (this->rxlog);
-    fflush (this->rxlog_txt);
+    fflush (this->ne2klog);
+    fflush (this->ne2klog_txt);
   }
 #endif
 
