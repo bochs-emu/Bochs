@@ -195,7 +195,19 @@ Known problems:
 1. BX_INSTR_MEM_CODE never called from Bochs's code.
 2. BX_INSTR_LIN_READ doesn't work when Guest-To-Host-TLB feature is enabled.
 3. BX_INSTR_LIN_WRITE doesn't work when Guest-To-Host-TLB feature is enabled.
+4.
 
+While using Bochs as a reference model for simulations, the simulator needs
+information about what loads/stores are taking place with each instruction.
+Presumably,  that  is  what  the BX_INSTR_MEM_DATA() instrumentation macros
+cover (which is the place where our simulator hooks up).
+
+The RETnear_xxx() functions call access_linear() directly, rather than call
+read_virtual_xxx()  functions. This is a problem for code making use of the
+BX_INSTR_MEM_DATA()   hook  because  it  does  not  get  called  for  these
+instructions.  Should  this  be  changed along with some other instructions
+that exhibit this?
+							Brian Slechta
 
 Feature requests:
 
