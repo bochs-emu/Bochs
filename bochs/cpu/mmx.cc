@@ -683,7 +683,7 @@ void BX_CPU_C::EMMS(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
-  FPU_TWD  = 0xffffffff;		// toDO: FPU_TWD should be 16bit 
+  FPU_TWD  = 0xffff;
 #else
   BX_INFO(("EMMS: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
