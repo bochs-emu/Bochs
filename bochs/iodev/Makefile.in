@@ -68,7 +68,6 @@ BX_IODEV_OBJS_NON_PLUGINABLE = \
   parallel.o \
   serial.o \
   dma.o \
-  $(VIDEO_OBJS) \
   @PCI_OBJ@ \
   @NE2K_OBJS@ \
   @CDROM_OBJS@ \
@@ -78,6 +77,7 @@ BX_IODEV_OBJS_NON_PLUGINABLE = \
   $(IOAPIC_OBJS)
 
 BX_IODEV_OBJS_PLUGINABLE = \
+  $(VIDEO_OBJS) \
   biosdev.o \
   cmos.o \
   unmapped.o 

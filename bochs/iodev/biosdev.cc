@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.4.6.1 2002-10-06 23:17:51 cbothamy Exp $
+// $Id: biosdev.cc,v 1.4.6.2 2002-10-07 12:55:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,6 +40,10 @@
 
 
 #include "bochs.h"
+
+#if BX_PLUGINS
+#include "biosdev.h"
+#endif
 
 bx_biosdev_c bx_biosdev;
 

@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.2 2002-10-06 23:17:51 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.3 2002-10-07 12:55:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,6 +51,7 @@ bx_devices_c::bx_devices_c(void)
   unmapped = NULL;
   biosdev = NULL;
   cmos = NULL;
+  vga = NULL;
 #endif
 
   floppy = NULL;
@@ -65,7 +66,6 @@ bx_devices_c::bx_devices_c(void)
   keyboard = NULL;
   serial = NULL;
   parallel = NULL;
-  vga = NULL;
   pic = NULL;
   hard_drive = NULL;
   sb16 = NULL;
@@ -89,7 +89,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.2 2002-10-06 23:17:51 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.3 2002-10-07 12:55:30 cbothamy Exp $"));
   mem = newmem;
 
   devices=this;
@@ -133,6 +133,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
   cmos = &bx_cmos;
   cmos->init(this);
 
+#if BX_SUPPORT_VGA
+  /*--- VGA adapter ---*/
+  vga = & bx_vga;
+  vga->init(this);
+#else
+  /*--- HGA adapter ---*/
+  bx_init_hga_hardware();
+#endif
+
 #endif
 
 #if BX_PCI_SUPPORT
@@ -165,15 +174,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   //--- SOUND ---
   sb16 = &bx_sb16;
   sb16->init(this);
-#endif
-
-#if BX_SUPPORT_VGA
-  /*--- VGA adapter ---*/
-  vga = & bx_vga;
-  vga->init(this);
-#else
-  /*--- HGA adapter ---*/
-  bx_init_hga_hardware();
 #endif
 
   /*--- 8259A PIC ---*/
@@ -260,26 +260,27 @@ bx_devices_c::reset(unsigned type)
 
   dma->reset(type);
 
-#if !BX_PLUGINS 
-
 #  if BX_SUPPORT_IOAPIC
     ioapic->reset (type);
 #  endif
 
+#if !BX_PLUGINS 
+
   cmos->reset(type);
   biosdev->reset(type);
   unmapped->reset(type);
+
+#if BX_SUPPORT_VGA
+  vga->reset(type);
+#else
+  // reset hga hardware?
+#endif
 #endif
 
   floppy->reset(type);
   hard_drive->reset(type);
 #if BX_SUPPORT_SB16
   sb16->reset(type);
-#endif
-#if BX_SUPPORT_VGA
-  vga->reset(type);
-#else
-  // reset hga hardware?
 #endif
   pic->reset(type);
   pit->reset(type);

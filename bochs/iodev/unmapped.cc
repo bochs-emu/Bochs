@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.18.4.1 2002-10-06 23:17:52 cbothamy Exp $
+// $Id: unmapped.cc,v 1.18.4.2 2002-10-07 12:55:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,11 @@
 
 
 #include "bochs.h"
+
+#if BX_PLUGINS
+#include "unmapped.h"
+#endif
+
 #define LOG_THIS bx_unmapped.
 
 

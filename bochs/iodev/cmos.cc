@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.1 2002-10-06 23:17:51 cbothamy Exp $
+// $Id: cmos.cc,v 1.20.2.2 2002-10-07 12:55:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,6 +29,11 @@
 
 
 #include "bochs.h"
+
+#if BX_PLUGINS
+#include "cmos.h"
+#endif
+
 #define LOG_THIS bx_cmos.
 
 bx_cmos_c bx_cmos;
@@ -48,6 +53,24 @@ bx_cmos_c bx_cmos;
 
 #if BX_PLUGINS
 
+  static Bit32u
+cmosGetReg(unsigned reg)
+{
+  return( bx_cmos.s.reg[reg] );
+}
+
+  static void
+cmosSetReg(unsigned reg, Bit32u val)
+{
+  bx_cmos.s.reg[reg] = val;
+}
+
+  static time_t
+cmosGetTimeval()
+{
+  return( bx_cmos.s.timeval );
+}
+
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
@@ -63,42 +86,15 @@ plugin_fini(void)
 {
 }
 
-  static Bit32u
-cmosGetReg(unsigned reg)
-{
-  return( bx_cmos.s.reg[reg] );
-}
-
-  static void
-cmosSetReg(unsigned reg, Bit32u val)
-{
-  bx_cmos.s.reg[reg] = val;
-}
-
-  void
-cmosChecksum(void)
-{
-  bx_cmos.checksum_cmos();
-}
-
-  static time_t
-cmosGetTimeval()
-{
-  return( bx_cmos.s.timeval );
-}
-
 #endif
 
 bx_cmos_c::bx_cmos_c(void)
 {
 #if BX_PLUGINS
 
-  // Register plugin basic entry points
-  // BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_CMOS);
-
   pluginGetCMOSReg = cmosGetReg;
   pluginSetCMOSReg = cmosSetReg;
-  pluginCMOSChecksum = cmosChecksum;
+  pluginCMOSChecksum = bx_cmos.checksum_cmos;
   pluginGetCMOSTimeval = cmosGetTimeval;
 
   // Register plugin basic entry points
@@ -124,7 +120,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.1 2002-10-06 23:17:51 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.2 2002-10-07 12:55:30 cbothamy Exp $"));
 
   // CMOS RAM & RTC
 

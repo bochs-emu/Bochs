@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.2 2002-10-06 23:17:52 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.3 2002-10-07 12:55:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -113,10 +113,10 @@ public:
   bx_unmapped_c    *unmapped;
   bx_biosdev_c     *biosdev;
   bx_cmos_c        *cmos;
+  bx_vga_c         *vga;
 #endif
   bx_serial_c      *serial;
   bx_parallel_c    *parallel;
-  bx_vga_c         *vga;
   bx_pic_c         *pic;
   bx_hard_drive_c  *hard_drive;
   bx_sb16_c        *sb16;
@@ -175,6 +175,12 @@ private:
 
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
+
+# if !BX_PLUGINS
+#include "iodev/biosdev.h"
+#include "iodev/cmos.h"
+#include "iodev/unmapped.h"
+
 #if BX_SUPPORT_VGA
 #  include "iodev/vga.h"
 #else
@@ -183,8 +189,9 @@ private:
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
 #endif
-#include "iodev/biosdev.h"
-#include "iodev/cmos.h"
+
+#endif // if !BX_PLUGINS
+
 #include "iodev/dma.h"
 #include "iodev/floppy.h"
 #include "iodev/harddrv.h"
@@ -200,7 +207,6 @@ private:
 #if BX_SUPPORT_SB16
 #  include "iodev/sb16.h"
 #endif
-#include "iodev/unmapped.h"
 #include "iodev/eth.h"
 #include "iodev/ne2k.h"
 #include "iodev/guest2host.h"

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43.2.1 2002-10-06 23:17:52 cbothamy Exp $
+// $Id: vga.cc,v 1.43.2.2 2002-10-07 12:55:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,6 +26,11 @@
 
 
 #include "bochs.h"
+
+#if BX_PLUGINS
+#include "vga.h"
+#endif
+
 #define LOG_THIS bx_vga.
 
 /* NOTES:
@@ -43,8 +48,47 @@ bx_vga_c bx_vga;
 
 unsigned old_iHeight = 0, old_iWidth = 0;
 
+#if BX_PLUGINS
+
+  void
+vgaRefresh(void)
+{
+  bx_vga.timer_handler(NULL);
+}
+
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  bx_vga_c        *vga;
+
+  vga = &bx_vga;
+
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+
+#endif
+
 bx_vga_c::bx_vga_c(void)
 {
+#if BX_PLUGINS
+
+  pluginVGARedrawArea = bx_vga.redraw_area;
+  pluginVGAMemRead = bx_vga.mem_read;
+  pluginVGAMemWrite = bx_vga.mem_write;
+  pluginVGAGetTextSnapshot = bx_vga.get_text_snapshot;
+  pluginVGARefresh = vgaRefresh;
+  pluginVGASetUpdateInterval = bx_vga.set_update_interval;
+
+  // Register plugin basic entry points
+  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_VGA);
+
+#endif
+
   BX_VGA_THIS s.vga_mem_updated = 0;
   BX_VGA_THIS s.x_tilesize = X_TILESIZE;
   BX_VGA_THIS s.y_tilesize = Y_TILESIZE;
@@ -68,38 +112,28 @@ bx_vga_c::init(bx_devices_c *d)
 
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
-    BX_VGA_THIS devices->register_io_read_handler(this, read_handler,
-                                        addr, "vga video");
-    BX_VGA_THIS devices->register_io_write_handler(this, write_handler,
-                                        addr, "vga video");
+    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03BA; addr<=0x03BA; addr++) {
-    BX_VGA_THIS devices->register_io_read_handler(this, read_handler,
-                                        addr, "vga video");
-    BX_VGA_THIS devices->register_io_write_handler(this, write_handler,
-                                        addr, "vga video");
+    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03C0; addr<=0x03CF; addr++) {
-    BX_VGA_THIS devices->register_io_read_handler(this, read_handler,
-                                        addr, "vga video");
-    BX_VGA_THIS devices->register_io_write_handler(this, write_handler,
-                                        addr, "vga video");
+    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03D4; addr<=0x03D5; addr++) {
-    BX_VGA_THIS devices->register_io_read_handler(this, read_handler,
-                                        addr, "vga video");
-    BX_VGA_THIS devices->register_io_write_handler(this, write_handler,
-                                        addr, "vga video");
+    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03DA; addr<=0x03DA; addr++) {
-    BX_VGA_THIS devices->register_io_read_handler(this, read_handler,
-                                        addr, "vga video");
-    BX_VGA_THIS devices->register_io_write_handler(this, write_handler,
-                                        addr, "vga video");
+    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
     }
 
 
@@ -210,10 +244,8 @@ bx_vga_c::init(bx_devices_c *d)
   // FIXME: change 0xff80 & 0xff81 into some nice constants
   
   for (addr=0xff80; addr<=0xff81; addr++) {
-    BX_VGA_THIS devices->register_io_read_handler(this, vbe_read_handler,
-                                        addr, "vga video");
-    BX_VGA_THIS devices->register_io_write_handler(this, vbe_write_handler,
-                                        addr, "vga video");
+    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, vbe_read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, vbe_write_handler, addr, "vga video", 7);
   }    
   BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
   BX_VGA_THIS s.vbe_xres=640;
@@ -1176,13 +1208,15 @@ void
 bx_vga_c::set_update_interval (unsigned interval)
 {
   BX_INFO (("Changing timer interval to %d\n", interval));
-  BX_VGA_THIS timer ();
+  BX_VGA_THIS timer_handler (this);
   bx_pc_system.activate_timer (BX_VGA_THIS timer_id, interval, 1);
 }
 
   void
 bx_vga_c::timer_handler(void *this_ptr)
 {
+#if !BX_USE_VGA_SMF
+  
   bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
 
   class_ptr->timer();
@@ -1191,6 +1225,10 @@ bx_vga_c::timer_handler(void *this_ptr)
   void
 bx_vga_c::timer(void)
 {
+#else
+  UNUSED(this_ptr);
+#endif
+
   update();
   bx_gui.flush();
 
@@ -1610,6 +1648,11 @@ bx_vga_c::mem_read(Bit32u addr)
 // ??? should get rid of references to shift_reg in this function
 
 #ifdef __OS2__
+
+#if BX_PLUGINS
+#error Fix the code for plugins
+#endif
+
   if ( bx_options.videomode == BX_VIDEO_DIRECT )
      {
      char value;
@@ -1736,6 +1779,11 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 #endif
 
 #ifdef __OS2__
+
+#if BX_PLUGINS
+#error Fix the code for plugins
+#endif
+
   if ( bx_options.videomode == BX_VIDEO_DIRECT )
     {
     devices->mem->video[addr-0xA0000] = value;

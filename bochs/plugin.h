@@ -27,6 +27,7 @@ extern "C" {
 #define BX_PLUGIN_UNMAPPED "UNMAPPED"
 #define BX_PLUGIN_BIOSDEV  "BIOSDEV"
 #define BX_PLUGIN_CMOS     "CMOS RAM"
+#define BX_PLUGIN_VGA      "VGA"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 
@@ -48,6 +49,12 @@ extern "C" {
 #define BX_CMOS_CHECKSUM(a) pluginCMOSChecksum()
 #define BX_GET_CMOS_TIMEVAL(a) pluginGetCMOSTimeval()
 
+#define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
+#define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
+#define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
+#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) pluginVGAGetTextSnapshot(rawsnap, height, width)
+#define BX_VGA_REFRESH() pluginVGARefresh ()
+#define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
 #else
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
@@ -64,6 +71,15 @@ extern "C" {
 #define BX_SET_CMOS_REG(a,b,c) a devices->cmos->s.reg[b]=c
 #define BX_CMOS_CHECKSUM(a) a devices->cmos->checksum_cmos()
 #define BX_GET_CMOS_TIMEVAL(a) a devices->cmos->s.timeval
+
+#define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
+#define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
+#define BX_VGA_REDRAW_AREA(left, top, right, bottom) \
+    (bx_vga.redraw_area(left, top, right, bottom))
+#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) \
+    (bx_vga.get_text_snapshot(rawsnap, height, width))
+#define BX_VGA_REFRESH() bx_vga.timer_handler (&bx_vga)
+#define BX_VGA_SET_UPDATE_INTERVAL(val) bx_vga.set_update_interval(val)
 
 #endif
 
@@ -95,10 +111,6 @@ extern "C" {
     (bx_devices.keyboard->put_scancode(scancode, count))
 #define BX_KBD_PASTE_BYTES(bytes, count) \
     (bx_devices.keyboard->paste_bytes(bytes, count))
-#define BX_VGA_REDRAW_AREA(left, top, right, bottom) \
-    (bx_vga.redraw_area(left, top, right, bottom))
-#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) \
-    (bx_vga.get_text_snapshot(rawsnap, height, width))
 #define BX_FLOPPY_GET_MEDIA_STATUS(drive) \
     (bx_devices.floppy->get_media_status(drive))
 #define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) \
@@ -220,6 +232,12 @@ extern void   (* pluginHDWriteHandler)(Bit32u address,
 /* === VGA stuff === */
 extern void (* pluginVGARedrawArea)(unsigned x0, unsigned y0,
                  unsigned width, unsigned height);
+extern Bit8u (* pluginVGAMemRead)(Bit32u addr);
+extern void  (* pluginVGAMemWrite)(Bit32u addr, Bit8u value);
+extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot, 
+		          unsigned *txHeight, unsigned *txWidth);
+extern void  (* pluginVGARefresh)(void);
+extern void  (* pluginVGASetUpdateInterval)(unsigned);
 
 /* === Timer stuff === */
 extern int      (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.70 2002-10-01 13:40:05 bdenney Exp $
+// $Id: siminterface.cc,v 1.70.2.1 2002-10-07 12:55:29 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -88,7 +88,7 @@ public:
   virtual void refresh_ci ();
   virtual void refresh_vga () {
     // maybe need to check if something has been initialized yet?
-    bx_vga.timer_handler (&bx_vga); 
+    BX_VGA_REFRESH();
   }
   virtual void handle_events () {
     // maybe need to check if something has been initialized yet?

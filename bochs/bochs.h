@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.3 2002-10-07 06:29:58 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.4 2002-10-07 12:55:29 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,6 +94,7 @@ extern "C" {
 // =-=-=-=-=-=-=- Redirected to cosimulation debugger -=-=-=-=-=-=-=
 #define BX_VGA_MEM_READ(addr)       bx_dbg_ucmem_read(addr)
 #define BX_VGA_MEM_WRITE(addr, val) bx_dbg_ucmem_write(addr, val)
+
 #if BX_SUPPORT_A20
 #  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
 #else
@@ -125,8 +126,12 @@ extern "C" {
 #else
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
+/*
+ * this macros are defined in plugin.h
 #define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
 #define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
+*/
+
 #if BX_SUPPORT_A20
 #  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
 #else
