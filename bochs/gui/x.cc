@@ -566,6 +566,7 @@ bx_gui_c::handle_events(void)
       key_event = (XKeyEvent *) &report;
       charcount = XLookupString(key_event, buffer, bufsize, &keysym, &compose);
       keycode = XKeysymToKeycode(bx_x_display, keysym);
+      BX_DEBUG (("key pressed, keysym=%d, keycode=%d", keysym, keycode));
       xkeypress(keycode, 0);
       break;
 
@@ -671,7 +672,6 @@ xkeypress(KeyCode keycode, int press_release)
 {
   Bit32u key_event;
   key_event = (unsigned) keycode;
-  BX_DEBUG (("keycode: %d\n", (unsigned) keycode));
 
   if (press_release)
     key_event |= BX_KEY_RELEASED;
