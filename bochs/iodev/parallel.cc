@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.6 2002-10-18 16:43:01 bdenney Exp $
+// $Id: parallel.cc,v 1.20.4.7 2002-10-18 16:53:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,13 +67,14 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.6 2002-10-18 16:43:01 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.7 2002-10-18 16:53:58 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
     /* PARALLEL PORT 1 */
 
     BX_REGISTER_IRQ(7, "Parallel Port 1");
+    BX_INFO (("parallel port 1 at 0x378"));
     for (unsigned addr=0x0378; addr<=0x037A; addr++) {
       BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "Parallel Port 1", 7);
       }
