@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.96 2002-12-21 17:20:27 bdenney Exp $
+$Id: user.dbk,v 1.97 2002-12-21 17:36:43 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3021,8 +3021,8 @@ this to be accurate.
 <section><title>keyboard_serial_delay</title>
 <para>
 Example:
-  keyboard_serial_delay: 200
 <screen>
+  keyboard_serial_delay: 200
 </screen>
 Approximate time in microseconds that it takes one character to be
 transfered from the keyboard to controller over the serial path.
@@ -3031,18 +3031,16 @@ transfered from the keyboard to controller over the serial path.
 
 <section><title>keyboard_paste_delay</title>
 <para>
+Example:
+<screen>
+  keyboard_paste_delay: 100000
+</screen>
 Approximate time in microseconds between attempts to paste
 characters to the keyboard controller. This leaves time for the
 guest os to deal with the flow of characters.  The ideal setting
 depends on how your operating system processes characters.  The
 default of 100000 usec (.1 seconds) was chosen because it works
 consistently in Windows.
-</para>
-<para>
-Example:
-  keyboard_paste_delay: 100000
-<screen>
-</screen>
 </para>
 </section>
 
@@ -3102,18 +3100,17 @@ speed.</para></footnote>.
 
 <section><title>pit</title>
 <para>
+Examples:
+<screen>
+  pit: realtime=0
+  pit: realtime=1
+</screen>
 The PIT is the programmable interval timer.  Bochs's PIT modelw as written by
 Greg Alexander.  It has a real-time option that tries to keep the PIT in sync
 with the host time.  This feature is still experimental, but it may be useful
 if you want to prevent Bochs from running too fast, for example a DOS video
 game.  Be aware that with the realtime pit option, your simulation will not be
 repeatable; this can a problem if you are debugging.
-
-Examples:
-<screen>
-  pit: realtime=0
-  pit: realtime=1
-</screen>
 </para>
 </section>
 
@@ -3143,6 +3140,29 @@ Requests that the GUI create and use its  own non-shared colormap.  This
 colormap  will  be used when in the bochs window. If not enabled, a shared
 colormap  scheme  may be used.  Once again, enabled=1  turns on this feature
 and 0 turns it off.
+</para>
+</section>
+
+<section><title>i440fxsupport</title>
+<para>
+Examples:
+<screen>
+  i440fxsupport: enabled=1
+</screen>
+Enables limited i440fx PCI chipset support.
+</para>
+</section>
+
+<section><title>time0</title>
+<para>
+Examples:
+<screen>
+  time0: 938581955
+</screen>
+Specifies the start (boot) time of the virtual machine. Use a
+time value as returned by the time(2) system call. Time
+equal to 1 is a special case which starts the virtual machine at the
+current time of the simulator host.
 </para>
 </section>
 
