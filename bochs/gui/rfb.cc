@@ -20,13 +20,32 @@
 #include "bochs.h"
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
-#include <windows.h>
+
+#ifdef WIN32
+
 #include <winsock.h>
 #include <process.h>
 #include "rfb.h"
+
+#else
+
+#include <sys/socket.h>
+#include <netinet/tcp.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <sys/errno.h>
+#include <pthread.h>
+typedef unsigned long CARD32;
+typedef unsigned short CARD16;
+typedef short INT16;
+typedef unsigned char  CARD8;
+typedef int SOCKET;
+
+#endif
+
 #include "rfbproto.h"
 
-static BOOL    keep_alive;
+static bool keep_alive;
 
 static unsigned short rfbPort = 5900;
 
@@ -40,14 +59,36 @@ struct {
 
 unsigned rfbHeaderbarBitmapCount = 0;
 struct {
-	unsigned index;
-	unsigned xorigin;
-	unsigned yorigin;
-	unsigned alignment;
+	unsigned int index;
+	unsigned int xorigin;
+	unsigned int yorigin;
+	unsigned int alignment;
 	void (*f)(void);
 } rfbHeaderbarBitmaps[BX_MAX_HEADERBAR_ENTRIES];
 
-// Misc stuff
+//Keyboard stuff
+#define KEYBOARD true
+#define MOUSE    false
+#define MAX_KEY_EVENTS 128
+struct {
+	bool type;
+	int  key;
+	int  down;
+	int  x;
+	int  y;
+} rfbKeyboardEvent[MAX_KEY_EVENTS];
+static unsigned long rfbKeyboardEvents = 0;
+static bool          bKeyboardInUse = false;
+
+// Misc Stuff
+struct {
+	unsigned int x;
+	unsigned int y;
+	unsigned int width;
+	unsigned int height;
+	bool updated;
+} rfbUpdateRegion;
+
 static char  *rfbScreen;
 static char  rfbPallet[256];
 
@@ -61,18 +102,21 @@ static unsigned long  rfbCursorY = 0;
 static unsigned long  rfbOriginLeft  = 0;
 static unsigned long  rfbOriginRight = 0;
 
-static unsigned long ServerThread   = NULL;
-static DWORD         ServerThreadID = 0;
+static unsigned long ServerThread   = 0;
+static unsigned long ServerThreadID = 0;
 
 static SOCKET sGlobal;
 
-void ServerThreadInit(PVOID indata);
+void ServerThreadInit(void *indata);
 void HandleRfbClient(SOCKET sClient);
-ReadExact(int sock, char *buf, int len);
-WriteExact(int sock, char *buf, int len);
+int  ReadExact(int sock, char *buf, int len);
+int  WriteExact(int sock, char *buf, int len);
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client);
 void UpdateScreen(char *newBits, int x, int y, int width, int height, bool update_client);
+void SendUpdate(int x, int y, int width, int height);
+void StartThread();
 void rfbKeyPressed(Bit32u key, int press_release);
+void rfbMouseMove(int x, int y, int bmask);
 void DrawColorPallet();
 
 static const rfbPixelFormat BGR233Format = {
@@ -128,78 +172,88 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 	rfbScreen = (char *)malloc(rfbDimensionX * rfbDimensionY); 
 	memset(&rfbPallet, 0, sizeof(rfbPallet));
 	rfbPallet[63] = (char)0xFF;
+
+	rfbUpdateRegion.x = rfbDimensionX;
+	rfbUpdateRegion.y = rfbDimensionY;
+	rfbUpdateRegion.width  = 0;
+	rfbUpdateRegion.height = 0;
+	rfbUpdateRegion.updated = false;
 	
-	keep_alive = TRUE;
-	ServerThread = _beginthread(ServerThreadInit, 0, NULL);
+	keep_alive = true;
+	StartThread();
 	
-	SetLastError(0);
+#ifdef WIN32
 	Sleep(1000);
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
-
+#endif
 	if (bx_options.private_colormap) {
 		fprintf(stderr, "# WARNING: RFB: private_colormap option ignored.\n");
 	}
 }
 
-BOOL InitWinsock()
+bool InitWinsock()
 {
+#ifdef WIN32
 	WSADATA wsaData;
-	if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0) return FALSE;
-	return TRUE;
+	if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0) return false;
+#endif
+	return true;
 }
 
-BOOL StopWinsock()
+bool StopWinsock()
 {
+#ifdef WIN32
 	WSACleanup();
-	return TRUE;
+#endif
+	return true;
 }
 
-void ServerThreadInit(PVOID indata) 
+void ServerThreadInit(void *indata) 
 {
-	SOCKET      sServer;
-	SOCKET      sClient;
-	SOCKADDR_IN sai;
-	int         sai_size;
+	SOCKET             sServer;
+	SOCKET             sClient;
+	struct sockaddr_in sai;
+	int       sai_size;
 
+#ifdef WIN32
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
-
+#endif
 	if(!InitWinsock()) {
 		fprintf(stderr, "# ERROR: RFB: could not initialize winsock.\n");
 		goto end_of_thread;
 	}
 
 	sServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if(sServer == INVALID_SOCKET) { 
+	if(sServer == -1) { 
 		fprintf(stderr, "# ERROR: RFB: could not create socket.\n");
 		goto end_of_thread;
 	}
 	sai.sin_addr.s_addr = INADDR_ANY;
 	sai.sin_family      = AF_INET;
 	sai.sin_port        = htons(rfbPort);
-	if(bind(sServer, (LPSOCKADDR)&sai, sizeof(sai)) == SOCKET_ERROR) {
+	if(bind(sServer, (struct sockaddr *)&sai, sizeof(sai)) == -1) {
 		fprintf(stderr, "# ERROR: RFB: could not bind socket.\n");
 		goto end_of_thread;
 	}
-	if(listen(sServer, SOMAXCONN) == SOCKET_ERROR) {
+	if(listen(sServer, SOMAXCONN) == -1) {
 		fprintf(stderr, "# ERROR: RFB: could not listen on socket.\n");
 		goto end_of_thread;
 	}
 	fprintf(stderr, "# RFB: listening for connections on port %i.\n", rfbPort);
 	sai_size = sizeof(sai);
 	while(keep_alive) {
-		sClient = accept(sServer, (LPSOCKADDR)&sai, &sai_size);
-		if(sClient != INVALID_SOCKET) {
+		sClient = accept(sServer, (struct sockaddr *)&sai, &sai_size);
+		if(sClient != -1) {
 			HandleRfbClient(sClient);
-			sGlobal = INVALID_SOCKET;
+			sGlobal = -1;
 			close(sClient);
 		} else {
-			closesocket(sClient);
+			close(sClient);
 		}
 	}
 
 end_of_thread:
 	StopWinsock();
-	_endthread();
 }
 
 void HandleRfbClient(SOCKET sClient) 
@@ -317,41 +371,51 @@ void HandleRfbClient(SOCKET sClient)
 		case rfbFramebufferUpdateRequest:
 			{
 				rfbFramebufferUpdateRequestMsg fur;
-				rfbFramebufferUpdateMsg fum;
-				rfbFramebufferUpdateRectHeader furh;
 
 				ReadExact(sClient, (char *)&fur, sizeof(rfbFramebufferUpdateRequestMsg));
-
-				fum.type = rfbFramebufferUpdate;
-				fum.nRects = Swap16IfLE(1);
-				WriteExact(sClient, (char *)&fum, sz_rfbFramebufferUpdateMsg);
-				furh.r.x = Swap16IfLE(0);
-				furh.r.y = Swap16IfLE(0);
-				furh.r.w = Swap16IfLE((short)rfbDimensionX);
-				furh.r.h = Swap16IfLE((short)rfbDimensionY);
-				furh.encoding = Swap32IfLE(rfbEncodingRaw);
-				WriteExact(sClient, (char *)&furh, sz_rfbFramebufferUpdateRectHeader);
-				WriteExact(sClient, (char *)rfbScreen, rfbDimensionX * rfbDimensionY);
+				if(!fur.incremental) {
+					rfbUpdateRegion.x = 0;
+					rfbUpdateRegion.y = 0;
+					rfbUpdateRegion.width  = rfbDimensionX;
+					rfbUpdateRegion.height = rfbDimensionY;
+					rfbUpdateRegion.updated = true;
+				} //else {
+				//	if(fur.x < rfbUpdateRegion.x) rfbUpdateRegion.x = fur.x;
+				//	if(fur.y < rfbUpdateRegion.x) rfbUpdateRegion.y = fur.y;
+				//	if(((fur.x + fur.w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((fur.x + fur.w) - rfbUpdateRegion.x);
+				//	if(((fur.y + fur.h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = ((fur.y + fur.h) - rfbUpdateRegion.y);
+				//}
+				//rfbUpdateRegion.updated = true;
 				break;
 			}
 		case rfbKeyEvent:
 			{
 				rfbKeyEventMsg ke;
-				Bit32u         key;
 				ReadExact(sClient, (char *)&ke, sizeof(rfbKeyEventMsg));
 				ke.key = Swap32IfLE(ke.key);
-				key = ke.key;
-				if(ke.down) {
-					rfbKeyPressed(ke.key, BX_KEY_PRESSED);
-				} else {
-					rfbKeyPressed(ke.key, BX_KEY_RELEASED);
-				}
+				while(bKeyboardInUse);
+				bKeyboardInUse = true;
+				if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
+				rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
+				rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
+				rfbKeyboardEvent[rfbKeyboardEvents].down = ke.down;
+				rfbKeyboardEvents++;
+				bKeyboardInUse = false;
 				break;
 			}
 		case rfbPointerEvent:
 			{	
 				rfbPointerEventMsg pe;
 				ReadExact(sClient, (char *)&pe, sizeof(rfbPointerEventMsg));
+				while(bKeyboardInUse);
+				bKeyboardInUse = true;
+				if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
+				rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
+				rfbKeyboardEvent[rfbKeyboardEvents].x    = Swap16IfLE(pe.x);
+				rfbKeyboardEvent[rfbKeyboardEvents].y    = Swap16IfLE(pe.y);
+				rfbKeyboardEvent[rfbKeyboardEvents].down = pe.buttonMask;
+				rfbKeyboardEvents++;
+				bKeyboardInUse = false;
 				break;
 			}
 		case rfbClientCutText:
@@ -371,6 +435,30 @@ void HandleRfbClient(SOCKET sClient)
 
 void bx_gui_c::handle_events(void)
 {
+	unsigned int i = 0;
+	while(bKeyboardInUse);
+	bKeyboardInUse = true;
+	if(rfbKeyboardEvents > 0) {
+		//fprintf(stderr, "# RFB: handling %i key events.\n", rfbKeyboardEvents);
+		for(i = 0; i < rfbKeyboardEvents; i++) {
+			if(rfbKeyboardEvent[i].type == KEYBOARD) {
+				rfbKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
+			} else { //type == MOUSE;
+				rfbMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].down);
+			}
+		}
+		rfbKeyboardEvents = 0;
+	}
+	bKeyboardInUse = false;
+
+	if(rfbUpdateRegion.updated) {
+		SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width, rfbUpdateRegion.height);
+		rfbUpdateRegion.x = rfbDimensionX;
+		rfbUpdateRegion.y = rfbDimensionY;
+		rfbUpdateRegion.width  = 0;
+		rfbUpdateRegion.height = 0;
+	}
+	rfbUpdateRegion.updated = false;
 }
 
 
@@ -419,6 +507,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long curso
 	unsigned char cChar;
 	unsigned int  nchars;
 	unsigned int  i, x, y;
+	bool updated = false;
 
 	nchars = 80 * nrows;
 	if((rfbCursorY * 80 + rfbCursorX) < nchars) {
@@ -432,6 +521,11 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long curso
 			x = (i / 2) % 80;
 			y = (i / 2) / 80;
 			DrawBitmap(x * 8, y * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i + 1], false);
+			if((y * 16 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y * 16 + rfbHeaderbarY;
+			if(((y * 16 + rfbHeaderbarY + 16) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = ((y * 16 + rfbHeaderbarY + 16) - rfbUpdateRegion.y);
+			if((x * 8) < rfbUpdateRegion.x) rfbUpdateRegion.x = x * 8;
+			if(((x * 8 + 8) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x * 8 + 8) - rfbUpdateRegion.x);
+			rfbUpdateRegion.updated = true;
 		}
 	}
 
@@ -444,7 +538,6 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long curso
 		//cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
 		DrawBitmap(rfbCursorX * 8, rfbCursorY * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr, false);
 	}
-
 }
 
 
@@ -479,6 +572,11 @@ Boolean bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, u
 void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
 	UpdateScreen((char *)tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
+	if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
+	if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
+	if(((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y) > rfbUpdateRegion.width) rfbUpdateRegion.width =  ((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y);
+	if(((x0 + rfbTileX) - rfbUpdateRegion.x) > rfbUpdateRegion.height) rfbUpdateRegion.height = ((x0 + rfbTileX) - rfbUpdateRegion.x);
+	rfbUpdateRegion.updated = true;
 }
 
 
@@ -613,7 +711,7 @@ void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 void bx_gui_c::exit(void)
 {
 	unsigned int i;
-	keep_alive = FALSE;
+	keep_alive = false;
 	StopWinsock();
 	free(rfbScreen);
 	for(i = 0; i < rfbBitmapCount; i++) {
@@ -650,8 +748,7 @@ int ReadExact(int sock, char *buf, int len)
 * ETIMEDOUT if it timed out).
 */
 
-int
-WriteExact(int sock, char *buf, int len)
+int WriteExact(int sock, char *buf, int len)
 {
     int n;
 	
@@ -739,20 +836,62 @@ void UpdateScreen(char *newBits, int x, int y, int width, int height, bool updat
 		y++;
 	}
 	if(update_client) {
-		if(sGlobal == INVALID_SOCKET) return;
+		if(sGlobal == -1) return;
 		rfbFramebufferUpdateMsg fum;
 		rfbFramebufferUpdateRectHeader furh;
 		fum.type = rfbFramebufferUpdate;
 		fum.nRects = Swap16IfLE(1);
 		WriteExact(sGlobal, (char *)&fum, sz_rfbFramebufferUpdateMsg);
 		furh.r.x = Swap16IfLE(x);
-		furh.r.y = Swap16IfLE(y);
+		furh.r.y = Swap16IfLE((y - i));
 		furh.r.w = Swap16IfLE((short)width);
 		furh.r.h = Swap16IfLE((short)height);
 		furh.encoding = Swap32IfLE(rfbEncodingRaw);
 		WriteExact(sGlobal, (char *)&furh, sz_rfbFramebufferUpdateRectHeader);
 		WriteExact(sGlobal, (char *)newBits, width * height);
 	}
+}
+
+void SendUpdate(int x, int y, int width, int height)
+{
+	char *newBits;
+	int  i;
+
+	if(sGlobal != -1) {
+		rfbFramebufferUpdateMsg fum;
+		rfbFramebufferUpdateRectHeader furh;
+
+		fum.type = rfbFramebufferUpdate;
+		fum.nRects = Swap16IfLE(1);
+
+		furh.r.x = Swap16IfLE(x);
+		furh.r.y = Swap16IfLE(y);
+		furh.r.w = Swap16IfLE((short)width);
+		furh.r.h = Swap16IfLE((short)height);
+		furh.encoding = Swap32IfLE(rfbEncodingRaw);
+
+		newBits = (char *)malloc(width * height);
+		for(i = 0; i < height; i++) {
+			memcpy(&newBits[i * width], &rfbScreen[y * rfbDimensionX + x], width);
+			y++;
+		}
+
+		WriteExact(sGlobal, (char *)&fum, sz_rfbFramebufferUpdateMsg);
+		WriteExact(sGlobal, (char *)&furh, sz_rfbFramebufferUpdateRectHeader);
+		WriteExact(sGlobal, (char *)newBits, width * height);
+
+		free(newBits);
+	}
+}
+
+void StartThread()
+{
+#ifdef WIN32
+	_beginthread(ServerThreadInit, 0, NULL);
+#else
+	pthread_t      thread;
+	pthread_create(&thread, NULL, (void *)&ServerThreadInit, NULL);
+#endif
 }
 
 /***********************/
@@ -1107,11 +1246,13 @@ void rfbKeyPressed(Bit32u key, int press_release)
 		case XK_F11:         key_event = BX_KEY_F11; break;
 		case XK_F12:         key_event = BX_KEY_F12; break;
 		case XK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+		case XK_Control_R:   key_event = BX_KEY_CTRL_R; break;
 		case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
 		case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
 		case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
 		case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
 		case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+		case XK_Alt_R:       key_event = BX_KEY_ALT_L; break;
 
 	    case XK_Insert:      key_event = BX_KEY_INSERT; break;
 	    case XK_Home:        key_event = BX_KEY_HOME; break;
@@ -1128,4 +1269,12 @@ void rfbKeyPressed(Bit32u key, int press_release)
 	if (press_release)
 		key_event |= BX_KEY_RELEASED;
 	bx_devices.keyboard->gen_scancode(key_event);
+}
+
+void rfbMouseMove(int x, int y, int bmask)
+{
+	int buttons = 0;
+	if(y > rfbHeaderbarY) {
+		bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
+	}
 }
