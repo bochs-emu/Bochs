@@ -1,0 +1,48 @@
+test6-execsymbols2
+
+Try again to allow the module to reference symbols in the executable. 
+But this time, eliminate direct symbol references from the executable 
+to the module, so that the executable can be linked first.  I believe
+this will work ok for win32 and it's closer to how plugins need to work.
+
+What I think I learned from test5:
+> DLLs don't allow any symbols to be undefined at link time.  So you have to
+> choose the order of how to build things so that each link is complete.
+> For a DLL that's used as a shared library, it must be built and linked on
+> its own (without the program), with symbols exported.  This link must be
+> complete, so it can't depend on pieces from the program.  Then, the 
+> program can be linked with the DLL, with the program reading symbols from
+> the DLL.  It can't go both ways.
+> 
+> For a plugin environment, we want the plugin to be able to call functions
+> in the main code, without putting every single thing as a function pointer.
+> So the main executable should be built first, with appropriate symbols 
+> exported, and then the plugin can import those symbols.  The main 
+> executable will find symbols in the DLL using lt_dlopen() and lt_dlsym(),
+> which probably maps to LoadLibrary() and GetProcAddress().
+
+
+module1.lo: In function `module_init(void)':
+/home/bryce/bochs-testing/plugin-test/test6-execsymbols2/module1.cc:7: undefined reference to `import stub for register_module(char const *)'
+
+---------------------
+ltdl error
+Program received signal SIGSEGV, Segmentation fault.
+tryall_dlopen_module (handle=0x78f928, prefix=0x0, dirname=0x0, 
+dlname=0x100d2118 "cygmodule1-0.dll") at ltdl.c:1958
+1958      if (dirname[dirname_len -1] == '/')
+Current language:  auto; currently c
+(gdb) where
+#0  tryall_dlopen_module (handle=0x78f928, prefix=0x0, dirname=0x0, 
+    dlname=0x100d2118 "cygmodule1-0.dll") at ltdl.c:1958
+#1  0x1000249b in find_module (handle=0x78f928, dir=0x0, libdir=0x100d2190
+	"/home/bryce/bochs-testing/plugin-test/test6-ltdlopen/lib",
+	dlname=0x100d2118 "cygmodule1-0.dll", old_name=0x100d2130 "libmodule1.a",
+	installed=0) at ltdl.c:2024
+#2  0x100035f8 in try_dlopen (phandle=0x78f958, 
+    filename=0x78f98c "libmodule1.la") at ltdl.c:2798
+#3  0x100038a5 in lt_dlopen (filename=0x78f98c "libmodule1.la") at ltdl.c:2893
+#4  0x10001143 in load_module (fmt=0x100011fc "lib%s.la", 
+    name=0x100011f4 "module1") at main.cc:19
+#5  0x100012bb in main (argc=1, argv=0x100d0e60) at main.cc:46
+
