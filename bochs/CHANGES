@@ -9,10 +9,12 @@ Changes in 1.3.pre1 (November 17, 2001):
   --enable-debugger, you can also choose to enter the debugger.
 - Parallel port emulation cleaned up by Volker Ruppert.  See .bochsrc for
   syntax of new parport1 line in bochsrc.
-- PCI support improved by Volker Ruppert, including BIOS work.
+- PCI support improved by Volker Ruppert, including BIOS changes.  Still
+  not complete.
 - the ROM BIOS now detects nonbootable disks, and prints a message on the
   console.  Thanks to Cliff Hones for a patch that included the console
-  display code.
+  display code, and Barry Allard who helped with checking the boot
+  signature.
 - LBA support added for hard disks.  (Not tested very much.)
 - add dependencies to makefiles
 - logging code moved into a separate file, logio.cc
@@ -20,17 +22,17 @@ Changes in 1.3.pre1 (November 17, 2001):
   bochsrc option using text menus, then save the configuration into
   a new bochsrc file for later use.  You can disable the new code using
   configure --disable-control-panel.  Also you can use the command
-  line arguments -nocp or -nocontrolpanel.
+  line arguments -nocp or -nocontrolpanel.  Also, there is a new
+  "Config" button on the GUI that allows limited changes to the 
+  configuration at runtime, such as changing the floppy disk.
 - new PIT model by Greg Alexander which is much more complete than the
   old one.  The new PIT is used by default, but you can switch back to 
   the old one if you configure with --disable-new-pit.
+  (PIT = 8254 programmable interrupt timer)
 - new option --enable-slowdown-timer, by Greg Alexander, which kicks in if
   Bochs simulation time starts to run faster than real time.  This helps to
   keep the Bochs clock in sync with the real clock when the CPU is mostly
   idle.
-- new option --enable-idle-hack, by Roland Mainz, which makes Bochs more
-  friendly toward other processes when its CPU is idle.  This only works with
-  X windows.
 - new option --enable-iodebug, by Dave Poirier, which creates an I/O
   interface to the debugger.  This lets you write software to be emulated
   in Bochs which can turn on instruction, register, or memory tracing
@@ -41,7 +43,8 @@ Changes in 1.3.pre1 (November 17, 2001):
 - you can now use environment variables in bochsrc values.  For example,
   diskd: file="$BOCHS_IMG/diskd.img", cyl=615, heads=6, spt=17
 - configure with --prefix=PATH works now
-- running configure from a different directory works now
+- running configure from a different directory works now, thanks to 
+  a patch from Edouard G. Parmelan
 - fix [ #433759 ] virtual address checks can overflow.
   > Bochs has been crashing in some cases when you try to access data which
   > overlaps the segment limit, when the segment limit is near the 32-bit
@@ -50,10 +53,6 @@ Changes in 1.3.pre1 (November 17, 2001):
   > condition used to compare offset+length-1 with the limit, but
   > offset+length-1 was overflowing so the comparison went wrong.
 - cmpxchg8b patch from Michael Hohmuth <hohmuth@innocent.com>
-- fixed problems in which bochs compiled with debugger measured time 
-  differently from bochs compiled without debugger.  Also breakpoints
-  in certain places such as the start of an interrupt handler were not
-  recognized, and now they are.
 - apply patch from Thomas Fitzsimmons <fitzsim@cygnus.com> to fix compile
   problems when BX_SUPPORT_PAGING and BX_USE_TLB are turned off
 - fix bug introduced in 1.2.1 which caused spurious exceptions.
@@ -74,52 +73,94 @@ Changes in 1.3.pre1 (November 17, 2001):
   report: [ #480422 ] gdt 'accessed' bit
 - in task_switch when it tried to ensure that the old TSS was paged in,
   it actually used the new TSS address, fixed.
+- add docbook documentation directory in the sources under doc/docbook.
+  The transition from HTML to docbook documentation is still in progress.
+- updated the instrumentation code, and added a working example.  To try
+  it, configure --enable-instrumentation=instrument/example1.  Then when
+  you run bochs, you will get one line for each instruction PC and for
+  each I/O access in a new file called bxevent.txt.
+- emulated cdrom can now read from image files, on any platform.
+- set a bit in the CMOS that says the processor has an FPU.  This is
+  from patch [ #455006 ] Device byte is not initialized aptly.
+  Author did not leave their name.
+- add logging code to the "null ethernet" which does not require host OS
+  support.  All this does is print the outgoing packets from the guest OS.
+- floppy controller returns a proper error response if you try to write
+  a read-only disk image.  For systems such as DOS that actually use the BIOS
+  services, it was also necessary to add code in int13_diskette_function to
+  recognize a write-protected error and return the correct error status code
+  (AH=3, Carry Set).
+- cleanup of log functions (Todd Fries)
+- add BX_ERROR for every command in ATAPI-6 that bochs does not support.
+  I still need to do add some commands from older specs that are obsolete
+  (and not listed) in ATAPI-6.  Commands that aren't in the spec will still
+  panic.
+- only put 0xf into the 2nd hard disk field when the cdrom is not present.
+  This is a patch from Volker Ruppert <Volker.Ruppert@t-online.de>, who
+  comments: "The fdisk command reports an unusable second harddisk if the cdrom
+  is enabled. This patch helps, but I don't know if it is the right way."
+- make hard disk code return error codes when data is not available instead
+  of just panicing.  In particular, if the logical sector is out of bounds
+  or the disk image cannot be read/written at the desired offset, we now
+  abort the ATA command and return an error code.  Many of the old BX_PANIC
+  messages are turned to BX_ERROR, so they will still appear in the
+  log, but now the device model will try to communicate this fact to
+  the OS instead of simply giving up.
+- don't blindly reject odd length atapi commands.  There are cases when
+  it's really ok according to ATA-4.
+- for big endian machines, reversed the bit fields in interrupt_reason.
+  This was pointed out by Nicholai Benalal.
+- extended keyboard improvements by Dave Poirier
+- major mouse patch from Dave Spring, that implements several missing 
+  mouse modes.
+- commit keyboard patch from David Haslam <dch@sirius.clara.co.uk>
+  posted to mailing list, that addresses the problem of each key press
+  printing ^@.  See cvs log for details.
+- mouse performance fixes by Greg Alexander and Robb Main
+- NE2000 fixes by Frode Vatvedt Fjeld, ecelca@yahoo.com, Greg Alexander,
+  and angelos@openbsd.org.
+- fix bug [ #468340 ] pic:slave: OCW3 not implemented.  Some event handling
+  code appeared in the master pic but not the slave pic.
+- fix compile problems in SB16 code, related to fpos_t being treated as 
+  an integer.
+- patch from Volker Ruppert <Volker.Ruppert@t-online.de> to fix
+  midi output file so that winamp can play it.
+- some cleanup of serial code by Todd Fries and Volker Ruppert, but it
+  doesn't work yet.
 
 
-----------------------------------------------------------------------
-NOT COMPLETE: I have been working through the diffs between 1.2.1 and now,
-and I'm down to cpu/arith16.cc.  Also going through the logs, down
-to dbg_main.cc.
-----------------------------------------------------------------------
+RFB mode changes:
+- apply patch.rfb-mouse by MURANAKA Masaki (monaka@users.sf.net)
+  see this source forge bug [ #457968 ] Strange mouse motion on RFB
+- add a retry loop in RFB code, so that if port 5900 is not available
+  it can try 5901, etc.
+
 
 
 Debugger:
-- do a vga update 
-- added debugger command "info fpu" that prints the FPU registers.
+- do a vga update whenever you print a debugger prompt.
+- added debugger command "info fpu" that prints the FPU registers.  If you
+  do "info all" you get cpu and fpu registers.
 - added debugger command "info ne2k" which prints all the registers
   of the NE2000 model
-- add ability to do register tracing and flag tracing (Dave Poirier)
+- add ability to do register tracing and flag tracing (Dave Poirier).
+  Try the trace-reg-on and trace-reg-off commands.
 - instruction trace now includes time ticks
+- fixed problems in which bochs compiled with debugger measured time 
+  differently from bochs compiled without debugger.  Also when instruction
+  trace was enabled, breakpoints and control-C did not work.  Also,
+  breakpoints at the beginning of an interrupt handler did not work.
 
-Linux platform notes:
-- The default configuration for Linux, given in .conf.linux, now enables
-  the NE2000 model.
-- RPM build process configures with --prefix=/usr so that everything is
-  installed in /usr/bochs instead of /usr/local/bochs.
-- DLX Linux disk image is now installed so that only root can write it, to
-  avoid security problems.  When you run the bochs-dlx script, it creates a
-  local copy in your home directory and then runs it.
-
-Amiga MorphOS platform notes:
-- Bochs now compiles and works on Amiga MorphOS.  Configure with
-  --with-amigaos.  For AmigaOS only, see .bochsrc for use of fullscreeen and
-  screenmode options.  The Amiga MorphsOS is written and maintained by
-  Nicholai Benalal <nicholai@chello.se>.
-- configure with --enable-cdrom should work
-
-BeOS platform notes:
-- Bochs compiles and works on BeOS.  Configure with --with-beos.
-  Bernd Thorsten Korz <bernd.korz@insidebeos.de> maintains the BeOS port.
-- configure with --enable-cdrom should work
-
-MacOS X platform notes:
-- Bochs now compiles and works on MacOS X.  Configure with --with-carbon.
-  Emmanuel Mailliard <e.rsz@libertysurf.fr> ported the Macintosh code to the
-  Carbon API.
-- The MacOS X application is built using (gasp) mkdir, copy, and rez.
-  Surely this is not the right way, but it works.
+X Windows platform:
+- commit patch from David Haslam <dch@sirius.clara.co.uk>
+  [ #455763 ] Cursor trail with DOS Edit/Minix vi
+- error for missing fonts now points to the documentation
+- new option --enable-idle-hack, by Roland Mainz, which makes Bochs more
+  friendly toward other processes when its CPU is idle.  Presently, 
+  this option is specific to X windows.
 
 Win32 platform notes:
+- now Windows 95/98/ME can read the physical cdrom (Don Becker)
 - The default configuration for Win32 VC++, given in .conf.win32-vcpp,
   now enables the NE2000 and renames all .cc files to .cpp.  This keeps VC++
   happy but may make it hard to use CVS.
@@ -128,9 +169,65 @@ Win32 platform notes:
 - See "new docs" on the web site for compile instructions for VC++ and Cygwin.
 - The sources include a VC++ workspace, in addition to the old "nmake"
   makefile.
-- new utility called niclist.exe which lists the names of all your network
-  cards (well probably you just have one).  The name must be used when
-  setting up your .bochsrc.
+- ethernet support (emulated NE2000 card), coded by Don Becker.  This
+  implementation requires a library called WinPCap, which you can 
+  download from http://netgroup-serv.polito.it/winpcap.
+- new utility called niclist.exe which lists the ID number of all your network
+  cards (well probably you just have one).  The ID be used when setting up your
+  .bochsrc.
+- patch [ #466403 ] make text colors more accurate.  The author did not leave
+  his/her name.
+- fix GUI bug [ #452159 ] win32: mouse stuck if bochs win partly off screen
+  Now we center the mouse periodically, whether or not the mouse has
+  wandered outside of the window or not.
+- event handler recognizes the extended keycode flag
+- fixes for raw floppy and floppy disk images (Don Becker)
+
+Linux platform notes:
+- Ethernet (emulated NE2000 card) now works in Linux!  Contributed by
+  splite@purdue.edu.  This has been tested using host OS kernel 2.2.14, and
+  works with telnet, ftp, irc, lynx, etc.  Because it is a packet filter
+  solution, you aren't able to talk to the host machine, only to other 
+  machines on the network.  
+- The default configuration for Linux, given in .conf.linux, now enables
+  the NE2000 model.
+- RPM build process configures with --prefix=/usr so that everything is
+  installed in /usr/bochs instead of /usr/local/bochs.
+- DLX Linux disk image is now installed so that only root can write it, to
+  avoid security problems.  When you run the bochs-dlx script, it creates a
+  local copy in your home directory and then runs it.
+- code that determines the capacity of a cdrom now works for both ATAPI
+  and SCSI drives (splite@purdue.edu)
+- applied patch from bochs@sigint.cs.purdue.edu.  The comments are:
+  > The Linux 2.4.5 CD-ROM driver sends a READ_DISC_INFO command which caused
+  > an "unrecognized ATAPI command" panic.  Looks like READ_DISC_INFO is only
+  > recognized by CD-R and CD-RW drives, so I ignore it for now.
+
+
+
+Amiga MorphOS platform notes:
+- Bochs now compiles and works on Amiga MorphOS.  Configure with
+  --with-amigaos.  For AmigaOS only, see .bochsrc for use of fullscreeen and
+  screenmode options.  The Amiga MorphsOS is written and maintained by
+  Nicholai Benalal <nicholai@chello.se>.
+- raw cdrom supported if you configure with --enable-cdrom
+
+BeOS platform notes:
+- Bochs compiles and works on BeOS.  Configure with --with-beos.
+  Bernd Thorsten Korz <bernd.korz@insidebeos.de> maintains the BeOS port.
+- raw cdrom supported if you configure with --enable-cdrom
+
+MacOS X platform notes:
+- Bochs now compiles and works on MacOS X.  Configure with --with-carbon.
+  Emmanuel Mailliard <e.rsz@libertysurf.fr> ported the Macintosh code to the
+  Carbon API.
+- The MacOS X application is built using (gasp) mkdir, copy, and rez.
+  Surely this is not the right way, but it works.
+
+
+
+
+
 
 
 Changes in 1.2.1 (June 12, 2001):
