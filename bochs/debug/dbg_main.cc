@@ -23,6 +23,11 @@
 
 extern "C" {
 #include <signal.h>
+#ifdef USE_READLINE
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
 }
 
 #include "bochs.h"
@@ -365,7 +370,6 @@ process_sim2:
   return(0); // keep compiler happy
 }
 
-
   void
 bx_dbg_usage(void)
 {
@@ -425,7 +429,6 @@ bx_dbg_user_input_loop(void)
     }
 }
 
-
   void
 bx_get_command(void)
 {
@@ -433,12 +436,31 @@ bx_get_command(void)
 
   bx_infile_stack[bx_infile_stack_index].lineno++;
 
+  char prompt[256];
   if (bx_infile_stack_index == 0) {
-    fprintf(stderr, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
+    sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
     }
-
+#ifdef USE_READLINE
+  if (bx_infile_stack_index == 0) {
+    // disable ^C handling during readline so that I get get to GDB
+    //set_ctrlc_handler (0);
+    charptr_ret = readline (prompt);
+    //set_ctrlc_handler (1);
+    if (strlen(charptr_ret) > 0) add_history (charptr_ret);
+    strcpy (tmp_buf, charptr_ret);
+    strcat (tmp_buf, "\n");
+    free (charptr_ret);
+    charptr_ret = &tmp_buf[0];
+  } else {
+    charptr_ret = fgets(tmp_buf, 512,
+      bx_infile_stack[bx_infile_stack_index].fp);
+  }
+#else
+  if (bx_infile_stack_index == 0)
+    fprintf (stderr, "%s", prompt);
   charptr_ret = fgets(tmp_buf, 512,
     bx_infile_stack[bx_infile_stack_index].fp);
+#endif
   if (charptr_ret == NULL) {
     // see if error was due to EOF condition
     if (feof(bx_infile_stack[bx_infile_stack_index].fp)) {
@@ -545,6 +567,7 @@ bxerror(char *s)
 bx_debug_ctrlc_handler(int signum)
 {
   UNUSED(signum);
+  bx_printf ("Ctrl-C detected in signal handler.\n");
 
   signal(SIGINT, bx_debug_ctrlc_handler);
   bx_guard.interrupt_requested = 1;
@@ -3233,9 +3256,44 @@ bx_dbg_info_dirty_command(void)
     }
 }
 
-
-
-
+  void
+bx_dbg_info_control_regs_command(void)
+{
+  bx_dbg_cpu_t cpu;
+  bx_dbg_callback[0].get_cpu(&cpu);
+  int cr0 = cpu.cr0;
+  int cr2 = cpu.cr2;
+  int cr3 = cpu.cr3;
+  int cr4 = cpu.cr4;
+  fprintf (stderr, "CR0=0x%08x\n", cr0);
+  fprintf (stderr, "    PG=paging=%d\n", (cr0>>31) & 1);
+  fprintf (stderr, "    CD=cache disable=%d\n", (cr0>>30) & 1);
+  fprintf (stderr, "    NW=not write through=%d\n", (cr0>>29) & 1);
+  fprintf (stderr, "    AM=alignment mask=%d\n", (cr0>>18) & 1);
+  fprintf (stderr, "    WP=write protect=%d\n", (cr0>>16) & 1);
+  fprintf (stderr, "    NE=numeric error=%d\n", (cr0>>5) & 1);
+  fprintf (stderr, "    ET=extension type=%d\n", (cr0>>4) & 1);
+  fprintf (stderr, "    TS=task switched=%d\n", (cr0>>3) & 1);
+  fprintf (stderr, "    EM=FPU emulation=%d\n", (cr0>>2) & 1);
+  fprintf (stderr, "    MP=monitor coprocessor=%d\n", (cr0>>1) & 1);
+  fprintf (stderr, "    PE=protection enable=%d\n", (cr0>>0) & 1);
+  fprintf (stderr, "CR2=page fault linear address=0x%08x\n", cr2);
+  fprintf (stderr, "CR3=0x%08x\n", cr3);
+  fprintf (stderr, "    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
+  fprintf (stderr, "    PWT=page-level writes transparent=%d\n", (cr3>>3) & 1);
+  fprintf (stderr, "CR4=0x%08x\n", cr4);
+  fprintf (stderr, "    VME=virtual-8086 mode extensions=%d\n", (cr4>>0) & 1);
+  fprintf (stderr, "    PVI=protected-mode virtual interrupts=%d\n", (cr4>>1) & 1);
+  fprintf (stderr, "    TSD=time stamp disable=%d\n", (cr4>>2) & 1);
+  fprintf (stderr, "    DE=debugging extensions=%d\n", (cr4>>3) & 1);
+  fprintf (stderr, "    PSE=page size extensions=%d\n", (cr4>>4) & 1);
+  fprintf (stderr, "    PAE=physical address extension=%d\n", (cr4>>5) & 1);
+  fprintf (stderr, "    MCE=machine check enable=%d\n", (cr4>>6) & 1);
+  fprintf (stderr, "    PGE=page global enable=%d\n", (cr4>>7) & 1);
+  fprintf (stderr, "    PCE=performance-monitor counter enable=%d\n", (cr4>>8) & 1);
+  fprintf (stderr, "    OXFXSR=OS support for FXSAVE/FXRSTOR=%d\n", (cr4>>9) & 1);
+  fprintf (stderr, "    OSXMMEXCPT=OS support for unmasked SIMD FP exceptions=%d\n", (cr4>>10) & 1);
+}
 
 //
 // Reports from various events
