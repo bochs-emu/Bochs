@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.28 2001-12-19 19:15:12 vruppert Exp $
+// $Id: x.cc,v 1.29 2002-01-07 15:50:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -239,6 +239,7 @@ Bit32u ascii_to_key_event[0x5f] = {
   BX_KEY_GRAVE
   };
 
+
 /* US key mapping. Also the default */
 Bit32u keymap_us[][2] = {
   { XK_space               , BX_KEY_SPACE },
@@ -303,7 +304,6 @@ Bit32u keymap_us[][2] = {
   { XK_bracketleft         , BX_KEY_LEFT_BRACKET },
   { XK_backslash           , BX_KEY_BACKSLASH },
   { XK_bracketright        , BX_KEY_RIGHT_BRACKET },
-  { XK_asciicircum         , BX_KEY_6 },
   { XK_underscore          , BX_KEY_MINUS },
   { XK_grave               , BX_KEY_GRAVE },
   { XK_a                   , BX_KEY_A },
@@ -458,6 +458,47 @@ lShift l\ Z X C V B N M , . / rShift
 lCtrl lAlt Space rAlt rCtrl
 */
 
+/* ES key mapping, Applied as a diff to the default.
+   Thanks to Vicente Hernando Ara */
+Bit32u keymap_es[][2] = {
+  { XK_bar                 , BX_KEY_1 },
+  { XK_dead_acute          , BX_KEY_SINGLE_QUOTE }, 
+  { XK_periodcentered      , BX_KEY_3 },
+  { XK_slash               , BX_KEY_7 },
+  { XK_dead_diaeresis      , BX_KEY_SINGLE_QUOTE },
+  { XK_parenright          , BX_KEY_9 },
+  { XK_equal               , BX_KEY_0 },
+  { XK_parenleft           , BX_KEY_8 },
+  { XK_questiondown        , BX_KEY_EQUALS },
+  { XK_comma               , BX_KEY_COMMA },
+  { XK_apostrophe          , BX_KEY_MINUS },
+  { XK_period              , BX_KEY_PERIOD },
+  { XK_underscore          , BX_KEY_SLASH },
+  { XK_minus               , BX_KEY_SLASH },
+  { XK_Ntilde              , BX_KEY_SEMICOLON },
+  { XK_ntilde              , BX_KEY_SEMICOLON },
+  { XK_semicolon           , BX_KEY_COMMA },
+  { XK_exclamdown          , BX_KEY_EQUALS },
+  { XK_colon               , BX_KEY_PERIOD },
+  { XK_underscore          , BX_KEY_SLASH },
+  { XK_at                  , BX_KEY_2 },
+  { XK_quotedbl            , BX_KEY_2 },
+  { XK_dead_grave          , BX_KEY_LEFT_BRACKET },
+  { XK_Ccedilla            , BX_KEY_BACKSLASH },
+  { XK_plus                , BX_KEY_RIGHT_BRACKET },
+  { XK_ampersand           , BX_KEY_6 },
+  { XK_question            , BX_KEY_MINUS },
+  { XK_masculine           , BX_KEY_GRAVE },
+  { XK_backslash           , BX_KEY_GRAVE },
+  { XK_EuroSign            , BX_KEY_E },
+  { XK_dead_circumflex     , BX_KEY_LEFT_BRACKET },
+  { XK_ccedilla            , BX_KEY_BACKSLASH },
+  { XK_asterisk            , BX_KEY_RIGHT_BRACKET },
+  { XK_ordfeminine         , BX_KEY_GRAVE },
+  { XK_less                , BX_KEY_LEFT_BACKSLASH },
+  { XK_greater             , BX_KEY_LEFT_BACKSLASH },
+  { XK_Control_R           , BX_KEY_CTRL_R },
+};
 
 /* French key mapping. Applied as a diff to the default */
 Bit32u keymap_fr[][2] = {
@@ -1031,6 +1072,7 @@ if (bx_options.Oprivate_colormap->get ()) {
   bx_keymap.addTable("us",&keymap_us,sizeof(keymap_us)/(sizeof(Bit32u)*2));
   bx_keymap.addTable("fr",&keymap_fr,sizeof(keymap_fr)/(sizeof(Bit32u)*2));
   bx_keymap.addTable("de",&keymap_de,sizeof(keymap_de)/(sizeof(Bit32u)*2));
+  bx_keymap.addTable("es",&keymap_es,sizeof(keymap_es)/(sizeof(Bit32u)*2));
   bx_keymap.setDefault("us");
 }
 
