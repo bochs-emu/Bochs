@@ -93,8 +93,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #  define assert(cond)   while (!(cond)) { fprintf (stderr, "Assert failed at %s:%d: '%s'\n", __FILE__, __LINE__, #cond); abort(); }
 #endif
 
-//#define LTDEBUG_PRINTF(x) /* debug output disabled */
-#define LTDEBUG_PRINTF(x) do{ printf("LT_DEBUG: "); printf x; } while (0)
+#define LTDEBUG_PRINTF(x) /* debug output disabled */
+//#define LTDEBUG_PRINTF(x) do{ printf("LT_DEBUG: "); printf x; } while (0)
 
 #include "ltdl.h"
 
