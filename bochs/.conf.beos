@@ -7,7 +7,7 @@
 
 CC=gcc
 CXX=$CC
-CFLAGS="-Wall -O9 -mpentium -fomit-frame-pointer -pipe -Wno-multichar"
+CFLAGS="-Wall -O9 -mpentium -fomit-frame-pointer -pipe"
 CXXFLAGS=$CFLAGS
 
 export CC
