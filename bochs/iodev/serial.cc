@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.13 2001-10-03 13:10:38 bdenney Exp $
+// $Id: serial.cc,v 1.14 2001-11-17 18:10:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,7 +121,7 @@ bx_serial_c::init(bx_devices_c *d)
 #if defined (USE_TTY_HACK)
   tty_id = tty_alloc("Bx Serial Console, Your Window to the 8250");
   if (tty_id > 0)
-    BX_INFO(("TTY Allocated fd = %d", tty_get_fd(tty_id)));
+    BX_INFO(("TTY allocated fd = %d", tty_get_fd(tty_id)));
   else
     BX_INFO(("TTY allocation failed"));
 #else
@@ -247,7 +247,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
   /* SERIAL PORT 1 */
 
   if (io_len > 1)
-    BX_PANIC(("serial: io read from port %04x, bad len=%u",
+    BX_PANIC(("io read from port %04x, bad len=%u",
 	     (unsigned) address,
              (unsigned) io_len));
 
@@ -348,15 +348,19 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 	(BX_SER_THIS s[0].modem_status.dsr          << 5) |
 	(BX_SER_THIS s[0].modem_status.ri           << 6) |
 	(BX_SER_THIS s[0].modem_status.dcd          << 7);
+      BX_SER_THIS s[0].modem_status.delta_cts = 0;
+      BX_SER_THIS s[0].modem_status.delta_dsr = 0;
+      BX_SER_THIS s[0].modem_status.ri_trailedge = 0;
+      BX_SER_THIS s[0].modem_status.delta_dcd = 0;
       break;
 
     case 0x03FF: /* scratch register */
-      val = BX_SER_THIS s[0].scratch = 0;
+      val = BX_SER_THIS s[0].scratch;
       break;
 
     default:
       val = 0; // keep compiler happy
-      BX_PANIC(("unsupported serial io read from address=%0x%x!",
+      BX_PANIC(("unsupported io read from address=%0x%x!",
         (unsigned) address));
       break;
   }
@@ -390,10 +394,10 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   /* SERIAL PORT 1 */
 
   if (io_len > 1)
-    BX_PANIC(("serial: io write to address %08x len=%u",
+    BX_PANIC(("io write to address %08x len=%u",
              (unsigned) address, (unsigned) io_len));
 
-  BX_DEBUG(("serial: write to address: 0x%x = 0x%x",
+  BX_DEBUG(("write to address: 0x%x = 0x%x",
 	      (unsigned) address, (unsigned) value));
 
   switch (address) {
@@ -426,7 +430,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		 (int) (1000000.0 / (BX_SER_THIS s[0].baudrate / 8)),
 				      0); /* not continuous */
 	} else {
-	  BX_ERROR(("serial: write to tx hold register when not empty"));
+	  BX_ERROR(("write to tx hold register when not empty"));
 	}
       }
       break;
@@ -474,7 +478,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  BX_SER_THIS s[0].line_cntl.stick_parity != (value & 0x20) >> 5) {
 	    if (((value & 0x20) >> 5) &&
 		((value & 0x8) >> 3))
-		  BX_PANIC(("[serial] sticky parity set and parity enabled"));
+		  BX_PANIC(("sticky parity set and parity enabled"));
 	    BX_SER_THIS raw->set_parity_mode(((value & 0x8) >> 3),
 					     ((value & 0x10) >> 4) ? P_EVEN : P_ODD);
       }
@@ -535,13 +539,11 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case 0x03FD: /* Line status register */
-      /* XXX ignore ?  */
-      BX_PANIC(("serial: write to line status register"));
+      BX_ERROR(("write to line status register ignored"));
       break;
 
     case 0x03FE: /* MODEM status register */
-      /* XXX ignore ?  */
-      BX_PANIC(("serial: write to MODEM status register"));
+      BX_ERROR(("write to MODEM status register ignored"));
       break;
 
     case 0x03FF: /* scratch register */
@@ -549,7 +551,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     default:
-      BX_PANIC(("unsupported serial io write to address=0x%x, value = 0x%x!",
+      BX_PANIC(("unsupported io write to address=0x%x, value = 0x%x!",
         (unsigned) address, (unsigned) value));
       break;
   }
@@ -590,7 +592,7 @@ bx_serial_c::tx_timer(void)
     tty(tty_id, 0, & BX_SER_THIS s[0].txbuffer);
 #elif USE_RAW_SERIAL
     if (!BX_SER_THIS raw->ready_transmit())
-	  BX_PANIC(("[serial] Not ready to transmit"));
+	  BX_PANIC(("Not ready to transmit"));
     BX_SER_THIS raw->transmit(BX_SER_THIS s[0].txbuffer);
 #endif
 #if defined(SERIAL_ENABLE)
@@ -650,7 +652,7 @@ bx_serial_c::rx_timer(void)
     if ((rdy = BX_SER_THIS raw->ready_receive())) {
       data = BX_SER_THIS raw->receive();
       if (data == C_BREAK) {
-	    BX_DEBUG(("[serial] Got BREAK"));
+	    BX_DEBUG(("got BREAK"));
 	    BX_SER_THIS s[0].line_status.break_int = 1;
 	    rdy = 0;
       }
