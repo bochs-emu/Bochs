@@ -54,12 +54,8 @@ LOCAL_CXXFLAGS =
 bios: BIOS-bochs-latest BIOS-bochs-2-processors BIOS-bochs-4-processors BIOS-bochs-8-processors 
 
 clean:
-	@RMCOMMAND@ *.o
-	@RMCOMMAND@ *.a
-	@RMCOMMAND@ _rombios_.c
-	@RMCOMMAND@ as86-sym.txt
-	@RMCOMMAND@ ld86-sym.txt
-	@RMCOMMAND@ rombios.txt
+	@RMCOMMAND@ *.o *.a _rombios_.c as86-sym.txt ld86-sym.txt 
+	@RMCOMMAND@ rombios*.txt rombios*.sym
 
 dist-clean: clean bios-clean
 	@RMCOMMAND@ Makefile
@@ -76,26 +72,34 @@ BIOS-bochs-latest: rombios.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
 	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	-perl ${srcdir}/makesym.perl < rombios.txt > rombios.sym
 	mv tmp.bin BIOS-bochs-latest
+	rm -f _rombios_.s
 
 BIOS-bochs-2-processors: rombios.c
 	gcc -DBX_SMP_PROCESSORS=2 -E $< > _rombios_.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
 	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios2.txt
+	-perl ${srcdir}/makesym.perl < rombios2.txt > rombios2.sym
 	mv tmp.bin BIOS-bochs-2-processors
+	rm -f _rombios_.s
 
 BIOS-bochs-4-processors: rombios.c
 	gcc -DBX_SMP_PROCESSORS=4 -E $< > _rombios_.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
 	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios4.txt
+	-perl ${srcdir}/makesym.perl < rombios4.txt > rombios4.sym
 	mv tmp.bin BIOS-bochs-4-processors
+	rm -f _rombios_.s
 
 BIOS-bochs-8-processors: rombios.c
 	gcc -DBX_SMP_PROCESSORS=8 -E $< > _rombios_.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
 	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios8.txt
+	-perl ${srcdir}/makesym.perl < rombios8.txt > rombios8.sym
 	mv tmp.bin BIOS-bochs-8-processors
+	rm -f _rombios_.s
 
