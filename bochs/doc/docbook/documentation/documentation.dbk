@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.6 2001-09-20 03:27:24 bdenney Exp $
+$Id: documentation.dbk,v 1.7 2001-09-25 19:00:45 vasudeva Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -195,14 +195,11 @@ the under construction symbol to appear, like this &FIXME;.
 </para>
 </chapter>
 
-<chapter><title>Rendering</title>
+<chapter><title>Reading and Writing</title>
 
 <para>
-The docbook source code is a text file that can be edited with any text editor
-such as emacs or vi.  Several software tools are required to render this
-source code into a nice readable form, such as HTML, PDF, or PostScript.
-This section describes the tools you need and the steps you take to render
-the Bochs documentation.
+The DocBook source code -- user.dbk, for example -- is a plain text file that 
+can be directly edited and saved with any text editor such as emacs or vi.  
 </para>
 
 <tip>
@@ -210,6 +207,25 @@ the Bochs documentation.
 If you just want to read the documentation, you should not
 need to read and understand this section, and render the docs yourself.  The
 &bochswebsite; has all this information in readable form already.
+</para>
+</tip>
+
+<para>
+To render this source code into the nice readable form the end-user will 
+require, several tools are required.  These tools allow the .dbk file to be 
+rendered into such format as HTML, PDF, and PostScript.  This section
+describes the tools you need and the steps you take to render the Bochs
+documentation.
+</para>
+
+<tip>
+<para>
+The rendering process is one-way.  That is, the DocBook source files will be 
+downloaded from CVS, edited, and uploaded to CVS as .dbk files.  Along the
+way, it will probably be necessary to render them into HTML, but only to 
+check one's work or to post them as part of a web page.  (I hope I'm not the
+only person to spend nine minutes trying to figure out how to 'compile' HTML
+into DocBook format.)
 </para>
 </tip>
 
