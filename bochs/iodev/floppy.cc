@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.41 2002-07-15 20:11:33 vruppert Exp $
+// $Id: floppy.cc,v 1.42 2002-07-16 19:36:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.41 2002-07-15 20:11:33 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.42 2002-07-16 19:36:40 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -651,7 +651,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         if (BX_FD_THIS s.reset_sensei > 0) {
           drive = 4 - BX_FD_THIS s.reset_sensei;
           BX_FD_THIS s.status_reg0 &= 0xfc;
-          BX_FD_THIS s.status_reg0 |= drive;
+          BX_FD_THIS s.status_reg0 |= (BX_FD_THIS s.head[drive] << 2) | drive;
           BX_FD_THIS s.reset_sensei--;
 	  }
         BX_FD_THIS s.result[1] = BX_FD_THIS s.cylinder[drive];
@@ -707,6 +707,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 
     case 0x4a: // read ID
       drive = BX_FD_THIS s.command[1] & 0x03;
+      BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
       BX_FD_THIS s.DOR &= 0xfc;
       BX_FD_THIS s.DOR |= drive;
 
@@ -726,7 +727,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
       BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
       BX_FD_THIS s.result[5] = 1; /* sector at completion */
-      BX_FD_THIS s.result[6] = 2; // sector size code
+      BX_FD_THIS s.result[6] = 2; /* sector size code */
       bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
         bx_options.Ofloppy_command_delay->get (), 0 );
       /* data reg not ready, controller busy */
@@ -1064,7 +1065,7 @@ bx_floppy_ctrl_c::timer()
       BX_FD_THIS s.pending_command = 0;
       /* write ready, not busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
-      BX_FD_THIS s.status_reg0 = 0x20 | drive;
+      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
       raise_interrupt();
       goto reset_changeline;
       break;
@@ -1073,7 +1074,7 @@ bx_floppy_ctrl_c::timer()
       BX_FD_THIS s.pending_command = 0;
       /* write ready, not busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
-      BX_FD_THIS s.status_reg0 = 0x20 | drive;
+      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
       raise_interrupt();
       goto reset_changeline;
       break;
@@ -1082,7 +1083,7 @@ bx_floppy_ctrl_c::timer()
       BX_FD_THIS s.pending_command = 0;
       /* read ready, busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO;
-      BX_FD_THIS s.status_reg0 = 0x20 | drive;
+      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
       BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
       raise_interrupt();
       break;
@@ -1096,7 +1097,7 @@ bx_floppy_ctrl_c::timer()
       BX_FD_THIS s.pending_command = 0;
       /* read ready, busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
-      BX_FD_THIS s.status_reg0 = 0x20 | drive;
+      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
       raise_interrupt();
       break;
 
