@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.48 2002-06-20 15:43:09 yakovlev Exp $
+// $Id: control.cc,v 1.49 2002-06-20 17:59:26 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.48 2002-06-20 15:43:09 yakovlev Exp $
+ * $Id: control.cc,v 1.49 2002-06-20 17:59:26 yakovlev Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -276,7 +276,7 @@ static char *startup_menu_prompt =
 "press return three times to accept the default choices (shown in\n"
 "square brackets).\n"
 "\n"
-"You can also start bochs with the -nocp option to skip these menus.\n";
+"You can also start bochs with the -nocp option to skip these menus.\n"
 "\n"
 "1. Read options from...\n"
 "2. Edit options\n"
