@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.21 2003-10-03 20:58:23 danielg4 Exp $
+// $Id: carbon.cc,v 1.22 2003-11-02 04:05:02 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -561,13 +561,13 @@ void CreateTile(void)
   CGrafPtr  savePort;
   OSErr     err;
   
-  if (bx_options.Oprivate_colormap->get ())
-  {
+//  if (bx_options.Oprivate_colormap->get ())
+//  {
     GetGWorld(&savePort, &saveDevice);
   
     err = NewGWorld(&gOffWorld, 8, 
-      &srcTileRect, gCTable, NULL, useTempMem);
-    if (err != noErr)
+      &srcTileRect, gCTable, NULL, keepLocal);
+    if (err != noErr || gOffWorld == NULL)
       BX_PANIC(("mac: can't create gOffWorld"));
 
     SetGWorld(gOffWorld, NULL);
@@ -577,22 +577,31 @@ void CreateTile(void)
     if (gTile != NULL)
     {
       NoPurgePixels(gTile);
-      LockPixels(gTile);
-      (**gTile).rowBytes = 0x8000 | srcTileRect.right;
-      (**gCTable).ctFlags = (**gCTable).ctFlags | 0x4000;   //use palette manager indexes
-      (**gTile).pmTable = gCTable;
+      if (!LockPixels(gTile))
+        BX_ERROR(("mac: can't LockPixels gTile"));
+      if ((**gTile).pmTable != gCTable)
+      {
+        DisposeCTable(gCTable);
+        gCTable = (**gTile).pmTable;
+      }
+        
+      (**gTile).rowBytes = 0x8000 | ((((long) (**gTile).pixelSize * ((long) ((**gTile).bounds.right-(**gTile).bounds.left)) + 31) >> 5) << 2);
+      PortChanged(gOffWorld);
+      (**gCTable).ctFlags |= 0x4000;   //use palette manager indexes
+      CTabChanged(gCTable);
     }
     else
       BX_PANIC(("mac: can't create gTile"));
   
     SetGWorld(savePort, saveDevice);
-  }
+/*  }
   else
   {
+    gOffWorld = NULL;
     gTile = CreatePixMap(0, 0, srcTileRect.right, srcTileRect.bottom, 8, gCTable);
     if (gTile == NULL)
       BX_PANIC(("mac: can't create gTile"));
-  }
+  }*/
 }
 
 void CreateMenus(void)
@@ -767,7 +776,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, u
 
   gCTable = GetCTable(128);
   BX_ASSERT (gCTable != NULL);
-  (*gCTable)->ctSeed = GetCTSeed(); 
+  CTabChanged(gCTable); //(*gCTable)->ctSeed = GetCTSeed(); 
   SetRect(&srcTextRect, 0, 0, FONT_WIDTH, FONT_HEIGHT);
   SetRect(&srcTileRect, 0, 0, tilewidth, tileheight);
   
@@ -784,7 +793,8 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, u
   InstallApplicationEventHandler(NewEventHandlerUPP(CEvtHandleApplicationMouseMoved),
     2, mouseMoved, 0, NULL);
 
-  GetCurrentProcess(&gProcessSerNum);
+  if (GetCurrentProcess(&gProcessSerNum) == noErr)
+    SetFrontProcess(&gProcessSerNum);
   
   GetMouse(&prevPt);
 
@@ -1077,12 +1087,20 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   int           cursori;
   Rect          destRect;
   RGBColor      fgColor, bgColor;
-  GrafPtr       oldPort;
+  GrafPtr       oldPort, savePort;
+  GDHandle      saveDevice;
   GrafPtr       winGrafPtr = GetWindowPort(win);
   unsigned      nchars, ncols;
+  OSErr         theError;
   
   screen_state = TEXT_MODE;
   
+/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
+  {
+    GetGWorld(&savePort, &saveDevice);
+
+    SetGWorld(gOffWorld, NULL);
+  }*/
   GetPort(&oldPort);
   
   SetPortWindowPort(win);
@@ -1129,6 +1147,8 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         
       CopyBits( vgafont[achar], WINBITMAP(win),
         &srcTextRect, &destRect, srcCopy, NULL);
+  if ((theError = QDError()) != noErr)
+    BX_ERROR(("mac: CopyBits returned %hd", theError));
 
       if (i == cursori)   //invert the current cursor block
       {
@@ -1142,7 +1162,9 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   previ = cursori;
   
   SetPort(oldPort);
-
+/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
+    SetGWorld(savePort, saveDevice);
+*/
   windowUpdatesPending = true;
 }
 
@@ -1200,13 +1222,16 @@ bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned g
   PaletteHandle thePal, oldpal;
   GDHandle  saveDevice;
   CGrafPtr  savePort;
+  GrafPtr   oldPort;
   
-  if (bx_options.Oprivate_colormap->get ())
+/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
   {
     GetGWorld(&savePort, &saveDevice);
 
     SetGWorld(gOffWorld, NULL);
-  }
+  }*/
+  GetPort(&oldPort);
+  SetPortWindowPort(win);
 
   (**gCTable).ctTable[index].value = index;
   (**gCTable).ctTable[index].rgb.red = (red << 8);
@@ -1217,9 +1242,11 @@ bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned g
   
   CTabChanged(gCTable);
   
+  SetPort(oldPort);
+/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
+    SetGWorld(savePort, saveDevice);*/
   if (bx_options.Oprivate_colormap->get ())
   {
-    SetGWorld(savePort, saveDevice);
   
     thePal = NewPalette(index, gCTable, pmTolerant, 0x5000);
     oldpal = GetPalette(win);
@@ -1251,27 +1278,41 @@ bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned g
 void bx_carbon_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   Rect      destRect;
-/*  GDHandle  saveDevice;
+  OSErr     theError;
+  Ptr       theBaseAddr;
+  GDHandle  saveDevice;
   CGrafPtr  savePort;
+  GrafPtr   oldPort;
   
-  GetGWorld(&savePort, &saveDevice);
+/*  if (gOffWorld != NULL)
+  {
+    GetGWorld(&savePort, &saveDevice);
 
-  SetGWorld(gOffWorld, NULL); */
-        
+    SetGWorld(gOffWorld, NULL);
+  }*/
+
   screen_state = GRAPHIC_MODE;
 
   // SetPort - Otherwise an update happens to the headerbar and ooomph, we're drawing weirdly on the screen
+  GetPort(&oldPort);
   SetPortWindowPort(win);
   destRect = srcTileRect;
   OffsetRect(&destRect, x0, y0);
   
-  (**gTile).baseAddr = (Ptr)tile; 
+  //(**gTile).baseAddr = (Ptr)tile;
+  if ((theBaseAddr = GetPixBaseAddr(gTile)) == NULL)
+    BX_PANIC(("mac: gTile has NULL baseAddr (offscreen buffer purged)"));
+  else
+    BlockMoveData(tile, theBaseAddr, ((**gTile).bounds.bottom-(**gTile).bounds.top) * ((**gTile).rowBytes & 0x3fff));
   
   CopyBits( & (** ((BitMapHandle)gTile) ), WINBITMAP(win),
             &srcTileRect, &destRect, srcCopy, NULL);
-
+  if ((theError = QDError()) != noErr)
+    BX_ERROR(("mac: CopyBits returned %hd", theError));
+  SetPort(oldPort);
   windowUpdatesPending = true;
-//  SetGWorld(savePort, saveDevice);
+/*  if (gOffWorld != NULL)
+    SetGWorld(savePort, saveDevice);*/
 }
 
 
