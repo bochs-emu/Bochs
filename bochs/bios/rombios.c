@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.87 2003-01-13 12:51:17 cbothamy Exp $
+// $Id: rombios.c,v 1.88 2003-01-14 17:59:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.87 $";
-static char bios_date_string[] = "$Date: 2003-01-13 12:51:17 $";
+static char bios_cvs_version_string[] = "$Revision: 1.88 $";
+static char bios_date_string[] = "$Date: 2003-01-14 17:59:52 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.87 2003-01-13 12:51:17 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.88 2003-01-14 17:59:52 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3146,16 +3146,20 @@ cdrom_boot()
   if(buffer[0x20]!=0x88)return 11; // Bootable
 
   write_byte(ebda_seg,&EbdaData->cdemu.media,buffer[0x21]);
-  if(buffer[0x21]<4)
+  if(buffer[0x21]==0){
+    // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 0xE0. 
+    // Win2000 cd boot needs to know it booted from cd
+    write_byte(ebda_seg,&EbdaData->cdemu.emulated_drive,0xE0);
+    } 
+  else if(buffer[0x21]<4)
     write_byte(ebda_seg,&EbdaData->cdemu.emulated_drive,0x00);
   else
     write_byte(ebda_seg,&EbdaData->cdemu.emulated_drive,0x80);
 
   // FIXME ElTorito Harddisk. current code can only emulate a floppy
-  if(read_byte(ebda_seg,&EbdaData->cdemu.emulated_drive)!=0x00)
-    BX_PANIC("El-Torito: Cannot boot as a harddisk yet\n");
+  //if(read_byte(ebda_seg,&EbdaData->cdemu.emulated_drive)!=0x00)
+  //  BX_PANIC("El-Torito: Cannot boot as a harddisk yet\n");
 
-  // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 1. Should be fixed if two ide interface
   write_byte(ebda_seg,&EbdaData->cdemu.controller_index,device/2);
   write_byte(ebda_seg,&EbdaData->cdemu.device_spec,device%2);
 
@@ -3183,7 +3187,7 @@ cdrom_boot()
   if((error = ata_cmd_packet(device, 12, get_SS(), atacmd, 0, nbsectors*512L, ATA_DATA_IN, boot_segment,0)) != 0)
     return 12;
 
-  // Remeber the media type
+  // Remember the media type
   switch(read_byte(ebda_seg,&EbdaData->cdemu.media)) {
     case 0x01:  // 1.2M floppy
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.spt,15);
@@ -3200,24 +3204,27 @@ cdrom_boot()
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.cylinders,80);
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.heads,2);
       break;
+    case 0x04:  // Harddrive
+      write_word(ebda_seg,&EbdaData->cdemu.vdevice.spt,read_byte(boot_segment,446+6)&0x3f);
+      write_word(ebda_seg,&EbdaData->cdemu.vdevice.cylinders,
+	      (read_byte(boot_segment,446+6)<<2) + read_byte(boot_segment,446+7) + 1);
+      write_word(ebda_seg,&EbdaData->cdemu.vdevice.heads,read_byte(boot_segment,446+5) + 1);
+      break;
    }
 
-  // Increase bios installed hardware number of floppy, booted from floppy
-  if(read_byte(ebda_seg,&EbdaData->cdemu.media)!=0)
+  if(read_byte(ebda_seg,&EbdaData->cdemu.media)!=0) {
+    // Increase bios installed hardware number of devices
     if(read_byte(ebda_seg,&EbdaData->cdemu.emulated_drive)==0x00)
       write_byte(0x40,0x10,read_byte(0x40,0x10)|0x41);
+    else
+      write_byte(ebda_seg, &EbdaData->ata.hdcount, read_byte(ebda_seg, &EbdaData->ata.hdcount) + 1);
+   }
+
   
   // everything is ok, so from now on, the emulation is active
   if(read_byte(ebda_seg,&EbdaData->cdemu.media)!=0)
     write_byte(ebda_seg,&EbdaData->cdemu.active,0x01);
 
-  // if we are not emulating a device
-  if(read_byte(ebda_seg,&EbdaData->cdemu.media)==0) {
-    // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 0xE0. 
-    // Win2000 cd boot needs this
-    write_byte(ebda_seg,&EbdaData->cdemu.emulated_drive,0xE0);
-    }
-  
   // return the boot drive + no error
   return (read_byte(ebda_seg,&EbdaData->cdemu.emulated_drive)*0x100)+0;
 }
@@ -5203,7 +5210,6 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   //BX_DEBUG_INT13_ET("int13_cdemu: SS=%04x ES=%04x DI=%04x SI=%04x\n", get_SS(), ES, DI, SI);
   
   /* at this point, we are emulating a floppy/harddisk */
-  // FIXME ElTorito Harddisk. Harddisk emulation is not implemented
   
   // Recompute the device number 
   device  = read_byte(ebda_seg,&EbdaData->cdemu.controller_index) * 2;
@@ -5287,11 +5293,11 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       SET_AL(nbsectors);
 
       // start lba on cd
-      slba  = (Bit16u)vlba/4;               // FIXME ElTorito Harddisk. should allow Bit32u image size - needs compiler helper function
+      slba  = (Bit32u)vlba/4; 
       before= (Bit16u)vlba%4;
 
       // end lba on cd
-      elba = (Bit16u)(vlba+nbsectors-1)/4; // FIXME ElTorito Harddisk. should allow Bit32u image size - needs compiler helper function
+      elba = (Bit32u)(vlba+nbsectors-1)/4;
       
       memsetb(get_SS(),atacmd,0,12);
       atacmd[0]=0x28;                      // READ command
@@ -5322,6 +5328,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       SET_CL((( vcylinders >> 2) & 0xc0) | ( vspt  & 0x3f ));
       SET_DH( vheads );
       SET_DL( 0x02 );   // FIXME ElTorito Various. should send the real count of drives 1 or 2
+                        // FIXME ElTorito Harddisk. should send the HD count
  
       switch(read_byte(ebda_seg,&EbdaData->cdemu.media)) {
         case 0x01: SET_BL( 0x02 ); break;
@@ -5335,7 +5342,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       break;
 
     case 0x15: /* read disk drive size */
-      // FIXME ElTorito Harddisk. if we want to emulate a harddisk
+      // FIXME ElTorito Harddisk. What geometry to send ?
       SET_AH(0x03);
       goto int13_success_noah;
       break;
@@ -5345,6 +5352,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
     case 0x0b: /* write disk sectors with ECC */
     case 0x18: /* set media type for format */
     case 0x41: // IBM/MS installation check
+      // FIXME ElTorito Harddisk. Darwin would like to use EDD
     case 0x42: // IBM/MS extended read
     case 0x43: // IBM/MS extended write
     case 0x44: // IBM/MS verify sectors
