@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.18 2002-04-20 07:19:35 vruppert Exp $
+// $Id: sdl.cc,v 1.19 2002-09-08 07:56:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,6 @@ static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 int textres_x, textres_y;
 int fontwidth = 8, fontheight = 16;
 unsigned tilewidth, tileheight;
-unsigned char *font = &sdl_font8x16[0][0];
 unsigned char menufont[256][8];
 Uint32 palette[256];
 Uint32 headerbar_fg, headerbar_bg;
@@ -197,13 +196,16 @@ void bx_gui_c::specific_init(
     unsigned header_bar_y)
 {
   int i,j;
-  Uint32 color, *buf;
 
   th->put("SDL");
 
   tilewidth = x_tilesize;
   tileheight = y_tilesize;
   headerbar_height = header_bar_y;
+
+  for(i=0;i<256;i++)
+    for(j=0;j<16;j++)
+      bx_gui.vga_charmap[i*32+j] = sdl_font8x16[i][j];
 
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
@@ -247,8 +249,6 @@ void bx_gui_c::text_update(
     Bit16u cursor_state,
     unsigned rows)
 {
-  char *oldText = (char *)old_text;
-  char *newText = (char *)new_text;
   unsigned char font_row, *pfont_row;
   unsigned long x,y;
   int hchars,fontrows,fontpixels;
@@ -299,7 +299,7 @@ void bx_gui_c::text_update(
 	
 	// Display this one char
 	fontrows = fontheight;
-	pfont_row = &font[(new_text[0]*fontheight)];
+	pfont_row = &bx_gui.vga_charmap[(new_text[0] << 5)];
 	buf_char = buf;
 	do
 	{
@@ -473,10 +473,6 @@ void bx_gui_c::handle_events(void)
 	// Windows/Fullscreen toggle-check
 	if( sdl_event.key.keysym.sym == SDLK_SCROLLOCK )
 	{
-	  Uint32 *buf, *buf_row;
-	  Uint32 *buf2, *buf_row2;
-	  Uint32 disp, disp2;
-	  int rows, cols;
 //	  SDL_WM_ToggleFullScreen( sdl_screen );
 	  sdl_fullscreen_toggle = ~sdl_fullscreen_toggle;
 	  if( sdl_fullscreen_toggle == 0 )
@@ -594,30 +590,10 @@ void bx_gui_c::dimension_update(
 
   if( fheight > 0 )
   {
-    if( fheight == 8 )
-    {
-      if( font != &sdl_font8x8[0][0] )
-      {
-        bx_gui.clear_screen();
-        font = &sdl_font8x8[0][0];
-        fontheight = 8;
-        fontwidth = 8;
-      }
-    }
-    else
-    {
-      if( fheight != 16 )
-      {
-        y = y * 16 / fheight;
-      }
-      if( font != &sdl_font8x16[0][0] )
-      {
-        bx_gui.clear_screen();
-        font = &sdl_font8x16[0][0];
-        fontheight = 16;
-        fontwidth = 8;
-      }
-    }
+    if (bx_gui.charmap_changed) bx_gui.clear_screen();
+    bx_gui.charmap_changed = 0;
+    fontheight = fheight;
+    fontwidth = 8;
   }
 
   if( (x == res_x) && (y == res_y )) return;

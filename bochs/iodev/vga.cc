@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.38 2002-08-27 19:54:46 bdenney Exp $
+// $Id: vga.cc,v 1.39 2002-09-08 07:56:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -938,7 +938,12 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
           if (charmap1 > 3) charmap1 = (charmap1 & 3) + 4;
           charmap2 = (value & 0x2C) >> 2;
           if (charmap2 > 3) charmap2 = (charmap2 & 3) + 4;
-          BX_INFO(("char map select: #1=%d / #2=%d (unused)", charmap1, charmap2));
+	  if (BX_VGA_THIS s.CRTC.reg[0x09] > 0) {
+            bx_gui.set_text_charmap(
+              & BX_VGA_THIS s.vga_memory[0x20000 + (charmap1 << 13)]);
+            }
+          if (charmap2 != charmap1)
+            BX_INFO(("char map select: #2=%d (unused)", charmap2));
           break;
         case 4: /* sequencer: memory mode register */
           BX_VGA_THIS s.sequencer.extended_mem   = (value >> 1) & 0x01;
@@ -2264,6 +2269,7 @@ bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
     }      
   }
   BX_PANIC(("VBE_read shouldn't reach this"));
+  return 0; /* keep compiler happy */
 }
 
   void

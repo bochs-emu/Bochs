@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.28 2002-08-09 06:16:43 vruppert Exp $
+// $Id: gui.h,v 1.29 2002-09-08 07:56:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,7 @@ public:
   static void show_headerbar(void);
   static int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
   static int set_clipboard_text(char *snapshot, Bit32u len);
+  static void set_text_charmap(Bit8u *fbuffer);
 
   // The following function(s) are defined already, and your
   // GUI code calls them
@@ -100,6 +101,9 @@ private:
   unsigned config_bmap_id, config_hbar_id;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   unsigned user_bmap_id, user_hbar_id;
+
+  unsigned char vga_charmap[0x2000];
+  Boolean charmap_changed;
   };
 
 
