@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.33 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: arith32.cc,v 1.34 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,8 +26,6 @@
 
 
 
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
@@ -48,16 +46,12 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
   asmInc32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
   setEFlagsOSZAP(flags32);
 #else
-  Bit32u erx;
-  erx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
+  Bit32u erx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
+  SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
 #endif
 
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
-#endif
-
-#if !defined(BX_HostAsm_Inc32)
-  SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
 #endif
 }
 
@@ -69,16 +63,12 @@ BX_CPU_C::DEC_ERX(bxInstruction_c *i)
   asmDec32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
   setEFlagsOSZAP(flags32);
 #else
-  Bit32u erx;
-  erx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
+  Bit32u erx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
+  SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
 #endif
 
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
-#endif
-
-#if !defined(BX_HostAsm_Dec32)
-  SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
 #endif
 }
 
@@ -120,13 +110,10 @@ BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 
   BX_WRITE_32BIT_REGZ(nnn, sum_32);
-
-#if !defined(BX_HostAsm_Add32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
-#endif
 }
 
   void
@@ -144,13 +131,10 @@ BX_CPU_C::ADD_GdEGd(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 
   BX_WRITE_32BIT_REGZ(nnn, sum_32);
-
-#if !defined(BX_HostAsm_Add32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
-#endif
 }
 
 
@@ -366,13 +350,10 @@ BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   diff_32 = op1_32 - op2_32;
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
 #endif
 
   BX_WRITE_32BIT_REGZ(nnn, diff_32);
-
-#if !defined(BX_HostAsm_Sub32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
-#endif
 }
 
   void
@@ -567,13 +548,10 @@ BX_CPU_C::ADD_EEdId(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 
   Write_RMW_virtual_dword(sum_32);
-
-#if !defined(BX_HostAsm_Add32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
-#endif
 }
 
   void
@@ -590,13 +568,10 @@ BX_CPU_C::ADD_EGdId(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 
   BX_WRITE_32BIT_REGZ(i->rm(), sum_32);
-
-#if !defined(BX_HostAsm_Add32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
-#endif
 }
 
   void

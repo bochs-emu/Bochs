@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.30 2004-06-18 14:11:06 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.31 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,53 +31,43 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-  void
-BX_CPU_C::MOV_RXIw(bxInstruction_c *i)
+void BX_CPU_C::MOV_RXIw(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx = i->Iw();
 }
 
-  void
-BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
+void BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
 {
   Bit16u temp16 = AX;
   AX = BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx = temp16;
 }
 
-  void
-BX_CPU_C::MOV_EEwGw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EEwGw(bxInstruction_c *i)
 {
   write_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
 }
 
-  void
-BX_CPU_C::MOV_EGwGw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EGwGw(bxInstruction_c *i)
 {
   Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
   BX_WRITE_16BIT_REG(i->rm(), op2_16);
 }
 
-  void
-BX_CPU_C::MOV_GwEGw(bxInstruction_c *i)
+void BX_CPU_C::MOV_GwEGw(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a general register Gw.
-  Bit16u op2_16;
-
-  op2_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
   BX_WRITE_16BIT_REG(i->nnn(), op2_16);
 }
 
-  void
-BX_CPU_C::MOV_GwEEw(bxInstruction_c *i)
+void BX_CPU_C::MOV_GwEEw(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a memory operand, Ew.
-
   read_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
 }
 
-  void
-BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_EwSw: incomplete for CPU < 3"));
@@ -104,14 +94,13 @@ BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
+void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 {
-  Bit16u op2_16;
-
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_SwEw: incomplete for CPU < 3"));
 #endif
+
+  Bit16u op2_16;
 
   /* If attempt is made to load the CS register ... */
   if (i->nnn() == BX_SEG_REG_CS) {
@@ -144,8 +133,7 @@ BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
   }
 }
 
-  void
-BX_CPU_C::LEA_GwM(bxInstruction_c *i)
+void BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 {
   if (i->modC0()) {
     BX_INFO(("LEA_GwM: op2 is a register"));
@@ -155,8 +143,7 @@ BX_CPU_C::LEA_GwM(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) RMAddr(i));
 }
 
-  void
-BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
+void BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
 {
   /* read from memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
@@ -167,8 +154,7 @@ BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
+void BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
 {
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
@@ -179,8 +165,7 @@ BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
 {
     Bit16u op2_16 = i->Iw();
 
@@ -193,11 +178,11 @@ BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
       }
 }
 
-  void
-BX_CPU_C::MOVZX_GwEb(bxInstruction_c *i)
+void BX_CPU_C::MOVZX_GwEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEb: not supported on < 386"));
+  BX_INFO(("MOVZX_GvEb: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit8u  op2_8;
 
@@ -214,11 +199,11 @@ BX_CPU_C::MOVZX_GwEb(bxInstruction_c *i)
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
-  void
-BX_CPU_C::MOVZX_GwEw(bxInstruction_c *i)
+void BX_CPU_C::MOVZX_GwEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEw: not supported on < 386"));
+  BX_INFO(("MOVZX_GvEw: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit16u op2_16;
 
@@ -235,11 +220,11 @@ BX_CPU_C::MOVZX_GwEw(bxInstruction_c *i)
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
-  void
-BX_CPU_C::MOVSX_GwEb(bxInstruction_c *i)
+void BX_CPU_C::MOVSX_GwEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEb: not supported on < 386"));
+  BX_INFO(("MOVSX_GvEb: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit8u op2_8;
 
@@ -256,11 +241,11 @@ BX_CPU_C::MOVSX_GwEb(bxInstruction_c *i)
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
-  void
-BX_CPU_C::MOVSX_GwEw(bxInstruction_c *i)
+void BX_CPU_C::MOVSX_GwEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
+  BX_INFO(("MOVSX_GvEw: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit16u op2_16;
 
@@ -277,18 +262,17 @@ BX_CPU_C::MOVSX_GwEw(bxInstruction_c *i)
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
-
-  void
-BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
+void BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16;
 
 #if BX_DEBUGGER && BX_MAGIC_BREAKPOINT
   // (mch) Magic break point
   // Note for mortals: the instruction to trigger this is "xchgw %bx,%bx"
-  if (i->nnn() == 3 && i->modC0() && i->rm() == 3) {
-	  BX_CPU_THIS_PTR magic_break = 1;
-    }
+  if (i->nnn() == 3 && i->modC0() && i->rm() == 3)
+  {
+     BX_CPU_THIS_PTR magic_break = 1;
+  }
 #endif
 
     /* op2_16 is a register, op2_addr is an index of a register */
@@ -308,8 +292,7 @@ BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 }
 
-  void
-BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
+void BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   // Note: CMOV accesses a memory source operand (read), regardless

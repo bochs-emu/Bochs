@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.17 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: bit.cc,v 1.18 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -465,7 +465,7 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
 
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */

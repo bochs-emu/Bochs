@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.12 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: mult8.cc,v 1.13 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,7 +28,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 
   void
@@ -140,7 +139,6 @@ BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
 #endif
 
   /* now write quotient back to destination */
-
   AL = quotient_8l;
   AH = remainder_8;
 }
@@ -189,7 +187,6 @@ BX_INFO(("AH: %02x, AL: %02x", (unsigned) AH, (unsigned) AL));
 #endif
 
   /* now write quotient back to destination */
-
   AL = quotient_8l;
   AH = remainder_8;
 }

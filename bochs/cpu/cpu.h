@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.169 2004-08-11 21:26:23 sshwarts Exp $
+// $Id: cpu.h,v 1.170 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3208,14 +3208,14 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 }
 
 #define SET_FLAGS_OSZAPC_RESULT_8(result, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_8, result, ins)
+    SET_FLAGS_OSZAPC_RESULT_SIZE(_8, result, ins)
 #define SET_FLAGS_OSZAPC_RESULT_16(result, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_16, result, ins)
+    SET_FLAGS_OSZAPC_RESULT_SIZE(_16, result, ins)
 #define SET_FLAGS_OSZAPC_RESULT_32(result, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_32, result, ins)
+    SET_FLAGS_OSZAPC_RESULT_SIZE(_32, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_RESULT_64(result, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_64, result, ins)
+    SET_FLAGS_OSZAPC_RESULT_SIZE(_64, result, ins)
 #endif
 
 #define SET_FLAGS_OSZAPC_CF_SIZE(size, lf_op1, lf_op2, lf_result, ins, last_CF) { \

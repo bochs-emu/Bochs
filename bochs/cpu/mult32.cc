@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.12 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: mult32.cc,v 1.13 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -155,7 +155,6 @@ BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
      */
 
     /* now write quotient back to destination */
-
     RAX = quotient_32l;
     RDX = remainder_32;
 }
@@ -196,7 +195,6 @@ BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
      */
 
     /* now write quotient back to destination */
-
     RAX = quotient_32l;
     RDX = remainder_32;
 }

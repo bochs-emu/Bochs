@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.29 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.30 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,8 +46,7 @@ BX_CPU_C::XCHG_ERXEAX(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
+void BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = i->Id();

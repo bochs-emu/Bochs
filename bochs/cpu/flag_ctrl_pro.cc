@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.14 2003-03-02 23:59:09 cbothamy Exp $
+// $Id: flag_ctrl_pro.cc,v 1.15 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,8 +30,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-
-
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
 {
@@ -56,7 +54,6 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
     BX_CPU_THIS_PTR async_event = 1; // TF = 1
     }
 }
-
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.19 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: shift16.cc,v 1.20 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -420,6 +420,7 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
     setEFlagsOSZAPC(flags32);
 #else
     result_16 = (op1_16 >> count);
+    SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHR16);
 #endif
 
     /* now write result back to destination */
@@ -429,10 +430,6 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
     else {
       Write_RMW_virtual_word(result_16);
       }
-
-#if !defined(BX_HostAsm_Shr16)
-    SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHR16);
-#endif
 }
 
 

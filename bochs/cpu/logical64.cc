@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.10 2004-08-11 21:26:23 sshwarts Exp $
+// $Id: logical64.cc,v 1.11 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -84,7 +84,7 @@ BX_CPU_C::XOR_GqEq(bxInstruction_c *i)
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), result_64);
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -100,7 +100,7 @@ BX_CPU_C::XOR_RAXId(bxInstruction_c *i)
     /* now write sum back to destination */
     RAX = sum_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(sum_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -129,7 +129,7 @@ BX_CPU_C::XOR_EqId(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -158,7 +158,7 @@ BX_CPU_C::OR_EqId(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -213,7 +213,7 @@ BX_CPU_C::OR_EqGq(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -237,7 +237,7 @@ BX_CPU_C::OR_GqEq(bxInstruction_c *i)
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), result_64);
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -252,7 +252,7 @@ BX_CPU_C::OR_RAXId(bxInstruction_c *i)
     /* now write sum back to destination */
     RAX = sum_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(sum_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -282,7 +282,7 @@ BX_CPU_C::AND_EqGq(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -306,7 +306,7 @@ BX_CPU_C::AND_GqEq(bxInstruction_c *i)
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), result_64);
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -321,7 +321,7 @@ BX_CPU_C::AND_RAXId(bxInstruction_c *i)
     /* now write sum back to destination */
     RAX = sum_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(sum_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -350,7 +350,7 @@ BX_CPU_C::AND_EqId(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -372,7 +372,7 @@ BX_CPU_C::TEST_EqGq(bxInstruction_c *i)
 
     result_64 = op1_64 & op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -388,7 +388,7 @@ BX_CPU_C::TEST_RAXId(bxInstruction_c *i)
 
     result_64 = op1_64 & op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
   void
@@ -410,7 +410,7 @@ BX_CPU_C::TEST_EqId(bxInstruction_c *i)
 
     result_64 = op1_64 & op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_LOGIC64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

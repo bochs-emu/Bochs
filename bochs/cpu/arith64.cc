@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.16 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: arith64.cc,v 1.17 2004-08-13 20:00:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,8 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
 
 
 
@@ -167,8 +165,7 @@ BX_CPU_C::ADC_GqEq(bxInstruction_c *i)
     /* now write sum back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), sum_64);
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64,
-                             temp_CF);
+    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64, temp_CF);
 }
 
   void
@@ -186,8 +183,7 @@ BX_CPU_C::ADC_RAXId(bxInstruction_c *i)
     /* now write sum back to destination */
     RAX = sum_64;
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64,
-                           temp_CF);
+    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64, temp_CF);
 }
 
   void
