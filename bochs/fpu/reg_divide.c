@@ -31,7 +31,7 @@ int FPU_div(int flags, FPU_REG *rm, int control_w)
   FPU_REG *dest;
   u_char taga, tagb, signa, signb, sign, saved_sign;
   int tag, deststnr;
-  int rmint = (int)rm;
+  int rmint = PTR2INT(rm);
 
   if ( flags & DEST_RM )
     deststnr = rmint;
