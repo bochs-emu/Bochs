@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.35 2005-03-28 18:19:02 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.36 2005-03-29 22:18:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1000,8 +1000,8 @@ void BX_CPU_C::atexit(void)
 {
   static const char *cpu_mode_name[] = {
      "real mode",
-     "protected mode",
      "v8086 mode",
+     "protected mode",
      "compatibility mode",
      "long mode"
   };
