@@ -101,6 +101,10 @@ void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
 void bx_dbg_info_registers_command(void);
 void bx_dbg_info_dirty_command(void);
+void bx_dbg_info_idt_command(void);
+void bx_dbg_info_gdt_command(void);
+void bx_dbg_info_ldt_command(void);
+void bx_dbg_info_tss_command(void);
 void bx_dbg_info_control_regs_command(void);
 void bx_dbg_info_linux_command(void);
 void bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
