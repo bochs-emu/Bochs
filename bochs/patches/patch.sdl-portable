@@ -1,0 +1,156 @@
+Index: gui/sdl.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/sdl.cc,v
+retrieving revision 1.5
+diff -u -r1.5 sdl.cc
+--- gui/sdl.cc	16 Feb 2002 20:31:35 -0000	1.5
++++ gui/sdl.cc	6 Mar 2002 19:35:53 -0000
+@@ -1,8 +1,5 @@
+ #define _MULTI_THREAD
+ 
+-#include <iostream>
+-#include <vector>
+-
+ #include <stdlib.h>
+ #include <SDL/SDL.h>
+ #include <SDL/SDL_endian.h>
+@@ -26,6 +23,7 @@
+ static unsigned prev_cursor_x=0;
+ static unsigned prev_cursor_y=0;
+ 
++#define MAX_SDL_BITMAPS 10
+ struct bitmaps {
+   SDL_Surface *surface;
+   SDL_Rect src,dst;
+@@ -50,7 +48,8 @@
+ Bit8u old_mousebuttons=0, new_mousebuttons=0;
+ int old_mousex=0, new_mousex=0;
+ int old_mousey=0, new_mousey=0;
+-vector<bitmaps> sdl_bitmaps;
++bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
++int n_sdl_bitmaps = 0;
+ 
+ #if SDL_BYTEORDER == SDL_LIL_ENDIAN
+ #define SWAP16(X)    (X)
+@@ -667,8 +666,8 @@
+       0, 0,
+       tmp->src.w,
+       tmp->src.h );
+-  sdl_bitmaps.push_back(*tmp);
+-  return sdl_bitmaps.size()-1;
++  sdl_bitmaps[n_sdl_bitmaps] = tmp;
++  return n_sdl_bitmaps++;
+ }
+ 
+ 
+@@ -677,24 +676,24 @@
+     unsigned alignment,
+     void (*f)(void))
+ {
+-  if( bmap_id >= sdl_bitmaps.size() ) return 0;
++  if( bmap_id >= n_sdl_bitmaps ) return 0;
+ 
+-  sdl_bitmaps[bmap_id].dst.x = headerbar_offset;
+-  headerbar_offset + sdl_bitmaps[bmap_id].src.w;
+-  sdl_bitmaps[bmap_id].cb = f;
++  sdl_bitmaps[bmap_id]->dst.x = headerbar_offset;
++  headerbar_offset += sdl_bitmaps[bmap_id]->src.w;
++  sdl_bitmaps[bmap_id]->cb = f;
+   if( sdl_screen )
+   {
+     SDL_BlitSurface(
+-	sdl_bitmaps[bmap_id].surface,
+-	&sdl_bitmaps[bmap_id].src,
++	sdl_bitmaps[bmap_id]->surface,
++	&sdl_bitmaps[bmap_id]->src,
+ 	sdl_screen,
+-	&sdl_bitmaps[bmap_id].dst);
++	&sdl_bitmaps[bmap_id]->dst);
+     SDL_UpdateRect(
+ 	sdl_screen,
+-	sdl_bitmaps[bmap_id].dst.x,
+-	sdl_bitmaps[bmap_id].dst.y,
+-	sdl_bitmaps[bmap_id].src.w,
+-	sdl_bitmaps[bmap_id].src.h);
++	sdl_bitmaps[bmap_id]->dst.x,
++	sdl_bitmaps[bmap_id]->dst.y,
++	sdl_bitmaps[bmap_id]->src.w,
++	sdl_bitmaps[bmap_id]->src.h);
+   }
+   return bmap_id;
+ }
+@@ -704,10 +703,10 @@
+     unsigned hbar_id,
+     unsigned bmap_id)
+ {
+-  sdl_bitmaps[bmap_id].dst.x = sdl_bitmaps[hbar_id].dst.x;
+-  sdl_bitmaps[bmap_id].cb = sdl_bitmaps[hbar_id].cb;
+-  sdl_bitmaps[hbar_id].dst.x = -1;
+-  sdl_bitmaps[hbar_id].cb = NULL;
++  sdl_bitmaps[bmap_id]->dst.x = sdl_bitmaps[hbar_id]->dst.x;
++  sdl_bitmaps[bmap_id]->cb = sdl_bitmaps[hbar_id]->cb;
++  sdl_bitmaps[hbar_id]->dst.x = -1;
++  sdl_bitmaps[hbar_id]->cb = NULL;
+ }
+ 
+ 
+@@ -718,7 +717,7 @@
+   Uint32 disp;
+   int rowsleft = headerbar_height;
+   int colsleft;
+-  int bitmapscount = sdl_bitmaps.size();
++  int bitmapscount = n_sdl_bitmaps;
+ 
+   if( !sdl_screen ) return;
+   disp = sdl_screen->pitch/4;
+@@ -741,19 +740,19 @@
+   // go thru the bitmaps and display the active ones
+   while( bitmapscount-- )
+   {
+-    if( sdl_bitmaps[bitmapscount].dst.x != -1 )
++    if( sdl_bitmaps[bitmapscount]->dst.x != -1 )
+     {
+       SDL_BlitSurface(
+-	  sdl_bitmaps[bitmapscount].surface,
+-	  &sdl_bitmaps[bitmapscount].src,
++	  sdl_bitmaps[bitmapscount]->surface,
++	  &sdl_bitmaps[bitmapscount]->src,
+ 	  sdl_screen,
+-	  &sdl_bitmaps[bitmapscount].dst);
++	  &sdl_bitmaps[bitmapscount]->dst);
+       SDL_UpdateRect(
+ 	  sdl_screen,
+-	  sdl_bitmaps[bitmapscount].dst.x,
+-	  sdl_bitmaps[bitmapscount].dst.y,
+-	  sdl_bitmaps[bitmapscount].src.w,
+-	  sdl_bitmaps[bitmapscount].src.h );
++	  sdl_bitmaps[bitmapscount]->dst.x,
++	  sdl_bitmaps[bitmapscount]->dst.y,
++	  sdl_bitmaps[bitmapscount]->src.w,
++	  sdl_bitmaps[bitmapscount]->src.h );
+     }
+   }
+ }
+@@ -761,7 +760,7 @@
+ 
+ void bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+ {
+-  cout << "sdl: mouse enabled changed specific" <<endl;
++  BX_INFO (("mouse enabled changed specific"));
+ }
+ 
+ 
+@@ -771,10 +770,10 @@
+     SDL_FreeSurface(sdl_screen);
+   if( sdl_fullscreen )
+     SDL_FreeSurface(sdl_fullscreen);
+-  while( sdl_bitmaps.size() )
++  while( n_sdl_bitmaps )
+   {
+-    SDL_FreeSurface( sdl_bitmaps[sdl_bitmaps.size()-1].surface );
+-    sdl_bitmaps.pop_back();
++    SDL_FreeSurface( sdl_bitmaps[n_sdl_bitmaps-1]->surface );
++    n_sdl_bitmaps--;
+   }
+ }
+ 
