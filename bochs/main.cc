@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.199 2002-12-01 14:18:37 vruppert Exp $
+// $Id: main.cc,v 1.200 2002-12-02 20:32:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3707,6 +3707,9 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_keyboard_options (fp, &bx_options.keyboard);
   fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get ()==BX_KBD_XT_TYPE?"xt":
                                        bx_options.Okeyboard_type->get ()==BX_KBD_AT_TYPE?"at":"mf");
+  fprintf (fp, "user_shortcut: keys=%s\n", bx_options.Ouser_shortcut->getptr ());
+  fprintf (fp, "config_interface: %s\n", bx_options.Osel_config->get_choice(bx_options.Osel_config->get()));
+  fprintf (fp, "display_library: %s\n", bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()));
   fclose (fp);
   return 0;
 }
