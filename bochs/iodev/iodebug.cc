@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.8 2001-10-03 19:06:17 instinc Exp $
+// $Id: iodebug.cc,v 1.9 2001-10-03 19:54:29 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -165,6 +165,17 @@ void bx_iodebug_c::write( Bit32u addr, Bit32u dvalue, unsigned int io_len )
       fprintf( stderr, "request made by the guest os to enable tracing, iodebug port 0x8A00->0x8AE3\n");
       BX_CPU(dbg_cpu)->trace = 1;
       break;
+
+    case( 0x8AE4 ):
+      fprintf( stderr, "request made by the guest os to disable register tracing, iodebug port 0x8A00->0x8AE4\n");
+      BX_CPU(dbg_cpu)->trace_reg = 0;
+      break;
+
+    case( 0x8AE5 ):
+      fprintf( stderr, "request made by the guest os to enable register tracing, iodebug port 0x8A00->0x8AE5\n");
+      BX_CPU(dbg_cpu)->trace_reg = 1;
+      break;
+
 #endif
 
     case( 0x8AFF ):
