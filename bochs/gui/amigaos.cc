@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.15 2003-04-08 17:53:12 nicholai Exp $
+// $Id: amigaos.cc,v 1.16 2003-04-08 17:56:45 nicholai Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -561,6 +561,8 @@ bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 		freeiff(iff);
 		return 0;
 	}
+
+    freeiff(iff);
 	
 	return 1;
 }
