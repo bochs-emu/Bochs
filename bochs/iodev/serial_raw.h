@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.8 2004-03-17 17:08:57 vruppert Exp $
+// $Id: serial_raw.h,v 1.9 2004-03-20 12:42:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -27,10 +27,10 @@ class serial_raw : public logfunctions {
     void set_break (int mode);
     void set_modem_control (int ctrl);
     int get_modem_status ();
-    void transmit (int byte);
-    int ready_transmit ();
-    int ready_receive ();
-    int receive ();
+    void transmit (Bit8u byte);
+    bx_bool ready_transmit ();
+    bx_bool ready_receive ();
+    Bit8u receive ();
 
   private:
     void setup_port ();
