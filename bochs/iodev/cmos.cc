@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.34 2003-01-04 00:02:05 vruppert Exp $
+// $Id: cmos.cc,v 1.35 2003-01-05 19:43:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.34 2003-01-04 00:02:05 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.35 2003-01-05 19:43:09 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -744,42 +744,45 @@ bx_cmos_c::update_timeval()
 
   // update seconds
   val_bin =
-     ((BX_CMOS_THIS s.reg[REG_SEC] >> 4) * 10) |
+     ((BX_CMOS_THIS s.reg[REG_SEC] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_SEC] & 0x0f);
   time_calendar.tm_sec = val_bin;
+  BX_INFO(("sec bin = %d", val_bin));
 
   // update minutes
   val_bin =
-     ((BX_CMOS_THIS s.reg[REG_MIN] >> 4) * 10) |
+     ((BX_CMOS_THIS s.reg[REG_MIN] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_MIN] & 0x0f);
   time_calendar.tm_min = val_bin;
+  BX_INFO(("min bin = %d", val_bin));
 
   // update hours
   val_bin =
-     ((BX_CMOS_THIS s.reg[REG_HOUR] >> 4) * 10) |
+     ((BX_CMOS_THIS s.reg[REG_HOUR] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
   time_calendar.tm_hour = val_bin;
+  BX_INFO(("hour bin = %d", val_bin));
 
   // update day of the month
   val_bin =
-     ((BX_CMOS_THIS s.reg[REG_MONTH_DAY] >> 4) * 10) |
+     ((BX_CMOS_THIS s.reg[REG_MONTH_DAY] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_MONTH_DAY] & 0x0f);
   time_calendar.tm_mday = val_bin;
 
   // update month
   val_bin =
-     ((BX_CMOS_THIS s.reg[REG_MONTH] >> 4) * 10) |
+     ((BX_CMOS_THIS s.reg[REG_MONTH] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_MONTH] & 0x0f);
   time_calendar.tm_mon = val_bin - 1;
 
   // update year
   val_bin =
-     ((BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] >> 4) * 10) |
+     ((BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] & 0x0f);
   val_bin = (val_bin - 19) * 100;
   val_bin +=
-     ((BX_CMOS_THIS s.reg[REG_YEAR] >> 4) * 10) |
-     (BX_CMOS_THIS s.reg[REG_YEAR] & 0x0f);
+     (((BX_CMOS_THIS s.reg[REG_YEAR] >> 4) * 10) +
+     (BX_CMOS_THIS s.reg[REG_YEAR] & 0x0f));
   time_calendar.tm_year = val_bin;
 
   BX_CMOS_THIS s.timeval = mktime(& time_calendar);
