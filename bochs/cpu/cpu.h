@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.21 2002-06-05 03:59:31 yakovlev Exp $
+// $Id: cpu.h,v 1.22 2002-06-05 21:51:30 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1587,10 +1587,18 @@ public: // for now...
     Bit32u fdcache_ip[BX_FDCACHE_SIZE]; // will store operation's IP
     // NOTE: This struct should really be aligned!
     BxInstruction_t fdcache_i[BX_FDCACHE_SIZE]; // stores decoded instruction
-    Boolean fdcache_is32[BX_FDCACHE_SIZE];
-    Bit32u fdcache_rpn[BX_FDCACHE_RPN_SIZE];
+    Boolean fdcache_is32[BX_FDCACHE_SIZE]; //32 or 16-bit mode?
+
+    struct list_node{
+      Bit32u next;
+      Bit32u prev;
+    };
+    Bit32u fdcache_rpn[BX_FDCACHE_RPN_SIZE]; //rpn cache used for invalidates.
+    list_node fdcache_rpn_list[BX_FDCACHE_SIZE]; //linked list of entries with the same rpn.
+    Bit32u fdcache_rpn_start[BX_FDCACHE_RPN_SIZE]; //start of rpn linked lists.
+
   #endif // #if BX_FETCHDECODE_CACHE
-                                              
+
   };
 
 

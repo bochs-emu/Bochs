@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.30 2002-06-05 03:59:31 yakovlev Exp $
+// $Id: cpu.cc,v 1.31 2002-06-05 21:51:30 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -251,6 +251,20 @@ async_events_processed:
     //   easiest way to handle them  
     if (ret) {
       Bit32u rpn,rpn_sel,old_rpn;
+      if(BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] != 0xFFFFFFFF) {
+	Bit32u next_ptr=BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next;
+	Bit32u prev_ptr=BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].prev;
+	if(next_ptr != 0xFFFFFFFF) {
+	  BX_CPU_THIS_PTR fdcache_rpn_list[next_ptr].prev=prev_ptr;
+	}
+	if(prev_ptr != 0xFFFFFFFF) {
+	  BX_CPU_THIS_PTR fdcache_rpn_list[prev_ptr].next=next_ptr;
+	} else {
+	  Bit32u temp_rpn_sel = ((BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel])>>12) & BX_FDCACHE_RPN_MASK;
+	  BX_CPU_THIS_PTR fdcache_rpn_start[temp_rpn_sel] = next_ptr;
+	}
+      }
+      BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].prev = 0xFFFFFFFF;
       BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] = bx_fdcache_ip;
       BX_CPU_THIS_PTR fdcache_is32[bx_fdcache_sel] = is_32;
       new_phy_addr += i->ilen;
@@ -258,13 +272,16 @@ async_events_processed:
       rpn_sel=rpn & BX_FDCACHE_RPN_MASK;
       old_rpn=BX_CPU_THIS_PTR fdcache_rpn[rpn_sel];
       if((old_rpn != rpn) && (old_rpn != 0xFFFFFFFF)) {
-	int n;
-	for(n=0;n<BX_FDCACHE_SIZE;n++) {
-	  if(((BX_CPU_THIS_PTR fdcache_ip[n])>>12) == old_rpn) {
-	    BX_CPU_THIS_PTR fdcache_ip[n] = 0xFFFFFFFF;
-	  }
+	Bit32u index = BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel];
+	for(;index!=0xFFFFFFFF;index=BX_CPU_THIS_PTR fdcache_rpn_list[index].next) {
+	  BX_CPU_THIS_PTR fdcache_ip[index] = 0xFFFFFFFF;
 	}
 	BX_CPU_THIS_PTR fdcache_rpn[rpn_sel] = rpn;
+	BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel] = bx_fdcache_sel;
+	BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next=0xFFFFFFFF;
+      } else {
+	Bit32u index = BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel];
+	BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next=index;
       }
     } else {
       // Invalidate cache!

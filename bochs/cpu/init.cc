@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.15 2002-03-27 16:04:05 bdenney Exp $
+// $Id: init.cc,v 1.16 2002-06-05 21:51:30 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ BX_CPU_C::BX_CPU_C()
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.15 2002-03-27 16:04:05 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.16 2002-06-05 21:51:30 yakovlev Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -184,6 +184,19 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   DTSetFlagsOSZAPCPtr = (BxDTShim_t) DTASSetFlagsOSZAPC;
   DTIndBrHandler = (BxDTShim_t) DTASIndBrHandler;
   DTDirBrHandler = (BxDTShim_t) DTASDirBrHandler;
+#endif
+
+#if BX_FETCHDECODE_CACHE
+  {
+    int n;
+    for(n=0;n<BX_FDCACHE_SIZE;n++) {
+      fdcache_ip[n]=0xFFFFFFFF;
+    }
+    for(n=0;n<BX_FDCACHE_RPN_SIZE;n++) {
+      fdcache_rpn[n]=0xFFFFFFFF;
+      fdcache_rpn_start[n]=0xFFFFFFFF;
+    }
+  }
 #endif
 
   mem = addrspace;

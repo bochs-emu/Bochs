@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.13 2002-06-05 03:59:31 yakovlev Exp $
+// $Id: memory.cc,v 1.14 2002-06-05 21:51:30 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,13 +68,12 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
     Bit32u rpn_sel = rpn & BX_FDCACHE_RPN_MASK;
     Bit32u old_rpn = cpu->fdcache_rpn[rpn_sel];
     if(rpn==old_rpn) {
-      Bit32u n;
-      for(n=0;n<BX_FDCACHE_SIZE;n++) {
-	if(((BX_CPU_THIS_PTR fdcache_ip[n])>>12) == old_rpn) {
-	  BX_CPU_THIS_PTR fdcache_ip[n] = 0xFFFFFFFF;
-	}
+      Bit32u index = cpu->fdcache_rpn_start[rpn_sel];
+      for(;index!=0xFFFFFFFF;index=cpu->fdcache_rpn_list[index].next) {
+	cpu->fdcache_ip[index] = 0xFFFFFFFF;
       }
       cpu->fdcache_rpn[rpn_sel] = 0xFFFFFFFF;
+      cpu->fdcache_rpn_start[rpn_sel] = 0xFFFFFFFF;
     }
   }
 
