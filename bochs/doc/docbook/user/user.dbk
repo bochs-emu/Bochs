@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.111 2003-01-21 22:59:35 cbothamy Exp $
+$Id: user.dbk,v 1.112 2003-01-27 23:56:34 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1341,6 +1341,78 @@ description of each one.
 
 
 </section> <!-- end of Installing a Binary:Linux section -->
+
+<section id="macosxdmg">
+<title>MacOS X DMG</title>
+<para>
+This was contributed by Aard Vark in January 2003
+</para>
+<para>
+The MacOS X binary distribution is a mountable disk
+image (.dmg file). Once you've downloaded the binary 
+distribution file, just double click
+on it to automatically unpack the archive and mount
+the volume on the desktop.  An icon will appear 
+exactly as if you'd inserted a CD-ROM
+or removable storage device, and a finder window
+containing the volume should automatically open.  
+It is likely to have an odd name
+such as _dmg_top, but don't worry about that.
+</para>
+<para>
+Copy the Bochs-2.0 (or whatever version) folder from
+the disk image onto your hard disk.  Either Home or 
+Applications would be sensible places to put it.  
+Because the disk image is mounted read only, you
+can't run the included dlxlinux guest OS until
+you've copied it to the hard disk.  
+</para>
+<para>
+Once you've installed the binaries, it's probably a
+good idea to drag the _dmg_top volume to trash to
+unmount it, so you don't get confused and try to 
+run bochs from there.  Then open
+the bochs folder from wherever you installed it.
+</para>
+<para>
+The MacOS X version of bochs requires a terminal
+window to run. If you just double click on the Bochs 
+icon, you'll get an error message telling you to 
+double click on "bochs.scpt" to start
+Bochs in a new terminal window.  You'll need to
+configure Bochs before you will get very far with 
+the bochs.scpt in the top folder,
+so to try out bochs open the dlxlinux folder and
+double click on the bochs.scpt icon inside.
+</para>
+<para>
+This will open a new terminal window which will
+contain the Bochs startup messages, and a 
+configuration menu.  The default option is
+[5], which starts the simulation, so press enter to
+do so.  You will then get a new window containing 
+the VGA display of the simulated
+machine.  The new window will probably appear behind
+the current terminal window, so either click on the
+bochs icon in the dock or the simulation window to 
+bring it to the front.  If you're quick
+enough you'll then see the VGA BIOS screen, then
+Linux  uncompresses and boots, and you get a login 
+prompt.  Type "root" and ENTER to log in to DLX Linux.
+</para>
+<para>
+Once you've finished playing with DLX Linux, just
+type "reboot" in the Bochs window to shut down the 
+DLX Linux operating system, and 
+when it starts to reboot again press the "Power"
+button in the "MacBochs Hardware Controls" window 
+(it's the circle containing a vertical bar at the 
+far right - have a look at the Linux screenshots,
+since the Mac version doesn't seem to have
+descriptions or tool-tips).
+</para>
+
+</section> <!-- end of Installing a Binary:MacOS X section -->
 
 </section> <!-- end of Installing a Binary -->
 
