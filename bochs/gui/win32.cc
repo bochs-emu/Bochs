@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.85 2004-08-18 09:03:48 vruppert Exp $
+// $Id: win32.cc,v 1.86 2004-08-22 16:22:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -605,7 +605,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   // parse win32 specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      BX_INFO(("option %d %s", argc, argv));
+      BX_INFO(("option %d: %s", i, argv[i]));
       if (!strcmp(argv[i], "legacyF12")) {
         legacyF12 = TRUE;
       } else {
