@@ -163,11 +163,11 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
 	// allocate low level driver
 #ifdef LOWLEVEL_CDROM
-	BX_HD_THIS s[1].cdrom.cd = new LOWLEVEL_CDROM(bx_options.cdromd.dev);
+	BX_HD_THIS s[1].cdrom.cd = new LOWLEVEL_CDROM(bx_options.cdromd.Odev->getptr ());
 #endif
 
 #ifdef LOWLEVEL_CDROM
-	if (bx_options.cdromd.inserted) {
+	if (bx_options.cdromd.Oinserted->get ()) {
 	      if (BX_HD_THIS s[1].cdrom.cd->insert_cdrom()) {
 		    BX_INFO(( "Media present in CD-ROM drive"));
 		    BX_HD_THIS s[1].cdrom.ready = 1;
