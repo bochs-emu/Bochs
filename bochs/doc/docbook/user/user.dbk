@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.166 2005-03-25 08:50:34 vruppert Exp $
+$Id: user.dbk,v 1.167 2005-03-27 14:50:38 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4801,6 +4801,63 @@ file yet.
       you what to do. The appearance of the "ask" feature depends on the display
       library used and the platform. Some display libraries don't support it at all.
     </para>
+    <para>
+      Some of the device names reported in the panic message are abbreviations,
+      since the length of the names is limited to 5 characters. This small list
+      may help you finding out the name of the device that caused the panic.
+    </para>
+    <table><title>Device prefixes</title>
+      <tgroup cols="2" align="left" colsep="1" rowsep="1">
+      <thead>
+        <row>
+          <entry>Prefix</entry>
+          <entry>Description</entry>
+        </row>
+      </thead>
+      <tbody>
+        <row>
+          <entry>CLVGA</entry>
+          <entry>Cirrus SVGA</entry>
+        </row>
+        <row>
+          <entry>EFIRQ</entry>
+          <entry>External FPU IRQ</entry>
+        </row>
+        <row>
+          <entry>IOAP</entry>
+          <entry>I/O APIC</entry>
+        </row>
+        <row>
+          <entry>KMAP</entry>
+          <entry>Keyboard mapping</entry>
+        </row>
+        <row>
+          <entry>P2I</entry>
+          <entry>PCI-to-ISA bridge</entry>
+        </row>
+        <row>
+          <entry>PIDE</entry>
+          <entry>PCI IDE controller</entry>
+        </row>
+        <row>
+          <entry>PLGIN</entry>
+          <entry>Plugin interface</entry>
+        </row>
+        <row>
+          <entry>STIME</entry>
+          <entry>Slowdown timer</entry>
+        </row>
+        <row>
+          <entry>UNMP</entry>
+          <entry>Unmapped I/O handler</entry>
+        </row>
+        <row>
+          <entry>VTIME</entry>
+          <entry>Virtual timer</entry>
+        </row>
+      </tbody>
+      </tgroup>
+    </table>
   </section>
 
   <section id="mouse-toggle">
