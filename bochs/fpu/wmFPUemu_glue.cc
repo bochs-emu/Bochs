@@ -29,10 +29,17 @@
 
 #include "bochs.h"
 #include <math.h>
+
+#if !BX_WITH_MACOS
 extern "C" {
+#endif
+
 #include "fpu_emu.h"
 #include "linux/signal.h"
+
+#if !BX_WITH_MACOS
 }
+#endif
 
 #define LOG_THIS genlog->
 #if BX_USE_CPU_SMF

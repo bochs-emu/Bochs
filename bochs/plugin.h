@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.10 2002-11-21 19:26:06 bdenney Exp $
+// $Id: plugin.h,v 1.11 2002-12-12 15:29:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -313,7 +313,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(x)
 
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /* __PLUGIN_H */

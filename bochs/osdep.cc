@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.10 2002-12-05 17:38:00 bdenney Exp $
+// $Id: osdep.cc,v 1.11 2002-12-12 15:29:33 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,7 +209,7 @@ char *bx_strdup(const char *str)
 {
 	char *temp;
 	
-	temp = malloc(strlen(str)+1);
+	temp = (char*)malloc(strlen(str)+1);
 	sprintf(temp, "%s", str);
 	return temp;
 	
@@ -225,6 +225,7 @@ char *bx_strdup(const char *str)
 #if BX_WITH_MACOS
 // these functions are part of MacBochs.  They are not intended to be
 // portable!
+#include <Devices.h>
 #include <Files.h>
 #include <Disks.h>
 

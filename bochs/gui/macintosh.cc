@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.17 2002-11-19 05:47:44 bdenney Exp $
+// $Id: macintosh.cc,v 1.18 2002-12-12 15:29:01 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,6 +53,7 @@
 #include <Memory.h>
 #include <Events.h>
 #include <TextUtils.h>
+#include <ToolUtils.h>
 #include <Dialogs.h>
 #include <LowMem.h>
 #include <Disks.h>
@@ -60,6 +61,7 @@
 #include <Menus.h>
 #include <Sound.h>
 #include <SIOUX.h>
+#include <Devices.h>
 
 // CONSTANTS
 
@@ -105,6 +107,8 @@ public:
 // plugin code
 static bx_macintosh_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(macintosh)
+
+#define LOG_THIS theGui->
 
 // GLOBALS
 WindowPtr			win, toolwin, fullwin, backdrop, hidden, SouixWin;

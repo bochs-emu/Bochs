@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.52 2002-11-20 12:23:41 bdenney Exp $
+// $Id: cdrom.cc,v 1.53 2002-12-12 15:29:07 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,6 +58,13 @@ extern "C" {
 #if defined(__GNU__) || (defined(__CYGWIN32__) && !defined(WIN32))
 extern "C" {
 #include <sys/ioctl.h>
+#define BX_CD_FRAMESIZE 2048
+#define CD_FRAMESIZE 2048
+}
+#endif
+
+#ifdef BX_WITH_MACOS
+extern "C" {
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE 2048
 }
@@ -463,7 +470,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.52 2002-11-20 12:23:41 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.53 2002-12-12 15:29:07 cbothamy Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -646,7 +653,7 @@ cdrom_interface::insert_cdrom(char *dev)
       BX_INFO (("Using direct access for cdrom."));
     }
 
-    ret = read(fd, &buffer, BX_CD_FRAMESIZE);
+    ret = read(fd, (char*) &buffer, BX_CD_FRAMESIZE);
     if (ret < 0) {
        close(fd);
        fd = -1;
@@ -1291,7 +1298,7 @@ cdrom_interface::read_block(uint8* buf, int lba)
   if (pos < 0) {
     BX_PANIC(("cdrom: read_block: lseek returned error."));
   }
-  n = read(fd, buf, BX_CD_FRAMESIZE);
+  n = read(fd, (char*) buf, BX_CD_FRAMESIZE);
 #endif
 
   if (n != BX_CD_FRAMESIZE) {

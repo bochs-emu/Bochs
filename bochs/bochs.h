@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.111 2002-12-12 06:21:43 yakovlev Exp $
+// $Id: bochs.h,v 1.112 2002-12-12 15:28:13 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,6 +58,8 @@ extern "C" {
 #if BX_WITH_MACOS
 #  include <types.h>
 #  include <stat.h>
+#  include <cstdio>
+#  include <unistd.h>
 #elif BX_WITH_CARBON
 #  include <sys/types.h>
 #  include <sys/stat.h>
@@ -750,7 +752,5 @@ int bx_init_hardware ();
     }
 
 #endif
-
-
 
 #endif  /* BX_BOCHS_H */

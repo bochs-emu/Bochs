@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.204 2002-12-12 06:21:43 yakovlev Exp $
+// $Id: main.cc,v 1.205 2002-12-12 15:29:27 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1914,7 +1914,7 @@ bx_bool load_and_init_display_lib () {
     PLUG_load_plugin (carbon, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_MACOS
-  if (!strcmp (gui_name, "macintosh")) 
+  if (!strcmp (gui_name, "macos")) 
     PLUG_load_plugin (macintosh, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_NOGUI
@@ -2102,13 +2102,13 @@ bx_init_hardware()
   BX_MEM(0)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
 
   // First load the optional ROM images
-  if (bx_options.optrom[0].Opath->getptr () > 0)
+  if (strcmp(bx_options.optrom[0].Opath->getptr (),"") !=0 )
     BX_MEM(0)->load_ROM(bx_options.optrom[0].Opath->getptr (), bx_options.optrom[0].Oaddress->get ());
-  if (bx_options.optrom[1].Opath->getptr () > 0)
+  if (strcmp(bx_options.optrom[1].Opath->getptr (),"") !=0 )
     BX_MEM(0)->load_ROM(bx_options.optrom[1].Opath->getptr (), bx_options.optrom[1].Oaddress->get ());
-  if (bx_options.optrom[2].Opath->getptr () > 0)
+  if (strcmp(bx_options.optrom[2].Opath->getptr (),"") !=0 )
     BX_MEM(0)->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get ());
-  if (bx_options.optrom[3].Opath->getptr () > 0)
+  if (strcmp(bx_options.optrom[3].Opath->getptr (),"") !=0 )
     BX_MEM(0)->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get ());
 
   // Then Load the BIOS and VGABIOS
@@ -2330,6 +2330,8 @@ parse_bochsrc(char *rcfile)
   static char *
 get_builtin_variable(char *varname)
 {
+#ifdef BX_BIOS_DEFAULT_PATH
+
 #ifdef WIN32
   int code;
   DWORD size;
@@ -2365,6 +2367,9 @@ get_builtin_variable(char *varname)
     }
     return NULL;
   }
+#else
+  return NULL;
+#endif
 }
 
   static Bit32s

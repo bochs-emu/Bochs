@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.90 2002-12-03 21:04:04 cbothamy Exp $
+// $Id: harddrv.cc,v 1.91 2002-12-12 15:29:17 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.90 2002-12-03 21:04:04 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.91 2002-12-12 15:29:17 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3144,12 +3144,12 @@ off_t default_image_t::lseek (off_t offset, int whence)
 
 ssize_t default_image_t::read (void* buf, size_t count)
 {
-      return ::read(fd, buf, count);
+      return ::read(fd, (char*) buf, count);
 }
 
 ssize_t default_image_t::write (const void* buf, size_t count)
 {
-      return ::write(fd, buf, count);
+      return ::write(fd, (char*) buf, count);
 }
 
 #if BX_SPLIT_HD_SUPPORT
@@ -3280,7 +3280,7 @@ ssize_t concat_image_t::read (void* buf, size_t count)
   // end of a partial image.
   if (!seek_was_last_op) 
     BX_PANIC( ("no seek before read"));
-  return ::read(fd, buf, count);
+  return ::read(fd, (char*) buf, count);
 }
 
 ssize_t concat_image_t::write (const void* buf, size_t count)
@@ -3291,7 +3291,7 @@ ssize_t concat_image_t::write (const void* buf, size_t count)
   // end of a partial image.
   if (!seek_was_last_op)
     BX_PANIC( ("no seek before write"));
-  return ::write(fd, buf, count);
+  return ::write(fd, (char*) buf, count);
 }
 #endif   /* BX_SPLIT_HD_SUPPORT */
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.60 2002-12-12 06:51:19 yakovlev Exp $
+// $Id: gui.cc,v 1.61 2002-12-12 15:28:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -184,7 +184,7 @@ bx_gui_c::update_drive_status_buttons (void) {
 #if BX_WITH_MACOS
     // If we are using the Mac floppy driver, eject the disk
     // from the floppy drive.  This doesn't work in MacOS X.
-    if (!strcmp(bx_options.floppya.Opath->get (), SuperDrive))
+    if (!strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
       DiskEject(1);
 #endif
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_eject_bmap_id);
@@ -195,7 +195,7 @@ bx_gui_c::update_drive_status_buttons (void) {
 #if BX_WITH_MACOS
     // If we are using the Mac floppy driver, eject the disk
     // from the floppy drive.  This doesn't work in MacOS X.
-    if (!strcmp(bx_options.floppyb.Opath->get (), SuperDrive))
+    if (!strcmp(bx_options.floppyb.Opath->getptr (), SuperDrive))
       DiskEject(1);
 #endif
     replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_eject_bmap_id);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.13 2002-11-15 18:11:40 bdenney Exp $
+// $Id: osdep.h,v 1.14 2002-12-12 15:29:39 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -114,6 +114,9 @@ typedef int socklen_t;
 int fd_read(char *buffer, Bit32u offset, Bit32u bytes);
 int fd_write(char *buffer, Bit32u offset, Bit32u bytes);
 int fd_stat(struct stat *buf);
+FILE *  fdopen(int fd, const char *type);
+
+typedef long ssize_t ;
 #endif
 
 //////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
- |  $Id: load_store.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: load_store.c,v 1.4 2002-12-12 15:28:43 cbothamy Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |
@@ -69,7 +69,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
   u_char st0_tag = TAG_Empty;  /* This is just to stop a gcc warning. */
   u_char loaded_tag;
 
-  st0_ptr = NULL;    /* Initialized just to stop compiler warnings. */
+  st0_ptr = (FPU_REG*) NULL;    /* Initialized just to stop compiler warnings. */
 
   if ( addr_modes.default_mode & PROTECTED )
     {

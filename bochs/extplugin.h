@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extplugin.h,v 1.3 2002-11-15 18:09:37 bdenney Exp $
+// $Id: extplugin.h,v 1.4 2002-12-12 15:28:37 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // extplugin.h
@@ -17,7 +17,9 @@
 #ifndef __EXTPLUGIN_H
 #define __EXTPLUGIN_H
 
+#if BX_PLUGINS
 #include "ltdl.h"
+#endif
 
 enum plugintype_t {
   PLUGTYPE_NULL=100,
@@ -32,7 +34,9 @@ typedef struct _plugin_t
 {
     plugintype_t type;
     int  initialized;
+#if BX_PLUGINS
     lt_dlhandle handle;
+#endif
     int  argc;
     char *name, *args, *argv[MAX_ARGC];
     int  (*plugin_init)(struct _plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
