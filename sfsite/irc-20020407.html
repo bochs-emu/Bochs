@@ -1,0 +1,2113 @@
+    <HTML>
+<HEAD>
+<TITLE>bochs: The Open Source IA-32 Emulation Project (IRC Chat Transcript)</TITLE>
+
+<!--#include virtual="includes/header.txt" -->
+
+ <!--content starts here-->
+ <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Transcript of Bochs chat on April 7, 2002</b></font><BR><BR> 
+ 
+ <b>Those in attendance were:</b>
+Ciaran, Exodus, bryce2, cbothamy, darkito, eks, japj, slowcoder, thefreak, wli.
+<p>
+
+<FONT SIZE="2">(15:54:41) </FONT><B>darkito:</B></FONT> thefreak : what is your favourite classical music composer?
+<BR>
+<FONT SIZE="2">(15:54:51) </FONT><B>darkito:</B></FONT> wb bryce2 :)
+<BR>
+<FONT SIZE="2">(15:55:33) </FONT><B>bryce2:</B></FONT> Chopin, Rachmaninoff, Debussy, Ravel
+<BR>
+<FONT SIZE="2">(15:55:54) </FONT><B>thefreak:</B></FONT> darkito<B>:</B> grieg for his beautifull music, bach for his great mathematical compositions, mozart cause he can make the simple sound great, etc.
+<BR>
+<FONT SIZE="2">(15:56:04) </FONT><B>darkito:</B></FONT> mine Bach, Haynd...
+<BR>
+<FONT SIZE="2">(15:56:36) </FONT><B>thefreak:</B></FONT> Ever read Hofstadters Gödel, Escher, Bach?
+<BR>
+<FONT SIZE="2">(15:58:06) </FONT><B>darkito:</B></FONT> no.. what's that?
+<BR>
+<FONT SIZE="2">(15:59:33) </FONT><B>***darkito</B></FONT> listens to schubert  - rosamunda "intermezzo"
+<BR>
+<FONT SIZE="2">(15:59:34) </FONT><B>thefreak:</B></FONT> It's a pulitzer winning book discussing number theory, mathematics and A.I. A classical great book in that field, large parts written in dialouge form and it contains great references to Gödel, the mathematician, Escher, the artist with those wierd scetches, and Bach with fugues.
+<BR>
+<FONT SIZE="2">(16:00:58) </FONT><B>darkito:</B></FONT> oh
+<BR>
+<FONT SIZE="2">(16:01:17) </FONT><B>darkito:</B></FONT> you're a classical music gooroo
+<BR>
+<FONT SIZE="2">(16:01:22) </FONT><B>***thefreak</B></FONT> actually owns a copy of Classical Music for Dummies (it's better than you'd think)
+<BR>
+<FONT SIZE="2">(16:01:46) </FONT><B>bryce2:</B></FONT> Sun Apr  7 20:01:42 UTC 2002
+<BR>
+<FONT SIZE="2">(16:02:09) </FONT><B>thefreak:</B></FONT> you're suggesting a change in topic?
+<BR>
+<FONT SIZE="2">(16:02:12) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(16:02:15) </FONT><B>darkito:</B></FONT> ahm... I didn't read a book about classical music
+<BR>
+<FONT SIZE="2">(16:02:21) </FONT><B>darkito:</B></FONT> heh
+<BR>
+<FONT SIZE="2">(16:02:41) </FONT><B>darkito:</B></FONT> heh
+<BR>
+<FONT SIZE="2">(16:02:51) </FONT><B>bryce2:</B></FONT> I assume people have been testing out Bochs 1.4, based on the 
+<BR>
+<FONT SIZE="2">(16:03:01) </FONT><B>bryce2:</B></FONT> 20 thousand people who have downloaded it from SF.
+<BR>
+<FONT SIZE="2">(16:03:33) </FONT><B>darkito:</B></FONT> (I think if bach was alive he would be a black-metal composer <- last note :)
+<BR>
+<FONT SIZE="2">(16:03:38) </FONT><B>darkito:</B></FONT> bryce2 oh...
+<BR>
+<FONT SIZE="2">(16:04:07) </FONT><B>wli:</B></FONT> heh
+<BR>
+<FONT SIZE="2">(16:04:11) </FONT><B>wli:</B></FONT> did I miss it yet?
+<BR>
+<FONT SIZE="2">(16:04:32) </FONT><B>bryce2:</B></FONT> Has anyone found any problems that didn't exist before? or new features that should work but don't?
+<BR>
+<FONT SIZE="2">(16:04:38) </FONT><B>thefreak:</B></FONT> I'm must say that i'm rather impressed on the ratio between number of downloads and bug reports, does this mean that i don't see them, that people don't even bother to file a bug report or that they never build it? (it's unfair that darkito got the last note, metalast note)
+<BR>
+<FONT SIZE="2">(16:05:02) </FONT><B>wli:</B></FONT> Did I miss the discussion?
+<BR>
+<FONT SIZE="2">(16:05:08) </FONT><B>bryce2:</B></FONT> wli: no we just started
+<BR>
+<FONT SIZE="2">(16:05:12) </FONT><B>wli:</B></FONT> phew
+<BR>
+<FONT SIZE="2">(16:05:37) </FONT><B>darkito:</B></FONT>                        Bochs x86 Emulator 1.2.1
+<BR>
+<FONT SIZE="2">(16:05:53) </FONT><B>darkito:</B></FONT> I use that one
+<BR>
+<FONT SIZE="2">(16:05:53) </FONT><B>darkito:</B></FONT> :\
+<BR>
+<FONT SIZE="2">(16:07:19) </FONT><B>bryce2:</B></FONT> who has gotten VBE to work?
+<BR>
+<FONT SIZE="2">(16:07:52) </FONT><B>japj:</B></FONT> i do :)
+<BR>
+<FONT SIZE="2">(16:07:52) </FONT><B>bryce2:</B></FONT> I haven't seen a disk image with a VBE X windows server yet
+<BR>
+<FONT SIZE="2">(16:08:00) </FONT><B>bryce2:</B></FONT> japj: I know you have. :)
+<BR>
+<FONT SIZE="2">(16:08:02) </FONT><B>japj:</B></FONT> who doesn't :)
+<BR>
+<FONT SIZE="2">(16:08:09) </FONT><B>wli:</B></FONT> What's VBE?
+<BR>
+<FONT SIZE="2">(16:08:30) </FONT><B>japj:</B></FONT> xfree86 4.x should have vbe driver
+<BR>
+<FONT SIZE="2">(16:08:46) </FONT><B>cbothamy:</B></FONT> wli : Vesa Bios Extensions
+<BR>
+<FONT SIZE="2">(16:08:58) </FONT><B>thefreak:</B></FONT> Even 3.x had a vbe driver, but it was painfully slow
+<BR>
+<FONT SIZE="2">(16:09:18) </FONT><B>bryce2:</B></FONT> there's a new debian 2.2r5 disk image on the site
+<BR>
+<FONT SIZE="2">(16:09:30) </FONT><B>bryce2:</B></FONT> 32meg download, 505meg disk image
+<BR>
+<FONT SIZE="2">(16:09:38) </FONT><B>wli:</B></FONT> um
+<BR>
+<FONT SIZE="2">(16:09:39) </FONT><B>japj:</B></FONT> thefreak: a generic vbe driver? from the release notes of Xfree86 4, they introduced it in 4
+<BR>
+<FONT SIZE="2">(16:09:48) </FONT><B>wli:</B></FONT> they can be manufactured pretty easily
+<BR>
+<FONT SIZE="2">(16:10:07) </FONT><B>bryce2:</B></FONT> we could start from that, install X free 4 in it
+<BR>
+<FONT SIZE="2">(16:10:10) </FONT><B>thefreak:</B></FONT> I believe that I used it back in the days, but it's off topic....
+<BR>
+<FONT SIZE="2">(16:10:26) </FONT><B>bryce2:</B></FONT> it would be great to get a working disk image with X windows on the site
+<BR>
+<FONT SIZE="2">(16:10:47) </FONT><B>japj:</B></FONT> yes indeed
+<BR>
+<FONT SIZE="2">(16:12:11) </FONT><B>wli:</B></FONT> it'd look flashy
+<BR>
+<FONT SIZE="2">(16:13:05) </FONT><B>bryce2:</B></FONT> How about keyboard mapping?  Has Christophe's keymap code solved the problems of using bochs on a non-US keyboard?
+<BR>
+<FONT SIZE="2">(16:13:40) </FONT><B>wli:</B></FONT> I've got a Sun Type 6 keyboard and it sometimes doesn't recognize scancodes.
+<BR>
+<FONT SIZE="2">(16:14:00) </FONT><B>wli:</B></FONT> then again that goes for Linux and XF86 as well
+<BR>
+<FONT SIZE="2">(16:14:02) </FONT><B>thefreak:</B></FONT> I'm not quite satisfied with it, I might fix a swedish one one day, but it haven't bugged me enough yet though.
+<BR>
+<FONT SIZE="2">(16:14:11) </FONT><B>bryce2:</B></FONT> wli: what are some of the keys that don't work?
+<BR>
+<FONT SIZE="2">(16:15:57) </FONT><B>wli:</B></FONT> the crescent moon, the volume keys, and the stop/again/props/undo/front/copy/open/paste/find/cut, and help.
+<BR>
+<FONT SIZE="2">(16:16:09) </FONT><B>wli:</B></FONT> OTOH I've NFI what it would do with them...
+<BR>
+<FONT SIZE="2">(16:16:35) </FONT><B>bryce2:</B></FONT> wli: you will probably need to figure out the keysyms of the missing keys (using output of xev or something) and add a line in gui/x.cc to handle them
+<BR>
+<FONT SIZE="2">(16:16:39) </FONT><B>bryce2:</B></FONT> that's a point. :)
+<BR>
+<FONT SIZE="2">(16:16:42) </FONT><B>slowcoder:</B></FONT> bryce2: I haven't been able to get VBE (+linear patches) working with the RH6.2 image thats on the site..  It appears to set the video-mode, and then after a few secs, it panics..   I'm running stock 1.4, would the CVS version help ?
+<BR>
+<FONT SIZE="2">(16:16:57) </FONT><B>wli:</B></FONT> I patched XF86 so it wouldn't crap the bed and now it passes along keycodes that 0 apps understand...
+<BR>
+<FONT SIZE="2">(16:17:08) </FONT><B>bryce2:</B></FONT> slowcoder: better ask japj :)
+<BR>
+<FONT SIZE="2">(16:17:22) </FONT><B>slowcoder:</B></FONT> Ah.
+<BR>
+<FONT SIZE="2">(16:17:30) </FONT><B>slowcoder:</B></FONT> japj: Did you get that ?
+<BR>
+<FONT SIZE="2">(16:17:34) </FONT><B>japj:</B></FONT> I will need to check the RH6.2 image on the site
+<BR>
+<FONT SIZE="2">(16:17:47) </FONT><B>bryce2:</B></FONT> slowcoder: and we'll need to know what is the panic message.
+<BR>
+<FONT SIZE="2">(16:18:08) </FONT><B>wli:</B></FONT> probably should be all separate patches
+<BR>
+<FONT SIZE="2">(16:18:14) </FONT><B>slowcoder:</B></FONT> I'm at another location right now, so I can't check it.. Sorry..
+<BR>
+<FONT SIZE="2">(16:18:17) </FONT><B>japj:</B></FONT> slowcoder: I hate to ask, but can you submit a bug on the sourceforge bug tracker on this?
+<BR>
+<FONT SIZE="2">(16:18:36) </FONT><B>bryce2:</B></FONT> hooray for the SF bug tracker
+<BR>
+<FONT SIZE="2">(16:18:47) </FONT><B>slowcoder:</B></FONT> japj: Sure, np..  I'll get some more info, and submit it
+<BR>
+<FONT SIZE="2">(16:19:38) </FONT><B>bryce2:</B></FONT> I tried to make "Paste" work in the precompiled binaries.  Any luck with that?
+<BR>
+<FONT SIZE="2">(16:19:56) </FONT><B>bryce2:</B></FONT> Copy and Snapshot should work everywhere, but to get paste working you must turn on keyboard_mapping.
+<BR>
+<FONT SIZE="2">(16:21:12) </FONT><B>wli:</B></FONT> a copy key?
+<BR>
+<FONT SIZE="2">(16:21:21) </FONT><B>wli:</B></FONT> I think it's like SunCopy or something
+<BR>
+<FONT SIZE="2">(16:21:31) </FONT><B>bryce2:</B></FONT> wli: those little toolbar buttons on the top, ya know?
+<BR>
+<FONT SIZE="2">(16:21:39) </FONT><B>wli:</B></FONT> nm
+<BR>
+<FONT SIZE="2">(16:22:31) </FONT><B>thefreak:</B></FONT> We might be able to create a guestOS kit (daemons which talks to the emulator) in order to make cut and paste work between guest and host in a proper way...
+<BR>
+<FONT SIZE="2">(16:22:45) </FONT><B>japj:</B></FONT> bryce2: btw, why can't I do "bochs some_bochsrc_file"
+<BR>
+<FONT SIZE="2">(16:23:04) </FONT><B>japj:</B></FONT> and have bochs read the rc file
+<BR>
+<FONT SIZE="2">(16:23:34) </FONT><B>bryce2:</B></FONT> at one time, all command line options were treated just like bochsrc options
+<BR>
+<FONT SIZE="2">(16:23:54) </FONT><B>bryce2:</B></FONT> like bochs 'boot: c' 'vgaromimage: bios/VGABIOS-elpin-2.40'
+<BR>
+<FONT SIZE="2">(16:24:22) </FONT><B>bryce2:</B></FONT> I don't even know if it still works.
+<BR>
+<FONT SIZE="2">(16:24:36) </FONT><B>japj:</B></FONT> btw, I still get wxmain.cc:960:28: gdk/gdkkeysyms.h: No such file or directory .. do I need some gdk dev package?
+<BR>
+<FONT SIZE="2">(16:24:45) </FONT><B>bryce2:</B></FONT> it would make sense though
+<BR>
+<FONT SIZE="2">(16:25:22) </FONT><B>bryce2:</B></FONT> (he's talking about wxwindows if you're wondering)
+<BR>
+<FONT SIZE="2">(16:25:36) </FONT><B>bryce2:</B></FONT> japj: my gdk/gdkkeysyms.h is provided by a package gtk+-devel-1.2.6-7
+<BR>
+<FONT SIZE="2">(16:25:40) </FONT><B>japj:</B></FONT> (the bochs cpanel brand)
+<BR>
+<FONT SIZE="2">(16:26:18) </FONT><B>bryce2:</B></FONT> try grep GDK_Alt_L /usr/include/*/*.h to find it
+<BR>
+<FONT SIZE="2">(16:26:33) </FONT><B>bryce2:</B></FONT> if it's in a different directory or something
+<BR>
+<FONT SIZE="2">(16:26:48) </FONT><B>japj:</B></FONT> it's in /usr/include/gtk-1.2/gdk/gdkkeysyms.h
+<BR>
+<FONT SIZE="2">(16:27:15) </FONT><B>cbothamy:</B></FONT> There is one "bug" when you press the config button. The default answer is "10. Instruction tracing", i'd prefer it be "11. Continue"
+<BR>
+<FONT SIZE="2">(16:27:16) </FONT><B>bryce2:</B></FONT> ah I bet we need gtk-config --cflags or something
+<BR>
+<FONT SIZE="2">(16:27:29) </FONT><B>bryce2:</B></FONT> cbothamy: haha good point
+<BR>
+<FONT SIZE="2">(16:28:05) </FONT><B>cbothamy:</B></FONT> bryce2: i think it comes from the added "keyboard paste delay" option
+<BR>
+<FONT SIZE="2">(16:29:08) </FONT><B>bryce2:</B></FONT> cbothamy: I'll fix it.
+<BR>
+<FONT SIZE="2">(16:30:48) </FONT><B>cbothamy:</B></FONT> Has anybody had "keyboard stuck" problem with dos 6.2 ? Or is it just french dos 6.2 ?
+<BR>
+<FONT SIZE="2">(16:31:03) </FONT><B>bryce2:</B></FONT> [ 466292 ] kbd fails in scandisk, freedos edit
+<BR>
+<FONT SIZE="2">(16:31:22) </FONT><B>bryce2:</B></FONT> When I install freedos and run the edit program, it starts up and displays just fine, but then it doesn't  respond to any key I press. Meanwhile, the clock down  in the lower right is ticking away, but there is absolutely nothing I can do except reboot. 
+<BR>
+<FONT SIZE="2">(16:31:26) </FONT><B>bryce2:</B></FONT> ?
+<BR>
+<FONT SIZE="2">(16:31:58) </FONT><B>japj:</B></FONT> the keyboard is 'systematicly' not responding in certain cases
+<BR>
+<FONT SIZE="2">(16:32:03) </FONT><B>cbothamy:</B></FONT> I fixed two missings functions in the bios yesterday because of this problem.
+<BR>
+<FONT SIZE="2">(16:32:32) </FONT><B>japj:</B></FONT> (or mabye 'was' not responding ... need to recheck after those changes)
+<BR>
+<FONT SIZE="2">(16:32:50) </FONT><B>bryce2:</B></FONT> cbothamy: do you have any suggestions on how to debug stuck keyboards?
+<BR>
+<FONT SIZE="2">(16:33:09) </FONT><B>cbothamy:</B></FONT> bryce2: can you check with current bios ? you will have to recompile it though
+<BR>
+<FONT SIZE="2">(16:33:10) </FONT><B>eks:</B></FONT> bryce2: do a trace on the keyboard port and keyboard functions
+<BR>
+<FONT SIZE="2">(16:33:16) </FONT><B>japj:</B></FONT> bryce2: I can boot that debian image, what was the idea?
+<BR>
+<FONT SIZE="2">(16:34:11) </FONT><B>bryce2:</B></FONT> eks: I have tried that, and everything looks the same when the keyboard works and when it's stuck.
+<BR>
+<FONT SIZE="2">(16:34:41) </FONT><B>bryce2:</B></FONT> japj: the idea was to install XFree4 in that image and try to run it with VBE
+<BR>
+<FONT SIZE="2">(16:34:51) </FONT><B>eks:</B></FONT> bryce2: the only other thing I see that could make it "stuck" is if the IRQ line was not lowered/raised under certain circonmstances
+<BR>
+<FONT SIZE="2">(16:34:54) </FONT><B>slowcoder:</B></FONT> japj: (With regards to the VBE "issue") would the CVS version have any improvements compared to the 1.4 release ?
+<BR>
+<FONT SIZE="2">(16:35:43) </FONT><B>japj:</B></FONT> current cvs has LFB patched already applied, 1.4 doesn't (but they both need the additional vbebios from patches/ somefile.tar.gz)
+<BR>
+<FONT SIZE="2">(16:35:44) </FONT><B>wli:</B></FONT> logging how irq's are raised/lowered
+<BR>
+<FONT SIZE="2">(16:35:47) </FONT><B>wli:</B></FONT> ?
+<BR>
+<FONT SIZE="2">(16:36:07) </FONT><B>slowcoder:</B></FONT> japj: Ok, but there hasn't been any changes in the code ?
+<BR>
+<FONT SIZE="2">(16:36:08) </FONT><B>cbothamy:</B></FONT> bryce2: no, i never had such problems before. Anyway, the fix is just for the key.com dos program
+<BR>
+<FONT SIZE="2">(16:36:19) </FONT><B>bryce2:</B></FONT> when I tried to debug the keyboard stuck problem (unsucessfully) I wrote everything I tried in http://sourceforge.net/tracker/index.php?func=detail&aid=466292&group_id=12580&atid=112580
+<BR>
+<FONT SIZE="2">(16:36:25) </FONT><B>japj:</B></FONT> what's vfb.o (in /lib/modules/.../video , is it a vesa framebuffer driver?
+<BR>
+<FONT SIZE="2">(16:36:46) </FONT><B>Ciaran:</B></FONT> Hi.
+<BR>
+<FONT SIZE="2">(16:36:58) </FONT><B>japj:</B></FONT> slowcoder: no, not yet there are some other things that need to fixed first
+<BR>
+<FONT SIZE="2">(16:37:16) </FONT><B>slowcoder:</B></FONT> japj: Okay
+<BR>
+<FONT SIZE="2">(16:37:22) </FONT><B>wli:</B></FONT> I ran into something weird while trying to make clustered mode work...
+<BR>
+<FONT SIZE="2">(16:37:41) </FONT><B>wli:</B></FONT> for some reason the APIC LVT timer behaved weirdly
+<BR>
+<FONT SIZE="2">(16:37:46) </FONT><B>Ciaran:</B></FONT> I guess I'm too late for the IRC meeting...
+<BR>
+<FONT SIZE="2">(16:37:48) </FONT><B>wli:</B></FONT> first it delivered int 0
+<BR>
+<FONT SIZE="2">(16:37:54) </FONT><B>wli:</B></FONT> which I didn't see before
+<BR>
+<FONT SIZE="2">(16:38:04) </FONT><B>japj:</B></FONT> Ciaran: no, it's still running
+<BR>
+<FONT SIZE="2">(16:38:07) </FONT><B>wli:</B></FONT> then it didn't deliver more than a few times
+<BR>
+<FONT SIZE="2">(16:38:08) </FONT><B>cbothamy:</B></FONT> Ciaran: no, it's just now
+<BR>
+<FONT SIZE="2">(16:38:17) </FONT><B>Ciaran:</B></FONT> Oh, cool.
+<BR>
+<FONT SIZE="2">(16:38:56) </FONT><B>japj:</B></FONT> bryce2: does the redhat 62 image also have an bochsrc?
+<BR>
+<FONT SIZE="2">(16:39:20) </FONT><B>eks:</B></FONT> bryce2: is there an image of freedos available for download somewhere?
+<BR>
+<FONT SIZE="2">(16:39:24) </FONT><B>bryce2:</B></FONT> I don't know. Psyon probably has one
+<BR>
+<FONT SIZE="2">(16:39:34) </FONT><B>slowcoder:</B></FONT> Who put together the RH6.2 image ?
+<BR>
+<FONT SIZE="2">(16:39:54) </FONT><B>bryce2:</B></FONT> I forget if psyon created it, or he got it from someone and uploaded it.
+<BR>
+<FONT SIZE="2">(16:39:59) </FONT><B>bryce2:</B></FONT> do you need help guessing the diskc line?
+<BR>
+<FONT SIZE="2">(16:40:18) </FONT><B>bryce2:</B></FONT> eks: http://bochs.sourceforge.net/guestos/freedos-img.tar.gz
+<BR>
+<FONT SIZE="2">(16:40:27) </FONT><B>slowcoder:</B></FONT> bryce2: There's an issue with it.. The root-password is unknown..  I had to mess around with it quite a bit..
+<BR>
+<FONT SIZE="2">(16:40:34) </FONT><B>bryce2:</B></FONT> haha
+<BR>
+<FONT SIZE="2">(16:41:28) </FONT><B>bryce2:</B></FONT> slowcoder: try "bochs" or "redhat"
+<BR>
+<FONT SIZE="2">(16:41:39) </FONT><B>bryce2:</B></FONT> I think it may be Michael Calabrese's image.
+<BR>
+<FONT SIZE="2">(16:41:51) </FONT><B>slowcoder:</B></FONT> bryce2: I tried bochs..  Didn't think of "redhat" though
+<BR>
+<FONT SIZE="2">(16:41:53) </FONT><B>thefreak:</B></FONT> Why don't you simply mount the image and edit the passwd file?
+<BR>
+<FONT SIZE="2">(16:41:57) </FONT><B>bryce2:</B></FONT> I remember that...I had to boot a floppy, edit the password file, etc.
+<BR>
+<FONT SIZE="2">(16:42:22) </FONT><B>slowcoder:</B></FONT> thefreak: 'linux single init=/bin/sh' is the "proper" way.. :)
+<BR>
+<FONT SIZE="2">(16:42:42) </FONT><B>thefreak:</B></FONT> slowcoder<B>:</B> let's not get religous :)
+<BR>
+<FONT SIZE="2">(16:43:05) </FONT><B>bryce2:</B></FONT> Did everybody see the survey results?  I can paste them in here if you want.
+<BR>
+<FONT SIZE="2">(16:43:51) </FONT><B>thefreak:</B></FONT> how many voters was there?
+<BR>
+<FONT SIZE="2">(16:43:55) </FONT><B>bryce2:</B></FONT> only 13
+<BR>
+<FONT SIZE="2">(16:44:09) </FONT><B>wli:</B></FONT> I couldn't get to the survey thing, it required some kind of login, and it never sent me my passwd.
+<BR>
+<FONT SIZE="2">(16:44:14) </FONT><B>bryce2:</B></FONT> oops
+<BR>
+<FONT SIZE="2">(16:44:54) </FONT><B>bryce2:</B></FONT> it's a source forge survey, and I didn't think that it required you to log in.
+<BR>
+<FONT SIZE="2">(16:45:02) </FONT><B>cbothamy:</B></FONT> was it advertised on the main bochs site ? 13 answers is not a lot
+<BR>
+<FONT SIZE="2">(16:45:18) </FONT><B>cbothamy:</B></FONT> compared to 20K downloads
+<BR>
+<FONT SIZE="2">(16:45:18) </FONT><B>bryce2:</B></FONT> I sent it to the 400+ people on the bochs developers list
+<BR>
+<FONT SIZE="2">(16:45:27) </FONT><B>bryce2:</B></FONT> I know, it's a wimpy response
+<BR>
+<FONT SIZE="2">(16:45:36) </FONT><B>bryce2:</B></FONT> anyway :)
+<BR>
+<FONT SIZE="2">(16:45:39) </FONT><B>wli:</B></FONT> heh
+<BR>
+<FONT SIZE="2">(16:45:53) </FONT><B>bryce2:</B></FONT> everything is rated from 1 (not important) to 5 (most important)
+<BR>
+<FONT SIZE="2">(16:45:56) </FONT><B>bryce2:</B></FONT> 4.07   simulation speed improvements
+<BR>
+<FONT SIZE="2">(16:46:02) </FONT><B>bryce2:</B></FONT> 3.71   testing framework to compare Bochs against physical hardware
+<BR>
+<FONT SIZE="2">(16:46:06) </FONT><B>bryce2:</B></FONT> 3.71   full featured networking
+<BR>
+<FONT SIZE="2">(16:46:13) </FONT><B>japj:</B></FONT> bryce2: I can't seem to boot from the redhat image (it's stuck at LI (lilo bootloader))
+<BR>
+<FONT SIZE="2">(16:46:21) </FONT><B>bryce2:</B></FONT> 3.57   convert devices to plugins so bochs and plex86 can share code
+<BR>
+<FONT SIZE="2">(16:46:32) </FONT><B>bryce2:</B></FONT> 3.43   improve video emulation to allow better resolutions, more colors
+<BR>
+<FONT SIZE="2">(16:46:44) </FONT><B>japj:</B></FONT> bryce2: at least, with latest cvs that is
+<BR>
+<FONT SIZE="2">(16:46:48) </FONT><B>bryce2:</B></FONT> 3.00   regression testing to compare Bochs versions against each other
+<BR>
+<FONT SIZE="2">(16:46:51) </FONT><B>bryce2:</B></FONT> 3.00   improve documentation
+<BR>
+<FONT SIZE="2">(16:46:58) </FONT><B>bryce2:</B></FONT> 2.64   wxwindows graphical interface for configuration, debugger
+<BR>
+<FONT SIZE="2">(16:47:04) </FONT><B>bryce2:</B></FONT> etc.
+<BR>
+<FONT SIZE="2">(16:47:04) </FONT><B>slowcoder:</B></FONT> japj: Probably wrong CHS..  It's xxx / 63 / 16   (I can't remember how many bytes the image is..)
+<BR>
+<FONT SIZE="2">(16:47:39) </FONT><B>japj:</B></FONT> 512mb
+<BR>
+<FONT SIZE="2">(16:47:50) </FONT><B>japj:</B></FONT> 1040/16/63 CHS
+<BR>
+<FONT SIZE="2">(16:47:52) </FONT><B>slowcoder:</B></FONT> japj: Exact byte-count
+<BR>
+<FONT SIZE="2">(16:48:10) </FONT><B>bryce2:</B></FONT> I'm not surprised that simulation speed is the top of the list
+<BR>
+<FONT SIZE="2">(16:48:12) </FONT><B>wli:</B></FONT> I know what's #1 on my wishlist =)
+<BR>
+<FONT SIZE="2">(16:48:20) </FONT><B>wli:</B></FONT> (it ain't speed)
+<BR>
+<FONT SIZE="2">(16:48:24) </FONT><B>japj:</B></FONT>  ls /cvs_wa/images/redhat6-512mb.img  -la
+<BR>
+<FONT SIZE="2">(16:48:24) </FONT><B>japj:</B></FONT> -rw-rw-rw-    1 japj     japj     528482304 Jun  1  2001 /cvs_wa/images/redhat6-512mb.img
+<BR>
+<FONT SIZE="2">(16:48:44) </FONT><B>bryce2:</B></FONT> however, I don't really think we should spend 75% of our time on speed
+<BR>
+<FONT SIZE="2">(16:48:57) </FONT><B>thefreak:</B></FONT> 
+<BR>
+<FONT SIZE="2">(16:49:07) </FONT><B>slowcoder:</B></FONT> japj: 1024 / 16 / 63
+<BR>
+<FONT SIZE="2">(16:49:11) </FONT><B>wli:</B></FONT> As far as I'm concerned the simulation speed (or lack thereof) is an artifact of doing pure software emu, and I'd rather have the control than the speed.
+<BR>
+<FONT SIZE="2">(16:49:15) </FONT><B>japj:</B></FONT> nope, that won't work, but 1-3 people should definitely be looking at it
+<BR>
+<FONT SIZE="2">(16:49:25) </FONT><B>bryce2:</B></FONT> or something.  We know that emulation is slow compared to virtualization
+<BR>
+<FONT SIZE="2">(16:50:06) </FONT><B>bryce2:</B></FONT> Kevin chose to move to an entirely different architecture, rather than try to squeeze another 2x out of the existing bochs architecture.  He's studied the problem more than any of us I expect.
+<BR>
+<FONT SIZE="2">(16:50:44) </FONT><B>wli:</B></FONT> I've got an idea of how many JIT back ends I feel like writing and it's a natural number strictly less than 1.
+<BR>
+<FONT SIZE="2">(16:50:48) </FONT><B>cbothamy:</B></FONT> Well, virtual PC can do it...
+<BR>
+<FONT SIZE="2">(16:51:12) </FONT><B>bryce2:</B></FONT> does virtual PC try to compile on 10 platforms?
+<BR>
+<FONT SIZE="2">(16:51:19) </FONT><B>japj:</B></FONT> slowcoder: yep that was it, so it's not actually a 512 mb image then?
+<BR>
+<FONT SIZE="2">(16:51:25) </FONT><B>thefreak:</B></FONT> wli<B>:</B> if you write 0.9 of it, we'll do the rest :)
+<BR>
+<FONT SIZE="2">(16:51:31) </FONT><B>slowcoder:</B></FONT> japj: Apparently not.. ;)
+<BR>
+<FONT SIZE="2">(16:51:43) </FONT><B>wli:</B></FONT> thefreak: natural number, not rational
+<BR>
+<FONT SIZE="2">(16:51:58) </FONT><B>japj:</B></FONT> hmm /dev/hda6 has gone too long unchecked :)
+<BR>
+<FONT SIZE="2">(16:52:10) </FONT><B>slowcoder:</B></FONT> japj: Yea, I like that it starts out with that..
+<BR>
+<FONT SIZE="2">(16:52:23) </FONT><B>cbothamy:</B></FONT> bryce2: Bochs is portable, that's a fact
+<BR>
+<FONT SIZE="2">(16:52:27) </FONT><B>slowcoder:</B></FONT> japj: Also note that you haven't got a clue of what the root-password is..
+<BR>
+<FONT SIZE="2">(16:52:38) </FONT><B>thefreak:</B></FONT> Can anyone tell me where you learn how to write a JIT-backend?
+<BR>
+<FONT SIZE="2">(16:52:40) </FONT><B>bryce2:</B></FONT> japj: since you're running mandrake 8.2 (ha I remembered), just run fsck natively
+<BR>
+<FONT SIZE="2">(16:52:42) </FONT><B>wli:</B></FONT> Any way I can shoehorn my own priorities in after that survey?
+<BR>
+<FONT SIZE="2">(16:52:55) </FONT><B>wli:</B></FONT> thefreak: the idea is obvious, the implementation is a nightmare.
+<BR>
+<FONT SIZE="2">(16:53:04) </FONT><B>japj:</B></FONT> bryce2: http://www.connectix.com/products/vpcw_wp_index.html
+<BR>
+<FONT SIZE="2">(16:53:12) </FONT><B>slowcoder:</B></FONT> bryce2: That wouldn't be a good idea, since it's a partitioned image.
+<BR>
+<FONT SIZE="2">(16:53:16) </FONT><B>japj:</B></FONT> slowcoder: probably empty :)
+<BR>
+<FONT SIZE="2">(16:53:24) </FONT><B>slowcoder:</B></FONT> japj: Guess again
+<BR>
+<FONT SIZE="2">(16:53:51) </FONT><B>thefreak:</B></FONT> wli<B>:</B> any problem is simple enough when you've learned how to break it down properly.. :)
+<BR>
+<FONT SIZE="2">(16:54:02) </FONT><B>bryce2:</B></FONT> slowcoder: we should make it into a split disk image.  That's what I wrote it for.  The boot track can be one file, the first partition can be another. :)
+<BR>
+<FONT SIZE="2">(16:54:39) </FONT><B>slowcoder:</B></FONT> japj: After the fsck'ing, reboot and at the lilo-prompt, type: 'linux single init=/bin/sh' , and edit the /etc/passwd from there..
+<BR>
+<FONT SIZE="2">(16:54:47) </FONT><B>japj:</B></FONT> bryce2: I would like to have 'incremental write' images
+<BR>
+<FONT SIZE="2">(16:55:17) </FONT><B>japj:</B></FONT> but then a lot of tools won't work anymore
+<BR>
+<FONT SIZE="2">(16:55:20) </FONT><B>bryce2:</B></FONT> me too.  [ 433171 ] patch disk image mode
+<BR>
+<FONT SIZE="2">(16:55:26) </FONT><B>slowcoder:</B></FONT> japj: That would be _great_ for trying out fses for experimental-oses.
+<BR>
+<FONT SIZE="2">(16:55:26) </FONT><B>bryce2:</B></FONT> http://sourceforge.net/tracker/index.php?func=detail&aid=433171&group_id=12580&atid=362580
+<BR>
+<FONT SIZE="2">(16:55:31) </FONT><B>wli:</B></FONT> thefreak: an interpreter targets a virtual machine and simulates the virtual machine. JIT is targeting native hardware and doing dynamic code loading... so you've got a compiler, assembler, linker, runtime dynamic linker, and still more strange runtime issues, and still hairier issues to deal with involving debugging things that are getting auto-generated and vaporize out from under you when you look at them...
+<BR>
+<FONT SIZE="2">(16:55:55) </FONT><B>wli:</B></FONT> thefreak: and you repeat the entire process once for every arch
+<BR>
+<FONT SIZE="2">(16:55:59) </FONT><B>eks:</B></FONT> bryce2: seems like the keyboard problem is present even in console mode, as soon as you press "ALT"...
+<BR>
+<FONT SIZE="2">(16:56:02) </FONT><B>wli:</B></FONT> thefreak: this is a true nightmare
+<BR>
+<FONT SIZE="2">(16:56:41) </FONT><B>bryce2:</B></FONT> eks: interesting. I hadn't noticed that one.
+<BR>
+<FONT SIZE="2">(16:56:51) </FONT><B>japj:</B></FONT> slowcoder: the redhat6 image root password is 'redhat'
+<BR>
+<FONT SIZE="2">(16:57:05) </FONT><B>slowcoder:</B></FONT> japj: Ah.. Nice.. Didn't try that.. :)
+<BR>
+<FONT SIZE="2">(16:57:06) </FONT><B>eks:</B></FONT> that's why it seems to freeze in edit, since you most likely want to access ALT+F to open a new file or such..
+<BR>
+<FONT SIZE="2">(16:57:28) </FONT><B>bryce2:</B></FONT> Here's an idea for simulation performance improvement.  Let me know what you think...
+<BR>
+<FONT SIZE="2">(16:57:55) </FONT><B>bryce2:</B></FONT> Theory: bochs cannot run fast even on fast machines because it is absolutely full of branches which cannot be predicted right.
+<BR>
+<FONT SIZE="2">(16:57:56) </FONT><B>thefreak:</B></FONT> wli<B>:</B> can we get better speed in another way? Writing os/specific optimiztion is one other way..?
+<BR>
+<FONT SIZE="2">(16:58:12) </FONT><B>wli:</B></FONT> heck I don't know
+<BR>
+<FONT SIZE="2">(16:58:13) </FONT><B>japj:</B></FONT> how do I turn off mousegrabbing under linux? (in windows it's F12?)
+<BR>
+<FONT SIZE="2">(16:58:28) </FONT><B>bryce2:</B></FONT> When running code that is very frequently used, like a loop that executes over and over,
+<BR>
+<FONT SIZE="2">(16:58:54) </FONT><B>slowcoder:</B></FONT> japj: Third mousebutton
+<BR>
+<FONT SIZE="2">(16:59:23) </FONT><B>bryce2:</B></FONT> we "generate code" which is just the implementation of each instruction of the loop appended together
+<BR>
+<FONT SIZE="2">(16:59:25) </FONT><B>japj:</B></FONT> as far as I can see the redhat6 XFree, doesn't use VBE. It uses the standard vga adapter to display things
+<BR>
+<FONT SIZE="2">(16:59:41) </FONT><B>japj:</B></FONT> slowcoder: thanks :)
+<BR>
+<FONT SIZE="2">(17:00:01) </FONT><B>bryce2:</B></FONT> with no branches in between.  Does anyone think that would make a difference?
+<BR>
+<FONT SIZE="2">(17:00:17) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> is the loop detection trivial?
+<BR>
+<FONT SIZE="2">(17:00:34) </FONT><B>wli:</B></FONT> Is this like tabulating function pointers by instruction address?
+<BR>
+<FONT SIZE="2">(17:01:12) </FONT><B>bryce2:</B></FONT> I'm thinking we identify regions of code memory that are used constantly, and spend some time (at runtime) trying to speed them up.
+<BR>
+<FONT SIZE="2">(17:01:19) </FONT><B>***eks</B></FONT> wonders why freedos is stuck in a loop reprogramming the PIT after he presses ALT..
+<BR>
+<FONT SIZE="2">(17:01:22) </FONT><B>wli:</B></FONT> oic
+<BR>
+<FONT SIZE="2">(17:01:32) </FONT><B>slowcoder:</B></FONT> japj: I was booting the kernel with 'linux vga=????' to enable a framebuffer-console
+<BR>
+<FONT SIZE="2">(17:01:45) </FONT><B>bryce2:</B></FONT> wli: no I want to eliminate branches in the simulation, except for the branches in the guest code
+<BR>
+<FONT SIZE="2">(17:01:47) </FONT><B>wli:</B></FONT> I thought it was something different to avoid going through the decoder
+<BR>
+<FONT SIZE="2">(17:01:51) </FONT><B>bryce2:</B></FONT> for tight loops
+<BR>
+<FONT SIZE="2">(17:01:51) </FONT><B>japj:</B></FONT> as soon as we get >8bpp colors, I think lots of recent distros will be able to show nice installation gfx (some use hardcoded 16bpp modes during setup, instead of allowing 8bpp support)
+<BR>
+<FONT SIZE="2">(17:02:46) </FONT><B>japj:</B></FONT> I can't type ? in bochs :)
+<BR>
+<FONT SIZE="2">(17:03:00) </FONT><B>japj:</B></FONT> how do I turn it on?
+<BR>
+<FONT SIZE="2">(17:03:01) </FONT><B>bryce2:</B></FONT> japj: you need to write a keymap file for yourself
+<BR>
+<FONT SIZE="2">(17:03:32) </FONT><B>slowcoder:</B></FONT> japj: Wrong keymapping.. It's on '-' with a danish keyboard (if I recall correctly)
+<BR>
+<FONT SIZE="2">(17:03:34) </FONT><B>***wli</B></FONT> wants cpu's ...
+<BR>
+<FONT SIZE="2">(17:03:46) </FONT><B>thefreak:</B></FONT> btyce2: I like the idea of trying to detect frequently used code and optimize it.
+<BR>
+<FONT SIZE="2">(17:04:09) </FONT><B>bryce2:</B></FONT> The reason I suggest this is that I was learning how event-driven simulators can often be replaced by
+<BR>
+<FONT SIZE="2">(17:04:23) </FONT><B>slowcoder:</B></FONT> japj: When I got the problem, I booted the kernel with 'linux vga=771', which indicates a 800x600x256 framebuffer
+<BR>
+<FONT SIZE="2">(17:05:03) </FONT><B>bryce2:</B></FONT> a very long string of instructions, when the compiler KNOWS the order the simulated events should occur in.  This allows very fast simulation because you don't have to spend time deciding what to do next at every stage.
+<BR>
+<FONT SIZE="2">(17:05:51) </FONT><B>cbothamy:</B></FONT> bryce2: is this like transforming CISC to RISC microcode ?
+<BR>
+<FONT SIZE="2">(17:06:25) </FONT><B>bryce2:</B></FONT> sort of, yes.
+<BR>
+<FONT SIZE="2">(17:06:48) </FONT><B>bryce2:</B></FONT> but I think we can use the compiler+assembler to produce the "microcode" in the form of native instructions on your machine
+<BR>
+<FONT SIZE="2">(17:07:13) </FONT><B>darkito:</B></FONT> hi
+<BR>
+<FONT SIZE="2">(17:08:00) </FONT><B>***wli</B></FONT> wants lots of cpu's =)
+<BR>
+<FONT SIZE="2">(17:08:16) </FONT><B>darkito:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(17:08:17) </FONT><B>bryce2:</B></FONT> most modern processors are multiple issue per cycle, out of order machines, and they can go fast if they aren't mispredicting branches or waiting for cache misses all the time.
+<BR>
+<FONT SIZE="2">(17:08:20) </FONT><B>japj:</B></FONT> slowcoder: I get the linux fb penguin in the left upper corner (running under gdb)
+<BR>
+<FONT SIZE="2">(17:08:26) </FONT><B>***darkito</B></FONT> wants tons of knowledgements
+<BR>
+<FONT SIZE="2">(17:08:37) </FONT><B>japj:</B></FONT> slowcoder: (so it doesn't kill itself right away)
+<BR>
+<FONT SIZE="2">(17:08:59) </FONT><B>slowcoder:</B></FONT> japj: I didn't get that.. It just changed the size of the bochs-window, and everything was black..
+<BR>
+<FONT SIZE="2">(17:09:11) </FONT><B>japj:</B></FONT> bryce2: how do I turn on debug symbols?
+<BR>
+<FONT SIZE="2">(17:09:15) </FONT><B>slowcoder:</B></FONT> japj: And that's with the CVS version?
+<BR>
+<FONT SIZE="2">(17:09:20) </FONT><B>japj:</B></FONT> yes
+<BR>
+<FONT SIZE="2">(17:09:35) </FONT><B>bryce2:</B></FONT> japj: if using .conf.linux to configure, edit it and add "-g" to the CFLAGS/CXXFLAGS
+<BR>
+<FONT SIZE="2">(17:09:38) </FONT><B>slowcoder:</B></FONT> japj: Okay..  Looks like I brainfarted somewhere then..
+<BR>
+<FONT SIZE="2">(17:09:52) </FONT><B>bryce2:</B></FONT> otherwise export CFLAGS=-g; export CXXFLAGS=-g before running configure.
+<BR>
+<FONT SIZE="2">(17:10:11) </FONT><B>japj:</B></FONT> slowcoder: no, not entirely :) .. it still crashes (but using gdb, I saw the initial logo drawn correcltly ... after that it segfaults)
+<BR>
+<FONT SIZE="2">(17:10:20) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> do you have any theory pointers on it? Have you thought about practical implementation - how to assure that we don't spend more time on trying to optimeze than what we win...?
+<BR>
+<FONT SIZE="2">(17:10:43) </FONT><B>slowcoder:</B></FONT> japj: Still want me to submit the bug to sf ?
+<BR>
+<FONT SIZE="2">(17:11:00) </FONT><B>japj:</B></FONT> yep, especially mentioning the vga=711 things
+<BR>
+<FONT SIZE="2">(17:11:13) </FONT><B>bryce2:</B></FONT> thefreak: nothing about simulating virtual machines this way.  I bet there are papers on JIT compilers for java that talk about it
+<BR>
+<FONT SIZE="2">(17:11:22) </FONT><B>slowcoder:</B></FONT> japj: Will do... (Tomorrow)
+<BR>
+<FONT SIZE="2">(17:11:26) </FONT><B>wli:</B></FONT> for 32-way SMP all you need is clustered APIC mode, more xAPIC stuff in odd places, and *goat's blood*.
+<BR>
+<FONT SIZE="2">(17:11:30) </FONT><B>japj:</B></FONT> I'm going to rerun lilo on the image (so I won't have to type it in everytime :)
+<BR>
+<FONT SIZE="2">(17:11:50) </FONT><B>bryce2:</B></FONT> thefreak: but no I don't have anything to back me up.  (YET) :)
+<BR>
+<FONT SIZE="2">(17:12:08) </FONT><B>wli:</B></FONT> any idea why the local APIC timer would wig out?
+<BR>
+<FONT SIZE="2">(17:12:21) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> as java has overused the JIT acronym, it's hard to find anything theoretical enough in all the junk out on the net :)
+<BR>
+<FONT SIZE="2">(17:12:39) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> don't drop the idea
+<BR>
+<FONT SIZE="2">(17:12:43) </FONT><B>bryce2:</B></FONT> cbothamy: should we talk about the ideas for I/O device plugins?
+<BR>
+<FONT SIZE="2">(17:13:32) </FONT><B>bryce2:</B></FONT> cbothamy: and how to get shared code between bochs and plex?
+<BR>
+<FONT SIZE="2">(17:13:48) </FONT><B>cbothamy:</B></FONT> bryce2: ok
+<BR>
+<FONT SIZE="2">(17:14:13) </FONT><B>thefreak:</B></FONT> Is there a need to make the device-loading in devices.cc more dynamic, so that you don't have to recompile when you change configuration?
+<BR>
+<FONT SIZE="2">(17:14:19) </FONT><B>bryce2:</B></FONT> thefreak: I personally think bochs should most of its spend its time worrying about correctness rather than speed.
+<BR>
+<FONT SIZE="2">(17:15:03) </FONT><B>bryce2:</B></FONT> Christophe Bothamy and Volker Ruppert have been working on porting the bochs devices that we've been working on for a year into plex86.
+<BR>
+<FONT SIZE="2">(17:15:47) </FONT><B>wli:</B></FONT> me too
+<BR>
+<FONT SIZE="2">(17:16:36) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> well, I fully respect that, but I want speed! :) (i can't force you to do it for me though...)
+<BR>
+<FONT SIZE="2">(17:17:19) </FONT><B>bryce2:</B></FONT> cbothamy: I think you mentioned in an email that you think we can get identical code to work as a bochs device and as a plex device, using a few macro definitions for inter-device communications such as raising interrupts, log messages, etc.
+<BR>
+<FONT SIZE="2">(17:18:01) </FONT><B>cbothamy:</B></FONT> Log messages are ok
+<BR>
+<FONT SIZE="2">(17:18:34) </FONT><B>cbothamy:</B></FONT> The idea for plugins is to remove all direct inter-device access.
+<BR>
+<FONT SIZE="2">(17:20:05) </FONT><B>cbothamy:</B></FONT> In plex this is done by "registering" a plugin global function for each inter-device operation, (ie raise IRQ)
+<BR>
+<FONT SIZE="2">(17:20:05) </FONT><B>thefreak:</B></FONT> how much inter-device access is there today?
+<BR>
+<FONT SIZE="2">(17:20:05) </FONT><B>wli:</B></FONT> real hw rarely does that anyway
+<BR>
+<FONT SIZE="2">(17:21:12) </FONT><B>cbothamy:</B></FONT> thefreak: cmos, timers are accessed by a few devices, IRQ by nearly all,
+<BR>
+<FONT SIZE="2">(17:21:27) </FONT><B>thefreak:</B></FONT> cbothamy<B>:</B> what about dma?
+<BR>
+<FONT SIZE="2">(17:21:46) </FONT><B>japj:</B></FONT> how do I display a local variable in gdb? (I'm used to VC6 :)
+<BR>
+<FONT SIZE="2">(17:22:01) </FONT><B>bryce2:</B></FONT> japj: print n
+<BR>
+<FONT SIZE="2">(17:22:15) </FONT><B>cbothamy:</B></FONT> thfreak: yes, dma as well for devices using dma ;-)
+<BR>
+<FONT SIZE="2">(17:22:25) </FONT><B>japj:</B></FONT> bryce2: how can I print it in hex?
+<BR>
+<FONT SIZE="2">(17:22:31) </FONT><B>japj:</B></FONT> or signed?
+<BR>
+<FONT SIZE="2">(17:22:34) </FONT><B>bryce2:</B></FONT> japj: printf "%x\n", n
+<BR>
+<FONT SIZE="2">(17:22:38) </FONT><B>japj:</B></FONT> duh
+<BR>
+<FONT SIZE="2">(17:22:40) </FONT><B>japj:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(17:22:51) </FONT><B>eks:</B></FONT> bryce2: I think I know what is happening
+<BR>
+<FONT SIZE="2">(17:23:04) </FONT><B>eks:</B></FONT> bryce2: about that problemw ith the keyboard in freedos
+<BR>
+<FONT SIZE="2">(17:23:07) </FONT><B>thefreak:</B></FONT> cbothamy<B>:</B> how does bochs handle this?
+<BR>
+<FONT SIZE="2">(17:23:33) </FONT><B>thefreak:</B></FONT> cbotamy: never mind *reading back*
+<BR>
+<FONT SIZE="2">(17:23:46) </FONT><B>bryce2:</B></FONT> eks: great! what?
+<BR>
+<FONT SIZE="2">(17:23:46) </FONT><B>eks:</B></FONT> bryce2: some code sends a "keyboard disable" command to the emulated keyboard, but never re-enables it
+<BR>
+<FONT SIZE="2">(17:24:05) </FONT><B>cbothamy:</B></FONT> thefreak: In Bochs, the access is done by directly referencing methods on the objects.
+<BR>
+<FONT SIZE="2">(17:24:11) </FONT><B>eks:</B></FONT> bryce2: problem is, the code that sends the keyboard disable (0xAD) to port 0x64 is in the bios....
+<BR>
+<FONT SIZE="2">(17:24:57) </FONT><B>cbothamy:</B></FONT> thefreak: example BX_FD_THIS devices->pic->lower_irq(6);
+<BR>
+<FONT SIZE="2">(17:25:03) </FONT><B>thefreak:</B></FONT> cbothamy<B>:</B> i personally think the bochs way is awful compared to the pluginmode, it generates lots of depencies which we really don't need.
+<BR>
+<FONT SIZE="2">(17:25:13) </FONT><B>bryce2:</B></FONT> thefreak: amen
+<BR>
+<FONT SIZE="2">(17:25:25) </FONT><B>cbothamy:</B></FONT> thefreak: bryce2 fully agrees
+<BR>
+<FONT SIZE="2">(17:25:39) </FONT><B>thefreak:</B></FONT> cbothamy<B>:</B> i've had a few such problems when trying to implement 3c509 support, eth and ne2k is separated, but not completely.. for example.
+<BR>
+<FONT SIZE="2">(17:25:48) </FONT><B>bryce2:</B></FONT> thefreak: I think we should be replacing "BX_FD_THIS devices->pic->lower_irq(6)"
+<BR>
+<FONT SIZE="2">(17:26:13) </FONT><B>bryce2:</B></FONT> with a macro call such as BX_LOWER_IRQ(6) or something
+<BR>
+<FONT SIZE="2">(17:26:45) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> AAAAHHHRRRGG!!! If we're going to use an oo language, why not use the features on it instead on ugly macros?
+<BR>
+<FONT SIZE="2">(17:26:56) </FONT><B>bryce2:</B></FONT> I don't even mind if the macro is defined to do the exact same thing as before, but it would make the interface clean.
+<BR>
+<FONT SIZE="2">(17:27:07) </FONT><B>bryce2:</B></FONT> thefreak: plex86 is a C program
+<BR>
+<FONT SIZE="2">(17:27:18) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> point taken
+<BR>
+<FONT SIZE="2">(17:27:32) </FONT><B>bryce2:</B></FONT> thefreak: bochs is a C++ program which doesn't use many features of C++
+<BR>
+<FONT SIZE="2">(17:28:13) </FONT><B>bryce2:</B></FONT> thefreak: for better or for worse.  In fact some features are deliberately short-circuited because they caused a performance loss.  Such as the most basic of all: member functions.
+<BR>
+<FONT SIZE="2">(17:28:16) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> I've actually wondered about that, why did you choose c++ when you're hardly using many of it features?
+<BR>
+<FONT SIZE="2">(17:28:25) </FONT><B>bryce2:</B></FONT> history
+<BR>
+<FONT SIZE="2">(17:28:31) </FONT><B>bryce2:</B></FONT> Kevin regrets changing to C++
+<BR>
+<FONT SIZE="2">(17:28:45) </FONT><B>bryce2:</B></FONT> but it's done and I don't think there's good enough reason to change back.
+<BR>
+<FONT SIZE="2">(17:29:19) </FONT><B>cbothamy:</B></FONT> If we use macros, the code could be shared as is between the two projects.
+<BR>
+<FONT SIZE="2">(17:29:35) </FONT><B>bryce2:</B></FONT> Using macros is very flexible.  Anybody who wants to use our PIT can
+<BR>
+<FONT SIZE="2">(17:29:41) </FONT><B>cbothamy:</B></FONT> If we use macros, we can easily move to a plugin architecture
+<BR>
+<FONT SIZE="2">(17:29:42) </FONT><B>japj:</B></FONT> bryce2: I think I fixed the redhat6 fbdev bug (using linux vga=771 that slowcoder mentioned)
+<BR>
+<FONT SIZE="2">(17:29:47) </FONT><B>thefreak:</B></FONT> Implementing a emulator in oo-languages would lead to a beautiful implementation, but awfully slow.. And as I said I want speed! :)
+<BR>
+<FONT SIZE="2">(17:29:59) </FONT><B>bryce2:</B></FONT> just look at the header file, define the macros to do something reasonable in his simulation, and use it.
+<BR>
+<FONT SIZE="2">(17:30:47) </FONT><B>bryce2:</B></FONT> japj: sorry I wasn't following that conversation :) but I'm glad you found it.
+<BR>
+<FONT SIZE="2">(17:31:39) </FONT><B>bryce2:</B></FONT> cbothamy: do you and Volker need help with Macro-izing the devices, or do you have it under control?
+<BR>
+<FONT SIZE="2">(17:31:53) </FONT><B>wli:</B></FONT> the receive stimulus / transition between states / wait paradigm is fine
+<BR>
+<FONT SIZE="2">(17:32:07) </FONT><B>cbothamy:</B></FONT> bryce2: i guess we can handle it ;-)
+<BR>
+<FONT SIZE="2">(17:32:09) </FONT><B>wli:</B></FONT> OO is good for that
+<BR>
+<FONT SIZE="2">(17:32:15) </FONT><B>bryce2:</B></FONT> I think it makes sense to get the macros working in bochs&plex first
+<BR>
+<FONT SIZE="2">(17:32:30) </FONT><B>bryce2:</B></FONT> then start to add plugin support to Bochs
+<BR>
+<FONT SIZE="2">(17:32:33) </FONT><B>thefreak:</B></FONT> wli<B>:</B> agreed, interfaces and inheritance is also convenient.
+<BR>
+<FONT SIZE="2">(17:32:46) </FONT><B>japj:</B></FONT> I'm going to bed now (23:37 over here and I need to work early tomorrow)
+<BR>
+<FONT SIZE="2">(17:32:53) </FONT><B>bryce2:</B></FONT> (which will require a redefinition of the macros to make them more like plex's definitions)
+<BR>
+<FONT SIZE="2">(17:32:53) </FONT><B>wli:</B></FONT> hmm
+<BR>
+<FONT SIZE="2">(17:33:00) </FONT><B>cbothamy:</B></FONT> That's my idea as well. this sounds ok
+<BR>
+<FONT SIZE="2">(17:33:05) </FONT><B>bryce2:</B></FONT> cool
+<BR>
+<FONT SIZE="2">(17:33:12) </FONT><B>japj:</B></FONT> is someone logging this?
+<BR>
+<FONT SIZE="2">(17:33:18) </FONT><B>japj:</B></FONT> (so I can read back later)
+<BR>
+<FONT SIZE="2">(17:33:20) </FONT><B>wli:</B></FONT> there are a couple of devices that have been hounding me
+<BR>
+<FONT SIZE="2">(17:33:22) </FONT><B>thefreak:</B></FONT> I'm also leaving now, i'll have to be working before 08 am...
+<BR>
+<FONT SIZE="2">(17:33:54) </FONT><B>bryce2:</B></FONT> glad you could join us, japj and thefreak
+<BR>
+<FONT SIZE="2">(17:34:06) </FONT><B>wli:</B></FONT> rest easy japj
+<BR>
+<FONT SIZE="2">(17:34:06) </FONT><B>thefreak:</B></FONT> BTW. If you're interested... Linux now detects my 3c509 card, it doesn't actually do everything it should though..
+<BR>
+<FONT SIZE="2">(17:34:07) </FONT><B>bryce2:</B></FONT> we haven't talked about the testing framework ideas yet
+<BR>
+<FONT SIZE="2">(17:34:09) </FONT><B>wli:</B></FONT> thefreak too
+<BR>
+<FONT SIZE="2">(17:34:18) </FONT><B>bryce2:</B></FONT> thefreak: cool :) that's the first step!
+<BR>
+<FONT SIZE="2">(17:34:21) </FONT><B>japj:</B></FONT> bryce2: you're logging this?
+<BR>
+<FONT SIZE="2">(17:34:33) </FONT><B>bryce2:</B></FONT> japj: unless my client crashes again, yes :)
+<BR>
+<FONT SIZE="2">(17:34:42) </FONT><B>japj:</B></FONT> ok.. goodnight
+<BR>
+<FONT SIZE="2">(17:35:05) </FONT><B>bryce2:</B></FONT> regression testing should be a part of any sort of complex model, and we have absolutely nothing.
+<BR>
+<FONT SIZE="2">(17:35:32) </FONT><B>wli:</B></FONT> booting Linux is the closest thing I have
+<BR>
+<FONT SIZE="2">(17:35:44) </FONT><B>wli:</B></FONT> kind of imprecise
+<BR>
+<FONT SIZE="2">(17:35:58) </FONT><B>bryce2:</B></FONT> There are lots of different ways to approach it, from writing out a large log file of memory and I/O references
+<BR>
+<FONT SIZE="2">(17:36:08) </FONT><B>thefreak:</B></FONT> bryce2<B>:</B> yepps, it's much cleaner interface, one i/o port, and one interrupt. Thank you for the historic lessons on OO-decisions, it will help me keeping a c-style instead of an oop aproach. See ya
+<BR>
+<FONT SIZE="2">(17:36:09) </FONT><B>wli:</B></FONT> should be a bunch of executives around with canned tests
+<BR>
+<FONT SIZE="2">(17:36:19) </FONT><B>bryce2:</B></FONT> and comparing output from different versions
+<BR>
+<FONT SIZE="2">(17:37:06) </FONT><B>wli:</B></FONT> a full OS will generate quite a large trace
+<BR>
+<FONT SIZE="2">(17:37:08) </FONT><B>bryce2:</B></FONT> to writing guest OS code that searches for problems and returns a pass/fail, like wli just said
+<BR>
+<FONT SIZE="2">(17:38:15) </FONT><B>bryce2:</B></FONT> or periodically writing out some kind of MD5 checksum of what has been going on (machine state plus memory state) that is likely to differ if some part of the emulation has changed.
+<BR>
+<FONT SIZE="2">(17:38:33) </FONT><B>bryce2:</B></FONT> The full log is most useful for debugging, because yes it gets very long, but it's better than nothing!
+<BR>
+<FONT SIZE="2">(17:39:00) </FONT><B>bryce2:</B></FONT> Kevin also used simultaneous simulations of two bochses at once, doing comparison every once in a while, which he called co-simulation.
+<BR>
+<FONT SIZE="2">(17:39:06) </FONT><B>bryce2:</B></FONT> Any of these interest people?
+<BR>
+<FONT SIZE="2">(17:40:40) </FONT><B>bryce2:</B></FONT> Since we have a model of an Intel machine, and access to lots of real intel machines, for some kinds of testing we should be systematically comparing bochs results to physical machines.
+<BR>
+<FONT SIZE="2">(17:40:54) </FONT><B>wli:</B></FONT> um
+<BR>
+<FONT SIZE="2">(17:41:10) </FONT><B>wli:</B></FONT> the results from physical machines need logic analyzers to obtain
+<BR>
+<FONT SIZE="2">(17:41:27) </FONT><B>bryce2:</B></FONT> I mean results that can be detected using code
+<BR>
+<FONT SIZE="2">(17:41:31) </FONT><B>wli:</B></FONT> or circuit-level simulation of the verilog/whatever
+<BR>
+<FONT SIZE="2">(17:41:53) </FONT><B>wli:</B></FONT> nm
+<BR>
+<FONT SIZE="2">(17:42:29) </FONT><B>wli:</B></FONT> some of this is BIOS-dependent as well
+<BR>
+<FONT SIZE="2">(17:42:54) </FONT><B>bryce2:</B></FONT> for example, if you wanted to really get the PIC model right, you could write some test code that logs the PIC activity, and run it on both your PC and on bochs.
+<BR>
+<FONT SIZE="2">(17:43:07) </FONT><B>bryce2:</B></FONT> figure out what's different, and adjust Bochs accordingly.
+<BR>
+<FONT SIZE="2">(17:43:36) </FONT><B>wli:</B></FONT> e.g. on NUMA-Q NMI's do stuff basically like startup IPI's in the BIOS
+<BR>
+<FONT SIZE="2">(17:43:48) </FONT><B>wli:</B></FONT> other boxen probably have other weird BIOS hacks
+<BR>
+<FONT SIZE="2">(17:43:59) </FONT><B>bryce2:</B></FONT> granted it doesn't work for everything
+<BR>
+<FONT SIZE="2">(17:44:20) </FONT><B>bryce2:</B></FONT> if would be great for testing accuracy of our floating point multiply or something.
+<BR>
+<FONT SIZE="2">(17:44:40) </FONT><B>wli:</B></FONT> that can be done in userspace anyway
+<BR>
+<FONT SIZE="2">(17:44:42) </FONT><B>bryce2:</B></FONT> or almost any other user-level instruction
+<BR>
+<FONT SIZE="2">(17:45:03) </FONT><B>wli:</B></FONT> singleshot instructions aren't a good example because there's an easy trapdoor =)
+<BR>
+<FONT SIZE="2">(17:45:25) </FONT><B>bryce2:</B></FONT> it would still be valuable to be able to test them!
+<BR>
+<FONT SIZE="2">(17:45:28) </FONT><B>wli:</B></FONT> true
+<BR>
+<FONT SIZE="2">(17:45:37) </FONT><B>bryce2:</B></FONT> even if it's not a challenge
+<BR>
+<FONT SIZE="2">(17:45:45) </FONT><B>wli:</B></FONT> userspace test harness for them etc.
+<BR>
+<FONT SIZE="2">(17:46:37) </FONT><B>bryce2:</B></FONT> talking about regression tests seems to have put nearly everyone to sleep, or driven them away :)
+<BR>
+<FONT SIZE="2">(17:47:49) </FONT><B>wli:</B></FONT> well
+<BR>
+<FONT SIZE="2">(17:47:52) </FONT><B>bryce2:</B></FONT> Did anybody see the wxwindows screen shot at http://bochs.sourceforge.net/tmp/wxwindows/wxbochs4.gif ?
+<BR>
+<FONT SIZE="2">(17:48:15) </FONT><B>wli:</B></FONT> any chance I can sneak in my ulterior motives / blatant plugs / whatever?
+<BR>
+<FONT SIZE="2">(17:48:57) </FONT><B>bryce2:</B></FONT> wli: sure.
+<BR>
+<FONT SIZE="2">(17:48:59) </FONT><B>wli:</B></FONT> looks like different widgets
+<BR>
+<FONT SIZE="2">(17:49:04) </FONT><B>wli:</B></FONT> alright
+<BR>
+<FONT SIZE="2">(17:49:24) </FONT><B>wli:</B></FONT> I want nasty scenarios to "be hostile to" kernels.
+<BR>
+<FONT SIZE="2">(17:49:31) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(17:49:37) </FONT><B>wli:</B></FONT> there are 2 things, 1 more important than the other
+<BR>
+<FONT SIZE="2">(17:49:40) </FONT><B>bryce2:</B></FONT> for worst case races and things
+<BR>
+<FONT SIZE="2">(17:49:47) </FONT><B>wli:</B></FONT> #1 is tons of cpu's -- i.e. races right
+<BR>
+<FONT SIZE="2">(17:49:56) </FONT><B>wli:</B></FONT> #2 is fiddling with memory maps
+<BR>
+<FONT SIZE="2">(17:50:13) </FONT><B>bryce2:</B></FONT> can you clarify #2?
+<BR>
+<FONT SIZE="2">(17:50:35) </FONT><B>wli:</B></FONT> discontiguous memory maps have weird issues and under pressure the OS can crap itself believing it's out of mem when it isn't.
+<BR>
+<FONT SIZE="2">(17:51:08) </FONT><B>wli:</B></FONT> One of the weird issues is that when only one cpu is around the OS "puts processes to sleep" that are chewing up memory so it's hard to bring the issue to light.
+<BR>
+<FONT SIZE="2">(17:51:11) </FONT><B>Ciaran[zzz]:</B></FONT> I have to go sleep now.
+<BR>
+<FONT SIZE="2">(17:51:14) </FONT><B>Ciaran[zzz]:</B></FONT> See ya. :)
+<BR>
+<FONT SIZE="2">(17:51:21) </FONT><B>bryce2:</B></FONT> good night
+<BR>
+<FONT SIZE="2">(17:51:44) </FONT><B>Ciaran[zzz]:</B></FONT> Is it okay for me to stay in here while I'm sleeping?
+<BR>
+<FONT SIZE="2">(17:51:46) </FONT><B>wli:</B></FONT> With a lot of cpu's, the OS can be hit by > 1 task at once pushing it and this exposes the issue with allowing too much mem to be consumed
+<BR>
+<FONT SIZE="2">(17:51:51) </FONT><B>wli:</B></FONT> I don't mind.
+<BR>
+<FONT SIZE="2">(17:52:01) </FONT><B>bryce2:</B></FONT> ciaran: we won't pour cold water on you.
+<BR>
+<FONT SIZE="2">(17:52:06) </FONT><B>Ciaran[zzz]:</B></FONT> Cool. :)
+<BR>
+<FONT SIZE="2">(17:52:09) </FONT><B>Ciaran[zzz]:</B></FONT> 'night then.
+<BR>
+<FONT SIZE="2">(17:52:17) </FONT><B>Ciaran[zzz]:</B></FONT> *poof*
+<BR>
+<FONT SIZE="2">(17:52:42) </FONT><B>wli:</B></FONT> so basically being able to say "give me 128MB at 0, another 128MB starting at 4GB,..." and so on up to 64GB helps a lot here.
+<BR>
+<FONT SIZE="2">(17:52:50) </FONT><B>eks:</B></FONT> bryce2: does the PIT support mode 0 ?
+<BR>
+<FONT SIZE="2">(17:53:24) </FONT><B>wli:</B></FONT> atm support for > 8 cpu's on i386 in Linux needs clustered APIC mode + various tidbits of weirdness
+<BR>
+<FONT SIZE="2">(17:53:44) </FONT><B>bryce2:</B></FONT> eks: based on 10 seconds of looking at pit.cc I think yes
+<BR>
+<FONT SIZE="2">(17:53:53) </FONT><B>wli:</B></FONT> Assuming there aren't architectural weirdnesses physical mode could be used for > 64 up to 255 on xAPICs
+<BR>
+<FONT SIZE="2">(17:53:59) </FONT><B>bryce2:</B></FONT> switch (BX_PIT_THIS s.timer[timerid].mode) { case 0: .... }
+<BR>
+<FONT SIZE="2">(17:54:05) </FONT><B>eks:</B></FONT> bryce2: hrm.. ok..
+<BR>
+<FONT SIZE="2">(17:55:05) </FONT><B>bryce2:</B></FONT> wli: I don't think it would be hard to simulate the discontinuous memory maps.  I don't know much about it though.
+<BR>
+<FONT SIZE="2">(17:55:24) </FONT><B>wli:</B></FONT> One of the more pressing issues in Linux is that there are very early issues in v2.5.x with larger machines and without either special equipment or lots of time to devote to workarounds for not having the equipment fixing bootstrap code for larger machines will take ages...
+<BR>
+<FONT SIZE="2">(17:55:55) </FONT><B>wli:</B></FONT> Yeah the discontiguous memory map doesn't sound hard to me either, it's very much back burner for me.
+<BR>
+<FONT SIZE="2">(17:56:19) </FONT><B>bryce2:</B></FONT> eks: I didn't say it did mode 0 right necessarily :)
+<BR>
+<FONT SIZE="2">(17:56:31) </FONT><B>wli:</B></FONT> the way things come to light is for instance running dbench on an NFS-mounted filesystem on an SMP discontiguous memory machine.
+<BR>
+<FONT SIZE="2">(17:57:33) </FONT><B>wli:</B></FONT> the OS "paints itself into a corner" by not slowing down those consuming memory well enough to keep enough memory there to do low-level operations that will eventually alleviate the pressure... but this is less difficult to simulate by far than the interrupt controller business.
+<BR>
+<FONT SIZE="2">(17:58:43) </FONT><B>wli:</B></FONT> one of the most aggravating issues that's come up has to do with the APIC LVT timer in conjunction with some obvious bits to simulate clustered APIC destination formats.
+<BR>
+<FONT SIZE="2">(17:59:18) </FONT><B>wli:</B></FONT> there aren't enough clues to really tell why the in-service bit isn't getting cleared.
+<BR>
+<FONT SIZE="2">(17:59:26) </FONT><B>bryce2:</B></FONT> I see how bochs can be useful to see what's going on in some of these situations where the system gets unstable.
+<BR>
+<FONT SIZE="2">(17:59:57) </FONT><B>wli:</B></FONT> bryce: the greater parallelism exposes OS stability issues hidden by implicit serialization on smaller systems.
+<BR>
+<FONT SIZE="2">(18:00:02) </FONT><B>bryce2:</B></FONT> wli: I say, add lots more BX_DEBUGs :)
+<BR>
+<FONT SIZE="2">(18:00:39) </FONT><B>wli:</B></FONT> well, atm I don't really know if I'm working with the latest bits of APIC LVT code.
+<BR>
+<FONT SIZE="2">(18:00:54) </FONT><B>bryce2:</B></FONT> ?
+<BR>
+<FONT SIZE="2">(18:01:03) </FONT><B>bryce2:</B></FONT> I don't have any patches that aren't checked in
+<BR>
+<FONT SIZE="2">(18:01:14) </FONT><B>wli:</B></FONT> that answers it then; I am
+<BR>
+<FONT SIZE="2">(18:01:24) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(18:01:39) </FONT><B>wli:</B></FONT> one question that arises is how it's been tested thus far;
+<BR>
+<FONT SIZE="2">(18:02:17) </FONT><B>wli:</B></FONT> it *appears* that the APIC LVT timer doesn't adjust the interrupt vector by the base vector so for the timer interrupt (0) it appears to the cpu as interrupt 0 and generates a div by 0 exception
+<BR>
+<FONT SIZE="2">(18:02:35) </FONT><B>eks:</B></FONT> bryce2: on my system here it gets stuck in an infinite loop always reprogramming the PIT channel 0 for mode 0
+<BR>
+<FONT SIZE="2">(18:02:44) </FONT><B>eks:</B></FONT> bryce2: the loop is 25 instructions long
+<BR>
+<FONT SIZE="2">(18:03:03) </FONT><B>wli:</B></FONT> I didn't see an obvious base register so I just added a hardcoded offset of 0x20 to the vector since I know 0x20 is what Linux uses.
+<BR>
+<FONT SIZE="2">(18:03:16) </FONT><B>eks:</B></FONT> bryce2: keeps waiting for something to change on its stack
+<BR>
+<FONT SIZE="2">(18:03:29) </FONT><B>wli:</B></FONT> this is a workaround; the real fix is unclear
+<BR>
+<FONT SIZE="2">(18:03:32) </FONT><B>eks:</B></FONT> bryce2: so my guess is that it is waiting for the timer to act, but it never comes
+<BR>
+<FONT SIZE="2">(18:03:40) </FONT><B>bryce2:</B></FONT> eks: very strange.
+<BR>
+<FONT SIZE="2">(18:03:57) </FONT><B>bryce2:</B></FONT> eks: since we can get source to freedos edit, I wonder if that would shed some light on the behavior.
+<BR>
+<FONT SIZE="2">(18:04:14) </FONT><B>eks:</B></FONT> bryce2: I get the same behaviour from the console :/
+<BR>
+<FONT SIZE="2">(18:04:21) </FONT><B>wli:</B></FONT> there are some other odd issues; I believe that S-APIC bus arbitration should use round-robin distribution of the interrupts, but AFAICT IDE interrupts are always delivered to cpu0.
+<BR>
+<FONT SIZE="2">(18:04:45) </FONT><B>wli:</B></FONT> And this is in flat logical destination format.
+<BR>
+<FONT SIZE="2">(18:05:16) </FONT><B>wli:</B></FONT> btw, do I need to separate out the parts of the 8-way patch that -aren't- workarounds so they can be included?
+<BR>
+<FONT SIZE="2">(18:05:38) </FONT><B>bryce2:</B></FONT> eks: hmm.  did you turn on debugging on the PIC? maybe there are some clues just before it gets into the infinite loop.
+<BR>
+<FONT SIZE="2">(18:06:05) </FONT><B>wli:</B></FONT> the BIOS and configure.in stuff is trivial and has no bearing on quality of simulation for other configurations.
+<BR>
+<FONT SIZE="2">(18:06:40) </FONT><B>bryce2:</B></FONT> wli: I havent' had time to look at it more than a minute.
+<BR>
+<FONT SIZE="2">(18:07:04) </FONT><B>bryce2:</B></FONT> wli: which is the case for lots of things :(
+<BR>
+<FONT SIZE="2">(18:07:23) </FONT><B>wli:</B></FONT> so barring reviews for correctness of the other bits I should eliminate the bits that have any impact on simulation while < 8 cpu's are in use?
+<BR>
+<FONT SIZE="2">(18:07:55) </FONT><B>wli:</B></FONT> and leave the other stuff around so people can see what kinds of issues arise until real fixes are done?
+<BR>
+<FONT SIZE="2">(18:08:44) </FONT><B>bryce2:</B></FONT> yes, it will help me if you can split into two patches
+<BR>
+<FONT SIZE="2">(18:08:48) </FONT><B>eks:</B></FONT> bryce2: I'll compress the out.bochs and place it on my server, gimme a sec
+<BR>
+<FONT SIZE="2">(18:08:52) </FONT><B>wli:</B></FONT> on its way today
+<BR>
+<FONT SIZE="2">(18:09:24) </FONT><B>bryce2:</B></FONT> 1. things that you know are right, such as the 8-way cpu bios/configure changes
+<BR>
+<FONT SIZE="2">(18:09:37) </FONT><B>bryce2:</B></FONT> 2. workarounds, which I would want to leave in patches but not check in
+<BR>
+<FONT SIZE="2">(18:09:51) </FONT><B>bryce2:</B></FONT> eks: I doubt I'll be able to make sense of it, but I'll look :)
+<BR>
+<FONT SIZE="2">(18:10:02) </FONT><B>eks:</B></FONT> bryce2: I think the contrary :p
+<BR>
+<FONT SIZE="2">(18:10:31) </FONT><B>eks:</B></FONT> bryce2: is 1.2MB too big?
+<BR>
+<FONT SIZE="2">(18:10:35) </FONT><B>bryce2:</B></FONT> nope
+<BR>
+<FONT SIZE="2">(18:10:56) </FONT><B>eks:</B></FONT> bryce2: http://void-core.2y.net/out.bochs.bz2
+<BR>
+<FONT SIZE="2">(18:11:09) </FONT><B>eks:</B></FONT> bryce2: uncompress and go at the end of the log
+<BR>
+<FONT SIZE="2">(18:11:22) </FONT><B>eks:</B></FONT> look at the various [PIT  ] entries
+<BR>
+<FONT SIZE="2">(18:11:29) </FONT><B>eks:</B></FONT> you will notice something quite anormal
+<BR>
+<FONT SIZE="2">(18:12:28) </FONT><B>eks:</B></FONT> the timer is "reset" continously, that's alright, but it never have the time to expire before the timer is set again
+<BR>
+<FONT SIZE="2">(18:13:22) </FONT><B>bryce2:</B></FONT> I wonder if you set ips = 10 million if the problem would go away
+<BR>
+<FONT SIZE="2">(18:13:34) </FONT><B>eks:</B></FONT> most likely the reverse, IPS=1 ;)
+<BR>
+<FONT SIZE="2">(18:13:42) </FONT><B>bryce2:</B></FONT> ah one of those
+<BR>
+<FONT SIZE="2">(18:13:50) </FONT><B>wli:</B></FONT> I should try something like 32M for the 32-way sim.
+<BR>
+<FONT SIZE="2">(18:13:50) </FONT><B>eks:</B></FONT> I'll give it a try
+<BR>
+<FONT SIZE="2">(18:13:56) </FONT><B>wli:</B></FONT> it might make issues go away
+<BR>
+<FONT SIZE="2">(18:13:58) </FONT><B>bryce2:</B></FONT> usually raising ips makes it more realistic
+<BR>
+<FONT SIZE="2">(18:14:44) </FONT><B>wli:</B></FONT> maybe 600M or something hopefully that won't overflow inside the sim
+<BR>
+<FONT SIZE="2">(18:14:54) </FONT><B>wli:</B></FONT> 5M * NR_CPUS
+<BR>
+<FONT SIZE="2">(18:15:23) </FONT><B>bryce2:</B></FONT> eks: can you see from the disassembly how this code EXPECTS to ever leave the loop?
+<BR>
+<FONT SIZE="2">(18:17:04) </FONT><B>bryce2:</B></FONT> does the inf loop start immediately after the ALT is pressed?
+<BR>
+<FONT SIZE="2">(18:17:47) </FONT><B>eks:</B></FONT> there's a CMP BX, SS:[BP + F9]
+<BR>
+<FONT SIZE="2">(18:18:37) </FONT><B>eks:</B></FONT> I think it's related to the X11 GUI too... here's what happen
+<BR>
+<FONT SIZE="2">(18:18:59) </FONT><B>eks:</B></FONT> if I press ALT but no other keys on my real keyboard, FreeDOS does'nt see any key being pressed (int 9 not called)
+<BR>
+<FONT SIZE="2">(18:19:30) </FONT><B>eks:</B></FONT> if I hold ALT and press F, FreeDOS goes into this int 9 and then tries to set the timer (god only knows why)
+<BR>
+<FONT SIZE="2">(18:19:37) </FONT><B>eks:</B></FONT> it's there that it gets stuck
+<BR>
+<FONT SIZE="2">(18:20:00) </FONT><B>wli:</B></FONT> it's supposed to get the scancode for the real key not long after
+<BR>
+<FONT SIZE="2">(18:20:59) </FONT><B>bryce2:</B></FONT> it seems wrong that the ALT doesn't cause a keyboard event, so maybe we should solve that and then see if it helps.
+<BR>
+<FONT SIZE="2">(18:21:30) </FONT><B>eks:</B></FONT> maybe it's the ION window manager :P
+<BR>
+<FONT SIZE="2">(18:22:24) </FONT><B>eks:</B></FONT> *sigh*, running bochs with IPS: 1000 is painful...
+<BR>
+<FONT SIZE="2">(18:23:27) </FONT><B>bryce2:</B></FONT> simulate a 1khz pentium.  nice.
+<BR>
+<FONT SIZE="2">(18:25:19) </FONT><B>eks:</B></FONT> IPS=10000 makes the ALT in console work
+<BR>
+<FONT SIZE="2">(18:25:21) </FONT><B>wli:</B></FONT> 1KHz breaks timing algorithms
+<BR>
+<FONT SIZE="2">(18:25:35) </FONT><B>eks:</B></FONT> wli: quite what I wanted
+<BR>
+<FONT SIZE="2">(18:25:35) </FONT><B>wli:</B></FONT> Linux gets divide by 0
+<BR>
+<FONT SIZE="2">(18:26:03) </FONT><B>bryce2:</B></FONT> eks: when you say alt breaks in the console, what do you mean?
+<BR>
+<FONT SIZE="2">(18:26:13) </FONT><B>bryce2:</B></FONT> if I boot freedos, I get a command prompt
+<BR>
+<FONT SIZE="2">(18:26:17) </FONT><B>bryce2:</B></FONT> I type a few letters to test it
+<BR>
+<FONT SIZE="2">(18:26:24) </FONT><B>bryce2:</B></FONT> I press alt, release it, and type a few more
+<BR>
+<FONT SIZE="2">(18:26:34) </FONT><B>bryce2:</B></FONT> no problem.  Is that what you see too?
+<BR>
+<FONT SIZE="2">(18:27:36) </FONT><B>wli:</B></FONT> what's Alt-F1 key combination do?
+<BR>
+<FONT SIZE="2">(18:28:40) </FONT><B>bryce2:</B></FONT> I can't see any freeze problems at the console, no matter how many times I press ALT or ALT-F.
+<BR>
+<FONT SIZE="2">(18:30:13) </FONT><B>eks:</B></FONT> alright, confirmed, X11 does not foward the "ALT" neither left or right when it is pressed alone
+<BR>
+<FONT SIZE="2">(18:30:36) </FONT><B>eks:</B></FONT> bryce2: darn
+<BR>
+<FONT SIZE="2">(18:30:56) </FONT><B>bryce2:</B></FONT> does for me
+<BR>
+<FONT SIZE="2">(18:30:58) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(18:30:59) </FONT><B>eks:</B></FONT> I'll be right back, going to try with another window manager
+<BR>
+<FONT SIZE="2">(18:31:05) </FONT><B>bryce2:</B></FONT> X11 gui
+<BR>
+<FONT SIZE="2">(18:31:10) </FONT><B>eks:</B></FONT> yip, X11 giu
+<BR>
+<FONT SIZE="2">(18:33:49) </FONT><B>eks:</B></FONT> bryce2: same thing under blackbox and ion window manager
+<BR>
+<FONT SIZE="2">(18:33:54) </FONT><B>eks:</B></FONT> bochs is built with the X11 GUI
+<BR>
+<FONT SIZE="2">(18:34:04) </FONT><B>eks:</B></FONT> using the freedos-img that was on the bochs site
+<BR>
+<FONT SIZE="2">(18:34:06) </FONT><B>bryce2:</B></FONT> what you are looking at? debug messages from keyboard?
+<BR>
+<FONT SIZE="2">(18:34:32) </FONT><B>eks:</B></FONT> I put a breakpoint at the int 0x09 handler
+<BR>
+<FONT SIZE="2">(18:34:50) </FONT><B>bryce2:</B></FONT> ok
+<BR>
+<FONT SIZE="2">(18:35:18) </FONT><B>bryce2:</B></FONT> I need to go for a while. I can check back in an hour or so
+<BR>
+<FONT SIZE="2">(18:35:32) </FONT><B>wli:</B></FONT> later on
+<BR>
+<FONT SIZE="2">(18:35:37) </FONT><B>bryce2:</B></FONT> I think we're getting closer to figuring it out...
+<BR>
+<FONT SIZE="2">(18:35:53) </FONT><B>bryce2:</B></FONT> thanks
+<BR>
+<FONT SIZE="2">(18:35:55) </FONT><B>bryce2:</B></FONT> later
+<BR>
+<FONT SIZE="2">(18:37:40) </FONT><B>eks:</B></FONT> hrm..
+<BR>
+<FONT SIZE="2">(18:38:39) </FONT><B>eks:</B></FONT> ok...
+<BR>
+<FONT SIZE="2">(18:39:10) </FONT><B>eks:</B></FONT> here's the behaviour I'm experiencing here
+<BR>
+<FONT SIZE="2">(18:39:27) </FONT><B>eks:</B></FONT> if I press a key, int 0x09 is called right away
+<BR>
+<FONT SIZE="2">(18:39:38) </FONT><B>eks:</B></FONT> if I press left ALT, int 0x09 is also called right away
+<BR>
+<FONT SIZE="2">(18:40:12) </FONT><B>eks:</B></FONT> if I press left ALT + f, int 0x09 is called for the ALT like usual, but as soon as the f comes in, it enters a "waiting for timer" loop
+<BR>
+<FONT SIZE="2">(18:40:20) </FONT><B>eks:</B></FONT> if I press more keys, they do not even generate an interrupt
+<BR>
+<FONT SIZE="2">(18:40:34) </FONT><B>eks:</B></FONT> after a while (like 3 seconds), the keyboard works again
+<BR>
+<FONT SIZE="2">(18:40:41) </FONT><B>wli:</B></FONT> weird
+<BR>
+<FONT SIZE="2">(18:47:34) </FONT><B>eks:</B></FONT> hrm...
+<BR>
+<FONT SIZE="2">(18:59:21) </FONT><B>eks:</B></FONT> welll well well...
+<BR>
+<FONT SIZE="2">(18:59:41) </FONT><B>eks:</B></FONT> after I press ALT+<something>, the keyboard keep generating ALT make/break continuously
+<BR>
+<FONT SIZE="2">(19:00:00) </FONT><B>eks:</B></FONT> the <something> make/break is never sent..
+<BR>
+<FONT SIZE="2">(19:23:56) </FONT><B>bryce2:</B></FONT> back
+<BR>
+<FONT SIZE="2">(19:24:41) </FONT><B>wli:</B></FONT> re
+<BR>
+<FONT SIZE="2">(19:25:14) </FONT><B>wli:</B></FONT> I may have to introduce a cluster controller
+<BR>
+<FONT SIZE="2">(19:26:07) </FONT><B>bryce2:</B></FONT> I don't know nothin about that.
+<BR>
+<FONT SIZE="2">(19:26:16) </FONT><B>wli:</B></FONT> neither do I
+<BR>
+<FONT SIZE="2">(19:26:20) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(19:26:41) </FONT><B>wli:</B></FONT> it's not mentioned in vol3 except for a one-liner saying they may exist
+<BR>
+<FONT SIZE="2">(19:26:58) </FONT><B>wli:</B></FONT> depends on if CONFIG_MULTIQUAD depends on them
+<BR>
+<FONT SIZE="2">(19:33:55) </FONT><B>eks:</B></FONT> bryce2: if I press ALT+<something> in the console, the ALT is generated and seems to be handled properly, but the keyboard does not generate the <something> make/break code
+<BR>
+<FONT SIZE="2">(19:34:20) </FONT><B>eks:</B></FONT> bryce2: if=1, I've checked
+<BR>
+<FONT SIZE="2">(19:34:33) </FONT><B>eks:</B></FONT> bryce2: the EOI did receive the 0x20 on port 0x20
+<BR>
+<FONT SIZE="2">(19:34:34) </FONT><B>bryce2:</B></FONT> so you think it's a keyboard.cc problem, rather than software emulation/timing/etc?
+<BR>
+<FONT SIZE="2">(19:34:37) </FONT><B>eks:</B></FONT> and the keyboard _is_ enabled
+<BR>
+<FONT SIZE="2">(19:35:16) </FONT><B>eks:</B></FONT> yes, most likely, keyboard.cc or gui
+<BR>
+<FONT SIZE="2">(19:35:34) </FONT><B>eks:</B></FONT> I have to re-run the same tests with more debugging output though
+<BR>
+<FONT SIZE="2">(19:35:57) </FONT><B>bryce2:</B></FONT> once you turn on the PIT, the log is huge :)
+<BR>
+<FONT SIZE="2">(19:37:04) </FONT><B>eks:</B></FONT> well, my cpu trace is actually 147MB and the out.bochs like 40MB :p
+<BR>
+<FONT SIZE="2">(19:37:19) </FONT><B>bryce2:</B></FONT> it sounds like the missing <something> should be visible (well, not visible) if you just turn on the keyboard debugging.  right?
+<BR>
+<FONT SIZE="2">(19:37:36) </FONT><B>eks:</B></FONT> debugging was on, I'm studying the out.bochs atm
+<BR>
+<FONT SIZE="2">(19:37:52) </FONT><B>bryce2:</B></FONT> I won't ask you to send those to me ;)
+<BR>
+<FONT SIZE="2">(19:37:56) </FONT><B>bryce2:</B></FONT> I'll just make my own
+<BR>
+<FONT SIZE="2">(19:38:33) </FONT><B>bryce2:</B></FONT> the <something> is getting lost between the time you type it and.....your interrupt 0x9 breakpoint?
+<BR>
+<FONT SIZE="2">(19:38:42) </FONT><B>eks:</B></FONT> btw, the timings are not perfectly in sync between the cpu trace and the bochs.out file :p
+<BR>
+<FONT SIZE="2">(19:39:00) </FONT><B>bryce2:</B></FONT> ugh, I thought we fixed that....
+<BR>
+<FONT SIZE="2">(19:39:09) </FONT><B>eks:</B></FONT> bryce2: they are +3 in the bochs.out :p
+<BR>
+<FONT SIZE="2">(19:39:14) </FONT><B>eks:</B></FONT> constantly
+<BR>
+<FONT SIZE="2">(19:39:24) </FONT><B>bryce2:</B></FONT> at least it's consistent. :)
+<BR>
+<FONT SIZE="2">(19:39:26) </FONT><B>eks:</B></FONT> probably the changes whoever did to the debugger trace
+<BR>
+<FONT SIZE="2">(19:39:34) </FONT><B>bryce2:</B></FONT> Greg I think
+<BR>
+<FONT SIZE="2">(19:39:37) </FONT><B>eks:</B></FONT> yea
+<BR>
+<FONT SIZE="2">(19:39:48) </FONT><B>bryce2:</B></FONT> the <something> is getting lost between the time you type it and.....your interrupt 0x9 breakpoint?
+<BR>
+<FONT SIZE="2">(19:40:22) </FONT><B>wli:</B></FONT> hmm
+<BR>
+<FONT SIZE="2">(19:40:31) </FONT><B>wli:</B></FONT> does it compile yet?
+<BR>
+<FONT SIZE="2">(19:40:40) </FONT><B>wli:</B></FONT> wrong chan
+<BR>
+<FONT SIZE="2">(19:40:46) </FONT><B>bryce2:</B></FONT> wli: yes
+<BR>
+<FONT SIZE="2">(19:41:05) </FONT><B>bryce2:</B></FONT> wli: :)
+<BR>
+<FONT SIZE="2">(19:41:15) </FONT><B>eks:</B></FONT> bryce2: yip
+<BR>
+<FONT SIZE="2">(19:41:33) </FONT><B>bryce2:</B></FONT> ok
+<BR>
+<FONT SIZE="2">(19:41:39) </FONT><B>eks:</B></FONT> bryce2: the scancode for the ALT is properly passed, but the scancode for the accompanying letter is not
+<BR>
+<FONT SIZE="2">(19:41:48) </FONT><B>bryce2:</B></FONT> are you testing in the console?
+<BR>
+<FONT SIZE="2">(19:42:15) </FONT><B>eks:</B></FONT> testing in X
+<BR>
+<FONT SIZE="2">(19:42:16) </FONT><B>bryce2:</B></FONT> boot the image, press ALT, press F and the F scancode is lost?
+<BR>
+<FONT SIZE="2">(19:42:25) </FONT><B>eks:</B></FONT> if you do:
+<BR>
+<FONT SIZE="2">(19:42:27) </FONT><B>bryce2:</B></FONT> right. X11 gui.  I meant the freedos console
+<BR>
+<FONT SIZE="2">(19:42:28) </FONT><B>eks:</B></FONT> press and release alt
+<BR>
+<FONT SIZE="2">(19:42:31) </FONT><B>eks:</B></FONT> press F
+<BR>
+<FONT SIZE="2">(19:42:33) </FONT><B>eks:</B></FONT> both are going ok
+<BR>
+<FONT SIZE="2">(19:42:39) </FONT><B>eks:</B></FONT> if you do:
+<BR>
+<FONT SIZE="2">(19:42:45) </FONT><B>eks:</B></FONT> press and hold alt, press f
+<BR>
+<FONT SIZE="2">(19:42:50) </FONT><B>eks:</B></FONT> the alt goes thru, the f does not
+<BR>
+<FONT SIZE="2">(19:42:53) </FONT><B>bryce2:</B></FONT> ok
+<BR>
+<FONT SIZE="2">(19:43:00) </FONT><B>bryce2:</B></FONT> what's the breakpoint for int9?
+<BR>
+<FONT SIZE="2">(19:43:09) </FONT><B>eks:</B></FONT> pb 0xd6d6
+<BR>
+<FONT SIZE="2">(19:43:11) </FONT><B>bryce2:</B></FONT> thx
+<BR>
+<FONT SIZE="2">(19:44:11) </FONT><B>eks:</B></FONT> lol, ViM died :p
+<BR>
+<FONT SIZE="2">(19:44:17) </FONT><B>eks:</B></FONT> too much work for it >:}
+<BR>
+<FONT SIZE="2">(19:44:17) </FONT><B>bryce2:</B></FONT> hahaha
+<BR>
+<FONT SIZE="2">(19:44:27) </FONT><B>eks:</B></FONT> -rw-r--r--    1 eks      eks      39411609 Apr  7 18:17 out.bochs
+<BR>
+<FONT SIZE="2">(19:44:36) </FONT><B>bryce2:</B></FONT> maybe less can handle it
+<BR>
+<FONT SIZE="2">(19:44:51) </FONT><B>eks:</B></FONT> huh.. not sure I want to go thru 600thousand lines with less :p
+<BR>
+<FONT SIZE="2">(19:45:03) </FONT><B>bryce2:</B></FONT> it doesn't have to load them all at once
+<BR>
+<FONT SIZE="2">(19:45:07) </FONT><B>bryce2:</B></FONT> you can skip to end fast, etc.
+<BR>
+<FONT SIZE="2">(19:45:29) </FONT><B>bryce2:</B></FONT> just an idea
+<BR>
+<FONT SIZE="2">(19:46:14) </FONT><B>bryce2:</B></FONT> eks: btw, what bios are you using?
+<BR>
+<FONT SIZE="2">(19:46:16) </FONT><B>eks:</B></FONT> -rw-r--r--    1 eks      eks         78223 Apr  7 18:46 out2
+<BR>
+<FONT SIZE="2">(19:46:29) </FONT><B>eks:</B></FONT> here, that's the part of the debug log which is interesting
+<BR>
+<FONT SIZE="2">(19:46:44) </FONT><B>bryce2:</B></FONT> eks: christophe was working on some keyboard thing in the BIOS very recently
+<BR>
+<FONT SIZE="2">(19:46:53) </FONT><B>eks:</B></FONT> http://void-core.2y.net/out.bochs
+<BR>
+<FONT SIZE="2">(19:46:55) </FONT><B>eks:</B></FONT> 78KB
+<BR>
+<FONT SIZE="2">(19:46:58) </FONT><B>Exodus:</B></FONT> *YAWN*
+<BR>
+<FONT SIZE="2">(19:47:14) </FONT><B>eks:</B></FONT> bryce2: hrm.. lemme check
+<BR>
+<FONT SIZE="2">(19:47:15) </FONT><B>bryce2:</B></FONT> exodus: you slept through the whole irc meeting :)
+<BR>
+<FONT SIZE="2">(19:47:24) </FONT><B>Exodus:</B></FONT> i did?
+<BR>
+<FONT SIZE="2">(19:47:27) </FONT><B>Exodus:</B></FONT> i just got off work
+<BR>
+<FONT SIZE="2">(19:47:28) </FONT><B>cbothamy:</B></FONT> bryce2: int 16 function 92h and A2h
+<BR>
+<FONT SIZE="2">(19:47:33) </FONT><B>eks:</B></FONT> bryce2: I'm using the one provided with the freedos image
+<BR>
+<FONT SIZE="2">(19:47:48) </FONT><B>bryce2:</B></FONT> exodus: ok, well I guess you worked right through the irc meetin :)
+<BR>
+<FONT SIZE="2">(19:47:50) </FONT><B>bryce2:</B></FONT> g
+<BR>
+<FONT SIZE="2">(19:48:14) </FONT><B>eks:</B></FONT> bryce2: 00075135051d[KBD  ] READ(60) = 38
+<BR>
+<FONT SIZE="2">(19:48:18) </FONT><B>eks:</B></FONT> that's the ALT code
+<BR>
+<FONT SIZE="2">(19:48:33) </FONT><B>bryce2:</B></FONT> ok
+<BR>
+<FONT SIZE="2">(19:48:55) </FONT><B>eks:</B></FONT> there is no other READ(60) in this file, it was the only one
+<BR>
+<FONT SIZE="2">(19:49:33) </FONT><B>bryce2:</B></FONT> exactly what did you type in this run?
+<BR>
+<FONT SIZE="2">(19:49:35) </FONT><B>eks:</B></FONT> the only two writes to port 0x64 are 0xAD and 0xAE surrounding the read
+<BR>
+<FONT SIZE="2">(19:49:39) </FONT><B>bryce2:</B></FONT> cbothamy: thanks :)
+<BR>
+<FONT SIZE="2">(19:49:53) </FONT><B>eks:</B></FONT> bryce2: F1 ENTER ENTER ENTER ALT+F
+<BR>
+<FONT SIZE="2">(19:50:05) </FONT><B>bryce2:</B></FONT> cbothamy: I thought you were asleep
+<BR>
+<FONT SIZE="2">(19:50:07) </FONT><B>eks:</B></FONT> I hooked the d6d6 handler after the 3 enter
+<BR>
+<FONT SIZE="2">(19:50:37) </FONT><B>cbothamy:</B></FONT> bryce2: no, i'm trying to find out why win2k does not boot
+<BR>
+<FONT SIZE="2">(19:50:56) </FONT><B>Exodus:</B></FONT> cuz its made by MS?
+<BR>
+<FONT SIZE="2">(19:51:04) </FONT><B>Exodus:</B></FONT> hell Win2k on this computer doesnt boot all the time
+<BR>
+<FONT SIZE="2">(19:51:16) </FONT><B>Exodus:</B></FONT> when I restart I have to hit the reset button like 5 or 6 times before it decides to boot
+<BR>
+<FONT SIZE="2">(19:51:18) </FONT><B>cbothamy:</B></FONT> Exodus: of course ;-)
+<BR>
+<FONT SIZE="2">(19:51:29) </FONT><B>Exodus:</B></FONT> im serious
+<BR>
+<FONT SIZE="2">(19:51:41) </FONT><B>Exodus:</B></FONT> I refuse to restart this thing...
+<BR>
+<FONT SIZE="2">(19:51:50) </FONT><B>Exodus:</B></FONT> ive gone as long as an hour waiting for it to boot
+<BR>
+<FONT SIZE="2">(19:51:51) </FONT><B>bryce2:</B></FONT> eks: I don't know why there aren't READ(60)'s for the f1, 3xENTER
+<BR>
+<FONT SIZE="2">(19:51:55) </FONT><B>Exodus:</B></FONT> it just gets to a point and hangs
+<BR>
+<FONT SIZE="2">(19:51:57) </FONT><B>Exodus:</B></FONT> sometimes
+<BR>
+<FONT SIZE="2">(19:52:07) </FONT><B>bryce2:</B></FONT> did you turn on debug after that?
+<BR>
+<FONT SIZE="2">(19:52:11) </FONT><B>eks:</B></FONT> bryce2: lol, I stripped them out, they were in the first 39MB of log
+<BR>
+<FONT SIZE="2">(19:52:15) </FONT><B>bryce2:</B></FONT> right ok
+<BR>
+<FONT SIZE="2">(19:52:17) </FONT><B>eks:</B></FONT> bryce2: if you want them I can send ;)
+<BR>
+<FONT SIZE="2">(19:52:20) </FONT><B>bryce2:</B></FONT> NO!
+<BR>
+<FONT SIZE="2">(19:52:24) </FONT><B>eks:</B></FONT> :p
+<BR>
+<FONT SIZE="2">(19:52:27) </FONT><B>cbothamy:</B></FONT> Exodus: i don't really know because i've never installed or used it!
+<BR>
+<FONT SIZE="2">(19:52:39) </FONT><B>bryce2:</B></FONT> so this section shows the lack of the "F" scancode
+<BR>
+<FONT SIZE="2">(19:53:03) </FONT><B>eks:</B></FONT> bryce2: from what I get out of the bochs.out log is that the scancodes are encoded in the queue
+<BR>
+<FONT SIZE="2">(19:53:17) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] gen_scancode(): scancode: 0000001f
+<BR>
+<FONT SIZE="2">(19:53:17) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] enQ(26)
+<BR>
+<FONT SIZE="2">(19:53:17) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] enQ: putting scancode 26 in internal buffer
+<BR>
+<FONT SIZE="2">(19:53:17) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] activating timer...
+<BR>
+<FONT SIZE="2">(19:53:17) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] keyboard: writing translated 26
+<BR>
+<FONT SIZE="2">(19:53:19) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] gen_scancode 75165000 8000001f
+<BR>
+<FONT SIZE="2">(19:53:21) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] gen_scancode(): scancode: 8000001f
+<BR>
+<FONT SIZE="2">(19:53:24) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] enQ(a6)
+<BR>
+<FONT SIZE="2">(19:53:26) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] enQ: putting scancode a6 in internal buffer
+<BR>
+<FONT SIZE="2">(19:53:29) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] activating timer...
+<BR>
+<FONT SIZE="2">(19:53:32) </FONT><B>eks:</B></FONT> 00075165000d[KBD  ] keyboard: writing translated a6
+<BR>
+<FONT SIZE="2">(19:55:33) </FONT><B>eks:</B></FONT> bryce2: when 'activating timer', shouldn't the keyboard be called again?
+<BR>
+<FONT SIZE="2">(19:57:26) </FONT><B>bryce2:</B></FONT> you'd think so
+<BR>
+<FONT SIZE="2">(19:57:48) </FONT><B>bryce2:</B></FONT> but only if timer_pending==0 
+<BR>
+<FONT SIZE="2">(19:58:03) </FONT><B>bryce2:</B></FONT> I'm having a little trouble interpreting this.
+<BR>
+<FONT SIZE="2">(19:58:18) </FONT><B>bryce2:</B></FONT> there are two pairs of gen_scancode
+<BR>
+<FONT SIZE="2">(19:58:23) </FONT><B>bryce2:</B></FONT> gen_scancode 75150000 80000019
+<BR>
+<FONT SIZE="2">(19:58:31) </FONT><B>bryce2:</B></FONT> which results in enQ(a1)
+<BR>
+<FONT SIZE="2">(19:58:36) </FONT><B>bryce2:</B></FONT> and gen_scancode 75150000 80000012
+<BR>
+<FONT SIZE="2">(19:58:43) </FONT><B>bryce2:</B></FONT> which results in enQ(b8)
+<BR>
+<FONT SIZE="2">(19:58:54) </FONT><B>bryce2:</B></FONT> is that from the ALT?
+<BR>
+<FONT SIZE="2">(19:59:19) </FONT><B>bryce2:</B></FONT> or the F, or what?
+<BR>
+<FONT SIZE="2">(20:00:16) </FONT><B>eks:</B></FONT> b8 = release code for alt
+<BR>
+<FONT SIZE="2">(20:00:20) </FONT><B>eks:</B></FONT> a1 = release code for f
+<BR>
+<FONT SIZE="2">(20:00:32) </FONT><B>eks:</B></FONT> IIRC ;)
+<BR>
+<FONT SIZE="2">(20:00:53) </FONT><B>bryce2:</B></FONT> I got those VERY close together
+<BR>
+<FONT SIZE="2">(20:01:04) </FONT><B>bryce2:</B></FONT> in the same keyboard poll tick
+<BR>
+<FONT SIZE="2">(20:01:27) </FONT><B>bryce2:</B></FONT> then later gen_scancode 75165000 1f -> enQ(26)
+<BR>
+<FONT SIZE="2">(20:01:41) </FONT><B>bryce2:</B></FONT> and gen_scancode 75165000 8000001f -> enQ(a6)
+<BR>
+<FONT SIZE="2">(20:05:49) </FONT><B>eks:</B></FONT> hrm..
+<BR>
+<FONT SIZE="2">(20:05:54) </FONT><B>eks:</B></FONT> I think I know what's happening
+<BR>
+<FONT SIZE="2">(20:06:03) </FONT><B>eks:</B></FONT> if you search for the enQ()
+<BR>
+<FONT SIZE="2">(20:06:09) </FONT><B>eks:</B></FONT> you will get the following
+<BR>
+<FONT SIZE="2">(20:06:12) </FONT><B>eks:</B></FONT> 3B BB
+<BR>
+<FONT SIZE="2">(20:06:14) </FONT><B>eks:</B></FONT> 1C 9C
+<BR>
+<FONT SIZE="2">(20:06:15) </FONT><B>eks:</B></FONT> 1C 9C
+<BR>
+<FONT SIZE="2">(20:06:15) </FONT><B>eks:</B></FONT> 1C 9C
+<BR>
+<FONT SIZE="2">(20:06:21) </FONT><B>eks:</B></FONT> 38 38 21 B8
+<BR>
+<FONT SIZE="2">(20:06:29) </FONT><B>eks:</B></FONT> first is F1
+<BR>
+<FONT SIZE="2">(20:06:35) </FONT><B>eks:</B></FONT> the next 3 are 'Enter'
+<BR>
+<FONT SIZE="2">(20:06:41) </FONT><B>eks:</B></FONT> but, when I press ALT+F
+<BR>
+<FONT SIZE="2">(20:06:46) </FONT><B>eks:</B></FONT> instead of generating ALT and then F
+<BR>
+<FONT SIZE="2">(20:06:51) </FONT><B>eks:</B></FONT> it generates ALT ALT F
+<BR>
+<FONT SIZE="2">(20:07:05) </FONT><B>eks:</B></FONT> I'll retry to make sure the behaviour is constant
+<BR>
+<FONT SIZE="2">(20:07:06) </FONT><B>bryce2:</B></FONT> then B8 is the release of alt?
+<BR>
+<FONT SIZE="2">(20:07:12) </FONT><B>eks:</B></FONT> yip
+<BR>
+<FONT SIZE="2">(20:07:21) </FONT><B>eks:</B></FONT> and after B8 I have A1
+<BR>
+<FONT SIZE="2">(20:07:26) </FONT><B>eks:</B></FONT> no other B8 after that
+<BR>
+<FONT SIZE="2">(20:07:30) </FONT><B>bryce2:</B></FONT> interesting.
+<BR>
+<FONT SIZE="2">(20:08:58) </FONT><B>bryce2:</B></FONT> press ALT & hold, press F, release F, release ALT
+<BR>
+<FONT SIZE="2">(20:09:04) </FONT><B>bryce2:</B></FONT> I got 38 21 a1 b8
+<BR>
+<FONT SIZE="2">(20:09:16) </FONT><B>eks:</B></FONT> hrm..
+<BR>
+<FONT SIZE="2">(20:09:26) </FONT><B>bryce2:</B></FONT> I turned on debugging for all devices
+<BR>
+<FONT SIZE="2">(20:09:30) </FONT><B>eks:</B></FONT> must've been the debugger and the window switching
+<BR>
+<FONT SIZE="2">(20:09:33) </FONT><B>bryce2:</B></FONT> and then tail -f out.bochs | grep enQ
+<BR>
+<FONT SIZE="2">(20:09:44) </FONT><B>eks:</B></FONT> I had the debugger hooked to int 9
+<BR>
+<FONT SIZE="2">(20:10:04) </FONT><B>bryce2:</B></FONT> 20 megs and growing...
+<BR>
+<FONT SIZE="2">(20:10:05) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(20:10:08) </FONT><B>cbothamy:</B></FONT> Does anybody know if there are specific BIOS device numbers for atapi cdroms ? Or do they get a harddisk-type number (>=0x80) ?
+<BR>
+<FONT SIZE="2">(20:10:29) </FONT><B>eks:</B></FONT> cbothamy: they get floppy numbers
+<BR>
+<FONT SIZE="2">(20:10:44) </FONT><B>cbothamy:</B></FONT> eks: no kidding ?
+<BR>
+<FONT SIZE="2">(20:10:45) </FONT><B>eks:</B></FONT> cbothamy: at least at bootup
+<BR>
+<FONT SIZE="2">(20:11:08) </FONT><B>eks:</B></FONT> cbothamy: if you want to boot with a CDROM it will get a code 0x00 to 0x04 depending on how many floppies you have
+<BR>
+<FONT SIZE="2">(20:11:56) </FONT><B>cbothamy:</B></FONT> eks: ok, that's when you boot from a floppy-on-cd. But you can also use regular int13 access to cd sectors.
+<BR>
+<FONT SIZE="2">(20:12:41) </FONT><B>eks:</B></FONT> cbothamy: not sure about after bootup, but my guess is that the cd is still viewed as a floppy from a BIOS point of view
+<BR>
+<FONT SIZE="2">(20:14:36) </FONT><B>eks:</B></FONT> bryce2: ok.. like you said.. without the debugger interferring in my window management I do get the proper enQ() generated
+<BR>
+<FONT SIZE="2">(20:14:46) </FONT><B>eks:</B></FONT> bryce2: so that part should be alright
+<BR>
+<FONT SIZE="2">(20:15:13) </FONT><B>bryce2:</B></FONT> I also get the right enQ() sequence for Alt-F when running EDIT
+<BR>
+<FONT SIZE="2">(20:15:41) </FONT><B>bryce2:</B></FONT> on the console, I notice that after pressing alt-F the kbd seems to freeze for a little while
+<BR>
+<FONT SIZE="2">(20:15:48) </FONT><B>eks:</B></FONT> yes
+<BR>
+<FONT SIZE="2">(20:15:49) </FONT><B>bryce2:</B></FONT> but then in a few seconds it recovers
+<BR>
+<FONT SIZE="2">(20:15:51) </FONT><B>eks:</B></FONT> it does
+<BR>
+<FONT SIZE="2">(20:15:57) </FONT><B>eks:</B></FONT> that's the part where it's stuck in the timer loop
+<BR>
+<FONT SIZE="2">(20:16:05) </FONT><B>eks:</B></FONT> somehow after a while it manages to get out
+<BR>
+<FONT SIZE="2">(20:16:17) </FONT><B>eks:</B></FONT> but it's a very long loop
+<BR>
+<FONT SIZE="2">(20:16:24) </FONT><B>eks:</B></FONT> way too long to be normal IMO
+<BR>
+<FONT SIZE="2">(20:17:19) </FONT><B>bryce2:</B></FONT> rebuilding with debugger
+<BR>
+<FONT SIZE="2">(20:30:08) </FONT><B>bryce2:</B></FONT> eks: I think I know what that loop is!
+<BR>
+<FONT SIZE="2">(20:30:20) </FONT><B>eks:</B></FONT> ??
+<BR>
+<FONT SIZE="2">(20:30:32) </FONT><B>bryce2:</B></FONT> if you press ALT-F in freedos, I think it is trying to beep.
+<BR>
+<FONT SIZE="2">(20:30:45) </FONT><B>eks:</B></FONT> hrm...
+<BR>
+<FONT SIZE="2">(20:30:45) </FONT><B>bryce2:</B></FONT> During the beep, it doesn't accept any keystrokes, it's just in a busy wait loop
+<BR>
+<FONT SIZE="2">(20:30:56) </FONT><B>eks:</B></FONT> lol, could be
+<BR>
+<FONT SIZE="2">(20:30:58) </FONT><B>bryce2:</B></FONT> when the beep is over it starts accepting keys again
+<BR>
+<FONT SIZE="2">(20:31:06) </FONT><B>eks:</B></FONT> but how do you open the file menu in edit??
+<BR>
+<FONT SIZE="2">(20:31:38) </FONT><B>bryce2:</B></FONT> not sure
+<BR>
+<FONT SIZE="2">(20:31:45) </FONT><B>bryce2:</B></FONT> that is still broken
+<BR>
+<FONT SIZE="2">(20:31:54) </FONT><B>bryce2:</B></FONT> but I'm wondering if the freedos console is fine
+<BR>
+<FONT SIZE="2">(20:31:56) </FONT><B>eks:</B></FONT> now the question is..
+<BR>
+<FONT SIZE="2">(20:32:03) </FONT><B>eks:</B></FONT> is it a FreeDOS problem or a Bochs problem?
+<BR>
+<FONT SIZE="2">(20:32:17) </FONT><B>bryce2:</B></FONT> the keyboard is frozen in EDIT whether or not I type ALT.
+<BR>
+<FONT SIZE="2">(20:34:23) </FONT><B>bryce2:</B></FONT> the reason I think it's beeping is that
+<BR>
+<FONT SIZE="2">(20:34:25) </FONT><B>eks:</B></FONT> rombios bug?
+<BR>
+<FONT SIZE="2">(20:34:33) </FONT><B>bryce2:</B></FONT> several seconds after I press ALT-F on console I get
+<BR>
+<FONT SIZE="2">(20:34:39) </FONT><B>bryce2:</B></FONT> 00027272786i[PIT81] Changing GATE 2 to: 0
+<BR>
+<FONT SIZE="2">(20:35:19) </FONT><B>bryce2:</B></FONT> right after pressing the F, I see 00102273782i[PIT81] Changing GATE 2 to: 1
+<BR>
+<FONT SIZE="2">(20:35:30) </FONT><B>bryce2:</B></FONT> then after a few seconds, 00108272934i[PIT81] Changing GATE 2 to: 0
+<BR>
+<FONT SIZE="2">(20:35:38) </FONT><B>bryce2:</B></FONT> afaik that's a beep
+<BR>
+<FONT SIZE="2">(20:36:04) </FONT><B>eks:</B></FONT> eheh, we need to make a popup window with a "I'm emulating a beep here!" ;)
+<BR>
+<FONT SIZE="2">(20:37:02) </FONT><B>bryce2:</B></FONT> yeah, turning on the speaker would be bad. it would beep for 5 seconds
+<BR>
+<FONT SIZE="2">(20:37:04) </FONT><B>eks:</B></FONT> alright, so that explains the console
+<BR>
+<FONT SIZE="2">(20:37:11) </FONT><B>bryce2:</B></FONT> or if you put a breakpoint, it would beep forever :)
+<BR>
+<FONT SIZE="2">(20:37:14) </FONT><B>bryce2:</B></FONT> until you continue
+<BR>
+<FONT SIZE="2">(20:37:37) </FONT><B>bryce2:</B></FONT> I believe so
+<BR>
+<FONT SIZE="2">(20:39:46) </FONT><B>cbothamy:</B></FONT> bryce2: we had the same behavior with dos paste : beeps
+<BR>
+<FONT SIZE="2">(20:40:07) </FONT><B>bryce2:</B></FONT> Emulated beeping has become a top priority. :)
+<BR>
+<FONT SIZE="2">(20:40:31) </FONT><B>bryce2:</B></FONT> well, the beep was a symptom of the buffer overflow
+<BR>
+<FONT SIZE="2">(20:40:42) </FONT><B>bryce2:</B></FONT> I don't know if it was causing any problem.
+<BR>
+<FONT SIZE="2">(20:41:12) </FONT><B>bryce2:</B></FONT> eks: are you supposed to disable the keyboard before reading port 60, and then disable it?
+<BR>
+<FONT SIZE="2">(20:41:35) </FONT><B>bryce2:</B></FONT> eks: what would happen if you read port 60, then disabled the keyboard, then enabled it?
+<BR>
+<FONT SIZE="2">(20:41:40) </FONT><B>eks:</B></FONT> bryce2: no, you don't have to
+<BR>
+<FONT SIZE="2">(20:41:45) </FONT><B>bryce2:</B></FONT> since that's what EDIT seems to be doing....
+<BR>
+<FONT SIZE="2">(20:41:54) </FONT><B>eks:</B></FONT> hrm...
+<BR>
+<FONT SIZE="2">(20:42:02) </FONT><B>eks:</B></FONT> you mean reading disabling enabling?
+<BR>
+<FONT SIZE="2">(20:42:09) </FONT><B>bryce2:</B></FONT> yes
+<BR>
+<FONT SIZE="2">(20:42:16) </FONT><B>bryce2:</B></FONT> interrupt(): vector = 9, INT = 0, EXT = 1
+<BR>
+<FONT SIZE="2">(20:42:19) </FONT><B>bryce2:</B></FONT> READ(60) = 21
+<BR>
+<FONT SIZE="2">(20:42:19) </FONT><B>eks:</B></FONT> should work
+<BR>
+<FONT SIZE="2">(20:42:27) </FONT><B>bryce2:</B></FONT> keyboard: 8-bit write to 0064 = ad, keyboard disabled
+<BR>
+<FONT SIZE="2">(20:42:37) </FONT><B>bryce2:</B></FONT> keyboard: 8-bit write to 0064 = ae, keyboard enabled
+<BR>
+<FONT SIZE="2">(20:42:56) </FONT><B>bryce2:</B></FONT> is it wierd?
+<BR>
+<FONT SIZE="2">(20:43:11) </FONT><B>eks:</B></FONT> not really
+<BR>
+<FONT SIZE="2">(20:43:16) </FONT><B>eks:</B></FONT> edit read port 60 only
+<BR>
+<FONT SIZE="2">(20:43:21) </FONT><B>eks:</B></FONT> the bios must do the ad/ae
+<BR>
+<FONT SIZE="2">(20:43:35) </FONT><B>bryce2:</B></FONT> within 30 instructions
+<BR>
+<FONT SIZE="2">(20:43:40) </FONT><B>eks:</B></FONT> hrm...
+<BR>
+<FONT SIZE="2">(20:43:48) </FONT><B>bryce2:</B></FONT> 00083985000i[CPU  ] interrupt(): vector = 9, INT = 0, EXT = 1
+<BR>
+<FONT SIZE="2">(20:43:51) </FONT><B>bryce2:</B></FONT> 00083985013d[KBD  ] READ(60) = 21
+<BR>
+<FONT SIZE="2">(20:43:53) </FONT><B>bryce2:</B></FONT> 00083985042d[KBD  ] keyboard: 8-bit write to 0064 = ad
+<BR>
+<FONT SIZE="2">(20:43:56) </FONT><B>bryce2:</B></FONT> 00083985042d[KBD  ] keyboard disabled
+<BR>
+<FONT SIZE="2">(20:43:59) </FONT><B>bryce2:</B></FONT> 00083985056d[KBD  ] keyboard: 8-bit write to 0064 = ae
+<BR>
+<FONT SIZE="2">(20:44:02) </FONT><B>bryce2:</B></FONT> 00083985056d[KBD  ] keyboard enabled
+<BR>
+<FONT SIZE="2">(20:44:09) </FONT><B>eks:</B></FONT> yip, could be
+<BR>
+<FONT SIZE="2">(20:44:15) </FONT><B>cbothamy:</B></FONT> great news, i found out why win2k is not booting from cd.
+<BR>
+<FONT SIZE="2">(20:44:21) </FONT><B>eks:</B></FONT> cbothamy: woohoo!
+<BR>
+<FONT SIZE="2">(20:44:24) </FONT><B>bryce2:</B></FONT> great!
+<BR>
+<FONT SIZE="2">(20:44:52) </FONT><B>cbothamy:</B></FONT> Stupid bios conventions. cdroms must have their device number >=E0h
+<BR>
+<FONT SIZE="2">(20:45:44) </FONT><B>eks:</B></FONT> cbothamy: !!
+<BR>
+<FONT SIZE="2">(20:46:33) </FONT><B>eks:</B></FONT> bryce2: I'm 99% sure that the AD/AE is done by the BIOS, because the _exact_ same method is used to check if it was fired by IRQ 1 or not
+<BR>
+<FONT SIZE="2">(20:46:46) </FONT><B>eks:</B></FONT> 00031556157d[KBD  ] keyboard disabled
+<BR>
+<FONT SIZE="2">(20:46:46) </FONT><B>eks:</B></FONT> 00031556165d[PIC  ] IO write to 0020 = 0b
+<BR>
+<FONT SIZE="2">(20:46:46) </FONT><B>eks:</B></FONT> 00031556166d[PIC  ] IO read from 0020
+<BR>
+<FONT SIZE="2">(20:46:46) </FONT><B>eks:</B></FONT> 00031556166d[PIC  ] read master ISR = 02
+<BR>
+<FONT SIZE="2">(20:46:46) </FONT><B>eks:</B></FONT> 00031556170d[PIC  ] IO write to 0020 = 20
+<BR>
+<FONT SIZE="2">(20:46:48) </FONT><B>eks:</B></FONT> 00031556172d[KBD  ] keyboard: 8-bit write to 0064 = ae
+<BR>
+<FONT SIZE="2">(20:48:34) </FONT><B>bryce2:</B></FONT> eks: in edit, I put a breakpoint at 0xd6d6, and when I press a key it does hit the bp
+<BR>
+<FONT SIZE="2">(20:49:49) </FONT><B>eks:</B></FONT> so it must be a BIOS bug
+<BR>
+<FONT SIZE="2">(20:50:48) </FONT><B>bryce2:</B></FONT> hmm. I just tried it again.
+<BR>
+<FONT SIZE="2">(20:50:57) </FONT><B>bryce2:</B></FONT> after starting edit, I put a pb at 0xd6d6
+<BR>
+<FONT SIZE="2">(20:51:03) </FONT><B>bryce2:</B></FONT> I pressed "f" and release it
+<BR>
+<FONT SIZE="2">(20:51:13) </FONT><B>bryce2:</B></FONT> it hit the breakpoint twice
+<BR>
+<FONT SIZE="2">(20:51:19) </FONT><B>bryce2:</B></FONT> I pressed "f" again and released it
+<BR>
+<FONT SIZE="2">(20:51:22) </FONT><B>bryce2:</B></FONT> it hit the breakpoint once
+<BR>
+<FONT SIZE="2">(20:51:26) </FONT><B>bryce2:</B></FONT> I pressed "f" again
+<BR>
+<FONT SIZE="2">(20:51:28) </FONT><B>eks:</B></FONT> hrm..
+<BR>
+<FONT SIZE="2">(20:51:34) </FONT><B>bryce2:</B></FONT> it never hits the breakpoint....
+<BR>
+<FONT SIZE="2">(20:51:42) </FONT><B>eks:</B></FONT> huhh...
+<BR>
+<FONT SIZE="2">(20:51:45) </FONT><B>eks:</B></FONT> definately a problem
+<BR>
+<FONT SIZE="2">(20:51:51) </FONT><B>bryce2:</B></FONT> no......it just took a damn long time
+<BR>
+<FONT SIZE="2">(20:51:52) </FONT><B>bryce2:</B></FONT> and then it did
+<BR>
+<FONT SIZE="2">(20:51:54) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(20:51:55) </FONT><B>bryce2:</B></FONT> sorry
+<BR>
+<FONT SIZE="2">(20:52:10) </FONT><B>bryce2:</B></FONT> I'll keep playing
+<BR>
+<FONT SIZE="2">(20:52:15) </FONT><B>eks:</B></FONT> lol
+<BR>
+<FONT SIZE="2">(20:52:16) </FONT><B>eks:</B></FONT> alright
+<BR>
+<FONT SIZE="2">(20:53:07) </FONT><B>eks:</B></FONT> bryce2: rombios.c line 9457
+<BR>
+<FONT SIZE="2">(20:53:20) </FONT><B>eks:</B></FONT>   mov al, #0xAD      ;;disable keyboard
+<BR>
+<FONT SIZE="2">(20:53:20) </FONT><B>eks:</B></FONT>   out #0x64, al
+<BR>
+<FONT SIZE="2">(20:53:20) </FONT><B>eks:</B></FONT>   sti
+<BR>
+<FONT SIZE="2">(20:53:20) </FONT><B>eks:</B></FONT>   ;; see if there is really a key to read from the controller
+<BR>
+<FONT SIZE="2">(20:53:20) </FONT><B>eks:</B></FONT>   in   al, #0x64
+<BR>
+<FONT SIZE="2">(20:53:21) </FONT><B>bryce2:</B></FONT> in   al, #0x64
+<BR>
+<FONT SIZE="2">(20:53:23) </FONT><B>eks:</B></FONT>   test al, #0x01
+<BR>
+<FONT SIZE="2">(20:53:25) </FONT><B>eks:</B></FONT>   jz   int09_done    ;; nope, skip processing
+<BR>
+<FONT SIZE="2">(20:53:28) </FONT><B>eks:</B></FONT> int09_done:
+<BR>
+<FONT SIZE="2">(20:53:30) </FONT><B>eks:</B></FONT>   cli
+<BR>
+<FONT SIZE="2">(20:53:33) </FONT><B>eks:</B></FONT>   ;; look at PIC in-service-register to see if EOI required
+<BR>
+<FONT SIZE="2">(20:53:35) </FONT><B>eks:</B></FONT>   mov  al, #0x0B
+<BR>
+<FONT SIZE="2">(20:53:38) </FONT><B>eks:</B></FONT>   out  #0x20, al
+<BR>
+<FONT SIZE="2">(20:53:40) </FONT><B>eks:</B></FONT>   in   al, #0x20
+<BR>
+<FONT SIZE="2">(20:53:43) </FONT><B>eks:</B></FONT>   and  al, #0x02     ;; IRQ 1 in service
+<BR>
+<FONT SIZE="2">(20:53:46) </FONT><B>eks:</B></FONT>   jz   int09_finish
+<BR>
+<FONT SIZE="2">(20:53:48) </FONT><B>eks:</B></FONT>   mov  al, #0x20     ;; send EOI to master PIC
+<BR>
+<FONT SIZE="2">(20:53:51) </FONT><B>eks:</B></FONT>   out  #0x20, al
+<BR>
+<FONT SIZE="2">(20:53:53) </FONT><B>eks:</B></FONT> int09_finish:
+<BR>
+<FONT SIZE="2">(20:53:56) </FONT><B>eks:</B></FONT>   mov al, #0xAE      ;;enable keyboard
+<BR>
+<FONT SIZE="2">(20:53:58) </FONT><B>eks:</B></FONT>   out #0x64, al
+<BR>
+<FONT SIZE="2">(20:54:01) </FONT><B>eks:</B></FONT> that's the sequence you saw
+<BR>
+<FONT SIZE="2">(20:54:03) </FONT><B>eks:</B></FONT> so I'm positive it's the BIOS
+<BR>
+<FONT SIZE="2">(20:54:06) </FONT><B>eks:</B></FONT> the EDIT only read port 0x60
+<BR>
+<FONT SIZE="2">(20:54:25) </FONT><B>bryce2:</B></FONT> we know that EDIT read port 60
+<BR>
+<FONT SIZE="2">(20:54:35) </FONT><B>bryce2:</B></FONT> but somehow it never reacts to the key
+<BR>
+<FONT SIZE="2">(20:54:44) </FONT><B>eks:</B></FONT> I think I know why >:}
+<BR>
+<FONT SIZE="2">(20:55:02) </FONT><B>eks:</B></FONT> and if you want to have fun, reverse my patch
+<BR>
+<FONT SIZE="2">(20:55:06) </FONT><B>eks:</B></FONT> it will suddenly work
+<BR>
+<FONT SIZE="2">(20:55:19) </FONT><B>eks:</B></FONT> the problem is in the rombios.c at line 9466 and 9467
+<BR>
+<FONT SIZE="2">(20:55:22) </FONT><B>bryce2:</B></FONT> uh oh
+<BR>
+<FONT SIZE="2">(20:55:49) </FONT><B>eks:</B></FONT> you remember how Bochs cleared bit 0 of port 0x64 only after port 0x64 was read right?
+<BR>
+<FONT SIZE="2">(20:56:04) </FONT><B>eks:</B></FONT> now, EDIT read port 0x60
+<BR>
+<FONT SIZE="2">(20:56:10) </FONT><B>bryce2:</B></FONT> aha
+<BR>
+<FONT SIZE="2">(20:56:13) </FONT><B>eks:</B></FONT> wihch clears bit 0 of port 0x64 (with my patch)
+<BR>
+<FONT SIZE="2">(20:56:16) </FONT><B>eks:</B></FONT> the rombios goes in
+<BR>
+<FONT SIZE="2">(20:56:18) </FONT><B>eks:</B></FONT> disable the keyboard
+<BR>
+<FONT SIZE="2">(20:56:30) </FONT><B>eks:</B></FONT> notices that in fact, bit 0 is 0 so exit right away without reading the scancode
+<BR>
+<FONT SIZE="2">(20:56:57) </FONT><B>eks:</B></FONT> what we need to do is move the "look at PIC in-service-register" ... above
+<BR>
+<FONT SIZE="2">(20:57:04) </FONT><B>eks:</B></FONT> and replace the bit-test of port 0x64 by this code
+<BR>
+<FONT SIZE="2">(20:57:28) </FONT><B>eks:</B></FONT> if the irq is in service, we have a key to read
+<BR>
+<FONT SIZE="2">(20:57:33) </FONT><B>eks:</B></FONT> whatever what the port 0x64 says
+<BR>
+<FONT SIZE="2">(20:57:40) </FONT><B>bryce2:</B></FONT> so the rombios was okay, until the interrupt model was made more accurate
+<BR>
+<FONT SIZE="2">(20:57:46) </FONT><B>eks:</B></FONT> exact
+<BR>
+<FONT SIZE="2">(20:58:17) </FONT><B>bryce2:</B></FONT> that doesn't explain why it was broken in October of last year
+<BR>
+<FONT SIZE="2">(20:58:24) </FONT><B>eks:</B></FONT> ehehe
+<BR>
+<FONT SIZE="2">(20:58:34) </FONT><B>eks:</B></FONT> probably some other bugs before another patch
+<BR>
+<FONT SIZE="2">(20:58:40) </FONT><B>eks:</B></FONT> in between somewhere it must have been fixed
+<BR>
+<FONT SIZE="2">(20:58:42) </FONT><B>bryce2:</B></FONT> Date Submitted: 2001-09-28 18:07 
+<BR>
+<FONT SIZE="2">(20:58:45) </FONT><B>eks:</B></FONT> then we broke it again
+<BR>
+<FONT SIZE="2">(20:59:02) </FONT><B>bryce2:</B></FONT> I can believe it
+<BR>
+<FONT SIZE="2">(20:59:16) </FONT><B>eks:</B></FONT> let's see...
+<BR>
+<FONT SIZE="2">(20:59:17) </FONT><B>bryce2:</B></FONT> do you know what to change in rombios?
+<BR>
+<FONT SIZE="2">(20:59:25) </FONT><B>eks:</B></FONT> I think I do, I'll give it a try
+<BR>
+<FONT SIZE="2">(20:59:30) </FONT><B>bryce2:</B></FONT> should I reverse your patch to test your theory?
+<BR>
+<FONT SIZE="2">(20:59:57) </FONT><B>eks:</B></FONT> sure :)
+<BR>
+<FONT SIZE="2">(21:00:13) </FONT><B>eks:</B></FONT> not much to lose
+<BR>
+<FONT SIZE="2">(21:02:46) </FONT><B>eks:</B></FONT> huh... how the hell am I supposed to build rombios.c ??
+<BR>
+<FONT SIZE="2">(21:02:46) </FONT><B>bryce2:</B></FONT> I reversed your patch, and now I can enqueue keys but there's never an int9 :)
+<BR>
+<FONT SIZE="2">(21:02:52) </FONT><B>eks:</B></FONT> bcc-cc1 -o rombios.s -c -D__i86__ -0 _rombios_.c
+<BR>
+<FONT SIZE="2">(21:02:54) </FONT><B>bryce2:</B></FONT> something else is going on
+<BR>
+<FONT SIZE="2">(21:03:01) </FONT><B>eks:</B></FONT> ??
+<BR>
+<FONT SIZE="2">(21:03:02) </FONT><B>bryce2:</B></FONT> oh you want to compile it too? :)
+<BR>
+<FONT SIZE="2">(21:03:06) </FONT><B>eks:</B></FONT> lol
+<BR>
+<FONT SIZE="2">(21:03:15) </FONT><B>eks:</B></FONT> how do you expect me to modify it otherwise?
+<BR>
+<FONT SIZE="2">(21:03:19) </FONT><B>eks:</B></FONT> go with a hex editor? :p
+<BR>
+<FONT SIZE="2">(21:03:59) </FONT><B>bryce2:</B></FONT> I have bcc-cc1, and it was provided by dev86-0.15.0-2
+<BR>
+<FONT SIZE="2">(21:04:25) </FONT><B>bryce2:</B></FONT> you also need as86 and ld86
+<BR>
+<FONT SIZE="2">(21:04:28) </FONT><B>eks:</B></FONT> http://void-core.2y.net/rombios.diff-eks
+<BR>
+<FONT SIZE="2">(21:04:32) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(21:04:37) </FONT><B>darkito:</B></FONT> bye
+<BR>
+<FONT SIZE="2">(21:05:02) </FONT><B>eks:</B></FONT> bye darkito
+<BR>
+<FONT SIZE="2">(21:05:07) </FONT><B>bryce2:</B></FONT> bye
+<BR>
+<FONT SIZE="2">(21:05:56) </FONT><B>wli:</B></FONT> incoming
+<BR>
+<FONT SIZE="2">(21:05:58) </FONT><B>eks:</B></FONT> hrm...  dev86 is not a debian package...
+<BR>
+<FONT SIZE="2">(21:06:13) </FONT><B>bryce2:</B></FONT> http://bochs.sf.net/tmp/rombios.bin
+<BR>
+<FONT SIZE="2">(21:07:19) </FONT><B>eks:</B></FONT> at least the console still work :p
+<BR>
+<FONT SIZE="2">(21:08:01) </FONT><B>wli:</B></FONT> split patch sent
+<BR>
+<FONT SIZE="2">(21:08:06) </FONT><B>eks:</B></FONT> YES!
+<BR>
+<FONT SIZE="2">(21:08:08) </FONT><B>eks:</B></FONT> IT WORKS!
+<BR>
+<FONT SIZE="2">(21:08:10) </FONT><B>eks:</B></FONT> ahhahah!
+<BR>
+<FONT SIZE="2">(21:08:10) </FONT><B>bryce2:</B></FONT> wow
+<BR>
+<FONT SIZE="2">(21:08:15) </FONT><B>eks:</B></FONT> super!
+<BR>
+<FONT SIZE="2">(21:08:15) </FONT><B>cbothamy:</B></FONT> great
+<BR>
+<FONT SIZE="2">(21:08:25) </FONT><B>wli:</B></FONT> when I said "not for long" I didn't suspect "2 minutes".
+<BR>
+<FONT SIZE="2">(21:08:26) </FONT><B>eks:</B></FONT> even the menu with ALT+F >:}
+<BR>
+<FONT SIZE="2">(21:08:48) </FONT><B>eks:</B></FONT> woohoo :)
+<BR>
+<FONT SIZE="2">(21:09:06) </FONT><B>wli:</B></FONT> Now to convert the ioapic to the new irq model.
+<BR>
+<FONT SIZE="2">(21:09:42) </FONT><B>bryce2:</B></FONT> VERY NICE!
+<BR>
+<FONT SIZE="2">(21:09:44) </FONT><B>eks:</B></FONT> bryce2: you are testing it?
+<BR>
+<FONT SIZE="2">(21:10:11) </FONT><B>bryce2:</B></FONT> why the hell did they put Utilities:Calendar in here?
+<BR>
+<FONT SIZE="2">(21:10:18) </FONT><B>eks:</B></FONT> btw.. this BIOS could use some major optimizations ;)
+<BR>
+<FONT SIZE="2">(21:10:53) </FONT><B>bryce2:</B></FONT> I opened up the calendar and now I'm stuck :)
+<BR>
+<FONT SIZE="2">(21:10:57) </FONT><B>bryce2:</B></FONT> rebooting
+<BR>
+<FONT SIZE="2">(21:10:59) </FONT><B>eks:</B></FONT> lolol
+<BR>
+<FONT SIZE="2">(21:11:23) </FONT><B>wli:</B></FONT> it locked up after some amount of usage?
+<BR>
+<FONT SIZE="2">(21:11:34) </FONT><B>bryce2:</B></FONT> not sure
+<BR>
+<FONT SIZE="2">(21:11:37) </FONT><B>eks:</B></FONT> wli: he just doesn't know how to get out of the calendar :p
+<BR>
+<FONT SIZE="2">(21:12:08) </FONT><B>wli:</B></FONT> oic
+<BR>
+<FONT SIZE="2">(21:12:31) </FONT><B>wli:</B></FONT> can't he kill the process from another spell
+<BR>
+<FONT SIZE="2">(21:12:39) </FONT><B>eks:</B></FONT> bryce2: use the menu to close it
+<BR>
+<FONT SIZE="2">(21:12:55) </FONT><B>eks:</B></FONT> ALT+W -> Close All
+<BR>
+<FONT SIZE="2">(21:13:29) </FONT><B>eks:</B></FONT> wli: that's not unix, that's DOS in a Bochs window :P
+<BR>
+<FONT SIZE="2">(21:14:16) </FONT><B>wli:</B></FONT> eks: I've heard DOS has strange/poor process mgmt.
+<BR>
+<FONT SIZE="2">(21:14:34) </FONT><B>wli:</B></FONT> eks: (or none)
+<BR>
+<FONT SIZE="2">(21:14:58) </FONT><B>bryce2:</B></FONT> eks: why don't you check in that change to rombios.c and I'll check in the updated binary
+<BR>
+<FONT SIZE="2">(21:15:11) </FONT><B>bryce2:</B></FONT> it seems to work great
+<BR>
+<FONT SIZE="2">(21:15:21) </FONT><B>bryce2:</B></FONT> not that I managed to escape from the calendar
+<BR>
+<FONT SIZE="2">(21:15:24) </FONT><B>bryce2:</B></FONT> now that I
+<BR>
+<FONT SIZE="2">(21:15:31) </FONT><B>bryce2:</B></FONT> managed to escape from the calendar
+<BR>
+<FONT SIZE="2">(21:15:57) </FONT><B>eks:</B></FONT> eheh
+<BR>
+<FONT SIZE="2">(21:16:02) </FONT><B>eks:</B></FONT> sure, I'll check it in
+<BR>
+<FONT SIZE="2">(21:16:49) </FONT><B>wli:</B></FONT> my 8 cpu BIOS stuff doesn't come anywhere near that part of the BIOS -- should be no conflicts (or even fuzz).
+<BR>
+<FONT SIZE="2">(21:18:31) </FONT><B>bryce2:</B></FONT> now I can revert my local change in exception.cc:  if (vector==9)  BX_INFO(("interrupt(): vector = %u, INT = %u, EXT = %u",(unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT));
+<BR>
+<FONT SIZE="2">(21:18:43) </FONT><B>bryce2:</B></FONT> :)
+<BR>
+<FONT SIZE="2">(21:19:08) </FONT><B>eks:</B></FONT> eheh
+<BR>
+<FONT SIZE="2">(21:19:09) </FONT><B>bryce2:</B></FONT> wli: did you send me something? it hasn't arrived yet
+<BR>
+<FONT SIZE="2">(21:19:24) </FONT><B>wli:</B></FONT> bryce: to the mailing list
+<BR>
+<FONT SIZE="2">(21:19:25) </FONT><B>eks:</B></FONT> rombios.c committed
+<BR>
+<FONT SIZE="2">(21:19:40) </FONT><B>eks:</B></FONT> bryce2: I closed the bug report but did not delete it
+<BR>
+<FONT SIZE="2">(21:19:48) </FONT><B>bryce2:</B></FONT> that's the right thing
+<BR>
+<FONT SIZE="2">(21:21:29) </FONT><B>cbothamy:</B></FONT> ok guys, i will have a fix for win2k cd-boot in a few days. Now I'm going to sleep. Bye
+<BR>
+<FONT SIZE="2">(21:21:50) </FONT><B>bryce2:</B></FONT> cbothamy: good work. see you around.
+<BR>
+<FONT SIZE="2">(21:23:14) </FONT><B>eks:</B></FONT> bryce2: btw, good job on that bug hunting for the keyboard :)
+<BR>
+<FONT SIZE="2">(21:23:26) </FONT><B>bryce2:</B></FONT> you too
+<BR>
+<FONT SIZE="2">(21:23:28) </FONT><B>eks:</B></FONT> you provided many useful tips :)
+<BR>
+<FONT SIZE="2">(21:23:37) </FONT><B>bryce2:</B></FONT> you fixed it :)
+<BR>
+<FONT SIZE="2">(21:23:51) </FONT><B>bryce2:</B></FONT> that one has been bugging me for a long time
+<BR>
+<FONT SIZE="2">(21:24:03) </FONT><B>bryce2:</B></FONT> and we had 3 separate bug reports abou it
+<BR>
+<FONT SIZE="2">(21:24:17) </FONT><B>wli:</B></FONT> probably no need to revert that thing for SMP keyboard stuff then
+<BR>
+<FONT SIZE="2">(21:24:42) </FONT><B>wli:</B></FONT> wtf would I get a stack address for is_32?
+<BR>
+<FONT SIZE="2">(21:24:43) </FONT><B>bryce2:</B></FONT> I checked in the binaries
+<BR>
+<FONT SIZE="2">(21:24:55) </FONT><B>bryce2:</B></FONT> for bioses with the fix
+<BR>
+<FONT SIZE="2">(21:26:51) </FONT><B>wli:</B></FONT> is there a better APIC ID for the IO APIC?
+<BR>
+<FONT SIZE="2">(21:27:42) </FONT><B>wli:</B></FONT> maybe 0xe?
+<BR>
+<FONT SIZE="2">(21:27:46) </FONT><B>wli:</B></FONT> instead of 0x11?
+<BR>
+<FONT SIZE="2">(21:28:03) </FONT><B>bryce2:</B></FONT> I thought its apic id was the number of processors
+<BR>
+<FONT SIZE="2">(21:28:17) </FONT><B>wli:</B></FONT> hmm? there can be 14 of them no?
+<BR>
+<FONT SIZE="2">(21:28:26) </FONT><B>bryce2:</B></FONT> for 4 cpus, the cpus are 0,1,2,3 and the I/O apic is 4
+<BR>
+<FONT SIZE="2">(21:28:32) </FONT><B>bryce2:</B></FONT> isn't it?
+<BR>
+<FONT SIZE="2">(21:28:52) </FONT><B>wli:</B></FONT> I don't know of any relation to #cpus offhand
+<BR>
+<FONT SIZE="2">(21:29:14) </FONT><B>bryce2:</B></FONT> no
+<BR>
+<FONT SIZE="2">(21:29:21) </FONT><B>bryce2:</B></FONT> but that was the convention in rombios.c
+<BR>
+<FONT SIZE="2">(21:29:36) </FONT><B>bryce2:</B></FONT> db 4 ;; apic id=2. 
+<BR>
+<FONT SIZE="2">(21:29:39) </FONT><B>wli:</B></FONT> I just used 0x11 since it had no bits in common
+<BR>
+<FONT SIZE="2">(21:29:39) </FONT><B>bryce2:</B></FONT> db 0x11 ;; I/O APIC version number
+<BR>
+<FONT SIZE="2">(21:30:15) </FONT><B>bryce2:</B></FONT> that was for 4 processors
+<BR>
+<FONT SIZE="2">(21:30:33) </FONT><B>bryce2:</B></FONT> I don't think it matters though
+<BR>
+<FONT SIZE="2">(21:30:33) </FONT><B>wli:</B></FONT> 0x8 could work even though it's the low nybble it still has no bits in common.
+<BR>
+<FONT SIZE="2">(21:30:46) </FONT><B>wli:</B></FONT> it has to be < 0xf
+<BR>
+<FONT SIZE="2">(21:30:54) </FONT><B>bryce2:</B></FONT> ok
+<BR>
+<FONT SIZE="2">(21:31:36) </FONT><B>bryce2:</B></FONT> eks: did you see that kbd: OUTB set and command 0xaa encounter was reported again?
+<BR>
+<FONT SIZE="2">(21:31:44) </FONT><B>wli:</B></FONT> 17 - 8 is 9 so subtract 0x9 maybe?
+<BR>
+<FONT SIZE="2">(21:31:51) </FONT><B>eks:</B></FONT> bryce2: yes, it was reported only when the guy click reset
+<BR>
+<FONT SIZE="2">(21:31:57) </FONT><B>bryce2:</B></FONT> oh ok
+<BR>
+<FONT SIZE="2">(21:32:08) </FONT><B>eks:</B></FONT> bryce2: I'll have to reset the 'static' variable somehow when the button is pressed..
+<BR>
+<FONT SIZE="2">(21:32:24) </FONT><B>bryce2:</B></FONT> I think every device should have a hwreset() method
+<BR>
+<FONT SIZE="2">(21:32:28) </FONT><B>eks:</B></FONT> or maybe there's a more elegant fix to do
+<BR>
+<FONT SIZE="2">(21:32:43) </FONT><B>eks:</B></FONT> yes, that would definately be the way to go
+<BR>
+<FONT SIZE="2">(21:33:00) </FONT><B>bryce2:</B></FONT> they aren't very consistent
+<BR>
+<FONT SIZE="2">(21:33:09) </FONT><B>wli:</B></FONT> 0x9*16 = 0x90, 0x2e - 0x90 = 0x9e
+<BR>
+<FONT SIZE="2">(21:33:55) </FONT><B>eks:</B></FONT> alright, going to bed here, gn :)
+<BR>
+<FONT SIZE="2">(21:33:58) </FONT><B>bryce2:</B></FONT> gn
+<BR>
+<FONT SIZE="2">(21:34:04) </FONT><B>bryce2:</B></FONT> I have to do my taxes.
+<BR>
+<FONT SIZE="2">(21:34:10) </FONT><B>wli:</B></FONT> 'night
+<BR>
+<FONT SIZE="2">(21:34:15) </FONT><B>wli:</B></FONT> rest easy
+<BR>
+<FONT SIZE="2">(21:42:55) </FONT><B>bryce2:</B></FONT> wli: I just applied your 8cpu patch
+<BR>
+<FONT SIZE="2">(21:43:16) </FONT><B>wli:</B></FONT> bryce: sounds good
+<BR>
+<FONT SIZE="2">(21:43:20) </FONT><B>bryce2:</B></FONT> I don't think the keyboard change that eks and I were just working on will affect the I/O apic problems
+<BR>
+<FONT SIZE="2">(21:43:46) </FONT><B>bryce2:</B></FONT> it solved a problem of keyboard freezes in some DOS applications
+<BR>
+<FONT SIZE="2">(21:44:09) </FONT><B>wli:</B></FONT> bryce: well, I can field problem reports for the 8 cpu thing related to APIC ID unhappiness if the issue arises
+<BR>
+<FONT SIZE="2">(21:44:40) </FONT><B>bryce2:</B></FONT> in the other patch, I don't understand why you needed
+<BR>
+<FONT SIZE="2">(21:44:46) </FONT><B>bryce2:</B></FONT> bool os_32, as_32
+<BR>
+<FONT SIZE="2">(21:45:14) </FONT><B>wli:</B></FONT> bryce: overkill -- is_32 was set to a stack address and I got paranoid
+<BR>
+<FONT SIZE="2">(21:45:15) </FONT><B>bryce2:</B></FONT> instead of unsigned os_32, as_32
+<BR>
+<FONT SIZE="2">(21:46:03) </FONT><B>wli:</B></FONT> bryce: the real issue is something silently clobbering the variable, it's 100% workaround, they should all be boolean (i.e. 0 or 1) regardless of type.
+<BR>
+<FONT SIZE="2">(21:47:03) </FONT><B>bryce2:</B></FONT> what do you mean by "is_32 was set to a stack address"?
+<BR>
+<FONT SIZE="2">(21:47:19) </FONT><B>bryce2:</B></FONT> your change didn't change that
+<BR>
+<FONT SIZE="2">(21:47:27) </FONT><B>bryce2:</B></FONT> -  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+<BR>
+<FONT SIZE="2">(21:47:30) </FONT><B>bryce2:</B></FONT> +  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
+<BR>
+<FONT SIZE="2">(21:47:33) </FONT><B>wli:</B></FONT> bryce: it had a value which was 0xbfff0000 + something when the sim crashed hard
+<BR>
+<FONT SIZE="2">(21:47:38) </FONT><B>bryce2:</B></FONT> +    is_32 = 1;
+<BR>
+<FONT SIZE="2">(21:47:41) </FONT><B>bryce2:</B></FONT> +  else
+<BR>
+<FONT SIZE="2">(21:47:44) </FONT><B>bryce2:</B></FONT> +    is_32 = 0;
+<BR>
+<FONT SIZE="2">(21:47:59) </FONT><B>bryce2:</B></FONT> you mean that you found a value of 0xbfff0000 in is_32?
+<BR>
+<FONT SIZE="2">(21:48:05) </FONT><B>wli:</B></FONT> bryce: right
+<BR>
+<FONT SIZE="2">(21:48:29) </FONT><B>wli:</B></FONT> well, 0xbfff0000 + something < 0x10000
+<BR>
+<FONT SIZE="2">(21:48:29) </FONT><B>bryce2:</B></FONT> ugly
+<BR>
+<FONT SIZE="2">(21:49:00) </FONT><B>wli:</B></FONT> yeah, it's not remotely approaching the root cause
+<BR>
+<FONT SIZE="2">(21:49:17) </FONT><B>bryce2:</B></FONT> nope
+<BR>
+<FONT SIZE="2">(21:49:52) </FONT><B>bryce2:</B></FONT> you might try linking with electric fence or some other memory checker
+<BR>
+<FONT SIZE="2">(21:50:00) </FONT><B>bryce2:</B></FONT> -lefence, it's installed on redhat
+<BR>
+<FONT SIZE="2">(21:50:16) </FONT><B>bryce2:</B></FONT> and it takes over your malloc
+<BR>
+<FONT SIZE="2">(21:50:39) </FONT><B>wli:</B></FONT> whatever methods are required to find it will surely be laborious, efence just breaks assumptions more readily
+<BR>
+<FONT SIZE="2">(21:51:32) </FONT><B>wli:</B></FONT> I think I documented that in the "one giant patch" version of it
+<BR>
+<FONT SIZE="2">(21:51:41) </FONT><B>bryce2:</B></FONT> now the change in ioapic to allow an id>=16
+<BR>
+<FONT SIZE="2">(21:51:50) </FONT><B>bryce2:</B></FONT> is that specific to P4's or anything?
+<BR>
+<FONT SIZE="2">(21:52:18) </FONT><B>wli:</B></FONT> I think it is, if I fix the ioapic ID to 0xe instead of 0x11 it should no longer be necessary
+<BR>
+<FONT SIZE="2">(21:52:25) </FONT><B>bryce2:</B></FONT> ok
+<BR>
+<FONT SIZE="2">(21:53:19) </FONT><B>***arashi</B></FONT> is away: sleeping roommate
+<BR>
+<FONT SIZE="2">(21:53:22) </FONT><B>bryce2:</B></FONT> when we start coding things that should act differently on ppros and p4s or whatever, let's think about adding a new cpu level
+<BR>
+<FONT SIZE="2">(21:53:36) </FONT><B>bryce2:</B></FONT> or apic behavior switch
+<BR>
+<FONT SIZE="2">(21:53:46) </FONT><B>bryce2:</B></FONT> or something
+<BR>
+<FONT SIZE="2">(21:54:14) </FONT><B>wli:</B></FONT> the only piece I'm missing for that is I don't know how to add new config options to autoconf stuff
+<BR>
+<FONT SIZE="2">(21:54:45) </FONT><B>bryce2:</B></FONT> you edit configure.in and then run autoconf
+<BR>
+<FONT SIZE="2">(21:54:49) </FONT><B>bryce2:</B></FONT> to produce a new configure script
+<BR>
+<FONT SIZE="2">(21:55:11) </FONT><B>wli:</B></FONT> I winged the extra case for 8 cpu's, in general I don't know syntax.
+<BR>
+<FONT SIZE="2">(21:55:12) </FONT><B>bryce2:</B></FONT> I just follow the examples, or if I'm really desperate I read "info autoconf"
+<BR>
+<FONT SIZE="2">(21:55:17) </FONT><B>bryce2:</B></FONT> me either :)
+<BR>
+<FONT SIZE="2">(21:55:24) </FONT><B>bryce2:</B></FONT> it's a shell script with m4 macros. yuck.
+<BR>
+<FONT SIZE="2">(21:56:00) </FONT><B>bryce2:</B></FONT> I will check in 06_8_cpu_workarounds in patches
+<BR>
+<FONT SIZE="2">(21:56:28) </FONT><B>bryce2:</B></FONT> but I really don't like the is_32 stuff to avoid stack corruption, as you can imagine
+<BR>
+<FONT SIZE="2">(21:56:48) </FONT><B>wli:</B></FONT> I don't dare advertise it as clean or even truly a "fix"
+<BR>
+<FONT SIZE="2">(21:57:30) </FONT><B>bryce2:</B></FONT> I assume you tried make dist-clean, configure, make?
+<BR>
+<FONT SIZE="2">(21:57:52) </FONT><B>wli:</B></FONT> yeah
+<BR>
+<FONT SIZE="2">(21:57:55) </FONT><B>bryce2:</B></FONT> if there are broken compile dependencies, sometimes make fails to recompile some .o's
+<BR>
+<FONT SIZE="2">(21:58:05) </FONT><B>bryce2:</B></FONT> leading to disagreements over where the object fields can be found.
+<BR>
+<FONT SIZE="2">(21:58:25) </FONT><B>bryce2:</B></FONT> also, I find that sometimes the debugger lies about local variables
+<BR>
+<FONT SIZE="2">(21:58:32) </FONT><B>bryce2:</B></FONT> and says they have junk values.
+<BR>
+<FONT SIZE="2">(21:58:43) </FONT><B>bryce2:</B></FONT> adding a BX_INFO will tell for sure.
+<BR>
+<FONT SIZE="2">(21:59:24) </FONT><B>wli:</B></FONT> I got the local variable value from a coredump
+<BR>
+<FONT SIZE="2">(21:59:42) </FONT><B>bryce2:</B></FONT> I have a feeling the debugger has trouble with -fomit-frame-pointer, but I could be imagining it.
+<BR>
+<FONT SIZE="2">(21:59:50) </FONT><B>wli:</B></FONT> oh it does
+<BR>
+<FONT SIZE="2">(21:59:55) </FONT><B>wli:</B></FONT> I didn't use that option
+<BR>
+<FONT SIZE="2">(22:00:49) </FONT><B>wli:</B></FONT> could also be miscompiling, codegen does have a few holes in it as seen in the kernel, could be getting hit here as well.
+<BR>
+<FONT SIZE="2">(22:01:21) </FONT><B>bryce2:</B></FONT> I'm checking in your workarounds on top of patch.smp-8cpu-etc
+<BR>
+<FONT SIZE="2">(22:01:24) </FONT><B>bryce2:</B></FONT> is that ok?
+<BR>
+<FONT SIZE="2">(22:01:35) </FONT><B>wli:</B></FONT> Sounds good.
+<BR>
+<FONT SIZE="2">(22:01:39) </FONT><B>bryce2:</B></FONT> the rombios and configure.in changes are already committed
+<BR>
+<FONT SIZE="2">(22:01:48) </FONT><B>wli:</B></FONT> it ought to make some of the issues arising more visible.
+<BR>
+<FONT SIZE="2">(22:01:53) </FONT><B>bryce2:</B></FONT> so the remaining workarounds will be in patch.smp-8cpu-etc
+<BR>
+<FONT SIZE="2">(22:02:34) </FONT><B>bryce2:</B></FONT> ok
+<BR>
+<FONT SIZE="2">(22:02:38) </FONT><B>bryce2:</B></FONT> I'm off to do my taxes!
+<BR>
+<FONT SIZE="2">(22:02:55) </FONT><B>wli:</B></FONT> hopefully with more code going around for the stuff people will try it and drop code to help out, or poke it in ways I didn't before so I can debug. =)
+<BR>
