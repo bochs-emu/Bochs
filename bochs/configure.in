@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.170 2002-11-20 12:23:42 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.171 2002-11-20 12:42:53 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1821,6 +1821,7 @@ case "$target" in
     CXXFP="/Tp"
     CFP="/Tc"
     OFP="/Fo"
+    MAKE=nmake
     MAKELIB="lib.exe /nologo /subsystem:console /machine:I386 /verbose /out:\$@"
     RMCOMMAND="-del"
     RANLIB="echo"
