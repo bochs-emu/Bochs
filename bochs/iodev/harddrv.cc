@@ -93,6 +93,19 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     BX_HD_THIS devices->register_io_write_handler(this, write_handler,
                                         addr, "Hard Drive 0");
     }
+#if 0
+  // this would be necessary to make the second HD master on the
+  // second controller, using 0x170-0x177 and irq15.  But it currently
+  // works as second disk on the first IDE controller, so this code
+  // is not needed.
+  BX_HD_THIS devices->register_irq(15, "Hard Drive 1");
+  for (unsigned addr=0x0170; addr<=0x0177; addr++) {
+    BX_HD_THIS devices->register_io_read_handler(this, read_handler,
+                                        addr, "Hard Drive 1");
+    BX_HD_THIS devices->register_io_write_handler(this, write_handler,
+                                        addr, "Hard Drive 1");
+    }
+#endif
 
   BX_HD_THIS drive_select = 0;
 
@@ -180,18 +193,55 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   if (!bx_options.cmos.cmosImage) {
     cmos->s.reg[0x12] = 0x00; // start out with: no drive 0, no drive 1
 
-    // Flag drive type as Fh, use extended CMOS location as real type
-    cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0x0f) | 0xf0;
-    cmos->s.reg[0x19] = 47; // user definable type
-    cmos->s.reg[0x1b] = (bx_options.diskc.cylinders & 0x00ff);
-    cmos->s.reg[0x1c] = (bx_options.diskc.cylinders & 0xff00) >> 8;
-    cmos->s.reg[0x1d] = (bx_options.diskc.heads);
-    cmos->s.reg[0x1e] = 0xff; // -1
-    cmos->s.reg[0x1f] = 0xff; // -1
-    cmos->s.reg[0x20] = 0xc0 | ((bx_options.diskc.heads > 8) << 3);
-    cmos->s.reg[0x21] = cmos->s.reg[0x1b];
-    cmos->s.reg[0x22] = cmos->s.reg[0x1c];
-    cmos->s.reg[0x23] = bx_options.diskc.spt;
+    if (bx_options.diskc.present) {
+      // Flag drive type as Fh, use extended CMOS location as real type
+      cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0x0f) | 0xf0;
+      cmos->s.reg[0x19] = 47; // user definable type
+      // AMI BIOS: 1st hard disk #cyl low byte
+      cmos->s.reg[0x1b] = (bx_options.diskc.cylinders & 0x00ff);
+      // AMI BIOS: 1st hard disk #cyl high byte
+      cmos->s.reg[0x1c] = (bx_options.diskc.cylinders & 0xff00) >> 8;
+      // AMI BIOS: 1st hard disk #heads
+      cmos->s.reg[0x1d] = (bx_options.diskc.heads);
+      // AMI BIOS: 1st hard disk write precompensation cylinder, low byte
+      cmos->s.reg[0x1e] = 0xff; // -1
+      // AMI BIOS: 1st hard disk write precompensation cylinder, high byte
+      cmos->s.reg[0x1f] = 0xff; // -1
+      // AMI BIOS: 1st hard disk control byte
+      cmos->s.reg[0x20] = 0xc0 | ((bx_options.diskc.heads > 8) << 3);
+      // AMI BIOS: 1st hard disk landing zone, low byte
+      cmos->s.reg[0x21] = cmos->s.reg[0x1b];
+      // AMI BIOS: 1st hard disk landing zone, high byte
+      cmos->s.reg[0x22] = cmos->s.reg[0x1c];
+      // AMI BIOS: 1st hard disk sectors/track
+      cmos->s.reg[0x23] = bx_options.diskc.spt;
+    }
+
+    //set up cmos for second hard drive
+    if (bx_options.diskd.present) {
+      bx_printf ("[diskd] I will put 0xf into the second hard disk field");
+      // fill in lower 4 bits of 0x12 for second HD
+      cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0xf0) | 0x0f;
+      cmos->s.reg[0x1a] = 47; // user definable type
+      // AMI BIOS: 2nd hard disk #cyl low byte
+      cmos->s.reg[0x24] = (bx_options.diskd.cylinders & 0x00ff);
+      // AMI BIOS: 2nd hard disk #cyl high byte
+      cmos->s.reg[0x25] = (bx_options.diskd.cylinders & 0xff00) >> 8;
+      // AMI BIOS: 2nd hard disk #heads
+      cmos->s.reg[0x26] = (bx_options.diskd.heads);
+      // AMI BIOS: 2nd hard disk write precompensation cylinder, low byte
+      cmos->s.reg[0x27] = 0xff; // -1
+      // AMI BIOS: 2nd hard disk write precompensation cylinder, high byte
+      cmos->s.reg[0x28] = 0xff; // -1
+      // AMI BIOS: 2nd hard disk, 0x80 if heads>8
+      cmos->s.reg[0x29] = (bx_options.diskd.heads > 8) ? 0x80 : 0x00;
+      // AMI BIOS: 2nd hard disk landing zone, low byte
+      cmos->s.reg[0x2a] = cmos->s.reg[0x1b];
+      // AMI BIOS: 2nd hard disk landing zone, high byte
+      cmos->s.reg[0x2b] = cmos->s.reg[0x1c];
+      // AMI BIOS: 2nd hard disk sectors/track
+      cmos->s.reg[0x2c] = bx_options.diskd.spt;
+    }
 
 
     if ( bx_options.bootdrive[0] == 'c' ) {
@@ -547,6 +597,19 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       goto return_value8;
       break;
 
+#if 0
+      // you'll need these to support second IDE controller, not needed yet.
+      case 0x170:
+      case 0x171:
+      case 0x172:
+      case 0x173:
+      case 0x174:
+      case 0x175:
+      case 0x176:
+      case 0x177:
+	    bx_printf ("[disk] ignoring read from 0x%04x\n", address);
+       break;
+#endif
     default:
       bx_panic("hard drive: io read to address %x unsupported\n",
         (unsigned) address);
@@ -1611,6 +1674,19 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		}
 	  }
 	  break;
+#if 0
+      // you'll need these to support second IDE controller, not needed yet.
+    case 0x170:
+    case 0x171:
+    case 0x172:
+    case 0x173:
+    case 0x174:
+    case 0x175:
+    case 0x176:
+    case 0x177:
+	  bx_printf ("[disk] ignoring write to 0x%04x\n", address);
+       break;
+#endif
 
     default:
       bx_panic("hard drive: io write to address %x = %02x\n",
@@ -2225,9 +2301,11 @@ void
 bx_hard_drive_c::raise_interrupt()
 {
       if (!BX_SELECTED_CONTROLLER.control.disable_irq) {
+	    Bit32u irq = 14;  // always 1st IDE controller
+	    // for second controller, you would want irq 15
 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
-		  bx_printf("disk: Raising interrupt {%s}\n", DEVICE_TYPE_STRING);
-	    BX_HD_THIS devices->pic->trigger_irq(14);
+		  bx_printf("disk: Raising interrupt %d {%s}\n", irq, DEVICE_TYPE_STRING);
+	    BX_HD_THIS devices->pic->trigger_irq(irq);
       } else {
 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
 		  bx_printf("disk: Interrupt masked {%s}\n", DEVICE_TYPE_STRING);
