@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.35 2002-03-24 02:05:49 bdenney Exp $
+$Id: user.dbk,v 1.36 2002-03-24 02:44:18 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2580,11 +2580,11 @@ and 0 turns it off.
 
 </section> <!--end of bochsrc section-->
 
-<section id="keymap"><title>How to write your own keymap table (X windows)</title>
+<section id="keymap"><title>How to write your own keymap table</title>
 <para>
 Christophe Bothamy wrote the keymapping code for Bochs, and provided this
 documentation for how to create new keymaps.  Keymapping is currently 
-implemented for X windows only, so there are several references to X-specific
+implemented for X windows only, so there are many references to X-specific
 values in this section.
 </para>
 <screen>
@@ -2609,55 +2609,64 @@ values in this section.
 Each key of the US keyboard maps to a Bochs constant named
 BX_KEY_<replaceable>symbol</replaceable>. You can find the current list of
 BX_KEY_<replaceable>symbol</replaceable> in 
-<link linkend="bx-key-table">The BX_KEY table</link>. Please note that there
-is only one BX_KEY_<replaceable>symbol</replaceable> for each physical key.
+<link linkend="bx-key-table">the BX_KEY table</link>, below. Please note that
+there is only one BX_KEY_<replaceable>symbol</replaceable> for each physical
+key.
 </para>
 
 <para>
-  Now, for each key of the US keyboard, look which symbols
-  you can type on your real keyboard. Each symbol maps
-  to a X11 XK_<replaceable>symbol</replaceable> constant.  You will find in 
-  <filename>X11/keysymdef.h</filename> the list of all possible XK_<replaceable>symbol</replaceable>
-  on your system.
-  Alternatively, you can use a small utility called "xev"
-  that prints out the symbol names of a pressed key. Note
-  that the symbol name given by xev does not contain de
-  XK_ prefix.
-  Don't forget to add a line for every symbol you can type
-  on each key.
-  </para>
+Now, for each key of the US keyboard, look at which symbols you can type on your
+real keyboard. Each symbol maps to a X-windows
+XK_<replaceable>symbol</replaceable> constant.  In 
+<filename>X11/keysymdef.h</filename>, you will find the list of all possible
+XK_<replaceable>symbol</replaceable> on your system.  Alternatively, you can
+use a small utility called "xev" that prints out the symbol names of a pressed
+key. Note that the symbol name given by xev does not contain the XK_ prefix.
+Don't forget to add a line for every symbol you can type on each key.  For the
+key BX_KEY_A, you can type both lowercase 'a' and uppercase 'A', so you would
+need two different entries. 
+</para>
 
 <para>
-  So now, you know for each Bochs key symbol, the associated
-  set of X11 symbols.
-  </para>
+You can then create your own map file. Keymap files are found in the
+"gui/keymaps" directory in the source code, or in the "keymaps" directory in
+binary releases.  Look at the existing keymap file as an example, and create a
+file containing one line for each symbol.  The first column tells what key or
+combination of keys can be used to produce a given symbol.  The second column
+is the ASCII equivalent for that symbol, or a special keyword (none, space,
+return, tab, backslash, or apostrophe).  The third column is the X windows
+keysym for that symbol.  
+</para>
+
 
 <para>
-  You can then create your own map file. Keymap files are
-  found in the "gui/keymaps" directory.
-  Create a file containing each pair of BX_KEY_<replaceable>symbol</replaceable>
-  and XK_<replaceable>symbol</replaceable> separated with a '='. 
-  You have to remove to XK_ prefix.
-  </para>
-
-<para>
-  For example :
+For example :
 <screen>
-  BX_KEY_A = a
-  BX_KEY_A = A
-  ...
-  BX_KEY_TAB = Tab
-  BX_KEY_TAB = Iso_Left_Tab
-  ...
-  </screen>
-  </para>
+BX_KEY_0                                      '0'        XK_0
+BX_KEY_1                                      '1'        XK_1
+BX_KEY_2                                      '2'        XK_2
+BX_KEY_0+BX_KEY_SHIFT_L                       ')'        XK_parenright
+BX_KEY_1+BX_KEY_SHIFT_L                       '!'        XK_exclam
+BX_KEY_2+BX_KEY_SHIFT_L                       '@'        XK_at
+BX_KEY_A                                      'a'        XK_a
+BX_KEY_B                                      'b'        XK_b
+BX_KEY_A+BX_KEY_SHIFT_L                       'A'        XK_A
+BX_KEY_B+BX_KEY_SHIFT_L                       'B'        XK_B
+BX_KEY_TAB                                    tab        XK_Tab
+BX_KEY_ENTER                                  return     XK_Return
+BX_KEY_F1                                     none       XK_F1
+BX_KEY_F2                                     none       XK_F2
+BX_KEY_F3                                     none       XK_F3
+</screen>
+</para>
 
 <para>
-  Or you can copy the x11-i386-us.map file and modify the 
-  existing entries to suit your needs.
-  In that case, you will have to add your country specific 
-  X11 symbols.
-  </para>
+Now that there are several keymap files in the Bochs distribution, it is
+easiest to copy an existing keymap and follow the examples you see.  When it
+works, be sure to send it to the mailing list or post it on Source Forge so
+that we can include it in the next release.  You may need to look up some of
+your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
+</para>
 
 <table id="bx-key-table"><title>BX_KEY constants</title>
 <tgroup cols=2 align=center colsep=1 rowsep=1>
