@@ -95,8 +95,7 @@ BEGIN
     LTEXT           "Pass events", IDLOGLBL5, 80, 117, 55, 14
     COMBOBOX        IDLOGEVT5, 165, 115, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "The advanced log options are still present on the console", IDLOGINFO, 35, 137, 180, 14
-    PUSHBUTTON      "Advanced", IDADVLOGOPT, 95, 155, 60, 14
+    AUTOCHECKBOX    "Specify log options per device", IDADVLOGOPT, 60, 145, 112, 14, BS_LEFTTEXT | WS_TABSTOP
     LTEXT           "VGA update interval", IDMISCLBL1, 20, 37, 70, 14
     EDITTEXT        IDVGAUPDATE, 95, 35, 70, 14, ES_NUMBER
     AUTOCHECKBOX    "Mouse", IDMOUSE, 18, 55, 86, 14, BS_LEFTTEXT | WS_TABSTOP
