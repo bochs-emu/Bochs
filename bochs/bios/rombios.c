@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.126 2005-01-27 18:03:38 vruppert Exp $
+// $Id: rombios.c,v 1.127 2005-01-31 18:35:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -912,10 +912,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.126 $";
-static char bios_date_string[] = "$Date: 2005-01-27 18:03:38 $";
+static char bios_cvs_version_string[] = "$Revision: 1.127 $";
+static char bios_date_string[] = "$Date: 2005-01-31 18:35:35 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.126 2005-01-27 18:03:38 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.127 2005-01-31 18:35:35 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -7665,16 +7665,16 @@ int1a_function(regs, ds, iret_addr)
     case 0xb1:
       // real mode PCI BIOS functions now handled in assembler code
       // this C code handles the error code for information only
-      if (regs.u.r8.al == 0xff) {
+      if (regs.u.r8.bl == 0xff) {
         BX_INFO("PCI BIOS: PCI not present\n");
-      } else if (regs.u.r8.al == 0x81) {
+      } else if (regs.u.r8.bl == 0x81) {
         BX_INFO("unsupported PCI BIOS function 0x%02x\n", regs.u.r8.al);
-      } else if (regs.u.r8.al == 0x83) {
+      } else if (regs.u.r8.bl == 0x83) {
         BX_INFO("bad PCI vendor ID %04x\n", regs.u.r16.dx);
-      } else if (regs.u.r8.al == 0x86) {
+      } else if (regs.u.r8.bl == 0x86) {
         BX_INFO("PCI device %04x:%04x not found\n", regs.u.r16.dx, regs.u.r16.cx);
       }
-      regs.u.r8.ah = regs.u.r8.al;
+      regs.u.r8.ah = regs.u.r8.bl;
       SetCF(iret_addr.flags);
       break;
 #endif
@@ -10085,7 +10085,7 @@ int1a_handler:
   pop ax
   iret
 pcibios_error:
-  mov  al, ah
+  mov  bl, ah
   mov  ah, #0xb1
 int1a_normal:
 #endif
