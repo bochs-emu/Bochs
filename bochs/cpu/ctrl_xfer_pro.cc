@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.34 2005-03-12 16:40:14 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.35 2005-03-12 18:09:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1696,10 +1696,11 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
       // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
       if (new_eflags & 0x00020000) {
-        if (CPL != 0)
-          BX_PANIC(("iret: VM set on stack, CPL!=0"));
-        BX_CPU_THIS_PTR stack_return_to_v86(new_eip, raw_cs_selector, new_eflags);
-        return;
+        if (CPL == 0) {
+          BX_CPU_THIS_PTR stack_return_to_v86(new_eip, raw_cs_selector, new_eflags);
+          return;
+        }
+        else BX_INFO(("iret: VM set on stack, CPL!=0"));
       }
     }
     else {
