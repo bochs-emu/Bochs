@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.38 2003-06-07 19:16:54 vruppert Exp $
+// $Id: misc_mem.cc,v 1.39 2003-08-05 13:19:35 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,10 +87,18 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
 }
 #endif
 
+// We can't use this because alloc_vector_aligned uses BX_INFO, but the object does not yet exists
+/*
 #if BX_PROVIDE_CPU_MEMORY
   // BX_MEM_C constructor
+
 BX_MEM_C::BX_MEM_C(size_t memsize)
 {
+  char mem[6];
+  snprintf(mem, 6, "MEM%d", BX_SIM_ID);
+  put(mem);
+  settype(MEMLOG);
+
   vector = NULL;
   actual_vector = NULL;
   alloc_vector_aligned (memsize, BX_MEM_VECTOR_ALIGN);
@@ -98,6 +106,7 @@ BX_MEM_C::BX_MEM_C(size_t memsize)
   megabytes = len / (1024*1024);
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
+*/
 
 
 #if BX_PROVIDE_CPU_MEMORY
@@ -120,10 +129,10 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.38 2003-06-07 19:16:54 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.39 2003-08-05 13:19:35 cbothamy Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
-  BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
+  // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
@@ -153,11 +162,14 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   unsigned long size, offset;
 
   if (*path == '\0') {
-    if (type == 1) {
-      BX_PANIC(( "ROM: System BIOS image undefined."));
+    if (type == 2) {
+      BX_PANIC(( "ROM: Optional BIOS image undefined."));
+      }
+    else if (type == 1) {
+      BX_PANIC(( "ROM: VGA BIOS image undefined."));
       }
     else {
-      BX_PANIC(( "ROM: VGA BIOS image undefined."));
+      BX_PANIC(( "ROM: System BIOS image undefined."));
       }
     return;
     }
