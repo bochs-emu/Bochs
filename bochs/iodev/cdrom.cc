@@ -54,7 +54,7 @@ extern "C" {
 
 #if (defined(__OpenBSD__) || defined(__FreeBSD__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
-// all the includes, because the i386 sys/disklabel.h contains code which
+// all the includes, because the i386 sys/disklabel.h contains code which 
 // c++ considers invalid.
 #include <sys/types.h>
 #include <sys/param.h>
@@ -109,27 +109,26 @@ cdrom_interface::insert_cdrom()
   ssize_t ret;
 
   // Load CD-ROM. Returns false if CD is not ready.
+  BX_INFO (("load cdrom with path=%s\n", path));
 #ifdef WIN32
     char drive[256];
-printf(path);
-printf('\n');
     if ( (path[1] == ':') && (strlen(path) == 2) )
     {
+      // With all the backslashes it's hard to see, but to open D: drive 
+      // the name would be: \\.\d:
       sprintf(drive, "\\\\.\\%s", path);
       using_file = 0;
-printf("using cd");
+      BX_INFO (("opening raw cd"));
+      // This trick only works for Win2k and WinNT, so warn the user of that.
+      BX_ERROR (("WARNING: reading a raw cd only works under Win2000 and WinNT at present"));
     }
     else
     {
       strcpy(drive,path);
       using_file = 1;
-printf("using file");
+      BX_INFO (("opening image file as a cd"));
     }
-printf('\n');
     hFile=CreateFile((char *)&drive,  GENERIC_READ, 0 , NULL, OPEN_EXISTING, 
-FILE_FLAG_RANDOM_ACCESS, NULL);
-      //printf("%s", path);
-  //hFile=CreateFile(path,  GENERIC_READ, 0 , NULL, OPEN_EXISTING, 
 FILE_FLAG_RANDOM_ACCESS, NULL);
   if (hFile !=(void *)0xFFFFFFFF)
          fd=1;
@@ -181,8 +180,7 @@ cdrom_interface::eject_cdrom()
 if (using_file == 0)
 {
   DWORD lpBytesReturned;
-  DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, 
-&lpBytesReturned, NULL);
+  DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
 }
 #endif
 
@@ -193,8 +191,7 @@ if (using_file == 0)
 
 
   bool
-cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int 
-start_track)
+cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
 {
   // Read CD TOC. Returns false if start track is out of bounds.
 
@@ -205,11 +202,9 @@ start_track)
 #ifdef WIN32
   {
 /*     #define IOCTL_CDROM_BASE                 FILE_DEVICE_CD_ROM
-     #define IOCTL_CDROM_READ_TOC         CTL_CODE(IOCTL_CDROM_BASE, 0x0000, 
-METHOD_BUFFERED, FILE_READ_ACCESS)
+     #define IOCTL_CDROM_READ_TOC         CTL_CODE(IOCTL_CDROM_BASE, 0x0000, METHOD_BUFFERED, FILE_READ_ACCESS)
      unsigned long iBytesReturned;
-     DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC, NULL, 0, NULL, 0, 
-&iBytesReturned, NULL);       */
+     DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC, NULL, 0, NULL, 0, &iBytesReturned, NULL);       */
          return true;
   }
 #elif __linux__ || defined(__sun)
@@ -235,8 +230,7 @@ METHOD_BUFFERED, FILE_READ_ACCESS)
     if (ioctl(fd, CDROMREADTOCENTRY, &tocentry))
       BX_PANIC(("cdrom: read_toc: READTOCENTRY failed."));
     buf[len++] = 0; // Reserved
-    buf[len++] = (tocentry.cdte_adr << 4) | tocentry.cdte_ctrl ; // ADR, 
-control
+    buf[len++] = (tocentry.cdte_adr << 4) | tocentry.cdte_ctrl ; // ADR, control
     buf[len++] = i; // Track number
     buf[len++] = 0; // Reserved
 
@@ -265,8 +259,7 @@ control
   if (ioctl(fd, CDROMREADTOCENTRY, &tocentry))
     BX_PANIC(("cdrom: read_toc: READTOCENTRY lead-out failed."));
   buf[len++] = 0; // Reserved
-  buf[len++] = (tocentry.cdte_adr << 4) | tocentry.cdte_ctrl ; // ADR, 
-control
+  buf[len++] = (tocentry.cdte_adr << 4) | tocentry.cdte_ctrl ; // ADR, control
   buf[len++] = 0xaa; // Track number
   buf[len++] = 0; // Reserved
 
@@ -319,8 +312,7 @@ control
       BX_PANIC(("cdrom: read_toc: READTOCENTRY failed."));
 
     buf[len++] = 0; // Reserved
-    buf[len++] = (tocentry.addr_type << 4) | tocentry.control ; // ADR, 
-control
+    buf[len++] = (tocentry.addr_type << 4) | tocentry.control ; // ADR, control
     buf[len++] = i; // Track number
     buf[len++] = 0; // Reserved
 
@@ -349,8 +341,7 @@ control
     BX_PANIC(("cdrom: read_toc: READTOCENTRY lead-out failed."));
 
   buf[len++] = 0; // Reserved
-  buf[len++] = (tocentry.addr_type << 4) | tocentry.control ; // ADR, 
-control
+  buf[len++] = (tocentry.addr_type << 4) | tocentry.control ; // ADR, control
   buf[len++] = 0xaa; // Track number
   buf[len++] = 0; // Reserved
 
@@ -512,8 +503,7 @@ cdrom_interface::read_block(uint8* buf, int lba)
 #endif
 
 #ifdef WIN32
-  ReadFile(hFile, (void *) buf, BX_CD_FRAMESIZE, (unsigned long *) &n, 
-NULL);
+  ReadFile(hFile, (void *) buf, BX_CD_FRAMESIZE, (unsigned long *) &n, NULL);
 #else
   n = read(fd, buf, BX_CD_FRAMESIZE);
 #endif
