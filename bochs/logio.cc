@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.30 2002-09-20 17:56:21 bdenney Exp $
+// $Id: logio.cc,v 1.31 2002-09-23 15:39:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -431,6 +431,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   // the reentry check above.
   if (SIM->get_init_done()) bx_vga.timer_handler(&bx_vga);
 
+#if !BX_EXTERNAL_DEBUGGER
   int val = SIM->log_msg (prefix, level, buf1);
   switch (val)
   {
@@ -472,6 +473,9 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       // in gui/control.cc.
       fprintf (stderr, "WARNING: log_msg returned unexpected value %d\n", val);
   }
+#else
+  // external debugger ask code goes here
+#endif
   in_ask_already = 0;
 }
 
