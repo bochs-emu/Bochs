@@ -46,7 +46,10 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMEN
 APIC_OBJS = @APIC_OBJS@
 EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 
-OBJS = \
+# Objects which are specific to the x86-32 compile and
+# are not used for the x86-64 compile because they have not
+# been synced yet.
+OBJS32 = \
 	init.o \
 	access.o \
 	cpu.o mmx.o resolve32.o fetchdecode.o \
@@ -82,7 +85,6 @@ OBJS = \
 	logical16.o \
 	ctrl_xfer16.o \
 	stack16.o \
-	shift16.o \
 	bit.o \
 	flag_ctrl.o \
 	io.o \
@@ -95,19 +97,34 @@ OBJS = \
 	$(EXT_DEBUG_OBJS) \
 	$(APIC_OBJS)
 
+# Objects which are synced between the cpu and cpu64 code and
+# are used for either compile.
+OBJSXX = \
+	shift16.o \
+	
+
 BX_INCLUDES = ../bochs.h ../config.h
 
 
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
+all: @LIBCPU32_A@ libcpuXX.a
 
-libcpu.a: $(OBJS)
+
+libcpu.a: $(OBJS32)
 	@RMCOMMAND@ libcpu.a
-	@MAKELIB@ $(OBJS)
+	@MAKELIB@ $(OBJS32)
 	$(RANLIB) libcpu.a
 
-$(OBJS): $(BX_INCLUDES)
+libcpuXX.a: $(OBJSXX)
+	@RMCOMMAND@ libcpuXX.a
+	@MAKELIB@ $(OBJSXX)
+	$(RANLIB) libcpuXX.a
+
+$(OBJS32): $(BX_INCLUDES)
+
+$(OBJSXX): $(BX_INCLUDES)
 
 clean:
 	@RMCOMMAND@ *.o
