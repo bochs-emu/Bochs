@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.167 2005-03-27 14:50:38 vruppert Exp $
+$Id: user.dbk,v 1.168 2005-03-28 10:26:14 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1888,19 +1888,8 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
        </entry>
     </row>
     <row>
-      <entry>--with-win32-vcpp</entry>
-      <entry>Use Win32 GUI/Visual C++ environment.  This is for running
-          configure on a platform which supports running configure, so
-          that you may then transfer the configured code over to
-          an MS Win32/Visual C++ environment.  See 
-          <xref linkend="compiling-win32"> for details.
-          </entry>
-    </row>
-    <row>
       <entry>--with-win32</entry>
-      <entry>Use Win32 GUI, but compile with a Win32/gcc
-      environment such as Cygwin.  For Cygwin, see .conf.win32-cygwin
-      for the correct compile options.
+      <entry>Use the native Win32 GUI. This is the default on win32 platforms.
       </entry>
     </row>
     <row>

@@ -5,11 +5,6 @@ set echo
 #export CC=cl
 #export CXX=cl
 
-#./configure --with-win32-vcpp --enable-port-e9-hack
-#./configure --with-win32-vcpp --enable-debugger --enable-disasm --enable-instrumentation="instrument/example0"
-#./configure --with-win32-vcpp --enable-debugger --enable-disasm
-#./configure --with-win32-vcpp --enable-disasm
-
 ./configure --target=pentium-windows \
             --enable-cdrom \
             --enable-sb16 \
