@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.13 2004-08-14 19:34:02 sshwarts Exp $
+// $Id: mult16.cc,v 1.14 2004-08-18 19:27:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,6 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, product_16h, product_16l;
     Bit32u product_32;
-    bx_bool temp_flag;
 
     op1_16 = AX;
 
@@ -48,13 +47,11 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
-    product_32 = ((Bit32u) op1_16) * ((Bit32u) op2_16);
-
+    product_32  = ((Bit32u) op1_16) * ((Bit32u) op2_16);
     product_16l = (product_32 & 0xFFFF);
     product_16h = product_32 >> 16;
 
     /* now write product back to destination */
-
     AX = product_16l;
     DX = product_16h;
 
@@ -62,10 +59,9 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
      * MUL affects the following flags: C,O
      */
 
-    temp_flag = (product_16h != 0);
+    bx_bool temp_flag = (product_16h != 0);
     SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
-
 
   void
 BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
@@ -85,13 +81,11 @@ BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
       }
 
-    product_32 = ((Bit32s) op1_16) * ((Bit32s) op2_16);
-
+    product_32  = ((Bit32s) op1_16) * ((Bit32s) op2_16);
     product_16l = (product_32 & 0xFFFF);
     product_16h = product_32 >> 16;
 
     /* now write product back to destination */
-
     AX = product_16l;
     DX = product_16h;
 
@@ -112,7 +106,6 @@ BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
       }
 }
 
-
   void
 BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
 {
@@ -130,16 +123,15 @@ BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
-    if (op2_16 == 0) {
+    if (op2_16 == 0)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
-    quotient_32 = op1_32 / op2_16;
+
+    quotient_32  = op1_32 / op2_16;
     remainder_16 = op1_32 % op2_16;
     quotient_16l = quotient_32 & 0xFFFF;
 
-    if (quotient_32 != quotient_16l) {
+    if (quotient_32 != quotient_16l)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
 
     /* set EFLAGS:
      * DIV affects the following flags: O,S,Z,A,P,C are undefined
@@ -172,16 +164,19 @@ BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
       }
 
-    if (op2_16 == 0) {
+    if (op2_16 == 0)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
-    quotient_32 = op1_32 / op2_16;
+
+    /* check MIN_INT divided by -1 case */
+    if (op1_32 == BX_MIN_BIT32S && op2_16 == -1)
+      exception(BX_DE_EXCEPTION, 0, 0);
+
+    quotient_32  = op1_32 / op2_16;
     remainder_16 = op1_32 % op2_16;
     quotient_16l = quotient_32 & 0xFFFF;
 
-    if (quotient_32 != quotient_16l) {
+    if (quotient_32 != quotient_16l)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
 
     /* set EFLAGS:
      * IDIV affects the following flags: O,S,Z,A,P,C are undefined
@@ -195,7 +190,6 @@ BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
     AX = quotient_16l;
     DX = remainder_16;
 }
-
 
   void
 BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
@@ -215,7 +209,7 @@ BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
       }
 
-    product_32 = op2_16 * op3_16;
+    product_32  = op2_16 * op3_16;
     product_16l = (product_32 & 0xFFFF);
 
     /* now write product back to destination */
@@ -253,7 +247,7 @@ BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
 
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-    product_32 = op1_16 * op2_16;
+    product_32  = op1_16 * op2_16;
     product_16l = (product_32 & 0xFFFF);
 
     /* now write product back to destination */

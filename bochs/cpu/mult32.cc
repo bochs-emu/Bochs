@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.13 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: mult32.cc,v 1.14 2004-08-18 19:27:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,6 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
 {
     Bit32u op1_32, op2_32, product_32h, product_32l;
     Bit64u product_64;
-    bx_bool temp_flag;
 
     op1_32 = EAX;
 
@@ -55,13 +54,11 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
       read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
-    product_64 = ((Bit64u) op1_32) * ((Bit64u) op2_32);
-
+    product_64  = ((Bit64u) op1_32) * ((Bit64u) op2_32);
     product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
     product_32h = (Bit32u) (product_64 >> 32);
 
     /* now write product back to destination */
-
     RAX = product_32l;
     RDX = product_32h;
 
@@ -69,10 +66,9 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
      * MUL affects the following flags: C,O
      */
 
-    temp_flag = (product_32h != 0);
+    bx_bool temp_flag = (product_32h != 0);
     SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
-
 
   void
 BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
@@ -92,13 +88,11 @@ BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
       read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
       }
 
-    product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
-
+    product_64  = ((Bit64s) op1_32) * ((Bit64s) op2_32);
     product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
     product_32h = (Bit32u) (product_64 >> 32);
 
     /* now write product back to destination */
-
     RAX = product_32l;
     RDX = product_32h;
 
@@ -118,7 +112,6 @@ BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
       SET_FLAGS_OxxxxC(1, 1);
       }
 }
-
 
   void
 BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
@@ -141,7 +134,7 @@ BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
       exception(BX_DE_EXCEPTION, 0, 0);
     }
 
-    quotient_64 = op1_64 / op2_32;
+    quotient_64  = op1_64 / op2_32;
     remainder_32 = (Bit32u) (op1_64 % op2_32);
     quotient_32l = (Bit32u) (quotient_64 & 0xFFFFFFFF);
 
@@ -158,7 +151,6 @@ BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
     RAX = quotient_32l;
     RDX = remainder_32;
 }
-
 
   void
 BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
@@ -177,11 +169,14 @@ BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
       read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
       }
 
-    if (op2_32 == 0) {
+    if (op2_32 == 0)
       exception(BX_DE_EXCEPTION, 0, 0);
-    }
 
-    quotient_64 = op1_64 / op2_32;
+    /* check MIN_INT divided by -1 case */
+    if (op1_64 == BX_MIN_BIT64S && op2_32 == -1)
+      exception(BX_DE_EXCEPTION, 0, 0);
+
+    quotient_64  = op1_64 / op2_32;
     remainder_32 = (Bit32s) (op1_64 % op2_32);
     quotient_32l = (Bit32s) (quotient_64 & 0xFFFFFFFF);
 
@@ -198,7 +193,6 @@ BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
     RAX = quotient_32l;
     RDX = remainder_32;
 }
-
 
   void
 BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)

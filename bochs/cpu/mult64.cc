@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.9 2004-04-07 19:46:13 sshwarts Exp $
+// $Id: mult64.cc,v 1.10 2004-08-18 19:27:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,7 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -110,12 +109,9 @@ void long_shr(Bit128u *a)
 
 unsigned long_sub(Bit128u *a,Bit128u *b)
 {
-  Bit64u t;
-  int c;
-
-  t = a->lo;
+  Bit64u t = a->lo;
   a->lo -= b->lo;
-  c = (a->lo > t);
+  int c = (a->lo > t);
   t = a -> hi;
   a->hi -= b->hi + c;
   return(a->hi > t);
@@ -214,8 +210,7 @@ BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 {
     Bit64u op1_64, op2_64;
     Bit128u product_128;
-    bx_bool temp_flag;
-
+  
     op1_64 = RAX;
 
     /* op2 is a register or memory reference */
@@ -241,7 +236,7 @@ BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
      * MUL affects the following flags: C,O
      */
 
-    temp_flag = (product_128.hi != 0);
+    bx_bool temp_flag = (product_128.hi != 0);
     SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
 
@@ -289,7 +284,6 @@ BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
       }
 }
 
-
   void
 BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
 {
@@ -330,7 +324,6 @@ BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
     RDX = remainder_64;
 }
 
-
   void
 BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
 {
@@ -352,6 +345,13 @@ BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
     if (op2_64 == 0)
       exception(BX_DE_EXCEPTION, 0, 0);
 
+    /* check MIN_INT divided by -1 case */
+    if (op2_64 == -1)
+    {
+      if ((op1_128.ho == BX_CONT64(0x8000000000000000)) && (!op1_128.lo))
+        exception(BX_DE_EXCEPTION, 0, 0);
+    }
+
     // quotient_128 = op1_128 / op2_64;
     // remainder_64 = (Bit64s) (op1_128 % op2_64);
     // quotient_64l = (Bit64s) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
@@ -370,7 +370,6 @@ BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
     RAX = quotient_64l;
     RDX = remainder_64;
 }
-
 
   void
 BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
