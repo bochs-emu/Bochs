@@ -183,7 +183,7 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
 
-tar:
+tar: dist-clean
 	(NAME=`pwd | sed -e 's/.*\///'`; cd ..; $(TAR) cf - $$NAME | $(GZIP) > $$NAME.tar.gz; cd $$NAME; ls -l ../$$NAME.tar.gz)
 
 clean:
