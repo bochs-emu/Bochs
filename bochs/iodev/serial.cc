@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.20 2002-05-31 06:54:34 vruppert Exp $
+// $Id: serial.cc,v 1.21 2002-06-04 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -81,7 +81,8 @@ bx_serial_c::bx_serial_c(void)
 bx_serial_c::~bx_serial_c(void)
 {
 #ifdef SERIAL_ENABLE
-  tcsetattr(tty_id, TCSAFLUSH, &term_orig);
+  if (bx_options.com1.Opresent->get ())
+    tcsetattr(tty_id, TCSAFLUSH, &term_orig);
 #endif
   // nothing for now
 }
