@@ -844,6 +844,7 @@ Optional Features:
   --enable-slowdown                 use Greg Alexander's slowdown timer
   --enable-idle-hack                 use Roland Mainz's idle hack
   --enable-processors               select number of processors (1,2,4)
+  --enable-x86-64                   compile in support for x86-64 instructions
   --enable-cpu-level                select cpu level (3,4,5,6)
   --enable-dynamic                  enable dynamic translation support
   --enable-apic                     enable APIC support
@@ -852,7 +853,6 @@ Optional Features:
   --enable-pci                      enable limited i440FX PCI support
   --enable-port-e9-hack             writes to port e9 go to console
   --enable-cpp                      use .cpp as C++ suffix
-  --enable-x86-64                   compile in support for x86-64 instructions
   --enable-debugger                 compile in support for Bochs internal debugger
   --enable-external-debugger        enable external debugger support
   --enable-disasm                   compile in support for disassembler
@@ -8106,6 +8106,45 @@ _ACEOF
 fi
 rm -f conftest.$ac_objext conftest.$ac_ext
 
+use_x86_64=0
+echo "$as_me:$LINENO: checking for x86-64 support" >&5
+echo $ECHO_N "checking for x86-64 support... $ECHO_C" >&6
+# Check whether --enable-x86-64 or --disable-x86-64 was given.
+if test "${enable_x86_64+set}" = set; then
+  enableval="$enable_x86_64"
+  if test "$enableval" = yes; then
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    CPUDIR=cpu64
+    cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_X86_64 1
+_ACEOF
+
+    use_x86_64=1
+   else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    CPUDIR=cpu
+    cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_X86_64 0
+_ACEOF
+
+   fi
+
+else
+
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    CPUDIR=cpu
+    cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_X86_64 0
+_ACEOF
+
+
+
+fi;
+
+
 echo "$as_me:$LINENO: checking for cpu level" >&5
 echo $ECHO_N "checking for cpu level... $ECHO_C" >&6
 # Check whether --enable-cpu-level or --disable-cpu-level was given.
@@ -8175,7 +8214,7 @@ _ACEOF
 else
 
     # for multiprocessors, cpu level must be 6
-    if test "$bx_procs" -gt 1; then
+    if test "$bx_procs" -gt 1 -o "$use_x86_64" = 1; then
       echo "$as_me:$LINENO: result: 6" >&5
 echo "${ECHO_T}6" >&6
       cat >>confdefs.h <<\_ACEOF
@@ -8786,43 +8825,6 @@ if test "$enable_cpp" = yes; then
     echo "no more .cc source files to rename"
   fi
 fi
-
-
-echo "$as_me:$LINENO: checking for x86-64 support" >&5
-echo $ECHO_N "checking for x86-64 support... $ECHO_C" >&6
-# Check whether --enable-x86-64 or --disable-x86-64 was given.
-if test "${enable_x86_64+set}" = set; then
-  enableval="$enable_x86_64"
-  if test "$enableval" = yes; then
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    CPUDIR=cpu64
-    cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_X86_64 1
-_ACEOF
-
-   else
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    CPUDIR=cpu
-    cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_X86_64 0
-_ACEOF
-
-   fi
-
-else
-
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    CPUDIR=cpu
-    cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_X86_64 0
-_ACEOF
-
-
-
-fi;
 
 
 
@@ -11138,6 +11140,7 @@ s,@BX_USE_NEW_PIT@,$BX_USE_NEW_PIT,;t t
 s,@BX_USE_SLOWDOWN_TIMER@,$BX_USE_SLOWDOWN_TIMER,;t t
 s,@SLOWDOWN_OBJS@,$SLOWDOWN_OBJS,;t t
 s,@BX_USE_IDLE_HACK@,$BX_USE_IDLE_HACK,;t t
+s,@CPUDIR@,$CPUDIR,;t t
 s,@DYNAMIC_VAR@,$DYNAMIC_VAR,;t t
 s,@AS_DYNAMIC_OBJS@,$AS_DYNAMIC_OBJS,;t t
 s,@AS_DYNAMIC_INCS@,$AS_DYNAMIC_INCS,;t t
@@ -11148,7 +11151,6 @@ s,@NE2K_OBJS@,$NE2K_OBJS,;t t
 s,@PCI_OBJ@,$PCI_OBJ,;t t
 s,@SUFFIX_LINE@,$SUFFIX_LINE,;t t
 s,@CPP_SUFFIX@,$CPP_SUFFIX,;t t
-s,@CPUDIR@,$CPUDIR,;t t
 s,@DEBUGGER_VAR@,$DEBUGGER_VAR,;t t
 s,@BX_EXTERNAL_DEBUGGER@,$BX_EXTERNAL_DEBUGGER,;t t
 s,@DISASM_VAR@,$DISASM_VAR,;t t
