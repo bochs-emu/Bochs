@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.30 2003-08-24 10:30:07 cbothamy Exp $
+// $Id: debugstuff.cc,v 1.31 2003-12-24 20:32:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -151,6 +151,8 @@ BX_CPU_C::debug(Bit32u offset)
   Bit8u   instr_buf[32];
   char    char_buf[256];
   unsigned isize;
+
+  static disassembler bx_disassemble;
 
   if (BX_CPU_THIS_PTR protectedMode) { // 16bit & 32bit protected mode
    Base=BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base;

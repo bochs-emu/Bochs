@@ -1,912 +1,358 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.10 2003-08-04 16:03:09 akrisak Exp $
-/////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+#include <stdio.h>
+#include <assert.h>
+#include "disasm.h"
 
+//////////////////
+// Intel STYLE
+//////////////////
 
+static const char *general_8bit_reg_name[8] = {
+    "al",  "cl",  "dl",  "bl",  "ah",  "ch",  "dh",  "bh"
+};
 
-#include "bochs.h"
-#if BX_DISASM
+const char *general_16bit_reg_name[8] = {
+    "ax",  "cx",  "dx",  "bx",  "sp",  "bp",  "si",  "di"
+};
 
+const char *general_32bit_reg_name[8] = {
+    "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi"
+};
 
+static const char *segment_name[8] = {
+    "es",  "cs",  "ss",  "ds",  "fs",  "gs",  "??",  "??"
+};
 
-// Floating point stuff
-  void
-bx_disassemble_c::ST_STi(void) {dis_sprintf("*** ST_STi() unfinished ***");}
-  void
-bx_disassemble_c::STi_ST(void) {dis_sprintf("*** STi_ST() unfinished ***");}
-  void
-bx_disassemble_c::STi(void) {dis_sprintf("*** STi() unfinished ***");}
+static const char *mmx_reg_name[8] = {
+    "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7"
+};
 
-
-// Debug, Test, and Control Register stuff
-  void
-bx_disassemble_c::RdDd(void)
+static const char *xmm_reg_name[8] = 
 {
-  Bit8u mod_rm_byte, mod, opcode, rm;
-  mod_rm_byte = fetch_byte();
-  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
-  // only reg32 operand is valid
-  if (mod != 0x3) {
-    dis_sprintf("Invalid Opcode");
-    }
-  else {
-    dis_sprintf("%s, DR%u", general_32bit_reg_name[rm], opcode);
-    }
-}
+    "xmm0", 
+    "xmm1", 
+    "xmm2", 
+    "xmm3", 
+    "xmm4", 
+    "xmm5", 
+    "xmm6", 
+    "xmm7"
+};
 
-  void
-bx_disassemble_c::DdRd(void)
+void disassembler::reg32 (unsigned attr)
 {
-  Bit8u mod_rm_byte, mod, opcode, rm;
-  mod_rm_byte = fetch_byte();
-  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
-  // only reg32 operand is valid
-  if (mod != 0x3) {
-    dis_sprintf("Invalid Opcode");
-    }
-  else {
-    dis_sprintf("DR%u, %s", opcode, general_32bit_reg_name[rm]);
-    }
-}
+  assert(attr < 8);
 
-  void
-bx_disassemble_c::RdCd(void)
-{
-  Bit8u modrm;
-  modrm = fetch_byte();
-  if ( (modrm >> 6) != 3 ) {
-    dis_sprintf("Invalid Opcode");
-    }
-  else {
-    dis_sprintf("%s, CR%u",
-      general_32bit_reg_name[modrm&0x7],
-      (modrm>>3)&0x7
-      );
-    }
-}
-
-  void
-bx_disassemble_c::CdRd(void)
-{
-  Bit8u modrm;
-  modrm = fetch_byte();
-  if ( (modrm >> 6) != 3 ) {
-    dis_sprintf("Invalid Opcode");
-    }
-  else {
-    dis_sprintf("CR%u, %s",
-      (modrm>>3)&0x7,
-      general_32bit_reg_name[modrm&0x7]
-      );
-    }
-}
-
-  void
-bx_disassemble_c::RdTd(void)
-{
-  Bit8u mod_rm_byte, mod, opcode, rm;
-  mod_rm_byte = fetch_byte();
-  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
-  // only reg32 operand is valid and tr3 or above
-  if (mod != 0x3 || opcode < 3) {
-    dis_sprintf("Invalid Opcode");
-    }
-  else {
-    dis_sprintf("TR%u, %s", opcode, general_32bit_reg_name[rm]);
-    }
-}
-
-  void
-bx_disassemble_c::TdRd(void)
-{
-  Bit8u mod_rm_byte, mod, opcode, rm;
-  mod_rm_byte = fetch_byte();
-  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
-  // only reg32 operand is valid and tr3 or above
-  if (mod != 0x3 || opcode < 3) {
-    dis_sprintf("Invalid Opcode");
-    }
-  else {
-    dis_sprintf("%s, TR%u", general_32bit_reg_name[rm], opcode);
-    }
-}
-
-
-  void
-bx_disassemble_c::Ms(void)
-{
-  Bit8u mod_rm_byte, mod, opcode, rm;
-  mod_rm_byte = peek_byte();
-  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
-  // only memory operand is valid
-  if (mod == 0x3) {
-    dis_sprintf("Invalid Opcode");
-    fetch_byte();
-    }
-  else {
-    decode_exgx(BX_NO_REG_TYPE, BX_NO_REG_TYPE);
-    }
-}
-
-  void
-bx_disassemble_c::Mp(void)
-{
-    GvMp();
-}
-
-  void
-bx_disassemble_c::Mq(void)
-{
- Ms();
-}
-
-void
-bx_disassemble_c::Mb(void)
-{
- Ms();
-}
-
-  void
-bx_disassemble_c::GvMa(void)
-{
-  Bit8u mod_rm_byte, mod, opcode, rm;
-  mod_rm_byte = peek_byte();
-  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
-  // only memory operand is valid
-  if (mod == 0x3) {
-    dis_sprintf("Invalid Opcode");
-    fetch_byte();
-    }
-  else {
-    if (db_32bit_opsize) {
-      decode_gxex(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
-      }
-    else {
-      decode_gxex(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
-      }
-    }
-}
-
-  void
-bx_disassemble_c::EwRw(void)
-{
-  decode_exgx(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
-}
-
-// Other un-implemented operand signatures
-  void
-bx_disassemble_c::XBTS(void) {dis_sprintf("*** XBTS() unfinished ***");}
-  void
-bx_disassemble_c::IBTS(void) {dis_sprintf("*** IBTS() unfinished ***");}
-/*
-  void
-bx_disassemble_c::YbDX(void) {dis_sprintf("*** YbDX() unfinished ***");}
-  void
-bx_disassemble_c::YvDX(void) {dis_sprintf("*** YvDX() unfinished ***");}
-  void
-bx_disassemble_c::DXXb(void) {dis_sprintf("*** DXXb() unfinished ***");}
-  void
-bx_disassemble_c::DXXv(void) {dis_sprintf("*** DXXv() unfinished ***");}
-*/
-
-  void
-bx_disassemble_c::ALOb(void)
-{
-  char *seg;
-
-  if (seg_override)
-    seg = seg_override;
+  if (i32bit_opsize)
+    dis_sprintf("%s", general_32bit_reg_name[attr]);
   else
-    seg = "DS";
-
-  if (db_32bit_addrsize) {
-    Bit32u imm32;
-
-    imm32 = fetch_dword();
-    dis_sprintf("AL, [%s:%08x]", seg, (unsigned) imm32);
-    }
-  else {
-    Bit16u imm16;
-
-    imm16 = fetch_word();
-    dis_sprintf("AL, [%s:%04x]", seg, (unsigned) imm16);
-    }
+    dis_sprintf("%s", general_16bit_reg_name[attr]);
 }
 
-  void
-bx_disassemble_c::eAXOv(void)
+void disassembler::reg16 (unsigned attr)
 {
-  char *seg;
-
-  if (seg_override)
-    seg = seg_override;
-  else
-    seg = "DS";
-
-  if (db_32bit_opsize) {
-    dis_sprintf("EAX, ");
-    }
-  else {
-    dis_sprintf("AX, ");
-    }
-
-  if (db_32bit_addrsize) {
-    Bit32u imm32;
-
-    imm32 = fetch_dword();
-    dis_sprintf("[%s:%08x]", seg, (unsigned) imm32);
-    }
-  else {
-    Bit16u imm16;
-
-    imm16 = fetch_word();
-    dis_sprintf("[%s:%04x]", seg, (unsigned) imm16);
-    }
+  assert(attr < 8);
+  dis_sprintf("%s", general_16bit_reg_name[attr]);
 }
 
-  void
-bx_disassemble_c::OveAX(void)
+void disassembler::reg8 (unsigned attr)
 {
-  char *seg;
-
-  if (seg_override)
-    seg = seg_override;
-  else
-    seg = "DS";
-
-  if (db_32bit_addrsize) {
-    Bit32u imm32;
-
-    imm32 = fetch_dword();
-    dis_sprintf("[%s:%08x], ", seg, (unsigned) imm32);
-    }
-  else {
-    Bit16u imm16;
-
-    imm16 = fetch_word();
-    dis_sprintf("[%s:%04x], ", seg, (unsigned) imm16);
-    }
-
-  if (db_32bit_opsize) {
-    dis_sprintf("EAX");
-    }
-  else {
-    dis_sprintf("AX");
-    }
+  assert(attr < 8);
+  dis_sprintf("%s", general_8bit_reg_name[attr]);
 }
 
-
-
-  void
-bx_disassemble_c::XvYv(void)
+void disassembler::OP_SEG (unsigned attr)
 {
-  char *esi, *edi;
-  char *seg;
-
-  if (seg_override)
-    seg = seg_override;
-  else
-    seg = "DS";
-
-  if (db_32bit_addrsize) {
-    esi = "ESI";
-    edi = "EDI";
-    }
-  else {
-    esi = "SI";
-    edi = "DI";
-    }
-
-  dis_sprintf("ES:[%s], %s:[%s]", edi, seg, esi);
+  assert(attr < 8);
+  dis_sprintf("%s", segment_name[attr]);
 }
 
-  void
-bx_disassemble_c::ObAL(void) 
+void disassembler::OP_MEM (unsigned attr)
 {
-  char *seg;
-
-  if (seg_override)
-    seg = seg_override;
-  else
-    seg = "DS";
-
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize)
-  {
-    Bit32u imm32;
-    imm32 = fetch_dword();
-    dis_sprintf("[%s:%08x], AL", seg, imm32);
-  }
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-  {
-    Bit16u imm16;
-    imm16 = fetch_word();
-    dis_sprintf("[%s:%04x], AL", seg, imm16);
-  }
+ if(mod == 3)
+    dis_sprintf("(bad)");
+ else
+    (this->*resolve_modrm)(attr);
 }
 
-  void
-bx_disassemble_c::YbAL(void)
+void disassembler::OP_Q (unsigned attr)
 {
-  char *edi;
-
-  if (db_32bit_addrsize) {
-    edi = "EDI";
-    }
-  else {
-    edi = "DI";
-    }
-
-  dis_sprintf("ES:[%s], AL", edi);
+  if (mod == 3)
+    dis_sprintf("%s", mmx_reg_name[rm]);
+  else
+    (this->*resolve_modrm)(attr);
 }
 
-  void
-bx_disassemble_c::ALXb(void)
+void disassembler::OP_W (unsigned attr)
+{
+  if (mod == 3)
+    dis_sprintf("%s", xmm_reg_name[rm]);
+  else
+    (this->*resolve_modrm)(attr);
+}
+
+void disassembler::OP_V (unsigned attr)
+{
+  dis_sprintf("%s", xmm_reg_name[nnn]);
+}
+
+void disassembler::OP_P (unsigned attr)
+{
+  dis_sprintf("%s", mmx_reg_name[nnn]);
+}
+
+void disassembler::OP_X (unsigned attr)
 {
   char *esi;
 
-  if (db_32bit_addrsize) {
-    esi = "ESI";
+  if (i32bit_addrsize)
+    esi = "esi";
+  else
+    esi = "si";
+  
+  if (attr & 0x80)
+    dis_sprintf("es:");
+
+  print_datasize(attr & 0x7F);
+
+  dis_sprintf("[%s]", esi);
+}
+
+void disassembler::OP_Y (unsigned attr)
+{
+  char *edi;
+
+  if (i32bit_addrsize)
+    edi = "edi";
+  else
+    edi = "di";
+  
+  if (attr & 0x80)
+    dis_sprintf("es:");
+
+  print_datasize(attr & 0x7F);
+
+  dis_sprintf("[%s]", edi);
+}
+
+void disassembler::Ob (unsigned attr)
+{
+  const char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = "ds";
+
+  if (i32bit_addrsize) {
+    Bit32u imm32 = fetch_dword();
+    dis_sprintf("byte ptr [%s:0x%x]", seg, (unsigned) imm32);
     }
   else {
-    esi = "SI";
+    Bit16u imm16 = fetch_word();
+    dis_sprintf("byte ptr [%s:0x%x]", seg, (unsigned) imm16);
     }
-
-  dis_sprintf("AL, [%s]", esi);
 }
 
-  void
-bx_disassemble_c::eAXXv(void)
+void disassembler::Ov (unsigned attr)
 {
-  char *eax, *esi;
+  const char *seg;
 
-  if (db_32bit_opsize) {
-    eax = "EAX";
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = "ds";
+
+  if (i32bit_addrsize) {
+    Bit32u imm32 = fetch_dword();
+    dis_sprintf("[%s:0x%x]", seg, (unsigned) imm32);
     }
   else {
-    eax = "AX";
-    }
-
-  if (db_32bit_addrsize) {
-    esi = "ESI";
-    }
-  else {
-    esi = "SI";
-    }
-
-  dis_sprintf("%s, [%s]", eax, esi);
-}
- 
-  void
-bx_disassemble_c::Es(void) {dis_sprintf("*** Es() unfinished ***");}
-  void
-bx_disassemble_c::Ea(void) {dis_sprintf("*** Ea() unfinished ***");}
-  void
-bx_disassemble_c::Et(void) {dis_sprintf("*** Et() unfinished ***");}
-  void
-bx_disassemble_c::Ed(void) {dis_sprintf("*** Ed() unfinished ***");}
-  void
-bx_disassemble_c::El(void) {dis_sprintf("*** El() unfinished ***");}
-  void
-bx_disassemble_c::Eq(void) {dis_sprintf("*** Eq() unfinished ***");}
-
-  void
-bx_disassemble_c::GvEb(void)
-{
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize)
-    decode_gxex(BX_GENERAL_32BIT_REG, BX_GENERAL_8BIT_REG);
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_8BIT_REG);
-}
-
-  void
-bx_disassemble_c::Eb(void)
-{
-  decode_exgx(BX_GENERAL_8BIT_REG, BX_NO_REG_TYPE);
-}
-
-  void
-bx_disassemble_c::Eb1(void)
-{
-  decode_exgx(BX_GENERAL_8BIT_REG, BX_NO_REG_TYPE);
-  dis_sprintf(", 1");
-}
-
-  void
-bx_disassemble_c::Ev1(void)
-{
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize)
-    decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
-  dis_sprintf(", 1");
-}
-
-
-
-  void
-bx_disassemble_c::Iw(void)
-{
-  Bit16u imm16;
-
-  imm16 = fetch_word();
-  dis_sprintf("%04x", (unsigned) imm16);
-}
-
-
-
-  void
-bx_disassemble_c::EbGb(void)
-{
-  decode_exgx(BX_GENERAL_8BIT_REG, BX_GENERAL_8BIT_REG);
-}
-
-  void
-bx_disassemble_c::EvGv(void)
-{
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize)
-    decode_exgx(BX_GENERAL_32BIT_REG, BX_GENERAL_32BIT_REG);
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_exgx(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
-}
-
-  void
-bx_disassemble_c::GbEb(void)
-{
-  decode_gxex(BX_GENERAL_8BIT_REG, BX_GENERAL_8BIT_REG);
-}
-
-  void
-bx_disassemble_c::GvEv(void)
-{
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize)
-    decode_gxex(BX_GENERAL_32BIT_REG, BX_GENERAL_32BIT_REG);
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
-}
-
-
-  void
-bx_disassemble_c::Ew(void)
-{
-  decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
-}
-
-  void
-bx_disassemble_c::GvEw(void)
-{
-  if (db_32bit_opsize)
-    decode_gxex(BX_GENERAL_32BIT_REG, BX_GENERAL_16BIT_REG);
-  else
-    decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
-}
-
-
-  void
-bx_disassemble_c::Jv(void)
-{
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
-    Bit32s imm32; /* JMP rel32 is signed */
-
-    imm32 = (Bit32s) fetch_dword();
-#if BX_DEBUGGER
-    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm32 + db_eip), db_base);
-    if(Sym) {
-      dis_sprintf("%s", Sym);
-    }
-    else // Symbol not found
-#endif
-    dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
-    }
-  else
-#endif
-    {
-    Bit16s imm16; /* JMP rel16 is signed */
-
-    imm16 = (Bit16s) fetch_word();
-#if BX_DEBUGGER
-    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm16 + db_eip) & 0xFFFF), db_base);
-    if(Sym) {
-      dis_sprintf("%s", Sym);
-    }
-    else // Symbol not found
-#endif
-    dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
+    Bit16u imm16 = fetch_word();
+    dis_sprintf("[%s:0x%x]", seg, (unsigned) imm16);
     }
 }
 
-
-  void
-bx_disassemble_c::EvIb(void)
-{
-  Bit8u imm8;
-
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
-    decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
-    imm8 = fetch_byte();
-    dis_sprintf(", %02x", (unsigned) imm8);
-    }
-  else {
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
-    imm8 = fetch_byte();
-    dis_sprintf(", %02x", (unsigned) imm8);
-#if BX_CPU_LEVEL > 2
-    }
-#endif /* BX_CPU_LEVEL > 2 */
-}
-
-
-  void
-bx_disassemble_c::Iv(void)
-{
-  if (db_32bit_opsize) {
-    Bit32u imm32;
-
-    imm32 = fetch_dword();
-    dis_sprintf("%08x", (unsigned) imm32);
-    }
-  else {
-    Bit16u imm16;
-
-    imm16 = fetch_word();
-    dis_sprintf("%04x", (unsigned) imm16);
-    }
-}
-
-
-  void
-bx_disassemble_c::Ib(void)
-{
-  Bit8u imm8;
-
-  imm8 = fetch_byte();
-  dis_sprintf("%02x", imm8);
-}
-
-
-  void
-bx_disassemble_c::Jb(void)
+void disassembler::Jb (unsigned attr)
 {
   Bit8s imm8; /* JMP rel8 is signed */
-
   imm8 = (Bit8s) fetch_byte();
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
+  if (i32bit_opsize) {
 #if BX_DEBUGGER
-    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm8 + db_eip), db_base);
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm8+db_eip), db_base);
     if(Sym) {
       dis_sprintf("%s", Sym);
     }
     else // Symbol not found
 #endif
-    dis_sprintf("%08x", (unsigned) (imm8 + db_eip));
+    dis_sprintf("0x%x", (unsigned) (imm8+db_eip));
     }
   else
-#endif
   {
 #if BX_DEBUGGER
-    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm8 + db_eip) & 0xFFFF), db_base);
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm8+db_eip) & 0xFFFF), db_base);
     if(Sym) {
       dis_sprintf("%s", Sym);
     }
     else // Symbol not found
  #endif
-    dis_sprintf("%04x", (unsigned) ((imm8 + db_eip) & 0xFFFF));
+    dis_sprintf("0x%x", (unsigned) ((imm8+db_eip) & 0xFFFF));
   }
 }
 
-  void
-bx_disassemble_c::EbIb(void)
+void disassembler::Jv (unsigned attr)
 {
-  Bit8u imm8;
-
-  decode_exgx(BX_GENERAL_8BIT_REG, BX_NO_REG_TYPE);
-  imm8 = fetch_byte();
-  dis_sprintf(", %02x", (unsigned) imm8);
-}
-
-  void
-bx_disassemble_c::EvIv(void)
-{
-  Bit16u imm16;
-
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
-    Bit32u imm32;
-
-    decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
-    imm32 = fetch_dword();
-    dis_sprintf(", %08x", (unsigned) imm32);
+  if (i32bit_opsize) {
+    Bit32s imm32; /* JMP rel32 is signed */
+    imm32 = (Bit32s) fetch_dword();
+#if BX_DEBUGGER
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm32+db_eip), db_base);
+    if(Sym) {
+      dis_sprintf("%s", Sym);
     }
-  else {
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
-    imm16 = fetch_word();
-    dis_sprintf(", %04x", (unsigned) imm16);
-#if BX_CPU_LEVEL > 2
-    }
-#endif /* BX_CPU_LEVEL > 2 */
-}
-
-  void
-bx_disassemble_c::EwSw(void)
-{
-  decode_exgx(BX_GENERAL_16BIT_REG, BX_SEGMENT_REG);
-}
-
-  void
-bx_disassemble_c::GvM(void)
-{
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize)
-    decode_gxex(BX_GENERAL_32BIT_REG, BX_GENERAL_32BIT_REG);
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
-}
-
-  void
-bx_disassemble_c::SwEw(void)
-{
-  decode_gxex(BX_SEGMENT_REG, BX_GENERAL_16BIT_REG);
-}
-
-  void
-bx_disassemble_c::Ev(void)
-{
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
-    decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
-    }
-  else {
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
-#if BX_CPU_LEVEL > 2
-    }
-#endif /* BX_CPU_LEVEL > 2 */
-}
-
-  void
-bx_disassemble_c::Ap(void)
-{
-
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
-    Bit32u imm32;
-    Bit16u cs_selector;
-
-    imm32 = fetch_dword();
-    cs_selector = fetch_word();
-    dis_sprintf("%04x:%08x", (unsigned) cs_selector, (unsigned) imm32);
+    else // Symbol not found
+#endif
+    dis_sprintf("0x%x", (unsigned) (imm32+db_eip));
     }
   else
-#endif /* BX_CPU_LEVEL > 2 */
     {
-    Bit16u imm16;
-    Bit16u cs_selector;
+    Bit16s imm16; /* JMP rel16 is signed */
+    imm16 = (Bit16s) fetch_word();
+#if BX_DEBUGGER
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm16+db_eip) & 0xFFFF), db_base);
+    if(Sym) {
+      dis_sprintf("%s", Sym);
+    }
+    else // Symbol not found
+#endif
+    dis_sprintf("0x%x", (unsigned) ((imm16+db_eip) & 0xFFFF));
+    }
+}
 
-    imm16 = fetch_word();
-    cs_selector = fetch_word();
+void disassembler::Ap (unsigned attr)
+{
+  if (i32bit_opsize)
+  {
+    Bit32u imm32 = fetch_dword();
+    Bit16u cs_selector = fetch_word();
+    dis_sprintf("%04x:%08x", (unsigned) cs_selector, (unsigned) imm32);
+  }
+  else
+  {
+    Bit16u imm16 = fetch_word();
+    Bit16u cs_selector = fetch_word();
     dis_sprintf("%04x:%04x", (unsigned) cs_selector, (unsigned) imm16);
-    }
+  }
 }
 
-
-  void
-bx_disassemble_c::XbYb(void)
+void disassembler::Eb (unsigned attr) 
 {
-  char *esi, *edi;
-  char *seg;
-
-  if (db_32bit_addrsize) {
-    esi = "ESI";
-    edi = "EDI";
-    }
-  else {
-    esi = "SI";
-    edi = "DI";
-    }
-
-  if (seg_override)
-    seg = seg_override;
+  if (mod == 3)
+    dis_sprintf("%s", general_8bit_reg_name[rm]);
   else
-    seg = "DS";
-
-  dis_sprintf("ES:[%s], %s:[%s]", edi, seg, esi);
+    (this->*resolve_modrm)(B_MODE);
 }
 
-
-  void
-bx_disassemble_c::YveAX(void)
+void disassembler::Ew (unsigned attr) 
 {
-  char *eax, *edi;
-
-  if (db_32bit_opsize)
-    eax = "EAX";
+  if (mod == 3)
+    dis_sprintf("%s", general_16bit_reg_name[rm]);
   else
-    eax = "AX";
-
-  if (db_32bit_addrsize)
-    edi = "EDI";
-  else
-    edi = "DI";
-
-  dis_sprintf("ES:[%s], %s", edi, eax);
+    (this->*resolve_modrm)(W_MODE);
 }
 
-  void
-bx_disassemble_c::GvMp(void)
+void disassembler::Ev (unsigned attr) 
 {
-  Bit8u mod_rm_byte, mod, opcode, rm;
-  mod_rm_byte = peek_byte();
-  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
-  // only memory operand is valid
-  if (mod == 0x3) {
-    dis_sprintf("Invalid Opcode");
-    fetch_byte();
-    }
-  else {
-#if BX_CPU_LEVEL > 2
-    if (db_32bit_opsize)
-      decode_gxex(BX_GENERAL_32BIT_REG, BX_GENERAL_32BIT_REG);
+  if (mod == 3)
+  {
+    if (i32bit_opsize)
+      dis_sprintf("%s", general_32bit_reg_name[rm]);
     else
-#endif /* BX_CPU_LEVEL > 2 */
-      decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_16BIT_REG);
-    }
+      dis_sprintf("%s", general_16bit_reg_name[rm]);
+  }
+  else
+    (this->*resolve_modrm)(V_MODE);
 }
 
-  void
-bx_disassemble_c::eAXEv(void)
+void disassembler::Ed (unsigned attr) 
 {
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
-    dis_sprintf("EAX, ");
-    decode_gxex(BX_NO_REG_TYPE, BX_GENERAL_32BIT_REG);
-    }
-  else {
-#endif /* BX_CPU_LEVEL > 2 */
-    dis_sprintf("AX, ");
-    decode_gxex(BX_NO_REG_TYPE, BX_GENERAL_16BIT_REG);
-#if BX_CPU_LEVEL > 2
-    }
-#endif /* BX_CPU_LEVEL > 2 */
+  if (mod == 3)
+    dis_sprintf("%s", general_32bit_reg_name[rm]);
+  else
+    (this->*resolve_modrm)(D_MODE);
 }
 
-  void
-bx_disassemble_c::Ep(void)
+void disassembler::Ep (unsigned attr) {dis_sprintf("*** Ep unfinished ***");}
+void disassembler::Ea (unsigned attr) {dis_sprintf("*** Ea unfinished ***");}
+
+void disassembler::Gb (unsigned attr) 
 {
-#if BX_CPU_LEVEL > 2
-  if (db_32bit_opsize) {
-    decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
-    }
-  else {
-#endif /* BX_CPU_LEVEL > 2 */
-    decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
-#if BX_CPU_LEVEL > 2
-    }
-#endif /* BX_CPU_LEVEL > 2 */
+  dis_sprintf("%s", general_8bit_reg_name[nnn]);
 }
 
-  void
-bx_disassemble_c::eAX(void)
+void disassembler::Gv (unsigned attr) 
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("EAX");
-    }
-  else {
-    dis_sprintf("AX");
-    }
+  if (i32bit_opsize)
+    dis_sprintf("%s", general_32bit_reg_name[nnn]);
+  else
+    dis_sprintf("%s", general_16bit_reg_name[nnn]);
 }
 
-  void
-bx_disassemble_c::eCX(void)
+void disassembler::Gd (unsigned attr) 
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("ECX");
-    }
-  else {
-    dis_sprintf("CX");
-    }
+  dis_sprintf("%s", general_32bit_reg_name[nnn]);
 }
 
-  void
-bx_disassemble_c::eDX(void)
+void disassembler::Rd (unsigned attr)
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("EDX");
-    }
-  else {
-    dis_sprintf("DX");
-    }
+    dis_sprintf("%s", general_32bit_reg_name[rm]);
 }
 
-  void
-bx_disassemble_c::eBX(void)
+void disassembler::Rw (unsigned attr)
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("EBX");
-    }
-  else {
-    dis_sprintf("BX");
-    }
+    dis_sprintf("%s", general_16bit_reg_name[rm]);
 }
 
-  void
-bx_disassemble_c::eSP(void)
+void disassembler::Sw (unsigned attr) 
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("ESP");
-    }
-  else {
-    dis_sprintf("SP");
-    }
+  dis_sprintf("%s", segment_name[nnn]);
 }
 
-  void
-bx_disassemble_c::eBP(void)
+void disassembler::Ib (unsigned attr) 
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("EBP");
-    }
-  else {
-    dis_sprintf("BP");
-    }
+  dis_sprintf("0x%x", (unsigned) fetch_byte());
 }
 
-  void
-bx_disassemble_c::eSI(void)
+void disassembler::Iw (unsigned attr) 
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("ESI");
-    }
-  else {
-    dis_sprintf("SI");
-    }
+  dis_sprintf("0x%x", (unsigned) fetch_word());
 }
 
-  void
-bx_disassemble_c::eDI(void)
+void disassembler::Id (unsigned attr) 
 {
-  if (db_32bit_opsize) {
-    dis_sprintf("EDI");
-    }
-  else {
-    dis_sprintf("DI");
-    }
+  dis_sprintf("0x%x", (unsigned) fetch_dword());
 }
 
-#endif /* if BX_DISASM */
+void disassembler::Iv (unsigned attr) 
+{
+  if (i32bit_opsize)
+    Id(attr);
+  else
+    Iw(attr);
+}
+
+void disassembler::sIb(unsigned attr) 
+{
+  if (i32bit_opsize)
+  {
+    Bit32u imm32 =  (Bit8s) fetch_byte();
+    dis_sprintf("0x%x", imm32);
+  }
+  else
+  {
+    Bit32u imm16 =  (Bit8s) fetch_byte();
+    dis_sprintf("0x%x", imm16);
+  }
+}
+
+// floating point
+void disassembler::STj (unsigned attr) {dis_sprintf("st(%d)", rm);}
