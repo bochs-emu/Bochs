@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.14 2002-03-17 16:57:07 vruppert Exp $
+// $Id: sdl.cc,v 1.15 2002-03-17 20:56:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,6 +65,7 @@ struct bitmaps {
 static struct {
   unsigned bmp_id;
   unsigned alignment;
+  void (*f)(void);
 } hb_entry[BX_MAX_HEADERBAR_ENTRIES];
 
 unsigned bx_headerbar_entries = 0;
@@ -99,6 +100,7 @@ int n_sdl_bitmaps = 0;
 #define SWAP32(X)    SDL_Swap32(X)
 #endif
 
+static void headerbar_click(int x);
 
 
 void switch_to_windowed(void)
@@ -434,7 +436,10 @@ void bx_gui_c::handle_events(void)
 	  }
 	  sdl_grab = ~sdl_grab;
 	  break;
+	} else if (sdl_event.button.y < headerbar_height) {
+	  headerbar_click(sdl_event.button.x);
 	}
+	break;
       case SDL_MOUSEBUTTONUP:
 	// figure out mouse state
 	new_mousex = (int)(sdl_event.button.x);
@@ -748,6 +753,7 @@ unsigned bx_gui_c::headerbar_bitmap(
 
   hb_entry[hb_index].bmp_id = bmap_id;
   hb_entry[hb_index].alignment = alignment;
+  hb_entry[hb_index].f = f;
   if (alignment == BX_GRAVITY_LEFT) {
     sdl_bitmaps[bmap_id]->dst.x = bx_bitmap_left_xorigin;
     bx_bitmap_left_xorigin += sdl_bitmaps[bmap_id]->src.w;
@@ -764,11 +770,15 @@ void bx_gui_c::replace_bitmap(
     unsigned bmap_id)
 {
   SDL_Rect hb_dst;
+  unsigned old_id;
 
+  old_id = hb_entry[hbar_id].bmp_id;
+  hb_dst = sdl_bitmaps[old_id]->dst;
+  sdl_bitmaps[old_id]->dst.x = -1;
   hb_entry[hbar_id].bmp_id = bmap_id;
+  sdl_bitmaps[bmap_id]->dst.x = hb_dst.x;
   if( sdl_bitmaps[bmap_id]->dst.x != -1 )
   {
-    hb_dst = sdl_bitmaps[bmap_id]->dst;
     if (hb_entry[hbar_id].alignment == BX_GRAVITY_RIGHT) {
       hb_dst.x = res_x - hb_dst.x;
     }
@@ -847,6 +857,23 @@ void bx_gui_c::mouse_enabled_changed_specific (Boolean val)
   BX_INFO (("mouse enabled changed specific"));
 }
 
+
+void headerbar_click(int x)
+{
+  int xdim,xorigin;
+
+  for (unsigned i=0; i<bx_headerbar_entries; i++) {
+    xdim = sdl_bitmaps[hb_entry[i].bmp_id]->src.w;
+    if (hb_entry[i].alignment == BX_GRAVITY_LEFT)
+      xorigin = sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
+    else
+      xorigin = res_x - sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
+    if ( (x>=xorigin) && (x<(xorigin+xdim)) ) {
+      hb_entry[i].f();
+      return;
+      }
+    }
+}
 
 void bx_gui_c::exit(void)
 {
