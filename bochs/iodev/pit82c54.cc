@@ -92,7 +92,7 @@
 	(1*((thisctr.count>>0)&0xF)) +
 	(10*((thisctr.count>>4)&0xF)) +
 	(100*((thisctr.count>>8)&0xF)) +
-	(1000*((thisctr.count>12)&0xF))
+	(1000*((thisctr.count>>12)&0xF))
 	;
     } else {
       thisctr.count_binary=thisctr.count;
