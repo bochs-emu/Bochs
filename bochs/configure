@@ -10310,13 +10310,12 @@ fi
   fi
 fi
 
-if test "$with_rfb" = yes; then
-  # first see if compiler takes "-pthread" argument
-  echo "$as_me:$LINENO: checking for -pthread arg to compiler" >&5
+# test if -pthread or -lpthread works
+echo "$as_me:$LINENO: checking for -pthread arg to compiler" >&5
 echo $ECHO_N "checking for -pthread arg to compiler... $ECHO_C" >&6
-  CFLAGS_SAVE="$CFLAGS"
-  CFLAGS="$CFLAGS -pthread"
-  cat >conftest.$ac_ext <<_ACEOF
+CFLAGS_SAVE="$CFLAGS"
+CFLAGS="$CFLAGS -pthread"
+cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
 #include "confdefs.h"
  #include <pthread.h>
@@ -10347,20 +10346,21 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-      # it compiles with -pthread
-      echo "$as_me:$LINENO: result: yes" >&5
+    # it compiles with -pthread
+    echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
-      CXXFLAGS="$CXXFLAGS -pthread"
+    pthread_ok=yes
+    PTHREAD_FLAG=-pthread
 
 else
   echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
 
-      echo "$as_me:$LINENO: result: no" >&5
+    echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
-      # now try with -lpthread
-      CFLAGS="$CFLAGS_SAVE"
-      echo "$as_me:$LINENO: checking for pthread_create in -lpthread" >&5
+    # now try with -lpthread
+    CFLAGS="$CFLAGS_SAVE"
+    echo "$as_me:$LINENO: checking for pthread_create in -lpthread" >&5
 echo $ECHO_N "checking for pthread_create in -lpthread... $ECHO_C" >&6
 if test "${ac_cv_lib_pthread_pthread_create+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -10417,18 +10417,36 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_pthread_pthread_create" >&5
 echo "${ECHO_T}$ac_cv_lib_pthread_pthread_create" >&6
 if test $ac_cv_lib_pthread_pthread_create = yes; then
 
-	  # it compiles with -lpthread
-	  RFB_LIBS='-lpthread'
+	# it compiles with -lpthread
+	PTHREAD_FLAG='-lpthread'
+	pthread_ok=yes
 
 else
 
-	    echo ERROR: --with-rfb requires the pthread library, which could not be found.; exit 1
+        pthread_ok=no
 
 fi
 
 
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+CFLAGS="$CFLAGS_SAVE"
+
+if test "$with_rfb" = yes; then
+  if test "$pthread_ok" = yes; then
+    RFB_LIBS=$PTHREAD_FLAG
+  else
+    echo ERROR: --with-rfb requires the pthread library, which could not be found.; exit 1
+  fi
+fi
+
+if test "$with_wx" = yes; then
+  if test "$pthread_ok" = yes; then
+    GUI_LINK_OPTS="$PTHREAD_FLAG $GUI_LINK_OPTS"
+    CFLAGS="$CFLAGS $PTHREAD_FLAG"
+  else
+    echo ERROR: --with-wx requires the pthread library, which could not be found.; exit 1
+  fi
 fi
 
 # Create some subdirectories for when you run configure from some other
