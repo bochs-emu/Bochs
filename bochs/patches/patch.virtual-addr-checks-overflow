@@ -2,7 +2,7 @@
 Patch name: patch.virtual-addr-checks-overflow
 Author: Bryce Denney
 Date: Tue Oct  2 12:58:18 EDT 2001
-RCS Id: $Id: patch.virtual-addr-checks-overflow,v 1.1 2001-10-02 17:01:09 bdenney Exp $
+RCS Id: $Id: patch.virtual-addr-checks-overflow,v 1.2 2001-10-03 01:52:17 bdenney Exp $
 
 Detailed description:
 Bochs has been crashing in some cases when you try to access data which
@@ -11,9 +11,7 @@ boundary.  The example that came up a few times is reading/writing 4 bytes
 starting at 0xffffffff when the segment limit was 0xffffffff.  The 
 condition used to compare offset+length-1 with the limit, but offset+length-1
 was overflowing so the comparison went wrong.  This patch changes the
-condition so that it supports all segment limits except for sizes 0,1,2,3 
-bytes.  Dave and I figured that these sizes would not be needed, while
-size 0xffffffff is used quite a lot.
+condition so that it supports all segment limits.
 
 Patch was created with:
   cvs diff -u
@@ -23,188 +21,61 @@ Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-? cpu/Makefile
 Index: cpu/access.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/access.cc,v
-retrieving revision 1.7
-diff -u -r1.7 access.cc
---- cpu/access.cc	2001/05/30 18:56:01	1.7
-+++ cpu/access.cc	2001/10/02 16:54:40
-@@ -33,6 +33,30 @@
- #endif
- 
- 
-+// In write_virtual_checks and read_virtual_checks, we check that the
-+// segment limit is not between 0 and 4.  The reason for this restriction
-+// is that the condition which is used to check for out-of-bounds reads and
-+// writes is:
-+//    offset > seg->cache.u.segment.limit_scaled-length+1
-+// This condition works better than the previous one, which overflowed and
-+// failed when offset+length-1 was larger than 0xffffffff.  However our new
-+// condition can underflow if the segment limit is less than 4, but hopefully
-+// nobody will want to do that.  To be safe though, I added this function
-+// that will panic if anyone tries to set the segment limit less than 4.  If
-+// this panic shows up in real software and we must support it, it's not hard
-+// check for overflow/underflow in the condition, but it does add a few
-+// instructions to a heavily used function.
-+//
-+// This is called whenever the segment limit is changed to a non-constant 
-+// value.  If it's getting set to 0xffff or something, I didn't bother to
-+// call the check function.
-+void
-+BX_CPU_C::check_seg_limit_scaled (char *name, Bit32u value)
-+{
-+  if (value >= 0 && value < 4) {
-+    BX_PANIC (("segment limit (%s) is less than 4, which is not supported.  See cpu/access.cc"));
-+  }
-+}
- 
- 
-   void
-@@ -71,7 +95,7 @@
+retrieving revision 1.10
+retrieving revision 1.11
+diff -u -r1.10 -r1.11
+--- cpu/access.cc	2001/10/02 20:01:29	1.10
++++ cpu/access.cc	2001/10/03 01:06:31	1.11
+@@ -71,7 +71,8 @@
          return;
  
        case 2: case 3: /* read/write */
 -        if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
-+        if ( offset > seg->cache.u.segment.limit_scaled-length+1 ) {
++	if (offset > (seg->cache.u.segment.limit_scaled - length + 1) 
++	    || (length-1 > seg->cache.u.segment.limit_scaled)) {
  		  BX_INFO(("write_virtual_checks(): write beyond limit, r/w"));
            exception(int_number(seg), 0, 0);
            return;
-@@ -97,7 +121,7 @@
+@@ -97,7 +98,8 @@
      }
  
    else { /* real mode */
 -    if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
-+    if (offset > seg->cache.u.segment.limit_scaled-length+1) {
++      if (offset > (seg->cache.u.segment.limit_scaled - length + 1) 
++	  || (length-1 > seg->cache.u.segment.limit_scaled)) {
        //BX_INFO(("write_virtual_checks() SEG EXCEPTION:  %x:%x + %x",
        //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
        if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
-@@ -136,7 +160,7 @@
+@@ -136,7 +138,8 @@
        case 0: case 1: /* read only */
        case 10: case 11: /* execute/read */
        case 14: case 15: /* execute/read-only, conforming */
 -        if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
-+        if ( offset > seg->cache.u.segment.limit_scaled-length+1 ) {
++	if (offset > (seg->cache.u.segment.limit_scaled - length + 1) 
++	    || (length-1 > seg->cache.u.segment.limit_scaled)) {
  		  BX_INFO(("read_virtual_checks(): write beyond limit"));
            exception(int_number(seg), 0, 0);
            return;
-@@ -144,7 +168,7 @@
+@@ -144,7 +147,8 @@
          break;
  
        case 2: case 3: /* read/write */
 -        if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
-+        if ( offset > seg->cache.u.segment.limit_scaled-length+1 ) {
++	if (offset > (seg->cache.u.segment.limit_scaled - length + 1) 
++	    || (length-1 > seg->cache.u.segment.limit_scaled)) {
  		  BX_INFO(("read_virtual_checks(): write beyond limit"));
            exception(int_number(seg), 0, 0);
            return;
-@@ -191,7 +215,7 @@
+@@ -191,7 +195,8 @@
      }
  
    else { /* real mode */
 -    if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
-+    if ( offset >  seg->cache.u.segment.limit_scaled-length+1) {
++    if (offset > (seg->cache.u.segment.limit_scaled - length + 1) 
++	|| (length-1 > seg->cache.u.segment.limit_scaled)) {
        //BX_ERROR(("read_virtual_checks() SEG EXCEPTION:  %x:%x + %x",
        //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
        if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
-Index: cpu/cpu.h
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
-retrieving revision 1.11
-diff -u -r1.11 cpu.h
---- cpu/cpu.h	2001/09/15 06:55:14	1.11
-+++ cpu/cpu.h	2001/10/02 16:54:42
-@@ -1378,6 +1378,7 @@
-   BX_SMF void revalidate_prefetch_q(void);
-   BX_SMF void invalidate_prefetch_q(void);
- 
-+  BX_SMF void check_seg_limit_scaled (char *name, Bit32u value);
-   BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length);
-   BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length);
-   BX_SMF void write_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);
-Index: cpu/debugstuff.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/debugstuff.cc,v
-retrieving revision 1.7
-diff -u -r1.7 debugstuff.cc
---- cpu/debugstuff.cc	2001/05/30 18:56:01	1.7
-+++ cpu/debugstuff.cc	2001/10/02 16:54:43
-@@ -687,8 +687,8 @@
-   else
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled =
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit;
-+  BX_CPU_THIS_PTR check_seg_limit_scaled ("CS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled);
- 
--
-   // SS:
-   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = cpu->ss.sel;
-   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = cpu->ss.sel >> 3;
-@@ -718,7 +718,7 @@
-   else
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled =
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit;
--
-+  BX_CPU_THIS_PTR check_seg_limit_scaled ("SS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled);
- 
-   // DS:
-   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = cpu->ds.sel;
-@@ -749,9 +749,8 @@
-   else
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled =
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit;
-+  BX_CPU_THIS_PTR check_seg_limit_scaled ("DS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled);
- 
--
--
-   // ES:
-   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = cpu->es.sel;
-   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index = cpu->es.sel >> 3;
-@@ -781,7 +780,7 @@
-   else
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled =
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit;
--
-+  BX_CPU_THIS_PTR check_seg_limit_scaled ("ES", BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled);
- 
-   // FS:
-   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = cpu->fs.sel;
-@@ -812,7 +811,7 @@
-   else
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled =
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit;
--
-+  BX_CPU_THIS_PTR check_seg_limit_scaled ("FS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled);
- 
-   // GS:
-   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = cpu->gs.sel;
-@@ -843,6 +842,7 @@
-   else
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled =
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit;
-+  BX_CPU_THIS_PTR check_seg_limit_scaled ("GS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled);
- 
-   // LDTR:
-   BX_CPU_THIS_PTR ldtr.selector.value = cpu->ldtr.sel;
-Index: cpu/segment_ctrl_pro.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/segment_ctrl_pro.cc,v
-retrieving revision 1.6
-diff -u -r1.6 segment_ctrl_pro.cc
---- cpu/segment_ctrl_pro.cc	2001/05/30 18:56:01	1.6
-+++ cpu/segment_ctrl_pro.cc	2001/10/02 16:54:44
-@@ -382,6 +382,7 @@
-       temp->u.segment.limit_scaled = temp->u.segment.limit;
- 
-     temp->valid    = 1;
-+    BX_CPU_THIS_PTR check_seg_limit_scaled ("unknown", temp->u.segment.limit_scaled);
-     }
-   else { // system & gate segment descriptors
-     switch ( temp->type ) {
-@@ -453,6 +454,7 @@
-                  (unsigned) temp->type));
-         temp->valid    = 0;
-       }
-+      BX_CPU_THIS_PTR check_seg_limit_scaled ("unknown", temp->u.tss386.limit_scaled);
-     }
- }
- 
