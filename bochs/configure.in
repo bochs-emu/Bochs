@@ -21,12 +21,91 @@ AC_CHECK_SIZEOF(unsigned short)
 AC_CHECK_SIZEOF(unsigned int)
 AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
+AC_CHECK_SIZEOF(int *)
 AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
+AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
+AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
 
+AC_MSG_CHECKING(if compiler allows empty structs)
+AC_TRY_COMPILE([], [typedef struct { } junk;], 
+    AC_MSG_RESULT(yes),
+    [
+      AC_DEFINE(BX_NO_EMPTY_STRUCTS)
+      AC_MSG_RESULT(no)
+    ])
+
+AC_MSG_CHECKING(if compiler allows __attribute__)
+AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
+    AC_MSG_RESULT(yes),
+    [
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_NO_ATTRIBUTES)
+    ])
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(for hash_map.h)
+AC_TRY_COMPILE([#include <hash_map.h>], [],
+   [
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(HAVE_HASH_MAP)
+   ], AC_MSG_RESULT(no))
+AC_LANG_RESTORE
+
+AC_CHECK_LIB(readline, 
+  readline,
+  [
+    AC_DEFINE(HAVE_LIBREADLINE, 1)
+    READLINE_LIB='-lreadline'
+  ]
+)
+  AC_SUBST(READLINE_LIB)
+
+AC_CHECK_HEADER(readline/history.h,
+  AC_DEFINE(HAVE_READLINE_HISTORY_H)
+  )
+
+AC_MSG_CHECKING(for number of processors)
+AC_ARG_ENABLE(processors,
+  [  --enable-processors                select number of processors (1,2,4)],
+  [case "$enableval" in
+     1)
+       AC_MSG_RESULT(1)
+       AC_DEFINE(BX_SMP_PROCESSORS, 1)
+       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
+       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 1)
+       ;;
+     2)
+       AC_MSG_RESULT(2)
+       AC_DEFINE(BX_SMP_PROCESSORS, 2)
+       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
+       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 2)
+       ;;
+     4)
+       AC_MSG_RESULT(4)
+       AC_DEFINE(BX_SMP_PROCESSORS, 4)
+       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 2)
+       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 4)
+       ;;
+     *)
+       echo " "
+       echo "WARNING: processors != [1,2,4] can work, but you need to modify rombios.c manually"
+       ;;
+   esac
+   bx_procs="$enableval"
+  ],
+  [
+     AC_MSG_RESULT(1)
+     AC_DEFINE(BX_SMP_PROCESSORS, 1)
+     AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
+     AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 1)
+     bx_procs=1
+  ]
+  )
 
 AC_MSG_CHECKING(for cpu level)
 AC_ARG_ENABLE(cpu-level,
-  [  --enable-cpu-level                select cpu level (3,4,5)],
+  [  --enable-cpu-level                select cpu level (3,4,5,6)],
   [case "$enableval" in
      3)
        AC_MSG_RESULT(3)
@@ -43,17 +122,33 @@ AC_ARG_ENABLE(cpu-level,
        AC_DEFINE(BX_CPU_LEVEL, 5)
        AC_DEFINE(BX_CPU_LEVEL_HACKED, 5)
        ;;
+     6)
+       AC_MSG_RESULT(6)
+       AC_DEFINE(BX_CPU_LEVEL, 6)
+       AC_DEFINE(BX_CPU_LEVEL_HACKED, 6)
+       ;;
      *)
        echo " "
        echo "ERROR: you must supply a valid CPU level to --enable-cpu-level"
        exit 1
        ;;
    esac
+   if test "$bx_procs" -gt 1 -a "$enableval" -lt 6; then
+     echo "ERROR: with >1 processor, use --enable-cpu-level=6"
+     exit 1
+   fi
   ],
   [
-   AC_MSG_RESULT(5)
-   AC_DEFINE(BX_CPU_LEVEL, 5)
-   AC_DEFINE(BX_CPU_LEVEL_HACKED, 5)
+    # for multiprocessors, cpu level must be 6
+    if test "$bx_procs" -gt 1; then
+      AC_MSG_RESULT(6)
+      AC_DEFINE(BX_CPU_LEVEL, 6)
+      AC_DEFINE(BX_CPU_LEVEL_HACKED, 6)
+    else
+      AC_MSG_RESULT(5)
+      AC_DEFINE(BX_CPU_LEVEL, 5)
+      AC_DEFINE(BX_CPU_LEVEL_HACKED, 5)
+    fi
   ]
   )
 
@@ -110,6 +205,44 @@ AC_ARG_ENABLE(dynamic,
 AC_SUBST(DYNAMIC_VAR)
 AC_SUBST(AS_DYNAMIC_OBJS)
 AC_SUBST(AS_DYNAMIC_INCS)
+
+AC_MSG_CHECKING(for APIC support)
+AC_ARG_ENABLE(apic,
+  [  --enable-apic                   enable APIC support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_APIC_SUPPORT, 1)
+    IOAPIC_OBJS='ioapic.o'
+    APIC_OBJS='apic.o'
+   else
+    AC_MSG_RESULT(no)
+    if test "$bx_procs" -gt 1; then
+      echo "Number of processors = $bx_procs"
+      echo "ERROR: With processors > 1 you must use --enable-apic"
+      exit 1
+    fi
+    AC_DEFINE(BX_APIC_SUPPORT, 0)
+    IOAPIC_OBJS=''
+    APIC_OBJS=''
+   fi
+   ],
+  [
+    if test "$bx_procs" -gt 1; then
+      # enable APIC by default, if processors>1
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_APIC_SUPPORT, 1)
+      IOAPIC_OBJS='ioapic.o'
+      APIC_OBJS='apic.o'
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_APIC_SUPPORT, 0)
+      IOAPIC_OBJS=''
+      APIC_OBJS=''
+     fi
+   ]
+  )
+AC_SUBST(IOAPIC_OBJS)
+AC_SUBST(APIC_OBJS)
 
 AC_MSG_CHECKING(for NE2000 support)
 AC_ARG_ENABLE(ne2000,
@@ -214,15 +347,19 @@ AC_ARG_ENABLE(debugger,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_DEBUGGER, 1)
     DEBUGGER_VAR='$(DEBUGGER_LIB)'
+    bx_debugger=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_DEBUGGER, 0)
     DEBUGGER_VAR=''
-   fi],
+    bx_debugger=0
+   fi
+   ],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_DEBUGGER, 0)
     DEBUGGER_VAR=''
+    bx_debugger=0
     ]
   )
 AC_SUBST(DEBUGGER_VAR)
@@ -236,13 +373,23 @@ AC_ARG_ENABLE(disasm,
     DISASM_VAR='$(DISASM_LIB)'
    else
     AC_MSG_RESULT(no)
+    if test "$bx_debugger" = 1; then
+      echo "ERROR: debugger is enabled, so --enable-disasm is required"
+      exit 1
+    fi
     AC_DEFINE(BX_DISASM, 0)
     DISASM_VAR=''
    fi],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_DISASM, 0)
-    DISASM_VAR=''
+    if test "$bx_debugger" = 1; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_DISASM, 1)
+      DISASM_VAR='$(DISASM_LIB)'
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_DISASM, 0)
+      DISASM_VAR=''
+    fi
     ]
   )
 AC_SUBST(DISASM_VAR)
@@ -378,7 +525,8 @@ AC_ARG_ENABLE(fpu,
     echo " "
     echo "ERROR: --enable-fpu does not accept a path"
     exit 1
-   fi],
+   fi
+   ],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_FPU, 0)
@@ -630,6 +778,8 @@ AC_SUBST(COMMAND_SEPARATOR)
 AC_SUBST(CD_UP_ONE)
 AC_SUBST(CD_UP_TWO)
 
+AC_PATH_PROG(GZIP, gzip)
+AC_PATH_PROG(TAR, tar)
 
 AC_OUTPUT(Makefile iodev/Makefile debug/Makefile bios/Makefile \
          cpu/Makefile memory/Makefile gui/Makefile disasm/Makefile \

@@ -1,4 +1,4 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2000  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -464,15 +464,15 @@ bx_get_command(void)
     }
 #if HAVE_LIBREADLINE
   if (bx_infile_stack_index == 0) {
+    // disable ^C handling during readline so that I get get to GDB
+    //set_ctrlc_handler (0);
     charptr_ret = readline (prompt);
-    // beward, returns NULL on end of file
-    if (charptr_ret && strlen(charptr_ret) > 0) {
-      add_history (charptr_ret);
-      strcpy (tmp_buf, charptr_ret);
-      strcat (tmp_buf, "\n");
-      free (charptr_ret);
-      charptr_ret = &tmp_buf[0];
-    }
+    //set_ctrlc_handler (1);
+    if (strlen(charptr_ret) > 0) add_history (charptr_ret);
+    strcpy (tmp_buf, charptr_ret);
+    strcat (tmp_buf, "\n");
+    free (charptr_ret);
+    charptr_ret = &tmp_buf[0];
   } else {
     charptr_ret = fgets(tmp_buf, 512,
       bx_infile_stack[bx_infile_stack_index].fp);
@@ -1084,34 +1084,6 @@ void bx_dbg_show_command(char* arg)
 		    /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
 		    printf("Turned on all bx_dbg flags\n");
 		    return;
-	    } else if(!strcmp(arg,"\"none\"")){
-		    bx_dbg.floppy = 0;
-		    bx_dbg.keyboard = 0;
-		    bx_dbg.video = 0;
-		    bx_dbg.disk = 0;
-		    bx_dbg.pit = 0;
-		    bx_dbg.pic = 0;
-		    bx_dbg.bios = 0;
-		    bx_dbg.cmos = 0;
-		    bx_dbg.a20 = 0;
-		    bx_dbg.interrupts = 0;
-		    bx_dbg.exceptions = 0;
-		    bx_dbg.unsupported = 0;
-		    bx_dbg.temp = 0;
-		    bx_dbg.reset = 0;
-		    bx_dbg.mouse = 0;
-		    bx_dbg.io = 0;
-		    bx_dbg.debugger = 0;
-		    bx_dbg.xms = 0;
-		    bx_dbg.v8086 = 0;
-		    bx_dbg.paging = 0;
-		    bx_dbg.creg = 0;
-		    bx_dbg.dreg = 0;
-		    bx_dbg.dma = 0;
-		    bx_dbg.unsupported_io = 0;
-		    /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
-		    printf("Turned off all bx_dbg flags\n");
-		    return;
 	    } else {
 		  printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
 		  return;
@@ -1317,7 +1289,7 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
       static char buf[80];
       if (base != 0) {
-	    snprintf (buf, 80, "non-zero base");
+	    bx_snprintf (buf, 80, "non-zero base");
 	    return buf;
       }
       // Look up this context
@@ -1326,17 +1298,17 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 	    // Try global context
 	    cntx = context_t::get_context(0);
 	    if (!cntx) {
-		  snprintf (buf, 80, "unknown context");
+		  bx_snprintf (buf, 80, "unknown context");
 		  return buf;
 	    }
       }
 
       symbol_entry_t* entr = cntx->get_symbol_entry(eip);
       if (!entr) {
-	    snprintf (buf, 80, "no symbol");
+	    bx_snprintf (buf, 80, "no symbol");
 	    return buf;
       }
-      snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
+      bx_snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
       return buf;
 }
 
@@ -1535,7 +1507,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
   bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT; // looking for icount
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
 	// for now, step each CPU one BX_DBG_DEFAULT_ICOUNT_QUANTUM at a time
-  //bx_printf ("Stepping each CPU a total of %d cycles\n", count);
+  bx_printf ("Stepping each CPU a total of %d cycles\n", count);
 	for (unsigned cycle=0; cycle < count; cycle++) {
 		for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
 		  //bx_printf ("Stepping %s\n", BX_CPU[cpu]->name);
@@ -1547,7 +1519,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 		}
 		BX_TICK1 ();
 	}
-  //bx_printf ("Stepped each CPU a total of %d cycles\n", count);
+  bx_printf ("Stepped each CPU a total of %d cycles\n", count);
 #endif
 
   BX_INSTR_DEBUG_PROMPT();

@@ -153,7 +153,7 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
     }
   else
     {
-      int rmint = PTR2INT(rm);
+      int rmint = (int)rm;
       b = &st(rmint);
       tagb = FPU_gettagi(rmint);
 
