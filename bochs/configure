@@ -842,10 +842,11 @@ Optional Features:
   --enable-control-panel           turns on/off control panel
   --enable-new-pit                  use Greg Alexander's new PIT model
   --enable-slowdown                 use Greg Alexander's slowdown timer
-  --enable-idle-hack                 use Roland Mainz's idle hack
+  --enable-idle-hack                use Roland Mainz's idle hack
   --enable-processors               select number of processors (1,2,4)
   --enable-cpu-level                select cpu level (3,4,5,6)
   --enable-dynamic                  enable dynamic translation support
+  --enable-fetchdecode-cache        enable fetchdecode-cache support
   --enable-apic                     enable APIC support
   --enable-split-hd                 allows split hard disk image
   --enable-ne2000                   enable limited ne2000 support
@@ -854,7 +855,7 @@ Optional Features:
   --enable-cpp                      use .cpp as C++ suffix
   --enable-debugger                 compile in support for Bochs internal debugger
   --enable-disasm                   compile in support for disassembler
- --enable-readline                  use readline library, if available
+  --enable-readline                 use readline library, if available
   --enable-loader                   support calling external loader from debugger
   --enable-instrumentation          compile in support for instrumentation
   --enable-simid=0 or 1             CPU simulator ID if using more than one
@@ -865,7 +866,7 @@ Optional Features:
   --enable-fpu                      compile in FPU emulation
   --enable-x86-debugger             x86 debugger support
   --enable-cdrom                    CDROM support
-  --enable-sb16=xxx                     Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd)
+  --enable-sb16=xxx                 Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd)
   --enable-hga-dumps=Nmicroseconds  copy memory to HGA video buffer every N useconds
   --enable-iodebug                  enable I/O interface to debugger
 
@@ -8300,6 +8301,38 @@ fi;
 
 
 
+echo "$as_me:$LINENO: checking for fetchdecode-cache support" >&5
+echo $ECHO_N "checking for fetchdecode-cache support... $ECHO_C" >&6
+# Check whether --enable-fetchdecode-cache or --disable-fetchdecode-cache was given.
+if test "${enable_fetchdecode_cache+set}" = set; then
+  enableval="$enable_fetchdecode_cache"
+  if test "$enableval" = no; then
+     echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+     cat >>confdefs.h <<\_ACEOF
+#define BX_FETCHDECODE_CACHE 0
+_ACEOF
+
+   else
+     echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+     cat >>confdefs.h <<\_ACEOF
+#define BX_FETCHDECODE_CACHE 1
+_ACEOF
+
+   fi
+else
+
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_FETCHDECODE_CACHE 0
+_ACEOF
+
+
+
+fi;
+
 echo "$as_me:$LINENO: checking for APIC support" >&5
 echo $ECHO_N "checking for APIC support... $ECHO_C" >&6
 # Check whether --enable-apic or --disable-apic was given.
@@ -9680,11 +9713,24 @@ _ACEOF
    fi
 else
 
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    CDROM_OBJS=''
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    CDROM_OBJS='cdrom.o'
+    if test "$with_amigaos" = yes; then
+      # use the amiga cdrom file instead.
+      CDROM_OBJS="cdrom_amigaos.o"
+    elif test "$can_use_osx_cdrom" = yes; then
+      # use cdrom_osx
+      echo "$as_me:$LINENO: result: Using OSX IOKit CD Interface" >&5
+echo "${ECHO_T}Using OSX IOKit CD Interface" >&6
+      CDROM_OBJS="cdrom_osx.o"
+      EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation"
+    elif test "$with_beos" = yes; then
+      # use the beos cdrom file instead
+      CDROM_OBJS="$CDROM_OBJS cdrom_beos.o"
+    fi
     cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_CDROM 0
+#define BX_SUPPORT_CDROM 1
 _ACEOF
 
 
