@@ -13,14 +13,6 @@
 #define asmlinkage CPP_ASMLINKAGE
 #endif
 
-#define SYMBOL_NAME_STR(X) #X
-#define SYMBOL_NAME(X) X
-#ifdef __STDC__
-#define SYMBOL_NAME_LABEL(X) X##:
-#else
-#define SYMBOL_NAME_LABEL(X) X/**/:
-#endif
-
 #ifdef __arm__
 #define __ALIGN .align 0
 #define __ALIGN_STR ".align 0"
