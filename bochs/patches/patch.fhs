@@ -13,6 +13,9 @@ Detailed description:
    It is important to comply with FHS because most
    distributions require it in order to accept packages. 
 
+   We have to change some more files to make them work with the new file
+   locations. (Volker)
+   
 Patch was created with:
   diff -u
 Apply patch to what version:
@@ -144,3 +147,68 @@ diff -u -r1.68 Makefile.in
  
  V6WORKSPACE_ZIP=build/win32/workspace.zip
  V6WORKSPACE_FILES=bochs.dsw bochs.dsp bochs.opt cpu/cpu.dsp \
+diff -urN ../bochs/build/linux/bochs-docs.in ./build/linux/bochs-docs.in
+--- ../bochs/build/linux/bochs-docs.in	Fri May 31 09:57:56 2002
++++ ./build/linux/bochs-docs.in	Wed Jun 26 18:41:55 2002
+@@ -1,6 +1,6 @@
+ #!/bin/sh
+ BROWSER=netscape
+-URL=@prefix@/bochs/@VERSION@/DOC-linux.html
++URL=@prefix@/share/doc/bochs/DOC-linux.html
+ MY_PATH=@prefix@/bin/bochs-docs
+ 
+ cat <<EOF
+diff -urN ../bochs/build/redhat/bochs.rpmspec.template ./build/redhat/bochs.rpmspec.template
+--- ../bochs/build/redhat/bochs.rpmspec.template	Sun Dec  9 00:38:55 2001
++++ ./build/redhat/bochs.rpmspec.template	Wed Jun 26 18:42:43 2002
+@@ -34,31 +34,26 @@
+ 	for i in "" usr usr/bin usr/man usr/man/man1; do 
+ 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
+ 	done
+-	make install_bin install_man install_fonts install_dlx prefix=$RPM_BUILD_ROOT/usr
+-	# fix up symlinks that point to buildroot
+-        cd $RPM_BUILD_ROOT/usr/bin
+-        rm -f bochs; ln -sf /usr/bochs/@SEDVERSION@/bochs .
+-        rm -f bximage; ln -sf /usr/bochs/@SEDVERSION@/bximage .
++	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
+ 
+ %files
+ 	/usr/bin/bochs
+ 	/usr/bin/bochs-docs
+ 	/usr/bin/bochs-dlx
+ 	/usr/bin/bximage
+-	/usr/bochs/@SEDVERSION@
+-	/usr/bochs/dlxlinux
+-	/usr/bochs/latest
+-	/usr/man/man1/*
++	/usr/share/bochs/*
++	/usr/share/doc/*
++	/usr/man/*
+ %clean
+ 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
+ 	if test "/" != $RPM_BUILD_ROOT; then
+ 	  rm -rf $RPM_BUILD_ROOT
+ 	fi
+ %post
+-	/usr/bochs/@SEDVERSION@/install-x11-fonts
++	/usr/share/bochs/install-x11-fonts
+ %preun
+ 	# clean up the bochsout.txt that is always produced if you 
+ 	# run bochs-dlx.
+-	rm -rf /usr/bochs/dlxlinux/bochsout.txt core
++	rm -rf /usr/share/bochs/dlxlinux/bochsout.txt core
+ %postun
+-	rmdir /usr/bochs > /dev/null 2>&1
++	rmdir /usr/share/bochs > /dev/null 2>&1
+diff -urN ../bochs/install-x11-fonts.in ./install-x11-fonts.in
+--- ../bochs/install-x11-fonts.in	Mon Mar 18 12:39:57 2002
++++ ./install-x11-fonts.in	Wed Jun 26 18:35:53 2002
+@@ -9,7 +9,7 @@
+ 
+ X11_FONT_PATH_CHOICES="/usr/X11R6/lib/X11/fonts /usr/local/lib/X11/fonts /usr/lib/X11/fonts /usr/openwin/lib/X11/fonts"
+ FONTS=vga.pcf
+-FONT_SOURCE_PATH_CHOICES="font ${srcdir+$srcdir/font} @prefix@/bochs/latest"
++FONT_SOURCE_PATH_CHOICES="font ${srcdir+$srcdir/font} @prefix@/share/bochs"
+ 
+ die () {
+ cat <<EOF
