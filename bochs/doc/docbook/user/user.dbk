@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.101 2002-12-23 22:15:31 vruppert Exp $
+$Id: user.dbk,v 1.102 2002-12-25 10:08:24 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -75,7 +75,7 @@ the simulator typically takes control and simulates that code in
 software at much slower speed, just like Bochs does.
 </para>
 </footnote>, but they are neither portable to non-x86 platforms nor open
-source.  The <ulink url="http://www.plex86.org">Plex86</ulink> project is
+source.  The <ulink url="http://savannah.nongnu.org/projects/plex86">Plex86</ulink> project is
 working toward an open-source x86 simulator with virtualization.
 </para>
 
@@ -622,7 +622,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
        enhancements, and code contributions from some few hundred people, so
        it is not possible to list them all.  Recently, Kevin has been working
        on a PC virtualization project called <ulink
-       url="http://www.plex86.org">plex86</ulink>.  In Fall 2002, he
+       url="http://savannah.nongnu.org/projects/plex86">plex86</ulink>. In Fall 2002, he
        made contributed some major CPU speedups and helped with integration
        and debugging of the x86-64 emulation code.
        </para>
@@ -718,7 +718,7 @@ host operating system's CDROM data directly.
      Does bochs support a sound device?
      </para></question>
      <answer><para>
-     Yes, there is Sound Blaster emulation support for Windows and Linux.
+     Yes, there is Sound Blaster emulation support for Windows, Linux and FreeBSD.
      </para></answer>
   </qandaentry>
 
@@ -1437,11 +1437,12 @@ been tested in recent Bochs versions:
 <screen>
   .conf.linux
   .conf.sparc
+  .conf.macos
   .conf.macosx
   .conf.win32-vcpp
   .conf.win32-cygwin
   .conf.AIX.4.3.1
-  .conf.beos-x86-R4
+  .conf.beos
 </screen>
 </para>
 
@@ -1505,9 +1506,9 @@ Once the program has been built, the next step is typically to run
 other required files into a public place so that all users can use it.
 <footnote><para>
 &FIXME; We should mention what gets installed, and where.
-    /usr/local/bochs/$VERSION/*
     /usr/local/bin/bochs (and bximage)
-    /usr/man/man1/bochs*.1 (and bximage.1)
+    /usr/local/share/bochs/*
+    /usr/local/share/man/man1/bochs*.1 (and bximage.1)
     make install_dlx option
 </para></footnote>
 </para>
@@ -1753,8 +1754,8 @@ turn it off.
       Enable Sound Blaster emulation.  SB16 output is only supported for
       Windows or Linux.  The <constant>dummy</constant> option means to support
       an SB16, but don't use an output device.  So for example, you might use
-      <option>--enable-sb16=linux</option>. Check out &FIXME; sound.html for
-      more info.
+      <option>--enable-sb16=linux</option>. See <xref linkend="sb16-emulation">
+      for more info.
       </entry>
     </row>
     <row>
@@ -2350,8 +2351,8 @@ Kevin Lawton ported Bochs to BeOS.  Bernd Korz has taken over the port,
 and is working on raw cdrom and raw floppy support.  As of Bochs 1.4, it should
 compile if you just type "configure && make", because configure will
 detect the BeOS platform and assume you want the BeOS GUI.  Optionally,
-you can use the configure shortcut script for BeOS,
-<filename>.conf.beos-x86-R4</filename>.
+you can use the configure shortcut script for BeOS, <filename>.conf.beos</filename>.
+This shortcut script uses the SDL gui by default.
 </para>
 </section> <!-- end BeOS -->
 
@@ -3384,7 +3385,10 @@ Examples:
 </screen>
 This enables a remap of a physical localized keyboard to a
 virtualized U.S. keyboard, as the PC architecture expects.
-If enabled, the keymap file must be specified.
+If enabled, the keymap file must be specified. Keyboard mapping is 
+available for X windows, SDL (Linux port) and wxWindows (GTK port).
+For SDL you have to use keymaps designed for SDL, the wxWindows gui 
+uses the keymaps for X windows.
 </para>
 </section>
 
@@ -3611,9 +3615,10 @@ Sound Blaster 16 emulation in the developer documentation.
 <section id="keymap"><title>How to write your own keymap table</title>
 <para>
 Christophe Bothamy wrote the keymapping code for Bochs, and provided this
-documentation for how to create new keymaps.  Keymapping is currently 
+documentation for how to create new keymaps.  Keymapping was first 
 implemented for X windows only, so there are many references to X-specific
-values in this section.
+values in this section. In Bochs 2.0 keymapping is also available for SDL 
+(Linux port) and wxWindows (wxGTK port).
 </para>
 <screen>
   The standard US Keyboard looks like this:
