@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.44 2004-02-08 11:02:42 cbothamy Exp $
+// $Id: logio.cc,v 1.45 2004-02-14 06:33:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,7 +31,11 @@
 #include "state_file.h"
 
 #if BX_WITH_CARBON
+#define Float32 KLUDGE_Float32
+#define Float64 KLUDGE_Float64
 #include <Carbon/Carbon.h>
+#undef Float32
+#undef Float64
 #endif
 
 // Just for the iofunctions

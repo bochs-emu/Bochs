@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.66 2003-12-08 23:49:48 danielg4 Exp $
+// $Id: cdrom.cc,v 1.67 2004-02-14 06:33:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -112,7 +112,11 @@ extern "C" {
 #include <paths.h>
 #include <sys/param.h>
 
+#define Float32 KLUDGE_Float32
+#define Float64 KLUDGE_Float64
 #include <IOKit/IOKitLib.h>
+#undef Float32
+#undef Float64
 #include <IOKit/IOBSD.h>
 #include <IOKit/storage/IOCDMedia.h>
 #include <IOKit/storage/IOMedia.h>
@@ -468,7 +472,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.66 2003-12-08 23:49:48 danielg4 Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.67 2004-02-14 06:33:29 danielg4 Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

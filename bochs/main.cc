@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.268 2004-02-11 23:05:41 cbothamy Exp $
+// $Id: main.cc,v 1.269 2004-02-14 06:33:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,7 +47,11 @@
 #endif
 
 #if BX_WITH_CARBON
+#define Float32 KLUDGE_Float32
+#define Float64 KLUDGE_Float64
 #include <Carbon/Carbon.h>
+#undef Float32
+#undef Float64
 #endif
 
 // BX_SHARE_PATH should be defined by the makefile.  If not, give it

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.24 2003-11-17 04:21:16 danielg4 Exp $
+// $Id: carbon.cc,v 1.25 2004-02-14 06:33:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,11 @@
 
 
 // BOCHS INCLUDES
+#define Float32 KLUDGE_Float32
+#define Float64 KLUDGE_Float64
 #include "bochs.h"
+#undef Float32
+#undef Float64
 
 #if BX_WITH_CARBON
 
