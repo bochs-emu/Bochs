@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.63 2004-12-14 20:41:55 sshwarts Exp $
+// $Id: init.cc,v 1.64 2004-12-17 10:50:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,8 +28,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-extern Bit32u get_cpu_version_information();
 
 BX_CPU_C::BX_CPU_C(): bx_cpuid(0)
 #if BX_SUPPORT_APIC
@@ -162,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.63 2004-12-14 20:41:55 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.64 2004-12-17 10:50:49 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC

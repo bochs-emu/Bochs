@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.192 2004-12-16 22:21:20 sshwarts Exp $
+// $Id: cpu.h,v 1.193 2004-12-17 10:50:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2848,6 +2848,10 @@ public: // for now...
   BX_SMF Bit32u  hwdebug_compare(Bit32u laddr, unsigned size,
                                  unsigned opa, unsigned opb);
 #endif
+
+  BX_SMF Bit32u get_cpu_version_information(void);
+  BX_SMF Bit32u get_extended_cpuid_features(void);
+  BX_SMF Bit32u get_std_cpuid_features(void);
 
   BX_CPP_INLINE unsigned which_cpu(void) { return bx_cpuid; }
   BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }

@@ -38,7 +38,7 @@
 
 
 /* Get CPU version information. */
-Bit32u get_cpu_version_information()
+Bit32u BX_CPU_C::get_cpu_version_information()
 {
   Bit32u family = 0, model = 0, stepping = 0;
   Bit32u extended_model = 0;
@@ -107,7 +107,7 @@ Bit32u get_cpu_version_information()
 }       
 
 /* Get CPU extended feature flags. */
-static Bit32u get_extended_cpuid_features()
+Bit32u BX_CPU_C::get_extended_cpuid_features()
 {
   Bit32u features = 0;	// start with none
 
@@ -119,7 +119,7 @@ static Bit32u get_extended_cpuid_features()
 }
 
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
-Bit32u get_std_cpuid_features()
+Bit32u BX_CPU_C::get_std_cpuid_features()
 {
   Bit32u features = 0; // start with none
 
@@ -325,6 +325,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       break;
     }
 #else
-  BX_PANIC(("CPUID: not available on < late 486"));
+  BX_INFO(("CPUID: not available on < late 486"));
+  UndefinedOpcode(i);
 #endif
 }
