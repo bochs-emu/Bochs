@@ -24,6 +24,7 @@
 
 #include "bochs.h"
 #include "icon_bochs.h"
+#define LOG_THIS bx_gui.
 
 
 // This file defines stubs for the GUI interface, which is a
