@@ -15,7 +15,8 @@ makedlxdir() {
   . $CONFFILE
   for file in bochsrc.txt README testform.txt; do
     if [ ! -f $DLXPATH/$file ]; then
-      cp -av $DLXINST/$file $DLXPATH/.
+      echo Copying $DLXINST/$file '->' $DLXPATH/.
+      cp $DLXINST/$file $DLXPATH/.
     else
       echo "ERROR: $file already exists in $DLXPATH. Remove it to replace."
     fi;
@@ -44,7 +45,7 @@ if test ! -d $DLXINST; then
 fi
 echo ok
 echo -n "Checking for $GZIP..."
-$GZIP < /dev/null >& /dev/null 
+$GZIP < /dev/null > /dev/null 
 if test $? = 0; then
   echo ok
 else
