@@ -44,7 +44,7 @@ unsigned (* pluginRegisterDMA16Channel)(
 		const char* name
                 ) = 0;
 unsigned (* pluginUnregisterDMAChannel)(unsigned channel) = 0;
-void     (* pluginDMASetDRQ)(unsigned channel, unsigned val) = 0;
+void     (* pluginDMASetDRQ)(unsigned channel, Boolean val) = 0;
 unsigned (* pluginDMAGetTC)(void) = 0;
 void     (* pluginDMARaiseHLDA)(void) = 0;
 
