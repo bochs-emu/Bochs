@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.34 2004-04-11 18:04:34 vruppert Exp $
+// $Id: rfb.cc,v 1.35 2004-04-13 19:07:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -24,7 +24,7 @@
 // RFB still to do :
 // - properly handle SetPixelFormat, including big/little-endian flag
 // - depth > 8bpp support
-// - dimension update support
+// - full dimension update support (desktop size should be an option)
 // - optional compression support
 // - status bar text support
 
@@ -125,11 +125,14 @@ struct {
     bool updated;
 } rfbUpdateRegion;
 
+#define BX_RFB_MAX_XDIM 720
+#define BX_RFB_MAX_YDIM 480
+
 static char  *rfbScreen;
 static char  rfbPalette[256];
 
-static long  rfbDimensionX, rfbDimensionY;
-static long  rfbStretchedX, rfbStretchedY;
+static long  rfbWindowX, rfbWindowY;
+static unsigned rfbDimensionX, rfbDimensionY;
 static long  rfbHeaderbarY;
 static long  rfbTileX = 0;
 static long  rfbTileY = 0;
@@ -159,7 +162,7 @@ void HandleRfbClient(SOCKET sClient);
 int  ReadExact(int sock, char *buf, int len);
 int  WriteExact(int sock, char *buf, int len);
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client);
-void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color);
+void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color, bx_bool gfxchar);
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client);
 void SendUpdate(int x, int y, int width, int height);
 void StartThread();
@@ -203,10 +206,10 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
   rfbHeaderbarY = headerbar_y;
-  rfbDimensionX = 640;
-  rfbDimensionY = 480 + rfbHeaderbarY + rfbStatusbarY;
-  rfbStretchedX = rfbDimensionX;
-  rfbStretchedY = rfbDimensionY;
+  rfbDimensionX = BX_RFB_MAX_XDIM;
+  rfbDimensionY = BX_RFB_MAX_YDIM;
+  rfbWindowX = rfbDimensionX;
+  rfbWindowY = rfbDimensionY + rfbHeaderbarY + rfbStatusbarY;
   rfbTileX      = tilewidth;
   rfbTileY      = tileheight;
 
@@ -222,12 +225,12 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
     }
   }
 
-  rfbScreen = (char *)malloc(rfbDimensionX * rfbDimensionY); 
+  rfbScreen = (char *)malloc(rfbWindowX * rfbWindowY); 
   memset(&rfbPalette, 0, sizeof(rfbPalette));
   rfbPalette[63] = (char)0xFF;
 
-  rfbUpdateRegion.x = rfbDimensionX;
-  rfbUpdateRegion.y = rfbDimensionY;
+  rfbUpdateRegion.x = rfbWindowX;
+  rfbUpdateRegion.y = rfbWindowY;
   rfbUpdateRegion.width  = 0;
   rfbUpdateRegion.height = 0;
   rfbUpdateRegion.updated = false;
@@ -282,7 +285,7 @@ void rfbSetStatus(int element, bx_bool active)
     newBits[((xsize / 8) + 1) * i] = 0;
   }
   color = active?0xa0:0xf0;
-  DrawBitmap(xleft, rfbDimensionY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2, newBits, color, true);
+  DrawBitmap(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2, newBits, color, true);
   free(newBits);
 }
 
@@ -425,8 +428,8 @@ void HandleRfbClient(SOCKET sClient)
         return;
     }
 
-    sim.framebufferWidth  = htons((short)rfbDimensionX);
-    sim.framebufferHeight = htons((short)rfbDimensionY);
+    sim.framebufferWidth  = htons((short)rfbWindowX);
+    sim.framebufferHeight = htons((short)rfbWindowY);
     sim.serverPixelFormat            = BGR233Format;
     sim.serverPixelFormat.redMax     = htons(sim.serverPixelFormat.redMax);
     sim.serverPixelFormat.greenMax   = htons(sim.serverPixelFormat.greenMax);
@@ -542,8 +545,8 @@ void HandleRfbClient(SOCKET sClient)
                 if(!fur.incremental) {
                     rfbUpdateRegion.x = 0;
                     rfbUpdateRegion.y = 0;
-                    rfbUpdateRegion.width  = rfbDimensionX;
-                    rfbUpdateRegion.height = rfbDimensionY;
+                    rfbUpdateRegion.width  = rfbWindowX;
+                    rfbUpdateRegion.height = rfbWindowY;
                     rfbUpdateRegion.updated = true;
                 } //else {
                 //    if(fur.x < rfbUpdateRegion.x) rfbUpdateRegion.x = fur.x;
@@ -618,8 +621,8 @@ void bx_rfb_gui_c::handle_events(void)
 
     if(rfbUpdateRegion.updated) {
         SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width, rfbUpdateRegion.height);
-        rfbUpdateRegion.x = rfbDimensionX;
-        rfbUpdateRegion.y = rfbDimensionY;
+        rfbUpdateRegion.x = rfbWindowX;
+        rfbUpdateRegion.y = rfbWindowY;
         rfbUpdateRegion.width  = 0;
         rfbUpdateRegion.height = 0;
     }
@@ -643,7 +646,7 @@ void bx_rfb_gui_c::flush(void)
 // clear the area that defines the headerbar.
 void bx_rfb_gui_c::clear_screen(void)
 {
-    memset(&rfbScreen[rfbDimensionX * rfbHeaderbarY], 0, rfbDimensionX * (rfbDimensionY - rfbHeaderbarY - rfbStatusbarY));
+    memset(&rfbScreen[rfbWindowX * rfbHeaderbarY], 0, rfbWindowX * rfbDimensionY);
 }
 
 
@@ -658,21 +661,22 @@ void bx_rfb_gui_c::clear_screen(void)
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is 4000 bytes long.
-//     This represents 80 characters wide by 25 high, with
-//     each character being 2 bytes.  The first by is the
-//     character value, the second is the attribute byte.
-//     I currently don't handle the attribute byte.
+// format of old_text & new_text: each is tm_info.line_offset*text_rows
+//     bytes long. Each character consists of 2 bytes.  The first by is
+//     the character value, the second is the attribute byte.
 //
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
+// tm_info:  this structure contains information for additional
+//           features in text mode (cursor shape, line offset,...)
+// nrows:    number of text rows (unused here)
 
 void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t tm_info, unsigned nrows)
 {
-  unsigned char *old_line, *new_line;
-  unsigned char cAttr, cChar;
+  Bit8u *old_line, *new_line;
+  Bit8u cAttr, cChar;
   unsigned int  curs, hchars, offset, rows, x, y, xc, yc;
-  bx_bool force_update=0;
+  bx_bool force_update=0, gfxchar;
 
   UNUSED(nrows);
 
@@ -708,17 +712,18 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
           || (old_text[1] != new_text[1])) {
         cChar = new_text[0];
         cAttr = new_text[1];
-        xc = x * 8;
-        DrawChar(xc, yc, 8, font_height, 0, (char *)&vga_charmap[cChar<<5], cAttr);
+        gfxchar = tm_info.line_graphics && ((cChar & 0xE0) == 0xC0);
+        xc = x * font_width;
+        DrawChar(xc, yc, font_width, font_height, 0, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
         if(yc < rfbUpdateRegion.y) rfbUpdateRegion.y = yc;
         if((yc + font_height - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = (yc + font_height - rfbUpdateRegion.y);
         if(xc < rfbUpdateRegion.x) rfbUpdateRegion.x = xc;
-        if((xc + 8 - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = (xc + 8 - rfbUpdateRegion.x);
+        if((xc + font_width - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = (xc + font_width - rfbUpdateRegion.x);
         rfbUpdateRegion.updated = true;
-    if (offset == curs) {
+        if (offset == curs) {
           cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-          DrawChar(xc, yc + tm_info.cs_start, 8, tm_info.cs_end - tm_info.cs_start + 1,
-                   tm_info.cs_start, (char *)&vga_charmap[cChar<<5], cAttr);
+          DrawChar(xc, yc + tm_info.cs_start, font_width, tm_info.cs_end - tm_info.cs_start + 1,
+                   tm_info.cs_start, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
         }
       }
       x++;
@@ -811,10 +816,14 @@ bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigne
     font_width = fwidth;
     text_cols = x / fwidth;
     text_rows = y / fheight;
-  } else {
-    if ((x > 640) || (y > 480)) {
-      BX_PANIC(("dimension_update(): RFB doesn't support graphics modes > 640x480 (%dx%d)", x, y));
-    }
+  }
+  if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {
+    BX_PANIC(("dimension_update(): RFB doesn't support graphics mode %dx%d", x, y));
+  } else if ((x != rfbDimensionX) || (x != rfbDimensionY)) {
+    clear_screen();
+    SendUpdate(0, rfbHeaderbarY, rfbDimensionX, rfbDimensionY);
+    rfbDimensionX = x;
+    rfbDimensionY = y;
   }
 }
 
@@ -896,28 +905,28 @@ void bx_rfb_gui_c::show_headerbar(void)
   char *newBits, value;
   unsigned int i, xorigin, addr;
 
-  newBits = (char *)malloc(rfbDimensionX * rfbHeaderbarY);
-  memset(newBits, 0, (rfbDimensionX * rfbHeaderbarY));
-  DrawBitmap(0, 0, rfbDimensionX, rfbHeaderbarY, newBits, (char)0xf0, false);
+  newBits = (char *)malloc(rfbWindowX * rfbHeaderbarY);
+  memset(newBits, 0, (rfbWindowX * rfbHeaderbarY));
+  DrawBitmap(0, 0, rfbWindowX, rfbHeaderbarY, newBits, (char)0xf0, false);
   for(i = 0; i < rfbHeaderbarBitmapCount; i++) {
     if(rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT) {
       xorigin = rfbHeaderbarBitmaps[i].xorigin;
     } else {
-      xorigin = rfbDimensionX - rfbHeaderbarBitmaps[i].xorigin;
+      xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
     }
     DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap, (char)0xf0, false);
   }
   free(newBits);
-  newBits = (char *)malloc(rfbDimensionX * rfbStatusbarY / 8);
-  memset(newBits, 0, (rfbDimensionX * rfbStatusbarY / 8));
+  newBits = (char *)malloc(rfbWindowX * rfbStatusbarY / 8);
+  memset(newBits, 0, (rfbWindowX * rfbStatusbarY / 8));
   for (i = 1; i < 12; i++) {
     addr = rfbStatusitemPos[i] / 8;
     value = 1 << (rfbStatusitemPos[i] % 8);
     for (unsigned j=1; j<rfbStatusbarY; j++) {
-      newBits[(rfbDimensionX * j / 8) + addr] = value;
+      newBits[(rfbWindowX * j / 8) + addr] = value;
     }
   }
-  DrawBitmap(0, rfbDimensionY - rfbStatusbarY, rfbDimensionX, rfbStatusbarY, newBits, (char)0xf0, false);
+  DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY, newBits, (char)0xf0, false);
   free(newBits);
   for (i = 1; i <= statusitem_count; i++) {
     rfbSetStatus(i, rfbStatusitemActive[i]);
@@ -947,7 +956,7 @@ void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
     if (rfbHeaderbarBitmaps[hbar_id].alignment == BX_GRAVITY_LEFT) {
       xorigin = rfbHeaderbarBitmaps[hbar_id].xorigin;
     } else {
-      xorigin = rfbDimensionX - rfbHeaderbarBitmaps[hbar_id].xorigin;
+      xorigin = rfbWindowX - rfbHeaderbarBitmaps[hbar_id].xorigin;
     }
     DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].xdim,
                rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].ydim,
@@ -1070,9 +1079,9 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, boo
     free(newBits);
 }
 
-void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color)
+void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color, bx_bool gfxchar)
 {
-  static unsigned char newBits[8 * 32];
+  static unsigned char newBits[9 * 32];
   unsigned char mask;
   int bytes = width * height;
   char fgcolor, bgcolor;
@@ -1100,7 +1109,15 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char c
   for(int i = 0; i < bytes; i+=width) {
     mask = 0x80;
     for(int j = 0; j < width; j++) {
-      newBits[i + j] = (bmap[fonty] & mask) ? fgcolor : bgcolor;
+      if (mask > 0) {
+        newBits[i + j] = (bmap[fonty] & mask) ? fgcolor : bgcolor;
+      } else {
+        if (gfxchar) {
+          newBits[i + j] = (bmap[fonty] & 0x01) ? fgcolor : bgcolor;
+        } else {
+          newBits[i + j] = bgcolor;
+        }
+      }
       mask >>= 1;
     }
     fonty++;
@@ -1131,7 +1148,7 @@ void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, b
         for(c = 0; c < width; c++) {
             newBits[(i * width) + c] = rfbPalette[newBits[(i * width) + c]];
         }
-        memcpy(&rfbScreen[y * rfbDimensionX + x], &newBits[i * width], width);
+        memcpy(&rfbScreen[y * rfbWindowX + x], &newBits[i * width], width);
         y++;
     }
     if(update_client) {
@@ -1156,7 +1173,7 @@ void SendUpdate(int x, int y, int width, int height)
     char *newBits;
     int  i;
 
-    if(x < 0 || y < 0 || (x + width) > rfbDimensionX || (y + height) > rfbDimensionY) {
+    if(x < 0 || y < 0 || (x + width) > rfbWindowX || (y + height) > rfbWindowY) {
         BX_ERROR(("Dimensions out of bounds.  x=%i y=%i w=%i h=%i", x, y, width, height));
     }
     if(sGlobal != INVALID_SOCKET) {
@@ -1174,7 +1191,7 @@ void SendUpdate(int x, int y, int width, int height)
 
         newBits = (char *)malloc(width * height);
         for(i = 0; i < height; i++) {
-            memcpy(&newBits[i * width], &rfbScreen[y * rfbDimensionX + x], width);
+            memcpy(&newBits[i * width], &rfbScreen[y * rfbWindowX + x], width);
             y++;
         }
 
@@ -1615,7 +1632,7 @@ void rfbMouseMove(int x, int y, int bmask)
         if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT)
           xorigin = rfbHeaderbarBitmaps[i].xorigin;
         else
-          xorigin = rfbDimensionX - rfbHeaderbarBitmaps[i].xorigin;
+          xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
         if ( (x>=xorigin) && (x<(xorigin+int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim))) ) {
           rfbHeaderbarBitmaps[i].f();
           return;
