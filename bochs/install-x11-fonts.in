@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # install-x11-fonts
-# $Id: install-x11-fonts,v 1.4 2001-09-30 14:55:20 bdenney Exp $
+# $Id: install-x11-fonts.in,v 1.1 2001-11-10 03:45:53 bdenney Exp $
 #
 # This is designed help people to get the Bochs fonts installed on their 
 # system.
@@ -9,7 +9,7 @@
 
 X11_FONT_PATH_CHOICES="/usr/X11R6/lib/X11/fonts /usr/local/lib/X11/fonts /usr/lib/X11/fonts /usr/openwin/lib/X11/fonts"
 FONTS=vga.pcf
-FONT_SOURCE_PATH_CHOICES="font ${srcdir+$srcdir/font} /usr/local/bochs/latest"
+FONT_SOURCE_PATH_CHOICES="font ${srcdir+$srcdir/font} @prefix@/bochs/latest"
 
 die () {
 cat <<EOF

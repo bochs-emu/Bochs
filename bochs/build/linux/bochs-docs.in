@@ -1,7 +1,7 @@
 #!/bin/sh
 BROWSER=netscape
-URL=/usr/local/bochs/@VERSION@/DOC-linux.html
-MY_PATH=/usr/local/bin/bochs-docs
+URL=@prefix@/@VERSION@/DOC-linux.html
+MY_PATH=@prefix@/bin/bochs-docs
 
 cat <<EOF
 -----------------------------------------------------

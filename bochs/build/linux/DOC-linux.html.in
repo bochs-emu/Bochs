@@ -91,25 +91,25 @@ text form are shown as links.  <br>
 
 <table align=center border=1>
 <th>File name </th> <th> Description </th>
-<tr><td><a href="README ">/usr/local/bochs/@VERSION@/README </a></td> <td> the ReadMe file from the source distribution. </td> </tr>
-<tr><td><a href="COPYING ">/usr/local/bochs/@VERSION@/COPYING </a></td> <td> copy of the LGPL license </td> </tr>
-<tr><td><a href="DOC-linux.html ">/usr/local/bochs/@VERSION@/DOC-linux.html </a></td> <td> this file </td> </tr>
+<tr><td><a href="README ">@prefix@/bochs/@VERSION@/README </a></td> <td> the ReadMe file from the source distribution. </td> </tr>
+<tr><td><a href="COPYING ">@prefix/bochs/@VERSION@/COPYING </a></td> <td> copy of the LGPL license </td> </tr>
+<tr><td><a href="DOC-linux.html ">@prefix/bochs/@VERSION@/DOC-linux.html </a></td> <td> this file </td> </tr>
 <tr><td>/usr/man/man1/* </td> <td> man pages for bochs, bochs-dlx, bochsrc, and bximage </td> </tr>
-<tr><td><a href="docs-html/index.html ">/usr/local/bochs/@VERSION@/docs-html/* </a></td> <td> a local copy of all Bochs documentation ( <a href="http://bochs.sourceforge.net/docs-html">Online copy</a> )</td> </tr>
-<tr><td><a href="CHANGES ">/usr/local/bochs/@VERSION@/CHANGES </a></td> <td> what is changed between versions </td> </tr>
-<tr><td>/usr/local/bochs/@VERSION@/BIOS-bochs-latest </td> <td> ROM BIOS image for Bochs  </td> </tr>
-<tr><td>/usr/local/bochs/@VERSION@/VGABIOS-elpin-2.40 </td> <td> VGA BIOS image for Bochs </td> </tr>
-<tr><td><a href="VGABIOS-elpin-LICENSE ">/usr/local/bochs/@VERSION@/VGABIOS-elpin-LICENSE </a></td> <td> license for VGA BIOS </td> </tr>
-<tr><td><a href="bochsrc-sample.txt">/usr/local/bochs/@VERSION@/bochsrc-sample.txt</a></td> <td> sample Bochs configuration file </td> </tr>
-<tr><td>/usr/local/bin/bochs </td> <td> the main Bochs executable (This is actually a symbolic link to /usr/local/bochs/@VERSION@/bochs) </td> </tr>
-<tr><td>/usr/local/bin/bximage </td> <td> tool for making new disk images (This is actually a symbolic link to /usr/local/bochs/@VERSION@/bximage)</td> </tr>
-<tr><td>/usr/local/bin/bochs-docs </td> <td> script to start up browser with this page </td> </tr>
-<tr><td>/usr/local/bin/bochs-dlx </td> <td> run this script to try out DLX Linux inside Bochs!</td> </tr>
-<tr><td>/usr/local/bochs/dlxlinux/ </td> <td> directory containing DLX linux sample disk image </td> </tr>
-<tr><td><a href="../dlxlinux/README ">/usr/local/bochs/dlxlinux/README </a></td> <td> description of DLX linux</td> </tr>
-<tr><td><a href="../dlxlinux/bochsrc.txt ">/usr/local/bochs/dlxlinux/bochsrc.txt </a></td> <td> Bochs configuration file for DLX</td> </tr>
-<tr><td>/usr/local/bochs/dlxlinux/hd10meg.img </td> <td> disk image file (10 meg) </td> </tr>
-<tr><td><a href="../dlxlinux/testform.txt ">/usr/local/bochs/dlxlinux/testform.txt </a></td> <td> Form for reporting success or failure </td> </tr>
+<tr><td><a href="docs-html/index.html ">@prefix/bochs/@VERSION@/docs-html/* </a></td> <td> a local copy of all Bochs documentation ( <a href="http://bochs.sourceforge.net/docs-html">Online copy</a> )</td> </tr>
+<tr><td><a href="CHANGES ">@prefix@/bochs/@VERSION@/CHANGES </a></td> <td> what is changed between versions </td> </tr>
+<tr><td>@prefix@/bochs/@VERSION@/BIOS-bochs-latest </td> <td> ROM BIOS image for Bochs  </td> </tr>
+<tr><td>@prefix@/bochs/@VERSION@/VGABIOS-elpin-2.40 </td> <td> VGA BIOS image for Bochs </td> </tr>
+<tr><td><a href="VGABIOS-elpin-LICENSE ">@prefix@/bochs/@VERSION@/VGABIOS-elpin-LICENSE </a></td> <td> license for VGA BIOS </td> </tr>
+<tr><td><a href="bochsrc-sample.txt">@prefix@/bochs/@VERSION@/bochsrc-sample.txt</a></td> <td> sample Bochs configuration file </td> </tr>
+<tr><td>@prefix@/bin/bochs </td> <td> the main Bochs executable (This is actually a symbolic link to @prefix@/bochs/@VERSION@/bochs) </td> </tr>
+<tr><td>@prefix@/bin/bximage </td> <td> tool for making new disk images (This is actually a symbolic link to @prefix@/bochs/@VERSION@/bximage)</td> </tr>
+<tr><td>@prefix@/bin/bochs-docs </td> <td> script to start up browser with this page </td> </tr>
+<tr><td>@prefix@/bin/bochs-dlx </td> <td> run this script to try out DLX Linux inside Bochs!</td> </tr>
+<tr><td>@prefix@/bochs/dlxlinux/ </td> <td> directory containing DLX linux sample disk image </td> </tr>
+<tr><td><a href="../dlxlinux/README ">@prefix@/bochs/dlxlinux/README </a></td> <td> description of DLX linux</td> </tr>
+<tr><td><a href="../dlxlinux/bochsrc.txt ">@prefix@/bochs/dlxlinux/bochsrc.txt </a></td> <td> Bochs configuration file for DLX</td> </tr>
+<tr><td>@prefix@/bochs/dlxlinux/hd10meg.img </td> <td> disk image file (10 meg) </td> </tr>
+<tr><td><a href="../dlxlinux/testform.txt ">@prefix@/bochs/dlxlinux/testform.txt </a></td> <td> Form for reporting success or failure </td> </tr>
 </table>
 
 
@@ -217,7 +217,7 @@ to start up DLX Linux.
 <BR>
 This script makes it quick and easy to start up DLX Linux within bochs.
 "bochs-dlx" should run as soon as you install the RPM.  All the script actually
-does is to cd into /usr/local/bochs/dlxlinux and then run bochs from there.
+does is to cd into @prefix@/bochs/dlxlinux and then run bochs from there.
 <br><br>
 
 <font face="arial, helvetica" color="#1e029a" size="3">

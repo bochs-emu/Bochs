@@ -4,6 +4,12 @@ AC_PREREQ(2.4)
 AC_INIT(bochs.h)
 AC_CONFIG_HEADER(config.h)
 
+dnl // Put Bochs version information right here so that it gets substituted
+dnl // into all the right places.
+VERSION="1.2.cvs"
+VER_STRING="cvs-snapshot"
+REL_STRING=""
+
 changequote(<<, >>)
 changequote([, ])
 
@@ -1085,6 +1091,9 @@ AC_SUBST(PRIMARY_TARGET)
 AC_SUBST(COMMAND_SEPARATOR)
 AC_SUBST(CD_UP_ONE)
 AC_SUBST(CD_UP_TWO)
+AC_SUBST(VERSION)
+AC_SUBST(VER_STRING)
+AC_SUBST(REL_STRING)
 
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
@@ -1092,4 +1101,6 @@ AC_PATH_PROG(TAR, tar)
 AC_OUTPUT(Makefile iodev/Makefile debug/Makefile bios/Makefile \
          cpu/Makefile memory/Makefile gui/Makefile disasm/Makefile \
          ${INSTRUMENT_DIR}/Makefile misc/Makefile dynamic/Makefile \
-         fpu/Makefile)
+         fpu/Makefile install-x11-fonts build/linux/bochs-dlx \
+	 build/linux/bochs-docs bxversion.h \
+	 build/linux/DOC-linux.html)
