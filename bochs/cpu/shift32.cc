@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.10 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: shift32.cc,v 1.11 2002-09-18 08:00:41 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
 
   /* op1:op2 << count.  result stored in op1 */
 
-  if (i->b1 == 0x1a4)
+  if (i->b1() == 0x1a4)
     count = i->Ib() & 0x1f;
   else // 0x1a5
     count = CL & 0x1f;
@@ -90,7 +90,7 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0x1ac)
+  if (i->b1() == 0x1ac)
     count = i->Ib() & 0x1f;
   else // 0x1ad
     count = CL & 0x1f;
@@ -141,11 +141,11 @@ BX_CPU_C::ROL_Ed(bxInstruction_c *i)
   Bit32u op1_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0xc1)
+  if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
-  else if (i->b1 == 0xd1)
+  else if (i->b1() == 0xd1)
     count = 1;
-  else // (i->b1 == 0xd3)
+  else // (i->b1() == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
@@ -187,11 +187,11 @@ BX_CPU_C::ROR_Ed(bxInstruction_c *i)
     Bit32u op1_32, result_32, result_b31;
   unsigned count;
 
-  if (i->b1 == 0xc1)
+  if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
-  else if (i->b1 == 0xd1)
+  else if (i->b1() == 0xd1)
     count = 1;
-  else // (i->b1 == 0xd3)
+  else // (i->b1() == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
@@ -233,11 +233,11 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
   Bit32u op1_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0xc1)
+  if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
-  else if (i->b1 == 0xd1)
+  else if (i->b1() == 0xd1)
     count = 1;
-  else // (i->b1 == 0xd3)
+  else // (i->b1() == 0xd3)
     count = CL & 0x1f;
 
 
@@ -285,11 +285,11 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
   Bit32u op1_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0xc1)
+  if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
-  else if (i->b1 == 0xd1)
+  else if (i->b1() == 0xd1)
     count = 1;
-  else // (i->b1 == 0xd3)
+  else // (i->b1() == 0xd3)
     count = CL & 0x1f;
 
 
@@ -339,11 +339,11 @@ BX_CPU_C::SHL_Ed(bxInstruction_c *i)
   Bit32u op1_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0xc1)
+  if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
-  else if (i->b1 == 0xd1)
+  else if (i->b1() == 0xd1)
     count = 1;
-  else // (i->b1 == 0xd3)
+  else // (i->b1() == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
@@ -379,11 +379,11 @@ BX_CPU_C::SHR_Ed(bxInstruction_c *i)
   Bit32u op1_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0xc1)
+  if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
-  else if (i->b1 == 0xd1)
+  else if (i->b1() == 0xd1)
     count = 1;
-  else // (i->b1 == 0xd3)
+  else // (i->b1() == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
@@ -418,11 +418,11 @@ BX_CPU_C::SAR_Ed(bxInstruction_c *i)
   Bit32u op1_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0xc1)
+  if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
-  else if (i->b1 == 0xd1)
+  else if (i->b1() == 0xd1)
     count = 1;
-  else // (i->b1 == 0xd3)
+  else // (i->b1() == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.45 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: cpu.cc,v 1.46 2002-09-18 08:00:32 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -263,9 +263,9 @@ fetch_decode_OK:
     }
 #endif
 
-    if ( !(i.rep_used && (i.attr & BxRepeatable)) ) {
+    if ( !(i.repUsedL() && i.repeatableL()) ) {
       // non repeating instruction
-      RIP += i.ilen;
+      RIP += i.ilen();
       BX_CPU_CALL_METHOD(i.execute, (&i));
 
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
@@ -279,15 +279,15 @@ fetch_decode_OK:
 
     else {
 repeat_loop:
-      if (i.attr & BxRepeatableZF) {
+      if (i.repeatableZFL()) {
 #if BX_SUPPORT_X86_64
         if (i.as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(i.execute, (&i));
             RCX -= 1;
             }
-          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
-          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i.repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i.repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (RCX == 0) goto repeat_done;
           goto repeat_not_done;
           }
@@ -298,8 +298,8 @@ repeat_loop:
             BX_CPU_CALL_METHOD(i.execute, (&i));
             ECX -= 1;
             }
-          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
-          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i.repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i.repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (ECX == 0) goto repeat_done;
           goto repeat_not_done;
           }
@@ -308,8 +308,8 @@ repeat_loop:
             BX_CPU_CALL_METHOD(i.execute, (&i));
             CX -= 1;
             }
-          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
-          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i.repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i.repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (CX == 0) goto repeat_done;
           goto repeat_not_done;
           }
@@ -364,7 +364,7 @@ repeat_not_done:
 
 
 repeat_done:
-      RIP += i.ilen;
+      RIP += i.ilen();
 
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP

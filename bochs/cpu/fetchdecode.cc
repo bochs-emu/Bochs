@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.13 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.14 2002-09-18 08:00:36 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1444,8 +1444,7 @@ BX_CPU_C::FetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
                   BX_SEG_REG_NULL,   /*rex_b*/    0,
                   /*os32*/   is_32,  /*as32*/ is_32,
                   /*os64*/       0,  /*as64*/     0,
-                  /*extend8bit*/ 0);
-  instruction->rep_used = 0;
+                  /*extend8bit*/ 0,  /*repUsed*/  0);
 
 
 fetch_b1:
@@ -1453,7 +1452,8 @@ fetch_b1:
 
 another_byte:
   offset = os_32 << 9; // * 512
-  instruction->attr = attr = BxOpcodeInfo[b1+offset].Attr;
+  attr = BxOpcodeInfo[b1+offset].Attr;
+  instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
 
   if ( !(attr & BxAnother) ) {
     // Opcode does not require a MODRM byte.
@@ -1467,8 +1467,8 @@ another_byte:
 #endif
     // Simple instruction, nothing left to do.
     if (attr == 0) {
-      instruction->b1 = b1;
-      instruction->ilen = ilen;
+      instruction->setB1(b1);
+      instruction->setILen(ilen);
       return(1);
       }
     }
@@ -1495,7 +1495,7 @@ another_byte:
 
         case 0xf2: // REPNE/REPNZ
         case 0xf3: // REP/REPE/REPZ
-          instruction->rep_used = b1;
+          instruction->setRepUsed(b1 & 3);
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
@@ -1772,7 +1772,7 @@ modrm_done:
       instruction->execute = OpcodeInfoPtr[nnn].ExecutePtr;
       // get additional attributes from group table
       attr |= OpcodeInfoPtr[nnn].Attr;
-      instruction->attr = attr;
+      instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
 #if BX_DYNAMIC_TRANSLATION
       instruction->DTAttr = 0; // for now
 #endif
@@ -1939,8 +1939,8 @@ BX_INFO(("b1 was %x", b1));
     }
 
 
-  instruction->b1 = b1;
-  instruction->ilen = ilen;
+  instruction->setB1(b1);
+  instruction->setILen(ilen);
   return(1);
 }
 
@@ -1948,7 +1948,7 @@ BX_INFO(("b1 was %x", b1));
 BX_CPU_C::BxError(bxInstruction_c *i)
 {
   // extern void dump_core();
-  BX_INFO(("BxError: instruction with op1=0x%x", i->b1));
+  BX_INFO(("BxError: instruction with op1=0x%x", i->b1()));
   BX_INFO(("nnn was %u", i->nnn()));
 
   BX_INFO(("WARNING: Encountered an unknown instruction (signalling illegal instruction):"));
@@ -1960,5 +1960,5 @@ BX_CPU_C::BxError(bxInstruction_c *i)
   void
 BX_CPU_C::BxResolveError(bxInstruction_c *i)
 {
-  BX_PANIC(("BxResolveError: instruction with op1=0x%x", i->b1));
+  BX_PANIC(("BxResolveError: instruction with op1=0x%x", i->b1()));
 }

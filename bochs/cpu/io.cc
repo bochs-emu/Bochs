@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.16 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: io.cc,v 1.17 2002-09-18 08:00:38 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,7 +156,7 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time.
      */
-    if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
+    if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
       if (i->as32L())
@@ -437,7 +437,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time.
      */
-    if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
+    if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
       if (i->as32L())

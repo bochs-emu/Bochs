@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.13 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: ctrl_xfer32.cc,v 1.14 2002-09-18 08:00:34 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -371,7 +371,7 @@ BX_CPU_C::JCC_Jd(bxInstruction_c *i)
 {
   Boolean condition = 0;
 
-  switch (i->b1 & 0x0f) {
+  switch (i->b1() & 0x0f) {
     case 0x00: /* JO */ condition = get_OF(); break;
     case 0x01: /* JNO */ condition = !get_OF(); break;
     case 0x02: /* JB */ condition = get_CF(); break;

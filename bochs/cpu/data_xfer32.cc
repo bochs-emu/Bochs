@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.12 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: data_xfer32.cc,v 1.13 2002-09-18 08:00:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,15 +42,15 @@ BX_CPU_C::XCHG_ERXEAX(bxInstruction_c *i)
 
   temp32 = EAX;
 #if BX_SUPPORT_X86_64
-  RAX = BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx;
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx = temp32;
+  RAX = BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.erx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.erx = temp32;
   //RAX = BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.erx;
   //BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.erx = temp32;
 #else
-  EAX = BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx;
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx = temp32;
-  //EAX = BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx;
-  //BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx = temp32;
+  EAX = BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.erx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.erx = temp32;
+  //EAX = BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].dword.erx;
+  //BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].dword.erx = temp32;
 #endif
 }
 
@@ -58,11 +58,11 @@ BX_CPU_C::XCHG_ERXEAX(bxInstruction_c *i)
 BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 0x07) + i->rex_b()].rrx = i->Id();
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 0x07) + i->rex_b()].rrx = i->Id();
   //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = i->Id();
 #else
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 0x07) + i->rex_b()].dword.erx = i->Id();
-  //BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx = i->Id();
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 0x07) + i->rex_b()].dword.erx = i->Id();
+  //BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].dword.erx = i->Id();
 #endif
 }
 
@@ -301,7 +301,7 @@ BX_CPU_C::CMOV_GdEd(bxInstruction_c *i)
   Bit32u op2_32;
 
 
-  switch (i->b1) {
+  switch (i->b1()) {
     // CMOV opcodes:
     case 0x140: condition = get_OF(); break;
     case 0x141: condition = !get_OF(); break;

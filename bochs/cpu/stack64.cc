@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.3 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: stack64.cc,v 1.4 2002-09-18 08:00:42 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ BX_CPU_C::POP_Eq(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 {
-  push_64(BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx);
+  push_64(BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx);
   //push_64(BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx);
 }
 
@@ -73,7 +73,7 @@ BX_CPU_C::POP_RRX(bxInstruction_c *i)
   Bit64u rrx;
 
   pop_64(&rrx);
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx = rrx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx = rrx;
   //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = rrx;
 }
 

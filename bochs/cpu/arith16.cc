@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.11 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: arith16.cc,v 1.12 2002-09-18 08:00:30 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,11 +38,11 @@ BX_CPU_C::INC_RX(bxInstruction_c *i)
 {
   Bit16u rx;
 
-  rx = ++ BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].word.rx;
+  rx = ++ BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].word.rx;
 //#if BX_SUPPORT_X86_64
 //  rx = ++ BX_CPU_THIS_PTR gen_reg[i->nnn()].word.rx;
 //#else
-//  rx = ++ BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
+//  rx = ++ BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].word.rx;
 //#endif
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_INC16);
 }
@@ -52,11 +52,11 @@ BX_CPU_C::DEC_RX(bxInstruction_c *i)
 {
   Bit16u rx;
 
-  rx = -- BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].word.rx;
+  rx = -- BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].word.rx;
 //#if BX_SUPPORT_X86_64
 //  rx = -- BX_CPU_THIS_PTR gen_reg[i->nnn()].word.rx;
 //#else
-//  rx = -- BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
+//  rx = -- BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].word.rx;
 //#endif
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_DEC16);
 }

@@ -126,7 +126,7 @@ access_limit = 0xff;
   data_sel_off.offset = RMAddr(i);
   data_sel_off.selector = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
 
-  math_emulate2(addr_modes, i->modrm(), i->b1, data_address,
+  math_emulate2(addr_modes, i->modrm(), i->b1(), data_address,
                 data_sel_off, entry_sel_off);
 }
 

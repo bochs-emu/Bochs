@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.41 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.42 2002-09-18 08:00:39 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,7 +48,7 @@
 BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
   BX_DEBUG(("UndefinedOpcode: %02x causes exception 6",
-              (unsigned) i->b1));
+              (unsigned) i->b1()));
   exception(BX_UD_EXCEPTION, 0, 0);
 }
 

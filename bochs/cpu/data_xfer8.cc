@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.9 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: data_xfer8.cc,v 1.10 2002-09-18 08:00:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,13 +37,13 @@
   void
 BX_CPU_C::MOV_RLIb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x03].word.byte.rl = i->Ib();
+  BX_CPU_THIS_PTR gen_reg[i->b1() & 0x03].word.byte.rl = i->Ib();
 }
 
   void
 BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x03].word.byte.rh = i->Ib();
+  BX_CPU_THIS_PTR gen_reg[i->b1() & 0x03].word.byte.rh = i->Ib();
 }
 
 

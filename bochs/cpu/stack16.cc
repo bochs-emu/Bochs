@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.10 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: stack16.cc,v 1.11 2002-09-18 08:00:42 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,11 +39,11 @@
   void
 BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
-  push_16( BX_CPU_THIS_PTR gen_reg[(i->b1 & 0x07) + i->rex_b()].word.rx );
+  push_16( BX_CPU_THIS_PTR gen_reg[(i->b1() & 0x07) + i->rex_b()].word.rx );
 //#if BX_SUPPORT_X86_64
 //  push_16( BX_CPU_THIS_PTR gen_reg[i->nnn()].word.rx );
 //#else
-//  push_16( BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx );
+//  push_16( BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].word.rx );
 //#endif
 }
 
@@ -53,11 +53,11 @@ BX_CPU_C::POP_RX(bxInstruction_c *i)
   Bit16u rx;
 
   pop_16(&rx);
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 0x07) + i->rex_b()].word.rx = rx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 0x07) + i->rex_b()].word.rx = rx;
 //#if BX_SUPPORT_X86_64
 //  BX_CPU_THIS_PTR gen_reg[i->nnn()].word.rx = rx;
 //#else
-//  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx = rx;
+//  BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].word.rx = rx;
 //#endif
 }
 

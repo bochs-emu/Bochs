@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.62 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: cpu.h,v 1.63 2002-09-18 08:00:33 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -663,9 +663,11 @@ public:
   void (BX_CPU_C::*execute)(bxInstruction_c *);
 #endif
 
-  unsigned ilen; // instruction length
-
-
+  // 25..22  ilen (0..15).  Leave this one on top so no mask is needed.
+  // 21..13  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511.
+  // 12..12  BxRepeatableZF (pass-thru from fetchdecode attributes)
+  // 11..11  BxRepeatable   (pass-thru from fetchdecode attributes)
+  // 10...9  repUsed (0=none, 2=0xF2, 3=0xF3).
   //  8...8  extend8bit
   //  7...7  as64
   //  6...6  os64
@@ -674,11 +676,6 @@ public:
   //  3...3  rex_b (Note: needs to be bit3, so value is 0x8)
   //  2...0  seg
   unsigned metaInfo;
-
-  // prefix stuff here...
-  unsigned attr; // attribute from fetchdecode
-  unsigned b1; // opcode1 byte
-  unsigned rep_used;
 
   union {
     // Form (longest case): [opcode/modrm/sib/displacement32/immediate32]
@@ -760,9 +757,9 @@ public:
   BX_CPP_INLINE void initMetaInfo(unsigned seg, unsigned rex_b,
                                   unsigned os32, unsigned as32,
                                   unsigned os64, unsigned as64,
-                                  unsigned extend8bit) {
+                                  unsigned extend8bit, unsigned repUsed) {
       metaInfo = seg | (rex_b<<3) | (os32<<4) | (as32<<5) |
-                 (os64<<6) | (as64<<7) | (extend8bit<<8);
+                 (os64<<6) | (as64<<7) | (extend8bit<<8) | (repUsed<<9);
       }
   BX_CPP_INLINE unsigned seg(void) {
       return metaInfo & 7;
@@ -823,6 +820,47 @@ public:
       }
   BX_CPP_INLINE void assertExtend8bit(void) {
       metaInfo |= (1<<8);
+      }
+
+  BX_CPP_INLINE unsigned repUsedL(void) {
+      return metaInfo & (3<<9);
+      }
+  BX_CPP_INLINE unsigned repUsedValue(void) {
+      return (metaInfo >> 9) & 3;
+      }
+  BX_CPP_INLINE void setRepUsed(unsigned value) {
+      metaInfo = (metaInfo & ~(3<<9)) | (value<<9);
+      }
+
+  BX_CPP_INLINE void setRepAttr(unsigned value) {
+      // value is expected to be masked, and only contain bits
+      // for BxRepeatable and BxRepeatableZF.  We don't need to
+      // keep masking out these bits before we add in new ones,
+      // since the fetch process won't start with repeatable attributes
+      // and then delete them.
+      metaInfo |= value;
+      }
+  BX_CPP_INLINE unsigned repeatableL(void) {
+      return metaInfo & (1<<11);
+      }
+  BX_CPP_INLINE unsigned repeatableZFL(void) {
+      return metaInfo & (1<<12);
+      }
+
+  BX_CPP_INLINE unsigned b1(void) {
+      return (metaInfo >> 13) & 0x1ff;
+      }
+  BX_CPP_INLINE void setB1(unsigned b1) {
+      metaInfo = (metaInfo & ~(0x1ff<<13)) | (b1<<13);
+      }
+
+  // Note this is the highest field, and thus needs no masking.
+  // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
+  BX_CPP_INLINE unsigned ilen(void) {
+      return metaInfo >> 22;
+      }
+  BX_CPP_INLINE void setILen(unsigned ilen) {
+      metaInfo |= (ilen<<22);
       }
   };
 
@@ -2691,8 +2729,8 @@ BX_CPU_C::get_IOPL() {
 
 #define BxPrefix          0x0010 // bit  4
 #define BxAnother         0x0020 // bit  5
-#define BxRepeatable      0x0040 // bit  6
-#define BxRepeatableZF    0x0080 // bit  7
+#define BxRepeatable      0x0800 // bit 11 (pass through to metaInfo field)
+#define BxRepeatableZF    0x1000 // bit 12 (pass through to metaInfo field)
 #define BxGroupN          0x0100 // bits 8
 #define BxGroup1          BxGroupN
 #define BxGroup2          BxGroupN

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.13 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: arith32.cc,v 1.14 2002-09-18 08:00:31 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,16 +45,16 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
   Bit32u erx;
 
-  erx = ++ BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx;
+  erx = ++ BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.erx;
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.hrx = 0;
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.hrx = 0;
 #endif
 
 //#if BX_SUPPORT_X86_64
 //  erx = ++ BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.erx;
 //  BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.hrx = 0;
 //#else
-//  erx = ++ BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx;
+//  erx = ++ BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].dword.erx;
 //#endif
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
 }
@@ -64,16 +64,16 @@ BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
   Bit32u erx;
 
-  erx = -- BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx;
+  erx = -- BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.erx;
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.hrx = 0;
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].dword.hrx = 0;
 #endif
 
 //#if BX_SUPPORT_X86_64
 //  erx = -- BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.erx;
 //  BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.hrx = 0;
 //#else
-//  erx = -- BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx;
+//  erx = -- BX_CPU_THIS_PTR gen_reg[i->b1() & 0x07].dword.erx;
 //#endif
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
 }

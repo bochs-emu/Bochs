@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.9 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: shift16.cc,v 1.10 2002-09-18 08:00:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
   unsigned count;
 
   /* op1:op2 << count.  result stored in op1 */
-  if (i->b1 == 0x1a4)
+  if (i->b1() == 0x1a4)
     count = i->Ib();
   else // 0x1a5
     count = CL;
@@ -103,7 +103,7 @@ BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
   Bit32u temp_32, result_32;
   unsigned count;
 
-  if (i->b1 == 0x1ac)
+  if (i->b1() == 0x1ac)
     count = i->Ib();
   else // 0x1ad
     count = CL;
@@ -163,9 +163,9 @@ BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1 == 0xc1 )
+  if ( i->b1() == 0xc1 )
     count = i->Ib();
-  else if ( i->b1 == 0xd1 )
+  else if ( i->b1() == 0xd1 )
     count = 1;
   else // 0xd3
     count = CL;
@@ -211,9 +211,9 @@ BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     Bit16u op1_16, result_16, result_b15;
   unsigned count;
 
-  if ( i->b1 == 0xc1 )
+  if ( i->b1() == 0xc1 )
     count = i->Ib();
-  else if ( i->b1 == 0xd1 )
+  else if ( i->b1() == 0xd1 )
     count = 1;
   else // 0xd3
     count = CL;
@@ -259,9 +259,9 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1 == 0xc1 )
+  if ( i->b1() == 0xc1 )
     count = i->Ib();
-  else if ( i->b1 == 0xd1 )
+  else if ( i->b1() == 0xd1 )
     count = 1;
   else // 0xd3
     count = CL;
@@ -319,9 +319,9 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1 == 0xc1 )
+  if ( i->b1() == 0xc1 )
     count = i->Ib();
-  else if ( i->b1 == 0xd1 )
+  else if ( i->b1() == 0xd1 )
     count = 1;
   else // 0xd3
     count = CL;
@@ -370,9 +370,9 @@ BX_CPU_C::SHL_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1 == 0xc1 )
+  if ( i->b1() == 0xc1 )
     count = i->Ib();
-  else if ( i->b1 == 0xd1 )
+  else if ( i->b1() == 0xd1 )
     count = 1;
   else // 0xd3
     count = CL;
@@ -412,9 +412,9 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1 == 0xc1 )
+  if ( i->b1() == 0xc1 )
     count = i->Ib();
-  else if ( i->b1 == 0xd1 )
+  else if ( i->b1() == 0xd1 )
     count = 1;
   else // 0xd3
     count = CL;
@@ -454,9 +454,9 @@ BX_CPU_C::SAR_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1 == 0xc1 )
+  if ( i->b1() == 0xc1 )
     count = i->Ib();
-  else if ( i->b1 == 0xd1 )
+  else if ( i->b1() == 0xd1 )
     count = 1;
   else // 0xd3
     count = CL;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.4 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: data_xfer64.cc,v 1.5 2002-09-18 08:00:35 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,8 +41,8 @@ BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
   Bit64u temp64;
 
   temp64 = RAX;
-  RAX = BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx;
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx = temp64;
+  RAX = BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx = temp64;
   //RAX = BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx;
   //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = temp64;
 }
@@ -50,7 +50,7 @@ BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx = i->Iq();
+  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx = i->Iq();
   //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = i->Iq();
 }
 
@@ -435,7 +435,7 @@ BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
   Bit64u op2_64;
 
 
-  switch (i->b1) {
+  switch (i->b1()) {
     // CMOV opcodes:
     case 0x140: condition = get_OF(); break;
     case 0x141: condition = !get_OF(); break;

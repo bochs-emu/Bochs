@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.3 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: resolve64.cc,v 1.4 2002-09-18 08:00:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_CPU_C::Resolve64Mod0Rm3(bxInstruction_c *i)
 BX_CPU_C::Resolve64Mod0Rm5(bxInstruction_c *i)
 {
   // eip hasn't been bumped yet when this is called.  must choose the saved value.
-  RMAddr(i) = BX_CPU_THIS_PTR prev_eip + i->ilen + (Bit32s)i->displ32u();
+  RMAddr(i) = BX_CPU_THIS_PTR prev_eip + i->ilen() + (Bit32s)i->displ32u();
 }
   void
 BX_CPU_C::Resolve64Mod0Rm6(bxInstruction_c *i)
