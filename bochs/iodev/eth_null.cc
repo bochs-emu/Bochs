@@ -22,11 +22,13 @@
 
 // eth_null.cc  - skeleton code for an ethernet pktmover
 
-// Peter Grehan (grehan@iprg.nokia.com) coded all of this
-// NE2000/ether stuff.
+// Various networking docs:
+// http://www.graphcomp.com/info/rfc/
+// rfc0826: arp
+// rfc0903: rarp
 
 #include "bochs.h"
-#define LOG_THIS /* not needed */
+#define LOG_THIS bx_ne2k.
 
 
 //
@@ -38,6 +40,10 @@ public:
 		     eth_rx_handler_t rxh,
 		     void *rxarg);
   void sendpkt(void *buf, unsigned io_len);
+private:
+  int rx_timer_index;
+  static void rx_timer_handler(void *);
+  FILE *txlog, *txlog_txt;
 };
 
 
@@ -67,13 +73,56 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
 				       eth_rx_handler_t rxh,
 				       void *rxarg)
 {
-  // Nothing here.
+#if BX_ETH_NULL_LOGGING
+  // Start the rx poll 
+  this->rx_timer_index = 
+    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
+				1, 1); // continuous, active
+  this->rxh   = rxh;
+  this->rxarg = rxarg;
+  // eventually Bryce wants txlog to dump in pcap format so that
+  // tcpdump -r FILE can read it and interpret packets.
+  txlog = fopen ("ne2k-tx.log", "wb");
+  if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
+  txlog_txt = fopen ("ne2k-txdump.txt", "wb");
+  if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
+  fprintf (txlog_txt, "null packetmover readable log file\n");
+  fprintf (txlog_txt, "net IF = %s\n", netif);
+  fprintf (txlog_txt, "MAC address = ");
+  for (int i=0; i<6; i++) 
+    fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf (txlog_txt, "\n--\n");
+  fflush (txlog_txt);
+#endif
 }
 
-// the output routine - called with pre-formatted ethernet frame.
 void
 bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-  // silent discard.
+#if BX_ETH_NULL_LOGGING
+  BX_DEBUG (("sendpkt length %u", io_len));
+  // dump raw bytes to a file, eventually dump in pcap format so that
+  // tcpdump -r FILE can interpret them for us.
+  int n = fwrite (buf, io_len, 1, txlog);
+  if (n != 1) BX_ERROR (("fwrite to txlog failed", io_len));
+  // dump packet in hex into an ascii log file
+  fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+  Bit8u *charbuf = (Bit8u *)buf;
+  for (n=0; n<io_len; n++) {
+    if (((n % 16) == 0) && n>0)
+      fprintf (txlog_txt, "\n");
+    fprintf (txlog_txt, "%02x ", charbuf[n]);
+  }
+  fprintf (txlog_txt, "\n--\n");
+  // flush log so that we see the packets as they arrive w/o buffering
+  fflush (txlog);
+  fflush (txlog_txt);
+#endif
 }
 
+void bx_null_pktmover_c::rx_timer_handler (void *)
+{
+#if BX_ETH_NULL_LOGGING
+  BX_DEBUG (("rx_timer_handler"));
+#endif
+}

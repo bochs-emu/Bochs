@@ -75,3 +75,6 @@ private:
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 #define ETH_FBSD  1
 #endif
+#if (0 && defined(linux))
+#define ETH_LINUX 1
+#endif

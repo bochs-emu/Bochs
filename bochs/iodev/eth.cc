@@ -72,6 +72,13 @@ eth_locator_c::create(const char *type, const char *netif,
       ptr = (eth_locator_c *) &bx_fbsd_match;
   }
 #endif
+#ifdef ETH_LINUX
+  {
+    extern class bx_linux_locator_c bx_linux_match;
+    if (!strcmp(type, "linux"))    
+      ptr = (eth_locator_c *) &bx_linux_match;
+  }
+#endif
 #ifdef ETH_TEST
   {
     extern bx_test_match;
