@@ -13,14 +13,15 @@ extern int array2[MAX][MAX];
 //#define ST(n) (state->n)
 #define ST(n) (n)
 
-#define TOP_OF_TRANSLATED_FUNCTION() \
+#define BEGIN_TRANSLATED_FUNCTION() \
   int x=state->x, y=state->y, accum=state->accum; \
-  int *load_ptr=state->load_ptr, *store_ptr=state->store_ptr; \
+  int *load_ptr=state->load_ptr, *store_ptr=state->store_ptr;
 
-#define BOTTOM_OF_TRANSLATED_FUNCTION() do { \
-  state->x=x; state->y=y; state->accum=accum; \
-  state->load_ptr=load_ptr; state->store_ptr=store_ptr; \
-} while (0)
+#define END_TRANSLATED_FUNCTION() \
+  do { \
+    state->x=x; state->y=y; state->accum=accum; \
+    state->load_ptr=load_ptr; state->store_ptr=store_ptr; \
+  } while (0)
 
 
 #define DO_MOVE_REL(delta_x,delta_y) do { \
