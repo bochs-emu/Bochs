@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.161 2002-10-21 11:13:53 bdenney Exp $
+// $Id: main.cc,v 1.162 2002-10-21 11:22:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1911,10 +1911,12 @@ parse_line_unformatted(char *context, char *line)
   return retval;
 }
 
-// This PARSE_ERR macro is called for all parse errors, so that we can easily
+// These macros are called for all parse errors, so that we can easily
 // change the behavior of all occurrences.
 #define PARSE_ERR(x)  \
   do { BX_PANIC(x); return -1; } while (0)
+#define PARSE_WARN(x)  \
+  BX_ERROR(x)
 
   static Bit32s
 parse_line_formatted(char *context, int num_params, char *params[])
@@ -2180,23 +2182,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
     // if enabled check if device ok
     if (bx_options.atadevice[channel][slave].Opresent->get() == 1) {
       if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_DISK) {
-        if ((strlen(bx_options.atadevice[channel][slave].Opath->getptr()) ==0) ||
-            (bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
+        if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) ==0)
+	  PARSE_WARN(("%s: ataX-master/slave has empty path", context));
+	if ((bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
             (bx_options.atadevice[channel][slave].Oheads->get() ==0 ) ||
             (bx_options.atadevice[channel][slave].Ospt->get() == 0)) {
-          PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
+          PARSE_WARN(("%s: ataX-master/slave cannot have zero cylinders, heads, or sectors/track", context));
           }
         }
       else if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_CDROM) {
         if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) == 0) {
-          PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
+          PARSE_WARN(("%s: ataX-master/slave has empty path", context));
           }
         }
       else {
-        PARSE_ERR(("%s: ataX-master/slave: type sould be specified ", context));
+        PARSE_WARN(("%s: ataX-master/slave: type should be specified", context));
         }
       }
-
     }
 
   // Legacy disk options emulation

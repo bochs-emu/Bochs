@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.81 2002-10-17 07:04:45 cbothamy Exp $
+// $Id: harddrv.cc,v 1.82 2002-10-21 11:22:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.81 2002-10-17 07:04:45 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.82 2002-10-21 11:22:26 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -236,13 +236,20 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
       if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_DISK) {
         BX_DEBUG(( "Hard-Disk on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type           = IDE_DISK;
-        BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = bx_options.atadevice[channel][device].Ocylinders->get ();
-        BX_HD_THIS channels[channel].drives[device].hard_drive->heads     = bx_options.atadevice[channel][device].Oheads->get ();
-        BX_HD_THIS channels[channel].drives[device].hard_drive->sectors   = bx_options.atadevice[channel][device].Ospt->get ();
+        int cyl = bx_options.atadevice[channel][device].Ocylinders->get ();
+        int heads = bx_options.atadevice[channel][device].Oheads->get ();
+        int spt = bx_options.atadevice[channel][device].Ospt->get ();
+        BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
+        BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
+        BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
+
+        if (cyl == 0 || heads == 0 || spt == 0) {
+          BX_PANIC(("ata%d/%d cannot have zero cylinders, heads, or sectors/track", channel, device));
+          }
 
         /* open hard drive image file */
         if ((BX_HD_THIS channels[channel].drives[device].hard_drive->open(bx_options.atadevice[channel][device].Opath->getptr ())) < 0) {
-          BX_PANIC(("could not open hard drive image file '%s'", bx_options.atadevice[channel][device].Opath->getptr ()));
+          BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
           }
         BX_INFO(("HD on ata%d-%d: '%s'",channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
         }
