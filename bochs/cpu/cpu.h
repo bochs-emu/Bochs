@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.129 2003-02-13 15:51:18 sshwarts Exp $
+// $Id: cpu.h,v 1.130 2003-02-26 02:41:30 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1561,7 +1561,7 @@ union {
 #endif
 
 #if BX_EXTERNAL_DEBUGGER
-  void ask (int level, const char *prefix, const char *fmt, va_list ap);
+  virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
 #endif
 
 #define ArithmeticalFlag(flag, lfMaskShift, eflagsBitShift) \
