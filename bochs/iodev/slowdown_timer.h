@@ -1,8 +1,6 @@
 
 #ifdef BX_USE_SLOWDOWN_TIMER
 
-#define BX_HAVE_USLEEP 1
-
 class bx_slowdown_timer_c {
 
 private:
