@@ -9734,6 +9734,7 @@ echo "${ECHO_T}yes" >&6
 #define BX_IODEBUG_SUPPORT 1
 _ACEOF
 
+      IODEBUG_OBJS='iodebug.o'
     else
       echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
