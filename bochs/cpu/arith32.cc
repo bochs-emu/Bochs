@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: arith32.cc,v 1.7 2001-11-17 22:22:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -856,11 +856,38 @@ BX_CPU_C::CMPXCHG_EdGd(BxInstruction_t *i)
 BX_CPU_C::CMPXCHG8B(BxInstruction_t *i)
 {
 #if (BX_CPU_LEVEL >= 5) || (BX_CPU_LEVEL_HACKED >= 5)
-  if (i->mod != 0xc0) {
-    BX_INFO(("CMPXCHG8B: dest is reg: #UD"));
-    UndefinedOpcode(i);
-    }
-  BX_PANIC(("CMPXCHG8B: not implemented yet"));
+
+    Bit32u op1_64_lo, op1_64_hi, diff;
+
+    if (i->mod == 0xc0) {
+      BX_INFO(("CMPXCHG8B: dest is reg: #UD"));
+      UndefinedOpcode(i);
+      }
+
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg, i->rm_addr, &op1_64_lo);
+    read_RMW_virtual_dword(i->seg, i->rm_addr + 4, &op1_64_hi);
+
+    diff = EAX - op1_64_lo;
+    diff |= EDX - op1_64_hi;
+
+//     SET_FLAGS_OSZAPC_32(EAX, op1_32, diff_32, BX_INSTR_CMP32);
+
+    if (diff == 0) {  // if accumulator == dest
+      // ZF = 1
+      set_ZF(1);
+      // dest <-- src
+      write_RMW_virtual_dword(ECX);
+      write_virtual_dword(i->seg, i->rm_addr, &EBX);
+      }
+    else {
+      // ZF = 0
+      set_ZF(0);
+      // accumulator <-- dest
+      EAX = op1_64_lo;
+      EDX = op1_64_hi;
+      }
+  
 #else
   BX_INFO(("CMPXCHG8B: not implemented yet"));
   UndefinedOpcode(i);
