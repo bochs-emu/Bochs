@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.70 2002-11-20 20:58:48 bdenney Exp $
+$Id: user.dbk,v 1.71 2002-11-20 21:11:01 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4750,6 +4750,33 @@ Here are the meaning of the errors:
         <para>
         </para>
         </section>
+</section>
+
+<section><title>Notes about VESA usage</title>
+
+<para>
+Since Bochs version 1.4 it's possible to use VESA graphics. There are some limitations in the current implementation,
+but in general it should work ok (we haved run several test programs, the XFree86 VESA display driver, etc)
+</para>
+
+<para>
+Current limitations:
+<itemizedlist>
+	<listitem> <para> only 8bpp modes are supported (no 16bpp, 24bpp or 32bpp!)</para> </listitem>
+	<listitem> <para> banked mode is very slow (if you can, just use Linear Frame Buffering instead!) </para> </listitem>
+	<listitem> <para> only 320x200, 640x400, 640x480, 800x600, 1024x768 are currently supported</para> </listitem>
+</itemizedlist
+</para>
+
+<para>
+Interesting Facts:
+<itemizedlist>
+	<listitem> <para> You need a display driver capable of using the VESA bios for this to work 
+	                  (a recent XFree86 will do, Windows 9x/NT/2K/XP probably will not work 'out of the box'. </para> </listitem>
+	<listitem> <para> Currently the VBE2 extension should be supported ok </para> </listitem>
+</itemizedlist
+</para>
+
 </section>
 
 </chapter>
