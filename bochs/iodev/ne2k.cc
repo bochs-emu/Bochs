@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.71 2004-10-07 17:38:03 vruppert Exp $
+// $Id: ne2k.cc,v 1.72 2005-01-01 09:31:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -182,42 +182,33 @@ bx_ne2k_c::write_cr(Bit32u value)
   BX_NE2K_THIS s.CR.start = ((value & 0x02) == 0x02);
   BX_NE2K_THIS s.CR.pgsel = (value & 0xc0) >> 6;
 
-    // Check for send-packet command
-    if (BX_NE2K_THIS s.CR.rdma_cmd == 3) {
-	// Set up DMA read from receive ring
-	BX_NE2K_THIS s.remote_start = BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.bound_ptr * 256;
-	BX_NE2K_THIS s.remote_bytes = *((Bit16u*) & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.bound_ptr * 256 + 2 - BX_NE2K_MEMSTART]);
-	BX_INFO(("Sending buffer #x%x length %d",
-		  BX_NE2K_THIS s.remote_start,
-		  BX_NE2K_THIS s.remote_bytes));
-    }
+  // Check for send-packet command
+  if (BX_NE2K_THIS s.CR.rdma_cmd == 3) {
+    // Set up DMA read from receive ring
+    BX_NE2K_THIS s.remote_start = BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.bound_ptr * 256;
+    BX_NE2K_THIS s.remote_bytes = *((Bit16u*) & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.bound_ptr * 256 + 2 - BX_NE2K_MEMSTART]);
+    BX_INFO(("Sending buffer #x%x length %d",
+      BX_NE2K_THIS s.remote_start,
+      BX_NE2K_THIS s.remote_bytes));
+  }
 
   // Check for start-tx
-    if ((value & 0x04) && BX_NE2K_THIS s.TCR.loop_cntl) {
-	if (BX_NE2K_THIS s.TCR.loop_cntl != 1) {
-	    BX_INFO(("Loop mode %d not supported.", BX_NE2K_THIS s.TCR.loop_cntl));
-	} else {
-	    rx_frame (& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART],
-		      BX_NE2K_THIS s.tx_bytes);
-	}
-    } else if (value & 0x04) {
-    if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start)
+  if ((value & 0x04) && BX_NE2K_THIS s.TCR.loop_cntl) {
+    if (BX_NE2K_THIS s.TCR.loop_cntl != 1) {
+      BX_INFO(("Loop mode %d not supported.", BX_NE2K_THIS s.TCR.loop_cntl));
+    } else {
+      rx_frame (& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART],
+                BX_NE2K_THIS s.tx_bytes);
+    }
+  } else if (value & 0x04) {
+    if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start) {
+      if (BX_NE2K_THIS s.tx_bytes == 0) /* njh@bandsman.co.uk */
+        return; /* Solaris9 probe */
       BX_PANIC(("CR write - tx start, dev in reset"));
-    
+    }
+
     if (BX_NE2K_THIS s.tx_bytes == 0)
       BX_PANIC(("CR write - tx start, tx bytes == 0"));
-
-#ifdef notdef    
-    // XXX debug stuff
-    printf("packet tx (%d bytes):\t", BX_NE2K_THIS s.tx_bytes);
-    for (int i = 0; i < BX_NE2K_THIS s.tx_bytes; i++) {
-      printf("%02x ", BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - 
-				BX_NE2K_MEMSTART + i]);
-      if (i && (((i+1) % 16) == 0)) 
-	printf("\t");
-    }
-    printf("");
-#endif    
 
     // Send the packet to the system driver
     BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
@@ -1302,7 +1293,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.71 2004-10-07 17:38:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.72 2005-01-01 09:31:38 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
