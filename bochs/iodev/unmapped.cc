@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.18.4.4 2002-10-10 13:10:58 cbothamy Exp $
+// $Id: unmapped.cc,v 1.18.4.5 2002-10-18 16:15:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ bx_unmapped_c bx_unmapped;
 
 #if BX_PLUGINS
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   return(0); // Success
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.4 2002-10-10 13:10:54 cbothamy Exp $
+// $Id: parallel.cc,v 1.20.4.5 2002-10-18 16:15:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,62 +31,42 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "parallel.h"
-#endif
-
-#define LOG_THIS bx_parallel.
+#define LOG_THIS theParallelDevice->
 
 #define OUTPUT (BX_PAR_THIS s.output)
 
-bx_parallel_c bx_parallel;
-
-#if BX_USE_PAR_SMF
-#define this (&bx_parallel)
-#endif
-
-
-#if BX_PLUGINS
+bx_parallel_c *theParallelDevice = NULL;
 
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  theParallelDevice = new bx_parallel_c ();
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libparallel_LTX_plugin_fini(void)
 {
 }
 
-#endif
-
-
 bx_parallel_c::bx_parallel_c(void)
 {
-
-#if BX_PLUGINS
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_PARALLEL);
-
-#endif
-
-	put("PAR");
-	settype(PARLOG);
-	OUTPUT = NULL;
+  put("PAR");
+  settype(PARLOG);
+  s.output = NULL;
 }
 
 bx_parallel_c::~bx_parallel_c(void)
 {
-  if (OUTPUT != NULL)
-    fclose(OUTPUT);
+  if (s.output != NULL)
+    fclose(s.output);
 }
 
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.4 2002-10-10 13:10:54 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.5 2002-10-18 16:15:44 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 

@@ -42,12 +42,12 @@ extern "C" {
 #define BX_PLUGIN_PIC      "pic"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
-#define BX_REGISTER_DEVICE_DEVMODEL pluginRegisterDeviceDevmodel
+#define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
 
 #if BX_PLUGINS
 
-#define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); bx_init_plugins();}
-#define BX_RESET_DEVICES(type) {bx_devices.reset(type); bx_reset_plugins(type);}
+#define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
+#define BX_RESET_DEVICES(type) {bx_devices.reset(type); }
 #define BX_LOAD_PLUGIN(name,type) {bx_load_plugin(#name,type);}
 
 #define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -99,7 +99,7 @@ extern "C" {
 #define BX_RESET_DEVICES(type) {bx_devices.reset(type); }
 // When plugins are off, BX_LOAD_PLUGIN will call the plugin_init function
 // directly.
-#define BX_LOAD_PLUGIN(name,type) {lib##name##_LTX_plugin_init(NULL,0,NULL);}
+#define BX_LOAD_PLUGIN(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
 #define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e)
 #define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e)
 #define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) bx_devices.register_default_io_read_handler(b,c,d)
@@ -154,10 +154,7 @@ extern "C" {
 #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 
 
-
-
 ///////// keyboard macros
-extern class bx_keyb_stub_c *pluginKeyboard;
 #define DEV_mouse_motion(dx, dy, state) \
     (pluginKeyboard->mouse_motion(dx, dy, state))
 #define DEV_kbd_gen_scancode(scancode) \
@@ -172,7 +169,6 @@ extern class bx_keyb_stub_c *pluginKeyboard;
     (pluginKeyboard->mouse_enabled_changed(val))
 
 ///////// hard drive macros
-extern class bx_hard_drive_stub_c *pluginHardDrive;
 #define BX_HD_READ_HANDLER(a, b, c) \
     (bx_hard_drive_c::read_handler(a, b, c))
 #define BX_HD_WRITE_HANDLER(a, b, c, d) \
@@ -212,7 +208,7 @@ typedef struct _plugin_t
     lt_dlhandle handle;
     int  argc;
     char *name, *args, *argv[MAX_ARGC];
-    int  (*plugin_init)(struct _plugin_t *plugin, int argc, char *argv[]);
+    int  (*plugin_init)(struct _plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
     void (*plugin_fini)(void);
 
     struct _plugin_t *next;
@@ -255,7 +251,7 @@ typedef void (*deviceSave_t)(void);
 void pluginRegisterDevice(deviceInitMem_t init_mem, deviceInitDev_t init_dev,
                           deviceReset_t reset, deviceLoad_t load, 
                           deviceSave_t save, char *name);
-void pluginRegisterDeviceDevmodel(bx_devmodel_c *dev, char *name);
+void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, char *name);
 Boolean pluginDevicePresent(char *name);
 
 /* === IO port stuff === */
@@ -352,13 +348,24 @@ extern void bx_reset_plugins (unsigned);
 // every plugin must define these, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.
 void plugin_fini(void);
-int plugin_init(plugin_t *plugin, int argc, char *argv[]);
+int plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
 
 // still in extern "C"
-int libharddrv_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[]);
-void libharddrv_LTX_plugin_fini(void);
-int libkeyboard_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[]);
-void libkeyboard_LTX_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
+  int lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]); \
+  void lib##mod##_LTX_plugin_fini(void);
+  
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(keyboard)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(serial)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(unmapped)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(biosdev)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(cmos)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(dma)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pic)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(vga)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(floppy)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
 
 
 #ifdef __cplusplus

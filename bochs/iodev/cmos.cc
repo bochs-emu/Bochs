@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.5 2002-10-10 13:10:49 cbothamy Exp $
+// $Id: cmos.cc,v 1.20.2.6 2002-10-18 16:15:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,7 +72,7 @@ cmosGetTimeval()
 }
 
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   return(0); // Success
 }
@@ -116,7 +116,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.5 2002-10-10 13:10:49 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.6 2002-10-18 16:15:37 bdenney Exp $"));
 
   // CMOS RAM & RTC
 

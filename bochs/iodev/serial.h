@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.7.4.1 2002-10-10 13:10:58 cbothamy Exp $
+// $Id: serial.h,v 1.7.4.2 2002-10-18 16:15:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 
 #if BX_USE_SER_SMF
 #  define BX_SER_SMF  static
-#  define BX_SER_THIS bx_serial.
+#  define BX_SER_THIS theSerialDevice->
 #else
 #  define BX_SER_SMF
 #  define BX_SER_THIS this->
@@ -149,12 +149,12 @@ typedef struct {
 
 
 
-class bx_serial_c : public logfunctions {
+class bx_serial_c : public bx_devmodel_c {
 public:
   bx_serial_c(void);
   ~bx_serial_c(void);
-  BX_SER_SMF void   init(void);
-  BX_SER_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
 #if USE_RAW_SERIAL
   serial_raw* raw;
 #endif // USE_RAW_SERIAL
@@ -176,5 +176,3 @@ private:
 #endif
   };
 
-
-extern bx_serial_c bx_serial;

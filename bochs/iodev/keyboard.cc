@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.11 2002-10-18 02:31:21 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.12 2002-10-18 16:15:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,11 +58,13 @@
 bx_keyb_c *theKeyboard = NULL;
 
   int
-libkeyboard_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[])
+libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   // Before this plugin was loaded, pluginKeyboard pointed to a stub.
   // Now make it point to the real thing.
   theKeyboard = new bx_keyb_c ();
+  pluginKeyboard = theKeyboard;
+  BX_REGISTER_DEVICE_DEVMODEL (plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
   return(0); // Success
 }
 
@@ -79,11 +81,6 @@ bx_keyb_c::bx_keyb_c(void)
   settype(KBDLOG);
   // install this object as the keyboard object, so that other devices
   // will call our keyboard methods.
-  pluginKeyboard = this;
-#if BX_PLUGINS
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE_DEVMODEL (this, BX_PLUGIN_KEYBOARD);
-#endif
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -123,7 +120,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.11 2002-10-18 02:31:21 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.12 2002-10-18 16:15:44 bdenney Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");

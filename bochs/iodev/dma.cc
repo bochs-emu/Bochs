@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.23.4.2 2002-10-10 13:10:49 cbothamy Exp $
+// $Id: dma.cc,v 1.23.4.3 2002-10-18 16:15:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,7 +42,7 @@
 #if BX_PLUGINS
 
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   return(0); // Success
 }
@@ -154,7 +154,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.2 2002-10-10 13:10:49 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.3 2002-10-18 16:15:39 bdenney Exp $"));
 
   /* 8237 DMA controller */
 

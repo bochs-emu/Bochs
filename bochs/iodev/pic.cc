@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.29.4.2 2002-10-10 13:10:55 cbothamy Exp $
+// $Id: pic.cc,v 1.29.4.3 2002-10-18 16:15:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ bx_pic_c bx_pic;
 #if BX_PLUGINS
 
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   return(0); // Success
 }

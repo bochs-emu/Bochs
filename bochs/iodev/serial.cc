@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.26.2.4 2002-10-10 13:10:57 cbothamy Exp $
+// $Id: serial.cc,v 1.26.2.5 2002-10-18 16:15:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,11 +38,7 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "serial.h"
-#endif
-
-#define LOG_THIS bx_serial.
+#define LOG_THIS theSerialDevice->
 
 #if USE_RAW_SERIAL
 #include <signal.h>
@@ -66,41 +62,29 @@ extern "C" {
 };
 #endif
 
-bx_serial_c bx_serial;
-#if BX_USE_SER_SMF
-#define this (&bx_serial)
-#endif
-
 #ifdef SERIAL_ENABLE
 static struct termios term_orig, term_new;
 #endif
 
 static int tty_id;
 
-#if BX_PLUGINS
+bx_serial_c *theSerialDevice = NULL;
 
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  theSerialDevice = new bx_serial_c ();
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libserial_LTX_plugin_fini(void)
 {
 }
 
-#endif
-
 bx_serial_c::bx_serial_c(void)
 {
-#if BX_PLUGINS
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_SERIAL);
-
-#endif
-
   put("SER");
   settype(SERLOG);
   tty_id = -1;

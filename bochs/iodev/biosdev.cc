@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.4.6.4 2002-10-10 13:10:48 cbothamy Exp $
+// $Id: biosdev.cc,v 1.4.6.5 2002-10-18 16:15:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ bx_biosdev_c bx_biosdev;
 
 #if BX_PLUGINS
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   return(0); // Success
 }

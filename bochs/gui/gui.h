@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.5 2002-10-10 04:58:54 bdenney Exp $
+// $Id: gui.h,v 1.31.4.6 2002-10-18 16:15:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -321,7 +321,8 @@ protected:
 #if BX_PLUGINS
 
 #define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                           \
-  int plugin_init(plugin_t *plugin, int argc, char *argv[]) {         \
+  int plugin_init(plugin_t *plugin, plugintype_t type,                \
+                  int argc, char *argv[]) {                           \
     genlog->info("installing %s module as the Bochs GUI", gui_name);  \
     bx_gui = &theGui;                                                 \
     return(0); /* Success */                                          \

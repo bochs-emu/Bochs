@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.7 2002-10-18 02:31:21 bdenney Exp $
+// $Id: harddrv.cc,v 1.77.2.8 2002-10-18 16:15:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,9 +94,11 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 bx_hard_drive_c *theHardDrive = NULL;
 
   int
-libharddrv_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[])
+libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theHardDrive = new bx_hard_drive_c ();
+  pluginHardDrive = theHardDrive;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHardDrive, BX_PLUGIN_HARDDRV);
   return(0); // Success
 }
 
@@ -107,12 +109,6 @@ libharddrv_LTX_plugin_fini(void)
 
 bx_hard_drive_c::bx_hard_drive_c(void)
 {
-    pluginHardDrive = this;
-#if BX_PLUGINS
-    // Register plugin basic entry points
-    BX_REGISTER_DEVICE_DEVMODEL(this, BX_PLUGIN_HARDDRV);
-#endif
-
 #if DLL_HD_SUPPORT
 #   error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
 #endif
@@ -173,7 +169,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.7 2002-10-18 02:31:21 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.8 2002-10-18 16:15:42 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {

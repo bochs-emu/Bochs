@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.12 2002-10-18 02:31:21 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.13 2002-10-18 16:15:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,7 +151,9 @@ class bx_hard_drive_stub_c : public bx_devmodel_c {
   }
 };
 
-extern bx_keyb_stub_c pluginKeyboardStub;
+extern class bx_keyb_stub_c *pluginKeyboard;
+extern class bx_hard_drive_stub_c *pluginHardDrive;
+//////////////
 
 class bx_devices_c : public logfunctions {
 public:
@@ -190,8 +192,6 @@ public:
   bx_cmos_c        *cmos;
   bx_vga_c         *vga;
   bx_floppy_ctrl_c *floppy;
-  bx_parallel_c    *parallel;
-  bx_serial_c      *serial;
   bx_pic_c         *pic;
 #endif
   bx_sb16_c        *sb16;
@@ -242,9 +242,9 @@ private:
   BX_DEV_SMF void   port92_write(Bit32u address, Bit32u value, unsigned io_len);
 
   int timer_handle;
+  Boolean is_serial_enabled ();
+  Boolean is_parallel_enabled ();
   };
-
-
 
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
@@ -260,12 +260,12 @@ private:
 #  include "iodev/hga.h"
 #endif
 #include "iodev/floppy.h"
-#include "iodev/parallel.h"
-#include "iodev/serial.h"
 #include "iodev/dma.h"
 #include "iodev/pic.h"
 
 #endif // #if !BX_PLUGINS
+#include "iodev/parallel.h"
+#include "iodev/serial.h"
 #include "iodev/keyboard.h"
 #include "iodev/harddrv.h"
 

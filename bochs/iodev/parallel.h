@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.9.4.1 2002-10-10 13:10:54 cbothamy Exp $
+// $Id: parallel.h,v 1.9.4.2 2002-10-18 16:15:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 #if BX_USE_PAR_SMF
 #  define BX_PAR_SMF  static
-#  define BX_PAR_THIS bx_parallel.
+#  define BX_PAR_THIS theParallelDevice->
 #else
 #  define BX_PAR_SMF
 #  define BX_PAR_THIS this->
@@ -56,13 +56,13 @@ typedef struct {
 
 
 
-class bx_parallel_c : public logfunctions {
+class bx_parallel_c : public bx_devmodel_c {
 public:
 
   bx_parallel_c(void);
   ~bx_parallel_c(void);
-  BX_PAR_SMF void   init(void);
-  BX_PAR_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
 
 private:
   bx_par_t s;
@@ -76,6 +76,3 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
   };
-
-
-extern bx_parallel_c bx_parallel;

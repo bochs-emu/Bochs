@@ -363,6 +363,7 @@ builtinActivateTimer(unsigned id, Bit32u usec, Boolean continuous)
   pluginlog->ldebug("plugin activated timer %d", id);
 }
 
+#if BX_PLUGINS
 /************************************************************************/
 /* Plugin initialization / deinitialization                             */
 /************************************************************************/
@@ -398,7 +399,7 @@ plugin_init_all (void)
         }
 
         /* initialize the plugin */
-        if (plugin->plugin_init (plugin, plugin->argc, plugin->argv))
+        if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
         {
             pluginlog->panic("Plugin initialization failed for %s", plugin->name);
             plugin_abort();
@@ -435,7 +436,7 @@ plugin_init_one(plugin_t *plugin)
         }
  
         /* initialize the plugin */
-        if (plugin->plugin_init (plugin, plugin->argc, plugin->argv))
+        if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
         {
             pluginlog->info("Plugin initialization failed for %s", plugin->name);
             plugin_abort();
@@ -498,7 +499,7 @@ plugin_load (char *name, char *args, plugintype_t type)
     current_plugin_context = plugin;
 
     plugin->handle = lt_dlopen (name);
-    fprintf (stderr, "lt_dlhandle is %p\n", plugin->handle);
+    BX_INFO (("lt_dlhandle is %p", plugin->handle));
     if (!plugin->handle)
     {
       current_plugin_context = NULL;
@@ -508,7 +509,7 @@ plugin_load (char *name, char *args, plugintype_t type)
     }
 
     plugin->plugin_init =  
-      (int  (*)(struct _plugin_t *, int, char *[])) /* monster typecast */
+      (int  (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
       lt_dlsym (plugin->handle, PLUGIN_INIT);
     if (plugin->plugin_init == NULL) {
         pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
@@ -613,10 +614,15 @@ plugin_startup(void)
   }
 }
 
+#endif   /* end of #if BX_PLUGINS */
+
 
 /************************************************************************/
 /* Plugin system: Device registration                                   */
 /************************************************************************/
+
+#warning BBD: when all plugin devices are converted to the "bx_devmodel" type with virtual functions, I intend to chop this out.
+// (and the nasty current_plugin_context hack can go too)
 
 void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
 			  deviceReset_t reset, deviceLoad_t load, 
@@ -673,7 +679,7 @@ void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
     }
 }
 
-void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
+void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *devmodel, char *name)
 {
     device_t *device;
 
@@ -686,8 +692,7 @@ void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
     device->name = name;
     BX_ASSERT (devmodel != NULL);
     device->devmodel = devmodel;
-    BX_ASSERT(current_plugin_context != NULL);
-    device->plugin = current_plugin_context;
+    device->plugin = plugin;  // this can be NULL
     device->use_devmodel_interface = 1;
     device->device_init_mem = NULL;  // maybe should use 1 to detect any use?
     device->device_init_dev = NULL;
@@ -697,8 +702,7 @@ void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
     device->next = NULL;
 
     // Don't add every kind of device to the list.
-    switch (device->plugin->type)
-    {
+    switch (type) {
       case PLUGTYPE_CORE:
 	// Core devices are present whether or not we are using plugins, so
 	// they are managed by the same code in iodev/devices.cc whether
@@ -710,7 +714,6 @@ void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
 	// The plugin system will manage optional and user devices only.
 	break;
     }
-
 
     if (!devices)
     {
@@ -745,6 +748,7 @@ Boolean pluginDevicePresent(char *name)
     return false;
 }
 
+#if BX_PLUGINS
 /************************************************************************/
 /* Plugin system: Load one plugin                                       */
 /************************************************************************/
@@ -787,8 +791,6 @@ int bx_load_plugins (void)
   bx_load_plugin(BX_PLUGIN_PIC, PLUGTYPE_OPTIONAL);
   bx_load_plugin(BX_PLUGIN_VGA, PLUGTYPE_OPTIONAL);
   bx_load_plugin(BX_PLUGIN_FLOPPY, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_PARALLEL, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_SERIAL, PLUGTYPE_OPTIONAL);
 
 
   // quick and dirty gui plugin selection
@@ -829,6 +831,7 @@ int bx_load_plugins (void)
 
   return 0;
 }
+#endif   /* end of #if BX_PLUGINS */
 
 /*************************************************************************/
 /* Plugin system: Execute init function of all registered plugin-devices */
@@ -843,10 +846,11 @@ void bx_init_plugins()
     {
       if (!device->use_devmodel_interface) {
         if (device->device_init_mem != NULL) {
-            pluginlog->info("Initialisation of '%s' plugin device",device->name);
+            pluginlog->info("init_mem of '%s' plugin device by function pointer",device->name);
             device->device_init_mem(BX_MEM(0));
 	}
       } else {
+	pluginlog->info("init_mem of '%s' plugin device by virtual method",device->name);
 	device->devmodel->init_mem (BX_MEM(0));
       }
     }
@@ -855,10 +859,11 @@ void bx_init_plugins()
     {
       if (!device->use_devmodel_interface) {
         if (device->device_init_dev != NULL) {
-            pluginlog->info("Initialisation of '%s' plugin device",device->name);
+            pluginlog->info("init_dev of '%s' plugin device by function pointer",device->name);
             device->device_init_dev();
 	}
       } else {
+	pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
 	device->devmodel->init ();
       }
     } 
@@ -875,10 +880,11 @@ void bx_reset_plugins(unsigned signal)
     {
       if (!device->use_devmodel_interface) {
         if (device->device_reset != NULL) {
-            pluginlog->info("Reset of '%s' plugin device",device->name);
+            pluginlog->info("reset of '%s' plugin device by function pointer",device->name);
             device->device_reset(signal);
         }
       } else {
+	pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
 	device->devmodel->reset (signal);
       }
     }

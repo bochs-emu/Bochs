@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.12 2002-10-18 02:31:21 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.13 2002-10-18 16:15:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,9 +38,9 @@
 
 bx_devices_c bx_devices;
 
+// core devices
 bx_keyb_stub_c pluginKeyboardStub;
 bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
-
 bx_hard_drive_stub_c pluginHardDriveStub;
 bx_hard_drive_stub_c *pluginHardDrive = &pluginHardDriveStub;
 
@@ -56,8 +56,6 @@ bx_devices_c::bx_devices_c(void)
   cmos = NULL;
   vga = NULL;
   floppy = NULL;
-  parallel = NULL;
-  serial = NULL;
   dma = NULL;
   pic = NULL;
 #endif
@@ -90,7 +88,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.12 2002-10-18 02:31:21 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.13 2002-10-18 16:15:39 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -120,6 +118,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   BX_LOAD_PLUGIN (harddrv, PLUGTYPE_CORE);
   BX_LOAD_PLUGIN (keyboard, PLUGTYPE_CORE);
+  if (is_serial_enabled ())
+    BX_LOAD_PLUGIN(serial, PLUGTYPE_OPTIONAL);
+  if (is_parallel_enabled ()) 
+    BX_LOAD_PLUGIN(parallel, PLUGTYPE_OPTIONAL);
 
 #if !BX_PLUGINS 
   // Start with all IO port address registered to unmapped handler
@@ -169,14 +171,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   //--- FLOPPY ---
   floppy = &bx_floppy;
   floppy->init();
-
-  /*--- PARALLEL PORT ---*/
-  parallel = &bx_parallel;
-  parallel->init();
-
-  /*--- SERIAL PORT ---*/
-  serial = &bx_serial;
-  serial->init();
 
   /*--- 8259A PIC ---*/
   pic = & bx_pic;
@@ -252,6 +246,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
   bulkIOHostAddr = 0;
   bulkIOQuantumsRequested = 0;
   bulkIOQuantumsTransferred = 0;
+
+  bx_init_plugins();
 }
 
 
@@ -282,10 +278,9 @@ bx_devices_c::reset(unsigned type)
 #endif
 
   floppy->reset(type);
-  parallel->reset(type);
-  serial->reset(type);
   pic->reset(type);
 #endif
+  // call reset on all core plugins
   pluginHardDrive->reset(type);
   pluginKeyboard->reset(type);
 
@@ -302,7 +297,8 @@ bx_devices_c::reset(unsigned type)
 #if BX_NE2K_SUPPORT
   ne2k->reset(type);
 #endif
- 
+
+  bx_reset_plugins(type);
 }
 
 
@@ -614,4 +610,22 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   handle = write_handler_id[addr];
   (* io_write_handler[handle].funct)(io_write_handler[handle].this_ptr,
                      (Bit32u) addr, value, io_len);
+}
+
+Boolean bx_devices_c::is_serial_enabled ()
+{
+  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+    if (SIM->get_param_bool (BXP_COMx_ENABLED(i+1))->get())
+      return true;
+  }
+  return false;
+}
+
+Boolean bx_devices_c::is_parallel_enabled ()
+{
+  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+    if (SIM->get_param_bool (BXP_PARPORTx_ENABLED(i+1))->get())
+      return true;
+  }
+  return false;
 }
