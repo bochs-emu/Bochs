@@ -207,8 +207,8 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 #   ata3-slave:  type=cdrom, path=iso.sample, status=inserted
 #=======================================================================
 ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
-#ata0-slave: dev=D:, status=inserted
-#ata0-slave: dev=/dev/cdrom, status=inserted
+#ata0-slave: type=cdrom, path=D:, status=inserted
+#ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 
 #=======================================================================
 #
