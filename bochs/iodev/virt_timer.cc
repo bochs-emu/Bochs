@@ -1,5 +1,8 @@
 #include "bochs.h"
 
+#define BX_USE_VIRTUAL_TIMERS 0
+#define BX_VIRTUAL_TIMERS_REALTIME 0
+
 //Important constant #defines:
 #define USEC_PER_SECOND (1000000)
 
