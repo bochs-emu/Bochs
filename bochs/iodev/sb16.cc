@@ -91,7 +91,7 @@ bx_sb16_c::~bx_sb16_c(void)
 
   delete(DSP.dma.chunk);
 
-  if (bx_options.sb16.loglevel > 0)
+  if ((bx_options.sb16.loglevel > 0) && LOGFILE)
     fclose(LOGFILE);
 }
 

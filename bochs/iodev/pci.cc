@@ -395,17 +395,17 @@ bx_pci_c::print_i440fx_state()
 bx_pci_c::i440fx_fetch_ptr(Bit32u addr)
 {
   if (bx_options.i440FXSupport) {
-    switch (bx_pci.rd_memType (addr)) {
+    switch (rd_memType (addr)) {
       case 0x0:   // Read from ShadowRAM
-        return (&BX_MEM.vector[addr]);
+        return (&devices->mem->vector[addr]);
 
       case 0x1:   // Read from ROM
-        return (&bx_pci.s.i440fx.shadow[(addr - 0xc0000)]);
+        return (&s.i440fx.shadow[(addr - 0xc0000)]);
       default:
         BX_PANIC(("i440fx_fetch_ptr(): default case\n"));
         return(0);
       }
     }
   else
-    return (&BX_MEM.vector[addr]);
+    return (&devices->mem->vector[addr]);
 }

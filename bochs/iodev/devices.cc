@@ -97,8 +97,9 @@ bx_devices_c::~bx_devices_c(void)
 
 
   void
-bx_devices_c::init(void)
+bx_devices_c::init(BX_MEM_C *newmem)
 {
+  mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
   unmapped = &bx_unmapped;
@@ -109,6 +110,13 @@ bx_devices_c::init(void)
   pci = & bx_pci;
   pci->init(this);
   pci->reset();
+#endif
+
+#if BX_APIC_SUPPORT
+  // I/O APIC 82093AA
+  ioapic = & bx_ioapic;
+  ioapic->init ();
+  ioapic->set_id (BX_IOAPIC_DEFAULT_ID);
 #endif
 
 
@@ -190,7 +198,7 @@ bx_devices_c::init(void)
                             "Port 92h System Control" );
 
   // misc. CMOS
-  Bit16u extended_memory_in_k = BX_MEM.get_memory_in_k() - 1024;
+  Bit16u extended_memory_in_k = mem->get_memory_in_k() - 1024;
   cmos->s.reg[0x15] = (Bit8u) BASE_MEMORY_IN_K;
   cmos->s.reg[0x16] = (Bit8u) (BASE_MEMORY_IN_K >> 8);
   cmos->s.reg[0x17] = (Bit8u) extended_memory_in_k;
@@ -289,6 +297,13 @@ bx_devices_c::timer()
     }
   if (retval & 0x02)
     pic->trigger_irq(12);
+
+#if BX_APIC_SUPPORT
+  // update local APIC timers
+  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
+    BX_CPU(i)->local_apic.periodic (TIMER_DELTA);
+  }
+#endif
 }
 
 

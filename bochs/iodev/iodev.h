@@ -47,6 +47,7 @@ class bx_pic_c;
 class bx_hard_drive_c;
 class bx_sb16_c;
 class bx_pci_c;
+class bx_ioapic_c;
 class bx_ne2k_c;
 class bx_g2h_c;
 
@@ -70,7 +71,8 @@ class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
   ~bx_devices_c(void);
-  void init(void);
+  void init(BX_MEM_C *);
+  BX_MEM_C *mem;  // address space associated with these devices
   void register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
   void register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
   void register_irq(unsigned irq, const char *name);
@@ -86,6 +88,7 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
+  bx_ioapic_c      *ioapic;
   bx_pci_c         *pci;
   bx_pit_c         *pit;
   bx_keyb_c        *keyboard;
@@ -138,6 +141,9 @@ private:
 #  include "iodev/vga.h"
 #else
 #  include "iodev/hga.h"
+#endif
+#if BX_APIC_SUPPORT
+#  include "iodev/ioapic.h"
 #endif
 #include "iodev/cmos.h"
 #include "iodev/dma.h"

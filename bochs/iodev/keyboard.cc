@@ -535,7 +535,10 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered\n", value));
         case 0xfe: // System Reset, transition to real mode
           BX_INFO(("system reset\n"));
           bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
-          BX_CPU.reset(BX_RESET_HARDWARE);
+	  {
+	  for (int i=0; i<BX_SMP_PROCESSORS; i++) 
+            BX_CPU(i)->reset(BX_RESET_HARDWARE);
+	  }
           // Use bx_pc_system if necessary bx_cpu.reset_cpu();
           // bx_pc_system.ResetSignal( PCS_SET );
           break;
