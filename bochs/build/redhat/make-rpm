@@ -1,6 +1,6 @@
 #!/bin/bash -x
 #########################################################################
-# $Id: make-rpm,v 1.2 2002-06-26 18:20:21 vruppert Exp $
+# $Id: make-rpm,v 1.3 2002-09-22 23:41:50 bdenney Exp $
 #########################################################################
 # build/redhat/make-rpm
 #
@@ -13,18 +13,19 @@
 
 CAT=cat
 RM=rm
+CP=cp
+MV=mv
 MKDIR=mkdir
 GREP=grep
 ECHO=echo
 RPM=rpm
 SED=sed
 TAR=tar
-RPMSRCPATH=/usr/src/redhat
+RPMSRCPATH=_rpm_top
 SOURCES=${RPMSRCPATH}/SOURCES
 SPECS=${RPMSRCPATH}/SPECS
-RPMS=${RPMSRCPATH}/RPMS
-SRPMS=${RPMSRCPATH}/SRPMS
 RPMSPEC="build/redhat/bochs.rpmspec.template"
+TMPDIR=/tmp
 
 echo Reading version from configure.in script.
 VERSION='unknown'
@@ -35,48 +36,59 @@ if test $? != 0 -o "$VERSION" = unknown; then
   exit 1
 fi
 
-# test that you are able to write in the RPM build area
-if test ! -w ${SOURCES}; then
-  echo ${SOURCES} not writable.  Maybe you aren\'t root, or the path is wrong.
-  echo Exiting.
-  exit 1
+# clean up previous rpm builds
+${RM} -rf *.rpm ${RPMSRCPATH}
+if test -f Makefile; then
+  make dist-clean
 fi
-if test ! -w ${SPECS}; then
-  echo ${SPECS} not writable.  Maybe you aren\'t root, or the path is wrong.
-  exit 1
-fi
-
-# copy the spec into SPECS.  The template is in $RPMSPEC, and we use
-# SED to substitute in the version number.
-${RM} -f /usr/src/redhat/SPECS/bochs.spec
-test $? = 0 || exit 1
-${CAT} ${RPMSPEC} | ${SED} "s/@SEDVERSION@/${VERSION}/g" > ${SPECS}/bochs.spec
-test $? = 0 || exit 1
 
 # make a TAR.GZ of the entire source directory, exactly as it is.  The
 # tar is placed in $SOURCES/bochs-$VERSION.tar.gz.  Because the current
 # directory could be named nearly anything, I copy all the contents into
 # $SOURCES/bochs-$VERSION and then build a tar in $SOURCES.
 
-${RM} -rf ${SOURCES}/bochs-${VERSION}
+${RM} -rf ${TMPDIR}/bochs-${VERSION}
 test $? = 0 || exit 1
-${MKDIR} ${SOURCES}/bochs-${VERSION}
+${MKDIR} ${TMPDIR}/bochs-${VERSION}
 test $? = 0 || exit 1
-${TAR} cf - * .??* | (cd ${SOURCES}/bochs-${VERSION} && tar xf -)
+${TAR} cf - * .??* | (cd ${TMPDIR}/bochs-${VERSION} && tar xf -)
 test $? = 0 || exit 1
-(cd ${SOURCES}; tar czf bochs-${VERSION}.tar.gz bochs-${VERSION} --exclude=CVS)
+(cd ${TMPDIR}; tar czf bochs-${VERSION}.tar.gz bochs-${VERSION} --exclude=CVS)
 test $? = 0 || exit 1
-${RM} -rf ${SOURCES}/bochs-${VERSION}
+${RM} -rf ${TMPDIR}/bochs-${VERSION}
+test $? = 0 || exit 1
+
+# create RPM build area
+rm -rf ${RPMSRCPATH}
+mkdir ${RPMSRCPATH} ${RPMSRCPATH}/SOURCES ${RPMSRCPATH}/SPECS ${RPMSRCPATH}/BUILD ${RPMSRCPATH}/RPMS ${RPMSRCPATH}/SRPMS
+test $? = 0 || exit 1   # test that mkdir succeeded
+
+# copy source into sources
+${MV} ${TMPDIR}/bochs-${VERSION}.tar.gz ${SOURCES}
+test $? = 0 || exit 1
+
+# copy the spec into SPECS.  The template is in $RPMSPEC, and we use
+# SED to substitute in the version number.
+${RM} -f ${SPECS}/bochs.spec
+test $? = 0 || exit 1
+${CAT} ${RPMSPEC} | ${SED} "s/@SEDVERSION@/${VERSION}/g" > ${SPECS}/bochs.spec
 test $? = 0 || exit 1
 
 # finally, start the rpm build.
-${RPM} -ba ${SPECS}/bochs.spec
+${RPM} -ba --define "_topdir `pwd`/${RPMSRCPATH}" ${SPECS}/bochs.spec
 
-# print final status
+# test status
 if test $? = 0; then
   echo RPM build succeeded
-  exit 0
 else
   echo RPM build failed.
   exit 1
+fi
+
+# copy all rpms out into main directory
+ALLRPMS=`find ${RPMSRCPATH} -name '*.rpm'`
+if test "$ALLRPMS" != ""; then
+  echo Moving .rpm files into the main directory.
+  mv ${ALLRPMS} .
+  ls -l *.rpm
 fi
