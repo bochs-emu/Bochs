@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.5 2001-09-12 06:34:50 bdenney Exp $
+$Id: documentation.dbk,v 1.6 2001-09-20 03:27:24 bdenney Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -287,8 +287,8 @@ and some associated tools.  It is a nontrivial process.
 
 <para>
 For now, building the Bochs documentation also depends on some scripts called
-docbook2html, docbook2pdf, and docbook2ps.  I'm not sure which packages these
-come from, but they are very convenient.  &NEEDHELP;
+docbook2html, docbook2pdf, and docbook2ps.  These come from the docbook-tools
+project at <ulink url="http://sources.redhat.com/docbook-tools">http://sources.redhat.com/docbook-tools</ulink>.
 </para>
 
 </sect2>
