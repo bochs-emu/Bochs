@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.66 2002-09-23 16:57:45 bdenney Exp $
+// $Id: siminterface.cc,v 1.67 2002-09-23 17:41:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -86,6 +86,14 @@ public:
   virtual void periodic ();
   virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite);
   virtual void refresh_ci ();
+  virtual void refresh_vga () {
+    // maybe need to check if something has been initialized yet?
+    bx_vga.timer_handler (&bx_vga); 
+  }
+  virtual void handle_events () {
+    // maybe need to check if something has been initialized yet?
+    bx_gui.handle_events ();
+  }
   bx_param_c *get_first_cdrom ();
 #if BX_DEBUGGER
   virtual void debug_break ();
