@@ -1,0 +1,311 @@
+----------------------------------------------------------------------
+Patch name: patch.consistent2b
+Author: Bryce Denney
+Date: Thu Sep 27 10:14:30 EDT 2001
+
+Detailed description:
+This patch fixes a number of debugger problems.
+- with trace-on, simulation time would pass 5x faster than usual, so 
+  interrupts and other timed events would happen at different times
+- with trace-on, breakpoints were ignored
+- with trace-on, control-C would not stop the processor and return to the
+  debugger.
+
+This patch changes the execution quantum for the debugger to 1, which means
+that cpu_loop is asked to do one instruction at a time.  This may cause
+bochs with the debugger to be slower than before.
+
+I haven't tested without the debugger yet, so I don't know if the timing
+of events matches or not.
+
+Apply patch to:
+  Bochs 1.2
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+? cpu/Makefile
+? cpu/both.cc
+? debug/Makefile
+Index: cpu/cpu.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.cc,v
+retrieving revision 1.6
+diff -u -r1.6 cpu.cc
+--- cpu/cpu.cc	2001/05/24 18:46:34	1.6
++++ cpu/cpu.cc	2001/09/27 14:01:23
+@@ -281,6 +281,14 @@
+     CHECK_MAX_INSTRUCTIONS(max_instr_count);
+ 
+ #if BX_DEBUGGER
++    if (BX_CPU_THIS_PTR trace) {
++      // print the instruction that was just executed.  This used to 
++      // return with a certain stop reason, but as a result the tracing
++      // affected simulation, which is obviously bad when you're trying
++      // to debug a problem.
++      bx_dbg_disassemble_current (-1);
++    }
++
+     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
+     // note instr generating exceptions never reach this point.
+ 
+@@ -317,14 +325,9 @@
+ 	  }
+     }
+ #endif
+-    if (BX_CPU_THIS_PTR trace) {
+-	  BX_CPU_THIS_PTR stop_reason = STOP_TRACE;
+-	  return;
+-    }
+-#endif
+ 
+-#if BX_DEBUGGER
+     {
++      // check for icount or control-C.  If found, set guard reg and return.
+     Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
+     if ( dbg_is_end_instr_bpoint(
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
+@@ -334,6 +337,7 @@
+       return;
+       }
+     }
++
+ #endif  // #if BX_DEBUGGER
+     goto main_cpu_loop;
+     }
+@@ -613,6 +617,7 @@
+ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
+                                     Bit32u is_32)
+ {
++  //fprintf (stderr, "begin_instr_bp: checking cs:eip %04x:%08x\n", cs, eip);
+   BX_CPU_THIS_PTR guard_found.cs  = cs;
+   BX_CPU_THIS_PTR guard_found.eip = eip;
+   BX_CPU_THIS_PTR guard_found.laddr = laddr;
+@@ -672,7 +677,14 @@
+       Boolean valid;
+       dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr,
+                               &phy, &valid);
+-      if ( (BX_CPU_THIS_PTR guard_found.icount!=0) && valid ) {
++      // why the condition "guard_found.icount!=0"?  That means that
++      // breakpoints only occur when you're using "continue" but never
++      // when you're using "step".  I'm going to try disabling taht
++      // condition and see what happens.  This caused it to stop at
++      // a breakpoint even while trace-on is on.
++      if ( valid 
++	    //&& (BX_CPU_THIS_PTR guard_found.icount!=0)
++	    ) {
+         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
+           if ( bx_guard.iaddr.phy[i].addr == phy ) {
+             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+@@ -692,8 +704,16 @@
+ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
+                                   Bit32u is_32)
+ {
++  //fprintf (stderr, "end_instr_bp: checking for icount or ^C\n");
+   BX_CPU_THIS_PTR guard_found.icount++;
+ 
++  // convenient point to see if user typed Ctrl-C
++  if (bx_guard.interrupt_requested &&
++      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
++    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
++    return(1);
++    }
++
+   // see if debugger requesting icount guard
+   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
+     if (BX_CPU_THIS_PTR guard_found.icount >= bx_guard.icount) {
+@@ -704,13 +724,6 @@
+       BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
+       return(1);
+       }
+-    }
+-
+-  // convenient point to see if user typed Ctrl-C
+-  if (bx_guard.interrupt_requested &&
+-      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
+-    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
+-    return(1);
+     }
+ 
+ #if (BX_NUM_SIMULATORS >= 2)
+Index: debug/dbg_main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/dbg_main.cc,v
+retrieving revision 1.9.2.1
+diff -u -r1.9.2.1 dbg_main.cc
+--- debug/dbg_main.cc	2001/05/29 14:28:38	1.9.2.1
++++ debug/dbg_main.cc	2001/09/27 14:01:29
+@@ -1482,13 +1482,18 @@
+   bx_guard.interrupt_requested = 0;
+ 	int stop = 0;
+ 	int which = -1;
++	int max_instr_executed = 0;
+ 	while (!stop) {
+-		int quantum = 5;   // arbitrary number of cycles to run in each
++		int quantum = 1;   // arbitrary number of cycles to run in each
+ 		for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+ 			BX_CPU(cpu)->guard_found.guard_found = 0;
+ 			BX_CPU(cpu)->guard_found.icount = 0;
+ 			bx_guard.icount = quantum;
+ 			BX_CPU(cpu)->cpu_loop (-1);
++			/// check out BX_CPU(cpu)->guard_found.icount
++			//fprintf (stderr, "dbg_cont: after cpu_loop guard_found.icount=%d\n", BX_CPU(cpu)->guard_found.icount);
++			if (BX_CPU(cpu)->guard_found.icount > max_instr_executed)
++			  max_instr_executed = BX_CPU(cpu)->guard_found.icount;
+ 			// set stop flag if a guard found other than icount or halted
+ 			unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
+ 			stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
+@@ -1507,7 +1512,13 @@
+ 			// cpus set stop, too bad.
+ 		}
+ 		// increment time tick only after all processors have had their chance.
+-		BX_TICKN(quantum);
++		// MAJOR PROBLEM: we should tick by the number of instructions
++		// that were ACTUALLY executed, not the number that we asked it
++		// to execute.  When tracing is on, only one instruction is
++		// executed, not quantum.  As a result, when you trace you get
++		// ticks speeding ahead at 5x normal speed.
++		BX_TICKN(max_instr_executed);
++		//BX_TICKN(quantum);
+ 	}
+ #endif
+ 
+@@ -1517,10 +1528,6 @@
+   BX_INSTR_DEBUG_PROMPT();
+   bx_dbg_print_guard_results();
+ 
+-  if (BX_CPU(which)->stop_reason == STOP_TRACE
+-			|| BX_CPU(which)->stop_reason == STOP_CPU_HALTED)
+-	goto one_more;
+-
+   if (watchpoint_continue && (BX_CPU(which)->stop_reason == STOP_READ_WATCH_POINT ||
+ 			      BX_CPU(which)->stop_reason == STOP_WRITE_WATCH_POINT))
+ 	goto one_more;
+@@ -1972,7 +1979,47 @@
+ #endif
+ 
+ 
++void bx_dbg_disassemble_current (int which_cpu)
++{
++  Bit32u phy;
++  Boolean valid;
++
++  if (which_cpu < 0) {
++    // iterate over all of them.
++    for (int i=0; i<BX_NUM_SIMULATORS; i++)
++      bx_dbg_disassemble_current (i);
++    return;
++  }
++
++  BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy, &valid);
++
++  if (valid) {
++    unsigned ilen;
+ 
++    BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
++    ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
++				 bx_disasm_ibuf, bx_disasm_tbuf);
++
++    if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
++      fprintf(stderr, "(%u) %04x:%08x (%s): ", which_cpu,
++	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
++	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
++	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
++      }
++    else {
++      fprintf(stderr, "(%u) %04x:%04x: ", which_cpu,
++	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
++	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
++      }
++    for (unsigned j=0; j<ilen; j++)
++      fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
++    fprintf(stderr, ": %s\n", bx_disasm_tbuf);
++    }
++  else {
++    fprintf(stderr, "(%u) ??? (physical address not available)\n", which_cpu);
++  }
++}
++
+   void
+ bx_dbg_print_guard_results(void)
+ {
+@@ -2019,8 +2066,6 @@
+ 	}
+   else if (BX_CPU(sim)->stop_reason == STOP_MAGIC_BREAK_POINT) {
+ 	fprintf(stderr, "(%u) Magic breakpoint\n", sim);
+-  } else if (BX_CPU(sim)->stop_reason == STOP_TRACE) {
+-	/* Nothing */
+   } else if (BX_CPU(sim)->stop_reason == STOP_TIME_BREAK_POINT) {
+ 	fprintf(stderr, "(%u) Caught time breakpoint\n", sim);
+   } else if (BX_CPU(sim)->stop_reason == STOP_MODE_BREAK_POINT) {
+@@ -2036,40 +2081,14 @@
+ 	    sim, BX_CPU(sim)->stop_reason);
+     }
+ 
+-
+ #if BX_DISASM
+   if (bx_debugger.auto_disassemble) {
+-    Bit32u phy;
+-    Boolean valid;
+-
+-    BX_CPU(sim)->dbg_xlate_linear2phy(BX_CPU(sim)->guard_found.laddr, &phy, &valid);
+-
+-    if (valid) {
+-      unsigned ilen;
+-
+-      BX_CPU(sim)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
+-      ilen = bx_disassemble.disasm(BX_CPU(sim)->guard_found.is_32bit_code,
+-                                   bx_disasm_ibuf, bx_disasm_tbuf);
+-
+-      if (BX_CPU(sim)->guard_found.is_32bit_code) {
+-        fprintf(stderr, "(%u) %04x:%08x (%s): ", sim,
+-                (unsigned) BX_CPU(sim)->guard_found.cs,
+-                (unsigned) BX_CPU(sim)->guard_found.eip,
+-		bx_dbg_symbolic_address((BX_CPU(sim)->cr3) >> 12, BX_CPU(sim)->guard_found.eip, BX_CPU(sim)->sregs[BX_SREG_CS].cache.u.segment.base));
+-        }
+-      else {
+-        fprintf(stderr, "(%u) %04x:%04x: ", sim,
+-                (unsigned) BX_CPU(sim)->guard_found.cs,
+-                (unsigned) BX_CPU(sim)->guard_found.eip);
+-        }
+-      for (unsigned j=0; j<ilen; j++)
+-        fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
+-      fprintf(stderr, ": %s\n", bx_disasm_tbuf);
+-      }
+-    else {
+-      fprintf(stderr, "(%u) ??? (physical address not available)\n", sim);
+-      }
+-    }
++    // if tracing is on for this cpu, we've already printed the disassembly
++    // for the instruction that's about to be executed.  So omit the 
++    // disassembly here.  (experiment)
++    if (! BX_CPU(sim)->trace)
++      bx_dbg_disassemble_current (sim);
++  }
+ #endif  // #if BX_DISASM
+   }
+ }
+Index: debug/debug.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/debug.h,v
+retrieving revision 1.4
+diff -u -r1.4 debug.h
+--- debug/debug.h	2001/05/23 08:16:07	1.4
++++ debug/debug.h	2001/09/27 14:01:29
+@@ -148,7 +148,7 @@
+ extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
+ 
+ typedef enum {
+-      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
++      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, UNUSED_STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
+ } stop_reason_t;
+ 
+ typedef enum {
+@@ -403,6 +403,7 @@
+ void    bx_dbg_raise_HLDA(void);
+ Bit8u   bx_dbg_IAC(void);
+ void    bx_dbg_set_INTR(Boolean b);
++void bx_dbg_disassemble_current (int which_cpu);
+ 
+ int bx_dbg_symbolic_output(void); /* BW */
+ #endif // #ifdef __cplusplus
