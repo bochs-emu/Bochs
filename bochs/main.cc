@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.184 2002-11-18 02:32:53 bdenney Exp $
+// $Id: main.cc,v 1.185 2002-11-18 17:16:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -114,7 +114,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
         DEV_mouse_enabled_changed (val!=0);
       }
       break;
-    case BXP_NE2K_VALID:
+    case BXP_NE2K_PRESENT:
       if (set) {
         int enable = (val != 0);
         SIM->get_param (BXP_NE2K_IOADDR)->set_enabled (enable);
@@ -1007,7 +1007,7 @@ void bx_init_options ()
   menu->get_options ()->set (menu->SHOW_PARENT);
 
   // NE2K options
-  bx_options.ne2k.Ovalid = new bx_param_bool_c (BXP_NE2K_VALID,
+  bx_options.ne2k.Opresent = new bx_param_bool_c (BXP_NE2K_PRESENT,
       "NE2K is present",
       "to be written",
       0);
@@ -1042,7 +1042,7 @@ void bx_init_options ()
       "none", BX_PATHNAME_LEN);
   bx_options.ne2k.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
   bx_param_c *ne2k_init_list[] = {
-    bx_options.ne2k.Ovalid,
+    bx_options.ne2k.Opresent,
     bx_options.ne2k.Oioaddr,
     bx_options.ne2k.Oirq,
     bx_options.ne2k.Omacaddr,
@@ -1053,8 +1053,8 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
-  bx_options.ne2k.Ovalid->set_handler (bx_param_handler);
-  bx_options.ne2k.Ovalid->set (0);
+  bx_options.ne2k.Opresent->set_handler (bx_param_handler);
+  bx_options.ne2k.Opresent->set (0);
 
   // SB16 options
   bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,
@@ -1326,7 +1326,7 @@ void bx_reset_options ()
 #endif
 
   // ne2k
-  bx_options.ne2k.Ovalid->reset();
+  bx_options.ne2k.Opresent->reset();
   bx_options.ne2k.Oioaddr->reset();
   bx_options.ne2k.Oirq->reset();
   bx_options.ne2k.Omacaddr->reset();
@@ -3194,7 +3194,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
     char tmpchar[6];
-    bx_options.ne2k.Ovalid->set (0);
+    bx_options.ne2k.Opresent->set (0);
     if ((num_params < 4) || (num_params > 7)) {
       PARSE_ERR(("%s: ne2k directive malformed.", context));
       }
@@ -3236,7 +3236,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
           }
         }
       }
-    bx_options.ne2k.Ovalid->set (1);
+    bx_options.ne2k.Opresent->set (1);
     }
 
   else if (!strcmp(params[0], "load32bitOSImage")) {
@@ -3452,7 +3452,7 @@ bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
 int
 bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
 {
-  if (!opt->Ovalid->get ()) {
+  if (!opt->Opresent->get ()) {
     fprintf (fp, "# no ne2k\n");
     return 0;
   }

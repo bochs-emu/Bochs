@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.108 2002-11-15 18:31:52 bdenney Exp $
+// $Id: bochs.h,v 1.109 2002-11-18 17:16:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -561,7 +561,7 @@ typedef struct {
   } bx_cmos_options;
 
 typedef struct {
-  bx_param_bool_c *Ovalid;
+  bx_param_bool_c *Opresent;
   bx_param_num_c *Oioaddr;
   bx_param_num_c *Oirq;
   bx_param_string_c *Omacaddr;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.87 2002-11-15 18:31:55 bdenney Exp $
+// $Id: siminterface.h,v 1.88 2002-11-18 17:16:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -298,7 +298,7 @@ typedef enum {
   BXP_MENU_RUNTIME,
   BXP_SYSTEM_CLOCK_SYNC,
   BXP_MAX_IPS,
-  BXP_NE2K_VALID,
+  BXP_NE2K_PRESENT,
   BXP_NE2K_IOADDR,
   BXP_NE2K_IRQ,
   BXP_NE2K_MACADDR,

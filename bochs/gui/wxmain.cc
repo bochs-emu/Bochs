@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.76 2002-11-09 14:12:10 cbothamy Exp $
+// $Id: wxmain.cc,v 1.77 2002-11-18 17:16:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -661,7 +661,7 @@ void MyFrame::OnEditCmos(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   NetConfigDialog dlg (this, -1);
-  bx_param_bool_c *present = (bx_param_bool_c*)SIM->get_param (BXP_NE2K_VALID);
+  bx_param_bool_c *present = (bx_param_bool_c*)SIM->get_param (BXP_NE2K_PRESENT);
   bx_param_num_c *io = (bx_param_num_c*)SIM->get_param (BXP_NE2K_IOADDR);
   bx_param_num_c *irq = (bx_param_num_c*)SIM->get_param (BXP_NE2K_IRQ);
   bx_param_string_c *mac = (bx_param_string_c*)

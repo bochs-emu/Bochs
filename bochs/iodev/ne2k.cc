@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.43 2002-10-30 11:11:26 ptrumpet Exp $
+// $Id: ne2k.cc,v 1.44 2002-11-18 17:16:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
   put("NE2K");
   settype(NE2KLOG);
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.43 2002-10-30 11:11:26 ptrumpet Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.44 2002-11-18 17:16:07 vruppert Exp $"));
   BX_NE2K_THIS s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -1247,10 +1247,10 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.43 2002-10-30 11:11:26 ptrumpet Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.44 2002-11-18 17:16:07 vruppert Exp $"));
 
 
-  if (bx_options.ne2k.Ovalid->get ()) {
+  if (bx_options.ne2k.Opresent->get ()) {
     // Bring the register state into power-up state
     reset(BX_RESET_HARDWARE);
 
