@@ -54,10 +54,6 @@ TO DO:
 
 - platform specific issues
   - make sure LTDL works on VC++
-  - to support plugins on win32, we must add special tags on any function or
-    class in the executable that the plugins need to know about.  See
-    plugin-test code for examples, e.g. definition of MAINAPI in
-    bochs-testing/plugin-test/test8-execlass/main.h.
 
 - configure script work
   - LTDL has a feature called dlpreload which sort of emulates dlopen
@@ -71,6 +67,26 @@ TO DO:
     The configure script should bomb in this case, with an error that says
     where to find dlcompat.  dlcompat IS installed on SF compile farm in
     /sw/include and /sw/lib.
+
+- Understand/resolve simulation differences between CVS head and
+  BRANCH_PLUGINS.  Simulation is slightly different.
+  - compare four versions
+    - BRANCH_PLUGINS with --enable-plugins
+    - BRANCH_PLUGINS without --enable-plugins
+    - BRANCH_PLUGINS_BASE
+    - CVS head
+  - these differences seem to be explained by a few things:
+    1. devices are initialized in a different order, so they are assigned
+       different timer id.  For any events that occur at the same tick, the
+       timer handlers would get called in a different order.  I believe I
+       have fixed the order of timer registration so that it matches, and
+       that cleaned up some simulation differences.
+    2. bx_gui->handle_events is now called from iodev/devices.cc instead of
+       from iodev/keyboard.cc.
+    3. bx_keyb_c::periodic() used to be called directly from devices.cc
+       but now the keyboard registers its own timer
+  - I have never seen any problems caused by the sim differences, but they
+    make me nervous. -Bryce
 
 - (LATER) eventually we need to clarify the connection between plugins and
   devices.  At the moment, each plugin creates exactly one device, but it does
@@ -213,6 +229,13 @@ DONE:
     the use of global object constructors.  In fact every global variable in a
     module MUST BE set to a compile-time constant.  We must declare object
     pointers as globals, not actual objects.
+  - WIN32 PLUGINS WORK!  to support plugins on win32, I added the
+    BOCHSAPI macro which expands to __declspec(dllexport) in the nonplugin 
+    code and __declspec(dllimport) in the plugin code.  Some makefile hacks
+    were required too.  A few differences between win32 and other platforms:
+    - use semicolon to separate path names in LTDL_LIBRARY_PATH
+    - every path name in LTDL_LIBRARY_PATH should start with a drive letter,
+      for example: c:/cygwin/home/bryce/plugins.
 - how do we locate plugins on the disk?
   - make install copies the plugins into ${prefix}/lib
   - if people install into a standard location, no action may be needed (?)
