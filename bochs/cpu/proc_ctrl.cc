@@ -1038,6 +1038,7 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
       family = 5;
       model = 1; // Pentium (60,66)
       stepping = 3; // ???
+      features |= (1<<4);   // implement TSC
 #  if BX_SUPPORT_FPU
       features |= 0x01;
 #  endif
@@ -1131,7 +1132,18 @@ BX_CPU_C::RSM(BxInstruction_t *i)
 BX_CPU_C::RDTSC(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 5
-  bx_panic("RDTSC: not implemented yet\n");
+  Boolean tsd = BX_CPU_THIS_PTR cr4 & 4;
+  Boolean cpl = CPL;
+  if ((tsd==0) || (tsd==1 && cpl==0)) {
+    // return ticks
+    Bit64u ticks = bx_pc_system.time_ticks ();
+    EAX = (Bit32u) (ticks & 0xffffffff);
+    EDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
+    bx_printf ("RDTSC: returning EDX:EAX = %08x:%08x\n", EDX, EAX);
+  } else {
+    // not allowed to use RDTSC!
+    exception (BX_GP_EXCEPTION, 0, 0);
+  }
 #else
   UndefinedOpcode(i);
 #endif
