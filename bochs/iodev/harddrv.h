@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.12 2002-08-27 19:54:46 bdenney Exp $
+// $Id: harddrv.h,v 1.13 2002-09-12 06:49:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -141,6 +141,35 @@ class concat_image_t : public device_image_t
 #if EXTERNAL_DISK_SIMULATOR
 #include "external-disk-simulator.h"
 #endif
+
+#if DLL_HD_SUPPORT
+class dll_image_t : public device_image_t
+{
+  public:
+      // Open a image. Returns non-negative if successful.
+      int open (const char* pathname);
+
+      // Close the image.
+      void close ();
+
+      // Position ourselves. Return the resulting offset from the
+      // beginning of the file.
+      off_t lseek (off_t offset, int whence);
+
+      // Read count bytes to the buffer buf. Return the number of
+      // bytes read (count).
+      ssize_t read (void* buf, size_t count);
+
+      // Write count bytes from buf. Return the number of bytes
+      // written (count).
+      ssize_t write (const void* buf, size_t count);
+
+  private:
+      int vunit,vblk;
+
+};
+#endif
+
 
 typedef struct {
   struct {

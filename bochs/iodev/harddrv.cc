@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.70 2002-09-09 16:56:56 kevinlawton Exp $
+// $Id: harddrv.cc,v 1.71 2002-09-12 06:49:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,10 +97,18 @@ bx_hard_drive_c::bx_hard_drive_c(void)
 #if BX_SPLIT_HD_SUPPORT
       // use new concatenated image object
       s[0].hard_drive = new concat_image_t();
+#if DLL_HD_SUPPORT
+      s[1].hard_drive = new dll_image_t();
+#else
       s[1].hard_drive = new concat_image_t();
+#endif
 #else
       s[0].hard_drive = new default_image_t();
+#if DLL_HD_SUPPORT
+      s[1].hard_drive = new dll_image_t();
+#else
       s[1].hard_drive = new default_image_t();
+#endif
 #endif
 
 #endif
@@ -128,7 +136,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.70 2002-09-09 16:56:56 kevinlawton Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.71 2002-09-12 06:49:04 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -3001,11 +3009,82 @@ ssize_t concat_image_t::write (const void* buf, size_t count)
   // notice if anyone does sequential read or write without seek in between.
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
-  if (!seek_was_last_op) 
+  if (!seek_was_last_op)
     BX_PANIC( ("no seek before write"));
   return ::write(fd, buf, count);
 }
 #endif   /* BX_SPLIT_HD_SUPPORT */
+
+#if DLL_HD_SUPPORT
+/*** dll_image_t function definitions ***/
+
+/*
+function vdisk_open(path:PChar;numclusters,clustersize:integer):integer;
+procedure vdisk_read(vunit:integer;blk:integer;var buf:TBlock);
+procedure vdisk_write(vunit:integer;blk:integer;var buf:TBlock);
+procedure vdisk_close(vunit:integer);
+*/
+
+HINSTANCE hlib_vdisk = 0;
+
+int (*vdisk_open)  (const char *path,int numclusters,int clustersize);
+void (*vdisk_read)   (int vunit,int blk,void *buf);
+void (*vdisk_write)  (int vunit,int blk,const void *buf);
+void (*vdisk_close) (int vunit);
+
+int dll_image_t::open (const char* pathname)
+{
+    if (hlib_vdisk == 0) {
+      hlib_vdisk = LoadLibrary("vdisk.dll");
+      if (hlib_vdisk != 0) {
+        vdisk_read = (void (*)(int,int,void*))        GetProcAddress(hlib_vdisk,"vdisk_read");
+        vdisk_write = (void (*)(int,int,const void*)) GetProcAddress(hlib_vdisk,"vdisk_write");
+        vdisk_open = (int (*)(const char *,int,int))  GetProcAddress(hlib_vdisk,"vdisk_open");
+        vdisk_close = (void (*)(int))                 GetProcAddress(hlib_vdisk,"vdisk_close");
+      }
+    }
+    if (hlib_vdisk != 0) {
+      vunit = vdisk_open(pathname,0x10000,64);
+      vblk = 0;
+    } else {
+      vunit = -2;
+    }
+    return vunit;
+}
+
+void dll_image_t::close ()
+{
+   if (vunit >= 0 && hlib_vdisk != 0) {
+     vdisk_close(vunit);
+   }
+}
+
+off_t dll_image_t::lseek (off_t offset, int whence)
+{
+      vblk = offset >> 9;
+      return 0;
+}
+
+ssize_t dll_image_t::read (void* buf, size_t count)
+{
+      if (vunit >= 0 && hlib_vdisk != 0) {
+         vdisk_read(vunit,vblk,buf);
+         return count;
+      } else {
+         return -1;
+      }
+}
+
+ssize_t dll_image_t::write (const void* buf, size_t count)
+{
+      if (vunit >= 0 && hlib_vdisk != 0) {
+        vdisk_write(vunit,vblk,buf);
+        return count;
+      } else {
+         return -1;
+      }
+}
+#endif
 
 error_recovery_t::error_recovery_t ()
 {
