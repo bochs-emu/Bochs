@@ -151,33 +151,6 @@ static Bit64s roundAndPackInt64(flag zSign, Bit64u absZ0, Bit64u absZ1, float_st
 }
 
 /*----------------------------------------------------------------------------
-| Returns the fraction bits of the single-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit32u extractFloat32Frac(float32 a)
-{
-    return a & 0x007FFFFF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the exponent bits of the single-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit16s extractFloat32Exp(float32 a)
-{
-    return (a>>23) & 0xFF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the sign bit of the single-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE flag extractFloat32Sign(float32 a)
-{
-    return a>>31;
-}
-
-/*----------------------------------------------------------------------------
 | Determine single-precision floating-point number class
 *----------------------------------------------------------------------------*/
 
@@ -220,22 +193,6 @@ static void
 }
 
 /*----------------------------------------------------------------------------
-| Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
-| single-precision floating-point value, returning the result.  After being
-| shifted into the proper positions, the three fields are simply added
-| together to form the result.  This means that any integer portion of `zSig'
-| will be added into the exponent.  Since a properly normalized significand
-| will have an integer portion equal to 1, the `zExp' input should be 1 less
-| than the desired result exponent whenever `zSig' is a complete, normalized
-| significand.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float32 packFloat32(flag zSign, Bit16s zExp, Bit32u zSig)
-{
-    return (((Bit32u) zSign)<<31) + (((Bit32u) zExp)<<23) + zSig;
-}
-
-/*----------------------------------------------------------------------------
 | Takes an abstract floating-point value having sign `zSign', exponent `zExp',
 | and significand `zSig', and returns the proper single-precision floating-
 | point value corresponding to the abstract input.  Ordinarily, the abstract
@@ -264,14 +221,8 @@ static float32 roundAndPackFloat32(flag zSign, Bit16s zExp, Bit32u zSig, float_s
 
     roundingMode = get_float_rounding_mode(status);
     int roundNearestEven = (roundingMode == float_round_nearest_even);
-
-    if(get_float_precision(status) == 12) {
-        roundIncrement = 0x20000;
-        roundMask = 0x3FFFF;
-    } else {
-	roundIncrement = 0x40;
-	roundMask = 0x7F;
-    }
+    roundIncrement = 0x40;
+    roundMask = 0x7F;
 
     if (! roundNearestEven) {
         if (roundingMode == float_round_to_zero) {
@@ -337,33 +288,6 @@ static float32
 }
 
 /*----------------------------------------------------------------------------
-| Returns the fraction bits of the double-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit64u extractFloat64Frac(float64 a)
-{
-    return a & BX_CONST64(0x000FFFFFFFFFFFFF);
-}
-
-/*----------------------------------------------------------------------------
-| Returns the exponent bits of the double-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit16s extractFloat64Exp(float64 a)
-{
-    return (a>>52) & 0x7FF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the sign bit of the double-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE flag extractFloat64Sign(float64 a)
-{
-    return a>>63;
-}
-
-/*----------------------------------------------------------------------------
 | Determine double-precision floating-point number class
 *----------------------------------------------------------------------------*/
 
@@ -403,22 +327,6 @@ static void
     int shiftCount = countLeadingZeros64(aSig) - 11;
     *zSigPtr = aSig<<shiftCount;
     *zExpPtr = 1 - shiftCount;
-}
-
-/*----------------------------------------------------------------------------
-| Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
-| double-precision floating-point value, returning the result.  After being
-| shifted into the proper positions, the three fields are simply added
-| together to form the result.  This means that any integer portion of `zSig'
-| will be added into the exponent.  Since a properly normalized significand
-| will have an integer portion equal to 1, the `zExp' input should be 1 less
-| than the desired result exponent whenever `zSig' is a complete, normalized
-| significand.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float64 packFloat64(flag zSign, Bit16s zExp, Bit64u zSig)
-{
-    return (((Bit64u) zSign)<<63) + (((Bit64u) zExp)<<52) + zSig;
 }
 
 /*----------------------------------------------------------------------------

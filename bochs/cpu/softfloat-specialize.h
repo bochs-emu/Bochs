@@ -76,15 +76,6 @@ BX_CPP_INLINE int get_flush_underflow_to_zero(float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Returns current floating point precision.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_float_precision(float_status_t &status)
-{
-    return status.float_precision;
-}
-
-/*----------------------------------------------------------------------------
 | Internal canonical NaN format.
 *----------------------------------------------------------------------------*/
 
@@ -97,9 +88,58 @@ typedef struct {
 | The pattern for a default generated single-precision NaN.
 *----------------------------------------------------------------------------*/
 #define float32_default_nan 0xFFC00000
-/*        in another version
+/*
 #define float32_default_nan 0x7FFFFFFF
 */
+
+/*----------------------------------------------------------------------------
+| Returns the fraction bits of the single-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit32u extractFloat32Frac(float32 a)
+{
+    return a & 0x007FFFFF;
+}
+
+#define float32_fraction extractFloat32Frac
+
+/*----------------------------------------------------------------------------
+| Returns the exponent bits of the single-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit16s extractFloat32Exp(float32 a)
+{
+    return (a>>23) & 0xFF;
+}
+
+#define float32_exp extractFloat32Exp
+
+/*----------------------------------------------------------------------------
+| Returns the sign bit of the single-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE flag extractFloat32Sign(float32 a)
+{
+    return a>>31;
+}
+
+#define float32_sign extractFloat32Sign
+
+/*----------------------------------------------------------------------------
+| Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
+| single-precision floating-point value, returning the result.  After being
+| shifted into the proper positions, the three fields are simply added
+| together to form the result.  This means that any integer portion of `zSig'
+| will be added into the exponent.  Since a properly normalized significand
+| will have an integer portion equal to 1, the `zExp' input should be 1 less
+| than the desired result exponent whenever `zSig' is a complete, normalized
+| significand.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float32 packFloat32(flag zSign, Bit16s zExp, Bit32u zSig)
+{
+    return (((Bit32u) zSign)<<31) + (((Bit32u) zExp)<<23) + zSig;
+}
 
 /*----------------------------------------------------------------------------
 | Returns 1 if the single-precision floating-point value `a' is a NaN;
@@ -189,9 +229,58 @@ static float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status)
 | The pattern for a default generated double-precision NaN.
 *----------------------------------------------------------------------------*/
 #define float64_default_nan BX_CONST64(0xFFF8000000000000)
-/*                in another version
+/*
 #define float64_default_nan BX_CONST64(0x7FFFFFFFFFFFFFFF)
 */
+
+/*----------------------------------------------------------------------------
+| Returns the fraction bits of the double-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit64u extractFloat64Frac(float64 a)
+{
+    return a & BX_CONST64(0x000FFFFFFFFFFFFF);
+}
+
+#define float64_fraction extractFloat64Frac
+
+/*----------------------------------------------------------------------------
+| Returns the exponent bits of the double-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit16s extractFloat64Exp(float64 a)
+{
+    return (a>>52) & 0x7FF;
+}
+
+#define float64_exp extractFloat64Exp
+
+/*----------------------------------------------------------------------------
+| Returns the sign bit of the double-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE flag extractFloat64Sign(float64 a)
+{
+    return a>>63;
+}
+
+#define float64_sign extractFloat64Sign
+
+/*----------------------------------------------------------------------------
+| Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
+| double-precision floating-point value, returning the result.  After being
+| shifted into the proper positions, the three fields are simply added
+| together to form the result.  This means that any integer portion of `zSig'
+| will be added into the exponent.  Since a properly normalized significand
+| will have an integer portion equal to 1, the `zExp' input should be 1 less
+| than the desired result exponent whenever `zSig' is a complete, normalized
+| significand.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float64 packFloat64(flag zSign, Bit16s zExp, Bit64u zSig)
+{
+    return (((Bit64u) zSign)<<63) + (((Bit64u) zExp)<<52) + zSig;
+}
 
 /*----------------------------------------------------------------------------
 | Returns 1 if the double-precision floating-point value `a' is a NaN;

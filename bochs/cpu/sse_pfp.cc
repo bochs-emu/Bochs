@@ -41,9 +41,8 @@ void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
   }
 }
 
-static void mxcsr_to_softfloat_status_word(softfloat_status_word_t &status, bx_mxcsr_t mxcsr, unsigned precision = 32)
+static void mxcsr_to_softfloat_status_word(softfloat_status_word_t &status, bx_mxcsr_t mxcsr)
 {
-  status.float_precision = precision; // affects only float32 and float80 operations
   status.float_detect_tininess = float_tininess_before_rounding;
   status.float_exception_flags = 0; // clear exceptions before execution
   status.float_nan_handling_mode = float_first_operand_nan;
@@ -51,54 +50,6 @@ static void mxcsr_to_softfloat_status_word(softfloat_status_word_t &status, bx_m
   // if underflow is masked and FUZ is 1, set it to 1, else to 0
   status.flush_underflow_to_zero = 
        (mxcsr.get_flush_masked_underflow() && mxcsr.get_UM()) ? 1 : 0;
-}
-
-BX_CPP_INLINE Float32 convert_to_QNaN(Float32 op)
-{
-  return op | 0x00400000;
-}
-
-// approximate reciprocal of scalar single precision FP
-static Float32 approximate_reciprocal(Float32 op)
-{
-  softfloat_status_word_t status_word;
-  float_class_t op_class = float32_class(op);
-
-  static const Float32 one = 0x3F800000;
-  Float32 result;
-
-  if (op_class == float_NaN)
-  {
-    return convert_to_QNaN(op);
-  } 
-  else {
-    if (op_class == float_denormal)
-    {
-      op &= ((Bit32u)(1) << 31);
-    } 
-    else if(op_class == float_normalized)
-    {
-      /*
-       * for Katmai, a one will be placed in the 12th bit after decimal
-       *  point, and the lower bits will be cleared.
-       */
-      op &= 0xFFFFF000;
-      op |= 0x00000800;
-    }
-
-    /* 
-     * Calculate (1/1.yyyyyyyyyyy1), the result is always rounded to the 
-     *  12th bit after the decimal point by round-to-nearest, regardless
-     *  of the current rounding mode. 
-    */
-
-    mxcsr_to_softfloat_status_word(status_word, 
-            bx_mxcsr_t(MXCSR_FLUSH_MASKED_UNDERFLOW | MXCSR_UM), 12);
-
-    result = float32_div(one, op, status_word);
-  }
-  
-  return result;
 }
 
 // handle DAZ
@@ -1456,92 +1407,6 @@ void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 
 #else
   BX_INFO(("SQRTSS_VssWss: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("RSQRTPS_VpsWps: SSE instruction still not implemented"));
-#else
-  BX_INFO(("RSQRTPS_VpsWps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("RSQRTSS_VssWss: SSE instruction still not implemented"));
-#else
-  BX_INFO(("RSQRTSS_VssWss: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 
- * Opcode: 0F 53
- * Approximate reciprocals of packed single precision FP values from XMM2/MEM.
- * Possible floating point exceptions: -
- */
-void BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-  BxPackedXmmRegister op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
-  }
-
-  op.xmm32u(0) = approximate_reciprocal(op.xmm32u(0));
-  op.xmm32u(1) = approximate_reciprocal(op.xmm32u(1));
-  op.xmm32u(2) = approximate_reciprocal(op.xmm32u(2));
-  op.xmm32u(3) = approximate_reciprocal(op.xmm32u(3));
-
-  BX_WRITE_XMM_REG(i->nnn(), op);
-
-#else
-  BX_INFO(("RCPPS_VpsWps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 
- * Opcode: F3 0F 53
- * Approximate reciprocal of scalar single precision FP value from XMM2/MEM32.
- * Possible floating point exceptions: -
- */
-void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-  Float32 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_DWORD(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
-  }
-
-  Float32 result = approximate_reciprocal(op);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
-
-#else
-  BX_INFO(("RCPSS_VssWss: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
