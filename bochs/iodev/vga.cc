@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.36 2002-07-24 19:36:39 vruppert Exp $
+// $Id: vga.cc,v 1.37 2002-08-12 16:16:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2100,7 +2100,7 @@ bx_vga_c::vbe_mem_read(Bit32u addr)
   if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
   {
     // LFB read
-    offset = offset - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+    offset = addr - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
   }
   else
   {
@@ -2124,7 +2124,7 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
   {
     // LFB write
-    offset = offset - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+    offset = addr - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
   }
   else
   {
