@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.81 2002-12-07 19:43:53 bdenney Exp $
+// $Id: wxmain.cc,v 1.82 2002-12-11 22:35:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -314,6 +314,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_ATA3, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
+  EVT_MENU(ID_Edit_Speed, MyFrame::OnEditSpeed)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
   EVT_MENU(ID_Edit_Cmos, MyFrame::OnEditCmos)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
@@ -376,8 +377,6 @@ END_EVENT_TABLE()
 //   | Start                |
 //   | Pause/Resume         |
 //   | Stop                 |
-//   +----------------------+
-//   | Speed...             |
 //   +----------------------|
 // - Debug
 //   +----------------------|
@@ -425,7 +424,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append( ID_Edit_ATA3, "ATA Channel 3..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
-  menuEdit->Append( ID_Edit_Sound, "&Sound..." );
+  menuEdit->Append( ID_Edit_Speed, "&Speed..." );
+  menuEdit->Append( ID_Edit_Sound, "Sound..." );
   menuEdit->Append( ID_Edit_Cmos, "&CMOS..." );
   menuEdit->Append( ID_Edit_Network, "&Network..." );
   menuEdit->Append( ID_Edit_Keyboard, "&Keyboard..." );
@@ -438,7 +438,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuSimulate->Append( ID_Simulate_PauseResume, "&Pause...");
   menuSimulate->Append( ID_Simulate_Stop, "S&top...");
   menuSimulate->AppendSeparator ();
-  menuSimulate->Append( ID_Simulate_Speed, "S&peed...");
   menuSimulate->Enable (ID_Simulate_PauseResume, FALSE);
   menuSimulate->Enable (ID_Simulate_Stop, FALSE);
 
@@ -561,10 +560,6 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   wxString devices[MAX_BOOT_DEVICES];
   int dev_id[MAX_BOOT_DEVICES];
   bx_param_enum_c *floppy = SIM->get_param_enum (BXP_FLOPPYA_DEVTYPE);
-  bx_param_bool_c *ata0_mpres = SIM->get_param_bool (BXP_ATA0_MASTER_PRESENT);
-  bx_param_enum_c *ata0_mtype = SIM->get_param_enum (BXP_ATA0_MASTER_TYPE);
-  bx_param_bool_c *ata0_spres = SIM->get_param_bool (BXP_ATA0_SLAVE_PRESENT);
-  bx_param_enum_c *ata0_stype = SIM->get_param_enum (BXP_ATA0_SLAVE_TYPE);
   if (floppy->get () != BX_FLOPPY_NONE) {
     devices[bootDevices] = wxT("First floppy drive");
     dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
@@ -635,6 +630,14 @@ void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
       optromAddr[rom]->set (dlg.GetRomAddr (rom));
     }
   }
+}
+
+void MyFrame::OnEditSpeed(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg (this, -1);
+  dlg.AddParam (SIM->get_param (BXP_IPS));
+  dlg.AddParam (SIM->get_param (BXP_REALTIME_PIT));
+  dlg.ShowModal ();
 }
 
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
@@ -753,7 +756,6 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
   dlg.SetTitle ("Other Options");
   dlg.AddParam (SIM->get_param (BXP_SEL_DISPLAY_LIBRARY));
   dlg.AddParam (SIM->get_param (BXP_SEL_CONFIG_INTERFACE));
-  dlg.AddParam (SIM->get_param (BXP_IPS));
   dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
   dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
   dlg.AddParam (SIM->get_param (BXP_MOUSE_ENABLED));
@@ -1008,6 +1010,7 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   //menuEdit->Enable (ID_Edit_ATA3, canConfigure);
   menuEdit->Enable( ID_Edit_Boot, canConfigure);
   menuEdit->Enable( ID_Edit_Memory, canConfigure);
+  menuEdit->Enable( ID_Edit_Speed, canConfigure);
   menuEdit->Enable( ID_Edit_Sound, canConfigure);
   menuEdit->Enable( ID_Edit_Cmos, canConfigure);
   menuEdit->Enable( ID_Edit_Network, canConfigure);

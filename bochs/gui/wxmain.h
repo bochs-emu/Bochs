@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.37 2002-12-07 16:52:09 cbothamy Exp $
+// $Id: wxmain.h,v 1.38 2002-12-11 22:35:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -38,6 +38,7 @@ enum
   ID_Edit_Cdrom,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
   ID_Edit_Boot,
   ID_Edit_Memory,
+  ID_Edit_Speed,
   ID_Edit_Sound,
   ID_Edit_Cmos,
   ID_Edit_Network,
@@ -49,7 +50,6 @@ enum
   ID_Simulate_Start,
   ID_Simulate_PauseResume,
   ID_Simulate_Stop,
-  ID_Simulate_Speed,
   ID_Debug_ShowCpu,
   ID_Debug_ShowKeyboard,
   ID_Debug_Console,
@@ -178,6 +178,7 @@ public:
   void OnLogMsg(BxEvent *logMsgEvent);
   void OnEditBoot(wxCommandEvent& event);
   void OnEditMemory(wxCommandEvent& event);
+  void OnEditSpeed(wxCommandEvent& event);
   void OnEditSound(wxCommandEvent& event);
   void OnEditCmos(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
