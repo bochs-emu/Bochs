@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.6 2003-04-20 19:20:07 sshwarts Exp $
+ |  $Id: errors.c,v 1.7 2003-07-31 18:54:47 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -79,7 +79,7 @@ void Un_impl(void)
    */
 void FPU_illegal(void)
 {
-  math_abort(FPU_info,SIGILL);
+  math_abort(NULL, SIGILL);
 }
 
 

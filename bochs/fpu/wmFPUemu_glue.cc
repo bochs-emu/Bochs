@@ -256,7 +256,7 @@ fpu_put_user(unsigned val, bx_address ptr, unsigned len)
 }
 
   void
-math_abort(struct info *info, unsigned int signal)
+math_abort(void *info, unsigned int signal)
 {
   UNUSED(info); // info is always passed NULL
 #if BX_CPU_LEVEL >= 4

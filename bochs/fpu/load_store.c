@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
- |  $Id: load_store.c,v 1.8 2003-07-31 17:39:24 sshwarts Exp $
+ |  $Id: load_store.c,v 1.9 2003-07-31 18:54:48 sshwarts Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |
@@ -78,12 +78,12 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
       if ( addr_modes.default_mode == SEG32 )
 	{
 	  if ( access_limit < data_sizes_32[type] )
-	    math_abort(FPU_info,SIGSEGV);
+	    math_abort(NULL,SIGSEGV);
 	}
       else if ( addr_modes.default_mode == PM16 )
 	{
 	  if ( access_limit < data_sizes_16[type] )
-	    math_abort(FPU_info,SIGSEGV);
+	    math_abort(NULL,SIGSEGV);
 	}
 #ifdef PARANOID
       else

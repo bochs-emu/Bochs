@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.12 2003-07-31 17:39:24 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.13 2003-07-31 18:54:48 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -173,7 +173,7 @@ math_emulate(fpu_addr_modes addr_modes,
        */
 do_the_FPU_interrupt:
 
-      math_abort(FPU_info, SIGFPE);
+      math_abort(NULL, SIGFPE);
       }
     }
 
@@ -199,7 +199,7 @@ do_the_FPU_interrupt:
                 {
                   /* This table works for 16 and 32 bit protected mode */
                   if (access_limit < data_sizes_16[(byte1 >> 1) & 3])
-                    math_abort(FPU_info, SIGSEGV);
+                    math_abort(NULL, SIGSEGV);
                 }
 #endif
               unmasked = 0;  /* Do this here to stop compiler warnings. */
