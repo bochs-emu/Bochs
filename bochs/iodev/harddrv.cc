@@ -95,7 +95,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.25 2001-06-27 20:27:49 fries Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.26 2001-08-13 15:58:35 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1622,6 +1622,13 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  BX_SELECTED_CONTROLLER.sector_count = 0xff; // Active or Idle mode
 	  raise_interrupt();
 	  break;
+	
+	// win2K uses 0xe7, but what is it???
+	// This can be used temporarily to avoid panics.
+	case 0xe7:
+	  BX_INFO(("IO write(1f7h): command 0xe7 : WHAT IS THIS?"));
+          command_aborted(value);
+          break;
 
         default:
           BX_PANIC(("IO write(1f7h): command 0x%02x", (unsigned) value));
