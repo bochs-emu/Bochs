@@ -91,6 +91,9 @@ To do:
   - should we allow multiple log files with different settings? for example
     dump cpu events to cpulog.txt and keyboard events to keyboardlog.txt?
 - debugger
+  - bug: it's possible to make the GUI stop responding to mouse and keyboard
+    input if you click the continue button in the debugger twice in very
+    close succession.  I don't know why yet.
   - probably the layout will be similar to BFE at first
   - need to show disassembly of the next instruction to be executed
   - have a text box where you can type debugger commands, and a scrolling
