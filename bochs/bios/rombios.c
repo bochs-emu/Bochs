@@ -244,7 +244,9 @@ static void           debugger_on();
 static void           debugger_off();
 static void           keyboard_panic();
 
-#if 0
+#define DEBUG_ROMBIOS 0
+
+#if DEBUG_ROMBIOS
 #  define printf(format, p...) bios_printf(0, format, ##p)
 #  define panic(format, p...)  bios_printf(1, format, ##p)
 #else
@@ -1643,6 +1645,7 @@ int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS;
 {
   Bit8u    drive, num_sectors, sector, head, status, mod;
+  Bit8u    n_drives;
   Bit16u   cyl_mod, ax;
   Bit16u   max_cylinder, cylinder, total_sectors;
   Bit16u   hd_cylinders;
@@ -1656,7 +1659,13 @@ int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
 
   /* at this point, DL is >= 0x80 to be passed from the floppy int13h
      handler code */
-  if (GET_DL() > 0x80) { /* only handle one disk for now */
+  /* check how many disks first (cmos reg 0x12), return an error if
+     DL > n_drives */
+  n_drives = inb_cmos(0x12);
+  n_drives = ((n_drives & 0xf0)==0) ? 0 :
+    ((n_drives & 0x0f) ? 2 : 1);
+
+  if (!((GET_DL()&0x7f) < n_drives)) { /* allow 0, 1, or 2 disks */
     SET_AH(0x01);
     set_disk_ret_status(0x01);
     SET_CF(); /* error occurred */
@@ -1667,7 +1676,6 @@ int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
 
     case 0x00: /* disk controller reset */
 printf("int13_f00\n");
-      drive = GET_DL();
 
       SET_AH(0);
       set_disk_ret_status(0);
@@ -1691,7 +1699,8 @@ printf("int13_f01\n");
 
     case 0x04: // verify disk sectors
     case 0x02: // read disk sectors
-      get_hd_geometry(&hd_cylinders, &hd_heads, &hd_sectors);
+      drive = GET_DL();
+      get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 
       num_sectors = GET_AL();
       cylinder    = GET_CH();
@@ -1751,7 +1760,7 @@ printf("int13_f01\n");
       outb(0x01f3, sector);
       outb(0x01f4, cylinder & 0x00ff);
       outb(0x01f5, cylinder >> 8);
-      outb(0x01f6, 0xa0 | ((GET_DL() & 0x01)<<4) | (head & 0x0f));
+      outb(0x01f6, 0xa0 | ((drive&1)<<4) | (head & 0x0f));
       outb(0x01f7, 0x20);
 
       while (1) {
@@ -1828,7 +1837,9 @@ i13_f02_done:
 
 
     case 0x03: /* write disk sectors */
-      get_hd_geometry(&hd_cylinders, &hd_heads, &hd_sectors);
+printf("int13_f03\n");
+      drive = GET_DL ();
+      get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 
       num_sectors = GET_AL();
       cylinder    = GET_CH();
@@ -1880,7 +1891,7 @@ i13_f02_done:
       outb(0x01f3, sector);
       outb(0x01f4, cylinder & 0x00ff);
       outb(0x01f5, cylinder >> 8);
-      outb(0x01f6, 0xa0 | ((GET_DL() & 0x01)<<4) | (head & 0x0f));
+      outb(0x01f6, 0xa0 | ((drive&1)<<4) | (head & 0x0f));
       outb(0x01f7, 0x30);
 
       // wait for busy bit to turn off after seeking
@@ -1968,7 +1979,8 @@ printf("int13_f05\n");
 
     case 0x08: /* read disk drive parameters */
 printf("int13_f08\n");
-      get_hd_geometry(&hd_cylinders, &hd_heads, &hd_sectors);
+      // return geom for drive 0x80, they asked for "max" cylinders anyway
+      get_hd_geometry(0x80, &hd_cylinders, &hd_heads, &hd_sectors);
 
       // translate CHS
       //
@@ -1998,7 +2010,7 @@ printf("int13_f08\n");
       SET_CH(max_cylinder & 0xff);
       SET_CL(((max_cylinder >> 2) & 0xc0) | (hd_sectors & 0x3f));
       SET_DH(hd_heads - 1);
-      SET_DL(1); /* one drive for now */
+      SET_DL(n_drives); /* returns 0, 1, or 2 hard drives */
       SET_AH(0);
       set_disk_ret_status(0);
       CLEAR_CF(); /* successful */
@@ -2080,8 +2092,8 @@ printf("int13_f14\n");
       break;
 
     case 0x15: /* read disk drive size */
-      // check for driveno in DL here
-      get_hd_geometry(&hd_cylinders, &hd_heads, &hd_sectors);
+      drive = GET_DL();
+      get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 #asm
       push bp
       mov  bp, sp
@@ -2967,32 +2979,45 @@ determine_floppy_media(drive)
 
 
   void
-get_hd_geometry(hd_cylinders, hd_heads, hd_sectors)
+get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
+  Bit8u drive;
   Bit16u *hd_cylinders;
   Bit8u  *hd_heads;
   Bit8u  *hd_sectors;
 {
-  Bit8u hd0_type;
+  Bit8u hd_type;
   Bit16u ss;
   Bit16u cylinders;
+  Bit8u iobase;
 
   ss = get_SS();
-  hd0_type = inb_cmos(0x12) & 0xf0;
-  if (hd0_type != 0xf0)
-    panic("HD0 cmos reg 12h not type F\n");
-  hd0_type = inb_cmos(0x19); // HD0: extended type
-  if (hd0_type != 47)
-    panic("HD0 cmos reg 19h not user definable type 47\n");
+  if (drive == 0x80) {
+    hd_type = inb_cmos(0x12) & 0xf0;
+    if (hd_type != 0xf0)
+      panic("HD0 cmos reg 12h not type F\n");
+    hd_type = inb_cmos(0x19); // HD0: extended type
+    if (hd_type != 47)
+      panic("HD0 cmos reg 19h not user definable type 47\n");
+    iobase = 0x1b;
+  } else {
+    hd_type = inb_cmos(0x12) & 0x0f;
+    if (hd_type != 0x0f)
+      panic("HD1 cmos reg 12h not type F\n");
+    hd_type = inb_cmos(0x1a); // HD0: extended type
+    if (hd_type != 47)
+      panic("HD1 cmos reg 1ah not user definable type 47\n");
+    iobase = 0x24;
+  }
 
   // cylinders
-  cylinders = inb_cmos(0x1b) | (inb_cmos(0x1c) << 8);
+  cylinders = inb_cmos(iobase) | (inb_cmos(iobase+1) << 8);
   write_word(ss, hd_cylinders, cylinders);
 
   // heads
-  write_byte(ss, hd_heads, inb_cmos(0x1d));
+  write_byte(ss, hd_heads, inb_cmos(iobase+2));
 
   // sectors per track
-  write_byte(ss, hd_sectors, inb_cmos(0x23));
+  write_byte(ss, hd_sectors, inb_cmos(iobase+8));
 }
 
   void
@@ -3465,6 +3490,7 @@ post_d0_type47:
   mov  ax, #EBDA_SEG
   mov  ds, ax
 
+  ;;; Filling EBDA table for hard disk 0.
   mov  al, #0x1f
   out  #0x70, al
   in   al, #0x71
@@ -3508,17 +3534,17 @@ post_d0_type47:
   mov  dl, al      ;; DL = sectors
 
   cmp  bx, #1024
-  jnbe post_logical_chs ;; if cylinders > 1024, use translated style CHS
+  jnbe hd0_post_logical_chs ;; if cylinders > 1024, use translated style CHS
 
-post_physical_chs:
+hd0_post_physical_chs:
   ;; no logical CHS mapping used, just physical CHS
   ;; use Standard Fixed Disk Parameter Table (FDPT)
   mov   (0x003d + 0x00), bx ;; number of physical cylinders
   mov   (0x003d + 0x02), cl ;; number of physical heads
   mov   (0x003d + 0x0E), dl ;; number of physical sectors
-  ret
+  jmp check_for_hd1
 
-post_logical_chs:
+hd0_post_logical_chs:
   ;; complies with Phoenix style Translated Fixed Disk Parameter Table (FDPT)
   mov   (0x003d + 0x09), bx ;; number of physical cylinders
   mov   (0x003d + 0x0b), cl ;; number of physical heads
@@ -3528,48 +3554,192 @@ post_logical_chs:
   mov   (0x003d + 0x03), al ;; A0h signature, indicates translated table
 
   cmp bx, #2048
-  jnbe post_above_2048
+  jnbe hd0_post_above_2048
   ;; 1024 < c <= 2048 cylinders
   shr bx, #0x01
   shl cl, #0x01
-  jmp post_store_logical
+  jmp hd0_post_store_logical
 
-post_above_2048:
+hd0_post_above_2048:
   cmp bx, #4096
-  jnbe post_above_4096
+  jnbe hd0_post_above_4096
   ;; 2048 < c <= 4096 cylinders
   shr bx, #0x02
   shl cl, #0x02
-  jmp post_store_logical
+  jmp hd0_post_store_logical
 
-post_above_4096:
+hd0_post_above_4096:
   cmp bx, #8192
-  jnbe post_above_8192
+  jnbe hd0_post_above_8192
   ;; 4096 < c <= 8192 cylinders
   shr bx, #0x03
   shl cl, #0x03
-  jmp post_store_logical
+  jmp hd0_post_store_logical
 
-post_above_8192:
+hd0_post_above_8192:
   ;; 8192 < c <= 16384 cylinders
   shr bx, #0x04
   shl cl, #0x04
 
-post_store_logical:
+hd0_post_store_logical:
   mov   (0x003d + 0x00), bx ;; number of physical cylinders
   mov   (0x003d + 0x02), cl ;; number of physical heads
   ;; checksum
   mov   cl, #0x0f     ;; repeat count
   mov   si, #0x003d   ;; offset to disk0 FDPT
   mov   al, #0x00     ;; sum
-post_checksum_loop:
+hd0_post_checksum_loop:
   add   al, [si]
   inc   si
   dec   cl
-  jnz post_checksum_loop
+  jnz hd0_post_checksum_loop
   not   al  ;; now take 2s complement
   inc   al
   mov   [si], al
+;;; Done filling EBDA table for hard disk 0.
+
+
+check_for_hd1:
+  ;; is there really a second hard disk?  if not, return now
+  mov  al, #0x12
+  out  #0x70, al
+  in   al, #0x71
+  and  al, #0x0f
+  jnz   post_d1_exists
+  ret
+post_d1_exists:
+  ;; check that the hd type is really 0x0f.
+  cmp al, #0x0f
+  jz post_d1_extended
+  HALT(__LINE__)
+post_d1_extended:
+  ;; check that the extended type is 47 - user definable
+  mov  al, #0x1a
+  out  #0x70, al
+  in   al, #0x71
+  cmp  al, #47  ;; decimal 47 - user definable
+  je   post_d1_type47
+  HALT(__LINE__)
+post_d1_type47:
+  ;; Table for disk1.
+  ;; CMOS  purpose                  param table offset
+  ;; 0x24    cylinders low            0
+  ;; 0x25    cylinders high           1
+  ;; 0x26    heads                    2
+  ;; 0x27    write pre-comp low       5
+  ;; 0x28    write pre-comp high      6
+  ;; 0x29    heads>8                  8
+  ;; 0x2a    landing zone low         C
+  ;; 0x2b    landing zone high        D
+  ;; 0x2c    sectors/track            E
+;;; Fill EBDA table for hard disk 1.
+  mov  al, #0x28
+  out  #0x70, al
+  in   al, #0x71
+  mov  ah, al
+  mov  al, #0x27
+  out  #0x70, al
+  in   al, #0x71
+  mov   (0x004d + 0x05), ax ;; write precomp word
+
+  mov  al, #0x29
+  out  #0x70, al
+  in   al, #0x71
+  mov   (0x004d + 0x08), al ;; drive control byte
+
+  mov  al, #0x2b
+  out  #0x70, al
+  in   al, #0x71
+  mov  ah, al
+  mov  al, #0x2a
+  out  #0x70, al
+  in   al, #0x71
+  mov   (0x004d + 0x0C), ax ;; landing zone word
+
+  mov  al, #0x25   ;; get cylinders word in AX
+  out  #0x70, al
+  in   al, #0x71   ;; high byte
+  mov  ah, al
+  mov  al, #0x24
+  out  #0x70, al
+  in   al, #0x71   ;; low byte
+  mov  bx, ax      ;; BX = cylinders
+
+  mov  al, #0x26
+  out  #0x70, al
+  in   al, #0x71
+  mov  cl, al      ;; CL = heads
+
+  mov  al, #0x2c
+  out  #0x70, al
+  in   al, #0x71
+  mov  dl, al      ;; DL = sectors
+
+  cmp  bx, #1024
+  jnbe hd1_post_logical_chs ;; if cylinders > 1024, use translated style CHS
+
+hd1_post_physical_chs:
+  ;; no logical CHS mapping used, just physical CHS
+  ;; use Standard Fixed Disk Parameter Table (FDPT)
+  mov   (0x004d + 0x00), bx ;; number of physical cylinders
+  mov   (0x004d + 0x02), cl ;; number of physical heads
+  mov   (0x004d + 0x0E), dl ;; number of physical sectors
+  ret
+
+hd1_post_logical_chs:
+  ;; complies with Phoenix style Translated Fixed Disk Parameter Table (FDPT)
+  mov   (0x004d + 0x09), bx ;; number of physical cylinders
+  mov   (0x004d + 0x0b), cl ;; number of physical heads
+  mov   (0x004d + 0x04), dl ;; number of physical sectors
+  mov   (0x004d + 0x0e), dl ;; number of logical sectors (same)
+  mov al, #0xa0
+  mov   (0x004d + 0x03), al ;; A0h signature, indicates translated table
+
+  cmp bx, #2048
+  jnbe hd1_post_above_2048
+  ;; 1024 < c <= 2048 cylinders
+  shr bx, #0x01
+  shl cl, #0x01
+  jmp hd1_post_store_logical
+
+hd1_post_above_2048:
+  cmp bx, #4096
+  jnbe hd1_post_above_4096
+  ;; 2048 < c <= 4096 cylinders
+  shr bx, #0x02
+  shl cl, #0x02
+  jmp hd1_post_store_logical
+
+hd1_post_above_4096:
+  cmp bx, #8192
+  jnbe hd1_post_above_8192
+  ;; 4096 < c <= 8192 cylinders
+  shr bx, #0x03
+  shl cl, #0x03
+  jmp hd1_post_store_logical
+
+hd1_post_above_8192:
+  ;; 8192 < c <= 16384 cylinders
+  shr bx, #0x04
+  shl cl, #0x04
+
+hd1_post_store_logical:
+  mov   (0x004d + 0x00), bx ;; number of physical cylinders
+  mov   (0x004d + 0x02), cl ;; number of physical heads
+  ;; checksum
+  mov   cl, #0x0f     ;; repeat count
+  mov   si, #0x004d   ;; offset to disk0 FDPT
+  mov   al, #0x00     ;; sum
+hd1_post_checksum_loop:
+  add   al, [si]
+  inc   si
+  dec   cl
+  jnz hd1_post_checksum_loop
+  not   al  ;; now take 2s complement
+  inc   al
+  mov   [si], al
+;;; Done filling EBDA table for hard disk 0.
+
   ret
 
 
