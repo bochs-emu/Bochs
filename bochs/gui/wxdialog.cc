@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.67 2003-09-09 16:41:24 vruppert Exp $
+// $Id: wxdialog.cc,v 1.68 2003-09-13 16:49:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -874,7 +874,7 @@ void DebugLogDialog::CheckLogLength ()
   if (len > lengthMax + lengthTolerance) {
     // Truncate the string.  Start from length - lengthMax, search 
     // forward until we find the first \n.
-    for (int i = len - lengthMax; i<len-1; i++) {
+    for (int i = len - lengthMax; i<(int)(len-1); i++) {
       if (str.GetChar (i) == '\n') {
 	// remove the \n and everything before it.  Done.
 	//printf ("truncating from 0 to %d\n", i+1);

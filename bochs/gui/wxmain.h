@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.43 2003-08-29 18:57:40 vruppert Exp $
+// $Id: wxmain.h,v 1.44 2003-09-13 16:49:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -11,6 +11,9 @@ class MyPanel;
 class SimThread;
 class FloppyConfigDialog;
 class ParamDialog;
+#if BX_DEBUGGER
+class DebugLogDialog;
+#endif
 
 //hack alert; yuck; FIXME
 extern MyFrame *theFrame;
