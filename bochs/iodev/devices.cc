@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34.2.24 2002-10-23 19:31:52 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.25 2002-10-23 20:04:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.24 2002-10-23 19:31:52 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.25 2002-10-23 20:04:32 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -367,7 +367,9 @@ bx_devices_c::timer()
     if ( ++multiple==10)
     {
       multiple=0;
-      bx_gui->handle_events();
+      SIM->periodic ();
+      if (!BX_CPU(0)->kill_bochs_request)
+	bx_gui->handle_events();
     }
   }
 
