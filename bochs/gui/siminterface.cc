@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.54 2002-09-06 16:43:23 bdenney Exp $
+// $Id: siminterface.cc,v 1.55 2002-09-07 14:27:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -240,8 +240,10 @@ bx_real_sim_c::quit_sim (int code) {
   BX_INFO (("quit_sim called"));
   // use longjmp to quit cleanly, no matter where in the stack we are.
   //fprintf (stderr, "using longjmp() to jump directly to the quit context!\n");
-  longjmp (*quit_context, 1);
-  BX_PANIC (("in bx_real_sim_c::quit_sim, longjmp should never return"));
+  if (quit_context != NULL) {
+    longjmp (*quit_context, 1);
+    BX_PANIC (("in bx_real_sim_c::quit_sim, longjmp should never return"));
+  }
 #if BX_WITH_WX
   // in wxWindows, the whole simulator is running in a separate thread.
   // our only job is to end the thread as soon as possible, NOT to shut
