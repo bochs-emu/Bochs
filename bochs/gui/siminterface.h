@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.55 2002-09-03 05:31:42 bdenney Exp $
+// $Id: siminterface.h,v 1.56 2002-09-03 08:46:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -157,6 +157,7 @@ typedef enum {
   BXP_DISKD_HEADS,
   BXP_DISKD_SPT,
   BXP_DISKD,
+#define BXP_PARAMS_PER_SERIAL_PORT 2
   BXP_COM1_ENABLED,
   BXP_COM1_PATH,
   BXP_COM2_ENABLED,
@@ -213,6 +214,7 @@ typedef enum {
   BXP_SB16_LOGLEVEL,
   BXP_SB16_DMATIMER,
   BXP_SB16,
+#define BXP_PARAMS_PER_PARALLEL_PORT 2
   BXP_PARPORT1_ENABLED,
   BXP_PARPORT1_OUTFILE,
   BXP_PARPORT2_ENABLED,
@@ -224,6 +226,17 @@ typedef enum {
   BXP_ASK_FOR_PATHNAME,   // for general file selection dialog
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
+
+// use x=1,2,3,4
+#define BXP_COMx_ENABLED(x) \
+   (bx_id)(BXP_COM1_ENABLED + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
+#define BXP_COMx_PATH(x) \
+  (bx_id)(BXP_COM1_PATH + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
+// use x=1,2
+#define BXP_PARPORTx_ENABLED(x) \
+  (bx_id)(BXP_PARPORT1_ENABLED + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
+#define BXP_PARPORTx_OUTFILE(x) \
+  (bx_id)(BXP_PARPORT1_OUTFILE + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
 
 typedef enum {
   BX_TOOLBAR_UNDEFINED,
@@ -515,6 +528,15 @@ typedef struct {
 //
 // The parameter concept is similar to the use of parameters in JavaBeans.
 
+class bx_object_c;
+class bx_param_c;
+class bx_param_num_c;
+class bx_param_enum_c;
+class bx_param_bool_c;
+class bx_param_string_c;
+class bx_param_filename_c;
+class bx_list_c;
+
 class bx_object_c {
 private:
   bx_id id;
@@ -581,11 +603,26 @@ public:
 };
 
 class bx_param_bool_c : public bx_param_num_c {
+  // many boolean variables are used to enable/disable modules.  In the
+  // user interface, the enable variable should enable/disable all the
+  // other parameters associated with that module.
+  // The dependent_list is initialized to NULL.  If dependent_list is modified
+  // to point to a bx_list_c of other parameters, the set() method of
+  // bx_param_bool_c will enable those parameters when this bool is true, and
+  // disable them when this bool is false.
+  bx_list_c *dependent_list;
+  void update_dependents ();
 public:
   bx_param_bool_c (bx_id id, 
       char *name,
       char *description,
       Bit32s initial_val);
+  bx_list_c *get_dependent_list () { return dependent_list; }
+  void set_dependent_list (bx_list_c *l) {
+    dependent_list = l; 
+    update_dependents ();
+  }
+  void set (Bit32s val) { bx_param_num_c::set (val); update_dependents (); }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -686,7 +723,7 @@ public:
     // series of questions format is preferred.
     BX_SERIES_ASK = (1<<1)
   } bx_listopt_bits;
-  //bx_list_c (bx_id id, int maxsize);
+  bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
   virtual ~bx_list_c();
   void add (bx_param_c *param);
