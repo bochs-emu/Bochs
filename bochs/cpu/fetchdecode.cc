@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.49 2003-04-23 17:52:58 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.50 2003-05-02 12:22:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2380,7 +2380,7 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
   bx_bool is_32, lock=0;
   unsigned b1, b2, ilen=1, attr, os_32;
   unsigned imm_mode, offset;
-  unsigned rm, mod, nnn;
+  unsigned rm, mod=0, nnn=0;
   unsigned sse_prefix;
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1

@@ -81,16 +81,18 @@ Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit32s value)
   return value;
 }
 
+#if BX_SUPPORT_SSE >= 1
 static Bit16u SelectMmxWord(BxPackedMmxRegister mmx, unsigned index)
 {
   return (MMXUQ(mmx) >> ((index & 0x3) * 16)) & 0xffff;
 }
+#endif
 
 void BX_CPU_C::printMmxRegisters(void)
 {
   for(int i=0;i<8;i++) {
       BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
-      fprintf(stderr, "MM%d: %lx%lx\n", i, MMXUD1(mm), MMXUD0(mm));
+      fprintf(stderr, "MM%d: %08x%08x\n", i, MMXUD1(mm), MMXUD0(mm));
   }
 }
 

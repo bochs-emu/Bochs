@@ -340,7 +340,7 @@ bx_virt_timer_c::init(void) {
   total_real_usec=0;
   last_realtime_delta=0;
   //System time variables:
-  last_usec;
+  last_usec = 0;
   usec_per_second = USEC_PER_SECOND;
   stored_delta=0;
   last_system_usec=0;
