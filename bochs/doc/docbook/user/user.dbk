@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.5 2001-09-12 13:16:03 bdenney Exp $
+$Id: user.dbk,v 1.6 2001-09-15 06:56:21 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -205,12 +205,39 @@ users.
 
 <section><title>License</title>
 <para>
-Bochs is distributed under the 
-<ulink url="http://www.gnu.org/copyleft/lesser.html">GNU Lesser General Public
-License</ulink> (LGPL).  It was originally a commercial product, but in
-March 2000 <ulink url="http://www.linux-mandrake.com">MandrakeSoft</ulink>
-bought Bochs and committed it to Open Source.
+Bochs is copyrighted by MandrakeSoft S.A.<footnote>
+<para>
+MandrakeSoft has web sites at
+<ulink url="http://mandrakesoft.com">http://mandrakesoft.com</ulink> and
+<ulink url="http://www.linux-mandrake.com">http://www.linux-mandrake.com</ulink>.
 </para>
+</footnote>
+and distributed under the
+GNU Lesser General Public License<footnote>
+<para>
+Complete text of the GNU LGPL is included with the source code in a file
+called COPYING, and is also <ulink url="http://www.gnu.org/licenses/lgpl.html">here</ulink>.
+</para>
+</footnote>.  The following text appears at the
+top of every source code file in the Bochs distribution:
+<programlisting>
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+</programlisting>
+
+</para>
+
 </section>  <!-- end of Introduction:License section -->
 
 </chapter>  <!-- End of Introductino to Bochs -->
@@ -482,15 +509,24 @@ to mention, running DOOM, though at then-pathetic speeds.
 <section><title>Downloading Bochs</title>
 
 <para>
-You can download Bochs from our web site at &bochs-sf-net;.  On the download
-page, you will find the latest release version (binaries and source code)
-and also some development versions.  If you trying to get things working
-for the first time, a release version is recommended since it has been
-tested the most.  We have precompiled binaries for many platforms, which
-can save you the troubles (and joys) of compiling Bochs yourself.  Most 
-binary packages come with a small demo of a guest operating system called DLX
-Linux.  If you choose to compile it yourself, you have a lot more flexibility
-in which devices you enable.
+You can download Bochs from our web site at &bochs-sf-net;.  First, you
+need to choose what version to get: latest release or a development version.
+If you trying to get things working for the first time, a release version is
+recommended since it has been tested the most.  The development versions
+(sometimes called snapshots) may have some newer bug fixes and new features,
+but have not been tested as much as the releases.
+See the <link linkend="linuxrpm">Linux RPM Section</link> for more information.
+</para>
+
+<para>
+Second, you can choose to compile Bochs from source code or install a binary
+(if one is available for your platform).  Binary packages will be quicker to
+install, and most include a small demo of a guest operating system called DLX
+Linux to get you started.  However, some features can only be enabled if you
+compile Bochs yourself, for example the Bochs debugger.  For multiuser systems,
+you will probably need system administrator privileges (root) to install a
+binary package.  If you only have a user account you can compile Bochs in your
+home directory.
 </para>
 
 <para>
@@ -505,20 +541,102 @@ for details.
 </section>  <!-- End of Installation:Downloading Bochs section -->
 
 <section><title>Installing a Binary</title>
-    <section><title>Windows</title>
-       <para>
-       unzip into some directory.  Look for DOC-win32.html
-  for more instructions.  Quick start: find dlxlinux/start.bat and
-  double click
-       </para>
-   </section>
-   <section><title>Unix</title>
-     <para>
-     <command>rpm -i bochs-&lt;VERSION>;.rpm</command>
-     Look for <filename>/usr/local/bochs/latest/DOC-linux.html</filename>, man pages for
-     bochs.  Quick start: <command>run bochs-dlx</command>  (in <filename>/usr/local/bin</filename>)
-      </para>
-   </section>
+
+<para>
+This section is divided up by platform, since installing a binary package
+is different on different platforms.
+</para>
+
+<section><title>Windows</title>
+<para>
+unzip into some directory.  Look for DOC-win32.html
+for more instructions.  Quick start: find dlxlinux/start.bat and
+double click
+</para>
+</section> <!-- end of Installing a Binary:Windows -->
+
+<section id="linuxrpm">
+<title>Linux RPM</title>
+<para>
+RPM stands for "RedHat Package Manager."  An RPM is a compressed file
+containing files to be installed on your system.  Many Linux distributions,
+not just RedHat ones, can install files from an RPM.  Debian packages are
+available as well, but this section talks deals with RPMs.  First, download the
+Bochs RPM for your architecture to your computer.  If you have an
+Intel-compatible computer, be sure to get the RPM that says "for Linux x86
+distributions."  Once you have the package on your local disk, you should be
+able to install it as follows<footnote>
+<para>
+Many distributions have their own RPM installer program, often graphical, and
+they should work as well.  It is helpful to be able to see the text output from
+RPM, so if you use a fancy RPM installer, be sure to find the text output and
+check that it looks correct.
+</para>
+</footnote>:
+<screen>
+  user$ <command>su</command>
+  Password: 
+  root# <command>ls -l bochs-1.2.1.i386.rpm</command>
+  -rw-rw-r--    1 user     user      1877515 Sep 14 09:02 bochs-1.2.1.i386.rpm
+  root# <command>rpm -i bochs-1.2.1.i386.rpm</command>
+  Looking for fonts to install... /usr/local/bochs/latest/
+  Looking for X11 Font Path... /usr/lib/X11/fonts
+  Installing vga.pcf... ok    (it was already there)
+  Running mkfontdir...
+  Done installing Bochs fonts for X11.
+  root# exit
+  user$ _
+</screen>
+</para>
+
+<note>
+<para>
+All RPM installations are done as the root user because they require permission
+to update system files and directories.  If you do not have root access you
+need to compile Bochs in your home directory.
+</para>
+</note>
+
+<para>
+The Bochs RPM installs three new commands and associated manual pages: bochs,
+bochs-dlx, and bximage.  First, let's try out the DLX Linux demo by typing
+<command>bochs-dlx</command>.  This command is installed into 
+<filename>/usr/local/bin</filename>, so you might need to add that
+directory to your <varname>PATH</varname> variable.
+
+<screen>
+  user$ bochs-dlx
+  Checking for bochs binary...ok
+  Checking for DLX linux directory...ok
+  Entering /usr/local/bochs/dlxlinux
+  Running bochs
+  ========================================================================
+                         Bochs x86 Emulator 1.2.1
+                               June 12, 2001
+  ========================================================================
+  00000000000 [    ] looking for configuration in .bochsrc
+  00000000000 [    ] looking for configuration in bochsrc
+  00000000000 [    ] looking for configuration in bochsrc.txt
+  00000000000 [    ] reading configuration from bochsrc.txt
+  00000000000 [    ] using log file bochsout.txt
+</screen>
+Then you get a new X11 window containing the VGA display of the simulated
+machine.  First you see the VGA BIOS screen, then Linux uncompresses and
+boots, and you get a login prompt.  Type "root" and ENTER to log in to
+DLX linux.
+<figure>
+<title>DLX Linux screenshot, running on Linux</title>
+<graphic format="GIF" fileref="dlxlinux-in-linux.gif">
+</figure>
+</para>
+
+<para>
+&FIXME;
+Look for <filename>/usr/local/bochs/latest/DOC-linux.html</filename>, man pages for
+bochs.
+</para>
+</section> <!-- end of Installing a Binary:Linux section -->
+
 </section>
 
 <section><title>Compiling from source</title>
