@@ -80,7 +80,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.22 2001-10-01 17:20:08 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.23 2001-10-01 17:23:45 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -1232,7 +1232,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-#ifdef BX_WITH_WIN32
+#if BX_WITH_WIN32
     if ( (path[1] == ':') && (strlen(path) == 2) ) {
 	  wsprintf(sTemp, "\\\\.\\%s", path);
 	  media->fd = open(sTemp, BX_RDWR);
@@ -1251,7 +1251,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-#ifdef BX_WITH_WIN32
+#if BX_WITH_WIN32
     if ( (path[1] == ':') && (strlen(path) == 2) ) {
 	  wsprintf(sTemp, "\\\\.\\%s", path);
 	  media->fd = open(sTemp, BX_RDONLY);
@@ -1345,7 +1345,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   else if ( S_ISCHR(stat_buf.st_mode)
 #if BX_WITH_MACOS == 0
 #ifdef S_ISBLK
-            || stat_buf.st_mode == S_IFBLK)
+            || S_ISBLK(stat_buf.st_mode)
 #endif
 #endif
            ) {
