@@ -43,7 +43,7 @@
 
 bx_sb16_c bx_sb16;
 #if BX_USE_SB16_SMF
-#define this NULL
+#define this ((void *)&bx_sb16)
 #endif
 
 bx_sb16_c::bx_sb16_c(void)
@@ -202,15 +202,15 @@ void bx_sb16_c::init(bx_devices_c *d)
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
     BX_SB16_THIS devices->register_io_read_handler(this,
-       read_handler, addr, "SB16");
+       &read_handler, addr, "SB16");
     BX_SB16_THIS devices->register_io_write_handler(this,
-       write_handler, addr, "SB16");
+       &write_handler, addr, "SB16");
     }
   for (addr=BX_SB16_IOMPU; addr<BX_SB16_IOMPU+BX_SB16_IOMPULEN; addr++) {
     BX_SB16_THIS devices->register_io_read_handler(this,
-       read_handler, addr, "SB16");
+       &read_handler, addr, "SB16");
     BX_SB16_THIS devices->register_io_write_handler(this,
-       write_handler, addr, "SB16");
+       &write_handler, addr, "SB16");
     }
   /* Uncomment this if you know the consequences...
   for (addr=BX_SB16_IOADLIB; addr<BX_SB16_IOADLIB+BX_SB16_IOADLIBLEN; addr++) {
