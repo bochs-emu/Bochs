@@ -1188,20 +1188,6 @@ bx_printf("  aux_clock_enabled = %u\n",
 		   controller_enQ(0xFA, 1); // ack
 		   break;
 
-	       case 0xeb: // Read Data (send a packet when in Remote Mode)
-		 controller_enQ(0xFA, 1); // ACK
-		 mouse_enQ_packet( 
-                     ((BX_KEY_THIS s.mouse.button_status & 0x0f) | 0x08),
-		       0x00, 0x00 ); // bit3 of first byte always set
-		 //assumed we really aren't in polling mode, a rather odd assumption.
-		 bx_printf("[mouse] Warning: Read Data command partially supported.\n");
-		 break;
-
-		 //EAh Set Stream Mode
-		 //ECh Reset Wrap Mode
-		 //EEh Set Wrap Mode
-		 //F0h Set Remote Mode (polling mode, i.e. not stream mode.)
-
 	     default:
 		   bx_panic("MOUSE: unknown last command (%02xh)\n", (unsigned) BX_KEY_THIS s.kbd_controller.last_mouse_command);
        }
