@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.155 2002-10-02 19:23:01 bdenney Exp $
+// $Id: main.cc,v 1.156 2002-10-03 05:28:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1136,6 +1136,12 @@ void bx_init_options ()
       "Userbutton shortcut",
       "none", 16);
 
+  // GDB stub
+  bx_options.gdbstub.port = 1234;
+  bx_options.gdbstub.text_base = 0;
+  bx_options.gdbstub.data_base = 0;
+  bx_options.gdbstub.bss_base = 0;
+
   bx_param_c *other_init_list[] = {
       bx_options.Okeyboard_serial_delay,
       bx_options.Okeyboard_paste_delay,
@@ -1494,7 +1500,9 @@ bx_do_text_config_interface (int argc, char *argv[])
 int
 bx_continue_after_config_interface (int argc, char *argv[])
 {
-#if BX_DEBUGGER
+#if BX_GDBSTUB
+  bx_gdbstub_init (argc, argv);
+#elif BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
   bx_dbg_main(argc, argv);
@@ -1987,6 +1995,42 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
+   else if (!strcmp(params[0], "gdbstub_port"))
+     {
+       if (num_params != 2)
+         {
+            fprintf(stderr, ".bochsrc: gdbstub_port directive: wrong # args.\n");
+            exit(1);
+         }
+       bx_options.gdbstub.port = atoi(params[1]);
+     }
+   else if (!strcmp(params[0], "gdbstub_text_base"))
+     {
+       if (num_params != 2)
+         {
+            fprintf(stderr, ".bochsrc: gdbstub_text_base directive: wrong # args.\n");
+            exit(1);
+         }
+       bx_options.gdbstub.text_base = atoi(params[1]);
+     }
+   else if (!strcmp(params[0], "gdbstub_data_base"))
+     {
+       if (num_params != 2)
+         {
+            fprintf(stderr, ".bochsrc: gdbstub_data_base directive: wrong # args.\n");
+            exit(1);
+         }
+       bx_options.gdbstub.data_base = atoi(params[1]);
+     }
+   else if (!strcmp(params[0], "gdbstub_bss_base"))
+     {
+       if (num_params != 2)
+         {
+            fprintf(stderr, ".bochsrc: gdbstub_bss_base directive: wrong # args.\n");
+            exit(1);
+         }
+       bx_options.gdbstub.bss_base = atoi(params[1]);
+     }
 
   else if (!strcmp(params[0], "floppyb")) {
     for (i=1; i<num_params; i++) {

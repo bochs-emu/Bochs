@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.97 2002-10-01 04:13:12 ptrumpet Exp $
+// $Id: bochs.h,v 1.98 2002-10-03 05:28:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -439,6 +439,13 @@ extern logfunc_t *genlog;
 #  include "cpu/extdb.h"
 #endif
 
+#if BX_GDBSTUB
+// defines for GDB stub
+void bx_gdbstub_init(int argc, char* argv[]);
+int bx_gdbstub_check(unsigned int eip);
+#define GDBSTUB_STOP_NO_REASON   (0xac0)
+#endif
+
 #if BX_DISASM
 #  include "disasm/disasm.h"
 #endif
@@ -629,6 +636,13 @@ typedef struct {
   } bx_sb16_options;
 
 typedef struct {
+  unsigned int port;
+  unsigned int text_base;
+  unsigned int data_base;
+  unsigned int bss_base;
+  } bx_gdbstub_t;
+
+typedef struct {
   bx_param_bool_c *OuseMapping;
   bx_param_string_c *Okeymap;
   } bx_keyboard_options;
@@ -678,6 +692,7 @@ typedef struct {
   bx_log_options    log;
   bx_keyboard_options keyboard;
   bx_param_string_c *Ouser_shortcut;
+  bx_gdbstub_t      gdbstub;
   } bx_options_t;
 
 extern bx_options_t bx_options;
