@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.101 2003-05-27 18:19:13 vruppert Exp $
+// $Id: siminterface.h,v 1.102 2003-08-01 01:20:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1133,7 +1133,7 @@ enum {
 #define BX_ATA_MODE_VMWARE3     5
 #define BX_ATA_MODE_SPLIT       6
 #define BX_ATA_MODE_UNDOABLE    7
-#define BX_ATA_MODE_GROWABLE    8
+#define BX_ATA_MODE_GROWING     8
 #define BX_ATA_MODE_VOLATILE    9
 #define BX_ATA_MODE_Z_UNDOABLE  10
 #define BX_ATA_MODE_Z_VOLATILE  11

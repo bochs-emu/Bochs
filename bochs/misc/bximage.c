@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.18 2003-05-03 16:37:18 cbothamy Exp $
+ * $Id: bximage.c,v 1.19 2003-08-01 01:20:00 cbothamy Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -26,7 +26,7 @@
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.18 2003-05-03 16:37:18 cbothamy Exp $";
+char *rcsid = "$Id: bximage.c,v 1.19 2003-08-01 01:20:00 cbothamy Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -40,8 +40,8 @@ char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
 int fdsize_n_choices = 5;
 
 /* menu data for choosing disk mode */
-char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growable. ";
-                char *hdmode_choices[] = {"flat", "sparse", "growable" };
+char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growing. ";
+                char *hdmode_choices[] = {"flat", "sparse", "growing" };
 int hdmode_n_choices = 3;
 
 void myexit (int code)
@@ -338,14 +338,14 @@ int make_sparse_image(FILE *fp, Bit64u sec)
    return 0;
 }
 
-/* produce a growable image file */
-int make_growable_image(FILE *fp, Bit64u sec)
+/* produce a growing image file */
+int make_growing_image(FILE *fp, Bit64u sec)
 {
         redolog_header_t header;
         Bit32u i, not_allocated = htod32(REDOLOG_PAGE_NOT_ALLOCATED);
 
         memset(&header, 0, sizeof(header));
-        make_redolog_header(&header, REDOLOG_SUBTYPE_GROWABLE, sec * 512);
+        make_redolog_header(&header, REDOLOG_SUBTYPE_GROWING, sec * 512);
 
         if (fwrite(&header, sizeof(header), 1, fp) != 1)
         {
@@ -445,7 +445,7 @@ int main()
         write_function=make_sparse_image;
         break;
       case 2:
-        write_function=make_growable_image;
+        write_function=make_growing_image;
         break;
       default:
         write_function=make_flat_image;

@@ -187,7 +187,7 @@ Examples:
 This defines the type and characteristics of all attached ata devices:
    type=       type of attached device [disk|cdrom] 
    path=       path of the image
-   mode=       image mode [flat|concat|external|dll|sparse|vmware3|undoable|growable|volatile|z-undoable|z-volatile], only valid for disks
+   mode=       image mode [flat|concat|external|dll|sparse|vmware3|undoable|growing|volatile|z-undoable|z-volatile], only valid for disks
    cylinders=  only valid for disks
    heads=      only valid for disks
    spt=        only valid for disks
@@ -216,7 +216,7 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - sparse : stackable, commitable, rollbackable 
   - vmware3 : vmware3 disk support
   - undoable : flat file with commitable redolog
-  - growable : growing file
+  - growing : growing file
   - volatile : flat file with volatile redolog
   - z-undoable : gziped flat file with commitable redolog
   - z-volatile : gziped flat file with volatile redolog

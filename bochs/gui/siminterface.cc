@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.96 2003-06-07 19:16:53 vruppert Exp $
+// $Id: siminterface.cc,v 1.97 2003-08-01 01:20:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -451,7 +451,7 @@ int n_keyboard_type_names = 3;
 
 char *atadevice_type_names[] = { "disk", "cdrom", NULL };
 int n_atadevice_type_names = 2;
-char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "split", "undoable", "growable", "volatile", "z-undoable", "z-volatile", NULL };
+char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "split", "undoable", "growing", "volatile", "z-undoable", "z-volatile", NULL };
 int n_atadevice_mode_names = 12;
 char *atadevice_status_names[] = { "ejected", "inserted", NULL };
 int n_atadevice_status_names = 2;

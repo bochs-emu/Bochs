@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.20 2003-05-03 16:37:17 cbothamy Exp $
+// $Id: harddrv.h,v 1.21 2003-08-01 01:20:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,7 +58,7 @@
 #define REDOLOG_TYPE "Redolog"
 #define REDOLOG_SUBTYPE_UNDOABLE "Undoable"
 #define REDOLOG_SUBTYPE_VOLATILE "Volatile"
-#define REDOLOG_SUBTYPE_GROWABLE "Growable"
+#define REDOLOG_SUBTYPE_GROWING  "Growing"
 // #define REDOLOG_SUBTYPE_Z_UNDOABLE "z-Undoable"
 // #define REDOLOG_SUBTYPE_Z_VOLATILE "z-Volatile"
 
@@ -351,12 +351,12 @@ class redolog_t
       Bit32u           extent_blocs;
 };
 
-// GROWABLE MODE
-class growable_image_t : public device_image_t
+// GROWING MODE
+class growing_image_t : public device_image_t
 {
   public:
       // Contructor
-      growable_image_t(Bit64u size);
+      growing_image_t(Bit64u size);
 
       // Open a image. Returns non-negative if successful.
       int open (const char* pathname);
