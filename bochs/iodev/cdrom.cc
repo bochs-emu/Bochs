@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.69 2004-06-19 15:20:10 sshwarts Exp $
+// $Id: cdrom.cc,v 1.70 2004-08-22 16:23:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -177,7 +177,8 @@ BOOL  (*TranslateASPI32Address)(PDWORD,PDWORD);
 DWORD (*GetASPI32DLLVersion)(void);
 
 
-static BOOL bUseASPI = FALSE;
+static OSVERSIONINFO osinfo;
+static BOOL isWindowsXP;
 static BOOL bHaveDev;
 static UINT cdromCount = 0;
 static HINSTANCE hASPI = NULL;
@@ -468,11 +469,17 @@ cdrom_interface::cdrom_interface(char *dev)
     path = strdup(dev);
   }
   using_file=0;
+#ifdef WIN32
+  bUseASPI = FALSE;
+  osinfo.dwOSVersionInfoSize = sizeof(osinfo);
+  GetVersionEx(&osinfo);
+  isWindowsXP = (osinfo.dwMajorVersion >= 5) && (osinfo.dwMinorVersion >= 1);
+#endif
 }
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.69 2004-06-19 15:20:10 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.70 2004-08-22 16:23:34 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -498,97 +505,92 @@ cdrom_interface::insert_cdrom(char *dev)
   if (dev != NULL) path = strdup(dev);
   BX_INFO (("load cdrom with path=%s", path));
 #ifdef WIN32
-    char drive[256];
-	OSVERSIONINFO osi;
-    if ( (path[1] == ':') && (strlen(path) == 2) )
-    {
-	  osi.dwOSVersionInfoSize = sizeof(osi);
-	  GetVersionEx(&osi);
-	  if(osi.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-	    // Use direct device access under windows NT/2k
+  char drive[256];
+  if ( (path[1] == ':') && (strlen(path) == 2) )
+  {
+    if(osinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+      // Use direct device access under windows NT/2k
 
-        // With all the backslashes it's hard to see, but to open D: drive 
-        // the name would be: \\.\d:
-        sprintf(drive, "\\\\.\\%s", path);
-        using_file = 0;
-        BX_INFO (("Using direct access for cdrom."));
-        // This trick only works for Win2k and WinNT, so warn the user of that.
-	  } else {
-		  BX_INFO(("Using ASPI for cdrom. Drive letters are unused yet."));
-          bUseASPI = TRUE;
-	  }
+      // With all the backslashes it's hard to see, but to open D: drive 
+      // the name would be: \\.\d:
+      sprintf(drive, "\\\\.\\%s", path);
+      using_file = 0;
+      BX_INFO (("Using direct access for cdrom."));
+      // This trick only works for Win2k and WinNT, so warn the user of that.
+    } else {
+      BX_INFO(("Using ASPI for cdrom. Drive letters are unused yet."));
+      bUseASPI = TRUE;
     }
-    else
-    {
-      strcpy(drive,path);
-      using_file = 1;
-	  bUseASPI = FALSE;
-      BX_INFO (("Opening image file as a cd"));
+  }
+  else
+  {
+    strcpy(drive,path);
+    using_file = 1;
+    BX_INFO (("Opening image file as a cd"));
+  }
+  if(bUseASPI) {
+    DWORD d;
+    UINT cdr, cnt, max;
+    UINT i, j, k;
+    SRB_HAInquiry sh;
+    SRB_GDEVBlock sd;
+    if (!hASPI) {
+      hASPI = LoadLibrary("WNASPI32.DLL");
+      if (hASPI) {
+        SendASPI32Command    = (DWORD(*)(LPSRB))GetProcAddress( hASPI, "SendASPI32Command" );
+        GetASPI32DLLVersion  = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32DLLVersion" );
+        GetASPI32SupportInfo = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32SupportInfo" );
+        d = GetASPI32DLLVersion();
+        BX_INFO(("WNASPI32.DLL version %d.%02d initialized", d & 0xff, (d >> 8) & 0xff));
+      } else {
+        BX_PANIC(("Could not load ASPI drivers, so cdrom access will fail"));
+        return false;
+      }
     }
-	if(bUseASPI) {
-		DWORD d;
-		UINT cdr, cnt, max;
-		UINT i, j, k;
-		SRB_HAInquiry sh;
-		SRB_GDEVBlock sd;
-		if (!hASPI) {
-		  hASPI = LoadLibrary("WNASPI32.DLL");
-		}
-		if(hASPI) {
-            SendASPI32Command      = (DWORD(*)(LPSRB))GetProcAddress( hASPI, "SendASPI32Command" );
-			GetASPI32DLLVersion    = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32DLLVersion" );
-			GetASPI32SupportInfo   = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32SupportInfo" );
-//			BX_INFO(("Using first CDROM.  Please upgrade your ASPI drivers to version 4.01 or later if you wish to specify a cdrom driver."));
-			
-			cdr = 0;
-			bHaveDev = FALSE;
-			d = GetASPI32SupportInfo();
-			cnt = LOBYTE(LOWORD(d));
-			for(i = 0; i < cnt; i++) {
-				memset(&sh, 0, sizeof(sh));
-				sh.SRB_Cmd  = SC_HA_INQUIRY;
-				sh.SRB_HaId = i;
-				SendASPI32Command((LPSRB)&sh);
-				if(sh.SRB_Status != SS_COMP)
-					continue;
+    cdr = 0;
+    bHaveDev = FALSE;
+    d = GetASPI32SupportInfo();
+    cnt = LOBYTE(LOWORD(d));
+    for(i = 0; i < cnt; i++) {
+      memset(&sh, 0, sizeof(sh));
+      sh.SRB_Cmd  = SC_HA_INQUIRY;
+      sh.SRB_HaId = i;
+      SendASPI32Command((LPSRB)&sh);
+      if(sh.SRB_Status != SS_COMP)
+        continue;
 
-				max = (int)sh.HA_Unique[3];
-				for(j = 0; j < max; j++) {
-					for(k = 0; k < 8; k++) {
-						memset(&sd, 0, sizeof(sd));
-						sd.SRB_Cmd    = SC_GET_DEV_TYPE;
-						sd.SRB_HaId   = i;
-						sd.SRB_Target = j;
-						sd.SRB_Lun    = k;
-						SendASPI32Command((LPSRB)&sd);
-						if(sd.SRB_Status == SS_COMP) {
-							if(sd.SRB_DeviceType == DTYPE_CDROM) {
-								cdr++;
-								if(cdr > cdromCount) {
-									hid = i;
-									tid = j;
-									lun = k;
-									cdromCount++;
-									bHaveDev = TRUE;
-								}
-							}
-						}
-						if(bHaveDev) break;
-					}
-					if(bHaveDev) break;
-				}
-
-			}
-		} else {
-			BX_PANIC(("Could not load ASPI drivers, so cdrom access will fail"));
-		}
-		fd=1;
-	} else {
-	  BX_INFO(("Using direct access for CDROM"));
-      hFile=CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL); 
-      if (hFile !=(void *)0xFFFFFFFF)
-        fd=1;
-	}
+      max = (int)sh.HA_Unique[3];
+      for(j = 0; j < max; j++) {
+        for(k = 0; k < 8; k++) {
+          memset(&sd, 0, sizeof(sd));
+          sd.SRB_Cmd    = SC_GET_DEV_TYPE;
+          sd.SRB_HaId   = i;
+          sd.SRB_Target = j;
+          sd.SRB_Lun    = k;
+          SendASPI32Command((LPSRB)&sd);
+          if(sd.SRB_Status == SS_COMP) {
+            if(sd.SRB_DeviceType == DTYPE_CDROM) {
+              cdr++;
+              if(cdr > cdromCount) {
+                hid = i;
+                tid = j;
+                lun = k;
+                cdromCount++;
+                bHaveDev = TRUE;
+              }
+            }
+          }
+          if(bHaveDev) break;
+        }
+        if(bHaveDev) break;
+      }
+    }
+    fd=1;
+  } else {
+    hFile=CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL); 
+    if (hFile !=(void *)0xFFFFFFFF)
+    fd=1;
+  }
 #elif defined(__APPLE__)
       if(strcmp(path, "drive") == 0)
       {
@@ -760,7 +762,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track)
         buf[len++] = 0;
         buf[len++] = 0;
         buf[len++] = 0;
-        buf[len++] = 0; // logical sector 0
+        buf[len++] = 16; // logical sector 0
       }
     }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.13 2003-08-19 00:37:03 cbothamy Exp $
+// $Id: cdrom.h,v 1.14 2004-08-22 16:23:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,6 +58,7 @@ private:
 
   int using_file;
 #ifdef WIN32
+  BOOL bUseASPI;
   HANDLE hFile;
   int hid;
   int tid;
