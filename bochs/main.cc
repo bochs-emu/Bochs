@@ -713,14 +713,12 @@ main(int argc, char *argv[])
   bx_init_bx_dbg ();
 
   int read_rc_already = 0;
-#if BX_USE_CONTROL_PANEL
-  // Display the pre-simulation control panel.
   init_siminterface ();
   bx_init_options ();
+#if BX_USE_CONTROL_PANEL
+  // Display the pre-simulation control panel.
   if ((bx_control_panel (BX_CPANEL_START_MAIN)) != BX_DISABLE_CONTROL_PANEL)
     read_rc_already = 1;
-#else
-  bx_init_options ();
 #endif
   if (!read_rc_already) {
     /* parse configuration file and command line arguments */
@@ -768,9 +766,7 @@ main(int argc, char *argv[])
     bx_load32bitOSimagehack();
     }
 
-#if BX_USE_CONTROL_PANEL
   SIM->set_init_done (1);
-#endif
 
   if (BX_SMP_PROCESSORS == 1) {
     // only one processor, run as fast as possible by not messing with

@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.29 2001-06-21 19:57:21 bdenney Exp $
+ * $Id: control.cc,v 1.30 2001-06-21 20:50:30 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -57,7 +57,6 @@ write a compiler!
 */
 
 #include "config.h"
-#if BX_USE_CONTROL_PANEL
 
 extern "C" {
 #include <stdio.h>
@@ -887,7 +886,4 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
   return 0;
 }
 
-
 ///////////////////////////////////////////////////////////
-
-#endif

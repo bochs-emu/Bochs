@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.28 2001-06-21 19:57:21 bdenney Exp $
+ * $Id: siminterface.cc,v 1.29 2001-06-21 20:50:30 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -9,8 +9,6 @@
  */
 
 #include "bochs.h"
-
-#if BX_USE_CONTROL_PANEL
 
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
@@ -545,7 +543,3 @@ bx_list_c::set_parent (bx_param_c *parent)
 {
   this->parent = parent;
 }
-
-#endif  // if BX_USE_CONTROL_PANEL==1
-
-

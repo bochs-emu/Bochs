@@ -82,9 +82,7 @@ extern "C" {
 #include "debug/debug.h"
 #include "bxversion.h"
 
-#if BX_USE_CONTROL_PANEL
 #include "gui/siminterface.h"
-#endif
 
 //
 // some macros to interface the CPU and memory to external environment
@@ -245,7 +243,12 @@ typedef class logfunctions {
 // values of onoff: 0=ignore, 1=report, 2=fatal
 #define ACT_IGNORE 0
 #define ACT_REPORT 1
-#define ACT_ASK    2
+#if BX_USE_CONTROL_PANEL
+#  define ACT_ASK    2
+#else
+   // if control panel disabled, then map all ACT_ASK into ACT_FATAL.
+#  define ACT_ASK    ACT_FATAL
+#endif
 #define ACT_FATAL  3
 #define N_ACT      4
 	int onoff[N_LOGLEV];
