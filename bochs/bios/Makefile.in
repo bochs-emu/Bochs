@@ -78,5 +78,5 @@ rombios.bin: rombios.o
 rombios.o: rombios.c
 	gcc -E rombios.c | tools86 -E > _rombios_.c
 	bcc-cc1 -o rombios.s -c -D__i86__ -0 _rombios_.c
-	dataseghack
+	csh dataseghack
 	as86 rombios.s -o rombios.o -u -w -g -0 -j
