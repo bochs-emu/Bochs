@@ -1,3 +1,11 @@
+<!--
+================================================================
+doc/docbook/development/development.dbk
+$Id: development.dbk,v 1.2 2001-09-10 03:59:11 bdenney Exp $
+
+This is the top level file for the Bochs Developers Manual.
+================================================================
+-->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
 <book>
 <bookinfo>

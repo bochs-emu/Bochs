@@ -1,3 +1,12 @@
+<!--
+================================================================
+doc/docbook/user/user.dbk
+$Id: user.dbk,v 1.2 2001-09-10 03:59:11 bdenney Exp $
+
+This is the top level file for the Bochs Users Manual.
+================================================================
+-->
+
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
 <book>
 <bookinfo>
@@ -478,9 +487,6 @@ to mention, running DOOM, though at then-pathetic speeds.
              </para>
           </section>
 </chapter>
-
-
-
 
 
 </book>

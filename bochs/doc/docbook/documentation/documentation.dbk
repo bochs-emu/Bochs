@@ -1,3 +1,12 @@
+<!--
+================================================================
+doc/docbook/documentation/documentation.dbk
+$Id: documentation.dbk,v 1.4 2001-09-10 03:59:11 bdenney Exp $
+
+This is the top level file for the Bochs Documentation Manual.
+================================================================
+-->
+
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 <!-- example entity that can be used with &bochs; -->
 <!ENTITY bochs '<ulink url="http://bochs.sourceforge.net">The Bochs Project</ulink>'>
