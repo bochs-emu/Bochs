@@ -513,8 +513,9 @@ floppy_command_delay: 500
 # mouse button on X11, SDL, wxWidgets and Win32).
 # With the new mouse type option you can select the type of mouse to emulate.
 # The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-# on PS/2), 'serial' and 'serial_wheel' (one com port requires setting
-# 'mode=mouse').
+# on PS/2), 'serial', 'serial_wheel' (one com port requires setting
+# 'mode=mouse') and 'usb' (3-button mouse on USB port #1 - requires PCI and
+# USB support).
 #
 # Examples:
 #   mouse: enabled=1
@@ -635,7 +636,8 @@ keyboard_mapping: enabled=0, map=
 # This option controls the usage of the i440FX PCI chipset. You can also
 # specify the devices connected to PCI slots. Up to 5 slots are available
 # now. These devices are currently supported: ne2k, pcivga, pcidev and
-# pcipnic.
+# pcipnic. If Bochs is compiled with Cirrus SVGA support you'll have the
+# choice 'cirrus' instead of 'pcivga'.
 #
 # Example:
 #   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k

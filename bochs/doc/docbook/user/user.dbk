@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.156 2004-12-25 09:31:09 vruppert Exp $
+$Id: user.dbk,v 1.157 2004-12-29 12:27:12 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -787,7 +787,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      Does Bochs support a CD-ROM?
      </para></question>
      <answer><para>
-     Yes, a CD-ROM is supported in Linux, Windows, BeOS, and OpenBSD.  The
+     Yes, a CD-ROM is supported in Linux, Windows, BeOS, and most BSDs.  The
 CD-ROM drivers for Bochs allow the guest operating system to access the
 host operating system's CD-ROM data directly.
      </para></answer>
@@ -2972,8 +2972,8 @@ in the simulation, that can be retrieved by the boot loader
 <para>
 Examples:
 <screen>
-  vgaromimage: bios/VGABIOS-elpin-2.40
-  vgaromimage: bios/VGABIOS-lgpl-latest
+  vgaromimage: file=bios/VGABIOS-elpin-2.40
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 </screen>
 You also need to load a VGA ROM BIOS at 0xC0000.  
 </para>
@@ -3370,41 +3370,52 @@ If you really don't want it, make it '/dev/null', or '-'.
 </para>
 </section>
 
-<section><title>com1</title>
-<para>
-Specifies the device to use as com1.  This can be a real serial line, or
-a pty.  To use a pty (under X/Unix), create two windows (xterms,
-usually).  One of them will run bochs, and the other will act as com1.
-Find out the tty the com1 window using the `tty' command, and use that
-as the `dev' parameter.  Then do `sleep 1000000' in the com1 window to
-keep the shell from messing with things, and run bochs in the other
-window.  Serial I/O to com1 (port 0x3f8) will all go to the other
-window.
-</para>
+<section id="bochsopt-com">
+<title>com[1-4]</title>
 <para>
 Examples:
 <screen>
-com1: dev=/dev/ttyp9
-com1: dev=/dev/cua0
+  com1: enabled=1, mode=null
+  com1: enabled=1, mode=mouse
+  com1: enabled=1, mode=term, dev=/dev/ttyp9
+  com2: enabled=1, mode=file, dev=serial.out
+  com3: enabled=1, mode=raw, dev=com1
 </screen>
+  This defines a serial port (UART type 16550A).
+</para>
+<para>
+  When using the mode 'term', you can specify a device to use as com1.
+  This can be a real serial line, or a pty.  To use a pty (under X/Unix),
+  create two windows (xterms, usually).  One of them will run Bochs, and
+  the other will act as com1. Find out the tty of the com1 window using
+  the `tty' command, and use that as the `dev' parameter.  Then do
+  `sleep 1000000' in the com1 window to keep the shell from messing with
+  things, and run Bochs in the other window. Serial I/O to com1 (port 0x3f8)
+  will all go to the other window.
+</para>
+<para>
+  Other serial modes are 'null' (no input/output), 'file' (output to a file
+  specified as the 'dev' parameter), 'raw' (use the real serial port - under
+  construction for win32) and 'mouse' (standard serial mouse - requires
+  <link linkend="bochsopt-mouse">mouse option</link> setting 'type=serial'
+  or 'type=serial_wheel').
 </para>
 </section>
 
-<section><title>parport1</title>
-<para>
-This defines a parallel (printer) port. When turned on and an output file is
-defined emulated printer port sends characters printed by the guest OS into
-the output file. On some platforms a device filename can be used to send the
-data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
-win32 platforms).
-</para>
+<section>
+<title>parport[1-2]</title>
 <para>
 Examples:
 <screen>
-parport1: enabled=1, file="parport.out"
-parport1: enabled=1, file="/dev/lp0"
-parport1: enabled=0
+  parport1: enabled=1, file="parport.out"
+  parport2: enabled=1, file="/dev/lp0"
+  parport1: enabled=0
 </screen>
+This defines a parallel (printer) port. When turned on and an output file is
+defined, the emulated printer port sends characters printed by the guest OS
+into the output file. On some platforms, a device filename can be used to
+send the data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
+win32 platforms).
 </para>
 </section>
 
@@ -3612,19 +3623,29 @@ Default value are sync=none, time0=local
 
 </section>
 
-<section><title>mouse</title>
+<section id="bochsopt-mouse">
+<title>mouse</title>
 <para>
 Examples:
 <screen>
   mouse: enabled=1
+  mouse: enabled=1, type=imps2
+  mouse: enabled=1, type=serial
   mouse: enabled=0
 </screen>
-This option prevents Bochs from creating mouse "events"  unless  a  mouse  is
-enabled.  The hardware emulation  itself is not disabled  by this. You  can
-turn the mouse on  by  setting enabled to  1,  or  turn  it  off  by  setting
-enabled to 0. Unless  you  have  a  particular reason  for enabling  the  mouse
+This option prevents Bochs from creating mouse "events" unless a mouse is
+enabled. The hardware emulation itself is not disabled by this. You can
+turn the mouse on by setting enabled to 1, or turn it off by setting
+enabled to 0. Unless you have a particular reason for enabling the mouse
 by default, it is recommended that you leave it off. You can also toggle the
 mouse usage at runtime (see <link linkend="headerbar">headerbar</link>).
+</para>
+<para>
+  With the mouse type option you can select the type of mouse to emulate.
+  The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
+  on PS/2), 'serial', 'serial_wheel' (one com port requires setting
+  'mode=mouse', see <link linkend="bochsopt-com">com option</link>) and
+  'usb' (3-button mouse on USB port #1 - requires PCI and USB support).
 </para>
 </section>
 
@@ -3646,14 +3667,19 @@ and 0 turns it off.
 Examples:
 <screen>
   i440fxsupport: enabled=1
+  i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
 </screen>
-Enables limited i440fx PCI chipset support.
+This option controls the usage of the i440FX PCI chipset. You can also
+specify the devices connected to PCI slots. Up to 5 slots are available.
+These devices are currently supported: ne2k, pcivga, pcidev and pcipnic.
+If Bochs is compiled with Cirrus SVGA support you'll have the choice 'cirrus'
+instead of 'pcivga'.
 </para>
 </section>
 
 <section><title>pcidev</title>
 <para>
-Examples:
+Example:
 <screen>
   pcidev: vendor=0xbabe, device=0x2bad
 </screen>
@@ -3678,11 +3704,26 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 
 <section><title>usb1</title>
 <para>
-Examples:
+Example:
 <screen>
   usb1: enabled=1, ioaddr=0xFF80, irq=10
 </screen>
 Enables the i440fx PCI USB root hub. PCI support must be enabled, too.
+</para>
+</section>
+
+<section id="bochsopt-gdbstub">
+<title>gdbstub</title>
+<para>
+Example:
+<screen>
+  gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+</screen>
+Default:
+<screen>
+  gdbstub: enabled=0
+</screen>
+This enables the GDB stub. See <xref linkend="debugging-with-gdb">.
 </para>
 </section>
 
@@ -4526,7 +4567,8 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
   capturing again. In this case, use "Ctrl+3rd mouse button" to disable it.
 </para>
 <para>&FIXME; Support for 2 button mouse to toggle the capture mode not yet complete.
-  Some display libraries still don't support the new feature.</para>
+  Some display libraries still don't support the new feature, but
+  it is already supported on X11, SDL, wxWidgets and Win32.</para>
 </listitem>
 <listitem>
 <para>user button</para>
@@ -5667,15 +5709,15 @@ Some of the other options in this group is probably also needed,
 </section>
 
 <section id="internal-debugger">
-<title> Using Bochs internal debugger </title>
+<title>Using Bochs internal debugger</title>
 
 <para>
 Note, if you are looking for a graphical front-end for the
 bochs debugger, you may want to check out
-<ulink url="http://www.qzx.com/bfe/">BFE</ulink>. &nbsp;This is a
-package written by a bochs user which can interface with
-the text based bochs debugger.  No linking is necessary.
-It's not part of bochs, but you may find it useful.
+<ulink url="http://www.qzx.com/bfe/">BFE</ulink>. This is a
+package written by a Bochs user which can interface with
+the text based Bochs debugger.  No linking is necessary.
+It's not part of Bochs, but you may find it useful.
 </para>
 
 <para>
@@ -6070,24 +6112,20 @@ Related links
 </itemizedlist>
 </para>
 </section> 
-</section> <!-- Using Bochs internal debugger -->
+</section><!-- end: Using Bochs internal debugger -->
 
 <section id="debugging-with-gdb">
-<title>
-Using Bochs and the remote GDB stub
-</title>
+<title>Using Bochs and the remote GDB stub</title>
 <para>
 This section covers how you can use Bochs with a remote GDB stub to debug your kernel.
 </para>
 
 <section>
-<title>
-Configuring Bochs
-</title>
+<title>Configuring Bochs</title>
 <para>
-The GDB stub is not active in standard Bochs binary package.  So you must recompile Bochs. 
-Download the Bochs source package, untar it and run the configure script 
-with the <command>`--enable-gdb-stub'</command> argument.
+The GDB stub is not active in standard Bochs binary package.  So you must recompile Bochs.
+Download the Bochs source package, unpack it and run the configure script
+with the <command>--enable-gdb-stub</command> argument.
 
 <screen>
   $ ./configure --enable-gdb-stub
@@ -6098,20 +6136,16 @@ After that, just run make and you should have a Bochs binary that contain a GDB 
 </section>
 
 <section>
-<title>
-Running Bochs
-</title>
+<title>Running Bochs</title>
 <para>
-Enable the gdbstub option in bochsrc, then just start Bochs as normal. Bochs will stop and wait for GDB to connect to the stub.
+Enable the <link linkend="bochsopt-gdbstub">gdbstub option</link> in <filename>bochsrc</filename>, then just start Bochs as normal. Bochs will stop and wait for GDB to connect to the stub.
 </para>
 </section>
 
 <section>
-<title>
-Running GDB
-</title>
+<title>Running GDB</title>
 <para>
-Bochs GDB stub waits for a connection on port 1234 on localhost (127.0.0.1). Just start GDB like this;
+Bochs GDB stub waits for a connection on port 1234 on localhost (127.0.0.1). Just start GDB like this:
 
 <screen>
   $ gdb YOUR-KERNEL
@@ -6121,19 +6155,19 @@ Bochs GDB stub waits for a connection on port 1234 on localhost (127.0.0.1). Jus
   (gdb) target remote localhost:1234
   Remote debugging using localhost:1234
   0x0000fff0 in ?? ()
-  (gdb) 
+  (gdb)
 </screen>
 
-You are now connected to the remote GDB stub in Bochs. You are now able to set breakpoints. 
+You are now connected to the remote GDB stub in Bochs. You are now able to set breakpoints.
 Use the continue (c) command to continue the simulation.
 
-Hitting ^C works. Example;
+Hitting ^C works. Example:
 
 <screen>
   Program received signal 0, Signal 0.
   syscall_testsuite_result (aux=0x1f11fe4) at ../rtmk/syscalls.c:33
   33     {
-  (gdb) 
+  (gdb)
 </screen>
 </para>
 </section>
@@ -6286,15 +6320,15 @@ dlx login:
 </section>
 
 <section id="bios-tips"> 
-<title>Bios Tips</title>
+<title>BIOS Tips</title>
         <section> 
-        <title>Booting from cdroms</title>
+        <title>Booting from CD-ROMs</title>
         <para>
-A bootable cdrom has a special layout that is detected by the
-bios boot loader code, and executed if it conforms the specifications.
+A bootable CD-ROM has a special layout that is detected by the
+BIOS boot loader code, and executed if it conforms the specifications.
 This layout is called "El Torito Bootable CD-ROM Format Specification"
-and has been published by Phoenix and IBM. A copy of this spec is on 
-Bochs tech specs page at http://bochs.sourceforge.net/techdata.html.
+and has been published by Phoenix and IBM. A copy of this spec is on
+<ulink url="http://bochs.sourceforge.net/techdata.html">Bochs tech specs page</ulink>.
         </para>
         <para>
 El Torito specifies 3 ways to have a bootable cd :
@@ -6310,7 +6344,7 @@ arbitrary number of sectors straight into memory, and execute it
 </para></listitem>
 <listitem><para>
 Harddisk emulation : a hard disk image in burnt inside the cd. The 
-Bios has to redirect all hard disk accesses to that image. The rel hard disks
+BIOS has to redirect all hard disk accesses to that image. The rel hard disks
 are still available, with bios numbers #81 and up.
 </para></listitem>
 </itemizedlist>
@@ -8628,9 +8662,9 @@ Here are the known issues about installing and running Windows NT4.0 :
 <itemizedlist>
 <listitem>
 <para>
-at the moment, you can not use the LGPL VGABios to install Windows NT 4.0 
-(you'll get a black screen after first reboot). The solution is to use the
-Elpin VGABios.
+If you want to use the LGPL'd VGABIOS to install Windows NT 4.0 you'll need
+version 0.4c or higher. With older versions you'll get a black screen after
+first reboot.
 </para>
 </listitem>
 <listitem>
