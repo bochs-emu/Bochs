@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.8 2001-06-10 05:30:27 bdenney Exp $
+ * $Id: control.cc,v 1.9 2001-06-11 06:35:18 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -70,6 +70,7 @@ extern "C" {
 #include "siminterface.h"
 
 #define BX_PANIC(x) printf x
+#define CPANEL_PATH_LEN 512
 
 /* functions for changing particular options */
 void bx_edit_mem ();
@@ -84,6 +85,7 @@ void bx_private_colormap ();
 void bx_boot_from ();
 void bx_ips_change ();
 int bx_read_rc (char *rc);
+int bx_write_rc (char *rc);
 void bx_log_file ();
 void bx_log_options (int individual);
 void bx_vga_update_interval ();
@@ -231,12 +233,11 @@ static char *startup_menu_prompt =
 "------------------\n\
 Bochs Startup Menu\n\
 ------------------\n\
-1. %s%s%s\n\
-2. Read options from...\n\
-3. Edit options\n\
-4. Save options to...\n\
-5. Begin simulation\n\
-6. Quit now\n\
+1. Read options from...\n\
+2. Edit options\n\
+3. Save options to...\n\
+4. Begin simulation\n\
+5. Quit now\n\
 \n\
 Please choose one: [%d] ";
 
@@ -317,6 +318,7 @@ Bochs Miscellaneous Options\n\
 ---------------------------\n\
 1. Keyboard Serial Delay: 250\n\
 2. Floppy command delay: 500\n\
+To be added someday: magic_break, ne2k, load32bitOSImage,i440fxsupport,time0
 \n\
 Please choose one: [0] ";
 
@@ -409,38 +411,27 @@ int bx_control_panel (int menu)
      }
    case BX_CPANEL_START_MENU:
      {
-       char rc[512], prompt[512];
+       char rc[CPANEL_PATH_LEN];
        char *choice_disabled = "Choice 1 not allowed because the default bochsrc file was not found.";
        static int read_rc = 0;
-       int notfound = 0;
        int default_choice = 1;
-       if (SIM->get_default_rc (rc, 512) >= 0) {
-	 default_choice = read_rc ? 5 : 1;
-         sprintf (prompt, startup_menu_prompt, "Read options from ", rc, "", default_choice);
-       } else {
-	 default_choice = read_rc ? 5 : 2;
-         sprintf (prompt, startup_menu_prompt, "DISABLED because a bochsrc file was not found", "", "", default_choice);
-	 notfound = 1;
-       }
-       if (ask_int (prompt, 1, 6, default_choice, &choice) < 0) return -1;
+       default_choice = read_rc ? 4 : 1;
+       if (ask_int (startup_menu_prompt, 1, 5, default_choice, &choice) < 0) return -1;
        switch (choice) {
-	 case 1: if (notfound) fprintf (stderr, "%s\n", choice_disabled);
-		 else if (bx_read_rc (rc) >= 0) read_rc=1;
-		 break;
-	 case 2: if (bx_read_rc (NULL) >= 0) read_rc=1; break;
-	 case 3: bx_control_panel (BX_CPANEL_START_OPTS); break;
-	 case 4: NOT_IMPLEMENTED (choice); break;
-	 case 5: return 0;   // return from menu
-	 case 6: SIM->quit_sim (1); return -1;
+	 case 1: if (bx_read_rc (NULL) >= 0) read_rc=1; break;
+	 case 2: bx_control_panel (BX_CPANEL_START_OPTS); break;
+	 case 3: bx_write_rc (NULL); break;
+	 case 4: return 0;   // return from menu
+	 case 5: SIM->quit_sim (1); return -1;
 	 default: BAD_OPTION(menu, choice);
        }
      }
      break;
    case BX_CPANEL_START_OPTS:
      {
-       char prompt[512];
-       char oldpath[512];
-       assert (SIM->get_log_file (oldpath, 512) >= 0);
+       char prompt[CPANEL_PATH_LEN];
+       char oldpath[CPANEL_PATH_LEN];
+       assert (SIM->get_log_file (oldpath, CPANEL_PATH_LEN) >= 0);
        sprintf (prompt, startup_options_prompt, oldpath);
        if (ask_int (prompt, 0, 8, 0, &choice) < 0) return -1;
        switch (choice) {
@@ -459,10 +450,10 @@ int bx_control_panel (int menu)
      break;
    case BX_CPANEL_START_OPTS_BOOT:
      {
-       char prompt[512], vgapath[512], rompath[512];
-       if (SIM->get_rom_path (rompath, 512) < 0)
+       char prompt[CPANEL_PATH_LEN], vgapath[CPANEL_PATH_LEN], rompath[CPANEL_PATH_LEN];
+       if (SIM->get_rom_path (rompath, CPANEL_PATH_LEN) < 0)
 	 strcpy (rompath, "none");
-       if (SIM->get_vga_path (vgapath, 512) < 0)
+       if (SIM->get_vga_path (vgapath, CPANEL_PATH_LEN) < 0)
 	 strcpy (vgapath, "none");
        sprintf (prompt, startup_boot_options_prompt, 
 	  SIM->get_mem_size (),
@@ -607,14 +598,14 @@ void bx_edit_cdrom ()
 
 void bx_edit_rom_path (int vga)
 {
-  char oldpath[512], newpath[512];
+  char oldpath[CPANEL_PATH_LEN], newpath[CPANEL_PATH_LEN];
   if (vga) {
-    if (SIM->get_vga_path (oldpath, 512) < 0) return;
+    if (SIM->get_vga_path (oldpath, CPANEL_PATH_LEN) < 0) return;
     if (ask_string ("Enter pathname of the VGA ROM image: [%s] ", oldpath, newpath) < 0)
       return;
     SIM->set_vga_path (newpath);
   } else {
-    if (SIM->get_rom_path (oldpath, 512) < 0) return;
+    if (SIM->get_rom_path (oldpath, CPANEL_PATH_LEN) < 0) return;
     if (ask_string ("Enter pathname of the ROM image: [%s] ", oldpath, newpath) < 0)
       return;
     SIM->set_rom_path (newpath);
@@ -748,22 +739,58 @@ void bx_mouse_enable ()
 int bx_read_rc (char *rc)
 {
   if (rc && SIM->read_rc (rc) >= 0) return 0;
-  char oldrc[512];
-  if (SIM->get_default_rc (oldrc, 512) < 0)
-    oldrc[0] = 0;
-  char newrc[512];
+  char oldrc[CPANEL_PATH_LEN];
+  if (SIM->get_default_rc (oldrc, CPANEL_PATH_LEN) < 0)
+    strcpy (oldrc, "none");
+  char newrc[CPANEL_PATH_LEN];
   while (1) {
-    if (ask_string ("\nWhat is the configuration file name?  If there is no config file\ntype none.  [%s] ", oldrc, newrc) < 0) return -1;
+    if (ask_string ("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc) < 0) return -1;
     if (!strcmp (newrc, "none")) return 0;
     if (SIM->read_rc (newrc) >= 0) return 0;
     fprintf (stderr, "The file '%s' could not be found.\n", newrc);
   }
 }
 
+int bx_write_rc (char *rc)
+{
+  char oldrc[CPANEL_PATH_LEN], newrc[CPANEL_PATH_LEN];
+  if (rc == NULL) {
+    if (SIM->get_default_rc (oldrc, CPANEL_PATH_LEN) < 0)
+      strcpy (oldrc, "none");
+  } else {
+    strncpy (oldrc, rc, CPANEL_PATH_LEN);
+  }
+  while (1) {
+    if (ask_string ("Save configuration to what file?  To cancel, type 'none'.\n[%s] ", oldrc, newrc) < 0) return -1;
+    if (!strcmp (newrc, "none")) return 0;
+    // try with overwrite off first
+    int status = SIM->write_rc (newrc, 0);
+    if (status >= 0) {
+      fprintf (stderr, "Wrote configuration to '%s'.\n", newrc);
+      return 0;
+    } else if (status == -2) {
+      // return code -2 indicates the file already exists, and overwrite
+      // confirmation is required.
+      int overwrite = 0;
+      char prompt[256];
+      sprintf (prompt, "Configuration file '%s' already exists.  Overwrite it? [no] ", newrc);
+      if (ask_yn (prompt, 0, &overwrite) < 0) return -1;
+      if (!overwrite) continue;  // if "no", start loop over, asking for a different file
+      // they confirmed, so try again with overwrite bit set
+      if (SIM->write_rc (newrc, 1) >= 0) {
+	fprintf (stderr, "Overwriting existing configuration '%s'.\n", newrc);
+	return 0;
+      } else {
+	fprintf (stderr, "Write failed to '%s'.\n", newrc);
+      }
+    }
+  }
+}
+
 void bx_log_file ()
 {
-  char oldpath[512], newpath[512];
-  assert (SIM->get_log_file (oldpath, 512) >= 0);
+  char oldpath[CPANEL_PATH_LEN], newpath[CPANEL_PATH_LEN];
+  assert (SIM->get_log_file (oldpath, CPANEL_PATH_LEN) >= 0);
   if (ask_string ("Enter log file name: [%s] ", oldpath, newpath) < 0) return;
   SIM->set_log_file (newpath);
 }

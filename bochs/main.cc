@@ -70,7 +70,7 @@ bx_options_t bx_options = {
   { NULL, 0 },                          // rom
   { NULL },                             // vgarom
   { BX_DEFAULT_MEM_MEGS },              // memory
-  { NULL, NULL, NULL, 0, 0, 0, 0 },     // SB16
+  { 0, NULL, NULL, NULL, 0, 0, 0, 0 },  // SB16
   "a",                                  // boot drive
   300000,                               // vga update interval
   20000,  // default keyboard serial path delay (usec)
@@ -83,11 +83,8 @@ bx_options_t bx_options = {
   { 0, 0, 0, {0,0,0,0,0,0}, NULL, NULL }, // ne2k
   1,          // newHardDriveSupport
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
-  {
-    // ignore debugs, report infos and errors, fatal on panics.
-    ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_FATAL 
-  },
-  "-"       // default log file name (stdout)
+  // log options: ignore debug, report info and error, crash on panic.
+  { "-", { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_FATAL } },
   };
 
 static void parse_line_unformatted(char *context, char *line);
@@ -259,8 +256,8 @@ logfunctions::logfunctions(void)
 	setio(io);
 	// BUG: unfortunately this can be called before the bochsrc is read,
 	// which means that the bochsrc has no effect on the actions.
-	for (int i=0; i<MAX_LOGLEV; i++)
-	  onoff[i] = bx_options.log_actions[i];
+	for (int i=0; i<N_LOGLEV; i++)
+	  onoff[i] = bx_options.log.actions[i];
 }
 
 logfunctions::logfunctions(iofunc_t *iofunc)
@@ -270,8 +267,8 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 	setio(iofunc);
 	// BUG: unfortunately this can be called before the bochsrc is read,
 	// which means that the bochsrc has no effect on the actions.
-	for (int i=0; i<MAX_LOGLEV; i++)
-	  onoff[i] = bx_options.log_actions[i];
+	for (int i=0; i<N_LOGLEV; i++)
+	  onoff[i] = bx_options.log.actions[i];
 }
 
 logfunctions::~logfunctions(void)
@@ -541,14 +538,14 @@ bx_init_hardware()
   // This function used to 
   // all configuration has been read, now initialize everything.
 
-  for (int level=0; level<MAX_LOGLEV; level++)
-    io->set_log_action (level, bx_options.log_actions[level]);
+  for (int level=0; level<N_LOGLEV; level++)
+    io->set_log_action (level, bx_options.log.actions[level]);
 
   bx_pc_system.init_ips(bx_options.ips);
 
-  if(bx_options.logfilename[0]!='-') {
-    BX_INFO (("using log file %s", bx_options.logfilename));
-    io->init_log(bx_options.logfilename);
+  if(bx_options.log.filename[0]!='-') {
+    BX_INFO (("using log file %s", bx_options.log.filename));
+    io->init_log(bx_options.log.filename);
   }
 
   // set up memory and CPU objects
@@ -909,7 +906,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (num_params != 2) {
       BX_PANIC(("%s: log directive has wrong # args.", context));
       }
-    strcpy(bx_options.logfilename, params[1]);
+    strcpy(bx_options.log.filename, params[1]);
     }
   else if (!strcmp(params[0], "panic")) {
     if (num_params != 2) {
@@ -920,11 +917,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log_actions[LOGLEV_PANIC] = ACT_FATAL;
+      bx_options.log.actions[LOGLEV_PANIC] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_PANIC] = ACT_REPORT;
+      bx_options.log.actions[LOGLEV_PANIC] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_PANIC] = ACT_IGNORE;
+      bx_options.log.actions[LOGLEV_PANIC] = ACT_IGNORE;
     else {
       BX_PANIC(("%s: panic directive malformed.", context));
       }
@@ -938,11 +935,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log_actions[LOGLEV_ERROR] = ACT_FATAL;
+      bx_options.log.actions[LOGLEV_ERROR] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_ERROR] = ACT_REPORT;
+      bx_options.log.actions[LOGLEV_ERROR] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_ERROR] = ACT_IGNORE;
+      bx_options.log.actions[LOGLEV_ERROR] = ACT_IGNORE;
     else {
       BX_PANIC(("%s: error directive malformed.", context));
       }
@@ -956,11 +953,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log_actions[LOGLEV_INFO] = ACT_FATAL;
+      bx_options.log.actions[LOGLEV_INFO] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_INFO] = ACT_REPORT;
+      bx_options.log.actions[LOGLEV_INFO] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_INFO] = ACT_IGNORE;
+      bx_options.log.actions[LOGLEV_INFO] = ACT_IGNORE;
     else {
       BX_PANIC(("%s: info directive malformed.", context));
       }
@@ -974,11 +971,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log_actions[LOGLEV_DEBUG] = ACT_FATAL;
+      bx_options.log.actions[LOGLEV_DEBUG] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_DEBUG] = ACT_REPORT;
+      bx_options.log.actions[LOGLEV_DEBUG] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_DEBUG] = ACT_IGNORE;
+      bx_options.log.actions[LOGLEV_DEBUG] = ACT_IGNORE;
     else {
       BX_PANIC(("%s: debug directive malformed.", context));
       }
@@ -1081,6 +1078,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
   else if (!strcmp(params[0], "sb16")) {
     for (i=1; i<num_params; i++) {
+        bx_options.sb16.present = 1;
       if (!strncmp(params[i], "midi=", 5)) {
 	bx_options.sb16.midifile = strdup(&params[i][5]);
         }
@@ -1174,16 +1172,20 @@ parse_line_formatted(char *context, int num_params, char *params[])
     bx_options.ne2k.valid = 0;
     if ((num_params < 4) || (num_params > 6)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
+      return;
       }
     bx_options.ne2k.ethmod = "null";
     if (strncmp(params[1], "ioaddr=", 7)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
+      return;
       }
     if (strncmp(params[2], "irq=", 4)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
+      return;
       }
     if (strncmp(params[3], "mac=", 4)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
+      return;
       }
     bx_options.ne2k.ioaddr = strtoul(&params[1][7], NULL, 16);
     bx_options.ne2k.irq = atol(&params[2][4]);
@@ -1191,17 +1193,20 @@ parse_line_formatted(char *context, int num_params, char *params[])
              &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
     if (i != 6) {
       BX_PANIC(("%s: ne2k mac address malformed.", context));
+      return;
       }
     for (i=0;i<6;i++)
       bx_options.ne2k.macaddr[i] = tmp[i];
     if (num_params > 4) {
       if (strncmp(params[4], "ethmod=", 7)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
+      return;
         }
       bx_options.ne2k.ethmod = strdup(&params[4][7]);
       if (num_params == 6) {
       if (strncmp(params[5], "ethdev=", 7)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
+      return;
           }
       bx_options.ne2k.ethdev = strdup(&params[5][7]);
         }
@@ -1247,6 +1252,198 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
   if (bx_options.diskd.present && bx_options.cdromd.present)
     BX_PANIC(("At present, using both diskd and cdromd at once is not supported."));
+}
+
+static char *fdtypes[] = {
+  "none", "1_2", "1_44", "2_88", "720k"
+};
+
+int 
+bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)
+{
+  BX_ASSERT (drive==0 || drive==1);
+  if (opt->type == BX_FLOPPY_NONE) {
+    fprintf (fp, "# no floppy%c\n", (char)'a'+drive);
+    return 0;
+  }
+  BX_ASSERT (opt->type > BX_FLOPPY_NONE && opt->type <= BX_FLOPPY_LAST);
+  fprintf (fp, "floppy%c: %s=%s, status=%s\n", 
+    (char)'a'+drive, 
+    fdtypes[opt->type - BX_FLOPPY_NONE],
+    opt->path,
+    opt->initial_status==BX_EJECTED ? "ejected" : "inserted");
+  return 0;
+}
+
+int 
+bx_write_disk_options (FILE *fp, int drive, bx_disk_options *opt)
+{
+  if (!opt->present) {
+    fprintf (fp, "# no disk%c\n", (char)'c'+drive);
+    return 0;
+  }
+  fprintf (fp, "disk%c: file=\"%s\", cyl=%d, heads=%d, spt=%d\n",
+     (char)'c'+drive,
+     opt->path,
+     opt->cylinders,
+     opt->heads,
+     opt->spt);
+  return 0;
+}
+
+int 
+bx_write_cdrom_options (FILE *fp, int drive, bx_cdrom_options *opt)
+{
+  BX_ASSERT (drive == 0);
+  if (!opt->present) {
+    fprintf (fp, "# no cdromd\n");
+    return 0;
+  }
+  fprintf (fp, "cdromd: dev=%s, status=%s\n", 
+    opt->dev,
+    opt->inserted ? "inserted" : "ejected");
+  return 0;
+}
+
+int
+bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
+{
+  if (!opt->present) {
+    fprintf (fp, "# no sb16\n");
+    return 0;
+  }
+  fprintf (fp, "sb16: midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d\n", opt->midimode, opt->midifile, opt->wavemode, opt->wavefile, opt->loglevel, opt->logfile, opt->dmatimer);
+  return 0;
+}
+
+int
+bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
+{
+  if (!opt->valid) {
+    fprintf (fp, "# no ne2k\n");
+    return 0;
+  }
+  fprintf (fp, "ne2k: ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s\n",
+      opt->ioaddr, 
+      opt->irq,
+      opt->macaddr[0],
+      opt->macaddr[1],
+      opt->macaddr[2],
+      opt->macaddr[3],
+      opt->macaddr[4],
+      opt->macaddr[5],
+      opt->ethmod,
+      opt->ethdev);
+  return 0;
+}
+
+int
+bx_write_loader_options (FILE *fp, bx_load32bitOSImage_t *opt)
+{
+  if (opt->whichOS == 0) {
+    fprintf (fp, "# no loader\n");
+    return 0;
+  }
+  BX_ASSERT(opt->whichOS == Load32bitOSLinux || opt->whichOS == Load32bitOSNullKernel);
+  fprintf (fp, "load32bitOSImage: os=%s, path=%s, iolog=%s, initrd=%s\n",
+      (opt->whichOS == Load32bitOSLinux) ? "linux" : "nullkernel",
+      opt->path,
+      opt->iolog,
+      opt->initrd);
+  return 0;
+}
+
+int
+bx_write_log_options (FILE *fp, bx_log_options *opt)
+{
+  fprintf (fp, "log: %s\n", opt->filename);
+  // no syntax to describe all the possible action settings for every 
+  // device.  Instead, take a vote and record the most popular action
+  // for each level of event.
+  int action_tally[N_ACT];
+  int most_popular_action[N_LOGLEV];
+  int i,j,lev;
+  for (lev = 0; lev < N_LOGLEV; lev++) {
+    // clear tally
+    for (i=0; i<N_ACT; i++)
+      action_tally[i] = 0;
+    // count how many devices use each action
+    for (i=0; i<io->get_n_logfns (); i++) {
+      logfunc_t *fn = io->get_logfn (i);
+      int action = fn->getonoff(lev);
+      BX_ASSERT (action >= 0 && action < N_ACT);
+      action_tally[action]++;
+    }
+    // count the votes
+    int best = 0, best_votes = action_tally[0];
+    for (i=1; i<N_ACT; i++) {
+      if (action_tally[i] > best_votes) {
+	best = i;
+	best_votes = action_tally[i];
+      }
+    }
+    most_popular_action[lev] = best;
+  }
+  fprintf (fp, "panic: action=%s\n",
+      io->getaction(most_popular_action[LOGLEV_PANIC]));
+  fprintf (fp, "error: action=%s\n",
+      io->getaction(most_popular_action[LOGLEV_ERROR]));
+  fprintf (fp, "info: action=%s\n",
+      io->getaction(most_popular_action[LOGLEV_INFO]));
+  fprintf (fp, "debug: action=%s\n",
+      io->getaction(most_popular_action[LOGLEV_DEBUG]));
+}
+
+// return values:
+//   0: written ok
+//  -1: failed
+//  -2: already exists, and overwrite was off
+int
+bx_write_configuration (char *rc, int overwrite)
+{
+  BX_INFO (("write configuration to %s\n", rc));
+  // check if it exists.  If so, only proceed if overwrite is set.
+  FILE *fp = fopen (rc, "r");
+  if (fp != NULL) {
+    fclose (fp);
+    if (!overwrite) return -2;
+  }
+  fp = fopen (rc, "w");
+  if (fp == NULL) return -1;
+  // finally it's open and we can start writing.
+  fprintf (fp, "# configuration file generated by Bochs\n");
+  // it would be nice to put this type of function as methods on
+  // the structs like bx_floppy_options::print or something.
+  bx_write_floppy_options (fp, 0, &bx_options.floppya);
+  bx_write_floppy_options (fp, 1, &bx_options.floppyb);
+  bx_write_disk_options (fp, 0, &bx_options.diskc);
+  bx_write_disk_options (fp, 1, &bx_options.diskd);
+  bx_write_cdrom_options (fp, 0, &bx_options.cdromd);
+  if (bx_options.rom.path)
+    fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.path, bx_options.rom.address);
+  else
+    fprintf (fp, "# no romimage\n");
+  if (bx_options.vgarom.path)
+    fprintf (fp, "vgaromimage: %s\n", bx_options.vgarom.path);
+  else
+    fprintf (fp, "# no vgaromimage\n");
+  fprintf (fp, "megs: %d\n", bx_options.memory.megs);
+  bx_write_sb16_options (fp, &bx_options.sb16);
+  fprintf (fp, "boot: %s\n", bx_options.bootdrive);
+  fprintf (fp, "vga_update_interval: %d\n", bx_options.vga_update_interval);
+  fprintf (fp, "keyboard_serial_delay: %d\n", bx_options.keyboard_serial_delay);
+  fprintf (fp, "floppy_command_delay: %d\n", bx_options.floppy_command_delay);
+  fprintf (fp, "ips: %d\n", bx_options.ips);
+  fprintf (fp, "mouse: enabled=%d\n", bx_options.mouse_enabled);
+  fprintf (fp, "private_colormap: enabled=%d\n", bx_options.private_colormap);
+  fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.i440FXSupport);
+  fprintf (fp, "time0: %u\n", bx_options.cmos.time0);
+  bx_write_ne2k_options (fp, &bx_options.ne2k);
+  fprintf (fp, "newharddrivesupport: enabled=%d\n", bx_options.newHardDriveSupport);
+  bx_write_loader_options (fp, &bx_options.load32bitOSImage);
+  bx_write_log_options (fp, &bx_options.log);
+  fclose (fp);
+  return 0;
 }
 #endif // #if BX_PROVIDE_MAIN
 

@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.4 2001-06-09 21:29:07 bdenney Exp $
+ * $Id: siminterface.h,v 1.5 2001-06-11 06:35:18 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -74,6 +74,7 @@ public:
   virtual void set_mouse_enabled (int en) {}
   virtual int get_default_rc (char *path, int len) {}
   virtual int read_rc (char *path) {return -1;}
+  virtual int write_rc (char *rc, int overwrite) {return -1;}
   virtual int get_log_file (char *path, int len) {}
   virtual int set_log_file (char *path) {return -1;}
   virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}

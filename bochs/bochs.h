@@ -237,7 +237,7 @@ extern Bit8u DTPageDirty[];
 #define LOGLEV_INFO  1
 #define LOGLEV_ERROR 2
 #define LOGLEV_PANIC 3
-#define MAX_LOGLEV   4
+#define N_LOGLEV   4
 
 typedef class logfunctions {
 	char *prefix;
@@ -246,7 +246,8 @@ typedef class logfunctions {
 #define ACT_IGNORE 0
 #define ACT_REPORT 1
 #define ACT_FATAL  2
-	int onoff[MAX_LOGLEV];
+#define N_ACT      3
+	int onoff[N_LOGLEV];
 	class iofunctions *logio;
 public:
 	logfunctions(void);
@@ -262,12 +263,12 @@ public:
 	void settype(int);
 	void setio(class iofunctions *);
 	void setonoff(int loglev, int value) {
-	  assert (loglev >= 0 && loglev < MAX_LOGLEV);
+	  assert (loglev >= 0 && loglev < N_LOGLEV);
 	  onoff[loglev] = value; 
 	}
 	char *getprefix () { return prefix; }
 	int getonoff(int level) {
-	  assert (level>=0 && level<MAX_LOGLEV);
+	  assert (level>=0 && level<N_LOGLEV);
 	  return onoff[level]; 
         }
 } logfunc_t;
@@ -398,7 +399,7 @@ public:
 	}
 	char *getaction(int i) {
 	   static char *name[] = { "ignore", "report", "fatal" };
-	   assert (i>=0 && i<3);
+	   assert (i>=ACT_IGNORE && i<=ACT_FATAL);
 	   return name[i];
 	}
 
@@ -560,6 +561,7 @@ extern bx_devices_c   bx_devices;
 
 char *bx_find_bochsrc (void);
 int bx_read_configuration (char *rcfile, int argc, char *argv[]);
+int bx_write_configuration (char *rcfile, int overwrite);
 
 #if BX_USE_CONTROL_PANEL==0
 // with control panel enabled, this is defined in gui/siminterface.h instead.
@@ -631,8 +633,15 @@ typedef struct {
   char    *initrd;
   } bx_load32bitOSImage_t;
 
+typedef struct {
+  char filename[BX_PATHNAME_LEN];
+  // one array item for each log level, indexed by LOGLEV_*.
+  // values: ACT_IGNORE, ACT_REPORT, ACT_FATAL
+  unsigned char actions[N_LOGLEV];  
+} bx_log_options;
 
 typedef struct {
+  int present;
   char *midifile, *wavefile, *logfile;
   unsigned int midimode, wavemode, loglevel;
   Bit32u dmatimer;
@@ -660,10 +669,7 @@ typedef struct {
   bx_ne2k_options   ne2k;
   Boolean           newHardDriveSupport;
   bx_load32bitOSImage_t load32bitOSImage;
-         // one array item for each log level, indexed by LOGLEV_*.
-	 // values: 0=ignore event, 1=report event in log, 2=fatal
-  unsigned char log_actions[MAX_LOGLEV];  
-  char logfilename[BX_PATHNAME_LEN];
+  bx_log_options    log;
   } bx_options_t;
 
 extern bx_options_t bx_options;

@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.7 2001-06-09 21:29:07 bdenney Exp $
+ * $Id: siminterface.cc,v 1.8 2001-06-11 06:35:18 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -10,19 +10,9 @@
 
 #include "bochs.h"
 
-// this dummy only exists for purposes of log functions.  It would be
-// lovely to get rid of it.
-class siminterface_dummy_c : public logfunctions {
-public:
-  siminterface_dummy_c () {
-    setprefix("[CTRL]"); // control panel
-    settype(CTRLLOG);
-  }
-};
-siminterface_dummy_c siminterface_dummy;
-
 bx_simulator_interface_c *SIM = NULL;
-#define LOG_THIS siminterface_dummy.
+logfunctions *siminterface_log = NULL;
+#define LOG_THIS siminterface_log->
 
 class bx_real_sim_c : public bx_simulator_interface_c {
   virtual int getips ();
@@ -41,6 +31,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   virtual void set_mouse_enabled (int en);
   virtual int get_default_rc (char *path, int len);
   virtual int read_rc (char *path);
+  virtual int write_rc (char *path, int overwrite);
   virtual int get_log_file (char *path, int len);
   virtual int set_log_file (char *path);
   virtual int get_floppy_options (int drive, bx_floppy_options *out);
@@ -68,6 +59,9 @@ class bx_real_sim_c : public bx_simulator_interface_c {
 
 void init_siminterface ()
 {
+  siminterface_log = new logfunctions ();
+  siminterface_log->setprefix ("[CTRL]");
+  siminterface_log->settype(CTRLLOG);
   if (SIM == NULL) 
     SIM = new bx_real_sim_c();
 }
@@ -132,7 +126,7 @@ bx_real_sim_c::get_log_level_name (int level)
 int 
 bx_real_sim_c::get_max_log_level ()
 {
-  return MAX_LOGLEV;
+  return N_LOGLEV;
 }
 
 void 
@@ -179,17 +173,27 @@ bx_real_sim_c::read_rc (char *rc)
   return bx_read_configuration (rc, 0, NULL);
 }
 
+// return values:
+//   0: written ok
+//  -1: failed
+//  -2: already exists, and overwrite was off
+int 
+bx_real_sim_c::write_rc (char *rc, int overwrite)
+{
+  return bx_write_configuration (rc, overwrite);
+}
+
 int 
 bx_real_sim_c::get_log_file (char *path, int len)
 {
-  strncpy (path, bx_options.logfilename, len);
+  strncpy (path, bx_options.log.filename, len);
   return 0;
 }
 
 int 
 bx_real_sim_c::set_log_file (char *path)
 {
-  strncpy (bx_options.logfilename, path, sizeof(bx_options.logfilename));
+  strncpy (bx_options.log.filename, path, sizeof(bx_options.log.filename));
   return 0;
 }
 
