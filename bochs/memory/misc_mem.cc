@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.44 2004-06-19 15:20:15 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.45 2004-07-29 20:15:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -131,7 +131,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.44 2004-06-19 15:20:15 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.45 2004-07-29 20:15:19 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -396,7 +396,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
       return(NULL); // Vetoed!  ROMs
 #endif
 
-#if BX_SupportICache
+#if BX_SUPPORT_ICACHE
     cpu->iCache.decWriteStamp(cpu, a20Addr);
 #endif
 

@@ -29,9 +29,7 @@
 
 extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
-#if BX_SUPPORT_FPU
 #include "softfloatx80.h"
-#endif
 
 void BX_CPU_C::FLD_STi(bxInstruction_c *i)
 {

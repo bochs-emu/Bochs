@@ -33013,12 +33013,12 @@ fi
 
 if test "$speedup_iCache" = 1; then
   cat >>confdefs.h <<\_ACEOF
-#define BX_SupportICache 1
+#define BX_SUPPORT_ICACHE 1
 _ACEOF
 
 else
   cat >>confdefs.h <<\_ACEOF
-#define BX_SupportICache 0
+#define BX_SUPPORT_ICACHE 0
 _ACEOF
 
 fi

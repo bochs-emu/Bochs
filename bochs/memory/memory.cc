@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.31 2004-07-18 19:40:51 vruppert Exp $
+// $Id: memory.cc,v 1.32 2004-07-29 20:15:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
         }
 #endif
 
-#if BX_SupportICache
+#if BX_SUPPORT_ICACHE
   if (a20addr < BX_MEM_THIS len)
     cpu->iCache.decWriteStamp(cpu, a20addr);
 #endif

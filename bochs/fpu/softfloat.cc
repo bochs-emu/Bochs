@@ -2387,7 +2387,7 @@ static floatx80 addFloatx80Sigs(floatx80 a, floatx80 b, int zSign, float_status_
     if (bExp == 0x7FFF) {
         if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
         if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
-        return b;
+        return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
     if (aExp == 0) {
         if (aSig == 0) {

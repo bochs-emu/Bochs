@@ -27,10 +27,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-
-#if BX_SUPPORT_FPU
 #include "softfloatx80.h"
-#endif
 
 /* D9 C8 */
 void BX_CPU_C::FXCH_STi(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.84 2004-06-19 15:20:07 sshwarts Exp $
+// $Id: cpu.cc,v 1.85 2004-07-29 20:15:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -188,29 +188,27 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 #endif
 
   {
-  bx_address eipBiased;
   Bit8u *fetchPtr;
+  bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
-  eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-
-  if ( eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize ) {
+  if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
     prefetch();
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-    }
+  }
 
-#if BX_SupportICache
+#if BX_SUPPORT_ICACHE
   unsigned iCacheHash;
   Bit32u pAddr, pageWriteStamp;
 
   pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
-  iCacheHash = BX_CPU_THIS_PTR iCache.hash( pAddr );
+  iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
   i = & BX_CPU_THIS_PTR iCache.entry[iCacheHash].i;
 
   pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
 
-  if ( (BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr == pAddr) &&
-       (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp == pageWriteStamp) ) {
-
+  if ((BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr == pAddr) &&
+      (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp == pageWriteStamp))
+  {
     // iCache hit.  Instruction is already decoded and stored in
     // the instruction cache.
     BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
@@ -228,67 +226,63 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
   else
 #endif
     {
-    // iCache miss.  No validated instruction with matching fetch parameters
-    // is in the iCache.  Or we're not compiling iCache support in, in which
+    // iCache miss. No validated instruction with matching fetch parameters
+    // is in the iCache. Or we're not compiling iCache support in, in which
     // case we always have an iCache miss.  :^)
     bx_address remainingInPage;
-    unsigned maxFetch;
-    Bit32u fetchModeMask;
-
     remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-    maxFetch = 15;
-    if (remainingInPage < 15)
-      maxFetch = remainingInPage;
+    unsigned maxFetch = 15;
+    if (remainingInPage < 15) maxFetch = remainingInPage;
     fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
-#if BX_SupportICache
-    // In the case where the page is marked ICacheWriteStampInvalid, all
-    // counter bits will be high, being eqivalent to ICacheWriteStampMax.
-    // In the case where the page is marked as possibly having associated
-    // iCache entries, we need to leave the counter as-is, unless we're
-    // willing to dump all iCache entries which can hash to this page.
-    // Therefore, in either case, we can keep the counter as-is and
-    // replace the fetch mode bits.
-    fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
-    pageWriteStamp &= 0x1fffffff;    // Clear out old fetch mode bits.
-    pageWriteStamp |= fetchModeMask; // Add in new ones.
-    BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
-    BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr = pAddr;
-    BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = pageWriteStamp;
+#if BX_SUPPORT_ICACHE
+    // The entry will be marked valid if fetchdecode will succeed
+    BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = 
+      ICacheWriteStampInvalid;
 #endif
 
 #if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
       ret = fetchDecode64(fetchPtr, i, maxFetch);
-      }
     else
 #endif
-      {
       ret = fetchDecode(fetchPtr, i, maxFetch);
-      }
 
     BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get function pointers early.
     if (ret==0) {
-#if BX_SupportICache
-      // Invalidate entry, since fetch-decode failed with partial updates
-      // to the i-> structure.
-      BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp =
-        ICacheWriteStampInvalid;
-      i = &iStorage;
+#if BX_SUPPORT_ICACHE
+BX_INFO((" ... fetchdecode returned zero, leave entry invalid"));
+      i = &iStorage;	// Leave entry invalid
 #endif
       boundaryFetch(i);
-      resolveModRM = i->ResolveModrm; // Get function pointers as early
+      resolveModRM = i->ResolveModrm;
     }
-#if BX_INSTRUMENTATION
     else
     {
+#if BX_SUPPORT_ICACHE
+      // In the case where the page is marked ICacheWriteStampInvalid, all
+      // counter bits will be high, being eqivalent to ICacheWriteStampMax.
+      // In the case where the page is marked as possibly having associated
+      // iCache entries, we need to leave the counter as-is, unless we're
+      // willing to dump all iCache entries which can hash to this page.
+      // Therefore, in either case, we can keep the counter as-is and
+      // replace the fetch mode bits.
+      Bit32u fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
+      pageWriteStamp &= 0x1fffffff;    // Clear out old fetch mode bits.
+      pageWriteStamp |= fetchModeMask; // Add in new ones.
+      BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
+      BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr = pAddr;
+      BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = pageWriteStamp;
+#endif
+#if BX_INSTRUMENTATION
       // An instruction was either fetched, or found in the iCache.
       BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, i->ilen(),
                   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
-    }
 #endif
+    }
+
     execute = i->execute; // fetch as soon as possible for speculation.
-    if (resolveModRM) {
+    if (resolveModRM){
       BX_CPU_CALL_METHODR(resolveModRM, (i));
       }
     }
@@ -791,7 +785,7 @@ BX_CPU_C::prefetch(void)
       }
     }
 
-#if BX_SupportICache
+#if BX_SUPPORT_ICACHE
   Bit32u pageWriteStamp;
   Bit32u fetchModeMask;
   Bit32u phyPageIndex;
@@ -882,7 +876,6 @@ BX_CPU_C::ask (int level, const char *prefix, const char *fmt, va_list ap)
   vsprintf (buf1, fmt, ap);
   printf ("%s %s\n", prefix, buf1);
   trap_debugger(1);
-  //this->logfunctions::ask(level,prefix,fmt,ap);
 }
 
   void

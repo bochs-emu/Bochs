@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.166 2004-07-15 19:45:33 sshwarts Exp $
+// $Id: cpu.h,v 1.167 2004-07-29 20:15:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -996,7 +996,7 @@ typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN
 
 // ========== iCache =============================================
 
-#if BX_SupportICache
+#if BX_SUPPORT_ICACHE
 
 #define BxICacheEntries (32 * 1024)  // Must be a power of 2.
   // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
@@ -1422,7 +1422,7 @@ union {
   // An instruction cache.  Each entry should be exactly 32 bytes, and
   // this structure should be aligned on a 32-byte boundary to be friendly
   // with the host cache lines.
-#if BX_SupportICache
+#if BX_SUPPORT_ICACHE
   bxICache_c iCache  BX_CPP_AlignN(32);
 #endif
 
@@ -2961,7 +2961,7 @@ union {
   };
 
 
-#if BX_SupportICache
+#if BX_SUPPORT_ICACHE
 
 BX_CPP_INLINE void bxICache_c::decWriteStamp(BX_CPU_C *cpu, Bit32u a20Addr) {
   // Increment page write stamp, so iCache entries with older stamps

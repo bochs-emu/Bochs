@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.256 2004-07-15 19:57:31 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.257 2004-07-29 20:15:16 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1293,9 +1293,9 @@ else
 fi
 
 if test "$speedup_iCache" = 1; then
-  AC_DEFINE(BX_SupportICache, 1)
+  AC_DEFINE(BX_SUPPORT_ICACHE, 1)
 else
-  AC_DEFINE(BX_SupportICache, 0)
+  AC_DEFINE(BX_SUPPORT_ICACHE, 0)
 fi
 
 if test "$speedup_host_specific_asms" = 1; then

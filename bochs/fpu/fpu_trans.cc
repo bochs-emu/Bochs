@@ -27,10 +27,8 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_FPU
 #include "softfloatx80.h"
 #include "softfloat-specialize.h"
-#endif
 
 extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
