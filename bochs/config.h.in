@@ -176,8 +176,11 @@
 // Virtual 8086 mode emulation.
 //   1 = compile in support for v8086 mode.
 //   0 = don't compile in support for v8086 mode.
-
 #define BX_SUPPORT_V8086_MODE 1
+
+// Defines if the simulation should reset on triple fault
+// if set to 0, the simulation will panic.
+#define BX_RESET_ON_TRIPLE_FAULT 1
 
 // Support shadowing of ROM from C0000 to FFFFF.
 // This allows that region to be written to.
@@ -192,6 +195,7 @@
 
 #define BX_USE_SLOWDOWN_TIMER 0
 #define BX_HAVE_SLEEP 0
+#define BX_HAVE_MSLEEP 0
 #define BX_HAVE_USLEEP 0
 #define BX_HAVE_NANOSLEEP 0
 #define BX_HAVE_ABORT 0
@@ -909,7 +913,5 @@ typedef
 // of instructions.
 //#define BX_SCHEDULED_DIE_TIME 1162230000   // end of redhat6.0 boot
 
-
-#define BX_HAVE_MSLEEP 0
 
 #endif  // _BX_CONFIG_H

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.33 2003-02-26 02:48:12 ptrumpet Exp $
+// $Id: exception.cc,v 1.34 2003-08-24 23:39:33 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -877,8 +877,16 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 
   /* if 1st was a double fault (software INT?), then shutdown */
   if ( (BX_CPU_THIS_PTR errorno==2) && (BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT) ) {
+#if BX_RESET_ON_TRIPLE_FAULT
+    BX_INFO(("exception(): triple fault encountered, shutdown status is %02xh, resetting", DEV_cmos_get_reg(0x0f)));
+    {
+    for (int i=0; i<BX_SMP_PROCESSORS; i++)
+      BX_CPU(i)->reset(BX_RESET_HARDWARE);
+    }
+#else
     BX_PANIC(("exception(): triple fault encountered"));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
+#endif
 #if BX_DEBUGGER
     bx_guard.special_unwind_stack = true;
 #endif
