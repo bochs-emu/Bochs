@@ -1,7 +1,7 @@
 Summary: Bochs Project X86 PC Emulator
 Name: bochs
 Version: @VERSION@
-Release: 3
+Release: 1
 License: LGPL
 Group: Applications/Emulators
 URL:http://bochs.sourceforge.net
