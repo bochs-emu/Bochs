@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.43 2002-12-08 04:48:52 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.43.2.1 2003-01-11 22:03:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -339,7 +339,7 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 
     case 0x61:
       /* AT, port 61h */
-      BX_PIT_THIS s.refresh_clock_div2 = !BX_PIT_THIS s.refresh_clock_div2;
+      BX_PIT_THIS s.refresh_clock_div2 = ((bx_pc_system.time_usec() / 15) & 1);
       return( (BX_PIT_THIS s.timer.read_OUT(2)<<5) |
               (BX_PIT_THIS s.refresh_clock_div2<<4) |
               (BX_PIT_THIS s.speaker_data_on<<1) |
