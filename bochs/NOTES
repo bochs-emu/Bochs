@@ -1202,3 +1202,14 @@ would get closer.
 
 Tried with TIMER_DELTA=10.  However it had no effect!  Went from 1.2000 MHz to
 1.952MHz for bus clock speed.  I think it is good enough now anyway.
+
+I compiled a stupid program called work, and I'm testing how long it takes
+on the SMP bochs thing.  The first line of the input file controls how many
+iterations will be done.  With iterations=12 it took around 8.5 bochs seconds
+or several minutes of my time.  
+work &
+With iterations=10:  5.17user, 0.00system, 5.12elapsed 100%CPU
+With iterations=8:  2.80user, 0.01system, 2.78elapsed 100%CPU
+
+iterations=8, try two at once.
+work & work &
