@@ -359,6 +359,7 @@ panic: action=ask
 error: action=report
 info: action=report
 debug: action=ignore
+#pass: action=fatal
 
 #=======================================================================
 # DEBUGGER_LOG:
@@ -561,8 +562,8 @@ private_colormap: enabled=0
 #   fullscreen: enabled=0
 #   fullscreen: enabled=1
 #=======================================================================
-fullscreen: enabled=0
-screenmode: name="sample"
+#fullscreen: enabled=0
+#screenmode: name="sample"
 
 #=======================================================================
 # ne2k: NE2000 compatible ethernet adapter
@@ -652,12 +653,13 @@ keyboard_mapping: enabled=0, map=
 #=======================================================================
 # other stuff
 #=======================================================================
-# magic_break
-
+#magic_break: enabled=1
+#cmosimage: cmos.img
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 #i440fxsupport: enabled=1
 #usb1: enabled=1, ioaddr=0xFF40, irq=9
+#text_snapshot_check: enable
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
