@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.17 2002-09-02 17:03:11 bdenney Exp $
+// $Id: wxdialog.h,v 1.18 2002-09-02 20:13:49 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -17,6 +17,13 @@
 #define BTNLABEL_OK "Ok"
 #define BTNLABEL_CREATE_IMG "Create Image"
 #define BTNLABEL_ADVANCED "Advanced"
+#define BTNLABEL_BROWSE "<--Browse"
+
+// utility function prototype
+void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext);
+bool CreateImage (int harddisk, int sectors, const char *filename);
+void SetTextCtrl (wxTextCtrl *text, const char *format, int val);
+int GetTextCtrlInt (wxTextCtrl *text, const char *format, bool complain=false, bool *valid = NULL);
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
@@ -373,7 +380,7 @@ public:
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   void SetEnable (bool en) { enable->SetValue (en); EnableChanged (); }
   bool GetEnable () { return enable->GetValue (); }
-  void SetIO (int addr);
+  void SetIO (int addr) { SetTextCtrl (io, "0x%03x", addr); }
   int GetIO ();
   void SetIrq (int addr) { irq->SetValue (addr); }
   int GetIrq () { return irq->GetValue (); }
@@ -409,40 +416,75 @@ DECLARE_EVENT_TABLE()
 //  | +--- Optional ROM images ---------------------------------------+ |
 //  | |                                                               | |
 //  | |   Optional ROM image #1: [________________] [Browse]          | |
-//  | |                 address: [______]                             | |
+//  | |                 Address: [______]                             | |
 //  | |                                                               | |
 //  | |   Optional ROM image #2: [________________] [Browse]          | |
-//  | |                 address: [______]                             | |
+//  | |                 Address: [______]                             | |
 //  | |                                                               | |
 //  | |   Optional ROM image #3: [________________] [Browse]          | |
-//  | |                 address: [______]                             | |
+//  | |                 Address: [______]                             | |
 //  | |                                                               | |
 //  | |   Optional ROM image #4: [________________] [Browse]          | |
-//  | |                 address: [______]                             | |
+//  | |                 Address: [______]                             | |
 //  | |                                                               | |
 //  | +---------------------------------------------------------------+ |
 //  |                                        [ Help ] [ Cancel ] [ Ok ] |
 //  +-------------------------------------------------------------------+
+//
+// To use this dialog:
+// After constructor, use SetSize(), SetBios(), SetBiosAddr(), SetVgaBios(),
+// SetRom(), SetRomAddr() to set the initial values.  Then call ShowModal()
+// which will return wxOK or wxCANCEL.  Use the Get* equivalent methods
+// to find out the value from each field.
+class ConfigMemoryDialog: public wxDialog
+{
+private:
+#define CONFIG_MEMORY_TITLE "Configure Memory"
+#define CONFIG_MEMORY_BOX1_TITLE "Standard Options"
+#define CONFIG_MEMORY_BOX2_TITLE "Optional ROM Images"
+#define CONFIG_MEMORY_BOX1_LABELS { \
+  "Memory size (megabytes):", \
+    "ROM BIOS image:", \
+    "ROM BIOS address:", \
+    "VGA BIOS image:", \
+    "VGA BIOS address:", \
+    "0xC0000" }
+#define CONFIG_MEMORY_BOX2_LABELS { \
+  "Optional ROM image #1:", "Address:",  \
+  "Optional ROM image #2:", "Address:",  \
+  "Optional ROM image #3:", "Address:",  \
+  "Optional ROM image #4:", "Address:" \
+  }
+#define CONFIG_MEMORY_N_ROMS 4
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *mainSizer, *buttonSizer;
+  wxStaticBoxSizer *box1sizer, *box2sizer;
+  wxFlexGridSizer *box1gridSizer, *box2gridSizer;
+  wxSpinCtrl *megs;
+  wxTextCtrl *biosImage, *biosAddr, *vgabiosImage;
+  wxTextCtrl *rom[CONFIG_MEMORY_N_ROMS], *romAddr[CONFIG_MEMORY_N_ROMS];
+#define CONFIG_MEMORY_N_BROWSES 6
+  wxButton *browseBtn[CONFIG_MEMORY_N_BROWSES];
+public:
+  ConfigMemoryDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void SetSize (int val) { megs->SetValue (val); }
+  void SetBios (wxString filename) { biosImage->SetValue (filename); }
+  void SetVgaBios (wxString filename) { vgabiosImage->SetValue (filename); }
+  void SetRom (int n, wxString filename) { rom[n]->SetValue (filename); }
+  void SetBiosAddr (int addr) { SetTextCtrl (biosAddr, "0x%05x", addr); }
+  void SetRomAddr (int n, int addr) { SetTextCtrl (romAddr[n], "0x%05x", addr); }
+  int GetSize () { return megs->GetValue (); }
+  wxString GetBios () { return biosImage->GetValue (); }
+  wxString GetVgaBios () { return vgabiosImage->GetValue (); }
+  wxString GetRom (int n) { return rom[n]->GetValue (); }
+  int GetBiosAddr () { return GetTextCtrlInt (biosAddr, "0x%x"); }
+  int GetRomAddr (int n) { return GetTextCtrlInt (romAddr[n], "0x%x"); }
 
-////////////////////////////////////////////////////////////////////////////
-// ConfigSoundDialog
-////////////////////////////////////////////////////////////////////////////
-// 
-// +--- Configure Sound -------------------------------------------+
-// |                                                               |
-// |  Bochs can emulate a Sound Blaster 16.  Would you like        |
-// |  to enable it?                                                |
-// |                                                               |
-// |           Enable [X]                                          |
-// |                                                               |
-// |   DMA timer: [_________]                                      |
-// |                                                               |
-// |   Midi mode  [ 1 ]  Output file [_________________] [Browse]  |
-// |   Wave mode  [ 1 ]  Output file [_________________] [Browse]  |
-// |   Log  mode  [ 1 ]  Output file [_________________] [Browse]  |
-// |                                                               |
-// |                                    [ Help ] [ Cancel ] [ Ok ] |
-// +---------------------------------------------------------------+
+DECLARE_EVENT_TABLE()
+};
 
 ////////////////////////////////////////////////////////////////////////////
 // LogOptionsDialog
@@ -509,6 +551,27 @@ public:
   void SetAction (int evtype, int action);
 DECLARE_EVENT_TABLE()
 };
+
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigSoundDialog
+////////////////////////////////////////////////////////////////////////////
+// 
+// +--- Configure Sound -------------------------------------------+
+// |                                                               |
+// |  Bochs can emulate a Sound Blaster 16.  Would you like        |
+// |  to enable it?                                                |
+// |                                                               |
+// |           Enable [X]                                          |
+// |                                                               |
+// |   DMA timer: [_________]                                      |
+// |                                                               |
+// |   Midi mode  [ 1 ]  Output file [_________________] [Browse]  |
+// |   Wave mode  [ 1 ]  Output file [_________________] [Browse]  |
+// |   Log  mode  [ 1 ]  Output file [_________________] [Browse]  |
+// |                                                               |
+// |                                    [ Help ] [ Cancel ] [ Ok ] |
+// +---------------------------------------------------------------+
 
 
 /**************************************************************************

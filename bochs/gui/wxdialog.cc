@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.17 2002-09-02 17:03:07 bdenney Exp $
+// $Id: wxdialog.cc,v 1.18 2002-09-02 20:13:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -35,9 +35,6 @@ enum {
   ID_Button2,
   ID_MY_LAST_ID
 };
-
-void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext);
-bool CreateImage (int harddisk, int sectors, const char *filename);
 
 //////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog implementation
@@ -262,7 +259,7 @@ void FloppyConfigDialog::Init()
   // add contents of diskImageSizer
   diskImageSizer->Add (diskImageRadioBtn);
   diskImageSizer->Add (filename, 1, wxGROW);
-  wxButton *btn = new wxButton (this, ID_Browse, "<--Browse");
+  wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   diskImageSizer->Add (btn, 0, wxALL, 5);
   radioSizer->Add (diskImageSizer);
 
@@ -440,7 +437,7 @@ HDConfigDialog::HDConfigDialog(
   filename = new wxTextCtrl (this, ID_FilenameText);
   filename->SetSize (300, filename->GetSize ().GetHeight ());
   hsizer[0]->Add (filename, 1);
-  wxButton *btn = new wxButton (this, ID_Browse, "<--Browse");
+  wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   hsizer[0]->Add (btn);
   // contents of hsizer[1]
   for (int i=0; i<3; i++) {
@@ -655,7 +652,7 @@ CdromConfigDialog::CdromConfigDialog(
   filename = new wxTextCtrl (this, ID_FilenameText);
   filename->SetSize (300, filename->GetSize ().GetHeight ());
   fileSizer->Add (filename, 1, wxLEFT, 5);
-  wxButton *btn = new wxButton (this, ID_Browse, "<--Browse");
+  wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   fileSizer->Add (btn, 0, wxALL, 5);
   // create buttonSizer & contents but don't add yet
   btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
@@ -909,16 +906,10 @@ int NetConfigDialog::GetIO () {
   strncpy (buf, string, sizeof(buf));
   int n = strtol (string, NULL, 0);
   if (n<0 || n>0xffff) {
-    wxMessageBox("I/O address out of range. Try 0x200-0x400.", "Bad I/O address", wxOK | wxICON_ERROR );
+    wxMessageBox("I/O address out of range. Try 0 - 0xffff.", "Bad I/O address", wxOK | wxICON_ERROR );
     return -1;
   }
   return n;
-}
-
-void NetConfigDialog::SetIO (int addr) {
-  wxString text;
-  text.Printf ("0x%03x", addr);
-  io->SetValue (text);
 }
 
 void NetConfigDialog::SetMac (unsigned char addr[6]) {
@@ -1163,6 +1154,191 @@ void LogOptionsDialog::ShowHelp ()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
+//////////////////////////////////////////////////////////////////////
+// ConfigMemoryDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   mainSizer:
+//     box1 = static box "Standard Options"
+//       box1sizer:
+//         box1gridSizer, 3 columns:
+//           "memsize"
+//           megs = textfield
+//           spacer
+//           "biosimg"
+//           biosImage = textfield
+//           browse button
+//           "biosaddr"
+//           biosAddr = textfield
+//           spacer
+//           "vgabiosimg"
+//           vgabios = textfield
+//           browse button
+//           "vgabiosaddr"
+//           "0xc0000"
+//     box2 = static box "Optional ROM images"
+//       box2sizer:
+//         box2gridSizer, 3 columns:
+//           "opt rom 1"
+//           romImage[0] = textfield
+//           browse button
+//           "opt rom 2"
+//           romImage[1] = textfield
+//           browse button
+//           "opt rom 3"
+//           romImage[2] = textfield
+//           browse button
+//           "opt rom 4"
+//           romImage[3] = textfield
+//           browse button
+//     buttonSizer:
+//       help
+//       cancel
+//       ok
+//
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(ConfigMemoryDialog, wxDialog)
+  EVT_BUTTON(-1, ConfigMemoryDialog::OnEvent)
+  EVT_CHECKBOX(-1, ConfigMemoryDialog::OnEvent)
+  EVT_TEXT(-1, ConfigMemoryDialog::OnEvent)
+END_EVENT_TABLE()
+
+
+ConfigMemoryDialog::ConfigMemoryDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  static char *box1_label[] = CONFIG_MEMORY_BOX1_LABELS;
+  static char *box2_label[] = CONFIG_MEMORY_BOX2_LABELS;
+  int n_browse = 0;
+  int insideStaticBoxMargin = 15;
+  SetTitle (CONFIG_MEMORY_TITLE);
+  mainSizer = new wxBoxSizer (wxVERTICAL);
+  wxStaticBox *box1 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX1_TITLE);
+  box1sizer = new wxStaticBoxSizer (box1, wxVERTICAL);
+  mainSizer->Add (box1sizer, 0, wxALL|wxGROW, 10);
+  wxStaticBox *box2 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX2_TITLE);
+  box2sizer = new wxStaticBoxSizer (box2, wxVERTICAL);
+  mainSizer->Add (box2sizer, 0, wxALL|wxGROW, 10);
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+
+  // box1 contents
+  wxSize textCtrlSize (300, -1);  // width=300, height=default
+  box1gridSizer = new wxFlexGridSizer (3);
+  box1sizer->Add (box1gridSizer, 0, wxALL, insideStaticBoxMargin);
+#define add(x) box1gridSizer->Add (x, 0, wxALL, 2)
+#define addrt(x) box1gridSizer->Add (x, 0, wxALL|wxALIGN_RIGHT, 2)
+#define newlabel(x) new wxStaticText (this, -1, x)
+#define spacer() box1gridSizer->Add (1, 1);
+#define newbrowse() (browseBtn[n_browse++] = new wxButton (this, ID_Browse, BTNLABEL_BROWSE))
+#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, textCtrlSize))
+  addrt (newlabel (box1_label[0]));
+  add (megs = new wxSpinCtrl (this, -1));
+  spacer();
+  addrt (newlabel (box1_label[1]));
+  add (biosImage = newlongtext ());
+  add (newbrowse ());
+  addrt (newlabel (box1_label[2]));
+  add (biosAddr = new wxTextCtrl (this, -1));
+  spacer();
+  addrt (newlabel (box1_label[3]));
+  add (vgabiosImage = newlongtext ());
+  add (newbrowse ());
+  addrt (newlabel (box1_label[4]));
+  add (newlabel (box1_label[5]));
+#undef add(x)
+#undef addrt(x)
+#undef newlabel(x)
+#undef spacer()
+  biosImage->SetSizeHints (300, biosImage->GetSize().GetHeight ());
+  vgabiosImage->SetSizeHints (300, biosImage->GetSize().GetHeight ());
+
+  // box2 contents
+  box2gridSizer = new wxFlexGridSizer (3);
+  box2sizer->Add (box2gridSizer, 0, wxALL, insideStaticBoxMargin);
+#define add(x) box2gridSizer->Add (x, 0, wxALL, 2)
+#define addrt(x) box2gridSizer->Add (x, 0, wxALL|wxALIGN_RIGHT, 2)
+#define newlabel(x) new wxStaticText (this, -1, x)
+#define spacer() box2gridSizer->Add (1, 1);
+  for (int i=0; i<CONFIG_MEMORY_N_ROMS; i++) {
+    addrt (newlabel (box2_label[2*i]));
+    add (rom[i] = newlongtext ());
+    rom[i]->SetSizeHints (300, rom[i]->GetSize().GetHeight ());
+    add (newbrowse ());
+    addrt (newlabel (box2_label[2*i + 1]));
+    add (romAddr[i] = new wxTextCtrl (this, -1));
+    spacer();
+  }
+#undef add(x)
+#undef addrt(x)
+#undef newlabel(x)
+#undef spacer()
+#undef newbrowse()
+#undef newlongtext()
+
+  // buttonSizer contents
+  wxButton *btn;
+  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+}
+
+void ConfigMemoryDialog::Init()
+{
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(mainSizer);
+  mainSizer->Fit (this);
+  wxSize size = mainSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("you pressed button id=%d\n", id);
+  switch (id) {
+    case wxOK:
+      {
+	// test validity of the integer fields
+	bool valid;
+	GetTextCtrlInt (biosAddr, "0x%x", true, &valid);
+	if (!valid) return;
+	for (int rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
+	  GetTextCtrlInt (romAddr[rom], "0x%x", true, &valid);
+	  if (!valid) return;
+	}
+      }
+      EndModal (wxOK);
+      break;
+    case wxID_CANCEL:
+      EndModal (wxCANCEL);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void ConfigMemoryDialog::ShowHelp ()
+{
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+}
+
+
 /////////////////////////////////////////////////////////////////
 // utility
 /////////////////////////////////////////////////////////////////
@@ -1214,6 +1390,30 @@ CreateImage (int harddisk, int sectors, const char *filename)
   wxASSERT (ret==0);
   return true;
 }
+
+void SetTextCtrl (wxTextCtrl *ctrl, const char *format, int val) {
+  wxString tmp;
+  tmp.Printf (format, val);
+  ctrl->SetValue (tmp);
+}
+
+int GetTextCtrlInt (wxTextCtrl *ctrl, const char *format, bool complain, bool *valid) {
+  wxString tmp (ctrl->GetValue ());
+  char buf[1024];
+  strncpy (buf, tmp.c_str(), sizeof(buf));
+  int n;
+  if (sscanf (buf, format, &n) == 1) {
+    if (valid) *valid = true;
+    return n;
+  }
+  if (valid) *valid = false;
+  if (complain) {
+    wxMessageBox("Invalid integer!", "Invalid", wxOK | wxICON_ERROR );
+    ctrl->SetFocus ();
+  }
+  return -1;
+}
+
 
 
 #ifdef TEST_DIALOG

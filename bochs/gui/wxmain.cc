@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.23 2002-09-02 17:03:13 bdenney Exp $
+// $Id: wxmain.cc,v 1.24 2002-09-02 20:13:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -148,6 +148,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
+  EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   // toolbar events
@@ -367,6 +368,53 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   bx_param_enum_c *bootdevice = (bx_param_enum_c *) 
     SIM->get_param(BXP_BOOTDRIVE);
   bootdevice->set (which);
+}
+
+void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
+{
+  ConfigMemoryDialog dlg (this, -1);
+  bx_param_num_c *megs = (bx_param_num_c*) SIM->get_param(BXP_MEM_SIZE);
+  bx_param_string_c *bios = (bx_param_string_c *) SIM->get_param (BXP_ROM_PATH);
+  bx_param_num_c *biosaddr = (bx_param_num_c*) SIM->get_param(BXP_ROM_ADDRESS);
+  bx_param_string_c *vgabios = (bx_param_string_c *) SIM->get_param (BXP_VGA_ROM_PATH);
+  static bx_id optRomPathParams[] = {
+    BXP_OPTROM1_PATH, BXP_OPTROM2_PATH, BXP_OPTROM3_PATH, BXP_OPTROM4_PATH
+  };
+  static bx_id optRomAddrParams[] = {
+    BXP_OPTROM1_ADDRESS, BXP_OPTROM2_ADDRESS, BXP_OPTROM3_ADDRESS, BXP_OPTROM4_ADDRESS
+  };
+  bx_param_string_c *optromPath[CONFIG_MEMORY_N_ROMS];
+  bx_param_num_c *optromAddr[CONFIG_MEMORY_N_ROMS];
+  int rom;
+  for (rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
+    optromPath[rom] = (bx_param_string_c *) 
+      SIM->get_param (optRomPathParams[rom]);
+    optromAddr[rom] = (bx_param_num_c *) 
+      SIM->get_param (optRomAddrParams[rom]);
+  }
+  dlg.SetSize (megs->get ());
+  dlg.SetBios (wxString (bios->getptr ()));
+  dlg.SetBiosAddr (biosaddr->get ());
+  dlg.SetVgaBios (wxString (vgabios->getptr ()));
+  for (rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
+    dlg.SetRom (rom, wxString (optromPath[rom]->getptr ()));
+    dlg.SetRomAddr (rom, optromAddr[rom]->get ());
+  }
+  int n = dlg.ShowModal ();
+  if (n == wxOK) {
+    char buf[1024];
+    megs->set (dlg.GetSize ());
+    safeWxStrcpy (buf, dlg.GetBios (), sizeof (buf));
+    bios->set (buf);
+    biosaddr->set (dlg.GetBiosAddr ());
+    safeWxStrcpy (buf, dlg.GetVgaBios (), sizeof (buf));
+    vgabios->set (buf);
+    for (rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
+      safeWxStrcpy (buf, dlg.GetRom (rom), sizeof (buf));
+      optromPath[rom]->set (buf);
+      optromAddr[rom]->set (dlg.GetRomAddr (rom));
+    }
+  }
 }
 
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
@@ -1125,3 +1173,12 @@ SimThread::GetSyncResponse ()
   return event;
 }
 
+///////////////////////////////////////////////////////////////////
+// utility
+///////////////////////////////////////////////////////////////////
+void 
+safeWxStrcpy (char *dest, wxString src, int destlen)
+{
+  wxString tmp (src);
+  strncpy (dest, tmp.c_str (), destlen);
+}

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.15 2002-09-02 17:03:14 bdenney Exp $
+// $Id: wxmain.h,v 1.16 2002-09-02 20:13:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -95,6 +95,9 @@ enum
 //#define IFDBG_KEY(x) x
 
 
+// defined in wxmain.cc
+void safeWxStrcpy (char *dest, wxString src, int destlen);
+
 /// the MyPanel methods are defined in wx.cc
 class MyPanel: public wxPanel
 {
@@ -133,6 +136,7 @@ public:
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CIEvent(wxCommandEvent& event);
   void OnEditBoot(wxCommandEvent& event);
+  void OnEditMemory(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
   void OnLogPrefs(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
