@@ -264,6 +264,7 @@ builtinVGARedrawArea(unsigned x0, unsigned y0,
 Bit8u builtinVGAMemRead(Bit32u addr)
 {
   pluginlog->panic("builtinVGAMemRead called, no VGA plugin loaded?");
+  return 0;
 }
 
 void  builtinVGAMemWrite(Bit32u addr, Bit8u value) 
@@ -296,6 +297,7 @@ static unsigned builtinFloppyGetMediaStatus(unsigned drive)
 static unsigned builtinFloppySetMediaStatus(unsigned drive, unsigned status) 
 {
   pluginlog->panic("builtinFloppySetMediaStatus called, no floppy plugin loaded?");
+  return 0;
 }
 
   static void  
@@ -370,6 +372,7 @@ builtinRegisterIOReadHandler(void *thisPtr, ioReadHandler_t callback,
   BX_ASSERT (len<8);
   bx_devices.register_io_read_handler (thisPtr, callback, base, name);
   pluginlog->ldebug("plugin %s registered I/O read address at %04x", name, base);
+  return 0;
 }
 
   static int
@@ -379,6 +382,7 @@ builtinRegisterIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
   BX_ASSERT (len<8);
   bx_devices.register_io_write_handler (thisPtr, callback, base, name);
   pluginlog->ldebug("plugin %s registered I/O write address at %04x", name, base);
+  return 0;
 }
 
   static int
@@ -388,6 +392,7 @@ builtinRegisterDefaultIOReadHandler(void *thisPtr, ioReadHandler_t callback,
   BX_ASSERT (len<8);
   bx_devices.register_default_io_read_handler (thisPtr, callback, name);
   pluginlog->ldebug("plugin %s registered default I/O read ", name);
+  return 0;
 }
 
   static int
@@ -397,6 +402,7 @@ builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
   BX_ASSERT (len<8);
   bx_devices.register_default_io_write_handler (thisPtr, callback, name);
   pluginlog->ldebug("plugin %s registered default I/O write ", name);
+  return 0;
 }
 
   static int
@@ -834,9 +840,11 @@ int bx_load_plugins (void)
     fprintf (stderr, "%d. %s\n", i, gui_names[i]);
   int imax = i;
   int which = -1;
+  char line[256];
   do {
     fprintf (stderr, "--> ");
-  } while (scanf ("%d", &which) != 1 || !(which>=0 && which<imax));
+    if (!fgets (line, sizeof(line), stdin)) break;
+  } while (sscanf (line, "%d", &which) != 1 || !(which>=0 && which<imax));
   bx_load_plugin (format, gui_names[which]);
 
   if (bx_gui == NULL) {
