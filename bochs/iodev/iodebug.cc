@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.13 2002-10-26 03:53:22 bdenney Exp $
+// $Id: iodebug.cc,v 1.14 2002-11-18 17:27:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -210,7 +210,7 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
   {
     area--;
 #if BX_DEBUGGER
-  fprintf( stdout, "%s @ eip: %08X wrote at monitored memory location %8X\n", cpu->name, cpu->eip, addr);
+  fprintf( stdout, "%s @ eip: %08X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
   bx_guard.interrupt_requested=1;
 #else
     fprintf( stderr,
@@ -268,7 +268,7 @@ void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
   {
     area--;
 #if BX_DEBUGGER
-  fprintf( stdout, "%s @ eip: %8X wrote at monitored memory location %8X\n", cpu->name, cpu->eip, addr);
+  fprintf( stdout, "%s @ eip: %8X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
   bx_guard.interrupt_requested=1;
 #else
     fprintf( stderr,
