@@ -37,7 +37,7 @@ Detailed description:
     modified to avoid confliction.
     modified access rights from private to protected.
 
-  Changes by vruppert (June 10th 2004)
+  Changes by vruppert (June 11th 2004)
     - updated for current CVS
     - PCI host bridge is now a core plugin and initialized earlier
     - plugin version works now (CLGD54xx included in the vga plugin)
@@ -46,21 +46,21 @@ Detailed description:
     - return device ID (CRTC reg 0x27)
     - fixed sequencer register 0x06 (WHATVGA.EXE detects Cirrus VGA)
     - fixed some compile problems
-    - prepared memory PnP support
+    - PCI memory/mmio PnP support
     - some vga register now support 16-bit reads
     - a bunch of updates sent by suzu295@melu.jp
 
 Patch was created with:
   diff -urN
 Apply patch to what version:
-  cvs snapshot on June 10th 2004
+  cvs snapshot on June 11th 2004
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 diff -urN ../bochs/config.h.in ./config.h.in
 --- ../bochs/config.h.in	2004-06-09 22:58:01.000000000 +0200
-+++ ./config.h.in	2004-06-10 08:43:34.000000000 +0200
++++ ./config.h.in	2004-06-10 10:41:55.000000000 +0200
 @@ -266,6 +266,7 @@
  #define BX_USE_NE2K_SMF    1  // NE2K
  #define BX_USE_EFI_SMF     1  // External FPU IRQ
@@ -100,7 +100,7 @@ diff -urN ../bochs/config.h.in ./config.h.in
  
 diff -urN ../bochs/iodev/devices.cc ./iodev/devices.cc
 --- ../bochs/iodev/devices.cc	2004-06-09 22:55:58.000000000 +0200
-+++ ./iodev/devices.cc	2004-06-09 23:23:36.000000000 +0200
++++ ./iodev/devices.cc	2004-06-09 23:35:58.000000000 +0200
 @@ -184,7 +184,7 @@
    // PCI logic (i440FX)
    if (bx_options.Oi440FXSupport->get ()) {
@@ -123,7 +123,7 @@ diff -urN ../bochs/iodev/devices.cc ./iodev/devices.cc
  
 diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
 --- ../bochs/iodev/Makefile.in	2004-02-18 19:29:33.000000000 +0100
-+++ ./iodev/Makefile.in	2004-06-06 21:13:46.000000000 +0200
++++ ./iodev/Makefile.in	2004-06-06 13:09:58.000000000 +0200
 @@ -95,6 +95,7 @@
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
    scancodes.o \
@@ -163,8 +163,8 @@ diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
    ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
 diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 --- ../bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.cc	2004-06-10 21:11:31.000000000 +0200
-@@ -0,0 +1,2762 @@
++++ ./iodev/svga_cirrus.cc	2004-06-11 20:22:49.000000000 +0200
+@@ -0,0 +1,2789 @@
 +//
 +// limited PCI/ISA CLGD5446 support.
 +//
@@ -671,7 +671,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +#if BX_SUPPORT_SVGA_CIRRUS_PCI
 +  bx_bool
 +bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len,
-+                                void *data, void *param)
++                                           void *data, void *param)
 +{
 +  Bit8u *data_ptr;
 +
@@ -1889,18 +1889,22 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +{
 +  int i;
 +
++  // addresses
++  BX_CIRRUS_THIS pci_memaddr = CIRRUS_PNPMEM_BASE_ADDRESS;
++  BX_CIRRUS_THIS pci_mmioaddr = CIRRUS_PNPMMIO_BASE_ADDRESS;
++  BX_CIRRUS_THIS pci_romaddr = CIRRUS_PNPROM_BASE_ADDRESS;
 +  DEV_register_pci_handlers(BX_CIRRUS_THIS_PTR,
 +     pci_read_handler, pci_write_handler,
 +     BX_PCI_DEVICE(2,0),
 +     "PCI SVGA Cirrus");
 +  DEV_register_memory_handlers(cirrus_mem_read_handler, BX_CIRRUS_THIS_PTR,
 +                               cirrus_mem_write_handler, BX_CIRRUS_THIS_PTR,
-+                               CIRRUS_PNPMEM_BASE_ADDRESS,
-+                               CIRRUS_PNPMEM_BASE_ADDRESS + CIRRUS_PNPMEM_SIZE - 1);
++                               BX_CIRRUS_THIS pci_memaddr,
++                               BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 1);
 +  DEV_register_memory_handlers(cirrus_mem_read_handler, BX_CIRRUS_THIS_PTR,
 +                               cirrus_mem_write_handler, BX_CIRRUS_THIS_PTR,
-+                               CIRRUS_PNPMMIO_BASE_ADDRESS,
-+                               CIRRUS_PNPMMIO_BASE_ADDRESS + CIRRUS_PNPMMIO_SIZE - 1);
++                               BX_CIRRUS_THIS pci_mmioaddr,
++                               BX_CIRRUS_THIS pci_mmioaddr + CIRRUS_PNPMMIO_SIZE - 1);
 +
 +  for (i=0; i<256; i++) {
 +    BX_CIRRUS_THIS pci_conf[i] = 0x0;
@@ -1966,10 +1970,6 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  BX_CIRRUS_THIS pci_romdata[0x34] = 0x00; // code-type=x86
 +  BX_CIRRUS_THIS pci_romdata[0x35] = 0x80; // last image
 +
-+  // addresses
-+  BX_CIRRUS_THIS pci_memaddr = CIRRUS_PNPMEM_BASE_ADDRESS;
-+  BX_CIRRUS_THIS pci_mmioaddr = CIRRUS_PNPMMIO_BASE_ADDRESS;
-+  BX_CIRRUS_THIS pci_romaddr = CIRRUS_PNPROM_BASE_ADDRESS;
 +}
 +
 +  Bit8u
@@ -2055,6 +2055,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  unsigned write_addr;
 +  Bit8u old_value;
 +  Bit8u new_value;
++  bx_bool baseaddr0_change = 0;
++  bx_bool baseaddr1_change = 0;
 +
 +  if (io_len > 4) {
 +    BX_PANIC(("pci_write: io_len > 4!"));
@@ -2089,11 +2091,11 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +      case 0x10: case 0x11: case 0x12: case 0x13: // base address #0
 +        new_value = pci_write_baseaddr(write_addr & 0x3, CIRRUS_PNPMEM_SIZE, old_value, new_value);
-+        BX_ERROR(("no baseaddr PnP support!"));
++        baseaddr0_change = (old_value != new_value);
 +        break;
 +      case 0x14: case 0x15: case 0x16: case 0x17: // base address #1
 +        new_value = pci_write_baseaddr(write_addr & 0x3, CIRRUS_PNPMMIO_SIZE, old_value, new_value);
-+        BX_ERROR(("no baseaddr PnP support!"));
++        baseaddr1_change = (old_value != new_value);
 +        break;
 +      case 0x18: case 0x19: case 0x1a: case 0x1b: // base address #2
 +      case 0x1c: case 0x1d: case 0x1e: case 0x1f: // base address #3
@@ -2104,10 +2106,10 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +        break;
 +
 +      case 0x30: case 0x31: case 0x32: case 0x33: // ROM address
-+        new_value = pci_write_romaddr(write_addr & 0x3, CIRRUS_PNPROM_SIZE, old_value, new_value);
++/*      new_value = pci_write_romaddr(write_addr & 0x3, CIRRUS_PNPROM_SIZE, old_value, new_value);
 +        BX_ERROR(("no romaddr PnP support!"));
 +        break;
-+
++*/
 +      // read-only.
 +      case 0x00: case 0x01: // vendor
 +      case 0x02: case 0x03: // device
@@ -2122,7 +2124,32 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      }
 +    BX_CIRRUS_THIS pci_conf[write_addr] = new_value;
 +    value >>= 8;
-+    }
++  }
++  if (baseaddr0_change) {
++    DEV_unregister_memory_handlers(cirrus_mem_read_handler, cirrus_mem_write_handler,
++                                   BX_CIRRUS_THIS pci_memaddr,
++                                   BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 1);
++    BX_CIRRUS_THIS pci_memaddr = BX_CIRRUS_THIS pci_conf[0x12] << 16 |
++                                 BX_CIRRUS_THIS pci_conf[0x13] << 24;
++    BX_INFO(("new pci_memaddr = 0x%08x", BX_CIRRUS_THIS pci_memaddr));
++    DEV_register_memory_handlers(cirrus_mem_read_handler, BX_CIRRUS_THIS_PTR,
++                                 cirrus_mem_write_handler, BX_CIRRUS_THIS_PTR,
++                                 BX_CIRRUS_THIS pci_memaddr,
++                                 BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 1);
++  }
++  if (baseaddr1_change) {
++    DEV_unregister_memory_handlers(cirrus_mem_read_handler, cirrus_mem_write_handler,
++                                   BX_CIRRUS_THIS pci_mmioaddr,
++                                   BX_CIRRUS_THIS pci_mmioaddr + CIRRUS_PNPMMIO_SIZE - 1);
++    BX_CIRRUS_THIS pci_mmioaddr = BX_CIRRUS_THIS pci_conf[0x15] << 8 |
++                                  BX_CIRRUS_THIS pci_conf[0x16] << 16 |
++                                  BX_CIRRUS_THIS pci_conf[0x17] << 24;
++    BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_mmioaddr));
++    DEV_register_memory_handlers(cirrus_mem_read_handler, BX_CIRRUS_THIS_PTR,
++                                 cirrus_mem_write_handler, BX_CIRRUS_THIS_PTR,
++                                 BX_CIRRUS_THIS pci_mmioaddr,
++                                 BX_CIRRUS_THIS pci_mmioaddr + CIRRUS_PNPMMIO_SIZE - 1);
++  }
 +}
 +
 +#endif // BX_SUPPORT_SVGA_CIRRUS_PCI
@@ -2929,7 +2956,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +#endif // BX_SUPPORT_SVGA_CIRRUS
 diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 --- ../bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.h	2004-06-10 09:29:04.000000000 +0200
++++ ./iodev/svga_cirrus.h	2004-06-11 19:58:40.000000000 +0200
 @@ -0,0 +1,227 @@
 +#if BX_SUPPORT_SVGA_CIRRUS
 +
@@ -3376,7 +3403,7 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
      unsigned i;
 diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
 --- ../bochs/iodev/vga.h	2004-06-06 19:01:18.000000000 +0200
-+++ ./iodev/vga.h	2004-06-10 09:38:36.000000000 +0200
++++ ./iodev/vga.h	2004-06-09 23:44:43.000000000 +0200
 @@ -79,6 +79,11 @@
  #define BX_MAX_XRES VBE_DISPI_MAX_XRES
  #define BX_MAX_YRES VBE_DISPI_MAX_YRES
@@ -3419,7 +3446,7 @@ diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
 +#endif // BX_SUPPORT_SVGA_CIRRUS
 diff -urN ../bochs/Makefile.in ./Makefile.in
 --- ../bochs/Makefile.in	2004-06-05 10:44:54.000000000 +0200
-+++ ./Makefile.in	2004-06-06 21:13:46.000000000 +0200
++++ ./Makefile.in	2004-06-06 13:09:58.000000000 +0200
 @@ -108,7 +108,7 @@
  GUI_LINK_OPTS_AMIGAOS = 
  GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
