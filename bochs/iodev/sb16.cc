@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.35 2003-07-31 19:51:42 vruppert Exp $
+// $Id: sb16.cc,v 1.36 2003-11-14 19:00:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -858,16 +858,17 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	    }
 	  break;
 
-	  // used and expected by the CL diagnose.exe
+	  // DSP identification
 	case 0xe0:
-	  DSP.dataout.put(0x55);
+	  DSP.datain.get(&value8);
+	  DSP.dataout.put(~value8);
 	  break;
 
 	  // get version, out 2 bytes (major, minor)
 	case 0xe1:
 	  // none, o1/2: version major.minor
 	  DSP.dataout.put(4);
-	  if (DSP.dataout.put(11) == 0) 
+	  if (DSP.dataout.put(5) == 0) 
 	    {
 	      writelog(WAVELOG(3), "DSP version couldn't be written - buffer overflow");
 	    }
