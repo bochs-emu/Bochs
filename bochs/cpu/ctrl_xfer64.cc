@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.24 2004-05-10 21:05:47 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.25 2004-10-19 20:05:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -210,7 +210,6 @@ done:
   void
 BX_CPU_C::CALL_Eq(bxInstruction_c *i)
 {
-  Bit64u temp_RSP;
   Bit64u op1_64;
 
   //invalidate_prefetch_q();
@@ -218,8 +217,6 @@ BX_CPU_C::CALL_Eq(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
-
-  temp_RSP = RSP;
 
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
@@ -314,7 +311,6 @@ BX_CPU_C::JCC_Jq(bxInstruction_c *i)
     }
 
   if (condition) {
-
     RIP += (Bit32s) i->Id();
     if (i->os32L()==0)
       RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
@@ -437,7 +433,6 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
 BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
-
     if ( ((--RCX)!=0) && (get_ZF()==0) ) {
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
@@ -471,7 +466,6 @@ BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
 BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
-
     if ( ((--RCX)!=0) && (get_ZF()) ) {
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.29 2004-05-10 21:05:47 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.30 2004-10-19 20:05:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,7 +276,6 @@ done:
 BX_CPU_C::CALL_Ed(bxInstruction_c *i)
 {
 BailBigRSP("CALL_Ed");
-  Bit32u temp_ESP;
   Bit32u op1_32;
 
   //invalidate_prefetch_q();
@@ -284,12 +283,6 @@ BailBigRSP("CALL_Ed");
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_ESP = ESP;
-  else
-    temp_ESP = SP;
-
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
@@ -355,11 +348,10 @@ done:
 BX_CPU_C::JMP_Jd(bxInstruction_c *i)
 {
 BailBigRSP("JMP_Jd");
-  Bit32u new_EIP;
 
   //invalidate_prefetch_q();
 
-    new_EIP = EIP + (Bit32s) i->Id();
+    Bit32u new_EIP = EIP + (Bit32s) i->Id();
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
@@ -406,9 +398,8 @@ BX_CPU_C::JCC_Jd(bxInstruction_c *i)
 
   if (condition) {
 BailBigRSP("JCC_Jd");
-    Bit32u new_EIP;
 
-    new_EIP = EIP + (Bit32s) i->Id();
+    Bit32u new_EIP = EIP + (Bit32s) i->Id();
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( new_EIP >
@@ -435,9 +426,7 @@ BX_CPU_C::JZ_Jd(bxInstruction_c *i)
 {
 BailBigRSP("JZ_Jd");
   if (get_ZF()) {
-    Bit32u new_EIP;
-
-    new_EIP = EIP + (Bit32s) i->Id();
+    Bit32u new_EIP = EIP + (Bit32s) i->Id();
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( new_EIP >
@@ -463,9 +452,7 @@ BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
 {
 BailBigRSP("JNZ_Jd");
   if (!get_ZF()) {
-    Bit32u new_EIP;
-
-    new_EIP = EIP + (Bit32s) i->Id();
+    Bit32u new_EIP = EIP + (Bit32s) i->Id();
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( new_EIP >
@@ -517,9 +504,6 @@ done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
-
-
-
 
   void
 BX_CPU_C::JMP_Ed(bxInstruction_c *i)

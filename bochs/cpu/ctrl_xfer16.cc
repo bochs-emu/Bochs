@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.21 2004-05-10 21:05:47 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.22 2004-10-19 20:05:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ BailBigRSP("CALL_Aw");
 #if BX_CPU_LEVEL >= 2
   if ( protected_mode() &&
        (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) ) {
-    BX_PANIC(("call_av: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
+    BX_PANIC(("call_aw: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 #endif
@@ -243,7 +243,7 @@ BailBigRSP("CALL_Ew");
   if (protected_mode()) {
     if (op1_16 >
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_PANIC(("call_ev: IP out of CS limits!"));
+      BX_PANIC(("call_ew: IP out of CS limits!"));
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -349,9 +349,7 @@ BailBigRSP("JCC_Jw");
     }
 
   if (condition) {
-    Bit32u new_EIP;
-
-    new_EIP = EIP + (Bit32s) i->Id();
+    Bit32u new_EIP = EIP + (Bit32s) i->Id();
     new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
@@ -378,9 +376,7 @@ BX_CPU_C::JZ_Jw(bxInstruction_c *i)
 {
 BailBigRSP("JZ_Jw");
   if (get_ZF()) {
-    Bit32u new_EIP;
-
-    new_EIP = EIP + (Bit32s) i->Id();
+    Bit32u new_EIP = EIP + (Bit32s) i->Id();
     new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
@@ -407,9 +403,7 @@ BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
 {
 BailBigRSP("JNZ_Jw");
   if (!get_ZF()) {
-    Bit32u new_EIP;
-
-    new_EIP = EIP + (Bit32s) i->Id();
+    Bit32u new_EIP = EIP + (Bit32s) i->Id();
     new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
@@ -525,7 +519,6 @@ BailBigRSP("IRET16");
     goto done;
     }
 #endif
-
 
   pop_16(&ip);
   pop_16(&cs_raw);
