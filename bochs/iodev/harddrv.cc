@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.62 2002-07-19 13:32:49 vruppert Exp $
+// $Id: harddrv.cc,v 1.63 2002-07-27 18:42:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.62 2002-07-19 13:32:49 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.63 2002-07-27 18:42:31 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1243,7 +1243,9 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
 			      case 0xbe: { // read cd
 				    if (BX_SELECTED_HD.cdrom.ready) {
-					  BX_PANIC(("Read CD with CD present not implemented"));
+					  BX_ERROR(("Read CD with CD present not implemented"));
+					  atapi_cmd_error(SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET);
+					  raise_interrupt();
 				    } else {
 					  atapi_cmd_error(SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT);
 					  raise_interrupt();
