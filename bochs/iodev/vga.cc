@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.39 2002-09-08 07:56:10 vruppert Exp $
+// $Id: vga.cc,v 1.40 2002-09-13 00:11:49 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1469,6 +1469,40 @@ bx_vga_c::update(void)
 
 
     switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
+      case 0: // 128K @ A0000
+      case 1: // 64K @ A0000
+	iWidth = 8*80;	// TODO: should use font size
+	iHeight = 16*25;
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	{
+	  bx_gui.dimension_update(iWidth, iHeight, 16);
+	  old_iWidth = iWidth;
+	  old_iHeight = iHeight;
+	}
+//BX_DEBUG(("update(): case 2"));
+        /* pass old text snapshot & new VGA memory contents */
+        start_address = 0x0;
+        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) |
+                          BX_VGA_THIS s.CRTC.reg[0x0f]);
+        if (cursor_address < start_address) {
+          cursor_x = 0xffff;
+          cursor_y = 0xffff;
+          }
+        else {
+          cursor_x = ((cursor_address - start_address)/2) % 80;
+          cursor_y = ((cursor_address - start_address)/2) / 80;
+          }
+        cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
+        bx_gui.text_update(BX_VGA_THIS s.text_snapshot,
+                          &BX_VGA_THIS s.vga_memory[start_address],
+                           cursor_x, cursor_y, cursor_state, 25);
+        // screen updated, copy new VGA memory contents into text snapshot
+        memcpy(BX_VGA_THIS s.text_snapshot,
+              &BX_VGA_THIS s.vga_memory[start_address],
+               2*80*25);
+        BX_VGA_THIS s.vga_mem_updated = 0;
+        break;
+
       case 2: // B0000 .. B7FFF
 	iWidth = 8*80;	// TODO: should use font size
 	iHeight = 16*25;
