@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.3 2002-12-13 17:52:16 bdenney Exp $
+# $Id: Makefile.in,v 1.4 2002-12-13 19:17:22 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -70,5 +70,5 @@ clean:
 	  rm -f $$S/*.html $$S/*.htm $$S/*.ps $$S/*.pdf $$S/*.out; \
 	done
 
-dist-clean:
+dist-clean: clean
 	@RMCOMMAND@ Makefile
