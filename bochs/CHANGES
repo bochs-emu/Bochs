@@ -173,6 +173,7 @@ Changes to next release:
  [1021740] Turn gdb stub into a runtime option by Charles Duffy
  [1063329] RFB key press/release bug fix by Remko van der Vossen
  [1079240] Wheel Mouse by Ben Lunt
+ [1087537] Fix for Win9X CD Boot
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
@@ -184,6 +185,9 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #963314 Redhat Fedora Installer Kernel Panic and Crash
+ #1086920 Bochs (cvs) doesn't compile on FreeBSD 5
+  #879050 Bochs reports enabled APIC without support
  #1071199 dBaseII cause prefetch: RIP > CS limit 
  #1070812 typecast error while compiling wx.cc
  #1068786 FSINCOS Cos value wrong at 90 degrees 
