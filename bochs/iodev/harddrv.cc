@@ -498,7 +498,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         value8 = BX_SELECTED_CONTROLLER.sector_count;
         goto return_value8;
         }
-      bx_panic("disk: IO read(0x1f2): current command not read/write\n");
+      bx_panic("disk: IO read(0x1f2): current command (0x%2x) not read/write\n", BX_SELECTED_CONTROLLER.current_command);
       break;
 
     case 0x1f3: // sector number
