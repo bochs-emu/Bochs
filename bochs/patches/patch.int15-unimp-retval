@@ -1,0 +1,39 @@
+Index: rombios.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bios/rombios.c,v
+retrieving revision 1.79
+diff -u -r1.79 rombios.c
+--- rombios.c	14 Nov 2002 20:04:37 -0000	1.79
++++ rombios.c	20 Nov 2002 15:40:13 -0000
+@@ -3825,11 +3825,14 @@
+                         CLEAR_CF();
+                         return;
+                         break;
+-                    default:
+-                        SET_CF();
++                    default:  /* AX=E820, DX=534D4150, BX unrecognized */
++                        goto int15_unimplemented;
+                         break;
+                 }
+-            }
++	    } else {
++	      // if DX != 0x534D4150)
++	      goto int15_unimplemented;
++	    }
+             break;
+ 
+         case 0x01: // coded by Hartmut Birr
+@@ -3847,9 +3850,13 @@
+           regs.u.r8.ah = 0xe8;
+           regs.u.r8.al = 0x01;
+           break;
++	default:  /* AH=0xE8?? but not implemented */
++	  goto int15_unimplemented;
+        }
+        break;
+ 
++    int15_unimplemented:
++       // fall into the default
+     default:
+       BX_INFO("*** int 15h function AX=%04x, BX=%04x not yet supported!\n",
+         (unsigned) regs.u.r16.ax, (unsigned) regs.u.r16.bx);
