@@ -77,6 +77,8 @@ bx_options_t bx_options = {
   NULL,  // default keyboard serial path delay (usec)
   NULL,  // default floppy command delay (usec)
   NULL,    // ips
+  NULL,    // max_ips
+  NULL,    // system clock sync
   NULL,    // default mouse_enabled
   NULL,       // default private_colormap
   NULL,          // default i440FXSupport
@@ -430,14 +432,25 @@ void bx_init_options ()
       "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
       1, BX_MAX_INT,
       500000);
+  bx_options.Omax_ips = new bx_param_num_c (BXP_MAX_IPS, 
+      "Maximum allowed IPS",
+      "Maximum allowed IPS, if nonzero, causes Bochs to slow down if it runs faster MAX_IPS for a short time period",
+      0, BX_MAX_INT,
+      0);
   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
       "Use a private colormap",
       "Request that the GUI create and use it's own non-shared colormap.  This colormap will be used when in the bochs window.  If not enabled, a shared colormap scheme may be used.  Not implemented on all GUI's.",
+      0);
+  bx_options.Osystem_clock_sync = new bx_param_bool_c (BXP_SYSTEM_CLOCK_SYNC,
+      "Sync with system clock",
+      "This option slows down bochs if it starts to run ahead of the system clock",
       0);
   bx_param_c *interface_init_list[] = {
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
     bx_options.Oips,
+    bx_options.Omax_ips,
+    bx_options.Osystem_clock_sync,
     bx_options.Oprivate_colormap,
     NULL
   };
@@ -1154,7 +1167,24 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_ERROR(("%s: WARNING: ips is AWFULLY low!", context));
       }
     }
-
+  else if (!strcmp(params[0], "max_ips")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: max_ips directive: wrong # args.", context));
+      }
+    bx_options.Omax_ips->set (atol(params[1]));
+    }
+  else if (!strcmp(params[0], "system_clock_sync")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: system_clock_sync directive malformed.", context));
+      }
+    if (strncmp(params[1], "enabled=", 8)) {
+      BX_PANIC(("%s: system_clock_sync directive malformed.", context));
+      }
+    if (params[1][8] == '0' || params[1][8] == '1')
+      bx_options.Osystem_clock_sync->set (params[1][8] - '0');
+    else
+      BX_PANIC(("%s: system_clock_sync directive malformed.", context));
+    }
   else if (!strcmp(params[0], "mouse")) {
     if (num_params != 2) {
       BX_PANIC(("%s: mouse directive malformed.", context));
@@ -1541,6 +1571,8 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "keyboard_serial_delay: %lu\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "floppy_command_delay: %lu\n", bx_options.Ofloppy_command_delay->get ());
   fprintf (fp, "ips: %lu\n", bx_options.Oips->get ());
+  fprintf (fp, "max_ips: %lu\n", bx_options.Omax_ips->get ());
+  fprintf (fp, "system_clock_sync: enabled=%d\n", bx_options.Osystem_clock_sync->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
   fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.Oi440FXSupport->get ());
