@@ -100,6 +100,9 @@ libwx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
 wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
 	$(CXX) $(CXXFLAGS) -shared -o wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
+sdl.dll: $(GUI_OBJS_SDL) 
+	$(CXX) $(CXXFLAGS) -shared -o sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) `sdl-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+
 # no need to build DLLs for beos.o
 # no need to build DLLs for x.o
 
