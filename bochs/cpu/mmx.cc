@@ -111,13 +111,6 @@ void BX_CPU_C::prepareFPU2MMX(void)
 
 #endif
 
-#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
-BX_CPP_INLINE Bit16u SelectMmxWord(BxPackedMmxRegister mmx, unsigned index)
-{
-  return (MMXUQ(mmx) >> ((index & 0x3) * 16)) & 0xffff;
-}
-#endif
-
 /* 0F 60 */
 void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 {
@@ -577,10 +570,10 @@ void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 
-  MMXUW0(result) = SelectMmxWord(op, order);
-  MMXUW1(result) = SelectMmxWord(op, order >> 2);
-  MMXUW2(result) = SelectMmxWord(op, order >> 4);
-  MMXUW3(result) = SelectMmxWord(op, order >> 6);
+  MMXUW0(result) = op.mmx16u((order)    & 0x3);
+  MMXUW1(result) = op.mmx16u((order>>2) & 0x3);
+  MMXUW2(result) = op.mmx16u((order>>4) & 0x3);
+  MMXUW3(result) = op.mmx16u((order>>6) & 0x3);
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
@@ -770,22 +763,7 @@ void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op2);
   }
 
-  Bit8u count = i->Ib() & 0x3;
-
-  switch(count) {
-    case 0:
-      MMXUW0(op1) = op2;
-      break;
-    case 1:
-      MMXUW1(op1) = op2;
-      break;
-    case 2:
-      MMXUW2(op1) = op2;
-      break;
-    case 3:
-      MMXUW3(op1) = op2;
-      break;
-  }
+  op1.xmm16u(i->Ib() & 0x3) = op2;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
@@ -802,8 +780,7 @@ void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
-  Bit8u count = i->Ib() & 0x3;
-  Bit32u result = (Bit32u) SelectMmxWord(op, count);
+  Bit32u result = (Bit32u) op.mmx16u(i->Ib() & 0x3);
 
   BX_WRITE_32BIT_REG(i->nnn(), result);
 #else

@@ -100,89 +100,74 @@ extern "C"
 
 #if BX_SUPPORT_MMX
 
-typedef union {
-  Bit8u u8;
-  Bit8s s8;
-} MMX_BYTE;
+typedef union bx_packed_mmx_reg_t {
+   Bit8s   _sbyte[8];
+   Bit16s  _s16[4];
+   Bit32s  _s32[2];
+   Bit64s  _s64;
+   Bit8u   _ubyte[8];
+   Bit16u  _u16[4];
+   Bit32u  _u32[2];
+   Bit64u  _u64;
+} BxPackedMmxRegister;
 
-typedef union {
-  Bit16u u16;
-  Bit16s s16;
-  struct {
 #ifdef BX_BIG_ENDIAN
-    MMX_BYTE hi;
-    MMX_BYTE lo;
+#define mmx64s(i)   _s64
+#define mmx32s(i)   _s32[1 - (i)]
+#define mmx16s(i)   _s16[3 - (i)]
+#define mmxsbyte(i) _sbyte[7 - (i)]
+#define mmxubyte(i) _ubyte[7 - (i)]
+#define mmx16u(i)   _u16[3 - (i)]
+#define mmx32u(i)   _u32[1 - (i)]
+#define mmx64u      _u64
 #else
-    MMX_BYTE lo;
-    MMX_BYTE hi;
+#define mmx64s(i)   _s64
+#define mmx32s(i)   _s32[(i)]
+#define mmx16s(i)   _s16[(i)]
+#define mmxsbyte(i) _sbyte[(i)]
+#define mmxubyte(i) _ubyte[(i)]
+#define mmx16u(i)   _u16[(i)]
+#define mmx32u(i)   _u32[(i)]
+#define mmx64u      _u64
 #endif
-  } bytes;
-} MMX_WORD;
 
-typedef union {
-  Bit32u u32;
-  Bit32s s32;
-  struct {
-#ifdef BX_BIG_ENDIAN
-    MMX_WORD hi;
-    MMX_WORD lo;
-#else
-    MMX_WORD lo;
-    MMX_WORD hi;
-#endif
-  } words;
-} MMX_DWORD;
+/* for compatability with already written code */
+#define MMXSB0(reg) (reg.mmxsbyte(0))
+#define MMXSB1(reg) (reg.mmxsbyte(1))
+#define MMXSB2(reg) (reg.mmxsbyte(2))
+#define MMXSB3(reg) (reg.mmxsbyte(3))
+#define MMXSB4(reg) (reg.mmxsbyte(4))
+#define MMXSB5(reg) (reg.mmxsbyte(5))
+#define MMXSB6(reg) (reg.mmxsbyte(6))
+#define MMXSB7(reg) (reg.mmxsbyte(7))
 
-typedef union {
-  Bit64u u64;
-  Bit64s s64;
-  struct {
-#ifdef BX_BIG_ENDIAN
-    MMX_DWORD hi;
-    MMX_DWORD lo;
-#else
-    MMX_DWORD lo;
-    MMX_DWORD hi;
-#endif
-  } dwords;
-} MMX_QWORD, BxPackedMmxRegister;
+#define MMXSW0(reg) (reg.mmx16s(0))
+#define MMXSW1(reg) (reg.mmx16s(1))
+#define MMXSW2(reg) (reg.mmx16s(2))
+#define MMXSW3(reg) (reg.mmx16s(3))
 
-#define MMXSB0(reg) (reg.dwords.lo.words.lo.bytes.lo.s8)
-#define MMXSB1(reg) (reg.dwords.lo.words.lo.bytes.hi.s8)
-#define MMXSB2(reg) (reg.dwords.lo.words.hi.bytes.lo.s8)
-#define MMXSB3(reg) (reg.dwords.lo.words.hi.bytes.hi.s8)
-#define MMXSB4(reg) (reg.dwords.hi.words.lo.bytes.lo.s8)
-#define MMXSB5(reg) (reg.dwords.hi.words.lo.bytes.hi.s8)
-#define MMXSB6(reg) (reg.dwords.hi.words.hi.bytes.lo.s8)
-#define MMXSB7(reg) (reg.dwords.hi.words.hi.bytes.hi.s8)
+#define MMXSD0(reg) (reg.mmx32s(0))
+#define MMXSD1(reg) (reg.mmx32s(1))
 
-#define MMXUB0(reg) (reg.dwords.lo.words.lo.bytes.lo.u8)
-#define MMXUB1(reg) (reg.dwords.lo.words.lo.bytes.hi.u8)
-#define MMXUB2(reg) (reg.dwords.lo.words.hi.bytes.lo.u8)
-#define MMXUB3(reg) (reg.dwords.lo.words.hi.bytes.hi.u8)
-#define MMXUB4(reg) (reg.dwords.hi.words.lo.bytes.lo.u8)
-#define MMXUB5(reg) (reg.dwords.hi.words.lo.bytes.hi.u8)
-#define MMXUB6(reg) (reg.dwords.hi.words.hi.bytes.lo.u8)
-#define MMXUB7(reg) (reg.dwords.hi.words.hi.bytes.hi.u8)
-
-#define MMXSW0(reg) (reg.dwords.lo.words.lo.s16)
-#define MMXSW1(reg) (reg.dwords.lo.words.hi.s16)
-#define MMXSW2(reg) (reg.dwords.hi.words.lo.s16)
-#define MMXSW3(reg) (reg.dwords.hi.words.hi.s16)
-
-#define MMXUW0(reg) (reg.dwords.lo.words.lo.u16)
-#define MMXUW1(reg) (reg.dwords.lo.words.hi.u16)
-#define MMXUW2(reg) (reg.dwords.hi.words.lo.u16)
-#define MMXUW3(reg) (reg.dwords.hi.words.hi.u16)
+#define MMXSQ(reg)  (reg.mmx64s)
+#define MMXUQ(reg)  (reg.mmx64u)
                                 
-#define MMXSD0(reg) (reg.dwords.lo.s32)
-#define MMXSD1(reg) (reg.dwords.hi.s32)
+#define MMXUD0(reg) (reg.mmx32u(0))
+#define MMXUD1(reg) (reg.mmx32u(1))
 
-#define MMXUD0(reg) (reg.dwords.lo.u32)
-#define MMXUD1(reg) (reg.dwords.hi.u32)
+#define MMXUW0(reg) (reg.mmx16u(0))
+#define MMXUW1(reg) (reg.mmx16u(1))
+#define MMXUW2(reg) (reg.mmx16u(2))
+#define MMXUW3(reg) (reg.mmx16u(3))
 
-#define MMXSQ(reg)  (reg.s64)
-#define MMXUQ(reg)  (reg.u64)
+#define MMXUB0(reg) (reg.mmxubyte(0))
+#define MMXUB1(reg) (reg.mmxubyte(1))
+#define MMXUB2(reg) (reg.mmxubyte(2))
+#define MMXUB3(reg) (reg.mmxubyte(3))
+#define MMXUB4(reg) (reg.mmxubyte(4))
+#define MMXUB5(reg) (reg.mmxubyte(5))
+#define MMXUB6(reg) (reg.mmxubyte(6))
+#define MMXUB7(reg) (reg.mmxubyte(7))
 
 // Endian  Host byte order         Guest (x86) byte order
 // ======================================================
