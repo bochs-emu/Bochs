@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.17 2001-12-31 08:38:08 vruppert Exp $
+// $Id: pic.cc,v 1.18 2002-01-15 20:42:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -644,7 +644,7 @@ bx_pic_c::service_slave_pic(void)
     return;
     }
 
-  if (BX_PIC_THIS s.master_pic.special_mask) {
+  if (BX_PIC_THIS s.slave_pic.special_mask) {
     /* all priorities may be enabled.  check all IRR bits except ones
      * which have corresponding ISR bits set
      */
