@@ -70,10 +70,10 @@ extern "C" {
 // VCPP includes also are missing these
 #  define off_t long
 #  define ssize_t int
-#endif
 
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
+#endif
 
 #endif
 
