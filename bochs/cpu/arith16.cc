@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.22 2002-09-30 02:02:06 kevinlawton Exp $
+// $Id: arith16.cc,v 1.23 2002-10-03 18:12:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -370,16 +370,50 @@ BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "subw %3, %1\n\t"
+      "pushfl     \n\t"
+      "popl %0"
+      : "=g" (flags32), "=r" (diff_16)
+      : "1" (op1_16), "g" (op2_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+        (flags32 & EFlagsOSZAPCMask);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     diff_16 = op1_16 - op2_16;
+#endif
     BX_WRITE_16BIT_REG(i->rm(), diff_16);
     }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "subw %3, %1\n\t"
+      "pushfl     \n\t"
+      "popl %0"
+      : "=g" (flags32), "=r" (diff_16)
+      : "1" (op1_16), "g" (op2_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+        (flags32 & EFlagsOSZAPCMask);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     diff_16 = op1_16 - op2_16;
+#endif
     Write_RMW_virtual_word(diff_16);
     }
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+#endif
 }
 
 
@@ -397,11 +431,28 @@ BX_CPU_C::SUB_GwEw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
     }
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  Bit32u flags32;
+  asm (
+    "subw %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (diff_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   diff_16 = op1_16 - op2_16;
+#endif
 
   BX_WRITE_16BIT_REG(i->nnn(), diff_16);
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+#endif
 }
 
   void
@@ -412,11 +463,28 @@ BX_CPU_C::SUB_AXIw(bxInstruction_c *i)
   op1_16 = AX;
   op2_16 = i->Iw();
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  Bit32u flags32;
+  asm (
+    "subw %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (diff_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   diff_16 = op1_16 - op2_16;
+#endif
 
   AX = diff_16;
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+#endif
 }
 
 
@@ -687,16 +755,50 @@ BX_CPU_C::SUB_EwIw(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "subw %3, %1\n\t"
+      "pushfl     \n\t"
+      "popl %0"
+      : "=g" (flags32), "=r" (diff_16)
+      : "1" (op1_16), "g" (op2_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+        (flags32 & EFlagsOSZAPCMask);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     diff_16 = op1_16 - op2_16;
+#endif
     BX_WRITE_16BIT_REG(i->rm(), diff_16);
     }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "subw %3, %1\n\t"
+      "pushfl     \n\t"
+      "popl %0"
+      : "=g" (flags32), "=r" (diff_16)
+      : "1" (op1_16), "g" (op2_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+        (flags32 & EFlagsOSZAPCMask);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     diff_16 = op1_16 - op2_16;
+#endif
     Write_RMW_virtual_word(diff_16);
     }
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+#endif
 }
 
   void
@@ -784,16 +886,50 @@ BX_CPU_C::DEC_Ew(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "decw %1 \n\t"
+      "pushfl  \n\t"
+      "popl   %0"
+      : "=g" (flags32), "=r" (op1_16)
+      : "1" (op1_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) |
+        (flags32 & EFlagsOSZAPMask);
+    BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
+#else
     op1_16--;
+#endif
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
     }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "decw %1 \n\t"
+      "pushfl  \n\t"
+      "popl   %0"
+      : "=g" (flags32), "=r" (op1_16)
+      : "1" (op1_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) |
+        (flags32 & EFlagsOSZAPMask);
+    BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
+#else
     op1_16--;
+#endif
     Write_RMW_virtual_word(op1_16);
     }
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAP_16(0, 0, op1_16, BX_INSTR_DEC16);
+#endif
 }
 
 

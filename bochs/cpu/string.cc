@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.17 2002-09-30 16:43:59 kevinlawton Exp $
+// $Id: string.cc,v 1.18 2002-10-03 18:12:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -993,9 +993,25 @@ BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
     read_virtual_byte(BX_SEG_REG_ES, di, &op2_8);
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "subb %3, %1\n\t"
+      "pushfl     \n\t"
+      "popl %0"
+      : "=g" (flags32), "=r" (diff_8)
+      : "1" (op1_8), "g" (op2_8)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+        (flags32 & EFlagsOSZAPCMask);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     diff_8 = op1_8 - op2_8;
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMPS8);
+#endif
 
     if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
@@ -1168,9 +1184,25 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
 
       read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+      Bit32u flags32;
+      asm (
+        "subw %3, %1\n\t"
+        "pushfl     \n\t"
+        "popl %0"
+        : "=g" (flags32), "=r" (diff_16)
+        : "1" (op1_16), "g" (op2_16)
+        : "cc"
+        );
+      BX_CPU_THIS_PTR eflags.val32 =
+          (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+          (flags32 & EFlagsOSZAPCMask);
+      BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
       diff_16 = op1_16 - op2_16;
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMPS16);
+#endif
 
       if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
@@ -1230,9 +1262,25 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
 
       read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+      Bit32u flags32;
+      asm (
+        "subw %3, %1\n\t"
+        "pushfl     \n\t"
+        "popl %0"
+        : "=g" (flags32), "=r" (diff_16)
+        : "1" (op1_16), "g" (op2_16)
+        : "cc"
+        );
+      BX_CPU_THIS_PTR eflags.val32 =
+          (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+          (flags32 & EFlagsOSZAPCMask);
+      BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
       diff_16 = op1_16 - op2_16;
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMPS16);
+#endif
 
       if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
@@ -1272,8 +1320,7 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
     diff_8 = op1_8 - op2_8;
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
-
-
+ 
     if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
       rdi--;
@@ -1297,10 +1344,25 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     read_virtual_byte(BX_SEG_REG_ES, edi, &op2_8);
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "subb %3, %1\n\t"
+      "pushfl     \n\t"
+      "popl %0"
+      : "=g" (flags32), "=r" (diff_8)
+      : "1" (op1_8), "g" (op2_8)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+        (flags32 & EFlagsOSZAPCMask);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     diff_8 = op1_8 - op2_8;
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
-
+#endif
 
     if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
@@ -1327,9 +1389,25 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     read_virtual_byte(BX_SEG_REG_ES, di, &op2_8);
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+    Bit32u flags32;
+    asm (
+      "subb %3, %1\n\t"
+      "pushfl     \n\t"
+      "popl %0"
+      : "=g" (flags32), "=r" (diff_8)
+      : "1" (op1_8), "g" (op2_8)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+        (flags32 & EFlagsOSZAPCMask);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     diff_8 = op1_8 - op2_8;
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
+#endif
 
     if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
@@ -1469,9 +1547,25 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
       op1_16 = AX;
       read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+      Bit32u flags32;
+      asm (
+        "subw %3, %1\n\t"
+        "pushfl     \n\t"
+        "popl %0"
+        : "=g" (flags32), "=r" (diff_16)
+        : "1" (op1_16), "g" (op2_16)
+        : "cc"
+        );
+      BX_CPU_THIS_PTR eflags.val32 =
+          (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+          (flags32 & EFlagsOSZAPCMask);
+      BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
       diff_16 = op1_16 - op2_16;
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SCAS16);
+#endif
 
       if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
@@ -1522,9 +1616,25 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
       op1_16 = AX;
       read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+      Bit32u flags32;
+      asm (
+        "subw %3, %1\n\t"
+        "pushfl     \n\t"
+        "popl %0"
+        : "=g" (flags32), "=r" (diff_16)
+        : "1" (op1_16), "g" (op2_16)
+        : "cc"
+        );
+      BX_CPU_THIS_PTR eflags.val32 =
+          (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+          (flags32 & EFlagsOSZAPCMask);
+      BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
       diff_16 = op1_16 - op2_16;
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SCAS16);
+#endif
 
       if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */

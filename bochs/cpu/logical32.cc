@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.14 2002-09-30 03:37:42 kevinlawton Exp $
+// $Id: logical32.cc,v 1.15 2002-10-03 18:12:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -196,11 +196,29 @@ BX_CPU_C::OR_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
     }
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  Bit32u flags32;
+  asm (
+    "orl %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result_32)
+    : "1" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+      (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   result_32 = op1_32 | op2_32;
+#endif
 
   BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
+#endif
 }
 
 

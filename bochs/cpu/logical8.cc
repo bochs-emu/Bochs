@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.15 2002-09-30 03:37:42 kevinlawton Exp $
+// $Id: logical8.cc,v 1.16 2002-10-03 18:12:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -193,11 +193,29 @@ BX_CPU_C::OR_GbEb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  Bit32u flags32;
+  asm (
+    "orb %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result)
+    : "1" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+      (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   result = op1 | op2;
+#endif
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
+#endif
 }
 
 
@@ -209,11 +227,29 @@ BX_CPU_C::OR_ALIb(bxInstruction_c *i)
   op1 = AL;
   op2 = i->Ib();
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  Bit32u flags32;
+  asm (
+    "orb %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum)
+    : "1" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+      (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   sum = op1 | op2;
+#endif
 
   AL = sum;
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_OR8);
+#endif
 }
 
 
