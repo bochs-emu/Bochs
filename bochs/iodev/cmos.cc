@@ -46,13 +46,13 @@ bx_cmos_c::bx_cmos_c(void)
 {
 	setprefix("[CMOS]");
 	settype(CMOSLOG);
-	BX_INFO(("Init.\n"));
+	BX_DEBUG(("Init.\n"));
 }
 
 bx_cmos_c::~bx_cmos_c(void)
 {
   // nothing for now
-	BX_INFO(("Exit.\n"));
+  BX_DEBUG(("Exit.\n"));
 }
 
 

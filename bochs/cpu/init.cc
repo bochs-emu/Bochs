@@ -167,14 +167,14 @@ BX_CPU_C::BX_CPU_C(void)
 #endif
 
   BX_INSTR_INIT();
-  BX_INFO(( "Init.\n"));
+  BX_DEBUG(( "Init.\n"));
 }
 
 
 BX_CPU_C::~BX_CPU_C(void)
 {
   BX_INSTR_SHUTDOWN();
-  BX_INFO(( "Exit.\n"));
+  BX_DEBUG(( "Exit.\n"));
 }
 
 
