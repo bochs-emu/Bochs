@@ -68,7 +68,6 @@ OBJS32 = \
 	flag_ctrl.o \
 	io.o \
 	proc_ctrl.o \
-	segment_ctrl.o \
 	string.o \
 	$(EXT_DEBUG_OBJS) \
 
@@ -104,6 +103,7 @@ OBJSXX = \
 	logical8.o \
 	logical32.o \
 	arith16.o \
+	segment_ctrl.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been

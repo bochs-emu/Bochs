@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: segment_ctrl.cc,v 1.7 2002-09-14 03:31:50 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,7 +60,7 @@ BX_CPU_C::LES_GvMp(BxInstruction_t *i)
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
-    BX_WRITE_32BIT_REG(i->nnn, reg_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, reg_32);
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */
@@ -94,7 +94,7 @@ BX_CPU_C::LDS_GvMp(BxInstruction_t *i)
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
-    BX_WRITE_32BIT_REG(i->nnn, reg_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, reg_32);
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */
@@ -131,7 +131,7 @@ BX_CPU_C::LFS_GvMp(BxInstruction_t *i)
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
-    BX_WRITE_32BIT_REG(i->nnn, reg_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, reg_32);
     }
   else { /* 16 bit operand size */
     Bit16u reg_16;
@@ -168,7 +168,7 @@ BX_CPU_C::LGS_GvMp(BxInstruction_t *i)
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
-    BX_WRITE_32BIT_REG(i->nnn, reg_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, reg_32);
     }
   else { /* 16 bit operand size */
     Bit16u reg_16;
@@ -205,7 +205,7 @@ BX_CPU_C::LSS_GvMp(BxInstruction_t *i)
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss_raw);
 
-    BX_WRITE_32BIT_REG(i->nnn, reg_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, reg_32);
     }
   else { /* 16 bit operand size */
     Bit16u reg_16;
