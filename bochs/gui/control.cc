@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.16 2001-06-13 13:31:53 bdenney Exp $
+ * $Id: control.cc,v 1.17 2001-06-13 15:52:04 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -252,7 +252,7 @@ static char *startup_options_prompt =
 "1. Log file: %s\n"
 "2. Log options for all devices\n"
 "3. Log options for individual devices\n"
-"4. Boot options\n"
+"4. Memory options\n"
 "5. Interface options\n"
 "6. Disk options\n"
 "7. Sound options\n"
