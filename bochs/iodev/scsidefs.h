@@ -1,3 +1,10 @@
+//
+// iodev/scsidefs.h
+// $Id: scsidefs.h,v 1.2 2001-06-25 14:02:29 bdenney Exp $
+//
+// This file was copied from ... ?
+//
+
 //***************************************************************************
 //
 // Name:            SCSIDEFS.H
