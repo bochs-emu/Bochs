@@ -12,27 +12,27 @@ EOF
 
 echo "*** Cleaning up from any previous tests"
 make dist-clean >$OUT 2>&1
-# erase that
+# erase that dist-clean stuff
 rm -f $OUT
 echo "*** Starting configure, results to $OUT" 
-echo "do_tests output file" >> $OUT
-echo date: `date` >> $OUT
-echo host: `hostname` >> $OUT
-echo "" >> $OUT
-echo "*** Starting configure" >> $OUT
-./configure >> $OUT 2>&1
+echo "*** do_tests output file"                        >> $OUT 2>&1
+echo "*** date: `date`                                 >> $OUT 2>&1
+echo "*** host: `hostname`                             >> $OUT 2>&1
+echo "*** uname -a: `uname -a`                         >> $OUT 2>&1
+echo "*** Starting configure"                          >> $OUT 2>&1
+./configure                                            >> $OUT 2>&1
 echo "*** Copying config.log and config.status into the output file"
-echo "*** This is config.log" >> $OUT
-cat config.log >> $OUT
-echo "*** This is config.status" >> $OUT
-cat config.status >> $OUT
+echo "*** This is config.log"                          >> $OUT 2>&1
+cat config.log                                         >> $OUT 2>&1
+echo "*** This is config.status"                       >> $OUT 2>&1
+cat config.status                                      >> $OUT 2>&1
 echo "*** Starting make, results to $OUT" 
-echo "*** Starting make" >> $OUT
-make >> $OUT 2>&1
+echo "*** Starting make"                               >> $OUT 2>&1
+make                                                   >> $OUT 2>&1
 echo "*** Starting make test, results to $OUT" 
-echo "*** Starting make test" >> $OUT
-make test >> $OUT 2>&1
-
+echo "*** Starting make test"                          >> $OUT 2>&1
+make test                                              >> $OUT 2>&1
+echo "*** do_tests is done at `date`"
 cat<<EOF
 
 The tests are complete!  Run "make test" or look at the end of $OUT
