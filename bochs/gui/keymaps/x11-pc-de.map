@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-de.map,v 1.5 2002-09-25 08:00:23 bdenney Exp $
+# $Id: x11-pc-de.map,v 1.6 2002-10-09 18:08:42 vruppert Exp $
 # Target: PC(x86) keyboard, DE keymap
 # Author: Volker Ruppert
 #
@@ -41,7 +41,7 @@ BX_KEY_1                                      '1'        XK_1
 BX_KEY_1+BX_KEY_SHIFT_L                       '!'        XK_exclam
 BX_KEY_1+BX_KEY_ALT_R                         '¹'        XK_onesuperior
 BX_KEY_2                                      '2'        XK_2
-BX_KEY_2+BX_KEY_SHIFT_L                       '='        XK_quotedbl
+BX_KEY_2+BX_KEY_SHIFT_L                       '"'        XK_quotedbl
 BX_KEY_2+BX_KEY_ALT_R                         '²'        XK_twosuperior
 BX_KEY_3                                      '3'        XK_3
 BX_KEY_3+BX_KEY_SHIFT_L                       '§'        XK_section
@@ -234,8 +234,8 @@ BX_KEY_SEMICOLON+BX_KEY_SHIFT_L               'Ö'        XK_Odiaeresis
 BX_KEY_SEMICOLON                              'ö'        XK_odiaeresis
 BX_KEY_SHIFT_L                                none       XK_Shift_L
 BX_KEY_SHIFT_R                                none       XK_Shift_R
-BX_KEY_SINGLE_QUOTE                           'Ä'        XK_Adiaeresis
-BX_KEY_SINGLE_QUOTE+BX_KEY_SHIFT_L            'ä'        XK_adiaeresis
+BX_KEY_SINGLE_QUOTE+BX_KEY_SHIFT_L            'Ä'        XK_Adiaeresis
+BX_KEY_SINGLE_QUOTE                           'ä'        XK_adiaeresis
 BX_KEY_SLASH                                  none       XK_dead_belowdot
 BX_KEY_SLASH                                  '-'        XK_minus
 BX_KEY_SLASH+BX_KEY_SHIFT_L                   '_'        XK_underscore
