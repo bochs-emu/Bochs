@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.10 2002-08-28 03:20:23 bdenney Exp $
+// $Id: wxmain.cc,v 1.11 2002-08-28 07:54:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -71,45 +71,6 @@
 // to access the MyFrame and the MyPanel.
 MyFrame *theFrame = NULL;
 MyPanel *thePanel = NULL;
-
-enum
-{
-  ID_Quit = 1,
-  ID_Config_New,
-  ID_Config_Read,
-  ID_Config_Save,
-  ID_Edit_Disks,
-  ID_Edit_Boot,
-  ID_Edit_Vga,
-  ID_Edit_Memory,
-  ID_Edit_Sound,
-  ID_Edit_Network,
-  ID_Edit_Keyboard,
-  ID_Edit_Other,
-  ID_Simulate_Start,
-  ID_Simulate_PauseResume,
-  ID_Simulate_Stop,
-  ID_Simulate_Speed,
-  ID_Debug_ShowCpu,
-  ID_Debug_ShowMemory,
-  ID_Log_View,
-  ID_Log_Prefs,
-  ID_Log_PrefsDevice,
-  ID_Help_About,
-  ID_Sim2Cui_Event,
-  // ids for Bochs toolbar
-  ID_Toolbar_FloppyA,
-  ID_Toolbar_FloppyB,
-  ID_Toolbar_CdromD,
-  ID_Toolbar_Reset,
-  ID_Toolbar_Power,
-  ID_Toolbar_Copy,
-  ID_Toolbar_Paste,
-  ID_Toolbar_Snapshot,
-  ID_Toolbar_Config,
-  ID_Toolbar_Mouse_en,
-  ID_Toolbar_User
-};
 
 //////////////////////////////////////////////////////////////////////
 // class declarations
@@ -592,6 +553,43 @@ MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
   wxASSERT_MSG (0, "switch stmt should have returned");
 }
 
+bool
+MyFrame::editFloppyValidate (FloppyConfigDialog *dialog)
+{
+  return true;
+}
+
+void MyFrame::editFloppyConfig (int drive)
+{
+  FloppyConfigDialog dlg (this, -1);
+  dlg.SetDriveName (drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME);
+  dlg.SetCapacityChoices (n_floppy_type_names, floppy_type_names);
+  bx_list_c *list = (bx_list_c*) SIM->get_param ((drive==0)? BXP_FLOPPYA : BXP_FLOPPYB);
+  if (!list) { wxLogError ("floppy object param is null"); return; }
+  bx_param_filename_c *fname = (bx_param_filename_c*) list->get(0);
+  bx_param_enum_c *disktype = (bx_param_enum_c *) list->get(1);
+  bx_param_enum_c *status = (bx_param_enum_c *) list->get(2);
+  if (fname->get_type () != BXT_PARAM_STRING
+      || disktype->get_type () != BXT_PARAM_ENUM 
+      || status->get_type() != BXT_PARAM_ENUM) {
+    wxLogError ("floppy params have wrong type");
+  }
+  dlg.AddRadio ("None/Disabled", "none");
+  dlg.AddRadio ("Physical floppy drive /dev/fd0", "/dev/fd0");
+  dlg.AddRadio ("Physical floppy drive /dev/fd1", "/dev/fd1");
+  dlg.SetCapacity (disktype->get () - disktype->get_min ());
+  dlg.SetFilename (fname->getptr ());
+  dlg.SetValidateFunc (editFloppyValidate);
+  int n = dlg.ShowModal ();
+  printf ("floppy config returned %d\n", n);
+  if (n==0) {
+    printf ("filename is '%s'\n", dlg.GetFilename ());
+    printf ("capacity = %d (%s)\n", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
+    fname->set (dlg.GetFilename ());
+    disktype->set (disktype->get_min () + dlg.GetCapacity ());
+  }
+}
+
 void MyFrame::OnToolbarClick(wxCommandEvent& event)
 {
   wxLogDebug ("clicked toolbar thingy");
@@ -600,8 +598,14 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
   switch (id) {
     case ID_Toolbar_Power:which = BX_TOOLBAR_POWER; break;
     case ID_Toolbar_Reset: which = BX_TOOLBAR_RESET; break;
-    case ID_Toolbar_FloppyA: which = BX_TOOLBAR_FLOPPYA; break;
-    case ID_Toolbar_FloppyB: which = BX_TOOLBAR_FLOPPYB; break;
+    case ID_Toolbar_FloppyA: 
+      // floppy config dialog box
+      editFloppyConfig (0);
+      break;
+    case ID_Toolbar_FloppyB: 
+      // floppy config dialog box
+      editFloppyConfig (1);
+      break;
     case ID_Toolbar_CdromD: which = BX_TOOLBAR_CDROMD; break;
     case ID_Toolbar_Copy: which = BX_TOOLBAR_COPY; break;
     case ID_Toolbar_Paste: which = BX_TOOLBAR_PASTE; break;

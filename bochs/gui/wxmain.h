@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.5 2002-08-27 18:11:13 bdenney Exp $
+// $Id: wxmain.h,v 1.6 2002-08-28 07:54:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -9,6 +9,7 @@
 class MyFrame;
 class MyPanel;
 class SimThread;
+class FloppyConfigDialog;
 
 //hack alert; yuck; FIXME
 extern MyFrame *theFrame;
@@ -17,6 +18,59 @@ extern MyPanel *thePanel;
 #define MAX_EVENTS 256
 extern unsigned long num_events;
 extern BxEvent event_queue[MAX_EVENTS];
+
+enum
+{
+  ID_Quit = 1,
+  ID_Config_New,
+  ID_Config_Read,
+  ID_Config_Save,
+  ID_Edit_Disks,
+  ID_Edit_Boot,
+  ID_Edit_Vga,
+  ID_Edit_Memory,
+  ID_Edit_Sound,
+  ID_Edit_Network,
+  ID_Edit_Keyboard,
+  ID_Edit_Other,
+  ID_Simulate_Start,
+  ID_Simulate_PauseResume,
+  ID_Simulate_Stop,
+  ID_Simulate_Speed,
+  ID_Debug_ShowCpu,
+  ID_Debug_ShowMemory,
+  ID_Log_View,
+  ID_Log_Prefs,
+  ID_Log_PrefsDevice,
+  ID_Help_About,
+  ID_Sim2Cui_Event,
+  // ids for Bochs toolbar
+  ID_Toolbar_FloppyA,
+  ID_Toolbar_FloppyB,
+  ID_Toolbar_CdromD,
+  ID_Toolbar_Reset,
+  ID_Toolbar_Power,
+  ID_Toolbar_Copy,
+  ID_Toolbar_Paste,
+  ID_Toolbar_Snapshot,
+  ID_Toolbar_Config,
+  ID_Toolbar_Mouse_en,
+  ID_Toolbar_User,
+  // dialog box: LogMsgAskDialog
+  ID_Continue,
+  ID_Die,
+  ID_DumpCore,
+  ID_Debugger,
+  ID_Help,
+  // dialog box: FloppyConfigDialog
+  ID_None,
+  ID_Physical_A,
+  ID_Physical_B,
+  ID_Filename,
+  ID_FilenameText,
+  ID_Browse,
+};
+
 
 // to compile in debug messages, change these defines to x.  To remove them,
 // change the defines to return nothing.
@@ -63,6 +117,8 @@ public:
   void OnPauseResumeSim(wxCommandEvent& event);
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CuiEvent(wxCommandEvent& event);
+  static bool editFloppyValidate (FloppyConfigDialog *dialog);
+  void editFloppyConfig (int drive);
   void OnToolbarClick(wxCommandEvent& event);
   int HandleAskParam (BxEvent *event);
   int HandleAskParamString (bx_param_string_c *param);

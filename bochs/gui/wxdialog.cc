@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.1 2002-08-28 03:20:23 bdenney Exp $
+// $Id: wxdialog.cc,v 1.2 2002-08-28 07:54:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -31,14 +31,8 @@ enum {
   ID_ShowDialog_1 = 1,
   ID_ShowDialog_2,
   ID_ShowDialog_3,
-  ID_Quit,
   ID_Button1,
   ID_Button2,
-  ID_Continue,
-  ID_Die,
-  ID_DumpCore,
-  ID_Debugger,
-  ID_Help,
   ID_MY_LAST_ID
 };
 
@@ -47,6 +41,18 @@ void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext);
 //////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog implementation
 //////////////////////////////////////////////////////////////////////
+// Structure:
+//   vertSizer: 
+//    context text field, 
+//    message text field
+//    don't-ask checkbox
+//    buttonSizer:
+//	continue button
+//	die button
+//	dumpcore button
+//	debugger button
+//	help button
+//
 
 // all events go to OnEvent method
 BEGIN_EVENT_TABLE(LogMsgAskDialog, wxDialog)
@@ -54,7 +60,7 @@ BEGIN_EVENT_TABLE(LogMsgAskDialog, wxDialog)
   EVT_BUTTON(ID_Die, LogMsgAskDialog::OnEvent)
   EVT_BUTTON(ID_DumpCore, LogMsgAskDialog::OnEvent)
   EVT_BUTTON(ID_Debugger, LogMsgAskDialog::OnEvent)
-  EVT_BUTTON(ID_Help, LogMsgAskDialog::OnEvent)
+  EVT_BUTTON(wxHELP, LogMsgAskDialog::OnEvent)
 END_EVENT_TABLE()
 
 
@@ -130,7 +136,7 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
     case ID_Die:        ret = DIE;   break;
     case ID_DumpCore:   ret = DUMP;  break;
     case ID_Debugger:   ret = DEBUG; break;
-    case ID_Help: showHelp (); return;
+    case wxHELP: ShowHelp (); return;
     default:
       return;  // without EndModal
   }
@@ -138,7 +144,211 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
   EndModal (ret);
 }
 
-void LogMsgAskDialog::showHelp ()
+void LogMsgAskDialog::ShowHelp ()
+{
+  wxMessageBox("No help is available yet.", "No Help", wxOK | wxICON_ERROR );
+}
+
+//////////////////////////////////////////////////////////////////////
+// FloppyConfigDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   vertSizer: 
+//     instructions
+//     radioSizer (vert):
+//       phys0
+//       phys1
+//       diskImageSizer (horiz):
+//         disk image file
+//         filename
+//         browse button
+//     capacitySizer (horizontal):
+//       capacity text
+//       capacity choice box
+//     hint text
+//     buttonSizer:
+//       cancel button
+//       ok button
+//       help button
+//
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(FloppyConfigDialog, wxDialog)
+  EVT_BUTTON(-1, FloppyConfigDialog::OnEvent)
+  EVT_TEXT(-1, FloppyConfigDialog::OnEvent)
+END_EVENT_TABLE()
+
+
+FloppyConfigDialog::FloppyConfigDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  validate = NULL;
+  n_rbtns = 0;
+  wxButton *btn;
+  vertSizer = new wxBoxSizer (wxVERTICAL);
+  instr = new wxStaticText (this, -1, FLOPPY_CONFIG_INSTRS);
+  radioSizer = new wxBoxSizer (wxVERTICAL);
+  diskImageSizer = new wxBoxSizer (wxHORIZONTAL);
+  capacitySizer = new wxBoxSizer (wxHORIZONTAL);
+  wxStaticText *hint = new wxStaticText (this, -1, FLOPPY_CONFIG_HINT);
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  // add top level components to vertSizer
+  vertSizer->Add (instr, 0, wxTOP|wxLEFT, 30);
+  vertSizer->Add (radioSizer, 0, wxLEFT, 50);
+  vertSizer->Add (capacitySizer, 0, wxTOP|wxLEFT, 30);
+  vertSizer->Add (hint, 0, wxTOP|wxLEFT, 30);
+  vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT|wxTOP, 30);
+  // contents of capacitySizer
+  wxStaticText *captext = new wxStaticText (this, -1, FLOPPY_CONFIG_CAP);
+  capacity = new wxChoice (this, -1);
+  capacitySizer->Add (captext, 0, wxALL, 5);
+  capacitySizer->Add (capacity, 0, wxALL, 5);
+  // contents of buttonSizer
+  btn = new wxButton (this, wxHELP, "Help");
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxCANCEL, "Cancel");
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, "Ok");
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // create filename and diskImageRadioBtn so that we can tweak them before
+  // Init comes.  However don't add it to any sizer yet because it needs to go
+  // in after the last radio button.
+  filename = new wxTextCtrl (this, ID_FilenameText);
+  filename->SetSize (300, filename->GetSize ().GetHeight ());
+  diskImageRadioBtn = new wxRadioButton (this, ID_Filename, FLOPPY_CONFIG_DISKIMG);
+
+  // the radioSizer contents will be added by successive calls to
+  // AddRadio().  The diskImageSizer will be added last, in Init().
+}
+
+void FloppyConfigDialog::AddRadio (char *description, char *filename)
+{
+  if (n_rbtns >= MAX_RBTNS) {
+    wxLogError ("AddRadio failed: increase MAX_RBTNS in wxdialog.h");
+    return;
+  }
+  rbtn[n_rbtns] = new wxRadioButton (this, -1, description);
+  equivalentFilename[n_rbtns] = filename;
+  radioSizer->Add (rbtn[n_rbtns]);
+  n_rbtns++;
+}
+
+void FloppyConfigDialog::SetDriveName (char *name)
+{
+  wxString text;
+  text.Printf ("Configure Floppy %s", name);
+  SetTitle (text);
+  text.Printf (FLOPPY_CONFIG_INSTRS, name);
+  ChangeStaticText (vertSizer, instr, text);
+}
+
+void FloppyConfigDialog::SetCapacityChoices (int n, char *choices[])
+{
+  for (int i=0; i<n; i++)
+    capacity->Append (wxString (choices[i]));
+}
+
+void FloppyConfigDialog::Init()
+{
+  // add contents of diskImageSizer
+  diskImageSizer->Add (diskImageRadioBtn);
+  diskImageSizer->Add (filename, 1, wxGROW);
+  wxButton *btn = new wxButton (this, ID_Browse, "<--Browse");
+  diskImageSizer->Add (btn, 0, wxALL, 5);
+  radioSizer->Add (diskImageSizer);
+
+  SetAutoLayout(TRUE);
+  SetSizer(vertSizer);
+  vertSizer->Fit (this);
+  wxSize size = vertSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+int
+FloppyConfigDialog::GetRadio () {
+  int i;
+  for (i=0; i<n_rbtns; i++) {
+    if (rbtn[i]->GetValue ()) 
+      return i;
+  }
+  if (diskImageRadioBtn->GetValue ()) {
+    return i;
+  }
+  wxLogError ("GetRadio() found nothing selected");
+  return 0;
+}
+
+void
+FloppyConfigDialog::SetRadio (int n) {
+  if (n < n_rbtns) {
+    rbtn[n]->SetValue (TRUE);
+  } else {
+    diskImageRadioBtn->SetValue (TRUE);
+  }
+}
+
+void FloppyConfigDialog::SetFilename (char *f) {
+  // search equivalentFilename[] for matches. if it matches, select the
+  // radio button instead.
+  for (int i=0; i<n_rbtns; i++) {
+    if (!strcmp (f, equivalentFilename[i])) {
+      rbtn[i]->SetValue (TRUE);
+      return;  // leaving filename text field unchanged
+    }
+  }
+  filename->SetValue (f); 
+}
+
+const char *FloppyConfigDialog::GetFilename ()
+{
+  int n = GetRadio ();
+  if (n < n_rbtns) {
+    return equivalentFilename[n];
+  } else {
+    return filename->GetValue ().c_str ();
+  }
+}
+
+void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("you pressed button id=%d\n", id);
+  switch (id) {
+    case ID_FilenameText:
+      // when you type into the filename field, ensure that the radio
+      // button associated with that field is chosen.
+      diskImageRadioBtn->SetValue (TRUE);
+      break;
+    case wxOK:
+      // probably should validate before allowing ok
+      if (validate!=NULL && !(*validate)(this))
+	return;  // validation failed, don't leave yet
+      EndModal (0);
+      break;
+    case ID_Browse:
+      {
+      long style = wxOPEN;
+      wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
+      if (fdialog->ShowModal () == wxID_OK)
+	SetFilename (fdialog->GetPath().c_str ());
+      }
+      break;
+    case wxCANCEL:
+      EndModal (-1);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+  }
+}
+
+void FloppyConfigDialog::ShowHelp ()
 {
   wxMessageBox("No help is available yet.", "No Help", wxOK | wxICON_ERROR );
 }
@@ -236,6 +446,7 @@ void MyFrame::OnMenuEvent(wxCommandEvent& event)
       break;
     case ID_ShowDialog_2:
       printf ("show dialog 2\n");
+
       break;
     case ID_ShowDialog_3:
       printf ("show dialog 3\n");
@@ -246,4 +457,3 @@ void MyFrame::OnMenuEvent(wxCommandEvent& event)
   }
 }
 #endif
-
