@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.112 2003-10-29 01:12:07 cbothamy Exp $
+// $Id: harddrv.cc,v 1.113 2003-11-07 22:59:05 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.112 2003-10-29 01:12:07 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.113 2003-11-07 22:59:05 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -4219,10 +4219,10 @@ redolog_t::open (const char* filename, const char *type, Bit64u size)
         extent_next = 0;
         for (Bit32u i=0; i < dtoh32(header.specific.catalog); i++)
         {
-                if (dtoh32(catalog[extent_index]) != REDOLOG_PAGE_NOT_ALLOCATED)
+                if (dtoh32(catalog[i]) != REDOLOG_PAGE_NOT_ALLOCATED)
                 {
-                        if (dtoh32(catalog[extent_index]) >= extent_next)
-                                extent_next = dtoh32(catalog[extent_index]) + 1;
+                        if (dtoh32(catalog[i]) >= extent_next)
+                                extent_next = dtoh32(catalog[i]) + 1;
                 }
         }
         BX_INFO(("redolog : next extent will be at index %d",extent_next));
