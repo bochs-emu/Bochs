@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.15 2002-08-30 06:06:36 bdenney Exp $
+// $Id: wxmain.cc,v 1.16 2002-08-30 06:46:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -160,6 +160,60 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
 END_EVENT_TABLE()
 
+//////////////////////////////////////////////////////////////////
+// Menu layout (approximate)
+//
+// The actual menus will be changing so this probably isn't up
+// to date, but having it in text form was useful in planning.
+//////////////////////////////////////////////////////////////////
+// - File
+//   +----------------------+
+//   | New Configuration    |
+//   | Read Configuration   |
+//   | Save Configuration   |
+//   +----------------------+
+//   | Quit                 |
+//   +----------------------+
+// - Edit
+//   +----------------------+
+//   | Floppy Disk 0...     |
+//   | Floppy Disk 1...     |
+//   | Hard Disk 0...       |
+//   | Hard Disk 1...       |
+//   | Cdrom...             |
+//   | Boot...              |
+//   | VGA...               |
+//   | Memory...            |
+//   | Sound...             |
+//   | Networking...        |
+//   | Keyboard...          |
+//   | Other...             |
+//   +----------------------+
+// - Simulate
+//   +----------------------+
+//   | Start                |
+//   | Pause/Resume         |
+//   | Stop                 |
+//   +----------------------+
+//   | Speed...             |
+//   +----------------------|
+// - Debug
+//   +----------------------|
+//   | Show CPU             |
+//   | Show Memory          |
+//   | ? what else ?        |
+//   +----------------------|
+// - Event Log
+//   +----------------------+
+//   | View                 |
+//   | Preferences...       |
+//   | By Device...         |
+//   +----------------------+
+// - Help
+//   +----------------------+
+//   | About Bochs...       |
+//   +----------------------+
+//////////////////////////////////////////////////////////////////
 
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style)
 : wxFrame((wxFrame *)NULL, -1, title, pos, size, style)
