@@ -116,25 +116,24 @@ void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), result;
-  Bit32u op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
-    op2 = BX_READ_32BIT_REG(i->rm());
+    op2 = BX_READ_MMX_REG(i->rm()); 
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB7(result) = (op2) >> 24;
+  MMXUB7(result) = MMXUB3(op2);
   MMXUB6(result) = MMXUB3(op1);
-  MMXUB5(result) = (op2 & 0x00ff0000) >> 16;
+  MMXUB5(result) = MMXUB2(op2);
   MMXUB4(result) = MMXUB2(op1);
-  MMXUB3(result) = (op2 & 0x0000ff00) >>  8;
+  MMXUB3(result) = MMXUB1(op2);
   MMXUB2(result) = MMXUB1(op1);
-  MMXUB1(result) = (op2 & 0x000000ff);
+  MMXUB1(result) = MMXUB0(op2);
   MMXUB0(result) = MMXUB0(op1);
 
   /* now write result back to destination */
@@ -151,21 +150,20 @@ void BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), result;
-  Bit32u op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
-    op2 = BX_READ_32BIT_REG(i->rm());
+    op2 = BX_READ_MMX_REG(i->rm()); 
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUW3(result) = (op2) >> 16;
+  MMXUW3(result) = MMXUW1(op2);
   MMXUW2(result) = MMXUW1(op1);
-  MMXUW1(result) = (op2 & 0x0000ffff);
+  MMXUW1(result) = MMXUW0(op2);
   MMXUW0(result) = MMXUW0(op1);
 
   /* now write result back to destination */
@@ -182,19 +180,18 @@ void BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn());
-  Bit32u op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
-    op2 = BX_READ_32BIT_REG(i->rm());
+    op2 = BX_READ_MMX_REG(i->rm()); 
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUD1(op1) = op2;
+  MMXUD1(op1) = MMXUD0(op2);
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
@@ -2051,7 +2048,6 @@ void BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
-
 
   MMXUB0(op1) += MMXUB0(op2);
   MMXUB1(op1) += MMXUB1(op2);
