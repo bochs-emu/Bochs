@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.9 2003-01-23 19:31:27 vruppert Exp $
+// $Id: pci2isa.cc,v 1.10 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,17 +75,17 @@ bx_pci2isa_c::init(void)
   DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
                             BX_PCI_DEVICE(1,0), "PIIX3 PCI-to-ISA bridge");
 
-  DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 1);
 
-  DEV_register_ioread_handler(this, read_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 1);
 
   for (unsigned i=0; i<256; i++)
     BX_P2I_THIS s.pci_conf[i] = 0x0;
@@ -157,9 +157,6 @@ bx_pci2isa_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_P2I_SMF
-  if (io_len > 1)
-    BX_PANIC(("io read from port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
 
   switch (address) {
     case 0x00b2:
@@ -201,9 +198,6 @@ bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_P2I_SMF
-  if (io_len > 1)
-    BX_PANIC(("io write to port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
 
   switch (address) {
     case 0x00b2:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.28 2003-01-23 19:31:26 vruppert Exp $
+// $Id: pci.cc,v 1.29 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -84,12 +84,13 @@ bx_pci_c::init(void)
     BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
   }
 
+  // confAddr accepts dword i/o only
   DEV_register_ioread_handler(this, read_handler, 0x0CF8, "i440FX", 4);
+  DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "i440FX", 4);
+
   for (i=0x0CFC; i<=0x0CFF; i++) {
     DEV_register_ioread_handler(this, read_handler, i, "i440FX", 7);
   }
-
-  DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "i440FX", 4);
   for (i=0x0CFC; i<=0x0CFF; i++) {
     DEV_register_iowrite_handler(this, write_handler, i, "i440FX", 7);
   }
@@ -157,12 +158,7 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
   switch (address) {
     case 0x0CF8:
       {
-      if (io_len == 4) {
         return BX_PCI_THIS s.i440fx.confAddr;
-        }
-      else {
-        return 0xFFFF;
-        }
       }
       break;
     case 0x0CFC:
@@ -218,16 +214,12 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0xCF8:
       {
-      // confAddr accepts a dword value only
-      if (io_len == 4) {
         BX_PCI_THIS s.i440fx.confAddr = value;
         if ((value & 0x80FFFF00) == 0x80000000) {
           BX_DEBUG(("440FX PMC register 0x%02x selected", value & 0xfc));
-          }
-        else if ((value & 0x80000000) == 0x80000000) {
+        } else if ((value & 0x80000000) == 0x80000000) {
           BX_DEBUG(("440FX request for bus 0x%02x device 0x%02x function 0x%02x",
                     (value >> 16) & 0xFF, (value >> 11) & 0x1F, (value >> 8) & 0x07));
-          }
         }
       }
       break;

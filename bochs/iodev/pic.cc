@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.30 2002-10-24 21:07:45 bdenney Exp $
+// $Id: pic.cc,v 1.31 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,15 +70,15 @@ bx_pic_c::~bx_pic_c(void)
 bx_pic_c::init(void)
 {
   /* 8259 PIC (Programmable Interrupt Controller) */
-  DEV_register_ioread_handler(this, read_handler, 0x0020, "8259 PIC", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x0021, "8259 PIC", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x00A0, "8259 PIC", 7);
-  DEV_register_ioread_handler(this, read_handler, 0x00A1, "8259 PIC", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x0020, "8259 PIC", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x0021, "8259 PIC", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x00A0, "8259 PIC", 1);
+  DEV_register_ioread_handler(this, read_handler, 0x00A1, "8259 PIC", 1);
 
-  DEV_register_iowrite_handler(this, write_handler, 0x0020, "8259 PIC", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x0021, "8259 PIC", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x00A0, "8259 PIC", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x00A1, "8259 PIC", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0020, "8259 PIC", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x0021, "8259 PIC", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x00A0, "8259 PIC", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x00A1, "8259 PIC", 1);
 
 
   BX_PIC_THIS s.master_pic.single_PIC = 0;
@@ -155,9 +155,6 @@ bx_pic_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_PIC_SMF
-  if (io_len > 1)
-    BX_PANIC(("io read from port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
 
   BX_DEBUG(("IO read from %04x", (unsigned) address));
 
@@ -242,10 +239,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_PIC_SMF
-
-  if (io_len > 1)
-    BX_PANIC(("io write to port %04x, len=%u", (unsigned) address,
-             (unsigned) io_len));
 
   BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 

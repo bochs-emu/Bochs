@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.87 2003-07-27 17:50:43 vruppert Exp $
+// $Id: vga.cc,v 1.88 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,28 +126,28 @@ bx_vga_c::init(void)
 
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
   for (addr=0x03BA; addr<=0x03BA; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
   for (addr=0x03C0; addr<=0x03CF; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
   for (addr=0x03D4; addr<=0x03D5; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
   for (addr=0x03DA; addr<=0x03DA; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
 
@@ -391,10 +391,6 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #else
 #define RETURN return
 #endif
-
-  if (io_len > 1)
-    BX_PANIC(("io read from address %08x, len=%u",
-             (unsigned) address, (unsigned) io_len));
 
 #ifdef __OS2__
   if ( bx_options.videomode == BX_VIDEO_DIRECT )

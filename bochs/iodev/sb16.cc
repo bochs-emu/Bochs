@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.34 2003-06-21 12:55:19 vruppert Exp $
+// $Id: sb16.cc,v 1.35 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -236,21 +236,21 @@ void bx_sb16_c::init(void)
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
     DEV_register_ioread_handler(this,
-       &read_handler, addr, "SB16", 7);
+       &read_handler, addr, "SB16", 1);
     DEV_register_iowrite_handler(this,
-       &write_handler, addr, "SB16", 7);
+       &write_handler, addr, "SB16", 1);
     }
   for (addr=BX_SB16_IOMPU; addr<BX_SB16_IOMPU+BX_SB16_IOMPULEN; addr++) {
     DEV_register_ioread_handler(this,
-       &read_handler, addr, "SB16", 7);
+       &read_handler, addr, "SB16", 1);
     DEV_register_iowrite_handler(this,
-       &write_handler, addr, "SB16", 7);
+       &write_handler, addr, "SB16", 1);
     }
   for (addr=BX_SB16_IOADLIB; addr<BX_SB16_IOADLIB+BX_SB16_IOADLIBLEN; addr++) {
     DEV_register_ioread_handler(this,
-       read_handler, addr, "SB16", 7);
+       read_handler, addr, "SB16", 1);
     DEV_register_iowrite_handler(this,
-       write_handler, addr, "SB16", 7);
+       write_handler, addr, "SB16", 1);
     }
 
   writelog(BOTHLOG(3),
@@ -2965,14 +2965,6 @@ Bit32u bx_sb16_c::read(Bit32u address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_SB16_SMF
 
-// we support only byte access to the port
-  if (io_len != 1)
-    {
-      writelog(3, "Read access to %03x not byte access, len=%d!",
-	       address, io_len);
-      return(0xff);
-    }
-
   switch (address) 
     {
       // 2x0: FM Music Status Port
@@ -3089,13 +3081,6 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_SB16_SMF
-  // we only support byte access to the prot
-  if (io_len != 1)
-	{
-	  writelog(3, "Write access to %03x for %d to %02x: "
-		      "not byte access!", address, io_len, value);
-	  return;
-	}
 
   switch (address)
     {

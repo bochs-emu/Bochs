@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.104 2003-07-29 16:08:54 vruppert Exp $
+// $Id: harddrv.cc,v 1.105 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.104 2003-07-29 16:08:54 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.105 2003-07-31 19:51:42 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -192,11 +192,15 @@ bx_hard_drive_c::init(void)
       DEV_register_irq(BX_HD_THIS channels[channel].irq, strdup(string));
 
     if (BX_HD_THIS channels[channel].ioaddr1 != 0) {
-      for (unsigned addr=0x0; addr<=0x7; addr++) {
+      DEV_register_ioread_handler(this, read_handler,
+                           BX_HD_THIS channels[channel].ioaddr1, strdup(string), 6);
+      DEV_register_iowrite_handler(this, write_handler,
+                           BX_HD_THIS channels[channel].ioaddr1, strdup(string), 6);
+      for (unsigned addr=0x1; addr<=0x7; addr++) {
         DEV_register_ioread_handler(this, read_handler,
-                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
+                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 1);
         DEV_register_iowrite_handler(this, write_handler,
-                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
+                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 1);
         }
       }
 
@@ -204,9 +208,9 @@ bx_hard_drive_c::init(void)
     if ((BX_HD_THIS channels[channel].ioaddr2 != 0) && (BX_HD_THIS channels[channel].ioaddr2 != 0x3f0)) {
       for (unsigned addr=0x6; addr<=0x7; addr++) {
         DEV_register_ioread_handler(this, read_handler,
-                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
+                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 1);
         DEV_register_iowrite_handler(this, write_handler,
-                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
+                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 1);
         }
       }
      
@@ -706,10 +710,6 @@ if (channel == 0) {
 }
 #endif
 
-  if (io_len>1 && port!=0x00) {
-    BX_PANIC(("non-byte IO read to %04x", (unsigned) address));
-    }
-  
   switch (port) {
     case 0x00: // hard disk data (16bit) 0x1f0
       if (BX_SELECTED_CONTROLLER(channel).status.drq == 0) {
@@ -722,10 +722,6 @@ if (channel == 0) {
       switch (BX_SELECTED_CONTROLLER(channel).current_command) {
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
-          if (io_len == 1) {
-            BX_PANIC(("byte IO read from %04x",
-                     (unsigned) address));
-            }
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512)
             BX_PANIC(("IO read(0x%04x): buffer_index >= 512", address));
 
@@ -1212,10 +1208,6 @@ if (channel == 0) {
 }
 #endif
 
-  if (io_len>1 && port!=0x00) {
-    BX_PANIC(("non-byte IO write to %04x", (unsigned) address));
-    }
-
   if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom)) {
 	switch (io_len) {
 	      case 1:
@@ -1240,14 +1232,10 @@ if (channel == 0) {
 	}
   }
 
-BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
+  BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
   switch (port) {
     case 0x00: // 0x1f0
-      if (io_len == 1) {
-        BX_ERROR(("byte IO write to 0x%04x ignored", address));
-        return;
-        }
       switch (BX_SELECTED_CONTROLLER(channel).current_command) {
         case 0x30: // WRITE SECTORS
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.32 2002-10-25 11:44:41 bdenney Exp $
+// $Id: serial.cc,v 1.33 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -254,8 +254,8 @@ bx_serial_c::init(void)
 
   for (unsigned addr=0x03F8; addr<=0x03FF; addr++) {
 	BX_DEBUG(("register read/write: 0x%04x",addr));
-    DEV_register_ioread_handler(this, read_handler, addr, "Serial Port 1", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "Serial Port 1", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "Serial Port 1", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "Serial Port 1", 1);
     }
 
   BX_INFO(( "com1 at 0x3f8/8 irq 4" ));
@@ -290,11 +290,6 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
   Bit8u val;
 
   /* SERIAL PORT 1 */
-
-  if (io_len > 1)
-    BX_PANIC(("io read from port 0x%04x, bad len=%u",
-	     (unsigned) address,
-             (unsigned) io_len));
 
   BX_DEBUG(("register read from address 0x%04x - ", (unsigned) address));
 
@@ -466,10 +461,6 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   bx_bool gen_int = 0;
 
   /* SERIAL PORT 1 */
-
-  if (io_len > 1)
-    BX_PANIC(("io write to address 0x%04x len=%u",
-             (unsigned) address, (unsigned) io_len));
 
   BX_DEBUG(("write to address: 0x%04x = 0x%02x",
 	      (unsigned) address, (unsigned) value));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.62 2003-06-20 16:28:00 vruppert Exp $
+// $Id: floppy.cc,v 1.63 2003-07-31 19:51:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,12 +101,12 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.62 2003-06-20 16:28:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.63 2003-07-31 19:51:42 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "Floppy Drive", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "Floppy Drive", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "Floppy Drive", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "Floppy Drive", 1);
     }
 
 
@@ -336,10 +336,6 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
 #endif  // !BX_USE_FD_SMF
   Bit8u status, value;
 
-  if (io_len > 1)
-    BX_PANIC(("io read from address %08x, len=%u",
-             (unsigned) address, (unsigned) io_len));
-
   if (bx_dbg.floppy)
     BX_INFO(("read access to port %04x", (unsigned) address));
 
@@ -434,10 +430,6 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u normal_operation, prev_normal_operation;
   Bit8u drive_select;
   Bit8u motor_on_drive0, motor_on_drive1;
-
-  if (io_len > 1)
-    BX_PANIC(("io write to address %08x, len=%u",
-             (unsigned) address, (unsigned) io_len));
 
   if (bx_dbg.floppy)
     BX_INFO(("write access to port %04x, value=%02x",
