@@ -84,7 +84,10 @@ floppya: 1_44=/dev/fd0, status=inserted
 floppyb: 1_44=b.img, status=inserted
 
 #=======================================================================
-# ATA[0-3]: enabled=[0|1], ioaddr1=, ioaddr2=, irq=
+# ATA0, ATA1, ATA2, ATA3
+# ATA controller for hard disks and cdroms
+#
+# ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
 # 
 # These options enables up to 4 ata channels. For each channel
 # the two base io address and the irq must be specified.
@@ -103,9 +106,7 @@ ata2: enabled=0, ioaddr1=0x1e8, ioaddr2=0x3e8, irq=12
 ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=11
 
 #=======================================================================
-#
-# ATA[0-3]-MASTER: 
-# ATA[0-3]-SLAVE:
+# ATA[0-3]-MASTER, ATA[0-3]-SLAVE
 #
 # This defines the type and characteristics of all attached ata devices:
 #   type=       type of attached device [disk|cdrom] 
