@@ -237,7 +237,7 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   // Reset the processor.
 
   fprintf(stderr, "# bx_pc_system_c::ResetSignal() called\n");
-  bx_panic("pc_system.resetsignal() called\n");
+  BX_CPU.reset(BX_RESET_SOFTWARE);
   return(0);
 }
 

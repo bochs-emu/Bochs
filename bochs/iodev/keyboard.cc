@@ -528,11 +528,11 @@ bx_panic("kbd: OUTB set and command 0x%02x encountered\n", value);
           break;
 
         case 0xfe: // System Reset, transition to real mode
-          if (bx_dbg.keyboard)
-            bx_printf("KBD: system reset\n");
-          bx_panic("system reset via KBD ctrl command FEh\n");
+          bx_printf("KBD: system reset\n");
+          bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
+          BX_CPU.reset(BX_RESET_HARDWARE);
           // Use bx_pc_system if necessary bx_cpu.reset_cpu();
-          bx_pc_system.ResetSignal( PCS_SET );
+          // bx_pc_system.ResetSignal( PCS_SET );
           break;
 
         default:
