@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.25 2001-10-05 14:01:52 bdenney Exp $
+// $Id: floppy.cc,v 1.26 2001-10-07 03:28:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.25 2001-10-05 14:01:52 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.26 2001-10-07 03:28:45 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -1294,7 +1294,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   ret = fstat(media->fd, &stat_buf);
 #endif
   if (ret) {
-    BX_PANIC(("fstat()'ing floppy 0 drive image file returns error!"));
+    BX_PANIC(("fstat floppy 0 drive image file returns error: %s", strerror(errno)));
     return(0);
     }
 
