@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.12 2002-09-30 22:33:52 bdenney Exp $
+ * $Id: bximage.c,v 1.13 2002-10-15 20:47:43 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -11,10 +11,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#ifdef WIN32
+#  include <conio.h>
+#endif
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.12 2002-09-30 22:33:52 bdenney Exp $";
+char *rcsid = "$Id: bximage.c,v 1.13 2002-10-15 20:47:43 bdenney Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -51,6 +54,10 @@ print_banner ()
 void fatal (char *c)
 {
   printf ("%s\n", c);
+#ifdef WIN32
+  printf ("\nPress any key to continue\n");
+  getch();
+#endif
   exit (1);
 }
 
