@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.21 2002-10-06 17:49:11 bdenney Exp $
+// $Id: cmos.cc,v 1.22 2002-10-06 19:04:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,6 +50,8 @@ bx_cmos_c::bx_cmos_c(void)
 {
   put("CMOS");
   settype(CMOSLOG);
+  BX_CMOS_THIS s.periodic_timer_index = BX_NULL_TIMER_HANDLE;
+  BX_CMOS_THIS s.one_second_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_cmos_c::~bx_cmos_c(void)
@@ -62,7 +64,7 @@ bx_cmos_c::~bx_cmos_c(void)
 bx_cmos_c::init(bx_devices_c *d)
 {
   unsigned i;
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.21 2002-10-06 17:49:11 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.22 2002-10-06 19:04:46 bdenney Exp $"));
 
   // CMOS RAM & RTC
 
@@ -83,12 +85,16 @@ bx_cmos_c::init(bx_devices_c *d)
     0x0071, "CMOS RAM");
   BX_CMOS_THIS devices->register_irq(8, "CMOS RTC");
 
-  BX_CMOS_THIS s.periodic_timer_index =
-    bx_pc_system.register_timer(this, periodic_timer_handler,
-      1000000, 1,0, "cmos"); // continuous, not-active
-  BX_CMOS_THIS s.one_second_timer_index =
-    bx_pc_system.register_timer(this, one_second_timer_handler,
-      1000000, 1,0, "cmos"); // continuous, not-active
+  if (BX_CMOS_THIS s.periodic_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_CMOS_THIS s.periodic_timer_index =
+      bx_pc_system.register_timer(this, periodic_timer_handler,
+	1000000, 1,0, "cmos"); // continuous, not-active
+  }
+  if (BX_CMOS_THIS s.one_second_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_CMOS_THIS s.one_second_timer_index =
+      bx_pc_system.register_timer(this, one_second_timer_handler,
+	1000000, 1,0, "cmos"); // continuous, not-active
+  }
 
   for (i=0; i<BX_NUM_CMOS_REGS; i++) {
     BX_CMOS_THIS s.reg[i] = 0;

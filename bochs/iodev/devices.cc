@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34 2002-10-03 15:47:13 kevinlawton Exp $
+// $Id: devices.cc,v 1.35 2002-10-06 19:04:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,6 +77,7 @@ bx_devices_c::~bx_devices_c(void)
 {
   // nothing needed for now
   BX_DEBUG(("Exit."));
+  timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
 
@@ -85,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34 2002-10-03 15:47:13 kevinlawton Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.35 2002-10-06 19:04:47 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -106,8 +107,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   for (i=0; i < BX_MAX_IRQS; i++) {
     irq_handler_name[i] = NULL;
     }
-
-  timer_handle = BX_NULL_TIMER_HANDLE;
 
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -228,8 +227,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
   /* now perform checksum of CMOS memory */
   cmos->checksum_cmos();
 
-  timer_handle = bx_pc_system.register_timer( this, timer_handler,
-    (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
+  if (timer_handle != BX_NULL_TIMER_HANDLE) {
+    timer_handle = bx_pc_system.register_timer( this, timer_handler,
+      (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
+  }
 
   // Clear fields for bulk IO acceleration transfers.
   bulkIOHostAddr = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51 2002-10-03 21:07:04 bdenney Exp $
+// $Id: floppy.cc,v 1.52 2002-10-06 19:04:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,14 +71,15 @@ bx_floppy_ctrl_c bx_floppy;
 
 bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
-	put("FDD");
-	settype(FDLOG);
+  put("FDD");
+  settype(FDLOG);
+  BX_FD_THIS s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
 {
-	// nothing for now
-	BX_DEBUG(("Exit."));
+  // nothing for now
+  BX_DEBUG(("Exit."));
 }
 
 
@@ -87,7 +88,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51 2002-10-03 21:07:04 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.52 2002-10-06 19:04:47 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -221,9 +222,11 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     cmos->s.reg[0x14] = (cmos->s.reg[0x14] & 0x3e);
 
 
-  BX_FD_THIS s.floppy_timer_index =
-    bx_pc_system.register_timer( this, timer_handler,
-      bx_options.Ofloppy_command_delay->get (), 0,0, "floppy");
+  if (BX_FD_THIS s.floppy_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_FD_THIS s.floppy_timer_index =
+      bx_pc_system.register_timer( this, timer_handler,
+	bx_options.Ofloppy_command_delay->get (), 0,0, "floppy");
+  }
 
   BX_DEBUG(("bx_options.Ofloppy_command_delay = %u",
     (unsigned) bx_options.Ofloppy_command_delay->get ()));

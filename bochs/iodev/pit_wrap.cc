@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.29 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: pit_wrap.cc,v 1.30 2002-10-06 19:04:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -152,7 +152,9 @@ bx_pit_c::init( bx_devices_c *d )
 
   BX_PIT_THIS s.timer.init();
 
-  BX_PIT_THIS s.timer_handle[0] = bx_pc_system.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit_wrap");
+  if (BX_PIT_THIS s.timer_handle[0] == BX_NULL_TIMER_HANDLE) {
+    BX_PIT_THIS s.timer_handle[0] = bx_pc_system.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit_wrap");
+  }
   BX_DEBUG(("pit: RESETting timer."));
   bx_pc_system.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
   BX_DEBUG(("deactivated timer."));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.44 2002-10-05 08:04:28 vruppert Exp $
+// $Id: vga.cc,v 1.45 2002-10-06 19:04:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,6 +49,7 @@ bx_vga_c::bx_vga_c(void)
   BX_VGA_THIS s.x_tilesize = X_TILESIZE;
   BX_VGA_THIS s.y_tilesize = Y_TILESIZE;
   BX_VGA_THIS put("VGA");
+  BX_VGA_THIS timer_id = BX_NULL_TIMER_HANDLE;
 }
 
 
@@ -194,8 +195,10 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   }
 
   BX_INFO(("interval=%lu", bx_options.Ovga_update_interval->get ()));
-  BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
-     bx_options.Ovga_update_interval->get (), 1, 1, "vga");
+  if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
+    BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
+       bx_options.Ovga_update_interval->get (), 1, 1, "vga");
+  }
 
   cmos->s.reg[0x14] = (cmos->s.reg[0x14] & 0xcf) | 0x00; /* video card with BIOS ROM */
 

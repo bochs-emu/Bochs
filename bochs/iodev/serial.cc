@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.26 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: serial.cc,v 1.27 2002-10-06 19:04:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,6 +77,10 @@ bx_serial_c::bx_serial_c(void)
   put("SER");
   settype(SERLOG);
   tty_id = -1;
+  for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
+    s[i].tx_timer_index = BX_NULL_TIMER_HANDLE;
+    s[i].rx_timer_index = BX_NULL_TIMER_HANDLE;
+  }
 }
 
 bx_serial_c::~bx_serial_c(void)
@@ -161,13 +165,17 @@ bx_serial_c::init(bx_devices_c *d)
     BX_SER_THIS s[i].rx_interrupt = 0;
     BX_SER_THIS s[i].tx_interrupt = 0;
 
-    BX_SER_THIS s[i].tx_timer_index =
-      bx_pc_system.register_timer(this, tx_timer_handler, 0,
-				  0,0, "serial.tx"); // one-shot, inactive
+    if (BX_SER_THIS s[i].tx_timer_index == BX_NULL_TIMER_HANDLE) {
+      BX_SER_THIS s[i].tx_timer_index =
+	bx_pc_system.register_timer(this, tx_timer_handler, 0,
+				    0,0, "serial.tx"); // one-shot, inactive
+    }
 
-    BX_SER_THIS s[i].rx_timer_index =
-      bx_pc_system.register_timer(this, rx_timer_handler, 0,
-				  0,0, "serial.rx"); // one-shot, inactive
+    if (BX_SER_THIS s[i].rx_timer_index == BX_NULL_TIMER_HANDLE) {
+      BX_SER_THIS s[i].rx_timer_index =
+	bx_pc_system.register_timer(this, rx_timer_handler, 0,
+				    0,0, "serial.rx"); // one-shot, inactive
+    }
     BX_SER_THIS s[i].rx_pollstate = BX_SER_RXIDLE;
 
     /* int enable: b0000 0000 */
