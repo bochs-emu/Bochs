@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.15 2002-11-15 18:14:08 bdenney Exp $
+ * $Id: bximage.c,v 1.16 2002-11-21 06:36:22 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -17,7 +17,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.15 2002-11-15 18:14:08 bdenney Exp $";
+char *rcsid = "$Id: bximage.c,v 1.16 2002-11-21 06:36:22 bdenney Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -29,6 +29,15 @@ int fdhd_n_choices = 2;
 char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.36, 0.72, 1.2, 1.44, or 2.88. [1.44] ";
 char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
 int fdsize_n_choices = 5;
+
+void myexit (int code)
+{
+#ifdef WIN32
+  printf ("\nPress any key to continue\n");
+  getch();
+#endif
+  exit(code);
+}
 
 /* stolen from main.cc */
 void bx_center_print (FILE *file, char *line, int maxwidth)
@@ -54,11 +63,7 @@ print_banner ()
 void fatal (char *c)
 {
   printf ("%s\n", c);
-#ifdef WIN32
-  printf ("\nPress any key to continue\n");
-  getch();
-#endif
-  exit (1);
+  myexit (1);
 }
 
 /* remove leading spaces, newline junk at end.  returns pointer to 
@@ -302,5 +307,5 @@ int main()
   printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
-  return 0;
+  myexit(0);
 }
