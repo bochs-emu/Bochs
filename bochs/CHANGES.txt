@@ -1,7 +1,6 @@
 To be fixed before 1.2:
 - [ #428214 ] 1.2.pre1 need documentation for binaries
 - [ #428478 ] mkimg tool creates image 1 byte too big
-- add diskd to .bochsrc!
 
 Changes since 1.2-pre1:
 - [ #427259 ] rombios HALT calls don't print
@@ -30,10 +29,12 @@ Changes since 1.2-pre1:
   removed extra paren that broke SHOW_IPS
 - [ #428219 ] PCI doesn't compile with SMF=1
   Fixed.
+- BIOS prints messages in log in case of boot failure
 - rewrote instructions for compiling in win32 (win32.txt)
 - fixed link in HTML changelog.html to point to the real sources on SF.
 - added missing LOG_THIS definition to gui/nogui.cc
 - added additional check for null pointer in debugger exit routine
+- added diskd to .bochsrc
 
 Changes in version 1.2-pre1 (5/25/2001):
 - major cleanup of .bochsrc
