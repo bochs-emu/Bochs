@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.51 2005-01-25 20:41:43 sshwarts Exp $
+// $Id: access.cc,v 1.52 2005-02-28 18:56:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -289,7 +289,7 @@ BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
      || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_WRITE);
       pl = (CPL==3);
 
@@ -339,7 +339,7 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u *data)
      || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
       pl = (CPL==3);
 
@@ -391,7 +391,7 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
      || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
       pl = (CPL==3);
 
@@ -443,7 +443,7 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
      || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
       pl = (CPL==3);
 
@@ -495,7 +495,7 @@ BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
      || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_READ);
       pl = (CPL==3);
 
@@ -540,7 +540,7 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset, Bit16u *data)
      || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_READ);
       pl = (CPL==3);
 
@@ -586,7 +586,7 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
      || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_READ);
       pl = (CPL==3);
 
@@ -632,7 +632,7 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
      || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_READ);
       pl = (CPL==3);
 
@@ -683,7 +683,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
      || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_RW);
       pl = (CPL==3);
 
@@ -736,7 +736,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset, Bit16u *data)
      || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_RW);
       pl = (CPL==3);
 
@@ -789,7 +789,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
      || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_RW);
       pl = (CPL==3);
 
@@ -842,7 +842,7 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
      || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
-      laddr = seg->cache.u.segment.base + offset;
+      laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_RW);
       pl = (CPL==3);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.27 2004-11-04 22:41:23 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.28 2005-02-28 18:56:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   //  /* ??? #SS(0) -or #GP(0) */
   //  }
 
-  access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP,
+  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP,
     8, CPL==3, BX_READ, &return_RIP);
 
   /* Pentium book says imm16 is number of words ??? */
@@ -90,7 +90,7 @@ BX_CPU_C::RETnear64(bxInstruction_c *i)
   //  /* ??? #SS(0) -or #GP(0) */
   //  }
 
-  access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP,
+  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP,
       8, CPL==3, BX_READ, &return_RIP);
 
   RIP = return_RIP;

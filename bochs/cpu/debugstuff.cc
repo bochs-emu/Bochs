@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.32 2004-09-30 16:50:03 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.33 2005-02-28 18:56:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -155,13 +155,13 @@ BX_CPU_C::debug(Bit32u offset)
   static disassembler bx_disassemble;
 
   if (BX_CPU_THIS_PTR protectedMode) { // 16bit & 32bit protected mode
-   Base=BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base;
+   Base=BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS);
   }
   else {
    Base=BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value<<4;
   }
 
-  dbg_xlate_linear2phy(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + offset,
+  dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset,
                        &phy_addr, &valid);
   if (valid && BX_CPU_THIS_PTR mem!=NULL) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);

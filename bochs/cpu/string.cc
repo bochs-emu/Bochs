@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.27 2005-02-22 18:24:19 sshwarts Exp $
+// $Id: string.cc,v 1.28 2005-02-28 18:56:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
         // transfer, we can do the full segment limit check ourselves
         // without generating an exception.
         read_virtual_checks(srcSegPtr, si, 1);
-        laddrSrc = srcSegPtr->cache.u.segment.base + si;
+        laddrSrc = BX_CPU_THIS_PTR get_segment_base(seg) + si;
         if (BX_CPU_THIS_PTR cr0.pg) {
           paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
         }
@@ -161,7 +161,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
         paddrSrc = A20ADDR(paddrSrc);
 
         write_virtual_checks(dstSegPtr, di, 1);
-        laddrDst = dstSegPtr->cache.u.segment.base + di;
+        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + di;
         if (BX_CPU_THIS_PTR cr0.pg) {
           paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
         }
@@ -405,7 +405,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
         // transfer, we can do the full segment limit check ourselves
         // without generating an exception.
         read_virtual_checks(srcSegPtr, si, 2);
-        laddrSrc = srcSegPtr->cache.u.segment.base + si;
+        laddrSrc = BX_CPU_THIS_PTR get_segment_base(seg) + si;
         if (BX_CPU_THIS_PTR cr0.pg) {
           paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
         }
@@ -417,7 +417,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
         paddrSrc = A20ADDR(paddrSrc);
 
         write_virtual_checks(dstSegPtr, di, 2);
-        laddrDst = dstSegPtr->cache.u.segment.base + di;
+        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + di;
         if (BX_CPU_THIS_PTR cr0.pg) {
           paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
         }
@@ -630,7 +630,7 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
         // transfer, we can do the full segment limit check ourselves
         // without generating an exception.
         read_virtual_checks(srcSegPtr, esi, 4);
-        laddrSrc = srcSegPtr->cache.u.segment.base + esi;
+        laddrSrc = BX_CPU_THIS_PTR get_segment_base(seg) + esi;
         if (BX_CPU_THIS_PTR cr0.pg) {
           paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
         }
@@ -642,7 +642,7 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
         paddrSrc = A20ADDR(paddrSrc);
 
         write_virtual_checks(dstSegPtr, edi, 4);
-        laddrDst = dstSegPtr->cache.u.segment.base + edi;
+        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + edi;
         if (BX_CPU_THIS_PTR cr0.pg) {
           paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
         }
@@ -1561,7 +1561,7 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
         // transfer, we can do the full segment limit check ourselves
         // without generating an exception.
         write_virtual_checks(dstSegPtr, edi, 1);
-        laddrDst = dstSegPtr->cache.u.segment.base + edi;
+        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + edi;
         if (BX_CPU_THIS_PTR cr0.pg) {
           paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
         }

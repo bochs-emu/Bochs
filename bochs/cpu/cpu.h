@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.199 2005-02-27 17:41:26 sshwarts Exp $
+// $Id: cpu.h,v 1.200 2005-02-28 18:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2689,7 +2689,6 @@ public: // for now...
 #endif
   BX_SMF Bit16u read_flags(void);
   BX_SMF Bit32u read_eflags(void);
-  BX_SMF Bit32u get_segment_base(unsigned seg);
 
   BX_SMF Bit8u   inp8(Bit16u addr) BX_CPP_AttrRegparmN(1);
   BX_SMF void    outp8(Bit16u addr, Bit8u value) BX_CPP_AttrRegparmN(2);
@@ -2799,6 +2798,8 @@ public: // for now...
   BX_CPP_INLINE Bit8u  get_CPL(void);
   BX_CPP_INLINE Bit32u get_EIP(void);
 
+  BX_SMF BX_CPP_INLINE bx_address get_segment_base(unsigned seg);
+
   BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
@@ -2873,8 +2874,12 @@ BX_CPP_INLINE Bit32u BX_CPU_C::get_EIP(void)
    return (BX_CPU_THIS_PTR dword.eip); 
 } 
 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg)
+BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 {
+#if BX_SUPPORT_X86_64
+   if (IsLongMode() && seg != BX_SEG_REG_FS && seg != BX_SEG_REG_GS)
+       return 0;
+#endif
    return (BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }
 

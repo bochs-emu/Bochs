@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.31 2005-02-27 17:41:27 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.32 2005-02-28 18:56:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -863,7 +863,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
             return_ESP = ESP;
           else
             return_ESP =  SP;
-          return_ss_base = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base;
+          return_ss_base = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS);
 
           // save return CS:eIP to be pushed on new stack
           return_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
@@ -920,14 +920,14 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           if (gate_descriptor.type==4) {
             for (i=param_count; i>0; i--) {
               push_16(parameter_word[i-1]);
-              //access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + i*2,
+              //access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + i*2,
               //  2, 0, BX_WRITE, &parameter_word[i]);
               }
             }
           else {
             for (i=param_count; i>0; i--) {
               push_32(parameter_dword[i-1]);
-              //access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + i*4,
+              //access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + i*4,
               //  4, 0, BX_WRITE, &parameter_dword[i]);
               }
             }
@@ -1068,7 +1068,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   else temp_ESP = SP;
 
   // return selector RPL must be >= CPL, else #GP(return selector)
-  access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP +
+  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP +
                        stack_cs_offset, 2, CPL==3, BX_READ, &raw_cs_selector);
   parse_selector(raw_cs_selector, &cs_selector);
   if ( cs_selector.rpl < CPL ) {
@@ -1140,13 +1140,13 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 #if BX_CPU_LEVEL >= 3
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         4, CPL==3, BX_READ, &return_EIP);
       }
     else
 #endif
       {
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         2, CPL==3, BX_READ, &return_IP);
       return_EIP = return_IP;
       }
@@ -1255,22 +1255,22 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     /* examine return SS selector and associated descriptor: */
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 12 + pop_bytes,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 12 + pop_bytes,
         2, 0, BX_READ, &raw_ss_selector);
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 8 + pop_bytes,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8 + pop_bytes,
         4, 0, BX_READ, &return_ESP);
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         4, 0, BX_READ, &return_EIP);
       }
     else {
       Bit16u return_SP;
 
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 6 + pop_bytes,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 6 + pop_bytes,
         2, 0, BX_READ, &raw_ss_selector);
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 4 + pop_bytes,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4 + pop_bytes,
         2, 0, BX_READ, &return_SP);
       return_ESP = return_SP;
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         2, 0, BX_READ, &return_IP);
       return_EIP = return_IP;
       }
@@ -1362,7 +1362,7 @@ BX_CPU_C::iret32_real(bxInstruction_c *i)
     exception(BX_SS_EXCEPTION, 0, 0);
     return 0;
   }
-  access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + ESP, 
+  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + ESP, 
                 4, CPL == 3, BX_READ, &eip);
   if (eip > 0xffff)
   { 
@@ -1495,12 +1495,12 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     temp_RSP = RSP;
 
-    access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + cs_offset,
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + cs_offset,
       2, CPL==3, BX_READ, &raw_cs_selector);
 
-    access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + 0,
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
       8, CPL==3, BX_READ, &new_rip);
-    access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + 16,
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16,
       8, CPL==3, BX_READ, &new_eflags);
 
     // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
@@ -1605,7 +1605,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         }
 
       /* examine return SS selector and associated descriptor */
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + ss_offset,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + ss_offset,
         2, 0, BX_READ, &raw_ss_selector);
 
       // long mode - allowed to be null
@@ -1661,11 +1661,11 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
           }
         }
 
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
         8, 0, BX_READ, &new_rip);
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + 16,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16,
         4, 0, BX_READ, &new_eflags);
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + 24,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 24,
         8, 0, BX_READ, &new_rsp);
 
       /* RIP must be in code segment limit, else #GP(0) */
@@ -1750,13 +1750,13 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     else
       temp_ESP = SP;
 
-    access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + cs_offset,
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + cs_offset,
       2, CPL==3, BX_READ, &raw_cs_selector);
 
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         4, CPL==3, BX_READ, &new_eip);
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 8,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8,
         4, CPL==3, BX_READ, &new_eflags);
 
       // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
@@ -1768,9 +1768,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         }
       }
     else {
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         2, CPL==3, BX_READ, &new_ip);
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 4,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
         2, CPL==3, BX_READ, &new_flags);
       }
 
@@ -1893,7 +1893,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         }
 
       /* examine return SS selector and associated descriptor */
-      access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + ss_offset,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + ss_offset,
         2, 0, BX_READ, &raw_ss_selector);
 
       /* selector must be non-null, else #GP(0) */
@@ -1946,19 +1946,19 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         }
 
       if (i->os32L()) {
-        access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
           4, 0, BX_READ, &new_eip);
-        access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 8,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8,
           4, 0, BX_READ, &new_eflags);
-        access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 12,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 12,
           4, 0, BX_READ, &new_esp);
         }
       else {
-        access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
           2, 0, BX_READ, &new_ip);
-        access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 4,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
           2, 0, BX_READ, &new_flags);
-        access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 6,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 6,
           2, 0, BX_READ, &new_sp);
         new_eip = new_ip;
         new_esp = new_sp;

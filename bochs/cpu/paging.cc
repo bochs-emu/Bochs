@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.56 2005-02-23 21:18:23 sshwarts Exp $
+// $Id: paging.cc,v 1.57 2005-02-28 18:56:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -578,7 +578,7 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
     }
 
 #if BX_USE_TLB
-  laddr = BX_CPU_THIS_PTR sregs[i->seg()].cache.u.segment.base + RMAddr(i);
+  laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
   Bit32u TLB_index = BX_TLB_INDEX_OF(laddr);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
   InstrTLB_Increment(tlbEntryInvlpg);
@@ -994,8 +994,10 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 #define ERROR_RESERVED          0x08
 #define ERROR_CODE_ACCESS       0x10
 
+#if BX_SUPPORT_X86_64 // keep compiler happy
 page_fault_reserved:
   error_code |= ERROR_RESERVED;   // RSVD = 1
+#endif
 
 page_fault_access:
   error_code |= ERROR_PROTECTION; // P = 1

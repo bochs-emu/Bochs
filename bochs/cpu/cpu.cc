@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.98 2005-02-12 14:00:13 sshwarts Exp $
+// $Id: cpu.cc,v 1.99 2005-02-28 18:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,7 +166,7 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
   if ( dbg_is_begin_instr_bpoint(
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
          debug_eip,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + debug_eip,
+         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b) ) {
     return;
     }
@@ -441,7 +441,7 @@ debugger_check:
     if ( dbg_is_end_instr_bpoint(
            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
            debug_eip,
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + debug_eip,
+           BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b) ) {
       return;
       }
@@ -636,7 +636,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // only bother comparing if any breakpoints enabled
     if ( BX_CPU_THIS_PTR dr7 & 0x000000ff ) {
       Bit32u iaddr =
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base +
+        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) +
         BX_CPU_THIS_PTR prev_eip;
       Bit32u dr6_bits;
       if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
@@ -698,7 +698,7 @@ void BX_CPU_C::prefetch(void)
 
   temp_rip   = RIP;
   temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
-  laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + temp_rip;
+  laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
 
   if (((Bit32u)temp_rip) > temp_limit) {
     BX_PANIC(("prefetch: RIP > CS.limit"));

@@ -34,11 +34,15 @@ Changes to next release:
   - several protected mode fixes by Kevin Lawton
 
 - CPU (x86-64) (Stanislav)
-  - fetchdecode fixes for x86-64 and 3DNow!
-  - fixed CF flag handling for SHL instruction in x86-64 mode
-  - implemented CR8 register (aliased to APIC.TPR[7:4]) in x86-64 mode
-  - implemented NXE bit (No-Execute page protection) support for x86-64
-  - several x86-64 fixes by Avi Kivity
+  - fetchdecode fixes for x86-64 and 3DNow! (Stanislav)
+  - fixed CF flag handling for SHL instruction in x86-64 mode (Stanislav)
+  - implemented CR8 register (aliased to APIC.TPR[7:4]) (Stanislav)
+  - implemented NXE bit (No-Execute page protection) support (Stanislav)
+  - STOSQ instruction emulation fixed (Avi Kivity)
+  - allow null SS selector for MOV SS, POP SS, and LSS instructions 
+    in long mode (Avi Kivity)
+  - ignore segment bases for all segments (except FS and GS) in long
+    mode (Avi Kivity)
 
 - FPU
   - totally rewritten all FPU code based on softfloat library 
@@ -207,6 +211,7 @@ Changes to next release:
  [1123895] x86-64 gdb/debugger fixes by Avi Kivity
  [1145423] stosq simulation bugfix by Avi Kivity
  [1151012] allow null ss on x86-64 by Avi Kivity
+ [1153327] ignore segment bases in x86-64 by Avi Kivity
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
@@ -219,6 +224,11 @@ Changes to next release:
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
+ #1099294 VESA for Win98 bogus
+ #1112836 PGE-Bit crashes Bochs
+  #947586 The specification difference in x86-64 emulation
+ #1150781 Dissambly Error
+ #1117145 Push reset Button, APIC0 Error occur 
  #1123043 fpu stack pointer changed *despite* fault occured (e.g. #pf)
  #1122066 PANIC: iret: IP > descriptor limit when installing os/2 warp 
   #809574 rm -f segfaults
