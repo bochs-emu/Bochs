@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.116 2002-11-15 12:44:38 sshwarts Exp $
+// $Id: cpu.h,v 1.117 2002-11-15 18:12:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -989,7 +989,7 @@ class bxICacheEntry_c {
   bxInstruction_c i;  // The instruction decode information.
   };
 
-class bxICache_c {
+class BOCHSAPI bxICache_c {
   public:
 
   bxICacheEntry_c entry[BxICacheEntries];
