@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.12 2001-12-18 13:12:45 vruppert Exp $
+// $Id: dma.cc,v 1.13 2001-12-26 14:56:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ bx_dma_c::~bx_dma_c(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.12 2001-12-18 13:12:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.13 2001-12-26 14:56:15 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -535,18 +535,18 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
     }
 
 #if 0
-  BX_INFO(("BX_DMA_THIS s.mask[2]: %02x", (unsigned) BX_DMA_THIS s.mask[2]));
-  BX_INFO(("BX_DMA_THIS s.flip_flop: %u", (unsigned) BX_DMA_THIS s.flip_flop));
-  BX_INFO(("BX_DMA_THIS s.status_reg: %02x", (unsigned) BX_DMA_THIS s.status_reg));
-  BX_INFO(("mode_type: %02x", (unsigned) BX_DMA_THIS s.chan[channel].mode.mode_type));
-  BX_INFO(("address_decrement: %02x", (unsigned) BX_DMA_THIS s.chan[channel].mode.address_decrement));
-  BX_INFO(("autoinit_enable: %02x", (unsigned) BX_DMA_THIS s.chan[channel].mode.autoinit_enable));
-  BX_INFO(("transfer_type: %02x", (unsigned) BX_DMA_THIS s.chan[channel].mode.transfer_type));
-  BX_INFO((".base_address: %04x", (unsigned) BX_DMA_THIS s.chan[channel].base_address));
-  BX_INFO((".current_address: %04x", (unsigned) BX_DMA_THIS s.chan[channel].current_address));
-  BX_INFO((".base_count: %04x", (unsigned) BX_DMA_THIS s.chan[channel].base_count));
-  BX_INFO((".current_count: %04x", (unsigned) BX_DMA_THIS s.chan[channel].current_count));
-  BX_INFO((".page_reg: %02x", (unsigned) BX_DMA_THIS s.chan[channel].page_reg));
+  BX_INFO(("mask[%d]: %02x", channel, (unsigned) BX_DMA_THIS s[0].mask[channel]));
+  BX_INFO(("flip_flop: %u", (unsigned) BX_DMA_THIS s[0].flip_flop));
+  BX_INFO(("status_reg: %02x", (unsigned) BX_DMA_THIS s[0].status_reg));
+  BX_INFO(("mode_type: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.mode_type));
+  BX_INFO(("address_decrement: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.address_decrement));
+  BX_INFO(("autoinit_enable: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.autoinit_enable));
+  BX_INFO(("transfer_type: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].mode.transfer_type));
+  BX_INFO(("base_address: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].base_address));
+  BX_INFO(("current_address: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].current_address));
+  BX_INFO(("base_count: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].base_count));
+  BX_INFO(("current_count: %04x", (unsigned) BX_DMA_THIS s[0].chan[channel].current_count));
+  BX_INFO(("page_reg: %02x", (unsigned) BX_DMA_THIS s[0].chan[channel].page_reg));
 #endif
 
   BX_DMA_THIS s[ma_sl].status_reg |= (1 << (channel+4));
@@ -646,10 +646,10 @@ bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 1) { // write
     // xfer from I/O to Memory
     if (!ma_sl) {
-      pc_sys->dma_write8(phy_addr, channel);
+      pc_sys->dma_write8(phy_addr, channel, 0);
       }
     else {
-      pc_sys->dma_write16(phy_addr, channel+4);
+      pc_sys->dma_write16(phy_addr, channel+4, 0);
       }
     }
   else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 2) { // read
@@ -661,9 +661,17 @@ bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
       pc_sys->dma_read16(phy_addr, channel+4);
       }
     }
+  else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 0) {
+    // verify
+    if (!ma_sl) {
+      pc_sys->dma_write8(phy_addr, channel, 1);
+      }
+    else {
+      pc_sys->dma_write16(phy_addr, channel+4, 1);
+      }
+    }
   else {
-    BX_PANIC(("hlda: transfer_type of %u not handled",
-      (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type));
+    BX_PANIC(("hlda: transfer_type 3 is undefined"));
     }
 
   if (count_expired) {
