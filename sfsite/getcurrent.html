@@ -7,7 +7,66 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Download Current
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest Release: Bochs 1.3.pre1</b></font><BR><BR>
+
+<b>Bochs 1.3.pre1</b> (November 11, 2001):
+Bochs 1.3.pre1 is a pre-release of Bochs 1.3.  The new features in this
+version include:
+<ul>
+<li> add support for MacOS X (Carbon API), BeOS, and Amiga/MorphOS
+<li> emulated NE2000 works in Linux and WinNT/2000
+<li> read raw CD in Win95/98, read ISO images on any platform
+<li> in WinNT/2000, reading from raw floppies is supported
+<li> new text mode configuration menus, as an alternative to editing .bochsrc
+<li> runtime configuration menu can change floppy disk images, turn debug logging on/off during simulation
+<li> polite panics.  If you write "panic: action=ask" in the bochsrc, bochs
+     will ask you what to do when a panic occurs.  Choices include: quit,
+     continue, or turn off this type of message.
+<li> parallel port emulation
+<li> new and improved model of PIT (programmable interval timer)
+<li> improved control over simulation time: option to stay in sync with real time, and an option to use less CPU time when Bochs is idle.
+<li> many small improvements in cpu and device emulation
+<li> simpler Win32/VC++ compile process, option to use VC++ workspaces
+<li> documentation is about 80% converted to docbook, with many sections
+     written from scratch.
+</ul>
+
+<BR><BR>
+<B>BOCHS BINARIES</B><BR>
+<i>All binaries include Bochs plus a 10 mb disk image of DLX Linux to get you started.</i>
+<UL>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.pre1-win32-bin.zip">ZIP file with Binaries for all x86 Win32 Systems (3.3m)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[RPM]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.pre1.i386.rpm">RPM Binary for all RPM-based Linux x86 Distributions (1.8m)</A></li>
+</ul>
+
+<BR><BR>
+<B>BOCHS SOURCE</B><BR>
+Because Bochs is a cross-platform application, it is distributed as source code
+in a TAR file.  The primary file to download contains the Bochs sources,
+documentation, and the custom BIOS file.  If you are using a UNIX platform,
+this is all you need.  For Windows or Mac, because you cannot run the configure
+script on your machine to generate Makefiles, you will also need to grab a
+package of Makefiles, which are distributed separately.
+
+<UL>
+<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.pre1.tar.gz">GZIPPED TARBALL file containing source code (1.1meg)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.pre1.src.rpm">RPM Source (2.4meg)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.pre1-win32-src.zip">ZIP containing source code configured for Win32/VC++ (1.4meg)</A></li>
+</ul>
+
+<BR><BR>
+<B>BOCHS DOCUMENTATION</B><BR>
+The Bochs documentation is in the process of being converted to Docbook.  Since
+this transition is not yet complete, the old HTML documentation is still
+included in all source and binary distributions of 1.3.pre1.  For now, the
+new documentation is in a separate package, which you can download here.
+Of course, you can still read the <a href="/docs-html">old documentation</a> or 
+<a href="/doc/docbook/alldocs.html">new documentation</a> online.
+<UL>
+<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochsdoc-1.3.pre1.tar.gz">GZIPPED TARBALL file containing the new docbook documentation, rendered in HTML (151k)</A></li>
+</ul>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous
  Release: Bochs 1.2.1</b></font><BR><BR>
 
 <b>Bochs 1.2.1</b> (June 12, 2001):
@@ -15,6 +74,8 @@ Bochs 1.2.1 is a bugfix release based on version 1.2. Bochs 1.2 includes
 usability improvements such as improved control over error handling, an
 interactive disk image creator, and features including dual hard drive support,
 multiple processor emulation (SMP), and VNC remote viewer mode.
+( <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/docs-html/changelog.html">Details</a> )
+
 ( <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/docs-html/changelog.html">Details</a> )
 
 <BR><BR>
