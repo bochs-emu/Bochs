@@ -47,20 +47,24 @@ void pit_82C54::print_counter(counter_type & thisctr) {
       case MSByte:
 	thisctr.outlatch=thisctr.count & 0xFFFF;
 	thisctr.count_MSB_latched=1;
+	break;
       case LSByte:
 	thisctr.outlatch=thisctr.count & 0xFFFF;
 	thisctr.count_LSB_latched=1;
+	break;
       case LSByte_multiple:
 	thisctr.outlatch=thisctr.count & 0xFFFF;
 	thisctr.count_LSB_latched=1;
 	thisctr.count_MSB_latched=1;
+	break;
       case MSByte_multiple:
 	if(!(seen_problems & UNL_2P_READ)) {
-	  seen_problems|=UNL_2P_READ;
+//	  seen_problems|=UNL_2P_READ;
 	  BX_ERROR(("Unknown behavior when latching during 2-part read."));
 	  BX_ERROR(("  This message will not be repeated."));
 	}
 	//I guess latching and resetting to LSB first makes sense;
+	BX_DEBUG(("Setting read_state to LSB_mult"));
 	thisctr.read_state=LSByte_multiple;
 	thisctr.outlatch=thisctr.count & 0xFFFF;
 	thisctr.count_LSB_latched=1;
@@ -126,7 +130,12 @@ void pit_82C54::print_counter(counter_type & thisctr) {
 
   void pit_82C54::init (void) {
     Bit8u i;
+
+    put("PIT81");
+    settype(PIT81LOG);
+
     for(i=0;i<3;i++) {
+      BX_DEBUG(("Setting read_state to LSB"));
       counter[i].read_state=LSByte;
       counter[i].write_state=LSByte;
       counter[i].GATE=1;
@@ -476,6 +485,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
   }
 
   void pit_82C54::clock_all(Bit32u cycles) {
+    BX_DEBUG(("clock_all:  cycles=%d",cycles));
     clock_multiple(0,cycles);
     clock_multiple(1,cycles);
     clock_multiple(2,cycles);
@@ -485,6 +495,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
     if(address>MAX_ADDRESS) {
       BX_ERROR(("Counter address incorrect in data read."));
     } else if(address==CONTROL_ADDRESS) {
+      BX_DEBUG(("PIT Read: Control Word Register."));
       //Read from control word register;
       /* This might be okay.  If so, 0 seems the most logical
        *  return value from looking at the docs.
@@ -493,6 +504,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
       return 0;
     } else {
       //Read from a counter;
+      BX_DEBUG(("PIT Read: Counter %d.",address));
       counter_type & thisctr=counter[address];
       if(thisctr.status_latched) {
 	//Latched Status Read;
@@ -508,6 +520,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	if(thisctr.count_LSB_latched) {
 	  //Read Least Significant Byte;
 	  if(thisctr.read_state==LSByte_multiple) {
+	    BX_DEBUG(("Setting read_state to MSB_mult"));
 	    thisctr.read_state=MSByte_multiple;
 	  }
 	  thisctr.count_LSB_latched=0;
@@ -515,6 +528,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	} else if(thisctr.count_MSB_latched) {
 	  //Read Most Significant Byte;
 	  if(thisctr.read_state==MSByte_multiple) {
+	    BX_DEBUG(("Setting read_state to LSB_mult"));
 	    thisctr.read_state=LSByte_multiple;
 	  }
 	  thisctr.count_MSB_latched=0;
@@ -525,11 +539,13 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    //Read Least Significant Byte;
 	    if(thisctr.read_state==LSByte_multiple) {
 	      thisctr.read_state=MSByte_multiple;
+	      BX_DEBUG(("Setting read_state to MSB_mult"));
 	    }
 	    return (thisctr.count & 0xFF);
 	  } else {
 	    //Read Most Significant Byte;
 	    if(thisctr.read_state==MSByte_multiple) {
+	      BX_DEBUG(("Setting read_state to LSB_mult"));
 	      thisctr.read_state=LSByte_multiple;
 	    }
 	    return ((thisctr.count>>8) & 0xFF);
@@ -547,6 +563,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
     } else if(address==CONTROL_ADDRESS) {
       Bit8u SC, RW, M, BCD;
       controlword=data;
+      BX_DEBUG(("Control Word Write."));
       SC = (controlword>>6) & 0x3;
       RW = (controlword>>4) & 0x3;
       M = (controlword>>1) & 0x7;
@@ -554,6 +571,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
       if(SC == 3) {
 	//READ_BACK command;
 	int i;
+	BX_DEBUG(("READ_BACK command."));
 	for(i=0;i<=MAX_COUNTER;i++) {
 	  if((M>>i) & 0x1) {
 	    //If we are using this counter;
@@ -583,9 +601,11 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	counter_type & thisctr = counter[SC];
 	if(!RW) {
 	  //Counter Latch command;
+	  BX_DEBUG(("Counter Latch command.  SC=%d",SC));
 	  latch_counter(thisctr);
 	} else {
 	  //Counter Program Command;
+	  BX_DEBUG(("Counter Program command.  SC=%d, RW=%d, M=%d, BCD=%d",SC,RW,M,BCD));
 	  thisctr.null_count=1;
 	  thisctr.count_LSB_latched=0;
 	  thisctr.count_MSB_latched=0;
@@ -598,14 +618,17 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  thisctr.mode=M;
 	  switch(RW) {
 	  case 0x1:
+	    BX_DEBUG(("Setting read_state to LSB"));
 	    thisctr.read_state=LSByte;
 	    thisctr.write_state=LSByte;
 	    break;
 	  case 0x2:
+	    BX_DEBUG(("Setting read_state to MSB"));
 	    thisctr.read_state=MSByte;
 	    thisctr.write_state=MSByte;
 	    break;
 	  case 0x3:
+	    BX_DEBUG(("Setting read_state to LSB_mult"));
 	    thisctr.read_state=LSByte_multiple;
 	    thisctr.write_state=LSByte_multiple;
 	    break;
@@ -625,6 +648,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
     } else {
       //Write to counter initial value.
       counter_type & thisctr = counter[address];
+      BX_DEBUG(("Write Initial Count: counter=%d, count=%d",address,data));
       switch(thisctr.write_state) {
       case LSByte_multiple:
 	thisctr.inlatch=(thisctr.inlatch & (0xFF<<8)) | data;

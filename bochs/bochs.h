@@ -314,6 +314,8 @@ class iofunctions {
 #define    UNMAPLOG        42
 #define    SERRLOG         43
 #define    BIOSLOG         42
+#define    PIT81LOG        45
+#define    PIT82LOG        46
 
 
 public:
