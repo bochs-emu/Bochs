@@ -1,0 +1,344 @@
+----------------------------------------------------------------------
+Patch name: patch.memleaks-tominac
+Author: Darko Tominac <darko.tominac@zg.tel.hr>
+Date: Fri, 21 Dec 2001 19:22:48 +0100
+
+Detailed description:
+I am new to Bochs, but I have done some testing with 
+Numega's BoundsChecker and have found (and fixed) some bugs 
+and memory leaks.
+
+Bryce took the modified files, edited them a bit, and made
+it into this patch.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: logio.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/logio.cc,v
+retrieving revision 1.14
+diff -u -b -r1.14 logio.cc
+--- logio.cc	2001/12/08 18:08:24	1.14
++++ logio.cc	2001/12/21 19:03:24
+@@ -195,9 +195,10 @@
+ 
+ logfunctions::logfunctions(void)
+ {
++	prefix = NULL;
+ 	put(" ");
+ 	settype(GENLOG);
+-	if(io == NULL && Allocio == 0) {
++	if (io == NULL && Allocio == 0) {
+ 		Allocio = 1;
+ 		io = new iofunc_t(stderr);
+ 	}
+@@ -210,6 +211,7 @@
+ 
+ logfunctions::logfunctions(iofunc_t *iofunc)
+ {
++	prefix = NULL;
+ 	put(" ");
+ 	settype(GENLOG);
+ 	setio(iofunc);
+@@ -221,6 +223,16 @@
+ 
+ logfunctions::~logfunctions(void)
+ {
++    if (io != NULL)
++    {
++        delete io;
++        io = NULL;
++    }
++    if ( this->prefix )
++    {
++        free(this->prefix);
++        this->prefix = NULL;
++    }
+ }
+ 
+ void
+@@ -238,6 +250,16 @@
+ 	char *tmpbuf;
+ 	tmpbuf=strdup("[     ]");// if we ever have more than 32 chars,
+ 						   //  we need to rethink this
++
++	if ( tmpbuf == NULL)
++	{
++	    return ;                        /* allocation not successful */
++	}
++	if ( this->prefix != NULL )
++	{
++	    free(this->prefix);             /* free previously allocated memory */
++	    this->prefix = NULL;
++	}
+ 	int len=strlen(p);
+ 	for(int i=1;i<len+1;i++) {
+ 		tmpbuf[i]=p[i-1];
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.79
+diff -u -b -r1.79 main.cc
+--- main.cc	2001/11/12 02:35:09	1.79
++++ main.cc	2001/12/21 19:03:26
+@@ -1170,13 +1170,15 @@
+   static void
+ parse_line_unformatted(char *context, char *line)
+ {
++#define MAX_PARAMS_LEN 40
+   char *ptr;
+   unsigned i, string_i;
+   char string[512];
+-  char *params[40];
++  char *params[MAX_PARAMS_LEN];
+   int num_params;
+   Boolean inquotes = 0;
+ 
++  memset(params, 0, sizeof(params));
+   if (line == NULL) return;
+ 
+   // if passed nothing but whitespace, just return
+@@ -1222,10 +1224,30 @@
+       }
+     }
+     string[string_i] = '\0';
++    if ( params[num_params] != NULL )
++    {
++        free(params[num_params]);
++        params[num_params] = NULL;
++    }
++    if ( num_params < MAX_PARAMS_LEN )
++    {
+     params[num_params++] = strdup (string);
+     ptr = strtok(NULL, ",");
+   }
++    else
++    {
++        BX_PANIC (("too many parameters, max is %d\n", MAX_PARAMS_LEN));
++    }
++  }
+   parse_line_formatted(context, num_params, &params[0]);
++  for (i=0; i < MAX_PARAMS_LEN; i++)
++  {
++    if ( params[i] != NULL )
++    {
++        free(params[i]);
++        params[i] = NULL;
++    }
++  }
+ }
+ 
+   static void
+Index: state_file.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/state_file.cc,v
+retrieving revision 1.8
+diff -u -b -r1.8 state_file.cc
+--- state_file.cc	2001/10/03 13:10:37	1.8
++++ state_file.cc	2001/12/21 19:03:27
+@@ -128,4 +128,9 @@
+ state_file::~state_file()
+ {
+   BX_DEBUG(("Exit."));
++  if ( log != NULL )
++  {
++        delete log;
++        log = NULL;
++  }
+ }
+Index: gui/siminterface.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
+retrieving revision 1.35
+diff -u -b -r1.35 siminterface.cc
+--- gui/siminterface.cc	2001/11/14 00:23:08	1.35
++++ gui/siminterface.cc	2001/12/21 19:03:28
+@@ -32,6 +32,7 @@
+   int enabled;
+ public:
+   bx_real_sim_c ();
++  ~bx_real_sim_c ();
+   virtual int get_init_done () { return init_done; }
+   virtual int set_init_done (int n) { init_done = n; return 0;}
+   virtual int register_param (bx_id id, bx_param_c *it);
+@@ -127,6 +128,15 @@
+   param_registry = new bx_param_c*  [registry_alloc_size];
+ }
+ 
++bx_real_sim_c::~bx_real_sim_c ()
++{
++    if ( param_registry != NULL )
++    {
++        delete [] param_registry;
++        param_registry = NULL;
++    }
++}
++
+ int
+ bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
+ {
+@@ -447,6 +457,26 @@
+   set (initial_val);
+ }
+ 
++bx_param_string_c::~bx_param_string_c ()
++{
++    if ( this->val != NULL )
++    {
++        delete [] this->val;
++        this->val = NULL;
++    }
++    if ( this->initial_val != NULL )
++    {
++        delete [] this->initial_val;
++        this->initial_val = NULL;
++    }
++
++    if ( this->options != NULL )
++    {
++        delete [] this->options;
++        this->options = NULL;
++    }
++}
++
+ void 
+ bx_param_string_c::reset () {
+   strncpy (this->val, this->initial_val, maxsize);
+@@ -512,6 +542,30 @@
+   for (int i=0; i<this->size; i++)
+     this->list[i] = init_list[i];
+   init ();
++}
++
++bx_list_c::~bx_list_c()
++{
++    if (this->list)
++    {
++        delete [] this->list;
++        this->list = NULL;
++    }
++    if ( this->title != NULL)
++    {
++        delete this->title;
++        this->title = NULL;
++    }
++    if (this->options != NULL)
++    {
++        delete this->options;
++        this->options = NULL;
++    }
++    if ( this->choice != NULL )
++    {
++        delete this->choice;
++        this->choice = NULL;
++    }
+ }
+ 
+ void
+Index: gui/siminterface.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
+retrieving revision 1.27
+diff -u -b -r1.27 siminterface.h
+--- gui/siminterface.h	2001/11/14 00:23:08	1.27
++++ gui/siminterface.h	2001/12/21 19:03:28
+@@ -225,6 +225,7 @@
+       char *description,
+       char *initial_val,
+       int maxsize=-1);
++  ~bx_param_string_c ();
+   void reset ();
+   void set_handler (param_string_event_handler handler);
+   Bit32s get (char *buf, int len);
+@@ -270,6 +271,7 @@
+   } bx_listopt_bits;
+   //bx_list_c (bx_id id, int maxsize);
+   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
++  ~bx_list_c();
+   void add (bx_param_c *param);
+   bx_param_c *get (int index);
+   bx_param_num_c *get_options () { return options; }
+Index: gui/win32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/win32.cc,v
+retrieving revision 1.20
+diff -u -b -r1.20 win32.cc
+--- gui/win32.cc	2001/11/26 07:24:16	1.20
++++ gui/win32.cc	2001/12/21 19:03:30
+@@ -851,7 +851,8 @@
+   for (unsigned i=0; i<ydim * xdim/8; i++)
+     data[i] = reverse_bitorder(bmap[i]);
+   SetBitmapBits(bx_bitmaps[bx_bitmap_entries].bmap, ydim * xdim/8, data);
+-  free(data);
++  delete [] data;
++  data = NULL;
+ 
+   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
+   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.41
+diff -u -b -r1.41 harddrv.cc
+--- iodev/harddrv.cc	2001/11/12 03:34:45	1.41
++++ iodev/harddrv.cc	2001/12/21 19:03:34
+@@ -85,6 +85,8 @@
+ 
+ bx_hard_drive_c::bx_hard_drive_c(void)
+ {
++      s[0].hard_drive =  NULL;
++      s[1].hard_drive =  NULL;
+       put("HD");
+       settype(HDLOG);
+ #if EXTERNAL_DISK_SIMULATOR
+@@ -106,12 +108,22 @@
+ 
+ bx_hard_drive_c::~bx_hard_drive_c(void)
+ {
+-  // nothing for now
+ 	BX_DEBUG(("Exit."));
++  if ( s[0].hard_drive != NULL )      /* DT 17.12.2001 21:55 */
++  {
++    delete s[0].hard_drive;
++    s[0].hard_drive =  NULL;
++  }
++  if ( s[1].hard_drive != NULL )
++  {
++    delete s[1].hard_drive;
++    s[1].hard_drive =  NULL;        /* DT 17.12.2001 21:56 */
++  }
+ }
+ 
+ 
+ 
++
+   void
+ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
+ {
+Index: iodev/unmapped.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.cc,v
+retrieving revision 1.13
+diff -u -b -r1.13 unmapped.cc
+--- iodev/unmapped.cc	2001/10/03 13:10:38	1.13
++++ iodev/unmapped.cc	2001/12/21 19:03:34
+@@ -52,7 +52,11 @@
+ 
+ bx_unmapped_c::~bx_unmapped_c(void)
+ {
+-  // nothing for now
++    if ( bioslog != NULL )              /* DT 17.12.2001 21:32 */
++    {
++        delete bioslog;
++        bioslog = NULL;
++    }
+ }
+ 
+   void
