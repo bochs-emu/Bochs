@@ -195,6 +195,9 @@ iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
 	if(prefix != NULL)
 		fprintf(logfd, "%s ", prefix);
 
+	if(l==LOGLEV_PANIC)
+		fprintf(logfd, ">>PANIC<< ");
+
 	vfprintf(logfd, fmt, ap);
 	fflush(logfd);
 
