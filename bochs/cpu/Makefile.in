@@ -117,6 +117,8 @@ OBJS64 = \
 BX_INCLUDES = ../bochs.h ../config.h
 
 
+all: libcpu.a
+
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 

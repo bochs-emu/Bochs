@@ -47,6 +47,7 @@ BX_OBJS = \
 
 BX_INCLUDES = ../bochs.h ../config.h
 
+all: libmemory.a
 
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
