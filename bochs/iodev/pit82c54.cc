@@ -794,4 +794,5 @@ Bit32u pit_82C54::get_next_event_time(void) {
     out=time1;
   if(time2 && (time2<out))
     out=time2;
+  return out;
 }
