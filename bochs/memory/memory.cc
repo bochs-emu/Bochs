@@ -30,7 +30,6 @@
 #define LOG_THIS BX_MEM_THIS
 
 
-
 #if BX_PROVIDE_CPU_MEMORY
 
   void
@@ -39,6 +38,9 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   Bit8u *data_ptr;
   Bit32u a20addr;
 
+#if BX_IODEBUG_SUPPORT
+  bx_iodebug_c::mem_write( cpu, addr, len, data);
+#endif
 
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_WRITE(a20addr, len);
@@ -256,6 +258,10 @@ BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   Bit8u *data_ptr;
   Bit32u a20addr;
 
+#if BX_IODEBUG_SUPPORT
+  bx_iodebug_c::mem_read( cpu, addr, len, data);
+#endif
+  
 
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_READ(a20addr, len);
