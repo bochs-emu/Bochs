@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.31 2002-12-06 19:34:31 bdenney Exp $
+// $Id: sdl.cc,v 1.32 2002-12-28 11:49:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -320,8 +320,8 @@ void bx_sdl_gui_c::text_update(
       {
 
 	// Get Foreground/Background pixel colors
-	fgcolor_ndx = new_text[1] & 0x0F;
-	bgcolor_ndx = (new_text[1] >> 4) & 0x07;
+	fgcolor_ndx = DEV_vga_get_actl_pal_idx(new_text[1] & 0x0F);
+	bgcolor_ndx = DEV_vga_get_actl_pal_idx((new_text[1] >> 4) & 0x07);
 	fgcolor = palette[fgcolor_ndx];
 	bgcolor = palette[bgcolor_ndx];
 	invert = ( (y == cursor_y) && (x == cursor_x) && (cs_start < cs_end) );

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.55 2002-12-05 19:19:34 bdenney Exp $
+// $Id: x.cc,v 1.56 2002-12-28 11:49:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1069,8 +1069,8 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     curs = (prev_block_cursor_y*columns + prev_block_cursor_x)*2;
     string[0] = new_text[curs];
     if (string[0] == 0) string[0] = ' '; // convert null to space
-    XSetForeground(bx_x_display, gc, col_vals[new_text[curs+1] & 0x0f]);
-    XSetBackground(bx_x_display, gc, col_vals[(new_text[curs+1] & 0xf0) >> 4]);
+    XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_text[curs+1] & 0x0f)]);
+    XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx((new_text[curs+1] & 0xf0) >> 4)]);
     XDrawImageString(bx_x_display, win,
       gc,
       prev_block_cursor_x * font_width,
@@ -1088,8 +1088,8 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_foreground = new_text[i+1] & 0x0f;
       new_background = (new_text[i+1] & 0xf0) >> 4;
 
-      XSetForeground(bx_x_display, gc, col_vals[new_foreground]);
-      XSetBackground(bx_x_display, gc, col_vals[new_background]);
+      XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_foreground)]);
+      XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_background)]);
 
 //XSetForeground(bx_x_display, gc, white_pixel);
 //XSetBackground(bx_x_display, gc, black_pixel);

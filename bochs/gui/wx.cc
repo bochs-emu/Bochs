@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.53 2002-12-25 17:13:45 vruppert Exp $
+// $Id: wx.cc,v 1.54 2002-12-28 11:49:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -927,8 +927,8 @@ static void
 DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int cs_start, int cs_end)
 {
   int j = 0;
-  char bgcolor = (color >> 4) & 0xF;
-  char fgcolor = color & 0xF;
+  char bgcolor = DEV_vga_get_actl_pal_idx((color >> 4) & 0xF);
+  char fgcolor = DEV_vga_get_actl_pal_idx(color & 0xF);
 
   if (cs_start <= cs_end) {
     height = cs_end - cs_start + 1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.54 2002-12-24 08:20:13 cbothamy Exp $
+// $Id: vga.cc,v 1.55 2002-12-28 11:49:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2105,6 +2105,12 @@ bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
     *txHeight = 0;
     *txWidth = 0;
   }
+}
+
+  Bit8u
+bx_vga_c::get_actl_palette_idx(Bit8u index)
+{
+  return BX_VGA_THIS s.attribute_ctrl.palette_reg[index];
 }
 
   void

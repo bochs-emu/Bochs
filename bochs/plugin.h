@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.11 2002-12-12 15:29:45 cbothamy Exp $
+// $Id: plugin.h,v 1.12 2002-12-28 11:49:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -150,6 +150,7 @@ extern "C" {
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
 #define DEV_vga_set_update_interval(val) \
   (bx_devices.pluginVgaDevice->set_update_interval(val))
+#define DEV_vga_get_actl_pal_idx(index) (bx_devices.pluginVgaDevice->get_actl_palette_idx(index))
 
 ///////// PCI macros
 #define DEV_register_pci_handlers(b,c,d,e,f) \
@@ -241,6 +242,7 @@ BOCHSAPI extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot,
 		          unsigned *txHeight, unsigned *txWidth);
 BOCHSAPI extern void  (* pluginVGARefresh)(void *);
 BOCHSAPI extern void  (* pluginVGASetUpdateInterval)(unsigned);
+BOCHSAPI extern Bit8u (* pluginVGAGetActlPaletteIdx)(Bit8u index);
 
 /* === Timer stuff === */
 BOCHSAPI extern int      (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
