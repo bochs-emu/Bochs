@@ -13,7 +13,7 @@ CFLAGS	= -D__KERNEL__ -I$(LOCDIR) -I$(TOPDIR)/include -Wall -Wstrict-prototypes 
 #DEBUG	= -DDEBUGGING
 DEBUG	=
 PARANOID = -DPARANOID
-CFLAGS	:= $(CFLAGS) $(PARANOID) $(DEBUG) -fno-builtin -DNO_ASSEMBLER \
+CFLAGS	:= $(CFLAGS) $(PARANOID) $(DEBUG) -DNO_ASSEMBLER \
 		$(MATH_EMULATION)
 
 # From 'C' language sources:

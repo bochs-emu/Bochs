@@ -48,8 +48,7 @@ L_TARGET = libfpu.a
 
 BX_INCDIRS = -I.. -I../@INSTRUMENT_DIR@ -I. -I./stubs
 
-FPU_FLAGS = -DUSE_WITH_CPU_SIM $(PARANOID) $(DEBUG) \
-	-fno-builtin -DNO_ASSEMBLER
+FPU_FLAGS = -DUSE_WITH_CPU_SIM $(PARANOID) $(DEBUG) -DNO_ASSEMBLER
 FPU_GLUE_OBJ = wmFPUemu_glue.o
 
 # From 'C' language sources:
