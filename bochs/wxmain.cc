@@ -1,26 +1,15 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.19 2002-03-25 19:05:25 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.20 2002-03-25 20:09:34 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
 // when it's appropriate.
 //
-// Note that this file does NOT include bochs.h.  In an attempt to keep the
-// interface between the siimulator and its gui clean and well defined, all 
-// communication is done through the siminterface object.
+// This file contains both a VGA screen and a configuration interface.
+// I expect to separate the two, eventually, so that the configuration
+// interface could be used with a different GUI.
 //
-// Types of events between threads:
-// - async events from gui to sim. example: start, pause, resume, keypress
-// - async events from sim to gui. example: log message
-// - synchronous events from sim to gui. The sim will block forever until the
-//   gui responds to it.
-//
-// Sync events are what I need first.  The simulator calls a siminterface
-// function which creates an event and calls sim_to_gui_event (event).
-// This function clears the synchronous event mailbox, posts the event onto the
-// GUI event queue, then blocks forever until the GUI places the response event
-// in the mailbox.  Then it clears the mailbox and returns the response event.
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
@@ -44,6 +33,13 @@ extern "C" {
 #include "osdep.h"
 #include "font/vga.bitmap.h"
 #define LOG_THIS bx_gui.
+
+// to show debug messages, change these defines to x.  To hide them,
+// change the defines to return nothing.
+#define IFDBG_VGA(x) /* nothing */
+#define IFDBG_KEY(x) /* nothing */
+//#define IFDBG_VGA(x) x
+//#define IFDBG_KEY(x) x
 
 #include "gui/wx_toolbar.h"
 
@@ -87,9 +83,9 @@ private:
 
 class MyPanel: public wxPanel
 {
-  Bit16u convertToBXKey (wxKeyEvent& event);  // for all platforms
-  Bit16u convertToBXKey_MSW (wxKeyEvent& event);
-  Bit16u convertToBXKey_GTK (wxKeyEvent& event);
+  Bit32u convertToBXKey (wxKeyEvent& event);  // for all platforms
+  Bit32u convertToBXKey_MSW (wxKeyEvent& event);
+  Bit32u convertToBXKey_GTK (wxKeyEvent& event);
 public:
   MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = "panel")
       : wxPanel (parent, id, pos, size, style, name)
@@ -339,6 +335,7 @@ void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
 	"You have already started the simulator once this session. Due to memory leaks, you may get unstable behavior.",
 	"2nd time warning", wxOK | wxICON_WARNING);
   }
+  num_events = 0;  // clear the queue of events for bochs to handle
   sim_thread = new SimThread (this);
   sim_thread->Create ();
   sim_thread->Run ();                                                        
@@ -555,7 +552,7 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 	//PrepareDC(dc);
 
 	wxCriticalSectionLocker lock(wxScreen_lock);
-	wxLogDebug ("MyPanel::OnPaint called with wxScreen = %p", wxScreen);
+	IFDBG_VGA(wxLogDebug ("MyPanel::OnPaint called with wxScreen = %p", wxScreen));
 	if(wxScreen != NULL) {
 	  wxPoint pt = GetClientAreaOrigin();
 	  wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
@@ -756,6 +753,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 }
 
 
+/// copied right out of gui/x.cc
 char wxAsciiKey[0x5f] = {
   //  !"#$%&'
   BX_KEY_SPACE,
@@ -880,26 +878,158 @@ char wxAsciiKey[0x5f] = {
 };
 
 // MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode1 & 2.
-Bit16u
+Bit32u
 MyPanel::convertToBXKey_MSW (wxKeyEvent& event)
 {
 #if defined(wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXMSW__)
-  wxLogDebug ("convertToBXKey_MSW. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2);
-#endif
+  IFDBG_KEY(wxLogDebug ("convertToBXKey_MSW. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2));
+#else
   return BX_KEY_UNHANDLED;
+#endif
 }
 
+#if defined(__WXGTK__)
+// get those keysym definitions
+#include <gdk/gdkkeysyms.h>
+#endif
+
 // GTK specific key mapping, which uses wxKeyEvent::m_rawCode1.
-Bit16u
+Bit32u
 MyPanel::convertToBXKey_GTK (wxKeyEvent& event)
 {
 #if defined(__WXGTK__)
-  wxLogDebug ("convertToBXKey_GTK. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2);
+  IFDBG_KEY(wxLogDebug ("convertToBXKey_GTK. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2));
+  // GTK has only 16bit key codes
+  Bit16u keysym = (Bit32u) event.m_rawCode1;
+  Bit32u bx_key = 0;
+  // since the GDK_* symbols are very much like the X11 symbols (possibly
+  // identical), I'm using code that is copied from gui/x.cc.
+  if (keysym >= GDK_space && keysym < GDK_asciitilde) {
+    // use nice ASCII conversion table, based on x.cc
+    return wxAsciiKey[keysym - GDK_space];
+  } else switch (keysym) {
+      case GDK_KP_1:
+#ifdef GDK_KP_End
+      case GDK_KP_End:
 #endif
+        bx_key = BX_KEY_KP_END; break;
+
+      case GDK_KP_2:
+#ifdef GDK_KP_Down
+      case GDK_KP_Down:
+#endif
+        bx_key = BX_KEY_KP_DOWN; break;
+
+      case GDK_KP_3:
+#ifdef GDK_KP_Page_Down
+      case GDK_KP_Page_Down:
+#endif
+        bx_key = BX_KEY_KP_PAGE_DOWN; break;
+
+      case GDK_KP_4:
+#ifdef GDK_KP_Left
+      case GDK_KP_Left:
+#endif
+        bx_key = BX_KEY_KP_LEFT; break;
+
+      case GDK_KP_5:
+        bx_key = BX_KEY_KP_5; break;
+
+      case GDK_KP_6:
+#ifdef GDK_KP_Right
+      case GDK_KP_Right:
+#endif
+        bx_key = BX_KEY_KP_RIGHT; break;
+
+      case GDK_KP_7:
+#ifdef GDK_KP_Home
+      case GDK_KP_Home:
+#endif
+        bx_key = BX_KEY_KP_HOME; break;
+
+      case GDK_KP_8:
+#ifdef GDK_KP_Up
+      case GDK_KP_Up:
+#endif
+        bx_key = BX_KEY_KP_UP; break;
+
+      case GDK_KP_9:
+#ifdef GDK_KP_Page_Up
+      case GDK_KP_Page_Up:
+#endif
+        bx_key = BX_KEY_KP_PAGE_UP; break;
+
+      case GDK_KP_0:
+#ifdef GDK_KP_Insert
+      case GDK_KP_Insert:
+#endif
+        bx_key = BX_KEY_KP_INSERT; break;
+
+      case GDK_KP_Decimal:
+#ifdef GDK_KP_Delete
+      case GDK_KP_Delete:
+#endif
+        bx_key = BX_KEY_KP_DELETE; break;
+
+#ifdef GDK_KP_Enter
+      case GDK_KP_Enter:
+        bx_key = BX_KEY_KP_ENTER; break;
+#endif
+
+      case GDK_KP_Subtract: bx_key = BX_KEY_KP_SUBTRACT; break;
+      case GDK_KP_Add:      bx_key = BX_KEY_KP_ADD; break;
+
+      case GDK_KP_Multiply: bx_key = BX_KEY_KP_MULTIPLY; break;
+      case GDK_KP_Divide:   bx_key = BX_KEY_KP_DIVIDE; break;
+
+
+      case GDK_Up:          bx_key = BX_KEY_UP; break;
+      case GDK_Down:        bx_key = BX_KEY_DOWN; break;
+      case GDK_Left:        bx_key = BX_KEY_LEFT; break;
+      case GDK_Right:       bx_key = BX_KEY_RIGHT; break;
+
+
+      case GDK_Delete:      bx_key = BX_KEY_DELETE; break;
+      case GDK_BackSpace:   bx_key = BX_KEY_BACKSPACE; break;
+      case GDK_Tab:         bx_key = BX_KEY_TAB; break;
+      case GDK_Return:      bx_key = BX_KEY_ENTER; break;
+      case GDK_Escape:      bx_key = BX_KEY_ESC; break;
+      case GDK_F1:          bx_key = BX_KEY_F1; break;
+      case GDK_F2:          bx_key = BX_KEY_F2; break;
+      case GDK_F3:          bx_key = BX_KEY_F3; break;
+      case GDK_F4:          bx_key = BX_KEY_F4; break;
+      case GDK_F5:          bx_key = BX_KEY_F5; break;
+      case GDK_F6:          bx_key = BX_KEY_F6; break;
+      case GDK_F7:          bx_key = BX_KEY_F7; break;
+      case GDK_F8:          bx_key = BX_KEY_F8; break;
+      case GDK_F9:          bx_key = BX_KEY_F9; break;
+      case GDK_F10:         bx_key = BX_KEY_F10; break;
+      case GDK_F11:         bx_key = BX_KEY_F11; break;
+      case GDK_F12:         bx_key = BX_KEY_F12; break;
+      case GDK_Control_L:   bx_key = BX_KEY_CTRL_L; break;
+      case GDK_Shift_L:     bx_key = BX_KEY_SHIFT_L; break;
+      case GDK_Shift_R:     bx_key = BX_KEY_SHIFT_R; break;
+      case GDK_Caps_Lock:   bx_key = BX_KEY_CAPS_LOCK; break;
+      case GDK_Num_Lock:    bx_key = BX_KEY_NUM_LOCK; break;
+      case GDK_Alt_L:       bx_key = BX_KEY_ALT_L; break;
+
+      case GDK_Insert:      bx_key = BX_KEY_INSERT; break;
+      case GDK_Home:        bx_key = BX_KEY_HOME; break;
+      case GDK_End:         bx_key = BX_KEY_END; break;
+      case GDK_Page_Up:     bx_key = BX_KEY_PAGE_UP; break;
+      case GDK_Page_Down:   bx_key = BX_KEY_PAGE_DOWN; break;
+
+      default:
+        wxLogError( "convertToBXKey_GTK(): keysym %x unhandled!", (unsigned) keysym );
+        return BX_KEY_UNHANDLED;
+  }
+  return bx_key;
+#else   // if GTK toolkit
   return BX_KEY_UNHANDLED;
+#endif
 }
 
-Bit16u 
+Bit32u 
 MyPanel::convertToBXKey (wxKeyEvent& event)
 {
   // raw codes are a nonstandard addition to the wxWindows library.  At 
@@ -918,7 +1048,7 @@ MyPanel::convertToBXKey (wxKeyEvent& event)
 
   // otherwise fall back to using portable WXK_* keycodes.  Not all keys
   // can be mapped correctly using WXK_* codes but it should be usable.
-  wxLogDebug ("convertToBXKey. key code %d", event.m_keyCode);
+  IFDBG_KEY (wxLogDebug ("convertToBXKey. key code %d", event.m_keyCode));
   Bit32u key = event.m_keyCode;
 	Bit32u bx_key;
 	
@@ -1011,7 +1141,7 @@ MyPanel::convertToBXKey (wxKeyEvent& event)
 			return 0;
 		}
 	}
-	wxLogDebug ("convertToBXKey: after remapping, key=%d", bx_key);
+	IFDBG_KEY (wxLogDebug ("convertToBXKey: after remapping, key=%d", bx_key));
 	return bx_key;
 }
 
@@ -1029,9 +1159,9 @@ void bx_gui_c::handle_events(void)
     switch(event_queue[i].type) {
 	  case BX_ASYNC_EVT_KEY:
 		bx_key = event_queue[i].u.key.bx_key;
-		wxLogDebug ("sending key %s event to bochs, bx_key=0x%08x", 
-			(bx_key&BX_KEY_RELEASED)? "up  " : "down",
-			bx_key);
+		IFDBG_KEY (
+		  wxLogDebug ("sending key %s event to bochs, bx_key=0x%08x",
+		    (bx_key&BX_KEY_RELEASED)? "up  " : "down", bx_key));
         bx_devices.keyboard->gen_scancode(bx_key);
 		break;
 	  default:
@@ -1089,7 +1219,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
 		      Bit16u cursor_state, unsigned nrows)
 {
-  wxLogDebug ("text_update");
+  IFDBG_VGA(wxLogDebug ("text_update"));
 	unsigned char cChar;
 	unsigned int nchars = 80 * nrows;
 	if((wxCursorY * 80 + wxCursorX) < nchars) {
@@ -1136,7 +1266,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Boolean
 bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
-  wxLogDebug ("palette_change");
+  IFDBG_VGA(wxLogDebug ("palette_change"));
   wxBochsPalette[index].red = red;
   wxBochsPalette[index].green = green;
   wxBochsPalette[index].blue = blue;
@@ -1161,7 +1291,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-  wxLogDebug ("graphics_tile_update");
+  IFDBG_VGA (wxLogDebug ("graphics_tile_update"));
 	UpdateScreen((char *)tile, x0, y0, wxTileX, wxTileY);
 }
 
@@ -1178,7 +1308,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_gui_c::dimension_update(unsigned x, unsigned y)
 {
-  wxLogDebug ("dimension_update");
+  IFDBG_VGA (wxLogDebug ("dimension_update"));
   wxCriticalSectionLocker lock(wxScreen_lock);
   wxScreenX = x;
   wxScreenY = y;
