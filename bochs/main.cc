@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.180 2002-11-15 16:14:01 bdenney Exp $
+// $Id: main.cc,v 1.181 2002-11-15 18:53:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1443,7 +1443,19 @@ int bxmain () {
   return 0;
 }
 
-#if defined(__WXMSW__)
+#if !defined(__WXMSW__)
+// normal main function, presently in for all cases except for
+// wxWindows under win32.
+int main (int argc, char *argv[])
+{
+  bx_startup_flags.argc = argc;
+  bx_startup_flags.argv = argv;
+  return bxmain ();
+}
+#else
+
+// special WinMain function for wxWindows under win32
+
 #define MAX_ARGLEN 128
 
 // win32 applications get the whole command line in one long string.
@@ -1477,16 +1489,16 @@ int split_string_into_argv (
   *(last_nonspace+1) = 0;
   p = buf;
   while (*p) {
-    fprintf (stderr, "parsing '%c' with singlequote=%d, dblquote=%d", *p, in_single_quote, in_double_quote);
+    //fprintf (stderr, "parsing '%c' with singlequote=%d, dblquote=%d\n", *p, in_single_quote, in_double_quote);
     switch (*p) {
       case ' ':
 		if (in_double_quote || in_single_quote) 
 		  goto do_default;
         *outp = 0;
-        fprintf (stderr, "completed arg %d = '%s'", argc, argv[argc]);
+        //fprintf (stderr, "completed arg %d = '%s'\n", argc, argv[argc]);
         argc++;
 		if (argc >= max_argv) {
-		  fprintf (stderr, "too many arguments. Increase MAX_ARGUMENTS");
+		  fprintf (stderr, "too many arguments. Increase MAX_ARGUMENTS\n");
 		  return -1;
 		}
 		argv[argc] = new char[MAX_ARGLEN];
@@ -1506,24 +1518,59 @@ int split_string_into_argv (
 	  do_default:
       default:
 	    if (outp-&argv[argc][0] >= MAX_ARGLEN) {
-		  fprintf (stderr, "command line arg %d exceeded max size %d", argc, MAX_ARGLEN);
+		  //fprintf (stderr, "command line arg %d exceeded max size %d\n", argc, MAX_ARGLEN);
 		  return -1;
 		}
         *(outp++) = *(p++);
     }
   }
   if (in_single_quote) {
-	fprintf (stderr, "end of string with mismatched single quote (')");
+	fprintf (stderr, "end of string with mismatched single quote (')\n");
 	return -1;
   }
   if (in_double_quote) {
-	fprintf (stderr, "end of string with mismatched double quote (\")");
+	fprintf (stderr, "end of string with mismatched double quote (\")\n");
 	return -1;
   }
   *argc_out = argc + 1;
   return 0;
 }
 
+// The RedirectIOToConsole() function is copied from an article called "Adding
+// Console I/O to a Win32 GUI App" in Windows Developer Journal, December 1997.
+#define MAX_CONSOLE_LINES 30
+void RedirectIOToConsole ()
+{
+  int hConHandle;
+  long lStdHandle;
+  CONSOLE_SCREEN_BUFFER_INFO coninfo;
+  FILE *fp;
+  // allocate a console for this app
+  AllocConsole();
+  // set the screen buffer to be big enough to let us scroll text
+  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),
+  &coninfo);
+  coninfo.dwSize.Y = MAX_CONSOLE_LINES;
+  SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+  // redirect unbuffered STDOUT to the console
+  lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
+  hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+  fp = _fdopen( hConHandle, "w" );
+  *stdout = *fp;
+  setvbuf( stdout, NULL, _IONBF, 0 );
+  // redirect unbuffered STDIN to the console
+  lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
+  hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+  fp = _fdopen( hConHandle, "r" );
+  *stdin = *fp;
+  setvbuf( stdin, NULL, _IONBF, 0 );
+  // redirect unbuffered STDERR to the console
+  lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
+  hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+  fp = _fdopen( hConHandle, "w" );
+  *stderr = *fp;
+  setvbuf( stderr, NULL, _IONBF, 0 );
+}
 
 extern "C" int WinMain(
   HINSTANCE hInstance,
@@ -1534,16 +1581,10 @@ extern "C" int WinMain(
   bx_startup_flags.hPrevInstance = hPrevInstance;
   bx_startup_flags.m_lpCmdLine = m_lpCmdLine;
   bx_startup_flags.nCmdShow = nCmdShow;
+  RedirectIOToConsole ();
   int max_argv = 20;
   bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
   split_string_into_argv (m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
-  return bxmain ();
-}
-#else
-int main (int argc, char *argv[])
-{
-  bx_startup_flags.argc = argc;
-  bx_startup_flags.argv = argv;
   return bxmain ();
 }
 #endif
