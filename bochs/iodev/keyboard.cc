@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.60 2002-09-06 16:43:26 bdenney Exp $
+// $Id: keyboard.cc,v 1.61 2002-09-20 22:42:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,7 +48,7 @@
 // Ability to turn translation on or off
 
 #include "bochs.h"
-#include "math.h"
+#include <math.h>
 #include "scancodes.h"
 
 #define LOG_THIS  bx_keyboard.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.60 2002-09-06 16:43:26 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.61 2002-09-20 22:42:29 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.60 2002-09-06 16:43:26 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.61 2002-09-20 22:42:29 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
