@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.13 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: load32bitOShack.cc,v 1.14 2003-08-08 00:05:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -211,8 +211,14 @@ bx_load_linux_hack(void)
   BX_OUTP( 0x70, 0x80, 1 );
 
   // Enter protected mode
-  BX_CPU(0)->cr0.pe = 1;
-  BX_CPU(0)->cr0.val32 |= 0x01;
+  // Fixed by george (kyriazis at nvidia.com)
+  // BX_CPU(0)->cr0.pe = 1;
+  // BX_CPU(0)->cr0.val32 |= 0x01;
+
+  BX_CPU(0)->SetCR0(BX_CPU(0)->cr0.val32 | 0x01);
+ 
+  // load esi with real_mode
+  BX_CPU(0)->gen_reg[BX_32BIT_REG_ESI].dword.erx = 0x90000; 
 
   // Set up initial GDT
   BX_CPU(0)->gdtr.limit = 0x400;
