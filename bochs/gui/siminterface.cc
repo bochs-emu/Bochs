@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.15 2001-06-16 23:08:32 bdenney Exp $
+ * $Id: siminterface.cc,v 1.16 2001-06-17 13:50:52 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -52,10 +52,6 @@ public:
   virtual char *get_floppy_type_name (int type);
   virtual int get_boot_hard_disk ();
   virtual int set_boot_hard_disk (int val);
-  virtual int get_vga_path (char *buf, int len);
-  virtual int set_vga_path (char *path);
-  virtual int get_rom_address ();
-  virtual int set_rom_address (int addr);
   virtual int get_private_colormap ();
   virtual void set_private_colormap (int en);
   virtual void set_notify_callback (sim_interface_callback_t func);
@@ -75,6 +71,8 @@ bx_real_sim_c::get_param (bx_id id)
     case BXP_MOUSE_ENABLED: return bx_options.mouse_enabled;
     case BXP_MEM_SIZE: return bx_options.memory.size;
     case BXP_ROM_PATH: return bx_options.rom.path;
+    case BXP_ROM_ADDRESS: return bx_options.rom.address;
+    case BXP_VGA_ROM_PATH: return bx_options.vgarom.path;
     default: 
       BX_PANIC (("get_param can't find id %u", id));
   }
@@ -332,36 +330,6 @@ bx_real_sim_c::set_rom_path (char *path)
   return 0;
 }
 #endif
-
-int 
-bx_real_sim_c::get_vga_path (char *buf, int len)
-{
-  if (bx_options.vgarom.path)
-    strncpy (buf, bx_options.vgarom.path, len);
-  else
-    buf[0] = 0;
-  return 0;
-}
-
-int 
-bx_real_sim_c::set_vga_path (char *path)
-{
-  bx_options.vgarom.path = strdup (path);
-  return 0;
-}
-
-int 
-bx_real_sim_c::get_rom_address ()
-{
-  return bx_options.rom.address;
-}
-
-int 
-bx_real_sim_c::set_rom_address (int addr)
-{
-  bx_options.rom.address = addr;
-  return 0;
-}
 
 int 
 bx_real_sim_c::get_private_colormap ()

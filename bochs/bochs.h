@@ -599,11 +599,11 @@ struct bx_cdrom_options
 
 typedef struct {
   bx_param_string_c *path;
-  unsigned long address;
+  bx_param_num_c *address;
   } bx_rom_options;
 
 typedef struct {
-  char *path;
+  bx_param_string_c *path;
   } bx_vgarom_options;
 
 typedef struct {

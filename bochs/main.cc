@@ -67,7 +67,7 @@ bx_options_t bx_options = {
   { 0, "", 0, 0, 0 },                   // diskc
   { 0, "", 0, 0, 0 },                   // diskd
   { 0, "", 0 },                         // cdromd
-  { NULL, 0 },                          // rom
+  { NULL, NULL },                          // rom
   { NULL },                             // vgarom
   { NULL },              // memory
   { 0, NULL, NULL, NULL, 0, 0, 0, 0 },  // SB16
@@ -503,6 +503,15 @@ void bx_init_options ()
       "romimage",
       "Pathname of ROM image to load",
       BX_PATHNAME_LEN, "");
+  bx_options.rom.address = new bx_param_num_c (BXP_ROM_ADDRESS,
+      "romaddr",
+      "The address at which the ROM image should be loaded",
+      0, 1<<31, 
+      0);
+  bx_options.vgarom.path = new bx_param_string_c (BXP_VGA_ROM_PATH,
+      "vgaromimage",
+      "Pathname of VGA ROM image to load",
+      BX_PATHNAME_LEN, "");
 }
 
 int
@@ -649,15 +658,15 @@ bx_init_hardware()
 
 #if BX_SMP_PROCESSORS==1
   BX_MEM(0)->init_memory(bx_options.memory.size->get () * 1024*1024);
-  BX_MEM(0)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address);
-  BX_MEM(0)->load_ROM(bx_options.vgarom.path, 0xc0000);
+  BX_MEM(0)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get ());
+  BX_MEM(0)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
   BX_CPU(0)->init (BX_MEM(0));
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
   // SMP initialization
   bx_mem_array[0] = new BX_MEM_C ();
   bx_mem_array[0]->init_memory(bx_options.memory.size->get () * 1024*1024);
-  bx_mem_array[0]->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address);
+  bx_mem_array[0]->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get ());
   bx_mem_array[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C ();
@@ -1095,15 +1104,15 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     bx_options.rom.path->set (&params[1][5]);
     if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-      bx_options.rom.address = strtoul(&params[2][8], NULL, 16);
+      bx_options.rom.address->set (strtoul (&params[2][8], NULL, 16));
     else
-      bx_options.rom.address = strtoul(&params[2][8], NULL, 10);
+      bx_options.rom.address->set (strtoul (&params[2][8], NULL, 10));
     }
   else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
       BX_PANIC(("%s: vgaromimage directive: wrong # args.", context));
       }
-    bx_options.vgarom.path = strdup(params[1]);
+    bx_options.vgarom.path->set (params[1]);
     }
   else if (!strcmp(params[0], "vga_update_interval")) {
     if (num_params != 2) {

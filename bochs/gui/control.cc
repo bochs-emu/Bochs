@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.20 2001-06-16 23:08:32 bdenney Exp $
+ * $Id: control.cc,v 1.21 2001-06-17 13:50:52 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -479,15 +479,17 @@ int bx_control_panel (int menu)
      {
        char prompt[CPANEL_PATH_LEN], vgapath[CPANEL_PATH_LEN], rompath[CPANEL_PATH_LEN];
        bx_param_num_c *memsize = SIM->get_param_num (BXP_MEM_SIZE);
+       bx_param_num_c *rom_addr = SIM->get_param_num (BXP_ROM_ADDRESS);
        bx_param_string_c *rom_path = SIM->get_param_string (BXP_ROM_PATH);
+       bx_param_string_c *vga_rom_path = SIM->get_param_string (BXP_VGA_ROM_PATH);
        if (rom_path->get (rompath, CPANEL_PATH_LEN) < 0)
 	 strcpy (rompath, "none");
-       if (SIM->get_vga_path (vgapath, CPANEL_PATH_LEN) < 0)
+       if (vga_rom_path->get (vgapath, CPANEL_PATH_LEN) < 0)
 	 strcpy (vgapath, "none");
        sprintf (prompt, startup_mem_options_prompt, 
           memsize->get (),
 	  vgapath, rompath,
-	  SIM->get_rom_address ());
+	  rom_addr->get ());
        if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
@@ -634,10 +636,11 @@ void bx_edit_rom_path (int vga)
 {
   char oldpath[CPANEL_PATH_LEN], newpath[CPANEL_PATH_LEN];
   if (vga) {
-    if (SIM->get_vga_path (oldpath, CPANEL_PATH_LEN) < 0) return;
+    bx_param_string_c *vga_path = SIM->get_param_string (BXP_VGA_ROM_PATH);
+    if (vga_path->get (oldpath, CPANEL_PATH_LEN) < 0) return;
     if (ask_string ("Enter pathname of the VGA ROM image: [%s] ", oldpath, newpath) < 0)
       return;
-    SIM->set_vga_path (newpath);
+    vga_path->set (newpath);
   } else {
     bx_param_string_c *rom_path = SIM->get_param_string (BXP_ROM_PATH);
     if (rom_path->get (oldpath, CPANEL_PATH_LEN) < 0) return;
@@ -838,13 +841,14 @@ void bx_log_file ()
 void bx_edit_rom_addr ()
 {
   char oldval[256], newval[256];
-  sprintf (oldval, "%05x", SIM->get_rom_address ());
+  bx_param_num_c *rom_addr = SIM->get_param_num (BXP_ROM_ADDRESS);
+  sprintf (oldval, "%05x", rom_addr->get ());
   while (1) {
     if (ask_string ("Enter the ROM BIOS address: [%s] ", oldval, newval) < 0)
       return;
     int val;
     if (1==sscanf (newval, "%x", &val)) {
-      SIM->set_rom_address (val);
+      rom_addr->set (val);
       return;
     }
     fprintf (stderr, "The value should be in hex, as in 'e0000'.\n");
