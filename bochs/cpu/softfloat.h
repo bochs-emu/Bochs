@@ -158,7 +158,6 @@ float32 float32_add(float32, float32, float_status_t &status);
 float32 float32_sub(float32, float32, float_status_t &status);
 float32 float32_mul(float32, float32, float_status_t &status);
 float32 float32_div(float32, float32, float_status_t &status);
-float32 float32_rem(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
 
 typedef int (*float32_compare_method)(float32, float32, float_status_t &status);
@@ -192,7 +191,6 @@ float64 float64_add(float64, float64, float_status_t &status);
 float64 float64_sub(float64, float64, float_status_t &status);
 float64 float64_mul(float64, float64, float_status_t &status);
 float64 float64_div(float64, float64, float_status_t &status);
-float64 float64_rem(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
 
 typedef int (*float64_compare_method)(float64, float64, float_status_t &status);
@@ -214,7 +212,7 @@ int float64_is_signaling_nan(float64);
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
-#ifdef BIG_ENDIAN
+#ifdef BX_BIG_ENDIAN
 struct floatx80 {	// do not allow 16-byte extension of the structure
     Bit16u exp;
     Bit64u fraction;
@@ -261,7 +259,6 @@ floatx80 floatx80_add(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_sub(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_mul(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_div(floatx80, floatx80, float_status_t &status);
-floatx80 floatx80_rem(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_sqrt(floatx80, float_status_t &status);
 int floatx80_eq(floatx80, floatx80, float_status_t &status);
 int floatx80_le(floatx80, floatx80, float_status_t &status);

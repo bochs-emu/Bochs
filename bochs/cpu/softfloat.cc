@@ -1040,108 +1040,6 @@ float32 float32_div(float32 a, float32 b, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Returns the remainder of the single-precision floating-point value `a'
-| with respect to the corresponding value `b'.  The operation is performed
-| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-float32 float32_rem(float32 a, float32 b, float_status_t &status)
-{
-    int aSign, bSign, zSign;
-    Bit16s aExp, bExp, expDiff;
-    Bit32u aSig, bSig;
-    Bit32u q;
-    Bit64u aSig64, bSig64, q64;
-    Bit32u alternateASig;
-    Bit32s sigMean;
-
-    aSig = extractFloat32Frac(a);
-    aExp = extractFloat32Exp(a);
-    aSign = extractFloat32Sign(a);
-    bSig = extractFloat32Frac(b);
-    bExp = extractFloat32Exp(b);
-    bSign = extractFloat32Sign(b);
-    if (aExp == 0xFF) {
-        if (aSig || ((bExp == 0xFF) && bSig)) {
-            return propagateFloat32NaN(a, b, status);
-        }
-        float_raise(status, float_flag_invalid);
-        return float32_default_nan;
-    }
-    if (bExp == 0xFF) {
-        if (bSig) return propagateFloat32NaN(a, b, status);
-        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
-        return a;
-    }
-    if (bExp == 0) {
-        if (bSig == 0) {
-            float_raise(status, float_flag_invalid);
-            return float32_default_nan;
-        }
-        float_raise(status, float_flag_denormal);
-        normalizeFloat32Subnormal(bSig, &bExp, &bSig);
-    }
-    if (aExp == 0) {
-        if (aSig == 0) return packFloat32(aSign, 0, 0);
-        float_raise(status, float_flag_denormal);
-        normalizeFloat32Subnormal(aSig, &aExp, &aSig);
-    }
-    expDiff = aExp - bExp;
-    aSig |= 0x00800000;
-    bSig |= 0x00800000;
-    if (expDiff < 32) {
-        aSig <<= 8;
-        bSig <<= 8;
-        if (expDiff < 0) {
-            if (expDiff < -1) return a;
-            aSig >>= 1;
-        }
-        q = (bSig <= aSig);
-        if (q) aSig -= bSig;
-        if (0 < expDiff) {
-            q = (((Bit64u) aSig)<<32) / bSig;
-            q >>= 32 - expDiff;
-            bSig >>= 2;
-            aSig = ((aSig>>1)<<(expDiff - 1)) - bSig * q;
-        }
-        else {
-            aSig >>= 2;
-            bSig >>= 2;
-        }
-    }
-    else {
-        if (bSig <= aSig) aSig -= bSig;
-        aSig64 = ((Bit64u) aSig)<<40;
-        bSig64 = ((Bit64u) bSig)<<40;
-        expDiff -= 64;
-        while (0 < expDiff) {
-            q64 = estimateDiv128To64(aSig64, 0, bSig64);
-            q64 = (2 < q64) ? q64 - 2 : 0;
-            aSig64 = -((bSig * q64)<<38);
-            expDiff -= 62;
-        }
-        expDiff += 64;
-        q64 = estimateDiv128To64(aSig64, 0, bSig64);
-        q64 = (2 < q64) ? q64 - 2 : 0;
-        q = q64>>(64 - expDiff);
-        bSig <<= 6;
-        aSig = ((aSig64>>33)<<(expDiff - 1)) - bSig * q;
-    }
-    do {
-        alternateASig = aSig;
-        ++q;
-        aSig -= bSig;
-    } while (0 <= (Bit32s) aSig);
-    sigMean = aSig + alternateASig;
-    if ((sigMean < 0) || ((sigMean == 0) && (q & 1))) {
-        aSig = alternateASig;
-    }
-    zSign = ((Bit32s) aSig < 0);
-    if (zSign) aSig = -aSig;
-    return normalizeRoundAndPackFloat32(aSign ^ zSign, bExp, aSig, status);
-}
-
-/*----------------------------------------------------------------------------
 | Returns the square root of the single-precision floating-point value `a'.
 | The operation is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic.
@@ -2052,93 +1950,6 @@ float64 float64_div(float64 a, float64 b, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Returns the remainder of the double-precision floating-point value `a'
-| with respect to the corresponding value `b'.  The operation is performed
-| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-float64 float64_rem(float64 a, float64 b, float_status_t &status)
-{
-    int aSign, bSign, zSign;
-    Bit16s aExp, bExp, expDiff;
-    Bit64u aSig, bSig;
-    Bit64u q, alternateASig;
-    Bit64s sigMean;
-
-    aSig = extractFloat64Frac(a);
-    aExp = extractFloat64Exp(a);
-    aSign = extractFloat64Sign(a);
-    bSig = extractFloat64Frac(b);
-    bExp = extractFloat64Exp(b);
-    bSign = extractFloat64Sign(b);
-    if (aExp == 0x7FF) {
-        if (aSig || ((bExp == 0x7FF) && bSig)) {
-            return propagateFloat64NaN(a, b, status);
-        }
-        float_raise(status, float_flag_invalid);
-        return float64_default_nan;
-    }
-    if (bExp == 0x7FF) {
-        if (bSig) return propagateFloat64NaN(a, b, status);
-        if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
-        return a;
-    }
-    if (bExp == 0) {
-        if (bSig == 0) {
-            float_raise(status, float_flag_invalid);
-            return float64_default_nan;
-        }
-        float_raise(status, float_flag_denormal);
-        normalizeFloat64Subnormal(bSig, &bExp, &bSig);
-    }
-    if (aExp == 0) {
-        if (aSig == 0) return packFloat64(aSign, 0, 0);
-        float_raise(status, float_flag_denormal);
-        normalizeFloat64Subnormal(aSig, &aExp, &aSig);
-    }
-    expDiff = aExp - bExp;
-    aSig = (aSig | BX_CONST64(0x0010000000000000))<<11;
-    bSig = (bSig | BX_CONST64(0x0010000000000000))<<11;
-    if (expDiff < 0) {
-        if (expDiff < -1) return a;
-        aSig >>= 1;
-    }
-    q = (bSig <= aSig);
-    if (q) aSig -= bSig;
-    expDiff -= 64;
-    while (0 < expDiff) {
-        q = estimateDiv128To64(aSig, 0, bSig);
-        q = (2 < q) ? q - 2 : 0;
-        aSig = -((bSig>>2) * q);
-        expDiff -= 62;
-    }
-    expDiff += 64;
-    if (0 < expDiff) {
-        q = estimateDiv128To64(aSig, 0, bSig);
-        q = (2 < q) ? q - 2 : 0;
-        q >>= 64 - expDiff;
-        bSig >>= 2;
-        aSig = ((aSig>>1)<<(expDiff - 1)) - bSig * q;
-    }
-    else {
-        aSig >>= 2;
-        bSig >>= 2;
-    }
-    do {
-        alternateASig = aSig;
-        ++q;
-        aSig -= bSig;
-    } while (0 <= (Bit64s) aSig);
-    sigMean = aSig + alternateASig;
-    if ((sigMean < 0) || ((sigMean == 0) && (q & 1))) {
-        aSig = alternateASig;
-    }
-    zSign = ((Bit64s) aSig < 0);
-    if (zSign) aSig = -aSig;
-    return normalizeRoundAndPackFloat64(aSign ^ zSign, bExp, aSig, status);
-}
-
-/*----------------------------------------------------------------------------
 | Returns the square root of the double-precision floating-point value `a'.
 | The operation is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic.
@@ -2536,12 +2347,11 @@ float_class_t floatx80_class(floatx80 a)
 static floatx80 roundAndPackFloatx80(int roundingPrecision, 
         int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status)
 {
-    Bit8u roundingMode;
-    int roundNearestEven, increment, isTiny;
-    Bit64s roundIncrement, roundMask, roundBits;
+    Bit64u roundIncrement, roundMask, roundBits;
+    int increment;
 
-    roundingMode = get_float_rounding_mode(status);
-    roundNearestEven = (roundingMode == float_round_nearest_even);
+    Bit8u roundingMode = get_float_rounding_mode(status);
+    int roundNearestEven = (roundingMode == float_round_nearest_even);
     if (roundingPrecision == 64) {
         roundIncrement = BX_CONST64(0x0000000000000400);
         roundMask = BX_CONST64(0x00000000000007FF);
@@ -2575,7 +2385,7 @@ static floatx80 roundAndPackFloatx80(int roundingPrecision,
             goto overflow;
         }
         if (zExp <= 0) {
-            isTiny =
+            int isTiny =
                    (status.float_detect_tininess == float_tininess_before_rounding)
                 || (zExp < 0)
                 || (zSig0 <= zSig0 + roundIncrement);
@@ -2639,7 +2449,7 @@ static floatx80 roundAndPackFloatx80(int roundingPrecision,
             return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
         }
         if (zExp <= 0) {
-            isTiny =
+            int isTiny =
                    (status.float_detect_tininess == float_tininess_before_rounding)
                 || (zExp < 0)
                 || ! increment
