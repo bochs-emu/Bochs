@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.59 2002-06-22 15:22:20 vruppert Exp $
+// $Id: rombios.c,v 1.60 2002-07-23 18:45:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1067,10 +1067,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.59 $";
-static char bios_date_string[] = "$Date: 2002-06-22 15:22:20 $";
+static char bios_cvs_version_string[] = "$Revision: 1.60 $";
+static char bios_date_string[] = "$Date: 2002-07-23 18:45:26 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.59 2002-06-22 15:22:20 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.60 2002-07-23 18:45:26 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -9462,6 +9462,10 @@ post_default_ints:
   mov  bx, #0x003E
   mov  0x0482, bx
 
+  /* clear the output buffer and enable keyboard */
+  in   al, 0x60
+  mov  al, #0xae
+  out  0x64, al
   /* (mch) Keyboard self-test */
   mov  al, #0xaa
   out  0x64, al
@@ -10169,8 +10173,7 @@ dummy_iret_handler:
 ; .ascii "(c) 1994-2000 Kevin P. Lawton"
 
 .org 0xfff0 ; Power-up Entry Point
-  //JMPL(post)
-  jmp post
+  jmp 0xf000:post;
 
 .org 0xfff5 ; ASCII Date ROM was built - 8 characters in MM/DD/YY
 .ascii "06/23/99"
