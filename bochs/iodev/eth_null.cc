@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_null.cc,v 1.8 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: eth_null.cc,v 1.9 2002-10-06 20:19:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -108,7 +108,7 @@ bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
   unsigned int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed", io_len));
+  if (n != 1) BX_ERROR (("fwrite to txlog failed, io_len = %u", io_len));
   // dump packet in hex into an ascii log file
   fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
@@ -137,7 +137,7 @@ void bx_null_pktmover_c::rx_timer_handler (void *this_ptr)
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
     int n = fwrite (buf, io_len, 1, class_ptr->rxlog);
-    if (n != 1) BX_ERROR (("fwrite to rxlog failed", io_len));
+    if (n != 1) BX_ERROR (("fwrite to rxlog failed, io_len = %u", io_len));
     // dump packet in hex into an ascii log file
     fprintf (class_ptr->rxlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
     Bit8u *charbuf = (Bit8u *)buf;

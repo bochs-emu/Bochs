@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.46 2002-10-03 21:07:02 bdenney Exp $
+// $Id: cdrom.cc,v 1.47 2002-10-06 20:19:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -208,7 +208,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.46 2002-10-03 21:07:02 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.47 2002-10-06 20:19:03 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -669,7 +669,7 @@ cdrom_interface::capacity()
     if (ret) {
        BX_PANIC (("fstat on cdrom image returned err: %s", strerror(errno)));
     }
-    BX_INFO (("cdrom size is %d bytes", stat_buf.st_size));
+    BX_INFO (("cdrom size is %lu bytes", stat_buf.st_size));
     if ((stat_buf.st_size % 2048) != 0)  {
       BX_ERROR (("expected cdrom image to be a multiple of 2048 bytes"));
     }

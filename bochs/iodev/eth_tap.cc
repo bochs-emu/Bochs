@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.6 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: eth_tap.cc,v 1.7 2002-10-06 20:19:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -255,7 +255,7 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
   int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed", io_len));
+  if (n != 1) BX_ERROR (("fwrite to txlog failed, io_len = %u", io_len));
   // dump packet in hex into an ascii log file
   fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
@@ -307,7 +307,7 @@ void bx_tap_pktmover_c::rx_timer ()
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
     int n = fwrite (rxbuf, nbytes, 1, rxlog);
-    if (n != 1) BX_ERROR (("fwrite to rxlog failed", nbytes));
+    if (n != 1) BX_ERROR (("fwrite to rxlog failed, nbytes = %d", nbytes));
     // dump packet in hex into an ascii log file
     fprintf (rxlog_txt, "NE2K received a packet, length %u\n", nbytes);
     for (n=0; n<nbytes; n++) {
