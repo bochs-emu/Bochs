@@ -488,37 +488,75 @@ typedef struct {
   } bx_gen_reg_t;
 #endif
 
-#define APIC_MAX_ID 16
-extern BX_CPU_C *apic_index[APIC_MAX_ID];
-
+class bx_generic_apic_c {
+protected:
+  Bit32u base_addr;
+  Bit8u id;
 #define APIC_UNKNOWN_ID 0xff
-class bx_apic_c {
+#define APIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC
 public:
-  bx_apic_c(BX_CPU_C *mycpu);
-  ~bx_apic_c(void);
-  BX_CPU_C *cpu;
-  Bit32u get_base (void);
+  bx_generic_apic_c ();
+  ~bx_generic_apic_c ();
+  virtual void init ();
+  Bit32u get_base (void) { return base_addr; }
   void set_base (Bit32u newbase);
   void set_id (Bit8u newid);
   Bit8u get_id () { return id; }
-  void write_handler (Bit32u addr, Bit32u *data, unsigned len);
-  void read_handler (Bit32u addr, Bit32u *data, unsigned len);
+  virtual char *get_name();
+  Boolean is_selected (Bit32u addr, Bit32u len);
+  void read (Bit32u addr, void *data, unsigned len);
+  virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
+  virtual void write(Bit32u address, Bit32u *value, unsigned len);
+  virtual void startup_msg (Bit32u vector);
+  // on local APIC, trigger means deliver to the CPU.
+  // on I/O APIC, trigger means direct to another APIC according to table.
+  virtual void trigger_irq (unsigned num, unsigned from);
+  virtual void untrigger_irq (unsigned num, unsigned from);
+};
+
+class bx_local_apic_c : public bx_generic_apic_c {
+#define BX_LOCAL_APIC_MAX_INTS 256
+  // TMR=trigger mode register.  Cleared for edge-triggered interrupts
+  // and set for level-triggered interrupts.  If set, local APIC must send
+  // EOI message to all other APICs.  EOI's are not implemented.
+  Bit8u tmr[BX_LOCAL_APIC_MAX_INTS];
+  // IRR=interrupt request register.  When an interrupt is triggered by
+  // the I/O APIC or another processor, it sets a bit in irr.  The bit is
+  // cleared when the interrupt is acknowledged by the processor.
+  Bit8u irr[BX_LOCAL_APIC_MAX_INTS];
+  // ISR=in-service register.  When an IRR bit is cleared, the corresponding
+  // bit in ISR is set.  The ISR bit is cleared when 
+  Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
+  Bit32u arb_priority, proc_priority, tpr, log_dest, dest_format, spurious_vec;
+  Bit32u lvt_timer, lvt_thermal, lvt_perf, lvt_lint0, lvt_lint1, lvt_err;
+  Bit32u timer_initial, timer_current, timer_divide;
+public:
+  bx_local_apic_c(BX_CPU_C *mycpu);
+  ~bx_local_apic_c(void);
+  BX_CPU_C *cpu;
+  virtual void init ();
   static BX_CPU_C *get_cpu (Bit8u id);
-  void startup_msg (Bit32u vector);
+  void set_id (Bit8u newid);   // redefine to set cpu->name
+  virtual char *get_name();
+  virtual void write (Bit32u addr, Bit32u *data, unsigned len);
+  virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
+  virtual void startup_msg (Bit32u vector);
+  // on local APIC, trigger means raise the CPU's INTR line.  For now
+  // I also have to raise pc_system.INTR but that should be replaced
+  // with the cpu-specific INTR signals.
+  virtual void trigger_irq (unsigned num, unsigned from);
+  virtual void untrigger_irq (unsigned num, unsigned from);
+  Bit8u acknowledge_int ();  // only the local CPU should call this
+  int highest_priority_int (Bit8u *array);
+  void service_local_apic ();
 private:
   Bit32u apic_base_msr;
-  Bit8u id;
   Bit32u icr_high, icr_low;
   Bit32u err_status;
-#define APIC_VERSION_ID 0x00170011  // same as 82093 IOAPIC
   };
 
-
-#if BX_USE_APIC_SMF
-extern bx_apic_c bx_apic;
-#endif
-
-
+#define APIC_MAX_ID 16
+extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 
 
 #if BX_USE_SMF == 0
@@ -652,7 +690,7 @@ public: // for now...
 
   Bit32u   debug_trap; // holds DR6 value to be set as well
   volatile Boolean async_event;
-
+  volatile Boolean INTR;
 
   // for accessing registers by index number
   Bit16u *_16bit_base_reg[8];
@@ -1407,7 +1445,7 @@ public: // for now...
   BX_SMF inline Boolean v8086_mode(void);
 #endif
 #if BX_APIC_SUPPORT
-  bx_apic_c local_apic;
+  bx_local_apic_c local_apic;
 #endif
   };
 
