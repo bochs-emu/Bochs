@@ -1,0 +1,26 @@
+What is your name?
+[Danilo Paliani]
+
+What is your email address?
+[lab.village1@saritel.it]
+
+What type of hardware are you using, e.g. 500MHz Intel Celeron.
+[x86]
+
+What operating system are you using?  Please be specific, e.g. 
+Redhat Linux 6.2 with 2.2.16 kernel.
+[Solaris 7]
+
+What version of bochs are you using?
+   [ ] I compiled it from 03/25/2000 snapshot
+   [ ] I compiled it from 04/06/2001 bugfix snapshot
+   [ ] I compiled it from 04/09/2001 bugfix snapshot
+   [X] other source distribution from URL: [990708a]
+   [ ] binary distribution from URL: [__]
+
+What guest operating system are you using inside bochs?
+[win95]
+
+Did the guest operating system boot successfully?
+  [X] Yes
+  [ ] No

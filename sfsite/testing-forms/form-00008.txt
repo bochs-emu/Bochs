@@ -1,0 +1,107 @@
+What is your name?
+[Bryce Denney]
+
+What is your email address?
+[bryce dot denney at bigfoot dot com]
+
+Do you mind if your name and email address are placed on a testing results 
+web page so that people with a similar setup can write to you?
+   [X] Ok, put it on a web page
+   [ ] No, keep my address private.
+
+What type of hardware are you using, e.g. 500MHz Intel Celeron.
+[400MHz AMD K6]
+
+What operating system are you using?  Please be specific, e.g. 
+Redhat Linux 6.2 with 2.2.16 kernel.
+[Redhat Linux 6.2 with 2.2.14]
+
+What version of bochs are you using?
+   [ ] I compiled it from 03/25/2000 snapshot
+   [ ] I compiled it from 04/06/2001 bugfix snapshot
+   [X] I compiled it from 04/09/2001 bugfix snapshot
+   [ ] other source distribution from URL: [__]
+   [ ] binary distribution from URL: [__]
+
+Please fill in the next few questions only if you compiled Bochs
+yourself, as opposed to downloading a binary.
+
+Did the configure script run ok, and detect your hardware and
+operating system?
+  [X] Yes
+  [ ] No, configure crashed.
+  [ ] No, configure ran ok but produced a bad configuration.
+  [ ] No, I cannot run configure on my platform (win32 and mac).
+
+If you used configure, what arguments did you give it?  If you used a
+.conf.* script, give the name of the .conf script instead.
+[.conf.x86]
+
+What compiler did you use?  (Please include version.)
+[egcs-2.91.66]
+
+Did Bochs compile clean without any hacking?
+  [X] Yes
+  [ ] No
+
+If you had to make changes to compile, please summarize the problems you 
+had or include diffs.
+[__]
+
+End of compile-specific questions!
+
+What guest operating system are you using inside bochs?
+[netbsd test image from bochs.sourceforge.net]
+
+Are you booting from a floppy or hard disk?
+  [X] floppy image
+  [ ] raw floppy drive
+  [ ] hard drive image
+  [ ] raw hard drive         (is this even possible?)
+  [ ] other [__]
+
+Did the guest operating system boot successfully?
+  [ ] Yes
+  [X] No
+
+If no, what error messages do you see on the console or in the log file?
+[hard disk panic during boot.
+
+200470320 pic:slave: OCW3 not implemented (68) 
+200772055 KBD: LED status set to 00 
+203100071 DMA(ignored): write: 00d6h = 00c0h 
+203100090 DMA(ignored): write: 00d4h = 0000h 
+277515049 hard drive: RESET 
+277533056 disk: Reset complete {DISK} 
+bochs: panic, disk: IO read(0x1f2): current command not 
+read/write ]
+
+What applications worked under this guest operating system?
+[__]
+
+What applications failed under this guest operating system?  Did the
+application function incorrectly, crash Bochs, or what?  If you got a
+panic, paste in the panic message that you received with some
+description of what was happening at the time.
+[__]
+
+The remaining questions are about Bochs features that you may not have
+used.  If you tried out the feature, move the X to the "works" or
+"fails" column.
+
+                  Not       Works    
+		  tested    ok      Fails   Comments?
+floppy disk        [ ]      [X]     [ ]     [__]
+raw floppy disk    [X]      [ ]     [ ]     [__]
+hard disk          [ ]      [ ]     [X]     [__]
+floating point     [X]      [ ]     [ ]     [__]
+cdrom              [X]      [ ]     [ ]     [__]
+sb16               [X]      [ ]     [ ]     [__]
+ne2000             [X]      [ ]     [ ]     [__]
+i440FX pci         [X]      [ ]     [ ]     [__]
+debugger           [X]      [ ]     [ ]     [__]
+external loader    [X]      [ ]     [ ]     [__]
+VGA                [X]      [ ]     [ ]     [__]
+
+Thank you for your contribution in the Bochs testing effort!  Please
+mail completed forms to bochs-testing@tlw.com.

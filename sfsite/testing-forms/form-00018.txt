@@ -1,0 +1,36 @@
+Date: 5/16/2001
+Tester: Chris Schmidt
+
+Version of Bochs: bochs-20010515 CVS snapshot
+Computer/Hardware/OS Used:
+AMD K-7 Athlon 650mhz, 384mb RAM. Slackware Linux 2.2.19
+OS Installed on Bochs: DOS 6.22 w/ Windows 3.1
+
+Settings in .bochsrc:
+megs: 128
+boot: c
+diskc: file=win31.img, cyl=900, heads=15, spt=17 (112MB Image)
+keyboard_serial_delay: 200
+floppy_command_delay: 500
+ips: 1500000
+vga_update_interval: 300000
+
+Bochs compiling information: No problems
+
+Installation Information:
+Giving bochs 128megs of RAM at it's disposal DOS 6.22 started up from boot 
+disk and installed just fine, like any normal installation. When I went to 
+install Windows 3.1 it copied all the files from the first and second disk, 
+then said it was going into windows mode, and bochs died. The second time I 
+tried it, it worked fine and Windows installed as normal.
+
+Type of mouse: PS/2
+
+Problems:
+The mouse is VERY jerky and tends to go to the top or bottom of the screen 
+as you try to move it around. It's almost impossible to use the mouse.
+
+Usage details:
+Did not get much use out of it due to the mouse trouble and slowness of the 
+OS itself.
+

@@ -1,0 +1,122 @@
+What is the date?
+[5/29/2001]
+
+What is your name?
+[Bryce Denney]
+
+What is your email address?
+[bryce dot denney at bigfoot dot com]
+
+Do you mind if your name and email address are placed on a testing results 
+web page so that people with a similar setup can write to you?
+   [X] Ok, put it on a web page
+   [ ] No, keep my address private.
+
+What type of hardware are you using, e.g. 500MHz Intel Celeron.
+[PowerPC G4 with 384meg RAM]
+
+What operating system are you using?  Please be specific, e.g. 
+Redhat Linux 6.2 with 2.2.16 kernel.
+[MacOS X, build 3K78]
+
+What version of bochs are you using?
+   [ ] compiled from version 1.0 (3/25/2000 snapshot)
+   [ ] compiled from version 1.1 (bugfix1)
+   [ ] compiled from version 1.1.1 (bugfix2)
+   [ ] compiled from version 1.1.2 (bugfix3)
+   [X] compiled from version 1.2-pre1
+   [ ] I compiled it from the CVS sources from date: [__]
+   [ ] other source distribution from URL: [__]
+   [ ] binary distribution from URL: [__]
+
+Please fill in the next few questions only if you compiled Bochs
+yourself, as opposed to downloading a binary.
+
+Did the configure script run ok, and detect your hardware and
+operating system?
+  [ ] Yes
+  [ ] No, configure crashed.
+  [X] No, configure ran ok but produced a bad configuration.
+  [ ] No, I cannot run configure on my platform (win32 and mac).
+
+If you used configure, what arguments did you give it?  If you used a
+.conf.* script, give the name of the .conf script instead.
+[
+NOTE: This was done on a system that has no X windows libraries!
+./configure (no args): it said it could not find X windows libraries, 
+   then it set itself up for X windows anyway.  This failed of course.
+   If I install X windows I'll try it again.
+./configure --with-term: could not find mvaddch in any of the 
+   three libraries it searched (curses, ncurses, termlib).  So I changed
+   configure.in to search for waddch instead of mvwaddch, ran autoconf
+   again, and it said that waddch is found in curses.  However it still
+   will not build because of a few missing functions: keypad(), set_curs(),
+   and nodelay().  It's only complaining about "implicit declaration" of
+   these; they may actually be in the library but not the header?
+./configure --with-rfb: worked great!  Not tested much though.
+]
+
+What compiler did you use?  (Please include version.)
+[Reading specs from /usr/libexec/gcc/darwin/ppc/2.95.2/specs
+Apple Computer, Inc. version gcc-926, based on gcc version 2.95.2 19991024
+(release) ]
+
+Did Bochs compile clean without any hacking?
+  [X] Yes, once I started using RFB mode.
+  [ ] No
+
+If you had to make changes to compile, please summarize the problems you 
+had or include diffs.
+[./configure --with-rfb works fine
+X will probably be ok if I ever install it.
+]
+
+End of compile-specific questions!
+
+What guest operating system are you using inside bochs?
+[4meg linux image from web site]
+
+Are you booting from a floppy or hard disk?
+  [ ] floppy image
+  [ ] raw floppy drive
+  [X] hard drive image
+  [ ] raw hard drive         (is this even possible?)
+  [ ] other [__]
+
+Did the guest operating system boot successfully?
+  [X] Yes
+  [ ] No
+
+If no, what error messages do you see on the console or in the log file?
+[__]
+
+What applications worked under this guest operating system?
+[not time to run many, this machine is very slow]
+
+What applications failed under this guest operating system?  Did the
+application function incorrectly, crash Bochs, or what?  If you got a
+panic, paste in the panic message that you received with some
+description of what was happening at the time.
+[none yet]
+
+The remaining questions are about Bochs features that you may not have
+used.  If you tried out the feature, move the X to the "works" or
+"fails" column.
+
+                  Not       Works    
+		  tested    ok      Fails   Comments?
+floppy disk        [X]      [ ]     [ ]     [__]
+raw floppy disk    [X]      [ ]     [ ]     [__]
+hard disk          [ ]      [X]     [ ]     [__]
+floating point     [X]      [ ]     [ ]     [__]
+mouse              [X]      [ ]     [ ]     [__]
+cdrom              [X]      [ ]     [ ]     [__]
+sb16               [X]      [ ]     [ ]     [__]
+ne2000             [X]      [ ]     [ ]     [__]
+i440FX pci         [X]      [ ]     [ ]     [__]
+debugger           [X]      [ ]     [ ]     [__]
+external loader    [X]      [ ]     [ ]     [__]
+VGA                [X]      [ ]     [ ]     [__]
+
+Thank you for your contribution in the Bochs testing effort!  Please
+mail completed forms to bochs-testing@tlw.com.

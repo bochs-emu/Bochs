@@ -1,0 +1,106 @@
+What is the date?
+[June, 4th 2001]
+
+What is your name?
+[Ulli Woelfel]
+
+What is your email address?
+[uwoelfel@t-online.de]
+
+Do you mind if your name and email address are placed on a testing
+results
+web page so that people with a similar setup can write to you?
+   [x] Ok, put it on a web page
+   [ ] No, keep my address private.
+
+What type of hardware are you using, e.g. 500MHz Intel Celeron.
+[Sun Ultra 60, 2x300MHz]
+
+What operating system are you using?  Please be specific, e.g.
+Redhat Linux 6.2 with 2.2.16 kernel.
+[Solaris 8 01/01]
+
+What version of bochs are you using?
+   [ ] I compiled it from 04/09/2001 bugfix snapshot
+   [ ] I compiled it from 04/06/2001 bugfix snapshot
+   [ ] I compiled it from 03/25/2000 snapshot
+   [x] other source distribution from
+URL:[http://prdownloads.sourceforge.net/bochs/bochs-1.2.pre1.tar.gz]
+   [ ] binary distribution from URL: [__]
+
+Please fill in the next few questions only if you compiled Bochs
+yourself, as opposed to downloading a binary.
+
+Did the configure script run ok, and detect your hardware and
+operating system?
+  [x] Yes
+  [ ] No, configure crashed.
+  [ ] No, configure ran ok but produced a bad configuration.
+  [ ] No, I cannot run configure on my platform (win32 and mac).
+
+If you used configure, what arguments did you give it?  If you used a
+.conf.* script, give the name of the .conf script instead.
+[none]
+
+What compiler did you use?  (Please include version.)
+[gcc 2.95.3]
+
+Did Bochs compile clean without any hacking?
+  [x] Yes
+  [ ] No
+
+If you had to make changes to compile, please summarize the problems you
+had or include diffs.
+[__]
+
+End of compile-specific questions!
+
+What guest operating system are you using inside bochs?
+[MSDOS 6.22]
+
+Are you booting from a floppy or hard disk?
+  [ ] floppy image
+  [ ] raw floppy drive
+  [x] hard drive image
+  [ ] raw hard drive         (is this even possible?)
+  [ ] other [__]
+
+Did the guest operating system boot successfully?
+  [x] Yes
+  [ ] No
+
+If no, what error messages do you see on the console or in the log file?
+[__]
+
+What applications worked under this guest operating system?
+[edit]
+
+What applications failed under this guest operating system?  Did the
+application function incorrectly, crash Bochs, or what?  If you got a
+panic, paste in the panic message that you received with some
+description of what was happening at the time.
+[I have problems with typing the '/' character, also with edit the <alt>
+key doesn't work. I'm using
+a german Sun type 5 keyboard]
+
+The remaining questions are about Bochs features that you may not have
+used.  If you tried out the feature, move the X to the "works" or
+"fails" column.
+
+                  Not       Works
+                  tested    ok      Fails   Comments?
+floppy disk        [ ]      [x]     [ ]     [__]
+raw floppy disk    [X]      [ ]     [ ]     [__]
+hard disk          [ ]      [x]     [ ]     [__]
+floating point     [X]      [ ]     [ ]     [__]
+mouse              [ ]      [ ]     [x]     [__]
+cdrom              [X]      [ ]     [ ]     [__]
+sb16               [X]      [ ]     [ ]     [__]
+ne2000             [X]      [ ]     [ ]     [__]
+i440FX pci         [X]      [ ]     [ ]     [__]
+debugger           [X]      [ ]     [ ]     [__]
+external loader    [X]      [ ]     [ ]     [__]
+VGA                [ ]      [ ]     [x]     [works only in b&w]
+
+Thank you for your contribution in the Bochs testing effort!  Please
+mail completed forms to bochs-testing@tlw.com.

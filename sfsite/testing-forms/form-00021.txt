@@ -1,0 +1,64 @@
+What is your name?
+[Hiroshi OKAMOTO]
+
+What is your email address?
+[okamoto@cilab.tutkie.tut.ac.jp]
+
+Do you mind if your name and email address are placed on a testing results
+web page so that people with a similar setup can write to you?
+   [X] Ok, put it on a web page
+   [ ] No, keep my address private.
+
+What type of hardware are you using, e.g. 500MHz Intel Celeron.
+[1GHz Intel PentiumIII]
+
+What operating system are you using?  Please be specific, e.g.
+Redhat Linux 6.2 with 2.2.16 kernel.
+[Microsoft Windows 2000 Service Pack 1 (Japanese)]
+
+What version of bochs are you using?
+   [X] binary of 1.2.pre1 for win32
+
+What guest operating system are you using inside bochs?
+[DLX Linux hard disk image from bochs.sourceforge.net]
+
+Are you booting from a floppy or hard disk?
+  [ ] floppy image
+  [ ] raw floppy drive
+  [X] hard drive image
+  [ ] raw hard drive         (is this even possible?)
+  [ ] other [__]
+
+Did the guest operating system boot successfully?
+  [Y] Yes
+  [ ] No
+
+If no, what error messages do you see on the console or in the log file?
+[__]
+
+What applications worked under this guest operating system?
+[Not tested]
+
+What applications failed under this guest operating system?  Did the
+application function incorrectly, crash Bochs, or what?  If you got a
+panic, paste in the panic message that you received with some
+description of what was happening at the time.
+[Not tested]
+
+The remaining questions are about Bochs features that you may not have
+used.  If you tried out the feature, move the X to the "works" or
+"fails" column.
+
+                  Not       Works
+                  tested    ok      Fails   Comments?
+floppy disk        [X]      [ ]     [ ]     [__]
+raw floppy disk    [X]      [ ]     [ ]     [__]
+hard disk          [X]      [ ]     [ ]     [__]
+floating point     [X]      [ ]     [ ]     [__]
+cdrom              [X]      [ ]     [ ]     [__]
+sb16               [X]      [ ]     [ ]     [__]
+ne2000             [X]      [ ]     [ ]     [__]
+i440FX pci         [X]      [ ]     [ ]     [__]
+debugger           [X]      [ ]     [ ]     [__]
+external loader    [X]      [ ]     [ ]     [__]
+VGA                [X]      [ ]     [ ]     [__]

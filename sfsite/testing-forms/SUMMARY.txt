@@ -1,0 +1,35 @@
+plat-table.html:971118a:Solaris sparc gcc:Win95:green:
+form-00003.txt:1.1.1:Linux x86:FreeDOS:yellow:
+form-00006.txt:1.1.1:Win32 VC++:Win98:green:
+form-00007.txt:1.1.1:Linux x86:Linux console:green:
+form-00008.txt:1.1.1:Linux x86:NetBSD:red:
+form-00009.txt:1.1.1:Linux x86:OpenBSD:red:
+form-00010.txt:1.1.1:Linux x86:PicoBSD:green:
+form-00011.txt:1.1.1:Linux x86:PragmaLinux:green:
+form-00007-sol.txt:1.1.1:Solaris sparc gcc:Linux console:green:
+form-00008-sol.txt:1.1.1:Solaris sparc gcc:NetBSD:red:
+form-00009-sol.txt:1.1.1:Solaris sparc gcc:OpenBSD:red:
+form-00010-sol.txt:1.1.1:Solaris sparc gcc:PicoBSD:green:
+form-00011-sol.txt:1.1.1:Solaris sparc gcc:PragmaLinux:green:
+plat-table.html:990108:BeOS x86:Win95:green
+plat-table.html:971118:BeOS PPC:Win95:green
+plat-table.html:971118:Linux x86:Win95:green
+plat-table.html:971118:FreeBSD:DOS:green
+plat-table.html:980629:Win32 VC++:DOS:green
+plat-table.html:981222:Mac:Win95:green
+plat-table.html:990110:Alpha Tru64 Unix:Win95:green
+plat-table.html:991114:AIX:FreeDOS:green
+form-00012.txt:1.1.1:Win32 VC++:Win95:green
+form-00013.txt:1.1.1:Linux PPC:DOS:green
+form-00014.txt:1.1.1:Linux PPC:Win95:green
+form-00015.txt:1.1.1:Linux x86:Win95:yellow
+form-00016.txt:cvs 27-Apr-01:Alpha Tru64 Unix:Linux console:green
+form-00017.txt:cvs 09-May-01:Linux x86:OpenBSD:yellow
+form-00018.txt:cvs 16-May-01:Linux x86:Win3.1:yellow
+form-00019.txt:cvs 26-May-01:Linux x86:Win95:green
+form-00020.txt:1.2.pre1:MacOS X:Linux console:green
+form-00021.txt:1.2.pre1:Win32 VC++:Linux console:green
+form-00022.txt:1.2.pre1:Solaris sparc gcc:DOS:green
+form-00023.txt:1.2:IRIX:Linux console:green
+form-00024.txt:1.2:Win32 VC++:Linux console:green
+form-00025.txt:cvs 02-Jun-01:Linux x86:Linux console:green

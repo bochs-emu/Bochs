@@ -1,0 +1,101 @@
+What is the date?
+[May 01, 2001]
+
+What is your name?
+[Brad Davis]
+
+What is your email address?
+[davis@enel.ucalgary.ca]
+
+Do you mind if your name and email address are placed on a testing results 
+web page so that people with a similar setup can write to you?
+   [X] Ok, put it on a web page
+   [ ] No, keep my address private.
+
+What type of hardware are you using, e.g. 500MHz Intel Celeron.
+[G4 PPC]
+
+What operating system are you using?  Please be specific, e.g. 
+Redhat Linux 6.2 with 2.2.16 kernel.
+[Yellowdog LinuxPPC Champion Server 1.2 with 2.2.17pre20-ben3 kernel]
+
+What version of bochs are you using?
+   [X] I compiled it from 04/09/2001 bugfix snapshot
+   [ ] I compiled it from 03/25/2000 snapshot
+   [ ] I compiled it from 04/06/2001 bugfix snapshot
+   [ ] other source distribution from URL: [__]
+   [ ] binary distribution from URL: [__]
+
+Please fill in the next few questions only if you compiled Bochs
+yourself, as opposed to downloading a binary.
+
+Did the configure script run ok, and detect your hardware and
+operating system?
+  [X] Yes
+  [ ] No, configure crashed.
+  [ ] No, configure ran ok but produced a bad configuration.
+  [ ] No, I cannot run configure on my platform (win32 and mac).
+
+If you used configure, what arguments did you give it?  If you used a
+.conf.* script, give the name of the .conf script instead.
+[__]
+
+What compiler did you use?  (Please include version.)
+[gcc 2.95.2]
+
+Did Bochs compile clean without any hacking?
+  [X] Yes
+  [ ] No
+
+If you had to make changes to compile, please summarize the problems you 
+had or include diffs.
+[__]
+
+End of compile-specific questions!
+
+What guest operating system are you using inside bochs?
+[Win 95]
+
+Are you booting from a floppy or hard disk?
+  [X] floppy image
+  [ ] raw floppy drive
+  [X] hard drive image
+  [ ] raw hard drive         (is this even possible?)
+  [ ] other [__]
+
+Did the guest operating system boot successfully?
+  [X] Yes
+  [ ] No
+
+If no, what error messages do you see on the console or in the log file?
+[__]
+
+What applications worked under this guest operating system?
+[Included Win Programs]
+
+What applications failed under this guest operating system?  Did the
+application function incorrectly, crash Bochs, or what?  If you got a
+panic, paste in the panic message that you received with some
+description of what was happening at the time.
+[__]
+
+The remaining questions are about Bochs features that you may not have
+used.  If you tried out the feature, move the X to the "works" or
+"fails" column.
+
+                  Not       Works    
+		  tested    ok      Fails   Comments?
+floppy disk        [ ]      [X]     [ ]     [__]
+raw floppy disk    [X]      [ ]     [ ]     [__]
+hard disk          [ ]      [X]     [ ]     [__]
+floating point     [ ]      [X]     [ ]     [__]
+cdrom              [ ]      [ ]     [X]     [But computer has DVD drive]
+sb16               [ ]      [X]     [ ]     [__]
+ne2000             [ ]      [ ]     [X]     [Windows cant load driver]
+i440FX pci         [X]      [ ]     [ ]     [__]
+debugger           [X]      [ ]     [ ]     [__]
+external loader    [X]      [ ]     [ ]     [__]
+VGA                [X]      [ ]     [ ]     [__]
+
+Thank you for your contribution in the Bochs testing effort!  Please
+mail completed forms to bochs-testing@tlw.com.
