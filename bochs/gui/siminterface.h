@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.66 2002-09-17 04:47:55 bdenney Exp $
+// $Id: siminterface.h,v 1.67 2002-09-18 23:17:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -471,7 +471,7 @@ typedef struct {
 // events aren't implemented in our wxWindows code yet.
 typedef struct {
   // type is BX_EVT_MOUSE
-  Bit16u x, y;             // coordinate (vga screen?)
+  Bit16s dx, dy;           // mouse motion delta
   Bit8u buttons;           // which buttons are pressed.
                            // bit 0: 1=left button down, 0=up
                            // bit 1: 1=right button down, 0=up
