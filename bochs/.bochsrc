@@ -313,14 +313,14 @@ i440fxsupport: enabled=0
 #=======================================================================
 # KEYBOARD_MAPPING:
 # This enables a remap of a physical localized keyboard to a 
-# virtualized us keyboard, as the PC architecture waits for.
+# virtualized us keyboard, as the PC architecture expects.
 # If enabled, the keymap must be specified and should be 
-# one of "us", "fr", "de". More tables will be implemented.
+# one of "us", "fr", "de", or "es".  More tables will be implemented.
 # 
 # Examples:
-#   keyboard_mapping: enabled=1, keymap=de
+#   keyboard_mapping: enabled=1, map=de
 #=======================================================================
-keyboard_mapping: enabled=0, keymap=
+keyboard_mapping: enabled=0, map=
 
 #=======================================================================
 # KEYBOARD_TYPE:
