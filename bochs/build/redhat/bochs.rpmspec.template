@@ -22,7 +22,7 @@ and other OS's, all on your workstation.
 	fi
 %build
 	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
-	CONFIGURE_ARGS="--prefix /usr"
+	CONFIGURE_ARGS="--prefix=/usr --mandir=$RPM_BUILD_ROOT/%{_mandir}"
 	export CONFIGURE_ARGS
 	sh .conf.linux
 	make
@@ -31,7 +31,7 @@ and other OS's, all on your workstation.
 %install
 	pwd
 	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
-	for i in "" usr usr/bin usr/man usr/man/man1; do 
+	for i in "" usr usr/bin usr/lib usr/share usr/share/doc usr/share/man; do 
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
 	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
@@ -41,9 +41,10 @@ and other OS's, all on your workstation.
 	/usr/bin/bochs-docs
 	/usr/bin/bochs-dlx
 	/usr/bin/bximage
+	/usr/lib/*
 	/usr/share/bochs/*
 	/usr/share/doc/*
-	/usr/man/*
+	/usr/share/man/*
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	if test "/" != $RPM_BUILD_ROOT; then
