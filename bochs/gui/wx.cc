@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.11 2001-06-28 04:01:26 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.12 2001-06-28 13:43:36 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -185,17 +185,34 @@ MyFrame::ProcessBochsEvent2 (int code)
   {
   case NOTIFY_CODE_LOGMSG:
     if (0) {
-      // dumb static choices for now, eventually replace with an enum
-      // parameter or something.
+      // dumb static choices for now, I'll fix it once I get it to work
+      //
       // this code works if the gui thread calls it, but it's doing bad
       // things when it gets called from the bochs thread.
+      // I know it's legal for a non-GUI thread to enter a mutex, update
+      // an object like "m_frame->WriteText(msg)" and then leave the mutex.
+      // But this code puts up a modal dialog and waits for user input.
+      // If you comment out the mutex code, you get:
+      // GLib-WARNING **: g_main_run(): called recursively from within a source's check() or prepare() member or from a second thread, iteration not possible
+      // And if you uncomment the mutex, it displays the dialog correctly
+      // but then clicking on it does nothing...deadlock.
+      // Maybe this must be resolved by posting a message between threads
+      // instead.
+
       wxMutexGuiEnter();
-      static wxString choices[] = { "1", "2", "3" };
+      static wxString choices[] = { "Die", "Continue", "Continue and Disable" };
+      char prefix[512], msg[512];
+      int level;
+      assert (SIM->log_msg_2 (prefix, &level, msg, sizeof(msg)) >= 0);
+      wxString string;
+      string.Printf ("%s", msg);
       int choice = ::wxGetSingleChoiceIndex (
-	  wxString ("The message"), wxString ("The caption"), 3, choices);
+	  string,
+	  wxString (SIM->get_log_level_name (level)), 3, choices);
       wxMutexGuiLeave();
       printf ("you chose %d\n", choice);
     } else {
+  //////////// temporary! still implement this with stdin/stdout ///////////
       int level;
       char prefix[512], msg[512];
       assert (SIM->log_msg_2 (prefix, &level, msg, sizeof(msg)) >= 0);
@@ -209,11 +226,12 @@ MyFrame::ProcessBochsEvent2 (int code)
       fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), prefix);
       fprintf (stderr, "  die        - stop execution now\n");
       int choice;
-#if 0
+      extern int ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out);
+      char *log_action_ask_choices[] = { "cont", "alwayscont", "die" };
+      int log_action_n_choices = 3;
       if (ask_menu ("Choose cont, alwayscont, or die. [%s] ", 3,  
 	    log_action_ask_choices, 2, &choice) < 0) 
 	return SIM->notify_return(-1);
-#endif
       // return 0 for continue, 1 for alwayscontinue, 2 for die.
       SIM->notify_return(choice);
     }
