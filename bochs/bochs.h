@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.82 2002-08-30 14:22:47 vruppert Exp $
+// $Id: bochs.h,v 1.83 2002-08-31 04:57:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -609,10 +609,6 @@ typedef struct {
   bx_param_bool_c *OuseMapping;
   bx_param_string_c *Okeymap;
   } bx_keyboard_options;
-
-#define BX_BOOT_FLOPPYA 0
-#define BX_BOOT_DISKC   1
-#define BX_BOOT_CDROM   2
 
 #define BX_KBD_XT_TYPE        0
 #define BX_KBD_AT_TYPE        1
