@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.6 2003-03-17 00:41:00 cbothamy Exp $
+// $Id: resolve64.cc,v 1.7 2003-12-29 21:47:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -323,9 +323,6 @@ BX_CPU_C::Resolve64Mod0Base15(bxInstruction_c *i)
   else
     RMAddr(i) = R15;
 }
-
-
-
 
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Base0(bxInstruction_c *i)

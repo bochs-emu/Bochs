@@ -30,13 +30,13 @@
 //
 struct i387_t 
 {
-    Bit32s cwd;		 // control word
-    Bit32s swd;		 // status word
-    Bit32s twd;		 // tag word
-    Bit32s fip;
-    Bit32s fcs;
-    Bit32s foo;
-    Bit32s fos;
+    Bit32u cwd;		 // control word
+    Bit32u swd;		 // status word
+    Bit32u twd;		 // tag word
+    Bit32u fip;
+    Bit32u fcs;
+    Bit32u foo;
+    Bit32u fos;
 
     unsigned char tos;
     unsigned char no_update;

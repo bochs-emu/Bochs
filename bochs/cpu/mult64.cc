@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.6 2002-11-19 05:47:43 bdenney Exp $
+// $Id: mult64.cc,v 1.7 2003-12-29 21:47:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,9 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
 
 
 
@@ -406,11 +403,6 @@ BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
   void
 BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("IMUL_GdEdId() unsupported on 8086!"));
-#else
-
-
     Bit64s op2_64, op3_64, product_64;
     Bit128s product_128;
 
@@ -444,17 +436,12 @@ BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
     else {
       SET_FLAGS_OxxxxC(1, 1);
       }
-#endif
 }
 
 
   void
 BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("IMUL_GvEv() unsupported on 8086!"));
-#else
-
     Bit64s op1_64, op2_64, product_64;
     Bit128s product_128;
 
@@ -488,7 +475,6 @@ BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
     else {
       SET_FLAGS_OxxxxC(1, 1);
       }
-#endif
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

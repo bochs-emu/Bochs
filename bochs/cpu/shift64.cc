@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.9 2002-11-19 05:47:43 bdenney Exp $
+// $Id: shift64.cc,v 1.10 2003-12-29 21:47:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,9 +85,6 @@ BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
   void
 BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("shrd_evgvib: not supported on < 386"));
-#else
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
 
@@ -130,15 +127,11 @@ BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
     if (count == 1)
       set_OF(((op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
     set_PF_base(result_64);
-#endif /* BX_CPU_LEVEL >= 3 */
 }
-
-
 
   void
 BX_CPU_C::ROL_Eq(bxInstruction_c *i)
 {
-
   Bit64u op1_64, result_64;
   unsigned count;
 
@@ -178,9 +171,6 @@ BX_CPU_C::ROL_Eq(bxInstruction_c *i)
         set_OF(((op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
       }
 }
-
-
-
 
   void
 BX_CPU_C::ROR_Eq(bxInstruction_c *i)
@@ -225,8 +215,6 @@ BX_CPU_C::ROR_Eq(bxInstruction_c *i)
         set_OF(((op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
       }
 }
-
-
 
   void
 BX_CPU_C::RCL_Eq(bxInstruction_c *i)
@@ -278,8 +266,6 @@ BX_CPU_C::RCL_Eq(bxInstruction_c *i)
     set_CF((op1_64 >> (64 - count)) & 0x01);
 }
 
-
-
   void
 BX_CPU_C::RCR_Eq(bxInstruction_c *i)
 {
@@ -292,7 +278,6 @@ BX_CPU_C::RCR_Eq(bxInstruction_c *i)
     count = 1;
   else // (i->b1() == 0xd3)
     count = CL & 0x3f;
-
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {
@@ -331,9 +316,6 @@ BX_CPU_C::RCR_Eq(bxInstruction_c *i)
       set_OF(((op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
 }
 
-
-
-
   void
 BX_CPU_C::SHL_Eq(bxInstruction_c *i)
 {
@@ -371,9 +353,6 @@ BX_CPU_C::SHL_Eq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHL64);
 }
 
-
-
-
   void
 BX_CPU_C::SHR_Eq(bxInstruction_c *i)
 {
@@ -410,8 +389,6 @@ BX_CPU_C::SHR_Eq(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHR64);
 }
-
-
 
   void
 BX_CPU_C::SAR_Eq(bxInstruction_c *i)

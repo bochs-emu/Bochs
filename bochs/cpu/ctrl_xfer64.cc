@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.22 2003-05-10 22:25:54 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.23 2003-12-29 21:47:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,8 +32,6 @@
 
 
 #if BX_SUPPORT_X86_64
-
-
 
 
   void
@@ -116,13 +114,10 @@ BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   imm16 = i->Iw();
 
-#if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     BX_CPU_THIS_PTR return_protected(i, imm16);
     goto done;
     }
-#endif
-
 
     pop_64(&rip);
     pop_64(&rcs_raw);
@@ -145,13 +140,10 @@ BX_CPU_C::RETfar64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-#if BX_CPU_LEVEL >= 2
   if ( protected_mode() ) {
     BX_CPU_THIS_PTR return_protected(i, 0);
     goto done;
-    }
-#endif
-
+  }
 
   pop_64(&rip);
   pop_64(&rcs_raw); /* 64bit pop, upper 48 bits discarded */
@@ -162,8 +154,6 @@ done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
-
-
 
   void
 BX_CPU_C::CALL_Aq(bxInstruction_c *i)
@@ -281,7 +271,6 @@ done:
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
 
-
   void
 BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 {
@@ -337,42 +326,6 @@ BX_CPU_C::JCC_Jq(bxInstruction_c *i)
     }
 #endif
 }
-
-#ifdef ignore
-  void
-BX_CPU_C::JMP64_Ap(bxInstruction_c *i)
-{
-  Bit64u disp64;
-  Bit16u cs_raw;
-
-  invalidate_prefetch_q();
-
-  if (i->os32L()) {
-    disp64 = (Bit32s) i->Id();
-    }
-  else {
-    disp64 = (Bit16s) i->Iw();
-    }
-  cs_raw = i->Iw2();
-
-#if BX_CPU_LEVEL >= 2
-  if (protected_mode()) {
-    BX_CPU_THIS_PTR jump_protected(i, cs_raw, disp32);
-    goto done;
-    }
-#endif
-
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = disp64;
-
-done:
-  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
-}
-
-#endif
-
-
 
   void
 BX_CPU_C::JMP_Eq(bxInstruction_c *i)
@@ -435,19 +388,15 @@ BX_CPU_C::IRET64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_eip = BX_CPU_THIS_PTR rip;
 #endif
 
-#if BX_CPU_LEVEL >= 2
   if (BX_CPU_THIS_PTR cr0.pe) {
     iret_protected(i);
     goto done;
-    }
-#endif
-
+  }
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
-
 
   void
 BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
@@ -481,8 +430,6 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
 #endif
   }
 }
-
-
 
   void
 BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
@@ -585,4 +532,5 @@ BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
 #endif
     }
 }
+
 #endif /* if BX_SUPPORT_X86_64 */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.13 2002-11-19 05:47:43 bdenney Exp $
+// $Id: arith64.cc,v 1.14 2003-12-29 21:47:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,8 +32,8 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64
 
+#if BX_SUPPORT_X86_64
 
 /* I don't think these versions accessible in 64 bit mode
   void
@@ -505,17 +505,6 @@ BX_CPU_C::CMP_RAXId(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_CMP64);
 }
 
-
-#ifdef ignore
-  void
-BX_CPU_C::CWDE64(bxInstruction_c *i)
-{
-  /* CBW: no flags are effected */
-
-    RAX = (Bit16s) AX;
-}
-#endif
-
   void
 BX_CPU_C::CDQE(bxInstruction_c *i)
 {
@@ -535,44 +524,9 @@ BX_CPU_C::CQO(bxInstruction_c *i)
       RDX = 0;
 }
 
-#ifdef ignore_this
-// not sure about these....
-
-// Some info on the opcodes at {0F,A6} and {0F,A7}
-// On 386 steps A0-B0:
-//   {OF,A6} = XBTS
-//   {OF,A7} = IBTS
-// On 486 steps A0-B0:
-//   {OF,A6} = CMPXCHG 8
-//   {OF,A7} = CMPXCHG 16|64
-//
-// On 486 >= B steps, and further processors, the
-// CMPXCHG instructions were moved to opcodes:
-//   {OF,B0} = CMPXCHG 8
-//   {OF,B1} = CMPXCHG 16|64
-
-  void
-BX_CPU_C::CMPXCHG_XBTS(bxInstruction_c *i)
-{
-  BX_INFO(("CMPXCHG_XBTS:"));
-  UndefinedOpcode(i);
-}
-
-  void
-BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
-{
-  BX_INFO(("CMPXCHG_IBTS:"));
-  UndefinedOpcode(i);
-}
-
-#endif
-
-
   void
 BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
     Bit64u op2_64, op1_64, sum_64;
 
     /* XADD dst(r/m), src(r)
@@ -612,11 +566,7 @@ BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
 
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_XADD64);
-#else
-
-#endif
 }
-
 
 
   void
@@ -828,8 +778,6 @@ BX_CPU_C::DEC_Eq(bxInstruction_c *i)
   void
 BX_CPU_C::CMPXCHG_EqGq(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
     Bit64u op2_64, op1_64, diff_64;
 
     /* op1_64 is a register or memory reference */
@@ -864,10 +812,6 @@ BX_CPU_C::CMPXCHG_EqGq(bxInstruction_c *i)
       // accumulator <-- dest
       RAX = op1_64;
       }
-#else
-  BX_PANIC(("CMPXCHG_EqGq:"));
-#endif
 }
-
 
 #endif /* if BX_SUPPORT_X86_64 */
