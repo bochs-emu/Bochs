@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.91 2003-11-01 10:28:40 vruppert Exp $
+// $Id: vga.cc,v 1.92 2003-11-02 16:34:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -158,8 +158,6 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.misc_output.horiz_sync_pol   = 1;
   BX_VGA_THIS s.misc_output.vert_sync_pol    = 1;
 
-  BX_VGA_THIS s.CRTC.address = 0;
-
   BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha = 0;
   BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type = 0;
   BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics = 1;
@@ -172,7 +170,7 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.line_compare=1023;
   BX_VGA_THIS s.vertical_display_end=399;
 
-  for (i=0; i<0x18; i++)
+  for (i=0; i<=0x18; i++)
     BX_VGA_THIS s.CRTC.reg[i] = 0;
   BX_VGA_THIS s.CRTC.address = 0;
 
