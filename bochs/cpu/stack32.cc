@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.17 2003-03-17 00:41:01 cbothamy Exp $
+// $Id: stack32.cc,v 1.18 2004-05-10 21:05:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,9 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -77,11 +74,9 @@ BX_CPU_C::PUSH_ERX(bxInstruction_c *i)
 BX_CPU_C::POP_ERX(bxInstruction_c *i)
 {
   Bit32u erx;
-
   pop_32(&erx);
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx = erx;
 }
-
 
   void
 BX_CPU_C::PUSH_CS(bxInstruction_c *i)
@@ -110,7 +105,6 @@ BX_CPU_C::PUSH_ES(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_FS(bxInstruction_c *i)
 {
-BailBigRSP("push_fs");
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
   else
@@ -119,7 +113,6 @@ BailBigRSP("push_fs");
   void
 BX_CPU_C::PUSH_GS(bxInstruction_c *i)
 {
-BailBigRSP("push_gs");
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
   else
@@ -133,7 +126,6 @@ BX_CPU_C::PUSH_SS(bxInstruction_c *i)
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
 }
-
 
   void
 BX_CPU_C::POP_DS(bxInstruction_c *i)
@@ -166,7 +158,6 @@ BX_CPU_C::POP_ES(bxInstruction_c *i)
   void
 BX_CPU_C::POP_FS(bxInstruction_c *i)
 {
-BailBigRSP("pop_fs");
   if (i->os32L()) {
     Bit32u fs;
     pop_32(&fs);
@@ -181,7 +172,6 @@ BailBigRSP("pop_fs");
   void
 BX_CPU_C::POP_GS(bxInstruction_c *i)
 {
-BailBigRSP("pop_gs");
   if (i->os32L()) {
     Bit32u gs;
     pop_32(&gs);
@@ -234,7 +224,7 @@ BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 
     if (protected_mode()) {
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 32) ) {
-        BX_PANIC(("PUSHAD(): stack doesn't have enough room!"));
+        BX_ERROR(("PUSHAD(): stack doesn't have enough room!"));
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
         }
@@ -268,7 +258,7 @@ BX_CPU_C::POPAD32(bxInstruction_c *i)
 
     if (protected_mode()) {
       if ( !can_pop(32) ) {
-        BX_PANIC(("pop_ad: not enough bytes on stack"));
+        BX_ERROR(("POPAD: not enough bytes on stack"));
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
         }
@@ -300,12 +290,8 @@ BX_CPU_C::PUSH_Id(bxInstruction_c *i)
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("PUSH_Iv: not supported on 8086!"));
 #else
-
-    Bit32u imm32;
-
-    imm32 = i->Id();
-
-    push_32(imm32);
+  Bit32u imm32 = i->Id();
+  push_32(imm32);
 #endif
 }
 
@@ -325,7 +311,6 @@ BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
 
     push_32(op1_32);
 }
-
 
   void
 BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
@@ -372,8 +357,9 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
       temp_ESP = ESP;
     else
       temp_ESP = SP;
+
     if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, bytes_to_push) ) {
-      BX_PANIC(("ENTER: not enough room on stack!"));
+      BX_ERROR(("ENTER: not enough room on stack!"));
       exception(BX_SS_EXCEPTION, 0, 0);
       }
     }
@@ -473,7 +459,6 @@ BX_CPU_C::LEAVE(bxInstruction_c *i)
 #else
   Bit32u temp_EBP;
 
-
   invalidate_prefetch_q();
 
 #if BX_CPU_LEVEL >= 3
@@ -513,17 +498,15 @@ BX_CPU_C::LEAVE(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
   if (i->os32L()) {
     Bit32u temp32;
-
     pop_32(&temp32);
     RBP = temp32;
-    }
+  }
   else
 #endif
-    {
+  {
     Bit16u temp16;
-
     pop_16(&temp16);
     BP = temp16;
-    }
+  }
 #endif
 }

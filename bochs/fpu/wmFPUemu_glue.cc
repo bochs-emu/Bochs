@@ -267,7 +267,7 @@ math_abort(void *info, unsigned int signal)
       // execution does not reach here
 
     case SIGILL:
-      BX_PANIC (("math_abort: SIGILL not implemented yet."));
+      BX_INFO (("math_abort: SIGILL not implemented yet."));
       fpu_cpu_ptr->UndefinedOpcode(fpu_iptr);
       break;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.78 2003-11-13 21:57:13 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.79 2004-05-10 21:05:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -949,11 +949,9 @@ void BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
 #endif
 }
 
+#if BX_CPU_LEVEL == 2
 void BX_CPU_C::LOADALL(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("Undocumented LOADALL instruction not supported on 8086"));
-#else
   Bit16u msw, tr, flags, ip, ldtr;
   Bit16u ds_raw, ss_raw, cs_raw, es_raw;
   Bit16u di, si, bp, sp, bx, dx, cx, ax;
@@ -962,13 +960,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   if (v8086_mode()) BX_PANIC(("proc_ctrl: LOADALL in v8086 mode unsupported"));
 
-#if BX_CPU_LEVEL > 2
-  BX_PANIC(("loadall: not implemented for 386"));
-  /* ??? need to set G and other bits, and compute .limit_scaled also */
-  /* for all segments CS,DS,SS,... */
-#endif
-
-  if (BX_CPU_THIS_PTR cr0.pe) {
+  if (BX_CPU_THIS_PTR cr0.pe) 
+  {
     BX_PANIC(("LOADALL not yet supported for protected mode"));
   }
 
@@ -1270,8 +1263,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR mem->readPhysicalPage(this, 0x85e, 2, &limit);
   BX_CPU_THIS_PTR idtr.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR idtr.limit = limit;
-#endif
 }
+#endif
 
 void BX_CPU_C::SetCR0(Bit32u val_32)
 {
@@ -1428,16 +1421,54 @@ void BX_CPU_C::RSM(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 
-  BX_PANIC(("RSM: System Management Mode not implemented yet"));
-#else
-  UndefinedOpcode(i);
+  /* If we are not in System Management Mode, then 
+   * #UD should be generated.
+   *
+   * Bochs has no SMM.
+   */
+
+  BX_INFO(("RSM: System Management Mode not implemented yet"));
 #endif
+
+  UndefinedOpcode(i);
 }
 
 void BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
-  BX_PANIC(("RDPMC: Performance Counters Support not implemented yet"));
+/* We need to be Pentium with MMX or later */
+#if ((BX_CPU_LEVEL >= 6) || (BX_SUPPORT_MMX && BX_CPU_LEVEL == 5))
+  bx_bool pce = BX_CPU_THIS_PTR cr4.get_PCE();
+
+  if ((pce==1) || (CPL==0) || real_mode())
+  {
+    /* According to manual, Pentium 4 has 18 counters,
+     * previous versions have two.  And the P4 also can do
+     * short read-out (EDX always 0).  Otherwise it is
+     * limited to 40 bits.
+     */
+
+#if (BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2) // Pentium 4 processor (see cpuid.cc)
+    if ((ECX & 0x7fffffff) >= 18)
+      exception (BX_GP_EXCEPTION, 0, 0);
+#else //
+    if ((ECX & 0xffffffff) >= 2)
+      exception (BX_GP_EXCEPTION, 0, 0);
+#endif
+    // Most counters are for hardware specific details, which
+    // we anyhow do not emulate (like pipeline stalls etc)
+
+    // Could be interesting to count number of memory reads,
+    // writes.  Misaligned etc...  But to monitor bochs, this
+    // is easier done from the host.
+
+    EAX = 0;
+    EDX = 0; // if P4 and ECX & 0x10000000, then always 0 (short read 32 bits)
+
+    BX_ERROR(("RDPMC: Performance Counters Support not reasonably implemented yet"));
+  } else {
+    // not allowed to use RDPMC!
+    exception (BX_GP_EXCEPTION, 0, 0);
+  }
 #else
   UndefinedOpcode(i);
 #endif
@@ -1937,4 +1968,5 @@ Bit32u BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
     }
   return(0);
 }
+
 #endif

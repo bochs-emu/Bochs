@@ -2277,7 +2277,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 85 */  { "test",      0,  Ev,  Gv, XX },
   /* 86 */  { "xchg",      0,  Eb,  Gb, XX },
   /* 87 */  { "xchg",      0,  Ev,  Gv, XX },
-  /* 88 */  { "mov",       0,  Gb,  Eb, XX },
+  /* 88 */  { "mov",       0,  Eb,  Gb, XX },
   /* 89 */  { "mov",       0,  Ev,  Gv, XX },
   /* 8A */  { "mov",       0,  Gb,  Eb, XX },
   /* 8B */  { "mov",       0,  Gv,  Ev, XX },

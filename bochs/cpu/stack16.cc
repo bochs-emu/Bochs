@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.14 2003-03-17 00:41:00 cbothamy Exp $
+// $Id: stack16.cc,v 1.15 2004-05-10 21:05:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,11 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
-
-
 
 
 
@@ -87,11 +82,10 @@ BX_CPU_C::PUSHAD16(bxInstruction_c *i)
   else
     temp_ESP = SP;
 
-
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 16) ) {
-        BX_PANIC(("PUSHA(): stack doesn't have enough room!"));
+        BX_ERROR(("PUSHAD(): stack doesn't have enough room!"));
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
         }
@@ -100,7 +94,7 @@ BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 #endif
       {
       if (temp_ESP < 16)
-        BX_PANIC(("pushad: eSP < 16"));
+        BX_PANIC(("PUSHAD: eSP < 16"));
       }
 
     sp = SP;
@@ -128,7 +122,7 @@ BX_CPU_C::POPAD16(bxInstruction_c *i)
 
     if (protected_mode()) {
       if ( !can_pop(16) ) {
-        BX_PANIC(("pop_a: not enough bytes on stack"));
+        BX_ERROR(("POPAD: not enough bytes on stack"));
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
         }
@@ -160,12 +154,8 @@ BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("PUSH_Iv: not supported on 8086!"));
 #else
-
-    Bit16u imm16;
-
-    imm16 = i->Iw();
-
-    push_16(imm16);
+  Bit16u imm16 = i->Iw();
+  push_16(imm16);
 #endif
 }
 

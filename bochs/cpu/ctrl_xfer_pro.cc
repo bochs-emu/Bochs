@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.24 2004-02-11 23:47:55 cbothamy Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.25 2004-05-10 21:05:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,11 +48,9 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
   bx_selector_t    selector;
   Bit32u dword1, dword2;
 
-
-
   /* destination selector is not null else #GP(0) */
   if ((cs_raw & 0xfffc) == 0) {
-    BX_PANIC(("jump_protected: cs == 0"));
+    BX_ERROR(("jump_protected: cs == 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
@@ -108,7 +106,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     else {
       /* RPL of destination selector must be <= CPL else #GP(selector) */
       if (selector.rpl > CPL) {
-        BX_PANIC(("jump_protected: rpl > CPL"));
+        BX_ERROR(("jump_protected: rpl > CPL"));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
         return;
         }
@@ -182,15 +180,14 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         // checked in task_switch()
 
         // SWITCH_TASKS _without_ nesting to TSS
-        task_switch(&selector, &descriptor,
-          BX_TASK_FROM_JUMP, dword1, dword2);
+        task_switch(&selector, &descriptor, BX_TASK_FROM_JUMP, dword1, dword2);
 
         // IP must be in code seg limit, else #GP(0)
         if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
           BX_ERROR(("jump_protected: TSS.p == 0"));
           exception(BX_GP_EXCEPTION, 0, 0);
           return;
-          }
+        }
         return;
         break;
 
@@ -221,15 +218,16 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           BX_PANIC(("jump_protected: task gate.p == 0"));
           exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
           return;
-          }
+        }
 
         // examine selector to code segment given in call gate descriptor
         // selector must not be null, else #GP(0)
         gate_cs_raw = descriptor.u.gate286.dest_selector;
-        if ( (gate_cs_raw & 0xfffc) == 0) {
-          BX_PANIC(("jump_protected: CS selector null"));
+        if ((gate_cs_raw & 0xfffc) == 0) 
+        {
+          BX_ERROR(("jump_protected: CS selector null"));
           exception(BX_GP_EXCEPTION, 0x0000, 0);
-          }
+        }
         parse_selector(gate_cs_raw, &gate_cs_selector);
 
         // selector must be within its descriptor table limits else #GP(CS selector)
@@ -388,35 +386,35 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         // examine selector to code segment given in call gate descriptor
         // selector must not be null, else #GP(0)
         gate_cs_raw = descriptor.u.gate386.dest_selector;
-        if ( (gate_cs_raw & 0xfffc) == 0) {
-          BX_PANIC(("jump_protected: CS selector null"));
+        if ((gate_cs_raw & 0xfffc) == 0) {
+          BX_ERROR(("jump_protected: CS selector null"));
           exception(BX_GP_EXCEPTION, 0x0000, 0);
-          }
+        }
         parse_selector(gate_cs_raw, &gate_cs_selector);
 
         // selector must be within its descriptor table limits else #GP(CS selector)
-        fetch_raw_descriptor(&gate_cs_selector, &dword1, &dword2,
-          BX_GP_EXCEPTION);
+        fetch_raw_descriptor(&gate_cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
         parse_descriptor(dword1, dword2, &gate_cs_descriptor);
         // descriptor AR byte must indicate code segment else #GP(CS selector)
         if ( (gate_cs_descriptor.valid==0) ||
              (gate_cs_descriptor.segment==0) ||
-             (gate_cs_descriptor.u.segment.executable==0) ) {
+             (gate_cs_descriptor.u.segment.executable==0) )
+        {
           BX_PANIC(("jump_protected: AR byte: not code segment."));
           exception(BX_GP_EXCEPTION, gate_cs_raw & 0xfffc, 0);
-          }
+        }
 
         // if non-conforming, code segment descriptor DPL must = CPL else #GP(CS selector)
         if (gate_cs_descriptor.u.segment.c_ed==0) {
           if (gate_cs_descriptor.dpl != CPL) {
-            BX_PANIC(("jump_protected: non-conform: code seg des DPL != CPL."));
+            BX_ERROR(("jump_protected: non-conform: code seg des DPL != CPL."));
             exception(BX_GP_EXCEPTION, gate_cs_raw & 0xfffc, 0);
             }
           }
         // if conforming, then code segment descriptor DPL must <= CPL else #GP(CS selector)
         else {
           if (gate_cs_descriptor.dpl > CPL) {
-            BX_PANIC(("jump_protected: conform: code seg des DPL > CPL."));
+            BX_ERROR(("jump_protected: conform: code seg des DPL > CPL."));
             exception(BX_GP_EXCEPTION, gate_cs_raw & 0xfffc, 0);
             }
           }
@@ -429,10 +427,11 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
         // IP must be in code segment limit else #GP(0)
         if ( descriptor.u.gate386.dest_offset >
-             gate_cs_descriptor.u.segment.limit_scaled ) {
+             gate_cs_descriptor.u.segment.limit_scaled )
+        {
           BX_PANIC(("jump_protected: IP > limit"));
           exception(BX_GP_EXCEPTION, 0x0000, 0);
-          }
+        }
 
         // load CS:IP from call gate
         // load CS cache with new code segment
@@ -471,10 +470,10 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
    */
 
   /* new cs selector must not be null, else #GP(0) */
-  if ( (cs_raw & 0xfffc) == 0) {
-    BX_PANIC(("call_protected: CS selector null"));
+  if ((cs_raw & 0xfffc) == 0) {
+    BX_ERROR(("call_protected: CS selector null"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  }
 
   parse_selector(cs_raw, &cs_selector);
 
@@ -487,7 +486,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
   // examine AR byte of selected descriptor for various legal values
   if (cs_descriptor.valid==0) {
-    BX_PANIC(("call_protected: invalid CS descriptor"));
+    BX_ERROR(("call_protected: invalid CS descriptor"));
     exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
 
@@ -495,7 +494,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     Bit32u temp_ESP;
 
     if (cs_descriptor.u.segment.executable==0) {
-      BX_PANIC(("call_protected: non executable segment"));
+      BX_ERROR(("call_protected: non executable segment"));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
       return;
       }
@@ -513,7 +512,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
       // DPL must be = CPL, else #GP(code seg selector)
       if ( (cs_selector.rpl > CPL) ||
            (cs_descriptor.dpl != CPL) ) {
-        BX_PANIC(("call_protected: cs.rpl > CPL"));
+        BX_ERROR(("call_protected: cs.rpl > CPL"));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
         }
       }
@@ -545,7 +544,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
       // push return address onto stack (CS padded to 32bits)
       push_32((Bit32u) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
       push_32(EIP);
-      }
+    }
     else { // 16bit opsize
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 4) ) {
         BX_PANIC(("call_protected: stack doesn't have room for ret addr"));
@@ -612,7 +611,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           BX_PANIC(("call_protected: TSS.dpl < selector.rpl"));
           exception(BX_TS_EXCEPTION, cs_raw & 0xfffc, 0);
           return;
-          }
+        }
 
         // descriptor AR byte must specify available TSS,
         //   else #TS(TSS selector) */
@@ -685,7 +684,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
           }
 
-
         // task state segment must be present, else #NP(tss selector)
         if (tss_descriptor.p==0) {
           BX_PANIC(("call_protected: task descriptor.p == 0"));
@@ -701,10 +699,11 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           temp_eIP = EIP;
         else
           temp_eIP =  IP;
-        if (temp_eIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+        if (temp_eIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+        {
           BX_PANIC(("call_protected: eIP > cs.limit"));
           exception(BX_TS_EXCEPTION, 0x0000, 0);
-          }
+        }
 
         return;
         break;
@@ -719,16 +718,17 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         // call gate DPL must be >= CPL, else #GP(call gate selector)
         // call gate DPL must be >= RPL, else #GP(call gate selector)
         if ( (gate_descriptor.dpl < CPL) ||
-             (gate_descriptor.dpl < gate_selector.rpl) ) {
+             (gate_descriptor.dpl < gate_selector.rpl) )
+        {
           BX_PANIC(("call_protected: DPL < CPL or RPL"));
           exception(BX_GP_EXCEPTION, gate_selector.value & 0xfffc, 0);
-          }
+         }
 
         // call gate must be present, else #NP(call gate selector)
         if (gate_descriptor.p==0) {
           BX_PANIC(("call_protected: not present"));
           exception(BX_NP_EXCEPTION, gate_selector.value & 0xfffc, 0);
-          }
+        }
 
         // examine code segment selector in call gate descriptor
 
@@ -933,11 +933,11 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           if (gate_descriptor.type==4) {
             push_16(return_SS);
             push_16((Bit16u) return_ESP);
-            }
+          }
           else {
             push_32(return_SS);
             push_32(return_ESP);
-            }
+          }
 
           /* get word count from call gate, mask to 5 bits */
           /* copy parameters from old stack onto new stack */
@@ -1026,9 +1026,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           // set RPL of CS to CPL
           load_cs(&cs_selector, &cs_descriptor, CPL);
           EIP = new_EIP;
-
           return;
-          }
+        }
 
         BX_PANIC(("call_protected: call gate: should not get here"));
         return;
@@ -1039,10 +1038,9 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         return;
       }
     BX_PANIC(("call_protected: gate segment unfinished"));
-    }
+  }
 
   BX_PANIC(("call_protected: shouldn't get here!"));
-  return;
 }
 #endif /* 286+ */
 
@@ -1074,8 +1072,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     /* operand size=32: third word on stack must be within stack limits,
      *   else #SS(0); */
     if (!can_pop(6)) {
-      BX_PANIC(("return_protected: 3rd word not in stack limits"));
-      /* #SS(0) */
+      BX_ERROR(("return_protected: 3rd word not in stack limits"));
+      exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
     stack_cs_offset = 4;
@@ -1083,18 +1081,18 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
   else
 #endif
-    {
+  {
     /* operand size=16: second word on stack must be within stack limits,
      *   else #SS(0);
      */
     if ( !can_pop(4) ) {
       BX_PANIC(("return_protected: 2nd word not in stack limits"));
-      /* #SS(0) */
+      exception(BX_SS_EXCEPTION, 0, 0);
       return;
-      }
+    }
     stack_cs_offset = 2;
     stack_param_offset = 4;
-    }
+  }
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) temp_ESP = ESP;
   else temp_ESP = SP;
@@ -1250,20 +1248,22 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     /* descriptor AR byte must indicate code segment else #GP(selector) */
     if (cs_descriptor.valid==0 ||
         cs_descriptor.segment==0  ||
-        cs_descriptor.u.segment.executable==0) {
+        cs_descriptor.u.segment.executable==0)
+    {
       BX_PANIC(("return_protected: AR byte not code"));
       /* #GP(selector) */
       return;
-      }
+    }
 
     /* if non-conforming code then code seg DPL must equal return selector RPL
      * else #GP(selector) */
     if (cs_descriptor.u.segment.c_ed==0 &&
-        cs_descriptor.dpl!=cs_selector.rpl) {
+        cs_descriptor.dpl!=cs_selector.rpl)
+    {
       BX_PANIC(("return_protected: non-conforming seg DPL != selector.rpl"));
       /* #GP(selector) */
       return;
-      }
+    }
 
     /* if conforming then code segment DPL must be <= return selector RPL
      * else #GP(selector) */
@@ -1473,7 +1473,6 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc, 0);
       }
 
-
     // TSS must be present, else #NP(new TSS selector)
     if (tss_descriptor.p==0) {
       BX_INFO(("iret: task descriptor.p == 0"));
@@ -1520,7 +1519,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     /* CS on stack must be within stack limits, else #SS(0) */
     if ( !can_pop(top_nbytes_same) ) {
-      BX_PANIC(("iret: CS not within stack limits"));
+      BX_ERROR(("iret: CS not within stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
@@ -1545,7 +1544,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     // return CS selector must be non-null, else #GP(0)
     if ( (raw_cs_selector & 0xfffc) == 0 ) {
-      BX_PANIC(("iret: return CS selector null"));
+      BX_ERROR(("iret: return CS selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -1560,19 +1559,20 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     // AR byte must indicate code segment else #GP(return selector)
     if ( cs_descriptor.valid==0 ||
          cs_descriptor.segment==0  ||
-         cs_descriptor.u.segment.executable==0 ) {
-      BX_PANIC(("iret: AR byte indicated non code segment (%x) %x:%x",
-raw_cs_selector, dword1, dword2));
+         cs_descriptor.u.segment.executable==0 ) 
+    {
+      BX_ERROR(("iret: AR byte indicated non code segment (%x) %x:%x",
+         raw_cs_selector, dword1, dword2));
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
-      }
+    }
 
     // return CS selector RPL must be >= CPL, else #GP(return selector)
     if (cs_selector.rpl < CPL) {
-      BX_PANIC(("iret: return selector RPL < CPL"));
+      BX_ERROR(("iret: return selector RPL < CPL"));
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
-      }
+    }
 
     // if return code seg descriptor is conforming
     //   and return code seg DPL > return code seg selector RPL
@@ -1770,7 +1770,7 @@ raw_cs_selector, dword1, dword2));
 
     /* CS on stack must be within stack limits, else #SS(0) */
     if ( !can_pop(top_nbytes_same) ) {
-      BX_PANIC(("iret: CS not within stack limits"));
+      BX_ERROR(("iret: CS not within stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
@@ -1808,7 +1808,7 @@ raw_cs_selector, dword1, dword2));
 
     // return CS selector must be non-null, else #GP(0)
     if ( (raw_cs_selector & 0xfffc) == 0 ) {
-      BX_PANIC(("iret: return CS selector null"));
+      BX_ERROR(("iret: return CS selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -1823,18 +1823,19 @@ raw_cs_selector, dword1, dword2));
     // AR byte must indicate code segment else #GP(return selector)
     if ( cs_descriptor.valid==0 ||
          cs_descriptor.segment==0  ||
-         cs_descriptor.u.segment.executable==0 ) {
-      BX_PANIC(("iret: AR byte indicated non code segment"));
+         cs_descriptor.u.segment.executable==0 )
+    {
+      BX_ERROR(("iret: AR byte indicated non code segment"));
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
-      }
+    }
 
     // return CS selector RPL must be >= CPL, else #GP(return selector)
     if (cs_selector.rpl < CPL) {
-      BX_PANIC(("iret: return selector RPL < CPL"));
+      BX_ERROR(("iret: return selector RPL < CPL"));
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
-      }
+    }
 
     // if return code seg descriptor is conforming
     //   and return code seg DPL > return code seg selector RPL
@@ -1896,7 +1897,7 @@ raw_cs_selector, dword1, dword2));
 
         /* load flags with third word on stack */
         write_flags(new_flags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL ());
-        }
+      }
 
       /* increment stack by 6/12 */
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -1975,7 +1976,6 @@ raw_cs_selector, dword1, dword2));
         exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
         return;
         }
-
 
       if (i->os32L()) {
         access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,

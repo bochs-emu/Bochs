@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.11 2003-03-17 00:41:01 cbothamy Exp $
+// $Id: stack64.cc,v 1.12 2004-05-10 21:05:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -163,7 +163,7 @@ BX_CPU_C::PUSHAD64(bxInstruction_c *i)
 
   temp_RSP = RSP;
   if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_RSP, 64) ) {
-    BX_PANIC(("PUSHAD(): stack doesn't have enough room!"));
+    BX_ERROR(("PUSHAD(): stack doesn't have enough room!"));
     exception(BX_SS_EXCEPTION, 0, 0);
     return;
     }
@@ -187,7 +187,7 @@ BX_CPU_C::POPAD64(bxInstruction_c *i)
     Bit64u rdi, rsi, rbp, rtmp, rbx, rdx, rcx, rax;
 
     if ( !can_pop(64) ) {
-      BX_PANIC(("pop_ad: not enough bytes on stack"));
+      BX_ERROR(("POPAD: not enough bytes on stack"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
@@ -271,9 +271,10 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
     else { /* level > 0 */
       bytes_to_push = 8 + (level-1)*8 + 8 + i->Iw();
       }
+
     temp_RSP = RSP;
     if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_RSP, bytes_to_push) ) {
-      BX_PANIC(("ENTER: not enough room on stack!"));
+      BX_ERROR(("ENTER: not enough room on stack!"));
       exception(BX_SS_EXCEPTION, 0, 0);
       }
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.28 2004-02-26 19:17:40 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.29 2004-05-10 21:05:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,9 +26,6 @@
 
 
 
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
@@ -43,9 +40,7 @@ BX_CPU_C::MOV_RXIw(bxInstruction_c *i)
   void
 BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
 {
-  Bit16u temp16;
-
-  temp16 = AX;
+  Bit16u temp16 = AX;
   AX = BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx = temp16;
 }
@@ -59,10 +54,7 @@ BX_CPU_C::MOV_EEwGw(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EGwGw(bxInstruction_c *i)
 {
-  Bit16u op2_16;
-
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
   BX_WRITE_16BIT_REG(i->rm(), op2_16);
 }
 
@@ -87,13 +79,17 @@ BX_CPU_C::MOV_GwEEw(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
 {
-  Bit16u seg_reg;
-
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_EwSw: incomplete for CPU < 3"));
 #endif
 
-  seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
+  /* Illegal to use nonexisting segments */
+  if (i->nnn() >= 6) {
+    BX_INFO(("MOV_EwSw: using of nonexisting segment register"));
+    UndefinedOpcode(i);
+  }
+
+  Bit16u seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
 
   if (i->modC0()) {
     if ( i->os32L() ) {
@@ -113,14 +109,20 @@ BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 {
   Bit16u op2_16;
 
+#if BX_CPU_LEVEL < 3
+  BX_PANIC(("MOV_SwEw: incomplete for CPU < 3"));
+#endif
+
   /* If attempt is made to load the CS register ... */
   if (i->nnn() == BX_SEG_REG_CS) {
     UndefinedOpcode(i);
   }
 
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOV_SwEw: incomplete for CPU < 3"));
-#endif
+  /* Illegal to use nonexisting segments */
+  if (i->nnn() >= 6) {
+    BX_INFO(("MOV_EwSw: using of nonexisting segment register"));
+    UndefinedOpcode(i);
+  }
 
   if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
@@ -139,19 +141,18 @@ BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
     BX_CPU_THIS_PTR inhibit_mask |=
       BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG;
     BX_CPU_THIS_PTR async_event = 1;
-    }
+  }
 }
 
   void
 BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_INFO(("LEA_GvM: op2 is a register"));
+    BX_INFO(("LEA_GwM: op2 is a register"));
     UndefinedOpcode(i);
-    return;
-    }
+  }
 
-    BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) RMAddr(i));
+  BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) RMAddr(i));
 }
 
   void

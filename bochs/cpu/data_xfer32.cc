@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.26 2004-02-26 19:17:40 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.27 2004-05-10 21:05:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,10 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
-
+  
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -95,13 +92,12 @@ BX_CPU_C::MOV_GdEEd(bxInstruction_c *i)
 BX_CPU_C::LEA_GdM(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_INFO(("LEA_GvM: op2 is a register"));
+    BX_INFO(("LEA_GdM: op2 is a register"));
     UndefinedOpcode(i);
-    return;
-    }
+  }
 
-    /* write effective address of op2 in op1 */
-    BX_WRITE_32BIT_REGZ(i->nnn(), RMAddr(i));
+  /* write effective address of op2 in op1 */
+  BX_WRITE_32BIT_REGZ(i->nnn(), RMAddr(i));
 }
 
 
@@ -130,8 +126,6 @@ BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
     write_virtual_dword(BX_SEG_REG_DS, i->Id(), &EAX);
     }
 }
-
-
 
   void
 BX_CPU_C::MOV_EdId(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.26 2003-08-15 13:18:53 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.27 2004-05-10 21:05:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       Bit32u dword1, dword2;
 
       if ((new_value & 0xfffc) == 0) { /* null selector */
-        BX_PANIC(("load_seg_reg: SS: new_value == 0"));
+        BX_ERROR(("load_seg_reg: SS: new_value == 0"));
         exception(BX_GP_EXCEPTION, 0, 0);
         return;
         }
@@ -99,7 +99,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       if (ti == 0) { /* GDT */
         if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
-          BX_PANIC(("load_seg_reg: GDT: %s: index(%04x*8+7) > limit(%06x)",
+          BX_ERROR(("load_seg_reg: GDT: %s: index(%04x*8+7) > limit(%06x)",
             BX_CPU_THIS_PTR strseg(seg), (unsigned) index, (unsigned) BX_CPU_THIS_PTR gdtr.limit));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
@@ -610,7 +610,7 @@ BX_INFO(("-----------------------------------"));
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
       }
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
-      BX_PANIC(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
           (selector->index*8 + 7), selector->index,
           BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
       exception(exception_no, selector->value & 0xfffc, 0);

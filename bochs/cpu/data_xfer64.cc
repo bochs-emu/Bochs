@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.17 2004-04-07 19:23:06 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.18 2004-05-10 21:05:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,9 +35,7 @@
   void
 BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
 {
-  Bit64u temp64;
-
-  temp64 = RAX;
+  Bit64u temp64 = RAX;
   RAX = BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx;
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = temp64;
 }
@@ -51,10 +49,8 @@ BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EqGq(bxInstruction_c *i)
 {
-    Bit64u op2_64;
-
     /* op2_64 is a register, op2_addr is an index of a register */
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
+    Bit64u op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
     /* now write op2 to op1 */
@@ -86,13 +82,12 @@ BX_CPU_C::MOV_GqEq(bxInstruction_c *i)
 BX_CPU_C::LEA_GqM(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_INFO(("LEA_GvM: op2 is a register"));
+    BX_INFO(("LEA_GqM: op2 is a register"));
     UndefinedOpcode(i);
-    return;
-    }
+  }
 
-    /* write effective address of op2 in op1 */
-    BX_WRITE_64BIT_REG(i->nnn(), RMAddr(i));
+  /* write effective address of op2 in op1 */
+  BX_WRITE_64BIT_REG(i->nnn(), RMAddr(i));
 }
 
   void
@@ -117,11 +112,10 @@ BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_OqAL(bxInstruction_c *i)
 {
-  Bit8u temp_8;
   bx_address addr = i->Iq();
 
   /* read from register */
-  temp_8 = AL;
+  Bit8u temp_8 = AL;
 
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
@@ -153,11 +147,10 @@ BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
 {
-  Bit16u temp_16;
   bx_address addr = i->Iq();
 
   /* read from register */
-  temp_16 = AX;
+  Bit16u temp_16 = AX;
 
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
@@ -191,11 +184,10 @@ BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_OqEAX(bxInstruction_c *i)
 {
-  Bit32u temp_32;
   bx_address addr = i->Iq();
 
   /* read from register */
-  temp_32 = EAX;
+  Bit32u temp_32 = EAX;
 
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
@@ -228,11 +220,10 @@ BX_CPU_C::MOV_RAXOq(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_OqRAX(bxInstruction_c *i)
 {
-  Bit64u temp_64;
   bx_address addr = i->Iq();
 
   /* read from register */
-  temp_64 = RAX;
+  Bit64u temp_64 = RAX;
 
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {

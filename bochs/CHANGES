@@ -15,9 +15,15 @@ Changes to next release:
   - speed optimizations in MMX and CPU core (sshwarts and psychosmur)
   - fix MSR_APICBASE always returning APIC ADDRESS 0 (Kangmo Kim)
   - fetchdecode fixes for AMD64 and 3DNow!
+  - change BX_PANIC messages to BX_INFO when behaviour exactly 
+    matches Intel docs
+  - fixed using invalid segment register for MOV instruction (h.johansson)
 
 - FPU
   - fixed #NM exception on when FPU is disabled for FPU opcodes
+
+- Disassembler
+  - fixed MOV opcode 0x88, has exchanged the operands (h.johansson)
 
 - I/O devices
   - general
@@ -65,7 +71,7 @@ Changes to next release:
   [877510] amd64 fixes...
   [903465] SEGV in iodev/ne2k.cc line 1211 on Alpha architecture by Christian Lestrade
   [903332] copy the bximage result to clipboard, etc by Lukewarm
-
+  [950905] Do not PANIC on rare, bad input from user-mode by h.johansson
 
 - these S.F. bugs were closed 
   #923653 DAA instruction is broken

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.23 2003-12-29 21:47:36 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.24 2004-05-10 21:05:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -248,7 +248,8 @@ BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
-    BX_PANIC(("CALL_Ep: op1 is a register"));
+    BX_INFO(("CALL_Ep: op1 is a register"));
+    exception(BX_UD_EXCEPTION, 0, 0);
     }
 
   /* pointer, segment address pair */
@@ -357,7 +358,8 @@ BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   if (i->modC0()) {
-    BX_PANIC(("JMP_Ep(): op1 is a register"));
+    BX_INFO(("JMP_Ep(): op1 is a register"));
+    exception(BX_UD_EXCEPTION, 0, 0);
     }
 
   read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
