@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.26 2004-12-16 19:03:28 vruppert Exp $
+// $Id: config.cc,v 1.27 2004-12-30 14:50:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -923,27 +923,32 @@ void bx_init_options ()
                 "I/O base adress of USB hub",
                 0, 0xffe0,
                 (i==0)?0xff80 : 0);
-        bx_options.usb[i].Oirq = new bx_param_num_c (
-                BXP_USBx_IRQ(i+1),
-                "IRQ",
-                "IRQ used by USB hub",
-                0, 15,
-                (i==0)?10 : 0);
-        deplist = new bx_list_c (BXP_NULL, 2);
+        bx_options.usb[i].Oport1 = new bx_param_string_c (
+                BXP_USBx_PORT1(i+1), 
+                "port #1 device", 
+                "Device connected to USB port #1",
+                "", BX_PATHNAME_LEN);
+        bx_options.usb[i].Oport2 = new bx_param_string_c (
+                BXP_USBx_PORT2(i+1), 
+                "port #2 device", 
+                "Device connected to USB port #2",
+                "", BX_PATHNAME_LEN);
+        deplist = new bx_list_c (BXP_NULL, 3);
         deplist->add (bx_options.usb[i].Oioaddr);
-        deplist->add (bx_options.usb[i].Oirq);
+        deplist->add (bx_options.usb[i].Oport1);
+        deplist->add (bx_options.usb[i].Oport2);
         bx_options.usb[i].Oenabled->set_dependent_list (deplist);
         // add to menu
         *par_ser_ptr++ = bx_options.usb[i].Oenabled;
         *par_ser_ptr++ = bx_options.usb[i].Oioaddr;
-        *par_ser_ptr++ = bx_options.usb[i].Oirq;
+        *par_ser_ptr++ = bx_options.usb[i].Oport1;
+        *par_ser_ptr++ = bx_options.usb[i].Oport2;
 
         bx_options.usb[i].Oioaddr->set_ask_format ("Enter new ioaddr: [0x%x] ");
         bx_options.usb[i].Oioaddr->set_base (16);
         bx_options.usb[i].Oioaddr->set_group (strdup(group));
-        bx_options.usb[i].Oioaddr->set_ask_format ("Enter new IRQ: [%d] ");
-        bx_options.usb[i].Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
-        bx_options.usb[i].Oirq->set_group (strdup(group));
+        bx_options.usb[i].Oport1->set_group (strdup(group));
+        bx_options.usb[i].Oport2->set_group (strdup(group));
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
@@ -1775,6 +1780,12 @@ void bx_reset_options ()
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
     bx_options.par[i].Oenabled->reset();
     bx_options.par[i].Ooutfile->reset();
+    }
+  for (i=0; i<BX_N_USB_HUBS; i++) {
+    bx_options.usb[i].Oenabled->reset();
+    bx_options.usb[i].Oioaddr->reset();
+    bx_options.usb[i].Oport1->reset();
+    bx_options.usb[i].Oport2->reset();
     }
 
   // rom images
@@ -2691,11 +2702,17 @@ parse_line_formatted(char *context, int num_params, char *params[])
           bx_options.usb[0].Oioaddr->set (strtoul (&params[i][7], NULL, 10));
         bx_options.usb[0].Oenabled->set (1);
         }
+      else if (!strncmp(params[i], "port1=", 6)) {
+        bx_options.usb[0].Oport1->set (strdup(&params[i][6]));
+        }
+      else if (!strncmp(params[i], "port2=", 6)) {
+        bx_options.usb[0].Oport2->set (strdup(&params[i][6]));
+        }
       else if (!strncmp(params[i], "irq=", 4)) {
-        bx_options.usb[0].Oirq->set (atol(&params[i][4]));
+        PARSE_WARN(("%s: usb irq is now deprecated (assigned by BIOS).", context));
         }
       else {
-        PARSE_ERR(("%s: unknown parameter for usb1 ignored.", context));
+        PARSE_WARN(("%s: unknown parameter '%s' for usb1 ignored.", context, params[i]));
         }
       }
     }
@@ -3310,7 +3327,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       if (valid == 0x07) {
         bx_options.ne2k.Oenabled->set (1);
         }
-      else {
+      else if (valid < 0x80) {
         PARSE_ERR(("%s: ne2k directive incomplete (ioaddr, irq and mac are required)", context));
         }
       }
@@ -3370,7 +3387,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       if (valid == 0x07) {
         bx_options.pnic.Oenabled->set (1);
         }
-      else {
+      else if (valid < 0x80) {
         PARSE_ERR(("%s: pnic directive incomplete (ioaddr, irq and mac are required)", context));
         }
       }
@@ -3639,8 +3656,8 @@ bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
 {
   fprintf (fp, "usb%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
-    fprintf (fp, ", ioaddr=0x%04x, irq=%d", opt->Oioaddr->get (),
-      opt->Oirq->get ());
+    fprintf (fp, ", ioaddr=0x%04x, port1=%s, port2=%s", opt->Oioaddr->get (),
+      opt->Oport1->getptr (), opt->Oport2->getptr ());
   }
   fprintf (fp, "\n");
   return 0;
@@ -3675,7 +3692,7 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
   fprintf (fp, "ne2k: enabled=%d", opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
     char *ptr = opt->Omacaddr->getptr ();
-    fprintf (fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s\n",
+    fprintf (fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
       opt->Oioaddr->get (), 
       opt->Oirq->get (),
       (unsigned int)(0xff & ptr[0]),
@@ -3697,7 +3714,7 @@ bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
 {
   fprintf (fp, "sb16: enabled=%d", opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
-    fprintf (fp, "sb16: midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d\n",
+    fprintf (fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
       opt->Omidimode->get (),
       opt->Omidifile->getptr (),
       opt->Owavemode->get (),
@@ -3825,7 +3842,7 @@ bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, "vgaromimage: file=\"%s\"\n", bx_options.vgarom.Opath->getptr ());
   else
     fprintf (fp, "# no vgaromimage\n");
-  fprintf (fp, "boot: %s", bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get()));
+  fprintf (fp, "boot: %s", bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get() - 1));
   for (i=1; i<3; i++) {
     if (bx_options.Obootdrive[i]->get() != BX_BOOT_NONE) {
       fprintf (fp, ", %s", bx_options.Obootdrive[i]->get_choice(bx_options.Obootdrive[i]->get()));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.17 2004-12-26 09:28:35 vruppert Exp $
+// $Id: pciusb.cc,v 1.18 2004-12-30 14:50:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -118,9 +118,8 @@ bx_pciusb_c::init(void)
   BX_USB_THIS hub[0].base_ioaddr = 0x0;
 
   Bit16u base_ioaddr = bx_options.usb[0].Oioaddr->get();
-  Bit8u irq = bx_options.usb[0].Oirq->get();
 
-  BX_INFO(("usb1 at 0x%04x-0x%04x irq %d", base_ioaddr, base_ioaddr+0x13, irq));
+  BX_INFO(("usb1 at 0x%04x-0x%04x irq assigned by BIOS", base_ioaddr, base_ioaddr+0x13));
 
   //FIXME: for now, we want a status bar // hub zero, port zero
   BX_USB_THIS hub[0].statusbar_id[0] = bx_gui->register_statusitem("USB");
