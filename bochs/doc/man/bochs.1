@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochs 1 "The Bochs Project       bochs @VERSION@        2 Jun 2001"
+.TH bochs 1 "The Bochs Project       bochs @VERSION@        3 Jun 2001"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
@@ -7,11 +7,13 @@ bochs \- Portable x86 Emulator.
 .SH USAGE
 .B bochs [bochsrc syntax]
 .LP
-If you run bochs with no arguments, it will search for a configuration file
-called .bochsrc, bochsrc, bochsrc.txt, or $HOME/.bochsrc.  You can override
-the settings in the configuration file with command line arguments, with the
-same syntax of the bochsrc file.  If the bochsrc
-line has spaces, be sure to enclose the whole line in single quotes.  See also
+When you run bochs,  it will search for a  configuration
+file  called .bochsrc in  the current directory and your
+home directory.  You can override the settings from this
+configuration  file  with  command line arguments, using
+the  same  syntax  as the bochsrc file. If you have  any
+spaces in your command line  arguments, they should   be
+enclosed  in  single quotes.  For  more information, see
 .B bochsrc(1).
 
 Example:
