@@ -1,0 +1,13 @@
+SMP Bochs To Do List
+- work on timers
+  - (DONE) local APIC timers don't count down.
+  - (DONE) ticks occur once per instruction of any processor, rather than once
+    per cycle of all processors.
+  - if you care that TSC is identical in each processor, you should be able to
+      while(true) {
+        run one instruction in each CPU
+	tick++
+      }
+  - otherwise run each one a certain amount (called quantum in cosim mode)
+    and then increment ticks by the required amount.  But check that the
+    ticks are really programmed right.
