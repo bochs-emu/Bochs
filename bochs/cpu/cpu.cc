@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.99 2005-02-28 18:56:03 sshwarts Exp $
+// $Id: cpu.cc,v 1.100 2005-03-10 21:22:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,6 +69,33 @@ BOCHSAPI BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
 BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 #endif
 
+#if BX_SUPPORT_ICACHE
+
+#define InstrumentICACHE 0
+
+#if InstrumentICACHE
+static unsigned iCacheLookups=0;
+static unsigned iCacheMisses=0;
+
+#define InstrICache_StatsMask 0xffffff
+
+#define InstrICache_Stats() {\
+  if ((iCacheLookups & InstrICache_StatsMask) == 0) { \
+    BX_INFO(("ICACHE lookups: %u, misses: %u, hit rate = %6.2f%% ", \
+          iCacheLookups, \
+          iCacheMisses,  \
+          (iCacheLookups-iCacheMisses) * 100.0 / iCacheLookups)); \
+    iCacheLookups = iCacheMisses = 0; \
+  } \
+}
+#define InstrICache_Increment(v) (v)++
+
+#else
+#define InstrICache_Stats()
+#define InstrICache_Increment(v)
+#endif
+
+#endif
 
 // notes:
 
@@ -134,9 +161,9 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   // the debugger may request that control is returned to it so that
   // the situation may be examined.
   if (bx_guard.special_unwind_stack) {
-printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
+    printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
     return;
-    }
+  }
 #endif
 
   // We get here either by a normal function call, or by a longjmp
@@ -194,6 +221,11 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 
   Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.getPageWriteStamp(pAddr);
 
+#if BX_SUPPORT_ICACHE
+  InstrICache_Increment(iCacheLookups);
+  InstrICache_Stats();
+#endif
+
   if ((cache_entry->pAddr == pAddr) &&
       (cache_entry->writeStamp == pageWriteStamp))
   {
@@ -221,6 +253,7 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 #if BX_SUPPORT_ICACHE
     // The entry will be marked valid if fetchdecode will succeed
     cache_entry->writeStamp = ICacheWriteStampInvalid;
+    InstrICache_Increment(iCacheMisses);
 #endif
 
 #if BX_SUPPORT_X86_64
