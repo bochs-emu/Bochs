@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.31 2002-04-07 21:32:42 japj Exp $
+// $Id: vga.cc,v 1.32 2002-04-14 08:57:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -626,9 +626,11 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
 
     case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* CRTC Registers (color emulation modes) */
-      if (BX_VGA_THIS s.CRTC.address > 0x18)
-        BX_DEBUG(("vga_io_read: 3d5: address = %02xh",
+      if (BX_VGA_THIS s.CRTC.address > 0x18) {
+        BX_DEBUG(("read: invalid CRTC register 0x%02x",
           (unsigned) BX_VGA_THIS s.CRTC.address));
+        RETURN(0);
+      }
       RETURN(BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]);
       break;
 
@@ -736,14 +738,18 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log)
 
   switch (address) {
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
-      if (value > 0x18)
-        BX_PANIC(("io write 3b4: value > 18h"));
-      BX_VGA_THIS s.CRTC.address = value;
+      BX_VGA_THIS s.CRTC.address = value & 0x7f;
+      if (BX_VGA_THIS s.CRTC.address > 0x18)
+        BX_DEBUG(("write: invalid CRTC register 0x%02x selected",
+          (unsigned) BX_VGA_THIS s.CRTC.address));
       break;
 
     case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
-      if (BX_VGA_THIS s.CRTC.address > 0x18)
-        BX_PANIC(("io write 3b5: CRTC reg > 18h"));
+      if (BX_VGA_THIS s.CRTC.address > 0x18) {
+        BX_DEBUG(("write: invalid CRTC register 0x%02x ignored",
+          (unsigned) BX_VGA_THIS s.CRTC.address));
+        return;
+      }
       BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
 #if !defined(VGA_TRACE_FEATURE)
       BX_DEBUG(("mono CRTC Reg[%u] = %02x",
@@ -1123,21 +1129,23 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
       break;
 
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
-      BX_VGA_THIS s.CRTC.address = value;
+      BX_VGA_THIS s.CRTC.address = value & 0x7f;
       if (BX_VGA_THIS s.CRTC.address > 0x18)
-        BX_DEBUG(("vga_io_write: 3d4: address = %02xh",
+        BX_DEBUG(("write: invalid CRTC register 0x%02x selected",
           (unsigned) BX_VGA_THIS s.CRTC.address));
       break;
 
     case 0x03d5: /* CRTC Registers (color emulation modes) */
-      if (BX_VGA_THIS s.CRTC.address > 0x18)
-        BX_DEBUG(("vga_io_write: 3d5: address = %02xh",
+      if (BX_VGA_THIS s.CRTC.address > 0x18) {
+        BX_DEBUG(("write: invalid CRTC register 0x%02x ignored",
           (unsigned) BX_VGA_THIS s.CRTC.address));
+        return;
+      }
       BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
       //BX_DEBUG(("color CRTC Reg[%u] = %02x",
-      //  (unsigned) BX_VGA_THIS s.CRTC.address, (unsigned) value);
-      if (BX_VGA_THIS s.CRTC.address>=0x0C || BX_VGA_THIS s.CRTC.address<=0x0F) {
-        // Start Address or Cursor Location change
+      //  (unsigned) BX_VGA_THIS s.CRTC.address, (unsigned) value));
+      if (BX_VGA_THIS s.CRTC.address>=0x0A && BX_VGA_THIS s.CRTC.address<=0x0F) {
+        // Start address or cursor size / location change
         BX_VGA_THIS s.vga_mem_updated = 1;
         }
       break;
@@ -1490,8 +1498,8 @@ bx_vga_c::update(void)
         rows = (VDE+1)/(MSL+1);
         if (rows > BX_MAX_TEXT_LINES)
           BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
-	iWidth = 8*80;	// TODO: should use font size
-	iHeight = 16*rows;
+	iWidth = 8 * (BX_VGA_THIS s.CRTC.reg[1] + 1);
+	iHeight = 16*rows; // TODO: should use font size
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
 	  bx_gui.dimension_update(iWidth, iHeight);
@@ -1507,8 +1515,8 @@ bx_vga_c::update(void)
           cursor_y = 0xffff;
           }
         else {
-          cursor_x = ((cursor_address - start_address)/2) % 80;
-          cursor_y = ((cursor_address - start_address)/2) / 80;
+          cursor_x = ((cursor_address - start_address)/2) % (iWidth/8);
+          cursor_y = ((cursor_address - start_address)/2) / (iWidth/8);
           }
         cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
         bx_gui.text_update(BX_VGA_THIS s.text_snapshot,
