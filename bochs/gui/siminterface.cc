@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.31.2.15 2002-04-08 06:20:40 bdenney Exp $
+// $Id: siminterface.cc,v 1.31.2.16 2002-04-08 06:28:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.15 2002-04-08 06:20:40 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.16 2002-04-08 06:28:46 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -357,8 +357,7 @@ bx_real_sim_c::log_msg (const char *prefix, int level, char *msg)
   be->u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
   BxEvent *response = sim_to_gui_event (be);
-  assert (response == be);
-  return response->retcode;
+  return response? response->retcode : -1;
 }
 
 /////////////////////////////////////////////////////////////////////////
