@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.35 2001-11-14 01:28:53 bdenney Exp $
+// $Id: keyboard.cc,v 1.36 2001-11-26 09:55:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.35 2001-11-14 01:28:53 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.36 2001-11-26 09:55:30 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -97,7 +97,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.35 2001-11-14 01:28:53 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.36 2001-11-26 09:55:30 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -575,6 +575,7 @@ bx_keyb_c::gen_scancode(Bit32u   key)
 {
   Bit8u   scancode;
   int extended;
+  static Boolean alt_pressed = 0;
 
   BX_DEBUG(( "gen_scancode %lld %x", bx_pc_system.time_ticks(), key));
 
@@ -599,9 +600,10 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_CTRL_R:  extended = 1; scancode = 0x1d; break;
     case BX_KEY_SHIFT_L: scancode = 0x2a; break;
     case BX_KEY_SHIFT_R: scancode = 0x36; break;
+    case BX_KEY_CAPS_LOCK: scancode = 0x3a; break;
     case BX_KEY_ESC:   scancode = 0x01; break;
 
-    case BX_KEY_ALT_L: scancode = 0x38; break;
+    case BX_KEY_ALT_L: alt_pressed = (key >> 31); scancode = 0x38; break;
     case BX_KEY_ALT_R: extended = 1; scancode = 0x38; break;
 
     case BX_KEY_A:     scancode = 0x1e; break;
@@ -646,6 +648,7 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_SINGLE_QUOTE: scancode = 0x28; break;
     case BX_KEY_COMMA:        scancode = 0x33; break;
     case BX_KEY_PERIOD:       scancode = 0x34; break;
+    case BX_KEY_KP_DIVIDE:  extended = 1;
     case BX_KEY_SLASH:        scancode = 0x35; break;
 
     case BX_KEY_SEMICOLON:     scancode = 0x27; break;
@@ -653,6 +656,7 @@ bx_keyb_c::gen_scancode(Bit32u   key)
 
     case BX_KEY_LEFT_BRACKET:  scancode = 0x1a; break;
     case BX_KEY_BACKSLASH:     scancode = 0x2b; break;
+    case BX_KEY_LEFT_BACKSLASH: scancode = 0x56; break;
     case BX_KEY_RIGHT_BRACKET: scancode = 0x1b; break;
     case BX_KEY_MINUS:         scancode = 0x0c; break;
     case BX_KEY_GRAVE:         scancode = 0x29; break;
@@ -687,12 +691,7 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_KP_ADD:           scancode = 0x4e; break;
     case BX_KEY_KP_SUBTRACT:      scancode = 0x4a; break;
     case BX_KEY_KP_5:             scancode = 0x4c; break;
-    case BX_KEY_KP_MULTIPLY:
-      BX_DEBUG(( "Grey Multiply key not on 83-key keyboard" ));
-      return;
-    case BX_KEY_KP_DIVIDE:
-      BX_DEBUG(( "Grey Divide key not on 83-key keyboard" ));
-      return;
+    case BX_KEY_KP_MULTIPLY:      scancode = 0x37; break;
     case BX_KEY_NUM_LOCK:         scancode = 0x45; break;
 
     case BX_KEY_F1:               scancode = 0x3b; break;
@@ -707,6 +706,11 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_F10:              scancode = 0x44; break;
     case BX_KEY_F11:              scancode = 0x57; break;
     case BX_KEY_F12:              scancode = 0x58; break;
+
+    case BX_KEY_PRINT:          if (alt_pressed) scancode = 0x54;
+			        else { extended = 1; scancode = 0x37; }
+    case BX_KEY_SCRL_LOCK:        scancode = 0x46; break;
+    case BX_KEY_PAUSE:         extended = 1; scancode = 0x45; break;
 
     default:
       BX_DEBUG(( "bx_keyb_c::gen_scancode : Unhandled %u",
@@ -973,6 +977,8 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     case 0xf2:  // identify keyboard
       BX_INFO(("identify keyboard command received"));
       kbd_enQ(0xFA); // AT sends ACK, MFII sends ACK+ABh+41h
+      kbd_enQ(0xAB);
+      kbd_enQ(0x41);
       return;
       break;
 
@@ -1025,15 +1031,15 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       break;
 
     case 0xff:  // reset: internal keyboard reset and afterwards the BAT
-      BX_DEBUG(("rest command received"));
+      BX_DEBUG(("reset command received"));
       kbd_enQ(0xFA); // send ACK
       kbd_enQ(0xAA); // BAT test passed
       return;
       break;
 
-case 0xd3:
-  kbd_enQ(0xfa);
-  return;
+    case 0xd3:
+      kbd_enQ(0xfa);
+      return;
 
     default:
 			/* XXX fix this properly:
