@@ -49,6 +49,7 @@ install: build
 	# Add here commands to install the package into debian/bochs.
 	$(MAKE) install_bin prefix=$(CURDIR)/debian/bochs/usr/local
 	$(MAKE) install_man prefix=$(CURDIR)/debian/bochs/usr/local
+	$(MAKE) install_dlx prefix=$(CURDIR)/debian/bochs/usr/local
 
 	# Put the font in the right place
 	cp $(CURDIR)/debian/bochs/usr/local/bochs/latest/vga.pcf $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc/vga.pcf

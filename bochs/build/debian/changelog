@@ -1,3 +1,16 @@
+bochs (1.2.1-2) unstable; urgency=low
+
+  * Added bochs-dlx stuff. This may be separated out into its own
+    package at some point 
+
+ -- Rob Lemley <rjlemley@debian>  Tue, 12 Jun 2001 19:47:05 -0700
+
+bochs (1.2.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Rob Lemley <rjlemley@debian>  Tue, 12 Jun 2001 17:57:51 -0700
+
 bochs (1.2-3) unstable; urgency=low
 
   * Moved debian dir to build dir
