@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.80 2004-02-24 19:21:47 vruppert Exp $
+// $Id: win32.cc,v 1.81 2004-03-08 05:30:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,13 +55,6 @@ static bx_win32_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(win32)
 
 #define LOG_THIS theGui->
-
-
-#ifdef __MINGW32__
-#if BX_SHOW_IPS
-#include <windows32/CommonFunctions.h>
-#endif
-#endif
 
 #define EXIT_GUI_SHUTDOWN        1
 #define EXIT_GMH_FAILURE         2
