@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.19 2002-09-06 14:40:22 bdenney Exp $
+// $Id: wx.cc,v 1.20 2002-09-06 16:59:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -1034,7 +1034,6 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
     wxString string (text_snapshot, len);
     wxTheClipboard->SetData (new wxTextDataObject (string));
     wxTheClipboard->Close ();
-    wxMutexGuiLeave ();
     ret = 1;
   }
   wxMutexGuiLeave ();
