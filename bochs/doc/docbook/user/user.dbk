@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.124 2003-08-09 11:42:22 vruppert Exp $
+$Id: user.dbk,v 1.125 2003-08-09 17:52:35 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -435,7 +435,14 @@ currently work with.
     <entry>PCI</entry>
     <entry>incomplete</entry>
     <entry>The Host-to-PCI bridge, and Primary Memory Controller are available.
-    However, PCI-to-IDE, PCI-to-USB, or other PCI cards are not implemented yet.
+    However, PCI-to-IDE or other PCI cards are not implemented yet.
+    </entry>
+  </row>
+  <row>
+    <entry>USB</entry>
+    <entry>incomplete</entry>
+    <entry>The USB root hub is available, USB devices with access to real hardware
+    are not implemented yet.
     </entry>
   </row>
   <row>
@@ -2061,6 +2068,12 @@ turn it off.
           Don't use this option yet.</entry>
     </row>
     <row>
+      <entry>--enable-usb</entry>
+      <entry>no</entry>
+      <entry>Enable limited i440FX PCI USB support. This is not complete.
+          Don't use this option yet.</entry>
+    </row>
+    <row>
       <entry>--enable-4meg-pages</entry>
       <entry>no</entry>
       <entry>support 4 megabyte page extensions</entry>
@@ -2712,6 +2725,16 @@ determined by a platform-specific specific algorithm.  On Win32, we use the
 registry to see what directory Bochs and its support files were installed in.
 On MacOSX, the share directory is the directory where the application is
 located.
+</para>
+
+<para>
+Starting with version 2.0, you can can use #include in the bochsrc to read the
+configuration from other files. Now it is possible to put platform or
+installation defaults in a global config file (e.g. location of rom images).
+Put this on top of your config file if the global configuration is stored in /etc:
+<screen>
+ #include /etc/bochsrc
+</screen>
 </para>
 
 <para>
@@ -3484,6 +3507,16 @@ Examples:
   i440fxsupport: enabled=1
 </screen>
 Enables limited i440fx PCI chipset support.
+</para>
+</section>
+
+<section><title>usb1</title>
+<para>
+Examples:
+<screen>
+  usb1: enabled=1, ioaddr=0xFF40, irq=9
+</screen>
+Enables limited i440fx PCI USB root hub.
 </para>
 </section>
 
@@ -6136,7 +6169,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.124 2003-08-09 11:42:22 vruppert Exp $
+      $Id: user.dbk,v 1.125 2003-08-09 17:52:35 vruppert Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8599,7 +8632,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.124 2003-08-09 11:42:22 vruppert Exp $
+        $Id: user.dbk,v 1.125 2003-08-09 17:52:35 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

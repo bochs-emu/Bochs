@@ -656,7 +656,8 @@ keyboard_mapping: enabled=0, map=
 
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
-i440fxsupport: enabled=0
+#i440fxsupport: enabled=1
+#usb1: enabled=1, ioaddr=0xFF40, irq=9
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
