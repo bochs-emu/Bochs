@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.7 2001-06-24 19:55:15 instinc Exp $
+// $Id: wx.cc,v 1.1.2.8 2001-06-24 21:47:00 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -52,21 +52,40 @@ public:
 
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);
+  BochsThread *bochsThread;
+  void StartBochsThread ();
 
 private:
   DECLARE_EVENT_TABLE()
 };
 
+void
+MyFrame::StartBochsThread ()
+{
+  if (bochsThread == NULL)
+  {
+    printf ("Starting bochs thread\n");
+    bochsThread = new BochsThread ();
+    bochsThread->Create ();
+    bochsThread->Run ();
+  } else {
+    wxMessageBox (
+    "Can't start Bochs simulator, because it is already running",
+    "Already Running", wxOK | wxICON_ERROR);
+  }
+}
+
 class MyPanel: public wxScrolledWindow
 {
 private:
+  MyFrame *frame;
   void HandleEvent(wxCommandEvent& event);
   wxStaticText *text1;
-  BochsThread *bochsThread;
   void buildParamList (int x, int y);
+  void forAllEditors (int evt_id, wxHashTable &);
 public:
   MyPanel () {};
-  MyPanel ( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
+  MyPanel (MyFrame *frame, wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
   ~MyPanel();
 
   DECLARE_EVENT_TABLE()
@@ -89,40 +108,40 @@ class ParamEditor: public wxPanel {
   bx_param_c *param;
   DECLARE_EVENT_TABLE()
   void OnEvent (wxCommandEvent& event);
-  virtual void OnEvent2 (wxCommandEvent& event) = 0;
 public:
   ParamEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
   static ParamEditor *createEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
   bx_param_c *get_param ();
+  virtual void Action (int evt_id) = 0;
 };
 
 
 BEGIN_EVENT_TABLE(ParamEditor, wxPanel)
-  EVT_CHECKBOX (-1, ParamEditor::OnEvent)
-  EVT_CHOICE (-1, ParamEditor::OnEvent)
-  EVT_TEXT(-1, ParamEditor::OnEvent)
-  EVT_TEXT_ENTER(-1, ParamEditor::OnEvent)
+  //EVT_CHECKBOX (-1, ParamEditor::OnEvent)
+  //EVT_CHOICE (-1, ParamEditor::OnEvent)
+  //EVT_TEXT(-1, ParamEditor::OnEvent)
+  //EVT_TEXT_ENTER(-1, ParamEditor::OnEvent)
 END_EVENT_TABLE()
 
 class ParamEditorBool : public ParamEditor {
   wxCheckBox *component;
 public:
   ParamEditorBool (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
-  virtual void OnEvent2 (wxCommandEvent& event);
+  virtual void Action (int evt_id);
 };
 
 class ParamEditorNum : public ParamEditor {
   wxTextCtrl *component;
 public:
   ParamEditorNum (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
-  virtual void OnEvent2 (wxCommandEvent& event);
+  virtual void Action (int evt_id);
 };
 
 class ParamEditorString : public ParamEditor {
   wxTextCtrl *component;
 public:
   ParamEditorString (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
-  virtual void OnEvent2 (wxCommandEvent& event);
+  virtual void Action (int evt_id);
 };
 
 class ParamEditorEnum : public ParamEditor {
@@ -131,14 +150,14 @@ class ParamEditorEnum : public ParamEditor {
   wxString *choices;
 public:
   ParamEditorEnum (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
-  virtual void OnEvent2 (wxCommandEvent& event);
+  virtual void Action (int evt_id);
 };
 
 class ParamEditorList : public ParamEditor {
   wxControl *component;
 public:
   ParamEditorList (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
-  virtual void OnEvent2 (wxCommandEvent& event);
+  virtual void Action (int evt_id);
 };
 
 
@@ -163,6 +182,8 @@ enum
 {
   ID_Quit = 1,
   ID_StartBochs,
+  ID_ApplyAction,
+  ID_RevertAction,
   ID_Check1,
   ID_Choice1,
   ID_Combo1,
@@ -174,14 +195,19 @@ int wxid_count = ID_LAST_STATIC_ASSIGNED_ID;
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Quit,  MyFrame::OnQuit)
   EVT_MENU(ID_StartBochs, MyFrame::OnAbout)
+  EVT_MENU(ID_ApplyAction, MyFrame::OnAbout)
+  EVT_MENU(ID_RevertAction, MyFrame::OnAbout)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(MyPanel, wxScrolledWindow)
   EVT_BUTTON (ID_StartBochs, MyPanel::HandleEvent)
-  EVT_CHECKBOX (ID_Check1, MyPanel::HandleEvent)
-  EVT_CHOICE (ID_Choice1, MyPanel::HandleEvent)
-  EVT_COMBOBOX (ID_Combo1, MyPanel::HandleEvent)
-  EVT_TEXT (ID_Combo1, MyPanel::HandleEvent)
+  EVT_BUTTON (ID_ApplyAction, MyPanel::HandleEvent)
+  EVT_BUTTON (ID_RevertAction, MyPanel::HandleEvent)
+  // do not call event handlers for the ParamEditors
+  //EVT_CHECKBOX (ID_Check1, MyPanel::HandleEvent)
+  //EVT_CHOICE (ID_Choice1, MyPanel::HandleEvent)
+  //EVT_COMBOBOX (ID_Combo1, MyPanel::HandleEvent)
+  //EVT_TEXT (ID_Combo1, MyPanel::HandleEvent)
 END_EVENT_TABLE()
 
 
@@ -202,6 +228,7 @@ bool BochsApp::OnInit()
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 : wxFrame((wxFrame *)NULL, -1, title, pos, size)
 {
+  bochsThread = NULL;
   wxMenu *menuFile = new wxMenu;
 
   menuFile->Append( ID_StartBochs, "&Start Bochs..." );
@@ -215,8 +242,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
   CreateStatusBar();
   SetStatusText( "Bochs Controls" );
-  MyPanel *panel = new MyPanel ( this, -1, wxPoint(0,0), wxSize(100,100) );
-  panel->SetScrollbars( 10, 10, 50, 100 );
+  int width=500, height=3000;
+  MyPanel *panel = new MyPanel ( this, this, -1, wxPoint(0,0), wxSize(width,height) );
+  panel->SetScrollbars( 10, 10, width/10, height/10 );
 }
 
 
@@ -234,22 +262,33 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void MyPanel::HandleEvent (wxCommandEvent& evt)
 {
-  printf ("Handle event with event id %d\n", evt.GetId ());
-  switch (evt.GetId ())
+  int id = evt.GetId ();
+  printf ("Handle event with event id %d\n", id);
+  switch (id)
   {
     case ID_StartBochs:
-      if (bochsThread == NULL)
-      {
-        printf ("Starting bochs thread\n");
-	bochsThread = new BochsThread ();
-	bochsThread->Create ();
-	bochsThread->Run ();
-      } else {
-        wxMessageBox (
-	"Can't start Bochs simulator, because it is already running",
-	"Already Running", wxOK | wxICON_ERROR);
-      }
+      frame->StartBochsThread ();
       break;
+    case ID_ApplyAction:
+    case ID_RevertAction:
+      forAllEditors (id, paramEditorsById);
+      break;
+    default:
+      printf ("HandleEvent called with id=%d\n", id);
+  }
+}
+
+void 
+MyPanel::forAllEditors (int evt_id, wxHashTable& hash)
+{
+  printf ("MyPanel::forAllEditors");
+  // iterate over editors in the editors hashtable
+  hash.BeginFind ();
+  wxNode *node;
+  while (node = hash.Next ()) 
+  {
+    ParamEditor *editor = (ParamEditor *)node->Data ();
+    editor->Action (evt_id);
   }
 }
 
@@ -261,19 +300,23 @@ BochsThread::Entry (void)
   bx_continue_after_control_panel (argc, argv);
 }
 
-MyPanel::MyPanel (wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
+MyPanel::MyPanel (MyFrame *frame, wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
   : wxScrolledWindow( parent, id, pos, size, wxSUNKEN_BORDER | wxTAB_TRAVERSAL, "Bochs Controls" )
 {
+  this->frame = frame;
   // the parent constructor makes this panel a child of frame, with 
   // proper size.
-  bochsThread = NULL;
   wxButton *btn1 = new wxButton (this, ID_StartBochs, "Start Bochs", wxPoint (10, 10));
+  (void) new wxButton (this, ID_ApplyAction, "Apply", wxPoint (110, 10));
+  (void) new wxButton (this, ID_RevertAction, "Revert", wxPoint (210, 10));
   //wxCheckBox *check1 = new wxCheckBox (this, ID_Check1, "Checkbox", wxPoint (10, 50));
   //wxString choices[] = { "apple", "orange", "banana" };
   //wxChoice *choice1 = new wxChoice (this, ID_Choice1, wxPoint (10, 80), wxSize (80, 30), 3, choices);
   //wxComboBox *combo1 = new wxComboBox (this, ID_Combo1, "Default Combo String", wxPoint (10, 130), wxSize (180, 80), 3, choices);
   //text1 = new wxStaticText (this, ID_Text1, "no text yet", wxPoint (0, 160));
   buildParamList (10, 40);
+  // grab all the settings from siminterface into the GUI
+  forAllEditors (ID_RevertAction, paramEditorsById);
 }
 
 MyPanel::~MyPanel()
@@ -345,11 +388,20 @@ ParamEditorBool::ParamEditorBool (bx_param_c *param, wxWindow *parent, wxWindowI
 }
 
 void 
-ParamEditorBool::OnEvent2 (wxCommandEvent& event)
+ParamEditorBool::Action (int evt_id)
 {
-  printf ("ParamEditorBool::OnEvent2\n");
-  bx_param_bool_c *p = (bx_param_bool_c *) get_param ();
-  p->set (event.IsChecked ());
+  printf ("ParamEditorBool::Action\n");
+  bx_param_bool_c *param = (bx_param_bool_c *) get_param ();
+  switch (evt_id) {
+    case ID_ApplyAction:
+      param->set (component->GetValue ());
+      break;
+    case ID_RevertAction:
+      component->SetValue (param->get ());
+      break;
+    default:
+      wxASSERT (0);
+  }
 }
 
 ParamEditorNum::ParamEditorNum (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
@@ -364,9 +416,38 @@ ParamEditorNum::ParamEditorNum (bx_param_c *param, wxWindow *parent, wxWindowID 
 }
 
 void 
-ParamEditorNum::OnEvent2 (wxCommandEvent& event)
+ParamEditorNum::Action (int evt_id)
 {
-  printf ("ParamEditorNum::OnEvent2\n");
+  printf ("ParamEditorNum::Action\n");
+  bx_param_num_c *param = (bx_param_num_c *) get_param ();
+  int base = param->get_base ();
+  wxASSERT (base==10 || base==16);
+  switch (evt_id) {
+    case ID_ApplyAction:
+      {
+	const char *string = component->GetValue ().c_str ();
+	int n, status;
+	if (base==10) status = wxSscanf (string, "%d", &n);
+	else status = wxSscanf (string, "%x", &n);
+	if (status != 1) {
+	  printf ("Invalid number in %s, value = '%s'\n", param->get_name (), string);
+	  return;
+	}
+	param->set (n);
+      }
+      break;
+    case ID_RevertAction:
+      {
+	int n = param->get ();
+	wxString string;
+	if (base == 10) string.Printf ("%d", n);
+	else string.Printf ("%x", n);
+        component->SetValue (string);
+      }
+      break;
+    default:
+      wxASSERT (0);
+  }
 }
 
 ParamEditorString::ParamEditorString (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
@@ -379,10 +460,23 @@ ParamEditorString::ParamEditorString (bx_param_c *param, wxWindow *parent, wxWin
 }
 
 void 
-ParamEditorString::OnEvent2 (wxCommandEvent& event)
+ParamEditorString::Action (int evt_id)
 {
-  printf ("ParamEditorString::OnEvent2\n");
+  bx_param_string_c *param = (bx_param_string_c *) get_param ();
+  char *string;
+  switch (evt_id) {
+    case ID_ApplyAction:
+      string = component->GetValue ().c_str ();
+      param->set (string);
+      break;
+    case ID_RevertAction:
+      component->SetValue (wxString (param->getptr ()));
+      break;
+    default:
+      wxASSERT (0);
+  }
 }
+
 
 ParamEditorEnum::ParamEditorEnum (bx_param_c *genericparam, wxWindow *parent, wxWindowID id, int x, int y)
   : ParamEditor (genericparam, parent, id, x, y)
@@ -399,9 +493,21 @@ ParamEditorEnum::ParamEditorEnum (bx_param_c *genericparam, wxWindow *parent, wx
 }
 
 void 
-ParamEditorEnum::OnEvent2 (wxCommandEvent& event)
+ParamEditorEnum::Action (int evt_id)
 {
-  printf ("ParamEditorEnum::OnEvent2\n");
+  printf ("ParamEditorEnum::Action\n");
+  bx_param_enum_c *param = (bx_param_enum_c *) get_param ();
+  int min = param->get_min ();
+  switch (evt_id) {
+    case ID_ApplyAction:
+      param->set (min + component->GetSelection ());
+      break;
+    case ID_RevertAction:
+      component->SetSelection (param->get () - min);
+      break;
+    default:
+      wxASSERT (0);
+  }
 }
 
 
@@ -415,9 +521,9 @@ ParamEditorList::ParamEditorList (bx_param_c *genericparam, wxWindow *parent, wx
 }
 
 void 
-ParamEditorList::OnEvent2 (wxCommandEvent& event)
+ParamEditorList::Action (int evt_id)
 {
-  printf ("ParamEditorList::OnEvent2\n");
+  printf ("ParamEditorList::Action\n");
 }
 
 bx_param_c *
@@ -431,6 +537,9 @@ ParamEditor::get_param ()
 void
 ParamEditor::OnEvent (wxCommandEvent& evt)
 {
+  // if you want to run some action on the object that sent this event,
+  // see the code below.
+#if 0
   int id = evt.GetId ();
   wxObject *object = evt.GetEventObject ();
   printf ("ParamEditor::OnEvent, id=%d, object=%p\n", id, object);
@@ -442,5 +551,6 @@ ParamEditor::OnEvent (wxCommandEvent& evt)
   bx_param_c *genericparam = genericeditor->get_param ();
   wxASSERT (genericparam != NULL);
   printf ("This event will be sent to %s\n", genericparam->get_name ());
-  genericeditor->OnEvent2 (evt);
+  genericeditor->Action (evt);
+#endif
 }

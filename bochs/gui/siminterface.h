@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.2 2001-06-24 15:03:24 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.3 2001-06-24 21:47:00 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -163,6 +163,7 @@ public:
   Bit32s get ();
   void set (Bit32s val);
   void set_base (int base) { this->base = base; }
+  int get_base () { return base; }
   Bit32s get_min () { return min; }
   Bit32s get_max () { return max; }
 #if BX_UI_TEXT
