@@ -167,7 +167,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 #endif
 
 #ifdef LOWLEVEL_CDROM
-	if (bx_options.cdromd.Oinserted->get ()) {
+	if (bx_options.cdromd.Oinserted->get () == BX_INSERTED) {
 	      if (BX_HD_THIS s[1].cdrom.cd->insert_cdrom()) {
 		    BX_INFO(( "Media present in CD-ROM drive"));
 		    BX_HD_THIS s[1].cdrom.ready = 1;
@@ -335,6 +335,8 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	    BX_PANIC(("IO read(1f0h) with drq == 0: last command was %02xh",
 		     (unsigned) BX_SELECTED_CONTROLLER.current_command));
       }
+      BX_DEBUG(("IO read(1f0h): current command is %02xh",
+            (unsigned) BX_SELECTED_CONTROLLER.current_command));
       switch (BX_SELECTED_CONTROLLER.current_command) {
         case 0x20: // read sectors, with retries
         case 0x21: // read sectors, without retries
@@ -700,8 +702,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	}
   }
 
-//BX_INFO(("IO write to %04x = %02x",
-//      (unsigned) address, (unsigned) value));
+BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
   switch (address) {
     case 0x1f0:
