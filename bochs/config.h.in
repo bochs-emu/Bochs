@@ -19,7 +19,7 @@
 #else
 #define _BX_CONFIG_H_ 1
 
-
+// config.h is just #defines, so it can be called from C or C++
 
 ///////////////////////////////////////////////////////////////////
 // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
