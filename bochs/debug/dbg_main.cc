@@ -1130,6 +1130,9 @@ void bx_dbg_show_command(char* arg)
 		    /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
 		    printf("Turned off all bx_dbg flags\n");
 		    return;
+	    } else if(!strcmp(arg,"\"vga\"")){
+	      bx_vga.timer ();
+	      return;
 	    } else {
 		  printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
 		  return;
