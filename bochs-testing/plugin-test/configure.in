@@ -21,7 +21,17 @@ AC_PROG_LIBTOOL
 dnl Configure libltdl
 AC_CONFIG_SUBDIRS(libltdl)
 
+AC_MSG_CHECKING(if -no-undefined is required to build a shared library)
 LT_LDFLAGS=
+case $host in
+  *-*-cygwin* | *-*-mingw* | *-*-pw32* | *-*-os2*)
+    LT_LDFLAGS=-no-undefined
+    AC_MSG_RESULT(yes)
+    ;;
+  *)
+    AC_MSG_RESULT(no)
+    ;;
+esac
 AC_SUBST(LT_LDFLAGS)
 
 AC_OUTPUT(config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile)
