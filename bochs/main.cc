@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.244 2003-08-27 17:52:02 vruppert Exp $
+// $Id: main.cc,v 1.245 2003-08-30 13:10:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -432,7 +432,7 @@ void bx_init_options ()
   int i;
   bx_list_c *menu;
   bx_list_c *deplist;
-  char name[1024], descr[1024];
+  char name[1024], descr[1024], label[1024];
 
   memset (&bx_options, 0, sizeof(bx_options));
 
@@ -446,10 +446,11 @@ void bx_init_options ()
 
   // floppya
   bx_options.floppya.Opath = new bx_param_filename_c (BXP_FLOPPYA_PATH,
-      "First floppy image/device",
+      "floppya:path",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
   bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
+  bx_options.floppya.Opath->set_label ("First floppy image/device");
   bx_options.floppya.Odevtype = new bx_param_enum_c (BXP_FLOPPYA_DEVTYPE,
       "floppya:devtype",
       "Type of floppy drive",
@@ -489,10 +490,11 @@ void bx_init_options ()
   bx_options.floppya.Ostatus->set_handler (bx_param_handler);
 
   bx_options.floppyb.Opath = new bx_param_filename_c (BXP_FLOPPYB_PATH,
-      "Second floppy image/device",
+      "floppyb:path",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
   bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
+  bx_options.floppyb.Opath->set_label ("Second floppy image/device");
   bx_options.floppyb.Odevtype = new bx_param_enum_c (BXP_FLOPPYB_DEVTYPE,
       "floppyb:devtype",
       "Type of floppy drive",
@@ -705,19 +707,16 @@ void bx_init_options ()
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
-    bx_options.ata[channel].Opresent->set_ask_format (
-        BX_WITH_WX? "Enable this channel?"
-        : "Channel is enabled: [%s] ");
-    bx_options.ata[channel].Oioaddr1->set_ask_format (
-        BX_WITH_WX? "I/O Address 1:"
-        : "Enter new ioaddr1: [0x%x] ");
-    bx_options.ata[channel].Oioaddr2->set_ask_format (
-        BX_WITH_WX? "I/O Address 2:"
-        : "Enter new ioaddr2: [0x%x] ");
-    bx_options.ata[channel].Oirq->set_ask_format (
-        BX_WITH_WX? "IRQ:"
-        : "Enter new IRQ: [%d] ");
-#if !BX_WITH_WX
+    bx_options.ata[channel].Opresent->set_ask_format ("Channel is enabled: [%s] ");
+    bx_options.ata[channel].Oioaddr1->set_ask_format ("Enter new ioaddr1: [0x%x] ");
+    bx_options.ata[channel].Oioaddr2->set_ask_format ("Enter new ioaddr2: [0x%x] ");
+    bx_options.ata[channel].Oirq->set_ask_format ("Enter new IRQ: [%d] ");
+#if BX_WITH_WX
+    bx_options.ata[channel].Opresent->set_label ("Enable this channel?");
+    bx_options.ata[channel].Oioaddr1->set_label ("I/O Address 1:");
+    bx_options.ata[channel].Oioaddr2->set_label ("I/O Address 2:");
+    bx_options.ata[channel].Oirq->set_label ("IRQ:");
+#else
     bx_options.ata[channel].Opresent->set_format ("enabled: %s");
     bx_options.ata[channel].Oioaddr1->set_format (", ioaddr1: 0x%x");
     bx_options.ata[channel].Oioaddr2->set_format (", ioaddr2: 0x%x");
@@ -729,44 +728,56 @@ void bx_init_options ()
     for (Bit8u slave=0; slave<2; slave++) {
 
       bx_options.atadevice[channel][slave].Opresent->set_ask_format (
-          BX_WITH_WX? "Enable this device?"
-          : "Device is enabled: [%s] ");
+          "Device is enabled: [%s] ");
       bx_options.atadevice[channel][slave].Otype->set_ask_format (
-          BX_WITH_WX? "Type of ATA device:"
-          : "Enter type of ATA device, disk or cdrom: [%s] ");
+          "Enter type of ATA device, disk or cdrom: [%s] ");
       bx_options.atadevice[channel][slave].Omode->set_ask_format (
-          BX_WITH_WX? "Policy of ATA device:"
-          : "Enter mode of ATA device, (flat, concat, etc.): [%s] ");
+          "Enter mode of ATA device, (flat, concat, etc.): [%s] ");
       bx_options.atadevice[channel][slave].Opath->set_ask_format (
-          BX_WITH_WX? "Path or physical device name:"
-          : "Enter new filename: [%s] ");
+          "Enter new filename: [%s] ");
       bx_options.atadevice[channel][slave].Ocylinders->set_ask_format (
-          BX_WITH_WX? "Cylinders:"
-          : "Enter number of cylinders: [%d] ");
+          "Enter number of cylinders: [%d] ");
       bx_options.atadevice[channel][slave].Oheads->set_ask_format (
-          BX_WITH_WX? "Heads:"
-          : "Enter number of heads: [%d] ");
+          "Enter number of heads: [%d] ");
       bx_options.atadevice[channel][slave].Ospt->set_ask_format (
-          BX_WITH_WX? "Sectors per track:"
-          : "Enter number of sectors per track: [%d] ");
+          "Enter number of sectors per track: [%d] ");
       bx_options.atadevice[channel][slave].Ostatus->set_ask_format (
-          BX_WITH_WX? "Inserted?"
-          : "Is the device inserted or ejected? [%s] ");
+          "Is the device inserted or ejected? [%s] ");
       bx_options.atadevice[channel][slave].Omodel->set_ask_format (
-          BX_WITH_WX? "Model name:"
-          : "Enter new model name: [%s]");
+          "Enter new model name: [%s]");
       bx_options.atadevice[channel][slave].Otranslation->set_ask_format (
-          BX_WITH_WX? "Translation type:"
-          : "Enter translation type: [%s]");
+          "Enter translation type: [%s]");
       bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format (
-          BX_WITH_WX? "BIOS Detection:"
-          : "Enter bios detection type: [%s]");
+          "Enter bios detection type: [%s]");
       bx_options.atadevice[channel][slave].Ojournal->set_ask_format (
-          BX_WITH_WX? "Path of journal file:"
-          : "Enter path of journal file: [%s]");
+          "Enter path of journal file: [%s]");
 
-
-#if !BX_WITH_WX
+#if BX_WITH_WX
+      bx_options.atadevice[channel][slave].Opresent->set_label (
+          "Enable this device?");
+      bx_options.atadevice[channel][slave].Otype->set_label (
+          "Type of ATA device:");
+      bx_options.atadevice[channel][slave].Omode->set_label (
+          "Policy of ATA device:");
+      bx_options.atadevice[channel][slave].Opath->set_label (
+          "Path or physical device name:");
+      bx_options.atadevice[channel][slave].Ocylinders->set_label (
+          "Cylinders:");
+      bx_options.atadevice[channel][slave].Oheads->set_label (
+          "Heads:");
+      bx_options.atadevice[channel][slave].Ospt->set_label (
+          "Sectors per track:");
+      bx_options.atadevice[channel][slave].Ostatus->set_label (
+          "Inserted?");
+      bx_options.atadevice[channel][slave].Omodel->set_label (
+          "Model name:");
+      bx_options.atadevice[channel][slave].Otranslation->set_label (
+          "Translation type:");
+      bx_options.atadevice[channel][slave].Obiosdetect->set_label (
+          "BIOS Detection:");
+      bx_options.atadevice[channel][slave].Ojournal->set_label (
+          "Path of journal file:");
+#else
       bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
       bx_options.atadevice[channel][slave].Otype->set_format (", %s");
       bx_options.atadevice[channel][slave].Omode->set_format (", mode %s");
@@ -909,8 +920,9 @@ void bx_init_options ()
   // usb hubs
   for (i=0; i<BX_N_USB_HUBS; i++) {
         // options for USB hub
-        sprintf (name, "Enable usb hub #%d (USB%d)", i+1, i+1);
+        sprintf (name, "usb%d:enabled", i+1);
         sprintf (descr, "Controls whether USB%d is installed or not", i+1);
+        sprintf (label, "Enable usb hub #%d (USB%d)", i+1, i+1);
         bx_options.usb[i].Oenabled = new bx_param_bool_c (
                 BXP_USBx_ENABLED(i+1),
                 strdup(name), 
@@ -918,13 +930,13 @@ void bx_init_options ()
                 (i==0)?1 : 0);  // only enable the first by default
         bx_options.usb[i].Oioaddr = new bx_param_num_c (
                 BXP_USBx_IOADDR(i+1),
-                "USB ioaddr",
+                "usb:ioaddr",
                 "IO base adress of USB hub",
                 0, 0xffe0,
                 (i==0)?0xff40 : 0);
         bx_options.usb[i].Oirq = new bx_param_num_c (
                 BXP_USBx_IRQ(i+1),
-                "USB irq",
+                "usb:irq",
                 "IRQ of USB hub",
                 0, 15,
                 (i==0)?9 : 0);
@@ -937,10 +949,11 @@ void bx_init_options ()
         *par_ser_ptr++ = bx_options.usb[i].Oioaddr;
         *par_ser_ptr++ = bx_options.usb[i].Oirq;
 
-        bx_options.usb[i].Oioaddr->set_ask_format (
-          BX_WITH_WX? "I/O Address :"
-          : "Enter new ioaddr: [0x%x] ");
+        bx_options.usb[i].Oioaddr->set_ask_format ("Enter new ioaddr: [0x%x] ");
+        bx_options.usb[i].Oioaddr->set_label ("I/O Address");
         bx_options.usb[i].Oioaddr->set_base (16);
+        bx_options.usb[i].Oenabled->set_label (strdup(label));
+        bx_options.usb[i].Oirq->set_label ("USB IRQ");
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
@@ -1354,7 +1367,7 @@ void bx_init_options ()
 
   // clock
   bx_options.clock.Otime0 = new bx_param_num_c (BXP_CLOCK_TIME0,
-      "Initial CMOS time for Bochs (1:localtime, 2:utc, other:initial time in seconds)",
+      "clock:time0",
       "Initial time for Bochs CMOS clock, used if you really want two runs to be identical",
       0, BX_MAX_BIT32U,
       0);
@@ -1373,8 +1386,10 @@ void bx_init_options ()
   bx_options.clock.Osync->set_format ("sync=%s");
   bx_options.clock.Otime0->set_format (", Initial time=%d");
 #endif
-  bx_options.clock.Osync->set_ask_format ("Enter Synchronisation method: [%s] ");
   bx_options.clock.Otime0->set_ask_format ("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
+  bx_options.clock.Osync->set_ask_format ("Enter Synchronisation method: [%s] ");
+  bx_options.clock.Otime0->set_label ("Initial CMOS time for Bochs\n(1:localtime, 2:utc, other:time in seconds)");
+  bx_options.clock.Osync->set_label ("Synchronisation method");
   menu = new bx_list_c (BXP_CLOCK, "Clock parameters", "", clock_init_list);
   menu->get_options ()->set (menu->SERIES_ASK);
 
@@ -3537,18 +3552,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: max_ips directive: wrong # args.", context));
       }
     BX_INFO(("WARNING: max_ips not implemented"));
-    }
-  else if (!strcmp(params[0], "system_clock_sync")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: system_clock_sync directive malformed.", context));
-      }
-    if (strncmp(params[1], "enabled=", 8)) {
-      PARSE_ERR(("%s: system_clock_sync directive malformed.", context));
-      }
-    if (params[1][8] == '0' || params[1][8] == '1')
-      BX_INFO (("WARNING: system_clock_sync not implemented"));
-    else
-      PARSE_ERR(("%s: system_clock_sync directive malformed.", context));
     }
   else if (!strcmp(params[0], "text_snapshot_check")) {
     if (num_params != 2) {
