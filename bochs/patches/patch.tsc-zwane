@@ -28,18 +28,15 @@ Instructions:
 Index: cpu/cpu.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
-retrieving revision 1.78
-diff -u -r1.78 cpu.h
---- cpu/cpu.h	24 Sep 2002 18:33:37 -0000	1.78
-+++ cpu/cpu.h	25 Sep 2002 02:59:01 -0000
-@@ -575,12 +575,18 @@
- typedef struct {
-   Bit8u p5_mc_addr;
-   Bit8u p5_mc_type;
--  Bit8u tsc;
-   Bit8u cesr;
-   Bit8u ctr0;
-   Bit8u ctr1;
+retrieving revision 1.81
+diff -u -r1.81 cpu.h
+--- cpu/cpu.h	25 Sep 2002 14:09:08 -0000	1.81
++++ cpu/cpu.h	26 Sep 2002 02:11:08 -0000
+@@ -582,9 +582,15 @@
+ #endif  // #if BX_CPU_LEVEL >= 4
+ 
+ #if BX_CPU_LEVEL >= 5
+-typedef struct {
    Bit64u apicbase;
  
 +  // TSC: Time Stamp Counter
@@ -52,7 +49,7 @@ diff -u -r1.78 cpu.h
  #if BX_SUPPORT_X86_64
    // x86-64 EFER bits
    Boolean sce;
-@@ -1386,6 +1392,10 @@
+@@ -1390,6 +1396,10 @@
  
  #if BX_CPU_LEVEL >= 5
    bx_regs_msr_t	msr;  
@@ -69,7 +66,7 @@ RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
 retrieving revision 1.32
 diff -u -r1.32 init.cc
 --- cpu/init.cc	22 Sep 2002 18:22:24 -0000	1.32
-+++ cpu/init.cc	25 Sep 2002 02:59:02 -0000
++++ cpu/init.cc	26 Sep 2002 02:11:09 -0000
 @@ -818,6 +818,9 @@
  
  /* initialise MSR registers to defaults */
@@ -83,10 +80,10 @@ diff -u -r1.32 init.cc
 Index: cpu/proc_ctrl.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
-retrieving revision 1.50
-diff -u -r1.50 proc_ctrl.cc
---- cpu/proc_ctrl.cc	24 Sep 2002 13:57:37 -0000	1.50
-+++ cpu/proc_ctrl.cc	25 Sep 2002 02:59:04 -0000
+retrieving revision 1.51
+diff -u -r1.51 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	25 Sep 2002 14:09:08 -0000	1.51
++++ cpu/proc_ctrl.cc	26 Sep 2002 02:11:11 -0000
 @@ -1644,6 +1644,20 @@
  #endif
  }
