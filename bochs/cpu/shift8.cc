@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.20 2004-12-24 22:44:13 sshwarts Exp $
+// $Id: shift8.cc,v 1.21 2005-02-16 21:27:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,8 +42,6 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count &= 0x07; /* use only bottom 3 bits */
-
   /* op1 is a register or memory reference */
   if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
@@ -53,7 +51,15 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
   }
 
-  if (! count) return;
+  if ( (count & 0x07) == 0 ) {
+    if ( count & 0x18 ) {
+      unsigned bit0 = op1_8 & 1;
+      set_CF(bit0);
+      set_OF(bit0 ^ (op1_8 >> 7));
+    }
+    return;
+  }
+  count &= 0x07; // use only lowest 3 bits
 
   result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
 
@@ -86,8 +92,6 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count &= 0x07; /* use only bottom 3 bits */
-
   /* op1 is a register or memory reference */
   if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
@@ -97,7 +101,16 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
   }
 
-  if (! count) return;
+  if ( (count & 0x07) == 0 ) {
+    if ( count & 0x18 ) {
+      unsigned bit6 = (op1_8 >> 6) & 1;
+      unsigned bit7 = (op1_8 >> 7);
+      set_CF(bit7);
+      set_OF(bit7 ^ bit6);
+    }
+    return;
+  }
+  count &= 0x07; /* use only bottom 3 bits */
 
   result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
 
@@ -131,7 +144,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count &= 0x07; /* use only bottom 3 bits */
+  count = (count & 0x1f) % 9;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -181,7 +194,7 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count &= 0x07; /* use only bottom 3 bits */
+  count = (count & 0x1f) % 9;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {

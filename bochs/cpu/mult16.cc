@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.17 2004-08-31 19:43:58 sshwarts Exp $
+// $Id: mult16.cc,v 1.18 2005-02-16 21:27:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -151,7 +151,7 @@ BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
       exception(BX_DE_EXCEPTION, 0, 0);
 
     /* check MIN_INT divided by -1 case */
-    if (op1_32 == BX_MIN_BIT32S && op2_16 == -1)
+    if ((op1_32 == ((Bit32s)0x80000000)) && (op2_16 == -1))
       exception(BX_DE_EXCEPTION, 0, 0);
 
     quotient_32  = op1_32 / op2_16;

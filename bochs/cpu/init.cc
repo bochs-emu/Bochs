@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.66 2005-01-13 19:18:27 sshwarts Exp $
+// $Id: init.cc,v 1.67 2005-02-16 21:27:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.66 2005-01-13 19:18:27 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.67 2005-02-16 21:27:20 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -744,12 +744,12 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR realMode = 1;
 
 #if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR cr0.cd = 1; // caching disabled
-  BX_CPU_THIS_PTR cr0.nw = 1; // not write-through
+  BX_CPU_THIS_PTR cr0.cd = 0;
+  BX_CPU_THIS_PTR cr0.nw = 0;
   BX_CPU_THIS_PTR cr0.am = 0; // disable alignment check
   BX_CPU_THIS_PTR cr0.wp = 0; // disable write-protect
   BX_CPU_THIS_PTR cr0.ne = 0; // ndp exceptions through int 13H, DOS compat
-  BX_CPU_THIS_PTR cr0.val32 |= 0x60000000;
+  BX_CPU_THIS_PTR cr0.val32 |= 0x00000000;
 #endif
 
 #if BX_SUPPORT_X86_64

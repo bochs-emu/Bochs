@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.70 2005-02-12 19:25:33 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.71 2005-02-16 21:27:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2285,12 +2285,17 @@ another_byte:
     instruction->modRMForm.modRMData |= mod;
     instruction->modRMForm.modRMData |= (nnn<<8);
 
+    // MOVs with CRx and DRx always use register ops and ignore the mod field.
+    if ( (b1 & ~3) == 0x120 )
+      mod = 0xc0;
+
     if (mod == 0xc0) { // mod == 11b
       rm |= rex_b;
       instruction->modRMForm.modRMData |= rm;
       instruction->metaInfo |= (1<<22); // (modC0)
       goto modrm_done;
     }
+
     if (rm != 4) rm |= rex_b;
     instruction->modRMForm.modRMData |= rm;
     if (instruction->as64L()) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.197 2005-02-16 18:58:38 sshwarts Exp $
+// $Id: cpu.h,v 1.198 2005-02-16 21:26:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2839,6 +2839,7 @@ public: // for now...
 #endif
   BX_SMF bx_bool can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_bool can_pop(Bit32u bytes);
+  BX_SMF void    decrementESPForPush(unsigned nBytes, Bit32u *eSP);
   BX_SMF void    sanity_checks(void);
 
   BX_SMF void    debug(Bit32u offset);

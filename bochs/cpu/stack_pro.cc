@@ -277,11 +277,15 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
         return(1);
       if ((descriptor->u.segment.d_b==0) && (descriptor->u.segment.limit_scaled>=0xffff))
         return(1);
-      BX_PANIC(("can_push(): esp=0, normal, wraparound? limit=%08x",
+      BX_INFO(("can_push(): esp=0, normal, wraparound? limit=%08x",
         descriptor->u.segment.limit_scaled));
       return(0);
       }
 
+    if ( !descriptor->u.segment.d_b ) {
+      // Weird case for 16-bit SP.
+      esp = ((esp-bytes) & 0xffff) + bytes;
+      }
     if (esp < bytes) {
       BX_INFO(("can_push(): expand-up: esp < N"));
       return(0);
@@ -356,3 +360,37 @@ BX_CPU_C::can_pop(Bit32u bytes)
     }
 }
 #endif
+
+  void
+BX_CPU_C::decrementESPForPush(unsigned nBytes, Bit32u *eSP_ptr)
+{
+  Bit32u eSP;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+    eSP = ESP;
+  else
+    eSP = SP;
+
+  if (protected_mode()) {
+    if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, eSP, nBytes)) {
+      BX_INFO(("decrementESPForPush: push outside stack limits"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+      }
+    }
+  else { // Real Mode.
+    if ( (eSP>=1) && (eSP<nBytes) ) {
+      BX_PANIC(("decrementESPForPush: eSP=%08x", (unsigned) eSP));
+      }
+    }
+
+  // And finally, decrement eSP and return the new eSP value.
+  eSP -= nBytes;
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    ESP = eSP;
+    *eSP_ptr = eSP;
+    }
+  else {
+    SP = (Bit16u) eSP;
+    *eSP_ptr = SP;
+    }
+}

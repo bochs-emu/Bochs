@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.26 2004-11-20 23:26:29 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.27 2005-02-16 21:26:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,7 +34,6 @@
 
 void BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 {
-  Bit16u imm16;
   Bit16u return_IP;
 
 #if BX_DEBUGGER
@@ -50,10 +49,11 @@ void BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
   }
 
   EIP = return_IP;
-  imm16 = i->Iw();
+
+  Bit16u imm16 = i->Iw();
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
-    ESP += imm16; /* ??? should it be 2*imm16 ? */
+    ESP += imm16;
   else
     SP  += imm16;
 
@@ -93,27 +93,27 @@ BailBigRSP("RETfar16_Iw");
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  /* ??? is imm16, number of bytes/words depending on operandsize ? */
-
   imm16 = i->Iw();
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
-    BX_CPU_THIS_PTR return_protected(i, imm16);
+    BX_CPU_THIS_PTR return_protected(i, 0 /* imm16 */);
     goto done;
-    }
+  }
 #endif
 
   pop_16(&ip);
   pop_16(&cs_raw);
+
   EIP = (Bit32u) ip;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+
+done:
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
   else
     SP  += imm16;
 
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
@@ -132,7 +132,7 @@ void BX_CPU_C::RETfar16(bxInstruction_c *i)
   if ( protected_mode() ) {
     BX_CPU_THIS_PTR return_protected(i, 0);
     goto done;
-    }
+  }
 #endif
 
   pop_16(&ip);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.25 2005-01-28 20:50:48 sshwarts Exp $
+// $Id: stack32.cc,v 1.26 2005-02-16 21:27:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,48 +71,72 @@ void BX_CPU_C::POP_ERX(bxInstruction_c *i)
 
 void BX_CPU_C::PUSH_CS(bxInstruction_c *i)
 {
-  if (i->os32L())
-    push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+  if (i->os32L()) {
+    Bit32u eSP;
+    decrementESPForPush(4, &eSP);
+    write_virtual_word(BX_SEG_REG_SS, eSP,
+                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+    }
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
 }
 
 void BX_CPU_C::PUSH_DS(bxInstruction_c *i)
 {
-  if (i->os32L())
-    push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+  if (i->os32L()) {
+    Bit32u eSP;
+    decrementESPForPush(4, &eSP);
+    write_virtual_word(BX_SEG_REG_SS, eSP,
+                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+    }
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
 }
 
 void BX_CPU_C::PUSH_ES(bxInstruction_c *i)
 {
-  if (i->os32L())
-    push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+  if (i->os32L()) {
+    Bit32u eSP;
+    decrementESPForPush(4, &eSP);
+    write_virtual_word(BX_SEG_REG_SS, eSP,
+                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+    }
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
 }
 
 void BX_CPU_C::PUSH_FS(bxInstruction_c *i)
 {
-  if (i->os32L())
-    push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+  if (i->os32L()) {
+    Bit32u eSP;
+    decrementESPForPush(4, &eSP);
+    write_virtual_word(BX_SEG_REG_SS, eSP,
+                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+    }
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
 }
 
 void BX_CPU_C::PUSH_GS(bxInstruction_c *i)
 {
-  if (i->os32L())
-    push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+  if (i->os32L()) {
+    Bit32u eSP;
+    decrementESPForPush(4, &eSP);
+    write_virtual_word(BX_SEG_REG_SS, eSP,
+                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+    }
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
 
 void BX_CPU_C::PUSH_SS(bxInstruction_c *i)
 {
-  if (i->os32L())
-    push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+  if (i->os32L()) {
+    Bit32u eSP;
+    decrementESPForPush(4, &eSP);
+    write_virtual_word(BX_SEG_REG_SS, eSP,
+                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+    }
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
 }
@@ -299,40 +323,13 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
   UndefinedOpcode(i);
 #else
 
+  unsigned ss32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
+
+  Bit16u imm16 = i->Iw();
   Bit8u level = i->Ib2();
   level &= 0x1F;
 
-  static Bit8u first_time = 1;
-  if (first_time && level>0) {
-    BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
-    first_time = 0;
-  }
-
-//if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os32L()==0) {
-//  BX_INFO(("enter(): stacksize!=opsize: I'm unsure of the code for this"));
-//  BX_PANIC(("         The Intel manuals are a mess on this one!"));
-//  }
-
-  if (protected_mode())
-  {
-    Bit32u bytes_to_push, temp_ESP;
-
-    if (i->os32L())
-      bytes_to_push = 4 + level*4 + i->Iw();
-    else
-      bytes_to_push = 2 + level*2 + i->Iw();
-
-    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-      temp_ESP = ESP;
-    else
-      temp_ESP = SP;
-
-    if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, bytes_to_push))
-    {
-      BX_ERROR(("ENTER: not enough room on stack!"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-  }
+  Bit32u ebp; // Use temp copy in case of exception.
 
   if (i->os32L())
     push_32(EBP);
@@ -341,78 +338,60 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
 
   Bit32u frame_ptr32 = ESP;
 
+  if (ss32) {
+    ebp = EBP;
+  }
+  else {
+    ebp = BP;
+  }
+
   if (level > 0) {
     /* do level-1 times */
     while (--level) {
       if (i->os32L()) {
         Bit32u temp32;
 
-        if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
-          EBP -= 4;
-          read_virtual_dword(BX_SEG_REG_SS, EBP, &temp32);
-          ESP -= 4;
-          write_virtual_dword(BX_SEG_REG_SS, ESP, &temp32);
+        if (ss32) {
+          ebp -= 4;
+          read_virtual_dword(BX_SEG_REG_SS, ebp, &temp32);
         }
         else { /* 16bit stacksize */
-          BP -= 4;
-          read_virtual_dword(BX_SEG_REG_SS, BP, &temp32);
-          SP -= 4;
-          write_virtual_dword(BX_SEG_REG_SS, SP, &temp32);
+          ebp -= 4; ebp &= 0xffff;
+          read_virtual_dword(BX_SEG_REG_SS, ebp, &temp32);
         }
+        push_32(temp32);
       }
       else { /* 16bit opsize */
         Bit16u temp16;
 
-        if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
-          EBP -= 2;
-          read_virtual_word(BX_SEG_REG_SS, EBP, &temp16);
-          ESP -= 2;
-          write_virtual_word(BX_SEG_REG_SS, ESP, &temp16);
+        if (ss32) {
+          ebp -= 2;
+          read_virtual_word(BX_SEG_REG_SS, ebp, &temp16);
         }
         else { /* 16bit stacksize */
-          BP -= 2;
-          read_virtual_word(BX_SEG_REG_SS, BP, &temp16);
-          SP -= 2;
-          write_virtual_word(BX_SEG_REG_SS, SP, &temp16);
+          ebp -= 2; ebp &= 0xffff;
+          read_virtual_word(BX_SEG_REG_SS, ebp, &temp16);
         }
-      }
-    } /* while (--level) */
+        push_16(temp16);
+        }
+      } /* while (--level) */
 
     /* push(frame pointer) */
     if (i->os32L()) {
-      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
-        ESP -= 4;
-        write_virtual_dword(BX_SEG_REG_SS, ESP, &frame_ptr32);
-      }
-      else {
-        SP -= 4;
-        write_virtual_dword(BX_SEG_REG_SS, SP, &frame_ptr32);
-      }
+      push_32(frame_ptr32);
     }
     else { /* 16bit opsize */
-      Bit16u frame_ptr16 = frame_ptr32;
-
-      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
-        ESP -= 2;
-        write_virtual_word(BX_SEG_REG_SS, ESP, &frame_ptr16);
-      }
-      else {
-        SP -= 2;
-        write_virtual_word(BX_SEG_REG_SS, SP, &frame_ptr16);
-      }
+      push_16((Bit16u)frame_ptr32);
     }
   } /* if (level > 0) ... */
 
-  if (i->os32L())
+  if (ss32) {
     RBP = frame_ptr32;
-  else
-     BP = frame_ptr32 & 0xFFFF;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
-    ESP -= i->Iw();
+    ESP -= imm16;
   }
-  else { /* 16bit stack */
-     SP -= i->Iw();
+  else {
+    BP = (Bit16u) frame_ptr32;
+    SP -= imm16;
   }
 #endif
 }

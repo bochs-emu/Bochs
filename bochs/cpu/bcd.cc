@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.13 2004-08-14 19:34:02 sshwarts Exp $
+// $Id: bcd.cc,v 1.14 2005-02-16 21:26:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -227,8 +227,6 @@ BX_CPU_C::DAS(bxInstruction_c *)
     AL = AL - 0x60;
     tmpCF = 1;
   }
-  else
-    tmpCF = 0;
 
   set_OF(0);	/* undocumented flag modification */
   set_SF(AL >= 0x80);

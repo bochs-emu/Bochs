@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.25 2004-12-24 22:44:13 sshwarts Exp $
+// $Id: shift16.cc,v 1.26 2005-02-16 21:27:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
+  Bit32u temp_32, result_32;
   unsigned count;
 
   /* op1:op2 << count.  result stored in op1 */
@@ -57,15 +58,16 @@ void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
+  temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
+  result_32 = temp_32 << count;
   // Hack to act like x86 SHLD when count > 16
   if (count > 16) {
     // when count > 16 actually shifting op1:op2:op2 << count,
     // it is the same as shifting op2:op2 by count-16
-    op1_16 = op2_16;
-    count -= 16;
+    result_32 |= (op1_16 << (count - 16));
   }
 
-  result_16 = (op1_16 << count) | (op2_16 >> (16 - count));
+  result_16 = result_32 >> 16;
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -84,6 +86,7 @@ void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
 void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
+  Bit32u temp_32, result_32;
   unsigned count;
 
   if (i->b1() == 0x1ac)
@@ -108,14 +111,15 @@ void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
   // Hack to act like x86 SHLD when count > 16
+  temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
+  result_32 = temp_32 >> count;
   if (count > 16) {
     // when count > 16 actually shifting op2:op2:op1 >> count,
     // it is the same as shifting op2:op2 by count-16
-    op1_16 = op2_16;
-    count -= 16;
+    result_32 |= (op1_16 << (32 - count));
   }
   
-  result_16 = (op2_16 << (16 - count)) | (op1_16 >> count);
+  result_16 = result_32;
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -151,8 +155,6 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
   else // 0xd3
     count = CL;
 
-  count &= 0x0f; // only use bottom 4 bits
-
   /* op1 is a register or memory reference */
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
@@ -162,7 +164,14 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
   }
 
-  if (! count) return;
+  if ( (count & 0x0f) == 0 ) {
+    if ( count & 0x10 ) {
+      unsigned bit0 = op1_16 & 1;
+      set_CF(bit0);
+    }
+    return;
+  }
+  count &= 0x0f; // only use bottom 4 bits
 
   result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
 
@@ -195,8 +204,6 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
   else // 0xd3
     count = CL;
 
-  count &= 0x0f;  // use only 4 LSB's
-
   /* op1 is a register or memory reference */
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
@@ -206,7 +213,14 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
   }
 
-  if (! count) return;
+  if ( (count & 0x0f) == 0 ) {
+    if ( count & 0x10 ) {
+      unsigned MSB = op1_16 >> 15;
+      set_CF(MSB);
+    }
+    return;
+  }
+  count &= 0x0f;  // use only 4 LSB's
 
   result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
 
@@ -240,7 +254,7 @@ void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
   else // 0xd3
     count = CL;
 
-  count &= 0x0f;  // use only 4 LSB's
+  count = (count & 0x1f) % 17;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -293,7 +307,7 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   else // 0xd3
     count = CL;
 
-  count &= 0x0f;  // use only 4 LSB's
+  count = (count & 0x1f) % 17;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {

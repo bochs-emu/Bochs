@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.17 2004-08-31 19:43:58 sshwarts Exp $
+// $Id: mult8.cc,v 1.18 2005-02-16 21:27:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -153,7 +153,7 @@ BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
     exception(BX_DE_EXCEPTION, 0, 0);
 
   /* check MIN_INT divided by -1 case */
-  if (op1 == BX_MIN_BIT16S && op2 == -1)
+  if ((op1 == ((Bit16s)0x8000)) && (op2 == -1))
     exception(BX_DE_EXCEPTION, 0, 0);
 
   quotient_16 = op1 / op2;
