@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.89 2002-11-25 21:48:22 cbothamy Exp $
+// $Id: harddrv.cc,v 1.90 2002-12-03 21:04:04 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.89 2002-11-25 21:48:22 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.90 2002-12-03 21:04:04 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1320,7 +1320,9 @@ if ( quantumsMax == 0)
 				    bx_bool Start = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 0) & 1;
 
 				    if (!LoEj && !Start) { // stop the disc
-					  BX_PANIC(("Stop disc not implemented"));
+					  BX_ERROR(("FIXME: Stop disc not implemented"));
+					  atapi_cmd_nop(channel);
+					  raise_interrupt(channel);
 				    } else if (!LoEj && Start) { // start the disc and read the TOC
 					  // BX_PANIC(("Start disc not implemented"));
 					  BX_ERROR(("FIXME: ATAPI start disc not reading TOC"));
