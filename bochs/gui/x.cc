@@ -584,7 +584,7 @@ bx_gui_c::handle_events(void)
       button_event = (XButtonEvent *) &report;
 //BX_INFO(("xxx: buttonpress\n");
       if (button_event->y < BX_HEADER_BAR_Y) {
-//BX_INFO("xxx:   in headerbar\n");
+//BX_INFO(("xxx:   in headerbar\n"));
         if (mouse_update) {
 //BX_INFO(("xxx:   mouse_update=1\n"));
           send_keyboard_mouse_status();
