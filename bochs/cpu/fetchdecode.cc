@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.51 2003-05-15 16:41:14 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.52 2003-05-29 17:15:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -615,8 +615,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 83 */  { BxAnother | BxGroup1 | BxImmediate_Ib_SE, NULL, BxOpcodeInfoG1Ew },
   /* 84 */  { BxAnother, &BX_CPU_C::TEST_EbGb },
   /* 85 */  { BxAnother, &BX_CPU_C::TEST_EwGw },
-  /* 86 */  { BxAnother, &BX_CPU_C::XCHG_EbGb },
-  /* 87 */  { BxAnother, &BX_CPU_C::XCHG_EwGw },
+  /* 86 */  { BxAnother | BxLockable, &BX_CPU_C::XCHG_EbGb },
+  /* 87 */  { BxAnother | BxLockable, &BX_CPU_C::XCHG_EwGw },
   /* 88 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EbGb },
   /* 89 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EwGw },
   /* 8A */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GbEb },
@@ -1149,8 +1149,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 83 */  { BxAnother | BxGroup1 | BxImmediate_Ib_SE, NULL, BxOpcodeInfoG1Ed },
   /* 84 */  { BxAnother, &BX_CPU_C::TEST_EbGb },
   /* 85 */  { BxAnother, &BX_CPU_C::TEST_EdGd },
-  /* 86 */  { BxAnother, &BX_CPU_C::XCHG_EbGb },
-  /* 87 */  { BxAnother, &BX_CPU_C::XCHG_EdGd },
+  /* 86 */  { BxAnother | BxLockable, &BX_CPU_C::XCHG_EbGb },
+  /* 87 */  { BxAnother | BxLockable, &BX_CPU_C::XCHG_EwGw },
   /* 88 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EbGb },
   /* 89 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EdGd },
   /* 8A */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GbEb },
