@@ -38,6 +38,8 @@
 // #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 
+#define LOG_THIS bx_gui.
+
 #define PAD_NEAREST(n, quantum) (( ((n) + ((quantum) - 1)) / (n) ) * (n))
 
 
