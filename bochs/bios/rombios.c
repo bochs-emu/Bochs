@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.74 2002-10-27 23:04:59 cbothamy Exp $
+// $Id: rombios.c,v 1.75 2002-10-30 21:47:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -930,10 +930,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.74 $";
-static char bios_date_string[] = "$Date: 2002-10-27 23:04:59 $";
+static char bios_cvs_version_string[] = "$Revision: 1.75 $";
+static char bios_date_string[] = "$Date: 2002-10-30 21:47:11 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.74 2002-10-27 23:04:59 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.75 2002-10-30 21:47:11 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2184,13 +2184,16 @@ void ata_detect( )
 // ---------------------------------------------------------------------------
 // ATA/ATAPI driver : software reset 
 // ---------------------------------------------------------------------------
+// ATA-3
+// 8.2.1 Software reset - Device 0
 
 void   ata_reset(device)
 Bit16u device;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit16u iobase1, iobase2;
-  Bit8u  channel, slave;
+  Bit8u  channel, slave, max;
+  Bit8u  sn, sc; 
 
   channel = device / 2;
   slave = device % 2;
@@ -2199,24 +2202,46 @@ Bit16u device;
   iobase2 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase2);
 
   // Reset
+
+// 8.2.1 (a) -- set SRST in DC
   outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN | ATA_CB_DC_SRST);
+
+// 8.2.1 (b) -- wait for BSY
+  max=0xff;
+  while(max--!=0) {
+    Bit8u status = inb(iobase1+ATA_CB_STAT);
+    if ((status & ATA_CB_STAT_BSY) != 0) break;
+  }
+
+// 8.2.1 (f) -- clear SRST
   outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN);
 
   if (read_byte(ebda_seg,&EbdaData->ata.devices[device].type) != ATA_TYPE_NONE) {
-    Bit8u sn, sc, max=0xff;
 
+// 8.2.1 (g) -- check for sc==sn==0x01
     // select device
     outb(iobase1+ATA_CB_DH, slave?ATA_CB_DH_DEV1:ATA_CB_DH_DEV0);
     sc = inb(iobase1+ATA_CB_SC);
     sn = inb(iobase1+ATA_CB_SN);
 
     if ( (sc==0x01) && (sn==0x01) ) {
+
+// 8.2.1 (h) -- wait for not BSY
+      max=0xff;
       while(max--!=0) {
         Bit8u status = inb(iobase1+ATA_CB_STAT);
         if ((status & ATA_CB_STAT_BSY) == 0) break;
         }
       }
     }
+
+// 8.2.1 (i) -- wait for DRDY
+  max=0xfff;
+  while(max--!=0) {
+    Bit8u status = inb(iobase1+ATA_CB_STAT);
+      if ((status & ATA_CB_STAT_RDY) != 0) break;
+  }
+
   // Enable interrupts
   outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15);
 }
