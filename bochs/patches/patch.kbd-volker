@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.kbd-volker
 Author: Volker Ruppert <Volker.Ruppert@t-online.de>
-Date: Mon Nov 26 11:31:00 CET 2001
+Date: Tue Nov 27 09:43:00 CET 2001
 
 Detailed description:
   This is a modified version of the patch.kbd-dieter.
@@ -18,15 +18,15 @@ Instructions:
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 --- ../bochs/gui/gui.h	Mon Nov 26 10:54:12 2001
-+++ gui/gui.h	Mon Nov 26 11:11:57 2001
-@@ -99,6 +99,8 @@
- #define BX_GRAVITY_LEFT 10
- #define BX_GRAVITY_RIGHT 11
++++ gui/gui.h	Tue Nov 27 09:41:57 2001
+@@ -102,6 +102,8 @@
+ #define BX_KEY_PRESSED  0x00000000
+ #define BX_KEY_RELEASED 0x80000000
  
 +#ifndef BX_WITH_X11
 +
- #define BX_KEY_PRESSED  0x00000000
- #define BX_KEY_RELEASED 0x80000000
+ #define BX_KEY_CTRL_L   0
+ #define BX_KEY_SHIFT_L  1
  
 @@ -218,3 +220,124 @@
  #define BX_KEY_PRINT        73
