@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.13 2001-10-03 13:10:38 bdenney Exp $
+// $Id: sb16.cc,v 1.14 2001-12-22 13:30:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ void bx_sb16_c::init(bx_devices_c *d)
   if ( (bx_options.sb16.Omidimode->get () == 2) ||
        (bx_options.sb16.Omidimode->get () == 3) )
     {
-      MIDIDATA = fopen(bx_options.sb16.Omidifile->getptr (),"w");
+      MIDIDATA = fopen(bx_options.sb16.Omidifile->getptr (),"wb");
       if (MIDIDATA == NULL)
 	{
 	  writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.", bx_options.sb16.Omidifile->getptr ());
@@ -140,7 +140,7 @@ void bx_sb16_c::init(bx_devices_c *d)
   if ( (bx_options.sb16.Owavemode->get () == 2) ||
        (bx_options.sb16.Owavemode->get () == 3) )
     {
-      WAVEDATA = fopen(bx_options.sb16.Owavefile->getptr (),"w");
+      WAVEDATA = fopen(bx_options.sb16.Owavefile->getptr (),"wb");
       if (WAVEDATA == NULL)
 	{
 	  writelog (WAVELOG(2), "Error opening file %s. Wavemode disabled.", bx_options.sb16.Owavefile);
@@ -215,14 +215,12 @@ void bx_sb16_c::init(bx_devices_c *d)
     BX_SB16_THIS devices->register_io_write_handler(this,
        &write_handler, addr, "SB16");
     }
-  /* Uncomment this if you know the consequences...
   for (addr=BX_SB16_IOADLIB; addr<BX_SB16_IOADLIB+BX_SB16_IOADLIBLEN; addr++) {
     BX_SB16_THIS devices->register_io_read_handler(this,
        read_handler, addr, "SB16");
     BX_SB16_THIS devices->register_io_write_handler(this,
        write_handler, addr, "SB16");
     }
-  */
 
   writelog(BOTHLOG(3),
 	   "driver initialised, IRQ %d, IO %03x/%03x/%03x, DMA %d/%d",
@@ -2256,7 +2254,7 @@ break_here:
       if (channum != -1)
 	{
 	  int needchange = 0;
-	  if ((OPL.oper[OPL.chan[channum].opnum[0]][4] & 1) != (value & 1))
+	  if ((OPL.oper[OPL.chan[channum].opnum[0]][4] & 1) != (int)(value & 1))
 	    needchange = 1;
 
 	  opl_changeop(channum, OPL.chan[channum].opnum[0], 4, value & 0x3f);
@@ -3139,8 +3137,8 @@ void bx_sb16_c::writelog(int loglevel, const char *str, ...)
     {
 	time_t timep = time(NULL);
 	tm *t = localtime(&timep);
-	BX_INFO(( "SB16 %02d:%02d:%02d (%i): ",
-		t->tm_hour, t->tm_min, t->tm_sec, loglevel ));
+	fprintf(LOGFILE, "%02d:%02d:%02d (%i): ",
+		t->tm_hour, t->tm_min, t->tm_sec, loglevel );
 	va_list ap;
 	va_start(ap, str);
 	vfprintf(LOGFILE, str, ap);
