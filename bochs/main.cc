@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.258 2004-01-15 02:08:34 danielg4 Exp $
+// $Id: main.cc,v 1.259 2004-01-16 15:53:43 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1280,6 +1280,7 @@ void bx_init_options ()
 #ifdef ETH_ARPBACK
     "arpback",
 #endif
+    "vnet",
     NULL
   };
   bx_options.ne2k.Oethmod = new bx_param_enum_c (BXP_NE2K_ETHMOD,

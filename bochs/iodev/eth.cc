@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.17 2004-01-16 14:44:38 danielg4 Exp $
+// $Id: eth.cc,v 1.18 2004-01-16 15:53:43 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,6 +79,7 @@ extern bx_test_match;
 #ifdef ETH_ARPBACK
 extern class bx_arpback_locator_c bx_arpback_match;
 #endif
+extern class bx_vnet_locator_c bx_vnet_match;
 
 //
 // Called by ethernet chip emulations to locate and create a pktmover
@@ -151,6 +152,10 @@ eth_locator_c::create(const char *type, const char *netif,
       ptr = (eth_locator_c *) &bx_test_match;
   }
 #endif
+  {
+    if (!strcmp(type, "vnet"))    
+      ptr = (eth_locator_c *) &bx_vnet_match;
+  }
   if (ptr)
     return (ptr->allocate(netif, macaddr, rxh, rxarg));
 #endif
