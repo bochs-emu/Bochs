@@ -1378,7 +1378,7 @@ void BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 15) 
+  if(op2.xmm64u(0) > 15)  /* looking only to low 64 bits */
   {
     op1.xmm64u(0) = 0;
     op1.xmm64u(1) = 0;
@@ -1422,7 +1422,7 @@ void BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 31) 
+  if(op2.xmm64u(0) > 31)  /* looking only to low 64 bits */
   {
     op1.xmm64u(0) = 0;
     op1.xmm64u(1) = 0;
@@ -1462,7 +1462,7 @@ void BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 63) 
+  if(op2.xmm64u(0) > 63)  /* looking only to low 64 bits */
   {
     op1.xmm64u(0) = 0;
     op1.xmm64u(1) = 0;
@@ -1922,7 +1922,7 @@ void BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 15) 
+  if(op2.xmm64u(0) > 15)  /* looking only to low 64 bits */
   {
     result.xmm16u(0) = (op1.xmm16u(0) & 0x8000) ? 0xffff : 0;
     result.xmm16u(1) = (op1.xmm16u(1) & 0x8000) ? 0xffff : 0;
@@ -1981,7 +1981,7 @@ void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 31) 
+  if(op2.xmm64u(0) > 31)  /* looking only to low 64 bits */
   {
     result.xmm32u(0) = (op1.xmm32u(0) & 0x80000000) ? 0xffffffff : 0;
     result.xmm32u(1) = (op1.xmm32u(1) & 0x80000000) ? 0xffffffff : 0;
@@ -2448,7 +2448,7 @@ void BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 15) 
+  if(op2.xmm64u(0) > 15)  /* looking only to low 64 bits */
   {
     op1.xmm64u(0) = 0;
     op1.xmm64u(1) = 0;
@@ -2492,7 +2492,7 @@ void BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 31) 
+  if(op2.xmm64u(0) > 31)  /* looking only to low 64 bits */
   {
     op1.xmm64u(0) = 0;
     op1.xmm64u(1) = 0;
@@ -2532,7 +2532,7 @@ void BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  if(op2.xmm64u(1) != 0 || op2.xmm64u(0) > 63) 
+  if(op2.xmm64u(0) > 63)  /* looking only to low 64 bits */
   {
     op1.xmm64u(0) = 0;
     op1.xmm64u(1) = 0;
