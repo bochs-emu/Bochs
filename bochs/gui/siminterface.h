@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.60 2002-09-11 03:53:47 bdenney Exp $
+// $Id: siminterface.h,v 1.61 2002-09-13 19:39:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -248,6 +248,7 @@ typedef enum {
   BXP_CPU_GDTR_LIMIT,
   BXP_CPU_IDTR_BASE,
   BXP_CPU_IDTR_LIMIT,
+  BXP_CPU_EFLAGS,
   BXP_CPU_EFLAGS_ID,
   BXP_CPU_EFLAGS_VIP,
   BXP_CPU_EFLAGS_VIF,
@@ -415,6 +416,7 @@ typedef enum {
   BX_SYNC_EVT_ASK_PARAM,          // simulator -> CI -> simulator
   BX_SYNC_EVT_TICK,               // simulator -> CI, wait for response.
   BX_SYNC_EVT_LOG_ASK,            // simulator -> CI, wait for response.
+  BX_SYNC_EVT_GET_DBG_COMMAND,    // simulator -> CI, wait for response.
   __ALL_EVENTS_BELOW_ARE_ASYNC__,
   BX_ASYNC_EVT_KEY,               // vga window -> simulator
   BX_ASYNC_EVT_MOUSE,             // vga window -> simulator
@@ -544,6 +546,19 @@ typedef struct {
 // continue, quit, etc. and sends the answer back to the simulator.
 // This event also uses BxLogMsgEvent.
 
+// Event type: BX_SYNC_EVT_GET_DBG_COMMAND
+//
+// This is a synchronous event sent from the simulator to the debugger
+// requesting the next action.  In a text mode debugger, this would prompt
+// the user for the next command.  When a new command is ready, the
+// synchronous event is sent back with its fields filled in.
+typedef struct {
+  char *command;   // null terminated string. allocated by debugger interface
+                   // with new operator, freed by simulator with delete.
+} BxDebugCommand;
+
+
+
 // Event type: BX_EVT_TOOLBAR
 // Asynchronous event from the VGAW to the simulator, sent when the user
 // clicks on a toolbar button.  This may one day become something more 
@@ -566,6 +581,7 @@ typedef struct {
     BxParamEvent param;
     BxLogMsgEvent logmsg;
     BxToolbarEvent toolbar;
+    BxDebugCommand debugcmd;
   } u;
 } BxEvent;
 
@@ -1011,6 +1027,12 @@ public:
   // changed.  The CI will reread the parameters and change its display if it's
   // appropriate.  Maybe later: mention which params have changed to save time.
   virtual void refresh_ci () {}
+#if BX_DEBUGGER
+  // for debugger: same behavior as pressing control-C
+  virtual void debug_break () {}
+  virtual void debug_interpret_cmd (char *cmd) {}
+  virtual char *debug_get_next_command () {return NULL;}
+#endif
 };
 
 extern bx_simulator_interface_c *SIM;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.11 2002-03-12 09:16:41 bdenney Exp $
+// $Id: debug.h,v 1.12 2002-09-13 19:39:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,6 +187,8 @@ typedef enum {
 
 
 
+void bx_debug_ctrlc_handler(int signum);
+void bx_debug_break ();
 
 void bx_dbg_exit(int code);
 #if BX_DBG_EXTENSIONS
@@ -323,6 +325,7 @@ extern bx_guard_t        bx_guard;
 
 int  bx_dbg_main(int argc, char *argv[]);
 void bx_dbg_user_input_loop(void);
+void bx_dbg_interpret_line (char *cmd);
 
 
 typedef struct {

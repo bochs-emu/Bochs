@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.61 2002-09-13 18:15:20 bdenney Exp $
+// $Id: dbg_main.cc,v 1.62 2002-09-13 19:39:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -414,6 +414,12 @@ bx_dbg_usage(void)
   fprintf (stderr, "usage: %s [-rc path] [-sim1 ... ] [-sim2 ... ]\n", argv0);
 }
 
+void
+bx_dbg_interpret_line (char *cmd)
+{
+  bx_add_lex_input (cmd);
+  bxparse ();
+}
 
   void
 bx_dbg_user_input_loop(void)
@@ -479,7 +485,17 @@ bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
     }
-#if HAVE_LIBREADLINE
+#if BX_WITH_WX
+  if (bx_infile_stack_index == 0) {
+    // wait for wxWindows to send another debugger command
+    charptr_ret = SIM->debug_get_next_command ();
+    strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
+    strcat (tmp_buf, "\n");
+    // the returned string was allocated in wxmain.cc by "new char[]". free it.
+    delete charptr_ret;
+    charptr_ret = &tmp_buf[0];
+  }
+#elif HAVE_LIBREADLINE
   if (bx_infile_stack_index == 0) {
     charptr_ret = readline (prompt);
     // beware, returns NULL on end of file
@@ -621,8 +637,16 @@ bx_debug_ctrlc_handler(int signum)
   BX_INFO(("Ctrl-C detected in signal handler."));
 
   signal(SIGINT, bx_debug_ctrlc_handler);
+  bx_debug_break ();
+}
+
+void 
+bx_debug_break ()
+{
   bx_guard.interrupt_requested = 1;
 }
+
+
 
   void
 bx_dbg_exit(int code)

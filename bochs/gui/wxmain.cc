@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.43 2002-09-11 03:52:27 bdenney Exp $
+// $Id: wxmain.cc,v 1.44 2002-09-13 19:39:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -255,6 +255,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   closing = false;
   showCpu = NULL;
   showKbd = NULL;
+  debugCommand = NULL;
+  debugCommandEvent = NULL;
 
   // set up the gui
   menuConfiguration = new wxMenu;
@@ -662,10 +664,14 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
 // When simulation is free running, #1 or #2 might make sense.  Try #2.
 void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
 {
+  if (SIM->get_param (BXP_CPU_EAX) == NULL) {
+    // if params not initialized yet, then give up
+    wxMessageBox ("Cannot show the debugger window until the simulation has begun.", "Sim not started", wxOK | wxICON_ERROR );
+    return;
+  }
   if (showCpu == NULL) {
-    showCpu = new ParamDialog (this, -1);
-    showCpu->SetTitle ("CPU Registers (incomplete, this is a demo)");
-    showCpu->AddParam (SIM->get_param (BXP_CPU_PARAMETERS));
+    showCpu = new CpuRegistersDialog (this, -1);
+    showCpu->SetTitle ("Bochs Debugger");
     showCpu->Init ();
   } else {
     showCpu->Refresh ();
@@ -684,6 +690,45 @@ void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
     showKbd->Refresh ();
   }
   showKbd->Show (TRUE);
+}
+
+void
+MyFrame::DebugBreak ()
+{
+  if (debugCommand) {
+    delete debugCommand;
+    debugCommand = NULL;
+  }
+  SIM->debug_break ();
+}
+
+void
+MyFrame::DebugCommand (const char *cmd)
+{
+  wxLogDebug ("debugger command: %s", cmd);
+  if (debugCommand != NULL) {
+    // one is already waiting
+    wxLogDebug ("multiple debugger commands, discarding the earlier one");
+    delete debugCommand;
+    debugCommand = NULL;
+  }
+  int len = strlen(cmd);
+  char *tmp = new char[len+1];
+  strncpy (tmp, cmd, len+1);
+  // if an event is waiting for us, fill it an send back to sim_thread.
+  if (debugCommandEvent != NULL) {
+    wxLogDebug ("sim_thread was waiting for this command '%s'", tmp);
+    wxASSERT (debugCommandEvent->type == BX_SYNC_EVT_GET_DBG_COMMAND);
+    debugCommandEvent->u.debugcmd.command = tmp;
+    debugCommandEvent->retcode = 1;
+    sim_thread->SendSyncResponse (debugCommandEvent);
+    wxASSERT (debugCommand == NULL);
+    debugCommandEvent = NULL;
+  } else {
+    // store this command in debugCommand for the future
+    wxLogDebug ("storing debugger command '%s'", tmp);
+    debugCommand = tmp;
+  }
 }
 
 void MyFrame::OnQuit(wxCommandEvent& event)
@@ -761,7 +806,7 @@ void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
   menuEdit->Enable (ID_Edit_Cdrom, canConfigure || param->get_enabled ());
 }
 
-void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
+void MyFrame::OnStartSim(wxCommandEvent& event)
 {
   wxCriticalSectionLocker lock(sim_thread_lock);
   if (sim_thread != NULL) {
@@ -997,6 +1042,29 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
     sim_thread->SendSyncResponse (be);
     return;
     }
+  case BX_SYNC_EVT_GET_DBG_COMMAND:
+    wxLogDebug ("BX_SYNC_EVT_GET_DBG_COMMAND received");
+    if (debugCommand == NULL) {
+      // no debugger command is ready to send, so don't send a response yet.
+      // When a command is issued, MyFrame::DebugCommand will fill in the
+      // event and call SendSyncResponse() so that the simulation thread can
+      // continue.
+      debugCommandEvent = be;
+      //
+      if (showCpu == NULL || !showCpu->IsShowing ()) {
+	wxCommandEvent unused;
+	OnShowCpu (unused);
+      }
+    } else {
+      // a debugger command is waiting for us!
+      wxLogDebug ("sending debugger command '%s' that was waiting", debugCommandEvent);
+      be->u.debugcmd.command = debugCommand;
+      debugCommand = NULL;  // ready for the next one
+      debugCommandEvent = NULL;
+      be->retcode = 1;
+      sim_thread->SendSyncResponse (be);
+    }
+    return;
   default:
     wxLogDebug ("OnSim2CIEvent: event type %d ignored", (int)be->type);
     if (BX_EVT_IS_ASYNC(be->type)) {
@@ -1349,8 +1417,8 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
     while (response == NULL) {
 	  response = GetSyncResponse ();
 	  if (!response) {
-	    wxLogDebug ("no sync response yet, waiting");
-	    this->Sleep(500);
+	    //wxLogDebug ("no sync response yet, waiting");
+	    this->Sleep (20);
 	  }
     }
     wxASSERT (response != NULL);

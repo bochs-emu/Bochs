@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.24 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: init.cc,v 1.25 2002-09-13 19:39:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,7 +156,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.24 2002-09-13 00:15:23 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.25 2002-09-13 19:39:37 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -326,6 +326,15 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     DEFPARAM_NORMAL (DR3, dr3);
     DEFPARAM_NORMAL (DR6, dr6);
     DEFPARAM_NORMAL (DR7, dr7);
+#if BX_CPU_LEVEL >= 2
+    DEFPARAM_NORMAL (CR0, cr0.val32);
+    DEFPARAM_NORMAL (CR1, cr1);
+    DEFPARAM_NORMAL (CR2, cr2);
+    DEFPARAM_NORMAL (CR3, cr3);
+#endif
+#if BX_CPU_LEVEL >= 4
+    DEFPARAM_NORMAL (CR4, cr4);
+#endif
 
   // segment registers require a handler function because they have
   // special get/set requirements.
@@ -353,6 +362,9 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   DEFPARAM_GLOBAL_SEG_REG(GDTR, gdtr);
   DEFPARAM_GLOBAL_SEG_REG(IDTR, idtr);
 #undef DEFPARAM_SEGREG
+
+  list->add (param = new bx_shadow_num_c (BXP_CPU_EFLAGS, "EFLAGS", 
+	&BX_CPU_THIS_PTR eflags.val32));
 
   // flags implemented in lazy_flags.cc must be done with a handler
   // that calls their get function, to force them to be computed.
@@ -388,6 +400,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
         "IOPL", "", 0, 3, 
 	&eflags.val32,
 	12, 13));
+  param->set_format ("%d");
 #endif
   DEFPARAM_LAZY_EFLAG(OF);
   DEFPARAM_EFLAG(DF);

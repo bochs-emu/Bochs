@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.56 2002-09-11 03:53:48 bdenney Exp $
+// $Id: siminterface.cc,v 1.57 2002-09-13 19:39:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -76,8 +76,13 @@ public:
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
-  virtual void refresh_ci ();
   virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite);
+  virtual void refresh_ci ();
+#if BX_DEBUGGER
+  virtual void debug_break ();
+  virtual void debug_interpret_cmd (char *cmd);
+  virtual char *debug_get_next_command ();
+#endif
 };
 
 bx_param_c *
@@ -447,13 +452,6 @@ bx_real_sim_c::periodic ()
 #endif
 }
 
-void bx_real_sim_c::refresh_ci () {
-  BxEvent *refresh = new BxEvent ();
-  refresh->type = BX_ASYNC_EVT_REFRESH;
-  sim_to_ci_event (refresh);
-  // the event will be freed by the recipient
-}
-
 // create a disk image file called filename, size=512 bytes * sectors.
 // If overwrite is true and the file exists, returns -1 without changing it.
 // Otherwise, opens up the image and starts writing.  Returns -2 if
@@ -512,6 +510,44 @@ bx_real_sim_c::create_disk_image (
   fclose (fp);
   return 0;
 }
+
+void bx_real_sim_c::refresh_ci () {
+  BxEvent *refresh = new BxEvent ();
+  refresh->type = BX_ASYNC_EVT_REFRESH;
+  sim_to_ci_event (refresh);
+  // the event will be freed by the recipient
+}
+
+#if BX_DEBUGGER
+
+// this can be safely called from either thread.
+void bx_real_sim_c::debug_break () {
+  bx_debug_break ();
+}
+
+// this should only be called from the sim_thread.
+void bx_real_sim_c::debug_interpret_cmd (char *cmd) {
+  if (!isSimThread ()) {
+    fprintf (stderr, "ERROR: debug_interpret_cmd called but not from sim_thread\n");
+    return;
+  }
+  bx_dbg_interpret_line (cmd);
+}
+
+char *bx_real_sim_c::debug_get_next_command ()
+{
+  fprintf (stderr, "begin debug_get_next_command\n");
+  BxEvent event;
+  event.type = BX_SYNC_EVT_GET_DBG_COMMAND;
+  BX_INFO (("asking for next debug command"));
+  BxEvent *response = sim_to_ci_event (&event);
+  BX_INFO (("received next debug command: '%s'", event.u.debugcmd.command));
+  BX_ASSERT ((response == &event));
+  if (event.retcode >= 0)
+    return event.u.debugcmd.command;
+  return NULL;
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // define methods of bx_param_* and family

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.31 2002-09-13 17:43:57 bdenney Exp $
+// $Id: wxdialog.cc,v 1.32 2002-09-13 19:39:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -62,7 +62,7 @@ BEGIN_EVENT_TABLE(LogMsgAskDialog, wxDialog)
   EVT_BUTTON(ID_Die, LogMsgAskDialog::OnEvent)
   EVT_BUTTON(ID_DumpCore, LogMsgAskDialog::OnEvent)
   EVT_BUTTON(ID_Debugger, LogMsgAskDialog::OnEvent)
-  EVT_BUTTON(wxHELP, LogMsgAskDialog::OnEvent)
+  EVT_BUTTON(wxID_HELP, LogMsgAskDialog::OnEvent)
 END_EVENT_TABLE()
 
 
@@ -138,7 +138,7 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
     case ID_Die:        ret = DIE;   break;
     case ID_DumpCore:   ret = DUMP;  break;
     case ID_Debugger:   ret = DEBUG; break;
-    case wxHELP: ShowHelp (); return;
+    case wxID_HELP: ShowHelp (); return;
     default:
       return;  // without EndModal
   }
@@ -210,14 +210,14 @@ FloppyConfigDialog::FloppyConfigDialog(
   capacitySizer->Add (captext, 0, wxALL, 5);
   capacitySizer->Add (capacity, 0, wxALL, 5);
   // contents of buttonSizer
-  btn = new wxButton (this, wxHELP, "Help");
+  btn = new wxButton (this, wxID_HELP, "Help");
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, "Cancel");
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, ID_Create, "Create Image");
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, "Ok");
+  btn = new wxButton (this, wxID_OK, "Ok");
   buttonSizer->Add (btn, 0, wxALL, 5);
   // create filename and diskImageRadioBtn so that we can tweak them before
   // Init comes.  However don't add it to any sizer yet because it needs to go
@@ -334,7 +334,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       // button associated with that field is chosen.
       diskImageRadioBtn->SetValue (TRUE);
       break;
-    case wxOK:
+    case wxID_OK:
       // probably should validate before allowing ok
       if (validate!=NULL && !(*validate)(this))
 	return;  // validation failed, don't leave yet
@@ -365,7 +365,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
     case wxID_CANCEL:
       EndModal (wxID_CANCEL);
       break;
-    case wxHELP:
+    case wxID_HELP:
       ShowHelp(); 
       break;
   }
@@ -451,14 +451,14 @@ HDConfigDialog::HDConfigDialog(
   computeGeom = new wxButton (this, ID_ComputeGeometry, HD_CONFIG_COMPUTE_TEXT);
   hsizer[2]->Add (computeGeom, 0, wxLEFT, 20);
   // contents of buttonSizer
-  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, ID_Create, BTNLABEL_CREATE_IMG);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // lay it out!
   SetAutoLayout(TRUE);
@@ -549,7 +549,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
     case ID_Enable:
       EnableChanged ();
       break;
-    case wxOK:
+    case wxID_OK:
       // probably should validate before allowing ok
       EndModal (wxID_OK);
       break;
@@ -559,7 +559,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
     case wxID_CANCEL:
       EndModal (wxID_CANCEL);
       break;
-    case wxHELP:
+    case wxID_HELP:
       ShowHelp(); 
       break;
     default:
@@ -656,12 +656,12 @@ CdromConfigDialog::CdromConfigDialog(
   wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   fileSizer->Add (btn, 0, wxALL, 5);
   // create buttonSizer & contents but don't add yet
-  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add (btn, 0, wxALL, 5);
 }
 
@@ -749,7 +749,7 @@ void CdromConfigDialog::OnEvent(wxCommandEvent& event)
     case ID_Enable:
       EnableChanged ();  // enable/disable fields that depend on this
       break;
-    case wxOK:
+    case wxID_OK:
       // probably should validate before allowing ok
       EndModal (wxID_OK);
       break;
@@ -759,7 +759,7 @@ void CdromConfigDialog::OnEvent(wxCommandEvent& event)
     case wxID_CANCEL:
       EndModal (wxID_CANCEL);
       break;
-    case wxHELP:
+    case wxID_HELP:
       ShowHelp(); 
       break;
     default:
@@ -860,12 +860,12 @@ NetConfigDialog::NetConfigDialog(
   script->SetSizeHints (200, script->GetSize ().GetHeight ());
 
   // buttonSizer contents
-  wxButton *btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  wxButton *btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add (btn, 0, wxALL, 5);
 }
 
@@ -960,7 +960,7 @@ void NetConfigDialog::OnEvent(wxCommandEvent& event)
     case ID_Enable:
       EnableChanged ();  // enable/disable fields that depend on this
       break;
-    case wxOK:
+    case wxID_OK:
       {
 	// check for valid mac address by calling GetMac()
 	unsigned char tmp[6];
@@ -973,7 +973,7 @@ void NetConfigDialog::OnEvent(wxCommandEvent& event)
     case wxID_CANCEL:
       EndModal (wxID_CANCEL);
       break;
-    case wxHELP:
+    case wxID_HELP:
       ShowHelp(); 
       break;
     default:
@@ -1091,12 +1091,12 @@ LogOptionsDialog::LogOptionsDialog(
   // buttonSizer contents
   btn = new wxButton (this, ID_Advanced, BTNLABEL_ADVANCED);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add (btn, 0, wxALL, 5);
 }
 
@@ -1148,13 +1148,13 @@ void LogOptionsDialog::OnEvent(wxCommandEvent& event)
     case ID_Advanced:
       wxMessageBox ("The advanced dialog is not implemented yet.");
       break;
-    case wxOK:
+    case wxID_OK:
       EndModal (wxID_OK);
       break;
     case wxID_CANCEL:
       EndModal (wxID_CANCEL);
       break;
-    case wxHELP:
+    case wxID_HELP:
       ShowHelp(); 
       break;
     default:
@@ -1294,12 +1294,12 @@ ConfigMemoryDialog::ConfigMemoryDialog(
 
   // buttonSizer contents
   wxButton *btn;
-  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
   buttonSizer->Add (btn, 0, wxALL, 5);
 }
 
@@ -1343,7 +1343,7 @@ void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
 	BrowseTextCtrl (text);
       }
       break;
-    case wxOK:
+    case wxID_OK:
       {
 	// test validity of the integer fields
 	bool valid;
@@ -1359,7 +1359,7 @@ void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
     case wxID_CANCEL:
       EndModal (wxID_CANCEL);
       break;
-    case wxHELP:
+    case wxID_HELP:
       ShowHelp(); 
       break;
     default:
@@ -1391,29 +1391,37 @@ ParamDialog::ParamDialog(
 {
   idHash = new wxHashTable (wxKEY_INTEGER);
   paramHash = new wxHashTable (wxKEY_INTEGER);
+  nbuttons = 0;
 
   // top level objects
   mainSizer = new wxBoxSizer (wxVERTICAL);
-  gridSizer = new wxFlexGridSizer (3);
-  mainSizer->Add (gridSizer);
+  gridSizer = NULL;
 
-  // buttonSizer contents
+  // create buttonSizer, which will hold all the buttons.
   buttonSizer = new wxBoxSizer (wxHORIZONTAL);
-  wxButton *btn;
-  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+}
+
+void ParamDialog::AddButton (int id, wxString label)
+{
+  wxButton *btn = new wxButton (this, id, label);
   buttonSizer->Add (btn, 0, wxALL, 5);
-  // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, BTNLABEL_OK);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  // delay adding buttonsizer until Init()
+  nbuttons++;
+}
+
+// add the standard HELP, CANCEL, OK buttons.
+void ParamDialog::AddDefaultButtons ()
+{
+  AddButton (wxID_HELP, BTNLABEL_HELP);
+  AddButton (wxID_CANCEL, BTNLABEL_CANCEL);
+  AddButton (wxID_OK, BTNLABEL_OK);
 }
 
 void ParamDialog::Init()
 {
-  EnableChanged ();
+  // if nobody has made any buttons, then create some now
+  if (nbuttons==0) AddDefaultButtons ();
   mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+  EnableChanged ();
   // lay it out!
   SetAutoLayout(TRUE);
   SetSizer(mainSizer);
@@ -1435,12 +1443,30 @@ bool ParamDialog::isGeneratedId (int id) {
   return (id >= ID_LAST_USER_DEFINED && id < _next_id);
 }
 
-void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer) 
+void ParamDialog::AddParamList (bx_id *idList, wxFlexGridSizer *sizer, bool plain)
+{
+  bx_id *idptr;
+  for (idptr = idList; *idptr != BXP_NULL; idptr++) {
+    bx_param_c *param = SIM->get_param (*idptr);
+    if (param != NULL)
+      AddParam (param, sizer, plain);
+  }
+}
+
+void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, bool plain) 
 {
   if (param_generic == NULL) 
     return;  // param not registered, probably this option was not compiled in
-  if (sizer == NULL)
+  if (sizer == NULL) {
+    // add to default gridSizer.  Create a gridSizer if none exists yet.
+    if (gridSizer == NULL) {
+      gridSizer = new wxFlexGridSizer (3);
+      mainSizer->Add (gridSizer);
+    }
     sizer = gridSizer;
+  }
+
+
   ParamStruct *pstr = new ParamStruct ();
   memset (pstr, 0, sizeof(*pstr));
   pstr->id = genId ();
@@ -1450,12 +1476,14 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
   switch (type) {
     case BXT_PARAM_BOOL: {
 	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
-	char *prompt = param->get_name ();
-	ADD_LABEL (prompt);
+	if (!plain) {
+	  char *prompt = param->get_name ();
+	  ADD_LABEL (prompt);
+	}
 	wxCheckBox *ckbx = new wxCheckBox (this, pstr->id, "");
 	ckbx->SetValue (param->get ());
 	sizer->Add (ckbx);
-	sizer->Add (1, 1);  // spacer
+	if (!plain) sizer->Add (1, 1);  // spacer
 	pstr->u.checkbox = ckbx;
 	idHash->Put (pstr->id, pstr);
 	paramHash->Put (pstr->param->get_id (), pstr);
@@ -1463,15 +1491,17 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
       }
     case BXT_PARAM_NUM: {
 	bx_param_num_c *param = (bx_param_num_c*) param_generic;
-	char *prompt = param->get_name ();
-	ADD_LABEL (prompt);
+	if (!plain) {
+	  char *prompt = param->get_name ();
+	  ADD_LABEL (prompt);
+	}
 	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
 	const char *format = param->get_format ();
 	if (!format)
 	  format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
 	SetTextCtrl (textctrl, format, param->get ());
 	sizer->Add (textctrl);
-	sizer->Add (1, 1);  // spacer
+	if (!plain) sizer->Add (1, 1);  // spacer
 	pstr->u.text = textctrl;
 	idHash->Put (pstr->id, pstr);
 	paramHash->Put (pstr->param->get_id (), pstr);
@@ -1479,11 +1509,13 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
       }
     case BXT_PARAM_ENUM: {
 	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
-	char *prompt = param->get_name ();
-	ADD_LABEL (prompt);
+	if (!plain) {
+	  char *prompt = param->get_name ();
+	  ADD_LABEL (prompt);
+	}
 	wxChoice *choice = new wxChoice (this, pstr->id);
 	sizer->Add (choice);
-	sizer->Add (1, 1);  // spacer
+	if (!plain) sizer->Add (1, 1);  // spacer
 	// fill in the choices
 	int i=0;
 	char *ptr;
@@ -1497,22 +1529,26 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
       }
     case BXT_PARAM_STRING: {
 	bx_param_string_c *param = (bx_param_string_c*) param_generic;
-	char *prompt = param->get_name ();
-	ADD_LABEL (prompt);
+	if (!plain) {
+	  char *prompt = param->get_name ();
+	  ADD_LABEL (prompt);
+	}
 	bool isFilename = param->get_options ()->get () & param->BX_IS_FILENAME;
 	wxTextCtrl *txtctrl = new wxTextCtrl (this, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : wxDefaultSize);
 	txtctrl->SetValue (param->getptr ());
 	sizer->Add (txtctrl);
-	if (isFilename) {
-	  // create Browse button
-	  pstr->browseButtonId = genId ();
-	  pstr->browseButton = new wxButton (this, 
-	      pstr->browseButtonId, BTNLABEL_BROWSE);
-	  sizer->Add (pstr->browseButton, 0, wxALL, 5);
-	  idHash->Put (pstr->browseButtonId, pstr);  // register under button id
-	paramHash->Put (pstr->param->get_id (), pstr);
-	} else {
-	  sizer->Add (1, 1);  // spacer
+	if (!plain) {
+	  if (isFilename) {
+	    // create Browse button
+	    pstr->browseButtonId = genId ();
+	    pstr->browseButton = new wxButton (this, 
+		pstr->browseButtonId, BTNLABEL_BROWSE);
+	    sizer->Add (pstr->browseButton, 0, wxALL, 5);
+	    idHash->Put (pstr->browseButtonId, pstr);  // register under button id
+	    paramHash->Put (pstr->param->get_id (), pstr);
+	  } else {
+	    sizer->Add (1, 1);  // spacer
+	  }
 	}
 	pstr->u.text = txtctrl;
 	idHash->Put (pstr->id, pstr);
@@ -1532,9 +1568,9 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
       }
       // add the boxsz to mainSizer
       mainSizer->Add (boxsz, 0, wxALL, 10);
-      // create new gridSizer so that future items appear below the boxsz.
-      gridSizer = new wxFlexGridSizer (3);
-      mainSizer->Add (gridSizer);
+      // clear gridSizer variable so that any future parameters force
+      // creation of a new one.
+      gridSizer = NULL;
       break;
       }
     default:
@@ -1663,7 +1699,6 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
   int id = event.GetId ();
   //wxLogMessage ("event was from id=%d", id);
   if (isGeneratedId (id)) {
-    wxWindow *window = (wxWindow*)event.GetEventObject ();
     ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
     if (pstr == NULL) {
       wxLogDebug ("ParamStruct not found for id=%d", id);
@@ -1686,7 +1721,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
     wxLogDebug ("id was key to ParamStruct but doesn't match either id inside");
   }
   switch (id) {
-    case wxOK:
+    case wxID_OK:
       if (IsModal ()) {
         if (CommitChanges ())
           EndModal (wxID_OK);
@@ -1700,7 +1735,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
       else
 	Show (FALSE);
       break;
-    case wxHELP:
+    case wxID_HELP:
       ShowHelp(); 
       break;
     default:
@@ -1711,6 +1746,206 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
 void ParamDialog::ShowHelp ()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+}
+
+/////////////////////////////////////////////////////////////////
+// CpuRegistersDialog
+/////////////////////////////////////////////////////////////////
+// Structure:
+// - mainSizer
+//   - mainRegsSizer (grid or flexgrid)
+//     - col0: flexgrid
+//       - params from EAX to ESP
+//     - col1: flexgrid
+//       - params from EIP to EFLAGS
+//     - col2: flexgrid
+//       - params from LDTR to IDTR limit
+//   - flagsSizer
+//   - extRegsSizer
+//     - col0: flexgrid
+//       - DR* params
+//     - col1: flexgrid
+//       - TR* params
+//     - col2: flexgrid
+//       - CR* params
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(CpuRegistersDialog, wxDialog)
+  EVT_BUTTON(-1, CpuRegistersDialog::OnEvent)
+  EVT_CHECKBOX(-1, CpuRegistersDialog::OnEvent)
+  EVT_TEXT(-1, CpuRegistersDialog::OnEvent)
+END_EVENT_TABLE()
+
+CpuRegistersDialog::CpuRegistersDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : ParamDialog (parent, id)
+{
+  wxFlexGridSizer *column;
+  nflags = 0;
+  bx_id mainRegList1[] = CPU_REGS_MAIN_REGS1;
+  bx_id mainRegList2[] = CPU_REGS_MAIN_REGS2;
+  bx_id mainRegList3[] = CPU_REGS_MAIN_REGS3;
+  bx_id flagList[]     = CPU_REGS_FLAGS;
+  bx_id controlList[]  = CPU_REGS_CONTROL_REGS;
+  bx_id debugList[]    = CPU_REGS_DEBUG_REGS;
+  bx_id testList[]     = CPU_REGS_TEST_REGS;
+  bx_id *idptr;
+
+  // top level objects
+  wxStaticBox *mainRegsBox = new wxStaticBox (this, -1, "Basic Registers");
+  wxStaticBoxSizer *mainRegsBoxSizer = 
+    new wxStaticBoxSizer (mainRegsBox, wxVERTICAL);
+  mainSizer->Add (mainRegsBoxSizer, 0, wxALL|wxGROW, 10);
+
+  wxStaticBox *flagsBox = new wxStaticBox (this, -1, "EFLAGS Bits");
+  wxStaticBoxSizer *flagsBoxSizer = 
+    new wxStaticBoxSizer (flagsBox, wxVERTICAL);
+  mainSizer->Add (flagsBoxSizer, 0, wxALL|wxGROW, 10);
+
+  wxStaticBox *otherBox = new wxStaticBox (this, -1, "Other Registers");
+  wxStaticBoxSizer *otherBoxSizer = 
+    new wxStaticBoxSizer (otherBox, wxVERTICAL);
+  mainSizer->Add (otherBoxSizer, 0, wxALL|wxGROW, 10);
+
+  // mainRegsSizer contents
+  mainRegsSizer = new wxFlexGridSizer (3);
+  mainRegsBoxSizer->Add (mainRegsSizer, 0, wxALL, 3);
+  column = new wxFlexGridSizer (3);
+  mainRegsSizer->Add (column, 0, wxALL, 10);
+  AddParamList (mainRegList1, column);
+
+  column = new wxFlexGridSizer (3);
+  mainRegsSizer->Add (column, 0, wxALL, 10);
+  AddParamList (mainRegList2, column);
+
+  column = new wxFlexGridSizer (3);
+  mainRegsSizer->Add (column, 0, wxALL, 10);
+  AddParamList (mainRegList3, column);
+
+  // add flag parameters
+  flagsSizer = new wxFlexGridSizer (CPU_REGS_MAX_FLAGS);
+  flagsBoxSizer->Add (flagsSizer, 0, wxALL | wxALIGN_CENTER, 3);
+  for (idptr = flagList; *idptr != BXP_NULL; idptr++)
+    AddFlag (*idptr);
+
+  // extRegsSizer contents
+  extRegsSizer = new wxFlexGridSizer (3);
+  otherBoxSizer->Add (extRegsSizer, 0, wxALL, 3);
+
+  column = new wxFlexGridSizer (3);
+  extRegsSizer->Add (column, 0, wxALL, 10);
+  AddParamList (controlList, column);
+
+  column = new wxFlexGridSizer (3);
+  extRegsSizer->Add (column, 0, wxALL, 10);
+  AddParamList (debugList, column);
+
+  column = new wxFlexGridSizer (3);
+  extRegsSizer->Add (column, 0, wxALL, 10);
+  AddParamList (testList, column);
+
+  // add buttons
+  AddButton (ID_Debug_Continue, BTNLABEL_DEBUG_CONTINUE);
+  AddButton (ID_Debug_Stop, BTNLABEL_DEBUG_STOP);
+  AddButton (ID_Debug_Step, BTNLABEL_DEBUG_STEP);
+  AddButton (ID_Debug_Commit, BTNLABEL_DEBUG_COMMIT);
+  AddButton (ID_Close, BTNLABEL_DEBUG_CLOSE);
+}
+
+void
+CpuRegistersDialog::AddFlag (bx_id paramId)
+{
+  if (SIM->get_param (paramId) == NULL) {
+    wxLogDebug ("AddFlag on unregistered param id=%d", (int)paramId);
+    return;
+  }
+  wxASSERT (nflags < CPU_REGS_MAX_FLAGS);
+  flagid[nflags++] = paramId;
+}
+
+void
+CpuRegistersDialog::Init ()
+{
+  int i;
+  for (i=0; i<CPU_REGS_MAX_FLAGS; i++) {
+    if (i<nflags) {
+      bx_param_c *param = SIM->get_param (flagid[i]);
+      flagsSizer->Add (new wxStaticText (this, -1, param->get_name ()));
+    } else {
+      flagsSizer->Add (0, 0);  // spacer
+    }
+  }
+  for (i=0; i<nflags; i++) {
+    bx_param_c *param = SIM->get_param (flagid[i]);
+    AddParam (param, flagsSizer, true);
+  }
+  // special case: make IOPL text field small
+  ParamStruct *pstr = (ParamStruct*) paramHash->Get (BXP_CPU_EFLAGS_IOPL);
+  if (pstr != NULL) {
+    wxSize size = pstr->u.text->GetSize ();
+    size.SetWidth (size.GetWidth () / 2);
+    pstr->u.text->SetSize (size);
+    flagsSizer->SetItemMinSize (pstr->u.text, size.GetWidth(), size.GetHeight());
+  }
+  ParamDialog::Init ();
+}
+
+// How am I going to communicate with the debugger?
+// 
+// The current model is that the debugger asks you for a command, and
+// blocks forever until you press return.  Then it interprets the command,
+// however long it takes, and returns to the input loop when the command
+// is done.  A control-C can stop a command prematurely.
+//
+// To extend this into wxWindows multithreaded space, I will create a
+// synchronous event called BX_SYNC_GET_DBG_COMMAND which is sent from
+// the simulation thread to wxWindows.  When the user chooses a debugger
+// action (step, continue, breakpoint, etc.) the simulation awakens and
+// interprets the event by calling a function in debug/dbg_main.cc.
+//
+// The equivalent of a control-C is pressing the "Stop" button during
+// a long step or continue command.  This can be implemented by setting
+// bx_guard.interrupt_requested = 1, just like the SIGINT handler in
+// debug/dbg_main.cc does.
+// 
+//
+//
+//
+//
+// input loop model is good.  Create a debugger input loop, possibly in
+// siminterface.
+// in the simulation thread.  This loop waits for a command from the 
+// wxWindows debugger
+//
+// For example, if you press the "Step" button 5
+// times, with each click it should call bx_dbg_stepN_command(1) in the
+// simulator thread.  When it returns, it goes back to
+//
+void 
+CpuRegistersDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  switch (id) {
+    case ID_Debug_Stop:
+      wxLogDebug ("wxWindows triggered a break");
+      theFrame->DebugBreak ();
+      break;
+    case ID_Debug_Continue:
+      theFrame->DebugCommand ("continue");
+      break;
+    case ID_Debug_Step:
+      theFrame->DebugCommand ("step 1");
+      break;
+    case ID_Debug_Commit:
+      CommitChanges ();
+      break;
+    case ID_Close:
+      Show (FALSE);
+      break;
+    default:
+      ParamDialog::OnEvent (event);
+  }
 }
 
 

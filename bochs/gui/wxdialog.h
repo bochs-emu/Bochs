@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.28 2002-09-06 16:43:23 bdenney Exp $
+// $Id: wxdialog.h,v 1.29 2002-09-13 19:39:38 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -18,6 +18,11 @@
 #define BTNLABEL_CREATE_IMG "Create Image"
 #define BTNLABEL_ADVANCED "Advanced"
 #define BTNLABEL_BROWSE "<--Browse"
+#define BTNLABEL_DEBUG_CONTINUE "Continue"
+#define BTNLABEL_DEBUG_STOP "Stop"
+#define BTNLABEL_DEBUG_STEP "Step"
+#define BTNLABEL_DEBUG_COMMIT "Commit"
+#define BTNLABEL_DEBUG_CLOSE "Close"
 
 #if defined(WIN32)
 // On win32, apparantly the spinctrl depends on a native control which only
@@ -603,6 +608,12 @@ DECLARE_EVENT_TABLE()
 //
 // This will allow editing of all the miscellaneous parameters which do
 // not need to be laid out by hand.
+//
+// NOTES:
+// Right now, there is always one wxFlexGridSizer with three columns
+// where the fields go.  It is possible to create a new wxFlexGridSizer
+// and make that one the default.  This is used when handling a bx_list_c
+// parameter.
 ////////////////////////////////////////////////////////////////////////////
 class ParamDialog: public wxDialog 
 {
@@ -620,27 +631,33 @@ private:
     wxButton *browseButton;  // only for filename params
   };
   void ShowHelp ();
-  wxBoxSizer *mainSizer, *buttonSizer;
   wxFlexGridSizer *gridSizer;
   wxChoice *type;
   wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
   wxCheckBox *enableKeymap;
-  void EnableChanged ();
-  void EnableChanged (ParamStruct *pstr);
+  int genId ();
+  bool isGeneratedId (int id);
+  bool isShowing;
+  int nbuttons;
+protected:
+  wxBoxSizer *mainSizer, *buttonSizer;
   // hash table that maps the ID of a wxWindows control (e.g. wxChoice,
   // wxTextCtrl) to the associated ParamStruct object.  Data in the hash table
   // is of ParamStruct*.
   wxHashTable *idHash;
   // map parameter ID (BXP_*) onto ParamStruct.
   wxHashTable *paramHash;
-  int genId ();
-  bool isGeneratedId (int id);
+  void EnableChanged ();
+  void EnableChanged (ParamStruct *pstr);
   bool CommitChanges ();
-  bool isShowing;
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);
+  virtual ~ParamDialog() {}
   void OnEvent (wxCommandEvent& event);
-  void Init ();  // called automatically by ShowModal()
+  void AddButton(int id, wxString label);
+  virtual void AddDefaultButtons ();
+  void BeginParamGrid (wxFlexGridSizer *gs = NULL) { gridSizer = gs; }
+  virtual void Init ();  // called automatically by ShowModal()
   int ShowModal() {
     Init(); 
     isShowing = true;
@@ -649,7 +666,8 @@ public:
     return ret;
   }
   bool Show (bool val) { isShowing = val; return wxDialog::Show (val); }
-  void AddParam (bx_param_c *param, wxFlexGridSizer *sizer = NULL);
+  void AddParam (bx_param_c *param, wxFlexGridSizer *sizer = NULL, bool plain = false);
+  void AddParamList (bx_id *idList, wxFlexGridSizer *sizer = NULL, bool plain = false);
   void Refresh ();
   bool IsShowing () { return isShowing; }
 DECLARE_EVENT_TABLE()
@@ -667,28 +685,83 @@ DECLARE_EVENT_TABLE()
 // registers, with regs that change marked in a different color.  Modeless
 // dialog.
 // 
-// +--- CPU Registers----------------------------------------+
+// +--- CPU Registers ---------------------------------------+
 // |                                                         |
-// | EAX [____]                                              |
-// | EBX [____]                                              |
-// | ECX [____]                                              |
-// | EDX [____]                                              |
-// | EIP [____]                                              |
+// |  EAX 0x00000000   EIP    0xffff   LDTR 0x00000000       |
+// |  EBX 0x00000000   CS     0x0018   TR   0x00000000       |
+// |  ECX 0x00000000   SS     0x0018   GDTR 0x00000000       |
+// |  EDX 0x00000000   DS     0x0018    lim 0x00000000       |
+// |  EBP 0x00000000   ES     0x0018   IDTR 0x00000000       |
+// |  ESI 0x00000000   FS     0x0018    lim 0x00000000       |
+// |  EDI 0x00000000   GS     0x0018                         |
+// |  ESP 0x00000000   EFLAGS 0x0012                         |
 // |                                                         |
-// |                                               [ Close ] |
+// | ID AC VM RF NT IOPL CF PF AF ZF SF TF IF DF OF          |
+// | [] [] [] [] [] [0]  [] [] [] [] [] [] [] [] []          |
+// |                                                         |
+// | DR0 0x00000000   TR3 0x00000000  CR0 0x00000000         |
+// | DR1 0x00000000   TR4 0x00000000  CR1 0x00000000         |
+// | DR2 0x00000000   TR5 0x00000000  CR2 0x00000000         |
+// | DR3 0x00000000   TR6 0x00000000  CR3 0x00000000         |
+// | DR6 0x00000000   TR7 0x00000000  CR4 0x00000000         |
+// | DR7 0x00000000                                          |
+// |                                                         |
+// |      [Go]  [Stop]  [Step]  [Step N]  N=[____]           |
 // +---------------------------------------------------------+
-#if 0
+//
+// +--- CPU Extended Registers ------------------------------+
+// |                                                         |
+// |                                                         |
+// |      [Go]  [Stop]  [Step]  [Step N]  N=[____]           |
+// +---------------------------------------------------------+
+//
 class CpuRegistersDialog : public ParamDialog
 {
+
+#define CPU_REGS_MAIN_REGS1                                             \
+  { BXP_CPU_EAX, BXP_CPU_EBX, BXP_CPU_ECX, BXP_CPU_EDX,                 \
+    BXP_CPU_EBP, BXP_CPU_ESI, BXP_CPU_EDI, BXP_CPU_ESP,                 \
+    BXP_NULL }
+#define CPU_REGS_MAIN_REGS2                                             \
+  { BXP_CPU_EIP, BXP_CPU_SEG_CS, BXP_CPU_SEG_SS, BXP_CPU_SEG_DS,        \
+    BXP_CPU_SEG_ES, BXP_CPU_SEG_FS, BXP_CPU_SEG_GS, BXP_CPU_EFLAGS,     \
+    BXP_NULL }
+#define CPU_REGS_MAIN_REGS3                                             \
+  { BXP_CPU_SEG_LDTR, BXP_CPU_SEG_TR,                                   \
+    BXP_CPU_GDTR_BASE, BXP_CPU_IDTR_LIMIT,                              \
+    BXP_CPU_IDTR_BASE, BXP_CPU_GDTR_LIMIT,                              \
+    BXP_NULL }
+#define CPU_REGS_FLAGS                                                  \
+  { BXP_CPU_EFLAGS_ID, BXP_CPU_EFLAGS_VIP, BXP_CPU_EFLAGS_VIF,          \
+    BXP_CPU_EFLAGS_AC, BXP_CPU_EFLAGS_VM, BXP_CPU_EFLAGS_RF,            \
+    BXP_CPU_EFLAGS_NT, BXP_CPU_EFLAGS_IOPL, BXP_CPU_EFLAGS_OF,          \
+    BXP_CPU_EFLAGS_DF, BXP_CPU_EFLAGS_IF, BXP_CPU_EFLAGS_TF,            \
+    BXP_CPU_EFLAGS_SF, BXP_CPU_EFLAGS_ZF, BXP_CPU_EFLAGS_AF,            \
+    BXP_CPU_EFLAGS_PF, BXP_CPU_EFLAGS_CF, \
+    BXP_NULL }
+#define CPU_REGS_DEBUG_REGS                                             \
+  { BXP_CPU_DR0, BXP_CPU_DR1, BXP_CPU_DR2,                              \
+    BXP_CPU_DR3, BXP_CPU_DR6, BXP_CPU_DR7,                              \
+    BXP_NULL }
+#define CPU_REGS_TEST_REGS                                              \
+  { BXP_CPU_TR3, BXP_CPU_TR4, BXP_CPU_TR5, BXP_CPU_TR6, BXP_CPU_TR7,    \
+    BXP_NULL }
+#define CPU_REGS_CONTROL_REGS                                           \
+  { BXP_CPU_CR0, BXP_CPU_CR1, BXP_CPU_CR2, BXP_CPU_CR3, BXP_CPU_CR4,    \
+    BXP_NULL  }
+
   void Init ();  // called automatically by ShowModal()
-  wxBoxSizer *mainSizer;
-  wxTextCtrl *reg
+  wxFlexGridSizer *mainRegsSizer, *flagsSizer, *extRegsSizer;
+#define CPU_REGS_MAX_FLAGS 17
+  bx_id flagid[CPU_REGS_MAX_FLAGS];
+  int nflags;
 public:
   CpuRegistersDialog(wxWindow* parent, wxWindowID id);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void AddFlag (bx_id paramId);
+  void OnEvent (wxCommandEvent& event);
   DECLARE_EVENT_TABLE()
 };
-#endif
 
 
 /**************************************************************************
