@@ -3684,7 +3684,11 @@ bx_dbg_info_control_regs_command(void)
 void
 bx_dbg_info_ne2k(int page, int reg)
 {
+#if BX_NE2K_SUPPORT
   bx_ne2k.print_info (stderr, page, reg, 0);
+#else
+  fprintf (stderr, "NE2000 support is not compiled in.\n");
+#endif
 }
 
 //
