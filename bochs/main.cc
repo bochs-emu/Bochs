@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.88 2002-03-06 09:31:54 cbothamy Exp $
+// $Id: main.cc,v 1.89 2002-03-06 23:31:02 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2188,7 +2188,7 @@ bx_write_configuration (char *rc, int overwrite)
   //bx_write_parport_options (fp, &bx_options.par2);
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
-  fprintf (fp, "boot: %c\n", (bootdrive==BX_BOOT_FLOPPYA) ? 'a' : 'c');
+  fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "a" : (bootdrive==BX_BOOT_DISKC) ? "c" : "cdrom");
   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
