@@ -1,10 +1,10 @@
 #!/bin/sh
 #
 # These are the steps I typically use to configure and compile Bochs
-# on a Linux x86 system with egcs
+# on a Linux x86 system with gcc
 #
 
-CC="egcs"
+CC="gcc"
 CXX="c++"
 CFLAGS="-Wall -O2 -fomit-frame-pointer -pipe"
 CXXFLAGS="$CFLAGS"
