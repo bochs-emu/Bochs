@@ -42,8 +42,6 @@ comments:
 
 TO DO:
 - convert remaining devices
-- --enable-all-optimizations fails at harddrv.cc
-
 - some plugins, such as the GUI, PIT, SB, and NE2000, have several different
   possible implementations.  In this case, all implementations should be
   children of a single stub class.  The stub's methods produce errors or
