@@ -152,12 +152,12 @@ typedef struct
 #ifdef BX_BIG_ENDIAN
    Bit16u aligment1, aligment2, aligment3; 
    Bit16u exp;      /* 4 bytes: FP register exponent, 
-                                   set to 0xffff by all MMX commands */
+                                   set to 0xffff by all MMX instructions */
    BxPackedMmxRegister packed_mmx_register;
 #else
    BxPackedMmxRegister packed_mmx_register;
    Bit16u exp;      /* 4 bytes: FP register exponent, 
-                                   set to 0xffff by all MMX commands */
+                                   set to 0xffff by all MMX instructions */
    Bit16u aligment1, aligment2, aligment3; 
 #endif
 } BxMmxRegister;

@@ -94,7 +94,7 @@ void BX_CPU_C::printMmxRegisters(void)
 {
   for(int i=0;i<8;i++) {
       BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
-      fprintf(stderr, "MM%d: %.16llx\n", i, MMXUQ(mm));
+      fprintf(stderr, "MM%d: %lx%lx\n", i, MMXUD1(mm), MMXUD0(mm));
   }
 }
 
@@ -106,9 +106,13 @@ void BX_CPU_C::prepareMMX(void)
   if(BX_CPU_THIS_PTR cr0.em)
     exception(BX_UD_EXCEPTION, 0, 0);
 
+  /* check SW_Summary bit for a pending FPU exceptions */
+  if(FPU_SWD & 0x0080)
+    exception(BX_MF_EXCEPTION, 0, 0);
+
   FPU_TWD = 0;
-  FPU_TOS = 0;        /* Each time an MMX instruction is */
-  FPU_SWD &= 0xc7ff;  /*    executed, the TOS value is set to 000b */
+  FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
+  FPU_SWD &= 0xc7ff; 
 }
 
 #endif
@@ -682,17 +686,8 @@ void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::EMMS(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-
-  if(BX_CPU_THIS_PTR cr0.em)
-    exception(BX_UD_EXCEPTION, 0, 0);
-
-  if(BX_CPU_THIS_PTR cr0.ts)
-    exception(BX_NM_EXCEPTION, 0, 0);
-
-  FPU_TWD  = 0xffffffff;
-  FPU_TOS  = 0;        /* Each time an MMX instruction is */
-  FPU_SWD &= 0xc7ff;   /*      executed, the TOS value is set to 000b */
-
+  BX_CPU_THIS_PTR prepareMMX();
+  FPU_TWD  = 0xffffffff;		// toDO: FPU_TWD should be 16bit 
 #else
   BX_INFO(("EMMS: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
