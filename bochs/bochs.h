@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.130 2004-01-15 02:08:34 danielg4 Exp $
+// $Id: bochs.h,v 1.131 2004-01-18 00:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -626,7 +626,7 @@ typedef struct {
 #define BX_KBD_MF_TYPE        2 
 
 #define BX_N_OPTROM_IMAGES 4
-#define BX_N_SERIAL_PORTS 1
+#define BX_N_SERIAL_PORTS 4
 #define BX_N_PARALLEL_PORTS 1
 #define BX_N_USB_HUBS 1
 

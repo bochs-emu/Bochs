@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.16 2004-01-17 15:51:09 vruppert Exp $
+// $Id: serial.h,v 1.17 2004-01-18 00:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -28,16 +28,23 @@
 // Peter Grehan (grehan@iprg.nokia.com) coded most of this
 // serial emulation.
 
-#if USE_RAW_SERIAL
-#include "serial_raw.h"
-#endif // USE_RAW_SERIAL
-
 #if BX_USE_SER_SMF
 #  define BX_SER_SMF  static
 #  define BX_SER_THIS theSerialDevice->
 #else
 #  define BX_SER_SMF
 #  define BX_SER_THIS this->
+#endif
+
+#if USE_RAW_SERIAL
+#include "serial_raw.h"
+#endif // USE_RAW_SERIAL
+
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__GNU__) || defined(__APPLE__)
+#define SERIAL_ENABLE
+extern "C" {
+#include <termios.h>
+};
 #endif
 
 #define BX_SERIAL_MAXDEV   4
@@ -93,6 +100,12 @@ typedef struct {
   int  rx_pollstate;
   int  rx_timer_index;
   int  fifo_timer_index;
+
+  int tty_id;
+
+#ifdef SERIAL_ENABLE
+  struct termios term_orig, term_new;
+#endif
 
   /*
    * Register definitions
@@ -178,7 +191,7 @@ public:
 #endif // USE_RAW_SERIAL
 
 private:
-    bx_serial_t s[BX_SERIAL_MAXDEV];
+  bx_serial_t s[BX_SERIAL_MAXDEV];
 
   static void lower_interrupt(Bit8u port);
   static void raise_interrupt(Bit8u port, int type);

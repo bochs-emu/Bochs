@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.259 2004-01-16 15:53:43 danielg4 Exp $
+// $Id: main.cc,v 1.260 2004-01-18 00:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3347,7 +3347,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
-#if 0
   else if (!strcmp(params[0], "com2")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
@@ -3390,7 +3389,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
-#endif
   else if (!strcmp(params[0], "usb1")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {

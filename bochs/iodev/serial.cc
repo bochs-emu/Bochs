@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.42 2004-01-17 15:51:09 vruppert Exp $
+// $Id: serial.cc,v 1.43 2004-01-18 00:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -53,22 +53,6 @@
 #endif
 #endif
 
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__GNU__) || defined(__APPLE__)
-#define SERIAL_ENABLE
-#endif
-
-#ifdef SERIAL_ENABLE
-extern "C" {
-#include <termios.h>
-};
-#endif
-
-#ifdef SERIAL_ENABLE
-static struct termios term_orig, term_new;
-#endif
-
-static int tty_id;
-
 bx_serial_c *theSerialDevice = NULL;
 
   int
@@ -89,8 +73,8 @@ bx_serial_c::bx_serial_c(void)
 {
   put("SER");
   settype(SERLOG);
-  tty_id = -1;
   for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
+    s[i].tty_id = -1;
     s[i].tx_timer_index = BX_NULL_TIMER_HANDLE;
     s[i].rx_timer_index = BX_NULL_TIMER_HANDLE;
     s[i].fifo_timer_index = BX_NULL_TIMER_HANDLE;
@@ -100,8 +84,10 @@ bx_serial_c::bx_serial_c(void)
 bx_serial_c::~bx_serial_c(void)
 {
 #ifdef SERIAL_ENABLE
-  if ((bx_options.com[0].Oenabled->get ()) && (tty_id >= 0))
-    tcsetattr(tty_id, TCSAFLUSH, &term_orig);
+  for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
+    if ((bx_options.com[i].Oenabled->get ()) && (s[i].tty_id >= 0))
+      tcsetattr(s[i].tty_id, TCSAFLUSH, &s[i].term_orig);
+  }
 #endif
   // nothing for now
 }
@@ -113,41 +99,6 @@ bx_serial_c::init(void)
   Bit16u ports[BX_SERIAL_MAXDEV] = {0x03f8, 0x02f8, 0x03e8, 0x02e8};
   char name[16];
 
-  if (!bx_options.com[0].Oenabled->get ())
-    return;
-
-#ifdef SERIAL_ENABLE
-  if (strlen(bx_options.com[0].Odev->getptr ()) > 0) {
-    tty_id = open(bx_options.com[0].Odev->getptr (), O_RDWR|O_NONBLOCK,600);
-    if (tty_id < 0)
-      BX_PANIC(("open of %s (%s) failed\n",
-                "com1", bx_options.com[0].Odev->getptr ()));
-    BX_DEBUG(("tty_id: %d",tty_id));
-    tcgetattr(tty_id, &term_orig);
-    bcopy((caddr_t) &term_orig, (caddr_t) &term_new, sizeof(struct termios));
-    cfmakeraw(&term_new);
-    term_new.c_oflag |= OPOST | ONLCR;  // Enable NL to CR-NL translation
-#ifndef TRUE_CTLC
-    // ctl-C will exit Bochs, or trap to the debugger
-    term_new.c_iflag &= ~IGNBRK;
-    term_new.c_iflag |= BRKINT;
-    term_new.c_lflag |= ISIG;
-#else
-    // ctl-C will be delivered to the serial port
-    term_new.c_iflag |= IGNBRK;
-    term_new.c_iflag &= ~BRKINT;
-#endif    /* !def TRUE_CTLC */
-    term_new.c_iflag = 0;
-    term_new.c_oflag = 0;
-    term_new.c_cflag = CS8|CREAD|CLOCAL;
-    term_new.c_lflag = 0;
-    term_new.c_cc[VMIN] = 1;
-    term_new.c_cc[VTIME] = 0;
-    //term_new.c_iflag |= IXOFF;
-    tcsetattr(tty_id, TCSAFLUSH, &term_new);
-  }
-#endif   /* def SERIAL_ENABLE */
-  // nothing for now
 #if USE_RAW_SERIAL
   this->raw = new serial_raw("/dev/cua0", SIGUSR1);
 #endif // USE_RAW_SERIAL
@@ -255,6 +206,36 @@ bx_serial_c::init(void)
         DEV_register_ioread_handler(this, read_handler, addr, name, 1);
         DEV_register_iowrite_handler(this, write_handler, addr, name, 1);
       }
+#ifdef SERIAL_ENABLE
+      if (strlen(bx_options.com[i].Odev->getptr ()) > 0) {
+        BX_SER_THIS s[i].tty_id = open(bx_options.com[i].Odev->getptr (), O_RDWR|O_NONBLOCK,600);
+        if (BX_SER_THIS s[i].tty_id < 0)
+          BX_PANIC(("open of com%d (%s) failed\n", i, bx_options.com[i].Odev->getptr ()));
+        BX_DEBUG(("com%d tty_id: %d", i, BX_SER_THIS s[i].tty_id));
+        tcgetattr(BX_SER_THIS s[i].tty_id, &BX_SER_THIS s[i].term_orig);
+        bcopy((caddr_t) &BX_SER_THIS s[i].term_orig, (caddr_t) &BX_SER_THIS s[i].term_new, sizeof(struct termios));
+        cfmakeraw(&BX_SER_THIS s[i].term_new);
+        BX_SER_THIS s[i].term_new.c_oflag |= OPOST | ONLCR;  // Enable NL to CR-NL translation
+#ifndef TRUE_CTLC
+        // ctl-C will exit Bochs, or trap to the debugger
+        BX_SER_THIS s[i].term_new.c_iflag &= ~IGNBRK;
+        BX_SER_THIS s[i].term_new.c_iflag |= BRKINT;
+        BX_SER_THIS s[i].term_new.c_lflag |= ISIG;
+#else
+        // ctl-C will be delivered to the serial port
+        BX_SER_THIS s[i].term_new.c_iflag |= IGNBRK;
+        BX_SER_THIS s[i].term_new.c_iflag &= ~BRKINT;
+#endif    /* !def TRUE_CTLC */
+        BX_SER_THIS s[i].term_new.c_iflag = 0;
+        BX_SER_THIS s[i].term_new.c_oflag = 0;
+        BX_SER_THIS s[i].term_new.c_cflag = CS8|CREAD|CLOCAL;
+        BX_SER_THIS s[i].term_new.c_lflag = 0;
+        BX_SER_THIS s[i].term_new.c_cc[VMIN] = 1;
+        BX_SER_THIS s[i].term_new.c_cc[VTIME] = 0;
+        //BX_SER_THIS s[i].term_new.c_iflag |= IXOFF;
+        tcsetattr(BX_SER_THIS s[i].tty_id, TCSAFLUSH, &BX_SER_THIS s[i].term_new);
+      }
+#endif   /* def SERIAL_ENABLE */
       BX_INFO(("com%d at 0x%04x irq %d", i+1, ports[i], BX_SER_THIS s[i].IRQ));
     }
   }
@@ -892,9 +873,8 @@ bx_serial_c::tx_timer(void)
   } else if (timer_id == BX_SER_THIS s[3].tx_timer_index) {
     port = 3;
   }
-  BX_INFO(("tx_timer: port = %d", port));
   if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
-    rx_fifo_enq(0, BX_SER_THIS s[port].tsrbuffer);
+    rx_fifo_enq(port, BX_SER_THIS s[port].tsrbuffer);
   } else {
 #if USE_RAW_SERIAL
     if (!BX_SER_THIS raw->ready_transmit())
@@ -903,7 +883,9 @@ bx_serial_c::tx_timer(void)
 #endif
 #if defined(SERIAL_ENABLE)
     BX_DEBUG(("write: '%c'", BX_SER_THIS s[port].tsrbuffer));
-    if (tty_id >= 0) write(tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
+    if (BX_SER_THIS s[port].tty_id >= 0) {
+      write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
+    }
 #endif
   }
 
@@ -976,7 +958,7 @@ bx_serial_c::rx_timer(void)
 // leaving it commented out for the moment.
 
   FD_ZERO(&fds);
-  if (tty_id >= 0) FD_SET(tty_id, &fds);
+  if (BX_SER_THIS s[port].tty_id >= 0) FD_SET(BX_SER_THIS s[port].tty_id, &fds);
 
   if ((BX_SER_THIS s[port].line_status.rxdata_ready == 0) ||
       (BX_SER_THIS s[port].fifo_cntl.enable)) {
@@ -994,14 +976,14 @@ bx_serial_c::rx_timer(void)
     if (rdy) {
       chbuf = data;
 #elif defined(SERIAL_ENABLE)
-    if ((tty_id >= 0) && (select(tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
-      (void) read(tty_id, &chbuf, 1);
+    if ((BX_SER_THIS s[port].tty_id >= 0) && (select(BX_SER_THIS s[port].tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
+      (void) read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
       BX_DEBUG(("read: '%c'",chbuf));
 #else
     if (0) {
 #endif
       if (!BX_SER_THIS s[port].modem_cntl.local_loopback) {
-        rx_fifo_enq(0, chbuf);
+        rx_fifo_enq(port, chbuf);
       }
     } else {
       if (!BX_SER_THIS s[port].fifo_cntl.enable) {
