@@ -59,7 +59,7 @@ bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
   DataPointer = (Bit8u*) GlobalLock(DataHandle);
 
   if (DataPointer == NULL)
-    BX_PANIC(("GlobalLock returned NULL-pointer");
+    BX_PANIC(("GlobalLock returned NULL-pointer"));
 
 #define NEWBUFFER(size) &(DataPointer[offset]); offset += ALIGN(size)
 
@@ -74,7 +74,7 @@ bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
     }
 
   if (offset > size)
-    BX_PANIC(("Allocated memory was too small!");
+    BX_PANIC(("Allocated memory was too small!"));
 
 #undef size
 #undef ALIGN
