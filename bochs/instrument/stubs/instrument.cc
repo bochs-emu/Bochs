@@ -368,3 +368,17 @@ bx_instr_inp(Bit16u addr, unsigned len)
 bx_instr_outp(Bit16u addr, unsigned len)
 {
 }
+  void
+bx_instr_inp2(Bit16u addr, unsigned len, unsigned val)
+{
+}
+  void
+bx_instr_outp2(Bit16u addr, unsigned len, unsigned val)
+{
+}
+void bx_instr_lin_read(Bit32u lin, Bit32u phy, unsigned len)
+{
+}
+void bx_instr_lin_write(Bit32u lin, Bit32u phy, unsigned len)
+{
+}

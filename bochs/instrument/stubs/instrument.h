@@ -78,6 +78,8 @@ void bx_instr_interrupt(unsigned vector);
 void bx_instr_exception(unsigned vector);
 void bx_instr_inp(Bit16u addr, unsigned len);
 void bx_instr_outp(Bit16u addr, unsigned len);
+void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
+void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val);
 void bx_instr_tlb_cntrl(unsigned what, Bit32u newval);
 void bx_instr_cache_cntrl(unsigned what);
 void bx_instr_hwinterrupt(unsigned vector, Bit32u cs, Bit32u eip);
@@ -139,7 +141,9 @@ void bx_instr_print(void);
 #  define BX_INSTR_MEM_DATA(linear, size, rw)  bx_instr_mem_data(linear, size, rw)
 #  define BX_INSTR_EXCEPTION(vector)           bx_instr_exception(vector)
 #  define BX_INSTR_INP(addr, len)              bx_instr_inp(addr, len)
+#  define BX_INSTR_INP2(addr, len, val)        bx_instr_inp2(addr, len, val)
 #  define BX_INSTR_OUTP(addr, len)             bx_instr_outp(addr, len)
+#  define BX_INSTR_OUTP2(addr, len, val)       bx_instr_outp2(addr, len, val)
 #  define BX_INSTR_FETCH_BYTE(val8)            bx_instr_fetch_byte(val8)
 #  define BX_INSTR_FETCH_WORD(val16)           bx_instr_fetch_word(val16)
 #  define BX_INSTR_FETCH_DWORD(val32)          bx_instr_fetch_dword(val32)
@@ -209,7 +213,9 @@ void bx_instr_print(void);
 #  define BX_INSTR_MEM_DATA(linear, size, rw)
 #  define BX_INSTR_EXCEPTION(vector)
 #  define BX_INSTR_INP(addr, len)
+#  define BX_INSTR_INP2(addr, len, val)
 #  define BX_INSTR_OUTP(addr, len)
+#  define BX_INSTR_OUTP2(addr, len, val)
 #  define BX_INSTR_FETCH_BYTE(val8)
 #  define BX_INSTR_FETCH_WORD(val16)
 #  define BX_INSTR_FETCH_DWORD(val32)
