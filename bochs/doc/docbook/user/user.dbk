@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.87 2002-12-11 16:44:49 bdenney Exp $
+$Id: user.dbk,v 1.88 2002-12-11 19:16:19 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1137,11 +1137,11 @@ is different on different platforms.
 </para>
 
 <section><title>Windows</title>
-<para>
+<!--
 unzip into some directory.  Look for DOC-win32.html
 for more instructions.  Quick start: find dlxlinux/start.bat and
 double click
-</para>
+-->
 <para>
 &FIXME;
 Someone needs to write this.
@@ -1153,15 +1153,14 @@ Someone needs to write this.
 <para>
 RPM stands for "RedHat Package Manager."  An RPM is a compressed file
 containing files to be installed on your system.  Many Linux distributions,
-not just RedHat ones, can install files from an RPM.  Debian packages are
-available for Bochs as well, but this section talks deals with RPMs.  First,
-download the Bochs RPM for your architecture to your computer.  For example, if
-you have an Intel-compatible computer, be sure to get the RPM that says "for
-Linux x86 distributions."  Once you have the package on your local disk, you
-should be able to install it as follows<footnote>
+not just RedHat ones, can install files from an RPM.  First, download the
+Bochs RPM for your architecture to your computer.  For example, if you have an
+Intel-compatible computer, be sure to get the RPM that says "for Linux x86
+distributions" or "i386".  Once you have the package on your local disk, you
+should become the root user and install it as follows<footnote>
 <para>
 Many distributions have their own RPM installer program, often graphical, and
-they should work as well.  It is helpful to be able to see the text output from
+they should work ok.  It is helpful to be able to see the text output from
 RPM, so if you use a fancy RPM installer, be sure to find the text output and
 check that it looks correct.
 </para>
@@ -1185,70 +1184,140 @@ check that it looks correct.
 </figure>
 </para>
 
-<note>
 <para>
-All RPM installations are done as the root user because they require permission
-to update system files and directories.  If you do not have root access you
-need to compile Bochs in your home directory.
+All RPM installations are done as the root user because they require
+permission to update system files and directories.  If you do not have root
+access you need to compile Bochs in your home directory.
 </para>
-</note>
 
-<tip>
 <para>
-If RPM installation fails, try running <command>rpm -e bochs</command> first to
-erase any old bochs RPMs.  
-
-VGA Font failure?  For now, look at old bochs docs for now for instructions on
-installing the VGA font by hand. &FIXME;
-
-Missing RPM dependencies?  Try --nodeps option.
+RPM installation can fail for a few reasons.  It will fail if you already
+have a Bochs package installed.  In this case, try upgrading the old package
+to the new package with <command>rpm --upgrade NAME.i386.rpm</command>.
+Another potential problem is missing RPM dependencies.  If you are getting
+errors about missing files or RPMs, then first you should try to 
+install the RPMs that provide the missing pieces.  If that cannot be done,
+download the source RPM and build a new binary RPM that is appropriate
+for your platform.  The command is <command>rpmbuild --rebuild
+NAME.src.rpm</command>.  As a last resort, you can run rpm with the
+<command>--nodeps</command> option to ignore dependencies and install it
+anyway, but if it is missing important pieces it may not run properly.
 </para>
-</tip>
+
+<para>
+The RPM installation is supposed to install the VGA font for you, if
+necessary.  But if you are seeing errors like "Could not open vga font", then
+please read <xref linkend="vgafont">.
+</para>
 
 <para>
 The Bochs RPM installs three new commands and associated manual pages: bochs,
 bochs-dlx, and bximage.  First, let's try out the DLX Linux demo by typing
-<command>bochs-dlx</command>.  This command is installed into 
-<filename>/usr/local/bin</filename>, so you might need to add that
-directory to your <varname>PATH</varname> variable.
+<command>bochs-dlx</command>.  
 
 <screen>
   user$ bochs-dlx
+  ---------------------------------------------------------------
+	      DLX Linux Demo, for Bochs x86 Emulator
+  ---------------------------------------------------------------
   Checking for bochs binary...ok
   Checking for DLX linux directory...ok
-  Entering /usr/local/bochs/dlxlinux
+  Checking for /bin/gzip...ok
+  Checking for /usr/users/bryce/.bochsdlx directory...
+  ---------------------------------------------------------------
+  To run the DLX Linux demo, I need to create a directory called
+  /usr/users/bryce/.bochsdlx, and copy some configuration files
+  and a 10 megabyte disk image into the directory.
+  ---------------------------------------------------------------
+  Is that okay? [y/n]
+  y
+  Copying /usr/share/bochs/dlxlinux/bochsrc.txt -> /usr/users/bryce/.bochsdlx/.
+  Copying /usr/share/bochs/dlxlinux/README -> /usr/users/bryce/.bochsdlx/.
+  Copying /usr/share/bochs/dlxlinux/testform.txt -> /usr/users/bryce/.bochsdlx/.
+  Uncompressing /usr/share/bochs/dlxlinux/hd10meg.img.gz -> /usr/users/bryce/.bochsdlx/hd10meg.img
+  Entering /usr/users/bryce/.bochsdlx
   Running bochs
   ========================================================================
-                         Bochs x86 Emulator 1.2.1
-                               June 12, 2001
+			Bochs x86 Emulator 2.0.pre3
+		Build from CVS snapshot on December 4, 2002
   ========================================================================
-  00000000000 [    ] looking for configuration in .bochsrc
-  00000000000 [    ] looking for configuration in bochsrc
-  00000000000 [    ] looking for configuration in bochsrc.txt
-  00000000000 [    ] reading configuration from bochsrc.txt
-  00000000000 [    ] using log file bochsout.txt
 </screen>
+
 Then you get a new X11 window containing the VGA display of the simulated
 machine.  First you see the VGA BIOS screen, then Linux uncompresses and
 boots, and you get a login prompt.  Type "root" and ENTER to log in to
 DLX linux.
 <figure>
-<title>DLX Linux screenshot, running on Linux</title>
+<title>Screenshot of Bochs running DLX Linux</title>
 <graphic format="GIF" fileref="dlxlinux-in-linux.gif">
 </figure>
 </para>
 
 <para>
-If you get the DLX Linux screen, your Bochs installation is working 
-correctly.  This documentation will assume that everything is working
-as expected, then there are some tips at the end in case any step goes wrong.
+Booting is complete when you see "dlx login:" and a cursor.  At this login
+prompt, type "root".  On UNIX systems, root is the system admin user.
+There is no password for root on this sample disk image, so it lets you log 
+in without typing any password.  Now you should see a UNIX prompt, and you 
+can begin to type UNIX commands.
 </para>
 
+<screen>
+  Welcome to DLX V1.0 (C) 1995-96 Erich Boehm
+                      (C) 1995    Hannes Boehm
+
+  dlx login: <command>root</command>
+  Linux 1.3.89.
+  dlx:~# <command>pwd</command>
+  /root
+  dlx:~# <command>cd /</command>
+  dlx:~# <command>ls</command>
+  bin/       etc/       lost+found/       root/       usr/
+  boot/      fd/        mnt/              sbin/       var/
+  dev/       lib/       proc/             tmp/        zip/
+  dlx:/# <command>df</command>
+  Filesystem    1024-blocks   Used  Available Capacity Mounted on
+  /dev/hda1        10060      2736      6005     29%   /
+  dlx:/# _
+</screen>
+
 <para>
-&FIXME;
-Point to all the files that get installed with the RPM: binaries,
-BIOSes, DLX linux, HTML docs and man pages, etc.
+When you get tired of playing with DLX Linux, just type "reboot" in the Bochs
+window to shut down the DLX Linux operating system, and when it starts
+to reboot again press the "Power" button at the top of the Bochs display
+to end the application.
 </para>
+
+
+<para>
+Here is a list of the files that are installed by the RPM, and a brief
+description of each one.
+</para>
+
+<table><title>Files in RPM package</title>
+<tgroup cols=2 align=left colsep=1 rowsep=1>
+<thead> <row> <entry>File</entry> <entry>Description</entry> </row>
+</thead>
+<tbody>
+
+<row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
+<row><entry>/usr/share/doc/bochs/CHANGES</entry> <entry> what has changed between versions </entry> </row>
+<row><entry>/usr/share/doc/bochs/COPYING</entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
+<row><entry>/usr/bin/bximage </entry> <entry> tool for making new disk images </entry> </row>
+<row><entry>/usr/share/doc/bochs/bochsrc-sample.txt</entry> <entry> sample Bochs configuration file </entry> </row>
+<row><entry>/usr/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx and bximage </entry> </row>
+<row><entry>/usr/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
+<row><entry>/usr/share/doc/bochs/alldocs.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/alldocs.html">Online copy</ulink> )</entry> </row>
+<row><entry>/usr/share/bochs/BIOS-* </entry> <entry> ROM BIOS images for Bochs.  Normally you would only use BIOS-bochs-latest unless you are simulating multiple processors.  </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-elpin-* </entry> <entry> VGA BIOS image for Bochs </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
+<row><entry>/usr/bin/bochs-dlx </entry> <entry> run this script to try out DLX Linux inside Bochs!</entry> </row>
+<row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
+<row><entry>/usr/share/bochs/dlxlinux/README</entry> <entry> description of DLX linux</entry> </row>
+</tbody>
+</tgroup>
+</table>
+
 
 </section> <!-- end of Installing a Binary:Linux section -->
 
@@ -2275,6 +2344,57 @@ fpu/fpu_system.h, you could try --disable-fpu.
 
 
 </section> <!-- end of Compiling Bochs -->
+
+<section id="vgafont"><title>Installing the VGA font (X windows only)</title>
+<para>
+In text mode, Bochs requires your X server to have access to the
+VGA font.  If you don't already have it, you must install it.  The
+file is in the source directory, called <filename>font/vga.pcf</filename>.
+If the VGA font is not installed properly, you will get an error when you
+start Bochs: "Could not open vga font".
+</para>
+<para>
+There are two options; you may install the VGA font in a global place, or
+in a local directory.  You may need to install it locally if you don't have
+root access.  
+</para>
+
+<section><title>Option 1: Installing VGA font in global font directory</title>
+
+<para>
+The commands below show how to copy the VGA font from the source directory
+into the X windows font directory.
+</para>
+<screen>
+   # NOTE1: Make sure your DISPLAY variable points to local machine.
+   # NOTE2: These steps require root privileges.
+   # NOTE3: Your X11 fonts path will vary on different systems. For example:
+   #        Solaris 2.x /usr/openwin/lib/X11/fonts
+   #        Linux       /usr/lib/X11/fonts/
+   root# cp font/vga.pcf font-path-here/misc
+   root# compress font-path-here/misc/vga.pcf
+   root# mkfontdir font-path-here/misc
+   root# xset fp rehash
+   root# /etc/rc.d/init.d/xfs restart     (Restart your X font server)
+</screen>
+
+<para>
+The command to restart the X font server is given for Redhat systems, but
+it will vary between different machines, and might not even be necessary at
+all.  If you cannot figure out how to restart your font server, you can
+just reboot.
+</para>
+</section> <!-- end of option 1 -->
+
+<section><title>Option 2: Installing VGA font in local font directory</title>
+<screen>
+   # NOTE1: Make sure your DISPLAY variable points to local machine.
+   # NOTE2: The "xset" command needs to be run for each X session.
+   user-> mkfontdir bochs-YYMMDD/font
+   user-> xset fp+ [full-path]/bochs-YYMMDD/font
+</screen>
+</section> <!--end of option 2 -->
+</section> <!--end of installing vga font-->
 
 </chapter>
 
@@ -3864,6 +3984,48 @@ commercial product with a 30-day trial.
 <para>
 If anyone wants to write a tutorial, send mail to &devlist; and volunteer.
 </para>
+</section>
+
+<section><title>X Windows: Color allocation problems</title>
+<para>
+One common problem in X windows is that the screen colors can be abnormal
+if other X programs have already allocated all the colors.  If the colors
+don't look right, try quitting colorful applications such as netscape,
+clearing any complex images in the background, etc. so that Bochs has a 
+chance to allocate the colors it needs.
+</para>
+<para>
+If Bochs continues to have problems, or you want Bochs to have perfect
+colors without having to quit any other application, you can try turning
+on the private_colormap option in the configuration file.  Using a private 
+colormap causes the Bochs window to have its own set of 256 colors to work
+with.  When the cursor is over the Bochs display, Bochs will look correct
+and other parts of the screen may change to very strange colors.  When the
+cursor goes to any other window, the other windows will look correct
+and Bochs will have strange colors.  A better solution, if your hardware
+can support it, is to run your X server with 24-bit or 32-bit color.
+</para>
+</section>
+
+<section><title>Screen saver turns on too quickly</title>
+
+<para>
+One thing you may notice is that the screen saver turns on (screen goes
+blank) very quickly after you have stopped typing.  The reason is that Bochs
+simulates everything as fast as it can.  If the CPU is very busy (running
+instructions nonstop), simulated time goes by slowly.  If the CPU is idle (just
+waiting for you to type, for example), simulated time speeds up dramatically.
+In any case, If the screen saver blanks out the screen, just press a key (try
+shift or control) to restore the screen.
+</para>
+
+<para>
+There are two strategies to fix this problem.  One is to increase the "ips"
+setting in your configuration file.  This will cause the simulation time
+to pass more slowly.  The other strategy is to enable the experimental
+realtime PIT, which tries to keep Bochs in sync with real time.
+</para>
+
 </section>
 
 
@@ -6541,7 +6703,6 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.87 2002-12-11 16:44:49 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6817,7 +6978,6 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.87 2002-12-11 16:44:49 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

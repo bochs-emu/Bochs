@@ -119,15 +119,14 @@ in Windows.
 before running
 </H2>
 
-
+<!-------- VGA font section already converted to docbook --------------->
 In text mode, Bochs requires your X server to have access to the
 VGA font.  If you don't already have it, you must install it from
 one of the font files in bochs-yymmdd/font.
 <P>
 There are two options; you may install the VGA font in a global place, or
 in a local directory.  You may need to install it locally if you don't have
-root access.  If the VGA font is not installed properly, you will get
-the error, "Could not open vga font".
+root access.  
 
 <P>
 <B>Option 1: installing VGA font in global font directory</B>
@@ -158,6 +157,7 @@ just reboot.
    user-> mkfontdir bochs-YYMMDD/font
    user-> xset fp+ [full-path]/bochs-YYMMDD/font
 </PRE>
+<!-------- end of VGA font section already converted to docbook ------------>
 
 <A NAME="Creating a hard disk image file"></A>
 <B>Hard Drive Image File: </B> Bochs emulates a hard drive by using a

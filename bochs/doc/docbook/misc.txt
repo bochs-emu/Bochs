@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.18 2002-12-05 19:29:16 bdenney Exp $
+$Id: misc.txt,v 1.19 2002-12-11 19:16:19 bdenney Exp $
 
 Testing testing....
 
@@ -379,3 +379,70 @@ to .conf.linux.  Any changes will go into the source RPM.
 This produces two rpm files in the current directory.  Test and upload.
 
 ------
+
+<!-- *************************************************************** -->
+
+Wed Dec 11 13:56:20 EST 2002
+this text came from build/linux/DOC-linux.html.
+Originally it was an intro to Bochs for Linux users.  I converted it all to
+docbook.  I moved most of the info from DOC-linux.html into different
+sections of the user guide, and the rest I put here in misc.txt.  Maybe these
+paragraphs will be useful in some kind of introduction to something, or maybe
+not.
+
+<section><title>Quick Start for Linux users</title>
+<!--much text removed, put into user guide -->
+
+<para>
+This file is an introduction to Bochs for Linux users.  It assumes that you
+have just installed a Bochs binary distribution, and now you want to see what
+Bochs can do!
+</para>
+
+<section><title>How can I try out Bochs in 10 minutes or less?</title>
+<para>
+This RPM package includes a sample disk image containing DLX Linux, which you
+can boot within Bochs.  To start up DLX linux, just type "bochs-dlx" in an
+xterm.  The first time it runs, it creates a disk image in a directory
+called <filename>$HOME/.bochsdlx</filename>.  Then it creates a Bochs Display
+window and prints some log messages into the xterm.  The display window is the
+most interesting, but if something goes wrong the log messages should give an
+idea of what has happened.
+</para>
+<para>
+Meanwhile, the Bochs display screen should look like a PC booting...and in
+fact it is!  Bochs begins simulating a PC from the time the power turns on.
+You will see the VGA BIOS message, and it begins loading Linux from the disk
+image.  The disk image is just a big file that Bochs uses as if it were a
+real hard drive.  After a while, you see Linux boot messages and eventually a
+login prompt.  You are now running DLX Linux in a window!
+</para>
+<para>
+Bochs simulates every instruction of an x86 CPU, so it is very memory- and
+compute-intensive.  The speed of your real CPU will make a big difference in
+how fast the DLX Linux image boots.  On a 1GHz Pentium, the sample Linux 
+image takes about 10 seconds to boot.
+</para>
+
+<para>
+In this brief introduction you saw how Bochs can boot and run an x86 operating
+system in a window.  It doesn't have to be Linux, of course!  Various people
+have been able to install and run DOS, Windows 3.1, Windows 95/98/ME/NT/XP,
+Linux, FreeBSD, NetBSD, OpenBSD, and probably others that we've never even
+heard of.  In fact Bochs is used by many operating system developers to test
+out their software in a controlled environment without having to reboot their
+development machine.
+</para>
+
+<para>
+If you are learning about Bochs for the first time, you might want to
+download a few other prebuilt disk images of other operating systems from the
+Bochs website.  They range from very small (1.44 meg floppy disk images) to
+hundreds of megabytes.  Most disk images on the web site come with a
+working configuration file (often called bochsrc.txt) so they should work
+without much effort.  This will give you an idea of what Bochs can do,
+and how it might be useful to you.
+</para>
+
+</section>
+
