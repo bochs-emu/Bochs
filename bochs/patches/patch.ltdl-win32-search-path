@@ -1,0 +1,72 @@
+----------------------------------------------------------------------
+Patch name: patch.ltdl-win32-search-path
+Author: Hartmut Birr <hartmut.birr@tesionmail.de>
+Date: Fri, 1 Nov 2002 13:24:13 +0100
+
+Detailed description:
+it seems that the search algorithm for dll's (plugin's) on win32 is a
+little bit dirty. The search starts at first in the system directory and
+at last in the current directory. There is found a vga.dll in the system
+directory wich doesn't work with bochs. I've add a patch to ltdl.c, that
+will first open the dll without the given path and if this fail the dll
+is opened from the provided path. With this hack, bochs works perfect
+for me. I use mingw/msys for compiling.
+
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+--- ..\bochs\ltdl.c	Fri Oct 25 13:36:42 2002
++++ ltdl.c	Fri Nov 01 12:17:42 2002
+@@ -1182,6 +1182,7 @@
+   char	       *searchname = 0;
+   char	       *ext;
+   char		self_name_buf[MAX_PATH];
++  char         *basename;
+ 
+   if (!filename)
+     {
+@@ -1215,10 +1216,36 @@
+   {
+     char wpath[MAX_PATH];
+     cygwin_conv_to_full_win32_path(searchname, wpath);
+-    module = LoadLibrary(wpath);
++    basename = strrchr(wpath, '/');
++    if (basename == NULL)
++    {
++      basename = strrchr(wpath, '\\');
++    }
++    if (basename)
++    {
++      module = LoadLibrary(basename + 1);
++    }
++    if (module == 0)
++    {
++      module = LoadLibrary (wpath);
++    }
+   }
+ #else
+-  module = LoadLibrary (searchname);
++  {
++    basename = strrchr(searchname, '/');
++    if (basename == NULL)
++    {
++      basename = strrchr(searchname, '\\');
++    }
++    if (basename)
++    {
++      module = LoadLibrary(basename + 1);
++    }
++    if (module == 0)
++    {
++      module = LoadLibrary (searchname);
++    }
++  }
+ #endif
+   LT_DLFREE (searchname);
+ 
