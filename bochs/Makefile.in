@@ -27,11 +27,20 @@ INSTALL_LIST=bios/BIOS-* CHANGES.txt COPYING README bios/VGABIOS*
 CP=cp
 CAT=cat
 RM=rm
+MV=mv
 LN_S=ln -sf
 DLXLINUX_TAR=dlxlinux1.tar.gz
 DLXLINUX_TAR_URL=http://bochs.sourceforge.net/guestos/${DLXLINUX_TAR}
 GUNZIP=gunzip
 WGET=wget
+SED=sed
+SOURCES=/usr/src/redhat/SOURCES
+SPECS=/usr/src/redhat/SPECS
+RPMS=/usr/src/redhat/RPMS
+SRPMS=/usr/src/redhat/SRPMS
+MKDIR=mkdir
+TAR=tar
+RPM=rpm
 
 @SUFFIX_LINE@
 
@@ -217,6 +226,16 @@ erase_install::
 	${RM} -rf ${PREFIX}/${VERSION}
 	${RM} -rf ${PREFIX}/dlxlinux
 
+rpm:: dist-clean
+	test -w ${SOURCES}
+	test -w ${SPECS}
+	rm -f /usr/src/redhat/SPECS/bochs.spec
+	${CAT} build/linux/bochs.rpmspec.template | ${SED} "s/@VERSION@/${VERSION}/g" > ${SPECS}/bochs.spec
+	${RM} -rf ${SOURCES}/bochs
+	${MKDIR} ${SOURCES}/bochs
+	${TAR} cf - * .??* | (cd ${SOURCES}/bochs && tar xf -)
+	(cd ${SOURCES}; tar czf bochs.tar.gz bochs)
+	${RPM} -ba ${SPECS}/bochs.spec
 
 clean:
 	@RMCOMMAND@ *.o
