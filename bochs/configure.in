@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.138 2002-09-30 14:35:34 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.139 2002-09-30 16:24:23 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -126,6 +126,12 @@ AC_CHECK_FUNCS(abort, AC_DEFINE(BX_HAVE_ABORT))
 AC_CHECK_FUNCS(gettimeofday, AC_DEFINE(BX_HAVE_GETTIMEOFDAY))
 AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
 #include <sys/socket.h>])
+
+AC_SYS_LARGEFILE
+# Warning: wxwindows uses their own macro to test for largefile usability,
+# because they found bugs in the standard autoconf test that affect Linux/gcc.
+# We may need to do something similar.  See aclocal.m4 in wxWindows sources, at
+# http://cvs.wxwindows.org/cgi-bin/viewcvs.cgi/wxWindows/aclocal.m4
 
 AC_MSG_CHECKING(for struct timeval)
 AC_TRY_COMPILE([#include <sys/time.h>],
