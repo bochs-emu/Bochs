@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.64 2003-11-22 18:22:45 vruppert Exp $
+// $Id: floppy.cc,v 1.65 2003-11-23 21:54:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,6 +66,25 @@ bx_floppy_ctrl_c *theFloppyController;
 
 #define FLOPPY_DMA_CHAN 2
 
+typedef struct {
+  unsigned id;
+  Bit8u trk;
+  Bit8u hd;
+  Bit8u spt;
+  unsigned sectors;
+} floppy_type_t;
+
+static floppy_type_t floppy_type[8] = {
+  {BX_FLOPPY_160K, 40, 1, 8, 320},
+  {BX_FLOPPY_180K, 40, 1, 9, 360},
+  {BX_FLOPPY_320K, 40, 2, 8, 640},
+  {BX_FLOPPY_360K, 40, 2, 9, 720},
+  {BX_FLOPPY_720K, 80, 2, 9, 1440},
+  {BX_FLOPPY_1_2,  80, 2, 15, 2400},
+  {BX_FLOPPY_1_44, 80, 2, 18, 2880},
+  {BX_FLOPPY_2_88, 80, 2, 36, 5760}
+};
+
 
   int
 libfloppy_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -101,7 +120,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.64 2003-11-22 18:22:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.65 2003-11-23 21:54:59 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1326,7 +1345,8 @@ bx_floppy_ctrl_c::get_media_status(unsigned drive)
 bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 {
   struct stat stat_buf;
-  int ret;
+  int i, ret;
+  int idx = -1;
 #ifdef WIN32
   char sTemp[1024];
   bx_bool raw_floppy = 0;
@@ -1361,7 +1381,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 #endif
 
   if (media->fd < 0) {
-    BX_INFO(( "tried to open %s read/write: %s",path,strerror(errno) ));
+    BX_INFO(( "tried to open '%s' read/write: %s",path,strerror(errno) ));
     // try opening the file read-only
     media->write_protected = 1;
 #ifdef macintosh
@@ -1379,7 +1399,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 #endif
     if (media->fd < 0) {
       // failed to open read-only too
-      BX_INFO(( "tried to open %s read only: %s",path,strerror(errno) ));
+      BX_INFO(( "tried to open '%s' read only: %s",path,strerror(errno) ));
       media->type = type;
       return(0);
     }
@@ -1416,53 +1436,42 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     return(0);
     }
 
+  for (i = 0; i < 8; i++) {
+    if (type == floppy_type[i].id) idx = i;
+  }
+  if (idx == -1 ) {
+    BX_PANIC(("evaluate_media: unknown media type"));
+    return(0);
+  }
   if ( S_ISREG(stat_buf.st_mode) ) {
     // regular file
     switch (type) {
       // use CMOS reserved types
       case BX_FLOPPY_160K: // 160K 5.25"
-        media->type              = BX_FLOPPY_160K;
-        media->sectors_per_track = 8;
-        media->tracks            = 40;
-        media->heads             = 1;
-        break;
       case BX_FLOPPY_180K: // 180K 5.25"
-        media->type              = BX_FLOPPY_180K;
-        media->sectors_per_track = 9;
-        media->tracks            = 40;
-        media->heads             = 1;
-        break;
       case BX_FLOPPY_320K: // 320K 5.25"
-        media->type              = BX_FLOPPY_320K;
-        media->sectors_per_track = 8;
-        media->tracks            = 40;
-        media->heads             = 2;
-        break;
-
+      // standard floppy types
       case BX_FLOPPY_360K: // 360K 5.25"
-        media->type              = BX_FLOPPY_360K;
-        media->sectors_per_track = 9;
-        media->tracks            = 40;
-        media->heads             = 2;
-        break;
       case BX_FLOPPY_720K: // 720K 3.5"
-        media->type              = BX_FLOPPY_720K;
-        media->sectors_per_track = 9;
-        media->tracks            = 80;
-        media->heads             = 2;
-        break;
       case BX_FLOPPY_1_2: // 1.2M 5.25"
-        media->type              = BX_FLOPPY_1_2;
-        media->sectors_per_track = 15;
-        media->tracks            = 80;
-        media->heads             = 2;
+      case BX_FLOPPY_2_88: // 2.88M 3.5"
+        media->type              = type;
+        media->tracks            = floppy_type[idx].trk;
+        media->heads             = floppy_type[idx].hd;
+        media->sectors_per_track = floppy_type[idx].spt;
+        media->sectors           = floppy_type[idx].sectors;
+        if (stat_buf.st_size > (media->sectors * 512)) {
+          BX_INFO(("evaluate_media: size of file '%s' (%lu) too large for selected type",
+                   path, (unsigned long) stat_buf.st_size));
+          return(0);
+        }
         break;
-      case BX_FLOPPY_1_44: // 1.44M 3.5"
-        media->type              = BX_FLOPPY_1_44;
+      default: // 1.44M 3.5"
+        media->type              = type;
         if (stat_buf.st_size <= 1474560) {
-          media->sectors_per_track = 18;
-          media->tracks            = 80;
-          media->heads             = 2;
+          media->tracks            = floppy_type[idx].trk;
+          media->heads             = floppy_type[idx].hd;
+          media->sectors_per_track = floppy_type[idx].spt;
           }
         else if (stat_buf.st_size == 1720320) {
           media->sectors_per_track = 21;
@@ -1479,17 +1488,8 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
             path, (unsigned long) stat_buf.st_size));
           return(0);
           }
-        break;
-      case BX_FLOPPY_2_88: // 2.88M 3.5"
-        media->type              = BX_FLOPPY_2_88;
-        media->sectors_per_track = 36;
-        media->tracks            = 80;
-        media->heads             = 2;
-        break;
-      default:
-        BX_PANIC(("evaluate_media: unknown media type"));
+        media->sectors = media->heads * media->tracks * media->sectors_per_track;
       }
-    media->sectors = media->heads * media->tracks * media->sectors_per_track;
     return(1); // success
     }
 
