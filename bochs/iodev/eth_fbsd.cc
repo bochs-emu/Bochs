@@ -331,7 +331,7 @@ bx_fbsd_pktmover_c::rx_timer(void)
     for (n=0; n<nbytes; n++) {
       if (((n % 16) == 0) && n>0)
 	fprintf (this->rxlog_txt, "\n");
-      fprintf (this->rxlog_txt, "%02x ", charbuf[n]);
+      fprintf (this->rxlog_txt, "%02x ", rxbuf[n]);
     }
     fprintf (this->rxlog_txt, "\n--\n");
     // flush log so that we see the packets as they arrive w/o buffering
