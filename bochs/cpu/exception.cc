@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.52 2005-03-30 21:43:08 sshwarts Exp $
+// $Id: exception.cc,v 1.53 2005-03-30 22:31:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -232,9 +232,6 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 
       // load new RSP values from TSS
 
-      int savemode = BX_CPU_THIS_PTR cpu_mode;
-      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
-
       // need to switch to 64 bit mode temporarily here.
       // this means that any exception after here might be delivered
       // a little insanely.  Like faults are page faults..
@@ -266,7 +263,6 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       if ( is_error_code )
         push_64(error_code);
 
-      BX_CPU_THIS_PTR cpu_mode = savemode;
       load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
 
       RIP = gate_dest_offset;
@@ -298,9 +294,6 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       // align stack
       RSP = RSP & BX_CONST64(0xfffffffffffffff0);
 
-      int savemode = BX_CPU_THIS_PTR cpu_mode;
-      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
-
       // push flags onto stack
       // push current CS selector onto stack
       // push return offset onto stack
@@ -311,8 +304,6 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       push_64(RIP);
       if ( is_error_code )
         push_64(error_code);
-
-      BX_CPU_THIS_PTR cpu_mode = savemode;
 
       // load CS:IP from gate
       // load CS descriptor
