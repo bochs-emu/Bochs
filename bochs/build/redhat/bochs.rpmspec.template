@@ -41,7 +41,7 @@ and other OS's, all on your workstation.
 	/usr/bin/bochs-docs
 	/usr/bin/bochs-dlx
 	/usr/bin/bximage
-#	/usr/lib/*
+	/usr/lib/bochs-@SEDVERSION@/plugins/*
 	/usr/share/bochs/*
 	/usr/share/doc/*
 	%{_mandir}/*
