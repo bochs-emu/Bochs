@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.58 2002-06-04 17:43:18 vruppert Exp $
+// $Id: rombios.c,v 1.59 2002-06-22 15:22:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1067,10 +1067,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.58 $";
-static char bios_date_string[] = "$Date: 2002-06-04 17:43:18 $";
+static char bios_cvs_version_string[] = "$Revision: 1.59 $";
+static char bios_date_string[] = "$Date: 2002-06-22 15:22:20 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.58 2002-06-04 17:43:18 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.59 2002-06-22 15:22:20 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1236,7 +1236,7 @@ ASM_START
 ASM_END
 }
 
-#if BX_PCIBIOS || BX_USE_ATADRV
+#if BX_USE_ATADRV
   Bit16u
 inw(port)
   Bit16u port;
@@ -1277,7 +1277,7 @@ ASM_START
 ASM_END
 }
 
-#if BX_PCIBIOS || BX_USE_ATADRV
+#if BX_USE_ATADRV
   void
 outw(port, val)
   Bit16u port;
@@ -1463,34 +1463,6 @@ ASM_START
   pop  bp
 ASM_END
 }
-
-#if BX_PCIBIOS
-  void
-setPCIaddr(bus, devfunc, regnum)
-  Bit8u bus;
-  Bit8u devfunc;
-  Bit8u regnum;
-{
-ASM_START
-  push bp
-  mov  bp, sp
-  push dx
-  push eax
-
-    mov  eax, #0x800000
-    mov  ah, 4[bp] ;; bus
-    mov  al, 6[bp] ;; devfunc
-    shl  eax, 8
-    mov  al, 8[bp] ;; regnum
-    mov  dx, #0x0cf8
-    out dx, eax
-
-  pop  eax
-  pop  dx
-  pop  bp
-ASM_END
-}
-#endif
 
   Bit16u
 UDIV(a, b)
@@ -5202,31 +5174,19 @@ int1a_function(regs, ds, iret_addr)
       break;
 #if BX_PCIBIOS
     case 0xb1:
-      setPCIaddr(0, 0, 0);
-      if (inw(0x0cfc) != 0x8086) {
-	BX_INFO("PCI BIOS not present\n");
-        SetCF(iret_addr.flags);
-      } else {
-        switch (regs.u.r8.al) {
-	  case 0x09: // Read configuration word
-	    setPCIaddr(regs.u.r8.bh, regs.u.r8.bl, (Bit8u)(regs.u.r16.di & 0xfc));
-	    regs.u.r16.cx = inw(0x0cfc + (regs.u.r16.di & 0x0002));
-	    regs.u.r8.ah = 0;
-	    ClearCF(iret_addr.flags);
-	    break;
-	  case 0x0c: // Write configuration word
-	    BX_DEBUG("reg: 0x%02x value: 0x%02x\n",(Bit8u)(regs.u.r16.di & 0xff),regs.u.r16.cx);
-	    setPCIaddr(regs.u.r8.bh, regs.u.r8.bl, (Bit8u)(regs.u.r16.di & 0xfc));
-	    outw(0x0cfc + (regs.u.r16.di & 0x0002), regs.u.r16.cx);
-	    regs.u.r8.ah = 0;
-	    ClearCF(iret_addr.flags);
-	    break;
-	  default:
-	    BX_INFO("unsupported PCI BIOS function 0x%02x\n", regs.u.r8.al);
-	    regs.u.r8.ah = 0x81;
-	    SetCF(iret_addr.flags);
-	}
+      // real mode PCI BIOS functions now handled in assembler code
+      // this C code handles the error code for information only
+      if (regs.u.r8.al == 0xff) {
+        BX_INFO("PCI BIOS not present\n");
+      } else if (regs.u.r8.al == 0x81) {
+        BX_INFO("unsupported PCI BIOS function 0x%02x\n", regs.u.r8.al);
+      } else if (regs.u.r8.al == 0x83) {
+        BX_INFO("bad PCI vendor ID %04x\n", regs.u.r16.dx);
+      } else if (regs.u.r8.al == 0x86) {
+        BX_INFO("PCI device %04x:%04x not found\n", regs.u.r16.dx, regs.u.r16.cx);
       }
+      regs.u.r8.ah = regs.u.r8.al;
+      SetCF(iret_addr.flags);
       break;
 #endif
 
@@ -9081,9 +9041,9 @@ bios32_structure:
   db 0x5f, 0x33, 0x32, 0x5f  ;; "_32_" signature
   dw bios32_entry_point, 0xf ;; 32 bit physical address
   db 0             ;; revision level
-  db 1             ;; length in paragraphs
-  db ~(((((bios32_entry_point >> 8) + (bios32_entry_point & 0xff)) & 0xff) \
-        + 0x32) & 0xff)
+  ;; length in paragraphs and checksum stored in a word to prevent errors
+  dw (~(((bios32_entry_point >> 8) + (bios32_entry_point & 0xff) + 0x32) \
+        & 0xff) << 8) + 0x01
   db 0,0,0,0,0     ;; reserved
 
 .align 16
@@ -9114,105 +9074,105 @@ pcibios_protected:
   pushf
   cli
   cmp al, #0x01 ;; installation check
-  jne check_f02
+  jne pci_pro_f02
   mov bx, #0x0210
   mov cx, #0
   mov edx, #0x20494350
   mov al, #0x01
-  jmp pcibios_ok
-check_f02: ;; find pci device
+  jmp pci_pro_ok
+pci_pro_f02: ;; find pci device
   cmp al, #0x02
-  jne check_f08
+  jne pci_pro_f08
   shl ecx, #16
   or  ecx, edx
   mov bx, #0x0000
   mov di, #0x00
-pcidev_loop:
-  call pcibios_select_reg
+pci_pro_devloop:
+  call pci_pro_select_reg
   mov dx, #0x0cfc
   in  eax, dx
   cmp eax, ecx
-  jne pcidev_next
+  jne pci_pro_nextdev
   cmp si, #0
-  je  pcibios_ok
+  je  pci_pro_ok
   dec si
-pcidev_next:
+pci_pro_nextdev:
   inc bx
   cmp bx, #0x0100
-  jnb pcidev_loop
+  jnb pci_pro_devloop
   mov ah, #0x86
-  jmp pcibios_fail
-check_f08: ;; read configuration byte
+  jmp pci_pro_fail
+pci_pro_f08: ;; read configuration byte
   cmp al, #0x08
-  jne check_f09
-  call pcibios_select_reg
+  jne pci_pro_f09
+  call pci_pro_select_reg
   mov dx, di
   and dx, #0x03
   add dx, #0x0cfc
   in  al, dx
   mov cl, al
-  jmp pcibios_ok
-check_f09: ;; read configuration word
+  jmp pci_pro_ok
+pci_pro_f09: ;; read configuration word
   cmp al, #0x09
-  jne check_f0a
-  call pcibios_select_reg
+  jne pci_pro_f0a
+  call pci_pro_select_reg
   mov dx, di
   and dx, #0x02
   add dx, #0x0cfc
   in  ax, dx
   mov cx, ax
-  jmp pcibios_ok
-check_f0a: ;; read configuration dword
+  jmp pci_pro_ok
+pci_pro_f0a: ;; read configuration dword
   cmp al, #0x0a
-  jne check_f0b
-  call pcibios_select_reg
+  jne pci_pro_f0b
+  call pci_pro_select_reg
   mov dx, #0x0cfc
   in  eax, dx
   mov ecx, eax
-  jmp pcibios_ok
-check_f0b: ;; write configuration byte
+  jmp pci_pro_ok
+pci_pro_f0b: ;; write configuration byte
   cmp al, #0x0b
-  jne check_f0c
-  call pcibios_select_reg
+  jne pci_pro_f0c
+  call pci_pro_select_reg
   mov dx, di
   and dx, #0x03
   add dx, #0x0cfc
   mov al, cl
   out dx, al
-  jmp pcibios_ok
-check_f0c: ;; write configuration word
+  jmp pci_pro_ok
+pci_pro_f0c: ;; write configuration word
   cmp al, #0x0c
-  jne check_f0d
-  call pcibios_select_reg
+  jne pci_pro_f0d
+  call pci_pro_select_reg
   mov dx, di
   and dx, #0x02
   add dx, #0x0cfc
   mov ax, cx
   out dx, ax
-  jmp pcibios_ok
-check_f0d: ;; write configuration dword
+  jmp pci_pro_ok
+pci_pro_f0d: ;; write configuration dword
   cmp al, #0x0d
-  jne pcibios_unknown
-  call pcibios_select_reg
+  jne pci_pro_unknown
+  call pci_pro_select_reg
   mov dx, #0x0cfc
   mov eax, ecx
   out dx, eax
-  jmp pcibios_ok
-pcibios_unknown:
+  jmp pci_pro_ok
+pci_pro_unknown:
   mov ah, #0x81
-pcibios_fail:
+pci_pro_fail:
   sti
   popf
   stc
   retf
-pcibios_ok:
+pci_pro_ok:
   xor ah, ah
   sti
   popf
   clc
   retf
 
-pcibios_select_reg:
+pci_pro_select_reg:
   mov eax, #0x800000
   mov ax,  bx
   shl eax, #8
@@ -9225,14 +9185,26 @@ pcibios_select_reg:
 
 use16 386
 
-pcibios_real: ;; installation check
+pcibios_real:
+  push ax
+  push dx
   mov eax, #0x80000000
   mov dx, #0x0cf8
   out dx, eax
   mov dx, #0x0cfc
   in  eax, dx
   cmp eax, #0x12378086
-  jne no_pci
+  je  pci_present
+  pop dx
+  pop ax
+  mov ah, #0xff
+  stc
+  ret
+pci_present:
+  pop dx
+  pop ax
+  cmp al, #0x01 ;; installation check
+  jne pci_real_f02
   mov ax, #0x0001
   mov bx, #0x0210
   mov cx, #0
@@ -9240,10 +9212,107 @@ pcibios_real: ;; installation check
   mov edi, #pcibios_protected
   or  edi, #0xf0000
   clc
-  iret
-no_pci:
+  ret
+pci_real_f02: ;; find pci device
+  cmp al, #0x02
+  jne pci_real_f08
+  shl ecx, #16
+  or  ecx, edx
+  mov bx, #0x0000
+  mov di, #0x00
+pci_real_devloop:
+  call pci_real_select_reg
+  mov dx, #0x0cfc
+  in  eax, dx
+  cmp eax, ecx
+  jne pci_real_nextdev
+  cmp si, #0
+  je  pci_real_ok
+  dec si
+pci_real_nextdev:
+  inc bx
+  cmp bx, #0x0100
+  jnb pci_real_devloop
+  mov dx, cx
+  shr ecx, #16
+  mov ah, #0x86
+  jmp pci_real_fail
+pci_real_f08: ;; read configuration byte
+  cmp al, #0x08
+  jne pci_real_f09
+  call pci_real_select_reg
+  mov dx, di
+  and dx, #0x03
+  add dx, #0x0cfc
+  in  al, dx
+  mov cl, al
+  jmp pci_real_ok
+pci_real_f09: ;; read configuration word
+  cmp al, #0x09
+  jne pci_real_f0a
+  call pci_real_select_reg
+  mov dx, di
+  and dx, #0x02
+  add dx, #0x0cfc
+  in  ax, dx
+  mov cx, ax
+  jmp pci_real_ok
+pci_real_f0a: ;; read configuration dword
+  cmp al, #0x0a
+  jne pci_real_f0b
+  call pci_real_select_reg
+  mov dx, #0x0cfc
+  in  eax, dx
+  mov ecx, eax
+  jmp pci_real_ok
+pci_real_f0b: ;; write configuration byte
+  cmp al, #0x0b
+  jne pci_real_f0c
+  call pci_real_select_reg
+  mov dx, di
+  and dx, #0x03
+  add dx, #0x0cfc
+  mov al, cl
+  out dx, al
+  jmp pci_real_ok
+pci_real_f0c: ;; write configuration word
+  cmp al, #0x0c
+  jne pci_real_f0d
+  call pci_real_select_reg
+  mov dx, di
+  and dx, #0x02
+  add dx, #0x0cfc
+  mov ax, cx
+  out dx, ax
+  jmp pci_real_ok
+pci_real_f0d: ;; write configuration dword
+  cmp al, #0x0d
+  jne pci_real_unknown
+  call pci_real_select_reg
+  mov dx, #0x0cfc
+  mov eax, ecx
+  out dx, eax
+  jmp pci_real_ok
+pci_real_unknown:
+  mov ah, #0x81
+pci_real_fail:
   stc
-  iret
+  ret
+pci_real_ok:
+  xor ah, ah
+  clc
+  ret
+
+pci_real_select_reg:
+  mov eax, #0x800000
+  mov ax,  bx
+  shl eax, #8
+  and di,  #0xff
+  or  ax,  di
+  and al,  #0xfc
+  mov edx, #0x0cf8
+  out dx,  eax
+  ret
 #endif
 
 ;; for 'C' strings and other data, insert them here with
@@ -10017,9 +10086,14 @@ db 0x00    ;; base  23:16
 .org 0xfe6e ; INT 1Ah Time-of-day Service Entry Point
 int1a_handler:
 #if BX_PCIBIOS
-  cmp  ax, #0xb101
+  cmp  ah, #0xb1
   jne  int1a_normal
-  jmp  pcibios_real
+  call pcibios_real
+  jb   pcibios_error
+  iret
+pcibios_error:
+  mov  al, ah
+  mov  ah, #0xb1
 int1a_normal:
 #endif
   push ds
