@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.22 2003-11-02 04:05:02 danielg4 Exp $
+// $Id: carbon.cc,v 1.23 2003-11-08 06:46:03 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,7 +135,9 @@ short                gheaderbar_y;
 Point                prevPt;
 unsigned             width, height, gMinTop, gMaxTop, gLeft;
 GWorldPtr            gOffWorld;
+Ptr                  gMyBuffer;
 ProcessSerialNumber  gProcessSerNum;
+static unsigned      vga_bpp=8;
 
 enum {
   TEXT_MODE,
@@ -560,33 +562,63 @@ void CreateTile(void)
   GDHandle  saveDevice;
   CGrafPtr  savePort;
   OSErr     err;
+  unsigned  long p_f;
+  long      theRowBytes = ((((long) ( vga_bpp==24?32:(((vga_bpp+1)>>1)<<1) ) * ((long) (srcTileRect.right-srcTileRect.left)) + 31) >> 5) << 2);
   
 //  if (bx_options.Oprivate_colormap->get ())
 //  {
     GetGWorld(&savePort, &saveDevice);
+    switch(vga_bpp)
+    {
+      case 1:
+        p_f = k1MonochromePixelFormat;
+        break;
+      case 2:
+        p_f = k2IndexedPixelFormat;
+        break;
+      case 4:
+        p_f = k4IndexedPixelFormat;
+        break;
+      case 8:
+        p_f = k8IndexedPixelFormat;
+        break;
+      case 15:
+        p_f = k16LE555PixelFormat;
+        break;
+      case 16:
+        p_f = k16LE565PixelFormat;
+        break;
+      case 24:
+        //p_f = k24BGRPixelFormat;
+        //break;
+      case 32:
+        p_f = k32ARGBPixelFormat;//k32BGRAPixelFormat;
+       break;
+    }
   
-    err = NewGWorld(&gOffWorld, 8, 
-      &srcTileRect, gCTable, NULL, keepLocal);
+    BX_ASSERT((gMyBuffer = (Ptr)malloc(theRowBytes * (srcTileRect.bottom - srcTileRect.top))) != NULL);
+    err = NewGWorldFromPtr(&gOffWorld, p_f, 
+      &srcTileRect, vga_bpp>8 ? NULL : gCTable, NULL, keepLocal, gMyBuffer, theRowBytes);
     if (err != noErr || gOffWorld == NULL)
-      BX_PANIC(("mac: can't create gOffWorld"));
+      BX_PANIC(("mac: can't create gOffWorld; err=%hd", err));
 
     SetGWorld(gOffWorld, NULL);
+    RGBForeColor(&black);
+    RGBBackColor(&white);
   
     gTile = GetGWorldPixMap(gOffWorld);
-    
+
     if (gTile != NULL)
     {
       NoPurgePixels(gTile);
       if (!LockPixels(gTile))
         BX_ERROR(("mac: can't LockPixels gTile"));
-      if ((**gTile).pmTable != gCTable)
+      if ((**gTile).pixelType != RGBDirect && (**gTile).pmTable != gCTable)
       {
         DisposeCTable(gCTable);
         gCTable = (**gTile).pmTable;
       }
         
-      (**gTile).rowBytes = 0x8000 | ((((long) (**gTile).pixelSize * ((long) ((**gTile).bounds.right-(**gTile).bounds.left)) + 31) >> 5) << 2);
-      PortChanged(gOffWorld);
       (**gCTable).ctFlags |= 0x4000;   //use palette manager indexes
       CTabChanged(gCTable);
     }
@@ -1230,19 +1262,22 @@ bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned g
 
     SetGWorld(gOffWorld, NULL);
   }*/
-  GetPort(&oldPort);
-  SetPortWindowPort(win);
+  if ((**gTile).pixelType != RGBDirect)
+  {
+    GetPort(&oldPort);
+    SetPortWindowPort(win);
 
-  (**gCTable).ctTable[index].value = index;
-  (**gCTable).ctTable[index].rgb.red = (red << 8);
-  (**gCTable).ctTable[index].rgb.green = (green << 8);
-  (**gCTable).ctTable[index].rgb.blue = (blue << 8);
+    (**gCTable).ctTable[index].value = index;
+    (**gCTable).ctTable[index].rgb.red = (red << 8);
+    (**gCTable).ctTable[index].rgb.green = (green << 8);
+    (**gCTable).ctTable[index].rgb.blue = (blue << 8);
 
-  SetEntries(index, index, (**gCTable).ctTable);
-  
-  CTabChanged(gCTable);
-  
-  SetPort(oldPort);
+    SetEntries(index, index, (**gCTable).ctTable);
+
+    CTabChanged(gCTable);
+
+    SetPort(oldPort);
+  }
 /*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
     SetGWorld(savePort, saveDevice);*/
   if (bx_options.Oprivate_colormap->get ())
@@ -1254,9 +1289,10 @@ bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned g
     SetPalette(win, thePal, false);
     SetPalette(fullwin, thePal, false);
     SetPalette(hidden, thePal, false);
+    return(1);
   }
 
-  return(1);
+  return((**gTile).pixelType != RGBDirect);
 }
 
 
@@ -1300,12 +1336,31 @@ void bx_carbon_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0
   OffsetRect(&destRect, x0, y0);
   
   //(**gTile).baseAddr = (Ptr)tile;
+  if ((theError = LockPortBits(gOffWorld)) != noErr)
+    BX_PANIC(("mac: LockPortBits returned %hd", theError));
   if ((theBaseAddr = GetPixBaseAddr(gTile)) == NULL)
     BX_PANIC(("mac: gTile has NULL baseAddr (offscreen buffer purged)"));
+  else if (vga_bpp == 24 || vga_bpp == 32)
+  {
+    for (unsigned iY = 0; iY < (srcTileRect.bottom-srcTileRect.top); iY++)
+    {
+      Bit8u *iA = ((Bit8u *)theBaseAddr) + iY * GetPixRowBytes(gTile);
+      for (unsigned iX = 0; iX < (srcTileRect.right-srcTileRect.left); iX++)
+      {
+        iA[iX*4 + 3] = tile[((srcTileRect.right-srcTileRect.left)*iY+iX)*(vga_bpp>>3)];
+        iA[iX*4 + 2] = tile[((srcTileRect.right-srcTileRect.left)*iY+iX)*(vga_bpp>>3) + 1];
+        iA[iX*4 + 1] = tile[((srcTileRect.right-srcTileRect.left)*iY+iX)*(vga_bpp>>3) + 2];
+        iA[iX*4] = vga_bpp == 24 ? 0 : tile[((srcTileRect.right-srcTileRect.left)*iY+iX)*4 + 3];
+      }
+    }
+  }
   else
-    BlockMoveData(tile, theBaseAddr, ((**gTile).bounds.bottom-(**gTile).bounds.top) * ((**gTile).rowBytes & 0x3fff));
-  
-  CopyBits( & (** ((BitMapHandle)gTile) ), WINBITMAP(win),
+    BlockMoveData(tile, theBaseAddr, (srcTileRect.bottom-srcTileRect.top) * GetPixRowBytes(gTile));
+  if ((theError = UnlockPortBits(gOffWorld)) != noErr)
+    BX_ERROR(("mac: UnlockPortBits returned %hd", theError));
+  RGBForeColor(&black);
+  RGBBackColor(&white);
+  CopyBits( GetPortBitMapForCopyBits(gOffWorld), WINBITMAP(win),
             &srcTileRect, &destRect, srcCopy, NULL);
   if ((theError = QDError()) != noErr)
     BX_ERROR(("mac: CopyBits returned %hd", theError));
@@ -1331,8 +1386,17 @@ void bx_carbon_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0
 
 void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  if (bpp > 8) {
+  if ((bpp != 1) && (bpp != 2) && (bpp != 4) && (bpp != 8) && (bpp != 15) && (bpp != 16) && (bpp != 24) && (bpp != 32)) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  }
+  if (bpp != vga_bpp)
+  {
+    free(gMyBuffer);
+    DisposeGWorld(gOffWorld);
+    if ((gCTable == NULL) || (*gCTable == NULL) || (*gCTable == (void *)-1))
+      gCTable = GetCTable(128);
+    vga_bpp = bpp;
+    CreateTile();
   }
   if (fheight > 0) {
     if (fwidth != 8) {
