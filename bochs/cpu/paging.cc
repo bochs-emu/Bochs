@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.45 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: paging.cc,v 1.46 2004-09-04 18:22:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -793,7 +793,6 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   poffset   = laddr & 0x00000fff; // physical offset
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
-
   isWrite = (rw>=BX_WRITE); // write or r-m-w
 
   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
@@ -1205,14 +1204,10 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
       if (rw == BX_READ) {
-#if BX_SupportGuest2HostTLB
-        Bit32u lpf, tlbIndex;
-#endif
-
         BX_INSTR_LIN_READ(BX_CPU_ID, laddr, laddr, length);
 #if BX_SupportGuest2HostTLB
-        tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
+        Bit32u lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->readPhysicalPage(this, laddr, length, data);
           return;
@@ -1247,14 +1242,10 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         BX_CPU_THIS_PTR mem->readPhysicalPage(this, laddr, length, data);
         }
       else { // Write
-#if BX_SupportGuest2HostTLB
-        Bit32u lpf, tlbIndex;
-#endif
-
         BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, laddr, length);
 #if BX_SupportGuest2HostTLB
-        tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
+        Bit32u lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->writePhysicalPage(this, laddr, length, data);
           return;
