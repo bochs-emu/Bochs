@@ -1,5 +1,5 @@
 /************************************************************************
- * $Id: plex86.h,v 1.5 2003-01-09 04:02:30 kevinlawton Exp $
+ * $Id: plex86.h,v 1.6 2003-01-10 04:27:51 kevinlawton Exp $
  ************************************************************************
  *
  *  plex86: run multiple x86 operating systems concurrently
@@ -199,21 +199,33 @@ typedef struct {
 #define MonReqPinUserPage       7
 #define MonReqPanic             8
 
-#define VMStateFDOpened         0x001
-#define VMStateMemAllocated     0x002
-#define VMStateGuestCPUID       0x004
-#define VMStateMMapPhyMem       0x008
-#define VMStateMMapPrintBuffer  0x010
-#define VMStateMMapGuestCPU     0x020
-#define VMStateInitMonitor      0x040
-#define VMStateMapMonitor       0x080
-#define VMStatePanic            0x100
+#define VMStateFDOpened               0x001
+#define VMStateMemAllocated           0x002
+#define VMStateGuestCPUID             0x004
+#define VMStateRegisteredPhyMem       0x008
+#define VMStateRegisteredPrintBuffer  0x010
+#define VMStateRegisteredGuestCPU     0x020
+#define VMStateInitMonitor            0x040
+#define VMStateMapMonitor             0x080
+#define VMStatePanic                  0x100
 
-#define VMStateReady (VMStateFDOpened | VMStateMemAllocated | \
-          VMStateGuestCPUID | VMStateMMapPhyMem | VMStateMMapPrintBuffer | \
-          VMStateMMapGuestCPU | VMStateInitMonitor | VMStateMapMonitor )
-#define VMStateMMapAll \
-          (VMStateMMapPhyMem | VMStateMMapPrintBuffer | VMStateMMapGuestCPU)
+  /* State where the VM/monitor is ready to execute. */
+#define VMStateReady (VMStateFDOpened | \
+                      VMStateMemAllocated | \
+                      VMStateGuestCPUID | \
+                      VMStateRegisteredPhyMem | \
+                      VMStateRegisteredPrintBuffer | \
+                      VMStateRegisteredGuestCPU | \
+                      VMStateInitMonitor | \
+                      VMStateMapMonitor)
+
+  /* State where all user-space memory constructs are registered with
+   * the plex86 kernel module.
+   */
+#define VMStateRegisteredAll \
+                     (VMStateRegisteredPhyMem | \
+                      VMStateRegisteredPrintBuffer | \
+                      VMStateRegisteredGuestCPU)
 
 typedef struct {
   unsigned state;

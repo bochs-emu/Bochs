@@ -38,7 +38,7 @@
 
 
 
-monitor_pages_t monitor_pages;
+kernelModulePages_t kernelModulePages;
 
 #define NULL 0
 
@@ -47,118 +47,115 @@ main(int argc, char *argv[])
 {
   vm_t *vm = NULL;
 
-  genericModuleInit();
-  genericDeviceOpen(vm);
-  initMonitor(vm);
-  initGuestPhyMem(vm);
-  ioctlGeneric(vm, NULL, NULL, 0, 0);
+  hostModuleInit();
+  hostDeviceOpen(vm);
+  hostIoctlGeneric(vm, NULL, NULL, 0, 0);
   return(0);
 }
 
   void
-hostReservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
+hostOSReservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
 {
 }
 
   void
-hostUnreservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
+hostOSUnreservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
 {
 }
 
 
 
   unsigned
-hostIdle(void)
+hostOSIdle(void)
 {
   return 0;
 }
 
   void *
-hostAllocZeroedMem(unsigned long size)
+hostOSAllocZeroedMem(unsigned long size)
 {
   return 0;
 }
 
   void
-hostFreeMem(void *ptr)
+hostOSFreeMem(void *ptr)
 {
 }
 
   void *
-hostAllocZeroedPage(void)
+hostOSAllocZeroedPage(void)
 {
   return 0;
 }
 
   void
-hostFreePage(void *ptr)
+hostOSFreePage(void *ptr)
 {
 }
 
 
   unsigned
-hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr, unsigned size)
+hostOSGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr, unsigned size)
 {
   return 0;
 }
 
   Bit32u
-hostGetAllocedPagePhyPage(void *ptr)
+hostOSGetAllocedPagePhyPage(void *ptr)
 {
   return 0;
 }
 
   void
-hostPrint(char *fmt, ...)
+hostOSPrint(char *fmt, ...)
 {
 }
 
 
   int
-hostConvertPlex86Errno(unsigned ret)
+hostOSConvertPlex86Errno(unsigned ret)
 {
   return 0;
 }
 
 
   Bit32u
-hostKernelOffset(void)
-{
-  return 0;
-}
-
-  unsigned
-hostMMapCheck(void *i, void *f)
+hostOSKernelOffset(void)
 {
   return 0;
 }
 
   void
-hostModuleCountReset(vm_t *vm, void *inode, void *filp)
+hostOSModuleCountReset(vm_t *vm, void *inode, void *filp)
 {
 }
 
   unsigned long
-hostCopyFromUser(void *to, void *from, unsigned long len)
+hostOSCopyFromUser(void *to, void *from, unsigned long len)
 {
   return 0;
 }
 
   unsigned long
-hostCopyToUser(void *to, void *from, unsigned long len)
+hostOSCopyToUser(void *to, void *from, unsigned long len)
 {
   return 0;
 }
 
   Bit32u
-hostGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
+hostOSGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
                       Bit32u *ppi, Bit32u *kernelAddr)
 {
   return 0;
 }
 
   void
-hostUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
+hostOSUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
                           Bit32u ppi, Bit32u *kernelAddr, unsigned dirty)
+{
+}
+
+  void
+hostOSInstrumentIntRedirCount(unsigned interruptVector)
 {
 }

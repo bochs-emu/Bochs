@@ -492,22 +492,22 @@ extern char __ret_to_guest;
  * of the monitor itself (inside the kernel module)
  */
 
-#define PLEX86_MAX_MONITOR_PAGES 128
+#define Plex86MaxKernelModulePages 128
 
 typedef struct {
-  /* virtual address space occupied by the module */
+  /* Virtual address space occupied by the kernel module. */
   Bit32u startOffset;
   Bit32u startOffsetPageAligned;
-  /* number of pages */
-  unsigned n_pages;
+  unsigned nPages; /* Number of pages. */
     
-  /* the pages themselves */
-  Bit32u page[PLEX86_MAX_MONITOR_PAGES];
-  } monitor_pages_t;
+  /* A list of the Physical Page Indeces of the pages comprising the
+   * kernel module.  A PPI is just the physical page address >> 12.
+   */
+  Bit32u ppi[Plex86MaxKernelModulePages];
+  } kernelModulePages_t;
 
-extern monitor_pages_t monitor_pages;
-extern cpuid_info_t cpuid_info;
-extern unsigned intRedirCount[];
+extern kernelModulePages_t kernelModulePages;
+extern cpuid_info_t        hostCpuIDInfo;
 
 
 
@@ -531,7 +531,7 @@ void *mon_memset(void *s, unsigned c, unsigned n);
  *  space ...
  */
 #define MON_BASE_FROM_LADDR(laddr) \
-    ((laddr) - monitor_pages.startOffsetPageAligned)
+    ((laddr) - kernelModulePages.startOffsetPageAligned)
 
 
 /* ============================================================
@@ -603,47 +603,45 @@ vm_rdtsc(void) {
   asm volatile("pushl %0 ; popfl": :"g" (x): "memory", "cc")
 
 
-int      initMonitor(vm_t *);
-unsigned mapMonitor(vm_t *);
-unsigned initGuestPhyMem(vm_t *);
-void     unallocVmPages(vm_t *);
-int      allocVmPages(vm_t *, plex86IoctlRegisterMem_t *registerMsg);
-void     initShadowPaging(vm_t *vm);
-void     genericDeviceOpen(vm_t *);
-unsigned genericModuleInit(void);
-unsigned getCpuCapabilities(void);
-int      ioctlGeneric(vm_t *vm, void *inode, void *filp,
-                      unsigned int cmd, unsigned long arg);
-int      ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg);
-int      ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMsg);
-void     copyGuestStateToUserSpace(vm_t *vm);
-void     releasePinnedUserPages(vm_t *vm);
-unsigned handlePagePinRequest(vm_t *vm, Bit32u reqPPI);
+int      hostInitMonitor(vm_t *);
+unsigned hostMapMonitor(vm_t *);
+unsigned hostInitGuestPhyMem(vm_t *);
+void     hostUnallocVmPages(vm_t *);
+int      hostAllocVmPages(vm_t *, plex86IoctlRegisterMem_t *registerMsg);
+void     hostInitShadowPaging(vm_t *vm);
+void     hostDeviceOpen(vm_t *);
+unsigned hostModuleInit(void);
+unsigned hostGetCpuCapabilities(void);
+int      hostIoctlGeneric(vm_t *vm, void *inode, void *filp,
+                          unsigned int cmd, unsigned long arg);
+int      hostIoctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg);
+int      hostIoctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMsg);
+void     hostCopyGuestStateToUserSpace(vm_t *vm);
+void     hostReleasePinnedUserPages(vm_t *vm);
+unsigned hostHandlePagePinRequest(vm_t *vm, Bit32u reqPPI);
 
 /* These are the functions that the host-OS-specific file of the
  * plex86 device driver must define.
  */
-unsigned hostIdle(void);
-void    *hostAllocZeroedMem(unsigned long size);
-void     hostFreeMem(void *ptr);
-void    *hostAllocZeroedPage(void);
-void     hostFreePage(void *ptr);
-unsigned hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr,
+unsigned hostOSIdle(void);
+void    *hostOSAllocZeroedMem(unsigned long size);
+void     hostOSFreeMem(void *ptr);
+void    *hostOSAllocZeroedPage(void);
+void     hostOSFreePage(void *ptr);
+unsigned hostOSGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr,
                                    unsigned size);
-
-Bit32u   hostGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
+Bit32u   hostOSGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
              Bit32u *ppi, Bit32u *kernelAddr);
-void     hostUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
+void     hostOSUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
              Bit32u ppi, Bit32u *kernelAddr, unsigned dirty);
-
-Bit32u   hostGetAllocedPagePhyPage(void *ptr);
-void     hostPrint(char *fmt, ...);
-Bit32u   hostKernelOffset(void);
-int      hostConvertPlex86Errno(unsigned ret);
-unsigned hostMMapCheck(void *i, void *f);
-void     hostModuleCountReset(vm_t *vm, void *inode, void *filp);
-unsigned long hostCopyFromUser(void *to, void *from, unsigned long len);
-unsigned long hostCopyToUser(void *to, void *from, unsigned long len);
+Bit32u   hostOSGetAllocedPagePhyPage(void *ptr);
+void     hostOSPrint(char *fmt, ...);
+Bit32u   hostOSKernelOffset(void);
+int      hostOSConvertPlex86Errno(unsigned ret);
+void     hostOSModuleCountReset(vm_t *vm, void *inode, void *filp);
+void     hostOSInstrumentIntRedirCount(unsigned interruptVector);
+unsigned long hostOSCopyFromUser(void *to, void *from, unsigned long len);
+unsigned long hostOSCopyToUser(void *to, void *from, unsigned long len);
 
 #endif  /* HOST Space */
 

@@ -25,20 +25,46 @@
 #define IN_HOST_SPACE
 #include "monitor.h"
 
-monitor_pages_t monitor_pages;
-/* Instrumentation of how many hardware interrupts were redirected
- * to the host, while the VM was running.
+
+/* =====================================================================
+ * Plex86 module global variables.  This should be the _only_ place
+ * where globals are declared.  Since plex86 supports multiple VMs, almost
+ * all data is stored per-VM.  For the few variables which are global
+ * to all VMs, we have to be careful to access them in SMP friendly ways.
+ * The ones which are written upon kernel module initialization are fine,
+ * since they are only written once.
+ * =====================================================================
  */
-#warning "Check for SMP issues on these globals"
-unsigned intRedirCount[256];
+
+/* Info regarding the physical pages that comprise the kernel module,
+ * including physical page information.  This is written (once) at
+ * kernel module initialization time.  Thus there are no SMP access issues.
+ */
+kernelModulePages_t kernelModulePages;
+
+/* Information of the host processor as returned by the CPUID
+ * instruction.  This is written (once) at kernel module initialization time.
+ * Thus there no are SMP access issues.
+ */
 cpuid_info_t hostCpuIDInfo;
 
 
-static int  initIDTSlot(vm_t *vm, unsigned vec, int type);
-static void mapMonPages(vm_t *vm, Bit32u *, unsigned, Bit32u *, page_t *,
-                          unsigned user, unsigned writable, char *name);
+/* Some constants used by the VM logic.  Since they're "const", there are
+ * no problems with SMP access.
+ */
+static const selector_t nullSelector = { raw: 0 };
+static const descriptor_t nullDescriptor = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  };
+
+
+
+
+static int  hostInitIDTSlot(vm_t *vm, unsigned vec, int type);
+static void hostMapMonPages(vm_t *vm, Bit32u *, unsigned, Bit32u *, page_t *,
+                            unsigned user, unsigned writable, char *name);
 #if ANAL_CHECKS
-static void mapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable);
+static void hostMapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable);
 #endif
 
 #define RW0 0
@@ -52,29 +78,24 @@ static void mapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable);
 
 
 
-static const selector_t nullSelector = { raw: 0 };
-static const descriptor_t nullDescriptor = {
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  };
-
 
 
   unsigned
-genericModuleInit(void)
+hostModuleInit(void)
 {
   /* Kernel independent stuff to do at kernel module load time. */
 
-  if (!getCpuCapabilities()) {
-    hostPrint("getCpuCapabilities returned error\n");
+  if (!hostGetCpuCapabilities()) {
+    hostOSPrint("getCpuCapabilities returned error\n");
     return(0); /* Fail. */
     }
   else {
 #if 0
-    hostPrint("ptype:%u, family:%u, model:%u stepping:%u\n",
-      hostCpuIDInfo.procSignature.fields.procType,
-      hostCpuIDInfo.procSignature.fields.family,
-      hostCpuIDInfo.procSignature.fields.model,
-      hostCpuIDInfo.procSignature.fields.stepping);
+    hostOSPrint("ptype:%u, family:%u, model:%u stepping:%u\n",
+        hostCpuIDInfo.procSignature.fields.procType,
+        hostCpuIDInfo.procSignature.fields.family,
+        hostCpuIDInfo.procSignature.fields.model,
+        hostCpuIDInfo.procSignature.fields.stepping);
 #endif
     }
 
@@ -85,7 +106,7 @@ genericModuleInit(void)
   Bit32u cr0;
 
   asm volatile ( "movl %%cr0, %0" : "=r" (cr0) );
-  hostPrint("host CR0=0x%x\n", cr0);
+  hostOSPrint("host CR0=0x%x\n", cr0);
   }
 #endif
 
@@ -93,7 +114,7 @@ genericModuleInit(void)
 }
 
   void
-genericDeviceOpen(vm_t *vm)
+hostDeviceOpen(vm_t *vm)
 {
   /* Kernel independent stuff to do at device open time. */
 
@@ -104,7 +125,7 @@ genericDeviceOpen(vm_t *vm)
 }
 
   int
-initMonitor(vm_t *vm)
+hostInitMonitor(vm_t *vm)
 {
   unsigned pdi, pti;
   unsigned int i;
@@ -113,7 +134,7 @@ initMonitor(vm_t *vm)
   Bit32u laddr, base;
   int r;
 
-  vm->kernel_offset = hostKernelOffset();
+  vm->kernel_offset = hostOSKernelOffset();
 
   vm->system.a20Enable = 1; /* Start with A20 line enabled. */
   vm->system.a20AddrMask  = 0xffffffff; /* All address lines contribute. */
@@ -198,104 +219,104 @@ initMonitor(vm_t *vm)
   laddr = 0;
   base = MON_BASE_FROM_LADDR(laddr);
 
-  mapMonPages(vm, monitor_pages.page, monitor_pages.n_pages, &laddr,
-              pageTable, US0, RW1, "Monitor code/data pages");
+  hostMapMonPages(vm, kernelModulePages.ppi, kernelModulePages.nPages, &laddr,
+                  pageTable, US0, RW1, "Monitor code/data pages");
 
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
 
   vm->guest.addr.nexus = (nexus_t *) (laddr - base);
-  mapMonPages(vm, &vm->pages.nexus, 1, &laddr, pageTable, US0, RW1, "Nexus");
+  hostMapMonPages(vm, &vm->pages.nexus, 1, &laddr, pageTable, US0, RW1, "Nexus");
   vm->guest.addr.guest_context = (guest_context_t *)
     ( (Bit32u)vm->guest.addr.nexus + PAGESIZE - sizeof(guest_context_t) );
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   vm->host.addr.nexus->vm = (void *) (laddr - base);
-  mapMonPages(vm, vm->pages.vm, BytesToPages(sizeof(*vm)),
-              &laddr, pageTable, US0, RW1, "VM structure");
+  hostMapMonPages(vm, vm->pages.vm, BytesToPages(sizeof(*vm)),
+                  &laddr, pageTable, US0, RW1, "VM structure");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   vm->guest.addr.idt = (gate_t *) (laddr - base);
-  mapMonPages(vm, vm->pages.idt, MON_IDT_PAGES, &laddr, pageTable, US0, RW1,
-              "IDT");
+  hostMapMonPages(vm, vm->pages.idt, MON_IDT_PAGES, &laddr, pageTable, US0, RW1,
+                  "IDT");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   vm->guest.addr.gdt = (descriptor_t *) (laddr - base);
-  mapMonPages(vm, vm->pages.gdt, MON_GDT_PAGES, &laddr, pageTable, US0, RW1,
-              "GDT");
+  hostMapMonPages(vm, vm->pages.gdt, MON_GDT_PAGES, &laddr, pageTable, US0, RW1,
+                  "GDT");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   vm->guest.addr.ldt = (descriptor_t *) (laddr - base);
-  mapMonPages(vm, vm->pages.ldt, MON_LDT_PAGES, &laddr, pageTable, US0, RW1,
-              "LDT");
+  hostMapMonPages(vm, vm->pages.ldt, MON_LDT_PAGES, &laddr, pageTable, US0, RW1,
+                  "LDT");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   vm->guest.addr.tss = (tss_t *) (laddr - base);
-  mapMonPages(vm, vm->pages.tss, MON_TSS_PAGES, &laddr, pageTable, US0, RW1,
-              "TSS");
+  hostMapMonPages(vm, vm->pages.tss, MON_TSS_PAGES, &laddr, pageTable, US0, RW1,
+                  "TSS");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   vm->guest.addr.idt_stubs = (idt_stub_t *) (laddr - base);
-  mapMonPages(vm, vm->pages.idt_stubs, MON_IDT_STUBS_PAGES, &laddr,
+  hostMapMonPages(vm, vm->pages.idt_stubs, MON_IDT_STUBS_PAGES, &laddr,
                   pageTable, US0, RW1, "IDT stubs");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /* Monitor Page Directory */
   vm->guest.addr.page_dir = (pageEntry_t *) (laddr - base);
-  mapMonPages(vm, &vm->pages.page_dir, 1, &laddr, pageTable, US0, RW1,
-              "Monitor Page Directory");
+  hostMapMonPages(vm, &vm->pages.page_dir, 1, &laddr, pageTable, US0, RW1,
+                  "Monitor Page Directory");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /* Nexus Page Table */
   vm->guest.addr.nexus_page_tbl = (page_t *) (laddr - base);
-  mapMonPages(vm, &vm->pages.nexus_page_tbl, 1, &laddr, pageTable, US0, RW1,
-              "Nexus Page Table");
+  hostMapMonPages(vm, &vm->pages.nexus_page_tbl, 1, &laddr, pageTable, US0, RW1,
+                  "Nexus Page Table");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /* Map virtualized guest page tables into monitor. */
   vm->guest.addr.page_tbl = (page_t *) (laddr - base);
-  mapMonPages(vm, vm->pages.page_tbl, MON_PAGE_TABLES,
+  hostMapMonPages(vm, vm->pages.page_tbl, MON_PAGE_TABLES,
                   &laddr, pageTable, US0, RW1, "Guest Page Tables");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /* Map of linear addresses of page tables mapped into monitor */
   vm->guest.addr.page_tbl_laddr_map = (unsigned *) (laddr - base);
-  mapMonPages(vm, &vm->pages.page_tbl_laddr_map, 1, &laddr, pageTable, US0, RW1,
-              "Page Table Laddr Map");
+  hostMapMonPages(vm, &vm->pages.page_tbl_laddr_map, 1, &laddr, pageTable,
+                  US0, RW1, "Page Table Laddr Map");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /* Guest CPU state (mapped RW into user space also). */
   vm->guest.addr.guest_cpu = (guest_cpu_t *) (laddr - base);
-  mapMonPages(vm, &vm->pages.guest_cpu, 1, &laddr,
-              pageTable, US0, RW1, "Guest CPU State");
+  hostMapMonPages(vm, &vm->pages.guest_cpu, 1, &laddr,
+                  pageTable, US0, RW1, "Guest CPU State");
 
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /*
    *  We need a buffer to implement a debug print facility which
@@ -303,8 +324,8 @@ initMonitor(vm_t *vm)
    *  into monitor/guest space.
    */
   vm->guest.addr.log_buffer = (unsigned char *) (laddr - base);
-  mapMonPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES, &laddr,
-              pageTable, US0, RW1, "Log Buffer");
+  hostMapMonPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES, &laddr,
+                  pageTable, US0, RW1, "Log Buffer");
 
   {
   /* The physical addresses of the following pages are not */
@@ -313,30 +334,30 @@ initMonitor(vm_t *vm)
   tmp[0] = 0;
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /* Window into the guest's current physical code page */
   vm->guest.addr.code_phy_page = (unsigned char *) (laddr - base);
-  mapMonPages(vm, tmp, 1, &laddr, pageTable, US0, RW1, "Code Phy Page");
+  hostMapMonPages(vm, tmp, 1, &laddr, pageTable, US0, RW1, "Code Phy Page");
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
   /* Temporary window into a guest physical page, for accessing */
   /* guest GDT, IDT, etc info. */
   vm->guest.addr.tmp_phy_page0 = (unsigned char *) (laddr - base);
-  mapMonPages(vm, tmp, 1, &laddr, pageTable, US0, RW1, "Tmp Phy Page0");
+  hostMapMonPages(vm, tmp, 1, &laddr, pageTable, US0, RW1, "Tmp Phy Page0");
 
   vm->guest.addr.tmp_phy_page1 = (unsigned char *) (laddr - base);
-  mapMonPages(vm, tmp, 1, &laddr, pageTable, US0, RW1, "Tmp Phy Page1");
+  hostMapMonPages(vm, tmp, 1, &laddr, pageTable, US0, RW1, "Tmp Phy Page1");
   }
 
 #if ANAL_CHECKS
-  mapBlankPage(vm, &laddr, pageTable);
+  hostMapBlankPage(vm, &laddr, pageTable);
 #endif
 
-  hostPrint("Using %u/1024 PTE slots in 4Meg monitor range.\n",
-            (laddr >> 12) & 0x3ff);
+  hostOSPrint("Using %u/1024 PTE slots in 4Meg monitor range.\n",
+              (laddr >> 12) & 0x3ff);
 
   /* Pointer to mon2host routine inside nexus page */
   vm->guest.__mon2host = (void (*)(void)) MON_NEXUS_OFFSET(vm, __mon2host);
@@ -449,33 +470,33 @@ initMonitor(vm_t *vm)
    */
 
   r = 0;
-  r |= initIDTSlot(vm,  0, IDT_EXCEPTION_NOERROR); /* Divide error        */
-  r |= initIDTSlot(vm,  1, IDT_EXCEPTION_NOERROR); /* Debug exceptions    */
-  r |= initIDTSlot(vm,  2, IDT_INTERRUPT);         /* NMI                 */
-  r |= initIDTSlot(vm,  3, IDT_EXCEPTION_NOERROR); /* Breakpoint          */
-  r |= initIDTSlot(vm,  4, IDT_EXCEPTION_NOERROR); /* Overflow            */
-  r |= initIDTSlot(vm,  5, IDT_EXCEPTION_NOERROR); /* Bounds check        */
-  r |= initIDTSlot(vm,  6, IDT_EXCEPTION_NOERROR); /* Invalid opcode      */
-  r |= initIDTSlot(vm,  7, IDT_EXCEPTION_NOERROR); /* FPU not available   */
-  r |= initIDTSlot(vm,  8, IDT_EXCEPTION_ERROR);   /* Double fault        */
-  r |= initIDTSlot(vm,  9, IDT_EXCEPTION_NOERROR); /* FPU segment overrun */
-  r |= initIDTSlot(vm, 10, IDT_EXCEPTION_ERROR);   /* Invalid TSS         */
-  r |= initIDTSlot(vm, 11, IDT_EXCEPTION_ERROR);   /* Segment not present */
-  r |= initIDTSlot(vm, 12, IDT_EXCEPTION_ERROR);   /* Stack exception     */
-  r |= initIDTSlot(vm, 13, IDT_EXCEPTION_ERROR);   /* GP fault            */
-  r |= initIDTSlot(vm, 14, IDT_EXCEPTION_ERROR);   /* Page fault          */
-  r |= initIDTSlot(vm, 15, IDT_EXCEPTION_NOERROR); /* reserved            */
-  r |= initIDTSlot(vm, 16, IDT_EXCEPTION_NOERROR); /* Coprocessor error   */
-  r |= initIDTSlot(vm, 17, IDT_EXCEPTION_ERROR);   /* Alignment check     */
-  r |= initIDTSlot(vm, 18, IDT_EXCEPTION_NOERROR); /* Machine check       */
+  r |= hostInitIDTSlot(vm,  0, IDT_EXCEPTION_NOERROR); /* Divide error        */
+  r |= hostInitIDTSlot(vm,  1, IDT_EXCEPTION_NOERROR); /* Debug exceptions    */
+  r |= hostInitIDTSlot(vm,  2, IDT_INTERRUPT);         /* NMI                 */
+  r |= hostInitIDTSlot(vm,  3, IDT_EXCEPTION_NOERROR); /* Breakpoint          */
+  r |= hostInitIDTSlot(vm,  4, IDT_EXCEPTION_NOERROR); /* Overflow            */
+  r |= hostInitIDTSlot(vm,  5, IDT_EXCEPTION_NOERROR); /* Bounds check        */
+  r |= hostInitIDTSlot(vm,  6, IDT_EXCEPTION_NOERROR); /* Invalid opcode      */
+  r |= hostInitIDTSlot(vm,  7, IDT_EXCEPTION_NOERROR); /* FPU not available   */
+  r |= hostInitIDTSlot(vm,  8, IDT_EXCEPTION_ERROR);   /* Double fault        */
+  r |= hostInitIDTSlot(vm,  9, IDT_EXCEPTION_NOERROR); /* FPU segment overrun */
+  r |= hostInitIDTSlot(vm, 10, IDT_EXCEPTION_ERROR);   /* Invalid TSS         */
+  r |= hostInitIDTSlot(vm, 11, IDT_EXCEPTION_ERROR);   /* Segment not present */
+  r |= hostInitIDTSlot(vm, 12, IDT_EXCEPTION_ERROR);   /* Stack exception     */
+  r |= hostInitIDTSlot(vm, 13, IDT_EXCEPTION_ERROR);   /* GP fault            */
+  r |= hostInitIDTSlot(vm, 14, IDT_EXCEPTION_ERROR);   /* Page fault          */
+  r |= hostInitIDTSlot(vm, 15, IDT_EXCEPTION_NOERROR); /* reserved            */
+  r |= hostInitIDTSlot(vm, 16, IDT_EXCEPTION_NOERROR); /* Coprocessor error   */
+  r |= hostInitIDTSlot(vm, 17, IDT_EXCEPTION_ERROR);   /* Alignment check     */
+  r |= hostInitIDTSlot(vm, 18, IDT_EXCEPTION_NOERROR); /* Machine check       */
 
   /* Reserved exceptions */
   for (i = 19; i < 32; i++)
-      r |= initIDTSlot(vm, i, IDT_EXCEPTION_NOERROR);
+      r |= hostInitIDTSlot(vm, i, IDT_EXCEPTION_NOERROR);
 
   /* Hardware interrupts */
   for (i = 32; i < 256; i++)
-      r |= initIDTSlot(vm, i, IDT_INTERRUPT);
+      r |= hostInitIDTSlot(vm, i, IDT_INTERRUPT);
   if (r!=0) 
       goto error;
 
@@ -519,9 +540,8 @@ error:
 
 
 
-
   unsigned
-initGuestPhyMem(vm_t *vm)
+hostInitGuestPhyMem(vm_t *vm)
 {
   unsigned i;
   mon_memzero(vm->pageInfo, sizeof(vm->pageInfo));
@@ -569,7 +589,7 @@ initGuestPhyMem(vm_t *vm)
 
 
   int
-initIDTSlot(vm_t *vm, unsigned vec, int type)
+hostInitIDTSlot(vm_t *vm, unsigned vec, int type)
 /*
  *  initIDTSlot():  Initialize a monitor IDT slot.
  */
@@ -629,17 +649,17 @@ initIDTSlot(vm_t *vm, unsigned vec, int type)
  */
 
   void
-mapMonPages(vm_t *vm, Bit32u *pages, unsigned n, Bit32u *laddr_p,
-            page_t *pageTable, unsigned user, unsigned writable, char *name)
+hostMapMonPages(vm_t *vm, Bit32u *pages, unsigned n, Bit32u *laddr_p,
+                page_t *pageTable, unsigned user, unsigned writable, char *name)
 {
   unsigned i, pti;
 
 
 #if 0
-hostPrint("mapMonPages: '%s' mapped at 0x%x .. 0x%x.\n",
-          name,
-          (*laddr_p) - MON_BASE_FROM_LADDR(0),
-          ((*laddr_p) + (n*4096)) - MON_BASE_FROM_LADDR(0) );
+hostOSPrint("hostMapMonPages: '%s' mapped at 0x%x .. 0x%x.\n",
+            name,
+            (*laddr_p) - MON_BASE_FROM_LADDR(0),
+            ((*laddr_p) + (n*4096)) - MON_BASE_FROM_LADDR(0) );
 #endif
 
   pti = (*laddr_p >> 12) & 0x3ff;
@@ -670,7 +690,7 @@ hostPrint("mapMonPages: '%s' mapped at 0x%x .. 0x%x.\n",
 
 #if ANAL_CHECKS
   void
-mapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable)
+hostMapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable)
 {
   unsigned pti;
  
@@ -700,8 +720,8 @@ mapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable)
 #endif
 
   int
-ioctlGeneric(vm_t *vm, void *inode, void *filp,
-             unsigned int cmd, unsigned long arg)
+hostIoctlGeneric(vm_t *vm, void *inode, void *filp,
+                 unsigned int cmd, unsigned long arg)
 {
   switch (cmd) {
 
@@ -714,8 +734,8 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
         /* Can't change guest CPUID. */
         return -Plex86ErrnoEINVAL;
         }
-      if ( hostCopyFromUser(&vm->guestCPUIDInfo, (void *)arg,
-                            sizeof(vm->guestCPUIDInfo)) )
+      if ( hostOSCopyFromUser(&vm->guestCPUIDInfo, (void *)arg,
+                              sizeof(vm->guestCPUIDInfo)) )
         return -Plex86ErrnoEFAULT;
 /* xxx Value checks here. */
       vm->vmState |= VMStateGuestCPUID;
@@ -725,28 +745,26 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
     case PLEX86_REGISTER_MEMORY:
       {
       plex86IoctlRegisterMem_t registerMemMsg;
-      if ( hostCopyFromUser(&registerMemMsg, (void *)arg,
-                            sizeof(registerMemMsg)) )
+      if ( hostOSCopyFromUser(&registerMemMsg, (void *)arg,
+                              sizeof(registerMemMsg)) )
         return -Plex86ErrnoEFAULT;
-      return( ioctlRegisterMem(vm, &registerMemMsg) );
+      return( hostIoctlRegisterMem(vm, &registerMemMsg) );
       }
 
     /*
      * Tear down the VM environment.
      */
     case PLEX86_TEARDOWN:
-      /* We can't use the VMStateMMapAll bits, because we don't hook
-       * munmap().
-       */
-      
-      if ( hostMMapCheck(inode, filp) ) {
-        /* Do _not_ free pages that are still mapped to user space! */
-        hostPrint("plex86: guest memory is still mmap()'d!\n");
+      if ( vm->vmState & VMStateRegisteredAll ) {
+        hostOSPrint("plex86: guest memory is still registered!\n");
+        /* Could effect the unpinning here and then do:
+         *   vm->vmState &= ~VMStateRegisteredAll;
+         */
         return -Plex86ErrnoEBUSY;
         }
-vm->vmState &= ~VMStateMMapAll;
 
-      unallocVmPages(vm);
+      hostUnallocVmPages(vm);
+      /* Fixme: deal with state better here. */
 
       /* Reset state to only FD opened. */
       vm->vmState = VMStateFDOpened;
@@ -762,10 +780,10 @@ vm->vmState &= ~VMStateMMapAll;
       plex86IoctlExecute_t executeMsg;
       int ret;
 
-      if ( hostCopyFromUser(&executeMsg, (void *)arg, sizeof(executeMsg)) )
+      if ( hostOSCopyFromUser(&executeMsg, (void *)arg, sizeof(executeMsg)) )
         return -Plex86ErrnoEFAULT;
-      ret = ioctlExecute(vm, &executeMsg);
-      if ( hostCopyToUser((void *)arg, &executeMsg, sizeof(executeMsg)) )
+      ret = hostIoctlExecute(vm, &executeMsg);
+      if ( hostOSCopyToUser((void *)arg, &executeMsg, sizeof(executeMsg)) )
         return -Plex86ErrnoEFAULT;
       return ret;
       }
@@ -776,18 +794,18 @@ vm->vmState &= ~VMStateMMapAll;
      * to reset the in-use count, so we can rmmod it.
      */
     case PLEX86_RESET:
-      hostModuleCountReset(vm, inode, filp);
+      hostOSModuleCountReset(vm, inode, filp);
       return 0;
 
 
     default:
-      hostPrint("plex86: unknown ioctl(%d) called\n", cmd);
+      hostOSPrint("plex86: unknown ioctl(%d) called\n", cmd);
       return -Plex86ErrnoEINVAL;
     }
 }
 
   int
-ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
+hostIoctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
 {
   guest_cpu_t     *guest_cpu;
   guest_context_t *guest_stack_context;
@@ -841,7 +859,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
    */
   /* 0x8005003b */
   if ( (guest_cpu->cr0.raw & 0xe0000037) != 0x80000033 ) {
-    hostPrint("plex86: guest CR0=0x%x\n", guest_cpu->cr0.raw);
+    hostOSPrint("plex86: guest CR0=0x%x\n", guest_cpu->cr0.raw);
     retval = Plex86NoExecute_CR0; /* Fail. */
     goto handleFail;
     }
@@ -860,7 +878,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
    *   VME(0)==? (look into this later)
    */
   if ( (guest_cpu->cr4.raw & 0x000007ff) != 0x00000000 ) {
-    hostPrint("plex86: guest CR4=0x%x\n", guest_cpu->cr4.raw);
+    hostOSPrint("plex86: guest CR4=0x%x\n", guest_cpu->cr4.raw);
     retval = Plex86NoExecute_CR4; /* Fail. */
     goto handleFail;
     }
@@ -1016,7 +1034,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
 //   from VM to guest_cpu area.
 //   - Deal with cycle counts etc.
 
-  initShadowPaging(vm);
+  hostInitShadowPaging(vm);
 
   for (;;) {
     unsigned long eflags;
@@ -1038,7 +1056,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
 #if ANAL_CHECKS
     if (!(eflags & 0x200)) {
       vm_restore_flags(eflags);
-      hostPrint("ioctlExecute: EFLAGS.IF==0\n");
+      hostOSPrint("ioctlExecute: EFLAGS.IF==0\n");
       retval = 101; /* Fail. */
       goto handlePanic;
       }
@@ -1051,7 +1069,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
     if ( vm->mon_request == MonReqRedirect ) {
       vm_restore_flags(eflags & ~0x00000200); /* restore all but IF */
       soft_int(vm->redirect_vector); /* sets IF to 1 */
-      intRedirCount[vm->redirect_vector]++;
+      hostOSInstrumentIntRedirCount(vm->redirect_vector);
       vm->mon_request = MonReqNone; /* Request satisfied */
       }
 
@@ -1068,24 +1086,24 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
             break;
             }
           else {
-            hostPrint("mapMonitor failed.\n");
-            hostPrint("Panic w/ abort_code=%u\n", vm->abort_code);
+            hostOSPrint("mapMonitor failed.\n");
+            hostOSPrint("Panic w/ abort_code=%u\n", vm->abort_code);
             retval = 102;
             goto handlePanic;
             }
 #endif
-          hostPrint("ioctlExecute: case MonReqRemapMonitor.\n");
+          hostOSPrint("ioctlExecute: case MonReqRemapMonitor.\n");
           retval = 103;
           goto handlePanic;
 
         case MonReqFlushPrintBuf:
-          hostPrint("ioctlExecute: case MonReqFlushPrintBuf.\n");
+          hostOSPrint("ioctlExecute: case MonReqFlushPrintBuf.\n");
           retval = 104;
           goto handlePanic;
 
         case MonReqGuestFault:
           /* Encountered a guest fault. */
-          copyGuestStateToUserSpace(vm);
+          hostCopyGuestStateToUserSpace(vm);
           executeMsg->cyclesExecuted       = 0; /* Handle later. */
           executeMsg->instructionsExecuted = 0; /* Handle later. */
           executeMsg->monitorState.state   = vm->vmState;
@@ -1096,27 +1114,27 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
 
         case MonReqPanic:
           if (vm->abort_code)
-            hostPrint("Panic w/ abort_code=%u\n", vm->abort_code);
-          hostPrint("ioctlExecute: case MonReqPanic.\n");
+            hostOSPrint("Panic w/ abort_code=%u\n", vm->abort_code);
+          hostOSPrint("ioctlExecute: case MonReqPanic.\n");
           retval = 106;
           goto handlePanic;
 
         case MonReqPinUserPage:
-          if ( !handlePagePinRequest(vm, vm->pinReqPPI) ) {
+          if ( !hostHandlePagePinRequest(vm, vm->pinReqPPI) ) {
             retval = 108;
             goto handlePanic;
             }
           continue; /* Back to VM monitor. */
 
         default:
-          hostPrint("ioctlExecute: default case (%u).\n", vm->mon_request);
+          hostOSPrint("ioctlExecute: default case (%u).\n", vm->mon_request);
           retval = 107;
           goto handlePanic;
         }
       }
 
     /* Let host decide whether we are allowed another timeslice */
-    if ( !hostIdle() ) {
+    if ( !hostOSIdle() ) {
       /* We are returning only because the host wants to
        * schedule other work.
        */
@@ -1145,7 +1163,7 @@ handlePanic:
 }
 
   void
-copyGuestStateToUserSpace(vm_t *vm)
+hostCopyGuestStateToUserSpace(vm_t *vm)
 {
   guest_cpu_t     *guest_cpu;
   guest_context_t *guest_stack_context;
@@ -1243,7 +1261,7 @@ copyGuestStateToUserSpace(vm_t *vm)
 
 
   int
-ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
+hostIoctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
 {
   unsigned error;
 
@@ -1310,22 +1328,22 @@ ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
 
 
   /* Allocate memory */
-  if ( (error = allocVmPages(vm, registerMemMsg)) != 0 ) {
-    hostPrint("plex86: allocVmPages failed at %u\n",
-      error);
+  if ( (error = hostAllocVmPages(vm, registerMemMsg)) != 0 ) {
+    hostOSPrint("plex86: allocVmPages failed at %u\n",
+                error);
     return -Plex86ErrnoENOMEM;
     }
 
   /* Initialize the guests physical memory. */
-  if ( initGuestPhyMem(vm) ) {
-    unallocVmPages(vm);
+  if ( hostInitGuestPhyMem(vm) ) {
+    hostUnallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
 
   /* Initialize the monitor. */
-  if ( !initMonitor(vm) ||
-       !mapMonitor(vm) ) {
-    unallocVmPages(vm);
+  if ( !hostInitMonitor(vm) ||
+       !hostMapMonitor(vm) ) {
+    hostUnallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
   return 0;
@@ -1338,7 +1356,7 @@ ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
  */
 
   int
-allocVmPages(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
+hostAllocVmPages(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
 {
   vm_pages_t *pg = &vm->pages;
   vm_addr_t  *ad = &vm->host.addr;
@@ -1363,52 +1381,51 @@ allocVmPages(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
   where++;
 
   vm->guestPhyMemAddr = registerMemMsg->guestPhyMemVector;
-#warning "VMStateMMapPhyMem bogus"
-  vm->vmState |= VMStateMMapPhyMem; /* Bogus for now. */
+  vm->vmState |= VMStateRegisteredPhyMem; /* Bogus for now. */
   where++;
 
   {
   Bit32u hostPPI, kernelAddr;
 
   /* Guest CPU state (malloc()'d in user space). */
-  if ( !hostGetAndPinUserPage(vm, registerMemMsg->guestCPUWindow,
+  if ( !hostOSGetAndPinUserPage(vm, registerMemMsg->guestCPUWindow,
             &pg->guest_cpu_hostOSPtr, &hostPPI, &kernelAddr) ) {
     goto error;
     }
   ad->guest_cpu = (guest_cpu_t *) kernelAddr;
   pg->guest_cpu = hostPPI;
-vm->vmState |= VMStateMMapGuestCPU; /* For now. */
+vm->vmState |= VMStateRegisteredGuestCPU; /* For now. */
   where++;
 
   /* Log buffer area (malloc()'d in user space). */
   /* LOG_BUFF_PAGES */
-  if ( !hostGetAndPinUserPage(vm, registerMemMsg->logBufferWindow,
+  if ( !hostOSGetAndPinUserPage(vm, registerMemMsg->logBufferWindow,
             &pg->log_buffer_hostOSPtr[0], &hostPPI, &kernelAddr) ) {
     goto error;
     }
   ad->log_buffer = (Bit8u *) kernelAddr;
   pg->log_buffer[0] = hostPPI;
   where++;
-vm->vmState |= VMStateMMapPrintBuffer; /* For now. */
+vm->vmState |= VMStateRegisteredPrintBuffer; /* For now. */
   }
 
 
   /* Monitor page directory */
-  if ( !(ad->page_dir = (pageEntry_t *)hostAllocZeroedPage()) ) {
+  if ( !(ad->page_dir = (pageEntry_t *) hostOSAllocZeroedPage()) ) {
     goto error;
     }
   where++;
-  if (!(pg->page_dir = hostGetAllocedPagePhyPage(ad->page_dir))) {
+  if (!(pg->page_dir = hostOSGetAllocedPagePhyPage(ad->page_dir))) {
     goto error;
     }
   where++;
 
   /* Monitor page tables */
-  if ( !(ad->page_tbl = hostAllocZeroedMem(4096 * MON_PAGE_TABLES)) ) {
+  if ( !(ad->page_tbl = hostOSAllocZeroedMem(4096 * MON_PAGE_TABLES)) ) {
     goto error;
     }
   where++;
-  if (!hostGetAllocedMemPhyPages(pg->page_tbl, MON_PAGE_TABLES, 
+  if (!hostOSGetAllocedMemPhyPages(pg->page_tbl, MON_PAGE_TABLES, 
            ad->page_tbl, 4096 * MON_PAGE_TABLES)) {
     goto error;
     }
@@ -1416,99 +1433,99 @@ vm->vmState |= VMStateMMapPrintBuffer; /* For now. */
 
   /* Map of the linear addresses of page tables currently */
   /* mapped into the monitor space. */
-  if ( !(ad->page_tbl_laddr_map = (unsigned *)hostAllocZeroedPage()) ) {
+  if ( !(ad->page_tbl_laddr_map = (unsigned *) hostOSAllocZeroedPage()) ) {
     goto error;
     }
   where++;
   if ( !(pg->page_tbl_laddr_map =
-         hostGetAllocedPagePhyPage(ad->page_tbl_laddr_map)) ) {
+         hostOSGetAllocedPagePhyPage(ad->page_tbl_laddr_map)) ) {
     goto error;
     }
   where++;
 
   /* Nexus page table */
-  if ( !(ad->nexus_page_tbl = (page_t *)hostAllocZeroedPage()) ) {
+  if ( !(ad->nexus_page_tbl = (page_t *) hostOSAllocZeroedPage()) ) {
     goto error;
     }
   where++;
-  if ( !(pg->nexus_page_tbl = hostGetAllocedPagePhyPage(ad->nexus_page_tbl)) ) {
+  if ( !(pg->nexus_page_tbl = hostOSGetAllocedPagePhyPage(ad->nexus_page_tbl)) ) {
     goto error;
     }
   where++;
 
   /* Transition page table */
-  if ( !(ad->transition_PT = (page_t *)hostAllocZeroedPage()) ) {
+  if ( !(ad->transition_PT = (page_t *) hostOSAllocZeroedPage()) ) {
     goto error;
     }
   where++;
-  if ( !(pg->transition_PT = hostGetAllocedPagePhyPage(ad->transition_PT)) ) {
+  if ( !(pg->transition_PT = hostOSGetAllocedPagePhyPage(ad->transition_PT)) ) {
     goto error;
     }
   where++;
 
   /* Nexus page */
-  if ( !(ad->nexus = (nexus_t *)hostAllocZeroedPage()) ) {
+  if ( !(ad->nexus = (nexus_t *) hostOSAllocZeroedPage()) ) {
     goto error;
     }
   where++;
-  if ( !(pg->nexus = hostGetAllocedPagePhyPage(ad->nexus)) ) {
+  if ( !(pg->nexus = hostOSGetAllocedPagePhyPage(ad->nexus)) ) {
     goto error;
     }
   where++;
 
   /* Monitor IDT */
-  if ( !(ad->idt = hostAllocZeroedMem(MON_IDT_PAGES*4096)) ) {
+  if ( !(ad->idt = hostOSAllocZeroedMem(MON_IDT_PAGES*4096)) ) {
     goto error;
     }
   where++;
-  if (!hostGetAllocedMemPhyPages(pg->idt, MON_IDT_PAGES, ad->idt, MON_IDT_SIZE)) {
+  if (!hostOSGetAllocedMemPhyPages(pg->idt, MON_IDT_PAGES, ad->idt, MON_IDT_SIZE)) {
     goto error;
     }
   where++;
 
   /* Monitor GDT */
-  if ( !(ad->gdt = hostAllocZeroedMem(MON_GDT_PAGES*4096)) ) {
+  if ( !(ad->gdt = hostOSAllocZeroedMem(MON_GDT_PAGES*4096)) ) {
     goto error;
     }
   where++;
-  if (!hostGetAllocedMemPhyPages(pg->gdt, MON_GDT_PAGES, ad->gdt, MON_GDT_SIZE)) {
+  if (!hostOSGetAllocedMemPhyPages(pg->gdt, MON_GDT_PAGES, ad->gdt, MON_GDT_SIZE)) {
     goto error;
     }
   where++;
 
   /* Monitor LDT */
-  if ( !(ad->ldt = hostAllocZeroedMem(MON_LDT_PAGES*4096)) ) {
+  if ( !(ad->ldt = hostOSAllocZeroedMem(MON_LDT_PAGES*4096)) ) {
     goto error;
     }
   where++;
-  if (!hostGetAllocedMemPhyPages(pg->ldt, MON_LDT_PAGES, ad->ldt, MON_LDT_SIZE)) {
+  if (!hostOSGetAllocedMemPhyPages(pg->ldt, MON_LDT_PAGES, ad->ldt, MON_LDT_SIZE)) {
     goto error;
     }
   where++;
 
   /* Monitor TSS */
-  if ( !(ad->tss = hostAllocZeroedMem(MON_TSS_PAGES*4096)) ) {
+  if ( !(ad->tss = hostOSAllocZeroedMem(MON_TSS_PAGES*4096)) ) {
     goto error;
     }
   where++;
-  if (!hostGetAllocedMemPhyPages(pg->tss, MON_TSS_PAGES, ad->tss, MON_TSS_SIZE)) {
+  if (!hostOSGetAllocedMemPhyPages(pg->tss, MON_TSS_PAGES, ad->tss, MON_TSS_SIZE)) {
     goto error;
     }
   where++;
 
   /* Monitor IDT stubs */
-  if ( !(ad->idt_stubs = hostAllocZeroedMem(MON_IDT_STUBS_PAGES*4096)) ) {
+  if ( !(ad->idt_stubs = hostOSAllocZeroedMem(MON_IDT_STUBS_PAGES*4096)) ) {
     goto error;
     }
   where++;
-  if (!hostGetAllocedMemPhyPages(pg->idt_stubs, MON_IDT_STUBS_PAGES, 
+  if (!hostOSGetAllocedMemPhyPages(pg->idt_stubs, MON_IDT_STUBS_PAGES, 
            ad->idt_stubs, MON_IDT_STUBS_SIZE)) {
     goto error;
     }
   where++;
 
   /* Get the physical pages associated with the vm_t structure. */
-  if (!hostGetAllocedMemPhyPages(pg->vm, MAX_VM_STRUCT_PAGES, vm, sizeof(*vm))) {
+  if (!hostOSGetAllocedMemPhyPages(pg->vm, MAX_VM_STRUCT_PAGES, vm, sizeof(*vm))) {
     goto error;
     }
   where++;
@@ -1517,7 +1534,7 @@ vm->vmState |= VMStateMMapPrintBuffer; /* For now. */
   return 0; /* OK. */
 
  error:
-    unallocVmPages( vm );
+    hostUnallocVmPages( vm );
     return( where );
 }
 
@@ -1527,56 +1544,55 @@ vm->vmState |= VMStateMMapPrintBuffer; /* For now. */
 /* */
 
   void
-unallocVmPages( vm_t *vm )
+hostUnallocVmPages( vm_t *vm )
 {
   vm_pages_t *pg = &vm->pages;
   vm_addr_t  *ad = &vm->host.addr;
 
   /* Guest physical memory pages */
   if (vm->guestPhyMemAddr) {
-    releasePinnedUserPages(vm);
+    hostReleasePinnedUserPages(vm);
     vm->guestPhyMemAddr = 0;
     }
-#warning "Fix bogus VMStateMMapPhyMem."
-  vm->vmState &= ~VMStateMMapPhyMem; /* Bogus for now. */
+  vm->vmState &= ~VMStateRegisteredPhyMem; /* Bogus for now. */
 
   /* Monitor page directory */
-  if (ad->page_dir) hostFreePage(ad->page_dir);
+  if (ad->page_dir) hostOSFreePage(ad->page_dir);
 
   /* Monitor page tables */
-  if (ad->page_tbl) hostFreeMem(ad->page_tbl);
+  if (ad->page_tbl) hostOSFreeMem(ad->page_tbl);
 
   /* Map of linear addresses of page tables mapped into monitor. */
-  if (ad->page_tbl_laddr_map) hostFreePage(ad->page_tbl_laddr_map);
+  if (ad->page_tbl_laddr_map) hostOSFreePage(ad->page_tbl_laddr_map);
 
   /* Nexus page table */
-  if (ad->nexus_page_tbl) hostFreePage(ad->nexus_page_tbl);
+  if (ad->nexus_page_tbl) hostOSFreePage(ad->nexus_page_tbl);
 
   /* Guest CPU state. */
-  if (ad->guest_cpu) hostFreePage(ad->guest_cpu);
+  if (ad->guest_cpu) hostOSFreePage(ad->guest_cpu);
 
   /* Transition page table */
-  if (ad->transition_PT) hostFreePage(ad->transition_PT);
+  if (ad->transition_PT) hostOSFreePage(ad->transition_PT);
 
-  if (ad->log_buffer) hostFreeMem(ad->log_buffer);
+  if (ad->log_buffer) hostOSFreeMem(ad->log_buffer);
 
   /* Nexus page */
-  if (ad->nexus) hostFreePage(ad->nexus);
+  if (ad->nexus) hostOSFreePage(ad->nexus);
 
   /* Monitor IDT */
-  if (ad->idt) hostFreeMem(ad->idt);
+  if (ad->idt) hostOSFreeMem(ad->idt);
 
   /* Monitor GDT */
-  if (ad->gdt) hostFreeMem(ad->gdt);
+  if (ad->gdt) hostOSFreeMem(ad->gdt);
 
   /* Monitor LDT */
-  if (ad->ldt) hostFreeMem(ad->ldt);
+  if (ad->ldt) hostOSFreeMem(ad->ldt);
 
   /* Monitor TSS */
-  if (ad->tss) hostFreeMem(ad->tss);
+  if (ad->tss) hostOSFreeMem(ad->tss);
 
   /* Monitor IDT stubs */
-  if (ad->idt_stubs) hostFreeMem(ad->idt_stubs);
+  if (ad->idt_stubs) hostOSFreeMem(ad->idt_stubs);
 
 
   /* clear out allocated pages lists */
@@ -1585,7 +1601,7 @@ unallocVmPages( vm_t *vm )
 }
 
   unsigned
-getCpuCapabilities(void)
+hostGetCpuCapabilities(void)
 {
   Bit32u eax, ebx, ecx, edx;
 
@@ -1626,7 +1642,7 @@ getCpuCapabilities(void)
 /* Map the monitor and guest into the VM. */
 
   unsigned
-mapMonitor(vm_t *vm)
+hostMapMonitor(vm_t *vm)
 {
   selector_t monCsSel, monSsSel, monTssSel;
   Bit32u laddr, base;
@@ -1707,7 +1723,7 @@ mapMonitor(vm_t *vm)
 }
 
   void
-initShadowPaging(vm_t *vm)
+hostInitShadowPaging(vm_t *vm)
 {
   pageEntry_t *monPDir;
   Bit32u pdi;
@@ -1755,7 +1771,7 @@ initShadowPaging(vm_t *vm)
 
 
   void
-releasePinnedUserPages(vm_t *vm)
+hostReleasePinnedUserPages(vm_t *vm)
 {
   unsigned ppi;
   unsigned dirty;
@@ -1771,7 +1787,7 @@ releasePinnedUserPages(vm_t *vm)
       osSpecificPtr = (void *) vm->hostStructPagePtr[ppi];
 #warning "Conditionalize page dirtying before page release."
       dirty = 1; /* FIXME: 1 for now. */
-      hostUnpinUserPage(vm,
+      hostOSUnpinUserPage(vm,
           vm->guestPhyMemAddr + (ppi<<12),
           osSpecificPtr,
           ppi,
@@ -1783,7 +1799,7 @@ releasePinnedUserPages(vm_t *vm)
 
   /* Unpin the pages associated with the guest_cpu area. */
   kernelAddr = (Bit32u) vm->host.addr.guest_cpu;
-  hostUnpinUserPage(vm,
+  hostOSUnpinUserPage(vm,
       0, /* User space address. */
       vm->pages.guest_cpu_hostOSPtr,
       vm->pages.guest_cpu,
@@ -1792,7 +1808,7 @@ releasePinnedUserPages(vm_t *vm)
 
   /* Unpin the pages associated with the log buffer area. */
   kernelAddr = (Bit32u) vm->host.addr.log_buffer;
-  hostUnpinUserPage(vm,
+  hostOSUnpinUserPage(vm,
       0, /* User space address. */
       vm->pages.log_buffer_hostOSPtr[0],
       vm->pages.log_buffer[0],
@@ -1802,7 +1818,7 @@ releasePinnedUserPages(vm_t *vm)
 }
 
   unsigned
-handlePagePinRequest(vm_t *vm, Bit32u reqGuestPPI)
+hostHandlePagePinRequest(vm_t *vm, Bit32u reqGuestPPI)
 {
   Bit32u hostPPI;
   unsigned qIndex;
@@ -1826,7 +1842,7 @@ handlePagePinRequest(vm_t *vm, Bit32u reqGuestPPI)
     qIndex = vm->guestPhyPagePinQueue.tail;
     dirty = 1; /* FIXME: 1 for now. */
     unpinGuestPPI = vm->guestPhyPagePinQueue.ppi[qIndex];
-    hostUnpinUserPage(vm,
+    hostOSUnpinUserPage(vm,
         vm->guestPhyMemAddr + (unpinGuestPPI<<12),
         vm->hostStructPagePtr[unpinGuestPPI],
         unpinGuestPPI,
@@ -1836,13 +1852,13 @@ handlePagePinRequest(vm_t *vm, Bit32u reqGuestPPI)
     }
 
   /* Pin the requested guest physical page in the host OS. */
-  if ( !hostGetAndPinUserPage(vm,
+  if ( !hostOSGetAndPinUserPage(vm,
             vm->guestPhyMemAddr + (reqGuestPPI<<12),
             &vm->hostStructPagePtr[reqGuestPPI],
             &hostPPI,
             0 /* Don't need a host kernel address. */
             ) ) {
-    hostPrint("handlePagePinReq: request to pin failed.\n");
+    hostOSPrint("handlePagePinReq: request to pin failed.\n");
     return(0); /* Fail. */
     }
 

@@ -274,7 +274,7 @@ open_guest_phy_page(vm_t *vm, Bit32u ppi, Bit8u *mon_offset)
   /* (separate PDE), find out what mon_offset is in terms of */
   /* an offset from the beginning of the PDE boundary. */
   mon_range_offset = ( ((Bit32u) mon_offset) -
-                       monitor_pages.startOffsetPageAligned );
+                       kernelModulePages.startOffsetPageAligned );
   pti = (mon_range_offset >> 12) & 0x3ff;
   pageTable = vm->guest.addr.nexus_page_tbl;
 

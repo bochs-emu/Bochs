@@ -33,6 +33,7 @@
 #include <linux/wrapper.h>
 #include <linux/version.h>
 #include <asm/irq.h>
+#include <asm/atomic.h>
 
 
 #ifndef VERSION_CODE
@@ -76,6 +77,16 @@
 #else
 #define NEED_RESCHED current->need_resched
 #endif
+
+
+
+/* Instrumentation of how many hardware interrupts were redirected
+ * to the host, while the VM monitor/guest was running.  This can be
+ * written to by multiple contexts, so it needs SMP protection.
+ */
+static atomic_t interruptRedirCount[256];
+
+
 
 #if LINUX_VERSION_CODE < VERSION_CODE(2,1,0)
   static inline unsigned long
@@ -157,7 +168,7 @@ MODULE_LICENSE("GPL"); /* Close enough.  Keeps kernel from complaining. */
 /* Structures / Variables                                               */
 /************************************************************************/
 
-static int      retrieve_monitor_pages(void);
+static int      retrieveKernelModulePages(void);
 static unsigned retrievePhyPages(Bit32u *page, int max_pages, void *addr,
                                  unsigned size);
 
@@ -211,8 +222,11 @@ init_module(void)
 {
   int err;
 
-  /* Clear uninitialised structures. */
-  memset(&monitor_pages, 0, sizeof(monitor_pages));
+  /* Initialize structures which are not specific to each VM.  These
+   * are things which are set only once upon kernel module initialization.
+   */
+  memset(&kernelModulePages, 0, sizeof(kernelModulePages));
+  memset(&interruptRedirCount, 0, sizeof(interruptRedirCount));
 
   /* Register the device with the kernel. */
   err = register_chrdev(plex_major, "plex86", &plex86_fops);
@@ -248,14 +262,14 @@ init_module(void)
 #endif
 
   /* Retrieve the monitor physical pages. */
-  if ( !retrieve_monitor_pages() ) {
-    printk(KERN_ERR "plex86: retrieve_monitor_pages returned error\n");
+  if ( !retrieveKernelModulePages() ) {
+    printk(KERN_ERR "plex86: retrieveKernelModulePages returned error\n");
     err = -EINVAL;
     goto fail_retrieve_pages;
     }
 
   /* Kernel independent code to be run when kernel module is loaded. */
-  if ( !genericModuleInit() ) {
+  if ( !hostModuleInit() ) {
     printk(KERN_ERR "plex86: genericModuleInit returned error\n");
     err = -EINVAL;
     goto fail_cpu_capabilities;
@@ -316,12 +330,12 @@ plex86_open(struct inode *inode, struct file *filp)
 #endif
 
   /* Allocate a VM structure. */
-  if ( (vm = hostAllocZeroedMem(sizeof(vm_t))) == NULL )
+  if ( (vm = hostOSAllocZeroedMem(sizeof(vm_t))) == NULL )
     return -ENOMEM;
   filp->private_data = vm;
   
   /* Kernel independent device open code. */
-  genericDeviceOpen(vm);
+  hostDeviceOpen(vm);
 
   return(0);
 }
@@ -338,7 +352,7 @@ plex86_release(struct inode *inode, struct file *filp)
   filp->private_data = NULL;
 
   /* Free the virtual memory. */
-  unallocVmPages( vm );
+  hostUnallocVmPages( vm );
 
   /* Free the VM structure. */
   memset( vm, 0, sizeof(*vm) );
@@ -364,13 +378,13 @@ plex86_ioctl(struct inode *inode, struct file *filp,
   /* Call non host-specific ioctl() code which calls back to this
    * module only when it needs host-specific features.
    */
-  ret = ioctlGeneric(vm, inode, filp, cmd, arg);
+  ret = hostIoctlGeneric(vm, inode, filp, cmd, arg);
 
   /* Convert from plex86 errno codes to host-specific errno codes.  Not
    * very exciting.
    */
   if ( ret < 0 )
-    ret = - hostConvertPlex86Errno(- ret);
+    ret = - hostOSConvertPlex86Errno(- ret);
   return( ret );
 }
 
@@ -405,15 +419,17 @@ plex86_read_procmem(char *buf, char **start, off_t offset,
   len = 0;
   len += sprintf(buf, "monitor-->host interrupt reflection counts\n");
   for (i=0; i<256; i++) {
-    if (intRedirCount[i])
-      len += sprintf(buf+len, "  0x%2x:%10u\n", i, intRedirCount[i]);
+    int count;
+    count = atomic_read( &interruptRedirCount[i] );
+    if (count)
+      len += sprintf(buf+len, "  0x%2x:%10u\n", i, count);
     }
   return(len);
 }
 
 
   int
-retrieve_monitor_pages(void)
+retrieveKernelModulePages(void)
 {
   /* 
    * Retrieve start address and size of this module.
@@ -442,17 +458,17 @@ retrieve_monitor_pages(void)
       size += (driverStartAddr & 0xfff);
     }
 
-  nPages = retrievePhyPages(monitor_pages.page, PLEX86_MAX_MONITOR_PAGES,
+  nPages = retrievePhyPages(kernelModulePages.ppi, Plex86MaxKernelModulePages,
                             (void *) driverStartAddrPageAligned, size);
   if (nPages == 0) {
-    printk(KERN_ERR "plex86: retrieve_monitor_pages: retrieve returned error.\n");
+    printk(KERN_ERR "plex86: retrieveKernelModulePages: retrieve returned error.\n");
     return( 0 ); /* Error. */
     }
   printk(KERN_WARNING "plex86: %u monitor pages located\n", nPages);
 
-  monitor_pages.startOffset            = driverStartAddr;
-  monitor_pages.startOffsetPageAligned = driverStartAddrPageAligned;
-  monitor_pages.n_pages                = nPages;
+  kernelModulePages.startOffset            = driverStartAddr;
+  kernelModulePages.startOffsetPageAligned = driverStartAddrPageAligned;
+  kernelModulePages.nPages                 = nPages;
   return( 1 ); /* OK. */
 }
 
@@ -571,7 +587,7 @@ retrievePhyPages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
 
 
   unsigned
-hostIdle(void)
+hostOSIdle(void)
 {
   if (NEED_RESCHED)
     schedule();
@@ -581,7 +597,7 @@ hostIdle(void)
 }
 
   void *
-hostAllocZeroedMem(unsigned long size)
+hostOSAllocZeroedMem(unsigned long size)
 {
   void *ptr;
 
@@ -598,32 +614,32 @@ hostAllocZeroedMem(unsigned long size)
 }
 
   void
-hostFreeMem(void *ptr)
+hostOSFreeMem(void *ptr)
 {
   vfree(ptr);
 }
 
   void *
-hostAllocZeroedPage(void)
+hostOSAllocZeroedPage(void)
 {
   return( (void *) get_zeroed_page(GFP_KERNEL) );
 }
 
   void
-hostFreePage(void *ptr)
+hostOSFreePage(void *ptr)
 {
   free_page( (Bit32u)ptr );
 }
 
 
   unsigned
-hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr, unsigned size)
+hostOSGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr, unsigned size)
 {
   return( retrievePhyPages(page, max_pages, ptr, size) );
 }
 
   Bit32u
-hostGetAllocedPagePhyPage(void *ptr)
+hostOSGetAllocedPagePhyPage(void *ptr)
 {
   if (!ptr) return 0;
   /* return MAP_NR(ptr); */
@@ -631,7 +647,7 @@ hostGetAllocedPagePhyPage(void *ptr)
 }
 
   void
-hostPrint(char *fmt, ...)
+hostOSPrint(char *fmt, ...)
 {
 #warning "Fix hostPrint"
 #if 0
@@ -652,7 +668,7 @@ hostPrint(char *fmt, ...)
 
 
   int
-hostConvertPlex86Errno(unsigned ret)
+hostOSConvertPlex86Errno(unsigned ret)
 {
   switch (ret) {
     case 0: return(0);
@@ -670,32 +686,13 @@ hostConvertPlex86Errno(unsigned ret)
 
 
   Bit32u
-hostKernelOffset(void)
+hostOSKernelOffset(void)
 {
   return( KERNEL_OFFSET );
 }
 
-  unsigned
-hostMMapCheck(void *i, void *f)
-{
-  struct inode *inode;
-  struct file *filp;
-
-  inode = (struct inode *) i;
-  filp  = (struct file *) f;
-
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,3,99)
-  /* Not sure when this changed.  If you know, email us. */
-  if (inode->i_data.i_mmap != NULL)
-#else
-  if (inode->i_mmap != NULL)
-#endif
-    return 1;
-  return 0;
-}
-
   void
-hostModuleCountReset(vm_t *vm, void *inode, void *filp)
+hostOSModuleCountReset(vm_t *vm, void *inode, void *filp)
 {
 #if LINUX_VERSION_CODE < VERSION_CODE(2,4,0)
   while (MOD_IN_USE) {
@@ -707,19 +704,19 @@ hostModuleCountReset(vm_t *vm, void *inode, void *filp)
 }
 
   unsigned long
-hostCopyFromUser(void *to, void *from, unsigned long len)
+hostOSCopyFromUser(void *to, void *from, unsigned long len)
 {
   return( copy_from_user(to, from, len) );
 }
 
   unsigned long
-hostCopyToUser(void *to, void *from, unsigned long len)
+hostOSCopyToUser(void *to, void *from, unsigned long len)
 {
   return( copy_to_user(to, from, len) );
 }
 
   Bit32u
-hostGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
+hostOSGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
                       Bit32u *ppi, Bit32u *kernelAddr)
 {
   int    ret;
@@ -761,7 +758,7 @@ hostGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
 }
 
   void
-hostUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
+hostOSUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
                           Bit32u ppi, Bit32u *kernelAddr, unsigned dirty)
 {
 #if 0
@@ -794,4 +791,10 @@ hostUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
 
   /* Release/unpin the page. */
   put_page(page);
+}
+
+  void
+hostOSInstrumentIntRedirCount(unsigned interruptVector)
+{
+  atomic_inc( &interruptRedirCount[interruptVector] );
 }
