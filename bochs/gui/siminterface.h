@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.12 2001-06-17 13:50:52 bdenney Exp $
+ * $Id: siminterface.h,v 1.13 2001-06-18 14:11:55 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -13,6 +13,8 @@
  * for example).
  *
  */
+
+#define BX_UI_TEXT 1
 
 #define BX_PATHNAME_LEN 512
 
@@ -48,23 +50,22 @@ struct bx_cdrom_options
   int inserted;
 };
 
-/* what do I want to know about an integer parameter?
- * id number (comes from enum)
- * string name
- * description
- * minimum and maximum allowed value
- * default value
- * what about behavior?  getValue method and setValue method?
- */
+//////////////////////////////////////////////////////
 
 typedef enum {
-  BXP_IPS = 101,
+  BXP_NULL = 101,
+  BXP_IPS,
   BXP_VGA_UPDATE_INTERVAL,
   BXP_MOUSE_ENABLED,
   BXP_MEM_SIZE,
   BXP_ROM_PATH,
   BXP_ROM_ADDRESS,
-  BXP_VGA_ROM_PATH
+  BXP_VGA_ROM_PATH,
+  BXP_LIST_TITLE,      //title field in any bx_list
+  BXP_LIST_OPTIONS,    //options field in any bx_list
+  BXP_LIST_CHOICE,     //choice field in any bx_list
+  BXP_MEMORY_OPTIONS_MENU,
+  BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
 typedef enum {
@@ -72,14 +73,13 @@ typedef enum {
   BXT_NODE,
   BXT_PARAM,
   BXT_PARAM_NUM,
-  BXT_PARAM_STRING
+  BXT_PARAM_STRING,
+  BXT_LIST
 } bx_objtype;
-
-
 
 ////////////////////////////////////////////////////////////////////
 
-// Abstract type.
+// Abstract type. I haven't actually found a great use for this bx_any.
 
 struct bx_any {
   Bit32u type;
@@ -114,14 +114,26 @@ class bx_param_c : public bx_object_c {
 private:
   char *name;
   char *description;
+  char *text_format;  // printf format string. %d for ints, %s for strings, etc.
+  char *ask_format;  // format string for asking for a new value
+  int runtime_param;
 public:
   bx_param_c (bx_id id,
       char *name,
       char *description);
+  void set_format (char *format) {text_format = format;}
+  char *get_format () {return text_format;}
+  void set_ask_format (char *format) {ask_format = format; }
+  char *get_ask_format () {return ask_format;}
+  void set_runtime_param (int val) { runtime_param = val; }
   char *get_name () { return name; }
   char *get_description () { return description; }
   void reset () {}
   int getint () {return -1;}
+#if BX_UI_TEXT
+  virtual void text_print (FILE *fp) {}
+  virtual int text_ask (FILE *fpin, FILE *fpout) {}
+#endif
 };
 
 typedef Bit32s (*param_any_event_handler)(class bx_param_any_c *, int set, bx_any val);
@@ -149,6 +161,7 @@ typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
 class bx_param_num_c : public bx_param_c {
   Bit32s min, max, val, initial_val;
   param_event_handler handler;
+  int base;
 public:
   bx_param_num_c (bx_id id,
       char *name,
@@ -158,6 +171,11 @@ public:
   void set_handler (param_event_handler handler) { this->handler = handler; }
   Bit32s get ();
   void set (Bit32s val);
+  void set_base (int base) { this->base = base; }
+#if BX_UI_TEXT
+  virtual void text_print (FILE *fp);
+  virtual int text_ask (FILE *fpin, FILE *fpout);
+#endif
 };
 
 typedef Bit32s (*param_string_event_handler)(class bx_param_string_c *, int set, char *val, int maxlen);
@@ -170,35 +188,83 @@ public:
   bx_param_string_c (bx_id id,
       char *name,
       char *description,
-      int maxsize,
-      char *initial_val);
+      char *initial_val,
+      int maxsize=-1);
   void reset ();
   void set_handler (param_string_event_handler handler) { this->handler = handler; }
   Bit32s get (char *buf, int len);
   char *getptr () {return val; }
   void set (char *buf);
+#if BX_UI_TEXT
+  virtual void text_print (FILE *fp);
+  virtual int text_ask (FILE *fpin, FILE *fpout);
+#endif
 };
 
-class bx_node_c : public bx_object_c {
+// the BX_LISTOPT_* values define the bits in bx_list_c, that controls
+// the behavior of the bx_list_c.
+// When a bx_list_c is displayed as a menu, SHOW_PARENT controls whether 
+// or not the menu shows "0. Return to previous menu" or not.
+#define BX_LISTOPT_SHOW_PARENT   (1<<0)
+// Some lists are best displayed shown as menus, others as a series of related
+// questions.  Options is a bx_param so that if necessary the bx_list could
+// install a handler to cause get/set of options to have side effects.
+#define BX_LISTOPT_SERIES_ASK    (1<<1)
+
+
+class bx_list_c : public bx_param_c {
 private:
-  bx_object_c *car, *cdr;
+  // just a list of bx_param_c objects.  size tells current number of
+  // objects in the list, and maxsize tells how many list items are
+  // allocated in the constructor.
+  bx_param_c **list;
+  int size, maxsize;
+  // options is a bit field whose bits are defined by bx_listopt_bits ORed
+  // together.  Options is a bx_param so that if necessary the bx_list could
+  // install a handler to cause get/set of options to have side effects.
+  bx_param_num_c *options;
+  // for a menu, the value of choice before the call to "ask" is default.
+  // After ask, choice holds the value that the user chose.  Choice defaults
+  // to 1 in the constructor.
+  bx_param_num_c *choice;
+  // title of the menu or series
+  bx_param_string_c *title;
+  // if the menu shows a "return to previous menu" type of choice,
+  // this controls where that choice will go.
+  bx_param_c *parent;
+  void init ();
 public:
-  bx_node_c (bx_id id);
-  bx_node_c (bx_id id, bx_object_c *car, bx_object_c *cdr);
-  bx_object_c *setcar (bx_object_c *ptr);
-  bx_object_c *setcdr (bx_object_c *ptr);
-  bx_object_c *getcar () { return car; }
-  bx_object_c *getcdr () { return cdr; }
+  enum {
+    // When a bx_list_c is displayed as a menu, SHOW_PARENT controls whether or
+    // not the menu shows "0. Return to previous menu" or not.
+    BX_SHOW_PARENT = (1<<0),
+    // Some lists are best displayed shown as menus, others as a series of
+    // related questions.  
+    BX_SERIES_ASK = (1<<1)
+  } bx_listopt_bits;
+  bx_list_c (bx_id id, int maxsize);
+  bx_list_c (bx_id id, bx_param_c **init_list);
+  void add (bx_param_c *param);
+  bx_param_c *get (int index);
+  bx_param_num_c *get_options () { return options; }
+  bx_param_num_c *get_choice () { return choice; }
+  bx_param_string_c *get_title () { return title; }
+  void set_parent (bx_param_c *parent);
+#if BX_UI_TEXT
+  virtual void text_print (FILE *);
+  virtual int text_ask (FILE *fpin, FILE *fpout);
+#endif
 };
+
+
 ////////////////////////////////////////////////////////////////////
 
 class bx_simulator_interface_c {
-  int init_done;
 public:
   bx_simulator_interface_c ();
-  int get_init_done () { return init_done; }
-  int set_init_done (int n) { init_done = n; return 0;}
-
+  virtual int get_init_done () { return -1; }
+  virtual int set_init_done (int n) {return -1;}
+  virtual int register_param (bx_id id, bx_param_c *it) {return -1;}
   virtual bx_param_c *get_param (bx_id id) {return NULL;}
   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}

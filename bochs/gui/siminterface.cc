@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.16 2001-06-17 13:50:52 bdenney Exp $
+ * $Id: siminterface.cc,v 1.17 2001-06-18 14:11:55 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -23,8 +23,14 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   char *notify_string_args[10];
 #define NOTIFY_TYPE_INT
 #define NOTIFY_TYPE_STRING
+  int init_done;
+  bx_param_c **param_registry;
+  int registry_alloc_size;
 public:
   bx_real_sim_c ();
+  virtual int get_init_done () { return init_done; }
+  virtual int set_init_done (int n) { init_done = n; return 0;}
+  virtual int register_param (bx_id id, bx_param_c *it);
   virtual bx_param_c *get_param (bx_id id);
   virtual bx_param_num_c *get_param_num (bx_id id);
   virtual bx_param_string_c *get_param_string (bx_id id);
@@ -64,18 +70,12 @@ public:
 bx_param_c *
 bx_real_sim_c::get_param (bx_id id)
 {
-  switch (id)
-  {
-    case BXP_IPS: return bx_options.ips;
-    case BXP_VGA_UPDATE_INTERVAL: return bx_options.vga_update_interval;
-    case BXP_MOUSE_ENABLED: return bx_options.mouse_enabled;
-    case BXP_MEM_SIZE: return bx_options.memory.size;
-    case BXP_ROM_PATH: return bx_options.rom.path;
-    case BXP_ROM_ADDRESS: return bx_options.rom.address;
-    case BXP_VGA_ROM_PATH: return bx_options.vgarom.path;
-    default: 
-      BX_PANIC (("get_param can't find id %u", id));
-  }
+  BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
+  int index = (int)id - BXP_NULL;
+  bx_param_c *retval = param_registry[index];
+  if (!retval)
+    BX_PANIC (("get_param can't find id %u", id));
+  return retval;
 }
 
 bx_param_num_c *
@@ -115,12 +115,21 @@ void init_siminterface ()
 
 bx_simulator_interface_c::bx_simulator_interface_c ()
 {
-  init_done = 0;
 }
 
 bx_real_sim_c::bx_real_sim_c ()
 {
   callback = NULL;
+  registry_alloc_size = BXP_THIS_IS_THE_LAST - BXP_NULL;
+  param_registry = new (bx_param_c*)[registry_alloc_size];
+}
+
+int
+bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
+{
+  BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
+  int index = (int)id - BXP_NULL;
+  this->param_registry[index] = it;
 }
 
 int 
@@ -416,6 +425,10 @@ bx_param_c::bx_param_c (bx_id id, char *name, char *description)
   set_type (BXT_PARAM);
   this->name = name;
   this->description = description;
+  this->text_format = NULL;
+  this->ask_format = NULL;
+  this->runtime_param = 0;
+  SIM->register_param (id, this);
 }
 
 bx_param_num_c::bx_param_num_c (bx_id id,
@@ -430,6 +443,8 @@ bx_param_num_c::bx_param_num_c (bx_id id,
   this->initial_val = initial_val;
   this->val = initial_val;
   this->handler = NULL;
+  this->base = 10;
+  SIM->register_param (id, this);
 }
 
 void 
@@ -455,16 +470,15 @@ bx_param_num_c::set (Bit32s newval)
     val = newval;
 }
 
-
 bx_param_string_c::bx_param_string_c (bx_id id,
     char *name,
     char *description,
-    int maxsize,
-    char *initial_val)
+    char *initial_val,
+    int maxsize)
   : bx_param_c (id, name, description)
 {
   set_type (BXT_PARAM_STRING);
-  if (maxsize < 1) 
+  if (maxsize < 0) 
     maxsize = strlen(initial_val) + 1;
   this->val = new char[maxsize];
   this->initial_val = new char[maxsize];
@@ -497,20 +511,66 @@ bx_param_string_c::set (char *buf)
     strncpy (val, buf, maxsize);
 }
 
-bx_node_c::bx_node_c (bx_id id)
-  : bx_object_c (id)
+bx_list_c::bx_list_c (bx_id id, int maxsize)
+  : bx_param_c (id, "list", "")
 {
-  set_type (BXT_NODE);
-  car = NULL;
-  cdr = NULL;
+  set_type (BXT_LIST);
+  this->maxsize = maxsize;
+  this->size = 0;
+  this->list = new (bx_param_c *)[maxsize];
+  init ();
 }
 
-bx_node_c::bx_node_c (bx_id id, bx_object_c *car, bx_object_c *cdr)
-  : bx_object_c (id)
+bx_list_c::bx_list_c (bx_id id, bx_param_c **init_list)
+  : bx_param_c (id, "list", "")
 {
-  set_type (BXT_NODE);
-  this->car = car;
-  this->cdr = cdr;
+  set_type (BXT_LIST);
+  size = 0;
+  while (init_list[size] != NULL)
+    size++;
+  this->maxsize = size;
+  this->list = new (bx_param_c *)[maxsize];
+  for (int i=0; i<size; i++)
+    this->list[i] = init_list[i];
+  init ();
+}
+
+void
+bx_list_c::init ()
+{
+  this->title = new bx_param_string_c (BXP_LIST_TITLE,
+      "list_title",
+      "title of the bx_list",
+      "list", 80);
+  this->options = new bx_param_num_c (BXP_LIST_OPTIONS,
+      "list_option", "", 0, 1<<31,
+      0);
+  this->choice = new bx_param_num_c (BXP_LIST_CHOICE,
+      "list_choice", "", 0, 1<<31,
+      1);
+  this->parent = NULL;
+}
+
+void
+bx_list_c::add (bx_param_c *param)
+{
+  if (this->size >= this->maxsize)
+    BX_PANIC (("bx_list_c::add parameter id=%u exceeds capacity of list", param->get_id ()));
+  list[size] = param;
+  size++;
+}
+
+bx_param_c *
+bx_list_c::get (int index)
+{
+  BX_ASSERT (index >= 0 && index < size);
+  return list[index];
+}
+
+void
+bx_list_c::set_parent (bx_param_c *parent)
+{
+  this->parent = parent;
 }
 
 #endif  // if BX_USE_CONTROL_PANEL==1

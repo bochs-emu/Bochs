@@ -477,11 +477,44 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void bx_init_options ()
 {
+  // memory options menu
   bx_options.memory.size = new bx_param_num_c (BXP_MEM_SIZE,
       "megs",
       "Amount of RAM in megabytes",
       1, 1<<31,
       BX_DEFAULT_MEM_MEGS);
+  bx_options.memory.size->set_format ("Memory size in megabytes: %d");
+  bx_options.memory.size->set_ask_format ("Enter memory size (MB): [%d] ");
+  bx_options.rom.path = new bx_param_string_c (BXP_ROM_PATH,
+      "romimage",
+      "Pathname of ROM image to load",
+      "", BX_PATHNAME_LEN);
+  bx_options.rom.path->set_format ("Name of ROM BIOS image: %s");
+  bx_options.rom.address = new bx_param_num_c (BXP_ROM_ADDRESS,
+      "romaddr",
+      "The address at which the ROM image should be loaded",
+      0, 1<<31, 
+      0);
+  bx_options.rom.address->set_format ("ROM BIOS address: 0x%05x");
+  bx_options.rom.address->set_base (16);
+  bx_options.vgarom.path = new bx_param_string_c (BXP_VGA_ROM_PATH,
+      "vgaromimage",
+      "Pathname of VGA ROM image to load",
+      "", BX_PATHNAME_LEN);
+  bx_options.vgarom.path->set_format ("Name of VGA BIOS image: %s");
+  bx_param_c *init_list[] = {
+    bx_options.memory.size,
+    bx_options.vgarom.path,
+    bx_options.rom.path,
+    bx_options.rom.address,
+    NULL
+  };
+  bx_list_c *menu = new bx_list_c (BXP_MEMORY_OPTIONS_MENU, init_list);
+  menu->get_title ()->set ("Bochs Memory Options");
+  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+
+
+
   bx_options.ips = new bx_param_num_c (BXP_IPS, 
       "ips",
       "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
@@ -499,19 +532,6 @@ void bx_init_options ()
       0, 1, 
       0);
   bx_options.mouse_enabled->set_handler (bx_param_handler);
-  bx_options.rom.path = new bx_param_string_c (BXP_ROM_PATH,
-      "romimage",
-      "Pathname of ROM image to load",
-      BX_PATHNAME_LEN, "");
-  bx_options.rom.address = new bx_param_num_c (BXP_ROM_ADDRESS,
-      "romaddr",
-      "The address at which the ROM image should be loaded",
-      0, 1<<31, 
-      0);
-  bx_options.vgarom.path = new bx_param_string_c (BXP_VGA_ROM_PATH,
-      "vgaromimage",
-      "Pathname of VGA ROM image to load",
-      BX_PATHNAME_LEN, "");
 }
 
 int
@@ -528,14 +548,16 @@ main(int argc, char *argv[])
 
   bx_print_header ();
   bx_init_bx_dbg ();
-  bx_init_options ();
 
   int read_rc_already = 0;
 #if BX_USE_CONTROL_PANEL
   // Display the pre-simulation control panel.
   init_siminterface ();
+  bx_init_options ();
   if ((bx_control_panel (BX_CPANEL_START_MAIN)) != BX_DISABLE_CONTROL_PANEL)
     read_rc_already = 1;
+#else
+  bx_init_options ();
 #endif
   if (!read_rc_already) {
     /* parse configuration file and command line arguments */

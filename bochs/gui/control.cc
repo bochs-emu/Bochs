@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.21 2001-06-17 13:50:52 bdenney Exp $
+ * $Id: control.cc,v 1.22 2001-06-18 14:11:55 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -54,8 +54,6 @@ and each function needs an input list and a return value.
 Hmm.... This sounds like reinventing function calls.  Next I'm going to
 say we need to implement prototypes and type checking.  Why not just
 write a compiler!
-
-
 */
 
 #include "config.h"
@@ -71,18 +69,13 @@ extern "C" {
 #include "control.h"
 #include "siminterface.h"
 
-#define BX_PANIC(x) printf x
 #define CPANEL_PATH_LEN 512
 
 /* functions for changing particular options */
 void bx_control_panel_init ();
-void bx_edit_mem ();
-void bx_edit_rom_addr ();
 void bx_edit_floppy (int drive);
 void bx_edit_hard_disk (int drive);
 void bx_edit_cdrom ();
-void bx_edit_rom_path (int vga);
-void bx_edit_rom_addr ();
 void bx_newhd_support ();
 void bx_private_colormap ();
 void bx_boot_from ();
@@ -116,7 +109,39 @@ clean_string (char *s0)
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
 int 
-ask_int (char *prompt, int min, int max, int the_default, int *out)
+ask_uint (char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
+{
+  int n = max + 1;
+  char buffer[1024];
+  char *clean;
+  int illegal;
+  assert (base==10 || base==16);
+  while (1) {
+    printf (prompt, the_default);
+    if (!fgets (buffer, sizeof(buffer), stdin))
+      return -1;
+    clean = clean_string (buffer);
+    if (strlen(clean) < 1) {
+      // empty line, use the default
+      *out = the_default;
+      return 0;
+    }
+    char *format = (base==10) ? "%d" : "%x";
+    illegal = (1 != sscanf (buffer, format, &n));
+    if (illegal || n<min || n>max) {
+      printf ("Your choice (%s) was not an integer between %u and %u.\n\n",
+	  clean, min, max);
+    } else {
+      // choice is okay
+      *out = n;
+      return 0;
+    }
+  }
+}
+
+// identical to ask_uint, but uses signed comparisons
+int 
+ask_int (char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 {
   int n = max + 1;
   char buffer[1024];
@@ -178,11 +203,11 @@ ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out
 }
 
 int 
-ask_yn (char *prompt, int the_default, int *out)
+ask_yn (char *prompt, Bit32u the_default, Bit32u *out)
 {
   char buffer[16];
   char *clean;
-  *out = -1;
+  *out = 1<<31;
   while (1) {
     // if there's a %s field, substitute in the default yes/no.
     printf (prompt, the_default ? "yes" : "no");
@@ -419,6 +444,24 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
       SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled");
 }
 
+int do_mem_options_menu () {
+  bx_list_c *menu = (bx_list_c *)SIM->get_param (BXP_MEMORY_OPTIONS_MENU);
+  while (1) {
+    menu->get_choice()->set (0);
+    int status = menu->text_ask (stdin, stderr);
+    if (status < 0) return status;
+    bx_param_num_c *choice = menu->get_choice();
+    if (choice->get () < 1)
+      return choice->get ();
+    else {
+      int index = choice->get () - 1;  // choosing 1 means list[0]
+      bx_param_c *chosen = menu->get (index);
+      assert (chosen != NULL);
+      chosen->text_ask (stdin, stderr);
+    }
+  }
+}
+
 // return value of bx_control_panel:
 //   -1: error while reading, like if stdin closed
 //    0: no error
@@ -427,7 +470,7 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
 //       control panel.
 int bx_control_panel (int menu)
 {
- int choice;
+ Bit32u choice;
  while (1) {
   switch (menu)
   {
@@ -441,9 +484,9 @@ int bx_control_panel (int menu)
    case BX_CPANEL_START_MENU:
      {
        static int read_rc = 0;
-       int default_choice = 1;
+       Bit32u default_choice = 1;
        default_choice = read_rc ? 4 : 1;
-       if (ask_int (startup_menu_prompt, 1, 5, default_choice, &choice) < 0) return -1;
+       if (ask_uint (startup_menu_prompt, 1, 5, default_choice, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 1: if (bx_read_rc (NULL) >= 0) read_rc=1; break;
 	 case 2: bx_control_panel (BX_CPANEL_START_OPTS); break;
@@ -460,7 +503,7 @@ int bx_control_panel (int menu)
        char oldpath[CPANEL_PATH_LEN];
        assert (SIM->get_log_file (oldpath, CPANEL_PATH_LEN) >= 0);
        sprintf (prompt, startup_options_prompt, oldpath);
-       if (ask_int (prompt, 0, 8, 0, &choice) < 0) return -1;
+       if (ask_uint (prompt, 0, 8, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: bx_log_file (); break;
@@ -476,31 +519,7 @@ int bx_control_panel (int menu)
      }
      break;
    case BX_CPANEL_START_OPTS_MEM:
-     {
-       char prompt[CPANEL_PATH_LEN], vgapath[CPANEL_PATH_LEN], rompath[CPANEL_PATH_LEN];
-       bx_param_num_c *memsize = SIM->get_param_num (BXP_MEM_SIZE);
-       bx_param_num_c *rom_addr = SIM->get_param_num (BXP_ROM_ADDRESS);
-       bx_param_string_c *rom_path = SIM->get_param_string (BXP_ROM_PATH);
-       bx_param_string_c *vga_rom_path = SIM->get_param_string (BXP_VGA_ROM_PATH);
-       if (rom_path->get (rompath, CPANEL_PATH_LEN) < 0)
-	 strcpy (rompath, "none");
-       if (vga_rom_path->get (vgapath, CPANEL_PATH_LEN) < 0)
-	 strcpy (vgapath, "none");
-       sprintf (prompt, startup_mem_options_prompt, 
-          memsize->get (),
-	  vgapath, rompath,
-	  rom_addr->get ());
-       if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
-       switch (choice) {
-	 case 0: return 0;
-	 case 1: bx_edit_mem (); break;
-	 case 2: bx_edit_rom_path (1); break;
-	 case 3: bx_edit_rom_path (0); break;
-	 case 4: bx_edit_rom_addr (); break;
-	 default: BAD_OPTION(menu, choice);
-       }
-     }
-     break;
+     return do_mem_options_menu ();
    case BX_CPANEL_START_OPTS_INTERFACE:
      {
        char prompt[1024];
@@ -511,7 +530,7 @@ int bx_control_panel (int menu)
 	 SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled",
 	 ips->get (),
 	 SIM->get_private_colormap () ? "enabled" : "disabled");
-       if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
+       if (ask_uint (prompt, 0, 4, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: bx_vga_update_interval (); break;
@@ -526,7 +545,7 @@ int bx_control_panel (int menu)
      {
        char prompt[1024];
        build_disk_options_prompt (startup_disk_options_prompt, prompt, 1024);
-       if (ask_int (prompt, 0, 7, 0, &choice) < 0) return -1;
+       if (ask_uint (prompt, 0, 7, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: bx_edit_floppy (0); break;
@@ -543,7 +562,7 @@ int bx_control_panel (int menu)
    case BX_CPANEL_RUNTIME:
      char prompt[1024];
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
-     if (ask_int (prompt, 1, 11, 10, &choice) < 0) return -1;
+     if (ask_uint (prompt, 1, 11, 10, &choice, 10) < 0) return -1;
      switch (choice) {
        case 1: bx_edit_floppy (0); break;
        case 2: bx_edit_floppy (1); break;
@@ -565,7 +584,7 @@ int bx_control_panel (int menu)
    default:
      assert (menu >=0 && menu < BX_CPANEL_N_MENUS);
      fprintf (stderr, "--THIS IS A SAMPLE MENU, NO OPTIONS ARE IMPLEMENTED EXCEPT #0--\n");
-     if (ask_int (menu_prompt_list[menu], 0, 99, 0, &choice) < 0) return -1;
+     if (ask_uint (menu_prompt_list[menu], 0, 99, 0, &choice, 10) < 0) return -1;
      if (choice == 0) return 0;
      fprintf (stderr, "This is a sample menu.  Option %d is not implemented.\n", choice);
   }
@@ -599,14 +618,14 @@ void bx_edit_hard_disk (int drive)
   newopt.present = (strcmp (newopt.path, "none") != 0);
   if (newopt.present) {  // skip if "none" is the path.
     // ask cyl, head, sec.
-    int n;
-    if (ask_int ("How many cylinders? [%d] ", 1, 65535, opt.cylinders, &n) < 0)
+    Bit32u n;
+    if (ask_uint ("How many cylinders? [%d] ", 1, 65535, opt.cylinders, &n, 10) < 0)
       return;
     newopt.cylinders = n;
-    if (ask_int ("How many heads? [%d] ", 1, 256, opt.heads, &n) < 0)
+    if (ask_uint ("How many heads? [%d] ", 1, 256, opt.heads, &n, 10) < 0)
       return;
     newopt.heads = n;
-    if (ask_int ("How many sectors per track? [%d] ", 1, 255, opt.spt, &n) < 0)
+    if (ask_uint ("How many sectors per track? [%d] ", 1, 255, opt.spt, &n, 10) < 0)
       return;
     newopt.spt = n;
   }
@@ -632,27 +651,9 @@ void bx_edit_cdrom ()
   }
 }
 
-void bx_edit_rom_path (int vga)
-{
-  char oldpath[CPANEL_PATH_LEN], newpath[CPANEL_PATH_LEN];
-  if (vga) {
-    bx_param_string_c *vga_path = SIM->get_param_string (BXP_VGA_ROM_PATH);
-    if (vga_path->get (oldpath, CPANEL_PATH_LEN) < 0) return;
-    if (ask_string ("Enter pathname of the VGA ROM image: [%s] ", oldpath, newpath) < 0)
-      return;
-    vga_path->set (newpath);
-  } else {
-    bx_param_string_c *rom_path = SIM->get_param_string (BXP_ROM_PATH);
-    if (rom_path->get (oldpath, CPANEL_PATH_LEN) < 0) return;
-    if (ask_string ("Enter pathname of the ROM image: [%s] ", oldpath, newpath) < 0)
-      return;
-    rom_path->set (newpath);
-  }
-}
-
 void bx_newhd_support ()
 {
-  int newval, oldval = SIM->get_newhd_support ();
+  Bit32u newval, oldval = SIM->get_newhd_support ();
   if (ask_yn ("Use new hard disk support (recommended)? [%s] ", oldval, &newval) < 0) return;
   if (newval == oldval) return;
   SIM->set_newhd_support (newval);
@@ -660,7 +661,7 @@ void bx_newhd_support ()
 
 void bx_private_colormap ()
 {
-  int newval, oldval = SIM->get_private_colormap ();
+  Bit32u newval, oldval = SIM->get_private_colormap ();
   if (ask_yn ("Use private colormap? [%s] ", oldval, &newval) < 0) return;
   if (newval == oldval) return;
   SIM->set_private_colormap (newval);
@@ -676,23 +677,14 @@ void bx_boot_from ()
   SIM->set_boot_hard_disk (newval);
 }
 
-void bx_edit_mem ()
-{
-  bx_param_num_c *memsize = SIM->get_param_num (BXP_MEM_SIZE);
-  int newval, oldval = memsize->get ();
-  if (ask_int ("How much memory (megabytes) in the simulated machine? [%d] ", 1, 1<<30, oldval, &newval) < 0)
-    return;
-  memsize->set (newval);
-}
-
 void bx_ips_change ()
 {
   char prompt[1024];
   bx_param_num_c *ips = SIM->get_param_num (BXP_IPS);
-  int oldips = ips->get ();
+  Bit32u oldips = ips->get ();
   sprintf (prompt, "Type a new value for ips: [%d] ", oldips);
-  int newips;
-  if (ask_int (prompt, 1, 1<<30, oldips, &newips) < 0)
+  Bit32u newips;
+  if (ask_uint (prompt, 1, 1<<30, oldips, &newips, 10) < 0)
     return;
   ips->set (newips);
 }
@@ -701,10 +693,10 @@ void bx_vga_update_interval ()
 {
   char prompt[1024];
   bx_param_num_c *pinterval = SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL);
-  int old = pinterval->get ();
+  Bit32u old = pinterval->get ();
   sprintf (prompt, "Type a new value for VGA update interval: [%d] ", old);
-  int newinterval;
-  if (ask_int (prompt, 1, 1<<30, old, &newinterval) < 0)
+  Bit32u newinterval;
+  if (ask_uint (prompt, 1, 1<<30, old, &newinterval, 10) < 0)
     return;
   pinterval->set (newinterval);
 }
@@ -736,8 +728,8 @@ void bx_log_options (int individual)
     int done = 0;
     while (!done) {
       bx_print_log_action_table ();
-      int id, level, action;
-      int maxid = SIM->get_n_log_modules ();
+      Bit32s id, level, action;
+      Bit32s maxid = SIM->get_n_log_modules ();
       if (ask_int (log_options_prompt1, -1, maxid-1, -1, &id) < 0)
 	return;
       if (id < 0) return;
@@ -773,7 +765,7 @@ void bx_log_options (int individual)
 void bx_mouse_enable ()
 {
   bx_param_num_c *mouse_en = SIM->get_param_num (BXP_MOUSE_ENABLED);
-  int newval, oldval = mouse_en->get ();
+  Bit32u newval, oldval = mouse_en->get ();
   if (ask_yn ("Enable the mouse? [%s] ", oldval, &newval) < 0) return;
   if (newval == oldval) return;
   mouse_en->set (newval);
@@ -814,7 +806,7 @@ int bx_write_rc (char *rc)
     } else if (status == -2) {
       // return code -2 indicates the file already exists, and overwrite
       // confirmation is required.
-      int overwrite = 0;
+      Bit32u overwrite = 0;
       char prompt[256];
       sprintf (prompt, "Configuration file '%s' already exists.  Overwrite it? [no] ", newrc);
       if (ask_yn (prompt, 0, &overwrite) < 0) return -1;
@@ -836,23 +828,6 @@ void bx_log_file ()
   assert (SIM->get_log_file (oldpath, CPANEL_PATH_LEN) >= 0);
   if (ask_string ("Enter log file name: [%s] ", oldpath, newpath) < 0) return;
   SIM->set_log_file (newpath);
-}
-
-void bx_edit_rom_addr ()
-{
-  char oldval[256], newval[256];
-  bx_param_num_c *rom_addr = SIM->get_param_num (BXP_ROM_ADDRESS);
-  sprintf (oldval, "%05x", rom_addr->get ());
-  while (1) {
-    if (ask_string ("Enter the ROM BIOS address: [%s] ", oldval, newval) < 0)
-      return;
-    int val;
-    if (1==sscanf (newval, "%x", &val)) {
-      rom_addr->set (val);
-      return;
-    }
-    fprintf (stderr, "The value should be in hex, as in 'e0000'.\n");
-  }
 }
 
 /*
@@ -903,5 +878,121 @@ void bx_control_panel_init () {
   SIM->set_notify_callback (control_panel_notify_callback);
 }
 
+/////////////////////////////////////////////////////////////////////
+// implement the text_* methods for bx_param types.
+
+void
+bx_param_num_c::text_print (FILE *fp)
+{
+  //fprintf (fp, "number parameter, id=%u, name=%s\n", get_id (), get_name ());
+  //fprintf (fp, "value=%u\n", get ());
+  if (get_format ()) {
+    fprintf (fp, get_format (), get ());
+    fprintf (fp, "\n");
+  } else {
+    char *format = "%s: %d\n"; 
+    assert (base==10 || base==16);
+    if (base==16) format = "%s: 0x%x\n";
+    fprintf (fp, format, get_name (), get ());
+  }
+}
+
+void
+bx_param_string_c::text_print (FILE *fp)
+{
+  //fprintf (fp, "string parameter, id=%u, name=%s\n", get_id (), get_name ());
+  //fprintf (fp, "value=%s\n", getptr ());
+  if (get_format ()) {
+    fprintf (fp, get_format (), getptr ());
+    fprintf (fp, "\n");
+  } else {
+    fprintf (fp, "%s: %s\n", get_name (), getptr ());
+  }
+}
+
+void
+bx_list_c::text_print (FILE *fp)
+{
+  fprintf (fp, "This is a list.\n");
+  fprintf (fp, "title=%s\n", title->getptr ());
+  fprintf (fp, "options=%s%s%s\n", 
+      (options->get () == 0) ? "none" : "",
+      (options->get () & BX_SHOW_PARENT) ? "SHOW_PARENT " : "",
+      (options->get () & BX_SERIES_ASK) ? "SERIES_ASK " : "");
+  for (int i=0; i<size; i++) {
+    fprintf (fp, "param[%d] = %p\n", i, list[i]);
+    if (list[i])
+      list[i]->text_print (fp);
+  }
+}
+
+int 
+bx_param_num_c::text_ask (FILE *fpin, FILE *fpout)
+{
+  fprintf (fpout, "\n");
+  int status;
+  char *prompt = get_ask_format ();
+  if (prompt == NULL) {
+    // default prompt, if they didn't set an ask format string
+    text_print (fpout);
+    prompt = "Enter new value: [%d] ";
+    if (base==16)
+      prompt = "Enter new value in hex: [%x] ";
+  }
+  Bit32u n = get ();
+  status = ask_uint (prompt, min, max, n, &n, base);
+  if (status < 0) return status;
+  set (n);
+  return 0;
+}
+
+int 
+bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
+{
+  fprintf (fpout, "\n");
+  int status;
+  char *prompt = get_ask_format ();
+  if (prompt == NULL) {
+    // default prompt, if they didn't set an ask format string
+    text_print (fpout);
+    prompt = "Enter a new value, or press return for no change.\n";
+  }
+  //FIXME
+  char buffer[1024];
+  status = ask_string (prompt, getptr(), buffer);
+  if (status < 0) return status;
+  set (buffer);
+  return 0;
+}
+
+int
+bx_list_c::text_ask (FILE *fpin, FILE *fpout)
+{
+  fprintf (fpout, "\n");
+  int i, imax = strlen (title->getptr ());
+  for (i=0; i<imax; i++) fprintf (fpout, "-");
+  fprintf (fpout, "\n%s\n", title->getptr ());
+  for (i=0; i<imax; i++) fprintf (fpout, "-");
+  fprintf (fpout, "\n");
+  //fprintf (fp, "options=%s\n", options->get ());
+  if (options->get () & BX_SHOW_PARENT)
+    fprintf (fpout, "0. Return to previous menu\n");
+  for (int i=0; i<size; i++) {
+    assert (list[i] != NULL);
+    fprintf (fpout, "%d. ", i+1);
+    list[i]->text_print (fpout);
+  }
+    fprintf (fpout, "\n");
+  Bit32u n = choice->get ();
+  int min = (options->get () & BX_SHOW_PARENT) ? 0 : 1;
+  int max = size;
+  int status = ask_uint ("Please choose one: [%d] ", min, max, n, &n, 10);
+  if (status < 0) return status;
+  choice->set (n);
+  return 0;
+}
+
+
+///////////////////////////////////////////////////////////
 
 #endif
