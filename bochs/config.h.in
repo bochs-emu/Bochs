@@ -1,4 +1,4 @@
-// Copyright Notice
+
 // ================
 // BOCHS is Copyright 1994-2000 by Kevin P. Lawton.
 //
@@ -24,6 +24,16 @@
 ///////////////////////////////////////////////////////////////////
 // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
 ///////////////////////////////////////////////////////////////////
+
+#define BX_USE_GCC_ATTRIBUTES 0
+
+#if BX_USE_GCC_ATTRIBUTES
+#define GCC_ATTRIBUTE __attribute__
+#else
+#define GCC_ATTRIBUTE(x) /* attribute not supported */
+#endif
+
+#define BX_CONTEXT_SUPPORT 0
 
 // I have tested the following combinations:
 //  * processors=1, bootstrap=0, ioapic_id=1   (uniprocessor system)
