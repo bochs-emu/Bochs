@@ -764,9 +764,6 @@ typedef
 #if (BX_SUPPORT_SSE<2)
 #error X86-64 requires SSE2
 #endif
-#if (!BX_SUPPORT_3DNOW)
-#error X86-64 requires 3DNOW
-#endif
 #if !BX_SupportPAE
 #error X86-64 requires Physical Address Extensions (PAE)
 #endif
