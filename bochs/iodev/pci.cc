@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.13 2001-11-14 01:39:22 bdenney Exp $
+// $Id: pci.cc,v 1.14 2002-05-10 10:56:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,6 +63,7 @@ bx_pci_c::init(bx_devices_c *d)
   BX_PCI_THIS devices = d;
 
   if (bx_options.Oi440FXSupport->get ()) {
+    d->register_io_read_handler(this, read_handler, 0x0CF8, "i440FX");
     for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
       d->register_io_read_handler(this, read_handler, i, "i440FX");
       }
@@ -128,6 +129,16 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
 #endif // !BX_USE_PCI_SMF
 
   switch (address) {
+    case 0x0CF8:
+      {
+      if (io_len == 4) {
+        return BX_PCI_THIS s.i440fx.confAddr;
+        }
+      else {
+        return 0xFFFF;
+        }
+      }
+      break;
     case 0x0CFC:
     case 0x0CFD:
     case 0x0CFE:
@@ -150,7 +161,8 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
           }
         val440fx = (val440fx & retMask);
 	BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x",
-		  BX_PCI_THIS s.i440fx.confAddr + (address & 0x3), val440fx));
+		  (Bit8u)(BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x3),
+		  val440fx));
         return val440fx;
         }
       else
@@ -196,7 +208,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  BX_DEBUG(("440FX PMC register 0x%02x selected", idx440fx));
 	  }
 	else {
-	  BX_PCI_THIS s.i440fx.confData = 0;
+	  BX_PCI_THIS s.i440fx.confData = 0xFFFFFFFF;
 	  BX_DEBUG(("440FX request for bus 0x%02x device 0x%02x function 0x%02x",
 		    (value >> 16) & 0xFF, (value >> 11) & 0x1F, (value >> 8) & 0x07));
 	  }
@@ -226,6 +238,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
             case 0x09:
             case 0x0a:
             case 0x0b:
+            case 0x0e:
               break;
             default:
               BX_PCI_THIS s.i440fx.array[idx440fx+i] = (value >> (i*8)) & 0xFF;
