@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.13 2004-10-07 17:38:02 vruppert Exp $
+// $Id: config.cc,v 1.14 2004-10-16 15:44:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -754,14 +754,18 @@ void bx_init_options ()
       "Enables new features found on newer hard drives.",
       1);
 
-  bx_options.Obootdrive = new bx_param_enum_c (BXP_BOOTDRIVE,
-      "bootdrive",
-      "Boot A, C or CD",
-      floppy_bootdisk_names,
-      BX_BOOT_FLOPPYA,
-      BX_BOOT_FLOPPYA);
-  bx_options.Obootdrive->set_format ("Boot from: %s drive");
-  bx_options.Obootdrive->set_ask_format ("Boot from floppy drive, hard drive or cdrom ? [%s] ");
+  // boot sequence
+  for (i=0; i<3; i++) {
+    sprintf (name, "Boot drive #%d", i+1);
+    sprintf (descr, "Name of drive #%d in boot sequence (A, C or CD)", i+1);
+    bx_options.Obootdrive[i] = new bx_param_enum_c ((bx_id)(BXP_BOOTDRIVE1+i),
+        strdup(name),
+        strdup(descr),
+        bochs_bootdisk_names,
+        (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE,
+        BX_BOOT_NONE);
+    bx_options.Obootdrive[i]->set_ask_format ("Boot from floppy drive, hard drive or cdrom ? [%s] ");
+  }
 
   bx_options.OfloppySigCheck = new bx_param_bool_c (BXP_FLOPPYSIGCHECK,
       "Skip Floppy Boot Signature Check",
@@ -790,7 +794,9 @@ void bx_init_options ()
     SIM->get_param (BXP_ATA3_MASTER),
     SIM->get_param (BXP_ATA3_SLAVE),
 #endif
-    SIM->get_param (BXP_BOOTDRIVE),
+    SIM->get_param (BXP_BOOTDRIVE1),
+    SIM->get_param (BXP_BOOTDRIVE2),
+    SIM->get_param (BXP_BOOTDRIVE3),
     SIM->get_param (BXP_FLOPPYSIGCHECK),
     NULL
   };
@@ -870,6 +876,7 @@ void bx_init_options ()
                 serial_mode_list,
                 0,
                 0);
+        bx_options.com[i].Omode->set_ask_format ("Choose I/O mode of the serial device [%s] ");
         sprintf (name, "Pathname of the serial device for COM%d", i+1);
         sprintf (descr, "The path can be a real serial device or a pty (X/Unix only)");
         bx_options.com[i].Odev = new bx_param_filename_c (
@@ -1306,6 +1313,7 @@ void bx_init_options ()
        0,
        0);
   bx_options.ne2k.Oethmod->set_by_name ("null");
+  bx_options.ne2k.Oethmod->set_ask_format ("Choose ethernet module for the NE2K [%s] ");
   bx_options.ne2k.Oethdev = new bx_param_string_c (BXP_NE2K_ETHDEV,
       "Ethernet device",
       "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
@@ -1346,6 +1354,7 @@ void bx_init_options ()
        0,
        0);
   bx_options.pnic.Oethmod->set_by_name ("null");
+  bx_options.pnic.Oethmod->set_ask_format ("Choose ethernet module for the Pseudo NIC [%s]");
   bx_options.pnic.Oethdev = new bx_param_string_c (BXP_PNIC_ETHDEV,
       "Ethernet device",
       "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
@@ -1701,7 +1710,9 @@ void bx_reset_options ()
   bx_options.OnewHardDriveSupport->reset();
 
   // boot & memory
-  bx_options.Obootdrive->reset();
+  for (i=0; i<3; i++) {
+    bx_options.Obootdrive[i]->reset();
+  }
   bx_options.OfloppySigCheck->reset();
   bx_options.memory.Osize->reset();
 
@@ -2546,18 +2557,34 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
 
   else if (!strcmp(params[0], "boot")) {
-    if (!strcmp(params[1], "a")) {
-      bx_options.Obootdrive->set (BX_BOOT_FLOPPYA);
-    } else if (!strcmp(params[1], "floppy")) {
-      bx_options.Obootdrive->set (BX_BOOT_FLOPPYA);
-    } else if (!strcmp(params[1], "c")) {
-      bx_options.Obootdrive->set (BX_BOOT_DISKC);
-    } else if (!strcmp(params[1], "disk")) {
-      bx_options.Obootdrive->set (BX_BOOT_DISKC);
-    } else if (!strcmp(params[1], "cdrom")) {
-      bx_options.Obootdrive->set (BX_BOOT_CDROM);
-    } else {
-      PARSE_ERR(("%s: boot directive with unknown boot device '%s'.  use 'floppy', 'disk' or 'cdrom'.", context, params[1]));
+    if (num_params < 2) {
+      PARSE_ERR(("%s: boot directive malformed.", context));
+      }
+    for (i=1; i<num_params; i++) {
+      if (!strcmp(params[i], "none")) {
+        bx_options.Obootdrive[i-1]->set (BX_BOOT_NONE);
+      } else if (!strcmp(params[i], "a")) {
+        bx_options.Obootdrive[i-1]->set (BX_BOOT_FLOPPYA);
+      } else if (!strcmp(params[i], "floppy")) {
+        bx_options.Obootdrive[i-1]->set (BX_BOOT_FLOPPYA);
+      } else if (!strcmp(params[i], "c")) {
+        bx_options.Obootdrive[i-1]->set (BX_BOOT_DISKC);
+      } else if (!strcmp(params[i], "disk")) {
+        bx_options.Obootdrive[i-1]->set (BX_BOOT_DISKC);
+      } else if (!strcmp(params[i], "cdrom")) {
+        bx_options.Obootdrive[i-1]->set (BX_BOOT_CDROM);
+      } else {
+        PARSE_ERR(("%s: boot directive with unknown boot drive '%s'.  use 'floppy', 'disk' or 'cdrom'.", context, params[i]));
+        }
+      }
+    if (bx_options.Obootdrive[0]->get () == BX_BOOT_NONE) {
+      PARSE_ERR(("%s: first boot drive must be one of 'floppy', 'disk' or 'cdrom'.", context));
+      }
+    if ((bx_options.Obootdrive[0]->get () == bx_options.Obootdrive[1]->get ()) ||
+        (bx_options.Obootdrive[0]->get () == bx_options.Obootdrive[2]->get ()) ||
+        ((bx_options.Obootdrive[2]->get () != BX_BOOT_NONE) &&
+        (bx_options.Obootdrive[1]->get () == bx_options.Obootdrive[2]->get ()))) {
+      PARSE_ERR(("%s: a boot drive appears twice in boot sequence.", context));
       }
     }
 
@@ -3704,8 +3731,13 @@ bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, "vgaromimage: file=\"%s\"\n", bx_options.vgarom.Opath->getptr ());
   else
     fprintf (fp, "# no vgaromimage\n");
-  int bootdrive = bx_options.Obootdrive->get ();
-  fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "floppy" : (bootdrive==BX_BOOT_DISKC) ? "disk" : "cdrom");
+  fprintf (fp, "boot: %s", bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get()));
+  for (i=1; i<3; i++) {
+    if (bx_options.Obootdrive[i]->get() != BX_BOOT_NONE) {
+      fprintf (fp, ", %s", bx_options.Obootdrive[i]->get_choice(bx_options.Obootdrive[i]->get()));
+    }
+  }
+  fprintf (fp, "\n");
   // it would be nice to put this type of function as methods on
   // the structs like bx_floppy_options::print or something.
   bx_write_floppy_options (fp, 0, &bx_options.floppya);

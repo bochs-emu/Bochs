@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.124 2004-09-07 18:02:29 vruppert Exp $
+// $Id: siminterface.h,v 1.125 2004-10-16 15:44:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -357,7 +357,9 @@ typedef enum {
   BXP_LOAD32BITOS_IOLOG,
   BXP_LOAD32BITOS_INITRD,
   BXP_LOAD32BITOS,
-  BXP_BOOTDRIVE,
+  BXP_BOOTDRIVE1,
+  BXP_BOOTDRIVE2,
+  BXP_BOOTDRIVE3,
   BXP_FLOPPYSIGCHECK,
   BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
@@ -554,10 +556,11 @@ typedef enum {
 #define BX_EJECTED   10
 #define BX_INSERTED  11
 
-// boot devices
-#define BX_BOOT_FLOPPYA 0
-#define BX_BOOT_DISKC   1
-#define BX_BOOT_CDROM   2
+// boot devices (using the same values as the rombios)
+#define BX_BOOT_NONE    0
+#define BX_BOOT_FLOPPYA 1
+#define BX_BOOT_DISKC   2
+#define BX_BOOT_CDROM   3
 
 // loader hack
 #define Load32bitOSNone        0
@@ -1272,8 +1275,8 @@ BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern int n_floppy_type_names;
 BOCHSAPI extern char *floppy_status_names[];
 BOCHSAPI extern int n_floppy_status_names;
-BOCHSAPI extern char *floppy_bootdisk_names[];
-BOCHSAPI extern int n_floppy_bootdisk_names;
+BOCHSAPI extern char *bochs_bootdisk_names[];
+BOCHSAPI extern int n_bochs_bootdisk_names;
 BOCHSAPI extern char *loader_os_names[];
 BOCHSAPI extern int n_loader_os_names;
 BOCHSAPI extern char *keyboard_type_names[];

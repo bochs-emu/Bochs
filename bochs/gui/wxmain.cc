@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.106 2004-10-03 09:11:28 vruppert Exp $
+// $Id: wxmain.cc,v 1.107 2004-10-16 15:44:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -592,8 +592,8 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   int which = wxGetSingleChoiceIndex ("Select the device to boot from", "Boot Device", bootDevices, devices, this);
   if (which<0) return;  // cancelled
   bx_param_enum_c *bootdevice = (bx_param_enum_c *) 
-    SIM->get_param(BXP_BOOTDRIVE);
-  bootdevice->set (which);
+    SIM->get_param(BXP_BOOTDRIVE1);
+  bootdevice->set (dev_id[which]);
 }
 
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))

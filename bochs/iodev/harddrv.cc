@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.126 2004-09-05 10:30:18 vruppert Exp $
+// $Id: harddrv.cc,v 1.127 2004-10-16 15:44:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -163,7 +163,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.126 2004-09-05 10:30:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.127 2004-10-16 15:44:00 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -570,7 +570,7 @@ bx_hard_drive_c::init(void)
       }
 
     // Set the "non-extended" boot device. This will default to DISKC if cdrom
-    if ( bx_options.Obootdrive->get () != BX_BOOT_FLOPPYA) {
+    if ( bx_options.Obootdrive[0]->get () != BX_BOOT_FLOPPYA) {
       // system boot sequence C:, A:
       DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) & 0xdf);
       }
@@ -579,25 +579,18 @@ bx_hard_drive_c::init(void)
       DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) | 0x20);
       }
 
-    // Set the "extended" boot device, byte 0x3D (needed for cdrom booting)
-    if ( bx_options.Obootdrive->get () == BX_BOOT_FLOPPYA) {
-      // system boot sequence A:
-      DEV_cmos_set_reg(0x3d, 0x01);
-      BX_INFO(("Boot device will be 'a'"));
-      }
-    else if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) { 
-      // system boot sequence C:
-      DEV_cmos_set_reg(0x3d, 0x02);
-      BX_INFO(("Boot device will be 'c'"));
-      }
-    else if ( bx_options.Obootdrive->get () == BX_BOOT_CDROM) { 
-      // system boot sequence cdrom
-      DEV_cmos_set_reg(0x3d, 0x03);
-      BX_INFO(("Boot device will be 'cdrom'"));
-      }
-      
+    // Set the "extended" boot sequence, bytes 0x38 and 0x3D (needed for cdrom booting)
+    BX_INFO(("Using boot sequence %s, %s, %s",
+             bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get ()),
+             bx_options.Obootdrive[1]->get_choice(bx_options.Obootdrive[1]->get ()),
+             bx_options.Obootdrive[2]->get_choice(bx_options.Obootdrive[2]->get ())
+	     ));
+    DEV_cmos_set_reg(0x3d, bx_options.Obootdrive[0]->get () |
+                           (bx_options.Obootdrive[1]->get () << 4));
+
     // Set the signature check flag in cmos, inverted for compatibility
-    DEV_cmos_set_reg(0x38, bx_options.OfloppySigCheck->get());
+    DEV_cmos_set_reg(0x38, bx_options.OfloppySigCheck->get() |
+                           (bx_options.Obootdrive[2]->get () << 4));
     BX_INFO(("Floppy boot signature check is %sabled", bx_options.OfloppySigCheck->get() ? "dis" : "en"));
     }
 

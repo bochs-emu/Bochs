@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.72 2004-10-03 09:11:28 vruppert Exp $
+// $Id: wxdialog.cc,v 1.73 2004-10-16 15:44:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1205,7 +1205,7 @@ void ParamDialog::AddParam (
 	    bx_list_c *childl = (bx_list_c *)child;
 	    for (int j=0; j<childl->get_size(); j++)
 	      AddParam (childl->get(j), plain, &newcontext);
-	    const char *pagename = child->get_ask_format ();
+	    const char *pagename = child->get_label ();
 	    if (!pagename) pagename = child->get_name ();
 	    panel->SetAutoLayout (TRUE);
 	    panel->SetSizer (boxsz);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.142 2004-09-07 18:02:28 vruppert Exp $
+// $Id: bochs.h,v 1.143 2004-10-16 15:44:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -633,7 +633,7 @@ typedef struct BOCHSAPI {
   bx_mem_options    memory;
   bx_parport_options par[BX_N_PARALLEL_PORTS]; // parallel ports
   bx_sb16_options   sb16;
-  bx_param_num_c    *Obootdrive;  
+  bx_param_enum_c   *Obootdrive[3];  
   bx_param_bool_c   *OfloppySigCheck;
   bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
