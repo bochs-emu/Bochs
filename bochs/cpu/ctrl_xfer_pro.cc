@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.18 2002-09-24 08:29:05 bdenney Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.19 2002-09-24 15:41:03 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,6 +36,14 @@
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP
 #endif
+
+
+#define INIT_64_DESCRIPTOR(descriptor)            \
+{                                                    \
+  (descriptor).u.segment.base = 0;                  \
+  (descriptor).u.segment.limit_scaled = 0xffffffff; \
+  (descriptor).valid = 1; \
+}
 
 
 #if BX_CPU_LEVEL >= 2
@@ -1607,37 +1615,24 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       //  return;
       //  }
 
+      if ( (raw_ss_selector & 0xfffc) != 0 ) {
+        parse_selector(raw_ss_selector, &ss_selector);
 
-#if KPL64Hacks
-unsigned ssIsNull = 0;
-if ( (raw_ss_selector & 0xfffc) == 0 ) {
-  BX_INFO(("iret: SS NULL OK in LM"));
-  parse_selector(0,&ss_selector);
-  parse_descriptor(0,0,&ss_descriptor);
-  load_ss_null(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
-  ssIsNull = 1;
-  goto afterSSChecks;
-  }
-#endif
+        /* selector RPL must = RPL of return CS selector,
+         * else #GP(SS selector) */
+        if ( ss_selector.rpl != cs_selector.rpl) {
+          BX_PANIC(("iret: SS.rpl != CS.rpl"));
+          exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+          return;
+          }
 
-      parse_selector(raw_ss_selector, &ss_selector);
+        /* selector index must be within its descriptor table limits,
+         * else #GP(SS selector) */
+        fetch_raw_descriptor(&ss_selector, &dword1, &dword2,
+          BX_GP_EXCEPTION);
 
-      /* selector RPL must = RPL of return CS selector,
-       * else #GP(SS selector) */
-      if ( ss_selector.rpl != cs_selector.rpl) {
-        BX_PANIC(("iret: SS.rpl != CS.rpl"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        return;
-        }
+        parse_descriptor(dword1, dword2, &ss_descriptor);
 
-      /* selector index must be within its descriptor table limits,
-       * else #GP(SS selector) */
-      fetch_raw_descriptor(&ss_selector, &dword1, &dword2,
-        BX_GP_EXCEPTION);
-
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-
-      if (raw_ss_selector != 0) {
         /* AR byte must indicate a writable data segment,
          * else #GP(SS selector) */
         if ( ss_descriptor.valid==0 ||
@@ -1664,10 +1659,6 @@ if ( (raw_ss_selector & 0xfffc) == 0 ) {
           return;
           }
         }
-
-#if KPL64Hacks
-afterSSChecks:
-#endif
 
       access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + 0,
         8, 0, BX_READ, &new_rip);
@@ -1698,13 +1689,14 @@ afterSSChecks:
       else
         write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL());
 
-#if KPL64Hacks
-      if (!ssIsNull) {
+      if ( (raw_ss_selector & 0xfffc) != 0 ) {
         // load SS:RSP from stack
         // load the SS-cache with SS descriptor
         load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
         }
-#endif
+      else {
+        INIT_64_DESCRIPTOR(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
+        }
       RSP = new_rsp;
 
       validate_seg_regs();
