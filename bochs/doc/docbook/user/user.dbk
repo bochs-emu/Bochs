@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.148 2004-08-24 12:23:35 vruppert Exp $
+$Id: user.dbk,v 1.149 2004-09-26 19:20:21 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -377,7 +377,9 @@ currently work with.
     <entry>VESA (Display) Support</entry>
     <entry>Yes</entry>
     <entry>Currently resolutions up to 1024x768x32bpp are supported.
-    You must compile Bochs with vbe enabled and use the LGPL'ed VGABIOS.
+    You must compile Bochs with vbe enabled and use the LGPL'd VGABIOS.
+    For more information see section <link linkend="vesa-notes">Notes
+    about VESA usage</link>.
     </entry>
   </row>
   <row>
@@ -2005,8 +2007,8 @@ turn it off.
       <entry>--enable-vbe</entry>
       <entry>yes</entry>
       <entry>Use VGA BIOS Extensions (VBE) by Jeroen Janssen.  To take
-      advantage of the VBE, you must tell Bochs to use the LGPL VGA BIOS
-      version 0.3b or higher in the vgaromimage line of your bochsrc file.
+      advantage of the VBE, you must tell Bochs to use the LGPL'd VGA BIOS
+      version 0.4c or higher in the vgaromimage line of your bochsrc file.
       </entry>
     </row>
     <row>
@@ -2913,8 +2915,8 @@ Examples:
 </screen>
 You also need to load a VGA ROM BIOS at 0xC0000.  
 </para>
-<para> A VGA BIOS file from Elpin Systems, Inc. is provided in the source and binary distributions.  </para>
-<para> A free LGPL'd VGA BIOS is also provided in the source and binary distributions.  </para>
+<para> A VGA BIOS file from Elpin Systems, Inc. is provided in the source and binary distributions.</para>
+<para> A free LGPL'd VGA BIOS is also provided in the source and binary distributions.</para>
 </section>
 
 <section><title>floppya/floppyb</title>
@@ -6343,7 +6345,8 @@ but in general it should work ok (we have run several test programs, the XFree86
 </para>
 
 <para>
-NOTE: you will need to use the LGPL'ed VGABIOS in order for application to correctly detect VESA support.
+NOTE: you will need to use the <ulink url="http://savannah.nongnu.org/projects/vgabios">LGPL'd VGABIOS</ulink>
+in order for application to correctly detect VESA support.
 </para>
 
 <para>
@@ -6364,6 +6367,33 @@ Interesting Facts:
 </itemizedlist>
 </para>
 
+<section><title>Instructions to setup Bochs VBE in Windows Guest OS</title>
+<para>This section was written by Stanislav Shwartsman.</para>
+<screen>
+Instructions for Win95/98:
+==========================
+I can only confirm that scitech finally made a vbe driver
+for windows. It works out of the box, at least with win95
+as guest os, provided you use Bochs 2.1 with the LGPL 
+vgabios.
+
+Here is how I did it :
+- install win95 with the vga driver.
+- download sdd 7 beta from <ulink url="http://www.majorgeeks.com/download382.html"></ulink>
+- download pmhelp.vxd from <ulink url="http://unununium.org/viewcvs/snap/redist/release/pmhelp.vxd"></ulink>
+- copy pmhelp.vxd to the win95 system directory
+- install sdd7
+
+800x600 and 1024x768 in 16 and 24 bpp modes here.
+I did not try 32bpp.
+
+Instructions for Win2000/XP:
+============================
+
+Bochs VBE Display Drivers for Windows NT/2000
+<ulink url="http://dhenriq.en.eresmas.com/"></ulink>
+</screen>
+</section>
 </section>
 
 <section id="harddisk-modes"><title>Disk Image Modes</title>
@@ -9609,7 +9639,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.148 2004-08-24 12:23:35 vruppert Exp $
+        $Id: user.dbk,v 1.149 2004-09-26 19:20:21 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
