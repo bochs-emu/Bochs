@@ -105,7 +105,7 @@ fi
 echo Running bochs
 
 # ok now try it
-$BOCHS -nocontrolpanel
+$BOCHS -q
 
 echo
 echo ---------------------------------------------------------------
