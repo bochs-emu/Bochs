@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.28 2004-11-02 17:31:14 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.29 2004-11-03 06:35:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2009,7 +2009,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 #endif
 
 #if BX_CPU_LEVEL >= 2
-int BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
 {
     // check always, not only in protected mode
     if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.184 2004-11-02 17:31:08 sshwarts Exp $
+// $Id: cpu.h,v 1.185 2004-11-03 06:35:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2744,7 +2744,7 @@ public: // for now...
   BX_SMF void cpu_loop(Bit32s max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
   BX_SMF void boundaryFetch(bxInstruction_c *i);
-  BX_SMF int branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
+  BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void prefetch(void);
   // revalidate_prefetch_q is now a no-op, due to the newer EIP window

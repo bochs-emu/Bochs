@@ -5,6 +5,9 @@
 #  error "extdb.cc only supported in win32 environment"
 #endif
 
+#include "iodev/iodev.h"
+#include "extdb.h"
+
 TRegs regs;
 
 char debug_loaded = 0;
