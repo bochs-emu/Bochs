@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.81 2003-07-31 19:51:42 vruppert Exp $
+// $Id: keyboard.cc,v 1.82 2003-11-11 18:18:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.81 2003-07-31 19:51:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.82 2003-11-11 18:18:36 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -523,8 +523,12 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
           BX_KEY_THIS s.kbd_controller.expecting_port60h = 1;
           break;
 
+        case 0xa0:
+          BX_DEBUG(("keyboard BIOS name not supported"));
+          break;
+
         case 0xa1:
-          BX_ERROR(("Dummy out Green PC for now : 0xa1"));
+          BX_DEBUG(("keyboard BIOS version not supported"));
           break;
 
         case 0xa7: // disable the aux device
