@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.99 2003-05-06 20:30:21 cbothamy Exp $
+// $Id: harddrv.cc,v 1.100 2003-05-15 18:32:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.99 2003-05-06 20:30:21 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.100 2003-05-15 18:32:27 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1903,7 +1903,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
       Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
       WRITE_HEAD_NO(channel,value & 0xf);
       if (BX_SELECTED_CONTROLLER(channel).lba_mode == 0 && ((value >> 6) & 1) == 1)
-        BX_INFO(("enabling LBA mode"));
+        BX_DEBUG(("enabling LBA mode"));
       WRITE_LBA_MODE(channel,(value >> 6) & 1);
       if (!BX_SELECTED_IS_PRESENT(channel)) {
         BX_ERROR (("device set to %d which does not exist",drvsel));

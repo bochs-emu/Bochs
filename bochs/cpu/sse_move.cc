@@ -90,7 +90,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   Bit16u tos = BX_CPU_THIS_PTR the_i387.tos;
   unsigned index;
 
-  BX_INFO(("FXSAVE: save FPU/MMX/SSE state"));
+  BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
 #define SW_TOP (0x3800)
 
@@ -170,7 +170,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   Bit32u tag_byte, tag_byte_mask, twd = 0;
   unsigned index;
 
-  BX_INFO(("FXRSTOR: restore FPU/MMX/SSE state"));
+  BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
   readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
   
