@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.50 2004-11-14 21:25:42 sshwarts Exp $
+// $Id: paging.cc,v 1.51 2004-12-13 22:26:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,9 +116,9 @@
 // Page Table Entry format when P=1 (4-Kbyte Page):
 // ================================================
 //
-//   63..63: NX                  \
+//   63..63: NX                  |
 //   62..52: available           | Long mode
-//   51..32: page base address   /
+//   51..32: page base address   | 
 //   31..12: page base address
 //   11.. 9: available
 //        8: G (Pentium Pro+), 0=reserved otherwise
@@ -598,25 +598,30 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 {
   bx_address lpf;
-  Bit32u   ppf, poffset, error_code, paddress;
-  Bit32u   pde, pde_addr;
-  Bit32u   accessBits, combined_access;
+  Bit32u   accessBits, combined_access, error_code;
   unsigned priv_index;
 #if BX_USE_TLB
-  Bit32u   TLB_index;
+  Bit32u TLB_index;
 #endif
 
   InstrTLB_Increment(tlbLookups);
   InstrTLB_Stats();
 
+  // note - we assume physical memory < 4gig so for brevity & speed, we'll use
+  // 32 bit entries although cr3 is expanded to 64 bits.
+  Bit32u ppf, poffset, paddress;
+
   bx_bool isWrite = (rw>=BX_WRITE); // write or r-m-w
 
 #if BX_SupportPAE
-  if (BX_CPU_THIS_PTR cr4.get_PAE()) {
-    Bit32u   pdp, pdp_addr;
+  if (BX_CPU_THIS_PTR cr4.get_PAE())
+  {
+    bx_address pde, pdp;
+    Bit32u pde_addr;
+    Bit32u pdp_addr;
 
-    lpf       = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
-    poffset   = laddr & 0x00000fff; // physical offset
+    lpf     = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
+    poffset = laddr & 0x00000fff; // physical offset
 
 #if BX_USE_TLB
     TLB_index = BX_TLB_INDEX_OF(lpf);
@@ -638,16 +643,15 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
     InstrTLB_Increment(tlbMisses);
 
-    //  note - we assume physical memory < 4gig so for brevity & speed, we'll use
-    //  32 bit entries although cr3 is expanded to 64 bits.
-
 #if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR msr.lma) {
-      Bit32u pml4, pml4_addr;
+    if (BX_CPU_THIS_PTR msr.lma)
+    {
+      bx_address pml4;
+
       // Get PML4 entry
-      pml4_addr = BX_CPU_THIS_PTR cr3_masked |
+      Bit32u pml4_addr = BX_CPU_THIS_PTR cr3_masked |
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
-      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 4, &pml4);
+      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
       if ( !(pml4 & 0x01) ) {
         // PML4 Entry NOT present
         error_code = 0x00000000; // RSVD=0, P=0
@@ -655,7 +659,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       }
       if ( !(pml4 & 0x20) ) {
         pml4 |= 0x20;
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pml4_addr, 4, &pml4);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
       }
 
       // Get PDP entry
@@ -665,11 +669,10 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     else
 #endif
     {
-      pdp_addr = BX_CPU_THIS_PTR cr3_masked |
-               ((laddr & 0xc0000000) >> 27);
+      pdp_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27);
     }
 
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdp_addr, 4, &pdp);
+    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdp_addr, sizeof(bx_address), &pdp);
     if ( !(pdp & 0x01) ) {
       // PDP Entry NOT present
       error_code = 0x00000000; // RSVD=0, P=0
@@ -677,14 +680,13 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     }
     if ( !(pdp & 0x20) ) {
       pdp |= 0x20;
-      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pdp_addr, 4, &pdp);
+      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pdp_addr, sizeof(bx_address), &pdp);
     }
 
     // Get page dir entry
-    pde_addr = (pdp & 0xfffff000) |
-               ((laddr & 0x3fe00000) >> 18);
+    pde_addr = (pdp & 0xfffff000) | ((laddr & 0x3fe00000) >> 18);
 
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
     if ( !(pde & 0x01) ) {
       // Page Directory Entry NOT present
       error_code = 0x00000000; // RSVD=0, P=0
@@ -698,13 +700,14 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       // 4M pages are enabled, and this is a 4Meg page.
 
       // Combined access is just access from the pde (no pte involved).
-      combined_access  = pde & 0x06; // U/S and R/W
+      combined_access = pde & 0x06; // U/S and R/W
       // Make up the physical page frame address.
       ppf = (pde & 0xffe00000) | (laddr & 0x001ff000);
 
 #if BX_SupportGlobalPages
-      if (BX_CPU_THIS_PTR cr4.get_PGE()) // PGE==1
-        combined_access |= (pde & 0x100); // G
+      if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
+        combined_access |= (pde & 0x100);  // G
+      }
 #endif
 
       priv_index =
@@ -721,29 +724,30 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       }
 
       // Update PDE if A/D bits if needed.
-      if ( ((pde & 0x20)==0) ||
-           (isWrite && ((pde&0x40)==0)) ) {
+      if ( ((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0)) )
+      {
         pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
       }
     }
     else
 #endif
     { // 4k pages.
-      Bit32u   pte, pte_addr;
+      bx_address pte;
 
       // Get page table entry
-      pte_addr = (pde & 0xfffff000) |
-                 ((laddr & 0x001ff000) >> 9);
-      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
+      Bit32u pte_addr = (pde & 0xfffff000) | ((laddr & 0x001ff000) >> 9);
+
+      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, sizeof(bx_address), &pte);
 
       combined_access  = (pde & pte) & 0x06; // U/S and R/W
       // Make up the physical page frame address.
       ppf = pte & 0xfffff000;
 
 #if BX_SupportGlobalPages
-      if (BX_CPU_THIS_PTR cr4.get_PGE()) // PGE==1
-        combined_access |= (pte & 0x100); // G
+      if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
+        combined_access |= (pte & 0x100);  // G
+      }
 #endif
 
       if ( !(pte & 0x01) ) {
@@ -768,191 +772,166 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       // Update PDE A bit if needed.
       if ( (pde & 0x20)==0 ) {
         pde |= 0x20; // Update A bit.
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
       }
 
       // Update PTE A/D bits if needed.
       if (((pte & 0x20)==0) || (isWrite && ((pte&0x40)==0))) 
       {
         pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pte_addr, sizeof(bx_address), &pte);
       }
     }
-
-    // Calculate physical memory address and fill in TLB cache entry
-    paddress = ppf | poffset;
-#if BX_USE_TLB
-    BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
-    BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
-#endif
-
-    if ( combined_access & 4 ) { // User
-      accessBits = 0x3; // User priv; read from {user,sys} OK.
-      if ( isWrite ) { // Current operation is a write (Dirty bit updated)
-        accessBits |= 0xc; // write from {user,sys} OK.
-        }
-      }
-    else { // System
-      accessBits = 0x1; // System priv; read from {sys} OK.
-      if ( isWrite ) { // Current operation is a write (Dirty bit updated)
-        accessBits |= 4; // write from {sys} OK.
-        }
-      }
-#if BX_SupportGlobalPages
-    accessBits |= combined_access & 0x100; // Global bit
-#endif
-#if BX_USE_TLB
-    BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
-#if BX_SupportGuest2HostTLB
-    // Attempt to get a host pointer to this physical page.  Put that
-    // pointer in the TLB cache.  Note if the request is vetoed, NULL
-    // will be returned, and it's OK to OR zero in anyways.
-    BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
-        (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(ppf), rw);
-#endif
-#endif
-    return(paddress);
   }
-#endif  // #if BX_SupportPAE
-
-  // CR4.PAE==0 (and MSR.LMA==0)
-
-  lpf       = laddr & 0xfffff000; // linear page frame
-  poffset   = laddr & 0x00000fff; // physical offset
-
-#if BX_USE_TLB
-  TLB_index = BX_TLB_INDEX_OF(lpf);
-
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf))
-  {
-    paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
-    accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
-    if (accessBits & (1 << ((isWrite<<1) | pl)))
-      return(paddress);
-
-    // The current access does not have permission according to the info
-    // in our TLB cache entry.  Re-walk the page tables, in case there is
-    // updated information in the memory image, and let the long path code
-    // generate an exception if one is warranted.
-  }
-#endif
-
-  InstrTLB_Increment(tlbMisses);
-
-  // Get page dir entry
-  pde_addr = BX_CPU_THIS_PTR cr3_masked |
-             ((laddr & 0xffc00000) >> 20);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
-  if ( !(pde & 0x01) ) {
-    // Page Directory Entry NOT present
-    error_code = 0x00000000; // RSVD=0, P=0
-    goto page_fault_not_present;
-  }
-
-#if BX_SUPPORT_4MEG_PAGES
-  if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4.get_PSE())) {
-    // 4M pages are enabled, and this is a 4Meg page.
-    // Note: when the PSE and PAE flags in CR4 are set,
-    // the processor generates a PF if the reserved bits are not
-    // set to 0.  (We don't handle PAE yet, just a note for
-    // the future).
-
-    // Combined access is just access from the pde (no pte involved).
-    combined_access  = pde & 0x006; // {US,RW}
-    // make up the physical frame number
-    ppf = (pde & 0xFFC00000) | (laddr & 0x003FF000);
-
-#if BX_SupportGlobalPages
-    if (BX_CPU_THIS_PTR cr4.get_PGE()) // PGE==1
-      combined_access |= pde & 0x100; // {G}
-#endif
-
-    priv_index =
-#if BX_CPU_LEVEL >= 4
-      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
-#endif
-      (pl<<3) |                      // bit 3
-      (combined_access & 0x06) |     // bit 2,1
-      isWrite;                       // bit 0
-
-    if (!priv_check[priv_index]) {
-      error_code = 0x00000001; // RSVD=0, P=1
-      goto page_fault_access;
-    }
-
-    // Update PDE if A/D bits if needed.
-    if (((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0))) {
-      pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
-    }
-  }
-  // Else normal 4Kbyte page...
   else
-#endif
+#endif  // #if BX_SupportPAE
   {
-    Bit32u   pte, pte_addr;
+    // CR4.PAE==0 (and MSR.LMA==0)
 
-#if (BX_CPU_LEVEL < 6)
-    // update PDE if A bit was not set before
-    if ( !(pde & 0x20) ) {
-      pde |= 0x20;
-      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+    lpf       = laddr & 0xfffff000; // linear page frame
+    poffset   = laddr & 0x00000fff; // physical offset
+
+#if BX_USE_TLB
+    TLB_index = BX_TLB_INDEX_OF(lpf);
+
+    if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf))
+    {
+      paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
+      accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
+      if (accessBits & (1 << ((isWrite<<1) | pl)))
+        return(paddress);
+
+      // The current access does not have permission according to the info
+      // in our TLB cache entry.  Re-walk the page tables, in case there is
+      // updated information in the memory image, and let the long path code
+      // generate an exception if one is warranted.
     }
 #endif
 
-    // Get page table entry
-    pte_addr = (pde & 0xfffff000) |
-               ((laddr & 0x003ff000) >> 10);
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
+    InstrTLB_Increment(tlbMisses);
 
-    // 386 and 486+ have different bahaviour for combining
-    // privilege from PDE and PTE.
-#if BX_CPU_LEVEL == 3
-    combined_access  = (pde | pte) & 0x04; // U/S
-    combined_access |= (pde & pte) & 0x02; // R/W
-#else // 486+
-    combined_access  = (pde & pte) & 0x06; // U/S and R/W
-#if BX_SupportGlobalPages
-    if (BX_CPU_THIS_PTR cr4.get_PGE())
-      combined_access |= (pte & 0x100); // G
-#endif
-#endif
+    Bit32u pde, pde_addr;
 
-    // Make up the physical page frame address.
-    ppf = pte & 0xfffff000;
+    // Get page dir entry
+    pde_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xffc00000) >> 20);
 
-    if ( !(pte & 0x01) ) {
-      // Page Table Entry NOT present
+    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+
+    if ( !(pde & 0x01) )
+    {
+      // Page Directory Entry NOT present
       error_code = 0x00000000; // RSVD=0, P=0
       goto page_fault_not_present;
     }
 
-    priv_index =
-#if BX_CPU_LEVEL >= 4
-      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
-#endif
-      (pl<<3) |                      // bit 3
-      (combined_access & 0x06) |     // bit 2,1
-      isWrite;                       // bit 0
+#if BX_SUPPORT_4MEG_PAGES
+    if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4.get_PSE()))
+    {
+      // 4M pages are enabled, and this is a 4Meg page.
+      // Note: when the PSE and PAE flags in CR4 are set,
+      // the processor generates a PF if the reserved bits are not
+      // set to 0.  (We don't handle PAE yet, just a note for
+      // the future).
 
-    if (!priv_check[priv_index]) {
-      error_code = 0x00000001; // RSVD=0, P=1
-      goto page_fault_access;
+      // Combined access is just access from the pde (no pte involved).
+      combined_access  = pde & 0x006; // {US,RW}
+      // make up the physical frame number
+      ppf = (pde & 0xFFC00000) | (laddr & 0x003FF000);
+
+#if BX_SupportGlobalPages
+      if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
+        combined_access |= pde & 0x100;    // {G}
+      }
+#endif
+
+      priv_index =
+#if BX_CPU_LEVEL >= 4
+        (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
+#endif
+        (pl<<3) |                      // bit 3
+        (combined_access & 0x06) |     // bit 2,1
+        isWrite;                       // bit 0
+
+      if (!priv_check[priv_index]) {
+        error_code = 0x00000001; // RSVD=0, P=1
+        goto page_fault_access;
+      }
+
+      // Update PDE if A/D bits if needed.
+      if (((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0)))
+      {
+        pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+      }
     }
+    else // Else normal 4Kbyte page...
+#endif
+    {
+      Bit32u pte, pte_addr;
+
+#if (BX_CPU_LEVEL < 6)
+      // update PDE if A bit was not set before
+      if ( !(pde & 0x20) ) {
+        pde |= 0x20;
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+      }
+#endif
+
+      // Get page table entry
+      pte_addr = (pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10);
+
+      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
+
+      // 386 and 486+ have different bahaviour for combining
+      // privilege from PDE and PTE.
+#if BX_CPU_LEVEL == 3
+      combined_access  = (pde | pte) & 0x04; // U/S
+      combined_access |= (pde & pte) & 0x02; // R/W
+#else // 486+
+      combined_access  = (pde & pte) & 0x06; // U/S and R/W
+#if BX_SupportGlobalPages
+      if (BX_CPU_THIS_PTR cr4.get_PGE()) {
+        combined_access |= (pte & 0x100); // G
+      }
+#endif
+#endif
+
+      // Make up the physical page frame address.
+      ppf = pte & 0xfffff000;
+
+      if ( !(pte & 0x01) ) {
+        // Page Table Entry NOT present
+        error_code = 0x00000000; // RSVD=0, P=0
+        goto page_fault_not_present;
+      }
+
+      priv_index =
+#if BX_CPU_LEVEL >= 4
+        (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
+#endif
+        (pl<<3) |                      // bit 3
+        (combined_access & 0x06) |     // bit 2,1
+        isWrite;                       // bit 0
+
+      if (!priv_check[priv_index]) {
+        error_code = 0x00000001; // RSVD=0, P=1
+        goto page_fault_access;
+      }
 
 #if (BX_CPU_LEVEL >= 6)
-    // update PDE if A bit was not set before
-    if ( !(pde & 0x20) ) {
-      pde |= 0x20;
-      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
-    }
+      // update PDE if A bit was not set before
+      if ( !(pde & 0x20) ) {
+        pde |= 0x20;
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
+      }
 #endif
 
-    // Update PTE if A/D bits if needed.
-    if (((pte & 0x20)==0) || (isWrite && ((pte&0x40)==0))) 
-    {
-      pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
+      // Update PTE if A/D bits if needed.
+      if (((pte & 0x20)==0) || (isWrite && ((pte&0x40)==0))) 
+      {
+        pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
+      }
     }
   }
 
@@ -963,7 +942,6 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
 #endif
 
-// 1 << ((W<<1) | U)
 // b0: Read  Sys   OK
 // b1: Read  User  OK
 // b2: Write Sys   OK
@@ -972,30 +950,29 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     accessBits = 0x3; // User priv; read from {user,sys} OK.
     if ( isWrite ) { // Current operation is a write (Dirty bit updated)
       accessBits |= 0xc; // write from {user,sys} OK.
-      }
     }
+  }
   else { // System
     accessBits = 0x1; // System priv; read from {sys} OK.
     if ( isWrite ) { // Current operation is a write (Dirty bit updated)
       accessBits |= 4; // write from {sys} OK.
-      }
     }
+  }
 #if BX_SupportGlobalPages
   accessBits |= combined_access & 0x100; // Global bit
 #endif
 #if BX_USE_TLB
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 #if BX_SupportGuest2HostTLB
-  // Attempt to get a host pointer to this physical page.  Put that
-  // pointer in the TLB cache.  Note if the request is vetoed, NULL
+  // Attempt to get a host pointer to this physical page. Put that
+  // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
   BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
-      (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(ppf), rw);
+    (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(ppf), rw);
 #endif
 #endif
 
   return(paddress);
-
 
 page_fault_access:
 page_fault_not_present:

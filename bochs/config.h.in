@@ -32,8 +32,7 @@
 // contain anything language dependent such as a class declaration.
 //
 
-#ifdef _BX_CONFIG_H_
-#else
+#ifndef _BX_CONFIG_H_
 #define _BX_CONFIG_H_ 1
 
 ///////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.190 2004-12-11 20:51:07 sshwarts Exp $
+// $Id: cpu.h,v 1.191 2004-12-13 22:26:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2668,9 +2668,6 @@ public: // for now...
   BX_SMF void Resolve64Mod1or2Base15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
-  BX_SMF int REP(bxInstruction_c *);
-  BX_SMF int REP_ZF(bxInstruction_c *, unsigned rep_prefix);
-
 #if BX_DEBUGGER
   BX_SMF void     dbg_take_irq(void);
   BX_SMF void     dbg_force_interrupt(unsigned vector);
@@ -2705,9 +2702,9 @@ public: // for now...
   // technique.
   BX_SMF BX_CPP_INLINE void revalidate_prefetch_q(void) { }
   BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void) 
-    {
+  {
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
-    }
+  }
 
   BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length) BX_CPP_AttrRegparmN(3);
