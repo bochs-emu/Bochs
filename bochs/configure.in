@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.173 2002-11-21 03:43:03 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.174 2002-11-21 03:50:59 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2192,4 +2192,5 @@ AC_OUTPUT(Makefile iodev/Makefile debug/Makefile bios/Makefile \
 	 fpu/Makefile install-x11-fonts build/linux/bochs-dlx \
 	 build/linux/bochs-docs bxversion.h \
 	 build/linux/DOC-linux.html \
-	 build/macosx/Info.plist build/win32/nsis/bochs.nsi)
+	 build/macosx/Info.plist \
+	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi)
