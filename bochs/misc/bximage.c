@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.16 2002-11-21 06:36:22 bdenney Exp $
+ * $Id: bximage.c,v 1.17 2002-11-26 11:21:31 cbothamy Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -17,7 +17,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.16 2002-11-21 06:36:22 bdenney Exp $";
+char *rcsid = "$Id: bximage.c,v 1.17 2002-11-26 11:21:31 cbothamy Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -308,4 +308,8 @@ int main()
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
   myexit(0);
+
+  // make picky compilers (c++, gcc) happy,
+  // even though we leave via 'myexit' just above 
+  return 0;
 }
