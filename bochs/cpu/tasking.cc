@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.11 2002-09-09 21:59:10 kevinlawton Exp $
+// $Id: tasking.cc,v 1.12 2002-09-10 01:39:40 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -283,7 +283,10 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     trap_word = 0; // keep compiler happy (not used)
     }
   else {
-    access_linear(nbase32 + 0x1c, 4, 0, BX_READ, &newCR3);
+    if (BX_CPU_THIS_PTR cr0.pg)
+      access_linear(nbase32 + 0x1c, 4, 0, BX_READ, &newCR3);
+    else
+      newCR3 = 0;   // keep compiler happy (not used)
     access_linear(nbase32 + 0x20, 4, 0, BX_READ, &newEIP);
     access_linear(nbase32 + 0x24, 4, 0, BX_READ, &newEFLAGS);
     access_linear(nbase32 + 0x28, 4, 0, BX_READ, &newEAX);
@@ -476,7 +479,7 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
   //          descriptor parts of the segment registers.
   //
 
-  if (tss_descriptor->type >= 9) {
+  if ( (tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.pg) {
     CR3_change(newCR3); // Tell paging unit about new cr3 value
     BX_DEBUG (("task_switch changing CR3 to 0x%08x\n", newCR3));
     BX_INSTR_TLB_CNTRL(BX_INSTR_TASKSWITCH, newCR3);
