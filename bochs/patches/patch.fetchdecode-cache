@@ -1,35 +1,15 @@
 ----------------------------------------------------------------------
 Patch name: patche-fetchdecode-cache
 Author: tld
-Date: May, 29th 2002
+Date: June, 3rd 2002
 
 Detailed description:
-
-I somehow managed to implement the fetchdecode caching system I wrote 
-about last night (and to which I didn't get any answer)
-I couldn't benchmark it as I wanted (mainly, I lack the tools) so I 
-don't really know what performance change it brought.
-
-It has issues with code morphing (and some other things I can't 
-recognize in the code), but if the cache is "small enough" it works.
-For those interested, I left the source code on
-http://tld.digitalcurse.com/bochs/cpu.cc which is meant to
-replace the 
-file cpu/cpu.cc in the CVS snapshot 20020527 which you can find at
-http://tld.digitalcurse.com/bochs/bochs-20020527.tar.bz2 if
-you don't have CVS access.
-
-I'd like to hear comments on this.
-
-PS. Of course, my code does NOT follow bochs' code standard which is not 
-intended to be inserted into the release. This is just intended as a 
-prototype did in 2 hours (of which, 1.5 for understanding the 
-surrounding code...)
+3rd version of tld's fetchdecode cache
 
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
-  cvs checked out on May, 29th 2002
+  cvs checked out on June, 3rd 2002
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -40,146 +20,108 @@ RCS file: /cvsroot/bochs/bochs/config.h.in,v
 retrieving revision 1.48
 diff -u -r1.48 config.h.in
 --- config.h.in	18 Apr 2002 01:00:53 -0000	1.48
-+++ config.h.in	29 May 2002 21:46:52 -0000
-@@ -189,6 +189,14 @@
++++ config.h.in	3 Jun 2002 20:31:02 -0000
+@@ -546,6 +546,15 @@
+ #define BX_DYNAMIC_CPU_I386    0
+ #define BX_DYNAMIC_CPU_SPARC   0
  
- #define BX_SUPPORT_V8086_MODE 1
++// caching of fetchdecode() calls
++#define BX_FETCHDECODE_CACHE 1
++
++#if BX_FETCHDECODE_CACHE
++  // The number of entries. MUST be a power of 2
++  #define BX_FDCACHE_SIZE 0x0800
++  #define BX_FDCACHE_MASK (BX_FDCACHE_SIZE-1)
++#endif // BX_FETCHDECODE_CACHE
++
+ #define BX_SUPPORT_FPU 0
  
-+
-+// Use fetchdecode cache
-+//   1 = use the cache
-+//   0 = don't use the cache
-+
-+#define BX_FETCHDECODE_CACHE 01
-+
-+
- // Support shadowing of ROM from C0000 to FFFFF.
- // This allows that region to be written to.
- #define BX_SHADOW_RAM 0
+ #define BX_HAVE_GETENV 0
 Index: cpu/cpu.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/cpu.cc,v
 retrieving revision 1.28
 diff -u -r1.28 cpu.cc
 --- cpu/cpu.cc	18 Apr 2002 00:22:19 -0000	1.28
-+++ cpu/cpu.cc	29 May 2002 21:46:53 -0000
-@@ -26,7 +26,6 @@
- 
- #define BX_INSTR_SPY 0
- 
--
- #define NEED_CPU_REG_SHORTCUTS 1
- #include "bochs.h"
- #define LOG_THIS BX_CPU_THIS_PTR
-@@ -37,6 +36,35 @@
++++ cpu/cpu.cc	3 Jun 2002 20:31:03 -0000
+@@ -37,7 +37,12 @@
  
  //unsigned counter[2] = { 0, 0 };
  
 +#if BX_FETCHDECODE_CACHE
-+  // The number of entries. MUST be a power of 2
-+  #define BX_FDCACHE_SIZE 0x0100 
-+  #define BX_FDCACHE_MASK (BX_FDCACHE_SIZE-1)
-+
-+  // To get information about hit ratio every so operations
-+  #define BX_FDCACHE_STATS 0x100000
-+
-+  // The following stuff must be added to the processor's data (or else... poor MP!)
-+  // note from cb : still to do
-+
-+  Bit32u fdcache_eip[BX_FDCACHE_SIZE]; // will store operation's IP
-+
-+  // NOTE: This struct should really be aligned!
-+  BxInstruction_t fdcache_i[BX_FDCACHE_SIZE]; // stores decoded instruction
-+
-+  Bit32u fdcache_cs; // the last used CS
-+  Bit32u fdcache_32; // was the segment 32bit?
-+
-+  // End of stuff to insert
-+
-+  unsigned long bx_fdcache_sel,
-+                bx_fdcache_eip;
-+
-+  #if BX_FDCACHE_STATS
-+    int bx_fdcache_hit = 0; // cache hits
-+    int bx_fdcache_acc = BX_FDCACHE_STATS; // total accesses (countdown)
-+  #endif // BX_FDCACHE_STATS
++  static unsigned long bx_fdcache_sel;
++  static unsigned long bx_fdcache_eip;
+ 
++  static Bit32u new_phy_addr;
 +#endif // BX_FETCHDECODE_CACHE
  
- 
  #if BX_SIM_ID == 0   // only need to define once
-@@ -106,11 +134,13 @@
+ // This array defines a look-up table for the even parity-ness
+@@ -106,11 +111,16 @@
  BX_CPU_C::cpu_loop(Bit32s max_instr_count)
  {
    unsigned ret;
 -  BxInstruction_t i;
-+  BxInstruction_t bxinstruction_dummy, *i = &bxinstruction_dummy;
++  BxInstruction_t *i;
    unsigned maxisize;
    Bit8u *fetch_ptr;
    Boolean is_32;
  
-+printf("sizeof(BxInstruction_t) = %i\n", sizeof(BxInstruction_t));
++#if !BX_FETCHDECODE_CACHE
++  BxInstruction_t bxinstruction_dummy;
++  i = &bxinstruction_dummy;
++#endif // #if BX_FETCHDECODE_CACHE
 +
  #if BX_DEBUGGER
    BX_CPU_THIS_PTR break_point = 0;
  #ifdef MAGIC_BREAKPOINT
-@@ -217,15 +247,67 @@
-   maxisize = 16;
-   if (BX_CPU_THIS_PTR bytesleft < 16)
-     maxisize = BX_CPU_THIS_PTR bytesleft;
--  ret = FetchDecode(fetch_ptr, &i, maxisize, is_32);
-+
+@@ -207,25 +217,53 @@
+   }
+ #endif
+ 
+-  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+-
+   if (BX_CPU_THIS_PTR bytesleft == 0) {
+     prefetch();
+     }
+   fetch_ptr = BX_CPU_THIS_PTR fetch_ptr;
+ 
 +#if BX_FETCHDECODE_CACHE
-+  bx_fdcache_eip = EIP;
++  bx_fdcache_eip = new_phy_addr;
 +  bx_fdcache_sel = bx_fdcache_eip & BX_FDCACHE_MASK;
 +
-+  i = &fdcache_i[bx_fdcache_sel];
++  i = &(BX_CPU_THIS_PTR fdcache_i[bx_fdcache_sel]);
 +
-+  // NOTE: I'm not sure this is the correct value to check for (I don't know bochs)
-+  //       Maybe I should also check for other things?
-+  if (fdcache_cs != BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base || fdcache_32 != is_32) {
-+    // Clear the EIP values
-+    for (int tmp = BX_FDCACHE_SIZE-1; tmp >= 0; --tmp) {
-+      fdcache_eip[tmp] = 0xFFFFFFFF; // do NOT fill with 0s!
-+    }
-+    fdcache_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base;
-+    fdcache_32 = is_32;
-+  }
-+
-+  if (fdcache_eip[bx_fdcache_sel] == bx_fdcache_eip) {
-+    // HIT! :-)
-+    #if BX_FDCACHE_STATS
-+      ++bx_fdcache_hit;
-+    #endif    
-+
-+    // (debugging stuff)
-+    // printf("%8.8x:%8.8x !\n", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base, EIP);
-+
++  if (BX_CPU_THIS_PTR fdcache_eip[bx_fdcache_sel] == bx_fdcache_eip) {
++    // HIT! ;^)
 +    ret = 1; // success!
++    new_phy_addr += i->ilen;
 +  } else {
 +    // MISS :'(
-+    ret = FetchDecode(fetch_ptr, i, maxisize, is_32);
++#endif // #if BX_FETCHDECODE_CACHE
 +
-+    // (debugging stuff)
-+    // printf("%8.8x:%8.8x\n", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base, EIP);
+   maxisize = 16;
+-  if (BX_CPU_THIS_PTR bytesleft < 16)
++  if (BX_CPU_THIS_PTR bytesleft < 16) {
+     maxisize = BX_CPU_THIS_PTR bytesleft;
+-  ret = FetchDecode(fetch_ptr, &i, maxisize, is_32);
++    }
++  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
++  ret = FetchDecode(fetch_ptr, i, maxisize, is_32);
 +
-+    // NOTE: I don't know what ret is for. This way is safer, I guess...
++#if BX_FETCHDECODE_CACHE
++    // The instruction straddles a page boundary.
++    // Not storing such instructions in the cache is probably the
++    //   easiest way to handle them  
 +    if (ret) {
-+      fdcache_eip[bx_fdcache_sel] = bx_fdcache_eip; // store the computed value
++      BX_CPU_THIS_PTR fdcache_eip[bx_fdcache_sel] = bx_fdcache_eip;
++      new_phy_addr += i->ilen;
 +    } else {
-+      fdcache_eip[bx_fdcache_sel] = 0xFFFFFFFF;
++      // Invalidate cache!
++      BX_CPU_THIS_PTR fdcache_eip[bx_fdcache_sel] = 0xFFFFFFFF;
 +    }
 +  }
-+
-+  #if BX_FDCACHE_STATS
-+    if (!--bx_fdcache_acc) {
-+      bx_fdcache_acc = BX_FDCACHE_STATS;
-+      printf("%6.6x\n", bx_fdcache_hit);
-+      bx_fdcache_hit = 0;
-+    }
-+  #endif // BX_FDCACHE_STATS
-+#else // #if BX_FETCHDECODE_CACHE
-+  ret = FetchDecode(fetch_ptr, i, maxisize, is_32);
-+#endif // BX_FETCHDECODE_CACHE
++#endif // #if BX_FETCHDECODE_CACHE
  
    if (ret) {
 -    if (i.ResolveModrm) {
@@ -195,7 +137,7 @@ diff -u -r1.28 cpu.cc
  fetch_decode_OK:
  
  #if BX_DEBUGGER
-@@ -239,34 +321,34 @@
+@@ -239,34 +277,34 @@
      }
  #endif
  
@@ -241,7 +183,7 @@ diff -u -r1.28 cpu.cc
              ECX -= 1;
              }
            if (ECX == 0) goto repeat_done;
-@@ -274,7 +356,7 @@
+@@ -274,7 +312,7 @@
            }
          else { // 16bit addrsize
            if (CX != 0) {
@@ -250,7 +192,7 @@ diff -u -r1.28 cpu.cc
              CX -= 1;
              }
            if (CX == 0) goto repeat_done;
-@@ -302,12 +384,12 @@
+@@ -302,12 +340,12 @@
  
  
  repeat_done:
@@ -266,7 +208,7 @@ diff -u -r1.28 cpu.cc
        }
  
      BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
-@@ -410,13 +492,13 @@
+@@ -410,17 +448,22 @@
      for (; j<16; j++) {
        FetchBuffer[j] = *temp_ptr++;
        }
@@ -284,3 +226,100 @@ diff -u -r1.28 cpu.cc
  
      // note: eip has already been advanced to beginning of page
      BX_CPU_THIS_PTR fetch_ptr = fetch_ptr + remain;
+     BX_CPU_THIS_PTR bytesleft -= remain;
++
++    #if BX_FETCHDECODE_CACHE
++      new_phy_addr += remain;
++    #endif // BX_FETCHDECODE_CACHE
++
+     //BX_CPU_THIS_PTR eip += remain;
+     BX_CPU_THIS_PTR eip = BX_CPU_THIS_PTR prev_eip;
+     goto fetch_decode_OK;
+@@ -603,9 +646,12 @@
+   // cs:eIP
+   // prefetch QSIZE byte quantity aligned on corresponding boundary
+   Bit32u new_linear_addr;
+-  Bit32u new_phy_addr;
+   Bit32u temp_eip, temp_limit;
+ 
++#if !BX_FETCHDECODE_CACHE
++  Bit32u new_phy_addr;
++#endif // !BX_FETCHDECODE_CACHE
++
+   temp_eip   = BX_CPU_THIS_PTR eip;
+   temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
+ 
+@@ -664,7 +710,9 @@
+ BX_CPU_C::revalidate_prefetch_q(void)
+ {
+   Bit32u new_linear_addr, new_linear_page, new_linear_offset;
++#if !BX_FETCHDECODE_CACHE
+   Bit32u new_phy_addr;
++#endif // !BX_FETCHDECODE_CACHE
+ 
+   new_linear_addr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR eip;
+ 
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.19
+diff -u -r1.19 cpu.h
+--- cpu/cpu.h	18 Apr 2002 00:22:19 -0000	1.19
++++ cpu/cpu.h	3 Jun 2002 20:31:04 -0000
+@@ -32,7 +32,6 @@
+ 
+ #include "cpu/lazy_flags.h"
+ 
+-
+ #define BX_SREG_ES    0
+ #define BX_SREG_CS    1
+ #define BX_SREG_SS    2
+@@ -1582,6 +1581,13 @@
+   bx_local_apic_c local_apic;
+   Boolean int_from_local_apic;
+ #endif
++
++  #if BX_FETCHDECODE_CACHE
++    Bit32u fdcache_eip[BX_FDCACHE_SIZE]; // will store operation's IP
++    // NOTE: This struct should really be aligned!
++    BxInstruction_t fdcache_i[BX_FDCACHE_SIZE]; // stores decoded instruction
++  #endif // #if BX_FETCHDECODE_CACHE
++                                              
+   };
+ 
+ 
+Index: memory/memory.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/memory/memory.cc,v
+retrieving revision 1.11
+diff -u -r1.11 memory.cc
+--- memory/memory.cc	3 Apr 2002 16:48:15 -0000	1.11
++++ memory/memory.cc	3 Jun 2002 20:31:05 -0000
+@@ -49,6 +49,27 @@
+   a20addr = A20ADDR(addr);
+   BX_INSTR_PHY_WRITE(a20addr, len);
+ 
++#if BX_FETCHDECODE_CACHE
++  // NOTE: This piece should be put, if possible, where a write to the memory
++  //   takes place.
++  // Here it trashes cache even for writes that would end up to ROM
++
++  // Invalidate instruction cache for written addresses
++  // Instructions can be up to 16 bytes long, so I have to trash up to 15 bytes
++  //   before write address (costly!)
++  // I think it would NOT be safe to invalidate up to the last instruction
++  //   before the write because there COULD be programs which use
++  //   jump-in-the-middle-of-an-instruction schemes (esp. copyprotection
++  //   schemes)
++  unsigned long bx_fdcache_idx = addr - 15;
++  for (int count = 15+len; count > 0; --count) {
++    if (cpu->fdcache_eip[bx_fdcache_idx & BX_FDCACHE_MASK] == bx_fdcache_idx) {
++      cpu->fdcache_eip[bx_fdcache_idx & BX_FDCACHE_MASK] = 0xFFFFFFFF;
++    }
++    ++bx_fdcache_idx;
++  }
++#endif // #if BX_FETCHDECODE_CACHE
++
+ #if BX_DEBUGGER
+   // (mch) Check for physical write break points, TODO
+   // (bbd) Each breakpoint should have an associated CPU#, TODO
