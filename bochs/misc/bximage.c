@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.3 2001-06-01 04:28:14 bdenney Exp $
+ * $Id: bximage.c,v 1.4 2001-06-01 05:11:45 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -8,11 +8,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <assert.h>
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.3 2001-06-01 04:28:14 bdenney Exp $";
+char *rcsid = "$Id: bximage.c,v 1.4 2001-06-01 05:11:45 bdenney Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -138,7 +140,6 @@ ask_yn (char *prompt, int the_default, int *out)
 {
   char buffer[16];
   char *clean;
-  int i;
   *out = -1;
   while (1) {
     printf ("%s", prompt);
@@ -163,7 +164,6 @@ ask_string (char *prompt, char *the_default, char *out)
 {
   char buffer[1024];
   char *clean;
-  int i;
   out[0] = 0;
   printf ("%s", prompt);
   if (!fgets (buffer, sizeof(buffer), stdin))
@@ -190,7 +190,7 @@ int make_image (int sec, char *filename)
   fp = fopen (filename, "r");
   if (fp) {
     int confirm;
-    sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. [no] ");
+    sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. [no] ", filename);
     if (ask_yn (buffer, 0, &confirm) < 0)
       fatal (EOF_ERR);
     if (!confirm) 
@@ -257,8 +257,8 @@ int main()
       fatal (EOF_ERR);
     sprintf (bochsrc_line, "diskc: file=\"%s\", cyl=%d, heads=%d, spt=%d", filename, cyl, heads, spt);
   } else {
-    int fdsize, cyl, heads, spt;
-    char *name;
+    int fdsize, cyl=0, heads=0, spt=0;
+    char *name = NULL;
     if (ask_menu (fdsize_menu, fdsize_n_choices, fdsize_choices, 2, &fdsize) < 0)
       fatal (EOF_ERR);
     switch (fdsize) {
@@ -288,4 +288,5 @@ int main()
   printf ("\nI wrote %d bytes to %s.\n", sectors*512, filename);
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
+  return 0;
 }
