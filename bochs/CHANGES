@@ -70,6 +70,9 @@ Patches applied:
 
 - Christophe's changes...
   --------------------------------------------------------------------------
+- cpu
+  - fix flaw in IO bitmap permission of TSS
+  - cpu resets on triple fault
 - I/O devices
   - harddisks 
     - per device selectable Harddisk modes :
@@ -85,6 +88,7 @@ Patches applied:
     - tap support for FreeBSD (contributed by Ronald Klop and Gen Otsuji)
     - fix when booting with grub (contributed by Keir Fraser)
   - add experimental PCI VGA card (contributed by Mike Nordell)
+  - include slowdown timer as a runtime option
 - display libraries
   - X11
     - onboard vgacard charmap usage (no need for external X11 vga font any more)
@@ -205,6 +209,10 @@ Patches applied:
 - these S.F. bugs were fixed 
 // CB : I ran the request on SF, these bugs have definitely been closed 
 // since 2.0.2). There might have been others, during 2.0 to 2.0.2 times
+   #663320  flaw in IO bitmap permission..
+   #659510  Bochs timing off by x10
+   #764929  Timing is off.
+   #645609  Real Time Clock is too *FAST...
    #516745  breakpoint not caught
    #666202  Windows 2000 - random screen blanking with linux DLX demo 
    #629242  reset during Doom -> BIOS panic
