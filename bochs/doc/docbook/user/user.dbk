@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.135 2004-01-02 22:37:18 vruppert Exp $
+$Id: user.dbk,v 1.136 2004-01-04 17:14:01 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1226,6 +1226,45 @@ the runtime configuration and for log messages if no logfile is specified.
 You can find more information on the DLX Linux demo in the next section below the
 DLX Linux screenshot.
 </para>
+
+<table><title>Files in Bochs directory (Windows version)</title>
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
+<thead> <row> <entry>File</entry> <entry>Description</entry> </row>
+</thead>
+<tbody>
+
+<row><entry>BIOS-bochs-* </entry> <entry> ROM BIOS images for Bochs.  Normally you would only use BIOS-bochs-latest unless you are simulating multiple processors. </entry> </row>
+<row><entry>bochs.exe </entry> <entry> the main Bochs executable </entry> </row>
+<row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
+<row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
+<row><entry>bochsrc-sample.txt </entry> <entry> sample Bochs configuration file </entry> </row>
+<row><entry>bxcommit.exe </entry> <entry> tool for committing redologs to flat disk images </entry> </row>
+<row><entry>bximage.exe </entry> <entry> tool for making new disk images </entry> </row>
+<row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
+<row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>README.txt </entry> <entry> the read-me file from the source distribution. </entry> </row>
+<row><entry>niclist.exe </entry> <entry> tool to find out the network interface name </entry> </row>
+<row><entry>penguin.ico </entry> <entry> the Linux logo (used for the DLX link in start menu) </entry> </row>
+<row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
+<row><entry>sb16ctrl.txt </entry> <entry> examples of sb16ctrl commands </entry> </row>
+<row><entry>VGABIOS-elpin-* </entry> <entry> VGA BIOS image for Bochs </entry> </row>
+<row><entry>VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
+<row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
+<row><entry>uninstall.exe </entry> <entry> uninstall program for Bochs (created by the installation wizard) </entry> </row>
+<row><entry>dlxlinux\ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
+<row><entry>dlxlinux\readme.txt </entry> <entry> description of DLX linux</entry> </row>
+<row><entry>dlxlinux\bochsrc.txt </entry> <entry> Bochs configuration file for DLX</entry> </row>
+<row><entry>dlxlinux/hd10meg.img </entry> <entry> disk image file (10 meg) </entry> </row>
+<row><entry>dlxlinux\start.bat </entry> <entry> Run this BAT file to try out DLX Linux inside Bochs! </entry> </row>
+<row><entry>dlxlinux\testform.txt </entry> <entry> Form for reporting success or failure </entry> </row>
+<row><entry>doc\index.html </entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
+<row><entry>keymaps\*.map </entry> <entry>keymap tables (on Windows used for the paste feature only) </entry> </row>
+</tbody>
+</tgroup>
+</table>
+
 </section> <!-- end of Installing a Binary:Windows -->
 
 <section id="linuxrpm">
@@ -1379,18 +1418,21 @@ description of each one.
 <row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>/usr/bin/bximage </entry> <entry> tool for making new disk images </entry> </row>
 <row><entry>/usr/bin/bxcommit </entry> <entry> tool for committing redologs to flat disk images </entry> </row>
+<row><entry>/usr/lib/bochs/plugins/* </entry> <entry> device and gui plugins for Bochs (plugin version only) </entry> </row>
 <row><entry>/usr/share/doc/bochs/bochsrc-sample.txt</entry> <entry> sample Bochs configuration file </entry> </row>
 <row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx, bximage and bxcommit</entry> </row>
 <row><entry>/usr/share/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
-<row><entry>/usr/share/bochs/BIOS-* </entry> <entry> ROM BIOS images for Bochs.  Normally you would only use BIOS-bochs-latest unless you are simulating multiple processors.  </entry> </row>
+<row><entry>/usr/share/bochs/BIOS-bochs-* </entry> <entry> ROM BIOS images for Bochs.  Normally you would only use BIOS-bochs-latest unless you are simulating multiple processors.  </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-* </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>/usr/bin/bochs-dlx </entry> <entry> run this script to try out DLX Linux inside Bochs!</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
-<row><entry>/usr/share/bochs/dlxlinux/README</entry> <entry> description of DLX linux</entry> </row>
+<row><entry>/usr/share/bochs/dlxlinux/readme.txt</entry> <entry> description of DLX linux</entry> </row>
+<row><entry>/usr/share/bochs/keymaps/*.map </entry> <entry>keymap tables for X11 and SDL </entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -9475,7 +9517,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.135 2004-01-02 22:37:18 vruppert Exp $
+        $Id: user.dbk,v 1.136 2004-01-04 17:14:01 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
