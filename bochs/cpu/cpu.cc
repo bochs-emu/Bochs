@@ -724,14 +724,11 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       Boolean valid;
       dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr,
                               &phy, &valid);
-      // why the condition "guard_found.icount!=0"?  That means that
-      // breakpoints only occur when you're using "continue" but never
-      // when you're using "step".  I'm going to try disabling taht
-      // condition and see what happens.  This caused it to stop at
-      // a breakpoint even while trace-on is on.
-      if ( valid 
-	    //&& (BX_CPU_THIS_PTR guard_found.icount!=0)
-	    ) {
+      // The "guard_found.icount!=0" condition allows you to step or
+      // continue beyond a breakpoint.  Bryce tried removing it once,
+      // and once you get to a breakpoint you are stuck there forever.
+      // Not pretty.
+      if (valid && (BX_CPU_THIS_PTR guard_found.icount!=0)) {
         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
           if ( bx_guard.iaddr.phy[i].addr == phy ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
