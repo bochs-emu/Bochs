@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.82 2004-09-21 20:19:19 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.83 2004-10-03 21:52:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -582,9 +582,8 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
 
   // LMSW cannot clear PE
-  if ( ((msw & 0x0001)==0) && BX_CPU_THIS_PTR cr0.pe ) {
+  if (BX_CPU_THIS_PTR cr0.pe)
     msw |= 0x0001; // adjust PE bit to current value of 1
-    }
 
   msw &= 0x000f; // LMSW only affects last 4 flags
   cr0 = (BX_CPU_THIS_PTR cr0.val32 & 0xfffffff0) | msw;
