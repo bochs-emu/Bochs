@@ -256,7 +256,7 @@ bx_pc_system_c::exit(void)
 {
   if (bx_devices.hard_drive)
     bx_devices.hard_drive->close_harddrive();
-  this->info("Last time is %d\n", BX_CMOS_THIS s.timeval);
+  this->info("Last time is %d\n", bx_cmos.s.timeval);
   bx_gui.exit();
 }
 
