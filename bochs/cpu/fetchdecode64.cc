@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.27 2002-11-08 12:47:24 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.28 2002-11-13 21:35:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -279,6 +279,14 @@ static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
 /* SSE Groups */
 /* ********** */
 
+/* *********************************** 
+   According to the Intel/AMD Manuals: 
+
+   MOVAPS_VpsWps  (0f 28) = MOVAPD_VpdWpd  (66 0f 28)
+   MOVAPS_WpsVps  (0f 29) = MOVAPD_WpdVpd  (66 0f 29)
+   MOVNTPS_MdqVps (0f 2b) = MOVNTPD_MdqVpd (66 0f 2b)
+*/
+
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f10[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVUPS_VpsWps },
   /* 66 */  { 0, &BX_CPU_C::MOVUPD_VpdWpd },
@@ -337,14 +345,14 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f17[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f28[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVAPS_VpsWps },
-  /* 66 */  { 0, &BX_CPU_C::MOVAPD_VpdWpd },
+  /* 66 */  { 0, &BX_CPU_C::MOVAPS_VpsWps },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f29[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVAPS_WpsVps },
-  /* 66 */  { 0, &BX_CPU_C::MOVAPD_WpdVpd },
+  /* 66 */  { 0, &BX_CPU_C::MOVAPS_WpsVps },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
@@ -358,7 +366,7 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f2a[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f2b[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVNTPS_MdqVps },
-  /* 66 */  { 0, &BX_CPU_C::MOVNTPD_MdqVpd },            	
+  /* 66 */  { 0, &BX_CPU_C::MOVNTPS_MdqVps },            	
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };

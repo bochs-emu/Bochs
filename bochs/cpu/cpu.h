@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.113 2002-11-13 21:00:04 sshwarts Exp $
+// $Id: cpu.h,v 1.114 2002-11-13 21:35:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2126,11 +2126,8 @@ union {
   BX_SMF void UNPCKHPD_VpdWq(bxInstruction_c *i);
   BX_SMF void MOVHPD_VpdMq(bxInstruction_c *i);
   BX_SMF void MOVHPD_MqVpd(bxInstruction_c *i);
-  BX_SMF void MOVAPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void MOVAPD_WpdVpd(bxInstruction_c *i);
   BX_SMF void CVTPI2PD_VpdQd(bxInstruction_c *i);
   BX_SMF void CVTSI2SD_VsdEd(bxInstruction_c *i);
-  BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *i);            	
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *i);
   BX_SMF void CVTTSD2SI_GdWsd(bxInstruction_c *i);
   BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *i);

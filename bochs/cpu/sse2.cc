@@ -144,30 +144,6 @@ void BX_CPU_C::MOVHPD_MqVpd(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::MOVAPD_VpdWpd(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("MOVAPD_VpdWpd: SSE2 instruction still not implemented"));
-#else
-  BX_INFO(("MOVAPD_VpdWpd: SSE2 not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::MOVAPD_WpdVpd(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("MOVAPD_WpdVpd: SSE2 instruction still not implemented"));
-#else
-  BX_INFO(("MOVAPD_WpdVpd: SSE2 not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
 void BX_CPU_C::CVTPI2PD_VpdQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
@@ -188,18 +164,6 @@ void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
   BX_PANIC(("CVTSI2SD_VsdEd: SSE2 instruction still not implemented"));
 #else
   BX_INFO(("CVTSI2SD_VsdEd: SSE2 not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::MOVNTPD_MdqVpd(bxInstruction_c *i)            	
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("MOVNTPD_MdqVpd: SSE2 instruction still not implemented"));
-#else
-  BX_INFO(("MOVNTPD_MdqVpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
