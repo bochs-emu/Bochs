@@ -89,7 +89,7 @@ extern u_char emulating;
 #else
 #  define RE_ENTRANT_CHECK_OFF
 #  define RE_ENTRANT_CHECK_ON
-#endif RE_ENTRANT_CHECKING
+#endif /* ifdef RE_ENTRANT_CHECKING */
 
 #define FWAIT_OPCODE 0x9b
 #define OP_SIZE_PREFIX 0x66
@@ -122,7 +122,7 @@ struct address {
   u32 opcode:11;
   u32 empty:5;
 #endif
-} __attribute__ ((packed));
+} GCC_ATTRIBUTE((packed));
 
 struct fpu__reg {
 #ifdef EMU_BIG_ENDIAN
@@ -134,7 +134,7 @@ struct fpu__reg {
   u32 sigh;
   s16 exp;   /* Signed quantity used in internal arithmetic. */
 #endif
-} __attribute__ ((aligned(16), packed));
+} GCC_ATTRIBUTE((aligned(16), packed));
 
 #ifdef EMU_BIG_ENDIAN
 #define MAKE_REG(s,e,l,h) { h, l, \
@@ -148,10 +148,11 @@ typedef void (*FUNC)(void);
 typedef struct fpu__reg FPU_REG;
 typedef void (*FUNC_ST0)(FPU_REG *st0_ptr, u_char st0_tag);
 typedef struct { u_char address_size, operand_size, segment; }
-        __attribute__ ((packed)) overrides;
+        GCC_ATTRIBUTE((packed)) overrides;
 /* This structure is 32 bits: */
 typedef struct { overrides override;
-		 u_char default_mode; } __attribute__ ((packed)) fpu_addr_modes;
+		 u_char default_mode; } 
+    GCC_ATTRIBUTE((packed)) fpu_addr_modes;
 /* PROTECTED has a restricted meaning in the emulator; it is used
    to signal that the emulator needs to do special things to ensure
    that protection is respected in a segmented model. */
@@ -239,6 +240,6 @@ asmlinkage int FPU_round(FPU_REG *arg, u32 extent, int dummy,
 #include "fpu_proto.h"
 #endif
 
-#endif __ASSEMBLY__
+#endif /* defined __ASSEMBLY__ */
 
-#endif _FPU_EMU_H_
+#endif /* !defined _FPU_EMU_H_ */

@@ -66,7 +66,7 @@ void   poly_tan(FPU_REG *st0_ptr, int invert)
 #ifdef PARANOID
   if ( signnegative(st0_ptr) )	/* Can't hack a number < 0.0 */
     { arith_invalid(0); return; }  /* Need a positive number */
-#endif PARANOID
+#endif /* PARANOID */
 
   if ( (exponent >= 0)
        || ((exponent == -1) && (st0_ptr->sigh > 0xc90fdaa2)) )

@@ -42,4 +42,4 @@
 /* FULL_PRECISION simulates all exceptions masked */
 #define FULL_PRECISION  (PR_64_BITS | RC_RND | 0x3f)
 
-#endif _CONTROLW_H_
+#endif /* _CONTROLW_H_ */

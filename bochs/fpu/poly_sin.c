@@ -199,7 +199,7 @@ void	poly_sine(FPU_REG *st0_ptr)
     {
       EXCEPTION(EX_INTERNAL|0x150);
     }
-#endif PARANOID
+#endif /* PARANOID */
 
 }
 
@@ -224,7 +224,7 @@ void	poly_cos(FPU_REG *st0_ptr)
       FPU_copy_to_reg0(&CONST_QNaN, TAG_Special);
       return;
     }
-#endif PARANOID
+#endif /* PARANOID */
 
   exponent = exponent(st0_ptr);
 
@@ -392,6 +392,6 @@ void	poly_cos(FPU_REG *st0_ptr)
     {
       EXCEPTION(EX_INTERNAL|0x151);
     }
-#endif PARANOID
+#endif /* PARANOID */
 
 }

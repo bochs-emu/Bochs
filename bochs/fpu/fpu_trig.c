@@ -109,7 +109,7 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 	      q++;
 	    }
 	}
-#endif BETTER_THAN_486
+#endif /* BETTER_THAN_486 */
     }
 #ifdef BETTER_THAN_486
   else
@@ -153,7 +153,7 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 	    }
 	}
     }
-#endif BETTER_THAN_486
+#endif /* BETTER_THAN_486 */
 
   FPU_settag0(st0_tag);
   control_word = old_cw;
@@ -209,7 +209,7 @@ static void single_arg_error(FPU_REG *st0_ptr, u_char st0_tag)
 #ifdef PARANOID
   else
     EXCEPTION(EX_INTERNAL|0x0112);
-#endif PARANOID
+#endif /* PARANOID */
 }
 
 
@@ -255,7 +255,7 @@ static void single_arg_2_error(FPU_REG *st0_ptr, u_char st0_tag)
 #ifdef PARANOID
     default:
       EXCEPTION(EX_INTERNAL|0x0112);
-#endif PARANOID
+#endif /* PARANOID */
     }
 }
 
@@ -487,7 +487,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
 #ifdef PARANOID
   else
     EXCEPTION(EX_INTERNAL | 0x119);
-#endif PARANOID
+#endif /* PARANOID */
 }
 
 
@@ -742,7 +742,7 @@ static int f_cos(FPU_REG *st0_ptr, u_char tag)
 	  set_precision_flag_down();  /* 80486 appears to do this. */
 #else
 	  set_precision_flag_up();  /* Must be up. */
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 	  return 0;
 	}
     }
@@ -1052,7 +1052,7 @@ static void do_fprem(FPU_REG *st0_ptr, u_char st0_tag, int round)
 	      setcc(SW_C2);
 #else
 	      setcc(0);
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 	      return;
 	    }
 	  cc = SW_C2;
@@ -1158,7 +1158,7 @@ static void do_fprem(FPU_REG *st0_ptr, u_char st0_tag, int round)
 #ifdef PARANOID
   if ( (st0_tag != TW_NaN) && (st1_tag != TW_NaN) )
       EXCEPTION(EX_INTERNAL | 0x118);
-#endif PARANOID
+#endif /* PARANOID */
 
   real_2op_NaN(st1_ptr, st1_tag, 0, st1_ptr);
 
@@ -1359,7 +1359,7 @@ static void fyl2x(FPU_REG *st0_ptr, u_char st0_tag)
 	  sign = getsign(st1_ptr);
 	  if ( FPU_divide_by_zero(1, sign) < 0 )
 	    return;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 
 	  changesign(st1_ptr);
 	}
@@ -1495,7 +1495,7 @@ static void fpatan(FPU_REG *st0_ptr, u_char st0_tag)
 #ifdef PARANOID
   else
     EXCEPTION(EX_INTERNAL | 0x125);
-#endif PARANOID
+#endif /* PARANOID */
 
   FPU_pop();
   set_precision_flag_up();  /* We do not really know if up or down */
@@ -1586,7 +1586,7 @@ static void fyl2xp1(FPU_REG *st0_ptr, u_char st0_tag)
 #ifdef PARANOID
 	  EXCEPTION(EX_INTERNAL | 0x116);
 	  return;
-#endif PARANOID
+#endif /* PARANOID */
 	}
     }
   else if ( (st0_tag == TAG_Valid) || (st0_tag == TW_Denormal) )
@@ -1604,7 +1604,7 @@ static void fyl2xp1(FPU_REG *st0_ptr, u_char st0_tag)
 #else
 		  if ( arith_invalid(1) < 0 )
 		    return;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 		}
 	      else if ( (st0_tag == TW_Denormal) && (denormal_operand() < 0) )
 		return;
@@ -1627,7 +1627,7 @@ static void fyl2xp1(FPU_REG *st0_ptr, u_char st0_tag)
 		  changesign(st1_ptr);
 #else
 		  if ( arith_invalid(1) < 0 ) return;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 		}
 	      else if ( (st0_tag == TW_Denormal) && (denormal_operand() < 0) )
 		return;
@@ -1662,14 +1662,14 @@ static void fyl2xp1(FPU_REG *st0_ptr, u_char st0_tag)
 	  /* This should have higher priority than denormals, but... */
 	  if ( arith_invalid(1) < 0 )  /* log(-infinity) */
 	    return;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 	  if ( (st1_tag == TW_Denormal) && (denormal_operand() < 0) )
 	    return;
 #ifdef PECULIAR_486
 	  /* Denormal operands actually get higher priority */
 	  if ( arith_invalid(1) < 0 )  /* log(-infinity) */
 	    return;
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
 	}
       else if ( st1_tag == TAG_Zero )
 	{
@@ -1698,7 +1698,7 @@ static void fyl2xp1(FPU_REG *st0_ptr, u_char st0_tag)
       EXCEPTION(EX_INTERNAL | 0x117);
       return;
     }
-#endif PARANOID
+#endif /* PARANOID */
 
   FPU_pop();
   return;

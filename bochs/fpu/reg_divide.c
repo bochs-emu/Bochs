@@ -202,6 +202,6 @@ int FPU_div(int flags, FPU_REG *rm, int control_w)
       EXCEPTION(EX_INTERNAL|0x102);
       return FPU_Exception;
     }
-#endif PARANOID
+#endif /* PARANOID */
 
 }

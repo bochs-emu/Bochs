@@ -30,7 +30,7 @@ typedef struct {
   u32 midw;
   u32 msw;
 #endif
-} __attribute__ ((packed)) Xsig;
+} GCC_ATTRIBUTE((packed)) Xsig;
 
 asmlinkage void mul64(u64 const *a, u64 const *b,
 		      u64 *result);
@@ -208,4 +208,4 @@ extern inline void negate_Xsig(Xsig *x)
 }
 
 
-#endif _POLY_H
+#endif /* _POLY_H */

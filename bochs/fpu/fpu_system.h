@@ -95,11 +95,6 @@
  * rather than a kernel (ported by Kevin Lawton)
  * ------------------------------------------------------------ */
 
-#include <linux/kernel.h>
-#include <linux/mm.h>
-#include <asm/math_emu.h>
-#include <linux/types.h>
-
 /* Get data sizes from config.h generated from simulator's
  * configure script
  */
@@ -112,6 +107,12 @@ typedef Bit32u u32;
 typedef Bit32s s32;
 typedef Bit64u u64;
 typedef Bit64s s64;
+
+/* include ported linux headers after config.h for a few definitions */
+#include <linux/kernel.h>
+#include <linux/mm.h>
+#include <asm/math_emu.h>
+#include <linux/types.h>
 
 #ifndef WORDS_BIGENDIAN
 #error "WORDS_BIGENDIAN not defined in config.h"
@@ -135,6 +136,7 @@ extern void fpu_set_ax(u16);
 #ifndef __ASSEMBLY__
 
 struct info {
+unsigned char empty_struct_not_portable;
   };
 
 #define FPU_info ((struct info *) NULL)
@@ -159,7 +161,7 @@ typedef struct {
     unsigned char   no_update;
     unsigned char   rm;
     unsigned char   alimit;
-    } __attribute__ ((aligned(16), packed)) soft;
+    } GCC_ATTRIBUTE((aligned(16), packed)) soft;
   } i387_t;
 
 extern i387_t i387;

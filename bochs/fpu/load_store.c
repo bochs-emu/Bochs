@@ -85,7 +85,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 #ifdef PARANOID
       else
 	EXCEPTION(EX_INTERNAL|0x140);
-#endif PARANOID
+#endif /* PARANOID */
     }
 
   switch ( type_table[type] )
@@ -112,7 +112,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
     default:
       EXCEPTION(EX_INTERNAL|0x141);
       return 0;
-#endif PARANOID
+#endif /* PARANOID */
     }
 
   switch ( type )
@@ -217,7 +217,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 	partial_status &= ~(SW_Summary | SW_Backward);
 #ifdef PECULIAR_486
       control_word |= 0x40;  /* An 80486 appears to always set this bit */
-#endif PECULIAR_486
+#endif /* PECULIAR_486 */
       return 1;
     case 025:      /* fld m80real */
       clear_C1();

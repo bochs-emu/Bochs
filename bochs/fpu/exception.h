@@ -18,7 +18,7 @@
 
 #ifndef SW_C1
 #include "fpu_emu.h"
-#endif SW_C1
+#endif /* SW_C1 */
 
 #define FPU_BUSY        Const_(0x8000)   /* FPU busy bit (8087 compatibility) */
 #define EX_ErrorSummary Const_(0x0080)   /* Error summary status */
@@ -43,6 +43,6 @@
 
 #define        EXCEPTION(x)    FPU_exception(x)
 
-#endif __ASSEMBLY__
+#endif /* __ASSEMBLY__ */
 
-#endif _EXCEPTION_H_
+#endif /* _EXCEPTION_H_ */
