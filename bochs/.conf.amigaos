@@ -3,4 +3,4 @@
 # These options should work on Amiga/MorphOS
 #
 
-./configure --enable-cdrom ${CONFIGURE_ARGS}
+./configure --with-amigaos --disable-shared --enable-cdrom ${CONFIGURE_ARGS}
