@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.28 2004-03-02 16:30:21 vruppert Exp $
+// $Id: rfb.cc,v 1.29 2004-03-07 20:12:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -36,6 +36,7 @@ class bx_rfb_gui_c : public bx_gui_c {
 public:
   bx_rfb_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
+  void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1510,6 +1511,14 @@ void rfbMouseMove(int x, int y, int bmask)
   void
 bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
+}
+
+  void
+bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+{
+  *xres = 640;
+  *yres = 480;
+  *bpp = 8;
 }
 
 #endif /* if BX_WITH_RFB */
