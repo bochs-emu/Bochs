@@ -217,8 +217,7 @@ invalid:
     float128 x = normalizeRoundAndPackFloat128(0, aExp+0x3FEF, aSig, 0, status);
     x = poly_l2(x, status);
     x = float128_add(x, floatx80_to_float128(int32_to_floatx80(ExpDiff), status), status);
-    floatx80 r = float128_to_floatx80(x, status);
-    return floatx80_mul(r, b, status);
+    return floatx80_mul(b, x, status);
 }
 
 // =================================================
@@ -348,6 +347,5 @@ invalid:
 
     float128 x = normalizeRoundAndPackFloat128(aSign, aExp-0x10, aSig, 0, status);
     x = poly_l2p1(x, status);
-    floatx80 r = float128_to_floatx80(x, status);
-    return floatx80_mul(r, b, status);
+    return floatx80_mul(b, x, status);
 }

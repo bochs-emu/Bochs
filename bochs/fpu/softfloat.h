@@ -321,6 +321,11 @@ float128 floatx80_to_float128(floatx80 a, float_status_t &status);
 floatx80 float128_to_floatx80(float128 a, float_status_t &status);
 
 /*----------------------------------------------------------------------------
+| Software IEC/IEEE extended double-precision operations.
+*----------------------------------------------------------------------------*/
+floatx80 floatx80_mul(floatx80 a, float128 b, float_status_t &status);
+
+/*----------------------------------------------------------------------------
 | Software IEC/IEEE quadruple-precision operations.
 *----------------------------------------------------------------------------*/
 float128 float128_add(float128 a, float128 b, float_status_t &status);
