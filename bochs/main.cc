@@ -380,6 +380,15 @@ logfunctions::fatal (char *prefix, char *fmt, va_list ap)
   fprintf (stderr, "%s ", prefix);
   vfprintf (stderr, fmt, ap);
   fprintf (stderr, "%s\n", divider);
+#if 0 && defined(WIN32)
+#error disabled because it  is not working yet!
+  // wait for a keypress before quitting.  Depending on how bochs is
+  // installed, the console window can disappear before the user has
+  // a chance to read the final message.
+  fprintf (stderr, "\n\nPress Enter to exit...\n");
+  char buf[8];
+  fgets (buf, 8, stdin);
+#endif
 #if !BX_DEBUGGER
   exit(1);
 #else
