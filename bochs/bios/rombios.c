@@ -256,7 +256,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.13 2001-06-07 18:03:29 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.14 2001-06-13 07:06:10 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -2738,8 +2738,17 @@ printf("floppy: drive>1 || head>1 ...\n");
         write_byte(0x0040, 0x0048, return_status[6]);
 
         if ( (return_status[0] & 0xc0) != 0 ) {
-          panic("int13_diskette_function: read error\n");
+	  if ( (return_status[1] & 0x02) != 0 ) {
+	    // diskette not writable.
+	    // AH=status code=0x03 (tried to write on write-protected disk)
+	    // AL=number of sectors written=0
+	    AX = 0x0300;
+	    SET_CF();
+	    return;
+	  } else {
+            panic("int13_diskette_function: read error\n");
           }
+	}
 
         // ??? should track be new val from return_status[3] ?
         set_diskette_current_cyl(drive, track);

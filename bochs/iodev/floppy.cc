@@ -19,6 +19,18 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+//
+// Floppy Disk Controller Docs:
+// Intel 82077A Data sheet
+//   ftp://void-core.2y.net/pub/docs/fdc/82077AA_FloppyControllerDatasheet.pdf
+// Intel 82078 Data sheet
+//   ftp://download.intel.com/design/periphrl/datashts/29047403.PDF
+// Other FDC references
+//   http://debs.future.easyspace.com/Programming/Hardware/FDC/floppy.html
+// And a port list:
+//   http://mudlist.eorbit.net/~adam/pickey/ports.html
+//
 
 extern "C" {
 #include <errno.h>
@@ -563,7 +575,9 @@ bx_floppy_ctrl_c::floppy_command(void)
       break;
 
     case 0x04: // get status
-      BX_FD_THIS s.result[0] = 0x00;
+      drive = (BX_FD_THIS s.command[1] & 0x03);
+      BX_FD_THIS s.result[0] = 
+	  BX_FD_THIS s.media[drive].write_protected ? 0x40 : 0x00;
       BX_FD_THIS s.result_size = 1;
       BX_FD_THIS s.result_index = 0;
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
@@ -850,7 +864,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 #endif
 }
 
-  void
+  Bit32u
 bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
             Bit32u bytes, Bit8u direction)
 {
@@ -898,11 +912,7 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     }
 
   else { // TO_FLOPPY
-    if (BX_FD_THIS s.media[drive].read_only) {
-      BX_ERROR (("tried to write to a write-protected disk"));
-      BX_ERROR (("FIXME: This should send some sort of abort or error message to the floppy controller, but instead it silently fails!"));
-      return;
-    }
+    BX_ASSERT (!BX_FD_THIS s.media[drive].write_protected);
 #ifdef macintosh
     if (!strcmp(bx_options.floppya.path, SuperDrive))
       ret = fd_write((char *) buffer, offset, bytes);
@@ -1050,6 +1060,27 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
     logical_sector = (BX_FD_THIS s.cylinder[drive] * 2 * BX_FD_THIS s.media[drive].sectors_per_track) +
                      (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
                      (BX_FD_THIS s.sector[drive] - 1);
+  if ( BX_FD_THIS s.media[drive].write_protected ) {
+    // write protected error
+    BX_INFO(("tried to write disk %u, which is write-protected", drive));
+    BX_FD_THIS s.result_size = 7;
+    BX_FD_THIS s.result_index = 0;
+    // ST0: IC1,0=01  (abnormal termination: started execution but failed)
+    BX_FD_THIS s.result[0] = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
+    // ST1: DataError=1, NDAT=1, NotWritable=1, NID=1
+    BX_FD_THIS s.result[1] = 0x27; // 0010 0111
+    // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
+    BX_FD_THIS s.result[2] = 0x31; // 0011 0001
+    BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+    BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+    BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+    BX_FD_THIS s.result[6] = 2; // sector size = 512
+
+    BX_FD_THIS s.pending_command = 0;
+    BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+    BX_FD_THIS devices->pic->trigger_irq(6);
+    return;
+    }
     floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
                 512, TO_FLOPPY);
     increment_sector(); // increment to next sector after writing current one
@@ -1170,7 +1201,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     return(0);
 
   // open media file (image file or device)
-  media->read_only = 0;
+  media->write_protected = 0;
 #ifdef macintosh
   media->fd = 0;
   if (strcmp(bx_options.floppya.path, SuperDrive))
@@ -1184,7 +1215,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   if (media->fd < 0) {
     BX_INFO(( "tried to open %s read/write: %s",path,strerror(errno) ));
     // try opening the file read-only
-    media->read_only = 1;
+    media->write_protected = 1;
 #ifdef macintosh
   media->fd = 0;
   if (strcmp(bx_options.floppya.path, SuperDrive))
@@ -1200,7 +1231,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
       return(0);
     }
   }
-  BX_INFO(("opened %s with readonly=%d\n", path, media->read_only));
+  BX_INFO(("opened %s with readonly=%d\n", path, media->write_protected));
 
 #if BX_WITH_MACOS
   if (!strcmp(bx_options.floppya.path, SuperDrive))

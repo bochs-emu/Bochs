@@ -25,7 +25,6 @@
 #define FROM_FLOPPY 10
 #define TO_FLOPPY   11
 
-
 #if BX_USE_FD_SMF
 #  define BX_FD_SMF  static
 #  define BX_FD_THIS bx_floppy.
@@ -41,7 +40,7 @@ typedef struct {
   unsigned tracks;      /* number of tracks */
   unsigned heads;      /* number of heads */
   unsigned type;
-  unsigned read_only;
+  unsigned write_protected;
   } floppy_t;
 
 class bx_floppy_ctrl_c : public logfunctions {
@@ -95,7 +94,9 @@ private:
     Bit8u   status_reg2;
     Bit8u   status_reg3;
 
-    floppy_t media[2];
+    // drive field allows up to 4 drives, even though probably only 2 will
+    // ever be used.
+    floppy_t media[4];
     unsigned num_supported_floppies;
     Bit8u    floppy_buffer[512+2]; // 2 extra for good measure
     unsigned floppy_buffer_index;
