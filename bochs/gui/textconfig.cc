@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.23 2004-05-30 08:28:52 vruppert Exp $
+// $Id: textconfig.cc,v 1.24 2004-05-31 13:08:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -332,13 +332,8 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
         (cdromop.Ostatus->get () == BX_INSERTED)? "inserted" : "ejected");
     }
 
-  snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
-      buffer[3], buffer[4], buffer[5],
-      /* ips->get (), */
-      SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
-      SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled",
-      SIM->get_param_num (BXP_KBD_PASTE_DELAY)->get (),
-      SIM->get_param_string (BXP_USER_SHORTCUT)->getptr ());
+  snprintf (buf, size, format, buffer[0], buffer[1], buffer[2],
+            buffer[3], buffer[4], buffer[5]);
 }
 #endif
 
@@ -496,7 +491,7 @@ int bx_config_interface (int menu)
        case 8: bx_log_options (0); break;
        case 9: bx_log_options (1); break;
        case 10: NOT_IMPLEMENTED (choice); break;
-       case 11: askparam (BXP_MENU_RUNTIME); break;
+       case 11: do_menu (BXP_MENU_RUNTIME); break;
        case 12: fprintf (stderr, "Continuing simulation\n"); return 0;
        case 13:
 	 fprintf (stderr, "You chose quit on the configuration interface.\n");
