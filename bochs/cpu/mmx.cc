@@ -558,7 +558,7 @@ void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
   BxPackedMmxRegister op, result;
   Bit16u order = i->Ib();
 
-  /* op2 is a register or memory reference */
+  /* op is a register or memory reference */
   if (i->modC0()) {
     op = BX_READ_MMX_REG(i->rm());
   }
@@ -701,7 +701,7 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
-  /* op is a register or memory reference */
+  /* destination is a register or memory reference */
   if (i->modC0()) {
     BX_WRITE_32BIT_REG(i->rm(), MMXUD0(op));
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.26 2002-10-25 12:36:42 bdenney Exp $
+// $Id: fetchdecode64.cc,v 1.27 2002-11-08 12:47:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -647,7 +647,7 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f7e[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVD_EdPd },
   /* 66 */  { 0, &BX_CPU_C::MOVD_EdVd },
   /* F2 */  { 0, &BX_CPU_C::BxError },
-  /* F3 */  { 0, &BX_CPU_C::MOVD_VqWq },
+  /* F3 */  { 0, &BX_CPU_C::MOVQ_VqWq },
   };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f7f[4] = {
