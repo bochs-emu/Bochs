@@ -33,11 +33,6 @@
 #  include <Disks.h>
 #endif
 
-
-
-#include "hacks.h"
-
-
 bx_gui_c   bx_gui;
 
 #define BX_GUI_THIS bx_gui.
