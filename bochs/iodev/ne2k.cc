@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.56 2003-12-25 16:58:17 vruppert Exp $
+// $Id: ne2k.cc,v 1.56.2.1 2004-02-02 22:37:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -514,14 +514,16 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   BX_DEBUG(("page 0 write to port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
-  // The NE2000 driver for MS-DOS writes a 16 bit value to reg 5
-  // ignoring the high-byte - is this okay ?
-  if (((io_len > 1) && (offset != 5)) || (io_len > 2)) {
-    BX_ERROR(("bad length! page 0 write to port %04x, len=%u", offset, io_len));
+
+  // It appears to be a common practice to use outw on page0 regs...
+
+  // break up outw into two outb's
+  if (io_len == 2) {
+    page0_write(offset, (value & 0xff), 1);
+    page0_write(offset + 1, ((value >> 8) & 0xff), 1);
     return;
   }
-	
-  
+
   switch (offset) {
   case 0x0:  // CR
     write_cr(value);
@@ -1273,7 +1275,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.56 2003-12-25 16:58:17 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.56.2.1 2004-02-02 22:37:22 cbothamy Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
