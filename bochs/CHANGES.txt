@@ -1,3 +1,47 @@
+Changes in version 1.2-pre1 (5/25/2001):
+- major cleanup of .bochsrc
+- major cleanup of stderr output: prints bochs version information when
+  starting, and at the end it tries to print the message that caused 
+  bochs to quit.
+- two hard disk support (diskd).  At present, you cannot have two 
+  hard drives and a cdrom at the same time, because there is only
+  one IDE controller with two channels.
+- split hard disk support allows different partitions to be stored in
+  different image files
+- two new GUI choices: term mode and RFB mode.  Term is a text-only
+  interface, and RFB creates a server that can be accessed using
+  the AT&T VNC viewer.
+- now Bochs can simulate an SMP machine, if you configure with
+  --enable-processors=N.  Configuring more than one processor has
+  a major performance impact, so the default is 1 processor.
+  See SMP documentation for more details.
+- to make SMP work, bx_mem and bx_cpu have been replaced with
+  bx_mem_array[] and bx_cpu_array[].  The cpus are referenced through
+  the BX_CPU(n) macro and memories through the BX_MEM(n).  Normal
+  mode has one cpu and one memory, SMP mode has multiple cpu's and 
+  one memory, cosimulation mode has multiple cpus and multiple memories.
+- use --enable-cpu-level=6 to make Bochs claim to be a Pentium Pro.
+  The only feature that requires CPU level 6 is apic support.
+- new logging system by Todd Fries, which has 4 levels of event
+  severity (panic, error, info, debug).  There are new .bochsrc
+  options that control what action to take when a 
+  panic/error/info/debug event occurs.
+- now searches for .bochsrc, bochsrc, bochsrc.txt, and (on unix only)
+  $HOME/.bochsrc.
+- use GNU readline library if --enable-debugger is on, as long as readline
+  can be found on the machine
+- configure checks for existence strtoull and strtouq. if neither exists, 
+  Bochs uses its own implementation
+- applied patches from Cliff Hones <cliff@aonix.co.uk> to fix up the
+  rombios.  This includes many improvements, which you can list by
+  doing "cvs log -r 1.6 bios/rombios.c" or looking at cvsweb.
+- added suggested geometries of larger disks to the documentation
+- this is the first release to have official binary packages for win32
+  and Linux.  There is a new "make rpm" in the top-level Makefile which
+  will create an RPM of the current bochs directory.  To use this,
+  become root and type "configure; make rpm".
+- applied some FreeBSD patches from Maxim Sobolev (cdrom and serial).
+
 Changes in version 1.1.2 (bugfix3, 5/16/2001):
 - updated Elpin VGA BIOS to version 2.40, and changed pointer in .bochsrc
 - fixed .conf.x86 script so that it uses c++ instead of egcs for C++ files
