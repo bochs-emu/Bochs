@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.4 2004-07-02 23:18:21 vruppert Exp $
+// $Id: config.cc,v 1.5 2004-07-09 21:40:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -927,10 +927,23 @@ void bx_init_options ()
           par_ser_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
 
+  // initialize pci options
+#define PCICONF_INIT_LIST_MAX \
+  ((BXP_PARAMS_PER_PCI_SLOT * BX_N_PCI_SLOTS) + 1)
+  bx_param_c *pci_conf_init_list[1+PCICONF_INIT_LIST_MAX];
+  bx_param_c **pci_conf_ptr = &pci_conf_init_list[0];
+  bx_param_c *pci_deps_list[1+BX_N_PCI_SLOTS];
+  bx_param_c **pci_deps_ptr = &pci_deps_list[0];
+
+  bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
+      "Enable i440FX PCI Support",
+      "Controls whether to emulate the i440FX PCI chipset",
+      0);
+  *pci_conf_ptr++ = bx_options.Oi440FXSupport;
   // pci slots
   for (i=0; i<BX_N_PCI_SLOTS; i++) {
         sprintf (name, "Use PCI slot #%d", i+1);
-        sprintf (descr, "Controls whether PCI alot #%d is used or not", i+1);
+        sprintf (descr, "Controls whether PCI slot #%d is used or not", i+1);
         bx_options.pcislot[i].Oused = new bx_param_bool_c (
                 BXP_PCISLOTx_USED(i+1), 
                 strdup(name), 
@@ -946,7 +959,21 @@ void bx_init_options ()
         deplist = new bx_list_c (BXP_NULL, 1);
         deplist->add (bx_options.pcislot[i].Odevname);
         bx_options.pcislot[i].Oused->set_dependent_list (deplist);
+        // add to menus
+        *pci_conf_ptr++ = bx_options.pcislot[i].Oused;
+        *pci_conf_ptr++ = bx_options.pcislot[i].Odevname;
+        *pci_deps_ptr++ = bx_options.pcislot[i].Oused;
   }
+  // add final NULL at the end, and build the menu
+  *pci_conf_ptr = NULL;
+  *pci_deps_ptr = NULL;
+  bx_options.Oi440FXSupport->set_dependent_list (
+      new bx_list_c (BXP_NULL, "", "", pci_deps_list));
+  menu = new bx_list_c (BXP_PCI,
+          "PCI Options",
+          "pci_menu",
+          pci_conf_init_list);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
       "romimage",
@@ -1319,7 +1346,7 @@ void bx_init_options ()
 #if !BX_WITH_WX
   bx_options.pnic.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
 #endif
-  bx_param_c *ne2k_init_list[] = {
+  bx_param_c *netdev_init_list[] = {
     bx_options.ne2k.Opresent,
     bx_options.ne2k.Oioaddr,
     bx_options.ne2k.Oirq,
@@ -1336,13 +1363,25 @@ void bx_init_options ()
     bx_options.pnic.Oscript,
     NULL
   };
-  menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
+  bx_param_c *ne2k_deps_list[] = {
+    bx_options.ne2k.Oioaddr,
+    bx_options.ne2k.Oirq,
+    bx_options.ne2k.Omacaddr,
+    bx_options.ne2k.Oethmod,
+    bx_options.ne2k.Oethdev,
+    bx_options.ne2k.Oscript,
+    bx_options.pnic.Oenabled,
+    NULL
+  };
+  menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", netdev_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
-  bx_param_c **ne2k_dependent_list = &ne2k_init_list[1];
   bx_options.ne2k.Opresent->set_dependent_list (
-      new bx_list_c (BXP_NULL, "", "", ne2k_dependent_list));
+      new bx_list_c (BXP_NULL, "", "", ne2k_deps_list));
   bx_options.ne2k.Opresent->set_handler (bx_param_handler);
   bx_options.ne2k.Opresent->set (0);
+  bx_param_c **pnic_dependent_list = &netdev_init_list[8];
+  bx_options.pnic.Oenabled->set_dependent_list (
+      new bx_list_c (BXP_NULL, "", "", pnic_dependent_list));
 
   // SB16 options
   bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,
@@ -1514,10 +1553,6 @@ void bx_init_options ()
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
       1, BX_MAX_BIT32U,
       50000);
-  bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
-      "PCI i440FX Support",
-      "Controls whether to emulate the i440FX PCI chipset",
-      0);
   bx_options.cmos.OcmosImage = new bx_param_bool_c (BXP_CMOS_IMAGE,
       "Use a CMOS image",
       "Controls the usage of a CMOS image",
@@ -1604,7 +1639,6 @@ void bx_init_options ()
       bx_options.Ofullscreen,
       bx_options.Oscreenmode,
 #endif
-      bx_options.Oi440FXSupport,
       bx_options.cmos.OcmosImage,
       bx_options.cmos.Opath,
       NULL

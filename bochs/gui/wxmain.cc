@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.104 2004-05-23 10:47:00 vruppert Exp $
+// $Id: wxmain.cc,v 1.105 2004-07-09 21:40:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -318,6 +318,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_ATA3, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
+  EVT_MENU(ID_Edit_PCI, MyFrame::OnEditPCI)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
   EVT_MENU(ID_Edit_Timing, MyFrame::OnEditTiming)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
@@ -429,6 +430,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append( ID_Edit_ATA3, "ATA Channel 3..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
+  menuEdit->Append( ID_Edit_PCI, "&PCI..." );
   menuEdit->Append( ID_Edit_Sound, "S&ound..." );
   menuEdit->Append( ID_Edit_Timing, "&Timing..." );
   menuEdit->Append( ID_Edit_Network, "&Network..." );
@@ -597,6 +599,15 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
 {
   ConfigMemoryDialog dlg (this, -1);
+  dlg.ShowModal ();
+}
+
+void MyFrame::OnEditPCI(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg (this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_PCI);
+  dlg.SetTitle (list->get_name ());
+  dlg.AddParam (list);
   dlg.ShowModal ();
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.121 2004-06-29 19:24:29 vruppert Exp $
+// $Id: siminterface.h,v 1.122 2004-07-09 21:40:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -338,6 +338,7 @@ typedef enum {
   BXP_FULLSCREEN,
   BXP_SCREENMODE,
   BXP_I440FX_SUPPORT,
+  BXP_PCI,
   BXP_NEWHARDDRIVESUPPORT,
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
