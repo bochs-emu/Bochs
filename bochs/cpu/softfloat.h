@@ -53,7 +53,7 @@ typedef enum {
     float_negative_inf,
     float_positive_inf,
     float_denormal,
-    float_normalized,
+    float_normalized
 } float_class_t;
 
 /*----------------------------------------------------------------------------
@@ -91,7 +91,7 @@ enum float_exception_flag_t {
     float_flag_divbyzero = 0x04,
     float_flag_overflow  = 0x08,
     float_flag_underflow = 0x10,
-    float_flag_inexact   = 0x20,
+    float_flag_inexact   = 0x20
 };
 
 /*----------------------------------------------------------------------------
@@ -101,7 +101,7 @@ enum {
     float_relation_less      = -1,
     float_relation_equal     =  0,
     float_relation_greater   =  1,
-    float_relation_unordered =  2,
+    float_relation_unordered =  2
 };
 
 /*----------------------------------------------------------------------------

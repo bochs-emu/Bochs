@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.19 2003-08-26 20:24:36 cbothamy Exp $
+// $Id: virt_timer.cc,v 1.19.2.1 2004-02-06 22:14:36 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -412,7 +412,9 @@ bx_virt_timer_c::init(void) {
   system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler,virtual_next_event_time , 0, 1, "Virtual Timer");
 
   //Real time variables:
+#if BX_HAVE_REALTIME_USEC
   last_real_time=GET_VIRT_REALTIME64_USEC()+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
+#endif
   total_real_usec=0;
   last_realtime_delta=0;
   //System time variables:
@@ -529,8 +531,9 @@ bx_virt_timer_c::timer_handler(void) {
 #else
     BX_ASSERT(0);
 #endif
-
+#if BX_HAVE_REALTIME_USEC
     advance_virtual_time(ticks_delta);
+#endif
   }
 
   last_usec=last_usec + usec_delta;

@@ -41,6 +41,8 @@ class vmware3_image_t : public device_image_t
 
 #if defined(_MSC_VER) && (_MSC_VER<1300)
 #pragma pack(push, 1)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=packed
 #endif
       typedef
 #if defined(_MSC_VER) && (_MSC_VER>=1300)
@@ -74,11 +76,13 @@ class vmware3_image_t : public device_image_t
           Bit8u    PAD3[364];
       } COW_Header
 #if !defined(_MSC_VER)
-        __attribute__((packed))
+        GCC_ATTRIBUTE((packed))
 #endif
       ;
 #if defined(_MSC_VER) && (_MSC_VER<1300)
 #pragma pack(pop)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
 #endif
 
       struct COW_Image {

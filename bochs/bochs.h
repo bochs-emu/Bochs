@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.128 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: bochs.h,v 1.128.2.1 2004-02-06 22:14:25 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,7 +58,11 @@ extern "C" {
 #endif
 #include <time.h>
 #if BX_WITH_MACOS
+#define Float32 KLUDGE_Float32
+#define Float64 KLUDGE_Float64
 #  include <types.h>
+#undef Float32
+#undef Float64
 #  include <stat.h>
 #  include <cstdio>
 #  include <unistd.h>
