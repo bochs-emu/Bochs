@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.62 2004-09-17 20:47:19 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.63 2004-10-08 19:07:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -604,8 +604,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 2D */  { BxImmediate_Iv, &BX_CPU_C::SUB_AXIw },
   /* 2E */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // CS:
   /* 2F */  { 0, &BX_CPU_C::BxError },
-  /* 30 */  { BxAnother, &BX_CPU_C::XOR_EbGb },
-  /* 31 */  { BxAnother, &BX_CPU_C::XOR_EwGw },
+  /* 30 */  { BxAnother | BxLockable, &BX_CPU_C::XOR_EbGb },
+  /* 31 */  { BxAnother | BxLockable, &BX_CPU_C::XOR_EwGw },
   /* 32 */  { BxAnother, &BX_CPU_C::XOR_GbEb },
   /* 33 */  { BxAnother, &BX_CPU_C::XOR_GwEw },
   /* 34 */  { BxImmediate_Ib, &BX_CPU_C::XOR_ALIb },
