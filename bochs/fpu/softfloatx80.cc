@@ -106,11 +106,10 @@ floatx80 floatx80_extract(floatx80 &a, float_status_t &status)
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1)) 
         {
-            float_raise(status, float_flag_invalid);
             a = propagateFloatx80NaN(a, status);
             return a;
         }
-        return packFloatx80(0, 0x7FFF, BX_CONST64(0x8000000000000000));;
+        return packFloatx80(0, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
     if (aExp == 0)
     {
