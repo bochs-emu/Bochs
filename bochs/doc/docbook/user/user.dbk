@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.4 2001-09-12 06:37:31 bdenney Exp $
+$Id: user.dbk,v 1.5 2001-09-12 13:16:03 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -161,11 +161,27 @@ Bochs is very useful for some applications, and not well suited to others.
 This section tries to answer the question, "Will Bochs work for me?"
 </para>
 
+<para> &FIXME; </para>
+<!--
+I want this section to set reasonable expectations for people before they
+try out Bochs.  They should not expect to find blazing speed and complain
+to the list because Bochs perfoms so poorly compared to their VMWare demo.
+For simulating x86 on x86, if they want blazing speed they should look
+at a commercial simulator or plex86 (though it's still in development so
+it's not fast yet).
+
+Another factor is ease of setup.  With bochs you have to go editing config
+files in a text editor (with a very picky syntax), which is not for 
+everybody.
+
 <para>
-The most common host platform is an Intel x86 or compatible.  Since you will be
-simulating x86 instructions on an x86 platform, you have a range of choices.
+If you are running on a x86 hardware, you have a range of choices.
 Check the installation section for your host platform to see what 
-options Bochs supports on your platform.  Bochs will run on Windows, Linux,
+options Bochs supports on your platform<footnote>
+<para>
+&FIXME; Well, it will when it has been written.
+</para>
+</footnote>.  Bochs will run on Windows, Linux,
 FreeBSD, OpenBSD, or BeOS.  If the most important factor is speed, you may
 want to try a virtualization product instead of Bochs (VMware, plex86).
 </para>
@@ -176,75 +192,14 @@ running x86 software.  Bochs has been known to work on Solaris (Sparc),
 Linux (PowerPC/Alpha), MacOS (PowerPC), IRIX (MIPS), BeOS (PowerPC), Digital
 UNIX (Alpha), and AIX (PowerPC).
 </para>
+-->
 
-<table><title>Supported platforms</title>
-   <tgroup cols=2 align=left colsep=1 rowsep=1>
-   <tbody>
-   <row>
-      <entry>Unix/X11</entry>
-      <entry>This was Kevin's main development platform.</entry>
-   </row>
-   <row>
-      <entry>BeOS</entry>
-      <entry>Kevin Lawton also did this port, originally to R3/PPC using CodeWarrior.
-      It now works on R4/x86 with egcs. Simon Huet picked up
-      maintaining/reworking the BeOS GUI port. Check out Simon's 
-      BeBochs page.
-      </entry>
-   </row>
-
-   <row>
-      <entry>Win32</entry>
-      <entry> This port was done by David Ross. I've enhanced
-      the build process
-      for Win32. You can compile with either the MS Visual C++ 5.0
-      or GNU-Win32 environments. Go to Compiling Bochs on Win32 </entry>
-   </row>
-
-   <row>
-      <entry>OS/2</entry>
-      <entry> Nick Behnken used PE2LX to translate David Ross's Win32
-      port to an OS/2 program. Check out Nick Behnken's page. 
-      </entry>
-   </row>
-   <row>
-      <entry>OS/2</entry>
-      <entry> Craig Ballantyne ported bochs to OS/2. I will 
-      integrate this back
-      into the main bochs source soon. Check out the guiSoft Corp.
-      home page.
-      </entry>
-   </row>
-
-   <row>
-      <entry>Macintosh</entry>
-      <entry>David Batterham drbatter@socs.uts.edu.au or
-      drbatter@yahoo.com ported bochs to the Mac. His changes are
-      integrated, though it is work in progress. 
-      He compiled with CodeWarrior
-      Pro R1 (CW12), and included a project file 'Bochs.proj'
-      in the top-level
-      directory of source code, which you may need to modify. I
-      added a '--with-macos' option to configure, so you can use a Unix
-      machine to generate header files for the Mac. Check out David's
-      MacBochs website. David has not had time to maintain the page or the
-      Mac port since early 2000. If you have Mac 
-      development tools and want
-      to contribute, contact the developers list. </entry>
-   </row>
-   <row>
-      <entry>FreeDOS for Bochs</entry>
-      <entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
-      For more info about FreeDOS, see FreeDOS Web page</entry>
-   </row>
-   </tbody>
-   </tgroup>
-
-</table>
-
-      <para>
-      There's more! You can find more detailed testing information on the testing status page on the &bochswebsite;.
-      </para>
+<para>
+You can also find more detailed testing information on the testing
+status page on the &bochswebsite;.  The testing status page tells which
+combinations of host platform and guest platform have been tried by other Bochs
+users.
+</para>
 
 </section>  <!-- end of Introduction:Will it work for me? section -->
 
@@ -454,17 +409,100 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <!-- *************************************************************** -->
 <chapter><title>Installation</title>
-<section><title>Downloading Bochs</title>
-    <para>
-    You can get the soruce code for Bochs from the Bochs' home page at bochs.SourceForge.net.  From here you can get hold of the latest stable source along with binaries for unix and windows.  You can also use CVS software to obtain the a snapshot of the development version.
-    </para>
-    <para>
-       pointer to SF web site
-  </para>
-    <para>
 
-    </para>
-</section>
+<section><title>Platforms</title>
+
+
+<table><title>Supported platforms</title>
+   <tgroup cols=2 align=left colsep=1 rowsep=1>
+   <tbody>
+   <row>
+      <entry>Unix/X11</entry>
+      <entry>This was Kevin's main development platform.</entry>
+   </row>
+   <row>
+      <entry>BeOS</entry>
+      <entry>Kevin Lawton also did this port, originally to R3/PPC using CodeWarrior.
+      It now works on R4/x86 with egcs. Simon Huet picked up
+      maintaining/reworking the BeOS GUI port. Check out Simon's 
+      BeBochs page.
+      </entry>
+   </row>
+
+   <row>
+      <entry>Win32</entry>
+      <entry> This port was done by David Ross. I've enhanced
+      the build process
+      for Win32. You can compile with either the MS Visual C++ 5.0
+      or GNU-Win32 environments. Go to Compiling Bochs on Win32 </entry>
+   </row>
+
+   <row>
+      <entry>OS/2</entry>
+      <entry> Nick Behnken used PE2LX to translate David Ross's Win32
+      port to an OS/2 program. Check out Nick Behnken's page. 
+      </entry>
+   </row>
+   <row>
+      <entry>OS/2</entry>
+      <entry> Craig Ballantyne ported bochs to OS/2. I will 
+      integrate this back
+      into the main bochs source soon. Check out the guiSoft Corp.
+      home page.
+      </entry>
+   </row>
+
+   <row>
+      <entry>Macintosh</entry>
+      <entry>David Batterham drbatter@socs.uts.edu.au or
+      drbatter@yahoo.com ported bochs to the Mac. His changes are
+      integrated, though it is work in progress. 
+      He compiled with CodeWarrior
+      Pro R1 (CW12), and included a project file 'Bochs.proj'
+      in the top-level
+      directory of source code, which you may need to modify. I
+      added a '--with-macos' option to configure, so you can use a Unix
+      machine to generate header files for the Mac. Check out David's
+      MacBochs website. David has not had time to maintain the page or the
+      Mac port since early 2000. If you have Mac 
+      development tools and want
+      to contribute, contact the developers list. </entry>
+   </row>
+   <row>
+      <entry>FreeDOS for Bochs</entry>
+      <entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
+      For more info about FreeDOS, see FreeDOS Web page</entry>
+   </row>
+   </tbody>
+   </tgroup>
+
+</table>
+</section>  <!-- End Platforms section -->
+
+<section><title>Downloading Bochs</title>
+
+<para>
+You can download Bochs from our web site at &bochs-sf-net;.  On the download
+page, you will find the latest release version (binaries and source code)
+and also some development versions.  If you trying to get things working
+for the first time, a release version is recommended since it has been
+tested the most.  We have precompiled binaries for many platforms, which
+can save you the troubles (and joys) of compiling Bochs yourself.  Most 
+binary packages come with a small demo of a guest operating system called DLX
+Linux.  If you choose to compile it yourself, you have a lot more flexibility
+in which devices you enable.
+</para>
+
+<para>
+For those familiar with CVS software, you can also obtain the sources for any
+version using CVS.  See the CVS instructions<footnote>
+<para>
+&FIXME; section doesn't exist yet
+</para>
+</footnote>
+for details.
+
+</section>  <!-- End of Installation:Downloading Bochs section -->
 
 <section><title>Installing a Binary</title>
     <section><title>Windows</title>
