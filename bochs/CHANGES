@@ -161,7 +161,12 @@ Patches applied:
     - Bochs-RFB waits up to 30 seconds for a client connection. The emulation
       starts after connecting the client.
 - documentation
-  - user documentation updated and extended
+  - user documentation updated and extended:
+    - improved section "What does Bochs need"
+    - command line arguments
+    - search order for the configuration file
+    - the configuration interface 'textconfig'
+    - FreeDOS Beta 8 installation instructions
   - already ported and obsolete parts of the old documentation removed
   --------------------------------------------------------------------------
 
