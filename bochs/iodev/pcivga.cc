@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.1 2003-01-10 22:43:54 cbothamy Exp $
+// $Id: pcivga.cc,v 1.2 2003-01-23 19:31:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -35,7 +35,6 @@
 
 #include "bochs.h"
 #if BX_PCI_SUPPORT && BX_PCI_VGA_SUPPORT
-#include "pcivga.h"
 
 #define LOG_THIS thePciVgaAdapter->
 
@@ -77,11 +76,10 @@ bx_pcivga_c::init(void)
   DEV_register_pci_handlers(this,
                             pci_read_handler,
                             pci_write_handler,
-                            (2 /* device 2 */ << 3) | 0 /* func 0 */,
+                            BX_PCI_DEVICE(2,0),
                             "Experimental PCI VGA");
 
-  int i;
-  for (i=0; i<256; i++) {
+  for (unsigned i=0; i<256; i++) {
     BX_PCIVGA_THIS s.pci_conf[i] = 0x0;
   }
 
@@ -99,7 +97,7 @@ bx_pcivga_c::init(void)
     { 0x0b, 0x03 },                 // class_base display
     { 0x0e, 0x00 }                  // header_type_generic
   };
-  for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
+  for (unsigned i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
     BX_PCIVGA_THIS s.pci_conf[init_vals[i].addr] = init_vals[i].val;
   }
 }
@@ -114,7 +112,7 @@ bx_pcivga_c::reset(unsigned type)
       { 0x04, 0x01 }, { 0x05, 0x00 },	// command_io
       { 0x06, 0x00 }, { 0x07, 0x02 }	// status_devsel_medium
   };
-  for (int i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
+  for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
       BX_PCIVGA_THIS s.pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
 }
@@ -126,7 +124,7 @@ bx_pcivga_c::reset(unsigned type)
   Bit32u
 bx_pcivga_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
 {
-#if !BX_USE_P2I_SMF
+#if !BX_USE_PCIVGA_SMF
   bx_pcivga_c *class_ptr = (bx_pcivga_c *) this_ptr;
 
   return class_ptr->pci_read(address, io_len);
@@ -138,7 +136,7 @@ bx_pcivga_c::pci_read(Bit8u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_P2I_SMF
+#endif // !BX_USE_PCIVGA_SMF
 
   Bit32u value = 0;
 
@@ -201,7 +199,7 @@ bx_pcivga_c::pci_read(Bit8u address, unsigned io_len)
   void
 bx_pcivga_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_P2I_SMF
+#if !BX_USE_PCIVGA_SMF
   bx_pcivga_c *class_ptr = (bx_pcivga_c *) this_ptr;
 
   class_ptr->pci_write(address, value, io_len);
@@ -212,7 +210,7 @@ bx_pcivga_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_P2I_SMF
+#endif // !BX_USE_PCIVGA_SMF
 
   if (io_len > 4 || io_len == 0) {
     BX_DEBUG(("Experimental PCIVGA write register 0x%02x, len=%u !",

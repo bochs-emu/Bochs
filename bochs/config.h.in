@@ -225,24 +225,25 @@
 //   0 = Use nonstatic member functions (use only if you need
 //       multiple instances of a device class
 
-#define BX_USE_HD_SMF   1  // Hard drive
-#define BX_USE_BIOS_SMF 1  // BIOS
-#define BX_USE_CMOS_SMF 1  // CMOS
-#define BX_USE_DMA_SMF  1  // DMA
-#define BX_USE_FD_SMF   1  // Floppy
-#define BX_USE_KEY_SMF  1  // Keyboard
-#define BX_USE_PAR_SMF  1  // Parallel
-#define BX_USE_PIC_SMF  1  // PIC
-#define BX_USE_PIT_SMF  1  // PIT
-#define BX_USE_SER_SMF  1  // Serial
-#define BX_USE_UM_SMF   1  // Unmapped
-#define BX_USE_VGA_SMF  1  // VGA
-#define BX_USE_SB16_SMF 1  // Sound (SB 16)
-#define BX_USE_DEV_SMF  1  // System Devices (port92)
-#define BX_USE_PCI_SMF  1  // PCI
-#define BX_USE_P2I_SMF  1  // PCI-to-ISA bridge
-#define BX_USE_NE2K_SMF 1  // NE2K
-#define BX_USE_EFI_SMF  1  // External FPU IRQ
+#define BX_USE_HD_SMF      1  // Hard drive
+#define BX_USE_BIOS_SMF    1  // BIOS
+#define BX_USE_CMOS_SMF    1  // CMOS
+#define BX_USE_DMA_SMF     1  // DMA
+#define BX_USE_FD_SMF      1  // Floppy
+#define BX_USE_KEY_SMF     1  // Keyboard
+#define BX_USE_PAR_SMF     1  // Parallel
+#define BX_USE_PIC_SMF     1  // PIC
+#define BX_USE_PIT_SMF     1  // PIT
+#define BX_USE_SER_SMF     1  // Serial
+#define BX_USE_UM_SMF      1  // Unmapped
+#define BX_USE_VGA_SMF     1  // VGA
+#define BX_USE_SB16_SMF    1  // Sound (SB 16)
+#define BX_USE_DEV_SMF     1  // System Devices (port92)
+#define BX_USE_PCI_SMF     1  // PCI
+#define BX_USE_P2I_SMF     1  // PCI-to-ISA bridge
+#define BX_USE_PCIVGA_SMF  1  // PCI-VGA
+#define BX_USE_NE2K_SMF    1  // NE2K
+#define BX_USE_EFI_SMF     1  // External FPU IRQ
 
 #define BX_PLUGINS  0
 #define BX_HAVE_DLFCN_H 0
@@ -253,7 +254,8 @@
    || !BX_USE_PAR_SMF || !BX_USE_PIC_SMF || !BX_USE_PIT_SMF \
    || !BX_USE_SER_SMF || !BX_USE_UM_SMF || !BX_USE_VGA_SMF \
    || !BX_USE_SB16_SMF || !BX_USE_DEV_SMF || !BX_USE_PCI_SMF \
-   || !BX_USE_P2I_SMF || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF)
+   || !BX_USE_P2I_SMF || !BX_USE_PCIVGA_SMF \
+   || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF)
 #error You must use SMF to have plugins
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.h,v 1.1 2003-01-10 22:43:54 cbothamy Exp $
+// $Id: pcivga.h,v 1.2 2003-01-23 19:31:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003  Mike Nordell
@@ -18,10 +18,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-#ifndef BX_IODEV_PCIVGA_H
-#define BX_IODEV_PCIVGA_H
-
-#if BX_USE_P2I_SMF // reusing PCI to ISA Static Member Function macro.
+#if BX_USE_PCIVGA_SMF
 #  define BX_PCIVGA_THIS thePciVgaAdapter->
 #else
 #  define BX_PCIVGA_THIS this->
@@ -49,5 +46,3 @@ private:
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
 };
-
-#endif	// BX_IODEV_PCIVGA_H
