@@ -55,6 +55,8 @@ bx_keyb_c::bx_keyb_c(void)
   // constructor
   // should zero out state info here???
   memset( &s, 0, sizeof(s) );
+  BX_KEY_THIS setprefix("[KBD ]");
+  BX_KEY_THIS settype(KBDLOG);
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -89,8 +91,6 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_KEY_THIS setprefix("[KBD ]");
-  BX_KEY_THIS settype(KBDLOG);
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
