@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.12 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: flag_ctrl.cc,v 1.13 2002-10-05 06:33:10 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -171,67 +171,87 @@ BX_CPU_C::PUSHF_Fv(bxInstruction_c *i)
   void
 BX_CPU_C::POPF_Fv(bxInstruction_c *i)
 {
+  Bit32u changeMask = 0x004dd5;
+  Bit32u flags32;
 
 #if BX_CPU_LEVEL >= 3
-  if (v8086_mode()) {
+  if (protected_mode()) {
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      Bit64u flags64;
+
+      pop_64(&flags64);
+      flags32 = flags64;
+      changeMask |= 0x240000; // ID,AC
+      if (CPL==0)
+        changeMask |= (3<<12); // IOPL
+      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+        changeMask |= (1<<9); // IF
+      }
+    else
+#endif  // #if BX_SUPPORT_X86_64
+    if (i->os32L()) {
+
+      pop_32(&flags32);
+      changeMask |= 0x240000; // ID,AC
+      if (CPL==0)
+        changeMask |= (3<<12); // IOPL
+      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+        changeMask |= (1<<9); // IF
+      }
+    else
+#endif  // BX_CPU_LEVEL >= 3
+      {
+      Bit16u flags16;
+
+      pop_16(&flags16);
+      flags32 = flags16;
+      if (CPL==0)
+        changeMask |= (3<<12); // IOPL
+      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+        changeMask |= (1<<9); // IF
+      }
+
+    // Protected-mode: VIP/VIF cleared, VM unaffected.
+    // Does this happen for 16 bit case?  fixme!
+    flags32 &= ~( (1<<20) | (1<<19) ); // Clear VIP/VIF
+    }
+
+  else if (v8086_mode()) {
     if (BX_CPU_THIS_PTR get_IOPL() < 3) {
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
     if (i->os32L()) {
-      Bit32u eflags_tmp;
-
-      pop_32(&eflags_tmp);
-
-      eflags_tmp &= 0x00277fd7;
-      write_eflags(eflags_tmp, /* change IOPL? */ 0, /* change IF? */ 1, 0, 0);
-      return;
+      pop_32(&flags32);
+      changeMask |= 0x240000; // ID,AC
       }
+    else {
+      Bit16u flags16;
+      pop_16(&flags16);
+      flags32 = flags16;
+      }
+    // v8086-mode: VM,RF,IOPL,VIP,VIF are unaffected.
+    changeMask |= (1<<9); // IF
     }
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    Bit64u eflags_tmp;
-
-    pop_64(&eflags_tmp);
-
-    eflags_tmp &= 0x00277fd7;
-    if (!real_mode()) {
-      write_eflags(eflags_tmp, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL(), 0, 0);
+  else { // Real-mode
+    if (i->os32L()) {
+      pop_32(&flags32);
+      changeMask |= 0x243200; // ID,AC,IOPL,IF
       }
-    else { /* real mode */
-      write_eflags(eflags_tmp, /* change IOPL? */ 1, /* change IF? */ 1, 0, 0);
+    else { /* 16 bit opsize */
+      Bit16u flags16;
+
+      pop_16(&flags16);
+      flags32 = flags16;
+      changeMask |= 0x3200; // IOPL,IF
       }
+    // Real-mode: VIP/VIF cleared, VM unaffected.
+    flags32 &= ~( (1<<20) | (1<<19) ); // Clear VIP/VIF
     }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->os32L()) {
-    Bit32u eflags_tmp;
 
-    pop_32(&eflags_tmp);
-
-    eflags_tmp &= 0x00277fd7;
-    if (!real_mode()) {
-      write_eflags(eflags_tmp, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL(), 0, 0);
-      }
-    else { /* real mode */
-      write_eflags(eflags_tmp, /* change IOPL? */ 1, /* change IF? */ 1, 0, 0);
-      }
-    }
-  else
-#endif /* BX_CPU_LEVEL >= 3 */
-    { /* 16 bit opsize */
-    Bit16u flags;
-
-    pop_16(&flags);
-
-    if (!real_mode()) {
-      write_flags(flags, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL());
-      }
-    else { /* real mode */
-      write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);
-      }
-    }
+  writeEFlags(flags32, changeMask);
 }
 
 

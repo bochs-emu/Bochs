@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.95 2002-10-04 22:25:22 bdenney Exp $
+// $Id: cpu.h,v 1.96 2002-10-05 06:33:10 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2540,6 +2540,7 @@ union {
   BX_SMF void write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF);
   BX_SMF void write_eflags(Bit32u eflags, Boolean change_IOPL, Boolean change_IF,
                     Boolean change_VM, Boolean change_RF);
+  BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask); // Newer variant.
   BX_SMF Bit16u read_flags(void);
   BX_SMF Bit32u read_eflags(void);
   BX_SMF Bit32u get_segment_base(unsigned seg);

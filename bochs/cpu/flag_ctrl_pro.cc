@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.10 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: flag_ctrl_pro.cc,v 1.11 2002-10-05 06:33:10 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,48 +32,46 @@
 
 
 
+  void
+BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
+{
+  Bit32u supportMask, newEFlags;
+  
+  // Build a mask of the non-reserved bits:
+  // x,x,x,x,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+  supportMask = 0x00037fd5;
+#if BX_CPU_LEVEL >= 4
+  supportMask |= ((1<<21) | (1<<18)); // ID/AC
+#endif
+
+  // Screen out changing of any unsupported bits.
+  changeMask &= supportMask;
+
+  newEFlags = (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) |
+              (flags & changeMask);
+  BX_CPU_THIS_PTR setEFlags( newEFlags );
+  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
+
+  if (newEFlags & (1 << 8)) {
+    BX_CPU_THIS_PTR async_event = 1; // TF = 1
+    }
+}
 
 
   void
 BX_CPU_C::write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF)
 {
-  Bit32u changeMask; // Really should be passed in.
-
-  changeMask = 0x0dd5;
-
-#if BX_CPU_LEVEL <= 2
-  // NT = 0
-#else
-  changeMask |= (1<<14); // NT is modified as requested.
-#endif
+  Bit32u changeMask = 0x0dd5;
 
 #if BX_CPU_LEVEL >= 3
+  changeMask |= (1<<14); // NT is modified as requested.
   if (change_IOPL)
     changeMask |= (3<<12); // IOPL is modified as requested.
-#else
-  // IOPL = 0
 #endif
   if (change_IF)
     changeMask |= (1<<9);
 
-
-  BX_CPU_THIS_PTR setEFlags(
-      (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (flags & changeMask) );
-  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
-
-#if 0
-// +++
-if (get_TF ()==0 && (flags&0x0100))
-  BX_DEBUG(( "TF 0->1" ));
-else if (get_TF () && !(flags&0x0100))
-  BX_DEBUG(( "TF 1->0" ));
-else if (get_TF () && (flags&0x0100))
-  BX_DEBUG(( "TF 1->1" ));
-#endif
-
-  if ( flags & (1 << 8) ) {
-    BX_CPU_THIS_PTR async_event = 1; // TF = 1
-    }
+  writeEFlags(Bit32u(flags), changeMask);
 }
 
 
@@ -82,9 +80,8 @@ else if (get_TF () && (flags&0x0100))
 BX_CPU_C::write_eflags(Bit32u eflags_raw, Boolean change_IOPL, Boolean change_IF,
                 Boolean change_VM, Boolean change_RF)
 {
-  Bit32u changeMask; // Really should be passed in.
+  Bit32u changeMask = 0x4dd5;
 
-  changeMask = 0x4dd5;
 #if BX_CPU_LEVEL >= 4
   changeMask |= ((1<<21) | (1<<18)); // ID/AC
 #endif
@@ -92,33 +89,12 @@ BX_CPU_C::write_eflags(Bit32u eflags_raw, Boolean change_IOPL, Boolean change_IF
     changeMask |= (3<<12);
   if (change_IF)
     changeMask |= (1<<9);
-  if (change_VM) {
+  if (change_VM)
     changeMask |= (1<<17);
-#if BX_SUPPORT_V8086_MODE == 0
-    if ( eflags_raw & (1<<17) )
-      BX_PANIC(("write_eflags: VM bit set: BX_SUPPORT_V8086_MODE==0"));
-#endif
-    }
   if (change_RF)
     changeMask |= (1<<16);
 
-  BX_CPU_THIS_PTR setEFlags(
-    (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (eflags_raw & changeMask) );
-  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
-
-#if 0
-// +++
-if (get_TF ()==0 && (eflags_raw&0x0100))
-  BX_DEBUG(( "TF 0->1" ));
-else if (get_TF () && !(eflags_raw&0x0100))
-  BX_DEBUG(( "TF 1->0" ));
-else if (get_TF () && (eflags_raw&0x0100))
-  BX_DEBUG(( "TF 1->1" ));
-#endif
-
-  if (eflags_raw & (1 << 8)) {
-    BX_CPU_THIS_PTR async_event = 1; // TF = 1
-    }
+  writeEFlags(eflags_raw, changeMask);
 }
 #endif /* BX_CPU_LEVEL >= 3 */
 
