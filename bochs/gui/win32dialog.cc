@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.15 2004-02-01 19:22:41 vruppert Exp $
+// $Id: win32dialog.cc,v 1.16 2004-02-02 18:34:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -558,7 +558,11 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext)
     if (errcode == 0) {
       ret = -1;
     } else {
-      wsprintf(errtext, "CommDlgExtendedError returns 0x%04x", errcode);
+      if (errcode == 0x3002) {
+        wsprintf(errtext, "CommDlgExtendedError: illegal filename");
+      } else {
+        wsprintf(errtext, "CommDlgExtendedError returns 0x%04x", errcode);
+      }
       MessageBox(hwnd, errtext, "Error", MB_ICONERROR);
     }
   }
