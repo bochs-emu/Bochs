@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.10 2001-10-03 13:10:37 bdenney Exp $
+// $Id: term.cc,v 1.11 2001-12-13 18:36:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -395,8 +395,10 @@ bx_gui_c::clear_screen(void)
 	void
 bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned long cursor_x, unsigned long cursor_y,
-	unsigned nrows)
+	Bit16u cursor_state, unsigned nrows)
 {
+	UNUSED(cursor_state);
+
 	unsigned ncols = 4000/nrows/2;
 	// XXX There has GOT to be a better way of doing this
 	for(int i=0;i<4001;i+=2) {

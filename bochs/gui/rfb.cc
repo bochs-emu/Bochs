@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.13 2001-11-12 17:56:47 bdenney Exp $
+// $Id: rfb.cc,v 1.14 2001-12-13 18:36:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -522,7 +522,7 @@ void bx_gui_c::clear_screen(void)
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
 
-void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, unsigned nrows)
+void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, Bit16u cursor_state, unsigned nrows)
 {
 	unsigned char cChar;
 	unsigned int  nchars;

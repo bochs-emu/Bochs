@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.12 2001-10-03 13:10:37 bdenney Exp $
+// $Id: nogui.cc,v 1.13 2001-12-13 18:36:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -136,12 +136,13 @@ bx_gui_c::clear_screen(void)
   void
 bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-                      unsigned nrows)
+                      Bit16u cursor_state, unsigned nrows)
 {
   UNUSED(old_text);
   UNUSED(new_text);
   UNUSED(cursor_x);
   UNUSED(cursor_y);
+  UNUSED(cursor_state);
   UNUSED(nrows);
 }
 

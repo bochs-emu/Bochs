@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.20 2001-11-26 07:24:16 vruppert Exp $
+// $Id: win32.cc,v 1.21 2001-12-13 18:36:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -683,11 +683,15 @@ void bx_gui_c::clear_screen(void) {
 
 void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			   unsigned long cursor_x, unsigned long cursor_y,
-                           unsigned nrows) {
+                           Bit16u cursor_state, unsigned nrows) {
   HDC hdc;
   unsigned char cChar;
   unsigned i, x, y;
+  Bit8u cursor_start, cursor_end;
   unsigned nchars;
+
+  cursor_start = cursor_state >> 8;
+  cursor_end = cursor_state & 0xff;
 
   if (!stInfo.UIinited) return;
 	
@@ -722,7 +726,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ((cursor_y*80 + cursor_x) < nchars ) {
+  if (((cursor_y*80 + cursor_x) < nchars ) && (cursor_start <= cursor_end)) {
     cChar = new_text[(cursor_y*80 + cursor_x)*2];
 	//reverse background and foreground colors
 	char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];

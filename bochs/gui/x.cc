@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.24 2001-12-08 13:42:55 bdenney Exp $
+// $Id: x.cc,v 1.25 2001-12-13 18:36:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -461,7 +461,7 @@ if (bx_options.Oprivate_colormap->get ()) {
 
   XSetState(bx_x_display, gc, white_pixel, black_pixel, GXcopy,AllPlanes);
 
-  XSetState(bx_x_display, gc_inv, black_pixel, white_pixel, GXcopy,AllPlanes);
+  XSetState(bx_x_display, gc_inv, black_pixel, white_pixel, GXinvert,AllPlanes);
 
   XSetState(bx_x_display, gc_headerbar, black_pixel, white_pixel, GXcopy,AllPlanes);
 
@@ -946,13 +946,17 @@ bx_gui_c::clear_screen(void)
   void
 bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-                      unsigned nrows)
+                      Bit16u cursor_state, unsigned nrows)
 {
   int font_height;
   unsigned i, x, y, curs;
   unsigned new_foreground, new_background;
   Bit8u string[1];
+  Bit8u cursor_start, cursor_end;
   unsigned nchars;
+
+  cursor_start = cursor_state >> 8;
+  cursor_end = cursor_state & 0xff;
 
   font_height = font_info->ascent + font_info->descent;
 
@@ -1008,15 +1012,15 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   XSetBackground(bx_x_display, gc, black_pixel);
 
   // now draw character at new block cursor location in reverse
-  if ( (cursor_y*80 + cursor_x) < nchars ) {
-    string[0] = new_text[(cursor_y*80 + cursor_x)*2];
-    if (string[0] == 0) string[0] = ' '; // convert null to space
-    XDrawImageString(bx_x_display, win,
-      gc_inv,
-      cursor_x * font_info->max_bounds.width,
-      cursor_y * font_height + font_info->max_bounds.ascent + bx_headerbar_y,
-      (char *) string,
-      1);
+  if ( ( (cursor_y*80 + cursor_x) < nchars ) && (cursor_start <= cursor_end) ) {
+    for (unsigned i = cursor_start; i <= cursor_end; i++)
+      XDrawLine(bx_x_display, win,
+	gc_inv,
+	cursor_x * font_info->max_bounds.width,
+	cursor_y * font_height + bx_headerbar_y + i,
+	(cursor_x + 1) * font_info->max_bounds.width - 1,
+	cursor_y * font_height + bx_headerbar_y + i
+      );
     }
 
   XFlush(bx_x_display);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: carbon.cc,v 1.6 2001-12-13 18:36:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -796,7 +796,7 @@ void bx_gui_c::clear_screen(void)
 
 void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 											unsigned long cursor_x, unsigned long cursor_y,
-         unsigned nrows)
+         Bit16u cursor_state, unsigned nrows)
 {
 	int				i;
 	unsigned char		achar;
