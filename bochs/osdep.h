@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.12 2002-09-23 02:20:51 yakovlev Exp $
+// $Id: osdep.h,v 1.13 2002-11-15 18:11:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,9 +58,6 @@ extern "C" {
 // always return regular file.
 #  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
 #  define S_ISCHR(m)      (((m) & S_IFMT) == S_IFCHR)
-
-  // VCPP includes also are missing these
-#  define off_t long
 
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
