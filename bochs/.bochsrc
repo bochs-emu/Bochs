@@ -249,7 +249,7 @@ boot: disk
 # Examples:
 # Machine                                         Mips
 # ________________________________________________________________
-# 1.6Ghz Athlon P-4 with Win2000/g++ 3.3          5 to 7 Mips
+# 1.6Ghz Intel P4 with Win2000/g++ 3.3            5 to 7 Mips
 # 650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66 2 to 2.5 Mips
 # 400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3  1 to 1.8 Mips
 # 166Mhz 64bit Sparc with Solaris 2.x             approx 0.75 Mips
