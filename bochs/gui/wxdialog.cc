@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.22 2002-09-03 08:53:41 bdenney Exp $
+// $Id: wxdialog.cc,v 1.23 2002-09-03 16:02:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -843,8 +843,8 @@ NetConfigDialog::NetConfigDialog(
   add (phys = new wxTextCtrl (this, -1));
   add (label (NET_CONFIG_SCRIPT));
   add_grow (script = new wxTextCtrl (this, -1));
-#undef label()
-#undef add()
+#undef label
+#undef add
 
   irq->SetRange (0, 15);
   conn->SetSizeHints (200, conn->GetSize ().GetHeight ());
@@ -1238,10 +1238,10 @@ ConfigMemoryDialog::ConfigMemoryDialog(
   add (newbrowse ());
   addrt (newlabel (box1_label[4]));
   add (newlabel (box1_label[5]));
-#undef add(x)
-#undef addrt(x)
-#undef newlabel(x)
-#undef spacer()
+#undef add
+#undef addrt
+#undef newlabel
+#undef spacer
   biosImage->SetSizeHints (300, biosImage->GetSize().GetHeight ());
   vgabiosImage->SetSizeHints (300, biosImage->GetSize().GetHeight ());
 
@@ -1261,12 +1261,12 @@ ConfigMemoryDialog::ConfigMemoryDialog(
     add (romAddr[i] = new wxTextCtrl (this, -1));
     spacer();
   }
-#undef add(x)
-#undef addrt(x)
-#undef newlabel(x)
-#undef spacer()
-#undef newbrowse()
-#undef newlongtext()
+#undef add
+#undef addrt
+#undef newlabel
+#undef spacer
+#undef newbrowse
+#undef newlongtext
 
   // buttonSizer contents
   wxButton *btn;
@@ -1728,6 +1728,7 @@ bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
   wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), wxString(), style);
   if (fdialog->ShowModal () == wxID_OK)
     text->SetValue (fdialog->GetPath ());
+  return true;
 }
 
 
