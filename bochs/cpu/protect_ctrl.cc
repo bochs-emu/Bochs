@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.27 2003-10-24 18:34:15 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.28 2004-03-08 05:29:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -594,7 +594,7 @@ BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     /* readable, non-conforming code segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       set_ZF(0); /* inaccessible */
-      BX_INFO(("VERR: non-coforming code not withing priv level"));
+      BX_INFO(("VERR: non-conforming code not withing priv level"));
       return;
       }
     set_ZF(1); /* accessible */

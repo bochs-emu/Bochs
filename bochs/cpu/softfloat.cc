@@ -58,8 +58,8 @@ these four paragraphs for those parts of this code that are retained.
 | integer.  Bit 63 of `absZ' must be zero.  Ordinarily, the fixed-point input
 | is simply rounded to an integer, with the inexact exception raised if the
 | input cannot be represented exactly as an integer.  However, if the fixed-
-| point input is too large, the invalid exception is raised and the largest
-| positive or negative integer is returned.
+| point input is too large, the invalid exception is raised and the integer
+| indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
 static Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
@@ -88,7 +88,7 @@ static Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
     if (zSign) z = -z;
     if ((absZ>>32) || (z && ((z < 0) ^ zSign))) {
         float_raise(status, float_flag_invalid);
-        return zSign ? (Bit32s) 0x80000000 : 0x7FFFFFFF;
+        return (Bit32s)(int32_indefinite);
     }
     if (roundBits) float_raise(status, float_flag_inexact);
     return z;
@@ -102,8 +102,7 @@ static Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
 | Ordinarily, the fixed-point input is simply rounded to an integer, with
 | the inexact exception raised if the input cannot be represented exactly as
 | an integer.  However, if the fixed-point input is too large, the invalid
-| exception is raised and the largest positive or negative integer is
-| returned.
+| exception is raised and the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
 static Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &status)
@@ -133,9 +132,7 @@ static Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_sta
     if (z && ((z < 0) ^ zSign)) {
  overflow:
         float_raise(status, float_flag_invalid);
-        return
-              zSign ? (Bit64s) BX_CONST64(0x8000000000000000) :
-                               BX_CONST64(0x7FFFFFFFFFFFFFFF);
+        return (Bit64s)(int64_indefinite);
     }
     if (absZ1) float_raise(status, float_flag_inexact);
     return z;
@@ -489,7 +486,7 @@ float64 int64_to_float64(Bit64s a, float_status_t &status)
 | Returns the result of converting the single-precision floating-point value
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
-| Arithmetic---which means in particular that the conversion is rounded
+| Arithmetic - which means in particular that the conversion is rounded
 | according to the current rounding mode.  If `a' is a NaN, the largest
 | positive integer is returned.  Otherwise, if the conversion overflows, the
 | largest integer with the same sign as `a' is returned.
@@ -497,18 +494,13 @@ float64 int64_to_float64(Bit64s a, float_status_t &status)
 
 Bit32s float32_to_int32(float32 a, float_status_t &status)
 {
-    int aSign;
-    Bit16s aExp;
-    Bit32u aSig;
-    Bit64u aSig64;
-
-    aSig = extractFloat32Frac(a);
-    aExp = extractFloat32Exp(a);
-    aSign = extractFloat32Sign(a);
+    Bit32u aSig = extractFloat32Frac(a);
+    Bit16s aExp = extractFloat32Exp(a);
+    int aSign = extractFloat32Sign(a);
     if ((aExp == 0xFF) && aSig) aSign = 0;
     if (aExp) aSig |= 0x00800000;
     int shiftCount = 0xAF - aExp;
-    aSig64 = aSig;
+    Bit64u aSig64 = aSig;
     aSig64 <<= 32;
     if (0 < shiftCount) shift64RightJamming(aSig64, shiftCount, &aSig64);
     return roundAndPackInt32(aSign, aSig64, status);
@@ -519,9 +511,8 @@ Bit32s float32_to_int32(float32 a, float_status_t &status)
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic, except that the conversion is always rounded toward zero.
-| If `a' is a NaN, the largest positive integer is returned.  Otherwise, if
-| the conversion overflows, the largest integer with the same sign as `a' is
-| returned.
+| If `a' is a NaN or the conversion overflows, the integer indefinite 
+| value is returned.
 *----------------------------------------------------------------------------*/
 
 Bit32s float32_to_int32_round_to_zero(float32 a, float_status_t &status)
@@ -538,9 +529,8 @@ Bit32s float32_to_int32_round_to_zero(float32 a, float_status_t &status)
     if (0 <= shiftCount) {
         if (a != 0xCF000000) {
             float_raise(status, float_flag_invalid);
-            if (! aSign || ((aExp == 0xFF) && aSig)) return 0x7FFFFFFF;
         }
-        return (Bit32s) 0x80000000;
+        return (Bit32s)(int32_indefinite);
     }
     else if (aExp <= 0x7E) {
         if (aExp | aSig) float_raise(status, float_flag_inexact);
@@ -559,29 +549,23 @@ Bit32s float32_to_int32_round_to_zero(float32 a, float_status_t &status)
 | Returns the result of converting the single-precision floating-point value
 | `a' to the 64-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
-| Arithmetic---which means in particular that the conversion is rounded
-| according to the current rounding mode.  If `a' is a NaN, the largest
-| positive integer is returned.  Otherwise, if the conversion overflows, the
-| largest integer with the same sign as `a' is returned.
+| Arithmetic - which means in particular that the conversion is rounded
+| according to the current rounding mode. If `a' is a NaN or the 
+| conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
 Bit64s float32_to_int64(float32 a, float_status_t &status)
 {
-    int aSign;
-    Bit16s aExp;
-    Bit32u aSig;
     Bit64u aSig64, aSigExtra;
 
-    aSig = extractFloat32Frac(a);
-    aExp = extractFloat32Exp(a);
-    aSign = extractFloat32Sign(a);
+    Bit32u aSig = extractFloat32Frac(a);
+    Bit16s aExp = extractFloat32Exp(a);
+    int aSign = extractFloat32Sign(a);
+
     int shiftCount = 0xBE - aExp;
     if (shiftCount < 0) {
         float_raise(status, float_flag_invalid);
-        if (! aSign || ((aExp == 0xFF) && aSig)) {
-            return BX_CONST64(0x7FFFFFFFFFFFFFFF);
-        }
-        return (Bit64s) BX_CONST64(0x8000000000000000);
+        return (Bit64s)(int64_indefinite);
     }
     if (aExp) aSig |= 0x00800000;
     aSig64 = aSig;
@@ -594,9 +578,8 @@ Bit64s float32_to_int64(float32 a, float_status_t &status)
 | Returns the result of converting the single-precision floating-point value
 | `a' to the 64-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
-| Arithmetic, except that the conversion is always rounded toward zero.  If
-| `a' is a NaN, the largest positive integer is returned.  Otherwise, if the
-| conversion overflows, the largest integer with the same sign as `a' is
+| Arithmetic, except that the conversion is always rounded toward zero. If
+| `a' is a NaN or the conversion overflows, the integer indefinite value is 
 | returned.
 *----------------------------------------------------------------------------*/
 
@@ -615,11 +598,8 @@ Bit64s float32_to_int64_round_to_zero(float32 a, float_status_t &status)
     if (0 <= shiftCount) {
         if (a != 0xDF000000) {
             float_raise(status, float_flag_invalid);
-            if (! aSign || ((aExp == 0xFF) && aSig)) {
-                return BX_CONST64(0x7FFFFFFFFFFFFFFF);
-            }
         }
-        return (Bit64s) BX_CONST64(0x8000000000000000);
+        return (Bit64s)(int64_indefinite);
     }
     else if (aExp <= 0x7E) {
         if (aExp | aSig) float_raise(status, float_flag_inexact);
@@ -1491,7 +1471,7 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
 | Returns the result of converting the double-precision floating-point value
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
-| Arithmetic---which means in particular that the conversion is rounded
+| Arithmetic - which means in particular that the conversion is rounded
 | according to the current rounding mode.  If `a' is a NaN, the largest
 | positive integer is returned.  Otherwise, if the conversion overflows, the
 | largest integer with the same sign as `a' is returned.
@@ -1499,13 +1479,9 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
 
 Bit32s float64_to_int32(float64 a, float_status_t &status)
 {
-    int aSign;
-    Bit16s aExp;
-    Bit64u aSig;
-
-    aSig = extractFloat64Frac(a);
-    aExp = extractFloat64Exp(a);
-    aSign = extractFloat64Sign(a);
+    Bit64u aSig = extractFloat64Frac(a);
+    Bit16s aExp = extractFloat64Exp(a);
+    int aSign = extractFloat64Sign(a);
     if ((aExp == 0x7FF) && aSig) aSign = 0;
     if (aExp) aSig |= BX_CONST64(0x0010000000000000);
     int shiftCount = 0x42C - aExp;
@@ -1518,9 +1494,8 @@ Bit32s float64_to_int32(float64 a, float_status_t &status)
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic, except that the conversion is always rounded toward zero.
-| If `a' is a NaN, the largest positive integer is returned.  Otherwise, if
-| the conversion overflows, the largest integer with the same sign as `a' is
-| returned.
+| If `a' is a NaN or the conversion overflows, the integer indefinite
+| value  is returned.
 *----------------------------------------------------------------------------*/
 
 Bit32s float64_to_int32_round_to_zero(float64 a, float_status_t &status)
@@ -1551,7 +1526,7 @@ Bit32s float64_to_int32_round_to_zero(float64 a, float_status_t &status)
     if ((z < 0) ^ aSign) {
  invalid:
         float_raise(status, float_flag_invalid);
-        return aSign ? (Bit32s) 0x80000000 : 0x7FFFFFFF;
+        return (Bit32s)(int32_indefinite);
     }
     if ((aSig<<shiftCount) != savedASig) {
         float_raise(status, float_flag_inexact);
@@ -1563,7 +1538,7 @@ Bit32s float64_to_int32_round_to_zero(float64 a, float_status_t &status)
 | Returns the result of converting the double-precision floating-point value
 | `a' to the 64-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
-| Arithmetic---which means in particular that the conversion is rounded
+| Arithmetic - which means in particular that the conversion is rounded
 | according to the current rounding mode.  If `a' is a NaN, the largest
 | positive integer is returned.  Otherwise, if the conversion overflows, the
 | largest integer with the same sign as `a' is returned.
@@ -1583,12 +1558,7 @@ Bit64s float64_to_int64(float64 a, float_status_t &status)
     if (shiftCount <= 0) {
         if (0x43E < aExp) {
             float_raise(status, float_flag_invalid);
-            if (! aSign || ((aExp == 0x7FF)
-                      && (aSig != BX_CONST64(0x0010000000000000))))
-            {
-                return BX_CONST64(0x7FFFFFFFFFFFFFFF);
-            }
-            return (Bit64s) BX_CONST64(0x8000000000000000);
+            return (Bit64s)(int64_indefinite);
         }
         aSigExtra = 0;
         aSig <<= -shiftCount;
@@ -1604,9 +1574,8 @@ Bit64s float64_to_int64(float64 a, float_status_t &status)
 | `a' to the 64-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic, except that the conversion is always rounded toward zero.
-| If `a' is a NaN, the largest positive integer is returned.  Otherwise, if
-| the conversion overflows, the largest integer with the same sign as `a' is
-| returned.
+| If `a' is a NaN or the conversion overflows, the integer indefinite
+| value  is returned.
 *----------------------------------------------------------------------------*/
 
 Bit64s float64_to_int64_round_to_zero(float64 a, float_status_t &status)
@@ -1625,13 +1594,8 @@ Bit64s float64_to_int64_round_to_zero(float64 a, float_status_t &status)
         if (0x43E <= aExp) {
             if (a != BX_CONST64(0xC3E0000000000000)) {
                 float_raise(status, float_flag_invalid);
-                if (! aSign || ((aExp == 0x7FF)
-                          && (aSig != BX_CONST64(0x0010000000000000))))
-                {
-                    return BX_CONST64(0x7FFFFFFFFFFFFFFF);
-                }
             }
-            return (Bit64s) BX_CONST64(0x8000000000000000);
+            return (Bit64s)(int64_indefinite);
         }
         z = aSig<<shiftCount;
     }
@@ -2835,10 +2799,9 @@ floatx80 float64_to_floatx80(float64 a, float_status_t &status)
 | Returns the result of converting the extended double-precision floating-
 | point value `a' to the 32-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
-| Floating-Point Arithmetic---which means in particular that the conversion
-| is rounded according to the current rounding mode.  If `a' is a NaN, the
-| largest positive integer is returned.  Otherwise, if the conversion
-| overflows, the largest integer with the same sign as `a' is returned.
+| Floating-Point Arithmetic - which means in particular that the conversion
+| is rounded according to the current rounding mode. If `a' is a NaN or the 
+| conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
 Bit32s floatx80_to_int32(floatx80 a, float_status_t &status)
@@ -2859,9 +2822,8 @@ Bit32s floatx80_to_int32(floatx80 a, float_status_t &status)
 | point value `a' to the 32-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN, the largest positive integer is returned.
-| Otherwise, if the conversion overflows, the largest integer with the same
-| sign as `a' is returned.
+| toward zero.  If `a' is a NaN or the conversion overflows, the integer 
+| indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
 Bit32s floatx80_to_int32_round_to_zero(floatx80 a, float_status_t &status)
@@ -2891,7 +2853,7 @@ Bit32s floatx80_to_int32_round_to_zero(floatx80 a, float_status_t &status)
     if ((z < 0) ^ aSign) {
  invalid:
         float_raise(status, float_flag_invalid);
-        return aSign ? (Bit32s) 0x80000000 : 0x7FFFFFFF;
+        return (Bit32s)(int32_indefinite);
     }
     if ((aSig<<shiftCount) != savedASig) 
     {
@@ -2904,10 +2866,9 @@ Bit32s floatx80_to_int32_round_to_zero(floatx80 a, float_status_t &status)
 | Returns the result of converting the extended double-precision floating-
 | point value `a' to the 64-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
-| Floating-Point Arithmetic---which means in particular that the conversion
-| is rounded according to the current rounding mode.  If `a' is a NaN,
-| the largest positive integer is returned.  Otherwise, if the conversion
-| overflows, the largest integer with the same sign as `a' is returned.
+| Floating-Point Arithmetic - which means in particular that the conversion
+| is rounded according to the current rounding mode. If `a' is a NaN or the 
+| conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
 Bit64s floatx80_to_int64(floatx80 a, float_status_t &status)
@@ -2925,12 +2886,7 @@ Bit64s floatx80_to_int64(floatx80 a, float_status_t &status)
         if (shiftCount) 
         {
             float_raise(status, float_flag_invalid);
-            if (! aSign || ((aExp == 0x7FFF)
-                      && (aSig != BX_CONST64(0x8000000000000000)))) 
-            {
-                return BX_CONST64(0x7FFFFFFFFFFFFFFF);
-            }
-            return (Bit64s) BX_CONST64(0x8000000000000000);
+            return (Bit64s)(int64_indefinite);
         }
         aSigExtra = 0;
     }
@@ -2946,9 +2902,8 @@ Bit64s floatx80_to_int64(floatx80 a, float_status_t &status)
 | point value `a' to the 64-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN, the largest positive integer is returned.
-| Otherwise, if the conversion overflows, the largest integer with the same
-| sign as `a' is returned.
+| toward zero.  If `a' is a NaN or the conversion overflows, the integer 
+| indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
 Bit64s floatx80_to_int64_round_to_zero(floatx80 a, float_status_t &status)
@@ -2966,11 +2921,8 @@ Bit64s floatx80_to_int64_round_to_zero(floatx80 a, float_status_t &status)
         aSig &= BX_CONST64(0x7FFFFFFFFFFFFFFF);
         if ((a.exp != 0xC03E) || aSig) {
             float_raise(status, float_flag_invalid);
-            if (! aSign || ((aExp == 0x7FFF) && aSig)) {
-                return BX_CONST64(0x7FFFFFFFFFFFFFFF);
-            }
         }
-        return (Bit64s) BX_CONST64(0x8000000000000000);
+        return (Bit64s)(int64_indefinite);
     }
     else if (aExp < 0x3FFF) {
         if (aExp | aSig) float_raise(status, float_flag_inexact);
@@ -2993,18 +2945,14 @@ Bit64s floatx80_to_int64_round_to_zero(floatx80 a, float_status_t &status)
 
 float32 floatx80_to_float32(floatx80 a, float_status_t &status)
 {
-    int aSign;
-    Bit32s aExp;
-    Bit64u aSig;
-
-    aSig = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
+    Bit64u aSig = extractFloatx80Frac(a);
+    Bit32s aExp = extractFloatx80Exp(a);
+    int aSign = extractFloatx80Sign(a);
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1)) {
+        if ((Bit64u) (aSig<<1))
             return commonNaNToFloat32(floatx80ToCommonNaN(a, status));
-        }
+
         return packFloat32(aSign, 0xFF, 0);
     }
     shift64RightJamming(aSig, 33, &aSig);

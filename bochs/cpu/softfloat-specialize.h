@@ -32,6 +32,9 @@ these four paragraphs for those parts of this code that are retained.
  *            Stanislav Shwartsman (gate@fidonet.org.il)
  * ==========================================================================*/ 
 
+#define int32_indefinite 0x80000000
+#define int64_indefinite BX_CONST64(0x8000000000000000)
+
 /*----------------------------------------------------------------------------
 | Raises the exceptions specified by `flags'.  Floating-point traps can be
 | defined here if desired.  It is currently not possible for such a trap
@@ -57,10 +60,12 @@ BX_CPP_INLINE int get_float_rounding_mode(float_status_t &status)
 | Returns current floating point precision (floatx80 only).
 *----------------------------------------------------------------------------*/
 
+#ifdef FLOATX80
 BX_CPP_INLINE int get_float_rounding_precision(float_status_t &status)
 {
     return status.float_rounding_precision;
 }
+#endif
 
 /*----------------------------------------------------------------------------
 | Returns current floating point NaN operands handling mode specified 
