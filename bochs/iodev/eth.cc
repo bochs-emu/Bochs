@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.8 2001-10-03 13:10:38 bdenney Exp $
+// $Id: eth.cc,v 1.9 2002-03-09 00:38:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,6 +57,9 @@ extern class bx_linux_locator_c bx_linux_match;
 #ifdef ETH_WIN32
 extern class bx_win32_locator_c bx_win32_match;
 #endif
+#ifdef ETH_TAP
+extern class bx_tap_locator_c bx_tap_match;
+#endif
 #ifdef ETH_TEST
 extern bx_test_match;
 #endif
@@ -103,6 +106,12 @@ eth_locator_c::create(const char *type, const char *netif,
   {
     if (!strcmp(type, "linux"))    
       ptr = (eth_locator_c *) &bx_linux_match;
+  }
+#endif
+#ifdef ETH_TAP
+  {
+    if (!strcmp(type, "tap"))    
+      ptr = (eth_locator_c *) &bx_tap_match;
   }
 #endif
 #ifdef ETH_WIN32
