@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.46 2002-09-05 15:57:37 bdenney Exp $
+// $Id: x.cc,v 1.47 2002-09-23 16:30:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1365,7 +1365,8 @@ headerbar_click(int x, int y)
   void
 bx_gui_c::exit(void)
 {
-  XCloseDisplay (bx_x_display);
+  if (bx_x_display)
+    XCloseDisplay (bx_x_display);
   BX_INFO(("Exit."));
 }
 
