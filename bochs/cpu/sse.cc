@@ -34,7 +34,7 @@ void BX_CPU_C::prepareSSE(void)
   if(BX_CPU_THIS_PTR cr0.em)
     exception(BX_UD_EXCEPTION, 0, 0);
 
-  if(! (BX_CPU_THIS_PTR cr4.get_OSXMMEXCPT()))
+  if(! (BX_CPU_THIS_PTR cr4.get_OSFXSR()))
     exception(BX_UD_EXCEPTION, 0, 0);
 }
 
