@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.20 2002-10-25 18:26:27 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.21 2003-03-21 13:34:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,6 +121,11 @@ BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
 BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 {
   Bit16u op2_16;
+
+  /* If attempt is made to load the CS register ... */
+  if (i->nnn() == BX_SEG_REG_CS) {
+    UndefinedOpcode(i);
+  }
 
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_SwEw: incomplete for CPU < 3"));
