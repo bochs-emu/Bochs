@@ -656,6 +656,7 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
     UndefinedOpcode(i);
   }
 
+  Bit32u edi;
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn()), 
     mask = BX_READ_XMM_REG(i->rm());
 
