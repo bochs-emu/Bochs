@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.153 2002-09-30 22:18:52 bdenney Exp $
+// $Id: main.cc,v 1.154 2002-10-01 23:34:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,6 +28,13 @@
 #include "bochs.h"
 #include <assert.h>
 #include "state_file.h"
+
+#if BX_WITH_SDL
+// since SDL redefines main() to SDL_main(), we must include SDL.h so that the
+// C language prototype is found.  Otherwise SDL_main() will get its name 
+// mangled and not match what the SDL library is expecting.
+#include <SDL/SDL.h>
+#endif
 
 int enable_config_interface = 1;
 int bochsrc_include_count = 0;
