@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.89 2002-09-06 21:54:54 kevinlawton Exp $
+// $Id: bochs.h,v 1.90 2002-09-09 07:19:23 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -243,7 +243,7 @@ extern Bit8u DTPageDirty[];
 #define DEFAULT_LOG_ACTIONS(level) \
   (level<=LOGLEV_INFO ? ACT_IGNORE \
    : level==LOGLEV_ERROR ? ACT_REPORT \
-   : ACT_ASK)
+   : ACT_REPORT)
 
 typedef class logfunctions {
 	char *prefix;
