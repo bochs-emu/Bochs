@@ -126,6 +126,16 @@ cdrom_amigaos.o: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h \
  ../instrument/stubs/instrument.h scsi_commands.h
+cdrom_osx.o: cdrom_osx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+ ../cpu/cpu.h ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../gui/control.h ../iodev/iodev.h ../iodev/pci.h \
+ ../iodev/vga.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
+ ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
+ ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
+ ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
+ ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
 cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
