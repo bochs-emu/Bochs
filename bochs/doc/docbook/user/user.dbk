@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.76 2002-12-02 21:37:51 cbothamy Exp $
+$Id: user.dbk,v 1.77 2002-12-03 23:29:42 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4750,7 +4750,161 @@ Here are the meaning of the errors:
         <section> 
         <title>Disk translation</title>
         <para>
+Since the beginning of the PC era, disks have grown in size by a factor of 10000. Due to 
+differences between the ATA specification and BIOSes implementations, when disks reached
+critical sizes, it
+became necessary to translate the CHS geometry (cylinders, heads, sectors per track)
+between the BIOS (int 13h) and the ATA interface. Please refer to the 
+<ulink url="http://burks.brighton.ac.uk/burks/pcinfo/hardware/atafaq/atafq.htm">ATA-FAQ</ulink> 
+and 
+<ulink url="http://www.ata-atapi.com/hiwchs.htm">Hale Landis' document</ulink> 
+for a complete discussion of the problem.
         </para>
+        <para>
+Unfortunately, there has never been any standard on the translation algorithms. 
+        </para>
+        <para>
+Bochs implements 4 well-known algorithms, selectable in the configuration file
+in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
+        </para>
+
+<table><title>Disk translation algorithms</title>
+<tgroup cols=4 align=left colsep=1 rowsep=1>
+<thead>
+  <row>
+    <entry>Algorithm</entry>
+    <entry>Maximum disk size</entry>
+    <entry>Maximum logical and physical geometry (CHS)</entry>
+    <entry>Description</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>none</entry>
+    <entry>528MB (1032192 sectors)</entry>
+    <entry>
+    LCHS:1024/16/63
+    PCHS:1024/16/63
+    </entry>
+    <entry>
+    no translation is done. The CHS received at the int13h interface 
+    is sent as is to the ATA interface. 
+    </entry>
+  </row>
+  <row>
+    <entry>large</entry>
+    <entry>4.2GB (8257536 sectors)</entry>
+    <entry>
+    LCHS:1024/128/63
+    PCHS:8192/16/63
+    </entry>
+    <entry>
+    a standard bitshift algorithm (named Extended-CHS)
+    is used to translate the CHS between 
+    the int13h interface 
+    and the ATA interface. The translation is acheived by 
+    multiplying/dividing the cylinder/head count by a power of 2
+    (2, 4 or 8).
+    (a factor of 16 could not be used because the
+    head count would become 256, and MS-Dos thought this was 0)
+    Note that the number of sectors per track is not changed, so
+    a lower spt value will lead to a lower maximum disk size.
+    </entry>
+  </row>
+  <row>
+    <entry>echs</entry>
+    <entry> </entry>
+    <entry> </entry>
+    <entry>synonym for large</entry>
+  </row>
+  <row>
+    <entry>rechs</entry>
+    <entry>7.9GB (15482880 sectors)</entry>
+    <entry>
+    LCHS:1024/240/63
+    PCHS:15360/16/63
+    </entry>
+    <entry>
+    a revised bitshift algorithm (called Revised Extended-CHS)
+    is used to translate the CHS between 
+    the int13h interface 
+    and the ATA interface. First the number of physical heads is forced to
+    15, and the number of cylinders is adjusted accordingly.
+    Then, as in the simple extended CHS algorithm, the translation 
+    is acheived by 
+    multiplying/dividing the cylinder/head count by a power of 2
+    (2, 4, 8 or 16).
+    The head count being forced to 15, it can safely be multiplied by 16 
+    without crashing dos.
+    Note that the number of sectors per track is not changed, so
+    a lower spt value will lead to a lower maximum disk size.
+    </entry>
+  </row>
+  <row>
+    <entry>lba</entry>
+    <entry>8.4GB (16450560 sectors)</entry>
+    <entry>
+    LCHS:1024/255/63
+    PCHS:16320/16/63
+    </entry>
+    <entry>
+    a LBA-assisted algorithm
+    is used to translate the CHS between 
+    the int13h interface 
+    and the ATA interface. The translation is acheived by 
+    first computing the physical size of the disk (LBA=C*H*S).
+    Then the sectors per track is forced to 63, and the head count
+    to 255. Then the cylinder count is computed (C=LBA/(63*255))
+    Note that the number of sectors per track is forced to 63
+    in the logical geometry, regardless of the actual geometry
+    reported by the disk.
+    Also note that the LBA-assisted algorithm has nothing to do with
+    LBA access at the ATA interface.
+    </entry>
+  </row>
+  <row>
+    <entry>auto</entry>
+    <entry> </entry>
+    <entry> </entry>
+    <entry>the best suited algorithm between none, large and lba is used</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
+
+        <para>
+Setting a specific CHS translation should be done if you use a disk dump
+of an actual disk, or use a real disk as a block device. You need to
+know which geometry was used to format the disk, and which translation 
+was used.
+        </para>
+
+        <note>
+        <para>
+rechs translation should only be useful for compaq users who wants to
+use a disk as a block device. Please report if you know any other
+system that use such translation.
+        </para>
+        </note>
+
+        <para>
+If you plan to create a new disk image (for example with bximage),
+format it and install an OS on it, select the "auto" translation
+for an automatic selection
+of the best algorithm based on the disk image size. Be warned that an image created
+with the "auto" translation might not be readable with previous versions of Bochs.
+Upward compatibility will be maintained.
+        </para>
+
+<note>
+<para>
+This translation applies only to int13h bios disk accesses. Older OSes (ie MS-Dos)
+tend to use them a lot.  On modern OSes, disk accesses through BIOS int13h are 
+limited to boot loaders.
+The usual rules and tricks of the installed OS still apply (ie 1024 cylinders boot limit).
+</para>
+</note>
+
         </section>
 </section>
 
@@ -4758,7 +4912,7 @@ Here are the meaning of the errors:
 
 <para>
 Since Bochs version 1.4 it's possible to use VESA graphics. There are some limitations in the current implementation,
-but in general it should work ok (we haved run several test programs, the XFree86 VESA display driver, etc)
+but in general it should work ok (we have run several test programs, the XFree86 VESA display driver, etc)
 </para>
 
 <para>
@@ -6130,7 +6284,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.76 2002-12-02 21:37:51 cbothamy Exp $
+        $Id: user.dbk,v 1.77 2002-12-03 23:29:42 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6406,7 +6560,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.76 2002-12-02 21:37:51 cbothamy Exp $
+        $Id: user.dbk,v 1.77 2002-12-03 23:29:42 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
