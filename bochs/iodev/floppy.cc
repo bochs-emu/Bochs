@@ -898,6 +898,11 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     }
 
   else { // TO_FLOPPY
+    if (BX_FD_THIS s.media[drive].read_only) {
+      BX_ERROR (("tried to write to a write-protected disk"));
+      BX_ERROR (("FIXME: This should send some sort of abort or error message to the floppy controller, but instead it silently fails!"));
+      return;
+    }
 #ifdef macintosh
     if (!strcmp(bx_options.floppya.path, SuperDrive))
       ret = fd_write((char *) buffer, offset, bytes);
@@ -906,8 +911,8 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       ret = ::write(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
     if (ret < int(bytes)) {
       BX_PANIC(("could not perform write() on floppy image file"));
-      }
     }
+  }
 }
 
 
@@ -1165,6 +1170,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     return(0);
 
   // open media file (image file or device)
+  media->read_only = 0;
 #ifdef macintosh
   media->fd = 0;
   if (strcmp(bx_options.floppya.path, SuperDrive))
@@ -1176,9 +1182,25 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
                   );
 
   if (media->fd < 0) {
-    BX_INFO(( "floppy open of %s:",path,strerror(errno) ));
-    return(0);
+    BX_INFO(( "tried to open %s read/write: %s",path,strerror(errno) ));
+    // try opening the file read-only
+    media->read_only = 1;
+#ifdef macintosh
+  media->fd = 0;
+  if (strcmp(bx_options.floppya.path, SuperDrive))
+#endif
+    media->fd = open(path, O_RDONLY
+#ifdef O_BINARY
+                   | O_BINARY
+#endif
+                  );
+    if (media->fd < 0) {
+      // failed to open read-only too
+      BX_INFO(( "tried to open %s read only: %s",path,strerror(errno) ));
+      return(0);
     }
+  }
+  BX_INFO(("opened %s with readonly=%d\n", path, media->read_only));
 
 #if BX_WITH_MACOS
   if (!strcmp(bx_options.floppya.path, SuperDrive))

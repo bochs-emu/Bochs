@@ -41,6 +41,7 @@ typedef struct {
   unsigned tracks;      /* number of tracks */
   unsigned heads;      /* number of heads */
   unsigned type;
+  unsigned read_only;
   } floppy_t;
 
 class bx_floppy_ctrl_c : public logfunctions {
