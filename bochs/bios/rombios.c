@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.29 2002-01-15 21:22:00 vruppert Exp $
+// $Id: rombios.c,v 1.30 2002-01-20 00:25:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -273,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.29 $";
-static char bios_date_string[] = "$Date: 2002-01-15 21:22:00 $";
+static char bios_cvs_version_string[] = "$Revision: 1.30 $";
+static char bios_date_string[] = "$Date: 2002-01-20 00:25:12 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.29 2002-01-15 21:22:00 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.30 2002-01-20 00:25:12 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -2055,6 +2055,7 @@ int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS;
 {
   Bit8u    drive, num_sectors, sector, head, status, mod;
+  Bit8u    drive_map;
   Bit8u    n_drives;
   Bit16u   cyl_mod, ax;
   Bit16u   max_cylinder, cylinder, total_sectors;
@@ -2071,12 +2072,14 @@ int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   /* at this point, DL is >= 0x80 to be passed from the floppy int13h
      handler code */
   /* check how many disks first (cmos reg 0x12), return an error if
-     DL > n_drives */
-  n_drives = inb_cmos(0x12);
-  n_drives = ((n_drives & 0xf0)==0) ? 0 :
-    ((n_drives & 0x0f) ? 2 : 1);
+     drive not present */
+  drive_map = inb_cmos(0x12);
+  drive_map = (((drive_map & 0xf0)==0) ? 0 : 1) |
+              (((drive_map & 0x0f)==0) ? 0 : 2);
+  n_drives = (drive_map==0) ? 0 :
+    ((drive_map==3) ? 2 : 1);
 
-  if (!((GET_DL()&0x7f) < n_drives)) { /* allow 0, 1, or 2 disks */
+  if (!(drive_map & (1<<(GET_DL()&0x7f)))) { /* allow 0, 1, or 2 disks */
     SET_AH(0x01);
     set_disk_ret_status(0x01);
     SET_CF(); /* error occurred */
@@ -4300,6 +4303,8 @@ post_d1_type47:
   ;; 0x2b    landing zone high        D
   ;; 0x2c    sectors/track            E
 ;;; Fill EBDA table for hard disk 1.
+  mov  ax, #EBDA_SEG
+  mov  ds, ax
   mov  al, #0x28
   out  #0x70, al
   in   al, #0x71
@@ -4405,7 +4410,7 @@ hd1_post_checksum_loop:
   not   al  ;; now take 2s complement
   inc   al
   mov   [si], al
-;;; Done filling EBDA table for hard disk 0.
+;;; Done filling EBDA table for hard disk 1.
 
   ret
 
@@ -4807,9 +4812,10 @@ rom_scan_increment:
   mov al, #0x01
   out 0x21, al
   out 0xa1, al
-  mov  al, #0x00
-  out  0x21, AL ;master pic: all IRQs unmasked
-  out  0xA1, AL ;slave  pic: all IRQs unmasked
+  mov  al, #0xb8
+  out  0x21, AL ;master pic: unmask IRQ 0, 1, 2, 6
+  mov  al, #0x8f
+  out  0xa1, AL ;slave  pic: unmask IRQ 12, 13, 14
 
   call _print_bios_banner
 
