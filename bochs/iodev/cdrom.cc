@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.27 2002-02-01 16:46:27 vruppert Exp $
+// $Id: cdrom.cc,v 1.28 2002-02-07 17:38:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,6 +61,7 @@ extern "C" {
 #endif /* __sun */
 
 #ifdef __BEOS__
+#include "cdrom_beos.h"
 #define BX_CD_FRAMESIZE 2048
 #endif
 
@@ -202,7 +203,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.27 2002-02-01 16:46:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.28 2002-02-07 17:38:33 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -599,7 +600,6 @@ cdrom_interface::capacity()
 #endif
 
 #ifdef __BEOS__
-	#include "cdrom_beos.h"
 	return GetNumDeviceBlocks(fd, BX_CD_FRAMESIZE);
 #elif defined(__sun)
   {
