@@ -11,9 +11,10 @@ Bochs is a portable x86 PC emulation software package that emulates
 enough of the x86 CPU, related AT hardware, and BIOS to run DOS,
 Windows '95, Minix 2.0, and other OS's, all on your workstation.
 <P>
-Though Bochs is commercial software, source code for Bochs is
-available on the Internet, provided you abide by the license
-with the source code.
+Bochs is an open source project distributed under the <a
+href="http://www.gnu.org/copyleft/lesser.html">GNU Lesser General Public License</a>.  It was originally a commercial product, but in March 2000 
+<a href="www.linux-mandrake.com">MandrakeSoft</a> bought Bochs and committed it
+to Open Source.  <a href="http://www.linux-mandrake.com/en/announce-bochs-20000323.php3">Here</a> is the press release.
 <P>
 Bochs now compiles/runs on many platforms.  See the following list
 for supported platforms and special notes:
@@ -38,7 +39,7 @@ David Batterham
 <A HREF="mailto:drbatter@socs.uts.edu.au">drbatter@socs.uts.edu.au</A>
 or
 <A HREF="mailto:drbatter@yahoo.com">drbatter@yahoo.com</A>
-ported bochs to the Mac.  I've integrated his changes, though this
+ported bochs to the Mac.  His changes are integrated, though it
 is work in progress.  He compiled with CodeWarrior Pro R1 (CW12),
 and included a project file 'Bochs.proj' in the top-level directory
 of source code, which you may need to modify.  I added
@@ -46,9 +47,12 @@ a '--with-macos' option to configure, so you can use a Unix
 machine to generate header files for the Mac.
 Check out David's
 <A HREF="http://members.xoom.com/macbochs/">MacBochs website</A>.
+David has not had time to maintain the page or the Mac port since early
+2000.  If you have Mac development tools and want to contribute, contact
+the developers list.
+
 <LI><B>FreeDOS for Bochs:</B>
 David Batterham
-<A HREF="mailto:drbatter@socs.uts.edu.au">drbatter@socs.uts.edu.au</A>
 also offers information on running FreeDOS inside of bochs.
 You can download a disk image with a pre-installed copy of FreeDOS,
 a completely free DOS-like operating system.
@@ -60,6 +64,8 @@ For more info about FreeDOS, see
 <A HREF="http://www.freedos.org/">FreeDOS Web page</A>
 </UL>
 <P>
+There's more!  You can find more detailed testing information on the testing status page
+on <a href="http://bochs.sourceforge.net">bochs.sourceforge.net</a>.
 <BR>
 <HR>
 <H1>
@@ -175,6 +181,15 @@ add your platform to this list.
   <TD><A HREF="mailto:larry.gensch@digital.com">Larry Gensch</A></TD>
 </TR>
 <TR>
+  <TD>Compaq Alpha Station 600</TD>
+  <TD>Compaq Tru64 UNIX 5.1</TD>
+  <TD>X11</TD>
+  <TD>Compaq C V6.3-025</TD>
+  <TD>bugfix2</TD>
+  <TD>Linux</TD>
+  <TD><A HREF="mailto:Kenneth.block@compaq.com">Kenneth Block</A></TD>
+</TR>
+<TR>
   <TD>AMIGA1200/68060</TD>
   <TD>Linux/m68k 2.2.0 pre6 (RedHat5.1)</TD>
   <TD>X11R6.3</TD>
@@ -236,6 +251,15 @@ add your platform to this list.
   <TD>991114a</TD>
   <TD>FreeDOS</TD>
   <TD><A HREF="mailto:wissing@mail.desy.de">Christoph Wissing</A></TD>
+</TR>
+<TR>
+  <TD>G4 PowerPC</TD>
+  <TD>Yellowdog Linux</TD>
+  <TD>X11R6</TD>
+  <TD>gcc 2.95.2</TD>
+  <TD>bugfix2</TD>
+  <TD>Win95,DOS</TD>
+  <TD><A HREF="mailto:davis@enel.ucalgary.ca">Brad Davis</A></TD>
 </TR>
 </TABLE>
 
@@ -325,8 +349,6 @@ does not run any instructions natively, even if you are running it
 on an x86 machine.
 <P>
 Bochs may be of interest to you for other special modes, or uses.
-To use bochs for these purposes, you must negotiate a special
-license with me.
 You may wish to use only the device models included with bochs in
 combination with your own CPU emulation, use it's CPU emulation
 with another set of device models, use it's built in non-intrusive
