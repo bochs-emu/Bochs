@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.9 2001-10-05 21:03:53 bdenney Exp $
+// $Id: debug.h,v 1.10 2001-11-28 18:37:12 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,6 +77,8 @@ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 void bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset);
 void bx_dbg_trace_on_command(void);
 void bx_dbg_trace_off_command(void);
+void bx_dbg_trace_reg_on_command(void);
+void bx_dbg_trace_reg_off_command(void);
 void bx_dbg_ptime_command(void);
 void bx_dbg_timebp_command(Boolean absolute, Bit64u time);
 void bx_dbg_diff_memory(void);
