@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.168 2005-03-28 10:26:14 vruppert Exp $
+$Id: user.dbk,v 1.169 2005-04-03 10:47:01 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -433,7 +433,8 @@ currently work with.
   <row>
     <entry>Mouse</entry>
     <entry>Yes</entry>
-    <entry>Emulates a serial, PS/2 or USB mouse with 3 buttons (mouse wheel).
+    <entry>Emulates a serial, PS/2 or USB mouse with 3 buttons + optional mouse
+    wheel support.
     </entry>
   </row>
   <row>
@@ -472,7 +473,7 @@ currently work with.
     <entry>The serial port (single 16550A UART emulation) is usable, on GNU/Linux,
     NetBSD, OpenBSD, FreeBSD and MacOSX as host and guest. On other OSes the
     emulation is present, but the connection to hard- or software of the host is
-    not implemented yet.
+    not implemented yet. Up to 4 ports are available.
     </entry>
   </row>
   <row>
@@ -808,7 +809,8 @@ host operating system's CD-ROM data directly.
      Does Bochs support a sound device?
      </para></question>
      <answer><para>
-     Yes, there is Sound Blaster emulation support for Windows, Linux and FreeBSD.
+       Yes, there is Sound Blaster emulation support for most common operation systems,
+       see <xref linkend="sb16-emulation"> for details.
      </para></answer>
   </qandaentry>
 
@@ -2895,6 +2897,8 @@ likely want to setup a hard disk (see <xref linkend="using-bximage"> and
 <xref linkend="bochsopt-ata-master-slave">), and install some OS on it using either
 a set of floppy disks (see <xref linkend="bochsopt-floppyab">) or a CD-ROM
 (see <xref linkend="bochsopt-ata-master-slave"> again) as installation media.
+Make sure you boot the emulation from the media you want, using the right setting
+as <link linkend="bochsopt-boot">boot option</link>.
 </para>
 
 <para>
@@ -3186,7 +3190,7 @@ then suggest a line that works with it.
 
 <para>
 In Unix it is possible to use a raw device as a Bochs hard disk,
-but WE DON'T RECOMMEND IT for safety reasons. In Windows, there is no easy way.
+but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, there is no easy way.
 </para>
 
 <para>
@@ -3271,7 +3275,7 @@ Default values are:
 </para></note>
 </section>
 
-<section><title>boot</title>
+<section id="bochsopt-boot"><title>boot</title>
 <para>
 Examples:
 <screen>
@@ -4079,7 +4083,7 @@ current time of the simulator host.
 
 <title>Sound Blaster 16 Emulation</title>
 
-<section><title>Configuring From Source</title>
+<section><title>Preamble</title>
 
 <para>
 This section is a detailed description for configuring Sound Blaster 16 from
@@ -4128,11 +4132,15 @@ sox for example.
 
 <para>
 Output is supported on Windows, Linux, FreeBSD, MacOS 9 and MacOSX at the moment.
+</para>
+<para>
 On Linux, the output goes to any file or device. If you have a wavetable synthesizer,
 midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise you may need
 a midi interpreter. For example, the midid program from the DosEmu project would work.
 Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
 are assumed to be OSS devices, if they're not some of the ioctl's might fail.
+</para>
+<para>
 On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
 respectively. A future version might have selectable output devices.
 </para>
@@ -4140,9 +4148,7 @@ respectively. A future version might have selectable output devices.
 
 <section><title>Installation on Linux</title>
 
-<para>
-<emphasis>Prerequisites:</emphasis>
-</para>
+<section><title>Prerequisites</title>
 
 <para>
 A wavetable synthesizer on <filename class="devicefile">/dev/midi00</filename>
@@ -4198,46 +4204,80 @@ in that file (see <link linkend="sb16line">sb16 option</link>).
 
 <para>
 The source for the SB16CTRL program that is used to modify
-the runtime behaviour of the SB16 emulator is included in
-misc/sb16. You can compile it or download the
+the runtime behaviour of the SB16 emulation is included in
+<filename class="directory">misc/sb16/</filename>. It is a C
+program that can be run from inside the emulation. You can compile it or download the
 <ulink url="http://publish.uwo.ca/~jdrexler/bochs/">executable</ulink>.
 </para>
 
 <para>
-<emphasis>misc/sb16/</emphasis> contains a C program that can be run inside the emulator, and the
-executable for DOS. It currently supports the following commands:
+It currently supports the following commands:
 </para>
 
-<programlisting>
-<command>-i number</command>        shows the selected emulator info string,
-                 e.g. sb16ctrl -i 3 to show how many patch translations are active
-
-<command>-t six numbers</command>   loads a translation into the translation table. The
-                 numbers are:
-                 OldBankMSB,OldBankLSB,OldProgram,NewBankMSB,NewBankLSB,NewProgram
-                 All values can be 0..127 or 255. 255 for Old values means <emphasis>match
-                 any</emphasis> and for New values means <emphasis>don't change</emphasis>,
-                 e.g. sb16ctrl -t 255,255,0,255,255,32
-                 to change patch 0 (Piano) to patch 32 (Acoustic Bass)
-
-<command>-r</command>               Reset the patch translation table e.g. sb16ctrl -r
-
-<command>-m some numbers</command>  Upload the given numbers to the midi output device. Note
-                 that it should be a complete midi message, and also that it is
-                 subject to patch translation.
-                 e.g. sb16ctrl -m 0x80,64,0
-                 to send a note-off message to channel 0.
-
-<command>-f filename</command>      Reads in a file and executes the commands in it. These have
-                 the same format as the above commands, except that they don't have
-                 the dash "-" in front of them.
-                 Comment lines are supported and start with a hash sign "#".
-
-<command>-h</command>               Show a brief summary of the commands.
-</programlisting>
+<table><title>Supported options for <command>sb16ctl</command></title>
+<tgroup cols="2">
+  <thead>
+    <row>
+      <entry>Option</entry>
+      <entry>Description</entry>
+   </row>
+  </thead>
+  <tbody>
+    <row>
+      <entry><option>-i <replaceable>number</replaceable></option></entry>
+      <entry>
+        Show the selected emulator info string,
+        e.g. <command>sb16ctrl -i 3</command> to show how many patch translations are active.
+      </entry>
+    </row>
+    <row>
+      <entry><option>-t <replaceable>six numbers</replaceable></option></entry>
+      <entry>
+        Load a translation into the translation table. The numbers are:
+        "OldBankMSB,OldBankLSB,OldProgram,NewBankMSB,NewBankLSB,NewProgram".
+        All values can be 0..127 or 255. 255 for "Old" values means <emphasis>match
+        any</emphasis> and for "New" values means <emphasis>don't change</emphasis>,
+        e.g. <command>sb16ctrl -t 255,255,0,255,255,32</command>
+        to change patch 0 (Piano) to patch 32 (Acoustic Bass).
+      </entry>
+    </row>
+    <row>
+      <entry><option>-r</option></entry>
+      <entry>
+        Reset the patch translation table e.g. <command>sb16ctrl -r</command>.
+      </entry>
+    </row>
+    <row>
+      <entry><option>-m <replaceable>some numbers</replaceable></option></entry>
+      <entry>
+        Upload the given numbers to the midi output device. Note
+        that it should be a complete midi message, and also that it is
+        subject to patch translation,
+        e.g. <command>sb16ctrl -m 0x80,64,0</command>
+        to send a note-off message to channel 0.
+      </entry>
+    </row>
+    <row>
+      <entry><option>-f <replaceable>filename</replaceable></option></entry>
+      <entry>
+        Read in a file and execute the commands in it. These have
+        the same format as the above commands, except that they don't have
+        the dash "-" in front of them.
+        Comment lines are supported and start with a hash sign "#".
+      </entry>
+    </row>
+    <row>
+      <entry><option>-h</option></entry>
+      <entry>
+        Show a brief summary of the commands.
+      </entry>
+    </row>
+  </tbody>
+</tgroup>
+</table>
 
 <para>
-All numbers can be valid parameters to the strtol() function, so hex and
+All numbers can be valid parameters to the <function>strtol()</function> function, so hex and
 octal notation is fine. They have to be delimited by either commas "," or
 slashes "/", spaces are not allowed.
 </para>
@@ -4247,11 +4287,12 @@ The command line can have any number of commands. However, if none are given,
 "-f -" is assumed, which means commands are taken from stdin.
 </para>
 </section>
+</section>
 
 <section><title>Features planned for the future</title>
 <itemizedlist>
-<listitem><para>Ports to more OS's, but I can't do this myself</para></listitem>
-<listitem><para>Finishing the OPL3 FM emulation by translating the music to midi data</para></listitem>
+<listitem><para>Port it to more OS's, but I can't do this myself.</para></listitem>
+<listitem><para>Finish the OPL3 FM emulation by translating the music to midi data.</para></listitem>
 </itemizedlist>
 </section>
 
@@ -4259,7 +4300,8 @@ The command line can have any number of commands. However, if none are given,
 <title>Description of the sound output classes</title>
 <para>
 You can find a description of the sound output classes and more details on
-Sound Blaster 16 emulation in the developer documentation.
+Sound Blaster 16 emulation in the
+<ulink url="../development/sb16-emulation-basics.html">developer documentation</ulink>.
 </para>
 </section>
 </section> <!-- end of SB16 section-->
@@ -6393,12 +6435,7 @@ dlx:~#
         <para>
         Update the com1: section of your configuration file:
         <screen>
-com1: enabled=1, dev=serial.txt
-        </screen>
-        For some reasons, the file must be existing before you launch Bochs.
-        You may create it with:
-        <screen>
-host$ > serial.txt
+com1: enabled=1, mode=file, dev=serial.txt
         </screen>
         After you've launch dlxlinux, everything sent to the serial port will be
         logged to serial.txt :
@@ -6428,7 +6465,7 @@ host$
         Once you found an unused vt, update the com1: section of your
         configuration file:
         <screen>
-com1: enabled=1, dev=/dev/tty9
+com1: enabled=1, mode=term, dev=/dev/tty9
         </screen>
         The number must be set according to the terminal you want to use (here 9).
         </para>
@@ -6472,7 +6509,7 @@ T0:1234:respawn:/bin/agetty 38400 cua0
         <para>
         Update the com1: section of your configuration file:
         <screen>
-com1: enabled=1, dev=/dev/ptyp0
+com1: enabled=1, mode=term, dev=/dev/ptyp0
         </screen>
         and lauch dlxlinux. After you log in as root, enter the command:
         <screen>
@@ -7848,6 +7885,13 @@ Please see the <ulink url="http://minix1.hampshire.edu/faq/bxmxhowto.html">Minix
 
   <section>
     <title>Installing FreeBSD</title>
+
+    <para>
+      This is just a very short step-by-step installation guide for FreeBSD in Bochs. It
+      doesn't explain what you do nor why you do it, it just tells you how to do it.
+      For in-deepth information refer to the FreeBSD handbook:
+      <ulink url="http://www.freebsd.org/doc/handbook/install.html">Installing FreeBSD</ulink>.
+    </para>
 
     <para>
       FreeBSD boots up and shows a nice (text-mode) boot option screen. Just press
