@@ -16,10 +16,6 @@ int load_module (const char *fmt, const char *name)
   char buf[512];
   sprintf (buf, fmt, name);
   printf ("loading module from %s\n", buf);
-  if (lt_dlinit () != 0) {
-    printf ("lt_dlinit error: %s\n", lt_dlerror ());
-    return -1;
-  }
   lt_dlhandle handle = lt_dlopen (buf);
   printf ("handle is %p\n", handle);
   if (!handle) {
@@ -41,6 +37,10 @@ int load_module (const char *fmt, const char *name)
 int main (int argc, char **argv)
 {
   printf ("start\n");
+  if (lt_dlinit () != 0) {
+    printf ("lt_dlinit error: %s\n", lt_dlerror ());
+    return -1;
+  }
   printf ("loading module1\n");
   // try to load module1
   if (load_module ("lib%s.la", "module1") < 0) {
