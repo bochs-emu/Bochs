@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.42 2002-12-07 20:01:09 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.43 2002-12-08 04:48:52 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -634,7 +634,7 @@ bx_pit_c::second_update_data(void) {
     BX_PIT_THIS s.max_ticks = BX_MIN( (((BX_PIT_THIS s.total_sec)*(Bit64u)(TICKS_PER_SECOND))/USEC_PER_SECOND) + AHEAD_CEILING , BX_PIT_THIS s.total_ticks + (Bit64u)(TICKS_PER_SECOND*MAX_MULT) );
 
 #if DEBUG_REALTIME_WITH_PRINTF
-    printf("timediff: %lld, total_sec: %lld, total_ticks: %lld\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
+    printf("timediff: %llu, total_sec: %llu, total_ticks: %llu\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
 #endif
 
     tickstemp = 
@@ -649,26 +649,26 @@ bx_pit_c::second_update_data(void) {
     if(tickstemp > (TICKS_PER_SECOND*MAX_MULT)) {
 #if DEBUG_REALTIME_WITH_PRINTF
       if (tickstemp>(2*TICKS_PER_SECOND)) {
-	printf("Running WAY too slow. tps:%lld\n",tickstemp);
+	printf("Running WAY too slow. tps:%llu\n",tickstemp);
       } else {
-	printf("Running slow.         tps:%lld\n",tickstemp);
+	printf("Running slow.         tps:%llu\n",tickstemp);
       }
 #endif
       tickstemp = (Bit64u)(TICKS_PER_SECOND*MAX_MULT);
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("..................new tps:%lld\n",tickstemp);
+      printf("..................new tps:%llu\n",tickstemp);
 #endif
     } else if(tickstemp < (TICKS_PER_SECOND*MIN_MULT)) {
 #if DEBUG_REALTIME_WITH_PRINTF
       if(tickstemp<0) {
-        printf("Running WAY too fast. tps:%lld\n",tickstemp);
+        printf("Running WAY too fast. tps:%llu\n",tickstemp);
       } else {
-        printf("Running fast.         tps:%lld\n",tickstemp);
+        printf("Running fast.         tps:%llu\n",tickstemp);
       }
 #endif
       tickstemp = (Bit64u)(TICKS_PER_SECOND*MIN_MULT);
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("..................new tps:%lld\n",tickstemp);
+      printf("..................new tps:%llu\n",tickstemp);
 #endif
     }
 
@@ -679,8 +679,8 @@ bx_pit_c::second_update_data(void) {
     BX_PIT_THIS s.usec_per_second = BX_MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
     BX_PIT_THIS s.last_sec_usec = bx_pc_system.time_usec();
 #if DEBUG_REALTIME_WITH_PRINTF
-    printf("Parms: ticks_per_second=%lld, usec_per_second=%lld\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
-    printf("total_usec: %lld\n", bx_pc_system.time_usec());
+    printf("Parms: ticks_per_second=%llu, usec_per_second=%llu\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
+    printf("total_usec: %llu\n", bx_pc_system.time_usec());
 #endif
   }
 }
