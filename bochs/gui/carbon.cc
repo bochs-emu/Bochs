@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.6 2001-12-13 18:36:29 vruppert Exp $
+// $Id: carbon.cc,v 1.7 2002-03-09 02:40:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,6 +57,14 @@
 #define iSnapshot 9
 #define iReset 10
 
+const MenuCommand kCommandFloppy = FOUR_CHAR_CODE ('FLPY');
+const MenuCommand kCommandCursor = FOUR_CHAR_CODE ('CRSR');
+const MenuCommand kCommandTool = FOUR_CHAR_CODE ('TOOL');
+const MenuCommand kCommandMenuBar = FOUR_CHAR_CODE ('MENU');
+const MenuCommand kCommandFullScreen = FOUR_CHAR_CODE ('SCRN');
+const MenuCommand kCommandSnapshot = FOUR_CHAR_CODE ('SNAP');
+const MenuCommand kCommandReset = FOUR_CHAR_CODE ('RSET');
+
 #define SLEEP_TIME	0 // Number of ticks to surrender the processor during a WaitNextEvent()
 // Change this to 15 or higher if you don't want Bochs to hog the processor!
 
@@ -76,21 +84,24 @@ const RGBColor	ltGrey = 	{0xEEEE, 0xEEEE, 0xEEEE};
 // GLOBALS
 
 WindowPtr			win, toolwin, fullwin, backdrop, hidden, SouixWin;
+WindowGroupRef			fullwinGroup;
 bx_gui_c			*thisGUI;
 SInt16				gOldMBarHeight;
 Boolean				menubarVisible = true, cursorVisible = true;
+Boolean				windowUpdatesPending = true, mouseMoved = false;
 RgnHandle			mBarRgn, cnrRgn;
 unsigned			mouse_button_state = 0;
 CTabHandle		gCTable;
 PixMapHandle	gTile;
 BitMap 				*vgafont[256];
 Rect					srcTextRect, srcTileRect;
-Point					scrCenter = {320, 240};
+Point					scrCenter = {300, 240};
 Ptr						KCHR;
 short					gheaderbar_y;
 Point					prevPt;
 unsigned			width, height, gMinTop, gMaxTop, gLeft;
 GWorldPtr			gOffWorld;
+ProcessSerialNumber		gProcessSerNum;
 
 // HEADERBAR STUFF
 int 					numPixMaps = 0, toolPixMaps = 0;
@@ -110,15 +121,22 @@ struct {
 	void (*f)(void);
 } bx_tool_pixmap[BX_MAX_PIXMAPS];
 
+// Carbon Event Handlers
+pascal OSStatus CEvtHandleWindowToolClick       (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleWindowToolUpdate      (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleWindowBackdropUpdate  (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleWindowEmulatorClick   (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleWindowEmulatorUpdate  (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleWindowEmulatorKeys    (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleApplicationAppleEvent (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleApplicationMouseMoved (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleApplicationMouseUp    (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleApplicationMenuClick  (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleApplicationMenus      (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+
 // Event handlers
 BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState);
 BX_CPP_INLINE void HandleToolClick(Point where);
-void HandleMenuChoice(long menuChoice);
-BX_CPP_INLINE void HandleClick(EventRecord *event);
-
-// Update routines
-void UpdateWindow(WindowRef window);
-void UpdateRgn(RgnHandle rgn);
 
 // Show/hide UI elements
 void HidePointer(void);
@@ -127,8 +145,8 @@ void HideTools(void);
 void ShowTools(void);
 void HideMenubar(void);
 void ShowMenubar(void);
-void HideConsole(void);
-void ShowConsole(void);
+// void HideConsole(void);
+// void ShowConsole(void);
 
 // Initialisation
 void FixWindow(void);
@@ -144,13 +162,287 @@ PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
 	unsigned height, unsigned depth, CTabHandle clut);
 unsigned char reverse_bitorder(unsigned char);
 
-static OSErr QuitAppleEventHandler( const AppleEvent *appleEvt, AppleEvent* reply, UInt32 refcon );
-
+static pascal OSErr QuitAppleEventHandler(const AppleEvent *appleEvt, AppleEvent* reply, SInt32 refcon);
 
 extern bx_gui_c   bx_gui;
 
 #define BX_GUI_THIS bx_gui.
 #define LOG_THIS BX_GUI_THIS
+
+// Carbon Event Handlers
+
+pascal OSStatus CEvtHandleWindowToolClick (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	Point wheresMyMouse;
+	GetEventParameter (theEvent, kEventParamMouseLocation, typeQDPoint,
+            NULL, sizeof(Point), NULL, &wheresMyMouse);
+
+	HiliteWindow(win, true);
+	HandleToolClick(wheresMyMouse);
+
+	return noErr; // Report success
+}
+
+pascal OSStatus CEvtHandleWindowToolUpdate (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	thisGUI->show_headerbar();
+
+	return noErr; // Report success
+}
+
+pascal OSStatus CEvtHandleWindowBackdropUpdate (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	Rect	box;
+	Pattern qdBlackPattern;
+        
+        WindowRef myWindow;
+	GetEventParameter (theEvent, kEventParamDirectObject, typeWindowRef,
+            NULL, sizeof(WindowRef), NULL, &myWindow);
+
+        GetQDGlobalsBlack(&qdBlackPattern);
+	GetWindowPortBounds(myWindow, &box);
+        FillRect(&box, &qdBlackPattern);
+
+	return noErr; // Report success
+}
+
+// Translate MouseDowns in a handled window into Bochs events
+// Main ::HANDLE_EVENTS will feed all mouse updates to Bochs
+pascal OSStatus CEvtHandleWindowEmulatorClick (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	UInt32 keyModifiers;
+	GetEventParameter (theEvent, kEventParamKeyModifiers, typeUInt32,
+            NULL, sizeof(UInt32), NULL, &keyModifiers);
+
+//	if (!IsWindowActive(win))
+//	{
+ //           SelectWindow(win);
+//	}
+	if (keyModifiers & cmdKey)
+            mouse_button_state |= 0x02;
+	else
+            mouse_button_state |= 0x01;
+
+	return noErr; // Report success
+}
+
+pascal OSStatus CEvtHandleWindowEmulatorUpdate (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	Rect	box;
+	Pattern qdBlackPattern;
+        
+	WindowRef myWindow;
+	GetEventParameter (theEvent, kEventParamDirectObject, typeWindowRef,
+            NULL, sizeof(WindowRef), NULL, &myWindow);
+
+	GetWindowPortBounds(myWindow, &box);
+	bx_vga.redraw_area(box.left, box.top, box.right, box.bottom);
+
+	return noErr; // Report success
+}
+
+pascal OSStatus CEvtHandleWindowEmulatorKeys (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	EventRecord event;
+	int oldMods=0;
+
+	if(ConvertEventRefToEventRecord(theEvent, &event))
+	{
+            int key = event.message & charCodeMask;
+
+            switch(event.what)
+            {
+                case keyDown:
+                case autoKey:
+                        oldMods = event.modifiers;
+                        HandleKey(&event, BX_KEY_PRESSED);
+                        break;
+                        
+                case keyUp:
+                        event.modifiers = oldMods;
+                        HandleKey(&event, BX_KEY_RELEASED);
+                        break;
+            }
+	}
+	else
+            BX_PANIC(("Can't convert keyboard event"));
+
+	return noErr; 
+}
+
+#if 0
+// This stuff does work... it gets called, but converting the record
+// and then calling AEProcessAppleEvent consistently results in noOutstandingHLE(err result -608)
+// And its going to take more work to get RunApplicationLoop to work...
+pascal OSStatus CEvtHandleApplicationAppleEvent (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	EventRecord eventRec;
+
+	fprintf(stderr, "# Carbon apple event handler called\n");
+	if(ConvertEventRefToEventRecord(theEvent, &eventRec))
+	{
+            fprintf(stderr, "# Calling AEProcessAppleEvent\n");
+            OSStatus result = AEProcessAppleEvent(&eventRec);
+            fprintf(stderr, "# Received AE result: %i\n", result);
+            returm result;
+	}
+	else
+            BX_PANIC(("Can't convert apple event"));
+
+	return noErr; // Report success
+}
+#endif
+
+// Only have our application deal with mouseEvents when we catch the movement
+pascal OSStatus CEvtHandleApplicationMouseMoved (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	mouseMoved = true;
+        
+        return eventNotHandledErr;
+}
+
+pascal OSStatus CEvtHandleApplicationMouseUp (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	UInt32 keyModifiers;
+	GetEventParameter (theEvent, kEventParamKeyModifiers, typeUInt32,
+            NULL, sizeof(UInt32), NULL, &keyModifiers);
+
+	if (keyModifiers & cmdKey)
+            mouse_button_state &= ~0x02;
+	else
+            mouse_button_state &= ~0x01;
+
+	return eventNotHandledErr; // Don't want to eat all the mouseups
+}
+
+// Catch MouseDown's in the menubar, trigger menu browsing
+pascal OSStatus CEvtHandleApplicationMenuClick (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	short part;
+	WindowPtr whichWindow;
+
+	Point wheresMyMouse;
+	GetEventParameter (theEvent, kEventParamMouseLocation, typeQDPoint,
+            NULL, sizeof(Point), NULL, &wheresMyMouse);
+
+	part = FindWindow(wheresMyMouse, &whichWindow);
+
+	if(part == inMenuBar)
+	{
+            // MenuSelect will actually trigger an event cascade, 
+            // Triggering command events for any selected menu item
+            MenuSelect(wheresMyMouse);
+            return noErr;
+	}
+
+	return eventNotHandledErr; // Don't want to eat all the clicks
+}
+
+pascal OSStatus CEvtHandleApplicationMenus (EventHandlerCallRef nextHandler,
+    EventRef theEvent,
+    void* userData)
+{
+	HICommand commandStruct;
+
+	OSErr		err = noErr;
+	short		i;
+	DialogPtr	theDlog;
+
+	GetEventParameter (theEvent, kEventParamDirectObject,
+            typeHICommand, NULL, sizeof(HICommand),
+            NULL, &commandStruct);
+
+	switch(commandStruct.commandID)
+	{
+            case kHICommandAbout:
+                theDlog = GetNewDialog(128, NULL, (WindowPtr)-1);
+                ModalDialog(NULL, &i);
+                DisposeDialog(theDlog);
+                break;
+
+            case kHICommandQuit:
+                BX_PANIC(("User terminated"));
+                break;
+
+            case kCommandFloppy:
+                //DiskEject(1);
+                break;
+
+            case kCommandCursor:
+                if (cursorVisible)
+                        HidePointer();
+                else
+                        ShowPointer();
+                break;
+
+            case kCommandTool:
+                if (IsWindowVisible(toolwin))
+                        HideTools();
+                else
+                        ShowTools();
+                break;
+
+            case kCommandMenuBar:
+                    if (menubarVisible)
+                            HideMenubar();
+                    else
+                            ShowMenubar();
+                    break;
+
+            case kCommandFullScreen:
+                    if (IsWindowVisible(toolwin) || menubarVisible)
+                    {
+                            if (menubarVisible)
+                                    HideMenubar();
+                            if (IsWindowVisible(toolwin))
+                                    HideTools();
+                    }
+                    else
+                    {
+                            if (!menubarVisible)
+                                    ShowMenubar();
+                            if (!IsWindowVisible(toolwin))
+                                    ShowTools();
+                    }
+                    break;
+                    
+/*
+            // Codewarrior programatic console that isn't available under Carbon without Codewarrior
+            case iConsole:
+                    if (IsWindowVisible(SouixWin))
+                            HideConsole();
+                    else
+                            ShowConsole();
+                    break;
+*/
+            case kCommandSnapshot:
+                    //the following will break if snapshot is not last bitmap button instantiated
+                    bx_tool_pixmap[toolPixMaps-1].f();
+                    break;
+        }
+        
+	return noErr; // Report success
+}
 
 //this routine moves the initial window position so that it is entirely onscreen
 //it is needed for os 8.x with appearance managaer
@@ -201,12 +493,20 @@ void InitToolbox(void)
     
     InitCursor();
 
-    err = AEInstallEventHandler( kCoreEventClass, kAEQuitApplication, NewAEEventHandlerUPP((AEEventHandlerProcPtr)QuitAppleEventHandler), 0, false );
+#if 0
+    // Our handler gets called... but I can't AEProcesAppleEvent successfully upon it?
+    EventTypeSpec appleEvent = { kEventClassAppleEvent, kEventAppleEvent };
+    InstallApplicationEventHandler(NewEventHandlerUPP(CEvtHandleApplicationAppleEvent),
+        1, &appleEvent, 0, NULL);
+#endif
+
+    err = AEInstallEventHandler( kCoreEventClass, kAEQuitApplication,
+        NewAEEventHandlerUPP(QuitAppleEventHandler), 0, false);
     if (err != noErr)
         ExitToShell();
 }
 
-static OSErr QuitAppleEventHandler( const AppleEvent *appleEvt, AppleEvent* reply, UInt32 refcon )
+static pascal OSErr QuitAppleEventHandler(const AppleEvent *appleEvt, AppleEvent* reply, SInt32 refcon)
 {
     //gQuitFlag =  true;
     BX_PANIC(("User terminated"));
@@ -265,6 +565,23 @@ void CreateMenus(void)
         }
         else
             BX_PANIC(("can't create menu"));
+        
+        SetMenuItemCommandID (GetMenuRef(mApple), iAbout,      kHICommandAbout);
+        SetMenuItemCommandID (GetMenuRef(mFile),  iQuit,       kHICommandQuit);
+        SetMenuItemCommandID (GetMenuRef(mBochs), iFloppy,     kCommandFloppy);
+        SetMenuItemCommandID (GetMenuRef(mBochs), iCursor,     kCommandCursor);
+        SetMenuItemCommandID (GetMenuRef(mBochs), iTool,       kCommandTool);
+        SetMenuItemCommandID (GetMenuRef(mBochs), iMenuBar,    kCommandMenuBar);
+        SetMenuItemCommandID (GetMenuRef(mBochs), iFullScreen, kCommandFullScreen);
+        SetMenuItemCommandID (GetMenuRef(mBochs), iSnapshot,   kCommandSnapshot);
+        SetMenuItemCommandID (GetMenuRef(mBochs), iReset,      kCommandReset);
+        
+        EventTypeSpec commandEvents = {kEventClassCommand, kEventCommandProcess};
+        EventTypeSpec menuEvents = {kEventClassMouse, kEventMouseDown};
+        InstallApplicationEventHandler(NewEventHandlerUPP(CEvtHandleApplicationMenus),
+            1, &commandEvents, 0, NULL);
+        InstallApplicationEventHandler(NewEventHandlerUPP(CEvtHandleApplicationMenuClick),
+            1, &menuEvents, 0, NULL);
 }
 
 void CreateWindows(void)
@@ -273,9 +590,21 @@ void CreateWindows(void)
 	Rect winRect;
 	Rect screenBitsBounds;
         
+	EventTypeSpec eventClick =  { kEventClassWindow, kEventWindowHandleContentClick };
+	EventTypeSpec eventUpdate = { kEventClassWindow, kEventWindowDrawContent };
+	EventTypeSpec keyboardEvents[3] = {
+            { kEventClassKeyboard, kEventRawKeyDown }, { kEventClassKeyboard, kEventRawKeyRepeat },
+            { kEventClassKeyboard, kEventRawKeyUp }};
+
+	// Create a backdrop window for fullscreen mode
         GetRegionBounds(GetGrayRgn(), &screenBitsBounds);
 	SetRect(&winRect, 0, 0, screenBitsBounds.right, screenBitsBounds.bottom + GetMBarHeight());
-        backdrop = NewWindow(NULL, &winRect, "\p", false, plainDBox, (WindowPtr)-1, false, 0);
+	CreateNewWindow(kDocumentWindowClass, (kWindowStandardHandlerAttribute ), &winRect, &backdrop);
+	if (backdrop == NULL)
+		{BX_PANIC(("mac: can't create backdrop window"));}
+	InstallWindowEventHandler(backdrop, NewEventHandlerUPP(CEvtHandleWindowBackdropUpdate), 1, &eventUpdate, NULL, NULL);
+	InstallWindowEventHandler(backdrop, NewEventHandlerUPP(CEvtHandleWindowEmulatorClick), 1, &eventClick, NULL, NULL);
+	InstallWindowEventHandler(backdrop, NewEventHandlerUPP(CEvtHandleWindowEmulatorKeys), 3, keyboardEvents, 0, NULL);
 	
 	width = 640;
 	height = 480;
@@ -288,26 +617,58 @@ void CreateWindows(void)
 	t = (screenBitsBounds.bottom - height)/2;
 	b = t + height;
 	
+	// Create a moveable tool window for the "headerbar"
 	SetRect(&winRect, 0, 20, screenBitsBounds.right , 22+gheaderbar_y); //qd.screenBits.bounds.right, 22+gheaderbar_y);
-	toolwin = NewCWindow(NULL, &winRect, "\pMacBochs 586", true, floatProc,
-		(WindowPtr)-1, false, 0);
+	CreateNewWindow(kFloatingWindowClass, kWindowStandardHandlerAttribute ,&winRect, &toolwin);
 	if (toolwin == NULL)
 		{BX_PANIC(("mac: can't create tool window"));}
-	// Create a moveable tool window for the "headerbar"
-	
+
+	SetWindowTitleWithCFString (toolwin, CFSTR("MacBochs 586")); // Set title
+	InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolClick),  1, &eventClick, NULL, NULL);
+	InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolUpdate), 1, &eventUpdate, NULL, NULL);
+
+	// Create the emulator window for full screen mode
 	SetRect(&winRect, l, t, r, b);
-	fullwin = NewCWindow(NULL, &winRect, "\p", false, plainDBox, (WindowPtr)-1, false, 1);
-	
+	CreateNewWindow(kPlainWindowClass, (kWindowStandardHandlerAttribute), &winRect, &fullwin);
+	if (fullwin == NULL)
+		BX_PANIC(("mac: can't create fullscreen emulator window"));
+
+	InstallWindowEventHandler(fullwin, NewEventHandlerUPP(CEvtHandleWindowEmulatorUpdate), 1, &eventUpdate, NULL, NULL);
+	InstallWindowEventHandler(fullwin, NewEventHandlerUPP(CEvtHandleWindowEmulatorClick), 1, &eventClick, NULL, NULL);	InstallWindowEventHandler(fullwin, NewEventHandlerUPP(CEvtHandleWindowEmulatorKeys), 3, keyboardEvents, 0, NULL);
+
+	// Create the regular emulator window
 	SetRect(&winRect, gLeft, gMaxTop, gLeft+width, gMaxTop+height);
-	win = NewCWindow(NULL, &winRect, "\pMacBochs 586", true, documentProc,
-		(WindowPtr)-1, true, 1);
+	CreateNewWindow(kDocumentWindowClass,
+            (kWindowStandardHandlerAttribute | kWindowCollapseBoxAttribute),
+            &winRect, &win);
 	if (win == NULL)
 		BX_PANIC(("mac: can't create emulator window"));
 	
+	SetWindowTitleWithCFString (win, CFSTR("MacBochs 586")); // Set title
+	InstallWindowEventHandler(win, NewEventHandlerUPP(CEvtHandleWindowEmulatorUpdate), 1, &eventUpdate, NULL, NULL);
+	InstallWindowEventHandler(win, NewEventHandlerUPP(CEvtHandleWindowEmulatorClick), 1, &eventClick, NULL, NULL);
+	InstallWindowEventHandler(win, NewEventHandlerUPP(CEvtHandleWindowEmulatorKeys), 3, keyboardEvents, 0, NULL);
+
+	// Group the fullscreen and backdrop windows together, since they also share the same click
+	// event handler they will effectively act as a single window for layering and events
+
+	CreateWindowGroup((kWindowGroupAttrLayerTogether | kWindowGroupAttrSharedActivation), &fullwinGroup);
+	SetWindowGroupName(fullwinGroup, CFSTR("net.sourceforge.bochs.windowgroups.fullscreen"));
+
+	// This *can't* be the right way, then again groups aren't yet the right way
+	// For the life of me I couldn't find a right way of making sure my created group stayed
+	// below the layer of Floating Windows. But with the windows we have there's no current
+	// harm from making it part of the same group.
+	SetWindowGroup(toolwin, fullwinGroup);
+	SetWindowGroup(fullwin, fullwinGroup);
+	SetWindowGroup(backdrop, fullwinGroup);
+
 	FixWindow();
 
 	hidden = fullwin;
 	
+	ShowWindow(toolwin);
+	ShowWindow(win);
 	HiliteWindow(win, true);
 	
 	SetPort(GetWindowPort(win));
@@ -357,6 +718,16 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 	CreateTile();
 	CreateWindows();
 	
+	EventTypeSpec mouseUpEvent = { kEventClassMouse, kEventMouseUp };
+	EventTypeSpec mouseMoved[2] = { { kEventClassMouse, kEventMouseMoved },
+            { kEventClassMouse, kEventMouseDragged } };
+	InstallApplicationEventHandler(NewEventHandlerUPP(CEvtHandleApplicationMouseUp),
+            1, &mouseUpEvent, 0, NULL);
+	InstallApplicationEventHandler(NewEventHandlerUPP(CEvtHandleApplicationMouseMoved),
+            2, mouseMoved, 0, NULL);
+
+        GetCurrentProcess(&gProcessSerNum);
+        
 	GetMouse(&prevPt);
 	
 	UNUSED(argc);
@@ -378,16 +749,18 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
 	
 	key = event->message & charCodeMask;
 	
-	if (event->modifiers & cmdKey)
-	{
-		HandleMenuChoice(MenuKey(key));
-	}	
+//	if (event->modifiers & cmdKey)
+//	{
+//                // Like MenuSelect, MenuKey also triggers a cascade of
+//                // events that results in sending a command event
+//                MenuKey(key);
+//	}	
 //	else if (FrontWindow() == SouixWin)
 //	{
 //		SIOUXHandleOneEvent(event);
 //	}
-	else
-	{		
+//	else
+//	{		
 		if (event->modifiers & shiftKey)
 			bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | keyState);
 		if (event->modifiers & controlKey)
@@ -412,7 +785,7 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
 			bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
 		if (event->modifiers & optionKey)
 			bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
-	}		
+//	}		
 }
 
 // HandleToolClick()
@@ -446,208 +819,12 @@ BX_CPP_INLINE void HandleToolClick(Point where)
 
 BX_CPP_INLINE void ResetPointer(void)
 {
-#if 0
-	CursorDevice *theMouse;
-	if (true)
-	{
-		theMouse = NULL;
-		CrsrDevNextDevice(&theMouse);
-		CrsrDevMoveTo(theMouse, (long)scrCenter.h, (long)scrCenter.v);
-	}
-#endif
-
-#define MouseCur 0x082C
-#define MouseTemp 0x0828
-#define MouseNew 0x08CE
-#define MouseAttached 0x08CF
-
-	*(Point *)MouseCur = scrCenter;
-	*(Point *)MouseTemp = scrCenter;
-	*(Ptr)MouseNew = *(Ptr)MouseAttached;
-	//*(char *)CrsrNew = 0xFF;
-}
-
-// HandleClick()
-//
-// Handles mouse click events.
-
-
-void HandleMenuChoice(long menuChoice)
-{
-	OSErr			err = noErr;
-	short			item, menu, i;
-	DialogPtr	theDlog;
-	
-	item = LoWord(menuChoice);
-	menu = HiWord(menuChoice);
-
-	switch(menu) {
-		case mApple:
-			switch(item) 
-			{
-				case iAbout:
-					theDlog = GetNewDialog(128, NULL, (WindowPtr)-1);
-					ModalDialog(NULL, &i);
-					DisposeDialog(theDlog);
-					break;
-					
-				default:
-					break;
-			}	
-			break;
-					
-		case mFile:
-			switch(item) 
-			{
-				case iQuit:
-					BX_PANIC(("User terminated"));
-					break;
-					
-				default:
-					break;	
-			}
-			break;
-			
-		case mBochs:
-			switch(item)
-			{
-				case iFloppy:
-					//DiskEject(1);
-					break;
-				case iCursor:
-					if (cursorVisible)
-						HidePointer();
-					else
-						ShowPointer();
-					break;
-				case iTool:
-					if (IsWindowVisible(toolwin))
-						HideTools();
-					else
-						ShowTools();
-					break;
-				case iMenuBar:
-					if (menubarVisible)
-						HideMenubar();
-					else
-						ShowMenubar();
-					break;
-				case iFullScreen:
-					if (IsWindowVisible(toolwin) || menubarVisible)
-					{
-						if (menubarVisible)
-							HideMenubar();
-						if (IsWindowVisible(toolwin))
-							HideTools();
-					}
-					else
-					{
-						if (!menubarVisible)
-							ShowMenubar();
-						if (!IsWindowVisible(toolwin))
-							ShowTools();
-					}
-					break;
-				case iConsole:
-					if (IsWindowVisible(SouixWin))
-						HideConsole();
-					else
-						ShowConsole();
-					break;
-				case iSnapshot:
-					//the following will break if snapshot is not last bitmap button instantiated
-					bx_tool_pixmap[toolPixMaps-1].f();
-					break;
-			}
-					
-		default:
-			break;	
-		
-	}
-	
-	HiliteMenu(0);	
-}
-
-BX_CPP_INLINE void HandleClick(EventRecord *event)
-{
-	short part;
-	WindowPtr whichWindow;
-	Rect dRect;
-	
-	part = FindWindow(event->where, &whichWindow);
-	
-	switch(part)
-	{
-		case inContent:
-			if (whichWindow == win)
-			{
-				if (win != FrontWindow())
-					SelectWindow(win);
-				if (event->modifiers & cmdKey)
-					mouse_button_state |= 0x02;
-				else
-					mouse_button_state |= 0x01;
-			}
-			else if (whichWindow == toolwin)
-			{
-				HiliteWindow(win, true);
-				HandleToolClick(event->where);
-			}
-			else if (whichWindow == backdrop)
-			{
-				SelectWindow(win);
-			}
-			else if (whichWindow == SouixWin)
-			{
-				SelectWindow(SouixWin);
-			}
-			break;
-			
-		case inDrag:
-                        GetRegionBounds(GetGrayRgn(), &dRect);
-			if (IsWindowVisible(toolwin))
-				dRect.top = gMaxTop;
-			DragWindow(whichWindow, event->where, &dRect);
-			break;
-			
-		case inMenuBar:
-			HandleMenuChoice(MenuSelect(event->where));
-			break;
-	}
-}
-
-void UpdateWindow(WindowPtr window) 
-{
-	GrafPtr		oldPort;
-	Rect			box;
-	Pattern qdBlackPattern;
-        
-        GetQDGlobalsBlack(&qdBlackPattern);
-        
-	GetPort(&oldPort);
-	
-	SetPort(GetWindowPort(window));
-	BeginUpdate(window);
-	
-	if (window == win)
-	{
-                GetWindowPortBounds(window, &box);
-		bx_vga.redraw_area(box.left, box.top, box.right, box.bottom);
-	}
-	else if (window == backdrop)
-	{
-		GetWindowPortBounds(window, &box);
-		FillRect(&box, &qdBlackPattern);
-	}
-	else if (window == toolwin)
-	{
-		thisGUI->show_headerbar();
-	}
-	else
-	{
-	}
-	EndUpdate(window);
-	SetPort(oldPort);
+    // this appears to work well, especially when combined with
+    // mouse processing on the MouseMoved events
+    if(CGWarpMouseCursorPosition(CGPointMake(scrCenter.h, scrCenter.v)))
+    {
+        fprintf(stderr, "# Failed to warp cursor");
+    }
 }
 
 // ::HANDLE_EVENTS()
@@ -671,73 +848,99 @@ void bx_gui_c::handle_events(void)
 	{
 		switch(event.what)
 		{
+/*
+			// This event is just redundant
 			case nullEvent:
-				break;
-				
+                        
+			// These events are all covered by installed carbon event handlers
 			case mouseDown:
-				HandleClick(&event);
-				break;
-				
 			case mouseUp:
-				if (event.modifiers & cmdKey)
-					mouse_button_state &= ~0x02;
-				else
-					mouse_button_state &= ~0x01;
-				break;
-				
 			case keyDown:
 			case autoKey:
-				oldMods = event.modifiers;
-				HandleKey(&event, BX_KEY_PRESSED);
-				break;
-				
 			case keyUp:
-				event.modifiers = oldMods;
-				HandleKey(&event, BX_KEY_RELEASED);
-				break;
-				
 			case updateEvt:
-				UpdateWindow((WindowPtr)event.message);
 				break;
-				
+*/				
 			case diskEvt:
 			//	floppyA_handler();
                                 break;
                                 
                         case kHighLevelEvent:
+                            fprintf(stderr, "# Classic apple event handler called\n");
                             AEProcessAppleEvent(&event);
 				
 			default:
 				break;
 		}
 	}
-		
-	GetPort(&oldport);
-	SetPort(GetWindowPort(win));
 	
-	GetMouse(&mousePt);
+        // Only update mouse if we're not in the dock
+        // and we are the frontmost app.
+        ProcessSerialNumber frontProcessSerNum;
+        Boolean isSameProcess;
+        
+        GetFrontProcess(&frontProcessSerNum);
+        SameProcess(&frontProcessSerNum, &gProcessSerNum, &isSameProcess);
 
-
-//if mouse has moved, or button has changed state
-	if ((!EqualPt(mousePt, prevPt)) || (curstate != mouse_button_state))
-	{
-		dx = mousePt.h - prevPt.h;
-		dy = prevPt.v - mousePt.v;
-		
-		bx_devices.keyboard->mouse_motion(dx, dy, mouse_button_state);
-		
-		if (!cursorVisible)
-		{
-			SetPt(&scrCenter, 320, 240);
-			LocalToGlobal(&scrCenter);
-			ResetPointer();		//next getmouse should be 320, 240
-			SetPt(&mousePt, 320, 240);
-		}
-	}
-
-	prevPt = mousePt;
-	
-	SetPort(oldport);
+        if(isSameProcess && !IsWindowCollapsed(win))
+        {
+            GetPort(&oldport);
+            SetPort(GetWindowPort(win));
+            
+            GetMouse(&mousePt);
+            
+            if(menubarVisible && cursorVisible)
+            {
+                // Don't track the mouse if we're working with the main window
+                // and we're outside the window
+                if(mouseMoved &&
+                    (mousePt.v < 0 || mousePt.v > height || mousePt.h < 0 || mousePt.h > width) &&
+                    (prevPt.v < 0 || prevPt.v > height || prevPt.h < 0 || prevPt.h > width))
+                {
+                    mouseMoved = false;
+                }
+/*
+                // Limit mouse action to window
+                // Grr, any better ways to sync host and bochs cursor?
+                if(mousePt.h < 0) { mousePt.h = 0; }
+                else if(mousePt.h > width) { mousePt.h = width; }
+                if(mousePt.v < 0) { mousePt.v = 0; }
+                else if(mousePt.v > height) { mousePt.v = height; }
+*/
+            }
+            
+            //if mouse has moved, or button has changed state
+            if (mouseMoved || (curstate != mouse_button_state))
+            {
+                    if(mouseMoved)
+                    {
+                            CGMouseDelta CGdX, CGdY;
+                            CGGetLastMouseDelta( &CGdX, &CGdY );
+                            dx = CGdX;
+                            dy = - CGdY; // Windows has an opposing grid
+                    }
+                    else
+                    {
+                            dx = 0;
+                            dy = 0;
+                    }
+                    
+                    bx_devices.keyboard->mouse_motion(dx, dy, mouse_button_state);
+                    
+                    if (!cursorVisible && mouseMoved)
+                    {
+                            SetPt(&scrCenter, 300, 240);
+                            LocalToGlobal(&scrCenter);
+                            ResetPointer();		//next getmouse should be 300, 240
+                            SetPt(&mousePt, 300, 240);
+                    }
+                    mouseMoved = false;
+            }
+    
+            prevPt = mousePt;
+            
+            SetPort(oldport);
+    }
 }
 
 
@@ -750,6 +953,17 @@ void bx_gui_c::flush(void)
 {
 	// an opportunity to make the Window Manager happy.
 	// not needed on the macintosh....
+        
+	// Unless you don't want to needlessly update the dock icon 
+	// umpteen zillion times a second for each tile.
+        // A further note, UpdateCollapsedWindowDockTile is not
+        // recommended for animation. Setup like this my performance
+        // seems reasonable for little fuss.
+	if(windowUpdatesPending && IsWindowCollapsed(win))
+	{
+            UpdateCollapsedWindowDockTile(win);
+	}
+	windowUpdatesPending = false;
 }
 
 
@@ -771,6 +985,8 @@ void bx_gui_c::clear_screen(void)
 	RGBBackColor(&white);
 	GetWindowPortBounds(win, &r);
         FillRect (&r, &qdBlackPattern);
+        
+	windowUpdatesPending = true;
 }
 
 
@@ -866,6 +1082,8 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	previ = cursori;
 	
 	SetPort(oldPort);
+
+	windowUpdatesPending = true;
 }
 
 
@@ -938,7 +1156,9 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 	GetGWorld(&savePort, &saveDevice);
 
 	SetGWorld(gOffWorld, NULL);	*/
-//	SetPort(win);
+        
+	// SetPort - Otherwise an update happens to the headerbar and ooomph, we're drawing weirdly on the screen
+	SetPort(GetWindowPort(win));
 	destRect = srcTileRect;
 	OffsetRect(&destRect, x0, y0);
 	
@@ -947,6 +1167,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 	CopyBits( & (** ((BitMapHandle)gTile) ), WINBITMAP(win),
 						&srcTileRect, &destRect, srcCopy, NULL);
 
+	windowUpdatesPending = true;
 //	SetGWorld(savePort, saveDevice);
 }
 
@@ -965,12 +1186,27 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y)
 {
 	if (x != width || y != height)
 	{
+#if 1
 		SizeWindow(win, x, y, false);
+#endif
+
+#if 0
+		// Animates the resizing, cute, but gratuitous
+		Rect box, frame;
+		GetWindowBounds(win, kWindowStructureRgn, &frame);
+		GetWindowPortBounds(win, &box);
+		frame.right = frame.right - box.right + x;
+		frame.bottom = frame.bottom - box.bottom + y;
+
+		TransitionWindow(win, kWindowSlideTransitionEffect, kWindowResizeTransitionAction, &frame);
+#endif
 		SizeWindow(fullwin, x, y, false);
 		SizeWindow(hidden, x, y, false);
 		width = x;
 		height = y;
 	}
+        
+	windowUpdatesPending = true;
 }
 
 
@@ -1134,19 +1370,6 @@ void bx_gui_c::snapshot_handler(void)
 }
 #endif
 
-// UpdateRgn()
-//
-// Updates the screen after the menubar and round corners have been hidden
-
-void UpdateRgn(RgnHandle rgn)
-{
-	WindowPtr window;
-	
-	window = FrontWindow();
-	PaintBehind(window, rgn);
-	CalcVisBehind(window, rgn);
-}
-
 // HidePointer()
 //
 // Hides the Mac mouse pointer
@@ -1156,7 +1379,7 @@ void HidePointer()
 	HiliteMenu(0);
 	HideCursor();
 	SetPort(GetWindowPort(win));
-	SetPt(&scrCenter, 320, 240);
+	SetPt(&scrCenter, 300, 240);
 	LocalToGlobal(&scrCenter);
 	ResetPointer();
 	GetMouse(&prevPt);
@@ -1228,7 +1451,6 @@ void HideMenubar()
         
 	HideWindow(win);
 	ShowWindow(backdrop);
-	SelectWindow(backdrop);
 	hidden = win;
 	win = fullwin;
 	ShowWindow(win);
