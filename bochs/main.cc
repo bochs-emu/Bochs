@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.123 2002-08-27 18:11:13 bdenney Exp $
+// $Id: main.cc,v 1.124 2002-08-27 21:30:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1426,7 +1426,7 @@ bx_init_hardware()
 
 #if BX_DEBUGGER == 0
   bx_devices.init(BX_MEM(0));
-  bx_devices.reset();
+  bx_devices.reset(BX_RESET_HARDWARE);
   bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif

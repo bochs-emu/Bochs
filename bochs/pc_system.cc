@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.20 2002-08-27 18:53:30 vruppert Exp $
+// $Id: pc_system.cc,v 1.21 2002-08-27 21:30:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -182,7 +182,7 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   BX_ERROR(( "# bx_pc_system_c::ResetSignal() called" ));
   for (int i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->reset(BX_RESET_SOFTWARE);
-  bx_devices.reset();
+  bx_devices.reset(BX_RESET_SOFTWARE);
   return(0);
 }
 
