@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.18 2004-11-14 21:25:42 sshwarts Exp $
+// $Id: stack64.cc,v 1.19 2004-11-27 20:36:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -230,37 +230,11 @@ BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
   void
 BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 {
-  Bit64u frame_ptr64;
-  Bit8u level;
-  static Bit8u first_time = 1;
+  Bit8u level = i->Ib2();
+  level &= 0x1F;
+  Bit64u bytes_to_push = 8 + level*8 + i->Iw();
 
-  level = i->Ib2();
-
-//invalidate_prefetch_q();
-
-  level %= 32;
-/* ??? */
-  if (first_time && level>0) {
-    BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
-    first_time = 0;
-  }
-
-//if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os64L()==0) {
-//  BX_INFO(("enter(): stacksize!=opsize: I'm unsure of the code for this"));
-//  BX_PANIC(("         The Intel manuals are a mess on this one!"));
-//  }
-
-  Bit64u bytes_to_push, temp_RSP;
-
-  if (level == 0) {
-    bytes_to_push = 8 + i->Iw();
-    }
-  else { /* level > 0 */
-    bytes_to_push = 8 + level*8 + i->Iw();
-    }
-
-  temp_RSP = RSP;
-  if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_RSP, bytes_to_push))
+  if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, RSP, bytes_to_push))
   {
     BX_ERROR(("ENTER: not enough room on stack!"));
     exception(BX_SS_EXCEPTION, 0, 0);
@@ -268,7 +242,7 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 
   push_64(RBP);
 
-  frame_ptr64 = RSP;
+  Bit64u frame_ptr64 = RSP;
 
   if (level > 0) {
     /* do level-1 times */

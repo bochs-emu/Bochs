@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.23 2004-11-14 21:25:42 sshwarts Exp $
+// $Id: stack32.cc,v 1.24 2004-11-27 20:36:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ void BX_CPU_C::POP_Ed(bxInstruction_c *i)
 
   if (i->modC0()) {
     BX_WRITE_32BIT_REGZ(i->rm(), val32);
-    }
+  }
   else {
     // Note: there is one little weirdism here.  When 32bit addressing
     // is used, it is possible to use ESP in the modrm addressing.
@@ -52,9 +52,9 @@ void BX_CPU_C::POP_Ed(bxInstruction_c *i)
     if (i->as32L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
       BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
-      }
-    write_virtual_dword(i->seg(), RMAddr(i), &val32);
     }
+    write_virtual_dword(i->seg(), RMAddr(i), &val32);
+  }
 }
 
 void BX_CPU_C::PUSH_ERX(bxInstruction_c *i)
@@ -298,16 +298,11 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
   BX_INFO(("ENTER_IwIb: not supported by 8086!"));
   UndefinedOpcode(i);
 #else
-  Bit32u frame_ptr32;
-  Bit8u level;
+
+  Bit8u level = i->Ib2();
+  level &= 0x1F;
+
   static Bit8u first_time = 1;
-
-  level = i->Ib2();
-
-//invalidate_prefetch_q();
-
-  level %= 32;
-/* ??? */
   if (first_time && level>0) {
     BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
     first_time = 0;
@@ -318,43 +313,33 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
 //  BX_PANIC(("         The Intel manuals are a mess on this one!"));
 //  }
 
-  if ( protected_mode() ) {
+  if (protected_mode())
+  {
     Bit32u bytes_to_push, temp_ESP;
 
-    if (level == 0) {
-      if (i->os32L())
-        bytes_to_push = 4 + i->Iw();
-      else
-        bytes_to_push = 2 + i->Iw();
-      }
-    else { /* level > 0 */
-      if (i->os32L())
-        bytes_to_push = 4 + level*4 + i->Iw();
-      else
-        bytes_to_push = 2 + level*2 + i->Iw();
-      }
+    if (i->os32L())
+      bytes_to_push = 4 + level*4 + i->Iw();
+    else
+      bytes_to_push = 2 + level*2 + i->Iw();
 
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
       temp_ESP = ESP;
     else
       temp_ESP = SP;
 
-    if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, bytes_to_push) ) {
+    if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, bytes_to_push))
+    {
       BX_ERROR(("ENTER: not enough room on stack!"));
       exception(BX_SS_EXCEPTION, 0, 0);
-      }
     }
+  }
 
   if (i->os32L())
     push_32(EBP);
   else
     push_16(BP);
 
-  // can just do frame_ptr32 = ESP for either case ???
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    frame_ptr32 = ESP;
-  else
-    frame_ptr32 = SP;
+  Bit32u frame_ptr32 = ESP;
 
   if (level > 0) {
     /* do level-1 times */
@@ -367,14 +352,14 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
           read_virtual_dword(BX_SEG_REG_SS, EBP, &temp32);
           ESP -= 4;
           write_virtual_dword(BX_SEG_REG_SS, ESP, &temp32);
-          }
+        }
         else { /* 16bit stacksize */
           BP -= 4;
           read_virtual_dword(BX_SEG_REG_SS, BP, &temp32);
           SP -= 4;
           write_virtual_dword(BX_SEG_REG_SS, SP, &temp32);
-          }
         }
+      }
       else { /* 16bit opsize */
         Bit16u temp16;
 
@@ -383,57 +368,56 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
           read_virtual_word(BX_SEG_REG_SS, EBP, &temp16);
           ESP -= 2;
           write_virtual_word(BX_SEG_REG_SS, ESP, &temp16);
-          }
+        }
         else { /* 16bit stacksize */
           BP -= 2;
           read_virtual_word(BX_SEG_REG_SS, BP, &temp16);
           SP -= 2;
           write_virtual_word(BX_SEG_REG_SS, SP, &temp16);
-          }
         }
-      } /* while (--level) */
+      }
+    } /* while (--level) */
 
     /* push(frame pointer) */
     if (i->os32L()) {
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
         ESP -= 4;
         write_virtual_dword(BX_SEG_REG_SS, ESP, &frame_ptr32);
-        }
+      }
       else {
         SP -= 4;
         write_virtual_dword(BX_SEG_REG_SS, SP, &frame_ptr32);
-        }
       }
+    }
     else { /* 16bit opsize */
       Bit16u frame_ptr16 = frame_ptr32;
 
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
         ESP -= 2;
         write_virtual_word(BX_SEG_REG_SS, ESP, &frame_ptr16);
-        }
+      }
       else {
         SP -= 2;
         write_virtual_word(BX_SEG_REG_SS, SP, &frame_ptr16);
-        }
       }
-    } /* if (level > 0) ... */
+    }
+  } /* if (level > 0) ... */
 
   if (i->os32L())
     RBP = frame_ptr32;
   else
-    BP = frame_ptr32;
+     BP = frame_ptr32 & 0xFFFF;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
-    ESP = ESP - i->Iw();
-    }
+    ESP -= i->Iw();
+  }
   else { /* 16bit stack */
-    SP = SP - i->Iw();
-    }
+     SP -= i->Iw();
+  }
 #endif
 }
 
-  void
-BX_CPU_C::LEAVE(bxInstruction_c *i)
+void BX_CPU_C::LEAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_INFO(("LEAVE: not supported by 8086!"));
@@ -455,14 +439,12 @@ BX_CPU_C::LEAVE(bxInstruction_c *i)
       if (temp_EBP <= BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled) {
         BX_PANIC(("LEAVE: BP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].limit"));
         exception(BX_SS_EXCEPTION, 0, 0);
-        return;
         }
       }
     else { /* normal */
       if (temp_EBP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled) {
         BX_PANIC(("LEAVE: BP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].limit"));
         exception(BX_SS_EXCEPTION, 0, 0);
-        return;
         }
       }
     }
