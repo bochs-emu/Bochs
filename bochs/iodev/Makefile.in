@@ -300,7 +300,7 @@ keyboard.o: keyboard.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
  ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h \
- /usr/include/math.h scancodes.h
+ scancodes.h
 ne2k.o: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
