@@ -95,12 +95,12 @@ libgui.a: $(NONPLUGIN_OBJS)
 %.lo: %.@CPP_SUFFIX@
 	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-lib%.la: %.lo
+libbx_%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libwx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
-	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libwx.la `wx-config --cxxflags` -rpath $(PLUGIN_PATH)
+libbx_wx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
+	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libbx_wx.la `wx-config --cxxflags` -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 %.dll: %.o

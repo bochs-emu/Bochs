@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.4 2002-10-25 12:36:42 bdenney Exp $
+// $Id: plugin.cc,v 1.5 2002-11-14 18:45:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -22,9 +22,9 @@
 #define PLUGIN_PATH ""
 
 #ifndef WIN32
-#define PLUGIN_FILENAME_FORMAT "lib%s.la"
+#define PLUGIN_FILENAME_FORMAT "libbx_%s.la"
 #else
-#define PLUGIN_FILENAME_FORMAT "%s.dll"
+#define PLUGIN_FILENAME_FORMAT "bx_%s.dll"
 #endif
 
 

@@ -112,38 +112,38 @@ libiodev.a: $(NONPLUGIN_OBJS)
 %.lo: %.@CPP_SUFFIX@
 	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-lib%.la: %.lo
+libbx_%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libharddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
-	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
+libbx_harddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
+	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libbx_harddrv.la -rpath $(PLUGIN_PATH)
 
-libkeyboard.la: keyboard.lo scancodes.lo
-	$(LIBTOOL) $(CXX) -module keyboard.lo scancodes.lo -o libkeyboard.la -rpath $(PLUGIN_PATH)
+libbx_keyboard.la: keyboard.lo scancodes.lo
+	$(LIBTOOL) $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
 
-libpit.la: pit.lo pit82c54.lo pit_wrap.lo
-	$(LIBTOOL) $(CXX) -module pit.lo pit82c54.lo pit_wrap.lo -o libpit.la -rpath $(PLUGIN_PATH)
+libbx_pit.la: pit.lo pit82c54.lo pit_wrap.lo
+	$(LIBTOOL) $(CXX) -module pit.lo pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
-libsb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
-	$(LIBTOOL) $(CXX) -module sb16.lo $(SOUNDLOW_OBJS:.o=.lo) -o libsb16.la -rpath $(PLUGIN_PATH)
+libbx_sb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
+	$(LIBTOOL) $(CXX) -module sb16.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_sb16.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
-%.dll: %.o
+bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins that require more than one object file
-harddrv.dll: harddrv.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o harddrv.dll harddrv.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_harddrv.dll: harddrv.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_harddrv.dll harddrv.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
-keyboard.dll: keyboard.o scancodes.o
-	$(CXX) $(CXXFLAGS) -shared -o keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_keyboard.dll: keyboard.o scancodes.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-pit.dll: pit.o pit82c54.o pit_wrap.o
-	$(CXX) $(CXXFLAGS) -shared -o pit.dll pit.o pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_pit.dll: pit.o pit82c54.o pit_wrap.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit.o pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-sb16.dll: sb16.o $(SOUNDLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o sb16.dll sb16.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_sb16.dll: sb16.o $(SOUNDLOW_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_sb16.dll sb16.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 ##### end DLL section
 
 clean:
