@@ -16,16 +16,16 @@
 
 <br>
 <li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2-1.tar.gz">Version 1.2.1</a> (June 12, 2001)
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.1.tar.gz">Version 1.2.1</a> (June 12, 2001)
 </h2>
 <ul>
 <li> more work on makefile for building RPMs
-<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=432382">#432382</a>  ] build debian packages patch <BR>
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=432382">#432382</a>  ] build debian packages patch <BR>
   add build/debian directory from Rob Lemley <rjlemley@calypsoblue.org>
   which allows us to make Debian packages!
 <li> optimize for speed when simulating one processor.  Now 1-processor
   performance should be equivalent to 1.1.2.
-<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=425640">#425640</a>  ] sb16 assumes fpos_t is long int <BR>
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=425640">#425640</a>  ] sb16 assumes fpos_t is long int <BR>
   This fixes compiles of iodev/sb16.cc on linux systems with newer libraries
   in which fpos_t is not an integer.
 <li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=432488">#432488</a>  ] SMP:assert "n_logfn &lt; MAX_LOGFNS" fails <BR>
