@@ -131,6 +131,17 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 	SIM->get_param (BXP_NE2K_ETHDEV)->set_enabled (enable);
       }
       break;
+    case BXP_LOAD32BITOS_WHICH:
+      if (set) {
+	int enable = (val != 0);
+	SIM->get_param (BXP_LOAD32BITOS_PATH)->set_enabled (enable);
+	SIM->get_param (BXP_LOAD32BITOS_IOLOG)->set_enabled (enable);
+	SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
+      }
+      break;
+    case BXP_CMOS_IMAGE:
+      SIM->get_param (BXP_CMOS_PATH)->set_enabled (val);
+      break;
     default:
       BX_PANIC (("bx_param_handler called with unknown id %d", id));
       return -1;
@@ -438,6 +449,7 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
+  // interface
   bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
       "VGA Update Interval",
       "Number of microseconds between VGA updates",
@@ -577,6 +589,53 @@ void bx_init_options ()
   bx_options.sb16.Opresent->set_handler (bx_param_handler);
   bx_options.sb16.Opresent->set (0);
 
+  bx_options.log.Ofilename = new bx_param_string_c (BXP_LOG_FILENAME,
+      "log:filename",
+      "Pathname of bochs log file",
+      "-", BX_PATHNAME_LEN);
+  bx_options.log.Ofilename->set_ask_format ("Enter log filename: [%s] ");
+
+  // loader
+  bx_options.load32bitOSImage.OwhichOS = new bx_param_enum_c (BXP_LOAD32BITOS_WHICH,
+      "Which operating system?",
+      "Which OS to boot",
+      loader_os_names,
+      Load32bitOSNone,
+      Load32bitOSNone);
+  bx_options.load32bitOSImage.Opath = new bx_param_string_c (BXP_LOAD32BITOS_PATH,
+      "Pathname of OS to load",
+      NULL,
+      "", BX_PATHNAME_LEN);
+  bx_options.load32bitOSImage.Oiolog = new bx_param_string_c (BXP_LOAD32BITOS_IOLOG,
+      "Pathname of I/O log file",
+      NULL,
+      "", BX_PATHNAME_LEN);
+  bx_options.load32bitOSImage.Oinitrd = new bx_param_string_c (BXP_LOAD32BITOS_INITRD,
+      "Pathname of initrd",
+      NULL,
+      "", BX_PATHNAME_LEN);
+  bx_param_c *loader_init_list[] = {
+    bx_options.load32bitOSImage.OwhichOS,
+    bx_options.load32bitOSImage.Opath,
+    bx_options.load32bitOSImage.Oiolog,
+    bx_options.load32bitOSImage.Oinitrd,
+    NULL
+  };
+  bx_options.load32bitOSImage.OwhichOS->set_format ("os=%s");
+  bx_options.load32bitOSImage.Opath->set_format (", path=%s");
+  bx_options.load32bitOSImage.Oiolog->set_format (", iolog=%s");
+  bx_options.load32bitOSImage.Oinitrd->set_format (", initrd=%s");
+  bx_options.load32bitOSImage.OwhichOS->set_ask_format ("Enter OS to load: [%s] ");
+  bx_options.load32bitOSImage.Opath->set_ask_format ("Enter pathname of OS: [%s]");
+  bx_options.load32bitOSImage.Oiolog->set_ask_format ("Enter pathname of I/O log: [%s] ");
+  bx_options.load32bitOSImage.Oinitrd->set_ask_format ("Enter pathname of initrd: [%s] ");
+  menu = new bx_list_c (BXP_LOAD32BITOS, "32-bit OS Loader", "", loader_init_list);
+  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  bx_options.load32bitOSImage.OwhichOS->set_handler (bx_param_handler);
+  bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
+
+
+  // other
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "keyboard_serial_delay",
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
@@ -591,41 +650,34 @@ void bx_init_options ()
       "i440FXSupport",
       "Controls whether to emulate PCI I440FX",
       0);
-  bx_options.log.Ofilename = new bx_param_string_c (BXP_LOG_FILENAME,
-      "log:filename",
-      "Pathname of bochs log file",
-      "-", BX_PATHNAME_LEN);
-  bx_options.log.Ofilename->set_ask_format ("Enter log filename: [%s] ");
-  bx_options.cmos.Opath = new bx_param_string_c (BXP_CMOS_PATH,
-      "cmos:path",
-      "Pathname of CMOS image",
-      "", BX_PATHNAME_LEN);
   bx_options.cmos.OcmosImage = new bx_param_bool_c (BXP_CMOS_IMAGE,
-      "cmos:image",
-      "Whether to use a CMOS image or not",
+      "Use a CMOS image",
+      NULL,
       0);
+  bx_options.cmos.Opath = new bx_param_string_c (BXP_CMOS_PATH,
+      "Pathname of CMOS image",
+      NULL,
+      "", BX_PATHNAME_LEN);
   bx_options.cmos.Otime0 = new bx_param_num_c (BXP_CMOS_TIME0,
-      "cmos:time0",
+      "Initial CMOS time for Bochs",
       "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
       0, BX_MAX_INT,
       0);
-  bx_options.load32bitOSImage.OwhichOS = new bx_param_num_c (BXP_LOAD32BITOS_WHICH,
-      "load32bitOS:which",
-      "Which OS to boot",
-      0, Load32bitOSLast,
-      0);
-  bx_options.load32bitOSImage.Opath = new bx_param_string_c (BXP_LOAD32BITOS_PATH,
-      "load32bitOS:path",
-      "Pathname of OS to load",
-      "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oiolog = new bx_param_string_c (BXP_LOAD32BITOS_IOLOG,
-      "load32bitOS:iolog",
-      "I/O Log",
-      "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oinitrd = new bx_param_string_c (BXP_LOAD32BITOS_INITRD,
-      "load32bitOS:initrd",
-      "Initrd",
-      "", BX_PATHNAME_LEN);
+  bx_param_c *other_init_list[] = {
+    bx_options.Okeyboard_serial_delay,
+      bx_options.Ofloppy_command_delay,
+      bx_options.Oi440FXSupport,
+      bx_options.cmos.OcmosImage,
+      bx_options.cmos.Opath,
+      bx_options.cmos.Otime0,
+      SIM->get_param (BXP_LOAD32BITOS),
+      NULL
+  };
+  menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
+  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  bx_options.cmos.OcmosImage->set_handler (bx_param_handler);
+  bx_options.cmos.OcmosImage->set (0);
+
 
 
 }

@@ -605,6 +605,7 @@ typedef struct {
 // any of the 16bit real mode or BIOS assistance.  This
 // is for the development of freemware, so we don't have
 // to implement real mode up front.
+#define Load32bitOSNone        0
 #define Load32bitOSLinux       1
 #define Load32bitOSNullKernel  2 // being developed for freemware
 #define Load32bitOSLast        2

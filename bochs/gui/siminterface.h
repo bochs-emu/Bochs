@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.19 2001-06-21 19:27:05 bdenney Exp $
+ * $Id: siminterface.h,v 1.20 2001-06-21 19:57:21 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -64,6 +64,7 @@ typedef enum {
   BXP_LOAD32BITOS_PATH,
   BXP_LOAD32BITOS_IOLOG,
   BXP_LOAD32BITOS_INITRD,
+  BXP_LOAD32BITOS,
   BXP_BOOTDRIVE,
   BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
@@ -287,6 +288,8 @@ extern char *floppy_status_names[];
 extern int n_floppy_status_names;
 extern char *floppy_bootdisk_names[];
 extern int n_floppy_bootdisk_names;
+extern char *loader_os_names[];
+extern int n_loader_os_names;
 
 typedef struct {
   bx_param_string_c *Opath;

@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.28 2001-06-21 19:31:19 bdenney Exp $
+ * $Id: control.cc,v 1.29 2001-06-21 19:57:21 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -431,7 +431,7 @@ int bx_control_panel (int menu)
        char oldpath[CPANEL_PATH_LEN];
        assert (SIM->get_log_file (oldpath, CPANEL_PATH_LEN) >= 0);
        sprintf (prompt, startup_options_prompt, oldpath);
-       if (ask_uint (prompt, 0, 8, 0, &choice, 10) < 0) return -1;
+       if (ask_uint (prompt, 0, 9, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: askparam (BXP_LOG_FILENAME); break;
@@ -442,7 +442,7 @@ int bx_control_panel (int menu)
 	 case 6: do_menu (BXP_MENU_DISK); break;
 	 case 7: do_menu (BXP_SB16); break;
 	 case 8: do_menu (BXP_NE2K); break;
-	 case 9: bx_control_panel (BX_CPANEL_START_OPTS_MISC); break;
+	 case 9: do_menu (BXP_MENU_MISC); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
