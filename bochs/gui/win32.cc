@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.88 2004-12-06 21:12:06 vruppert Exp $
+// $Id: win32.cc,v 1.89 2004-12-28 14:38:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -861,11 +861,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   switch (iMsg) {
   case WM_CREATE:
-    bx_options.Omouse_enabled->set (mouseCaptureMode);
-    if (mouseCaptureMode)
-      SetStatusText(0, szMouseDisable, TRUE);
-    else
-      SetStatusText(0, szMouseEnable, TRUE);
+    SetStatusText(0, szMouseEnable, TRUE);
     return 0;
 
   case WM_COMMAND:
@@ -915,7 +911,12 @@ void SetMouseCapture()
 {
   RECT wndRect;
 
-  bx_options.Omouse_enabled->set (mouseCaptureMode);
+  if (mouseToggleReq) {
+    mouseCaptureMode = mouseCaptureNew;
+    mouseToggleReq = FALSE;
+  } else {
+    bx_options.Omouse_enabled->set (mouseCaptureMode);
+  }
   ShowCursor(!mouseCaptureMode);
   ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
   GetWindowRect(stInfo.simWnd, &wndRect);
@@ -944,9 +945,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_TIMER:
     if (mouseToggleReq && (GetActiveWindow() == stInfo.mainWnd)) {
-      mouseCaptureMode = mouseCaptureNew;
       SetMouseCapture();
-      mouseToggleReq = FALSE;
     }
     // If mouse escaped, bring it back
     if ( mouseCaptureMode)
@@ -955,8 +954,6 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
       cursorWarped();
     }
-    bx_options.Omouse_enabled->set (mouseCaptureMode);
-
     return 0;
 
   case WM_PAINT:
