@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.34 2003-07-16 17:56:25 vruppert Exp $
+// $Id: vga.h,v 1.35 2003-10-05 23:15:45 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,8 +33,8 @@
   #define VBE_DISPI_MAX_XRES              1024
   #define VBE_DISPI_MAX_YRES              768
 
-  #define VBE_DISPI_IOPORT_INDEX          0xFF80
-  #define VBE_DISPI_IOPORT_DATA           0xFF81
+  #define VBE_DISPI_IOPORT_INDEX          0x01CE
+  #define VBE_DISPI_IOPORT_DATA           0x01CF
 
   #define VBE_DISPI_INDEX_ID              0x0
   #define VBE_DISPI_INDEX_XRES            0x1
