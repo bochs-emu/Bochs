@@ -155,7 +155,7 @@ fpu_verify_area(unsigned what, void *ptr, unsigned n)
   void
 FPU_printall(void)
 {
-  bx_panic("FPU_printall\n");
+  genlog->panic("FPU_printall\n");
 }
 
 
@@ -179,7 +179,7 @@ fpu_get_user(void *ptr, unsigned len)
       BX_CPU.read_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
-      bx_panic("fpu_get_user: len=%u\n", len);
+      genlog->panic("fpu_get_user: len=%u\n", len);
     }
   return(val32);
 }
@@ -205,7 +205,7 @@ fpu_put_user(unsigned val, void *ptr, unsigned len)
       BX_CPU.write_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
-      bx_panic("fpu_put_user: len=%u\n", len);
+      genlog->panic("fpu_put_user: len=%u\n", len);
     }
 }
 
@@ -223,22 +223,22 @@ math_abort(struct info *info, unsigned int signal)
     case SIGFPE:
       if (BX_CPU.cr0.ne == 0) {
         // MSDOS compatibility external interrupt (IRQ13)
-        bx_panic("math_abort: MSDOS compatibility not supported yet\n");
+        genlog->panic("math_abort: MSDOS compatibility not supported yet\n");
         }
       BX_CPU.exception(BX_MF_EXCEPTION, 0, 0);
       // execution does not reach here
 
     case SIGILL:
-      bx_panic("math_abort: SIGILL not implemented yet.\n");
+      genlog->panic("math_abort: SIGILL not implemented yet.\n");
       break;
     case SIGSEGV:
-      bx_panic("math_abort: SIGSEGV not implemented yet.\n");
+      genlog->panic("math_abort: SIGSEGV not implemented yet.\n");
       break;
     }
 
 #else
   UNUSED(signal);
-  bx_panic("math_abort: CPU<4 not supported yet\n");
+  genlog->panic("math_abort: CPU<4 not supported yet\n");
 #endif
 }
 

@@ -26,6 +26,7 @@ extern "C" {
 }
 
 #include "bochs.h"
+#define LOG_THIS genlog->
 
 static unsigned doit = 0;
 
@@ -1090,7 +1091,7 @@ enter_playback_entry()
       last_playback_time = time;
 
       if (diff < 0) {
-	    bx_panic("Negative diff in playback");
+	    BX_PANIC(("Negative diff in playback"));
       } else if (diff == 0) {
 	    playback_entry.trigger();
       } else {

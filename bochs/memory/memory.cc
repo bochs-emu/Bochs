@@ -198,7 +198,7 @@ inc_one:
 //        genlog->info("Writing to ROM %08x, Data %02x ! \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
         default:
-          bx_panic("write_physical: default case\n");
+          BX_PANIC(("write_physical: default case\n"));
           goto inc_one;
         }
       }
@@ -382,7 +382,7 @@ inc_one:
           //genlog->info("Reading from ROM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
         default:
-          bx_panic("::read_physical: default case\n");
+          BX_PANIC(("::read_physical: default case\n"));
         }
       }
     goto inc_one;
@@ -421,7 +421,7 @@ inc_one:
                 genlog->info("Reading from ShadowRAM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
                 break;
               default:
-                bx_panic("read_physical: default case\n");
+                BX_PANIC(("read_physical: default case\n"));
               } // Switch
             }
           }

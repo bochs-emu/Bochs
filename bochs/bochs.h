@@ -241,12 +241,15 @@ class iofunctions {
 		  "PCI ",
 		  "PIC ",
 		  "PIT ",
-		  "SB  ",
+		  "SB16",
 		  "SER ",
 		  "SNDL",
 		  "SNDW",
 		  "VGA ",
-		  "ST  "
+		  "ST  ",
+		  "DEV ",
+		  "MEM "
+		  "DIS "
 		};
 		return logclass[i];
 	}
@@ -267,12 +270,15 @@ class iofunctions {
 #define    PCILOG          12
 #define    PICLOG          13
 #define    PITLOG          14
-#define    SBLOG           15
+#define    SB16LOG         15
 #define    SERLOG          16
 #define    SNDLLOG         17
 #define    SNDWLOG         18
 #define    VGALOG          19
 #define    STLOG           20   // state_file.cc
+#define    DEVLOG          21
+#define    MEMLOG          22
+#define    DISLOG          23
 
 
 public:

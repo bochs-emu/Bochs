@@ -24,6 +24,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS genlog->
 
 
 
@@ -45,7 +46,7 @@ bx_load32bitOSimagehack(void)
   fp = fopen(bx_options.load32bitOSImage.iolog, "r");
 
   if (fp == NULL) {
-    bx_panic("could not open IO init file.\n");
+    BX_PANIC(("could not open IO init file.\n"));
     }
 
   while (1) {
@@ -54,7 +55,7 @@ bx_load32bitOSimagehack(void)
     ret = fscanf(fp, "%u %u %x %x\n",
       &len, &op, &port, &val);
     if (ret != 4) {
-      bx_panic("could not open IO init file.\n");
+      BX_PANIC(("could not open IO init file.\n"));
       }
     if (op == 0) {
       // read
@@ -65,7 +66,7 @@ bx_load32bitOSimagehack(void)
       bx_devices.outp(port, val, len);
       }
     else {
-      bx_panic("bad IO op in init filen");
+      BX_PANIC(("bad IO op in init filen"));
       }
     if (feof(fp)) break;
     }
@@ -79,7 +80,7 @@ bx_load32bitOSimagehack(void)
       bx_load_null_kernel_hack();
       break;
     default:
-      bx_panic("load32bitOSImage: OS not recognized\n");
+      BX_PANIC(("load32bitOSImage: OS not recognized\n"));
     }
 }
 

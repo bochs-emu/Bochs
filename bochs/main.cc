@@ -23,6 +23,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS genlog->
 #include <assert.h>
 #include "state_file.h"
 
@@ -335,7 +336,22 @@ logfunctions::panic(char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(fs,fmt,ap);
 	va_end(ap);
-	bx_panic ("logfunctions::panic!");
+
+#if !BX_PANIC_IS_FATAL
+  return;
+#endif    
+
+  bx_atexit();
+
+#if !BX_DEBUGGER
+  exit(1);
+#else
+  static Boolean dbg_exit_called = 0;
+  if (dbg_exit_called == 0) {
+    dbg_exit_called = 1;
+    bx_dbg_exit(1);
+    }
+#endif
 }
 
 void
@@ -516,41 +532,6 @@ bx_atexit(void)
 #endif
     genlog->info("bochs exited, log file was '%s'\n", logfilename);
 }
-
-
-
-  void
-bx_panic(char *fmt, ...)
-{
-  va_list ap;
-#if BX_DEBUGGER
-  static Boolean dbg_exit_called = 0;
-#endif
-
-    genlog->info("bochs: panic, ");
-
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-#if !BX_PANIC_IS_FATAL
-  return;
-#endif    
-
-  bx_atexit();
-
-#if !BX_DEBUGGER
-  exit(1);
-#else
-  if (dbg_exit_called == 0) {
-    dbg_exit_called = 1;
-    bx_dbg_exit(1);
-    }
-#endif
-}
-
-
-
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
   void
@@ -1122,7 +1103,7 @@ parse_line_formatted(int num_params, char *params[])
     }
 
   if (bx_options.diskd.present && bx_options.cdromd.present)
-    bx_panic ("At present, using both diskd and cdromd at once is not supported.");
+    BX_PANIC(("At present, using both diskd and cdromd at once is not supported."));
 }
 #endif // #if BX_PROVIDE_MAIN
 
@@ -1151,6 +1132,6 @@ bx_signal_handler( int signum)
     }
 #endif
 
-  bx_panic("SIGNAL %u caught\n", signum);
+  BX_PANIC(("SIGNAL %u caught\n", signum));
 }
 

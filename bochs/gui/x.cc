@@ -32,7 +32,7 @@ extern "C" {
 #include "bochs.h"
 #include "icon_bochs.h"
 
-
+#define LOG_THIS bx_gui.
 
 
 #define MAX_MAPPED_STRING_LENGTH 10
@@ -299,8 +299,8 @@ if (bx_options.private_colormap) {
   /* connect to X server */
   if ( (bx_x_display=XOpenDisplay(display_name)) == NULL )
   {
-    bx_panic("%s: cannot connect to X server %s\n",
-        progname, XDisplayName(display_name));
+    BX_PANIC(("%s: cannot connect to X server %s\n",
+        progname, XDisplayName(display_name)));
   }
 
   /* get screen size from display structure macro */
@@ -346,7 +346,7 @@ genlog->info("font_height = %u\n", (unsigned) font_height);
                                    default_visual, AllocNone);
     if (XAllocColorCells(bx_x_display, default_cmap, False,
                          plane_masks_return, 0, col_vals, 256) == 0) {
-      bx_panic("XAllocColorCells returns error.\n");
+      BX_PANIC(("XAllocColorCells returns error.\n"));
       }
 
     win_attr.colormap = default_cmap;
@@ -419,13 +419,13 @@ genlog->info("font_height = %u\n", (unsigned) font_height);
    * XTextProperty structures and set their other
    * fields properly. */
   if (XStringListToTextProperty(&window_name, 1, &windowName) == 0) {
-    bx_panic("%s: structure allocation for windowName failed.\n",
-        progname);
+    BX_PANIC(("%s: structure allocation for windowName failed.\n",
+        progname));
   }
 
   if (XStringListToTextProperty(&icon_name, 1, &iconName) == 0) {
-    bx_panic("%s: structure allocation for iconName failed.\n",
-        progname);
+    BX_PANIC(("%s: structure allocation for iconName failed.\n",
+        progname));
   }
 
   wm_hints.initial_state = NormalState;
@@ -488,19 +488,19 @@ genlog->info("font_height = %u\n", (unsigned) font_height);
              32,                     // # bits of padding
              0 );                    // bytes_per_line, let X11 calculate
   if (!ximage)
-    bx_panic("vga: couldn't XCreateImage()\n");
+    BX_PANIC(("vga: couldn't XCreateImage()\n"));
 
   imDepth = default_depth;
   imWide  = ximage->bytes_per_line;
   imBPP   = ximage->bits_per_pixel;
 
   imagedata = (char *) malloc( (size_t) (ximage->bytes_per_line * y_tilesize) );
-  if (!imagedata) bx_panic("imagedata: malloc returned error\n");
+  if (!imagedata) BX_PANIC(("imagedata: malloc returned error\n"));
 
   ximage->data = imagedata;
 
   if (imBPP < imDepth) {
-    bx_panic("vga_x: bits_per_pixel < depth ?\n");
+    BX_PANIC(("vga_x: bits_per_pixel < depth ?\n"));
     }
 
 }
@@ -524,7 +524,7 @@ load_font(void)
   /* Load font and get font information structure. */
   if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
     fprintf(stderr, "# %s: Cannot open vga font\n", progname);
-    bx_panic("Could not open vga font\n");
+    BX_PANIC(("Could not open vga font\n"));
     }
 }
 
@@ -1076,8 +1076,8 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
             }
           break;
         default:
-          bx_panic("X_graphics_tile_update: bits_per_pixel %u not implemented\n",
-            (unsigned) imBPP);
+          BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented\n",
+            (unsigned) imBPP));
           break;
         }
       }
@@ -1157,7 +1157,7 @@ bx_gui_c::show_headerbar(void)
 bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   if (bx_bitmap_entries >= BX_MAX_PIXMAPS) {
-    bx_panic("x: too many pixmaps, increase BX_MAX_PIXMAPS\n");
+    BX_PANIC(("x: too many pixmaps, increase BX_MAX_PIXMAPS\n"));
     }
 
   bx_bitmaps[bx_bitmap_entries].bmap =
@@ -1165,7 +1165,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
   if (!bx_bitmaps[bx_bitmap_entries].bmap) {
-    bx_panic("x: could not create bitmap\n");
+    BX_PANIC(("x: could not create bitmap\n"));
     }
   bx_bitmap_entries++;
   return(bx_bitmap_entries-1); // return index as handle
@@ -1178,7 +1178,7 @@ bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)
   unsigned hb_index;
 
   if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
-    bx_panic("x: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES\n");
+    BX_PANIC(("x: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES\n"));
 
   bx_headerbar_entries++;
   hb_index = bx_headerbar_entries - 1;

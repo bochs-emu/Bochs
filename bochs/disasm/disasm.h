@@ -33,7 +33,7 @@
   }
 
 
-class bx_disassemble_c {
+class bx_disassemble_c : public logfunctions {
 public:
   bx_disassemble_c(void);
   unsigned disasm(Boolean is_32, Bit8u *instr, char *disbuf);

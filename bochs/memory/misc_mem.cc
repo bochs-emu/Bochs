@@ -27,7 +27,7 @@
 
 
 #include "bochs.h"
-
+#define LOG_THIS BX_MEM.
 
 
 
@@ -47,6 +47,10 @@ BX_MEM_C::get_memory_in_k(void)
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(void)
 {
+  setprefix("[MEM ]",__FILE__,__LINE__);
+  settype(MEMLOG);
+  setio(SAFE_GET_IOFUNC());
+
   BX_MEM.vector = NULL;
   BX_MEM.len    = 0;
   BX_MEM.megabytes = 0;
@@ -109,7 +113,7 @@ BX_MEM_C::init_memory(int memsize)
 
   if (BX_MEM.megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
     genlog->info("Error: memory larger than dirty page table can handle\n");
-    bx_panic("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS\n");
+    BX_PANIC(("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS\n"));
     }
 #endif
 
@@ -212,7 +216,7 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 //          genlog->info("Fetching from ROM %08x, Data %02x \n", (unsigned)addr, *buf);
             break;
           default:
-            bx_panic("dbg_fetch_mem: default case\n");
+            BX_PANIC(("dbg_fetch_mem: default case\n"));
           }
         }
       else

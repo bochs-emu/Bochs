@@ -153,7 +153,7 @@ BX_CPU_C::FWAIT(BxInstruction_t *i)
   // The same goes for prefix instructions, and instructions which
   // modify segment registers. (pg4-16)
   // BX_CPU_THIS_PTR single_step_event = 0;
-  bx_panic("WAIT: not implemented for < 386\n");
+  genlog->panic("WAIT: not implemented for < 386\n");
 #else // BX_CPU_LEVEL >= 3
 
   if ( BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp ) {

@@ -35,10 +35,11 @@
 
 
 
+
 bx_gui_c   bx_gui;
 
 #define BX_GUI_THIS bx_gui.
-
+#define LOG_THIS BX_GUI_THIS
 
   void
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
@@ -157,7 +158,7 @@ bx_gui_c::reset_handler(void)
   void
 bx_gui_c::power_handler(void)
 {
-  bx_panic("POWER button turned off.\n");
+  BX_PANIC(("POWER button turned off.\n"));
 }
 
   void
