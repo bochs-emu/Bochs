@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  exception.h                                                              |
- |  $Id: exception.h,v 1.6 2003-10-04 12:52:29 sshwarts Exp $
+ |  $Id: exception.h,v 1.7 2004-02-12 21:34:28 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992    W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
  |                       Australia.  E-mail   billm@vaxc.cc.monash.edu.au    |
@@ -14,7 +14,6 @@
 #include "fpu_emu.h"
 #endif /* SW_C1 */
 
-#define EX_ErrorSummary (0x0080)   /* Error summary status */
 /* Special exceptions: */
 #define EX_StackOver	(0x0041|SW_C1)	/* stack overflow */
 #define EX_StackUnder	(0x0041)	/* stack underflow */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.10 2004-02-11 20:04:34 sshwarts Exp $
+// $Id: fpu.cc,v 1.11 2004-02-12 21:34:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
@@ -48,34 +48,21 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
       DEV_pic_raise_irq(13);
     }
     else
-    {
       exception(BX_MF_EXCEPTION, 0, 0);
-    }
   }
 }
 #endif
 
 void BX_CPU_C::FWAIT(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  // WAIT doesn't generate single steps on 8086.
-  // The same goes for prefix instructions, and instructions which
-  // modify segment registers. (pg4-16)
-  BX_PANIC(("FWAIT: not implemented for < 386"));
-#else // BX_CPU_LEVEL >= 3
-
 #if BX_SUPPORT_FPU
-  if (BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp) {
+  if (BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp)
     exception(BX_NM_EXCEPTION, 0, 0);
-  }
 
-  if (FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
-      exception(BX_MF_EXCEPTION, 0, 0);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 #else
   BX_INFO(("FWAIT: requred FPU, use --enable-fpu"));
 #endif
-
-#endif // BX_CPU_LEVEL >= 3
 }
 
 void BX_CPU_C::FLD_STi(bxInstruction_c *i)
