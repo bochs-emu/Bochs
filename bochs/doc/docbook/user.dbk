@@ -197,6 +197,107 @@
      </para></answer>
   </qandaentry>
 
+  <qandaentry>
+     <question><para>
+     Is there a developer's email list for bochs?
+     </para></question>
+     <answer><para>
+     Yes.  For instructions on joining, go to
+     <ulink url="developers.html">Developers email-list.</ulink>
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Is there an irc channel for bochs?
+     </para></question>
+     <answer><para>
+     Not that I am aware of.
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Do you know of any snapshots of Bochs running Win95?
+     </para></question>
+     <answer><para>
+     Yes!  Look for "screen shots" on the <ulink url="http://bochs.sourceforge.net">Bochs home page</ulink> or on other Bochs sites.
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Does bochs support a CDROM?
+     </para></question>
+     <answer><para>
+     Yes, a CDROM is supported in Linux, Windows, and OpenBSD.  The
+CDROM drivers for bochs allow the guest operating system to access the
+host operating system's CDROM data directly.
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Does bochs support a sound device?
+     </para></question>
+     <answer><para>
+     Yes, there is Sound Blaster emulation support for Windows and Linux.
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Does bochs support a network card?
+     </para></question>
+     <answer><para>
+     Supposedly yes.  There is emulation for an NE2000 NIC in the current
+releases, though I have not heard whether it works or not.  If you try it,
+please fill out a testing form or bug report.
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     What applications are known to run inside of bochs?
+     </para></question>
+     <answer><para>
+     Well, lot's of different OS's run inside of bochs, so
+   thousands.  I'm assuming your asking about Windows programs.
+   To give you a few, the following ones from the Winstone'98 tests
+   worked:
+   </para>
+   <itemizedlist>
+      <listitem>
+      <para>Access 97</para>
+      </listitem>
+      <listitem>
+      <para>CorelDRAW! 7</para>
+      </listitem>
+      <listitem>
+      <para>Excel 97</para>
+      </listitem>
+      <listitem>
+      <para>Lotus 1-2-3 97</para>
+      </listitem>
+      <listitem>
+      <para>Word 97</para>
+      </listitem>
+      <listitem>
+      <para>PowerPoint 97</para>
+      </listitem>
+      <listitem>
+      <para>Quattro Pro 7</para>
+      </listitem>
+      <listitem>
+      <para>WordPerfect 7</para>
+      </listitem>
+   </itemizedlist>
+
+     <para>Also, I've compiled an entire OS kernel inside bochs before.  Not
+to mention, running DOOM, though at then-pathetic speeds.
+     </para></answer>
+  </qandaentry>
+
 <!-- ......................................................
      A blank question to fill in copy and paste to create
      a new entry (8 lines to yank)
@@ -218,12 +319,14 @@
 <chapter><title>Installation</title>
 <section><title>How to get it</title>
     <para>
+    You can get the soruce code for Bochs from the Bochs' home page at bochs.SourceForge.net.  From here you can get hold of the latest stable source along with binaries for unix and windows.  You can also use CVS software to obtain the a snapshot of the development version.
+    </para>
+    <para>
        pointer to SF web site
-most stable version: latest release. binaries and source available
-latest version
-  by using CVS software
-  by downloading CVS snapshot
   </para>
+    <para>
+
+    </para>
 </section>
 
 <section><title>Installing a Binary</title>
@@ -246,6 +349,16 @@ latest version
 <section><title>Compiling from source</title>
 
   <section><title>Unix</title>
+  <para>
+  All releases are gzip'd tar files. That means the whole Bochs source code directory has been consolidated into one file using the Unix command 'tar', then compressed to save space with GNU 'gzip'. To extract the source code, you'll need both 'tar' and 'gzip/gunzip'. All files are contained within one subdirectory named 'bochs-YYMMDDv'. 
+  <screen>
+  <userinput>
+    cd /path/parent-directory
+    gzip -dc bochs-YYMMDDv.tar.gz | tar -xvf -
+    cd bochs-YYMMDDv
+  </userinput>
+  </screen>
+  </para>
   <para>
   Run configure to make the Makefiles
   List of configure arguments
