@@ -1,4 +1,34 @@
 -------------------------------------------------------------------------
+Changes in 1.4.1 (June 21, 2002):
+
+- now cdrom is enabled in configure, unless you specifically disable
+  it with --disable-cdrom.
+- fix compile error in main.cc when SMP or APIC is enabled
+
+--- This is not complete!
+
+Just to us write the changes file, here are all the files that 
+changed since 1.4:
+  configure
+  configure.in
+  main.cc
+  bios/BIOS-bochs-latest
+  bios/rombios.c
+  build/linux/DOC-linux.html.in
+  build/linux/bochs-docs.in
+  doc/docbook/user/user.dbk
+  font/vga.bitmap.h
+  gui/gui.cc
+  gui/win32.cc
+  iodev/cdrom.cc
+  iodev/devices.cc
+  iodev/dma.h
+  iodev/eth_win32.cc
+  iodev/ne2k.cc
+  iodev/serial.cc
+
+
+-------------------------------------------------------------------------
 Changes in 1.4 (March 27, 2002):
 - ROM BIOS
   - Boot from CDROM!  Christophe Bothamy added partial El Torito support in
