@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.2 2002-03-09 01:04:49 bdenney Exp $
+// $Id: eth_tap.cc,v 1.3 2002-03-09 01:23:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,15 +24,38 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-// eth_tap.cc  - TAP interface
+// eth_tap.cc  - TAP interface by Bryce Denney
 //
-// Example configuration:
-//   ifconfig tap0 10.0.0.123 up
-//   route add -host 10.0.0.124 gw 10.0.0.123
-// Testing:
-//   in one window, cat /dev/tap0
-//   in another window, ping 10.0.0.124
-//   you should see data coming out of /dev/tap0 with each ping.
+// Here's how to get this working.  On the host machine:
+//    $ su root
+//    # /sbin/insmod ethertap
+//    Using /lib/modules/2.2.14-5.0/net/ethertap.o
+//    # mknod /dev/tap0 c 36 16          # if not already there
+//    # /sbin/ifconfig tap0 10.0.0.1
+//    # /sbin/route add -host 10.0.0.2 gw 10.0.0.1
+//
+// Now you have a tap0 device which you can on the ifconfig output.  The
+// tap0 interface has the IP address of 10.0.0.1.  The bochs machine will have
+// the IP address 10.0.0.2.
+//
+// Compile a bochs version from March 8, 2002 or later with --enable-ne2000.
+// Add this ne2k line to your .bochsrc to activate the tap device.
+//   ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+// Don't change the mac or ethmod!
+//
+// Boot up DLX Linux in Bochs.  Log in as root and then type the following
+// commands to set up networking:
+//   # ifconfig eth0 10.0.0.2
+//   # route add -net 10.0.0.0
+//   # route add default gw 10.0.0.1
+// Now you should be able to ping from guest OS to your host machine, if
+// you give its IP number.  I'm still having trouble with pings from the
+// host machine to the guest, so something is still not right.  But it's
+// really close to working!
+//
+// By setting up packet forwarding (with masquerading) on the host, you should
+// be able to get Bochs talking to anyone on the internet.
+// 
 
 #include "bochs.h"
 #define LOG_THIS bx_ne2k.
