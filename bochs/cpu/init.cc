@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.37 2002-10-04 17:04:33 kevinlawton Exp $
+// $Id: init.cc,v 1.38 2002-10-16 19:39:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -84,8 +84,8 @@ BX_CPU_C::BX_CPU_C()
 
 
 // implement get/set handler for parameters that need unusual set/get
-static Bit32s
-cpu_param_handler (bx_param_c *param, int set, Bit32s val)
+static Bit64s
+cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
   if (set) {
@@ -166,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.37 2002-10-04 17:04:33 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.38 2002-10-16 19:39:27 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -339,7 +339,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     const char *oldfmt = bx_param_num_c::set_default_format (fmt32);
     bx_list_c *list = new bx_list_c (BXP_CPU_PARAMETERS, "CPU State", "", 60);
 #define DEFPARAM_NORMAL(name,field) \
-    list->add (new bx_shadow_num_c (BXP_CPU_##name, #name, &(field)))
+    list->add (new bx_shadow_num_c (BXP_CPU_##name, #name, "", &(field)))
 
 
       DEFPARAM_NORMAL (EAX, EAX);
@@ -378,10 +378,10 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     param->set_format (fmt16);
 #define DEFPARAM_GLOBAL_SEG_REG(name,field) \
     list->add (param = new bx_shadow_num_c (BXP_CPU_##name##_BASE,  \
-        #name" base", \
+        #name" base", "", \
         & BX_CPU_THIS_PTR field.base)); \
     list->add (param = new bx_shadow_num_c (BXP_CPU_##name##_LIMIT, \
-        #name" limit", \
+        #name" limit", "", \
         & BX_CPU_THIS_PTR field.limit));
 
     DEFPARAM_SEG_REG(CS);
@@ -397,7 +397,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 #undef DEFPARAM_SEGREG
 
 #if BX_SUPPORT_X86_64==0
-    list->add (param = new bx_shadow_num_c (BXP_CPU_EFLAGS, "EFLAGS",
+    list->add (param = new bx_shadow_num_c (BXP_CPU_EFLAGS, "EFLAGS", "",
         &BX_CPU_THIS_PTR eflags.val32));
 #endif
 
@@ -432,9 +432,10 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     list->add (
         param = new bx_shadow_num_c (
             BXP_CPU_EFLAGS_IOPL,
-            "IOPL", "", 0, 3, 
+            "IOPL", "", 
             &eflags.val32,
             12, 13));
+    param->set_range (0, 3);
 #if BX_SUPPORT_X86_64==0
     param->set_format ("%d");
 #endif

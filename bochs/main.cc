@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.159 2002-10-14 13:37:17 bdenney Exp $
+// $Id: main.cc,v 1.160 2002-10-16 19:39:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -91,8 +91,8 @@ static int parse_bochsrc(char *rcfile);
 static void bx_do_text_config_interface (int first_arg, int argc, char *argv[]);
 #endif
 
-static Bit32s
-bx_param_handler (bx_param_c *param, int set, Bit32s val)
+static Bit64s
+bx_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
   switch (id) {

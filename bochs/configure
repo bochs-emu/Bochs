@@ -9323,7 +9323,6 @@ EOF
     echo library.  This combination is known to trigger problems with SIGINT
     echo handling.  Please run configure again with --disable-readline to
     echo correct this.
-    exit 1
   fi
   case $target in
     *-pc-windows* | *-cygwin* | *-mingw32*)
