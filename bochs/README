@@ -8,15 +8,9 @@ the latest release 1.4.  It is very close to being ready to merge with
 the main branch.
 
 TO DO:
-- decide the final location for wxmain.cc.  Its current location doesn't
-  really seem right.  Should the wx gui code go into gui/wx.cc and the main
-  stuff go into gui/wxmain.cc ?  
-- test with --with-wx and debugger.  The console debugger doesn't pop up
-  at all if you use --with-wx.  I'll have to figure this out.
-- add comments in the split-up main to explain why it is split the way it is.
-  Maybe there are more useful names than bx_init_before_control_panel and
-  bx_continue_after_control_panel.
-- add gtk-config --cflags for Jeroen
+- with --with-wx and debugger, control-C in the terminal window kills the
+  process instead of just interrupting the simulation.  This needs to be
+  fixed eventually.
 -------------
 
 wxWindows Configuration Interface
