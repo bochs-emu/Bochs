@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.10 2004-03-28 12:41:12 vruppert Exp $
+// $Id: serial_raw.h,v 1.11 2004-05-13 16:23:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -7,6 +7,11 @@
 
 #ifdef __linux__
 #include <linux/serial.h>
+#endif
+
+#ifdef WIN32
+// experimental raw serial receive support on win32
+//#define WIN32_RECEIVE_RAW
 #endif
 
 #define P_NONE  0
@@ -28,6 +33,9 @@
 #define RAW_EVENT_OVERRUN -11
 #define RAW_EVENT_PARITY  -12
 
+#define THREAD_RX_BUFSIZE 8192
+#define RX_BUFSIZE 256
+
 class serial_raw : public logfunctions {
   public:
     serial_raw (char *devname);
@@ -43,15 +51,32 @@ class serial_raw : public logfunctions {
     bx_bool ready_transmit ();
     bx_bool ready_receive ();
     int receive ();
+#ifdef WIN32_RECEIVE_RAW
+    void serial_thread ();
+#endif
 
   private:
     void setup_port ();
+#ifdef WIN32_RECEIVE_RAW
+    void enq_event (Bit16s event);
+#endif
     bx_bool present;
-    Bit8u rxdata_count;
+    unsigned rxdata_count;
 #ifdef WIN32
     HANDLE hCOM;
     DCB dcb;
     BOOL DCBchanged;
+    DWORD MSR_value;
+    Bit16s rxdata_buffer[RX_BUFSIZE];
+#ifdef WIN32_RECEIVE_RAW
+    HANDLE hRawSerialThread;
+    BOOL thread_active;
+    BOOL thread_quit;
+    OVERLAPPED rx_ovl;
+    OVERLAPPED thread_ovl;
+    unsigned thread_rxdata_count;
+    Bit16s thread_rxdata_buffer[THREAD_RX_BUFSIZE];
+#endif
 #endif
 };
 #endif
