@@ -81,7 +81,7 @@ And the biggest question of all: WHY?
 
 First it must be said that Bochs is an amazing achievement as-is.  The IA32 
 architecture has grown into such a tangled mess and I'm MOST IMPRESSED with
-Keith's accuracy in simulating it, and coming up with device models that allow
+Kevin's accuracy in simulating it, and coming up with device models that allow
 you to boot Win, Unix, etc.
 
 I have been interested in learning about how the Linux kernel works: memory
