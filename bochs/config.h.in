@@ -141,6 +141,7 @@
 #define BX_TLB_SIZE 1024
 #define BX_TLB_INDEX_OF(lpf) (((lpf) & 0x003ff000) >> 12)
 
+#define BX_USE_QUICK_TLB_INVALIDATE 0
 
 // Compile in support for DMA & FLOPPY IO.  You'll need this
 // if you plan to use the floppy drive emulation.  But if

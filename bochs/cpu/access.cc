@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.20 2002-09-06 16:29:49 yakovlev Exp $
+// $Id: access.cc,v 1.21 2002-09-06 19:21:55 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -280,7 +280,7 @@ accessOK:
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
       lpf = laddr & 0xfffff000;
-      if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+      if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
         Bit32u accessBits;
 
         // See if the TLB entry privilege level allows us write access
@@ -333,7 +333,7 @@ accessOK:
       if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
 
           // See if the TLB entry privilege level allows us write access
@@ -387,7 +387,7 @@ accessOK:
       if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
 
           // See if the TLB entry privilege level allows us write access
@@ -440,7 +440,7 @@ accessOK:
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
       lpf = laddr & 0xfffff000;
-      if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+      if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
         // See if the TLB entry privilege level allows us read access
         // from this CPL.
         Bit32u accessBits;
@@ -494,7 +494,7 @@ accessOK:
         Bit32u lpf, tlbIndex;
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
@@ -549,7 +549,7 @@ accessOK:
         Bit32u lpf, tlbIndex;
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
@@ -606,7 +606,7 @@ accessOK:
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
       lpf = laddr & 0xfffff000;
-      if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+      if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
         Bit32u accessBits;
 
         // See if the TLB entry privilege level allows us write access
@@ -664,7 +664,7 @@ accessOK:
       if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
 
           // See if the TLB entry privilege level allows us write access
@@ -720,7 +720,7 @@ accessOK:
       if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
 
           // See if the TLB entry privilege level allows us write access
@@ -843,7 +843,7 @@ accessOK:
       if (pageOffset <= 0xff8) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           Bit32u accessBits;
 
           // See if the TLB entry privilege level allows us write access
@@ -898,7 +898,7 @@ accessOK:
         Bit32u lpf, tlbIndex;
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;

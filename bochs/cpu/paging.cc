@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.17 2002-09-06 16:29:49 yakovlev Exp $
+// $Id: paging.cc,v 1.18 2002-09-06 19:21:55 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -269,7 +269,9 @@
 #if BX_SUPPORT_PAGING
 
 #define BX_INVALID_TLB_ENTRY 0xffffffff
+#if BX_USE_QUICK_TLB_INVALIDATE
 #define BX_MAX_TLB_INVALIDATE 0xffe
+#endif
 
 #if BX_CPU_LEVEL >= 4
 #  define BX_PRIV_CHECK_SIZE 32
@@ -437,7 +439,9 @@ BX_CPU_C::TLB_init(void)
       }
     }
 
+#if BX_USE_QUICK_TLB_INVALIDATE
   BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
+#endif
 
 #endif  // #if BX_USE_TLB
 }
@@ -446,16 +450,20 @@ BX_CPU_C::TLB_init(void)
 BX_CPU_C::TLB_flush(void)
 {
 #if BX_USE_TLB
+#if BX_USE_QUICK_TLB_INVALIDATE
   BX_CPU_THIS_PTR TLB.tlb_invalidate--;
 
   if(BX_CPU_THIS_PTR TLB.tlb_invalidate == 0 ) {
+#endif
 
     for (unsigned i=0; i<BX_TLB_SIZE; i++) {
       BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
     }
 
+#if BX_USE_QUICK_TLB_INVALIDATE
     BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
   }
+#endif
 #endif  // #if BX_USE_TLB
 
   invalidate_prefetch_q();
@@ -465,16 +473,20 @@ BX_CPU_C::TLB_flush(void)
 BX_CPU_C::TLB_clear(void)
 {
 #if BX_USE_TLB
+#if BX_USE_QUICK_TLB_INVALIDATE
   BX_CPU_THIS_PTR TLB.tlb_invalidate--;
 
   if(BX_CPU_THIS_PTR TLB.tlb_invalidate == 0 ) {
+#endif
 
     for (unsigned i=0; i<BX_TLB_SIZE; i++) {
       BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
     }
 
+#if BX_USE_QUICK_TLB_INVALIDATE
     BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
   }
+#endif
 #endif  // #if BX_USE_TLB
 }
 
@@ -533,7 +545,7 @@ BX_CPU_C::dtranslate_linear(Bit32u laddr, unsigned pl, unsigned rw)
 
   isWrite = (rw>=BX_WRITE); // write or r-m-w
 
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
     paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
     accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
     if (accessBits & (1 << ((isWrite<<1) | pl)) ) {
@@ -663,7 +675,7 @@ pageTableWalk:
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
 
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate);
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_TLB_LPF_VALUE(lpf);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
 
 // 1 << ((W<<1) | U)
@@ -724,7 +736,7 @@ BX_CPU_C::itranslate_linear(Bit32u laddr, unsigned pl)
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
 
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
     paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
     accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
     if (accessBits & (1 << pl) ) {
@@ -846,7 +858,7 @@ pageTableWalk:
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
 
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate);
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_TLB_LPF_VALUE(lpf);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
 
 // 1 << ((W<<1) | U)
@@ -902,7 +914,7 @@ BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, Boolean *valid)
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
   // see if page is in the TLB first
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
     paddress        = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
     *phy = paddress;
     *valid = 1;
@@ -1085,13 +1097,13 @@ BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
 #if BX_SupportGuest2HostTLB
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->readPhysicalPage(this, laddr, length, data);
           return;
           }
         // We haven't seen this page, or it's been bumped before.
 
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf = (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate);
+        BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf = BX_TLB_LPF_VALUE(lpf);
         BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf = lpf;
         // Request a direct write pointer so we can do either R or W.
         BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = (Bit32u)
@@ -1123,13 +1135,13 @@ BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
 #if BX_SupportGuest2HostTLB
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)) {
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->writePhysicalPage(this, laddr, length, data);
           return;
           }
         // We haven't seen this page, or it's been bumped before.
 
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf = (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate);
+        BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf = BX_TLB_LPF_VALUE(lpf);
         BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf = lpf;
         // TLB.entry[tlbIndex].ppf field not used for PG==0.
         // Request a direct write pointer so we can do either R or W.
