@@ -80,7 +80,7 @@ all: libgui.a
 
 libgui.a: $(BX_GUI_OBJS)
 	@RMCOMMAND@ libgui.a
-	$(LIBTOOL) $(CXX) -o $@ $(BX_GUI_OBJS)
+	$(LIBTOOL) $(CXX) -o libgui.a $(BX_GUI_OBJS)
 
 %.o: %.cc
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
@@ -95,6 +95,7 @@ beos.lo: beos.@CPP_SUFFIX@
 	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $(srcdir)/beos.@CPP_SUFFIX@
 beos.o: beos.@CPP_SUFFIX@
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $(srcdir)/beos.@CPP_SUFFIX@
+
 x.lo: x.@CPP_SUFFIX@
 	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(X_CFLAGS) $(srcdir)/x.@CPP_SUFFIX@
 x.o: x.@CPP_SUFFIX@
@@ -105,7 +106,10 @@ lib%.la: %.lo
 
 # special rule for wx, since it has 3 files
 libwx.la: $(GUI_OBJS_WX:.o=.lo)
-	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) -o $@ `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) -o libwx.la `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
+
+wx.dll: $(GUI_OBJS_WX)
+	$(CXX) $(CXXFLAGS) -shared -o wx.dll $(GUI_OBJS_WX) ../dllexports.a `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
 plugins: $(GUI_SO_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
