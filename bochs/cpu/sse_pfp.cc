@@ -42,7 +42,7 @@ void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
 
 static void mxcsr_to_softfloat_status_word(softfloat_status_word_t &status, bx_mxcsr_t mxcsr)
 {
-  status.float_detect_tininess = float_tininess_before_rounding;
+  status.float_detect_tininess = float_tininess_after_rounding;
   status.float_exception_flags = 0; // clear exceptions before execution
   status.float_nan_handling_mode = float_first_operand_nan;
   status.float_rounding_mode = mxcsr.get_rounding_mode();

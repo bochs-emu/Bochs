@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.273 2004-02-26 18:12:21 vruppert Exp $
+// $Id: main.cc,v 1.274 2004-04-09 15:34:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2566,6 +2566,7 @@ bx_init_hardware()
 #if BX_SUPPORT_APIC
   BX_CPU(0)->local_apic.set_id (0);
 #endif
+  BX_CPU(0)->sanity_checks();
   BX_INSTR_INIT(0);
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
@@ -2593,7 +2594,8 @@ bx_init_hardware()
     // assign apic ID from the index of this loop
     // if !BX_SUPPORT_APIC, this will not compile.
     BX_CPU(i)->set_cpu_id(i);
-    BX_CPU(i)->local_apic.set_id (i);
+    BX_CPU(i)->local_apic.set_id(i);
+    BX_CPU(i)->sanity_checks();
     BX_INSTR_INIT(i);
     BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }

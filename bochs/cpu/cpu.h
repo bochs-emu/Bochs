@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.161 2004-02-26 19:17:37 sshwarts Exp $
+// $Id: cpu.h,v 1.162 2004-04-09 15:34:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1867,8 +1867,13 @@ union {
   BX_SMF void BTR_EvIb(bxInstruction_c *);
   BX_SMF void BTC_EvIb(bxInstruction_c *);
 
+#if BX_SUPPORT_FPU == 0	// if FPU is disabled
+  BX_SMF void FPU_ESC(bxInstruction_c *);
+#endif
+
   BX_SMF void FWAIT(bxInstruction_c *);
 
+#if BX_SUPPORT_FPU
   BX_SMF void FLD_STi(bxInstruction_c *);  
   BX_SMF void FLD_SINGLE_REAL(bxInstruction_c *);
   BX_SMF void FLD_DOUBLE_REAL(bxInstruction_c *);
@@ -2028,6 +2033,7 @@ union {
   BX_SMF void FNCLEX(bxInstruction_c *);
   BX_SMF void FNINIT(bxInstruction_c *);
   BX_SMF void FFREE_STi(bxInstruction_c *);
+#endif
 
   /* MMX */
   BX_SMF void PUNPCKLBW_PqQd(bxInstruction_c *i);

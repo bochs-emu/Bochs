@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.61 2003-12-28 18:19:41 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.62 2004-04-09 15:34:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -682,6 +682,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* D5 */  { BxImmediate_Ib, &BX_CPU_C::AAD },
   /* D6 */  { 0, &BX_CPU_C::SALC },
   /* D7 */  { 0, &BX_CPU_C::XLAT },
+#if BX_SUPPORT_FPU
   // by default we have here pointer to the group .. as if mod <> 11b
   /* D8 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
   /* D9 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
@@ -691,6 +692,16 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* DD */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDD },
   /* DE */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
   /* DF */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
+#else
+  /* D8 */  { 0, &BX_CPU_C::FPU_ESC },
+  /* D9 */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DA */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DB */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DC */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DD */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DE */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DF */  { 0, &BX_CPU_C::FPU_ESC },
+#endif
   /* E0 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPNE_Jb },
   /* E1 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPE_Jb },
   /* E2 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOP_Jb },
@@ -1217,6 +1228,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* D5 */  { BxImmediate_Ib, &BX_CPU_C::AAD },
   /* D6 */  { 0, &BX_CPU_C::SALC },
   /* D7 */  { 0, &BX_CPU_C::XLAT },
+#if BX_SUPPORT_FPU
   // by default we have here pointer to the group .. as if mod <> 11b
   /* D8 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
   /* D9 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
@@ -1226,6 +1238,16 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* DD */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDD },
   /* DE */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
   /* DF */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
+#else
+  /* D8 */  { 0, &BX_CPU_C::FPU_ESC },
+  /* D9 */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DA */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DB */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DC */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DD */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DE */  { 0, &BX_CPU_C::FPU_ESC },
+  /* DF */  { 0, &BX_CPU_C::FPU_ESC },
+#endif
   /* E0 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPNE_Jb },
   /* E1 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPE_Jb },
   /* E2 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOP_Jb },
@@ -1865,15 +1887,16 @@ modrm_done:
               */
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod==0xc0]);
              break;
+#if BX_SUPPORT_FPU
          case BxFPGroup:
              if (mod != 0xc0)  // mod != 11b
                 OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
-             else
-             {
+             else {
                 int index = (b1-0xD8)*64 + (0x3f & b2);
                 OpcodeInfoPtr = &(BxOpcodeInfo_FloatingPoint[index]);
              }
              break;
+#endif
          default:
              BX_PANIC(("fetchdecode: Unknown opcode group"));
        }

@@ -53,6 +53,8 @@ BX_CPP_INLINE Bit64u FetchQWORD(Bit8u *iptr)
 // according to instruction prefixes)
 //
 
+#if BX_SUPPORT_FPU
+
 /* ************************************************************************ */
 /* FPU Opcodes */
 
@@ -686,6 +688,8 @@ static BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DF FE */  { 0,  &BX_CPU_C::BxError },
   /* DF FF */  { 0,  &BX_CPU_C::BxError },
   };
+
+#endif
 
 /* ************************************************************************ */
 /* 3DNow! Opcodes */
