@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $
+// $Id: cmos.cc,v 1.19 2002-08-31 21:31:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_cmos_c::~bx_cmos_c(void)
 bx_cmos_c::init(bx_devices_c *d)
 {
 	unsigned i;
-	BX_DEBUG(("Init $Id: cmos.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: cmos.cc,v 1.19 2002-08-31 21:31:11 cbothamy Exp $"));
 
 	// CMOS RAM & RTC
 
@@ -440,30 +440,54 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	case 0x0f: // shutdown status
 		   switch (value) {
 			 case 0x00: /* proceed with normal POST (soft reset) */
-			   BX_DEBUG(("Reg 0F set to 0: shutdown action = normal POST"));;
+			   BX_DEBUG(("Reg 0Fh(00): shutdown action = normal POST"));;
 			   break;
-			 case 0x02: /* shutdown after memory test */
-			   BX_DEBUG(("Reg 0Fh: request to change shutdown action"
-			                  " to shutdown after memory test"));
+			 case 0x01: /* shutdown after memory size check */
+			   BX_DEBUG(("Reg 0Fh(01): request to change shutdown action"
+			                  " to shutdown after memory size check"));
+			 case 0x02: /* shutdown after successful memory test */
+			   BX_DEBUG(("Reg 0Fh(02): request to change shutdown action"
+			                  " to shutdown after successful memory test"));
 			   break;
-			 case 0x03:
-			   BX_DEBUG(("Reg 0Fh(03) : Shutdown after memory test !"));;
+			 case 0x03: /* shutdown after failed memory test */
+			   BX_DEBUG(("Reg 0Fh(03): request to change shutdown action"
+			                  " to shutdown after successful memory test"));
 			   break;
 			 case 0x04: /* jump to disk bootstrap routine */
-			   BX_DEBUG(("Reg 0Fh: request to change shutdown action "
+			   BX_DEBUG(("Reg 0Fh(04): request to change shutdown action "
 			                  "to jump to disk bootstrap routine."));
 			   break;
+			 case 0x05: /* flush keyboard (issue EOI) and jump via 40h:0067h */
+			   BX_DEBUG(("Reg 0Fh(05): request to change shutdown action "
+			                  "to flush keyboard (issue EOI) and jump via 40h:0067h."));
+			   break;
 			 case 0x06:
-			   BX_DEBUG(("Reg 0Fh(06) : Shutdown after memory test !"));;
+			   BX_DEBUG(("Reg 0Fh(06): Shutdown after memory test !"));;
+			   break;
+			 case 0x07: /* reset (after failed test in virtual mode) */
+			   BX_DEBUG(("Reg 0Fh(07): request to change shutdown action "
+			                  "to reset (after failed test in virtual mode)."));
+			   break;
+			 case 0x08: /* used by POST during protected-mode RAM test (return to POST) */
+			   BX_DEBUG(("Reg 0Fh(08): request to change shutdown action "
+			                  "to return to POST (used by POST during protected-mode RAM test)."));
 			   break;
 			 case 0x09: /* return to BIOS extended memory block move
 			            (interrupt 15h, func 87h was in progress) */
-			   BX_DEBUG(("Reg 0Fh: request to change shutdown action "
+			   BX_DEBUG(("Reg 0Fh(09): request to change shutdown action "
 			                  "to return to BIOS extended memory block move."));
 			   break;
 			 case 0x0a: /* jump to DWORD pointer at 40:67 */
-			   BX_DEBUG(("Reg 0Fh: request to change shutdown action"
+			   BX_DEBUG(("Reg 0Fh(0a): request to change shutdown action"
 			                  " to jump to DWORD at 40:67"));
+			   break;
+			 case 0x0b: /* iret to DWORD pointer at 40:67 */
+			   BX_DEBUG(("Reg 0Fh(0b): request to change shutdown action"
+			                  " to iret to DWORD at 40:67"));
+			   break;
+			 case 0x0c: /* retf to DWORD pointer at 40:67 */
+			   BX_DEBUG(("Reg 0Fh(0c): request to change shutdown action"
+			                  " to retf to DWORD at 40:67"));
 			   break;
 			 default:
 			   BX_PANIC(("unsupported cmos io write to reg F, case 0x%02x!",
