@@ -114,17 +114,14 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   show_headerbar();
 }
 
-
-  void
-bx_gui_c::floppyA_handler(void)
-{
-  unsigned new_status;
-
-  new_status = bx_devices.floppy->set_media_status(0, !BX_GUI_THIS floppyA_status);
-  if (new_status == BX_GUI_THIS floppyA_status)
-    return;  // no change made
-
-  BX_GUI_THIS floppyA_status = new_status;
+void
+bx_gui_c::update_floppy_status_buttons (void) {
+  BX_GUI_THIS floppyA_status = 
+    bx_devices.floppy->get_media_status (0)
+    && bx_options.floppya.Oinitial_status->get ();
+  BX_GUI_THIS floppyB_status = 
+      bx_devices.floppy->get_media_status (1)
+      && bx_options.floppyb.Oinitial_status->get ();
   if (BX_GUI_THIS floppyA_status)
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
   else {
@@ -136,22 +133,33 @@ bx_gui_c::floppyA_handler(void)
 #endif
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_eject_bmap_id);
     }
+  if (BX_GUI_THIS floppyB_status)
+    replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_bmap_id);
+  else {
+#if BX_WITH_MACOS
+    // If we are using the Mac floppy driver, eject the disk
+    // from the floppy drive.  This doesn't work in MacOS X.
+    if (!strcmp(bx_options.floppyb.Opath->get (), SuperDrive))
+      DiskEject(1);
+#endif
+    replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_eject_bmap_id);
+    }
+}
+
+  void
+bx_gui_c::floppyA_handler(void)
+{
+  BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
+  bx_devices.floppy->set_media_status(0, BX_GUI_THIS floppyA_status);
+  BX_GUI_THIS update_floppy_status_buttons ();
 }
 
   void
 bx_gui_c::floppyB_handler(void)
 {
-  unsigned new_status;
-
-  new_status = bx_devices.floppy->set_media_status(1, !BX_GUI_THIS floppyB_status);
-  if (new_status == BX_GUI_THIS floppyB_status)
-    return;  // no change made
-
-  BX_GUI_THIS floppyB_status = new_status;
-  if (BX_GUI_THIS floppyB_status)
-    replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_bmap_id);
-  else
-    replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_eject_bmap_id);
+  BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
+  bx_devices.floppy->set_media_status(1, BX_GUI_THIS floppyB_status);
+  BX_GUI_THIS update_floppy_status_buttons ();
 }
 
   void

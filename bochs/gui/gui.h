@@ -49,6 +49,7 @@ public:
 
   static void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
+  void update_floppy_status_buttons (void);
   static void     mouse_enabled_changed (Boolean val);
   static void     mouse_enabled_changed_specific (Boolean val);
   static void     exit(void);
