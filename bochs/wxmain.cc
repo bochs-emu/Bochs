@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.25 2002-04-07 07:31:34 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.26 2002-04-08 06:18:04 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -674,7 +674,7 @@ SimThread::Entry (void)
   //     bx_continue_after_control_panel(), which notices the
   //     kill_bochs_request and returns back to this Entry() function.
   //   - Entry() exits and the thread stops. Whew.
-  bx_continue_after_control_panel (argc, argv);
+  bx_continue_after_control_panel (1, argc, argv);
   wxLogDebug ("in SimThread, bx_continue_after_control_panel exited");
   return NULL;
 }
