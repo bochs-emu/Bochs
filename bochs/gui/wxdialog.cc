@@ -1,20 +1,20 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.11 2002-08-30 06:06:36 bdenney Exp $
+// $Id: wxdialog.cc,v 1.12 2002-08-30 07:03:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
 // This is a testbed for wxWindows dialog box experiments.
 //
 
-// For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
+// For compilers that support precompilation, includes <wx/wx.h>.
+#include <wx/wxprec.h>
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
 #ifndef WX_PRECOMP
-#include "wx/wx.h"
+#include <wx/wx.h>
 #endif
-#include "wx/spinctrl.h"
+#include <wx/spinctrl.h>
 
 #include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff

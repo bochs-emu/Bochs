@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.8 2002-08-29 14:59:37 bdenney Exp $
+// $Id: wx.cc,v 1.9 2002-08-30 07:03:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -31,15 +31,15 @@
 // includes
 //////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
+// For compilers that support precompilation, includes <wx/wx.h>.
+#include <wx/wxprec.h>
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
 #ifndef WX_PRECOMP
-#include "wx/wx.h"
+#include <wx/wx.h>
 #endif
-#include "wx/image.h"
+#include <wx/image.h>
 
 #include "bochs.h"
 #include "gui/icon_bochs.h"
@@ -1002,8 +1002,8 @@ each bx_param_* type, and I expect to need that again.
 
 
 
-// For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
+// For compilers that support precompilation, includes <wx/wx.h>.
+#include <wx/wxprec.h>
 #include <wx/scrolwin.h>
 
 #ifdef __BORLANDC__
@@ -1011,7 +1011,7 @@ each bx_param_* type, and I expect to need that again.
 #endif
 
 #ifndef WX_PRECOMP
-#include "wx/wx.h"
+#include <wx/wx.h>
 #endif
 
 
