@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.146 2002-10-03 05:23:20 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.147 2002-10-03 21:03:16 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1249,6 +1249,9 @@ AC_ARG_ENABLE(gdb-stub,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_GDBSTUB, 1)
     GDBSTUB_VAR='$(GDBSTUB_OBJS)'
+    if test "$bx_debugger" = 1; then
+      AC_MSG_ERROR(--enable-debugger and --enable-gdb-stub are mutually exclusive)
+    fi
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_GDBSTUB, 0)
