@@ -81,24 +81,6 @@ BX_CPU_C::HLT(BxInstruction_t *i)
 }
 
 
-#if 0
-// (kpl) used to be called by ::HLT()
-// (mch) Wait for an interrupt
-  void
-BX_CPU_C::wait_for_interrupt()
-{ 
-  
-  while ( !(BX_INTR) ) {
-#if MCH_WAIT_EVENT_HACK
-    bx_pc_system.wait_for_event();
-#else
-    BX_TICK1();
-#endif
-    }
-}
-#endif
-
-
   void
 BX_CPU_C::CLTS(BxInstruction_t *i)
 {
