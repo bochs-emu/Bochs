@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.75 2004-02-13 15:56:05 vruppert Exp $
+// $Id: win32.cc,v 1.76 2004-02-15 00:03:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -461,7 +461,8 @@ static void processMouseXY( int x, int y, int windows_state, int implied_state_c
   int bx_state;
   int old_bx_state;
   EnterCriticalSection( &stInfo.mouseCS);
-  bx_state=( ( windows_state & MK_LBUTTON) ? 1 : 0 ) + ( ( windows_state & MK_RBUTTON) ? 2 : 0);
+  bx_state=( ( windows_state & MK_LBUTTON) ? 1 : 0 ) + ( ( windows_state & MK_RBUTTON) ? 2 : 0) +
+           ( ( windows_state & MK_MBUTTON) ? 4 : 0);
   old_bx_state=bx_state ^ implied_state_change;
   if ( old_bx_state!=mouse_button_state)
   {
@@ -936,10 +937,17 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
     processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 1);
     return 0;
 
+  case WM_MBUTTONDOWN:
+  case WM_MBUTTONDBLCLK:
+  case WM_MBUTTONUP:
+    processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 4);
+    return 0;
+
   case WM_RBUTTONDOWN:
   case WM_RBUTTONDBLCLK:
   case WM_RBUTTONUP:
     processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 2);
+    return 0;
 
   case WM_CLOSE:
     return DefWindowProc (hwnd, iMsg, wParam, lParam);
