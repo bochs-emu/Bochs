@@ -461,7 +461,11 @@ parse_line_formatted(int num_params, char *params[])
   if (params[0][0] == '#') return; /* comment */
   else if (!strcmp(params[0], "floppya")) {
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "1_44=", 5)) {
+      if (!strncmp(params[i], "2_88=", 5)) {
+        strcpy(bx_options.floppya.path, &params[i][5]);
+        bx_options.floppya.type = BX_FLOPPY_2_88;
+        }
+      else if (!strncmp(params[i], "1_44=", 5)) {
         strcpy(bx_options.floppya.path, &params[i][5]);
         bx_options.floppya.type = BX_FLOPPY_1_44;
         }
@@ -489,7 +493,11 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "floppyb")) {
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "1_44=", 5)) {
+      if (!strncmp(params[i], "2_88=", 5)) {
+        strcpy(bx_options.floppyb.path, &params[i][5]);
+        bx_options.floppyb.type = BX_FLOPPY_2_88;
+        }
+      else if (!strncmp(params[i], "1_44=", 5)) {
         strcpy(bx_options.floppyb.path, &params[i][5]);
         bx_options.floppyb.type = BX_FLOPPY_1_44;
         }
