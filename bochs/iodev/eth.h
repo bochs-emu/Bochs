@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.10 2002-09-01 21:22:43 bdenney Exp $
+// $Id: eth.h,v 1.11 2002-09-02 16:56:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@ typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 // system, an NDIS driver in promisc mode on WinNT, or maybe
 // a simulated network that talks to another process.
 //
-class eth_pktmover_c : public logfunctions {
+class eth_pktmover_c {
 public:
   virtual void sendpkt(void *buf, unsigned io_len) = 0;
   virtual ~eth_pktmover_c (void) {}

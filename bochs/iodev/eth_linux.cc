@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.6 2002-03-06 15:56:27 bdenney Exp $
+// $Id: eth_linux.cc,v 1.7 2002-09-02 16:56:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@
 
 #include "bochs.h"
 #ifdef ETH_LINUX
-#define LOG_THIS this->
+#define LOG_THIS bx_ne2k.
 
 extern "C" {
 #include <errno.h>
