@@ -22,4 +22,5 @@
   --enable-cdrom \
   --enable-sb16=linux \
   --enable-instrumentation \
-  --enable-iodebug
+  --enable-iodebug \
+  --with-all-libs
