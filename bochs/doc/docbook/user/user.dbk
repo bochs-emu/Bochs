@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.78 2002-12-04 23:32:39 cbothamy Exp $
+$Id: user.dbk,v 1.79 2002-12-05 20:23:34 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2620,6 +2620,75 @@ Example:
 This disables the 0xaa55 signature check on boot floppies
 The check is enabled by default.
 </para>
+</section>
+
+<section><title>config_interface</title>
+<para>
+The configuration interface is a series of menus or dialog boxes that
+allows you to edit all the settings that control Bochs's behavior.
+There are two choices of configuration interface: a text mode version
+called "textconfig" and a graphical version called "wx".  The text
+mode version uses stdin/stdout and is always available.  The graphical
+version is only compiled when you use "--with-wx" in the configure 
+command.  If you do not write a config_interface line, Bochs will 
+choose a default for you (usually textconfig).
+</para>
+<note><para>
+wxWindows provides both a configuration interface and a display library.
+So if you use the "wx" configuration interface, you must also use
+the "wx" display library.
+</para></note>
+<para>
+Examples:
+<screen>
+  config_interface: textconfig
+  config_interface: wx
+</screen>
+</para>
+</section>
+
+<section><title>display_library</title>
+<para>
+The display library is the code that displays the Bochs VGA screen.  Bochs 
+has a selection of about 10 different display library implementations for 
+different platforms.  If you run configure with multiple --with-* options, 
+the display_library command lets you choose which one you want to run with.
+If you do not write a display_library line, Bochs will choose a default for
+you.
+</para>
+<table>   
+<title>display_library values</title>
+<tgroup cols=2>
+<thead>
+<row>
+<entry>Option</entry>
+<entry>Description</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> x          </entry><entry> use X windows interface, cross platform </entry> </row>
+<row> <entry> win32      </entry><entry> use native win32 libraries </entry> </row>
+<row> <entry> carbon     </entry><entry> use Carbon library (for MacOS X) </entry> </row>
+<row> <entry> beos       </entry><entry> use native BeOS libraries </entry> </row>
+<row> <entry> macintosh  </entry><entry> use MacOS pre-10 </entry> </row>
+<row> <entry> amigaos    </entry><entry> use native AmigaOS libraries </entry> </row>
+<row> <entry> sdl        </entry><entry> use SDL library, cross platform </entry> </row>
+<row> <entry> svga       </entry><entry> use SVGALIB library for Linux, allows graphics without X windows</entry> </row>
+<row> <entry> term       </entry><entry> text only, uses curses/ncurses library, cross platform </entry> </row>
+<row> <entry> rfb        </entry><entry> provides an interface to AT&amp;T's VNC viewer, cross platform </entry> </row>
+<row> <entry> wx         </entry><entry> use wxWindows library, cross platform </entry> </row>
+<row> <entry> nogui      </entry><entry> no display at all </entry> </row>
+</tbody>
+</tgroup>
+</table>
+<para>
+Examples:
+<screen>
+  display_library: x
+  display_library: sdl
+</screen>
+</para>
+
 </section>
 
 <section><title>log</title>
@@ -6286,7 +6355,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.78 2002-12-04 23:32:39 cbothamy Exp $
+        $Id: user.dbk,v 1.79 2002-12-05 20:23:34 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6562,7 +6631,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.78 2002-12-04 23:32:39 cbothamy Exp $
+        $Id: user.dbk,v 1.79 2002-12-05 20:23:34 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

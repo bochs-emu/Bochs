@@ -37,6 +37,7 @@
 #   macintosh      use MacOS pre-10
 #   amigaos        use native AmigaOS libraries
 #   sdl            use SDL library, cross platform
+#   svga           use SVGALIB library for Linux, allows graphics without X11
 #   term           text only, uses curses/ncurses library, cross platform
 #   rfb            provides an interface to AT&T's VNC viewer, cross platform
 #   wx             use wxWindows library, cross platform
