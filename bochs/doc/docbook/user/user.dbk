@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.50 2002-11-03 20:05:02 ndavidg Exp $
+$Id: user.dbk,v 1.51 2002-11-03 23:24:42 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -325,6 +325,12 @@ currently work with.
     </entry>
   </row>
   <row>
+    <entry>Enhanced BIOS</entry>
+    <entry>Yes</entry>
+    <entry>Implements specifications ElTorito, EDD v3.0, PCI32 directory service
+    </entry>
+  </row>
+  <row>
     <entry>VGA</entry>
     <entry>Yes</entry>
     <entry>VGA color graphics emulation in a window
@@ -333,22 +339,43 @@ currently work with.
   <row>
     <entry>Floppy disk</entry>
     <entry>Yes</entry>
-    <entry>Supports floppy disk images on all platforms: 1.44M 3.5", 1.2M 5.25", and 720K 3.5".  On Unix and Windows NT/2000, Bochs can access the physical floppy drive.
+    <entry>Supports floppy disk images on all platforms: 1.44M 3.5", 1.2M 5.25", and 720K 3.5".  
+    On Unix and Windows NT/2000, Bochs can access the physical floppy drive.
+    </entry>
+  </row>
+  <row>
+    <entry>Multiple ATA channels</entry>
+    <entry>Yes</entry>
+    <entry>Emulates up to 4 (four) ATA channels. Up to 8 (height)ATA/ATAPI emulated devices can be attached,
+    two per ATA channel.
+    So you can have eight hard disks or seven hard disks and a cdrom or four hard disks and four cdroms, or one
+    hard disk and seven cdroms, etc...
     </entry>
   </row>
   <row>
     <entry>Hard disk</entry>
     <entry>Yes</entry>
-    <entry>Emulates one or two AT/IDE hard drives via image files.  No physical
-    hard disk access is supported, primarily for safety reasons.  Only two
-    IDE devices, total, are supported.  So you can have two hard disks,
-    or one hard disk and one CDROM.
+    <entry>Emulates ATA-2/IDE hard drives via image files.  Physical
+    hard disk access is supported on some architecture, but NOT recommended, primarily for safety reasons.  
+    Hard disk up to 32GB are supported, on any platform that support large files access. 
+    </entry>
+  </row>
+  <row>
+    <entry>CDROM</entry>
+    <entry>Yes</entry>
+    <entry>Emulates ATAPI-4/IDE CDROM.  The CDROMs can read from an ISO disk image
+    on any platform.  On Windows (95/98/NT/2000), Linux, SunOS, FreeBSD, 
+    NetBSD, Amiga/MorphOS, and BeOS, Bochs can read from the physical cdrom.
+    Starting with version 1.4, Bochs is even able to boot from a bootable cd
+    or bootable iso image.
     </entry>
   </row>
   <row>
     <entry>Keyboard</entry>
     <entry>Yes</entry>
-    <entry>Emulates a PS/2 keyboard with North American key mappings.  Keyboards with other key mappings are reported to have problems with special keys and punctuation.
+    <entry>Emulates a PS/2 keyboard with North American key mappings. Optional keyboard layout
+    remapping files are provided to support localized keyboard in X11 (german, french, italian, spanish,
+    danish, swedish)
     </entry>
   </row>
   <row>
@@ -363,8 +390,11 @@ currently work with.
     <entry>Emulates an NE2000 compatible network card.  On Windows NT/2000,
     Linux, FreeBSD, and NetBSD, Bochs will forward packets to and from the
     operating system so that the guest OS can talk on the physical network.
-    Unfortunately, with the current implementation, the guest OS can talk
-    to any machine on the network BUT NOT the host machine.
+    Unfortunately, with the current implementation (except linux), the guest 
+    OS can talk to any machine on the network BUT NOT the host machine.
+    On linux, with the tuntap interface, there is no such limitations, and 
+    the host machine may even be configured as a router so the guest os has access
+    to the internet (see <xref linkend="linux-config-tuntap"> for configuration instructions).
     </entry>
   </row>
   <row>
@@ -391,6 +421,13 @@ currently work with.
     <entry>The serial port (single 8259 UART emulation) is not really usable
     yet.  The interface to the emulated CPU is mostly working, but it needs
     some work before it can talk to a raw serial port or to a pseudo terminal.
+    </entry>
+  </row>
+  <row>
+    <entry>PCI</entry>
+    <entry>incomplete</entry>
+    <entry>The Host-to-PCI bridge, and Primary Memory Controller are available.
+    However, PCI-to-IDE, PCI-to-USB, or other PCI cards are not implemented yet.
     </entry>
   </row>
   <row>
@@ -438,13 +475,23 @@ currently work with.
     will not run any faster on multiprocessor hardware.
     </entry>
   </row>
+  <row>
+    <entry>Copy and Paste</entry>
+    <entry>Yes</entry>
+    <entry>Text-mode screen text
+    can be exported to the clipboard. Text in the clipboard can also be pasted, through Bochs,
+    to the guest OS, as simulated keystrokes.
+    </entry>
+  </row>
 </tbody>
 </tgroup>
 </table>
 </section> <!-- End of Features -->
 
 <section><title>Supported Platforms</title>
-
+<para>
+	&FIXME; should add a column with supported display library (X11, SDL, wx, etc...)
+</para>
 <table><title>Supported platforms</title>
    <tgroup cols=2 align=left colsep=1 rowsep=1>
    <tbody>
@@ -605,7 +652,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      </para></question>
      <answer><para>
      Yes.  For instructions on joining, refer to 
-     <xref linkend="mailinglist" />
+     <xref linkend="mailinglist">
      </para></answer>
   </qandaentry>
 
@@ -614,7 +661,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      Is there an irc channel for bochs?
      </para></question>
      <answer><para>
-     Not that I am aware of.
+     Yes. You will usually find Bochs developers and users on irc at irc.openprojects.net:6667, channel #bochs
      </para></answer>
   </qandaentry>
 
@@ -2331,15 +2378,44 @@ default is 32, since most operating systems won't need more than that.
 </para>
 </section>
 
+<section><title>optromimage1, optromimage2, optromimage3 or optromimage4</title>
+<para>
+Example:
+<screen>
+   optromimage1: file=optionalrom.bin, address=0xd0000
+</screen>
+
+ This enables Bochs to load up to 4 optional ROM images. 
+</para>
+<para>
+Be sure to use a
+read-only area, typically between C8000 and EFFFF. These optional
+ROM images should not overwrite the rombios (located at
+F0000-FFFFF) and the videobios (located at C0000-C7FFF).
+</para>
+<para>
+Those ROM images will be initialized by the bios if they contain
+</para>
+<para>
+the right signature (0x55AA).
+</para>
+<para>
+It can also be a convenient way to upload some arbitary code/data
+in the simulation, that can be retrieved by the boot loader
+</para>
+</section>
+
 <section><title>vgaromimage</title>
 <para>
 Examples:
 <screen>
   vgaromimage: bios/VGABIOS-elpin-2.40
+  vgaromimage: bios/VGABIOS-lgpl-latest
 </screen>
-You also need to load a VGA ROM BIOS at 0xC0000.  A VGA BIOS file from
-Elpin Systems, Inc. is provided in the source and binary distributions.
+You also need to load a VGA ROM BIOS at 0xC0000.  
 </para>
+<para> A VGA BIOS file from Elpin Systems, Inc. is provided in the source and binary distributions.  </para>
+<para> A free LGPL'd VGA BIOS is also provided in the source and binary distributions.  </para>
 </section>
 
 <section><title>floppya/floppyb</title>
@@ -2369,7 +2445,115 @@ to ever write <constant>ejected</constant> in your bochsrc.
 </para>
 </section>
 
+<section><title>ata0, ata1, ata2, ata3</title>
+<para>
+Examples:
+<screen>
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
+ata2: enabled=1, ioaddr1=0x1e8, ioaddr2=0x3e8, irq=11
+ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x368, irq=9
+</screen>
+
+These options enables up to 4 ata channels. For each channel
+the two base io addresses and the irq must be specified.
+ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+
+</para>
+</section>
+
+<section><title>ata0-master, ata0-slave, ata1-*, ata2-*, ata3-*</title>
+<para>
+Examples:
+<screen>
+ata0-master: type=disk, path=10M.img, cylinders=306, heads=4, spt=17, translation=none
+ata1-master: type=disk, path=2GB.img, cylinders=5242, heads=16, spt=50, translation=echs
+ata1-slave:  type=disk, path=3GB.img, cylinders=6541, heads=16, spt=63, translation=auto
+ata2-master: type=disk, path=7GB.img, cylinders=14563, heads=16, spt=63, translation=lba
+ata2-slave:  type=cdrom, path=iso.sample, status=inserted
+
+</screen>
+</para>
+
+<para>
+
+This defines the type and characteristics of all attached ata devices:
+<table>   
+<title>ata devices configuration options</title>
+<tgroup cols=3>
+<thead>
+<row>
+<entry>Option</entry>
+<entry>Comments</entry>
+<entry>Possible values</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> type </entry> <entry> type of attached device </entry> <entry> [disk|cdrom] </entry> </row>
+<row> <entry> path  </entry> <entry> path of the image </entry> </row>
+<row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
+<row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
+<row> <entry> spt </entry> <entry> only valid for disks </entry> </row>
+<row> <entry> status </entry> <entry> only valid for cdroms </entry> <entry> [inserted|ejected] </entry> </row>
+<row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [none|auto], only for disks on ata0 [cmos] </entry> </row>
+<row> <entry> translation </entry> <entry> type of translation done by the bios (legacy int13), only for disks </entry> <entry> [none|lba|large|rechs|auto] </entry> </row>
+<row> <entry> model </entry> <entry> string returned by identify device command </entry> </row>
+</table>
+</para>
+
+<para>
+You have to tell the type of the attached device. For Bochs version2.0, it can by disk or cdrom
+</para>
+
+<para>
+You have to point the "path" at a hard disk image file, cdrom iso file,
+or physical cdrom device.
+To create a hard disk image, try running bximage.
+It will help you choose the size and then suggest a line that
+works with it.
+</para>
+
+<para>
+In UNIX it is possible to use a raw device as a Bochs hard disk,
+but WE DON'T RECOMMEND IT for safety reasons.
+</para>
+
+<para>
+The path, cylinders, heads, and spt are mandatory for type=disk
+</para>
+<para>
+The path is mandatory for type=cdrom
+</para>
+
+<para>
+The disk translation scheme (implemented in legacy int13 bios functions, and used by
+older operating systems like MS-DOS), can be defined as:
+<itemizedlist>
+<listitem><para>
+none : no translation, for disks up to 528MB (1032192 sectors)
+</para></listitem>
+<listitem><para>
+large : a standard bitshift algorithm, for disks up to 4.2GB (8257536 sectors)
+</para></listitem>
+<listitem><para>
+rechs : a revised bitshift algorithm, using a 15 heads fake physical geometry, for disks up to 7.9GB (15482880 sectors). (don't use this unless you understand what you're doing)
+</para></listitem>
+<listitem><para>
+lba : a standard lba-assisted algorithm, for disks up to 8.4GB (16450560 sectors)
+</para></listitem>
+<listitem><para>
+auto : autoselection of best translation scheme. (it should be changed if system does not boot)
+</para></listitem>
+</itemizedlist>
+</para>
+
+</section>
+
 <section><title>diskc/diskd</title>
+<para>
+The diskc and diskd options are deprecated. Use "ataX-*: type=disk,..."
+options instead.
+</para>
 <para>
 Examples:
 <screen>
@@ -2380,8 +2564,9 @@ Examples:
 
 The diskc/diskd lines tell Bochs what disk image file to use as the constants
 of the emulated hard drive, and what geometry it should have.  Diskc is the
-first hard drive, and diskd is the second hard drive.  At present, using a raw
-hard drive is NOT SUPPORTED and dangerous to your data.  The file should be a
+first hard drive, and diskd is the second hard drive.  Using a raw
+hard drive is possible under on unix but WE DON'T RECOMMEND IT for safety reasons.  
+The file should be a
 disk image file, which must be exactly 512*cyl*heads*spt bytes long.  The
 geometry settings are cylinder (cyl), heads, and sectors per track (spt).  If
 you  use bximage  to create   the  image,  it  will give  you  the required
@@ -2395,6 +2580,9 @@ You cannot use both diskd and cdromd together.
 </section>
 
 <section><title>cdromd</title>
+<para>
+The cdromd option is deprecated. Use "ataX-*: type=cdrom,..." option instead.
+</para>
 <para>
 Examples:
 <screen>
@@ -2430,10 +2618,23 @@ unless you are having trouble with it.
 <para>
 Examples:
 <screen>
-  boot: a
-  boot: c
+  boot: floppy
+  boot: disk
+  boot: cdrom
 </screen>
-This defines  your boot drive. You can  either boot from 'a' or 'c'.
+This defines your boot drive. You can  either boot from 'floppy', 'disk' or 'cdrom'.
+'c' and 'a' are also accepted for historical reasons.
+</para>
+</section>
+
+<section><title>floppy_bootsig_check</title>
+<para>
+Example:
+<screen>
+  floppy_bootsig_check: disabled=1
+</screen>
+This disables the 0xaa55 signature check on boot floppies
+The check is enabled by default.
 </para>
 </section>
 
@@ -2447,6 +2648,27 @@ Examples:
 </screen>
 Give the path of the log file you'd like Bochs debug and misc. verbage to be
 written to.   If you really don't want it, make it /dev/null.
+</para>
+</section>
+
+<section><title>logprefix</title>
+<para>
+Examples:
+<screen>
+   logprefix: %t-%e-@%i-%d
+   logprefix: %i%e%d
+</screen>
+This handles the format of the string prepended to each log line.
+You may use those special tokens :
+  <screen>
+  %t : 11 decimal digits timer tick
+  %i : 8 hexadecimal digits of cpu0 current eip
+  %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
+  %d : 5 characters string of the device, between brackets
+  </screen>
+</para>
+<para>
+Default is %t%e%d
 </para>
 </section>
 
@@ -2744,6 +2966,7 @@ ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
 ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replaceable>MYCARD</replaceable>
 ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
 
 ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts.
@@ -2754,11 +2977,26 @@ address), and you cannot use ff:ff:ff:ff:ff:ff because that's the broadcast
 address.  For the ethertap module, you must use fe:fd:00:00:00:01.  There may
 be other restrictions too.  To be safe, just use the b0:c4... address.
 
+ethmod: The ethmod value defines which low level OS specific module to be 
+used to access pysical ethernet interface. Current implemented values include :
+ - fbsd : ethernet on freebsd and openbsd
+ - linux : ethernet on linux
+ - win32 : ethernet on win32
+ - tap : ethernet through a linux tap interface
+ - tuntap : ethernet through a linux tuntap interface
+
 ethdev: The ethdev value is the name of the network interface on your host
 platform.  On UNIX machines, you can get the name by running ifconfig.  On
 Windows machines, you must run niclist to get the name of the ethdev.
 Niclist source code is in misc/niclist.c and it is included in Windows 
 binary releases.
+
+script: The script value is optionnal, and is the name of a script that
+is executed after bochs initialize the network interface. You can use
+this script to configure this network interface, or enable masquerading.
+This is mainly useful for the tun/tap devices that only exist during
+Bochs execution. The network interface name is supplied to the script
+as first parameter
 </screen>
 </para>
 </section>
@@ -2788,6 +3026,19 @@ Type of keyboard returned by a "identify keyboard" command to the
 keyboard controller. It must be one of "xt", "at" or "mf".
 Defaults to "mf". It should be ok for almost everybody. A known
 exception is French macs, that do have a "at"-like keyboard.
+</para>
+</section>
+
+<section><title>user_shortcut</title>
+<para>
+Examples:
+<screen>
+  user_shortcut: keys=ctrlaltdel
+  user_shortcut: keys=ctrlaltesc
+</screen>
+This defines the keyboard shortcut to be sent when you press the "user"
+button in the headerbar. These shortcuts are currently recognized:
+ctrlaltdel, ctrlaltesc, ctrlaltf1, alttab
 </para>
 </section>
 
@@ -3021,7 +3272,11 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 <chapter><title>Using Bochs</title>
     <para>
     <screen>
-Resources for users
+- using the control panel
+- the graphical elements in bochs window
+- using plugins ?
+- rules to find the bochsrc file
+- Resources for users
 testing status page: tells what has been tried and who got it working
 search on bochs web site
 SourceForge
@@ -3029,6 +3284,7 @@ SourceForge
   how to report problems, make feature requests
     </screen>
     </para>
+    
 </chapter>
 
 <chapter><title>Common problems and what to do about them (Troubleshooting)</title>
@@ -3172,7 +3428,8 @@ write to bochs-announce-request or bochs-developers-request.  Don't forget the
       <screen>
 Ideas for new sections:
 - Using two hard disks
-- How to install Windows 95
+- using the debugger (done)
+- debugging from gdb
 - etc.
       </screen>
     </para>
@@ -3589,12 +3846,489 @@ your name server as shown.
 </para>
 </section>
 
+<section id="linux-config-tuntap"><title>Linux: Configuring and using a tuntap network interface</title>
+<para>
+</para>
+</section>
+
+<section id="internal-debugger">
+<title> Using Bochs internal debugger </title>
+
+<para>
+Note, if you are looking for a graphical front-end for the
+bochs debugger, you may want to check out
+<ulink url="http://www.qzx.com/bfe/">BFE</ulink>. &nbsp;This is a
+package written by a bochs user which can interface with
+the text based bochs debugger.  No linking is necessary.
+It's not part of bochs, but you may find it useful.
+</para>
+
+<para>
+You can now conditionally compile in a GDB like command line debugger, that
+allows you to set breakpoints, step through instructions, and other
+useful functions.  If there isn't a command for something you believe
+is generally useful for the debugger, let me know and I'll implement
+it if possible.
+</para>
+
+<para>
+To use the debugger, you must configure bochs with the
+'--enable-debugger' and '--enable-disasm' flags.  For example:
+
+<screen>
+  ./configure --enable-debugger --enable-disasm
+</screen>
+
+NOTE: You must use flex version 2.5.4 or greater.  I have heard that
+version 2.5.2 will not work.
+</para>
+<para>
+When you first start up bochs, you will see the command line prompt
+
+<screen>
+  bochs:1>
+</screen>
+
+From here, you may use the following commands:
+</para>
+
+<section>
+<title>Execution Control</title>
+<para>
+<screen>
+  c                           Continue executing
+  stepi [count]               execute count instructions, default is 1
+  si    [count]               execute count instructions, default is 1
+  step  [count]               execute count instructions, default is 1
+  s     [count]               execute count instructions, default is 1
+  Ctrl-C                      stop execution, and return to command line prompt
+  Ctrl-D                      if at empty line on command line, exit
+  quit                        quit debugger and execution
+  q                           quit debugger and execution
+</screen>
+</para>
+</section>
+
+<section>
+<title>BreakPoints</title>
+<para>
+<screen>
+  NOTE: The format of 'seg', 'off', and 'addr' in these descriptions,
+        are as follows.  I don't have any way to set the current radix.
+
+        hexidecimal:    0xcdef0123
+        decimal:        123456789
+        octal:          01234567
+
+  vbreak seg:off              Set a virtual address instruction breakpoint
+  vb     seg:off
+
+  lbreak addr                 Set a linear address instruction breakpoint
+  lb     addr
+
+  pbreak [*] addr             Set a physical address instruction breakpoint
+  pb     [*] addr             (the '*' is optional for GDB compatibility)
+  break  [*] addr
+  b      [*] addr
+
+  info break                  Display state of all current breakpoints
+  delete n                    Delete a breakpoint
+  del    n
+  d      n
+</screen>
+</para>
+</section>
+
+<section>
+<title>Manipulating Memory</title>
+<para>
+<screen>
+  x  /nuf addr      Examine memory at linear address addr
+  xp /nuf addr      Examine memory at physical address addr
+     n              Count of how many units to display
+     u              Unit size; one of
+                      b Individual bytes
+                      h Halfwords (2 bytes)
+                      w Words (4 bytes)
+                      g Giant words (8 bytes)
+                      NOTE: these are *not* typical Intel nomenclature sizes,
+                            but they are consistent with GDB convention.
+     f              Printing format.  one of
+                      x Print in hexadecimal
+                      d Print in decimal
+                      u Print in unsigned decimal
+                      o Print in octal
+                      t Print in binary
+
+    n, f, and u are optional parameters.  u and f default to the last values
+    you used, or to w(words) and x(hex) if none have been supplied.
+    n currently defaults to 1.  If none of these optional parameters are
+    used, no slash should be typed.  addr is also optional.  If you don't
+    specify it, it will be the value the next address (as if you had
+    specified n+1 in the last x command).
+
+  setpmem addr datasize val    Set physical memory location of size
+                               datasize to value val.
+
+  crc  addr1  addr2            Show CRC for physical memory range addr1..addr2
+  info dirty                   Show physical pages dirtied (written to) since last display
+                               Values displayed are the top 20 bits only (page addresses)
+
+</screen>
+</para>
+</section>
+
+<section>
+<title>Info</title>
+<para>
+<screen>
+  info program      Execution status of the program
+  info registers    List of CPU integer registers and their contents
+  info break        Information about current breakpoint status
+</screen>
+</para>
+</section>
+
+<section>
+<title>Manipulating CPU Registers</title>
+<para>
+<screen>
+  set $reg = val    Change a CPU register to value val.  Registers may be one of:
+                      eax, ecx, edx, ebx, esp, ebp, esi, edi.
+                    Currently, you may not change:
+                      eflags, cs, ss, ds, es, fs, gs.
+
+    Examples: set $eax = 0x01234567
+              set $edx = 25
+
+  info registers    See Info section
+  dump_cpu          Dump complete CPU state
+  set_cpu           Set  complete CPU state
+
+    Format of "dump_cpu" and "set_cpu":
+    "eax:0x%x\n"
+    "ebx:0x%x\n"
+    "ecx:0x%x\n"
+    "edx:0x%x\n"
+    "ebp:0x%x\n"
+    "esi:0x%x\n"
+    "edi:0x%x\n"
+    "esp:0x%x\n"
+    "eflags:0x%x\n"
+    "eip:0x%x\n"
+    "cs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "ss:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "ds:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "es:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "fs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "gs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "ldtr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "tr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
+    "gdtr:base=0x%x, limit=0x%x\n"
+    "idtr:base=0x%x, limit=0x%x\n"
+    "dr0:0x%x\n"
+    "dr1:0x%x\n"
+    "dr2:0x%x\n"
+    "dr3:0x%x\n"
+    "dr4:0x%x\n"
+    "dr5:0x%x\n"
+    "dr6:0x%x\n"
+    "dr7:0x%x\n"
+    "tr3:0x%x\n"
+    "tr4:0x%x\n"
+    "tr5:0x%x\n"
+    "tr6:0x%x\n"
+    "tr7:0x%x\n"
+    "cr0:0x%x\n"
+    "cr1:0x%x\n"
+    "cr2:0x%x\n"
+    "cr3:0x%x\n"
+    "cr4:0x%x\n"
+    "inhibit_int:%u\n"
+    "done\n"
+
+    Notes:
+      - s is the selector
+      - dl is the shadow descriptor low  dword (4 byte quantitiy)
+      - dh is the shadow descriptor high dword (4 byte quantitiy)
+      - valid denotes if the segment register holds a validated shadow descriptor
+      - inhibit_int is set if the previous instruction was one which delays the
+          acceptance of interrupts by one instruction (STI, MOV SS)
+      - any errors encountered by the set_cpu command, are reported by
+        "Error: ...".  They may be reported after any of the input lines,
+        or after the "done" line, during limit checks.
+      - A successful set_cpu command ends with the separate line:
+        "OK".
+</screen>
+</para>
+</section>
+
+<section>
+<title>Disassembly commands</title>
+<para>
+<screen>
+  disassemble start end       Disassemble instructions in given linear address
+                              range, inclusive of start, exclusive of end.
+                              Use "set $disassemble_size =" to tell
+                              debugger desired segment size.  Use a value for
+                              end of less than start (or zero) if you only
+                              want the first instruction disassembled.
+  set $disassemble_size = n   Tell debugger what segment size to use when
+                              the "disassemble" command is used.  Use values
+                              of 16 or 32 for n.  Default is 32.
+
+  set $auto_disassemble = n   Cause debugger to disassemble current instruction
+                              every time execution stops if n=1.  Default is 0.
+                              Segment size of current CPU context is used for
+                              disassembly, so variable "$disassemble_size" is
+                              ignored.
+</screen>
+</para>
+</section>
+
+<section>
+<title>Instrumentation</title>
+<para>
+
+To use instrumentation features in bochs, you must compile in support for it.
+You should build a custom instrumentation library in a separate directory in
+the "instrument/" directory.  To tell configure which instrumentation library
+you want to use, use the "--enable-instrumentation" option.
+
+The default library consists of a set of stubs, and the following are
+equivalent:
+
+<screen>
+  ./configure [...] --enable-instrumentation
+  ./configure [...] --enable-instrumentation="instrument/stubs"
+</screen>
+
+You could make a separate directory with your custom library,
+for example "instrument/myinstrument", copy the contents of
+the "instrument/stubs" directory to it, then customize it.  Use:
+
+<screen>
+  ./configure [...] --enable-instrumentation="instrument/myinstrument"
+</screen>
+</para>
+</section>
+
+<section>
+<title>Instrumentation commands</title>
+<para>
+<screen>
+  instrument start            calls bx_instr_start()
+  instrument stop             calls bx_instr_stop()
+  instrument reset            calls bx_instr_reset()
+  instrument print            calls bx_instr_print()
+</screen>
+</para>
+</section>
+
+
+<section>
+<title>New Commands</title>
+<para>
+
+<screen>trace-on</screen>
+
+Disassemble every executed instruction. Note that instructions that
+cause exceptions are not really executed, and therefore not traced.
+
+<screen>trace-off</screen>
+
+Disable tracing.
+
+<screen>ptime</screen>
+
+Print the current time (number of ticks since start of simulation
+(modulo 2^32)).
+
+<screen>sb <replaceable>delta</replaceable></screen>
+
+Insert a time break point "delta" instructions into the future.
+
+<screen>sba <replaceable>time"</replaceable></screen>
+
+Insert a time break point at "time".
+
+<screen>record <replaceable>filename</replaceable></screen>
+
+Record console input to file <replaceable>filename</replaceable>. The file consists of
+zero or more lines of the form "%s %d %x", where the first word is the
+event type, the second is a time stamp and the third is event specific
+data.
+
+<screen>playback <replaceable>filename</replaceable></screen>
+
+Playback console input from file <replaceable>filename</replaceable>. Additional input can
+be given directly in the console window. Events in the file will be
+played back at times relative to the time when the playback command
+was executed.
+
+<screen>print-stack [<replaceable>num words</replaceable>]</screen>
+
+Print the <replaceable>num words</replaceable> top 16-bit words on the stack. <replaceable>Num
+words</replaceable> defaults to 16. Only works reliably in protected mode when
+the base address of the stack segment is zero.
+
+<screen>watch stop</screen>
+
+Stop the simulation (and return to prompt) when a watch point is
+encountered.
+
+<screen>watch continue</screen>
+
+Do not stop the simulation when watch points are encountered. They will
+still be logged.
+
+<screen>watch</screen>
+
+Print current watch point status.
+
+<screen>unwatch</screen>
+
+Remove all watch points.
+
+<screen>watch read <replaceable>address</replaceable></screen>
+
+Insert a read watch point at physical address <replaceable>address</replaceable>.
+
+<screen>watch write address</screen>
+
+Insert a write watch point at physical address <replaceable>address</replaceable>.
+
+<screen>unwatch read <replaceable>address</replaceable></screen>
+
+Remove read watch point from physical address <replaceable>address</replaceable>.
+
+<screen>unwatch write <replaceable>address</replaceable></screen>
+
+Remove write watch point from physical address <replaceable>address</replaceable>.
+
+<screen>modebp [<replaceable>string</replaceable>]</screen>
+
+Toggles vm86 mode switch breakpoint.
+
+<screen>load-symbols [global] <replaceable>filename</replaceable> [<replaceable>offset</replaceable>]</screen>
+
+Load symbols from file <replaceable>filename</replaceable>. If the global keyword is
+added, then the the symbols will be visible in all contexts for which
+symbols have not been loaded. <replaceable>Offset</replaceable> (default is 0) is added to
+every symbol entry. The symbols are loaded in the current (executing)
+context.
+</para>
+
+<para>
+The symbol file consists of zero or more lines of the format <screen>"%x %s"</screen>.
+
+<screen>show [<replaceable>string</replaceable>]</screen>
+
+<screen>
+  Toggles show symbolic info (calls to begin with).
+  show - shows current show mode
+  show "mode" - show, when processor switch mode
+  show "int" - show, when interrupt is happens
+  show "call" - show, when call is happens
+  show "ret" - show, when iret is happens
+  show "off" - toggles off symbolic info
+  show "dbg-all" - turn on all show flags
+  show "none" - turn off all show flags
+</screen>
+</para>
+</section>
+
+<section>
+<title>
+Resource file extensions
+</title>
+<para>
+
+<screen>time0: <replaceable>time</replaceable></screen>
+
+Specifies the start (boot) time of the virtual machine. Use a
+<replaceable>time</replaceable> value as returned by the time(2) system call. <replaceable>Time</replaceable>
+equal to 1 is a special case which starts the virtual machine at the
+current time of the simulator host.
+
+<screen>cdromd: dev=<replaceable>device</replaceable>, status=(inserted|ejected)</screen>
+
+LoseNT needs a CD in order to boot properly. Our simulated CD-ROM unit
+communicates directly with the CD-ROM driver in Linux. <replaceable>Device</replaceable>
+is a device special file to which the CD-ROM driver is connected
+(typically /dev/hdc). <replaceable>Device</replaceable> is ignored if status=ejected.
+</para>
+
+</section>
+
+<section>
+<title>
+Related links
+</title>
+<para>
+&FIXME; add links
+<itemizedlist>
+<listitem> <para> Cosimulation </para> </listitem>
+<listitem> <para> Instrumentation </para> </listitem>
+</itemizedlist>
+</para>
+</section> 
+</section> <!-- Using Bochs internal debugger -->
+
+<section> 
+<title>Bios Tips</title>
+	<section> 
+	<title>CD Boot error codes</title>
+	<para>
+When failing to boot from CDROM, the bios outputs 
+the reason of the failure as
+an error code, in the log file, and on the screen.
+Here are the menaning of the errors:
+
+<table><title>CD Boot error codes</title>
+<tgroup cols=2 align=left colsep=1 rowsep=1>
+<thead>
+ <row>
+ <entry>Error code</entry>
+ <entry>Reason</entry>
+ </row>
+</thead>
+<tbody>
+<row> <entry> 0x01 </entry> <entry> no atapi device found </entry> </row>
+<row> <entry> 0x02 </entry> <entry> no atapi cdrom found </entry> </row>
+<row> <entry> 0x03 </entry> <entry> can not read cd - BRVD </entry> </row>
+<row> <entry> 0x04 </entry> <entry> cd is not eltorito (BRVD) </entry> </row>
+<row> <entry> 0x05 </entry> <entry> cd is not eltorito (ISO TAG) </entry> </row>
+<row> <entry> 0x06 </entry> <entry> cd is not eltorito (ELTORITO TAG) </entry> </row>
+<row> <entry> 0x07 </entry> <entry> can not read cd - boot catalog </entry> </row>
+<row> <entry> 0x08 </entry> <entry> boot catalog : bad header </entry> </row>
+<row> <entry> 0x09 </entry> <entry> boot catalog : bad platform </entry> </row>
+<row> <entry> 0x0A </entry> <entry> boot catalog : bad signature </entry> </row>
+<row> <entry> 0x0B </entry> <entry> boot catalog : bootable flag not set </entry> </row>
+<row> <entry> 0x0C </entry> <entry> can not read cd - boot image </entry> </row>
+</tbody>
+</tgroup>
+</table>
+	</para>
+	</section>
+
+	<section> 
+	<title>Disk translation</title>
+	<para>
+	</para>
+	</section>
+</section>
+
 </chapter>
 
 
 
 
 <chapter><title>Guest operating systems</title>
+        <section> <title>Minix</title>
+                  <para>
+                  </para>
+        </section>
 	<section><title>Linux</title>
            <para>
 	    What disk images are available.
@@ -3612,6 +4346,10 @@ your name server as shown.
              </para>
           </section>
 	  <section><title>FreeDOS</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>The Hurd</title>
              <para>
              </para>
           </section>
@@ -3663,18 +4401,289 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 
 </section>
           </section>
-	  <section><title>Windows *</title>
-             <para>
-             </para>
-          </section>
-	  <section><title>Minix</title>
-             <para>
-             </para>
-          </section>
-	  <section><title>[...]</title>
-             <para>
-             </para>
-          </section>
+
+<section>
+	<title>Windows 95</title>
+	<section>
+		<title>Installing a Japanese version of win95</title>
+       	 	<para>
+       	 	</para>
+	</section>
+	<section>
+		<title>32 bits disk access support and Promise DC23000 VLB</title>
+       	 	<para>
+       	 	</para>
+	</section>
+</section>
+<section>
+	<title>Windows NT 4.0</title>
+        <para>
+        </para>
+</section>
+<section>
+	<title>Windows 98</title>
+        <para>
+        </para>
+</section>
+<section>
+	<title>Windows ME</title>
+        <para>
+	
+		<section><title>Installing Windows ME</title>
+		<para>
+
+This has been contributed by Sancho Roberto :
+
+<screen>
+Date: Sun, 21 Oct 2001 02:24:22 -0700 (PDT)
+From: Sancho Roberto (rsanchov at yahoo dot com)
+To: bochs-developers@lists.sourceforge.net
+Subject: [Bochs-developers] WinMe install tips
+Parts/Attachments:
+
+1) Install Win98 
+
+   My Windows Me is an update version, that is, it upgrades over Win98.
+   So the first think I have to do is to install on a HD image a
+   Win98
+
+   It is not necessary to do the full install. What I've done is
+     - Create a HD image (Win98.img) with 500MB
+     - Format It, install MSDOS6 on it so I can boot from c
+     - Make a W98 directory.
+     - Copy using mtools the instalation directory from the original
+       Win98 CD
+     - Run bochs
+     - run the setup program into the W98 directory
+     - Select WIN98 as Windows directory. All other setup options
+       are left by default.
+     - I don't care about HW detection, etc. Just uncompressing
+       the cab files to the WIN98 directory es enought for WinMe.
+       (Note that Win98 is not functional and cannot boot)
+       
+2) Copy the WinMe install files to the HD
+
+   In Win98.img, with mtools, I create a directory called WinMe.
+   Again, I copy the contents of the Win9x directory from the original
+   WinMe CD. Note that I copy the CD to my HD, and then with mtools
+   from my HD to win98.img. I also delete then W98 directory.
+
+3) Create WinMe.img   
+
+   Now, I created another blank HD called WinMe.img with 500MB.
+   I format it and install MSDOS6 so I an boot using it.
+
+4) Prepare the instalation Bochs
+
+   I edit the bochsrc.txt file so
+   - WinMe.img is diskc
+   - Win98.img is diskd
+
+5) Running setup
+
+   I start bochs: the C: drive is empty (it only contains the
+   MSDOS6 command.com, IO.SYS, etc). The D: drive has: 
+      D:\W98 - The "installed" Windows 98
+      D:\WINME - Windows Me setup files
+
+   I go to the WINME directory and run:
+
+      SETUP xxxx 
+
+   The description of the setup options can be found in the Microsoft Knowledge page as
+   Q186111 - Description of the Windows 95, Windows 98, and Windows Me Setup Switches
+
+   I've done a lot of trials with this setup options until I finally
+   found a correct way to finnish the installation. These are the setup
+   options I used. I've copied a brief description (from the KB) and added
+   my comments.
+
+   /m - bypass the playing of the Setup sound (.wav) files.
+        Not necessary as my Bochs has no sound device activated 
+
+   /nf - Do not prompt to remove the floppy disk from the drive
+         Maybe not necessary. Just in case
+
+   /nh - This switch bypasses running the Hwinfo.exe program at 0 
+         percent files and RunOnce.
+
+         If not present, freezes on HW detection
+
+   /ie - This switch bypasses the Windows 98 Startup Disk wizard screens. 
+         To speed things up - I allways can create a Statup disk latter
+
+   /iv - This switch bypasses displaying the Setup screens during 
+         an upgrade within Windows.
+         To speed things up 
+
+   /c - This switch bypasses running SMARTDrive.
+        Maybe not necessary. Just in case
+
+   /im - Causes setup to ignore the conventional memory check.
+         Maybe not necessary. Just in case
+
+   /is - This switch causes Setup not to run ScanDisk.
+         Very important as SCANDISK freezed bochs
+
+   /iq - If you use the /is switch to bypass ScanDisk or if ScanDisk 
+         does not complete successfully, Setup checks your drive for cross-linked files. 
+         The /iq switch prevents Setup from doing this.
+
+         Very important. If not used, Setup stop the installation 
+         with a message "error found in C:, run scandisk and setup again"
+         (or something like this). Of course, there is no errors in C:
+         because is an empty, just formatted disk, but the WinMe setup
+         thinks so. The only way to progress from this point is
+         with this switch
+
+   /it - This switch bypasses checking for the presence of "dirty" or "deadly" 
+         terminate-and-stay-resident programs (TSRs) that are known to 
+	 cause problems with Windows Setup.
+         Maybe not necessary. Just in case
+
+   /p b;g=3
+
+      b: This switch enables Prompt Before mode. It prompts 
+         you before a detection module is called so that you can 
+         step through each detection module manually and decide 
+         if you want to skip it. 
+
+         Very important. See bellow
+
+      g: This switch controls how verbose the built-in progress bar is
+
+
+   There is another main issue that must be handled
+
+   WinMe requires a 150Mhz computer as a minimum. If you try to run
+   the WinMe setup, you will receive a message telling you so, and the
+   installation will stop.
+
+   The only way I found to solve this problem is to change the IPS
+   value in bochsrc.txt. I raised the IPS value until setup stop
+   complaining. In my machine (P3 @ 450MHz), I achieved this with
+
+      ips: 500000000
+
+   This this IPS value, the keyboard and mouse are updated each
+   100 seconds. This makes very dificult to type the CD-KEY numbers,
+   select type of instalation, etc.
+
+   One way to solve this is to lower the vga_update_interval and
+   the keyboard_serial_delay. I lower the value until 
+      - I have a minimum respons from keyboard and mouse (say 
+        1 second delay between keypress/mousemove and the
+        screen update)
+      - I still pass the 150 Mhz check 
+   
+   The values I used are    
+   
+      vga_update_interval: 10000
+      keyboard_serial_delay: 200
+
+   They may be diferent for other computers.
+   Note that bochs, on starting up complains about vga_update_interval
+   with the message "bochsrc.txt: vga_update_interval not big enough!":
+   ignore it.
+
+6) Follow the Windows Me setup instruction ...
+
+   Just a warning: it is very, very, very, *VERY* (very) slow ...
+   Two days running non stop on my PC.
+   Don't wait ... enjoy yourself during the process ... you that the time.
+
+7) Hardware nightmare
+
+   At a given moment, you are prompted to detect the hardware.
+   There is a prompt for each type of device: Bus, keyboard, mouse, 
+   HD, CDROM, etc. 
+
+   Say NO to everything.
+
+   If you say YES, sometimes setup will detect your HW, but normaly
+   it will crash with GPF on COMMCTRL.DLL (setup crash, but bochs 
+   still alive. Nice!).
+
+   If you sat CANCEL, setup will stay in this screen forever (ok, ok,
+   I have just wait 10 hours).
+
+8) Configuring 
+
+   Setup will configure you PC. You can set your timezone, etc.
+
+   Then Setup will create the Statup menu icons. Here, time to time,
+   you will get a GPF in PIFMGR.DLL. Just press Ok and continue.
+
+   Again this procedure is very very very very very very slow.
+   Worse of all, you cannot leave it running by night. You must
+   press Ok a lot of times to clean the GPF.
+
+9) Restart.
+
+   At last, setup will restart the PC. Exit Bochs. I recomend to make
+   a copy of WinMe.img just to save all your time.
+
+10) Run bochs again
+
+   Setup will do some stuff ... just wait
+
+   After a while, the Start button appearch on the lower left corner
+   of the screen!
+
+   Just for safe, I executed within WinMe msconfig.exe, and in the
+   advanced tab set the Disk Compatibility mode". Also, I've turned 
+   of the menu and windows animations, to speed thinks up a bit. Also
+   it may be a good idea to turn off scandisk on setup.
+
+   Do not forget to exit from Windows with the Shutdown menu ...
+
+11) That's all
+
+   Now you can comment out the diskd line in the bochsrc.txt. WinMe.img
+   contains a working WinMe.
+
+   NOTE: if you lower the IPS, WinMe will be unstable ... surelly 
+         a timing issue. But even if IPS is high, lowering 
+         vga_update_interval and keyboard_serial_delay will help
+         on getting an acceptable usability.
+
+         DO not forget to use your Pentium 10 at 500 GHz to get a
+         good speed within Windows.
+
+Some bugs i've found
+
+- MSDOS Scandisk freeze
+- Hw detection is very problematic
+- If bochs is visible when it switchs from text mode to grafic mode,
+  the size of the window is correct. But if Bochs is minimized when
+  doing so, the size of the Bochs window is incorrect. It does not
+  take into account the height of the top banner (the one with the 
+  disk icons, mouse, snapshot, etc), so the botton of the screen 
+  is clipped.
+- Dont expect to run WinMe at full speed unless you use your Pentium10 at 1500 GHz
+- (not a bug, but a comment) The splash screen when booting/shutdown 
+  WinMe is double height. I personally prefer to see the full image
+  as it was time ago.
+</screen>
+
+		</para>
+		</section> <!-- end of Installing Windows ME -->
+</section>
+<section>
+	<title>Windows 2000</title>
+        <para>
+        </para>
+</section>
+<section>
+	<title>Windows XP</title>
+        <para>
+        </para>
+</section>
+<section>
+	<title>[...]</title>
+        <para>
+        </para>
+</section>
 </chapter>
 
 
