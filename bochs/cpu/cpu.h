@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.151 2003-12-28 18:58:15 sshwarts Exp $
+// $Id: cpu.h,v 1.152 2003-12-29 07:28:28 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1856,6 +1856,7 @@ union {
   BX_SMF void FWAIT(bxInstruction_c *);
 
 #ifdef BX_SUPPORT_FPU
+#undef FSCALE
   BX_SMF void FLD_STi(bxInstruction_c *);  
   BX_SMF void FLD_SINGLE_REAL(bxInstruction_c *);
   BX_SMF void FLD_DOUBLE_REAL(bxInstruction_c *);

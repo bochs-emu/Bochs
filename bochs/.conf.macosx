@@ -8,8 +8,8 @@
 # those paths to the environment variables.
 
 set echo
-CFLAGS="-pipe -O2 -I/sw/include $CFLAGS"
-CPPFLAGS="$CFLAGS"
+CFLAGS="-pipe -O3 -I/sw/include -finline-functions -falign-loops=16 -falign-jumps=16 -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -fprefetch-loop-arrays -fmove-all-movables $CFLAGS"
+CPPFLAGS=""
 CXXFLAGS="$CFLAGS"
 LDFLAGS="-L/sw/lib"
 
@@ -19,6 +19,10 @@ export CXXFLAGS
 export LDFLAGS
 
 ./configure --enable-cdrom \
+	    --enable-ne2000 \
 	    --enable-vbe \
 	    --enable-all-optimizations \
-	    ${CONFIGURE_ARGS}
+	    ${CONFIGURE_ARGS} \
+	    --enable-plugins \
+	    --enable-pci \
+	    --enable-mmx
