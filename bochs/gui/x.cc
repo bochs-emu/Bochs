@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.82 2004-04-08 18:54:21 vruppert Exp $
+// $Id: x.cc,v 1.83 2004-04-11 10:58:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,6 +88,7 @@ static char *progname; /* name this program was invoked by */
 
 static unsigned int text_rows=25, text_cols=80;
 static Bit8u h_panning = 0, v_panning = 0;
+static Bit16u line_compare = 1023;
 
 static Window win;
 static GC gc, gc_inv, gc_headerbar, gc_headerbar_inv;
@@ -400,13 +401,13 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   font_height = 16;
 
   dimension_x = text_cols * font_width;
-  dimension_y = text_rows * font_height + headerbar_y;
+  dimension_y = text_rows * font_height;
 
   /* create opaque window */
   win = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
     x, y,
     dimension_x,
-    dimension_y + bx_statusbar_y,
+    dimension_y + bx_headerbar_y + bx_statusbar_y,
     border_width,
     BlackPixel(bx_x_display, bx_x_screen_num),
     BlackPixel(bx_x_display, bx_x_screen_num));
@@ -498,7 +499,8 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 
   size_hints.flags = PPosition | PSize | PMinSize | PMaxSize;
   size_hints.max_width = size_hints.min_width = dimension_x;
-  size_hints.max_height = size_hints.min_height = dimension_y + bx_statusbar_y;
+  size_hints.max_height = size_hints.min_height = dimension_y + bx_headerbar_y +
+                          bx_statusbar_y;
 
   {
   XWMHints wm_hints;
@@ -641,28 +643,30 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   void
 set_status_text(int element, const char *text, bx_bool active)
 {
-  int xleft, xsize;
+  int xleft, xsize, sb_ypos;
 
   xleft = bx_statusitem_pos[element] + 2;
   xsize = bx_statusitem_pos[element+1] - xleft;
+  sb_ypos = dimension_y + bx_headerbar_y;
   if (element < 1) {
     if (strcmp(bx_status_info_text, text)) {
       strcpy(bx_status_info_text, text);
     }
-    XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, dimension_y+2, xsize, bx_statusbar_y-2);
-    XDrawString(bx_x_display, win, gc_headerbar, xleft, dimension_y+bx_statusbar_y-2,
+    XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, sb_ypos+2, xsize,
+                   bx_statusbar_y-2);
+    XDrawString(bx_x_display, win, gc_headerbar, xleft, sb_ypos+bx_statusbar_y-2,
                 text, strlen(text));
   } else if (element <= BX_MAX_STATUSITEMS) {
     bx_statusitem_active[element] = active;
     if (active) {
       XSetForeground(bx_x_display, gc_headerbar, bx_status_led_green);
-      XFillRectangle(bx_x_display, win, gc_headerbar, xleft, dimension_y+2, xsize-1, bx_statusbar_y-2);
+      XFillRectangle(bx_x_display, win, gc_headerbar, xleft, sb_ypos+2, xsize-1, bx_statusbar_y-2);
       XSetForeground(bx_x_display, gc_headerbar, black_pixel);
     } else {
-      XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, dimension_y+2, xsize-1, bx_statusbar_y-2);
+      XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, sb_ypos+2, xsize-1, bx_statusbar_y-2);
       XSetForeground(bx_x_display, gc_headerbar, bx_status_graytext);
     }
-    XDrawString(bx_x_display, win, gc_headerbar, xleft, dimension_y+bx_statusbar_y-2,
+    XDrawString(bx_x_display, win, gc_headerbar, xleft, sb_ypos+bx_statusbar_y-2,
                 text, strlen(text));
     XSetForeground(bx_x_display, gc_headerbar, black_pixel);
   }
@@ -1132,7 +1136,7 @@ xkeypress(KeySym keysym, int press_release)
   void
 bx_x_gui_c::clear_screen(void)
 {
-  XClearArea(bx_x_display, win, 0, bx_headerbar_y, dimension_x, dimension_y-bx_headerbar_y, 0);
+  XClearArea(bx_x_display, win, 0, bx_headerbar_y, dimension_x, dimension_y, 0);
 }
 
 
@@ -1143,12 +1147,13 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       bx_vga_tminfo_t tm_info, unsigned nrows)
 {
-  unsigned char *old_line, *new_line;
-  unsigned char cChar;
-  unsigned int curs, hchars, i, j, offset, rows, x, y, xc, yc, yc2;
+  Bit8u *old_line, *new_line, *text_base;
+  Bit8u cChar;
+  unsigned int curs, hchars, i, j, offset, rows, x, y, xc, yc, yc2, cs_y;
   unsigned new_foreground, new_background;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
-  bx_bool force_update=0;
+  Bit8u split_textrow, split_fontrows;
+  bx_bool forceUpdate = 0, split_screen;
   unsigned char cell[64];
 
   UNUSED(nrows);
@@ -1182,14 +1187,18 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         char_changed[c] = 0;
       }
     }
-    force_update = 1;
+    forceUpdate = 1;
     charmap_updated = 0;
   }
 
   if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
-    force_update = 1;
+    forceUpdate = 1;
     h_panning = tm_info.h_panning;
     v_panning = tm_info.v_panning;
+  }
+  if(tm_info.line_compare != line_compare) {
+    forceUpdate = 1;
+    line_compare = tm_info.line_compare;
   }
 
   // first invalidate character at previous and new cursor location
@@ -1208,10 +1217,24 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
+  cs_y = 0;
+  text_base = new_text - tm_info.start_address;
+  split_textrow = (line_compare + v_panning) / font_height;
+  split_fontrows = ((line_compare + v_panning) % font_height) + 1;
+  split_screen = 0;
   do {
     hchars = text_cols;
     if (h_panning) hchars++;
-    if (v_panning) {
+    if (split_screen) {
+      yc = bx_headerbar_y + line_compare + cs_y * font_height + 1;
+      font_row = 0;
+      if (rows == 1) {
+        cfheight = (dimension_y - line_compare - 1) % font_height;
+        if (cfheight == 0) cfheight = font_height;
+      } else {
+        cfheight = font_height;
+      }
+    } else if (v_panning) {
       if (y == 0) {
         yc = bx_headerbar_y;
         font_row = v_panning;
@@ -1230,10 +1253,13 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       font_row = 0;
       cfheight = font_height;
     }
+    if (!split_screen && (y == split_textrow)) {
+      if (split_fontrows < cfheight) cfheight = split_fontrows;
+    }
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = y * tm_info.line_offset;
+    offset = cs_y * tm_info.line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1254,7 +1280,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         font_col = 0;
         cfwidth = font_width;
       }
-      if ( force_update || (old_text[0] != new_text[0])
+      if ( forceUpdate || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1]) ) {
 
         cChar = new_text[0];
@@ -1273,6 +1299,9 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
             yc2 = yc + tm_info.cs_start;
             font_row2 = tm_info.cs_start;
             cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+            if ((yc2 + cfheight2) > (dimension_y + bx_headerbar_y)) {
+              cfheight2 = dimension_y + bx_headerbar_y - yc2;
+            }
           } else {
             if (v_panning > tm_info.cs_start) {
               yc2 = yc;
@@ -1284,8 +1313,10 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
               cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
             }
           }
-          XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row2, cfwidth,
-                     cfheight2, xc, yc2, 1);
+          if (yc2 < (dimension_y + bx_headerbar_y)) {
+            XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row2, cfwidth,
+                       cfheight2, xc, yc2, 1);
+          }
         }
       }
       x++;
@@ -1293,11 +1324,22 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       old_text+=2;
       offset+=2;
     } while (--hchars);
-    y++;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
+    if (!split_screen && (y == split_textrow)) {
+      new_text = text_base;
+      forceUpdate = 1;
+      cs_y = 0;
+      if (tm_info.split_hpanning) h_panning = 0;
+      rows = ((dimension_y - line_compare + font_height - 2) / font_height) + 1;
+      split_screen = 1;
+    } else {
+      y++;
+      cs_y++;
+      new_text = new_line + tm_info.line_offset;
+      old_text = old_line + tm_info.line_offset;
+    }
   } while (--rows);
 
+  h_panning = tm_info.h_panning;
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
 
@@ -1338,8 +1380,8 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   unsigned color, offset;
   Bit8u b0, b1, b2, b3;
 
-  if ((y0 + y_tilesize) > (dimension_y - bx_headerbar_y)) {
-    y_size = dimension_y - bx_headerbar_y - y0;
+  if ((y0 + y_tilesize) > dimension_y) {
+    y_size = dimension_y - y0;
   } else {
     y_size = y_tilesize;
   }
@@ -1615,7 +1657,7 @@ bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned 
     text_cols = x / font_width;
     text_rows = y / font_height;
   }
-  if ( (x != dimension_x) || (y != (dimension_y-bx_headerbar_y)) ) {
+  if ( (x != dimension_x) || (y != dimension_y) ) {
     XSizeHints hints;
     long supplied_return;
 
@@ -1627,7 +1669,7 @@ bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned 
       }
     XResizeWindow(bx_x_display, win, x, y+bx_headerbar_y+bx_statusbar_y);
     dimension_x = x;
-    dimension_y = y + bx_headerbar_y;
+    dimension_y = y;
     }
 }
 
@@ -1636,11 +1678,12 @@ bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned 
 bx_x_gui_c::show_headerbar(void)
 {
   unsigned xorigin;
-  int xleft, xright;
+  int xleft, xright, sb_ypos;
 
+  sb_ypos = dimension_y + bx_headerbar_y;
   // clear header bar and status bar area to white
   XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,0, dimension_x, bx_headerbar_y);
-  XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,dimension_y, dimension_x, bx_statusbar_y);
+  XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,sb_ypos, dimension_x, bx_statusbar_y);
 
   xleft = 0;
   xright = dimension_x;
@@ -1661,8 +1704,8 @@ bx_x_gui_c::show_headerbar(void)
   for (unsigned i=0; i<12; i++) {
     xleft = bx_statusitem_pos[i];
     if (i > 0) {
-      XDrawLine(bx_x_display, win, gc_inv, xleft, dimension_y+1, xleft,
-                dimension_y+bx_statusbar_y);
+      XDrawLine(bx_x_display, win, gc_inv, xleft, sb_ypos+1, xleft,
+                sb_ypos+bx_statusbar_y);
       if (i <= statusitem_count) {
         set_status_text(i, statusitem_text[i-1], bx_statusitem_active[i]);
       }
