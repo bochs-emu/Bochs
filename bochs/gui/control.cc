@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.11 2001-06-11 14:03:35 bdenney Exp $
+ * $Id: control.cc,v 1.12 2001-06-11 14:07:54 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -838,7 +838,7 @@ int control_panel_notify_callback (int code)
       fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
       fprintf (stderr, "Device: %s\n", prefix);
       fprintf (stderr, "Message: %s\n\n", msg);
-      fprintf (stderr, "A panic has occurred.  Do you want to:\n");
+      fprintf (stderr, "A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
       fprintf (stderr, "  cont       - continue execution\n");
       fprintf (stderr, "  alwayscont - continue execution, and don't ask again.\n");
       fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), prefix);
