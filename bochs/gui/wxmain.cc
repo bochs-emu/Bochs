@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.59 2002-09-25 22:54:23 bdenney Exp $
+// $Id: wxmain.cc,v 1.60 2002-09-26 03:01:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -204,7 +204,7 @@ MyApp::DefaultCallback2 (BxEvent *event)
     default:
       wxLogDebug ("unknown event type %d", event->type);
   }
-  if (BX_EVT_IS_ASYNC(event-type)) {
+  if (BX_EVT_IS_ASYNC(event->type)) {
     delete event;
     event = NULL;
   }
