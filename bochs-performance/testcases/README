@@ -196,3 +196,17 @@ blur:
 .Lfe1:
 	.size	 blur,.Lfe1-blur
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+----------------------------------
+
+
+blur-opcode.c
+
+In a past email, I described a way to use gcc and gas to produce
+native code, so that Bochs would not need its own code generator for
+every supported platform.  I will attempt a proof of concept here.
+
+I will try to create a system in which snippets of C++ code can be compiled
+by gcc, then extracted to form a chunk of native binary code.  The chunks
+will be designed so that they can be pasted together efficiently.
+
+I haven't tried anything like this before....
