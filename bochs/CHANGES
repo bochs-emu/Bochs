@@ -1,5 +1,21 @@
+-------------------------------------------------------------------------
 Changes in 1.3.pre1 (November 17, 2001):
-- Add new log action "ask", as in these example bochsrc lines:
+- networking works on Windows and Linux platforms
+- emulated cdrom can now read from ISO image files, on any platform.
+- new PIT model by Greg Alexander which is much more complete than the
+  old one.  The new PIT is used by default, but you can switch back to 
+  the old one if you configure with --disable-new-pit.
+  (PIT = 8254 programmable interrupt timer)
+- new configuration menus by Bryce Denney, which allow you to change any
+  bochsrc option using text menus, then save the configuration into
+  a new bochsrc file for later use.  You can disable the new code using
+  configure --disable-control-panel.  Also you can use the command
+  line arguments -nocp or -nocontrolpanel.  Also, there is a new
+  "Config" button on the GUI that allows limited changes to the 
+  configuration at runtime, such as changing the floppy disk.
+- add docbook documentation directory in the sources under doc/docbook.
+  The transition from HTML to docbook documentation is still in progress.
+- Add new log action "ask", as shown in these example bochsrc lines:
     panic: action=ask
     error: action=ask
   When an event occurs which is set to "ask", you get a beep and message
@@ -11,24 +27,19 @@ Changes in 1.3.pre1 (November 17, 2001):
   syntax of new parport1 line in bochsrc.
 - PCI support improved by Volker Ruppert, including BIOS changes.  Still
   not complete.
-- the ROM BIOS now detects nonbootable disks, and prints a message on the
-  console.  Thanks to Cliff Hones for a patch that included the console
-  display code, and Barry Allard who helped with checking the boot
+- floppy controller returns a proper error response if you try to write
+  a read-only disk image.  For systems such as DOS that actually use the BIOS
+  services, it was also necessary to add code in int13_diskette_function to
+  recognize a write-protected error and return the correct error status code
+  (AH=3, Carry Set).
+- the ROM BIOS now prints panic messages to the console.  Thanks to Cliff
+  Hones for his console display code.
+- the ROM BIOS detects nonbootable disks (Barry Allard), and prints a message
+  on the console.  Barry Allard's patch who helped with checking the boot
   signature.
 - LBA support added for hard disks.  (Not tested very much.)
 - add dependencies to makefiles
 - logging code moved into a separate file, logio.cc
-- new configuration menus by Bryce Denney, which allow you to change any
-  bochsrc option using text menus, then save the configuration into
-  a new bochsrc file for later use.  You can disable the new code using
-  configure --disable-control-panel.  Also you can use the command
-  line arguments -nocp or -nocontrolpanel.  Also, there is a new
-  "Config" button on the GUI that allows limited changes to the 
-  configuration at runtime, such as changing the floppy disk.
-- new PIT model by Greg Alexander which is much more complete than the
-  old one.  The new PIT is used by default, but you can switch back to 
-  the old one if you configure with --disable-new-pit.
-  (PIT = 8254 programmable interrupt timer)
 - new option --enable-slowdown-timer, by Greg Alexander, which kicks in if
   Bochs simulation time starts to run faster than real time.  This helps to
   keep the Bochs clock in sync with the real clock when the CPU is mostly
@@ -62,7 +73,7 @@ Changes in 1.3.pre1 (November 17, 2001):
   This only happens if you are NOT in vm8086 mode or protected mode.
   The intent is to warn people when they are getting bad emulation, and
   encourage people to report how they got to that point.
-- applied patch from Santiago Bazerque.  See this bug report:
+- apply patch from Santiago Bazerque.  See this bug report:
   [ #463018 ] retf not removing parameters sometimes
 - fix bug [ #461730 ] IRETD causes problems if NT-flag is set
   reported by Peter Lammich.
@@ -73,23 +84,15 @@ Changes in 1.3.pre1 (November 17, 2001):
   report: [ #480422 ] gdt 'accessed' bit
 - in task_switch when it tried to ensure that the old TSS was paged in,
   it actually used the new TSS address, fixed.
-- add docbook documentation directory in the sources under doc/docbook.
-  The transition from HTML to docbook documentation is still in progress.
 - updated the instrumentation code, and added a working example.  To try
   it, configure --enable-instrumentation=instrument/example1.  Then when
   you run bochs, you will get one line for each instruction PC and for
   each I/O access in a new file called bxevent.txt.
-- emulated cdrom can now read from image files, on any platform.
 - set a bit in the CMOS that says the processor has an FPU.  This is
   from patch [ #455006 ] Device byte is not initialized aptly.
   Author did not leave their name.
 - add logging code to the "null ethernet" which does not require host OS
   support.  All this does is print the outgoing packets from the guest OS.
-- floppy controller returns a proper error response if you try to write
-  a read-only disk image.  For systems such as DOS that actually use the BIOS
-  services, it was also necessary to add code in int13_diskette_function to
-  recognize a write-protected error and return the correct error status code
-  (AH=3, Carry Set).
 - cleanup of log functions (Todd Fries)
 - add BX_ERROR for every command in ATAPI-6 that bochs does not support.
   I still need to do add some commands from older specs that are obsolete
@@ -128,30 +131,7 @@ Changes in 1.3.pre1 (November 17, 2001):
 - some cleanup of serial code by Todd Fries and Volker Ruppert, but it
   doesn't work yet.
 
-
-RFB mode changes:
-- apply patch.rfb-mouse by MURANAKA Masaki (monaka@users.sf.net)
-  see this source forge bug [ #457968 ] Strange mouse motion on RFB
-- add a retry loop in RFB code, so that if port 5900 is not available
-  it can try 5901, etc.
-
-
-
-Debugger:
-- do a vga update whenever you print a debugger prompt.
-- added debugger command "info fpu" that prints the FPU registers.  If you
-  do "info all" you get cpu and fpu registers.
-- added debugger command "info ne2k" which prints all the registers
-  of the NE2000 model
-- add ability to do register tracing and flag tracing (Dave Poirier).
-  Try the trace-reg-on and trace-reg-off commands.
-- instruction trace now includes time ticks
-- fixed problems in which bochs compiled with debugger measured time 
-  differently from bochs compiled without debugger.  Also when instruction
-  trace was enabled, breakpoints and control-C did not work.  Also,
-  breakpoints at the beginning of an interrupt handler did not work.
-
-X Windows platform:
+X Windows specific:
 - commit patch from David Haslam <dch@sirius.clara.co.uk>
   [ #455763 ] Cursor trail with DOS Edit/Minix vi
 - error for missing fonts now points to the documentation
@@ -159,7 +139,7 @@ X Windows platform:
   friendly toward other processes when its CPU is idle.  Presently, 
   this option is specific to X windows.
 
-Win32 platform notes:
+Win32 specific:
 - now Windows 95/98/ME can read the physical cdrom (Don Becker)
 - The default configuration for Win32 VC++, given in .conf.win32-vcpp,
   now enables the NE2000 and renames all .cc files to .cpp.  This keeps VC++
@@ -183,7 +163,7 @@ Win32 platform notes:
 - event handler recognizes the extended keycode flag
 - fixes for raw floppy and floppy disk images (Don Becker)
 
-Linux platform notes:
+Linux specific:
 - Ethernet (emulated NE2000 card) now works in Linux!  Contributed by
   splite@purdue.edu.  This has been tested using host OS kernel 2.2.14, and
   works with telnet, ftp, irc, lynx, etc.  Because it is a packet filter
@@ -203,33 +183,46 @@ Linux platform notes:
   > an "unrecognized ATAPI command" panic.  Looks like READ_DISC_INFO is only
   > recognized by CD-R and CD-RW drives, so I ignore it for now.
 
-
-
-Amiga MorphOS platform notes:
+Amiga MorphOS specific:
 - Bochs now compiles and works on Amiga MorphOS.  Configure with
   --with-amigaos.  For AmigaOS only, see .bochsrc for use of fullscreeen and
   screenmode options.  The Amiga MorphsOS is written and maintained by
   Nicholai Benalal <nicholai@chello.se>.
 - raw cdrom supported if you configure with --enable-cdrom
 
-BeOS platform notes:
+BeOS specific:
 - Bochs compiles and works on BeOS.  Configure with --with-beos.
   Bernd Thorsten Korz <bernd.korz@insidebeos.de> maintains the BeOS port.
 - raw cdrom supported if you configure with --enable-cdrom
 
-MacOS X platform notes:
+MacOS X specific:
 - Bochs now compiles and works on MacOS X.  Configure with --with-carbon.
   Emmanuel Mailliard <e.rsz@libertysurf.fr> ported the Macintosh code to the
   Carbon API.
 - The MacOS X application is built using (gasp) mkdir, copy, and rez.
   Surely this is not the right way, but it works.
 
+RFB mode:
+- apply patch.rfb-mouse by MURANAKA Masaki (monaka@users.sf.net)
+  see this source forge bug [ #457968 ] Strange mouse motion on RFB
+- add a retry loop in RFB code, so that if port 5900 is not available
+  it can try 5901, etc.
 
+Bochs Debugger:
+- do a vga update whenever you print a debugger prompt.
+- added debugger command "info fpu" that prints the FPU registers.  If you
+  do "info all" you get cpu and fpu registers.
+- added debugger command "info ne2k" which prints all the registers
+  of the NE2000 model
+- add ability to do register tracing and flag tracing (Dave Poirier).
+  Try the trace-reg-on and trace-reg-off commands.
+- instruction trace now includes time ticks
+- fixed problems in which bochs compiled with debugger measured time 
+  differently from bochs compiled without debugger.  Also when instruction
+  trace was enabled, breakpoints and control-C did not work.  Also,
+  breakpoints at the beginning of an interrupt handler did not work.
 
-
-
-
-
+-------------------------------------------------------------------------
 Changes in 1.2.1 (June 12, 2001):
 - more work on makefile for building RPMs
 - [ #432382 ] build debian packages patch
