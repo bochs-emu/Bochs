@@ -1,5 +1,9 @@
 BRANCH_PLUGINS
 
+The branch is called BRANCH_PLUGINS.  There is a normal tag called
+BRANCH_PLUGINS_BASE that marks the point where the branch began.  The
+base marker will help at merge time.
+
 This branch is a place to experiment with Bochs plugins.  Bryce created
 the branch on October 4, 2002 and checked in patch.plugins3 with
 minor changes to get it to compile.  Plugins3 was a patch from 
@@ -29,62 +33,26 @@ plex86.  Here are the comments from that patch:
 > plex_* just to reduce confusion and mayhem when I was compiling with both
 > kbd implementations.  I didn't change anything except to get it to compile.
 
-plugins5 is based on plugins3, with the following changes :
+Christophe had made a plugins5 patch, so he checked it in, with these
+comments:
  - plex86 keyboard device was marged with Bochs keyboard, as a plugin
  - plugin.cc was cleaned up
  - a device registration mechanism was set up
  - the biosdev and unmapped devices were plugin-ized
 
-The branch is called BRANCH_PLUGINS.  There is a normal tag called
-BRANCH_PLUGINS_BASE that marks the point where the branch began.  This
-will help at merge time.
-
 TO DO:
-- Christophe suggests that we rename vga_library to display_library in bochsrc,
-  variables, comments, etc.
-- wxWindows gui as a plugin will not start up.  Normally wxWindows
-  takes over your main() function and inserts its own app init code.
-  We'll have to figure out what that app init code does and put it
-  in plugin_init.
-
-  - wxWindows and text config menu are working in the nonplugin case.
-  - now I need to compile libwx.la and libcontrol.la, add a bochsrc
-    option (config_interface: [text|wx]), and I think it will work.
-  - what needs to be tested?
-    - noplug: no plugins, just X11 selected
-      - it starts up ok, quickstart works
-    - noplug-wx: no plugins, wxWindows selected
-      - I had to add BX_DEFAULT_CONFIG_INTERFACE and BX_DEFAULT_VGA_LIBRARY
-        because now I'm trying to support many BX_WITH_* variables being
-	on.
-      - it starts up ok, quickstart works
-    - plug: plugins, X11 is default
-      - it starts up ok, quickstart works
-      - config interface selection: ok for control, wx
-      - gui selection: ok for x, sdl, rfb
-      - this works: bochs 'config_interface: control' 'vga_library: sdl'
-      - this works: bochs 'config_interface: control' 'vga_library: x'
-      - this works: bochs 'config_interface: wx' 'vga_library: wx'
-      - this works: bochs 'config_interface: wx' 'vga_library: sdl'
-        But you get a wxWindows warning and it changes the vga_library to wx.
-      - this fails: bochs 'config_interface: control' 'vga_library: wx'
-        I made this panic because I had trouble getting wxWindows started 
-	up and shut down properly in this configuration.
-    - plug-wx: plugins, wxWindows is default
-      - it starts up ok, quickstart works
-      - exactly the same behavior as "plug" above.  These are not that
-        different anymore, since there are multiple BX_WITH_* variables set.
-
-How can I let the user set the preferred gui, if many guis are possible now?
-#define BX_DEFAULT_CONFIG_INTERFACE "wx"
-#define BX_DEFAULT_VGA_LIBRARY "wx"
-this could be set by the first --with-NAME on the configure line
-
-
-
 - convert remaining devices
 - make dist-clean doesn't delete the .libs directories and the *.lo files
 - --enable-all-optimizations fails at harddrv.cc
+
+- some plugins, such as the GUI, PIT, SB, and NE2000, have several different
+  possible implementations.  In this case, all implementations should be
+  children of a single stub class.  The stub's methods produce errors or
+  panics if they are called, depending on the importance of the device.
+  There is always one instance of the stub class lying around, which will be
+  used if none of the implementation plugins is loaded.  Either an optional
+  plugin or a user plugin can fill in these slots.
+
 - platform specific issues
   - make sure LTDL works on VC++
   - to support plugins on win32, we must add special tags on any function or
@@ -115,118 +83,41 @@ this could be set by the first --with-NAME on the configure line
     I don't see any value in this for plugins.  If the platform cannot
     support dlopen or some equivalent, let the configure script crash and
     tell the user to configure without plugins instead.
-  - Now we can compile multiple guis and devices, when before we had
-    to choose just one.  So now we need a few configure lines to decide
-    whether to compile each optional or platform specific plugin.
-    Basically, we should be able compile everything that CAN compile on a
-    platform.  A decent amount of configure script work will be required
-    to build a list of which plugins we think CAN be compiled.
-
-- we need to clarify the connection between plugins and devices.  
-  - a plugin is a shared object that you load that has a plugin_init() and
-    plugin_fini() function inside.  The plugin_init() can create any number of
-    "devices" and register them.  Devices are added to a global list so that we
-    can do operations on every registered device.
-  - There is (now) a pointer from each device to the plugin that created it.
-  - Devices created by core plugins are called core devices.  These will not be
-    added to the device list because they are managed by existing code in
-    devices.cc and elsewhere.  Instead of referring to them by their device_t
-    structure, we will use a global pointer to them, similar to the
-    bx_devices.pluginKeyboard pointer.  (Alternative: maybe we should add
-    them to device list anyway, but exclude them in init_all and reset_all 
-    functions.)
-  - what code do I want to be able to write?
-      ensure_plugin_loaded (PLUGIN_KEYBOARD);
-      pluginKeyboard->init ();
-
-
-
-- how do we know what plugins should be available when we start Bochs?
-  - we can have core plugins, optional plugins, and user plugins.
-    - (V2.0) core plugin: These are so fundamental that Bochs won't even
-      initialize  without them, for example the CMOS.  The user can substitute
-      his own equivalent plugin to replace the CMOS, but he cannot say "Don't
-      load the CMOS at all."  Core plugins are initialized and reset explictly
-      by code in iodev/devices.cc, since the initialization order for some of
-      them is critical.  They are currently NOT added to the device list in
-      pluginRegisterDevice and pluginRegisterDeviceDevmodel, so that the plugin
-      system does not call init() and reset().  If a core plugin cannot
-      be found, Bochs will panic.
-      In the bochsrc we can provide a way for the user to REPLACE a core plugin
-      with a different plugin that implements the same C++ interface, but there
-      is no way to ask bochs to NOT load a core plugin.  I'm not sure how to
-      configure the replacement plugin--this may have to be added later.
-      Bochsrc line: 
-        replace_core_plugin: old=pic, new=mypic
-    - (V2.0) optional plugin: These can be loaded or not without affecting
-      Bochs's ability to start up and simulate.  Initialization and reset for
-      all optional plugins are handled by bx_init_plugins() and
-      bx_reset_plugins(), which are now called from bx_devices_c::init() and
-      bx_devices_c::reset().  Bochs knows how to configure optional plugins at
-      compile time, and they   are loaded only if the configuration settings
-      enables the device.  Examples: serial, parallel, ne2k.  See the call to
-      is_serial_enabled() in iodev/devices.cc.  There are some plugins that you
-      wouldn't ever want to leave out, like vga.  Maybe the term "optional" is
-      not clear and I need to think of a better name.  Bochs will panic if an
-      optional plugin cannot be found.  If the plugin was compiled, then
-      it should be available at runtime too!
-    - (Later?) user plugin: These are plugins that Bochs does not know anything
-      about at compile time.  The user asks Bochs to load a plugin using just
-      its filename.  It loads the plugin and (somehow) gets information about
-      what settings the user can configure.  The settings are adjusted by
-      either bochsrc lines or the user interface, and then the device can be
-      used.  I'm missing some details here because I haven't thought through it
-      all the way.  User plugins may not be supported until after v2.0.
-  - some devices, such as the GUI, PIT, SB, and NE2000, have several different
-    possible implementations.  In this case, all implementations should be
-    children of a single stub class.  The stub's methods produce errors or
-    panics if they are called, depending on the importance of the device.
-    There is always one instance of the stub class lying around, which will be
-    used if none of the implementation plugins is loaded.  Either an optional
-    plugin or a user plugin can fill in these slots.
-  - make a list of plugins sorted into categories (FIRST TRY)
-    - core plugins: unmapped, biosdev, cmos, dma, pic, vga
-    - optional: floppy, harddrv, keyboard, serial, parallel
-    - user: none yet
 
 - how do we locate plugins on the disk?
   - fortunately, the LTDL library takes care of searching a list of paths.
   - We can tell people how to set the LTDL_LIBRARY_PATH variable.  
-  - we can implement a bochsrc command like
+  - if necessary we can implement a bochsrc command like
       plugin_search_directory: /path/to/libs
     which would call lt_dlsetsearchpath() to add the path to LTDL's list of
     directories it will search.
+  - make install needs to copy the plugins into the new location!
 
-- (assigned to Bryce) how does the user select which gui to use?  Add a bochsrc
-  parameter "gui_select: sdl".  This variable can also be edited in
-  configuration menus.  If there is no user-specified value when it's time to
-  initialize the gui, it will choose the first gui in the list of available
-  ones.  We just need to put the list in a reasonable order, for example don't 
-  put nogui first.
+- (LATER) eventually we need to clarify the connection between plugins and
+  devices.  At the moment, each plugin creates exactly one device, but it does
+  not have to work that way.
+  - it would be more correct to mark the devices as core, optional, etc. than
+    to use a type field in the plugin struct.  The reason that the type
+    (core,optional,user) is currently passed into the BX_LOAD_PLUGIN macro and
+    placed in the plugin struct instead of letting the device code decide is:
+    devices.cc is responsible for initting and resetting devices, so I wanted
+    devices.cc to decide whether the device would be managed by the plugin
+    infrastructure (init_all, reset_all) or not.  This is not that important
+    yet, but when Volker wants to write a plugin with multiple devices, we will
+    need to sort it out.
 
-- parameters of plugins... It would be nice to move the creation of the
-  parameters into the code for the device that they affect.  However this
-  would mean that you could not configure any plugin (except for whether to
-  enable it or not) until you have loaded it.  I don't really want to display a
-  dialog that says "Enable this device? [ ]" and load the plugin and fill in
-  the rest of the dialog only if they check the box.
-  - one solution, which I'm not sure that I like: separate the plugin into
-    two shared objects. libDEVNAME_param that sets up the configuration
-    parameters only, and libDEVNAME implements the whole thing.  The idea would
-    be that you would load EVERY lib*_param on startup so that you can allow
-    the user to configure the plugin.  Then only the ones that are enabled
-    would load the remainder of their code.
-  - alternative: distinguish between plugins known at compile time, and plugins
-    which the user adds manually through the config interface or bochsrc.
-    For standard plugins that are compiled in, we can put all the parameter
-    code into the executable as it is now.  For plugins that are added
-    by the user, there is no doubt about whether to load them or not.  They
-    wouldn't have asked for it, if they didn't want to load it!  In that
-    case, the config parameters can be initialized as soon as the module 
-    is loaded.  Once it is loaded, the config interface can display the
-    parameters so that the device can be configured.
+- (LATER) make a way for users to replace a core plugin with one of their
+  choice.
 
-- make plugin CPU???
+- (LATER) implement user plugins.  These are plugins that Bochs does not know
+  anything about at compile time.  The user asks Bochs to load a plugin using
+  just its filename.  It loads the plugin and registers any bx_params that
+  the user can configure, and either the text config interface or the
+  wxWindows interface can display this param list as a menu or dialog.
+  Then at simulation start time, we call init() on the user device and
+  it can be used like any other device.
+
+- (LATER) make plugin CPU???
 
 DONE:
 - applied patch.plugins5
@@ -242,15 +133,99 @@ DONE:
   caused bug #623152 MacOSX: Triple Exception Booting win95
 - take a look at the code generated by calls to virtual functions, to 
   check if there's huge overhead that I don't know about.
-
   Answer: I don't believe there is that much extra overhead.  If you call
   a nonvirtual function, it must push all the args onto the stack, then
   push the THIS pointer, then call the method using a known constant address.
-  With a virtual function, y you push all the args onto the stack, then push
+  With a virtual function, you push all the args onto the stack, then push
   the THIS pointer, then do one extra memory reference to THIS+constant to read
   the pointer to the virtual method, and call it.  This is just what I
   expected to find--no strange and magicial code was inserted by the 
   compiler in this case.
+- wxWindows configuration interface and display works fine as a plugin now
+- selection of config interface is controlled by the bochsrc line
+  "config_interface: NAME" and the parameter bx_options.Osel_config.
+- selection of display library is controlled by the bochsrc line
+  "display_library: NAME" and the parameter bx_options.Osel_displaylib.
+- renamed vga_library to display_library (Christophe's suggestion)
+- add --with-all-libs option, which attempts to detect all the display
+  libraries that Bochs can compile with.  You can use this with or without
+  plugins, compile with multiple guis in the same binary, and select between
+  them at runtime.  If the detection fails, you can always write a bunch
+  of --with-PACKAGE options yourself.
+- load plugins as they are needed, in main.cc and iodev/devices.cc.
+  - plugins are loaded using a macro BX_LOAD_PLUGIN(plugin_name, plugin_type).
+    When plugins are enabled, this macro calls bx_load_plugin() in plugin.cc,
+    which loads the plugin with lt_dlopen and calls its plugin_init method.
+    When plugins are disabled, the code is already linked into the binary so
+    the macro calls the plugin_init method directly.  
+  - The plugin_init method for plugin ABC is called libABC_LTX_plugin_init()
+    and the same prefix is added before the plugin_fini method.  This "name
+    mangling" makes the symbols unique so that they can all be linked
+    statically into the binary when plugins are turned off.  This turned out
+    to be a very useful thing!
+  - The choice of lib*_LTX_* is not random...  The libtool LTDL library
+    automatically searches for symbols of the form lib<module>_LTX_<symbol>
+    before looking for <symbol>.  Libtool recommends making global symbols in
+    every plugin unique in some way, and in fact on MacOSX the dynamic linker
+    will not allow two libs to be linked in that both have plugin_init symbols,
+    so this sort of mangling is required.
+- how do we know what plugins should be available when we start Bochs?
+  - we have core plugins, optional plugins, and user plugins.
+    - (V2.0) core plugin: These are so fundamental that Bochs won't even
+      initialize without them, for example the CMOS.  The user can substitute
+      his own equivalent plugin to replace the CMOS, but he cannot say "Don't
+      load the CMOS at all."  Core plugin devices are initialized and reset
+      explictly by code in iodev/devices.cc, since the initialization order for
+      some of them is critical.  They are currently NOT added to the device
+      list in pluginRegisterDevice and pluginRegisterDeviceDevmodel, so that
+      the plugin system does not call init() and reset().  If a core plugin
+      cannot be found, Bochs will panic.
+      In the bochsrc we can provide a way for the user to REPLACE a core plugin
+      with a different plugin that implements the same C++ interface, but there
+      is no way to ask bochs to NOT load a core plugin.  I'm not sure how to
+      configure the replacement plugin--this may have to be added later.
+      Bochsrc line: 
+        replace_core_plugin: old=pic, new=mypic
+    - (V2.0) optional plugin: These can be loaded or not without affecting
+      Bochs's ability to start up and simulate.  Initialization and reset for
+      all optional plugins are handled by bx_init_plugins() and
+      bx_reset_plugins(), which are now called from bx_devices_c::init() and
+      bx_devices_c::reset().  Bochs knows how to configure optional plugins at
+      compile time, and they are loaded only if the configuration settings
+      enables the device.  Examples: serial, parallel, ne2k.  See the call to
+      is_serial_enabled() in iodev/devices.cc.  There are some plugins that you
+      wouldn't ever want to leave out, like vga.  Maybe the term "optional" is
+      not clear and I need to think of a better name.  Bochs will panic if an
+      optional plugin cannot be found.  If the plugin was compiled, then
+      it should be available at runtime too!
+    - (NOT DONE) user plugin: These are plugins that Bochs does not know
+      anything about at compile time.  The user asks Bochs to load a plugin
+      using just its filename.  It loads the plugin and (somehow) gets
+      information about what settings the user can configure.  The settings are
+      adjusted by either bochsrc lines or the user interface, and then the
+      device can be used.  I'm missing some details here because I haven't
+      thought through it all the way.  User plugins may not be supported until
+      after v2.0.
+  - list of plugins sorted into categories
+    - core plugins: unmapped, biosdev, cmos, dma, pic, vga
+    - optional: floppy, harddrv, keyboard, serial, parallel
+    - user: none yet
+- clarify relationship of plugin and device
+  - a plugin is a shared object that you load that has a plugin_init() and
+    plugin_fini() function inside.  The plugin_init() can create any number of
+    "devices" and register them.  Devices are added to a global list so that we
+    can do operations on every registered device.
+  - There is (now) a pointer from each device to the plugin that created it.
+  - Devices created by core plugins are called core devices.  These will not be
+    added to the device list because they are managed by existing code in
+    devices.cc and elsewhere.  Instead of referring to them by their device_t
+    structure, we will use a global pointer to them, similar to the
+    bx_devices.pluginKeyboard pointer.  (Alternative: maybe we should add
+    them to device list anyway, but exclude them in init_all and reset_all 
+    functions.)
+
+
+
 -----------------------------------------------
 random notes:
 
