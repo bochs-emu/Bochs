@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.18 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.19 2003-10-05 12:14:02 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -37,9 +37,6 @@ typedef Bit8u u_char;
 
 #define VERIFY_READ     0
 #define VERIFY_WRITE    1
-
-/* bbd: include ported linux headers after config.h for GCC_ATTRIBUTE macro */
-//#include <linux/types.h>
 
 #ifndef WORDS_BIGENDIAN
 #error "WORDS_BIGENDIAN not defined in config.h"

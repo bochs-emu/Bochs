@@ -221,7 +221,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
   switch (EAX) {
     case 0:
       // EAX: highest input value understood by CPUID
-#if BX_CPU_LEVEL <= 6
+#if BX_CPU_LEVEL <= 5
       RAX = 1;		// 486 and Pentium processors
 #else
       RAX = 1;		// for Pentium Pro, Pentium II, Pentium 4 processors

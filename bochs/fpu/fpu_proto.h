@@ -1,35 +1,33 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: fpu_proto.h,v 1.12 2003-10-04 12:52:29 sshwarts Exp $
-/////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/*
+ * Copyright (C) 2001  MandrakeSoft S.A.
+ *
+ *   MandrakeSoft S.A.
+ *   43, rue d'Aboukir
+ *   75002 Paris - France
+ *   http: //www.linux-mandrake.com/
+ *   http: //www.mandrakesoft.com/
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ */
 
-//
-// bochs.h is the master header file for all C++ code.  It includes all 
-// the system header files needed by bochs, and also includes all the bochs
-// C++ header files.  Because bochs.h and the files that it includes has 
-// structure and class definitions, it cannot be called from C code.
-// 
+/*
+ * bochs.h is the master header file for all C++ code.  It includes all 
+ * the system header files needed by bochs, and also includes all the bochs
+ * C++ header files.  Because bochs.h and the files that it includes has 
+ * structure and class definitions, it cannot be called from C code.
+ */
 
 #ifndef _FPU_PROTO_H
 #define _FPU_PROTO_H
@@ -127,7 +125,7 @@ extern void poly_cos(FPU_REG *st0_ptr);
 extern void poly_tan(FPU_REG *st0_ptr, int flag);
 /* reg_add_sub.c */
 extern int FPU_add(FPU_REG const *b, u_char tagb, int destrnr, u16 control_w);
-extern int FPU_sub(int flags, FPU_REG *rm, u16 control_w);   // bbd: changed arg2 from int to FPU_REG*
+extern int FPU_sub(int flags, FPU_REG *rm, u16 control_w);
 /* reg_compare.c */
 extern int FPU_compare_st_data(FPU_REG const *loaded_data, u_char loaded_tag);
 extern void fcom_st(void);
@@ -163,7 +161,7 @@ extern int FPU_tagof(FPU_REG *ptr) BX_CPP_AttrRegparmN(1);
 /* reg_mul.c */
 extern int FPU_mul(FPU_REG const *b, u_char tagb, int deststnr, int control_w);
 
-extern int FPU_div(int flags, FPU_REG *regrm, int control_w); // bbd: changed arg2 from int to FPU_REG*
+extern int FPU_div(int flags, FPU_REG *regrm, int control_w);
 /* reg_convert.c */
 extern int FPU_to_exp16(FPU_REG const *a, FPU_REG *x) BX_CPP_AttrRegparmN(2);
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.12 2003-10-04 12:32:55 sshwarts Exp $
+ |  $Id: errors.c,v 1.13 2003-10-05 12:14:02 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -686,5 +686,5 @@ void FPU_stack_underflow_pop(int i)
 
 int printk(const char * fmt, ...)
 {
-  return(0); // for now
+  return(0);
 }
