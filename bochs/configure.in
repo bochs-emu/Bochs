@@ -196,7 +196,7 @@ AC_SUBST(SLOWDOWN_OBJS)
 
 AC_MSG_CHECKING(for idle hack)
 AC_ARG_ENABLE(idle-hack,
-  [  --enable-idle-hack                 use Roland Mainz's idle hack],
+  [  --enable-idle-hack                use Roland Mainz's idle hack],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_USE_IDLE_HACK, 1)
@@ -631,7 +631,7 @@ LIBS=$OLD_LIBS
 
 AC_MSG_CHECKING(whether user wants readline)
 AC_ARG_ENABLE(readline,
-  [ --enable-readline                  use readline library, if available],
+  [  --enable-readline                 use readline library, if available],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
      want_readline=yes
@@ -881,9 +881,21 @@ AC_ARG_ENABLE(cdrom,
     AC_DEFINE(BX_SUPPORT_CDROM, 1)
    fi],
   [
-    AC_MSG_RESULT(no)
-    CDROM_OBJS=''
-    AC_DEFINE(BX_SUPPORT_CDROM, 0)
+    AC_MSG_RESULT(yes)
+    CDROM_OBJS='cdrom.o'
+    if test "$with_amigaos" = yes; then
+      # use the amiga cdrom file instead.
+      CDROM_OBJS="cdrom_amigaos.o"
+    elif test "$can_use_osx_cdrom" = yes; then
+      # use cdrom_osx
+      AC_MSG_RESULT(Using OSX IOKit CD Interface)	
+      CDROM_OBJS="cdrom_osx.o"
+      EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation"
+    elif test "$with_beos" = yes; then
+      # use the beos cdrom file instead
+      CDROM_OBJS="$CDROM_OBJS cdrom_beos.o"
+    fi
+    AC_DEFINE(BX_SUPPORT_CDROM, 1)
     ]
   )
 
@@ -892,7 +904,7 @@ AC_SUBST(CDROM_OBJS)
 
 AC_MSG_CHECKING(for Sound Blaster 16 support)
 AC_ARG_ENABLE(sb16,
-  [  --enable-sb16=xxx                     Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd)],
+  [  --enable-sb16=xxx                 Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd)],
   [if test "$enableval" = no; then
      AC_MSG_RESULT(no)
      SB16_OBJS=''
