@@ -1,25 +1,33 @@
 ----------------------------------------------------------------------
 Patch name: VBE Linear Frame Buffer support
 Author: Jeroen Janssen
-Date:   10 March 2002
-RCS Id: $Id: patch.vbe-lfb,v 1.1 2002/03/10 20:30:25 japj Exp $
+Date:   24 March 2002
+RCS Id: $Id: patch.vbe-lfb,v 1.2 2002/03/21 07:13:47 japj Exp $
 
 Detailed description:
 This patch will (together with an update vgabios) add support for 
 VBE Linear Frame Buffer modes.
 
-TODO: add VBE enabled bios
+The file patch.vbe-lfb-bios.tar.gz contains a LFB enabled vbebios.
+It was build from the vgabios sources on 24 March 2002 with
+#define VBE_HAVE_LFB uncommented in vbe.c
+
+In order to test the LFB code, you need to replace the vgaromimage: 
+line in .bochsrc to the extracted vbebios.bin.
+
+The tar.gz file also contains a 'debug' build bios that shows lots
+of information on the bochsout logfile.
 
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
-  cvs checked out on 10 March 2002, release version 1.4pre1
+  cvs checked out on 24 March 2002, release version 1.4pre1
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-*** iodev/vga.cc	10 Mar 2002 04:51:24 -0000	1.24
---- iodev/vga.cc	10 Mar 2002 10:36:08 -0000
+*** iodev/vga.cc	16 Mar 2002 11:37:43 -0000	1.29
+--- iodev/vga.cc	24 Mar 2002 10:30:06 -0000
 @@ -2081,9 +2081,20 @@
  bx_vga_c::vbe_mem_read(Bit32u addr)
  {
@@ -61,13 +69,13 @@ Instructions:
 +    offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
 +  }
  
-   y_tileno = (offset / BX_VGA_THIS s.vbe_xres) / Y_TILESIZE;
-   x_tileno = (offset % BX_VGA_THIS s.vbe_xres) / X_TILESIZE;
+   // check for out of memory write
+   if (offset < sizeof(BX_VGA_THIS s.vbe_memory))
 
 
-*** iodev/vga.h	10 Mar 2002 04:51:24 -0000	1.8
---- iodev/vga.h	10 Mar 2002 10:36:11 -0000
-@@ -50,6 +50,8 @@
+*** iodev/vga.h	16 Mar 2002 10:22:57 -0000	1.10
+--- iodev/vga.h	24 Mar 2002 10:30:11 -0000
+@@ -52,6 +52,8 @@
  
    #define VBE_DISPI_DISABLED              0x00
    #define VBE_DISPI_ENABLED               0x01
@@ -79,7 +87,7 @@ Instructions:
 
 
 *** memory/memory.cc	3 Oct 2001 13:10:38 -0000	1.9
---- memory/memory.cc	10 Mar 2002 10:36:15 -0000
+--- memory/memory.cc	24 Mar 2002 10:30:16 -0000
 @@ -224,6 +224,37 @@
    data_ptr = (Bit8u *) data + (len - 1);
  #endif
