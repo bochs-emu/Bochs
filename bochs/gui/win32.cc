@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.55 2003-05-12 19:53:22 vruppert Exp $
+// $Id: win32.cc,v 1.56 2003-05-13 18:44:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ static unsigned prev_block_cursor_x = 0;
 static unsigned prev_block_cursor_y = 0;
 static HBITMAP vgafont[256];
 static unsigned x_edge=0, y_edge=0, y_caption=0;
-static int yChar = 16;
+static int xChar = 8, yChar = 16;
 static HFONT hFont[3];
 static int FontId = 2;
 
@@ -962,8 +962,12 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
         memset(data, 0, sizeof(data));
-        for (unsigned i=0; i<32; i++)
+        for (unsigned i=0; i<32; i++) {
           data[i*2] = vga_charmap[c*32+i];
+          if ((tm_info.line_graphics) && ((c & 0xE0) == 0xC0)) {
+            data[i*2+1] = (data[i*2] << 7);
+          }
+        }
         SetBitmapBits(vgafont[c], 64, data);
         char_changed[c] = 0;
       }
@@ -978,10 +982,10 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     cChar = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2];
     cAttr = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2 + 1];
     if (yChar >= 14) {
-      DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
+      DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*xChar,
                  prev_block_cursor_y*yChar, SRCCOPY, cAttr);
     } else {
-      DrawChar(hdc, cChar, prev_block_cursor_x*8,
+      DrawChar(hdc, cChar, prev_block_cursor_x*xChar,
                prev_block_cursor_y*yChar, cAttr, 1, 0);
     }
   }
@@ -1000,9 +1004,9 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         cChar = new_text[0];
         cAttr = new_text[1];
         if(yChar>=14) {
-          DrawBitmap(hdc, vgafont[cChar], x*8, y*yChar, SRCCOPY, cAttr);
+          DrawBitmap(hdc, vgafont[cChar], x*xChar, y*yChar, SRCCOPY, cAttr);
         } else {
-          DrawChar(hdc, cChar, x*8, y*yChar, cAttr, 1, 0);
+          DrawChar(hdc, cChar, x*xChar, y*yChar, cAttr, 1, 0);
         }
       }
       x++;
@@ -1029,10 +1033,10 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
           data[i*2] = 255 - data[i*2];
       }
       SetBitmapBits(cursorBmp, 64, data);
-      DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*yChar,
+      DrawBitmap(hdc, cursorBmp, cursor_x*xChar, cursor_y*yChar,
                  SRCCOPY, cAttr);
     } else {
-      DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar, cAttr, tm_info.cs_start, tm_info.cs_end);
+      DrawChar(hdc, cChar, cursor_x*xChar, cursor_y*yChar, cAttr, tm_info.cs_start, tm_info.cs_end);
     }
   }
 
@@ -1146,18 +1150,24 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
   if (fheight > 0) {
-    if (fwidth != 8) {
-      x = x * 8 / fwidth;
-    }
     if (fheight >= 14) {
       FontId = 2;
+      xChar = fwidth;
       yChar = fheight;
     } else if (fheight > 12) {
       FontId = 1;
+      xChar = 8;
       yChar = 14;
+      if (fwidth != 8) {
+        x = x * 8 / fwidth;
+      }
     } else {
       FontId = 0;
+      xChar = 8;
       yChar = 12;
+      if (fwidth != 8) {
+        x = x * 8 / fwidth;
+      }
     }
     y = y * yChar / fheight;
   }
@@ -1335,9 +1345,9 @@ void bx_win32_gui_c::exit(void) {
 void create_vga_font(void) {
   unsigned char data[64];
 
-  // VGA font is 8wide x 16high
+  // VGA font is 8 or 9 wide and up to 32 high
   for (unsigned c = 0; c<256; c++) {
-    vgafont[c] = CreateBitmap(8,32,1,1,NULL);
+    vgafont[c] = CreateBitmap(9,32,1,1,NULL);
     if (!vgafont[c]) terminateEmul(EXIT_FONT_BITMAP_ERROR);
     memset(data, 0, sizeof(data));
     for (unsigned i=0; i<16; i++)
@@ -1379,7 +1389,7 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
 
   GetObject (hBitmap, sizeof (BITMAP), (LPVOID) &bm);
 
-  ptSize.x = bm.bmWidth;
+  ptSize.x = xChar;
   ptSize.y = yChar;
 
   DPtoLP (hdc, &ptSize, 1);
@@ -1388,12 +1398,8 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
   ptOrg.y = 0;
   DPtoLP (hdcMem, &ptOrg, 1);
 
-  // BitBlt (hdc, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-  // 	    ptOrg.y, dwRop);
-
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
-//	BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-//		  ptOrg.y, dwRop);
+
 //Colors taken from Ralf Browns interrupt list.
 //(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)
 //The highest background bit usually means blinking characters. No idea
@@ -1472,7 +1478,7 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
 
   hdcMem = CreateCompatibleDC (hdc);
   SetMapMode (hdcMem, GetMapMode (hdc));
-  ptSize.x = 8;
+  ptSize.x = xChar;
   ptSize.y = yChar;
 
   DPtoLP (hdc, &ptSize, 1);
@@ -1506,7 +1512,7 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
     SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
     SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
     rc.left = xStart+0;
-    rc.right = xStart+8;
+    rc.right = xStart+xChar;
     if (cs_end >= y)
       cs_end = y-1;
     rc.top = yStart+cs_start*yChar/y;
