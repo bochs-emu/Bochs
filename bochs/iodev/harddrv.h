@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.26 2004-09-05 10:30:19 vruppert Exp $
+// $Id: harddrv.h,v 1.27 2005-02-08 18:32:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -685,6 +685,11 @@ public:
   virtual Bit32u   get_first_cd_handle(void);
   virtual unsigned get_cd_media_status(Bit32u handle);
   virtual unsigned set_cd_media_status(Bit32u handle, unsigned status);
+#if BX_SUPPORT_PCI
+  virtual bx_bool  bmdma_read_sector(Bit8u channel, Bit8u *buffer);
+  virtual bx_bool  bmdma_write_sector(Bit8u channel, Bit8u *buffer);
+  virtual void     bmdma_complete(Bit8u channel);
+#endif
 
   virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) {
     return read_handler (this, address, io_len);
@@ -719,6 +724,7 @@ private:
   BX_HD_SMF void atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc);
   BX_HD_SMF void init_mode_sense_single(Bit8u channel, const void* src, int size);
   BX_HD_SMF void atapi_cmd_nop(Bit8u channel) BX_CPP_AttrRegparmN(1);
+  BX_HD_SMF bx_bool bmdma_present(void);
 
   // FIXME:
   // For each ATA channel we should have one controller struct

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.80 2005-02-01 19:16:38 vruppert Exp $
+// $Id: devices.cc,v 1.81 2005-02-08 18:31:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ bx_devices_c::bx_devices_c(void)
 #if BX_SUPPORT_PCI
   pluginPciBridge = &stubPci;
   pluginPci2IsaBridge = &stubPci2Isa;
-  pluginPciIdeController = NULL;
+  pluginPciIdeController = &stubPciIde;
 #if BX_SUPPORT_PCIVGA
     pluginPciVgaAdapter = NULL;
 #endif
@@ -109,7 +109,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.80 2005-02-01 19:16:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.81 2005-02-08 18:31:51 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

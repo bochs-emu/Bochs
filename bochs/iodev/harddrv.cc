@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.128 2005-02-03 21:01:01 vruppert Exp $
+// $Id: harddrv.cc,v 1.129 2005-02-08 18:32:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -163,7 +163,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.128 2005-02-03 21:01:01 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.129 2005-02-08 18:32:03 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2435,6 +2435,29 @@ if (channel == 0) {
   	  }
           break;
 
+        case 0xC8: // READ DMA
+          if (BX_HD_THIS bmdma_present()) {
+            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+            BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
+            BX_SELECTED_CONTROLLER(channel).current_command = value;
+          } else {
+            BX_ERROR(("write cmd 0xC8 (READ DMA) not supported"));
+            command_aborted(channel, 0xC8);
+          }
+          break;
+
+        case 0xCA: // WRITE DMA
+          if (BX_HD_THIS bmdma_present()) {
+            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+            BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+            BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
+            BX_SELECTED_CONTROLLER(channel).current_command = value;
+          } else {
+            BX_ERROR(("write cmd 0xCA (WRITE DMA) not supported"));
+            command_aborted(channel, 0xCA);
+          }
+          break;
 
 
 	// List all the write operations that are defined in the ATA/ATAPI spec
@@ -2480,9 +2503,7 @@ if (channel == 0) {
 	case 0xC4: BX_ERROR(("write cmd 0xC4 (READ MULTIPLE) not supported"));command_aborted(channel, 0xC4); break;
 	case 0xC5: BX_ERROR(("write cmd 0xC5 (WRITE MULTIPLE) not supported"));command_aborted(channel, 0xC5); break;
 	case 0xC7: BX_ERROR(("write cmd 0xC7 (READ DMA QUEUED) not supported"));command_aborted(channel, 0xC7); break;
-	case 0xC8: BX_ERROR(("write cmd 0xC8 (READ DMA) not supported"));command_aborted(channel, 0xC8); break;
 	case 0xC9: BX_ERROR(("write cmd 0xC9 (READ DMA NO RETRY) not supported")); command_aborted(channel, 0xC9); break;
-	case 0xCA: BX_ERROR(("write cmd 0xCA (WRITE DMA) not supported"));command_aborted(channel, 0xCA); break;
 	case 0xCC: BX_ERROR(("write cmd 0xCC (WRITE DMA QUEUED) not supported"));command_aborted(channel, 0xCC); break;
 	case 0xCD: BX_ERROR(("write cmd 0xCD (CFA WRITE MULTIPLE W/OUT ERASE) not supported"));command_aborted(channel, 0xCD); break;
 	case 0xD1: BX_ERROR(("write cmd 0xD1 (CHECK MEDIA CARD TYPE) not supported"));command_aborted(channel, 0xD1); break;
@@ -2974,7 +2995,11 @@ bx_hard_drive_c::identify_drive(Bit8u channel)
   //       9: 1 = LBA supported
   //       8: 1 = DMA supported
   //     7-0: Vendor unique
-  BX_SELECTED_DRIVE(channel).id_drive[49] = 1<<9;
+  if (BX_HD_THIS bmdma_present()) {
+    BX_SELECTED_DRIVE(channel).id_drive[49] = (1<<9) | (1<<8);
+  } else {
+    BX_SELECTED_DRIVE(channel).id_drive[49] = 1<<9;
+  }
 
   // Word 50: Reserved
   BX_SELECTED_DRIVE(channel).id_drive[50] = 0;
@@ -3037,7 +3062,11 @@ bx_hard_drive_c::identify_drive(Bit8u channel)
   // supported e.g., if Mode 0 is supported bit 0 is set.
   // The high order byte contains a single bit set to indiciate
   // which mode is active.
-  BX_SELECTED_DRIVE(channel).id_drive[63] = 0x0;
+  if (BX_HD_THIS bmdma_present()) {
+    BX_SELECTED_DRIVE(channel).id_drive[63] = 0x07;
+  } else {
+    BX_SELECTED_DRIVE(channel).id_drive[63] = 0x0;
+  }
 
   // Word 64-79 Reserved
   for (i=64; i<=79; i++)
@@ -3326,6 +3355,107 @@ bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
     }
   return( BX_HD_THIS channels[channel].drives[device].cdrom.ready );
 }
+
+  bx_bool
+bx_hard_drive_c::bmdma_present(void)
+{
+#if BX_SUPPORT_PCI
+  if (bx_options.Oi440FXSupport->get()) {
+    return DEV_ide_bmdma_present();
+  }
+#endif
+  return 0;
+}
+
+#if BX_SUPPORT_PCI
+  bx_bool
+bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer)
+{
+  off_t logical_sector;
+  off_t ret;
+
+  if (BX_SELECTED_CONTROLLER(channel).current_command != 0xC8) {
+    BX_ERROR(("command 0xC8 (READ DMA) not active"));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  if (!calculate_logical_address(channel, &logical_sector)) {
+    BX_ERROR(("BM-DMA read sector reached invalid sector %lu, aborting", (unsigned long)logical_sector));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
+  if (ret < 0) {
+    BX_ERROR(("could not lseek() hard drive image file"));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  /* set status bar conditions for device */
+  if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+    bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+  BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+  bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+  ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) buffer, 512);
+  if (ret < 512) {
+    BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
+    BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  increment_address(channel);
+  return 1;
+}
+
+  bx_bool
+bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
+{
+  off_t logical_sector;
+  off_t ret;
+
+  if (BX_SELECTED_CONTROLLER(channel).current_command != 0xCA) {
+    BX_ERROR(("command 0xCA (WRITE DMA) not active"));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  if (!calculate_logical_address(channel, &logical_sector)) {
+    BX_ERROR(("BM-DMA read sector reached invalid sector %lu, aborting", (unsigned long)logical_sector));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
+  if (ret < 0) {
+    BX_ERROR(("could not lseek() hard drive image file"));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  /* set status bar conditions for device */
+  if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+    bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+  BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+  bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+  ret = BX_SELECTED_DRIVE(channel).hard_drive->write((bx_ptr_t) buffer, 512);
+  if (ret < 512) {
+    BX_ERROR(("could not write() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
+    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+    return 0;
+  }
+  increment_address(channel);
+  return 1;
+}
+
+  void
+bx_hard_drive_c::bmdma_complete(Bit8u channel)
+{
+  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+  BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+  BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+  BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+  BX_SELECTED_CONTROLLER(channel).status.err = 0;
+  raise_interrupt(channel);
+}
+#endif
 
 
 /*** default_image_t function definitions ***/

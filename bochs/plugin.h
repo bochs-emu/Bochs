@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.39 2005-01-21 16:07:18 vruppert Exp $
+// $Id: plugin.h,v 1.40 2005-02-08 18:31:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -131,6 +131,9 @@ extern "C" {
     (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
 #define DEV_hd_close_harddrive()  bx_devices.pluginHardDrive->close_harddrive()
 #define DEV_hd_present() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
+#define DEV_hd_bmdma_read_sector(a,b) bx_devices.pluginHardDrive->bmdma_read_sector(a,b)
+#define DEV_hd_bmdma_write_sector(a,b) bx_devices.pluginHardDrive->bmdma_write_sector(a,b)
+#define DEV_hd_bmdma_complete(a) bx_devices.pluginHardDrive->bmdma_complete(a)
 
 #define DEV_bulk_io_quantum_requested() (bx_devices.bulkIOQuantumsRequested)
 #define DEV_bulk_io_quantum_transferred() (bx_devices.bulkIOQuantumsTransferred)
@@ -188,6 +191,7 @@ extern "C" {
 #define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
 #define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
 #define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()
+#define DEV_ide_bmdma_present() bx_devices.pluginPciIdeController->bmdma_present()
 
 ///////// NE2000 macro
 #define DEV_ne2k_print_info(file,page,reg,brief) \

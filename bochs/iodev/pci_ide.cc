@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.8 2005-02-06 13:05:19 vruppert Exp $
+// $Id: pci_ide.cc,v 1.9 2005-02-08 18:32:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,6 +60,8 @@ bx_pci_ide_c::bx_pci_ide_c(void)
 {
   put("PIDE");
   settype(PCIIDELOG);
+  s.bmdma[0].timer_index = BX_NULL_TIMER_HANDLE;
+  s.bmdma[1].timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_pci_ide_c::~bx_pci_ide_c(void)
@@ -72,13 +74,21 @@ bx_pci_ide_c::~bx_pci_ide_c(void)
   void
 bx_pci_ide_c::init(void)
 {
-  // called once when bochs initializes
+  unsigned i;
 
   Bit8u devfunc = BX_PCI_DEVICE(1,1);
   DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
                             &devfunc, BX_PLUGIN_PCI_IDE, "PIIX3 PCI IDE controller");
 
-  for (unsigned i=0; i<256; i++)
+  // register BM-DMA timer
+  for (i=0; i<2; i++) {
+    if (BX_PIDE_THIS s.bmdma[i].timer_index == BX_NULL_TIMER_HANDLE) {
+      BX_PIDE_THIS s.bmdma[i].timer_index =
+        DEV_register_timer(this, timer_handler, 1000, 0,0, "PIIX3 BM-DMA timer");
+    }
+  }
+
+  for (i=0; i<256; i++)
     BX_PIDE_THIS s.pci_conf[i] = 0x0;
   // readonly registers
   BX_PIDE_THIS s.pci_conf[0x00] = 0x86;
@@ -108,9 +118,11 @@ bx_pci_ide_c::reset(unsigned type)
   }
   BX_PIDE_THIS s.pci_conf[0x44] = 0x00;
   for (unsigned i=0; i<2; i++) {
-    BX_PIDE_THIS s.bmdma_command[i] = 0;
-    BX_PIDE_THIS s.bmdma_status[i] = 0;
-    BX_PIDE_THIS s.bmdma_dtpr[i] = 0;
+    BX_PIDE_THIS s.bmdma[i].cmd_ssbm = 0;
+    BX_PIDE_THIS s.bmdma[i].cmd_rwcon = 0;
+    BX_PIDE_THIS s.bmdma[i].status = 0;
+    BX_PIDE_THIS s.bmdma[i].dtpr = 0;
+    BX_PIDE_THIS s.bmdma[i].prd_current = 0;
   }
   // This should be done by the PCI BIOS
   WriteHostDWordToLittleEndian(&BX_PIDE_THIS s.pci_conf[0x20], 0x0000);
@@ -119,6 +131,95 @@ bx_pci_ide_c::reset(unsigned type)
                       16, &bmdma_iomask[0], "PIIX3 PCI IDE controller");
 }
 
+  bx_bool
+bx_pci_ide_c::bmdma_present(void)
+{
+//  return (BX_PIDE_THIS s.bmdma_addr > 0);
+  return 0; // For now
+}
+
+  void
+bx_pci_ide_c::timer_handler(void *this_ptr)
+{
+  bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) this_ptr;
+
+  class_ptr->timer();
+}
+
+  void
+bx_pci_ide_c::timer()
+{
+  int timer_id, count;
+  Bit8u channel;
+  Bit32u size;
+  Bit8u buffer[0x10000];
+  Bit8u *bufptr;
+  struct {
+    Bit32u addr;
+    Bit32u size;
+  } prd;
+
+  timer_id = bx_pc_system.triggeredTimerID();
+  if (timer_id == BX_PIDE_THIS s.bmdma[0].timer_index) {
+    channel = 0;
+  } else {
+    channel = 1;
+  }
+  if (((BX_PIDE_THIS s.bmdma[channel].status & 0x01) == 0) ||
+      (BX_PIDE_THIS s.bmdma[channel].prd_current == 0)) {
+    return;
+  }
+  BX_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 8, (Bit8u *)&prd);
+  size = prd.size & 0xfffe;
+  if (size == 0) {
+    size = 0x10000;
+  }
+  count = size;
+  bufptr = &buffer[0];
+  if (BX_PIDE_THIS s.bmdma[channel].cmd_rwcon) {
+    BX_INFO(("READ DMA to addr=0x%08x, size=0x%08x", prd.addr, size));
+    do {
+      if (DEV_hd_bmdma_read_sector(channel, bufptr)) {
+        bufptr += 512;
+        count -= 512;
+      } else {
+        break;
+      }
+    } while (count > 0);
+    if (count > 0) {
+      BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
+      BX_PIDE_THIS s.bmdma[channel].status |= 0x06;
+      return;
+    } else {
+      BX_MEM_WRITE_PHYSICAL(prd.addr, size, &buffer);
+    }
+  } else {
+    BX_INFO(("WRITE DMA from addr=0x%08x, size=0x%08x", prd.addr, size));
+    BX_MEM_READ_PHYSICAL(prd.addr, size, &buffer);
+    do {
+      if (DEV_hd_bmdma_write_sector(channel, bufptr)) {
+        bufptr += 512;
+        count -= 512;
+      } else {
+        break;
+      }
+    } while (count > 0);
+    if (count > 0) {
+      BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
+      BX_PIDE_THIS s.bmdma[channel].status |= 0x06;
+      return;
+    }
+  }
+  if (prd.size & 0x80000000) {
+    BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
+    BX_PIDE_THIS s.bmdma[channel].status |= 0x04;
+    BX_PIDE_THIS s.bmdma[channel].prd_current = 0;
+    DEV_hd_bmdma_complete(channel);
+  } else {
+    BX_PIDE_THIS s.bmdma[channel].prd_current += 8;
+    bx_pc_system.activate_timer( BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0 );
+  }
+}
 
 
   // static IO port read callback handler
@@ -148,16 +249,17 @@ bx_pci_ide_c::read(Bit32u address, unsigned io_len)
   offset &= 0x07;
   switch (offset) {
     case 0x00:
-      value = BX_PIDE_THIS s.bmdma_command[channel];
-      BX_INFO(("BM-DMA read command register, channel %d, value = 0x%02x", channel, value));
+      value = BX_PIDE_THIS s.bmdma[channel].cmd_ssbm |
+              (BX_PIDE_THIS s.bmdma[channel].cmd_rwcon << 3);
+      BX_DEBUG(("BM-DMA read command register, channel %d, value = 0x%02x", channel, value));
       break;
     case 0x02:
-      value = BX_PIDE_THIS s.bmdma_status[channel];
-      BX_INFO(("BM-DMA read status register, channel %d, value = 0x%02x", channel, value));
+      value = BX_PIDE_THIS s.bmdma[channel].status;
+      BX_DEBUG(("BM-DMA read status register, channel %d, value = 0x%02x", channel, value));
       break;
     case 0x04:
-      value = BX_PIDE_THIS s.bmdma_dtpr[channel];
-      BX_INFO(("BM-DMA read DTP register, channel %d, value = 0x%04x", channel, value));
+      value = BX_PIDE_THIS s.bmdma[channel].dtpr;
+      BX_DEBUG(("BM-DMA read DTP register, channel %d, value = 0x%04x", channel, value));
       break;
   }
 
@@ -190,22 +292,26 @@ bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
   offset &= 0x07;
   switch (offset) {
     case 0x00:
-      if (value & 0x01) {
-        BX_PIDE_THIS s.bmdma_status[channel] |= 0x01;
-      } else {
-        BX_PIDE_THIS s.bmdma_status[channel] &= ~0x01;
-      }
-      BX_PIDE_THIS s.bmdma_command[channel] = (value & 0x09);
       BX_INFO(("BM-DMA write command register, channel %d, value = 0x%02x", channel, value));
+      BX_PIDE_THIS s.bmdma[channel].cmd_rwcon = (value >> 3) & 1;
+      if ((value & 0x01) && !BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
+        BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 1;
+        BX_PIDE_THIS s.bmdma[channel].status |= 0x01;
+        BX_PIDE_THIS s.bmdma[channel].prd_current = BX_PIDE_THIS s.bmdma[channel].dtpr;
+        bx_pc_system.activate_timer( BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0 );
+      } else if (!(value & 0x01) && BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
+        BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 0;
+        BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
+      }
       break;
     case 0x02:
-      BX_PIDE_THIS s.bmdma_status[channel] = (value & 0x60)
-        | (BX_PIDE_THIS s.bmdma_status[channel] & 0x01)
-        | (BX_PIDE_THIS s.bmdma_status[channel] & (~value & 0x06));
+      BX_PIDE_THIS s.bmdma[channel].status = (value & 0x60)
+        | (BX_PIDE_THIS s.bmdma[channel].status & 0x01)
+        | (BX_PIDE_THIS s.bmdma[channel].status & (~value & 0x06));
       BX_INFO(("BM-DMA write status register, channel %d, value = 0x%02x", channel, value));
       break;
     case 0x04:
-      BX_PIDE_THIS s.bmdma_dtpr[channel] = value;
+      BX_PIDE_THIS s.bmdma[channel].dtpr = value & 0xfffffffc;
       BX_INFO(("BM-DMA write DTP register, channel %d, value = 0x%04x", channel, value));
       break;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.4 2005-02-06 13:05:20 vruppert Exp $
+// $Id: pci_ide.h,v 1.5 2005-02-08 18:32:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -36,23 +36,32 @@
 #endif
 
 
-class bx_pci_ide_c : public bx_devmodel_c {
+class bx_pci_ide_c : public bx_pci_ide_stub_c {
 
 public:
   bx_pci_ide_c(void);
   ~bx_pci_ide_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
+  virtual bx_bool bmdma_present(void);
+
+  static void timer_handler(void *);
+  BX_PIDE_SMF void timer(void);
 
 private:
 
   struct {
     Bit8u pci_conf[256];
     Bit32u bmdma_addr;
-    Bit8u bmdma_command[2];
-    Bit8u bmdma_status[2];
-    Bit32u bmdma_dtpr[2];
-    } s;
+    struct {
+      bx_bool cmd_ssbm;
+      bx_bool cmd_rwcon;
+      Bit8u  status;
+      Bit32u dtpr;
+      Bit32u prd_current;
+      int timer_index;
+    } bmdma[2];
+  } s;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

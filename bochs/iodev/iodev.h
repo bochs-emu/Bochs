@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.59 2005-01-21 16:07:19 vruppert Exp $
+// $Id: iodev.h,v 1.60 2005-02-08 18:32:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,6 +149,15 @@ class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
   {
     STUBFUNC(HD, virt_write_handler);
   }
+  virtual bx_bool bmdma_read_sector(Bit8u channel, Bit8u *buffer) {
+    STUBFUNC(HD, bmdma_read_sector); return 0;
+  }
+  virtual bx_bool bmdma_write_sector(Bit8u channel, Bit8u *buffer) {
+    STUBFUNC(HD, bmdma_write_sector); return 0;
+  }
+  virtual void bmdma_complete(Bit8u channel) {
+    STUBFUNC(HD, bmdma_complete);
+  }
 };
 
 class BOCHSAPI bx_floppy_stub_c : public bx_devmodel_c {
@@ -296,6 +305,13 @@ class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c {
   }
 };
 
+class BOCHSAPI bx_pci_ide_stub_c : public bx_devmodel_c {
+  public:
+  virtual bx_bool bmdma_present (void) {
+    return 0;
+  }
+};
+
 class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
   public:
   virtual void print_info(FILE *file, int page, int reg, int nodups) {}
@@ -390,7 +406,7 @@ public:
   bx_ioapic_c       *ioapic;
   bx_pci_stub_c     *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
-  bx_devmodel_c     *pluginPciIdeController;
+  bx_pci_ide_stub_c *pluginPciIdeController;
   bx_devmodel_c     *pluginPciVgaAdapter;
   bx_devmodel_c     *pluginPciDevAdapter;
   bx_devmodel_c     *pluginPciPNicAdapter;
@@ -435,6 +451,7 @@ public:
   bx_vga_stub_c  stubVga;
   bx_pci_stub_c  stubPci;
   bx_pci2isa_stub_c stubPci2Isa;
+  bx_pci_ide_stub_c stubPciIde;
   bx_ne2k_stub_c    stubNE2k;
   bx_speaker_stub_c stubSpeaker;
   bx_serial_stub_c  stubSerial;
