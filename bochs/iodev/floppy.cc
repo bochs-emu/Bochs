@@ -1,5 +1,5 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.36 2002-03-17 20:55:27 vruppert Exp $
+  /////////////////////////////////////////////////////////////////////////
+// $Id: floppy.cc,v 1.37 2002-04-11 01:07:34 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.36 2002-03-17 20:55:27 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.37 2002-04-11 01:07:34 instinc Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -416,7 +416,10 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_DEBUG(("  drive_select=%02x",
           (unsigned) drive_select));
       if (drive_select>1) {
-        BX_PANIC(("io_write: drive_select>1"));
+	BX_DEBUG(("WARNING: applying mod(2) on drive_select"));
+	drive_select = drive_select & 0x01;
+	BX_DEBUG(("new drive_select=%02x",
+	  (unsigned) drive_select));
         }
       break;
 
