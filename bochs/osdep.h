@@ -45,8 +45,8 @@ extern "C" {
 #ifdef WIN32
 #ifndef __MINGW32__
 // always return regular file.
-#  define S_ISREG(st_mode) 1
-#  define S_ISCHR(st_mode) 0
+#  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
+#  define S_ISCHR(m)      (((m) & S_IFMT) == S_IFCHR)
 
   // VCPP includes also are missing these
 #  define off_t long
