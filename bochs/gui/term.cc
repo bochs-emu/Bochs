@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.31 2003-08-17 23:40:38 cbothamy Exp $
+// $Id: term.cc,v 1.32 2004-06-26 07:06:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -32,6 +32,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "iodev.h"
 #if BX_WITH_TERM
 
 #include "icon_bochs.h"
