@@ -101,7 +101,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.16 2001-09-14 14:55:59 instinc Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.17 2001-09-24 12:09:45 bdenney Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -160,7 +160,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pit = & bx_pit;
   pit->init(this);
 
-#ifdef BX_USE_SLOWDOWN_TIMER
+#if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.init();
 #endif
 
