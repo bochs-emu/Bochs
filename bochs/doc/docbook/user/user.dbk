@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.17 2001-11-14 02:40:55 bdenney Exp $
+$Id: user.dbk,v 1.18 2001-11-14 02:43:45 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -416,7 +416,87 @@ currently work with.
 </tbody>
 </tgroup>
 </table>
-</section>
+</section> <!-- End of Features -->
+
+<section><title>Supported Platforms</title>
+
+<table><title>Supported platforms</title>
+   <tgroup cols=2 align=left colsep=1 rowsep=1>
+   <tbody>
+   <row>
+      <entry>Unix/X11</entry>
+      <entry>X windows has always been well supported because it was
+      Kevin's Lawton's main development platform.  Bryce Denney maintains
+      the Unix/X11 platform now.  Most features and fixes (not all) are
+      tried first in Unix and then ported to the others.
+   </row>
+
+   <row>
+      <entry>Win32</entry>
+      <entry>This port was done by David Ross and is now maintained
+      by Don Becker.  You can compile with MS Visual C++ 5.0 or 6.0,
+      or cygwin<footnote>
+<para>Cygwin is a free Unix-like environment for Windows written by
+Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed it--<ulink url="http://www.cygwin.com">www.cygwin.com</ulink></para>
+</footnote>.
+      See <xref linkend="compiling-win32"> for compile
+      instructions.  </entry> 
+    </row>
+
+   <row>
+      <entry>BeOS</entry>
+      <entry>Kevin Lawton did this port, originally to R3/PPC using
+      CodeWarrior.  It now works on R4/x86 with egcs. Simon Huet picked up
+      maintaining/reworking the BeOS GUI port.  In September 2001, Bernd Korz
+      of Inside Beos magazine 
+      (<ulink url="http://www.insidebeos.com">www.insidebeos.com</ulink>), took
+      over the BeOS port.  Uses the same compile and install process as Unix.
+      </entry>
+   </row>
+
+   <row>
+     <entry>MacOS X</entry>
+     <entry>
+     Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
+     He has been too busy to maintain it, so if you are interested in working
+     on it, contact the &devlist;.
+     </entry>
+   </row>
+   <row>
+      <entry>Macintosh</entry>
+      <entry>David Batterham drbatter@socs.uts.edu.au or drbatter@yahoo.com
+      ported bochs to the Mac.  He compiled with CodeWarrior Pro R1 (CW12).  To
+      compile, you have to build headers and Makefiles on a Unix machine using
+      "configure --with-macos".  Check out David's MacBochs website.  David has
+      not had time to maintain the page or the Mac port since early 2000. If
+      you have Mac development tools and want to contribute, contact the
+      &devlist;. </entry>
+   </row>
+
+   <row>
+      <entry>Amiga MorphOS</entry>
+      <entry>
+      This port is written and maintained by Nicholai Benalal.
+      </entry>
+   </row>
+
+   <row>
+      <entry>OS/2</entry>
+      <entry> Nick Behnken used PE2LX to translate David Ross's Win32
+      port to an OS/2 program.  This hasn't been updated in more than
+      a year, and Nick Behnken's page seems to be inactive.
+      Also, Craig Ballantyne ported bochs to OS/2, but his web page has
+      disappeared and his port has not been updated since March 2000.
+      His latest sources are at <ulink url="http://www.os2world.com/emulator/computer.html">http://www.os2world.com/emulator/computer.html</ulink>.
+      If you want to bring the OS/2 port up to date, contact the &devlist;.
+      </entry>
+   </row>
+
+   </tbody>
+   </tgroup>
+
+</table>
+</section>  <!-- End Platforms section -->
 
 </chapter>  <!-- End of Introduction to Bochs -->
 
@@ -614,93 +694,6 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <!-- *************************************************************** -->
 <chapter><title>Installation</title>
-
-<section><title>Platforms</title>
-
-<para>
-&FIXME;
-Add information about what features are supported on what platforms.
-Example: networking on *bsd, linux only.  cdrom on ....
-</para>
-
-
-<table><title>Supported platforms</title>
-   <tgroup cols=2 align=left colsep=1 rowsep=1>
-   <tbody>
-   <row>
-      <entry>Unix/X11</entry>
-      <entry>X windows has always been well supported because it was
-      Kevin's Lawton's main development platform.  Bryce Denney maintains
-      the Unix/X11 platform now.  Most features and fixes (not all) are
-      tried first in Unix and then ported to the others.
-   </row>
-
-   <row>
-      <entry>Win32</entry>
-      <entry>This port was done by David Ross and is now maintained
-      by Don Becker.  You can compile with MS Visual C++ 5.0 or 6.0,
-      or cygwin<footnote>
-<para>Cygwin is a free Unix-like environment for Windows written by
-Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed it--<ulink url="http://www.cygwin.com">www.cygwin.com</ulink></para>
-</footnote>.
-      See <xref linkend="compiling-win32"> for compile
-      instructions.  </entry> 
-    </row>
-
-   <row>
-      <entry>BeOS</entry>
-      <entry>Kevin Lawton did this port, originally to R3/PPC using
-      CodeWarrior.  It now works on R4/x86 with egcs. Simon Huet picked up
-      maintaining/reworking the BeOS GUI port.  In September 2001, Bernd Korz
-      of Inside Beos magazine 
-      (<ulink url="http://www.insidebeos.com">www.insidebeos.com</ulink>), took
-      over the BeOS port.  Uses the same compile and install process as Unix.
-      </entry>
-   </row>
-
-   <row>
-     <entry>MacOS X</entry>
-     <entry>
-     Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
-     He has been too busy to maintain it, so if you are interested in working
-     on it, contact the &devlist;.
-     </entry>
-   </row>
-   <row>
-      <entry>Macintosh</entry>
-      <entry>David Batterham drbatter@socs.uts.edu.au or drbatter@yahoo.com
-      ported bochs to the Mac.  He compiled with CodeWarrior Pro R1 (CW12).  To
-      compile, you have to build headers and Makefiles on a Unix machine using
-      "configure --with-macos".  Check out David's MacBochs website.  David has
-      not had time to maintain the page or the Mac port since early 2000. If
-      you have Mac development tools and want to contribute, contact the
-      &devlist;. </entry>
-   </row>
-
-   <row>
-      <entry>Amiga MorphOS</entry>
-      <entry>
-      This port is written and maintained by Nicholai Benalal.
-      </entry>
-   </row>
-
-   <row>
-      <entry>OS/2</entry>
-      <entry> Nick Behnken used PE2LX to translate David Ross's Win32
-      port to an OS/2 program.  This hasn't been updated in more than
-      a year, and Nick Behnken's page seems to be inactive.
-      Also, Craig Ballantyne ported bochs to OS/2, but his web page has
-      disappeared and his port has not been updated since March 2000.
-      His latest sources are at <ulink url="http://www.os2world.com/emulator/computer.html">http://www.os2world.com/emulator/computer.html</ulink>.
-      If you want to bring the OS/2 port up to date, contact the &devlist;.
-      </entry>
-   </row>
-
-   </tbody>
-   </tgroup>
-
-</table>
-</section>  <!-- End Platforms section -->
 
 <section id="downloading"><title>Downloading Bochs</title>
 
