@@ -466,6 +466,7 @@
 #endif
 
 #if BX_WITH_CARBON
+// Boolean is defined as unsigned char in Carbon header files.
 typedef unsigned char Boolean;
 #elif BX_WITH_MACOS
 // don't define Boolean at all
