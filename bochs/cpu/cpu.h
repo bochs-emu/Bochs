@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.54 2002-09-14 23:17:55 kevinlawton Exp $
+// $Id: cpu.h,v 1.55 2002-09-16 15:21:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -674,7 +674,7 @@ typedef struct BxInstruction_tag {
   unsigned os_64, as_64; // OperandSize/AddressSize is 64bit (overrides os_32/as_32)
   unsigned extend8bit;
 #else
-  static const unsigned os_64=0, as_64=0; // x86-32: hardcode to 0.
+  enum { os_64=0, as_64=0 };  // x86-32: hardcode to 0.
   //static const unsigned extend8bit=0;     // x86-32: hardcode to 0.
 #endif
   unsigned ilen; // instruction length
@@ -1148,9 +1148,8 @@ union {
   // for x86-64  (MODE_IA32,MODE_LONG,MODE_64)
   unsigned cpu_mode;
 #else
-  // x86-32 is always in IA32 mode.  Let compiler optimize if-then-else
-  // statements.
-  static const unsigned cpu_mode=BX_MODE_IA32;
+  // x86-32 is always in IA32 mode.
+  enum { cpu_mode = BX_MODE_IA32 };
 #endif
 
 #if BX_DEBUGGER
