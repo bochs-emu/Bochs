@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.47 2003-02-18 16:57:44 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.48 2003-02-23 22:55:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -494,7 +494,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   Bit32u ticks_delta = 0;
 
 #ifdef BX_SCHEDULED_DIE_TIME
-  if (bx_virt_timer.time_ticks() > BX_SCHEDULED_DIE_TIME) {
+  if (bx_pc_system.time_ticks() > BX_SCHEDULED_DIE_TIME) {
     BX_ERROR (("ticks exceeded scheduled die time, quitting"));
     BX_EXIT (2);
   }
