@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.95 2002-03-27 16:05:13 bdenney Exp $
+// $Id: main.cc,v 1.95.2.1 2002-04-02 16:26:02 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1174,7 +1174,7 @@ bx_init_hardware()
   BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
   BX_CPU(0)->init (BX_MEM(0));
 #if BX_SUPPORT_APIC
-  BX_CPU(0)->local_apic.set_id (i);
+  BX_CPU(0)->local_apic.set_id (0);
 #endif
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
