@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# bochs-uninstall
+# Remove files created by this install package.
+#
+
+BP=/usr/local/bochs
+BINPATH=/usr/local/bin
+VERSION=1.1.2
+REMOVEFILES="
+/usr/local/bochs/1.1.2/BIOS-bochs-990925a
+/usr/local/bochs/1.1.2/CHANGES.txt
+/usr/local/bochs/1.1.2/COPYING
+/usr/local/bochs/1.1.2/README
+/usr/local/bochs/1.1.2/VGABIOS-elpin-2.40
+/usr/local/bochs/1.1.2/VGABIOS-elpin-LICENSE
+/usr/local/bochs/1.1.2/DOC-linux.html
+/usr/local/bochs/1.1.2/docs-html/00README
+/usr/local/bochs/1.1.2/docs-html/3rdparty.license.html
+/usr/local/bochs/1.1.2/docs-html/Linux.html
+/usr/local/bochs/1.1.2/docs-html/Minix.html
+/usr/local/bochs/1.1.2/docs-html/OldWindows95.html
+/usr/local/bochs/1.1.2/docs-html/Windows95.html
+/usr/local/bochs/1.1.2/docs-html/changelog.html
+/usr/local/bochs/1.1.2/docs-html/codingguidelines.html
+/usr/local/bochs/1.1.2/docs-html/configure.html
+/usr/local/bochs/1.1.2/docs-html/construction.html
+/usr/local/bochs/1.1.2/docs-html/cosimulation.html
+/usr/local/bochs/1.1.2/docs-html/cvs-status.html
+/usr/local/bochs/1.1.2/docs-html/cvs-structure.txt
+/usr/local/bochs/1.1.2/docs-html/debugger.html
+/usr/local/bochs/1.1.2/docs-html/developers.html
+/usr/local/bochs/1.1.2/docs-html/faq.html
+/usr/local/bochs/1.1.2/docs-html/features.html
+/usr/local/bochs/1.1.2/docs-html/fpu.html
+/usr/local/bochs/1.1.2/docs-html/guestNT.html
+/usr/local/bochs/1.1.2/docs-html/index.html
+/usr/local/bochs/1.1.2/docs-html/install.html
+/usr/local/bochs/1.1.2/docs-html/instrumentation.html
+/usr/local/bochs/1.1.2/docs-html/mtools.html
+/usr/local/bochs/1.1.2/docs-html/random.txt
+/usr/local/bochs/1.1.2/docs-html/sound.html
+/usr/local/bochs/1.1.2/docs-html/undercon.gif
+/usr/local/bochs/1.1.2/docs-html/whatisbochs.html
+/usr/local/bochs/1.1.2/docs-html/win32.html
+/usr/local/bochs/dlxlinux/hd10meg.img
+/usr/local/bochs/dlxlinux/README
+/usr/local/bochs/dlxlinux/testform.txt
+/usr/local/bochs/dlxlinux/.bochsrc
+/usr/local/bochs/dlxlinux/.README.swp
+/usr/local/bochs/dlxlinux/bochsout.txt
+/usr/local/bin/bochs-docs
+/usr/local/bin/bochs-dlx
+/usr/local/bin/bochs-1.1.2
+/usr/local/bin/bochs-uninstall-1.1.2
+/usr/local/bin/bochs"
+REMOVEDIRS="
+/usr/local/bochs/1.1.2/docs-html/
+/usr/local/bochs/1.1.2/
+/usr/local/bochs/dlxlinux/
+/usr/local/bochs/
+"
+
+for i in $REMOVEFILES; do
+  echo Removing $i
+  rm -f $i
+  if test $? != 0; then
+    echo Could not remove $i.
+  fi
+done
+for i in $REMOVEDIRS; do
+  echo Removing $i
+  rmdir $i
+  if test $? != 0; then
+    echo Could not remove $i, maybe not empty.
+  fi
+done
+
+echo Bochs $VERSION has been removed from your system.
