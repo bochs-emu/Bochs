@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.33 2003-04-25 23:32:55 cbothamy Exp $
+// $Id: sb16.cc,v 1.34 2003-06-21 12:55:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -252,14 +252,6 @@ void bx_sb16_c::init(void)
     DEV_register_iowrite_handler(this,
        write_handler, addr, "SB16", 7);
     }
-
-  // Allocate the SB16 gameport IO address range 0x200..0x207
-  for (addr=0x200; addr<0x208; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "SB16", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "SB16", 7);
-    }
-
-  BX_SB16_THIS gameport = 0xf0;
 
   writelog(BOTHLOG(3),
 	   "driver initialised, IRQ %d, IO %03x/%03x/%03x, DMA %d/%d",
@@ -3073,17 +3065,6 @@ Bit32u bx_sb16_c::read(Bit32u address, unsigned io_len)
     case BX_SB16_IOMPU + 0x03:
       return emul_read();
 
-      // gameport
-    case 0x0200:
-    case 0x0201:
-    case 0x0202:
-    case 0x0203:
-    case 0x0204:
-    case 0x0205:
-    case 0x0206:
-    case 0x0207:
-      BX_INFO(("read: joystick not present yet"));
-      return BX_SB16_THIS gameport;
     }
 
   // If we get here, the port wasn't valid
@@ -3218,19 +3199,6 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IOMPU + 0x03:
       emul_write(value);
       return;
-
-      // gameport
-    case 0x0200:
-    case 0x0201:
-    case 0x0202:
-    case 0x0203:
-    case 0x0204:
-    case 0x0205:
-    case 0x0206:
-    case 0x0207:
-      BX_INFO(("write: joystick not present yet"));
-      BX_SB16_THIS gameport |= 0x0f;
-      break;
     }
 
   // if we arrive here, the port is unsupported

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.13 2003-04-07 17:08:38 vruppert Exp $
+// $Id: sb16.h,v 1.14 2003-06-21 12:55:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -208,7 +208,6 @@ private:
   int currentirq;
   int currentdma8;
   int currentdma16;
-  Bit8u gameport;
 
   // the MPU 401 relevant variables
   struct bx_sb16_mpu_struct {

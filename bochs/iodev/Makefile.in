@@ -86,6 +86,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   dma.o \
   unmapped.o \
   extfpuirq.o \
+  gameport.o \
   @PCI_OBJ@ \
   @SB16_OBJS@ \
   @NE2K_OBJS@
