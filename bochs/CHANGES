@@ -47,12 +47,15 @@ Changes to next release:
 - I/O devices
   - general
     - handle cpu reset through port 0x92
+    - new memory handler API for PCI i/o and memory handling (Frank Cornelis)
   - speaker emulation added (David N. Welton)
   - pci
     - PCI slot configuration added for 5 slots
     - PCI irq routing, irq sharing and level sensitive irq mode implemented
     - ne2k device appears as a Realtec 8029 NIC if connected to a PCI slot
     - PCI IDE controller dummy device added
+    - PCI host device mapping for Linux (Frank Cornelis)
+    - PCI Pseudo-NIC emulation (Michael Brown)
   - serial
     - multiple serial port support added (4 ports now available)
     - partial raw serial support on win32 (transmit data)
@@ -65,6 +68,11 @@ Changes to next release:
     - CL-GD 54xx SVGA emulation added (Makato Suzuki)
   - floppy
     - raw floppy access now works on Win9x host (Ben Lunt)
+  - sb16
+    - MacOSX sound support (Brian Huffman)
+  - networking modules
+    - new: 'eth_vnet' simulates ARP, DHCP and ICMP-echo (m_suzu)
+    - new: 'eth_vde' for Virtual Distributed Ethernet (Renzo Davoli)
 
 - System BIOS
   - turn floppy motor off 2 seconds after last read/write/recalibrate command
@@ -73,6 +81,8 @@ Changes to next release:
     (Fabrice Bellard)
   - APM and system shutdown support (Fabrice Bellard)
   - checksum calculation for expansion ROMs
+  - extended floppy parameter table (Mike Nordell, Derek Favcus)
+  - PCI IRQ initialisation added
 
 - display libraries
   - status bar with indicators for cdrom, floppy, harddisk and keyboard added
