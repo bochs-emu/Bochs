@@ -1,4 +1,4 @@
-Changes in 2.1.1 (February 7, 2004):
+Changes in 2.1.1 (February 8, 2004):
 
 - fix bug in int15h function 0xe820 (Christian Neubert)
 - fix vmware3 disk support on big-endian platforms (Christophe Bothamy)

@@ -1532,9 +1532,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
           ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.1"
-VER_STRING="2.1"
-REL_STRING="January 11, 2004"
+VERSION="2.1.1"
+VER_STRING="2.1.1"
+REL_STRING="February 08, 2004"
 
 
 
