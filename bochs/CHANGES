@@ -78,9 +78,6 @@ Changes to next release:
   - fixed floating point instructions operands (Stanislav)
   - experimental support of AT&T syntax in disassembler (Stanislav)
 
-  TODO:
-   - X86-64 support
-
 - I/O devices
   - general
     - handle cpu reset through port 0x92
@@ -225,10 +222,15 @@ Changes to next release:
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
+ #1157124 Bochs doesn't run with large amounts of memory in bochsrc 
+ #1154266 weird INT handling in V86 mode
+ #1157051 default Bochs CVS doesn't work-out-of-the-box
+  #923954 enter() with level > 0, >>PANIC<< iret: return CS selector
+ #1098476 Privilege Problem after SYSEXIT
+ #1121734 Bochs crashes when shutting down Win95 
  #1099294 VESA for Win98 bogus
  #1112836 PGE-Bit crashes Bochs
   #947586 The specification difference in x86-64 emulation
- #1150781 Dissambly Error
  #1117145 Push reset Button, APIC0 Error occur 
  #1123043 fpu stack pointer changed *despite* fault occured (e.g. #pf)
  #1122066 PANIC: iret: IP > descriptor limit when installing os/2 warp 
