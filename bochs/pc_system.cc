@@ -441,6 +441,11 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
 }
 #endif // BX_DEBUGGER
 
+Bit64u
+bx_pc_system_c::time_usec() {
+  return (Bit64u) ( (time_ticks()) / m_ips );
+  //return (Bit64u) ( double(time_ticks()) / m_ips );
+}
 
   Bit64u
 bx_pc_system_c::time_ticks()

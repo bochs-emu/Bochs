@@ -153,6 +153,7 @@ public:
 #endif
   Bit64u counter;
   int counter_timer_index;
+  Bit64u time_usec();
   Bit64u time_ticks();
 
   void dma_write8(Bit32u phy_addr, unsigned channel);
