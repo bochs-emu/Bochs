@@ -1,19 +1,18 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.4 2001-09-10 03:59:11 bdenney Exp $
+$Id: documentation.dbk,v 1.5 2001-09-12 06:34:50 bdenney Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
 -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
-<!-- example entity that can be used with &bochs; -->
-<!ENTITY bochs '<ulink url="http://bochs.sourceforge.net">The Bochs Project</ulink>'>
-<!ENTITY FIXME '<inlinegraphic format="GIF" fileref="../images/undercon.gif">'>
-<!ENTITY NEEDHELP '<inlinegraphic format="GIF" fileref="../images/undercon.gif">'>
-<!ENTITY docbookTDG '<ulink url="http://www.docbook.org/tdg/en/html/docbook.html">DocBook: The Definitive Guide</ulink>'>
-<!ENTITY OASIS '<ulink url="http://www.oasis-open.org/">OASIS</ulink>'>
+
+<!-- include definitions that are common to all bochs documentation -->
+<!ENTITY % bochsdefs SYSTEM "../include/defs.sgm">
+%bochsdefs;
+
 ]>
 
 <book>
@@ -210,8 +209,7 @@ the Bochs documentation.
 <para>
 If you just want to read the documentation, you should not
 need to read and understand this section, and render the docs yourself.  The
-<ulink url="http://bochs.sourceforge.net">bochs web site</ulink> has all this
-information in readable form already.
+&bochswebsite; has all this information in readable form already.
 </para>
 </tip>
 
