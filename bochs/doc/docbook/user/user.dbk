@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.126 2003-08-10 08:21:12 vruppert Exp $
+$Id: user.dbk,v 1.127 2003-08-17 17:42:26 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3626,6 +3626,16 @@ Up to 3 keys can be pressed at a time.
 </para>
 </section>
 
+<section><title>cmosimage</title>
+<para>
+Example:
+<screen>
+  cmosimage: cmos.img
+</screen>
+This defines image file that can be loaded into the CMOS RAM at startup.
+</para>
+</section>
+
 </section> <!--end of bochsrc section-->
 
 <section id="sb16-emulation"> <!-- start of SB16 section-->
@@ -5991,7 +6001,7 @@ This should work for any key combination.
 </para>
 <para>
 You can also define one
-user key combination (up to three keys from "alt", "ctrl", "del", 
+user key combination (up to three keys from "alt", "bksp", "ctrl", "del", 
 "esc", "f1", "f4", "tab", "win") in your configuration file.
 This key combination is sent to the guest os when you press the user short-cut
 gui button.
@@ -6200,7 +6210,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.126 2003-08-10 08:21:12 vruppert Exp $
+      $Id: user.dbk,v 1.127 2003-08-17 17:42:26 vruppert Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8663,7 +8673,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.126 2003-08-10 08:21:12 vruppert Exp $
+        $Id: user.dbk,v 1.127 2003-08-17 17:42:26 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
