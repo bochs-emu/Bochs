@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # install-x11-fonts
-# $Id: install-x11-fonts.in,v 1.1 2001-11-10 03:45:53 bdenney Exp $
+# $Id: install-x11-fonts.in,v 1.2 2001-11-17 22:13:38 bdenney Exp $
 #
 # This is designed help people to get the Bochs fonts installed on their 
 # system.
@@ -88,13 +88,14 @@ for f in $FONTS; do
   elif test ! -f $fontpath/misc/$f; then
     echo ok
     added_font=1
-    cp $FONT_SOURCE_PATH/$f  $fontpath/misc
+    cp $FONT_SOURCE_PATH/$f  $fontpath/misc/$f
     if test ! $? = 0; then
       echo ERROR: Copy failed; die
     fi
   else
     echo "ok    (it was already there)"
   fi
+  chmod a+r $fontpath/misc/$f
 done
 
 echo Running mkfontdir...
