@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.58 2002-08-28 03:14:53 bdenney Exp $
+// $Id: control.cc,v 1.59 2002-09-03 01:09:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -786,9 +786,9 @@ bx_param_bool_c::text_ask (FILE *fpin, FILE *fpout)
   fprintf (fpout, "\n");
   int status;
   char *prompt = get_ask_format ();
+  char buffer[512];
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    char buffer[512];
     sprintf (buffer, "%s? [%%s] ", get_name ());
     prompt = buffer;
   }
