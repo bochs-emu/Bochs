@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.17 2002-10-04 16:26:09 kevinlawton Exp $
+// $Id: pc_system.h,v 1.18 2002-10-06 14:55:06 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,6 +97,7 @@ public:
   void   init_ips(Bit32u ips);
   int    register_timer( void *this_ptr, bx_timer_handler_t, Bit32u useconds,
                          Boolean continuous, Boolean active, const char *id);
+  unsigned unregisterTimer(int timerID);
   void   start_timers(void);
   void   activate_timer( unsigned timer_index, Bit32u useconds,
                          Boolean continuous );
