@@ -1,12 +1,8 @@
 To be fixed before 1.2:
-- [ #428214 ] 1.2.pre1 need documentation for binaries
-- [ #429229 ] install current .bochsrc in binary rels
-- [ #429225 ] linux RPM: bochs-docs problems
 - install Tim's man pages on linux
 - various configure problems, if possible
   - [ #429448 ] configure: -lreadline when not there
     I don't know what's wrong, so I asked Todd for help.
-- check that main branch has all changes from 1.2 branch
 
 Changes since 1.2-pre1:
 - [ #427259 ] rombios HALT calls don't print
@@ -29,6 +25,13 @@ Changes since 1.2-pre1:
   includes the Berkeley Packet Filter code (eth_fbsd) if the header
   file <net/bpf.h> can be found.  If you don't have BPF the ne2000
   will not actually move packets, but at least it will compile clean now.
+- [ #428214 ] 1.2.pre1 need documentation for binaries
+  Write windows and linux specific documentation to be installed in
+  binary releases.
+- [ #429258 ] disable RESET for version 1.2
+  Since soft reset was not completely working, I reverted the reset patch.
+  Now it does panics on reset instead of trying to reboot, as the old
+  bochs versions did.
 - [ #428222 ] Should the linux RPM install vga font?
   now font/vga.pcf will be installed in the RPM package
 - [ #429020 ] stop renaming the BIOS!!!
@@ -41,10 +44,11 @@ Changes since 1.2-pre1:
 - [ #428219 ] PCI doesn't compile with SMF=1
 - [ #429375 ] pthreads detection broken
 - [ #429073 ] configure: if no X11, makes bad config
+- [ #429229 ] install current .bochsrc in binary rels
 - BIOS prints messages in log in case of boot failure
 - rewrote instructions for compiling in win32 (win32.txt)
 - fixed link in HTML changelog.html to point to the real sources on SF.
-- added missing LOG_THIS definition to gui/nogui.cc
+- added missing LOG_THIS definition to gui/nogui.cc and gui/rfb.cc
 - added additional check for null pointer in debugger exit routine
 - added diskd to .bochsrc
 
