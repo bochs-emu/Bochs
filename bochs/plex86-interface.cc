@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.5 2003-01-08 17:22:06 kevinlawton Exp $
+//// $Id: plex86-interface.cc,v 1.6 2003-01-09 04:03:35 kevinlawton Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -27,13 +27,18 @@
 
 #define LOG_THIS genlog->
 
+unsigned      plex86State = 0;
+int           plex86FD = -1;
 
-unsigned     plex86State = 0;
-int          plex86FD = -1;
+asm (".comm   plex86PrintBufferPage,4096,4096");
+asm (".comm   plex86GuestCPUPage,4096,4096");
+extern Bit8u       plex86PrintBufferPage[];
+extern Bit8u       plex86GuestCPUPage[];
+
 static Bit8u       *plex86MemPtr = 0;
-size_t       plex86MemSize = 0;
-Bit8u       *plex86PrintBuffer = 0;
-guest_cpu_t *plex86GuestCPU = 0;
+static size_t       plex86MemSize = 0;
+static Bit8u       *plex86PrintBuffer = plex86PrintBufferPage;
+static guest_cpu_t *plex86GuestCPU = (guest_cpu_t *) plex86GuestCPUPage;
 
 static void copyPlex86StateToBochs(BX_CPU_C *cpu);
 static void copyBochsDescriptorToPlex86(descriptor_t *, bx_descriptor_t *);
@@ -123,20 +128,10 @@ plex86TearDown(void)
   plex86State &= ~Plex86StateMMapPhyMem;
 
   if ( plex86State & Plex86StateMMapPrintBuffer ) {
-    fprintf(stderr, "plex86: unmapping print buffer.\n");
-    if (munmap(plex86PrintBuffer, 4096) != 0) {
-      perror("munmap of print buffer.");
-      return(0); // Failed.
-      }
     }
   plex86State &= ~Plex86StateMMapPrintBuffer;
 
   if ( plex86State & Plex86StateMMapGuestCPU ) {
-    fprintf(stderr, "plex86: unmapping guest_cpu structure.\n");
-    if (munmap(plex86GuestCPU, 4096) != 0) {
-      perror("munmap of guest_cpu structure.");
-      return(0); // Failed.
-      }
     }
   plex86State &= ~Plex86StateMMapGuestCPU;
 
@@ -446,7 +441,9 @@ plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
     return(0); // Error.
     }
   ioctlMsg.nMegs = bytes >> 20;
-  ioctlMsg.vector = vector;
+  ioctlMsg.guestPhyMemVector = (Bit32u) vector;
+  ioctlMsg.logBufferWindow   = (Bit32u) plex86PrintBuffer;
+  ioctlMsg.guestCPUWindow    = (Bit32u) plex86GuestCPU;
   if (ioctl(plex86FD, PLEX86_REGISTER_MEMORY, &ioctlMsg) == -1) {
     return(0); // Error.
     }
@@ -455,33 +452,9 @@ plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
   /* For now... */
 plex86State |= Plex86StateMemAllocated;
 plex86State |= Plex86StateMMapPhyMem;
-
-  // Create a memory mapping of the monitor's print buffer into
-  // user memory.  This is used for efficient printing of info that
-  // the monitor prints out.
-  fprintf(stderr, "plex86: mapping monitor print buffer into user mem.\n");
-  plex86PrintBuffer = (Bit8u*) mmap(NULL, 4096, PROT_READ,
-      MAP_SHARED, plex86FD, plex86MemSize + 0*4096);
-  if (plex86PrintBuffer == (void *) -1) {
-    perror("mmap of monitor print buffer");
-    plex86TearDown();
-    return(0);
-    }
-  plex86State |= Plex86StateMMapPrintBuffer;
-
-  // Create a memory mapping of the monitor's guest_cpu structure into
-  // user memory.  This is used for passing the guest_cpu state between
-  // user and kernel/monitor space.
-  fprintf(stderr, "plex86: mapping guest_cpu structure into user mem.\n");
-  plex86GuestCPU = (guest_cpu_t *) mmap(NULL, 4096, PROT_READ | PROT_WRITE,
-      MAP_SHARED, plex86FD, plex86MemSize + 1*4096);
-  if (plex86GuestCPU == (void *) -1) {
-    perror("mmap of guest_cpu structure");
-    plex86TearDown();
-    return(0);
-    }
-  plex86State |= Plex86StateMMapGuestCPU;
-  // No need to zero guest_cpu structure.  Kernel module does that.
+plex86State |= Plex86StateMMapPrintBuffer;
+plex86State |= Plex86StateMMapGuestCPU;
+// Zero out printbuffer and guestcpu here?
 
   fprintf(stderr, "plex86: RegisterGuestMemory: %uMB succeeded.\n",
           ioctlMsg.nMegs);
