@@ -25,6 +25,9 @@
 // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
 ///////////////////////////////////////////////////////////////////
 
+#define BX_SIMULATE_SMP 0
+#define BX_SMP_PROCESSORS 2
+
 #define BX_DEBUG_LINUX 0
 // if simulating Linux, this provides a few more debugging options
 // such as tracing all system calls.
