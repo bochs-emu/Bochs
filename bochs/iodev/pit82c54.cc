@@ -28,67 +28,7 @@
 #include "bochs.h"
 #define LOG_THIS this->
 
-class pit_82C54 : public logfunctions {
-
-private:
-
-  enum {
-    MAX_COUNTER=2,
-    MAX_ADDRESS=3,
-    CONTROL_ADDRESS=3,
-    MAX_MODE=5
-  };
-
-  enum rw_status {
-    LSByte=0,
-    MSByte=1,
-    LSByte_multiple=2,
-    MSByte_multiple=3
-  };
-
-  enum real_RW_status {
-    LSB_real=1,
-    MSB_real=2,
-    BOTH_real=3
-  };
-
-  struct counter_type {
-    //Chip IOs;
-    bool GATE; //GATE Input value at end of cycle
-    bool OUT; //OUT output this cycle
-
-    //Architected state;
-    Bit32u count; //Counter value this cycle
-    Bit16u outlatch; //Output latch this cycle
-    Bit16u inlatch; //Input latch this cycle
-    Bit8u status_latch;
-
-    //Status Register data;
-    Bit8u rw_mode; //2-bit R/W mode from command word register.
-    Bit8u mode; //3-bit mode from command word register.
-    bool bcd_mode; //1-bit BCD vs. Binary setting.
-    bool null_count; //Null count bit of status register.
-
-    //Latch status data;
-    bool count_LSB_latched;
-    bool count_MSB_latched;
-    bool status_latched;
-
-    //Miscelaneous State;
-    bool triggerGATE; //Whether we saw GATE rise this cycle.
-    rw_status write_state; //Read state this cycle
-    rw_status read_state; //Read state this cycle
-    bool count_written; //Whether a count written since programmed
-    bool first_pass; //Whether or not this is the first loaded count.
-    bool state_bit_1; //Miscelaneous state bits.
-    bool state_bit_2;
-  };
-
-  counter_type counter[3];
-
-  Bit8u controlword;
-
-  void latch_counter(counter_type & thisctr) {
+  void pit_82C54::latch_counter(counter_type & thisctr) {
     if(thisctr.count_LSB_latched || thisctr.count_MSB_latched) {
       //Do nothing because previous latch has not been read.;
     } else {
@@ -118,12 +58,12 @@ private:
     }
   }
 
-  void set_OUT (counter_type & thisctr, bool data) {
+  void pit_82C54::set_OUT (counter_type & thisctr, bool data) {
     //This will probably have a callback, so I put it here.
     thisctr.OUT=data;
   }
 
-  void decrement (counter_type & thisctr) {
+  void pit_82C54::decrement (counter_type & thisctr) {
     if(thisctr.bcd_mode) {
       if(!thisctr.count) {
 	thisctr.count=0x9999;
@@ -158,8 +98,7 @@ private:
     }
   }
 
-public:
-  void init (void) {
+  void pit_82C54::init (void) {
     Bit8u i;
     for(i=0;i<3;i++) {
       counter[i].read_state=LSByte;
@@ -181,13 +120,14 @@ public:
       counter[i].status_latched=0;
     }
   }
-  pit_82C54 (void) {
+
+  pit_82C54::pit_82C54 (void) {
     init();
   }
 
-  void clock(Bit8u cnum) {
+  void pit_82C54::clock(Bit8u cnum) {
     if(cnum>MAX_COUNTER) {
-      BX_ERROR(("Counter number too high in clock");
+      BX_ERROR(("Counter number too high in clock"));
     } else {
       counter_type & thisctr = counter[cnum];
       switch(thisctr.mode) {
@@ -214,7 +154,7 @@ public:
 	    thisctr.null_count=0;
 	    set_OUT(thisctr,0);
 	    if(thisctr.write_state==MSByte_multiple) {
-	      BX_ERROR(("Undefined behavior when loading a half loaded count.")));
+	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
 	    }
 	  } else {
 	    decrement(thisctr);
@@ -231,13 +171,13 @@ public:
 	    thisctr.count=thisctr.inlatch;
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
-	      BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2.");
+	      BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2."));
 	    }
 	    if(!thisctr.OUT) {
 	      set_OUT(thisctr,1);
 	    }
 	    if(thisctr.write_state==MSByte_multiple) {
-	      BX_ERROR(("Undefined behavior when loading a half loaded count.")));
+	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
 	    }
 	    thisctr.first_pass=0;
 	  } else {
@@ -345,13 +285,13 @@ public:
     }
   }
 
-  void clock_all(void) {
+  void pit_82C54::clock_all(void) {
     clock(0);
     clock(1);
     clock(2);
   }
 
-  Bit8u read(Bit8u address) {
+  Bit8u pit_82C54::read(Bit8u address) {
     if(address>MAX_ADDRESS) {
       BX_ERROR(("Counter address incorrect in data read."));
     } else if(address==CONTROL_ADDRESS) {
@@ -411,7 +351,7 @@ public:
     return 0;
   }
 
-  void write(Bit8u address, Bit8u data) {
+  void pit_82C54::write(Bit8u address, Bit8u data) {
     if(address>MAX_ADDRESS) {
       BX_ERROR(("Counter address incorrect in data write."));
     } else if(address==CONTROL_ADDRESS) {
@@ -537,7 +477,7 @@ public:
     }
   }
 
-  void set_GATE(Bit8u cnum, bool data) {
+  void pit_82C54::set_GATE(Bit8u cnum, bool data) {
     if(cnum>MAX_COUNTER) {
       BX_ERROR(("Counter number incorrect in 82C54 set_GATE"));
     } else {
@@ -564,7 +504,7 @@ public:
     }
   }
 
-  bool read_OUT(Bit8u cnum) {
+  bool pit_82C54::read_OUT(Bit8u cnum) {
     if(cnum>MAX_COUNTER) {
       BX_ERROR(("Counter number incorrect in 82C54 read_OUT"));
       return 0;
@@ -572,7 +512,8 @@ public:
       return counter[cnum].OUT;
     }
   }
-  bool read_GATE(Bit8u cnum) {
+
+  bool pit_82C54::read_GATE(Bit8u cnum) {
     if(cnum>MAX_COUNTER) {
       BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
       return 0;
@@ -581,4 +522,3 @@ public:
     }
   }
 
-};
