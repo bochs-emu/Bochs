@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.48 2004-10-05 18:59:20 sshwarts Exp $
+// $Id: logio.cc,v 1.49 2004-12-13 19:10:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,7 +28,6 @@
 
 #include "iodev/iodev.h"
 #include <assert.h>
-#include "state_file.h"
 
 #if BX_WITH_CARBON
 #define Float32 KLUDGE_Float32

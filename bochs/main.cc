@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.282 2004-11-06 10:50:02 vruppert Exp $
+// $Id: main.cc,v 1.283 2004-12-13 19:10:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,7 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 #include "bochs.h"
-#include "state_file.h"
 #include "iodev/iodev.h"
 
 #ifdef HAVE_LOCALE_H
@@ -98,7 +97,6 @@ bx_bool bx_user_quit;
 
 #if ( BX_PROVIDE_DEVICE_MODELS==1 )
 bx_pc_system_c bx_pc_system;
-class state_file state_stuff("state_file.out", "options");
 #endif
 
 bx_debug_t bx_dbg;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.148 2004-12-11 08:35:30 vruppert Exp $
+// $Id: bochs.h,v 1.149 2004-12-13 19:10:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -293,7 +293,6 @@ public:
 enum {
   IOLOG=0, FDLOG, GENLOG, CMOSLOG, CDLOG, DMALOG, ETHLOG, G2HLOG, HDLOG, KBDLOG,
   NE2KLOG, PARLOG, PCILOG, PICLOG, PITLOG, SB16LOG, SERLOG, VGALOG,
-  STLOG, // state_file.cc 
   DEVLOG, MEMLOG, DISLOG, GUILOG, IOAPICLOG, APICLOG, CPU0LOG, CPU1LOG,
   CPU2LOG, CPU3LOG, CPU4LOG, CPU5LOG, CPU6LOG, CPU7LOG, CPU8LOG, CPU9LOG,
   CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
@@ -384,8 +383,6 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 
 BOCHSAPI extern iofunc_t *io;
 BOCHSAPI extern logfunc_t *genlog;
-
-#include "state_file.h"
 
 #ifndef UNUSED
 #  define UNUSED(x) ((void)x)

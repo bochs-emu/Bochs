@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.97 2004-12-11 08:35:32 vruppert Exp $
+// $Id: keyboard.cc,v 1.98 2004-12-13 19:10:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.97 2004-12-11 08:35:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.98 2004-12-13 19:10:37 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1614,24 +1614,3 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_s
 
   create_mouse_packet(force_enq);
 }
-
-
-  int
-bx_keyb_c::SaveState( class state_file *fd )
-{
-  fd->write_check ("keyboard start");
-  fd->write (&BX_KEY_THIS s, sizeof (BX_KEY_THIS s));
-  fd->write_check ("keyboard end");
-  return(0);
-}
-
-
-  int
-bx_keyb_c::LoadState( class state_file *fd )
-{
-  fd->read_check ("keyboard start");
-  fd->read (&BX_KEY_THIS s, sizeof (BX_KEY_THIS s));
-  fd->read_check ("keyboard end");
-  return(0);
-}
-
