@@ -1,6 +1,7 @@
+./configure --enable-cpu-level=6 --enable-fpu
+This ^^^ is the minimal config line to allow SMP.
+
 ./configure --enable-cpu-level=6 --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
-
-
 
 my disk image is a duplicate of debussy's 212MB disk
 12 heads
@@ -1117,4 +1118,10 @@ ever gets there...  return from ide_get_queue, unplug_device???, then
 IRQ0x0e_interrupt.  So the PIC's mask bit for int14 just went off, and
 it signalled an interrupt, unlike my dumb IOAPIC.
 
+
+
+need to understand use of timers on bochs linux.  Esp. if I expect to use
+time commands to measure performance or something.  And make the local APIC
+timer actually work, since I recall that is used for system/user time
+profiling.
 
