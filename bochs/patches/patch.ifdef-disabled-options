@@ -1,0 +1,2001 @@
+----------------------------------------------------------------------
+Patch name: patch.ifdef-disabled-options
+Author: Bryce Denney <bryce@tlw.com>
+Date: Mon Nov 18 13:10:05 EST 2002
+
+Detailed description:
+
+For a whole lot of configure options, I put #if...#endif around code that
+is specific to the option, even in files which are normally only compiled
+when the option is on.  This allows me to create a MS Visual C++ 6.0 
+workspace that supports many of these options.  The workspace will basically
+compile every file all the time, but the code for disabled options will
+be commented out by the #if...#endif.
+
+This may one day lead to simplification of the Makefiles and configure 
+scripts, but for the moment I'm leaving them alone.
+
+Affected options:
+  BX_SUPPORT_APIC (cpu/apic.cc)
+  BX_SUPPORT_X86_64 (cpu/*64.cc)
+  BX_DEBUGGER (debug/*)
+  BX_DISASM (disasm/*)
+  BX_WITH_nameofgui (gui/*)
+  BX_SUPPORT_CDROM (iodev/cdrom.cc)
+  BX_NE2K_SUPPORT (iodev/eth*.cc, iodev/ne2k.cc)
+  BX_SUPPORT_APIC (iodev/ioapic.cc)
+  BX_IODEBUG_SUPPORT (iodev/iodebug.cc)
+  BX_PCI_SUPPORT (iodev/pci*.cc)
+  BX_SUPPORT_SB16 (iodev/sb*.cc)
+
+I made this patch on Linux because it configures and builds much faster, but
+I'll test it on VC++ (the intended target) before checking it in.  If this
+works right, it will save time while building win32 releases because I can set
+up different VC++ configurations with different options enabled and use Batch
+Build.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/apic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/apic.cc,v
+retrieving revision 1.25
+diff -u -r1.25 apic.cc
+--- cpu/apic.cc	25 Oct 2002 11:44:34 -0000	1.25
++++ cpu/apic.cc	18 Nov 2002 18:26:37 -0000
+@@ -4,6 +4,7 @@
+ //
+ #define NEED_CPU_REG_SHORTCUTS 1
+ #include "bochs.h"
++#if BX_SUPPORT_APIC
+ 
+ #define LOG_THIS this->
+ 
+@@ -795,3 +796,4 @@
+     bx_pc_system.deactivate_timer(timer_handle); // Make sure.
+     }
+ }
++#endif /* if BX_SUPPORT_APIC */
+Index: cpu/arith64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/arith64.cc,v
+retrieving revision 1.12
+diff -u -r1.12 arith64.cc
+--- cpu/arith64.cc	25 Oct 2002 18:26:27 -0000	1.12
++++ cpu/arith64.cc	18 Nov 2002 18:26:39 -0000
+@@ -32,6 +32,8 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SUPPORT_X86_64
++
+ 
+ /* I don't think these versions accessible in 64 bit mode
+   void
+@@ -868,3 +870,4 @@
+ }
+ 
+ 
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/ctrl_xfer64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/ctrl_xfer64.cc,v
+retrieving revision 1.17
+diff -u -r1.17 ctrl_xfer64.cc
+--- cpu/ctrl_xfer64.cc	25 Oct 2002 11:44:34 -0000	1.17
++++ cpu/ctrl_xfer64.cc	18 Nov 2002 18:26:39 -0000
+@@ -31,6 +31,7 @@
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
+ 
++#if BX_SUPPORT_X86_64
+ 
+ 
+ 
+@@ -584,3 +585,4 @@
+ #endif
+     }
+ }
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/data_xfer64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/data_xfer64.cc,v
+retrieving revision 1.12
+diff -u -r1.12 data_xfer64.cc
+--- cpu/data_xfer64.cc	25 Oct 2002 18:26:27 -0000	1.12
++++ cpu/data_xfer64.cc	18 Nov 2002 18:26:39 -0000
+@@ -33,6 +33,7 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SUPPORT_X86_64
+ 
+ 
+   void
+@@ -470,3 +471,4 @@
+   BX_PANIC(("cmov_gded called"));
+ #endif
+ }
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/fetchdecode64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/fetchdecode64.cc,v
+retrieving revision 1.30
+diff -u -r1.30 fetchdecode64.cc
+--- cpu/fetchdecode64.cc	15 Nov 2002 12:44:39 -0000	1.30
++++ cpu/fetchdecode64.cc	18 Nov 2002 18:26:45 -0000
+@@ -29,6 +29,8 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SUPPORT_X86_64
++
+ #if 0
+ // KPL.  A number of cases are testing field values after they have
+ // been 16-register extended, but should be testing the pre-extension
+@@ -3685,3 +3687,4 @@
+   return(1);
+ }
+ 
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/logical64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/logical64.cc,v
+retrieving revision 1.6
+diff -u -r1.6 logical64.cc
+--- cpu/logical64.cc	25 Oct 2002 18:26:28 -0000	1.6
++++ cpu/logical64.cc	18 Nov 2002 18:26:45 -0000
+@@ -33,6 +33,7 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SUPPORT_X86_64
+ 
+ 
+ 
+@@ -437,3 +438,5 @@
+ 
+     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_TEST64);
+ }
++
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/mult64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/mult64.cc,v
+retrieving revision 1.5
+diff -u -r1.5 mult64.cc
+--- cpu/mult64.cc	25 Oct 2002 11:44:35 -0000	1.5
++++ cpu/mult64.cc	18 Nov 2002 18:26:45 -0000
+@@ -33,6 +33,7 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SUPPORT_X86_64
+ 
+ unsigned partial_add(Bit32u *sum,Bit32u b)
+ {
+@@ -489,3 +490,5 @@
+       }
+ #endif
+ }
++
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/resolve64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/resolve64.cc,v
+retrieving revision 1.4
+diff -u -r1.4 resolve64.cc
+--- cpu/resolve64.cc	18 Sep 2002 08:00:40 -0000	1.4
++++ cpu/resolve64.cc	18 Nov 2002 18:26:45 -0000
+@@ -33,6 +33,7 @@
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
+ 
++#if BX_SUPPORT_X86_64
+ 
+ 
+   void
+@@ -455,3 +456,4 @@
+     RMAddr(i) = R15 + (Bit32s) i->displ32u();
+ }
+ 
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/shift64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/shift64.cc,v
+retrieving revision 1.8
+diff -u -r1.8 shift64.cc
+--- cpu/shift64.cc	25 Oct 2002 18:26:29 -0000	1.8
++++ cpu/shift64.cc	18 Nov 2002 18:26:46 -0000
+@@ -33,6 +33,7 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SUPPORT_X86_64
+ 
+   void
+ BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
+@@ -463,3 +464,5 @@
+       set_OF(0);
+     set_PF_base(result_64);
+ }
++
++#endif /* if BX_SUPPORT_X86_64 */
+Index: cpu/stack64.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/stack64.cc,v
+retrieving revision 1.8
+diff -u -r1.8 stack64.cc
+--- cpu/stack64.cc	24 Oct 2002 21:05:54 -0000	1.8
++++ cpu/stack64.cc	18 Nov 2002 18:26:46 -0000
+@@ -32,6 +32,8 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SUPPORT_X86_64
++
+ #if BX_USE_CPU_SMF
+ #define this (BX_CPU(0))
+ #endif
+@@ -315,3 +317,5 @@
+   RBP = temp64;
+   }
+ }
++
++#endif /* if BX_SUPPORT_X86_64 */
+Index: debug/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/Makefile.in,v
+retrieving revision 1.12
+diff -u -r1.12 Makefile.in
+--- debug/Makefile.in	29 Oct 2002 20:18:27 -0000	1.12
++++ debug/Makefile.in	18 Nov 2002 18:26:46 -0000
+@@ -106,6 +106,8 @@
+ 	$(YACC) -p bx -d $<
+ 	@/bin/mv -f y.tab.c parser.c
+ 	@/bin/mv -f y.tab.h parser.h
++	@echo '#endif  /* if BX_DEBUGGER */' >> parser.c
++	@echo '/* The #endif is appended by the makefile after running yacc. */' >> parser.c
+ 
+ lexer.c: lexer.l
+ 	$(LEX) -Pbx -t $< > lexer.c
+Index: debug/crc.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/crc.cc,v
+retrieving revision 1.2
+diff -u -r1.2 crc.cc
+--- debug/crc.cc	3 Oct 2001 13:10:37 -0000	1.2
++++ debug/crc.cc	18 Nov 2002 18:26:46 -0000
+@@ -28,6 +28,7 @@
+ 
+ 
+ #include "bochs.h"
++#if BX_DEBUGGER
+ 
+ unsigned long crc32_table[256];
+ /* Initialized first time "crc32()" is called. If you prefer, you can
+@@ -68,3 +69,4 @@
+                 crc32_table[i] = c;
+         }
+ }
++#endif /* if BX_DEBUGGER */
+Index: debug/dbg_main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/dbg_main.cc,v
+retrieving revision 1.87
+diff -u -r1.87 dbg_main.cc
+--- debug/dbg_main.cc	15 Nov 2002 22:11:24 -0000	1.87
++++ debug/dbg_main.cc	18 Nov 2002 18:26:50 -0000
+@@ -29,6 +29,8 @@
+ }
+ 
+ #include "bochs.h"
++#if BX_DEBUGGER
++
+ #define LOG_THIS genlog->
+ 
+ #if HAVE_LIBREADLINE
+@@ -4954,3 +4956,4 @@
+   return;
+ }
+ 
++#endif /* if BX_DEBUGGER */
+Index: debug/lexer.l
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/lexer.l,v
+retrieving revision 1.9
+diff -u -r1.9 lexer.l
+--- debug/lexer.l	4 Oct 2002 14:57:34 -0000	1.9
++++ debug/lexer.l	18 Nov 2002 18:26:51 -0000
+@@ -6,8 +6,11 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include "debug.h"
++#if BX_DEBUGGER
++
+ #include "parser.h"
+ 
++
+ int bx_yyinput(char *buf, int max_size);
+ #undef YY_INPUT
+ #define YY_INPUT(buf, ret, max_size) (ret = bx_yyinput(buf, max_size))
+@@ -170,3 +173,5 @@
+ 
+   bx_flush_buffer( YY_CURRENT_BUFFER );
+ }
++
++#endif /* if BX_DEBUGGER */
+Index: debug/linux.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/linux.cc,v
+retrieving revision 1.5
+diff -u -r1.5 linux.cc
+--- debug/linux.cc	1 Nov 2002 15:22:20 -0000	1.5
++++ debug/linux.cc	18 Nov 2002 18:26:51 -0000
+@@ -4,6 +4,7 @@
+ //
+ #include <stdio.h>
+ #include "bochs.h"
++#if BX_DEBUGGER
+ 
+ #define LOG_THIS genlog->
+ 
+@@ -160,3 +161,4 @@
+   char *name = syscall_names.get_name (cpu.eax);
+   fprintf (stderr, "linux system call %s (#%d)\n", name, cpu.eax);
+ }
++#endif /* if BX_DEBUGGER */
+Index: debug/parser.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/parser.c,v
+retrieving revision 1.7
+diff -u -r1.7 parser.c
+--- debug/parser.c	4 Oct 2002 14:57:35 -0000	1.7
++++ debug/parser.c	18 Nov 2002 18:26:54 -0000
+@@ -36,18 +36,25 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include "debug.h"
++
++#if BX_DEBUGGER
++/*
++NOTE: The #if comes from parser.y.  The makefile will add the matching #endif
++at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
++*/
++
+ /* %left '-' '+'*/
+ /* %left '*' '/'*/
+ /* %right*/
+ /* %nonassoc UMINUS*/
+-#line 16 "../../debug/parser.y"
++#line 23 "../../debug/parser.y"
+ typedef union {
+   char    *sval;
+   Bit32u   uval;
+   Bit64u   ulval;
+   bx_num_range   uval_range;
+   } YYSTYPE;
+-#line 51 "y.tab.c"
++#line 58 "y.tab.c"
+ #define BX_TOKEN_CONTINUE 257
+ #define BX_TOKEN_STEPN 258
+ #define BX_TOKEN_NEXT_STEP 259
+@@ -711,191 +718,191 @@
+     switch (yyn)
+     {
+ case 39:
+-#line 160 "../../debug/parser.y"
++#line 167 "../../debug/parser.y"
+ {
+       }
+ break;
+ case 40:
+-#line 166 "../../debug/parser.y"
++#line 173 "../../debug/parser.y"
+ {
+ 		bx_dbg_diff_memory();
+ 		free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 41:
+-#line 171 "../../debug/parser.y"
++#line 178 "../../debug/parser.y"
+ {
+ 		bx_dbg_sync_memory(1);
+ 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 42:
+-#line 176 "../../debug/parser.y"
++#line 183 "../../debug/parser.y"
+ {
+ 		bx_dbg_sync_memory(0);
+ 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 43:
+-#line 181 "../../debug/parser.y"
++#line 188 "../../debug/parser.y"
+ {
+ 		bx_dbg_sync_cpu(1);
+ 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 44:
+-#line 186 "../../debug/parser.y"
++#line 193 "../../debug/parser.y"
+ {
+ 		bx_dbg_sync_cpu(0);
+ 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 45:
+-#line 191 "../../debug/parser.y"
++#line 198 "../../debug/parser.y"
+ {
+ 		free(yyvsp[-2].sval);
+ 		bx_dbg_fast_forward(yyvsp[-1].uval);
+ 	}
+ break;
+ case 46:
+-#line 196 "../../debug/parser.y"
++#line 203 "../../debug/parser.y"
+ {
+ 	}
+ break;
+ case 47:
+-#line 199 "../../debug/parser.y"
++#line 206 "../../debug/parser.y"
+ {
+ 		free(yyvsp[-4].sval);
+ 		bx_dbg_info_address(yyvsp[-3].uval, yyvsp[-1].uval);
+         }
+ break;
+ case 48:
+-#line 204 "../../debug/parser.y"
++#line 211 "../../debug/parser.y"
+ {
+         }
+ break;
+ case 49:
+-#line 207 "../../debug/parser.y"
++#line 214 "../../debug/parser.y"
+ {
+         }
+ break;
+ case 50:
+-#line 212 "../../debug/parser.y"
++#line 219 "../../debug/parser.y"
+ { yyval.uval = 1; }
+ break;
+ case 51:
+-#line 213 "../../debug/parser.y"
++#line 220 "../../debug/parser.y"
+ { yyval.uval = 0; }
+ break;
+ case 52:
+-#line 214 "../../debug/parser.y"
++#line 221 "../../debug/parser.y"
+ { yyval.uval = 2; }
+ break;
+ case 53:
+-#line 215 "../../debug/parser.y"
++#line 222 "../../debug/parser.y"
+ { yyval.uval = 3; }
+ break;
+ case 54:
+-#line 216 "../../debug/parser.y"
++#line 223 "../../debug/parser.y"
+ { yyval.uval = 4; }
+ break;
+ case 55:
+-#line 217 "../../debug/parser.y"
++#line 224 "../../debug/parser.y"
+ { yyval.uval = 5; }
+ break;
+ case 56:
+-#line 222 "../../debug/parser.y"
++#line 229 "../../debug/parser.y"
+ {
+         bx_dbg_timebp_command(0, yyvsp[-1].ulval);
+ 	free(yyvsp[-2].sval);
+ 	}
+ break;
+ case 57:
+-#line 227 "../../debug/parser.y"
++#line 234 "../../debug/parser.y"
+ {
+         bx_dbg_timebp_command(1, yyvsp[-1].ulval);
+ 	free(yyvsp[-2].sval);
+ 	}
+ break;
+ case 58:
+-#line 235 "../../debug/parser.y"
++#line 242 "../../debug/parser.y"
+ {
+           bx_dbg_record_command(yyvsp[-1].sval);
+           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+           }
+ break;
+ case 59:
+-#line 243 "../../debug/parser.y"
++#line 250 "../../debug/parser.y"
+ {
+           bx_dbg_playback_command(yyvsp[-1].sval);
+           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+           }
+ break;
+ case 60:
+-#line 251 "../../debug/parser.y"
++#line 258 "../../debug/parser.y"
+ {
+           bx_dbg_modebp_command(yyvsp[-1].sval);
+           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+           }
+ break;
+ case 61:
+-#line 256 "../../debug/parser.y"
++#line 263 "../../debug/parser.y"
+ {
+           bx_dbg_modebp_command(0);
+           free(yyvsp[-1].sval);
+           }
+ break;
+ case 62:
+-#line 264 "../../debug/parser.y"
++#line 271 "../../debug/parser.y"
+ {
+           bx_dbg_show_command(yyvsp[-1].sval);
+           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+           }
+ break;
+ case 63:
+-#line 269 "../../debug/parser.y"
++#line 276 "../../debug/parser.y"
+ {
+           bx_dbg_show_command(0);
+           free(yyvsp[-1].sval);
+           }
+ break;
+ case 64:
+-#line 277 "../../debug/parser.y"
++#line 284 "../../debug/parser.y"
+ {
+         bx_dbg_ptime_command();
+         free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 65:
+-#line 285 "../../debug/parser.y"
++#line 292 "../../debug/parser.y"
+ {
+         bx_dbg_trace_on_command();
+         free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 66:
+-#line 293 "../../debug/parser.y"
++#line 300 "../../debug/parser.y"
+ {
+         bx_dbg_trace_off_command();
+         free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 67:
+-#line 301 "../../debug/parser.y"
++#line 308 "../../debug/parser.y"
+ {
+           bx_dbg_print_stack_command(16);
+           free(yyvsp[-1].sval);
+ 	  }
+ break;
+ case 68:
+-#line 306 "../../debug/parser.y"
++#line 313 "../../debug/parser.y"
+ {
+           bx_dbg_print_stack_command(yyvsp[-1].uval);
+           free(yyvsp[-2].sval);
+ 	  }
+ break;
+ case 69:
+-#line 314 "../../debug/parser.y"
++#line 321 "../../debug/parser.y"
+ {
+           watchpoint_continue = 0;
+ 	  fprintf(stderr, "Will stop on watch points\n");
+@@ -903,7 +910,7 @@
+           }
+ break;
+ case 70:
+-#line 320 "../../debug/parser.y"
++#line 327 "../../debug/parser.y"
+ {
+           watchpoint_continue = 1;
+           fprintf(stderr, "Will not stop on watch points (they will still be logged)\n");
+@@ -911,327 +918,327 @@
+           }
+ break;
+ case 71:
+-#line 326 "../../debug/parser.y"
++#line 333 "../../debug/parser.y"
+ {
+           bx_dbg_watch(-1, 0);
+           free(yyvsp[-1].sval);
+           }
+ break;
+ case 72:
+-#line 331 "../../debug/parser.y"
++#line 338 "../../debug/parser.y"
+ {
+           bx_dbg_unwatch(-1, 0);
+           free(yyvsp[-1].sval);
+           }
+ break;
+ case 73:
+-#line 336 "../../debug/parser.y"
++#line 343 "../../debug/parser.y"
+ {
+           bx_dbg_watch(1, yyvsp[-1].uval);
+           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+           }
+ break;
+ case 74:
+-#line 341 "../../debug/parser.y"
++#line 348 "../../debug/parser.y"
+ {
+           bx_dbg_unwatch(1, yyvsp[-1].uval);
+           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+           }
+ break;
+ case 75:
+-#line 346 "../../debug/parser.y"
++#line 353 "../../debug/parser.y"
+ {
+           bx_dbg_watch(0, yyvsp[-1].uval);
+           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+           }
+ break;
+ case 76:
+-#line 351 "../../debug/parser.y"
++#line 358 "../../debug/parser.y"
+ {
+           bx_dbg_unwatch(0, yyvsp[-1].uval);
+           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+           }
+ break;
+ case 77:
+-#line 359 "../../debug/parser.y"
++#line 366 "../../debug/parser.y"
+ {
+ 	bx_dbg_symbol_command(yyvsp[-1].sval, 0, 0);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 78:
+-#line 364 "../../debug/parser.y"
++#line 371 "../../debug/parser.y"
+ {
+ 	bx_dbg_symbol_command(yyvsp[-2].sval, 0, yyvsp[-1].uval);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         }
+ break;
+ case 79:
+-#line 369 "../../debug/parser.y"
++#line 376 "../../debug/parser.y"
+ {
+ 	bx_dbg_symbol_command(yyvsp[-2].sval, 1, yyvsp[-1].uval);
+         free(yyvsp[-4].sval); free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         }
+ break;
+ case 80:
+-#line 377 "../../debug/parser.y"
++#line 384 "../../debug/parser.y"
+ {
+         bx_dbg_where_command();
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 81:
+-#line 385 "../../debug/parser.y"
++#line 392 "../../debug/parser.y"
+ {
+         bx_dbg_print_string_command(yyvsp[-1].uval);
+         free(yyvsp[-2].sval);
+         }
+ break;
+ case 82:
+-#line 393 "../../debug/parser.y"
++#line 400 "../../debug/parser.y"
+ {
+         bx_dbg_continue_command();
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 83:
+-#line 401 "../../debug/parser.y"
++#line 408 "../../debug/parser.y"
+ {
+         bx_dbg_stepN_command(1);
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 84:
+-#line 406 "../../debug/parser.y"
++#line 413 "../../debug/parser.y"
+ {
+         bx_dbg_stepN_command(yyvsp[-1].uval);
+         free(yyvsp[-2].sval);
+         }
+ break;
+ case 85:
+-#line 414 "../../debug/parser.y"
++#line 421 "../../debug/parser.y"
+ {
+         bx_dbg_set_command(yyvsp[-3].sval, yyvsp[-2].sval, yyvsp[-1].sval);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 86:
+-#line 419 "../../debug/parser.y"
++#line 426 "../../debug/parser.y"
+ {
+         bx_dbg_set_command(yyvsp[-3].sval, yyvsp[-2].sval, yyvsp[-1].sval);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 87:
+-#line 424 "../../debug/parser.y"
++#line 431 "../../debug/parser.y"
+ {
+         bx_dbg_set_symbol_command(yyvsp[-3].sval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
+         }
+ break;
+ case 88:
+-#line 432 "../../debug/parser.y"
++#line 439 "../../debug/parser.y"
+ {
+         bx_dbg_vbreakpoint_command(0, 0, 0);
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 89:
+-#line 437 "../../debug/parser.y"
++#line 444 "../../debug/parser.y"
+ {
+         bx_dbg_vbreakpoint_command(1, yyvsp[-3].uval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval);
+         }
+ break;
+ case 90:
+-#line 442 "../../debug/parser.y"
++#line 449 "../../debug/parser.y"
+ {
+         bx_dbg_lbreakpoint_command(0, 0);
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 91:
+-#line 447 "../../debug/parser.y"
++#line 454 "../../debug/parser.y"
+ {
+         bx_dbg_lbreakpoint_command(1, yyvsp[-1].uval);
+         free(yyvsp[-2].sval);
+         }
+ break;
+ case 92:
+-#line 452 "../../debug/parser.y"
++#line 459 "../../debug/parser.y"
+ {
+         bx_dbg_pbreakpoint_command(0, 0);
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 93:
+-#line 457 "../../debug/parser.y"
++#line 464 "../../debug/parser.y"
+ {
+         bx_dbg_pbreakpoint_command(1, yyvsp[-1].uval);
+         free(yyvsp[-2].sval);
+         }
+ break;
+ case 94:
+-#line 462 "../../debug/parser.y"
++#line 469 "../../debug/parser.y"
+ {
+         bx_dbg_pbreakpoint_command(1, yyvsp[-1].uval);
+         free(yyvsp[-3].sval);
+         }
+ break;
+ case 95:
+-#line 470 "../../debug/parser.y"
++#line 477 "../../debug/parser.y"
+ {
+         bx_dbg_info_bpoints_command();
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 96:
+-#line 475 "../../debug/parser.y"
++#line 482 "../../debug/parser.y"
+ {
+         bx_dbg_info_program_command();
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 97:
+-#line 480 "../../debug/parser.y"
++#line 487 "../../debug/parser.y"
+ {
+         bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 98:
+-#line 485 "../../debug/parser.y"
++#line 492 "../../debug/parser.y"
+ {
+         bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 99:
+-#line 490 "../../debug/parser.y"
++#line 497 "../../debug/parser.y"
+ {
+         bx_dbg_info_registers_command(BX_INFO_CPU_REGS | BX_INFO_FPU_REGS);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 100:
+-#line 495 "../../debug/parser.y"
++#line 502 "../../debug/parser.y"
+ {
+         bx_dbg_info_dirty_command();
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 101:
+-#line 500 "../../debug/parser.y"
++#line 507 "../../debug/parser.y"
+ {
+         bx_dbg_info_idt_command(yyvsp[-1].uval_range);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         }
+ break;
+ case 102:
+-#line 505 "../../debug/parser.y"
++#line 512 "../../debug/parser.y"
+ {
+         bx_dbg_info_gdt_command(yyvsp[-1].uval_range);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         }
+ break;
+ case 103:
+-#line 510 "../../debug/parser.y"
++#line 517 "../../debug/parser.y"
+ {
+         bx_dbg_info_ldt_command(yyvsp[-1].uval_range);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         }
+ break;
+ case 104:
+-#line 515 "../../debug/parser.y"
++#line 522 "../../debug/parser.y"
+ {
+         bx_dbg_info_tss_command(yyvsp[-1].uval_range);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         }
+ break;
+ case 105:
+-#line 520 "../../debug/parser.y"
++#line 527 "../../debug/parser.y"
+ {
+         bx_dbg_info_linux_command();
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 106:
+-#line 525 "../../debug/parser.y"
++#line 532 "../../debug/parser.y"
+ {
+         bx_dbg_info_control_regs_command();
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 107:
+-#line 530 "../../debug/parser.y"
++#line 537 "../../debug/parser.y"
+ {
+         bx_dbg_info_ne2k(-1, -1);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 108:
+-#line 535 "../../debug/parser.y"
++#line 542 "../../debug/parser.y"
+ {
+         free(yyvsp[-4].sval); free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         bx_dbg_info_ne2k(yyvsp[-1].uval, -1);
+         }
+ break;
+ case 109:
+-#line 540 "../../debug/parser.y"
++#line 547 "../../debug/parser.y"
+ {
+         free(yyvsp[-6].sval); free(yyvsp[-5].sval); free(yyvsp[-4].sval); free(yyvsp[-2].sval);
+         bx_dbg_info_ne2k(yyvsp[-3].uval, yyvsp[-1].uval);
+         }
+ break;
+ case 110:
+-#line 547 "../../debug/parser.y"
++#line 554 "../../debug/parser.y"
+ { yyval.uval = EMPTY_ARG; }
+ break;
+ case 112:
+-#line 551 "../../debug/parser.y"
++#line 558 "../../debug/parser.y"
+ { yyval.uval_range = make_num_range (EMPTY_ARG, EMPTY_ARG); }
+ break;
+ case 114:
+-#line 556 "../../debug/parser.y"
++#line 563 "../../debug/parser.y"
+ {
+     yyval.uval_range = make_num_range (yyvsp[0].uval, yyvsp[0].uval);
+   }
+ break;
+ case 115:
+-#line 561 "../../debug/parser.y"
++#line 568 "../../debug/parser.y"
+ {
+     yyval.uval_range = make_num_range (yyvsp[-1].uval, yyvsp[0].uval);
+   }
+ break;
+ case 116:
+-#line 566 "../../debug/parser.y"
++#line 573 "../../debug/parser.y"
+ {
+     yyval.uval_range = make_num_range (yyvsp[-2].uval, yyvsp[0].uval);
+   }
+ break;
+ case 117:
+-#line 573 "../../debug/parser.y"
++#line 580 "../../debug/parser.y"
+ {
+         bx_dbg_dump_cpu_command();
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 118:
+-#line 581 "../../debug/parser.y"
++#line 588 "../../debug/parser.y"
+ {
+         bx_dbg_del_breakpoint_command(yyvsp[-1].uval);
+         free(yyvsp[-2].sval);
+         }
+ break;
+ case 119:
+-#line 589 "../../debug/parser.y"
++#line 596 "../../debug/parser.y"
+ {
+ 	  bx_dbg_quit_command();
+ 	  free(yyvsp[-1].sval);
+         }
+ break;
+ case 120:
+-#line 598 "../../debug/parser.y"
++#line 605 "../../debug/parser.y"
+ {
+         bx_dbg_examine_command(yyvsp[-3].sval, yyvsp[-2].sval,1, yyvsp[-1].uval,1, 0);
+ #if BX_NUM_SIMULATORS >= 2
+@@ -1241,7 +1248,7 @@
+         }
+ break;
+ case 121:
+-#line 606 "../../debug/parser.y"
++#line 613 "../../debug/parser.y"
+ {
+         bx_dbg_examine_command(yyvsp[-2].sval, yyvsp[-1].sval,1, 0,0, 0);
+ #if BX_NUM_SIMULATORS >= 2
+@@ -1251,7 +1258,7 @@
+         }
+ break;
+ case 122:
+-#line 614 "../../debug/parser.y"
++#line 621 "../../debug/parser.y"
+ {
+         /*FIXME HanishKVC This method of hunting thro all the */
+         /*      simulators may be better than using 2 calls if */
+@@ -1266,7 +1273,7 @@
+         }
+ break;
+ case 123:
+-#line 627 "../../debug/parser.y"
++#line 634 "../../debug/parser.y"
+ {
+         /*FIXME HanishKVC This method of hunting thro all the */
+         /*      simulators may be better than using 2 calls if */
+@@ -1281,174 +1288,174 @@
+         }
+ break;
+ case 124:
+-#line 643 "../../debug/parser.y"
++#line 650 "../../debug/parser.y"
+ {
+         bx_dbg_setpmem_command(yyvsp[-3].uval, yyvsp[-2].uval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval);
+         }
+ break;
+ case 125:
+-#line 651 "../../debug/parser.y"
++#line 658 "../../debug/parser.y"
+ {
+         bx_dbg_query_command(yyvsp[-1].sval);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 126:
+-#line 659 "../../debug/parser.y"
++#line 666 "../../debug/parser.y"
+ {
+         bx_dbg_take_command(yyvsp[-1].sval, 1);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 127:
+-#line 664 "../../debug/parser.y"
++#line 671 "../../debug/parser.y"
+ {
+         bx_dbg_take_command(yyvsp[-2].sval, yyvsp[-1].uval);
+         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+         }
+ break;
+ case 128:
+-#line 669 "../../debug/parser.y"
++#line 676 "../../debug/parser.y"
+ {
+         bx_dbg_take_command(yyvsp[-1].sval, 1);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 129:
+-#line 677 "../../debug/parser.y"
++#line 684 "../../debug/parser.y"
+ {
+         bx_dbg_set_cpu_command();
+         free(yyvsp[-1].sval);
+         }
+ break;
+ case 130:
+-#line 685 "../../debug/parser.y"
++#line 692 "../../debug/parser.y"
+ {
+         bx_dbg_disassemble_command(yyvsp[-1].uval_range);
+         free(yyvsp[-2].sval);
+         }
+ break;
+ case 131:
+-#line 693 "../../debug/parser.y"
++#line 700 "../../debug/parser.y"
+ {
+         bx_dbg_instrument_command(yyvsp[-1].sval);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 132:
+-#line 698 "../../debug/parser.y"
++#line 705 "../../debug/parser.y"
+ {
+         bx_dbg_instrument_command(yyvsp[-1].sval);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 133:
+-#line 703 "../../debug/parser.y"
++#line 710 "../../debug/parser.y"
+ {
+         bx_dbg_instrument_command(yyvsp[-1].sval);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 134:
+-#line 708 "../../debug/parser.y"
++#line 715 "../../debug/parser.y"
+ {
+         bx_dbg_instrument_command(yyvsp[-1].sval);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 135:
+-#line 716 "../../debug/parser.y"
++#line 723 "../../debug/parser.y"
+ {
+         bx_dbg_loader_command(yyvsp[-1].sval);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 136:
+-#line 724 "../../debug/parser.y"
++#line 731 "../../debug/parser.y"
+ {
+         bx_dbg_doit_command(yyvsp[-1].uval);
+         free(yyvsp[-2].sval);
+         }
+ break;
+ case 137:
+-#line 732 "../../debug/parser.y"
++#line 739 "../../debug/parser.y"
+ {
+         bx_dbg_crc_command(yyvsp[-2].uval, yyvsp[-1].uval);
+         free(yyvsp[-3].sval);
+         }
+ break;
+ case 138:
+-#line 740 "../../debug/parser.y"
++#line 747 "../../debug/parser.y"
+ {
+         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
+         }
+ break;
+ case 139:
+-#line 745 "../../debug/parser.y"
++#line 752 "../../debug/parser.y"
+ {
+         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
+         }
+ break;
+ case 140:
+-#line 750 "../../debug/parser.y"
++#line 757 "../../debug/parser.y"
+ {
+         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
+         }
+ break;
+ case 141:
+-#line 755 "../../debug/parser.y"
++#line 762 "../../debug/parser.y"
+ {
+         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
+         }
+ break;
+ case 142:
+-#line 760 "../../debug/parser.y"
++#line 767 "../../debug/parser.y"
+ {
+         bx_dbg_maths_expression_command(yyvsp[-1].sval);
+         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+         }
+ break;
+ case 143:
+-#line 767 "../../debug/parser.y"
++#line 774 "../../debug/parser.y"
+ {
+         bx_dbg_v2l_command(yyvsp[-3].uval, yyvsp[-1].uval);
+         free(yyvsp[-4].sval);
+         }
+ break;
+ case 144:
+-#line 775 "../../debug/parser.y"
++#line 782 "../../debug/parser.y"
+ {
+ 	bx_dbg_trace_reg_on_command();
+ 	free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 145:
+-#line 783 "../../debug/parser.y"
++#line 790 "../../debug/parser.y"
+ {
+ 	bx_dbg_trace_reg_off_command();
+ 	free(yyvsp[-1].sval);
+ 	}
+ break;
+ case 146:
+-#line 791 "../../debug/parser.y"
++#line 798 "../../debug/parser.y"
+ {
+          bx_dbg_help_command(yyvsp[-1].sval);
+          free(yyvsp[-2].sval);free(yyvsp[-1].sval);
+          }
+ break;
+ case 147:
+-#line 796 "../../debug/parser.y"
++#line 803 "../../debug/parser.y"
+ {
+          bx_dbg_help_command(0);
+          free(yyvsp[-1].sval);
+          }
+ break;
+-#line 1452 "y.tab.c"
++#line 1459 "y.tab.c"
+     }
+     yyssp -= yym;
+     yystate = *yyssp;
+@@ -1505,3 +1512,5 @@
+ yyaccept:
+     return (0);
+ }
++#endif  /* if BX_DEBUGGER */
++/* The #endif is appended by the makefile after running yacc. */
+Index: debug/parser.y
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/parser.y,v
+retrieving revision 1.7
+diff -u -r1.7 parser.y
+--- debug/parser.y	4 Oct 2002 14:57:35 -0000	1.7
++++ debug/parser.y	18 Nov 2002 18:26:54 -0000
+@@ -6,6 +6,13 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include "debug.h"
++
++#if BX_DEBUGGER
++/*
++NOTE: The #if comes from parser.y.  The makefile will add the matching #endif
++at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
++*/
++
+ // %left '-' '+'
+ // %left '*' '/'
+ // %right
+Index: disasm/dis_decode.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/dis_decode.cc,v
+retrieving revision 1.11
+diff -u -r1.11 dis_decode.cc
+--- disasm/dis_decode.cc	25 Oct 2002 11:44:35 -0000	1.11
++++ disasm/dis_decode.cc	18 Nov 2002 18:26:56 -0000
+@@ -35,6 +35,8 @@
+ #define BX_DISASM_LOWER_CASE_REG_NAME 0
+ 
+ #include "bochs.h"
++#if BX_DISASM
++
+ #define LOG_THIS bx_disassemble.
+ 
+ bx_disassemble_c bx_disassemble;
+@@ -1829,3 +1831,4 @@
+   if (index_name16[index])
+     dis_sprintf("[%s]", index_name16[index]);
+ }
++#endif /* if BX_DISASM */
+Index: disasm/dis_groups.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/dis_groups.cc,v
+retrieving revision 1.6
+diff -u -r1.6 dis_groups.cc
+--- disasm/dis_groups.cc	28 Sep 2002 06:29:55 -0000	1.6
++++ disasm/dis_groups.cc	18 Nov 2002 18:26:56 -0000
+@@ -27,6 +27,7 @@
+ 
+ 
+ #include "bochs.h"
++#if BX_DISASM
+ 
+ 
+ 
+@@ -837,3 +838,5 @@
+     dis_sprintf("DI");
+     }
+ }
++
++#endif /* if BX_DISASM */
+Index: gui/amigaos.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/amigaos.cc,v
+retrieving revision 1.10
+diff -u -r1.10 amigaos.cc
+--- gui/amigaos.cc	25 Oct 2002 11:44:36 -0000	1.10
++++ gui/amigaos.cc	18 Nov 2002 18:27:05 -0000
+@@ -31,6 +31,7 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_WITH_AMIGAOS
+ #include "icon_bochs.h"
+ #include "amigagui.h"
+ 
+@@ -697,3 +698,4 @@
+     show_pointer();
+   }
+ }
++#endif /* if BX_WITH_AMIGAOS */
+Index: gui/beos.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/beos.cc,v
+retrieving revision 1.20
+diff -u -r1.20 beos.cc
+--- gui/beos.cc	26 Oct 2002 21:03:21 -0000	1.20
++++ gui/beos.cc	18 Nov 2002 18:27:06 -0000
+@@ -30,6 +30,9 @@
+ // is used to know when we are exporting symbols and when we are importing.
+ #define BX_PLUGGABLE
+ 
++#include "bochs.h"
++#if BX_WITH_BEOS
++
+ #include <app/Application.h>
+ #include <interface/Window.h>
+ #include <interface/View.h>
+@@ -43,7 +46,6 @@
+ #include <ctype.h>
+ #include <string.h>
+ 
+-#include "bochs.h"
+ //#include "icon_bochs.h"
+ #include "font/vga.bitmap.h"
+ 
+@@ -1227,3 +1229,5 @@
+   }
+ }
+ //IRA=> End
++
++#endif /* if BX_WITH_BEOS */
+Index: gui/carbon.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/carbon.cc,v
+retrieving revision 1.16
+diff -u -r1.16 carbon.cc
+--- gui/carbon.cc	14 Nov 2002 01:40:11 -0000	1.16
++++ gui/carbon.cc	18 Nov 2002 18:27:07 -0000
+@@ -41,6 +41,9 @@
+ 
+ // BOCHS INCLUDES
+ #include "bochs.h"
++
++#if BX_WITH_CARBON
++
+ #include "icon_bochs.h"
+ #include "font/vga.bitmap.h"
+ #include "bxversion.h"
+@@ -1993,3 +1996,4 @@
+ #endif
+   return event;
+ }
++#endif /* if BX_WITH_CARBON */
+Index: gui/macintosh.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/macintosh.cc,v
+retrieving revision 1.16
+diff -u -r1.16 macintosh.cc
+--- gui/macintosh.cc	18 Nov 2002 16:42:57 -0000	1.16
++++ gui/macintosh.cc	18 Nov 2002 18:27:08 -0000
+@@ -36,6 +36,10 @@
+ 
+ // BOCHS INCLUDES
+ #include "bochs.h"
++
++// decide whether to enable this file or not
++#if BX_WITH_MACOS
++
+ #include "icon_bochs.h"
+ #include "font/vga.bitmap.h"
+ 
+@@ -1564,3 +1568,4 @@
+ bx_macintosh_gui_c::mouse_enabled_changed_specific (bx_bool val)
+ {
+ }
++#endif /* if BX_WITH_MACOS */
+Index: gui/rfb.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/rfb.cc,v
+retrieving revision 1.19
+diff -u -r1.19 rfb.cc
+--- gui/rfb.cc	25 Oct 2002 11:44:37 -0000	1.19
++++ gui/rfb.cc	18 Nov 2002 18:27:10 -0000
+@@ -27,6 +27,8 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_WITH_RFB
++
+ #include "icon_bochs.h"
+ #include "font/vga.bitmap.h"
+ 
+@@ -1325,3 +1327,5 @@
+ bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
+ {
+ }
++
++#endif /* if BX_WITH_RFB */
+Index: gui/sdl.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/sdl.cc,v
+retrieving revision 1.29
+diff -u -r1.29 sdl.cc
+--- gui/sdl.cc	25 Oct 2002 11:44:37 -0000	1.29
++++ gui/sdl.cc	18 Nov 2002 18:27:10 -0000
+@@ -31,12 +31,14 @@
+ // is used to know when we are exporting symbols and when we are importing.
+ #define BX_PLUGGABLE
+ 
++#include "bochs.h"
++#if BX_WITH_SDL
++
+ #include <stdlib.h>
+ #include <SDL/SDL.h>
+ #include <SDL/SDL_endian.h>
+ #include <SDL/SDL_thread.h>
+ 
+-#include "bochs.h"
+ #include "icon_bochs.h"
+ #include "sdl.h"
+ 
+@@ -1150,3 +1152,5 @@
+   }
+   return BX_KEYMAP_UNKNOWN;
+ }
++
++#endif /* if BX_WITH_SDL */
+Index: gui/term.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/term.cc,v
+retrieving revision 1.23
+diff -u -r1.23 term.cc
+--- gui/term.cc	25 Oct 2002 11:44:37 -0000	1.23
++++ gui/term.cc	18 Nov 2002 18:27:11 -0000
+@@ -32,6 +32,8 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_WITH_TERM
++
+ #include "icon_bochs.h"
+ 
+ extern "C" {
+@@ -715,3 +717,4 @@
+ bx_term_gui_c::mouse_enabled_changed_specific (bx_bool val)
+ {
+ }
++#endif /* if BX_WITH_TERM */
+Index: gui/win32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/win32.cc,v
+retrieving revision 1.46
+diff -u -r1.46 win32.cc
+--- gui/win32.cc	25 Oct 2002 11:44:37 -0000	1.46
++++ gui/win32.cc	18 Nov 2002 18:27:13 -0000
+@@ -34,6 +34,8 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_WITH_WIN32
++
+ #include "icon_bochs.h"
+ #include "font/vga.bitmap.h"
+ // windows.h is included by bochs.h
+@@ -1400,3 +1402,4 @@
+     DeleteObject(hFont[i]);
+   }
+ }
++#endif /* if BX_WITH_WIN32 */
+Index: gui/wx.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/wx.cc,v
+retrieving revision 1.50
+diff -u -r1.50 wx.cc
+--- gui/wx.cc	18 Nov 2002 02:40:31 -0000	1.50
++++ gui/wx.cc	18 Nov 2002 18:27:14 -0000
+@@ -36,6 +36,9 @@
+ // is used to know when we are exporting symbols and when we are importing.
+ #define BX_PLUGGABLE
+ 
++#include "bochs.h"
++#if BX_WITH_WX
++
+ // For compilers that support precompilation, includes <wx/wx.h>.
+ #include <wx/wxprec.h>
+ #ifdef __BORLANDC__
+@@ -47,7 +50,6 @@
+ #include <wx/image.h>
+ #include <wx/clipbrd.h>
+ 
+-#include "bochs.h"
+ #include "gui/icon_bochs.h"
+ #include "osdep.h"
+ #include "font/vga.bitmap.h"
+@@ -1259,3 +1261,5 @@
+     return((Bit32u)keysym);
+ }
+ #endif
++
++#endif /* if BX_WITH_WX */
+Index: gui/wxdialog.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/wxdialog.cc,v
+retrieving revision 1.49
+diff -u -r1.49 wxdialog.cc
+--- gui/wxdialog.cc	16 Nov 2002 22:44:09 -0000	1.49
++++ gui/wxdialog.cc	18 Nov 2002 18:27:16 -0000
+@@ -7,6 +7,9 @@
+ // is used to know when we are exporting symbols and when we are importing.
+ #define BX_PLUGGABLE
+ 
++#include "config.h"              // definitions based on configure script
++#if BX_WITH_WX
++
+ // For compilers that support precompilation, includes <wx/wx.h>.
+ #include <wx/wxprec.h>
+ #ifdef __BORLANDC__
+@@ -20,7 +23,6 @@
+ #include <wx/confbase.h>
+ #include <wx/notebook.h>
+ 
+-#include "config.h"              // definitions based on configure script
+ #include "osdep.h"               // workarounds for missing stuff
+ #include "gui/siminterface.h"    // interface to the simulator
+ #include "bxversion.h"           // get version string
+@@ -2576,3 +2578,5 @@
+   control->SetSelection (lastChoice-1);
+   return control;
+ }
++
++#endif /* if BX_WITH_WX */
+Index: gui/wxmain.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/wxmain.cc,v
+retrieving revision 1.77
+diff -u -r1.77 wxmain.cc
+--- gui/wxmain.cc	18 Nov 2002 17:16:07 -0000	1.77
++++ gui/wxmain.cc	18 Nov 2002 18:27:17 -0000
+@@ -42,6 +42,9 @@
+ // is used to know when we are exporting symbols and when we are importing.
+ #define BX_PLUGGABLE
+ 
++#include "config.h"              // definitions based on configure script
++#if BX_WITH_WX
++
+ // For compilers that support precompilation, includes "wx/wx.h".
+ #include <wx/wxprec.h>
+ #ifdef __BORLANDC__
+@@ -53,7 +56,6 @@
+ #include <wx/image.h>
+ #include <wx/clipbrd.h>
+ 
+-#include "config.h"              // definitions based on configure script
+ #include "osdep.h"               // workarounds for missing stuff
+ #include "gui/siminterface.h"    // interface to the simulator
+ #include "bxversion.h"           // get version string
+@@ -1645,4 +1647,4 @@
+   dest[destlen-1] = 0;
+ }
+ 
+-
++#endif /* if BX_WITH_WX */
+Index: gui/x.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/x.cc,v
+retrieving revision 1.53
+diff -u -r1.53 x.cc
+--- gui/x.cc	27 Oct 2002 23:33:13 -0000	1.53
++++ gui/x.cc	18 Nov 2002 18:27:30 -0000
+@@ -32,6 +32,9 @@
+ // is used to know when we are exporting symbols and when we are importing.
+ #define BX_PLUGGABLE
+ 
++#include "bochs.h"
++#if BX_WITH_X11
++
+ extern "C" {
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+@@ -40,7 +43,6 @@
+ #include <X11/keysym.h>
+ }
+ 
+-#include "bochs.h"
+ #include "icon_bochs.h"
+ 
+ class bx_x_gui_c : public bx_gui_c {
+@@ -1558,3 +1560,5 @@
+ }
+ #endif
+ #endif /* BX_USE_IDLE_HACK */  
++
++#endif /* if BX_WITH_X11 */
+Index: iodev/cdrom.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cdrom.cc,v
+retrieving revision 1.50
+diff -u -r1.50 cdrom.cc
+--- iodev/cdrom.cc	1 Nov 2002 16:36:26 -0000	1.50
++++ iodev/cdrom.cc	18 Nov 2002 18:27:30 -0000
+@@ -38,6 +38,7 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_SUPPORT_CDROM
+ 
+ #define LOG_THIS /* no SMF tricks here, not needed */
+ 
+@@ -1291,3 +1292,4 @@
+     }
+ }
+ 
++#endif /* if BX_SUPPORT_CDROM */
+Index: iodev/eth.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth.cc,v
+retrieving revision 1.12
+diff -u -r1.12 eth.cc
+--- iodev/eth.cc	18 Apr 2002 00:59:58 -0000	1.12
++++ iodev/eth.cc	18 Nov 2002 18:27:30 -0000
+@@ -30,6 +30,8 @@
+ // NE2000/ether stuff.
+ 
+ #include "bochs.h"
++#if BX_NE2K_SUPPORT
++
+ #define LOG_THIS /* not needed */
+ 
+ eth_locator_c *eth_locator_c::all;
+@@ -141,3 +143,5 @@
+ 
+   return (NULL);
+ }
++
++#endif /* if BX_NE2K_SUPPORT */
+Index: iodev/eth_arpback.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_arpback.cc,v
+retrieving revision 1.8
+diff -u -r1.8 eth_arpback.cc
+--- iodev/eth_arpback.cc	25 Oct 2002 11:44:39 -0000	1.8
++++ iodev/eth_arpback.cc	18 Nov 2002 18:27:30 -0000
+@@ -33,7 +33,7 @@
+ 
+ #include "bochs.h"
+ 
+-#ifdef ETH_ARPBACK
++#if BX_NE2K_SUPPORT && defined(ETH_ARPBACK)
+ 
+ #include "crc32.h"
+ #include "eth_packetmaker.h"
+@@ -205,5 +205,5 @@
+   }
+ }
+ 
+-#endif
++#endif /* if BX_NE2K_SUPPORT && defined(ETH_ARPBACK) */
+ 
+Index: iodev/eth_fbsd.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_fbsd.cc,v
+retrieving revision 1.23
+diff -u -r1.23 eth_fbsd.cc
+--- iodev/eth_fbsd.cc	24 Oct 2002 21:07:24 -0000	1.23
++++ iodev/eth_fbsd.cc	18 Nov 2002 18:27:30 -0000
+@@ -49,7 +49,8 @@
+ //
+ 
+ #include "bochs.h"
+-#ifdef ETH_FBSD
++#if BX_NE2K_SUPPORT && defined(ETH_FBSD)
++
+ #define LOG_THIS bx_ne2k.
+ 
+ extern "C" {
+@@ -374,5 +375,6 @@
+ 	bhdr = (struct bpf_hdr*) ((char*) bhdr + BPF_WORDALIGN(bhdr->bh_hdrlen + bhdr->bh_caplen));
+   }  
+ }
+-#endif
++
++#endif /* if BX_NE2K_SUPPORT && defined(ETH_FBSD) */
+ 
+Index: iodev/eth_linux.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_linux.cc,v
+retrieving revision 1.10
+diff -u -r1.10 eth_linux.cc
+--- iodev/eth_linux.cc	24 Oct 2002 21:07:25 -0000	1.10
++++ iodev/eth_linux.cc	18 Nov 2002 18:27:30 -0000
+@@ -41,7 +41,7 @@
+ //
+ 
+ #include "bochs.h"
+-#ifdef ETH_LINUX
++#if BX_NE2K_SUPPORT && defined (ETH_LINUX)
+ #define LOG_THIS bx_ne2k.
+ 
+ extern "C" {
+@@ -277,4 +277,4 @@
+     (*rxh)(rxarg, rxbuf, nbytes);
+ //  }
+ }
+-#endif
++#endif /* if BX_NE2K_SUPPORT && defined ETH_LINUX */
+Index: iodev/eth_null.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_null.cc,v
+retrieving revision 1.10
+diff -u -r1.10 eth_null.cc
+--- iodev/eth_null.cc	24 Oct 2002 21:07:28 -0000	1.10
++++ iodev/eth_null.cc	18 Nov 2002 18:27:30 -0000
+@@ -32,6 +32,8 @@
+ // rfc0903: rarp
+ 
+ #include "bochs.h"
++#if BX_NE2K_SUPPORT
++
+ #define LOG_THIS bx_ne2k.
+ 
+ 
+@@ -153,3 +155,5 @@
+   }
+ #endif
+ }
++
++#endif /* if BX_NE2K_SUPPORT */
+Index: iodev/eth_packetmaker.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_packetmaker.cc,v
+retrieving revision 1.6
+diff -u -r1.6 eth_packetmaker.cc
+--- iodev/eth_packetmaker.cc	25 Oct 2002 11:44:39 -0000	1.6
++++ iodev/eth_packetmaker.cc	18 Nov 2002 18:27:30 -0000
+@@ -4,7 +4,7 @@
+ //
+ #include "bochs.h"
+ 
+-#ifdef ETH_ARPBACK
++#if BX_NE2K_SUPPORT && defined(ETH_ARPBACK)
+ 
+ #include "eth_packetmaker.h"
+ 
+@@ -176,5 +176,4 @@
+   }
+ }
+ 
+-#endif
+-
++#endif /* if BX_NE2K_SUPPORT && defined(ETH_ARPBACK) */
+Index: iodev/eth_tap.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_tap.cc,v
+retrieving revision 1.8
+diff -u -r1.8 eth_tap.cc
+--- iodev/eth_tap.cc	24 Oct 2002 21:07:28 -0000	1.8
++++ iodev/eth_tap.cc	18 Nov 2002 18:27:31 -0000
+@@ -80,6 +80,8 @@
+ // 
+ 
+ #include "bochs.h"
++#if BX_NE2K_SUPPORT
++
+ #define LOG_THIS bx_ne2k.
+ 
+ #include <signal.h>
+@@ -328,3 +330,5 @@
+   }
+   (*rxh)(rxarg, rxbuf, nbytes);
+ }
++
++#endif /* if BX_NE2K_SUPPORT */
+Index: iodev/eth_tuntap.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_tuntap.cc,v
+retrieving revision 1.4
+diff -u -r1.4 eth_tuntap.cc
+--- iodev/eth_tuntap.cc	2 Oct 2002 05:16:01 -0000	1.4
++++ iodev/eth_tuntap.cc	18 Nov 2002 18:27:31 -0000
+@@ -82,6 +82,8 @@
+ // 
+ 
+ #include "bochs.h"
++#if BX_NE2K_SUPPORT
++
+ #define LOG_THIS bx_ne2k.
+ 
+ #include <signal.h>
+@@ -421,3 +423,5 @@
+   }
+   return WEXITSTATUS(status);
+ }
++
++#endif /* if BX_NE2K_SUPPORT */
+Index: iodev/eth_win32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/eth_win32.cc,v
+retrieving revision 1.14
+diff -u -r1.14 eth_win32.cc
+--- iodev/eth_win32.cc	3 Oct 2002 21:07:04 -0000	1.14
++++ iodev/eth_win32.cc	18 Nov 2002 18:27:32 -0000
+@@ -37,6 +37,8 @@
+ // Download it from http://netgroup-serv.polito.it/winpcap
+ 
+ #include "bochs.h"
++#if BX_NE2K_SUPPORT
++
+ // windows.h included by bochs.h
+ #define LOG_THIS bx_ne2k.
+ 
+@@ -349,3 +351,5 @@
+ 		}
+     }
+ }
++
++#endif /* if BX_NE2K_SUPPORT */
+Index: iodev/ioapic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ioapic.cc,v
+retrieving revision 1.10
+diff -u -r1.10 ioapic.cc
+--- iodev/ioapic.cc	25 Oct 2002 11:44:40 -0000	1.10
++++ iodev/ioapic.cc	18 Nov 2002 18:27:32 -0000
+@@ -4,6 +4,7 @@
+ //
+ #include <stdio.h>
+ #include  "bochs.h"
++#if BX_SUPPORT_APIC
+ 
+ class bx_ioapic_c bx_ioapic;
+ #define LOG_THIS  bx_ioapic.
+@@ -170,3 +171,5 @@
+     }
+   }
+ }
++
++#endif /* if BX_SUPPORT_APIC */
+Index: iodev/iodebug.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodebug.cc,v
+retrieving revision 1.14
+diff -u -r1.14 iodebug.cc
+--- iodev/iodebug.cc	18 Nov 2002 17:27:40 -0000	1.14
++++ iodev/iodebug.cc	18 Nov 2002 18:27:32 -0000
+@@ -1,8 +1,9 @@
+ /////////////////////////////////////////////////////////////////////////
+-// $Id: iodebug.cc,v 1.14 2002/11/18 17:27:40 bdenney Exp $
++// $Id: iodebug.cc,v 1.13 2002/10/26 03:53:22 bdenney Exp $
+ /////////////////////////////////////////////////////////////////////////
+ //
+ #include "bochs.h"
++#if BX_IODEBUG_SUPPORT
+ 
+ 
+ 
+@@ -350,3 +351,4 @@
+   }
+ //  fprintf(stderr, "IODEBUG unable to register memory range, all slots taken\n");
+ }
++#endif /* if BX_IODEBUG_SUPPORT */
+Index: iodev/ne2k.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ne2k.cc,v
+retrieving revision 1.44
+diff -u -r1.44 ne2k.cc
+--- iodev/ne2k.cc	18 Nov 2002 17:16:07 -0000	1.44
++++ iodev/ne2k.cc	18 Nov 2002 18:27:33 -0000
+@@ -29,6 +29,8 @@
+ 
+ 
+ #include "bochs.h"
++#if BX_NE2K_SUPPORT
++
+ #define LOG_THIS bx_ne2k.
+ 
+ bx_ne2k_c bx_ne2k;
+@@ -1573,3 +1575,5 @@
+ }
+ 
+ #endif
++
++#endif /* if BX_NE2K_SUPPORT */
+Index: iodev/pci.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pci.cc,v
+retrieving revision 1.25
+diff -u -r1.25 pci.cc
+--- iodev/pci.cc	14 Nov 2002 20:02:57 -0000	1.25
++++ iodev/pci.cc	18 Nov 2002 18:27:34 -0000
+@@ -34,6 +34,8 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_PCI_SUPPORT
++
+ #define LOG_THIS thePciBridge->
+ 
+ bx_pci_c *thePciBridge = NULL;
+@@ -470,3 +472,4 @@
+     return false; // device/function not available, return false.
+     }
+ }
++#endif /* BX_PCI_SUPPORT */
+Index: iodev/pci2isa.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pci2isa.cc,v
+retrieving revision 1.6
+diff -u -r1.6 pci2isa.cc
+--- iodev/pci2isa.cc	14 Nov 2002 20:02:58 -0000	1.6
++++ iodev/pci2isa.cc	18 Nov 2002 18:27:34 -0000
+@@ -34,6 +34,8 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_PCI_SUPPORT
++
+ #define LOG_THIS thePci2IsaBridge->
+ 
+ bx_pci2isa_c *thePci2IsaBridge = NULL;
+@@ -298,3 +300,5 @@
+       }
+     }
+ }
++
++#endif /* BX_PCI_SUPPORT */
+Index: iodev/sb16.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/sb16.cc,v
+retrieving revision 1.29
+diff -u -r1.29 sb16.cc
+--- iodev/sb16.cc	13 Nov 2002 18:39:40 -0000	1.29
++++ iodev/sb16.cc	18 Nov 2002 18:27:36 -0000
+@@ -32,6 +32,8 @@
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if BX_SUPPORT_SB16
++
+ #define LOG_THIS theSB16Device->
+ 
+ bx_sb16_c *theSB16Device = NULL;
+@@ -3509,3 +3511,5 @@
+ {
+   return BX_SOUND_OUTPUT_OK;
+ }
++
++#endif /* if BX_SUPPORT_SB16 */
+Index: iodev/soundlnx.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/soundlnx.cc,v
+retrieving revision 1.4
+diff -u -r1.4 soundlnx.cc
+--- iodev/soundlnx.cc	3 Oct 2001 13:10:38 -0000	1.4
++++ iodev/soundlnx.cc	18 Nov 2002 18:27:37 -0000
+@@ -26,9 +26,9 @@
+ 
+ // This file (SOUNDLNX.CC) written and donated by Josef Drexler
+ 
+-#if defined(linux)
+ 
+ #include "bochs.h"
++#if defined(linux) && BX_SUPPORT_SB16
+ #define LOG_THIS bx_sb16.
+ 
+ #include <errno.h>
+Index: iodev/soundwin.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/soundwin.cc,v
+retrieving revision 1.11
+diff -u -r1.11 soundwin.cc
+--- iodev/soundwin.cc	16 Nov 2002 10:29:57 -0000	1.11
++++ iodev/soundwin.cc	18 Nov 2002 18:27:37 -0000
+@@ -26,14 +26,14 @@
+ 
+ // This file (SOUNDWIN.CC) written and donated by Josef Drexler
+ 
+-#if defined(WIN32)
+-
+ // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+ // platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+ // is used to know when we are exporting symbols and when we are importing.
+ #define BX_PLUGGABLE
+ 
+ #include "bochs.h"
++#if defined(WIN32) && BX_SUPPORT_SB16
++
+ #define LOG_THIS bx_devices.pluginSB16Device->
+ 
+ bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
