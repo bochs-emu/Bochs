@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.70 2003-11-14 15:43:12 vruppert Exp $
+// $Id: win32.cc,v 1.71 2003-12-14 09:51:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,11 +135,13 @@ static HBITMAP vgafont[256];
 static unsigned x_edge=0, y_edge=0, y_caption=0;
 static int xChar = 8, yChar = 16;
 static unsigned int text_rows=25, text_cols=80;
+static BOOL BxTextMode = TRUE;
 #if !BX_USE_WINDOWS_FONTS
 static Bit8u h_panning = 0, v_panning = 0;
-#endif
+#else
 static HFONT hFont[3];
 static int FontId = 2;
+#endif
 
 static char szAppName[] = "Bochs for Windows";
 static char szWindowName[] = "Bochs for Windows - Display";
@@ -1395,7 +1397,8 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 {
   RECT R;
 
-  if (fheight > 0) {
+  BxTextMode = (fheight > 0);
+  if (BxTextMode) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
 #if BX_USE_WINDOWS_FONTS
@@ -1432,8 +1435,7 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   stretched_x = dimension_x;
   stretched_y = dimension_y;
   stretch_factor = 1;
-  while ( stretched_x<400)
-  {
+  if (BxTextMode && (stretched_x<400)) {
     stretched_x *= 2;
     stretch_factor *= 2;
   }
