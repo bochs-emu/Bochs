@@ -1,4 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
+// $Id: apic.h,v 1.14 2005-03-19 20:44:00 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -20,6 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_CPU_APIC_H
@@ -91,12 +95,11 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
   // cleared when the interrupt is acknowledged by the processor.
   Bit8u irr[BX_LOCAL_APIC_MAX_INTS];
   // ISR=in-service register.  When an IRR bit is cleared, the corresponding
-  // bit in ISR is set.  The ISR bit is cleared when
-  Bit8u  isr[BX_LOCAL_APIC_MAX_INTS];
+  // bit in ISR is set.
+  Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
   Bit32u arb_id;
   Bit32u arb_priority;
   Bit32u task_priority;
-  Bit32u proc_priority;
   Bit32u log_dest;
   Bit32u dest_format;
   Bit32u spurious_vec;

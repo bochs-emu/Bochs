@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.11 2003-10-06 10:01:12 sshwarts Exp $
+// $Id: segment_ctrl.cc,v 1.12 2005-03-19 20:44:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,12 +23,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
-
-
-
+//
+/////////////////////////////////////////////////////////////////////////
 
 
 
@@ -37,18 +33,13 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-
-
-
-
-  void
-BX_CPU_C::LES_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LES_GvMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
     // (BW) NT seems to use this when booting.
     BX_INFO(("invalid use of LES, must use memory reference!"));
     UndefinedOpcode(i);
-    }
+  }
 
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
@@ -61,10 +52,10 @@ BX_CPU_C::LES_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
     BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-    }
+  }
   else
 #endif /* BX_CPU_LEVEL > 2 */
-    { /* 16 bit mode */
+  { /* 16 bit mode */
     Bit16u reg_16, es;
 
     read_virtual_word(i->seg(), RMAddr(i), &reg_16);
@@ -73,16 +64,15 @@ BX_CPU_C::LES_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
     BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-    }
+  }
 }
 
-  void
-BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
     BX_INFO(("invalid use of LDS, must use memory reference!"));
     UndefinedOpcode(i);
-    }
+  }
 
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
@@ -95,7 +85,7 @@ BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
     BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-    }
+  }
   else
 #endif /* BX_CPU_LEVEL > 2 */
     { /* 16 bit mode */
@@ -107,20 +97,17 @@ BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
     BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-    }
+  }
 }
 
-  void
-BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("lfs_gvmp: not supported on 8086"));
-#else /* 386+ */
+#if BX_CPU_LEVEL >= 3
 
+void BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
+{
   if (i->modC0()) {
     BX_INFO(("invalid use of LFS, must use memory reference!"));
     UndefinedOpcode(i);
-    }
+  }
 
   if (i->os32L()) {
     Bit32u reg_32;
@@ -132,7 +119,7 @@ BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
     BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-    }
+  }
   else { /* 16 bit operand size */
     Bit16u reg_16;
     Bit16u fs;
@@ -143,21 +130,15 @@ BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
     BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-    }
-#endif
+  }
 }
 
-  void
-BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("lgs_gvmp: not supported on 8086"));
-#else /* 386+ */
-
   if (i->modC0()) {
     BX_INFO(("invalid use of LGS, must use memory reference!"));
     UndefinedOpcode(i);
-    }
+  }
 
   if (i->os32L()) {
     Bit32u reg_32;
@@ -169,7 +150,7 @@ BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
     BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-    }
+  }
   else { /* 16 bit operand size */
     Bit16u reg_16;
     Bit16u gs;
@@ -180,21 +161,15 @@ BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
     BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-    }
-#endif
+  }
 }
 
-  void
-BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("lss_gvmp: not supported on 8086"));
-#else /* 386+ */
-
   if (i->modC0()) {
     BX_INFO(("invalid use of LSS, must use memory reference!"));
     UndefinedOpcode(i);
-    }
+  }
 
   if (i->os32L()) {
     Bit32u reg_32;
@@ -206,7 +181,7 @@ BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss_raw);
 
     BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-    }
+  }
   else { /* 16 bit operand size */
     Bit16u reg_16;
     Bit16u ss_raw;
@@ -217,6 +192,7 @@ BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss_raw);
 
     BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-    }
-#endif
+  }
 }
+
+#endif

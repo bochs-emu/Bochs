@@ -55,15 +55,6 @@ diff -u -r1.14 apic.cc
  #define LOG_THIS this->
  
  bx_generic_apic_c *apic_index[APIC_MAX_ID];
-@@ -15,7 +18,7 @@
-   id = APIC_UNKNOWN_ID;
-   put("APIC?");
-   settype(APICLOG);
--  hwreset ();
-+  // hwreset (); see bx_local_apic_c::bx_local_apic_c
- }
- 
- bx_generic_apic_c::~bx_generic_apic_c () 
 @@ -169,32 +178,51 @@
  
  bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
@@ -292,27 +283,6 @@ diff -u -r1.14 apic.cc
      }
    }
    BX_INFO(("}", cpu->name));
-@@ -691,14 +776,14 @@
- }
- 
- Bit8u bx_local_apic_c::get_ppr ()
-+
- {
--  static int warned = 0;
--  if (warned < 10) {
--    BX_ERROR(("WARNING: Local APIC Processor Priority not implemented, returning 0"));
--    warned++;
--  }
--  // should look at TPR, vector of highest priority isr, etc.
--  return 0;
-+  int ppr;
-+
-+  ppr = highest_priority_int (isr);							// see what's in service now
-+  if ((ppr < 0) || ((task_priority & 0xF0) >= (ppr & 0xF0))) ppr = task_priority;	// or if tpr is higher, use that
-+  else ppr &= 0xF0;
-+  return (ppr);
- }
- 
  
 Index: cpu/cpu.cc
 ===================================================================

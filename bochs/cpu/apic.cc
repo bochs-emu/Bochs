@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.43 2005-03-19 18:42:59 sshwarts Exp $
+// $Id: apic.cc,v 1.44 2005-03-19 20:44:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -18,7 +18,6 @@ bx_generic_apic_c::bx_generic_apic_c ()
   id = APIC_UNKNOWN_ID;
   put("APIC?");
   settype(APICLOG);
-  hwreset ();
 }
 
 void bx_generic_apic_c::set_arb_id (int new_arb_id)
@@ -219,6 +218,10 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       /* once = false */
       break;
     case APIC_DM_INIT:
+
+      // NOTE: special behavior of local apics is handled in
+      // bx_local_apic_c::deliver
+
       // normal INIT IPI sent to processors
       for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
         if (deliver_bitmask & (1<<i)) local_apic_index[i]->init();
@@ -379,8 +382,7 @@ void bx_local_apic_c::init ()
   icr_high = icr_low = log_dest = task_priority = 0;
   spurious_vec = 0xff;   // software disabled (bit 8)
 
-  // KPL
-  // Register a non-active timer for use when the timer is started.
+  // KPL: Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
             BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
 }
@@ -426,7 +428,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
   if (len != 4) {
     BX_PANIC (("local apic write with len=%d (should be 4)", len));
   }
-  BX_DEBUG(("%s: write %08x to APIC address %08x", cpu->name, *data, addr));
+  BX_DEBUG(("%s: write 0x%08x to APIC address %08x", cpu->name, *data, addr));
   addr &= 0xff0;
   Bit32u value = *data;
   switch (addr) {
@@ -460,7 +462,8 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       BX_DEBUG (("set destination format to %02x", dest_format));
       break;
     case 0xf0: // spurious interrupt vector
-      spurious_vec = (spurious_vec & 0x0f) | (value & 0x3f0);
+      // bits 0-3 are hardwired to logical '1
+      spurious_vec = (spurious_vec & 0xff) | (value & 0x30f);
       break;
     case 0x280: // error status reg
       // Here's what the IA-devguide-3 says on p.7-45:
@@ -826,18 +829,14 @@ Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 
 Bit8u bx_local_apic_c::get_ppr ()
 {
-  Bit32u tpr = (task_priority >> 4) & 0xf;		/* we want 7:4 */
-  Bit32u isrv = (highest_priority_int(isr) >> 4) & 0xf;	/* ditto */
+  int ppr = highest_priority_int (isr);
 
-  if (tpr >= isrv)
-    proc_priority = task_priority & 0xff;
-  else
-    proc_priority = isrv << 4;	/* low 4 bits of PPR have to be cleared */
+  if ((ppr < 0) || ((task_priority & 0xF0) >= (ppr & 0xF0))) 
+    ppr = task_priority;
+  else 
+    ppr &= 0xF0;
 
-  if (bx_dbg.apic)
-    BX_DEBUG(("%s: get_ppr returning %#x", cpu->name, proc_priority));
-
-  return (Bit8u) proc_priority;
+  return ppr;
 }
 
 Bit8u bx_local_apic_c::get_tpr ()

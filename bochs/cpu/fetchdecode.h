@@ -1,4 +1,6 @@
 /////////////////////////////////////////////////////////////////////////
+// $Id: fetchdecode.h,v 1.15 2005-03-19 20:44:00 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman <gate at fidonet.org.il>
@@ -16,6 +18,9 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
+
 
 #ifndef BX_COMMON_FETCHDECODE_TABLES_H
 #define BX_COMMON_FETCHDECODE_TABLES_H
