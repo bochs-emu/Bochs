@@ -47,7 +47,7 @@ GUI_OBJS_MACOS = macintosh.o
 GUI_OBJS_NOGUI = nogui.o
 GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
-GUI_OBJS = gui.o control.o siminterface.o wx.o @GUI_OBJS@
+GUI_OBJS = gui.o control.o siminterface.o @GUI_OBJS@
 
 BX_INCDIRS = -I.. -I../iodev -I../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
