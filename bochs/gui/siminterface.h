@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.85 2002-11-14 05:14:10 bdenney Exp $
+// $Id: siminterface.h,v 1.86 2002-11-15 13:22:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1055,10 +1055,22 @@ public:
 ////////////////////////////////////////////////////////////////
 
 
-#define BX_QUICK_START 0        // read bochsrc and start simulation immediately
-#define BX_LOAD_START  1        // default action load conf file 
-#define BX_EDIT_START  2        // default action edit conf file 
-#define BX_RUN_START   3        // default action start execution
+// These are the different start modes.
+enum {
+  // Just start the simulation without running the configuration interface
+  // at all, unless something goes wrong.
+  BX_QUICK_START = 200,
+  // Run the configuration interface.  The default action will be to load a
+  // configuration file.  This makes sense if a config file could not be
+  // loaded, either because it wasn't found or because it had errors.
+  BX_LOAD_START,
+  // Run the configuration interface.  The default action will be to
+  // edit the configuration.
+  BX_EDIT_START,
+  // Run the configuration interface, but make the default action be to
+  // start the simulation.
+  BX_RUN_START
+};
 
 #define BX_FLOPPY_NONE   10 // floppy not present
 #define BX_FLOPPY_1_2    11 // 1.2M  5.25"
