@@ -85,6 +85,7 @@ void OnPauseResumeBochs(wxCommandEvent& event);
 void OnKillBochs(wxCommandEvent& event);
 void OnBochs2GuiEvent(wxCommandEvent& event);
 int HandleAskParam (BxEvent *event);
+int HandleAskFilename (BxEvent *event);
 int StartBochsThread ();
 
 // called from the Bochs thread's OnExit() method.
@@ -310,14 +311,67 @@ int
 MyFrame::HandleAskParam (BxEvent *event)
 {
   wxASSERT (event->type == BX_SYNC_EVT_ASK_PARAM);
-  switch (event->u.param.id) {
+  bx_id param = event->u.param.id;
+  switch (param) {
   case BXP_FLOPPYA_PATH:
   case BXP_FLOPPYB_PATH:
-	return HandleVgaGuiButton (event->u.param.id);
+  case BXP_DISKC_PATH:
+  case BXP_DISKD_PATH:
+  case BXP_CDROM_PATH:
+	{
+	  Raise();  // bring the control panel to front so dialog shows
+	  char *msg;
+	  if (param==BXP_FLOPPYA_PATH || param==BXP_FLOPPYB_PATH)
+	    msg = "Choose new floppy disk image file";
+      else if (param==BXP_DISKC_PATH || param==BXP_DISKD_PATH)
+	    msg = "Choose new hard disk image file";
+      else if (param==BXP_CDROM_PATH)
+	    msg = "Choose new CDROM image file";
+	  else
+	    msg = "Choose new image file";
+	  wxFileDialog dialog(this, msg, "", "", "*.*", 0);
+	  int ret = dialog.ShowModal();
+	  if (ret == wxID_OK)
+	  {
+	    char *newpath = (char *)dialog.GetPath().c_str ();
+	    if (newpath && strlen(newpath)>0) {
+	      // change floppy path to this value.
+	      bx_param_string_c *Opath = SIM->get_param_string (param);
+	      assert (Opath != NULL);
+	      wxLogDebug ("Setting floppy %c path to '%s'\n", 
+		    param == BXP_FLOPPYA_PATH ? 'A' : 'B',
+		    newpath);
+	      Opath->set (newpath);
+	      return 1;
+	    }
+	  }
+	  return 0;
+	}
   default:
 	wxLogError ("HandleAskParam: parameter %d, not implemented\n", event->u.param.id);
   }
   return -1;  // could not display
+}
+
+int 
+MyFrame::HandleAskFilename (BxEvent *event)
+{
+  Raise();  // bring the control panel to front so dialog shows
+  // add option for confirm overwrite.
+  wxFileDialog dialog(this, 
+    event->u.askfile.prompt,
+	event->u.askfile.the_default,
+	"", "*.*", 0);
+  int ret = dialog.ShowModal();
+  if (ret == wxID_OK)
+  {
+	char *newpath = (char *)dialog.GetPath().c_str ();
+	if (newpath && strlen(newpath)>0) {
+	  strncpy (event->u.askfile.result, newpath, event->u.askfile.result_len);
+	  return 1;
+	}
+  }
+  return 0;
 }
 
 void 
@@ -329,6 +383,11 @@ MyFrame::OnBochs2GuiEvent (wxCommandEvent& event)
   // all cases should return.  sync event handlers MUST send back a 
   // response.
   switch (be->type) {
+  case BX_SYNC_EVT_ASK_FILENAME:
+    be->retcode = HandleAskFilename (be);
+    // sync must return something; just return a copy of the event.
+    bochs_thread->SendSyncResponse(be);
+	return;
   case BX_SYNC_EVT_ASK_PARAM:
     be->retcode = HandleAskParam (be);
     // sync must return something; just return a copy of the event.
@@ -405,26 +464,9 @@ MyFrame::HandleVgaGuiButton (bx_id param)
   {
 	case BXP_FLOPPYA_PATH:
 	case BXP_FLOPPYB_PATH:
-	{
-	  Raise();  // bring the control panel to front so dialog shows
-	  wxFileDialog dialog(this, "Choose new floppy disk image file", "", "", "*.img", 0);
-	  int ret = dialog.ShowModal();
-	  if (ret == wxID_OK)
-	  {
-	    char *newpath = (char *)dialog.GetPath().c_str ();
-	    if (newpath && strlen(newpath)>0) {
-	      // change floppy path to this value.
-	      bx_param_string_c *Opath = SIM->get_param_string (param);
-	      assert (Opath != NULL);
-	      wxLogDebug ("Setting floppy %c path to '%s'\n", 
-		    param == BXP_FLOPPYA_PATH ? 'A' : 'B',
-		    newpath);
-	      Opath->set (newpath);
-	      return 1;
-	    }
-	  }
-	  return 0;
-	}
+	case BXP_DISKC_PATH:
+	case BXP_DISKD_PATH:
+	case BXP_CDROM_PATH:
 	default:
 	  wxLogDebug ("HandleVgaGuiButton: button %d not recognized\n", param);
 	  return -1;
@@ -456,6 +498,7 @@ BochsThread::SiminterfaceCallback2 (BxEvent *event)
   switch (event->type)
   {
   case BX_SYNC_EVT_ASK_PARAM:
+  case BX_SYNC_EVT_ASK_FILENAME:
   case BX_SYNC_EVT_TICK:
     ClearSyncResponse ();  // must be before postevent.
     async = 0;
