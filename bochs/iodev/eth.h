@@ -39,6 +39,7 @@ typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 class eth_pktmover_c : public logfunctions {
 public:
   virtual void sendpkt(void *buf, unsigned io_len) = 0;
+  virtual ~eth_pktmover_c (void) {}
 protected:
   eth_rx_handler_t  rxh;   // receive callback
   void *rxarg;
