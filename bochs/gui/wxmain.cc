@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.99 2003-09-05 22:07:54 vruppert Exp $
+// $Id: wxmain.cc,v 1.100 2003-09-19 17:04:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -1028,7 +1028,7 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
         long style = 
           (n_opt & param->SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
         wxLogDebug ("HandleAskParamString: create dialog");
-        wxFileDialog *fdialog = new wxFileDialog (this, msg, "", "", "*.*", style);
+        wxFileDialog *fdialog = new wxFileDialog (this, msg, "", wxString(param->getptr ()), "*.*", style);
         wxLogDebug ("HandleAskParamString: before showmodal");
         if (fdialog->ShowModal() == wxID_OK)
           newval = (char *)fdialog->GetPath().c_str ();
