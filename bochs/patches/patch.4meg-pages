@@ -2005,7 +2005,7 @@ diff -Naur bochs-2000_0325a.orig/debug/lexer.c bochs-2000_0325a/debug/lexer.c
 @@ -20,6 +20,7 @@
  
  /* Scanner skeleton version:
-  * $Header: /home/volker/Archiv/bochs-cvs-rsync-20110222/bochs/patches/patch.4meg-pages,v 1.1 2001-05-03 16:21:30 bdenney Exp $
+  * $Header: /home/volker/Archiv/bochs-cvs-rsync-20110222/bochs/patches/patch.4meg-pages,v 1.1.4.1 2001-05-16 06:58:56 bdenney Exp $
 + * $FreeBSD: src/usr.bin/lex/flex.skl,v 1.4 1999/10/27 07:56:44 obrien Exp $
   */
  
