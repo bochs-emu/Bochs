@@ -1,6 +1,44 @@
-diff -urN clean/.conf.macosx chkplat/.conf.macosx
+diff -urN clean/.conf.amigaos chkplat2/.conf.amigaos
+--- clean/.conf.amigaos	Thu Dec 13 16:02:56 2001
++++ chkplat2/.conf.amigaos	Wed Mar  6 18:16:48 2002
+@@ -3,4 +3,4 @@
+ # These options should work on Amiga/MorphOS
+ #
+ 
+-./configure --with-amigaos --enable-fpu --enable-cdrom --enable-split-hd ${CONFIGURE_ARGS}
++./configure --enable-cdrom ${CONFIGURE_ARGS}
+diff -urN clean/.conf.beos-x86-R4 chkplat2/.conf.beos-x86-R4
+--- clean/.conf.beos-x86-R4	Mon Apr  9 21:04:08 2001
++++ chkplat2/.conf.beos-x86-R4	Wed Mar  6 18:15:18 2002
+@@ -15,4 +15,4 @@
+ export CFLAGS
+ export CXXFLAGS
+ 
+-./configure --with-beos
++./configure
+diff -urN clean/.conf.beos-x86-preR4 chkplat2/.conf.beos-x86-preR4
+--- clean/.conf.beos-x86-preR4	Mon Apr  9 21:04:08 2001
++++ chkplat2/.conf.beos-x86-preR4	Wed Mar  6 18:15:26 2002
+@@ -15,4 +15,4 @@
+ export CFLAGS
+ export CXXFLAGS
+ 
+-./configure --with-beos
++./configure 
+diff -urN clean/.conf.macos chkplat2/.conf.macos
+--- clean/.conf.macos	Sun Oct  7 17:23:00 2001
++++ chkplat2/.conf.macos	Wed Mar  6 18:16:06 2002
+@@ -18,6 +18,6 @@
+ export CFLAGS
+ export CXXFLAGS
+ 
+-./configure --with-macos
++./configure --target=mac-macos
+ 
+ unset echo
+diff -urN clean/.conf.macosx chkplat2/.conf.macosx
 --- clean/.conf.macosx	Thu Dec 13 16:02:56 2001
-+++ chkplat/.conf.macosx	Wed Mar  6 17:56:24 2002
++++ chkplat2/.conf.macosx	Wed Mar  6 18:14:42 2002
 @@ -4,7 +4,7 @@
  
  set echo
@@ -18,9 +56,9 @@ diff -urN clean/.conf.macosx chkplat/.conf.macosx
 +./configure
  
  unset echo
-diff -urN clean/.conf.sparc chkplat/.conf.sparc
+diff -urN clean/.conf.sparc chkplat2/.conf.sparc
 --- clean/.conf.sparc	Mon Apr  9 21:04:08 2001
-+++ chkplat/.conf.sparc	Wed Mar  6 17:57:10 2002
++++ chkplat2/.conf.sparc	Wed Mar  6 18:14:42 2002
 @@ -19,7 +19,8 @@
  export CFLAGS
  export CXXFLAGS
@@ -31,9 +69,20 @@ diff -urN clean/.conf.sparc chkplat/.conf.sparc
  #./configure
  #./configure --enable-instrumentation
  #./configure --with-nogui
-diff -urN clean/.conf.win32-cygwin chkplat/.conf.win32-cygwin
+diff -urN clean/.conf.win32 chkplat2/.conf.win32
+--- clean/.conf.win32	Mon Apr  9 21:04:08 2001
++++ chkplat2/.conf.win32	Wed Mar  6 18:17:16 2002
+@@ -14,6 +14,6 @@
+ export CFLAGS
+ export CXXFLAGS
+ 
+-./configure --with-win32
++./configure --target=pentium-windows
+ 
+ unset echo
+diff -urN clean/.conf.win32-cygwin chkplat2/.conf.win32-cygwin
 --- clean/.conf.win32-cygwin	Fri Nov 16 09:23:18 2001
-+++ chkplat/.conf.win32-cygwin	Wed Mar  6 17:34:46 2002
++++ chkplat2/.conf.win32-cygwin	Wed Mar  6 18:14:42 2002
 @@ -6,7 +6,7 @@
  
  CC="gcc"
@@ -49,9 +98,9 @@ diff -urN clean/.conf.win32-cygwin chkplat/.conf.win32-cygwin
  
 -./configure --with-win32  --enable-cdrom --enable-sb16=win
 +./configure --enable-cdrom --enable-sb16=win
-diff -urN clean/.conf.win32-vcpp chkplat/.conf.win32-vcpp
+diff -urN clean/.conf.win32-vcpp chkplat2/.conf.win32-vcpp
 --- clean/.conf.win32-vcpp	Tue Nov 20 19:16:18 2001
-+++ chkplat/.conf.win32-vcpp	Wed Mar  6 17:57:58 2002
++++ chkplat2/.conf.win32-vcpp	Wed Mar  6 18:14:42 2002
 @@ -15,7 +15,7 @@
  #./configure --with-win32-vcpp --enable-debugger --enable-disasm
  #./configure --with-win32-vcpp --enable-disasm
@@ -61,9 +110,9 @@ diff -urN clean/.conf.win32-vcpp chkplat/.conf.win32-vcpp
  
  unset echo
  
-diff -urN clean/config.guess chkplat/config.guess
+diff -urN clean/config.guess chkplat2/config.guess
 --- clean/config.guess	Wed Dec 31 19:00:00 1969
-+++ chkplat/config.guess	Wed Mar  6 15:59:56 2002
++++ chkplat2/config.guess	Wed Mar  6 18:14:42 2002
 @@ -0,0 +1,1368 @@
 +#! /bin/sh
 +# Attempt to guess a canonical system name.
@@ -1433,9 +1482,9 @@ diff -urN clean/config.guess chkplat/config.guess
 +# time-stamp-format: "%:y-%02m-%02d"
 +# time-stamp-end: "'"
 +# End:
-diff -urN clean/config.sub chkplat/config.sub
+diff -urN clean/config.sub chkplat2/config.sub
 --- clean/config.sub	Wed Dec 31 19:00:00 1969
-+++ chkplat/config.sub	Wed Mar  6 15:59:54 2002
++++ chkplat2/config.sub	Wed Mar  6 18:14:42 2002
 @@ -0,0 +1,1357 @@
 +#! /bin/sh
 +# Configuration validation subroutine script.
@@ -2794,9 +2843,9 @@ diff -urN clean/config.sub chkplat/config.sub
 +# time-stamp-format: "%:y-%02m-%02d"
 +# time-stamp-end: "'"
 +# End:
-diff -urN clean/configure chkplat/configure
+diff -urN clean/configure chkplat2/configure
 --- clean/configure	Tue Mar  5 10:56:54 2002
-+++ chkplat/configure	Wed Mar  6 17:53:18 2002
++++ chkplat2/configure	Wed Mar  6 18:14:42 2002
 @@ -665,6 +665,11 @@
  X features:
    --x-includes=DIR    X include files are in DIR
@@ -3005,21 +3054,21 @@ diff -urN clean/configure chkplat/configure
 +  *-pc-windows* | *-pc-winnt*)
 +    DEFAULT_GUI=win32                 # default to win32 gui
 +    ;;
-+  *-pc-cygwin)
++  *-pc-cygwin*)
 +    ADD_FLAGS="-mno-cygwin -DWIN32"   # required for cygwin compile
 +    DEFAULT_GUI=win32                 # default to win32 gui
 +    ;;
-+  *-darwin)
++  *-macosx* | *-darwin*)
 +    ADD_FLAGS="-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh"      # required for macosx compile
 +    DEFAULT_GUI=carbon                # default to carbon
 +    ;;
-+  *-macos)
++  *-macos*)
 +    DEFAULT_GUI=macos                 # macos defaults to macos
 +    ;;
-+  *-beos)
++  *-beos*)
 +    DEFAULT_GUI=beos                  # beos defaults to beos
 +    ;;
-+  *-amigaos)
++  *-amigaos*)
 +    DEFAULT_GUI=amigaos               # amigaos defaults to amigaos
 +    ;;
 +  *)
@@ -8867,9 +8916,9 @@ diff -urN clean/configure chkplat/configure
  echo "$as_me: $ac_file is unchanged" >&6;}
      else
        ac_dir=`$as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-diff -urN clean/configure.in chkplat/configure.in
+diff -urN clean/configure.in chkplat2/configure.in
 --- clean/configure.in	Tue Mar  5 10:56:10 2002
-+++ chkplat/configure.in	Wed Mar  6 17:55:34 2002
++++ chkplat2/configure.in	Wed Mar  6 18:14:42 2002
 @@ -13,6 +13,65 @@
  changequote(<<, >>)
  changequote([, ])
@@ -8886,21 +8935,21 @@ diff -urN clean/configure.in chkplat/configure.in
 +  *-pc-windows* | *-pc-winnt*)
 +    DEFAULT_GUI=win32                 # default to win32 gui
 +    ;;
-+  *-pc-cygwin)
++  *-pc-cygwin*)
 +    ADD_FLAGS="-mno-cygwin -DWIN32"   # required for cygwin compile
 +    DEFAULT_GUI=win32                 # default to win32 gui
 +    ;;
-+  *-macosx|*-darwin)
++  *-macosx* | *-darwin*)
 +    ADD_FLAGS="-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh"      # required for macosx compile
 +    DEFAULT_GUI=carbon                # default to carbon
 +    ;;
-+  *-macos)
++  *-macos*)
 +    DEFAULT_GUI=macos                 # macos defaults to macos
 +    ;;
-+  *-beos)
++  *-beos*)
 +    DEFAULT_GUI=beos                  # beos defaults to beos
 +    ;;
-+  *-amigaos)
++  *-amigaos*)
 +    DEFAULT_GUI=amigaos               # amigaos defaults to amigaos
 +    ;;
 +  *)
@@ -8969,9 +9018,9 @@ diff -urN clean/configure.in chkplat/configure.in
  
  if test "$with_x11" = yes; then
    AC_MSG_RESULT(X windows)
-diff -urN clean/install-sh chkplat/install-sh
+diff -urN clean/install-sh chkplat2/install-sh
 --- clean/install-sh	Wed Dec 31 19:00:00 1969
-+++ chkplat/install-sh	Wed Mar  6 15:59:50 2002
++++ chkplat2/install-sh	Wed Mar  6 18:14:42 2002
 @@ -0,0 +1,251 @@
 +#!/bin/sh
 +#
