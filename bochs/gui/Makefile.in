@@ -95,8 +95,8 @@ lib%.la: %.lo
 	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
 # special rule for wx, since it has 3 files
-libwx.la: $(GUI_OBJS_WX:.o:.lo)
-	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o:.lo) -o $@ `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
+libwx.la: $(GUI_OBJS_WX:.o=.lo)
+	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) -o $@ `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
 	mkdir -p $(PLUGIN_PATH)
 	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
