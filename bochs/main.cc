@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.90 2002-03-14 20:14:47 vruppert Exp $
+// $Id: main.cc,v 1.91 2002-03-17 20:57:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -180,19 +180,19 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_CDROM_INSERTED:
       if ((set) && (SIM->get_init_done ())) {
         bx_devices.hard_drive->set_cd_media_status(val == BX_INSERTED);
-        bx_gui.update_floppy_status_buttons ();
+        bx_gui.update_drive_status_buttons ();
       }
       break;
     case BXP_FLOPPYA_STATUS:
       if ((set) && (SIM->get_init_done ())) {
         bx_devices.floppy->set_media_status(0, val == BX_INSERTED);
-        bx_gui.update_floppy_status_buttons ();
+        bx_gui.update_drive_status_buttons ();
       }
       break;
     case BXP_FLOPPYB_STATUS:
       if ((set) && (SIM->get_init_done ())) {
         bx_devices.floppy->set_media_status(1, val == BX_INSERTED);
-        bx_gui.update_floppy_status_buttons ();
+        bx_gui.update_drive_status_buttons ();
       }
       break;
     default:
@@ -215,7 +215,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
           if (empty) {
             bx_devices.floppy->set_media_status(0, 0);
-            bx_gui.update_floppy_status_buttons ();
+            bx_gui.update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYA_TYPE)->get_enabled()) {
               BX_ERROR(("Cannot add a floppy drive at runtime"));
@@ -239,7 +239,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
           if (empty) {
             bx_devices.floppy->set_media_status(1, 0);
-            bx_gui.update_floppy_status_buttons ();
+            bx_gui.update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYB_TYPE)->get_enabled ()) {
               BX_ERROR(("Cannot add a floppy drive at runtime"));
@@ -279,7 +279,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
           if (empty) {
             bx_devices.hard_drive->set_cd_media_status(0);
-            bx_gui.update_floppy_status_buttons ();
+            bx_gui.update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_CDROM_PRESENT)->get ()) {
               BX_ERROR(("Cannot add a cdrom drive at runtime"));

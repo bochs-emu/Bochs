@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.38 2002-03-16 11:30:06 vruppert Exp $
+// $Id: gui.cc,v 1.39 2002-03-17 20:57:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -154,7 +154,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 }
 
 void
-bx_gui_c::update_floppy_status_buttons (void) {
+bx_gui_c::update_drive_status_buttons (void) {
   BX_GUI_THIS floppyA_status = 
     bx_devices.floppy->get_media_status (0)
     && bx_options.floppya.Oinitial_status->get ();
@@ -198,7 +198,7 @@ bx_gui_c::floppyA_handler(void)
 {
   BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
   bx_devices.floppy->set_media_status(0, BX_GUI_THIS floppyA_status);
-  BX_GUI_THIS update_floppy_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
@@ -206,7 +206,7 @@ bx_gui_c::floppyB_handler(void)
 {
   BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
   bx_devices.floppy->set_media_status(1, BX_GUI_THIS floppyB_status);
-  BX_GUI_THIS update_floppy_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
@@ -214,7 +214,7 @@ bx_gui_c::cdromD_handler(void)
 {
   BX_GUI_THIS cdromD_status =
     bx_devices.hard_drive->set_cd_media_status(!BX_GUI_THIS cdromD_status);
-  BX_GUI_THIS update_floppy_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void

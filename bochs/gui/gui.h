@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.25 2002-03-16 11:30:06 vruppert Exp $
+// $Id: gui.h,v 1.26 2002-03-17 20:57:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ public:
 
   static void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
-  void update_floppy_status_buttons (void);
+  void update_drive_status_buttons (void);
   static void     mouse_enabled_changed (Boolean val);
   static void     mouse_enabled_changed_specific (Boolean val);
   static void     exit(void);

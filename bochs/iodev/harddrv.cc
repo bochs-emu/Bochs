@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.50 2002-02-12 16:03:00 cbothamy Exp $
+// $Id: harddrv.cc,v 1.51 2002-03-17 20:57:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.50 2002-02-12 16:03:00 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.51 2002-03-17 20:57:54 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1010,7 +1010,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 #endif
                                             BX_HD_THIS s[1].cdrom.ready = 0;
                                             bx_options.cdromd.Oinserted->set(BX_EJECTED);
-                                            bx_gui.update_floppy_status_buttons();
+                                            bx_gui.update_drive_status_buttons();
                                           }
                                           raise_interrupt();
 				    } else { // Load the disc
