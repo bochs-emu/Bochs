@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.104 2002-09-15 15:10:20 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.105 2002-09-16 00:06:16 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1449,6 +1449,7 @@ AC_CHECK_HEADER(pthread.h, , acx_pthread_ok=noheader)
 if test x"$PTHREAD_LIBS$PTHREAD_CFLAGS" != x; then
 	save_CFLAGS="$CFLAGS"
 	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+	CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$PTHREAD_LIBS $LIBS"
 	AC_MSG_CHECKING([for pthread_join in LIBS=$PTHREAD_LIBS with CFLAGS=$PTHREAD_CFLAGS])
@@ -1629,6 +1630,7 @@ if test "$with_rfb" = yes; then
   if test "$pthread_ok" = yes; then
     RFB_LIBS="$PTHREAD_LIBS"
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
     CC="$PTHREAD_CC"
   else
     echo ERROR: --with-rfb requires the pthread library, which could not be found.; exit 1
