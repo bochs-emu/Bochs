@@ -1,9 +1,9 @@
 ----------------------------------------------------------------------
 THIS IS A PATCH FOR WXWINDOWS, NOT FOR BOCHS
 ----------------------------------------------------------------------
-Patch name: patch.raw-keycodes
+Patch name: patch.wx-raw-keycodes
 Author: Bryce Denney <bryce@tlw.com>
-Date: Sat Apr  6 14:27:13  2002
+Date: Sat Apr  6 17:22:36  2002
 
 Detailed description:
 This patch adds two 32-bit fields to the wxKeyEvent structure, m_rawCode1 and
@@ -44,36 +44,6 @@ Instructions:
   To patch, go to main wxGTK-2.3.2 directory.
   Type "patch -p1 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-diff -u -r wxGTK-2.3.2-orig/include/wx/event.h wxGTK-2.3.2/include/wx/event.h
---- wxGTK-2.3.2-orig/include/wx/event.h	Mon Dec 10 14:07:01 2001
-+++ wxGTK-2.3.2/include/wx/event.h	Mon Mar 25 13:21:06 2002
-@@ -763,6 +763,8 @@
-  wxEVT_KEY_UP
-  */
- 
-+#define wxKEY_EVENT_HAS_RAW_CODES 1
-+
- class WXDLLEXPORT wxKeyEvent : public wxEvent
- {
- public:
-@@ -825,6 +827,8 @@
-         m_altDown = evt.m_altDown;
-         m_metaDown = evt.m_metaDown;
-         m_scanCode = evt.m_scanCode;
-+        m_rawCode1 = evt.m_rawCode1;
-+        m_rawCode2 = evt.m_rawCode2;
- 
-         return *this;
-     }
-@@ -839,6 +843,8 @@
-     bool          m_altDown;
-     bool          m_metaDown;
-     bool          m_scanCode;
-+    wxUint32      m_rawCode1;
-+    wxUint32      m_rawCode2;
- 
- private:
-     DECLARE_DYNAMIC_CLASS(wxKeyEvent)
 diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
 --- wxGTK-2.3.2-orig/src/gtk/window.cpp	Mon Dec 10 14:07:06 2001
 +++ wxGTK-2.3.2/src/gtk/window.cpp	Mon Mar 25 13:26:41 2002
@@ -95,6 +65,42 @@ diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
      event.m_x = x;
      event.m_y = y;
      event.SetEventObject( win );
+diff -urb wx232-orig/include/wx/event.h wx232/include/wx/event.h
+--- wx232-orig/include/wx/event.h	Thu Nov 22 14:25:34 2001
++++ wx232/include/wx/event.h	Sat Apr  6 17:10:56 2002
+@@ -763,6 +763,10 @@
+  wxEVT_KEY_UP
+  */
+ 
++#if defined(__WXMSW__) || defined(__WXGTK__)
++#define wxKEY_EVENT_HAS_RAW_CODES 1
++#endif
++
+ class WXDLLEXPORT wxKeyEvent : public wxEvent
+ {
+ public:
+@@ -825,6 +829,10 @@
+         m_altDown = evt.m_altDown;
+         m_metaDown = evt.m_metaDown;
+         m_scanCode = evt.m_scanCode;
++#ifdef wxKEY_EVENT_HAS_RAW_CODES
++        m_rawCode1 = evt.m_rawCode1;
++        m_rawCode2 = evt.m_rawCode2;
++#endif
+ 
+         return *this;
+     }
+@@ -839,6 +847,10 @@
+     bool          m_altDown;
+     bool          m_metaDown;
+     bool          m_scanCode;
++#ifdef wxKEY_EVENT_HAS_RAW_CODES
++    wxUint32      m_rawCode1;
++    wxUint32      m_rawCode2;
++#endif
+ 
+ private:
+     DECLARE_DYNAMIC_CLASS(wxKeyEvent)
 diff -urb wx232-orig/include/wx/msw/window.h wx232/include/wx/msw/window.h
 --- wx232-orig/include/wx/msw/window.h	Wed Nov  7 13:29:52 2001
 +++ wx232/include/wx/msw/window.h	Sat Apr  6 15:44:14 2002
