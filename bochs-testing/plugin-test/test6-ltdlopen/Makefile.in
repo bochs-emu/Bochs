@@ -1,11 +1,12 @@
 top_builddir = ..
+top_srcdir = @srcdir@/..
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 CXX=@CXX@
-CXXFLAGS=@CXXFLAGS@
+CXXFLAGS=@CXXFLAGS@ @INCLTDL@
 LDFLAGS=@LDFLAGS@ @LT_LDFLAGS@
-LIBS=@LIBS@
+LIBS=@LIBS@ @LIBLTDL@
 
 LIBTOOL=@LIBTOOL@
 RPATH=`pwd`/lib
