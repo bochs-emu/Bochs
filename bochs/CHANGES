@@ -211,6 +211,7 @@ Patches applied:
   #830079  Fix bochs's application error if ...     (???)
   #724466  enable building with CC=gcc-3.2 CXX=...  (Leonard Norrgard)
   #834962  Fixed drawing graphics is broken         (???)
+  #838401  Fixed redrawing of ToolBar on Win32GUI   (???)
 
 - SF patches partially applied
   #707931  Support EGA/VGA write mode 2 and others  (???)
