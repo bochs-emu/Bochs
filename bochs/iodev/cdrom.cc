@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.24 2001-11-11 14:41:53 bdenney Exp $
+// $Id: cdrom.cc,v 1.25 2001-12-08 13:07:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,6 +59,10 @@ extern "C" {
 #define BX_CD_FRAMESIZE CDROM_BLK_2048
 }
 #endif /* __sun */
+
+#ifdef __BEOS__
+#define BX_CD_FRAMESIZE 2048
+#endif
 
 #if (defined(__OpenBSD__) || defined(__FreeBSD__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
@@ -197,7 +201,7 @@ cdrom_interface::cdrom_interface(char *dev)
 }
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.24 2001-11-11 14:41:53 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.25 2001-12-08 13:07:07 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
