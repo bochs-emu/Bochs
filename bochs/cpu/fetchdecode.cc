@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.17 2002-09-20 23:17:51 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.18 2002-09-22 01:52:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -500,8 +500,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 71 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
   /* 72 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
   /* 73 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
-  /* 74 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
-  /* 75 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
+  /* 74 */  { BxImmediate_BrOff8,  &BX_CPU_C::JZ_Jw },
+  /* 75 */  { BxImmediate_BrOff8,  &BX_CPU_C::JNZ_Jw },
   /* 76 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
   /* 77 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
   /* 78 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jw },
@@ -779,8 +779,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 81 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
   /* 0F 82 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
   /* 0F 83 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
-  /* 0F 84 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
-  /* 0F 85 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
+  /* 0F 84 */  { BxImmediate_BrOff16,  &BX_CPU_C::JZ_Jw },
+  /* 0F 85 */  { BxImmediate_BrOff16,  &BX_CPU_C::JNZ_Jw },
   /* 0F 86 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
   /* 0F 87 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
   /* 0F 88 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
@@ -1021,8 +1021,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 71 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
   /* 72 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
   /* 73 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
-  /* 74 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
-  /* 75 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
+  /* 74 */  { BxImmediate_BrOff8,  &BX_CPU_C::JZ_Jd },
+  /* 75 */  { BxImmediate_BrOff8,  &BX_CPU_C::JNZ_Jd },
   /* 76 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
   /* 77 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
   /* 78 */  { BxImmediate_BrOff8,  &BX_CPU_C::JCC_Jd },
@@ -1300,8 +1300,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 81 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
   /* 0F 82 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
   /* 0F 83 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
-  /* 0F 84 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
-  /* 0F 85 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
+  /* 0F 84 */  { BxImmediate_BrOff32,  &BX_CPU_C::JZ_Jd },
+  /* 0F 85 */  { BxImmediate_BrOff32,  &BX_CPU_C::JNZ_Jd },
   /* 0F 86 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
   /* 0F 87 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
   /* 0F 88 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
@@ -1431,13 +1431,17 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
 
   unsigned
 BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
-                      unsigned remain, Boolean is_32)
+                      unsigned remain)
 {
   // remain must be at least 1
 
-  unsigned b1, b2, ilen=1, attr, os_32=is_32;
+  Boolean is_32;
+  unsigned b1, b2, ilen=1, attr, os_32;
   unsigned imm_mode, offset;
   unsigned rm, mod, nnn;
+
+  os_32 = is_32 =
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
   instruction->ResolveModrm = NULL;
   instruction->initMetaInfo(

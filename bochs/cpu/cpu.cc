@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.48 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: cpu.cc,v 1.49 2002-09-22 01:52:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,10 +116,18 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
   unsigned ret;
   bxInstruction_c *i;
-#if BX_SupportICache==0
   bxInstruction_c iStorage BX_CPP_AlignN(32);
   i = &iStorage;
+
+#if BX_USE_CPU_SMF
+#define DeclareExecute()      void (*execute)(bxInstruction_c *)
+#define DeclareResolveModRM() void (*resolveModRM)(bxInstruction_c *)
+#else
+#define DeclareExecute()      void (BX_CPU_C::*execute)(bxInstruction_c *)
+#define DeclareResolveModRM() void (BX_CPU_C::*resolveModRM)(bxInstruction_c *)
 #endif
+
+  DeclareExecute();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
@@ -127,14 +135,6 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   BX_CPU_THIS_PTR magic_break = 0;
 #endif
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
-#endif
-
-#if BX_USE_CPU_SMF
-  void (*resolveModRM)(bxInstruction_c *);
-  void (*execute)(bxInstruction_c *);
-#else
-  void (BX_CPU_C::*resolveModRM)(bxInstruction_c *);
-  void (BX_CPU_C::*execute)(bxInstruction_c *);
 #endif
 
 
@@ -194,7 +194,6 @@ async_events_processed:
   {
   bx_address eipBiased;
   Bit8u *fetchPtr;
-  Boolean is32;
 
   eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
@@ -213,15 +212,17 @@ async_events_processed:
 
   pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
   fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
+
   if ( (BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr == pAddr) &&
-       (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp== pageWriteStamp) &&
+       (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp == pageWriteStamp) &&
        ((pageWriteStamp & fetchModeMask) == fetchModeMask) ) {
 
     // iCache hit.  Instruction is already decoded and stored in
     // the instruction cache.
+    DeclareResolveModRM();
+    resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
 
-    resolveModRM = i->ResolveModrm; // Get function pointers as early
-    execute      = i->execute;      // as possible for speculation.
+    execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
       BX_CPU_CALL_METHOD(resolveModRM, (i));
       }
@@ -241,7 +242,21 @@ async_events_processed:
       maxFetch = remainingInPage;
     fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
-    is32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+#if BX_SupportICache
+    // In the case where the page is marked ICacheWriteStampInvalid, all
+    // counter bits will be high, being eqivalent to ICacheWriteStampMax.
+    // In the case where the page is marked as possibly having associated
+    // iCache entries, we need to leave the counter as-is, unless we're
+    // willing to dump all iCache entries which can hash to this page.
+    // Therefore, in either case, we can keep the counter as-is and
+    // replace the fetch mode bits.
+    pageWriteStamp &= 0x1fffffff;    // Clear out old fetch mode bits.
+    pageWriteStamp |= fetchModeMask; // Add in new ones.
+    BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
+    BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr = pAddr;
+    BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = pageWriteStamp;
+#endif
+
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
       ret = fetchDecode64(fetchPtr, i, maxFetch);
@@ -249,40 +264,24 @@ async_events_processed:
     else
 #endif
       {
-      ret = fetchDecode(fetchPtr, i, maxFetch, is32);
+      ret = fetchDecode(fetchPtr, i, maxFetch);
       }
+
+    DeclareResolveModRM();
+    resolveModRM = i->ResolveModrm; // Get function pointers as early
     if (ret==0) {
+#if BX_SupportICache
       // Invalidate entry, since fetch-decode failed with partial updates
       // to the i-> structure.
-#if BX_SupportICache
       BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp =
-          ICacheWriteStampInvalid;
+        ICacheWriteStampInvalid;
 #endif
-      goto boundaryFetch;
+      i = &iStorage;
+      boundaryFetch(i);
+      resolveModRM = i->ResolveModrm; // Get function pointers as early
       }
-#if BX_SupportICache
-    else {
-      // Fetch succeeded, instruction does not cross any boundaries.
-      // Set iCache entry to this instruction's physical address.
-      BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr = pAddr;
 
-      // Make sure that this page reflects the same fetch parameters as
-      // are being used currently.  If not, reset the fetchModeMask
-      // bits.  Decrementing is not necessary, as the change in fetchModeMask
-      // bits will cause compares to fail if they are for iCache entries
-      // which have different fetch parameters.
-      if ((pageWriteStamp & 0xc0000000) != fetchModeMask) {
-        pageWriteStamp &= 0x3fffffff;    // Clear out old fetch mode bits.
-        pageWriteStamp |= fetchModeMask; // Add in new ones.
-        BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
-        }
-
-      // Set iCache entry's writeStamp to match that of the page's writeStamp.
-      BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = pageWriteStamp;
-      }
-#endif
-    resolveModRM = i->ResolveModrm; // Get function pointers as early
-    execute      = i->execute;      // as possible for speculation.
+    execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
       BX_CPU_CALL_METHOD(resolveModRM, (i));
       }
@@ -290,7 +289,6 @@ async_events_processed:
   }
 
 
-fetch_decode_OK:
 
 #if BX_DEBUGGER
     if (BX_CPU_THIS_PTR trace) {
@@ -480,75 +478,6 @@ debugger_check:
 
 #endif  // #if BX_DEBUGGER
     goto main_cpu_loop;
-
-
-boundaryFetch:
-    unsigned j;
-    Bit8u fetchBuffer[16]; // Really only need 15
-    bx_address eipBiased, remainingInPage;
-    Bit8u *fetchPtr;
-#if BX_SupportICache
-    bxInstruction_c iStorage BX_CPP_AlignN(32);
-
-    i = &iStorage;
-#endif
-    eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-    if (remainingInPage > 15) {
-      BX_PANIC(("fetch_decode: remaining > max ilen"));
-      }
-    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-
-    // Read all leftover bytes in current page up to boundary.
-    for (j=0; j<remainingInPage; j++) {
-      fetchBuffer[j] = *fetchPtr++;
-      }
-
-    // The 2nd chunk of the instruction is on the next page.
-    // Set RIP to the 0th byte of the 2nd page, and force a
-    // prefetch so direct access of that physical page is possible, and
-    // all the associated info is updated.
-    RIP += remainingInPage;
-    prefetch();
-    if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
-      BX_PANIC(("fetch_decode: small window size after prefetch"));
-      }
-
-    // We can fetch straight from the 0th byte, which is eipFetchPtr;
-    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
-
-    // read leftover bytes in next page
-    for (; j<15; j++) {
-      fetchBuffer[j] = *fetchPtr++;
-      }
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      ret = fetchDecode64(fetchBuffer, i, 15);
-      }
-    else
-#endif
-      {
-      ret = fetchDecode(fetchBuffer, i, 15,
-          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
-      }
-    resolveModRM = i->ResolveModrm; // Get function pointers as early
-    execute      = i->execute;      // as possible for speculation.
-    // Restore EIP since we fudged it to start at the 2nd page boundary.
-    RIP = BX_CPU_THIS_PTR prev_eip;
-    if (ret==0)
-      BX_PANIC(("fetchDecode: cross boundary: ret==0"));
-    if (resolveModRM) {
-      BX_CPU_CALL_METHOD(resolveModRM, (i));
-      }
-
-// Since we cross an instruction boundary, note that we need a prefetch()
-// again on the next instruction.  Perhaps we can optimize this to
-// eliminate the extra prefetch() since we do it above, but have to
-// think about repeated instructions, etc.
-BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
-    goto fetch_decode_OK;
-
-
 
 
   //
@@ -831,6 +760,66 @@ BX_CPU_C::prefetch(void)
                 pAddr));
       }
     }
+}
+
+
+  void
+BX_CPU_C::boundaryFetch(bxInstruction_c *i)
+{
+    unsigned j;
+    Bit8u fetchBuffer[16]; // Really only need 15
+    bx_address eipBiased, remainingInPage;
+    Bit8u *fetchPtr;
+    unsigned ret;
+
+    eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+    if (remainingInPage > 15) {
+      BX_PANIC(("fetch_decode: remaining > max ilen"));
+      }
+    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+
+    // Read all leftover bytes in current page up to boundary.
+    for (j=0; j<remainingInPage; j++) {
+      fetchBuffer[j] = *fetchPtr++;
+      }
+
+    // The 2nd chunk of the instruction is on the next page.
+    // Set RIP to the 0th byte of the 2nd page, and force a
+    // prefetch so direct access of that physical page is possible, and
+    // all the associated info is updated.
+    RIP += remainingInPage;
+    prefetch();
+    if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
+      BX_PANIC(("fetch_decode: small window size after prefetch"));
+      }
+
+    // We can fetch straight from the 0th byte, which is eipFetchPtr;
+    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
+
+    // read leftover bytes in next page
+    for (; j<15; j++) {
+      fetchBuffer[j] = *fetchPtr++;
+      }
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      ret = fetchDecode64(fetchBuffer, i, 15);
+      }
+    else
+#endif
+      {
+      ret = fetchDecode(fetchBuffer, i, 15);
+      }
+    // Restore EIP since we fudged it to start at the 2nd page boundary.
+    RIP = BX_CPU_THIS_PTR prev_eip;
+    if (ret==0)
+      BX_PANIC(("fetchDecode: cross boundary: ret==0"));
+
+// Since we cross an instruction boundary, note that we need a prefetch()
+// again on the next instruction.  Perhaps we can optimize this to
+// eliminate the extra prefetch() since we do it above, but have to
+// think about repeated instructions, etc.
+BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
 }
 
 

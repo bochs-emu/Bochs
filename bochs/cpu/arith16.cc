@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.14 2002-09-20 23:17:49 kevinlawton Exp $
+// $Id: arith16.cc,v 1.15 2002-09-22 01:52:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,21 +36,50 @@
   void
 BX_CPU_C::INC_RX(bxInstruction_c *i)
 {
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "incw %1 \n\t"
+    "pushfl  \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx)
+    : "1" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d4) | (flags32 & 0x000008d4);
+  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
+#else
   Bit16u rx;
-
   rx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
 
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_INC16);
+#endif
 }
 
   void
 BX_CPU_C::DEC_RX(bxInstruction_c *i)
 {
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "decw %1 \n\t"
+    "pushfl  \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx)
+    : "1" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d4) | (flags32 & 0x000008d4);
+  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
+#else
   Bit16u rx;
 
   rx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
 
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_DEC16);
+#endif
 }
 
 
@@ -104,12 +133,28 @@ BX_CPU_C::ADD_GwEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
+#if (defined(__i386__) && defined(__GNUC__))
+    Bit32u flags32;
+    asm (
+      "addw %3, %1 \n\t"
+      "pushfl      \n\t"
+      "popl   %0"
+      : "=g" (flags32), "=r" (sum_16)
+      : "1" (op1_16), "g" (op2_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+      (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
     sum_16 = op1_16 + op2_16;
-    /* now write sum back to destination */
+#endif
 
     BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
+#if !(defined(__i386__) && defined(__GNUC__))
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+#endif
 }
 
 
@@ -577,39 +622,49 @@ BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
   /* op1_16 is a register or memory reference */
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
+
+#if (defined(__i386__) && defined(__GNUC__))
+    Bit32u flags32;
+    asm (
+      "addw %3, %1 \n\t"
+      "pushfl      \n\t"
+      "popl   %0"
+      : "=g" (flags32), "=r" (sum_16)
+      : "1" (op1_16), "g" (op2_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+      (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+    sum_16 = op1_16 + op2_16;
+#endif
+    BX_WRITE_16BIT_REG(i->rm(), sum_16);
     }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    }
 
 #if (defined(__i386__) && defined(__GNUC__))
-  Bit32u flags32;
-  asm volatile (
-    "addw %3, %1 \n\t"
-    "pushfl      \n\t"
-    "popl   %0"
-    : "=g" (flags32), "=r" (sum_16)
-    : "1" (op1_16), "g" (op2_16)
-    : "memory", "cc"
-    );
+    Bit32u flags32;
+    asm (
+      "addw %3, %1 \n\t"
+      "pushfl      \n\t"
+      "popl   %0"
+      : "=g" (flags32), "=r" (sum_16)
+      : "1" (op1_16), "g" (op2_16)
+      : "cc"
+      );
+    BX_CPU_THIS_PTR eflags.val32 =
+      (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
-  sum_16 = op1_16 + op2_16;
+    sum_16 = op1_16 + op2_16;
 #endif
-
-  /* now write sum back to destination */
-  if (i->modC0()) {
-    BX_WRITE_16BIT_REG(i->rm(), sum_16);
-    }
-  else {
     Write_RMW_virtual_word(sum_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
-#else
+#if !(defined(__i386__) && defined(__GNUC__))
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 #endif
 }

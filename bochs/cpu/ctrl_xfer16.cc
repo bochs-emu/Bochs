@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.12 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: ctrl_xfer16.cc,v 1.13 2002-09-22 01:52:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -373,7 +373,7 @@ BX_CPU_C::JMP_Jw(bxInstruction_c *i)
   void
 BX_CPU_C::JCC_Jw(bxInstruction_c *i)
 {
-  Boolean condition = 0;
+  Boolean condition;
 
   switch (i->b1() & 0x0f) {
     case 0x00: /* JO */ condition = get_OF(); break;
@@ -395,6 +395,9 @@ BX_CPU_C::JCC_Jw(bxInstruction_c *i)
     case 0x0F: /* JNLE */ condition = (get_SF() == get_OF()) &&
                             !get_ZF();
       break;
+    default:
+      condition = 0; // For compiler...all targets should set condition.
+      break;
     }
 
   if (condition) {
@@ -404,7 +407,8 @@ BX_CPU_C::JCC_Jw(bxInstruction_c *i)
     new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
-      if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
+      if ( new_EIP >
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
         BX_PANIC(("jo_routine: offset outside of CS limits"));
         exception(BX_GP_EXCEPTION, 0, 0);
         }
@@ -421,6 +425,61 @@ BX_CPU_C::JCC_Jw(bxInstruction_c *i)
 #endif
 }
 
+  void
+BX_CPU_C::JZ_Jw(bxInstruction_c *i)
+{
+  if (get_ZF()) {
+    Bit32u new_EIP;
+
+    new_EIP = EIP + (Bit32s) i->Id();
+    new_EIP &= 0x0000ffff;
+#if BX_CPU_LEVEL >= 2
+    if (protected_mode()) {
+      if ( new_EIP >
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
+        BX_PANIC(("jo_routine: offset outside of CS limits"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+        }
+      }
+#endif
+    EIP = new_EIP;
+    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+    revalidate_prefetch_q();
+    }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+    }
+#endif
+}
+
+  void
+BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
+{
+  if (!get_ZF()) {
+    Bit32u new_EIP;
+
+    new_EIP = EIP + (Bit32s) i->Id();
+    new_EIP &= 0x0000ffff;
+#if BX_CPU_LEVEL >= 2
+    if (protected_mode()) {
+      if ( new_EIP >
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
+        BX_PANIC(("jo_routine: offset outside of CS limits"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+        }
+      }
+#endif
+    EIP = new_EIP;
+    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+    revalidate_prefetch_q();
+    }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+    }
+#endif
+}
 
 
   void

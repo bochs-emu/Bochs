@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.8 2002-09-15 00:18:41 kevinlawton Exp $
+// $Id: lazy_flags.cc,v 1.9 2002-09-22 01:52:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,13 +38,13 @@
 
 
   Boolean
-BX_CPU_C::get_CF(void)
+BX_CPU_C::get_CFLazy(void)
 {
   unsigned cf;
 
   switch ( BX_CPU_THIS_PTR lf_flags_status & 0x00000f ) {
-    case BX_LF_INDEX_KNOWN:
-      return(BX_CPU_THIS_PTR eflags.val32 & 1);
+//  case BX_LF_INDEX_KNOWN:
+//    return(BX_CPU_THIS_PTR eflags.val32 & 1);
 
     case BX_LF_INDEX_OSZAPC:
       switch (BX_CPU_THIS_PTR oszapc.instr) {
@@ -270,13 +270,13 @@ BX_CPU_C::get_CF(void)
 
 
   Boolean
-BX_CPU_C::get_AF(void)
+BX_CPU_C::get_AFLazy(void)
 {
   unsigned af;
 
   switch ( (BX_CPU_THIS_PTR lf_flags_status>>8) & 0x00000f ) {
-    case BX_LF_INDEX_KNOWN:
-      return( (BX_CPU_THIS_PTR eflags.val32 >> 4) & 1);
+//  case BX_LF_INDEX_KNOWN:
+//    return( (BX_CPU_THIS_PTR eflags.val32 >> 4) & 1);
 
     case BX_LF_INDEX_OSZAPC:
       switch (BX_CPU_THIS_PTR oszapc.instr) {
@@ -435,13 +435,14 @@ BX_CPU_C::get_AF(void)
 
 
   Boolean
-BX_CPU_C::get_ZF(void)
+BX_CPU_C::get_ZFLazy(void)
 {
   unsigned zf;
 
   switch ( (BX_CPU_THIS_PTR lf_flags_status>>12) & 0x00000f ) {
-    case BX_LF_INDEX_KNOWN:
-      return( (BX_CPU_THIS_PTR eflags.val32 >> 6) & 1);
+//  Now done in get_ZF() inline function.
+//  case BX_LF_INDEX_KNOWN:
+//    return( (BX_CPU_THIS_PTR eflags.val32 >> 6) & 1);
 
     case BX_LF_INDEX_OSZAPC:
       switch (BX_CPU_THIS_PTR oszapc.instr) {
@@ -561,13 +562,13 @@ BX_CPU_C::get_ZF(void)
 
 
   Boolean
-BX_CPU_C::get_SF(void)
+BX_CPU_C::get_SFLazy(void)
 {
   unsigned sf;
 
   switch ( (BX_CPU_THIS_PTR lf_flags_status>>16) & 0x00000f ) {
-    case BX_LF_INDEX_KNOWN:
-      return( (BX_CPU_THIS_PTR eflags.val32 >> 7) & 1);
+//  case BX_LF_INDEX_KNOWN:
+//    return( (BX_CPU_THIS_PTR eflags.val32 >> 7) & 1);
 
     case BX_LF_INDEX_OSZAPC:
       switch (BX_CPU_THIS_PTR oszapc.instr) {
@@ -686,7 +687,7 @@ BX_CPU_C::get_SF(void)
 }
 
   Boolean
-BX_CPU_C::get_OF(void)
+BX_CPU_C::get_OFLazy(void)
 {
   Bit8u op1_b7, op2_b7, result_b7;
   Bit16u op1_b15, op2_b15, result_b15;
@@ -697,8 +698,8 @@ BX_CPU_C::get_OF(void)
   unsigned of;
 
   switch ( (BX_CPU_THIS_PTR lf_flags_status>>20) & 0x00000f ) {
-    case BX_LF_INDEX_KNOWN:
-      return( (BX_CPU_THIS_PTR eflags.val32 >> 11) & 1);
+//  case BX_LF_INDEX_KNOWN:
+//    return( (BX_CPU_THIS_PTR eflags.val32 >> 11) & 1);
 
     case BX_LF_INDEX_OSZAPC:
       switch (BX_CPU_THIS_PTR oszapc.instr) {
@@ -931,13 +932,13 @@ BX_CPU_C::get_OF(void)
 }
 
   Boolean
-BX_CPU_C::get_PF(void)
+BX_CPU_C::get_PFLazy(void)
 {
   unsigned pf;
 
   switch ( (BX_CPU_THIS_PTR lf_flags_status>>4) & 0x00000f ) {
-    case BX_LF_INDEX_KNOWN:
-      return( (BX_CPU_THIS_PTR eflags.val32 >> 2) & 1);
+//  case BX_LF_INDEX_KNOWN:
+//    return( (BX_CPU_THIS_PTR eflags.val32 >> 2) & 1);
     case BX_LF_INDEX_OSZAPC:
       switch (BX_CPU_THIS_PTR oszapc.instr) {
         case BX_INSTR_ADD8:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.67 2002-09-20 23:17:50 kevinlawton Exp $
+// $Id: cpu.h,v 1.68 2002-09-22 01:52:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -916,8 +916,12 @@ typedef void (BX_CPU_C::*BxExecutePtr_t)(bxInstruction_c *);
 #if BX_SupportICache
 
 #define BxICacheEntries 32768  // Must be a power of 2.
-#define ICacheWriteStampInvalid   0x3fffffff
-#define ICacheWriteStampMax       0x3ffffffe // Decrements from here.
+  // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
+  // bit30: 1=Long Mode, 0=not Long Mode.
+  // bit29: 1=iCache page, 0=Data.
+#define ICacheWriteStampInvalid   0x1fffffff
+#define ICacheWriteStampMax       0x1fffffff // Decrements from here.
+#define ICacheWriteStampMask      0x1fffffff
 
 class bxICacheEntry_c {
   public:
@@ -939,8 +943,6 @@ class bxICache_c {
   // write stamps matching the physical page write stamp are valid.
   Bit32u *pageWriteStampTable; // Allocated later.
 
-  // bit31: 1=Long Mode, 0=not Long Mode
-  // bit30: 1=CS is 32/64-bit, 0=CS is 16-bit.
   Bit32u  fetchModeMask;
 
   bxICache_c::bxICache_c() {
@@ -956,9 +958,7 @@ class bxICache_c {
     pageWriteStampTable =
         (Bit32u*) malloc(sizeof(Bit32u) * (memSizeInBytes>>12));
     for (unsigned i=0; i<(memSizeInBytes>>12); i++) {
-      // Set each entry to MAX, to denote the 1st valid current stamp.
-      // It decrements to zero from there.
-      pageWriteStampTable[i] = ICacheWriteStampMax;
+      pageWriteStampTable[i] = ICacheWriteStampInvalid;
       }
     }
 
@@ -1468,13 +1468,23 @@ union {
   void ask (int level, const char *prefix, const char *fmt, va_list ap);
 #endif
 
-  // for lazy flags processing
-  BX_SMF Boolean get_OF(void);
-  BX_SMF Boolean get_SF(void);
-  BX_SMF Boolean get_ZF(void);
-  BX_SMF Boolean get_AF(void);
-  BX_SMF Boolean get_PF(void);
-  BX_SMF Boolean get_CF(void);
+#define ArithmeticalFlag(flag, lfMaskShift, eflagsBitShift) \
+  BX_SMF Boolean get_##flag##Lazy(void); \
+  BX_SMF Boolean get_##flag##(void) { \
+    if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
+         (BX_LF_INDEX_KNOWN<<lfMaskShift) ) \
+      return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
+    else \
+      return get_##flag##Lazy(); \
+    }
+
+  ArithmeticalFlag(OF, 20, 11);
+  ArithmeticalFlag(SF, 16,  7);
+  ArithmeticalFlag(ZF, 12,  6);
+  ArithmeticalFlag(AF,  8,  4);
+  ArithmeticalFlag(PF,  4,  2);
+  ArithmeticalFlag(CF,  0,  0);
+
 
   // constructors & destructors...
   BX_CPU_C();
@@ -1688,6 +1698,10 @@ union {
 
   BX_SMF void JCC_Jd(bxInstruction_c *);
   BX_SMF void JCC_Jw(bxInstruction_c *);
+  BX_SMF void JZ_Jd(bxInstruction_c *);
+  BX_SMF void JZ_Jw(bxInstruction_c *);
+  BX_SMF void JNZ_Jd(bxInstruction_c *);
+  BX_SMF void JNZ_Jw(bxInstruction_c *);
 
   BX_SMF void SETO_Eb(bxInstruction_c *);
   BX_SMF void SETNO_Eb(bxInstruction_c *);
@@ -2168,7 +2182,7 @@ union {
 #endif
   BX_SMF void dynamic_translate(void);
   BX_SMF void dynamic_init(void);
-  BX_SMF unsigned fetchDecode(Bit8u *, bxInstruction_c *, unsigned, Boolean);
+  BX_SMF unsigned fetchDecode(Bit8u *, bxInstruction_c *, unsigned);
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
 #endif
@@ -2326,6 +2340,7 @@ union {
 
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32s max_instr_count);
+  BX_SMF void boundaryFetch(bxInstruction_c *i);
   BX_SMF void decode_exgx16(unsigned need_fetch);
   BX_SMF void decode_exgx32(unsigned need_fetch);
 
@@ -2531,16 +2546,28 @@ BX_CPP_INLINE void bxICache_c::decWriteStamp(BX_CPU_C *cpu, Bit32u a20Addr) {
   // Increment page write stamp, so iCache entries with older stamps
   // are effectively invalidated.
   Bit32u pageIndex = a20Addr >> 12;
-  if ( ! --(cpu->iCache.pageWriteStampTable[pageIndex]) ) {
-    // Take the hash of the 0th page offset.
-    unsigned iCacheHash = cpu->iCache.hash(a20Addr & 0xfffff000);
-    for (unsigned o=0; o<4096; o++) {
-      cpu->iCache.entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
-      iCacheHash = (iCacheHash + 1) % BxICacheEntries;
+  Bit32u writeStamp = cpu->iCache.pageWriteStampTable[pageIndex];
+  if ( writeStamp & 0x20000000 ) {
+    // Page possibly contains iCache code.
+    if ( writeStamp & ICacheWriteStampMask ) {
+      // Short case: there is room to decrement the generation counter.
+      cpu->iCache.pageWriteStampTable[pageIndex]--;
       }
-    // Reset write stamp to highest value to begin the decrementing process
-    // again.
-    cpu->iCache.pageWriteStampTable[pageIndex] = ICacheWriteStampMax;
+    else {
+      // Long case: there is no more room to decrement.  We have dump
+      // all iCache entries which can possibly hash to this page since
+      // we don't keep track of individual entries.
+
+      // Take the hash of the 0th page offset.
+      unsigned iCacheHash = cpu->iCache.hash(a20Addr & 0xfffff000);
+      for (unsigned o=0; o<4096; o++) {
+        cpu->iCache.entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
+        iCacheHash = (iCacheHash + 1) % BxICacheEntries;
+        }
+      // Reset write stamp to highest value to begin the decrementing process
+      // again.
+      cpu->iCache.pageWriteStampTable[pageIndex] = ICacheWriteStampInvalid;
+      }
     }
   }
 
@@ -2549,6 +2576,7 @@ BX_CPP_INLINE Bit32u bxICache_c::createFetchModeMask(BX_CPU_C *cpu) {
 #if BX_SUPPORT_X86_64
          | ((cpu->cpu_mode == BX_MODE_LONG_64)<<30)
 #endif
+         | (1<<29) // iCache code.
          ;
   }
 
