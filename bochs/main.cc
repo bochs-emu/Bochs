@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.179 2002-11-15 14:47:58 bdenney Exp $
+// $Id: main.cc,v 1.180 2002-11-15 16:14:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -987,7 +987,7 @@ void bx_init_options ()
     0,
     0);
   bx_options.Osel_displaylib->set_by_name (BX_DEFAULT_DISPLAY_LIBRARY);
-  bx_options.Osel_displaylib->set_format ("Display libarary: %s");
+  bx_options.Osel_displaylib->set_format ("Display library: %s");
   bx_options.Osel_displaylib->set_ask_format ("Choose which libary to use for the Bochs display: [%s] ");
   bx_param_c *interface_init_list[] = {
     bx_options.Osel_config,
