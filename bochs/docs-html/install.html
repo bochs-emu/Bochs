@@ -126,7 +126,8 @@ one of the font files in bochs-yymmdd/font.
 <P>
 There are two options; you may install the VGA font in a global place, or
 in a local directory.  You may need to install it locally if you don't have
-root access.
+root access.  If the VGA font is not installed properly, you will get
+the error, "Could not open vga font".
 
 <P>
 <B>Option 1: installing VGA font in global font directory</B>
@@ -138,16 +139,16 @@ root access.
    #        Solaris 2.x /usr/openwin/lib/X11/fonts
    #        Linux       /usr/lib/X11/fonts/
    root-> cp font/vga.pcf font-path-here/misc
-   root-> compress font-path-here/misc/vga.pcf      (see note below)
+   root-> compress font-path-here/misc/vga.pcf
    root-> mkfontdir font-path-here/misc
    root-> xset fp rehash
+   root-> /etc/rc.d/init.d/xfs restart     (Restart your X font server)
 </PRE>
 
-Please note that on some systems, compressed fonts are not recognized.
-It may be safer to leave out the compress step entirely.  If you are seeing
-the "Could not open vga font" message, try leaving the font uncompressed.
-Whenever you move fonts around or compress/uncompress them, you must run
-mkfontdir again to notify the X server that the fonts have changed.
+The command to restart the X font server is given for Redhat systems, but
+it will vary between different machines, and might not even be necessary at
+all.  If you cannot figure out how to restart your font server, you can
+just reboot.
 <p>
 
 <B>Option 2: installing VGA font in local font directory</B>
