@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.9 2001-06-15 23:52:34 bdenney Exp $
+ * $Id: siminterface.h,v 1.10 2001-06-16 19:29:59 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -61,7 +61,9 @@ typedef enum {
   BXP_IPS = 101,
   BXP_VGA_UPDATE_INTERVAL,
   BXP_MOUSE_ENABLED,
-  BXP_MEM_SIZE
+  BXP_MEM_SIZE,
+  BXP_ROM_PATH,
+  BXP_VGA_ROM_PATH
 } bx_id;
 
 typedef enum {
@@ -71,6 +73,29 @@ typedef enum {
   BXT_PARAM_NUM
 } bx_objtype;
 
+
+
+////////////////////////////////////////////////////////////////////
+
+// Abstract type.
+
+struct bx_any {
+  Bit32u type;
+  union s {
+    int integer;
+    int boolean;
+    struct string {
+      char *val;
+      int alloc_len;
+    };
+    struct list {
+      Bit32u size;
+      bx_any *array;
+    };
+  };
+};
+
+////////////////////////////////////////////////////////////////////
 class bx_object_c {
 private:
   bx_id id;
@@ -94,23 +119,62 @@ public:
   char *get_name () { return name; }
   char *get_description () { return description; }
   void reset () {}
+  int getint () {return -1;}
 };
 
-// make it only handle ints for now
-typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
+typedef Bit32s (*param_any_event_handler)(class bx_param_any_c *, int set, bx_any val);
+
+class bx_param_any_c : public bx_param_c {
+  bx_any min, max, val, initial_val;
+  param_any_event_handler handler;
+public:
+  bx_param_any_c (bx_id id,
+      char *name,
+      char *description,
+      bx_any min, bx_any max, bx_any initial_val);
+  bx_param_any_c (bx_id id,
+      char *name,
+      char *description,
+      bx_any initial_val);
+  void reset ();
+  void set_handler (param_any_event_handler handler) { this->handler = handler; }
+  bx_any get ();
+  void set (bx_any val);
+};
+
+typedef Bit32s (*param_num_event_handler)(class bx_param_c *, int set, Bit32s val);
 
 class bx_param_num_c : public bx_param_c {
   Bit32s min, max, val, initial_val;
-  param_event_handler handler;
+  param_num_event_handler handler;
 public:
   bx_param_num_c (bx_id id,
       char *name,
       char *description,
       Bit32s min, Bit32s max, Bit32s initial_val);
   void reset ();
-  void set_handler (param_event_handler handler) { this->handler = handler; }
+  void set_handler (param_num_event_handler handler) { this->handler = handler; }
   Bit32s get ();
-  Bit32s set (Bit32s val);
+  void set (Bit32s val);
+};
+
+typedef Bit32s (*param_string_event_handler)(class bx_param_string_c *, int set, char *val, int maxlen);
+
+class bx_param_string_c : public bx_param_c {
+  int maxsize;
+  char *val, *initial_val;
+  param_string_event_handler handler;
+public:
+  bx_param_string_c (bx_id id,
+      char *name,
+      char *description,
+      int maxsize,
+      char *initial_val);
+  void reset ();
+  void set_handler (param_string_event_handler handler) { this->handler = handler; }
+  Bit32s get (char *buf, int len);
+  char *getptr () {return val; }
+  void set (char *buf);
 };
 
 class bx_node_c : public bx_object_c {
@@ -124,6 +188,7 @@ public:
   bx_object_c *getcar () { return car; }
   bx_object_c *getcdr () { return cdr; }
 };
+////////////////////////////////////////////////////////////////////
 
 class bx_simulator_interface_c {
   int init_done;
@@ -132,10 +197,12 @@ public:
   int get_init_done () { return init_done; }
   int set_init_done (int n) { init_done = n; return 0;}
 
+  virtual bx_param_c *get_param (bx_id id) {return NULL;}
+  virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
   bx_param_num_c *ips;
-  bx_param_num_c *vga_update_interval;
   bx_param_num_c *mouse_enabled;
-  bx_param_num_c *memsize;
+  bx_param_num_c *vga_update_interval;
+  bx_param_string_c *rom_path;
   virtual int get_n_log_modules () {return -1;}
   virtual char *get_prefix (int mod) {return 0;}
   virtual int get_log_action (int mod, int level) {return -1;}
@@ -160,8 +227,6 @@ public:
   virtual char *get_floppy_type_name (int type) {return NULL;}
   virtual int get_boot_hard_disk () {return -1;}
   virtual int set_boot_hard_disk (int val) {return -1;}
-  virtual int get_rom_path (char *buf, int len) {return -1;}
-  virtual int set_rom_path (char *path) {return -1;}
   virtual int get_vga_path (char *buf, int len) {return -1;}
   virtual int set_vga_path (char *path) {return -1;}
   virtual int get_rom_address () {return -1;}

@@ -69,7 +69,7 @@ bx_options_t bx_options = {
   { 0, "", 0 },                         // cdromd
   { NULL, 0 },                          // rom
   { NULL },                             // vgarom
-  { BX_DEFAULT_MEM_MEGS },              // memory
+  { NULL /*BX_DEFAULT_MEM_MEGS*/ },              // memory
   { 0, NULL, NULL, NULL, 0, 0, 0, 0 },  // SB16
   "a",                                  // boot drive
   300000,                               // vga update interval
@@ -452,6 +452,11 @@ void bx_print_header ()
   fprintf (stderr, "%s\n", divider);
 }
 
+void bx_init_options ()
+{
+  bx_options.memory.size = new bx_param_num_c (BXP_MEM_SIZE, "megs", "Amount of RAM in megabytes", 1, 1<<31, 4);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -466,6 +471,7 @@ main(int argc, char *argv[])
 
   bx_print_header ();
   bx_init_bx_dbg ();
+  bx_init_options ();
 
   int read_rc_already = 0;
 #if BX_USE_CONTROL_PANEL
@@ -576,7 +582,6 @@ int bx_parse_cmdline (int argc, char *argv[])
   int
 bx_init_hardware()
 {
-  // This function used to 
   // all configuration has been read, now initialize everything.
 
   for (int level=0; level<N_LOGLEV; level++)
@@ -595,7 +600,7 @@ bx_init_hardware()
 #endif
 
 #if BX_SMP_PROCESSORS==1
-  BX_MEM(0)->init_memory(bx_options.memory.megs * 1024*1024);
+  BX_MEM(0)->init_memory(bx_options.memory.size->get () * 1024*1024);
   BX_MEM(0)->load_ROM(bx_options.rom.path, bx_options.rom.address);
   BX_MEM(0)->load_ROM(bx_options.vgarom.path, 0xc0000);
   BX_CPU(0)->init (BX_MEM(0));
@@ -603,7 +608,7 @@ bx_init_hardware()
 #else
   // SMP initialization
   bx_mem_array[0] = new BX_MEM_C ();
-  bx_mem_array[0]->init_memory(bx_options.memory.megs * 1024*1024);
+  bx_mem_array[0]->init_memory(bx_options.memory.size->get () * 1024*1024);
   bx_mem_array[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
   bx_mem_array[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
@@ -1074,7 +1079,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (num_params != 2) {
       BX_PANIC(("%s: megs directive: wrong # args.", context));
       }
-    bx_options.memory.megs = atol(params[1]);
+    bx_options.memory.size->set (atol(params[1]));
     }
   else if (!strcmp(params[0], "floppy_command_delay")) {
     if (num_params != 2) {
@@ -1478,7 +1483,7 @@ bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, "vgaromimage: %s\n", bx_options.vgarom.path);
   else
     fprintf (fp, "# no vgaromimage\n");
-  fprintf (fp, "megs: %d\n", bx_options.memory.megs);
+  fprintf (fp, "megs: %d\n", bx_options.memory.size->get ());
   bx_write_sb16_options (fp, &bx_options.sb16);
   fprintf (fp, "boot: %s\n", bx_options.bootdrive);
   fprintf (fp, "vga_update_interval: %lu\n", bx_options.vga_update_interval);

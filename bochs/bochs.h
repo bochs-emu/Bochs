@@ -325,6 +325,7 @@ class iofunctions {
 #define    CPU15LOG         40
 #define    CTRLLOG         41
 #define    UNMAPLOG        42
+#define    SERRLOG         43
 
 
 public:
@@ -606,7 +607,8 @@ typedef struct {
   } bx_vgarom_options;
 
 typedef struct {
-  size_t megs;
+  //size_t megs;
+  bx_param_num_c *size;
   } bx_mem_options;
 
 typedef struct {

@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.18 2001-06-15 23:52:34 bdenney Exp $
+ * $Id: control.cc,v 1.19 2001-06-16 19:29:59 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -400,6 +400,7 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
 {
   bx_floppy_options floppyop;
   bx_cdrom_options cdromop;
+  bx_param_num_c *ips = SIM->get_param_num (BXP_IPS);
   char buffer[3][128];
   for (int i=0; i<2; i++) {
     SIM->get_floppy_options (i, &floppyop);
@@ -413,9 +414,9 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
      cdromop.dev, cdromop.present?"":"not ",
      cdromop.inserted?"inserted":"ejected");
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
-      SIM->ips->get (),
-      SIM->vga_update_interval->get (), 
-      SIM->mouse_enabled->get () ? "enabled" : "disabled");
+      ips->get (),
+      SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
+      SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled");
 }
 
 // return value of bx_control_panel:
@@ -477,12 +478,13 @@ int bx_control_panel (int menu)
    case BX_CPANEL_START_OPTS_MEM:
      {
        char prompt[CPANEL_PATH_LEN], vgapath[CPANEL_PATH_LEN], rompath[CPANEL_PATH_LEN];
-       if (SIM->get_rom_path (rompath, CPANEL_PATH_LEN) < 0)
+       bx_param_num_c *memsize = SIM->get_param_num (BXP_MEM_SIZE);
+       if (SIM->rom_path->get (rompath, CPANEL_PATH_LEN) < 0)
 	 strcpy (rompath, "none");
        if (SIM->get_vga_path (vgapath, CPANEL_PATH_LEN) < 0)
 	 strcpy (vgapath, "none");
        sprintf (prompt, startup_mem_options_prompt, 
-	  SIM->memsize->get (),
+          memsize->get (),
 	  vgapath, rompath,
 	  SIM->get_rom_address ());
        if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
@@ -499,11 +501,12 @@ int bx_control_panel (int menu)
    case BX_CPANEL_START_OPTS_INTERFACE:
      {
        char prompt[1024];
-       int interval = SIM->vga_update_interval->get ();
+       int interval = SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get ();
+       bx_param_num_c *ips = SIM->get_param_num (BXP_IPS);
        sprintf (prompt, startup_interface_options, 
 	 interval, 
-	 SIM->mouse_enabled->get () ? "enabled" : "disabled",
-	 SIM->ips->get (),
+	 SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled",
+	 ips->get (),
 	 SIM->get_private_colormap () ? "enabled" : "disabled");
        if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
        switch (choice) {
@@ -635,10 +638,10 @@ void bx_edit_rom_path (int vga)
       return;
     SIM->set_vga_path (newpath);
   } else {
-    if (SIM->get_rom_path (oldpath, CPANEL_PATH_LEN) < 0) return;
+    if (SIM->rom_path->get (oldpath, CPANEL_PATH_LEN) < 0) return;
     if (ask_string ("Enter pathname of the ROM image: [%s] ", oldpath, newpath) < 0)
       return;
-    SIM->set_rom_path (newpath);
+    SIM->rom_path->set (newpath);
   }
 }
 
@@ -670,32 +673,35 @@ void bx_boot_from ()
 
 void bx_edit_mem ()
 {
-  int newval, oldval = SIM->memsize->get ();
+  bx_param_num_c *memsize = SIM->get_param_num (BXP_MEM_SIZE);
+  int newval, oldval = memsize->get ();
   if (ask_int ("How much memory (megabytes) in the simulated machine? [%d] ", 1, 1<<30, oldval, &newval) < 0)
     return;
-  SIM->memsize->set (newval);
+  memsize->set (newval);
 }
 
 void bx_ips_change ()
 {
   char prompt[1024];
-  int oldips = SIM->ips->get ();
+  bx_param_num_c *ips = SIM->get_param_num (BXP_IPS);
+  int oldips = ips->get ();
   sprintf (prompt, "Type a new value for ips: [%d] ", oldips);
   int newips;
   if (ask_int (prompt, 1, 1<<30, oldips, &newips) < 0)
     return;
-  SIM->ips->set (newips);
+  ips->set (newips);
 }
 
 void bx_vga_update_interval ()
 {
   char prompt[1024];
-  int old = SIM->vga_update_interval->get ();
+  bx_param_num_c *pinterval = SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL);
+  int old = pinterval->get ();
   sprintf (prompt, "Type a new value for VGA update interval: [%d] ", old);
   int newinterval;
   if (ask_int (prompt, 1, 1<<30, old, &newinterval) < 0)
     return;
-  SIM->vga_update_interval->set (newinterval);
+  pinterval->set (newinterval);
 }
 
 static void bx_print_log_action_table ()
@@ -761,10 +767,11 @@ void bx_log_options (int individual)
 
 void bx_mouse_enable ()
 {
-  int newval, oldval = SIM->mouse_enabled->get ();
+  bx_param_num_c *mouse_en = SIM->get_param_num (BXP_MOUSE_ENABLED);
+  int newval, oldval = mouse_en->get ();
   if (ask_yn ("Enable the mouse? [%s] ", oldval, &newval) < 0) return;
   if (newval == oldval) return;
-  SIM->mouse_enabled->set (newval);
+  mouse_en->set (newval);
 }
 
 int bx_read_rc (char *rc)
