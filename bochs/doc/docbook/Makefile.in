@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.13 2002-12-25 10:07:42 vruppert Exp $
+# $Id: Makefile.in,v 1.14 2003-01-21 23:07:29 cbothamy Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -41,12 +41,23 @@ all: $(SECTION_HTML)
 user/book1.html: $(srcdir)/user/user.dbk
 	-mkdir -p user
 	$(DOCBOOK2HTML) -o user $(srcdir)/user/user.dbk
+	if [ -f $(srcdir)/user/index.html ]; \
+		then mv $(srcdir)/user/index.html $(srcdir)/user/book1.html; \
+	fi
+
 documentation/book1.html: $(srcdir)/documentation/documentation.dbk
 	-mkdir -p documentation
 	$(DOCBOOK2HTML) -o documentation $(srcdir)/documentation/documentation.dbk 
+	if [ -f $(srcdir)/documentation/index.html ]; \
+		then mv $(srcdir)/documentation/index.html $(srcdir)/documentation/book1.html; \
+	fi
+
 development/book1.html: $(srcdir)/development/development.dbk
 	-mkdir -p development
 	$(DOCBOOK2HTML) -o development $(srcdir)/development/development.dbk
+	if [ -f $(srcdir)/development/index.html ]; \
+		then mv $(srcdir)/development/index.html $(srcdir)/development/book1.html; \
+	fi
 
 fixperm::
 	# fix permissions locally so that tar will install things right
