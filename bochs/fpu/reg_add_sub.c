@@ -134,7 +134,12 @@ int FPU_add(FPU_REG const *b, u_char tagb, int deststnr, u16 control_w)
 }
 
 
-/* Subtract b from a.  (a-b) -> dest */
+/* Subtract b from a.  (a-b) -> dest
+ bbd: arg2 used to be int type, but sometimes pointers were forced
+ in with typecasts.  On Alphas pointers are 64 bits and ints are 32,
+ so when rm was cast back to a pointer...SEGFAULT.  Pass the pointers
+ around instead, since they are always larger precision than the
+ register numbers. */
 int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
 {
   FPU_REG const *a, *b;

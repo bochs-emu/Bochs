@@ -1,4 +1,4 @@
-//  Copyright (C) 2000  MandrakeSoft S.A.
+//  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -1177,12 +1177,19 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     return(0);
     }
 
-#ifdef macintosh
+#if BX_WITH_MACOS
   if (!strcmp(bx_options.floppya.path, SuperDrive))
     ret = fd_stat(&stat_buf);
   else
-#endif
     ret = fstat(media->fd, &stat_buf);
+#elif BX_WITH_WIN32
+  stat_buf.st_mode = S_IFCHR;
+  // maybe replace with code that sets ret to -1 if the disk is not available
+  ret = 0;
+#else
+  // unix
+  ret = fstat(media->fd, &stat_buf);
+#endif
   if (ret) {
     perror("fstat'ing floppy 0 drive image file");
     bx_panic("fstat() returns error!\n");

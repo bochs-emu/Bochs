@@ -23,6 +23,7 @@
 
 /*
   Divide one register by another and put the result into a third register.
+bbd: arg2 used to be an int, see comments on FPU_sub.
   */
 int FPU_div(int flags, FPU_REG *rm, int control_w)
 {

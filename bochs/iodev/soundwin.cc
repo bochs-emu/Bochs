@@ -1,4 +1,4 @@
-//  Copyright (C) 2000  MandrakeSoft S.A.
+//  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -250,7 +250,7 @@ int bx_sound_windows_c::playnextbuffer()
 	  waveformat.wf.nBlockAlign = bps;
 	  waveformat.wBitsPerSample = bits;
 
-	  ret = waveOutOpen( &(WaveOut), WaveDevice, &(waveformat.wf), NULL, NULL, CALLBACK_NULL);
+	  ret = waveOutOpen( &(WaveOut), WaveDevice, (LPWAVEFORMATEX)&(waveformat.wf), NULL, NULL, CALLBACK_NULL);
 	  if (ret != 0)
 	    {
 	      char errormsg[4*MAXERRORLENGTH+1];

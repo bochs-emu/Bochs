@@ -1,4 +1,4 @@
-//  Copyright (C) 2000  MandrakeSoft S.A.
+//  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -369,7 +369,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
           BX_PIT_THIS s.timer[1].input_latch_value = 0;
           BX_PIT_THIS s.timer[1].input_latch_toggle = 0;
           BX_PIT_THIS s.timer[1].bcd_mode    = bcd_mode;
-          if ( (mode!=3 && mode!=2 && mode != 0) || bcd_mode!=0 )
+          if ( (mode!=3 && mode!=2 && mode!=0) || bcd_mode!=0 )
             bx_panic("pit: outp(43h): comm 7, mode %02x, bcd %02x unhandled\n",
               (unsigned) mode, bcd_mode);
           break;
@@ -388,7 +388,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
           BX_PIT_THIS s.timer[2].input_latch_value = 0;
           BX_PIT_THIS s.timer[2].input_latch_toggle = 0;
           BX_PIT_THIS s.timer[2].bcd_mode    = bcd_mode;
-          if ( (mode!=3 && mode!=2 && mode != 0) || bcd_mode!=0 )
+          if ( (mode!=3 && mode!=2 && mode!=0) || bcd_mode!=0 )
             bx_panic("pit: outp(43h): comm Bh, mode %02x, bcd %02x unhandled\n",
               (unsigned) mode, bcd_mode);
           break;

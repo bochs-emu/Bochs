@@ -1,4 +1,4 @@
-//  Copyright (C) 2000  MandrakeSoft S.A.
+//  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -329,6 +329,10 @@ bx_panic(char *fmt, ...)
     }
 
   bx_atexit();
+
+#if !BX_PANIC_IS_FATAL
+  return;
+#endif    
 
 #if !BX_DEBUGGER
   exit(1);

@@ -24,6 +24,9 @@ FPU_REG const CONST_HALF = MAKE_REG(POS, -1, 0x00000000, 0x80000000);
 FPU_REG const CONST_L2T  = MAKE_REG(POS, 1, 0xcd1b8afe, 0xd49a784b);
 FPU_REG const CONST_L2E  = MAKE_REG(POS, 0, 0x5c17f0bc, 0xb8aa3b29);
 FPU_REG const CONST_PI   = MAKE_REG(POS, 1, 0x2168c235, 0xc90fdaa2);
+// bbd: make CONST_PI2 non-const so that you can write "&CONST_PI2" when
+// calling a function.  Otherwise you get const warnings.  Surely there's
+// a better way.
 FPU_REG CONST_PI2  = MAKE_REG(POS, 0, 0x2168c235, 0xc90fdaa2);
 FPU_REG const CONST_PI4  = MAKE_REG(POS, -1, 0x2168c235, 0xc90fdaa2);
 FPU_REG const CONST_LG2  = MAKE_REG(POS, -2, 0xfbcff799, 0x9a209a84);

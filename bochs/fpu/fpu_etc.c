@@ -29,7 +29,7 @@ static void fchs(FPU_REG *st0_ptr, u_char st0tag)
 }
 
 
-static void fabs(FPU_REG *st0_ptr, u_char st0tag)
+static void fpu_fabs(FPU_REG *st0_ptr, u_char st0tag)
 {
   if ( st0tag ^ TAG_Empty )
     {
@@ -133,7 +133,7 @@ static void fxam(FPU_REG *st0_ptr, u_char st0tag)
 
 
 static FUNC_ST0 const fp_etc_table[] = {
-  fchs, fabs, (FUNC_ST0)FPU_illegal, (FUNC_ST0)FPU_illegal,
+  fchs, fpu_fabs, (FUNC_ST0)FPU_illegal, (FUNC_ST0)FPU_illegal,
   ftst_, fxam, (FUNC_ST0)FPU_illegal, (FUNC_ST0)FPU_illegal
 };
 

@@ -1,3 +1,14 @@
+Changes by Bryce Denney 4/5/2001:
+I moved the contents of macutils.h into osdep.h, and macutils.c 
+into osdep.cc.  There are functions missing on other platforms too, 
+so I wanted to bring them all into the same place.
+
+The original macintosh.txt follows.
+------------------------------------------------------------------
+
+
+
+
 STATUS OF THE MAC PORT:
 -----------------------
 

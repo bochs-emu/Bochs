@@ -1,4 +1,4 @@
-//  Copyright (C) 2000  MandrakeSoft S.A.
+//  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -109,7 +109,7 @@ public:
   void   activate_timer( unsigned timer_index, Bit32u useconds,
                          Boolean continuous );
   void   deactivate_timer( unsigned timer_index );
-  static inline void tick1(void) {
+  static BX_CPP_INLINE void tick1(void) {
 #if BX_SHOW_IPS
   {
   extern unsigned long ips_count;
@@ -120,7 +120,7 @@ public:
       bx_pc_system.timer_handler();
       }
     }
-  static inline void tickn(Bit64u n) {
+  static BX_CPP_INLINE void tickn(Bit64u n) {
 #if BX_SHOW_IPS
   {
   extern unsigned long ips_count;

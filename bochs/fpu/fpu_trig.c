@@ -75,7 +75,7 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 
   if ( ((flags & FCOS) && !(q & 1)) || (!(flags & FCOS) && (q & 1)) )
     {
-      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, &CONST_PI2, FULL_PRECISION);
+      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, &CONST_PI2, FULL_PRECISION); //bbd: arg2 used to typecast to (int)
 
 #ifdef BETTER_THAN_486
       /* So far, the results are exact but based upon a 64 bit
@@ -146,7 +146,9 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 		 subtraction can be larger than pi/2. This means
 		 that the argument is actually in a different quadrant.
 		 The correction is always < pi/2, so it can't overflow
-		 into yet another quadrant. */
+		 into yet another quadrant. 
+	         bbd: arg2 used to typecast to (int), corrupting 64-bit ptrs
+	       */
 	      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, &CONST_PI2,
 				FULL_PRECISION);
 	      q++;
@@ -705,7 +707,7 @@ static int f_cos(FPU_REG *st0_ptr, u_char tag)
 	{
 	  if ( (exponent(st0_ptr) < 0)
 	      || ((exponent(st0_ptr) == 0)
-		  && (significand(st0_ptr) <= 0xc90fdaa22168c234LL)) )
+		  && (significand(st0_ptr) <= BX_CONST64(0xc90fdaa22168c234))) )
 	    {
 	      poly_cos(st0_ptr);
 

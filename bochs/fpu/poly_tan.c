@@ -22,33 +22,33 @@
 #define	HiPOWERop	3	/* odd poly, positive terms */
 static const u64 oddplterm[HiPOWERop] =
 {
-  0x0000000000000000LL,
-  0x0051a1cf08fca228LL,
-  0x0000000071284ff7LL
+  BX_CONST64(0x0000000000000000),
+  BX_CONST64(0x0051a1cf08fca228),
+  BX_CONST64(0x0000000071284ff7)
 };
 
 #define	HiPOWERon	2	/* odd poly, negative terms */
 static const u64 oddnegterm[HiPOWERon] =
 {
-   0x1291a9a184244e80LL,
-   0x0000583245819c21LL
+   BX_CONST64(0x1291a9a184244e80),
+   BX_CONST64(0x0000583245819c21)
 };
 
 #define	HiPOWERep	2	/* even poly, positive terms */
 static const u64 evenplterm[HiPOWERep] =
 {
-  0x0e848884b539e888LL,
-  0x00003c7f18b887daLL
+  BX_CONST64(0x0e848884b539e888),
+  BX_CONST64(0x00003c7f18b887da)
 };
 
 #define	HiPOWERen	2	/* even poly, negative terms */
 static const u64 evennegterm[HiPOWERen] =
 {
-  0xf1f0200fd51569ccLL,
-  0x003afb46105c4432LL
+  BX_CONST64(0xf1f0200fd51569cc),
+  BX_CONST64(0x003afb46105c4432)
 };
 
-static const u64 twothirds = 0xaaaaaaaaaaaaaaabLL;
+static const u64 twothirds = BX_CONST64(0xaaaaaaaaaaaaaaab);
 
 
 /*--- poly_tan() ------------------------------------------------------------+
@@ -121,7 +121,7 @@ void   poly_tan(FPU_REG *st0_ptr, int invert)
 	 really doesn't matter what value we use because it will
 	 have negligible effect in later calculations
 	 */
-      XSIG_LL(accum) = 0x8000000000000000LL;
+      XSIG_LL(accum) = BX_CONST64(0x8000000000000000);
       accum.lsw = 0;
     }
   else

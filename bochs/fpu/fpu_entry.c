@@ -30,8 +30,8 @@
 #include "control_w.h"
 #include "status_w.h"
 
-/* include ported linux headers after config.h for a few definitions */
 #include <linux/signal.h>
+
 #include <asm/uaccess.h>
 #include <asm/desc.h>
 
@@ -345,7 +345,7 @@ do_another_FPU_instruction:
 		  unmasked &= ~0xff;
 		  break;
 		case 1:
-		  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);
+		  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data); // bbd: was (u32*)
 		  break;
 		case 2:
 		  unmasked = FPU_load_double((double *)data_address,
@@ -445,6 +445,9 @@ do_another_FPU_instruction:
 		  break;
 		case 4:         /* fsub */
 		  clear_C1();
+		  // bbd: loaded_data used to be typecast to an int, but 
+		  // this corrupted the pointer on 64-bit machines.
+		  // Now FPU_sub and similar take a FPU_REG* here instead. 
 		  FPU_sub(LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		case 5:         /* fsubr */
@@ -849,7 +852,7 @@ do_the_FPU_interrupt:
                   unmasked &= ~0xff;
                   break;
                 case 1:
-                  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);
+                  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);  // bbd: was (u32 *)
                   break;
                 case 2:
                   unmasked = FPU_load_double((double *)data_address,
@@ -943,6 +946,8 @@ do_the_FPU_interrupt:
                   FPU_compare_st_data(&loaded_data, loaded_tag);
                   break;
                 case 3:         /* fcomp */
+		  // bbd: used to typecase to int first, but this corrupted the
+		  // pointer on 64 bit machines.
                   if ( !FPU_compare_st_data(&loaded_data, loaded_tag)
                        && !unmasked )
                     FPU_pop();
@@ -1061,7 +1066,7 @@ FPU_fwait_done:
 #ifdef DEBUG
   FPU_printall();
 #endif /* DEBUG */
-#ifdef NO_BLANK_LABELS
+#ifdef BX_NO_BLANK_LABELS
   if(0);
 #endif
 }
