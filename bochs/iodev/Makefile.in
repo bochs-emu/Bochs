@@ -108,8 +108,8 @@ all: libiodev.a plugins
 	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
 
 # special rule for hard drive, which can have multiple objects
-libharddrv.la: harddrv.lo $(CDROM_OBJS:.o:.lo)
-	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o:.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
+libharddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
+	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
 	mkdir -p $(PLUGIN_PATH)
 	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
