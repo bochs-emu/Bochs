@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.34 2002-04-29 13:06:06 japj Exp $
+// $Id: vga.cc,v 1.35 2002-07-21 11:03:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1434,7 +1434,8 @@ bx_vga_c::update(void)
                     pixelx = ((xti*X_TILESIZE) + c);
                     plane  = (pixelx % 4);
                     byte_offset = (plane * 65536) +
-                                  (pixely * 80) + (pixelx >> 2);
+                                  (pixely * (BX_VGA_THIS s.CRTC.reg[0x13]<<1))
+				  + (pixelx >> 2);
                     color = BX_VGA_THIS s.vga_memory[start_addr + byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                     }
