@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.33 2004-11-02 16:10:01 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.34 2004-11-02 17:31:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -203,18 +203,12 @@ done:
 void BX_CPU_C::CALL_Ad(bxInstruction_c *i)
 {
 BailBigRSP("CALL_Ad");
-  Bit32u new_EIP;
-  Bit32s disp32;
-
-  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  disp32 = i->Id();
-
-  new_EIP = EIP + disp32;
+  Bit32u new_EIP = EIP + i->Id();
 
   if ( protected_mode() ) {
     if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
@@ -332,20 +326,8 @@ done:
 
 void BX_CPU_C::JMP_Jd(bxInstruction_c *i)
 {
-BailBigRSP("JMP_Jd");
-
-  //invalidate_prefetch_q();
-
   Bit32u new_EIP = EIP + (Bit32s) i->Id();
-
-  if (protected_mode()) {
-    if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      BX_ERROR(("jmp_jd: offset outside of CS limits"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-
-  EIP = new_EIP;
+  branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
@@ -380,17 +362,8 @@ void BX_CPU_C::JCC_Jd(bxInstruction_c *i)
 
   if (condition) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    if (protected_mode()) {
-      if (new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-      {
-        BX_ERROR(("jo_routine: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    EIP = new_EIP;
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-    revalidate_prefetch_q();
   }
 #if BX_INSTRUMENTATION
   else {
@@ -403,17 +376,8 @@ void BX_CPU_C::JZ_Jd(bxInstruction_c *i)
 {
   if (get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    if (protected_mode()) {
-      if (new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-      {
-        BX_ERROR(("jz: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    EIP = new_EIP;
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-    revalidate_prefetch_q();
   }
 #if BX_INSTRUMENTATION
   else {
@@ -426,17 +390,8 @@ void BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
 {
   if (!get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    if (protected_mode()) {
-      if (new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-      {
-        BX_ERROR(("jnz: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    EIP = new_EIP;
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-    revalidate_prefetch_q();
   }
 #if BX_INSTRUMENTATION
   else {
@@ -476,30 +431,18 @@ done:
 
 void BX_CPU_C::JMP_Ed(bxInstruction_c *i)
 {
-BailBigRSP("JMP_Ed");
-  Bit32u op1_32;
-
-  //invalidate_prefetch_q();
+  Bit32u new_EIP;
 
   /* op1_32 is a register or memory reference */
   if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
+    new_EIP = BX_READ_32BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+    read_virtual_dword(i->seg(), RMAddr(i), &new_EIP);
     }
 
-  Bit32u new_EIP = op1_32;
-
-  if (protected_mode()) {
-    if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("jmp_ed: IP out of CS limits!"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-
-  EIP = new_EIP;
+  branch_near32(new_EIP);
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
@@ -528,7 +471,7 @@ BailBigRSP("JMP32_Ep");
     if ( protected_mode() ) {
       BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
       goto done;
-      }
+    }
 
     EIP = op1_32;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);

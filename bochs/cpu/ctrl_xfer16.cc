@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.23 2004-11-02 16:10:01 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.24 2004-11-02 17:31:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,6 @@
   void
 BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 {
-BailBigRSP("RETnear16_Iw");
   Bit16u imm16;
   Bit16u return_IP;
 
@@ -46,9 +45,8 @@ BailBigRSP("RETnear16_Iw");
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  imm16 = i->Iw();
-
   pop_16(&return_IP);
+
   if (protected_mode()) {
     if (return_IP >
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) 
@@ -57,8 +55,10 @@ BailBigRSP("RETnear16_Iw");
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
-
   EIP = return_IP;
+
+  imm16 = i->Iw();
+
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
     ESP += imm16; /* ??? should it be 2*imm16 ? */
   else
@@ -70,7 +70,6 @@ BailBigRSP("RETnear16_Iw");
   void
 BX_CPU_C::RETnear16(bxInstruction_c *i)
 {
-BailBigRSP("RETnear16");
   Bit16u return_IP;
 
   //invalidate_prefetch_q();
@@ -302,32 +301,15 @@ done:
   void
 BX_CPU_C::JMP_Jw(bxInstruction_c *i)
 {
-BailBigRSP("JMP_Jw");
-  Bit32u new_EIP;
-
-  //invalidate_prefetch_q();
-
-  new_EIP = EIP + (Bit32s) i->Id();
+  Bit32u new_EIP = EIP + (Bit32s) i->Id();
   new_EIP &= 0x0000ffff;
-
-#if BX_CPU_LEVEL >= 2
-  if (protected_mode()) {
-    if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-    {
-      BX_ERROR(("jmp_jw: offset outside of CS limits"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-  }
-#endif
-
-  EIP = new_EIP;
+  branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
   void
 BX_CPU_C::JCC_Jw(bxInstruction_c *i)
 {
-BailBigRSP("JCC_Jw");
   bx_bool condition;
 
   switch (i->b1() & 0x0f) {
@@ -358,20 +340,9 @@ BailBigRSP("JCC_Jw");
   if (condition) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     new_EIP &= 0x0000ffff;
-#if BX_CPU_LEVEL >= 2
-    if (protected_mode()) {
-      if (new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-      {
-        BX_ERROR(("jo_routine: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-#endif
-    EIP = new_EIP;
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-    revalidate_prefetch_q();
-    }
+  }
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
@@ -382,23 +353,11 @@ BailBigRSP("JCC_Jw");
   void
 BX_CPU_C::JZ_Jw(bxInstruction_c *i)
 {
-BailBigRSP("JZ_Jw");
   if (get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     new_EIP &= 0x0000ffff;
-#if BX_CPU_LEVEL >= 2
-    if (protected_mode()) {
-      if (new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-      {
-        BX_ERROR(("jz: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-#endif
-    EIP = new_EIP;
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-    revalidate_prefetch_q();
   }
 #if BX_INSTRUMENTATION
   else {
@@ -410,23 +369,11 @@ BailBigRSP("JZ_Jw");
   void
 BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
 {
-BailBigRSP("JNZ_Jw");
   if (!get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     new_EIP &= 0x0000ffff;
-#if BX_CPU_LEVEL >= 2
-    if (protected_mode()) {
-      if (new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) 
-      {
-        BX_ERROR(("jnz: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-#endif
-    EIP = new_EIP;
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-    revalidate_prefetch_q();
   }
 #if BX_INSTRUMENTATION
   else {
@@ -439,11 +386,7 @@ BailBigRSP("JNZ_Jw");
   void
 BX_CPU_C::JMP_Ew(bxInstruction_c *i)
 {
-BailBigRSP("JMP_Ew");
-  Bit32u new_EIP;
   Bit16u op1_16;
-
-  //invalidate_prefetch_q();
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
@@ -452,20 +395,8 @@ BailBigRSP("JMP_Ew");
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
-  new_EIP = op1_16;
-
-#if BX_CPU_LEVEL >= 2
-  if (protected_mode()) {
-    if (new_EIP >
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("jmp_ev: IP out of CS limits!"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-#endif
-
-  EIP = new_EIP;
-
+  Bit32u new_EIP = op1_16;
+  branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.27 2004-11-02 16:10:01 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.28 2004-11-02 17:31:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,14 +30,10 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-
-
 #if BX_SUPPORT_X86_64==0
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP
 #endif
-
-
 
 
 #if BX_CPU_LEVEL >= 2
@@ -59,8 +55,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
   /* destination selector index is whithin its descriptor table
      limits else #GP(selector) */
-  fetch_raw_descriptor(&selector, &dword1, &dword2,
-    BX_GP_EXCEPTION);
+  fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
   /* examine AR byte of destination selector for legal values: */
   parse_descriptor(dword1, dword2, &descriptor);
@@ -311,8 +306,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           }
 
         // index must be within GDT limits else #GP(TSS selector)
-        fetch_raw_descriptor(&tss_selector, &dword1, &dword2,
-          BX_GP_EXCEPTION);
+        fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
         // descriptor AR byte must specify available TSS
         //   else #GP(TSS selector)
@@ -469,8 +463,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
   // check new CS selector index within its descriptor limits,
   // else #GP(new CS selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-    BX_GP_EXCEPTION);
+  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
   parse_descriptor(dword1, dword2, &cs_descriptor);
 
@@ -657,8 +650,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           }
 
         // index must be within GDT limits else #TS(TSS selector)
-        fetch_raw_descriptor(&tss_selector, &dword1, &dword2,
-          BX_TS_EXCEPTION);
+        fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
 
         // descriptor AR byte must specify available TSS
         //   else #TS(TSS selector)
@@ -737,8 +729,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
         // selector must be within its descriptor table limits,
         //   else #GP(code segment selector)
-        fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-          BX_GP_EXCEPTION);
+        fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
         parse_descriptor(dword1, dword2, &cs_descriptor);
 
         // AR byte of selected descriptor must indicate code segment,
@@ -1108,8 +1099,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     // selector index must be within its descriptor table limits,
     // else #GP(selector)
-    fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-      BX_GP_EXCEPTION);
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
     // descriptor AR byte must indicate code segment, else #GP(selector)
     parse_descriptor(dword1, dword2, &cs_descriptor);
@@ -1228,8 +1218,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     /* selector index must be within its descriptor table limits,
      * else #GP(selector) */
-    fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-      BX_GP_EXCEPTION);
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
     parse_descriptor(dword1, dword2, &cs_descriptor);
 
     /* descriptor AR byte must indicate code segment else #GP(selector) (???) */
@@ -1300,8 +1289,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     /* selector index must be within its descriptor table limits,
      * else #GP(selector) */
     parse_selector(raw_ss_selector, &ss_selector);
-    fetch_raw_descriptor(&ss_selector, &dword1, &dword2,
-      BX_GP_EXCEPTION);
+    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
     parse_descriptor(dword1, dword2, &ss_descriptor);
 
     /* selector RPL must = RPL of the return CS selector,
@@ -1536,8 +1524,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     // selector index must be within descriptor table limits,
     // else #GP(return selector)
-    fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-      BX_GP_EXCEPTION);
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
     parse_descriptor(dword1, dword2, &cs_descriptor);
 
@@ -1802,8 +1789,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     // selector index must be within descriptor table limits,
     // else #GP(return selector)
-    fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-      BX_GP_EXCEPTION);
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
     parse_descriptor(dword1, dword2, &cs_descriptor);
 
@@ -2023,6 +2009,18 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 #endif
 
 #if BX_CPU_LEVEL >= 2
+int BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
+{
+    // check always, not only in protected mode
+    if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+    {
+        BX_ERROR(("branch_near: offset outside of CS limits"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    EIP = new_EIP;
+    revalidate_prefetch_q();
+}
+
 void BX_CPU_C::validate_seg_regs(void)
 {
   if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl<
@@ -2051,3 +2049,4 @@ void BX_CPU_C::validate_seg_regs(void)
     }
 }
 #endif
+
