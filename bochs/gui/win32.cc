@@ -324,7 +324,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
   //  the emulated CPU runs, and it hogs the real CPU
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 
-  if (bx_options.private_colormap)
+  if (bx_options.Oprivate_colormap->get ())
     BX_INFO(( "private_colormap option ignored."));
 }
 
