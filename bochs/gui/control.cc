@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.47 2002-04-18 00:22:19 bdenney Exp $
+// $Id: control.cc,v 1.48 2002-06-20 15:43:09 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.47 2002-04-18 00:22:19 bdenney Exp $
+ * $Id: control.cc,v 1.48 2002-06-20 15:43:09 yakovlev Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -275,6 +275,8 @@ static char *startup_menu_prompt =
 "then immediately start the simulation.  A quick way to do this is to\n"
 "press return three times to accept the default choices (shown in\n"
 "square brackets).\n"
+"\n"
+"You can also start bochs with the -nocp option to skip these menus.\n";
 "\n"
 "1. Read options from...\n"
 "2. Edit options\n"
