@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.19 2001-11-14 04:08:10 bdenney Exp $
+$Id: user.dbk,v 1.20 2001-11-14 04:18:24 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2287,7 +2287,7 @@ and 0 turns it off.
 <title>Mailing Lists</title>
 <para>
 The Bochs community uses two mailing lists to communicate, called
-bochs-announce and bochs-developers.
+bochs-developers and bochs-announce.
 </para>
 
 <section id="bochs-developers"><title>bochs-developers mailing list</title>
@@ -2316,6 +2316,9 @@ everyone on the list.  While it's possible to post without being a subscriber,
 it's not recommended.  If you aren't a subscriber, you might miss the response
 to your question.  
 </para>
+<para>
+<ulink url="http://marc.theaimsgroup.com/?l=bochs-dev">Archive of bochs-developers messages</ulink>
+</para>
 </section>  <!-- End of bochs-developers mailing list -->
 
 <section id="bochs-announce"><title>bochs-announce mailing list</title>
@@ -2343,6 +2346,10 @@ on <command>Edit Options</command>.  Then type your password and click
 There is no need to subscribe to both lists, because all bochs-announce
 messages are forwarded to the developers list.  If you subscribe to both, you
 will get 2 copies of every announcement. 
+</para>
+
+<para>
+<ulink url="http://www.geocrawler.com/lists/3/SourceForge/12081/0/">Archive of bochs-announce messages</ulink>
 </para>
 
 </section>  <!-- End of bochs-announce mailing list -->
