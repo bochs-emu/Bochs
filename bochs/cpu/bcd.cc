@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.11 2004-03-18 21:43:18 sshwarts Exp $
+// $Id: bcd.cc,v 1.12 2004-03-26 12:43:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,8 +59,7 @@ BX_CPU_C::AAA(bxInstruction_c *)
 
   if ( ((AL & 0x0f) > 9) || get_AF() )
   {
-    AX = AX + 6;
-    AH = AH + 1;
+    AX = AX + 0x106;
     set_AF(1);
     set_CF(1);
   }
@@ -89,8 +88,7 @@ BX_CPU_C::AAS(bxInstruction_c *)
 
   if ( ((AL & 0x0F) > 0x09) || get_AF() )
   {
-    AL = AL - 6;
-    AH = AH - 1;
+    AX = AX - 0x106;
     set_AF(1);
     set_CF(1);
   }
