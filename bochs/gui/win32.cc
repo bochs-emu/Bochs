@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.68 2003-10-25 17:37:58 vruppert Exp $
+// $Id: win32.cc,v 1.69 2003-11-05 17:25:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ static int bx_headerbar_entries;
 static unsigned bx_hb_separator;
 
 // Misc stuff
-static unsigned dimension_x, dimension_y;
+static unsigned dimension_x, dimension_y, current_bpp;
 static unsigned stretched_x, stretched_y;
 static unsigned stretch_factor=1;
 static unsigned prev_cursor_x = 0;
@@ -583,6 +583,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   UNUSED(headerbar_y);
   dimension_x = 640;
   dimension_y = 480;
+  current_bpp = 8;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
   stretch_factor = 1;
@@ -1419,10 +1420,11 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 #endif
   }
 
-  if ( x==dimension_x && y==dimension_y)
+  if ( x==dimension_x && y==dimension_y && bpp==current_bpp)
     return;
   dimension_x = x;
   dimension_y = y;
+  current_bpp = bpp;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
   stretch_factor = 1;
