@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.43 2002-11-13 18:39:38 vruppert Exp $
+// $Id: devices.cc,v 1.44 2002-11-14 02:32:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.43 2002-11-13 18:39:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.44 2002-11-14 02:32:33 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -265,7 +265,7 @@ bx_devices_c::reset(unsigned type)
   pluginDmaDevice->reset(type);
   pluginFloppyDevice->reset(type);
 #if BX_SUPPORT_SB16
-  pluginSB16Device->reset(type);
+  if (pluginSB16Device) pluginSB16Device->reset(type);
 #endif
   pluginVgaDevice->reset(type);
   pluginPicDevice->reset(type);
