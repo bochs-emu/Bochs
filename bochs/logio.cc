@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.35 2002-10-27 13:20:25 vruppert Exp $
+// $Id: logio.cc,v 1.36 2002-11-11 14:10:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -525,7 +525,10 @@ logfunc_t *genlog = NULL;
 void bx_center_print (FILE *file, char *line, int maxwidth)
 {
   int imax;
-  imax = (maxwidth - strlen(line)) >> 1;
+  int len = strlen(line);
+  if (len > maxwidth)
+    BX_PANIC (("bx_center_print: line is too long: '%s'", line));
+  imax = (maxwidth - len) >> 1;
   for (int i=0; i<imax; i++) fputc (' ', file);
   fputs (line, file);
 }
