@@ -1,14 +1,14 @@
 ----------------------------------------------------------------------
 Patch name: patch.plugins
+Date: soon!
 Authors:
   Bryce Denney
   Christophe Bothamy
   Kevin Lawton (we grabbed a lot of plugin code from plex86)
-Date:
-
-THINGS TO FIX!!!!!!!!
-- I removed more than I needed to from gui/Makefile.in.  Why remove the
-  sdl, rfb targets? 
+Testing help from:
+  Volker Ruppert
+  Don Becker (Psyon)
+  Jeremy Parsons (Br'fin)
 
 GENERAL NOTES
 - All the work on this patch was done in a CVS branch called BRANCH_PLUGINS.
@@ -159,6 +159,27 @@ PLUGIN DEVICES
   - each device provides a plugin_init method and a plugin_fini method
   - the plugin_init method can initialize any number of devices and they 
     should be "registered" by calling BX_REGISTER_DEVICE_DEVMODEL().
+  - all plugin devices descend from a class called bx_devmodel_c.  The devmodel
+    class is made up of virtual functions which tell the operations that we
+    should be able to do on ANY device.  The real implementation of a device,
+    in a child class, will override these methods to implement the real
+    behavior of that device.  As an example, the C++ class heirarchy for the
+    keyboard device looks like this:
+
+      logfunctions
+      |
+      +-- bx_devmodel_c
+          |
+          +-- bx_keyb_stub_c
+              |
+              +-- bx_keyboard_c
+
+    Logfunctions provides logging capabilities.  bx_devmodel_c provides a
+    uniform interface for dealing with any device without even knowing which
+    one it is.  bx_keyb_stub_c defines the interfaces that all external
+    functions and objects can use, but the implementation of those interfaces
+    just does a panic saying that you forgot to load the keyboard plugin.
+    Finally, bx_keyboard_c implements all of the missing methods.
   - for devices that provide special functions that other devices can call, we
     make a "stub" class in iodev/iodev.h which has virtual functions that just
     print a panic or warning message.  The real device will create a subclass
@@ -185,6 +206,81 @@ PLUGIN DEVICES
   even for devices that will always be loaded, but we want to make them
   into a plugin.  Otherwise we can't link bochs because of references to
   undefined symbols.
+- in iodev/devices.cc, device plugins are loaded if they are needed.  At
+  the moment we still load almost all of them all the time, but it doesn't have
+  to be that way.  Serial and Parallel devices are loaded only if they
+  are enabled in the bochsrc/config interface.  Devices that can be compiled
+  as plugins are called plugin*.  Devices that have not been converted to
+  plugins still have their old names like sb16, pit, ne2k.  At the end
+  of the bx_devices::init() function we call bx_init_plugins() which 
+  calls the init function of devices created in plugins.  (Not every 
+  device, see core plugins vs. optional plugins.)  At the end of
+  bx_devices::reset() we call bx_reset_plugins() which calls the reset
+  function of devices created in plugins.
+- core plugins vs. optional plugins vs. user plugins
+  - core plugin: These are so fundamental that Bochs can't even initialize
+    without them, for example the CMOS.  The user can substitute his own
+    equivalent plugin to replace the CMOS, but he cannot say "Don't load the
+    CMOS at all."  Core plugin devices are initialized and reset explictly by
+    code in iodev/devices.cc, since the initialization order for some of them
+    is critical.  They are currently NOT added to the device list in
+    pluginRegisterDevice and pluginRegisterDeviceDevmodel, so that the plugin
+    system does not call init() and reset().  If a core plugin cannot be found,
+    Bochs will panic.
+    (NOT DONE) In the bochsrc we could easily provide a way for the user to
+    replace a core plugin with a different plugin that implements the same C++
+    interface.  This is not implemented yet.  Example bochsrc line:
+      replace_core_plugin: old=pic, new=mypic
+  - optional plugin: These can be loaded or not, without affecting Bochs's
+    ability to start up and simulate.  Initialization and reset for all
+    optional plugins are handled by bx_init_plugins() and bx_reset_plugins(),
+    which are now called from bx_devices_c::init() and bx_devices_c::reset().
+    Bochs knows how to configure optional plugins at compile time, and they are
+    loaded only if the configuration settings enables the device.  Examples:
+    serial, parallel.  See the call to is_serial_enabled() in iodev/devices.cc.
+    There are some "optional" plugins that you might not ever want to leave
+    out, like vga.  Maybe the term optional is not clear and we need to think
+    of a better name.  Bochs will panic if an optional plugin cannot be found.
+    If the plugin was compiled, then it should be available at runtime too!
+  - (NOT DONE) user plugin: These are plugins that Bochs does not know
+    anything about at compile time.  The user asks Bochs to load a plugin
+    using just its filename.  It loads the plugin and (somehow) gets
+    information about what settings the user can configure.  The settings are
+    adjusted by either bochsrc lines or the user interface, and then the
+    device can be used.  User plugins will probably not be supported until
+    after v2.0.
+  - These categories might change over time, and more may be added.  We have
+    to start somewhere.
+- the keyboard timer handler used to control all sorts of things that had very
+  little to do with the keyboard!  For example, it would call SIM->periodic()
+  and bx_gui->handle_events() to make the gui update when it was supposed to.
+  This has been moved into iodev/devices.cc instead.  It didn't really belong
+  in the keyboard model, and what if you wanted to simulate with no keyboard
+  one day?
+- in devices.cc, added the concept of a default I/O handler.  Before, the
+  "unmapped" device was initialized first and it would register every single
+  I/O port in the whole 64k address space, then other devices would claim the
+  ones that they needed.  Now it works differently.  Now, the unmapped device
+  registers the default I/O read handler and the default I/O write handler,
+  which are represented by BX_DEFAULT_IO_DEVICE.  This is from an email
+  conversation with Christophe
+  >   Sooner or later, we will need to unregister some ioport handler, because
+  > some ports can be moved around the io architecture (for example the PCI
+  > IDE Bus Master ioports).  Bochs can not do this at the moment.
+  > ...
+  >   When another device claims the io address, we change the handler 
+  > number to the one of the new function.  This behaviour is compatible with
+  > the old one.
+  >   But when we'll need to unregister an io address handler, we will just
+  > reset the handler number to BX_DEFAULT_IO_HANDLER so unmapped is called
+  > again when the io port is accessed.
+  >   This way, we can have Bochs devices register/unregister/re-register
+  > their handlers.
+- device init() methods no longer have an argument.  We used to pass in
+  a pointer to the global variable bx_devices, which each device would
+  (usually) dutifully store and use instead of using the global symbol,
+  but it wasn't helping much.  If we start to simulate more than one
+  PC at once (who knows? it might happen) then maybe we'll add it back.
 
 
 
@@ -198,6 +294,8 @@ BUG FIXES THAT ENDED UP IN THE PLUGIN BRANCH
 - add semicolon to the end of a BX_INFO for XADD_EdGd in arith32.cc
 - make control.cc ignore BX_ASYNC_EVT_REFRESH and BX_ASYNC_EVT_DBG_MSG
   instead of sending them to default: which prints a warning.
+- remove memset(&s, 0, sizeof(s)) in bx_keyb_c constructor.  This memset
+  was wiping out some of the fields of the parent class (logfunctions).
 
 Patch was created with:
   cvs diff -u
