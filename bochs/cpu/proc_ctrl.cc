@@ -508,7 +508,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       break;
     case 3: // CR3
       if (bx_dbg.creg)
-        bx_printf("MOV_CdRd:(%08x)\n", (unsigned) val_32);
+        bx_printf("MOV_CdRd:CR3 = %08x\n", (unsigned) val_32);
       // Reserved bits take on value of MOV instruction
       CR3_change(val_32);
       BX_INSTR_TLB_CNTRL(BX_INSTR_MOV_CR3, val_32);
