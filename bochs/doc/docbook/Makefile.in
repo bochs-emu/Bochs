@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.6 2002-12-13 19:59:08 bdenney Exp $
+# $Id: Makefile.in,v 1.7 2002-12-13 22:41:24 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -65,8 +65,9 @@ webinst: all fixperm
 	for i in $(INSTALL_LIST); do if test -a $(srcdir)/$$i -a ! -a $$i; then cp $(srcdir)/$$i $$i; fi; done
 	# copy to remote
 	@echo Installing documentation on $(REMOTE_PATH)
+	tar cf - $(INSTALL_LIST) | gzip > bochsdoc.tar.gz
 	if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
-	  tar cf - $(INSTALL_LIST) | \
+	  gunzip -c bochsdoc.tar.gz | \
 	  $(SSH) $${SFUSER}@$(REMOTE_HOST) "cd $(REMOTE_PATH) && umask 002 && tar xvf -"
 
 clean:
@@ -74,6 +75,7 @@ clean:
 	for S in $(SECTIONS); do \
 	  rm -f $$S/*.html $$S/*.htm $$S/*.ps $$S/*.pdf $$S/*.out; \
 	done
+	@RMCOMMAND@ bochsdoc.tar.gz
 
 dist-clean: clean
 	rm -f  Makefile
