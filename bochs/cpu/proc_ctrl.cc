@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.95 2005-02-23 18:00:07 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.96 2005-02-26 12:00:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1829,7 +1829,7 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr + 8;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;          // data segment
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;          // expand-up
@@ -1875,7 +1875,7 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) | 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;           // code segment
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;           // non-conforming
@@ -1890,7 +1890,7 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;           // data segment
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;           // expand-up
