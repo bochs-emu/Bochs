@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.22 2002-10-25 11:44:33 bdenney Exp $
+// $Id: pc_system.h,v 1.23 2002-12-15 16:00:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 
 
-#define BX_MAX_TIMERS (15+BX_SMP_PROCESSORS)
+#define BX_MAX_TIMERS 64
 #define BX_NULL_TIMER_HANDLE 10000
 
 
