@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.30 2004-04-05 12:09:25 cbothamy Exp $
+// $Id: rfb.cc,v 1.31 2004-04-05 19:51:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -312,7 +312,7 @@ void ServerThreadInit(void *indata)
       break;
     }
     if (!port_ok) {
-      BX_PANIC (("RFB could not bind any port between %d and %d\n", 
+      BX_PANIC (("RFB could not bind any port between %d and %d", 
         BX_RFB_PORT_MIN,
         BX_RFB_PORT_MAX));
       goto end_of_thread;
@@ -369,7 +369,7 @@ void HandleRfbClient(SOCKET sClient)
     auth = Swap32IfLE(rfbSecurityNone);
 
     if(WriteExact(sClient, (char *)&auth, sizeof(auth)) < 0) {
-        BX_ERROR(("could not send authorization method.\n"));
+        BX_ERROR(("could not send authorization method."));
         return;
     }
 
@@ -427,7 +427,7 @@ void HandleRfbClient(SOCKET sClient)
                 spf.pixelFormat.blueShift = spf.pixelFormat.blueShift;
                 
                 if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
-                    BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d %d)",
+                    BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d)",
 			      spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.trueColourFlag,
 			      spf.pixelFormat.bigEndianFlag,spf.pixelFormat.redMax,spf.pixelFormat.greenMax,
 			      spf.pixelFormat.blueMax,spf.pixelFormat.redShift,spf.pixelFormat.blueShift));
