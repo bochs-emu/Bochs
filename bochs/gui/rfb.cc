@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.26 2003-07-06 20:51:05 vruppert Exp $
+// $Id: rfb.cc,v 1.27 2004-01-18 19:51:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -1194,7 +1194,7 @@ void StartThread()
 #define XK_Alt_L		0xFFE9
 #define XK_Alt_R		0xFFEA
 
-Bit32u ascii_to_key_event[0x5f] = {
+Bit32u rfb_ascii_to_key_event[0x5f] = {
   //  !"#$%&'
   BX_KEY_SPACE,
   BX_KEY_1,
@@ -1322,7 +1322,7 @@ void rfbKeyPressed(Bit32u key, int press_release)
   Bit32u key_event;
 
   if((key >= XK_space) && (key <= XK_asciitilde)) {
-    key_event = ascii_to_key_event[key - XK_space];
+    key_event = rfb_ascii_to_key_event[key - XK_space];
   } else {
     switch (key) {
       case XK_KP_1:
