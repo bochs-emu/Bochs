@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.33 2002-02-06 18:51:48 vruppert Exp $
+// $Id: floppy.cc,v 1.34 2002-02-09 13:22:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.33 2002-02-06 18:51:48 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.34 2002-02-09 13:22:43 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -258,6 +258,8 @@ bx_floppy_ctrl_c::reset(unsigned source)
 
   BX_FD_THIS s.floppy_buffer_index = 0;
 
+  BX_FD_THIS devices->pic->lower_irq(6);
+  bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
 }
 
 
