@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.6 2002-09-20 15:34:55 cbothamy Exp $
+// $Id: disasm.h,v 1.7 2002-09-28 06:29:55 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,13 +40,14 @@
 class bx_disassemble_c : public logfunctions {
 public:
   bx_disassemble_c(void);
-  unsigned disasm(Boolean is_32, Bit8u *instr, char *disbuf);
+  unsigned disasm(Boolean is_32, Bit32u ip, Bit8u *instr, char *disbuf);
 
 private:
   Boolean db_32bit_opsize;
   Boolean db_32bit_addrsize;
   Boolean db_rep_prefix;
   Boolean db_repne_prefix;
+  Bit32u db_eip;
   Bit8u *instruction_begin;  // keep track of where instruction starts
   Bit8u *instruction;        // for fetching of next byte of instruction
 
@@ -74,6 +75,7 @@ private:
   char *index_name32[8];
 
   BX_CPP_INLINE Bit8u  fetch_byte(void) {
+    db_eip++;
     return(*instruction++);
     };
   BX_CPP_INLINE Bit8u  peek_byte(void) {
@@ -87,6 +89,7 @@ private:
     b0 = * (Bit8u *) instruction++;
     b1 = * (Bit8u *) instruction++;
     ret16 = (b1<<8) | b0;
+    db_eip += 2;
     return(ret16);
     };
 
@@ -99,6 +102,7 @@ private:
     b2 = * (Bit8u *) instruction++;
     b3 = * (Bit8u *) instruction++;
     ret32 = (b3<<24) | (b2<<16) | (b1<<8) | b0;
+    db_eip += 4;
     return(ret32);
     };
 

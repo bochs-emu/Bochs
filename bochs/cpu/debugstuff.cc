@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.20 2002-09-24 18:33:38 kevinlawton Exp $
+// $Id: debugstuff.cc,v 1.21 2002-09-28 06:29:55 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,7 +157,7 @@ BX_CPU_C::debug(Bit32u offset)
   if (valid) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
     isize = bx_disassemble.disasm(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-                        instr_buf, char_buf);
+	EIP, instr_buf, char_buf);
     for (unsigned j=0; j<isize; j++)
       BX_INFO((">> %02x", (unsigned) instr_buf[j]));
     BX_INFO((">> : %s", char_buf));

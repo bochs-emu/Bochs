@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.69 2002-09-24 20:41:22 bdenney Exp $
+// $Id: dbg_main.cc,v 1.70 2002-09-28 06:29:55 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2141,7 +2141,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 
     BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
     ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
-				 bx_disasm_ibuf, bx_disasm_tbuf);
+      BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
     // Note: it would be nice to display only the modified registers here, the easy
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
@@ -3330,7 +3330,7 @@ bx_dbg_disassemble_command(bx_num_range range)
     if (paddr_valid) {
       BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
       ilen = bx_disassemble.disasm(bx_debugger.disassemble_size==32,
-                                   bx_disasm_ibuf, bx_disasm_tbuf);
+        range.from, bx_disasm_ibuf, bx_disasm_tbuf);
 
       dbg_printf ( "%08x: ", (unsigned) range.from);
       for (unsigned j=0; j<ilen; j++)

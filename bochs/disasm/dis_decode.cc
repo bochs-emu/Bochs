@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.9 2002-09-20 15:34:55 cbothamy Exp $
+// $Id: dis_decode.cc,v 1.10 2002-09-28 06:29:55 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,9 @@
 
 
 
+#define BX_DISASM_VERBOSE 0
+#define BX_DISASM_LOWER_CASE_REG_NAME 0
+
 #include "bochs.h"
 #define LOG_THIS bx_disassemble.
 
@@ -41,7 +44,143 @@ bx_disassemble_c::bx_disassemble_c(void)
 {
 put("DIS");
 settype(DISLOG);
+#if BX_DISASM_LOWER_CASE_REG_NAME
+sreg_mod01_rm32[0]   = "ds";
+sreg_mod01_rm32[1]   = "ds";
+sreg_mod01_rm32[2]   = "ds";
+sreg_mod01_rm32[3]   = "ds";
+sreg_mod01_rm32[4]   = "??";
+sreg_mod01_rm32[5]   = "ss";
+sreg_mod01_rm32[6]   = "ds";
+sreg_mod01_rm32[7]   = "ds";
 
+sreg_mod10_rm32[0]   = "ds";
+sreg_mod10_rm32[1]   = "ds";
+sreg_mod10_rm32[2]   = "ds";
+sreg_mod10_rm32[3]   = "ds";
+sreg_mod10_rm32[4]   = "??";
+sreg_mod10_rm32[5]   = "ss";
+sreg_mod10_rm32[6]   = "ds";
+sreg_mod10_rm32[7]   = "ds";
+
+sreg_mod00_base32[0] = "ds";
+sreg_mod00_base32[1] = "ds";
+sreg_mod00_base32[2] = "ds";
+sreg_mod00_base32[3] = "ds";
+sreg_mod00_base32[4] = "ss";
+sreg_mod00_base32[5] = "ds";
+sreg_mod00_base32[6] = "ds";
+sreg_mod00_base32[7] = "ds";
+
+sreg_mod01_base32[0] = "ds";
+sreg_mod01_base32[1] = "ds";
+sreg_mod01_base32[2] = "ds";
+sreg_mod01_base32[3] = "ds";
+sreg_mod01_base32[4] = "ss";
+sreg_mod01_base32[5] = "ss";
+sreg_mod01_base32[6] = "ds";
+sreg_mod01_base32[7] = "ds";
+
+sreg_mod10_base32[0] = "ds";
+sreg_mod10_base32[1] = "ds";
+sreg_mod10_base32[2] = "ds";
+sreg_mod10_base32[3] = "ds";
+sreg_mod10_base32[4] = "ss";
+sreg_mod10_base32[5] = "ss";
+sreg_mod10_base32[6] = "ds";
+sreg_mod10_base32[7] = "ds";
+
+sreg_mod00_rm16[0]   = "ds";
+sreg_mod00_rm16[1]   = "ds";
+sreg_mod00_rm16[2]   = "ss";
+sreg_mod00_rm16[3]   = "ss";
+sreg_mod00_rm16[4]   = "ds";
+sreg_mod00_rm16[5]   = "ds";
+sreg_mod00_rm16[6]   = "ds";
+sreg_mod00_rm16[7]   = "ds";
+
+sreg_mod01_rm16[0]   = "ds";
+sreg_mod01_rm16[1]   = "ds";
+sreg_mod01_rm16[2]   = "ss";
+sreg_mod01_rm16[3]   = "ss";
+sreg_mod01_rm16[4]   = "ds";
+sreg_mod01_rm16[5]   = "ds";
+sreg_mod01_rm16[6]   = "ss";
+sreg_mod01_rm16[7]   = "ds";
+
+sreg_mod10_rm16[0]   = "ds";
+sreg_mod10_rm16[1]   = "ds";
+sreg_mod10_rm16[2]   = "ss";
+sreg_mod10_rm16[3]   = "ss";
+sreg_mod10_rm16[4]   = "ds";
+sreg_mod10_rm16[5]   = "ds";
+sreg_mod10_rm16[6]   = "ss";
+sreg_mod10_rm16[7]   = "ds";
+
+
+segment_name[0] = "es";
+segment_name[1] = "cs";
+segment_name[2] = "ss";
+segment_name[3] = "ds";
+segment_name[4] = "fs";
+segment_name[5] = "gs";
+segment_name[6] = "??";
+segment_name[7] = "??";
+
+general_8bit_reg_name[0] = "al";
+general_8bit_reg_name[1] = "cl";
+general_8bit_reg_name[2] = "dl";
+general_8bit_reg_name[3] = "bl";
+general_8bit_reg_name[4] = "ah";
+general_8bit_reg_name[5] = "ch";
+general_8bit_reg_name[6] = "dh";
+general_8bit_reg_name[7] = "bh";
+
+general_16bit_reg_name[0] = "ax";
+general_16bit_reg_name[1] = "cx";
+general_16bit_reg_name[2] = "dx";
+general_16bit_reg_name[3] = "bx";
+general_16bit_reg_name[4] = "sp";
+general_16bit_reg_name[5] = "bp";
+general_16bit_reg_name[6] = "si";
+general_16bit_reg_name[7] = "di";
+
+general_32bit_reg_name[0] = "eax";
+general_32bit_reg_name[1] = "ecx";
+general_32bit_reg_name[2] = "edx";
+general_32bit_reg_name[3] = "ebx";
+general_32bit_reg_name[4] = "esp";
+general_32bit_reg_name[5] = "ebp";
+general_32bit_reg_name[6] = "esi";
+general_32bit_reg_name[7] = "edi";
+
+base_name16[0] =  "bx";
+base_name16[1] =  "bx";
+base_name16[2] =  "bp";
+base_name16[3] =  "bp";
+base_name16[4] =  "??";
+base_name16[5] =  "??";
+base_name16[6] =  "bp";
+base_name16[7] =  "bx";
+
+index_name16[0] = "si";
+index_name16[1] = "di";
+index_name16[2] = "si";
+index_name16[3] = "di";
+index_name16[4] = "si";
+index_name16[5] = "di";
+index_name16[6] = "??";
+index_name16[7] = "??";
+
+index_name32[0] =  "eax";
+index_name32[1] =  "ecx";
+index_name32[2] =  "edx";
+index_name32[3] =  "ebx";
+index_name32[4] =  "???";
+index_name32[5] =  "ebp";
+index_name32[6] =  "esi";
+index_name32[7] =  "edi";
+#else
 sreg_mod01_rm32[0]   = "DS";
 sreg_mod01_rm32[1]   = "DS";
 sreg_mod01_rm32[2]   = "DS";
@@ -177,12 +316,13 @@ index_name32[4] =  "???";
 index_name32[5] =  "EBP";
 index_name32[6] =  "ESI";
 index_name32[7] =  "EDI";
+#endif
 }
 
 
 
   unsigned
-bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
+bx_disassemble_c::disasm(Boolean is_32, Bit32u ip, Bit8u *instr, char *disbuf)
 {
   int byte_count;
   Bit8u next_byte;
@@ -190,6 +330,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
 
   db_32bit_opsize = is_32;
   db_32bit_addrsize = is_32;
+  db_eip = ip;
   instruction_begin = instruction = instr;
 
   seg_override = NULL;
@@ -570,7 +711,9 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
       case 0x25: dis_sprintf("and "); eAX(); dis_sprintf(", "); Iv(); goto done;
       case 0x26:
         seg_override = "ES";
+#if BX_DISASM_VERBOSE
         dis_sprintf("ES: ");
+#endif
         break;
       case 0x27: dis_sprintf("daa"); goto done;
       case 0x28: dis_sprintf("sub "); EbGb(); goto done;
@@ -581,7 +724,9 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
       case 0x2D: dis_sprintf("sub "); eAX(); dis_sprintf(", "); Iv(); goto done;
       case 0x2E:
         seg_override = "CS";
+#if BX_DISASM_VERBOSE
         dis_sprintf("CS: ");
+#endif
         break;
       case 0x2F: dis_sprintf("das"); goto done;
 
@@ -593,7 +738,9 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
       case 0x35: dis_sprintf("xor "); eAX(); dis_sprintf(", "); Iv(); goto done;
       case 0x36:
         seg_override = "SS";
+#if BX_DISASM_VERBOSE
         dis_sprintf("SS: ");
+#endif
         break;
       case 0x37: dis_sprintf("aaa"); goto done;
       case 0x38: dis_sprintf("cmp "); EbGb(); goto done;
@@ -604,7 +751,9 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
       case 0x3D: dis_sprintf("cmp "); eAX(); dis_sprintf(", "); Iv(); goto done;
       case 0x3E:
         seg_override = "DS";
+#if BX_DISASM_VERBOSE
         dis_sprintf("DS: ");
+#endif
         break;
       case 0x3F: dis_sprintf("aas"); goto done;
 
@@ -650,19 +799,27 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
       case 0x63: dis_sprintf("arpl "); EwRw(); goto done;
       case 0x64:
         seg_override = "FS";
+#if BX_DISASM_VERBOSE
         dis_sprintf("FS: ");
+#endif
         break;
       case 0x65:
         seg_override = "GS";
+#if BX_DISASM_VERBOSE
         dis_sprintf("GS: ");
+#endif
         break;
       case 0x66:
         db_32bit_opsize = !db_32bit_opsize;
+#if BX_DISASM_VERBOSE
         dis_sprintf("OPSIZE: ");
+#endif
         break;
       case 0x67:
         db_32bit_addrsize = !db_32bit_addrsize;
+#if BX_DISASM_VERBOSE
         dis_sprintf("ADDRSIZE: ");
+#endif
         break;
       case 0x68: dis_sprintf("push "); Iv(); goto done;
       case 0x69: dis_sprintf("imul "); GvEv(); dis_sprintf(", "); Iv(); goto done;
@@ -1415,7 +1572,9 @@ bx_disassemble_c::decode_ex(Bit8u modrm, unsigned modrm_reg_type)
 
     /* use 32bit addressing modes.  orthogonal base & index registers,
        scaling available, etc. */
+#if BX_DISASM_VERBOSE
     dis_sprintf("|MOD%d|REG%d|RM%d| ", (int) mod, (int) ttt, (int) rm);
+#endif
 
 
     if (mod == 3) { /* mod, reg, reg */
@@ -1466,8 +1625,10 @@ bx_disassemble_c::decode_ex(Bit8u modrm, unsigned modrm_reg_type)
         ss = sib >> 6;
         index = (sib >> 3) & 0x07;
         base = sib & 0x07;
+#if BX_DISASM_VERBOSE
         dis_sprintf("|SS%u|IND%u|BASE%u| ", (unsigned) ss,
                   (unsigned) index, (unsigned) base);
+#endif
 
         switch (mod) {
           case 0:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.5 2002-09-20 15:34:55 cbothamy Exp $
+// $Id: dis_groups.cc,v 1.6 2002-09-28 06:29:55 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,12 +187,51 @@ bx_disassemble_c::EwRw(void)
 bx_disassemble_c::XBTS(void) {dis_sprintf("*** XBTS() unfinished ***");}
   void
 bx_disassemble_c::IBTS(void) {dis_sprintf("*** IBTS() unfinished ***");}
+/*
   void
-bx_disassemble_c::ALOb(void) {dis_sprintf("*** ALOb() unfinished ***");}
+bx_disassemble_c::YbDX(void) {dis_sprintf("*** YbDX() unfinished ***");}
+  void
+bx_disassemble_c::YvDX(void) {dis_sprintf("*** YvDX() unfinished ***");}
+  void
+bx_disassemble_c::DXXb(void) {dis_sprintf("*** DXXb() unfinished ***");}
+  void
+bx_disassemble_c::DXXv(void) {dis_sprintf("*** DXXv() unfinished ***");}
+*/
+
+  void
+bx_disassemble_c::ALOb(void)
+{
+  char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = "DS";
+
+  if (db_32bit_addrsize) {
+    Bit32u imm32;
+
+    imm32 = fetch_dword();
+    dis_sprintf("AL, [%s:%08x]", seg, (unsigned) imm32);
+    }
+  else {
+    Bit16u imm16;
+
+    imm16 = fetch_word();
+    dis_sprintf("AL, [%s:%04x]", seg, (unsigned) imm16);
+    }
+}
 
   void
 bx_disassemble_c::eAXOv(void)
 {
+  char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = "DS";
+
   if (db_32bit_opsize) {
     dis_sprintf("EAX, ");
     }
@@ -204,30 +243,37 @@ bx_disassemble_c::eAXOv(void)
     Bit32u imm32;
 
     imm32 = fetch_dword();
-    dis_sprintf("[%08x]", (unsigned) imm32);
+    dis_sprintf("[%s:%08x]", seg, (unsigned) imm32);
     }
   else {
     Bit16u imm16;
 
     imm16 = fetch_word();
-    dis_sprintf("[%04x]", (unsigned) imm16);
+    dis_sprintf("[%s:%04x]", seg, (unsigned) imm16);
     }
 }
 
   void
 bx_disassemble_c::OveAX(void)
 {
+  char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = "DS";
+
   if (db_32bit_addrsize) {
     Bit32u imm32;
 
     imm32 = fetch_dword();
-    dis_sprintf("[%08x], ", (unsigned) imm32);
+    dis_sprintf("[%s:%08x], ", seg, (unsigned) imm32);
     }
   else {
     Bit16u imm16;
 
     imm16 = fetch_word();
-    dis_sprintf("[%04x], ", (unsigned) imm16);
+    dis_sprintf("[%s:%04x], ", seg, (unsigned) imm16);
     }
 
   if (db_32bit_opsize) {
@@ -264,7 +310,30 @@ bx_disassemble_c::XvYv(void)
 }
 
   void
-bx_disassemble_c::ObAL(void) {dis_sprintf("*** ObAL() unfinished ***");}
+bx_disassemble_c::ObAL(void) 
+{
+  char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = "DS";
+
+#if BX_CPU_LEVEL > 2
+  if (db_32bit_opsize)
+  {
+    Bit32u imm32;
+    imm32 = fetch_dword();
+    dis_sprintf("[%s:%08x], AL", seg, imm32);
+  }
+  else
+#endif /* BX_CPU_LEVEL > 2 */
+  {
+    Bit16u imm16;
+    imm16 = fetch_word();
+    dis_sprintf("[%s:%04x], AL", seg, imm16);
+  }
+}
 
   void
 bx_disassemble_c::YbAL(void) {dis_sprintf("*** YbAL() unfinished ***");}
@@ -301,14 +370,14 @@ bx_disassemble_c::GvEb(void)
 bx_disassemble_c::Av(void)
 {
   if (db_32bit_opsize) {
-    Bit32u imm32;
+    Bit32s imm32;
     imm32 = fetch_dword();
-    dis_sprintf("%08x", (unsigned) imm32);
+    dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
     }
   else {
-    Bit16u imm16;
+    Bit16s imm16;
     imm16 = fetch_word();
-    dis_sprintf("%04x", (unsigned) imm16);
+    dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
     }
 }
 
@@ -345,7 +414,7 @@ bx_disassemble_c::Iw(void)
   Bit16u imm16;
 
   imm16 = fetch_word();
-  dis_sprintf("#%04x", (unsigned) imm16);
+  dis_sprintf("%04x", (unsigned) imm16);
 }
 
 
@@ -409,7 +478,7 @@ bx_disassemble_c::Jv(void)
     Bit32u imm32;
 
     imm32 = fetch_dword();
-    dis_sprintf("+#%08x", (unsigned) imm32);
+    dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
     }
   else
 #endif
@@ -417,7 +486,7 @@ bx_disassemble_c::Jv(void)
     Bit16u imm16;
 
     imm16 = fetch_word();
-    dis_sprintf("+#%04x", (unsigned) imm16);
+    dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
     }
 }
 
@@ -431,13 +500,13 @@ bx_disassemble_c::EvIb(void)
   if (db_32bit_opsize) {
     decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
     imm8 = fetch_byte();
-    dis_sprintf(", #%02x", (unsigned) imm8);
+    dis_sprintf(", %02x", (unsigned) imm8);
     }
   else {
 #endif /* BX_CPU_LEVEL > 2 */
     decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
     imm8 = fetch_byte();
-    dis_sprintf(", #%02x", (unsigned) imm8);
+    dis_sprintf(", %02x", (unsigned) imm8);
 #if BX_CPU_LEVEL > 2
     }
 #endif /* BX_CPU_LEVEL > 2 */
@@ -451,13 +520,13 @@ bx_disassemble_c::Iv(void)
     Bit32u imm32;
 
     imm32 = fetch_dword();
-    dis_sprintf("#%08x", (unsigned) imm32);
+    dis_sprintf("%08x", (unsigned) imm32);
     }
   else {
     Bit16u imm16;
 
     imm16 = fetch_word();
-    dis_sprintf("#%04x", (unsigned) imm16);
+    dis_sprintf("%04x", (unsigned) imm16);
     }
 }
 
@@ -468,7 +537,7 @@ bx_disassemble_c::Ib(void)
   Bit8u imm8;
 
   imm8 = fetch_byte();
-  dis_sprintf("#%02x", imm8);
+  dis_sprintf("%02x", imm8);
 }
 
 
@@ -478,7 +547,15 @@ bx_disassemble_c::Jb(void)
   Bit8u imm8;
 
   imm8 = fetch_byte();
-  dis_sprintf("+#%02x", (unsigned) imm8);
+#if BX_CPU_LEVEL > 2
+  if (db_32bit_opsize) {
+    dis_sprintf("%08x", (unsigned) (imm8 + db_eip));
+    }
+  else
+#endif
+  {
+    dis_sprintf("%04x", (unsigned) ((imm8 + db_eip) & 0xFFFF));
+  }
 }
 
   void
@@ -488,7 +565,7 @@ bx_disassemble_c::EbIb(void)
 
   decode_exgx(BX_GENERAL_8BIT_REG, BX_NO_REG_TYPE);
   imm8 = fetch_byte();
-  dis_sprintf(", #%02x", (unsigned) imm8);
+  dis_sprintf(", %02x", (unsigned) imm8);
 }
 
   void
@@ -502,13 +579,13 @@ bx_disassemble_c::EvIv(void)
 
     decode_exgx(BX_GENERAL_32BIT_REG, BX_NO_REG_TYPE);
     imm32 = fetch_dword();
-    dis_sprintf(", #%08x", (unsigned) imm32);
+    dis_sprintf(", %08x", (unsigned) imm32);
     }
   else {
 #endif /* BX_CPU_LEVEL > 2 */
     decode_exgx(BX_GENERAL_16BIT_REG, BX_NO_REG_TYPE);
     imm16 = fetch_word();
-    dis_sprintf(", #%04x", (unsigned) imm16);
+    dis_sprintf(", %04x", (unsigned) imm16);
 #if BX_CPU_LEVEL > 2
     }
 #endif /* BX_CPU_LEVEL > 2 */
