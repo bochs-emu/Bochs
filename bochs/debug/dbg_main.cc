@@ -440,7 +440,7 @@ bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
     }
-#ifdef USE_READLINE
+#if USE_READLINE
   if (bx_infile_stack_index == 0) {
     // disable ^C handling during readline so that I get get to GDB
     //set_ctrlc_handler (0);
