@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: harddrv.h,v 1.7 2001-10-06 09:04:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -274,7 +274,7 @@ public:
 
 private:
 
-  BX_HD_SMF Bit32u calculate_logical_address();
+  BX_HD_SMF Boolean calculate_logical_address(Bit32u *sector);
   BX_HD_SMF void increment_address();
   BX_HD_SMF void identify_drive(unsigned drive);
   BX_HD_SMF void identify_ATAPI_drive(unsigned drive);
