@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.4 2001-06-01 05:11:45 bdenney Exp $
+ * $Id: bximage.c,v 1.5 2001-06-01 05:45:55 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -14,7 +14,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.4 2001-06-01 05:11:45 bdenney Exp $";
+char *rcsid = "$Id: bximage.c,v 1.5 2001-06-01 05:45:55 bdenney Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -120,7 +120,7 @@ ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out
       return 0;
     }
     for (i=0; i<n_choices; i++) {
-      if (!strcasecmp (choice[i], clean)) {
+      if (!strcmp (choice[i], clean)) {
 	// matched, return the choice number
 	*out = i;
 	return 0;
