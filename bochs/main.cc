@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.83 2001-12-29 11:40:37 vruppert Exp $
+// $Id: main.cc,v 1.84 2002-01-02 09:57:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -979,7 +979,6 @@ bx_read_configuration (char *rcfile)
     return -1;
   }
   // update log actions if control panel is enabled
-  fprintf(stderr,"updating actions: %d\n",SIM->get_enabled ());
   if (SIM->get_enabled ()) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
@@ -1006,11 +1005,12 @@ bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-  for (int level=0; level<N_LOGLEV; level++) {
-    int action = bx_options.log.actions[level];
-    if (!SIM->get_enabled () && action == ACT_ASK)
-      action = ACT_FATAL;
-    io->set_log_action (level, action);
+  if (!SIM->get_enabled ()) {
+    for (int level=0; level<N_LOGLEV; level++) {
+      int action = bx_options.log.actions[level];
+      if (action == ACT_ASK) action = ACT_FATAL;
+      io->set_log_action (level, action);
+    }
   }
 
   bx_pc_system.init_ips(bx_options.Oips->get ());
