@@ -865,7 +865,7 @@ typedef
 #ifdef BX_USE_ETH_ARPBACK
 #  define ETH_ARPBACK 1
 #endif
-#if defined(__FreeBSD__) || defined(__OpenBSD__)
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #define ETH_FBSD  1
 #endif
 #if defined(linux)

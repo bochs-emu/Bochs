@@ -137,6 +137,7 @@ floppya: 1_44=/dev/fd0, status=inserted
 #floppya: 1_2=../1_2, status=inserted
 #floppya: 1_44=a:, status=inserted
 #floppya: 1_44=a.img, status=inserted
+#floppya: 1_44=/dev/rfd0a, status=inserted
 
 #=======================================================================
 # FLOPPYB:
@@ -217,6 +218,7 @@ ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, sp
 #ata0-slave: type=cdrom, path=D:, status=inserted
 #ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 #ata0-slave: type=cdrom, path="drive", status=inserted
+#ata0-slave: type=cdrom, path=/dev/rcd0d, status=inserted 
 
 #=======================================================================
 # BOOT:

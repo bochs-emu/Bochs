@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.12 2003-03-02 23:59:10 cbothamy Exp $
+// $Id: cdrom.h,v 1.13 2003-08-19 00:37:03 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,9 @@ public:
 
   // Read a single block from the CD
   void read_block(uint8* buf, int lba) BX_CPP_AttrRegparmN(2);
+
+  // Start (spin up) the CD.
+  int start_cdrom();
 
 private:
   int fd;
