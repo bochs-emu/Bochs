@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.30 2002-09-25 18:40:15 bdenney Exp $
+// $Id: wx.cc,v 1.31 2002-09-26 19:24:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -402,6 +402,12 @@ MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 // get those keysym definitions
 #include <gdk/gdkkeysyms.h>
+#endif
+
+#if defined (wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
+// get windows specific definitions. At present the only thing needed
+// is the definition of HIWORD.
+#include <windows.h>
 #endif
 
 // GTK specific key mapping, which uses wxKeyEvent::m_rawCode.
