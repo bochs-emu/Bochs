@@ -65,7 +65,9 @@ TO DO:
   library itself.  Do I really want to embed 750k of extra library in the
   source code?  If I grabbed only the .h, .c, and ltdl.m4 then it's more
   like 120k and only two files, which seems more reasonable.
-
+- patch.ltdl: nearly fine but in noplugin compile, now it includes ltdl.o
+  and not -ld.  Make ltdl.o conditional on plugin compile too, and it will
+  be set.
 
 
 DONE:
