@@ -24,7 +24,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_SB16_THIS
+#define LOG_THIS bx_sb16.
 
 // some shortcuts to save typing
 #define LOGFILE         BX_SB16_THIS logfile
@@ -41,8 +41,8 @@
 
 #define BX_SB16_OUTPUT  BX_SB16_THIS output
 
-#if BX_USE_SB16_SMF
 bx_sb16_c bx_sb16;
+#if BX_USE_SB16_SMF
 #define this NULL
 #endif
 

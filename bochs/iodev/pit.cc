@@ -23,7 +23,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_PIT_THIS
+#define LOG_THIS bx_pit.
 
 
 // NOTES ON THE 8253/8254 PIT MODES
@@ -123,8 +123,8 @@
 #define BX_PIT_LATCH_MODE_16BIT 12
 
 
-#if BX_USE_PIT_SMF
 bx_pit_c bx_pit;
+#if BX_USE_PIT_SMF
 #define this (&bx_pit)
 #endif
 

@@ -22,7 +22,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_DEV_THIS
+#define LOG_THIS bx_devices.
 
 
 

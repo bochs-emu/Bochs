@@ -25,7 +25,7 @@
 #if defined(linux)
 
 #include "bochs.h"
-#define LOG_THIS /* not needed */
+#define LOG_THIS bx_sb16.
 
 #include <errno.h>
 #include <sys/ioctl.h>

@@ -24,13 +24,12 @@
 
 
 #include "bochs.h"
-#define LOG_THIS /* not needed */
+#define LOG_THIS bx_floppy.
 
 
-
+bx_floppy_ctrl_c bx_floppy;
 
 #if BX_USE_FD_SMF
-bx_floppy_ctrl_c bx_floppy;
 #define this (&bx_floppy)
 #endif
 

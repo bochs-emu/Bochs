@@ -29,7 +29,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS  BX_KEY_THIS
+#define LOG_THIS  bx_devices.keyboard->
 
 
 #define VERBOSE_KBD_DEBUG 0
@@ -40,9 +40,9 @@
 #define MOUSE_MODE_REMOTE 12
 #define MOUSE_MODE_WRAP   13
 
+bx_keyb_c bx_keyboard;
 
 #if BX_USE_KEY_SMF
-bx_keyb_c bx_keyboard;
 #define this (&bx_keyboard)
 #endif
 

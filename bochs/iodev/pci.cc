@@ -24,7 +24,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_PCI_THIS
+#define LOG_THIS bx_pci.
 
 
 
@@ -33,8 +33,8 @@
 //
 
 
-#if BX_USE_PCI_SMF
 bx_pci_c bx_pci;
+#if BX_USE_PCI_SMF
 #define this (&bx_pci)
 #endif
 

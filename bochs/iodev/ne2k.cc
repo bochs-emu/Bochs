@@ -25,10 +25,11 @@
 
 
 #include "bochs.h"
-#define LOG_THIS /* not needed */
+#define LOG_THIS bx_ne2k.
+
+bx_ne2k_c bx_ne2k;
 
 #if BX_USE_NE2K_SMF
-bx_ne2k_c bx_ne2k;
 #define this NULL
 #endif
 

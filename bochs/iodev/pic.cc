@@ -23,12 +23,12 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_PIC_THIS
+#define LOG_THIS bx_pic.
 
 
 
-#if BX_USE_PIC_SMF
 bx_pic_c bx_pic;
+#if BX_USE_PIC_SMF
 #define this (&bx_pic)
 #endif
 

@@ -23,11 +23,11 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_UM_THIS
+#define LOG_THIS bx_unmapped.
 
 
-#if BX_USE_UM_SMF
 bx_unmapped_c bx_unmapped;
+#if BX_USE_UM_SMF
 #define this (&bx_unmapped)
 #endif
 

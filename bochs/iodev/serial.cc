@@ -33,7 +33,7 @@
 // to the serial port /AM
 
 #include "bochs.h"
-#define LOG_THIS BX_SER_THIS
+#define LOG_THIS bx_serial.
 
 #if USE_RAW_SERIAL
 #include <signal.h>
@@ -54,8 +54,8 @@ extern "C" {
 };
 #endif
 
-#if BX_USE_SER_SMF
 bx_serial_c bx_serial;
+#if BX_USE_SER_SMF
 #define this (&bx_serial)
 #endif
 

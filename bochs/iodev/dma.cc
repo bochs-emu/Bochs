@@ -23,7 +23,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_DMA_THIS
+#define LOG_THIS bx_dma.
 
 #define DMA_MODE_DEMAND  0
 #define DMA_MODE_SINGLE  1
@@ -32,8 +32,8 @@
 
 
 
-#if BX_USE_DMA_SMF
 bx_dma_c bx_dma;
+#if BX_USE_DMA_SMF
 #define this (&bx_dma)
 #endif
 

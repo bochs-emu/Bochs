@@ -22,15 +22,15 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_HD_THIS
+#define LOG_THIS bx_hard_drive.
 
 
 #define INDEX_PULSE_CYCLE 10
 
 #define PACKET_SIZE 12
 
-#if BX_USE_HD_SMF
 bx_hard_drive_c bx_hard_drive;
+#if BX_USE_HD_SMF
 #define this (&bx_hard_drive)
 #endif
 

@@ -22,7 +22,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_VGA_THIS
+#define LOG_THIS bx_vga.
 
 /* NOTES:
  * I take it data rotate is a true rotate with carry of bit 0 to bit 7.
@@ -32,8 +32,8 @@
 // (mch)
 #define VGA_TRACE_FEATURE
 
-#if BX_USE_VGA_SMF
 bx_vga_c bx_vga;
+#if BX_USE_VGA_SMF
 #define this (&bx_vga)
 #endif
 

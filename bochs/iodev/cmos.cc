@@ -25,10 +25,11 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_CMOS_THIS
+#define LOG_THIS bx_cmos.
+
+bx_cmos_c bx_cmos;
 
 #if BX_USE_CMOS_SMF
-bx_cmos_c bx_cmos;
 #define this (&bx_cmos)
 #endif
 

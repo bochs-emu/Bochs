@@ -25,7 +25,7 @@
 #if defined(WIN32)
 
 #include "bochs.h"
-#define LOG_THIS /* not needed */
+#define LOG_THIS bx_sb16.
 
 #define WRITELOG        sb16->writelog
 #define BOTHLOG(x)      (x)
