@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly.h                                                                   |
- |  $Id: poly.h,v 1.6 2004-02-10 00:23:12 danielg4 Exp $
+ |  $Id: poly.h,v 1.7 2004-02-20 01:41:59 danielg4 Exp $
  |                                                                           |
  |  Header file for the FPU-emu poly*.c source files.                        |
  |                                                                           |
@@ -34,7 +34,7 @@ typedef struct {
   u32 midw;
   u32 msw;
 #endif
-} GCC_ATTRIBUTE((packed)) Xsig;
+} Xsig GCC_ATTRIBUTE((packed));
 #if defined(__MWERKS__) && defined(macintosh)
 #pragma options align=reset
 #endif
