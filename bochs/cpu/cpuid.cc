@@ -287,7 +287,8 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       // [29:29] Long Mode
       // [30:30] AMD 3DNow! Extensions
       // [31:31] AMD 3DNow! Instructions
-      features = features & 0x0183F3FF;
+//    features = features & 0x0183F3FF;
+      features = features & 0x0193F3FF;	/* NX is still not emulated by Bochs */
       RDX = features | (1 << 29) | (1 << 11);
       RBX = 0;
       RCX = 0;
