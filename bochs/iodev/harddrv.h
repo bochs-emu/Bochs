@@ -152,10 +152,17 @@ typedef struct {
   union {
     Bit8u    sector_count;
     struct {
+#ifdef BX_LITTLE_ENDIAN
       unsigned c_d : 1;
       unsigned i_o : 1;
       unsigned rel : 1;
       unsigned tag : 5;
+#else  /* BX_BIG_ENDIAN */
+      unsigned tag : 5;
+      unsigned rel : 1;
+      unsigned i_o : 1;
+      unsigned c_d : 1;
+#endif
     } interrupt_reason;
   };
   Bit8u    sector_no;
