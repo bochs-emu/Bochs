@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.20 2002-06-16 15:02:28 vruppert Exp $
+// $Id: sb16.cc,v 1.21 2002-08-23 18:12:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,33 +58,38 @@ bx_sb16_c::bx_sb16_c(void)
 
 bx_sb16_c::~bx_sb16_c(void)
 {
+  if (!bx_options.sb16.Opresent->get ())
+    return;
+
   switch (bx_options.sb16.Omidimode->get ())
     {
     case 2:
-      finishmidifile();
+      if (MIDIDATA != NULL)
+        finishmidifile();
       break;
     case 1:
       if (MPU.outputinit != 0)
-	BX_SB16_OUTPUT->closemidioutput();
+        BX_SB16_OUTPUT->closemidioutput();
       break;
     case 3:
       if (MIDIDATA != NULL)
-	fclose(MIDIDATA);
+        fclose(MIDIDATA);
       break;
     }
 
   switch (bx_options.sb16.Owavemode->get ())
     {
     case 2:
-      finishvocfile();
+      if (WAVEDATA != NULL)
+        finishvocfile();
       break;
     case 1:
       if (DSP.outputinit != 0)
-	BX_SB16_OUTPUT->closewaveoutput();
+        BX_SB16_OUTPUT->closewaveoutput();
       break;
     case 3:
       if (WAVEDATA != NULL)
-	fclose(WAVEDATA);
+        fclose(WAVEDATA);
       break;
     }
 
@@ -100,6 +105,9 @@ void bx_sb16_c::init(bx_devices_c *d)
 {
   BX_SB16_THIS devices = d;
   unsigned addr;
+
+  if (!bx_options.sb16.Opresent->get ())
+    return;
 
   if ( (strlen(bx_options.sb16.Ologfile->getptr ()) < 1) )
     bx_options.sb16.Ologlevel->set (0);
