@@ -321,23 +321,23 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 BX_CPU_C::enable_paging(void)
 {
   TLB_flush();
-  if (bx_dbg.paging) BX_INFO(("enable_paging():\n"));
-//BX_DEBUG(( "enable_paging():-------------------------\n" ));
+  if (bx_dbg.paging) BX_INFO(("enable_paging():"));
+//BX_DEBUG(( "enable_paging():-------------------------" ));
 }
 
   void
 BX_CPU_C::disable_paging(void)
 {
   TLB_flush();
-  if (bx_dbg.paging) BX_INFO(("disable_paging():\n"));
+  if (bx_dbg.paging) BX_INFO(("disable_paging():"));
 }
 
   void
 BX_CPU_C::CR3_change(Bit32u value32)
 {
   if (bx_dbg.paging) {
-    BX_INFO(("CR3_change(): flush TLB cache\n"));
-    BX_INFO(("Page Directory Base %08x\n", (unsigned) value32));
+    BX_INFO(("CR3_change(): flush TLB cache"));
+    BX_INFO(("Page Directory Base %08x", (unsigned) value32));
     }
 
   // flush TLB even if value does not change
@@ -435,7 +435,7 @@ BX_CPU_C::INVLPG(BxInstruction_t* i)
   // Protected instruction: CPL0 only
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      BX_INFO(("INVLPG: CPL!=0\n"));
+      BX_INFO(("INVLPG: CPL!=0"));
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -918,20 +918,20 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
   void
 BX_CPU_C::enable_paging(void)
 {
-  BX_PANIC(("enable_paging(): not implemented\n"));
+  BX_PANIC(("enable_paging(): not implemented"));
 }
 
   void
 BX_CPU_C::disable_paging(void)
 {
-  BX_PANIC(("disable_paging() called\n"));
+  BX_PANIC(("disable_paging() called"));
 }
 
   void
 BX_CPU_C::CR3_change(Bit32u value32)
 {
-  BX_INFO(("CR3_change(): flush TLB cache\n"));
-  BX_INFO(("Page Directory Base %08x\n", (unsigned) value32));
+  BX_INFO(("CR3_change(): flush TLB cache"));
+  BX_INFO(("Page Directory Base %08x", (unsigned) value32));
 }
 
 
@@ -950,7 +950,7 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
     return;
     }
 
-  BX_PANIC(("access_linear: paging not supported\n"));
+  BX_PANIC(("access_linear: paging not supported"));
 }
 
 

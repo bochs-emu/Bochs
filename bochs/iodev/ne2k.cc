@@ -52,7 +52,7 @@ bx_ne2k_c::~bx_ne2k_c(void)
 void
 bx_ne2k_c::reset_device(void)
 {
-  BX_DEBUG (("reset_device\n"));
+  BX_DEBUG (("reset_device"));
   // Zero out registers and memory
   memset( & BX_NE2K_THIS s.CR,  0, sizeof(BX_NE2K_THIS s.CR) );
   memset( & BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
@@ -107,18 +107,18 @@ bx_ne2k_c::read_cr(void)
 	  (BX_NE2K_THIS s.CR.tx_packet << 2) |
 	  (BX_NE2K_THIS s.CR.start     << 1) |
 	  (BX_NE2K_THIS s.CR.stop));
-  BX_DEBUG(("read CR returns 0x%08x\n", val));
+  BX_DEBUG(("read CR returns 0x%08x", val));
   return val;
 }
 
 void
 bx_ne2k_c::write_cr(Bit32u value)
 {
-  BX_DEBUG(("wrote 0x%08x to CR\n"));
+  BX_DEBUG(("wrote 0x%08x to CR"));
   // Validate remote-DMA
   if ((value & 0x38) == 0x00)
     return;
-  //  BX_PANIC(("CR write - invalid rDMA value 0\n"));
+  //  BX_PANIC(("CR write - invalid rDMA value 0"));
 
   // Check for s/w reset
   if (value & 0x01) {
@@ -142,21 +142,21 @@ bx_ne2k_c::write_cr(Bit32u value)
   // Check for start-tx
   if (value & 0x04) {
     if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start)
-      BX_PANIC(("CR write - tx start, dev in reset\n"));
+      BX_PANIC(("CR write - tx start, dev in reset"));
     
     if (BX_NE2K_THIS s.tx_bytes == 0)
-      BX_PANIC(("CR write - tx start, tx bytes == 0\n"));
+      BX_PANIC(("CR write - tx start, tx bytes == 0"));
 
 #ifdef notdef    
     // XXX debug stuff
-    printf("packet tx (%d bytes):\n\t", BX_NE2K_THIS s.tx_bytes);
+    printf("packet tx (%d bytes):\t", BX_NE2K_THIS s.tx_bytes);
     for (int i = 0; i < BX_NE2K_THIS s.tx_bytes; i++) {
       printf("%02x ", BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - 
 				BX_NE2K_MEMSTART + i]);
       if (i && (((i+1) % 16) == 0)) 
-	printf("\n\t");
+	printf("\t");
     }
-    printf("\n");
+    printf("");
 #endif    
 
     // Send the packet to the system driver
@@ -164,7 +164,7 @@ bx_ne2k_c::write_cr(Bit32u value)
 
     // some more debug
     if (BX_NE2K_THIS s.tx_timer_active)
-      BX_PANIC(("CR write, tx timer still active\n"));
+      BX_PANIC(("CR write, tx timer still active"));
     
     // Schedule a timer to trigger a tx-complete interrupt
     // The number of microseconds is the bit-time / 10.
@@ -204,7 +204,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
   Bit32u retval = 0;
 
   if ((io_len == 2) && (address & 0x1)) 
-    BX_PANIC(("unaligned chipmem word read\n"));
+    BX_PANIC(("unaligned chipmem word read"));
 
   // ROM'd MAC address
   if ((address >=0) && (address <= 31)) {
@@ -223,7 +223,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  BX_INFO(("out-of-bounds chipmem read, %04X\n", address));
+  BX_INFO(("out-of-bounds chipmem read, %04X", address));
 
   return (0xff);
 }
@@ -232,14 +232,14 @@ void
 bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
 {
   if ((io_len == 2) && (address & 0x1)) 
-    BX_PANIC(("unaligned chipmem word write\n"));
+    BX_PANIC(("unaligned chipmem word write"));
 
   if ((address >= BX_NE2K_MEMSTART) && (address <= BX_NE2K_MEMEND)) {
     BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART] = value & 0xff;
     if (io_len == 2)
       BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
   } else
-    BX_INFO(("out-of-bounds chipmem write, %04X\n", address));
+    BX_INFO(("out-of-bounds chipmem write, %04X", address));
 }
 
 //
@@ -267,10 +267,10 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // registers must have been initialised.
     //
     if (io_len != (1 + BX_NE2K_THIS s.DCR.wdsize))
-      BX_PANIC(("dma read, wrong size %d\n", io_len));
+      BX_PANIC(("dma read, wrong size %d", io_len));
 
     if (BX_NE2K_THIS s.remote_bytes == 0)
-      BX_PANIC(("ne2K: dma read, byte count 0\n"));
+      BX_PANIC(("ne2K: dma read, byte count 0"));
     
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
     BX_NE2K_THIS s.remote_dma   += io_len;
@@ -282,7 +282,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     break;
 
   default:
-    BX_INFO(("asic read invalid address %04x\n", (unsigned) offset));
+    BX_INFO(("asic read invalid address %04x", (unsigned) offset));
     break;
   }
 
@@ -292,15 +292,15 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
 void
 bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
-  BX_DEBUG(("asic write addr=0x%08x, value=0x%08x\n", (unsigned) value, (unsigned) offset));
+  BX_DEBUG(("asic write addr=0x%08x, value=0x%08x", (unsigned) value, (unsigned) offset));
   switch (offset) {
   case 0x0:  // Data register - see asic_read for a description
 
     if (io_len != (1 + BX_NE2K_THIS s.DCR.wdsize))
-      BX_PANIC(("dma write, wrong size %d\n", io_len));
+      BX_PANIC(("dma write, wrong size %d", io_len));
 
     if (BX_NE2K_THIS s.remote_bytes == 0)
-      BX_PANIC(("ne2K: dma write, byte count 0\n"));
+      BX_PANIC(("ne2K: dma write, byte count 0"));
     
     chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
     BX_NE2K_THIS s.remote_dma   += io_len;
@@ -317,7 +317,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   default:
-    BX_PANIC(("asic write invalid address %04x\n", (unsigned) offset));
+    BX_PANIC(("asic write invalid address %04x", (unsigned) offset));
     break ;
   }
 }
@@ -329,10 +329,10 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
 {
-  BX_DEBUG(("page 0 read from port %04x, len=%u\n", (unsigned) offset,
+  BX_DEBUG(("page 0 read from port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
   if (io_len > 1)
-    BX_PANIC(("bad length! page 0 read from port %04x, len=%u\n", (unsigned) offset,
+    BX_PANIC(("bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
              (unsigned) io_len));
 
   switch (offset) {
@@ -390,12 +390,12 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0xa:  // reserved
-    BX_INFO(("reserved read - page 0, 0xa\n"));
+    BX_INFO(("reserved read - page 0, 0xa"));
     return (0xff);
     break;
 
   case 0xb:  // reserved
-    BX_INFO(("reserved read - page 0, 0xb\n"));
+    BX_INFO(("reserved read - page 0, 0xb"));
     return (0xff);
     break;
     
@@ -423,7 +423,7 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     break;
 
   default:
-    BX_PANIC(("page 0 offset %04x out of range\n", (unsigned) offset));
+    BX_PANIC(("page 0 offset %04x out of range", (unsigned) offset));
   }
 
   return(0);
@@ -432,10 +432,10 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
 void
 bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
-  BX_DEBUG(("page 0 write to port %04x, len=%u\n", (unsigned) offset,
+  BX_DEBUG(("page 0 write to port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
   if (io_len > 1)
-    BX_PANIC(("bad length! page 0 write to port %04x, len=%u\n", (unsigned) offset,
+    BX_PANIC(("bad length! page 0 write to port %04x, len=%u", (unsigned) offset,
              (unsigned) io_len));
   
   switch (offset) {
@@ -512,7 +512,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xc:  // RCR
     // Check if the reserved bits are set
     if (value & 0xc0)
-      BX_INFO(("RCR write, reserved bits set\n"));
+      BX_INFO(("RCR write, reserved bits set"));
 
     // Set all other bit-fields
     BX_NE2K_THIS s.RCR.errors_ok = ((value & 0x01) == 0x01);
@@ -524,17 +524,17 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 
     // Monitor bit is a little suspicious...
     if (value & 0x20)
-      BX_INFO(("RCR write, monitor bit set!\n"));
+      BX_INFO(("RCR write, monitor bit set!"));
     break;
 
   case 0xd:  // TCR
     // Check reserved bits
     if (value & 0xe0)
-      BX_PANIC(("TCR write, reserved bits set\n"));
+      BX_PANIC(("TCR write, reserved bits set"));
 
     // Test loop mode (not supported)
     if (value & 0x06) {
-      BX_INFO(("TCR write, loop mode not supported\n"));
+      BX_INFO(("TCR write, loop mode not supported"));
       BX_NE2K_THIS s.TCR.loop_cntl = (value & 0x6) >> 1;
     } else {
       BX_NE2K_THIS s.TCR.loop_cntl = 0;
@@ -542,11 +542,11 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 
     // Inhibit-CRC not supported.
     if (value & 0x01)
-      BX_PANIC(("TCR write, inhibit-CRC not supported\n"));
+      BX_PANIC(("TCR write, inhibit-CRC not supported"));
 
     // Auto-transmit disable very suspicious
     if (value & 0x04)
-      BX_PANIC(("TCR write, auto transmit disable not supported\n"));
+      BX_PANIC(("TCR write, auto transmit disable not supported"));
 
     // Allow collision-offset to be set, although not used
     BX_NE2K_THIS s.TCR.coll_prio = ((value & 0x08) == 0x08);
@@ -555,7 +555,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xe:  // DCR
     // Don't allow loopback mode to be set
     if (!(value & 0x08)) {
-      BX_ERROR(("DCR write, loopback mode selected\n"));
+      BX_ERROR(("DCR write, loopback mode selected"));
 	  // XXX This is a HACK, lets fix this right!
 	  value -= 8;
 	}
@@ -563,9 +563,9 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     // It is questionable to set longaddr and auto_rx, since they
     // aren't supported on the ne2000. Print a warning and continue
     if (value & 0x04)
-      BX_INFO(("DCR write - LAS set ???\n"));
+      BX_INFO(("DCR write - LAS set ???"));
     if (value & 0x10)
-      BX_INFO(("DCR write - AR set ???\n"));
+      BX_INFO(("DCR write - AR set ???"));
 
     // Set other values.
     BX_NE2K_THIS s.DCR.wdsize   = ((value & 0x01) == 0x01);
@@ -578,7 +578,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xf:  // IMR
     // Check for reserved bit
     if (value & 0x80)
-      BX_PANIC(("IMR write, reserved bit set\n"));
+      BX_PANIC(("IMR write, reserved bit set"));
 
     // Set other values
     BX_NE2K_THIS s.IMR.rx_inte    = ((value & 0x01) == 0x01);
@@ -591,7 +591,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   default:
-    BX_PANIC(("page 0 write, bad offset %0x\n", offset));
+    BX_PANIC(("page 0 write, bad offset %0x", offset));
   }
 }
 
@@ -603,10 +603,10 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
 {
-  BX_INFO(("page 1 read from port %04x, len=%u\n", (unsigned) offset,
+  BX_INFO(("page 1 read from port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
   if (io_len > 1)
-    BX_PANIC(("bad length! page 1 read from port %04x, len=%u\n", (unsigned) offset,
+    BX_PANIC(("bad length! page 1 read from port %04x, len=%u", (unsigned) offset,
              (unsigned) io_len));
 
   switch (offset) {
@@ -638,7 +638,7 @@ bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
     break;
 
   default:
-    BX_PANIC(("page 1 r offset %04x out of range\n", (unsigned) offset));
+    BX_PANIC(("page 1 r offset %04x out of range", (unsigned) offset));
   }
 
   return (0);
@@ -647,7 +647,7 @@ bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
 void
 bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
-  BX_DEBUG(("page 1 w offset %04x\n", (unsigned) offset));
+  BX_DEBUG(("page 1 w offset %04x", (unsigned) offset));
   switch (offset) {
   case 0x0:  // CR
     write_cr(value);
@@ -678,7 +678,7 @@ bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   default:
-    BX_PANIC(("page 1 w offset %04x out of range\n", (unsigned) offset));
+    BX_PANIC(("page 1 w offset %04x out of range", (unsigned) offset));
   }  
 }
 
@@ -690,10 +690,10 @@ bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
 {
-  BX_DEBUG(("page 2 read from port %04x, len=%u\n", (unsigned) offset, (unsigned) io_len));
+  BX_DEBUG(("page 2 read from port %04x, len=%u", (unsigned) offset, (unsigned) io_len));
 
   if (io_len > 1)
-    BX_PANIC(("bad length!  page 2 read from port %04x, len=%u\n", (unsigned) offset, (unsigned) io_len));
+    BX_PANIC(("bad length!  page 2 read from port %04x, len=%u", (unsigned) offset, (unsigned) io_len));
 
   switch (offset) {
   case 0x0:  // CR
@@ -732,7 +732,7 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   case 0x9:
   case 0xa:
   case 0xb:
-    BX_INFO(("reserved read - page 2, 0x%02x\n", (unsigned) offset));
+    BX_INFO(("reserved read - page 2, 0x%02x", (unsigned) offset));
     return (0xff);
     break;
 
@@ -772,7 +772,7 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
     break;
 
   default:
-    BX_PANIC(("page 2 offset %04x out of range\n", (unsigned) offset));
+    BX_PANIC(("page 2 offset %04x out of range", (unsigned) offset));
   }
 
   return (0);
@@ -785,7 +785,7 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
   // affect internal operation, but let them through for now
   // and print a warning.
   if (offset != 0)
-    BX_INFO(("page 2 write ?\n"));
+    BX_INFO(("page 2 write ?"));
 
   switch (offset) {
   case 0x0:  // CR
@@ -809,7 +809,7 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0x4:
-    BX_PANIC(("page 2 write to reserved offset 4\n"));
+    BX_PANIC(("page 2 write to reserved offset 4"));
     break;
 
   case 0x5:  // Local Next-packet pointer
@@ -836,11 +836,11 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xd:
   case 0xe:
   case 0xf:
-    BX_PANIC(("page 2 write to reserved offset %0x\n", offset));
+    BX_PANIC(("page 2 write to reserved offset %0x", offset));
     break;
    
   default:
-    BX_PANIC(("page 2 write, illegal offset %0x\n", offset));
+    BX_PANIC(("page 2 write, illegal offset %0x", offset));
     break;
   }
 }
@@ -851,14 +851,14 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page3_read(Bit32u offset, unsigned int io_len)
 {
-  BX_PANIC(("page 3 read attempted\n"));
+  BX_PANIC(("page 3 read attempted"));
   return (0);
 }
 
 void
 bx_ne2k_c::page3_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
-  BX_PANIC(("page 3 write attempted\n"));
+  BX_PANIC(("page 3 write attempted"));
 }
 
 //
@@ -875,7 +875,7 @@ bx_ne2k_c::tx_timer_handler(void *this_ptr)
 void
 bx_ne2k_c::tx_timer(void)
 {
-  BX_DEBUG(("tx_timer\n"));
+  BX_DEBUG(("tx_timer"));
   BX_NE2K_THIS s.TSR.tx_ok = 1;
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
@@ -906,7 +906,7 @@ bx_ne2k_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_NE2K_SMF
-  BX_DEBUG(("read addr %x, len %d\n", address, io_len));
+  BX_DEBUG(("read addr %x, len %d", address, io_len));
   Bit32u retval;
   int offset = address - BX_NE2K_THIS s.base_address;
 
@@ -931,7 +931,7 @@ bx_ne2k_c::read(Bit32u address, unsigned io_len)
       break;
 
     default:
-      BX_PANIC(("ne2K: unknown value of pgsel in read - %d\n",
+      BX_PANIC(("ne2K: unknown value of pgsel in read - %d",
 	       BX_NE2K_THIS s.CR.pgsel));
     }
   }
@@ -960,7 +960,7 @@ bx_ne2k_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_NE2K_SMF
-  BX_DEBUG(("write with length %d\n", io_len));
+  BX_DEBUG(("write with length %d", io_len));
   int offset = address - BX_NE2K_THIS s.base_address;
 
   //
@@ -990,7 +990,7 @@ bx_ne2k_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     default:
-      BX_PANIC(("ne2K: unknown value of pgsel in write - %d\n",
+      BX_PANIC(("ne2K: unknown value of pgsel in write - %d",
 	       BX_NE2K_THIS s.CR.pgsel));
     }
   }
@@ -1030,7 +1030,7 @@ bx_ne2k_c::mcast_index(const void *dst)
 void
 bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
 {
-  BX_DEBUG(("rx_handler with length %d\n", len));
+  BX_DEBUG(("rx_handler with length %d", len));
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) arg;
   
   class_ptr->rx_frame(buf, len);
@@ -1056,7 +1056,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   unsigned char *startptr;
   static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
-  BX_DEBUG(("rx_frame with length %d\n", io_len));
+  BX_DEBUG(("rx_frame with length %d", io_len));
 
   if ((BX_NE2K_THIS s.CR.start == 0) ||
       (BX_NE2K_THIS s.page_start == 0) ||
@@ -1152,7 +1152,7 @@ bx_ne2k_c::init(bx_devices_c *d)
 {
   BX_NE2K_THIS devices = d;
 
-  BX_DEBUG(("Init.\n"));
+  BX_DEBUG(("Init."));
 
   if (bx_options.ne2k.valid) {
     // Bring the register state into power-up state
@@ -1182,7 +1182,7 @@ bx_ne2k_c::init(bx_devices_c *d)
 						      addr, 
 						      "ne2000 NIC");
     }
-	BX_INFO(("irq %d, ioport 0x%x\n",
+	BX_INFO(("irq %d, ioport 0x%x",
 				BX_NE2K_THIS s.base_irq,
 				BX_NE2K_THIS s.base_address));
     
@@ -1212,7 +1212,7 @@ bx_ne2k_c::init(bx_devices_c *d)
 						this);
     
     if (BX_NE2K_THIS ethdev == NULL) {
-      BX_INFO(("could not find eth module %s - using null instead\n",
+      BX_INFO(("could not find eth module %s - using null instead",
 		bx_options.ne2k.ethmod));
       
       BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
@@ -1220,7 +1220,7 @@ bx_ne2k_c::init(bx_devices_c *d)
 						  rx_handler, 
 						  this);
       if (BX_NE2K_THIS ethdev == NULL)
-	BX_PANIC(("could not locate null module\n"));
+	BX_PANIC(("could not locate null module"));
     }
   }
 }

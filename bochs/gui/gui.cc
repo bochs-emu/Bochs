@@ -158,7 +158,7 @@ bx_gui_c::floppyB_handler(void)
   void
 bx_gui_c::reset_handler(void)
 {
-  BX_INFO(( "system RESET callback.\n" ));
+  BX_INFO(( "system RESET callback." ));
   bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
   for (int i=0; i<BX_SMP_PROCESSORS; i++)
       BX_CPU(i)->reset(BX_RESET_HARDWARE);
@@ -167,13 +167,13 @@ bx_gui_c::reset_handler(void)
   void
 bx_gui_c::power_handler(void)
 {
-  BX_PANIC(("POWER button turned off.\n"));
+  BX_PANIC(("POWER button turned off."));
 }
 
   void
 bx_gui_c::snapshot_handler(void)
 {
-  BX_INFO(( "# SNAPSHOT callback (unimplemented).\n" ));
+  BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
 }
 
   void

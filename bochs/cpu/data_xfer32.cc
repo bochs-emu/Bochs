@@ -162,7 +162,7 @@ BX_CPU_C::MOV_EdId(BxInstruction_t *i)
 BX_CPU_C::MOVZX_GdEb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEb: not supported on < 386\n"));
+  BX_PANIC(("MOVZX_GvEb: not supported on < 386"));
 #else
   Bit8u  op2_8;
 
@@ -183,7 +183,7 @@ BX_CPU_C::MOVZX_GdEb(BxInstruction_t *i)
 BX_CPU_C::MOVZX_GdEw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEw: not supported on < 386\n"));
+  BX_PANIC(("MOVZX_GvEw: not supported on < 386"));
 #else
   Bit16u op2_16;
 
@@ -204,7 +204,7 @@ BX_CPU_C::MOVZX_GdEw(BxInstruction_t *i)
 BX_CPU_C::MOVSX_GdEb(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEb: not supported on < 386\n"));
+  BX_PANIC(("MOVSX_GvEb: not supported on < 386"));
 #else
   Bit8u op2_8;
 
@@ -225,7 +225,7 @@ BX_CPU_C::MOVSX_GdEb(BxInstruction_t *i)
 BX_CPU_C::MOVSX_GdEw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEw: not supported on < 386\n"));
+  BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
 #else
   Bit16u op2_16;
 
@@ -298,7 +298,7 @@ BX_CPU_C::CMOV_GdEd(BxInstruction_t *i)
     case 0x14F: condition = !get_ZF() && (get_SF() == get_OF()); break;
     default:
       condition = 0;
-      BX_PANIC(("CMOV_GdEd: default case\n"));
+      BX_PANIC(("CMOV_GdEd: default case"));
     }
 
   if (i->mod == 0xc0) {
@@ -313,6 +313,6 @@ BX_CPU_C::CMOV_GdEd(BxInstruction_t *i)
     BX_WRITE_32BIT_REG(i->nnn, op2_32);
     }
 #else
-  BX_PANIC(("cmov_gded called\n"));
+  BX_PANIC(("cmov_gded called"));
 #endif
 }

@@ -190,14 +190,14 @@ BX_CPU_C::get_CF(void)
               (32 - BX_CPU_THIS_PTR oszapc.op2_32)) & 0x01;
           break;
         default:
-          BX_PANIC(("get_CF: OSZAPC: unknown instr %u\n",
+          BX_PANIC(("get_CF: OSZAPC: unknown instr %u",
             (unsigned) BX_CPU_THIS_PTR oszapc.instr));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xfffff0;
       return(BX_CPU_THIS_PTR eflags.cf);
 
     default:
-      BX_PANIC(("get_CF: unknown case\n"));
+      BX_PANIC(("get_CF: unknown case"));
       return(0);
     }
 }
@@ -285,7 +285,7 @@ BX_CPU_C::get_AF(void)
           /* undefined */
           break;
         default:
-          BX_PANIC(("get_AF: OSZAPC: unknown instr %u\n",
+          BX_PANIC(("get_AF: OSZAPC: unknown instr %u",
             (unsigned) BX_CPU_THIS_PTR oszapc.instr));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
@@ -318,14 +318,14 @@ BX_CPU_C::get_AF(void)
             (BX_CPU_THIS_PTR oszap.result_32 & 0x0f) == 0x0f;
           break;
         default:
-          BX_PANIC(("get_AF: OSZAP: unknown instr %u\n",
+          BX_PANIC(("get_AF: OSZAP: unknown instr %u",
             (unsigned) BX_CPU_THIS_PTR oszap.instr));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
       return(BX_CPU_THIS_PTR eflags.af);
 
     default:
-      BX_PANIC(("get_AF: unknown case\n"));
+      BX_PANIC(("get_AF: unknown case"));
       return(0);
     }
 }
@@ -392,7 +392,7 @@ BX_CPU_C::get_ZF(void)
           BX_CPU_THIS_PTR eflags.zf = (BX_CPU_THIS_PTR oszapc.result_32 == 0);
           break;
         default:
-          BX_PANIC(("get_ZF: OSZAPC: unknown instr\n"));
+          BX_PANIC(("get_ZF: OSZAPC: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
       return(BX_CPU_THIS_PTR eflags.zf);
@@ -412,13 +412,13 @@ BX_CPU_C::get_ZF(void)
           BX_CPU_THIS_PTR eflags.zf = (BX_CPU_THIS_PTR oszap.result_32 == 0);
           break;
         default:
-          BX_PANIC(("get_ZF: OSZAP: unknown instr\n"));
+          BX_PANIC(("get_ZF: OSZAP: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
       return(BX_CPU_THIS_PTR eflags.zf);
 
     default:
-      BX_PANIC(("get_ZF: unknown case\n"));
+      BX_PANIC(("get_ZF: unknown case"));
       return(0);
     }
 }
@@ -488,7 +488,7 @@ BX_CPU_C::get_SF(void)
             (BX_CPU_THIS_PTR oszapc.result_32 >= 0x80000000);
           break;
         default:
-          BX_PANIC(("get_SF: OSZAPC: unknown instr\n"));
+          BX_PANIC(("get_SF: OSZAPC: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
       return(BX_CPU_THIS_PTR eflags.sf);
@@ -511,13 +511,13 @@ BX_CPU_C::get_SF(void)
             (BX_CPU_THIS_PTR oszap.result_32 >= 0x80000000);
           break;
         default:
-          BX_PANIC(("get_SF: OSZAP: unknown instr\n"));
+          BX_PANIC(("get_SF: OSZAP: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
       return(BX_CPU_THIS_PTR eflags.sf);
 
     default:
-      BX_PANIC(("get_SF: unknown case\n"));
+      BX_PANIC(("get_SF: unknown case"));
       return(0);
     }
 }
@@ -655,7 +655,7 @@ BX_CPU_C::get_OF(void)
                 BX_CPU_THIS_PTR oszapc.result_32) & 0x80000000) > 0;
           break;
         default:
-          BX_PANIC(("get_OF: OSZAPC: unknown instr\n"));
+          BX_PANIC(("get_OF: OSZAPC: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
       return(BX_CPU_THIS_PTR eflags.of);
@@ -687,13 +687,13 @@ BX_CPU_C::get_OF(void)
             BX_CPU_THIS_PTR oszap.result_32 == 0x7FFFFFFF;
           break;
         default:
-          BX_PANIC(("get_OF: OSZAP: unknown instr\n"));
+          BX_PANIC(("get_OF: OSZAP: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
       return(BX_CPU_THIS_PTR eflags.of);
 
     default:
-      BX_PANIC(("get_OF: unknown case\n"));
+      BX_PANIC(("get_OF: unknown case"));
       return(0);
     }
 }
@@ -761,7 +761,7 @@ BX_CPU_C::get_PF(void)
             bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.result_32];
           break;
         default:
-          BX_PANIC(("get_PF: OSZAPC: unknown instr\n"));
+          BX_PANIC(("get_PF: OSZAPC: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
       return(BX_CPU_THIS_PTR lf_pf);
@@ -784,7 +784,7 @@ BX_CPU_C::get_PF(void)
             bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszap.result_32];
           break;
         default:
-          BX_PANIC(("get_PF: OSZAP: unknown instr\n"));
+          BX_PANIC(("get_PF: OSZAP: unknown instr"));
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
       return(BX_CPU_THIS_PTR lf_pf);
@@ -795,7 +795,7 @@ BX_CPU_C::get_PF(void)
       return(BX_CPU_THIS_PTR lf_pf);
 
     default:
-      BX_PANIC(("get_PF: unknown case\n"));
+      BX_PANIC(("get_PF: unknown case"));
       return(0);
     }
 }

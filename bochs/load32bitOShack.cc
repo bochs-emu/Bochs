@@ -46,7 +46,7 @@ bx_load32bitOSimagehack(void)
   fp = fopen(bx_options.load32bitOSImage.iolog, "r");
 
   if (fp == NULL) {
-    BX_PANIC(("could not open IO init file.\n"));
+    BX_PANIC(("could not open IO init file."));
     }
 
   while (1) {
@@ -55,7 +55,7 @@ bx_load32bitOSimagehack(void)
     ret = fscanf(fp, "%u %u %x %x\n",
       &len, &op, &port, &val);
     if (ret != 4) {
-      BX_PANIC(("could not open IO init file.\n"));
+      BX_PANIC(("could not open IO init file."));
       }
     if (op == 0) {
       // read
@@ -80,7 +80,7 @@ bx_load32bitOSimagehack(void)
       bx_load_null_kernel_hack();
       break;
     default:
-      BX_PANIC(("load32bitOSImage: OS not recognized\n"));
+      BX_PANIC(("load32bitOSImage: OS not recognized"));
     }
 }
 
@@ -263,12 +263,12 @@ bx_load_kernel_image(char *path, Bit32u paddr)
 #endif
            );
   if (fd < 0) {
-    BX_INFO(( "load_kernel_image: couldn't open image file '%s'.\n", path ));
+    BX_INFO(( "load_kernel_image: couldn't open image file '%s'.", path ));
     exit(1);
     }
   ret = fstat(fd, &stat_buf);
   if (ret) {
-    BX_INFO(( "load_kernel_image: couldn't stat image file '%s'.\n", path ));
+    BX_INFO(( "load_kernel_image: couldn't stat image file '%s'.", path ));
     exit(1);
     }
 
@@ -277,7 +277,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
 
   BX_MEM_C *mem = BX_MEM(0);
   if ( (paddr + size) > mem->len ) {
-    BX_INFO(( "load_kernel_image: address range > physical memsize!\n" ));
+    BX_INFO(( "load_kernel_image: address range > physical memsize!" ));
     exit(1);
     }
 
@@ -285,14 +285,14 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) &mem->vector[paddr + offset], size);
     if (ret <= 0) {
-      BX_INFO(( "load_kernel_image: read failed on image\n" ));
+      BX_INFO(( "load_kernel_image: read failed on image" ));
       exit(1);
       }
     size -= ret;
     offset += ret;
     }
   close(fd);
-  BX_INFO(( "#(%u) load_kernel_image: '%s', size=%u read into memory at %08x\n",
+  BX_INFO(( "#(%u) load_kernel_image: '%s', size=%u read into memory at %08x",
           BX_SIM_ID, path,
           (unsigned) stat_buf.st_size,
           (unsigned) paddr ));

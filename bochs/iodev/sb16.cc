@@ -161,7 +161,7 @@ void bx_sb16_c::init(bx_devices_c *d)
       bx_options.sb16.wavemode = 0;
     }
 
-  BX_INFO(("midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d\n",
+  BX_INFO(("midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d",
 	    bx_options.sb16.midimode, MIGHT_BE_NULL(bx_options.sb16.midifile),
 	    bx_options.sb16.wavemode, MIGHT_BE_NULL(bx_options.sb16.wavefile),
 	    bx_options.sb16.loglevel, MIGHT_BE_NULL(bx_options.sb16.logfile),
@@ -3232,7 +3232,7 @@ Boolean bx_sb16_buffer::puts(char *data, ...)
   va_end(ap);
 
   if ( (int) strlen(string) >= length)
-    BX_PANIC(("bx_sb16_buffer: puts() too long!\n"));
+    BX_PANIC(("bx_sb16_buffer: puts() too long!"));
 
   while (string[index] != 0)
     {

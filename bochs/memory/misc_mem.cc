@@ -64,7 +64,7 @@ BX_MEM_C::BX_MEM_C(size_t memsize)
   vector = new Bit8u[memsize];
   len    = memsize;
   megabytes = len / (1024*1024);
-  BX_INFO(("Init(%uB == %.2f)\n",memsize, megabytes));
+  BX_INFO(("Init(%uB == %.2f)",memsize, megabytes));
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
@@ -77,7 +77,7 @@ BX_MEM_C::~BX_MEM_C(void)
     delete this->vector;
     }
   else {
-    BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!\n", BX_SIM_ID));
+    BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!", BX_SIM_ID));
     }
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
@@ -95,7 +95,7 @@ BX_MEM_C::init_memory(int memsize)
     BX_MEM_THIS vector = new Bit8u[memsize];
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
-    BX_INFO(("Init(%uB == %.2fMB).\n", memsize, (float)(BX_MEM_THIS megabytes) ));
+    BX_INFO(("Init(%uB == %.2fMB).", memsize, (float)(BX_MEM_THIS megabytes) ));
     }
   // initialize all memory to 0x00
   memset(BX_MEM_THIS vector, 0x00, BX_MEM_THIS len);
@@ -108,8 +108,8 @@ BX_MEM_C::init_memory(int memsize)
   memset(dbg_dirty_pages, 0, sizeof(dbg_dirty_pages));
 
   if (megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
-    BX_INFO(("Error: memory larger than dirty page table can handle\n"));
-    BX_PANIC(("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS\n"));
+    BX_INFO(("Error: memory larger than dirty page table can handle"));
+    BX_PANIC(("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS"));
     }
 #endif
 
@@ -132,19 +132,19 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
 #endif
            );
   if (fd < 0) {
-    BX_INFO(( "ROM: couldn't open ROM image file '%s'.\n", path));
+    BX_INFO(( "ROM: couldn't open ROM image file '%s'.", path));
     exit(1);
     }
   ret = fstat(fd, &stat_buf);
   if (ret) {
-    BX_INFO(( "ROM: couldn't stat ROM image file '%s'.\n", path));
+    BX_INFO(( "ROM: couldn't stat ROM image file '%s'.", path));
     exit(1);
     }
 
   size = stat_buf.st_size;
 
   if ( (romaddress + size) > BX_MEM_THIS len ) {
-    BX_INFO(( "ROM: ROM address range > physical memsize!\n"));
+    BX_INFO(( "ROM: ROM address range > physical memsize!"));
     exit(1);
     }
 
@@ -160,7 +160,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
     ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
 #endif
     if (ret <= 0) {
-      BX_PANIC(( "ROM: read failed on BIOS image\n"));
+      BX_PANIC(( "ROM: read failed on BIOS image: '%s'",path));
       }
     size -= ret;
     offset += ret;
@@ -168,19 +168,19 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   close(fd);
 #if BX_PCI_SUPPORT
   if (bx_options.i440FXSupport)
-    BX_INFO(("rom in i440FX RAM 0x%06x/%u ('%s')\n",
+    BX_INFO(("rom in i440FX RAM 0x%06x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
   else
-    BX_INFO(("rom at 0x%06x/%u ('%s')\n",
+    BX_INFO(("rom at 0x%06x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
 #else  // #if BX_PCI_SUPPORT
-  BX_INFO(("rom at 0x%06x/%u ('%s')\n",
+  BX_INFO(("rom at 0x%06x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
  			path
@@ -195,7 +195,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
 BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   if ( (addr + len) > this->len ) {
-    BX_INFO(("dbg_fetch_mem out of range. %p > %p\n",
+    BX_INFO(("dbg_fetch_mem out of range. %p > %p",
       addr+len, this->len));
     return(0); // error, beyond limits of memory
     }
@@ -214,15 +214,15 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
         switch (bx_devices.pci->rd_memType (addr)) {
           case 0x0:  // Fetch from ShadowRAM
             *buf = vector[addr];
-//          BX_INFO(("Fetching from ShadowRAM %06x, len %u !\n", (unsigned)addr, (unsigned)len));
+//          BX_INFO(("Fetching from ShadowRAM %06x, len %u !", (unsigned)addr, (unsigned)len));
             break;
 
           case 0x1:  // Fetch from ROM
             *buf = bx_pci.s.i440fx.shadow[(addr - 0xC0000)];
-//          BX_INFO(("Fetching from ROM %06x, Data %02x \n", (unsigned)addr, *buf));
+//          BX_INFO(("Fetching from ROM %06x, Data %02x ", (unsigned)addr, *buf));
             break;
           default:
-            BX_PANIC(("dbg_fetch_mem: default case\n"));
+            BX_PANIC(("dbg_fetch_mem: default case"));
           }
         }
       else

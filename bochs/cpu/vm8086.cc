@@ -77,13 +77,13 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
 
   // top 36 bytes of stack must be within stack limits, else #GP(0)
   if ( !can_pop(36) ) {
-    BX_PANIC(("iret: VM: top 36 bytes not within limits\n"));
+    BX_PANIC(("iret: VM: top 36 bytes not within limits"));
     exception(BX_SS_EXCEPTION, 0, 0);
     return;
     }
 
   if ( new_eip & 0xffff0000 ) {
-    BX_INFO(("IRET to V86-mode: ignoring upper 16-bits\n"));
+    BX_INFO(("IRET to V86-mode: ignoring upper 16-bits"));
     new_eip = new_eip & 0xffff;
     }
 
@@ -121,13 +121,13 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   void
 BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
 {
-  //BX_INFO(("stack_return_from_v86:\n"));
+  //BX_INFO(("stack_return_from_v86:"));
   exception(BX_GP_EXCEPTION, 0, 0);
 
 #if 0
   if (IOPL != 3) {
     // trap to virtual 8086 monitor
-    BX_INFO(("stack_return_from_v86: IOPL != 3\n"));
+    BX_INFO(("stack_return_from_v86: IOPL != 3"));
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
@@ -279,23 +279,23 @@ BX_CPU_C::init_v8086_mode(void)
   void
 BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32)
 {
-  BX_INFO(("stack_return_to_v86: VM bit set in EFLAGS stack image\n"));
+  BX_INFO(("stack_return_to_v86: VM bit set in EFLAGS stack image"));
   v8086_message();
 }
 
   void
 BX_CPU_C::stack_return_from_v86(void)
 {
-  BX_INFO(("stack_return_from_v86:\n"));
+  BX_INFO(("stack_return_from_v86:"));
   v8086_message();
 }
 
   void
 BX_CPU_C::v8086_message(void)
 {
-  BX_INFO(("Program compiled with BX_SUPPORT_V8086_MODE = 0\n"));
-  BX_INFO(("You need to rerun the configure script and recompile\n"));
-  BX_INFO(("  to use virtual-8086 mode features.\n"));
-  BX_PANIC(("Bummer!\n"));
+  BX_INFO(("Program compiled with BX_SUPPORT_V8086_MODE = 0"));
+  BX_INFO(("You need to rerun the configure script and recompile"));
+  BX_INFO(("  to use virtual-8086 mode features."));
+  BX_PANIC(("Bummer!"));
 }
 #endif // BX_SUPPORT_V8086_MODE

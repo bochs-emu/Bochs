@@ -511,7 +511,7 @@ BX_CPU_C::XADD_EbGb(BxInstruction_t *i)
 
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_XADD8);
 #else
-  BX_PANIC(("XADD_EbGb: not supported on < 80486\n"));
+  BX_PANIC(("XADD_EbGb: not supported on < 80486"));
 #endif
 }
 
@@ -758,6 +758,6 @@ BX_CPU_C::CMPXCHG_EbGb(BxInstruction_t *i)
     }
 
 #else
-  BX_PANIC(("CMPXCHG_EbGb:\n"));
+  BX_PANIC(("CMPXCHG_EbGb:"));
 #endif
 }

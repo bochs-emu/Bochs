@@ -42,11 +42,11 @@ BX_CPU_C::write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF)
 #if 0
 // +++
 if (BX_CPU_THIS_PTR eflags.tf==0 && (flags&0x0100))
-  BX_DEBUG(( "TF 0->1\n" ));
+  BX_DEBUG(( "TF 0->1" ));
 else if (BX_CPU_THIS_PTR eflags.tf && !(flags&0x0100))
-  BX_DEBUG(( "TF 1->0\n" ));
+  BX_DEBUG(( "TF 1->0" ));
 else if (BX_CPU_THIS_PTR eflags.tf && (flags&0x0100))
-  BX_DEBUG(( "TF 1->1\n" ));
+  BX_DEBUG(( "TF 1->1" ));
 #endif
 
   BX_CPU_THIS_PTR eflags.tf = (flags >> 8) & 0x01;
@@ -86,11 +86,11 @@ BX_CPU_C::write_eflags(Bit32u eflags_raw, Boolean change_IOPL, Boolean change_IF
 #if 0
 // +++
 if (BX_CPU_THIS_PTR eflags.tf==0 && (eflags_raw&0x0100))
-  BX_DEBUG(( "TF 0->1\n" ));
+  BX_DEBUG(( "TF 0->1" ));
 else if (BX_CPU_THIS_PTR eflags.tf && !(eflags_raw&0x0100))
-  BX_DEBUG(( "TF 1->0\n" ));
+  BX_DEBUG(( "TF 1->0" ));
 else if (BX_CPU_THIS_PTR eflags.tf && (eflags_raw&0x0100))
-  BX_DEBUG(( "TF 1->1\n" ));
+  BX_DEBUG(( "TF 1->1" ));
 #endif
 
   BX_CPU_THIS_PTR eflags.tf = (eflags_raw >> 8) & 0x01;
@@ -112,7 +112,7 @@ else if (BX_CPU_THIS_PTR eflags.tf && (eflags_raw&0x0100))
     BX_CPU_THIS_PTR eflags.vm = (eflags_raw >> 17) & 0x01;
 #if BX_SUPPORT_V8086_MODE == 0
     if (BX_CPU_THIS_PTR eflags.vm)
-      BX_PANIC(("write_eflags: VM bit set: BX_SUPPORT_V8086_MODE==0\n"));
+      BX_PANIC(("write_eflags: VM bit set: BX_SUPPORT_V8086_MODE==0"));
 #endif
     }
   if (change_RF) {

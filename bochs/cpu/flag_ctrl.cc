@@ -72,7 +72,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if (CPL > IOPL) {
-      //BX_INFO(("CLI: CPL > IOPL\n")); /* ??? */
+      //BX_INFO(("CLI: CPL > IOPL")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -80,7 +80,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode()) {
     if (IOPL != 3) {
-      //BX_INFO(("CLI: IOPL != 3\n")); /* ??? */
+      //BX_INFO(("CLI: IOPL != 3")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -97,7 +97,7 @@ BX_CPU_C::STI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if (CPL > IOPL) {
-      //BX_INFO(("STI: CPL > IOPL\n")); /* ??? */
+      //BX_INFO(("STI: CPL > IOPL")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -105,7 +105,7 @@ BX_CPU_C::STI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode()) {
     if (IOPL != 3) {
-      //BX_INFO(("STI: IOPL != 3\n")); /* ??? */
+      //BX_INFO(("STI: IOPL != 3")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -165,12 +165,12 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   if (v8086_mode()) {
     if (IOPL < 3) {
-      //BX_INFO(("popf_fv: IOPL < 3\n"));
+      //BX_INFO(("popf_fv: IOPL < 3"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
     if (i->os_32) {
-      BX_PANIC(("POPFD(): not supported in virtual mode\n"));
+      BX_PANIC(("POPFD(): not supported in virtual mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }

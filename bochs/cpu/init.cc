@@ -168,8 +168,8 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   DTRead16vShim = NULL;
   DTRead32vShim = NULL;
   DTReadRMW8vShim = (BxDTShim_t) DTASReadRMW8vShim;
-  BX_DEBUG(( "DTReadRMW8vShim is %x\n", (unsigned) DTReadRMW8vShim ));
-  BX_DEBUG(( "&DTReadRMW8vShim is %x\n", (unsigned) &DTReadRMW8vShim ));
+  BX_DEBUG(( "DTReadRMW8vShim is %x", (unsigned) DTReadRMW8vShim ));
+  BX_DEBUG(( "&DTReadRMW8vShim is %x", (unsigned) &DTReadRMW8vShim ));
   DTReadRMW16vShim = NULL;
   DTReadRMW32vShim = NULL;
   DTWriteRMW8vShim = (BxDTShim_t) DTASWriteRMW8vShim;
@@ -184,14 +184,14 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sprintf (name, "CPU %p", this);
 
   BX_INSTR_INIT();
-  BX_DEBUG(( "Init.\n"));
+  BX_DEBUG(( "Init."));
 }
 
 
 BX_CPU_C::~BX_CPU_C(void)
 {
   BX_INSTR_SHUTDOWN();
-  BX_DEBUG(( "Exit.\n"));
+  BX_DEBUG(( "Exit."));
 }
 
 
@@ -584,10 +584,10 @@ BX_CPU_C::reset(unsigned source)
   if (BX_BOOTSTRAP_PROCESSOR == apic_id)
   {
     // boot normally
-    BX_INFO(("CPU[%d] is the bootstrap processor\n", apic_id));
+    BX_INFO(("CPU[%d] is the bootstrap processor", apic_id));
   } else {
     // it's an application processor, halt until IPI is heard.
-    BX_INFO(("CPU[%d] is an application processor. Halting until IPI.\n", apic_id));
+    BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
     debug_trap |= 0x80000000;
     async_event = 1;
   }
@@ -628,7 +628,7 @@ BX_CPU_C::sanity_checks(void)
        ch != ((ECX >> 8) & 0xFF) ||
        dh != ((EDX >> 8) & 0xFF) ||
        bh != ((EBX >> 8) & 0xFF) ) {
-    BX_PANIC(("problems using BX_READ_8BIT_REG()!\n"));
+    BX_PANIC(("problems using BX_READ_8BIT_REG()!"));
     }
 
   ax = AX;
@@ -648,7 +648,7 @@ BX_CPU_C::sanity_checks(void)
        bp != (EBP & 0xFFFF) ||
        si != (ESI & 0xFFFF) ||
        di != (EDI & 0xFFFF) ) {
-    BX_PANIC(("problems using BX_READ_16BIT_REG()!\n"));
+    BX_PANIC(("problems using BX_READ_16BIT_REG()!"));
     }
 
 
@@ -663,13 +663,13 @@ BX_CPU_C::sanity_checks(void)
 
 
   if (sizeof(Bit8u)  != 1  ||  sizeof(Bit8s)  != 1)
-    BX_PANIC(("data type Bit8u or Bit8s is not of length 1 byte!\n"));
+    BX_PANIC(("data type Bit8u or Bit8s is not of length 1 byte!"));
   if (sizeof(Bit16u) != 2  ||  sizeof(Bit16s) != 2)
-    BX_PANIC(("data type Bit16u or Bit16s is not of length 2 bytes!\n"));
+    BX_PANIC(("data type Bit16u or Bit16s is not of length 2 bytes!"));
   if (sizeof(Bit32u) != 4  ||  sizeof(Bit32s) != 4)
-    BX_PANIC(("data type Bit32u or Bit32s is not of length 4 bytes!\n"));
+    BX_PANIC(("data type Bit32u or Bit32s is not of length 4 bytes!"));
 
-  BX_DEBUG(( "#(%u)all sanity checks passed!\n", BX_SIM_ID ));
+  BX_DEBUG(( "#(%u)all sanity checks passed!", BX_SIM_ID ));
 }
 
 

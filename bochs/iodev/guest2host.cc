@@ -37,13 +37,13 @@ bx_g2h_c::bx_g2h_c(void)
     s.callback[i].f = NULL;
     s.callback[i].used = 0;
     }
-  BX_DEBUG(("Init.\n"));
+  BX_DEBUG(("Init."));
 }
 
 bx_g2h_c::~bx_g2h_c(void)
 {
   // nothing for now
-  BX_DEBUG(("Exit.\n"));
+  BX_DEBUG(("Exit."));
 }
 
   void
@@ -73,7 +73,7 @@ bx_g2h_c::aquire_channel(bx_g2h_callback_t f)
       }
     }
 
-  BX_INFO(("g2h: attempt to aquire channel: maxed out\n");
+  BX_INFO(("g2h: attempt to aquire channel: maxed out");
   return(BX_G2H_ERROR); // No more free channels
 }
 
@@ -82,7 +82,7 @@ bx_g2h_c::deaquire_channel(unsigned channel)
 {
   if ( (channel >= BX_MAX_G2H_CHANNELS) ||
        (bx_g2h.s.callback[channel].used==0) ) {
-    BX_PANIC(("g2h: attempt to deaquire channel %u: not aquired\n",
+    BX_PANIC(("g2h: attempt to deaquire channel %u: not aquired",
       channel));
     }
   bx_g2h.s.callback[channel].used = 0;
@@ -100,11 +100,11 @@ bx_g2h_c::inp_handler(void *this_ptr, Bit32u addr, unsigned io_len)
   UNUSED(this_ptr);
 
   if (addr != BX_G2H_PORT)
-    BX_PANIC(("g2h: IO read not aligned on dword boundary.\n"));
+    BX_PANIC(("g2h: IO read not aligned on dword boundary."));
   if (io_len != 4)
-    BX_PANIC(("g2h: IO read not dword.\n"));
+    BX_PANIC(("g2h: IO read not dword."));
 
-  BX_PANIC(("g2h: IO read not complete.\n"));
+  BX_PANIC(("g2h: IO read not complete."));
   return(0);
 }
 
@@ -117,12 +117,12 @@ bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr,
   UNUSED(this_ptr);
 
   if (addr != BX_G2H_PORT)
-    BX_PANIC(("g2h: IO write not aligned on dword boundary.\n"));
+    BX_PANIC(("g2h: IO write not aligned on dword boundary."));
   if (io_len != 4)
-    BX_PANIC(("g2h: IO write not dword.\n"));
+    BX_PANIC(("g2h: IO write not dword."));
 
   if ( (bx_g2h.s.packet_count==0) && (val32!=BX_G2H_MAGIC) ) {
-    BX_INFO(("g2h: IO W: Not magic header.\n");
+    BX_INFO(("g2h: IO W: Not magic header.");
     return;
     }
   bx_g2h.s.guest_packet[bx_g2h.s.packet_count++] = val32;
@@ -132,10 +132,10 @@ bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr,
     // Full packet received from guest.  Pass on to the host code.
     channel = bx_g2h.s.guest_packet[1];
     if (channel >= BX_MAX_G2H_CHANNELS) {
-      BX_PANIC(("g2h: channel (%u) out of bounds\n", channel));
+      BX_PANIC(("g2h: channel (%u) out of bounds", channel));
       }
     if (bx_g2h.s.callback[channel].used==0) {
-      BX_PANIC(("g2h: channel (%u) not active\n", channel));
+      BX_PANIC(("g2h: channel (%u) not active", channel));
       }
     bx_g2h.s.callback[channel].f(&bx_g2h.s.guest_packet);
     bx_g2h.s.packet_count = 0; // Ready for next packet

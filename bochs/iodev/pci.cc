@@ -47,7 +47,7 @@ bx_pci_c::bx_pci_c(void)
 
 bx_pci_c::~bx_pci_c(void)
 {
-	BX_INFO(("Exit.\n"));
+	BX_INFO(("Exit."));
 }
 
 
@@ -122,13 +122,13 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
         default:
           retMask = 0xFFFFFFFF; break;
         }
-      BX_INFO(("440FX IO read from port: %04x, len: %02x, data: %04x\n",
+      BX_INFO(("440FX IO read from port: %04x, len: %02x, data: %04x",
                 address, io_len, (val440fx & retMask)));
       return (val440fx & retMask);
       }
     }
 
-  BX_PANIC(("pci: unsupported IO read to port 0x%x\n",
+  BX_PANIC(("pci: unsupported IO read to port 0x%x",
            (unsigned) address));
   return(0xffffffff);
 }
@@ -156,7 +156,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0xCF8:
       BX_PCI_THIS s.i440fx.confAddr = value;
-      BX_INFO(("440FX IO write to port %04x of %04x, len %02x \n",
+      BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
                 address, value, io_len));
       break;
 
@@ -177,7 +177,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | (value & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x \n",
+        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }
@@ -198,7 +198,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 8) & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x \n",
+        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }
@@ -219,7 +219,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 16) & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x \n",
+        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }
@@ -238,14 +238,14 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 24) & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x \n",
+        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }
      break;
 
     default:
-      BX_PANIC(("pci: IO write to port 0x%x\n", (unsigned) address));
+      BX_PANIC(("pci: IO write to port 0x%x", (unsigned) address));
     }
 }
 
@@ -319,7 +319,7 @@ bx_pci_c::rd_memType (Bit32u addr)
            return (mapRead ( (BX_PCI_THIS s.i440fx.array[0x58] >> 12) & 0x3));
 
       default:
-           BX_PANIC(("wr_memType () Error: Memory Type not known !\n"));
+           BX_PANIC(("wr_memType () Error: Memory Type not known !"));
            return(0); // keep compiler happy
            break;
    }
@@ -365,7 +365,7 @@ bx_pci_c::wr_memType (Bit32u addr)
            return (mapWrite ( (BX_PCI_THIS s.i440fx.array[0x58] >> 12) & 0x3));
 
       default:
-           BX_PANIC(("rd_memType () Error: Memory Type not known !\n"));
+           BX_PANIC(("rd_memType () Error: Memory Type not known !"));
            return(0); // keep compiler happy
            break;
    }
@@ -378,16 +378,16 @@ bx_pci_c::print_i440fx_state()
   int  i;
 #endif /* DUMP_FULL_I440FX */
 
-  BX_INFO(( "i440fxConfAddr:0x%x\n", BX_PCI_THIS s.i440fx.confAddr ));
-  BX_INFO(( "i440fxConfData:0x%x\n", BX_PCI_THIS s.i440fx.confData ));
+  BX_INFO(( "i440fxConfAddr:0x%x", BX_PCI_THIS s.i440fx.confAddr ));
+  BX_INFO(( "i440fxConfData:0x%x", BX_PCI_THIS s.i440fx.confData ));
 
 #ifdef DUMP_FULL_I440FX
   for (i=0; i<256; i++) {
-    BX_INFO(( "i440fxArray%02x:0x%x\n", i, BX_PCI_THIS s.i440fx.array[i] ));
+    BX_INFO(( "i440fxArray%02x:0x%x", i, BX_PCI_THIS s.i440fx.array[i] ));
     }
 #else /* DUMP_FULL_I440FX */
-  BX_INFO(( "i440fxArray58:0x%x\n", BX_PCI_THIS s.i440fx.array[0x58] ));
-  BX_INFO(( "i440fxArray5c:0x%x\n", BX_PCI_THIS s.i440fx.array[0x5c] ));
+  BX_INFO(( "i440fxArray58:0x%x", BX_PCI_THIS s.i440fx.array[0x58] ));
+  BX_INFO(( "i440fxArray5c:0x%x", BX_PCI_THIS s.i440fx.array[0x5c] ));
 #endif /* DUMP_FULL_I440FX */
 }
 
@@ -402,7 +402,7 @@ bx_pci_c::i440fx_fetch_ptr(Bit32u addr)
       case 0x1:   // Read from ROM
         return (&BX_PCI_THIS s.i440fx.shadow[(addr - 0xc0000)]);
       default:
-        BX_PANIC(("i440fx_fetch_ptr(): default case\n"));
+        BX_PANIC(("i440fx_fetch_ptr(): default case"));
         return(0);
       }
     }

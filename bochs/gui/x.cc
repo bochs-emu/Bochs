@@ -283,7 +283,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
   UNUSED(th);
 
 if (bx_options.private_colormap) {
-  BX_ERROR(( "private_colormap option not handled yet.\n" ));
+  BX_ERROR(( "private_colormap option not handled yet." ));
   }
 
   x_tilesize = tilewidth;
@@ -299,7 +299,7 @@ if (bx_options.private_colormap) {
   /* connect to X server */
   if ( (bx_x_display=XOpenDisplay(display_name)) == NULL )
   {
-    BX_PANIC(("%s: cannot connect to X server %s\n",
+    BX_PANIC(("%s: cannot connect to X server %s",
         progname, XDisplayName(display_name)));
   }
 
@@ -321,7 +321,7 @@ if (bx_options.private_colormap) {
   dimension_x = columns * font_width;
   dimension_y = rows * font_height + headerbar_y;
 
-  BX_INFO(("font %u wide x %u high\n", (unsigned) font_width, (unsigned) font_height));
+  BX_INFO(("font %u wide x %u high", (unsigned) font_width, (unsigned) font_height));
 
   /* create opaque window */
   win = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
@@ -345,7 +345,7 @@ if (bx_options.private_colormap) {
                                    default_visual, AllocNone);
     if (XAllocColorCells(bx_x_display, default_cmap, False,
                          plane_masks_return, 0, col_vals, 256) == 0) {
-      BX_PANIC(("XAllocColorCells returns error.\n"));
+      BX_PANIC(("XAllocColorCells returns error."));
       }
 
     win_attr.colormap = default_cmap;
@@ -382,7 +382,7 @@ if (bx_options.private_colormap) {
   black_pixel = col_vals[0];
   white_pixel = col_vals[15];
 
-  BX_INFO(("default_depth = %d\n", default_depth));
+  BX_INFO(("default_depth = %d", default_depth));
 
   //select_visual();
 
@@ -418,12 +418,12 @@ if (bx_options.private_colormap) {
    * XTextProperty structures and set their other
    * fields properly. */
   if (XStringListToTextProperty(&window_name, 1, &windowName) == 0) {
-    BX_PANIC(("%s: structure allocation for windowName failed.\n",
+    BX_PANIC(("%s: structure allocation for windowName failed.",
         progname));
   }
 
   if (XStringListToTextProperty(&icon_name, 1, &iconName) == 0) {
-    BX_PANIC(("%s: structure allocation for iconName failed.\n",
+    BX_PANIC(("%s: structure allocation for iconName failed.",
         progname));
   }
 
@@ -468,12 +468,12 @@ if (bx_options.private_colormap) {
   XMapWindow(bx_x_display, win);
   XSync(bx_x_display, /* no discard */ 0);
 
-  BX_DEBUG(("waiting for MapNotify\n"));
+  BX_DEBUG(("waiting for MapNotify"));
   while (1) {
     XNextEvent(bx_x_display, &report);
     if (report.type == MapNotify) break;
     }
-  BX_DEBUG(("MapNotify found.\n"));
+  BX_DEBUG(("MapNotify found."));
 
 {
   char *imagedata;
@@ -487,19 +487,19 @@ if (bx_options.private_colormap) {
              32,                     // # bits of padding
              0 );                    // bytes_per_line, let X11 calculate
   if (!ximage)
-    BX_PANIC(("vga: couldn't XCreateImage()\n"));
+    BX_PANIC(("vga: couldn't XCreateImage()"));
 
   imDepth = default_depth;
   imWide  = ximage->bytes_per_line;
   imBPP   = ximage->bits_per_pixel;
 
   imagedata = (char *) malloc( (size_t) (ximage->bytes_per_line * y_tilesize) );
-  if (!imagedata) BX_PANIC(("imagedata: malloc returned error\n"));
+  if (!imagedata) BX_PANIC(("imagedata: malloc returned error"));
 
   ximage->data = imagedata;
 
   if (imBPP < imDepth) {
-    BX_PANIC(("vga_x: bits_per_pixel < depth ?\n"));
+    BX_PANIC(("vga_x: bits_per_pixel < depth ?"));
     }
 
 }
@@ -522,7 +522,7 @@ load_font(void)
 
   /* Load font and get font information structure. */
   if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
-    BX_PANIC(("Could not open vga font\n"));
+    BX_PANIC(("Could not open vga font"));
     }
 }
 
@@ -575,17 +575,17 @@ bx_gui_c::handle_events(void)
       break;
 
     case ConfigureNotify:
-      BX_DEBUG(("ConfigureNotify Xevent\n"));
+      BX_DEBUG(("ConfigureNotify Xevent"));
       show_headerbar();
       break;
 
     case ButtonPress:
       button_event = (XButtonEvent *) &report;
-		BX_DEBUG(("xxx: buttonpress\n"));
+		BX_DEBUG(("xxx: buttonpress"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-		BX_DEBUG(("xxx:   in headerbar\n"));
+		BX_DEBUG(("xxx:   in headerbar"));
         if (mouse_update) {
-		  BX_DEBUG(("xxx:   mouse_update=1\n"));
+		  BX_DEBUG(("xxx:   mouse_update=1"));
           send_keyboard_mouse_status();
           mouse_update = 0;
           }
@@ -597,28 +597,28 @@ bx_gui_c::handle_events(void)
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-	  BX_DEBUG(("xxx:   x,y=(%d,%d)\n", current_x, current_y));
+	  BX_DEBUG(("xxx:   x,y=(%d,%d)", current_x, current_y));
       switch (button_event->button) {
         case Button1:
-		  BX_DEBUG(("xxx:   button1\n"));
+		  BX_DEBUG(("xxx:   button1"));
           mouse_button_state |= 0x01;
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
-		  BX_DEBUG(("XXX:   button2\n"));
+		  BX_DEBUG(("XXX:   button2"));
 
 	      // (mch) Hack for easier mouse handling (toggle mouse enable)
 	      mouse_handler();
 	      if (bx_options.mouse_enabled) {
-		    BX_INFO(("[x] Mouse on\n"));
+		    BX_INFO(("[x] Mouse on"));
 		    mouse_enable_x = current_x;
 		    mouse_enable_y = current_y;
 		    disable_cursor();
 		    // Move the cursor to a 'safe' place
 		    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 	      } else {
-		    BX_INFO(("[x] Mouse off\n"));
+		    BX_INFO(("[x] Mouse off"));
 		    enable_cursor();
 		    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
 	      }
@@ -628,7 +628,7 @@ bx_gui_c::handle_events(void)
           //mouse_update = 0;
           break;
         case Button3:
-		  BX_DEBUG(("xxx:   button3\n"));
+		  BX_DEBUG(("xxx:   button3"));
           mouse_button_state |= 0x02;
           send_keyboard_mouse_status();
           mouse_update = 0;
@@ -638,11 +638,11 @@ bx_gui_c::handle_events(void)
 
     case ButtonRelease:
       button_event = (XButtonEvent *) &report;
-//BX_INFO(("xxx: buttonrelease\n"));
+//BX_INFO(("xxx: buttonrelease"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-//BX_INFO(("xxx:   in headerbar\n"));
+//BX_INFO(("xxx:   in headerbar"));
         if (mouse_update) {
-//BX_INFO(("xxx:   mouse_update=1\n"));
+//BX_INFO(("xxx:   mouse_update=1"));
           send_keyboard_mouse_status();
           mouse_update = 0;
           }
@@ -654,22 +654,22 @@ bx_gui_c::handle_events(void)
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-//BX_INFO(("xxx:   x,y=(%d,%d)\n", current_x, current_y));
+//BX_INFO(("xxx:   x,y=(%d,%d)", current_x, current_y));
       switch (button_event->button) {
         case Button1:
-//BX_INFO(("xxx:   button1\n"));
+//BX_INFO(("xxx:   button1"));
           mouse_button_state &= ~0x01;
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
-//BX_INFO(("xxx:   button2\n"));
+//BX_INFO(("xxx:   button2"));
           //mouse_button_state &= ~;
           //send_keyboard_mouse_status();
           //mouse_update = 0;
           break;
         case Button3:
-//BX_INFO(("xxx:   button3\n"));
+//BX_INFO(("xxx:   button3"));
           mouse_button_state &= ~0x02;
           send_keyboard_mouse_status();
           mouse_update = 0;
@@ -694,34 +694,34 @@ bx_gui_c::handle_events(void)
       current_x = pointer_event->x;
       current_y = pointer_event->y;
       mouse_update = 1;
-//BX_INFO(("xxx: motionNotify x,y=(%d,%d)\n", current_x, current_y));
+//BX_INFO(("xxx: motionNotify x,y=(%d,%d)", current_x, current_y));
       break;
 
     case EnterNotify:
       enter_event = (XEnterWindowEvent *) &report;
       prev_x = current_x = enter_event->x;
       prev_y = current_y = enter_event->y;
-//BX_INFO(("xxx: enterNotify x,y=(%d,%d)\n", current_x, current_y));
+//BX_INFO(("xxx: enterNotify x,y=(%d,%d)", current_x, current_y));
       break;
 
     case LeaveNotify:
       leave_event = (XLeaveWindowEvent *) &report;
       prev_x = current_x = -1;
       prev_y = current_y = -1;
-//BX_INFO(("xxx: LeaveNotify x,y set to -1\n"));
+//BX_INFO(("xxx: LeaveNotify x,y set to -1"));
       break;
 
     case MapNotify:
       /* screen needs redraw, since X would have tossed previous
        * requests before window mapped
        */
-//BX_INFO(("xxx: mapnotify: found\n"));
+//BX_INFO(("xxx: mapnotify: found"));
       //retval = 1;
       break;
 
     default:
 	  // (mch) Ignore...
-	  BX_DEBUG(("XXX: default Xevent type\n"));
+	  BX_DEBUG(("XXX: default Xevent type"));
       /* all events selected by StructureNotifyMask are thrown away here,
        * since nothing is done with them */
       break;
@@ -729,7 +729,7 @@ bx_gui_c::handle_events(void)
   } /* end while */
 
   if (mouse_update) {
-    BX_DEBUG(("XXX: bottom, send status\n"));
+    BX_DEBUG(("XXX: bottom, send status"));
     send_keyboard_mouse_status();
     }
 }
@@ -738,7 +738,7 @@ bx_gui_c::handle_events(void)
   void
 send_keyboard_mouse_status(void)
 {
-	BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)\n",
+	BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
 			prev_x, prev_y, current_x, current_y));
 
   if ( (prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) {
@@ -749,7 +749,7 @@ send_keyboard_mouse_status(void)
     dy = -(current_y - prev_y - warp_dy);
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 
-//BX_INFO(("xxx: MOUSE_MOTION: dx=%d, dy=%d\n", (int) dx, (int) dy));
+//BX_INFO(("xxx: MOUSE_MOTION: dx=%d, dy=%d", (int) dx, (int) dy));
     bx_devices.keyboard->mouse_motion( dx, dy, mouse_button_state);
     //if (warped) {
     //  prev_x = current_x = -1;
@@ -907,7 +907,7 @@ xkeypress(KeySym keysym, int press_release)
     case XK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
 
     default:
-      BX_ERROR(( "xkeypress(): keysym %x unhandled!\n", (unsigned) keysym ));
+      BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
       return;
       break;
     }
@@ -1072,7 +1072,7 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
             }
           break;
         default:
-          BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented\n",
+          BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented",
             (unsigned) imBPP));
           break;
         }
@@ -1153,7 +1153,7 @@ bx_gui_c::show_headerbar(void)
 bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   if (bx_bitmap_entries >= BX_MAX_PIXMAPS) {
-    BX_PANIC(("x: too many pixmaps, increase BX_MAX_PIXMAPS\n"));
+    BX_PANIC(("x: too many pixmaps, increase BX_MAX_PIXMAPS"));
     }
 
   bx_bitmaps[bx_bitmap_entries].bmap =
@@ -1161,7 +1161,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
   if (!bx_bitmaps[bx_bitmap_entries].bmap) {
-    BX_PANIC(("x: could not create bitmap\n"));
+    BX_PANIC(("x: could not create bitmap"));
     }
   bx_bitmap_entries++;
   return(bx_bitmap_entries-1); // return index as handle
@@ -1174,7 +1174,7 @@ bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)
   unsigned hb_index;
 
   if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
-    BX_PANIC(("x: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES\n"));
+    BX_PANIC(("x: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
 
   bx_headerbar_entries++;
   hb_index = bx_headerbar_entries - 1;
@@ -1236,7 +1236,7 @@ headerbar_click(int x, int y)
   void
 bx_gui_c::exit(void)
 {
-  BX_INFO(("Exit.\n"));
+  BX_INFO(("Exit."));
 }
 
 static void warp_cursor (int dx, int dy)

@@ -39,12 +39,12 @@
 BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_PANIC(("BOUND_GvMa: not supported on 8086!\n"));
+  BX_PANIC(("BOUND_GvMa: not supported on 8086!"));
 #else
 
   if (i->mod == 0xc0) {
     /* undefined opcode exception */
-    BX_PANIC(("bound: op2 must be mem ref\n"));
+    BX_PANIC(("bound: op2 must be mem ref"));
     UndefinedOpcode(i);
     }
 
@@ -59,7 +59,7 @@ BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
 
     /* ??? */
     if ( (op1_32 < bound_min) || (op1_32 > bound_max) ) {
-      BX_INFO(("BOUND: fails bounds test\n"));
+      BX_INFO(("BOUND: fails bounds test"));
       exception(5, 0, 0);
       }
     }
@@ -74,7 +74,7 @@ BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
 
     /* ??? */
     if ( (op1_16 < bound_min) || (op1_16 > bound_max) ) {
-      BX_INFO(("BOUND: fails bounds test\n"));
+      BX_INFO(("BOUND: fails bounds test"));
       exception(5, 0, 0);
       }
     }
@@ -107,7 +107,7 @@ BX_CPU_C::INT3(BxInstruction_t *i)
   BX_CPU_THIS_PTR show_flag |= Flag_int;
 #endif
 
-//BX_PANIC(("INT3: bailing\n"));
+//BX_PANIC(("INT3: bailing"));
   interrupt(3, 1, 0, 0);
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -127,13 +127,13 @@ BX_CPU_C::INT_Ib(BxInstruction_t *i)
   imm8 = i->Ib;
 
   if (v8086_mode() && (IOPL<3)) {
-    //BX_INFO(("int_ib: v8086: IOPL<3\n"));
+    //BX_INFO(("int_ib: v8086: IOPL<3"));
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
 #ifdef SHOW_EXIT_STATUS
 if ( (imm8 == 0x21) && (AH == 0x4c) ) {
-  BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x\n", (unsigned) AL, (unsigned) BX));
+  BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x", (unsigned) AL, (unsigned) BX));
   }
 #endif
 
@@ -153,7 +153,7 @@ BX_CPU_C::INTO(BxInstruction_t *i)
 #endif
 
   /* ??? is this IOPL sensitive ? */
-  if (v8086_mode()) BX_PANIC(("soft_int: v8086 mode unsupported\n"));
+  if (v8086_mode()) BX_PANIC(("soft_int: v8086 mode unsupported"));
 
   if (get_OF()) {
     interrupt(4, 1, 0, 0);

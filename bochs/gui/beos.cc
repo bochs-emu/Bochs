@@ -201,7 +201,7 @@ UNUSED(window_name);
   th->setprefix("[BGUI]");
 
 if (bx_options.private_colormap) {
-  BX_INFO(( "BeOS: private_colormap option not handled yet.\n"));
+  BX_INFO(( "BeOS: private_colormap option not handled yet."));
   }
 
   x_tilesize = tilewidth;
@@ -219,8 +219,8 @@ if (bx_options.private_colormap) {
   // width = columns * font_width;
   // height = rows * font_height;
 
-BX_INFO(("font_width = %u\n", (unsigned) font_width));
-BX_INFO(("font_height = %u\n", (unsigned) font_height));
+BX_INFO(("font_width = %u", (unsigned) font_width));
+BX_INFO(("font_height = %u", (unsigned) font_height));
 
   // Create pixmap of depth 1 (bitmap) for icon
   // icon_pixmap = XCreateBitmapFromData(bx_x_display, win,
@@ -502,14 +502,14 @@ void  BochsView::MouseDown(BPoint point)
     headerbar_click(int(point.x), int(point.y));
     return;
     }
-  fprintf(stderr, "# mousedown()\n");
+   BX_DEBUG(("mousedown()"));
 }
 
 void  BochsView::MouseUp(BPoint point)
 {
   UNUSED(point);
   // currently a place holder function
-  fprintf(stderr, "# mouseup()\n");
+  BX_DEBUG(( "mouseup()" ));
 }
 
 void  BochsView::MouseMoved(BPoint point,
@@ -518,7 +518,7 @@ void  BochsView::MouseMoved(BPoint point,
   UNUSED(point);
   UNUSED(transit);
   UNUSED(message);
-  fprintf(stderr, "# mousemoved()\n");
+  BX_DEBUG(( "mousemoved()" ));
 }
 
 void BochsView::KeyDown(const char *bytes, int32 numBytes)
@@ -531,7 +531,7 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
 
   msg = Window()->CurrentMessage();
   if ( !msg ) {
-    fprintf(stderr, "# keydown() msg NULL\n");
+    BX_DEBUG(( "keydown() msg NULL" ));
     return;
     }
   modifiers = msg->FindInt32("modifiers");
@@ -989,7 +989,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap,
   unsigned char *data;
 
   if (bx_bitmap_entries >= BX_MAX_PIXMAPS) {
-    BX_PANIC(("beos: too many pixmaps, increase BX_MAX_PIXMAPS\n"));
+    BX_PANIC(("beos: too many pixmaps, increase BX_MAX_PIXMAPS"));
     }
 
   bx_bitmaps[bx_bitmap_entries].bmap =
@@ -1005,7 +1005,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap,
   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
   if (!bx_bitmaps[bx_bitmap_entries].bmap) {
-    BX_PANIC(("beos: could not create bitmap\n"));
+    BX_PANIC(("beos: could not create bitmap"));
     }
   bx_bitmap_entries++;
   return(bx_bitmap_entries-1); // return index as handle
@@ -1018,7 +1018,7 @@ bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   unsigned hb_index;
 
   if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
-    BX_PANIC(("beos: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES\n"));
+    BX_PANIC(("beos: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
 
   bx_headerbar_entries++;
   hb_index = bx_headerbar_entries - 1;
@@ -1111,13 +1111,13 @@ create_vga_font(void)
   unsigned char *data;
   BRect brect(0,0, 7,15);
 
-  fprintf(stderr, "# BeOS: creating VGA font from bitmaps\n");
+  BX_INFO(( "BeOS: creating VGA font from bitmaps" ));
 
   // VGA font is 8wide x 16high
   for (unsigned c=0; c<256; c++) {
     vgafont[c] = new BBitmap(brect, B_MONOCHROME_1_BIT);
     if (!vgafont[c]) {
-      BX_PANIC(("beos: could not create bitmap\n"));
+      BX_PANIC(("beos: could not create bitmap"));
       }
 
     bitslength = vgafont[c]->BitsLength();

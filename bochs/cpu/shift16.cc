@@ -93,7 +93,7 @@ BX_CPU_C::SHLD_EwGw(BxInstruction_t *i)
 BX_CPU_C::SHRD_EwGw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("shrd_evgvib: not supported on < 386\n"));
+  BX_PANIC(("shrd_evgvib: not supported on < 386"));
 #else
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;

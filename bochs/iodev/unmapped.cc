@@ -108,7 +108,7 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
 #endif
     case 0x03df:
 	  retval = 0xffffffff;
-      BX_DEBUG(("unsupported IO read from port %04x (CGA)\n", address));
+      BX_DEBUG(("unsupported IO read from port %04x (CGA)", address));
       break;
     case 0x023a:
     case 0x02f8: /* UART */
@@ -131,7 +131,7 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
     case 0x03fd: /* UART */
     case 0x17c6:
 	  retval = 0xffffffff;
-      BX_DEBUG(("unsupported IO read from port %04x\n", address));
+      BX_DEBUG(("unsupported IO read from port %04x", address));
       break;
     default:
 	  retval = 0xffffffff;
@@ -142,17 +142,17 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
 	  switch (io_len) {
 	  case 1:
 		  retval = (Bit8u)retval;
-		  BX_DEBUG(("unmapped: 8-bit read from %04x = %02x\n", address, retval));
+		  BX_DEBUG(("unmapped: 8-bit read from %04x = %02x", address, retval));
 		  break;
 	  case 2:
 		  retval = (Bit16u)retval;
-		  BX_DEBUG(("unmapped: 16-bit read from %04x = %04x\n", address, retval));
+		  BX_DEBUG(("unmapped: 16-bit read from %04x = %04x", address, retval));
 		  break;
 	  case 4:
-		  BX_DEBUG(("unmapped: 32-bit read from %04x = %08x\n", address, retval));
+		  BX_DEBUG(("unmapped: 32-bit read from %04x = %08x", address, retval));
 		  break;
 	  default:
-		  BX_DEBUG(("unmapped: ??-bit read from %04x = %x\n", address, retval));
+		  BX_DEBUG(("unmapped: ??-bit read from %04x = %x", address, retval));
 	  }
   return retval;
 }
@@ -191,7 +191,7 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x80: // diagnostic test port to display progress of POST
-      //BX_DEBUG(("Diagnostic port 80h: write = %02xh\n", (unsigned) value));
+      //BX_DEBUG(("Diagnostic port 80h: write = %02xh", (unsigned) value));
       BX_UM_THIS s.port80 = value;
       break;
 
@@ -230,15 +230,15 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3eb:
     case 0x3ec:
     case 0x3ed:
-	    // BX_DEBUG(("unsupported IO write to port %04x of %02x\n",
+	    // BX_DEBUG(("unsupported IO write to port %04x of %02x",
 	    // address, value));
       break;
     case 0x0400:
-      BX_PANIC(("BIOS panic at rombios.c, line %d\n", value));
+      BX_PANIC(("BIOS panic at rombios.c, line %d", value));
       break;
     case 0xfedc:
       bx_dbg.debugger = (value > 0);
-		BX_DEBUG(( "DEBUGGER = %u\n", (unsigned) bx_dbg.debugger));
+		BX_DEBUG(( "DEBUGGER = %u", (unsigned) bx_dbg.debugger));
       break;
 
     case 0xfff0:
@@ -264,16 +264,16 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
   if (bx_dbg.unsupported_io)
 	  switch (io_len) {
 	  case 1:
-		  BX_INFO(("unmapped: 8-bit write to %04x = %02x\n", address, value));
+		  BX_INFO(("unmapped: 8-bit write to %04x = %02x", address, value));
 		  break;
 	  case 2:
-		  BX_INFO(("unmapped: 16-bit write to %04x = %04x\n", address, value));
+		  BX_INFO(("unmapped: 16-bit write to %04x = %04x", address, value));
 		  break;
 	  case 4:
-		  BX_INFO(("unmapped: 32-bit write to %04x = %08x\n", address, value));
+		  BX_INFO(("unmapped: 32-bit write to %04x = %08x", address, value));
 		  break;
 	  default:
-		  BX_INFO(("unmapped: ??-bit write to %04x = %x\n", address, value));
+		  BX_INFO(("unmapped: ??-bit write to %04x = %x", address, value));
 		  break;
 	  }
 }

@@ -121,7 +121,7 @@ iofunctions::init(void) {
 	log = new logfunc_t(this);
 	LOG_THIS setprefix("[IO  ]");
 	LOG_THIS settype(IOLOG);
-	BX_DEBUG(("Init(log file: '%s').\n",logfn));
+	BX_DEBUG(("Init(log file: '%s').",logfn));
 }
 
 void
@@ -150,9 +150,9 @@ iofunctions::init_log(char *fn)
 		newfd = fopen(fn, "w");
 		if(newfd != NULL) {
 			newfn = strdup(fn);
-			BX_DEBUG(("Opened log file '%s'.\n", fn ));
+			BX_DEBUG(("Opened log file '%s'.", fn ));
 		} else {
-			BX_DEBUG(("Log file '%s' not there?\n", fn));
+			BX_DEBUG(("Log file '%s' not there?", fn));
 			newfd = NULL;
 			logfn = "(none)";
 		}
@@ -182,7 +182,7 @@ iofunctions::init_log(int fd)
 	assert (magic==MAGIC_LOGNUM);
 	FILE *tmpfd;
 	if( (tmpfd = fdopen(fd,"w")) == NULL ) {
-	  BX_PANIC(("Couldn't open fd %d as a stream for writing\n", fd));
+	  BX_PANIC(("Couldn't open fd %d as a stream for writing", fd));
 	  return;
 	}
 
@@ -211,6 +211,7 @@ iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
 		fprintf(logfd, ">>PANIC<< ");
 
 	vfprintf(logfd, fmt, ap);
+	fprintf(logfd, "\n");
 	fflush(logfd);
 
 	return;
@@ -380,7 +381,7 @@ logfunctions::fatal (char *prefix, char *fmt, va_list ap)
   fprintf (stderr, "Bochs is exiting with the following message:\n");
   fprintf (stderr, "%s ", prefix);
   vfprintf (stderr, fmt, ap);
-  fprintf (stderr, "%s\n", divider);
+  fprintf (stderr, "\n%s\n", divider);
 #if 0 && defined(WIN32)
 #error disabled because it  is not working yet!
   // wait for a keypress before quitting.  Depending on how bochs is
@@ -504,7 +505,7 @@ bx_bochs_init(int argc, char *argv[])
   bx_pc_system.init_ips(bx_options.ips);
 
   if(logfilename[0]!='-') {
-    BX_INFO (("using log file %s\n", logfilename));
+    BX_INFO (("using log file %s", logfilename));
     io->init_log(logfilename);
   }
 
@@ -533,7 +534,7 @@ bx_bochs_init(int argc, char *argv[])
   bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif
-  BX_DEBUG(("bx_bochs_init is setting signal handlers\n"));
+  BX_DEBUG(("bx_bochs_init is setting signal handlers"));
 // if not using debugger, then we can take control of SIGINT.
 // If using debugger, it needs control of this.
 #if BX_DEBUGGER==0
@@ -649,7 +650,7 @@ parse_bochsrc(int argc)
       // no bochsrc used.  This is still legal since they may have 
       // everything on the command line.  However if they have no
       // arguments then give them some friendly advice.
-      BX_INFO(( "could not find a bochsrc file\n"));
+      BX_INFO(( "could not find a bochsrc file"));
       if (argc==1) {
 	fprintf (stderr, "%s\n", divider);
 	fprintf (stderr, "Before running Bochs, you should cd to a directory which contains\n");
@@ -669,14 +670,14 @@ parse_bochsrc(int argc)
       return;
     }
     if (bochsrc_path[0]) {
-      BX_INFO (("looking for configuration in %s\n", bochsrc_path));
+      BX_INFO (("looking for configuration in %s", bochsrc_path));
       fd = fopen(bochsrc_path, "r");
       if (fd) found = 1;
     }
   }
   assert (fd != NULL && bochsrc_path[0] != 0);
 
-  BX_INFO(("reading configuration from %s\n", bochsrc_path));
+  BX_INFO(("reading configuration from %s", bochsrc_path));
 
   do {
     ret = fgets(line, sizeof(line)-1, fd);
@@ -763,7 +764,7 @@ parse_line_formatted(int num_params, char *params[])
         bx_options.floppya.initial_status = BX_INSERTED;
         }
       else {
-        BX_PANIC(("%s: floppya attribute '%s' not understood.\n", bochsrc_path,
+        BX_PANIC(("%s: floppya attribute '%s' not understood.", bochsrc_path,
           params[i]));
         }
       }
@@ -794,7 +795,7 @@ parse_line_formatted(int num_params, char *params[])
         bx_options.floppyb.initial_status = BX_INSERTED;
         }
       else {
-        BX_PANIC(("%s: floppyb attribute '%s' not understood.\n", bochsrc_path,
+        BX_PANIC(("%s: floppyb attribute '%s' not understood.", bochsrc_path,
           params[i]));
         }
       }
@@ -802,13 +803,13 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "diskc")) {
     if (num_params != 5) {
-      BX_PANIC(("%s: diskc directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: diskc directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "file=", 5) ||
         strncmp(params[2], "cyl=", 4) ||
         strncmp(params[3], "heads=", 6) ||
         strncmp(params[4], "spt=", 4)) {
-      BX_PANIC(("%s: diskc directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: diskc directive malformed.", bochsrc_path));
       }
     strcpy(bx_options.diskc.path, &params[1][5]);
     bx_options.diskc.cylinders = atol( &params[2][4] );
@@ -818,13 +819,13 @@ parse_line_formatted(int num_params, char *params[])
     }
   else if (!strcmp(params[0], "diskd")) {
     if (num_params != 5) {
-      BX_PANIC(("%s: diskd directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: diskd directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "file=", 5) ||
         strncmp(params[2], "cyl=", 4) ||
         strncmp(params[3], "heads=", 6) ||
         strncmp(params[4], "spt=", 4)) {
-      BX_PANIC(("%s: diskd directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: diskd directive malformed.", bochsrc_path));
       }
     strcpy(bx_options.diskd.path, &params[1][5]);
     bx_options.diskd.cylinders = atol( &params[2][4] );
@@ -835,10 +836,10 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "cdromd")) {
     if (num_params != 3) {
-      BX_PANIC(("%s: cdromd directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: cdromd directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "dev=", 4) || strncmp(params[2], "status=", 7)) {
-      BX_PANIC(("%s: cdromd directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: cdromd directive malformed.", bochsrc_path));
       }
     strcpy(bx_options.cdromd.dev, &params[1][4]);
     if (!strcmp(params[2], "status=inserted"))
@@ -846,7 +847,7 @@ parse_line_formatted(int num_params, char *params[])
     else if (!strcmp(params[2], "status=ejected"))
       bx_options.cdromd.inserted = 0;
     else {
-      BX_PANIC(("%s: cdromd directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: cdromd directive malformed.", bochsrc_path));
       }
     bx_options.cdromd.present = 1;
     }
@@ -857,21 +858,21 @@ parse_line_formatted(int num_params, char *params[])
       strcpy(bx_options.bootdrive, params[1]);
       }
     else {
-      BX_PANIC(("%s: boot directive with unknown boot device '%s'.  use 'a' or 'c'.\n", bochsrc_path, params[1]));
+      BX_PANIC(("%s: boot directive with unknown boot device '%s'.  use 'a' or 'c'.", bochsrc_path, params[1]));
       }
     }
   else if (!strcmp(params[0], "log")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: log directive has wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: log directive has wrong # args.", bochsrc_path));
       }
     strcpy(logfilename, params[1]);
     }
   else if (!strcmp(params[0], "panic")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: panic directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: panic directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "action=", 7)) {
-      BX_PANIC(("%s: panic directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: panic directive malformed.", bochsrc_path));
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
@@ -881,15 +882,15 @@ parse_line_formatted(int num_params, char *params[])
     else if (!strcmp (action, "ignore"))
       bx_options.log_actions[LOGLEV_PANIC] = ACT_IGNORE;
     else {
-      BX_PANIC(("%s: panic directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: panic directive malformed.", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "error")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: error directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: error directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "action=", 7)) {
-      BX_PANIC(("%s: error directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: error directive malformed.", bochsrc_path));
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
@@ -899,15 +900,15 @@ parse_line_formatted(int num_params, char *params[])
     else if (!strcmp (action, "ignore"))
       bx_options.log_actions[LOGLEV_ERROR] = ACT_IGNORE;
     else {
-      BX_PANIC(("%s: error directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: error directive malformed.", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "info")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: info directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: info directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "action=", 7)) {
-      BX_PANIC(("%s: info directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: info directive malformed.", bochsrc_path));
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
@@ -917,15 +918,15 @@ parse_line_formatted(int num_params, char *params[])
     else if (!strcmp (action, "ignore"))
       bx_options.log_actions[LOGLEV_INFO] = ACT_IGNORE;
     else {
-      BX_PANIC(("%s: info directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: info directive malformed.", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "debug")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: debug directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: debug directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "action=", 7)) {
-      BX_PANIC(("%s: debug directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: debug directive malformed.", bochsrc_path));
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
@@ -935,18 +936,18 @@ parse_line_formatted(int num_params, char *params[])
     else if (!strcmp (action, "ignore"))
       bx_options.log_actions[LOGLEV_DEBUG] = ACT_IGNORE;
     else {
-      BX_PANIC(("%s: debug directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: debug directive malformed.", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "romimage")) {
     if (num_params != 3) {
-      BX_PANIC(("%s: romimage directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: romimage directive: wrong # args.", bochsrc_path));
       }
     if (strncmp(params[1], "file=", 5)) {
-      BX_PANIC(("%s: romimage directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: romimage directive malformed.", bochsrc_path));
       }
     if (strncmp(params[2], "address=", 8)) {
-      BX_PANIC(("%s: romimage directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: romimage directive malformed.", bochsrc_path));
       }
     bx_options.rom.path    = strdup(&params[1][5]);
     if ( (params[2][8] == '0') && (params[2][9] == 'x') )
@@ -956,81 +957,81 @@ parse_line_formatted(int num_params, char *params[])
     }
   else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: vgaromimage directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: vgaromimage directive: wrong # args.", bochsrc_path));
       }
     bx_options.vgarom.path = strdup(params[1]);
     }
   else if (!strcmp(params[0], "vga_update_interval")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: vga_update_interval directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: vga_update_interval directive: wrong # args.", bochsrc_path));
       }
     bx_options.vga_update_interval = atol(params[1]);
     if (bx_options.vga_update_interval < 50000) {
-      BX_PANIC(("%s: vga_update_interval not big enough!\n", bochsrc_path));
+      BX_PANIC(("%s: vga_update_interval not big enough!", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "keyboard_serial_delay")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: keyboard_serial_delay directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: keyboard_serial_delay directive: wrong # args.", bochsrc_path));
       }
     bx_options.keyboard_serial_delay = atol(params[1]);
     if (bx_options.keyboard_serial_delay < 5) {
-      BX_PANIC(("%s: keyboard_serial_delay not big enough!\n", bochsrc_path));
+      BX_PANIC(("%s: keyboard_serial_delay not big enough!", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "megs")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: megs directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: megs directive: wrong # args.", bochsrc_path));
       }
     bx_options.memory.megs = atol(params[1]);
     }
   else if (!strcmp(params[0], "floppy_command_delay")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: floppy_command_delay directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: floppy_command_delay directive: wrong # args.", bochsrc_path));
       }
     bx_options.floppy_command_delay = atol(params[1]);
     if (bx_options.floppy_command_delay < 100) {
-      BX_PANIC(("%s: floppy_command_delay not big enough!\n", bochsrc_path));
+      BX_PANIC(("%s: floppy_command_delay not big enough!", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "ips")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: ips directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: ips directive: wrong # args.", bochsrc_path));
       }
     bx_options.ips = atol(params[1]);
     if (bx_options.ips < 200000) {
-      BX_INFO(("%s: WARNING: ips is AWFULLY low!\n", bochsrc_path));
+      BX_INFO(("%s: WARNING: ips is AWFULLY low!", bochsrc_path));
       }
     }
 
   else if (!strcmp(params[0], "mouse")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: mouse directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: mouse directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      BX_PANIC(("%s: mouse directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: mouse directive malformed.", bochsrc_path));
       }
     if (params[1][8] == '0')
       bx_options.mouse_enabled = 0;
     else if (params[1][8] == '1')
       bx_options.mouse_enabled = 1;
     else {
-      BX_PANIC(("%s: mouse directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: mouse directive malformed.", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "private_colormap")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: private_colormap directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: private_colormap directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      BX_PANIC(("%s: private_colormap directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: private_colormap directive malformed.", bochsrc_path));
       }
     if (params[1][8] == '0')
       bx_options.private_colormap = 0;
     else if (params[1][8] == '1')
       bx_options.private_colormap = 1;
     else {
-      BX_PANIC(("%s: private_colormap directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: private_colormap directive malformed.", bochsrc_path));
       }
     }
 
@@ -1062,65 +1063,65 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "i440fxsupport")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: i440FXSupport directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: i440FXSupport directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      BX_PANIC(("%s: i440FXSupport directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: i440FXSupport directive malformed.", bochsrc_path));
       }
     if (params[1][8] == '0')
       bx_options.i440FXSupport = 0;
     else if (params[1][8] == '1')
       bx_options.i440FXSupport = 1;
     else {
-      BX_PANIC(("%s: i440FXSupport directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: i440FXSupport directive malformed.", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "newharddrivesupport")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: newharddrivesupport directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: newharddrivesupport directive malformed.", bochsrc_path));
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      BX_PANIC(("%s: newharddrivesupport directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: newharddrivesupport directive malformed.", bochsrc_path));
       }
     if (params[1][8] == '0')
       bx_options.newHardDriveSupport = 0;
     else if (params[1][8] == '1')
       bx_options.newHardDriveSupport = 1;
     else {
-      BX_PANIC(("%s: newharddrivesupport directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: newharddrivesupport directive malformed.", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "cmosimage")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: cmosimage directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: cmosimage directive: wrong # args.", bochsrc_path));
       }
     bx_options.cmos.path = strdup(params[1]);
     bx_options.cmos.cmosImage = 1;                // CMOS Image is true
     }
   else if (!strcmp(params[0], "time0")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: time0 directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: time0 directive: wrong # args.", bochsrc_path));
       }
     bx_options.cmos.time0 = atoi(params[1]);
     }
 #ifdef MAGIC_BREAKPOINT
   else if (!strcmp(params[0], "magic_break")) {
     if (num_params != 2) {
-      BX_PANIC(("%s: magic_break directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: magic_break directive: wrong # args.", bochsrc_path));
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      BX_PANIC(("%s: magic_break directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: magic_break directive malformed.", bochsrc_path));
       }
     if (params[1][8] == '0') {
-      BX_INFO(("Ignoring magic break points\n"));
+      BX_INFO(("Ignoring magic break points"));
       bx_dbg.magic_break_enabled = 0;
       }
     else if (params[1][8] == '1') {
-      BX_INFO(("Stopping on magic break points\n"));
+      BX_INFO(("Stopping on magic break points"));
       bx_dbg.magic_break_enabled = 1;
       }
     else {
-      BX_PANIC(("%s: magic_break directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: magic_break directive malformed.", bochsrc_path));
       }
     }
 #endif
@@ -1128,35 +1129,35 @@ parse_line_formatted(int num_params, char *params[])
     int tmp[6];
     bx_options.ne2k.valid = 0;
     if ((num_params < 4) || (num_params > 6)) {
-      BX_PANIC(("%s: ne2k directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: ne2k directive malformed.", bochsrc_path));
       }
     bx_options.ne2k.ethmod = "null";
     if (strncmp(params[1], "ioaddr=", 7)) {
-      BX_PANIC(("%s: ne2k directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: ne2k directive malformed.", bochsrc_path));
       }
     if (strncmp(params[2], "irq=", 4)) {
-      BX_PANIC(("%s: ne2k directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: ne2k directive malformed.", bochsrc_path));
       }
     if (strncmp(params[3], "mac=", 4)) {
-      BX_PANIC(("%s: ne2k directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: ne2k directive malformed.", bochsrc_path));
       }
     bx_options.ne2k.ioaddr = strtoul(&params[1][7], NULL, 16);
     bx_options.ne2k.irq = atol(&params[2][4]);
     i = sscanf(&params[3][4], "%x:%x:%x:%x:%x:%x",
              &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
     if (i != 6) {
-      BX_PANIC(("%s: ne2k mac address malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: ne2k mac address malformed.", bochsrc_path));
       }
     for (i=0;i<6;i++)
       bx_options.ne2k.macaddr[i] = tmp[i];
     if (num_params > 4) {
       if (strncmp(params[4], "ethmod=", 7)) {
-      BX_PANIC(("%s: ne2k directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: ne2k directive malformed.", bochsrc_path));
         }
       bx_options.ne2k.ethmod = strdup(&params[4][7]);
       if (num_params == 6) {
       if (strncmp(params[5], "ethdev=", 7)) {
-      BX_PANIC(("%s: ne2k directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: ne2k directive malformed.", bochsrc_path));
           }
       bx_options.ne2k.ethdev = strdup(&params[5][7]);
         }
@@ -1166,10 +1167,10 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "load32bitOSImage")) {
     if ( (num_params!=4) && (num_params!=5) ) {
-      BX_PANIC(("%s: load32bitOSImage directive: wrong # args.\n", bochsrc_path));
+      BX_PANIC(("%s: load32bitOSImage directive: wrong # args.", bochsrc_path));
       }
     if (strncmp(params[1], "os=", 3)) {
-      BX_PANIC(("%s: load32bitOSImage: directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: load32bitOSImage: directive malformed.", bochsrc_path));
       }
     if (!strcmp(&params[1][3], "nullkernel")) {
       bx_options.load32bitOSImage.whichOS = Load32bitOSNullKernel;
@@ -1178,26 +1179,26 @@ parse_line_formatted(int num_params, char *params[])
       bx_options.load32bitOSImage.whichOS = Load32bitOSLinux;
       }
     else {
-      BX_PANIC(("%s: load32bitOSImage: unsupported OS.\n", bochsrc_path));
+      BX_PANIC(("%s: load32bitOSImage: unsupported OS.", bochsrc_path));
       }
     if (strncmp(params[2], "path=", 5)) {
-      BX_PANIC(("%s: load32bitOSImage: directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: load32bitOSImage: directive malformed.", bochsrc_path));
       }
     if (strncmp(params[3], "iolog=", 6)) {
-      BX_PANIC(("%s: load32bitOSImage: directive malformed.\n", bochsrc_path));
+      BX_PANIC(("%s: load32bitOSImage: directive malformed.", bochsrc_path));
       }
     bx_options.load32bitOSImage.path = strdup(&params[2][5]);
     bx_options.load32bitOSImage.iolog = strdup(&params[3][6]);
     if (num_params == 5) {
       if (strncmp(params[4], "initrd=", 7)) {
-        BX_PANIC(("%s: load32bitOSImage: directive malformed.\n", bochsrc_path));
+        BX_PANIC(("%s: load32bitOSImage: directive malformed.", bochsrc_path));
         }
       bx_options.load32bitOSImage.initrd = strdup(&params[4][7]);
       }
     }
 
   else {
-    BX_PANIC(( "%s: directive '%s' not understood\n", bochsrc_path, params[0]));
+    BX_PANIC(( "%s: directive '%s' not understood", bochsrc_path, params[0]));
     }
 
   if (bx_options.diskd.present && bx_options.cdromd.present)
@@ -1220,7 +1221,7 @@ bx_signal_handler( int signum)
   extern unsigned long ips_count;
 
   if (signum == SIGALRM ) {
-    BX_INFO(("ips = %lu\n", ips_count));
+    BX_INFO(("ips = %lu", ips_count));
     ips_count = 0;
 #ifndef __MINGW32__
     signal(SIGALRM, bx_signal_handler);
@@ -1236,6 +1237,6 @@ bx_signal_handler( int signum)
     return;
   }
 #endif
-  BX_PANIC(("SIGNAL %u caught\n", signum));
+  BX_PANIC(("SIGNAL %u caught", signum));
 }
 

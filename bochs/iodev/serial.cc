@@ -115,11 +115,11 @@ bx_serial_c::init(bx_devices_c *d)
 #if defined (USE_TTY_HACK)
   tty_id = tty_alloc("Bx Serial Console, Your Window to the 8250");
   if (tty_id > 0)
-    BX_INFO(("TTY Allocated fd = %d\n", tty_get_fd(tty_id)));
+    BX_INFO(("TTY Allocated fd = %d", tty_get_fd(tty_id)));
   else
-    BX_INFO(("TTY allocation failed\n"));
+    BX_INFO(("TTY allocation failed"));
 #else
-  BX_INFO(("TTY not used, serial port is not connected\n"));
+  BX_INFO(("TTY not used, serial port is not connected"));
 #endif
 
   /*
@@ -238,7 +238,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
   /* SERIAL PORT 1 */
 
   if (io_len > 1)
-    BX_PANIC(("serial: io read from port %04x, bad len=%u\n",
+    BX_PANIC(("serial: io read from port %04x, bad len=%u",
 	     (unsigned) address,
              (unsigned) io_len));
 
@@ -349,13 +349,13 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 
     default:
       val = 0; // keep compiler happy
-      BX_PANIC(("unsupported serial io read from address=%0x%x!\n",
+      BX_PANIC(("unsupported serial io read from address=%0x%x!",
         (unsigned) address));
       break;
   }
 
   if (bx_dbg.serial)
-    BX_INFO(("val =  0x%x\n",
+    BX_INFO(("val =  0x%x",
 	      (unsigned) val));
 
   return(val);
@@ -384,11 +384,11 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   /* SERIAL PORT 1 */
 
   if (io_len > 1)
-    BX_PANIC(("serial: io write to address %08x len=%u\n",
+    BX_PANIC(("serial: io write to address %08x len=%u",
              (unsigned) address, (unsigned) io_len));
 
   if (bx_dbg.serial)
-    BX_INFO(("serial: write to address: 0x%x = 0x%x\n",
+    BX_INFO(("serial: write to address: 0x%x = 0x%x",
 	      (unsigned) address, (unsigned) value));
 
   switch (address) {
@@ -421,7 +421,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		 (int) (1000000.0 / (BX_SER_THIS s[0].baudrate / 8)),
 				      0); /* not continuous */
 	} else {
-	  BX_INFO(("serial: write to tx hold register when not empty\n"));
+	  BX_INFO(("serial: write to tx hold register when not empty"));
 	}
       }
       break;
@@ -498,7 +498,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 				      0); /* not continuous */
 	}
 	if (bx_dbg.serial) {
-	  BX_INFO(("serial: baud rate set - %d\n", BX_SER_THIS s[0].baudrate));
+	  BX_INFO(("serial: baud rate set - %d", BX_SER_THIS s[0].baudrate));
 	}
       }
       BX_SER_THIS s[0].line_cntl.dlab = (value & 0x80) >> 7;
@@ -533,12 +533,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x03FD: /* Line status register */
       /* XXX ignore ?  */
-      BX_PANIC(("serial: write to line status register\n"));
+      BX_PANIC(("serial: write to line status register"));
       break;
 
     case 0x03FE: /* MODEM status register */
       /* XXX ignore ?  */
-      BX_PANIC(("serial: write to MODEM status register\n"));
+      BX_PANIC(("serial: write to MODEM status register"));
       break;
 
     case 0x03FF: /* scratch register */
@@ -546,7 +546,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     default:
-      BX_PANIC(("unsupported serial io write to address=0x%x, value = 0x%x!\n",
+      BX_PANIC(("unsupported serial io write to address=0x%x, value = 0x%x!",
         (unsigned) address, (unsigned) value));
       break;
   }
@@ -643,7 +643,7 @@ bx_serial_c::rx_timer(void)
     if ((rdy = BX_SER_THIS raw->ready_receive())) {
       data = BX_SER_THIS raw->receive();
       if (data == C_BREAK) {
-	    BX_INFO(("[serial] Got BREAK\n"));
+	    BX_INFO(("[serial] Got BREAK"));
 	    BX_SER_THIS s[0].line_status.break_int = 1;
 	    rdy = 0;
       }
