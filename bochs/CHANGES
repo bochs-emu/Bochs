@@ -1,3 +1,88 @@
+
+Changes in 2.0 (December 2002):
+
+- configure script/compile/porting to other OSes
+  - added plugin architecture (Bryce, Christophe, Volker)
+  - add #if's around all files which are conditionally compiled such
+    as cdrom.cc and sb16.cc.  This makes it possible to compile every
+    source file all the time, which has the potential to simplify the
+    configure script and makefiles.  At present we only take advantage
+    of this capability in the win32 VC++ workspace.
+  - the MacOS9 port has been updated so that it works again (Christophe)
+
+- CPU
+  - speed optimizations (Kevin)
+    - FIXME
+  - add support for AMD's x86-64 instruction set.  To enable, configure
+    with --enable-x86-64.  (Peter Tattam)
+  - add MMX support. To enable, configure with --enable-mmx. (Stanislav)
+  - add SSE and SSE2 support. To enable, configure with --enable-sse=1
+    or --enable-sse=2. (Stanislav)
+
+- I/O devices
+  - biosdev
+    - FIXME
+  - cmos
+    - FIXME
+  - dma
+    - FIXME
+  - floppy
+    - FIXME
+  - harddrv
+    - FIXME
+  - ioapic
+    - FIXME
+  - iodebug
+    - FIXME
+  - keyboard
+    - FIXME
+  - ne2k
+    - FIXME
+  - parallel
+    - FIXME
+  - pci
+    - FIXME
+  - pic
+    - FIXME
+  - pit
+    - FIXME
+  - Sound Blaster 16 emulation
+    - FIXME
+  - serial
+    - FIXME
+  - unmapped
+    - FIXME
+  - vga
+    - FIXME
+
+- ROM BIOS
+  - FIXME
+
+- configuration interface
+  - renamed "control.cc" to "textconfig.cc"
+
+- display libraries
+  - "display library" is a new term in release 2.0.  In the gui directory,
+    Bochs has a number of different C++ files which you can choose from to
+    display the text and graphics on the simulated monitor.  Each of these
+    implements a display library.  Examples: x, win32, sdl, carbon.
+  - it is now possible to compile Bochs with support for many different
+    display libraries and select the one to use at runtime.  See the
+    display_library directive in .bochsrc.
+  - add new svgalib display library by Igor Popik
+  - fix bug [ 614724 ] SDL can get stuck in full screen mode
+    display libraries such as SDL which have a full screen mode can be
+    dangerous, if Bochs does not switch back to normal display mode at
+    the right time.  This is fixed for SDL and the new svga.
+
+- Bochs debugger
+  - [ 609616 ] remote GDB stub
+    add GDB Stub support from Johan Rydberg, with bug fixes by Stu Grossman
+  - add hooks for external debugger for win32.  The external debugger 
+    that connects to Bochs is distributed in 
+    build/win32/tattam-external-debugger.zip in binary form.
+- 
+
 -------------------------------------------------------------------------
 Changes in 1.4.1 (June 22, 2002):
 
