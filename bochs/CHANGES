@@ -15,15 +15,21 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
   - keyboard mapping?
   - keyboard type?
 - keyboard changes by Volker Ruppert. FIXME(vruppert): need details.
-- new SDL interface by Dave Poirier.  FIXME(eks): need compile instructions for
-  different platforms.  Possibly this will require configure.in improvements
-  that Bryce can help with.
+- experimental SDL interface by Dave Poirier.
+  SDL is a graphics library that has works on many platforms.
+  This interface is experimental, and is missing a few features of the
+  standard Bochs interfaces: 1. icons at the top of the window, and 
+  2.  extended keys (arrows, keypad) are not working.
+  FIXME: need compile instructions for various platforms.
+  Possibly this will require configure.in improvements that Bryce can help
+  with.
 - fixed bug [ #468340 ] pic:slave: OCW3 not implemented.  Now the slave PIC
   supports all the modes that the master PIC does, and nobody will see this
   message again.
 - text mode cursor is improved (Volker Ruppert)
 - improve mouse motion in RFB mode, from patch #457968
-- serial port emulation improvements by Volker Ruppert
+- serial port emulation improvements by Volker Ruppert. 
+  FIXME(vruppert): need a few more details.
 - serial port emulation improvements for FreeBSD and OpenBSD by Stu Grossman
 - fix some memory leaks (patch from Darko Tominac)
 - you can now change the cdrom at runtime.  To notify Bochs that you have

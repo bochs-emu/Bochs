@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile,v 1.5 2001-06-16 00:23:33 m2calabr Exp $
+# $Id: Makefile,v 1.6 2002-03-06 15:45:09 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -11,7 +11,7 @@
 SECTIONS=user documentation development
 
 # these files get installed in addition to the sections
-EXTRAS=README alldocs.html
+EXTRAS=README alldocs.html images include
 
 # complete list of what to install
 INSTALL_LIST=$(SECTIONS) $(EXTRAS)
@@ -27,35 +27,58 @@ REMOTE_PATH=/home/groups/b/bo/bochs/htdocs/doc/docbook
 # -x means don't try to forward X authorization, it won't work for SF
 SSH=ssh -x
 
-all: $(SECTIONS)
+# docbook defines and stuff
+DSSSL_ROOT=/usr/share/sgml/docbook/stylesheet/dsssl/modular/
+HTML_STYLESHEET=$(DSSSL_ROOT)/html/docbook.dsl
+JADE=jade
+JADE_ARGS=-t sgml -d $(HTML_STYLESHEET)   # -V nochunks
+SGML_VALIDATE=nsgmls -s
 
-# this assumes that for each section [S], there is a subdirectory
-# called [S] and the main file to render is [S]/[S].dbk.  The $@
-# expression is the target name, so when doing "make user" the $@ is
-# user.
-$(SECTIONS)::
-	# render the docbook for a section
-	cd $@; docbook2ps $@.dbk
-	cd $@; docbook2pdf $@.dbk
-	cd $@; docbook2html $@.dbk
+all: all_html
 
-# install the stuff on the remote server using ssh the bryce->bdenney
+all_html: user/book1.html documentation/book1.html development/book1.html
+
+user/book1.html: user/user.dbk
+	rm -f user/*.htm*
+	export i=user; cd $$i; $(JADE) $(JADE_ARGS) $$i.dbk
+	cp user/book1.htm user/book1.html
+
+documentation/book1.html: documentation/documentation.dbk
+	rm -f documentation/*.htm*
+	export i=documentation; cd $$i; $(JADE) $(JADE_ARGS) $$i.dbk
+	cp documentation/book1.htm documentation/book1.html
+
+development/book1.html: development/development.dbk
+	rm -f development/*.htm*
+	export i=development; cd $$i; $(JADE) $(JADE_ARGS) $$i.dbk
+	cp development/book1.htm development/book1.html
+
+validate::
+	for i in $(SECTIONS); do $(SGML_VALIDATE) $$i/$$i.dbk; done
+
+# install the stuff on the remote server using ssh.  The bryce->bdenney
 # stuff is just because Bryce's local username and sourceforge
 # username don't match.  If your usernames match then the "whoami"
 # will work ok.
-webinst: all
+webinst: #all
+	# fix <TITLE> tags in all html files
+	./fixtitles.pl `find . -name '*.htm'`
+	./fixtitles.pl `find . -name '*.html'`
 	# fix permissions locally so that tar will install things right
 	chmod 664 `find $(INSTALL_LIST) -type f -print`
 	chmod 775 `find $(INSTALL_LIST) -type d -print`
 	# copy to remote
 	@echo Installing documentation on $(REMOTE_PATH)
-	if test "`whoami`" = bryce; then sfuser=bdenney; \
-	else sfuser=`whoami`; fi; \
+	case "`whoami`" in \
+	  bryce) sfuser=bdenney;; \
+	  daemian) sfuser=vasudeva;; \
+	  *) sfuser=`whoami`;; \
+	esac; \
 	tar cf - $(INSTALL_LIST) | \
 	  $(SSH) $$sfuser@$(REMOTE_HOST) "cd $(REMOTE_PATH) && umask 002 && tar xvf -"
 
 clean:
 	#remove generated files
 	for S in $(SECTIONS); do \
-	  rm -f $$S/*.html $$S/*.ps $$S/*.pdf $$S/*.out; \
+	  rm -f $$S/*.htm* $$S/*.ps $$S/*.pdf $$S/*.out $$S/*.rtf $$S/*.tex $$S/*.fot; \
 	done
