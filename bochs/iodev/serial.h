@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.14 2003-11-09 00:14:43 vruppert Exp $
+// $Id: serial.h,v 1.15 2003-11-16 08:21:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,11 +82,6 @@ typedef struct {
   int  rx_pollstate;
   int  rx_timer_index;
   int  fifo_timer_index;
-
-#define RX_CB_SIZE  80
-  int  rx_cb_start;
-  int  rx_cb_end;
-  unsigned char rx_cbuf[RX_CB_SIZE];
 
   /*
    * Register definitions
