@@ -1,19 +1,25 @@
---- bochs-1.3-zwane/debug/dbg_main.cc	Wed Nov 28 10:38:32 2001
-+++ bochs-1.3-wli/debug/dbg_main.cc	Sun Mar 17 01:06:26 2002
-@@ -416,6 +416,7 @@
+? debug/Makefile
+? debug/.dbg_main.cc.swp
+Index: debug/dbg_main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/dbg_main.cc,v
+retrieving revision 1.38
+diff -u -r1.38 dbg_main.cc
+--- debug/dbg_main.cc	12 Mar 2002 09:16:40 -0000	1.38
++++ debug/dbg_main.cc	20 Mar 2002 02:47:18 -0000
+@@ -416,14 +416,17 @@
    // Print disassembly of the first instruction...  you wouldn't think it
    // would have to be so hard.  First initialize guard_found, since it is used
    // in the disassembly code to decide what instruction to print.
-+#if BX_SMP_PROCESSORS==1
-   BX_CPU_THIS_PTR guard_found.cs =
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-   BX_CPU_THIS_PTR guard_found.eip =
-@@ -424,6 +425,19 @@
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip;
-   BX_CPU_THIS_PTR guard_found.is_32bit_code =
-     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
-+#else
-+  for (i = 0; i < BX_SMP_PROCESSORS; ++i) {
+-  BX_CPU_THIS_PTR guard_found.cs =
+-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+-  BX_CPU_THIS_PTR guard_found.eip =
+-    BX_CPU_THIS_PTR prev_eip;
+-  BX_CPU_THIS_PTR guard_found.laddr =
+-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip;
+-  BX_CPU_THIS_PTR guard_found.is_32bit_code =
+-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
++  for (i=0; i<BX_SMP_PROCESSORS; i++) {
 +    BX_CPU(i)->guard_found.cs =
 +      BX_CPU(i)->sregs[BX_SEG_REG_CS].selector.value;
 +    BX_CPU(i)->guard_found.eip =
@@ -24,12 +30,6 @@
 +    BX_CPU(i)->guard_found.is_32bit_code =
 +      BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 +  }
-+#endif
    // finally, call the usual function to print the disassembly
    fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
    bx_dbg_disassemble_current (-1, 0);  // all cpus, don't print time
-
-_______________________________________________
-bochs-developers mailing list
-bochs-developers@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/bochs-developers
