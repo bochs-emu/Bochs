@@ -105,7 +105,7 @@ div_Xsig.o: div_Xsig.c exception.h fpu_emu.h stubs/linux/linkage.h \
   fpu_system.h ../config.h ../cpu/i387.h fpu_proto.h poly.h
 errors.o: errors.c stubs/linux/signal.h fpu_emu.h stubs/linux/linkage.h \
   fpu_system.h ../config.h ../cpu/i387.h fpu_proto.h exception.h \
-  status_w.h control_w.h reg_constant.h version.h
+  status_w.h control_w.h reg_constant.h
 fpu_arith.o: fpu_arith.c fpu_system.h ../config.h ../cpu/i387.h fpu_emu.h \
   stubs/linux/linkage.h fpu_proto.h control_w.h status_w.h
 fpu_aux.o: fpu_aux.c fpu_system.h ../config.h ../cpu/i387.h exception.h \

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.17 2004-02-11 19:40:25 sshwarts Exp $
+ |  $Id: errors.c,v 1.18 2004-03-06 13:33:11 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -27,7 +27,7 @@
 #include "status_w.h"
 #include "control_w.h"
 #include "reg_constant.h"
-#include "version.h"
+
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -41,66 +41,6 @@ void FPU_illegal(void)
 {
   math_abort(NULL, SIGILL);
 }
-
-#ifndef USE_WITH_CPU_SIM
-void FPU_printall(void)
-{
-  int i;
-  static const char *tag_desc[] = { "Valid", "Zero", "ERROR", "Empty",
-                              "DeNorm", "Inf", "NaN" };
-
-  FPU_partial_status = status_word();
-
-  printk(" SW: b=%d st=%ld es=%d sf=%d cc=%d%d%d%d ef=%d%d%d%d%d%d\n",
-	 FPU_partial_status & 0x8000 ? 1 : 0,   /* busy */
-	 (FPU_partial_status & 0x3800) >> 11,   /* stack top pointer */
-	 FPU_partial_status & 0x80 ? 1 : 0,     /* Error summary status */
-	 FPU_partial_status & 0x40 ? 1 : 0,     /* Stack flag */
-	 FPU_partial_status & SW_C3?1:0, FPU_partial_status & SW_C2?1:0, /* cc */
-	 FPU_partial_status & SW_C1?1:0, FPU_partial_status & SW_C0?1:0, /* cc */
-	 FPU_partial_status & SW_Precision?1:0, FPU_partial_status & SW_Underflow?1:0,
-	 FPU_partial_status & SW_Overflow?1:0, FPU_partial_status & SW_Zero_Div?1:0,
-	 FPU_partial_status & SW_Denorm_Op?1:0, FPU_partial_status & SW_Invalid?1:0);
-  
-printk(" CW: ic=%d rc=%ld%ld pc=%ld%ld iem=%d     ef=%d%d%d%d%d%d\n",
-	 FPU_control_word & 0x1000 ? 1 : 0,
-	 (FPU_control_word & 0x800) >> 11, (FPU_control_word & 0x400) >> 10,
-	 (FPU_control_word & 0x200) >> 9, (FPU_control_word & 0x100) >> 8,
-	 FPU_control_word & 0x80 ? 1 : 0,
-	 FPU_control_word & SW_Precision?1:0, FPU_control_word & SW_Underflow?1:0,
-	 FPU_control_word & SW_Overflow?1:0, FPU_control_word & SW_Zero_Div?1:0,
-	 FPU_control_word & SW_Denorm_Op?1:0, FPU_control_word & SW_Invalid?1:0);
-
-  for (i = 0; i < 8; i++)
-    {
-      FPU_REG *r = &st(i);
-      u_char tagi = FPU_gettagi(i);
-      switch (tagi)
-	{
-	case TAG_Empty:
-	  continue;
-	  break;
-	case TAG_Zero:
-	case TAG_Special:
-	  tagi = FPU_Special(r);
-	case TAG_Valid:
-	  printk("st(%d)  %c .%04lx %04lx %04lx %04lx e%+-6d ", i,
-		 getsign(r) ? '-' : '+',
-		 (s32)(r->sigh >> 16),
-		 (s32)(r->sigh & 0xFFFF),
-		 (s32)(r->sigl >> 16),
-		 (s32)(r->sigl & 0xFFFF),
-		 exponent(r) - EXP_BIAS + 1);
-	  break;
-	default:
-	  printk("Whoops! Error in errors.c: tag%d is %d ", i, tagi);
-	  continue;
-	  break;
-	}
-      printk("%s\n", tag_desc[(int) (unsigned) tagi]);
-    }
-}
-#endif
 
 static struct {
   int type;
