@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.28 2003-05-15 19:00:18 vruppert Exp $
+// $Id: term.cc,v 1.29 2003-05-18 11:26:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -70,6 +70,25 @@ static short curses_color[8] = {
   /* 5 */ COLOR_MAGENTA,
   /* 6 */ COLOR_YELLOW,
   /* 7 */ COLOR_WHITE
+};
+
+static chtype vga_to_term[128] = {
+  0xc7, 0xfc, 0xe9, 0xe2, 0xe4, 0xe0, 0xe5, 0xe7,
+  0xea, 0xeb, 0xe8, 0xef, 0xee, 0xec, 0xc4, 0xc5,
+  0xc9, 0xe6, 0xc6, 0xf4, 0xf6, 0xf2, 0xfb, 0xf9,
+  0xff, 0xd6, 0xdc, 0xe7, 0xa3, 0xa5, ' ',  ' ',
+  0xe1, 0xed, 0xf3, 0xfa, 0xf1, 0xd1, 0xaa, 0xba,
+  0xbf, ' ',  0xac, ' ',  ' ',  0xa1, 0xab, 0xbb,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, ' ',  ' ',  ' ',  ' ',
+  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  0xb5, ' ',
+  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',
+  ' ',  0xb1, ' ',  ' ',  ' ',  ' ',  0xf7, ' ',
+  0xb0, ' ',  ' ',  ' ',  ' ',  0xb2, ' ',  ' '
 };
 
 static void
@@ -466,60 +485,71 @@ get_color_pair(Bit8u vga_attr)
 chtype
 get_term_char(Bit8u vga_char[])
 {
-	int term_char;
+  int term_char;
 
-	if ((vga_char[1] & 0x0f) == ((vga_char[1] >> 4) & 0x0f)) {
-		return ' ';
-	}
-	switch (vga_char[0]) {
-		case 0x00: term_char = ' '; break;
-		case 0x04: term_char = ACS_DIAMOND; break;
-		case 0x18: term_char = ACS_UARROW; break;
-		case 0x19: term_char = ACS_DARROW; break;
-		case 0x1a: term_char = ACS_RARROW; break;
-		case 0x1b: term_char = ACS_LARROW; break;
-		case 0x81: term_char = 0xfc; break;
-		case 0x84: term_char = 0xe4; break;
-		case 0x94: term_char = 0xf6; break;
-		case 0x8e: term_char = 0xc4; break;
-		case 0x99: term_char = 0xd6; break;
-		case 0x9a: term_char = 0xdc; break;
-		case 0xc4:
-		case 0xcd: term_char = ACS_HLINE; break;
-		case 0xb3:
-		case 0xba: term_char = ACS_VLINE; break;
-		case 0xc9:
-		case 0xda: term_char = ACS_ULCORNER; break;
-		case 0xbb:
-		case 0xbf: term_char = ACS_URCORNER; break;
-		case 0xc0:
-		case 0xc8: term_char = ACS_LLCORNER; break;
-		case 0xbc:
-		case 0xd9: term_char = ACS_LRCORNER; break;
-		case 0xc3:
-		case 0xcc: term_char = ACS_LTEE; break;
-		case 0xb4:
-		case 0xb9: term_char = ACS_RTEE; break;
-		case 0xc2:
-		case 0xcb: term_char = ACS_TTEE; break;
-		case 0xc1:
-		case 0xca: term_char = ACS_BTEE; break;
-		case 0xc5:
-		case 0xce: term_char = ACS_PLUS; break;
-		case 0xb0:
-		case 0xb1: term_char = ACS_CKBOARD; break;
-		case 0xb2: term_char = ACS_BOARD; break;
-		case 0xdb: term_char = ACS_BLOCK; break;
-		case 0xe1: term_char = 0xdf; break;
-		default:
-		  if (vga_char[0] < 0x80) {
-		    term_char = vga_char[0];
-		  } else {
-		    BX_DEBUG(("vga char ignored: 0x%02x", vga_char[0]));
-		    term_char = ' ';
-		  }
-	}
-	return term_char;
+  if ((vga_char[1] & 0x0f) == ((vga_char[1] >> 4) & 0x0f)) {
+    return ' ';
+  }
+  switch (vga_char[0]) {
+    case 0x04: term_char = ACS_DIAMOND; break;
+    case 0x18: term_char = ACS_UARROW; break;
+    case 0x19: term_char = ACS_DARROW; break;
+    case 0x1a: term_char = ACS_RARROW; break;
+    case 0x1b: term_char = ACS_LARROW; break;
+    case 0xc4:
+    case 0xcd: term_char = ACS_HLINE; break;
+    case 0xb3:
+    case 0xba: term_char = ACS_VLINE; break;
+    case 0xc9:
+    case 0xd5:
+    case 0xd6:
+    case 0xda: term_char = ACS_ULCORNER; break;
+    case 0xb7:
+    case 0xb8:
+    case 0xbb:
+    case 0xbf: term_char = ACS_URCORNER; break;
+    case 0xc0:
+    case 0xc8:
+    case 0xd3:
+    case 0xd4: term_char = ACS_LLCORNER; break;
+    case 0xbc:
+    case 0xbd:
+    case 0xbe:
+    case 0xd9: term_char = ACS_LRCORNER; break;
+    case 0xc3:
+    case 0xc6:
+    case 0xc7:
+    case 0xcc: term_char = ACS_LTEE; break;
+    case 0xb4:
+    case 0xb5:
+    case 0xb6:
+    case 0xb9: term_char = ACS_RTEE; break;
+    case 0xc2:
+    case 0xcb:
+    case 0xd1:
+    case 0xd2: term_char = ACS_TTEE; break;
+    case 0xc1:
+    case 0xca:
+    case 0xcf:
+    case 0xd0: term_char = ACS_BTEE; break;
+    case 0xc5:
+    case 0xce:
+    case 0xd7:
+    case 0xd8: term_char = ACS_PLUS; break;
+    case 0xb0:
+    case 0xb1: term_char = ACS_CKBOARD; break;
+    case 0xb2: term_char = ACS_BOARD; break;
+    case 0xdb: term_char = ACS_BLOCK; break;
+    default:
+      if (vga_char[0] > 0x7f) {
+        term_char = vga_to_term[vga_char[0]-0x80];
+      } else if (vga_char[0] > 0x1f) {
+        term_char = vga_char[0];
+      } else {
+        term_char = ' ';
+      }
+  }
+  return term_char;
 }
 
 // ::TEXT_UPDATE()
@@ -577,7 +607,7 @@ bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 #endif
         ch = get_term_char(&new_text[0]);
         if ((new_text[1] & 0x08) > 0) ch |= A_BOLD;
-        if ((new_text[1] & 0x80) > 0) ch |= A_REVERSE;
+        if ((new_text[1] & 0x80) > 0) ch |= A_BLINK;
         mvaddch(y, x, ch);
       }
       x++;
