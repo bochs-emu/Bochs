@@ -323,20 +323,20 @@ bx_fbsd_pktmover_c::rx_timer(void)
     BX_DEBUG (("receive packet length %u", nbytes));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
-    int n = fwrite (rxbuf, nbytes, 1, class_ptr->rxlog);
+    int n = fwrite (rxbuf, nbytes, 1, this->rxlog);
     if (n != 1) BX_ERROR (("fwrite to rxlog failed", nbytes));
     // dump packet in hex into an ascii log file
-    fprintf (class_ptr->rxlog_txt, "NE2K transmitting a packet, length %u\n", nbytes);
+    fprintf (this->rxlog_txt, "NE2K transmitting a packet, length %u\n", nbytes);
     Bit8u *charrxbuf = (Bit8u *)rxbuf;
     for (n=0; n<nbytes; n++) {
       if (((n % 16) == 0) && n>0)
-	fprintf (class_ptr->rxlog_txt, "\n");
-      fprintf (class_ptr->rxlog_txt, "%02x ", charbuf[n]);
+	fprintf (this->rxlog_txt, "\n");
+      fprintf (this->rxlog_txt, "%02x ", charbuf[n]);
     }
-    fprintf (class_ptr->rxlog_txt, "\n--\n");
+    fprintf (this->rxlog_txt, "\n--\n");
     // flush log so that we see the packets as they arrive w/o buffering
-    fflush (class_ptr->rxlog);
-    fflush (class_ptr->rxlog_txt);
+    fflush (this->rxlog);
+    fflush (this->rxlog_txt);
   }
 #endif
 
