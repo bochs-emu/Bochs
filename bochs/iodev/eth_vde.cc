@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.1 2004-01-16 14:44:38 danielg4 Exp $
+// $Id: eth_vde.cc,v 1.2 2004-01-16 15:15:49 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -56,7 +56,7 @@
 #define BX_ETH_VDE_LOGGING 0
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
-int vde_alloc(char *dev,int *fdp);
+int vde_alloc(char *dev,int *fdp,struct sockaddr_un *pdataout);
 
 //
 //  Define the class. This is private to this module
@@ -74,6 +74,7 @@ private:
   void rx_timer ();
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
   int fddata;
+  struct sockaddr_un dataout;
 };
 
 
@@ -112,7 +113,7 @@ bx_vde_pktmover_c::bx_vde_pktmover_c(const char *netif,
 	  strcpy(intname,"/tmp/vde.ctl");
   else
   	strcpy(intname,netif);
-  fd=vde_alloc(intname,&fddata);
+  fd=vde_alloc(intname,&fddata,&dataout);
   if (fd < 0) {
     BX_PANIC (("open failed on %s: %s", netif, strerror (errno)));
     return;
@@ -179,7 +180,8 @@ bx_vde_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   unsigned int size;
   //size = write (fd, buf, io_len);
-  size=send(fd,buf,io_len,0);
+  //size=send(fd,buf,io_len,0);
+  size=sendto(fddata,buf,io_len,0,(struct sockaddr *) &dataout, sizeof(struct sockaddr_un));
   if (size != io_len) {
     BX_PANIC (("write on vde device: %s", strerror (errno)));
   } else {
@@ -314,19 +316,18 @@ static int send_fd(char *name, int fddata, struct sockaddr_un *datasock, int gro
 	return fdctl;
 }
 
-  int vde_alloc(char *dev, int *fdp)
+  int vde_alloc(char *dev, int *fdp, struct sockaddr_un *pdataout)
   {
       //struct ifreq ifr;
       int fd, err;
       int fddata;
-      struct sockaddr_un dataout;
 
       if((fddata = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0){ 
 	      return -1;
       }
 
 
-      if( (fd = send_fd(dev, fddata, &dataout, 0)) < 0 )
+      if( (fd = send_fd(dev, fddata, pdataout, 0)) < 0 )
          return -1;
 
       //memset(&ifr, 0, sizeof(ifr));
