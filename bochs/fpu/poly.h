@@ -75,7 +75,7 @@ asmlinkage void div_Xsig(const Xsig *x1, const Xsig *x2, Xsig *dest);
 
 /* Multiply two fixed-point 32 bit numbers, producing a 32 bit result.
    The answer is the ms word of the product. */
-extern inline u32 mul_32_32(const u32 arg1, const u32 arg2)
+static inline u32 mul_32_32(const u32 arg1, const u32 arg2)
 {
 #ifdef NO_ASSEMBLER
   return (((u64)arg1) * arg2) >> 32;
@@ -94,7 +94,7 @@ extern inline u32 mul_32_32(const u32 arg1, const u32 arg2)
 
 
 /* Add the 12 byte Xsig x2 to Xsig dest, with no checks for overflow. */
-extern inline void add_Xsig_Xsig(Xsig *dest, const Xsig *x2)
+static inline void add_Xsig_Xsig(Xsig *dest, const Xsig *x2)
 {
 #ifdef NO_ASSEMBLER
   dest->lsw += x2->lsw;
@@ -122,7 +122,7 @@ extern inline void add_Xsig_Xsig(Xsig *dest, const Xsig *x2)
 
 
 /* Add the 12 byte Xsig x2 to Xsig dest, adjust exp if overflow occurs. */
-extern inline void add_two_Xsig(Xsig *dest, const Xsig *x2, s32 *exp)
+static inline void add_two_Xsig(Xsig *dest, const Xsig *x2, s32 *exp)
 {
 #ifdef NO_ASSEMBLER
   int ovfl = 0;
@@ -182,7 +182,7 @@ extern inline void add_two_Xsig(Xsig *dest, const Xsig *x2, s32 *exp)
 
 
 /* Negate the 12 byte Xsig */
-extern inline void negate_Xsig(Xsig *x)
+static inline void negate_Xsig(Xsig *x)
 {
 #ifdef NO_ASSEMBLER
   x->lsw = ~x->lsw;
