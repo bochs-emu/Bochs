@@ -55,8 +55,6 @@ BX_HW_IODEV_OBJS = \
   devices.o \
   pic.o \
   pit.o \
-  pit82c54.o \
-  pit_wrap.o \
   unmapped.o \
   cmos.o \
   dma.o \
