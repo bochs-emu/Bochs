@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.61 2003-01-30 18:41:00 cbothamy Exp $
+// $Id: x.cc,v 1.62 2003-04-28 12:28:08 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -647,6 +647,7 @@ bx_x_gui_c::handle_events(void)
   int bufsize = MAX_MAPPED_STRING_LENGTH;
   int charcount;
   bx_bool mouse_update;
+  int y, height;
 
 
   XPointerMovedEvent *pointer_event;
@@ -665,26 +666,34 @@ bx_x_gui_c::handle_events(void)
     switch  (report.type) {
 
     case Expose:
-      /* unless this is the last contiguous expose,
-       * don't draw the window */
-      expose_event = (XExposeEvent *) &report;
+      expose_event = &report.xexpose;
+      /* Adjust y, and reduce height if it overlaps headerbar. */
+      y = expose_event->y - BX_HEADER_BAR_Y;
+      height = expose_event->height;
+      if (y < 0) {
+	height += y;
+	y = 0;
+      }
 
       DEV_vga_redraw_area(
         (unsigned) expose_event->x,
-        (unsigned) expose_event->y,
+        y,
         (unsigned) expose_event->width,
-        (unsigned) expose_event->height);
+        height);
 
+      /* Always draw headerbar, even if not touched by expose event.
+       * As a small optimization, only do it on last contigous expose.
+       */
+      if (expose_event->count == 0) {
       show_headerbar();
-
-      //if (report.xexpose.count != 0) {
-      //  break;
-      //  }
-
+      }
       break;
 
     case ConfigureNotify:
       BX_DEBUG(("ConfigureNotify Xevent"));
+      /* FIXME: It's not clear why we have to show the headerbar here.
+       * This should be forced by the following expose events.
+       */
       show_headerbar();
       break;
 
