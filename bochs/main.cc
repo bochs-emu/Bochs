@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.130 2002-09-03 05:34:32 bdenney Exp $
+// $Id: main.cc,v 1.131 2002-09-03 06:22:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,43 +68,7 @@ class state_file state_stuff("state_file.out", "options");
 
 bx_debug_t bx_dbg;
 
-bx_options_t bx_options = {
-  { NULL, NULL, NULL, NULL },   // floppya
-  { NULL, NULL, NULL, NULL },   // floppyb
-  { 0, NULL, 0, 0, 0 },                   // diskc
-  { 0, NULL, 0, 0, 0 },                   // diskd
-  {{ 0, NULL}, { 0, NULL}, { 0, NULL}, { 0, NULL}},	// com1 - com4
-  { 0, NULL, 0 },               // cdromd
-  { NULL, NULL },               // rom
-  { NULL },                     // vgarom
-  {{ NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }}, // optrom[4]
-  { NULL },              // memory
-  {{ 0, NULL }, { 0, NULL }},   // parallel port 1 + 2
-  { 0, NULL, NULL, NULL, 0, 0, 0, 0 },  // SB16
-  NULL,                                  // boot drive
-  NULL,                                  // boot signature check
-  NULL,                               // vga update interval
-  NULL,  // default keyboard serial path delay (usec)
-  NULL,  // default keyboard paste delay (usec)
-  NULL,  // default keyboard type
-  NULL,  // default floppy command delay (usec)
-  NULL,    // ips
-  NULL,    // default mouse_enabled
-  NULL,       // default private_colormap
-#if BX_WITH_AMIGAOS
-  NULL,       // full screen mode
-  NULL,       // screen mode
-#endif
-  NULL,          // default i440FXSupport
-  {NULL, NULL},  // cmos path, cmos image boolean
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL }, // ne2k
-  NULL,          // newHardDriveSupport
-  { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
-  // log options: ignore debug, report info and error, crash on panic.
-  { NULL, NULL, { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_ASK } },
-  { NULL, NULL }, // KeyboardMapping
-  NULL  // user shortcut
-  };
+bx_options_t bx_options; // initialized in bx_init_options()
 
 static void parse_line_unformatted(char *context, char *line);
 static void parse_line_formatted(char *context, int num_params, char *params[]);
@@ -333,6 +297,12 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
 void bx_init_options ()
 {
   bx_list_c *menu;
+
+  memset (&bx_options, 0, sizeof(bx_options));
+  bx_options.log.actions[0] = ACT_IGNORE;
+  bx_options.log.actions[1] = ACT_REPORT;
+  bx_options.log.actions[2] = ACT_REPORT;
+  bx_options.log.actions[3] = ACT_ASK;
 
   // floppya
   bx_options.floppya.Opath = new bx_param_filename_c (BXP_FLOPPYA_PATH,
