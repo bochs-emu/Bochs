@@ -1,6 +1,6 @@
 #!/bin/bash -x
 #########################################################################
-# $Id: make-rpm,v 1.1 2001-12-08 15:59:50 bdenney Exp $
+# $Id: make-rpm,v 1.2 2002-06-26 18:20:21 vruppert Exp $
 #########################################################################
 # build/redhat/make-rpm
 #
@@ -64,7 +64,7 @@ ${MKDIR} ${SOURCES}/bochs-${VERSION}
 test $? = 0 || exit 1
 ${TAR} cf - * .??* | (cd ${SOURCES}/bochs-${VERSION} && tar xf -)
 test $? = 0 || exit 1
-(cd ${SOURCES}; tar czf bochs-${VERSION}.tar.gz bochs-${VERSION})
+(cd ${SOURCES}; tar czf bochs-${VERSION}.tar.gz bochs-${VERSION} --exclude=CVS)
 test $? = 0 || exit 1
 ${RM} -rf ${SOURCES}/bochs-${VERSION}
 test $? = 0 || exit 1
