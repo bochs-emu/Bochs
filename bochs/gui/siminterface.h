@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.118 2004-02-06 22:28:00 danielg4 Exp $
+// $Id: siminterface.h,v 1.119 2004-02-22 18:51:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -473,6 +473,7 @@ typedef enum {
 #endif
   BXP_SEL_CONFIG_INTERFACE,
   BXP_SEL_DISPLAY_LIBRARY,
+  BXP_DISPLAYLIB_OPTIONS,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 

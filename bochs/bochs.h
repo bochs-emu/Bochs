@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.136 2004-02-06 22:27:59 danielg4 Exp $
+// $Id: bochs.h,v 1.137 2004-02-22 18:51:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -681,6 +681,7 @@ typedef struct BOCHSAPI {
   bx_gdbstub_t      gdbstub;
   bx_param_enum_c *Osel_config;
   bx_param_enum_c *Osel_displaylib;
+  bx_param_string_c *Odisplaylib_options;
   } bx_options_t;
 
 BOCHSAPI extern bx_options_t bx_options;

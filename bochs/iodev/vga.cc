@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.96 2004-02-22 13:02:59 vruppert Exp $
+// $Id: vga.cc,v 1.97 2004-02-22 18:51:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,6 +126,8 @@ bx_vga_c::init(void)
 #if BX_SUPPORT_VBE  
   Bit16u max_xres, max_yres, max_bpp;
 #endif
+  int argc;
+  char *argv[2];
 
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
@@ -240,9 +242,13 @@ bx_vga_c::init(void)
       SET_TILE_UPDATED (x, y, 0);
 
   {
-  /* ??? should redo this to pass X args */
-  char *argv[1] = { "bochs" };
-  bx_gui->init(1, &argv[0], BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
+  argc = 1;
+  argv[0] = "bochs";
+  if (strlen(bx_options.Odisplaylib_options->getptr())) {
+    argc = 2;
+    argv[1] = bx_options.Odisplaylib_options->getptr();
+  }
+  bx_gui->init(argc, argv, BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
   }
 
   BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.270 2004-02-17 21:40:05 vruppert Exp $
+// $Id: main.cc,v 1.271 2004-02-22 18:51:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1205,9 +1205,15 @@ void bx_init_options ()
     0);
   bx_options.Osel_displaylib->set_by_name (BX_DEFAULT_DISPLAY_LIBRARY);
   bx_options.Osel_displaylib->set_ask_format ("Choose which library to use for the Bochs display: [%s] ");
+  bx_options.Odisplaylib_options = new bx_param_string_c (BXP_DISPLAYLIB_OPTIONS,
+    "Display Library options",
+    "Options passed to Display Library",
+    "",
+    BX_PATHNAME_LEN);
   bx_param_c *interface_init_list[] = {
     bx_options.Osel_config,
     bx_options.Osel_displaylib,
+    bx_options.Odisplaylib_options,
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
     bx_options.Oips,
@@ -2814,7 +2820,7 @@ parse_line_unformatted(char *context, char *line)
 {
 #define MAX_PARAMS_LEN 40
   char *ptr;
-  unsigned i, string_i;
+  unsigned i, string_i = 0;
   char string[512];
   char *params[MAX_PARAMS_LEN];
   int num_params;
@@ -2838,7 +2844,11 @@ parse_line_unformatted(char *context, char *line)
   else
     ptr = strtok(line, ":");
   while ((ptr) && (!comment)) {
-    string_i = 0;
+    if (!inquotes) {
+      string_i = 0;
+    } else {
+      string[string_i++] = ',';
+    }
     for (i=0; i<strlen(ptr); i++) {
       if (ptr[i] == '"')
         inquotes = !inquotes;
@@ -2880,20 +2890,18 @@ parse_line_unformatted(char *context, char *line)
     }
     string[string_i] = '\0';
     if (string_i == 0) break;
-    if ( params[num_params] != NULL )
-    {
+    if (!inquotes) {
+      if (params[num_params] != NULL) {
         free(params[num_params]);
         params[num_params] = NULL;
-    }
-    if ( num_params < MAX_PARAMS_LEN )
-    {
-    params[num_params++] = strdup (string);
-    ptr = strtok(NULL, ",");
-  }
-    else
-    {
+      }
+      if (num_params < MAX_PARAMS_LEN) {
+        params[num_params++] = strdup (string);
+      } else {
         BX_PANIC (("too many parameters, max is %d\n", MAX_PARAMS_LEN));
+      }
     }
+    ptr = strtok(NULL, ",");
   }
   Bit32s retval = parse_line_formatted(context, num_params, &params[0]);
   for (i=0; i < MAX_PARAMS_LEN; i++)
@@ -4136,11 +4144,16 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
     }
   else if (!strcmp(params[0], "display_library")) {
-    if (num_params != 2) {
+    if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: display_library directive: wrong # args.", context));
       }
     if (!bx_options.Osel_displaylib->set_by_name (params[1]))
       PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
+    if (num_params == 3) {
+      if (!strncmp(params[2], "options=", 8)) {
+        bx_options.Odisplaylib_options->set (strdup(&params[2][8]));
+        }
+      }
     }
   else {
     PARSE_ERR(( "%s: directive '%s' not understood", context, params[0]));
