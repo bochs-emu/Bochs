@@ -306,6 +306,7 @@ private_colormap: enabled=0
 #   fullscreen: enabled=1
 #=======================================================================
 fullscreen: enabled=0
+screenmode: name="sample"
 
 #=======================================================================
 # other stuff

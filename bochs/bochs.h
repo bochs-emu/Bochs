@@ -595,7 +595,10 @@ typedef struct {
   bx_param_bool_c   *Osystem_clock_sync;
   bx_param_bool_c   *Omouse_enabled;
   bx_param_bool_c   *Oprivate_colormap;
+#if BX_USE_AMIGAOS
   bx_param_bool_c   *Ofullscreen;
+  bx_param_string_c *Oscreenmode;
+#endif
   bx_param_bool_c   *Oi440FXSupport;
   bx_cmos_options   cmos;
   bx_ne2k_options   ne2k;
