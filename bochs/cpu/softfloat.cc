@@ -1535,14 +1535,23 @@ int float32_lt_quiet(float32 a, float32 b, float_status_t &status)
 
 int float32_unordered(float32 a, float32 b, float_status_t &status)
 {
-    if (((extractFloat32Exp(a) == 0xFF) && extractFloat32Frac(a))
-         || ((extractFloat32Exp(b) == 0xFF) && extractFloat32Frac(b)))
+    float_class_t aClass = float32_class(a);
+    float_class_t bClass = float32_class(b);
+
+    if (aClass == float_NaN || bClass == float_NaN) 
     {
-        if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b)) {
+        if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b))
+        {
             float_raise(status, float_flag_invalid);
         }
         return 1;
     }
+
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
+    }
+
     return 0;
 }
 
@@ -2572,15 +2581,23 @@ int float64_lt_quiet(float64 a, float64 b, float_status_t &status)
 
 int float64_unordered(float64 a, float64 b, float_status_t &status)
 {
-    if (((extractFloat64Exp(a) == 0x7FF) && extractFloat64Frac(a))
-         || ((extractFloat64Exp(b) == 0x7FF) && extractFloat64Frac(b)))
+    float_class_t aClass = float64_class(a);
+    float_class_t bClass = float64_class(b);
+
+    if (aClass == float_NaN || bClass == float_NaN) 
     {
-        if (float64_is_signaling_nan(a) || float64_is_signaling_nan(b)) 
+        if (float64_is_signaling_nan(a) || float64_is_signaling_nan(b))
         {
             float_raise(status, float_flag_invalid);
         }
         return 1;
     }
+
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
+    }
+
     return 0;
 }
 
