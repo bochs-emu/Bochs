@@ -61,13 +61,11 @@ SLOWDOWN_OBJS = slowdown_timer.o
 BX_IODEV_OBJS_EXTERNAL =
 
 
-BX_IODEV_OBJS_NON_PLUGINABLE = \
+BX_IODEV_OBJS_NON_PLUGGABLE = \
   devices.o \
   pit.o \
   pit82c54.o pit_wrap.o \
-  scancodes.o \
   @IODEBUG_OBJS@ \
-  \
   @PCI_OBJ@ \
   @NE2K_OBJS@ \
   @SB16_OBJS@ \
@@ -75,11 +73,12 @@ BX_IODEV_OBJS_NON_PLUGINABLE = \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
 
-BX_IODEV_OBJS_PLUGINABLE = \
+BX_IODEV_OBJS_PLUGGABLE = \
   pic.o \
   serial.o \
   parallel.o \
   floppy.o \
+  scancodes.o \
   keyboard.o \
   $(VIDEO_OBJS) \
   biosdev.o \
@@ -101,7 +100,7 @@ BX_OBJS     = $(BX_IODEV_OBJS_NON_PLUGINS) $(BX_IODEV_OBJS_PLUGINS) $(BX_IODEV_O
 
 BX_INCLUDES = iodev.h
 
-all: libiodev.a plugins
+all: libiodev.a 
 
 %.o: %.cc
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
@@ -113,23 +112,39 @@ all: libiodev.a plugins
 libharddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
 	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
 
+harddrv.dll: harddrv.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o harddrv.dll harddrv.o cdrom.o ../dllexports.a
+
 # special rule for keyboard, which has 2 objects
 libkeyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) $(CXX) -module keyboard.lo scancodes.lo -o libkeyboard.la -rpath $(PLUGIN_PATH)
+
+keyboard.dll: keyboard.o scancodes.o
+	$(CXX) $(CXXFLAGS) -shared -o keyboard.dll keyboard.o scancodes.o ../dllexports.a
 
 # special rule for pit, which has 3 objects
 libpit.la: pit.lo pit82c54.lo pit_wrap.lo
 	$(LIBTOOL) $(CXX) -module pit.lo pit82c54.lo pit_wrap.lo -o libpit.la -rpath $(PLUGIN_PATH)
 
+pit.dll: pit.o pit82c54.o pit_wrap.o
+	$(CXX) $(CXXFLAGS) -shared -o pit.dll pit.o pit82c54.o pit_wrap.o ../dllexports.a
+
 # default rule for linking plugins
 lib%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+%.dll: %.o
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< ../dllexports.a -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+
 
 libiodev.a: $(BX_IODEV_OBJS)
 	$(LIBTOOL) @RMCOMMAND@ libiodev.a
 	$(LIBTOOL) $(CXX) -o $@ $(BX_IODEV_OBJS)
 
-plugins: $(BX_IODEV_SO_OBJS:%.o=lib%.la)
+%.dll: %.o
+	-$(CXX) $(CXXFLAGS) -shared -o $@ $< ../dllexports.a -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+
+
+plugins: $(BX_IODEV_SO_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
 $(BX_OBJS): $(BX_INCLUDES)
 

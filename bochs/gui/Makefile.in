@@ -57,8 +57,8 @@ GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o wxmain.o wxdialog.o
-GUI_OBJS_NON_PLUGINABLE = keymap.o gui.o siminterface.o control.o
-GUI_OBJS_PLUGINABLE = @GUI_OBJS@
+GUI_OBJS_NON_PLUGGABLE = keymap.o gui.o siminterface.o control.o
+GUI_OBJS_PLUGGABLE = @GUI_OBJS@
 GUI_OBJS_EXTERNAL =
 
 GUI_OBJS_NON_PLUGINS=@GUI_NON_PLUGINS_OBJ@
@@ -76,17 +76,20 @@ LOCAL_CXXFLAGS =
 
 BX_GUI_OBJS = $(GUI_OBJS)
 
+all: libgui.a 
+
+libgui.a: $(BX_GUI_OBJS)
+	@RMCOMMAND@ libgui.a
+	$(LIBTOOL) $(CXX) -o $@ $(BX_GUI_OBJS)
+
 %.o: %.cc
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 %.lo: %.cc
 	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-all: libgui.a plugins
-
-libgui.a: $(BX_GUI_OBJS)
-	@RMCOMMAND@ libgui.a
-	$(LIBTOOL) $(CXX) -o $@ $(BX_GUI_OBJS)
+%.dll: %.o
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< ../dllexports.a -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
 beos.lo: beos.@CPP_SUFFIX@
 	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $(srcdir)/beos.@CPP_SUFFIX@
@@ -104,7 +107,7 @@ lib%.la: %.lo
 libwx.la: $(GUI_OBJS_WX:.o=.lo)
 	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) -o $@ `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
 
-plugins: $(GUI_SO_OBJS:%.o=lib%.la)
+plugins: $(GUI_SO_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
 clean:
 	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o
