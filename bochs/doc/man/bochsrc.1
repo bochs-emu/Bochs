@@ -313,6 +313,15 @@ Example:
   keyboard_serial_delay: 200
 
 .TP
+.I "keyboard_type:"
+Type of emulated keyboard sent back  to the OS
+to a "keyboard identify"  command.  It must be 
+one of "xt", "at" or "mf". 
+
+Example:
+  keyboard_type: mf
+
+.TP
 .I "floppy_command_delay:"
 Time in microseconds to wait before completing
 some  floppy  commands  such  as read,  write,

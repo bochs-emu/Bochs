@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.38 2001-12-08 14:02:57 bdenney Exp $
+// $Id: keyboard.cc,v 1.39 2001-12-12 10:38:39 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.38 2001-12-08 14:02:57 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.39 2001-12-12 10:38:39 cbothamy Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -97,7 +97,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.38 2001-12-08 14:02:57 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.39 2001-12-12 10:38:39 cbothamy Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -923,6 +923,7 @@ bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
   void
 bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 {
+
   BX_DEBUG(("controller passed byte %02xh to keyboard", value));
 
   if (BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic) {
@@ -976,9 +977,15 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 
     case 0xf2:  // identify keyboard
       BX_INFO(("identify keyboard command received"));
-      kbd_enQ(0xFA); // AT sends ACK, MFII sends ACK+ABh+41h
-      kbd_enQ(0xAB);
-      kbd_enQ(0x41);
+
+      // XT sends nothing, AT sends ACK, MFII sends ACK+ABh+41h
+      if (bx_options.Okeyboard_type->get() != BX_KBD_XT_TYPE) {
+        kbd_enQ(0xFA); 
+        if (bx_options.Okeyboard_type->get() == BX_KBD_MF_TYPE) {
+          kbd_enQ(0xAB);
+          kbd_enQ(0x41);
+          }
+        }
       return;
       break;
 
