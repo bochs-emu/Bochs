@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.7 2002-10-20 17:22:57 bdenney Exp $
+// $Id: gui.h,v 1.31.4.8 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -313,16 +313,17 @@ protected:
 // each gui module, the macro is easier to maintain than pasting the same code
 // in each one.
 //
-// Each gui should declare an object called "theGui" which is derived
+// Each gui should declare a class pointer called "theGui" which is derived
 // from bx_gui_c, before calling this macro.  For example, the SDL port
 // says:
-//   static bx_sdl_gui_c theGui;
+//   static bx_sdl_gui_c *theGui;
 
 #define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                           \
   int lib##gui_name##_LTX_plugin_init(plugin_t *plugin,               \
           plugintype_t type, int argc, char *argv[]) {                \
-    genlog->info("installing %s module as the Bochs GUI", #gui_name);  \
-    bx_gui = &theGui;                                                 \
+    genlog->info("installing %s module as the Bochs GUI", #gui_name); \
+    theGui = new bx_##gui_name##_gui_c ();                            \
+    bx_gui = theGui;                                                  \
     return(0); /* Success */                                          \
   }                                                                   \
   void lib##gui_name##_LTX_plugin_fini(void) { }

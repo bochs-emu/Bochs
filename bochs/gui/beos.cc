@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.17.4.5 2002-10-20 17:22:57 bdenney Exp $
+// $Id: beos.cc,v 1.17.4.6 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_beos_gui_c theGui;
+static bx_beos_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(beos)
 
 #define PAD_NEAREST(n, quantum) (( ((n) + ((quantum) - 1)) / (n) ) * (n))
@@ -502,7 +502,7 @@ BochsWindow::FrameResized(float width, float height)
 {
   dimension_x = unsigned(width);
   dimension_y = unsigned(height) + bx_headerbar_y;
-  theGui.show_headerbar();
+  theGui->show_headerbar();
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35.2.7 2002-10-20 17:22:58 bdenney Exp $
+// $Id: wx.cc,v 1.35.2.8 2002-10-21 20:32:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -63,13 +63,13 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_wx_gui_c theGui;
+static bx_wx_gui_c *theGui = NULL;
 
 void MyPanel::OnPluginInit () {
-  bx_gui = &theGui;
+  bx_gui = theGui;
 }
 
-#define LOG_THIS theGui.
+#define LOG_THIS theGui->
 
 //////////////////////////////////////////////////////////////
 // data for wx gui

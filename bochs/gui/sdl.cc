@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.23.2.8 2002-10-20 17:22:58 bdenney Exp $
+// $Id: sdl.cc,v 1.23.2.9 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,10 +43,10 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_sdl_gui_c theGui;
+static bx_sdl_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(sdl)
 
-#define LOG_THIS theGui.
+#define LOG_THIS theGui->
 
 #define _SDL_DEBUG_ME_
 

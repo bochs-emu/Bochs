@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.8.4.5 2002-10-20 17:22:57 bdenney Exp $
+// $Id: amigaos.cc,v 1.8.4.6 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -37,10 +37,10 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_amigaos_gui_c theGui;
+static bx_amigaos_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(amigaos)
 
-#define LOG_THIS theGui.
+#define LOG_THIS theGui->
 
 static void hide_pointer();
 static void show_pointer();

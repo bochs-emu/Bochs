@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.44.2.5 2002-10-20 17:22:58 bdenney Exp $
+// $Id: win32.cc,v 1.44.2.6 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,10 +43,10 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_win32_gui_c theGui;
+static bx_win32_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(win32)
 
-#define LOG_THIS theGui.
+#define LOG_THIS theGui->
 
 
 #ifdef __MINGW32__

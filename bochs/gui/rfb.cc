@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.17.4.6 2002-10-20 17:22:58 bdenney Exp $
+// $Id: rfb.cc,v 1.17.4.7 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -33,10 +33,10 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_rfb_gui_c theGui;
+static bx_rfb_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 
-#define LOG_THIS theGui.
+#define LOG_THIS theGui->
 
 #ifdef WIN32
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.16.4.3 2002-10-20 17:22:58 bdenney Exp $
+// $Id: nogui.cc,v 1.16.4.4 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,10 +37,10 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_nogui_gui_c theGui;
+static bx_nogui_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 
-#define LOG_THIS theGui.
+#define LOG_THIS theGui->
 
 // This file defines stubs for the GUI interface, which is a
 // place to start if you want to port bochs to a platform, for

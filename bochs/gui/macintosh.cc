@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.13.4.5 2002-10-20 17:22:57 bdenney Exp $
+// $Id: macintosh.cc,v 1.13.4.6 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_mac_gui_c theGui;
+static bx_mac_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(macintosh)
 
 // GLOBALS
@@ -442,7 +442,7 @@ BX_CPP_INLINE void HandleToolClick(Point where)
 		if (PtInRect(where, &bounds))
 			bx_tool_pixmap[i].f();
 	}
-	theGui.show_headerbar();
+	theGui->show_headerbar();
 }
 
 BX_CPP_INLINE void ResetPointer(void)
@@ -649,7 +649,7 @@ void UpdateWindow(WindowPtr window)
 	}
 	else if (window == toolwin)
 	{
-		theGui.show_headerbar();
+		theGui->show_headerbar();
 	}
 	else
 	{
@@ -1226,7 +1226,7 @@ void ShowTools()
 	BringToFront(toolwin);
 	SelectWindow(toolwin);
 	HiliteWindow(win, true);
-//	theGui.show_headerbar();
+//	theGui->show_headerbar();
 	CheckItem(GetMenuHandle(mBochs), iTool, true);
 	HiliteWindow(win, true);
 }

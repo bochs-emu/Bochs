@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.11.2.5 2002-10-20 17:22:57 bdenney Exp $
+// $Id: carbon.cc,v 1.11.2.6 2002-10-21 20:32:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -173,10 +173,10 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-static bx_carbon_gui_c theGui;
+static bx_carbon_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(carbon)
 
-#define LOG_THIS theGui.
+#define LOG_THIS theGui->
 
 // Carbon Event Handlers
 
@@ -198,7 +198,7 @@ pascal OSStatus CEvtHandleWindowToolUpdate (EventHandlerCallRef nextHandler,
     EventRef theEvent,
     void* userData)
 {
-	theGui.show_headerbar();
+	theGui->show_headerbar();
 
 	return noErr; // Report success
 }
@@ -800,7 +800,7 @@ void HandleToolClick(Point where)
 		if (PtInRect(where, &bounds))
 			bx_tool_pixmap[i].f();
 	}
-	theGui.show_headerbar();
+	theGui->show_headerbar();
 }
 
 BX_CPP_INLINE void ResetPointer(void)
@@ -1440,7 +1440,7 @@ void ShowTools()
 	}
 #endif
 	ShowWindow(toolwin);
-//	theGui.show_headerbar();
+//	theGui->show_headerbar();
 	CheckMenuItem(GetMenuHandle(mBochs), iTool, true);
 	HiliteWindow(win, true);
 }
