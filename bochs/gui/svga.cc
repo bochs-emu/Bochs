@@ -36,6 +36,7 @@ class bx_svga_gui_c : public bx_gui_c {
 public:
   bx_svga_gui_c (void);
   DECLARE_GUI_VIRTUAL_METHODS()
+  virtual void set_display_mode (disp_mode_t newmode);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -52,6 +53,8 @@ static unsigned tilewidth, tileheight;
 static unsigned char vgafont[256 * 16];
 static int clut8 = 0;
 GraphicsContext *screen = NULL;
+static int save_vga_mode;
+static int save_vga_pal[256 * 3];
 
 void keyboard_handler(int scancode, int press);
 void mouse_handler(int button, int dx, int dy, int dz, 
@@ -115,6 +118,10 @@ void bx_svga_gui_c::specific_init(
     vga_ext_set(VGA_EXT_SET, VGA_CLUT8);
     clut8 = 1;
   }
+  // Save settings to prepare for mode transition in set_display_mode.
+  // If DISP_MODE_SIM is called first, these values will be used.
+  save_vga_mode = vga_getcurrentmode();
+  vga_getpalvec(0, 256, save_vga_pal);
 }
 
 void bx_svga_gui_c::text_update(
@@ -323,22 +330,9 @@ void keyboard_handler(int scancode, int press)
 	
 	DEV_kbd_gen_scancode(bx_key | key_state);
     } else {
-	int mode;
-	int pal[256 * 3];
-	
 	BX_INFO(("F12 pressed"));
-	// remember old values and switch to text mode
-	mode = vga_getcurrentmode();
-	vga_getpalvec(0, 256, pal);
-        keyboard_close();
-        vga_setmode(TEXT);
 	// show runtime options menu, which uses stdin/stdout	
 	SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
-	// restore to previous state
-	keyboard_init();
-	keyboard_seteventhandler((__keyboard_handler) keyboard_handler);
-	vga_setmode(mode);
-	vga_setpalvec(0, 256, pal);
     }
 }
 
@@ -401,7 +395,7 @@ void bx_svga_gui_c::dimension_update(
     unsigned y,
     unsigned fheight)
 {
-  int mode;
+  int newmode;
     
   // TODO: remove this stupid check whenever the vga driver is fixed
   if( y == 208 ) y = 200;
@@ -415,26 +409,27 @@ void bx_svga_gui_c::dimension_update(
   if( (x == res_x) && (y == res_y )) return;
 
   if (x == 640 && y == 480) { 
-    mode = G640x480x256;
+    newmode = G640x480x256;
   } else if (x == 640 && y == 400) {
-    mode = G640x400x256;
+    newmode = G640x400x256;
   } else if (x == 320 && y == 200) {
-    mode = G320x200x256;
+    newmode = G320x200x256;
   }
   
-  if (!vga_hasmode(mode)) {
-    mode = G640x480x256; // trying "default" mode...
+  if (!vga_hasmode(newmode)) {
+    newmode = G640x480x256; // trying "default" mode...
   }
   
-  if (vga_setmode(mode) != 0)
+  if (vga_setmode(newmode) != 0)
   {
       LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
       BX_PANIC (("Unable to set requested videomode: %ix%i", x, y));
   }
   
-  gl_setcontextvga(mode);
+  gl_setcontextvga(newmode);
   gl_getcontext(screen);
-  gl_setcontextvgavirtual(mode);
+  gl_setcontextvgavirtual(newmode);
+  save_vga_mode = newmode;
 
   res_x = x;
   res_y = y;
@@ -485,6 +480,32 @@ void bx_svga_gui_c::exit(void)
     vga_setmode(TEXT);
     keyboard_close();
     mouse_close();
+}
+
+void 
+bx_svga_gui_c::set_display_mode (disp_mode_t newmode)
+{
+  // if no mode change, do nothing.
+  if (disp_mode == newmode) return;
+  // remember the display mode for next time
+  disp_mode = newmode;
+  switch (newmode) {
+    case DISP_MODE_CONFIG:
+      BX_DEBUG (("switch to configuration mode (back to console)"));
+      // remember old values and switch to text mode
+      save_vga_mode = vga_getcurrentmode();
+      vga_getpalvec(0, 256, save_vga_pal);
+      keyboard_close();
+      vga_setmode(TEXT);
+      break;
+    case DISP_MODE_SIM:
+      BX_DEBUG (("switch to simulation mode (fullscreen)"));
+      keyboard_init();
+      keyboard_seteventhandler((__keyboard_handler) keyboard_handler);
+      vga_setmode(save_vga_mode);
+      vga_setpalvec(0, 256, save_vga_pal);
+      break;
+  }
 }
 
 #endif /* if BX_WITH_SVGA */
