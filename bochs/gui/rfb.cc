@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.27 2004-01-18 19:51:36 vruppert Exp $
+// $Id: rfb.cc,v 1.28 2004-03-02 16:30:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -64,6 +64,9 @@ typedef unsigned short CARD16;
 typedef short INT16;
 typedef unsigned char  CARD8;
 typedef int SOCKET;
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
 
 #endif
 
@@ -163,14 +166,6 @@ static const int rfbEndianTest = 1;
 #define Swap32IfLE(l) (*(const char *)&rfbEndianTest ? Swap32(l) : (l))
 #define PF_EQ(x,y) ((x.bitsPerPixel == y.bitsPerPixel) && (x.depth == y.depth) && (x.trueColour == y.trueColour) &&	((x.bigEndian == y.bigEndian) || (x.bitsPerPixel == 8)) && (!x.trueColour || ((x.redMax == y.redMax) &&	(x.greenMax == y.greenMax) && (x.blueMax == y.blueMax) && (x.redShift == y.redShift) && (x.greenShift == y.greenShift) && (x.blueShift == y.blueShift))))
 
-// This file defines stubs for the GUI interface, which is a
-// place to start if you want to port bochs to a platform, for
-// which there is no support for your native GUI, or if you want to compile
-// bochs without any native GUI support (no output window or
-// keyboard input will be possible).
-// Look in 'x.cc', 'beos.cc', and 'win32.cc' for specific
-// implementations of this interface.  -Kevin
-
 
 // ::SPECIFIC_INIT()
 //
@@ -191,6 +186,7 @@ static const int rfbEndianTest = 1;
 void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight, unsigned headerbar_y)
 {
   unsigned char fc, vc;
+  int i, timeout = 30;
 
   put("RFB");
   UNUSED(bochs_icon_bits);
@@ -206,7 +202,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   rfbTileX      = tilewidth;
   rfbTileY      = tileheight;
 
-  for(int i = 0; i < 256; i++) {
+  for(i = 0; i < 256; i++) {
     for(int j = 0; j < 16; j++) {
       vc = bx_vgafont[i].data[j];
       fc = 0;
@@ -239,15 +235,26 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   if (bx_options.Oprivate_colormap->get ()) {
     BX_ERROR(( "private_colormap option ignored." ));
   }
-  int counter = 30;
-  while ((!client_connected) && (counter--)) {
+
+  // parse rfb specific options
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!strncmp(argv[i], "timeout=", 8)) {
+        timeout = atoi(&argv[i][8]);
+      } else {
+        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
+      }
+    }
+  }
+
+  while ((!client_connected) && (timeout--)) {
 #ifdef WIN32
     Sleep(1000);
 #else
     sleep(1);
 #endif
   }
-  if (counter < 0) BX_PANIC(("timeout! no client present"));
+  if (timeout < 0) BX_PANIC(("timeout! no client present"));
 }
 
 bool InitWinsock()
@@ -316,9 +323,9 @@ void ServerThreadInit(void *indata)
 	sai_size = sizeof(sai);
 	while(keep_alive) {
 		sClient = accept(sServer, (struct sockaddr *)&sai, (socklen_t*)&sai_size);
-		if(sClient != -1) {
+		if(sClient != INVALID_SOCKET) {
 			HandleRfbClient(sClient);
-			sGlobal = -1;
+			sGlobal = INVALID_SOCKET;
 			close(sClient);
 		} else {
 			close(sClient);
@@ -1009,7 +1016,7 @@ void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, b
 		y++;
 	}
 	if(update_client) {
-		if(sGlobal == -1) return;
+		if(sGlobal == INVALID_SOCKET) return;
 		rfbFramebufferUpdateMsg fum;
 		rfbFramebufferUpdateRectHeader furh;
 		fum.type = rfbFramebufferUpdate;
@@ -1033,7 +1040,7 @@ void SendUpdate(int x, int y, int width, int height)
 	if(x < 0 || y < 0 || (x + width) > rfbDimensionX || (y + height) > rfbDimensionY) {
 		fprintf(stderr, "# RFB: Dimensions out of bounds.  x=%i y=%i w=%i h=%i\n", x, y, width, height);
 	}
-	if(sGlobal != -1) {
+	if(sGlobal != INVALID_SOCKET) {
 		rfbFramebufferUpdateMsg fum;
 		rfbFramebufferUpdateRectHeader furh;
 
