@@ -40,6 +40,16 @@
 // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
 ///////////////////////////////////////////////////////////////////
 
+#define USE_WX 1
+
+#if USE_WX
+// wxWindows will provide main.
+#define BX_MAIN bx_main
+#else
+// provide the real main
+#define BX_MAIN main
+#endif
+
 #define BX_USE_CONTROL_PANEL 1
 
 // I have tested the following combinations:

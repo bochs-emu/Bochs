@@ -698,7 +698,7 @@ void bx_print_header ()
 }
 
 int
-main(int argc, char *argv[])
+BX_MAIN(int argc, char *argv[])
 {
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
