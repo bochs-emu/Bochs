@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.19 2004-08-14 19:34:02 sshwarts Exp $
+// $Id: bit.cc,v 1.20 2004-08-15 20:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1290,13 +1290,8 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     }
 
     temp_CF = (op1_64 >> index) & 0x01;
-
-    // old code not as efficient???
-
-    op1_64 &= ~(((Bit64u) 1) << index);  /* clear out bit */
-    op1_64 |= (((Bit64u) !temp_CF) << index); /* set to complement */
-
-    //op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit  wrong??? */
+    op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
+    set_CF(temp_CF);
 
     /* now write diff back to destination */
     if (i->modC0()) {
@@ -1305,7 +1300,6 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     else {
       Write_RMW_virtual_qword(op1_64);
       }
-    set_CF(temp_CF);
   }
   else
 #endif  // #if BX_SUPPORT_X86_64
@@ -1329,8 +1323,8 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     }
 
     temp_CF = (op1_32 >> index_32) & 0x01;
-    op1_32 &= ~(((Bit32u) 1) << index_32);  /* clear out bit */
-    op1_32 |= (((Bit32u) !temp_CF) << index_32); /* set to complement */
+    op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
+    set_CF(temp_CF);
 
     /* now write diff back to destination */
     if (i->modC0()) {
@@ -1339,7 +1333,6 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     else {
       Write_RMW_virtual_dword(op1_32);
       }
-    set_CF(temp_CF);
     }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, op2_16, index_16, temp_CF;
@@ -1360,8 +1353,8 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     }
 
     temp_CF = (op1_16 >> index_16) & 0x01;
-    op1_16 &= ~(((Bit16u) 1) << index_16);  /* clear out bit */
-    op1_16 |= (((Bit16u) !temp_CF) << index_16); /* set to complement */
+    op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
+    set_CF(temp_CF);
 
     /* now write diff back to destination */
     if (i->modC0()) {
@@ -1572,10 +1565,8 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       }
 
     temp_CF = (op1_64 >> op2_8) & 0x01;
-
-    op1_64 &= ~(((Bit64u) 1) << op2_8);  /* clear out bit */
-    op1_64 |= (((Bit64u) !temp_CF) << op2_8); /* set to complement */
-    //op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
+    op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
+    set_CF(temp_CF);
 
     /* now write diff back to destination */
     if (i->modC0()) {
@@ -1584,7 +1575,6 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_qword(op1_64);
       }
-    set_CF(temp_CF);
   }
   else
 #endif  // #if BX_SUPPORT_X86_64
@@ -1606,9 +1596,8 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       }
 
     temp_CF = (op1_32 >> op2_8) & 0x01;
-
-    op1_32 &= ~(((Bit32u) 1) << op2_8);  /* clear out bit */
-    op1_32 |= (((Bit32u) !temp_CF) << op2_8); /* set to complement */
+    op1_32 ^= (((Bit32u) 1) << op2_8);  /* toggle bit */
+    set_CF(temp_CF);
 
     /* now write diff back to destination */
     if (i->modC0()) {
@@ -1617,7 +1606,6 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_dword(op1_32);
       }
-    set_CF(temp_CF);
   }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, temp_CF;
@@ -1636,8 +1624,8 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       }
 
     temp_CF = (op1_16 >> op2_8) & 0x01;
-    op1_16 &= ~(((Bit16u) 1) << op2_8);  /* clear out bit */
-    op1_16 |= (((Bit16u) !temp_CF) << op2_8); /* set to complement */
+    op1_16 ^= (((Bit16u) 1) << op2_8);  /* toggle bit */
+    set_CF(temp_CF);
 
     /* now write diff back to destination */
     if (i->modC0()) {
@@ -1646,8 +1634,6 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_word(op1_16);
       }
-
-    set_CF(temp_CF);
   }
 #endif
 }

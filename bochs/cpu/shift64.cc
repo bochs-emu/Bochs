@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.12 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: shift64.cc,v 1.13 2004-08-15 20:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -424,16 +424,7 @@ BX_CPU_C::SAR_Eq(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    /* set eflags:
-     * SAR count affects the following flags: S,Z,P,C
-     */
-
-    set_CF((op1_64 >> (count - 1)) & 0x01);
-    set_ZF(result_64 == 0);
-    set_SF(result_64 >> 63);
-    if (count == 1)
-      set_OF(0);
-    set_PF_base(result_64);
+    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_SAR64);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */
