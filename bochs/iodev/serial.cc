@@ -616,7 +616,7 @@ bx_serial_c::rx_timer(void)
 #endif
 #endif
   int bdrate = BX_SER_THIS s[0].baudrate / 8;
-  unsigned char chbuf;
+  unsigned char chbuf = 0;
 
   tval.tv_sec  = 0;
   tval.tv_usec = 0;
