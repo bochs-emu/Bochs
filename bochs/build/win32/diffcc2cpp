@@ -1,0 +1,6 @@
+#!/bin/sh
+
+list=`find . -name '*.cpp' | sed 's/\.cpp$//'`
+for i in $list; do 
+  diff -u ${i}.cc ${i}.cpp
+done
