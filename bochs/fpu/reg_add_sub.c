@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_add_sub.c                                                            |
- |  $Id: reg_add_sub.c,v 1.5 2003-05-15 16:04:26 sshwarts Exp $
+ |  $Id: reg_add_sub.c,v 1.6 2003-05-15 16:11:29 sshwarts Exp $
  |                                                                           |
  | Functions to add or subtract two registers and put the result in a third. |
  |                                                                           |

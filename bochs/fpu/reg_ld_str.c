@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.10 2003-05-15 16:04:27 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.11 2003-05-15 16:11:29 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |

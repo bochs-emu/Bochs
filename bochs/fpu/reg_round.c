@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_round.c                                                              |
- |  $Id: reg_round.c,v 1.4 2003-05-15 16:04:27 sshwarts Exp $
+ |  $Id: reg_round.c,v 1.5 2003-05-15 16:11:29 sshwarts Exp $
  |                                                                           |
  | Rounding/truncation/etc for FPU basic arithmetic functions.               |
  |                                                                           |

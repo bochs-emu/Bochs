@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_sub.c                                                              |
- |  $Id: reg_u_sub.c,v 1.4 2003-05-15 16:04:27 sshwarts Exp $
+ |  $Id: reg_u_sub.c,v 1.5 2003-05-15 16:11:29 sshwarts Exp $
  |                                                                           |
  | Core floating point subtraction routine.                                  |
  |                                                                           |
