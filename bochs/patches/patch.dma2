@@ -1,12 +1,12 @@
 ----------------------------------------------------------------------
 Patch name: patch.dma2
 Author: Volker Ruppert <Volker.Ruppert@t-online.de>
-Date: Sun Dec 16 18:11:00 2001
+Date: Mon Dec 17 19:03:00 2001
 
 Detailed description:
-  This patch implements the DMA-2 registers. The 16-bit DMA read/write
-  functions are still not available. The DMA channels are still "hardwired".
-  The floppy uses channel #2, SB16 usually uses channel #1 in 8-bit mode.
+  This patch implements the DMA-2 registers and the 16-bit DMA read/write
+  functions (untested). The DMA channels are still "hardwired". The floppy
+  uses channel #2, SB16 usually uses channel #1 in 8-bit mode.
   Bochs needs functions like "register_dma" and "unregister_dma" to make
   the usage of DMA easier.
 
@@ -18,14 +18,63 @@ Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
+diff -urN ../bochs/iodev/devices.cc ./iodev/devices.cc
+--- ../bochs/iodev/devices.cc	Wed Oct  3 15:10:38 2001
++++ ./iodev/devices.cc	Mon Dec 17 11:32:23 2001
+@@ -338,7 +338,6 @@
+   void
+ bx_devices_c::dma_read8(unsigned channel, Bit8u *data_byte)
+ {
+-  //  UNUSED( channel );
+   if (channel == 2) 
+     floppy->dma_read(data_byte);
+ #if BX_SUPPORT_SB16
+@@ -350,12 +349,35 @@
+   void
+ bx_devices_c::dma_write8(unsigned channel, Bit8u *data_byte)
+ {
+-  //  UNUSED( channel );
+   if (channel == 2)
+     floppy->dma_write(data_byte);
+ #if BX_SUPPORT_SB16
+   else if (channel == (unsigned) sb16->currentdma8)
+     sb16->dma_write8(data_byte);
++#endif
++}
++
++  void
++bx_devices_c::dma_read16(unsigned channel, Bit16u *data_word)
++{
++#if BX_SUPPORT_SB16
++  if (channel == (unsigned) sb16->currentdma16)
++    sb16->dma_read16(data_word);
++#else
++  UNUSED(channel);
++  UNUSED(data_word);
++#endif
++}
++
++  void
++bx_devices_c::dma_write16(unsigned channel, Bit16u *data_word)
++{
++#if BX_SUPPORT_SB16
++  if (channel == (unsigned) sb16->currentdma16)
++    sb16->dma_write16(data_word);
++#else
++  UNUSED(channel);
++  UNUSED(data_word);
+ #endif
+ }
+ 
+diff -urN ../bochs/iodev/dma.cc ./iodev/dma.cc
 --- ../bochs/iodev/dma.cc	Wed Oct  3 15:10:38 2001
-+++ iodev/dma.cc	Sun Dec 16 11:06:07 2001
++++ ./iodev/dma.cc	Mon Dec 17 18:00:32 2001
 @@ -59,7 +59,7 @@
  bx_dma_c::init(bx_devices_c *d)
  {
    unsigned c;
--	BX_DEBUG(("Init $Id: patch.dma2,v 1.1 2001-12-16 17:19:07 vruppert Exp $"));
-+  BX_DEBUG(("Init $Id: patch.dma2,v 1.1 2001-12-16 17:19:07 vruppert Exp $"));
+-	BX_DEBUG(("Init $Id: patch.dma2,v 1.2 2001-12-17 18:08:02 vruppert Exp $"));
++  BX_DEBUG(("Init $Id: patch.dma2,v 1.2 2001-12-17 18:08:02 vruppert Exp $"));
  
    BX_DMA_THIS devices = d;
  
@@ -547,17 +596,20 @@ Instructions:
          (unsigned) address, (unsigned) value));
      }
  }
-@@ -493,22 +511,25 @@
+@@ -493,22 +511,26 @@
  bx_dma_c::DRQ(unsigned channel, Boolean val)
  {
    Bit32u dma_base, dma_roof;
 +  Boolean ma_sl;
  
  #if BX_SUPPORT_SB16
-   if ( (channel != 2) && (channel != (unsigned) BX_SB16_DMAL) )
+-  if ( (channel != 2) && (channel != (unsigned) BX_SB16_DMAL) )
 -    BX_PANIC(("bx_dma_c::DRQ(): channel %d != 2 or %d (SB16) (",
-+    BX_PANIC(("DRQ(): channel %d != 2 or %d (SB16) (",
- 	     channel, BX_SB16_DMAL));
+-	     channel, BX_SB16_DMAL));
++  if ( (channel != 2) && (channel != (unsigned) BX_SB16_DMAL) &&
++       (channel != (unsigned) BX_SB16_DMAH) )
++    BX_PANIC(("DRQ(): channel %d != 2 or %d (SB16) or %d (SB16)",
++	     channel, BX_SB16_DMAL, BX_SB16_DMAH));
  #else
    if ( channel != 2 )
 -    BX_PANIC(("bx_dma_c::DRQ(): channel %d != 2",
@@ -576,7 +628,7 @@ Instructions:
      return;
      }
  
-@@ -527,27 +548,27 @@
+@@ -527,27 +549,27 @@
    BX_INFO((".page_reg: %02x", (unsigned) BX_DMA_THIS s.chan[channel].page_reg));
  #endif
  
@@ -616,7 +668,7 @@ Instructions:
      BX_PANIC(("request outside 64k boundary"));
    }
  
-@@ -563,45 +584,57 @@
+@@ -563,45 +585,56 @@
    unsigned channel;
    Bit32u phy_addr;
    Boolean count_expired = 0;
@@ -633,6 +685,7 @@ Instructions:
        }
      }
    if (channel >= 4) {
+-	// don't panic, just wait till they're unmasked
 +    for (channel=0; channel<4; channel++) {
 +      if ( (BX_DMA_THIS s[1].status_reg & (1 << (channel+4))) &&
 +           (BX_DMA_THIS s[1].mask[channel]==0) ) {
@@ -642,7 +695,7 @@ Instructions:
 +      }
 +    }
 +  if (channel >= 4) {
- 	// don't panic, just wait till they're unmasked
++    // don't panic, just wait till they're unmasked
      //    BX_PANIC(("hlda: no unmasked requests"));
      return;
      }
@@ -651,8 +704,7 @@ Instructions:
 -  phy_addr = (BX_DMA_THIS s.chan[channel].page_reg << 16) |
 -             BX_DMA_THIS s.chan[channel].current_address;
 +  phy_addr = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
-+             BX_DMA_THIS s[ma_sl].chan[channel].current_address;
-+  if (ma_sl) phy_addr <<= 1;
++             (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
  
 -  bx_pc_system.set_DACK(channel, 1);
 +  bx_pc_system.set_DACK(channel + (ma_sl << 2), 1);
@@ -701,7 +753,7 @@ Instructions:
 +      pc_sys->dma_write8(phy_addr, channel);
 +      }
 +    else {
-+      BX_PANIC(("dma_write16 not implemented"));
++      pc_sys->dma_write16(phy_addr, channel+4);
 +      }
      }
 -  else if (BX_DMA_THIS s.chan[channel].mode.transfer_type == 2) { // read
@@ -712,7 +764,7 @@ Instructions:
 +      pc_sys->dma_read8(phy_addr, channel);
 +      }
 +    else {
-+      BX_PANIC(("dma_read16 not implemented"));
++      pc_sys->dma_read16(phy_addr, channel+4);
 +      }
      }
    else {
@@ -728,8 +780,9 @@ Instructions:
 +    bx_pc_system.set_DACK(channel + (ma_sl << 2), 0); // clear DACK to adapter card
      }
  }
+diff -urN ../bochs/iodev/dma.h ./iodev/dma.h
 --- ../bochs/iodev/dma.h	Wed Oct  3 15:10:38 2001
-+++ iodev/dma.h	Sat Dec 15 13:16:18 2001
++++ ./iodev/dma.h	Mon Dec 17 00:06:15 2001
 @@ -81,7 +81,7 @@
        Bit16u  current_count;
        Bit8u   page_reg;
@@ -739,3 +792,78 @@ Instructions:
  
    bx_devices_c *devices;
    };
+diff -urN ../bochs/iodev/iodev.h ./iodev/iodev.h
+--- ../bochs/iodev/iodev.h	Wed Oct  3 15:10:38 2001
++++ ./iodev/iodev.h	Mon Dec 17 11:27:07 2001
+@@ -90,6 +90,8 @@
+ 
+   void dma_write8(unsigned channel, Bit8u *data);
+   void dma_read8(unsigned channel, Bit8u *data);
++  void dma_write16(unsigned channel, Bit16u *data);
++  void dma_read16(unsigned channel, Bit16u *data);
+   void drq(unsigned channel, Boolean val);
+   void raise_hlda(void);
+   static void timer_handler(void *);
+diff -urN ../bochs/pc_system.cc ./pc_system.cc
+--- ../bochs/pc_system.cc	Wed Oct  3 15:10:37 2001
++++ ./pc_system.cc	Mon Dec 17 11:33:57 2001
+@@ -134,7 +134,6 @@
+ 
+   Bit8u data_byte;
+ 
+-  UNUSED(channel);
+   bx_devices.dma_write8(channel, &data_byte);
+   BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 1, &data_byte);
+ 
+@@ -149,11 +148,38 @@
+ 
+   Bit8u data_byte;
+ 
+-  UNUSED(channel);
+   BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 1, &data_byte);
+   bx_devices.dma_read8(channel, &data_byte);
+ 
+   BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
++}
++
++
++  void
++bx_pc_system_c::dma_write16(Bit32u phy_addr, unsigned channel)
++{
++  // DMA controlled xfer of word from I/O to Memory
++
++  Bit16u data_word;
++
++  bx_devices.dma_write16(channel, &data_word);
++  BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 2, &data_word);
++
++  BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
++}
++
++
++  void
++bx_pc_system_c::dma_read16(Bit32u phy_addr, unsigned channel)
++{
++  // DMA controlled xfer of word from Memory to I/O
++
++  Bit16u data_word;
++
++  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 2, &data_word);
++  bx_devices.dma_read16(channel, &data_word);
++
++  BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
+ }
+ 
+ 
+diff -urN ../bochs/pc_system.h ./pc_system.h
+--- ../bochs/pc_system.h	Wed Oct  3 15:10:37 2001
++++ ./pc_system.h	Mon Dec 17 11:08:32 2001
+@@ -162,6 +162,8 @@
+ 
+   void dma_write8(Bit32u phy_addr, unsigned channel);
+   void dma_read8(Bit32u phy_addr, unsigned channel);
++  void dma_write16(Bit32u phy_addr, unsigned channel);
++  void dma_read16(Bit32u phy_addr, unsigned channel);
+ 
+   Bit32u  inp(Bit16u addr, unsigned io_len);
+   void    outp(Bit16u addr, Bit32u value, unsigned io_len);
