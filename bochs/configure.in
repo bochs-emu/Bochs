@@ -65,7 +65,7 @@ AC_LANG_RESTORE
 
 AC_MSG_CHECKING(for control panel)
 AC_ARG_ENABLE(control-panel,
-  [  --enable-control-panel                 turns on/off control panel],
+  [  --enable-control-panel           turns on/off control panel],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_USE_CONTROL_PANEL, 1)
@@ -81,9 +81,27 @@ AC_ARG_ENABLE(control-panel,
 AC_SUBST(BX_USE_CONTROL_PANEL)
 
 
+AC_MSG_CHECKING(for new PIT model)
+AC_ARG_ENABLE(new-pit,
+  [  --enable-new-pit                  use Greg Alexander's new PIT model],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_USE_NEW_PIT, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_USE_NEW_PIT, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_USE_NEW_PIT, 0)
+    ]
+  )
+AC_SUBST(BX_USE_NEW_PIT)
+
+
 AC_MSG_CHECKING(for number of processors)
 AC_ARG_ENABLE(processors,
-  [  --enable-processors                select number of processors (1,2,4)],
+  [  --enable-processors               select number of processors (1,2,4)],
   [case "$enableval" in
      1)
        AC_MSG_RESULT(1)
@@ -250,7 +268,7 @@ AC_SUBST(AS_DYNAMIC_INCS)
 
 AC_MSG_CHECKING(for APIC support)
 AC_ARG_ENABLE(apic,
-  [  --enable-apic                   enable APIC support],
+  [  --enable-apic                     enable APIC support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_APIC, 1)
@@ -288,7 +306,7 @@ AC_SUBST(APIC_OBJS)
 
 AC_MSG_CHECKING(for split hard disk image support)
 AC_ARG_ENABLE(split-hd,
-  [  --enable-split-hd                   allows split hard disk image],
+  [  --enable-split-hd                 allows split hard disk image],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SPLIT_HD_SUPPORT, 1)
@@ -457,7 +475,7 @@ AC_SUBST(DISASM_VAR)
 
 AC_MSG_CHECKING(whether to use readline)
 AC_ARG_ENABLE(readline,
-  [ --enable-readline                     use readline library with debugger],
+  [ --enable-readline                  use readline library with debugger],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
      want_readline=yes

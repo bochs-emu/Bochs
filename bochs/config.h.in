@@ -182,6 +182,9 @@
 #define BX_NUM_CMOS_REGS 64
 //#define BX_NUM_CMOS_REGS 128
 
+// Use Greg Alexander's new PIT model (summer 2001) instead of the original.
+#define BX_USE_NEW_PIT 0
+
 // Use Static Member Funtions to eliminate 'this' pointer passing
 // If you want the efficiency of 'C', you can make all the
 // members of the C++ CPU class to be static.
