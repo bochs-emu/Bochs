@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.94 2002-09-20 17:56:21 bdenney Exp $
+// $Id: bochs.h,v 1.95 2002-09-21 11:38:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -346,6 +346,7 @@ class iofunctions {
 #define    PIT81LOG        45
 #define    PIT82LOG        46
 #define    IODEBUGLOG      47
+#define    PCI2ISALOG      48
 
 
 public:

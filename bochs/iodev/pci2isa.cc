@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.1 2002-09-16 19:18:58 vruppert Exp $
+// $Id: pci2isa.cc,v 1.2 2002-09-21 11:38:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,8 +45,8 @@ bx_pci2isa_c bx_pci2isa;
 
 bx_pci2isa_c::bx_pci2isa_c(void)
 {
-  put("PCI");
-  settype(PCILOG);
+  put("P2I");
+  settype(PCI2ISALOG);
 }
 
 bx_pci2isa_c::~bx_pci2isa_c(void)
@@ -65,29 +65,69 @@ bx_pci2isa_c::init(bx_devices_c *d)
 
   if (bx_options.Oi440FXSupport->get ()) {
     BX_REGISTER_PCI_HANDLERS(this, pci_read_handler, pci_write_handler,
-                             0x08, "440FX PCI-to-ISA bridge");
+                             0x08, "PIIX3 PCI-to-ISA bridge");
+
+    d->register_io_write_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_write_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_write_handler(this, write_handler, 0x00F0, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_write_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_write_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_write_handler(this, write_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge");
+
+    d->register_io_read_handler(this, read_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_read_handler(this, read_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_read_handler(this, read_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_read_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge");
+    d->register_io_read_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge");
 
     for (unsigned i=0; i<256; i++)
-      BX_P2I_THIS pci_conf[i] = 0x0;
+      BX_P2I_THIS s.pci_conf[i] = 0x0;
     // readonly registers
-    BX_P2I_THIS pci_conf[0x00] = 0x86;
-    BX_P2I_THIS pci_conf[0x01] = 0x80;
-    BX_P2I_THIS pci_conf[0x02] = 0x00;
-    BX_P2I_THIS pci_conf[0x03] = 0x70;
-    BX_P2I_THIS pci_conf[0x0a] = 0x01;
-    BX_P2I_THIS pci_conf[0x0b] = 0x06;
-    BX_P2I_THIS pci_conf[0x0e] = 0x80;
+    BX_P2I_THIS s.pci_conf[0x00] = 0x86;
+    BX_P2I_THIS s.pci_conf[0x01] = 0x80;
+    BX_P2I_THIS s.pci_conf[0x02] = 0x00;
+    BX_P2I_THIS s.pci_conf[0x03] = 0x70;
+    BX_P2I_THIS s.pci_conf[0x0a] = 0x01;
+    BX_P2I_THIS s.pci_conf[0x0b] = 0x06;
+    BX_P2I_THIS s.pci_conf[0x0e] = 0x80;
   }
 }
 
   void
 bx_pci2isa_c::reset(unsigned type)
 {
-  BX_P2I_THIS pci_conf[0x04] = 0x07;
-  BX_P2I_THIS pci_conf[0x05] = 0x00;
-  BX_P2I_THIS pci_conf[0x06] = 0x00;
-  BX_P2I_THIS pci_conf[0x07] = 0x02;
-  BX_P2I_THIS pci_conf[0x4c] = 0x4d;
+  BX_P2I_THIS s.pci_conf[0x04] = 0x07;
+  BX_P2I_THIS s.pci_conf[0x05] = 0x00;
+  BX_P2I_THIS s.pci_conf[0x06] = 0x00;
+  BX_P2I_THIS s.pci_conf[0x07] = 0x02;
+  BX_P2I_THIS s.pci_conf[0x4c] = 0x4d;
+  BX_P2I_THIS s.pci_conf[0x4e] = 0x03;
+  BX_P2I_THIS s.pci_conf[0x4f] = 0x00;
+  BX_P2I_THIS s.pci_conf[0x60] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x69] = 0x02;
+  BX_P2I_THIS s.pci_conf[0x70] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x76] = 0x0c;
+  BX_P2I_THIS s.pci_conf[0x77] = 0x0c;
+  BX_P2I_THIS s.pci_conf[0x78] = 0x02;
+  BX_P2I_THIS s.pci_conf[0x79] = 0x00;
+  BX_P2I_THIS s.pci_conf[0x80] = 0x00;
+  BX_P2I_THIS s.pci_conf[0x82] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xa0] = 0x08;
+  BX_P2I_THIS s.pci_conf[0xa0] = 0x08;
+  BX_P2I_THIS s.pci_conf[0xa2] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xa3] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xa4] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xa5] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xa6] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xa7] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xa8] = 0x0f;
+  BX_P2I_THIS s.pci_conf[0xaa] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xab] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xac] = 0x00;
+  BX_P2I_THIS s.pci_conf[0xae] = 0x00;
+
+  BX_P2I_THIS s.elcr1 = 0x00;
+  BX_P2I_THIS s.elcr2 = 0x00;
 }
 
 
@@ -111,6 +151,27 @@ bx_pci2isa_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_P2I_SMF
+  if (io_len > 1)
+    BX_PANIC(("io read from port %04x, len=%u", (unsigned) address,
+             (unsigned) io_len));
+
+  switch (address) {
+    case 0x00b2:
+      BX_ERROR(("read: APM command register not supported yet"));
+      break;
+    case 0x00b3:
+      BX_ERROR(("read: APM status register not supported yet"));
+      break;
+    case 0x04d0:
+      return(BX_P2I_THIS s.elcr1);
+      break;
+    case 0x04d1:
+      return(BX_P2I_THIS s.elcr2);
+      break;
+    case 0x0cf9:
+      BX_ERROR(("read: CPU reset register not supported yet"));
+      break;
+    }
 
   return(0xffffffff);
 }
@@ -134,7 +195,32 @@ bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_P2I_SMF
+  if (io_len > 1)
+    BX_PANIC(("io write to port %04x, len=%u", (unsigned) address,
+             (unsigned) io_len));
 
+  switch (address) {
+    case 0x00b2:
+      BX_ERROR(("write: APM command register not supported yet"));
+      break;
+    case 0x00b3:
+      BX_ERROR(("write: APM status register not supported yet"));
+      break;
+    case 0x00f0:
+      BX_ERROR(("write: FPU error register not supported yet"));
+      break;
+    case 0x04d0:
+      BX_P2I_THIS s.elcr1 = (value & 0xf8);
+      BX_ERROR(("write: ELCR1 changes have no effect yet"));
+      break;
+    case 0x04d1:
+      BX_P2I_THIS s.elcr2 = (value & 0xde);
+      BX_ERROR(("write: ELCR2 changes have no effect yet"));
+      break;
+    case 0x0cf9:
+      BX_ERROR(("write: CPU reset register not supported yet"));
+      break;
+    }
 }
 
 
@@ -161,8 +247,8 @@ bx_pci2isa_c::pci_read(Bit8u address, unsigned io_len)
   Bit32u value = 0;
 
   if (io_len <= 4) {
-    memcpy(&value, &BX_P2I_THIS pci_conf[address], io_len);
-    BX_DEBUG(("440FX PCI-to-ISA read register 0x%02x value 0x%08x", address, value));
+    memcpy(&value, &BX_P2I_THIS s.pci_conf[address], io_len);
+    BX_DEBUG(("PIIX3 PCI-to-ISA read register 0x%02x value 0x%08x", address, value));
     return value;
     }
   else
@@ -198,8 +284,8 @@ bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x06:
           break;
         default:
-          BX_P2I_THIS pci_conf[address+i] = value8;
-          BX_DEBUG(("440FX PCI-to-ISA write register 0x%02x value 0x%02x", address,
+          BX_P2I_THIS s.pci_conf[address+i] = value8;
+          BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address,
                     value8));
         }
       }
