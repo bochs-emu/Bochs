@@ -76,12 +76,21 @@ The source code is based on information taken from :
 Feedback
 --------
 Please report any bugs, comments, patches for this VGA Bios to cbothamy@free.fr
-You can find the latest release at : http://cbothamy.free.fr/projects/vgabios/
+You can find the latest release at : http://www.nongnu.org/vgabios/
 For any information on bochs, visit the website http://bochs.sourceforge.net/
 
 
 History
 -------
+vgabios-0.4b : Nov 04 2003
+  - Volker 
+    . fix offset of character tables
+    . optimizations of CRT controller accesses
+    . VBE i/o registers changed to 0x01CE/CF 
+      (suggestion from Daniel Gimpelevich)
+    . "noclear" flag stored in BIOS area
+    . fix character height returned by get_font_info function
+
 vgabios-0.4a : Aug 17 2003
   - Volker
     . LFB flagged VBE modes removed
