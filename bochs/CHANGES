@@ -2,7 +2,7 @@ Changes in 2.1 (October 2, 2003):
 
 - Stanislav's changes...
   --------------------------------------------------------------------------
-- cpu
+- CPU
   - added emulation of AMD 3DNow! instructions set.
   - added emulation of SSE/SSE2 floating point instructions.
   - added P4 CPU support to CPUID instruction.
@@ -12,6 +12,16 @@ Changes in 2.1 (October 2, 2003):
     in 32bit mode.
   - fixed fetchdecode64 bug caused wrong decoding of opcodes containing
     BxImmediate_IvIw or BxImmediate_IwIb in x86-64.
+  - fixed bug in int01 (opcode 0xF1) emulation. (Vitaly Vorobyov)
+  - fixed bug in x86 debugger with dr0-dr3 registers (Vitaly Vorobyov)
+  - fixed bug with mov to/from dr register in v86mode.
+    (now exception is generated (according to Intel documentation)
+    instead of panic) (Vitaly Vorobyov)
+  - fixed stack limit checking, now message is generated as BX_DEBUG,
+    rather then BX_PANIC, and exception code is executed. (Vitaly Vorobyov)
+  - instrumentation code updated.
+
+- FPU
   - hundreds of bugfixes in FPU emulation after checking of the emulation
     with testfloat (Scott Duplichan).
     - Fixed cases:
@@ -19,15 +29,7 @@ Changes in 2.1 (October 2, 2003):
         - floatx80_to_float64, floatx80_round_to_int
         - floatx80_add,        floatx80_sub, 
         - floatx80_mul,        floatx80_div
-  - FPU: 64-bit addressing support for x86-64 mode (Christophe Bothamy)
-  - fixed bug in int01 (opcode 0xF1) emulation (Vitaly Vorobyov)
-  - fixed bug in x86 debugger with dr0-dr3 registers (Vitaly Vorobyov)
-  - fixed bug with mov to/from dr register in v86mode
-    (now exception is generated (according to Intel documentation)
-    instead of panic) (Vitaly Vorobyov)
-  - fixed stack limit checking, now message is generated as BX_DEBUG,
-    rather then BX_PANIC, and exception code is executed (Vitaly Vorobyov)
-  - instrumentation code updated (Stanislav)
+  - 64-bit addressing support for x86-64 mode (Christophe Bothamy)
 
 More Details:
 
