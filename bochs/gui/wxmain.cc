@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.61 2002-09-27 19:12:56 bdenney Exp $
+// $Id: wxmain.cc,v 1.61.4.1 2002-10-19 15:17:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -143,13 +143,22 @@ bool MyApp::OnInit()
   wxLog::SetActiveTarget (new wxLogStderr ());
 #endif
   bx_init_siminterface ();
-  // install callback function to handle anything that occurs before the
-  // simulation begins.
+  // Install callback function to handle anything that occurs before the
+  // simulation begins.  This is responsible for displaying any error
+  // dialogs during bochsrc and command line processing.
   SIM->set_notify_callback (&MyApp::DefaultCallback, this);
-  if (bx_init_main (argc, argv) < 0) {
-    // init failed. Don't even start the interface.
+  static jmp_buf context;
+  if (setjmp (context) == 0) {
+    SIM->set_quit_context (&context);
+    if (bx_init_main (argc, argv) < 0) {
+      // init failed. Don't even start the interface.
+      return FALSE;
+    }
+  } else {
+    // quit unexpectedly via longjmp
     return FALSE;
   }
+  SIM->set_quit_context (NULL);
   MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
   theFrame = frame;  // hack alert
   frame->Show( TRUE );
