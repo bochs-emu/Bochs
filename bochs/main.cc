@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.93 2002-03-26 14:28:31 bdenney Exp $
+// $Id: main.cc,v 1.94 2002-03-26 14:46:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,6 +195,9 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
         bx_devices.floppy->set_media_status(1, val == BX_INSERTED);
         bx_gui.update_drive_status_buttons ();
       }
+      break;
+    case BXP_KBD_PASTE_DELAY:
+      if (set) bx_keyboard.paste_delay_changed ();
       break;
     default:
       BX_PANIC (("bx_param_handler called with unknown id %d", id));
@@ -853,6 +856,7 @@ void bx_init_options ()
       "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
       1000, BX_MAX_INT,
       100000);
+  bx_options.Okeyboard_paste_delay->set_handler (bx_param_handler);
   bx_options.Ofloppy_command_delay = new bx_param_num_c (BXP_FLOPPY_CMD_DELAY,
       "floppy_command_delay",
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.50 2002-03-26 13:59:35 bdenney Exp $
+// $Id: keyboard.cc,v 1.51 2002-03-26 14:46:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.50 2002-03-26 13:59:35 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.51 2002-03-26 14:46:03 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.50 2002-03-26 13:59:35 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.51 2002-03-26 14:46:03 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -179,12 +179,18 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS pastebuf = NULL;
   BX_KEY_THIS pastebuf_len = 0;
   BX_KEY_THIS pastebuf_ptr = 0;
-  BX_KEY_THIS pastedelay = bx_options.Okeyboard_paste_delay->get()/BX_IODEV_HANDLER_PERIOD;
-  BX_INFO(("will paste characters every %d keyboard ticks",BX_KEY_THIS pastedelay));
+  BX_KEY_THIS paste_delay_changed ();
 
   // mouse port installed on system board
   cmos->s.reg[0x14] |= 0x04;
 
+}
+
+  void
+bx_keyb_c::paste_delay_changed()
+{
+  BX_KEY_THIS pastedelay = bx_options.Okeyboard_paste_delay->get()/BX_IODEV_HANDLER_PERIOD;
+  BX_INFO(("will paste characters every %d keyboard ticks",BX_KEY_THIS pastedelay));
 }
 
   // static IO port read callback handler
@@ -598,8 +604,8 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
 void 
 bx_keyb_c::service_paste_buf ()
 {
-  BX_DEBUG (("service_paste_buf: ptr at %d out of %d", BX_KEY_THIS pastebuf_ptr, BX_KEY_THIS pastebuf_len));
   if (!BX_KEY_THIS pastebuf) return;
+  BX_DEBUG (("service_paste_buf: ptr at %d out of %d", BX_KEY_THIS pastebuf_ptr, BX_KEY_THIS pastebuf_len));
   int fill_threshold = BX_KBD_ELEMENTS - 8;
   while (BX_KEY_THIS pastebuf_ptr < BX_KEY_THIS pastebuf_len) {
     if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= fill_threshold)
@@ -1085,8 +1091,9 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   }
 
   if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled ) {
-  // if queue is empty, add more data from the paste buffer, if it exists.
     if(++count_before_paste>=BX_KEY_THIS pastedelay) {
+      // after the paste delay, consider adding moving more chars
+      // from the paste buffer to the keyboard buffer.
       BX_KEY_THIS service_paste_buf ();
       count_before_paste=0;
     }

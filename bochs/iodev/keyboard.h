@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.13 2002-03-26 13:51:48 bdenney Exp $
+// $Id: keyboard.h,v 1.14 2002-03-26 14:46:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,6 +64,9 @@ public:
   BX_KEY_SMF int      LoadState( class state_file *fd );
   BX_KEY_SMF unsigned periodic( Bit32u   usec_delta );
   BX_KEY_SMF void     put_scancode( unsigned char *code, int count );
+
+  // update the paste delay based on bx_options.Okeyboard_paste_delay
+  BX_KEY_SMF void     paste_delay_changed ();
 
 private:
 
