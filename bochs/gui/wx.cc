@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.45 2002-10-15 16:48:10 vruppert Exp $
+// $Id: wx.cc,v 1.46 2002-10-16 16:32:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -1217,34 +1217,24 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 }
 
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
-/// key mapping for wxGTK
-typedef struct keyTableEntry {
-  const char *name;
-  Bit32u value;
-};
-
-#define DEF_WX_KEY(key) \
-  { #key, key },
-
-keyTableEntry keytable[] = {
-  // this include provides all the entries.
-#include "wxgtkkeys.h"
-  // one final entry to mark the end
-  { NULL, 0 }
-};
-
-// function to convert key names into GDKKey values.
-// This first try will be horribly inefficient, but it only has
-// to be done while loading a keymap.  Once the simulation starts,
-// this function won't be called.
+/* we can use the X keysyms for GTK too */
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+/* convertStringToGDKKey is a keymap callback
+ * used when reading the keymap file.
+ * It converts a Symblic String to a GUI Constant
+ *
+ * It returns a Bit32u constant or BX_KEYMAP_UNKNOWN if it fails
+ */
 static Bit32u convertStringToGDKKey (const char *string)
 {
-  keyTableEntry *ptr;
-  for (ptr = &keytable[0]; ptr->name != NULL; ptr++) {
-    //BX_DEBUG (("comparing string '%s' to wxGTK key '%s'", string, ptr->name));
-    if (!strcmp (string, ptr->name))
-      return ptr->value;
-  }
-  return BX_KEYMAP_UNKNOWN;
+    if (strncmp ("XK_", string, 3) != 0)
+      return BX_KEYMAP_UNKNOWN;
+    KeySym keysym=XStringToKeysym(string+3);
+
+    // failure, return unknown
+    if(keysym==NoSymbol) return BX_KEYMAP_UNKNOWN;
+
+    return((Bit32u)keysym);
 }
 #endif
