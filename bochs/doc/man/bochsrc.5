@@ -26,6 +26,53 @@ Example:
   #include /etc/bochsrc
 
 .TP
+.I "config_interface:"
+The configuration interface is a series of menus or dialog boxes that
+allows you to change all the settings that control Bochs's behavior.
+There are two choices of configuration interface: a text mode version
+called "textconfig" and a graphical version called "wx".  The text
+mode version uses stdin/stdout and is always compiled in.  The graphical
+version is only available when you use "--with-wx" on the configure 
+command.  If you do not write a config_interface line, Bochs will 
+choose a default for you.
+
+.B NOTE:
+if you use the "wx" configuration interface, you must also use
+the "wx" display library.
+
+Example:
+  config_interface: textconfig
+
+.TP
+.I "display_library:"
+The display library is the code that displays the Bochs VGA screen.  Bochs 
+has a selection of about 10 different display library implementations for 
+different platforms.  If you run configure with multiple --with-* options, 
+the display_library command lets you choose which one you want to run with.
+If you do not write a display_library line, Bochs will choose a default for
+you.
+
+The choices are: 
+  x           X windows interface, cross platform
+  win32       native win32 libraries
+  carbon      Carbon library (for MacOS X)
+  beos        native BeOS libraries
+  macintosh   MacOS pre-10
+  amigaos     native AmigaOS libraries
+  sdl         SDL library, cross platform
+  term        text only, uses curses/ncurses library, cross platform
+  rfb         provides an interface to AT&T's VNC viewer, cross platform
+  wx          wxWindows library, cross platform
+  nogui       no display at all
+
+.B NOTE:
+if you use the "wx" configuration interface, you must also use
+the "wx" display library.
+
+Example:
+  display_library: x
+
+.TP
 .I "romimage:"
 You need to load  a ROM BIOS into  F0000-FFFFF.
 The  BIOS  controls  what  the PC does when it
@@ -600,8 +647,9 @@ Example:
 .TP
 .I "user_shortcut:"
 This defines the keyboard shortcut to be sent when you press the "user"
-button in the headerbar. These shortcuts are currently recognized:
-ctrlaltdel, ctrlaltesc, ctrlaltf1, alttab
+button in the headerbar. The shortcut string can be a combination of
+these key names: "alt", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
+Up to 3 keys can be pressed at a time.
 
 Example:
   user_shortcut: keys=ctrlaltdel
