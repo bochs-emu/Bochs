@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.30 2002-03-20 01:24:15 bdenney Exp $
+// $Id: cdrom.cc,v 1.30.2.1 2002-06-10 21:15:44 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,10 +43,18 @@ extern "C" {
 #ifdef __linux__
 extern "C" {
 #include <sys/ioctl.h>
-#include <linux/fs.h>
+//#include <linux/fs.h>
 #include <linux/cdrom.h>
 // I use the framesize in non OS specific code too
 #define BX_CD_FRAMESIZE CD_FRAMESIZE
+}
+#endif
+
+#ifdef __GNU__
+extern "C" {
+#include <sys/ioctl.h>
+#define BX_CD_FRAMESIZE 2048
+#define CD_FRAMESIZE 2048
 }
 #endif
 
@@ -65,7 +73,7 @@ extern "C" {
 #define BX_CD_FRAMESIZE 2048
 #endif
 
-#if (defined(__OpenBSD__) || defined(__FreeBSD__))
+#if (defined (__NetBSD__) || defined(__OpenBSD__) || defined(__FreeBSD__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
 // all the includes, because the i386 sys/disklabel.h contains code which 
 // c++ considers invalid.
@@ -203,7 +211,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.30 2002-03-20 01:24:15 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.30.2.1 2002-06-10 21:15:44 cbothamy Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -221,7 +229,6 @@ cdrom_interface::insert_cdrom(char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
   ssize_t ret;
-  struct stat stat_buf;
 
   // Load CD-ROM. Returns false if CD is not ready.
   if (dev != NULL) path = strdup(dev);
@@ -251,7 +258,7 @@ cdrom_interface::insert_cdrom(char *dev)
     {
       strcpy(drive,path);
       using_file = 1;
-      bUseASPI = FALSE;
+	  bUseASPI = FALSE;
       BX_INFO (("Opening image file as a cd"));
     }
 	if(bUseASPI) {
@@ -334,6 +341,7 @@ cdrom_interface::insert_cdrom(char *dev)
 	}
 #else
     // do fstat to determine if it's a file or a device, then set using_file.
+    struct stat stat_buf;
     ret = fstat (fd, &stat_buf);
     if (ret) {
       BX_PANIC (("fstat cdrom file returned error: %s", strerror (errno)));
@@ -495,7 +503,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
 
   return true;
   }
-#elif (defined(__OpenBSD__) || defined(__FreeBSD__))
+#elif (defined(__NetBSD__) || defined(__OpenBSD__) || defined(__FreeBSD__))
   {
   struct ioc_toc_header h;
   struct ioc_read_toc_entry t;
@@ -622,7 +630,7 @@ cdrom_interface::capacity()
   
     return(buf.st_size);
   }
-#elif defined(__OpenBSD__)
+#elif (defined(__NetBSD__) || defined(__OpenBSD__))
   {
   // We just read the disklabel, imagine that...
   struct disklabel lp;
@@ -642,7 +650,8 @@ cdrom_interface::capacity()
   // non-ATAPI drives.  This is based on Keith Jones code below.
   // <splite@purdue.edu> 21 June 2001
 
-  int i, dtrk, dtrk_lba, num_sectors;
+  int i, dtrk_lba, num_sectors;
+  int dtrk = 0;
   struct cdrom_tochdr td;
   struct cdrom_tocentry te;
 
