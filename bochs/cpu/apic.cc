@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.9 2002-03-20 02:51:47 bdenney Exp $
+// $Id: apic.cc,v 1.10 2002-03-20 23:32:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -250,7 +250,7 @@ bx_local_apic_c::init ()
   base_addr = 0xfee00000;
   err_status = 0;
   log_dest = 0;
-  dest_format = 0xff;
+  dest_format = 0xf;
   for (int bit=0; bit<BX_LOCAL_APIC_MAX_INTS; bit++) {
     irr[bit] = isr[bit] = tmr[bit] = 0;
   }
