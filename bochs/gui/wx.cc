@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.13 2002-09-04 19:14:08 bdenney Exp $
+// $Id: wx.cc,v 1.14 2002-09-05 06:08:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -373,6 +373,8 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
         bx_key = BX_KEY_KP_LEFT; break;
 
       case GDK_KP_5:
+      /* I get 0xFF9D (GDK_KP_Begin?) on my keyboard. -bbd */
+      case GDK_KP_Begin: 
         bx_key = BX_KEY_KP_5; break;
 
       case GDK_KP_6:
