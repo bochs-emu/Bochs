@@ -18,10 +18,15 @@ I chose the keyboard because it takes about 2 seconds to test that it's
 basically working, and because the bochs and plex86 implementations hadn't
 changed very much since they split.
 
+If you look at plex-keyboard.cc and plex-keyboard.h, it is fundamentally the
+same as the current plex86 code.  I have changed lots of names from bx_* to
+plex_* just to reduce confusion and mayhem when I was compiling with both
+kbd implementations.  I didn't change anything except to get it to compile.
+
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
-  cvs checked out on DATE, release version VER
+  cvs current as of 12/12/2001
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
