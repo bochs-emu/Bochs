@@ -65,7 +65,11 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 
 #elif BX_CPU_LEVEL == 5	
     family   = 5;
-    model    = 1;	// Pentium (60,66)
+#if BX_SUPPORT_MMX
+    model    = 4;	// Pentium MMX
+#else
+    model    = 1;	// Pentium 60/66
+#endif
     stepping = 3;
 
   /* ****** */
@@ -84,7 +88,7 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 */
     model    = 0;
     family   = 0x0F;
-    stepping = 3;
+    stepping = 10;
 
 #if BX_SUPPORT_X86_64
     model = 2;    	// Hammer returns what?
