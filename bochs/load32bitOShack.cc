@@ -130,8 +130,9 @@ struct linux_setup_params
   static void
 bx_load_linux_setup_params( Bit32u initrd_start, Bit32u initrd_size )
 {
+  BX_MEM_C *mem = &BX_MEM[0];
   struct linux_setup_params *params =
-         (struct linux_setup_params *) &BX_MEM_THIS vector[0x00090000];
+         (struct linux_setup_params *) &mem->vector[0x00090000];
 
   memset( params, '\0', sizeof(*params) );
 
@@ -147,7 +148,7 @@ bx_load_linux_setup_params( Bit32u initrd_start, Bit32u initrd_size )
   params->orig_video_ega_bx = 3;
 
   /* Memory size (total mem - 1MB, in KB) */
-  params->memory_size_ext = (BX_MEM_THIS megabytes - 1) * 1024;
+  params->memory_size_ext = (mem->megabytes - 1) * 1024;
 
   /* Boot parameters */
   params->loader_type = 1;
@@ -273,14 +274,15 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   size = stat_buf.st_size;
   page_size = ((Bit32u)size + 0xfff) & ~0xfff;
 
-  if ( (paddr + size) > BX_MEM_THIS len ) {
+  BX_MEM_C *mem = &BX_MEM[0];
+  if ( (paddr + size) > mem->len ) {
     fprintf(stderr, "load_kernel_image: address range > physical memsize!\n");
     exit(1);
     }
 
   offset = 0;
   while (size > 0) {
-    ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[paddr + offset], size);
+    ret = read(fd, (bx_ptr_t) &mem->vector[paddr + offset], size);
     if (ret <= 0) {
       fprintf(stderr, "load_kernel_image: read failed on image\n");
       exit(1);
