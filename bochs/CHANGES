@@ -1,3 +1,18 @@
+---------------------------
+TO DO LIST:
+- check logs in debug  (Bryce is working on this)
+- check logs in cpu
+- check logs in iodev
+- check logs in main directory
+  - configure.in  (Bryce is working on this)
+  - Makefile.in
+  - main.cc
+- check logs in documentation
+- summarize SF bugs/features/requests
+  Bug fixes in a newly added feature are not necessary to list.  They
+  are just part of the new feature.
+------------------------
+
 
 Changes in 2.0 (December 2002):
 
