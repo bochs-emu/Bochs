@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.13 2002-09-23 17:59:18 kevinlawton Exp $
+// $Id: logical8.cc,v 1.14 2002-09-28 01:48:18 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -290,15 +290,6 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
-  result = op1 & op2;
-
-  if (i->modC0()) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
-    }
-  else {
-    Write_RMW_virtual_byte(result);
-    }
-
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
@@ -314,6 +305,17 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
+  result = op1 & op2;
+#endif
+
+  if (i->modC0()) {
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
+    }
+  else {
+    Write_RMW_virtual_byte(result);
+    }
+
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
@@ -333,10 +335,6 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
-  result = op1 & op2;
-
-  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
-
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
@@ -352,6 +350,12 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
     (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
+  result = op1 & op2;
+#endif
+
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
+
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
@@ -367,10 +371,6 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
 
   op2 = i->Ib();
 
-  result = op1 & op2;
-
-  AL = result;
-
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
@@ -386,6 +386,12 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
     (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
+  result = op1 & op2;
+#endif
+
+  AL = result;
+
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
@@ -408,15 +414,6 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
-  result = op1 & op2;
-
-  if (i->modC0()) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
-    }
-  else {
-    Write_RMW_virtual_byte(result);
-    }
-
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
@@ -432,6 +429,17 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
+  result = op1 & op2;
+#endif
+
+  if (i->modC0()) {
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
+    }
+  else {
+    Write_RMW_virtual_byte(result);
+    }
+
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
