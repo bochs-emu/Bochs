@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.73 2003-05-07 19:15:47 vruppert Exp $
+// $Id: vga.cc,v 1.74 2003-05-09 15:32:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -253,9 +253,6 @@ bx_vga_c::init(void)
   /* video card with BIOS ROM */
   DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00); 
 
-  BX_VGA_THIS s.horiz_tick = 0;
-  BX_VGA_THIS s.vert_tick = 0;
-
   BX_VGA_THIS s.charmap_address = 0;
   BX_VGA_THIS s.x_dotclockdiv2 = 0;
   BX_VGA_THIS s.y_doublescan = 0;
@@ -379,7 +376,9 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_VGA_SMF
-  bx_bool  horiz_retrace, vert_retrace;
+  bx_bool  horiz_retrace = 0, vert_retrace = 0;
+  Bit64u usec;
+  Bit16u vertres;
   Bit8u retval;
 
 #if defined(VGA_TRACE_FEATURE)
@@ -425,43 +424,21 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
       //       1 = display is not in the display mode; either the
       //           horizontal or vertical retrace period is active
 
-      //      printf("horiz = %d, vert = %d", BX_VGA_THIS s.horiz_tick, BX_VGA_THIS s.vert_tick);
-
-      if(BX_VGA_THIS s.misc_output.clock_select == 0){ // 25.175 clock 112.5% the length of 28.32
-	if (BX_VGA_THIS s.horiz_tick >= 112) {
-	  BX_VGA_THIS s.horiz_tick = 0;
-	  horiz_retrace = 1;
-	}
-	else {
-	  BX_VGA_THIS s.horiz_tick++;
-	  horiz_retrace = 0;
-	}
-	if (BX_VGA_THIS s.vert_tick >= 112) {
-	  BX_VGA_THIS s.vert_tick = 0;
-	  vert_retrace = 1;
-	}
-	else {
-	  BX_VGA_THIS s.vert_tick++;
-	  vert_retrace = 0;
-	}
-      }else{ // clock_select 1 is assumed to be the 28.32 clock in XF86_VGA16
-	if (BX_VGA_THIS s.horiz_tick >= 100) { // ??? bogus # 100
-	  BX_VGA_THIS s.horiz_tick = 0;
-	  horiz_retrace = 1;
-	}
-	else {
-	  BX_VGA_THIS s.horiz_tick++;
-	  horiz_retrace = 0;
-	}
-	if (BX_VGA_THIS s.vert_tick >= 100) { // ??? bogus # 100
-	  BX_VGA_THIS s.vert_tick = 0;
-	  vert_retrace = 1;
-	}
-	else {
-	  BX_VGA_THIS s.vert_tick++;
-	  vert_retrace = 0;
-	}
-      } // probably add more clock modes here for diffrent resolutions
+      // using 72 Hz vertical frequency
+      usec = bx_pc_system.time_usec();
+      switch ( ( BX_VGA_THIS s.misc_output.vert_sync_pol << 1) | BX_VGA_THIS s.misc_output.horiz_sync_pol )
+      {
+        case 0: vertres = 200; break;
+        case 1: vertres = 400; break;
+        case 2: vertres = 350; break;
+        default: vertres = 480; break;
+      }
+      if ((usec % 13888) < 70) {
+        vert_retrace = 1;
+      }
+      if ((usec % (13888 / vertres)) == 0) {
+        horiz_retrace = 1;
+      }
 
       retval = 0;
       if (horiz_retrace || vert_retrace)
@@ -903,6 +880,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             break;
           case 0x13: // Horizontal Pixel Panning Register
             BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning = (value & 0x0f);
+            needs_update = 1;
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: horiz pel panning = %02x",
                         (unsigned) value);
@@ -1057,7 +1035,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         case 2:
           BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue = value;
 
-          needs_update = bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
+          needs_update |= bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red<<2,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].green<<2,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue<<2);
@@ -1183,12 +1161,6 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
       if (value != BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]) {
         BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
         switch (BX_VGA_THIS s.CRTC.address) {
-          case 0x09:
-            BX_VGA_THIS s.y_doublescan = ((value & 0x9f) > 0);
-            BX_VGA_THIS s.line_compare &= 0x1ff;
-            if (BX_VGA_THIS s.CRTC.reg[0x09] & 0x40) BX_VGA_THIS s.line_compare |= 0x200;
-            needs_update = 1;
-            break;
           case 0x07:
             BX_VGA_THIS s.vertical_display_end &= 0xff;
             if (BX_VGA_THIS s.CRTC.reg[0x07] & 0x02) BX_VGA_THIS s.vertical_display_end |= 0x100;
@@ -1197,9 +1169,14 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             if (BX_VGA_THIS s.CRTC.reg[0x07] & 0x10) BX_VGA_THIS s.line_compare |= 0x100;
             needs_update = 1;
             break;
-          case 0x18:
-            BX_VGA_THIS s.line_compare &= 0x300;
-            BX_VGA_THIS s.line_compare |= BX_VGA_THIS s.CRTC.reg[0x18];
+          case 0x08:
+            // Vertical pel panning change
+            needs_update = 1;
+            break;
+          case 0x09:
+            BX_VGA_THIS s.y_doublescan = ((value & 0x9f) > 0);
+            BX_VGA_THIS s.line_compare &= 0x1ff;
+            if (BX_VGA_THIS s.CRTC.reg[0x09] & 0x40) BX_VGA_THIS s.line_compare |= 0x200;
             needs_update = 1;
             break;
           case 0x0A:
@@ -1227,6 +1204,11 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             else if ((BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) == 0) BX_VGA_THIS s.line_offset <<= 1;
             needs_update = 1;
             break;
+          case 0x18:
+            BX_VGA_THIS s.line_compare &= 0x300;
+            BX_VGA_THIS s.line_compare |= BX_VGA_THIS s.CRTC.reg[0x18];
+            needs_update = 1;
+            break;
         }
 
       }
@@ -1242,9 +1224,9 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         (unsigned) address, (unsigned) value));
     }
   if (needs_update) {
+    BX_VGA_THIS s.vga_mem_updated = 1;
     // Mark all video as updated so the changes will go through
     if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
-      BX_VGA_THIS s.vga_mem_updated = 1;
       for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
         for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
           SET_TILE_UPDATED (xti, yti, 1);
