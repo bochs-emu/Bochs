@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.42 2002-07-28 17:04:29 vruppert Exp $
+$Id: user.dbk,v 1.43 2002-08-13 10:31:51 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3011,8 +3011,8 @@ SourceForge
 <chapter id="mailinglist">
 <title>Mailing Lists</title>
 <para>
-The Bochs community uses two mailing lists to communicate, called
-bochs-developers and bochs-announce.
+The Bochs community uses three mailing lists to communicate, called
+bochs-developers, bochs-cvs and bochs-announce.
 </para>
 
 <section id="bochs-developers"><title>bochs-developers mailing list</title>
@@ -3039,7 +3039,7 @@ Once you have subscribed, you can write to
 <email>bochs-developers@lists.sourceforge.net</email> to send a message to
 everyone on the list.  While it's possible to post without being a subscriber,
 it's not recommended.  If you aren't a subscriber, you might miss the response
-to your question.  
+to your question.
 </para>
 <para>
 <ulink url="http://marc.theaimsgroup.com/?l=bochs-dev">Archive of bochs-developers messages</ulink>
@@ -3051,7 +3051,7 @@ to your question.
 Bochs-announce is a moderated, low-traffic list which carries only periodic
 announcements of Bochs releases and important events.  If you have a very
 important and truly relevant Bochs announcement, you can try posting it to
-bochs-announce, but the moderator will have to approve it before it will 
+bochs-announce, but the moderator will have to approve it before it will
 go out.  On average, bochs-announce subscribers get one or two messages
 per month.  There are about 75 subscribers.  Anyone may join the list.
 </para>
@@ -3070,14 +3070,26 @@ on <command>Edit Options</command>.  Then type your password and click
 <para>
 There is no need to subscribe to both lists, because all bochs-announce
 messages are forwarded to the developers list.  If you subscribe to both, you
-will get 2 copies of every announcement. 
+will get 2 copies of every announcement.
 </para>
 
 <para>
-<ulink url="http://www.geocrawler.com/lists/3/SourceForge/12081/0/">Archive of bochs-announce messages</ulink>
+<ulink url="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Announce+Archive&amp;url=http://sourceforge.net/mailarchive/forum.phpqmrkforum_ideq1855">Archive of bochs-announce messages</ulink>
 </para>
 
 </section>  <!-- End of bochs-announce mailing list -->
+
+<section id="bochs-cvs"><title>bochs-cvs mailing list</title>
+<para>
+This is the cvs commit mailinglist (a unified diff email will get send
+whenever someone does a checkin in the bochs cvs repository).
+</para>
+
+<para>
+<ulink url="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+CVS+Mailing+List+Archive&amp;url=http://sourceforge.net/mailarchive/forum.phpqmrkforum_ideq8301">Archive of bochs-cvs messages</ulink>
+</para>
+
+</section>  <!-- End of bochs-cvs mailing list -->
 
 <section><title>Mailing List Etiquette</title>
 
@@ -3617,6 +3629,10 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 </section>
           </section>
 	  <section><title>Windows *</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>Minix</title>
              <para>
              </para>
           </section>
