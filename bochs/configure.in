@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.128 2002-09-24 21:47:27 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.129 2002-09-25 04:24:46 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -556,38 +556,46 @@ AC_ARG_ENABLE(dc2300-vlb-ide,
   )
 
 
-support_pse=0
 AC_MSG_CHECKING(for 4Meg pages support)
 AC_ARG_ENABLE(4meg-pages,
   [  --enable-4meg-pages               support 4Megabyte pages extensions],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    support_pse=1
+    AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
    else
     AC_MSG_RESULT(no)
-    support_pse=0
+    AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
    fi],
   [
-    AC_MSG_RESULT(no)
-    support_pse=0
+    if test "$bx_cpu_level" -gt 5; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
+    fi
     ]
   )
 
 
-support_pae=0
 AC_MSG_CHECKING(for PAE support)
 AC_ARG_ENABLE(pae,
   [  --enable-pae                      support Physical Address Extensions],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    support_pae=1
+    AC_DEFINE(BX_SupportPAE, 1)
    else
     AC_MSG_RESULT(no)
-    support_pae=0
+    AC_DEFINE(BX_SupportPAE, 0)
    fi],
   [
-    AC_MSG_RESULT(no)
-    support_pae=0
+    if test "$bx_cpu_level" -gt 5; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SupportPAE, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SupportPAE, 0)
+    fi
     ]
   )
 
@@ -626,7 +634,7 @@ AC_ARG_ENABLE(repeat-speedups,
 
 AC_MSG_CHECKING(for instruction cache support)
 AC_ARG_ENABLE(icache,
-  [  --enable-icache                   support instruction cache],
+  [  --enable-icache                   support instruction cache (runs faster)],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SupportICache, 1)
@@ -640,20 +648,25 @@ AC_ARG_ENABLE(icache,
     ]
   )
 
-support_global_pages=0
-AC_MSG_CHECKING(for Global pages support)
+AC_MSG_CHECKING(for global pages support)
 AC_ARG_ENABLE(global-pages,
-  [  --enable-global-pages             support for Global pages in PDE/PTE],
+  [  --enable-global-pages             support for global pages in PDE/PTE],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-	support_global_pages=1
+    AC_DEFINE(BX_SupportGlobalPages, 1)
    else
     AC_MSG_RESULT(no)
-	support_global_pages=0
+    AC_DEFINE(BX_SupportGlobalPages, 0)
    fi],
   [
-    AC_MSG_RESULT(no)
-	support_global_pages=0
+    if test "$bx_cpu_level" -gt 5; then
+      # enable by default
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SupportGlobalPages, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SupportGlobalPages, 0)
+    fi
     ]
   )
 
@@ -684,8 +697,14 @@ AC_ARG_ENABLE(ignore-bad-msr,
     AC_DEFINE(BX_IGNORE_BAD_MSR, 0)
    fi],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_IGNORE_BAD_MSR, 0)
+    # default: normally disabled, but in x86-64 mode enable it.
+    if test "$use_x86_64" = 1; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_IGNORE_BAD_MSR, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_IGNORE_BAD_MSR, 0)
+    fi
     ]
   )
 
@@ -1702,35 +1721,6 @@ fi
 if test ! -d instrument; then mkdir instrument; fi
 if test ! -d build; then mkdir build; fi
 if test ! -d build/linux; then mkdir build/linux; fi
-
-if test "$use_x86_64" = 1; then
-  # For x86-64, force support of the Physical Address Extension (PAE),
-  # and Page Global Extension (PGE.
-  echo 'Because X86-64 is enabled, enabling Physical Address Extension (PAE).'
-  echo 'Because X86-64 is enabled, enabling Page Global Extension (PGE).'
-  echo 'Because X86-64 is enabled, enabling Page Size Extension (PSE).'
-  support_pae=1
-  support_global_pages=1
-  support_pse=1
-fi
-
-if test "$support_global_pages" = 1; then 
-  AC_DEFINE(BX_SupportGlobalPages, 1)
-else 
-  AC_DEFINE(BX_SupportGlobalPages, 0)
-fi
-
-if test "$support_pae" = 1; then 
-  AC_DEFINE(BX_SupportPAE, 1)
-else 
-  AC_DEFINE(BX_SupportPAE, 0)
-fi
-
-if test "$support_pse" = 1; then 
-  AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
-else 
-  AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
-fi
 
 AC_SUBST(INSTALL_TARGET)
 AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
