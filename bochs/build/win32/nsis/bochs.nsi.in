@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi,v 1.1 2002-11-21 03:08:35 bdenney Exp $
+; $Id: bochs.nsi.in,v 1.1 2002-11-21 03:43:04 bdenney Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -10,11 +10,8 @@
 ; also original BOCHS script by Robert (segra)
 ; 
 
-!define VER_MAJOR 2
-!define VER_MINOR 0
-!define VER_REV   pre2
-
-!define NAME "Bochs ${VER_MAJOR}.${VER_MINOR}.${VER_REV}"
+!define VERSION @VERSION@
+!define NAME "Bochs ${VERSION}"
 
 !verbose 3
 !include "WinMessages.nsh"
@@ -26,14 +23,14 @@
 !define TEMP1 $R0
 !define TEMP2 $R1
 
-!define SRCDIR bochs-${VER_MAJOR}.${VER_MINOR}.${VER_REV}
-!define PGDIR "$SMPROGRAMS\Bochs ${VER_MAJOR}.${VER_MINOR}.${VER_REV}"
+!define SRCDIR bochs-${VERSION}
+!define PGDIR "$SMPROGRAMS\Bochs ${VERSION}"
 
 ;--------------------------------
 
   ;General
   Name "${NAME}"
-  OutFile Bochs-${VER_MAJOR}.${VER_MINOR}.${VER_REV}.exe
+  OutFile Bochs-${VERSION}.exe
   SetOverwrite on
 
   ;User interface
@@ -51,7 +48,7 @@
   InstType "Full (with DLX Linux demo)"
 
   ;Folder-select dialog
-  InstallDir $PROGRAMFILES\Bochs-${VER_MAJOR}.${VER_MINOR}.${VER_REV}
+  InstallDir $PROGRAMFILES\Bochs-${VERSION}
   DirText "Setup will install ${NAME} in the following folder.$\r$\n$\r$\nTo install in this folder, click Install. To install in a different folder, click Browse and select another folder." " "
 
   ;Uninstaller
