@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.16 2004-08-30 21:47:24 sshwarts Exp $
+// $Id: mult16.cc,v 1.17 2004-08-31 19:43:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
     Bit16u product_16h =  product_32 >> 16;
 
     /* set EFLAGS */
-    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_MUL_AX);
+    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_MUL16);
 
     /* now write product back to destination */
     AX = product_16l;
@@ -86,7 +86,7 @@ BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
      * IMUL r/m16: condition for clearing CF & OF:
      *   DX:AX = sign-extend of AX
      */
-    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL_AX);
+    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL16);
 }
 
   void
