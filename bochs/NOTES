@@ -1374,8 +1374,10 @@ All Tru64 Unix machines had something called cc/cxx.
 Make the default be 1 processor again.  It's easy to configure for more.
 
 ./configure --enable-processors=2 --enable-fpu --enable-debugger
-----------------------------------------------------
 
+Linux will want --enable-fpu
+
+----------------------------------------------------
 After release on 4/3/2001, now what?
 text mode regression testing.
 this can do performance testing too, by timing the length of a consistent run.
@@ -1391,3 +1393,33 @@ better, detect when it's not a terminal, though that would probably not
 be portable.  
 
 don't print argv, since that various between simulations.
+---------------------------------------------------------------
+submit some patches.
+portable1 patch:
+- makes configure check for:
+  - 1. what is sizeof int*?  use bx_ptr_equiv_t
+  patched fpu code to use PTR2INT and REGNO2PTR macros.
+  - 2. does library have snprintf?  BX_HAVE_SNPRINTF
+  added to main.cc, fixed dbg_main.cc
+  - 3. does library have strtoull BX_HAVE_STRTOULL
+  added to main.cc.  tested on OSF1.
+  - 4. does compiler allow empty structs BX_NO_EMPTY_STRUCTS
+  patched fpu_system.h.  OSF1 was clean.
+  - 5. does compiler allow __attribute__ BX_NO_ATTRIBUTES
+  patched fpu_emu.h, fpu_system.h, stubs/asm/desc.h, stubs/linux/kernel.h, stubs/linux/linkage.h
+  OSF1 was clean.
+  - 6. does <hash_map.h> exist?  BX_HAVE_HASH_MAP
+  patched dbg_main.cc.  OSF1 was clean.
+  - 7. turn on disassembler if debugger is on
+       (DONE)
+Then include things that depend on those #defines.
+Test with correct configuration for linux
+Edit config.h to turn on the other case of each of these, test.
+
+Structure of my CVS tree:
+
+main branch
+|
++-- patch-portable1
+|   |
+|   +-- patch-64bit-const
