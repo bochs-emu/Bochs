@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.49 2002-09-24 08:29:06 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.50 2002-09-24 13:57:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1782,7 +1782,6 @@ BX_CPU_C::RDMSR(bxInstruction_c *i)
 			BX_PANIC(("RDMSR: Unknown register %#x", ECX));
 #endif
 			goto do_exception;
-#endif
 
 	}
 #endif	/* BX_CPU_LEVEL >= 5 */
@@ -1888,7 +1887,6 @@ BX_CPU_C::WRMSR(bxInstruction_c *i)
 			BX_PANIC(("WRMSR: Unknown register %#x", ECX));
 #endif
 			goto do_exception;
-#endif
 
 	}
 #endif	/* BX_CPU_LEVEL >= 5 */
