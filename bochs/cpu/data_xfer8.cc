@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.6 2002-09-06 21:54:57 kevinlawton Exp $
+// $Id: data_xfer8.cc,v 1.7 2002-09-13 21:47:21 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,11 +53,11 @@ BX_CPU_C::MOV_EbGb(BxInstruction_t *i)
   Bit8u op2;
 
   /* op2 is a register, op2_addr is an index of a register */
-  op2 = BX_READ_8BIT_REG(i->nnn);
+  op2 = BX_READ_8BIT_REGx(i->nnn,i->extend8bit);
 
   /* now write op2 to op1 */
   if (i->mod == 0xc0) {
-    BX_WRITE_8BIT_REG(i->rm, op2);
+    BX_WRITE_8BIT_REGx(i->rm, i->extend8bit, op2);
     }
   else {
     write_virtual_byte(i->seg, i->rm_addr, &op2);
@@ -71,14 +71,14 @@ BX_CPU_C::MOV_GbEb(BxInstruction_t *i)
   Bit8u op2;
 
   if (i->mod == 0xc0) {
-    op2 = BX_READ_8BIT_REG(i->rm);
+    op2 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
     read_virtual_byte(i->seg, i->rm_addr, &op2);
     }
 
-  BX_WRITE_8BIT_REG(i->nnn, op2);
+  BX_WRITE_8BIT_REGx(i->nnn, i->extend8bit, op2);
 }
 
 
@@ -87,16 +87,16 @@ BX_CPU_C::MOV_GbEb(BxInstruction_t *i)
 BX_CPU_C::MOV_ALOb(BxInstruction_t *i)
 {
   Bit8u  temp_8;
-  Bit32u addr_32;
+  bx_address addr;
 
-  addr_32 = i->Id;
+  addr = i->Id;
 
   /* read from memory address */
   if (!BX_NULL_SEG_REG(i->seg)) {
-    read_virtual_byte(i->seg, addr_32, &temp_8);
+    read_virtual_byte(i->seg, addr, &temp_8);
     }
   else {
-    read_virtual_byte(BX_SEG_REG_DS, addr_32, &temp_8);
+    read_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
     }
 
 
@@ -109,19 +109,19 @@ BX_CPU_C::MOV_ALOb(BxInstruction_t *i)
 BX_CPU_C::MOV_ObAL(BxInstruction_t *i)
 {
   Bit8u  temp_8;
-  Bit32u addr_32;
+  bx_address addr;
 
-  addr_32 = i->Id;
+  addr = i->Id;
 
   /* read from register */
   temp_8 = AL;
 
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg)) {
-    write_virtual_byte(i->seg, addr_32, &temp_8);
+    write_virtual_byte(i->seg, addr, &temp_8);
     }
   else {
-    write_virtual_byte(BX_SEG_REG_DS, addr_32, &temp_8);
+    write_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
     }
 }
 
@@ -135,7 +135,7 @@ BX_CPU_C::MOV_EbIb(BxInstruction_t *i)
 
   /* now write op2 back to destination */
   if (i->mod == 0xc0) {
-    BX_WRITE_8BIT_REG(i->rm, op2);
+    BX_WRITE_8BIT_REGx(i->rm, i->extend8bit, op2);
     }
   else {
     write_virtual_byte(i->seg, i->rm_addr, &op2);
@@ -176,12 +176,12 @@ BX_CPU_C::XCHG_EbGb(BxInstruction_t *i)
   Bit8u op2, op1;
 
   /* op2 is a register, op2_addr is an index of a register */
-  op2 = BX_READ_8BIT_REG(i->nnn);
+  op2 = BX_READ_8BIT_REGx(i->nnn,i->extend8bit);
 
   /* op1 is a register or memory reference */
   if (i->mod == 0xc0) {
-    op1 = BX_READ_8BIT_REG(i->rm);
-    BX_WRITE_8BIT_REG(i->rm, op2);
+    op1 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
+    BX_WRITE_8BIT_REGx(i->rm, i->extend8bit, op2);
     }
   else {
     /* pointer, segment address pair */
@@ -189,5 +189,5 @@ BX_CPU_C::XCHG_EbGb(BxInstruction_t *i)
     Write_RMW_virtual_byte(op2);
     }
 
-  BX_WRITE_8BIT_REG(i->nnn, op1);
+  BX_WRITE_8BIT_REGx(i->nnn, i->extend8bit, op1);
 }
