@@ -33,18 +33,22 @@ documentation
 - manpages updated (Volker)
 
 - configuration file (bochsrc)
-  - there are several new options:
-    config_interface: select text mode menus or wxWindows for configuration
-    display_library: select which display lib to use
-    optromimage: load optional rom images
-    ataN (N=0,1,2,3): up to 4 ATA controllers for hard disks, cdroms
-    ataN-master, ataN-slave, N=0,1,2,3: defines a hard disk or cdrom
-    floppy_bootsig_check: control the 0xaa55 signature check on boot floppies
-    logprefix: lets you change the format of log messages
-    debugger_log: log all output from bochs debugger
-    user_shortcut: allow you to type key combinations like Ctrl-Alt-Del
-    pit: control the PIT model, including realtime option to try to
-         keep in sync with real time.
+  - There are several new options. See the documentation for more details.
+    - config_interface: select text mode menus or wxWindows for configuration
+    - display_library: select which display lib to use
+    - optromimage: load optional rom images
+    - ataN (N=0,1,2,3): up to 4 ATA controllers for hard disks, cdroms
+    - ataN-master, ataN-slave, N=0,1,2,3: defines a hard disk or cdrom
+    - floppy_bootsig_check: control the 0xaa55 signature check on boot floppies
+    - logprefix: lets you change the format of log messages
+    - debugger_log: log all output from bochs debugger
+    - user_shortcut: allow you to type key combinations like Ctrl-Alt-Del
+    - pit: control the PIT model, including realtime option to try to
+      keep in sync with real time.
+    - Credits: Christophe added optromimage, everything about ATA, 
+      floppy_bootsig_check, debugger_log.  Bryce added config_interface
+      and display_library.  Volker did the user_shortcut button.
+      Greg Alexander wrote the PIT model and added the realtime option.
   - since v1.3 we've been able to use environment variables in pathnames
     in the bochsrc file.  Now, a few variables have default values, set at
     compile time, that are used if the user does not set a value.  If Bochs 
@@ -57,7 +61,11 @@ documentation
       The default value comes from $(sharedir) in the makefile.  Disk
       images on the Bochs website will begin to use BIOS pathnames like
       $BXSHARE/BIOS-bios-latest.
-  - new option to reset all settings to initial defaults (Volker)
+  - new option in the configuration interface to reset all bochsrc 
+    settings to initial defaults.  A reset occurs just before reading
+    a new configuration file, so that leftover parameters from a
+    previous configuration do not affect the new configuration.  Also, 
+    you can request a reset using the configuration interface. (Volker, Bryce)
 
 - CPU
   - speed optimizations (Kevin)
@@ -118,6 +126,7 @@ documentation
     - in function mouse_motion(): added parentheses to fix compilation problems
       with MSVC. See SF bug #575301. (Volker)
     - added missing register_irq() for the PS/2 mouse IRQ12 (Volker)
+    - fix "AltGr" key on European keyboards wxWindows/win32, SDL (Volker)
     - FIXME
   - NE2000
     - function reset() clears the IRQ line (Volker)
@@ -207,12 +216,14 @@ wxWindows
   download for free at http://wxwindows.org.  wxWindows provides C++
   classes for all sorts of GUI controls (buttons, menubars, etc.) and
   implements all of them using the native controls on the platform.
-- The wxWindows port of Bochs provides both a graphical configuration
+- The new wxWindows port of Bochs provides both a graphical configuration
   interface (for editing bochsrc options) and a display.  It was
   written by Bryce Denney, Don Becker, Dave Poirier, and Volker Ruppert.
 - In release 2.0, we concentrated on making the wxWindows port as stable
   and functional as the other interfaces.  wxWindows provides a great
   toolbox that we can use to make Bochs easier to learn and use.
+- wxWindows supports charmap changes, keyboard mapping, cut and paste,
+  text and graphics modes, text mode cursor size, and mouse (Volker, Bryce)
 - To compile Bochs with wxWindows, you should install wxWindows 2.3.3
   or later.  Then configure Bochs with --with-wx.
 
@@ -255,6 +266,8 @@ wxWindows
   - use keyboard mapping for keyup messages too
   - term display library:
     - support for color terminal, function keys, clear screen (Volker)
+  - win32 display library:
+    - use native win32 toolbar for headerbar, use system palette (Volker)
 
 - Bochs debugger
   - [ 609616 ] remote GDB stub
@@ -262,33 +275,6 @@ wxWindows
   - add hooks for external debugger for win32.  The external debugger 
     that connects to Bochs is distributed in 
     build/win32/tattam-external-debugger.zip in binary form.
-
------from Volker, to be merged (Bryce is working on it)-----
-Here is my list of the most important changes:
-
-- general
-  - new bochsrc option 'user_shortcut' and new 'user' button in the headerbar.
-    Now the user can send keypresses to the guest if he clicks on the button.
-  - update the vga screen in the ask() function before executing the dialog
-
-- win32 gui
-  - standard headerbar replaced by a real win32 toolbar using the existing
-    bitmaps. The bochs window now consists of 3 windows: the main window and
-    it's child windows simulation window and toolbar window.
-  - DrawBitmap and DrawChar() now use the system color palette instead of 
-fixed
-    RGB values
-
-- wxWindows gui
-  - in function DrawBochsBitmap(): use the system palette instead of fixed
-    values
-  - text mode cursor size feature implemented
-  - the "AltGr" key on European keyboards works now (wxbochs on win32 only)
-  - wx gui menu functions "Read Configuration" and "Save Configuration"
-    implemented
-  - implementation of the keyboard mapping feature for wxbochs (wxGTK version)
-
--------------------
 
 ----list of closed bugs since 1.4.1----
 We don't want a line of changelog for each of these, but it 
