@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.53 2002-12-12 15:29:07 cbothamy Exp $
+// $Id: cdrom.cc,v 1.54 2002-12-13 14:42:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,11 +63,9 @@ extern "C" {
 }
 #endif
 
-#ifdef BX_WITH_MACOS
-extern "C" {
+#ifdef macintosh
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE 2048
-}
 #endif
 
 #ifdef __sun
@@ -470,7 +468,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.53 2002-12-12 15:29:07 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.54 2002-12-13 14:42:11 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
