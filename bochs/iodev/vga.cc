@@ -1383,7 +1383,7 @@ bx_vga_c::mem_read(Bit32u addr)
      {
      char value;
 
-     value = BX_MEM.video[addr-0xA0000];
+     value = devices->mem->video[addr-0xA0000];
 
      return value;
      }
@@ -1487,7 +1487,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 #ifdef __OS2__
   if ( bx_options.videomode == BX_VIDEO_DIRECT )
     {
-    BX_MEM.video[addr-0xA0000] = value;
+    devices->mem->video[addr-0xA0000] = value;
 
     return;
     }
