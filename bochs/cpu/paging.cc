@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.8 2001-10-03 13:10:37 bdenney Exp $
+// $Id: paging.cc,v 1.9 2002-06-19 15:49:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -502,9 +502,9 @@ priv_check:
       // A/D bits need updating first
       BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access = new_combined_access;
       pte_addr = BX_CPU_THIS_PTR TLB.entry[TLB_index].pte_addr;
-      BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte); // get old PTE
+      BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte); // get old 4kPTE/4mPDE
       pte |= 0x20 | (is_rw << 6);
-      BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte); // write updated PTE
+      BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte); // write updated 4kPTE/4mPDE
       return(paddress);
       }
 
@@ -522,6 +522,18 @@ priv_check:
     error_code = 0xfffffff8; // RSVD=1, P=0
     goto page_fault_not_present;
     }
+
+  // check for 4Mbyte page
+
+  if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4 & 0x10)) {     // check for 4M page and make sure it's enabled
+    combined_access = pde & 0x06;                         // combined access is just access from the pde
+    ppf = (pde & 0xFFC00000) | (laddress & 0x003FF000);   // make up the physical frame number
+    pte_addr = pde_addr;                                  // A/D bits in same place as a real pte
+  }
+
+  // normal 4Kbyte page
+  
+  else {
 
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
@@ -556,12 +568,17 @@ priv_check:
 #endif
 
   ppf = pte & 0xfffff000;
+  }
+
+  // Calculate physical memory address and fill in TLB cache entry
+
   paddress = ppf | poffset;
 
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
   BX_CPU_THIS_PTR TLB.entry[TLB_index].pte_addr = pte_addr;
   BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access = combined_access;
+
   goto priv_check;
 
 
@@ -654,6 +671,18 @@ priv_check:
     goto page_fault;
     }
 
+  // check for 4Mbyte page
+
+  if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4 & 0x10)) {     // check for 4M page and make sure it's enabled
+    combined_access = pde & 0x06;                         // combined access is just access from the pde
+    ppf = (pde & 0xFFC00000) | (laddress & 0x003FF000);   // make up the physical frame number
+    pte_addr = pde_addr;                                  // A/D bits in same place as a real pte
+  }
+
+  
+  else {
+  // normal 4Kbyte page
+
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
@@ -687,6 +716,8 @@ priv_check:
 #endif
 
   ppf = pte & 0xfffff000;
+  }
+
   paddress = ppf | poffset;
 
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
