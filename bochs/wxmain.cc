@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.24 2002-04-06 21:46:12 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.25 2002-04-07 07:31:34 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -973,7 +973,7 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
   // identical), I'm using code that is copied from gui/x.cc.
   if (keysym >= GDK_space && keysym < GDK_asciitilde) {
     // use nice ASCII conversion table, based on x.cc
-    return wxAsciiKey[keysym - GDK_space];
+    bx_key = wxAsciiKey[keysym - GDK_space];
   } else switch (keysym) {
       case GDK_KP_1:
 #ifdef GDK_KP_End
