@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.14 2004-08-18 19:27:52 sshwarts Exp $
+// $Id: mult32.cc,v 1.15 2004-08-26 20:37:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,16 +58,12 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
     product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
     product_32h = (Bit32u) (product_64 >> 32);
 
+    /* set EFLAGS */
+    SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_MUL32);
+
     /* now write product back to destination */
     RAX = product_32l;
     RDX = product_32h;
-
-    /* set eflags:
-     * MUL affects the following flags: C,O
-     */
-
-    bx_bool temp_flag = (product_32h != 0);
-    SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
 
   void

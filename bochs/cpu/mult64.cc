@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.11 2004-08-18 21:29:07 sshwarts Exp $
+// $Id: mult64.cc,v 1.12 2004-08-26 20:37:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -228,16 +228,12 @@ BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 
     long_mul(&product_128,op1_64,op2_64);
 
+    /* set EFLAGS */
+    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_MUL64);
+
     /* now write product back to destination */
     RAX = product_128.lo;
     RDX = product_128.hi;
-
-    /* set eflags:
-     * MUL affects the following flags: C,O
-     */
-
-    bx_bool temp_flag = (product_128.hi != 0);
-    SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.14 2004-08-18 19:27:52 sshwarts Exp $
+// $Id: mult16.cc,v 1.15 2004-08-26 20:37:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,8 +33,7 @@
   void
 BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
 {
-    Bit16u op1_16, op2_16, product_16h, product_16l;
-    Bit32u product_32;
+    Bit16u op1_16, op2_16;
 
     op1_16 = AX;
 
@@ -47,20 +46,16 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
-    product_32  = ((Bit32u) op1_16) * ((Bit32u) op2_16);
-    product_16l = (product_32 & 0xFFFF);
-    product_16h = product_32 >> 16;
+    Bit32u product_32  = ((Bit32u) op1_16) * ((Bit32u) op2_16);
+    Bit16u product_16l = (product_32 & 0xFFFF);
+    Bit16u product_16h =  product_32 >> 16;
+
+    /* set EFLAGS */
+    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_MUL16);
 
     /* now write product back to destination */
     AX = product_16l;
     DX = product_16h;
-
-    /* set eflags:
-     * MUL affects the following flags: C,O
-     */
-
-    bx_bool temp_flag = (product_16h != 0);
-    SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
 
   void

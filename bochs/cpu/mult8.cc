@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.14 2004-08-18 19:27:52 sshwarts Exp $
+// $Id: mult8.cc,v 1.15 2004-08-26 20:37:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,14 +46,13 @@ BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
-  Bit16u product_16 = op1 * op2;
+  Bit32u product_16  = ((Bit16u) op1) * ((Bit16u) op2);
 
-  /* set EFLAGS:
-   * MUL affects the following flags: C,O
-   */
+  Bit8u product_8l = (product_16 & 0xFF);
+  Bit8u product_8h =  product_16 >> 8;
 
-  bx_bool temp_flag = ((product_16 & 0xFF00) != 0);
-  SET_FLAGS_OxxxxC(temp_flag, temp_flag);
+  /* set EFLAGS */
+  SET_FLAGS_OSZAPC_S1S2_8(product_8l, product_8h, BX_INSTR_MUL8);
 
   /* now write product back to destination */
   AX = product_16;

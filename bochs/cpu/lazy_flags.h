@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.15 2004-08-18 20:49:31 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.16 2004-08-26 20:37:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -93,6 +93,11 @@
 #define BX_INSTR_SAR16          50
 #define BX_INSTR_SAR32          51
 #define BX_INSTR_SAR64          52
+
+#define BX_INSTR_MUL8           53
+#define BX_INSTR_MUL16          54
+#define BX_INSTR_MUL32          55
+#define BX_INSTR_MUL64          56
 
 #define BX_LF_INDEX_OSZAPC  1
 #define BX_LF_INDEX_OSZAP   2
