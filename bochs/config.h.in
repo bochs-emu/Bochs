@@ -28,11 +28,11 @@
 #define BX_SIMULATE_SMP 0
 #define BX_SMP_PROCESSORS 2
 
-#define BX_DEBUG_LINUX 0
+#define BX_DEBUG_LINUX 1
 // if simulating Linux, this provides a few more debugging options
 // such as tracing all system calls.
 
-#define USE_READLINE 0
+#define USE_READLINE 1
 // adds support for the GNU readline library in the debugger command 
 // prompt.
 
