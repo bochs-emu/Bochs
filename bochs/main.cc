@@ -729,7 +729,7 @@ void bx_print_header ()
   fprintf (stderr, "%s\n", divider);
 }
 
-#ifdef BX_WITH_CARBON
+#if BX_WITH_CARBON
 /* Original code by Darrell Walisser - dwaliss1@purdue.edu */
 
 static void setupWorkingDirectory (char *path)
@@ -768,7 +768,7 @@ main(int argc, char *argv[])
   bx_print_header ();
   bx_init_bx_dbg ();
 
-#ifdef BX_WITH_CARBON
+#if BX_WITH_CARBON
     /* This is passed if we are launched by double-clicking */
    if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 )
         argc = 1;
