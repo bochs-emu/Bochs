@@ -367,7 +367,13 @@ static void debug_loop(void)
                    }
                  
                  stub_trace_flag = 0;
+                 bx_cpu.ispanic = 0;
                  bx_cpu.cpu_loop(-1);              
+                 if (bx_cpu.ispanic)
+                 {
+                    last_stop_reason = GDBSTUB_EXECUTION_BREAKPOINT;
+                 }
+
                  DEV_vga_refresh();
                  
                  if (buffer[1] != 0)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.3 2004-01-04 13:13:45 cbothamy Exp $
+// $Id: dbg_main.cc,v 1.4 2004-01-17 08:36:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1872,7 +1872,7 @@ bx_dbg_continue_command(void)
       // set stop flag if a guard found other than icount or halted
       unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
-      if (found & BX_DBG_GUARD_ICOUNT) {
+      if (found == BX_DBG_GUARD_ICOUNT) {
         // I expected this guard, don't stop
       } else if (found!=0) {
         stop = 1;

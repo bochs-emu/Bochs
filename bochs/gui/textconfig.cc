@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.18 2003-10-24 15:39:57 vruppert Exp $
+// $Id: textconfig.cc,v 1.19 2004-01-17 08:36:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -623,7 +623,7 @@ int bx_write_rc (char *rc)
 }
 
 char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
-int log_action_n_choices = 4 + (BX_DEBUGGER?1:0);
+int log_action_n_choices = 4 + (BX_DEBUGGER||BX_GDBSTUB?1:0);
 
 BxEvent *
 config_interface_notify_callback (void *unused, BxEvent *event)
@@ -680,6 +680,10 @@ config_interface_notify_callback (void *unused, BxEvent *event)
 #if BX_DEBUGGER
       fprintf (stderr, "  debug      - continue and return to bochs debugger\n");
 #endif
+#if BX_GDBSTUB
+      fprintf (stderr, "  debug      - hand control to gdb\n");
+#endif
+
       int choice;
 ask:
       if (ask_menu ("Choose one of the actions above: [%s] ", 

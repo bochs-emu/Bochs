@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.155 2003-12-30 22:12:45 cbothamy Exp $
+// $Id: cpu.h,v 1.156 2004-01-17 08:36:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1378,6 +1378,10 @@ union {
   Bit8u show_eip;   /* BW record eip at special instr f.ex eip */
   Bit8u show_flag;  /* BW shows instr class executed */
   bx_guard_found_t guard_found;
+#endif
+
+#if BX_GDBSTUB
+  Bit8u ispanic;
 #endif
 
 #if BX_SUPPORT_X86_64
