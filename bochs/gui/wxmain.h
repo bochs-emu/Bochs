@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.20 2002-09-05 16:01:34 bdenney Exp $
+// $Id: wxmain.h,v 1.21 2002-09-06 16:43:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -10,6 +10,7 @@ class MyFrame;
 class MyPanel;
 class SimThread;
 class FloppyConfigDialog;
+class ParamDialog;
 
 //hack alert; yuck; FIXME
 extern MyFrame *theFrame;
@@ -45,6 +46,7 @@ enum
   ID_Simulate_Stop,
   ID_Simulate_Speed,
   ID_Debug_ShowCpu,
+  ID_Debug_ShowKeyboard,
   ID_Debug_ShowMemory,
   ID_Log_View,
   ID_Log_Prefs,
@@ -98,6 +100,12 @@ enum
 
 #define IFDBG_KEY(x) /* nothing */
 //#define IFDBG_KEY(x) x
+
+#define IFDBG_EVENT(x) /* nothing */
+//#define IFDBG_EVENT(x) x
+
+#define IFDBG_DLG(x) /* nothing */
+//#define IFDBG_DLG(x) x
 
 
 // defined in wxmain.cc
@@ -157,6 +165,8 @@ public:
   void OnEditOther(wxCommandEvent& event);
   void OnLogPrefs(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
+  void OnShowCpu(wxCommandEvent& event);
+  void OnShowKeyboard(wxCommandEvent& event);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);
   void editHDConfig (int drive);
@@ -179,6 +189,10 @@ private:
   wxMenu *menuDebug;
   wxMenu *menuLog;
   wxMenu *menuHelp;
+  ParamDialog *showCpu, *showKbd;
+  void RefreshDialogs ();
+public:
+  bool WantRefresh ();
 
 DECLARE_EVENT_TABLE()
 };

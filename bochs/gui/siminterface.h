@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.58 2002-09-05 07:48:38 bdenney Exp $
+// $Id: siminterface.h,v 1.59 2002-09-06 16:43:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -225,6 +225,27 @@ typedef enum {
   BXP_USER_SHORTCUT,
   BXP_ASK_FOR_PATHNAME,   // for general file selection dialog
   BXP_QUICK_START,        // read bochsrc and start simulation immediately
+  // experiment: add params for CPU registers
+  BXP_CPU_PARAMETERS,
+  BXP_CPU_EAX,
+  BXP_CPU_EBX,
+  BXP_CPU_ECX,
+  BXP_CPU_EDX,
+  BXP_CPU_CS,
+  BXP_CPU_EIP,
+  // a few parameters for the keyboard
+  BXP_KBD_PARAMETERS,
+  BXP_KBD_PARE,
+  BXP_KBD_TIM ,
+  BXP_KBD_AUXB,
+  BXP_KBD_KEYL,
+  BXP_KBD_C_D,
+  BXP_KBD_SYSF,
+  BXP_KBD_INPB,
+  BXP_KBD_OUTB,
+  BXP_KBD_TIMER_PENDING,
+  BXP_KBD_IRQ1_REQ,
+  BXP_KBD_IRQ12_REQ,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -352,7 +373,8 @@ typedef enum {
   BX_ASYNC_EVT_SET_PARAM,         // CI -> simulator
   BX_ASYNC_EVT_LOG_MSG,           // simulator -> CI
   BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> CI
-  BX_ASYNC_EVT_TOOLBAR            // CI -> simulator
+  BX_ASYNC_EVT_TOOLBAR,           // CI -> simulator
+  BX_ASYNC_EVT_REFRESH            // simulator -> CI
 } BxEventType;
 
 typedef union {
@@ -551,17 +573,18 @@ public:
 };
 
 class bx_param_c : public bx_object_c {
+  static const char *default_text_format;
 protected:
   char *name;
   char *description;
-  char *text_format;  // printf format string. %d for ints, %s for strings, etc.
+  const char *text_format;  // printf format string. %d for ints, %s for strings, etc.
   char *ask_format;  // format string for asking for a new value
   int runtime_param;
   int enabled;
 public:
   bx_param_c (bx_id id, char *name, char *description);
-  void set_format (char *format) {text_format = format;}
-  char *get_format () {return text_format;}
+  void set_format (const char *format) {text_format = format;}
+  const char *get_format () {return text_format;}
   void set_ask_format (char *format) {ask_format = format; }
   char *get_ask_format () {return ask_format;}
   void set_runtime_param (int val) { runtime_param = val; }
@@ -571,6 +594,8 @@ public:
   void set_enabled (int enabled) { this->enabled = enabled; }
   void reset () {}
   int getint () {return -1;}
+  static const char* set_default_format (const char *f);
+  static const char *get_default_format () { return default_text_format; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp) {}
   virtual int text_ask (FILE *fpin, FILE *fpout) {return -1;}
@@ -580,8 +605,14 @@ public:
 typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
 
 class bx_param_num_c : public bx_param_c {
+  static Bit32u default_base;
 protected:
-  Bit32s min, max, val, initial_val;
+  Bit32s min, max, initial_val;
+  union _uval_ {
+    Bit32s number;   // used by bx_param_num_c
+    Bit32s *pointer;  // used by bx_shadow_num_c
+    Boolean *pbool;  // used by bx_shadow_bool_c
+  } val;
   param_event_handler handler;
   int base;
 public:
@@ -591,16 +622,40 @@ public:
       Bit32s min, Bit32s max, Bit32s initial_val);
   void reset ();
   void set_handler (param_event_handler handler);
-  Bit32s get ();
-  void set (Bit32s val);
+  virtual Bit32s get ();
+  virtual void set (Bit32s val);
   void set_base (int base) { this->base = base; }
   int get_base () { return base; }
   Bit32s get_min () { return min; }
   Bit32s get_max () { return max; }
+  static Bit32u set_default_base (Bit32u val);
+  static Bit32u get_default_base () { return default_base; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
+};
+
+// a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
+// store the actual value with its data. Instead, it uses val.pointer
+// to keep a pointer to the actual data.  This is used to register
+// existing variables as parameters, without have to access it via
+// set/get methods.
+class bx_shadow_num_c : public bx_param_num_c {
+public:
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      char *description,
+      Bit32s min, Bit32s max, Bit32s *ptr_to_real_val);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      char *description,
+      Bit32s min, Bit32s max, Bit32u *ptr_to_real_val);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      Bit32u *ptr_to_real_val);
+  virtual Bit32s get ();
+  virtual void set (Bit32s val);
 };
 
 class bx_param_bool_c : public bx_param_num_c {
@@ -629,6 +684,17 @@ public:
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
 };
+
+// a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
+class bx_shadow_bool_c : public bx_param_bool_c {
+public:
+  bx_shadow_bool_c (bx_id id,
+      char *name,
+      Boolean *ptr_to_real_val);
+  virtual Bit32s get ();
+  virtual void set (Bit32s val);
+};
+
 
 class bx_param_enum_c : public bx_param_num_c {
   char **choices;
@@ -726,6 +792,7 @@ public:
   } bx_listopt_bits;
   bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
+  bx_list_c (bx_id id, char *name, char *description, int maxsize);
   virtual ~bx_list_c();
   void add (bx_param_c *param);
   bx_param_c *get (int index);
@@ -867,6 +934,10 @@ public:
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic () {}
   virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite) {return -3;}
+  // Tell the configuration interface (CI) that some parameter values have
+  // changed.  The CI will reread the parameters and change its display if it's
+  // appropriate.  Maybe later: mention which params have changed to save time.
+  virtual void refresh_ci () {}
 };
 
 extern bx_simulator_interface_c *SIM;

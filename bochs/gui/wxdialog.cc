@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.29 2002-09-06 04:41:39 bdenney Exp $
+// $Id: wxdialog.cc,v 1.30 2002-09-06 16:43:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -21,8 +21,8 @@
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/siminterface.h"    // interface to the simulator
 #include "bxversion.h"           // get version string
-#include "wxmain.h"              // wxwindows shared stuff
 #include "wxdialog.h"            // custom dialog boxes
+#include "wxmain.h"              // wxwindows shared stuff
 
 //////////////////////////////////////////////////////////////////////
 // constants, prototypes
@@ -1465,7 +1465,7 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
 	char *prompt = param->get_name ();
 	ADD_LABEL (prompt);
 	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
-	char *format = param->get_format ();
+	const char *format = param->get_format ();
 	if (!format)
 	  format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
 	SetTextCtrl (textctrl, format, param->get ());
@@ -1617,10 +1617,50 @@ void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
   }
 }
 
+// if any parameters changed, update the associated control
+void ParamDialog::Refresh ()
+{
+  // loop through all the parameters
+  idHash->BeginFind ();
+  wxNode *node;
+  while ((node = idHash->Next ()) != NULL) {
+    ParamStruct *pstr = (ParamStruct*) node->GetData ();
+    IFDBG_DLG (wxLogDebug ("refresh param %s", pstr->param->get_name ()));
+    int type = pstr->param->get_type ();
+    switch (type) {
+      case BXT_PARAM_BOOL: {
+        bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
+	pstr->u.checkbox->SetValue (boolp->get ());
+	break;
+        }
+      case BXT_PARAM_NUM: {
+        bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
+	const char *format = nump->get_format ();
+	if (!format)
+	  format = strdup(nump->get_base () == 16 ? "0x%X" : "%d");
+	SetTextCtrl (pstr->u.text, format, nump->get ());
+	break;
+        }
+      case BXT_PARAM_ENUM: {
+        bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
+	pstr->u.choice->SetSelection (enump->get () - enump->get_min ());
+	break;
+        }
+      case BXT_PARAM_STRING: {
+        bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
+	pstr->u.text->SetValue (wxString (stringp->getptr ()));
+	break;
+        }
+      default:
+        wxLogError ("ParamDialog::Refresh(): unsupported param type id=%d", (int)type);
+    }
+  }
+}
+
 void ParamDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  wxLogMessage ("event was from id=%d", id);
+  //wxLogMessage ("event was from id=%d", id);
   if (isGeneratedId (id)) {
     wxWindow *window = (wxWindow*)event.GetEventObject ();
     ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
@@ -1629,7 +1669,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
       return;
     }
     if (id == pstr->id) {
-      wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ());
+      IFDBG_DLG (wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ()));
       if (pstr->param->get_type () == BXT_PARAM_BOOL) {
 	// we know that a wxCheckBox changed state.  We don't yet know
 	// if that checkbox was enabling anything.
@@ -1646,11 +1686,18 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
   }
   switch (id) {
     case wxOK:
-      if (CommitChanges ())
-        EndModal (wxID_OK);
+      if (IsModal ()) {
+        if (CommitChanges ())
+          EndModal (wxID_OK);
+      } else {
+	Refresh ();
+      }
       break;
     case wxID_CANCEL:
-      EndModal (wxID_CANCEL);
+      if (IsModal ())
+	EndModal (wxID_CANCEL);
+      else
+	Show (FALSE);
       break;
     case wxHELP:
       ShowHelp(); 

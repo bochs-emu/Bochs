@@ -439,6 +439,11 @@
 
 #define BX_MAX_UINT 4294967295
 #define BX_MAX_INT 2147483647
+#define BX_MIN_UINT 0
+#define BX_MIN_INT -2147483647
+// I would think BX_MIN_INT should be -2147483648 because that's the smallest
+// representable number in 32bit unsigned.  But gcc gives warnings, probably
+// because it has to parse the 2147483648 first and then negate it.
 
 
 // create an unsigned integer type that is the same size as a pointer.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.59 2002-09-03 01:09:46 bdenney Exp $
+// $Id: control.cc,v 1.60 2002-09-06 16:43:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -652,6 +652,9 @@ ask:
       fflush(stderr);
       event->retcode = choice;
     }
+    return event;
+  case BX_ASYNC_EVT_REFRESH:
+    // ignore refresh events
     return event;
   default:
     fprintf (stderr, "Control panel: notify callback called with event type %04x\n", event->type);

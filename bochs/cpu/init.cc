@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.18 2002-09-02 18:44:35 kevinlawton Exp $
+// $Id: init.cc,v 1.19 2002-09-06 16:43:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,9 +48,33 @@ BX_CPU_C::BX_CPU_C()
   settype (CPU0LOG);
 }
 
+#if BX_WITH_WX
+// implement get/set handler for parameters that need unusual set/get
+static Bit32s
+cpu_param_handler (bx_param_c *param, int set, Bit32s val)
+{
+  bx_id id = param->get_id ();
+  if (!set) {
+    switch (id) {
+      case BXP_CPU_CS: 
+	return BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+      default: break;
+    }
+  } else {
+    switch (id) {
+      case BXP_CPU_CS:
+        BX_CPU_THIS_PTR load_seg_reg (&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], val);
+	break;
+      default: break;
+    }
+  }
+  return val;
+}
+#endif
+
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.18 2002-09-02 18:44:35 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.19 2002-09-06 16:43:18 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -58,6 +82,30 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 #endif
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
+
+#if BX_WITH_WX
+  // Register some of the CPUs variables as shadow parameters so that
+  // they can be visible in the config interface.
+  // (Experimental, obviously not a complete list)
+  const char *fmt16 = "%04X";
+  const char *fmt32 = "%08X";
+  Bit32u oldbase = bx_param_num_c::set_default_base (16);
+  const char *oldfmt = bx_param_num_c::set_default_format (fmt32);
+  bx_list_c *list = new bx_list_c (BXP_CPU_PARAMETERS, "CPU State", "", 8);
+  list->add (new bx_shadow_num_c (BXP_CPU_EAX, "EAX", &EAX));
+  list->add (new bx_shadow_num_c (BXP_CPU_EBX, "EBX", &EBX));
+  list->add (new bx_shadow_num_c (BXP_CPU_ECX, "ECX", &ECX));
+  list->add (new bx_shadow_num_c (BXP_CPU_EDX, "EDX", &EDX));
+  list->add (new bx_shadow_num_c (BXP_CPU_EIP, "EIP", &EIP));
+  // CS has a special get/set technique, so it needs a handler function
+  bx_param_num_c *param;
+  list->add (param = new bx_param_num_c (BXP_CPU_CS, "CS", "", 0, 0xffff, 0));
+  param->set_handler (cpu_param_handler);
+  param->set_format (fmt16);
+  // restore defaults
+  bx_param_num_c::set_default_base (oldbase);
+  bx_param_num_c::set_default_format (oldfmt);
+#endif
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
      you can assume there's always a base & index register used.  For

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.53 2002-09-06 16:29:49 yakovlev Exp $
+// $Id: dbg_main.cc,v 1.54 2002-09-06 16:43:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -428,6 +428,7 @@ bx_dbg_user_input_loop(void)
   unsigned include_cmd_len = strlen(BX_INCLUDE_CMD);
 
   while ( 1 ) {
+    SIM->refresh_ci ();
     bx_get_command();
     if ( (*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0) ) {
       if (bx_infile_stack_index == 0)

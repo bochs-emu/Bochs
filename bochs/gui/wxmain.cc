@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.41 2002-09-06 15:00:54 bdenney Exp $
+// $Id: wxmain.cc,v 1.42 2002-09-06 16:43:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -52,8 +52,8 @@
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/siminterface.h"    // interface to the simulator
 #include "bxversion.h"           // get version string
-#include "wxmain.h"              // wxwindows shared stuff
 #include "wxdialog.h"            // custom dialog boxes
+#include "wxmain.h"              // wxwindows shared stuff
 
 // include XPM icons
 #include "bitmaps/cdromd.xpm"
@@ -175,6 +175,8 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_LoadHack, MyFrame::OnEditLoadHack)
   EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
+  EVT_MENU(ID_Debug_ShowCpu, MyFrame::OnShowCpu)
+  EVT_MENU(ID_Debug_ShowKeyboard, MyFrame::OnShowKeyboard)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -251,6 +253,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   sim_thread = NULL;
   start_bochs_times = 0;
   closing = false;
+  showCpu = NULL;
+  showKbd = NULL;
 
   // set up the gui
   menuConfiguration = new wxMenu;
@@ -287,6 +291,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
   menuDebug = new wxMenu;
   menuDebug->Append (ID_Debug_ShowCpu, "Show &CPU");
+  menuDebug->Append (ID_Debug_ShowKeyboard, "Show &Keyboard");
   menuDebug->Append (ID_Debug_ShowMemory, "Show &memory");
 
   menuLog = new wxMenu;
@@ -307,7 +312,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   SetMenuBar( menuBar );
 
   // disable things that don't work yet
-  menuDebug->Enable (ID_Debug_ShowCpu, FALSE);  // not implemented
   menuDebug->Enable (ID_Debug_ShowMemory, FALSE);  // not implemented
   menuLog->Enable (ID_Log_View, FALSE);  // not implemented
   menuLog->Enable (ID_Log_PrefsDevice, FALSE);  // not implemented
@@ -642,6 +646,46 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   }
 }
 
+// How is this going to work?
+// The dialog box shows the value of CPU registers, which will be changing
+// all the time.  What causes the dialog to reread the register value and
+// display it?  Brainstorm:
+// 1) The update could be controlled by a real-time timer.
+// 2) It could be triggered by periodic BX_SYNC_EVT_TICK events.  
+// 3) It could be triggered by changes in the actual value.  This is
+//    good for values that rarely change, but horrible for values like
+//    EIP that change constantly.
+// 4) An update can be forced by explictly calling an update function.  For
+//   example after a single-step you would want to force an update.  If you
+//   interrupt the simulation, you want to force an update.  If you manually
+//   change a parameter, you would force an update.
+// When simulation is free running, #1 or #2 might make sense.  Try #2.
+void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
+{
+  if (showCpu == NULL) {
+    showCpu = new ParamDialog (this, -1);
+    showCpu->SetTitle ("CPU Registers (incomplete, this is a demo)");
+    showCpu->AddParam (SIM->get_param (BXP_CPU_PARAMETERS));
+    showCpu->Init ();
+  } else {
+    showCpu->Refresh ();
+  }
+  showCpu->Show (TRUE);
+}
+
+void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
+{
+  if (showKbd == NULL) {
+    showKbd = new ParamDialog (this, -1);
+    showKbd->SetTitle ("Keyboard State (incomplete, this is a demo)");
+    showKbd->AddParam (SIM->get_param (BXP_KBD_PARAMETERS));
+    showKbd->Init ();
+  } else {
+    showKbd->Refresh ();
+  }
+  showKbd->Show (TRUE);
+}
+
 void MyFrame::OnQuit(wxCommandEvent& event)
 {
   closing = true;
@@ -900,12 +944,16 @@ MyFrame::HandleAskParam (BxEvent *event)
 void 
 MyFrame::OnSim2CIEvent (wxCommandEvent& event)
 {
-  wxLogDebug ("received a bochs event in the GUI thread");
+  IFDBG_EVENT (wxLogDebug ("received a bochs event in the GUI thread"));
   BxEvent *be = (BxEvent *) event.GetEventObject ();
-  wxLogDebug ("event type = %d", (int) be->type);
+  IFDBG_EVENT (wxLogDebug ("event type = %d", (int) be->type));
   // all cases should return.  sync event handlers MUST send back a 
-  // response.
+  // response.  async event handlers MUST delete the event.
   switch (be->type) {
+  case BX_ASYNC_EVT_REFRESH:
+    delete be;
+    RefreshDialogs ();
+    return;
   case BX_SYNC_EVT_ASK_PARAM:
     wxLogDebug ("before HandleAskParam");
     be->retcode = HandleAskParam (be);
@@ -923,6 +971,7 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
 	be->u.logmsg.msg);
     if (be->type == BX_ASYNC_EVT_LOG_MSG) {
       // don't ask for user response
+      delete be;
       return;
     }
     wxString levelName (SIM->get_log_level_name (be->u.logmsg.level));
@@ -950,10 +999,14 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
     }
   default:
     wxLogDebug ("OnSim2CIEvent: event type %d ignored", (int)be->type);
-	// assume it's a synchronous event and send back a response, to avoid
-	// potential deadlock.
-    sim_thread->SendSyncResponse(be);
-	return;
+    if (BX_EVT_IS_ASYNC(be->type)) {
+      delete be;
+    } else {
+      // assume it's a synchronous event and send back a response, to avoid
+      // potential deadlock.
+      sim_thread->SendSyncResponse(be);
+    }
+    return;
   }
   // it is critical to send a response back eventually since the sim thread
   // is blocking.
@@ -1166,6 +1219,19 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
   }
 }
 
+// warning: This can be called from the simulator thread!!!
+bool MyFrame::WantRefresh () {
+  bool anyShowing = false;
+  if (showCpu!=NULL && showCpu->IsShowing ()) anyShowing = true;
+  if (showKbd!=NULL && showKbd->IsShowing ()) anyShowing = true;
+  return anyShowing;
+}
+
+void MyFrame::RefreshDialogs () {
+  if (showCpu!=NULL && showCpu->IsShowing ()) showCpu->Refresh ();
+  if (showKbd!=NULL && showKbd->IsShowing ()) showKbd->Refresh ();
+}
+
 //////////////////////////////////////////////////////////////////////
 // Simulation Thread
 //////////////////////////////////////////////////////////////////////
@@ -1262,12 +1328,19 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
 	return event;
   }
 
+  // prune refresh events if the frame is going to ignore them anyway
+  if (event->type == BX_ASYNC_EVT_REFRESH && !theFrame->WantRefresh ()) {
+    delete event;
+    return NULL;
+  }
+
   //encapsulate the bxevent in a wxwindows event
   wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Sim2CI_Event);
   wxevent.SetEventObject ((wxEvent *)event);
-  wxLogDebug ("Sending an event to the window");
+  IFDBG_EVENT (wxLogDebug ("Sending an event to the window"));
   wxPostEvent (frame, wxevent);
-  // if it is an asynchronous event, return immediately
+  // if it is an asynchronous event, return immediately.  The event will be
+  // freed by the recipient in the GUI thread.
   if (async) return NULL;
   wxLogDebug ("SiminterfaceCallback2: synchronous event; waiting for response");
   // now wait forever for the GUI to post a response.

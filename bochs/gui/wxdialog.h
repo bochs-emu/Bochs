@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.27 2002-09-05 17:27:50 bdenney Exp $
+// $Id: wxdialog.h,v 1.28 2002-09-06 16:43:23 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -619,7 +619,6 @@ private:
     int browseButtonId;  // only for filename params
     wxButton *browseButton;  // only for filename params
   };
-  void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
   wxBoxSizer *mainSizer, *buttonSizer;
   wxFlexGridSizer *gridSizer;
@@ -637,13 +636,60 @@ private:
   int genId ();
   bool isGeneratedId (int id);
   bool CommitChanges ();
+  bool isShowing;
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);
   void OnEvent (wxCommandEvent& event);
-  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void Init ();  // called automatically by ShowModal()
+  int ShowModal() {
+    Init(); 
+    isShowing = true;
+    int ret = wxDialog::ShowModal(); 
+    isShowing = false;
+    return ret;
+  }
+  bool Show (bool val) { isShowing = val; return wxDialog::Show (val); }
   void AddParam (bx_param_c *param, wxFlexGridSizer *sizer = NULL);
+  void Refresh ();
+  bool IsShowing () { return isShowing; }
 DECLARE_EVENT_TABLE()
 };
+
+////////////////////////////////////////////////////////////////////////////
+// CpuRegistersDialog
+////////////////////////////////////////////////////////////////////////////
+// 
+// this would display the current values of all CPU registers, possibly you can
+// enable different groups like debug, FPU, MMX registers.  Certainly if you
+// interrupt the simulation, these would be updated.  we could update
+// periodically during simulation if it was useful.  If we get the debugger
+// integrated with wxwindows, you could single step and update the cpu
+// registers, with regs that change marked in a different color.  Modeless
+// dialog.
+// 
+// +--- CPU Registers----------------------------------------+
+// |                                                         |
+// | EAX [____]                                              |
+// | EBX [____]                                              |
+// | ECX [____]                                              |
+// | EDX [____]                                              |
+// | EIP [____]                                              |
+// |                                                         |
+// |                                               [ Close ] |
+// +---------------------------------------------------------+
+#if 0
+class CpuRegistersDialog : public ParamDialog
+{
+  void Init ();  // called automatically by ShowModal()
+  wxBoxSizer *mainSizer;
+  wxTextCtrl *reg
+public:
+  CpuRegistersDialog(wxWindow* parent, wxWindowID id);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  DECLARE_EVENT_TABLE()
+};
+#endif
+
 
 /**************************************************************************
 Everything else in here is a comment!
@@ -967,16 +1013,6 @@ devices at once.
 +---------------------------------------------------------+
                                                            
 
-////////////////////////////////////////////////////////////////////////////
-// CpuRegistersDialog
-////////////////////////////////////////////////////////////////////////////
-
-this would display the current values of all CPU registers, possibly you can
-enable different groups like debug, FPU, MMX registers.  Certainly if you
-interrupt the simulation, these would be updated.  we could update periodically
-during simulation if it was useful.  If we get the debugger integrated with
-wxwindows, you could single step and update the cpu registeres, with regs that
-change marked in a different color.  Modeless dialog.
 
 ////////////////////////////////////////////////////////////////////////////
 // ViewMemoryDialog

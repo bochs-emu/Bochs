@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.53 2002-09-05 15:51:03 bdenney Exp $
+// $Id: siminterface.cc,v 1.54 2002-09-06 16:43:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -76,6 +76,7 @@ public:
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
+  virtual void refresh_ci ();
   virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite);
 };
 
@@ -427,6 +428,14 @@ bx_real_sim_c::periodic ()
     bx_atexit ();
     quit_sim (0);
   }
+  static int refresh_counter = 0;
+  if (++refresh_counter == 50) {
+    // only ask the CI to refresh every 50 times periodic() is called.
+    // This should obviously be configurable because system speeds and
+    // user preferences vary.
+    refresh_ci ();
+    refresh_counter = 0;
+  }
 #if 0
   // watch for memory leaks.  Allocate a small block of memory, print the
   // pointer that is returned, then free.
@@ -434,6 +443,13 @@ bx_real_sim_c::periodic ()
   BX_INFO(("memory allocation at %p", memcheck));
   delete memcheck;
 #endif
+}
+
+void bx_real_sim_c::refresh_ci () {
+  BxEvent *refresh = new BxEvent ();
+  refresh->type = BX_ASYNC_EVT_REFRESH;
+  sim_to_ci_event (refresh);
+  // the event will be freed by the recipient
 }
 
 // create a disk image file called filename, size=512 bytes * sectors.
@@ -511,17 +527,25 @@ bx_object_c::set_type (bx_objtype type)
   this->type = type;
 }
 
+const char* bx_param_c::default_text_format = NULL;
+
 bx_param_c::bx_param_c (bx_id id, char *name, char *description)
   : bx_object_c (id)
 {
   set_type (BXT_PARAM);
   this->name = name;
   this->description = description;
-  this->text_format = NULL;
+  this->text_format = default_text_format;
   this->ask_format = NULL;
   this->runtime_param = 0;
   this->enabled = 1;
   SIM->register_param (id, this);
+}
+
+const char* bx_param_c::set_default_format (const char *f) {
+  const char *old = default_text_format;
+  default_text_format = f; 
+  return old;
 }
 
 bx_param_num_c::bx_param_num_c (bx_id id,
@@ -534,16 +558,24 @@ bx_param_num_c::bx_param_num_c (bx_id id,
   this->min = min;
   this->max = max;
   this->initial_val = initial_val;
-  this->val = initial_val;
+  this->val.number = initial_val;
   this->handler = NULL;
-  this->base = 10;
+  this->base = default_base;
   set (initial_val);
+}
+
+Bit32u bx_param_num_c::default_base = 10;
+
+Bit32u bx_param_num_c::set_default_base (Bit32u val) {
+  Bit32u old = default_base;
+  default_base = val; 
+  return old;
 }
 
 void 
 bx_param_num_c::reset ()
 {
-  this->val = initial_val;
+  this->val.number = initial_val;
 }
 
 void 
@@ -559,10 +591,10 @@ bx_param_num_c::get ()
 {
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
-    return (*handler)(this, 0, val);
+    return (*handler)(this, 0, val.number);
   } else {
     // just return the value
-    return val;
+    return val.number;
   }
 }
 
@@ -571,14 +603,68 @@ bx_param_num_c::set (Bit32s newval)
 {
   if (handler) {
     // the handler can override the new value and/or perform some side effect
-    val = newval;
+    val.number = newval;
     (*handler)(this, 1, newval);
   } else {
     // just set the value.  This code does not check max/min.
-    val = newval;
+    val.number = newval;
   }
-  if (val < min || val > max) 
-    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), val, min, max));
+  if (val.number < min || val.number > max) 
+    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), val.number, min, max));
+}
+
+bx_shadow_num_c::bx_shadow_num_c (bx_id id,
+    char *name,
+    char *description,
+    Bit32s min,
+    Bit32s max,
+    Bit32s *ptr_to_real_val)
+: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+{
+  val.pointer = ptr_to_real_val;
+}
+
+bx_shadow_num_c::bx_shadow_num_c (bx_id id,
+    char *name,
+    char *description,
+    Bit32s min, Bit32s max, Bit32u *ptr_to_real_val)
+: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+{
+  val.pointer = (Bit32s*) ptr_to_real_val;
+}
+
+bx_shadow_num_c::bx_shadow_num_c (bx_id id,
+      char *name,
+      Bit32u *ptr_to_real_val)
+: bx_param_num_c (id, name, "", BX_MIN_INT, BX_MAX_INT, *ptr_to_real_val)
+{
+  val.pointer = (Bit32s*) ptr_to_real_val;
+}
+
+Bit32s
+bx_shadow_num_c::get () {
+  if (handler) {
+    // the handler can decide what value to return and/or do some side effect
+    return (*handler)(this, 0, *(val.pointer));
+  } else {
+    // just return the value
+    return *(val.pointer);
+  }
+}
+
+void
+bx_shadow_num_c::set (Bit32s newval)
+{
+  if (handler) {
+    // the handler can override the new value and/or perform some side effect
+    *(val.pointer) = newval;
+    (*handler)(this, 1, newval);
+  } else {
+    // just set the value.
+    *(val.pointer) = newval;
+  }
+  if (*(val.pointer) < min || *(val.pointer) > max)
+    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), *(val.pointer), min, max));
 }
 
 bx_param_bool_c::bx_param_bool_c (bx_id id,
@@ -597,9 +683,41 @@ bx_param_bool_c::bx_param_bool_c (bx_id id,
 void bx_param_bool_c::update_dependents ()
 {
   if (dependent_list) {
-    int en = val? 1 : 0;
+    int en = val.number? 1 : 0;
     for (int i=0; i<dependent_list->get_size (); i++)
       dependent_list->get (i)->set_enabled (en);
+  }
+}
+
+bx_shadow_bool_c::bx_shadow_bool_c (bx_id id,
+      char *name,
+      Boolean *ptr_to_real_val)
+  : bx_param_bool_c (id, name, "", (Bit32s) *ptr_to_real_val)
+{
+  val.pbool = ptr_to_real_val;
+}
+
+Bit32s
+bx_shadow_bool_c::get () {
+  if (handler) {
+    // the handler can decide what value to return and/or do some side effect
+    return (*handler)(this, 0, (Bit32s) *(val.pbool));
+  } else {
+    // just return the value
+    return (Bit32s) *(val.pbool);
+  }
+}
+
+void
+bx_shadow_bool_c::set (Bit32s newval)
+{
+  if (handler) {
+    // the handler can override the new value and/or perform some side effect
+    *(val.pbool) = (bool) newval;
+    (*handler)(this, 1, newval);
+  } else {
+    // just set the value.  This code does not check max/min.
+    *(val.pbool) = (bool) newval;
   }
 }
 
@@ -725,6 +843,16 @@ bx_list_c::bx_list_c (bx_id id, int maxsize)
   init ();
 }
 
+bx_list_c::bx_list_c (bx_id id, char *name, char *description, int maxsize)
+  : bx_param_c (id, name, description)
+{
+  set_type (BXT_LIST);
+  this->size = 0;
+  this->maxsize = maxsize;
+  this->list = new bx_param_c*  [maxsize];
+  init ();
+}
+
 bx_list_c::bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list)
   : bx_param_c (id, name, description)
 {
@@ -801,4 +929,3 @@ bx_list_c::set_parent (bx_param_c *parent)
 {
   this->parent = parent;
 }
-
