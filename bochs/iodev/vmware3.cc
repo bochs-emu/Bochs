@@ -86,7 +86,7 @@ int vmware3_image_t::open(const char * pathname)
     int file;
     int flags = O_RDWR;
 #ifdef O_BINARY
-    flags |= O_BINARY
+    flags |= O_BINARY;
 #endif
 
     /* Open the virtual disk */
