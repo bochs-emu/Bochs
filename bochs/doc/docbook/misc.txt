@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.20 2002-12-13 17:16:10 bdenney Exp $
+$Id: misc.txt,v 1.21 2002-12-15 18:00:28 bdenney Exp $
 
 Testing testing....
 
@@ -335,6 +335,17 @@ make install_win32 prefix=/tmp/bochs-2.0.pre3
 This copies all the files into /tmp/bochs-2.0.pre3 and then creates a
 binary ZIP at /tmp/bochs-2.0.pre3.zip.  Rename that 
 bochs-2.0.pre3.win32-bin.zip
+
+
+NOTE: To get the docbook installed, you need to do  something like this
+make dl_docbook
+make install_win32 prefix=$PREFIX
+make install_docbook prefix=$PREFIX docdir=$PREFIX/docs
+make install_win32 prefix=$PREFIX
+
+This will get cleaned up some day.  I did install_win32 twice because the
+install_docbook target doesn't know to create $(prefix).  This can be fixed
+pretty easily, but not right now.
 
 Now make the NSIS installer package.
 cd build/win32/nsis
