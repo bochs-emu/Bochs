@@ -8,7 +8,7 @@ Kevin'
 snapshot
 3/25/2000
 |
-| <-- REL-bochs-2000-03-25.  Also called version 2.0 or REL_1_0_BASE.
+| <-- REL-bochs-2000-03-25.  Also called version 1.0 or REL_1_0_BASE.
 |
 +----- BRANCH-smp-bochs: by Bryce, modify bochs to simulate SMP machine.
 |      |
