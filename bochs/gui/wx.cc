@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.43 2002-10-12 09:04:50 vruppert Exp $
+// $Id: wx.cc,v 1.44 2002-10-13 11:07:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -573,6 +573,16 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
       case GDK_End:         key_event = BX_KEY_END; break;
       case GDK_Page_Up:     key_event = BX_KEY_PAGE_UP; break;
       case GDK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
+
+#ifdef GDK_Menu
+      case GDK_Menu:        key_event = BX_KEY_MENU; break;
+#endif
+#ifdef GDK_Super_L
+      case GDK_Super_L:     key_event = BX_KEY_WIN_L; break;
+#endif
+#ifdef GDK_Super_R
+      case GDK_Super_R:     key_event = BX_KEY_WIN_R; break;
+#endif
 
       default:
         wxLogError( "fillBxKeyEvent_GTK(): keysym %x unhandled!", (unsigned) keysym );
