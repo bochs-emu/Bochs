@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.25 2003-11-13 21:17:31 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.26 2003-11-13 21:57:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -104,7 +104,12 @@ BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
   seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
 
   if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), seg_reg);
+    if ( i->os32L() ) {
+      BX_WRITE_32BIT_REGZ(i->rm(), seg_reg);
+      }
+    else {
+      BX_WRITE_16BIT_REG(i->rm(), seg_reg);
+      }
     }
   else {
     write_virtual_word(i->seg(), RMAddr(i), &seg_reg);
