@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.15 2002-05-30 07:33:48 vruppert Exp $
+// $Id: pci.cc,v 1.16 2002-08-05 17:43:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,7 +60,11 @@ bx_pci_c::bx_pci_c(void)
 
   for (i=0; i < 0x100; i++) {
     BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
-    }
+  }
+
+  for (i=0; i<0x40000; i++) {
+    BX_PCI_THIS s.i440fx.shadow[i] = 0xff;
+  }
 }
 
 bx_pci_c::~bx_pci_c(void)
@@ -93,13 +97,13 @@ bx_pci_c::init(bx_devices_c *d)
 
     for (unsigned i=0; i<256; i++)
       BX_PCI_THIS s.i440fx.array[i] = 0x0;
-    }
     // readonly registers
     BX_PCI_THIS s.i440fx.array[0x00] = 0x86;
     BX_PCI_THIS s.i440fx.array[0x01] = 0x80;
     BX_PCI_THIS s.i440fx.array[0x02] = 0x37;
     BX_PCI_THIS s.i440fx.array[0x03] = 0x12;
     BX_PCI_THIS s.i440fx.array[0x0b] = 0x06;
+  }
 }
 
   void
