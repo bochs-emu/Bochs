@@ -114,7 +114,8 @@ Changes to next release:
   [874816] local ARP/ping/DHCP simulator by m_suzu
   [976066] Keyboard: Get controller version by Ben Lunt
   [832330] ROMBIOS improvement (reduce stack consumption, etc.)
-  [977900] READ_CDROM_TOC and base address from Ben Lunt
+  [977900] READ_CDROM_TOC and base address by Ben Lunt
+  [961665] WinXP patch to read physical CDROM's TOC by Ben Lunt
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.123 2004-08-19 19:42:21 vruppert Exp $
+// $Id: harddrv.cc,v 1.124 2004-08-23 09:39:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -161,7 +161,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.123 2004-08-19 19:42:21 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.124 2004-08-23 09:39:45 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1744,17 +1744,45 @@ if (channel == 0) {
 #ifdef LOWLEVEL_CDROM
 					  bool msf = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 1) & 1;
 					  uint8 starting_track = BX_SELECTED_CONTROLLER(channel).buffer[6];
+					  int toc_length;
 #endif
 					  uint16 alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
 
 					  uint8 format = (BX_SELECTED_CONTROLLER(channel).buffer[9] >> 6);
-                                          int i;
-					  switch (format) {
+// Win32:  I just read the TOC using Win32's IOCTRL functions (Ben)
+#if defined(WIN32)
+#ifdef LOWLEVEL_CDROM
+					switch (format) {
+						case 2:
+						case 3:
+						case 4:
+							if (msf != TRUE)
+								BX_ERROR(("READ_TOC_EX: msf not set for format %i", format));
+						case 0:
+						case 1:
+						case 5:
+						      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
+									    &toc_length, msf, starting_track, format))) {
+										atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET);
+										raise_interrupt(channel);
+						      } else {
+										init_send_atapi_command(channel, atapi_command, toc_length, alloc_length);
+										ready_to_send_atapi(channel);
+						      }
+						      break;
+						default:
+						      BX_PANIC(("(READ TOC) Format %d not supported", format));
+					}
+#else
+					BX_PANIC(("LOWLEVEL_CDROM not defined"));
+#endif
+#else  // WIN32
+					int i;
+					switch (format) {
 						case 0:
 #ifdef LOWLEVEL_CDROM
-						      int toc_length;
-						      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
-										       &toc_length, msf, starting_track))) {
+							if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
+										       &toc_length, msf, starting_track, format))) {
 							    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST,
 									    ASC_INV_FIELD_IN_CMD_PACKET);
 							    raise_interrupt(channel);
@@ -1786,6 +1814,7 @@ if (channel == 0) {
 						      BX_PANIC(("(READ TOC) Format %d not supported", format));
 						      break;
 					  }
+#endif  // WIN32
 				    } else {
 					  atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT);
 					  raise_interrupt(channel);
