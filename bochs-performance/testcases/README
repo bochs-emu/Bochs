@@ -51,9 +51,8 @@ F(N, ARGS) = ?
   1 to set %esp back to normal
   1.5*ARGS to load it into a register and maybe save the old register value
   2 for leave & ret
-  N instructions that the function is replacing
   
-  = N + 4 + 3*ARGS   instructions
+  = 4 + 3*ARGS   instructions
 
 This is ignoring the fact that some CISC instructions are much more expensive
 than others.
@@ -64,19 +63,29 @@ much larger.
 Compare blur with no function call to blur with a call to a function with
 2 arguments.  1.796 ms per iter versus 3.526978 ms per iter.  The function
 was called 142884 times, so the overhead of each function call is
-12.1 microseconds.  (In 12.1 microseconds this machine can execute over
-9000 instructions.)
+12.1 ns.  (In 12.1 ns this machine can execute between 9-10 instructions.)
 
 I briefly tested the overhead of function calls of 2,3,4,5 arguments.
 This should measure the difference between NO function call (inline function)
 and a function call with N arguments.
 
-2 args: 12.1 us more than no function call
-3 args: 13.91 us more than no function call
-4 args: 18.15 us more than no function call
-5 args: 21.58 us more than no function call
+2 args: 12.1 ns more than no function call
+3 args: 13.91 ns more than no function call
+4 args: 18.15 ns more than no function call
+5 args: 21.58 ns more than no function call
+
+Based on measurements, maybe the func_overhead should be
+func_overhead(ARGS) = 4 + 2.5*ARGS instructions
 
 
+Measure the cost of a switch statement.
+With no switch statement, around 1.84 ms per iteration.
+With 2 case switch+default, 2.3867 ms.
+With 3 case switch+default, 3.739635 ms.
+With 4 case switch, 3.341807 ms.   (successive compares)
+With 8 case switch, 2.241196 ms.   (jump table)
+With 16 case switch, 3.122807 ms.  (jump table)
+With 32 case switch, 3.080882 ms.  (jump table)
 
 
 ;;;;;;;;;;;blur.c revision 1.2, compiled with -O2 -S;;;;;;;;;;;;
