@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.256.2.2 2004-02-06 22:14:26 danielg4 Exp $
+// $Id: main.cc,v 1.256.2.3 2004-02-08 14:39:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2621,7 +2621,7 @@ bx_find_bochsrc ()
     case 3:
       {
       char *ptr = getenv("HOME");
-      if (ptr) sprintf (rcfile, "%s/.bochsrc", ptr);
+      if (ptr) snprintf (rcfile, sizeof(rcfile), "%s/.bochsrc", ptr);
       }
       break;
      case 4: strcpy (rcfile, "/etc/bochsrc"); break;
