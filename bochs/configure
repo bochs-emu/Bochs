@@ -14,7 +14,7 @@ ac_default_prefix=/usr/local
 ac_help="$ac_help
   --with-x                use the X Window System"
 ac_help="$ac_help
-  --enable-control-panel                 allows split hard disk image"
+  --enable-control-panel                 turns on/off control panel"
 ac_help="$ac_help
   --enable-processors                select number of processors (1,2,4)"
 ac_help="$ac_help

@@ -65,7 +65,7 @@ AC_LANG_RESTORE
 
 AC_MSG_CHECKING(for control panel)
 AC_ARG_ENABLE(control-panel,
-  [  --enable-control-panel                 allows split hard disk image],
+  [  --enable-control-panel                 turns on/off control panel],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_USE_CONTROL_PANEL, 1)
