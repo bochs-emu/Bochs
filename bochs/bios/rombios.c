@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.28 2002-01-02 09:59:32 vruppert Exp $
+// $Id: rombios.c,v 1.29 2002-01-15 21:22:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -273,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.28 $";
-static char bios_date_string[] = "$Date: 2002-01-02 09:59:32 $";
+static char bios_cvs_version_string[] = "$Revision: 1.29 $";
+static char bios_date_string[] = "$Date: 2002-01-15 21:22:00 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.28 2002-01-02 09:59:32 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.29 2002-01-15 21:22:00 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -4740,30 +4740,57 @@ post_default_ints:
   ;; Video setup
   SET_INT_VECTOR(0x10, #0xF000, #int10_handler)
 
-  ;; Call extension ROMs - scan C0000 to F4000 in 800 steps
+  ;; Scan for existence of valid expansion ROMS.
+  ;;   Video ROM:   from 0xC0000..0xC7FFF in 2k increments
+  ;;   General ROM: from 0xC8000..0xDFFFF in 2k increments
+  ;;   System  ROM: only 0xE0000
+  ;;
+  ;; Header:
+  ;;   Offset    Value
+  ;;   0         0x55
+  ;;   1         0xAA
+  ;;   2         ROM length in 512-byte blocks
+  ;;   3         ROM initialization entry point (FAR CALL)
 
-  mov  bx, #0xc000
-romscan:
+  mov  cx, #0xc000
+rom_scan_loop:
+  mov  ds, cx
+  mov  ax, #0x0004 ;; start with increment of 4 (512-byte) blocks = 2k
+  cmp [0], #0xAA55 ;; look for signature
+  jne  rom_scan_increment
+  mov  al, [2]  ;; change increment to ROM length in 512-byte blocks
+
+  ;; We want our increment in 512-byte quantities, rounded to
+  ;; the nearest 2k quantity, since we only scan at 2k intervals.
+  test al, #0x03
+  jz   block_count_rounded
+  and  al, #0xfc ;; needs rounding up
+  add  al, #0x04
+block_count_rounded:
+
+  xor  bx, bx   ;; Restore DS back to 0000:
   mov  ds, bx
-  mov  ax, 0x0000
-  cmp  ax, #0xAA55
-  jne  notrom
-  xor  ax,ax
-  mov  ds,ax
-  push bx
-  push #3
-  mov  bp,sp
-  db   0xff  ; call 0[bp]
+  push ax       ;; Save AX
+  ;; Push addr of ROM entry point
+  push cx       ;; Push seg
+  push #0x0003  ;; Push offset
+  mov  bp, sp   ;; Call ROM init routine using seg:off on stack
+  db   0xff     ;; call_far ss:[bp+0]
   db   0x5e
   db   0
-  pop  ax
-  pop  bx
-notrom:
-  add  bx,#0x80
-  cmp  bx,#0xf400
-  jne  romscan
-  xor  ax,ax
-  mov  ds,ax
+  cli           ;; In case expansion ROM BIOS turns IF on
+  add  sp, #2   ;; Pop offset value
+  pop  cx       ;; Pop seg value (restore CX)
+  pop  ax       ;; Restore AX
+rom_scan_increment:
+  shl  ax, #5   ;; convert 512-bytes blocks to 16-byte increments
+                ;; because the segment selector is shifted left 4 bits.
+  add  cx, ax
+  cmp  cx, #0xe000
+  jbe  rom_scan_loop
+
+  xor  ax, ax   ;; Restore DS back to 0000:
+  mov  ds, ax
 
   ;; PIC
   mov al, #0x11 ; send initialisation commands
