@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.23 2002-09-20 15:35:44 bdenney Exp $
+// $Id: pc_system.cc,v 1.24 2002-09-30 17:32:34 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -398,7 +398,7 @@ bx_pc_system_c::time_usec() {
 bx_pc_system_c::time_ticks()
 {
       return (counter + 1) * COUNTER_INTERVAL 
-	    - ticks_remaining(counter_timer_index) 
+	    - timer[counter_timer_index].remaining
 	    + ((Bit64u)num_cpu_ticks_in_period - (Bit64u)num_cpu_ticks_left);
 }
 
