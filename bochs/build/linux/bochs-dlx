@@ -1,6 +1,30 @@
 #!/bin/sh
 BOCHS=/usr/local/bin/bochs
-DLXPATH=/usr/local/bochs/dlxlinux
+DLXINST=/usr/local/bochs/dlxlinux
+GUNZIP=gunzip
+if [ ! -z $1 ]; then
+  DLXPATH=$1
+else
+  DLXPATH=$HOME/.bochs
+fi
+CONFFILE=$HOME/.bochs/bochsconf
+
+makedlxdir() {
+  echo DEBUG: Creating $HOME/.bochs/bochsrc
+  echo DLXPATH=$DLXPATH > $CONFFILE
+  . $CONFFILE
+  if [ ! -f $DLXPATH/bochsrc.txt ]; then
+    cp -av $DLXINST/bochsrc.txt $DLXPATH/.
+  else
+    echo "ERROR: bochsrc.txt already exists in $DLXPATH. Remove it to replace"
+  fi
+  if [ ! -f $DLXPATH/hd10meg.img ]; then
+    cp -av $DLXINST/hd10meg.img $DLXPATH/.
+  else
+    echo "ERROR: hd10meg.img already exists in $DLXPATH. Remove it to replace"
+  fi
+}
+
 
 echo -n "Checking for bochs binary..."
 if test ! -x $BOCHS; then
@@ -10,14 +34,48 @@ if test ! -x $BOCHS; then
 fi
 echo ok
 echo -n "Checking for DLX linux directory..."
-if test ! -d $DLXPATH; then
+if test ! -d $DLXINST; then
   echo FAILED
   echo ERROR: I could not find the DLX linux directory.
   exit 1
 fi
 echo ok
+echo -n "Checking for $GUNZIP..."
+$GUNZIP < /dev/null >& /dev/null 
+if test $? = 0; then
+  echo ok
+else
+  echo not found
+  echo ERROR: without $GUNZIP in your PATH, I cannot continue.
+  exit 1
+fi
+echo -n "Checking for $HOME/.bochs directory..."
+if test -d "$HOME/.bochs"; then
+  echo "ok"
+  if test -f "$CONFFILE"; then
+    . $CONFFILE
+  else
+    makedlxdir
+  fi
+else
+  echo DEBUG: Creating $HOME/.bochs
+  mkdir -p $HOME/.bochs
+  mkdir -p $DLXPATH
+  makedlxdir
+fi
 echo Entering $DLXPATH
 cd $DLXPATH
+
+# Now that we're in the DLXPATH, make sure that bochsrc.txt & hd10meg.img exist
+if test ! -f bochsrc.txt; then
+  echo ERROR: bochsrc.txt not found
+  exit 1
+fi
+if test ! -f hd10meg.img; then
+  echo ERROR: hd10meg.img not found
+  exit 1
+fi
+
 echo Running bochs
 
 # ok now try it
