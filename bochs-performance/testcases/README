@@ -87,6 +87,20 @@ With 8 case switch, 2.241196 ms.   (jump table)
 With 16 case switch, 3.122807 ms.  (jump table)
 With 32 case switch, 3.080882 ms.  (jump table)
 
+Once you have enough cases that gcc creates a jump table, the
+cost of a switch statement is about 7 instructions.
+
+Try with a bunch of function calls in a switch stmt.
+
+
+blur-O2                 1.798693 ms
+blur-O2-func            3.309882 ms
+blur-O2-switch          3.101132 ms
+blur-O2-switch-call     2.667050 ms
+blur-O2-fnptr-switch    8.669802 ms
+blur-O2-fnptr-table     6.010503 ms
+
+
 
 ;;;;;;;;;;;blur.c revision 1.2, compiled with -O2 -S;;;;;;;;;;;;
 ;; with some annotations by Bryce to figure out what is what.
