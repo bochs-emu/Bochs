@@ -21,6 +21,11 @@ AC_PROG_LIBTOOL
 dnl Configure libltdl
 AC_CONFIG_SUBDIRS(libltdl)
 
+CFLAGS="$CFLAGS $INCLDL"
+CPPFLAGS="$CPPFLAGS $INCLDL"
+CXXFLAGS="$CXXFLAGS $INCLDL"
+LIBS="$LIBS $LIBLTDL"
+
 AC_MSG_CHECKING(if -no-undefined is required to build a shared library)
 LT_LDFLAGS=
 case $host in
@@ -32,6 +37,11 @@ case $host in
     AC_MSG_RESULT(no)
     ;;
 esac
+
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(CXXFLAGS)
+AC_SUBST(LDFLAGS)
 AC_SUBST(LT_LDFLAGS)
 
 AC_OUTPUT(config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile test6-ltdlopen/Makefile)
