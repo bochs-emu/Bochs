@@ -103,6 +103,20 @@ OBJSXX = \
 	bcd.o \
 	mult16.o \
 	
+# Objects which are only used for x86-64 code, but which have been
+# moved to the cpu/ directory since they cause no conflict at all
+# by being here.
+OBJS64_CPU = \
+	arith64.o \
+	ctrl_xfer64.o \
+	data_xfer64.o \
+	fetchdecode64.o \
+	logical64.o \
+	mult64.o \
+	resolve64.o \
+	shift64.o \
+	stack64.o \
+	
 
 BX_INCLUDES = ../bochs.h ../config.h
 
@@ -118,14 +132,16 @@ libcpu.a: $(OBJS32)
 	@MAKELIB@ $(OBJS32)
 	$(RANLIB) libcpu.a
 
-libcpuXX.a: $(OBJSXX)
+libcpuXX.a: $(OBJSXX) @OBJS64_CPU@
 	@RMCOMMAND@ libcpuXX.a
-	@MAKELIB@ $(OBJSXX)
+	@MAKELIB@ $(OBJSXX) @OBJS64_CPU@
 	$(RANLIB) libcpuXX.a
 
 $(OBJS32): $(BX_INCLUDES)
 
 $(OBJSXX): $(BX_INCLUDES)
+
+$(OBJS64_CPU): $(BX_INCLUDES)
 
 clean:
 	@RMCOMMAND@ *.o
