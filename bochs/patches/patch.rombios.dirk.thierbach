@@ -1,0 +1,80 @@
+----------------------------------------------------------------------
+Patch name: BIOS Int 15 Func D8 (EISA CMOS)
+Author: Dirk Thierbach
+Date: 4/30/2003
+Status: new
+
+Detailed description:
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+--- rombios.c.ORIG	2003-04-29 23:31:20.000000000 +0200
++++ rombios.c	2003-04-30 00:11:48.000000000 +0200
+@@ -3799,6 +3799,60 @@
+ #endif
+       break;
+ 
++    case 0xd8: /* EISA configuration */
++      /* Ralf's interrupt list http://www-2.cs.cmu.edu/~ralf/files.html
++       * gives a few more details about this interrupt. I haven't been
++       * able to find an in-depth description, but for example
++       *   http://docsrv.caldera.com/cgi-bin/man/man?eisa+D4
++       *   http://www.rcnp.osaka-u.ac.jp/unix/DOCUMENTATION/HTML/AA-Q0R6C-TET1_html/TOC.html
++       * give a few hints, though only in the context of writing unix device 
++       * drivers.
++       *
++       * For now, we just indicate empty slots. Shouldn't be a big difference
++       * from leaving it unimplemented, but who knows...
++       */
++      switch (regs.u.r8.al) {
++  	case 0x00: /* Read slot configuration information */
++  	case 0x80: /* Read slot configuration information, 32bit CS */
++	  BX_INFO ("int15: func=%04x slot=%02x, returning empty slot error\n", 
++		   (unsigned) regs.u.r16.ax, (unsigned) regs.u.r8.cl);
++  	  SET_CF();
++  	  regs.u.r8.ah = 0x83; /* empty slot */
++  	  break;
++  	case 0x01: /* Read function configuration information */
++  	case 0x81: /* Read function configuration information, 32bit CS */
++	  BX_INFO ("int15: func=%04x slot=%02x func=%02x, returning empty slot error\n", 
++		   (unsigned) regs.u.r16.ax, (unsigned) regs.u.r8.cl,
++		   (unsigned) regs.u.r8.ch);
++  	  SET_CF();
++  	  regs.u.r8.ah = 0x83; /* empty slot */
++  	  break;
++  	case 0x02: /* Clear nonvolatile memory (EISA CMOS) */
++  	case 0x82: /* Clear nonvolatile memory (EISA CMOS), 32bit CS */
++	  BX_INFO ("int15: func=%04x rev=%04x, returning success\n", 
++		   (unsigned) regs.u.r16.ax, (unsigned) regs.u.r16.bx);
++	  CLEAR_CF();
++  	  regs.u.r8.ah = 0x00; /* success */
++  	  break;
++  	case 0x03: /* Write nonvolatile memory */
++  	case 0x83: /* Write nonvolatile memory, 32bit CS */
++	  BX_INFO ("int15: func=%04x len=%04x, returning CMOS full error\n", 
++		   (unsigned) regs.u.r16.ax, (unsigned) regs.u.r16.cx);
++  	  SET_CF();
++  	  regs.u.r8.ah = 0x85; /* EISA CMOS full */
++  	  break;
++  	case 0x04: /* Read physical slot */
++  	case 0x84: /* Read physical slot, 32bit CS */
++	  BX_INFO ("int15: func=%04x slot=%02x, returning empty slot error\n", 
++		   (unsigned) regs.u.r16.ax, (unsigned) regs.u.r8.cl);
++  	  SET_CF();
++  	  regs.u.r8.ah = 0x83; /* empty slot */
++  	  break;
++  	default:
++	  goto int15_unimplemented;
++  	}
++      break;
++
+     case 0xe8:
+         switch(regs.u.r8.al)
+         {

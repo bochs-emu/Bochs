@@ -1,0 +1,68 @@
+----------------------------------------------------------------------
+Patch name: Disassmble relative jumps correctly
+Author: Dirk Thierbach
+Date: 4/30/2003
+Status: new
+
+Detailed description:
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+--- dis_groups.cc.ORIG	2003-01-21 14:23:47.000000000 +0100
++++ dis_groups.cc	2003-04-30 12:46:36.000000000 +0200
+@@ -418,12 +418,12 @@
+ {
+   if (db_32bit_opsize) {
+     Bit32s imm32;
+-    imm32 = fetch_dword();
++    imm32 = (Bit32s) fetch_dword();
+     dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
+     }
+   else {
+     Bit16s imm16;
+-    imm16 = fetch_word();
++    imm16 = (Bit16s) fetch_word();
+     dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
+     }
+ }
+@@ -522,17 +522,17 @@
+ {
+ #if BX_CPU_LEVEL > 2
+   if (db_32bit_opsize) {
+-    Bit32u imm32;
++    Bit32s imm32; /* JMP rel32 is signed */
+ 
+-    imm32 = fetch_dword();
++    imm32 = (Bit32s) fetch_dword();
+     dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
+     }
+   else
+ #endif
+     {
+-    Bit16u imm16;
++    Bit16s imm16; /* JMP rel16 is signed */
+ 
+-    imm16 = fetch_word();
++    imm16 = (Bit16s) fetch_word();
+     dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
+     }
+ }
+@@ -591,9 +591,9 @@
+   void
+ bx_disassemble_c::Jb(void)
+ {
+-  Bit8u imm8;
++  Bit8s imm8; /* JMP rel8 is signed */
+ 
+-  imm8 = fetch_byte();
++  imm8 = (Bit8s) fetch_byte();
+ #if BX_CPU_LEVEL > 2
+   if (db_32bit_opsize) {
+     dis_sprintf("%08x", (unsigned) (imm8 + db_eip));
