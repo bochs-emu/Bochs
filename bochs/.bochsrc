@@ -45,16 +45,20 @@
 #
 # NOTE: if you use the "wx" configuration interface, you must also use
 # the "wx" display library.
+#
+# Specific options:
+# Some display libraries now support specific option to control their
+# behaviour. See the examples below for currently supported options.
 #=======================================================================
 #display_library: amigaos
 #display_library: beos
 #display_library: carbon
 #display_library: macintosh
 #display_library: nogui
-#display_library: rfb
-#display_library: sdl
+#display_library: rfb, options="timeout=60" # time to wait for client
+#display_library: sdl, options="fullscreen" # startup in fullscreen mode
 #display_library: term
-#display_library: win32
+#display_library: win32, options="legacyF12" # use F12 to toggle mouse
 #display_library: wx
 #display_library: x
 
@@ -105,9 +109,9 @@ megs: 32
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
-#vgaromimage: bios/VGABIOS-lgpl-latest
-#vgaromimage: bios/VGABIOS-elpin-2.40
-vgaromimage: $BXSHARE/VGABIOS-elpin-2.40
+#vgaromimage: file=bios/VGABIOS-lgpl-latest
+#vgaromimage: file=bios/VGABIOS-elpin-2.40
+vgaromimage: file=$BXSHARE/VGABIOS-elpin-2.40
 
 #=======================================================================
 # FLOPPYA:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.9 2004-08-01 19:17:18 vruppert Exp $
+// $Id: config.cc,v 1.10 2004-09-01 18:12:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2797,7 +2797,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: optromimage1 directive malformed.", context));
       }
     if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: optromimage2 directive malformed.", context));
+      PARSE_ERR(("%s: optromimage1 directive malformed.", context));
       }
     bx_options.optrom[0].Opath->set (&params[1][5]);
     if ( (params[2][8] == '0') && (params[2][9] == 'x') )
@@ -2829,7 +2829,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: optromimage3 directive malformed.", context));
       }
     if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: optromimage2 directive malformed.", context));
+      PARSE_ERR(("%s: optromimage3 directive malformed.", context));
       }
     bx_options.optrom[2].Opath->set (&params[1][5]);
     if ( (params[2][8] == '0') && (params[2][9] == 'x') )
@@ -2845,7 +2845,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: optromimage4 directive malformed.", context));
       }
     if (strncmp(params[2], "address=", 8)) {
-      PARSE_ERR(("%s: optromimage2 directive malformed.", context));
+      PARSE_ERR(("%s: optromimage4 directive malformed.", context));
       }
     bx_options.optrom[3].Opath->set (&params[1][5]);
     if ( (params[2][8] == '0') && (params[2][9] == 'x') )
@@ -2857,7 +2857,13 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (num_params != 2) {
       PARSE_ERR(("%s: vgaromimage directive: wrong # args.", context));
       }
-    bx_options.vgarom.Opath->set (params[1]);
+    if (!strncmp(params[1], "file=", 5)) {
+      bx_options.vgarom.Opath->set (&params[1][5]);
+      }
+    else {
+      BX_INFO(("WARNING: old-style syntax is deprecated, use 'vgaromimage: file=...' instead"));
+      bx_options.vgarom.Opath->set (params[1]);
+      }
     }
   else if (!strcmp(params[0], "vga_update_interval")) {
     if (num_params != 2) {
@@ -3664,7 +3670,7 @@ bx_write_configuration (char *rc, int overwrite)
   else
     fprintf (fp, "# no romimage\n");
   if (strlen (bx_options.vgarom.Opath->getptr ()) > 0)
-    fprintf (fp, "vgaromimage: %s\n", bx_options.vgarom.Opath->getptr ());
+    fprintf (fp, "vgaromimage: file=%s\n", bx_options.vgarom.Opath->getptr ());
   else
     fprintf (fp, "# no vgaromimage\n");
   int bootdrive = bx_options.Obootdrive->get ();

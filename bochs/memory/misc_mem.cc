@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.48 2004-08-30 21:47:24 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.49 2004-09-01 18:12:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,9 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.48 2004-08-30 21:47:24 sshwarts Exp $"));
+  int idx;
+
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.49 2004-09-01 18:12:23 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -120,8 +122,10 @@ BX_MEM_C::init_memory(int memsize)
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
     BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
-    for (int idx = 0; idx < 1024 * 1024; idx++)
+    for (idx = 0; idx < 1024 * 1024; idx++)
 	    BX_MEM_THIS memory_handlers[idx] = NULL;
+    for (idx = 0; idx < 65; idx++)
+      BX_MEM_THIS rom_present[idx] = 0;
     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
     }
 
@@ -145,7 +149,7 @@ BX_MEM_C::init_memory(int memsize)
 BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 {
   struct stat stat_buf;
-  int fd, ret;
+  int fd, ret, i, start_idx, end_idx;
   unsigned long size, max_size, offset;
 
   if (*path == '\0') {
@@ -187,7 +191,6 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     }
 
   size = stat_buf.st_size;
-  BX_INFO(("ROM image size is %ld ...", size));
 
   if (type > 0) {
     max_size = 0x10000;
@@ -195,26 +198,48 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     max_size = 0x20000;
   }
   if (size > max_size) {
+    close(fd);
     BX_PANIC(("ROM: ROM image too large"));
     return;
   }
   if (type == 0) {
     if ( (romaddress + size) != 0x100000 ) {
+      close(fd);
       BX_PANIC(("ROM: System BIOS must end at 0xfffff"));
       return;
     }
+    if (romaddress < 0xf0000 ) {
+      BX_MEM_THIS rom_present[64] = 1;
+    }
   } else {
-//    if ((size % 512) != 0) {
-//      BX_PANIC(("ROM: ROM image size must be multiple of 512"));
+// This check will be enabled after an update of the vgabios files
+    if ((size % 512) != 0) {
+//      close(fd);
+//      BX_PANIC(("ROM: ROM image size must be multiple of 512 (size = %ld)", size));
 //      return;
-//    }
+      BX_INFO(("ROM: ROM image size must be multiple of 512 (size = %ld)", size));
+    }
     if ((romaddress % 2048) != 0) {
+      close(fd);
       BX_PANIC(("ROM: ROM image must start at a 2k boundary"));
       return;
     }
-    if ((romaddress < 0xc0000) || ((romaddress + size) > 0xf0000)) {
+    if ((romaddress < 0xc0000) || (romaddress > 0xe0000)) {
+      close(fd);
       BX_PANIC(("ROM: ROM address space out of range"));
       return;
+    }
+    start_idx = ((romaddress - 0xc0000) >> 11);
+    end_idx = start_idx + (size >> 11) + (((size % 2048) > 0) ? 1 : 0);
+    if (end_idx > 65) end_idx = 65;
+    for (i = start_idx; i < end_idx; i++) {
+      if (BX_MEM_THIS rom_present[i]) {
+        close(fd);
+        BX_PANIC(("ROM: address space already in use"));
+        return;
+      } else {
+        BX_MEM_THIS rom_present[i] = 1;
+      }
     }
   }
   offset = 0;
