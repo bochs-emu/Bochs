@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.99 2003-11-02 12:39:54 vruppert Exp $
+// $Id: rombios.c,v 1.100 2003-11-15 00:00:37 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.99 $";
-static char bios_date_string[] = "$Date: 2003-11-02 12:39:54 $";
+static char bios_cvs_version_string[] = "$Revision: 1.100 $";
+static char bios_date_string[] = "$Date: 2003-11-15 00:00:37 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.99 2003-11-02 12:39:54 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.100 2003-11-15 00:00:37 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8464,7 +8464,7 @@ pci_pro_select_reg:
 use16 386
 
 pcibios_real:
-  push ax
+  push eax
   push dx
   mov eax, #0x80000000
   mov dx, #0x0cf8
@@ -8474,13 +8474,13 @@ pcibios_real:
   cmp eax, #0x12378086
   je  pci_present
   pop dx
-  pop ax
+  pop eax
   mov ah, #0xff
   stc
   ret
 pci_present:
   pop dx
-  pop ax
+  pop eax
   cmp al, #0x01 ;; installation check
   jne pci_real_f02
   mov ax, #0x0001
