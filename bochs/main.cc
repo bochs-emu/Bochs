@@ -177,11 +177,12 @@ bx_bochs_init(int argc, char *argv[])
     }
 
 #if BX_DEBUGGER == 0
+#error missing init code for cpu and mem objects
   // debugger will do this work, if enabled
-  BX_CPU.reset(BX_RESET_HARDWARE);
-  BX_MEM.init_memory(bx_options.memory.megs * 1024*1024);
-  BX_MEM.load_ROM(bx_options.rom.path, bx_options.rom.address);
-  BX_MEM.load_ROM(bx_options.vgarom.path, 0xc0000);
+  BX_CPU[0]->reset(BX_RESET_HARDWARE);
+  BX_MEM[0]->init_memory(bx_options.memory.megs * 1024*1024);
+  BX_MEM[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  BX_MEM[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
 #endif
 
   bx_init_debug();

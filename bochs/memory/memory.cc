@@ -220,7 +220,7 @@ inc_one:
 
 #if BX_APIC_SUPPORT
 #warning CPU# hardcoded to 0
-    bx_apic_c *apic = &BX_CPU[0].local_apic;
+    bx_apic_c *apic = &BX_CPU[0]->local_apic;
     if ((a20addr & ~0xfff) == (apic->get_base ())) {
       if ((addr & 0xf != 0) || (len != 4))
         bx_printf ("warning: misaligned or wrong-size APIC write");
@@ -415,7 +415,7 @@ inc_one:
 
 #if BX_APIC_SUPPORT
 #warning always CPU=0
-    bx_apic_c *apic = &BX_CPU[0].local_apic;
+    bx_apic_c *apic = &BX_CPU[0]->local_apic;
     if ((a20addr & ~0xfff) == (apic->get_base ())) {
       Bit32u value;
       apic->read_handler (addr, &value, 4);

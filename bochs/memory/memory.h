@@ -26,7 +26,7 @@
 
 #if BX_USE_MEM_SMF
 #  define BX_MEM_SMF  static
-#  define BX_MEM_THIS BX_MEM[0].
+#  define BX_MEM_THIS BX_MEM[0]->
 #else
 #  define BX_MEM_SMF
 #  define BX_MEM_THIS this->
@@ -63,11 +63,11 @@ public:
   };
 
 #if BX_PROVIDE_CPU_MEMORY==1
-extern BX_MEM_C    BX_MEM[BX_ADDRESS_SPACES];
+extern BX_MEM_C    *BX_MEM[BX_ADDRESS_SPACES];
 #endif
 
 #if BX_DEBUGGER
-#  define BX_DBG_DIRTY_PAGE(page) BX_MEM[0].dbg_dirty_pages[page] = 1;
+#  define BX_DBG_DIRTY_PAGE(page) BX_MEM[0]->dbg_dirty_pages[page] = 1;
 #else
 #  define BX_DBG_DIRTY_PAGE(page)
 #endif
