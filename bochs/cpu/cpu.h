@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.99 2002-10-06 22:08:18 kevinlawton Exp $
+// $Id: cpu.h,v 1.100 2002-10-07 22:51:57 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3038,5 +3038,341 @@ typedef enum _show_flags {
 // Can be used as LHS or RHS.
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
+
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+
+#define setEFlagsOSZAPC(flags32) { \
+  BX_CPU_THIS_PTR eflags.val32 = \
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | \
+    (flags32 & EFlagsOSZAPCMask); \
+  BX_CPU_THIS_PTR lf_flags_status = 0; \
+  }
+
+#define setEFlagsOSZAP(flags32) { \
+  BX_CPU_THIS_PTR eflags.val32 = \
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) | \
+    (flags32 & EFlagsOSZAPMask); \
+  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f; \
+  }
+
+// This section defines some convience inline functions which do the
+// dirty work of asm() statements for arithmetic instructions on x86 hosts. 
+// Essentially these speed up eflags processing since the value of the
+// eflags register can be read directly on x86 hosts, after the
+// arithmetic operations.
+
+  static inline void
+asmAdd16(Bit16u &sum_16, Bit16u op1_16, Bit16u op2_16, Bit32u &flags32)
+{
+  asm (
+    "addw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmAdd32(Bit32u &sum_32, Bit32u op1_32, Bit32u op2_32, Bit32u &flags32)
+{
+  asm (
+    "addl %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum_32)
+    : "1" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmSub16(Bit16u &diff_16, Bit16u op1_16, Bit16u op2_16, Bit32u &flags32)
+{
+  asm (
+    "subw %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (diff_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmSub32(Bit32u &diff_32, Bit32u op1_32, Bit32u op2_32, Bit32u &flags32)
+{
+  asm (
+    "subl %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (diff_32)
+    : "1" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmCmp8(Bit8u op1_8, Bit8u op2_8, Bit32u &flags32)
+{
+  asm (
+    "cmpb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "q" (op1_8), "mq" (op2_8)
+    : "cc"
+    );
+}
+
+  static inline void
+asmCmp16(Bit16u op1_16, Bit16u op2_16, Bit32u &flags32)
+{
+  asm (
+    "cmpw %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmCmp32(Bit32u op1_32, Bit32u op2_32, Bit32u &flags32)
+{
+  asm (
+    "cmpl %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmInc16(Bit16u &op1_16, Bit32u &flags32)
+{
+  asm (
+    "incw %1 \n\t"
+    "pushfl  \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=g" (op1_16)
+    : "1" (op1_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmInc32(Bit32u &op1_32, Bit32u &flags32)
+{
+  asm (
+    "incl %1 \n\t"
+    "pushfl  \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=g" (op1_32)
+    : "1" (op1_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmDec16(Bit16u &op1_16, Bit32u &flags32)
+{
+  asm (
+    "decw %1 \n\t"
+    "pushfl  \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=g" (op1_16)
+    : "1" (op1_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmDec32(Bit32u &op1_32, Bit32u &flags32)
+{
+  asm (
+    "decl %1 \n\t"
+    "pushfl  \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=g" (op1_32)
+    : "1" (op1_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmXor16(Bit16u &result_16, Bit16u op1_16, Bit16u op2_16, Bit32u &flags32)
+{
+  asm (
+    "xorw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmXor32(Bit32u &result_32, Bit32u op1_32, Bit32u op2_32, Bit32u &flags32)
+{
+  asm (
+    "xorl %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result_32)
+    : "1" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmOr8(Bit8u &result_8, Bit8u op1_8, Bit8u op2_8, Bit32u &flags32)
+{
+  asm (
+    "orb %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=q" (result_8)
+    : "1" (op1_8), "mq" (op2_8)
+    : "cc"
+    );
+}
+
+  static inline void
+asmOr16(Bit16u &result_16, Bit16u op1_16, Bit16u op2_16, Bit32u &flags32)
+{
+  asm (
+    "orw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmOr32(Bit32u &result_32, Bit32u op1_32, Bit32u op2_32, Bit32u &flags32)
+{
+  asm (
+    "orl %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result_32)
+    : "1" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmAnd8(Bit8u &result_8, Bit8u op1_8, Bit8u op2_8, Bit32u &flags32)
+{
+  asm (
+    "andb %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=q" (result_8)
+    : "1" (op1_8), "mq" (op2_8)
+    : "cc"
+    );
+}
+
+  static inline void
+asmAnd16(Bit16u &result_16, Bit16u op1_16, Bit16u op2_16, Bit32u &flags32)
+{
+  asm (
+    "andw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmAnd32(Bit32u &result_32, Bit32u op1_32, Bit32u op2_32, Bit32u &flags32)
+{
+  asm (
+    "andl %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (result_32)
+    : "1" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmTest8(Bit8u op1_8, Bit8u op2_8, Bit32u &flags32)
+{
+  asm (
+    "testb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "q" (op1_8), "mq" (op2_8)
+    : "cc"
+    );
+}
+
+  static inline void
+asmTest16(Bit16u op1_16, Bit16u op2_16, Bit32u &flags32)
+{
+  asm (
+    "testw %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+}
+
+  static inline void
+asmTest32(Bit32u op1_32, Bit32u op2_32, Bit32u &flags32)
+{
+  asm (
+    "testl %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_32), "g" (op2_32)
+    : "cc"
+    );
+}
+
+  static inline void
+asmShr16(Bit16u &result_16, Bit16u op1_16, unsigned count, Bit32u &flags32)
+{
+  asm (
+    "shrw %%cl, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=g" (result_16)
+    : "1" (op1_16), "c" (count)
+    : "cc"
+    );
+}
+
+  static inline void
+asmShr32(Bit32u &result_32, Bit32u op1_32, unsigned count, Bit32u &flags32)
+{
+  asm (
+    "shrl %%cl, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=g" (result_32)
+    : "1" (op1_32), "c" (count)
+    : "cc"
+    );
+}
+
+#endif
 
 #endif  // #ifndef BX_CPU_H

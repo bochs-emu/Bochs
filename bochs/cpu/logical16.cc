@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.14 2002-10-03 18:12:40 kevinlawton Exp $
+// $Id: logical16.cc,v 1.15 2002-10-07 22:51:57 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,20 +45,12 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
+
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-    asm (
-      "xorw %3, %1 \n\t"
-      "pushfl      \n\t"
-      "popl   %0"
-      : "=g" (flags32), "=r" (result_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-        (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+
+    asmXor16(result_16, op1_16, op2_16, flags32);
+    setEFlagsOSZAPC(flags32);
 #else
     result_16 = op1_16 ^ op2_16;
 #endif
@@ -68,18 +60,9 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-    asm (
-      "xorw %3, %1 \n\t"
-      "pushfl      \n\t"
-      "popl   %0"
-      : "=g" (flags32), "=r" (result_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-        (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-        (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+
+    asmXor16(result_16, op1_16, op2_16, flags32);
+    setEFlagsOSZAPC(flags32);
 #else
     result_16 = op1_16 ^ op2_16;
 #endif
@@ -96,8 +79,9 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
 BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
+  unsigned nnn = i->nnn();
 
-  op1_16 = BX_READ_16BIT_REG(i->nnn());
+  op1_16 = BX_READ_16BIT_REG(nnn);
 
   if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
@@ -108,7 +92,7 @@ BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 
   result_16 = op1_16 ^ op2_16;
 
-  BX_WRITE_16BIT_REG(i->nnn(), result_16);
+  BX_WRITE_16BIT_REG(nnn, result_16);
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
 }
@@ -231,18 +215,9 @@ BX_CPU_C::OR_GwEw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "orw %3, %1 \n\t"
-    "pushfl      \n\t"
-    "popl   %0"
-    : "=g" (flags32), "=r" (result_16)
-    : "1" (op1_16), "g" (op2_16)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-      (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmOr16(result_16, op1_16, op2_16, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   result_16 = op1_16 | op2_16;
 #endif
@@ -284,18 +259,9 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-    asm (
-      "andw %3, %1\n\t"
-      "pushfl     \n\t"
-      "popl %0"
-      : "=g" (flags32), "=r" (result_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-      (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+
+    asmAnd16(result_16, op1_16, op2_16, flags32);
+    setEFlagsOSZAPC(flags32);
 #else
     result_16 = op1_16 & op2_16;
 #endif
@@ -307,18 +273,9 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-    asm (
-      "andw %3, %1\n\t"
-      "pushfl     \n\t"
-      "popl %0"
-      : "=g" (flags32), "=r" (result_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-      (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+
+    asmAnd16(result_16, op1_16, op2_16, flags32);
+    setEFlagsOSZAPC(flags32);
 #else
     result_16 = op1_16 & op2_16;
 #endif
@@ -348,18 +305,9 @@ BX_CPU_C::AND_GwEw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "andw %3, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32), "=r" (result_16)
-    : "1" (op1_16), "g" (op2_16)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-    (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmAnd16(result_16, op1_16, op2_16, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   result_16 = op1_16 & op2_16;
 #endif
@@ -382,18 +330,9 @@ BX_CPU_C::AND_AXIw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "andw %3, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32), "=r" (result_16)
-    : "1" (op1_16), "g" (op2_16)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-    (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmAnd16(result_16, op1_16, op2_16, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   result_16 = op1_16 & op2_16;
 #endif
@@ -417,18 +356,9 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-    asm (
-      "andw %3, %1\n\t"
-      "pushfl     \n\t"
-      "popl %0"
-      : "=g" (flags32), "=r" (result_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-      (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+
+    asmAnd16(result_16, op1_16, op2_16, flags32);
+    setEFlagsOSZAPC(flags32);
 #else
     result_16 = op1_16 & op2_16;
 #endif
@@ -440,18 +370,9 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-    asm (
-      "andw %3, %1\n\t"
-      "pushfl     \n\t"
-      "popl %0"
-      : "=g" (flags32), "=r" (result_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-      (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+
+    asmAnd16(result_16, op1_16, op2_16, flags32);
+    setEFlagsOSZAPC(flags32);
 #else
     result_16 = op1_16 & op2_16;
 #endif
@@ -481,18 +402,9 @@ BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "testw %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "r" (op1_16), "g" (op2_16)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-    (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmTest16(op1_16, op2_16, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit16u result_16;
   result_16 = op1_16 & op2_16;
@@ -513,18 +425,9 @@ BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "testw %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "r" (op1_16), "g" (op2_16)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-    (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmTest16(op1_16, op2_16, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit16u result_16;
   result_16 = op1_16 & op2_16;
@@ -550,18 +453,9 @@ BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "testw %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "r" (op1_16), "g" (op2_16)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-    (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmTest16(op1_16, op2_16, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit16u result_16;
   result_16 = op1_16 & op2_16;

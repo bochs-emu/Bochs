@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.25 2002-10-02 04:01:45 bdenney Exp $
+// $Id: arith32.cc,v 1.26 2002-10-07 22:51:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,17 +45,9 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "incl %1 \n\t"
-    "pushfl  \n\t"
-    "popl   %0"
-    : "=g" (flags32), "=r" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx)
-    : "1" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) | (flags32 & EFlagsOSZAPMask);
-  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
+
+  asmInc32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
+  setEFlagsOSZAP(flags32);
 #else
   Bit32u erx;
 
@@ -76,17 +68,9 @@ BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "decl %1 \n\t"
-    "pushfl  \n\t"
-    "popl   %0"
-    : "=g" (flags32), "=r" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx)
-    : "1" (BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) | (flags32 & EFlagsOSZAPMask);
-  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
+
+  asmDec32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
+  setEFlagsOSZAP(flags32);
 #else
   Bit32u erx;
 
@@ -131,29 +115,22 @@ BX_CPU_C::ADD_EdGd(bxInstruction_c *i)
 BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
+  unsigned nnn = i->nnn();
 
-  op1_32 = BX_READ_32BIT_REG(i->nnn());
+  op1_32 = BX_READ_32BIT_REG(nnn);
 
   read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "addl %3, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32), "=r" (sum_32)
-    : "1" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmAdd32(sum_32, op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
 #endif
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
+  BX_WRITE_32BIT_REGZ(nnn, sum_32);
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
@@ -164,28 +141,21 @@ BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
 BX_CPU_C::ADD_GdEGd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
+  unsigned nnn = i->nnn();
 
-  op1_32 = BX_READ_32BIT_REG(i->nnn());
+  op1_32 = BX_READ_32BIT_REG(nnn);
   op2_32 = BX_READ_32BIT_REG(i->rm());
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "addl %3, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32), "=r" (sum_32)
-    : "1" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmAdd32(sum_32, op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
 #endif
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
+  BX_WRITE_32BIT_REGZ(nnn, sum_32);
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
@@ -414,8 +384,9 @@ BX_CPU_C::SUB_EdGd(bxInstruction_c *i)
 BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
+  unsigned nnn = i->nnn();
 
-  op1_32 = BX_READ_32BIT_REG(i->nnn());
+  op1_32 = BX_READ_32BIT_REG(nnn);
 
   if (i->modC0()) {
     op2_32 = BX_READ_32BIT_REG(i->rm());
@@ -424,11 +395,20 @@ BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
     }
 
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  Bit32u flags32;
+
+  asmSub32(diff_32, op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
+#else
   diff_32 = op1_32 - op2_32;
+#endif
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), diff_32);
+  BX_WRITE_32BIT_REGZ(nnn, diff_32);
 
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
+#endif
 }
 
   void
@@ -463,17 +443,9 @@ BX_CPU_C::CMP_EdGd(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpl %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "r" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp32(op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;
@@ -499,17 +471,9 @@ BX_CPU_C::CMP_GdEd(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpl %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "r" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp32(op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;
@@ -529,17 +493,9 @@ BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpl %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "r" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp32(op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;
@@ -653,18 +609,9 @@ BX_CPU_C::ADD_EEdId(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "addl %3, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32), "=r" (sum_32)
-    : "1" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-    (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmAdd32(sum_32, op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
 #endif
@@ -686,18 +633,9 @@ BX_CPU_C::ADD_EGdId(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "addl %3, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32), "=r" (sum_32)
-    : "1" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
-    (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmAdd32(sum_32, op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   sum_32 = op1_32 + op2_32;
 #endif
@@ -773,17 +711,9 @@ BX_CPU_C::CMP_EdId(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpl %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "r" (op1_32), "g" (op2_32)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp32(op1_32, op2_32, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.64 2002-10-06 22:08:18 kevinlawton Exp $
+// $Id: cpu.cc,v 1.65 2002-10-07 22:51:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -255,7 +255,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
       ret = fetchDecode(fetchPtr, i, maxFetch);
       }
 
-    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get function pointers as early
+    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get function pointers early.
     if (ret==0) {
 #if BX_SupportICache
       // Invalidate entry, since fetch-decode failed with partial updates

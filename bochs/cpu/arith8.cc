@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.19 2002-09-30 02:02:06 kevinlawton Exp $
+// $Id: arith8.cc,v 1.20 2002-10-07 22:51:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -347,17 +347,9 @@ BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpb %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "q" (op1_8), "mq" (op2_8)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp8(op1_8, op2_8, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
@@ -383,17 +375,9 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpb %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "q" (op1_8), "mq" (op2_8)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp8(op1_8, op2_8, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
@@ -415,17 +399,9 @@ BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpb %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "q" (op1_8), "mq" (op2_8)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp8(op1_8, op2_8, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
@@ -559,17 +535,9 @@ BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
-  asm (
-    "cmpb %2, %1\n\t"
-    "pushfl     \n\t"
-    "popl %0"
-    : "=g" (flags32)
-    : "q" (op1_8), "mq" (op2_8)
-    : "cc"
-    );
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-  BX_CPU_THIS_PTR lf_flags_status = 0;
+
+  asmCmp8(op1_8, op2_8, flags32);
+  setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;

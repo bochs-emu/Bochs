@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.14 2002-10-03 18:12:40 kevinlawton Exp $
+// $Id: shift32.cc,v 1.15 2002-10-07 22:51:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -399,17 +399,9 @@ BX_CPU_C::SHR_Ed(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-    asm (
-      "shrl %%cl, %1\n\t"
-      "pushfl     \n\t"
-      "popl %0"
-      : "=g" (flags32), "=r" (result_32)
-      : "1" (op1_32), "c" (count)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+
+    asmShr32(result_32, op1_32, count, flags32);
+    setEFlagsOSZAPC(flags32);
 #else
     result_32 = (op1_32 >> count);
 #endif
