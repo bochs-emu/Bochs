@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.34 2002-09-19 04:52:03 bdenney Exp $
+// $Id: wxdialog.h,v 1.35 2002-09-20 12:40:13 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -754,7 +754,7 @@ protected:
   wxHashTable *paramHash;
   virtual void EnableChanged ();
   void EnableChanged (ParamStruct *pstr);
-  bool CommitChanges ();
+  bool CopyGuiToParam ();
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);
   virtual ~ParamDialog() {}
@@ -773,7 +773,7 @@ public:
   bool Show (bool val) { isShowing = val; return wxDialog::Show (val); }
   void AddParam (bx_param_c *param, wxFlexGridSizer *sizer = NULL, bool plain = false);
   void AddParamList (bx_id *idList, wxFlexGridSizer *sizer = NULL, bool plain = false);
-  virtual void Refresh ();
+  virtual void CopyParamToGui ();
   bool IsShowing () { return isShowing; }
 DECLARE_EVENT_TABLE()
 };
@@ -869,7 +869,7 @@ public:
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   void AddFlag (bx_id paramId);
   void OnEvent (wxCommandEvent& event);
-  virtual void Refresh ();
+  virtual void CopyParamToGui ();
   DECLARE_EVENT_TABLE()
 };
 

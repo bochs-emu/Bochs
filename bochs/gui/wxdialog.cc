@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.39 2002-09-19 04:52:02 bdenney Exp $
+// $Id: wxdialog.cc,v 1.40 2002-09-20 12:40:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1917,7 +1917,7 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
   }
 }
 
-bool ParamDialog::CommitChanges ()
+bool ParamDialog::CopyGuiToParam ()
 {
   // loop through all the parameters
   idHash->BeginFind ();
@@ -1955,7 +1955,7 @@ bool ParamDialog::CommitChanges ()
 	break;
         }
       default:
-        wxLogError ("ParamDialog::CommitChanges: unsupported param type id=%d", (int)type);
+        wxLogError ("ParamDialog::CopyGuiToParam: unsupported param type id=%d", (int)type);
     }
   }
   return true;
@@ -1994,7 +1994,7 @@ void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
 }
 
 // if any parameters changed, update the associated control
-void ParamDialog::Refresh ()
+void ParamDialog::CopyParamToGui ()
 {
   // loop through all the parameters
   idHash->BeginFind ();
@@ -2028,7 +2028,7 @@ void ParamDialog::Refresh ()
 	break;
         }
       default:
-        wxLogError ("ParamDialog::Refresh(): unsupported param type id=%d", (int)type);
+        wxLogError ("ParamDialog::CopyParamToGui(): unsupported param type id=%d", (int)type);
     }
   }
 }
@@ -2062,10 +2062,10 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
   switch (id) {
     case wxID_OK:
       if (IsModal ()) {
-        if (CommitChanges ())
+        if (CopyGuiToParam ())
           EndModal (wxID_OK);
       } else {
-	Refresh ();
+	CopyParamToGui ();
       }
       break;
     case wxID_CANCEL:
@@ -2245,9 +2245,9 @@ CpuRegistersDialog::stateChanged (bool simRunning)
 }
 
 void 
-CpuRegistersDialog::Refresh ()
+CpuRegistersDialog::CopyParamToGui ()
 {
-  ParamDialog::Refresh ();
+  ParamDialog::CopyParamToGui ();
 #if BX_DEBUGGER
   stateChanged (SIM->get_param_bool (BXP_DEBUG_RUNNING)->get ());
 #endif
@@ -2302,7 +2302,7 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
       theFrame->DebugCommand ("step 1");
       break;
     case ID_Debug_Commit:
-      CommitChanges ();
+      CopyGuiToParam ();
       break;
 #endif
     default:
