@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.41 2003-09-05 23:17:51 cbothamy Exp $
+// $Id: cmos.cc,v 1.42 2003-10-02 07:38:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.41 2003-09-05 23:17:51 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.42 2003-10-02 07:38:00 cbothamy Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -163,16 +163,12 @@ bx_cmos_c::init(void)
        
        BX_CMOS_THIS s.timeval = time(NULL);
 
-#if BX_HAVE_LOCALTIME
-       localtime(&BX_CMOS_THIS s.timeval);
-#if BX_HAVE_TIMEZONE
+#if BX_HAVE_GMTIME && BX_HAVE_MKTIME
        utc_ok = 1;
-       BX_CMOS_THIS s.timeval += timezone;
-#endif // BX_HAVE_TIMEZONE
-#if BX_HAVE_DAYLIGHT
-       BX_CMOS_THIS s.timeval -= (daylight*3600);
-#endif // BX_HAVE_DAYLIGHT
-#endif // BX_HAVE_LOCALTIME
+       struct tm *utc_holder = gmtime(&BX_CMOS_THIS s.timeval);
+       utc_holder->tm_isdst = -1;
+       BX_CMOS_THIS s.timeval = mktime(utc_holder);
+#endif // BX_HAVE_GMTIME && BX_HAVE_MKTIME
 
        if (!utc_ok) {
            BX_ERROR(("UTC time is not supported on your platform. Using current localtime"));
