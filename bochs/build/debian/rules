@@ -57,7 +57,7 @@ install: build
 
 	# Put the font in the right place
 	mkdir -p $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc
-	cp $(CURDIR)/debian/bochs/usr/bochs/latest/vga.pcf $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc/vga.pcf
+	gzip -c $(CURDIR)/debian/bochs/usr/bochs/latest/vga.pcf > $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc/vga.pcf.gz
 
 	# Dirty little Hack to put the binaries in the right place 
 	# This is becasue the makefile puts symlinks into /usr/bin which is bad ;)
