@@ -81,7 +81,7 @@ rombios.bin: rombios.o
 biosconfig.h: ../config.h
 	@RMCOMMAND@ biosconfig.h
 	echo '// This file generated automatically by bios/Makefile using config.h' > biosconfig.h
-	grep '#define' ../config.h >> biosconfig.h
+	grep '#define.*SMP_PROCESSORS' ../config.h >> biosconfig.h
 
 rombios.o: rombios.c biosconfig.h
 	gcc -E rombios.c | tools86 -E > _rombios_.c
