@@ -6,7 +6,7 @@ test:
 	@echo "*** Test done in `pwd`"
 
 uselib.out.expected::
-	-./uselib | ../filter-test-output > uselib.out.expected
+	-./uselib | ${top_srcdir}/filter-test-output > uselib.out.expected
 
 clean-common::
 	rm -rf .libs *.o *.lo *.la *.dll uselib uselib.exe bin lib uselib.out
