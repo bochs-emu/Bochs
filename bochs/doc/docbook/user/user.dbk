@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.119 2003-05-11 19:27:03 cbothamy Exp $
+$Id: user.dbk,v 1.120 2003-07-16 12:49:52 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -341,8 +341,8 @@ currently work with.
   <row>
     <entry>VESA (Display) Support</entry>
     <entry>Yes</entry>
-    <entry>Currently resolutions up to 1024x768x8pp are supported (so no
-    16/24/32 modes). You must enable vbe and use the LGPL'ed VGABIOS.
+    <entry>Currently resolutions up to 1024x768x32bpp are supported.
+    You must enable vbe and use the LGPL'ed VGABIOS.
     </entry>
   </row>
   <row>
@@ -1224,12 +1224,6 @@ anyway, but if it is missing important pieces it may not run properly.
 </para>
 
 <para>
-The RPM installation is supposed to install the VGA font for you, if
-necessary.  But if you are seeing errors like "Could not open vga font", then
-please read <xref linkend="vgafont">.
-</para>
-
-<para>
 The Bochs RPM installs four new commands and associated manual pages: bochs,
 bochs-dlx, bximage and bxcommit.  First, let's try out the DLX Linux demo by typing
 <command>bochs-dlx</command>.  
@@ -1900,7 +1894,7 @@ turn it off.
       <entry>yes</entry>
       <entry>Use VGA BIOS Extensions (VBE) by Jeroen Janssen.  To take
       advantage of the VBE, you must tell Bochs to use the LGPL VGA BIOS
-      version 0.3a or higher in the vgaromimage line of your bochsrc file.
+      version 0.3b or higher in the vgaromimage line of your bochsrc file.
       </entry>
     </row>
     <row>
@@ -2562,6 +2556,10 @@ fpu/fpu_system.h, you could try --disable-fpu.
 
 <section id="vgafont"><title>Installing the VGA font (X windows only)</title>
 <para>
+This description will be obsolete in Bochs 2.1, since Bochs no longer requires
+an external font. Now a changeable internal font is used.
+</para>
+<para>
 In text mode, Bochs requires your X server to have access to the
 VGA font.  If you don't already have it, you must install it.  The
 file is in the source directory, called <filename>font/vga.pcf</filename>.
@@ -2619,10 +2617,9 @@ just reboot.
      <para> &FIXME; </para>
       <para>
         <screen>
-        - bochsrc, BIOS, VGABIOS, VGA font, disk images.
+        - bochsrc, BIOS, VGABIOS, disk images.
         - (DONE) table of bochsrc options and what they do
         - BIOS/VGABIOS, what do they do?
-        - VGA font, how to install it
         - disk images
           - where to find one pre-made
           - make a blank one with bximage
@@ -5754,7 +5751,7 @@ NOTE: you will need to use the LGPL'ed VGABIOS in order for application to corre
 <para>
 Current limitations:
 <itemizedlist>
-	<listitem> <para> only 8bpp modes are supported (no 16bpp, 24bpp or 32bpp!)</para> </listitem>
+	<listitem> <para> 4bpp modes support is incomplete (8, 15, 16, 24 and 32bpp should work)</para> </listitem>
 	<listitem> <para> banked mode is very slow (if you can, just use Linear Frame Buffering instead!) </para> </listitem>
 	<listitem> <para> only 320x200, 640x400, 640x480, 800x600, 1024x768 are currently supported</para> </listitem>
 </itemizedlist>
@@ -5942,7 +5939,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.119 2003-05-11 19:27:03 cbothamy Exp $
+      $Id: user.dbk,v 1.120 2003-07-16 12:49:52 vruppert Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8369,7 +8366,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.119 2003-05-11 19:27:03 cbothamy Exp $
+        $Id: user.dbk,v 1.120 2003-07-16 12:49:52 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
