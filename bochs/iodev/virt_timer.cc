@@ -317,7 +317,7 @@ bx_virt_timer_c::next_event_time_update(void) {
 
 void
 bx_virt_timer_c::init(void) {
-  virtual_timers_realtime = BX_VIRTUAL_TIMERS_REALTIME;
+  virtual_timers_realtime = bx_options.Orealtime_pit->get ();
 
   register_timer(this, nullTimer, NullTimerInterval, 1, 1, "Null Timer");
 
