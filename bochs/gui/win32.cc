@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.25 2002-03-11 16:35:41 bdenney Exp $
+// $Id: win32.cc,v 1.26 2002-03-15 10:55:48 mlerwill Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -154,6 +154,24 @@ static void headerbar_click(int x);
   void alarm(int);
   void bx_signal_handler(int);
 #endif
+
+static int stored_x = 0;
+static int stored_y = 0;
+ 
+static void CreateMainBitmap (HWND hwnd, int x, int y)
+{
+	HDC hdc;
+	if ((stored_x != x) || (stored_y != y))
+		if (MemoryBitmap != NULL)
+			DeleteObject (MemoryBitmap);
+	hdc = GetDC(hwnd);
+    MemoryBitmap = CreateCompatibleBitmap(hdc, x, y);
+	stored_x = x;
+	stored_y = y;
+    MemoryDC = CreateCompatibleDC(hdc);
+    ReleaseDC(hwnd, hdc);
+}
+
 
 
 static void processMouseXY( int x, int y, int windows_state, int implied_state_change)
@@ -389,12 +407,7 @@ VOID UIThread(PVOID pvoid) {
     SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
       wndRect.top + stretched_y/2 + y_edge + y_caption);
     cursorWarped();
-
-    hdc = GetDC(stInfo.hwnd);
-    MemoryBitmap = CreateCompatibleBitmap(hdc, BX_MAX_XRES, BX_MAX_YRES);
-    MemoryDC = CreateCompatibleDC(hdc);
-    ReleaseDC(stInfo.hwnd, hdc);
-
+	CreateMainBitmap (stInfo.hwnd, stretched_x, stretched_y);
     if (MemoryBitmap && MemoryDC) {
       stInfo.UIinited = TRUE;
 
@@ -837,6 +850,7 @@ if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
     stretch_factor *= 2;
   }
   
+  CreateMainBitmap(stInfo.hwnd, stretched_x, stretched_y); 
   SetWindowPos(stInfo.hwnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
               stretched_y+ y_edge * 2 + y_caption,
                SWP_NOMOVE | SWP_NOZORDER);
