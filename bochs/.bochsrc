@@ -18,6 +18,8 @@ romimage: file=bios/BIOS-bochs-2001_0517, address=0xf0000
 # MEGS
 # set this to the default number of Megabytes of memory you want
 # to emulate.  You may also pass the '-megs xyz' option to bochs
+#
+# The default is 32MB, most OS's won't need more than that. 
 #=======================================================================
 #megs: 256
 #megs: 128
@@ -35,25 +37,26 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 #=======================================================================
 # FLOPPYA:
 # Point this to pathname of floppy image file or device
-# This should be of a bootable floppy(image/device) if you're booting from 'a'.
+# This should be of a bootable floppy(image/device) if you're 
+# booting from 'a'.
+#
 # You can set the initial status of the media to 'ejected' or 'inserted'.
 #   floppya: 2_88=path, status=ejected             (2.88M 3.5" floppy)
 #   floppya: 1_44=path, status=inserted            (1.44M 3.5" floppy)
 #   floppya: 1_2=path, status=ejected              (1.2M  5.25" floppy)
 #   floppya: 720k=path, status=inserted            (720K  3.5" floppy)
+#
+# The default is 1_44=/dev/fd0, at least I think that's what most people use.
 #=======================================================================
-#floppya: file=../144
-#floppya: file=/dev/fd0
-#floppya: 1_44=/dev/fd0H1440
-#floppya: 1_2=../1_2
+#floppya: 1_44=/dev/fd0, status=ejected
+#floppya: file=../1.44, status=ejected
+#floppya: 1_44=/dev/fd0H1440, status=ejected
+#floppya: 1_2=../1_2, status=ejected
 
 #=======================================================================
 # FLOPPYB:
 # See FLOPPYA above
 #=======================================================================
-
-
-
 
 #=======================================================================
 # DISKC: file=, cyl=, heads=, spt=
@@ -68,7 +71,7 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 #   diskc: file=112M.sample, cyl=900, heads=15, spt=17
 #   diskc: file=483M.sample, cyl=1024, heads=15, spt=63
 #=======================================================================
-diskc: file="../10M.vga", cyl=306, heads=4, spt=17
+diskc: file="30M.sample", cyl=615, heads=6, spt=17
 
 #=======================================================================
 # CDROM
@@ -119,8 +122,14 @@ log: bochsout.txt
 #          spit out thousands per second.
 #
 # For events of each level, you can choose to crash, report, or ignore.
-# TODO: allow choice based on the facility: e.g. report debug messages
-#       from the cdrom but ignore debug messages from everything else.
+# TODO: allow choice based on the facility: e.g. crash on panics from
+#       everything except the cdrom, and only report those.
+#
+# If you are experiencing many panics, it can be helpful to change
+# the panic action to report instead of fatal.  However, be aware
+# that anything executed after a panic is uncharted territory and can 
+# cause bochs to become unstable.  The panic is a "graceful exit," so
+# if you disable it you may get a spectacular disaster instead.
 #=======================================================================
 panic: action=fatal
 error: action=report
@@ -187,7 +196,7 @@ vga_update_interval: 300000
 # Examples:
 #   keyboard_serial_delay: 200
 #=======================================================================
-keyboard_serial_delay: 200
+keyboard_serial_delay: 250
 
 #=======================================================================
 # FLOPPY_COMMAND_DELAY:
@@ -206,13 +215,19 @@ floppy_command_delay: 500
 # is capable of running on your machine.  Read the note in config.h
 # on how to find this.  Make sure to recompile after.
 #
-# Examples:
+# IPS is used to calibrate many time-dependent events within the bochs 
+# simulation.  For example, changing IPS affects the frequency of VGA
+# updates, the duration of time before a key starts to autorepeat, and 
+# the measurement of BogoMips and other benchmarks.
 #
-# machine                                         Mips
+# Examples:
+# Machine                                         Mips
 # ________________________________________________________________
-# 400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3  1 to 1.8Mips
+# 650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66 2 to 2.5 Mips
+# 400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3  1 to 1.8 Mips
 # 166Mhz 64bit Sparc with Solaris 2.x             approx 0.75 Mips
 # 200Mhz Pentium with Linux 2.x                   approx 0.5 Mips
+#
 #=======================================================================
 ips: 1000000
 
@@ -226,6 +241,9 @@ ips: 1000000
 # Examples:
 #   mouse: enabled=1
 #   mouse: enabled=0
+#
+# I wouldn't recommend enabling the mouse by default, unless you have a
+# really good reason to do so.
 #=======================================================================
 mouse: enabled=0
 
@@ -261,4 +279,3 @@ i440fxsupport: enabled=0
 # romimage: file=:bios:BIOS-bochs-981222a, address=0xf0000
 # floppya: 1_44=[fd:], status=inserted
 #=======================================================================
-
