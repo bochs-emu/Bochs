@@ -1184,15 +1184,15 @@ bx_dbg_print_stack_command(int nwords)
 	}
 }
 
-#if !BX_CONTEXT_SUPPORT
+#if !BX_HAVE_HASH_MAP
 
-static char *BX_CONTEXT_SUPPORT_ERR = "context not implemented because BX_CONTEXT_SUPPORT=0\n";
+static char *BX_HAVE_HASH_MAP_ERR = "context not implemented because BX_HAVE_HASH_MAP=0\n";
 char*
 bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
   static Boolean first = true;
   if (first) {
-    fprintf (stderr, BX_CONTEXT_SUPPORT_ERR);
+    fprintf (stderr, BX_HAVE_HASH_MAP_ERR);
     first = false;
   }
   return "unknown context";
@@ -1201,14 +1201,14 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 void
 bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
 {
-  fprintf (stderr, BX_CONTEXT_SUPPORT_ERR);
+  fprintf (stderr, BX_HAVE_HASH_MAP_ERR);
 }
 
-#else   /* if BX_CONTEXT_SUPPORT == 1 */
+#else   /* if BX_HAVE_HASH_MAP == 1 */
 
 /* Haven't figured out how to port this code to OSF1 cxx compiler.
    Until a more portable solution is found, at least make it easy
-   to disable the template code:  just set BX_CONTEXT_SUPPORT=0
+   to disable the template code:  just set BX_HAVE_HASH_MAP=0
    in config.h */
 
 #include <hash_map.h>
