@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.151 2002-10-16 19:42:24 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.152 2002-10-16 20:19:35 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1151,7 +1151,7 @@ AC_SUBST(FPU_GLUE_OBJ)
 support_sse=0
 AC_MSG_CHECKING(for SSE support)
 AC_ARG_ENABLE(sse,
-  [  --enable-sse                      =1 (SSE) =2 (SSE2) support],
+  [  --enable-sse                      SSE/SSE2 support (--enable-sse=[no|1|2])],
   [case "$enableval" in
     no | 0)
       support_sse=0
@@ -1159,14 +1159,14 @@ AC_ARG_ENABLE(sse,
       ;;
     yes | 1)
       support_sse=1
-      AC_MSG_RESULT(yes)
+      AC_MSG_RESULT(SSE only)
       ;;
     2)
       support_sse=2
-      AC_MSG_RESULT(yes)
+      AC_MSG_RESULT(SSE and SSE2)
       ;;
     *)
-      echo "ERROR: --enable-sse=$enableval not understood"
+      echo "ERROR: --enable-sse=$enableval not understood. Use --enable-sse=[no|1|2]"
       exit 1
       ;;
    esac
@@ -1326,7 +1326,7 @@ AC_SUBST(GDBSTUB_VAR)
 
 
 AC_ARG_ENABLE(hga-dumps,
-  [  --enable-hga-dumps=Nmicroseconds  copy memory to HGA video buffer every N useconds],
+  [  --enable-hga-dumps=Nmicroseconds  copy memory to HGA buffer every N usec],
   AC_DEFINE_UNQUOTED(BX_EMULATE_HGA_DUMPS, $enableval),
   )
 
