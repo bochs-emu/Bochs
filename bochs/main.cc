@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.254 2003-10-07 00:21:10 danielg4 Exp $
+// $Id: main.cc,v 1.255 2003-12-29 20:58:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3696,7 +3696,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
   else if (!strcmp(params[0], "sb16")) {
     for (i=1; i<num_params; i++) {
-        bx_options.sb16.Opresent->set (1);
       if (!strncmp(params[i], "midi=", 5)) {
         bx_options.sb16.Omidifile->set (strdup(&params[i][5]));
         }
@@ -3719,6 +3718,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.sb16.Odmatimer->set (atol(&params[i][9]));
         }
       }
+    if (bx_options.sb16.Odmatimer->get () > 0)
+      bx_options.sb16.Opresent->set (1);
     }
 
   else if (!strcmp(params[0], "parport1")) {
@@ -3840,50 +3841,53 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
     char tmpchar[6];
-    bx_options.ne2k.Opresent->set (0);
-    if ((num_params < 4) || (num_params > 7)) {
-      PARSE_ERR(("%s: ne2k directive malformed.", context));
+    int valid = 0;
+    int n;
+    if (!bx_options.ne2k.Opresent->get ()) {
+      bx_options.ne2k.Oethmod->set_by_name ("null");
       }
-    bx_options.ne2k.Oethmod->set_by_name ("null");
-    if (strncmp(params[1], "ioaddr=", 7)) {
-      PARSE_ERR(("%s: ne2k directive malformed.", context));
-      }
-    if (strncmp(params[2], "irq=", 4)) {
-      PARSE_ERR(("%s: ne2k directive malformed.", context));
-      }
-    if (strncmp(params[3], "mac=", 4)) {
-      PARSE_ERR(("%s: ne2k directive malformed.", context));
-      }
-    bx_options.ne2k.Oioaddr->set (strtoul(&params[1][7], NULL, 16));
-    bx_options.ne2k.Oirq->set (atol(&params[2][4]));
-    i = sscanf(&params[3][4], "%x:%x:%x:%x:%x:%x",
-             &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
-    if (i != 6) {
-      PARSE_ERR(("%s: ne2k mac address malformed.", context));
-      }
-    for (i=0;i<6;i++)
-      tmpchar[i] = (unsigned char)tmp[i];
-    bx_options.ne2k.Omacaddr->set (tmpchar);
-    if (num_params > 4) {
-      if (strncmp(params[4], "ethmod=", 7)) {
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "ioaddr=", 7)) {
+        bx_options.ne2k.Oioaddr->set (strtoul(&params[i][7], NULL, 16));
+        valid |= 0x01;
+        }
+      else if (!strncmp(params[i], "irq=", 4)) {
+        bx_options.ne2k.Oirq->set (atol(&params[i][4]));
+        valid |= 0x02;
+        }
+      else if (!strncmp(params[i], "mac=", 4)) {
+        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
+                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
+        if (n != 6) {
+          PARSE_ERR(("%s: ne2k mac address malformed.", context));
+        }
+        for (n=0;n<6;n++)
+          tmpchar[n] = (unsigned char)tmp[n];
+        bx_options.ne2k.Omacaddr->set (tmpchar);
+        valid |= 0x04;
+        }
+      else if (!strncmp(params[i], "ethmod=", 7)) {
+        if (!bx_options.ne2k.Oethmod->set_by_name (strdup(&params[i][7])))
+          PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
+        }
+      else if (!strncmp(params[i], "ethdev=", 7)) {
+        bx_options.ne2k.Oethdev->set (strdup(&params[i][7]));
+        }
+      else if (!strncmp(params[i], "script=", 7)) {
+        bx_options.ne2k.Oscript->set (strdup(&params[i][7]));
+        }
+      else {
         PARSE_ERR(("%s: ne2k directive malformed.", context));
         }
-      if (!bx_options.ne2k.Oethmod->set_by_name (strdup(&params[4][7])))
-        PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[4][7])));
-      if (num_params > 5) {
-        if (strncmp(params[5], "ethdev=", 7)) {
-          PARSE_ERR(("%s: ne2k directive malformed.", context));
-          }
-        bx_options.ne2k.Oethdev->set (strdup(&params[5][7]));
-        if (num_params > 6) {
-          if (strncmp(params[6], "script=", 7)) {
-            PARSE_ERR(("%s: ne2k directive malformed.", context));
-            }
-          bx_options.ne2k.Oscript->set (strdup(&params[6][7]));
-          }
+    }
+    if (!bx_options.ne2k.Opresent->get ()) {
+      if (valid == 0x07) {
+        bx_options.ne2k.Opresent->set (1);
+        }
+      else {
+        PARSE_ERR(("%s: ne2k directive incomplete (ioaddr, irq and mac are required)", context));
         }
       }
-    bx_options.ne2k.Opresent->set (1);
     }
 
   else if (!strcmp(params[0], "load32bitOSImage")) {
