@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.13.2.1 2002-03-17 08:57:02 bdenney Exp $
+// $Id: floppy.cc,v 1.13.2.2 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.13.2.1 2002-03-17 08:57:02 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.13.2.2 2002-04-05 06:53:48 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -1329,7 +1329,11 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       BX_FD_THIS s.media[drive].fd = -1;
       }
     BX_FD_THIS s.media_present[drive] = 0;
-    bx_options.floppya.Oinitial_status->set(BX_EJECTED);
+    if (drive == 0) {
+      bx_options.floppya.Oinitial_status->set(BX_EJECTED);
+    } else {
+      bx_options.floppyb.Oinitial_status->set(BX_EJECTED);
+    }
     BX_FD_THIS s.DIR |= 0x80; // disk changed line
     return(0);
     }
@@ -1345,13 +1349,21 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       }
     if (evaluate_media(type, path, & BX_FD_THIS s.media[drive])) {
       BX_FD_THIS s.media_present[drive] = 1;
-      bx_options.floppya.Oinitial_status->set(BX_INSERTED);
+      if (drive == 0) {
+        bx_options.floppya.Oinitial_status->set(BX_INSERTED);
+      } else {
+        bx_options.floppyb.Oinitial_status->set(BX_INSERTED);
+      }
       BX_FD_THIS s.DIR |= 0x80; // disk changed line
       return(1);
       }
     else {
       BX_FD_THIS s.media_present[drive] = 0;
-      bx_options.floppya.Oinitial_status->set(BX_EJECTED);
+      if (drive == 0) {
+        bx_options.floppya.Oinitial_status->set(BX_EJECTED);
+      } else {
+        bx_options.floppyb.Oinitial_status->set(BX_EJECTED);
+      }
       return(0);
       }
     }

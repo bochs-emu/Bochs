@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.18.2.2 2002-03-17 08:57:02 bdenney Exp $
+// $Id: dbg_main.cc,v 1.18.2.3 2002-04-05 06:53:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -416,14 +416,17 @@ process_sim2:
   // Print disassembly of the first instruction...  you wouldn't think it
   // would have to be so hard.  First initialize guard_found, since it is used
   // in the disassembly code to decide what instruction to print.
-  BX_CPU_THIS_PTR guard_found.cs =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  BX_CPU_THIS_PTR guard_found.eip =
-    BX_CPU_THIS_PTR prev_eip;
-  BX_CPU_THIS_PTR guard_found.laddr =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip;
-  BX_CPU_THIS_PTR guard_found.is_32bit_code =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  for (i=0; i<BX_SMP_PROCESSORS; i++) {
+    BX_CPU(i)->guard_found.cs =
+      BX_CPU(i)->sregs[BX_SEG_REG_CS].selector.value;
+    BX_CPU(i)->guard_found.eip =
+      BX_CPU(i)->prev_eip;
+    BX_CPU(i)->guard_found.laddr =
+      BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.base
+        + BX_CPU(i)->prev_eip;
+    BX_CPU(i)->guard_found.is_32bit_code =
+      BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  }
   // finally, call the usual function to print the disassembly
   fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
   bx_dbg_disassemble_current (-1, 0);  // all cpus, don't print time
@@ -1520,6 +1523,7 @@ bx_dbg_continue_command(void)
 
 #if BX_NUM_SIMULATORS >= 2
   bx_guard.interrupt_requested = 0;
+  bx_guard.special_unwind_stack = 0;
   while (1) {
     if ( !bx_dbg_cosimulateN(bx_debugger.icount_quantum) )
       break;
@@ -1533,6 +1537,7 @@ bx_dbg_continue_command(void)
 
 
   bx_guard.interrupt_requested = 0;
+  bx_guard.special_unwind_stack = 0;
 	int stop = 0;
 	int which = -1;
 	while (!stop) {
@@ -1582,6 +1587,12 @@ bx_dbg_continue_command(void)
 		  if (BX_CPU(cpu)->guard_found.icount > max_executed)
 			max_executed = BX_CPU(cpu)->guard_found.icount;
 		}
+		// potential deadlock if all processors are halted.  Then 
+		// max_executed will be 0, tick will be incremented by zero, and
+		// there will never be a timed event to wake them up.  To avoid this,
+		// always tick by a minimum of 1.
+		if (max_executed < 1) max_executed=1;
+
 		BX_TICKN(max_executed);
 #endif /* BX_SMP_PROCESSORS>1 */
 	}
@@ -1608,6 +1619,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 
 #if BX_NUM_SIMULATORS >= 2
   bx_guard.interrupt_requested = 0;
+  bx_guard.special_unwind_stack = 0;
   bx_dbg_cosimulateN(count);
 #else
   // single CPU
@@ -2055,7 +2067,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 
   if (which_cpu < 0) {
     // iterate over all of them.
-    for (int i=0; i<BX_NUM_SIMULATORS; i++)
+    for (int i=0; i<BX_SMP_PROCESSORS; i++)
       bx_dbg_disassemble_current (i, print_time);
     return;
   }
@@ -2188,7 +2200,10 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 
 #if BX_DISASM
   if (bx_debugger.auto_disassemble) {
-    fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
+    if (sim==0) {
+      // print this only once
+      fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
+    }
     bx_dbg_disassemble_current (sim, 0);  // one cpu, don't print time
   }
 #endif  // #if BX_DISASM

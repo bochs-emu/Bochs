@@ -8,8 +8,8 @@ diff -u -r1.45 -r1.46
 +++ iodev/keyboard.cc	23 Feb 2002 09:32:49 -0000	1.46
 @@ -1,5 +1,5 @@
  /////////////////////////////////////////////////////////////////////////
--// $Id: keyboard.cc,v 1.45 2002/02/21 20:26:48 bdenney Exp $
-+// $Id: keyboard.cc,v 1.46 2002/02/23 09:32:49 vruppert Exp $
+-// $Id: patch.eks-port64,v 1.1 2002/03/27 05:58:25 bdenney Exp $
++// $Id: patch.eks-port64,v 1.1 2002/03/27 05:58:25 bdenney Exp $
  /////////////////////////////////////////////////////////////////////////
  //
  //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -17,8 +17,8 @@ diff -u -r1.45 -r1.46
    memset( &s, 0, sizeof(s) );
    BX_KEY_THIS put("KBD");
    BX_KEY_THIS settype(KBDLOG);
--  BX_DEBUG(("Init $Id: keyboard.cc,v 1.45 2002/02/21 20:26:48 bdenney Exp $"));
-+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.46 2002/02/23 09:32:49 vruppert Exp $"));
+-  BX_DEBUG(("Init $Id: patch.eks-port64,v 1.1 2002/03/27 05:58:25 bdenney Exp $"));
++  BX_DEBUG(("Init $Id: patch.eks-port64,v 1.1 2002/03/27 05:58:25 bdenney Exp $"));
  }
  
  bx_keyb_c::~bx_keyb_c(void)
@@ -26,8 +26,8 @@ diff -u -r1.45 -r1.46
    void
  bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
  {
--  BX_DEBUG(("Init $Id: keyboard.cc,v 1.45 2002/02/21 20:26:48 bdenney Exp $"));
-+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.46 2002/02/23 09:32:49 vruppert Exp $"));
+-  BX_DEBUG(("Init $Id: patch.eks-port64,v 1.1 2002/03/27 05:58:25 bdenney Exp $"));
++  BX_DEBUG(("Init $Id: patch.eks-port64,v 1.1 2002/03/27 05:58:25 bdenney Exp $"));
    Bit32u   i;
  
    BX_KEY_THIS devices = d;

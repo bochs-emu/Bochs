@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.8.2.1 2002-03-17 08:57:01 bdenney Exp $
+// $Id: exception.cc,v 1.8.2.2 2002-04-05 06:53:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,10 @@ BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
                     Bit16u error_code)
 {
 #if BX_DEBUGGER
+  if (bx_guard.special_unwind_stack) {
+    BX_INFO (("interrupt() returning early because special_unwind_stack is set"));
+    return;
+  }
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
 #if BX_DEBUG_LINUX
   if (bx_dbg.linux_syscall) {
@@ -572,6 +576,13 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   Bit8u    exception_type;
   unsigned prev_errno;
 
+#if BX_DEBUGGER
+  if (bx_guard.special_unwind_stack) {
+    BX_INFO (("exception() returning early because special_unwind_stack is set"));
+    return;
+  }
+#endif
+
 //BX_DEBUG(( "::exception(%u)", vector ));
 
   BX_INSTR_EXCEPTION(vector);
@@ -593,6 +604,11 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   BX_CPU_THIS_PTR errorno++;
   if (BX_CPU_THIS_PTR errorno >= 3) {
     BX_PANIC(("exception(): 3rd exception with no resolution"));
+    BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
+#if BX_DEBUGGER
+    bx_guard.special_unwind_stack = true;
+#endif
+    return;
     }
 
   /* careful not to get here with curr_exception[1]==DOUBLE_FAULT */
@@ -600,7 +616,12 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
 
   /* if 1st was a double fault (software INT?), then shutdown */
   if ( (BX_CPU_THIS_PTR errorno==2) && (BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT) ) {
-    BX_PANIC(("exception(): tripple fault encountered"));
+    BX_PANIC(("exception(): triple fault encountered"));
+    BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
+#if BX_DEBUGGER
+    bx_guard.special_unwind_stack = true;
+#endif
+    return;
     }
 
   /* ??? this is not totally correct, should be done depending on

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.39.2.3 2002-03-17 08:51:16 bdenney Exp $
+// $Id: bochs.h,v 1.39.2.4 2002-04-05 06:53:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -517,6 +517,12 @@ extern bx_devices_c   bx_devices;
 #define BX_RESET_HARDWARE 11
 
 void bx_init_before_control_panel ();
+
+// This value controls how often each I/O device's periodic() method
+// gets called.  The timer is set up in iodev/devices.cc.
+#define BX_IODEV_HANDLER_PERIOD 100    // microseconds
+//#define BX_IODEV_HANDLER_PERIOD 10    // microseconds
+
 char *bx_find_bochsrc (void);
 int bx_parse_cmdline (int arg, int argc, char *argv[]);
 int bx_read_configuration (char *rcfile);
@@ -623,6 +629,7 @@ typedef struct {
   bx_param_num_c    *Obootdrive;  //0=floppya, 0x80=diskc
   bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
+  bx_param_num_c    *Okeyboard_paste_delay;
   bx_param_enum_c   *Okeyboard_type;
   bx_param_num_c    *Ofloppy_command_delay;
   bx_param_num_c    *Oips;

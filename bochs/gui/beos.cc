@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.8.2.1 2002-03-17 08:57:02 bdenney Exp $
+// $Id: beos.cc,v 1.8.2.2 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -378,6 +378,18 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     }
 
   aWindow->Unlock();
+}
+
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  return 0;
+}
+
+  int
+bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+{
+  return 0;
 }
 
 

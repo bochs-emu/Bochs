@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.21 2002-03-25 21:50:33 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.22 2002-04-05 06:53:45 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -1533,3 +1533,20 @@ void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color
 	UpdateScreen(newBits, x, y, width, height);
 	free(newBits);
 }
+
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  UNUSED(bytes);
+  UNUSED(nbytes);
+  return 0;
+}
+
+  int
+bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+{
+  UNUSED(text_snapshot);
+  UNUSED(len);
+  return 0;
+}
+

@@ -6,9 +6,9 @@ AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="1.4.pre2"
-VER_STRING="1.4.pre2"
-REL_STRING="March 11, 2002"
+VERSION="1.4"
+VER_STRING="1.4"
+REL_STRING="March 27, 2002"
 
 changequote(<<, >>)
 changequote([, ])
@@ -32,7 +32,7 @@ case "$target" in
   *-pc-windows* | *-pc-winnt*)
     DEFAULT_GUI=win32                 # default to win32 gui
     ;;
-  *-pc-cygwin*)
+  *-pc-cygwin* | *-pc-mingw32*)
     ADD_FLAGS="-mno-cygwin -DWIN32"   # required for cygwin compile
     DEFAULT_GUI=win32                 # default to win32 gui
     ;;
@@ -447,6 +447,10 @@ AC_ARG_ENABLE(ne2000,
     AC_CHECK_HEADER(linux/netlink.h, [
         NE2K_OBJS="$NE2K_OBJS eth_tap.o"
         AC_DEFINE(HAVE_ETHERTAP, 1)
+      ], [], 
+      [
+	#include <asm/types.h>
+	#include <sys/socket.h>
       ])
     if test "$with_win32" = yes; then
       NE2K_OBJS="$NE2K_OBJS eth_win32.o"
@@ -889,7 +893,7 @@ AC_SUBST(CDROM_OBJS)
 
 AC_MSG_CHECKING(for Sound Blaster 16 support)
 AC_ARG_ENABLE(sb16,
-  [  --enable-sb16                     Sound Blaster 16 Support],
+  [  --enable-sb16=xxx                     Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd)],
   [if test "$enableval" = no; then
      AC_MSG_RESULT(no)
      SB16_OBJS=''
@@ -948,8 +952,14 @@ AC_ARG_ENABLE(iodebug,
    fi
    ],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_IODEBUG_SUPPORT, 0)
+    if test "" = 1; then
+      # enable by default if debugger is on
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_IODEBUG_SUPPORT, 1)
+      IODEBUG_OBJS='iodebug.o'
+    else
+      AC_MSG_RESULT(no)
+    fi
     ]
   )
 AC_SUBST(IODEBUG_OBJS)
@@ -1088,7 +1098,7 @@ elif test "$with_win32" = yes; then
     *-pc-windows*)
        GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'  # native libs for win gui
        ;;
-    *-cygwin*)
+    *-cygwin* | *-mingw32*)
        GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32)'   # cygwin/mingw libs for win gui
        ;;
     *) echo Unsupported compile setup: GUI library is win32, but target is neither windows nor cygwin.

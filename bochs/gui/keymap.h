@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.3.2.1 2002-03-17 08:50:19 bdenney Exp $
+// $Id: keymap.h,v 1.3.2.2 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  Christophe Bothamy
@@ -30,9 +30,17 @@
 //   loads the specified keymap file 
 //   using convertStringToSymbol to convert strings to client constants
 //
-// - convertStringToBXKey
-//   convert a string to a BX_KEY code
+// - isKeymapLoaded () returns true if the keymap contains any valid key
+//   entries.
 //
+// - convertStringToBXKey
+//   convert a null-terminate string to a BX_KEY code
+//
+// - getKeyXwin(Bit32u key)
+// - getKeyASCII(Bit8u ch)
+//   Each of these methods returns a pointer to a BXKeyEntry structure
+//   corresponding to a key.  getKeyXwin() uses an X windows keysym to find the
+//   structure, and getKeyASCII() uses an ASCII code to find the structure.
 
 // In case of unknown symbol
 #define BX_KEYMAP_UNKNOWN   0xFFFFFFFF

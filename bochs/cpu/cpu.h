@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.8.2.2 2002-03-17 08:50:39 bdenney Exp $
+// $Id: cpu.h,v 1.8.2.3 2002-04-05 06:53:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,9 +195,43 @@
 #define BX_MF_EXCEPTION  16
 #define BX_AC_EXCEPTION  17
 
-
-
-
+/* MSR registers */
+#define BX_MSR_P5_MC_ADDR	0x0000
+#define BX_MSR_MC_TYPE		0x0001
+#define BX_MSR_TSC		0x0010
+#define BX_MSR_CESR		0x0011
+#define BX_MSR_CTR0		0x0012
+#define BX_MSR_CTR1		0x0013
+#define BX_MSR_APICBASE		0x001b
+#define BX_MSR_EBL_CR_POWERON	0x002a
+#define BX_MSR_TEST_CTL		0x0033
+#define BX_MSR_BIOS_UPDT_TRIG	0x0079
+#define BX_MSR_BBL_CR_D0	0x0088
+#define BX_MSR_BBL_CR_D1	0x0089
+#define BX_MSR_BBL_CR_D2	0x008a
+#define BX_MSR_BBL_CR_D3	0x008b	/* = BIOS_SIGN */
+#define BX_MSR_PERFCTR0		0x00c1
+#define BX_MSR_PERFCTR1		0x00c2
+#define BX_MSR_MTRRCAP		0x00fe
+#define BX_MSR_BBL_CR_ADDR	0x0116
+#define BX_MSR_BBL_DECC		0x0118
+#define BX_MSR_BBL_CR_CTL	0x0119
+#define BX_MSR_BBL_CR_TRIG	0x011a
+#define BX_MSR_BBL_CR_BUSY	0x011b
+#define BX_MSR_BBL_CR_CTL3	0x011e
+#define BX_MSR_MCG_CAP		0x0179
+#define BX_MSR_MCG_STATUS	0x017a
+#define BX_MSR_MCG_CTL		0x017b
+#define BX_MSR_EVNTSEL0		0x0186
+#define BX_MSR_EVNTSEL1		0x0187
+#define BX_MSR_DEBUGCTLMSR	0x01d9
+#define BX_MSR_LASTBRANCHFROMIP	0x01db
+#define BX_MSR_LASTBRANCHTOIP	0x01dc
+#define BX_MSR_LASTINTOIP	0x01dd
+#define BX_MSR_ROB_CR_BKUPTMPDR6	0x01e0
+#define BX_MSR_MTRRPHYSBASE0	0x0200
+#define BX_MSR_MTRRPHYSMASK0	0x0201
+#define BX_MSR_MTRRPHYSBASE1	0x0202
 
 typedef struct {
   /* 31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16
@@ -286,6 +320,18 @@ typedef struct {
   } bx_cr0_t;
 #endif
 
+#if BX_CPU_LEVEL >= 5
+typedef struct {
+  Bit8u p5_mc_addr;
+  Bit8u p5_mc_type;
+  Bit8u tsc;
+  Bit8u cesr;
+  Bit8u ctr0;
+  Bit8u ctr1;
+  Bit64u apicbase;
+  /* TODO finish of the others */
+  } bx_regs_msr_t;
+#endif
 
 typedef struct { /* bx_selector_t */
   Bit16u value;   /* the 16bit value of the selector */
@@ -521,6 +567,8 @@ typedef enum {
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
 
+#define APIC_BASE_ADDR	0xfee00000	// default APIC address
+
 #if BX_SUPPORT_APIC
 class bx_generic_apic_c : public logfunctions {
 protected:
@@ -548,9 +596,10 @@ public:
   virtual void trigger_irq (unsigned num, unsigned from);
   virtual void untrigger_irq (unsigned num, unsigned from);
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
+  virtual Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   virtual Boolean match_logical_addr (Bit8u address);
   virtual bx_apic_type_t get_type ();
+  virtual void set_arb_id (int newid);  // only implemented on local apics
 };
 
 class bx_local_apic_c : public bx_generic_apic_c {
@@ -577,7 +626,6 @@ class bx_local_apic_c : public bx_generic_apic_c {
   Bit32u timer_initial, timer_current, timer_divconf;
   Boolean timer_active;  // internal state, not accessible from bus
   Bit32u timer_divide_counter, timer_divide_factor;
-  Bit32u apic_base_msr;
   Bit32u icr_high, icr_low;
   Bit32u err_status;
 #define APIC_ERR_ILLEGAL_ADDR    0x80
@@ -612,10 +660,13 @@ public:
   virtual Boolean is_local_apic () { return true; }
   virtual bx_apic_type_t get_type () { return APIC_TYPE_LOCAL_APIC; }
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
+  virtual Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   Bit8u get_ppr ();
   Bit8u get_apr ();
   void periodic (Bit32u usec_delta);
   void set_divide_configuration (Bit32u value);
+  virtual void update_msr_apicbase(Bit32u newaddr);
+  virtual void set_arb_id (int newid);
   };
 
 #define APIC_MAX_ID 16
@@ -753,6 +804,10 @@ public: // for now...
   Bit32u    cr4;
 #endif
 
+#if BX_CPU_LEVEL >= 5
+  bx_regs_msr_t	msr;  
+#endif
+
   // pointer to the address space that this processor uses.
   BX_MEM_C *mem;
 
@@ -766,6 +821,8 @@ public: // for now...
   volatile Boolean INTR;
   volatile Boolean kill_bochs_request;
 
+  /* wether this CPU is the BSP always set for UP */
+  Boolean bsp;
   // for accessing registers by index number
   Bit16u *_16bit_base_reg[8];
   Bit16u *_16bit_index_reg[8];

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.1.2.1 2002-03-17 08:51:20 bdenney Exp $
+$Id: development.dbk,v 1.1.2.2 2002-04-05 06:53:47 bdenney Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -209,6 +209,36 @@ Ideas:
 </chapter>
 
  <chapter><title>About the code</title>
+
+<section><title>How to add keymapping in a GUI client</title>
+<para>
+Christophe Bothamy, wrote the keymapping code for Bochs, provided these
+instructions to help developers to add keymapping to a GUI.
+</para>
+
+<screen>
+Bochs creates a bx_keymap_c object named bx_keymap.
+This object allows you to :
+  - load the configuration specified keymap file
+  - get the translated BX_KEY_* from your GUI key
+
+You have to provide a translation function from string to your Bit32u key
+constant. Casting will be necessary if your key constants are not Bit32u typed.
+The function must be "static Bit32u (*)(const char *)" typed, and must return
+BX_KEYMAP_UNKNOWN if it can not translate the parameter string.
+
+What you have to do is :
+  - call once "void loadKeymap(Bit32u (*)(const char*))", 
+    providing your translation function, to load the keymap
+  - call "Bit32u getBXKey(Bit32u)" that returns the BX_KEY_*
+    constant, for each key you want to map.
+
+The file gui/x.cc implements this architecture, so you can refer to it
+as an example.
+</screen>
+
+</section>
+
     <section><title>Directory Structure</title>
       <para>
       &FIXME;

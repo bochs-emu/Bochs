@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.22.2.1 2002-03-17 08:57:02 bdenney Exp $
+// $Id: harddrv.cc,v 1.22.2.2 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.22.2.1 2002-03-17 08:57:02 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.22.2.2 2002-04-05 06:53:48 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -282,9 +282,9 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
       // AMI BIOS: 2nd hard disk, 0x80 if heads>8
       cmos->s.reg[0x29] = (bx_options.diskd.Oheads->get () > 8) ? 0x80 : 0x00;
       // AMI BIOS: 2nd hard disk landing zone, low byte
-      cmos->s.reg[0x2a] = cmos->s.reg[0x1b];
+      cmos->s.reg[0x2a] = cmos->s.reg[0x24];
       // AMI BIOS: 2nd hard disk landing zone, high byte
-      cmos->s.reg[0x2b] = cmos->s.reg[0x1c];
+      cmos->s.reg[0x2b] = cmos->s.reg[0x25];
       // AMI BIOS: 2nd hard disk sectors/track
       cmos->s.reg[0x2c] = bx_options.diskd.Ospt->get ();
     }
@@ -1010,7 +1010,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 #endif
                                             BX_HD_THIS s[1].cdrom.ready = 0;
                                             bx_options.cdromd.Oinserted->set(BX_EJECTED);
-                                            bx_gui.update_floppy_status_buttons();
+                                            bx_gui.update_drive_status_buttons();
                                           }
                                           raise_interrupt();
 				    } else { // Load the disc

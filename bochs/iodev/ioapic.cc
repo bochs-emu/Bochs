@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.4.2.1 2002-03-17 08:57:02 bdenney Exp $
+// $Id: ioapic.cc,v 1.4.2.2 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -43,8 +43,7 @@ void
 bx_ioapic_c::init () 
 {
   bx_generic_apic_c::init ();
-  if (bx_dbg.ioapic)
-    BX_INFO(("initializing I/O APIC"));
+  BX_DEBUG(("initializing I/O APIC"));
   base_addr = 0xfec00000;
   ioregsel = 0;
   // all interrupts masked
@@ -58,8 +57,7 @@ bx_ioapic_c::init ()
 void 
 bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
 {
-  if (bx_dbg.ioapic)
-    BX_INFO( ("I/O APIC read_aligned addr=%08x, len=%d", address, len));
+  BX_DEBUG( ("I/O APIC read_aligned addr=%08x, len=%d", address, len));
   BX_ASSERT (len == 4);
   address &= 0xff;
   if (address == 0x00) {
@@ -96,8 +94,7 @@ bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
 void 
 bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
 {
-  if (bx_dbg.ioapic)
-    BX_INFO(("IOAPIC: write addr=%08x, data=%08x, len=%d", address, *value, len));
+  BX_DEBUG(("IOAPIC: write addr=%08x, data=%08x, len=%d", address, *value, len));
   address &= 0xff;
   if (address == 0x00)  {
     ioregsel = *value;
@@ -128,8 +125,7 @@ bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
 	  entry->set_even_word (*value);
 	char buf[1024];
 	entry->sprintf_self (buf);
-        if (bx_dbg.ioapic)
-	  BX_INFO(("IOAPIC: now entry[%d] is %s", index, buf));
+	BX_DEBUG(("IOAPIC: now entry[%d] is %s", index, buf));
 	service_ioapic ();
 	return;
       }
@@ -139,8 +135,7 @@ bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
 
 void bx_ioapic_c::trigger_irq (unsigned vector, unsigned from) 
 {
-  if (bx_dbg.ioapic)
-    BX_INFO(("IOAPIC: received interrupt %d", vector));
+  BX_DEBUG(("IOAPIC: received interrupt %d", vector));
   if (vector >= 0 && vector < BX_IOAPIC_NUM_PINS) {
     Bit32u bit = 1<<vector;
     if ((irr & bit) == 0) {
@@ -152,15 +147,13 @@ void bx_ioapic_c::trigger_irq (unsigned vector, unsigned from)
 
 void bx_ioapic_c::untrigger_irq (unsigned num, unsigned from) 
 {
-  if (bx_dbg.ioapic)
-    BX_INFO(("IOAPIC: interrupt %d went away", num));
+  BX_DEBUG(("IOAPIC: interrupt %d went away", num));
 }
 
 void bx_ioapic_c::service_ioapic ()
 {
   // look in IRR and deliver any interrupts that are not masked.
-  if (bx_dbg.ioapic)
-    BX_INFO(("IOAPIC: servicing"));
+  BX_DEBUG(("IOAPIC: servicing"));
   for (unsigned bit=0; bit < BX_IOAPIC_NUM_PINS; bit++) {
     if (irr & (1<<bit)) {
       bx_io_redirect_entry_t *entry = ioredtbl + bit;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.14.2.1 2002-03-17 08:51:19 bdenney Exp $
+// $Id: rombios.c,v 1.14.2.2 2002-04-05 06:53:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -455,18 +455,24 @@ typedef unsigned long  Bit32u;
   ;; cmp function
   lcmpl:
   lcmpul:
-    cmp	bx,2[di]
-    je	lcmp_firstw_equal
-    ret
-  lcmp_firstw_equal:
-    cmp	ax,[di]
-    jb    lcmp_below
-    jge   lcmp_exit
-    inc   bx
-  lcmp_exit:
-    ret
-  lcmp_below:
-    dec   bx
+  ;;  cmp	bx,2[di]
+  ;;  je	lcmp_firstw_equal
+  ;;  ret
+  ;;lcmp_firstw_equal:
+  ;;  cmp	ax,[di]
+  ;;  jb    lcmp_below
+  ;;  jge   lcmp_exit
+  ;;  inc   bx
+  ;;lcmp_exit:
+  ;;  ret
+  ;;lcmp_below:
+  ;;  dec   bx
+
+    and eax, #0x0000FFFF
+    shl ebx, #16
+    add eax, ebx
+    shr ebx, #16
+    cmp eax, dword ptr [di]
     ret
   
   ;; sub function
@@ -479,26 +485,35 @@ typedef unsigned long  Bit32u;
   ;; mul function
   lmull:
   lmulul:
-    mov	cx,ax
-    mul	word ptr 2[di]
-    xchg	ax,bx
-    mul	word ptr [di]
-    add	bx,ax
-    mov	ax,ptr [di]
-    mul	cx
-    add	bx,dx
+    ;; mov	cx,ax
+    ;; mul	word ptr 2[di]
+    ;; xchg	ax,bx
+    ;; mul	word ptr [di]
+    ;; add	bx,ax
+    ;; mov	ax,ptr [di]
+    ;; mul	cx
+    ;; add	bx,dx
+
+    and eax, #0x0000FFFF
+    shl ebx, #16
+    add eax, ebx
+    mul eax, dword ptr [di]
+    mov ebx, eax
+    shr ebx, #16
     ret
   
   ;; dec function
   ldecl:
   ldecul:
-    cmp	word ptr [bx],*0
-    je	ldec_both
-    dec	word ptr [bx]
-    ret
-  ldec_both:
-    dec	word ptr [bx]
-    dec	word ptr 2[bx]
+  ;;  cmp	word ptr [bx],*0
+  ;;  je	ldec_both
+  ;;  dec	word ptr [bx]
+  ;;  ret
+  ;;ldec_both:
+  ;;  dec	word ptr [bx]
+  ;;  dec	word ptr 2[bx]
+
+    dec dword ptr [bx]
     ret
   
   ;; or function
@@ -511,60 +526,93 @@ typedef unsigned long  Bit32u;
   ;; inc function
   lincl:
   lincul:
-    inc	word ptr [bx]
-    je	linc_hword
-    ret
-  linc_hword:
-    inc	word ptr 2[bx]
+  ;;  inc	word ptr [bx]
+  ;;  je	linc_hword
+  ;;  ret
+  ;;linc_hword:
+  ;;  inc	word ptr 2[bx]
+
+    inc dword ptr [bx]
     ret
   
   ;; tst function
   ltstl:
   ltstul:
-  	test	bx,bx
-  	je	ltst_firstw_equal
-  	ret
-  ltst_firstw_equal:
-  	test	ax,ax
-  	js	ltst_sign
-  	ret
-  ltst_sign:
-  	inc	bx
-  	ret
+  ;;  test	bx,bx
+  ;;  je	ltst_firstw_equal
+  ;;  ret
+  ;;ltst_firstw_equal:
+  ;;  test	ax,ax
+  ;;  js	ltst_sign
+  ;;  ret
+  ;;ltst_sign:
+  ;;  inc	bx
+
+    and eax, #0x0000FFFF
+    shl ebx, #16
+    add eax, ebx
+    shr ebx, #16
+    test eax, eax
+    ret
   
   ;; sr function
   lsrul:
-    mov	cx,di
-    jcxz	lsru_exit
-    cmp	cx,*32
-    jae	lsru_zero
-  lsru_loop:
-    shr	bx,*1
-    rcr	ax,*1
-    loop	lsru_loop
-  lsru_exit:
-    ret
-  lsru_zero:
-    xor	ax,ax
-    mov	bx,ax
+  ;;  mov	cx,di
+  ;;  jcxz	lsru_exit
+  ;;  cmp	cx,*32
+  ;;  jae	lsru_zero
+  ;;lsru_loop:
+  ;;  shr	bx,*1
+  ;;  rcr	ax,*1
+  ;;  loop	lsru_loop
+  ;;lsru_exit:
+  ;;  ret
+  ;;lsru_zero:
+  ;;  xor	ax,ax
+  ;;  mov	bx,ax
+
+    mov  cx,di
+    jcxz lsr_exit
+    and  eax, #0x0000FFFF
+    shl  ebx, #16
+    add  eax, ebx
+  lsr_loop:
+    shr  eax, #1
+    loop lsr_loop
+    mov  ebx, eax
+    shr  ebx, #16
+  lsr_exit:
     ret
   
   ;; sl function
   lsll:
   lslul:
-    mov	cx,di
-    jcxz	lsl_exit
-    cmp	cx,*32
-    jae	lsl_zero
-  lsl_loop:
-    shl	ax,*1
-    rcl	bx,*1
-    loop	lsl_loop
-    lsl_exit:
-    ret
-  lsl_zero:
-    xor	ax,ax
-    mov	bx,ax
+  ;;  mov	cx,di
+  ;;  jcxz	lsl_exit
+  ;;  cmp	cx,*32
+  ;;  jae	lsl_zero
+  ;;lsl_loop:
+  ;;  shl	ax,*1
+  ;;  rcl	bx,*1
+  ;;  loop	lsl_loop
+  ;;  lsl_exit:
+  ;;  ret
+  ;;lsl_zero:
+  ;;  xor	ax,ax
+  ;;  mov	bx,ax
+  ;;  ret
+
+    mov  cx,di
+    jcxz lsl_exit
+    and  eax, #0x0000FFFF
+    shl  ebx, #16
+    add  eax, ebx
+  lsl_loop: 
+    shl  eax, #1
+    loop lsl_loop
+    mov  ebx, eax
+    shr  ebx, #16
+  lsl_exit:
     ret
   
   #endasm
@@ -995,10 +1043,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.14.2.1 $";
-static char bios_date_string[] = "$Date: 2002-03-17 08:51:19 $";
+static char bios_cvs_version_string[] = "$Revision: 1.14.2.2 $";
+static char bios_date_string[] = "$Date: 2002-04-05 06:53:46 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.14.2.1 2002-03-17 08:51:19 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.14.2.2 2002-04-05 06:53:46 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2587,7 +2635,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     default:
       if (scancode & 0x80) return; /* toss key releases ... */
       if (scancode > MAX_SCAN_CODE) {
-        panic("KBD: int09h_handler(): unknown scancode read!");
+        printf("KBD: int09h_handler(): unknown scancode read!");
         return;
         }
       if (shift_flags & 0x08) { /* ALT */
@@ -2614,7 +2662,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
         scancode = scan_to_scanascii[scancode].normal >> 8;
         }
       if (scancode==0 && asciicode==0) {
-        panic("KBD: int09h_handler(): scancode & asciicode are zero?");
+        printf("KBD: int09h_handler(): scancode & asciicode are zero?");
         }
       enqueue_key(scancode, asciicode);
       break;
@@ -2728,12 +2776,14 @@ outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
 	xor	ebx,ebx
 	mov	bl,6[bp]
 	imul	ebx
-	add	al,8[bp]
-	adc	ah,#0
+
+	mov 	bl,8[bp]
+	add 	eax,ebx
 	mov	bl,10[bp]
 	imul	ebx
-	add	al,12[bp]
-	adc	ah,#0
+	mov 	bl,12[bp]
+	add 	eax,ebx
+
 	dec	eax
 	mov	dx,#0x1f3
 	out	dx,al
@@ -8999,20 +9049,15 @@ post_default_ints:
   /* (mch) Keyboard self-test */
   mov  al, #0xaa
   out  0x64, al
-kbd_wait1:
+kbd_wait:
   in   al, 0x64
   test al, #0x01
-  jz   kbd_wait1
+  jz   kbd_wait
   in   al, 0x60
   cmp  al, #0x55
   je   keyboard_ok
   call _keyboard_panic
 keyboard_ok:
-  mov  cx, 0x0100
-kbd_wait2:
-  nop
-  loop kbd_wait2
-  in   al, 0x64 ; read status to clear IRQ
 
   ;; mov CMOS Equipment Byte to BDA Equipment Word
   mov  ax, 0x0410
@@ -9208,7 +9253,7 @@ int19_handler:
   ;; bl contains the boot drive
   ;; ax contains the boot segment or 0 if failure
 
-  cmp ax, 0x0000
+  cmp ax, #0x0000
   je  int19_fail
 
   mov dl, bl       ;; set drive so guest os find it

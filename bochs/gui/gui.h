@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.7.2.1 2002-03-17 08:50:19 bdenney Exp $
+// $Id: gui.h,v 1.7.2.2 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,6 +46,8 @@ public:
   static unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
   static void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
   static void show_headerbar(void);
+  static int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
+  static int set_clipboard_text(char *snapshot, Bit32u len);
 
   // The following function(s) are defined already, and your
   // GUI code calls them
@@ -53,7 +55,7 @@ public:
 
   static void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
-  void update_floppy_status_buttons (void);
+  void update_drive_status_buttons (void);
   static void     mouse_enabled_changed (Boolean val);
   static void     mouse_enabled_changed_specific (Boolean val);
   static void     exit(void);

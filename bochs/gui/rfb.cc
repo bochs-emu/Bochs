@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.10.2.1 2002-03-17 08:57:02 bdenney Exp $
+// $Id: rfb.cc,v 1.10.2.2 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -558,6 +558,18 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long curso
 		//cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
 		DrawBitmap(rfbCursorX * 8, rfbCursorY * 16 + rfbHeaderbarY, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr, false);
 	}
+}
+
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  return 0;
+}
+
+  int
+bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+{
+  return 0;
 }
 
 

@@ -46,29 +46,35 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 #   floppya: 1_44=path, status=inserted            (1.44M 3.5" floppy)
 #   floppya: 1_2=path, status=ejected              (1.2M  5.25" floppy)
 #   floppya: 720k=path, status=inserted            (720K  3.5" floppy)
+#
 # The path should be the name of a disk image file.  On unix, you can use
 # a raw device name such as /dev/fd0 on Linux.  On WinNT and Win2k, use
 # drive letters such as a: or b: as the path.  Raw floppy access is not
 # supported on Windows 95 and 98.
-#
-# The default is 1_44=/dev/fd0, at least I think that's what most people use.
 #=======================================================================
-#floppya: 1_44=/dev/fd0, status=ejected
-#floppya: file=../1.44, status=ejected
-#floppya: 1_44=/dev/fd0H1440, status=ejected
-#floppya: 1_2=../1_2, status=ejected
-floppya: 1_44=a.img, status=inserted
+floppya: 1_44=/dev/fd0, status=inserted
+#floppya: file=../1.44, status=inserted
+#floppya: 1_44=/dev/fd0H1440, status=inserted
+#floppya: 1_2=../1_2, status=inserted
+#floppya: 1_44=a:, status=inserted             # for win32
+#floppya: 1_44=a.img, status=inserted
 
 #=======================================================================
 # FLOPPYB:
 # See FLOPPYA above for syntax
 #=======================================================================
+#floppyb: 1_44=b:, status=inserted
 floppyb: 1_44=b.img, status=inserted
 
 #=======================================================================
 # DISKC: file=, cyl=, heads=, spt=
-# Point this at a 10M, 20M, or 30M hard disk image file.
-# Read INSTALL to create one.
+# Point this at a 10M, 20M, or 30M hard disk image file.  To create 
+# a hard disk image, try running bximage.  It will help you choose the
+# size and then suggest a diskc line that works with it.
+#
+# In UNIX it may be possible to use a raw device as a Bochs hard disk, 
+# but WE DON'T RECOMMEND IT.  In Windows there is no easy way.
+#
 # Examples:
 #   diskc: file=10M.sample, cyl=306, heads=4, spt=17
 #   diskc: file=20M.sample, cyl=615, heads=4, spt=17
@@ -90,10 +96,18 @@ diskc: file="30M.sample", cyl=615, heads=6, spt=17
 
 #=======================================================================
 # CDROM
+#
 # cdromd: dev=/dev/cdrom, status=inserted
 # cdromd: dev=/dev/cdrom, status=ejected
+# cdromd: dev=e:, status=ejected
+#
+# In windows, the drive letter + colon notation should be used.  Depending
+# on versions of windows and drivers, you may only be able to access the
+# "first" cdrom in the system.
+#
+# NOTE: diskd and cdromd must not be used together!
 #=======================================================================
-#cdromd: dev=/dev/cdrom, status=ejected
+#cdromd: dev=D:, status=inserted             # for win32
 #cdromd: dev=/dev/cdrom, status=inserted
 
 #=======================================================================
@@ -241,6 +255,23 @@ vga_update_interval: 300000
 keyboard_serial_delay: 250
 
 #=======================================================================
+# KEYBOARD_PASTE_DELAY:
+# Approximate time in microseconds between attempts to paste
+# characters to the keyboard controller. This leaves time for the
+# guest os to deal with the flow of characters.  The ideal setting
+# depends on how your operating system processes characters.  The
+# default of 100000 usec (.1 seconds) was chosen because it works 
+# consistently in Windows.
+#
+# If your OS is losing characters during a paste, increase the paste
+# delay until it stops losing characters.
+#
+# Examples:
+#   keyboard_paste_delay: 100000
+#=======================================================================
+keyboard_paste_delay: 100000
+
+#=======================================================================
 # FLOPPY_COMMAND_DELAY:
 # Time in microseconds to wait before completing some floppy commands
 # such as read/write/seek/etc, which normally have a delay associated.
@@ -318,30 +349,27 @@ screenmode: name="sample"
 # ne2k: NE2000 compatible ethernet adapter
 #
 # Examples:
+# ne2k: ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE
+#
+# ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
+# are IRQ conflicts.
+#
+# mac: The MAC address MUST NOT match the address of any machine on the net.
+# Also, the first byte must be an even number (bit 0 set means a multicast
+# address), and you cannot use ff:ff:ff:ff:ff:ff because that's the broadcast
+# address.  For the ethertap module, you must use fe:fd:00:00:00:01.  There may
+# be other restrictions too.  To be safe, just use the b0:c4... address.
+#
+# ethdev: The ethdev value is the name of the network interface on your host
+# platform.  On UNIX machines, you can get the name by running ifconfig.  On
+# Windows machines, you must run niclist to get the name of the ethdev.
+# Niclist source code is in misc/niclist.c and it is included in Windows 
+# binary releases.
+#=======================================================================
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
 # ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
-#
-# You probably won't need to change ioaddr and irq, unless there are IRQ
-# conflicts.  The MAC address MUST NOT match the address of any other
-# machine on the net.  The b0:c4... address is probably safe.  For ethertap,
-# you must use the address in the example.  The ethdev value is the name
-# of the network interface on your host platform.  On UNIX machines, you can
-# get the name by running ifconfig.  On Windows machines, you must run
-# niclist to get the name of the ethdev.  Niclist is included in Windows
-# binary releases.
-#=======================================================================
-
-#=======================================================================
-# other stuff
-#=======================================================================
-# magic_break
-
-#load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
-#load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
-i440fxsupport: enabled=0
-#time0: 938581955
 
 #=======================================================================
 # KEYBOARD_MAPPING:
@@ -365,6 +393,16 @@ keyboard_mapping: enabled=0, map=
 #   keyboard_type: mf
 #=======================================================================
 #keyboard_type: mf
+
+#=======================================================================
+# other stuff
+#=======================================================================
+# magic_break
+
+#load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
+#load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
+i440fxsupport: enabled=0
+#time0: 938581955
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following

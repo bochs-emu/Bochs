@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.6.2.2 2002-03-17 08:50:39 bdenney Exp $
+// $Id: keyboard.h,v 1.6.2.3 2002-04-05 06:53:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,6 +64,9 @@ public:
   BX_KEY_SMF int      LoadState( class state_file *fd );
   BX_KEY_SMF unsigned periodic( Bit32u   usec_delta );
   BX_KEY_SMF void     put_scancode( unsigned char *code, int count );
+
+  // update the paste delay based on bx_options.Okeyboard_paste_delay
+  BX_KEY_SMF void     paste_delay_changed ();
 
 private:
 
@@ -192,6 +195,7 @@ private:
   Bit8u *pastebuf;   // ptr to bytes to be pasted, or NULL if none in progress
   Bit32u pastebuf_len; // length of pastebuf
   Bit32u pastebuf_ptr; // ptr to next byte to be added to hw buffer
+  Bit32u pastedelay;   // count before paste
 
   BX_KEY_SMF void     resetinternals(Boolean powerup);
   BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.18.2.8 2002-03-23 02:58:31 bdenney Exp $
+// $Id: gui.cc,v 1.18.2.9 2002-04-05 06:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,10 +43,6 @@
 
 #if BX_WITH_X11
 #include <X11/Xlib.h>
-#endif
-
-#ifdef WIN32
-#include <windows.h>
 #endif
 
 bx_gui_c   bx_gui;
@@ -158,7 +154,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 }
 
 void
-bx_gui_c::update_floppy_status_buttons (void) {
+bx_gui_c::update_drive_status_buttons (void) {
   BX_GUI_THIS floppyA_status = 
     bx_devices.floppy->get_media_status (0)
     && bx_options.floppya.Oinitial_status->get ();
@@ -216,7 +212,7 @@ bx_gui_c::floppyA_handler(void)
   BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
   bx_devices.floppy->set_media_status(0, BX_GUI_THIS floppyA_status);
 #endif
-  BX_GUI_THIS update_floppy_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
@@ -238,7 +234,7 @@ bx_gui_c::floppyB_handler(void)
   BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
   bx_devices.floppy->set_media_status(1, BX_GUI_THIS floppyB_status);
 #endif
-  BX_GUI_THIS update_floppy_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
@@ -260,7 +256,7 @@ bx_gui_c::cdromD_handler(void)
   BX_GUI_THIS cdromD_status =
     bx_devices.hard_drive->set_cd_media_status(!BX_GUI_THIS cdromD_status);
 #endif
-  BX_GUI_THIS update_floppy_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
@@ -325,26 +321,12 @@ bx_gui_c::copy_handler(void)
     BX_INFO(( "copy button failed, mode not implemented"));
     return;
   }
-  // copy to clipboard using gui dependent code.
-#ifdef WIN32
-  if (OpenClipboard(NULL)) {
-    HANDLE hMem = GlobalAlloc(GMEM_ZEROINIT, len);
-    EmptyClipboard();
-    lstrcpy((char *)hMem, text_snapshot);
-    SetClipboardData(CF_TEXT, hMem);
-    CloseClipboard();
-    GlobalFree(hMem);
+  if (!set_clipboard_text(text_snapshot, len)) {
+    // platform specific code failed, use portable code instead
+    FILE *fp = fopen("copy.txt", "w");
+    fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+    fclose(fp);
   }
-#elif BX_WITH_X11
-  extern Display *bx_x_display;
-  // this writes data to the clipboard.
-  BX_INFO (("storing %d bytes to X windows clipboard", len));
-  XStoreBytes (bx_x_display, (char *)text_snapshot, len);
-#else
-  FILE *fp = fopen("copy.txt", "w");
-  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
-  fclose(fp);
-#endif
   free(text_snapshot);
 }
 
@@ -354,8 +336,9 @@ bx_gui_c::snapshot_handler(void)
 {
   char *text_snapshot;
   Bit32u len;
+  int flag;
   if (make_text_snapshot (&text_snapshot, &len) < 0) {
-    BX_ERROR(( "copy button failed, mode not implemented"));
+    BX_ERROR(( "snapshot button failed, mode not implemented"));
     return;
   }
   //FIXME
@@ -372,8 +355,6 @@ bx_gui_c::snapshot_handler(void)
   fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
   fclose(fp);
   free(text_snapshot);
-  // I wish I had a dialog box!!!
-  BX_INFO (("copied text snapshot to snapshot.txt"));
 }
 
 // Read ASCII chars from the system clipboard and paste them into bochs.
@@ -387,29 +368,10 @@ bx_gui_c::paste_handler(void)
     BX_ERROR (("keyboard_mapping disabled, so paste cannot work"));
     return;
   }
-#ifdef WIN32
-  HANDLE hMem = GetClipboardData (CF_TEXT);
-  if (!OpenClipboard(NULL)) {
-    BX_ERROR (("paste: could not open clipboard"));
+  if (!get_clipboard_text(&bytes, &nbytes)) {
+    BX_ERROR (("paste not implemented on this platform"));
     return;
   }
-  HGLOBAL hg = GetClipboardData(CF_TEXT);
-  char *data = (char *)GlobalLock(hg);
-  nbytes = strlen(data);
-  bytes = (Bit8u *)malloc (nbytes+1);
-  BX_INFO (("found %d bytes on the clipboard", nbytes));
-  memcpy (bytes, data, nbytes+1);
-  BX_INFO (("first byte is 0x%02x", bytes[0]));
-  GlobalUnlock(hg);
-  CloseClipboard();
-
-#elif BX_WITH_X11
-  extern Display *bx_x_display;
-  bytes = (Bit8u *)XFetchBytes (bx_x_display, &nbytes);
-#else
-  BX_ERROR (("paste not implemented on this platform"));
-  return;
-#endif
   BX_INFO (("pasting %d bytes", nbytes));
   bx_devices.keyboard->paste_bytes (bytes, nbytes);
 }

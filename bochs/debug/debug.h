@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.4.4.1 2002-03-17 08:51:20 bdenney Exp $
+// $Id: debug.h,v 1.4.4.2 2002-04-05 06:53:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -256,6 +256,18 @@ typedef struct {
 
   // user typed Ctrl-C, requesting simulator stop at next convient spot
   volatile Boolean interrupt_requested;
+
+  // when a triple fault occurs, Bochs panics.  If you continue through
+  // the panic, it will generally produce another exception and panic
+  // again at an even deeper stack level.  To recover from this potentially
+  // infinite recursion, I set special_unwind_stack to true.  This causes
+  // the interrupt() and exception() functions to return immediately instead
+  // of creating more exception conditions, and allows the user to reenter the
+  // debugger after the triple fault.  Note that special_unwind_stack causes
+  // bochs to NOT emulate the hardware behavior correctly.  The correct
+  // behavior would be to reboot.  (Rebooting, if it is ever implemented,
+  // will need some kind of unwinding too.)
+  Boolean special_unwind_stack;
 
   // booleans to control whether simulator should report events
   // to debug controller

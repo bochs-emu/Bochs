@@ -1,7 +1,8 @@
 #!/bin/sh
 #
-# These are the steps I typically use to configure and compile Bochs
-# on a Linux x86 system with gcc
+# .conf.linux
+#
+# This file is used to create the binary RPMs for Linux at release time.
 #
 
 CC="gcc"
@@ -14,7 +15,14 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-wx --enable-fpu --enable-cdrom --enable-sb16=linux  --enable-split-hd  --enable-ne2000 ${CONFIGURE_ARGS}
+./configure --with-wx \
+            --enable-cdrom \
+            --enable-sb16=linux \
+	    --enable-ne2000 \
+	    --enable-vbe \
+	    ${CONFIGURE_ARGS}
+
+
 #./configure --enable-fpu
 #./configure
 #./configure --enable-cdrom --enable-cpu-level=4

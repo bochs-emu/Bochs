@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.12.2.2 2002-03-17 08:57:01 bdenney Exp $
+// $Id: cpu.cc,v 1.12.2.3 2002-04-05 06:53:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -100,7 +100,6 @@ extern void REGISTER_IADDR(Bit32u addr);
 #else
 #  define BX_TICK1_IF_SINGLE_PROCESSOR()
 #endif
-
 
 #if BX_DYNAMIC_TRANSLATION == 0
   void
@@ -232,9 +231,11 @@ fetch_decode_OK:
 #if BX_DEBUGGER
     if (BX_CPU_THIS_PTR trace) {
       // print the instruction that is about to be executed.
-//      fprintf(stderr, "begin about to execute:\n");
-      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
-//      fprintf(stderr, "  end about to execute:\n");
+#if (BX_SMP_PROCESSORS==1)
+      bx_dbg_disassemble_current (0, 1);  // only one cpu, print time stamp
+#else
+      bx_dbg_disassemble_current (local_apic.get_id (), 1); // this cpu only
+#endif
     }
 #endif
 
@@ -286,12 +287,6 @@ repeat_not_done:
       REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
 
-#if BX_DEBUGGER
-//    if (BX_CPU_THIS_PTR trace) {
-      // print the instruction that was just executed.
-//      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
-//    }
-#endif
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -321,12 +316,6 @@ repeat_done:
     REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
 
-#if BX_DEBUGGER
-//    if (BX_CPU_THIS_PTR trace) {
-      // print the instruction that was just executed.
-//      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
-//    }
-#endif
     BX_TICK1_IF_SINGLE_PROCESSOR();
 
 debugger_check:
