@@ -37,6 +37,8 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef SOFTFLOAT_H
 #define SOFTFLOAT_H
 
+#define FLOATX80
+
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
@@ -109,6 +111,9 @@ enum {
 *----------------------------------------------------------------------------*/
 struct float_status_t 
 {
+#ifdef FLOATX80
+    int float_rounding_precision;	/* floatx80 only */
+#endif
     int float_detect_tininess;
     int float_rounding_mode;
     int float_exception_flags;
@@ -203,5 +208,69 @@ int float64_compare_quiet(float64, float64, float_status_t &status);
 
 float_class_t float64_class(float64);
 int float64_is_signaling_nan(float64);
+
+#ifdef FLOATX80
+
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE floating-point types.
+*----------------------------------------------------------------------------*/
+#ifdef BIG_ENDIAN
+typedef struct {
+    Bit16u exp;
+    Bit64u fraction;
+} floatx80;
+#else
+typedef struct {
+    Bit64u fraction;
+    Bit16u exp;
+} floatx80;
+#endif
+
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE integer-to-floating-point conversion routines.
+*----------------------------------------------------------------------------*/
+floatx80 int32_to_floatx80(Bit32s);
+floatx80 int64_to_floatx80(Bit64s);
+
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE single-precision conversion routines.
+*----------------------------------------------------------------------------*/
+floatx80 float32_to_floatx80(float32, float_status_t &status);
+
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE double-precision conversion routines.
+*----------------------------------------------------------------------------*/
+floatx80 float64_to_floatx80(float64, float_status_t &status);
+
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE extended double-precision conversion routines.
+*----------------------------------------------------------------------------*/
+Bit32s floatx80_to_int32(floatx80);
+Bit32s floatx80_to_int32_round_to_zero(floatx80);
+Bit64s floatx80_to_int64(floatx80);
+Bit64s floatx80_to_int64_round_to_zero(floatx80);
+
+float32 floatx80_to_float32(floatx80);
+float64 floatx80_to_float64(floatx80);
+
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE extended double-precision operations.
+*----------------------------------------------------------------------------*/
+floatx80 floatx80_round_to_int(floatx80, float_status_t &status);
+floatx80 floatx80_add(floatx80, floatx80, float_status_t &status);
+floatx80 floatx80_sub(floatx80, floatx80, float_status_t &status);
+floatx80 floatx80_mul(floatx80, floatx80, float_status_t &status);
+floatx80 floatx80_div(floatx80, floatx80, float_status_t &status);
+floatx80 floatx80_rem(floatx80, floatx80, float_status_t &status);
+floatx80 floatx80_sqrt(floatx80, float_status_t &status);
+int floatx80_eq(floatx80, floatx80, float_status_t &status);
+int floatx80_le(floatx80, floatx80, float_status_t &status);
+int floatx80_lt(floatx80, floatx80, float_status_t &status);
+int floatx80_eq_signaling(floatx80, floatx80, float_status_t &status);
+int floatx80_le_quiet(floatx80, floatx80, float_status_t &status);
+int floatx80_lt_quiet(floatx80, floatx80, float_status_t &status);
+
+int floatx80_is_signaling_nan(floatx80);
+#endif
 
 #endif

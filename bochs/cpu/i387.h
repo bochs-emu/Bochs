@@ -77,6 +77,7 @@ typedef struct bx_fpu_reg_t FPU_REG;
     (BX_CPU_THIS_PTR the_i387.st_space[index*2])
 
 #define FPU_PARTIAL_STATUS     (BX_CPU_THIS_PTR the_i387.swd)
+#define FPU_CONTROL_WORD       (BX_CPU_THIS_PTR the_i387.cwd)
 #define FPU_TAG_WORD           (BX_CPU_THIS_PTR the_i387.twd)
 #define FPU_TOS                (BX_CPU_THIS_PTR the_i387.tos)
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.8 2004-01-31 15:11:41 sshwarts Exp $
+// $Id: fpu.cc,v 1.9 2004-02-06 12:45:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
@@ -1277,6 +1277,7 @@ void BX_CPU_C::FNOP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   // Perform no FPU operation. This instruction takes up space in the
   // instruction stream but does not affect the FPU or machine

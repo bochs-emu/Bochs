@@ -56,6 +56,15 @@ BX_CPP_INLINE int get_float_rounding_mode(float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
+| Returns current floating point precision (floatx80 only).
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int get_float_rounding_precision(float_status_t &status)
+{
+    return status.float_rounding_precision;
+}
+
+/*----------------------------------------------------------------------------
 | Returns current floating point NaN operands handling mode specified 
 | by status word.
 *----------------------------------------------------------------------------*/
@@ -92,6 +101,10 @@ typedef struct {
 #define float32_default_nan 0x7FFFFFFF
 */
 
+#define float32_fraction extractFloat32Frac
+#define float32_exp extractFloat32Exp
+#define float32_sign extractFloat32Sign
+
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the single-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
@@ -100,8 +113,6 @@ BX_CPP_INLINE Bit32u extractFloat32Frac(float32 a)
 {
     return a & 0x007FFFFF;
 }
-
-#define float32_fraction extractFloat32Frac
 
 /*----------------------------------------------------------------------------
 | Returns the exponent bits of the single-precision floating-point value `a'.
@@ -112,8 +123,6 @@ BX_CPP_INLINE Bit16s extractFloat32Exp(float32 a)
     return (a>>23) & 0xFF;
 }
 
-#define float32_exp extractFloat32Exp
-
 /*----------------------------------------------------------------------------
 | Returns the sign bit of the single-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
@@ -122,8 +131,6 @@ BX_CPP_INLINE flag extractFloat32Sign(float32 a)
 {
     return a>>31;
 }
-
-#define float32_sign extractFloat32Sign
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
@@ -167,10 +174,9 @@ BX_CPP_INLINE int float32_is_signaling_nan(float32 a)
 | exception is raised.
 *----------------------------------------------------------------------------*/
 
-static commonNaNT float32ToCommonNaN(float32 a, float_status_t &status)
+BX_CPP_INLINE commonNaNT float32ToCommonNaN(float32 a, float_status_t &status)
 {
     commonNaNT z;
-
     if (float32_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
     z.sign = a>>31;
     z.lo = 0;
@@ -183,7 +189,7 @@ static commonNaNT float32ToCommonNaN(float32 a, float_status_t &status)
 | precision floating-point format.
 *----------------------------------------------------------------------------*/
 
-static float32 commonNaNToFloat32(commonNaNT a)
+BX_CPP_INLINE float32 commonNaNToFloat32(commonNaNT a)
 {
     return (((Bit32u) a.sign)<<31) | 0x7FC00000 | (a.hi>>41);
 }
@@ -233,6 +239,10 @@ static float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status)
 #define float64_default_nan BX_CONST64(0x7FFFFFFFFFFFFFFF)
 */
 
+#define float64_fraction extractFloat64Frac
+#define float64_exp extractFloat64Exp
+#define float64_sign extractFloat64Sign
+
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the double-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
@@ -241,8 +251,6 @@ BX_CPP_INLINE Bit64u extractFloat64Frac(float64 a)
 {
     return a & BX_CONST64(0x000FFFFFFFFFFFFF);
 }
-
-#define float64_fraction extractFloat64Frac
 
 /*----------------------------------------------------------------------------
 | Returns the exponent bits of the double-precision floating-point value `a'.
@@ -253,8 +261,6 @@ BX_CPP_INLINE Bit16s extractFloat64Exp(float64 a)
     return (a>>52) & 0x7FF;
 }
 
-#define float64_exp extractFloat64Exp
-
 /*----------------------------------------------------------------------------
 | Returns the sign bit of the double-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
@@ -263,8 +269,6 @@ BX_CPP_INLINE flag extractFloat64Sign(float64 a)
 {
     return a>>63;
 }
-
-#define float64_sign extractFloat64Sign
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
@@ -308,10 +312,9 @@ BX_CPP_INLINE int float64_is_signaling_nan(float64 a)
 | exception is raised.
 *----------------------------------------------------------------------------*/
 
-static commonNaNT float64ToCommonNaN(float64 a, float_status_t &status)
+BX_CPP_INLINE commonNaNT float64ToCommonNaN(float64 a, float_status_t &status)
 {
     commonNaNT z;
-
     if (float64_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
     z.sign = a>>63;
     z.lo = 0;
@@ -324,7 +327,7 @@ static commonNaNT float64ToCommonNaN(float64 a, float_status_t &status)
 | precision floating-point format.
 *----------------------------------------------------------------------------*/
 
-static float64 commonNaNToFloat64(commonNaNT a)
+BX_CPP_INLINE float64 commonNaNToFloat64(commonNaNT a)
 {
     return (((Bit64u) a.sign)<<63) | BX_CONST64(0x7FF8000000000000) | (a.hi>>12);
 }
@@ -365,3 +368,139 @@ static float64 propagateFloat64NaN(float64 a, float64 b, float_status_t &status)
         return (aIsSignalingNaN | aIsNaN) ? a : b;
     }
 }
+
+#ifdef FLOATX80
+
+/*----------------------------------------------------------------------------
+| The pattern for a default generated extended double-precision NaN.  The
+| `high' and `low' values hold the most- and least-significant bits,
+| respectively.
+*----------------------------------------------------------------------------*/
+#define floatx80_default_nan_exp 0xFFFF
+#define floatx80_default_nan_fraction BX_CONST64(0xC000000000000000)
+/*
+#define floatx80_default_nan_exp 0x7FFF
+#define floatx80_default_nan_fraction BX_CONST64(0xFFFFFFFFFFFFFFFF)
+*/
+
+#define floatx80_fraction extractFloat80Frac
+#define floatx80_exp extractFloat80Exp
+#define floatx80_sign extractFloat80Sign
+
+/*----------------------------------------------------------------------------
+| Returns the fraction bits of the extended double-precision floating-point
+| value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit64u extractFloatx80Frac(floatx80 a)
+{
+    return a.fraction;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the exponent bits of the extended double-precision floating-point
+| value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit32s extractFloatx80Exp(floatx80 a)
+{
+    return a.exp & 0x7FFF;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the sign bit of the extended double-precision floating-point value
+| `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int extractFloatx80Sign(floatx80 a)
+{
+    return a.exp>>15;
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the extended double-precision floating-point value `a' is a
+| NaN; otherwise returns 0.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int floatx80_is_nan(floatx80 a)
+{
+    return ((a.exp & 0x7FFF) == 0x7FFF) && (Bit64s) (a.fraction<<1);
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the extended double-precision floating-point value `a' is a
+| signaling NaN; otherwise returns 0.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int floatx80_is_signaling_nan(floatx80 a)
+{
+    Bit64s aLow = a.fraction & ~BX_CONST64(0x4000000000000000);
+    return
+           ((a.exp & 0x7FFF) == 0x7FFF)
+        && (Bit64s) (aLow<<1)
+        && (a.fraction == aLow);
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the extended double-precision floating-
+| point NaN `a' to the canonical NaN format.  If `a' is a signaling NaN, the
+| invalid exception is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE commonNaNT floatx80ToCommonNaN(floatx80 a, float_status_t &status)
+{
+    commonNaNT z;
+    if (floatx80_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
+    z.sign = a.exp >> 15;
+    z.lo = 0;
+    z.hi = a.fraction << 1;
+    return z;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the canonical NaN `a' to the extended
+| double-precision floating-point format.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE floatx80 commonNaNToFloatx80(commonNaNT a)
+{
+    floatx80 z;
+    z.fraction = BX_CONST64(0xC000000000000000) | (a.hi>>1);
+    z.exp = (((Bit16u) a.sign)<<15) | 0x7FFF;
+    return z;
+}
+
+/*----------------------------------------------------------------------------
+| Takes two extended double-precision floating-point values `a' and `b', one
+| of which is a NaN, and returns the appropriate NaN result.  If either `a' or
+| `b' is a signaling NaN, the invalid exception is raised.
+*----------------------------------------------------------------------------*/
+
+static floatx80 propagateFloatx80NaN(floatx80 a, floatx80 b, float_status_t &status)
+{
+    flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
+
+    aIsNaN = floatx80_is_nan(a);
+    aIsSignalingNaN = floatx80_is_signaling_nan(a);
+    bIsNaN = floatx80_is_nan(b);
+    bIsSignalingNaN = floatx80_is_signaling_nan(b);
+    a.fraction |= BX_CONST64(0xC000000000000000);
+    b.fraction |= BX_CONST64(0xC000000000000000);
+    if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);
+    if (aIsSignalingNaN) {
+        if (bIsSignalingNaN) goto returnLargerSignificand;
+        return bIsNaN ? b : a;
+    }
+    else if (aIsNaN) {
+        if (bIsSignalingNaN | ! bIsNaN) return a;
+ returnLargerSignificand:
+        if (a.fraction < b.fraction) return b;
+        if (b.fraction < a.fraction) return a;
+        return (a.exp < b.exp) ? a : b;
+    }
+    else {
+        return b;
+    }
+}
+
+#endif
