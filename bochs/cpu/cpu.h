@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.32 2002-09-05 20:16:40 bdenney Exp $
+// $Id: cpu.h,v 1.33 2002-09-06 14:58:56 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -879,6 +879,7 @@ public: // for now...
 #if BX_USE_TLB
   struct {
     bx_TLB_entry entry[BX_TLB_SIZE];
+    Bit32u tlb_invalidate;
     } TLB;
 #endif
 
