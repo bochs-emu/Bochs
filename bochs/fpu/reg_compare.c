@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_compare.c                                                            |
- |  $Id: reg_compare.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_compare.c,v 1.4 2003-07-31 17:39:24 sshwarts Exp $
  |                                                                           |
  | Compare two floating point registers                                      |
  |                                                                           |
@@ -348,8 +348,11 @@ void fcompp()
       FPU_illegal();
       return;
     }
-  if ( !compare_st_st(1) )
-      poppop();
+  if (!compare_st_st(1))
+  {
+      FPU_pop();
+      FPU_pop();
+  }
 }
 
 
@@ -374,8 +377,11 @@ void fucompp()
   /* fucompp */
   if (FPU_rm == 1)
     {
-      if ( !compare_u_st_st(1) )
-	poppop();
+      if (!compare_u_st_st(1))
+      {
+          FPU_pop();
+          FPU_pop();
+      }
     }
   else
     FPU_illegal();

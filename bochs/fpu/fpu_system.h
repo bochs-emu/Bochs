@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.11 2003-07-25 11:44:06 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.12 2003-07-31 17:39:24 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -55,8 +55,6 @@ extern void math_emulate_init(void);
 extern unsigned fpu_get_ds(void);
 extern void fpu_set_ax(u16);
 
-#ifndef __ASSEMBLY__
-
 struct info {
 #ifdef BX_NO_EMPTY_STRUCTS
   unsigned char donotindexme;
@@ -64,8 +62,6 @@ struct info {
   };
 
 #define FPU_info ((struct info *) NULL)
-
-#endif
 
 #define SIGSEGV  11
 

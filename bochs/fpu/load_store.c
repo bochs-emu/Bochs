@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
- |  $Id: load_store.c,v 1.7 2003-07-25 08:59:45 sshwarts Exp $
+ |  $Id: load_store.c,v 1.8 2003-07-31 17:39:24 sshwarts Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |
@@ -45,6 +45,7 @@ static u_char const type_table[32] = {
   _NONE_, _REG0_, _NONE_, _REG0_
   };
 
+#ifndef USE_WITH_CPU_SIM
 u_char const data_sizes_16[32] = {
   4,  4,  8,  2,  0,  0,  0,  0,
   4,  4,  8,  2,  4,  4,  8,  2,
@@ -58,6 +59,7 @@ u_char const data_sizes_32[32] = {
   28, 0,108, 10,  2, 10,  0,  8,  
   28, 0,108, 10,  2, 10,  2,  8
 };
+#endif
 
 int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 		     bx_address data_address)

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.11 2003-07-25 09:16:26 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.12 2003-07-31 17:39:24 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -32,8 +32,6 @@
 #include "status_w.h"
 
 #include <linux/signal.h>
-#include <asm/desc.h>
-
 
 #define __BAD__ FPU_illegal   /* Illegal on an 80486, causes SIGILL */
 

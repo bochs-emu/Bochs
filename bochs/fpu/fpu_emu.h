@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.11 2003-07-25 11:44:06 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.12 2003-07-31 17:39:24 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -28,45 +28,38 @@
  */
 #define PTR2INT(x) ((bx_ptr_equiv_t)(void *)(x))
 
-#ifdef __ASSEMBLY__
-#include "fpu_asm.h"
-#define	Const(x)	$##x
-#else
-#define	Const(x)	x
-#endif
-
-#define EXP_BIAS	Const(0)
-#define EXP_OVER	Const(0x4000)    /* smallest invalid large exponent */
-#define	EXP_UNDER	Const(-0x3fff)   /* largest invalid small exponent */
-#define EXP_WAY_UNDER   Const(-0x6000)   /* Below the smallest denormal, but
+#define EXP_BIAS	(0)
+#define EXP_OVER	(0x4000)    /* smallest invalid large exponent */
+#define	EXP_UNDER	(-0x3fff)   /* largest invalid small exponent */
+#define EXP_WAY_UNDER   (-0x6000)   /* Below the smallest denormal, but
 					    still a 16 bit nr. */
 #define EXP_Infinity    EXP_OVER
 #define EXP_NaN         EXP_OVER
 
-#define EXTENDED_Ebias Const(0x3fff)
+#define EXTENDED_Ebias (0x3fff)
 #define EXTENDED_Emin (-0x3ffe)  /* smallest valid exponent */
 
-#define SIGN_POS	Const(0)
-#define SIGN_NEG	Const(0x80)
+#define SIGN_POS	(0)
+#define SIGN_NEG	(0x80)
 
-#define SIGN_Positive	Const(0)
-#define SIGN_Negative	Const(0x8000)
+#define SIGN_Positive	(0)
+#define SIGN_Negative	(0x8000)
 
 
 /* Keep the order TAG_Valid, TAG_Zero, TW_Denormal */
 /* The following fold to 2 (Special) in the Tag Word */
-#define TW_Denormal     Const(4)        /* De-normal */
-#define TW_Infinity	Const(5)	/* + or - infinity */
-#define	TW_NaN		Const(6)	/* Not a Number */
-#define	TW_Unsupported	Const(7)	/* Not supported by an 80486 */
+#define TW_Denormal      4      /* De-normal */
+#define TW_Infinity	 5 	/* + or - infinity */
+#define	TW_NaN		 6      /* Not a Number */
+#define	TW_Unsupported	 7 	/* Not supported by an 80486 */
 
-#define TAG_Valid	Const(0)	/* valid */
-#define TAG_Zero	Const(1)	/* zero */
-#define TAG_Special	Const(2)	/* De-normal, + or - infinity,
+#define TAG_Valid	 0 	/* valid */
+#define TAG_Zero	 1 	/* zero */
+#define TAG_Special	 2 	/* De-normal, + or - infinity,
 					   or Not a Number */
-#define TAG_Empty	Const(3)	/* empty */
+#define TAG_Empty	 3 	/* empty */
 
-#define LOADED_DATA	Const(10101)	/* Special st() number to identify
+#define LOADED_DATA	(10101)	/* Special st() number to identify
 					   loaded data (not on stack). */
 
 /* A few flags (must be >= 0x10). */
@@ -74,14 +67,10 @@
 #define DEST_RM         0x20
 #define LOADED          0x40
 
-#define FPU_Exception   Const(0x80000000)   /* Added to tag returns. */
-
-
-#ifndef __ASSEMBLY__
+#define FPU_Exception   (0x80000000)   /* Added to tag returns. */
 
 #include "fpu_system.h"
 
-#include <asm/sigcontext.h>   /* for struct _fpstate */
 #include <linux/linkage.h>
 
 /*
@@ -100,6 +89,8 @@ extern u_char emulating;
 #define FWAIT_OPCODE 0x9b
 #define OP_SIZE_PREFIX 0x66
 #define ADDR_SIZE_PREFIX 0x67
+
+#ifndef USE_WITH_CPU_SIM
 #define PREFIX_CS 0x2e
 #define PREFIX_DS 0x3e
 #define PREFIX_ES 0x26
@@ -116,6 +107,7 @@ extern u_char emulating;
 #define PREFIX_GS_ 5
 #define PREFIX_SS_ 6
 #define PREFIX_DEFAULT 7
+#endif
 
 struct address {
   bx_address offset;
@@ -187,7 +179,10 @@ typedef struct { overrides override;
 #define VM86      SIXTEEN
 #define PM16      (SIXTEEN | PROTECTED)
 #define SEG32     PROTECTED
+
+#ifndef USE_WITH_CPU_SIM
 extern u_char const data_sizes_16[32];
+#endif
 
 #define register_base ((u_char *) registers )
 #define fpu_register(x)  ( * ((FPU_REG *)( register_base + sizeof(FPU_REG) * (x & 7) )) )
@@ -197,8 +192,6 @@ extern u_char const data_sizes_16[32];
 #define	NOT_EMPTY(i)	(!FPU_empty_i(i))
 
 #define	NOT_EMPTY_ST0	(st0_tag ^ TAG_Empty)
-
-#define poppop() { FPU_pop(); FPU_pop(); }
 
 /* push() does not affect the tags */
 #define push()	{ top--; }
@@ -261,7 +254,5 @@ asmlinkage int FPU_round(FPU_REG *arg, u32 extent, int dummy,
 #ifndef MAKING_PROTO
 #include "fpu_proto.h"
 #endif
-
-#endif /* defined __ASSEMBLY__ */
 
 #endif /* !defined _FPU_EMU_H_ */

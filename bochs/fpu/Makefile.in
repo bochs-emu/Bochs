@@ -83,9 +83,6 @@ all: libfpu.a
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) $(FPU_FLAGS) @CXXFP@$< @OFP@$@
 
-.S.o:
-	$(CC) -I./stubs -D__ASSEMBLY__ $(PARANOID) -c $<
-
 .c.o:
 	$(CC) @DASH@c $(CFLAGS) $(FPU_FLAGS) $(BX_INCDIRS) $< @OFP@$@
 

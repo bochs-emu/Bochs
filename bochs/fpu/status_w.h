@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  status_w.h                                                               |
- |  $Id: status_w.h,v 1.4 2003-07-25 11:44:06 sshwarts Exp $
+ |  $Id: status_w.h,v 1.5 2003-07-31 17:39:24 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993                                                   |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -13,31 +13,23 @@
 
 #include "fpu_emu.h"    /* for definition of PECULIAR_486 */
 
-#ifdef __ASSEMBLY__
-#define	Const__(x)	$##x
-#else
-#define	Const__(x)	x
-#endif
+#define SW_Backward    	(0x8000)	/* backward compatibility */
+#define SW_C3		(0x4000)	/* condition bit 3 */
+#define SW_Top		(0x3800)	/* top of stack */
+#define SW_Top_Shift 	(11)		/* shift for top of stack bits */
+#define SW_C2		(0x0400)	/* condition bit 2 */
+#define SW_C1		(0x0200)	/* condition bit 1 */
+#define SW_C0		(0x0100)	/* condition bit 0 */
+#define SW_Summary     	(0x0080)	/* exception summary */
+#define SW_Stack_Fault	(0x0040)	/* stack fault */
+#define SW_Precision   	(0x0020)	/* loss of precision */
+#define SW_Underflow   	(0x0010)	/* underflow */
+#define SW_Overflow    	(0x0008)	/* overflow */
+#define SW_Zero_Div    	(0x0004)	/* divide by zero */
+#define SW_Denorm_Op   	(0x0002)	/* denormalized operand */
+#define SW_Invalid     	(0x0001)	/* invalid operation */
 
-#define SW_Backward    	Const__(0x8000)	/* backward compatibility */
-#define SW_C3		Const__(0x4000)	/* condition bit 3 */
-#define SW_Top		Const__(0x3800)	/* top of stack */
-#define SW_Top_Shift 	Const__(11)	/* shift for top of stack bits */
-#define SW_C2		Const__(0x0400)	/* condition bit 2 */
-#define SW_C1		Const__(0x0200)	/* condition bit 1 */
-#define SW_C0		Const__(0x0100)	/* condition bit 0 */
-#define SW_Summary     	Const__(0x0080)	/* exception summary */
-#define SW_Stack_Fault	Const__(0x0040)	/* stack fault */
-#define SW_Precision   	Const__(0x0020)	/* loss of precision */
-#define SW_Underflow   	Const__(0x0010)	/* underflow */
-#define SW_Overflow    	Const__(0x0008)	/* overflow */
-#define SW_Zero_Div    	Const__(0x0004)	/* divide by zero */
-#define SW_Denorm_Op   	Const__(0x0002)	/* denormalized operand */
-#define SW_Invalid     	Const__(0x0001)	/* invalid operation */
-
-#define SW_Exc_Mask     Const__(0x27f)  /* Status word exception bit mask */
-
-#ifndef __ASSEMBLY__
+#define SW_Exc_Mask     (0x27f)  /* Status word exception bit mask */
 
 #define COMP_A_gt_B	1
 #define COMP_A_eq_B	2
@@ -65,7 +57,5 @@
 # else
 #  define clear_C1()
 #endif /* PECULIAR_486 */
-
-#endif /* __ASSEMBLY__ */
 
 #endif /* _STATUS_H_ */
