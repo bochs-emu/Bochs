@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.51 2004-03-09 22:17:33 vruppert Exp $
+// $Id: serial.cc,v 1.52 2004-03-13 17:17:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -978,11 +978,9 @@ bx_serial_c::rx_timer_handler(void *this_ptr)
 void
 bx_serial_c::rx_timer(void)
 {
-#if BX_HAVE_SELECT
-#ifndef __BEOS__
+#if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
   struct timeval tval;
   fd_set fds;
-#endif
 #endif
   Bit8u port = 0;
   int timer_id;
@@ -1000,8 +998,7 @@ bx_serial_c::rx_timer(void)
   int bdrate = BX_SER_THIS s[port].baudrate / (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5);
   unsigned char chbuf = 0;
 
-#if BX_HAVE_SELECT
-#ifndef __BEOS__
+#if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
   tval.tv_sec  = 0;
   tval.tv_usec = 0;
 
@@ -1012,6 +1009,7 @@ bx_serial_c::rx_timer(void)
 
   FD_ZERO(&fds);
   if (BX_SER_THIS s[port].tty_id >= 0) FD_SET(BX_SER_THIS s[port].tty_id, &fds);
+#endif
 
   if ((BX_SER_THIS s[port].line_status.rxdata_ready == 0) ||
       (BX_SER_THIS s[port].fifo_cntl.enable)) {
@@ -1028,7 +1026,7 @@ bx_serial_c::rx_timer(void)
     }
     if (rdy) {
       chbuf = data;
-#elif defined(SERIAL_ENABLE)
+#elif BX_HAVE_SELECT && defined(SERIAL_ENABLE)
     if ((BX_SER_THIS s[port].tty_id >= 0) && (select(BX_SER_THIS s[port].tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
       (void) read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
       BX_DEBUG(("com%d: read: '%c'", port+1, chbuf));
@@ -1048,8 +1046,6 @@ bx_serial_c::rx_timer(void)
     // be read
     bdrate *= 4;
   }
-#endif
-#endif
 
   bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
                               (int) (1000000.0 / bdrate),
