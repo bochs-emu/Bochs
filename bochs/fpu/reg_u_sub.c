@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_sub.c                                                              |
- |  $Id: reg_u_sub.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_u_sub.c,v 1.3 2003-04-20 19:20:08 sshwarts Exp $
  |                                                                           |
  | Core floating point subtraction routine.                                  |
  |                                                                           |
@@ -29,7 +29,6 @@
 #include "control_w.h"
 
 
-
 int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
 	       u16 control_w, u_char sign, int expa, int expb)
 {
@@ -38,7 +37,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
   int ediff = expa - expb, ed2, borrow;
 
 #ifdef PARANOID
-  if ( ediff < 0 )
+  if (ediff < 0)
     {
       EXCEPTION(EX_INTERNAL|0x206);
       return -1;
@@ -48,20 +47,20 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
   answ.exp = expa;
 
 #ifdef PARANOID
-  if ( !(arg1->sigh & 0x80000000) || !(arg2->sigh & 0x80000000) )
+  if (!(arg1->sigh & 0x80000000) || !(arg2->sigh & 0x80000000))
     {
       EXCEPTION(EX_INTERNAL|0x209);
       return -1;
     }
 #endif
 
-  if ( ediff == 0 )
+  if (ediff == 0)
     {
       shifted.sigl = arg2->sigl;
       shifted.sigh = arg2->sigh;
       extent = 0;
     }
-  else if ( ediff < 32 )
+  else if (ediff < 32)
     {
       ed2 = 32 - ediff;
       extent = arg2->sigl << ed2;
@@ -69,10 +68,10 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
       shifted.sigl |= (arg2->sigh << ed2);
       shifted.sigh = arg2->sigh >> ediff;
     }
-  else if ( ediff < 64 )
+  else if (ediff < 64)
     {
       ediff -= 32;
-      if ( ! ediff )
+      if (! ediff)
 	{
 	  extent = arg2->sigl;
 	  shifted.sigl = arg2->sigh;
@@ -83,7 +82,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
 	  ed2 = 32 - ediff;
 	  extent = arg2->sigl >> ediff;
 	  extent |= (arg2->sigh << ed2);
-	  if ( arg2->sigl << ed2 )
+	  if (arg2->sigl << ed2)
 	    extent |= 1;
 	  shifted.sigl = arg2->sigh >> ediff;
 	  shifted.sigh = 0;
@@ -92,20 +91,20 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
   else
     {
       ediff -= 64;
-      if ( ! ediff )
+      if (! ediff)
 	{
 	  extent = arg2->sigh;
-	  if ( arg2->sigl )
+	  if (arg2->sigl)
 	    extent |= 1;
 	  shifted.sigl = 0;
 	  shifted.sigh = 0;
 	}
       else
 	{
-	  if ( ediff < 32 )
+	  if (ediff < 32)
 	    {
 	      extent = arg2->sigh >> ediff;
-	      if ( arg2->sigl || (arg2->sigh << (32-ediff)) )
+	      if (arg2->sigl || (arg2->sigh << (32-ediff)))
 		extent |= 1;
 	    }
 	  else
@@ -118,34 +117,34 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
   extent = -extent;
   borrow = extent;
   answ.sigl = arg1->sigl - shifted.sigl;
-  if ( answ.sigl > arg1->sigl )
+  if (answ.sigl > arg1->sigl)
     {
-      if ( borrow )
+      if (borrow)
 	answ.sigl --;
       borrow = 1;
     }
-  else if ( borrow )
+  else if (borrow)
     {
       answ.sigl --;
-      if ( answ.sigl != 0xffffffff )
+      if (answ.sigl != 0xffffffff)
 	borrow = 0;
     }
   answ.sigh = arg1->sigh - shifted.sigh;
-  if ( answ.sigh > arg1->sigh )
+  if (answ.sigh > arg1->sigh)
     {
-      if ( borrow )
+      if (borrow)
 	answ.sigh --;
       borrow = 1;
     }
-  else if ( borrow )
+  else if (borrow)
     {
       answ.sigh --;
-      if ( answ.sigh != 0xffffffff )
+      if (answ.sigh != 0xffffffff)
 	borrow = 0;
     }
 
 #ifdef PARANOID
-  if ( borrow )
+  if (borrow)
     {
       /* This can only occur if the code is bugged */
       EXCEPTION(EX_INTERNAL|0x212);
@@ -153,7 +152,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
     }
 #endif
 
-  if ( answ.sigh & 0x80000000 )
+  if (answ.sigh & 0x80000000)
     {
       /*
 	The simpler "*dest = answ" is broken in gcc
@@ -164,16 +163,16 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
       return FPU_round(dest, extent, 0, control_w, sign);
     }
 
-  if ( answ.sigh == 0 )
+  if (answ.sigh == 0)
     {
-      if ( answ.sigl )
+      if (answ.sigl)
 	{
 	  answ.sigh = answ.sigl;
 	  answ.sigl = extent;
 	  extent = 0;
 	  answ.exp -= 32;
 	}
-      else if ( extent )
+      else if (extent)
 	{
 /*
  *	 A rare case, the only one which is non-zero if we got here
@@ -182,7 +181,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
  *                       -------------------- 
  *                       0000000 .... 0000 1 
  */
-	  if ( extent != 0x80000000 )
+	  if (extent != 0x80000000)
 	    {
 	      /* This can only occur if the code is bugged */
 	      EXCEPTION(EX_INTERNAL|0x210);
@@ -190,8 +189,12 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
 	    }
 	  dest->sigh = extent;
 	  dest->sigl = extent = 0;
-	  dest->exp -= 64;
-	  return FPU_round(dest, extent, 0, control_w, sign);
+          dest->exp -= 64;
+          if (arg1->sigh == 0x80000000 && arg2->sigh == 0x80000000)
+            dest->exp++;
+          dest->exp &= 0x7FFF;
+          dest->exp -= EXTENDED_Ebias;
+          return FPU_round(dest, extent, 0, control_w, sign);
 	}
       else
 	{
@@ -201,13 +204,13 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
 	}
     }
 
-  while ( !(answ.sigh & 0x80000000) )
+  while (!(answ.sigh & 0x80000000))
     {
       answ.sigh <<= 1;
-      if ( answ.sigl & 0x80000000 )
+      if (answ.sigl & 0x80000000)
 	answ.sigh |= 1;
       answ.sigl <<= 1;
-      if ( extent & 0x80000000 )
+      if (extent & 0x80000000)
 	answ.sigl |= 1;
       extent <<= 1;
       answ.exp --;
@@ -218,5 +221,4 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
   dest->sigl = answ.sigl;
 
   return FPU_round(dest, extent, 0, control_w, sign);
-
 }

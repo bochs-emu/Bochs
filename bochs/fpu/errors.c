@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.5 2003-04-12 21:02:06 sshwarts Exp $
+ |  $Id: errors.c,v 1.6 2003-04-20 19:20:07 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -313,11 +313,6 @@ void FPU_exception(int n)
   RE_ENTRANT_CHECK_OFF;
   if ( (~control_word & n & CW_Exceptions) || (n == EX_INTERNAL) )
     {
-#ifdef PRINT_MESSAGES
-      /* My message from the sponsor */
-      printk(FPU_VERSION" "__DATE__" (C) W. Metzenthen.\n");
-#endif /* PRINT_MESSAGES */
-      
       /* Get a name string for error reporting */
       for (i=0; exception_names[i].type; i++)
 	if ( (exception_names[i].type & n) == exception_names[i].type )

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_add.c                                                              |
- |  $Id: reg_u_add.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_u_add.c,v 1.4 2003-04-20 19:20:08 sshwarts Exp $
  |                                                                           |
  | Add two valid (TAG_Valid) FPU_REG numbers, of the same sign, and put the  |
  |   result in a destination FPU_REG.                                        |
@@ -36,7 +36,7 @@ int  FPU_u_add(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *answ,
   u32 extent = 0;
   int ediff = expa - expb, ed2, eflag, ovfl, carry;
 
-  if ( ediff < 0 )
+  if (ediff < 0)
     {
       ediff = -ediff;
       rtmp = arg1;
@@ -50,20 +50,20 @@ int  FPU_u_add(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *answ,
   answ->exp = expa;
 
 #ifdef PARANOID
-  if ( !(arg1->sigh & 0x80000000) || !(arg2->sigh & 0x80000000) )
+  if (!(arg1->sigh & 0x80000000) || !(arg2->sigh & 0x80000000))
     {
       EXCEPTION(EX_INTERNAL|0x201);
       return -1;
     }
 #endif
 
-  if ( ediff == 0 )
+  if (ediff == 0)
     {
       extent = 0;
       shifted.sigl = arg2->sigl;
       shifted.sigh = arg2->sigh;
     }
-  else if ( ediff < 32 )
+  else if (ediff < 32)
     {
       ed2 = 32 - ediff;
       extent = arg2->sigl << ed2;
@@ -71,65 +71,70 @@ int  FPU_u_add(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *answ,
       shifted.sigl |= (arg2->sigh << ed2);
       shifted.sigh = arg2->sigh >> ediff;
     }
-  else if ( ediff < 64 )
+  else if (ediff < 64)
     {
       ediff -= 32;
-      if ( ! ediff )
+      if (! ediff)
 	{
 	  eflag = 0;
 	  extent = arg2->sigl;
 	  shifted.sigl = arg2->sigh;
 	}
       else
-	{
-	  ed2 = 32 - ediff;
-	  eflag = arg2->sigl;
-	  if ( eflag )
-	    extent |= 1;
-	  extent = arg2->sigl >> ediff;
-	  extent |= (arg2->sigh << ed2);
-	  shifted.sigl = arg2->sigh >> ediff;
-	}
+        {
+          u32 extent2;
+
+          ed2 = 32 - ediff;
+          eflag = arg2->sigl;
+          if (eflag)
+              extent |= 1;
+          extent2 = arg2->sigl >> ediff; 
+          extent2 |= (arg2->sigh << ed2);
+          extent |= extent2;
+          shifted.sigl = arg2->sigh >> ediff;
+        }
       shifted.sigh = 0;
     }
   else
     {
       ediff -= 64;
-      if ( ! ediff )
+      if (! ediff)
 	{
 	  eflag = arg2->sigl;
 	  extent = arg2->sigh;
 	}
       else
 	{
-	  ed2 = 64 - ediff;
 	  eflag = arg2->sigl | arg2->sigh;
-	  extent = arg2->sigh >> ediff;
+          if (ediff < 32)
+             extent = arg2->sigh >> ediff;
+          else
+             extent = 0;
 	}
       shifted.sigl = 0;
       shifted.sigh = 0;
-      if ( eflag )
+      if (eflag)
 	extent |= 1;
     }
 
   answ->sigh = arg1->sigh + shifted.sigh;
   ovfl = shifted.sigh > answ->sigh;
   answ->sigl = arg1->sigl + shifted.sigl;
-  if ( shifted.sigl > answ->sigl )
+  if (shifted.sigl > answ->sigl)
     {
       answ->sigh ++;
-      if ( answ->sigh == 0 )
+      if (answ->sigh == 0)
 	ovfl = 1;
     }
-  if ( ovfl )
+  if (ovfl)
     {
       carry = extent & 1;
       extent >>= 1;
       extent |= carry;
-      if ( answ->sigl & 1 )
+      if (answ->sigl & 1)
 	extent |= 0x80000000;
       answ->sigl >>= 1;
-      if ( answ->sigh & 1 )
+      if (answ->sigh & 1)
 	answ->sigl |= 0x80000000;
       answ->sigh >>= 1;
       answ->sigh |= 0x80000000;

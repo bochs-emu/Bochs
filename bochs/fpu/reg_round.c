@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_round.c                                                              |
- |  $Id: reg_round.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_round.c,v 1.3 2003-04-20 19:20:08 sshwarts Exp $
  |                                                                           |
  | Rounding/truncation/etc for FPU basic arithmetic functions.               |
  |                                                                           |
@@ -534,6 +534,3 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
   return tag;
 
 }
-
-
-
