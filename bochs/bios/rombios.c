@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.64 2002-09-28 12:27:15 vruppert Exp $
+// $Id: rombios.c,v 1.65 2002-09-28 15:02:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -881,10 +881,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.64 $";
-static char bios_date_string[] = "$Date: 2002-09-28 12:27:15 $";
+static char bios_cvs_version_string[] = "$Revision: 1.65 $";
+static char bios_date_string[] = "$Date: 2002-09-28 15:02:48 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.64 2002-09-28 12:27:15 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.65 2002-09-28 15:02:48 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8102,10 +8102,38 @@ detect_parport:
   in   al, dx
   cmp  al, #0xaa
   jne  no_parport
+  shl  bx, #1
   mov  [bx+0x408], dx ; Parallel I/O address
-  mov  [bx+0x478], cx ; Parallel printer timeout
+  shr  bx, #1
+  mov  [bx+0x478], cl ; Parallel printer timeout
   inc  bx
 no_parport:
+  ret
+
+detect_serial:
+  add  dx, #4
+  in   al, dx
+  or   al, #0x10 ; enable loopback mode
+  out  dx, al
+  and  al, #0xf0
+  or   al, #0x0a
+  out  dx, al
+  add  dx, #2
+  in   al, dx
+  and  al, #0xf0
+  cmp  al, #0x90
+  jne  no_serial
+  sub  dx, #2
+  in   al, dx
+  and  al, #0xe0
+  out  dx, al
+  sub  dx, #4
+  shl  bx, #1
+  mov  [bx+0x400], dx ; Serial I/O address
+  shr  bx, #1
+  mov  [bx+0x47c], cl ; Serial timeout
+  inc  bx
+no_serial:
   ret
 
 ;; for 'C' strings and other data, insert them here with
@@ -8314,7 +8342,7 @@ keyboard_ok:
   xor ax, ax
   mov ds, ax
   xor bx, bx
-  mov cx, #0x14 ; timeout value
+  mov cl, #0x14 ; timeout value
   mov dx, #0x378 ; Parallel I/O address, port 1
   call detect_parport
   mov dx, #0x278 ; Parallel I/O address, port 2
@@ -8323,17 +8351,22 @@ keyboard_ok:
   mov ax, 0x410   ; Equipment word bits 14..15 determing # parallel ports
   and ax, #0x3fff
   or  ax, bx ; set number of parallel ports
-  mov 0x410, bx
+  mov 0x410, ax
 
   ;; Serial setup
   SET_INT_VECTOR(0x0C, #0xF000, #dummy_iret_handler)
   SET_INT_VECTOR(0x14, #0xF000, #int14_handler)
-  mov 0x400, #0x03F8   ; Serial I/O address, port 1
-  mov 0x47C, #0x0a   ; Serial 1 timeout
-  mov AX, 0x410   ; Equipment word bits 9..11 determing # serial ports
-  and AX, #0xf1ff
-  or  AX, #0x0200 ; one serial port
-  mov 0x410, AX
+  xor bx, bx
+  mov cl, #0x0a ; timeout value
+  mov dx, #0x03f8 ; Serial I/O address, port 1
+  call detect_serial
+  mov dx, #0x02f8 ; Serial I/O address, port 2
+  call detect_serial
+  shl bx, #0x09
+  mov ax, 0x410   ; Equipment word bits 9..11 determing # serial ports
+  and ax, #0xf1ff
+  or  ax, bx ; set number of serial port
+  mov 0x410, ax
 
   ;; CMOS RTC
   SET_INT_VECTOR(0x1A, #0xF000, #int1a_handler)
