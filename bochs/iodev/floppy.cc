@@ -81,7 +81,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.19 2001-09-26 00:19:44 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.20 2001-09-26 17:35:51 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -904,7 +904,7 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
 
   else { // TO_FLOPPY
     BX_ASSERT (!BX_FD_THIS s.media[drive].write_protected);
-#ifdef macintosh
+#if BX_WITH_MACOS
     if (!strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
       ret = fd_write((char *) buffer, offset, bytes);
     else
