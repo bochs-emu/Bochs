@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.54 2002-11-19 05:47:44 bdenney Exp $
+// $Id: x.cc,v 1.55 2002-12-05 19:19:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -422,7 +422,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
                                    default_visual, AllocNone);
     if (XAllocColorCells(bx_x_display, default_cmap, False,
                          plane_masks_return, 0, col_vals, MAX_VGA_COLORS) == 0) {
-      BX_PANIC(("XAllocColorCells returns error."));
+      BX_PANIC(("XAllocColorCells returns error. Maybe your screen does not support a private colormap?"));
       }
 
     win_attr.colormap = default_cmap;
