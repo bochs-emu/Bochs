@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.27 2002-11-25 21:48:19 cbothamy Exp $
+// $Id: cmos.cc,v 1.28 2002-12-03 21:01:48 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.27 2002-11-25 21:48:19 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.28 2002-12-03 21:01:48 cbothamy Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -249,9 +249,10 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
 
   switch (address) {
     case 0x0070:
-      BX_INFO(("CMOS read of CMOS index. returning 0x%02x", BX_CMOS_THIS s.cmos_mem_address));
-      ret8 = BX_CMOS_THIS s.cmos_mem_address;
-      return(ret8);
+      BX_INFO(("read of index port 0x70. returning 0xff"));
+      // Volker says his boxes return 0xff
+      //ret8 = BX_CMOS_THIS s.cmos_mem_address;
+      return(0xff);
       break;
     case 0x0071:
       if (BX_CMOS_THIS s.cmos_mem_address >= BX_NUM_CMOS_REGS) {
