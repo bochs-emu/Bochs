@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.89 2004-08-21 08:15:42 vruppert Exp $
+// $Id: keyboard.cc,v 1.90 2004-11-27 14:38:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -117,7 +117,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
     BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 0;
     BX_KEY_THIS s.kbd_internal_buffer.delay = 1; // 500 mS
     BX_KEY_THIS s.kbd_internal_buffer.repeat_rate = 0x0b; // 10.9 chars/sec
-    }
+  }
 }
 
 
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.89 2004-08-21 08:15:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.90 2004-11-27 14:38:12 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -153,7 +153,6 @@ bx_keyb_c::init(void)
     BX_KEY_THIS s.mouse_internal_buffer.buffer[i] = 0;
   BX_KEY_THIS s.mouse_internal_buffer.head = 0;
 
-  //  BX_INFO(("kbd: %04d outb 0 auxb 0",__LINE__)); // das
   BX_KEY_THIS s.kbd_controller.pare = 0;
   BX_KEY_THIS s.kbd_controller.tim  = 0;
   BX_KEY_THIS s.kbd_controller.auxb = 0;
@@ -175,8 +174,6 @@ bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
   BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
 
-//BX_DEBUG(( "# Okeyboard_serial_delay is %u usec",
-//        (unsigned) bx_options.Okeyboard_serial_delay->get ()));
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
   // Mouse initialization stuff
@@ -187,6 +184,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS s.mouse.enable          = 0;
   BX_KEY_THIS s.mouse.delayed_dx      = 0;
   BX_KEY_THIS s.mouse.delayed_dy      = 0;
+  BX_KEY_THIS s.mouse.im_request      = 0; // wheel mouse mode request
 
   for (i=0; i<BX_KBD_CONTROLLER_QSIZE; i++)
     BX_KEY_THIS s.controller_Q[i] = 0;
@@ -293,14 +291,11 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_KEY_SMF
 
-//BX_DEBUG(( "read from port 0x%04x", (unsigned) address));
-
   if (address == 0x60) { /* output buffer */
     Bit8u   val;
     if (BX_KEY_THIS s.kbd_controller.auxb) { /* mouse byte available */
       val = BX_KEY_THIS s.kbd_controller.aux_output_buffer;
       BX_KEY_THIS s.kbd_controller.aux_output_buffer = 0;
-      //      BX_INFO(("kbd: %04d outb 0 auxb 0",__LINE__)); // das
       BX_KEY_THIS s.kbd_controller.outb = 0;
       BX_KEY_THIS s.kbd_controller.auxb = 0;
       BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
@@ -308,7 +303,6 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
       if (BX_KEY_THIS s.controller_Qsize) {
         unsigned i;
         BX_KEY_THIS s.kbd_controller.aux_output_buffer = BX_KEY_THIS s.controller_Q[0];
-	//	BX_INFO(("kbd: %04d outb 1 auxb 1",__LINE__)); // das
         BX_KEY_THIS s.kbd_controller.outb = 1;
         BX_KEY_THIS s.kbd_controller.auxb = 1;
         if (BX_KEY_THIS s.kbd_controller.allow_irq12)
@@ -320,8 +314,6 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
         BX_KEY_THIS s.controller_Qsize--;
         }
 
-//BX_DEBUG(("mouse: ___io_read aux = 0x%02x", (unsigned) val));
-
       DEV_pic_lower_irq(12);
       activate_timer();
       BX_DEBUG(("READ(%02x) (from mouse) = %02x", (unsigned) address,
@@ -330,16 +322,13 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
       }
     else if (BX_KEY_THIS s.kbd_controller.outb) { /* kbd byte available */
       val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
-      // BX_INFO(("kbd: %04d outb 0 auxb 0",__LINE__)); // das
       BX_KEY_THIS s.kbd_controller.outb = 0;
       BX_KEY_THIS s.kbd_controller.auxb = 0;
       BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
-//BX_DEBUG(( "___io_read kbd"));
 
       if (BX_KEY_THIS s.controller_Qsize) {
         unsigned i;
         BX_KEY_THIS s.kbd_controller.aux_output_buffer = BX_KEY_THIS s.controller_Q[0];
-	//	BX_INFO(("kbd: %04d outb 1 auxb 1",__LINE__)); // das
         BX_KEY_THIS s.kbd_controller.outb = 1;
         BX_KEY_THIS s.kbd_controller.auxb = 1;
         if (BX_KEY_THIS s.kbd_controller.allow_irq1)
@@ -359,9 +348,8 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
       return val;
       }
     else {
-        BX_DEBUG(("num_elements = %d", BX_KEY_THIS s.kbd_internal_buffer.num_elements));
-        BX_DEBUG(("read from port 60h with outb empty"));
-//        val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
+      BX_DEBUG(("num_elements = %d", BX_KEY_THIS s.kbd_internal_buffer.num_elements));
+      BX_DEBUG(("read from port 60h with outb empty"));
       return BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
       }
     }
@@ -445,8 +433,8 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             else if (BX_KEY_THIS s.kbd_controller.allow_irq1  && BX_KEY_THIS s.kbd_controller.outb)
               BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
 
-			BX_DEBUG(( " allow_irq12 set to %u", (unsigned)
-				BX_KEY_THIS s.kbd_controller.allow_irq12));
+            BX_DEBUG(( " allow_irq12 set to %u",
+              (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
             if ( !scan_convert )
               BX_ERROR(("keyboard: (mch) scan convert turned off"));
 
@@ -459,8 +447,8 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
 	    BX_DEBUG(("write output port : %sable A20",(value & 0x02)?"en":"dis"));
             BX_SET_ENABLE_A20( (value & 0x02) != 0 );
             if (!(value & 0x01)) {
-	        BX_INFO(("write output port : processor reset requested!"));
-                bx_pc_system.Reset( BX_RESET_SOFTWARE);
+              BX_INFO(("write output port : processor reset requested!"));
+              bx_pc_system.Reset( BX_RESET_SOFTWARE);
             }
             break;
           case 0xd4: // Write to mouse
@@ -484,8 +472,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             BX_PANIC(("=== unsupported write to port 60h(lastcomm=%02x): %02x",
               (unsigned) BX_KEY_THIS s.kbd_controller.last_comm, (unsigned) value));
           }
-        }
-      else {
+      } else {
         // data byte written last to 0x60
         BX_KEY_THIS s.kbd_controller.c_d = 0;
         BX_KEY_THIS s.kbd_controller.expecting_port60h = 0;
@@ -494,9 +481,9 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled==0) {
           BX_ERROR(("keyboard disabled & send of byte %02x to kbd",
             (unsigned) value));
-          }
-        kbd_ctrl_to_kbd(value);
         }
+        kbd_ctrl_to_kbd(value);
+      }
       break;
 
     case 0x64: // control register
@@ -511,9 +498,9 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
           BX_DEBUG(("get keyboard command byte"));
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-			BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
+            BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
-            }
+          }
           command_byte =
             (BX_KEY_THIS s.kbd_controller.scancodes_translate << 6) |
             ((!BX_KEY_THIS s.kbd_controller.aux_clock_enabled) << 5) |
@@ -549,24 +536,23 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         case 0xa9: // Test Mouse Port
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-			BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
+            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
-            }
+          }
           controller_enQ(0x00, 0); // no errors detected
           break;
         case 0xaa: // motherboard controller self test
           BX_DEBUG(("Self Test"));
-	  if( kbd_initialized == 0 )
-	  {
+	  if (kbd_initialized == 0) {
 	    BX_KEY_THIS s.controller_Qsize = 0;
 	    BX_KEY_THIS s.kbd_controller.outb = 0;
 	    kbd_initialized++;
 	  }
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-		BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
+            BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
-            }
+          }
 	  // (mch) Why is this commented out??? Enabling
           BX_KEY_THIS s.kbd_controller.sysf = 1; // self test complete
           controller_enQ(0x55, 0); // controller OK
@@ -574,9 +560,9 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         case 0xab: // Interface Test
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
+            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
-            }
+          }
           controller_enQ(0x00, 0);
           break;
         case 0xad: // disable keyboard
@@ -593,9 +579,9 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
         case 0xc0: // read input port
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
+            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
-            }
+          }
           // keyboard power normal
           controller_enQ(0x00, 0);
           break;
@@ -603,9 +589,9 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
           BX_DEBUG(("io write to port 64h, command d0h (partial)"));
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
+            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
-            }
+          }
           controller_enQ(
               (BX_KEY_THIS s.kbd_controller.auxb << 5) |
               (BX_KEY_THIS s.kbd_controller.outb << 4) |
@@ -659,7 +645,7 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
             BX_DEBUG(("io write to port 64h, useless command %02x",
                 (unsigned) value));
             return;
-	    }
+          }
           BX_PANIC(("unsupported io write to keyboard port %x, value = %x",
             (unsigned) address, (unsigned) value));
           break;
@@ -667,7 +653,7 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
       break;
 
     default: BX_PANIC(("unknown address in bx_keyb_c::write()"));
-    }
+  }
 }
 
 // service_paste_buf() transfers data from the paste buffer to the hardware
@@ -719,7 +705,7 @@ bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
   BX_DEBUG (("paste_bytes: %d bytes", length));
   if (BX_KEY_THIS pastebuf) {
     BX_ERROR (("previous paste was not completed!  %d chars lost", 
-	  BX_KEY_THIS pastebuf_len - BX_KEY_THIS pastebuf_ptr));
+      BX_KEY_THIS pastebuf_len - BX_KEY_THIS pastebuf_ptr));
     delete [] BX_KEY_THIS pastebuf;  // free the old paste buffer
   }
   BX_KEY_THIS pastebuf = bytes;
@@ -785,16 +771,15 @@ bx_keyb_c::set_kbd_clock_enable(Bit8u   value)
 
   if (value==0) {
     BX_KEY_THIS s.kbd_controller.kbd_clock_enabled = 0;
-    }
-  else {
+  } else {
     /* is another byte waiting to be sent from the keyboard ? */
     prev_kbd_clock_enabled = BX_KEY_THIS s.kbd_controller.kbd_clock_enabled;
     BX_KEY_THIS s.kbd_controller.kbd_clock_enabled = 1;
 
     if (prev_kbd_clock_enabled==0 && BX_KEY_THIS s.kbd_controller.outb==0) {
       activate_timer();
-      }
     }
+  }
 }
 
 
@@ -807,14 +792,13 @@ bx_keyb_c::set_aux_clock_enable(Bit8u   value)
   BX_DEBUG(("set_aux_clock_enable(%u)", (unsigned) value));
   if (value==0) {
     BX_KEY_THIS s.kbd_controller.aux_clock_enabled = 0;
-    }
-  else {
+  } else {
     /* is another byte waiting to be sent from the keyboard ? */
     prev_aux_clock_enabled = BX_KEY_THIS s.kbd_controller.aux_clock_enabled;
     BX_KEY_THIS s.kbd_controller.aux_clock_enabled = 1;
     if (prev_aux_clock_enabled==0 && BX_KEY_THIS s.kbd_controller.outb==0)
       activate_timer();
-    }
+  }
 }
 
   Bit8u
@@ -844,49 +828,45 @@ bx_keyb_c::controller_enQ(Bit8u   data, unsigned source)
     BX_KEY_THIS s.controller_Q[BX_KEY_THIS s.controller_Qsize++] = data;
     BX_KEY_THIS s.controller_Qsource = source;
     return;
-    }
+  }
 
   // the Q is empty
   if (source == 0) { // keyboard
     BX_KEY_THIS s.kbd_controller.kbd_output_buffer = data;
-    //    BX_INFO(("kbd: %04d outb 1 auxb 0",__LINE__)); // das
     BX_KEY_THIS s.kbd_controller.outb = 1;
     BX_KEY_THIS s.kbd_controller.auxb = 0;
     BX_KEY_THIS s.kbd_controller.inpb = 0;
     if (BX_KEY_THIS s.kbd_controller.allow_irq1)
       BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
-    }
-  else { // mouse
+  } else { // mouse
     BX_KEY_THIS s.kbd_controller.aux_output_buffer = data;
-    //    BX_INFO(("kbd: %04d outb 1 auxb 1",__LINE__)); // das
     BX_KEY_THIS s.kbd_controller.outb = 1;
     BX_KEY_THIS s.kbd_controller.auxb = 1;
     BX_KEY_THIS s.kbd_controller.inpb = 0;
     if (BX_KEY_THIS s.kbd_controller.allow_irq12)
       BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
-    }
+  }
 }
 
 void
 bx_keyb_c::kbd_enQ_imm(Bit8u val)
 {
-      int tail;
+  int tail;
 
-      if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= BX_KBD_ELEMENTS) {
-	    BX_PANIC(("internal keyboard buffer full (imm)"));
-	    return;
-      }
+  if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= BX_KBD_ELEMENTS) {
+    BX_PANIC(("internal keyboard buffer full (imm)"));
+    return;
+  }
 
-      /* enqueue scancode in multibyte internal keyboard buffer */
-      tail = (BX_KEY_THIS s.kbd_internal_buffer.head + BX_KEY_THIS s.kbd_internal_buffer.num_elements) %
-	    BX_KBD_ELEMENTS;
+  /* enqueue scancode in multibyte internal keyboard buffer */
+  tail = (BX_KEY_THIS s.kbd_internal_buffer.head + BX_KEY_THIS s.kbd_internal_buffer.num_elements) %
+    BX_KBD_ELEMENTS;
 
-      BX_KEY_THIS s.kbd_controller.kbd_output_buffer = val;
-      //      BX_INFO(("kbd: %04d outb 1",__LINE__)); // das
-      BX_KEY_THIS s.kbd_controller.outb = 1;
+  BX_KEY_THIS s.kbd_controller.kbd_output_buffer = val;
+  BX_KEY_THIS s.kbd_controller.outb = 1;
 
-      if (BX_KEY_THIS s.kbd_controller.allow_irq1)
-	    BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
+  if (BX_KEY_THIS s.kbd_controller.allow_irq1)
+    BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
 }
 
 
@@ -901,7 +881,7 @@ bx_keyb_c::kbd_enQ(Bit8u scancode)
     BX_INFO(("internal keyboard buffer full, ignoring scancode.(%02x)",
       (unsigned) scancode));
     return;
-    }
+  }
 
   /* enqueue scancode in multibyte internal keyboard buffer */
   BX_DEBUG(("kbd_enQ: putting scancode 0x%02x in internal buffer",
@@ -915,12 +895,7 @@ bx_keyb_c::kbd_enQ(Bit8u scancode)
     activate_timer();
     BX_DEBUG(("activating timer..."));
     return;
-    }
-//BX_DEBUG(( "# not activating timer...");
-//BX_DEBUG(( "#   allow_irq1 = %u", (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq1);
-//BX_DEBUG(( "#   outb       = %u", (unsigned) BX_KEY_THIS s.kbd_controller.outb);
-//BX_DEBUG(( "#   clock_enab = %u", (unsigned) BX_KEY_THIS s.kbd_controller.kbd_clock_enabled);
-//BX_DEBUG(( "#   out_buffer = %u", (unsigned) BX_KEY_THIS s.kbd_controller.kbd_output_buffer);
+  }
 }
 
   bx_bool BX_CPP_AttrRegparmN(3)
@@ -928,10 +903,7 @@ bx_keyb_c::mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3)
 {
   if ((BX_KEY_THIS s.mouse_internal_buffer.num_elements + 3) >= BX_MOUSE_BUFF_SIZE) {
     return(0); /* buffer doesn't have the space */
-    }
-
-//BX_DEBUG(("mouse: enQ_packet(%02x, %02x, %02x)",
-//  (unsigned) b1, (unsigned) b2, (unsigned) b3));
+  }
 
   mouse_enQ(b1);
   mouse_enQ(b2);
@@ -951,9 +923,7 @@ bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
     BX_ERROR(("mouse: internal mouse buffer full, ignoring mouse data.(%02x)",
       (unsigned) mouse_data));
     return;
-    }
-//BX_DEBUG(( "# mouse_enq() aux_clock_enabled = %u",
-//  (unsigned) BX_KEY_THIS s.kbd_controller.aux_clock_enabled);
+  }
 
   /* enqueue mouse data in multibyte internal mouse buffer */
   tail = (BX_KEY_THIS s.mouse_internal_buffer.head + BX_KEY_THIS s.mouse_internal_buffer.num_elements) %
@@ -963,14 +933,8 @@ bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
 
   if (!BX_KEY_THIS s.kbd_controller.outb && BX_KEY_THIS s.kbd_controller.aux_clock_enabled) {
     activate_timer();
-//BX_DEBUG(( "# activating timer...");
     return;
-    }
-//BX_DEBUG(( "# not activating timer...");
-//BX_DEBUG(( "#   allow_irq12= %u", (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12);
-//BX_DEBUG(( "#   outb       = %u", (unsigned) BX_KEY_THIS s.kbd_controller.outb);
-//BX_DEBUG(( "#   clock_enab = %u", (unsigned) BX_KEY_THIS s.kbd_controller.aux_clock_enabled);
-//BX_DEBUG(( "#   out_buffer = %u", (unsigned) BX_KEY_THIS s.kbd_controller.aux_output_buffer);
+  }
 }
 
   void
@@ -987,13 +951,13 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       case 1: BX_INFO(("setting delay to 500 mS (unused)")); break;
       case 2: BX_INFO(("setting delay to 750 mS (unused)")); break;
       case 3: BX_INFO(("setting delay to 1000 mS (unused)")); break;
-      }
+    }
     BX_KEY_THIS s.kbd_internal_buffer.repeat_rate = value & 0x1f;
     double cps = 1 /((double)(8 + (value & 0x07)) * (double)exp(log((double)2) * (double)((value >> 3) & 0x03)) * 0.00417);
     BX_INFO(("setting repeat rate to %.1f cps (unused)", cps));
     kbd_enQ(0xFA); // send ACK
     return;
-    }
+  }
 
   if (BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write) {
     BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 0;
@@ -1005,7 +969,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[2], value & 0x01);
     kbd_enQ(0xFA); // send ACK %%%
     return;
-    }
+  }
 
   if (BX_KEY_THIS s.kbd_controller.expecting_scancodes_set) {
     BX_KEY_THIS s.kbd_controller.expecting_scancodes_set = 0;
@@ -1015,18 +979,16 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
         BX_INFO(("Switched to scancode set %d\n",
           (unsigned) BX_KEY_THIS s.kbd_controller.current_scancodes_set + 1));
         kbd_enQ(0xFA);
-        } 
-      else {
+      } else {
         BX_ERROR(("Received scancodes set out of range: %d\n", value ));
         kbd_enQ(0xFF); // send ERROR
-        }
-      } 
-    else {
+      }
+    } else {
       // Send current scancodes set to port 0x60
       kbd_enQ( 1 + (BX_KEY_THIS s.kbd_controller.current_scancodes_set) ); 
-      }
-    return;
     }
+    return;
+  }
 
   switch (value) {
     case 0x00: // ??? ignore and let OS timeout with no response
@@ -1035,9 +997,9 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       break;
 
     case 0x05: // ???
-	  // (mch) trying to get this to work...
-          BX_KEY_THIS s.kbd_controller.sysf = 1;
-	  kbd_enQ_imm(0xfe);
+      // (mch) trying to get this to work...
+      BX_KEY_THIS s.kbd_controller.sysf = 1;
+      kbd_enQ_imm(0xfe);
       return;
       break;
 
@@ -1074,8 +1036,8 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
             kbd_enQ(0x41);
           else
             kbd_enQ(0x83);
-          }
         }
+      }
       return;
       break;
 
@@ -1139,16 +1101,16 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       return;
 
     default:
-			/* XXX fix this properly:
-			http://panda.cs.ndsu.nodak.edu/~achapwes/PICmicro/mouse/mouse.html
-			http://sourceforge.net/tracker/index.php?func=detail&aid=422457&group_id=12580&atid=112580
-			 */
+     /* XXX fix this properly:
+        http://panda.cs.ndsu.nodak.edu/~achapwes/PICmicro/mouse/mouse.html
+        http://sourceforge.net/tracker/index.php?func=detail&aid=422457&group_id=12580&atid=112580
+      */
       BX_ERROR(("kbd_ctrl_to_kbd(): got value of %02x",
         (unsigned) value));
       kbd_enQ(0xFA); /* send ACK ??? */
       return;
       break;
-    }
+  }
 }
 
   void
@@ -1190,58 +1152,48 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
 
   if ( BX_KEY_THIS s.kbd_controller.timer_pending == 0 ) {
     return(retval);
-    }
+  }
 
   if ( usec_delta >= BX_KEY_THIS s.kbd_controller.timer_pending ) {
     BX_KEY_THIS s.kbd_controller.timer_pending = 0;
-    }
-  else {
+  } else {
     BX_KEY_THIS s.kbd_controller.timer_pending -= usec_delta;
     return(retval);
-    }
+  }
 
   if (BX_KEY_THIS s.kbd_controller.outb) {
     return(retval);
-    }
+  }
 
   /* nothing in outb, look for possible data xfer from keyboard or mouse */
   if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled && BX_KEY_THIS s.kbd_internal_buffer.num_elements) {
-//BX_DEBUG(( "#   servicing keyboard code");
     BX_DEBUG(("service_keyboard: key in internal buffer waiting"));
     BX_KEY_THIS s.kbd_controller.kbd_output_buffer =
       BX_KEY_THIS s.kbd_internal_buffer.buffer[BX_KEY_THIS s.kbd_internal_buffer.head];
-    //    BX_INFO(("kbd: %04d outb 1",__LINE__)); // das
     BX_KEY_THIS s.kbd_controller.outb = 1;
     // commented out since this would override the current state of the
     // mouse buffer flag - no bug seen - just seems wrong (das)
     //    BX_KEY_THIS s.kbd_controller.auxb = 0;
-//BX_DEBUG(( "# ___kbd::periodic kbd");
     BX_KEY_THIS s.kbd_internal_buffer.head = (BX_KEY_THIS s.kbd_internal_buffer.head + 1) %
       BX_KBD_ELEMENTS;
     BX_KEY_THIS s.kbd_internal_buffer.num_elements--;
     if (BX_KEY_THIS s.kbd_controller.allow_irq1)
       BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
-    }
-  else { 
+  } else { 
     create_mouse_packet(0);
     if (BX_KEY_THIS s.kbd_controller.aux_clock_enabled && BX_KEY_THIS s.mouse_internal_buffer.num_elements) {
-//BX_DEBUG(( "#   servicing mouse code");
       BX_DEBUG(("service_keyboard: key(from mouse) in internal buffer waiting"));
       BX_KEY_THIS s.kbd_controller.aux_output_buffer =
 	BX_KEY_THIS s.mouse_internal_buffer.buffer[BX_KEY_THIS s.mouse_internal_buffer.head];
 
-    //    BX_INFO(("kbd: %04d outb 1 auxb 1",__LINE__)); //das
       BX_KEY_THIS s.kbd_controller.outb = 1;
       BX_KEY_THIS s.kbd_controller.auxb = 1;
-//BX_DEBUG(( "# ___kbd:periodic aux");
       BX_KEY_THIS s.mouse_internal_buffer.head = (BX_KEY_THIS s.mouse_internal_buffer.head + 1) %
 	BX_MOUSE_BUFF_SIZE;
       BX_KEY_THIS s.mouse_internal_buffer.num_elements--;
-//BX_DEBUG(( "#   allow12 = %u", (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12);
       if (BX_KEY_THIS s.kbd_controller.allow_irq12)
 	BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
-    }
-    else {
+    } else {
       BX_DEBUG(("service_keyboard(): no keys waiting"));
     }
   }
@@ -1255,215 +1207,217 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
 bx_keyb_c::activate_timer(void)
 {
   if (BX_KEY_THIS s.kbd_controller.timer_pending == 0) {
-    // BX_KEY_THIS s.kbd_controller.timer_pending = bx_options.Okeyboard_serial_delay->get ();
     BX_KEY_THIS s.kbd_controller.timer_pending = 1;
-    }
+  }
 }
 
 
   void
 bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
 {
-BX_DEBUG(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
-BX_DEBUG(("  enable = %u", (unsigned) BX_KEY_THIS s.mouse.enable));
-BX_DEBUG(("  allow_irq12 = %u",
-  (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
-BX_DEBUG(("  aux_clock_enabled = %u",
-  (unsigned) BX_KEY_THIS s.kbd_controller.aux_clock_enabled));
-//BX_DEBUG(( "MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
+  BX_DEBUG(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
+  BX_DEBUG(("  enable = %u", (unsigned) BX_KEY_THIS s.mouse.enable));
+  BX_DEBUG(("  allow_irq12 = %u",
+    (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
+  BX_DEBUG(("  aux_clock_enabled = %u",
+    (unsigned) BX_KEY_THIS s.kbd_controller.aux_clock_enabled));
 
   // an ACK (0xFA) is always the first response to any valid input
   // received from the system other than Set-Wrap-Mode & Resend-Command
 
+  if (BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter) {
+    BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
+    switch (BX_KEY_THIS s.kbd_controller.last_mouse_command) {
+      case 0xf3: // Set Mouse Sample Rate
+        BX_KEY_THIS s.mouse.sample_rate = value;
+        BX_DEBUG(("[mouse] Sampling rate set: %d Hz", value));
+        if ((value == 200) && (!BX_KEY_THIS s.mouse.im_request)) {
+          BX_KEY_THIS s.mouse.im_request = 1;
+        } else if ((value == 100) && (BX_KEY_THIS s.mouse.im_request == 1)) {
+          BX_KEY_THIS s.mouse.im_request = 2;
+        } else if ((value == 80) && (BX_KEY_THIS s.mouse.im_request == 2)) {
+          BX_INFO(("wheel mouse mode requested (not implemented)"));
+          BX_KEY_THIS s.mouse.im_request = 0;
+        } else {
+          BX_KEY_THIS s.mouse.im_request = 0;
+        }
+        controller_enQ(0xFA, 1); // ack
+        break;
 
- if (BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter) {
-       BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
-       switch (BX_KEY_THIS s.kbd_controller.last_mouse_command) {
-	     case 0xf3: // Set Mouse Sample Rate
-		   BX_KEY_THIS s.mouse.sample_rate = value;
-		   BX_DEBUG(("[mouse] Sampling rate set: %d Hz", value));
-		   controller_enQ(0xFA, 1); // ack
-		   break;
+      case 0xe8: // Set Mouse Resolution
+        switch (value) {
+          case 0:
+            BX_KEY_THIS s.mouse.resolution_cpmm = 1;
+            break;
+          case 1:
+            BX_KEY_THIS s.mouse.resolution_cpmm = 2;
+            break;
+          case 2:
+            BX_KEY_THIS s.mouse.resolution_cpmm = 4;
+            break;
+          case 3:
+            BX_KEY_THIS s.mouse.resolution_cpmm = 8;
+            break;
+          default:
+            BX_PANIC(("[mouse] Unknown resolution %d", value));
+            break;
+        }
+        BX_DEBUG(("[mouse] Resolution set to %d counts per mm",
+          BX_KEY_THIS s.mouse.resolution_cpmm));
 
-	     case 0xe8: // Set Mouse Resolution
-		   switch (value) {
-			 case 0:
-			       BX_KEY_THIS s.mouse.resolution_cpmm = 1;
-			       break;
-			 case 1:
-			       BX_KEY_THIS s.mouse.resolution_cpmm = 2;
-			       break;
-			 case 2:
-			       BX_KEY_THIS s.mouse.resolution_cpmm = 4;
-			       break;
-			 case 3:
-			       BX_KEY_THIS s.mouse.resolution_cpmm = 8;
-			       break;
-			 default:
-			       BX_PANIC(("[mouse] Unknown resolution %d", value));
-			       break;
-		   }
-		   BX_DEBUG(("[mouse] Resolution set to %d counts per mm",
-				   BX_KEY_THIS s.mouse.resolution_cpmm));
+        controller_enQ(0xFA, 1); // ack
+        break;
 
-		   controller_enQ(0xFA, 1); // ack
-		   break;
+      default:
+        BX_PANIC(("MOUSE: unknown last command (%02xh)", (unsigned) BX_KEY_THIS s.kbd_controller.last_mouse_command));
+    }
+  } else {
+    BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
+    BX_KEY_THIS s.kbd_controller.last_mouse_command = value;
 
-	     default:
-		   BX_PANIC(("MOUSE: unknown last command (%02xh)", (unsigned) BX_KEY_THIS s.kbd_controller.last_mouse_command));
-       }
- } else {
-  BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
-  BX_KEY_THIS s.kbd_controller.last_mouse_command = value;
+    // test for wrap mode first
+    if (BX_KEY_THIS s.mouse.mode == MOUSE_MODE_WRAP) {
+      // if not a reset command or reset wrap mode
+      // then just echo the byte.
+      if ((value != 0xff) && (value != 0xec)) {
+        if (bx_dbg.mouse)
+          BX_INFO(("[mouse] wrap mode: Ignoring command %0X02.",value));
+        controller_enQ(value,1);
+        // bail out
+        return;
+      }
+    }
+    switch ( value ) {
+      case 0xe6: // Set Mouse Scaling to 1:1
+        controller_enQ(0xFA, 1); // ACK
+        BX_KEY_THIS s.mouse.scaling = 2;
+        BX_DEBUG(("[mouse] Scaling set to 1:1"));
+        break;
 
-  // test for wrap mode first
-  if (BX_KEY_THIS s.mouse.mode == MOUSE_MODE_WRAP) {
-    // if not a reset command or reset wrap mode
-    // then just echo the byte.
-    if ((value != 0xff) && (value != 0xec)) {
-      if (bx_dbg.mouse)
-	BX_INFO(("[mouse] wrap mode: Ignoring command %0X02.",value));
-      controller_enQ(value,1);
-      // bail out
-      return;
+      case 0xe7: // Set Mouse Scaling to 2:1
+        controller_enQ(0xFA, 1); // ACK
+        BX_KEY_THIS s.mouse.scaling         = 2;
+        BX_DEBUG(("[mouse] Scaling set to 2:1"));
+        break;
+
+      case 0xe8: // Set Mouse Resolution
+        controller_enQ(0xFA, 1); // ACK
+        BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 1;
+        break;
+
+      case 0xea: // Set Stream Mode
+        if (bx_dbg.mouse)
+          BX_INFO(("[mouse] Mouse stream mode on."));
+        BX_KEY_THIS s.mouse.mode = MOUSE_MODE_STREAM;
+        controller_enQ(0xFA, 1); // ACK
+        break;
+
+      case 0xec: // Reset Wrap Mode
+        // unless we are in wrap mode ignore the command
+        if ( BX_KEY_THIS s.mouse.mode == MOUSE_MODE_WRAP) {
+          if (bx_dbg.mouse)
+            BX_INFO(("[mouse] Mouse wrap mode off."));
+          // restore previous mode except disable stream mode reporting.
+          // ### TODO disabling reporting in stream mode
+          BX_KEY_THIS s.mouse.mode = BX_KEY_THIS s.mouse.saved_mode;
+          controller_enQ(0xFA, 1); // ACK
+        }
+        break;
+      case 0xee: // Set Wrap Mode
+        // ### TODO flush output queue.
+        // ### TODO disable interrupts if in stream mode.
+        if (bx_dbg.mouse)
+          BX_INFO(("[mouse] Mouse wrap mode on."));
+        BX_KEY_THIS s.mouse.saved_mode = BX_KEY_THIS s.mouse.mode;
+        BX_KEY_THIS s.mouse.mode = MOUSE_MODE_WRAP;
+        controller_enQ(0xFA, 1); // ACK
+        break;
+
+      case 0xf0: // Set Remote Mode (polling mode, i.e. not stream mode.)
+        if (bx_dbg.mouse)
+          BX_INFO(("[mouse] Mouse remote mode on."));
+        // ### TODO should we flush/discard/ignore any already queued packets?
+        BX_KEY_THIS s.mouse.mode = MOUSE_MODE_REMOTE;
+        controller_enQ(0xFA, 1); // ACK
+        break;
+
+      case 0xf2: // Read Device Type
+        controller_enQ(0xFA, 1); // ACK
+        controller_enQ(0x00, 1); // Device ID
+        BX_DEBUG(("[mouse] Read mouse ID"));
+        break;
+
+      case 0xf3: // Set Mouse Sample Rate (sample rate written to port 60h)
+        controller_enQ(0xFA, 1); // ACK
+        BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 1;
+        break;
+
+      case 0xf4: // Enable (in stream mode)
+        BX_KEY_THIS s.mouse.enable = 1;
+        controller_enQ(0xFA, 1); // ACK
+        BX_DEBUG(("[mouse] Mouse enabled (stream mode)"));
+        break;
+
+      case 0xf5: // Disable (in stream mode)
+        BX_KEY_THIS s.mouse.enable = 0;
+        controller_enQ(0xFA, 1); // ACK
+        BX_DEBUG(("[mouse] Mouse disabled (stream mode)"));
+        break;
+
+      case 0xf6: // Set Defaults
+        BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
+        BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
+        BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
+        BX_KEY_THIS s.mouse.enable          = 0;
+        BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_STREAM;
+        controller_enQ(0xFA, 1); // ACK
+        BX_DEBUG(("[mouse] Set Defaults"));
+        break;
+
+      case 0xff: // Reset
+        BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
+        BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
+        BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
+        BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_RESET;
+        BX_KEY_THIS s.mouse.enable          = 0;
+        /* (mch) NT expects an ack here */
+        controller_enQ(0xFA, 1); // ACK
+        controller_enQ(0xAA, 1); // completion code
+        controller_enQ(0x00, 1); // ID code (normal mouse, wheelmouse has id 0x3)
+        BX_DEBUG(("[mouse] Mouse reset"));
+        break;
+
+      case 0xe9: // Get mouse information
+        // should we ack here? (mch): Yes
+        controller_enQ(0xFA, 1); // ACK
+        controller_enQ(BX_KEY_THIS s.mouse.get_status_byte(), 1); // status
+        controller_enQ(BX_KEY_THIS s.mouse.get_resolution_byte(), 1); // resolution
+        controller_enQ(BX_KEY_THIS s.mouse.sample_rate, 1); // sample rate
+        BX_DEBUG(("[mouse] Get mouse information"));
+        break;
+
+      case 0xeb: // Read Data (send a packet when in Remote Mode)
+        controller_enQ(0xFA, 1); // ACK
+        // perhaps we should be adding some movement here.
+        mouse_enQ_packet( ((BX_KEY_THIS s.mouse.button_status & 0x0f) | 0x08),
+          0x00, 0x00 ); // bit3 of first byte always set
+        //assumed we really aren't in polling mode, a rather odd assumption.
+        BX_ERROR(("[mouse] Warning: Read Data command partially supported."));
+        break;
+
+      default:
+        //FEh Resend
+        BX_PANIC(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
     }
   }
-  switch ( value ) {
-    case 0xe6: // Set Mouse Scaling to 1:1
-      controller_enQ(0xFA, 1); // ACK
-      BX_KEY_THIS s.mouse.scaling         = 2;
-	  BX_DEBUG(("[mouse] Scaling set to 1:1"));
-      break;
-
-    case 0xe7: // Set Mouse Scaling to 2:1
-      controller_enQ(0xFA, 1); // ACK
-      BX_KEY_THIS s.mouse.scaling         = 2;
-	  BX_DEBUG(("[mouse] Scaling set to 2:1"));
-      break;
-
-    case 0xe8: // Set Mouse Resolution
-      controller_enQ(0xFA, 1); // ACK
-      BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 1;
-      break;
-
-    case 0xea: // Set Stream Mode
-      if (bx_dbg.mouse)
-	BX_INFO(("[mouse] Mouse stream mode on."));
-      BX_KEY_THIS s.mouse.mode = MOUSE_MODE_STREAM;
-      controller_enQ(0xFA, 1); // ACK
-      break;
-
-    case 0xec: // Reset Wrap Mode
-      // unless we are in wrap mode ignore the command
-      if ( BX_KEY_THIS s.mouse.mode == MOUSE_MODE_WRAP) {
-	if (bx_dbg.mouse)
-	  BX_INFO(("[mouse] Mouse wrap mode off."));
-	// restore previous mode except disable stream mode reporting.
-	// ### TODO disabling reporting in stream mode
-	BX_KEY_THIS s.mouse.mode = BX_KEY_THIS s.mouse.saved_mode;
-	controller_enQ(0xFA, 1); // ACK
-      }
-      break;
-    case 0xee: // Set Wrap Mode
-      // ### TODO flush output queue.
-      // ### TODO disable interrupts if in stream mode.
-      if (bx_dbg.mouse)
-	    BX_INFO(("[mouse] Mouse wrap mode on."));
-      BX_KEY_THIS s.mouse.saved_mode = BX_KEY_THIS s.mouse.mode;
-      BX_KEY_THIS s.mouse.mode = MOUSE_MODE_WRAP;
-      controller_enQ(0xFA, 1); // ACK
-      break;
-
-    case 0xf0: // Set Remote Mode (polling mode, i.e. not stream mode.)
-      if (bx_dbg.mouse)
-	    BX_INFO(("[mouse] Mouse remote mode on."));
-      // ### TODO should we flush/discard/ignore any already queued packets?
-      BX_KEY_THIS s.mouse.mode = MOUSE_MODE_REMOTE;
-      controller_enQ(0xFA, 1); // ACK
-      break;
-
-
-    case 0xf2: // Read Device Type
-      controller_enQ(0xFA, 1); // ACK
-      controller_enQ(0x00, 1); // Device ID
-	  BX_DEBUG(("[mouse] Read mouse ID"));
-      break;
-
-    case 0xf3: // Set Mouse Sample Rate (sample rate written to port 60h)
-      controller_enQ(0xFA, 1); // ACK
-      BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 1;
-      break;
-
-    case 0xf4: // Enable (in stream mode)
-      BX_KEY_THIS s.mouse.enable = 1;
-      controller_enQ(0xFA, 1); // ACK
-	  BX_DEBUG(("[mouse] Mouse enabled (stream mode)"));
-      break;
-
-    case 0xf5: // Disable (in stream mode)
-      BX_KEY_THIS s.mouse.enable = 0;
-      controller_enQ(0xFA, 1); // ACK
-	  BX_DEBUG(("[mouse] Mouse disabled (stream mode)"));
-      break;
-
-    case 0xf6: // Set Defaults
-      BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
-      BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
-      BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
-      BX_KEY_THIS s.mouse.enable          = 0;
-      BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_STREAM;
-      controller_enQ(0xFA, 1); // ACK
-	  BX_DEBUG(("[mouse] Set Defaults"));
-      break;
-
-    case 0xff: // Reset
-      BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
-      BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
-      BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
-      BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_RESET;
-      BX_KEY_THIS s.mouse.enable          = 0;
-      /* (mch) NT expects an ack here */
-      controller_enQ(0xFA, 1); // ACK
-      controller_enQ(0xAA, 1); // completion code
-      controller_enQ(0x00, 1); // ID code (normal mouse, wheelmouse has id 0x3)
-	  BX_DEBUG(("[mouse] Mouse reset"));
-      break;
-
-    case 0xe9: // Get mouse information
-      // should we ack here? (mch): Yes
-      controller_enQ(0xFA, 1); // ACK
-      controller_enQ(BX_KEY_THIS s.mouse.get_status_byte(), 1); // status
-      controller_enQ(BX_KEY_THIS s.mouse.get_resolution_byte(), 1); // resolution
-      controller_enQ(BX_KEY_THIS s.mouse.sample_rate, 1); // sample rate
-	  BX_DEBUG(("[mouse] Get mouse information"));
-      break;
-
-    case 0xeb: // Read Data (send a packet when in Remote Mode)
-      controller_enQ(0xFA, 1); // ACK
-      // perhaps we should be adding some movement here.
-      mouse_enQ_packet( ((BX_KEY_THIS s.mouse.button_status & 0x0f) | 0x08),
-			0x00, 0x00 ); // bit3 of first byte always set
-      //assumed we really aren't in polling mode, a rather odd assumption.
-      BX_ERROR(("[mouse] Warning: Read Data command partially supported."));
-      break;
-
-    default:
-      //FEh Resend
-      BX_PANIC(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
-    }
- }
 }
 
 void
 bx_keyb_c::create_mouse_packet(bool force_enq) {
   Bit8u   b1, b2, b3;
 
-  //  BX_DEBUG("Calling create_mouse_packet: force_enq=%d\n",force_enq);
-
   if(BX_KEY_THIS s.mouse_internal_buffer.num_elements && !force_enq)
     return;
-
-  //  BX_DEBUG("Got to first milestone: force_enq=%d\n",force_enq);
 
   Bit16s delta_x = BX_KEY_THIS s.mouse.delayed_dx;
   Bit16s delta_y = BX_KEY_THIS s.mouse.delayed_dy;
@@ -1472,8 +1426,6 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
   if(!force_enq && !delta_x && !delta_y) {
     return;
   }
-
-  //  BX_DEBUG("Got to second milestone: delta_x=%d, delta_y=%d\n",delta_x,delta_y);
 
   if(delta_x>254) delta_x=254;
   if(delta_x<-254) delta_x=-254;

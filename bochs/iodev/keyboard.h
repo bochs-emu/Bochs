@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.23 2004-02-07 14:34:35 vruppert Exp $
+// $Id: keyboard.h,v 1.24 2004-11-27 14:38:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -161,6 +161,7 @@ private:
       Bit8u button_status;
       Bit16s delayed_dx;
       Bit16s delayed_dy;
+      Bit8u im_request;
       } mouse;
 
     struct {
