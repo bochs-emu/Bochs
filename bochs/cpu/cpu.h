@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.123 2002-12-20 09:11:37 sshwarts Exp $
+// $Id: cpu.h,v 1.123.2.1 2003-01-17 21:35:46 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1278,7 +1278,7 @@ class BX_MEM_C;
 
 #include "cpu/i387.h"
 
-#if BX_SUPPORT_SSE != 0
+#if BX_SUPPORT_SSE
 #include "cpu/xmm.h"
 #endif
 
@@ -1416,7 +1416,7 @@ union {
 
   i387_t the_i387;
 
-#if BX_SUPPORT_SSE != 0
+#if BX_SUPPORT_SSE
   bx_xmm_reg_t xmm[BX_XMM_REGISTERS];
   bx_mxcsr_t mxcsr;
 #endif
@@ -2037,12 +2037,12 @@ union {
   BX_SMF void PSLLQ_PqIb(bxInstruction_c *i);
   /* MMX */
 
-#if BX_SUPPORT_MMX || BX_SUPPORT_SSE != 0
+#if BX_SUPPORT_MMX || BX_SUPPORT_SSE
   BX_SMF void prepareMMX(void);
   BX_SMF void printMmxRegisters(void);
 #endif
 
-#if BX_SUPPORT_SSE != 0
+#if BX_SUPPORT_SSE
   BX_SMF void prepareSSE(void);
 #endif
 
@@ -2061,8 +2061,6 @@ union {
   BX_SMF void MOVSS_WssVss(bxInstruction_c *i);
   BX_SMF void MOVLPS_VpsMq(bxInstruction_c *i);
   BX_SMF void MOVLPS_MqVps(bxInstruction_c *i);
-  BX_SMF void UNPCKLPS_VpsWq(bxInstruction_c *i);
-  BX_SMF void UNPCKHPS_VpsWq(bxInstruction_c *i);
   BX_SMF void MOVHPS_VpsMq(bxInstruction_c *i);
   BX_SMF void MOVHPS_MqVps(bxInstruction_c *i);
   BX_SMF void MOVAPS_VpsWps(bxInstruction_c *i);
@@ -2118,8 +2116,6 @@ union {
   /* SSE2 */
   BX_SMF void MOVSD_VsdWsd(bxInstruction_c *i);
   BX_SMF void MOVSD_WsdVsd(bxInstruction_c *i);
-  BX_SMF void UNPCKLPD_VpdWq(bxInstruction_c *i);
-  BX_SMF void UNPCKHPD_VpdWq(bxInstruction_c *i);
   BX_SMF void CVTPI2PD_VpdQd(bxInstruction_c *i);
   BX_SMF void CVTSI2SD_VsdEd(bxInstruction_c *i);
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *i);
@@ -2704,7 +2700,7 @@ union {
 #define Write_RMW_virtual_dword(val32) write_RMW_virtual_dword(val32)
 #define Write_RMW_virtual_qword(val64) write_RMW_virtual_qword(val64)
 
-#if BX_SUPPORT_SSE != 0
+#if BX_SUPPORT_SSE
   BX_SMF void readVirtualDQword(unsigned s, bx_address off, Bit8u *data);
   BX_SMF void readVirtualDQwordAligned(unsigned s, bx_address off, Bit8u *data);
   BX_SMF void writeVirtualDQword(unsigned s, bx_address off, Bit8u *data);
