@@ -2,12 +2,14 @@
 #
 # .conf.linux
 #
-# This file is used to create the binary RPMs for Linux at release time.
-#
+
+which_config=normal
+#which_config=plugins
 
 CC="gcc"
 CXX="c++"
-CFLAGS="-Wall -O2 -fomit-frame-pointer -pipe"
+CFLAGS="-Wall -O2 -fomit-frame-pointer -pipe"    # for speed
+#CFLAGS="-Wall -g -pipe"                         # for development
 CXXFLAGS="$CFLAGS"
 
 export CC
@@ -15,46 +17,43 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --enable-cdrom \
-            --enable-sb16=linux \
-	    --enable-ne2000 \
-	    --enable-vbe \
-	    --enable-all-optimizations \
-	    ${CONFIGURE_ARGS}
 
+case $which_config in
 
-#./configure --enable-fpu
-#./configure
-#./configure --enable-cdrom --enable-cpu-level=4
+  normal)
 
+    #######################################################################
+    # configuration 1 for release binary RPMs
+    # Include a few standard options, speed optimizations, X11 only.
+    #######################################################################
+    ./configure --enable-cdrom \
+                --enable-sb16=linux \
+                --enable-ne2000 \
+                --enable-vbe \
+                --enable-dc2300-vlb-ide \
+                --enable-all-optimizations \
+                ${CONFIGURE_ARGS}
+    ;;
 
-#./configure --enable-fpu \
-#  --enable-x86-debugger \
-#  --enable-debugger \
-#  --enable-loader \
-#  --enable-disasm
+  plugins)
+    #######################################################################
+    # configuration 2 for release binary RPMs
+    # Include lots of extra stuff
+    # plugins, every possible gui.
+    #######################################################################
+    ./configure --enable-cdrom \
+                --enable-sb16=linux \
+                --enable-ne2000 \
+                --enable-vbe \
+                --enable-dc2300-vlb-ide \
+                --enable-all-optimizations \
+                ${CONFIGURE_ARGS} \
+                --enable-plugins \
+                --enable-pci \
+                --enable-port-e9-hack \
+                --enable-mmx \
+                --enable-sse=2 \
+                --with-all-libs
+    ;;
 
-#./configure --enable-fpu --enable-cdrom
-#  --enable-x86-debugger
-
-#--enable-debugger --enable-disasm
-#./configure --enable-fpu --enable-cpu-level=5 \
-#  --enable-debugger --enable-disasm
-#./configure
-
-#./configure --enable-cpu-level=5
-#./configure --enable-fpu --enable-cpu-level=4
-#./configure --enable-fpu
-#./configure --enable-debugger --enable-disasm --enable-fpu
-
-#./configure --enable-fpu
-#./configure --enable-cpu-level=3
-#./configure --enable-cpu-level=3 --enable-fpu
-#            --enable-debugger --enable-disasm
-#./configure --enable-pci
-#./configure --enable-debugger --enable-disasm
-#./configure --enable-debugger --enable-disasm --enable-loader
-#./configure --enable-dynamic=i386
-#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=0
-#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=1 --enable-time0=917385580
-#./configure --enable-ne2000
+esac
