@@ -1,25 +1,23 @@
 #!/bin/sh
 
-# This configure file should be used for Win32 systems using MS Visual C++ 5.0
-# I first untar/gzip the source on a unix machine.  Run this script
-# to generate the Makefile's and config.h file.  Then copy everything
-# over to your Win32/Visual C++ system.
-
 set echo
-
-# bbd: I removed the explicit settings for CC,CFLAGS, etc.  
-#      Just let configure choose the compiler on the configure platform.
 
 #./configure --with-win32-vcpp --enable-port-e9-hack
 #./configure --with-win32-vcpp --enable-debugger --enable-disasm --enable-instrumentation="instrument/example0"
 #./configure --with-win32-vcpp --enable-debugger --enable-disasm
 #./configure --with-win32-vcpp --enable-disasm
 
-./configure --target=pentium-windows --enable-cdrom --enable-sb16=win --enable-ne2000 --enable-cpp --disable-readline
+./configure --target=pentium-windows \
+            --enable-cdrom \
+	    --enable-sb16=win \
+	    --enable-ne2000 \
+	    --enable-vbe \
+	    --enable-cpp \
+	    --disable-readline
 
 unset echo
 
-
+# Fix up all makefiles so that nmake can handle them.
 for i in `find . -name Makefile`; do
   echo Removing curly brackets in $i for NMAKE.
   mv $i $i.tmp
