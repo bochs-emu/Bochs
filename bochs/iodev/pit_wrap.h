@@ -23,23 +23,28 @@
 #ifndef _BX_PIT_WRAP_H
 #define _BX_PIT_WRAP_H
 
+#include "bochs.h"
+
+#ifdef BX_USE_NEW_PIT
+
+#include "pit82c54.h"
 
 #if BX_USE_PIT_SMF
 #  define BX_PIT_SMF  static
-#  define BX_PIT2_THIS bx_pit2.
+#  define BX_PIT_THIS bx_pit.
 #else
 #  define BX_PIT_SMF
-#  define BX_PIT2_THIS this->
+#  define BX_PIT_THIS this->
 #endif
 
 #ifdef OUT
 #  undef OUT
 #endif
 
-class bx_pit2_c : public logfunctions {
+class bx_pit_c : public logfunctions {
 public:
-  bx_pit2_c( void );
-  ~bx_pit2_c( void );
+  bx_pit_c( void );
+  ~bx_pit_c( void );
   BX_PIT_SMF int init( bx_devices_c *);
   BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
 
@@ -71,6 +76,7 @@ private:
   BX_PIT_SMF void  start(unsigned timerid);
 };
 
-extern bx_pit2_c bx_pit2;
+extern bx_pit_c bx_pit;
 
+#endif  // #ifdef BX_USE_NEW_PIT
 #endif  // #ifndef _BX_PIT_WRAP_H

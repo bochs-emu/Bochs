@@ -153,6 +153,7 @@ private:
 #include "iodev/parallel.h"
 #include "iodev/pic.h"
 #include "iodev/pit.h"
+#include "iodev/pit_wrap.h"
 #include "iodev/serial.h"
 #if BX_SUPPORT_SB16
 #  include "iodev/sb16.h"

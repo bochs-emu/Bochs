@@ -23,6 +23,9 @@
 
 
 #include "bochs.h"
+
+#ifndef BX_USE_NEW_PIT
+
 #define LOG_THIS bx_pit.
 
 
@@ -857,3 +860,5 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   else
     return(0);
 }
+
+#endif // #ifndef BX_USE_NEW_PIT

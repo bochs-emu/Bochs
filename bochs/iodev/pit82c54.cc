@@ -45,7 +45,11 @@
 	thisctr.count_LSB_latched=1;
 	thisctr.count_MSB_latched=1;
       case MSByte_multiple:
-	BX_ERROR(("Unknown behavior when latching during 2-part read."));
+	if(!(seen_problems & UNL_2P_READ)) {
+	  seen_problems|=UNL_2P_READ;
+	  BX_ERROR(("Unknown behavior when latching during 2-part read."));
+	  BX_ERROR(("  This message will not be repeated."));
+	}
 	//I guess latching and resetting to LSB first makes sense;
 	thisctr.read_state=LSByte_multiple;
 	thisctr.outlatch=thisctr.count & 0xFFFF;
@@ -131,7 +135,9 @@
       counter[i].count_LSB_latched=0;
       counter[i].count_MSB_latched=0;
       counter[i].status_latched=0;
+      counter[i].next_change_time=0;
     }
+    seen_problems=0;
   }
 
   pit_82C54::pit_82C54 (void) {

@@ -23,20 +23,22 @@
 
 
 #include "bochs.h"
-#include "pit82c54.h"
-#include "pit_wrap.h"
-#define LOG_THIS bx_pit2.
 
-bx_pit2_c bx_pit2;
+#ifdef BX_USE_NEW_PIT
+
+#include "pit_wrap.h"
+#define LOG_THIS bx_pit.
+
+bx_pit_c bx_pit;
 #if BX_USE_PIT_SMF
-#define this (&bx_pit2)
+#define this (&bx_pit)
 #endif
 
 #ifdef OUT
 #  undef OUT
 #endif
 
-bx_pit2_c::bx_pit2_c( void )
+bx_pit_c::bx_pit_c( void )
 {
   put("PIT");
   settype(PITLOG);
@@ -44,36 +46,36 @@ bx_pit2_c::bx_pit2_c( void )
 
   /* 8254 PIT (Programmable Interval Timer) */
 
-  BX_PIT2_THIS s.timer_handle[1] = BX_NULL_TIMER_HANDLE;
-  BX_PIT2_THIS s.timer_handle[2] = BX_NULL_TIMER_HANDLE;
+  BX_PIT_THIS s.timer_handle[1] = BX_NULL_TIMER_HANDLE;
+  BX_PIT_THIS s.timer_handle[2] = BX_NULL_TIMER_HANDLE;
 }
 
-bx_pit2_c::~bx_pit2_c( void )
+bx_pit_c::~bx_pit_c( void )
 {
 }
 
   int
-bx_pit2_c::init( bx_devices_c *d )
+bx_pit_c::init( bx_devices_c *d )
 {
-  BX_PIT2_THIS devices = d;
+  BX_PIT_THIS devices = d;
 
-  BX_PIT2_THIS devices->register_irq(0, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_read_handler(this, read_handler, 0x0040, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_read_handler(this, read_handler, 0x0041, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_read_handler(this, read_handler, 0x0042, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_read_handler(this, read_handler, 0x0043, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_read_handler(this, read_handler, 0x0061, "8254 PIT");
+  BX_PIT_THIS devices->register_irq(0, "8254 PIT");
+  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0040, "8254 PIT");
+  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0041, "8254 PIT");
+  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0042, "8254 PIT");
+  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0043, "8254 PIT");
+  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0061, "8254 PIT");
 
-  BX_PIT2_THIS devices->register_io_write_handler(this, write_handler, 0x0040, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_write_handler(this, write_handler, 0x0041, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_write_handler(this, write_handler, 0x0042, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_write_handler(this, write_handler, 0x0043, "8254 PIT");
-  BX_PIT2_THIS devices->register_io_write_handler(this, write_handler, 0x0061, "8254 PIT");
+  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0040, "8254 PIT");
+  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0041, "8254 PIT");
+  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0042, "8254 PIT");
+  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0043, "8254 PIT");
+  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0061, "8254 PIT");
 
-  BX_PIT2_THIS s.speaker_data_on = 0;
-  BX_PIT2_THIS s.refresh_clock_div2 = 0;
+  BX_PIT_THIS s.speaker_data_on = 0;
+  BX_PIT_THIS s.refresh_clock_div2 = 0;
 
-  BX_PIT2_THIS s.timer.init();
+  BX_PIT_THIS s.timer.init();
 
   return(1);
 }
@@ -84,17 +86,17 @@ bx_pit2_c::init( bx_devices_c *d )
   // redirects to non-static class handler to avoid virtual functions
 
   Bit32u
-bx_pit2_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+bx_pit_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_PIT_SMF
-  bx_pit2_c *class_ptr = (bx_pit2_c *) this_ptr;
+  bx_pit_c *class_ptr = (bx_pit_c *) this_ptr;
 
   return( class_ptr->read(address, io_len) );
 }
 
 
   Bit32u
-bx_pit2_c::read( Bit32u   address, unsigned int io_len )
+bx_pit_c::read( Bit32u   address, unsigned int io_len )
 {
 #else
   UNUSED(this_ptr);
@@ -109,25 +111,25 @@ bx_pit2_c::read( Bit32u   address, unsigned int io_len )
   switch (address) {
 
     case 0x40: /* timer 0 - system ticks */
-      return(BX_PIT2_THIS s.timer.read(0));
+      return(BX_PIT_THIS s.timer.read(0));
       break;
     case 0x41: /* timer 1 read */
-      return(BX_PIT2_THIS s.timer.read(1));
+      return(BX_PIT_THIS s.timer.read(1));
       break;
     case 0x42: /* timer 2 read */
-      return(BX_PIT2_THIS s.timer.read(2));
+      return(BX_PIT_THIS s.timer.read(2));
       break;
     case 0x43: /* timer 1 read */
-      return(BX_PIT2_THIS s.timer.read(3));
+      return(BX_PIT_THIS s.timer.read(3));
       break;
 
     case 0x61:
       /* AT, port 61h */
-      BX_PIT2_THIS s.refresh_clock_div2 = !BX_PIT2_THIS s.refresh_clock_div2;
-      return( (BX_PIT2_THIS s.timer.read_OUT(2)<<5) |
-              (BX_PIT2_THIS s.refresh_clock_div2<<4) |
-              (BX_PIT2_THIS s.speaker_data_on<<1) |
-              (BX_PIT2_THIS s.timer.read_GATE(2)) );
+      BX_PIT_THIS s.refresh_clock_div2 = !BX_PIT_THIS s.refresh_clock_div2;
+      return( (BX_PIT_THIS s.timer.read_OUT(2)<<5) |
+              (BX_PIT_THIS s.refresh_clock_div2<<4) |
+              (BX_PIT_THIS s.speaker_data_on<<1) |
+              (BX_PIT_THIS s.timer.read_GATE(2)) );
       break;
 
     default:
@@ -141,16 +143,16 @@ bx_pit2_c::read( Bit32u   address, unsigned int io_len )
   // redirects to non-static class handler to avoid virtual functions
 
   void
-bx_pit2_c::write_handler(void *this_ptr, Bit32u address, Bit32u dvalue, unsigned io_len)
+bx_pit_c::write_handler(void *this_ptr, Bit32u address, Bit32u dvalue, unsigned io_len)
 {
 #if !BX_USE_PIT_SMF
-  bx_pit2_c *class_ptr = (bx_pit2_c *) this_ptr;
+  bx_pit_c *class_ptr = (bx_pit_c *) this_ptr;
 
   class_ptr->write(address, dvalue, io_len);
 }
 
   void
-bx_pit2_c::write( Bit32u   address, Bit32u   dvalue,
+bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
                 unsigned int io_len )
 {
 #else
@@ -170,24 +172,24 @@ bx_pit2_c::write( Bit32u   address, Bit32u   dvalue,
 
   switch (address) {
     case 0x40: /* timer 0: write count register */
-      BX_PIT2_THIS s.timer.write(0,value);
+      BX_PIT_THIS s.timer.write(0,value);
       break;
 
     case 0x41: /* timer 1: write count register */
-      BX_PIT2_THIS s.timer.write( 1,value );
+      BX_PIT_THIS s.timer.write( 1,value );
       break;
 
     case 0x42: /* timer 2: write count register */
-      BX_PIT2_THIS s.timer.write( 2,value );
+      BX_PIT_THIS s.timer.write( 2,value );
       break;
 
     case 0x43: /* timer 0-2 mode control */
-      BX_PIT2_THIS s.timer.write( 3,value );
+      BX_PIT_THIS s.timer.write( 3,value );
 
     case 0x61:
-      BX_PIT2_THIS s.speaker_data_on = (value >> 1) & 0x01;
+      BX_PIT_THIS s.speaker_data_on = (value >> 1) & 0x01;
 /*??? only on AT+ */
-      BX_PIT2_THIS s.timer.set_GATE(2, value & 0x01);
+      BX_PIT_THIS s.timer.set_GATE(2, value & 0x01);
 #if BX_CPU_LEVEL < 2
       /* ??? XT: */
       bx_kbd_port61h_write(value);
@@ -204,20 +206,20 @@ bx_pit2_c::write( Bit32u   address, Bit32u   dvalue,
 
 
   int
-bx_pit2_c::SaveState( class state_file *fd )
+bx_pit_c::SaveState( class state_file *fd )
 {
   fd->write_check ("8254 start");
-  fd->write (&BX_PIT2_THIS s, sizeof (BX_PIT2_THIS s));
+  fd->write (&BX_PIT_THIS s, sizeof (BX_PIT_THIS s));
   fd->write_check ("8254 end");
   return(0);
 }
 
 
   int
-bx_pit2_c::LoadState( class state_file *fd )
+bx_pit_c::LoadState( class state_file *fd )
 {
   fd->read_check ("8254 start");
-  fd->read (&BX_PIT2_THIS s, sizeof (BX_PIT2_THIS s));
+  fd->read (&BX_PIT_THIS s, sizeof (BX_PIT_THIS s));
   fd->read_check ("8254 end");
   return(0);
 }
@@ -234,25 +236,27 @@ bx_kbd_port61h_write(Bit8u   value)
 
 
   Boolean
-bx_pit2_c::periodic( Bit32u   usec_delta )
+bx_pit_c::periodic( Bit32u   usec_delta )
 {
   Bit32u i=0;
-  Boolean prev_timer0_out = BX_PIT2_THIS s.timer.read_OUT(0);
+  Boolean prev_timer0_out = BX_PIT_THIS s.timer.read_OUT(0);
   Boolean want_interrupt = 0;
 
   while(usec_delta>0) {
-    Bit32u maxchange=BX_PIT2_THIS s.timer.get_next_event_time();
+    Bit32u maxchange=BX_PIT_THIS s.timer.get_next_event_time();
     Bit32u timedelta=maxchange;
     if((maxchange==0) || (maxchange>usec_delta)) {
       timedelta=usec_delta;
     }
-    BX_PIT2_THIS s.timer.clock_all(timedelta);
-    if ( (prev_timer0_out==0) && ((BX_PIT2_THIS s.timer.read_OUT(0))==1) ) {
+    BX_PIT_THIS s.timer.clock_all(timedelta);
+    if ( (prev_timer0_out==0) && ((BX_PIT_THIS s.timer.read_OUT(0))==1) ) {
       want_interrupt=1;
     }
-    prev_timer0_out=BX_PIT2_THIS s.timer.read_OUT(0);
+    prev_timer0_out=BX_PIT_THIS s.timer.read_OUT(0);
     usec_delta-=timedelta;
   }
 
   return(want_interrupt);
 }
+
+#endif // #ifdef BX_USE_NEW_PIT

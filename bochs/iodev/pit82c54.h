@@ -6,6 +6,9 @@
  * that you can experiment with it.  (bbd)
  */
 
+#ifndef _PIT_82C54_H_
+#define _PIT_82C54_H_ 1
+
 #include "bochs.h"
 
 #ifdef OUT
@@ -40,6 +43,10 @@ private:
     LSB_real=1,
     MSB_real=2,
     BOTH_real=3
+  };
+
+  enum problem_type {
+    UNL_2P_READ=1
   };
 
   struct counter_type {
@@ -81,6 +88,8 @@ private:
 
   Bit8u controlword;
 
+  int seen_problems;
+
   void latch_counter(counter_type & thisctr);
 
   void set_OUT (counter_type & thisctr, bool data);
@@ -116,3 +125,5 @@ public:
   Bit32u get_next_event_time(void);
 
 };
+
+#endif
