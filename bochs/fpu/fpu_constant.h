@@ -21,10 +21,15 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _FPU_CONSTANTS_H_
 #define _FPU_CONSTANTS_H_
 
-#include "config.h"
+#include <config.h>
 
 // Pentium CPU uses only 68-bit precision M_PI approximation
 // #define BETTER_THAN_PENTIUM
+
+/*============================================================================
+ * Written for Bochs (x86 achitecture simulator) by
+ *            Stanislav Shwartsman (gate at fidonet.org.il)
+ * ==========================================================================*/ 
 
 //////////////////////////////
 // PI, PI/2, PI/4 constants
