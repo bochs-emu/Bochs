@@ -3,7 +3,7 @@ THIS IS A PATCH FOR WXWINDOWS, NOT FOR BOCHS
 ----------------------------------------------------------------------
 Patch name: patch.raw-keycodes
 Author: Bryce Denney <bryce@tlw.com>
-Date: Mon Mar 25 13:54:41 EST 2002
+Date: Sat Apr  6 14:27:13  2002
 
 Detailed description:
 This patch adds two 32-bit fields to the wxKeyEvent structure, m_rawCode1 and
@@ -11,16 +11,24 @@ m_rawCode2.  On supported wxWindows ports, these two fields will be filled with
 the raw key information from the underlying graphic toolkit.  On unsupported
 ports, the value in m_rawCode1 and 2 will be unpredictable.
 
-The only toolkit supported by this patch is wxGTK.  It copies the GTK keyval
-into m_rawCode1 and sets m_rawCode2 to zero.  The application can then compare
+The only toolkits supported by this patch are wxMSW and wxGTK.
+
+wxGTK:
+I added a few lines in src/gtk/window.cpp that copy the GTK keyval into
+m_rawCode1 and set m_rawCode2 to zero.  The application can then compare
 m_rawCode1 against the GTK key symbols such as GDK_C, GDK_colon, GDK_Alt_L,
 etc.  See <gdk/gdkkeysyms.h> for the complete list.
 
+wxMSW:
+I added a few lines in src/msw/window.cpp that copy the lparam and wparam
+value from the WM_KEYUP or WM_KEYDOWN events into m_rawCode1 and m_rawCode2,
+respectively.  The application can then decode raw key information from
+the raw code fields.
+
 It is trivial to add support for other toolkits.  Just find the code that
-fills in the wxKeyEvent structure, and set m_rawCode1 (and 2 if not all
-the information fits in 32 bits).  For GTK and MSW ports, look in
-src/gtk/window.cpp and src/msw/window.cpp.  I haven't looked at the
-others.
+fills in the wxKeyEvent structure, and set m_rawCode1 and m_rawCode2.
+For GTK and MSW ports, look in src/gtk/window.cpp and src/msw/window.cpp.  I
+haven't looked at the others.
 
 Patch was created with:
   diff -ur between two directories
@@ -81,3 +89,15 @@ diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
      event.m_x = x;
      event.m_y = y;
      event.SetEventObject( win );
+diff -u -r wxGTK-2.3.2-orig/src/msw/window.cpp wxGTK-2.3.2/src/msw/window.cpp
+--- wxGTK-2.3.2-orig/src/msw/window.cpp.orig	Sat Apr  6 14:05:34 2002
++++ wxGTK-2.3.2/src/msw/window.cpp	Sat Apr  6 14:14:00 2002
+@@ -3852,6 +3852,8 @@
+         {
+             event.m_controlDown = TRUE;
+         }
++		event.m_rawCode1 = (wxUint32) lParam;
++		event.m_rawCode2 = (wxUint32) wParam;
+ 
+         if ( GetEventHandler()->ProcessEvent(event) )
+             return TRUE;
