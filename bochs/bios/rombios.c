@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.45 2002-04-05 21:08:22 cbothamy Exp $
+// $Id: rombios.c,v 1.46 2002-04-06 15:59:29 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1051,10 +1051,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.45 $";
-static char bios_date_string[] = "$Date: 2002-04-05 21:08:22 $";
+static char bios_cvs_version_string[] = "$Revision: 1.46 $";
+static char bios_date_string[] = "$Date: 2002-04-06 15:59:29 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.45 2002-04-05 21:08:22 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.46 2002-04-06 15:59:29 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2357,6 +2357,14 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       SET_AL(shift_flags);
       shift_flags = read_byte(0x0040, 0x18);
       SET_AH(shift_flags);
+      break;
+
+    case 0x92: /* keyboard capability check called by DOS 5.0+ keyb */
+      SET_AH(0x80); // function int16 ah=0x10-0x12 supported
+      break;
+
+    case 0xA2: /* 122 keys capability check called by DOS 5.0+ keyb */
+      SET_AH(0xFF); // function int16 ah=0x20-0x22 NOT supported
       break;
 
     default:
