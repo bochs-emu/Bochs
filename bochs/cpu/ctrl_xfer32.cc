@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.31 2004-10-29 21:15:48 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.32 2004-10-30 16:04:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -598,14 +598,9 @@ BailBigRSP("IRET32");
     goto done;
     }
 #endif
-#if BX_CPU_LEVEL >= 5
-  /*this feature discribed in pentium docs*/
-  if  (iret32_real(i))
-    goto done;
-#endif
 
-  BX_ERROR(("IRET32 may not be implemented right."));
-  BX_PANIC(("Please report that you have found a test case for BX_CPU_C::IRET32."));
+  if (iret32_real(i))
+    goto done;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
