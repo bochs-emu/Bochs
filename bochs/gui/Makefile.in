@@ -85,7 +85,7 @@ beos.o: beos.@CPP_SUFFIX@
 x.o: x.@CPP_SUFFIX@
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(X_CFLAGS) $<
 
-sdl.o: sdl.@CPP_SUFFIX@
+sdl.o: sdl.@CPP_SUFFIX@ sdl.h
 	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(SDL_CFLAGS) $<
 
 rfb.o: rfb.@CPP_SUFFIX@ rfb.h rfbproto.h
