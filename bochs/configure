@@ -1249,7 +1249,7 @@ ac_config_headers="$ac_config_headers config.h"
 
 VERSION="1.4.1"
 VER_STRING="1.4.1"
-REL_STRING="June 22, 2002"
+REL_STRING="June 23, 2002"
 
 
 

@@ -8,7 +8,7 @@ dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
 VERSION="1.4.1"
 VER_STRING="1.4.1"
-REL_STRING="June 22, 2002"
+REL_STRING="June 23, 2002"
 
 changequote(<<, >>)
 changequote([, ])
