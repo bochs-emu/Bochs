@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.19 2002-06-16 15:02:27 vruppert Exp $
+// $Id: dma.cc,v 1.20 2002-06-23 18:03:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -119,15 +119,15 @@ bx_dma_c::get_TC(void)
   void
 bx_dma_c::init(bx_devices_c *d)
 {
-  unsigned c;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.19 2002-06-16 15:02:27 vruppert Exp $"));
+  unsigned c, i, j;
+  BX_DEBUG(("Init $Id: dma.cc,v 1.20 2002-06-23 18:03:37 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
   /* 8237 DMA controller */
 
-  for (unsigned int i=0; i < 2; i++) {
-    for (unsigned int j=0; j < 4; j++) {
+  for (i=0; i < 2; i++) {
+    for (j=0; j < 4; j++) {
       BX_DMA_THIS s[i].DRQ[j] = 0;
       BX_DMA_THIS s[i].DACK[j] = 0;
       }
@@ -136,7 +136,6 @@ bx_dma_c::init(bx_devices_c *d)
   BX_DMA_THIS TC = 0;
 
   // 0000..000F
-  unsigned i;
   for (i=0x0000; i<=0x000F; i++) {
     BX_DMA_THIS devices->register_io_read_handler(this, read_handler,
                                         i, "DMA controller");
