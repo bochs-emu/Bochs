@@ -209,11 +209,21 @@ extern Bit8u DTPageDirty[];
 
 #define MAGIC_LOGNUM 0x12345678
 
+// Log Level defines
+#define LOGLEV_DEBUG 0
+#define LOGLEV_INFO  1
+#define LOGLEV_ERROR 2
+#define LOGLEV_PANIC 3
+#define MAX_LOGLEV   4
 
 typedef class logfunctions {
 	char *prefix;
 	int type;
-	int onoff[5];
+// values of onoff: 0=ignore, 1=report, 2=fatal
+#define ACT_IGNORE 0
+#define ACT_REPORT 1
+#define ACT_FATAL  2
+	int onoff[MAX_LOGLEV];
 	class iofunctions *logio;
 public:
 	logfunctions(void);
@@ -224,14 +234,14 @@ public:
 	void error(char *fmt, ...);
 	void panic(char *fmt, ...);
 	void ldebug(char *fmt, ...);
-	void crash ();
+	void fatal (char *prefix, char *fmt, va_list ap);
 	void setprefix(char *);
 	void settype(int);
 	void setio(class iofunctions *);
+	void setonoff(int loglev, int value) { onoff[loglev] = value; }
 } logfunc_t;
 
 class iofunctions {
-
 	int showtick,magic;
 	FILE *logfd;
 	class logfunctions *log;
@@ -246,12 +256,7 @@ class iofunctions {
 		};
 		return loglevel[i];
 	}
-// Log Level defines
-#define LOGLEV_DEBUG 0
-#define LOGLEV_INFO  1
-#define LOGLEV_ERROR 2
-#define LOGLEV_PANIC 3
-#define MAX_LOGLEV   4
+
 	char *getclass(int i) {
 		char *logclass[] = {
 		  "IO  ",
@@ -319,7 +324,14 @@ public:
 	void init_log(char *fn);
 	void init_log(int fd);
 	void init_log(FILE *fs);
+	int get_n_logfns () { return n_logfn; }
+	logfunc_t *get_logfn (int index) { return logfn_list[index]; }
+	void add_logfn (logfunc_t *fn);
+	void set_log_action (int loglevel, int action);
 protected:
+	int n_logfn;
+#define MAX_LOGFNS 32
+	logfunc_t *logfn_list[MAX_LOGFNS];
 	char *logfn;
 };
 
@@ -555,7 +567,7 @@ typedef struct {
   Boolean           newHardDriveSupport;
   bx_load32bitOSImage_t load32bitOSImage;
          // one array item for each log level, indexed by LOGLEV_*.
-	 // values: 0=ignore event, 1=report event in log, 2=crash
+	 // values: 0=ignore event, 1=report event in log, 2=fatal
   unsigned char log_actions[MAX_LOGLEV];  
   } bx_options_t;
 

@@ -21,8 +21,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 VERSION=1.1.2
-VER_STRING=1.1.2 (bugfix3)
-REL_STRING=Released 5/16/2001
+VER_STRING=cvs-snapshot
+REL_STRING=No Release Info
 PREFIX=/usr/local/bochs
 BINPATH=/usr/local/bin
 INSTALL_LIST=bios/BIOS-* CHANGES.txt COPYING README bios/VGABIOS*

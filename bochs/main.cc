@@ -48,6 +48,8 @@ void   bx_close_harddrive(void);
 
 void bx_init_debug(void);
 void bx_emulate_hga_dumps_timer(void);
+static char *divider = "========================================================================";
+
 
 /* typedefs */
 
@@ -81,7 +83,7 @@ bx_options_t bx_options = {
   { 0, 0, 0, {0,0,0,0,0,0}, NULL, NULL }, // ne2k
   1,          // newHardDriveSupport
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
-  { 0, 1, 1, 2 }  // ignore debugs, report infos and errors, crash on panics.
+  { 0, 1, 1, 2 }  // ignore debugs, report infos and errors, fatal on panics.
   };
 
 static char bochsrc_path[512];
@@ -117,6 +119,21 @@ iofunctions::init(void) {
 	LOG_THIS setprefix("[IO  ]");
 	LOG_THIS settype(IOLOG);
 	BX_DEBUG(("Init(log file: '%s').\n",logfn));
+	n_logfn = 0;
+}
+
+void
+iofunctions::add_logfn (logfunc_t *fn)
+{
+  assert (n_logfn < MAX_LOGFNS);
+  logfn_list[n_logfn++] = fn;
+}
+
+void
+iofunctions::set_log_action (int loglevel, int action)
+{
+  for (int i=0; i<n_logfn; i++)
+    logfn_list[i]->setonoff(loglevel, action);
 }
 
 void
@@ -233,7 +250,7 @@ iofunctions::~iofunctions(void)
 
 logfunctions::logfunctions(void)
 {
-	setprefix("[GEN ]");
+	setprefix("[    ]");
 	settype(GENLOG);
 	if(io == NULL && Allocio == 0) {
 		Allocio = 1;
@@ -248,7 +265,7 @@ logfunctions::logfunctions(void)
 
 logfunctions::logfunctions(iofunc_t *iofunc)
 {
-	setprefix("[GEN ]");
+	setprefix("[    ]");
 	settype(GENLOG);
 	setio(iofunc);
 	// BUG: unfortunately this can be called before the bochsrc is read,
@@ -264,7 +281,10 @@ logfunctions::~logfunctions(void)
 void
 logfunctions::setio(iofunc_t *i)
 {
+  	// add pointer to iofunction object to use
 	this->logio = i;
+	// give iofunction a pointer to me
+	i->add_logfn (this);
 }
 
 void
@@ -293,9 +313,9 @@ logfunctions::info(char *fmt, ...)
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
+	if (onoff[LOGLEV_INFO] == ACT_FATAL) fatal (this->prefix, fmt, ap);
 	va_end(ap);
 
-	if (onoff[LOGLEV_INFO] > 1) crash ();
 }
 
 void
@@ -313,7 +333,7 @@ logfunctions::error(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
 	va_end(ap);
-	if (onoff[LOGLEV_ERROR] > 1) crash ();
+	if (onoff[LOGLEV_ERROR] == ACT_FATAL) fatal (this->prefix, fmt, ap);
 }
 
 void
@@ -325,14 +345,14 @@ logfunctions::panic(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
-	if(onoff[LOGLEV_PANIC]) { // XXX to return or not to return?
+	if(onoff[LOGLEV_PANIC]) {
 
 		va_start(ap, fmt);
 		this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
 		va_end(ap);
 
 	}
-	if (onoff[LOGLEV_PANIC] > 1) crash ();
+	if (onoff[LOGLEV_PANIC] == ACT_FATAL) fatal (this->prefix, fmt, ap);
 }
 
 void
@@ -350,14 +370,21 @@ logfunctions::ldebug(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
 	va_end(ap);
-	if (onoff[LOGLEV_DEBUG] > 1) crash ();
+	if (onoff[LOGLEV_DEBUG] == ACT_FATAL) fatal (this->prefix, fmt, ap);
 }
 
 void
-logfunctions::crash (void)
+logfunctions::fatal (char *prefix, char *fmt, va_list ap)
 {
+  static int fatal_reentry = 0;
+  if (fatal_reentry) return;
+  fatal_reentry++;
   bx_atexit();
-
+  fprintf (stderr, "%s\n", divider);
+  fprintf (stderr, "Bochs is exiting with the following message:\n");
+  fprintf (stderr, "%s ", prefix);
+  vfprintf (stderr, fmt, ap);
+  fprintf (stderr, "%s\n", divider);
 #if !BX_DEBUGGER
   exit(1);
 #else
@@ -367,6 +394,7 @@ logfunctions::crash (void)
     bx_dbg_exit(1);
     }
 #endif
+  fatal_reentry--;
 }
 
 iofunc_t *io = NULL;
@@ -380,8 +408,6 @@ void bx_center_print (FILE *file, char *line, int maxwidth)
   fputs (line, file);
 }
 
-static char *divider = "========================================================================";
-
 void bx_print_header ()
 {
   fprintf (stderr, "%s\n", divider);
@@ -391,12 +417,6 @@ void bx_print_header ()
   sprintf (buffer, "%s\n", REL_STRING);
   bx_center_print (stderr, buffer, 72);
   fprintf (stderr, "%s\n", divider);
-}
-
-void bx_print_footer ()
-{
-  fprintf (stderr, "%s\n", divider);
-  fprintf (stderr, "Bochs is finished.\n");
 }
 
 int
@@ -446,6 +466,9 @@ bx_bochs_init(int argc, char *argv[])
   /* read the .bochsrc file */
   parse_bochsrc(argc);
 
+  for (int level=0; level<MAX_LOGLEV; level++)
+    io->set_log_action (level, bx_options.log_actions[level]);
+
 //#if BX_PROVIDE_CPU_MEMORY==1
 //    else if (!strcmp(argv[n-1], "-sanity-check")) {
 //      BX_CPU.sanity_checks();
@@ -467,7 +490,7 @@ bx_bochs_init(int argc, char *argv[])
   bx_pc_system.init_ips(bx_options.ips);
 
   if(logfilename[0]!='-') {
-    BX_INFO (("all further messages will go to %s\n", logfilename));
+    BX_INFO (("using log file %s\n", logfilename));
     io->init_log(logfilename);
   }
 
@@ -560,8 +583,6 @@ bx_atexit(void)
       bx_devices.pci->print_i440fx_state();
       }
 #endif
-  BX_INFO(("bochs exited, log file was '%s'\n", logfilename));
-  bx_print_footer ();
 }
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
@@ -579,7 +600,7 @@ bx_emulate_hga_dumps_timer(void)
   static void
 parse_bochsrc(int argc)
 {
-  FILE *fd;
+  FILE *fd = NULL;
   char *ret;
   char line[512];
   Bit32u retry = 0, found = 0;
@@ -716,7 +737,7 @@ parse_line_formatted(int num_params, char *params[])
         bx_options.floppya.initial_status = BX_INSERTED;
         }
       else {
-        fprintf(stderr, ".bochsrc: floppya attribute '%s' not understood.\n",
+        fprintf(stderr, "%s: floppya attribute '%s' not understood.\n", bochsrc_path,
           params[i]);
         exit(1);
         }
@@ -748,7 +769,7 @@ parse_line_formatted(int num_params, char *params[])
         bx_options.floppyb.initial_status = BX_INSERTED;
         }
       else {
-        fprintf(stderr, ".bochsrc: floppyb attribute '%s' not understood.\n",
+        fprintf(stderr, "%s: floppyb attribute '%s' not understood.\n", bochsrc_path,
           params[i]);
         exit(1);
         }
@@ -757,14 +778,14 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "diskc")) {
     if (num_params != 5) {
-      fprintf(stderr, ".bochsrc: diskc directive malformed.\n");
+      fprintf(stderr, "%s: diskc directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "file=", 5) ||
         strncmp(params[2], "cyl=", 4) ||
         strncmp(params[3], "heads=", 6) ||
         strncmp(params[4], "spt=", 4)) {
-      fprintf(stderr, ".bochsrc: diskc directive malformed.\n");
+      fprintf(stderr, "%s: diskc directive malformed.\n", bochsrc_path);
       exit(1);
       }
     strcpy(bx_options.diskc.path, &params[1][5]);
@@ -775,14 +796,14 @@ parse_line_formatted(int num_params, char *params[])
     }
   else if (!strcmp(params[0], "diskd")) {
     if (num_params != 5) {
-      fprintf(stderr, ".bochsrc: diskd directive malformed.\n");
+      fprintf(stderr, "%s: diskd directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "file=", 5) ||
         strncmp(params[2], "cyl=", 4) ||
         strncmp(params[3], "heads=", 6) ||
         strncmp(params[4], "spt=", 4)) {
-      fprintf(stderr, ".bochsrc: diskd directive malformed.\n");
+      fprintf(stderr, "%s: diskd directive malformed.\n", bochsrc_path);
       exit(1);
       }
     strcpy(bx_options.diskd.path, &params[1][5]);
@@ -794,11 +815,11 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "cdromd")) {
     if (num_params != 3) {
-      fprintf(stderr, ".bochsrc: cdromd directive malformed.\n");
+      fprintf(stderr, "%s: cdromd directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "dev=", 4) || strncmp(params[2], "status=", 7)) {
-      fprintf(stderr, ".bochsrc: cdromd directive malformed.\n");
+      fprintf(stderr, "%s: cdromd directive malformed.\n", bochsrc_path);
       exit(1);
       }
     strcpy(bx_options.cdromd.dev, &params[1][4]);
@@ -807,7 +828,7 @@ parse_line_formatted(int num_params, char *params[])
     else if (!strcmp(params[2], "status=ejected"))
       bx_options.cdromd.inserted = 0;
     else {
-      fprintf(stderr, ".bochsrc: cdromd directive malformed.\n");
+      fprintf(stderr, "%s: cdromd directive malformed.\n", bochsrc_path);
       exit(1);
       }
     bx_options.cdromd.present = 1;
@@ -819,7 +840,7 @@ parse_line_formatted(int num_params, char *params[])
       strcpy(bx_options.bootdrive, params[1]);
       }
     else {
-      fprintf(stderr, ".bochsrc: boot directive with unknown boot device '%s'.\n",
+      fprintf(stderr, "%s: boot directive with unknown boot device '%s'.\n", bochsrc_path,
         params[1]);
       fprintf(stderr, "          use 'a', or 'c'.\n");
       exit(1);
@@ -827,106 +848,106 @@ parse_line_formatted(int num_params, char *params[])
     }
   else if (!strcmp(params[0], "log")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: log directive has wrong # args.\n");
+      fprintf(stderr, "%s: log directive has wrong # args.\n", bochsrc_path);
       exit(1);
       }
     strcpy(logfilename, params[1]);
     }
   else if (!strcmp(params[0], "panic")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      fprintf(stderr, "%s: panic directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "action=", 7)) {
-      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      fprintf(stderr, "%s: panic directive malformed.\n", bochsrc_path);
       exit(1);
       }
     char *action = 7 + params[1];
-    if (!strcmp(action, "crash"))
-      bx_options.log_actions[LOGLEV_PANIC] = 2;
+    if (!strcmp(action, "fatal"))
+      bx_options.log_actions[LOGLEV_PANIC] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_PANIC] = 1;
+      bx_options.log_actions[LOGLEV_PANIC] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_PANIC] = 0;
+      bx_options.log_actions[LOGLEV_PANIC] = ACT_IGNORE;
     else {
-      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      fprintf(stderr, "%s: panic directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "error")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      fprintf(stderr, "%s: error directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "action=", 7)) {
-      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      fprintf(stderr, "%s: error directive malformed.\n", bochsrc_path);
       exit(1);
       }
     char *action = 7 + params[1];
-    if (!strcmp(action, "crash"))
-      bx_options.log_actions[LOGLEV_ERROR] = 2;
+    if (!strcmp(action, "fatal"))
+      bx_options.log_actions[LOGLEV_ERROR] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_ERROR] = 1;
+      bx_options.log_actions[LOGLEV_ERROR] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_ERROR] = 0;
+      bx_options.log_actions[LOGLEV_ERROR] = ACT_IGNORE;
     else {
-      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      fprintf(stderr, "%s: error directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "info")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      fprintf(stderr, "%s: info directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "action=", 7)) {
-      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      fprintf(stderr, "%s: info directive malformed.\n", bochsrc_path);
       exit(1);
       }
     char *action = 7 + params[1];
-    if (!strcmp(action, "crash"))
-      bx_options.log_actions[LOGLEV_INFO] = 2;
+    if (!strcmp(action, "fatal"))
+      bx_options.log_actions[LOGLEV_INFO] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_INFO] = 1;
+      bx_options.log_actions[LOGLEV_INFO] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_INFO] = 0;
+      bx_options.log_actions[LOGLEV_INFO] = ACT_IGNORE;
     else {
-      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      fprintf(stderr, "%s: info directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "debug")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      fprintf(stderr, "%s: debug directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "action=", 7)) {
-      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      fprintf(stderr, "%s: debug directive malformed.\n", bochsrc_path);
       exit(1);
       }
     char *action = 7 + params[1];
-    if (!strcmp(action, "crash"))
-      bx_options.log_actions[LOGLEV_DEBUG] = 2;
+    if (!strcmp(action, "fatal"))
+      bx_options.log_actions[LOGLEV_DEBUG] = ACT_FATAL;
     else if (!strcmp (action, "report"))
-      bx_options.log_actions[LOGLEV_DEBUG] = 1;
+      bx_options.log_actions[LOGLEV_DEBUG] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
-      bx_options.log_actions[LOGLEV_DEBUG] = 0;
+      bx_options.log_actions[LOGLEV_DEBUG] = ACT_IGNORE;
     else {
-      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      fprintf(stderr, "%s: debug directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "romimage")) {
     if (num_params != 3) {
-      fprintf(stderr, ".bochsrc: romimage directive: wrong # args.\n");
+      fprintf(stderr, "%s: romimage directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "file=", 5)) {
-      fprintf(stderr, ".bochsrc: romimage directive malformed.\n");
+      fprintf(stderr, "%s: romimage directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[2], "address=", 8)) {
-      fprintf(stderr, ".bochsrc: romimage directive malformed.\n");
+      fprintf(stderr, "%s: romimage directive malformed.\n", bochsrc_path);
       exit(1);
       }
     bx_options.rom.path    = strdup(&params[1][5]);
@@ -937,69 +958,69 @@ parse_line_formatted(int num_params, char *params[])
     }
   else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: vgaromimage directive: wrong # args.\n");
+      fprintf(stderr, "%s: vgaromimage directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.vgarom.path = strdup(params[1]);
     }
   else if (!strcmp(params[0], "vga_update_interval")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: vga_update_interval directive: wrong # args.\n");
+      fprintf(stderr, "%s: vga_update_interval directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.vga_update_interval = atol(params[1]);
     if (bx_options.vga_update_interval < 50000) {
-      fprintf(stderr, ".bochsrc: vga_update_interval not big enough!\n");
+      fprintf(stderr, "%s: vga_update_interval not big enough!\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "keyboard_serial_delay")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: keyboard_serial_delay directive: wrong # args.\n");
+      fprintf(stderr, "%s: keyboard_serial_delay directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.keyboard_serial_delay = atol(params[1]);
     if (bx_options.keyboard_serial_delay < 5) {
-      fprintf(stderr, ".bochsrc: keyboard_serial_delay not big enough!\n");
+      fprintf(stderr, "%s: keyboard_serial_delay not big enough!\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "megs")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: megs directive: wrong # args.\n");
+      fprintf(stderr, "%s: megs directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.memory.megs = atol(params[1]);
     }
   else if (!strcmp(params[0], "floppy_command_delay")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: floppy_command_delay directive: wrong # args.\n");
+      fprintf(stderr, "%s: floppy_command_delay directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.floppy_command_delay = atol(params[1]);
     if (bx_options.floppy_command_delay < 100) {
-      fprintf(stderr, ".bochsrc: floppy_command_delay not big enough!\n");
+      fprintf(stderr, "%s: floppy_command_delay not big enough!\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "ips")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: ips directive: wrong # args.\n");
+      fprintf(stderr, "%s: ips directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.ips = atol(params[1]);
     if (bx_options.ips < 200000) {
-      fprintf(stderr, ".bochsrc: WARNING: ips is AWFULLY low!\n");
+      fprintf(stderr, "%s: WARNING: ips is AWFULLY low!\n", bochsrc_path);
       }
     }
 
   else if (!strcmp(params[0], "mouse")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: mouse directive malformed.\n");
+      fprintf(stderr, "%s: mouse directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      fprintf(stderr, ".bochsrc: mouse directive malformed.\n");
+      fprintf(stderr, "%s: mouse directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (params[1][8] == '0')
@@ -1007,17 +1028,17 @@ parse_line_formatted(int num_params, char *params[])
     else if (params[1][8] == '1')
       bx_options.mouse_enabled = 1;
     else {
-      fprintf(stderr, ".bochsrc: mouse directive malformed.\n");
+      fprintf(stderr, "%s: mouse directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "private_colormap")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: private_colormap directive malformed.\n");
+      fprintf(stderr, "%s: private_colormap directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      fprintf(stderr, ".bochsrc: private_colormap directive malformed.\n");
+      fprintf(stderr, "%s: private_colormap directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (params[1][8] == '0')
@@ -1025,7 +1046,7 @@ parse_line_formatted(int num_params, char *params[])
     else if (params[1][8] == '1')
       bx_options.private_colormap = 1;
     else {
-      fprintf(stderr, ".bochsrc: private_colormap directive malformed.\n");
+      fprintf(stderr, "%s: private_colormap directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
@@ -1058,11 +1079,11 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "i440fxsupport")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: i440FXSupport directive malformed.\n");
+      fprintf(stderr, "%s: i440FXSupport directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      fprintf(stderr, ".bochsrc: i440FXSupport directive malformed.\n");
+      fprintf(stderr, "%s: i440FXSupport directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (params[1][8] == '0')
@@ -1070,17 +1091,17 @@ parse_line_formatted(int num_params, char *params[])
     else if (params[1][8] == '1')
       bx_options.i440FXSupport = 1;
     else {
-      fprintf(stderr, ".bochsrc: i440FXSupport directive malformed.\n");
+      fprintf(stderr, "%s: i440FXSupport directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "newharddrivesupport")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: newharddrivesupport directive malformed.\n");
+      fprintf(stderr, "%s: newharddrivesupport directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      fprintf(stderr, ".bochsrc: newharddrivesupport directive malformed.\n");
+      fprintf(stderr, "%s: newharddrivesupport directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (params[1][8] == '0')
@@ -1088,13 +1109,13 @@ parse_line_formatted(int num_params, char *params[])
     else if (params[1][8] == '1')
       bx_options.newHardDriveSupport = 1;
     else {
-      fprintf(stderr, ".bochsrc: newharddrivesupport directive malformed.\n");
+      fprintf(stderr, "%s: newharddrivesupport directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
   else if (!strcmp(params[0], "cmosimage")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: cmosimage directive: wrong # args.\n");
+      fprintf(stderr, "%s: cmosimage directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.cmos.path = strdup(params[1]);
@@ -1102,7 +1123,7 @@ parse_line_formatted(int num_params, char *params[])
     }
   else if (!strcmp(params[0], "time0")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: time0 directive: wrong # args.\n");
+      fprintf(stderr, "%s: time0 directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     bx_options.cmos.time0 = atoi(params[1]);
@@ -1110,11 +1131,11 @@ parse_line_formatted(int num_params, char *params[])
 #ifdef MAGIC_BREAKPOINT
   else if (!strcmp(params[0], "magic_break")) {
     if (num_params != 2) {
-      fprintf(stderr, ".bochsrc: magic_break directive: wrong # args.\n");
+      fprintf(stderr, "%s: magic_break directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "enabled=", 8)) {
-      fprintf(stderr, ".bochsrc: magic_break directive malformed.\n");
+      fprintf(stderr, "%s: magic_break directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (params[1][8] == '0') {
@@ -1126,7 +1147,7 @@ parse_line_formatted(int num_params, char *params[])
       bx_dbg.magic_break_enabled = 1;
       }
     else {
-      fprintf(stderr, ".bochsrc: magic_break directive malformed.\n");
+      fprintf(stderr, "%s: magic_break directive malformed.\n", bochsrc_path);
       exit(1);
       }
     }
@@ -1135,20 +1156,20 @@ parse_line_formatted(int num_params, char *params[])
     int tmp[6];
     bx_options.ne2k.valid = 0;
     if ((num_params < 4) || (num_params > 6)) {
-      fprintf(stderr, ".bochsrc: ne2k directive malformed.\n");
+      fprintf(stderr, "%s: ne2k directive malformed.\n", bochsrc_path);
       exit(1);
       }
     bx_options.ne2k.ethmod = "null";
     if (strncmp(params[1], "ioaddr=", 7)) {
-      fprintf(stderr, ".bochsrc: ne2k directive malformed.\n");
+      fprintf(stderr, "%s: ne2k directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[2], "irq=", 4)) {
-      fprintf(stderr, ".bochsrc: ne2k directive malformed.\n");
+      fprintf(stderr, "%s: ne2k directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[3], "mac=", 4)) {
-      fprintf(stderr, ".bochsrc: ne2k directive malformed.\n");
+      fprintf(stderr, "%s: ne2k directive malformed.\n", bochsrc_path);
       exit(1);
       }
     bx_options.ne2k.ioaddr = strtoul(&params[1][7], NULL, 16);
@@ -1156,20 +1177,20 @@ parse_line_formatted(int num_params, char *params[])
     i = sscanf(&params[3][4], "%x:%x:%x:%x:%x:%x",
              &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
     if (i != 6) {
-      fprintf(stderr, ".bochsrc: ne2k mac address malformed.\n");
+      fprintf(stderr, "%s: ne2k mac address malformed.\n", bochsrc_path);
       exit(1);
       }
     for (i=0;i<6;i++)
       bx_options.ne2k.macaddr[i] = tmp[i];
     if (num_params > 4) {
       if (strncmp(params[4], "ethmod=", 7)) {
-      fprintf(stderr, ".bochsrc: ne2k directive malformed.\n");
+      fprintf(stderr, "%s: ne2k directive malformed.\n", bochsrc_path);
       exit(1);
         }
       bx_options.ne2k.ethmod = strdup(&params[4][7]);
       if (num_params == 6) {
       if (strncmp(params[5], "ethdev=", 7)) {
-      fprintf(stderr, ".bochsrc: ne2k directive malformed.\n");
+      fprintf(stderr, "%s: ne2k directive malformed.\n", bochsrc_path);
       exit(1);
           }
       bx_options.ne2k.ethdev = strdup(&params[5][7]);
@@ -1180,11 +1201,11 @@ parse_line_formatted(int num_params, char *params[])
 
   else if (!strcmp(params[0], "load32bitOSImage")) {
     if ( (num_params!=4) && (num_params!=5) ) {
-      fprintf(stderr, ".bochsrc: load32bitOSImage directive: wrong # args.\n");
+      fprintf(stderr, "%s: load32bitOSImage directive: wrong # args.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[1], "os=", 3)) {
-      fprintf(stderr, ".bochsrc: load32bitOSImage: directive malformed.\n");
+      fprintf(stderr, "%s: load32bitOSImage: directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (!strcmp(&params[1][3], "nullkernel")) {
@@ -1194,22 +1215,22 @@ parse_line_formatted(int num_params, char *params[])
       bx_options.load32bitOSImage.whichOS = Load32bitOSLinux;
       }
     else {
-      fprintf(stderr, ".bochsrc: load32bitOSImage: unsupported OS.\n");
+      fprintf(stderr, "%s: load32bitOSImage: unsupported OS.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[2], "path=", 5)) {
-      fprintf(stderr, ".bochsrc: load32bitOSImage: directive malformed.\n");
+      fprintf(stderr, "%s: load32bitOSImage: directive malformed.\n", bochsrc_path);
       exit(1);
       }
     if (strncmp(params[3], "iolog=", 6)) {
-      fprintf(stderr, ".bochsrc: load32bitOSImage: directive malformed.\n");
+      fprintf(stderr, "%s: load32bitOSImage: directive malformed.\n", bochsrc_path);
       exit(1);
       }
     bx_options.load32bitOSImage.path = strdup(&params[2][5]);
     bx_options.load32bitOSImage.iolog = strdup(&params[3][6]);
     if (num_params == 5) {
       if (strncmp(params[4], "initrd=", 7)) {
-        fprintf(stderr, ".bochsrc: load32bitOSImage: directive malformed.\n");
+        fprintf(stderr, "%s: load32bitOSImage: directive malformed.\n", bochsrc_path);
         exit(1);
         }
       bx_options.load32bitOSImage.initrd = strdup(&params[4][7]);
@@ -1217,7 +1238,7 @@ parse_line_formatted(int num_params, char *params[])
     }
 
   else {
-    BX_PANIC(( ".bochsrc: directive '%s' not understood\n", params[0]));
+    BX_PANIC(( "%s: directive '%s' not understood\n", bochsrc_path, params[0]));
     }
 
   if (bx_options.diskd.present && bx_options.cdromd.present)

@@ -24,7 +24,7 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 # For events of each level, you can choose to crash, report, or ignore.
 # TODO: allow choice based on the facility: e.g. report debug messages
 #       from the cdrom but ignore debug messages from everything else.
-panic: action=crash
+panic: action=fatal
 error: action=report
 info: action=report
 debug: action=ignore
