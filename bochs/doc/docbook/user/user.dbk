@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.26 2001-11-21 02:13:47 bdenney Exp $
+$Id: user.dbk,v 1.27 2001-12-05 20:16:09 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1576,11 +1576,11 @@ enables FPU and CDROM.
 
 <section><title>Building an RPM on Linux</title>
 <para>
-Linux is based on Unix, so it uses the standard compile.  Several
-Linux distributions use the Redhat Package Manager (RPM) to make it
-easier to install and uninstall software.  If you want to build an
-RPM of Bochs, here are the commands.  Edit .conf.linux first if you want
-to adjust the configure options.
+RPM stands for "RedHat Package Manager."  An RPM is a compressed file
+containing files to be installed on your system.  The Bochs makefile
+has a special make target that can be used to build an RPM of Bochs.
+Start with a clean source directory.  Edit .conf.linux first if you want to
+adjust the configure options.  Then, type:
 
 <screen>
   su root
@@ -1595,6 +1595,7 @@ output of the <command>make rpm</command> will tell you the exact location
 of these new files.  Instructions for installing an RPM are <link
 linkend="linuxrpm">here</link>.
 </para>
+
 </section> <!-- end of Building an RPM -->
 
 
