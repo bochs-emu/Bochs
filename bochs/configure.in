@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.202 2003-03-02 23:59:08 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.203 2003-04-26 13:31:22 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -711,6 +711,14 @@ AC_ARG_ENABLE(ne2000,
     NETLOW_OBJS='eth.o eth_null.o'
     AC_CHECK_HEADER(net/bpf.h, NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o")
     AC_CHECK_HEADER(netpacket/packet.h, NETLOW_OBJS="$NETLOW_OBJS eth_linux.o")
+    AC_CHECK_HEADER(net/if.h, [
+        NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
+        AC_DEFINE(HAVE_ETHERTAP, 1)
+      ], [],
+      [
+	#include <sys/types.h>
+	#include <sys/socket.h>
+      ])
     AC_CHECK_HEADER(linux/netlink.h, [
         NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
         AC_DEFINE(HAVE_ETHERTAP, 1)

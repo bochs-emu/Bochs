@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.12 2003-02-16 19:35:57 vruppert Exp $
+// $Id: eth_tap.cc,v 1.13 2003-04-26 13:31:23 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,12 +95,16 @@
 #include <sys/poll.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <asm/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
+#if defined(__FreeBSD__)
+#include <net/if.h>
+#else
+#include <asm/types.h>
 #include <linux/netlink.h>
 #include <linux/if.h>
+#endif
 #include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -108,6 +112,8 @@
 #define TAP_VIRTUAL_HW_ADDR             0xDEADBEEF
 #define BX_ETH_TAP_LOGGING 1
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
+
+int execute_script(char *name, char* arg1);
 
 //
 //  Define the class. This is private to this module
@@ -160,6 +166,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
   }
   sprintf (filename, "/dev/%s", netif);
 
+#if defined(__linux__)
   // check if the TAP devices is running, and turn on ARP.  This is based
   // on code from the Mac-On-Linux project. http://http://www.maconlinux.org/
   int sock = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -190,6 +197,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
     }
   }
   close(sock);
+#endif
 
   fd = open (filename, O_RDWR);
   if (fd < 0) {
@@ -208,13 +216,24 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 
   BX_INFO (("eth_tap: opened %s device", netif));
 
-#if BX_ETH_TAP_LOGGING
+  /* Execute the configuration script */
+  char intname[IFNAMSIZ];
+  strcpy(intname,netif);
+  char *scriptname=bx_options.ne2k.Oscript->getptr();
+  if((scriptname != NULL)
+   &&(strcmp(scriptname, "") != 0)
+   &&(strcmp(scriptname, "none") != 0)) {
+    if (execute_script(scriptname, intname) < 0)
+      BX_ERROR (("execute script '%s' on %s failed", scriptname, intname));
+    }
+
   // Start the rx poll 
   this->rx_timer_index = 
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
 				1, 1, "eth_tap"); // continuous, active
   this->rxh   = rxh;
   this->rxarg = rxarg;
+#if BX_ETH_TAP_LOGGING
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
   txlog = fopen ("ne2k-tx.log", "wb");
@@ -250,9 +269,15 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   Bit8u txbuf[BX_PACKET_BUFSIZ];
   txbuf[0] = 0;
   txbuf[1] = 0;
+#if defined(__FreeBSD__)
+  memcpy (txbuf, buf, io_len);
+  unsigned int size = write (fd, txbuf, io_len);
+  if (size != io_len) {
+#else
   memcpy (txbuf+2, buf, io_len);
   unsigned int size = write (fd, txbuf, io_len+2);
   if (size != io_len+2) {
+#endif
     BX_PANIC (("write on tap device: %s", strerror (errno)));
   } else {
     BX_INFO (("wrote %d bytes + 2 byte pad on tap", io_len));
@@ -293,13 +318,19 @@ void bx_tap_pktmover_c::rx_timer ()
   nbytes = read (fd, buf, sizeof(buf));
 
   // hack: discard first two bytes
+#if defined(__FreeBSD__)
+  rxbuf = buf;
+#else
   rxbuf = buf+2;
   nbytes-=2;
+#endif
   
   // hack: TAP device likes to create an ethernet header which has
   // the same source and destination address FE:FD:00:00:00:00.
   // Change the dest address to FE:FD:00:00:00:01.
+#if defined(__linux__)
   rxbuf[5] = 1;
+#endif
 
   if (nbytes>0)
     BX_INFO (("tap read returned %d bytes", nbytes));
@@ -334,6 +365,36 @@ void bx_tap_pktmover_c::rx_timer ()
     nbytes = 60;
   }
   (*rxh)(rxarg, rxbuf, nbytes);
+}
+
+int execute_script( char* scriptname, char* arg1 )
+{
+  int pid,status;
+
+  if (!(pid=fork())) {
+    char filename[BX_PATHNAME_LEN];
+    if ( scriptname[0]=='/' ) {
+      strcpy (filename, scriptname);
+    }
+    else {
+      getcwd (filename, BX_PATHNAME_LEN);
+      strcat (filename, "/");
+      strcat (filename, scriptname);
+    }
+
+    // execute the script
+    BX_INFO(("Executing script '%s %s'",filename,arg1));
+    execle(filename, scriptname, arg1, NULL, NULL);
+
+    // if we get here there has been a problem
+    exit(-1);
+  }
+
+  wait (&status);
+  if (!WIFEXITED(status)) {
+    return -1;
+  }
+  return WEXITSTATUS(status);
 }
 
 #endif /* if BX_NE2K_SUPPORT */
