@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.5 2001-10-03 13:10:38 bdenney Exp $
+// $Id: serial.h,v 1.6 2002-01-20 16:35:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -55,8 +55,14 @@ typedef struct {
    */
   Boolean  rx_empty;
   Boolean  tx_empty;
+  Boolean  ls_interrupt;
+  Boolean  ms_interrupt;
   Boolean  rx_interrupt;
   Boolean  tx_interrupt;
+  Boolean  ls_ipending;
+  Boolean  ms_ipending;
+  Boolean  rx_ipending;
+  Boolean  tx_ipending;
 
   int  baudrate;
   int  tx_timer_index;
