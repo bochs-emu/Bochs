@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.56 2004-09-05 10:30:19 vruppert Exp $
+// $Id: serial.cc,v 1.57 2004-09-05 21:09:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -566,7 +566,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   bx_bool gen_int = 0;
   Bit8u offset, new_wordlen;
 #if USE_RAW_SERIAL
-  bx_bool mcr_changed;
+  bx_bool mcr_changed = 0;
   Bit8u p_mode;
 #endif
   Bit8u port = 0;

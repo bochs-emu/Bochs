@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.20 2004-09-05 10:30:19 vruppert Exp $
+// $Id: serial.h,v 1.21 2004-09-05 21:09:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -76,6 +76,10 @@ enum {
   BX_SER_INT_FIFO
 };
 
+#if USE_RAW_SERIAL
+class serial_raw;
+#endif
+
 typedef struct {
   /*
    * UART internal state
@@ -108,7 +112,8 @@ typedef struct {
 
 #if USE_RAW_SERIAL
   serial_raw* raw;
-#elif defined(SERIAL_ENABLE)
+#endif
+#if defined(SERIAL_ENABLE)
   struct termios term_orig, term_new;
 #endif
 
