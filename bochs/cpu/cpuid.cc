@@ -218,8 +218,6 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
   unsigned features;
 #endif
 
-  invalidate_prefetch_q();
-
 #if BX_CPU_LEVEL >= 4
   switch (EAX) {
     case 0:

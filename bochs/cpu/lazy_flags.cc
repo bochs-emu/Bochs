@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.23 2004-08-26 20:37:50 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.24 2004-08-27 18:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -785,21 +785,27 @@ bx_bool BX_CPU_C::get_OFLazy(void)
             of = ((BX_CPU_THIS_PTR oszapc.op1_8 ^
                 BX_CPU_THIS_PTR oszapc.result_8) & 0x80) > 0;
           else
-            of = (BX_CPU_THIS_PTR eflags.val32 >> 11) & 1; // Old val
+            of = (((BX_CPU_THIS_PTR oszapc.op1_8 <<
+                   (BX_CPU_THIS_PTR oszapc.op2_8 - 1)) ^
+                      BX_CPU_THIS_PTR oszapc.result_8) & 0x80) > 0;
           break;
         case BX_INSTR_SHL16:
           if (BX_CPU_THIS_PTR oszapc.op2_16 == 1)
             of = ((BX_CPU_THIS_PTR oszapc.op1_16 ^
                 BX_CPU_THIS_PTR oszapc.result_16) & 0x8000) > 0;
           else
-            of = (BX_CPU_THIS_PTR eflags.val32 >> 11) & 1; // Old val
+            of = (((BX_CPU_THIS_PTR oszapc.op1_16 <<
+                   (BX_CPU_THIS_PTR oszapc.op2_16 - 1)) ^
+                      BX_CPU_THIS_PTR oszapc.result_16) & 0x8000) > 0;
           break;
         case BX_INSTR_SHL32:
           if (BX_CPU_THIS_PTR oszapc.op2_32 == 1)
             of = ((BX_CPU_THIS_PTR oszapc.op1_32 ^
                 BX_CPU_THIS_PTR oszapc.result_32) & 0x80000000) > 0;
           else
-            of = (BX_CPU_THIS_PTR eflags.val32 >> 11) & 1; // Old val
+            of = (((BX_CPU_THIS_PTR oszapc.op1_32 <<
+                   (BX_CPU_THIS_PTR oszapc.op2_32 - 1)) ^
+                      BX_CPU_THIS_PTR oszapc.result_32) & 0x80000000) > 0;
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_SHL64:
@@ -807,7 +813,9 @@ bx_bool BX_CPU_C::get_OFLazy(void)
             of = ((BX_CPU_THIS_PTR oszapc.op1_64 ^
                 BX_CPU_THIS_PTR oszapc.result_64) & BX_CONST64(0x8000000000000000)) > 0;
           else
-            of = (BX_CPU_THIS_PTR eflags.val32 >> 11) & 1; // Old val
+            of = (((BX_CPU_THIS_PTR oszapc.op1_64 <<
+                   (BX_CPU_THIS_PTR oszapc.op2_64 - 1)) ^
+                      BX_CPU_THIS_PTR oszapc.result_64) & BX_CONST64(0x8000000000000000)) > 0;
           break;
 #endif
         case BX_INSTR_MUL8:
