@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.23 2001-11-17 17:14:28 bdenney Exp $
+$Id: user.dbk,v 1.24 2001-11-17 17:20:29 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -358,7 +358,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Parallel port emulation was added by Volker Ruppert for Bochs 1.3.
     Data that is sent to the parallel port by the guest OS can be saved into a
-    file or (on Unix only) sent directly into the parallel port device.
+    file or sent directly into the parallel port device (Unix only).
     </entry>
   </row>
   <row>
@@ -2434,7 +2434,6 @@ following prompt:
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-         $Id: user.dbk,v 1.23 2001-11-17 17:14:28 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
