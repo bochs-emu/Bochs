@@ -259,7 +259,11 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [29]    TM: Thermal Monitor
       //   [31:30] Reserved
       RAX = get_cpu_version_information();
-      RBX = 0; // still not implemented
+#if BX_SUPPORT_APIC
+      RBX = (BX_CPU_THIS_PTR local_apic.get_id() << 24);
+#else
+      RBX = 0;
+#endif
       RCX = get_extended_cpuid_features ();
       RDX = get_std_cpuid_features ();
       break;
