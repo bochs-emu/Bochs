@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.162 2005-02-23 18:49:50 vruppert Exp $
+$Id: user.dbk,v 1.163 2005-02-25 11:49:31 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -340,12 +340,12 @@ currently work with.
   <row>
     <entry>386,486,Pentium Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate on of several families of Intel hardware.  Some Pentium features are supported, such as the Time Stamp Counter.</entry>
+    <entry>Bochs can be configured to emulate on of several families of Intel hardware. Some Pentium features are unsupported, such as the Time Stamp Counter.</entry>
   </row>
   <row>
     <entry>Pentium Pro Emulation</entry>
     <entry>Incomplete</entry>
-    <entry>A few Pentium Pro features are supported, such as an on-chip APIC for SMP simulation.
+    <entry>A few Pentium Pro features is incomplete, such as an on-chip APIC for SMP simulation.
     </entry>
   </row>
   <row>
@@ -358,7 +358,7 @@ currently work with.
   <row>
     <entry>Floating Point</entry>
     <entry>Yes</entry>
-    <entry>Uses software floating point routines written by Bill Metzenthen
+    <entry>Uses software floating point engine based on SoftFloat floating point emulation library (http://www.jhauser.us/arithmetic/SoftFloat.html)
     </entry>
   </row>
   <row>
@@ -420,7 +420,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates a PS/2 keyboard with North American key mappings. Optional keyboard layout
     remapping files are provided to support localized keyboard in X11 (German, French, Italian, Spanish,
-    Danish, Swedish).
+    Danish, Swedish, Russian).
     </entry>
   </row>
   <row>
