@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.3 2002-04-18 18:36:02 vruppert Exp $
+// $Id: wx.cc,v 1.4 2002-04-20 07:19:35 vruppert Exp $
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
 // wxPanel called a MyPanel, which has methods to display
@@ -749,26 +749,27 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	Bit8u cs_start = (cursor_state >> 8) & 0x3f;
 	Bit8u cs_end = cursor_state & 0x1f;
 	unsigned char cChar;
-	unsigned int nchars = 80 * nrows;
-	if((wxCursorY * 80 + wxCursorX) < nchars) {
-		cChar = new_text[(wxCursorY * 80 + wxCursorX) * 2];
-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * 80 + wxCursorX) * 2) + 1]);
+	unsigned int ncols = wxScreenX / 8;
+	unsigned int nchars = ncols * nrows;
+	if((wxCursorY * ncols + wxCursorX) < nchars) {
+		cChar = new_text[(wxCursorY * ncols + wxCursorX) * 2];
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1]);
 	}
 	
 	for(int i = 0; i < nchars * 2; i += 2) {
 		if((old_text[i] != new_text[i]) || (old_text[i+1] != new_text[i+1])) {
 			cChar = new_text[i];
-			int x = (i / 2) % 80;
-			int y = (i / 2) / 80;
+			int x = (i / 2) % ncols;
+			int y = (i / 2) / ncols;
 			DrawBochsBitmap(x * 8, y * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i+1]);
 		}
 	}
 	wxCursorX = cursor_x;
 	wxCursorY = cursor_y;
 
-	if(((cursor_y * 80 + cursor_x) < nchars) && (cs_start <= cs_end)) {
-		cChar = new_text[(cursor_y * 80 + cursor_x) * 2];
-		char cAttr = new_text[((cursor_y * 80 + cursor_x) * 2) + 1];
+	if(((cursor_y * ncols + cursor_x) < nchars) && (cs_start <= cs_end)) {
+		cChar = new_text[(cursor_y * ncols + cursor_x) * 2];
+		char cAttr = new_text[((cursor_y * ncols + cursor_x) * 2) + 1];
 		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
 		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr);
 	}
@@ -826,10 +827,15 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
-void bx_gui_c::dimension_update(unsigned x, unsigned y)
+void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   IFDBG_VGA (wxLogDebug ("dimension_update"));
   wxCriticalSectionLocker lock(wxScreen_lock);
+  if (fheight > 0) {
+    if (fheight != 16) {
+      y = y * 16 / fheight;
+    }
+  }
   wxScreenX = x;
   wxScreenY = y;
   wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);

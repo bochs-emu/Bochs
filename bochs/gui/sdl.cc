@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.17 2002-03-19 19:59:44 vruppert Exp $
+// $Id: sdl.cc,v 1.18 2002-04-20 07:19:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ SDL_Surface *sdl_screen, *sdl_fullscreen;
 SDL_Event sdl_event;
 int sdl_fullscreen_toggle;
 int sdl_grab;
-int res_x, res_y;
+unsigned res_x, res_y;
 int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
@@ -586,32 +586,37 @@ Boolean bx_gui_c::palette_change(
 
 void bx_gui_c::dimension_update(
     unsigned x,
-    unsigned y)
+    unsigned y,
+    unsigned fheight)
 {
-  int i=headerbar_height;
-
   // TODO: remove this stupid check whenever the vga driver is fixed
   if( y == 208 ) y = 200;
-  // TODO: remove this stupid check whenever 80x50 font is properly handled
-  if( y > x )
+
+  if( fheight > 0 )
   {
-    y = y>>1;
-    if( font != &sdl_font8x8[0][0] )
+    if( fheight == 8 )
     {
-      bx_gui.clear_screen();
-      font = &sdl_font8x8[0][0];
-      fontheight = 8;
-      fontwidth = 8;
+      if( font != &sdl_font8x8[0][0] )
+      {
+        bx_gui.clear_screen();
+        font = &sdl_font8x8[0][0];
+        fontheight = 8;
+        fontwidth = 8;
+      }
     }
-  }
-  else
-  {
-    if( font != &sdl_font8x16[0][0] )
+    else
     {
-      bx_gui.clear_screen();
-      font = &sdl_font8x16[0][0];
-      fontheight = 16;
-      fontwidth = 8;
+      if( fheight != 16 )
+      {
+        y = y * 16 / fheight;
+      }
+      if( font != &sdl_font8x16[0][0] )
+      {
+        bx_gui.clear_screen();
+        font = &sdl_font8x16[0][0];
+        fontheight = 16;
+        fontwidth = 8;
+      }
     }
   }
 
@@ -658,8 +663,11 @@ void bx_gui_c::dimension_update(
   }
   res_x = x;
   res_y = y;
-  textres_x = x / fontwidth;
-  textres_y = y / fontheight;
+  if( fheight > 0 )
+  {
+    textres_x = x / fontwidth;
+    textres_y = y / fontheight;
+  }
   bx_gui.show_headerbar();
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.41 2002-04-18 00:22:19 bdenney Exp $
+// $Id: x.cc,v 1.42 2002-04-20 07:19:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1015,7 +1015,7 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned new_foreground, new_background;
   Bit8u string[1];
   Bit8u cs_start, cs_end;
-  unsigned nchars;
+  unsigned nchars, ncols;
 
   cs_start = (cursor_state >> 8) & 0x3f;
   cs_end = cursor_state & 0x1f;
@@ -1023,11 +1023,12 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   font_height = font_info->ascent + font_info->descent;
 
   // Number of characters on screen, variable number of rows
-  nchars = 80*nrows;
+  ncols = dimension_x/8;
+  nchars = ncols*nrows;
 
   // first draw over character at original block cursor location
-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars ) {
-    curs = (prev_block_cursor_y*80 + prev_block_cursor_x)*2;
+  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars ) {
+    curs = (prev_block_cursor_y*ncols + prev_block_cursor_x)*2;
     string[0] = new_text[curs];
     if (string[0] == 0) string[0] = ' '; // convert null to space
     XSetForeground(bx_x_display, gc, col_vals[new_text[curs+1] & 0x0f]);
@@ -1055,8 +1056,8 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 //XSetForeground(bx_x_display, gc, white_pixel);
 //XSetBackground(bx_x_display, gc, black_pixel);
 
-      x = (i/2) % 80;
-      y = (i/2) / 80;
+      x = (i/2) % ncols;
+      y = (i/2) / ncols;
 
       XDrawImageString(bx_x_display, win,
         gc,
@@ -1074,7 +1075,7 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   XSetBackground(bx_x_display, gc, black_pixel);
 
   // now draw character at new block cursor location in reverse
-  if ( ( (cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
+  if ( ( (cursor_y*ncols + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
     for (unsigned i = cs_start; i <= cs_end; i++)
       XDrawLine(bx_x_display, win,
 	gc_inv,
@@ -1211,8 +1212,13 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y)
+bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
+  if (fheight > 0) {
+    if (fheight != 16) {
+      y = y * 16 / fheight;
+    }
+  }
   if ( (x != dimension_x) || (y != (dimension_y-bx_headerbar_y)) ) {
     XSizeHints hints;
     long supplied_return;

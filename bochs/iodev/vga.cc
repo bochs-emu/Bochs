@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.32 2002-04-14 08:57:24 vruppert Exp $
+// $Id: vga.cc,v 1.33 2002-04-20 07:19:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1458,7 +1458,7 @@ bx_vga_c::update(void)
 	iHeight = 16*25;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui.dimension_update(iWidth, iHeight);
+	  bx_gui.dimension_update(iWidth, iHeight, 16);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1499,10 +1499,10 @@ bx_vga_c::update(void)
         if (rows > BX_MAX_TEXT_LINES)
           BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
 	iWidth = 8 * (BX_VGA_THIS s.CRTC.reg[1] + 1);
-	iHeight = 16*rows; // TODO: should use font size
+	iHeight = VDE+1;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui.dimension_update(iWidth, iHeight);
+	  bx_gui.dimension_update(iWidth, iHeight, MSL+1);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}

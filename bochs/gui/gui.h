@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.26 2002-03-17 20:57:54 vruppert Exp $
+// $Id: gui.h,v 1.27 2002-04-20 07:19:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ public:
   static void flush(void);
   static void clear_screen(void);
   static Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
-  static void dimension_update(unsigned x, unsigned y);
+  static void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
   static unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
   static unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
   static void replace_bitmap(unsigned hbar_id, unsigned bmap_id);

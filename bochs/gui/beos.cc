@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.15 2002-03-16 11:30:05 vruppert Exp $
+// $Id: beos.cc,v 1.16 2002-04-20 07:19:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -337,16 +337,17 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned i, x, y;
   BPoint point;
   unsigned char achar;
-  unsigned nchars;
+  unsigned nchars, ncols;
 
   aWindow->Lock();
 
   // Number of characters on screen, variable number of rows
-  nchars = 80*nrows;
+  ncols = dimension_x/8;
+  nchars = ncols*nrows;
 
   // first draw over character at original block cursor location
-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars ) {
-    achar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
+  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars ) {
+    achar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
     point.Set(prev_block_cursor_x*8, prev_block_cursor_y*16 + bx_headerbar_y);
     aView->DrawBitmap(vgafont[achar], point );
     }
@@ -357,8 +358,8 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
       achar = new_text[i];
 
-      x = (i/2) % 80;
-      y = (i/2) / 80;
+      x = (i/2) % ncols;
+      y = (i/2) / ncols;
 
       point.Set(x*8, y*16 + bx_headerbar_y);
       aView->DrawBitmap(vgafont[achar], point );
@@ -369,8 +370,8 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ( (cursor_y*80 + cursor_x) < nchars ) {
-    achar = new_text[(cursor_y*80 + cursor_x)*2];
+  if ( (cursor_y*ncols + cursor_x) < nchars ) {
+    achar = new_text[(cursor_y*ncols + cursor_x)*2];
     point.Set(cursor_x*8, cursor_y*16 + bx_headerbar_y);
     aView->set_inv_text_colors();
     aView->DrawBitmap(vgafont[achar], point );
@@ -420,8 +421,13 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y)
+bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
+  if (fheight > 0) {
+    if (fheight != 16) {
+      y = y * 16 / fheight;
+    }
+  }
   aWindow->Lock();
   aWindow->ResizeTo(x, y + bx_headerbar_y);
   aWindow->Unlock();

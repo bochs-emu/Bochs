@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.16 2002-03-16 11:30:06 vruppert Exp $
+// $Id: rfb.cc,v 1.17 2002-04-20 07:19:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -623,10 +623,11 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y)
+bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   UNUSED(x);
   UNUSED(y);
+  UNUSED(fheight);
 }
 
 

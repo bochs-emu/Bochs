@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.7 2002-03-16 11:30:05 vruppert Exp $
+// $Id: amigaos.cc,v 1.8 2002-04-20 07:19:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -384,21 +384,23 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 {
 int i;
 int	cursori;
-unsigned nchars;
+unsigned nchars, ncols;
 unsigned char achar;
 char string[80];
 int	x, y;
 static int previ;
 unsigned int fgcolor, bgcolor;
 
-//current cursor position
-	cursori = (cursor_y*80 + cursor_x)*2;
+	ncols = w/8;
+
+	//current cursor position
+	cursori = (cursor_y*ncols + cursor_x)*2;
 
 	// Number of characters on screen, variable number of rows
-	nchars = 80*nrows;
+	nchars = ncols*nrows;
 
     
-for (i=0; i<nchars*2; i+=2)
+	for (i=0; i<nchars*2; i+=2)
 	{
 		if ( i == cursori || i == previ || new_text[i] != old_text[i] || new_text[i+1] != old_text[i+1])
 		{
@@ -418,13 +420,13 @@ for (i=0; i<nchars*2; i+=2)
             }
 
 
-            x = ((i/2) % 80)*window->RPort->TxWidth;
-			y = ((i/2) / 80)*window->RPort->TxHeight;
+            x = ((i/2) % ncols)*window->RPort->TxWidth;
+            y = ((i/2) / ncols)*window->RPort->TxHeight;
 
             Move(window->RPort, bx_borderleft + x, bx_bordertop + bx_headerbar_y + y + window->RPort->TxBaseline);
             Text(window->RPort, &achar, 1);
             }
-    }
+	}
 
     previ = cursori;
 }
@@ -486,8 +488,14 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y)
+bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
+        if (fheight > 0) {
+          if (fheight != 16) {
+            y = y * 16 / fheight;
+          }
+        }
+
         if(!bx_options.Ofullscreen->get () && (x != w || y != h))
         {
             ChangeWindowBox(window, window->LeftEdge, window->TopEdge, x + bx_borderleft + bx_borderright, y + bx_bordertop + bx_borderbottom + bx_headerbar_y);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.32 2002-04-07 18:07:20 vruppert Exp $
+// $Id: win32.cc,v 1.33 2002-04-20 07:19:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -715,7 +715,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char cChar;
   unsigned i, x, y;
   Bit8u cs_start, cs_end;
-  unsigned nchars;
+  unsigned nchars, ncols;
   unsigned char data[32];
 
   cs_start = (cursor_state >> 8) & 0x3f;
@@ -727,19 +727,21 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   hdc = GetDC(stInfo.hwnd);
 
-  // Number of characters on screen, variable number of rows
-  nchars = 80*nrows;
+  ncols = dimension_x/8;
 
-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars) {
-    cChar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
+  // Number of characters on screen, variable number of rows
+  nchars = ncols*nrows;
+
+  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars) {
+    cChar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
     if (yChar >= 16) {
       DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
 	              prev_block_cursor_y*16 + bx_headerbar_y, SRCCOPY,
-				  new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
+				  new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1]);
     } else {
       DrawChar(hdc, cChar, prev_block_cursor_x*8,
                prev_block_cursor_y*yChar + bx_headerbar_y,
-               new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1], 1, 0);
+               new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1], 1, 0);
     }
   }
 
@@ -749,8 +751,8 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
       cChar = new_text[i];
 
-      x = (i/2) % 80;
-      y = (i/2) / 80;
+      x = (i/2) % ncols;
+      y = (i/2) / ncols;
       if(yChar>=16) {
         DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
       } else {
@@ -763,8 +765,8 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if (((cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end)) {
-    cChar = new_text[(cursor_y*80 + cursor_x)*2];
+  if (((cursor_y*ncols + cursor_x) < nchars ) && (cs_start <= cs_end)) {
+    cChar = new_text[(cursor_y*ncols + cursor_x)*2];
     if (yChar>=16)
     {
       memset(data, 0, sizeof(data));
@@ -775,9 +777,9 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       }
       SetBitmapBits(cursorBmp, 32, data);
       DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16 + bx_headerbar_y,
-	         SRCCOPY, new_text[((cursor_y*80 + cursor_x)*2)+1]);
+	         SRCCOPY, new_text[((cursor_y*ncols + cursor_x)*2)+1]);
     } else {
-      char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
+      char cAttr = new_text[((cursor_y*ncols + cursor_x)*2)+1];
       DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar + bx_headerbar_y, cAttr, cs_start, cs_end);
     }
   }
@@ -890,8 +892,23 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0) {
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
-void bx_gui_c::dimension_update(unsigned x, unsigned y) {
-if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
+void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+{
+  if (fheight > 0) {
+    if (fheight >= 16) {
+      FontId = 2;
+      yChar = 16;
+    } else if (fheight > 12) {
+      FontId = 1;
+      yChar = 14;
+    } else {
+      FontId = 0;
+      yChar = 12;
+    }
+    y = y * yChar / fheight;
+  }
+
+  if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
     return;
   dimension_x = x;
   dimension_y = y + bx_headerbar_y;
@@ -903,21 +920,6 @@ if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
     stretched_x *= 2;
     stretched_y *= 2;
     stretch_factor *= 2;
-  }
-
-  FontId = 2;
-  yChar = 16;
-  if(y>600)
-  {
-    FontId = 0;
-    yChar = 12;
-    dimension_y = y * yChar / 16 + bx_headerbar_y;
-    stretched_y = dimension_y * stretch_factor;
-  } else if (y>480) {
-    FontId = 1;
-    yChar = 14;
-    dimension_y = y * yChar / 16 + bx_headerbar_y;
-    stretched_y = dimension_y * stretch_factor;
   }
 
   SetWindowPos(stInfo.hwnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
