@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.77 2002-12-03 23:29:42 cbothamy Exp $
+$Id: user.dbk,v 1.78 2002-12-04 23:32:39 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -399,6 +399,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates a Sound Blaster 16 card.  On Windows, Linux, and FreeBSD
     you can send the output to your host computer's sound system.
+    On MacOSX, this is not supported yet.
     </entry>
   </row>
   <row>
@@ -411,7 +412,8 @@ currently work with.
     the network BUT NOT the host machine.  On Windows and on systems that
     allow the TAP or TUN/TAP interface, there is no such limitation.  Often
     the host machine may be configured so the guest OS has access to the
-    internet.
+    internet. On MacOSX, it is not possible yet to forward packets between the
+    guest and the host.
     </entry>
   </row>
   <row>
@@ -6284,7 +6286,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.77 2002-12-03 23:29:42 cbothamy Exp $
+        $Id: user.dbk,v 1.78 2002-12-04 23:32:39 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6560,7 +6562,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.77 2002-12-03 23:29:42 cbothamy Exp $
+        $Id: user.dbk,v 1.78 2002-12-04 23:32:39 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
