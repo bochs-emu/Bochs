@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.30 2001-12-10 14:54:39 bdenney Exp $
+$Id: user.dbk,v 1.31 2002-03-05 17:17:50 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2839,7 +2839,7 @@ an SMP machine to see what it looks like.
 </para>
 
 <para>
-It is important to understand that configuring bochs for 4 processors will make
+It is important to understand that configuring bochs for 4 processors will NOT make
 your single-threaded applications run faster in general!  On the contrary, it
 has to spend time simulating idle processors as well as the ones doing your
 task.  The point is to simulate an SMP system, not to speed up a uniprocessor
