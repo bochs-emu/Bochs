@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.7 2002-08-29 20:41:45 bdenney Exp $
+// $Id: wxdialog.cc,v 1.8 2002-08-29 21:00:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -458,10 +458,10 @@ HDConfigDialog::HDConfigDialog(
   hsizer[2] = new wxBoxSizer (wxHORIZONTAL);
   buttonSizer = new wxBoxSizer (wxHORIZONTAL);
   // add top level components to vertSizer
-  vertSizer->Add (enable, 0, wxTOP|wxLEFT, 30);
-  vertSizer->Add (hsizer[0], 0, wxLEFT, 30);
-  vertSizer->Add (hsizer[1], 0, wxLEFT, 30);
-  vertSizer->Add (hsizer[2], 0, wxLEFT, 30);
+  vertSizer->Add (enable, 0, wxTOP|wxLEFT, 10);
+  vertSizer->Add (hsizer[0], 0, wxTOP|wxLEFT, 10);
+  vertSizer->Add (hsizer[1], 0, wxTOP|wxLEFT, 10);
+  vertSizer->Add (hsizer[2], 0, wxTOP|wxLEFT, 10);
   vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT|wxTOP, 10);
   // contents of hsizer[0]
   wxStaticText *text;
