@@ -12,7 +12,7 @@ Changes to next release:
   - fixed bug in HADDPD/HSUBPD (SSE3) instructions
   - fixed bug in float to integer SSE/SSE2 convert instructions
   - fixed BCD instructions implementation
-  - speed optimizations in MMX and CPU core (sshwarts and psychosmur)
+  - execution speed improvements (sshwarts and psychosmur)
   - fix MSR_APICBASE always returning APIC ADDRESS 0 (Kangmo Kim)
   - fetchdecode fixes for AMD64 and 3DNow!
   - change BX_PANIC messages to BX_INFO when behaviour exactly 
