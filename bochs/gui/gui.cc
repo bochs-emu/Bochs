@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.64 2002-12-17 05:17:41 yakovlev Exp $
+// $Id: gui.cc,v 1.65 2003-02-09 18:59:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -377,7 +377,7 @@ bx_gui_c::snapshot_checker(void * this_ptr)
     fp=fopen(filename, "rb");
     if(fp) {
       char *mask_snapshot = (char *) malloc((len+1) * sizeof(char));
-      int i;
+      unsigned i;
       bx_bool flag = 1;
       fread(mask_snapshot, 1, len, fp);
       fclose(fp);
@@ -488,39 +488,35 @@ bx_gui_c::userbutton_handler(void)
     p = 0;
     while ((p < strlen(user_shortcut)) && (len < 3)) {
       if (!strncmp(user_shortcut+p, "alt", 3)) {
-        shortcut[len] = BX_KEY_ALT_L;
-        len++;
+        shortcut[len++] = BX_KEY_ALT_L;
         p += 3;
       } else if (!strncmp(user_shortcut+p, "ctrl", 4)) {
-        shortcut[len] = BX_KEY_CTRL_L;
-        len++;
+        shortcut[len++] = BX_KEY_CTRL_L;
         p += 4;
       } else if (!strncmp(user_shortcut+p, "del", 3)) {
-        shortcut[len] = BX_KEY_DELETE;
-        len++;
+        shortcut[len++] = BX_KEY_DELETE;
         p += 3;
       } else if (!strncmp(user_shortcut+p, "esc", 3)) {
-        shortcut[len] = BX_KEY_ESC;
-        len++;
+        shortcut[len++] = BX_KEY_ESC;
         p += 3;
       } else if (!strncmp(user_shortcut+p, "f1", 2)) {
-        shortcut[len] = BX_KEY_F1;
-        len++;
+        shortcut[len++] = BX_KEY_F1;
         p += 2;
       } else if (!strncmp(user_shortcut+p, "f4", 2)) {
-        shortcut[len] = BX_KEY_F4;
-        len++;
+        shortcut[len++] = BX_KEY_F4;
         p += 2;
       } else if (!strncmp(user_shortcut+p, "tab", 3)) {
-        shortcut[len] = BX_KEY_TAB;
-        len++;
+        shortcut[len++] = BX_KEY_TAB;
         p += 3;
       } else if (!strncmp(user_shortcut+p, "win", 3)) {
-        shortcut[len] = BX_KEY_WIN_L;
-        len++;
+        shortcut[len++] = BX_KEY_WIN_L;
         p += 3;
+      } else if (!strncmp(user_shortcut+p, "bksp", 4)) {
+        shortcut[len++] = BX_KEY_BACKSPACE;
+        p += 4;
       } else {
         BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
+        return;
       }
     }
     i = 0;

@@ -621,8 +621,8 @@ keyboard_mapping: enabled=0, map=
 # USER_SHORTCUT:
 # This defines the keyboard shortcut to be sent when you press the "user"
 # button in the headerbar. The shortcut string can be a combination of
-# these key names: "alt", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
-# Up to 3 keys can be pressed at a time.
+# these key names: "alt", "bksp", "ctrl", "del", "esc", "f1", "f4", "tab"
+# and "win". Up to 3 keys can be pressed at a time.
 #
 # Example:
 #   user_shortcut: keys=ctrlaltdel
