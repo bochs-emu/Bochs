@@ -36,6 +36,11 @@
 #include "eflags.h"
 #include "guest_context.h"
 
+#ifndef UNUSED
+#  define UNUSED(x) ((void)(x))
+#endif
+
+
 /* Method1: push event info (CPU pushes error code before) */
 typedef struct 
 {
@@ -481,6 +486,7 @@ typedef struct {
 
 extern monitor_pages_t monitor_pages;
 extern cpuid_info_t cpuid_info;
+extern unsigned intRedirCount[];
 
 
 
@@ -566,6 +572,8 @@ vm_rdtsc(void) {
 #define Plex86ErrnoENOMEM     2
 #define Plex86ErrnoEFAULT     3
 #define Plex86ErrnoEINVAL     4
+#define Plex86ErrnoEACCES     5
+#define Plex86ErrnoEAGAIN     6
 
 #define vm_save_flags(x) \
   asm volatile("pushfl ; popl %0": "=g" (x): :"memory")
@@ -588,6 +596,10 @@ int      ioctlGeneric(vm_t *vm, void *inode, void *filp,
 int      ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg);
 unsigned ioctlAllocVPhys(vm_t *vm, unsigned long arg);
 void     copyGuestStateToUserSpace(vm_t *vm);
+void     unreserveGuestPhyPages(vm_t *vm);
+void     reserveGuestPhyPages(vm_t *vm);
+int      genericMMap(vm_t *vm, void *inode, void *file, void *vma,
+                     unsigned firstPage, unsigned pagesN);
 
 /* These are the functions that the host-OS-specific file of the
  * plex86 device driver must define.
@@ -602,13 +614,15 @@ unsigned hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr,
 Bit32u   hostGetAllocedPagePhyPage(void *ptr);
 void     hostPrint(char *fmt, ...);
 Bit32u   hostKernelOffset(void);
-void     hostReserveGuestPages(vm_t *vm);
-void     hostUnreserveGuestPages(vm_t *vm);
+void     hostReservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages);
+void     hostUnreservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages);
 int      hostConvertPlex86Errno(unsigned ret);
 unsigned hostMMapCheck(void *i, void *f);
 void     hostModuleCountReset(vm_t *vm, void *inode, void *filp);
 unsigned long hostCopyFromUser(void *to, void *from, unsigned long len);
 unsigned long hostCopyToUser(void *to, void *from, unsigned long len);
+int      hostMMap(vm_t *vm, void *iV, void *fV, void *vmaV,
+                  unsigned pagesN, Bit32u *pagesArray);
 
 #endif  /* HOST Space */
 

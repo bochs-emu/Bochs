@@ -25,13 +25,14 @@
 #define IN_HOST_SPACE
 #include "monitor.h"
 
+monitor_pages_t monitor_pages;
 /* Instrumentation of how many hardware interrupts were redirected
  * to the host, while the VM was running.
  */
+#warning "Check for SMP issues on these globals"
 unsigned intRedirCount[256];
-
-
 cpuid_info_t hostCpuIDInfo;
+
 
 static int  initIDTSlot(vm_t *vm, unsigned vec, int type);
 static void mapMonPages(vm_t *vm, Bit32u *, unsigned, Bit32u *, page_t *,
@@ -744,7 +745,8 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
        */
       vm->vmState &= ~VMStateMMapAll;
 
-      hostUnreserveGuestPages(vm);
+#warning "Add check before calling unreserveGuestPhyPages()"
+      unreserveGuestPhyPages(vm);
       unallocVmPages(vm);
 
       /* Reset state to only FD opened. */
@@ -769,6 +771,7 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
       return ret;
       }
 
+#warning "PLEX86_RESET should only conditionally compiled for debugging."
     /*
      * For debugging, when the module gets hosed, this is a way
      * to reset the in-use count, so we can rmmod it.
@@ -1262,11 +1265,11 @@ hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
     }
 
   /* Mark guest pages as reserved (for mmap()). */
-  hostReserveGuestPages( vm );
+  reserveGuestPhyPages(vm);
 
   /* Initialize the guests physical memory. */
   if ( initGuestPhyMem(vm) ) {
-    hostUnreserveGuestPages(vm);
+    unreserveGuestPhyPages(vm);
     unallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
@@ -1274,7 +1277,7 @@ hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
   /* Initialize the monitor. */
   if ( !initMonitor(vm) ||
        !mapMonitor(vm) ) {
-    hostUnreserveGuestPages(vm);
+    unreserveGuestPhyPages(vm);
     unallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
@@ -1688,4 +1691,86 @@ initShadowPaging(vm_t *vm)
       xxxpanic(vm, "monPagingRemap: BadUsage4PDir\n");
     }
 #endif
+}
+
+  void
+reserveGuestPhyPages(vm_t *vm)
+{
+  /* Mark guest pages as reserved (for mmap()). */
+  hostReservePhyPages(vm, vm->pages.guest, vm->pages.guest_n_pages);
+  hostReservePhyPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES);
+  hostReservePhyPages(vm, &vm->pages.guest_cpu, 1);
+}
+
+  void
+unreserveGuestPhyPages(vm_t *vm)
+{
+  hostUnreservePhyPages(vm, vm->pages.guest, vm->pages.guest_n_pages);
+  hostUnreservePhyPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES);
+  hostUnreservePhyPages(vm, &vm->pages.guest_cpu, 1);
+}
+
+  int
+genericMMap(vm_t *vm, void *inode, void *file, void *vma, unsigned firstPage,
+            unsigned pagesN)
+{
+  unsigned stateMask;
+  Bit32u *pagesArray;
+  int ret;
+
+  /* The memory map:
+   *   guest physical memory (guest_n_pages)
+   *   log_buffer      (1)
+   *   guest_cpu       (1)
+   */
+
+  /* Must have memory allocated. */
+  if (!vm->pages.guest_n_pages) {
+    hostPrint("plex86: genericMMap: device not initialized\n");
+    return Plex86ErrnoEACCES;
+    }
+
+  if ( firstPage == 0 ) {
+    if (pagesN != vm->pages.guest_n_pages) {
+      hostPrint("plex86: mmap of guest phy mem, "
+                "pagesN of %u != guest_n_pages of %u\n",
+                pagesN, vm->pages.guest_n_pages);
+      return Plex86ErrnoEINVAL;
+      }
+    /* hostPrint("plex86: found mmap of guest phy memory.\n"); */
+    pagesArray = &vm->pages.guest[0];
+    stateMask = VMStateMMapPhyMem;
+    }
+  else if ( firstPage == (vm->pages.guest_n_pages+0) ) {
+    if (pagesN != 1) {
+      hostPrint("plex86: mmap of log_buffer, pages>1.\n");
+      return Plex86ErrnoEINVAL;
+      }
+    /* hostPrint("plex86: found mmap of log_buffer.\n"); */
+    pagesArray = &vm->pages.log_buffer[0];
+    stateMask = VMStateMMapPrintBuffer;
+    }
+  else if ( firstPage == (vm->pages.guest_n_pages+1) ) {
+    if (pagesN != 1) {
+      hostPrint("plex86: mmap of guest_cpu, pages>1.\n");
+      return Plex86ErrnoEINVAL;
+      }
+    /* hostPrint("plex86: found mmap of guest_cpu.\n"); */
+    pagesArray = &vm->pages.guest_cpu;
+    stateMask = VMStateMMapGuestCPU;
+    }
+  else {
+    hostPrint("plex86: mmap with firstPage of 0x%x.\n", firstPage);
+    return Plex86ErrnoEINVAL;
+    }
+
+  /* Call the hostOS-specific mmap code. */
+  ret = hostMMap(vm, inode, file, vma, pagesN, pagesArray);
+  if (ret != 0) {
+    /* Host-specific mmap code returned an error.  Return that. */
+    return( ret );
+    }
+
+  vm->vmState |= stateMask;
+  return 0; /* OK. */
 }

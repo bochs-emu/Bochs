@@ -56,12 +56,12 @@ main(int argc, char *argv[])
 }
 
   void
-hostReserveGuestPages(vm_t *vm)
+hostReservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
 {
 }
 
   void
-hostUnreserveGuestPages(vm_t *vm)
+hostUnreservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
 {
 }
 
