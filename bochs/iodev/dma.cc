@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.14 2002-01-02 10:00:54 vruppert Exp $
+// $Id: dma.cc,v 1.15 2002-01-05 10:28:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ bx_dma_c::~bx_dma_c(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.14 2002-01-02 10:00:54 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.15 2002-01-05 10:28:49 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -400,7 +400,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       channel = value & 0x03;
       BX_DMA_THIS s[ma_sl].mask[channel] = (set_mask_bit > 0);
       BX_DEBUG(("DMA-%d: set_mask_bit=%u, channel=%u, mask now=%02xh", ma_sl+1,
-          (unsigned) set_mask_bit, (unsigned) channel, (unsigned) BX_DMA_THIS s[0].mask[channel]));
+          (unsigned) set_mask_bit, (unsigned) channel, (unsigned) BX_DMA_THIS s[ma_sl].mask[channel]));
       return;
       break;
 
@@ -529,11 +529,18 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
   if (!val) {
     //BX_DEBUG(("bx_dma_c::DRQ(): val == 0"));
     // clear bit in status reg
-    // deassert HRQ if not pending DRQ's ?
-    // etc.
     BX_DMA_THIS s[ma_sl].status_reg &= ~(1 << (channel+4));
-    return;
+
+    // deassert HRQ if no DRQ is pending
+    if ((BX_DMA_THIS s[ma_sl].status_reg & 0xf0) == 0) {
+      if (ma_sl) {
+        bx_pc_system.set_HRQ(0);
+      } else {
+        bx_pc_system.set_DRQ(4, 0);
+      }
     }
+    return;
+  }
 
 #if 0
   BX_INFO(("mask[%d]: %02x", channel, (unsigned) BX_DMA_THIS s[0].mask[channel]));
@@ -563,16 +570,15 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
       (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement != 0)
     BX_PANIC(("DRQ: address_decrement != 0"));
-  //if (BX_DMA_THIS s.chan[channel].mode.autoinit_enable != 0)
-  //  BX_PANIC(("bx_dma_c::DRQ: autoinit_enable != 0"));
 
-  dma_base = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) | BX_DMA_THIS s[ma_sl].chan[channel].base_address;
-  dma_roof = dma_base + BX_DMA_THIS s[ma_sl].chan[channel].base_count;
-  if ( (dma_base & 0xffff0000) != (dma_roof & 0xffff0000) ) {
+  dma_base = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
+             (BX_DMA_THIS s[ma_sl].chan[channel].base_address << ma_sl);
+  dma_roof = dma_base + (BX_DMA_THIS s[ma_sl].chan[channel].base_count << ma_sl);
+  if ( (dma_base & (0x7fff0000 << ma_sl)) != (dma_roof & (0x7fff0000 << ma_sl)) ) {
     BX_INFO(("dma_base = %08x", (unsigned) dma_base));
-    BX_INFO(("dma_base_count = %08x", (unsigned) BX_DMA_THIS s[0].chan[channel].base_count));
+    BX_INFO(("dma_base_count = %08x", (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_count));
     BX_INFO(("dma_roof = %08x", (unsigned) dma_roof));
-    BX_PANIC(("request outside 64k boundary"));
+    BX_PANIC(("request outside %dk boundary", 64 << ma_sl));
   }
 
   if (ma_sl) {
@@ -613,8 +619,7 @@ bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
       }
     }
   if (channel >= 4) {
-    // don't panic, just wait till they're unmasked
-    //    BX_PANIC(("hlda: no unmasked requests"));
+    // wait till they're unmasked
     return;
     }
 
