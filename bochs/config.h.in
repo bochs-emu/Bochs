@@ -255,7 +255,7 @@
 // is sent to the console.  Reading from port 0xe9
 // will return 0xe9 to let you know this is available.
 // Leave this 0 unless you have a reason to use it.
-#define BX_PORT_E9_HACK 1
+#define BX_PORT_E9_HACK 0
 
 // This option enables "split hard drive" support, which means
 // that a series of partial hard disk images can be treated

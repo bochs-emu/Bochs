@@ -3717,9 +3717,9 @@ EOF
    fi
 else
   
-    echo "$ac_t""no" 1>&6
+    echo "$ac_t""yes" 1>&6
     cat >> confdefs.h <<\EOF
-#define BX_PORT_E9_HACK 0
+#define BX_PORT_E9_HACK 1
 EOF
 
     
