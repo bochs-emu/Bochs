@@ -1,70 +1,132 @@
-Bochs Pentium Emulator
-Upated: Fri Apr  6 15:47:04 EDT 2001
-Version: bugfix-20010406-beta
+Bochs x86 Pentium Emulator
+Upated: Wed May 16 09:13:08 EDT 2001
+Version: 1.1.2  (bugfix3)
 
-Since the number of patches on SourceForge is getting large, I collected
-them all into this snapshot file.  Once we get the source moved into
-public CVS, it will be much easier to manage.
+WHAT IS BOCHS?
 
-Please try compiling and running Bochs with this beta version.
-If you have to hack it to make it compile or run, please submit your
-diffs to sourceforge.  Be sure to mention that the diff should be
-applied to bugfix-20010406-beta.  If you don't have diff, do a make
-all-clean, and send a ZIP or TAR of the whole directory to Bryce.
+Bochs is a highly portable open source IA-32 (x86) PC emulator
+written in C++, that runs on most popular platforms.  It includes
+emulation of the Intel x86 CPU, common I/O devices, and a custom
+BIOS.  Currently, bochs can be compiled to emulate a 386, 486 or
+Pentium CPU.  Bochs is capable of running most Operating Systems
+inside the emulation including Linux, Windows 95, DOS, and 
+Windows NT 4.  Bochs was written by Kevin Lawton and is currently 
+maintained by the Bochs project at "http://bochs.sourceforge.net".
 
-The following patches were applied to bochs-2000_0325a.tar.gz from
-ftp.bochs.com:
+Bochs can be compiled and used in a variety of modes, some which are
+still in development.  The 'typical' use of bochs is to provide
+complete x86 PC emulation, including the x86 processor, hardware
+devices, and memory.  This allows you to run OS's and software within
+the emulator on your workstation, much like you have a machine
+inside of a machine.  Bochs will allow you to run Win '95
+applications on a Solaris machine with X11, for example.
 
-  patch.portable1
-  patch.portable2
-  patch.const64bit
-  patch.fabs-conflict
-  patch.hd-abort-features
-  patch.inlines
-  patch.macos-no-strdup
-  patch.mouse-fix-linux-bsd
-  patch.panic-is-fatal
-  patch.pit-panic
-  patch.sun-cdrom
-  patch.vga-3c3
-  patch.win32-rawcd
-  patch.win32-rawfloppy
-  patch.copyrights2
+Bochs is distributed under the GNU LGPL.  See COPYING for details.
 
-The changes in these patches came from many different sources,
-including Don Becker (win32-VC++ port, fpu portability), Greg
-Alexander (mouse, hard drive, vga fixes), Roland Mainz (sun cdrom),
-and others on bochs-developers@redhat.com.
+GETTING CURRENT SOURCE CODE 
 
-For a summary of fixed bugs, see BUGS.txt.  A copy of all the patches
-can be found in the patches directory.  All patches are, of course,
-open for discussion.  If you think a patch is an incomplete or poor
-solution to a problem, improve it and share your changes.
+Source code for Bochs is available from the Bochs home page at
+http://bochs.sourceforge.net.  You can download the most recent
+release, use CVS to get the latest sources, or grab a CVS
+snapshot which is updated nightly.  The releases contain the most
+stable code, but if you want the very newest features try the
+CVS version instead. 
 
-Whether you have success or failure with this version, please send
-feedback to bochs-developers@redhat.com or post a bug report or patch
-on sourceforge.  Please don't send bugs to Kevin, since he's working
-on plex86 now.  Before making an "official" release, we must verify
-that it compiles and runs on a variety of target hosts, and that a
-variety of guest operating systems functions correctly in emulation.
-So please, report your results!
+COMPILING BOCHS FROM SOURCES
 
-Have fun,
-Bryce Denney
-bryce.denney@bigfoot.com
+All releases are gzip'd tar files.  That means the whole Bochs source
+code directory has been consolidated into one file using the Unix
+command 'tar', then compressed to save space with GNU 'gzip'.  To
+extract the source code, you'll need both 'tar' and 'gzip/gunzip'.
+All files are contained within one subdirectory named 'bochs-[VERSION]'. 
 
-----------------------------------------------------------------------
-The original README from the 3/25/2000 snapshot follows.
-----------------------------------------------------------------------
-Hello,
+cd /path/parent-directory
+gzip -dc bochs-[VERSION].tar.gz | tar -xvf -
+cd bochs-[VERSION]
 
-All documentation is now located in the docs-html directory.
+Before compiling, you'll need to run the configure script, which
+will configure source code to run on your system, and with your
+chosen options.  There are many options to 'configure', and you
+probably don't need any of them.  If you run BeOS, specify
+'--with-beos' to configure.  To see a complete list: 
 
-Just point you Web browser at Bochs.html.  For example:
+unix-> ./configure --help
 
-  netscape docs-html/index.html
+For more complete documentation of options available to configure,
+look at docs-html/configure.html in your browser.
 
-Please read the file 'LICENSE' for information about the
-license associated with this software.
+If configure cannot guess your compiler and compiler arguments,
+you will also need to set environment variables to tell configure
+what compiler and options to use.  The relevant environment variables 
+are CC and CXX (C and C++ compiler), CFLAGS and CXXFLAGS (options
+for the C and C++ compiler).
 
--Kevin Lawton
+Now run configure, be it manually or by way of a script file. 
+
+unix-> ./configure
+-or-
+unix-> ./.conf.x86
+
+If the configure script bombs, check 'config.log'. Specifically,
+look for errors returned by the compiler.  You may have options
+incompatible with your compiler.  See the link on setting the
+environment variables above. 
+
+Assuming at this point all went well with the configure command,
+edit the file 'config.h', which was generated by ./configure.  Look
+for the USER CONFIGURABLE OPTIONS section.  Each parameter available
+for editing is documented.  Generally the defaults are fine for
+typical users.  Please read about each parameter and edit carefully.
+NOTE: This file is generated, and will be deleted if you run 'make
+dist-clean'. 
+
+You may now compile the source. 
+
+unix-> make
+
+WHERE ARE THE DOCS?
+
+You have a local copy of the Bochs documentation in docs-html that
+came out of the TAR file.  (Point your browser to
+docs-html/index.html.)  These same docs are also on the web at
+http://bochs.sourceforge.net/docs-html.  If you followed the compile
+directions above, the next step is "Setting up the environment
+before running" under Compile/Install.
+
+WHERE CAN I GET MORE INFORMATION?  HOW DO I REPORT PROBLEMS?
+
+Both the docs-html and the Bochs website have instructions on how 
+to join the bochs-developers mailing list, which is the primary
+forum for discussion of Bochs.  The main page of the website also
+has links to bug reports and feature requests.  You can browse and
+add to the content in these areas even if you do not have a (free)
+SourceForge account.  We need your feedback so that we know what
+parts of Bochs to improve.  
+
+There is a patches section on the web site too, if you have made
+some changes to Bochs that you want to share.
+
+HOW CAN I HELP?
+
+If you would like contribute to the Bochs project, a good first step
+is to join the bochs-developers mailing list, and read the archive
+of recent messages to see what's going on.  
+
+If you are a technical person (can follow hardware specs, can write
+C/C++) take a look at the list of open bug reports and feature
+requests to see if you are interested in working on any of the
+problems that are mentioned in them.  If you check out the CVS
+sources, make some changes, and create a patch, one of the
+developers will be very happy to apply it for you.  Developers who
+frequently submit patches, or who embark on major changes in the
+source can get write access to CVS.  Be sure to communicate with the
+bochs-developers list to avoid several people working on the same
+thing without realizing it.
+
+If you are a Bochs user, not a hardware/C++ guru, there are still
+many ways you could help out.  We have a group of people working on
+making win32 binary releases, and building up a set of useful tools
+to include in those releases.  Others are writing documentation or
+cleaning up the existing documentation.  Others are testing out
+Bochs on every imaginable operating system and writing about how
+they did it.
