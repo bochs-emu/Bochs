@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.97 2005-02-05 20:56:44 sshwarts Exp $
+// $Id: cpu.cc,v 1.98 2005-02-12 14:00:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -234,7 +234,7 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 #if BX_SUPPORT_ICACHE
       i = &iStorage;	// Leave entry invalid
 #endif
-      boundaryFetch(i);
+      boundaryFetch(fetchPtr, remainingInPage, i);
     }
     else
     {
@@ -299,64 +299,64 @@ repeat_loop:
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
             RCX --;
-            }
+          }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
           if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (RCX == 0) goto repeat_done;
           goto repeat_not_done;
-          }
+        }
         else
 #endif
         if (i->as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
             ECX --;
-            }
+          }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
           if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (ECX == 0) goto repeat_done;
           goto repeat_not_done;
-          }
+        }
         else {
           if (CX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
             CX --;
-            }
+          }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
           if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (CX == 0) goto repeat_done;
           goto repeat_not_done;
-          }
         }
+      }
       else { // normal repeat, no concern for ZF
 #if BX_SUPPORT_X86_64
         if (i->as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
             RCX --;
-            }
+          }
           if (RCX == 0) goto repeat_done;
           goto repeat_not_done;
-          }
+        }
         else
 #endif
         if (i->as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
             ECX --;
-            }
+          }
           if (ECX == 0) goto repeat_done;
           goto repeat_not_done;
-          }
+        }
         else { // 16bit addrsize
           if (CX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
             CX --;
-            }
+          }
           if (CX == 0) goto repeat_done;
           goto repeat_not_done;
-          }
         }
+      }
       // shouldn't get here from above
 repeat_not_done:
       BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
@@ -417,8 +417,8 @@ debugger_check:
           return;
         default:
           BX_PANIC(("Weird break point condition"));
-        }
       }
+    }
 #if BX_MAGIC_BREAKPOINT
     // (mch) Magic break point support
     if (BX_CPU_THIS_PTR magic_break) {
@@ -426,13 +426,13 @@ debugger_check:
         BX_DEBUG(("Stopped on MAGIC BREAKPOINT"));
         BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
         return;
-        }
+      }
       else {
         BX_CPU_THIS_PTR magic_break = 0;
         BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
         BX_DEBUG(("Ignoring MAGIC BREAKPOINT"));
-        }
       }
+    }
 #endif
 
     {
@@ -460,8 +460,7 @@ debugger_check:
   }  // while (1)
 }
 
-  unsigned
-BX_CPU_C::handleAsyncEvent(void)
+unsigned BX_CPU_C::handleAsyncEvent(void)
 {
   //
   // This area is where we process special conditions and events.
@@ -479,16 +478,16 @@ BX_CPU_C::handleAsyncEvent(void)
 #else
     while (1)
 #endif
-      {
+    {
       if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
         break;
-        }
+      }
       if (BX_CPU_THIS_PTR async_event == 2) {
         BX_INFO(("decode: reset detected in halt state"));
         break;
-        }
-      BX_TICK1();
       }
+      BX_TICK1();
+    }
 #else      /* BX_SMP_PROCESSORS != 1 */
     // for multiprocessor simulation, even if this CPU is halted we still
     // must give the others a chance to simulate.  If an interrupt has 
@@ -523,7 +522,7 @@ BX_CPU_C::handleAsyncEvent(void)
   if (BX_CPU_THIS_PTR debug_trap & 0x00008000) {
     BX_CPU_THIS_PTR dr6 |= BX_CPU_THIS_PTR debug_trap;
     exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-    }
+  }
 
   // Priority 3: External Hardware Interventions
   //   FLUSH
@@ -536,14 +535,15 @@ BX_CPU_C::handleAsyncEvent(void)
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
   if ( BX_CPU_THIS_PTR debug_trap &&
-       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG) ) {
+       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG) )
+  {
     // A trap may be inhibited on this boundary due to an instruction
     // which loaded SS.  If so we clear the inhibit_mask below
     // and don't execute this code until the next boundary.
     // Commit debug events to DR6
     BX_CPU_THIS_PTR dr6 |= BX_CPU_THIS_PTR debug_trap;
     exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-    }
+  }
 
   // Priority 5: External Interrupts
   //   NMI Interrupts
@@ -554,9 +554,10 @@ BX_CPU_C::handleAsyncEvent(void)
     // inhibit_mask is cleared below, in which case we will have
     // an opportunity to check interrupts on the next instruction
     // boundary.
-    }
+  }
   else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () &&
-           BX_DBG_ASYNC_INTR) {
+           BX_DBG_ASYNC_INTR)
+  {
     Bit8u vector;
 
     // NOTE: similar code in ::take_irq()
@@ -585,12 +586,12 @@ BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR prev_esp = RSP; // commit new RSP
     BX_CPU_THIS_PTR EXT = 0;
     BX_CPU_THIS_PTR errorno = 0;
-    }
+  }
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
     // NOTE: similar code in ::take_dma()
     // assert Hold Acknowledge (HLDA) and go into a bus hold state
     DEV_dma_raise_hlda();
-    }
+  }
 
   // Priority 6: Faults from fetching next instruction
   //   Code breakpoint fault
@@ -617,18 +618,19 @@ BX_CPU_C::handleAsyncEvent(void)
   // (handled by rest of the code)
 
 
-  if (BX_CPU_THIS_PTR get_TF ()) {
+  if (BX_CPU_THIS_PTR get_TF ())
+  {
     // TF is set before execution of next instruction.  Schedule
     // a debug trap (#DB) after execution.  After completion of
     // next instruction, the code above will invoke the trap.
     BX_CPU_THIS_PTR debug_trap |= 0x00004000; // BS flag in DR6
-    }
+  }
 
   // Now we can handle things which are synchronous to instruction
   // execution.
   if (BX_CPU_THIS_PTR get_RF ()) {
     BX_CPU_THIS_PTR clear_RF ();
-    }
+  }
 #if BX_X86_DEBUGGER
   else {
     // only bother comparing if any breakpoints enabled
@@ -638,7 +640,8 @@ BX_CPU_C::handleAsyncEvent(void)
         BX_CPU_THIS_PTR prev_eip;
       Bit32u dr6_bits;
       if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
-                                       BX_HWDebugInstruction)) ) {
+                                       BX_HWDebugInstruction)) )
+      {
         // Add to the list of debug events thus far.
         BX_CPU_THIS_PTR async_event = 1;
         BX_CPU_THIS_PTR debug_trap |= dr6_bits;
@@ -649,10 +652,10 @@ BX_CPU_C::handleAsyncEvent(void)
           // Commit debug events to DR6
           BX_CPU_THIS_PTR dr6 = BX_CPU_THIS_PTR debug_trap;
           exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-          }
         }
       }
     }
+  }
 #endif
 
   // We have ignored processing of external interrupts and
@@ -674,8 +677,6 @@ BX_CPU_C::handleAsyncEvent(void)
 }
 
 
-
-
 // boundaries of consideration:
 //
 //  * physical memory boundary: 1024k (1Megabyte) (increments of...)
@@ -685,9 +686,7 @@ BX_CPU_C::handleAsyncEvent(void)
 //  * segment boundary:         any
 
 
-
-  void
-BX_CPU_C::prefetch(void)
+void BX_CPU_C::prefetch(void)
 {
   // cs:eIP
   // prefetch QSIZE byte quantity aligned on corresponding boundary
@@ -760,23 +759,16 @@ BX_CPU_C::prefetch(void)
 #endif
 }
 
-
-  void
-BX_CPU_C::boundaryFetch(bxInstruction_c *i)
+void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
 {
     unsigned j;
     Bit8u fetchBuffer[16]; // Really only need 15
-    bx_address eipBiased, remainingInPage;
-    Bit8u *fetchPtr;
     unsigned ret;
 
-    eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
     if (remainingInPage >= 15) {
       BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
     // Read all leftover bytes in current page up to boundary.
     for (j=0; j<remainingInPage; j++) {
