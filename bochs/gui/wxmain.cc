@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.95 2003-08-29 18:57:40 vruppert Exp $
+// $Id: wxmain.cc,v 1.96 2003-08-30 11:21:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -819,6 +819,12 @@ void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
 {
+  if (SIM->get_param (BXP_KBD_PARAMETERS) == NULL) {
+    // if params not initialized yet, then give up
+    wxMessageBox ("Cannot show the debugger window until the simulation has begun.",
+                  "Sim not started", wxOK | wxICON_ERROR, this );
+    return;
+  }
   if (showKbd == NULL) {
     showKbd = new ParamDialog (this, -1);
     showKbd->SetTitle ("Keyboard State (incomplete, this is a demo)");
