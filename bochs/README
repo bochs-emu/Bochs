@@ -28,7 +28,7 @@ a wxwindows vga display too.
 
 WARNING: Don't expect stable or complete code yet!
 
-I have tested in linux, where a "configure;make" should work fine.
+I have tested in linux, where a "configure --with-wx;make" should work fine.
 More recently, I have been developing in MSVC++ using projects and 
 workspaces.  To build in VC++:
 
