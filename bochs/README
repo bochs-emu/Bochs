@@ -48,6 +48,11 @@ TO DO:
   will be an improvement or not.  
 - convert remaining devices and guis
 - make plugin CPU???
+- MacOS X: with patch.ltdl, it builds ok but when I try to load plugins it
+  says "no symbols"
+- Solaris: it does not appear to call constructors of global objects that
+  are loaded in a plugin.  Maybe we need to link the plugins with some
+  c++ library or some piece of one?
 
 DONE:
 - applied patch.plugins5
