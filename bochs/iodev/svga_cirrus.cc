@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.10 2005-03-22 22:20:26 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.11 2005-03-27 09:46:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -979,8 +979,8 @@ bx_svga_cirrus_c::svga_timer(void)
   void
 bx_svga_cirrus_c::svga_modeupdate(void)
 {
-  Bit32u iTopOffset, iHeight;
-  int width, iBpp, iDispBpp;
+  Bit32u iTopOffset, iWidth, iHeight;
+  Bit8u iBpp, iDispBpp;
 
   iTopOffset = (BX_CIRRUS_THIS crtc.reg[0x0c] << 8)
        + BX_CIRRUS_THIS crtc.reg[0x0d]
@@ -995,7 +995,7 @@ bx_svga_cirrus_c::svga_modeupdate(void)
   if ((BX_CIRRUS_THIS crtc.reg[0x1a] & 0x01) > 0) {
     iHeight <<= 1;
   }
-  width = (BX_CIRRUS_THIS crtc.reg[0x01] + 1) * 8;
+  iWidth = (BX_CIRRUS_THIS crtc.reg[0x01] + 1) * 8;
   iBpp = 8;
   iDispBpp = 4;
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x1) == CIRRUS_SR7_BPP_SVGA) {
@@ -1022,9 +1022,11 @@ bx_svga_cirrus_c::svga_modeupdate(void)
       break;
     }
   }
-  BX_INFO(("switched to %u x %u x %u",width,iHeight,iDispBpp));
-
-  BX_CIRRUS_THIS svga_xres = width;
+  if ((iWidth != BX_CIRRUS_THIS svga_xres) || (iHeight != BX_CIRRUS_THIS svga_yres)
+      || (iDispBpp != BX_CIRRUS_THIS svga_dispbpp)) {
+    BX_INFO(("switched to %u x %u x %u", iWidth, iHeight, iDispBpp));
+  }
+  BX_CIRRUS_THIS svga_xres = iWidth;
   BX_CIRRUS_THIS svga_yres = iHeight;
   BX_CIRRUS_THIS svga_bpp = iBpp;
   BX_CIRRUS_THIS svga_dispbpp = iDispBpp;
@@ -2472,8 +2474,10 @@ bx_svga_cirrus_c::svga_bitblt()
   BX_CIRRUS_THIS bitblt.async_xbytes = 0;
   BX_CIRRUS_THIS bitblt.async_y = 0;
   offset = dstaddr - (BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS vidmem);
-  BX_CIRRUS_THIS bitblt.pos_x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
-  BX_CIRRUS_THIS bitblt.pos_y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
+  BX_CIRRUS_THIS redraw.x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
+  BX_CIRRUS_THIS redraw.y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
+  BX_CIRRUS_THIS redraw.w = BX_CIRRUS_THIS bitblt.bltwidth / (BX_CIRRUS_THIS svga_bpp >> 3);
+  BX_CIRRUS_THIS redraw.h = BX_CIRRUS_THIS bitblt.bltheight;
 
   BX_INFO(("BLT: src:0x%08x,dst 0x%08x,block %ux%u,mode 0x%02x,ROP 0x%02x",
     (unsigned)srcaddr,(unsigned)dstaddr,
@@ -2483,7 +2487,6 @@ bx_svga_cirrus_c::svga_bitblt()
     (unsigned)BX_CIRRUS_THIS bitblt.srcpitch,
     (unsigned)BX_CIRRUS_THIS bitblt.dstpitch,
     (unsigned)BX_CIRRUS_THIS bitblt.bltmodeext));
-  BX_INFO(("BLT: dst x = %d, dst y = %d", BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y));
 
   switch (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PIXELWIDTHMASK) {
     case CIRRUS_BLTMODE_PIXELWIDTH8:
@@ -2527,10 +2530,14 @@ bx_svga_cirrus_c::svga_bitblt()
       BX_CIRRUS_THIS bitblt.dstpitch = -BX_CIRRUS_THIS bitblt.dstpitch;
       BX_CIRRUS_THIS bitblt.srcpitch = -BX_CIRRUS_THIS bitblt.srcpitch;
       BX_CIRRUS_THIS bitblt.rop_handler = svga_get_bkwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
-      }
-    else {
+      BX_CIRRUS_THIS redraw.x -= BX_CIRRUS_THIS redraw.w;
+      BX_CIRRUS_THIS redraw.y -= BX_CIRRUS_THIS redraw.h;
+    } else {
       BX_CIRRUS_THIS bitblt.rop_handler = svga_get_fwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
-      }
+    }
+
+    BX_INFO(("BLT redraw: x = %d, y = %d, w = %d, h = %d", BX_CIRRUS_THIS redraw.x,
+      BX_CIRRUS_THIS redraw.y, BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h));
 
     // setup bitblt engine.
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_MEMSYSSRC) {
@@ -2564,37 +2571,32 @@ bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr)
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
       BX_CIRRUS_THIS bitblt.memsrc_needed = 8;
-      }
-    else {
+    } else {
       BX_CIRRUS_THIS bitblt.memsrc_needed = 8 * 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
-      }
+    }
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
       BX_ERROR(("BLT: patterncopy: TRANSPARENTCOMP is not implemented"));
-      }
-    else {
+    } else {
       BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_memsrc_static;
-      }
     }
-  else {
+  } else {
     BX_CIRRUS_THIS bitblt.memdst_bytesperline =
         BX_CIRRUS_THIS bitblt.bltwidth * BX_CIRRUS_THIS bitblt.pixelwidth;
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
       BX_CIRRUS_THIS bitblt.memsrc_bytesperline =
-          (BX_CIRRUS_THIS bitblt.bltwidth + 7) / 8;
-      }
-    else {
+          (BX_CIRRUS_THIS bitblt.bltwidth + 7) >> 3;
+    } else {
       BX_CIRRUS_THIS bitblt.memsrc_bytesperline = BX_CIRRUS_THIS bitblt.memdst_bytesperline;
-      }
+    }
     BX_CIRRUS_THIS bitblt.memsrc_needed =
         BX_CIRRUS_THIS bitblt.memsrc_bytesperline * BX_CIRRUS_THIS bitblt.bltheight;
     BX_CIRRUS_THIS bitblt.memsrc_needed = (BX_CIRRUS_THIS bitblt.memsrc_needed + 3) & (~3);
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
       BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_transp_memsrc_static;
-      }
-    else {
+    } else {
       BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memsrc_static;
-      }
     }
+  }
 
   svga_asyncbitblt_next();
 }
@@ -2643,8 +2645,8 @@ bx_svga_cirrus_c::svga_setup_bitblt_videotovideo(Bit32u dstaddr,Bit32u srcaddr)
 
   (*BX_CIRRUS_THIS bitblt.bitblt_ptr)();
   svga_reset_bitblt();
-  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
-                             BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
+  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS redraw.x, BX_CIRRUS_THIS redraw.y,
+                             BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
 }
 
 
@@ -3028,8 +3030,8 @@ bx_svga_cirrus_c::svga_solidfill()
     }
     BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
   }
-  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
-                             BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
+  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS redraw.x, BX_CIRRUS_THIS redraw.y,
+                             BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
 }
 
   void
@@ -3047,8 +3049,8 @@ bx_svga_cirrus_c::svga_patterncopy_memsrc()
 
     BX_CIRRUS_THIS bitblt.src = &BX_CIRRUS_THIS bitblt.memsrc[0];
     svga_patterncopy();
-    BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
-                               BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
+    BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS redraw.x, BX_CIRRUS_THIS redraw.y,
+                               BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
   }
 }
 
@@ -3117,8 +3119,8 @@ bx_svga_cirrus_c::svga_simplebitblt_memsrc()
     }
 
   BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[total];
-  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
-                             BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
+  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS redraw.x, BX_CIRRUS_THIS redraw.y,
+                             BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
 }
 
   void
@@ -3195,8 +3197,8 @@ bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc()
   }
 
   BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[total];
-  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS bitblt.pos_x, BX_CIRRUS_THIS bitblt.pos_y,
-                             BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
+  BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS redraw.x, BX_CIRRUS_THIS redraw.y,
+                             BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
 }
 
   bx_bool // true if finished, false otherwise

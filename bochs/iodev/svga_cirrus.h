@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.2 2004-08-16 15:23:19 vruppert Exp $
+// $Id: svga_cirrus.h,v 1.3 2005-03-27 09:46:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -230,13 +230,15 @@ private:
     int memdst_needed;
     Bit8u memsrc[CIRRUS_BLT_CACHESIZE];
     Bit8u memdst[CIRRUS_BLT_CACHESIZE];
-    Bit16u pos_x;
-    Bit16u pos_y;
-    } bitblt;
+  } bitblt;
 
   struct {
     Bit16u x, y, size;
-    } hw_cursor;
+  } hw_cursor;
+
+  struct {
+    Bit16u x, y, w, h;
+  } redraw;
 
   bx_bool is_unlocked() { return svga_unlock_special; }
 
