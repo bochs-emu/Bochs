@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.199 2003-01-28 16:56:58 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.200 2003-01-30 18:37:05 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1942,6 +1942,7 @@ case "$target" in
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(HAVE_TUNTAP, 0)
     AC_DEFINE(HAVE_ETHERTAP, 0)
+    AC_DEFINE(BX_HAVE_HASH_MAP, 0)
     ;;
   *-pc-windows*)
     INSTALL_TARGET='install_win32'
