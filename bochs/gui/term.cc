@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.14 2002-04-20 07:19:35 vruppert Exp $
+// $Id: term.cc,v 1.15 2002-08-11 18:42:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -43,12 +43,11 @@ do_scan(int key_event, int shift, int ctrl, int alt)
 		 changes do we simulate a press or release, to cut down on
 		 keyboard input to the simulated machine */
 
-	if(bx_dbg.keyboard)
-		BX_INFO(("[TERM] key_event %d/0x%x %s%s%s",
-			key_event,key_event,
-			shift?"(shift)":"",
-			ctrl?"(ctrl)":"",
-			alt?"(alt)":""));
+	BX_DEBUG(("key_event %d/0x%x %s%s%s",
+		  key_event,key_event,
+		  shift?"(shift)":"",
+		  ctrl?"(ctrl)":"",
+		  alt?"(alt)":""));
 	if(shift)
 		bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L);
 	if(ctrl)
@@ -137,15 +136,23 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 	//BX_INFO(("[TERM] Moved Log to another tty"));
 
 	initscr();
+	start_color();
 	cbreak();
 	curs_set(2);
 	keypad(stdscr,TRUE);
 	nodelay(stdscr, TRUE);
 	noecho();
 
+	if (has_colors()) {
+		for (int i=0; i<COLORS; i++) {
+			for (int j=0; j<COLORS; j++) {
+				if ((i!=0)||(j!=0)) init_pair(i * COLORS + j, j, i);
+			}
+		}
+	}
+
 	if (bx_options.Oprivate_colormap->get ())
-		if(bx_dbg.video)
-			BX_INFO(("#TERM] WARNING: private_colormap option ignored."));
+		BX_ERROR(("WARNING: private_colormap option ignored."));
 }
 
 
@@ -169,11 +176,8 @@ do_char(int character,int alt)
 	case   0x6: do_scan(BX_KEY_F,0,1,alt); break;
 	case   0x7: do_scan(BX_KEY_G,0,1,alt); break;
 	case   0x8: do_scan(BX_KEY_H,0,1,alt); break;
-//	case   0x9: do_scan(BX_KEY_I,0,1,alt); break;
-//	case   0xa: do_scan(BX_KEY_J,0,1,alt); break;
 	case   0xb: do_scan(BX_KEY_K,0,1,alt); break;
 	case   0xc: do_scan(BX_KEY_L,0,1,alt); break;
-//	case   0xd: do_scan(BX_KEY_M,0,1,alt); break;
 	case   0xe: do_scan(BX_KEY_N,0,1,alt); break;
 	case   0xf: do_scan(BX_KEY_O,0,1,alt); break;
 	case  0x10: do_scan(BX_KEY_P,0,1,alt); break;
@@ -198,8 +202,8 @@ do_char(int character,int alt)
 	case 0x106: do_scan(BX_KEY_HOME,0,0,alt); break;
 	case 0x168: do_scan(BX_KEY_END,0,0,alt); break;
 	case 0x14b: do_scan(BX_KEY_INSERT,0,0,alt); break;
-	case  0x7f: do_scan(BX_KEY_DELETE,0,0,alt); break;
-	case  0x1b:      do_scan(BX_KEY_ESC,0,0,alt); break;
+	case 0x7f:  do_scan(BX_KEY_DELETE,0,0,alt); break;
+	case 0x1b:  do_scan(BX_KEY_ESC,0,0,alt); break;
 	case '!': do_scan(BX_KEY_1,1,0,alt); break;
 	case '\'': do_scan(BX_KEY_SINGLE_QUOTE,0,0,alt); break;
 	case '#': do_scan(BX_KEY_3,1,0,alt); break;
@@ -318,13 +322,28 @@ do_char(int character,int alt)
 	case '\\': do_scan(BX_KEY_BACKSLASH,0,0,alt); break;
 	case ']': do_scan(BX_KEY_RIGHT_BRACKET,0,0,alt); break;
 	case '~': do_scan(BX_KEY_GRAVE,1,0,alt); break;
+
+	// function keys
+	case KEY_F(1): do_scan(BX_KEY_F1,0,0,alt); break;
+	case KEY_F(2): do_scan(BX_KEY_F2,0,0,alt); break;
+	case KEY_F(3): do_scan(BX_KEY_F3,0,0,alt); break;
+	case KEY_F(4): do_scan(BX_KEY_F4,0,0,alt); break;
+	case KEY_F(5): do_scan(BX_KEY_F5,0,0,alt); break;
+	case KEY_F(6): do_scan(BX_KEY_F6,0,0,alt); break;
+	case KEY_F(7): do_scan(BX_KEY_F7,0,0,alt); break;
+	case KEY_F(8): do_scan(BX_KEY_F8,0,0,alt); break;
+	case KEY_F(9): do_scan(BX_KEY_F9,0,0,alt); break;
+	case KEY_F(10): do_scan(BX_KEY_F10,0,0,alt); break;
+	case KEY_F(11): do_scan(BX_KEY_F11,0,0,alt); break;
+	case KEY_F(12): do_scan(BX_KEY_F12,0,0,alt); break;
+
 	default:
 		if(character > 0x79) {
 			do_char(character - 0x80,1);
 			break;
 		}
 
-		BX_INFO(("[TERM] character unhandled: 0x%x",character));
+		BX_INFO(("character unhandled: 0x%x",character));
 		break;
 	}
 }
@@ -341,8 +360,7 @@ bx_gui_c::handle_events(void)
 {
 	unsigned int character;
 	while((character = getch()) != ERR) {
-		if(bx_dbg.keyboard)
-			BX_INFO(("[TERM] scancode(0x%x)",character));
+		BX_DEBUG(("scancode(0x%x)",character));
 		do_char(character,0);
 	}
 }
@@ -369,8 +387,60 @@ bx_gui_c::flush(void)
 	void
 bx_gui_c::clear_screen(void)
 {
-	if(bx_dbg.video)
-		BX_INFO(("[TERM] Ignored clear_screeen()"));
+	clear();
+}
+
+int
+get_color_pair(Bit8u vga_attr)
+{
+	static int colortbl[8] = {0, 4, 2, 6, 1, 5, 3, 7};
+	int term_attr;
+
+	term_attr = colortbl[vga_attr & 0x07];
+	term_attr |= (colortbl[(vga_attr & 0x70) >> 4] << 3);
+	return term_attr;
+}
+
+int
+get_term_char(Bit8u vga_char)
+{
+	int term_char;
+
+	switch (vga_char) {
+		case 0x00: term_char = ' '; break;
+		case 0x18: term_char = ACS_UARROW; break;
+		case 0x19: term_char = ACS_DARROW; break;
+		case 0x1a: term_char = ACS_RARROW; break;
+		case 0x1b: term_char = ACS_LARROW; break;
+		case 0xc4:
+		case 0xcd: term_char = ACS_HLINE; break;
+		case 0xb3:
+		case 0xba: term_char = ACS_VLINE; break;
+		case 0xc9:
+		case 0xda: term_char = ACS_ULCORNER; break;
+		case 0xbb:
+		case 0xbf: term_char = ACS_URCORNER; break;
+		case 0xc0:
+		case 0xc8: term_char = ACS_LLCORNER; break;
+		case 0xbc:
+		case 0xd9: term_char = ACS_LRCORNER; break;
+		case 0xc3:
+		case 0xcc: term_char = ACS_LTEE; break;
+		case 0xb4:
+		case 0xb9: term_char = ACS_RTEE; break;
+		case 0xc2:
+		case 0xcb: term_char = ACS_TTEE; break;
+		case 0xc1:
+		case 0xca: term_char = ACS_BTEE; break;
+		case 0xc5:
+		case 0xce: term_char = ACS_PLUS; break;
+		case 0xb0:
+		case 0xb1:
+		case 0xb2: term_char = ACS_BOARD; break;
+		case 0xdb: term_char = ACS_BLOCK; break;
+		default: term_char = vga_char;
+	}
+	return term_char;
 }
 
 // ::TEXT_UPDATE()
@@ -398,12 +468,19 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	Bit16u cursor_state, unsigned nrows)
 {
 	UNUSED(cursor_state);
+	int term_attr;
 
 	unsigned ncols = 4000/nrows/2;
 	// XXX There has GOT to be a better way of doing this
 	for(int i=0;i<4001;i+=2) {
-		if( old_text[i] != new_text[i] ) {
-			mvaddch((i/2)/ncols,(i/2)%ncols,new_text[i]);
+		if ((old_text[i] != new_text[i]) ||
+		    (old_text[i+1] != new_text[i+1])) {
+			if (has_colors()) {
+				color_set(get_color_pair(new_text[i+1]), NULL);
+			}
+			if ((new_text[i+1] & 0x08) > 0) attron(A_BOLD);
+			mvaddch((i/2)/ncols,(i/2)%ncols,get_term_char(new_text[i]));
+			if ((new_text[i+1] & 0x08) > 0) attroff(A_BOLD);
 		}
 	}
 
@@ -415,7 +492,13 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		cursor_x=79;
 		cursor_y--;
 	}
-	mvaddch(cursor_y,cursor_x,new_text[(cursor_y*80+cursor_x)*2]);
+	if (has_colors()) {
+		term_attr = get_color_pair(new_text[(cursor_y*80+cursor_x)*2+1]);
+		color_set(term_attr, NULL);
+	}
+	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) attron(A_BOLD);
+	mvaddch(cursor_y,cursor_x,get_term_char(new_text[(cursor_y*80+cursor_x)*2]));
+	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) attroff(A_BOLD);
 }
 
   int
@@ -441,9 +524,8 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 	Boolean
 bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
-	if(bx_dbg.video)
-		BX_INFO(("[TERM] color pallete request (%d,%d,%d,%d) ignored",
-			index,red,green,blue));
+	BX_DEBUG(("color pallete request (%d,%d,%d,%d) ignored",
+		  index,red,green,blue));
 	return(0);
 }
 
@@ -576,11 +658,10 @@ bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 	void
 bx_gui_c::exit(void)
 {
+	clear();
 	flush();
-	echo();
-	nocbreak();
-	if(bx_dbg.video)
-		BX_INFO(("[TERM] exiting"));
+	endwin();
+	BX_DEBUG(("exiting"));
 }
 
   void
