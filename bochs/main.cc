@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.146 2002-09-24 22:49:52 cbothamy Exp $
+// $Id: main.cc,v 1.147 2002-09-25 08:04:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -442,7 +442,8 @@ void bx_init_options ()
 
   bx_list_c *ata[BX_MAX_ATA_CHANNEL];
 
-  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
+  Bit8u channel;
+  for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
     ata[channel] = new bx_list_c ((bx_id)(BXP_ATA0+channel), s_atachannel[channel], s_atachannel[channel], 8);
     ata[channel]->get_options ()->set (ata[channel]->BX_SERIES_ASK);
@@ -562,7 +563,7 @@ void bx_init_options ()
   for (i=0; i<BX_MAX_ATA_CHANNEL; i++)
     bx_options.ata[i].Opresent->set (i==0);
 
-  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
+  for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
     bx_options.ata[channel].Opresent->set_ask_format (
 	BX_WITH_WX? "Enable?"
