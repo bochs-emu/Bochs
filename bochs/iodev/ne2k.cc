@@ -37,7 +37,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.17 2001-06-27 20:11:10 fries Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.18 2001-06-27 20:27:49 fries Exp $"));
 	// nothing for now
 }
 
@@ -1160,9 +1160,9 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.18 2001-06-27 20:27:49 fries Exp $"));
   BX_NE2K_THIS devices = d;
 
-  BX_DEBUG(("Init."));
 
   if (bx_options.ne2k.Ovalid->get ()) {
     // Bring the register state into power-up state

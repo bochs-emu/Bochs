@@ -46,6 +46,7 @@ BX_CPU_C::BX_CPU_C()
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
+  BX_DEBUG(( "Init $Id: init.cc,v 1.12 2001-06-27 20:27:48 fries Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -185,7 +186,6 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sprintf (name, "CPU %p", this);
 
   BX_INSTR_INIT();
-  BX_DEBUG(( "Init."));
 }
 
 

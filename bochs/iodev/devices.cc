@@ -85,7 +85,6 @@ bx_devices_c::bx_devices_c(void)
     }
 
   timer_handle = BX_NULL_TIMER_HANDLE;
-  BX_DEBUG(("Init $Id: devices.cc,v 1.11 2001-06-27 20:11:10 fries Exp $"));
 }
 
 
@@ -99,6 +98,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
+  BX_DEBUG(("Init $Id: devices.cc,v 1.12 2001-06-27 20:27:49 fries Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first

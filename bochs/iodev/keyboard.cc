@@ -57,7 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.26 2001-06-27 20:11:10 fries Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.27 2001-06-27 20:27:49 fries Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,6 +92,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.27 2001-06-27 20:27:49 fries Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -157,7 +158,6 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   // mouse port installed on system board
   cmos->s.reg[0x14] |= 0x04;
-  BX_DEBUG(("Init."));
 }
 
 #define RETURN(x) do { ret = (x); goto read_return; } while (0)

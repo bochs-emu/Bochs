@@ -37,7 +37,6 @@ bx_g2h_c::bx_g2h_c(void)
     s.callback[i].f = NULL;
     s.callback[i].used = 0;
     }
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.7 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_g2h_c::~bx_g2h_c(void)
@@ -49,6 +48,7 @@ bx_g2h_c::~bx_g2h_c(void)
   void
 bx_g2h_c::init(bx_devices_c *d)
 {
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.8 2001-06-27 20:27:49 fries Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     d->register_io_read_handler(&bx_g2h,

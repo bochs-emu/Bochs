@@ -87,6 +87,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.13 2001-06-27 20:27:49 fries Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -95,7 +96,7 @@ BX_MEM_C::init_memory(int memsize)
     BX_MEM_THIS vector = new Bit8u[memsize];
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
-    BX_INFO(("Init(%uB == %.2fMB).", memsize, (float)(BX_MEM_THIS megabytes) ));
+    BX_INFO(("%.2fMB", memsize, (float)(BX_MEM_THIS megabytes) ));
     }
   // initialize all memory to 0x00
   memset(BX_MEM_THIS vector, 0x00, BX_MEM_THIS len);

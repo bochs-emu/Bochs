@@ -39,7 +39,6 @@ bx_parallel_c::bx_parallel_c(void)
 {
 	put("PAR");
 	settype(PARLOG);
-	BX_DEBUG(("Init $Id: parallel.cc,v 1.6 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_parallel_c::~bx_parallel_c(void)
@@ -50,6 +49,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
+	BX_DEBUG(("Init $Id: parallel.cc,v 1.7 2001-06-27 20:27:49 fries Exp $"));
   BX_PAR_THIS devices = d;
 
 #if 0

@@ -81,7 +81,6 @@ bx_hard_drive_c::bx_hard_drive_c(void)
 #endif
 
 #endif
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.24 2001-06-27 20:11:10 fries Exp $"));
 }
 
 bx_hard_drive_c::~bx_hard_drive_c(void)
@@ -96,6 +95,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.25 2001-06-27 20:27:49 fries Exp $"));
 
   /* HARD DRIVE 0 */
 
