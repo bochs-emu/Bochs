@@ -15,20 +15,24 @@ int load_module (const char *fmt, const char *name)
 {
   char buf[512];
   sprintf (buf, fmt, name);
+  if (lt_dlinit () != 0) {
+    printf ("lt_dlinit error: %s\n", lt_dlerror ());
+    return -1;
+  }
   lt_dlhandle handle = lt_dlopen (buf);
-  printf ("handle is %p\n");
+  printf ("handle is %p\n", handle);
   if (!handle) {
     printf ("lt_dlopen error: %s\n", lt_dlerror ());
-	return -1;
+    return -1;
   }
-  modload_func func = (modload_func) lt_dlsym (handle, "_module_init");
+  modload_func func = (modload_func) lt_dlsym (handle, "module_init");
   printf ("module_init function is at %p\n", func);
   if (func != NULL) {
     printf ("Calling module_init\n");
     (*func)();
   } else {
-    printf ("lt_dlopen error: %s\n", lt_dlerror ());
-	return -1;
+    printf ("lt_dlsym error: %s\n", lt_dlerror ());
+    return -1;
   }
   return 0;
 }
