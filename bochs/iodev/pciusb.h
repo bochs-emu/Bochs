@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.3 2004-07-12 17:34:28 vruppert Exp $
+// $Id: pciusb.h,v 1.4 2004-12-11 08:35:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -40,9 +40,131 @@
 #define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
 #define USB_NUM_PORTS   2 /* UHCI supports 2 ports per root hub */
+#define USB_CUR_DEVS    1
+
+#define TOKEN_IN    0x69
+#define TOKEN_OUT   0xE1
+#define TOKEN_SETUP 0x2D
+
+// Bus Line Status States
+#define LO_IDLE  BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
+#define LO_K     BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
+#define LO_J     BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
+#define HI_IDLE  BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
+#define HI_K     BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
+#define HI_J     BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
+#define SE0      BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
+#define SE1      BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
+                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
+#define LO_SOP   LO_K
+#define LO_EOP   SE0 LO_K LO_IDLE
+
+// device requests
+enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR=6, SET_DESCRIPTOR,
+       GET_CONFIGURATION, SET_CONFIGURATION,
+// interface requests
+       GET_INTERFACE, SET_INTERFACE,
+// standard endpoint requests
+       SYNCH_FRAME
+};
+
+// Descriptor types
+enum {  DEVICE=1, CONFIG, STRING, INTERFACE, ENDPOINT,         // USB 1.1
+        DEVICE_QUALIFIER, OTHER_SPEED_CONFIG, INTERFACE_POWER  // USB 2.0
+};
+
+// setup packets
+struct REQUEST_PACKET {
+  Bit8u  request_type;
+  Bit8u  request;
+  Bit16u value;
+  Bit16u index;
+  Bit16u length;
+};
+
+// set it to 1 (align on byte) and save so we can pop it
+// (( MS Specific ???? ))
+#pragma pack(push, 1)
+struct USB_DEVICE {
+  Bit8u   address;        // 7 bit address
+  Bit8u   descriptor;     // which descriptor to use
+  Bit8u   config;         // which configuration to use
+  Bit8u   Interface;      // which interface to use
+  Bit8u   alt_interface;  // which alt interface to use ???
+  Bit8u   functions;      // how many functions does this device have
+  struct {
+    Bit8u   direction;
+    Bit8u   *in;
+    Bit8u   *out;
+    Bit16u  in_cnt;
+    Bit16u  out_cnt;
+    struct {
+      Bit8u  len;
+      Bit8u  type;
+      Bit16u usb_ver;
+      Bit8u  _class;
+      Bit8u  subclass;
+      Bit8u  protocol;
+      Bit8u  max_packet_size;
+      Bit16u vendorid;
+      Bit16u productid;
+      Bit16u device_rel;
+      Bit8u  manuf_indx;
+      Bit8u  prod_indx;
+      Bit8u  serial_indx;
+      Bit8u  configs;
+    } device_descr;
+    unsigned configs;
+    struct {
+      Bit8u  len;
+      Bit8u  type;
+      Bit16u tot_len;
+      Bit8u  interfaces;
+      Bit8u  config_val;
+      Bit8u  config_indx;
+      Bit8u  attrbs;
+      Bit8u  max_power;
+      Bit8u  remaining[247];
+    } device_config[2];
+    struct {
+      Bit8u  size;
+      Bit8u  type;
+      Bit16u langid[3];
+    } str_descriptor;
+    struct {
+      Bit8u  size;
+      Bit8u  type;
+      Bit8u  unicode_str[64];
+    } string[4];
+    struct {
+      Bit8u  size;
+      Bit8u  type;
+      Bit16u HID_class;
+      Bit8u  country_code;
+      Bit8u  num_descriptors;
+      Bit8u  descriptor_type;
+      Bit16u descriptor_len;
+      Bit8u  op_descriptor_type;
+      Bit16u op_descriptor_len;
+    } dev_hid_descript;
+    struct {
+      Bit8u  size;
+      Bit8u  type;
+      Bit8u  unknown[3];
+    } dev_hid_descript_report;
+    Bit8u interfaces[129];
+  } function[1];     // this device has 1 function
+};
+#pragma pack(pop)
 
 typedef struct {
-
   Bit32u base_ioaddr;
   int    timer_index;
 
@@ -154,8 +276,8 @@ typedef struct {
     bx_bool reset;
     bx_bool low_speed;
     bx_bool resume;
-    bx_bool line_dplus;
     bx_bool line_dminus;
+    bx_bool line_dplus;
     bx_bool able_changed;
     bx_bool enabled;
     bx_bool connect_changed;
@@ -163,25 +285,59 @@ typedef struct {
   } usb_port[USB_NUM_PORTS];
 
   Bit8u pci_conf[256];
+  Bit8u devfunc;
+
+  struct USB_DEVICE device[USB_CUR_DEVS];  // two ports per hub, 127 devices per port (max)
+
+  int statusbar_id[2]; // IDs of the status LEDs
 
 } bx_usb_t;
 
+#pragma pack (push, 1)
+struct TD {
+  Bit32u dword0;
+  Bit32u dword1;
+  Bit32u dword2;
+  Bit32u dword3;
+  Bit32u resv[4];
+};
+#pragma pack (pop)
 
-class bx_pciusb_c : public bx_devmodel_c
+#define HC_HORZ    0x80
+#define HC_VERT    0x81
+struct HCSTACK {
+  Bit32u  next;
+  Bit8u   d;   // if queue, denotes VERT or HORZ
+  bx_bool q;
+  bx_bool t;
+};
+
+class bx_pciusb_c : public bx_usb_stub_c
 {
 public:
   bx_pciusb_c(void);
   ~bx_pciusb_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
+  virtual void   usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
 private:
 
   bx_usb_t hub[BX_USB_MAXDEV];
-  Bit8u  global_reset;
+  Bit8u    global_reset;
 
+  int      mouse_delayed_dx;
+  int      mouse_delayed_dy;
+  int      mouse_delayed_dz;
+  unsigned button_state;
+
+  static void set_irq_level(bx_bool level);
   static void usb_timer_handler(void *);
   void usb_timer(void);
+  void DoTransfer(struct TD *);
+  void GetDescriptor(struct USB_DEVICE *, Bit8u, struct REQUEST_PACKET *, Bit8u);
+  void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
+    bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.12 2004-09-25 22:15:02 vruppert Exp $
+// $Id: pciusb.cc,v 1.13 2004-12-11 08:35:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -43,7 +43,7 @@
 bx_pciusb_c* theUSBDevice = NULL;
 
 const Bit8u usb_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 1, 4, 0, 0, 0, 1, 0, 0, 0,
-                              2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                              2, 1, 2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   int
 libpciusb_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -85,11 +85,11 @@ bx_pciusb_c::init(void)
   BX_USB_THIS hub[0].timer_index =
                    bx_pc_system.register_timer(this, usb_timer_handler, 1000, 1,1, "usb.timer");
 
-  Bit8u devfunc = BX_PCI_DEVICE(1,2);
+  BX_USB_THIS hub[0].devfunc = BX_PCI_DEVICE(1,2);
   DEV_register_pci_handlers(this,
                             pci_read_handler,
                             pci_write_handler,
-                            &devfunc, BX_PLUGIN_PCIUSB,
+                            &BX_USB_THIS hub[0].devfunc, BX_PLUGIN_PCIUSB,
                             "Experimental PCI USB");
 
   for (unsigned i=0; i<256; i++) {
@@ -102,6 +102,9 @@ bx_pciusb_c::init(void)
   Bit8u irq = bx_options.usb[0].Oirq->get();
 
   BX_INFO(("usb1 at 0x%04x-0x%04x irq %d", base_ioaddr, base_ioaddr+0x13, irq));
+
+  //FIXME: for now, we want a status bar // hub zero, port zero
+  BX_USB_THIS hub[0].statusbar_id[0] = bx_gui->register_statusitem("USB0");
 }
 
   void
@@ -153,7 +156,7 @@ bx_pciusb_c::reset(unsigned type)
     BX_USB_THIS hub[i].usb_command.configured = 0;
     BX_USB_THIS hub[i].usb_command.debug = 0;
     BX_USB_THIS hub[i].usb_command.resume = 0;
-    BX_USB_THIS hub[i].usb_command.suspend = 1;
+    BX_USB_THIS hub[i].usb_command.suspend = 0;
     BX_USB_THIS hub[i].usb_command.host_reset = 0;
     BX_USB_THIS hub[i].usb_command.reset = 0;
     BX_USB_THIS hub[i].usb_command.schedule = 0;
@@ -183,6 +186,103 @@ bx_pciusb_c::reset(unsigned type)
       BX_USB_THIS hub[i].usb_port[j].status = 0;
     }
   }
+
+  if (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_USB) {
+    // for our purposes, we are going to set a device on hub 0, port 0
+    BX_USB_THIS hub[0].usb_port[0].low_speed = 1;    // all devices we support are low speed
+    BX_USB_THIS hub[0].usb_port[0].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)
+    BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
+    BX_USB_THIS hub[0].usb_port[0].status = 1;       // we will always have a device attached
+    BX_USB_THIS hub[0].usb_port[0].connect_changed = 1;
+
+    // Cyprus mouse
+    // the one and only device
+    BX_USB_THIS hub[0].device[0].address = 0;  // default state
+    BX_USB_THIS hub[0].device[0].alt_interface = 0;
+    BX_USB_THIS hub[0].device[0].Interface = 0;
+    BX_USB_THIS hub[0].device[0].config = 0;
+    BX_USB_THIS hub[0].device[0].descriptor = 0;
+    BX_USB_THIS hub[0].device[0].functions = 1;
+    BX_USB_THIS hub[0].device[0].function[0].direction = 0;
+    BX_USB_THIS hub[0].device[0].function[0].configs = 1; // only one config in this function
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.len = 18;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.type = DEVICE;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.usb_ver = 0x0100;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr._class = 0;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.subclass = 0;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.protocol = 0;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.max_packet_size = 8;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.vendorid = 0x0627;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.productid = 0x0001;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.device_rel = 0;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.manuf_indx = 1;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.prod_indx = 2;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.serial_indx = 0;
+    BX_USB_THIS hub[0].device[0].function[0].device_descr.configs = 1;
+
+    // config descriptor
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].len = 9;
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].type = CONFIG;
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].tot_len = 34;
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].interfaces = 1;
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].config_val = 1;
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].config_indx = 0;//4;
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].attrbs = 0xA0;  // bus powered, etc
+    BX_USB_THIS hub[0].device[0].function[0].device_config[0].max_power = 50;
+    Bit8u str_0[34] = {  
+      0x09, 0x04, 0x00, 0x00, 0x01, 0x03, 0x01, 0x02, 0, //0x05,   // interface descriptor
+      0x07, 0x05, 0x81, 0x03, 0x03, 0x00, 0x0A,                    // endpoint descriptor
+      0x09, 0x21, 0x00, 0x01, 0x00,  0x01, 0x22, 0x32, 0x00         // hid descriptor
+    };
+    memcpy(BX_USB_THIS hub[0].device[0].function[0].device_config[0].remaining, str_0, 34);
+
+    // string descriptors
+    BX_USB_THIS hub[0].device[0].function[0].str_descriptor.size = 0x04;
+    BX_USB_THIS hub[0].device[0].function[0].str_descriptor.type = 0x03;
+    BX_USB_THIS hub[0].device[0].function[0].str_descriptor.langid[0] = 0x0409;
+
+    BX_USB_THIS hub[0].device[0].function[0].string[0].size = 24;
+    BX_USB_THIS hub[0].device[0].function[0].string[0].type = 3;
+    Bit8u str_1[64] = {  0x43, 0x00, 0x79, 0x00, 0x70, 0x00, 0x72, 0x00, 0x65, 
+      0x00, 0x73, 0x00, 0x73,  0x00, 0x20, 0x00, 0x53, 0x00, 0x65, 0x00, 0x6D, 0x00,
+    };
+    memcpy(BX_USB_THIS hub[0].device[0].function[0].string[0].unicode_str, str_1, 24);
+
+    BX_USB_THIS hub[0].device[0].function[0].string[1].size = 36;
+    BX_USB_THIS hub[0].device[0].function[0].string[1].type = 3;
+    Bit8u str_2[64] = {  0x43, 0x00, 0x79, 0x00, 0x70, 0x00, 0x72, 0x00, 0x65,
+      0x00, 0x73, 0x00, 0x73,  0x00, 0x20, 0x00, 0x55, 0x00, 0x53, 0x00, 0x42,
+      0x00, 0x20, 0x00, 0x4D, 0x00, 0x6F, 0x00, 0x75, 0x00, 0x73, 0x00, 0x65, 0x00,
+    };
+    memcpy(BX_USB_THIS hub[0].device[0].function[0].string[1].unicode_str, str_2, 36);
+
+    // HID descriptor type 0x21 (device descriptor)
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.size = 9;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.type = 0x21;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.HID_class = 0x0100;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.country_code = 0;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.num_descriptors = 1;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.descriptor_type = 0x22;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.descriptor_len = 50;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.op_descriptor_type = 0;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript.op_descriptor_len = 0;
+
+    // HID descriptor type 0x22 (report descriptor)
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript_report.size = 5;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript_report.type = 0x22;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript_report.unknown[0] = 9;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript_report.unknown[1] = 2;
+    BX_USB_THIS hub[0].device[0].function[0].dev_hid_descript_report.unknown[2] = 0xA1;
+  } else {
+    // No device attached
+    memset(&BX_USB_THIS hub[0].device[0], 0, sizeof(USB_DEVICE));
+  }
+}
+
+  void
+bx_pciusb_c::set_irq_level(bx_bool level)
+{
+  DEV_pci_set_irq(BX_USB_THIS hub[0].devfunc, BX_USB_THIS hub[0].pci_conf[0x3d], level);
 }
 
 
@@ -208,7 +308,7 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
   Bit32u val = 0x0;
   Bit8u  offset,port;
 
-  BX_DEBUG(("register read from address 0x%04x - ", (unsigned) address));
+  //BX_DEBUG(("register read from address 0x%04x - ", (unsigned) address));
 
   offset = address - BX_USB_THIS hub[0].base_ioaddr;
 
@@ -221,6 +321,7 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
       break;
     case 0x10: // port0
     case 0x12: // port1
+    case 0x14: // port2 non existant, but linux systems check it to see if there are more than 2
       if ((io_len < 1) || (io_len > 2))
         BX_PANIC(("io read from port 0x%04x, bad len=%u", (unsigned) address, (unsigned) io_len));
       break;
@@ -239,7 +340,7 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
 
   switch (offset) {
     case 0x00: // command register (16-bit)
-      val = BX_USB_THIS hub[0].usb_command.max_packet_size << 7
+      val = /*BX_USB_THIS hub[0].usb_command.max_packet_size*/ 0 << 7  // always return as 0 (max packet = 32) lowspeed
             | BX_USB_THIS hub[0].usb_command.configured << 6
             | BX_USB_THIS hub[0].usb_command.debug << 5
             | BX_USB_THIS hub[0].usb_command.resume << 4
@@ -256,6 +357,7 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
             | BX_USB_THIS hub[0].usb_status.resume << 2
             | BX_USB_THIS hub[0].usb_status.error_interrupt << 1
             | BX_USB_THIS hub[0].usb_status.interrupt;
+      set_irq_level(0);
       break;
 
     case 0x04: // interrupt enable register (16-bit)
@@ -277,13 +379,19 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
       val = BX_USB_THIS hub[0].usb_sof.sof_timing;
       break;
 
+    case 0x14: // port2 non existant, but linux systems check it to see if there are more than 2
+      BX_INFO(("read from non existant port 0x14 (port 2)"));
+      val = 0xFF7F;  //TODO: if non existant, does it return 0xFF7F
+      break;
+
     case 0x10: // port0
     case 0x12: // port1
       port = (offset & 0x0F) >> 1;
       if (port < USB_NUM_PORTS) {
         val = BX_USB_THIS hub[0].usb_port[port].suspend << 12
+              |                                       1 << 10  // some Root Hubs have bit 10 set ?????
               | BX_USB_THIS hub[0].usb_port[port].reset << 9
-              | BX_USB_THIS hub[0].usb_port[port].low_speed << 8
+              | 1 << 8                                         // always return TRUE (lowspeed device)
               | 1 << 7
               | BX_USB_THIS hub[0].usb_port[port].resume << 6
               | BX_USB_THIS hub[0].usb_port[port].line_dminus << 5
@@ -292,16 +400,17 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
               | BX_USB_THIS hub[0].usb_port[port].enabled << 2
               | BX_USB_THIS hub[0].usb_port[port].connect_changed << 1
               | BX_USB_THIS hub[0].usb_port[port].status;
+        //BX_INFO(("read from port%01X register: 0x%04x", port, val));
         break;
       } // else fall through to default
-
     default:
-      val = 0; // keep compiler happy
+      val = 0xFF7F; // keep compiler happy
       BX_PANIC(("unsupported io read from address=0x%04x!", (unsigned) address));
       break;
   }
 
-  BX_DEBUG(("val =  0x%08x", (Bit32u) val));
+  //BX_DEBUG(("val =  0x%08x", (Bit32u) val));
+  //BX_INFO(("register read from address 0x%04X:  0x%08X (%i bits)", (unsigned) address, (Bit32u) val, io_len * 8));
 
   return(val);
 }
@@ -327,7 +436,10 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif // !BX_USE_PCIUSB_SMF
   Bit8u  offset,port;
 
-  BX_DEBUG(("register write to address 0x%04x - ", (unsigned) address));
+  int i, j;
+
+//  BX_DEBUG(("register write to address 0x%04x - ", (unsigned) address));
+//  BX_INFO(("register write to  address 0x%04X:  0x%04X  (%i bits)", (unsigned) address, (unsigned) value, io_len * 8));
 
   offset = address - BX_USB_THIS hub[0].base_ioaddr;
 
@@ -356,6 +468,11 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (value & 0xFF00)
         BX_DEBUG(("write to command register with bits 15:8 not zero: 0x%04x", value));
 
+      // reset, do not reset ports, just host controller
+      //  (i.e.: don't send global reset to all USB devices)
+      if (BX_USB_THIS hub[0].usb_command.reset && !(value & 0x04))
+        BX_USB_THIS reset(0);
+
       BX_USB_THIS hub[0].usb_command.max_packet_size = (value & 0x80) ? 1: 0;
       BX_USB_THIS hub[0].usb_command.configured = (value & 0x40) ? 1: 0;
       BX_USB_THIS hub[0].usb_command.debug = (value & 0x20) ? 1: 0;
@@ -365,15 +482,15 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_USB_THIS hub[0].usb_command.host_reset = (value & 0x02) ? 1: 0;
       BX_USB_THIS hub[0].usb_command.schedule = (value & 0x01) ? 1: 0;
 
-      // If software set the reset bit, we need to set reset bit of each port for 10ms.
-      if (BX_USB_THIS hub[0].usb_command.reset)
+      // If software set the hcreset bit, we need to set reset bit of each port for 10ms.
+      // 10ms is a known figure for how long max, a reset should take.  On actual hardware,
+      //  this can be considerably less.
+      if (BX_USB_THIS hub[0].usb_command.host_reset) {
         BX_USB_THIS global_reset = 10;
+        BX_INFO(("Global Reset"));
+      }
 
-      // If host_reset then reset all registers, etc.
-      if (BX_USB_THIS hub[0].usb_command.host_reset)
-        BX_USB_THIS reset(0);
-
-      // If Run/Stop, identify in log and ignore
+      // If Run/Stop, identify in log
       if (BX_USB_THIS hub[0].usb_command.schedule)
         BX_INFO(("Software set Schedule bit in Command register"));
 
@@ -404,7 +521,12 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_USB_THIS hub[0].usb_enable.resume  = (value & 0x02) ? 1: 0;
       BX_USB_THIS hub[0].usb_enable.timeout_crc = (value & 0x01) ? 1: 0;
 
-      // For now, we will just ignore these being set since we never raise the IRQ
+      if (value & 0x08) {
+        BX_INFO(("Host set Enable Interrupt on Short Packet"));
+      }
+      if (value & 0x04) {
+        BX_INFO(("Host set Enable Interrupt on Complete"));
+      }
 
       break;
 
@@ -417,7 +539,6 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       else
         // ignored by the hardward, but lets report it anyway
         BX_DEBUG(("write to frame number register with STATUS.HALTED == 0"));
-
       break;
 
     case 0x08: // frame base register (32-bit)
@@ -433,6 +554,10 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
        BX_USB_THIS hub[0].usb_sof.sof_timing = value;
        break;
+
+    case 0x14: // port2 non existant, but linux systems check it to see if there are more than 2
+      BX_DEBUG(("write from non existant port 0x14 (port 2)"));
+      break;
 
     case 0x10: // port0
     case 0x12: // port1
@@ -453,10 +578,35 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_USB_THIS hub[0].usb_port[port].able_changed = (value & (1<<3)) ? 0 : BX_USB_THIS hub[0].usb_port[port].able_changed;
         BX_USB_THIS hub[0].usb_port[port].enabled = (value & (1<<2)) ? 1 : 0;
         BX_USB_THIS hub[0].usb_port[port].connect_changed = (value & (1<<1)) ? 0 : BX_USB_THIS hub[0].usb_port[port].connect_changed;
+
+        // if port reset, reset function(s)
+        //TODO: only reset items on the downstream...
+        // for now, reset the one and only
+        // TODO: descriptors, etc....
+        if (BX_USB_THIS hub[0].usb_port[port].reset) {
+          BX_USB_THIS hub[0].usb_port[port].suspend = 0;
+          BX_USB_THIS hub[0].usb_port[port].reset = 1;
+          BX_USB_THIS hub[0].usb_port[port].low_speed = 1;
+          BX_USB_THIS hub[0].usb_port[port].resume = 0;
+          BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;
+          BX_USB_THIS hub[0].usb_port[port].line_dplus = 0;
+          BX_USB_THIS hub[0].usb_port[port].able_changed = 1;
+          BX_USB_THIS hub[0].usb_port[port].enabled = 0;
+          BX_USB_THIS hub[0].usb_port[port].connect_changed = 1;
+          BX_USB_THIS hub[0].usb_port[port].status = 1;
+          for (i=0; i<USB_CUR_DEVS; i++) {
+            for (j=0; j<BX_USB_THIS hub[0].device[i].functions; j++) {
+              BX_USB_THIS hub[0].device[i].address = 0;
+              BX_USB_THIS hub[0].device[i].function[j].out = 0;
+              BX_USB_THIS hub[0].device[i].function[j].in = 0;
+              // need to reset descriptors and the such?
+            }
+          }
+          BX_INFO(("Port Reset"));
+        }
         break;
       }
       // else fall through to default
-
     default:
       BX_PANIC(("unsupported io write to address=0x%04x!", (unsigned) address));
       break;
@@ -472,15 +622,17 @@ void bx_pciusb_c::usb_timer_handler(void *this_ptr)
 // Called once every 1ms
 void bx_pciusb_c::usb_timer(void)
 {
+  static bx_bool busy = 0;
   int i;
 
-  // The Frame Number Register is incremented every 1ms  ?????????
+  // The Frame Number Register is incremented every 1ms
   // Needs more work and investigation on this.
-  BX_USB_THIS hub[0].usb_frame_num.frame_num++;
-  BX_USB_THIS hub[0].usb_frame_num.frame_num &= (1024-1);
+  if (BX_USB_THIS hub[0].usb_command.schedule && !busy) {
+    BX_USB_THIS hub[0].usb_frame_num.frame_num++;
+    BX_USB_THIS hub[0].usb_frame_num.frame_num &= (1024-1);
+  }
 
-  // If the "global reset" bit was set by software, we need
-  // to set the reset bit in each "active" port for 10ms
+  // If the "global reset" bit was set by software
   if (BX_USB_THIS global_reset) {
     for (i=0; i<USB_NUM_PORTS; i++) {
       BX_USB_THIS hub[0].usb_port[i].able_changed = 0;
@@ -488,30 +640,431 @@ void bx_pciusb_c::usb_timer(void)
       BX_USB_THIS hub[0].usb_port[i].enabled = 0;
       BX_USB_THIS hub[0].usb_port[i].line_dminus = 0;
       BX_USB_THIS hub[0].usb_port[i].line_dplus = 0;
-      BX_USB_THIS hub[0].usb_port[i].low_speed = 0;
-      BX_USB_THIS hub[0].usb_port[i].reset = 1;
+      BX_USB_THIS hub[0].usb_port[i].low_speed = 1;
+      BX_USB_THIS hub[0].usb_port[i].reset = 0;
       BX_USB_THIS hub[0].usb_port[i].resume = 0;
       BX_USB_THIS hub[0].usb_port[i].status = 0;
       BX_USB_THIS hub[0].usb_port[i].suspend = 0;
     }
     BX_USB_THIS global_reset--;
-  } else {
-    for (i=0; i<USB_NUM_PORTS; i++)
-      BX_USB_THIS hub[0].usb_port[i].reset = 0;
+    if (BX_USB_THIS global_reset == 0) {
+      BX_USB_THIS reset(1);
+    }
   }
 
-  // If command.schedule = 0, then we need to set Status.Halted
-  if (!BX_USB_THIS hub[0].usb_command.schedule)
-    BX_USB_THIS hub[0].usb_status.host_halted = 1;
+  // If command.schedule = 1, then run schedule
+  //  *** This assumes that we can complete the frame within the 1ms time allowed ***
+  //     Actually, not complete, but reach the end of the frame.  This means that there         
+  //      may still be TDs and QHs that were BREADTH defined and will be executed on the next   
+  //      cycle/iteration.                                                                      
+  //    I am not sure if it will correctly finish something before the 1ms is over, so
+  //      that is why the busy flag is used.
+  if (BX_USB_THIS hub[0].usb_command.schedule && !busy) {
+    busy = 1;
+    bx_bool interrupt = 0, shortpacket = 0;
+    struct TD td;
+    struct HCSTACK stack[64];  // queue stack for this item only
+    Bit32s stk = 0;
+    Bit32u item, address, lastvertaddr = 0;
+    Bit32u frame, frm_addr = BX_USB_THIS hub[0].usb_frame_base.frame_base + 
+                                (BX_USB_THIS hub[0].usb_frame_num.frame_num << 2);
+    BX_MEM_READ_PHYSICAL(frm_addr, 4, &frame);
+    if (!(frame & 1)) {
+      stack[stk].next = frame & 0xFFFFFFF0;
+      stack[stk].d = 0;
+      stack[stk].q = (frame & 0x0002) ? 1 : 0;
+      stack[stk].t = 0;
+      while (stk > -1) {
+        // check to make sure we are not done before continue-ing on
+        if ((stack[stk].d == HC_VERT) && stack[stk].t) { stk--; continue; }
+        if ((stack[stk].d == HC_HORZ) && stack[stk].t) break;
+        if (stack[stk].q) { // is a queue
+          address = stack[stk].next;
+          lastvertaddr = address + 4;
+          // get HORZ slot
+          stk++;
+          BX_MEM_READ_PHYSICAL(address, 4, &item);
+          stack[stk].next = item & 0xFFFFFFF0;
+          stack[stk].d = HC_HORZ;
+          stack[stk].q = (item & 0x0002) ? 1 : 0;
+          stack[stk].t = (item & 0x0001) ? 1 : 0;
+          // get VERT slot
+          stk++;
+          BX_MEM_READ_PHYSICAL(lastvertaddr, 4, &item);
+          stack[stk].next = item & 0xFFFFFFF0;
+          stack[stk].d = HC_VERT;
+          stack[stk].q = (item & 0x0002) ? 1 : 0;
+          stack[stk].t = (item & 0x0001) ? 1 : 0;
+        } else {  // else is a TD
+          address = stack[stk].next;
+          BX_MEM_READ_PHYSICAL(address, 32, &td);
+          bx_bool spd = (td.dword1 & (1<<29)) ? 1 : 0;
+          stack[stk].next = td.dword0 & 0xFFFFFFF0;
+          bx_bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
+          stack[stk].q = (td.dword0 & 0x0002) ? 1 : 0;
+          stack[stk].t = (td.dword0 & 0x0001) ? 1 : 0;
+
+          if (td.dword1 & (1<<24)) interrupt = 1;
+          if (td.dword1 & (1<<23)) {  // is it an active TD
+            BX_USB_THIS DoTransfer(&td); // pass address for a return value of dev->max_packet_size --v
+            BX_MEM_WRITE_PHYSICAL(address+4, 4, &td.dword1);  // write back the status
+            
+            // issue short packet?
+            Bit16u r_actlen = (((td.dword1 & 0x7FF)+1) & 0x7FF);
+            Bit16u r_maxlen = (((td.dword2>>21)+1) & 0x7FF);
+          BX_INFO((" r_actlen = 0x%04X r_maxlen = 0x%04X", r_actlen, r_maxlen));
+            if (((td.dword2 & 0xFF) == TOKEN_IN) && spd && stk && (r_actlen < r_maxlen))
+              shortpacket = 1;
+
+            // copy pointer for next queue item, in to vert queue head
+            if (stk && !shortpacket && (stack[stk].d == HC_VERT)) BX_MEM_WRITE_PHYSICAL(lastvertaddr, 4, &td.dword0);
+            else {
+              // else, just mark it as done.
+              BX_MEM_READ_PHYSICAL(lastvertaddr, 4, &td.dword0);
+              td.dword0 |= 1;
+              BX_MEM_WRITE_PHYSICAL(lastvertaddr, 4, &td.dword0);
+            }
+          }
+          // if Breadth first, move to next queue.
+          if (stk && !depthbreadth) stk--;
+          // if last vert in queue, move back one queue
+          else if (stack[stk].t) break;
+        }
+        if (stk < 1) break;  // don't execute the Frame Pointer again, not until next rotation. (1 sec from now)
+      }
+
+      // set the status register bit:0 to 1 if SPD is enabled
+      // and if interrupts not masked via interrupt register, raise irq interrupt.
+      if (shortpacket) {
+        BX_USB_THIS hub[0].usb_status.interrupt = 1;
+        if (BX_USB_THIS hub[0].usb_enable.short_packet) {
+          set_irq_level(1);
+          BX_INFO((" [SPD] We wan't it to fire here"));
+        }
+      }
+
+      // if one of the TD's in this frame had the ioc bit set, we need to
+      //   raise an interrupt, if interrupts are not masked via interrupt register.
+      //   always set the status register if IOC.
+      if (interrupt) {
+        BX_USB_THIS hub[0].usb_status.interrupt = 1;
+        if (BX_USB_THIS hub[0].usb_enable.on_complete) {
+          set_irq_level(1);
+          BX_INFO((" [IOC] We wan't it to fire here"));
+        }
+      }
+    
+    }
+    busy = 0;  // ready to do next frame item
+  }  // end run schedule
 
 
-  // TODO:
-  //  If ins Global_Suspend mode and any of usb_port[i] bits 6,3, or 1 are set,
+    // TODO:
+  //  If in Global_Suspend mode and any of usb_port[i] bits 6,3, or 1 are set,
   //    we need to issue a Global_Resume (set the global resume bit).
   //    However, since we don't do anything, let's not.
-
 }
+
+Bit8u g_set_address = 0;
+
+void bx_pciusb_c::DoTransfer(struct TD *td) {
   
+  //Bit8u  active = (td->dword1 & (1<<23)) ? 1 : 0;
+  Bit16u maxlen = (td->dword2 >> 21);
+  Bit8u  addr   = (td->dword2 >> 8) & 0x7F;
+  Bit8u  endpt  = (td->dword2 >> 15) & 0x0F;
+  Bit8u  pid    =  td->dword2 & 0xFF;
+  Bit8u  d      = (td->dword2 & 0x00080000) ? 1 : 0;
+  Bit8u  data[64];
+  struct REQUEST_PACKET *rp = (struct REQUEST_PACKET *) data;
+
+  // if packed, read in the packet data
+  if (pid == TOKEN_SETUP) {
+    //LO_SOP
+    if (td->dword3) BX_MEM_READ_PHYSICAL(td->dword3, 8, data);
+    // the '8' above may need to be maxlen (unless maxlen == 0)
+    //LO_EOP
+  }
+
+  BX_DEBUG(("TD found:  %08x   %08x   %08x   %08x", td->dword0, td->dword1, td->dword2, td->dword3));
+  BX_DEBUG(("           %02x %02x %02x %02x %02x %02x %02x %02x", data[0], data[1], data[2], 
+                                                     data[3], data[4], data[5], data[6], data[7]));
+
+  // check TD to make sure it is valid
+  // A max length 0x500 to 0x77E is illegal  (win98se does this to keep the usb "alive" ???)
+  if (((td->dword2 >> 21) >= 0x500) && ((td->dword2 >> 21) != 0x7FF)) {
+    BX_ERROR(("error at 11111111111"));
+    return;  // error = consistency check failure
+  }
+  //if (td->dword0 & 0x8) return; // error = reserved bits in dword0 set
+  // other error checks here
+
+  // find device address
+  struct USB_DEVICE *dev = NULL;
+  for (int i=0; i<USB_CUR_DEVS; i++) {
+    if (BX_USB_THIS hub[0].device[i].address == addr) {
+      dev = &BX_USB_THIS hub[0].device[i];
+      break;
+    }
+  }
+  if (dev == NULL) {
+    BX_ERROR(("Device not found for addr: %08X", addr));
+    return;  // device not found
+  }
+
+  maxlen++;
+  maxlen &= 0x7FF;
+  if (maxlen > dev->function[endpt].device_descr.max_packet_size)
+    maxlen = dev->function[endpt].device_descr.max_packet_size;
+
+  // parse and get command
+  Bit16u cnt;
+
+  switch (pid) {
+    case TOKEN_IN:   // Data came from HC to Host
+
+    
+//TODO: if token in from mouse endpt, then send back a packet with the mouse status.
+
+
+      bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 1);
+      BX_INFO(("TOKEN_IN: len = %i", maxlen));
+      BX_INFO(("          address = 0x%08X, Depth = %i, QH = %i, Terminate = %i\n"
+               "                              spd=%i, c_err=%i, LS=%i, IOS=%i, IOC=%i, status=0x%02X, act_len=0x%03X\n"
+               "                              max_len=0x%03X, D=%i, EndPt=%i, addr=%i, PID=0x%02X\n"
+               "                              buffer address = 0x%08X",
+      td->dword0 & ~0x0000000F, (td->dword0 & 0x00000004)?1:0, (td->dword0 & 0x00000002)?1:0, (td->dword0 & 0x00000001)?1:0,
+      (td->dword1 & 0x20000000)?1:0, (td->dword1 & 0x18000000)>>27, (td->dword1 & 0x04000000)?1:0, (td->dword1 & 0x02000000)?1:0, (td->dword1 & 0x01000000)?1:0, (td->dword1 & 0x00FF0000)>>16, td->dword1 & 0x000007FF,
+      (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
+      td->dword3));
+      
+      if (maxlen == 0) {
+        BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x7FF); 
+        bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 0);
+        if (g_set_address) {
+          dev->address = g_set_address;
+          g_set_address = 0;
+        }
+        break;
+      }
+
+      cnt = (dev->function[endpt].in_cnt < maxlen) ? dev->function[endpt].in_cnt : maxlen;
+      //LO_SOP
+      BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, dev->function[endpt].in);
+      //LO_EOP
+      dev->function[endpt].in += cnt;
+      dev->function[endpt].in_cnt -= cnt;
+      BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
+
+      bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 0);
+      break;
+    case TOKEN_OUT: // data should go from Host to HC
+      BX_INFO(("TOKEN_OUT: maxlen = 0x%03X", maxlen));
+      BX_INFO(("          address = 0x%08X, Depth = %i, QH = %i, Terminate = %i\n"
+               "                              spd=%i, c_err=%i, LS=%i, IOS=%i, IOC=%i, status=0x%02X, act_len=0x%03X\n"
+               "                              max_len=0x%03X, D=%i, EndPt=%i, addr=%i, PID=0x%02X\n"
+               "                              buffer address = 0x%08X",
+      td->dword0 & ~0x0000000F, (td->dword0 & 0x00000004)?1:0, (td->dword0 & 0x00000002)?1:0, (td->dword0 & 0x00000001)?1:0,
+      (td->dword1 & 0x20000000)?1:0, (td->dword1 & 0x18000000)>>27, (td->dword1 & 0x04000000)?1:0, (td->dword1 & 0x02000000)?1:0, (td->dword1 & 0x01000000)?1:0, (td->dword1 & 0x00FF0000)>>16, td->dword1 & 0x000007FF,
+      (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
+      td->dword3));
+      
+      bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 1);
+      if (maxlen == 0) {
+        BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x7FF);
+      } else {
+
+      }
+      bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 0);
+      break;
+    case TOKEN_SETUP:
+      switch (rp->request) {
+        case GET_STATUS:
+          BX_INFO(("Request: GET_STATUS"));
+          
+          break;
+        case CLEAR_FEATURE:
+          BX_INFO(("Request: CLEAR_FEATURE"));
+          
+          break;
+        case SET_FEATURE:
+          BX_INFO(("Request: SET_FEATURE"));
+          
+          break;
+        case SET_ADDRESS:
+          BX_INFO(("Request: SET_ADDRESS: %04x", rp->value));
+          BX_INFO(("          address = 0x%08X, Depth = %i, QH = %i, Terminate = %i\n"
+                   "                              spd=%i, c_err=%i, LS=%i, IOS=%i, IOC=%i, status=0x%02X, act_len=0x%03X\n"
+                   "                              max_len=0x%03X, D=%i, EndPt=%i, addr=%i, PID=0x%02X\n"
+                   "                              buffer address = 0x%08X",
+          td->dword0 & ~0x0000000F, (td->dword0 & 0x00000004)?1:0, (td->dword0 & 0x00000002)?1:0, (td->dword0 & 0x00000001)?1:0,
+          (td->dword1 & 0x20000000)?1:0, (td->dword1 & 0x18000000)>>27, (td->dword1 & 0x04000000)?1:0, (td->dword1 & 0x02000000)?1:0, (td->dword1 & 0x01000000)?1:0, (td->dword1 & 0x00FF0000)>>16, td->dword1 & 0x000007FF,
+          (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
+          td->dword3));
+          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007);
+          g_set_address = (Bit8u) rp->value;
+          break;
+        case GET_DESCRIPTOR:
+          BX_INFO(("Request: GET_DESCRIPTOR: %02x  %02x  %i", rp->value >> 8, rp->value & 0xFF, rp->length));
+          BX_INFO(("          address = 0x%08X, Depth = %i, QH = %i, Terminate = %i\n"
+                   "                              spd=%i, c_err=%i, LS=%i, IOS=%i, IOC=%i, status=0x%02X, act_len=0x%03X\n"
+                   "                              max_len=0x%03X, D=%i, EndPt=%i, addr=%i, PID=0x%02X\n"
+                   "                              buffer address = 0x%08X",
+          td->dword0 & ~0x0000000F, (td->dword0 & 0x00000004)?1:0, (td->dword0 & 0x00000002)?1:0, (td->dword0 & 0x00000001)?1:0,
+          (td->dword1 & 0x20000000)?1:0, (td->dword1 & 0x18000000)>>27, (td->dword1 & 0x04000000)?1:0, (td->dword1 & 0x02000000)?1:0, (td->dword1 & 0x01000000)?1:0, (td->dword1 & 0x00FF0000)>>16, td->dword1 & 0x000007FF,
+          (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
+          td->dword3));
+          BX_USB_THIS GetDescriptor(dev, endpt, rp, d);
+          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
+          break;
+        case SET_DESCRIPTOR:
+          BX_INFO(("Request: SET_DESCRIPTOR: %02x", rp->value >> 8));
+          //dev->descriptor = (Bit8u) rp->value >> 8;
+          break;
+        case GET_CONFIGURATION:
+          BX_INFO(("Request: GET_CONFIGURATION"));
+          BX_INFO(("          address = 0x%08X, Depth = %i, QH = %i, Terminate = %i\n"
+                   "                              spd=%i, c_err=%i, LS=%i, IOS=%i, IOC=%i, status=0x%02X, act_len=0x%03X\n"
+                   "                              max_len=0x%03X, D=%i, EndPt=%i, addr=%i, PID=0x%02X\n"
+                   "                              buffer address = 0x%08X",
+          td->dword0 & ~0x0000000F, (td->dword0 & 0x00000004)?1:0, (td->dword0 & 0x00000002)?1:0, (td->dword0 & 0x00000001)?1:0,
+          (td->dword1 & 0x20000000)?1:0, (td->dword1 & 0x18000000)>>27, (td->dword1 & 0x04000000)?1:0, (td->dword1 & 0x02000000)?1:0, (td->dword1 & 0x01000000)?1:0, (td->dword1 & 0x00FF0000)>>16, td->dword1 & 0x000007FF,
+          (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
+          td->dword3));
+          BX_USB_THIS GetDescriptor(dev, endpt, rp, d);
+          break;
+        case SET_CONFIGURATION:
+          BX_INFO(("Request: SET_CONFIGURATION: %02x", rp->value));
+          dev->config = 0xFF;
+          unsigned configs;
+          for (configs=0; configs<dev->function[0].configs; configs++) {
+            if ((rp->value & 0xFF) == dev->function[0].device_config[configs].config_val) {
+              dev->config = configs; // pointer ot our only config
+              break;
+            }
+          }
+          if (dev->config == 0xFF) {
+            BX_ERROR(("Set configuration value to an unknown configuration"));
+            dev->config = 0;
+          }
+          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
+          break;
+        case GET_INTERFACE:
+          BX_INFO(("Request: GET_INTERFACE  %02X  %02X  %02X", rp->value >> 8, rp->value & 0xFF, rp->length));
+          // find the interface descriptor in the config block.
+          dev->function[endpt].in = NULL;
+          dev->function[endpt].in_cnt = 0;
+          Bit8u *p;
+          p = (Bit8u *) &dev->function[endpt].device_config[dev->config] + dev->function[endpt].device_config[dev->config].len;
+          while (p < ((Bit8u *) &dev->function[endpt].device_config[dev->config] + dev->function[endpt].device_config[dev->config].tot_len)) {
+            if (p[1] == 0x04) {
+              dev->function[endpt].in = p;
+              dev->function[endpt].in_cnt = p[0];
+              break;
+            }
+            p += p[0];
+          }
+          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
+          if (!dev->function[endpt].in_cnt)
+            BX_ERROR(("Did not find interface descriptor in config descriptor"));
+          break;
+        case SET_INTERFACE:
+          BX_INFO(("Request: SET_INTERFACE: %02x (alt %02x)", rp->index, rp->value));
+          dev->Interface = (Bit8u) (rp->index & 0xFF);
+          dev->alt_interface = (Bit8u) (rp->value & 0xFF);
+          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
+          break;
+        case SYNCH_FRAME:
+          BX_INFO(("Request: SYNCH_FRAME"));
+          break;
+        default:
+          BX_ERROR((" **** illegal or unknown REQUEST sent to Host Controller:  %02x", data[1]));
+      }
+      break;
+    default:
+      BX_ERROR(("illegal PID sent to Host Controller:  %02x", pid));
+  }
+}
+
+void bx_pciusb_c::GetDescriptor(struct USB_DEVICE *dev, Bit8u endpt, struct REQUEST_PACKET *packet, Bit8u d) {
+
+  BX_INFO(("GET DESCRIPTOR  0x%02X 0x%02X  value=0x%04X  len=%i index=%i", 
+    packet->request, packet->request_type, packet->value, packet->length, packet->index));
+    
+  if (endpt > dev->functions) {
+    BX_ERROR(("Function %i on device %i not present", dev->address, endpt));
+    return;
+  }
+  switch (packet->value >> 8) {
+    case DEVICE:
+      dev->function[endpt].in = (Bit8u *) &dev->function[endpt].device_descr;
+      dev->function[endpt].in_cnt = dev->function[endpt].device_descr.len; //18
+      break;
+    case CONFIG:
+      dev->function[endpt].in = (Bit8u *) &dev->function[endpt].device_config[dev->config];
+      dev->function[endpt].in_cnt = dev->function[endpt].device_config[dev->config].tot_len; // 34
+      break;
+    case STRING:
+      switch (packet->value & 0xFF) {
+        case 0: // string descriptor table
+          dev->function[endpt].in = (Bit8u *) &dev->function[endpt].str_descriptor;
+          dev->function[endpt].in_cnt = dev->function[endpt].str_descriptor.size;  // 4
+          break;
+        case 1: // first string
+        case 2: // second string
+          dev->function[endpt].in = (Bit8u *) &dev->function[endpt].string[(packet->value & 0xFF)-1];
+          dev->function[endpt].in_cnt = dev->function[endpt].string[(packet->value & 0xFF)-1].size;
+          break;
+        default:
+          BX_ERROR(("STRING:  %i", packet->value & 0xFF));
+      }
+      break;
+    case INTERFACE:
+
+      break;
+    case ENDPOINT:
+      
+      break;
+    case DEVICE_QUALIFIER:
+
+      break;
+    case OTHER_SPEED_CONFIG:
+      
+      break;
+    case INTERFACE_POWER:
+
+      break;
+    case 0x21:  // (HID device descriptor)
+      dev->function[endpt].in = (Bit8u *) &dev->function[endpt].dev_hid_descript;
+      dev->function[endpt].in_cnt = dev->function[endpt].dev_hid_descript.size; //9
+      break;
+    case 0x22:  // (HID report descriptor)
+      dev->function[endpt].in = (Bit8u *) &dev->function[endpt].dev_hid_descript_report;
+      dev->function[endpt].in_cnt = dev->function[endpt].dev_hid_descript_report.size; // 5
+      break;
+    default:
+      BX_ERROR((" **** illegal or unknown GET_DESCRIPTOR::DEVICE sent to Host Controller:  %02x", packet->value >> 8));
+      return;
+  }
+}
+
+void bx_pciusb_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble, 
+                             bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len) {
+
+  // clear out the bits we can modify and/or want zero
+  td->dword1 &= 0xDF00F800;
+
+  // now set the bits according to the passed param's
+  td->dword1 |= stalled           ? (1<<22) : 0; // stalled
+  td->dword1 |= data_buffer_error ? (1<<21) : 0; // data buffer error
+  td->dword1 |= babble            ? (1<<20) : 0; // babble
+  td->dword1 |= nak               ? (1<<19) : 0; // nak
+  td->dword1 |= crc_time_out      ? (1<<18) : 0; // crc/timeout
+  td->dword1 |= bitstuff_error    ? (1<<17) : 0; // bitstuff error
+  td->dword1 |= (act_len & 0x7FF);               // actual length
+}
+ 
+ 
   // static pci configuration space read callback handler
   // redirects to non-static class handler to avoid virtual functions
 
@@ -656,5 +1209,48 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   strrev(szTmp);
   BX_DEBUG(("Experimental USB PCI write register 0x%02x value 0x%s", address, szTmp));
 }
+
+  void
+bx_pciusb_c::usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
+{
+  // scale down the motion
+  if ( (delta_x < -1) || (delta_x > 1) )
+    delta_x /= 2;
+  if ( (delta_y < -1) || (delta_y > 1) )
+    delta_y /= 2;
+
+  if(delta_x>127) delta_x=127;
+  if(delta_y>127) delta_y=127;
+  if(delta_x<-128) delta_x=-128;
+  if(delta_y<-128) delta_y=-128;
+
+  BX_USB_THIS mouse_delayed_dx+=delta_x;
+  BX_USB_THIS mouse_delayed_dy-=delta_y;
+
+  if (BX_USB_THIS mouse_delayed_dx > 127) {
+    delta_x = 127;
+    BX_USB_THIS mouse_delayed_dx -= 127;
+  } else if (BX_USB_THIS mouse_delayed_dx < -128) {
+    delta_x = -128;
+    BX_USB_THIS mouse_delayed_dx += 128;
+  } else {
+    delta_x = BX_USB_THIS mouse_delayed_dx;
+    BX_USB_THIS mouse_delayed_dx = 0;
+  }
+  if (BX_USB_THIS mouse_delayed_dy > 127) {
+    delta_y = 127;
+    BX_USB_THIS mouse_delayed_dy -= 127;
+  } else if (BX_USB_THIS mouse_delayed_dy < -128) {
+    delta_y = -128;
+    BX_USB_THIS mouse_delayed_dy += 128;
+  } else {
+    delta_y = BX_USB_THIS mouse_delayed_dy;
+    BX_USB_THIS mouse_delayed_dy = 0;
+  }
+
+  BX_USB_THIS mouse_delayed_dz = delta_z;
+  BX_USB_THIS button_state = button_state;
+}
+
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

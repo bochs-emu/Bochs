@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.129 2004-12-09 18:47:35 vruppert Exp $
+// $Id: siminterface.h,v 1.130 2004-12-11 08:35:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1278,6 +1278,8 @@ enum {
 #define BX_MOUSE_TYPE_IMPS2        2
 #define BX_MOUSE_TYPE_SERIAL       3
 #define BX_MOUSE_TYPE_SERIAL_WHEEL 4
+#define BX_MOUSE_TYPE_BUS          5
+#define BX_MOUSE_TYPE_USB          6
 
 BOCHSAPI extern char *bochs_start_names[];
 BOCHSAPI extern int n_bochs_start_names;

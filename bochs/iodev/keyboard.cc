@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.96 2004-12-09 18:47:36 vruppert Exp $
+// $Id: keyboard.cc,v 1.97 2004-12-11 08:35:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.96 2004-12-09 18:47:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.97 2004-12-11 08:35:32 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1537,12 +1537,28 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_s
   if (bx_options.Omouse_enabled->get () == 0)
     return;
 
-  // redirect mouse data to the serial device
+  // if type == serial, redirect mouse data to the serial device
   if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL) ||
       (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL_WHEEL)) {
     DEV_serial_mouse_enq(delta_x, delta_y, delta_z, button_state);
     return;
   }
+
+#if BX_SUPPORT_BUSMOUSE
+  // if type == bus, redirect mouse data to the bus device
+  if (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_BUS) {
+    DEV_bus_mouse_enq(delta_x, delta_y, 0, button_state);
+    return;
+  }
+#endif
+
+#if BX_SUPPORT_PCIUSB
+  // if type == usb, redirect mouse data to the usb device
+  if (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_USB) {
+    DEV_usb_mouse_enq(delta_x, delta_y, delta_z, button_state);
+    return;
+  }
+#endif
 
   // don't generate interrupts if we are in remote mode.
   if ( BX_KEY_THIS s.mouse.mode == MOUSE_MODE_REMOTE)

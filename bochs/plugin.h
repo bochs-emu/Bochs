@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.34 2004-12-05 20:23:38 vruppert Exp $
+// $Id: plugin.h,v 1.35 2004-12-11 08:35:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -29,6 +29,7 @@ extern "C" {
 #define BX_PLUGIN_PARALLEL  "parallel"
 #define BX_PLUGIN_SERIAL    "serial"
 #define BX_PLUGIN_KEYBOARD  "keyboard"
+#define BX_PLUGIN_BUSMOUSE  "busmouse"
 #define BX_PLUGIN_HARDDRV   "harddrv"
 #define BX_PLUGIN_DMA       "dma"
 #define BX_PLUGIN_PIC       "pic"
@@ -200,6 +201,16 @@ extern "C" {
 #define DEV_serial_mouse_enq(dx, dy, dz, state) \
     (bx_devices.pluginSerialDevice->serial_mouse_enq(dx, dy, dz, state))
 
+///////// BUS mouse macro
+#define DEV_bus_mouse_enq(dx, dy, dz, state) \
+    (bx_devices.pluginBusMouse->bus_mouse_enq(dx, dy, 0, state))
+
+///////// USB mouse macro
+#if BX_SUPPORT_PCIUSB
+	#define DEV_usb_mouse_enq(dx, dy, dz, state) \
+    (bx_devices.pluginPciUSBAdapter->usb_mouse_enq(dx, dy, dz, state))
+#endif
+
 //////// Memory macros
 #define DEV_register_memory_handlers(rh,rp,wh,wp,b,e) \
     bx_devices.mem->registerMemoryHandlers(rh,rp,wh,wp,b,e)
@@ -334,6 +345,7 @@ int plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
   
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(keyboard)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(busmouse)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(serial)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(unmapped)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(biosdev)

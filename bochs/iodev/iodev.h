@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.54 2004-12-05 20:23:38 vruppert Exp $
+// $Id: iodev.h,v 1.55 2004-12-11 08:35:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,9 @@
 
 class bx_pit_c;
 class bx_keyb_c;
+#if BX_SUPPORT_BUSMOUSE
+class bx_busm_c;
+#endif
 class bx_ioapic_c;
 class bx_g2h_c;
 #if BX_SUPPORT_IODEBUG
@@ -311,6 +314,24 @@ class BOCHSAPI bx_serial_stub_c : public bx_devmodel_c {
   }
 };
 
+#if BX_SUPPORT_PCIUSB
+class BOCHSAPI bx_usb_stub_c : public bx_devmodel_c {
+  public:
+  virtual void usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
+    STUBFUNC(pciusb, usb_mouse_enq);
+  }
+};
+#endif
+
+#if BX_SUPPORT_BUSMOUSE
+class BOCHSAPI bx_busm_stub_c : public bx_devmodel_c {
+  public:
+  virtual void bus_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
+    STUBFUNC(busmouse, bus_mouse_enq);
+  }
+};
+#endif
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -359,14 +380,19 @@ public:
   bx_devmodel_c     *pluginPciIdeController;
   bx_devmodel_c     *pluginPciVgaAdapter;
   bx_devmodel_c     *pluginPciDevAdapter;
-  bx_devmodel_c     *pluginPciUSBAdapter;
-  bx_devmodel_c	    *pluginPciPNicAdapter;
+  bx_devmodel_c     *pluginPciPNicAdapter;
   bx_pit_c          *pit;
   bx_keyb_stub_c    *pluginKeyboard;
+#if BX_SUPPORT_BUSMOUSE
+  bx_busm_stub_c    *pluginBusMouse;
+#endif
   bx_dma_stub_c     *pluginDmaDevice;
   bx_floppy_stub_c  *pluginFloppyDevice;
   bx_cmos_stub_c    *pluginCmosDevice;
   bx_serial_stub_c  *pluginSerialDevice;
+#if BX_SUPPORT_PCIUSB
+  bx_usb_stub_c     *pluginPciUSBAdapter;
+#endif
   bx_devmodel_c     *pluginParallelDevice;
   bx_devmodel_c     *pluginUnmapped;
   bx_vga_stub_c     *pluginVgaDevice;
@@ -386,6 +412,9 @@ public:
   // loaded
   bx_cmos_stub_c stubCmos;
   bx_keyb_stub_c stubKeyboard;
+#if BX_SUPPORT_BUSMOUSE
+  bx_busm_stub_c stubBusMouse;
+#endif
   bx_hard_drive_stub_c stubHardDrive;
   bx_dma_stub_c  stubDma;
   bx_pic_stub_c  stubPic;
@@ -396,6 +425,9 @@ public:
   bx_ne2k_stub_c    stubNE2k;
   bx_speaker_stub_c stubSpeaker;
   bx_serial_stub_c  stubSerial;
+#if BX_SUPPORT_PCIUSB
+  bx_usb_stub_c     stubUsbAdapter;
+#endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
@@ -471,6 +503,9 @@ private:
 #   include "iodev/iodebug.h"
 #endif
 #include "iodev/keyboard.h"
+#if BX_SUPPORT_BUSMOUSE
+#   include "iodev/busmouse.h"
+#endif
 #include "iodev/parallel.h"
 #include "iodev/pic.h"
 #include "iodev/pit.h"
