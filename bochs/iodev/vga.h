@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.29 2003-05-09 15:32:28 vruppert Exp $
+// $Id: vga.h,v 1.30 2003-06-05 18:18:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -69,11 +69,10 @@
 
 #else
 
-#define BX_MAX_XRES 640
-#define BX_MAX_YRES 480
+#define BX_MAX_XRES 800
+#define BX_MAX_YRES 600
 
 #endif //BX_SUPPORT_VBE
-#define CGA_TEXT_ADDR(row, column) (0x18000 + ((row)*80 + (column))*2)
 
 #define X_TILESIZE 16
 #define Y_TILESIZE 24
@@ -82,7 +81,7 @@
 
 // Support varying number of rows of text.  This used to
 // be limited to only 25 lines.
-#define BX_MAX_TEXT_LINES 260
+#define BX_MAX_TEXT_LINES 100
 
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static
@@ -232,7 +231,7 @@ private:
     unsigned vertical_display_end;
     bx_bool  vga_tile_updated[BX_NUM_X_TILES][BX_NUM_Y_TILES];
     Bit8u vga_memory[256 * 1024];
-    Bit8u text_snapshot[2 * 80 * BX_MAX_TEXT_LINES]; // current text snapshot
+    Bit8u text_snapshot[32 * 1024]; // current text snapshot
     Bit8u rgb[3 * 256];
     Bit8u tile[X_TILESIZE * Y_TILESIZE];
     Bit16u charmap_address;
