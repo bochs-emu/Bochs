@@ -158,6 +158,8 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
   - fixed the PIT gate and improved the PIT printing options
   - experimental real-time PIT
 - parallel port improvements (Volker Ruppert)
+- bug fix: hard disk errors caused by overflowing imul in the BIOS code.  
+  Sebastian Bechet and Peter Tattam tracked it down and fixed it.
 - fix some memory leaks (patch from Darko Tominac)
 - Double-Word IO is supported for ATA devices
 - fix bash-specific syntax in install-x11-fonts script
