@@ -21,13 +21,13 @@ export CXXFLAGS
 export LDFLAGS
 
 ./configure --enable-cdrom \
-	    --enable-sb16=osx \
+	    --enable-sb16 \
 	    --enable-ne2000 \
 	    --enable-vbe \
 	    --enable-all-optimizations \
-	    ${CONFIGURE_ARGS} \
             --enable-cpu-level=6 \
             --enable-sse=1 \
             --enable-pci \
             --enable-clgd54xx \
-	    --enable-plugins
+	    --enable-plugins \
+	    ${CONFIGURE_ARGS}

@@ -20,15 +20,15 @@ export CXXFLAGS
 
 ./configure --target=ppc-macos \
             --enable-cdrom \
-            --enable-sb16=osx \
+            --enable-sb16 \
             --enable-vbe \
             --enable-all-optimizations \
-            ${CONFIGURE_ARGS} \
             --enable-cpu-level=6 \
             --enable-sse=1 \
             --enable-pci \
             --enable-clgd54xx \
             --enable-plugins \
-            --with-macos
+            --with-macos \
+            ${CONFIGURE_ARGS}
 
 unset echo

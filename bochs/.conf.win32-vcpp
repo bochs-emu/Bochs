@@ -12,7 +12,7 @@ set echo
 
 ./configure --target=pentium-windows \
             --enable-cdrom \
-            --enable-sb16=win \
+            --enable-sb16 \
             --enable-ne2000 \
             --enable-vbe \
             --enable-all-optimizations \
