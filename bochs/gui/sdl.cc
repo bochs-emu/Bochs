@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.15 2002-03-17 20:56:15 vruppert Exp $
+// $Id: sdl.cc,v 1.16 2002-03-18 21:21:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -198,6 +198,8 @@ void bx_gui_c::specific_init(
 {
   int i,j;
   Uint32 color, *buf;
+
+  th->put("SDL");
 
   tilewidth = x_tilesize;
   tileheight = y_tilesize;
@@ -435,11 +437,12 @@ void bx_gui_c::handle_events(void)
 	    SDL_WM_GrabInput(SDL_GRAB_OFF);
 	  }
 	  sdl_grab = ~sdl_grab;
+	  toggle_mouse_enable();
 	  break;
 	} else if (sdl_event.button.y < headerbar_height) {
 	  headerbar_click(sdl_event.button.x);
+	  break;
 	}
-	break;
       case SDL_MOUSEBUTTONUP:
 	// figure out mouse state
 	new_mousex = (int)(sdl_event.button.x);
@@ -854,7 +857,17 @@ void bx_gui_c::show_headerbar(void)
 
 void bx_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
-  BX_INFO (("mouse enabled changed specific"));
+  if( val == 1 )
+  {
+    SDL_ShowCursor(0);
+    SDL_WM_GrabInput(SDL_GRAB_ON);
+  }
+  else
+  {
+    SDL_ShowCursor(1);
+    SDL_WM_GrabInput(SDL_GRAB_OFF);
+  }
+  sdl_grab = val;
 }
 
 
