@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.36 2002-10-30 18:30:29 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.37 2002-10-30 23:54:29 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,30 +65,76 @@
 #if BX_USE_NEW_PIT
 
 #include "pit_wrap.h"
+
+
+//Important constant #defines:
+#define USEC_PER_SECOND (1000000)
+//1.193181MHz Clock
+#define TICKS_PER_SECOND (1193181)
+
+
+//CONFIGURATION #defines:
+
+
+//MAINLINE Configuration (For realtime PIT):
+
+//How much faster than real time we can go:
+#define MAX_MULT (1.25)
+
+//Minimum number of emulated useconds per second.
+//  Now calculated using BX_MIN_IPS, the minimum number of
+//   instructions per second.
+#if 1
+#  define MIN_USEC_PER_SECOND (((((Bit64u)USEC_PER_SECOND)*((Bit64u)BX_MIN_IPS))/((Bit64u)(bx_options.Oips->get())))+(Bit64u)1)
+#else
+#  define MIN_USEC_PER_SECOND (150000)
+#endif
+
+#if !BX_HAVE_REALTIME_USEC
+//These are only used if we don't have a way of getting accurate time.
+//How much slower than real time we can go:
+#  define MIN_MULT (0.9)
+
+//How much farther ahead we can get before we just stop
+//  and wait for real time to catch up:
+#  define AHEAD_CEILING ((Bit64u)(TICKS_PER_SECOND*2))
+#endif
+
+
+
+//DEBUG configuration:
+
+//Debug with printf options.
+#define DEBUG_REALTIME_WITH_PRINTF 0
+
+//Use to test execution at multiples of real time.
+#define TIME_DIVIDER (1)
+#define TIME_MULTIPLIER (1)
+#define TIME_HEADSTART (0)
+
+
+
+
+//Set up Logging.
 #define LOG_THIS bx_pit.
 
+//A single instance.
 bx_pit_c bx_pit;
 #if BX_USE_PIT_SMF
 #define this (&bx_pit)
 #endif
 
+//Workaround for environments where OUT is defined.
 #ifdef OUT
 #  undef OUT
 #endif
 
-#define DEBUG_REALTIME_WITH_PRINTF 0
-#define DEBUG_GETTIMEOFDAY_WITH_PRINTF 0
+
+//Generic MAX and MIN Functions
+#define BX_MAX(a,b) ( ((a)>(b))?(a):(b) )
+#define BX_MIN(a,b) ( ((a)>(b))?(b):(a) )
 
 
-#define USEC_PER_SECOND (1000000)
-
-#define TIME_DIVIDER (1)
-#define TIME_MULTIPLIER (1)
-#define TIME_HEADSTART (1)
-#define MIN_USEC_PER_SECOND (((((Bit64u)USEC_PER_SECOND)*((Bit64u)BX_MIN_IPS))/((Bit64u)(bx_options.Oips->get())))+(Bit64u)1)
-#if 0
-#define MIN_USEC_PER_SECOND (150000)
-#endif
 //USEC_ALPHA is multiplier for the past.
 //USEC_ALPHA_B is 1-USEC_ALPHA, or multiplier for the present.
 #define USEC_ALPHA ((double)(.8))
@@ -96,23 +142,17 @@ bx_pit_c bx_pit;
 #define USEC_ALPHA2 ((double)(.5))
 #define USEC_ALPHA2_B ((double)(((double)1)-USEC_ALPHA2))
 #define ALPHA_LOWER(old,new) ((Bit64u)((old<new)?((USEC_ALPHA*((double)(old)))+(USEC_ALPHA_B*((double)new))):((USEC_ALPHA2*((double)old))+(USEC_ALPHA2_B*((double)new)))))
-#define MIN_MULT (0.9)
-#define MIN_MULT_FLOOR (0.75)
-#define MAX_MULT (1.25)
-#define MAX_MULT_CEILING (1.5)
-#define BX_MAX(a,b) ( ((a)>(b))?(a):(b) )
-#define BX_MIN(a,b) ( ((a)>(b))?(b):(a) )
 
-//How many timer ticks per usecond.
-//1.193181MHz Clock
-//1193/1000 Ticks Per usecond.
-#define TICKS_PER_SECOND (1193181)
-#define TIME_MULT 1.193
+
+//PIT tick to usec conversion functions:
+//Direct conversions:
 #define REAL_TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
 #define REAL_USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
-#define AHEAD_CEILING ((Bit64u)(TICKS_PER_SECOND*2))
-#define TICKS_TO_USEC(a) ((BX_PIT_THIS s.use_realtime)?( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second ):( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND ))
-#define USEC_TO_TICKS(a) ((BX_PIT_THIS s.use_realtime)?( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second ):( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND ))
+
+//Conversion between emulated useconds and optionally realtime ticks.
+#define TICKS_TO_USEC(a) ((BX_PIT_THIS s.use_realtime)?( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second ):( REAL_TICKS_TO_USEC(a) ))
+#define USEC_TO_TICKS(a) ((BX_PIT_THIS s.use_realtime)?( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second ):( REAL_USEC_TO_TICKS(a) ))
+
 
 bx_pit_c::bx_pit_c( void )
 {
@@ -182,8 +222,8 @@ bx_pit_c::init( void )
     BX_PIT_THIS s.last_time=((bx_get_realtime64_usec()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
 #else
     BX_PIT_THIS s.last_time=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART)*USEC_PER_SECOND;
-#endif
     BX_PIT_THIS s.max_ticks = AHEAD_CEILING;
+#endif
   } else {
     BX_PIT_THIS s.total_usec=0;
   }
@@ -481,7 +521,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     }
 
     if(ticks_delta) {
-#  if DEBUG_GETTIMEOFDAY_WITH_PRINTF
+#  if DEBUG_REALTIME_WITH_PRINTF
       if(((BX_PIT_THIS s.last_time + real_time_delta) / USEC_PER_SECOND) > (BX_PIT_THIS s.last_time / USEC_PER_SECOND)) {
 	printf("useconds: %lld, expected ticks: %lld, ticks: %lld, diff: %lld\n",
 	       (Bit64u) BX_PIT_THIS s.total_sec,
@@ -503,7 +543,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 
     Bit64u a,b;
     a=(BX_PIT_THIS s.usec_per_second);
-    b=((Bit64u)1000000 * em_time_delta / real_time_delta);
+    b=((Bit64u)USEC_PER_SECOND * em_time_delta / real_time_delta);
 
     BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(a,b);
 #else
@@ -525,9 +565,9 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     ticks_delta=(Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
     BX_PIT_THIS s.total_ticks += ticks_delta;
 
-    while ((BX_PIT_THIS s.total_ticks >= 1193181) && (BX_PIT_THIS s.total_usec >= 1000000)) {
-      BX_PIT_THIS s.total_ticks -= 1193181;
-      BX_PIT_THIS s.total_usec  -= 1000000;
+    while ((BX_PIT_THIS s.total_ticks >= TICKS_PER_SECOND) && (BX_PIT_THIS s.total_usec >= USEC_PER_SECOND)) {
+      BX_PIT_THIS s.total_ticks -= TICKS_PER_SECOND;
+      BX_PIT_THIS s.total_usec  -= USEC_PER_SECOND;
     }
   }
 
@@ -557,14 +597,11 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 }
 
 
+#if !BX_HAVE_REALTIME_USEC
 void
 bx_pit_c::second_update_data(void) {
   Bit64u timediff;
-#if BX_HAVE_REALTIME_USEC
-  timediff=((bx_get_realtime64_usec()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))-(Bit64u)BX_PIT_THIS s.last_time;
-#else
   timediff=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)*USEC_PER_SECOND)-BX_PIT_THIS s.last_time;
-#endif
   BX_PIT_THIS s.last_time += timediff;
   if(timediff) {
     Bit64s tickstemp;
@@ -624,4 +661,5 @@ bx_pit_c::second_update_data(void) {
 #endif
   }
 }
+#endif // #if !BX_HAVE_REALTIME_USEC
 #endif // #if BX_USE_NEW_PIT
