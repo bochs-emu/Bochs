@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.18 2001-11-14 02:43:45 bdenney Exp $
+$Id: user.dbk,v 1.19 2001-11-14 04:08:10 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -131,7 +131,7 @@ active project of the week at Source Forge.
 <section><title>Who uses Bochs?</title>
 <para> It is hard to estimate how many people have tried Bochs or use it on a
 regular basis, but a few statistics give an indication.  The <link
-linkend="mailinglist">bochs-developers mailing list</link>, which is the
+linkend="bochs-developers">bochs-developers mailing list</link>, which is the
 primary source of news on bugs and releases, has over 300 subscribers.  The
 latest version has been downloaded over 40,000 times from SourceForge, not
 counting mirrors or CVS users.
@@ -2284,38 +2284,108 @@ and 0 turns it off.
 </chapter>
 
 <chapter id="mailinglist">
-<title>Developer's Mailing List</title>
-    <para>
-        To provide a forum for the development of the Bochs x86 PC emulation software, and to keep interested parties apprised of developments, there is a developer's email list available to anyone willing to join. After joining, you may email to bochs-developers@lists.sourceforge.net. Please note that your email will be sent to EVERYONE on the list.
-    </para>
-    <para>
-        How to subscribe to the bochs-developers mailing list:
+<title>Mailing Lists</title>
+<para>
+The Bochs community uses two mailing lists to communicate, called
+bochs-announce and bochs-developers.
 </para>
-<para>Subscribe via the web:
+
+<section id="bochs-developers"><title>bochs-developers mailing list</title>
+<para>
+Bochs-developers is the forum for all Bochs discussions and questions.  On
+average, subscribers get between five and ten messages per day.  There are
+about 350 subscribers.  If this sounds like too much email, maybe the <link
+linkend="bochs-announce">bochs-announce list</link> is more appropriate for
+you.  Anyone may join the list, unless they abuse it of course.
 </para>
-<orderedlist>
-<listitem><para>Go to the bochs-developers info page.
+<para>
+To subscribe, go to the <ulink url="http://lists.sourceforge.net/lists/listinfo/bochs-developers">Bochs-Developers Info Page</ulink> and type your email
+address and a password into the web form and click
+<command>Subscribe</command>.  In a few minutes you will get a confirmation
+email.  Follow the directions in the email to complete the subscription
+process.  To unsubscribe, go to the <ulink
+url="http://lists.sourceforge.net/lists/listinfo/bochs-developers">same
+page</ulink> and type your email address in the blank at the bottom and click
+on <command>Edit Options</command>.  Then type your password and click
+<command>Unsubscribe</command>.
 </para>
-</listitem>
-<listitem><para>Type your email address and a password into the blanks and click Subscribe.
+<para>
+Once you have subscribed, you can write to
+<email>bochs-developers@lists.sourceforge.net</email> to send a message to
+everyone on the list.  While it's possible to post without being a subscriber,
+it's not recommended.  If you aren't a subscriber, you might miss the response
+to your question.  
 </para>
-</listitem>
-<listitem><para>In a few minutes you will receive a confirmation email.  Follow the directions to complete the subscription process.
+</section>  <!-- End of bochs-developers mailing list -->
+
+<section id="bochs-announce"><title>bochs-announce mailing list</title>
+<para>
+Bochs-announce is a moderated, low-traffic list which carries only periodic
+announcements of Bochs releases and important events.  If you have a very
+important and truly relevant Bochs announcement, you can try posting it to
+bochs-announce, but the moderator will have to approve it before it will 
+go out.  On average, bochs-announce subscribers get one or two messages
+per month.  There are about 75 subscribers.  Anyone may join the list.
 </para>
-</listitem>
-</orderedlist>
 
 <para>
-        Subscribe via email:
+To subscribe, go to the <ulink url="http://lists.sourceforge.net/lists/listinfo/bochs-announce">Bochs-Announce Info Page</ulink> and type your email
+address and a password into the web form and click <command>Subscribe</command>.
+In a few minutes you will get a confirmation email.  Follow the directions in
+the email to complete the subscription process.  To unsubscribe, go to the
+<ulink url="http://lists.sourceforge.net/lists/listinfo/bochs-announce">same
+page</ulink> and type your email address in the blank at the bottom and click
+on <command>Edit Options</command>.  Then type your password and click
+<command>Unsubscribe</command>.
 </para>
-<orderedlist numeration="arabic">
-<listitem><para>Send an email to bochs-developers-request@lists.sourceforge.net with the subject line "subscribe".  (Don't forget the "-request" part or your subscribe message will go to 300 people.)
+
+<para>
+There is no need to subscribe to both lists, because all bochs-announce
+messages are forwarded to the developers list.  If you subscribe to both, you
+will get 2 copies of every announcement. 
 </para>
-</listitem>
-<listitem><para>In a few minutes you will receive a confirmation email.  Follow the directions to complete the subscription process.
+
+</section>  <!-- End of bochs-announce mailing list -->
+
+<section><title>Mailing List Etiquette</title>
+
+<para>
+Here are a few guidelines for use of the Bochs mailing lists:
 </para>
-</listitem>
-</orderedlist>
+
+<itemizedlist>
+<listitem> <para>
+Please check the documentation before asking questions, but on this list you
+are very UNLIKELY to get flamed and insulted for being a Bochs beginner.
+Sending commercial promotions to the list probably will get you some angry
+responses though.
+</para> </listitem>
+
+<listitem> <para>
+Also, keep in mind that messages are limited to 40K, so if you want to share a
+large screen shot or disk image, put it on a web or FTP site and tell people
+how to find it.  Patches are usually small enough that they aren't a problem,
+especially if compressed.
+</para> </listitem>
+
+<listitem> <para>
+Distribution of copyrighted material, or even offers to distribute copyrighted
+material WILL NOT be tolerated.  The Bochs Project does not distribute
+any software (disk images) in violation of the license agreement, and users who
+do so will be warned first and then blocked from the list if it happens again.
+As an open source project, we rely on donated services from Source Forge and
+other groups, and we can't afford to put them or ourselves at risk of legal
+action.
+</para> </listitem>
+
+<listitem> <para>
+It is possible to subscribe and unsubscribe by email.  If you do this, you must
+write to bochs-announce-request or bochs-developers-request.  Don't forget the
+"-request" part or your subscribe message will go to 300+ people.
+</para> </listitem>
+</itemizedlist>
+
+</section>
 </chapter>
 
 <chapter><title>Tips and Techniques</title>
@@ -2323,6 +2393,7 @@ and 0 turns it off.
       <screen>
 Ideas:
 - Using two hard disks
+- How to install ____
       </screen>
     </para>
 
