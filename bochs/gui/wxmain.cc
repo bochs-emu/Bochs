@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.85 2002-12-12 16:52:21 bdenney Exp $
+// $Id: wxmain.cc,v 1.86 2002-12-25 17:13:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -75,6 +75,9 @@
 #include "bitmaps/mouse.xpm"
 //#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
+#ifdef __WXGTK__
+#include "icon_bochs.xpm"
+#endif
 
 // FIXME: ugly global variables that the bx_gui_c object in wx.cc can use
 // to access the MyFrame and the MyPanel.
@@ -400,6 +403,8 @@ END_EVENT_TABLE()
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style)
 : wxFrame((wxFrame *)NULL, -1, title, pos, size, style)
 {
+  SetIcon(wxICON(icon_bochs));
+
   // init variables
   sim_thread = NULL;
   start_bochs_times = 0;

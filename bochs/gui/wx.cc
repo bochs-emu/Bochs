@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.52 2002-12-11 22:55:14 bdenney Exp $
+// $Id: wx.cc,v 1.53 2002-12-25 17:13:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -50,7 +50,7 @@
 #include <wx/image.h>
 #include <wx/clipbrd.h>
 
-#include "gui/icon_bochs.h"
+//#include "gui/icon_bochs.h"
 #include "osdep.h"
 #include "font/vga.bitmap.h"
 
