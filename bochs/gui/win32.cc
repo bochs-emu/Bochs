@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.35 2002-08-10 15:23:30 vruppert Exp $
+// $Id: win32.cc,v 1.36 2002-08-11 13:01:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -410,6 +410,7 @@ VOID UIThread(PVOID pvoid) {
   if (stInfo.mainWnd) {
     ShowWindow (stInfo.mainWnd, SW_SHOW);
 
+    InitCommonControls();
     hwndTB = CreateWindowEx(0, TOOLBARCLASSNAME, (LPSTR) NULL,
                WS_CHILD | CCS_ADJUSTABLE, 0, 0, 0, 0, stInfo.mainWnd,
                (HMENU) 100, stInfo.hInstance, NULL);
