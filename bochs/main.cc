@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.150 2002-09-25 18:49:35 bdenney Exp $
+// $Id: main.cc,v 1.151 2002-09-25 19:04:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1307,7 +1307,7 @@ int main (int argc, char *argv[])
   static jmp_buf context;
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
-    bx_init_main (argc, argv);
+    if (bx_init_main (argc, argv) < 0) return 0;
     bx_do_text_config_interface (argc, argv);
     bx_config_interface (BX_CI_INIT);
     bx_continue_after_config_interface (argc, argv);
@@ -1319,7 +1319,7 @@ int main (int argc, char *argv[])
 }
 #endif
 
-void
+int
 bx_init_main (int argc, char *argv[])
 {
   int help = 0;
@@ -1394,11 +1394,15 @@ bx_init_main (int argc, char *argv[])
       arg += 2;
     }
     if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
-    if (bochsrc)
-      bx_read_configuration (bochsrc);
+    if (bochsrc) {
+      if (bx_read_configuration (bochsrc) < 0)
+	return -1;   // read config failed
+    }
   }
+  // parse cmdline after bochsrc so that it can override things
   bx_parse_cmdline (arg, argc, argv);
 #endif
+  return 0;
 }
 
 #if !BX_WITH_WX
@@ -1802,6 +1806,7 @@ parse_bochsrc(char *rcfile)
   fd = fopen (rcfile, "r");
   if (fd == NULL) return -1;
 
+  int retval = 0;
   do {
     ret = fgets(line, sizeof(line)-1, fd);
     line[sizeof(line) - 1] = '\0';
@@ -1810,13 +1815,14 @@ parse_bochsrc(char *rcfile)
       line[len-1] = '\0';
     if ((ret != NULL) && strlen(line)) {
       if (parse_line_unformatted(rcfile, line) < 0) {
+	retval = -1;
 	break;  // quit parsing after first error
         }
       }
     } while (!feof(fd));
   fclose(fd);
   bochsrc_include_count--;
-  return 0;
+  return retval;
 }
 
   static Bit32s

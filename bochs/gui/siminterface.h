@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.73 2002-09-25 18:32:36 bdenney Exp $
+// $Id: siminterface.h,v 1.74 2002-09-25 19:05:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1193,7 +1193,7 @@ public:
 extern bx_simulator_interface_c *SIM;
 
 extern void bx_init_siminterface ();
-extern void bx_init_main (int argc, char *argv[]);
+extern int bx_init_main (int argc, char *argv[]);
 extern int bx_continue_after_config_interface (int argc, char *argv[]);
 
 #if BX_WITH_WX
