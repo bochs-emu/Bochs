@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.20 2002-02-01 16:46:27 vruppert Exp $
+// $Id: gui.h,v 1.21 2002-03-06 10:55:44 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -249,5 +249,7 @@ private:
 #define BX_KEY_POWER_WAKE   120
 
 #define BX_KEY_NBKEYS       121
-// If you add BX_KEYs Please update BX_KEY_NBKEYS
-// and the scancodes table in the file iodev/scancodes.cc
+// If you add BX_KEYs Please update 
+// - BX_KEY_NBKEYS
+// - the scancodes table in the file iodev/scancodes.cc
+// - the bx_key_symbol table in the file gui/keymap.cc
