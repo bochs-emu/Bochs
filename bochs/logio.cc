@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.17 2002-04-18 00:22:19 bdenney Exp $
+// $Id: logio.cc,v 1.18 2002-06-01 07:39:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -359,10 +359,23 @@ logfunctions::ldebug(const char *fmt, ...)
 void
 logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 {
+  static char in_ask_already = 0;
   char buf1[1024], buf2[1024];
+  if (in_ask_already) {
+    fprintf (stderr, "logfunctions::ask() should not reenter!!\n");
+    return;
+  }
+  in_ask_already = 1;
   vsprintf (buf1, fmt, ap);
   sprintf (buf2, "%s %s", prefix, buf1);
   // FIXME: facility set to 0 because it's unknown.
+
+  // update vga screen.  This is useful because sometimes useful messages
+  // are printed on the screen just before a panic.  It's also potentially
+  // dangerous if this function calls ask again...  That's why I added
+  // the reentry check above.
+  if (SIM->get_init_done()) bx_vga.timer_handler(&bx_vga);
+
   int val = SIM->log_msg (prefix, level, buf2);
   switch (val)
   {
@@ -373,6 +386,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       break;
     case 2:   // user chose die
       fatal (prefix, fmt, ap);
+      break;
     case 3: // user chose abort
       fprintf (stderr, "User chose to dump core...\n");
 #if BX_HAVE_ABORT
@@ -400,6 +414,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       // in gui/control.cc.
       fprintf (stderr, "WARNING: log_msg returned unexpected value %d\n", val);
   }
+  in_ask_already = 0;
 }
 
 void
