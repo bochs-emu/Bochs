@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.6 2002-10-18 16:15:37 bdenney Exp $
+// $Id: cmos.cc,v 1.20.2.7 2002-10-18 19:37:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,18 +30,9 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "cmos.h"
-#endif
+#define LOG_THIS theCmosDevice->
 
-#define LOG_THIS bx_cmos.
-
-bx_cmos_c bx_cmos;
-
-#if BX_USE_CMOS_SMF
-#define this (&bx_cmos)
-#endif
-
+bx_cmos_c *theCmosDevice = NULL;
 
 // check that BX_NUM_CMOS_REGS is 64 or 128
 #if (BX_NUM_CMOS_REGS == 64)
@@ -51,60 +42,51 @@ bx_cmos_c bx_cmos;
 #endif
 
 
-#if BX_PLUGINS
-
   static Bit32u
 cmosGetReg(unsigned reg)
 {
-  return( bx_cmos.s.reg[reg] );
+  return( BX_CMOS_THIS s.reg[reg] );
 }
 
   static void
 cmosSetReg(unsigned reg, Bit32u val)
 {
-  bx_cmos.s.reg[reg] = val;
+  BX_CMOS_THIS s.reg[reg] = val;
 }
 
   static time_t
 cmosGetTimeval()
 {
-  return( bx_cmos.s.timeval );
+  return( BX_CMOS_THIS s.timeval );
 }
 
   int
-plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  theCmosDevice = new bx_cmos_c ();
+  bx_devices.pluginCmosDevice = theCmosDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libcmos_LTX_plugin_fini(void)
 {
 }
 
-#endif
-
 bx_cmos_c::bx_cmos_c(void)
 {
-#if BX_PLUGINS
-
   pluginGetCMOSReg = cmosGetReg;
   pluginSetCMOSReg = cmosSetReg;
-  pluginCMOSChecksum = bx_cmos.checksum_cmos;
+  pluginCMOSChecksum = checksum_cmos;
   pluginGetCMOSTimeval = cmosGetTimeval;
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_CMOS);
-
-#endif
 
   put("CMOS");
   settype(CMOSLOG);
 
   unsigned i;
-  for (i=0; i<BX_NUM_CMOS_REGS; i++) {
-    BX_CMOS_THIS s.reg[i] = 0;
-    }
+  for (i=0; i<BX_NUM_CMOS_REGS; i++)
+    s.reg[i] = 0;
 }
 
 bx_cmos_c::~bx_cmos_c(void)
@@ -116,7 +98,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.6 2002-10-18 16:15:37 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.7 2002-10-18 19:37:07 bdenney Exp $"));
 
   // CMOS RAM & RTC
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.9 2002-10-17 17:29:06 bdenney Exp $
+// $Id: gui.cc,v 1.49.4.10 2002-10-18 19:37:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,8 +110,10 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_LEFT, floppyB_handler);
 
   // CDROM
-  Bit32u handle = BX_HD_GET_FIRST_CD_HANDLE();
-  BX_GUI_THIS cdromD_status = BX_HD_GET_CD_MEDIA_STATUS(handle);
+  if (BX_HARD_DRIVE_PRESENT()) {
+    Bit32u handle = BX_HD_GET_FIRST_CD_HANDLE();
+    BX_GUI_THIS cdromD_status = BX_HD_GET_CD_MEDIA_STATUS(handle);
+  }
 
   if (BX_GUI_THIS cdromD_status)
     BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_bmap_id,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.8.4.1 2002-10-10 13:10:55 cbothamy Exp $
+// $Id: pic.h,v 1.8.4.2 2002-10-18 19:37:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 #if BX_USE_PIC_SMF
 #  define BX_PIC_SMF  static
-#  define BX_PIC_THIS bx_pic.
+#  define BX_PIC_THIS thePic->
 #else
 #  define BX_PIC_SMF
 #  define BX_PIC_THIS this->
@@ -66,13 +66,13 @@ typedef struct {
   } bx_pic_t;
 
 
-class bx_pic_c : public logfunctions {
+class bx_pic_c : public bx_devmodel_c {
 
 public:
   bx_pic_c(void);
   ~bx_pic_c(void);
-  BX_PIC_SMF void   init(void);
-  BX_PIC_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
   BX_PIC_SMF void   lower_irq(unsigned irq_no);
   BX_PIC_SMF void   raise_irq(unsigned irq_no);
   BX_PIC_SMF Bit8u  IAC(void);
@@ -95,5 +95,3 @@ private:
   BX_PIC_SMF void   show_pic_state(void);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
   };
-
-extern bx_pic_c bx_pic;

@@ -62,7 +62,7 @@ Bit8u    (* pluginVGAMemRead)(Bit32u addr) = 0;
 void     (* pluginVGAMemWrite)(Bit32u addr, Bit8u value) = 0;
 void     (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot, 
 		     unsigned *txHeight, unsigned *txWidth) = 0;
-void     (* pluginVGARefresh)(void) = 0;
+void     (* pluginVGARefresh)(void *) = 0;
 void     (* pluginVGASetUpdateInterval)(unsigned) = 0;
 
 unsigned (* pluginFloppyGetMediaStatus)(unsigned drive) = 0;
@@ -219,7 +219,7 @@ void builtinVGAGetTextSnapshot(Bit8u **text_snapshot,
   pluginlog->panic("builtinVGAGetTextSnapshot called, no VGA plugin loaded?");
 }
 
-void builtinVGARefresh(void)
+void builtinVGARefresh(void *v)
 {
   pluginlog->panic("builtinVGARefresh called, no VGA plugin loaded?");
 }
@@ -558,6 +558,7 @@ plugin_abort (void)
     pluginlog->panic("plugin load aborted");
 }
 
+#endif   /* end of #if BX_PLUGINS */
 
 /************************************************************************/
 /* Plugin system: initialisation of plugins entry points                */
@@ -607,14 +608,14 @@ plugin_startup(void)
   pluginRegisterTimer = builtinRegisterTimer;
   pluginActivateTimer = builtinActivateTimer;
 
+#if BX_PLUGINS
   int status = lt_dlinit ();
   if (status != 0) {
     BX_ERROR (("initialization error in ltdl library (for loading plugins)"));
     BX_PANIC (("error message was: %s", lt_dlerror ()));
   }
+#endif
 }
-
-#endif   /* end of #if BX_PLUGINS */
 
 
 /************************************************************************/
@@ -780,19 +781,7 @@ int bx_load_plugins (void)
   pluginlog->put("PLGIN");
   pluginlog->settype(PLUGINLOG);
 
-  // Default builtins are used even in non-plugin mode
-  plugin_startup();
-
 #if BX_PLUGINS
-  bx_load_plugin(BX_PLUGIN_UNMAPPED, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_BIOSDEV, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_CMOS, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_DMA, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_PIC, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_VGA, PLUGTYPE_OPTIONAL);
-  bx_load_plugin(BX_PLUGIN_FLOPPY, PLUGTYPE_OPTIONAL);
-
-
   // quick and dirty gui plugin selection
   static char *gui_names[] = {
     "amigaos", "beos", "carbon", "macintosh", "nogui", 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.29.4.3 2002-10-18 16:15:45 bdenney Exp $
+// $Id: pic.cc,v 1.29.4.4 2002-10-18 19:37:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,51 +28,34 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "pic.h"
-#endif
-
-#define LOG_THIS bx_pic.
+#define LOG_THIS thePic->
 
 
 
-bx_pic_c bx_pic;
-#if BX_USE_PIC_SMF
-#define this (&bx_pic)
-#endif
-
-
-#if BX_PLUGINS
+bx_pic_c *thePic = NULL;
 
   int
-plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+libpic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  thePic = new bx_pic_c ();
+  bx_devices.pluginPicDevice = thePic;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePic, BX_PLUGIN_PIC);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libpic_LTX_plugin_fini(void)
 {
 }
-
-#endif
 
 
 bx_pic_c::bx_pic_c(void)
 {
-#if BX_PLUGINS
-
+  put("PIC");
+  settype(PICLOG);
   pluginRaiseIRQ = raise_irq;
   pluginLowerIRQ = lower_irq;
   pluginPicIAC   = IAC;
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_PIC);
-
-#endif
-
-	put("PIC");
-	settype(PICLOG);
 }
 
 bx_pic_c::~bx_pic_c(void)

@@ -1,5 +1,5 @@
 
-// $Id: biosdev.h,v 1.2.6.1 2002-10-10 13:10:48 cbothamy Exp $
+// $Id: biosdev.h,v 1.2.6.2 2002-10-18 19:37:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,20 +30,20 @@
 
 #if BX_USE_BIOS_SMF
 #  define BX_BIOS_SMF  static
-#  define BX_BIOS_THIS bx_biosdev.
+#  define BX_BIOS_THIS theBiosDevice->
 #else
 #  define BX_BIOS_SMF
 #  define BX_BIOS_THIS this->
 #endif
 
 
-class bx_biosdev_c {
+class bx_biosdev_c : public bx_devmodel_c {
 public:
   bx_biosdev_c(void);
   ~bx_biosdev_c(void);
 
-  BX_BIOS_SMF void init(void);
-  BX_BIOS_SMF void reset (unsigned type);
+  virtual void init(void);
+  virtual void reset (unsigned type);
 
 private:
 
@@ -61,5 +61,3 @@ private:
     } s;  // state information
 
   };
-
-extern bx_biosdev_c bx_biosdev;

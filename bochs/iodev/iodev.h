@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.14 2002-10-18 16:43:00 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.15 2002-10-18 19:37:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -181,15 +181,6 @@ public:
   bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
   bx_ioapic_c      *ioapic;
-#if !BX_PLUGINS
-  bx_dma_c         *dma;
-  bx_unmapped_c    *unmapped;
-  bx_biosdev_c     *biosdev;
-  bx_cmos_c        *cmos;
-  bx_vga_c         *vga;
-  bx_floppy_ctrl_c *floppy;
-  bx_pic_c         *pic;
-#endif
   bx_sb16_c        *sb16;
   bx_ne2k_c        *ne2k;
   bx_g2h_c         *g2h;
@@ -200,6 +191,18 @@ public:
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_devmodel_c *pluginSerialDevice;
   bx_devmodel_c *pluginParallelDevice;
+  bx_devmodel_c *pluginUnmapped;
+  bx_devmodel_c *pluginBiosDevice;
+  bx_devmodel_c *pluginCmosDevice;
+  bx_devmodel_c *pluginDmaDevice;
+  bx_devmodel_c *pluginPicDevice;
+  bx_devmodel_c *pluginVgaDevice;
+  bx_devmodel_c *pluginFloppyDevice;
+
+  // stub classes that the pointers (above) can point to until a plugin is
+  // loaded
+  bx_keyb_stub_c stubKeyboard;
+  bx_hard_drive_stub_c stubHardDrive;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
@@ -249,21 +252,18 @@ private:
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
 
-# if !BX_PLUGINS
-#include "iodev/biosdev.h"
 #include "iodev/cmos.h"
 #include "iodev/unmapped.h"
-
+#include "iodev/biosdev.h"
 #if BX_SUPPORT_VGA
 #  include "iodev/vga.h"
 #else
 #  include "iodev/hga.h"
 #endif
+
+#include "iodev/pic.h"
 #include "iodev/floppy.h"
 #include "iodev/dma.h"
-#include "iodev/pic.h"
-
-#endif // #if !BX_PLUGINS
 #include "iodev/parallel.h"
 #include "iodev/serial.h"
 #include "iodev/keyboard.h"

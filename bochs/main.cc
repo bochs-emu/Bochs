@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.11 2002-10-17 17:29:05 bdenney Exp $
+// $Id: main.cc,v 1.156.2.12 2002-10-18 19:37:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1515,6 +1515,8 @@ bx_continue_after_config_interface (int argc, char *argv[])
   bx_dbg_main(argc, argv);
 #else
 
+  // Default builtins are used even in non-plugin mode
+  plugin_startup();
 #if BX_PLUGINS
   bx_load_plugins ();
 #endif

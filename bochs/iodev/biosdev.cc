@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.4.6.5 2002-10-18 16:15:37 bdenney Exp $
+// $Id: biosdev.cc,v 1.4.6.6 2002-10-18 19:37:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,43 +41,27 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "biosdev.h"
-#endif
+bx_biosdev_c *theBiosDevice;
 
-bx_biosdev_c bx_biosdev;
-
-#if BX_USE_BIOS_SMF
-#define this (&bx_biosdev)
-#endif
-
-#if BX_PLUGINS
   int
-plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+libbiosdev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  theBiosDevice = new bx_biosdev_c ();
+  bx_devices.pluginBiosDevice = theBiosDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBiosDevice, BX_PLUGIN_BIOSDEV);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libbiosdev_LTX_plugin_fini(void)
 {
 }
-
-#endif
 
 logfunctions  *bioslog;
 logfunctions  *vgabioslog;
 
 bx_biosdev_c::bx_biosdev_c(void)
 {
-
-#if BX_PLUGINS
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_BIOSDEV);
-
-#endif
-
   bioslog = new logfunctions();
   bioslog->put("BIOS");
   bioslog->settype(BIOSLOG);

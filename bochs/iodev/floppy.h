@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.12.4.2 2002-10-10 13:10:50 cbothamy Exp $
+// $Id: floppy.h,v 1.12.4.3 2002-10-18 19:37:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 
 #if BX_USE_FD_SMF
 #  define BX_FD_SMF  static
-#  define BX_FD_THIS bx_floppy.
+#  define BX_FD_THIS theFloppyController->
 #else
 #  define BX_FD_SMF
 #  define BX_FD_THIS this->
@@ -47,13 +47,13 @@ typedef struct {
   unsigned write_protected;
   } floppy_t;
 
-class bx_floppy_ctrl_c : public logfunctions {
+class bx_floppy_ctrl_c : public bx_devmodel_c {
 public:
 
   bx_floppy_ctrl_c(void);
   ~bx_floppy_ctrl_c(void);
-  BX_FD_SMF void   init(void);
-  BX_FD_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
   BX_FD_SMF void   dma_write(Bit8u *data_byte);
   BX_FD_SMF void   dma_read(Bit8u *data_byte);
   BX_FD_SMF unsigned set_media_status(unsigned drive, unsigned status);
@@ -134,5 +134,3 @@ public:
   BX_FD_SMF void   increment_sector(void);
   BX_FD_SMF Boolean evaluate_media(unsigned type, char *path, floppy_t *floppy);
   };
-
-extern bx_floppy_ctrl_c bx_floppy;

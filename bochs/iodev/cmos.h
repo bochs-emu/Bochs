@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.6.4.1 2002-10-10 13:10:49 cbothamy Exp $
+// $Id: cmos.h,v 1.6.4.2 2002-10-18 19:37:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,21 +30,21 @@
 
 #if BX_USE_CMOS_SMF
 #  define BX_CMOS_SMF  static
-#  define BX_CMOS_THIS bx_cmos.
+#  define BX_CMOS_THIS theCmosDevice->
 #else
 #  define BX_CMOS_SMF
 #  define BX_CMOS_THIS this->
 #endif
 
 
-class bx_cmos_c : public logfunctions {
+class bx_cmos_c : public bx_devmodel_c {
 public:
   bx_cmos_c(void);
   ~bx_cmos_c(void);
 
-  BX_CMOS_SMF void init(void);
+  virtual void init(void);
   BX_CMOS_SMF void checksum_cmos(void);
-  BX_CMOS_SMF void reset(unsigned type);
+  virtual void reset(unsigned type);
 
   struct {
     int     periodic_timer_index;
@@ -73,6 +73,3 @@ private:
   BX_CMOS_SMF void update_clock(void);
   BX_CMOS_SMF void CRA_change(void);
   };
-
-
-extern bx_cmos_c bx_cmos;

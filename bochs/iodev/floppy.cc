@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.9 2002-10-18 16:43:00 bdenney Exp $
+// $Id: floppy.cc,v 1.51.2.10 2002-10-18 19:37:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,20 +41,9 @@ extern "C" {
 }
 #include "bochs.h"
 // windows.h included by bochs.h
-#define LOG_THIS bx_floppy.
+#define LOG_THIS theFloppyController->
 
-#if BX_PLUGINS
-#include "floppy.h"
-#endif
-
-
-bx_floppy_ctrl_c bx_floppy;
-
-#if BX_USE_FD_SMF
-#define this (&bx_floppy)
-#endif
-
-
+bx_floppy_ctrl_c *theFloppyController;
 
 /* for main status register */
 #define FD_MS_MRQ  0x80
@@ -72,37 +61,28 @@ bx_floppy_ctrl_c bx_floppy;
 #define FLOPPY_DMA_CHAN 2
 
 
-#if BX_PLUGINS
-
   int
-plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+libfloppy_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  theFloppyController = new bx_floppy_ctrl_c ();
+  bx_devices.pluginFloppyDevice = theFloppyController;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theFloppyController, BX_PLUGIN_FLOPPY);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libfloppy_LTX_plugin_fini(void)
 {
 }
-
-#endif
 
 
 bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
+  put("FDD");
+  settype(FDLOG);
 
-#if BX_PLUGINS
-
-  pluginFloppyGetMediaStatus = bx_floppy.get_media_status;
-  pluginFloppySetMediaStatus = bx_floppy.set_media_status;
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_FLOPPY);
-
-#endif
-
-	put("FDD");
-	settype(FDLOG);
+  pluginFloppyGetMediaStatus = get_media_status;
+  pluginFloppySetMediaStatus = set_media_status;
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
@@ -117,9 +97,9 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.9 2002-10-18 16:43:00 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.10 2002-10-18 19:37:09 bdenney Exp $"));
 
-  BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
+  BX_REGISTER_DMA8_CHANNEL(2, dma_read, dma_write, "Floppy Drive");
   BX_REGISTER_IRQ(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
     BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "Floppy Drive", 7);
@@ -1155,7 +1135,7 @@ bx_floppy_ctrl_c::timer()
       break;
 
     case 0xfe: // (contrived) RESET
-      reset(BX_RESET_SOFTWARE);
+      theFloppyController->reset(BX_RESET_SOFTWARE);
       BX_FD_THIS s.pending_command = 0;
       BX_FD_THIS s.status_reg0 = 0xc0;
       raise_interrupt();

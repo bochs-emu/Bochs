@@ -67,7 +67,7 @@ extern "C" {
 #define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
 #define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
 #define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) pluginVGAGetTextSnapshot(rawsnap, height, width)
-#define BX_VGA_REFRESH() pluginVGARefresh ()
+#define BX_VGA_REFRESH() pluginVGARefresh(bx_devices.pluginVgaDevice)
 #define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
 
 #define BX_FLOPPY_GET_MEDIA_STATUS(drive) pluginFloppyGetMediaStatus(drive)
@@ -107,44 +107,40 @@ extern "C" {
 #define BX_REGISTER_IRQ(b,c) bx_devices.register_irq(b,c)
 #define BX_UNREGISTER_IRQ(b) bx_devices.unregister_irq(b)
 
-#define BX_GET_CMOS_REG(b) (bx_devices.cmos->s.reg[b])
-#define BX_SET_CMOS_REG(b,c) (bx_devices.cmos->s.reg[b]=c)
-#define BX_CMOS_CHECKSUM() (bx_devices.cmos->checksum_cmos())
-#define BX_GET_CMOS_TIMEVAL() (bx_devices.cmos->s.timeval)
+#define BX_GET_CMOS_REG(b) pluginGetCMOSReg(b)
+#define BX_SET_CMOS_REG(b,c) pluginSetCMOSReg(b,c)
+#define BX_CMOS_CHECKSUM() pluginCMOSChecksum()
+#define BX_GET_CMOS_TIMEVAL() pluginGetCMOSTimeval()
 
-#define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
-#define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
-#define BX_VGA_REDRAW_AREA(left, top, right, bottom) \
-    (bx_vga.redraw_area(left, top, right, bottom))
-#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) \
-    (bx_vga.get_text_snapshot(rawsnap, height, width))
-#define BX_VGA_REFRESH() bx_vga.timer_handler (&bx_vga)
-#define BX_VGA_SET_UPDATE_INTERVAL(val) bx_vga.set_update_interval(val)
+#define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
+#define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
+#define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
+#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) pluginVGAGetTextSnapshot(rawsnap, height, width)
+#define BX_VGA_REFRESH() pluginVGARefresh(bx_devices.pluginVgaDevice)
+#define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
 
-#define BX_FLOPPY_GET_MEDIA_STATUS(drive) \
-    (bx_devices.floppy->get_media_status(drive))
-#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) \
-    (bx_devices.floppy->set_media_status(drive, status))
+#define BX_FLOPPY_GET_MEDIA_STATUS(drive) pluginFloppyGetMediaStatus(drive)
+#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) pluginFloppySetMediaStatus(drive, status)
 
-#define BX_FLOPPY_PRESENT() (bx_devices.floppy)
+#define BX_FLOPPY_PRESENT() (pluginDevicePresent(BX_PLUGIN_FLOPPY))
 
 #define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
 #define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
 
 #define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  bx_dma.registerDMA8Channel(channel, dmaRead, dmaWrite, name)
+  pluginRegisterDMA8Channel(channel, dmaRead, dmaWrite, name)
 #define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  bx_dma.registerDMA16Channel(channel, dmaRead, dmaWrite, name)
+  pluginRegisterDMA16Channel(channel, dmaRead, dmaWrite, name)
 #define BX_UNREGISTER_DMA_CHANNEL(channel) \
-  bx_dma.unregisterDMAChannel(channel)
-#define BX_DMA_SET_DRQ(channel, val) bx_dma.set_DRQ(channel, val)
-#define BX_DMA_GET_TC()             bx_dma.get_TC()
-#define BX_DMA_RAISE_HLDA()         bx_dma.raise_HLDA()
+  pluginUnregisterDMAChannel(channel)
+#define BX_DMA_SET_DRQ(channel, val) pluginDMASetDRQ(channel, val)
+#define BX_DMA_GET_TC()              pluginDMAGetTC()
+#define BX_DMA_RAISE_HLDA()          pluginDMARaiseHLDA()
 
-#define BX_PIC_LOWER_IRQ(b) bx_devices.pic->lower_irq(b);
-#define BX_PIC_RAISE_IRQ(b) bx_devices.pic->raise_irq(b);
-#define BX_PIC_IAC()        bx_devices.pic->IAC()
+#define BX_PIC_LOWER_IRQ(b)  pluginLowerIRQ(b)
+#define BX_PIC_RAISE_IRQ(b)  pluginRaiseIRQ(b)
+#define BX_PIC_IAC()         pluginPicIAC()
 
 #endif // #if BX_PLUGINS
 
@@ -182,7 +178,7 @@ extern "C" {
 #define BX_HD_SET_CD_MEDIA_STATUS(handle, status) \
     (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
 #define BX_HD_CLOSE_HARDDRIVE()  bx_devices.pluginHardDrive->close_harddrive()
-#define BX_HARD_DRIVE_PRESENT() (bx_devices.pluginHardDrive)
+#define BX_HARD_DRIVE_PRESENT() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
 
 
 #if BX_HAVE_DLFCN_H
@@ -319,7 +315,7 @@ extern Bit8u (* pluginVGAMemRead)(Bit32u addr);
 extern void  (* pluginVGAMemWrite)(Bit32u addr, Bit8u value);
 extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot, 
 		          unsigned *txHeight, unsigned *txWidth);
-extern void  (* pluginVGARefresh)(void);
+extern void  (* pluginVGARefresh)(void *);
 extern void  (* pluginVGASetUpdateInterval)(unsigned);
 
 /* === Timer stuff === */

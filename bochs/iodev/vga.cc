@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43.2.6 2002-10-18 16:15:47 bdenney Exp $
+// $Id: vga.cc,v 1.43.2.7 2002-10-18 19:37:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,11 +27,7 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "vga.h"
-#endif
-
-#define LOG_THIS bx_vga.
+#define LOG_THIS theVga->
 
 /* NOTES:
  * I take it data rotate is a true rotate with carry of bit 0 to bit 7.
@@ -41,54 +37,36 @@
 // (mch)
 #define VGA_TRACE_FEATURE
 
-bx_vga_c bx_vga;
-#if BX_USE_VGA_SMF
-#define this (&bx_vga)
-#endif
+bx_vga_c *theVga = NULL;
 
 unsigned old_iHeight = 0, old_iWidth = 0;
 
-#if BX_PLUGINS
-
-  void
-vgaRefresh(void)
-{
-  bx_vga.timer_handler(NULL);
-}
-
   int
-plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  theVga = new bx_vga_c ();
+  bx_devices.pluginVgaDevice = theVga;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libvga_LTX_plugin_fini(void)
 {
 }
 
-#endif
-
 bx_vga_c::bx_vga_c(void)
 {
-#if BX_PLUGINS
-
-  pluginVGARedrawArea = bx_vga.redraw_area;
-  pluginVGAMemRead = bx_vga.mem_read;
-  pluginVGAMemWrite = bx_vga.mem_write;
-  pluginVGAGetTextSnapshot = bx_vga.get_text_snapshot;
-  pluginVGARefresh = vgaRefresh;
-  pluginVGASetUpdateInterval = bx_vga.set_update_interval;
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_VGA);
-
-#endif
-
-  BX_VGA_THIS s.vga_mem_updated = 0;
-  BX_VGA_THIS s.x_tilesize = X_TILESIZE;
-  BX_VGA_THIS s.y_tilesize = Y_TILESIZE;
-  BX_VGA_THIS put("VGA");
+  put("VGA");
+  s.vga_mem_updated = 0;
+  s.x_tilesize = X_TILESIZE;
+  s.y_tilesize = Y_TILESIZE;
+  pluginVGARedrawArea = redraw_area;
+  pluginVGAMemRead = mem_read;
+  pluginVGAMemWrite = mem_write;
+  pluginVGAGetTextSnapshot = get_text_snapshot;
+  pluginVGARefresh = timer_handler;
+  pluginVGASetUpdateInterval = set_update_interval;
 }
 
 
@@ -696,7 +674,7 @@ bx_vga_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned i
   class_ptr->write(address, value, io_len, 0);
 #else
   UNUSED(this_ptr);
-  bx_vga.write(address, value, io_len, 0);
+  theVga->write(address, value, io_len, 0);
 #endif
 }
 
@@ -709,7 +687,7 @@ bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, uns
   class_ptr->write(address, value, io_len, 1);
 #else
   UNUSED(this_ptr);
-  bx_vga.write(address, value, io_len, 1);
+  theVga->write(address, value, io_len, 1);
 #endif
 }
 
@@ -1202,7 +1180,7 @@ void
 bx_vga_c::set_update_interval (unsigned interval)
 {
   BX_INFO (("Changing timer interval to %d\n", interval));
-  BX_VGA_THIS timer_handler (this);
+  BX_VGA_THIS timer_handler (theVga);
   bx_pc_system.activate_timer (BX_VGA_THIS timer_id, interval, 1);
 }
 
@@ -1528,7 +1506,7 @@ bx_vga_c::update(void)
           cursor_x = ((cursor_address - start_address)/2) % 80;
           cursor_y = ((cursor_address - start_address)/2) / 80;
           }
-        cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
+        cursor_state = (BX_VGA_THIS s.CRTC.reg[0x0a] << 8) | BX_VGA_THIS s.CRTC.reg[0x0b];
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
                            cursor_x, cursor_y, cursor_state, 25);
@@ -1561,7 +1539,7 @@ bx_vga_c::update(void)
           cursor_x = ((cursor_address - start_address)/2) % 80;
           cursor_y = ((cursor_address - start_address)/2) / 80;
           }
-        cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
+        cursor_state = (BX_VGA_THIS s.CRTC.reg[0x0a] << 8) | BX_VGA_THIS s.CRTC.reg[0x0b];
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
                            cursor_x, cursor_y, cursor_state, 25);
@@ -1576,11 +1554,11 @@ bx_vga_c::update(void)
         unsigned VDE, MSL, rows;
 
         // Verticle Display End: find out how many lines are displayed
-        VDE = bx_vga.s.CRTC.reg[0x12] |
-              ((bx_vga.s.CRTC.reg[0x07]<<7)&0x100) |
-              ((bx_vga.s.CRTC.reg[0x07]<<3)&0x200);
+        VDE = BX_VGA_THIS s.CRTC.reg[0x12] |
+              ((BX_VGA_THIS s.CRTC.reg[0x07]<<7)&0x100) |
+              ((BX_VGA_THIS s.CRTC.reg[0x07]<<3)&0x200);
         // Maximum Scan Line: height of character cell
-        MSL = bx_vga.s.CRTC.reg[0x09] & 0x1f;
+        MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
         rows = (VDE+1)/(MSL+1);
         if (rows > BX_MAX_TEXT_LINES)
           BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
@@ -1604,7 +1582,7 @@ bx_vga_c::update(void)
           cursor_x = ((cursor_address - start_address)/2) % (iWidth/8);
           cursor_y = ((cursor_address - start_address)/2) / (iWidth/8);
           }
-        cursor_state = (bx_vga.s.CRTC.reg[0x0a] << 8) | bx_vga.s.CRTC.reg[0x0b];
+        cursor_state = (BX_VGA_THIS s.CRTC.reg[0x0a] << 8) | BX_VGA_THIS s.CRTC.reg[0x0b];
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
                            cursor_x, cursor_y, cursor_state, rows);
@@ -2066,10 +2044,10 @@ bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
 
   if (!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     *text_snapshot = &BX_VGA_THIS s.text_snapshot[0];
-    VDE = bx_vga.s.CRTC.reg[0x12] |
-          ((bx_vga.s.CRTC.reg[0x07]<<7)&0x100) |
-          ((bx_vga.s.CRTC.reg[0x07]<<3)&0x200);
-    MSL = bx_vga.s.CRTC.reg[0x09] & 0x1f;
+    VDE = BX_VGA_THIS s.CRTC.reg[0x12] |
+          ((BX_VGA_THIS s.CRTC.reg[0x07]<<7)&0x100) |
+          ((BX_VGA_THIS s.CRTC.reg[0x07]<<3)&0x200);
+    MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
     *txHeight = (VDE+1)/(MSL+1);
     *txWidth = BX_VGA_THIS s.CRTC.reg[1] + 1;
   } else {

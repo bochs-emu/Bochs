@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.17.4.2 2002-10-10 13:10:58 cbothamy Exp $
+// $Id: vga.h,v 1.17.4.3 2002-10-18 19:37:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,20 +85,20 @@
 
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static
-#  define BX_VGA_THIS bx_vga.
+#  define BX_VGA_THIS theVga->
 #else
 #  define BX_VGA_SMF
 #  define BX_VGA_THIS this->
 #endif
 
 
-class bx_vga_c : public logfunctions {
+class bx_vga_c : public bx_devmodel_c {
 public:
 
   bx_vga_c(void);
   ~bx_vga_c(void);
-  BX_VGA_SMF void   init(void);
-  BX_VGA_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
   BX_VGA_SMF Bit8u  mem_read(Bit32u addr);
   // Note: either leave value of type Bit8u, or mask it when
   //       used to 8 bits, in memory.cc
@@ -277,5 +277,3 @@ private:
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight,
                                               unsigned *piWidth);
   };
-
-extern bx_vga_c bx_vga;

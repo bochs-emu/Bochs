@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.18.4.5 2002-10-18 16:15:46 bdenney Exp $
+// $Id: unmapped.cc,v 1.18.4.6 2002-10-18 19:37:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,42 +28,27 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "unmapped.h"
-#endif
-
-#define LOG_THIS bx_unmapped.
+#define LOG_THIS theUnmappedDevice->
 
 
-bx_unmapped_c bx_unmapped;
-#if BX_USE_UM_SMF
-#define this (&bx_unmapped)
-#endif
+bx_unmapped_c *theUnmappedDevice = NULL;
 
-#if BX_PLUGINS
   int
-plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
+  theUnmappedDevice = new bx_unmapped_c ();
+  bx_devices.pluginUnmapped = theUnmappedDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libunmapped_LTX_plugin_fini(void)
 {
 }
 
-#endif
-
 bx_unmapped_c::bx_unmapped_c(void)
 {
-
-#if BX_PLUGINS
-
-  // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_UNMAPPED);
-
-#endif
-
   put("UNMP");
   settype(UNMAPLOG);
   s.port80 = 0x00;

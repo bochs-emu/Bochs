@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.10.4.1 2002-10-10 13:10:49 cbothamy Exp $
+// $Id: dma.h,v 1.10.4.2 2002-10-18 19:37:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 
 #if BX_USE_DMA_SMF
 #  define BX_DMA_SMF  static
-#  define BX_DMA_THIS bx_dma.
+#  define BX_DMA_THIS theDmaDevice->
 #else
 #  define BX_DMA_SMF
 #  define BX_DMA_THIS this->
@@ -39,14 +39,14 @@
 
 
 
-class bx_dma_c : public logfunctions {
+class bx_dma_c : public bx_devmodel_c {
 public:
 
   bx_dma_c();
   ~bx_dma_c(void);
 
-  BX_DMA_SMF void     init(void);
-  BX_DMA_SMF void     reset(unsigned type);
+  virtual void     init(void);
+  virtual void     reset(unsigned type);
   BX_DMA_SMF void     raise_HLDA(void);
   BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
   BX_DMA_SMF unsigned get_TC(void);
@@ -109,7 +109,5 @@ private:
     } h[4]; // DMA read and write handlers
 
   };
-
-extern bx_dma_c bx_dma;
 
 #endif  // #ifndef _PCDMA_H

@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.13 2002-10-18 16:15:39 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.14 2002-10-18 19:37:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,28 +38,11 @@
 
 bx_devices_c bx_devices;
 
-// core devices
-bx_keyb_stub_c pluginKeyboardStub;
-bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
-bx_hard_drive_stub_c pluginHardDriveStub;
-bx_hard_drive_stub_c *pluginHardDrive = &pluginHardDriveStub;
-
 // constructor for bx_devices_c
 bx_devices_c::bx_devices_c(void)
 {
   put("DEV");
   settype(DEVLOG);
-
-#if !BX_PLUGINS
-  unmapped = NULL;
-  biosdev = NULL;
-  cmos = NULL;
-  vga = NULL;
-  floppy = NULL;
-  dma = NULL;
-  pic = NULL;
-#endif
-
 
 #if BX_PCI_SUPPORT
   pci = NULL;
@@ -73,6 +56,17 @@ bx_devices_c::bx_devices_c(void)
 #if BX_IODEBUG_SUPPORT
   iodebug = NULL;
 #endif
+  pluginKeyboard = &stubKeyboard;
+  pluginHardDrive = &stubHardDrive;
+  pluginSerialDevice = NULL;
+  pluginParallelDevice = NULL;
+  pluginUnmapped = NULL;
+  pluginBiosDevice = NULL;
+  pluginCmosDevice = NULL;
+  pluginDmaDevice = NULL;
+  pluginPicDevice = NULL;
+  pluginVgaDevice = NULL;
+  pluginFloppyDevice = NULL;
 }
 
 
@@ -88,7 +82,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.13 2002-10-18 16:15:39 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.14 2002-10-18 19:37:08 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -116,36 +110,42 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   timer_handle = BX_NULL_TIMER_HANDLE;
 
-  BX_LOAD_PLUGIN (harddrv, PLUGTYPE_CORE);
-  BX_LOAD_PLUGIN (keyboard, PLUGTYPE_CORE);
+  // unmapped is core because it must be initialized before anybody else
+  BX_LOAD_PLUGIN(unmapped, PLUGTYPE_CORE);
+
+#warning these should only be loaded if they are enabled.
+#warning and they should only be optional if the init order is irrelevant
+  BX_LOAD_PLUGIN(biosdev, PLUGTYPE_CORE);
+  BX_LOAD_PLUGIN(cmos, PLUGTYPE_CORE);
+  BX_LOAD_PLUGIN(dma, PLUGTYPE_CORE);
+  BX_LOAD_PLUGIN(pic, PLUGTYPE_CORE);
+  BX_LOAD_PLUGIN(vga, PLUGTYPE_CORE);
+  /// optional plugins
+  BX_LOAD_PLUGIN(floppy, PLUGTYPE_OPTIONAL);
+  BX_LOAD_PLUGIN(harddrv, PLUGTYPE_OPTIONAL);
+  BX_LOAD_PLUGIN(keyboard, PLUGTYPE_OPTIONAL);
   if (is_serial_enabled ())
     BX_LOAD_PLUGIN(serial, PLUGTYPE_OPTIONAL);
   if (is_parallel_enabled ()) 
     BX_LOAD_PLUGIN(parallel, PLUGTYPE_OPTIONAL);
 
-#if !BX_PLUGINS 
+
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
-  unmapped = &bx_unmapped;
-  unmapped->init();
- 
+  pluginUnmapped->init ();
+
   // BIOS log 
-  biosdev = &bx_biosdev;
-  biosdev->init();
+  pluginBiosDevice->init ();
 
   // CMOS RAM & RTC
-  cmos = &bx_cmos;
-  cmos->init();
+  pluginCmosDevice->init ();
 
 #if BX_SUPPORT_VGA
   /*--- VGA adapter ---*/
-  vga = & bx_vga;
-  vga->init();
+  pluginVgaDevice->init ();
 #else
   /*--- HGA adapter ---*/
   bx_init_hga_hardware();
-#endif
-
 #endif
 
 #if BX_PCI_SUPPORT
@@ -162,27 +162,11 @@ bx_devices_c::init(BX_MEM_C *newmem)
     ioapic->init (this);
 #endif
 
-#if !BX_PLUGINS 
-
   /*--- 8237 DMA ---*/
-  dma = &bx_dma;
-  dma->init();
-
-  //--- FLOPPY ---
-  floppy = &bx_floppy;
-  floppy->init();
+  pluginDmaDevice->init();
 
   /*--- 8259A PIC ---*/
-  pic = & bx_pic;
-  pic->init();
-
-#endif
-
-  /*--- HARD DRIVE ---*/
-  pluginHardDrive->init();
-
-  /*--- KEYBOARD ---*/
-  pluginKeyboard->init();
+  pluginPicDevice->init();
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
@@ -266,23 +250,20 @@ bx_devices_c::reset(unsigned type)
 
 #if !BX_PLUGINS 
 
-  dma->reset(type);
-  cmos->reset(type);
-  biosdev->reset(type);
-  unmapped->reset(type);
+  pluginDmaDevice->reset(type);
+  pluginCmosDevice->reset(type);
+  pluginBiosDevice->reset(type);
+  pluginUnmapped->reset(type);
 
 #if BX_SUPPORT_VGA
-  vga->reset(type);
+  pluginVgaDevice->reset(type);
 #else
   // reset hga hardware?
 #endif
 
-  floppy->reset(type);
-  pic->reset(type);
+  pluginPicDevice->reset(type);
+
 #endif
-  // call reset on all core plugins
-  pluginHardDrive->reset(type);
-  pluginKeyboard->reset(type);
 
 #if BX_SUPPORT_SB16
   sb16->reset(type);
