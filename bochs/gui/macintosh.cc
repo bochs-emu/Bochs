@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.20 2003-05-11 15:07:53 vruppert Exp $
+// $Id: macintosh.cc,v 1.21 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -988,9 +988,15 @@ void bx_macintosh_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned
 //
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+// fheight: new VGA character height in text mode
+// fwidth : new VGA character width in text mode
+// bpp : bits per pixel in graphics mode
 
-void bx_macintosh_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
+void bx_macintosh_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
+  if (bpp > 8) {
+    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  }
   if (fheight > 0) {
     if (fwidth != 8) {
       x = x * 8 / fwidth;

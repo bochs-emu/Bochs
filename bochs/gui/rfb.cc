@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.23 2003-06-04 20:35:28 vruppert Exp $
+// $Id: rfb.cc,v 1.24 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -640,10 +640,16 @@ void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 //
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+// fheight: new VGA character height in text mode
+// fwidth : new VGA character width in text mode
+// bpp : bits per pixel in graphics mode
 
   void
-bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
+bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
+  if (bpp > 8) {
+    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  }
   if (fheight > 0) {
     text_cols = x / fwidth;
     text_rows = y / fheight;

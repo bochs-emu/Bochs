@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.60 2003-06-15 10:37:56 vruppert Exp $
+// $Id: wx.cc,v 1.61 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -1161,13 +1161,17 @@ void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // y:       new VGA y size
 // fheight: new VGA character height in text mode
 // fwidth : new VGA character width in text mode
+// bpp : bits per pixel in graphics mode
 
-void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
+void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen)));
   wxScreen_lock.Enter ();
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen)));
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d", x, y, fheight, fwidth));
+  if (bpp > 8) {
+    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  }
   if (fheight > 0) {
     wxFontX = fwidth;
     wxFontY = fheight;

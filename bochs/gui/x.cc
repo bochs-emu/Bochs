@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.71 2003-06-15 19:20:06 vruppert Exp $
+// $Id: x.cc,v 1.72 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1373,8 +1373,11 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
 
 
   void
-bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
+bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
+  if (bpp > 8) {
+    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  }
   if (fheight > 0) {
     font_height = fheight;
     font_width = fwidth;

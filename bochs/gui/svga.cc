@@ -394,13 +394,17 @@ void bx_svga_gui_c::dimension_update(
     unsigned x,
     unsigned y,
     unsigned fheight,
-    unsigned fwidth)
+    unsigned fwidth,
+    unsigned bpp)
 {
   int newmode;
     
   // TODO: remove this stupid check whenever the vga driver is fixed
   if( y == 208 ) y = 200;
     
+  if (bpp > 8) {
+    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  }
   if( fheight > 0 )
   {
     fontheight = fheight;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.39 2003-05-18 10:44:26 vruppert Exp $
+// $Id: gui.h,v 1.40 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ public:
   virtual void flush(void) = 0;
   virtual void clear_screen(void) = 0;
   virtual bx_bool palette_change(unsigned index, unsigned red, unsigned green, unsigned blue) = 0;
-  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0, unsigned fwidth=0) = 0;
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0, unsigned fwidth=0, unsigned bpp=8) = 0;
   virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim) = 0;
   virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)) = 0;
   virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id) = 0;
@@ -158,7 +158,7 @@ protected:
   virtual bx_bool palette_change(unsigned index,                              \
       unsigned red, unsigned green, unsigned blue);                           \
   virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
-                                unsigned fwidth=0);                           \
+                                unsigned fwidth=0, unsigned bpp=8);           \
   virtual unsigned create_bitmap(const unsigned char *bmap,                   \
       unsigned xdim, unsigned ydim);                                          \
   virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \

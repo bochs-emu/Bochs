@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.18 2003-05-11 15:07:53 vruppert Exp $
+// $Id: amigaos.cc,v 1.19 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -664,9 +664,12 @@ bx_amigaos_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 
   void
-bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
+bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
 
+	if (bpp > 8) {
+		BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+	}
 	int xdiff = w - x;
 
 	if (fheight > 0) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.40 2003-06-15 15:10:45 vruppert Exp $
+// $Id: sdl.cc,v 1.41 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -893,8 +893,12 @@ void bx_sdl_gui_c::dimension_update(
     unsigned x,
     unsigned y,
     unsigned fheight,
-    unsigned fwidth)
+    unsigned fwidth,
+    unsigned bpp)
 {
+  if (bpp > 8) {
+    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  }
   if( fheight > 0 )
   {
     fontheight = fheight;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.60 2003-06-22 12:37:03 vruppert Exp $
+// $Id: win32.cc,v 1.61 2003-06-28 08:04:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -433,7 +433,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   bitmap_info->bmiHeader.biPlanes=1;
   bitmap_info->bmiHeader.biBitCount=8;
   bitmap_info->bmiHeader.biCompression=BI_RGB;
-  bitmap_info->bmiHeader.biSizeImage=x_tilesize*y_tilesize;
+  bitmap_info->bmiHeader.biSizeImage=x_tilesize*y_tilesize*4;
   // I think these next two figures don't matter; saying 45 pixels/centimeter
   bitmap_info->bmiHeader.biXPelsPerMeter=4500;
   bitmap_info->bmiHeader.biYPelsPerMeter=4500;
@@ -1238,8 +1238,9 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 // fheight: new VGA character height in text mode
 // fwidth : new VGA character width in text mode
+// bpp : bits per pixel in graphics mode
 
-void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
+void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   if (fheight > 0) {
     text_cols = x / fwidth;
@@ -1282,12 +1283,17 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     stretched_x *= 2;
     stretch_factor *= 2;
   }
+  
+  bitmap_info->bmiHeader.biBitCount = bpp;
 
   SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
               stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
                SWP_NOMOVE | SWP_NOZORDER);
   MoveWindow(hwndTB, 0, 0, stretched_x, bx_headerbar_y, TRUE);
   MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
+ 
+  BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
+  
 }
 
 
