@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.58 2003-05-28 19:08:32 vruppert Exp $
+// $Id: win32.cc,v 1.59 2003-06-20 10:36:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,6 +68,9 @@ IMPLEMENT_GUI_PLUGIN_CODE(win32)
 #define EXIT_NORMAL              4
 #define EXIT_HEADER_BITMAP_ERROR 5
 
+/*  FIXME: Should we add a bochsrc option to control the font usage? */
+#define BX_USE_WINDOWS_FONTS 0
+
 // Keyboard/mouse stuff
 #define SCANCODE_BUFSIZE    20
 #define MOUSE_PRESSED       0x20000000
@@ -128,8 +131,8 @@ static unsigned bx_hb_separator;
 static unsigned dimension_x, dimension_y;
 static unsigned stretched_x, stretched_y;
 static unsigned stretch_factor=1;
-static unsigned prev_block_cursor_x = 0;
-static unsigned prev_block_cursor_y = 0;
+static unsigned prev_cursor_x = 0;
+static unsigned prev_cursor_y = 0;
 static HBITMAP vgafont[256];
 static unsigned x_edge=0, y_edge=0, y_caption=0;
 static int xChar = 8, yChar = 16;
@@ -165,8 +168,10 @@ void DrawBitmap (HDC, HBITMAP, int, int, DWORD, unsigned char cColor);
 void DrawChar (HDC, unsigned char, int, int, unsigned char cColor, int, int);
 void updateUpdated(int,int,int,int);
 static void headerbar_click(int x);
+#if BX_USE_WINDOWS_FONTS
 void InitFont(void);
 void DestroyFont(void);
+#endif
 
 
 Bit32u win32_to_bx_key[0x59] = {
@@ -635,7 +640,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
 
   switch (iMsg) {
   case WM_CREATE:
+#if BX_USE_WINDOWS_FONTS
     InitFont();
+#endif
     SetTimer (hwnd, 1, 330, NULL);
     return 0;
 
@@ -690,7 +697,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
   case WM_DESTROY:
     KillTimer (hwnd, 1);
     stInfo.UIinited = FALSE;
+#if BX_USE_WINDOWS_FONTS
     DestroyFont();
+#endif
     return 0;
 
   case WM_KEYDOWN:
@@ -952,7 +961,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char data[64];
   unsigned char *old_line, *new_line, *new_start;
   unsigned char cAttr, cChar;
-  unsigned int hchars, rows, x, y;
+  unsigned int curs, hchars, offset, rows, x, y, xc, yc;
   BOOL forceUpdate = FALSE;
 
   if (!stInfo.UIinited) return;
@@ -981,16 +990,17 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   hdc = GetDC(stInfo.simWnd);
 
-  if ( (prev_block_cursor_y < text_rows) && (prev_block_cursor_x < text_cols)) {
-    cChar = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2];
-    cAttr = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2 + 1];
-    if (yChar >= 14) {
-      DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*xChar,
-                 prev_block_cursor_y*yChar, SRCCOPY, cAttr);
-    } else {
-      DrawChar(hdc, cChar, prev_block_cursor_x*xChar,
-               prev_block_cursor_y*yChar, cAttr, 1, 0);
-    }
+  // first invalidate character at previous and new cursor location
+  if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
+    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  }
+  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < yChar) &&
+     (cursor_y < text_rows) && (cursor_x < text_cols)) {
+    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  } else {
+    curs = 0xffff;
   }
 
   new_start = new_text;
@@ -998,50 +1008,49 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   y = 0;
   do {
     hchars = text_cols;
+    yc = y * yChar;
     new_line = new_text;
     old_line = old_text;
     x = 0;
+    offset = y * tm_info.line_offset;
     do {
+      xc = x * xChar;
       if (forceUpdate || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1])) {
         cChar = new_text[0];
         cAttr = new_text[1];
-        if(yChar>=14) {
-          DrawBitmap(hdc, vgafont[cChar], x*xChar, y*yChar, SRCCOPY, cAttr);
-        } else {
-          DrawChar(hdc, cChar, x*xChar, y*yChar, cAttr, 1, 0);
+#if BX_USE_WINDOWS_FONTS
+        DrawChar(hdc, cChar, xc, yc, cAttr, 1, 0);
+#else
+        DrawBitmap(hdc, vgafont[cChar], xc, yc, SRCCOPY, cAttr);
+#endif
+        if (offset == curs) {
+#if BX_USE_WINDOWS_FONTS
+          DrawChar(hdc, cChar, xc, yc, cAttr, tm_info.cs_start, tm_info.cs_end);
+#else
+          memset(data, 0, sizeof(data));
+          for (unsigned i=0; i<32; i++) {
+            data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
+            if ((i >= tm_info.cs_start) && (i <= tm_info.cs_end))
+              data[i*2] = 255 - data[i*2];
+          }
+          SetBitmapBits(cursorBmp, 64, data);
+          DrawBitmap(hdc, cursorBmp, xc, yc, SRCCOPY, cAttr);
+#endif
         }
       }
       x++;
       new_text+=2;
       old_text+=2;
+      offset+=2;
     } while (--hchars);
     y++;
     new_text = new_line + tm_info.line_offset;
     old_text = old_line + tm_info.line_offset;
   } while (--rows);
 
-  prev_block_cursor_x = cursor_x;
-  prev_block_cursor_y = cursor_y;
-
-  // now draw character at new block cursor location in reverse
-  if ((cursor_y < text_rows ) && (cursor_x < text_cols) && (tm_info.cs_start <= tm_info.cs_end)) {
-    cChar = new_start[cursor_y * tm_info.line_offset + cursor_x * 2];
-    cAttr = new_start[cursor_y * tm_info.line_offset + cursor_x * 2 + 1];
-    if (yChar>=14) {
-      memset(data, 0, sizeof(data));
-      for (unsigned i=0; i<32; i++) {
-        data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
-        if ((i >= tm_info.cs_start) && (i <= tm_info.cs_end))
-          data[i*2] = 255 - data[i*2];
-      }
-      SetBitmapBits(cursorBmp, 64, data);
-      DrawBitmap(hdc, cursorBmp, cursor_x*xChar, cursor_y*yChar,
-                 SRCCOPY, cAttr);
-    } else {
-      DrawChar(hdc, cChar, cursor_x*xChar, cursor_y*yChar, cAttr, tm_info.cs_start, tm_info.cs_end);
-    }
-  }
+  prev_cursor_x = cursor_x;
+  prev_cursor_y = cursor_y;
 
   ReleaseDC(stInfo.simWnd, hdc);
 
@@ -1157,26 +1166,30 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   if (fheight > 0) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
+#if BX_USE_WINDOWS_FONTS
     if (fheight >= 14) {
       FontId = 2;
-      xChar = fwidth;
-      yChar = fheight;
-    } else if (fheight > 12) {
+      xChar = 8;
+      yChar = 16;
+    } else if (fheight >= 12) {
       FontId = 1;
       xChar = 8;
       yChar = 14;
-      if (fwidth != 8) {
-        x = x * 8 / fwidth;
-      }
     } else {
       FontId = 0;
       xChar = 8;
       yChar = 12;
-      if (fwidth != 8) {
-        x = x * 8 / fwidth;
-      }
     }
-    y = y * yChar / fheight;
+    if (fwidth != xChar) {
+      x = x * 8 / fwidth;
+    }
+    if (fheight != yChar) {
+      y = y * yChar / fheight;
+    }
+#else
+    xChar = fwidth;
+    yChar = fheight;
+#endif
   }
 
   if ( x==dimension_x && y==dimension_y)
@@ -1475,6 +1488,8 @@ bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
 
+#if BX_USE_WINDOWS_FONTS
+
 void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
                unsigned char cColor, int cs_start, int cs_end) {
   HDC hdcMem;
@@ -1572,4 +1587,7 @@ void DestroyFont(void)
     DeleteObject(hFont[i]);
   }
 }
+
+#endif /* if BX_USE_WINDOWS_FONTS */
+
 #endif /* if BX_WITH_WIN32 */
