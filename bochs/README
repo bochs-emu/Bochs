@@ -94,6 +94,8 @@ To do:
   time.
 ------------------------------------------------------
 
+Random notes follow
+
 Added some sketches in README.gui-sketch.  I'm thinking that the control
 panel will be able to basically show one of these screens at a time.  When
 you first start you would see ChooseConfigScreen which chooses between the
