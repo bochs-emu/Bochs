@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.52 2002-09-28 00:54:05 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.53 2002-09-29 16:23:03 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1451,6 +1451,11 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 #if BX_SupportPAE
       features |= (1<<6); // Support PAE.
 #endif
+
+#if (BX_CPU_LEVEL >= 5)
+	    features |= (1<<8); //Support CMPXCHG8B instruction
+#endif
+
 
       RAX = (family <<8) | (model<<4) | stepping;
       RBX = RCX = 0; // reserved
