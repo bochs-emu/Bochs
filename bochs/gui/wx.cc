@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.6 2001-06-24 19:36:33 instinc Exp $
+// $Id: wx.cc,v 1.1.2.7 2001-06-24 19:55:15 instinc Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -25,7 +25,6 @@ extern "C" {
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 #include <wx/scrolwin.h>
-#include <wx/sizer.h>
 
 #ifdef __BORLANDC__
 #pragma hdrstop
@@ -301,7 +300,7 @@ void MyPanel::buildParamList (int x, int y)
 
 
 ParamEditor::ParamEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
-  : wxPanel(parent, id, wxPoint(x, y), wxSize (300, 20))
+  : wxPanel(parent, id, wxPoint(x, y), wxSize (300, 30))
 {
   printf ("ParamEditor::ParamEditor\n");
   this->param = param;
