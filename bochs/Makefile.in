@@ -281,7 +281,7 @@ install_win32: all  download_dlx
 # install target for unix
 #####################################################################
 
-install_unix: install_bin install_man install_fonts
+install_unix: install_bin install_man install_fonts install_dlx
 
 install_fonts::
 	srcdir=$(srcdir) $(VERSIONDIR)/install-x11-fonts
@@ -320,14 +320,13 @@ install_dlx::
 	make download_dlx
 	$(RM) -rf $(BOCHSDIR)/dlxlinux
 	$(GUNZIP) -c $(DLXLINUX_TAR) | (cd $(BOCHSDIR); tar -xvf -)
-	$(RM) -f $(DLXLINUX_TAR)
 	test -d $(BOCHSDIR)/dlxlinux
 	(cd $(BOCHSDIR)/dlxlinux; $(MV) bochsrc.txt bochsrc.txt.orig; $(SED) -e "s/1\.1\.2/$(VERSION)/g"< bochsrc.txt.orig > bochsrc.txt; rm -f bochsrc.txt.orig)
 	$(CHOWN) -R root.root $(BOCHSDIR)/dlxlinux
 	$(CHMOD) 777 $(BOCHSDIR)/dlxlinux
 	$(CHMOD) 666 $(BOCHSDIR)/dlxlinux/*
 	$(CHMOD) 644 $(BOCHSDIR)/dlxlinux/README
-	for i in bochs-dlx; do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(bindir)/$$i; $(CHMOD) 755 $(bindir)/$$i; done
+	for i in bochs-dlx; do cat $(srcdir)/build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(bindir)/$$i; $(CHMOD) 755 $(bindir)/$$i; done
 
 uninstall::
 	$(RM) -rf $(VERSIONDIR)
