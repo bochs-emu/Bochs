@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.13 2001-11-09 22:17:33 bdenney Exp $
+// $Id: gui.h,v 1.14 2001-11-12 00:45:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,6 +63,9 @@ public:
   static Bit32u get_sighandler_mask ();
   // called when registered signal arrives
   static void sighandler (int sig);
+#endif
+#if BX_USE_IDLE_HACK
+  static void sim_is_idle(void);
 #endif
 
 

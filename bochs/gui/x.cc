@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.22 2001-10-11 13:03:35 yakovlev Exp $
+// $Id: x.cc,v 1.23 2001-11-12 00:45:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1315,3 +1315,76 @@ static void enable_cursor ()
 {
       XUndefineCursor(bx_x_display, win);
 }
+
+#if BX_USE_IDLE_HACK
+
+/* BX_USE_IDLE_HACK: a small idle hack by
+ * Roland.Mainz@informatik.med.uni-giessen.de to prevent bochs
+ * from consuming 100% CPU time even when it is not required (for
+ * example, the OS in the emulator calls HLT to wait for an interupt)
+ * pro:
+ * - no more 100% CPU usage
+ * contra:
+ * - we're sleeping too long
+ * - bochs still consumes ~10%-20% CPU time while executing an idle 
+ *   linux kernel
+ * - this is an hack
+ */
+
+/* XPeekEvent() with timeout 
+ * (adopted from mozilla/gfx/src/xprint/xprintutil_printtofile.c#XNextEventTimeout())
+ */
+static
+Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *timeout ) 
+{
+    int      res;
+    fd_set   readfds;
+    int      display_fd = XConnectionNumber(display);
+
+    /* small shortcut... */
+    if( timeout == NULL )
+    {
+      XPeekEvent(display, event_return);
+      return(True);
+    }
+    
+    FD_ZERO(&readfds);
+    FD_SET(display_fd, &readfds);
+
+    /* Note/bug: In the case of internal X events (like used to trigger callbacks 
+     * registered by XpGetDocumentData()&co.) select() will return with "new info" 
+     * - but XNextEvent() below processes these _internal_ events silently - and 
+     * will block if there are no other non-internal events.
+     * The workaround here is to check with XEventsQueued() if there are non-internal 
+     * events queued - if not select() will be called again - unfortunately we use 
+     * the old timeout here instead of the "remaining" time... (this only would hurt 
+     * if the timeout would be really long - but for current use with values below
+     * 1/2 secs it does not hurt... =:-)
+     */
+    while( XEventsQueued(display, QueuedAfterFlush) == 0 )
+    {
+      res = select(display_fd+1, &readfds, NULL, NULL, timeout);
+    
+      switch(res)
+      {
+        case -1: /* select() error - should not happen */ 
+            perror("XPeekEventTimeout: select() failure"); 
+            return(False);
+        case  0: /* timeout */
+          return(False);
+      }
+    }
+    
+    XPeekEvent(display, event_return); 
+    return(True);
+}
+
+
+static void bx_gui_c::sim_is_idle () {
+  XEvent dummy;
+  struct timeval   timeout;   
+  timeout.tv_sec  = 0;
+  timeout.tv_usec = 1000; /* 1/1000 s */  
+  XPeekEventTimeout(bx_x_display, &dummy, &timeout);
+}
+#endif /* BX_USE_IDLE_HACK */  
