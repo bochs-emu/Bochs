@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.49 2002-08-30 16:23:36 bdenney Exp $
+// $Id: siminterface.cc,v 1.50 2002-09-03 08:44:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -574,6 +574,16 @@ bx_param_bool_c::bx_param_bool_c (bx_id id,
 {
   set_type (BXT_PARAM_BOOL);
   set (initial_val);
+  dependent_list = NULL;
+}
+
+void bx_param_bool_c::update_dependents ()
+{
+  if (dependent_list) {
+    int en = val? 1 : 0;
+    for (int i=0; i<dependent_list->get_size (); i++)
+      dependent_list->get (i)->set_enabled (en);
+  }
 }
 
 bx_param_enum_c::bx_param_enum_c (bx_id id, 
@@ -688,7 +698,6 @@ bx_param_string_c::set (char *buf)
   }
 }
 
-#if 0
 bx_list_c::bx_list_c (bx_id id, int maxsize)
   : bx_param_c (id, "list", "")
 {
@@ -698,7 +707,6 @@ bx_list_c::bx_list_c (bx_id id, int maxsize)
   this->list = new bx_param_c*  [maxsize];
   init ();
 }
-#endif
 
 bx_list_c::bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list)
   : bx_param_c (id, name, description)
