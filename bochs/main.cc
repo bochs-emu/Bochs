@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.111 2002-08-09 06:16:42 vruppert Exp $
+// $Id: main.cc,v 1.112 2002-08-12 14:55:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1508,15 +1508,16 @@ bx_find_bochsrc ()
     case 0: strcpy (rcfile, ".bochsrc"); break;
     case 1: strcpy (rcfile, "bochsrc"); break;
     case 2: strcpy (rcfile, "bochsrc.txt"); break;
-    case 3:
 #if (!defined(WIN32)) && !BX_WITH_MACOS
       // only try this on unix
+    case 3:
       {
       char *ptr = getenv("HOME");
       if (ptr) sprintf (rcfile, "%s/.bochsrc", ptr);
       }
-#endif
       break;
+     case 4: strcpy (rcfile, "/etc/bochsrc"); break;
+#endif
     default:
       return NULL;
     }
