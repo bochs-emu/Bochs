@@ -1,0 +1,474 @@
+<HTML>
+<HEAD>
+<TITLE>bochs: The Open Source IA-32 Emulation Project (IRC Chat Transcript)</TITLE>
+
+<!--#include virtual="includes/header.txt" -->
+
+ <!--content starts here-->
+ <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Transcript of Bochs Chat from October 13, 2002</b></font><BR><BR>
+
+<pre>
+(19:00:56) bryce: Oct. 13, 2002, 19:00:39 Universal Time
+(19:01:02) astaroth: sandos: i was thinking more along the lines of seeing how many bochs sessions running simultaniously it would take to make a linux Beowulf cluster that a commodore c64 could easily out perform
+(19:01:27) sandos: =)
+(19:01:35) bryce: I have written a web page about release 2.0 at http://bochs.sourceforge.net/release2_0.html
+(19:02:25) bryce: I figured we'd probably spend a lot of this time talking about what's new and how we are moving toward getting a release out the door.
+(19:04:07) bryce: It's been a very productive month, and it's been great to see Kevin Lawton working on Bochs again.
+(19:04:40) astaroth: bryce: i mentioned to sandos that i have some potentially helpful documentation for various bits of hardware.  I will try to compile good list of what i have, but as an example, i have full docs on a couple of complete pc chipsets and various other tidbits
+(19:05:16) bryce: astaroth: that's great.  We have a place to put such things (Tech Specs Pages) and it would be good to add your stuff.
+(19:06:04) bryce: astaroth: you can email me documents, or send me the urls of them
+(19:06:26) astaroth: i don't have the foggiest clue about any potential copyright infringements, but i figure that for stuff that used to be on the web, it should be safe
+(19:06:35) bryce: :)
+(19:07:29) astaroth: the original ibm pc Technical Reference complete with schematics and full bios source code might be a slightly different matter, though
+(19:08:30) bryce: yes
+(19:09:08) bryce: I assume a number of people have been using Kevin's optimized CPU code?
+(19:09:21) bryce: by doing configure --enable-all-optimizations, or configure --enable-icache, etc.?
+(19:09:45) sandos: all the time. =)
+(19:09:52) sandos: almost atleast.
+(19:10:13) bryce: unfortunately Kevin said he couldn't be here this afternoon. He had a conflict.
+(19:10:29) bryce: yeah, it seems reliable to me
+(19:10:47) bryce: At first I found a few segfaults, but the ones I've found have been fixed now.
+(19:11:33) bryce: any comments or questions about other new stuff?
+(19:12:58) japj: goodevening
+(19:13:04) bryce: For a group of 12 we're pretty quiet ;)
+(19:13:05) sandos: evening
+(19:13:07) bryce: Hi japj
+(19:13:16) japj: hello bryce
+(19:13:36) cbothamy: hi
+(19:13:42) japj: is someone logging this channel?
+(19:14:50) sandos: you flooder, you
+(19:14:55) bryce: oops!
+(19:15:08) bryce: I tried to send a log to japj
+(19:15:13) bryce: and I got booted off ;)
+(19:15:39) bryce: oh well
+(19:16:39) bryce: Has anybody tried out the GDB stub?
+(19:17:00) sandos: I never got to that.
+(19:17:06) bryce: You can get gdb to control Bochs, so you can do source level debug on a kernel compiled with -g.
+(19:17:16) bryce: It's pretty nice.
+(19:17:33) sandos: since Im only trying to install XP, and for some weird reason I dont have the debug symbols for that. :)
+(19:17:42) bryce: let us know if you do ;)
+(19:17:45) sandos: hehe
+(19:18:04) bryce: well it doesn't help all the time
+(19:18:39) bryce: but one advantage is that you can use any of the many interfaces to GDB that you want
+(19:19:01) bryce: There are some nice ones.
+(19:19:19) sandos: hmm
+(19:19:36) bryce: But not all of the bochs debugger features are available because they are not standard, like "break when you switch to protected mode"
+(19:19:55) sandos: is that part of the bochs debugger??
+(19:20:04) bryce: I think so
+(19:20:48) sandos: I could use that.
+(19:20:58) bryce: :)
+(19:21:25) bryce: Also, sshwarts added MMX emulation, and he's working on SSE/SSE2 right now.
+(19:22:42) bryce: sshwarts: I thought that would be mostly used to speed up performance on some multimedia tasks, but I think it turned out to fix a few windows boot bugs.
+(19:22:49) astaroth: wow, this is much faster
+(19:23:13) sandos: Lets hope it fixes XP
+(19:23:13) sandos: =)
+(19:23:15) bryce: (he must have tried Kevin's code)
+(19:24:17) sandos: kevins code?
+(19:24:37) bryce: (I'm guessing astaroth just did configure --enable-all-optimizations)
+(19:24:44) astaroth: also enabled the timer stuff, so now the screen saver isn't kicking in every 5 seconds :)  (although, if had tweaked the IPS setting, i suppose that would have helped aswell)
+(19:24:58) sandos: ah
+(19:25:24) astaroth: this is MUCH faster.  You guys rock
+(19:25:25) sandos: "the timer stuff" being "real-time pit" (which is going to get another name or?)
+(19:25:32) sandos: ?
+(19:25:34) sshwarts: BTW, about SSE ... Somebody knows a good ieee754 floating point emulation library ?
+(19:26:25) sshwarts: I could write my own one but it will take much more time
+(19:26:54) bryce: does the fpu directory have a complete library?
+(19:27:22) bryce: I don't know of one, but I'd be surprised if there wasn't one on the web somewhere.
+(19:27:42) sshwarts: fpu directory not ieee754 compatible
+(19:28:03) sshwarts: and also have a bugs ;)
+(19:28:07) bryce: :)
+(19:28:13) sandos: what is ieee754?
+(19:28:16) bryce: I believe it.
+(19:28:25) bryce: standard for floating point calculations
+(19:29:02) sandos: http://oss.software.ibm.com/mathlib/
+(19:29:09) sandos: maybe
+(19:30:14) astaroth: the project is a mips emulator, but they do say that they "include an IEEE754-compliant FPA instruction emulator"
+(19:30:16) astaroth: at
+(19:30:33) bryce: sshwarts: how does Java do it? Does it depend on the host processor's FPU?
+(19:30:34) astaroth: http://www.algor.co.uk/algor/info/sde-benefits.html
+(19:30:51) sandos: bryce: I think so
+(19:32:28) sandos: that mathlib from ibm isnt complete, but accurate and LGPL as I can see
+(19:32:51) bryce: sshwarts: why don't you ask on the mailing list?  Maybe someone else has heard of one.
+(19:33:13) bryce: I don't think it's worth the time to consider writing one
+(19:33:24) bryce: even though I know you can work fast :)
+(19:33:58) sshwarts: I asked, may be you not seen ?
+(19:34:28) sshwarts: The best library that I found now doesn't have complete support of NaNs and
+(19:34:37) sshwarts: doesn't have sqrt and reciprocals
+(19:34:43) bryce: I spent about 6 months doing floating point verification on a 64bit processor... not enough to know everything but enough to know that there are many many details to get right, like denorms and stuff.
+(19:36:19) bryce: Maybe you should ask on list again. :)
+(19:36:44) sshwarts: bryce: Ok, I'll ask and you'll answer ;)
+(19:36:50) bryce: haha if I can
+(19:37:41) japj: btw, does anyone know how some bios'es can boot from the network?
+(19:38:05) japj: (I'm assuming there is some 'standard' ?)
+(19:39:50) sshwarts: and about bioses ... anyone know where I can find VESA VBE display driver for Win98 that will work with Bochs ?
+(19:40:12) sandos: japj: there are standars. One from intel I think, cant remember the name of it.
+(19:40:38) sshwarts: name of what ?
+(19:40:40) japj: sshwarts : maybe the scitech display doctor can?
+(19:41:22) sshwarts: May be there is a bug in VBE inmplementation but SDD also failed.
+(19:41:41) japj: japj : the windows version of SDD?
+(19:42:13) sshwarts: SDD 6.53 for Windows. It succefully switched video mode but
+(19:42:19) japj: sshwarts: I have never tried SDD with windows under Bochs (since I couldn't get Windows installed, but that might be fixed)
+(19:44:55) bryce: Christophe and I have been working on plugins for devices and for guis.
+(19:45:18) bryce: Bochs plugin = shared library that can be selected and loaded at run time
+(19:45:23) cbothamy: right ;-)
+(19:45:34) sandos: sounds really nice
+(19:45:48) bryce: We're working in a cvs branch called BRANCH_PLUGINS
+(19:45:56) japj: sshwarts : btw, I don't think SDD 6.53 will do, version 7 (http://www.scitechsoft.com/products/enterprise/enterprise_download/sdd_win_download.html)
+(19:46:06) sshwarts: could you try SDD in Windows ?
+(19:46:08) bryce: and it's not ready to go into the main trunk yet, but it is getting close.
+(19:46:31) sshwarts: On scitechsoft website there is a list of supported card
+(19:46:35) japj: sshwarts: should have support for a display driver using Vesa VBE
+(19:46:54) sandos: japj: ah, yeah, the intel thing is called PXE. I think netboot/etherboot is more common to boot linux though.
+(19:46:57) sandos: I tried
+(19:47:18) sandos: PXE with my 3com, never got it going Im afraid since Im on a campus where I cant freely set up bootp/dhcp servers.
+(19:47:48) bryce: One of the big benefits of the plugins is that I think we will be able to put a lot more features into a release binary package, without increasing the download size by a huge amount.
+(19:48:03) sshwarts: all supported cards from the their list has a 3D and thought that SDD7 already not supports old VGA cards ...
+(19:49:12) japj: sshwarts : yeah, but if I remember correctly they also have a 'generic' windows display driver that can use an existing VESA VBE to display windows graphics
+(19:49:49) bryce: Has anybody noticed that most of our disk images on the web site are out of date and don't work anymore?
+(19:50:03) bryce: (e.g. bochsrc invalid, roms fail)
+(19:50:15) japj: bryce: how often does anyone download them?
+(19:50:26) sshwarts: I not found it, may you know the filename ?
+(19:50:45) bryce: not sure.  but they are there to save people time, not waste people's time ;)
+(19:50:48) japj: bryce: I would suggest to split the image files and their config files
+(19:51:07) japj: bryce: although you might get people complaining that there isn't a config file present :)
+(19:51:15) bryce: bochs.sf.net seems to be down right now
+(19:51:28) sandos: entire sf.net seems down actually
+(19:51:28) japj: bryce: sf was having several problems today
+(19:51:40) bryce: japj: I think it is important to include a bochsrc, because you have to guess the disk geometry otherwise.
+(19:51:43) sandos: both netboot and etherboot homepages was down :(
+(19:52:25) bryce: japj: the bochsrc is reasonably stable across versions, but the ROM frequenly needs to be changed.  Maybe we should include disk images, bochsrc, but not ROMs.
+(19:52:32) sshwarts: somebody tryed SSE branch in last time ?
+(19:52:51) bryce: japj: I like having a TAR that people can install and use without much guessing/hacking
+(19:53:02) bryce: sshwarts: I tested that it compiled a few days ago when adding configure options
+(19:53:11) japj: bryce : yes, but you can have a tar with the latest rom images seperately
+(19:53:28) bryce: sshwarts: from past experience with branches, almost nobody will try it until it gets into the main CVS trunk
+(19:54:04) bryce: japj: yes
+(19:54:48) sshwarts: I mean with x86-64. I tested that it not brokes MMX results, but I don't know if it not fails with x86-64
+(19:55:11) bryce: japj: it would be nice if we could make some sort of "standard" for what goes into our disk image packages. they are all different now. some have bochsrc's, some don't. some have roms, some don't. some are just a gzipped image, while some are TARs or ZIPs with other stuff included.
+(19:55:50) sandos: can bochsrc "#include" eachothers ?
+(19:56:11) japj: bryce : I think the best thing would to seperate the images from files that can change frequently, you don't want to upload/download a new file each time a change is made to the bios/etc
+(19:56:34) bryce: sshwarts: I don't know, sorry.  I think as soon as soon as you think adding SSE to the main branch will not damage anything when it is turned off, you may want to go ahead and bring it into the main branch.
+(19:57:03) bryce: japj: I agree
+(19:57:58) bryce: japj: I hope I can find someone with good internet connection to download all the images, make the packages consistent with each other, and upload them again.
+(19:58:13) bryce: japj: not a good use of my time, when I have 20 bugs to fix
+(19:58:16) bryce: ;)
+(19:58:37) japj: btw. <offtopic>I found myself a new appartment last week (still need to 'officially' call in the decision tomorrow, but it looks ok).. result is that I'll probably be more busy with preparing to move in, then with something else</offtopic>
+(19:59:15) japj: + I'll probably switch from cable (lousy upload speed) to ADSL (but with less download speed)
+(19:59:20) bryce: sandos: I think #include works now... based on what I see in main.cc
+(19:59:46) bryce: japj: not targeting you in particular, but I hope someone can do it
+(19:59:51) sshwarts: somebody, who logging this discussion, can mail the complete log to me ?
+(20:00:10) bryce: I will put it on bochs web page afterward.
+(20:00:16) japj: bryce : I understand
+(20:00:40) bryce: Anybody had a chance to try wxWindows?  I know sandos has been.
+(20:00:55) japj: bryce : I would gladly do it, if my upload speed wasn't so lousy
+(20:01:30) SnitraM: Perhaps this has already been covered as I'm late: Why should we jump to 2.0 instead of 1.5 or 1.6?
+(20:01:45) bryce: snitra: because so much has been added since 1.4
+(20:01:56) bryce: it's somewhat arbitrary as you know
+(20:01:58) SnitraM: So make it 1.5...
+(20:02:15) bryce: then 1.9, 1.15, 1.22, when do you switch?
+(20:02:23) bryce: :)
+(20:02:28) SnitraM: After 1.9 of course.
+(20:02:31) sshwarts: 1.5 is also very "round" number ;)
+(20:02:47) bryce: those numbers are not base 10
+(20:03:09) bryce: but anyway it's just to indicate that there have been major upgrades to lots of things
+(20:03:31) sandos: bryce: shouldnt we just then include a "snippet" of a bochsrc that only includes the disk-image specific things, and let the user #include that from another bochsrc? maybe thats too much work for just easily testing images though.
+(20:03:40) bryce: and it's partly for the dramatic effect as well ;)
+(20:04:59) bryce: sandos: I just want a user to be able to download it, do a MINIMUM of steps, and boot the image.  But since bios changes regularly, let's not package the bioses.
+(20:06:00) bryce: Anybody had a chance to try wxWindows?  So far my goal has been to get it stabilized so that it can do everything that the old text config interface and the other GUIs can do.
+(20:06:25) japj: bryce: what is the currently expected ATA of 2.0? (since there is still some work to do, are we aiming for Oct/Nov/Dec?)
+(20:06:26) sshwarts: zwane: what about SMP ? it able to boot something other than smpdemo image ? WinNT for example ?
+(20:06:44) SnitraM: I see that at least one of my suggestions for making bochs compile with DJGPP hasn't found its way into CVS (<http://marc.theaimsgroup.com/?l=bochs-dev&m=102898262110890&w=2>). I humbly suggest you merge parts 1 and 4, and perhaps 3.
+(20:07:01) bryce: But the reason I'm so interested in it is that we can do a LOT more that other guis in terms of dialog boxes, help screen, drag and drop, whatever we want, without having to reimplement all the same features in 10 other gui libraries.
+(20:09:54) bryce: SnitraM: when SF comes back online I will add a bug report with that URL in it.
+(20:10:08) japj: bryce : you mean it's a multiplatform gui library?
+(20:10:12) bryce: yes
+(20:10:21) SnitraM: bryce: Thanks!
+(20:10:36) japj: that's always better then to reinvent the wheel for every platform.
+(20:10:44) bryce: wxWindows works on windows, X11, macos, beos, etc.
+(20:10:50) japj: (but does it support fullscreen? :)
+(20:11:02) bryce: it has a very good selection of text boxes, buttons, etc that are portable.
+(20:11:34) bryce: not sure.  SDL does support fullscreen.  Maybe you would want wxWindows dialogs and menus but an SDL fullscreen display?
+(20:11:51) japj: that means you need to be able to switch at runtime
+(20:11:54) ***SnitraM has to go. Will see you some other time.
+(20:12:02) bryce: japj: probably if you make a black window that is big enough, it could
+(20:12:15) bryce: thanks SnitraM :)
+(20:12:39) bryce: japj: could be done.  Just wait until you see our plugins. :)
+(20:13:08) bryce: japj: but I'm not going to promise it
+(20:13:12) japj: do they resemble the plex86 plugins?
+(20:13:19) bryce: very closely, yes
+(20:14:06) bryce: I hope the device code can be almost 100% shared between the two
+(20:14:14) bryce: eventually
+(20:14:33) japj: it would be nice if you could put a bochs plugin into plex86 (and vice versa)
+(20:14:38) japj: yep
+(20:15:10) cbothamy: actually there are differences so the vga devices can't be the same
+(20:15:34) bryce: nothing that an ifdef can't handle, right ? :)
+(20:15:39) cbothamy: sure
+(20:15:41) bryce: or maybe a few
+(20:16:02) bryce: having them united would save both projects some work, even if there are occasional ifdefs
+(20:16:25) bryce: I unsubscribed from plex86 lists a while ago.  Are they still moving, or still talking?
+(20:16:28) japj: :) well... maybe if the plex86 project becomes more active they see the light
+(20:16:30) cbothamy: sure, that would be a benefit for everybody
+(20:17:12) japj: ... anyway, gotta go.. (I got a three day course at work tomorrow and I need the sleep badly :)
+(20:17:30) cbothamy: hum... don't know, I will propose to port Bochs2 devices to plex86 when we're ready
+(20:17:36) bryce: japj: glad you could join us
+(20:17:46) japj: bryce : I
+(20:17:48) japj: 'll
+(20:18:25) japj: probably try to do some 'leftover' work for the Vesa stuff for bochs 2.0
+(20:18:38) bryce: japj: you asked about a target date
+(20:18:55) japj: yes
+(20:18:59) bryce: target date is something like Nov 1 for release
+(20:19:15) bryce: but it will probably slip a bit when we look more closely at our bug list :)
+(20:19:31) japj: bryce : the feature list also needs a cleanup :)
+(20:19:37) bryce: that too
+(20:19:43) bryce: please mark things for v2.0 if appropriate
+(20:20:00) bryce: or mark them "long term goal" or close them
+(20:20:19) sshwarts: Release will not have complete SSE/SSE2 but its integer part will be ready
+(20:20:53) japj: anyway, good night (or good morning wherever you are) - I'm heading to bed...
+(20:21:18) bryce: sshwarts: cool.  I think just having a decode of all instructions is the most important thing, because then people can discover which instructions are actually needed.
+(20:21:32) bryce: but we will take whatever you have :)
+(20:21:54) sshwarts: just decoding already is
+(20:23:37) bryce: One of the things I've been struggling with in wxWindows is when to load  
+the bochsrc.  The wxWindows app starts up with a menubar, toolbar, and a  
+big black rectangle for the VGA screen.  The menus let you change the 
+configuration and start simulating.  Then you can also stop simulating,   
+change parameters and start it up again.
+(20:24:00) bryce: Do you think it should always load a bochsrc when you start the application?
+(20:26:23) bryce: This was an issue for the text mode version as well.  If it loads a bochsrc instantly, then you don't have an opportunity to say, "I want to load this other bochsrc instead."  But if it doesn't load a bochsrc at the start, then have to click on more things before you can start running.
+(20:27:49) sshwarts: bryce: merging SMP fixes is panned for the release ?
+(20:29:06) sshwarts: I mean planned ...
+(20:29:27) bryce: sshwarts: yes, if we can decide which fixes to merge.  If you know of any in particular, talk to zwane and check them in on the SMP branch
+(20:30:27) sshwarts: zwane: you are here ?
+(20:30:52) bryce: sshwarts: zwane is always logged in, but may be away from his machine now
+(20:30:55) d_Eric: has anyone been successful in getting Windows (any version) running in > 640x480x4bit mode inside bochs?
+(20:34:02) bryce: not sure
+(20:34:15) bryce: 4 bit mode?  16 colors?
+(20:35:18) d_Eric: it would be great if Bochs could include a Windows display driver for its super-vga interface, but it looks like you need M$ compiler to produce drivers
+(20:35:51) bryce: if we know of one, we can just give people the url
+(20:36:01) sshwarts: I asked about it, people says to try SDD7 as display driver, I am downloading it now ;)
+(20:36:54) d_Eric: that would be super-slick if the simulated h/w was close enough to a real board that someone else's driver would work
+(20:37:53) bryce: Anybody know how hard it would be?  Do some video cards provide adequate specs to write a model of them?
+(20:38:03) sshwarts: S3 for example ...
+(20:38:34) cbothamy: Yes, I post about this in the ml. We settled down on a voodoo3 card, if I remember right
+(20:38:44) d_Eric: I have the specs for the old ATI Mach64 graphics engines
+(20:39:22) bryce: It might help to hack an xfree86 server that talks to that card, and log everything that goes between the cpu and the video card, for reference.  Then in Bochs we could run the same xfree86 server and see how it compares.
+(20:40:51) d_Eric: cbothamy: do you know where the docs for voodoo3 could be downloaded?
+(20:41:09) cbothamy: yes, specs are freely available. Wait a sec
+(20:42:58) cbothamy: my post about video cards in the ml: http://marc.theaimsgroup.com/?l=bochs-dev&m=103062757300695&w=2
+(20:43:21) cbothamy: voodoo3 specs : http://ftp.yars.free.net/pub/doc/Hardware/Video/voodoo3_spec.zip
+(20:43:28) bryce: nice
+(20:44:09) sandos: "- the "virtual to real display" rendering architecture" <- what is that?
+(20:44:14) d_Eric: thanks
+(20:44:36) sandos: I mean, is anything done on that today?
+(20:45:01) cbothamy: No, I would really like to be able to zoom in and out in the virtual bochs screen
+(20:45:16) cbothamy: That means virtualize the monitor
+(20:45:28) sandos: ok
+(20:45:38) bryce: by integer factors, I assume
+(20:46:10) bryce: probably useful to have separate x,y scale factors to fix aspect ratio differences
+(20:46:15) cbothamy: performances-wise yes.
+(20:47:47) bryce: A few weeks ago I made a binary snapshot for several platforms.  For each platform I made about 20 binaries with different configuration options like these: bochs.normal, bochs.dbg, bochs.sdl, bochs.rfb, bochs.smp2, bochs.icache, bochs.wx...  With all the binaries built like this, it was easy to run each binary on a disk image to verify that it started up and booted ok.
+(20:48:29) bryce: So my question is, if I build these binaries as the release gets closer, would some people be willing to download them and try them out?  In the Oct 2 snapshot I did this and the TARs with 20 binaries were over 5 meg.  Would it help if each could be downloaded separately, or does that make it even more labor intensive?
+(20:49:01) sandos: I could test them, and I dont mind large files.
+(20:49:10) cbothamy: same for me
+(20:49:23) bryce: do you prefer a massive tar file full of binaries
+(20:49:31) bryce: rather than ability to download just a few?
+(20:49:44) bryce: like 5-10meg
+(20:49:55) sandos: I do
+(20:50:20) cbothamy: one big tar file is fine
+(20:50:21) d_Eric: perhaps there should be 1 with just "standard" configurations (all defaults, all optimizations on), and then another one with the 20ish binaries
+(20:50:28) bryce: yes
+(20:50:46) bryce: that makes sense
+(20:50:55) d_Eric: but I don't think it would be necessary to have more mix-and-match than just those 2 options
+(20:51:18) bryce: I might make these once a week or so
+(20:51:37) bryce: The other component for testing is Disk Images
+(20:51:45) bryce: everybody has a few, and it's great to try them
+(20:52:08) bryce: let's also find some volunteer to clean up the disk images on the web page
+(20:52:25) bryce: or else I should remove links to ones that have invalid configs
+(20:52:32) d_Eric: what would be involved in such cleanup?
+(20:52:32) bryce: until they are fixed
+(20:52:37) bryce: not much really
+(20:52:59) bryce: just download them, get them all into a "standard package"
+(20:53:19) bryce: for example I think we decided that roms should NOT be included, but a working bochsrc that works for current cvs SHOULD be.
+(20:53:33) bryce: then tar them back up and send to me or to SF
+(20:53:36) d_Eric: the package would be a tar/zip containing the disk image & the bochsrc ?
+(20:53:57) bryce: yes, and a README that tells a little about it is nice
+(20:54:17) bryce: e.g. what is the root password? :)  what packages are installed
+(20:54:40) d_Eric: lol, yes that would be useful.  I could give that a shot
+(20:55:04) bryce: that would be great
+(20:55:13) bryce: hope you have a good net connection :)
+(20:55:52) d_Eric: well, I'm about to find out ;)
+(20:56:00) bryce: I think TAR.GZ is good and standard
+(20:56:11) bryce: I like bz2 but I'm not sure if winzip will understand it
+(20:56:30) d_Eric: can Mac's deal with tar.gz ?
+(20:56:42) bryce: macosx certainly can
+(20:56:52) d_Eric: good point
+(20:57:02) cbothamy: legacy macos can with the right tool
+(20:57:17) bryce: there seems to be zero interest in bochs on macos9, among mac developers at least
+(20:57:52) cbothamy: well, i've tried to recompile bochs on macos. Did not work at all.
+(20:58:07) d_Eric: VirtualPC is a lot faster than bochs, too
+(20:58:28) bryce: d_eric: wonder what their budget it... :)
+(20:58:32) cbothamy: but is not open source AFAIK
+(20:58:38) bryce: d_eric: wonder what their budget is...
+(20:58:44) sshwarts: VirualPC, VmWare and etc has a direct execution of instructions
+(20:58:49) sandos: winzip doesnt do bz2, too bad.
+(20:58:55) sshwarts: it DEFINITLY faster
+(20:59:23) cbothamy: VirtualPC for mac has not
+(20:59:33) d_Eric: definitely not open source - they got access to the windows source, and then tuned + optimized for it
+(20:59:56) bryce: cbothamy I think they translate into native code though
+(21:00:00) cbothamy: that's right. Never tried to boot linux under virtual PC for mac
+(21:00:12) cbothamy: dynamic translation you mean ?
+(21:00:21) bryce: cbothamy: I am not sure, but I think so.
+(21:00:47) bryce: maybe that will be for v3.0 ;)
+(21:01:20) bryce: if we have 2x speed improvement for 2.0, then we'll have to work hard for the next major version!
+(21:01:40) bryce: Has anybody been thinking about bochs regression testing?
+(21:02:02) cbothamy: yes
+(21:02:08) bryce: like comparing the simulation results  of one version of Bochs against another, while replaying the exact I/O reads and writes?
+(21:02:46) cbothamy: It might not be possible to replay exact IO
+(21:03:00) bryce: why not, I'm willing to log it to a file. :)
+(21:03:22) cbothamy: I was thinking about logging the execution path in a file
+(21:03:33) sandos: cbothamy: like every branch?
+(21:03:36) bryce: what about memory activity?
+(21:04:22) d_Eric: what about booting a certain disk image with *no* k/b or mouse input, and take screenshots at predefined instruction counts
+(21:04:39) cbothamy: I'm not sure what you mean by memory actvity
+(21:04:41) sandos: d_Eric: well, sometimes you need/want to use keyboard to get further etc
+(21:04:53) bryce: There are several different levels you might want to test.  One of them is to verify that two simulations are absolutely identical, and if there are any differences you want to know exactly where the simulations diverge.
+(21:06:12) bryce: This would be needed to test new experiments on the CPU emulation, especially if we attempt to do dynamic translation or take advantage of x86-on-x86 speedups.
+(21:06:55) bryce: memory activity = checking that the contents of memory are the same for two runs, or checking that all reads and writes produced the same values on two runs.
+(21:07:06) sshwarts: what is dynamic translation ?
+(21:07:47) bryce: if bochs could read x86 instructions and generate the equivalent implementation in assembly on the computer it's running on
+(21:08:09) bryce: as opposed to calling a function pointer for each instruction that we see
+(21:08:36) d_Eric: it can sometimes be even more sophisticated -- you can do all the standard compiler optimizations on the input machine code, like constant
+(21:08:47) d_Eric: folding, etc
+(21:10:20) bryce: One approach that we've talked about is micro-ops.  Each x86 instruction is translated into a series of simple operations, we can do some kind of optimizations on the micro-ops as d_eric says, and then a code generator to turn micro ops into machine code for that platform.
+(21:10:48) bryce: You'd get the most benefit if you can translate a whole basic block at a time 
+(21:11:01) d_Eric: the difficult part is that, you will have some intermediate representation (trees, stack-based language, small RISC instructions, etc).  and you need to express __every__ x86 operation in that representation
+(21:11:08) bryce: (basic block = series of instructions that end at a branch)
+(21:11:40) bryce: d_eric: not every, doing just the common ones will help.
+(21:12:10) d_Eric: oh, so uncommon ones would just trap back to the interpreter
+(21:12:12) bryce: d_eric: uncommon ones can be implemented as function calls
+(21:12:29) bryce: yes
+(21:13:18) bryce: it would be a fun project, but quite a challenge.  Basically it's like writing a JIT compiler.
+(21:13:34) d_Eric: one nifty consequence of that would be that you could have several different front ends for machine-code -> micro-op, one for x86, ppc, alpha, and they would all use the same infrastructure.  sounds like a 3.0 (4.0) feature though . . .
+(21:13:47) bryce: I REALLY wish we could get Julian Seward, who wrote Valgrind, interested in helping.
+(21:14:19) bryce: Valgrind is a memory checking tool for linux only, but it's implemented exactly like that: translate to micro-ops, optimize, and generate x86 code.
+(21:14:31) bryce: but he is just doing user level code
+(21:18:26) bryce: Christophe, how long do you think it will take us to get plugins ready for main branch?  A week?
+(21:20:47) bryce: Plugins don't quite work on any platform other than linux.  Shared libraries seem completely different on each platform, even though I'm using libtool which helps to hide the differences.
+(21:20:57) cbothamy: one week sounds ok.
+(21:21:35) d_Eric: i never quite understood what plugins were supposed to do... is there any documentation on that?
+(21:21:41) bryce: no, they are very new
+(21:21:51) bryce: here's what I wrote on the web page (sorry web site is down):
+(21:22:05) bryce: Christophe and Bryce are working on plugin support, so that you can compile in support for many more options and enable them at runtime. For example, you could compile in support for 4 different gui libraries (X11, SDL, RFB, wxWindows) and select between them in your bochsrc. 
+(21:22:44) d_Eric: oooh! very cool
+(21:22:49) bryce: A plugin is a shared library (.so on unix, .dll on win32) that can be loaded at runtime
+(21:23:02) bryce: In our plugin branch, we can build it so that you can
+(21:23:17) bryce: compile all guis into plugins
+(21:23:27) bryce: (the ones that your platform supports at least)
+(21:23:34) bryce: and then at run time you can say "I want SDL this time"
+(21:23:43) bryce: or "I want to use Term GUI"
+(21:24:04) bryce: For devices, we can make it so that bochs only loads the devices that you have enabled in bochsrc.
+(21:24:33) bryce: And I hope that it's possible to make libcpu_fast.so and libcpu_debug.so and libsmp_debug.so
+(21:25:27) astaroth: bryce: would plugins be strictly for user interface stuff or will there be a hardware devices? or would there be 2 separate plugin api's?
+(21:25:29) bryce: instead of having to reconfigure and recompile when you change any options.
+(21:25:46) bryce: astaroth: right now there are 2 kinds of plugins: hardware device and gui.
+(21:26:16) d_Eric: is the plugin model that each plugin implements a C++ class derived from common base type?
+(21:26:25) astaroth: got it.
+(21:26:28) bryce: :)
+(21:26:57) bryce: we have two possible ways to do it.  I think Christophe and I prefer what you just said.
+(21:27:16) astaroth: be neat if the hardware device plugin could be done in an os-independant bytecode or something
+(21:27:26) bryce: the other way is a bunch of C function pointers, and macros that call them.
+(21:27:54) osmaker|hereish: astaroth: u could interface to it with .NET maybe
+(21:28:03) bryce: d_eric: one problem we have run into is that on some systems you cannot be sure if C++ constructors in a shared library module will ever be called! :(
+(21:28:33) astaroth: osmaker|hereish: ack
+(21:28:45) bryce: d_eric: so it's possible that platform limitations might cause us to use the C function pointer method, but I hope the C++ class method will work out.
+(21:29:05) d_Eric: even if you explicitly (sp?) call the constructor?
+(21:30:12) bryce: if you explicitly call it, it's fine.  But if you write "bx_floppy_c the_floppy;" as a global variable inside the plugin code, I've seen cases where it didn't ever get called.
+(21:30:56) d_Eric: yes, I have seen that.  C++ shared objects require more programming dicipline than static C++ programs
+(21:30:58) bryce: Christophe, plex86 uses C++ devices now, right?  I bet they could use our virtual functions too.
+(21:31:44) cbothamy: Not so sure, because the wrapper is C code, not C++. I'll check
+(21:31:59) bryce: Hmm.
+(21:32:38) bryce: Anyway, hopefully in the next week we can get the plugin code cleaned up and merged into CVS main trunk.
+(21:33:34) bryce: I want to get SSE in there too, and then it sounds like a good time to start the "feature freeze"
+(21:34:27) d_Eric: all of SSE, or just decoding + stubs ?
+(21:34:37) bryce: not all will be ready
+(21:35:01) bryce: stanslav says decoding is already ready, and he's working on the integer part
+(21:35:08) bryce: stanislav
+(21:35:37) bryce: Maybe the release should just be deoding & stubs as you said, rather than a brand new implementation of part of SSE
+(21:36:45) bryce: although bugs inside #if BX_SUPPORT_SSE ... #endif are not going to hurt anybody, in general
+(21:39:21) osmaker|hereish: will the device plugin stuff allow ppl to make gfx card devices for bochs?
+(21:39:35) bryce: you can do that, with plugins, or without
+(21:40:10) bryce: device plugin just means that the devices can be loaded at runtime.
+(21:44:07) bryce: Any win32 DLL experts out here?
+(21:44:42) bryce: With libtool I can build bochs plugin DLLs in cygwin, but so far I cannot load them and install them.
+(21:45:13) bryce: I'm trying to make it work using libtool and its little library call libltdl, which is supposed to support windows LoadLibrary/GetProcAddress interface
+(21:45:30) bryce: ...little library called libltdl, ....
+(21:47:28) bryce: guess not. :)
+(21:48:21) bryce: Any patches that are sitting around, with nobody looking at them?
+(21:49:09) bryce: If so, you should probably write a reminder to the mailing list, saying that we should apply this or that patch and why.
+(21:49:22) cbothamy: yes, there is the block device patch for linux from Phil Marek
+(21:51:06) bryce: looks reasonable
+(21:51:16) bryce: you can check it in if you want :)
+(21:51:29) cbothamy: ok fine
+(21:51:55) bryce: We have 37 patches sitting there.....
+(21:52:11) bryce: 904k of patches
+(21:52:16) cbothamy: yes, some must be outdated
+(21:52:42) bryce: Often I look at one and say, "I don't know anything about this. Maybe someone else will." and then it sits around.
+(21:54:06) bryce: Volker suggested that we add a "status" line or something for each patch, to help keep track of why the patch is still there.  They don't very often get thrown away.
+(21:54:11) d_Eric: bryce: I have to go now.  where should I send cleaned-up packages?
+(21:54:22) bryce: they are simply ignored instead.
+(21:54:35) bryce: d_eric: less than 5 meg, you can email it to me
+(21:55:05) d_Eric: ok.  for bigger ones, I can put the package on my web page and send a link?
+(21:55:08) bryce: do you have any web site you can put big images on?
+(21:55:10) bryce: yes that would be ideal
+(21:55:17) d_Eric: ok
+(21:55:42) bryce: if you have a web page, why don't you do it for all of them  :)
+(21:56:02) bryce: you can delete as soon as I copy them to SF
+(21:56:05) d_Eric: ok, but my web server is pretty wussy, so they have to end up back on sourceforge
+(21:56:10) bryce: definitely
+(21:56:15) d_Eric: ok
+(21:56:18) d_Eric: sounds like a plan
+(21:56:51) d_Eric: bye all
+(21:57:03) osmaker|hereish: see ya d_Eric
+(21:57:56) bryce: I was hoping that I could make wxwindows so good that it could be the default for 2.0, but I doubt that it is there yet.
+(21:58:17) bryce: Sandos, do you have an opinion on that?
+(21:59:17) bryce: I think it looks a lot more like a modern application than the text mode menus plus the native GUI window.
+(21:59:42) bryce: (sandos has been using wx a lot)
+(22:00:21) bryce: When I make binary snapshots, I will make wx binaries that are easy for people to play around with.
+(22:00:38) osmaker|hereish: can the wxwindows option be compiled in cygwin without getting any special libs?
+(22:01:09) bryce: no, you must download the libs to compile
+(22:01:25) osmaker|hereish: k
+(22:01:34) bryce: http://bochs.sourceforge.net/tmp/wxwindows/binaries/cygwin/wxMSW-2.3.3-cygwinlib-release.tar.gz
+(22:01:48) bryce: that's a 3.6meg download, containing the wxwindows 2.3.3 library built for cygwin
+(22:02:03) bryce: including header files
+(22:02:30) cbothamy: I have to go, see you around
+(22:02:49) bryce: bye cbothamy
+(22:03:08) astaroth: anyone have a moment or 2 for a couple of troubleshooting questions?
+(22:03:42) bryce: osmaker: if you want to build wx in cygwin yourself, be sure to read [ 615617 ] wxWindows port won't compile in cygwin at http://sourceforge.net/tracker/index.php?func=detail&aid=615617&group_id=12580&atid=112580
+(22:03:53) bryce: astaroth: ok
+(22:06:05) astaroth: I seem to be missing something: using the freedos image from the homepage, bochs (orignally tried the rpm, then the source distro, now am using the cvs) seems to hang when trying to get to the floppy image a.img (or others for that matter) any thoughts?
+(22:06:59) bryce: are you booting the floppy, or using it after boot?
+(22:09:27) astaroth: i have tried both, and am currently booting with the c image so that i could run debug and try a raw int 13 read from the floppy, but it hangs (i continue to get the "useconds: expected ticks: ..." so it is not crashed, just held up somewhere
+(22:09:49) bryce: are you using a recent ROMBIOS with current CVS?
+(22:10:06) bryce: if bios doesn't match binary it can do strange things like that
+(22:10:23) astaroth: hmmm....
+(22:10:46) bryce: copy bios/BIOS-bochs-latest out of CVS and use it
+(22:12:34) ***astaroth hangs his head in shame
+(22:12:50) astaroth: thanks...that fixed it
+(22:13:07) bryce: great!
+(22:13:51) bryce: simple but non-obvious
+(22:14:31) astaroth: now, onward and upward.  (trying to get NeXTStep/OpenStep to install)
+</pre>
+
+ <!--content ends here -->
+
+
+<!--#include virtual="includes/footer.txt" -->
+
+
+Last Modified on <!--#flastmod file="mailinglists.html" -->.<BR>
+
+<!--#include virtual="includes/cright.txt" -->
+
+</BODY>
+</HTML>
