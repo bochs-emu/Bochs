@@ -36,7 +36,6 @@ Changes to next release:
     ! Unmasked underflow/overflow should correct the result 
       by magic number for all operations, including float32 
       and float64.
-    ! improve performance of transcendential instructions.
 
 - Disassembler
   - fixed MOV opcode 0x88, had exchanged the operands (h.johansson)
@@ -111,6 +110,35 @@ Changes to next release:
   [869822] a real SVGA implementation by m_suzu
 
 - these S.F. bugs were closed 
+  #522111 Host os SIGILL, booting grub from hd
+ #1005052 DMA Controller Model Problem
+  #552939 Bochs window doesn't resize when win311
+  #989478 I-Cache and undefined Instructions
+  #661008 make install fails
+  #845691 Workaround: Ne2k and Windows 2000 not working
+  #923662 BIOS diskette motor countdown byte broken
+  #848141 VGA problems running Scitech Display Driver on Win95
+  #799370 Problem booting ReactOS 0.1.3
+  #670143 No rule to make config.h
+  #653444 with vbe/lgpl bios, scrn updates broken
+  #655696 quickstart broken?
+  #659350 FDC
+  #620853 Ne2000 ethernet card *NOT* supported
+  #607611 Numlock
+  #543476 Sound card does not work in Windows 95
+  #529554 unsupported VBE features DISPI update
+  #487316 Access violation on Win32
+  #576253 RTC too fast
+  #489748 io read from address 000003c0, len=2
+  #656861 Gentoo Linux panics in VGA code
+  #787184 Video BIOS's don't checksum correctly
+  #988529 textconfig [Save options to] function output obsolete option
+  #987293 Cannot accesss header/toolbar
+  #988246 floppy read error
+  #933199 speedup Bochs compilation 4x -> suggestion
+  #979106 Incorrect disassembly table entry
+  #658374 FPU incorrect emulation
+  #706933 Problem with the F12-Key
   #477043 math_abort panic in RH 7.1
   #634371 Floating point problems
   #681138 // is not valid in C

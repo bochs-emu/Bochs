@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.30 2004-08-14 20:44:48 sshwarts Exp $
+// $Id: arith8.cc,v 1.31 2004-08-16 20:18:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -314,7 +314,7 @@ BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8 = op1_8 - op2_8;
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 #endif
 }
 
@@ -339,7 +339,7 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8 = op1_8 - op2_8;
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 #endif
 }
 
@@ -358,7 +358,7 @@ BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8 = op1_8 - op2_8;
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 #endif
 }
 
@@ -486,7 +486,7 @@ BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8 = op1_8 - op2_8;
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 #endif
 }
 
@@ -562,7 +562,7 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
 
   diff_8 = AL - op1_8;
 
-  SET_FLAGS_OSZAPC_8(AL, op1_8, diff_8, BX_INSTR_CMP8);
+  SET_FLAGS_OSZAPC_8(AL, op1_8, diff_8, BX_INSTR_COMPARE8);
 
   if (diff_8 == 0) {  // if accumulator == dest
     // ZF = 1

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.37 2004-08-14 20:44:48 sshwarts Exp $
+// $Id: arith32.cc,v 1.38 2004-08-16 20:18:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -393,7 +393,7 @@ BX_CPU_C::CMP_EdGd(bxInstruction_c *i)
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_CMP32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 #endif
 }
 
@@ -419,7 +419,7 @@ BX_CPU_C::CMP_GdEd(bxInstruction_c *i)
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_CMP32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 #endif
 }
 
@@ -439,7 +439,7 @@ BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_CMP32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 #endif
 }
 
@@ -640,7 +640,7 @@ BX_CPU_C::CMP_EdId(bxInstruction_c *i)
 #else
   Bit32u diff_32;
   diff_32 = op1_32 - op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_CMP32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 #endif
 }
 
@@ -719,7 +719,7 @@ BX_CPU_C::CMPXCHG_EdGd(bxInstruction_c *i)
 
   diff_32 = EAX - op1_32;
 
-  SET_FLAGS_OSZAPC_32(EAX, op1_32, diff_32, BX_INSTR_CMP32);
+  SET_FLAGS_OSZAPC_32(EAX, op1_32, diff_32, BX_INSTR_COMPARE32);
 
   if (diff_32 == 0) {  // if accumulator == dest
     // ZF = 1

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.12 2004-08-15 20:12:05 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.13 2004-08-16 20:18:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,10 +47,10 @@
 #define BX_INSTR_SBB32          15
 #define BX_INSTR_SBB64          16
 
-#define BX_INSTR_CMP8           17
-#define BX_INSTR_CMP16          18
-#define BX_INSTR_CMP32          19
-#define BX_INSTR_CMP64          20
+#define BX_INSTR_COMPARE8       17
+#define BX_INSTR_COMPARE16      18
+#define BX_INSTR_COMPARE32      19
+#define BX_INSTR_COMPARE64      20
 
 #define BX_INSTR_INC8           21
 #define BX_INSTR_INC16          22
@@ -72,15 +72,15 @@
 #define BX_INSTR_LOGIC32        35
 #define BX_INSTR_LOGIC64        36
 
-#define BX_INSTR_CMPS8          37
-#define BX_INSTR_CMPS16         38
-#define BX_INSTR_CMPS32         39
-#define BX_INSTR_CMPS64         40
+//      BX_INSTR_BITSCAN8       not exists, leave number for alignment
+#define BX_INSTR_BITSCAN16      38
+#define BX_INSTR_BITSCAN32      39
+#define BX_INSTR_BITSCAN64      40
 
-#define BX_INSTR_SCAS8          41
-#define BX_INSTR_SCAS16         42
-#define BX_INSTR_SCAS32         43
-#define BX_INSTR_SCAS64         44
+#define BX_INSTR_SHL8           41
+#define BX_INSTR_SHL16          42
+#define BX_INSTR_SHL32          43
+#define BX_INSTR_SHL64          44
 
 #define BX_INSTR_SHR8           45
 #define BX_INSTR_SHR16          46
@@ -91,16 +91,6 @@
 #define BX_INSTR_SAR16          50
 #define BX_INSTR_SAR32          51
 #define BX_INSTR_SAR64          52
-
-#define BX_INSTR_SHL8           53
-#define BX_INSTR_SHL16          54
-#define BX_INSTR_SHL32          55
-#define BX_INSTR_SHL64          56
-
-//      BX_INSTR_BITSCAN8       not exists, leave number for alignment
-#define BX_INSTR_BITSCAN16      58
-#define BX_INSTR_BITSCAN32      59
-#define BX_INSTR_BITSCAN64      60
 
 #define BX_LF_INDEX_OSZAPC  1
 #define BX_LF_INDEX_OSZAP   2

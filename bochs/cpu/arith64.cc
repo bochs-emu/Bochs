@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.20 2004-08-14 20:44:48 sshwarts Exp $
+// $Id: arith64.cc,v 1.21 2004-08-16 20:18:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -391,7 +391,7 @@ BX_CPU_C::CMP_EqGq(bxInstruction_c *i)
 
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_CMP64);
+    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 }
 
   void
@@ -414,7 +414,7 @@ BX_CPU_C::CMP_GqEq(bxInstruction_c *i)
 
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_CMP64);
+    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 }
 
   void
@@ -427,7 +427,7 @@ BX_CPU_C::CMP_RAXId(bxInstruction_c *i)
     op2_64 = (Bit32s) i->Id();
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_CMP64);
+    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 }
 
   void
@@ -603,7 +603,7 @@ BX_CPU_C::CMP_EqId(bxInstruction_c *i)
 
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_CMP64);
+    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 }
 
   void
@@ -704,7 +704,7 @@ BX_CPU_C::CMPXCHG_EqGq(bxInstruction_c *i)
 
     diff_64 = RAX - op1_64;
 
-    SET_FLAGS_OSZAPC_64(RAX, op1_64, diff_64, BX_INSTR_CMP64);
+    SET_FLAGS_OSZAPC_64(RAX, op1_64, diff_64, BX_INSTR_COMPARE64);
 
     if (diff_64 == 0) {  // if accumulator == dest
       // ZF = 1

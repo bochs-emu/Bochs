@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.34 2004-08-14 20:44:48 sshwarts Exp $
+// $Id: arith16.cc,v 1.35 2004-08-16 20:18:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -395,7 +395,7 @@ BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit16u diff_16 = op1_16 - op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 #endif
 }
 
@@ -420,7 +420,7 @@ BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit16u diff_16 = op1_16 - op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 #endif
 }
 
@@ -439,7 +439,7 @@ BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit16u diff_16 = op1_16 - op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 #endif
 }
 
@@ -626,7 +626,7 @@ BX_CPU_C::CMP_EwIw(bxInstruction_c *i)
   setEFlagsOSZAPC(flags32);
 #else
   Bit16u diff_16 = op1_16 - op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 #endif
 }
 
@@ -718,7 +718,7 @@ BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
 
   diff_16 = AX - op1_16;
 
-  SET_FLAGS_OSZAPC_16(AX, op1_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(AX, op1_16, diff_16, BX_INSTR_COMPARE16);
 
   if (diff_16 == 0) {  // if accumulator == dest
     // ZF = 1
