@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.4 2005-01-29 12:08:31 vruppert Exp $
+// $Id: speaker.cc,v 1.5 2005-02-09 18:25:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -111,6 +111,25 @@ void bx_speaker_c::beep_on(float frequency)
   bx_gui->beep_on(frequency);
 }
 
+#if defined(WIN32)
+
+struct {
+  DWORD frequency;
+  DWORD msec;
+} beep_info;
+
+DWORD WINAPI BeepThread(LPVOID)
+{
+  static BOOL threadActive = FALSE;
+
+  while (threadActive) Sleep(10);
+  threadActive = TRUE;
+  Beep(beep_info.frequency, beep_info.msec);
+  threadActive = FALSE;
+}
+
+#endif
+
 void bx_speaker_c::beep_off()
 {
   if (beep_frequency != 0.0) {
@@ -119,9 +138,11 @@ void bx_speaker_c::beep_off()
       ioctl(consolefd, KIOCSOUND, 0);
     }
 #elif defined(WIN32)
-  // FIXME: sound should start at beep_on() and end here
-  Bit32u msec = (bx_pc_system.time_usec() - usec_start) / 1000;
-  Beep((Bit32u)beep_frequency, msec);
+    // FIXME: sound should start at beep_on() and end here
+    DWORD threadID;
+    beep_info.msec = (DWORD)((bx_pc_system.time_usec() - usec_start) / 1000);
+    beep_info.frequency = (DWORD)beep_frequency;
+    CreateThread(NULL, 0, BeepThread, NULL, 0, &threadID);
 #endif
 
     // give the gui a chance to signal beep off
