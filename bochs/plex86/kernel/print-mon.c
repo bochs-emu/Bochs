@@ -21,7 +21,7 @@
 
 
 #include "plex86.h"
-#define IN_NEXUS_SPACE
+#define IN_MONITOR_SPACE
 #include "monitor.h"
 
 int mon_vprint(vm_t *vm, char *fmt, va_list args);
@@ -67,13 +67,13 @@ mon_vprint(vm_t *vm, char *fmt, va_list args)
 
   /* Sanity check */
   if (offset >= LOG_BUFF_SIZE) {
-    vm->addr->log_buffer[0] = 0; /* Null terminate. */
+    vm->guest.addr.log_buffer[0] = 0; /* Null terminate. */
     resetPrintBuf(vm);
     return(0);
     }
 
   size = LOG_BUFF_SIZE - offset;
-  log_buff_p = &vm->addr->log_buffer[offset];
+  log_buff_p = &vm->guest.addr.log_buffer[offset];
 
   ret = mon_vsnprintf(log_buff_p, size, fmt, args);
 
@@ -84,21 +84,19 @@ mon_vprint(vm_t *vm, char *fmt, va_list args)
      * current buffer contents be printed.
      */
     resetPrintBuf(vm);
-    if (vm->addr != &vm->host.addr) {
-      sysFlushPrintBuf(vm);
-      }
+    sysFlushPrintBuf(vm);
 
     /* Print request did not fit.  dump buffer contents and try again
      * using whole buffer.
      */
     size = LOG_BUFF_SIZE;
-    log_buff_p = &vm->addr->log_buffer[0];
+    log_buff_p = &vm->guest.addr.log_buffer[0];
     ret = mon_vsnprintf(log_buff_p, size, fmt, args);
     if (ret == -1) {
       /* We have serious problems.  This print request will not even
        * fit in the whole buffer.
        */
-      vm->addr->log_buffer[0] = 0; /* Null terminate. */
+      vm->guest.addr.log_buffer[0] = 0; /* Null terminate. */
       resetPrintBuf(vm);
       /* xxx Put error in buffer here. */
       return(0);
@@ -107,10 +105,8 @@ mon_vprint(vm_t *vm, char *fmt, va_list args)
   vm->log_buffer_info.offset += ret;
   vm->log_buffer_info.locked = 0;
 #if 0 /* Fri Dec 27 21:43:05 EST 2002 */
-  if (vm->addr != &vm->host.addr) {
-    resetPrintBuf(vm);
-    sysFlushPrintBuf(vm);
-    }
+  resetPrintBuf(vm);
+  sysFlushPrintBuf(vm);
 #endif
   return(ret);
 }
@@ -126,7 +122,7 @@ resetPrintBuf(vm_t *vm)
 
 
 /* For now, this is a simple vsnprintf() type of function.  We need
- * to fill a little
+ * to fill this out a little.
  */
 
   int
