@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.67 2002-08-07 08:53:01 vruppert Exp $
+// $Id: harddrv.cc,v 1.68 2002-08-09 13:16:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.67 2002-08-07 08:53:01 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.68 2002-08-09 13:16:22 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1735,7 +1735,9 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	    case 0x82: //  Disable write cache.
 	    case 0xAA: // Enable and
 	    case 0x55: //  Disable look-ahead cache.
-	      BX_INFO(("SET FEATURES subcommand not supported by disk."));
+	    case 0x66: //  Disable reverting to power-on default
+	    case 0xCC: //  Enable reverting to power-on default
+	      BX_INFO(("SET FEATURES subcommand 0x%02x not supported by disk.", (unsigned) BX_SELECTED_CONTROLLER.features));
 	      command_aborted(value);
 	    break;
 
