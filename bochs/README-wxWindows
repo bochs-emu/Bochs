@@ -72,7 +72,7 @@ What works right now (September 2002):
 - use the choices on the Edit menu to adjust settings.
 - choose "Start" on the Simulate menu.  Bochs starts running in the
   You can pause it, resume it, or kill it on the Simulate menu.
-  Most toolbar buttons work, but mouse support does not exist yet.
+  Most toolbar buttons work.
 - You can pause, resume, and stop the simulation too.  If you start
   a new simulation, it's possible that things may not work quite right.  
   The initialization and re-initialization process needs work.
@@ -112,7 +112,6 @@ To do:
   recently it couldn't run multithreaded programes.
 - disk change dialogs for floppy and cdrom need work.
   http://sourceforge.net/tracker/index.php?func=detail&aid=545414&group_id=12580&atid=112580
-- mouse events not implemented
 -------------
 
 ------------------------------------------------------
