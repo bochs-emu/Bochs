@@ -9,7 +9,10 @@
 #define STRING_DLG  2100
 #define IDSTRING    2110
 #define FLOPPY_DLG  2200
-#define IDPATH      2210
-#define IDBROWSE    2220
-#define IDSTATUS    2230
-#define IDCREATE    2240
+#define IDDEVTX     2205
+#define IDDEVTYPE   2210
+#define IDPATHTX    2215
+#define IDPATH      2220
+#define IDBROWSE    2230
+#define IDSTATUS    2240
+#define IDCREATE    2250

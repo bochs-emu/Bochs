@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.8 2003-09-01 17:47:57 vruppert Exp $
+// $Id: win32dialog.cc,v 1.9 2003-09-18 17:37:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -139,6 +139,8 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         status = SIM->get_param_enum(BXP_FLOPPYB_STATUS);
         disktype = SIM->get_param_enum(BXP_FLOPPYB_DEVTYPE);
       }
+      cap = disktype->get() - disktype->get_min();
+      SetWindowText(GetDlgItem(hDlg, IDDEVTYPE), floppy_type_names[cap]);
       if (status->get() == BX_INSERTED) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
       }
