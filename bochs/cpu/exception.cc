@@ -728,12 +728,14 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   if (BX_CPU_THIS_PTR errorno >= 2) {
     if (is_exception_OK[BX_CPU_THIS_PTR curr_exception[0]][exception_type])
       BX_CPU_THIS_PTR curr_exception[1] = exception_type;
-    else
+    else {
       BX_CPU_THIS_PTR curr_exception[1] = BX_ET_DOUBLE_FAULT;
+      vector = 8;
     }
+  }
   else {
     BX_CPU_THIS_PTR curr_exception[0] = exception_type;
-    }
+  }
 
 
 #if BX_CPU_LEVEL >= 2
