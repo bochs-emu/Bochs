@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.93 2002-12-17 05:58:44 bdenney Exp $
+// $Id: siminterface.cc,v 1.94 2003-02-06 23:16:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -435,9 +435,11 @@ bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *whe
 
 char *bochs_start_names[] = { "quick", "load", "edit", "run" };
 int n_bochs_start_names = 3;
-char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", NULL };
-int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9 };
-int n_floppy_type_names = 6;
+
+char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", NULL };
+int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8 };
+int n_floppy_type_names = 9;
+
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
 int n_floppy_status_names = 2;
 char *floppy_bootdisk_names[] = { "floppy", "hard","cdrom", NULL };

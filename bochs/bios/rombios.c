@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.90 2003-01-18 19:20:52 cbothamy Exp $
+// $Id: rombios.c,v 1.91 2003-02-06 23:16:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.90 $";
-static char bios_date_string[] = "$Date: 2003-01-18 19:20:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.91 $";
+static char bios_date_string[] = "$Date: 2003-02-06 23:16:52 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.90 2003-01-18 19:20:52 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.91 2003-02-06 23:16:52 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -6094,6 +6094,35 @@ floppy_media_sense(drive)
 
   // for now cheat and get drive type from CMOS,
   // assume media is same as drive type
+
+  // ** config_data **
+  // Bitfields for diskette media control:
+  // Bit(s)  Description (Table M0028)
+  //  7-6  last data rate set by controller
+  //        00=500kbps, 01=300kbps, 10=250kbps, 11=1Mbps
+  //  5-4  last diskette drive step rate selected
+  //        00=0Ch, 01=0Dh, 10=0Eh, 11=0Ah
+  //  3-2  {data rate at start of operation}
+  //  1-0  reserved
+
+  // ** media_state **
+  // Bitfields for diskette drive media state:
+  // Bit(s)  Description (Table M0030)
+  //  7-6  data rate
+  //    00=500kbps, 01=300kbps, 10=250kbps, 11=1Mbps
+  //  5  double stepping required (e.g. 360kB in 1.2MB)
+  //  4  media type established
+  //  3  drive capable of supporting 4MB media
+  //  2-0  on exit from BIOS, contains
+  //    000 trying 360kB in 360kB
+  //    001 trying 360kB in 1.2MB
+  //    010 trying 1.2MB in 1.2MB
+  //    011 360kB in 360kB established
+  //    100 360kB in 1.2MB established
+  //    101 1.2MB in 1.2MB established
+  //    110 reserved
+  //    111 all other formats/drives
+
   drive_type = inb_cmos(0x10);
   if (drive == 0)
     drive_type >>= 4;
@@ -6108,7 +6137,7 @@ floppy_media_sense(drive)
   else if ( drive_type == 2 ) {
     // 1.2 MB 5.25" drive
     config_data = 0x00; // 0000 0000
-    media_state = 0x25; // 0010 0101
+    media_state = 0x25; // 0010 0101   // need double stepping??? (bit 5)
     retval = 1;
     }
   else if ( drive_type == 3 ) {
@@ -6129,6 +6158,27 @@ floppy_media_sense(drive)
     media_state = 0xD7; // 1101 0111
     retval = 1;
     }
+  //
+  // Extended floppy size uses special cmos setting 
+  else if ( drive_type == 6 ) {
+    // 160k 5.25" drive
+    config_data = 0x00; // 0000 0000
+    media_state = 0x27; // 0010 0111
+    retval = 1;
+    }
+  else if ( drive_type == 7 ) {
+    // 180k 5.25" drive
+    config_data = 0x00; // 0000 0000
+    media_state = 0x27; // 0010 0111
+    retval = 1;
+    }
+  else if ( drive_type == 8 ) {
+    // 320k 5.25" drive
+    config_data = 0x00; // 0000 0000
+    media_state = 0x27; // 0010 0111
+    retval = 1;
+    }
+
   else {
     // not recognized
     config_data = 0x00; // 0000 0000
@@ -6796,7 +6846,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
 BX_DEBUG_INT13_FL("floppy f08\n");
       drive = GET_DL();
 
-      if (drive>1) {
+      if (drive > 1) {
         AX = 0;
         BX = 0;
         CX = 0;
@@ -6819,7 +6869,6 @@ BX_DEBUG_INT13_FL("floppy f08\n");
         drive_type >>= 4;
       else
         drive_type &= 0x0f;
-
 
       SET_BH(0);
       SET_BL(drive_type);
@@ -6855,6 +6904,21 @@ BX_DEBUG_INT13_FL("floppy f08\n");
 
         case 5: // 2.88MB, 3.5"
           CX = 0x4f24; // 80 tracks, 36 sectors
+          SET_DH(1); // max head #
+          break;
+
+        case 6: // 160k, 5.25"
+          CX = 0x2708; // 40 tracks, 8 sectors
+          SET_DH(0); // max head #
+          break;
+
+        case 7: // 180k, 5.25"
+          CX = 0x2709; // 40 tracks, 9 sectors
+          SET_DH(0); // max head #
+          break;
+
+        case 8: // 320k, 5.25"
+          CX = 0x2708; // 40 tracks, 8 sectors
           SET_DH(1); // max head #
           break;
 
@@ -9457,6 +9521,10 @@ int08_store_ticks:
 
 .org 0xfef3 ; Initial Interrupt Vector Offsets Loaded by POST
 
+
+.org 0xff00
+.ascii "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
+
 ;------------------------------------------------
 ;- IRET Instruction for Dummy Interrupt Handler -
 ;------------------------------------------------
@@ -9467,9 +9535,6 @@ dummy_iret_handler:
 .org 0xff54 ; INT 05h Print Screen Service Entry Point
   HALT(__LINE__)
   iret
-
-.org 0xff00
-.ascii "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
 .org 0xfff0 ; Power-up Entry Point
   jmp 0xf000:post;
@@ -9784,7 +9849,7 @@ mp_config_irqs:
 #endif  // if (BX_SMP_PROCESSORS==...)
 
 mp_config_end:   // this label used to find length of mp structure
-  db 0
+ db 0
 
 #if (BX_SMP_PROCESSORS>1)
 .align 16

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.221 2003-02-05 18:19:03 cbothamy Exp $
+// $Id: main.cc,v 1.222 2003-02-06 23:16:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1876,14 +1876,14 @@ bx_init_main (int argc, char *argv[])
     BX_INFO (("LTDL_LIBRARY_PATH is set to '%s'", getenv("LTDL_LIBRARY_PATH")));
   } else {
     BX_INFO (("LTDL_LIBRARY_PATH not set. using compile time default '%s'", 
-	  BX_PLUGIN_PATH));
+        BX_PLUGIN_PATH));
     setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
   }
   if (getenv("BXSHARE") != NULL) {
     BX_INFO (("BXSHARE is set to '%s'", getenv("BXSHARE")));
   } else {
     BX_INFO (("BXSHARE not set. using compile time default '%s'", 
-	  BX_SHARE_PATH));
+        BX_SHARE_PATH));
     setenv("BXSHARE", BX_SHARE_PATH, 1);
   }
 #else
@@ -2594,6 +2594,19 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_360K);
         }
+      // use CMOS reserved types?
+      else if (!strncmp(params[i], "160k=", 5)) {
+        bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Otype->set (BX_FLOPPY_160K);
+        }
+      else if (!strncmp(params[i], "180k=", 5)) {
+        bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Otype->set (BX_FLOPPY_180K);
+        }
+      else if (!strncmp(params[i], "320k=", 5)) {
+        bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Otype->set (BX_FLOPPY_320K);
+        }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppya.Ostatus->set (BX_EJECTED);
         }
@@ -2664,6 +2677,19 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strncmp(params[i], "360k=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_360K);
+        }
+      // use CMOS reserved types?
+      else if (!strncmp(params[i], "160k=", 5)) {
+        bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Otype->set (BX_FLOPPY_160K);
+        }
+      else if (!strncmp(params[i], "180k=", 5)) {
+        bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Otype->set (BX_FLOPPY_180K);
+        }
+      else if (!strncmp(params[i], "320k=", 5)) {
+        bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Otype->set (BX_FLOPPY_320K);
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppyb.Ostatus->set (BX_EJECTED);
@@ -3284,9 +3310,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     if (!strncmp(params[1], "realtime=", 9)) {
       switch (params[1][9]) {
-	case '0': bx_options.Orealtime_pit->set (0); break;
-	case '1': bx_options.Orealtime_pit->set (1); break;
-	default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
+        case '0': bx_options.Orealtime_pit->set (0); break;
+        case '1': bx_options.Orealtime_pit->set (1); break;
+        default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
         }
       }
     else PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
@@ -3633,8 +3659,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
 }
 
 static char *fdtypes[] = {
-  "none", "1_2", "1_44", "2_88", "720k", "360k"
+  "none", "1_2", "1_44", "2_88", "720k", "360k", "160k", "180k", "320k"
 };
+
 
 int 
 bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.98 2003-01-28 16:56:59 vruppert Exp $
+// $Id: siminterface.h,v 1.99 2003-02-06 23:16:54 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1095,7 +1095,11 @@ enum {
 #define BX_FLOPPY_2_88   13 // 2.88M 3.5"
 #define BX_FLOPPY_720K   14 // 720K  3.5"
 #define BX_FLOPPY_360K   15 // 360K  5.25"
-#define BX_FLOPPY_LAST   15 // last legal value of floppy type
+#define BX_FLOPPY_160K   16 // 160K  5.25"
+#define BX_FLOPPY_180K   17 // 180K  5.25"
+#define BX_FLOPPY_320K   18 // 320K  5.25"
+#define BX_FLOPPY_LAST   18 // last legal value of floppy type
+
 #define BX_FLOPPY_GUESS  20 // decide based on image size
 
 #define BX_ATA_DEVICE_DISK      0
