@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.57 2003-05-13 20:38:35 vruppert Exp $
+// $Id: win32.cc,v 1.58 2003-05-28 19:08:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -133,6 +133,7 @@ static unsigned prev_block_cursor_y = 0;
 static HBITMAP vgafont[256];
 static unsigned x_edge=0, y_edge=0, y_caption=0;
 static int xChar = 8, yChar = 16;
+static unsigned int text_rows=25, text_cols=80;
 static HFONT hFont[3];
 static int FontId = 2;
 
@@ -933,14 +934,15 @@ void bx_win32_gui_c::clear_screen(void) {
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is 80*nrows*2 bytes long.
-//     This represents 80 characters wide by 'nrows' high, with
-//     each character being 2 bytes.  The first by is the
-//     character value, the second is the attribute byte.
-//     I currently don't handle the attribute byte.
+// format of old_text & new_text: each is tm_info.line_offset*text_rows
+//     bytes long. Each character consists of 2 bytes.  The first by is
+//     the character value, the second is the attribute byte.
 //
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
+// tm_info:  this structure contains information for additional
+//           features in text mode (cursor shape, line offset,...)
+// nrows:    number of text rows (unused here)
 
 void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			   unsigned long cursor_x, unsigned long cursor_y,
@@ -950,7 +952,6 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char data[64];
   unsigned char *old_line, *new_line, *new_start;
   unsigned char cAttr, cChar;
-  unsigned int ncols = dimension_x / xChar;
   unsigned int hchars, rows, x, y;
   BOOL forceUpdate = FALSE;
 
@@ -958,6 +959,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   EnterCriticalSection(&stInfo.drawCS);
 
+  UNUSED(nrows);
   if (charmap_updated) {
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
@@ -979,7 +981,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   hdc = GetDC(stInfo.simWnd);
 
-  if ( (prev_block_cursor_y < nrows) && (prev_block_cursor_x < ncols)) {
+  if ( (prev_block_cursor_y < text_rows) && (prev_block_cursor_x < text_cols)) {
     cChar = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2];
     cAttr = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2 + 1];
     if (yChar >= 14) {
@@ -992,10 +994,10 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   }
 
   new_start = new_text;
-  rows = nrows;
+  rows = text_rows;
   y = 0;
   do {
-    hchars = ncols;
+    hchars = text_cols;
     new_line = new_text;
     old_line = old_text;
     x = 0;
@@ -1023,7 +1025,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ((cursor_y < nrows ) && (cursor_x < ncols) && (tm_info.cs_start <= tm_info.cs_end)) {
+  if ((cursor_y < text_rows ) && (cursor_x < text_cols) && (tm_info.cs_start <= tm_info.cs_end)) {
     cChar = new_start[cursor_y * tm_info.line_offset + cursor_x * 2];
     cAttr = new_start[cursor_y * tm_info.line_offset + cursor_x * 2 + 1];
     if (yChar>=14) {
@@ -1147,10 +1149,14 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 //
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
+// fheight: new VGA character height in text mode
+// fwidth : new VGA character width in text mode
 
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
   if (fheight > 0) {
+    text_cols = x / fwidth;
+    text_rows = y / fheight;
     if (fheight >= 14) {
       FontId = 2;
       xChar = fwidth;
