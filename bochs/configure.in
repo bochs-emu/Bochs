@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.5 2002-10-09 05:36:36 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.147.2.6 2002-10-09 06:10:38 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -100,7 +100,11 @@ fi
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
+
+# Configure libtool, and default to shared libraries.  Libtool will only be
+# used for compiling and linking plugins.
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
 
 AC_PATH_XTRA
 

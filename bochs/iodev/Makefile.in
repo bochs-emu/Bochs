@@ -39,7 +39,8 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
 PLUGIN_PATH=`pwd`/../plugins
-LIBTOOL=libtool
+top_builddir    = ..
+LIBTOOL=@LIBTOOL@
 
 VIDEO_OBJS_VGA = vga.o
 VIDEO_OBJS_HGA = hga.o

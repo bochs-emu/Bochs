@@ -41,7 +41,8 @@ X_CFLAGS = @X_CFLAGS@
 BEOS_CFLAGS = -Wno-multichar
 RANLIB = @RANLIB@
 PLUGIN_PATH=`pwd`/../plugins
-LIBTOOL=libtool
+top_builddir    = ..
+LIBTOOL=@LIBTOOL@
 
 GUI_OBJS_X11  = x.o
 GUI_OBJS_SDL = sdl.o
