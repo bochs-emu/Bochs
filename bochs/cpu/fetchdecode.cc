@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.33 2002-11-13 22:24:02 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.34 2002-11-15 12:44:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -216,8 +216,6 @@ static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
 /* *********************************** 
    According to the Intel/AMD Manuals: 
 
-   MOVAPS_VpsWps  (0f 28) = MOVAPD_VpdWpd  (66 0f 28)
-   MOVAPS_WpsVps  (0f 29) = MOVAPD_WpdVpd  (66 0f 29)
    MOVNTPS_MdqVps (0f 2b) = MOVNTPD_MdqVpd (66 0f 2b)
    MOVLPS_VpsMq   (0f 12) = MOVLPD_VsdMq   (66 0f 12)
    MOVLPS_MqVps   (0f 13) = MOVLPD_MqVsd   (66 0f 13)
@@ -283,14 +281,14 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f17[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f28[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVAPS_VpsWps },
-  /* 66 */  { 0, &BX_CPU_C::MOVAPS_VpsWps },
+  /* 66 */  { 0, &BX_CPU_C::MOVAPD_VpdWpd },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f29[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVAPS_WpsVps },
-  /* 66 */  { 0, &BX_CPU_C::MOVAPS_WpsVps },
+  /* 66 */  { 0, &BX_CPU_C::MOVAPD_WpdVpd },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };

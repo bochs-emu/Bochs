@@ -24,6 +24,30 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+void BX_CPU_C::MOVAPD_VpdWpd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BX_PANIC(("MOVAPD_VpdWpd: SSE instruction still not implemented"));
+#else
+  BX_INFO(("MOVAPD_VpdWpd: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+void BX_CPU_C::MOVAPD_WpdVpd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BX_PANIC(("MOVAPD_WpdVpd: SSE instruction still not implemented"));
+#else
+  BX_INFO(("MOVAPD_WpdVpd: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
 void BX_CPU_C::MOVUPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
