@@ -233,6 +233,9 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    // BX_DEBUG(("unsupported IO write to port %04x of %02x\n",
 	    // address, value));
       break;
+    case 0x0400:
+      BX_PANIC(("BIOS panic at rombios.c, line %d\n", value));
+      break;
     case 0xfedc:
       bx_dbg.debugger = (value > 0);
 		BX_DEBUG(( "DEBUGGER = %u\n", (unsigned) bx_dbg.debugger));
