@@ -91,7 +91,7 @@ Patches applied:
 - I/O devices
   - harddisks 
     - per device selectable Harddisk modes :
-      - undoable, volatile, growing, z-undoable, z-volatile disks support
+      - undoable, volatile, growing disks support
       - sparse disks support (contributed by justinSB)
       - vmware3 disks support (contributed by Sharvil Nanavati)
     - fix non detection of hard drives by minix2

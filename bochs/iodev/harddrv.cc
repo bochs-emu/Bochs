@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.111 2003-09-22 23:32:23 cbothamy Exp $
+// $Id: harddrv.cc,v 1.112 2003-10-29 01:12:07 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.111 2003-09-22 23:32:23 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.112 2003-10-29 01:12:07 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -316,17 +316,23 @@ bx_hard_drive_c::init(void)
 
 #if BX_COMPRESSED_HD_SUPPORT
           case BX_ATA_MODE_Z_UNDOABLE:
+            BX_PANIC(("z-undoable disk support not implemented"));
+#if 0
             BX_INFO(("HD on ata%d-%d: '%s' 'z-undoable' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
             channels[channel].drives[device].hard_drive = new z_undoable_image_t(disk_size,
                             bx_options.atadevice[channel][device].Ojournal->getptr());
+#endif
             break;
 
           case BX_ATA_MODE_Z_VOLATILE:
+            BX_PANIC(("z-volatile disk support not implemented"));
+#if 0
             BX_INFO(("HD on ata%d-%d: '%s' 'z-volatile' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
             channels[channel].drives[device].hard_drive = new z_volatile_image_t(disk_size,
                             bx_options.atadevice[channel][device].Ojournal->getptr());
+#endif
             break;
 #endif //BX_COMPRESSED_HD_SUPPORT
 

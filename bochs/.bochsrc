@@ -173,7 +173,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # This defines the type and characteristics of all attached ata devices:
 #   type=       type of attached device [disk|cdrom] 
 #   mode=       only valid for disks [flat|concat|external|dll|sparse|vmware3]
-#   mode=       only valid for disks [undoable|growing|volatile|z-undoable|z-volatile]
+#   mode=       only valid for disks [undoable|growing|volatile]
 #   path=       path of the image
 #   cylinders=  only valid for disks
 #   heads=      only valid for disks
@@ -182,7 +182,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 #   biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
 #   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
-#   journal=    optional filename of the redolog for (z-)undoable and (z-)volatile disks
+#   journal=    optional filename of the redolog for undoable and volatile disks
 #   
 # Point this at a hard disk image file, cdrom iso file, or physical cdrom
 # device.  To create a hard disk image, try running bximage.  It will help you
