@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.7 2002-09-20 23:17:51 kevinlawton Exp $
+// $Id: data_xfer64.cc,v 1.8 2002-09-22 15:42:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -392,7 +392,7 @@ BX_CPU_C::MOVSX_GqEd(bxInstruction_c *i)
     }
 
     /* sign extend word op2 into qword op1 */
-    BX_WRITE_64BIT_REG(i->nnn(), (Bit16s) op2_32);
+    BX_WRITE_64BIT_REG(i->nnn(), (Bit32s) op2_32);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
