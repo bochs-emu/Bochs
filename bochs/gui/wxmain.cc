@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.89 2003-08-22 01:00:58 cbothamy Exp $
+// $Id: wxmain.cc,v 1.90 2003-08-22 16:52:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -318,10 +318,9 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_ATA3, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
-  EVT_MENU(ID_Edit_Speed, MyFrame::OnEditSpeed)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
   EVT_MENU(ID_Edit_Cmos, MyFrame::OnEditCmos)
-  EVT_MENU(ID_Edit_Clock, MyFrame::OnEditClock)
+  EVT_MENU(ID_Edit_Timing, MyFrame::OnEditTiming)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
   EVT_MENU(ID_Edit_Serial_Parallel, MyFrame::OnEditSerialParallel)
@@ -431,10 +430,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append( ID_Edit_ATA3, "ATA Channel 3..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
-  menuEdit->Append( ID_Edit_Speed, "&Speed..." );
-  menuEdit->Append( ID_Edit_Sound, "Sound..." );
+  menuEdit->Append( ID_Edit_Sound, "S&ound..." );
   menuEdit->Append( ID_Edit_Cmos, "&CMOS..." );
-  menuEdit->Append( ID_Edit_Clock, "&Clock..." );
+  menuEdit->Append( ID_Edit_Timing, "&Timing..." );
   menuEdit->Append( ID_Edit_Network, "&Network..." );
   menuEdit->Append( ID_Edit_Keyboard, "&Keyboard..." );
   menuEdit->Append( ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
@@ -640,14 +638,6 @@ void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
   }
 }
 
-void MyFrame::OnEditSpeed(wxCommandEvent& WXUNUSED(event))
-{
-  ParamDialog dlg (this, -1);
-  dlg.AddParam (SIM->get_param (BXP_IPS));
-  dlg.AddParam (SIM->get_param (BXP_REALTIME_PIT));
-  dlg.ShowModal ();
-}
-
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
@@ -663,13 +653,13 @@ void MyFrame::OnEditCmos(wxCommandEvent& WXUNUSED(event))
   ParamDialog dlg (this, -1);
   dlg.AddParam (SIM->get_param (BXP_CMOS_IMAGE));
   dlg.AddParam (SIM->get_param (BXP_CMOS_PATH));
-  //dlg.AddParam (SIM->get_param (BXP_CMOS_TIME0));
   dlg.ShowModal ();
 }
 
-void MyFrame::OnEditClock(wxCommandEvent& WXUNUSED(event))
+void MyFrame::OnEditTiming(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
+  dlg.AddParam (SIM->get_param (BXP_IPS));
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_CLOCK);
   dlg.SetTitle (list->get_name ());
   for (int i=0; i<list->get_size (); i++)
@@ -1035,10 +1025,9 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   }
   menuEdit->Enable( ID_Edit_Boot, canConfigure);
   menuEdit->Enable( ID_Edit_Memory, canConfigure);
-  menuEdit->Enable( ID_Edit_Speed, canConfigure);
   menuEdit->Enable( ID_Edit_Sound, canConfigure);
   menuEdit->Enable( ID_Edit_Cmos, canConfigure);
-  menuEdit->Enable( ID_Edit_Clock, canConfigure);
+  menuEdit->Enable( ID_Edit_Timing, canConfigure);
   menuEdit->Enable( ID_Edit_Network, canConfigure);
   menuEdit->Enable( ID_Edit_Keyboard, canConfigure);
   menuEdit->Enable( ID_Edit_Serial_Parallel, canConfigure);
