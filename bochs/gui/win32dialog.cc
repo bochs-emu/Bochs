@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.4 2003-07-15 21:02:05 vruppert Exp $
+// $Id: win32dialog.cc,v 1.5 2003-08-23 09:52:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -71,7 +71,7 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
   switch (msg) {
     case WM_INITDIALOG:
       param = (bx_param_string_c *)lParam;
-      SetWindowText(hDlg, param->get_description());
+      SetWindowText(hDlg, param->get_name());
       SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
       return FALSE;
     case WM_CLOSE:
@@ -111,7 +111,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
       }
       lstrcpy(origpath, param->getptr());
-      SetWindowText(hDlg, param->get_ask_format());
+      SetWindowText(hDlg, param->get_name());
       if (lstrlen(origpath) && lstrcmp(origpath, "none")) {
         SetWindowText(GetDlgItem(hDlg, IDPATH), origpath);
       }
@@ -166,10 +166,7 @@ int AskFilename(bx_param_filename_c *param)
   char *title;
 
   param->get(filename, MAX_PATH);
-  title = param->get_ask_format();
-  if (!title) {
-    title = param->get_description();
-  }
+  title = param->get_name();
   ofn.lStructSize = sizeof(OPENFILENAME);
   ofn.hwndOwner = GetBochsWindow();
   ofn.hInstance   = NULL;

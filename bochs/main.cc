@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.237 2003-08-22 01:00:58 cbothamy Exp $
+// $Id: main.cc,v 1.238 2003-08-23 09:52:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -446,14 +446,10 @@ void bx_init_options ()
 
   // floppya
   bx_options.floppya.Opath = new bx_param_filename_c (BXP_FLOPPYA_PATH,
-      "Floppy A image",
+      "First floppy image/device",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
-#if BX_WITH_WX || defined(WIN32)
-  bx_options.floppya.Opath->set_ask_format ("Filename of first floppy image");
-#else
   bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
-#endif
   bx_options.floppya.Odevtype = new bx_param_enum_c (BXP_FLOPPYA_DEVTYPE,
       "floppya:devtype",
       "Type of floppy drive",
@@ -493,14 +489,10 @@ void bx_init_options ()
   bx_options.floppya.Ostatus->set_handler (bx_param_handler);
 
   bx_options.floppyb.Opath = new bx_param_filename_c (BXP_FLOPPYB_PATH,
-      "floppyb:path",
+      "Second floppy image/device",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
-#if BX_WITH_WX || defined(WIN32)
-  bx_options.floppyb.Opath->set_ask_format ("Filename of second floppy image");
-#else
   bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
-#endif
   bx_options.floppyb.Odevtype = new bx_param_enum_c (BXP_FLOPPYB_DEVTYPE,
       "floppyb:devtype",
       "Type of floppy drive",
@@ -1420,7 +1412,7 @@ void bx_init_options ()
   // Userbutton shortcut
   bx_options.Ouser_shortcut = new bx_param_string_c (BXP_USER_SHORTCUT,
       "Userbutton shortcut",
-      "Userbutton shortcut",
+      "Defines the keyboard shortcut to be sent when you press the 'user' button in the headerbar.",
       "none", 16);
 
   // GDB stub

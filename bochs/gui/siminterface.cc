@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.100 2003-08-19 00:10:39 cbothamy Exp $
+// $Id: siminterface.cc,v 1.101 2003-08-23 09:52:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -537,7 +537,7 @@ bx_real_sim_c::ask_filename (char *filename, int maxlen, char *prompt, char *the
   // implement using ASK_PARAM on a newly created param.  I can't use
   // ask_param because I don't intend to register this param.
   BxEvent event;
-  bx_param_string_c param (BXP_NULL, "filename", prompt, the_default, maxlen);
+  bx_param_string_c param (BXP_NULL, prompt, "filename", the_default, maxlen);
   flags |= param.IS_FILENAME;
   param.get_options()->set (flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
