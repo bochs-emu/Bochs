@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.11 2002-09-12 06:44:04 bdenney Exp $
+// $Id: eth_win32.cc,v 1.12 2002-09-22 14:58:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,11 +47,10 @@
 typedef	int bpf_int32;
 typedef	u_int bpf_u_int32;
 
-
-
 /*
  * The instruction encondings.
  */
+
 /* instruction classes */
 
 #define BPF_CLASS(code) ((code) & 0x07)
@@ -163,6 +162,7 @@ char      AdapterList[10][1024];
 char      cMacAddr[6];
 void      *rx_Arg;
 char      netdev[512];
+BOOL      IsNT = FALSE;
 
 eth_rx_handler_t rx_handler;
 
@@ -197,9 +197,8 @@ static const struct bpf_insn macfilter[] = {
 //
 class bx_win32_pktmover_c : public eth_pktmover_c {
 public:
-  bx_win32_pktmover_c(const char *netif, const char *macaddr,
-		     eth_rx_handler_t rxh,
-		     void *rxarg);
+  bx_win32_pktmover_c(const char *netif, const char *macaddr, 
+	  eth_rx_handler_t rxh, void *rxarg);
   void sendpkt(void *buf, unsigned io_len);
 private: 
   struct bpf_insn filter[8];
@@ -265,6 +264,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(const char *netif,
 	 {  // Windows NT/2k
 		 int nLen = MultiByteToWideChar(CP_ACP, 0, netif, -1, NULL, 0);
 		 MultiByteToWideChar(CP_ACP, 0, netif, -1, (WCHAR *)netdev, nLen);
+		 IsNT = TRUE;
 	 } else { // Win9x
 		 strcpy(netdev, netif);
 	 }
@@ -292,7 +292,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(const char *netif,
 //    }
 
      PacketSetBuff(lpAdapter, 512000);
-     PacketSetReadTimeout(lpAdapter, 1);
+     PacketSetReadTimeout(lpAdapter, -1);
 
      if((pkSend = PacketAllocatePacket()) == NULL) {
           BX_PANIC(("Could not allocate a send packet"));
@@ -326,27 +326,26 @@ void bx_win32_pktmover_c::rx_timer_handler (void *this_ptr)
 	int pktlen;
 	static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 	PacketInitPacket(pkRecv, (char *)buffer, 256000);
-        //fprintf(stderr, "[ETH-WIN32] poll packet\n");
-        if (WaitForSingleObject(lpAdapter->ReadEvent,0) == WAIT_OBJECT_0) {
-	PacketReceivePacket(lpAdapter, pkRecv, TRUE);
-	pBuf = (char *)pkRecv->Buffer;
-	iOffset = 0;
-	while(iOffset < pkRecv->ulBytesReceived)
-	{
-		hdr = (struct bpf_hdr *)(pBuf + iOffset);
-		pPacket = (unsigned char *)(pBuf + iOffset + hdr->bh_hdrlen);
-		if (memcmp(pPacket + 6, cMacAddr, 6) != 0) // src field != ours
+    //fprintf(stderr, "[ETH-WIN32] poll packet\n");
+    if (WaitForSingleObject(lpAdapter->ReadEvent,0) == WAIT_OBJECT_0 || IsNT) {
+		PacketReceivePacket(lpAdapter, pkRecv, TRUE);
+		pBuf = (char *)pkRecv->Buffer;
+		iOffset = 0;
+		while(iOffset < pkRecv->ulBytesReceived)
 		{
-			if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, bcast_addr, 6) == 0)
+			hdr = (struct bpf_hdr *)(pBuf + iOffset);
+			pPacket = (unsigned char *)(pBuf + iOffset + hdr->bh_hdrlen);
+			if (memcmp(pPacket + 6, cMacAddr, 6) != 0) // src field != ours
 			{
-				//fprintf(stderr, "[ETH-WIN32] RX packet: size=%i, dst=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x, src=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n", hdr->bh_caplen, pPacket[0], pPacket[1], pPacket[2], pPacket[3], pPacket[4], pPacket[5], pPacket[6], pPacket[7], pPacket[8], pPacket[9], pPacket[10], pPacket[11]);
-                                pktlen = hdr->bh_caplen;
-                                if (pktlen < 60) pktlen = 60;
-				(*rx_handler)(rx_Arg, pPacket, pktlen);
+				if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, bcast_addr, 6) == 0)
+				{
+					//fprintf(stderr, "[ETH-WIN32] RX packet: size=%i, dst=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x, src=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n", hdr->bh_caplen, pPacket[0], pPacket[1], pPacket[2], pPacket[3], pPacket[4], pPacket[5], pPacket[6], pPacket[7], pPacket[8], pPacket[9], pPacket[10], pPacket[11]);
+	                pktlen = hdr->bh_caplen;
+	                if (pktlen < 60) pktlen = 60;
+					(*rx_handler)(rx_Arg, pPacket, pktlen);
+				}
 			}
+			iOffset = Packet_WORDALIGN(iOffset + (hdr->bh_hdrlen + hdr->bh_caplen));
 		}
-		iOffset = Packet_WORDALIGN(iOffset + (hdr->bh_hdrlen + hdr->bh_caplen));
-	}
-        }
+    }
 }
-
