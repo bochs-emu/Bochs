@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.28 2005-03-12 16:40:14 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.29 2005-03-20 18:01:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -96,7 +96,7 @@ void BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
-    BX_CPU_THIS_PTR return_protected(i, 0 /* imm16 */);
+    BX_CPU_THIS_PTR return_protected(i, imm16);
     goto done;
   }
 #endif
@@ -107,12 +107,12 @@ void BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
   EIP = (Bit32u) ip;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
-done:
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
   else
     SP  += imm16;
 
+done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
