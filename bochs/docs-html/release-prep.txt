@@ -28,7 +28,7 @@ mac makefiles:
   rm -rf $DIR
   tar xzvf bochs-$VERSION.tar.gz
   (cd $DIR && sh .conf.macos)
-  zip bochs-macos-$VERSION.zip  bochs-$VERSION/config.h bochs-$VERSION/Makefile bochs-$VERSION/*/Makefile bochs-$VERSION/*/*/Makefile
+  zip bochs-macmakefiles-$VERSION.zip  bochs-$VERSION/config.h bochs-$VERSION/Makefile bochs-$VERSION/*/Makefile bochs-$VERSION/*/*/Makefile
   rm -rf $DIR
 
 Linux RPM:
