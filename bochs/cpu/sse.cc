@@ -626,18 +626,6 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("PSHUFLW_VqWqIb: SSE instruction still not implemented"));
-#else
-  BX_INFO(("PSHUFLW_VqWqIb: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
 void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1

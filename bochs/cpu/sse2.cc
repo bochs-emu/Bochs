@@ -1097,7 +1097,7 @@ void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op, result;
-  Bit16u order = i->Ib();
+  Bit8u order = i->Ib();
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1121,12 +1121,63 @@ void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 #endif
 }
 
+/* F2 0F 70 */
+void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op, result;
+  Bit8u order = i->Ib();
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  result.xmm16u(0) = op.xmm16u(order & 0x3);
+  result.xmm16u(1) = op.xmm16u((order >> 2) & 0x3);
+  result.xmm16u(2) = op.xmm16u((order >> 4) & 0x3);
+  result.xmm16u(3) = op.xmm16u((order >> 6) & 0x3);
+  result.xmm64u(1) = op.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PSHUFLW_VqWqIb: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
 void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSHUFHW_VqWqIb: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op, result;
+  Bit8u order = i->Ib();
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  result.xmm64u(0) = op.xmm64u(0);
+  result.xmm16u(4) = op.xmm16u(4 + (order & 0x3));
+  result.xmm16u(5) = op.xmm16u(4 + ((order >> 2) & 0x3));
+  result.xmm16u(6) = op.xmm16u(4 + ((order >> 4) & 0x3));
+  result.xmm16u(7) = op.xmm16u(4 + ((order >> 6) & 0x3));
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PSHUFHW_VqWqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);

@@ -556,7 +556,7 @@ void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op, result;
-  Bit16u order = i->Ib();
+  Bit8u order = i->Ib();
 
   /* op is a register or memory reference */
   if (i->modC0()) {
