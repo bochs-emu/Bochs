@@ -24,6 +24,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS /* not needed */
 
 
 

@@ -33,7 +33,7 @@
 #endif
 
 
-class bx_cmos_c : logfunctions {
+class bx_cmos_c : public logfunctions {
 public:
   bx_cmos_c(void);
   ~bx_cmos_c(void);

@@ -25,7 +25,7 @@
 
 
 #include "bochs.h"
-
+#define LOG_THIS BX_CMOS_THIS
 
 #if BX_USE_CMOS_SMF
 bx_cmos_c bx_cmos;

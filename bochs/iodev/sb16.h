@@ -380,7 +380,7 @@ private:
 };
 
 // The class with the output functions
-class bx_sound_output_c {
+class bx_sound_output_c : public logfunctions {
 public:
 
       /* These functions are the sound output functions, sending

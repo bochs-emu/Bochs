@@ -40,9 +40,8 @@
 #  define BX_VGA_SMF
 #  define BX_VGA_THIS this->
 #endif
-#define LOG_THIS BX_VGA_THIS
 
-class bx_vga_c : logfunctions {
+class bx_vga_c : public logfunctions {
 public:
 
   bx_vga_c(void);

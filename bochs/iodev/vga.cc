@@ -22,6 +22,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_VGA_THIS
 
 /* NOTES:
  * I take it data rotate is a true rotate with carry of bit 0 to bit 7.

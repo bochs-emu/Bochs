@@ -25,6 +25,7 @@
 #if defined(WIN32)
 
 #include "bochs.h"
+#define LOG_THIS /* not needed */
 
 #define WRITELOG        sb16->writelog
 #define BOTHLOG(x)      (x)
@@ -58,7 +59,7 @@ bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
   DataPointer = (Bit8u*) GlobalLock(DataHandle);
 
   if (DataPointer == NULL)
-    bx_panic("GlobalLock returned NULL-pointer");
+    BX_PANIC(("GlobalLock returned NULL-pointer");
 
 #define NEWBUFFER(size) &(DataPointer[offset]); offset += ALIGN(size)
 
@@ -73,7 +74,7 @@ bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
     }
 
   if (offset > size)
-    bx_panic("Allocated memory was too small!");
+    BX_PANIC(("Allocated memory was too small!");
 
 #undef size
 #undef ALIGN

@@ -25,6 +25,7 @@
 #if defined(linux)
 
 #include "bochs.h"
+#define LOG_THIS /* not needed */
 
 #include <errno.h>
 #include <sys/ioctl.h>
@@ -76,7 +77,7 @@ int bx_sound_linux_c::openmidioutput(char *device)
 int bx_sound_linux_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
   UNUSED(delta);
-  //  bx_panic("Sendmidicommand!!");
+  //  BX_PANIC(("Sendmidicommand!!");
 
   fputc(command, midi);
   fwrite(data, 1, length, midi);

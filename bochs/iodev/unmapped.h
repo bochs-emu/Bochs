@@ -36,7 +36,7 @@
 
 
 
-class bx_unmapped_c {
+class bx_unmapped_c : public logfunctions {
 public:
   bx_unmapped_c(void);
   ~bx_unmapped_c(void);

@@ -39,7 +39,7 @@
 
 
 
-class bx_dma_c {
+class bx_dma_c : public logfunctions {
 public:
 
   bx_dma_c();

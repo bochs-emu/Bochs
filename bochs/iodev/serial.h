@@ -139,7 +139,7 @@ typedef struct {
 
 
 
-class bx_serial_c {
+class bx_serial_c : public logfunctions {
 public:
   bx_serial_c(void);
   ~bx_serial_c(void);

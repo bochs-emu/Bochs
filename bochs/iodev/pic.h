@@ -58,7 +58,7 @@ typedef struct {
   } bx_pic_t;
 
 
-class bx_pic_c {
+class bx_pic_c : public logfunctions {
 
 public:
   bx_pic_c(void);

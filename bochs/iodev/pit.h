@@ -56,7 +56,7 @@ typedef struct {
 
 
 
-class bx_pit_c {
+class bx_pit_c : public logfunctions {
 public:
   bx_pit_c( void );
   ~bx_pit_c( void );

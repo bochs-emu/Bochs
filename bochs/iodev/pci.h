@@ -41,7 +41,7 @@ typedef struct {
 
 
 
-class bx_pci_c : logfunctions {
+class bx_pci_c : public logfunctions {
 
 public:
   bx_pci_c(void);

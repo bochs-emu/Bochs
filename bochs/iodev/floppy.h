@@ -34,7 +34,6 @@
 #  define BX_FD_THIS this->
 #endif
 
-
 typedef struct {
   int      fd;         /* file descriptor of floppy image file */
   unsigned sectors_per_track;    /* number of sectors/track */
@@ -44,7 +43,7 @@ typedef struct {
   unsigned type;
   } floppy_t;
 
-class bx_floppy_ctrl_c : logfunctions {
+class bx_floppy_ctrl_c : public logfunctions {
 public:
 
   bx_floppy_ctrl_c(void);

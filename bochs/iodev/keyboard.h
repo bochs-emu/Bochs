@@ -41,7 +41,7 @@
 
 
 
-class bx_keyb_c {
+class bx_keyb_c : public logfunctions {
 public:
   bx_keyb_c(void);
   ~bx_keyb_c(void);
@@ -132,7 +132,8 @@ private:
 	    break;
 
 	  default:
-	    bx_panic("[mouse] invalid resolution_cpmm");
+	    extern bx_devices_c bx_devices;
+	    bx_devices.keyboard->panic ("[mouse] invalid resolution_cpmm");
 	  };
 	  return ret;
 	}
