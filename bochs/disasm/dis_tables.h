@@ -117,15 +117,15 @@ struct BxDisasmOpcodeInfo_t
 #define Wps &disassembler::OP_W,  O_MODE
 #define Wpd &disassembler::OP_W,  O_MODE
 
-#define ES_BASE 0x80
-
  // string instructions
 #define Xb  &disassembler::OP_X,  B_MODE
+#define Xbe &disassembler::OP_X,  B_MODE|ES_SEG
 #define Yb  &disassembler::OP_Y,  B_MODE
+#define Ybe &disassembler::OP_Y,  B_MODE|ES_SEG
 #define Xv  &disassembler::OP_X,  V_MODE
-#define Xve &disassembler::OP_X,  V_MODE|ES_BASE
+#define Xve &disassembler::OP_X,  V_MODE|ES_SEG
 #define Yv  &disassembler::OP_Y,  V_MODE
-#define Yve &disassembler::OP_Y,  V_MODE|ES_BASE
+#define Yve &disassembler::OP_Y,  V_MODE|ES_SEG
 
  // immediate
 #define I1 &disassembler::I1, 0
@@ -2255,7 +2255,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 68 */  { "push",      0,  Iv,  XX, XX },
   /* 69 */  { "imul",      0,  Gv,  Ev, Iv },
   /* 6A */  { "push",      0, sIb,  XX, XX },   // sign extended immediate
-  /* 6B */  { "imul",      0,  Gv,  Ev, Ib },   
+  /* 6B */  { "imul",      0,  Gv,  Ev, sIb },   
   /* 6C */  { "insb",      0,  Yb,  DX, XX },
   /* 6D */  { "ins",       0,  Yv,  DX, XX },
   /* 6E */  { "outsb",     0,  DX,  Xb, XX },
@@ -2312,18 +2312,18 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* A1 */  { "mov",       0, eAX,  Ov, XX },
   /* A2 */  { "mov",       0,  Ob,  AL, XX },
   /* A3 */  { "mov",       0,  Ov, eAX, XX },
-  /* A4 */  { "movsb",     0,  Yb,  Xb, XX },
-  /* A5 */  { "movs",      0,  Yv,  Xv, XX },
-  /* A6 */  { "cmpsb",     0,  Xb,  Yb, XX },
-  /* A7 */  { "cmps",      0,  Xv,  Yv, XX },
+  /* A4 */  { "movsb",     0, Ybe,  Xb, XX },
+  /* A5 */  { "movs",      0, Yve,  Xv, XX },
+  /* A6 */  { "cmpsb",     0, Ybe,  Xb, XX },
+  /* A7 */  { "cmps",      0, Yve,  Xv, XX },
   /* A8 */  { "test",      0,  AL,  Ib, XX },
   /* A9 */  { "test",      0, eAX,  Iv, XX },
-  /* AA */  { "stosb",     0,  Yb,  AL, XX },
-  /* AB */  { "stos",      0,  Yv, eAX, XX },
+  /* AA */  { "stosb",     0, Ybe,  AL, XX },
+  /* AB */  { "stos",      0, Yve, eAX, XX },
   /* AC */  { "lodsb",     0,  AL,  Xb, XX },
   /* AD */  { "lods",      0, eAX,  Xv, XX },
-  /* AE */  { "scasb",     0,  Yb,  AL, XX },
-  /* AF */  { "scas",      0,  Yv, eAX, XX },
+  /* AE */  { "scasb",     0, Ybe,  AL, XX },
+  /* AF */  { "scas",      0, Yve, eAX, XX },
   /* B0 */  { "mov",       0,  AL,  Ib, XX },
   /* B1 */  { "mov",       0,  CL,  Ib, XX },
   /* B2 */  { "mov",       0,  DL,  Ib, XX },
@@ -2360,8 +2360,8 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* D1 */  { GRPN(G2Ev1) },
   /* D2 */  { GRPN(G2EbCL) },
   /* D3 */  { GRPN(G2EvCL) },
-  /* D4 */  { "aam",       0, sIb,  XX, XX },
-  /* D5 */  { "aad",       0, sIb,  XX, XX },
+  /* D4 */  { "aam",       0,  Ib,  XX, XX },
+  /* D5 */  { "aad",       0,  Ib,  XX, XX },
   /* D6 */  { "salc",      0,  XX,  XX, XX },
   /* D7 */  { "xlat",      0,  XX,  XX, XX },
   /* D8 */  { GRPFP(D8) },

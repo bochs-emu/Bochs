@@ -106,36 +106,54 @@ void disassembler::OP_P (unsigned attr)
 
 void disassembler::OP_X (unsigned attr)
 {
-  char *esi;
+  const char *esi, *seg;
 
   if (i32bit_addrsize)
     esi = "esi";
   else
     esi = "si";
   
-  if (attr & 0x80)
-    dis_sprintf("es:");
+  if (attr & ES_SEG)
+  {
+    seg = "es";
+  }
+  else
+  {
+    if (seg_override)
+      seg = seg_override;
+    else
+      seg = "ds";
+  }
 
   print_datasize(attr & 0x7F);
 
-  dis_sprintf("[%s]", esi);
+  dis_sprintf("%s:[%s]", seg, esi);
 }
 
 void disassembler::OP_Y (unsigned attr)
 {
-  char *edi;
+  const char *edi, *seg;
 
   if (i32bit_addrsize)
     edi = "edi";
   else
     edi = "di";
   
-  if (attr & 0x80)
-    dis_sprintf("es:");
+  if (attr & ES_SEG)
+  {
+    seg = "es";
+  }
+  else
+  {
+    if (seg_override)
+      seg = seg_override;
+    else
+      seg = "ds";
+  }
 
   print_datasize(attr & 0x7F);
 
-  dis_sprintf("[%s]", edi);
+  dis_sprintf("%s:[%s]", seg, edi);
 }
 
 void disassembler::Ob (unsigned attr)
@@ -150,11 +168,11 @@ void disassembler::Ob (unsigned attr)
   if (i32bit_addrsize) {
     Bit32u imm32 = fetch_dword();
     dis_sprintf("byte ptr [%s:0x%x]", seg, (unsigned) imm32);
-    }
+  }
   else {
     Bit16u imm16 = fetch_word();
     dis_sprintf("byte ptr [%s:0x%x]", seg, (unsigned) imm16);
-    }
+  }
 }
 
 void disassembler::Ov (unsigned attr)
@@ -168,12 +186,12 @@ void disassembler::Ov (unsigned attr)
 
   if (i32bit_addrsize) {
     Bit32u imm32 = fetch_dword();
-    dis_sprintf("[%s:0x%x]", seg, (unsigned) imm32);
-    }
+    dis_sprintf("dword ptr [%s:0x%x]", seg, (unsigned) imm32);
+  }
   else {
     Bit16u imm16 = fetch_word();
-    dis_sprintf("[%s:0x%x]", seg, (unsigned) imm16);
-    }
+    dis_sprintf("word ptr [%s:0x%x]",  seg, (unsigned) imm16);
+  }
 }
 
 void disassembler::Jb (unsigned attr)
@@ -189,7 +207,7 @@ void disassembler::Jb (unsigned attr)
     else // Symbol not found
 #endif
     dis_sprintf("0x%x", (unsigned) (imm8+db_eip));
-    }
+  }
   else
   {
 #if BX_DEBUGGER
@@ -216,9 +234,9 @@ void disassembler::Jv (unsigned attr)
     else // Symbol not found
 #endif
     dis_sprintf("0x%x", (unsigned) (imm32+db_eip));
-    }
+  }
   else
-    {
+  {
     Bit16s imm16; /* JMP rel16 is signed */
     imm16 = (Bit16s) fetch_word();
 #if BX_DEBUGGER
@@ -228,8 +246,8 @@ void disassembler::Jv (unsigned attr)
     }
     else // Symbol not found
 #endif
-    dis_sprintf("0x%x", (unsigned) ((imm16+db_eip) & 0xFFFF));
-    }
+      dis_sprintf("0x%x", (unsigned) ((imm16+db_eip) & 0xFFFF));
+  }
 }
 
 void disassembler::Ap (unsigned attr)
@@ -346,14 +364,14 @@ void disassembler::sIb(unsigned attr)
   if (i32bit_opsize)
   {
     Bit32u imm32 = (Bit8s) fetch_byte();
-    dis_sprintf("0x%x", imm32);
+    dis_sprintf("0x%x", (unsigned) imm32);
   }
   else
   {
-    Bit32u imm16 = (Bit8s) fetch_byte();
-    dis_sprintf("0x%x", imm16);
+    Bit16u imm16 = (Bit8s) fetch_byte();
+    dis_sprintf("0x%x", (unsigned) imm16);
   }
 }
 
 // floating point
-void disassembler::STj (unsigned attr) {dis_sprintf("st(%d)", rm);}
+void disassembler::STj (unsigned attr) { dis_sprintf("st(%d)", rm); }

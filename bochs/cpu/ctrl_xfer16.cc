@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.25 2004-11-02 18:05:18 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.26 2004-11-20 23:26:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ void BX_CPU_C::CALL_Aw(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 2
   if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
-    BX_ERROR(("call_aw: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
+    BX_ERROR(("CALL_Aw: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 #endif
@@ -220,7 +220,7 @@ void BX_CPU_C::CALL_Ew(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 2
   if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
-    BX_ERROR(("call_ew: IP out of CS limits!"));
+    BX_ERROR(("CALL_Ew: IP out of CS limits!"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.35 2004-11-02 18:05:19 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.36 2004-11-20 23:26:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -205,7 +205,7 @@ BailBigRSP("CALL_Ad");
   Bit32u new_EIP = EIP + i->Id();
 
   if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-    BX_ERROR(("call_ad: offset outside of CS limits"));
+    BX_ERROR(("CALL_Ad: offset outside of CS limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -263,7 +263,7 @@ void BX_CPU_C::CALL_Ed(bxInstruction_c *i)
 
   if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
-    BX_ERROR(("call_ed: IP out of CS limits!"));
+    BX_ERROR(("CALL_Ed: IP out of CS limits!"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

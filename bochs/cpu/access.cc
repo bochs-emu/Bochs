@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.48 2004-11-18 23:16:35 sshwarts Exp $
+// $Id: access.cc,v 1.49 2004-11-20 23:26:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,11 +34,6 @@
 #define LPFOf(laddr) ((laddr) & BX_CONST64(0xfffffffffffff000))
 #define BX_CANONICAL_BITS     48
 #define IsCanonical(offset)   ((Bit64u)((((Bit64s)(offset)) >> (BX_CANONICAL_BITS-1)) + 1) < 2)
-
-//#define BX_CANONICAL_LO       BX_CONST64(0xffff800000000000)
-//#define BX_CANONICAL_HI       BX_CONST64(0x0000800000000000)
-//#define IsCanonical(offset)   ((Bit64u)(offset-BX_CANONICAL_LO) < (Bit64u)(BX_CANONICAL_HI-BX_CANONICAL_LO))
-
 #else
 #define IsLongMode() (0)
 #define LPFOf(laddr) ((laddr) & 0xfffff000)
@@ -174,7 +169,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       }
 
     if (seg->cache.p == 0) { /* not present */
-          BX_INFO(("read_virtual_checks(): segment not present"));
+      BX_INFO(("read_virtual_checks(): segment not present"));
       exception(int_number(seg), 0, 0);
       return;
       }

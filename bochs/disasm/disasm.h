@@ -101,6 +101,8 @@ enum {
 #define P_MODE  0x8
 #define S_MODE  0x9
 
+#define ES_SEG 0x80
+
 class disassembler;
 
 typedef void (disassembler::*BxDisasmPtr_t) (unsigned attr);

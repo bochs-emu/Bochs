@@ -56,6 +56,8 @@ Changes to next release:
   - fixed BOUND opcode 0x62 (Stanislav)
   - fixed CALLW opcode 0xFF /3 and JMPW opcode 0xFF /5 (Stanislav)
   - fixed INS opcode 0x6D, had wrong operand size (Stanislav)
+  - fixed disassembly for repeatable instructions (Stanislav)
+  - fixed sign-extended immediate opcodes (Stanislav)
 
 - I/O devices
   - general
@@ -169,6 +171,10 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #675248 Panic: EIP > limit on win98 install
+  #829793 [CPU ] prefetch: RIP > CS.limit
+ #1034059 >>PANIC<< prefetch: running in bogus memory
+ #1067813 pbm fpu_proto.h:144 ebuild gentoo bochs 2.1.1 
   #922034 bios not aliased at 0xFFFFF000, registers wrong after reset
   #912666 Configure fails on Yellow Dog Linux 3.0.1
   #922038 Unexisting memory should read back as 0xFFFFFFFF
