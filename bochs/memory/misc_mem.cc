@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.39 2003-08-05 13:19:35 cbothamy Exp $
+// $Id: misc_mem.cc,v 1.40 2003-08-06 08:24:14 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -129,7 +129,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.39 2003-08-05 13:19:35 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.40 2003-08-06 08:24:14 cbothamy Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -155,6 +155,10 @@ BX_MEM_C::init_memory(int memsize)
 
 #if BX_PROVIDE_CPU_MEMORY
   void
+  // Values for type :
+  // 0 : System Bios
+  // 1 : VGA Bios
+  // 2 : Optional ROM Bios
 BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 {
   struct stat stat_buf;
@@ -180,7 +184,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 #endif
            );
   if (fd < 0) {
-    if (type > 0) {
+    if (type < 2) {
       BX_PANIC(( "ROM: couldn't open ROM image file '%s'.", path));
       }
     else {
@@ -190,7 +194,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     }
   ret = fstat(fd, &stat_buf);
   if (ret) {
-    if (type > 0) {
+    if (type < 2) {
       BX_PANIC(( "ROM: couldn't stat ROM image file '%s'.", path));
       }
     else {
