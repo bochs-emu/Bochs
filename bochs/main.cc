@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.97 2002-04-18 00:22:19 bdenney Exp $
+// $Id: main.cc,v 1.98 2002-04-23 07:44:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -84,6 +84,7 @@ bx_options_t bx_options = {
   { 0, NULL },          // parallel port 2
   { 0, NULL, NULL, NULL, 0, 0, 0, 0 },  // SB16
   NULL,                                  // boot drive
+  NULL,                                  // boot signature check
   NULL,                               // vga update interval
   NULL,  // default keyboard serial path delay (usec)
   NULL,  // default keyboard paste delay (usec)
@@ -579,6 +580,12 @@ void bx_init_options ()
       BX_BOOT_FLOPPYA);
   bx_options.Obootdrive->set_format ("Boot from: %s drive");
   bx_options.Obootdrive->set_ask_format ("Boot from floppy drive, hard drive or cdrom ? [%s] ");
+
+  bx_options.OfloppySigCheck = new bx_param_bool_c (BXP_FLOPPYSIGCHECK,
+      "Flopppy Boot Signature Check",
+      "Checks for the 0xaa55 signature on floppy boot device.",
+      1);
+
   // disk menu
   bx_param_c *disk_menu_init_list[] = {
     SIM->get_param (BXP_FLOPPYA),
@@ -588,6 +595,7 @@ void bx_init_options ()
     SIM->get_param (BXP_CDROMD),
     SIM->get_param (BXP_NEWHARDDRIVESUPPORT),
     SIM->get_param (BXP_BOOTDRIVE),
+    SIM->get_param (BXP_FLOPPYSIGCHECK),
     NULL
   };
   menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "diskmenu", disk_menu_init_list);
@@ -1657,6 +1665,21 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_PANIC(("%s: boot directive with unknown boot device '%s'.  use 'a', 'c' or 'cdrom'.", context, params[1]));
       }
     }
+  else if (!strcmp(params[0], "floppy_bootsig_check")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
+      }
+    if (strncmp(params[1], "enabled=", 8)) {
+      BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
+      }
+    if (params[1][8] == '0')
+      bx_options.OfloppySigCheck->set (0);
+    else if (params[1][8] == '1')
+      bx_options.OfloppySigCheck->set (1);
+    else {
+      BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
+      }
+    }
   else if (!strcmp(params[0], "log")) {
     if (num_params != 2) {
       BX_PANIC(("%s: log directive has wrong # args.", context));
@@ -2323,6 +2346,7 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
   fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "a" : (bootdrive==BX_BOOT_DISKC) ? "c" : "cdrom");
+  fprintf (fp, "floppy_bootsig_check: enabled=%d\n", bx_options.OfloppySigCheck->get ());
   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());

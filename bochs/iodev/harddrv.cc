@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.53 2002-04-09 15:52:02 bdenney Exp $
+// $Id: harddrv.cc,v 1.54 2002-04-23 07:44:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.53 2002-04-09 15:52:02 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.54 2002-04-23 07:44:34 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -313,6 +313,10 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
       // system boot sequence cdrom
       cmos->s.reg[0x3d] = 0x03;
       }
+      
+    // Set the signature check flag
+    cmos->s.reg[0x38] = bx_options.OfloppySigCheck->get();
+    BX_INFO(("Floppy boot signature will %sbe checked", bx_options.OfloppySigCheck->get()==0?"not ":""));
     }
 
   //switch (stat_buf.st_size) {

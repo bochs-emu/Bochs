@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.62 2002-04-18 00:22:18 bdenney Exp $
+// $Id: bochs.h,v 1.63 2002-04-23 07:44:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -619,7 +619,8 @@ typedef struct {
   bx_parport_options par1; // parallel port #1
   bx_parport_options par2; // parallel port #2  (not implemented)
   bx_sb16_options   sb16;
-  bx_param_num_c    *Obootdrive;  //0=floppya, 0x80=diskc
+  bx_param_num_c    *Obootdrive;  
+  bx_param_bool_c   *OfloppySigCheck;
   bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
   bx_param_num_c    *Okeyboard_paste_delay;

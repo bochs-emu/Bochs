@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.35 2002-04-18 00:22:19 bdenney Exp $
+// $Id: siminterface.h,v 1.36 2002-04-23 07:44:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.35 2002-04-18 00:22:19 bdenney Exp $
+ * $Id: siminterface.h,v 1.36 2002-04-23 07:44:34 cbothamy Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -112,6 +112,7 @@ typedef enum {
   BXP_LOAD32BITOS_INITRD,
   BXP_LOAD32BITOS,
   BXP_BOOTDRIVE,
+  BXP_FLOPPYSIGCHECK,
   BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
   BXP_MENU_INTERFACE,

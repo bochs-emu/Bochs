@@ -129,6 +129,17 @@ diskc: file="30M.sample", cyl=615, heads=6, spt=17
 boot: c
 
 #=======================================================================
+# FLOPPY_BOOTSIG_CHECK: enabled=[0|1]
+# Enables or disables the 0xaa55 signature check on boot floppies
+# Defaults to enabled=1
+# Examples:
+#   floppy_bootsig_check: enabled=0
+#   floppy_bootsig_check: enabled=1
+#=======================================================================
+#floppy_bootsig_check: enabled=0
+floppy_bootsig_check: enabled=1
+
+#=======================================================================
 # LOG:
 # Give the path of the log file you'd like Bochs debug and misc. verbage
 # to be written to.  If you really don't want it, make it /dev/null. :^(
