@@ -41,6 +41,10 @@ struct BxDisasmOpcodeInfo_t
 #define PREFIX_REP      "rep",      _PREFIX, NULL, 0, NULL, 0, NULL, 0
 #define PREFIX_REPNE    "repne",    _PREFIX, NULL, 0, NULL, 0, NULL, 0
 
+#if BX_SUPPORT_X86_64
+#define PREFIX_REX      "rex",      _PREFIX, NULL, 0, NULL, 0, NULL, 0
+#endif
+
 #ifdef BX_DISASM_NEED_SHORTCUTS
 
  // general
@@ -113,6 +117,7 @@ struct BxDisasmOpcodeInfo_t
 #define Wps &disassembler::OP_W,  O_MODE
 #define Wpd &disassembler::OP_W,  O_MODE
 
+ // string instructions
 #define Xb  &disassembler::OP_X,  B_MODE
 #define Yb  &disassembler::OP_Y,  B_MODE
 #define Xv  &disassembler::OP_X,  V_MODE
@@ -138,6 +143,7 @@ struct BxDisasmOpcodeInfo_t
 #define Mp  &disassembler::OP_MEM, P_MODE
 #define Mq  &disassembler::OP_MEM, Q_MODE
 #define Mt  &disassembler::OP_MEM, T_MODE
+#define Ms  &disassembler::OP_MEM, S_MODE
 #define Mx  &disassembler::OP_MEM, X_MODE
 #define Mdq &disassembler::OP_MEM, O_MODE
 #define Mps &disassembler::OP_MEM, O_MODE
@@ -150,7 +156,10 @@ struct BxDisasmOpcodeInfo_t
  // call
 #define Ap  &disassembler::Ap, 0
 
- // still unsorted
+ // mov
+#define Ob  &disassembler::Ob, 0
+#define Ov  &disassembler::Ov, 0
+
 #define Gb  &disassembler::Gb, 0
 #define Gw  &disassembler::Gw, 0
 #define Gv  &disassembler::Gv, 0
@@ -162,9 +171,6 @@ struct BxDisasmOpcodeInfo_t
 #define Ev  &disassembler::Ev, 0
 #define Ea  &disassembler::Ea, 0
 #define Ep  &disassembler::Ep, 0
-
-#define Ob  &disassembler::Ob, 0
-#define Ov  &disassembler::Ov, 0
 
 #endif
 
@@ -1156,10 +1162,10 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG6[8] = {
   }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG7[8] = {
-  /* 0 */  { "sgdt",        0, Mx, XX, XX },
-  /* 1 */  { "sidt",        0, Mx, XX, XX },
-  /* 2 */  { "lgdt",        0, Mx, XX, XX },
-  /* 3 */  { "lidt",        0, Mx, XX, XX },
+  /* 0 */  { "sgdt",        0, Ms, XX, XX },
+  /* 1 */  { "sidt",        0, Ms, XX, XX },
+  /* 2 */  { "lgdt",        0, Ms, XX, XX },
+  /* 3 */  { "lidt",        0, Ms, XX, XX },
   /* 4 */  { "smsw",        0, Ew, XX, XX },
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { "lmsw",        0, Ew, XX, XX },

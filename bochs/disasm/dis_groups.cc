@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include "disasm.h"
+
+#if BX_DEBUGGER
 #include "../bx_debug/debug.h"
+#endif
 
 //////////////////
 // Intel STYLE

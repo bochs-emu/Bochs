@@ -3,6 +3,12 @@
 
 #include "config.h"
 
+#if BX_SUPPORT_X86_64
+# define DISASM_REGISTERS 16
+#else
+# define DISASM_REGISTERS 8
+#endif
+
 #define BX_DECODE_MODRM(modrm_byte, mod, opcode, rm) { \
   mod    = (modrm_byte >> 6) & 0x03; \
   opcode = (modrm_byte >> 3) & 0x07; \
@@ -15,22 +21,24 @@
   base  =  sib & 0x07;        \
 }
 
-// to be used in future
-#define IF_8086       0x00000000         /* 8086 instruction */
-#define IF_186        0x00000000         /* 186+ instruction */
-#define IF_286        0x00000000         /* 286+ instruction */
-#define IF_386        0x00000000         /* 386+ instruction */
-#define IF_387        0x00000000         /* 387+ FPU instruction */
-#define IF_486        0x00000000         /* 486+ instruction */
-#define IF_PENTIUM    0x00000000         /* Pentium instruction */
-#define IF_P6         0x00000000         /* P6 instruction */
-#define IF_KATMAI     0x00000000         /* Katmai instruction */
-#define IF_WILLAMETTE 0x00000000         /* Willamette instruction */
-#define IF_PRESCOTT   0x00000000         /* Prescott instruction */
+// will be used in future
+#define IF_8086       0x00000000        /* 8086 instruction */
+#define IF_186        0x00000000        /* 186+ instruction */
+#define IF_286        0x00000000        /* 286+ instruction */
+#define IF_386        0x00000000        /* 386+ instruction */
+#define IF_387        0x00000000        /* 387+ FPU instruction */
+#define IF_486        0x00000000        /* 486+ instruction */
+#define IF_PENTIUM    0x00000000        /* Pentium instruction */
+#define IF_P6         0x00000000        /* P6 instruction */
+#define IF_KATMAI     0x00000000        /* Katmai instruction */
+#define IF_WILLAMETTE 0x00000000        /* Willamette instruction */
+#define IF_PRESCOTT   0x00000000        /* Prescott instruction */
+#define IF_X86_64     0x00000000        /* x86-64 specific instruction */
 
 #define IF_ARITHMETIC 0x00000000        /* arithmetic instruction */
 #define IF_LOGIC      0x00000000        /* logic instruction */
 #define IF_SYSTEM     0x00000000        /* system instruction (require CPL=0) */
+#define IF_BRANCH     0x00000000        /* branch instruction */
 #define IF_FPU        0x00000000        /* FPU instruction */
 #define IF_MMX        0x00000000        /* MMX instruction */
 #define IF_3DNOW      0x00000000        /* 3DNow! instruction */
@@ -91,6 +99,7 @@ enum {
 #define O_MODE  0x6
 #define T_MODE  0x7
 #define P_MODE  0x8
+#define S_MODE  0x9
 
 class disassembler;
 
@@ -174,7 +183,7 @@ public:
  *      If it is a memory address, the address is computed from a segment 
  *      register and any of the following values: a base register, an
  *      index register, a scaling factor, a displacement.
- * F  - EFLAGS Register.
+ * F  - Flags Register.
  * G  - The reg field of the ModR/M byte selects a general register.
  * I  - Immediate data. The operand value is encoded in subsequent bytes of 
  *      the instruction.
@@ -201,8 +210,8 @@ public:
  *      it is a memory address, the address is computed from a segment 
  *      register and any of the following values: a base register, an
  *      index register, a scaling factor, and a displacement.
- * X  - Memory addressed by the DS:SI register pair.
- * Y  - Memory addressed by the ES:DI register pair.
+ * X  - Memory addressed by the DS:rSI register pair.
+ * Y  - Memory addressed by the ES:rDI register pair.
  */   
 
 /* 
@@ -215,14 +224,18 @@ public:
  * d  - Doubleword, regardless of operand-size attribute.
  * dq - Double-quadword, regardless of operand-size attribute.
  * p  - 32-bit or 48-bit pointer, depending on operand-size attribute.
+ * pd - 128-bit packed double-precision floating-point data.
  * pi - Quadword MMX technology register (e.g. mm0)
  * ps - 128-bit packed single-precision floating-point data.
  * q  - Quadword, regardless of operand-size attribute.
- * s  - 6-byte pseudo-descriptor.
+ * s  - 6-byte or 10-byte pseudo-descriptor.
  * ss - Scalar element of a 128-bit packed single-precision floating data.
+ * sd - Scalar element of a 128-bit packed double-precision floating data.
  * si - Doubleword integer register (e.g., eax)
- * v  - Word or doubleword, depending on operand-size attribute.
+ * v  - Word, doubleword or quadword, depending on operand-size attribute.
  * w  - Word, regardless of operand-size attribute.
+ * w  - A word if the effective operand size is 16 bits, or a doubleword 
+ *      if the effective operand size is 32 or 64 bits.
  */
 
  void XX (unsigned) {}
@@ -252,6 +265,7 @@ public:
  // memory only
  void OP_MEM (unsigned);
 
+ // string instructions
  void OP_X (unsigned);
  void OP_Y (unsigned);
 
@@ -273,16 +287,19 @@ public:
  void  Ew (unsigned);
  void  Ed (unsigned);
  void  Ev (unsigned);
- void  Ea (unsigned);
- void  Ep (unsigned);
 
  void  Gb (unsigned);
  void  Gw (unsigned);
  void  Gv (unsigned);
  void  Gd (unsigned);
 
+ void  Ea (unsigned);
+ void  Ep (unsigned);
+
+ // call
  void  Ap (unsigned);
 
+ // mov
  void  Ob (unsigned);
  void  Ov (unsigned);
 

@@ -159,6 +159,8 @@ void disassembler::print_datasize(unsigned mode)
     case T_MODE:
       dis_sprintf("tword ptr ");
       break;
+    case S_MODE:
+      break;
     case X_MODE:
       break;
   };
@@ -372,3 +374,4 @@ void disassembler::resolve32_mod2_rm4(unsigned mode)
 
   dis_sprintf("]");
 }
+

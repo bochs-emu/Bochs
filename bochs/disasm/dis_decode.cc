@@ -109,43 +109,43 @@ unsigned disassembler::disasm(bx_bool is_32,
 
   for(;;)
   {
-        b1 = fetch_byte();
-        entry = &BxDisasmOpcodes[b1];
+          b1 = fetch_byte();
+          entry = &BxDisasmOpcodes[b1];
 
-        if (entry->Attr == _PREFIX)
-        {
-                switch(b1) {
-                case 0xf3:
-                        sse_prefix |= SSE_PREFIX_F3;
-                        break;
-                case 0xf2:
-                        sse_prefix |= SSE_PREFIX_F2;
-                        break;
-                case 0x2e:
-                case 0x36:
-                case 0x3e:
-                case 0x26:
-                case 0x64:
-                case 0x65:
-                        seg_override = entry->Opcode;
-                        break;
-                case 0x66:
-                        i32bit_opsize = !i32bit_opsize;
-                        sse_prefix |= SSE_PREFIX_66;
-                        break;
-                case 0x67:
-                        i32bit_addrsize = !i32bit_addrsize;
-                        break;
-                case 0xf0:      // lock
-                        break;
-                default:
-                        printf("Internal disassembler error !");
-                        return 0;
-                }
+          if (entry->Attr == _PREFIX)
+          {
+              switch(b1) {
+              case 0xf3:
+                  sse_prefix |= SSE_PREFIX_F3;
+                  break;
+              case 0xf2:
+                  sse_prefix |= SSE_PREFIX_F2;
+                  break;
+              case 0x2e:
+              case 0x36:
+              case 0x3e:
+              case 0x26:
+              case 0x64:
+              case 0x65:
+                  seg_override = entry->Opcode;
+                  break;
+              case 0x66:
+                  i32bit_opsize = !i32bit_opsize;
+                  sse_prefix |= SSE_PREFIX_66;
+                  break;
+              case 0x67:
+                  i32bit_addrsize = !i32bit_addrsize;
+                  break;
+              case 0xf0:      // lock
+                  break;
+              default:
+                  printf("Internal disassembler error !");
+                  return 0;
+            }
 
-                n_prefixes++;
+            n_prefixes++;
         }
-        else    break;
+        else break;
   }
 
   if (b1 == 0x0f)
