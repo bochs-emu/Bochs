@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.19 2001-06-18 22:37:46 bdenney Exp $
+ * $Id: siminterface.cc,v 1.20 2001-06-19 04:55:01 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -18,9 +18,10 @@ logfunctions *siminterface_log = NULL;
 
 class bx_real_sim_c : public bx_simulator_interface_c {
   sim_interface_callback_t callback;
+#define BX_NOTIFY_MAX_ARGS 10
   int notify_return_val;
-  int notify_int_args[10];
-  char *notify_string_args[10];
+  int notify_int_args[BX_NOTIFY_MAX_ARGS];
+  char *notify_string_args[BX_NOTIFY_MAX_ARGS];
 #define NOTIFY_TYPE_INT
 #define NOTIFY_TYPE_STRING
   int init_done;
@@ -120,6 +121,12 @@ bx_simulator_interface_c::bx_simulator_interface_c ()
 bx_real_sim_c::bx_real_sim_c ()
 {
   callback = NULL;
+  notify_return_val = -1;
+  for (int i=0; i<NOTIFY_TYPE_STRING; i++) {
+    notify_int_args[i] = -1;
+    notify_string_args[i] = NULL;
+  }
+  init_done = 0;
   registry_alloc_size = BXP_THIS_IS_THE_LAST - BXP_NULL;
   param_registry = new bx_param_c*  [registry_alloc_size];
 }
@@ -516,8 +523,8 @@ bx_list_c::bx_list_c (bx_id id, int maxsize)
   : bx_param_c (id, "list", "")
 {
   set_type (BXT_LIST);
-  this->maxsize = maxsize;
   this->size = 0;
+  this->maxsize = maxsize;
   this->list = new bx_param_c*  [maxsize];
   init ();
 }
@@ -526,12 +533,12 @@ bx_list_c::bx_list_c (bx_id id, bx_param_c **init_list)
   : bx_param_c (id, "list", "")
 {
   set_type (BXT_LIST);
-  size = 0;
-  while (init_list[size] != NULL)
-    size++;
-  this->maxsize = size;
+  this->size = 0;
+  while (init_list[this->size] != NULL)
+    this->size++;
+  this->maxsize = this->size;
   this->list = new bx_param_c*  [maxsize];
-  for (int i=0; i<size; i++)
+  for (int i=0; i<this->size; i++)
     this->list[i] = init_list[i];
   init ();
 }
