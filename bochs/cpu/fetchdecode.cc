@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.60 2003-12-27 13:50:06 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.61 2003-12-28 18:19:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1866,7 +1866,7 @@ modrm_done:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod==0xc0]);
              break;
          case BxFPGroup:
-             if (mod != 0xc0)  // mod == 11b
+             if (mod != 0xc0)  // mod != 11b
                 OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
              else
              {
@@ -2034,12 +2034,10 @@ modrm_done:
   void
 BX_CPU_C::BxError(bxInstruction_c *i)
 {
-  // extern void dump_core();
   BX_INFO(("BxError: instruction with op1=0x%x", i->b1()));
-  BX_INFO(("nnn was %u", i->nnn()));
+  BX_INFO(("mod was %x, nnn was %u, rm was %u", i->mod(), i->nnn(), i->rm()));
 
-  BX_INFO(("WARNING: Encountered an unknown instruction (signalling illegal instruction):"));
-  // dump_core();
+  BX_INFO(("WARNING: Encountered an unknown instruction (signalling illegal instruction)"));
 
   BX_CPU_THIS_PTR UndefinedOpcode(i);
 }

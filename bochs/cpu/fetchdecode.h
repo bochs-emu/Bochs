@@ -389,11 +389,11 @@ static BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DB DD */  { 0,  &BX_CPU_C::FCMOVNU_ST0_STj  },
   /* DB DE */  { 0,  &BX_CPU_C::FCMOVNU_ST0_STj  },
   /* DB DF */  { 0,  &BX_CPU_C::FCMOVNU_ST0_STj  },
-  /* DB E0 */  { 0,  &BX_CPU_C::BxError          },
-  /* DB E1 */  { 0,  &BX_CPU_C::BxError          },
+  /* DB E0 */  { 0,  &BX_CPU_C::FNOP             },     // feni  (287 only)
+  /* DB E1 */  { 0,  &BX_CPU_C::FNOP             },     // fdisi (287 only)
   /* DB E2 */  { 0,  &BX_CPU_C::FCLEX            },
   /* DB E3 */  { 0,  &BX_CPU_C::FNINIT           },
-  /* DB E4 */  { 0,  &BX_CPU_C::BxError          },
+  /* DB E4 */  { 0,  &BX_CPU_C::FNOP             },     // fsetpm (287 only)
   /* DB E5 */  { 0,  &BX_CPU_C::BxError          },
   /* DB E6 */  { 0,  &BX_CPU_C::BxError          },
   /* DB E7 */  { 0,  &BX_CPU_C::BxError          },

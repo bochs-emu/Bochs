@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.58 2003-12-27 13:50:06 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.59 2003-12-28 18:19:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2588,7 +2588,7 @@ modrm_done:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod==0xc0]);
              break;
          case BxFPGroup:
-             if (mod != 0xc0)  // mod == 11b
+             if (mod != 0xc0)  // mod != 11b
                 OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
              else
              {
