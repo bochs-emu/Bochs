@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.82 2002-12-06 18:28:40 bdenney Exp $
+$Id: user.dbk,v 1.83 2002-12-07 23:58:41 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -426,10 +426,10 @@ currently work with.
   </row>
   <row>
     <entry>Serial Port</entry>
-    <entry>Not quite</entry>
-    <entry>The serial port (single 16450 UART emulation) is not really usable
-    yet.  The interface to the emulated CPU is mostly working, but it needs
-    some work before it can talk to a raw serial port or to a pseudo terminal.
+    <entry>Yes</entry>
+    <entry>The serial port (single 16450 UART emulation) is usable, at least 
+    with Linux as host and guest.  
+    Status for other OSes (host and guest) is not known.
     </entry>
   </row>
   <row>
@@ -4791,6 +4791,11 @@ Hitting ^C works. Example;
 
 </section>
 
+<section id="serial-port"><title>Using the serial port</title>
+<para>
+</para>
+</section>
+
 <section> 
 <title>Bios Tips</title>
         <section> 
@@ -4987,6 +4992,28 @@ The usual rules and tricks of the installed OS still apply (ie 1024 cylinders bo
 </note>
 
         </section>
+</section>
+
+<section id="enter-special-keys"><title>How to enter special key combination</title>
+<para>
+Your window manager may trap the key combination you want to enter
+in Bochs guest OS, for example ctrl-alt-del. Here is a work-around:
+</para>
+<para>
+press and hold CTRL+ALT, move your mouse cursor outside of the Bochs
+window.  Release them, move the cursor back in the Bochs window and
+press DEL.
+</para>
+<para>
+This should work for any key combination. 
+</para>
+<para>
+You can also define one
+user key combination (up to three keys from "alt", "ctrl", "del", 
+"esc", "f1", "f4", "tab", "win") in your configuration file.
+This key combination is sent to the guest os when you press the user short-cut
+gui button.
+</para>
 </section>
 
 <section><title>Notes about VESA usage</title>
@@ -6139,10 +6166,37 @@ to
                         </para>
         </section>
 </section>
+
 <section>
         <title>Windows NT 4.0</title>
-        <para>
-        </para>
+<para>
+You must read the message regarding software licenses in 
+<xref linkend="thirdparty"> before you install Windows NT 4.0 as a guest operating system in Bochs.
+</para>
+<para>
+Here are the known issues about installing and running Windows NT4.0 :
+</para>
+<itemizedlist>
+<listitem>
+<para>
+at the moment, you can not use the LGPL VGABios to install Windows NT 4.0 
+(you'll get a black screen after first reboot). The solution is to use the
+Elpin VGABios.
+</para>
+</listitem>
+<listitem>
+<para>
+to log in you must press ctrl-alt-del, and it is likely that the window manager
+will trap this key combination. You can either use the trick described in 
+<xref linkend="enter-special-keys"> or define a user short-cut 
+(callable through the user short-cut gui button)
+in you configuration file, for example:
+<programlisting>
+user_shortcut: keys=ctrlaltdel
+</programlisting>
+</para>
+</listitem>
+</itemizedlist>
 </section>
 
 
@@ -6365,7 +6419,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.82 2002-12-06 18:28:40 bdenney Exp $
+        $Id: user.dbk,v 1.83 2002-12-07 23:58:41 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6641,7 +6695,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.82 2002-12-06 18:28:40 bdenney Exp $
+        $Id: user.dbk,v 1.83 2002-12-07 23:58:41 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -7229,6 +7283,8 @@ Some bugs i've found
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install Windows XP as a guest OS in Bochs.</para>
         <para>
+        Windows XP has been reported to install from the cd, and run inside Bochs. 
+        The only known issue is to set the IPS to, at least, a value of 10000000.
         </para>
 </section>
 </chapter>
