@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: pit_wrap.h,v 1.7 2002-01-31 16:52:00 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,6 +71,8 @@ private:
     int  timer_handle[3];
     Bit64u last_usec;
     Bit32u last_next_event_time;
+    Bit64u total_usec;
+    Bit64u total_ticks;
     } s;
 
   bx_devices_c *devices;
