@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.57 2002-09-11 03:55:22 bdenney Exp $
+// $Id: dbg_main.cc,v 1.58 2002-09-12 07:16:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,12 +24,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-// define shortcuts to get register from the default CPU
-#define EBP (BX_CPU(dbg_cpu)->gen_reg[5].erx)
-#define EIP (BX_CPU(dbg_cpu)->eip)
-#define ESP (BX_CPU(dbg_cpu)->gen_reg[4].erx)
-#define SP  (BX_CPU(dbg_cpu)->gen_reg[4].word.rx)
-
 extern "C" {
 #include <signal.h>
 }
@@ -46,6 +40,17 @@ extern "C" {
 #endif
 }
 #endif
+
+// define shortcuts to get register from the default CPU
+#define EBP (BX_CPU(dbg_cpu)->gen_reg[5].erx)
+#if BX_SUPPORT_X86_64==0
+#define EIP (BX_CPU(dbg_cpu)->eip)
+#else
+#define EIP (BX_CPU(dbg_cpu)->_long.eip)
+#endif
+#define ESP (BX_CPU(dbg_cpu)->gen_reg[4].erx)
+#define SP  (BX_CPU(dbg_cpu)->gen_reg[4].word.rx)
+
 
 static unsigned doit = 0;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.9 2002-09-11 03:56:22 bdenney Exp $
+// $Id: load32bitOShack.cc,v 1.10 2002-09-12 07:16:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -232,7 +232,11 @@ bx_load_null_kernel_hack(void)
 
   // EIP deltas
   BX_CPU(0)->prev_eip =
+#if BX_SUPPORT_X86_64==0
   BX_CPU(0)->eip = 0x00100000;
+#else
+  BX_CPU(0)->_long.eip = 0x00100000;
+#endif
 
   // CS deltas
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.base = 0x00000000;
