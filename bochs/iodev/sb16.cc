@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.16 2002-01-13 17:07:14 vruppert Exp $
+// $Id: sb16.cc,v 1.17 2002-01-25 20:31:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -993,11 +993,12 @@ Bit32u bx_sb16_c::dsp_status()
   // read might be to acknowledge IRQ
   if ( DSP.irqpending != 0 )
     {
-      DSP.irqpending = 0;
       MIXER.reg[0x82] &= (~0x01);
       writelog( WAVELOG(4), "8-bit DMA or SBMIDI IRQ acknowledged");
-      if (MIXER.reg[0x82] == 0)
-	BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+      if (MIXER.reg[0x82] == 0) {
+        DSP.irqpending = 0;
+        BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+      }
     }
 
   // if buffer is not empty, there is data to be read
@@ -1016,10 +1017,11 @@ Bit32u bx_sb16_c::dsp_irq16ack()
 
   if ( DSP.irqpending != 0 )
     {
-      DSP.irqpending = 0;
       MIXER.reg[0x82] &= (~0x02);
-      if (MIXER.reg[0x82] == 0)
-	BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+      if (MIXER.reg[0x82] == 0) {
+        DSP.irqpending = 0;
+        BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+      }
       writelog( WAVELOG(4), "16-bit DMA IRQ acknowledged");
     }
   else
@@ -3140,7 +3142,7 @@ void bx_sb16_c::writelog(int loglevel, const char *str, ...)
 // append a line to the log file, if desired
   if ( (int) bx_options.sb16.Ologlevel->get () >= loglevel)
     {
-        fprintf(LOGFILE, "%011lld (%i) ", bx_pc_system.time_ticks(), loglevel);
+        fprintf(LOGFILE, "%011lld (%d) ", bx_pc_system.time_ticks(), loglevel);
 	va_list ap;
 	va_start(ap, str);
 	vfprintf(LOGFILE, str, ap);
