@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.11 2002-03-12 18:59:31 bdenney Exp $
+// $Id: exception.cc,v 1.12 2002-03-12 19:00:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -605,7 +605,9 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   if (BX_CPU_THIS_PTR errorno >= 3) {
     BX_PANIC(("exception(): 3rd exception with no resolution"));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
+#if BX_DEBUGGER
     bx_guard.special_unwind_stack = true;
+#endif
     return;
     }
 
@@ -616,7 +618,9 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   if ( (BX_CPU_THIS_PTR errorno==2) && (BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT) ) {
     BX_PANIC(("exception(): triple fault encountered"));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
+#if BX_DEBUGGER
     bx_guard.special_unwind_stack = true;
+#endif
     return;
     }
 
