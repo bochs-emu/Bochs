@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.17 2004-01-08 22:27:07 cbothamy Exp $
+# $Id: Makefile.in,v 1.18 2004-10-29 17:04:02 vruppert Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -14,6 +14,8 @@ DOCBOOK2HTML = @DOCBOOK2HTML@
 WGET = wget
 TARGZ = bochsdoc.tar.gz
 RENDERED_DOC_URL = http://bochs.sf.net/doc/docbook/$(TARGZ)
+
+DESTDIR=
 
 # name of the major documentation sections
 SECTIONS=user documentation development
