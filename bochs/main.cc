@@ -79,17 +79,17 @@ bx_debug_t bx_dbg;
 
 
 bx_options_t bx_options = {
-  { "", BX_FLOPPY_NONE, BX_EJECTED },
-  { "", BX_FLOPPY_NONE, BX_EJECTED },
-  { 0, "", 0, 0, 0 },
-  { 0, "", 0, 0, 0 },
-  { 0, "", 0 },
-  { NULL, 0 },
-  { NULL },
-  { BX_DEFAULT_MEM_MEGS },
-  { NULL, NULL, NULL, 0, 0, 0, 0 },     // SB16 options
-  "a",
-  300000,
+  { "", BX_FLOPPY_NONE, BX_EJECTED },   // floppya
+  { "", BX_FLOPPY_NONE, BX_EJECTED },   // floppyb
+  { 0, "", 0, 0, 0 },                   // diskc
+  { 0, "", 0, 0, 0 },                   // diskd
+  { 0, "", 0 },                         // cdromd
+  { NULL, 0 },                          // rom
+  { NULL },                             // vgarom
+  { BX_DEFAULT_MEM_MEGS },              // memory
+  { NULL, NULL, NULL, 0, 0, 0, 0 },     // SB16
+  "a",                                  // boot drive
+  300000,                               // vga update interval
   20000,  // default keyboard serial path delay (usec)
   50000,  // default floppy command delay (usec)
   500000,  // default ips (instructions-per-second)
