@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.16 2003-05-06 20:28:13 cbothamy Exp $
+// $Id: osdep.h,v 1.17 2003-05-06 21:53:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,11 +69,15 @@ extern "C" {
 #ifndef S_IRUSR
 #define S_IRUSR 0400
 #define S_IWUSR 0200
+#endif
+#ifndef S_IRGRP
 #define S_IRGRP 0040
 #define S_IWGRP 0020
+#endif
+#ifndef S_IROTH
 #define S_IROTH 0004
 #define S_IWOTH 0002
-#endif   /* S_IRUSR */
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // Missing library functions.
