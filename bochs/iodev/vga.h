@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.12 2002-04-29 13:06:06 japj Exp $
+// $Id: vga.h,v 1.13 2002-07-21 14:50:11 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,8 +71,8 @@
 #endif //BX_SUPPORT_VBE
 #define CGA_TEXT_ADDR(row, column) (0x18000 + ((row)*80 + (column))*2)
 
-#define X_TILESIZE 16
-#define Y_TILESIZE 16
+#define X_TILESIZE 8
+#define Y_TILESIZE 8
 #define BX_NUM_X_TILES (BX_MAX_XRES /X_TILESIZE)
 #define BX_NUM_Y_TILES (BX_MAX_YRES /Y_TILESIZE)
 
