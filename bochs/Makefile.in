@@ -276,7 +276,9 @@ clean:
 	@RMCOMMAND@ *.a
 	@RMCOMMAND@ */*.a
 	@RMCOMMAND@ bochs@EXE@
+	@RMCOMMAND@ bximage@EXE@
 	@RMCOMMAND@ bochs.out
+	@RMCOMMAND@ bochsout.txt
 
 local-dist-clean: clean
 	@RMCOMMAND@ config.h config.status config.log config.cache
