@@ -1,0 +1,108 @@
+----------------------------------------------------------------------
+Patch name: patch.example-override-ask
+Author: Bryce Denney
+Date: Mon Sep 23 13:00:53 EDT 2002
+
+Detailed description:
+This patch shows how to create your own siminterface callback function.
+It is not intended to be checked in anytime, only to serve as an example
+of how to use the siminterface.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+--- bochs/config.h.in	Mon Sep 23 12:51:22 2002
++++ bochs-overrideask/config.h.in	Mon Sep 23 12:12:45 2002
+@@ -678,6 +678,7 @@
+ // External Debugger
+ #define BX_EXTERNAL_DEBUGGER 0
+ #define BX_OVERRIDE_ASK 0
++#define BX_OVERRIDE_ASK_EXAMPLE 1
+ 
+ #ifdef WIN32
+ #define BX_FLOPPY0_NAME "Floppy Disk A:"
+--- bochs/main.cc	Mon Sep 23 12:51:23 2002
++++ bochs-overrideask/main.cc	Mon Sep 23 12:17:25 2002
+@@ -1306,6 +1306,10 @@
+   bx_init_main (argc, argv);
+   bx_do_text_config_interface (argc, argv);
+   bx_config_interface (BX_CI_INIT);
++#if BX_OVERRIDE_ASK_EXAMPLE
++  extern void override_ask_init();
++  override_ask_init ();
++#endif
+   static jmp_buf context;
+   if (setjmp (context) == 0) {
+     SIM->set_quit_context (&context);
+--- bochs/overrideask.cc	Mon Sep 23 12:52:01 2002
++++ bochs-overrideask/overrideask.cc	Mon Sep 23 12:35:14 2002
+@@ -0,0 +1,52 @@
++#include <stdio.h>
++#include <assert.h>
++#include "config.h"
++#include "osdep.h"
++#include "gui/siminterface.h"
++
++bx_simulator_interface_c::sim_interface_callback_t old_callback = NULL;
++void *old_callback_arg = NULL;
++
++BxEvent *
++override_ask_callback (void *unused, BxEvent *event)
++{
++  int n;
++  int level;
++  fprintf (stderr, "override_ask_callback\n");
++  event->retcode = -1;
++  switch (event->type)
++  {
++    case BX_SYNC_EVT_LOG_ASK:
++      level = event->u.logmsg.level;
++      fprintf (stderr, "============ override_ask_callback was called ==========================\n");
++      fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
++      fprintf (stderr, "Device: %s\n", event->u.logmsg.prefix);
++      fprintf (stderr, "Message: %s\n\n", event->u.logmsg.msg);
++      // note: 4 only available if BX_DEBUGGER=1. ideally, don't show it
++      fprintf (stderr, "What should I do? (0=continue, 1=alwayscont, 2=die, 3=abort, 4=debug) ");
++      while (scanf ("%d", &n) != 1 || (n<0 && n>4)) {
++	fprintf (stderr, "Enter 0-4 only.\n");
++      }
++      event->retcode = n;
++      fprintf (stderr, "============ override_ask_callback is done =============================\n");
++      return event;
++    case BX_SYNC_EVT_TICK: // called periodically by siminterface.
++    case BX_SYNC_EVT_ASK_PARAM: // called if simulator needs to know value of a param.
++    case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
++      // fall into default case
++  default:
++    return (*old_callback)(old_callback_arg, event);
++  }
++}
++
++// called from bochs.cc
++void override_ask_init ()
++{
++  fprintf (stderr, "override_ask_init");
++  // this should be called after the configuration interface has had a
++  // chance to install its own callback.  Otherwise, overrideask will not
++  // override anything.
++  SIM->get_notify_callback (&old_callback, &old_callback_arg);
++  assert (old_callback != NULL);
++  SIM->set_notify_callback (override_ask_callback, NULL);
++}
+--- bochs/Makefile.in	Mon Sep 23 00:07:49 2002
++++ bochs-overrideask/Makefile.in	Mon Sep 23 12:55:56 2002
+@@ -132,7 +132,8 @@
+ 	load32bitOShack.o \
+ 	state_file.o \
+ 	pc_system.o \
+-	osdep.o
++	osdep.o \
++	overrideask.o
+ 
+ EXTERN_ENVIRONMENT_OBJS = \
+ 	main.o \
