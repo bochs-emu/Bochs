@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.73 2002-09-22 20:56:12 cbothamy Exp $
+// $Id: harddrv.cc,v 1.74 2002-09-22 23:47:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.73 2002-09-22 20:56:12 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.74 2002-09-22 23:47:34 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -509,7 +509,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             unsigned transferLen, quantumsMax;
 
             quantumsMax =
-              (512 - BX_SELECTED_CONTROLLER.buffer_index) / io_len;
+              (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
 if ( quantumsMax == 0)
   BX_PANIC(("IO read(1f0): not enough space for read"));
             BX_HD_THIS devices->bulkIOQuantumsTransferred =
@@ -518,10 +518,10 @@ if ( quantumsMax == 0)
               BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
             transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
             memcpy((Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
-              &BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index], 
+              &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], 
               transferLen);
             BX_HD_THIS devices->bulkIOHostAddr += transferLen;
-            BX_SELECTED_CONTROLLER.buffer_index += transferLen;
+            BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             value32 = 0; // Value returned not important;
             }
           else
@@ -998,7 +998,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
             unsigned transferLen, quantumsMax;
 
             quantumsMax =
-              (512 - BX_SELECTED_CONTROLLER.buffer_index) / io_len;
+              (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
 if ( quantumsMax == 0)
   BX_PANIC(("IO write(1f0): not enough space for write"));
             BX_HD_THIS devices->bulkIOQuantumsTransferred =
@@ -1007,11 +1007,11 @@ if ( quantumsMax == 0)
               BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
             transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
             memcpy(
-              &BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index], 
+              &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], 
               (Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
               transferLen);
             BX_HD_THIS devices->bulkIOHostAddr += transferLen;
-            BX_SELECTED_CONTROLLER.buffer_index += transferLen;
+            BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             }
           else
 #endif
