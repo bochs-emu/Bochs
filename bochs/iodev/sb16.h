@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.9 2002-10-25 11:44:41 bdenney Exp $
+// $Id: sb16.h,v 1.10 2002-11-10 10:14:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,21 +197,8 @@ public:
   BX_SB16_SMF void init(void);
   BX_SB16_SMF void reset(unsigned type);
 
-      /* DMA input and output, 8 and 16 bit, have to be public */
-  BX_SB16_SMF void   dma_write8(Bit8u *data_byte);
-  BX_SB16_SMF void   dma_read8(Bit8u *data_byte);
-  BX_SB16_SMF void   dma_write16(Bit16u *data_word);
-  BX_SB16_SMF void   dma_read16(Bit16u *data_word);
-
-      /* the OPL timer event handler has to be called by the timer */
-  BX_SB16_SMF void   opl_timerevent();
-
       /* Make writelog available to output functions */
   BX_SB16_SMF void   writelog(int loglevel, const char *str, ...);
-
-      // DMA8 and DMA16 also public, they're read in devices.cc
-  int currentdma8;
-  int currentdma16;
 
 private:
 
@@ -219,6 +206,8 @@ private:
   FILE *midifile,*wavefile;     // the output files or devices
   BX_SOUND_OUTPUT_C_DEF *output;// the output class
   int currentirq;
+  int currentdma8;
+  int currentdma16;
 
   // the MPU 401 relevant variables
   struct bx_sb16_mpu_struct {
@@ -303,6 +292,12 @@ private:
     int remaps;
   } emuldata;
 
+      /* DMA input and output, 8 and 16 bit */
+  BX_SB16_SMF void   dma_write8(Bit8u *data_byte);
+  BX_SB16_SMF void   dma_read8(Bit8u *data_byte);
+  BX_SB16_SMF void   dma_write16(Bit16u *data_word);
+  BX_SB16_SMF void   dma_read16(Bit16u *data_word);
+
       /* the MPU 401 part of the emulator */
   BX_SB16_SMF Bit32u mpu_status();                   // read status port   3x1
   BX_SB16_SMF void   mpu_command(Bit32u value);      // write command port 3x1
@@ -345,6 +340,7 @@ private:
   BX_SB16_SMF void   opl_index(Bit32u value, int chipid);
   BX_SB16_SMF void   opl_data(Bit32u value, int chipid);
   static void   opl_timer(void *);
+  BX_SB16_SMF void   opl_timerevent(void);
   BX_SB16_SMF void   opl_changeop(int channum, int opernum, int byte, int value);
   BX_SB16_SMF void   opl_settimermask(int value, int chipid);
   BX_SB16_SMF void   opl_set4opmode(int new4opmode);
