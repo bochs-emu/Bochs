@@ -53,7 +53,7 @@ void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVUPS/PD/MOVDQU_VpsWps: SSE not supported in current configuration"));
+  BX_INFO(("MOVUPS/PD/MOVDQU_VdqWdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -77,7 +77,7 @@ void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
     writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 #else
-  BX_INFO(("MOVUPS/PD/MOVDQU_WpsVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVUPS/PD/MOVDQU_WdqVdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -105,7 +105,7 @@ void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVAPS/PD/MOVDQA_VpsWps: SSE not supported in current configuration"));
+  BX_INFO(("MOVAPS/PD/MOVDQA_VdqWdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -129,7 +129,7 @@ void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
     writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 #else
-  BX_INFO(("MOVAPS/PD/MOVDQA_WpsVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVAPS/PD/MOVDQA_WdqVdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -330,7 +330,7 @@ void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_MMX_REG(i->nnn());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
   Bit32u val32 = 0;
 
   if(op.xmm32u(0) & 0x80000000) val32 |= 0x1;
@@ -351,7 +351,7 @@ void BX_CPU_C::MOVMSKPD_EdVRpd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_MMX_REG(i->nnn());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
   Bit32u val32 = 0;
 
   if(op.xmm32u(1) & 0x80000000) val32 |= 0x1;
