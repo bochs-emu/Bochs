@@ -33643,7 +33643,7 @@ _ACEOF
 
 fi;
 
-if test "$bx_support_vbe" = 1 && test "$bx_suppot_clgd54xx" = 1; then
+if test "$bx_support_vbe" = 1 && test "$bx_support_clgd54xx" = 1; then
   { { echo "$as_me:$LINENO: error: --enable-vbe and --enable-clgd54xx are mutually exclusive" >&5
 echo "$as_me: error: --enable-vbe and --enable-clgd54xx are mutually exclusive" >&2;}
    { (exit 1); exit 1; }; }
