@@ -131,6 +131,17 @@ MACRO HALT
   out dx,ax
 MEND
 
+MACRO HALT2
+  ;; the HALT macro is called with the line number of the HALT call.
+  ;; The line number is then sent to the PANIC_PORT, causing Bochs to
+  ;; print a BX_PANIC message.  This will normally halt the simulation
+  ;; with a message such as "BIOS panic at rombios.c, line 4091".
+  ;; However, users can choose to make panics non-fatal and continue.
+  mov dx,#0x401
+  mov ax,#?1
+  out dx,ax
+MEND
+
 MACRO JMP_AP
   db 0xea
   dw ?2
@@ -256,7 +267,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.14 2001-06-13 07:06:10 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.15 2001-08-15 04:56:00 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -782,7 +793,7 @@ bios_printf(bomb, s)
         in_format = 0;
         }
       else
-        panic("bios_printf: unknown format\n");
+        panic("bios_printf: unknown format");
       }
     else {
       outb(0xfff0, c);
@@ -792,7 +803,7 @@ bios_printf(bomb, s)
 
   if (bomb) {
 #asm
-    HALT(__LINE__)
+    HALT2(__LINE__)
 #endasm
     }
 }
@@ -808,7 +819,7 @@ cli()
   void
 keyboard_panic()
 {
-  panic("Keyboard RESET error\n");
+  panic("Keyboard RESET error");
 }
 
   void
@@ -816,11 +827,14 @@ boot_failure_msg(drive)
   Bit16u drive;
 {
   if (drive < 0x80) {
-    bios_printf(0, "Boot Failure!  I could not read floppy drive %d.\n", drive);
+    bios_printf(0, "Booting from floppy drive %d.\n", drive);
   } else {
-    drive &= 0x7f;
-    bios_printf(0, "Boot Failure!  I could not read hard disk %d.\n", drive);
+    bios_printf(0, "Booting from hard drive %d.\n", drive & 0x7f);
   }
+  if (drive & 0x100)
+    panic("Not a bootable disk");
+  else
+    panic("Could not read the boot disk");
 }
 
 void
@@ -1162,7 +1176,7 @@ printf("case 1: enable mouse\n");
 printf("case 1 or 5:\n");
           if (GET_AL() == 5) {
             if (GET_BH() != 3)
-              panic("INT 15h C2 AL=5, BH=%02x\n", (unsigned) GET_BH());
+              panic("INT 15h C2 AL=5, BH=%02x", (unsigned) GET_BH());
             mouse_flags_2 = read_byte(ebda_seg, 0x0027);
             mouse_flags_2 = (mouse_flags_2 & 0x00) | GET_BH();
             mouse_flags_1 = 0x00;
@@ -1175,7 +1189,7 @@ printf("case 1 or 5:\n");
           if (ret == 0) {
             ret = get_mouse_data(&mouse_data3);
             if (mouse_data3 != 0xfa)
-              panic("Mouse reset returned %02x (should be ack)\n", (unsigned)mouse_data3);
+              panic("Mouse reset returned %02x (should be ack)", (unsigned)mouse_data3);
             if ( ret == 0 ) {
               ret = get_mouse_data(&mouse_data1);
               if ( ret == 0 ) {
@@ -1212,7 +1226,7 @@ printf("case 2:\n");
               SET_AH(0);
               break;
             default:
-              panic("INT 15h C2 AL=2, BH=%02x\n", (unsigned) GET_BH());
+              panic("INT 15h C2 AL=2, BH=%02x", (unsigned) GET_BH());
             }
           break;
 
@@ -1243,7 +1257,7 @@ printf("case 6:\n");
               if (ret == 0) {
                 ret = get_mouse_data(&mouse_data1);
                 if (mouse_data1 != 0xfa)
-                  panic("Mouse status returned %02x (should be ack)\n", (unsigned)mouse_data1);
+                  panic("Mouse status returned %02x (should be ack)", (unsigned)mouse_data1);
                 if (ret == 0) {
                   ret = get_mouse_data(&mouse_data1);
                   if ( ret == 0 ) {
@@ -1276,7 +1290,7 @@ printf("case 6:\n");
               break;
 
             default:
-              panic("INT 15h C2 AL=6, BH=%02x\n", (unsigned) GET_BH());
+              panic("INT 15h C2 AL=6, BH=%02x", (unsigned) GET_BH());
             }
           break;
 
@@ -1340,7 +1354,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
     case 0x00: /* read keyboard input */
 
       if ( !dequeue_key(&scan_code, &ascii_code, 1) ) {
-        panic("KBD: int16h: out of keyboard input\n");
+        panic("KBD: int16h: out of keyboard input");
         }
       AX = (scan_code << 8) | ascii_code;
       break;
@@ -1417,14 +1431,14 @@ inhibit_mouse_int_and_events()
 
   // Turn off IRQ generation and aux data line
   if ( inb(0x64) & 0x02 )
-    panic("inhibmouse: keyboard input buffer full\n");
+    panic("inhibmouse: keyboard input buffer full");
   outb(0x64, 0x20); // get command byte
   while ( (inb(0x64) & 0x01) != 0x01 );
   prev_command_byte = inb(0x60);
   command_byte = prev_command_byte;
   //while ( (inb(0x64) & 0x02) );
   if ( inb(0x64) & 0x02 )
-    panic("inhibmouse, keyboard input buffer full\n");
+    panic("inhibmouse, keyboard input buffer full");
   command_byte &= 0xfd; // turn off IRQ 12 generation
   command_byte |= 0x20; // disable mouse serial clock line
   outb(0x64, 0x60); // write command byte
@@ -1439,13 +1453,13 @@ enable_mouse_int_and_events()
 
   // Turn on IRQ generation and aux data line
   if ( inb(0x64) & 0x02 )
-    panic("enabmouse: keyboard input buffer full\n");
+    panic("enabmouse: keyboard input buffer full");
   outb(0x64, 0x20); // get command byte
   while ( (inb(0x64) & 0x01) != 0x01 );
   command_byte = inb(0x60);
   //while ( (inb(0x64) & 0x02) );
   if ( inb(0x64) & 0x02 )
-    panic("enabmouse, keyboard input buffer full\n");
+    panic("enabmouse, keyboard input buffer full");
   command_byte |= 0x02; // turn on IRQ 12 generation
   command_byte &= 0xdf; // enable mouse serial clock line
   outb(0x64, 0x60); // write command byte
@@ -1460,7 +1474,7 @@ send_to_mouse_ctrl(sendbyte)
 
   // wait for chance to write to ctrl
   if ( inb(0x64) & 0x02 )
-    panic("sendmouse, keyboard input buffer full\n");
+    panic("sendmouse, keyboard input buffer full");
   outb(0x64, 0xD4);
   outb(0x60, sendbyte);
   return(0);
@@ -1489,7 +1503,7 @@ set_kbd_command_byte(command_byte)
   Bit8u command_byte;
 {
   if ( inb(0x64) & 0x02 )
-    panic("setkbdcomm, input buffer full\n");
+    panic("setkbdcomm, input buffer full");
 
   outb(0x64, 0x60); // write command byte
   outb(0x60, command_byte);
@@ -1573,7 +1587,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     default:
       if (scancode & 0x80) return; /* toss key releases ... */
       if (scancode > MAX_SCAN_CODE) {
-        panic("KBD: int09h_handler(): unknown scancode read!\n");
+        panic("KBD: int09h_handler(): unknown scancode read!");
         return;
         }
       if (shift_flags & 0x08) { /* ALT */
@@ -1600,7 +1614,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
         scancode = scan_to_scanascii[scancode].normal >> 8;
         }
       if (scancode==0 && asciicode==0) {
-        panic("KBD: int09h_handler(): scancode & asciicode are zero?\n");
+        panic("KBD: int09h_handler(): scancode & asciicode are zero?");
         }
       enqueue_key(scancode, asciicode);
       break;
@@ -1633,7 +1647,7 @@ enqueue_key(scan_code, ascii_code)
     buffer_tail = buffer_start;
 
   if (buffer_tail == buffer_head) {
-    panic("KBD: dropped key scan=%02x, ascii=%02x\n",
+    panic("KBD: dropped key scan=%02x, ascii=%02x",
       (int) scan_code, (int) ascii_code);
     return;
     }
@@ -1667,7 +1681,7 @@ printf("int74: read byte %02x\n", in_byte);
   mouse_flags_2 = read_byte(ebda_seg, 0x0027);
 
   if ( (mouse_flags_2 & 0x80) != 0x80 ) {
-    panic("int74_function:\n");
+    panic("int74_function:");
     }
 
   package_count = mouse_flags_2 & 0x07;
@@ -1794,11 +1808,11 @@ printf("int13_f01\n");
         }
 
       if ( (num_sectors > 128) || (num_sectors == 0) )
-        panic("int13_function(): num_sectors out of range!\n");
+        panic("int13_function(): num_sectors out of range!");
 
 
       if (head > 15)
-        panic("hard drive BIOS:(read/verify) head > 15\n");
+        panic("hard drive BIOS:(read/verify) head > 15");
 
       if ( GET_AH() == 0x04 ) {
         SET_AH(0);
@@ -1809,7 +1823,7 @@ printf("int13_f01\n");
 
       status = inb(0x1f7);
       if (status & 0x80) {
-        panic("hard drive BIOS:(read/verify) BUSY bit set\n");
+        panic("hard drive BIOS:(read/verify) BUSY bit set");
         }
       outb(0x01f2, num_sectors);
       outb(0x01f3, sector);
@@ -1825,7 +1839,7 @@ printf("int13_f01\n");
 
       if ( !(status & 0x08) ) {
         printf("status was %02x\n", (unsigned) status);
-        panic("hard drive BIOS:(read/verify) data-request bit not set\n");
+        panic("hard drive BIOS:(read/verify) data-request bit not set");
         }
 
       sector_count = 0;
@@ -1872,13 +1886,13 @@ i13_f02_done:
         if (num_sectors == 0) {
           status = inb(0x1f7);
           if ( (status & 0xc9) != 0x40 )
-            panic("no sectors left to read/verify, status is %02x\n", (unsigned) status);
+            panic("no sectors left to read/verify, status is %02x", (unsigned) status);
           break;
           }
         else {
           status = inb(0x1f7);
           if ( (status & 0xc9) != 0x48 )
-            panic("more sectors left to read/verify, status is %02x\n", (unsigned) status);
+            panic("more sectors left to read/verify, status is %02x", (unsigned) status);
           continue;
           }
         }
@@ -1932,14 +1946,14 @@ printf("int13_f03\n");
         }
 
       if ( (num_sectors > 128) || (num_sectors == 0) )
-        panic("int13_function(): num_sectors out of range!\n");
+        panic("int13_function(): num_sectors out of range!");
 
       if (head > 15)
-        panic("hard drive BIOS:(read) head > 15\n");
+        panic("hard drive BIOS:(read) head > 15");
 
       status = inb(0x1f7);
       if (status & 0x80) {
-        panic("hard drive BIOS:(read) BUSY bit set\n");
+        panic("hard drive BIOS:(read) BUSY bit set");
         }
 // should check for Drive Ready Bit also in status reg
       outb(0x01f2, num_sectors);
@@ -1957,7 +1971,7 @@ printf("int13_f03\n");
 
       if ( !(status & 0x08) ) {
         printf("status was %02x\n", (unsigned) status);
-        panic("hard drive BIOS:(write) data-request bit not set\n");
+        panic("hard drive BIOS:(write) data-request bit not set");
         }
 
       sector_count = 0;
@@ -2004,13 +2018,13 @@ i13_f03_no_adjust:
         if (num_sectors == 0) {
           status = inb(0x1f7);
           if ( (status & 0xe9) != 0x40 )
-            panic("no sectors left to write, status is %02x\n", (unsigned) status);
+            panic("no sectors left to write, status is %02x", (unsigned) status);
           break;
           }
         else {
           status = inb(0x1f7);
           if ( (status & 0xc9) != 0x48 )
-            panic("more sectors left to write, status is %02x\n", (unsigned) status);
+            panic("more sectors left to write, status is %02x", (unsigned) status);
           continue;
           }
         }
@@ -2024,7 +2038,7 @@ i13_f03_no_adjust:
 
     case 0x05: /* format disk track */
 printf("int13_f05\n");
-      panic("format disk track called\n");
+      panic("format disk track called");
       /* nop */
       SET_AH(0);
       set_disk_ret_status(0);
@@ -2084,7 +2098,7 @@ printf("int13_f09\n");
 printf("int13_f0a\n");
     case 0x0b: /* write disk sectors with ECC */
 printf("int13_f0b\n");
-      panic("int13h Functions 0Ah & 0Bh not implemented!\n");
+      panic("int13h Functions 0Ah & 0Bh not implemented!");
       return;
       break;
 
@@ -2181,7 +2195,7 @@ printf("int13_f18,41\n");
       break;
 
     default:
-      panic("case 0x%x found in int13_function()\n", (unsigned) GET_AH());
+      panic("case 0x%x found in int13_function()", (unsigned) GET_AH());
       break;
     }
 }
@@ -2302,7 +2316,7 @@ floppy_drive_recal(drive)
   // check port 3f4 for drive readiness
   val8 = inb(0x3f4);
   if ( (val8 & 0xf0) != 0x80 )
-    panic("floppy recal:f07: ctrl not ready\n");
+    panic("floppy recal:f07: ctrl not ready");
 
   // send Recalibrate command (2 bytes) to controller
   outb(0x03f5, 0x07);  // 07: Recalibrate
@@ -2534,7 +2548,7 @@ printf("floppy: drive>1 || head>1 ...\n");
         // check port 3f4 for drive readiness
         val8 = inb(0x3f4);
         if ( (val8 & 0xf0) != 0x80 )
-          panic("int13_diskette:f02: ctrl not ready\n");
+          panic("int13_diskette:f02: ctrl not ready");
 
         // send read-normal-data command (9 bytes) to controller
         outb(0x03f5, 0xe6); // e6: read normal data
@@ -2572,7 +2586,7 @@ printf("floppy: drive>1 || head>1 ...\n");
         // check port 3f4 for accessibility to status bytes
         val8 = inb(0x3f4);
         if ( (val8 & 0xc0) != 0xc0 )
-          panic("int13_diskette: ctrl not ready\n");
+          panic("int13_diskette: ctrl not ready");
 
         // read 7 return status bytes from controller
         // using loop index broken, have to unroll...
@@ -2679,7 +2693,7 @@ printf("floppy: drive>1 || head>1 ...\n");
         // check port 3f4 for drive readiness
         val8 = inb(0x3f4);
         if ( (val8 & 0xf0) != 0x80 )
-          panic("int13_diskette:f03: ctrl not ready\n");
+          panic("int13_diskette:f03: ctrl not ready");
 
         // send read-normal-data command (9 bytes) to controller
         outb(0x03f5, 0xc5); // c5: write normal data
@@ -2717,7 +2731,7 @@ printf("floppy: drive>1 || head>1 ...\n");
         // check port 3f4 for accessibility to status bytes
         val8 = inb(0x3f4);
         if ( (val8 & 0xc0) != 0xc0 )
-          panic("int13_diskette: ctrl not ready\n");
+          panic("int13_diskette: ctrl not ready");
 
         // read 7 return status bytes from controller
         // using loop index broken, have to unroll...
@@ -2746,7 +2760,7 @@ printf("floppy: drive>1 || head>1 ...\n");
 	    SET_CF();
 	    return;
 	  } else {
-            panic("int13_diskette_function: read error\n");
+            panic("int13_diskette_function: read error");
           }
 	}
 
@@ -2869,7 +2883,7 @@ printf("floppy f08\n");
           break;
 
         default: // ?
-          panic("floppy: int13: bad floppy type\n");
+          panic("floppy: int13: bad floppy type");
         }
 
       /* set es & di to point to 11 byte diskette param table */
@@ -2942,7 +2956,7 @@ printf("floppy f18\n");
         printf("floppy: int13: 0x%02x\n", ah);
         return;
         }
-      panic("int13_diskette: AH=%02x\n", ah);
+      panic("int13_diskette: AH=%02x", ah);
     }
 }
 #else  // #if BX_SUPPORT_FLOPPY
@@ -2991,7 +3005,7 @@ set_diskette_current_cyl(drive, cyl)
   Bit8u cyl;
 {
   if (drive > 1)
-    panic("set_diskette_current_cyl(): drive > 1\n");
+    panic("set_diskette_current_cyl(): drive > 1");
   write_byte(0x0040, 0x0094+drive, cyl);
 }
 
@@ -3026,7 +3040,7 @@ determine_floppy_media(drive)
   // check Main Status Register for readiness
   val8 = inb(0x03f4) & 0x80; // Main Status Register
   if (val8 != 0x80)
-    panic("d_f_m: MRQ bit not set\n");
+    panic("d_f_m: MRQ bit not set");
 
   // change line
 
@@ -3036,7 +3050,7 @@ determine_floppy_media(drive)
   outb(0x03f2, DOR); // Digital Output Register
   //
 #endif
-  panic("d_f_m: OK so far\n");
+  panic("d_f_m: OK so far");
 #endif
 }
 
@@ -3058,18 +3072,18 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
   if (drive == 0x80) {
     hd_type = inb_cmos(0x12) & 0xf0;
     if (hd_type != 0xf0)
-      panic("HD0 cmos reg 12h not type F\n");
+      panic("HD0 cmos reg 12h not type F");
     hd_type = inb_cmos(0x19); // HD0: extended type
     if (hd_type != 47)
-      panic("HD0 cmos reg 19h not user definable type 47\n");
+      panic("HD0 cmos reg 19h not user definable type 47");
     iobase = 0x1b;
   } else {
     hd_type = inb_cmos(0x12) & 0x0f;
     if (hd_type != 0x0f)
-      panic("HD1 cmos reg 12h not type F\n");
+      panic("HD1 cmos reg 12h not type F");
     hd_type = inb_cmos(0x1a); // HD0: extended type
     if (hd_type != 47)
-      panic("HD1 cmos reg 1ah not user definable type 47\n");
+      panic("HD1 cmos reg 1ah not user definable type 47");
     iobase = 0x24;
   }
 
@@ -3275,8 +3289,8 @@ int70_function(regs, ds, iret_addr)
   Bit8u val8;
 
   val8 = inb_cmos(0x0c); // Status Reg C
-  if (val8 == 0) panic("int70: regC 0\n");
-  if (val8 & 0x40) panic("int70: periodic request\n");
+  if (val8 == 0) panic("int70: regC 0");
+  if (val8 & 0x40) panic("int70: periodic request");
   if (val8 & 0x20) {
     // Alarm Flag indicates alarm time matches current time
     // call user INT 4Ah alarm handler
@@ -3410,10 +3424,13 @@ int19_loadsector:
   mov  cl, #0x01      ;; sector 1
   mov  dh, #0x00      ;; head 0
   int #0x13
-  jc  bootstrap_problem
+  xor dh,dh
+  jc bootstrap_problem 
+  inc dh
+  cmp WORD [0x7DFE], #0xAA55
+  jne bootstrap_problem
   JMP_AP(0x0000, 0x7c00)
 bootstrap_problem:
-  xor dh,dh
   push dx
   call _boot_failure_msg
   int #0x18 ;; Boot failure
