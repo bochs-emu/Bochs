@@ -861,7 +861,12 @@ typedef
 
 // On gcc2.95+ x86 only
 #if BX_FAST_FUNC_CALL && defined(__i386__) && defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+#if BX_USE_CPU_SMF == 1
 #  define BX_CPP_AttrRegparmN(X) __attribute__((regparm(X)))
+#else
+#  error "FIXME: BX_FAST_FUNC_CALL doesn't work with BX_USE_CPU_SMF = 0"
+#  define BX_CPP_AttrRegparmN(X) /* Not defined */
+#endif
 #else
 #  define BX_CPP_AttrRegparmN(X) /* Not defined */
 #endif
