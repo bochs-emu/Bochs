@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.34 2002-09-05 07:01:30 bdenney Exp $
+// $Id: wxmain.cc,v 1.35 2002-09-05 07:48:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -71,6 +71,16 @@
 // to access the MyFrame and the MyPanel.
 MyFrame *theFrame = NULL;
 MyPanel *thePanel = NULL;
+
+bool isSimThread () {
+  wxThread *current = wxThread::This ();
+  if (current == (wxThread*) theFrame->GetSimThread ()) {
+    wxLogDebug ("isSimThread? yes");
+    return true;
+  }
+  wxLogDebug ("isSimThread? no");
+  return false;
+}
 
 //////////////////////////////////////////////////////////////////////
 // class declarations

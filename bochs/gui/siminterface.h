@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.57 2002-09-05 07:01:30 bdenney Exp $
+// $Id: siminterface.h,v 1.58 2002-09-05 07:48:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -874,3 +874,9 @@ extern bx_simulator_interface_c *SIM;
 extern void bx_init_siminterface ();
 extern void bx_init_main (int argc, char *argv[]);
 extern int bx_continue_after_config_interface (int argc, char *argv[]);
+
+#if BX_WITH_WX
+// returns true if called from the simulator thread.
+// defined in wxmain.cc, usable anywhere.
+bool isSimThread ();
+#endif

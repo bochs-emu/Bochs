@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.18 2002-09-03 05:32:49 bdenney Exp $
+// $Id: wxmain.h,v 1.19 2002-09-05 07:48:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -161,6 +161,7 @@ public:
 
   // called from the sim thread's OnExit() method.
   void OnSimThreadExit ();
+  SimThread *GetSimThread () { return sim_thread; }
 
 private:
   wxCriticalSection sim_thread_lock;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.136 2002-09-05 07:01:28 bdenney Exp $
+// $Id: main.cc,v 1.137 2002-09-05 07:48:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1477,7 +1477,7 @@ bx_init_hardware()
   BX_DEBUG(("bx_init_hardware is setting signal handlers"));
 // if not using debugger, then we can take control of SIGINT.
 // If using debugger, it needs control of this.
-#if BX_DEBUGGER==0
+#if !BX_DEBUGGER /* && !BX_WITH_WX  seems like an improvement */
   signal(SIGINT, bx_signal_handler);
 #endif
 
@@ -2757,6 +2757,18 @@ bx_write_configuration (char *rc, int overwrite)
   void
 bx_signal_handler( int signum)
 {
+#if BX_WITH_WX
+  // in a multithreaded environment, a signal such as SIGINT can be sent to all
+  // threads.  This function is only intended to handle signals in the
+  // simulator thread.  It will simply return if called from any other thread.
+  // Otherwise the BX_PANIC() below can be called in multiple threads at
+  // once, leading to multiple threads trying to display a dialog box,
+  // leading to GUI deadlock.
+  if (!isSimThread ()) {
+    BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
+    return;
+  }
+#endif
 #if BX_GUI_SIGHANDLER
   // GUI signal handler gets first priority, if the mask says it's wanted
   if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
