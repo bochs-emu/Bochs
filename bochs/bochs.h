@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.69 2002-06-28 21:34:30 cbothamy Exp $
+// $Id: bochs.h,v 1.70 2002-07-14 13:23:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,6 +58,7 @@ extern "C" {
 #else
 #  ifndef WIN32
 #    include <sys/time.h>
+#    include <sys/mount.h>
 #  endif
 #  include <sys/types.h>
 #  include <sys/stat.h>
@@ -239,15 +240,10 @@ extern Bit8u DTPageDirty[];
 typedef class logfunctions {
 	char *prefix;
 	int type;
-// values of onoff: 0=ignore, 1=report, 2=fatal
+// values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
 #define ACT_IGNORE 0
 #define ACT_REPORT 1
-#if BX_USE_CONTROL_PANEL
-#  define ACT_ASK    2
-#else
-   // if control panel disabled, then map all ACT_ASK into ACT_FATAL.
-#  define ACT_ASK    ACT_FATAL
-#endif
+#define ACT_ASK    2
 #define ACT_FATAL  3
 #define N_ACT      4
 	int onoff[N_LOGLEV];
