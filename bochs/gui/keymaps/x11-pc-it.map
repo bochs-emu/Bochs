@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-it.map,v 1.1 2002-05-17 20:25:36 cbothamy Exp $
+# $Id: x11-pc-it.map,v 1.2 2002-09-25 08:00:25 bdenney Exp $
 # Target: PC(x86) keyboard, IT keymap
 # Author: Emanuele Goldoni
 #
@@ -121,6 +121,7 @@ BX_KEY_F11                                    none       XK_F11
 BX_KEY_F12                                    none       XK_F12
 BX_KEY_ALT_L                                  none       XK_Alt_L
 BX_KEY_ALT_L                                  none       XK_Meta_L
+BX_KEY_ALT_R                                  none       XK_Alt_R
 BX_KEY_ALT_R                                  none       XK_Mode_switch
 BX_KEY_ALT_R                                  none       XK_Multi_key
 BX_KEY_BACKSLASH                              'ù'	 XK_ugrave

@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-fr.map,v 1.4 2002-03-25 00:57:30 cbothamy Exp $
+# $Id: x11-pc-fr.map,v 1.5 2002-09-25 08:00:24 bdenney Exp $
 # Target: PC(x86) keyboard, FR keymap
 # Author: Christophe Bothamy, Bryce Denney
 #
@@ -130,6 +130,7 @@ BX_KEY_F11                                    none       XK_F11
 BX_KEY_F12                                    none       XK_F12
 BX_KEY_ALT_L                                  none       XK_Alt_L
 BX_KEY_ALT_L                                  none       XK_Meta_L
+BX_KEY_ALT_R                                  none       XK_Alt_R
 BX_KEY_ALT_R                                  none       XK_Mode_switch
 BX_KEY_ALT_R                                  none       XK_Multi_key
 BX_KEY_BACKSLASH                              '*'        XK_asterisk
