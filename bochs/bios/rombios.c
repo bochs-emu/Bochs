@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.68 2002-10-16 07:38:36 cbothamy Exp $
+// $Id: rombios.c,v 1.69 2002-10-16 14:04:41 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,7 +134,7 @@
 
 #define DEBUG_ATA          0
 #define DEBUG_INT13_HD     1
-#define DEBUG_INT13_CD     1
+#define DEBUG_INT13_CD     0
 #define DEBUG_INT13_ET     0
 #define DEBUG_INT13_FL     0
 #define DEBUG_INT15        0
@@ -881,10 +881,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.68 $";
-static char bios_date_string[] = "$Date: 2002-10-16 07:38:36 $";
+static char bios_cvs_version_string[] = "$Revision: 1.69 $";
+static char bios_date_string[] = "$Date: 2002-10-16 14:04:41 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.68 2002-10-16 07:38:36 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.69 2002-10-16 14:04:41 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1992,7 +1992,12 @@ void ata_detect( )
         bitshift++;
 	cylinders >>= 1;
 	heads <<= 1;
+
+	// If we max out the head count
+	if (heads > 128) break;
         }
+      // limit to 1024 cylinders in lchs
+      if (cylinders > 1024) cylinders=1024;
 
       write_byte(ebda_seg,&EbdaData->ata.devices[device].bitshift, bitshift);
 
@@ -4367,7 +4372,7 @@ ASM_END
       if( (cylinder >= read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders)) 
        || (head >= read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads))
        || (sector > read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt) )) {
-        BX_INFO("int13_harddisk: function %02x, parameters out of range %04x/%04x/%04x!\n", cylinder, head, sector);
+        BX_INFO("int13_harddisk: function %02x, parameters out of range %04x/%04x/%04x!\n", GET_AH(), cylinder, head, sector);
 	goto int13_fail;
         }
       
