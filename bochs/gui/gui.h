@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.2 2002-10-07 19:59:10 bdenney Exp $
+// $Id: gui.h,v 1.31.4.3 2002-10-08 22:45:16 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,10 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+extern class bx_gui_c *bx_gui;
 
+// The bx_gui_c class provides data and behavior that is common to
+// all guis.  Each gui implementation will override the abstract methods.
 class bx_gui_c : public logfunctions {
 public:
   bx_gui_c (void);
