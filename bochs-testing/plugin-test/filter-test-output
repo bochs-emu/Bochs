@@ -1,2 +1,0 @@
-#!/bin/sh
-sed 's/VARIES{[^}]*}/VARIES{xxx}/g'
