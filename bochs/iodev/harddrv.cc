@@ -100,7 +100,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.34 2001-09-28 07:18:55 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.35 2001-09-28 22:20:49 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -546,6 +546,72 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 		  }
 		  break;
 	    }
+
+	// List all the read operations that are defined in the ATA/ATAPI spec
+	// that we don't support.  Commands that are listed here will cause a
+	// BX_ERROR, which is non-fatal, and the command will be aborted.
+	case 0x08: BX_ERROR(("read cmd 0x08 (DEVICE RESET) not supported"));command_aborted(0x08); break;
+	case 0x24: BX_ERROR(("read cmd 0x24 (READ SECTOR(S) EXT) not supported"));command_aborted(0x24); break;
+	case 0x25: BX_ERROR(("read cmd 0x25 (READ DMA EXT) not supported"));command_aborted(0x25); break;
+	case 0x26: BX_ERROR(("read cmd 0x26 (READ DMA QUEUED EXT) not supported"));command_aborted(0x26); break;
+	case 0x27: BX_ERROR(("read cmd 0x27 (READ NATIVE MAX ADDRESS EXT) not supported"));command_aborted(0x27); break;
+	case 0x29: BX_ERROR(("read cmd 0x29 (READ MULTIPLE EXT) not supported"));command_aborted(0x29); break;
+	case 0x2A: BX_ERROR(("read cmd 0x2A (READ STREAM DMA) not supported"));command_aborted(0x2A); break;
+	case 0x2B: BX_ERROR(("read cmd 0x2B (READ STREAM PIO) not supported"));command_aborted(0x2B); break;
+	case 0x2F: BX_ERROR(("read cmd 0x2F (READ LOG EXT) not supported"));command_aborted(0x2F); break;
+	case 0x30: BX_ERROR(("read cmd 0x30 (WRITE SECTOR(S)) not supported"));command_aborted(0x30); break;
+	case 0x34: BX_ERROR(("read cmd 0x34 (WRITE SECTOR(S) EXT) not supported"));command_aborted(0x34); break;
+	case 0x35: BX_ERROR(("read cmd 0x35 (WRITE DMA EXT) not supported"));command_aborted(0x35); break;
+	case 0x36: BX_ERROR(("read cmd 0x36 (WRITE DMA QUEUED EXT) not supported"));command_aborted(0x36); break;
+	case 0x37: BX_ERROR(("read cmd 0x37 (SET MAX ADDRESS EXT) not supported"));command_aborted(0x37); break;
+	case 0x38: BX_ERROR(("read cmd 0x38 (CFA WRITE SECTORS W/OUT ERASE) not supported"));command_aborted(0x38); break;
+	case 0x39: BX_ERROR(("read cmd 0x39 (WRITE MULTIPLE EXT) not supported"));command_aborted(0x39); break;
+	case 0x3A: BX_ERROR(("read cmd 0x3A (WRITE STREAM DMA) not supported"));command_aborted(0x3A); break;
+	case 0x3B: BX_ERROR(("read cmd 0x3B (WRITE STREAM PIO) not supported"));command_aborted(0x3B); break;
+	case 0x3F: BX_ERROR(("read cmd 0x3F (WRITE LOG EXT) not supported"));command_aborted(0x3F); break;
+	case 0x40: BX_ERROR(("read cmd 0x40 (READ VERIFY SECTOR(S)) not supported"));command_aborted(0x40); break;
+	case 0x42: BX_ERROR(("read cmd 0x42 (READ VERIFY SECTOR(S) EXT) not supported"));command_aborted(0x42); break;
+	case 0x51: BX_ERROR(("read cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(0x51); break;
+	case 0x70: BX_ERROR(("read cmd 0x70 (SEEK) not supported"));command_aborted(0x70); break;
+	case 0x87: BX_ERROR(("read cmd 0x87 (CFA TRANSLATE SECTOR) not supported"));command_aborted(0x87); break;
+	case 0x90: BX_ERROR(("read cmd 0x90 (EXECUTE DEVICE DIAGNOSTIC) not supported"));command_aborted(0x90); break;
+	case 0x92: BX_ERROR(("read cmd 0x92 (DOWNLOAD MICROCODE) not supported"));command_aborted(0x92); break;
+	case 0xA2: BX_ERROR(("read cmd 0xA2 (SERVICE) not supported"));command_aborted(0xA2); break;
+	case 0xB0: BX_ERROR(("read cmd 0xB0 (SMART DISABLE OPERATIONS) not supported"));command_aborted(0xB0); break;
+	case 0xB1: BX_ERROR(("read cmd 0xB1 (DEVICE CONFIGURATION FREEZE LOCK) not supported"));command_aborted(0xB1); break;
+	case 0xC0: BX_ERROR(("read cmd 0xC0 (CFA ERASE SECTORS) not supported"));command_aborted(0xC0); break;
+	case 0xC4: BX_ERROR(("read cmd 0xC4 (READ MULTIPLE) not supported"));command_aborted(0xC4); break;
+	case 0xC5: BX_ERROR(("read cmd 0xC5 (WRITE MULTIPLE) not supported"));command_aborted(0xC5); break;
+	case 0xC6: BX_ERROR(("read cmd 0xC6 (SET MULTIPLE MODE) not supported"));command_aborted(0xC6); break;
+	case 0xC7: BX_ERROR(("read cmd 0xC7 (READ DMA QUEUED) not supported"));command_aborted(0xC7); break;
+	case 0xC8: BX_ERROR(("read cmd 0xC8 (READ DMA) not supported"));command_aborted(0xC8); break;
+	case 0xCA: BX_ERROR(("read cmd 0xCA (WRITE DMA) not supported"));command_aborted(0xCA); break;
+	case 0xCC: BX_ERROR(("read cmd 0xCC (WRITE DMA QUEUED) not supported"));command_aborted(0xCC); break;
+	case 0xCD: BX_ERROR(("read cmd 0xCD (CFA WRITE MULTIPLE W/OUT ERASE) not supported"));command_aborted(0xCD); break;
+	case 0xD1: BX_ERROR(("read cmd 0xD1 (CHECK MEDIA CARD TYPE) not supported"));command_aborted(0xD1); break;
+	case 0xDA: BX_ERROR(("read cmd 0xDA (GET MEDIA STATUS) not supported"));command_aborted(0xDA); break;
+	case 0xDE: BX_ERROR(("read cmd 0xDE (MEDIA LOCK) not supported"));command_aborted(0xDE); break;
+	case 0xDF: BX_ERROR(("read cmd 0xDF (MEDIA UNLOCK) not supported"));command_aborted(0xDF); break;
+	case 0xE0: BX_ERROR(("read cmd 0xE0 (STANDBY IMMEDIATE) not supported"));command_aborted(0xE0); break;
+	case 0xE1: BX_ERROR(("read cmd 0xE1 (IDLE IMMEDIATE) not supported"));command_aborted(0xE1); break;
+	case 0xE2: BX_ERROR(("read cmd 0xE2 (STANDBY) not supported"));command_aborted(0xE2); break;
+	case 0xE3: BX_ERROR(("read cmd 0xE3 (IDLE) not supported"));command_aborted(0xE3); break;
+	case 0xE4: BX_ERROR(("read cmd 0xE4 (READ BUFFER) not supported"));command_aborted(0xE4); break;
+	case 0xE5: BX_ERROR(("read cmd 0xE5 (CHECK POWER MODE) not supported"));command_aborted(0xE5); break;
+	case 0xE6: BX_ERROR(("read cmd 0xE6 (SLEEP) not supported"));command_aborted(0xE6); break;
+	case 0xE7: BX_ERROR(("read cmd 0xE7 (FLUSH CACHE) not supported"));command_aborted(0xE7); break;
+	case 0xE8: BX_ERROR(("read cmd 0xE8 (WRITE BUFFER) not supported"));command_aborted(0xE8); break;
+	case 0xEA: BX_ERROR(("read cmd 0xEA (FLUSH CACHE EXT) not supported"));command_aborted(0xEA); break;
+	case 0xED: BX_ERROR(("read cmd 0xED (MEDIA EJECT) not supported"));command_aborted(0xED); break;
+	case 0xEF: BX_ERROR(("read cmd 0xEF (SET FEATURES) not supported"));command_aborted(0xEF); break;
+	case 0xF1: BX_ERROR(("read cmd 0xF1 (SECURITY SET PASSWORD) not supported"));command_aborted(0xF1); break;
+	case 0xF2: BX_ERROR(("read cmd 0xF2 (SECURITY UNLOCK) not supported"));command_aborted(0xF2); break;
+	case 0xF3: BX_ERROR(("read cmd 0xF3 (SECURITY ERASE PREPARE) not supported"));command_aborted(0xF3); break;
+	case 0xF4: BX_ERROR(("read cmd 0xF4 (SECURITY ERASE UNIT) not supported"));command_aborted(0xF4); break;
+	case 0xF5: BX_ERROR(("read cmd 0xF5 (SECURITY FREEZE LOCK) not supported"));command_aborted(0xF5); break;
+	case 0xF6: BX_ERROR(("read cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported"));command_aborted(0xF6); break;
+	case 0xF8: BX_ERROR(("read cmd 0xF8 (READ NATIVE MAX ADDRESS) not supported"));command_aborted(0xF8); break;
+	case 0xF9: BX_ERROR(("read cmd 0xF9 (SET MAX ADDRESS) not supported"));command_aborted(0xF9); break;
 
         default:
           BX_PANIC(("IO read(1f0h): current command is %02xh",
@@ -1644,16 +1710,63 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
 	  break;
 	
-	case 0xe7: // FLUSH CACHE
-	  // We don't have a cache!  This is showing up in win2000 and freebsd.
-	  BX_INFO(("IO write(1f7h): flush cache ignored"));
-          command_aborted(value);
-          break;
+	// List all the write operations that are defined in the ATA/ATAPI spec
+	// that we don't support.  Commands that are listed here will cause a
+	// BX_ERROR, which is non-fatal, and the command will be aborted.
+	case 0x24: BX_ERROR(("write cmd 0x24 (READ SECTOR(S) EXT) not supported"));command_aborted(0x24); break;
+	case 0x25: BX_ERROR(("write cmd 0x25 (READ DMA EXT) not supported"));command_aborted(0x25); break;
+	case 0x26: BX_ERROR(("write cmd 0x26 (READ DMA QUEUED EXT) not supported"));command_aborted(0x26); break;
+	case 0x27: BX_ERROR(("write cmd 0x27 (READ NATIVE MAX ADDRESS EXT) not supported"));command_aborted(0x27); break;
+	case 0x29: BX_ERROR(("write cmd 0x29 (READ MULTIPLE EXT) not supported"));command_aborted(0x29); break;
+	case 0x2A: BX_ERROR(("write cmd 0x2A (READ STREAM DMA) not supported"));command_aborted(0x2A); break;
+	case 0x2B: BX_ERROR(("write cmd 0x2B (READ STREAM PIO) not supported"));command_aborted(0x2B); break;
+	case 0x2F: BX_ERROR(("write cmd 0x2F (READ LOG EXT) not supported"));command_aborted(0x2F); break;
+	case 0x34: BX_ERROR(("write cmd 0x34 (WRITE SECTOR(S) EXT) not supported"));command_aborted(0x34); break;
+	case 0x35: BX_ERROR(("write cmd 0x35 (WRITE DMA EXT) not supported"));command_aborted(0x35); break;
+	case 0x36: BX_ERROR(("write cmd 0x36 (WRITE DMA QUEUED EXT) not supported"));command_aborted(0x36); break;
+	case 0x37: BX_ERROR(("write cmd 0x37 (SET MAX ADDRESS EXT) not supported"));command_aborted(0x37); break;
+	case 0x38: BX_ERROR(("write cmd 0x38 (CFA WRITE SECTORS W/OUT ERASE) not supported"));command_aborted(0x38); break;
+	case 0x39: BX_ERROR(("write cmd 0x39 (WRITE MULTIPLE EXT) not supported"));command_aborted(0x39); break;
+	case 0x3A: BX_ERROR(("write cmd 0x3A (WRITE STREAM DMA) not supported"));command_aborted(0x3A); break;
+	case 0x3B: BX_ERROR(("write cmd 0x3B (WRITE STREAM PIO) not supported"));command_aborted(0x3B); break;
+	case 0x3F: BX_ERROR(("write cmd 0x3F (WRITE LOG EXT) not supported"));command_aborted(0x3F); break;
+	case 0x42: BX_ERROR(("write cmd 0x42 (READ VERIFY SECTOR(S) EXT) not supported"));command_aborted(0x42); break;
+	case 0x51: BX_ERROR(("write cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(0x51); break;
+	case 0x70: BX_ERROR(("write cmd 0x70 (SEEK) not supported"));command_aborted(0x70); break;
+	case 0x87: BX_ERROR(("write cmd 0x87 (CFA TRANSLATE SECTOR) not supported"));command_aborted(0x87); break;
+	case 0x92: BX_ERROR(("write cmd 0x92 (DOWNLOAD MICROCODE) not supported"));command_aborted(0x92); break;
+	case 0xB0: BX_ERROR(("write cmd 0xB0 (SMART commands) not supported"));command_aborted(0xB0); break;
+	case 0xB1: BX_ERROR(("write cmd 0xB1 (DEVICE CONFIGURATION commands) not supported"));command_aborted(0xB1); break;
+	case 0xC0: BX_ERROR(("write cmd 0xC0 (CFA ERASE SECTORS) not supported"));command_aborted(0xC0); break;
+	case 0xC4: BX_ERROR(("write cmd 0xC4 (READ MULTIPLE) not supported"));command_aborted(0xC4); break;
+	case 0xC5: BX_ERROR(("write cmd 0xC5 (WRITE MULTIPLE) not supported"));command_aborted(0xC5); break;
+	case 0xC7: BX_ERROR(("write cmd 0xC7 (READ DMA QUEUED) not supported"));command_aborted(0xC7); break;
+	case 0xC8: BX_ERROR(("write cmd 0xC8 (READ DMA) not supported"));command_aborted(0xC8); break;
+	case 0xCA: BX_ERROR(("write cmd 0xCA (WRITE DMA) not supported"));command_aborted(0xCA); break;
+	case 0xCC: BX_ERROR(("write cmd 0xCC (WRITE DMA QUEUED) not supported"));command_aborted(0xCC); break;
+	case 0xCD: BX_ERROR(("write cmd 0xCD (CFA WRITE MULTIPLE W/OUT ERASE) not supported"));command_aborted(0xCD); break;
+	case 0xD1: BX_ERROR(("write cmd 0xD1 (CHECK MEDIA CARD TYPE) not supported"));command_aborted(0xD1); break;
+	case 0xDA: BX_ERROR(("write cmd 0xDA (GET MEDIA STATUS) not supported"));command_aborted(0xDA); break;
+	case 0xDE: BX_ERROR(("write cmd 0xDE (MEDIA LOCK) not supported"));command_aborted(0xDE); break;
+	case 0xDF: BX_ERROR(("write cmd 0xDF (MEDIA UNLOCK) not supported"));command_aborted(0xDF); break;
+	case 0xE0: BX_ERROR(("write cmd 0xE0 (STANDBY IMMEDIATE) not supported"));command_aborted(0xE0); break;
+	case 0xE2: BX_ERROR(("write cmd 0xE2 (STANDBY) not supported"));command_aborted(0xE2); break;
+	case 0xE3: BX_ERROR(("write cmd 0xE3 (IDLE) not supported"));command_aborted(0xE3); break;
+	case 0xE4: BX_ERROR(("write cmd 0xE4 (READ BUFFER) not supported"));command_aborted(0xE4); break;
+	case 0xE6: BX_ERROR(("write cmd 0xE6 (SLEEP) not supported"));command_aborted(0xE6); break;
+        case 0xE7: BX_ERROR(("write cmd 0xE7 (FLUSH CACHE) not supported"));command_aborted(0xE7); break;
+	case 0xE8: BX_ERROR(("write cmd 0xE8 (WRITE BUFFER) not supported"));command_aborted(0xE8); break;
+	case 0xEA: BX_ERROR(("write cmd 0xEA (FLUSH CACHE EXT) not supported"));command_aborted(0xEA); break;
+	case 0xED: BX_ERROR(("write cmd 0xED (MEDIA EJECT) not supported"));command_aborted(0xED); break;
+	case 0xF1: BX_ERROR(("write cmd 0xF1 (SECURITY SET PASSWORD) not supported"));command_aborted(0xF1); break;
+	case 0xF2: BX_ERROR(("write cmd 0xF2 (SECURITY UNLOCK) not supported"));command_aborted(0xF2); break;
+	case 0xF3: BX_ERROR(("write cmd 0xF3 (SECURITY ERASE PREPARE) not supported"));command_aborted(0xF3); break;
+	case 0xF4: BX_ERROR(("write cmd 0xF4 (SECURITY ERASE UNIT) not supported"));command_aborted(0xF4); break;
+	case 0xF5: BX_ERROR(("write cmd 0xF5 (SECURITY FREEZE LOCK) not supported"));command_aborted(0xF5); break;
+	case 0xF6: BX_ERROR(("write cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported"));command_aborted(0xF6); break;
+	case 0xF8: BX_ERROR(("write cmd 0xF8 (READ NATIVE MAX ADDRESS) not supported"));command_aborted(0xF8); break;
+	case 0xF9: BX_ERROR(("write cmd 0xF9 (SET MAX ADDRESS) not supported"));command_aborted(0xF9); break;
 
-        case 0xf0: // Exabyte enable nest command (non-standard)
-	  BX_INFO(("Not implemented command 0xf0: exabyte enable nest"));
-          command_aborted(value);
-          break;
 
 	default:
           BX_PANIC(("IO write(1f7h): command 0x%02x", (unsigned) value));
