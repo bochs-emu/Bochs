@@ -13,7 +13,7 @@ int gui_button_pressed (int which);
 ///////////////////////////////////////////////////////////////////
 
 typedef enum {
-  BX_ASYNC_EVT_KEY_PRESS,         // vga gui -> simulator
+  BX_ASYNC_EVT_KEY_PRESS = 2000,  // vga gui -> simulator
   BX_ASYNC_EVT_KEY_RELEASE,       // vga gui -> simulator
   BX_ASYNC_EVT_MOUSE,             // vga gui -> simulator
   BX_SYNC_EVT_GET_PARAM,          // cpanel -> simulator -> cpanel
@@ -25,7 +25,7 @@ typedef enum {
 } BxEventType;
 
 typedef union {
-  Bit32s val;
+  Bit32s s32;
   char *charptr;
 } AnyParamVal;
 
@@ -45,6 +45,7 @@ typedef struct {
       // type is BX_EVT_GET_PARAM, BX_EVT_SET_PARAM, BX_EVT_ASK
       bx_id id;         // id number of parameter
       AnyParamVal val;
+	  Bit32s success;
     } param;
     struct {
       // type is BX_EVT_LOG_MSG
