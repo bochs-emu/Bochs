@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.54 2002-09-28 09:38:58 sshwarts Exp $
+// $Id: cpu.cc,v 1.55 2002-09-29 14:16:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -128,8 +128,15 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
 #endif
 
-
+#if BX_INSTRUMENTATION
+  if (setjmp( BX_CPU_THIS_PTR jmp_buf_env )) 
+  { 
+    // only from exception function can we get here ...
+    BX_INSTR_NEW_INSTRUCTION(CPU_ID);
+  }
+#else
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
+#endif
 
   // We get here either by a normal function call, or by a longjmp
   // back from an exception() call.  In either case, commit the
