@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.29 2004-01-01 23:10:33 cbothamy Exp $
+$Id: misc.txt,v 1.30 2004-01-04 18:53:58 cbothamy Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -370,7 +370,7 @@ so that it sticks to the release tag.
 
 cp -a clean-anon bochs-2.0.pre3
 cd bochs-2.0.pre3
-cvs upd -r REL_2_0_pre3_FINAL
+cvs upd -P -r REL_2_0_pre3_FINAL
 cd ..
 tar czvf bochs-2.0.pre3.tar.gz --exclude CVS --exclude .cvsignore bochs-2.0.pre3
 
