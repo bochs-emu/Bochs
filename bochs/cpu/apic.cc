@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.19 2002-09-30 22:18:52 bdenney Exp $
+// $Id: apic.cc,v 1.20 2002-10-03 04:45:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -642,7 +642,7 @@ bx_local_apic_c::acknowledge_int ()
     BX_INFO(("Status after setting isr:"));
     print_status ();
   }
-  cpu->INTR = 0;
+  cpu->set_INTR (0);
   cpu->int_from_local_apic = 0;
   service_local_apic ();  // will set INTR again if another is ready
   return vector;
