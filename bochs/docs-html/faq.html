@@ -22,20 +22,12 @@
 <BR>
 <a name="license"></a>
 <BR><B><FONT COLOR="#000066">Q: Is bochs Open Source?.</FONT></B>
-<BR><b>Yes!</b> &nbsp;Thanks <u>very</u> much to
-    <a href="http://www.linux-mandrake.com">MandrakeSoft</a>, producers of
-    the much acclaimed Linux-Mandrake distribution. &nbsp;They
-    have enabled bochs to be made Open Source, and I have become
-    part of their team, working on plex86/bochs.  Bochs is now released
-    under the <a href="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</a>.
 
 <BR>
-<BR><B><FONT COLOR="#000066">Q: Who is the author of bochs?</FONT></B>
-<BR>Well, I'm (Kevin Lawton) the primary author
-    of bochs.  There have been bug fixes, enhancements, and
-    code contributions from some few hundred people to date.
-    Support has been incredible!  And it's growing.  Without
-    it, I would have quit years ago.
+<B>Yes!</B>
+Bochs is released under the LGPL, much thanks to <a
+href="http://www.linux-mandrake.com">MandrakeSoft</a>, makers of the
+Linux-Mandrake distribution.
 
 <BR>
 <BR><B><FONT COLOR="#000066">Q: How do you pronounce "bochs"?</FONT></B>
@@ -45,38 +37,29 @@
     a box inside a box.
 
 <BR>
+<BR><B><FONT COLOR="#000066">Q: Who is the author of bochs?</FONT></B>
+<BR>Kevin Lawton is the primary author of bochs.  There have 
+    been bug fixes, enhancements, and code contributions from some few
+    hundred people, so it is not possible to list them all.  Kevin
+    is presently working on a PC virtualization project called
+    <a href="http://www.plex86.org">plex86</a> and no longer maintain bochs.
+
+<BR>
+<BR><B><FONT COLOR="#000066">Q: Who maintains bochs now?</FONT></B>
+<BR>With Kevin's help, in April 2001, the members of the
+    bochs-developers mailing list set up a new official bochs site hosted
+    by <a href="http://sourceforge.net">Source Forge</a>.  The current
+    admins on this project are Bryce Denney and Greg Alexander.
+
+<BR>
 <BR><B><FONT COLOR="#000066">Q: Tell me about peformance when running bochs?</FONT></B>
-<BR><I>Up to now</I>, bochs has exclusively used interpreter
-    emulation technology; fetch in an instruction, decode,
-    then execute it.  I am currently in the process of adding
-    dynamic translation, which allows for small x86 code sequences
-    to be translated into native CPU code sequences, on-the-fly.
-    This native code is cached, so it can be run any number of
-    times thereafter.  There's an architecture neutral part
-    to the dynamic translation, and an architecture specific
-    part (back-end).  There needs to be a back-end for each
-    platform bochs runs on.  It's too early for me to comment
-    on performance using dynamic translation.  But, I have tested
-    a few code sample, and I walked away with a smile on my face.
-    I'm hoping to release the framework for this in the next
-    release or two.  It won't have many instructions translated,
-    but those will be added incrementally, and quickly, once the
-    framework is stable.  The first backends will support
-    Linux/x86 and BeOS/x86.  Probably SPARC after that.  It
-    would be helpful if I could get a high-end PPC platform
-    loaner.  Multiple CPU's would be wonderful, but not essential.
-    I'll need one for writing a back-end for it.
-    Also, I want to add threading to bochs.  At some point, I want to
-    put certain parts (optionally) in their own thread.  Also,
-    I believe with very careful lightweight thread communication,
-    it may be possible to thread the CPU emulation itself.
-    This idea was suggested on the developer's email list.
-<P> So, back to your question.  If you need speed, wait for
-    dynamic translation.  In interpreted mode, I get approximately
-    1.5MIPS using bochs on my 400Mhz PII Linux machine.  In dynamic
-    translation mode, you will see a lag as bochs encounters
-    new code, then it'll get snappy and run at a much higher
-    rate than in interpreted mode.
+<BR>Because Bochs emulates every x86 instruction and all the devices in a PC
+system, it does not reach high emulation speeds.  Kevin reported 
+approximately 1.5MIPS using bochs on a 400Mhz PII Linux machine.
+Users who have an x86 processor and want the highest emulation speeds
+may want to consider PC virtualization sotware uch as plex86 (free) or 
+vmware (commercial).
+
 
 <BR>
 <BR><B><FONT COLOR="#000066">Q: Does bochs use a disk partition to install the OS?</FONT></B>
@@ -103,27 +86,23 @@
 
 <BR>
 <BR><B><FONT COLOR="#000066">Q: Do you know of any snapshots of Bochs running Win95?</FONT></B>
-<BR>There are some on external project sites.  Look at the
-   main bochs web page under "What is Bochs" or other topic.
-   I don't include any, because I'm trying to keep the web site
-   very low bandwidth.
+<BR>Yes!  Look for "screen shots" on the <a href="http://bochs.sourceforge.net">Bochs home page</a> or on other Bochs sites.
 
 <BR>
 <BR><B><FONT COLOR="#000066">Q: Does bochs support a CDROM?</FONT></B>
-<BR>Not yet.  However you can use the "mtools" package on quite
-   a few platforms, to copy files from your CDROM to a disk image
-   file.  Make sure to comply with all software copyright issues.
+<BR>Yes, a CDROM is supported in Linux, Windows, and OpenBSD.  The
+CDROM drivers for bochs allow the guest operating system to access the
+host operating system's CDROM data directly.
 
 <BR>
 <BR><B><FONT COLOR="#000066">Q: Does bochs support a sound device?</FONT></B>
-<BR>Not yet.  There are efforts in this area going on by
-   contributing authors.  The emulation is of a Sound Blaster.
+<BR>Yes, there is Sound Blaster emulation support for Windows and Linux.
 
 <BR>
 <BR><B><FONT COLOR="#000066">Q: Does bochs support a network card?</FONT></B>
-<BR>Not yet.  There are also efforts in this area going on by
-   contributing authors.  The emulation is of an NE2000 NIC,
-   and I'm told it's quite far along.
+<BR>Supposedly yes.  There is emulation for an NE2000 NIC in the current
+releases, though I have not heard whether it works or not.  If you try it,
+please fill out a testing form or bug report.
 
 <BR>
 <BR><B><FONT COLOR="#000066">Q: What applications are known to run inside of bochs?</FONT></B>
