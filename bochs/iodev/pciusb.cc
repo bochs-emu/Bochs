@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.10 2004-08-06 15:49:55 vruppert Exp $
+// $Id: pciusb.cc,v 1.11 2004-09-16 18:34:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -287,8 +287,8 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
               | BX_USB_THIS hub[0].usb_port[port].low_speed << 8
               | 1 << 7
               | BX_USB_THIS hub[0].usb_port[port].resume << 6
-              | BX_USB_THIS hub[0].usb_port[port].line_dplus << 5
-              | BX_USB_THIS hub[0].usb_port[port].line_dminus << 4
+              | BX_USB_THIS hub[0].usb_port[port].line_dminus << 5
+              | BX_USB_THIS hub[0].usb_port[port].line_dplus << 4
               | BX_USB_THIS hub[0].usb_port[port].able_changed << 3
               | BX_USB_THIS hub[0].usb_port[port].enabled << 2
               | BX_USB_THIS hub[0].usb_port[port].connect_changed << 1
@@ -355,7 +355,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (offset) {
     case 0x00: // command register (16-bit) (R/W)
       if (value & 0xFF00)
-        BX_ERROR(("write to command register with bits 15:8 not zero: 0x%04x", value));
+        BX_DEBUG(("write to command register with bits 15:8 not zero: 0x%04x", value));
 
       BX_USB_THIS hub[0].usb_command.max_packet_size = (value & 0x80) ? 1: 0;
       BX_USB_THIS hub[0].usb_command.configured = (value & 0x40) ? 1: 0;
@@ -386,7 +386,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x02: // status register (16-bit) (R/WC)
       if (value & 0xFFC0)
-        BX_ERROR(("write to status register with bits 15:6 not zero: 0x%04x", value));
+        BX_DEBUG(("write to status register with bits 15:6 not zero: 0x%04x", value));
 
       BX_USB_THIS hub[0].usb_status.host_halted = (value & 0x20) ? 0: BX_USB_THIS hub[0].usb_status.host_halted;
       BX_USB_THIS hub[0].usb_status.host_error = (value & 0x10) ? 0: BX_USB_THIS hub[0].usb_status.host_error;
@@ -398,7 +398,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x04: // interrupt enable register (16-bit)
       if (value & 0xFFF0)
-        BX_ERROR(("write to interrupt enable register with bits 15:4 not zero: 0x%04x", value));
+        BX_DEBUG(("write to interrupt enable register with bits 15:4 not zero: 0x%04x", value));
 
       BX_USB_THIS hub[0].usb_enable.short_packet  = (value & 0x08) ? 1: 0;
       BX_USB_THIS hub[0].usb_enable.on_complete  = (value & 0x04) ? 1: 0;
@@ -411,13 +411,13 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x06: // frame number register (16-bit)
       if (value & 0xF800)
-        BX_ERROR(("write to frame number register with bits 15:11 not zero: 0x%04x", value));
+        BX_DEBUG(("write to frame number register with bits 15:11 not zero: 0x%04x", value));
 
       if (BX_USB_THIS hub[0].usb_status.host_halted)
         BX_USB_THIS hub[0].usb_frame_num.frame_num = value;
       else
         // ignored by the hardward, but lets report it anyway
-        BX_ERROR(("write to frame number register with STATUS.HALTED == 0"));
+        BX_DEBUG(("write to frame number register with STATUS.HALTED == 0"));
 
       break;
 
@@ -430,7 +430,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x0C: // start of Frame Modify register (8-bit)
       if (value & 0x80)
-        BX_ERROR(("write to SOF Modify register with bit 7 not zero: 0x%04x", value));
+        BX_DEBUG(("write to SOF Modify register with bit 7 not zero: 0x%04x", value));
 
        BX_USB_THIS hub[0].usb_sof.sof_timing = value;
        break;
@@ -440,22 +440,20 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       port = (offset & 0x0F) >> 1;
       if (port < USB_NUM_PORTS) {
         if (value & ((1<<5) | (1<<4) | (1<<0)))
-          BX_PANIC(("write to one or more read-only bits in port%d register: 0x%04x", port, value));
+          BX_DEBUG(("write to one or more read-only bits in port%d register: 0x%04x", port, value));
         if (!(value & (1<<7)))
-          BX_ERROR(("write to port%d register bit 7 = 0", port));
+          BX_DEBUG(("write to port%d register bit 7 = 0", port));
         if (value & (1<<8))
-          BX_INFO(("write to bit 8 in port%d register ignored", port));
-        if (value & (1<<2))
-          BX_INFO(("port%d enabled ignored.  Not implemented", port));
+          BX_DEBUG(("write to bit 8 in port%d register ignored", port));
         if ((value & (1<<12)) && BX_USB_THIS hub[0].usb_command.suspend)
-          BX_ERROR(("write to port%d register bit 12 when in Global-Suspend", port));
+          BX_DEBUG(("write to port%d register bit 12 when in Global-Suspend", port));
 
         BX_USB_THIS hub[0].usb_port[port].suspend = (value & (1<<12)) ? 1 : 0;
         BX_USB_THIS hub[0].usb_port[port].reset = (value & (1<<9)) ? 1 : 0;
         BX_USB_THIS hub[0].usb_port[port].resume = (value & (1<<6)) ? 1 : 0;
-        BX_USB_THIS hub[0].usb_port[port].able_changed = (value & (1<<3)) ? 0 : BX_USB_THIS hub[0].usb_port[0].able_changed;
+        BX_USB_THIS hub[0].usb_port[port].able_changed = (value & (1<<3)) ? 0 : BX_USB_THIS hub[0].usb_port[port].able_changed;
         BX_USB_THIS hub[0].usb_port[port].enabled = (value & (1<<2)) ? 1 : 0;
-        BX_USB_THIS hub[0].usb_port[port].connect_changed = (value & (1<<1)) ? 0 : BX_USB_THIS hub[0].usb_port[0].connect_changed;
+        BX_USB_THIS hub[0].usb_port[port].connect_changed = (value & (1<<1)) ? 0 : BX_USB_THIS hub[0].usb_port[port].connect_changed;
         break;
       }
       // else fall through to default
@@ -630,6 +628,13 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x05: // disallowing write to command hi-byte
         case 0x06: // disallowing write to status lo-byte (is that expected?)
           strcpy(szTmp2, "..");
+          break;
+        case 0x3c:
+          if (value8 != oldval) {
+            BX_INFO(("new irq line = %d", value8));
+            BX_USB_THIS hub[0].pci_conf[address+i] = value8;
+          }
+          sprintf(szTmp2, "%02x", value8);
           break;
         case 0x20:
         case 0x21:
