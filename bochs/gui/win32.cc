@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.47 2002-11-19 05:47:44 bdenney Exp $
+// $Id: win32.cc,v 1.48 2002-12-26 18:24:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 #include "bochs.h"
 #if BX_WITH_WIN32
 
-#include "icon_bochs.h"
+#include "win32res.h"
 #include "font/vga.bitmap.h"
 // windows.h is included by bochs.h
 #include <commctrl.h>
@@ -387,12 +387,11 @@ VOID UIThread(PVOID pvoid) {
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = stInfo.hInstance;
-  wndclass.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+  wndclass.hIcon = LoadIcon (stInfo.hInstance, MAKEINTRESOURCE(ICON_BOCHS));
   wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
   wndclass.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szAppName;
-  wndclass.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
 
   RegisterClassEx (&wndclass);
 
@@ -402,12 +401,11 @@ VOID UIThread(PVOID pvoid) {
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = stInfo.hInstance;
-  wndclass.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+  wndclass.hIcon = NULL;
   wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
   wndclass.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = "SIMWINDOW";
-  wndclass.hIconSm = NULL;
 
   RegisterClassEx (&wndclass);
 

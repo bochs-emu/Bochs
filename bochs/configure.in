@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.194 2002-12-21 16:36:07 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.195 2002-12-26 18:24:40 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1770,6 +1770,7 @@ if test "$with_win32" = yes; then
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32_VCPP)"
        ;;
     *-cygwin* | *-mingw32*)
+       EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32)"
        ;;
     *) echo Unsupported compile setup: GUI library is win32, but target is neither windows nor cygwin.

@@ -1,0 +1,4 @@
+#include <windows.h>
+#include "gui\win32res.h"
+
+ICON_BOCHS ICON build\win32\nsis\bochs.ico
