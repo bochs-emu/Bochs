@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.17 2001-10-03 13:10:37 bdenney Exp $
+// $Id: rombios.c,v 1.18 2001-10-05 23:58:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -271,7 +271,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.17 2001-10-03 13:10:37 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.18 2001-10-05 23:58:45 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -2252,8 +2252,16 @@ printf("int13_f14\n");
 
     case 0x18: /* */
     case 0x41: // IBM/MS installation check
-printf("int13_f18,41\n");
-      SET_AH(1);  // unsupported
+    case 0x42: // IBM/MS extended read
+    case 0x43: // IBM/MS extended write
+    case 0x44: // IBM/MS verify sectors
+    case 0x45: // IBM/MS lock/unlock drive
+    case 0x46: // IBM/MS eject media
+    case 0x47: // IBM/MS extended seek
+    case 0x48: // IBM/MS get drive parameters
+    case 0x49: // IBM/MS extended media change
+printf("int13_f18,41-49\n");
+      SET_AH(1);  // code=invalid function in AH or invalid parameter
       set_disk_ret_status(1);
       SET_CF(); /* unsuccessful */
       return;
