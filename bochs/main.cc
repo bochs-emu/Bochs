@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.226 2003-05-03 16:37:16 cbothamy Exp $
+// $Id: main.cc,v 1.227 2003-05-27 18:19:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,6 +85,7 @@ static logfunctions thePluginLog;
 logfunctions *pluginlog = &thePluginLog;
 
 bx_startup_flags_t bx_startup_flags;
+bx_bool bx_user_quit;
 
 /* typedefs */
 
@@ -1524,6 +1525,7 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 #endif
 
 int bxmain () {
+  bx_user_quit = 0;
   bx_init_siminterface ();   // create the SIM object
   static jmp_buf context;
   if (setjmp (context) == 0) {
@@ -1554,11 +1556,14 @@ int bxmain () {
   }
   SIM->set_quit_context (NULL);
 #if defined(WIN32)
-  // ask user to press ENTER before exiting, so that they can read messages
-  // before the console window is closed.
-  fprintf (stderr, "\nBochs is exiting. Press ENTER when you're ready to close this window.\n");
-  char buf[16];
-  fgets (buf, sizeof(buf), stdin);
+  if (!bx_user_quit) {
+    // ask user to press ENTER before exiting, so that they can read messages
+    // before the console window is closed. This isn't necessary after pressing
+    // the power button.
+    fprintf (stderr, "\nBochs is exiting. Press ENTER when you're ready to close this window.\n");
+    char buf[16];
+    fgets (buf, sizeof(buf), stdin);
+  }
 #endif
   return SIM->get_exit_code ();
 }

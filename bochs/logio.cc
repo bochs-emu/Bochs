@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.40 2002-12-17 05:58:43 bdenney Exp $
+// $Id: logio.cc,v 1.41 2003-05-27 18:19:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -488,6 +488,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       setonoff (level, ACT_REPORT);
       break;
     case BX_LOG_ASK_CHOICE_DIE:
+      bx_user_quit = 1;
       in_ask_already = 0;  // because fatal will longjmp out
       fatal (prefix, fmt, ap, 1);
       // should never get here

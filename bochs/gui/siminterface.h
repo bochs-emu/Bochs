@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.100 2003-05-03 16:37:17 cbothamy Exp $
+// $Id: siminterface.h,v 1.101 2003-05-27 18:19:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1366,3 +1366,4 @@ typedef struct BOCHSAPI {
 } bx_startup_flags_t;
 
 BOCHSAPI extern bx_startup_flags_t bx_startup_flags;
+BOCHSAPI extern bx_bool bx_user_quit;
