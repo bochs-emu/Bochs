@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.28.2.1 2001-12-10 12:45:22 bdenney Exp $
+$Id: user.dbk,v 1.28.2.2 2001-12-10 14:58:13 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -499,10 +499,8 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 </table>
 </section>  <!-- End Platforms section -->
 
-</chapter>  <!-- End of Introduction to Bochs -->
-
 <!-- *************************************************************** -->
-<chapter><title>FAQ</title>
+<section><title>FAQ</title>
 <qandaset>
   <qandaentry>
      <question>
@@ -691,7 +689,29 @@ to mention, running DOOM, though at then-pathetic speeds.
 -->
 
 </qandaset>
+</section>
+
+</chapter>  <!-- End of Introduction to Bochs -->
+
+<!-- *************************************************************** -->
+<chapter><title>Release Notes</title>
+<section>
+<title>Release Notes by Version</title>
+<itemizedlist>
+<listitem><para><ulink url="http://bochs.sf.net/docs-html/changelog.html#v1.3">Version 1.3 Change Log</ulink></para></listitem>
+<listitem><para><ulink url="http://bochs.sf.net/docs-html/changelog.html#v1.2.1">Version 1.2.1 Change Log</ulink></para></listitem>
+<listitem><para><ulink url="http://bochs.sf.net/docs-html/changelog.html#v1.2">Version 1.2 Change Log</ulink></para></listitem>
+<listitem><para><ulink url="http://bochs.sf.net/docs-html/changelog.html#v1.2.pre1">Version 1.2.pre1 Change Log</ulink></para></listitem>
+<listitem><para><ulink url="http://bochs.sf.net/docs-html/changelog.html#v1.1.2">Version 1.1.2 Change Log</ulink></para></listitem>
+<listitem><para><ulink url="http://bochs.sf.net/docs-html/changelog.html#v1.1.1">Version 1.1.1 Change Log</ulink></para></listitem>
+<listitem><para><ulink url="http://bochs.sf.net/docs-html/changelog.html#v1.1">Version 1.1 Change Log</ulink></para></listitem>
+</itemizedlist>
+
+</section>
 </chapter>
+
+
+
 
 <!-- *************************************************************** -->
 <chapter><title>Installation</title>
