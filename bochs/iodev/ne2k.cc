@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.31 2002-03-09 00:28:07 bdenney Exp $
+// $Id: ne2k.cc,v 1.32 2002-03-09 01:05:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.31 2002-03-09 00:28:07 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.32 2002-03-09 01:05:41 bdenney Exp $"));
 	// nothing for now
 }
 
@@ -1235,7 +1235,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.31 2002-03-09 00:28:07 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.32 2002-03-09 01:05:41 bdenney Exp $"));
   BX_NE2K_THIS devices = d;
 
 
@@ -1303,6 +1303,8 @@ bx_ne2k_c::init(bx_devices_c *d)
 						this);
     
     if (BX_NE2K_THIS ethdev == NULL) {
+      BX_PANIC(("could not find eth module %s"));
+      // if they continue, use null.
       BX_INFO(("could not find eth module %s - using null instead",
 		bx_options.ne2k.Oethmod->getptr ()));
       
