@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.76 2003-08-11 19:27:57 vruppert Exp $
+// $Id: x.cc,v 1.77 2004-02-01 23:48:57 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,6 +61,8 @@ public:
 #if BX_USE_IDLE_HACK
   virtual void sim_is_idle(void);
 #endif
+  virtual void beep_on(float frequency);
+  virtual void beep_off();
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1844,5 +1846,18 @@ void bx_x_gui_c::sim_is_idle () {
 }
 #endif
 #endif /* BX_USE_IDLE_HACK */  
+
+
+  void
+bx_x_gui_c::beep_on(float frequency)
+{
+  BX_INFO(( "X11 Beep ON (frequency=%.2f)",frequency));
+}
+
+  void
+bx_x_gui_c::beep_off()
+{
+  BX_INFO(( "X11 Beep OFF"));
+}
 
 #endif /* if BX_WITH_X11 */

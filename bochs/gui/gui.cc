@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.74 2004-02-01 01:40:14 vruppert Exp $
+// $Id: gui.cc,v 1.75 2004-02-01 23:48:57 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -584,4 +584,17 @@ bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
   BX_GUI_THIS vga_charmap[address] = data;
   BX_GUI_THIS char_changed[address >> 5] = 1;
   BX_GUI_THIS charmap_updated = 1;
+}
+
+  
+  void
+bx_gui_c::beep_on(float frequency)
+{
+  BX_INFO(( "GUI Beep ON (frequency=%.2f)",frequency));
+}
+
+  void
+bx_gui_c::beep_off()
+{
+  BX_INFO(( "GUI Beep OFF"));
 }

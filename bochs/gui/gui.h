@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.40 2003-06-28 08:04:31 vruppert Exp $
+// $Id: gui.h,v 1.41 2004-02-01 23:48:57 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -83,6 +83,8 @@ public:
   // this is called from the CPU model when the HLT instruction is executed.
   virtual void sim_is_idle(void) {}
 #endif
+  virtual void beep_on(float frequency);
+  virtual void beep_off();
 
   // The following function(s) are defined already, and your
   // GUI code calls them
@@ -145,31 +147,31 @@ protected:
 //    };
 // Then, each method must be defined later in the file.
 #define DECLARE_GUI_VIRTUAL_METHODS()                                         \
-  virtual void specific_init(int argc, char **argv,                           \
-                 unsigned x_tilesize, unsigned y_tilesize,                    \
-		 unsigned header_bar_y);                                      \
-  virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
-                          unsigned long cursor_x, unsigned long cursor_y,     \
-                          bx_vga_tminfo_t tm_info, unsigned rows);            \
-  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
-  virtual void handle_events(void);                                           \
-  virtual void flush(void);                                                   \
-  virtual void clear_screen(void);                                            \
-  virtual bx_bool palette_change(unsigned index,                              \
-      unsigned red, unsigned green, unsigned blue);                           \
-  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
-                                unsigned fwidth=0, unsigned bpp=8);           \
-  virtual unsigned create_bitmap(const unsigned char *bmap,                   \
-      unsigned xdim, unsigned ydim);                                          \
-  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \
-      void (*f)(void));                                                       \
-  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);            \
-  virtual void show_headerbar(void);                                          \
-  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);              \
-  virtual int set_clipboard_text(char *snapshot, Bit32u len);                 \
-  virtual void mouse_enabled_changed_specific (bx_bool val);                  \
-  virtual void exit(void);                                                    \
-  /* end of DECLARE_GUI_VIRTUAL_METHODS */
+virtual void specific_init(int argc, char **argv,                           \
+         unsigned x_tilesize, unsigned y_tilesize,                    \
+         unsigned header_bar_y);                                      \
+virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
+                  unsigned long cursor_x, unsigned long cursor_y,     \
+                  bx_vga_tminfo_t tm_info, unsigned rows);            \
+virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
+virtual void handle_events(void);                                           \
+virtual void flush(void);                                                   \
+virtual void clear_screen(void);                                            \
+virtual bx_bool palette_change(unsigned index,                              \
+unsigned red, unsigned green, unsigned blue);                           \
+virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
+                        unsigned fwidth=0, unsigned bpp=8);           \
+virtual unsigned create_bitmap(const unsigned char *bmap,                   \
+unsigned xdim, unsigned ydim);                                          \
+virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \
+void (*f)(void));                                                       \
+virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);            \
+virtual void show_headerbar(void);                                          \
+virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);              \
+virtual int set_clipboard_text(char *snapshot, Bit32u len);                 \
+virtual void mouse_enabled_changed_specific (bx_bool val);                  \
+virtual void exit(void);                                                    \
+/* end of DECLARE_GUI_VIRTUAL_METHODS */
 
 #define BX_MAX_PIXMAPS 16
 #define BX_MAX_HEADERBAR_ENTRIES 11
