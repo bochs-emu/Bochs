@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.67 2002-09-18 23:17:47 bdenney Exp $
+// $Id: siminterface.h,v 1.68 2002-09-20 17:39:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -64,8 +64,12 @@
 // class.  Bx_real_sim_c implements each of the functions.  The separation into
 // parent class and child class leaves the possibility of making a different
 // child class that talks to the simulator in a different way (networking for
-// example).  At the moment this particular abstraction is serving no specific
-// purpose, so it might be removed in the future.
+// example).  If you were writing a user interface in a separate process, you
+// could define a subclass of bx_simulator_interface_c called
+// bx_siminterface_proxy_c which opens up a network port and turns all method
+// calls into network sends and receives.  Because the interface is defined
+// entirely by the base class, the code that calls the methods would not know
+// the difference.
 //
 // An important part of the siminterface implementation is the use of parameter
 // classes, or bx_param_*.  The parameter classes are described below, where
