@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.9 2002-12-04 19:51:51 yakovlev Exp $
+// $Id: osdep.cc,v 1.10 2002-12-05 17:38:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -294,15 +294,15 @@ Bit64u bx_get_realtime64_usec (void) {
 Bit64u last_realtime64_top = 0;
 Bit64u last_realtime64_bottom = 0;
 Bit64u bx_get_realtime64_usec (void) {
-  Bit64u new_bottom = ((Bit64u) GetTickCount()) & 0x0FFFFFFFFll;
+  Bit64u new_bottom = ((Bit64u) GetTickCount()) & BX_CONST64(0x0FFFFFFFF);
   if(new_bottom < last_realtime64_bottom) {
-    last_realtime64_top += 0x0000000100000000ll;
+    last_realtime64_top += BX_CONST64(0x0000000100000000);
   }
   last_realtime64_bottom = new_bottom;
   Bit64u interim_realtime64 =
-    (last_realtime64_top & 0xFFFFFFFF00000000ll) |
-    (new_bottom          & 0x00000000FFFFFFFFll);
-  return interim_realtime64*((Bit64u)1000ll);
+    (last_realtime64_top & BX_CONST64(0xFFFFFFFF00000000)) |
+    (new_bottom          & BX_CONST64(0x00000000FFFFFFFF));
+  return interim_realtime64*(BX_CONST64(1000));
 }
 #    endif
 #  endif
