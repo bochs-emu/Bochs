@@ -66,7 +66,7 @@ bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
     *((Bit32u *)data) = value;
     return;
   }
-  // handle partial word read
+  // handle partial word read, independent of endian-ness.
   Bit8u bytes[4];
   bytes[0] = value & 0xff;
   bytes[1] = (value >> 8) & 0xff;
@@ -149,7 +149,8 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   // mask must include ONLY local APICs, or we will have problems.
   if (!deliver_bitmask) {
-    bx_printf ("deliver failed: no APICs in destination bitmask\n");
+    if (bx_dbg.apic)
+			bx_printf ("deliver failed: no APICs in destination bitmask\n");
     return false;
   }
   switch (delivery_mode) {
@@ -267,6 +268,16 @@ bx_local_apic_c::get_name()
   return cpu->name;
 }
 
+void bx_local_apic_c::set_divide_configuration (Bit32u value) {
+  bx_assert (value == (value & 0x0b));
+  // move bit 3 down to bit 0.
+  value = ((value & 8) >> 1) | (value & 3);
+  bx_assert (value >= 0 && value <= 7);
+  timer_divide_factor = (value==7)? 1 : (2 << value);
+  if (bx_dbg.apic)
+    bx_printf ("%s: set timer divide factor to %d\n", cpu->name, timer_divide_factor);
+}
+
 void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
 {
   assert (len == 4);
@@ -340,28 +351,35 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       icr_high = *data & 0xff000000;
       break;
     case 0x320: // LVT Timer Reg
-      lvt_timer = *data;  //?
+      lvt[APIC_LVT_TIMER] = *data & 0x310ff;
       break;
     case 0x330: // LVT Thermal Monitor
-      lvt_thermal = *data;  //?
+      lvt[APIC_LVT_THERMAL] = *data & 0x117ff;
       break;
     case 0x340: // LVT Performance Counter
-      lvt_perf = *data;  //?
+      lvt[APIC_LVT_PERFORM] = *data & 0x117ff;
       break;
     case 0x350: // LVT LINT0 Reg
-      lvt_lint0 = *data;  //?
+      lvt[APIC_LVT_LINT0] = *data & 0x1f7ff;
       break;
     case 0x360: // LVT Lint1 Reg
-      lvt_lint1 = *data;  //?
+      lvt[APIC_LVT_LINT1] = *data & 0x1f7ff;
       break;
     case 0x370: // LVT Error Reg
-      lvt_err = *data;  //?
+      lvt[APIC_LVT_ERROR] = *data & 0x117ff;
       break;
     case 0x380: // initial count for timer
       timer_initial = *data;
+      // This should trigger the counter to start.  If already started,
+      // restart from the new start value.
+      timer_current = timer_initial;
+      timer_active = true;
+      timer_divide_counter = 0;
       break;
     case 0x3e0: // timer divide configuration
-      timer_divide = *data;
+      // only bits 3, 1, and 0 are writable
+      timer_divconf = *data & 0xb;
+      set_divide_configuration (timer_divconf);
       break;
     /* all read-only registers go here */
     case 0x30: // local APIC version
@@ -404,7 +422,8 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
 {
   assert (len == 4);
   *data = 0;  // default value for unimplemented registers
-  switch (addr & 0xff0) {
+  Bit32u addr2 = addr & 0xff0;
+  switch (addr2) {
   case 0x20: // local APIC id
     *data = (id) << 24; break;
   case 0x30: // local APIC version
@@ -441,23 +460,22 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
   case 0x310: // interrupt command reg 31-63
     *data = icr_high; break;
   case 0x320: // LVT Timer Reg
-    *data = lvt_timer; break;
   case 0x330: // LVT Thermal Monitor
-    *data = lvt_thermal; break;
   case 0x340: // LVT Performance Counter
-    *data = lvt_perf; break;
   case 0x350: // LVT LINT0 Reg
-    *data = lvt_lint0; break;
   case 0x360: // LVT Lint1 Reg
-    *data = lvt_lint1; break;
   case 0x370: // LVT Error Reg
-    *data = lvt_err; break;
+    {
+      int index = (addr2 - 0x320) >> 4;
+      *data = lvt[index];
+      break;
+    }
   case 0x380: // initial count for timer
     *data = timer_initial; break;
   case 0x390: // current count for timer
     *data = timer_current; break;
   case 0x3e0: // timer divide configuration
-    *data = timer_divide; break;
+    *data = timer_divconf; break;
   default:
     bx_printf ("APIC register %08x not implemented\n", addr);
   }
@@ -485,7 +503,8 @@ void bx_local_apic_c::service_local_apic ()
   int first_isr = highest_priority_int (isr);
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   if (first_isr >= 0 && first_irr >= first_isr) {
-    bx_printf ("local apic (%s): not delivering int%02x because int%02x is in service\n", cpu->name, first_irr, first_isr);
+    if (bx_dbg.apic)
+      bx_printf ("local apic (%s): not delivering int%02x because int%02x is in service\n", cpu->name, first_irr, first_isr);
     return;
   }
   // interrupt has appeared in irr.  raise INTR.  When the CPU
@@ -598,7 +617,8 @@ bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 
 Bit8u bx_local_apic_c::get_ppr ()
 {
-  bx_printf ("WARNING: Local APIC Processor Priority not implemented, returning 0\n");
+  if (bx_dbg.apic)
+		bx_printf ("WARNING: Local APIC Processor Priority not implemented, returning 0\n");
   // should look at TPR, vector of highest priority isr, etc.
   return 0;
 }
@@ -606,8 +626,60 @@ Bit8u bx_local_apic_c::get_ppr ()
 
 Bit8u bx_local_apic_c::get_apr ()
 {
-  bx_printf ("WARNING: Local APIC Arbitration Priority not implemented, returning 0\n");
+  if (bx_dbg.apic)
+		bx_printf ("WARNING: Local APIC Arbitration Priority not implemented, returning 0\n");
   // should look at TPR, vector of highest priority isr, etc.
   return 0;
 }
 
+
+void
+bx_local_apic_c::periodic (Bit32u usec_delta)
+{
+  if (!timer_active) return;
+  if (bx_dbg.apic)
+    bx_printf ("%s: bx_local_apic_c::periodic called with %d usec\n",
+      cpu->name, usec_delta);
+  // unless usec_delta is guaranteed to be a multiple of 128, I can't
+  // just divide usec_delta by the divide-down value.  Instead, it will
+  // have a similar effect to implement the divide-down by ignoring
+  // some fraction of calls to this function.  This can be improved if
+  // more granularity is important.
+  timer_divide_counter = (timer_divide_counter + 1) % timer_divide_factor;
+  if (timer_divide_counter != 0) return;
+  if (timer_current > usec_delta) {
+    timer_current -= usec_delta;
+    //bx_printf ("%s: local apic timer is now 0x%08x\n", cpu->name, timer_current);
+    return;
+  }
+  // timer reached zero since the last call to periodic.
+  Bit32u timervec = lvt[APIC_LVT_TIMER];
+  if (timervec & 0x20000) {
+    // periodic mode.  Always trigger the interrupt when we reach zero.
+    trigger_irq (timervec & 0xff, id);
+    if (timer_initial == 0) {
+      usec_delta = 0;
+      timer_current = 0;
+    } else {
+      // timer_initial might be smaller than usec_delta.  I can't trigger
+      // multiple interrupts, so just try to get the timer_current right.
+      while (usec_delta > timer_initial)
+	usec_delta -= timer_initial;
+      timer_current = timer_current + timer_initial - usec_delta;
+      // sanity check. all these are unsigned so I can't check for
+      // negative timer_current.
+      bx_assert ((timer_current + timer_initial) >= usec_delta);
+    }
+    if (bx_dbg.apic)
+      bx_printf ("%s: local apic timer (periodic) triggered int, reset counter to 0x%08x\n", cpu->name, timer_current);
+  } else {
+    // one-shot mode
+    timer_current = 0;
+    if (timer_active) {
+      trigger_irq (timervec & 0xff, id);
+      timer_active = false;
+      if (bx_dbg.apic)
+        bx_printf ("%s: local apic timer (one-shot) triggered int\n", cpu->name);
+    }
+  }
+}
