@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.75 2002-10-04 23:16:48 bdenney Exp $
+// $Id: dbg_main.cc,v 1.76 2002-10-16 21:32:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -511,7 +511,7 @@ bx_get_command(void)
     strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
     strcat (tmp_buf, "\n");
     // the returned string was allocated in wxmain.cc by "new char[]". free it.
-    delete charptr_ret;
+    delete charptr_ret [];
     charptr_ret = &tmp_buf[0];
   }
 #elif HAVE_LIBREADLINE
