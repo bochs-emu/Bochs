@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.33 2002-09-28 00:54:05 kevinlawton Exp $
+// $Id: init.cc,v 1.34 2002-09-29 16:59:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.33 2002-09-28 00:54:05 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.34 2002-09-29 16:59:28 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -324,8 +324,6 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 
   mem = addrspace;
   sprintf (name, "CPU %p", this);
-
-  BX_INSTR_INIT(CPU_ID);
 
 #if BX_WITH_WX
   // Register some of the CPUs variables as shadow parameters so that
