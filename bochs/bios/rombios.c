@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.97 2003-10-07 00:21:10 danielg4 Exp $
+// $Id: rombios.c,v 1.98 2003-10-16 19:29:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.97 $";
-static char bios_date_string[] = "$Date: 2003-10-07 00:21:10 $";
+static char bios_cvs_version_string[] = "$Revision: 1.98 $";
+static char bios_date_string[] = "$Date: 2003-10-16 19:29:12 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.97 2003-10-07 00:21:10 danielg4 Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.98 2003-10-16 19:29:12 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3929,7 +3929,8 @@ BX_DEBUG_INT15("case default:\n");
 int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, FLAGS;
 {
-  Bit8u scan_code, ascii_code, shift_flags;
+  Bit8u scan_code, ascii_code, shift_flags, count;
+  Bit16u kbd_code, max;
 
   BX_DEBUG_INT16("int16: AX=%04x BX=%04x CX=%04x DX=%04x \n", AX, BX, CX, DX);
 
@@ -3973,10 +3974,25 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       break;
 
     case 0x0A: /* GET KEYBOARD ID */
-      // translated
-      BX=0x41AB;
-      // passthru (FIXME)
-      // BX=0x83AB;
+      count = 2;
+      kbd_code = 0x0;
+      outb(0x60, 0xf2);
+      /* Wait for data */
+      max=0xffff;
+      while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x00);
+      if (max>0x0) {
+        if ((inb(0x60) == 0xfa)) {
+          do {
+            max=0xffff;
+            while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x00);
+            if (max>0x0) {
+              kbd_code >>= 8;
+              kbd_code |= (inb(0x60) << 8);
+            }
+          } while (--count>0);
+	}
+      }
+      BX=kbd_code;
       break;
 
     case 0x10: /* read MF-II keyboard input */
@@ -3984,7 +4000,6 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       if ( !dequeue_key(&scan_code, &ascii_code, 1) ) {
         BX_PANIC("KBD: int16h: out of keyboard input\n");
         }
-      if (ascii_code == 0) ascii_code = 0xE0;
       AX = (scan_code << 8) | ascii_code;
       break;
 
@@ -3993,7 +4008,6 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
         SET_ZF();
         return;
         }
-      if (ascii_code == 0) ascii_code = 0xE0;
       AX = (scan_code << 8) | ascii_code;
       CLEAR_ZF();
       break;
