@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.39 2002-10-05 17:45:48 bdenney Exp $
+// $Id: wx.cc,v 1.40 2002-10-05 18:15:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -834,7 +834,7 @@ bx_gui_c::clear_screen(void)
 }
 
 static void 
-UpdateScreen(char *newBits, int x, int y, int width, int height) 
+UpdateScreen(unsigned char *newBits, int x, int y, int width, int height) 
 {
   IFDBG_VGA(wxLogDebug ("MyPanel::UpdateScreen trying to get lock. wxScreen=%p", wxScreen));
   wxCriticalSectionLocker lock(wxScreen_lock);
@@ -866,7 +866,7 @@ DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int
     y += cs_start;
     j = cs_start * ((width - 1) / 8 + 1);
   }
-  char *newBits = (char *)malloc(width * height);
+  unsigned char *newBits = (unsigned char *)malloc(width * height);
   memset(newBits, 0, (width * height));
   for(int i = 0; i < (width * height) / 8; i++) {
     newBits[i * 8 + 0] = (bmap[j] & 0x80) ? fgcolor : bgcolor;
@@ -987,7 +987,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   IFDBG_VGA (wxLogDebug ("graphics_tile_update"));
   //static Bit32u counter = 0;
   //BX_INFO (("graphics_tile_update executed %d times", ++counter));
-  UpdateScreen((char *)tile, x0, y0, wxTileX, wxTileY);
+  UpdateScreen(tile, x0, y0, wxTileX, wxTileY);
   thePanel->MyRefresh ();
 }
 
