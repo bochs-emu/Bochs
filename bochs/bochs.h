@@ -250,7 +250,11 @@ typedef struct {
 #ifdef MAGIC_BREAKPOINT
   Boolean magic_break_enabled;
 #endif /* MAGIC_BREAKPOINT */
-#ifdef BX_DEBUG_LINUX
+#if BX_APIC_SUPPORT
+  Boolean apic;
+  Boolean ioapic;
+#endif
+#if BX_DEBUG_LINUX
   Boolean linux_syscall;
   Boolean linux_task;
 #endif
