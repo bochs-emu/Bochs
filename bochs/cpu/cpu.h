@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.59 2002-09-17 14:36:38 sshwarts Exp $
+// $Id: cpu.h,v 1.60 2002-09-17 22:14:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1907,7 +1907,9 @@ union {
   BX_SMF void RDTSC(BxInstruction_t *);
   BX_SMF void RDMSR(BxInstruction_t *);
   BX_SMF void SetCR0(Bit32u val_32);
+#if BX_CPU_LEVEL >= 4
   BX_SMF void SetCR4(Bit32u val_32);
+#endif
   BX_SMF void dynamic_translate(void);
   BX_SMF void dynamic_init(void);
   BX_SMF unsigned FetchDecode(Bit8u *, BxInstruction_t *, unsigned, Boolean);

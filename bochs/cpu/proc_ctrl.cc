@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.38 2002-09-15 15:10:21 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.39 2002-09-17 22:14:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1481,14 +1481,13 @@ BX_CPU_C::SetCR0(Bit32u val_32)
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
   Boolean prev_pe, prev_pg;
-#if BX_CPU_LEVEL >= 4
-  Boolean prev_wp;
-#endif
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
 
   prev_pe = BX_CPU_THIS_PTR cr0.pe;
   prev_pg = BX_CPU_THIS_PTR cr0.pg;
-  prev_wp = BX_CPU_THIS_PTR cr0.wp;
+#if BX_CPU_LEVEL >= 4
+  Boolean prev_wp = BX_CPU_THIS_PTR cr0.wp;
+#endif
 
   BX_CPU_THIS_PTR cr0.pe = val_32 & 0x01;
   BX_CPU_THIS_PTR cr0.mp = (val_32 >> 1) & 0x01;
@@ -1561,6 +1560,7 @@ BX_CPU_C::SetCR0(Bit32u val_32)
   pagingCR0Changed(oldCR0, newCR0);
 }
 
+#if BX_CPU_LEVEL >= 4
   void
 BX_CPU_C::SetCR4(Bit32u val_32)
 {
@@ -1600,6 +1600,7 @@ BX_CPU_C::SetCR4(Bit32u val_32)
   BX_CPU_THIS_PTR cr4.setRegister(val_32);
   pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.getRegister());
 }
+#endif
 
 
   void
