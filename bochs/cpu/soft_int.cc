@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.16 2003-05-15 16:41:16 sshwarts Exp $
+// $Id: soft_int.cc,v 1.17 2003-08-03 16:44:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -89,9 +89,9 @@ BX_CPU_C::INT1(bxInstruction_c *i)
 
 #if BX_EXTERNAL_DEBUGGER
   trap_debugger(0);
-#else
-  interrupt(1, 1, 0, 0);
 #endif
+
+  interrupt(1, 1, 0, 0);
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.14 2003-03-02 23:59:09 cbothamy Exp $
+// $Id: stack_pro.cc,v 1.15 2003-08-03 16:44:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ BailBigRSP("push_16");
 #endif
       temp_ESP = SP;
     if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 2)) {
-      BX_PANIC(("push_16(): push outside stack limits"));
+      BX_DEBUG(("push_16(): push outside stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }

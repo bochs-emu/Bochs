@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.8 2003-01-21 13:23:47 cbothamy Exp $
+// $Id: dis_groups.cc,v 1.9 2003-08-03 16:44:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -418,12 +418,12 @@ bx_disassemble_c::Av(void)
 {
   if (db_32bit_opsize) {
     Bit32s imm32;
-    imm32 = fetch_dword();
+    imm32 = (Bit32s) fetch_dword();
     dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
     }
   else {
     Bit16s imm16;
-    imm16 = fetch_word();
+    imm16 = (Bit16s) fetch_word();
     dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
     }
 }
@@ -522,17 +522,17 @@ bx_disassemble_c::Jv(void)
 {
 #if BX_CPU_LEVEL > 2
   if (db_32bit_opsize) {
-    Bit32u imm32;
+    Bit32s imm32; /* JMP rel32 is signed */
 
-    imm32 = fetch_dword();
+    imm32 = (Bit32s) fetch_dword();
     dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
     }
   else
 #endif
     {
-    Bit16u imm16;
+    Bit16s imm16; /* JMP rel16 is signed */
 
-    imm16 = fetch_word();
+    imm16 = (Bit16s) fetch_word();
     dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
     }
 }
@@ -591,9 +591,9 @@ bx_disassemble_c::Ib(void)
   void
 bx_disassemble_c::Jb(void)
 {
-  Bit8u imm8;
+  Bit8s imm8; /* JMP rel8 is signed */
 
-  imm8 = fetch_byte();
+  imm8 = (Bit8s) fetch_byte();
 #if BX_CPU_LEVEL > 2
   if (db_32bit_opsize) {
     dis_sprintf("%08x", (unsigned) (imm8 + db_eip));
