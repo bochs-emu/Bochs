@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.191 2002-11-23 13:26:21 bdenney Exp $
+// $Id: main.cc,v 1.192 2002-11-24 13:41:07 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1628,6 +1628,7 @@ print_usage ()
 {
   fprintf(stderr, 
     "Usage: bochs [flags] [bochsrc options]\n\n"
+    "  -n               no configuration file\n"
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
     "  --help           display this help and exit\n\n"
@@ -1663,12 +1664,15 @@ bx_init_main (int argc, char *argv[])
   SIM->get_param_enum(BXP_BOCHS_START)->set (BX_RUN_START);
 
   // interpret the args that start with -, like -q, -f, etc.
-  int arg = 1;
+  int arg = 1, load_rcfile=1;
   while (arg < argc) {
     // parse next arg
     if (!strcmp ("--help", argv[arg]) || !strncmp ("-h", argv[arg], 2)) {
       print_usage();
       SIM->quit_sim (0);
+    }
+    else if (!strcmp ("-n", argv[arg])) {
+      load_rcfile = 0;
     }
     else if (!strcmp ("-q", argv[arg])) {
       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
@@ -1767,10 +1771,13 @@ bx_init_main (int argc, char *argv[])
 #endif
 
   int norcfile = 1;
-  /* always parse configuration file and command line arguments */
-  if (bochsrc_filename == NULL) bochsrc_filename = bx_find_bochsrc ();
-  if (bochsrc_filename)
-    norcfile = bx_read_configuration (bochsrc_filename);
+
+  if (load_rcfile) {
+    /* parse configuration file and command line arguments */
+    if (bochsrc_filename == NULL) bochsrc_filename = bx_find_bochsrc ();
+    if (bochsrc_filename)
+      norcfile = bx_read_configuration (bochsrc_filename);
+  }
 
   if (norcfile) {
     // No configuration was loaded, so the current settings are unusable.
