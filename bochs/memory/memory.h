@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.21 2004-09-01 18:12:23 vruppert Exp $
+// $Id: memory.h,v 1.22 2004-10-29 21:15:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,7 +26,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
+#ifndef BX_MEM_H
+#  define BX_MEM_H 1
 
 #define BX_USE_MEM_SMF 0
 
@@ -55,7 +56,6 @@ struct memory_handler_struct {
 };
 
 class BOCHSAPI BX_MEM_C : public logfunctions {
-
 private:
   struct memory_handler_struct **memory_handlers;
   bx_bool rom_present[65];
@@ -90,7 +90,7 @@ public:
   BX_MEM_SMF bx_bool dbg_crc32(
     unsigned long (*f)(unsigned char *buf, int len),
     Bit32u addr1, Bit32u addr2, Bit32u *crc);
-  BX_MEM_SMF Bit8u * getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op) BX_CPP_AttrRegparmN(3);
+  BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op) BX_CPP_AttrRegparmN(3);
   BX_MEM_SMF bx_bool registerMemoryHandlers(memory_handler_t read_handler, void *read_param, 
 		  memory_handler_t write_handler, void *write_param, 
 		  unsigned long begin_addr, unsigned long end_addr);
@@ -112,4 +112,6 @@ BOCHSAPI extern BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 #  define BX_DBG_DIRTY_PAGE(page) BX_MEM(0)->dbg_dirty_pages[page] = 1;
 #else
 #  define BX_DBG_DIRTY_PAGE(page)
+#endif
+
 #endif

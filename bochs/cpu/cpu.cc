@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.89 2004-10-16 19:34:17 sshwarts Exp $
+// $Id: cpu.cc,v 1.90 2004-10-29 21:15:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -750,8 +750,7 @@ BX_CPU_C::prefetch(void)
       BX_PANIC(("prefetch: running in bogus memory"));
       }
     else {
-      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%x.",
-                pAddr));
+      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%x.", pAddr));
       }
     }
 

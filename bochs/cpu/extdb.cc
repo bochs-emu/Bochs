@@ -2,7 +2,7 @@
 #ifdef WIN32
 // windows.h included in bochs.h
 #else
-//#  error "extdb.cc only supported in win32 environment"
+#  error "extdb.cc only supported in win32 environment"
 #endif
 
 TRegs regs;

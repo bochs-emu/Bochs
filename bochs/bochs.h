@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.143 2004-10-16 15:44:00 vruppert Exp $
+// $Id: bochs.h,v 1.144 2004-10-29 21:15:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -107,11 +107,6 @@ int bx_begin_simulation (int argc, char *argv[]);
 #define DEV_vga_mem_read(addr)       bx_dbg_ucmem_read(addr)
 #define DEV_vga_mem_write(addr, val) bx_dbg_ucmem_write(addr, val)
 
-#if BX_SUPPORT_A20
-#  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
-#else
-#  define A20ADDR(x)                (x)
-#endif
 #define BX_INP(addr, len)           bx_dbg_inp(addr, len)
 #define BX_OUTP(addr, val, len)     bx_dbg_outp(addr, val, len)
 #define BX_HRQ                      (bx_pc_system.HRQ)
@@ -138,12 +133,6 @@ int bx_begin_simulation (int argc, char *argv[]);
 #else
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
-#if BX_SUPPORT_A20
-#  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
-#else
-#  define A20ADDR(x)               (x)
-#endif
-//
 // some pc_systems functions just redirect to the IO devices so optimize
 // by eliminating call here
 //
@@ -176,6 +165,12 @@ int bx_begin_simulation (int argc, char *argv[]);
 
 #endif
 
+#if BX_SUPPORT_A20
+#  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
+#else
+#  define A20ADDR(x)                (x)
+#endif
+
 
 // you can't use static member functions on the CPU, if there are going
 // to be 2 cpus.  Check this early on.
@@ -185,9 +180,6 @@ int bx_begin_simulation (int argc, char *argv[]);
 #  endif
 #endif
 
-
-// #define BX_IAC()                 bx_pc_system.IAC()
-//#define BX_IAC()                    bx_dbg_IAC()
 
 //
 // Ways for the the external environment to report back information
@@ -472,13 +464,10 @@ int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 
 
-
-#define BX_READ    0
-#define BX_WRITE   1
-#define BX_RW      2
-
-
-
+// memory access type (read/write/rw)
+#define BX_READ         0
+#define BX_WRITE        1
+#define BX_RW           2
 
 
 #include "memory/memory.h"
@@ -491,10 +480,6 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 #include "gui/gui.h"
 #include "gui/textconfig.h"
 #include "gui/keymap.h"
-
-
-
-
 
 
 

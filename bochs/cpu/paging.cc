@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.48 2004-10-21 18:20:34 sshwarts Exp $
+// $Id: paging.cc,v 1.49 2004-10-29 21:15:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -604,7 +604,6 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   bx_address lpf;
   Bit32u   ppf, poffset, error_code, paddress;
   Bit32u   pde, pde_addr;
-  bx_bool  isWrite;
   Bit32u   accessBits, combined_access;
   unsigned priv_index;
 #if BX_USE_TLB
@@ -614,15 +613,14 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   InstrTLB_Increment(tlbLookups);
   InstrTLB_Stats();
 
+  bx_bool isWrite = (rw>=BX_WRITE); // write or r-m-w
+
 #if BX_SupportPAE
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
     Bit32u   pdp, pdp_addr;
 
     lpf       = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
     poffset   = laddr & 0x00000fff; // physical offset
-    isWrite   = (rw>=BX_WRITE); // write or r-m-w
-
-    //BX_DEBUG (("poffset: %-8x laddr: %-8x lpf: %-8x",poffset,laddr,lpf));
 
 #if BX_USE_TLB
     TLB_index = BX_TLB_INDEX_OF(lpf);
@@ -658,33 +656,33 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
         // PML4 Entry NOT present
         error_code = 0x00000000; // RSVD=0, P=0
         goto page_fault_not_present;
-        }
+      }
       if ( !(pml4 & 0x20) ) {
         pml4 |= 0x20;
         BX_CPU_THIS_PTR mem->writePhysicalPage(this, pml4_addr, 4, &pml4);
-        }
+      }
 
       // Get PDP entry
       pdp_addr =  (pml4 & 0xfffff000) |
                   ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27);
-      }
+    }
     else
 #endif
-      {
+    {
       pdp_addr = BX_CPU_THIS_PTR cr3_masked |
                ((laddr & 0xc0000000) >> 27);
-      }
+    }
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(this, pdp_addr, 4, &pdp);
     if ( !(pdp & 0x01) ) {
       // PDP Entry NOT present
       error_code = 0x00000000; // RSVD=0, P=0
       goto page_fault_not_present;
-      }
+    }
     if ( !(pdp & 0x20) ) {
       pdp |= 0x20;
       BX_CPU_THIS_PTR mem->writePhysicalPage(this, pdp_addr, 4, &pdp);
-      }
+    }
 
     // Get page dir entry
     pde_addr = (pdp & 0xfffff000) |
@@ -695,7 +693,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       // Page Directory Entry NOT present
       error_code = 0x00000000; // RSVD=0, P=0
       goto page_fault_not_present;
-      }
+    }
 
 #if BX_SUPPORT_4MEG_PAGES
     // (KPL) Weird.  I would think the processor would consult CR.PSE?
@@ -724,18 +722,18 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       if (!priv_check[priv_index]) {
         error_code = 0x00000001; // RSVD=0, P=1
         goto page_fault_access;
-        }
+      }
 
       // Update PDE if A/D bits if needed.
       if ( ((pde & 0x20)==0) ||
            (isWrite && ((pde&0x40)==0)) ) {
         pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
         BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-        }
       }
+    }
     else
 #endif
-      { // 4k pages.
+    { // 4k pages.
       Bit32u   pte, pte_addr;
 
       // Get page table entry
@@ -756,7 +754,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
         // Page Table Entry NOT present
         error_code = 0x00000000; // RSVD=0, P=0
         goto page_fault_not_present;
-        }
+      }
 
       priv_index =
 #if BX_CPU_LEVEL >= 4
@@ -769,21 +767,21 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       if (!priv_check[priv_index]) {
         error_code = 0x00000001; // RSVD=0, P=1
         goto page_fault_access;
-        }
+      }
 
       // Update PDE A bit if needed.
       if ( (pde & 0x20)==0 ) {
         pde |= 0x20; // Update A bit.
         BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-        }
+      }
 
       // Update PTE A/D bits if needed.
-      if ( ((pte & 0x20)==0) ||
-           (isWrite && ((pte&0x40)==0)) ) {
+      if (((pte & 0x20)==0) || (isWrite && ((pte&0x40)==0))) 
+      {
         pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
         BX_CPU_THIS_PTR mem->writePhysicalPage(this, pte_addr, 4, &pte);
-        }
       }
+    }
 
     // Calculate physical memory address and fill in TLB cache entry
     paddress = ppf | poffset;
@@ -825,7 +823,6 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
   lpf       = laddr & 0xfffff000; // linear page frame
   poffset   = laddr & 0x00000fff; // physical offset
-  isWrite   = (rw>=BX_WRITE); // write or r-m-w
 
 #if BX_USE_TLB
   TLB_index = BX_TLB_INDEX_OF(lpf);
@@ -854,7 +851,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     // Page Directory Entry NOT present
     error_code = 0x00000000; // RSVD=0, P=0
     goto page_fault_not_present;
-    }
+  }
 
 #if BX_SUPPORT_4MEG_PAGES
   if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4.get_PSE())) {
@@ -885,20 +882,18 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     if (!priv_check[priv_index]) {
       error_code = 0x00000001; // RSVD=0, P=1
       goto page_fault_access;
-      }
-
-    // Update PDE if A/D bits if needed.
-    if ( ((pde & 0x20)==0) ||
-         (isWrite && ((pde&0x40)==0)) ) {
-      pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-      BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-      }
     }
 
+    // Update PDE if A/D bits if needed.
+    if (((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0))) {
+      pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+      BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
+    }
+  }
   // Else normal 4Kbyte page...
   else
 #endif
-    {
+  {
     Bit32u   pte, pte_addr;
 
 #if (BX_CPU_LEVEL < 6)
@@ -906,7 +901,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     if ( !(pde & 0x20) ) {
       pde |= 0x20;
       BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-      }
+    }
 #endif
 
     // Get page table entry
@@ -934,7 +929,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       // Page Table Entry NOT present
       error_code = 0x00000000; // RSVD=0, P=0
       goto page_fault_not_present;
-      }
+    }
 
     priv_index =
 #if BX_CPU_LEVEL >= 4
@@ -947,24 +942,23 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     if (!priv_check[priv_index]) {
       error_code = 0x00000001; // RSVD=0, P=1
       goto page_fault_access;
-      }
+    }
 
 #if (BX_CPU_LEVEL >= 6)
     // update PDE if A bit was not set before
     if ( !(pde & 0x20) ) {
       pde |= 0x20;
       BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-      }
+    }
 #endif
 
     // Update PTE if A/D bits if needed.
-    if ( ((pte & 0x20)==0) ||
-         (isWrite && ((pte&0x40)==0)) ) {
+    if (((pte & 0x20)==0) || (isWrite && ((pte&0x40)==0))) 
+    {
       pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
       BX_CPU_THIS_PTR mem->writePhysicalPage(this, pte_addr, 4, &pte);
-      }
     }
-
+  }
 
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
@@ -1115,9 +1109,6 @@ page_fault:
 BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
     unsigned rw, void *data)
 {
-  Bit32u pageOffset;
-  unsigned xlate_rw;
-
 
 #if BX_X86_DEBUGGER
   if ( BX_CPU_THIS_PTR dr7 & 0x000000ff ) {
@@ -1137,15 +1128,9 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
     }
 #endif
 
-  if (rw==BX_RW) {
-    xlate_rw = BX_RW;
-    rw = BX_READ;
-    }
-  else {
-    xlate_rw = rw;
-    }
-
-  pageOffset = laddr & 0x00000fff;
+  Bit32u pageOffset = laddr & 0x00000fff;
+  unsigned xlate_rw = rw;
+  if (rw==BX_RW) rw = BX_READ;
 
   if (BX_CPU_THIS_PTR cr0.pg) {
     /* check for reference across multiple pages */
@@ -1239,7 +1224,6 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       return;
       }
     }
-
   else {
     // Paging off.
     if ( (pageOffset + length) <= 4096 ) {
@@ -1388,7 +1372,6 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         }
 #endif
       }
-    return;
     }
 }
 

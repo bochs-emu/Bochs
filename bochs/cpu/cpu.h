@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.181 2004-10-21 18:20:32 sshwarts Exp $
+// $Id: cpu.h,v 1.182 2004-10-29 21:15:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -738,8 +738,6 @@ typedef struct {
   } bx_segment_reg_t;
 
 typedef void * (*BxVoidFPtr_t)(void);
-class BX_CPU_C;
-
 
 class bxInstruction_c {
 public:
@@ -1475,7 +1473,11 @@ public: // for now...
 
   // constructors & destructors...
   BX_CPU_C();
-  ~BX_CPU_C(void);
+#if BX_EXTERNAL_DEBUGGER
+  virtual ~BX_CPU_C();
+#else
+  ~BX_CPU_C();
+#endif
   void init (BX_MEM_C *addrspace);
 
   // prototypes for CPU instructions...
