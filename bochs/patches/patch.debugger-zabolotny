@@ -1,0 +1,1526 @@
+----------------------------------------------------------------------
+Patch name: patch.debugger-zabolotny
+Author: Andrew Zabolotny <zap@cobra.ru>, updated by Volker Ruppert
+Date: Thu Jun 19 09:15:00 CEST 2003
+Status: Proposed
+
+Detailed description:
+  This patch improves the Bochs debugger. Here is the description from
+  the author:
+
+  -*- Added the ability to repeat previous command (by entering a empty
+      line) without using libreadline. This is actual for Windows port.
+  -*- Improved the 'x' and 'xp' commands: the 'm' specifier has been added
+      for 'memory dump', it can display bytes, words, dwords or characters in
+      a way which is more usual to people used to PC debuggers (and is more
+      readable IMHO).
+  -*- Added the expression evaluator to most commands. Added the '?'
+      command (alias to 'calc') which calculates a expression. Any reasonable
+      registers can be used within the expression. The 'si' alias to the 's'
+      and 'step' commands has been removed since it conflicts with the SI
+      register name. All arithmetic and logic operators are supported,
+      additionally the ':' operator has been implemented which calculates a
+      linear address from a segment:offset (real or v86 mode) or a
+      selector:offset (in protected mode it looks up GDT or LDT) pair.
+  -*- Implemented the 'info tss' command which dumps the TSS in a readable
+      form.
+  -*- Improved help text so that it is more readable.
+  -*- Improved 'disas' command so that a) if no range is given, cs:eip is
+      used. Also added the /count modifier so that you can disassemble a
+      certain number of instructions (e.g. 'disas /10 cs:eip' or 'disas /10'
+      which is equivalent).
+
+  The patched bochs has been tested under both Linux and Win32. Care has
+  been taken not to break backward compatibility, although a few obsolete
+  undocumented commands (like 'add', 'sub' and company) have been removed
+  since expression evaluator now is a lot more powerful.
+
+  If there are issues that makes integration of this patch problematic, I
+  am always open to discussion.
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  cvs checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -urN ../bochs/bochs.h ./bochs.h
+--- ../bochs/bochs.h	2003-05-04 09:09:15.000000000 +0200
++++ ./bochs.h	2003-06-05 20:38:48.000000000 +0200
+@@ -77,6 +77,7 @@
+ #include <ctype.h>
+ #include <string.h>
+ #include <fcntl.h>
++#include <limits.h>
+ #ifdef macintosh
+ #  define SuperDrive "[fd:]"
+ #endif
+diff -urN ../bochs/config.h.in ./config.h.in
+--- ../bochs/config.h.in	2003-06-13 18:04:59.000000000 +0200
++++ ./config.h.in	2003-06-13 18:17:46.000000000 +0200
+@@ -83,6 +83,9 @@
+ // adds support for the GNU readline library in the debugger command 
+ // prompt.
+ 
++#define HAVE_LOCALE_H 0
++// Define to 1 if you have <locale.h>
++
+ // I rebuilt the code which provides timers to IO devices.
+ // Setting this to 1 will introduce a little code which
+ // will panic out if cases which shouldn't happen occur.
+diff -urN ../bochs/configure.in ./configure.in
+--- ../bochs/configure.in	2003-06-13 18:05:01.000000000 +0200
++++ ./configure.in	2003-06-13 18:22:39.000000000 +0200
+@@ -221,6 +221,10 @@
+     fi
+ fi
+ 
++AC_CHECK_HEADER(locale.h,
++  AC_DEFINE(HAVE_LOCALE_H)
++  )
++
+ AC_MSG_CHECKING(for struct timeval)
+ AC_TRY_COMPILE([#include <sys/time.h>],
+     [struct timeval x;], 
+diff -urN ../bochs/debug/dbg_main.cc ./debug/dbg_main.cc
+--- ../bochs/debug/dbg_main.cc	2003-06-07 21:16:53.000000000 +0200
++++ ./debug/dbg_main.cc	2003-06-07 21:34:31.000000000 +0200
+@@ -60,6 +60,7 @@
+ static void bx_dbg_usage(void);
+ static char bx_debug_rc_fname[BX_MAX_PATH];
+ static char tmp_buf[512];
++static char tmp_buf_prev[512];
+ static char *tmp_buf_ptr;
+ static char *argv0 = NULL;
+ 
+@@ -476,9 +477,13 @@
+     SIM->refresh_ci ();
+     SIM->set_display_mode (DISP_MODE_CONFIG);
+     bx_get_command();
+-    if ( (*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0) ) {
+-      if (bx_infile_stack_index == 0)
+-        dbg_printf ( "\n");
++reparse:
++    if ((*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0))
++      {
++        if ((*tmp_buf_prev != '\n') && (*tmp_buf_prev != 0)) {
++          strncpy(tmp_buf, tmp_buf_prev, sizeof(tmp_buf_prev));
++          goto reparse;
++	  }
+       }
+     else if ( (strncmp(tmp_buf_ptr, BX_INCLUDE_CMD, include_cmd_len) == 0) &&
+               (tmp_buf_ptr[include_cmd_len] == ' ' ||
+@@ -558,14 +563,15 @@
+       charptr_ret = &tmp_buf[0];
+     }
+   } else {
+-    charptr_ret = fgets(tmp_buf, 512,
++    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf),
+       bx_infile_stack[bx_infile_stack_index].fp);
+   }
+ #else /* !HAVE_LIBREADLINE */
+   else {
+     if (bx_infile_stack_index == 0)
+       dbg_printf ( "%s", prompt);
+-    charptr_ret = fgets(tmp_buf, 512,
++      strncpy(tmp_buf_prev, tmp_buf, sizeof(tmp_buf));
++    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf),
+       bx_infile_stack[bx_infile_stack_index].fp);
+   }
+ #endif
+@@ -791,7 +797,7 @@
+   Bit64u diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
+   Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
+ 
+-  if (diff < 0) {
++  if (time < bx_pc_system.time_ticks()) {
+     dbg_printf ( "Request for time break point in the past. I can't let you do that.\n");
+     return;
+   }
+@@ -1291,7 +1297,7 @@
+   Bit64u diff = time - last_playback_time;
+   last_playback_time = time;
+ 
+-  if (diff < 0) {
++  if (time < last_playback_time) {
+     BX_PANIC(("Negative diff in playback"));
+   } else if (diff == 0) {
+     playback_entry.trigger();
+@@ -1379,6 +1385,7 @@
+ 
+ #include <hash_map.h>
+ #include <set.h>
++using namespace std;
+ 
+ struct symbol_entry_t
+ {
+@@ -2747,12 +2754,24 @@
+ }
+ 
+   void
++dbg_printf_binary (char *format, Bit32u data, int bits)
++{
++  int b,len = 0;
++  char num[33];
++
++  for (b = 1 << (bits - 1); b; b >>= 1)
++    num [len++] = (data & b) ? '1' : '0';
++  num [len] = 0;
++  dbg_printf (format, num);
++}
++
++  void
+ bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+                Bit32u addr, bx_bool addr_passed, int simulator)
+ {
+   unsigned repeat_count, i;
+   char ch, display_format, unit_size;
+-  bx_bool iteration;
++  bx_bool iteration, memory_dump = false;
+   unsigned data_size;
+   bx_bool paddr_valid;
+   Bit32u  paddr;
+@@ -2760,8 +2779,6 @@
+   Bit16u  data16;
+   Bit32u  data32;
+   unsigned columns, per_line, offset;
+-  unsigned char digit;
+-  unsigned biti;
+   bx_bool is_linear;
+   unsigned char databuf[8];
+ 
+@@ -2830,9 +2847,8 @@
+     display_format = bx_debugger.default_display_format;
+     unit_size      = bx_debugger.default_unit_size;
+ 
+-    for (i=0; i<=1; i++) {
+-      if (ch==0) break; // bail on null character
+-      switch (ch) {
++    for (i = 0; format [i]; i++) {
++      switch (ch = format [i]) {
+         case 'x': // hex
+         case 'd': // signed decimal
+         case 'u': // unsigned decimal
+@@ -2850,13 +2866,16 @@
+         case 'g': // giant words (8 bytes)
+           unit_size = ch;
+           break;
++
++	case 'm': // memory dump
++	  memory_dump = true;
++          break;
++
+         default:
+-          dbg_printf ( "dbg_examine: invalid format passed.\n");
++          dbg_printf ( "dbg_examine: invalid format passed. \'%c\'\n", ch);
+           bx_dbg_exit(1);
+           break;
+         }
+-      format++;
+-      ch = *format;
+       }
+ 
+     // store current options as default
+@@ -2882,6 +2901,25 @@
+   per_line  = 0;
+   offset = 0;
+ 
++  if (memory_dump) {
++    if (display_format == 'c') {
++      // Display character dump in lines of 64 characters
++      unit_size = 'b';
++      data_size = 1;
++      per_line = 64;
++      }
++    else
++      switch (unit_size) {
++        case 'b': data_size = 1; per_line = 16; break;
++        case 'h': data_size = 2; per_line = 8; break;
++        case 'w': data_size = 4; per_line = 4; break;
++        //case 'g': data_size = 8; per_line = 2; break;
++        }
++    // binary format is quite large
++    if (display_format == 't')
++      per_line /= 4;
++    }
++  else
+   switch (unit_size) {
+     case 'b': data_size = 1; per_line = 8; break;
+     case 'h': data_size = 2; per_line = 8; break;
+@@ -2897,10 +2935,19 @@
+       // if not 1st run, need a newline from last line
+       if (i!=1)
+         dbg_printf ( "\n");
++      if (memory_dump)
++        dbg_printf ( "%08X  ", addr + offset);
++      else
+       dbg_printf ( "0x%x <bogus+%u>:", addr, offset);
+       columns = 1;
+       }
+ 
++    /* Put a space in the middle of dump, for readability */
++    if ((columns - 1) == per_line / 2
++     && memory_dump
++     && display_format != 'c')
++      dbg_printf (" ");
++
+     if (is_linear) {
+       BX_CPU(simulator)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
+       if (!paddr_valid) {
+@@ -2920,22 +2967,23 @@
+     switch (data_size) {
+       case 1:
+         data8 = databuf[0];
++        if (memory_dump)
++          switch (display_format) {
++	    case 'd': dbg_printf ("%03d ", data8); break;
++	    case 'u': dbg_printf ("%03u ", data8); break;
++	    case 'o': dbg_printf ("%03o ", data8); break;
++	    case 't': dbg_printf_binary ("%s ", data8, 8); break;
++            case 'c': dbg_printf ("%c", isprint(data8) ? data8 : '.'); break;
++	    default : dbg_printf ("%02X ", data8); break;
++	  }
++	else
+         switch (display_format) {
+           case 'x': dbg_printf ( "\t0x%02x", (unsigned) data8); break;
+           case 'd': dbg_printf ( "\t%d", (int) (Bit8s) data8); break;
+           case 'u': dbg_printf ( "\t%u", (unsigned) data8); break;
+           case 'o': dbg_printf ( "\t%o", (unsigned) data8); break;
+-          case 't':
+-            fputc('\t', stderr);
+-            for (biti=7; ; biti--) {
+-              digit = (data8 >> biti) & 0x01;
+-              fputc(digit + '0', stderr);
+-              if (biti==0) break;
+-              }
+-            break;
+-          case 'c': 
+-            bx_print_char (data8);
+-            break;
++            case 't': dbg_printf_binary ("\t%s", data8, 8); break;
++            case 'c': bx_print_char (data8); break;
+           }
+         break;
+ 
+@@ -2945,19 +2993,21 @@
+ #else
+         data16 = (databuf[1]<<8)  |  databuf[0];
+ #endif
++        if (memory_dump)
++          switch (display_format) {
++	    case 'd': dbg_printf ("%05d ", data16); break;
++	    case 'u': dbg_printf ("%05u ", data16); break;
++	    case 'o': dbg_printf ("%06o ", data16); break;
++	    case 't': dbg_printf_binary ("%s ", data16, 16); break;
++	    default : dbg_printf ("%04X ", data16); break;
++	  }
++	else
+         switch (display_format) {
+           case 'x': dbg_printf ( "\t0x%04x", (unsigned) data16); break;
+           case 'd': dbg_printf ( "\t%d", (int) (Bit16s) data16); break;
+           case 'u': dbg_printf ( "\t%u", (unsigned) data16); break;
+           case 'o': dbg_printf ( "\t%o", (unsigned) data16); break;
+-          case 't':
+-            fputc('\t', stderr);
+-            for (biti=15; ; biti--) {
+-              digit = (data16 >> biti) & 0x01;
+-              fputc(digit + '0', stderr);
+-              if (biti==0) break;
+-              }
+-            break;
++            case 't': dbg_printf_binary ("\t%s", data16, 16); break;
+           case 'c': 
+             bx_print_char (data16>>8);
+             bx_print_char (data16 & 0xff);
+@@ -2972,19 +3022,21 @@
+         data32 = (databuf[3]<<24) | (databuf[2]<<16) |
+                  (databuf[1]<<8)  |  databuf[0];
+ #endif
++        if (memory_dump)
++          switch (display_format) {
++	    case 'd': dbg_printf ("%10d ", data32); break;
++	    case 'u': dbg_printf ("%10u ", data32); break;
++	    case 'o': dbg_printf ("%12o ", data32); break;
++	    case 't': dbg_printf_binary ("%s ", data32, 32); break;
++	    default : dbg_printf ("%08X ", data32); break;
++	  }
++	else
+         switch (display_format) {
+           case 'x': dbg_printf ( "\t0x%08x", (unsigned) data32); break;
+           case 'd': dbg_printf ( "\t%d", (int) (Bit32s) data32); break;
+           case 'u': dbg_printf ( "\t%u", (unsigned) data32); break;
+           case 'o': dbg_printf ( "\t%o", (unsigned) data32); break;
+-          case 't':
+-            fputc('\t', stderr);
+-            for (biti=31; ; biti--) {
+-              digit = (data32 >> biti) & 0x01;
+-              fputc(digit + '0', stderr);
+-              if (biti==0) break;
+-              }
+-            break;
++            case 't': dbg_printf_binary ("\t%s", data32, 32); break;
+     case 'c': 
+             bx_print_char (0xff & (data32>>24));
+             bx_print_char (0xff & (data32>>16));
+@@ -3037,7 +3089,7 @@
+   void
+ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
+ {
+-  bx_bool is_OK;
++  bx_bool is_OK = false;
+   symbol++; // get past '$'
+ 
+   if ( !strcmp(symbol, "eax") ) {
+@@ -3389,21 +3441,31 @@
+ }
+ 
+   void
+-bx_dbg_disassemble_command(bx_num_range range)
++bx_dbg_disassemble_command(const char *format, bx_num_range range)
+ {
+ #if BX_DISASM
+   bx_bool paddr_valid;
+   Bit32u  paddr;
+   unsigned ilen;
++  int numlines = INT_MAX;
+ 
+   if (range.to == EMPTY_ARG) {
+-    // should set to cs:eip. FIXME
+-    BX_INFO(("Error: type 'disassemble ADDR' or 'disassemble ADDR:ADDR'"));
+-    return;
++    range.from = bx_dbg_get_laddr(bx_dbg_get_selector_value(1), BX_CPU(dbg_cpu)->get_EIP());
++    range.to = range.from;
++  }
++
++  if (format) {
++    // format always begins with '/' (checked in lexer)
++    // so we won't bother checking it here second time.
++    numlines = atoi(format + 1);
++    if (range.to == range.from)
++      range.to = BX_MAX_BIT64S; // Disassemble just X lines
+   }
+ 
+   do {
+-    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(range.from, &paddr, &paddr_valid);
++    numlines--;
++
++    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy((Bit32u)range.from, &paddr, &paddr_valid);
+ 
+     if (paddr_valid) {
+       unsigned dis_size = bx_debugger.disassemble_size;
+@@ -3414,7 +3476,7 @@
+       }
+       BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
+       ilen = bx_disassemble.disasm(dis_size==32,
+-        range.from, bx_disasm_ibuf, bx_disasm_tbuf);
++        (Bit32u)range.from, bx_disasm_ibuf, bx_disasm_tbuf);
+ 
+       dbg_printf ( "%08x: ", (unsigned) range.from);
+       dbg_printf ( "%-25s ; ", bx_disasm_tbuf);
+@@ -3429,141 +3491,13 @@
+       range.from = range.to; // bail out
+       }
+       range.from += ilen;
+-    } while (range.from < range.to);
++    } while ((range.from < range.to) && numlines > 0);
+ #else
++  UNUSED(format);
+   UNUSED(range);
+ #endif  // #if BX_DISASM
+ }
+ 
+-//NOTE simple minded maths logic
+-  void
+-bx_dbg_maths_command(char *command, int data1, int data2)
+-{
+-  if(strcmp(command,"add") == 0)
+-  {
+-    dbg_printf (" %x + %x = %x ", data1, data2, data1+data2);
+-  }
+-  else if(strcmp(command,"sub") == 0)
+-  {
+-    dbg_printf (" %x - %x = %x ", data1, data2, data1-data2); 
+-  }
+-  else if(strcmp(command,"mul") == 0)
+-  {
+-    dbg_printf (" %x * %x = %x ", data1, data2, data1*data2); 
+-  }
+-  else if(strcmp(command,"div") == 0)
+-  {
+-    dbg_printf (" %x / %x = %x ", data1, data2, data1/data2); 
+-  }
+-  dbg_printf ("\n");
+-}
+-
+-//FIXME HanishKVC requires better error checking in POST FIX expression
+-//NOTE Uses POST FIX EXPRESSION handling for better maths
+-  void
+-bx_dbg_maths_expression_command(char *expr)
+-{
+-  int data1, data2, res;
+-  int biti,digit;
+-  char *next_token;
+-
+-  dbg_printf ("%s\n",expr);
+-
+-  expr++; // skip " in the string token passed
+-  while(expr[0] == ' ')expr++; // skip any spaces following the " 
+-
+-  next_token = strtok(expr," ");
+-  if(next_token == NULL) return;
+-  data1 = res = strtol(next_token,NULL,0);
+-  do
+-  {
+-    switch(next_token[0])
+-    {
+-      case '+':  
+-        res = data1+data2;
+-        dbg_printf (" %x + %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '-':  
+-        res = data1-data2;
+-        dbg_printf (" %x - %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '*':  
+-        res = data1*data2;
+-        dbg_printf (" %x * %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '/':  
+-        res = data1/data2;
+-        dbg_printf (" %x / %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '&':
+-        res = data1 & data2;
+-        dbg_printf (" %x & %x = %x ",data1,data2,res);
+-        data1 = res;
+-        break;
+-      case '|':
+-        res = data1 | data2;
+-        dbg_printf (" %x | %x = %x ",data1,data2,res);
+-        data1 = res;
+-        break;
+-      case '~':
+-        res = ~data1;
+-        dbg_printf (" ~ %x = %x ",data1,res);
+-        data1 = res;
+-        break;
+-     default:
+-       data2 = strtol(next_token,NULL,0);
+-       break;
+-    }
+-    next_token = strtok(NULL," ");
+-    if(next_token == NULL) break;
+-  }while(1);
+-  dbg_printf ("\n");
+-  //FIXME HanishKVC If sizeof changes from a Byte addressed to 
+-  //      Word addressed machine & so on then the logic 
+-  //      below requires to be updated
+-  dbg_printf (" Binary of %x : ",res);
+-  for(biti=(sizeof(int)*8)-1; ; biti--) 
+-  {
+-    digit = (res >> biti) & 0x01;
+-    fputc(digit + '0', stderr);
+-    if(biti==0) break;
+-    if((biti%4) == 0) fputc(' ',stderr);
+-  }
+-  dbg_printf ("\n");
+-}
+-
+-  void
+-bx_dbg_v2l_command(unsigned seg_no, Bit32u offset)
+-{
+-#if BX_NUM_SIMULATORS > 1
+-  dbg_printf ( "Error: v2l not supported for nsim > 1\n"
+-#else
+-  bx_dbg_sreg_t sreg;
+-  Bit32u laddr;
+-
+-  if (seg_no > 5) {
+-    dbg_printf ( "Error: seg_no out of bounds\n");
+-    return;
+-    }
+-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, seg_no);
+-  if (!sreg.valid) {
+-    dbg_printf ( "Error: segment valid bit cleared\n");
+-    return;
+-    }
+-  laddr = (sreg.des_l>>16) |
+-          ((sreg.des_h<<16)&0x00ff0000) |
+-          (sreg.des_h & 0xff000000);
+-  laddr += offset;
+-  
+-  dbg_printf ( "laddr: 0x%x (%u)\n",
+-    (unsigned) laddr, (unsigned) laddr);
+-#endif
+-}
+-
+   void
+ bx_dbg_instrument_command(char *comm)
+ {
+@@ -3807,12 +3741,12 @@
+   }
+   if (print_table)
+     dbg_printf ( "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
+-  for (n = range.from; n<=range.to; n++) {
++  for (n = (int)range.from; n<=(int)range.to; n++) {
+     Bit32u paddr;
+     bx_bool paddr_valid;
+     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.idtr.base + 8*n, &paddr, &paddr_valid);
+     if (!paddr_valid) {
+-      dbg_printf ( "error: IDTR+8*%d points to invalid linear address %p\n",
++      dbg_printf ( "error: IDTR+8*%d points to invalid linear address 0x%-08x\n",
+    n, cpu.idtr.base);
+       return;
+     }
+@@ -3838,12 +3772,12 @@
+   }
+   if (print_table)
+     dbg_printf ( "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
+-  for (n = range.from; n<=range.to; n++) {
++  for (n = (int)range.from; n<=(int)range.to; n++) {
+     Bit32u paddr;
+     bx_bool paddr_valid;
+     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.gdtr.base + 8*n, &paddr, &paddr_valid);
+     if (!paddr_valid) {
+-      dbg_printf ( "error: GDTR+8*%d points to invalid linear address %p\n",
++      dbg_printf ( "error: GDTR+8*%d points to invalid linear address 0x%-08x\n",
+     n, cpu.gdtr.base);
+       return;
+     }
+@@ -3863,11 +3797,63 @@
+   dbg_printf ( "Local Descriptor Table output not implemented\n");
+ }
+ 
++static void bx_dbg_print_tss (unsigned char *tss, int len)
++{
++  if (len<104) {
++    dbg_printf ("Invalid tss length (limit must be greater then 103)\n");
++    return;
++    }
++
++  dbg_printf ("ss:esp(0): 0x%04x:0x%08x\n",
++    *(Bit16u*)(tss+8), *(Bit32u*)(tss+4));
++  dbg_printf ("ss:esp(1): 0x%04x:0x%08x\n",
++    *(Bit16u*)(tss+0x10), *(Bit32u*)(tss+0xc));
++  dbg_printf ("ss:esp(2): 0x%04x:0x%08x\n",
++    *(Bit16u*)(tss+0x18), *(Bit32u*)(tss+0x14));
++  dbg_printf ("cr3: 0x%08x\n", *(Bit32u*)(tss+0x1c));
++  dbg_printf ("eip: 0x%08x\n", *(Bit32u*)(tss+0x20));
++  dbg_printf ("eflags: 0x%08x\n", *(Bit32u*)(tss+0x24));
++
++  dbg_printf ("cs: 0x%04x ds: 0x%04x ss: 0x%04x\n",
++    *(Bit16u*)(tss+76), *(Bit16u*)(tss+84), *(Bit16u*)(tss+80));
++  dbg_printf ("es: 0x%04x fs: 0x%04x gs: 0x%04x\n",
++    *(Bit16u*)(tss+72), *(Bit16u*)(tss+88), *(Bit16u*)(tss+92));
++
++  dbg_printf ("eax: 0x%08x  ebx: 0x%08x  ecx: 0x%08x  edx: 0x%08x\n",
++    *(Bit32u*)(tss+0x28), *(Bit32u*)(tss+0x34), *(Bit32u*)(tss+0x2c), *(Bit32u*)(tss+0x30));
++  dbg_printf ("esi: 0x%08x  edi: 0x%08x  ebp: 0x%08x  esp: 0x%08x\n",
++    *(Bit32u*)(tss+0x40), *(Bit32u*)(tss+0x44), *(Bit32u*)(tss+0x3c), *(Bit32u*)(tss+0x38));
++
++  dbg_printf ("ldt: 0x%04x\n", *(Bit16u*)(tss+0x60));
++  dbg_printf ("i/o map: 0x%04x\n", *(Bit16u*)(tss+0x66));
++}
++
+ void
+-bx_dbg_info_tss_command(bx_num_range n) {
++bx_dbg_info_tss_command(bx_num_range range) {
+   bx_dbg_cpu_t cpu;
+   BX_CPU(0)->dbg_get_cpu(&cpu);
+-  dbg_printf ( "TSS output not implemented\n");
++
++  int print_table = 0;
++  if (range.to == EMPTY_ARG) {
++    // show all entries
++    Bit32u laddr = (cpu.tr.des_l>>16) |
++                   ((cpu.tr.des_h<<16)&0x00ff0000) |
++                   (cpu.tr.des_h & 0xff000000);
++    Bit32u len = (cpu.tr.des_l & 0xffff) + 1;
++
++    dbg_printf ( "tr:s=0x%x, base=0x%x, valid=%u\n",
++      (unsigned) cpu.tr.sel, laddr, (unsigned) cpu.tr.valid);
++
++    Bit32u paddr;
++    bx_bool paddr_valid;
++    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &paddr_valid);
++
++    bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
++
++    range.from = 0;
++    range.to = (cpu.gdtr.limit) / 8;
++    print_table = 1;
++  }
+ }
+ 
+ bx_num_range 
+@@ -4779,20 +4765,25 @@
+   if (command == NULL)
+   {
+     fprintf(stderr, "help - show list of debugger commands\n");
+-    fprintf(stderr, "help \"command\" - show short command description\n");
+-    fprintf(stderr, "debugger commands are:\n");
+-    fprintf(stderr, "help, quit, q, c, stepi, si, step, s, vbreak, v, lbreak, lb, pbreak, pb, break\n");
+-    fprintf(stderr, "b, delete, del, d, xp, x, setpmem, crc, info, set, dump_cpu, set_cpu, disas\n");
+-    fprintf(stderr, "disassemble, instrument, trace-on, trace-off, ptime, sb, sba, record, playback\n");
+-    fprintf(stderr, "print-stack, watch, unwatch, load-symbols, show, modebp\n");
++    fprintf(stderr, "help \'command\'- show short command description\n");
++    fprintf(stderr, "-*- Debugger control -*-\n");
++    fprintf(stderr, "    help, q|quit, set, instrument, show, trace-on, trace-off,\n");
++    fprintf(stderr, "    record, playback, load-symbols\n");
++    fprintf(stderr, "-*- Execution control -*-\n");
++    fprintf(stderr, "    c|cont, s|step|stepi, modebp\n");
++    fprintf(stderr, "-*- Breakpoint management -*-\n");
++    fprintf(stderr, "    v|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, d|del|delete\n");
++    fprintf(stderr, "-*- CPU and memory contents -*-\n");
++    fprintf(stderr, "    x, xp, disas|disassemble, setpmem, crc, info, dump_cpu,\n");
++    fprintf(stderr, "    set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
+   }
+   else
+   {
+     p = command;
+-    for (; *p != 0 && *p != '\"'; p++); p++;
+-    for (; *p != 0 && *p != '\"'; p++); *p = 0;
++    for (; *p != 0 && *p != '\"' && *p != '\''; p++); p++;
++    for (; *p != 0 && *p != '\"' && *p != '\''; p++); *p = 0;
+     p = command;
+-    for (; *p != 0 && *p != '\"'; p++); p++;
++    for (; *p != 0 && *p != '\"' && *p != '\''; p++); p++;
+ 
+     fprintf(stderr, "help %s\n", p);
+ 
+@@ -4807,14 +4798,14 @@
+       fprintf(stderr, "%s - quit debugger and execution\n", p);
+     }
+     else
+-    if (strcmp(p, "c") == 0)
++    if ((strcmp(p, "c") == 0) ||
++        (strcmp(p, "cont") == 0))
+     {
+       fprintf(stderr, "%s - continue executing\n", p);
+     }
+     else
+     if ((strcmp(p, "stepi") == 0) ||
+         (strcmp(p, "step") == 0) ||
+-        (strcmp(p, "si") == 0) ||
+        (strcmp(p, "s") == 0))
+     {
+       fprintf(stderr, "%s [count] - execute count instructions, default is 1\n", p);
+@@ -4850,11 +4841,21 @@
+     if (strcmp(p, "xp") == 0)
+     {
+       fprintf(stderr, "%s /nuf addr - examine memory at physical address\n", p);
++      goto nuf_help;
+     }
+     else
+     if (strcmp(p, "x") == 0)
+     {
+       fprintf(stderr, "%s /nuf addr - examine memory at linear address\n", p);
++nuf_help:
++      fprintf(stderr, "    nuf is a sequence of numbers (how much values\n");
++      fprintf(stderr, "    to display) and one or more of the [mxduotcsibhwg]\n");
++      fprintf(stderr, "    format specificators:\n");
++      fprintf(stderr, "    x,d,u,o,t,c,s,i select the format of the output (they stand for\n");
++      fprintf(stderr, "        hex, decimal, unsigned, octal, binary, char, asciiz, instr)\n");
++      fprintf(stderr, "    b,h,w,g select the size of a data element (for byte, half-word,\n");
++      fprintf(stderr, "        word and giant word)\n");
++      fprintf(stderr, "    m selects an alternative output format (memory dump)\n");
+     }
+     else
+     if (strcmp(p, "setpmem") == 0)
+@@ -4873,10 +4874,11 @@
+       fprintf(stderr, "%s dirty - show physical pages dirtied (written to) since last display\n", p);
+       fprintf(stderr, "%s program - execution status of the program\n", p);
+       fprintf(stderr, "%s registers - list of CPU integer registers and their contents\n", p);
++      fprintf(stderr, "%s cpu - list of CPU registers and their contents\n", p);
+       fprintf(stderr, "%s fpu - list of FPU registers and their contents\n", p);
+       fprintf(stderr, "%s idt - show interrupt descriptor table\n", p);
+       fprintf(stderr, "%s gdt - show global descriptor table\n", p);
+-      fprintf(stderr, "%s tss - show task ???\n", p);
++      fprintf(stderr, "%s tss - show current task state segment\n", p);
+       fprintf(stderr, "%s cr - show CR0-4 registers\n", p);
+       fprintf(stderr, "%s ne2000 - show NE2000 registers\n", p);
+     }
+@@ -4903,7 +4905,8 @@
+     if ((strcmp(p, "disassemble") == 0) ||
+         (strcmp(p, "disas") == 0))
+     {
+-      fprintf(stderr, "%s start end - disassemble instructions for given linear adress\n", p);
++      fprintf(stderr, "%s [/count] start end - disassemble instructions for given linear adress\n", p);
++      fprintf(stderr, "    Optional 'count' is the number of disassembled instructions");
+     }
+     else
+     if (strcmp(p, "instrument") == 0)
+@@ -4994,6 +4997,17 @@
+       fprintf(stderr, "%s \"tab\" - show page tables\n", p);
+     }
+     else
++    if ((strcmp(p, "calc") == 0) ||
++        (strcmp(p, "?") == 0))
++    {
++      fprintf(stderr, "%s expr - calculate a expression and display the result.\n", p);
++      fprintf(stderr, "    'expr' can reference any general-purpose and segment\n");
++      fprintf(stderr, "    registers, use any arithmetic and logic operations, and\n");
++      fprintf(stderr, "    also the special ':' operator which computes the linear\n");
++      fprintf(stderr, "    address for a segment:offset (in real and v86 mode) or\n");
++      fprintf(stderr, "    of a selector:offset (in protected mode) pair.\n");
++    }
++    else
+     {
+       fprintf(stderr, "%s - unknow command, try help\n", p);
+     }
+@@ -5001,4 +5015,165 @@
+   return;
+ }
+ 
++void
++bx_dbg_calc_command(Bit64u value)
++{
++ dbg_printf ("0x" FMT_LL "x\n", value);
++}
++
++Bit32u
++bx_dbg_get_reg_value(Regs reg)
++{
++ switch(reg)
++ {
++  case rAL:
++   return (Bit8u)BX_CPU(dbg_cpu)->get_EAX();
++  case rBL:
++   return (Bit8u)BX_CPU(dbg_cpu)->get_EBX();
++  case rCL:
++   return (Bit8u)BX_CPU(dbg_cpu)->get_ECX();
++  case rDL:
++   return (Bit8u)BX_CPU(dbg_cpu)->get_EDX();
++  case rAH:
++   return (Bit8u)(BX_CPU(dbg_cpu)->get_EAX()>>8);
++  case rBH:
++   return (Bit8u)(BX_CPU(dbg_cpu)->get_EBX()>>8);
++  case rCH:
++   return (Bit8u)(BX_CPU(dbg_cpu)->get_ECX()>>8);
++  case rDH:
++   return (Bit8u)(BX_CPU(dbg_cpu)->get_EDX()>>8);
++  case rAX:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_EAX();
++  case rBX:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_EBX();
++  case rCX:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_ECX();
++  case rDX:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_EDX();
++  case rEAX:
++   return BX_CPU(dbg_cpu)->get_EAX();
++  case rEBX:
++   return BX_CPU(dbg_cpu)->get_EBX();
++  case rECX:
++   return BX_CPU(dbg_cpu)->get_ECX();
++  case rEDX:
++   return BX_CPU(dbg_cpu)->get_EDX();
++
++  case rSI:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_ESI();
++  case rDI:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_EDI();
++  case rESI:
++   return BX_CPU(dbg_cpu)->get_ESI();
++  case rEDI:
++   return BX_CPU(dbg_cpu)->get_EDI();
++
++  case rBP:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_EBP();
++  case rEBP:
++   return BX_CPU(dbg_cpu)->get_EBP();
++  case rSP:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_ESP();
++  case rESP:
++   return BX_CPU(dbg_cpu)->get_ESP();
++  case rIP:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_EIP();
++  case rEIP:
++   return BX_CPU(dbg_cpu)->get_EIP();
++  default:
++    fprintf(stderr, "unknown register ??? (BUG!!!)\n");
++   return 0;
++ }
++}
++
++Bit16u 
++bx_dbg_get_selector_value(unsigned int seg_no)
++{
++  bx_dbg_sreg_t sreg;
++
++  if (seg_no > 5) {
++    dbg_printf ( "Error: seg_no out of bounds\n");
++    return 0;
++  }
++  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, seg_no);
++  if (!sreg.valid) {
++    dbg_printf ( "Error: segment valid bit cleared\n");
++    return 0;
++  }
++  return sreg.sel;
++}
++
++Bit32u
++bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
++{
++  bool protmode = (BX_CPU(dbg_cpu)->cr0.pe)
++   && !(BX_CPU(dbg_cpu)->get_VM());
++
++  if (protmode) {
++    bx_descriptor_t descriptor;
++    bx_selector_t selector;
++    Bit32u dword1, dword2;
++
++    /* if selector is NULL, error */
++    if ((sel & 0xfffc) == 0) {
++      dbg_printf ("ERROR: Dereferencing a NULL selector!\n");
++      return 0;
++      }
++
++    /* parse fields in selector */
++    BX_CPU(dbg_cpu)->parse_selector(sel, &selector);
++
++    Bit32u desc_base;
++    if (selector.ti) {
++      // LDT
++      if ((selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.ldt.limit) {
++        dbg_printf ("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
++        return 0;
++        }
++      desc_base = BX_CPU(dbg_cpu)->ldtr.cache.u.ldt.base;
++      }
++    else {
++      // GDT
++      if ((selector.index*8 + 7) > BX_CPU(dbg_cpu)->gdtr.limit) {
++        dbg_printf ("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
++        return 0;
++        }
++      desc_base = BX_CPU(dbg_cpu)->gdtr.base;
++      }
++
++    BX_CPU(dbg_cpu)->access_linear(desc_base + selector.index * 8,     4, 0, BX_READ, &dword1);
++    BX_CPU(dbg_cpu)->access_linear(desc_base + selector.index * 8 + 4, 4, 0, BX_READ, &dword2);
++
++    memset (&descriptor, 0, sizeof (descriptor));
++    BX_CPU(dbg_cpu)->parse_descriptor(dword1, dword2, &descriptor);
++
++    if (!descriptor.segment) {
++      dbg_printf ("ERROR: selector %04x points to a system descriptor and is not supported!\n", sel);
++      return 0;
++      }
++
++    /* #NP(selector) if descriptor is not present */
++    if (descriptor.p==0) {
++      dbg_printf ("ERROR: descriptor %04x not present!\n", sel);
++      return 0;
++      }
++
++    Bit32u lowaddr, highaddr;
++    if (descriptor.u.segment.c_ed && !descriptor.u.segment.executable) // expand-down
++      lowaddr = descriptor.u.segment.limit_scaled,
++      highaddr = descriptor.u.segment.g ? 0xffffffff : 0xffff;
++    else
++      lowaddr = 0, highaddr = descriptor.u.segment.limit_scaled;
++
++    if ((ofs < lowaddr) || (ofs > highaddr)) {
++      dbg_printf ("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n",
++        ofs, sel, lowaddr, highaddr);
++      }
++
++    return descriptor.u.segment.base + ofs;
++    }
++  else {
++    return sel * 16 + ofs;
++    }
++}
+ #endif /* if BX_DEBUGGER */
+diff -urN ../bochs/debug/debug.h ./debug/debug.h
+--- ../bochs/debug/debug.h	2003-04-02 19:03:32.000000000 +0200
++++ ./debug/debug.h	2003-06-06 17:38:02.000000000 +0200
+@@ -56,6 +56,17 @@
+ extern "C" {
+ #endif
+ 
++typedef enum 
++{
++ rAL, rBL, rCL, rDL, 
++ rAH, rBH, rCH, rDH, 
++ rAX, rBX, rCX, rDX, 
++ rEAX, rEBX, rECX, rEDX, 
++ rSI, rDI, rESI, rEDI, 
++ rBP, rEBP, rSP, rESP, 
++ rIP, rEIP
++} Regs;
++
+ // Flex defs
+ extern int bxlex(void);
+ extern char *bxtext;  // Using the pointer option rather than array
+@@ -72,6 +83,9 @@
+ } bx_num_range;
+ #define EMPTY_ARG (-1)
+ 
++Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
++Bit32u bx_dbg_get_reg_value(Regs reg);
++Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
+ bx_num_range make_num_range (Bit64s from, Bit64s to);
+ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
+ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
+@@ -129,18 +143,16 @@
+ void bx_dbg_take_command(char *, unsigned n);
+ void bx_dbg_dump_cpu_command(void);
+ void bx_dbg_set_cpu_command(void);
+-void bx_dbg_disassemble_command(bx_num_range);
++void bx_dbg_disassemble_command(const char *,bx_num_range);
+ void bx_dbg_instrument_command(char *);
+ void bx_dbg_loader_command(char *);
+ void bx_dbg_doit_command(unsigned);
+ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
+-void bx_dbg_maths_command(char *command, int data1, int data2);
+-void bx_dbg_maths_expression_command(char *expr);
+-void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
+ extern bx_bool watchpoint_continue;
+ void bx_dbg_linux_syscall ();
+ void bx_dbg_info_ne2k(int page, int reg);
+ void bx_dbg_help_command(char* command);
++void bx_dbg_calc_command(Bit64u value);
+ 
+ #ifdef __cplusplus
+ }
+diff -urN ../bochs/debug/lexer.l ./debug/lexer.l
+--- ../bochs/debug/lexer.l	2002-11-19 17:04:01.000000000 +0100
++++ ./debug/lexer.l	2003-06-06 17:38:02.000000000 +0200
+@@ -19,28 +19,30 @@
+ static unsigned lex_input_size = 0;
+ %}
+ 
++%x EXAMINE
++%x DISASM
+ 
+ %%
+-[ \t]+          ; // eat up whitespace
++<*>[ \t]+       ; // eat up whitespace
+ set             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET); }
+ dis             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIS); }
+ on              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ON); }
+ off             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_OFF); }
+ crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
+-c               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
++c               |
++cont            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
+ stepi           |
+ step            |
+-si              |
+ s               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEPN); }
+-vb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VBREAKPOINT); }
++vb              |
+ vbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VBREAKPOINT); }
+-lb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LBREAKPOINT); }
++lb              |
+ lbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LBREAKPOINT); }
+-pb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
++break           |
++b               |
++pb              |
+ pbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
+ info            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO); }
+-break           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
+-b               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
+ program         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PROGRAM); }
+ cr		|
+ creg		|
+@@ -49,6 +51,7 @@
+ reg		|
+ registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
+ fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
++cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }
+ all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
+ idt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }
+ gdt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_GDT); }
+@@ -57,13 +60,13 @@
+ dirty           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIRTY); }
+ linux           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LINUX); }
+ dump_cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DUMP_CPU); }
+-delete          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
+-del             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
++delete          |
++del             |
+ d               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
+-quit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
++quit            |
+ q               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
+-x               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
+-xp              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
++x               |
++xp              { BEGIN(EXAMINE); bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
+ setpmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SETPMEM); }
+ query           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUERY); }
+ pending         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PENDING); }
+@@ -72,12 +75,7 @@
+ irq             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IRQ); }
+ set_cpu         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET_CPU); }
+ disas           |
+-disassemble     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
+-maths           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MATHS); }
+-add             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ADD); }
+-sub             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SUB); }
+-mul             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MUL); }
+-div             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIV); }
++disassemble     { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
+ instrument      { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INSTRUMENT); }
+ start           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_START); }
+ stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
+@@ -115,6 +113,32 @@
+ ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
++al	 	{ bxlval.reg=rAL; return (BX_TOKEN_REG_AL);}
++bl	 	{ bxlval.reg=rBL; return (BX_TOKEN_REG_BL);}
++cl	 	{ bxlval.reg=rCL; return (BX_TOKEN_REG_CL);}
++dl	 	{ bxlval.reg=rDL; return (BX_TOKEN_REG_DL);}
++ah	 	{ bxlval.reg=rAH; return (BX_TOKEN_REG_AH);}
++bh	 	{ bxlval.reg=rBH; return (BX_TOKEN_REG_BH);}
++ch	 	{ bxlval.reg=rCH; return (BX_TOKEN_REG_CH);}
++dh	 	{ bxlval.reg=rDH; return (BX_TOKEN_REG_DH);}
++ax	 	{ bxlval.reg=rAX; return (BX_TOKEN_REG_AX);}
++bx	 	{ bxlval.reg=rBX; return (BX_TOKEN_REG_BX);}
++cx	 	{ bxlval.reg=rCX; return (BX_TOKEN_REG_CX);}
++dx	 	{ bxlval.reg=rDX; return (BX_TOKEN_REG_DX);}
++eax	 	{ bxlval.reg=rEAX; return (BX_TOKEN_REG_EAX);}
++ebx	 	{ bxlval.reg=rEBX; return (BX_TOKEN_REG_EBX);}
++ecx	 	{ bxlval.reg=rECX; return (BX_TOKEN_REG_ECX);}
++edx	 	{ bxlval.reg=rEDX; return (BX_TOKEN_REG_EDX);}
++si	 	{ bxlval.reg=rSI; return (BX_TOKEN_REG_SI);}
++di	 	{ bxlval.reg=rDI; return (BX_TOKEN_REG_DI);}
++bp	 	{ bxlval.reg=rBP; return (BX_TOKEN_REG_BP);}
++sp	 	{ bxlval.reg=rSP; return (BX_TOKEN_REG_SP);}
++ip	 	{ bxlval.reg=rIP; return (BX_TOKEN_REG_IP);}
++esi	 	{ bxlval.reg=rESI; return (BX_TOKEN_REG_ESI);}
++edi	 	{ bxlval.reg=rEDI; return (BX_TOKEN_REG_EDI);}
++ebp	 	{ bxlval.reg=rEBP; return (BX_TOKEN_REG_EBP);}
++esp	 	{ bxlval.reg=rESP; return (BX_TOKEN_REG_ESP);}
++eip	 	{ bxlval.reg=rEIP; return (BX_TOKEN_REG_EIP);}
+ cs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CS); }
+ es              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ES); }
+ ss              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SS); }
+@@ -122,20 +146,35 @@
+ fs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FS); }
+ gs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GS); }
+ force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
+-v2l             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_V2L); }
+ help            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
++\?              |
++calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
++<EXAMINE>\/[0-9]+                 { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
++<EXAMINE>\/[0-9]*[mxduotcsibhwg]+ { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
++<DISASM>\/[0-9]+	{ BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISFORMAT); }
++"+"             { return ('+'); }
++"-"             { return ('-'); }
++"*"             { return ('*'); }
++"/"             { return ('/'); }
++">>"            { return (BX_TOKEN_RSHIFT); }
++"<<"            { return (BX_TOKEN_LSHIFT); }
++"&"             { return ('&'); }
++"|"             { return ('|'); }
++"^"             { return ('^'); }
++"!"             { return ('!'); }
++"("             { return ('('); }
++")"             { return (')'); }
++\'[^\'\n]*\'    |
+ \"[^\"\n]*\"    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STRING); }
+-\/[0-9]*[xduotcsibhwg][xduotcsibhwg] { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+-\/[0-9]*[xduotcsibhwg]              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+-\/[0-9]+                           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+ 0x[0-9a-fA-F]+  { bxlval.uval = strtoul(bxtext+2, NULL, 16); return(BX_TOKEN_NUMERIC); }
+ 0[0-7]+         { bxlval.uval = strtoul(bxtext+1, NULL, 8); return(BX_TOKEN_NUMERIC); }
+ [0-9]+L         { bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
+ [0-9]+          { bxlval.uval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_NUMERIC); }
+ $[a-zA-Z_][a-zA-Z0-9_]* { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLNAME); }
+-\n              { return('\n'); }
++<*>\n           { return('\n'); }
+ [#][^\n]*    ; // eat up comments '//'
+ .               { return(bxtext[0]); }
++<EXAMINE,DISASM>. { BEGIN(INITIAL); unput(*bxtext); }
+ %%
+ 
+ // [A-Za-z_][A-Za-z0-9_]*   { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GENERIC); }
+diff -urN ../bochs/debug/parser.y ./debug/parser.y
+--- ../bochs/debug/parser.y	2002-11-19 17:04:02.000000000 +0100
++++ ./debug/parser.y	2003-06-06 17:38:02.000000000 +0200
+@@ -8,10 +8,6 @@
+ #include "debug.h"
+ 
+ #if BX_DEBUGGER
+-/*
+-NOTE: The #if comes from parser.y.  The makefile will add the matching #endif
+-at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
+-*/
+ 
+ // %left '-' '+'
+ // %left '*' '/'
+@@ -25,8 +21,41 @@
+   Bit32u   uval;
+   Bit64u   ulval;
+   bx_num_range   uval_range;
++  Regs     reg;
+   }
+ 
++// Common registers
++%type<reg> BX_TOKEN_COMMON_REG
++%type<reg> BX_TOKEN_INDEX_REG
++%type<reg> BX_TOKEN_PTR_REG
++%type<reg> BX_TOKEN_NONSEG_REG
++%token<reg> BX_TOKEN_REG_AL
++%token<reg> BX_TOKEN_REG_BL
++%token<reg> BX_TOKEN_REG_CL
++%token<reg> BX_TOKEN_REG_DL
++%token<reg> BX_TOKEN_REG_AH
++%token<reg> BX_TOKEN_REG_BH
++%token<reg> BX_TOKEN_REG_CH
++%token<reg> BX_TOKEN_REG_DH
++%token<reg> BX_TOKEN_REG_AX
++%token<reg> BX_TOKEN_REG_BX
++%token<reg> BX_TOKEN_REG_CX
++%token<reg> BX_TOKEN_REG_DX
++%token<reg> BX_TOKEN_REG_EAX
++%token<reg> BX_TOKEN_REG_EBX
++%token<reg> BX_TOKEN_REG_ECX
++%token<reg> BX_TOKEN_REG_EDX
++%token<reg> BX_TOKEN_REG_SI
++%token<reg> BX_TOKEN_REG_DI
++%token<reg> BX_TOKEN_REG_BP
++%token<reg> BX_TOKEN_REG_SP
++%token<reg> BX_TOKEN_REG_IP
++%token<reg> BX_TOKEN_REG_ESI
++%token<reg> BX_TOKEN_REG_EDI
++%token<reg> BX_TOKEN_REG_EBP
++%token<reg> BX_TOKEN_REG_ESP
++%token<reg> BX_TOKEN_REG_EIP
++
+ %token <sval> BX_TOKEN_CONTINUE
+ %token <sval> BX_TOKEN_STEPN
+ %token <sval> BX_TOKEN_NEXT_STEP
+@@ -40,6 +69,7 @@
+ %token <sval> BX_TOKEN_QUIT
+ %token <sval> BX_TOKEN_PROGRAM
+ %token <sval> BX_TOKEN_REGISTERS
++%token <sval> BX_TOKEN_CPU
+ %token <sval> BX_TOKEN_FPU
+ %token <sval> BX_TOKEN_ALL
+ %token <sval> BX_TOKEN_IDT
+@@ -51,6 +81,7 @@
+ %token <sval> BX_TOKEN_CONTROL_REGS
+ %token <sval> BX_TOKEN_EXAMINE
+ %token <sval> BX_TOKEN_XFORMAT
++%token <sval> BX_TOKEN_DISFORMAT
+ %token <sval> BX_TOKEN_SETPMEM
+ %token <sval> BX_TOKEN_SYMBOLNAME
+ %token <sval> BX_TOKEN_QUERY
+@@ -108,18 +139,21 @@
+ %token <sval> BX_TOKEN_FS
+ %token <sval> BX_TOKEN_GS
+ %token <sval> BX_TOKEN_ALWAYS_CHECK
+-%token <sval> BX_TOKEN_MATHS
+-%token <sval> BX_TOKEN_ADD
+-%token <sval> BX_TOKEN_SUB
+-%token <sval> BX_TOKEN_MUL
+-%token <sval> BX_TOKEN_DIV
+-%token <sval> BX_TOKEN_V2L
+ %token <sval> BX_TOKEN_TRACEREGON
+ %token <sval> BX_TOKEN_TRACEREGOFF
+ %token <sval> BX_TOKEN_HELP
++%token <sval> BX_TOKEN_CALC
++%token BX_TOKEN_RSHIFT
++%token BX_TOKEN_LSHIFT
+ %type <uval> segment_register
+ %type <uval> optional_numeric
+ %type <uval_range> numeric_range optional_numeric_range
++%type <ulval> vexpression
++%type <ulval> expression
++
++%left '+' '-' '|' '^'
++%left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
++%left NOT NEG
+ 
+ %start command
+ 
+@@ -162,6 +196,7 @@
+     | trace_reg_on_command
+     | trace_reg_off_command
+     | help_command
++    | calc_command
+     | 
+     | '\n'
+       {
+@@ -440,7 +475,7 @@
+         bx_dbg_vbreakpoint_command(0, 0, 0);
+         free($1);
+         }
+-    | BX_TOKEN_VBREAKPOINT BX_TOKEN_NUMERIC ':' BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_VBREAKPOINT vexpression ':' expression '\n'
+         {
+         bx_dbg_vbreakpoint_command(1, $2, $4);
+         free($1);
+@@ -450,7 +485,7 @@
+         bx_dbg_lbreakpoint_command(0, 0);
+         free($1);
+         }
+-    | BX_TOKEN_LBREAKPOINT BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_LBREAKPOINT expression '\n'
+         {
+         bx_dbg_lbreakpoint_command(1, $2);
+         free($1);
+@@ -460,12 +495,12 @@
+         bx_dbg_pbreakpoint_command(0, 0);
+         free($1);
+         }
+-    | BX_TOKEN_PBREAKPOINT BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_PBREAKPOINT expression '\n'
+         {
+         bx_dbg_pbreakpoint_command(1, $2);
+         free($1);
+         }
+-    | BX_TOKEN_PBREAKPOINT '*' BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_PBREAKPOINT '*' expression '\n'
+         {
+         bx_dbg_pbreakpoint_command(1, $3);
+         free($1);
+@@ -478,6 +513,11 @@
+         bx_dbg_info_bpoints_command();
+         free($1); free($2);
+         }
++    | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
++        {
++        bx_dbg_dump_cpu_command();
++        free($1); free($2);
++        }
+     | BX_TOKEN_INFO BX_TOKEN_PROGRAM '\n'
+         {
+         bx_dbg_info_program_command();
+@@ -559,19 +599,14 @@
+   | numeric_range;
+ 
+ numeric_range :
+-  BX_TOKEN_NUMERIC
++  expression
+   {
+     $$ = make_num_range ($1, $1);
+   }
+   | 
+-  BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC
++  expression expression
+   {
+     $$ = make_num_range ($1, $2);
+-  }
+-  | 
+-  BX_TOKEN_NUMERIC ':' BX_TOKEN_NUMERIC
+-  {
+-    $$ = make_num_range ($1, $3);
+   };
+    
+ 
+@@ -601,7 +636,7 @@
+ 
+ 
+ examine_command:
+-      BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT BX_TOKEN_NUMERIC '\n'
++      BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'
+         {
+         bx_dbg_examine_command($1, $2,1, $3,1, 0);
+ #if BX_NUM_SIMULATORS >= 2
+@@ -617,7 +652,7 @@
+ #endif
+         free($1); free($2);
+         }
+-    | BX_TOKEN_EXAMINE BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_EXAMINE expression '\n'
+         {
+         //FIXME HanishKVC This method of hunting thro all the 
+         //      simulators may be better than using 2 calls if 
+@@ -690,9 +725,14 @@
+ disassemble_command:
+       BX_TOKEN_DISASSEMBLE optional_numeric_range '\n'
+         {
+-        bx_dbg_disassemble_command($2);
++        bx_dbg_disassemble_command(NULL, $2);
+         free($1);
+         }
++    | BX_TOKEN_DISASSEMBLE BX_TOKEN_DISFORMAT optional_numeric_range '\n'
++        {
++        bx_dbg_disassemble_command($2, $3);
++	free($1); free($2);
++        }
+     ;
+ 
+ instrument_command:
+@@ -742,41 +782,6 @@
+         }
+     ;
+ 
+-maths_command:
+-      BX_TOKEN_MATHS BX_TOKEN_ADD BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_SUB BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_MUL BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_DIV BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_STRING '\n'
+-        {
+-        bx_dbg_maths_expression_command($2);
+-        free($1); free($2);
+-        }
+-
+-v2l_command:
+-      BX_TOKEN_V2L segment_register ':' BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_v2l_command($2, $4);
+-        free($1);
+-        }
+-    ;
+-
+ trace_reg_on_command:
+       BX_TOKEN_TRACEREGON '\n'
+         {
+@@ -806,4 +811,98 @@
+          }
+     ;
+ 
++calc_command:
++   BX_TOKEN_CALC expression '\n'
++     {
++     bx_dbg_calc_command($2);
++     free($1);
++     }
++;
++
++BX_TOKEN_COMMON_REG:
++     BX_TOKEN_REG_AL
++   | BX_TOKEN_REG_BL
++   | BX_TOKEN_REG_CL
++   | BX_TOKEN_REG_DL
++   | BX_TOKEN_REG_AH
++   | BX_TOKEN_REG_BH
++   | BX_TOKEN_REG_CH
++   | BX_TOKEN_REG_DH
++   | BX_TOKEN_REG_AX
++   | BX_TOKEN_REG_BX
++   | BX_TOKEN_REG_CX
++   | BX_TOKEN_REG_DX
++   | BX_TOKEN_REG_EAX
++   | BX_TOKEN_REG_EBX
++   | BX_TOKEN_REG_ECX
++   | BX_TOKEN_REG_EDX
++   { $$=$1; }
++;
++
++BX_TOKEN_INDEX_REG:
++     BX_TOKEN_REG_SI
++   | BX_TOKEN_REG_DI
++   | BX_TOKEN_REG_ESI
++   | BX_TOKEN_REG_EDI
++   { $$=$1; }
++;
++
++BX_TOKEN_PTR_REG:
++     BX_TOKEN_REG_BP
++   | BX_TOKEN_REG_SP
++   | BX_TOKEN_REG_IP
++   | BX_TOKEN_REG_EBP
++   | BX_TOKEN_REG_ESP
++   | BX_TOKEN_REG_EIP
++   { $$=$1; }
++;
++
++BX_TOKEN_NONSEG_REG:
++     BX_TOKEN_COMMON_REG
++   | BX_TOKEN_INDEX_REG
++   | BX_TOKEN_PTR_REG
++   { $$=$1; }
++;
++
++/* Arithmetic expression for vbreak command */
++vexpression:
++     BX_TOKEN_NUMERIC                { $$ = $1; }
++   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
++   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1); }
++   | segment_register                { $$ = bx_dbg_get_selector_value($1); }
++   | vexpression '+' vexpression     { $$ = $1 + $3; }
++   | vexpression '-' vexpression     { $$ = $1 - $3; }
++   | vexpression '*' vexpression     { $$ = $1 * $3; }
++   | vexpression '/' vexpression     { $$ = $1 / $3; }
++   | vexpression BX_TOKEN_RSHIFT vexpression { $$ = $1 >> $3; }
++   | vexpression BX_TOKEN_LSHIFT vexpression { $$ = $1 << $3; }
++   | vexpression '|' vexpression     { $$ = $1 | $3; }
++   | vexpression '^' vexpression     { $$ = $1 ^ $3; }
++   | vexpression '&' vexpression     { $$ = $1 & $3; }
++   | '!' vexpression %prec NOT       { $$ = !$2; }
++   | '-' vexpression %prec NEG       { $$ = -$2; }
++   | '(' vexpression ')'             { $$ = $2; }
++;
++
++/* Same as vexpression but includes the ':' operator - used in most commands */
++expression:
++     BX_TOKEN_NUMERIC                { $$ = $1; }
++   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
++   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1);}
++   | segment_register                { $$ = bx_dbg_get_selector_value($1);}
++   | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
++   | expression '+' expression       { $$ = $1 + $3; }
++   | expression '-' expression       { $$ = $1 - $3; }
++   | expression '*' expression       { $$ = $1 * $3; }
++   | expression '/' expression       { $$ = $1 / $3; }
++   | expression BX_TOKEN_RSHIFT expression { $$ = $1 >> $3; }
++   | expression BX_TOKEN_LSHIFT expression { $$ = $1 << $3; }
++   | expression '|' expression       { $$ = $1 | $3; }
++   | expression '^' expression       { $$ = $1 ^ $3; }
++   | expression '&' expression       { $$ = $1 & $3; }
++   | '!' expression %prec NOT        { $$ = !$2; }
++   | '-' expression %prec NEG        { $$ = -$2; }
++   | '(' expression ')'              { $$ = $2; }
++;
++
+ %%
+diff -urN ../bochs/main.cc ./main.cc
+--- ../bochs/main.cc	2003-05-27 20:19:12.000000000 +0200
++++ ./main.cc	2003-06-05 21:31:44.000000000 +0200
+@@ -29,6 +29,10 @@
+ #include <assert.h>
+ #include "state_file.h"
+ 
++#ifdef HAVE_LOCALE_H
++#include <locale.h>
++#endif
++
+ #if BX_WITH_SDL
+ // since SDL redefines main() to SDL_main(), we must include SDL.h so that the
+ // C language prototype is found.  Otherwise SDL_main() will get its name 
+@@ -1525,6 +1529,10 @@
+ #endif
+ 
+ int bxmain () {
++#ifdef HAVE_LOCALE_H
++  // Initialize locale (for isprint() and other functions)
++  setlocale (LC_ALL, "");
++#endif
+   bx_user_quit = 0;
+   bx_init_siminterface ();   // create the SIM object
+   static jmp_buf context;
