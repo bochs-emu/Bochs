@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.49 2002-06-20 17:59:26 yakovlev Exp $
+// $Id: control.cc,v 1.50 2002-06-23 18:02:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.49 2002-06-20 17:59:26 yakovlev Exp $
+ * $Id: control.cc,v 1.50 2002-06-23 18:02:55 vruppert Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -760,7 +760,7 @@ bx_list_c::text_print (FILE *fp)
     assert (list[i] != NULL);
     if (list[i]->get_enabled ()) {
       list[i]->text_print (fp);
-      if (!options->get () & BX_SERIES_ASK)
+      if (!(options->get () & BX_SERIES_ASK))
         fprintf (fp, "\n");
     }
   }
