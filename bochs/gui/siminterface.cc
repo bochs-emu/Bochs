@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.25 2001-06-21 14:37:55 bdenney Exp $
+ * $Id: siminterface.cc,v 1.26 2001-06-21 14:55:38 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -49,18 +49,8 @@ public:
   virtual int get_log_file (char *path, int len);
   virtual int set_log_file (char *path);
   virtual int get_floppy_options (int drive, bx_floppy_options *out);
-  virtual int set_floppy_options (int drive, bx_floppy_options *in);
-  virtual int get_disk_options (int drive, bx_disk_options *out);
-  virtual int set_disk_options (int drive, bx_disk_options *out);
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
-  virtual int set_cdrom_options (int drive, bx_cdrom_options *out);
-  virtual int get_newhd_support ();
-  virtual void set_newhd_support (int en);
   virtual char *get_floppy_type_name (int type);
-  virtual int get_boot_hard_disk ();
-  virtual int set_boot_hard_disk (int val);
-  virtual int get_private_colormap ();
-  virtual void set_private_colormap (int en);
   virtual void set_notify_callback (sim_interface_callback_t func);
   virtual int notify_return (int retcode);
   virtual int LOCAL_notify (int code);
@@ -238,70 +228,12 @@ bx_real_sim_c::get_floppy_options (int drive, bx_floppy_options *out)
   return 0;
 }
 
-// return values:
-//   0: success
-//  -1: could not open the file given by path (unless type==none)
-//  -2: could open file but need hint on size
-int
-bx_real_sim_c::set_floppy_options (int drive, bx_floppy_options *in)
-{
-  bx_floppy_options *dest = 
-      (drive==0)? &bx_options.floppya : &bx_options.floppyb;
-  if (!get_init_done ()) {
-    *dest = *in;
-    return 0;
-  } else {
-    // bochs is already running.  Try to open the image file
-    *dest = *in;
-    bx_devices.floppy->set_media_status (drive, 0);
-    int status = bx_devices.floppy->set_media_status (drive, 1);
-    BX_INFO (("set_media_status for drive %d returned %d\n", drive, status));
-    if (status==0) return -1;
-    return 0;
-  }
-}
-
-int 
-bx_real_sim_c::get_disk_options (int drive, bx_disk_options *out)
-{
-  *out = (drive==0)? bx_options.diskc : bx_options.diskd;
-  return 0;
-}
-
-int
-bx_real_sim_c::set_disk_options (int drive, bx_disk_options *in)
-{
-  bx_disk_options *dest = (drive==0)? &bx_options.diskc : &bx_options.diskd;
-  *dest = *in;
-  return 0;
-}
-
 int 
 bx_real_sim_c::get_cdrom_options (int drive, bx_cdrom_options *out)
 {
   BX_ASSERT (drive == 0);
   *out = bx_options.cdromd;
   return 0;
-}
-
-int 
-bx_real_sim_c::set_cdrom_options (int drive, bx_cdrom_options *out)
-{
-  BX_ASSERT (drive == 0);
-  bx_options.cdromd = *out;
-  return 0;
-}
-
-int 
-bx_real_sim_c::get_newhd_support ()
-{
-  return bx_options.OnewHardDriveSupport->get ();
-}
-
-void 
-bx_real_sim_c::set_newhd_support (int en)
-{
-  bx_options.OnewHardDriveSupport->set (en != 0);
 }
 
 char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", NULL };
@@ -317,50 +249,6 @@ bx_real_sim_c::get_floppy_type_name (int type)
   BX_ASSERT (type >= BX_FLOPPY_NONE && type <= BX_FLOPPY_720K);
   type -= BX_FLOPPY_NONE;
   return floppy_type_names[type];
-}
-
-int 
-bx_real_sim_c::get_boot_hard_disk ()
-{
-  return bx_options.Obootdrive->get () == BX_BOOT_DISKC;
-}
-
-int 
-bx_real_sim_c::set_boot_hard_disk (int val)
-{
-  bx_options.Obootdrive->set (val?  BX_BOOT_DISKC : BX_BOOT_FLOPPYA);
-  return 0;
-}
-
-#if 0
-int 
-bx_real_sim_c::get_rom_path (char *buf, int len)
-{
-  if (bx_options.rom.path)
-    strncpy (buf, bx_options.rom.path, len);
-  else
-    buf[0] = 0;
-  return 0;
-}
-
-int 
-bx_real_sim_c::set_rom_path (char *path)
-{
-  bx_options.rom.path = strdup (path);
-  return 0;
-}
-#endif
-
-int 
-bx_real_sim_c::get_private_colormap ()
-{
-  return bx_options.Oprivate_colormap->get ();
-}
-
-void 
-bx_real_sim_c::set_private_colormap (int en)
-{
-  bx_options.Oprivate_colormap->set (en);
 }
 
 void 

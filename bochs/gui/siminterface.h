@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.15 2001-06-21 14:37:55 bdenney Exp $
+ * $Id: siminterface.h,v 1.16 2001-06-21 14:55:38 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -310,18 +310,8 @@ public:
   virtual int get_log_file (char *path, int len) {return -1;}
   virtual int set_log_file (char *path) {return -1;}
   virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}
-  virtual int set_floppy_options (int drive, bx_floppy_options *in) {return -1;}
-  virtual int get_disk_options (int drive, bx_disk_options *out) {return -1;}
-  virtual int set_disk_options (int drive, bx_disk_options *in) {return -1;}
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out) {return -1;}
-  virtual int set_cdrom_options (int drive, bx_cdrom_options *out) {return -1;}
-  virtual int get_newhd_support () {return -1;}
-  virtual void set_newhd_support (int en) {}
   virtual char *get_floppy_type_name (int type) {return NULL;}
-  virtual int get_boot_hard_disk () {return -1;}
-  virtual int set_boot_hard_disk (int val) {return -1;}
-  virtual int get_private_colormap () { return -1; }
-  virtual void set_private_colormap (int en) {}
   typedef int (*sim_interface_callback_t)(int code);
   virtual void set_notify_callback (sim_interface_callback_t func) {}
   virtual int notify_return (int retcode) {return -1;}
