@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.161 2005-02-22 18:28:25 sshwarts Exp $
+$Id: user.dbk,v 1.162 2005-02-23 18:49:50 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -738,10 +738,10 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
   <qandaentry>
      <question><para>
-     Does Bochs use a disk partition to install the OS? 
+     Does Bochs use a disk partition to install the OS?
      </para></question>
      <answer><para>
-     No. You use a disk image file, which is simply a large file, like any other file, on your platform's disk. 
+     No. It uses a disk image file, which is simply a large file, like any other file, on your platform's disk.
      </para></answer>
   </qandaentry>
 
@@ -2824,12 +2824,10 @@ fpu/fpu_system.h, you could try --disable-fpu.
 
 </para>
 </section>
-
-
-
 </section> <!-- end of Compiling Bochs -->
-
 </chapter>
+
+
 
 <chapter id="setup"><title>Setup</title>
 <section><title>What does Bochs need?</title>
@@ -2843,12 +2841,12 @@ the Bochs executable
 </listitem>
 <listitem>
 <para>
-the BIOS image (usually called 'BIOS-bochs-latest')
+the BIOS image (usually called <filename>BIOS-bochs-latest</filename>)
 </para>
 </listitem>
 <listitem>
 <para>
-the VGA BIOS image (e.g. 'VGABIOS-lgpl-latest' or 'VGABIOS-elpin-2.40')
+the VGA BIOS image (e.g. <filename>VGABIOS-lgpl-latest</filename> or <filename>VGABIOS-elpin-2.40</filename>)
 </para>
 </listitem>
 <listitem>
@@ -2861,8 +2859,23 @@ at least one bootable media, either as disk image (floppy, hard disk or CD-ROM) 
 <para>
 In that case you have to pass the configuration options on the command
 line or to use the configuration interface to set up Bochs for the simulation.
-Running Bochs is easier if you use a configuration file (we call it 'bochsrc').
-See section <link linkend="bochsrc">bochsrc</link> for all supported options.
+Running Bochs is easier if you use a configuration file (we call it
+<filename>bochsrc</filename>). See <xref linkend="bochsrc"> for all supported options.
+</para>
+
+<para>
+The easiest way to setup Bochs for the first time is to use the example configuration
+file called <filename>bochsrc-sample.txt</filename>. Locate that file (location depends
+on the (host) OS and on the installation facility used) and copy it to a location where
+Bochs looks for that file, see <xref linkend="search-order">.
+</para>
+
+<para>
+The next step is to change the configuration so that it fits your needs: You most
+likely want to setup a hard disk (see <xref linkend="using-bximage"> and
+<xref linkend="bochsopt-ata-master-slave">), and install some OS on it using either
+a set of floppy disks (see <xref linkend="bochsopt-floppyab">) or a CD-ROM
+(see <xref linkend="bochsopt-ata-master-slave"> again) as installation media.
 </para>
 
 <para>
@@ -2884,7 +2897,6 @@ images are the size of a floppy disk (1 meg compressed) and others are gigantic
 <para>
 <screen>
   - (DONE )bochsrc, BIOS, VGABIOS, disk images.
-  - (DONE) table of bochsrc options and what they do
   - BIOS/VGABIOS, what do they do?
   - disk images
     - (DONE) where to find one pre-made
@@ -7552,37 +7564,172 @@ Shall I remove the redolog afterwards?
 
 
 
-
 <chapter id="guests"><title>Guest operating systems</title>
-        <section id="guest-linux"><title>Linux</title>
-           <para>
-           <screen>
-            What disk images are available.
-            Installing from scratch.
-            What works
-            Known problems
-           </screen>
-           </para>
-        </section>
-        <section id="guest-minix"> <title>Minix</title>
-                  <para>
+<para>
+<screen>
+What disk images are available.
+Installing from scratch.
+What works
+Known problems
+</screen>
+</para>
+
+<section id="guest-linux"><title>Linux</title>
+  <para>
+  </para>
+</section>
+
+<section id="guest-minix"><title>Minix</title>
+<para>
 Please see the <ulink url="http://minix1.hampshire.edu/faq/bxmxhowto.html">Minix on Bochs on Windows How-To</ulink> by Al Woodhull.
-                  </para>
-        </section>
+</para>
+</section>
 
-          <section id="guest-openbsd"><title>OpenBSD</title>
-             <para>
-             </para>
-          </section>
+<section id="guest-openbsd"><title>OpenBSD</title>
+  <para>
+  </para>
+</section>
 
-          <section id="guest-freebsd"><title>FreeBSD</title>
-             <para>
-             </para>
-          </section>
+<section id="guest-freebsd">
+<!--
+  <sectioninfo>
+    <authorgroup>
+      <author>
+        <firstname>Alexander</firstname>
+        <surname>Schuch</surname>
+        <contrib>Contributed by </contrib>
+      </author>
+    </authorgroup>
+  </sectioninfo>
+-->
+  <title>FreeBSD 5.2.1</title>
+
+  <para>
+    Contributed by Alexander Schuch.
+  </para>
+
+  <para>
+    This section describes how to install FreeBSD 5.2.1 (miniinst) inside of Bochs, using an ISO image.
+  </para>
+
+  <section>
+    <title>Getting FreeBSD</title>
+
+    <para>
+      As <filename>5.2.1-RELEASE-i386-miniinst.iso</filename> (240M) is no longer available from
+      the FreeBSD FTP server, you might want to ask a (file) search engine of your choice
+      for a download location. Once you downloaded the file, you should check its integrity
+      using the provided MD5 checksum from the
+      <ulink url="http://www.freebsd.org/releases/5.2.1R/announce.html">FreeBSD 5.2.1 release announcement</ulink>.
+    </para>
+  </section>
+
+  <section>
+    <title>Preparing Bochs</title>
+
+    <para>
+      Create a new hard disk image using bximage tool (see <xref linkend="using-bximage">) with
+      a size of at least 350M, as the standard installation uses 280M on its own.
+    </para>
+
+    <para>
+      Next, you need to setup your <filename>bochsrc</filename> so that Bochs knows about your
+     (still empty) hard disk, as well as about your ISO image. Make Bochs boot from CD-ROM and
+     start the emulation.
+    </para>
+  </section>
+
+  <section>
+    <title>Installing FreeBSD</title>
+
+    <para>
+      FreeBSD boots up and shows a nice (text-mode) boot option screen. Just press
+      <keycap>return</keycap> there, that is, use the default option. After loading the
+      kernel and needed device drivers, select 'Standard' in the installation menu.
+    </para>
+
+    <para>
+      A fdisk like partition program is loaded next, where you just press <keycap>A</keycap>
+      to use the entire disk, followed by <keycap>Q</keycap> to finish the selection. The next
+      dialog asks for the boot manager you want to use. Select 'Standard' and continue.
+    </para>
+
+    <para>
+      In the Disklabel Editor, you have to setup the layout of your partition. If your (virtual)
+      hard disk is large enough, you can press <keycap>A</keycap> for auto-layout. However, you
+      need to make sure that the <filename class="directory">/usr</filename> partition is at least
+      250M large, or you will end up with a 'disk full' error message during installation. If
+      this is not the case, select one partition after another and press <keycap>D</keycap> to
+      delete it again. After you deleted all partitions, create two new ones. The first one will
+      be a swap partition; press <keycap>C</keycap>, enter '32M' as size and select 'Swap' from
+      the dialog. Press <keycap>C</keycap> again, and accept the remaining capacity for your
+      filesystem partition. Choose 'FS' as partition type and enter '/' (slash) as mount point.
+      Your partition layout is complete now; press <keycap>Q</keycap> to leave the editor.
+
+      <note><para>
+        This 'all-in-one' partition layout is not recommended for a FreeBSD installation on a
+        real box; use 'auto-layout' or something comparable to that there.
+      </para></note>
+    </para>
+
+    <para>
+      You now can choose what set of programs/files (distribution) you want to install. Take
+      'User' (option 8), and select 'No' when asked to install the ports collection. You are
+      back in the distribution selection, where you select the first item, called 'Exit'.
+      Choose to install from 'CD/DVD' and answer the 'Are you sure?' dialog with 'yes'.
+    </para>
+
+    <para>
+      Now, while FreeBSD installs, it is a very good time to have a look at the
+      <ulink url="http://www.freebsd.org/docs.html">FreeBSD documentation</ulink>, especially
+      the <ulink url="http://www.freebsd.org/doc/handbook/index.html">FreeBSD handbook</ulink>
+      and the <ulink url="http://www.freebsd.org/doc/faq/index.html">FreeBSD FAQ</ulink>.
+    </para>
+  </section>
+
+  <section>
+    <title>Post-installation configuration</title>
+
+    <para>
+      All files are installed on your (virtual) hard disk now, and FreeBSD is ready for getting set
+      up. As this is a very basic FreeBSD installation, you just answer 'no' to nearly all questions,
+      but the one about your mouse: Answer 'yes' for PS/2 mouse, and choose 'Exit' at mouse configuration.
+      The miniinst FreeBSD ISO image contains nearly no binary packages, so don't browse the package
+      collection. Then, when asked to create a new user account, answer 'yes' and create a new user
+      called 'bochs' (or whatever you like). You might want to use <filename>/bin/csh</filename>
+      or <filename>/bin/tcsh</filename> as shell rather than <filename>/bin/sh</filename>. Next,
+      you are asked for the super user (root) password. The installation is finished now, there is
+      no need to visit the general configuration menu again - answer 'no' to that question. FreeBSD
+      will then reboot. Shutdown Bochs, as soon as the (virtual) computer boots.
+    </para>
+  </section>
+
+  <section>
+    <title>Using FreeBSD</title>
+
+    <para>
+      Open your <filename>bochsrc</filename> and change the boot sequence, so that Bochs will boot
+      from hard disk, rather than from CD-ROM from now on. Start Bochs again and watch the FreeBSD
+      boot process.
+    </para>
+
+    <para>
+      Your keyboard might use the wrong keymap, so login (into FreeBSD) as super user and use
+      <command>/stand/sysinstall</command> to start the FreeBSD configuration program. Choose
+      'keymap' and select the keymap you want to use.
+    </para>
+
+    <para>
+      You have successfully installed FreeBSD now. You might want to shutdown FreeBSD using
+      <command>shutdown -h now</command>, quit Bochs, and create a backup of your hard disk
+      image, before you start playing around.
+    </para>
+  </section>
+</section>
 
 <section id="guest-freedos"><title>FreeDOS Beta 8</title>
 <para>
-This has been contributed by Volker Ruppert 
+This has been contributed by Volker Ruppert.
 
 <screen>
 1. Download FDB8_144.DSK and base1.zip from www.freedos.org
