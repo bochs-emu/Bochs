@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.11 2004-01-17 11:47:12 danielg4 Exp $
+// $Id: eth_tuntap.cc,v 1.12 2004-01-18 06:15:38 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -278,7 +278,14 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 void
 bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-#ifdef NEVERDEF
+#ifdef __APPLE__	//FIXME
+  unsigned int size = write (fd, buf+14, io_len-14);
+  if (size != io_len-14) {
+    BX_PANIC (("write on tuntap device: %s", strerror (errno)));
+  } else {
+    BX_INFO (("wrote %d bytes on tuntap - 14 bytes Ethernet header", io_len));
+  }
+#elif NEVERDEF
   Bit8u txbuf[BX_PACKET_BUFSIZ];
   txbuf[0] = 0;
   txbuf[1] = 0;
@@ -289,13 +296,14 @@ bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   } else {
     BX_INFO (("wrote %d bytes + 2 byte pad on tuntap", io_len));
   }
-#endif
+#else
   unsigned int size = write (fd, buf, io_len);
   if (size != io_len) {
     BX_PANIC (("write on tuntap device: %s", strerror (errno)));
   } else {
     BX_INFO (("wrote %d bytes on tuntap", io_len));
   }
+#endif
 #if BX_ETH_TUNTAP_LOGGING
   BX_DEBUG (("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
@@ -329,13 +337,22 @@ void bx_tuntap_pktmover_c::rx_timer ()
   Bit8u buf[BX_PACKET_BUFSIZ];
   Bit8u *rxbuf;
   if (fd<0) return;
-  nbytes = read (fd, buf, sizeof(buf));
 
-#ifdef NEVERDEF
+#ifdef __APPLE__	//FIXME:hack
+  nbytes = 14;
+  bzero(buf, nbytes);
+  buf[0] = buf[6] = 0xFE;
+  buf[1] = buf[7] = 0xFD;
+  buf[12] = 8;
+  nbytes += read (fd, buf+nbytes, sizeof(buf)-nbytes);
+  rxbuf=buf;
+#elif NEVERDEF
+  nbytes = read (fd, buf, sizeof(buf));
   // hack: discard first two bytes
   rxbuf = buf+2;
   nbytes-=2;
 #else
+  nbytes = read (fd, buf, sizeof(buf));
   rxbuf=buf;
 #endif
 
@@ -344,9 +361,17 @@ void bx_tuntap_pktmover_c::rx_timer ()
   // Change the dest address to FE:FD:00:00:00:01.
   rxbuf[5] = 1;
 
+#ifdef __APPLE__	//FIXME:hack
+  if (nbytes>14)
+#else
   if (nbytes>0)
+#endif
     BX_INFO (("tuntap read returned %d bytes", nbytes));
+#ifdef __APPLE__	//FIXME:hack
+  if (nbytes<14) {
+#else
   if (nbytes<0) {
+#endif
     if (errno != EAGAIN)
       BX_ERROR (("tuntap read error: %s", strerror(errno)));
     return;
