@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.134 2003-12-29 09:40:13 vruppert Exp $
+$Id: user.dbk,v 1.135 2004-01-02 22:37:18 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1198,14 +1198,33 @@ is different on different platforms.
 </para>
 
 <section><title>Windows</title>
-<!--
-unzip into some directory.  Look for DOC-win32.html
-for more instructions.  Quick start: find dlxlinux/start.bat and
-double click
--->
 <para>
-&FIXME;
-Someone needs to write this.
+The Bochs binaries for Windows are distributed in two different package types:
+EXE and ZIP. Both package types contain all files you need to run Bochs. The EXE
+version can be started like any other Windows program and it brings up the
+installation wizard. Here you can select the destination folder and the
+installation options. The wizard installs the files and creates the registry
+keys, start menu and desktop links. We recommend to use the EXE package unless
+you are a Bochs expert.
+</para>
+<para>
+If you choose the ZIP package you need a tool like WinZip to unpack the archive.
+Note that you have to create a registry key for Bochs if you want to use the
+environment variable $BXSHARE in your config file. The name of the key is
+"HKEY_LOCAL_MACHINE\Software\Bochs 2.1.pre3" (the Bochs version may differ).
+For more information on environment variables see the section <link
+linkend="bochsrc">bochsrc</link>.
+</para>
+<para>
+If you are new to Bochs you should try out the DLX Linux demo distributed with
+Bochs. The installation wizard has created a link on the desktop if you decided
+to install the demo. If you doubleclick the icon two windows will appear:
+one is the Bochs Display window, and the other is text window that is used for
+the runtime configuration and for log messages if no logfile is specified.
+</para>
+<para>
+You can find more information on the DLX Linux demo in the next section below the
+DLX Linux screenshot.
 </para>
 </section> <!-- end of Installing a Binary:Windows -->
 
@@ -2674,7 +2693,7 @@ These are the minimum requirements for running an OS inside of Bochs:
 - the bochs executable
 - the bios image (usually called 'BIOS-bochs-latest')
 - the vga bios image (e.g. 'VGABIOS-lgpl-latest')
-- at least one bootable disk image (floppy or harddisk)
+- at least one bootable disk image (floppy, harddisk or cdrom)
 </screen>
 </para>
 <para>
@@ -9456,7 +9475,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.134 2003-12-29 09:40:13 vruppert Exp $
+        $Id: user.dbk,v 1.135 2004-01-02 22:37:18 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
