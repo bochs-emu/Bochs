@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.59 2002-12-12 06:21:43 yakovlev Exp $
+// $Id: gui.cc,v 1.60 2002-12-12 06:51:19 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -161,7 +161,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS user_hbar_id = headerbar_bitmap(BX_GUI_THIS user_bmap_id,
                           BX_GRAVITY_RIGHT, userbutton_handler);
 
-  if(bx_options.Otext_snapshot_check) {
+  if(bx_options.Otext_snapshot_check->get()) {
     bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 10000000, 1, 1, "snap_chk");
   }
 
