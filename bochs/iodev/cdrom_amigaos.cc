@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.4 2002-05-28 15:39:05 vruppert Exp $
+// $Id: cdrom_amigaos.cc,v 1.5 2003-02-21 14:51:12 cisc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -104,17 +104,17 @@ cdrom_interface::cdrom_interface(char *dev)
 cdrom_interface::~cdrom_interface(void)
 {
   if (cd_error == 0) {
-    CloseDevice(CDIO);
+    CloseDevice((struct IORequest *)CDIO);
   }
   if (CDIO != NULL) {
-    DeleteIORequest(CDIO);
+    DeleteIORequest((struct IORequest *)CDIO);
   }
   if (CDMP != NULL) {
     DeleteMsgPort(CDMP);
   }
 }
 
-  bool
+  bx_bool
 cdrom_interface::insert_cdrom(char *dev)
 {
   uint8 cdb[6];
@@ -143,11 +143,11 @@ cdrom_interface::insert_cdrom(char *dev)
   }
 
   if (CDIO->iotd_Req.io_Error != 0)
-    return FALSE;
+    return false;
   else
   {
     //bx_options.cdromd.inserted = 1;
-    return TRUE;
+    return true;
   }
 }
 
@@ -167,8 +167,8 @@ cdrom_interface::eject_cdrom()
 }
 
 
-  bool
-cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
+  bx_bool
+cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track)
 {
   uint8 cdb[10];
   TOC *toc;
@@ -191,7 +191,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
 
   *length = toc->length + 4;
 
-  return TRUE;
+  return true;
 }
 
 
