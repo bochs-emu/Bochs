@@ -28,7 +28,7 @@
 /* SSE: MEMORY MOVE OPERATIONS */
 /* *************************** */
 
-/* All these opcodes never generate SIMD floating point exections */
+/* All these opcodes never generate SIMD floating point exeptions */
 
 /* MOVUPS:    0F 10 */
 /* MOVUPD: 66 0F 10 */
