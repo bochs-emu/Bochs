@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.22 2002-02-04 20:31:35 vruppert Exp $
+// $Id: vga.cc,v 1.23 2002-02-07 19:04:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,6 +40,8 @@ bx_vga_c bx_vga;
 #if BX_USE_VGA_SMF
 #define this (&bx_vga)
 #endif
+
+unsigned old_iHeight = 0, old_iWidth = 0;
 
 bx_vga_c::bx_vga_c(void)
 {
@@ -962,7 +964,12 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
           {
           unsigned iHeight, iWidth;
           determine_screen_dimensions(&iHeight, &iWidth);
-          bx_gui.dimension_update(iWidth, iHeight);
+	  if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	  {
+	    bx_gui.dimension_update(iWidth, iHeight);
+	    old_iWidth = iWidth;
+	    old_iHeight = iHeight;
+	  }
           }
 
           needs_update = bx_gui.palette_change(BX_VGA_THIS s.pel.write_data_register,
@@ -1142,6 +1149,7 @@ bx_vga_c::timer(void)
   void
 bx_vga_c::update(void)
 {
+  unsigned iHeight, iWidth;
   // fields that effect the way video memory is serialized into screen output:
   // GRAPHICS CONTROLLER:
   //   BX_VGA_THIS s.graphics_ctrl.shift_reg:
@@ -1163,7 +1171,6 @@ bx_vga_c::update(void)
     Bit8u color;
     unsigned bit_no, r, c;
     unsigned long byte_offset;
-
     unsigned xti, yti;
 
 
@@ -1173,7 +1180,6 @@ bx_vga_c::update(void)
 //  (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
 
     switch ( BX_VGA_THIS s.graphics_ctrl.shift_reg ) {
-      unsigned iHeight, iWidth;
 
       case 0: // output data in serial fashion with each display plane
               // output on its associated serial output.  Standard EGA/VGA format
@@ -1182,7 +1188,12 @@ bx_vga_c::update(void)
         determine_screen_dimensions(&iHeight, &iWidth);
 
         //BX_DEBUG(("update(): Mode 12h: 640x480x16colors"));
-        bx_gui.dimension_update(iWidth, iHeight);
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	{
+	  bx_gui.dimension_update(iWidth, iHeight);
+	  old_iWidth = iWidth;
+	  old_iHeight = iHeight;
+	}
 
         for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
           for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
@@ -1230,7 +1241,12 @@ bx_vga_c::update(void)
 
         /* CGA 320x200x4 start */
         iHeight=200; iWidth=320;
-        bx_gui.dimension_update(iWidth, iHeight);
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	{
+	  bx_gui.dimension_update(iWidth, iHeight);
+	  old_iWidth = iWidth;
+	  old_iHeight = iHeight;
+	}
 
         for (yti=0; yti<=iHeight/Y_TILESIZE; yti++)
           for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
@@ -1274,7 +1290,12 @@ bx_vga_c::update(void)
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
             BX_PANIC(("update: select_high_bank != 1"));
 
-          bx_gui.dimension_update(iWidth, iHeight);
+	  if( (iHeight != old_iHeight) || (iWidth != old_iWidth) )
+	  {
+	    bx_gui.dimension_update(iWidth, iHeight);
+	    old_iHeight = iHeight;
+	    old_iWidth = iWidth;
+	  }
           for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
             for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
               if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) { // }
@@ -1302,7 +1323,13 @@ bx_vga_c::update(void)
         else { // chain_four == 0, modeX
           unsigned long pixely, pixelx, plane, start_addr;
 
-          bx_gui.dimension_update(iWidth, iHeight);
+	  if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	  {
+	    bx_gui.dimension_update(iWidth, iHeight);
+	    old_iWidth = iWidth;
+	    old_iHeight = iHeight;
+	  }
+
           start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
           for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
             for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
@@ -1344,7 +1371,14 @@ bx_vga_c::update(void)
 
     switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
       case 2: // B0000 .. B7FFF
-        bx_gui.dimension_update(8*80, 16*25); // ??? should use font size
+	iWidth = 8*80;	// TODO: should use font size
+	iHeight = 16*25;
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	{
+	  bx_gui.dimension_update(iWidth, iHeight);
+	  old_iWidth = iWidth;
+	  old_iHeight = iHeight;
+	}
 //BX_DEBUG(("update(): case 2"));
         /* pass old text snapshot & new VGA memory contents */
         start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
@@ -1381,7 +1415,14 @@ bx_vga_c::update(void)
         rows = (VDE+1)/(MSL+1);
         if (rows > BX_MAX_TEXT_LINES)
           BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
-        bx_gui.dimension_update(8*80, 16*rows); // ??? should use font size
+	iWidth = 8*80;	// TODO: should use font size
+	iHeight = 16*rows;
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	{
+	  bx_gui.dimension_update(iWidth, iHeight);
+	  old_iWidth = iWidth;
+	  old_iHeight = iHeight;
+	}
         // pass old text snapshot & new VGA memory contents
         start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
         cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) |
