@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.33 2002-09-16 16:04:15 bdenney Exp $
+// $Id: wxdialog.h,v 1.34 2002-09-19 04:52:03 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -42,6 +42,7 @@ int GetTextCtrlInt (wxTextCtrl *text, bool *valid = NULL, bool complain=false, w
 bool BrowseTextCtrl (wxTextCtrl *text,
     wxString prompt="Choose a file",
     long style=wxOPEN);
+wxChoice *makeLogOptionChoiceBox (wxWindow *parent, wxWindowID id, int evtype, int choiceWidth);
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
@@ -529,26 +530,26 @@ DECLARE_EVENT_TABLE()
 // To use this dialog:
 // After constructor, call SetAction(eventtype, action) to set initial
 // value for each choice field.  The eventtype is 0 to LOG_OPTS_N_TYPES-1,
-// representing the types listed in LOG_OPTS_NAMES.  The choice field is 0 to
-// LOG_OPTS_N_CHOICES-1, representing the actions listed in LOG_OPTS_CHOICES.
-// Then call ShowModal(), which will return wxID_OK or wxID_CANCEL.  Afterward,
-// the GetAction(eventtype) method will tell what was selected in each
-// choice box.  
+// representing the types listed in LOG_OPTS_TYPE_NAMES.  The choice field is 0
+// to LOG_OPTS_N_CHOICES-1, representing the actions listed in
+// LOG_OPTS_CHOICES.  Then call ShowModal(), which will return wxID_OK or
+// wxID_CANCEL.  Afterward, the GetAction(eventtype) method will tell what was
+// selected in each choice box.  
 class LogOptionsDialog: public wxDialog
 {
 private:
 #define LOG_OPTS_TITLE "Configure Log Events"
 #define LOG_OPTS_LOGFILE "Log file is "
 #define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
-#define LOG_OPTS_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: " }
+#define LOG_OPTS_TYPE_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: " }
 #define LOG_OPTS_N_TYPES 4
-#define LOG_OPTS_CHOICES { "ignore", "report in log file", "ask user what to do", "end simulation", "no change" }
+#define LOG_OPTS_CHOICES { "ignore", "log", "ask user", "end simulation", "no change" }
 #define LOG_OPTS_N_CHOICES_NORMAL 4
 #define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
 #define LOG_OPTS_NO_CHANGE 5   // index of "no change"
 // LOG_OPTS_CHOICES is the index of the longest string in LOG_OPTS_CHOICES
 // array, used to determine dialog geometry
-#define LOG_OPTS_LONGEST_CHOICE 2
+#define LOG_OPTS_LONGEST_CHOICE 3   // "end simulation" is longest
 // normally all choices are available for all event types. The exclude 
 // expression allows some choices to be eliminated if they don't make any 
 // sense.  For example, it would be stupid to ignore a panic.
@@ -563,6 +564,7 @@ private:
   void ShowHelp ();
   wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
   wxFlexGridSizer *gridSizer;
+  wxButton *applyDefault;
   wxTextCtrl *logfile;
   wxChoice *action[LOG_OPTS_N_TYPES];
 public:
@@ -575,6 +577,65 @@ public:
   wxString GetLogfile () { return logfile->GetValue (); }
 DECLARE_EVENT_TABLE()
 };
+
+////////////////////////////////////////////////////////////////////////////
+// AdvancedLogOptionsDialog
+////////////////////////////////////////////////////////////////////////////
+// +---- Advanced event configuration -----------------------+
+// |                                                         |
+// | Log file is [_____________________________]  [ Browse ] |
+// |                                                         |
+// | This table determines how Bochs will respond to each    |
+// | kind of event coming from a particular source.  For     |
+// | example if you are having problems with the keyboard,   |
+// | you could ask for debug and info events from the        |
+// | keyboard to be reported.                                |
+// |                                                         |
+// |                      [Apply defaults for all devices]   |
+// |                                                         |
+// | +---------------------------------------------------+-+ |
+// | |Device    Debug     Info      Error      Panic     |^| |
+// | |--------  --------  -------   --------   --------- ||| |
+// | |Keyboard  [ignore]  [ignore]  [report]   [report]  ||| |
+// | |VGA       [ignore]  [ignore]  [report]   [report]  ||| |
+// | |NE2000    [ignore]  [ignore]  [report]   [report]  ||| |
+// | |Sound     [ignore]  [ignore]  [report]   [report]  |v| |
+// | +-----------------------------------------------------+ |
+// |                                                         |
+// |                              [ Help ] [ Cancel ] [ Ok ] |
+// +-------------------------------------------------------+-+
+// 
+class AdvancedLogOptionsDialog: public wxDialog
+{
+private:
+#define ADVLOG_OPTS_TITLE "Configure Log Events"
+#define ADVLOG_OPTS_LOGFILE LOG_OPTS_LOGFILE
+#define ADVLOG_OPTS_PROMPT                                                    \
+"This table determines how Bochs will respond to each kind of event coming\n" \
+"from a particular source.  For example if you are having problems with\n"    \
+"the keyboard, you could ask for debug and info events from the keyboard\n"   \
+"to be reported."
+#define ADVLOG_OPTS_TYPE_NAMES { "Debug", "Info", "Error", "Panic" }
+#define ADVLOG_OPTS_N_TYPES 4
+#define ADVLOG_DEFAULTS "Apply defaults for all devices"
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
+  wxScrolledWindow *scrollWin;
+  wxPanel *scrollPanel;
+  wxGridSizer *gridSizer;
+  wxTextCtrl *logfile;
+  wxButton *applyDefault;
+  wxChoice *action[LOG_OPTS_N_TYPES];
+public:
+  AdvancedLogOptionsDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void SetLogfile (wxString f) { logfile->SetValue (f); }
+  wxString GetLogfile () { return logfile->GetValue (); }
+DECLARE_EVENT_TABLE()
+};
+
 
 ////////////////////////////////////////////////////////////////////////////
 // DebugLogDialog

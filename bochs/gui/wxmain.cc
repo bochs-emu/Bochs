@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.50 2002-09-18 22:44:02 bdenney Exp $
+// $Id: wxmain.cc,v 1.51 2002-09-19 04:52:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -175,6 +175,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_LoadHack, MyFrame::OnEditLoadHack)
   EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
+  EVT_MENU(ID_Log_PrefsDevice, MyFrame::OnLogPrefsDevice)
   EVT_MENU(ID_Debug_ShowCpu, MyFrame::OnShowCpu)
   EVT_MENU(ID_Debug_ShowKeyboard, MyFrame::OnShowKeyboard)
 #if BX_DEBUGGER
@@ -320,7 +321,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // disable things that don't work yet
   menuDebug->Enable (ID_Debug_ShowMemory, FALSE);  // not implemented
   menuLog->Enable (ID_Log_View, FALSE);  // not implemented
-  menuLog->Enable (ID_Log_PrefsDevice, FALSE);  // not implemented
 
   CreateStatusBar();
 
@@ -657,6 +657,13 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
       }
     }
   }
+}
+
+void MyFrame::OnLogPrefsDevice(wxCommandEvent& WXUNUSED(event))
+{
+  wxASSERT (SIM->get_max_log_level() == ADVLOG_OPTS_N_TYPES);
+  AdvancedLogOptionsDialog dlg (this, -1);
+  dlg.ShowModal ();
 }
 
 // How is this going to work?

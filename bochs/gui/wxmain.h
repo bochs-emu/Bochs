@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.27 2002-09-19 00:43:32 bdenney Exp $
+// $Id: wxmain.h,v 1.28 2002-09-19 04:52:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -97,6 +97,8 @@ enum
   ID_Close,
   ID_Execute,
   ID_DebugCommand,
+  // advanced log options
+  ID_ApplyDefault,
   // that's all
   ID_LAST_USER_DEFINED
 };
@@ -182,6 +184,7 @@ public:
   void OnEditLoadHack(wxCommandEvent& event);
   void OnEditOther(wxCommandEvent& event);
   void OnLogPrefs(wxCommandEvent& event);
+  void OnLogPrefsDevice(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
   void OnShowCpu(wxCommandEvent& event);
   void OnShowKeyboard(wxCommandEvent& event);
