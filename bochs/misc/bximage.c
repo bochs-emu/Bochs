@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.24 2004-08-29 19:31:09 vruppert Exp $
+ * $Id: bximage.c,v 1.25 2005-01-28 10:25:06 sshwarts Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -45,7 +45,7 @@ typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.24 2004-08-29 19:31:09 vruppert Exp $";
+char *rcsid = "$Id: bximage.c,v 1.25 2005-01-28 10:25:06 sshwarts Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -733,13 +733,13 @@ int main (int argc, char *argv[])
 #ifdef WIN32
   if (OpenClipboard(NULL)) {
     HGLOBAL hgClip;
-    
     EmptyClipboard();
     hgClip = GlobalAlloc(GMEM_DDESHARE, (strlen(bochsrc_line) + 1));
     strcpy((char *)GlobalLock(hgClip), bochsrc_line);
     GlobalUnlock(hgClip);
     SetClipboardData(CF_TEXT, hgClip);
     CloseClipboard();
+    printf("(The line is stored in your windows clipboard, use CTRL-V to paste)\n");
   }
 #endif
   myexit(0);
