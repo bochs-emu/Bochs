@@ -68,7 +68,7 @@ floppya: 1_44=../1.44a, status=inserted
 #floppya: 1_2=../1.2
 #floppyb: 1_44=../1.680
 
-romimage: file=bios/BIOS-bochs-990925a, address=0xf0000
+romimage: file=bios/BIOS-bochs-2001_0517, address=0xf0000
 
 #romimage: file=bios/rombios.bin, address=0xf0000
 #romimage: file=../cbios961203
