@@ -85,8 +85,8 @@ translate2.c: blur-O2-opcode-dynamic2
 	test -f translate2.c
 
 blur-O2-opcode-dynamic3: blur-opcode.c
-	libtool $(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE3 -o blur-O2-opcode-dynamic3-test blur-opcode.c -lltdl -export-dynamic
-	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE3 -o blur-O2-opcode-dynamic3-test.s -S blur-opcode.c
+	libtool $(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE3 -o blur-O2-opcode-dynamic3 blur-opcode.c -lltdl -export-dynamic
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE3 -o blur-O2-opcode-dynamic3.s -S blur-opcode.c
 
 blur-translate: blur-translate.c
 	libtool $(CC) $(CFLAGS) -DUSE_DYNAMIC_TRANSLATION -o blur-translate blur-translate.c -lltdl -export-dynamic
@@ -100,7 +100,7 @@ dltest:
 	libtool gcc 1.o -o test1 -export-dynamic -lltdl
 
 run-all::
-	for i in $(LIST); do echo Running $$i; ./$$i; done
+	for i in $(LIST); do rm -f blur.out; echo Running $$i; ./$$i; echo -n "checksum of output: "; md5sum blur.out; done
 
 clean::
 	rm -rf *.o *.s blur-no-opt blur-O* blur-profile gmon.out blur.out *.bb *.bbg *.da *.gcov translate1.c translate2.c translate3.c *.lo *.la .libs $(LIST)
