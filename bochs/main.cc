@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.194 2002-11-25 18:00:05 bdenney Exp $
+// $Id: main.cc,v 1.195 2002-11-25 18:17:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1528,6 +1528,9 @@ int main (int argc, char *argv[])
 // This function is used to split up the string into argc and argv,
 // so that the command line can be used on win32 just like on every
 // other platform.
+//
+// I'm sure other people have written this same function, and they may have
+// done it better, but I don't know where to find it. -BBD
 int split_string_into_argv (
   char *string,
   int *argc_out,
@@ -1608,6 +1611,11 @@ int split_string_into_argv (
 
 // The RedirectIOToConsole() function is copied from an article called "Adding
 // Console I/O to a Win32 GUI App" in Windows Developer Journal, December 1997.
+// It creates a console window.
+//
+// NOTE: It could probably be written so that it can safely be called for all
+// win32 builds.  Right now it appears to have absolutely no error checking:
+// for example if AllocConsole returns false we should probably return early.
 #define MAX_CONSOLE_LINES 30
 void RedirectIOToConsole ()
 {
@@ -1642,6 +1650,9 @@ void RedirectIOToConsole ()
   setvbuf( stderr, NULL, _IONBF, 0 );
 }
 
+// only used for wxWindows/win32.
+// This works ok in Cygwin with a standard wxWindows compile.  In
+// VC++ wxWindows must be compiled with -DNOMAIN=1.
 int WINAPI WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
