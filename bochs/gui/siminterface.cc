@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.10 2002-03-17 02:56:08 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.11 2002-03-17 07:45:26 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -213,6 +213,7 @@ bx_real_sim_c::get_max_log_level ()
 
 void 
 bx_real_sim_c::quit_sim (int code) {
+#if 0
   if (!code)
     BX_PANIC (("Quit simulation command"));
   // tell bochs to shut down (includes vga screen)
@@ -224,6 +225,11 @@ bx_real_sim_c::quit_sim (int code) {
   // set something that will cause the cpu loop to exit.
   // or use setjmp/longjmp, or something.
   //FIXME!
+#endif
+  BX_INFO (("quit_sim called"));
+  BX_CPU_THIS_PTR async_event = 1;
+  BX_CPU_THIS_PTR kill_bochs_request = 1;
+  // the cpu loop will exit very soon after this condition is set.
 }
 
 int
@@ -613,12 +619,21 @@ bx_real_sim_c::periodic ()
 {
   // give the GUI a chance to do periodic things on the bochs thread. in 
   // particular, notice if the thread has been asked to die.
-  BxEvent *be = new BxEvent ();
-  be->type = BX_SYNC_EVT_TICK;
-  be = LOCAL_notify (be);
-  if (be->retcode < 0) {
+  BxEvent *tick = new BxEvent ();
+  tick->type = BX_SYNC_EVT_TICK;
+  BxEvent *response = LOCAL_notify (tick);
+  int retcode = response->retcode;
+  BX_ASSERT (response == tick);
+  delete tick;
+  if (retcode < 0) {
     BX_INFO (("Bochs thread has been asked to quit."));
-	BX_CPU_THIS_PTR async_event = 1;
-	BX_CPU_THIS_PTR kill_bochs_request = 1;
+    quit_sim (0);
   }
+#if 0
+  // watch for memory leaks.  Allocate a small block of memory, print the
+  // pointer that is returned, then free.
+  BxEvent *memcheck = new BxEvent ();
+  BX_INFO(("memory allocation at %p", memcheck));
+  delete memcheck;
+#endif
 }
