@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.35 2005-03-12 18:09:32 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.36 2005-03-20 18:08:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,27 +73,6 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
         return;
       }
-
-      /* segment must be PRESENT else #NP(selector) */
-      if (descriptor.p == 0) {
-        BX_ERROR(("jump_protected: p == 0"));
-        exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
-        return;
-      }
-
-      /* instruction pointer must be in code segment limit else #GP(0) */
-      if (dispBig > descriptor.u.segment.limit_scaled) {
-        BX_ERROR(("jump_protected: IP > limit"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-        return;
-      }
-
-      /* Load CS:IP from destination pointer */
-      /* Load CS-cache with new segment descriptor */
-      /* CPL does not change for conforming code segment */
-      load_cs(&selector, &descriptor, CPL);
-      RIP = dispBig;
-      return;
     }
     // CASE: jump nonconforming code segment
     else {
@@ -110,29 +89,28 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
         return;
       }
+    }
 
-      /* segment must be PRESENT else #NP(selector) */
-      if (descriptor.p == 0) {
-        BX_ERROR(("jump_protected: p == 0"));
-        exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
-        return;
-      }
-
-      /* IP must be in code segment limit else #GP(0) */
-      if (dispBig > descriptor.u.segment.limit_scaled) {
-        BX_ERROR(("jump_protected: IP > limit"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-        return;
-      }
-
-      /* load CS:IP from destination pointer */
-      /* load CS-cache with new segment descriptor */
-      /* set RPL field of CS register to CPL */
-      load_cs(&selector, &descriptor, CPL);
-      RIP = dispBig;
+    /* segment must be PRESENT else #NP(selector) */
+    if (descriptor.p == 0) {
+      BX_ERROR(("jump_protected: p == 0"));
+      exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
       return;
     }
-    BX_PANIC(("jump_protected: shoudn't get here !"));
+
+    /* instruction pointer must be in code segment limit else #GP(0) */
+    if (dispBig > descriptor.u.segment.limit_scaled) {
+      BX_ERROR(("jump_protected: IP > limit"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+      return;
+    }
+
+    /* Load CS:IP from destination pointer */
+    /* Load CS-cache with new segment descriptor */
+    /* CPL does not change for conforming code segment */
+    load_cs(&selector, &descriptor, CPL);
+    RIP = dispBig;
+    return;
   }
   else {
     Bit16u          raw_tss_selector;
@@ -1485,26 +1463,27 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       return;
     }
 
-    // if return code seg descriptor is conforming
-    //   and return code seg DPL > return code seg selector RPL
-    //     then #GP(return selector)
-    if ( cs_descriptor.u.segment.c_ed  &&
-         cs_descriptor.dpl > cs_selector.rpl )
-    {
-      BX_PANIC(("iret: conforming, DPL > cs_selector.RPL"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-      return;
+    if (cs_descriptor.u.segment.c_ed) {
+      // if return code seg descriptor is conforming
+      //   and return code seg DPL > return code seg selector RPL
+      //     then #GP(return selector)
+      if (cs_descriptor.dpl > cs_selector.rpl)
+      {
+        BX_PANIC(("iret: conforming, DPL > cs_selector.RPL"));
+        exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+        return;
+      }
     }
-
-    // if return code seg descriptor is non-conforming
-    //   and return code seg DPL != return code seg selector RPL
-    //     then #GP(return selector)
-    if ( cs_descriptor.u.segment.c_ed==0 &&
-         cs_descriptor.dpl != cs_selector.rpl )
-    {
-      BX_INFO(("(mch) iret: Return with DPL != RPL. #GP(selector)"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-      return;
+    else {
+      // if return code seg descriptor is non-conforming
+      //   and return code seg DPL != return code seg selector RPL
+      //     then #GP(return selector)
+      if (cs_descriptor.dpl != cs_selector.rpl)
+      {
+        BX_INFO(("(mch) iret: Return with DPL != RPL. #GP(selector)"));
+        exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+        return;
+      }
     }
 
     // segment must be present else #NP(return selector)
