@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.18 2002-09-28 00:54:05 kevinlawton Exp $
+// $Id: fetchdecode64.cc,v 1.19 2002-09-29 15:07:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -212,6 +212,17 @@ typedef struct BxOpcodeInfo_t {
   BxExecutePtr_t ExecutePtr;
   struct BxOpcodeInfo_t *AnotherArray;
 } BxOpcodeInfo_t;
+
+static BxOpcodeInfo_t opcodesMOV_GwEw[2] = {
+  { 0,  &BX_CPU_C::MOV_GwEEw },
+  { 0,  &BX_CPU_C::MOV_GwEGw }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_GdEd[2] = {
+  { 0,  &BX_CPU_C::MOV_GdEEd },
+  { 0,  &BX_CPU_C::MOV_GdEGd }
+  };
+
 
 static BxOpcodeInfo_t BxOpcodeInfo64G1EbIb[8] = {
   /* 0 */  { BxImmediate_Ib,  &BX_CPU_C::ADD_EbIb },
@@ -637,7 +648,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 88 */  { BxAnother,  &BX_CPU_C::MOV_EbGb },
   /* 89 */  { BxAnother,  &BX_CPU_C::MOV_EwGw },
   /* 8A */  { BxAnother,  &BX_CPU_C::MOV_GbEb },
-  /* 8B */  { BxAnother,  &BX_CPU_C::MOV_GwEw },
+  /* 8B */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GwEw },
   /* 8C */  { BxAnother,  &BX_CPU_C::MOV_EwSw },
   /* 8D */  { BxAnother,  &BX_CPU_C::LEA_GwM },
   /* 8E */  { BxAnother,  &BX_CPU_C::MOV_SwEw },
@@ -1119,7 +1130,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 61 */  { 0,  &BX_CPU_C::BxError },
   /* 62 */  { 0,  &BX_CPU_C::BxError },
 #warning PRT: This needs checking on real hardware.  Manual says 32 bit version zero extends result
-  /* 63 */  { BxAnother,  &BX_CPU_C::MOV_GdEd },
+  /* 63 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GdEd },
   /* 64 */  { BxPrefix | BxAnother,  &BX_CPU_C::BxError }, // FS:
   /* 65 */  { BxPrefix | BxAnother,  &BX_CPU_C::BxError }, // GS:
   /* 66 */  { BxPrefix | BxAnother,  &BX_CPU_C::BxError }, // OS:
@@ -1159,7 +1170,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 88 */  { BxAnother,  &BX_CPU_C::MOV_EbGb },
   /* 89 */  { BxAnother,  &BX_CPU_C::MOV_EdGd },
   /* 8A */  { BxAnother,  &BX_CPU_C::MOV_GbEb },
-  /* 8B */  { BxAnother,  &BX_CPU_C::MOV_GdEd },
+  /* 8B */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GdEd },
   /* 8C */  { BxAnother,  &BX_CPU_C::MOV_EwSw },
   /* 8D */  { BxAnother,  &BX_CPU_C::LEA_GdM },
   /* 8E */  { BxAnother,  &BX_CPU_C::MOV_SwEw },
@@ -2579,6 +2590,14 @@ modrm_done:
       instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
       instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
 #endif
+      // For high frequency opcodes, two variants of the instruction are
+      // implemented; one for the mod=11b case (Reg-Reg), and one for
+      // the other cases (Reg-Mem).
+      if (attr & BxSplitMod11b) {
+        BxOpcodeInfo_t *OpcodeInfoPtr;
+        OpcodeInfoPtr = BxOpcodeInfo64[b1+offset].AnotherArray;
+        instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
+        }
       }
     }
   else {
