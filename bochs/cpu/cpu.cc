@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.29 2002-06-03 22:39:10 yakovlev Exp $
+// $Id: cpu.cc,v 1.30 2002-06-05 03:59:31 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -250,9 +250,22 @@ async_events_processed:
     // Not storing such instructions in the cache is probably the
     //   easiest way to handle them  
     if (ret) {
+      Bit32u rpn,rpn_sel,old_rpn;
       BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] = bx_fdcache_ip;
       BX_CPU_THIS_PTR fdcache_is32[bx_fdcache_sel] = is_32;
       new_phy_addr += i->ilen;
+      rpn=bx_fdcache_ip>>12;
+      rpn_sel=rpn & BX_FDCACHE_RPN_MASK;
+      old_rpn=BX_CPU_THIS_PTR fdcache_rpn[rpn_sel];
+      if((old_rpn != rpn) && (old_rpn != 0xFFFFFFFF)) {
+	int n;
+	for(n=0;n<BX_FDCACHE_SIZE;n++) {
+	  if(((BX_CPU_THIS_PTR fdcache_ip[n])>>12) == old_rpn) {
+	    BX_CPU_THIS_PTR fdcache_ip[n] = 0xFFFFFFFF;
+	  }
+	}
+	BX_CPU_THIS_PTR fdcache_rpn[rpn_sel] = rpn;
+      }
     } else {
       // Invalidate cache!
       BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] = 0xFFFFFFFF;

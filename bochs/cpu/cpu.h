@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.20 2002-06-03 22:39:10 yakovlev Exp $
+// $Id: cpu.h,v 1.21 2002-06-05 03:59:31 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1588,6 +1588,7 @@ public: // for now...
     // NOTE: This struct should really be aligned!
     BxInstruction_t fdcache_i[BX_FDCACHE_SIZE]; // stores decoded instruction
     Boolean fdcache_is32[BX_FDCACHE_SIZE];
+    Bit32u fdcache_rpn[BX_FDCACHE_RPN_SIZE];
   #endif // #if BX_FETCHDECODE_CACHE
                                               
   };

@@ -553,6 +553,8 @@ typedef unsigned int Boolean;
   // The number of entries. MUST be a power of 2
   #define BX_FDCACHE_SIZE 0x0800
   #define BX_FDCACHE_MASK (BX_FDCACHE_SIZE-1)
+  #define BX_FDCACHE_RPN_SIZE (0x0080)
+  #define BX_FDCACHE_RPN_MASK (BX_FDCACHE_RPN_SIZE-1)
 #endif // BX_FETCHDECODE_CACHE
 
 #define BX_SUPPORT_FPU 0
