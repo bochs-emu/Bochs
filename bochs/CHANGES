@@ -13,11 +13,10 @@ Changes in 2.1 (October 2, 2003):
 
      Close all still not implemented instructions:
 
-  	PFPNACC_PqQq, PI2FW_PqQq, PI2FD_PqQq, PF2IW_PqQq, PF2ID_PqQq,
-	PFNACC_PqQq, PFCMPGE_PqQq, PFMIN_PqQq, PFRCP_PqQq, PFRSQRT_PqQq,
-	PFSUB_PqQq, PFADD_PqQq, PFCMPGT_PqQq, PFMAX_PqQq, PFRCPIT1_PqQq,
-	PFRSQIT1_PqQq, PFSUBR_PqQq, PFACC_PqQq, PFCMPEQ_PqQq, PFMUL_PqQq,
-	PFRCPIT2_PqQq
+	PFPNACC_PqQq, PF2IW_PqQq, PFNACC_PqQq, PFCMPGE_PqQq, PFMIN_PqQq,
+	PFRCP_PqQq, PFRSQRT_PqQq, PFSUB_PqQq, PFADD_PqQq, PFCMPGT_PqQq,
+	PFMAX_PqQq, PFRCPIT1_PqQq, PFRSQIT1_PqQq, PFSUBR_PqQq, PFACC_PqQq,
+	PFCMPEQ_PqQq, PFMUL_PqQq, PFRCPIT2_PqQq
  
      CPUID still could not report 3DNow! instruction set.
 
@@ -34,19 +33,16 @@ Changes in 2.1 (October 2, 2003):
 
 	RSQRTSS_VssWss, RSQRTPS_VpsWps, RCPPS_VpsWps, RCPSS_VssWss
 
-[+] Add emulation of SSE3 (PNI) instructions
+[+] Added emulation of SSE3 (PNI) instructions
 
   Currently only 3 PNI opcodes still not implemented:
 
 	FISTTP m16int, FISTTP m32int, FISTTP m64int
 
 [+] Fixed: Unallowed lock prefix cases must cause #UD exception
-
 [+] Fixed FXSAVE/FXRSTOR instructions
-
 [+] Fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
   in 32bit mode.
-
 [+] Fixed fetchdecode64 bug caused wrong decoding of opcodes containing
     BxImmediate_IvIw or BxImmediate_IwIb in x86-64.
 
@@ -216,63 +212,82 @@ Patches applied:
 - these S.F. bugs were fixed 
 // CB : I ran the request on SF, these bugs have definitely been closed 
 // since 2.0.2). There might have been others, during 2.0 to 2.0.2 times
-   #787134  Config options not saved
-   #663320  flaw in IO bitmap permission..
-   #659510  Bochs timing off by x10
-   #764929  Timing is off.
-   #645609  Real Time Clock is too *FAST...
-   #516745  breakpoint not caught
-   #666202  Windows 2000 - random screen blanking with linux DLX demo 
-   #629242  reset during Doom -> BIOS panic
-   #695434  minix floppies won't boot.
-   #764473  Freesco Linux crashes on boot
-   #656026  error when trying to run some stuff
-   #614202  HD: non-byte IO read to 01f4
-   #777357  Strange FPU compiler error
-   #583758  gag bootloader doesn't run
-   #658639  ne2k panics with MS lanman Client/DOS62 
-   #536711  problem running smart bootmanager
-   #741433  Disabling all ata# results in HD error.
-   #753200  lock instruction doesn't do an illegal instruction trap
-   #679389  libbx_wx.so.0: undefined symbol
-   #758936  Problem Installing Bochs
-   #742580  I configured fants but bochs still give me the same error
-   #772242  iodev/vga.cc wrong memory access.
-   #739222  Cannot change resultion
-   #693344  libwx_gtk2.3.so.2 RedHat linux 8.0
-   #639320  sparc: needs -lm to compile
-   #587422  Windows 95j doesn't boot
-   #547817  sparc: rfb needs -lsocket
-   #480963  RFB: option to wait for client
-   #763894  i've got problems with a "libvga.so.1" and another file
-   #766490  Documentation mistake
-   #766481  Bochs 2.0.2 Fails to compile on YDL3.0
-   #626144  %lld is not portable
-   #752241  lock prefix erronously allowed for some instructions
-   #743305  fetchdecode.c probs
-   #658707  Automatic exit?
-   #696758  BeOS can't mount image disk, won't complete boot.
-   #737048  Enabling keyboard resets controllers translation mode
-   #717713  Bochs panics on startup on RH 9
-   #738808  VGA PANIC
-   #730922  seg fault on "bochs boot: cdrom"
-   #658905  VGA read write error
-   #564218  Panic on vga_mem_write
-   #614231  X11 doesn't support charmap change
-   #708311  Missing CGA low-res emulation
-   #720776  REX MOVB immediate broken for x86_64
-   #643296  lock prefix, unallowed cases
-   #716964  [sb16] OPL.timer_running not initialized
-   #662074  little mistake in the default config example
-   #470701  CD-ROM on Win2K needs FILE_SHARE_READ
-   #706454  bug??
-   #653861  Win32 build bug
-   #421155  panic on vga read 0x3c7,0x3cb
-   #666434  VGA BIOS: Incompatible mode reporting
-   #681819  Incorrent return value from cdrom reads
-   #648222  Lotus Agenda futuristic dates off
-   #657455  doesn't boot plan9
-   #658938  SGDT in VM8086
+   #813556 Compile error under gcc 3.3.1
+   #809758 RIGHT ALT does not function properly
+   #809695 CVS complains about unknown files after compilation
+   #628762 Error in Floppy Booting
+   #474526 Crash under win32 (access violation)
+   #687619 test case for BX_CPU_C::IRET32
+   #664544 Panic in IRET32 - Reporting test case
+   #637822 test case for BX_CPU_C::IRET32
+   #603410 BX_CP U_C::IRET32
+   #537047 IRET32 incomplete emulation, panic
+   #805541 Compile fails on i686, gcc 3.3
+   #798829 Problem booting from ISO image
+   #688163 Panic at rombios.c
+   #688161 rombios.c crashes when boot from a CD.
+   #796339 int 15h, e801h broken?
+   #666946 Slowdown Timer should be a module
+   #783826 the clock is extremely fast
+   #645609 Real Time Clock is too *FAST*
+   #663320 flaw in IO bitmap permission handling
+   #764929 Timing is off.
+   #659510 Bochs timing off by x10
+   #787138 No ROM BIOS character map
+   #787134 Config options not saved
+   #689201 Disassembler bug
+   #666202 Windows 2000 - random screen blanking with linux DLX demo
+   #629242 reset during Doom -> BIOS panic
+   #685508 PANIC: prefetch: RIP > CS.limit
+   #695434 minix floppies won't boot.
+   #764473 Freesco Linux crashes on boot
+   #656026 error when trying to run some stuff
+   #614202 HD: non-byte IO read to 01f4
+   #777357 Strange FPU compiler error
+   #583758 gag bootloader doesn't run
+   #658639 ne2k panics with MS lanman Client/DOS62
+   #536711 problem running smart bootmanager
+   #741433 Disabling all ata# results in HD error.
+   #753200 lock instruction doesn't do an illegal instruction trap
+   #679389 libbx_wx.so.0: undefined symbol
+   #758936 Problem Installing Bochs
+   #742580 I configured fants but bochs still give me the same error
+   #772242 iodev/vga.cc wrong memory access.
+   #739222 Cannot change resultion
+   #693344 libwx_gtk2.3.so.2 RedHat linux 8.0
+   #639320 sparc: needs -lm to compile
+   #587422 Windows 95j doesn't boot
+   #547817 sparc: rfb needs -lsocket
+   #480963 RFB: option to wait for client
+   #763893 i've got problems with a "libvga.so.1" and another file
+   #766490 Documentation mistake
+   #766481 Bochs 2.0.2 Fails to compile on YDL3.0
+   #626144 %lld is not portable
+   #752241 lock prefix erronously allowed for some instructions
+   #743305 fetchdecode.c probs
+   #658707 Automatic exit?
+   #696758 BeOS can't mount image disk, won't complete boot.
+   #737048 Enabling keyboard resets controllers translation mode
+   #717713 Bochs panics on startup on RH 9
+   #738808 VGA PANIC
+   #730922 seg fault on "bochs boot: cdrom"
+   #658905 VGA read write error
+   #564218 Panic on vga_mem_write
+   #614231 X11 doesn't support charmap change
+   #708311 Missing CGA low-res emulation
+   #720776 REX MOVB immediate broken for x86_64
+   #643296 lock prefix, unallowed cases
+   #716964 [sb16] OPL.timer_running not initialized
+   #662074 little mistake in the default config example
+   #470701 CD-ROM on Win2K needs FILE_SHARE_READ
+   #706454 bug??
+   #653861 Win32 build bug
+   #421155 panic on vga read 0x3c7,0x3cb
+   #666434 VGA BIOS: Incompatible mode reporting
+   #681819 Incorrent return value from cdrom reads
+   #648222 Lotus Agenda futuristic dates off
+   #657455 doesn't boot plan9
+   #658938 SGDT in VM8086 
 
 -------------------------------------------------------------------------
 Changes in 2.0.2 (January 21, 2003):
