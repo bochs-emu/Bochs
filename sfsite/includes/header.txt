@@ -60,7 +60,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 
 <br><br><center><b>Support</b></center>
 
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+FAQ&url=http://bochs.sourceforge.net/docs-html/faq.html" class="sidebar">Bochs FAQ</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+FAQ&url=http://bochs.sourceforge.net/doc/docbook/user/x237.html" ckass="sidebar">Bochs FAQ</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook" class="sidebar">Documentation</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/user/book1.html" class="sidebar">User Guide</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/development/book1.html" class="sidebar">Devel. Guide</a>
