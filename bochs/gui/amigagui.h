@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigagui.h,v 1.2 2001-10-03 13:10:37 bdenney Exp $
+// $Id: amigagui.h,v 1.3 2003-02-21 15:06:16 cisc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <exec/types.h>
@@ -13,13 +13,13 @@
 #include <proto/diskfont.h>
 #include <proto/gadtools.h>
 #include <diskfont/diskfont.h>
-#include <intuition/IntuitionBase.h>
+#include <intuition/intuitionbase.h>
 #include <intuition/pointerclass.h>
 #include <devices/input.h>
 #include <devices/inputevent.h>
 #include <graphics/gfxbase.h>
 #include <graphics/videocontrol.h>
-#include <cybergraphics/cybergraphics.h>
+#include <cybergraphx/cybergraphics.h>
 #include <libraries/gadtools.h>
 #define FULL(x) (x*0x01010101)
 
@@ -60,7 +60,10 @@ static unsigned bx_bordertop, bx_borderleft, bx_borderright, bx_borderbottom,
 				bx_headerbar_y, mouse_button_state = 0, bx_headernext_left,
                 bx_headernext_right, x_tilesize, y_tilesize, bx_mouseX, bx_mouseY;
 static LONG apen = -1, black = -1, white = -1;
+BOOL bx_xchanged = FALSE;
 void *vi;
+
+extern "C" { void dprintf(char *, ...) __attribute__ ((format (printf, 1, 2)));}
 
 int w = 648, h = 480, d = 8;
 
@@ -82,7 +85,7 @@ const unsigned char raw_to_bochs [130] = {
             BX_KEY_EQUALS,
             BX_KEY_BACKSLASH,
             0,
-            BX_KEY_INSERT,
+            BX_KEY_KP_INSERT,
             BX_KEY_Q,
             BX_KEY_W,
             BX_KEY_E,
@@ -127,7 +130,7 @@ const unsigned char raw_to_bochs [130] = {
             BX_KEY_PERIOD,
         	BX_KEY_SLASH,
             0,
-            BX_KEY_KP_INSERT,          /*60*/
+            BX_KEY_KP_DELETE,       /*60*/
             BX_KEY_KP_HOME,
             BX_KEY_KP_UP,
             BX_KEY_KP_PAGE_UP,
@@ -138,11 +141,11 @@ const unsigned char raw_to_bochs [130] = {
             BX_KEY_ENTER,
             BX_KEY_ESC,
         	BX_KEY_DELETE,          /*70*/
-            0,
-            0,
-            0,
+            BX_KEY_INSERT,
+            BX_KEY_PAGE_UP,
+            BX_KEY_PAGE_DOWN,
             BX_KEY_KP_SUBTRACT,
-            0,
+            BX_KEY_F11,
             BX_KEY_UP,
             BX_KEY_DOWN,
             BX_KEY_RIGHT,
@@ -157,21 +160,34 @@ const unsigned char raw_to_bochs [130] = {
             BX_KEY_F8,
             BX_KEY_F9,
             BX_KEY_F10,
-            BX_KEY_NUM_LOCK,          /*90*/
+            0,                      /*90*/
             0,
             BX_KEY_KP_DIVIDE,
             BX_KEY_KP_MULTIPLY,
             BX_KEY_KP_ADD,
-            0,
+            BX_KEY_MENU,
             BX_KEY_SHIFT_L,
             BX_KEY_SHIFT_R,
             BX_KEY_CAPS_LOCK,
             BX_KEY_CTRL_L,
             BX_KEY_ALT_L,           /*100*/
-            BX_KEY_ALT_R
-            /* missing:
-            BX_KEY_HOME
-			BX_KEY_END
-            BX_KEY_PAGE_UP
-			BX_KEY_PAGE_DOWN     */
+            BX_KEY_ALT_R,
+            BX_KEY_WIN_L,
+            BX_KEY_WIN_R,
+            0,
+            0,
+            0,
+            BX_KEY_SCRL_LOCK,
+            BX_KEY_PRINT,
+            BX_KEY_NUM_LOCK,
+            BX_KEY_PAUSE,           /*110*/
+            BX_KEY_F12,
+            BX_KEY_HOME,
+            BX_KEY_END,
+            BX_KEY_INT_STOP,
+            BX_KEY_INT_FAV,
+            BX_KEY_INT_BACK,
+            BX_KEY_INT_FORWARD,
+            BX_KEY_INT_HOME,
+            BX_KEY_INT_SEARCH
             };
