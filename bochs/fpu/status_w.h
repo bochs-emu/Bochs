@@ -48,9 +48,15 @@
 
 #define status_word() \
   ((partial_status & ~SW_Top & 0xffff) | ((top << SW_Top_Shift) & SW_Top))
+#ifdef NO_PAREN_AROUND_BRACES
+#define setcc(cc) { \
+  partial_status &= ~(SW_C0|SW_C1|SW_C2|SW_C3); \
+  partial_status |= (cc) & (SW_C0|SW_C1|SW_C2|SW_C3); }
+#else
 #define setcc(cc) ({ \
   partial_status &= ~(SW_C0|SW_C1|SW_C2|SW_C3); \
   partial_status |= (cc) & (SW_C0|SW_C1|SW_C2|SW_C3); })
+#endif /* NO_PAREN_AROUND_BRACES */
 
 #ifdef PECULIAR_486
    /* Default, this conveys no information, but an 80486 does it. */

@@ -1061,6 +1061,9 @@ FPU_fwait_done:
 #ifdef DEBUG
   FPU_printall();
 #endif /* DEBUG */
+#ifdef NO_BLANK_LABELS
+  if(0);
+#endif
 }
 
 #endif  /* #ifndef USE_WITH_CPU_SIM */

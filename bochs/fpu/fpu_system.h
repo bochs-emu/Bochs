@@ -136,7 +136,9 @@ extern void fpu_set_ax(u16);
 #ifndef __ASSEMBLY__
 
 struct info {
-unsigned char empty_struct_not_portable;
+#ifdef NO_EMPTY_STRUCTS
+  unsigned char donotindexme;
+#endif
   };
 
 #define FPU_info ((struct info *) NULL)
