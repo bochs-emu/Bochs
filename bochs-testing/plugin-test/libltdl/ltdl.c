@@ -1911,6 +1911,15 @@ tryall_dlopen (handle, filename)
       cur->info.filename = 0;
     }
 
+  // Call access() to see if it exists first.  If not return FILE_NOT_FOUND
+  // instead of CANNOT_OPEN.
+  if (access (cur->info.filename, R_OK) != 0) {
+    LT_DLFREE (cur->info.filename);
+    LT_DLMUTEX_SETERROR (LT_DLSTRERROR (FILE_NOT_FOUND));
+    ++errors;
+    goto done;
+  }
+
   while (loader)
     {
       lt_user_data data = loader->dlloader_data;
@@ -2875,10 +2884,12 @@ try_dlopen (phandle, filename)
 #endif
 		   )))
 	{
-	  tryall_dlopen (&newhandle, filename);
+	  // Directory component was specified, or all find_handle() calls
+	  // failed to find the lib.  This is our last try.
+	  errors = tryall_dlopen (&newhandle, filename);
 	}
 
-      if (!newhandle)
+      if (!newhandle || errors>0)
 	{
 	  LT_DLFREE (*phandle);
 	  ++errors;
@@ -2994,7 +3005,7 @@ lt_dlopenext (filename)
      failed, it is better to return an error message here than to
      report FILE_NOT_FOUND when the alternatives (foo.so etc) are not
      in the module search path.  */
-  if (handle || ((errors > 0) && file_not_found ()))
+  if (handle || ((errors > 0) && !file_not_found ()))
     {
       LT_DLFREE (tmp);
 
@@ -3028,7 +3039,7 @@ lt_dlopenext (filename)
 
   /* As before, if the file was found but loading failed, return now
      with the current error message.  */
-  if (handle || ((errors > 0) && file_not_found ()))
+  if (handle || ((errors > 0) && !file_not_found ()))
     {
       LT_DLFREE (tmp);
       // If we're going to return a handle, be sure that has its loader
