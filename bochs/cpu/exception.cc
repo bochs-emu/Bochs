@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.10 2002-03-12 09:16:41 bdenney Exp $
+// $Id: exception.cc,v 1.11 2002-03-12 18:59:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,10 @@ BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
                     Bit16u error_code)
 {
 #if BX_DEBUGGER
+  if (bx_guard.special_unwind_stack) {
+    BX_INFO (("interrupt() returning early because special_unwind_stack is set"));
+    return;
+  }
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
 #if BX_DEBUG_LINUX
   if (bx_dbg.linux_syscall) {
@@ -63,10 +67,6 @@ BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
 #endif
 #endif
 
-  if (bx_guard.special_unwind_stack) {
-    BX_INFO (("interrupt() returning early because special_unwind_stack is set"));
-    return;
-  }
 //BX_DEBUG(( "::interrupt(%u)", vector ));
 
   BX_INSTR_INTERRUPT(vector);
@@ -576,10 +576,12 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   Bit8u    exception_type;
   unsigned prev_errno;
 
+#if BX_DEBUGGER
   if (bx_guard.special_unwind_stack) {
     BX_INFO (("exception() returning early because special_unwind_stack is set"));
     return;
   }
+#endif
 
 //BX_DEBUG(( "::exception(%u)", vector ));
 
