@@ -3,8 +3,8 @@
 # .conf.linux
 #
 
-which_config=normal
-#which_config=plugins
+#which_config=normal
+which_config=plugins
 
 CC="gcc"
 CXX="c++"
