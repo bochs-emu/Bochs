@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.18 2002-01-15 20:42:51 vruppert Exp $
+// $Id: pic.cc,v 1.19 2002-01-26 12:03:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -103,6 +103,10 @@ bx_pic_c::init(bx_devices_c *d)
   BX_PIC_THIS s.slave_pic.init.requires_4 = 0;
   BX_PIC_THIS s.slave_pic.init.byte_expected = 0;
   BX_PIC_THIS s.slave_pic.special_mask = 0;
+  for (unsigned i=0; i<8; i++) { /* all IRQ lines low */
+    BX_PIC_THIS s.master_pic.IRQ_line[i] = 0;
+    BX_PIC_THIS s.slave_pic.IRQ_line[i] = 0;
+  }
 }
 
 
@@ -295,7 +299,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
           BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0x60));
-          BX_PIC_THIS s.master_pic.irr &= ~(1 << (value-0x60));
           service_master_pic();
 	  break;
 
@@ -443,7 +446,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
           BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0x60));
-          BX_PIC_THIS s.slave_pic.irr &= ~(1 << (value-0x60));
           service_slave_pic();
 	  break;
 
@@ -517,6 +519,22 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   return;
 }
+
+// new IRQ signal handling routines (under construction)
+
+  void
+bx_pic_c::lower_irq(unsigned irq_no)
+{
+  UNUSED(irq_no);
+}
+
+  void
+bx_pic_c::raise_irq(unsigned irq_no)
+{
+  UNUSED(irq_no);
+}
+
+// current IRQ handling routines
 
   void
 bx_pic_c::trigger_irq(unsigned irq_no)
@@ -621,8 +639,6 @@ bx_pic_c::service_master_pic(void)
         continue;
       if (unmasked_requests & (1 << irq)) {
         BX_DEBUG(("signalling IRQ(%u)", (unsigned) irq));
-        BX_PIC_THIS s.master_pic.irr &= ~(1 << irq);
-        /*??? do for slave too: BX_PIC_THIS s.master_pic.isr |=  (1 << irq);*/
         BX_PIC_THIS s.master_pic.INT = 1;
         BX_SET_INTR(1);
         BX_PIC_THIS s.master_pic.irq = irq;
@@ -678,7 +694,6 @@ bx_pic_c::service_slave_pic(void)
         if (bx_dbg.pic)
           BX_DEBUG(("slave: signalling IRQ(%u)",
             (unsigned) 8 + irq));
-        BX_PIC_THIS s.slave_pic.irr &= ~(1 << irq);
         BX_PIC_THIS s.slave_pic.INT = 1;
         BX_PIC_THIS s.master_pic.irr |= 0x04; /* request IRQ 2 on master pic */
         BX_PIC_THIS s.slave_pic.irq = irq;
