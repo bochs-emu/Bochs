@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.30 2002-01-23 20:23:07 vruppert Exp $
+// $Id: floppy.cc,v 1.31 2002-01-27 21:56:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.30 2002-01-23 20:23:07 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.31 2002-01-27 21:56:53 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -1316,6 +1316,7 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       BX_FD_THIS s.media[drive].fd = -1;
       }
     BX_FD_THIS s.media_present[drive] = 0;
+    bx_options.floppya.Oinitial_status->set(BX_EJECTED);
     BX_FD_THIS s.DIR |= 0x80; // disk changed line
     return(0);
     }
@@ -1331,11 +1332,13 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       }
     if (evaluate_media(type, path, & BX_FD_THIS s.media[drive])) {
       BX_FD_THIS s.media_present[drive] = 1;
+      bx_options.floppya.Oinitial_status->set(BX_INSERTED);
       BX_FD_THIS s.DIR |= 0x80; // disk changed line
       return(1);
       }
     else {
       BX_FD_THIS s.media_present[drive] = 0;
+      bx_options.floppya.Oinitial_status->set(BX_EJECTED);
       return(0);
       }
     }
