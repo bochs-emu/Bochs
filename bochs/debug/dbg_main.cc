@@ -464,15 +464,15 @@ bx_get_command(void)
     }
 #if HAVE_LIBREADLINE
   if (bx_infile_stack_index == 0) {
-    // disable ^C handling during readline so that I get get to GDB
-    //set_ctrlc_handler (0);
     charptr_ret = readline (prompt);
-    //set_ctrlc_handler (1);
-    if (strlen(charptr_ret) > 0) add_history (charptr_ret);
-    strcpy (tmp_buf, charptr_ret);
-    strcat (tmp_buf, "\n");
-    free (charptr_ret);
-    charptr_ret = &tmp_buf[0];
+    // beward, returns NULL on end of file
+    if (charptr_ret && strlen(charptr_ret) > 0) {
+      add_history (charptr_ret);
+      strcpy (tmp_buf, charptr_ret);
+      strcat (tmp_buf, "\n");
+      free (charptr_ret);
+      charptr_ret = &tmp_buf[0];
+    }
   } else {
     charptr_ret = fgets(tmp_buf, 512,
       bx_infile_stack[bx_infile_stack_index].fp);
@@ -1507,7 +1507,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
   bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT; // looking for icount
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
 	// for now, step each CPU one BX_DBG_DEFAULT_ICOUNT_QUANTUM at a time
-  bx_printf ("Stepping each CPU a total of %d cycles\n", count);
+  //bx_printf ("Stepping each CPU a total of %d cycles\n", count);
 	for (unsigned cycle=0; cycle < count; cycle++) {
 		for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
 		  //bx_printf ("Stepping %s\n", BX_CPU[cpu]->name);
@@ -1519,7 +1519,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 		}
 		BX_TICK1 ();
 	}
-  bx_printf ("Stepped each CPU a total of %d cycles\n", count);
+  //bx_printf ("Stepped each CPU a total of %d cycles\n", count);
 #endif
 
   BX_INSTR_DEBUG_PROMPT();
