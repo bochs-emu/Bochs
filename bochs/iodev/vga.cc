@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.63 2003-04-20 17:04:45 vruppert Exp $
+// $Id: vga.cc,v 1.64 2003-04-21 19:03:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,7 +54,7 @@
 // of the array.  If out of bounds, do nothing.
 #define SET_TILE_UPDATED(xtile,ytile,value)                              \
   do {                                                                   \
-    if ((xtile) < BX_NUM_X_TILES && (ytile) < BX_NUM_Y_TILES)            \
+    if (((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))        \
       BX_VGA_THIS s.vga_tile_updated[(xtile)][(ytile)] = value;          \
   } while (0)
 
@@ -236,7 +236,8 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.vert_tick = 0;
 
   BX_VGA_THIS s.charmap_address = 0;
-  
+  BX_VGA_THIS s.y_doublescan = 0;
+
 #if BX_SUPPORT_VBE  
   // The following is for the vbe display extension
   // FIXME: change 0xff80 & 0xff81 into some nice constants
@@ -279,7 +280,6 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
 
   h = (ai[1] + 1) * 8;
   v = (ai[18] | ((ai[7] & 0x02) << 7) | ((ai[7] & 0x40) << 3)) + 1;
-  if ((ai[9] & 0x9f) > 0) v >>= 1;
 
   /*
   switch ( ( BX_VGA_THIS s.misc_output.vert_sync_pol << 1) | BX_VGA_THIS s.misc_output.horiz_sync_pol )
@@ -305,20 +305,10 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
         *piWidth = 320;
         *piHeight = 240;
         }
-      if (BX_VGA_THIS s.CRTC.reg[23] == 0xE3 &&
-         BX_VGA_THIS s.CRTC.reg[20] == 0xF &&
-         BX_VGA_THIS s.CRTC.reg[9] == 0x40)
-        {
-        *piWidth = 640;
-        *piHeight = 350;
-        }
-      if (BX_VGA_THIS s.CRTC.reg[23] == 0xE3 &&
-         BX_VGA_THIS s.CRTC.reg[20] == 0 &&
-         BX_VGA_THIS s.CRTC.reg[9] == 0xC0)
-        {
-        BX_VGA_THIS s.scan_bits = BX_VGA_THIS s.CRTC.reg[19] << 4;
+      else {
         *piWidth = h;
         *piHeight = v;
+        BX_VGA_THIS s.scan_bits = BX_VGA_THIS s.CRTC.reg[19] << 4;
         }
       }
     else if ((h >= 640) && (v >= 480)) {
@@ -826,15 +816,18 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           BX_DEBUG(("found enable transition"));
 #endif
           // Mark all video as updated so the color changes will go through
-          memset(BX_VGA_THIS s.text_snapshot, 0,
-                 sizeof(BX_VGA_THIS s.text_snapshot));
-          BX_VGA_THIS s.vga_mem_updated = 1;
-          for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
-            for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
-              SET_TILE_UPDATED (xti, yti, 1);
+          if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+            BX_VGA_THIS s.vga_mem_updated = 1;
+            for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
+              for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
+                SET_TILE_UPDATED (xti, yti, 1);
               }
             }
+          } else {
+            memset(BX_VGA_THIS s.text_snapshot, 0,
+                   sizeof(BX_VGA_THIS s.text_snapshot));
           }
+        }
         value &= 0x1f; /* address = bits 0..4 */
         BX_VGA_THIS s.attribute_ctrl.address = value;
         switch (value) {
@@ -1056,15 +1049,18 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue<<2);
           if (needs_update) {
             // Mark all video as updated so the color changes will go through
-            memset(BX_VGA_THIS s.text_snapshot, 0,
-                   sizeof(BX_VGA_THIS s.text_snapshot));
-            BX_VGA_THIS s.vga_mem_updated = 1;
-            for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
-              for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
-                SET_TILE_UPDATED (xti, yti, 1);
+            if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+              BX_VGA_THIS s.vga_mem_updated = 1;
+              for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
+                for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
+                  SET_TILE_UPDATED (xti, yti, 1);
                 }
               }
+            } else {
+              memset(BX_VGA_THIS s.text_snapshot, 0,
+                     sizeof(BX_VGA_THIS s.text_snapshot));
             }
+          }
           break;
         }
 
@@ -1153,9 +1149,19 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 #endif
           if (prev_memory_mapping != BX_VGA_THIS s.graphics_ctrl.memory_mapping)
             BX_VGA_THIS s.vga_mem_updated = 1;
-          // other checks here ???
-          // check for transition from graphics to alpha mode and clear
-          // old snapshot memory
+          if (prev_graphics_alpha != BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+            BX_VGA_THIS s.vga_mem_updated = 1;
+            if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+              for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
+                for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
+                  SET_TILE_UPDATED (xti, yti, 1);
+                }
+              }
+	    } else {
+              memset(BX_VGA_THIS s.text_snapshot, 0,
+                     sizeof(BX_VGA_THIS s.text_snapshot));
+	    }
+	  }
           break;
         case 7: /* Color Don't Care */
           BX_VGA_THIS s.graphics_ctrl.color_dont_care = value & 0x0f;
@@ -1186,6 +1192,10 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
       BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
       //BX_DEBUG(("color CRTC Reg[%u] = %02x",
       //  (unsigned) BX_VGA_THIS s.CRTC.address, (unsigned) value));
+      if (BX_VGA_THIS s.CRTC.address==0x09) {
+        BX_VGA_THIS s.y_doublescan = ((value & 0x9f) > 0);
+      }
+
       if (BX_VGA_THIS s.CRTC.address>=0x0A && BX_VGA_THIS s.CRTC.address<=0x0F) {
         // Start address or cursor size / location change
         BX_VGA_THIS s.vga_mem_updated = 1;
@@ -1317,7 +1327,7 @@ bx_vga_c::update(void)
 
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     Bit8u color;
-    unsigned bit_no, r, c;
+    unsigned bit_no, r, c, x, y;
     unsigned long byte_offset;
     unsigned xti, yti, y_tiles;
 
@@ -1333,13 +1343,14 @@ bx_vga_c::update(void)
         Bit8u attribute, palette_reg_val, DAC_regno;
         unsigned long start_addr;
 
+        determine_screen_dimensions(&iHeight, &iWidth);
+        if( (iWidth != old_iWidth) || (iHeight != old_iHeight) ) {
+          bx_gui->dimension_update(iWidth, iHeight);
+          old_iWidth = iWidth;
+          old_iHeight = iHeight;
+        }
+
         if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // CGA 640x200x2
-	  iWidth = 640; iHeight = 200;
-          if( (iWidth != old_iWidth) || (iHeight != old_iHeight) ) {
-            bx_gui->dimension_update(iWidth, iHeight);
-            old_iWidth = iWidth;
-            old_iHeight = iHeight;
-          }
 
           y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
 
@@ -1349,18 +1360,18 @@ bx_vga_c::update(void)
                 for (r=0; r<Y_TILESIZE; r++) {
                   for (c=0; c<X_TILESIZE; c++) {
   
+                    x = xti*X_TILESIZE + c;
+                    y = yti*Y_TILESIZE + r;
+                    if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                     /* 0 or 0x2000 */
-                    byte_offset = ((yti*Y_TILESIZE + r) & 1) << 13;
+                    byte_offset = (y & 1) << 13;
                     /* to the start of the line */
-                    byte_offset += (320 / 4) * ((yti*Y_TILESIZE + r) / 2);
+                    byte_offset += (320 / 4) * (y / 2);
                     /* to the byte start */
-                    byte_offset += ((xti*X_TILESIZE + c) / 8);
+                    byte_offset += (x / 8);
 
-                    attribute = 7 - ((xti*X_TILESIZE + c) % 8);
-                    palette_reg_val = (BX_VGA_THIS s.vga_memory[byte_offset]) >> attribute;
-                    palette_reg_val &= 3;
-                    palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics << 2;
-                    // palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity << 3;
+                    bit_no = 7 - (x % 8);
+                    palette_reg_val = (((BX_VGA_THIS s.vga_memory[byte_offset]) >> bit_no) & 1);
                     DAC_regno = BX_VGA_THIS s.attribute_ctrl.palette_reg[palette_reg_val];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                   }
@@ -1374,14 +1385,6 @@ bx_vga_c::update(void)
 	else { // output data in serial fashion with each display plane
                // output on its associated serial output.  Standard EGA/VGA format
 
-          determine_screen_dimensions(&iHeight, &iWidth);
-
-          if( (iWidth != old_iWidth) || (iHeight != old_iHeight) ) {
-            bx_gui->dimension_update(iWidth, iHeight);
-            old_iWidth = iWidth;
-            old_iHeight = iHeight;
-          }
-
           start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
           y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
 
@@ -1390,9 +1393,11 @@ bx_vga_c::update(void)
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   for (c=0; c<X_TILESIZE; c++) {
+                    y = yti*Y_TILESIZE + r;
+                    if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                     bit_no = 7 - (c % 8);
                     byte_offset = start_addr + (xti*X_TILESIZE+c)/8 +
-                      ((yti*Y_TILESIZE+r) * (BX_VGA_THIS s.scan_bits/8));
+                      (y * (BX_VGA_THIS s.scan_bits/8));
                     attribute =
                       (((BX_VGA_THIS s.vga_memory[0*65536 + byte_offset] >> bit_no) & 0x01) << 0) |
                       (((BX_VGA_THIS s.vga_memory[1*65536 + byte_offset] >> bit_no) & 0x01) << 1) |
@@ -1499,6 +1504,7 @@ bx_vga_c::update(void)
                 for (r=0; r<Y_TILESIZE; r++) {
                   for (c=0; c<X_TILESIZE; c++) {
                     pixely = ((yti*Y_TILESIZE) + r);
+                    if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
                     pixelx = ((xti*X_TILESIZE) + c);
                     plane  = (pixelx % 4);
                     byte_offset = (plane * 65536) +
@@ -1534,6 +1540,7 @@ bx_vga_c::update(void)
 	      for (r=0; r<Y_TILESIZE; r++) {
 		for (c=0; c<X_TILESIZE; c++) {
 		  pixely = ((yti*Y_TILESIZE) + r);
+		  if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
 		  pixelx = ((xti*X_TILESIZE) + c) / 2;
 		  plane  = (pixelx % 4);
 		  byte_offset = (plane * 65536) +
@@ -1857,13 +1864,14 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       offset = addr - 0xA0000;
       }
     else if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // 0xB8000 .. 0xBFFFF
-      unsigned x_tileno, y_tileno, isEven;
+      unsigned x_tileno, x_tileno2, y_tileno, isEven;
 
       if ( (addr < 0xB8000) || (addr > 0xBFFFF) )
         return;
       offset = addr - 0xB8000;
 
       /* CGA 320x200x4 start */
+      BX_VGA_THIS s.vga_memory[offset] = value;
       isEven = (offset>=0x2000)?1:0;
       if (isEven) {
         y_tileno = offset - 0x2000;
@@ -1874,14 +1882,28 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
         x_tileno <<= 2; //*= 4;
       } else {
         y_tileno = offset / (320/4);
-        y_tileno = offset<<1; //2 * offset;
+        y_tileno <<= 1; //2 * y_tileno;
         x_tileno = offset % (320/4);
         x_tileno <<= 2; //*=4;
       }
-      x_tileno/=X_TILESIZE;
-      y_tileno/=Y_TILESIZE;
+      x_tileno2=x_tileno;
+      if (BX_VGA_THIS s.y_doublescan && (BX_VGA_THIS s.graphics_ctrl.shift_reg==0)) {
+        x_tileno2+=7;
+        x_tileno/=(X_TILESIZE/2);
+        x_tileno2/=(X_TILESIZE/2);
+        y_tileno/=(Y_TILESIZE/2);
+      } else {
+        x_tileno2+=3;
+        x_tileno/=X_TILESIZE;
+        x_tileno2/=X_TILESIZE;
+        y_tileno/=Y_TILESIZE;
+      }
       BX_VGA_THIS s.vga_mem_updated = 1;
       SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+      if (x_tileno2!=x_tileno) {
+        SET_TILE_UPDATED (x_tileno2, y_tileno, 1);
+      }
+      return;
       /* CGA 320x200x4 end */
       }
     else {
@@ -2113,7 +2135,11 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     unsigned x_tileno, y_tileno;
 
     x_tileno = (offset % (BX_VGA_THIS s.scan_bits/8)) / (X_TILESIZE / 8);
-    y_tileno = (offset / (BX_VGA_THIS s.scan_bits/8)) / Y_TILESIZE;
+    if (BX_VGA_THIS s.y_doublescan) {
+      y_tileno = (offset / (BX_VGA_THIS s.scan_bits/8)) / (Y_TILESIZE / 2);
+    } else {
+      y_tileno = (offset / (BX_VGA_THIS s.scan_bits/8)) / Y_TILESIZE;
+    }
     SET_TILE_UPDATED (x_tileno, y_tileno, 1);
     }
 }
