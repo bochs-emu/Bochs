@@ -611,3 +611,70 @@ in bad sim:
 
 try to get a trace of the instructions before the exception, since
 they caused the exception.
+vbreak 0x10:0x0010002f
+c
+set $cpu=2
+trace-on
+c
+This was caused by FPU code which was hardcoded to BX_CPU[0].  When Linux
+tested for an FPU, the results were written to BX_CPU[0] instead of the
+bootstrap cpu.  Fixed.
+Now I'm having trouble in the multiprocessor simulation with fpu_check
+failing.  It worked fine before.  I get
+Checking 386/387 coupling... general protection fault: 0000
+CPU:2
+EIP 0x10:0xc01b0120
+Another BX_CPU[0] problem in the FPU code. Hopefully no more.
+
+time_init() problem in multiprocessor sim that doesn't happen in the other
+Stop in time_init and again at end.
+vbreak 0x10:0xc01b1f54
+vbreak 0x10:0xc01b1fc6
+it does reach end of time_init. where the crash then?
+can't interrupt trace output with ^C (?)
+
+fixed lack of BX_TICK1 calls when all processors halted.
+added code so that APIC startup message brings the target processor
+out of halt, sets its CS:IP to vector*0x1000.
+Now problem is:  jump_protected: gate type 0 unsupported
+supported gate types 
+1,3,4,5,9,11,12
+
+1=286 available TSS
+3=Busy 286 TSS
+4=286 call gate
+5=task gate
+9=386 available TSS
+11=Busy 386 TSS
+12=386 call gate
+
+this is the instruction, in processor #0, and it's exactly what should
+be going on.  It should jump to the start of the kernel.
+jmp 0010:00100000
+Step through the trampoline code and watch.
+JMP_Ap -> jump_protected (ctrl_xfer_pro.cc)
+a far call or far jmp can only access a segment descriptor for a 
+conforming code segment, nonconforming code segment, call gate, task gate,
+or TSS.  So what is this one?
+segment is 0x10
+check that gdtr+16 points to the right thing before the jump
+huh? cpu#0 has
+gdtr:base=0xff53f0, limit=0xff
+idtr:base=0xf000ff, limit=0x53f0
+could this be mapped to a real gdt?
+
+ok, the problem was that I jumped to 0000:2000 but it should have been
+0200:0000.  In real mode, they're the same, but then it needed to reference
+data using 0x0200:offset too.  Now the second processor boots, but I'm
+getting a nonzero write to CR4, which is causing a panic.
+panic: MOV_CdRd: (CR4) write of 0x10
+eip=0xc010016e
+Indeed, in kernel startup code the first CPU skips the code in
+head.S that says:
+        movl %cr4,%eax          # Turn on 4Mb pages
+	orl $16,%eax
+	movl %eax,%cr4
+bochs does not support 4mb pages.  Do I need to implement it, or can Linux
+do without?  Linux can do without for now, if I use "mem=nopentium".
+Later, if I feel like it (and understand paging well enough), implement 
+4mb pages.
