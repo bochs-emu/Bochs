@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.59 2003-03-02 23:59:10 cbothamy Exp $
+// $Id: cdrom.cc,v 1.60 2003-04-25 00:32:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -468,14 +468,17 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.59 2003-03-02 23:59:10 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.60 2003-04-25 00:32:58 cbothamy Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
 cdrom_interface::~cdrom_interface(void)
 {
+#ifdef WIN32
+#else
 	if (fd >= 0)
 		close(fd);
+#endif
 	if (path)
 		free(path);
 	BX_DEBUG(("Exit"));
@@ -684,7 +687,7 @@ if (using_file == 0)
 		DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
 	}
 }
-#endif
+#else // WIN32
 
 #if __linux__
   if (!using_file)
@@ -692,6 +695,7 @@ if (using_file == 0)
 #endif
 
     close(fd);
+#endif // WIN32
     fd = -1;
     }
 }
