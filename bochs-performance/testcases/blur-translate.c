@@ -1,6 +1,6 @@
 /*
  *
- * $Id: blur-translate.c,v 1.1 2002-04-17 08:12:49 bdenney Exp $
+ * $Id: blur-translate.c,v 1.2 2002-04-17 19:34:57 bdenney Exp $
  *
  */
 
@@ -15,8 +15,27 @@
 int array[MAX][MAX];
 int array2[MAX][MAX];
 #define BLUR_WINDOW_HALF 1
-
 #define DEFAULT_TIMES 1000
+
+#define MAX_TIMERS 3
+struct timeval start[MAX_TIMERS], stop[MAX_TIMERS];
+#define start_timer(T) gettimeofday (&start[T], NULL);
+#define stop_timer(T) gettimeofday (&stop[T], NULL);
+
+void report_time (FILE *fp, int T, int iters)
+{
+  int usec_duration = 
+    (stop[T].tv_sec*1000000 + stop[T].tv_usec)
+    - (start[T].tv_sec*1000000 + start[T].tv_usec);
+  double sec = (double)usec_duration / 1.0e3;
+  double sec_per_iter = sec / (double)iters;
+  fprintf (fp, "%f msec\n", sec);
+  if (iters!=1) {
+    fprintf (fp, "Iterations = %d\n", iters);
+    fprintf (fp, "Time per iteration = %f msec\n", sec_per_iter);
+  }
+}
+
 
 typedef enum {
   OP_MOVE_REL,           // 2 args delta_x and delta_y
@@ -232,6 +251,7 @@ int translate_block (CodeBlock *block)
   if (block->func != NULL) return 0;
   block->dlhandle = NULL;
   block->func = NULL;
+  start_timer(1);
   // generate C code
   sprintf (buffer, "translate%d.c", id);
   fprintf (stderr, "building translation function in %s\n", buffer);
@@ -269,6 +289,10 @@ int translate_block (CodeBlock *block)
     fprintf (stderr, "can't find symbol %s\n", buffer);
     return -1;
   }
+  stop_timer(1);
+  fprintf (stderr, "How long did translation take?\n");
+  report_time(stderr, 1, 1);
+  fprintf (stderr, "---\n");
   return 0;
 }
 
@@ -304,31 +328,41 @@ void dump_array (FILE *fp, int ptr[MAX][MAX])
   }
 }
 
-struct timeval start, stop;
-#define start_timer() gettimeofday (&start, NULL);
-#define stop_timer() gettimeofday (&stop, NULL);
-
-void report_time (FILE *fp, int iters)
+void usage ()
 {
-  int usec_duration = 
-    (stop.tv_sec*1000000 + stop.tv_usec)
-    - (start.tv_sec*1000000 + start.tv_usec);
-  double sec = (double)usec_duration / 1.0e3;
-  double sec_per_iter = sec / (double)iters;
-  fprintf (fp, "Total time elapsed = %f msec\n", sec);
-  fprintf (fp, "Iterations = %d\n", iters);
-  fprintf (fp, "Time per iteration = %f msec\n", sec_per_iter);
+  fprintf (stderr, "Usage: blur-translate [-emulate | -reference | -translate] [iterations]\n");
+  exit(1);
 }
+
+enum {
+  METHOD_REFERENCE,
+  METHOD_EMULATE,
+  METHOD_TRANSLATE
+};
 
 int main (int argc, char *argv[])
 {
   int i;
-  int times = 0;
+  int times = DEFAULT_TIMES;
   FILE *out;
-  if (argc>1) {
-    assert (sscanf (argv[1], "%d", &times) == 1);
-  } else {
-    times = DEFAULT_TIMES;
+  int arg = 1;
+  int method = METHOD_TRANSLATE;
+  for (arg=1; arg<argc; arg++) {
+    if (!strncmp (argv[arg], "-ref", 4)) {
+      fprintf (stderr, "Using reference implementation.\n");
+      method = METHOD_REFERENCE;
+    } else if (!strncmp (argv[arg], "-emu", 4)) {
+      fprintf (stderr, "Using emulation only.\n");
+      method = METHOD_EMULATE;
+    } else if (!strncmp (argv[arg], "-tra", 4)) {
+      fprintf (stderr, "Using translation only.\n");
+      method = METHOD_TRANSLATE;
+    } else if (argv[arg][0]>='0' && argv[arg][0]<='9') {
+      sscanf (argv[arg], "%d", &times);
+      fprintf (stderr, "Set iterations to %d\n", times);
+    } else {
+      usage();
+    }
   }
   if (lt_dlinit () != 0) {
     fprintf (stderr, "lt_dlinit() failed\n");
@@ -336,18 +370,23 @@ int main (int argc, char *argv[])
   }
   fill_array();
   //dump_array (stderr);
-  start_timer();
+  start_timer(0);
   for (i=0; i<times; i++) {
-#if defined USE_SIMPLE
-    blur_simple ();
-#elif defined USE_DYNAMIC_TRANSLATION
-    execute_code_block (&blur);
-#else
-    emulate_opcodes (blur.opcode_list);
-#endif
+    switch (method) {
+    case METHOD_REFERENCE:
+      blur_simple ();
+      break;
+    case METHOD_EMULATE:
+      emulate_opcodes (blur.opcode_list);
+      break;
+    case METHOD_TRANSLATE:
+      execute_code_block (&blur);
+      break;
+    }
   }
-  stop_timer();
-  report_time (stdout, times);
+  stop_timer(0);
+  printf ("Total time elapsed:\n");
+  report_time (stdout, 0, times);
   //fprintf (stderr, "-----------------------------------\n");
   out = fopen ("blur.out", "w");
   assert (out != NULL);
