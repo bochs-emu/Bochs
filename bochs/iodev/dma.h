@@ -82,8 +82,6 @@ private:
   bx_devices_c *devices;
   };
 
-#if BX_USE_DMA_SMF
 extern bx_dma_c bx_dma;
-#endif
 
 #endif  // #ifndef _PCDMA_H

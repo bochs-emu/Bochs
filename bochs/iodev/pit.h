@@ -91,8 +91,6 @@ private:
   BX_PIT_SMF void  start(unsigned timerid);
   };
 
-#if BX_USE_PIT_SMF
 extern bx_pit_c bx_pit;
-#endif
 
 #endif  // #ifndef _BX_PIT_H

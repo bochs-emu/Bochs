@@ -56,6 +56,4 @@ private:
   };
 
 
-#if BX_USE_PAR_SMF
 extern bx_parallel_c bx_parallel;
-#endif

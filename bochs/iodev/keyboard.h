@@ -179,8 +179,6 @@ private:
   BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
   };
 
-#if BX_USE_KEY_SMF
 extern bx_keyb_c bx_keyboard;
-#endif
 
 #endif  // #ifndef _PCKEY_H

@@ -123,6 +123,4 @@ public:
   BX_FD_SMF Boolean evaluate_media(unsigned type, char *path, floppy_t *floppy);
   };
 
-#if BX_USE_FD_SMF
 extern bx_floppy_ctrl_c bx_floppy;
-#endif

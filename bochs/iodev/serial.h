@@ -168,6 +168,4 @@ private:
   };
 
 
-#if BX_USE_SER_SMF
 extern bx_serial_c bx_serial;
-#endif

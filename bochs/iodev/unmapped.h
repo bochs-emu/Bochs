@@ -62,6 +62,4 @@ private:
   bx_devices_c *devices;
   };
 
-#if BX_USE_UM_SMF
 extern bx_unmapped_c bx_unmapped;
-#endif

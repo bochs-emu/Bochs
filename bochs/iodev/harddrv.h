@@ -297,6 +297,4 @@ private:
   bx_devices_c *devices;
   };
 
-#if BX_USE_HD_SMF
 extern bx_hard_drive_c bx_hard_drive;
-#endif

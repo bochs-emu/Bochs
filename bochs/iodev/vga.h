@@ -186,6 +186,4 @@ private:
                                               unsigned *piWidth);
   };
 
-#if BX_USE_VGA_SMF
 extern bx_vga_c bx_vga;
-#endif

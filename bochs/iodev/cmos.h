@@ -71,6 +71,4 @@ private:
   };
 
 
-#if BX_USE_CMOS_SMF
 extern bx_cmos_c bx_cmos;
-#endif
