@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.46 2002-09-08 07:56:09 vruppert Exp $
+// $Id: gui.cc,v 1.47 2002-09-19 18:59:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -485,5 +485,12 @@ bx_gui_c::init_signal_handlers ()
 bx_gui_c::set_text_charmap(Bit8u *fbuffer)
 {
   memcpy(& BX_GUI_THIS vga_charmap, fbuffer, 0x2000);
-  BX_GUI_THIS charmap_changed = 1;
+  for (unsigned i=0; i<256; i++) BX_GUI_THIS charmap_changed[i] = 1;
+}
+
+  void
+bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
+{
+  BX_GUI_THIS vga_charmap[address] = data;
+  BX_GUI_THIS charmap_changed[address >> 5] = 1;
 }

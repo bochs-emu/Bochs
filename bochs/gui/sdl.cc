@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.19 2002-09-08 07:56:09 vruppert Exp $
+// $Id: sdl.cc,v 1.20 2002-09-19 18:59:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -590,8 +590,6 @@ void bx_gui_c::dimension_update(
 
   if( fheight > 0 )
   {
-    if (bx_gui.charmap_changed) bx_gui.clear_screen();
-    bx_gui.charmap_changed = 0;
     fontheight = fheight;
     fontwidth = 8;
   }

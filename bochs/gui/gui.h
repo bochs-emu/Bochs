@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.29 2002-09-08 07:56:09 vruppert Exp $
+// $Id: gui.h,v 1.30 2002-09-19 18:59:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,6 +49,7 @@ public:
   static int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
   static int set_clipboard_text(char *snapshot, Bit32u len);
   static void set_text_charmap(Bit8u *fbuffer);
+  static void set_text_charbyte(Bit16u address, Bit8u data);
 
   // The following function(s) are defined already, and your
   // GUI code calls them
@@ -103,7 +104,7 @@ private:
   unsigned user_bmap_id, user_hbar_id;
 
   unsigned char vga_charmap[0x2000];
-  Boolean charmap_changed;
+  Boolean charmap_changed[256];
   };
 
 

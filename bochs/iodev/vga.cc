@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.40 2002-09-13 00:11:49 cbothamy Exp $
+// $Id: vga.cc,v 1.41 2002-09-19 18:59:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -201,6 +201,8 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   BX_VGA_THIS s.horiz_tick = 0;
   BX_VGA_THIS s.vert_tick = 0;
+
+  BX_VGA_THIS s.charmap_address = 0;
   
 #if BX_SUPPORT_VBE  
   // The following is for the vbe display extension
@@ -939,8 +941,9 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
           charmap2 = (value & 0x2C) >> 2;
           if (charmap2 > 3) charmap2 = (charmap2 & 3) + 4;
 	  if (BX_VGA_THIS s.CRTC.reg[0x09] > 0) {
+            BX_VGA_THIS s.charmap_address = (charmap1 << 13);
             bx_gui.set_text_charmap(
-              & BX_VGA_THIS s.vga_memory[0x20000 + (charmap1 << 13)]);
+              & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
             }
           if (charmap2 != charmap1)
             BX_INFO(("char map select: #2=%d (unused)", charmap2));
@@ -1815,11 +1818,6 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       default: // 0xA0000 .. 0xBFFFF
         offset = addr - 0xA0000;
       }
-    if (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 1) {
-      BX_VGA_THIS s.vga_memory[offset] = value;
-      BX_VGA_THIS s.vga_mem_updated = 1;
-      return;
-      }
     }
 
   /* addr between 0xA0000 and 0xAFFFF */
@@ -1998,8 +1996,13 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       BX_VGA_THIS s.vga_memory[0*65536 + offset] = new_val[0];
     if (BX_VGA_THIS s.sequencer.map_mask_bit[1])
       BX_VGA_THIS s.vga_memory[1*65536 + offset] = new_val[1];
-    if (BX_VGA_THIS s.sequencer.map_mask_bit[2])
+    if (BX_VGA_THIS s.sequencer.map_mask_bit[2]) {
+      if ((!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) &&
+          ((offset & 0xe000) == BX_VGA_THIS s.charmap_address)) {
+        bx_gui.set_text_charbyte((offset & 0x1fff), new_val[2]);
+        }
       BX_VGA_THIS s.vga_memory[2*65536 + offset] = new_val[2];
+      }
     if (BX_VGA_THIS s.sequencer.map_mask_bit[3])
       BX_VGA_THIS s.vga_memory[3*65536 + offset] = new_val[3];
 

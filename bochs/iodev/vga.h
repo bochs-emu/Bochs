@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.15 2002-09-19 01:32:38 bdenney Exp $
+// $Id: vga.h,v 1.16 2002-09-19 18:59:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -224,6 +224,7 @@ private:
     unsigned vert_tick;
     Bit8u rgb[3 * 256];
     Bit8u tile[X_TILESIZE * Y_TILESIZE];
+    Bit16u charmap_address;
 
 #if BX_SUPPORT_VBE    
     Bit8u vbe_memory[VBE_DISPI_TOTAL_VIDEO_MEMORY_MB *1024 * 1024];
