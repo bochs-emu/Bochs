@@ -24,11 +24,8 @@ extern "C" {
 #include <stdio.h>
 }
 #include "osdep.h"
-#include "control.h"
+#include "gui/control.h"
 #include "gui/siminterface.h"
-
-// just for temporary stuff
-#include "hacks.h"
 
 class MyApp: public wxApp
 {
@@ -162,51 +159,43 @@ MyFrame::HandleVgaGuiButton (int which)
   {
 	case GUI_BUTTON_FLOPPYA:
 	{
-	  Raise();  // bring the control panel to front so that the dialog shows up
+	  wxMutexGuiEnter ();
+	  Raise();  // bring the control panel to front so dialog shows
 	  wxFileDialog dialog(this, "Choose new floppy disk image file", "", "", "*.img", 0);
-	  if (dialog.ShowModal() == wxID_OK)
+	  int ret = dialog.ShowModal();
+	  wxMutexGuiLeave ();
+	  if (ret == wxID_OK)
 	  {
-		wxString info;
-		info.Printf(_T("Full file name: %s\n")
-					_T("Path: %s\n")
-					_T("Name: %s"),
-					dialog.GetPath().c_str(),
-					dialog.GetDirectory().c_str(),
-					dialog.GetFilename().c_str());
-		char *newpath = (char *)dialog.GetPath().c_str ();
-		if (newpath && strlen(newpath)>0) {
-		  // change floppy A path to this value.
-		  bx_param_string_c *Opath = SIM->get_param_string (BXP_FLOPPYA_PATH);
-		  assert (Opath != NULL);
-		  printf ("Setting floppy A path to '%s'\n", newpath);
-		  Opath->set (newpath);
-		  return 1;
-		}
+	    char *newpath = (char *)dialog.GetPath().c_str ();
+	    if (newpath && strlen(newpath)>0) {
+	      // change floppy A path to this value.
+	      bx_param_string_c *Opath = SIM->get_param_string (BXP_FLOPPYA_PATH);
+	      assert (Opath != NULL);
+	      printf ("Setting floppy A path to '%s'\n", newpath);
+	      Opath->set (newpath);
+	      return 1;
+	    }
 	  }
 	  return 0;
 	}
 	case GUI_BUTTON_FLOPPYB:
 	{
-	  Raise();  // bring the control panel to front so that the dialog shows up
+	  wxMutexGuiEnter ();
+	  Raise();  // bring the control panel to front so dialog shows
 	  wxFileDialog dialog(this, "Choose new floppy disk image file", "", "", "*.img", 0);
-	  if (dialog.ShowModal() == wxID_OK)
+	  int ret = dialog.ShowModal ();
+	  wxMutexGuiLeave ();
+	  if (ret == wxID_OK)
 	  {
-		wxString info;
-		info.Printf(_T("Full file name: %s\n")
-					_T("Path: %s\n")
-					_T("Name: %s"),
-					dialog.GetPath().c_str(),
-					dialog.GetDirectory().c_str(),
-					dialog.GetFilename().c_str());
-		char *newpath = (char *)dialog.GetPath().c_str ();
-		if (newpath && strlen(newpath)>0) {
-		  // change floppy A path to this value.
-		  bx_param_string_c *Opath = SIM->get_param_string (BXP_FLOPPYB_PATH);
-		  assert (Opath != NULL);
-		  printf ("Setting floppy B path to '%s'\n", newpath);
-		  Opath->set (newpath);
-		  return 1;
-		}
+	    char *newpath = (char *)dialog.GetPath().c_str ();
+	    if (newpath && strlen(newpath)>0) {
+	      // change floppy A path to this value.
+	      bx_param_string_c *Opath = SIM->get_param_string (BXP_FLOPPYB_PATH);
+	      assert (Opath != NULL);
+	      printf ("Setting floppy B path to '%s'\n", newpath);
+	      Opath->set (newpath);
+	      return 1;
+	    }
 	  }
 	  return 0;
 	}
@@ -244,6 +233,7 @@ MyFrame::SiminterfaceCallback2 (int code)
 	  // assume bochs has already had its change to shut down.
 	  // this will just shut down the gui.
 	  printf ("control panel is exiting\n");
+	  Close (TRUE);
 	  wxExit ();
 	}
   }
