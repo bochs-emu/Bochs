@@ -1,3 +1,63 @@
+Readme for BRANCH-cpanel branch
+updated Thu Mar 14 16:51:10  2002
+Bryce Denney
+
+wxWindows Configuration Interface
+
+This branch began in June 2001 when the most recent bochs version was
+1.2.1.  Dave Poirier and Bryce Denney started adding a wxWindows 
+configuration interface.  So far, it uses the platform's native
+interface to show the vga screen and the traditional bitmap buttons.
+The wxWindows window is a separate window, and eventually it will let
+you choose between different configurations, manage all the bochsrc options,
+create new disk images (?), and then start a simulation.
+
+Right now, the wxWindows window appears first.  This will be where
+you can choose a preset configuration or create one from scratch, then
+edit the bochsrc options using the GUI.  Then, by clicking on some button or a
+menu option, you can start up the Bochs simulation.  For now, the simulation
+creates its own window for vga display and the traditional buttons, which
+still use the platform-dependent gui code (not wxwindows).
+
+WARNING: Don't expect stable or complete code yet!
+
+I have tested in linux, where a "configure;make" should work fine.
+More recently, I have been developing in MSVC++ using projects and 
+workspaces.  To build in VC++:
+
+- in cygwin, do "sh .conf.win32-vcpp".  If you want different configure
+  options from the default, edit .conf.win32-vcpp first.
+- in cygwin, do "unzip build/win32/workspace.zip", or use winzip.  Now
+  you should have bochs.dsw and bochs.dsp in the main directory.
+- open up bochs.dsw, the workspace file.
+- edit project settings so that VC++ can find the wxWindows include
+  files and libraries on your system.  I installed them in
+  d:/wx/wx232/include and d:/wx/wx232/lib.  Specifically, edit
+  - Project>Settings>C/C++>Preprocessor: include directories.
+  - Project>Settings>Link>Input: additional library path.
+- build
+
+Note that the project is set up for wxWindows 2.3.2, and the only 
+configuration that I've used is called Win32 Debug.  To use on 
+other wxwindows versions, you will have to change some of the names
+of the libraries to include.  Use the samples that came with that
+version of wxwindows for reference.
+
+What works right now:
+- cd to a directory with a bochsrc and disk images in it (I use dlxlinux)
+- start up bochs.  You get a small wxwindows window with a File menu.
+- choose "start bochs" on the file menu.
+- a new window pops up with is the normal bochs window
+- click on the floppy icon for A or B.  You get a modal dialog box from
+  the control panel that lets you choose a new image file name.  Click
+  the new image file, and ok.  Now you can read the new image file in
+  Bochs.  If the file you select or type is readable, the floppy icon shows a
+  good floppy disk.  If you type "none" or choose an unreadable file,
+  the floopy icon will show a disk with an X through it.
+- That's all.  Nothing else works except for quit.
+
+
+-------------------------------------------------------------
 Bochs x86 Pentium Emulator
 Upated: Tue Jun 12 13:54:43 EDT 2001
 Version: 1.2.1
