@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.37 2002-09-05 16:01:34 bdenney Exp $
+// $Id: wxmain.cc,v 1.38 2002-09-05 16:27:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -958,7 +958,7 @@ void
 MyFrame::OnOtherEvent (wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("event id=%d\n", id);
+  wxLogMessage ("event id=%d", id);
   switch (id) {
     case ID_Edit_HD_0: editHDConfig (0); break;
     case ID_Edit_HD_1: editHDConfig (1); break;
@@ -1011,13 +1011,13 @@ void MyFrame::editFloppyConfig (int drive)
     // otherwise the SetFilename() should have done the right thing.
   }
   int n = dlg.ShowModal ();
-  printf ("floppy config returned %d\n", n);
+  wxLogMessage ("floppy config returned %d", n);
   if (n==wxID_OK) {
     char filename[1024];
     wxString fn (dlg.GetFilename ());
     strncpy (filename, fn.c_str (), sizeof(filename));
-    printf ("filename is '%s'\n", filename);
-    printf ("capacity = %d (%s)\n", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
+    wxLogMessage ("filename is '%s'", filename);
+    wxLogMessage ("capacity = %d (%s)", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
     fname->set (filename);
     disktype->set (disktype->get_min () + dlg.GetCapacity ());
     if (dlg.GetRadio () == 0)
@@ -1051,18 +1051,18 @@ void MyFrame::editHDConfig (int drive)
   dlg.SetGeom (2, spt->get ());
   dlg.SetEnable (present->get ());
   int n = dlg.ShowModal ();
-  printf ("HD config returned %d\n", n);
+  wxLogMessage ("HD config returned %d", n);
   if (n==wxID_OK) {
     char filename[1024];
     wxString fn (dlg.GetFilename ());
     strncpy (filename, fn.c_str (), sizeof (filename));
-    printf ("filename is '%s'\n", filename);
+    wxLogMessage ("filename is '%s'", filename);
     fname->set (filename);
     cyl->set (dlg.GetGeom (0));
     heads->set (dlg.GetGeom (1));
     spt->set (dlg.GetGeom (2));
     present->set (dlg.GetEnable ());
-    printf ("present=%d cyl=%d heads=%d spt=%d\n", present->get (), cyl->get(), heads->get(), spt->get());
+    wxLogMessage ("present=%d cyl=%d heads=%d spt=%d", present->get (), cyl->get(), heads->get(), spt->get());
     if (drive==1 && present->get ()) {
       // check that diskD and cdrom are not enabled at the same time
       bx_param_bool_c *cdromd = (bx_param_bool_c*)
@@ -1102,7 +1102,7 @@ void MyFrame::editCdromConfig ()
   dlg.SetFilename (fname->getptr ());
   dlg.SetEjected (status->get () == BX_EJECTED);
   int n = dlg.ShowModal ();
-  printf ("cdrom config returned %d\n", n);
+  wxLogMessage ("cdrom config returned %d", n);
   if (n==wxID_OK) {
     char filename[1024];
     wxString fn (dlg.GetFilename ());
@@ -1110,8 +1110,8 @@ void MyFrame::editCdromConfig ()
     fname->set (filename);
     present->set (dlg.GetEnable ());
     status->set (dlg.GetEjected () ? BX_EJECTED : BX_INSERTED);
-    printf ("filename is '%s'\n", filename);
-    printf ("enabled=%d ejected=%d\n", present->get(), status->get());
+    wxLogMessage ("filename is '%s'", filename);
+    wxLogMessage ("enabled=%d ejected=%d", present->get(), status->get());
     // cdrom and hard disk D cannot both be enabled.
     if (present->get ()) {
       bx_param_bool_c *diskd = (bx_param_bool_c*)

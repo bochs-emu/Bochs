@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.25 2002-09-04 12:29:04 bdenney Exp $
+// $Id: wxdialog.cc,v 1.26 2002-09-05 16:27:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -114,12 +114,12 @@ void LogMsgAskDialog::Init ()
     btnSizer->Add (btn, 1, wxALL, 5);
   }
   wxSize ms = message->GetSize ();
-  printf ("message size is %d,%d\n", ms.GetWidth(), ms.GetHeight ());
+  wxLogMessage ("message size is %d,%d", ms.GetWidth(), ms.GetHeight ());
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
   vertSizer->Fit (this);
   wxSize size = vertSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 10;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -141,7 +141,7 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
     default:
       return;  // without EndModal
   }
-  printf ("you pressed button id=%d, return value=%d\n", id, ret);
+  wxLogMessage ("you pressed button id=%d, return value=%d", id, ret);
   EndModal (ret);
 }
 
@@ -270,7 +270,7 @@ void FloppyConfigDialog::Init()
   SetSizer(vertSizer);
   vertSizer->Fit (this);
   wxSize size = vertSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 5;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -326,7 +326,7 @@ FloppyConfigDialog::GetFilename ()
 void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("you pressed button id=%d\n", id);
+  wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
     case ID_FilenameText:
       // when you type into the filename field, ensure that the radio
@@ -464,7 +464,7 @@ HDConfigDialog::HDConfigDialog(
   SetSizer(vertSizer);
   vertSizer->Fit (this);
   wxSize size = vertSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 5;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -477,9 +477,9 @@ void HDConfigDialog::SetDriveName (wxString name) {
 }
 
 void HDConfigDialog::SetGeom (int n, int value) {
-  printf ("setting geom[%d] to %d\n", n, value);
+  wxLogMessage ("setting geom[%d] to %d", n, value);
   geom[n]->SetValue (value); 
-  printf ("now geom[%d] has value %d\n", n, geom[n]->GetValue ());
+  wxLogMessage ("now geom[%d] has value %d", n, geom[n]->GetValue ());
   UpdateMegs ();
 }
 
@@ -519,7 +519,7 @@ void HDConfigDialog::EnableChanged ()
 void HDConfigDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("you pressed button id=%d\n", id);
+  wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
     case ID_Cylinders:
     case ID_Heads:
@@ -673,7 +673,7 @@ void CdromConfigDialog::Init()
   SetSizer(vertSizer);
   vertSizer->Fit (this);
   wxSize size = vertSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 5;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -738,7 +738,7 @@ CdromConfigDialog::AddRadio (const wxString& description, const wxString& filena
 void CdromConfigDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("you pressed button id=%d\n", id);
+  wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
     case ID_FilenameText:
       // when you type into the filename field, ensure that the radio
@@ -876,7 +876,7 @@ void NetConfigDialog::Init()
   SetSizer(mainSizer);
   mainSizer->Fit (this);
   wxSize size = mainSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 5;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -954,7 +954,7 @@ void NetConfigDialog::SetConn (const char *realname) {
 void NetConfigDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("you pressed button id=%d\n", id);
+  wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
     case ID_Enable:
       EnableChanged ();  // enable/disable fields that depend on this
@@ -1093,7 +1093,7 @@ void LogOptionsDialog::Init()
   SetSizer(vertSizer);
   vertSizer->Fit (this);
   wxSize size = vertSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 5;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -1126,7 +1126,7 @@ int LogOptionsDialog::GetAction (int evtype) {
 void LogOptionsDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("you pressed button id=%d\n", id);
+  wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
     case ID_Advanced:
       wxMessageBox ("The advanced dialog is not implemented yet.");
@@ -1293,7 +1293,7 @@ void ConfigMemoryDialog::Init()
   SetSizer(mainSizer);
   mainSizer->Fit (this);
   wxSize size = mainSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 5;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -1302,7 +1302,7 @@ void ConfigMemoryDialog::Init()
 void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("you pressed button id=%d\n", id);
+  wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
     case ID_Browse:
       {
@@ -1402,7 +1402,7 @@ void ParamDialog::Init()
   SetSizer(mainSizer);
   mainSizer->Fit (this);
   wxSize size = mainSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
   int margin = 5;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -1604,7 +1604,7 @@ void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
 void ParamDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  printf ("event was from id=%d\n", id);
+  wxLogMessage ("event was from id=%d", id);
   if (isGeneratedId (id)) {
     wxWindow *window = (wxWindow*)event.GetEventObject ();
     ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
@@ -1804,22 +1804,22 @@ void MyFrame::OnMenuEvent(wxCommandEvent& event)
   switch (id) {
     case ID_ShowDialog_1:
       {
-      printf ("show dialog 1\n");
+      wxLogMessage ("show dialog 1");
       LogMsgAskDialog dlg(this, -1, "Panic");
       dlg.EnableButton (dlg.DEBUG, FALSE);
       dlg.SetContext ("Hard Drive");
       dlg.SetMessage ("could not open hard drive image file '30M.sample'");
       int n = dlg.ShowModal ();
-      printf ("modal dialog returned %d\n", n);
-      printf ("and the dontAsk button is %d\n", dlg.GetDontAsk ());
+      wxLogMessage ("modal dialog returned %d", n);
+      wxLogMessage ("and the dontAsk button is %d", dlg.GetDontAsk ());
       }
       break;
     case ID_ShowDialog_2:
-      printf ("show dialog 2\n");
+      wxLogMessage ("show dialog 2");
 
       break;
     case ID_ShowDialog_3:
-      printf ("show dialog 3\n");
+      wxLogMessage ("show dialog 3");
       break;
     case ID_Quit:
       Close (TRUE);
