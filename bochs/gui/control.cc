@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.35 2001-10-07 00:35:35 bdenney Exp $
+// $Id: control.cc,v 1.36 2001-10-07 18:16:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.35 2001-10-07 00:35:35 bdenney Exp $
+ * $Id: control.cc,v 1.36 2001-10-07 18:16:01 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -421,8 +421,9 @@ int bx_control_panel (int menu)
    case BX_CPANEL_START_OPTS:
      {
        char prompt[CPANEL_PATH_LEN];
-       char oldpath[CPANEL_PATH_LEN];
-       assert (SIM->get_log_file (oldpath, CPANEL_PATH_LEN) >= 0);
+       char oldpath[CPANEL_PATH_LEN];     
+	   int retval = SIM->get_log_file (oldpath, CPANEL_PATH_LEN);
+	   assert (retval >= 0);
        sprintf (prompt, startup_options_prompt, oldpath);
        if (ask_uint (prompt, 0, 9, 0, &choice, 10) < 0) return -1;
        switch (choice) {
@@ -595,7 +596,8 @@ int control_panel_notify_callback (int code)
     {
       int level;
       char prefix[512], msg[512];
-      assert (SIM->log_msg_2 (prefix, &level, msg, sizeof(msg)) >= 0);
+	  int retval = SIM->log_msg_2 (prefix, &level, msg, sizeof(msg)) >= 0;
+      assert (retval);
       fprintf (stderr, "========================================================================\n");
       fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
       fprintf (stderr, "Device: %s\n", prefix);

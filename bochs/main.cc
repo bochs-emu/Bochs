@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.73 2001-10-07 01:07:59 bdenney Exp $
+// $Id: main.cc,v 1.74 2001-10-07 18:16:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -750,8 +750,12 @@ static void setupWorkingDirectory (char *path)
     
     *c = '\0';             /* cut off last part (binary name) */
     
-    assert ( chdir (parentdir) == 0 );   /* chdir to the binary app's parent */
-    assert ( chdir ("../../../") == 0 ); /* chdir to the .app's parent */
+	/* chdir to the binary app's parent */
+	int n = chdir (parentdir);
+	if (n) BX_PANIC (("failed to change dir to parent"));
+	/* chdir to the .app's parent */
+	int n = chdir ("../../../");
+    if (n) BX_PANIC (("failed to change to ../../.."));
 }
 #endif
 
