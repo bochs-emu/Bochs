@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.6 2001-06-09 21:19:58 bdenney Exp $
+ * $Id: siminterface.cc,v 1.7 2001-06-09 21:29:07 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -62,6 +62,8 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   virtual int set_vga_path (char *path);
   virtual int get_rom_address ();
   virtual int set_rom_address (int addr);
+  virtual int get_private_colormap ();
+  virtual void set_private_colormap (int en);
 };
 
 void init_siminterface ()
@@ -147,7 +149,9 @@ bx_real_sim_c::get_vga_update_interval () {
 
 void 
 bx_real_sim_c::set_vga_update_interval (unsigned interval) {
-  bx_vga.set_update_interval (interval);
+  bx_options.vga_update_interval = interval;
+  if (get_init_done ())
+    bx_vga.set_update_interval (interval);
 }
 
 int bx_real_sim_c::get_mouse_enabled () {
@@ -155,7 +159,9 @@ int bx_real_sim_c::get_mouse_enabled () {
 }
 
 void bx_real_sim_c::set_mouse_enabled (int en) {
-  bx_gui.gui_set_mouse_enable (en!=0);
+  bx_options.mouse_enabled = en;
+  if (get_init_done ())
+    bx_gui.gui_set_mouse_enable (en!=0);
 }
 
 int
@@ -340,3 +346,14 @@ bx_real_sim_c::set_rom_address (int addr)
   return 0;
 }
 
+int 
+bx_real_sim_c::get_private_colormap ()
+{
+  return bx_options.private_colormap;
+}
+
+void 
+bx_real_sim_c::set_private_colormap (int en)
+{
+  bx_options.private_colormap = en;
+}

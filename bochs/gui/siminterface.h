@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.3 2001-06-09 21:12:16 bdenney Exp $
+ * $Id: siminterface.h,v 1.4 2001-06-09 21:29:07 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -95,6 +95,8 @@ public:
   virtual int set_vga_path (char *path) {return -1;}
   virtual int get_rom_address () {return -1;}
   virtual int set_rom_address (int addr) {return -1;}
+  virtual int get_private_colormap () { return -1; }
+  virtual void set_private_colormap (int en) {}
 };
 
 extern bx_simulator_interface_c *SIM;

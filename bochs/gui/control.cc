@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.5 2001-06-09 21:19:58 bdenney Exp $
+ * $Id: control.cc,v 1.6 2001-06-09 21:29:07 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -78,6 +78,7 @@ void bx_edit_cdrom ();
 void bx_edit_rom_path (int vga);
 void bx_edit_rom_addr ();
 void bx_newhd_support ();
+void bx_private_colormap ();
 void bx_boot_from ();
 void bx_ips_change ();
 int bx_read_rc (char *rc);
@@ -476,32 +477,26 @@ int bx_control_panel (int menu)
        }
      }
      break;
-#if 0
    case BX_CPANEL_START_OPTS_INTERFACE:
      {
        char prompt[1024];
-       int interval;
-       SIM->get_vga_update_interval (&interval);
+       int interval = SIM->get_vga_update_interval ();
        sprintf (prompt, startup_interface_options, 
 	 interval, 
-	 SIM->get_mouse_enabled (),
-	 SIM->getips ());
-       build_disk_options_prompt (startup_disk_options_prompt, prompt, 1024);
-       if (ask_int (prompt, 0, 7, 0, &choice) < 0) return -1;
+	 SIM->get_mouse_enabled () ? "enabled" : "disabled",
+	 SIM->getips (),
+	 SIM->get_private_colormap () ? "enabled" : "disabled");
+       if (ask_int (prompt, 0, 4, 0, &choice) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
-	 case 1: bx_edit_floppy (0); break;
-	 case 2: bx_edit_floppy (1); break;
-	 case 3: bx_edit_hard_disk (0); break;
-	 case 4: bx_edit_hard_disk (1); break;
-	 case 5: bx_edit_cdrom (); break;
-	 case 6: bx_newhd_support (); break;
-	 case 7: bx_boot_from (); break;
+	 case 1: bx_vga_update_interval (); break;
+	 case 2: bx_mouse_enable (); break;
+	 case 3: bx_ips_change (); break;
+	 case 4: bx_private_colormap (); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
      break;
-#endif
    case BX_CPANEL_RUNTIME:
      if (ask_int (runtime_menu_prompt, 1, 9, 8, &choice) < 0) return -1;
      switch (choice) {
@@ -613,6 +608,15 @@ void bx_newhd_support ()
   if (newval == oldval) return;
   SIM->set_newhd_support (newval);
 }
+
+void bx_private_colormap ()
+{
+  int newval, oldval = SIM->get_private_colormap ();
+  if (ask_yn ("Use private colormap? [%s] ", oldval, &newval) < 0) return;
+  if (newval == oldval) return;
+  SIM->set_private_colormap (newval);
+}
+
 
 void bx_boot_from ()
 {
