@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.45 2004-01-25 13:01:29 vruppert Exp $
+// $Id: serial.cc,v 1.46 2004-02-28 13:10:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -71,7 +71,9 @@ bx_serial_c::bx_serial_c(void)
 
 bx_serial_c::~bx_serial_c(void)
 {
-#ifdef SERIAL_ENABLE
+#if USE_RAW_SERIAL
+  // nothing here yet
+#elif defined(SERIAL_ENABLE)
   for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
     if ((bx_options.com[i].Oenabled->get ()) && (s[i].tty_id >= 0))
       tcsetattr(s[i].tty_id, TCSAFLUSH, &s[i].term_orig);
@@ -489,8 +491,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_SER_SMF
   bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
   bx_bool new_rx_ien, new_tx_ien, new_ls_ien, new_ms_ien;
+  bx_bool new_wordlen, new_stopbits, new_break, new_dlab;
   bx_bool gen_int = 0;
-  Bit8u offset;
+  Bit8u offset, new_parity;
+#if USE_RAW_SERIAL
+  Bit8u p_mode;
+#endif
   Bit8u port = 0;
 
   BX_DEBUG(("write to address: 0x%04x = 0x%02x", address, value));
@@ -512,9 +518,6 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SER_THIS s[port].baudrate = (int) (BX_PC_CLOCK_XTL /
                                          (16 * ((BX_SER_THIS s[port].divisor_msb << 8) |
                                          BX_SER_THIS s[port].divisor_lsb)));
-#if USE_RAW_SERIAL
-          BX_SER_THIS s[port].raw->set_baudrate(BX_SER_THIS s[port].baudrate);
-#endif // USE_RAW_SERIAL
         }
       } else {
         Bit8u bitmask = 0xff >> (3 - BX_SER_THIS s[port].line_cntl.wordlen_sel);
@@ -566,9 +569,6 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SER_THIS s[port].baudrate = (int) (BX_PC_CLOCK_XTL /
                                          (16 * ((BX_SER_THIS s[port].divisor_msb << 8) |
                                          BX_SER_THIS s[port].divisor_lsb)));
-#if USE_RAW_SERIAL
-          BX_SER_THIS s[port].raw->set_baudrate(BX_SER_THIS s[port].baudrate);
-#endif // USE_RAW_SERIAL
         }
       } else {
         new_rx_ien = value & 0x01;
@@ -664,42 +664,42 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case BX_SER_LCR: /* Line control register */
-#if !USE_RAW_SERIAL
-      if ((value & 0x3) != 0x3) {
-        /* ignore this: this is set by FreeBSD when the console
-        code wants to set DLAB */
+      new_wordlen = value & 0x03;
+      new_stopbits = (value & 0x04) >> 2;
+      new_parity = (value & 0x38) >> 3;
+      new_break = (value & 0x40) >> 6;
+      new_dlab = (value & 0x80) >> 7;
+#if USE_RAW_SERIAL
+      if (BX_SER_THIS s[port].line_cntl.wordlen_sel != new_wordlen) {
+        BX_SER_THIS s[port].raw->set_data_bits(new_wordlen + 5);
       }
-#else
-      if (BX_SER_THIS s[port].line_cntl.wordlen_sel != (value & 0x3)) {
-        BX_SER_THIS s[port].raw->set_data_bits((value & 0x3) + 5);
+      if (BX_SER_THIS s[port].line_cntl.stopbits != new_stopbits) {
+        BX_SER_THIS s[port].raw->set_stop_bits(new_stopbits ? 2 : 1);
       }
-      if (BX_SER_THIS s[port].line_cntl.stopbits != (value & 0x4) >> 2) {
-        BX_SER_THIS s[port].raw->set_stop_bits((value & 0x4 >> 2) ? 2 : 1);
+      if ((BX_SER_THIS s[port].line_cntl.parity_enable != (bx_bool)(new_parity & 0x1)) ||
+          (BX_SER_THIS s[port].line_cntl.evenparity_sel != (bx_bool)((new_parity & 0x2) >> 1)) ||
+          (BX_SER_THIS s[port].line_cntl.stick_parity != (bx_bool)((new_parity & 0x4) >> 2))) {
+        if ((new_parity & 0x1) == 0) {
+          p_mode = P_NONE;
+        } else {
+          p_mode = (new_parity >> 1) + 1;
+        }
+        BX_SER_THIS s[port].raw->set_parity_mode(p_mode);
       }
-      if (BX_SER_THIS s[port].line_cntl.parity_enable != (value & 0x8) >> 3 ||
-          BX_SER_THIS s[port].line_cntl.evenparity_sel != (value & 0x10) >> 4 ||
-          BX_SER_THIS s[port].line_cntl.stick_parity != (value & 0x20) >> 5) {
-            if (((value & 0x20) >> 5) &&
-                ((value & 0x8) >> 3))
-              BX_PANIC(("com%d: sticky parity set and parity enabled", port+1));
-        BX_SER_THIS s[port].raw->set_parity_mode(((value & 0x8) >> 3),
-                                                 ((value & 0x10) >> 4) ? P_EVEN : P_ODD);
-      }
-      if (BX_SER_THIS s[port].line_cntl.break_cntl && !((value & 0x40) >> 6)) {
+      if (!BX_SER_THIS s[port].line_cntl.break_cntl && new_break) {
         BX_SER_THIS s[port].raw->transmit(C_BREAK);
       }
 #endif // USE_RAW_SERIAL
 
-      BX_SER_THIS s[port].line_cntl.wordlen_sel = value & 0x3;
+      BX_SER_THIS s[port].line_cntl.wordlen_sel = new_wordlen;
       /* These are ignored, but set them up so they can be read back */
-      BX_SER_THIS s[port].line_cntl.stopbits = (value & 0x4) >> 2;
-      BX_SER_THIS s[port].line_cntl.parity_enable = (value & 0x8) >> 3;
-      BX_SER_THIS s[port].line_cntl.evenparity_sel = (value & 0x10) >> 4;
-      BX_SER_THIS s[port].line_cntl.stick_parity = (value & 0x20) >> 5;
-      BX_SER_THIS s[port].line_cntl.break_cntl = (value & 0x40) >> 6;
+      BX_SER_THIS s[port].line_cntl.stopbits = new_stopbits;
+      BX_SER_THIS s[port].line_cntl.parity_enable = new_parity & 0x01;
+      BX_SER_THIS s[port].line_cntl.evenparity_sel = (new_parity & 0x02) >> 1;
+      BX_SER_THIS s[port].line_cntl.stick_parity = (new_parity & 0x04) >> 2;
+      BX_SER_THIS s[port].line_cntl.break_cntl = new_break;
       /* used when doing future writes */
-      if (BX_SER_THIS s[port].line_cntl.dlab &&
-          !((value & 0x80) >> 7)) {
+      if (BX_SER_THIS s[port].line_cntl.dlab && !new_dlab) {
         // Start the receive polling process if not already started
         // and there is a valid baudrate.
         if (BX_SER_THIS s[port].rx_pollstate == BX_SER_RXIDLE &&
@@ -710,9 +710,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                       (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5)),
                                       0); /* not continuous */
         }
+#if USE_RAW_SERIAL
+        BX_SER_THIS s[port].raw->set_baudrate(BX_SER_THIS s[port].baudrate);
+#endif // USE_RAW_SERIAL
         BX_DEBUG(("com%d: baud rate set - %d", port+1, BX_SER_THIS s[port].baudrate));
       }
-      BX_SER_THIS s[port].line_cntl.dlab = (value & 0x80) >> 7;
+      BX_SER_THIS s[port].line_cntl.dlab = new_dlab;
       break;
 
     case BX_SER_MCR: /* MODEM control register */

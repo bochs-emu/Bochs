@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.6 2004-01-18 11:58:07 vruppert Exp $
+// $Id: serial_raw.cc,v 1.7 2004-02-28 13:10:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -66,9 +66,9 @@ serial_raw::set_stop_bits (int val)
 }
 
 void 
-serial_raw::set_parity_mode (int x, int y)
+serial_raw::set_parity_mode (int mode)
 {
-  BX_DEBUG (("set parity %d %d", x, y));
+  BX_DEBUG (("set parity mode %d", mode));
 }
 
 void 
