@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.72 2002-10-30 23:58:03 yakovlev Exp $
+// $Id: keyboard.cc,v 1.73 2002-12-26 22:19:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.72 2002-10-30 23:58:03 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.73 2002-12-26 22:19:44 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -198,6 +198,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS pastebuf_len = 0;
   BX_KEY_THIS pastebuf_ptr = 0;
   BX_KEY_THIS paste_delay_changed ();
+  BX_KEY_THIS stop_paste = 0;
 
   // mouse port installed on system board
   DEV_cmos_set_reg(0x14, DEV_cmos_get_reg(0x14) | 0x04);
@@ -248,6 +249,9 @@ bx_keyb_c::init(void)
   void
 bx_keyb_c::reset(unsigned type)
 {
+  if (BX_KEY_THIS pastebuf != NULL) {
+    BX_KEY_THIS stop_paste = 1;
+  }
 }
 
   void
@@ -683,7 +687,7 @@ bx_keyb_c::service_paste_buf ()
   if (!BX_KEY_THIS pastebuf) return;
   BX_DEBUG (("service_paste_buf: ptr at %d out of %d", BX_KEY_THIS pastebuf_ptr, BX_KEY_THIS pastebuf_len));
   int fill_threshold = BX_KBD_ELEMENTS - 8;
-  while (BX_KEY_THIS pastebuf_ptr < BX_KEY_THIS pastebuf_len) {
+  while ( (BX_KEY_THIS pastebuf_ptr < BX_KEY_THIS pastebuf_len) && ! BX_KEY_THIS stop_paste) {
     if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= fill_threshold)
       return;
     // there room in the buffer for a keypress and a key release.
@@ -706,6 +710,7 @@ bx_keyb_c::service_paste_buf ()
   // reached end of pastebuf.  free the memory it was using.
   delete [] BX_KEY_THIS pastebuf;
   BX_KEY_THIS pastebuf = NULL;
+  BX_KEY_THIS stop_paste = 0;
 }
 
 // paste_bytes schedules an arbitrary number of ASCII characters to be

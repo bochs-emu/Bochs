@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.19 2002-10-25 11:44:40 bdenney Exp $
+// $Id: keyboard.h,v 1.20 2002-12-26 22:19:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -212,6 +212,7 @@ private:
   Bit32u pastebuf_len; // length of pastebuf
   Bit32u pastebuf_ptr; // ptr to next byte to be added to hw buffer
   Bit32u pastedelay;   // count before paste
+  bx_bool stop_paste;  // stop the current paste operation on hardware reset
 
   BX_KEY_SMF void     resetinternals(bx_bool powerup);
   BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value);
