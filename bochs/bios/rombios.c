@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.43 2002-04-04 03:50:11 instinc Exp $
+// $Id: rombios.c,v 1.44 2002-04-04 16:57:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,7 +28,7 @@
    to this file */
 #include "biosconfig.h"
 
-// ROM BIOS for use with Bochs x86 emulation environment
+// ROM BIOS for use with Bochs/Plex x86 emulation environment
 
 
 // ROM BIOS compatability entry points:
@@ -147,11 +147,18 @@
 #define SYS_MODEL_ID     0xFC
 #define SYS_SUBMODEL_ID  0x00
 #define BIOS_REVISION    1
-#define BIOS_CONFIG_TABLE 0xe716
+#define BIOS_CONFIG_TABLE 0xe71F
   // 1K of base memory used for Extended Bios Data Area (EBDA)
   // EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
 #define BASE_MEM_IN_K   (640 - 1)
 #define EBDA_SEG           0x9FC0
+
+  // Define the application NAME
+#ifdef PLEX86
+#  define BX_APPNAME "Plex86"
+#else
+#  define BX_APPNAME "Bochs"
+#endif
 
   // Sanity Checks
 #if BX_USE_ATADRV && BX_CPU<3
@@ -184,6 +191,7 @@
 
 #asm
 .rom
+
 .org 0x0000
 
 #if BX_CPU >= 3
@@ -194,8 +202,8 @@ use16 286
 
 MACRO HALT
   ;; the HALT macro is called with the line number of the HALT call.
-  ;; The line number is then sent to the PANIC_PORT, causing Bochs to
-  ;; print a BX_PANIC message.  This will normally halt the simulation
+  ;; The line number is then sent to the PANIC_PORT, causing Bochs/Plex 
+  ;; to print a BX_PANIC message.  This will normally halt the simulation
   ;; with a message such as "BIOS panic at rombios.c, line 4091".
   ;; However, users can choose to make panics non-fatal and continue.
   mov dx,#PANIC_PORT
@@ -205,8 +213,8 @@ MEND
 
 MACRO HALT2
   ;; the HALT macro is called with the line number of the HALT call.
-  ;; The line number is then sent to the PANIC_PORT, causing Bochs to
-  ;; print a BX_PANIC message.  This will normally halt the simulation
+  ;; The line number is then sent to the PANIC_PORT, causing Bochs/Plex
+  ;; to print a BX_PANIC message.  This will normally halt the simulation
   ;; with a message such as "BIOS panic at rombios.c, line 4091".
   ;; However, users can choose to make panics non-fatal and continue.
   mov dx,#0x401
@@ -1043,10 +1051,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.43 $";
-static char bios_date_string[] = "$Date: 2002-04-04 03:50:11 $";
+static char bios_cvs_version_string[] = "$Revision: 1.44 $";
+static char bios_date_string[] = "$Date: 2002-04-04 16:57:45 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.43 2002-04-04 03:50:11 instinc Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.44 2002-04-04 16:57:45 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1588,8 +1596,8 @@ put_int(action, val, width, neg)
 //--------------------------------------------------------------------------
 // bios_printf()
 //   A compact variable argument printf function which prints its output via
-//   an I/O port so that it can be logged by Bochs.  Currently, only %x is
-//   supported (or %02x, %04x, etc).
+//   an I/O port so that it can be logged by Bochs/Plex.  
+//   Currently, only %x is supported (or %02x, %04x, etc).
 //
 //   Supports %[format_width][format]
 //   where format can be d,x,c,s
@@ -1727,7 +1735,7 @@ log_bios_start()
 void
 print_bios_banner()
 {
-  bios_printf(BIOS_PRINTF_SCREEN, "Bochs BIOS, %s %s\n\n", 
+  bios_printf(BIOS_PRINTF_SCREEN, BX_APPNAME" BIOS, %s %s\n\n", 
     bios_cvs_version_string, bios_date_string);
   /*
   bios_printf(BIOS_PRINTF_SCREEN, "Test: x234=%3x, d-123=%d, c=%c, s=%s\n",
@@ -8944,8 +8952,6 @@ normal_post:
   mov  ds, ax
   mov  ss, ax
 
-  call _log_bios_start
-
   ;; zero out BIOS data area (40:00..40:ff)
   mov  es, ax
   mov  cx, #0x0080 ;; 128 words
@@ -8953,6 +8959,8 @@ normal_post:
   cld
   rep
     stosw
+
+  call _log_bios_start
 
   ;; set all interrupts to default handler
   mov  bx, #0x0000    ;; offset index
@@ -9253,18 +9261,22 @@ int19_handler:
   ;; bl contains the boot drive
   ;; ax contains the boot segment or 0 if failure
 
-  cmp ax, #0x0000
-  je  int19_fail
+  test ax, ax
+  jz  int19_fail
 
-  mov dl, bl       ;; set drive so guest os find it
-  mov 2[bp], ax    ;; set cs
-  xor ax, ax
-  mov 4[bp], ax    ;; set ip
-  mov [bp], ax     ;; set bp
-  mov ax, #0xaa55  ;; set ok flag
+  mov dl,    bl      ;; set drive so guest os find it
+  shl eax,   #0x04   ;; convert seg to ip
+  mov 2[bp], ax      ;; set ip
+
+  shr eax,   #0x10   ;; get the new cs
+  and ax,    #0x000F ;; remove unknown junk
+  mov 4[bp], ax      ;; set cs
+  xor ax,    ax
+  mov [bp],  ax      ;; set bp 
+  mov ax,    #0xaa55 ;; set ok flag
 
   pop bp
-  iret             ;; Beam me up Scotty
+  iret               ;; Beam me up Scotty
 
 int19_fail:
   hlt
@@ -9277,7 +9289,7 @@ int19_fail:
 ;-------------------------------------------
 .org BIOS_CONFIG_TABLE
 db 0x08                  ; Table size (bytes) -Lo
-     db 0x00             ; Table size (bytes) -Hi
+db 0x00                  ; Table size (bytes) -Hi
 db SYS_MODEL_ID
 db SYS_SUBMODEL_ID
 db BIOS_REVISION
