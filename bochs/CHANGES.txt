@@ -2,6 +2,11 @@ Changes since 1.2-pre1:
 - fixed link in HTML changelog.html to point to the real sources on SF.
 - added missing LOG_THIS definition to gui/nogui.cc
 - now iodev/pci.cc will compile with SMF=1.
+- fixed bios/rombios.c HALT macro so that it writes the line number of the
+  panic to the PANIC_PORT (port 0x400)
+- fixed iodev/unmapped.cc so that the line number written to PANIC_PORT
+  is displayed as a BX_PANIC message.
+- added additional check for null pointer in debugger exit routine
 
 Changes in version 1.2-pre1 (5/25/2001):
 - major cleanup of .bochsrc
