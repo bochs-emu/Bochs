@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.5 2002-09-20 17:57:54 bdenney Exp $
+# $Id: batch-build.perl,v 1.6 2002-09-23 07:37:07 bdenney Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -81,9 +81,9 @@ if ($TEST_GUIS) {
 if ($TEST_CPU) {
 # test with various cpu options
 add_configuration ('i386',
-  '--enable-cpu-level=3');
+  '--enable-cpu-level=3 --disable-mmx');
 add_configuration ('i486',
-  '--enable-cpu-level=4');
+  '--enable-cpu-level=4 --disable-mmx');
 add_configuration ('i586',
   '--enable-cpu-level=5');
 add_configuration ('i686',
