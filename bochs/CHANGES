@@ -1,3 +1,16 @@
+Changes in 2.1.1 (February 7, 2004):
+
+- fix bug in int15h function 0xe820 (Christian Neubert)
+- fix vmware3 disk support on big-endian platforms (Christophe Bothamy)
+- fix conditions for NM exception on FWAIT instruction (Christophe)
+- fix symbol conflict in rfb and x display libraries (Volker Ruppert)
+- allow 16 bit writes to ne2k page 0 (Volker)
+- notify display libraries on change of bpp (Volker)
+- fix bug in int13h function 0x10 (Volker)
+- fix floppy dialog error on win2k (Volker)
+- fix adress check in TSS IO permission bitmap (Christophe)
+
+-------------------------------------------------------------------------
 Changes in 2.1 (January 9, 2004):
 
 Brief summary :
