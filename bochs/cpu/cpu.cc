@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.77 2003-05-10 22:25:43 kevinlawton Exp $
+// $Id: cpu.cc,v 1.78 2003-05-21 15:48:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -777,6 +777,7 @@ BX_CPU_C::prefetch(void)
       }
     }
 
+#if BX_SupportICache
   Bit32u pageWriteStamp;
   Bit32u fetchModeMask;
   Bit32u phyPageIndex;
@@ -791,6 +792,7 @@ BX_CPU_C::prefetch(void)
     pageWriteStamp |= fetchModeMask; // Add in new ones.
     BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex] = pageWriteStamp;
     }
+#endif
 }
 
 

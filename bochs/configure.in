@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.206 2003-05-06 20:15:31 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.207 2003-05-21 15:48:55 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1342,7 +1342,7 @@ AC_ARG_ENABLE(vbe,
 
 AC_MSG_CHECKING(for MMX support)
 AC_ARG_ENABLE(mmx,
-  [  --enable-mmx                      compile in MMX emulation],
+  [  --enable-mmx                      MMX support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_MMX, 1)
@@ -1354,6 +1354,29 @@ AC_ARG_ENABLE(mmx,
   [
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_MMX, 1)
+    ]
+  )
+
+AC_MSG_CHECKING(for 3DNOW support)
+AC_ARG_ENABLE(3dnow,
+  [  --enable-ednow                      3DNow! support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_3DNOW, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_3DNOW, 0)
+   fi
+   ],
+  [
+    if test "$use_x86_64" = 1; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_3DNOW, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_3DNOW, 0)
+    fi
+    AC_MSG_RESULT(no)
     ]
   )
 
