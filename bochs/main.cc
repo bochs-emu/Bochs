@@ -89,7 +89,7 @@ static char logfilename[512] = "-";
 
 static void parse_line_unformatted(char *line);
 static void parse_line_formatted(int num_params, char *params[]);
-static void parse_bochsrc(void);
+static void parse_bochsrc(int argc);
 
 
 // Just for the iofunctions
@@ -365,6 +365,33 @@ logfunctions::ldebug(char *fmt, ...)
 iofunc_t *io = NULL;
 logfunc_t *genlog = NULL;
 
+void bx_center_print (FILE *file, char *line, int maxwidth)
+{
+  int imax;
+  imax = (maxwidth - strlen(line)) >> 1;
+  for (int i=0; i<imax; i++) fputc (' ', file);
+  fputs (line, file);
+}
+
+static char *divider = "========================================================================";
+
+void bx_print_header ()
+{
+  fprintf (stderr, "%s\n", divider);
+  char buffer[128];
+  sprintf (buffer, "Bochs x86 Emulator %s\n", VER_STRING);
+  bx_center_print (stderr, buffer, 72);
+  sprintf (buffer, "%s\n", REL_STRING);
+  bx_center_print (stderr, buffer, 72);
+  fprintf (stderr, "%s\n", divider);
+}
+
+void bx_print_footer ()
+{
+  fprintf (stderr, "%s\n", divider);
+  fprintf (stderr, "Bochs is finished.\n");
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -376,6 +403,8 @@ main(int argc, char *argv[])
   // each macro right here.  All other code can call them directly.
   SAFE_GET_IOFUNC();
   SAFE_GET_GENLOG();
+
+  bx_print_header ();
 
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
@@ -408,7 +437,7 @@ bx_bochs_init(int argc, char *argv[])
 #endif
 
   /* read the .bochsrc file */
-  parse_bochsrc();
+  parse_bochsrc(argc);
 
 //#if BX_PROVIDE_CPU_MEMORY==1
 //    else if (!strcmp(argv[n-1], "-sanity-check")) {
@@ -522,7 +551,8 @@ bx_atexit(void)
       bx_devices.pci->print_i440fx_state();
       }
 #endif
-    BX_INFO(("bochs exited, log file was '%s'\n", logfilename));
+  BX_INFO(("bochs exited, log file was '%s'\n", logfilename));
+  bx_print_footer ();
 }
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
@@ -538,61 +568,59 @@ bx_emulate_hga_dumps_timer(void)
 
 #if BX_PROVIDE_MAIN
   static void
-parse_bochsrc(void)
+parse_bochsrc(int argc)
 {
   FILE *fd;
   char *ret;
   char line[512];
+  Bit32u retry = 0, found = 0;
 
+  // try several possibilities for the bochsrc before giving up
+  while (!found) {
+    bochsrc_path[0] = 0;
+    switch (retry++) {
+    case 0: strcpy (bochsrc_path, ".bochsrc"); break;
+    case 1: strcpy (bochsrc_path, "bochsrc"); break;
+    case 2: strcpy (bochsrc_path, "bochsrc.txt"); break;
+    case 3:
 #if (!defined(WIN32) && !defined(macintosh))
-  char *ptr;
-
-  ptr = getenv("HOME");
-  if (!ptr) {
-    BX_PANIC(( "could not get environment variable 'HOME'.\n" ));
+      // only try this on unix
+      {
+      char *ptr = getenv("HOME");
+      if (ptr) sprintf (bochsrc_path, "%s/.bochsrc", ptr);
+      }
+#endif
+      break;
+    default:
+      // no bochsrc used.  This is still legal since they may have 
+      // everything on the command line.  However if they have no
+      // arguments then give them some friendly advice.
+      BX_INFO(( "could not find a bochsrc file\n"));
+      if (argc==1) {
+	fprintf (stderr, "%s\n", divider);
+	fprintf (stderr, "Before running Bochs, you should cd to a directory which contains\n");
+	fprintf (stderr, "a .bochsrc file and a disk image.  If you downloaded a binary package,\n");
+	fprintf (stderr, "all the necessary files are already on your disk.\n");
+#if defined(WIN32)
+	fprintf (stderr, "\nFor Windows installations, go to the dlxlinux direectory and\n");
+	fprintf (stderr, "double-click on the start.bat script.\n");
+#elif !defined(macintosh)
+	fprintf (stderr, "\nFor UNIX installations, try running \"bochs-dlx\" for a demo.  This script\n");
+	fprintf (stderr, "goes into the /usr/local/bochs/dlxlinux directory and starts bochs.\n");
+#endif
+	exit(1);
+      }
+      return;
+    }
+    if (bochsrc_path[0]) {
+      BX_INFO (("looking for configuration in %s\n", bochsrc_path));
+      fd = fopen(bochsrc_path, "r");
+      if (fd) found = 1;
+    }
   }
+  assert (fd != NULL && bochsrc_path[0] != 0);
 
-  strcpy(bochsrc_path, ".bochsrc");
-  fd = fopen(bochsrc_path, "r");
-
-  if (!fd) {
-    BX_DEBUG(( "could not open file '%s', trying home directory.\n",
-      bochsrc_path));
-
-    strcpy(bochsrc_path, ptr);
-    strcat(bochsrc_path, "/");
-    strcat(bochsrc_path, ".bochsrc");
-
-    fd = fopen(bochsrc_path, "r");
-    if (!fd) {
-      BX_DEBUG(( "could not open file '%s'.\n", bochsrc_path ));
-      // no file used, nothing left to do.  This is now valid,
-      // as you can pass everything on the command line.
-      return;
-      }
-    }
-  BX_INFO(("using rc file '%s'.\n", bochsrc_path));
-
-#else
-  // try opening file bochsrc only in current directory for win32
-  strcpy(bochsrc_path, "bochsrc");
-  fd = fopen(bochsrc_path, "r");
-
-  if (!fd) {
-    BX_INFO(( "could not open file '%s' in current directory.\n",
-      bochsrc_path ));
-    strcpy(bochsrc_path, "bochsrc");
-    fd = fopen(bochsrc_path, "r");
-    if (!fd) {
-      BX_INFO(( "could not open file '%s' in current directory.\n",
-	bochsrc_path ));
-      return;
-      }
-    }
-  BX_INFO(("using rc file '%s'.\n", bochsrc_path));
-
-#endif  // #if (!defined(WIN32) && !defined(macintosh))
-
+  BX_INFO(("reading configuration from %s\n", bochsrc_path));
 
   do {
     ret = fgets(line, sizeof(line)-1, fd);
