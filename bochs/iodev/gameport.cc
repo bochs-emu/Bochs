@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.2 2003-07-31 12:04:48 vruppert Exp $
+// $Id: gameport.cc,v 1.3 2003-12-21 17:24:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -42,6 +42,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+
+#elif defined(WIN32)
+
+#define JOY_BUTTON1 1
+#define JOY_BUTTON2 2
+#define JOYSTICKID1 0
+
+UINT STDCALL joyGetPos(UINT, LPJOYINFO);
 
 #endif
 
@@ -95,6 +103,13 @@ bx_gameport_c::init(void)
   if (BX_GAMEPORT_THIS joyfd >= 0) {
     for (unsigned i=0; i<4; i++) poll_joydev();
   }
+#elif defined(WIN32)
+  JOYINFO joypos;
+  if (joyGetPos(JOYSTICKID1, &joypos) == JOYERR_NOERROR) {
+    BX_GAMEPORT_THIS joyfd = 1;
+  } else {
+    BX_GAMEPORT_THIS joyfd = -1;
+  }
 #else
   BX_GAMEPORT_THIS joyfd = -1;
 #endif
@@ -135,6 +150,22 @@ bx_gameport_c::poll_joydev(void)
         BX_GAMEPORT_THIS delay_y = 25 + ((e.value + 0x8000) / 62);
       }
     }
+  }
+#elif defined(WIN32)
+  JOYINFO joypos;
+  if (joyGetPos(JOYSTICKID1, &joypos) == JOYERR_NOERROR) {
+    if (joypos.wButtons & JOY_BUTTON1) {
+      BX_GAMEPORT_THIS port &= ~0x10;
+    } else {
+      BX_GAMEPORT_THIS port |= 0x10;
+    }
+    if (joypos.wButtons & JOY_BUTTON2) {
+      BX_GAMEPORT_THIS port &= ~0x20;
+    } else {
+      BX_GAMEPORT_THIS port |= 0x20;
+    }
+    BX_GAMEPORT_THIS delay_x = 25 + (joypos.wXpos / 60);
+    BX_GAMEPORT_THIS delay_y = 25 + (joypos.wYpos / 60);
   }
 #endif
 }
