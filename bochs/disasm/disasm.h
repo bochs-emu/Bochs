@@ -3,14 +3,6 @@
 
 #include "config.h"
 
-#undef BX_SUPPORT_X86_64
-
-#if BX_SUPPORT_X86_64
-# define DISASM_REGISTERS 16
-#else
-# define DISASM_REGISTERS 8
-#endif
-
 #define BX_DECODE_MODRM(modrm_byte, mod, opcode, rm) { \
   mod    = (modrm_byte >> 6) & 0x03; \
   opcode = (modrm_byte >> 3) & 0x07; \
@@ -82,7 +74,7 @@ enum {
 	eDI_REG
 };
 
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
 enum {
 	rAX_REG,
 	rCX_REG,
@@ -152,7 +144,7 @@ private:
   const char **general_16bit_regname;
   const char **general_8bit_regname;
   const char **general_32bit_regname;
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
   const char **general_8bit_regname_rex;
   const char **general_64bit_regname;
 #endif
@@ -170,7 +162,7 @@ private:
 
   bx_bool i32bit_opsize;
   bx_bool i32bit_addrsize;
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
   bx_bool i64bit_opsize;
   bx_bool i64bit_addrsize;
 #endif
@@ -222,7 +214,7 @@ private:
     return(ret32);
   };
 
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
   BX_CPP_INLINE Bit64u fetch_qword() {
     Bit64u d0 = fetch_dword();
     Bit64u d1 = fetch_dword();
@@ -370,7 +362,7 @@ public:
  void  Iw (unsigned attribute); 
  void  Id (unsigned attribute);
  void  Iv (unsigned attribute);
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
  void  Iz (unsigned attribute);
  void  Iq (unsigned attribute);
 #endif

@@ -5,7 +5,7 @@
 // Intel STYLE
 //////////////////
 
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
 
 static const char *intel_general_16bit_regname[16] = {
     "ax",  "cx",  "dx",   "bx",   "sp",   "bp",   "si",   "di",
@@ -63,7 +63,7 @@ static const char *intel_index16[8] = {
 // AT&T STYLE
 //////////////////
 
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
 
 static const char *att_general_16bit_regname[16] = {
     "%ax",  "%cx",  "%dx",   "%bx",   "%sp",   "%bp",   "%si",   "%di",
@@ -177,7 +177,7 @@ void disassembler::set_syntax_intel()
   general_16bit_regname = intel_general_16bit_regname;
   general_8bit_regname = intel_general_8bit_regname;
   general_32bit_regname = intel_general_32bit_regname;
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
   general_8bit_regname_rex = intel_general_8bit_regname_rex;
   general_64bit_regname = intel_general_64bit_regname;
 #endif
@@ -252,7 +252,7 @@ void disassembler::set_syntax_att()
   general_16bit_regname = att_general_16bit_regname;
   general_8bit_regname = att_general_8bit_regname;
   general_32bit_regname = att_general_32bit_regname;
-#if BX_SUPPORT_X86_64
+#if BX_DISASM_SUPPORT_X86_64
   general_8bit_regname_rex = att_general_8bit_regname_rex;
   general_64bit_regname = att_general_64bit_regname;
 #endif
