@@ -2537,11 +2537,11 @@ void bx_sb16_c::initmidifile()
     Bit16u timecode;  // 0x80 + deltatimesperquarter << 8
     } midiheader = 
 #ifdef BX_LITTLE_ENDIAN
-      { "MTh", 0x06000000, 0x0100, 0x0100, 0x8001 };
+      { "MTh", 0x06000000, 0, 0x0100, 0x8001 };
 #else
-      { "MTh", 6, 1, 1, 0x180 };
+      { "MTh", 6, 0, 1, 0x180 };
 #endif
-   midiheader.chunk[3] = 'k';
+   midiheader.chunk[3] = 'd';
 
   struct {
     Bit8u chunk[4];
