@@ -39,7 +39,8 @@ REL_STRING=
 BOCHSDIR=$(prefix)/bochs
 VERSIONDIR=$(BOCHSDIR)/$(VERSION)
 MAN_PAGE_LIST=bochs bochsrc bximage bochs-dlx
-INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bximage install-x11-fonts test-x11-fonts
+INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bximage @INSTALL_LIST_FOR_PLATFORM@
+INSTALL_LIST_X11=install-x11-fonts test-x11-fonts
 INSTALL_LIST_SED=DOC-linux.html
 BOCHS_SCRIPTS=bochs-docs
 CP=cp
@@ -67,6 +68,7 @@ CHOWN=chown
 GZIP=gzip
 GUNZIP=gunzip
 ZIP=zip
+UNIX2DOS=unix2dos
 
 @SUFFIX_LINE@
 
@@ -244,7 +246,42 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
 
-install: all install_bin install_man install_fonts
+#####################################################################
+# Install target for all platforms.
+#####################################################################
+
+install: all @INSTALL_TARGET@
+
+#####################################################################
+# Install target for win32
+#
+# This is intended to be run in cygwin, since it has better scripting
+# tools.
+#####################################################################
+
+install_win32: all  download_dlx
+	-mkdir -p $(prefix)
+	for i in $(INSTALL_LIST); do cp $(srcdir)/$$i $(prefix); done
+	cp misc/sb16/sb16ctrl.example $(prefix)/sb16ctrl.txt
+	cp misc/sb16/sb16ctrl.exe $(prefix)
+	cat $(srcdir)/build/win32/DOC-win32.htm | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(prefix)/DOC-win32.htm
+	cp .bochsrc $(prefix)/bochsrc-sample.txt
+	cp -r docs-html $(prefix)
+	cat $(DLXLINUX_TAR) | (cd $(prefix) && tar xzvf -)
+	echo '..\bochs' > $(prefix)/dlxlinux/start.bat
+	dlxrc=$(prefix)/dlxlinux/bochsrc.txt; mv $$dlxrc $$dlxrc.orig && sed < $$dlxrc.orig 's/\/usr\/local\/bochs\/latest/../' > $$dlxrc && rm -f $$dlxrc.orig
+	mv $(prefix)/README $(prefix)/README.orig
+	cat build/win32/README.win32-binary $(prefix)/README.orig > $(prefix)/README
+	rm -f $(prefix)/README.orig
+	for i in README CHANGES COPYING VGABIOS-elpin-LICENSE dlxlinux/README; do mv $(prefix)/$$i $(prefix)/$$i.txt; done
+	$(UNIX2DOS) $(prefix)/*.txt $(prefix)/*/*.txt
+-l 	cd $(prefix); NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(ZIP) $$NAME.zip -r $$NAME); ls -l ../$$NAME.zip
+
+#####################################################################
+# install target for unix
+#####################################################################
+
+install_unix: install_bin install_man install_fonts
 
 install_fonts::
 	srcdir=$(srcdir) $(VERSIONDIR)/install-x11-fonts
