@@ -52,7 +52,7 @@ extern "C" {
 }
 #endif /* __sun */
 
-#ifdef __OpenBSD__
+#if (defined(__OpenBSD__) || defined(__FreeBSD__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
 // all the includes, because the i386 sys/disklabel.h contains code which 
 // c++ considers invalid.
@@ -154,7 +154,7 @@ cdrom_interface::eject_cdrom()
   // some ioctl() calls to really eject the CD as well.
 
   if (fd >= 0) {
-#ifdef __OpenBSD__
+#if (defined(__OpenBSD__) || defined(__FreeBSD__))
     (void) ioctl (fd, CDIOCALLOW);
     if (ioctl (fd, CDIOCEJECT) < 0)
 	  BX_DEBUG(( "eject_cdrom: eject returns error.\n" ));
@@ -264,7 +264,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
 
   return true;
   }
-#elif defined(__OpenBSD__)
+#elif (defined(__OpenBSD__) || defined(__FreeBSD__))
   {
   struct ioc_toc_header h;
   struct ioc_read_toc_entry t;
@@ -402,6 +402,53 @@ cdrom_interface::capacity()
 
   BX_DEBUG(( "capacity: %u\n", lp.d_secperunit ));
   return(lp.d_secperunit);
+  }
+#elif defined(__FreeBSD__)
+  {
+  // Read the TOC to get the data size, since disklabel doesn't appear
+  // to work, sadly.
+  // Keith Jones, 16 January 2000
+
+#define MAX_TRACKS 100
+
+  int i, num_tracks, num_sectors;
+  struct ioc_toc_header td;
+  struct ioc_read_toc_entry rte;
+  struct cd_toc_entry toc_buffer[MAX_TRACKS + 1];
+
+  if (fd < 0)
+    BX_PANIC(("cdrom: capacity: file not open.\n"));
+
+  if (ioctl(fd, CDIOREADTOCHEADER, &td) < 0)
+    BX_PANIC(("cdrom: ioctl(CDIOREADTOCHEADER) failed\n"));
+
+  num_tracks = (td.ending_track - td.starting_track) + 1;
+  if (num_tracks > MAX_TRACKS)
+    BX_PANIC(("cdrom: TOC is too large\n"));
+
+  rte.address_format = CD_LBA_FORMAT;
+  rte.starting_track = td.starting_track;
+  rte.data_len = (num_tracks + 1) * sizeof(struct cd_toc_entry);
+  rte.data = toc_buffer;
+  if (ioctl(fd, CDIOREADTOCENTRYS, &rte) < 0)
+    BX_PANIC(("cdrom: ioctl(CDIOREADTOCENTRYS) failed\n"));
+
+  num_sectors = -1;
+  for (i = 0; i < num_tracks; i++) {
+    if (rte.data[i].control & 4) {	/* data track */
+      num_sectors = ntohl(rte.data[i + 1].addr.lba)
+          - ntohl(rte.data[i].addr.lba);
+      fprintf(stderr, "cdrom: Data track %d, length %d\n",
+        rte.data[i].track, num_sectors);
+      break;
+      }
+    }
+
+  if (num_sectors < 0)
+    BX_PANIC(("cdrom: no data track found\n"));
+
+  return(num_sectors);
+
   }
 #elif defined WIN32
   {
