@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.18 2002-03-25 18:34:22 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.19 2002-03-25 19:05:25 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -87,7 +87,9 @@ private:
 
 class MyPanel: public wxPanel
 {
-  Bit16u convertToBXKey (wxKeyEvent& event);
+  Bit16u convertToBXKey (wxKeyEvent& event);  // for all platforms
+  Bit16u convertToBXKey_MSW (wxKeyEvent& event);
+  Bit16u convertToBXKey_GTK (wxKeyEvent& event);
 public:
   MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = "panel")
       : wxPanel (parent, id, pos, size, style, name)
@@ -569,7 +571,6 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 
 void MyPanel::OnKeyDown(wxKeyEvent& event)
 {
-  wxLogDebug ("key down %d, scan code %d, raw code %d", event.m_keyCode, event.m_scanCode, event.m_rawCode);
 	if(event.GetKeyCode() == WXK_F12) {
 		if(wxMouseCaptured) {
 			ReleaseMouse();
@@ -590,7 +591,6 @@ void MyPanel::OnKeyDown(wxKeyEvent& event)
 
 void MyPanel::OnKeyUp(wxKeyEvent& event)
 {
-  wxLogDebug ("key up %d", event.m_keyCode);
 	wxCriticalSectionLocker lock(event_thread_lock);
 	if(num_events < MAX_EVENTS) {
 		event_queue[num_events].type = BX_ASYNC_EVT_KEY;
@@ -879,10 +879,46 @@ char wxAsciiKey[0x5f] = {
   BX_KEY_GRAVE
 };
 
+// MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode1 & 2.
+Bit16u
+MyPanel::convertToBXKey_MSW (wxKeyEvent& event)
+{
+#if defined(wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXMSW__)
+  wxLogDebug ("convertToBXKey_MSW. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2);
+#endif
+  return BX_KEY_UNHANDLED;
+}
+
+// GTK specific key mapping, which uses wxKeyEvent::m_rawCode1.
+Bit16u
+MyPanel::convertToBXKey_GTK (wxKeyEvent& event)
+{
+#if defined(__WXGTK__)
+  wxLogDebug ("convertToBXKey_GTK. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2);
+#endif
+  return BX_KEY_UNHANDLED;
+}
+
 Bit16u 
 MyPanel::convertToBXKey (wxKeyEvent& event)
 {
-  wxLogDebug ("convertToBXKey. key code %d, raw code %d", event.m_keyCode, event.m_rawCode);
+  // raw codes are a nonstandard addition to the wxWindows library.  At 
+  // present, the only way to use the "RAW_CODES" mode is to apply a
+  // patch to the wxWindows sources and recompile.  Our changes might 
+  // appear in future wxWindows versions, making the patch unnecessary.
+
+  // use raw codes if they are available
+#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXMSW__)
+  return convertToBXKey_MSW (event);
+#endif
+
+#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
+  return convertToBXKey_GTK (event);
+#endif
+
+  // otherwise fall back to using portable WXK_* keycodes.  Not all keys
+  // can be mapped correctly using WXK_* codes but it should be usable.
+  wxLogDebug ("convertToBXKey. key code %d", event.m_keyCode);
   Bit32u key = event.m_keyCode;
 	Bit32u bx_key;
 	
