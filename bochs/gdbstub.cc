@@ -1,12 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#ifdef __MINGW32__
+#include <winsock2.h>
+#define SIGTRAP 5
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <signal.h>
 #include <netdb.h>
+#endif
 
 #define NEED_CPU_REG_SHORTCUTS 1
 
@@ -173,8 +178,8 @@ static int other_thread = 0;
 static int registers[NUMREGS];
 
 #define MAX_BREAKPOINTS (255)
-static int breakpoints[MAX_BREAKPOINTS] = {0,};
-static int nr_breakpoints = 0;
+static unsigned int breakpoints[MAX_BREAKPOINTS] = {0,};
+static unsigned int nr_breakpoints = 0;
 
 static int stub_trace_flag = 0;
 
@@ -188,14 +193,16 @@ int bx_gdbstub_check(unsigned int eip)
    unsigned char ch;
    long arg;
    int r;
+#if defined(__CYGWIN__) || defined(__MINGW32__)
    fd_set fds;
    struct timeval tv = {0, 0};
+#endif
 
    instr_count++;
    
    if ((instr_count % 500) == 0)
      {
-#ifndef __CYGWIN__
+#if !defined(__CYGWIN__) && !defined(__MINGW32__)
        arg = fcntl(socket_fd, F_GETFL);
        fcntl(socket_fd, F_SETFL, arg | O_NONBLOCK);
        r = recv(socket_fd, &ch, 1, 0);
@@ -206,7 +213,7 @@ int bx_gdbstub_check(unsigned int eip)
         r = select(socket_fd + 1, &fds, NULL, NULL, &tv);
        if (r == 1)
          {
-           r = recv(socket_fd, &ch, 1, 0);
+           r = recv(socket_fd, (char *)&ch, 1, 0);
          }
 #endif   
        if (r == 1)
@@ -237,7 +244,7 @@ int bx_gdbstub_check(unsigned int eip)
    return(GDBSTUB_STOP_NO_REASON);
 }
 
-static int remove_breakpoint(int addr, int len)
+static int remove_breakpoint(unsigned int addr, int len)
 {
    unsigned int i;
    
@@ -258,13 +265,13 @@ static int remove_breakpoint(int addr, int len)
    return(0);
 }
 
-static void insert_breakpoint(int addr)
+static void insert_breakpoint(unsigned int addr)
 {
    unsigned int i;
    
    BX_INFO (("setting breakpoint at %x", addr));
    
-   for (i = 0; i < MAX_BREAKPOINTS; i++)
+   for (i = 0; i < (unsigned)MAX_BREAKPOINTS; i++)
      {
        if (breakpoints[i] == 0)
          {
@@ -638,7 +645,11 @@ static void wait_for_connect(int portn)
    
    /* Allow rapid reuse of this port */
    opt = 1;
+#if __MINGW32__
+   r = setsockopt(listen_socket_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
+#else
    r = setsockopt(listen_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#endif
    if (r == -1)
      {
        BX_INFO (("setsockopt(SO_REUSEADDR) failed\n"));
@@ -683,7 +694,11 @@ static void wait_for_connect(int portn)
 
    /* Disable Nagle - allow small packets to be sent without delay. */
    opt = 1;
+#ifdef __MINGW32__
+   r = setsockopt (socket_fd, protoent->p_proto, TCP_NODELAY, (const char *)&opt, sizeof(opt));
+#else
    r = setsockopt (socket_fd, protoent->p_proto, TCP_NODELAY, &opt, sizeof(opt));
+#endif
    if (r == -1)
      {
        BX_INFO (("setsockopt(TCP_NODELAY) failed\n"));
@@ -693,6 +708,11 @@ static void wait_for_connect(int portn)
 void bx_gdbstub_init(int argc, char* argv[])
 {
    int portn = bx_options.gdbstub.port;
+
+#ifdef __MINGW32__
+   WSADATA wsaData;
+   WSAStartup(2, &wsaData);
+#endif
 
    bx_init_hardware();
 
