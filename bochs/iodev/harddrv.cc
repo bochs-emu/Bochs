@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.113 2003-11-07 22:59:05 cbothamy Exp $
+// $Id: harddrv.cc,v 1.114 2003-11-25 23:00:06 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.113 2003-11-07 22:59:05 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.114 2003-11-25 23:00:06 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -221,7 +221,35 @@ bx_hard_drive_c::init(void)
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
 
-      // If not present
+	  // Initialize controller state, even if device is not present
+      BX_CONTROLLER(channel,device).status.busy           = 0;
+      BX_CONTROLLER(channel,device).status.drive_ready    = 1;
+      BX_CONTROLLER(channel,device).status.write_fault    = 0;
+      BX_CONTROLLER(channel,device).status.seek_complete  = 1;
+      BX_CONTROLLER(channel,device).status.drq            = 0;
+      BX_CONTROLLER(channel,device).status.corrected_data = 0;
+      BX_CONTROLLER(channel,device).status.index_pulse    = 0;
+      BX_CONTROLLER(channel,device).status.index_pulse_count = 0;
+      BX_CONTROLLER(channel,device).status.err            = 0;
+
+      BX_CONTROLLER(channel,device).error_register = 0x01; // diagnostic code: no error
+      BX_CONTROLLER(channel,device).head_no        = 0;
+      BX_CONTROLLER(channel,device).sector_count   = 1;
+      BX_CONTROLLER(channel,device).sector_no      = 1;
+      BX_CONTROLLER(channel,device).cylinder_no    = 0;
+      BX_CONTROLLER(channel,device).current_command = 0x00;
+      BX_CONTROLLER(channel,device).buffer_index = 0;
+
+      BX_CONTROLLER(channel,device).control.reset       = 0;
+      BX_CONTROLLER(channel,device).control.disable_irq = 0;
+      BX_CONTROLLER(channel,device).reset_in_progress   = 0;
+
+      BX_CONTROLLER(channel,device).sectors_per_block   = 0x80;
+      BX_CONTROLLER(channel,device).lba_mode            = 0;
+      
+	  BX_CONTROLLER(channel,device).features            = 0;
+	
+	  // If not present
       BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
       if (!bx_options.atadevice[channel][device].Opresent->get()) {
         continue;
@@ -409,34 +437,6 @@ bx_hard_drive_c::init(void)
 	}
 #endif
       }
-
-    BX_CONTROLLER(channel,device).status.busy           = 0;
-    BX_CONTROLLER(channel,device).status.drive_ready    = 1;
-    BX_CONTROLLER(channel,device).status.write_fault    = 0;
-    BX_CONTROLLER(channel,device).status.seek_complete  = 1;
-    BX_CONTROLLER(channel,device).status.drq            = 0;
-    BX_CONTROLLER(channel,device).status.corrected_data = 0;
-    BX_CONTROLLER(channel,device).status.index_pulse    = 0;
-    BX_CONTROLLER(channel,device).status.index_pulse_count = 0;
-    BX_CONTROLLER(channel,device).status.err            = 0;
-
-    BX_CONTROLLER(channel,device).error_register = 0x01; // diagnostic code: no error
-    BX_CONTROLLER(channel,device).head_no        = 0;
-    BX_CONTROLLER(channel,device).sector_count   = 1;
-    BX_CONTROLLER(channel,device).sector_no      = 1;
-    BX_CONTROLLER(channel,device).cylinder_no    = 0;
-    BX_CONTROLLER(channel,device).current_command = 0x00;
-    BX_CONTROLLER(channel,device).buffer_index = 0;
-
-    BX_CONTROLLER(channel,device).control.reset       = 0;
-    BX_CONTROLLER(channel,device).control.disable_irq = 0;
-
-    BX_CONTROLLER(channel,device).reset_in_progress   = 0;
-
-    BX_CONTROLLER(channel,device).sectors_per_block   = 0x80;
-    BX_CONTROLLER(channel,device).lba_mode            = 0;
-
-    BX_CONTROLLER(channel,device).features            = 0;
     }
   }
 
