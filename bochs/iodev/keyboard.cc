@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.6 2002-10-08 21:00:24 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.7 2002-10-08 22:50:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,9 +75,8 @@ plugin_fini(void)
 {
 }
 #else
-// When plugins are turned off, we have to create a bx_keyb_c object.
-// Also provide the pluginKeyboard pointer which every other object
-// will use to reference this object.
+// When plugins are turned off, provide the pluginKeyboard pointer which every
+// other object will use to reference this object.
 bx_keyb_stub_c *pluginKeyboard = &theKeyboard;
 
 // NOTE: It would be possible to put pluginKeyboard in plugin.cc all the time,
@@ -94,7 +93,6 @@ bx_keyb_stub_c *pluginKeyboard = &theKeyboard;
 
 bx_keyb_c::bx_keyb_c(void)
 {
-  fprintf (stderr, "bx_keyb_c constructor\n");
   // constructor
   // should zero out state info here???
   memset( &s, 0, sizeof(s) );
@@ -143,7 +141,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.6 2002-10-08 21:00:24 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.7 2002-10-08 22:50:31 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
