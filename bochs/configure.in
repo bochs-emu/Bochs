@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.95 2002-09-09 16:11:23 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.96 2002-09-10 03:52:32 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -595,6 +595,23 @@ AC_ARG_ENABLE(repeat-speedups,
     ]
   )
 AC_SUBST(BX_SupportRepeatSpeedups)
+
+AC_MSG_CHECKING(for Global pages support)
+AC_ARG_ENABLE(global-pages,
+  [  --enable-global-pages             support for Global pages in PDE/PTE],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SupportGlobalPages, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SupportGlobalPages, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SupportGlobalPages, 0)
+    ]
+  )
+AC_SUBST(BX_SupportGlobalPages)
 
 
 AC_MSG_CHECKING(for port e9 hack)

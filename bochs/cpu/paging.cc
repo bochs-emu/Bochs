@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.20 2002-09-10 00:01:01 kevinlawton Exp $
+// $Id: paging.cc,v 1.21 2002-09-10 03:52:32 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -325,6 +325,7 @@
 //       Thus for reads, it's simply:
 //         OK = 1 << (          U )
 //
+//     bit 8:       Page is a global page.
 //     bit 3:       a Write from User   privilege is OK
 //     bit 2:       a Write from System privilege is OK
 //     bit 1:       a Read  from User   privilege is OK
@@ -456,8 +457,13 @@ BX_CPU_C::TLB_flush(Boolean invalidateGlobal)
     for (unsigned i=0; i<BX_TLB_SIZE; i++) {
       // To be conscious of the native cache line usage, only
       // write to (invalidate) entries which need it.
-      if (BX_CPU_THIS_PTR TLB.entry[i].lpf != BX_INVALID_TLB_ENTRY)
-        BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
+      if (BX_CPU_THIS_PTR TLB.entry[i].lpf != BX_INVALID_TLB_ENTRY) {
+#if BX_SupportGlobalPages
+        if ( invalidateGlobal ||
+             !(BX_CPU_THIS_PTR TLB.entry[i].accessBits & 0x100) )
+#endif
+          BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
+        }
       }
 
 #if BX_USE_QUICK_TLB_INVALIDATE
@@ -563,7 +569,11 @@ pageTableWalk:
     // the future).
 
     // Combined access is just access from the pde (no pte involved).
-    combined_access = pde & 0x06;
+    combined_access  = pde & 0x006; // {US,RW}
+#if BX_SupportGlobalPages
+    if (BX_CPU_THIS_PTR cr4 & (1<<7)) // PGE==1
+      combined_access |= pde & 0x100; // {G}
+#endif
 
     priv_index =
 #if BX_CPU_LEVEL >= 4
@@ -621,6 +631,10 @@ pageTableWalk:
     combined_access |= (pde & pte) & 0x02; // R/W
 #else // 486+
     combined_access  = (pde & pte) & 0x06; // U/S and R/W
+#if BX_SupportGlobalPages
+    if (BX_CPU_THIS_PTR cr4 & (1<<7)) // PGE==1
+      combined_access |= (pte & 0x100); // G
+#endif
 #endif
 
     priv_index =
@@ -678,6 +692,9 @@ pageTableWalk:
       accessBits |= 4; // write from {sys} OK.
       }
     }
+#if BX_SupportGlobalPages
+  accessBits |= combined_access & 0x100; // Global bit
+#endif
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 
 #if BX_SupportGuest2HostTLB
@@ -749,7 +766,11 @@ pageTableWalk:
   // If 4M pages are enabled, and this is a 4Meg page
   if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4 & 0x10)) {
     // combined access is just access from the pde (no pte involved).
-    combined_access = pde & 0x06;
+    combined_access  = pde & 0x006;
+#if BX_SupportGlobalPages
+    if (BX_CPU_THIS_PTR cr4 & (1<<7)) // PGE==1
+      combined_access |= pde & 0x100; // {G}
+#endif
 
     priv_index =
 #if BX_CPU_LEVEL >= 4
@@ -806,6 +827,10 @@ pageTableWalk:
     combined_access |= (pde & pte) & 0x02; // R/W
 #else // 486+
     combined_access  = (pde & pte) & 0x06; // U/S and R/W
+#if BX_SupportGlobalPages
+    if (BX_CPU_THIS_PTR cr4 & (1<<7)) // PGE==1
+      combined_access |= (pte & 0x100); // G
+#endif
 #endif
 
     priv_index =
@@ -855,6 +880,9 @@ pageTableWalk:
   else { // System
     accessBits = 0x1; // System priv; read from {sys} OK.
     }
+#if BX_SupportGlobalPages
+  accessBits |= combined_access & 0x100; // Global bit
+#endif
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 
 #if BX_SupportGuest2HostTLB

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.32 2002-09-09 16:11:25 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.33 2002-09-10 03:52:32 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -513,7 +513,11 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       //  any reserved bit of CR4
 
 #if BX_SUPPORT_4MEG_PAGES
-      allowMask |= 0x00000010;
+      allowMask |= (1<<4);
+#endif
+
+#if BX_SupportGlobalPages
+      allowMask |= (1<<7);
 #endif
 
       if (val_32 & ~allowMask) {
@@ -1060,6 +1064,10 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
 
 #if BX_SUPPORT_4MEG_PAGES
       features |= 8; // support page-size extension (4m pages)
+#endif
+
+#if BX_SupportGlobalPages
+      features |= (1<<13); // Support Global pages.
 #endif
 
       EAX = (family <<8) | (model<<4) | stepping;
