@@ -28,6 +28,7 @@ extern "C" {
 #define BX_PLUGIN_BIOSDEV  "BIOSDEV"
 #define BX_PLUGIN_CMOS     "CMOS RAM"
 #define BX_PLUGIN_VGA      "VGA"
+#define BX_PLUGIN_FLOPPY   "FLOPPY"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 
@@ -55,6 +56,17 @@ extern "C" {
 #define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) pluginVGAGetTextSnapshot(rawsnap, height, width)
 #define BX_VGA_REFRESH() pluginVGARefresh ()
 #define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
+
+#define BX_FLOPPY_GET_MEDIA_STATUS(drive) pluginFloppyGetMediaStatus(drive)
+#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) pluginFloppySetMediaStatus(drive, status)
+
+#define BX_FLOPPY_PRESENT() (pluginDevicePresent(BX_PLUGIN_FLOPPY))
+
+#define BX_HD_READ_HANDLER(a, b, c) \
+    (bx_devices.hard_drive->read_handler(bx_devices.hard_drive, b, c))
+#define BX_HD_WRITE_HANDLER(a, b, c, d) \
+    (bx_devices.hard_drive->write_handler(bx_devices.hard_drive, b, c, d))
+
 #else
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
@@ -81,14 +93,26 @@ extern "C" {
 #define BX_VGA_REFRESH() bx_vga.timer_handler (&bx_vga)
 #define BX_VGA_SET_UPDATE_INTERVAL(val) bx_vga.set_update_interval(val)
 
-#endif
+#define BX_FLOPPY_GET_MEDIA_STATUS(drive) \
+    (bx_devices.floppy->get_media_status(drive))
+#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) \
+    (bx_devices.floppy->set_media_status(drive, status))
+
+#define BX_FLOPPY_PRESENT() (bx_devices.floppy)
+
+#define BX_HD_READ_HANDLER(a, b, c) \
+    (a devices->hard_drive->read_handler(a devices->hard_drive, b, c))
+#define BX_HD_WRITE_HANDLER(a, b, c, d) \
+    (a devices->hard_drive->write_handler(a devices->hard_drive, b, c, d))
+
+#endif // #if BX_PLUGINS
 
 
 // FIXME Do we really need pluginRegisterTimer ?
 #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 
-#define BX_LOWER_IRQ pluginLowerIRQ
-#define BX_RAISE_IRQ pluginRaiseIRQ
+#define BX_PIC_LOWER_IRQ(a,b)  pluginLowerIRQ(b)
+#define BX_PIC_RAISE_IRQ(a,b)  pluginRaiseIRQ(b)
 
 
 #if BX_PLUGINS
@@ -111,10 +135,7 @@ extern "C" {
     (bx_devices.keyboard->put_scancode(scancode, count))
 #define BX_KBD_PASTE_BYTES(bytes, count) \
     (bx_devices.keyboard->paste_bytes(bytes, count))
-#define BX_FLOPPY_GET_MEDIA_STATUS(drive) \
-    (bx_devices.floppy->get_media_status(drive))
-#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) \
-    (bx_devices.floppy->set_media_status(drive, status))
+
 #define BX_HD_GET_FIRST_CD_HANDLE() \
     (bx_devices.hard_drive->get_first_cd_handle())
 #define BX_CD_GET_MEDIA_STATUS(handle) \
@@ -174,6 +195,7 @@ typedef void (*deviceSave_t)(void);
 void pluginRegisterDevice(deviceInitMem_t init_mem, deviceInitDev_t init_dev,
                           deviceReset_t reset, deviceLoad_t load, 
                           deviceSave_t save, char *name);
+Boolean pluginDevicePresent(char *name);
 
 /* === IO port stuff === */
 extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
@@ -228,6 +250,10 @@ extern Bit32u (* pluginHDReadHandler)(Bit32u address,
     unsigned io_len);
 extern void   (* pluginHDWriteHandler)(Bit32u address,
     Bit32u value, unsigned io_len);
+
+/* === Floppy stuff ===*/
+extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);
+extern unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status);
 
 /* === VGA stuff === */
 extern void (* pluginVGARedrawArea)(unsigned x0, unsigned y0,

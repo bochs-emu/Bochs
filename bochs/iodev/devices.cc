@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.4 2002-10-07 16:43:34 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.5 2002-10-07 17:50:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,9 +52,9 @@ bx_devices_c::bx_devices_c(void)
   biosdev = NULL;
   cmos = NULL;
   vga = NULL;
+  floppy = NULL;
 #endif
 
-  floppy = NULL;
   dma = NULL;
 
 #if BX_PCI_SUPPORT
@@ -89,7 +89,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.4 2002-10-07 16:43:34 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.5 2002-10-07 17:50:50 cbothamy Exp $"));
   mem = newmem;
 
   devices=this;
@@ -162,13 +162,17 @@ bx_devices_c::init(BX_MEM_C *newmem)
   dma = &bx_dma;
   dma->init(this);
 
-  /*--- HARD DRIVE ---*/
-  hard_drive = &bx_hard_drive;
-  hard_drive->init(this);
+#if !BX_PLUGINS 
 
   //--- FLOPPY ---
   floppy = &bx_floppy;
   floppy->init(this);
+
+#endif
+
+  /*--- HARD DRIVE ---*/
+  hard_drive = &bx_hard_drive;
+  hard_drive->init(this);
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
@@ -275,9 +279,10 @@ bx_devices_c::reset(unsigned type)
 #else
   // reset hga hardware?
 #endif
-#endif
 
   floppy->reset(type);
+#endif
+
   hard_drive->reset(type);
 #if BX_SUPPORT_SB16
   sb16->reset(type);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.3 2002-10-07 12:55:30 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.4 2002-10-07 17:50:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,16 +38,19 @@
 #define BX_NO_IRQ  -1
 
 
+#if !BX_PLUGINS
 class bx_biosdev_c;
+class bx_floppy_ctrl_c;
+class bx_cmos_c;
+class bx_vga_c;
+class bx_unmapped_c;
+#endif
+
 class bx_pit_c;
 class bx_keyb_c;
 class bx_dma_c;
-class bx_floppy_ctrl_c;
-class bx_cmos_c;
 class bx_serial_c;
 class bx_parallel_c;
-class bx_unmapped_c;
-class bx_vga_c;
 class bx_pic_c;
 class bx_hard_drive_c;
 class bx_sb16_c;
@@ -106,7 +109,6 @@ public:
   bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
   bx_keyb_c        *keyboard;
-  bx_floppy_ctrl_c *floppy;
   bx_dma_c         *dma;
   bx_ioapic_c      *ioapic;
 #if !BX_PLUGINS
@@ -114,6 +116,7 @@ public:
   bx_biosdev_c     *biosdev;
   bx_cmos_c        *cmos;
   bx_vga_c         *vga;
+  bx_floppy_ctrl_c *floppy;
 #endif
   bx_serial_c      *serial;
   bx_parallel_c    *parallel;
@@ -190,10 +193,11 @@ private:
 #  include "iodev/ioapic.h"
 #endif
 
-#endif // if !BX_PLUGINS
+#include "iodev/floppy.h"
+
+#endif // #if !BX_PLUGINS
 
 #include "iodev/dma.h"
-#include "iodev/floppy.h"
 #include "iodev/harddrv.h"
 #if BX_IODEBUG_SUPPORT
 #   include "iodev/iodebug.h"

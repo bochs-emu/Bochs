@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.4 2002-10-07 16:43:33 bdenney Exp $
+// $Id: main.cc,v 1.156.2.5 2002-10-07 17:50:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,7 +151,8 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       break;
     case BXP_FLOPPYA_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-        bx_devices.floppy->set_media_status(0, val == BX_INSERTED);
+        BX_FLOPPY_SET_MEDIA_STATUS(0, val == BX_INSERTED);
+        bx_gui.update_drive_status_buttons ();
         bx_gui->update_drive_status_buttons ();
       }
       break;
@@ -162,7 +163,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       break;
     case BXP_FLOPPYB_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-        bx_devices.floppy->set_media_status(1, val == BX_INSERTED);
+        BX_FLOPPY_SET_MEDIA_STATUS(1, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons ();
       }
       break;
@@ -226,7 +227,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       if (set==1) {
         if (SIM->get_init_done ()) {
           if (empty) {
-            bx_devices.floppy->set_media_status(0, 0);
+            BX_FLOPPY_SET_MEDIA_STATUS(0, 0);
             bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYA_TYPE)->get_enabled()) {
@@ -234,11 +235,11 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
               bx_options.floppya.Opath->set ("none");
             }
           }
-          if ((bx_devices.floppy) &&
+          if ((BX_FLOPPY_PRESENT()) &&
               (SIM->get_param_num(BXP_FLOPPYA_STATUS)->get () == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the disk
-            bx_devices.floppy->set_media_status(0, 0);
-            bx_devices.floppy->set_media_status(0, 1);
+            BX_FLOPPY_SET_MEDIA_STATUS(0, 0);
+            BX_FLOPPY_SET_MEDIA_STATUS(0, 1);
           }
         } else {
           SIM->get_param_num(BXP_FLOPPYA_DEVTYPE)->set_enabled (!empty);
@@ -251,7 +252,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       if (set==1) {
         if (SIM->get_init_done ()) {
           if (empty) {
-            bx_devices.floppy->set_media_status(1, 0);
+            BX_FLOPPY_SET_MEDIA_STATUS(1, 0);
             bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYB_TYPE)->get_enabled ()) {
@@ -259,11 +260,11 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
               bx_options.floppyb.Opath->set ("none");
             }
           }
-          if ((bx_devices.floppy) &&
+          if ((BX_FLOPPY_PRESENT()) &&
               (SIM->get_param_num(BXP_FLOPPYB_STATUS)->get () == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the disk
-            bx_devices.floppy->set_media_status(1, 0);
-            bx_devices.floppy->set_media_status(1, 1);
+            BX_FLOPPY_SET_MEDIA_STATUS(1, 0);
+            BX_FLOPPY_SET_MEDIA_STATUS(1, 1);
           }
         } else {
           SIM->get_param_num(BXP_FLOPPYB_DEVTYPE)->set_enabled (!empty);

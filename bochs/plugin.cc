@@ -54,6 +54,9 @@ void     (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot,
 void     (* pluginVGARefresh)(void) = 0;
 void     (* pluginVGASetUpdateInterval)(unsigned) = 0;
 
+unsigned (* pluginFloppyGetMediaStatus)(unsigned drive) = 0;
+unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status) = 0;
+
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginRaiseIRQ)(unsigned irq) = 0;
@@ -199,6 +202,17 @@ void builtinVGASetUpdateInterval(unsigned val)
   pluginlog->panic("builtinVGASetUpdateInterval called, no VGA plugin loaded?");
 }
 
+static unsigned builtinFloppyGetMediaStatus(unsigned drive) 
+{
+  pluginlog->panic("builtinFloppyGetMediaStatus called, no floppy plugin loaded?");
+  return 0;
+}
+
+static unsigned builtinFloppySetMediaStatus(unsigned drive, unsigned status) 
+{
+  pluginlog->panic("builtinFloppySetMediaStatus called, no floppy plugin loaded?");
+}
+
   static void  
 builtinRegisterIRQ(unsigned irq, const char* name) 
 {
@@ -316,47 +330,6 @@ builtinActivateTimer(unsigned id, Bit32u usec, Boolean continuous)
 {
   bx_pc_system.activate_timer (id, usec, continuous);
   pluginlog->ldebug("plugin activated timer %d", id);
-}
-
-/************************************************************************/
-/* Device registration                                                  */
-/************************************************************************/
-
-void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
-		          deviceReset_t reset, deviceLoad_t load, 
-                          deviceSave_t save, char *name)
-{
-    device_t *device;
-
-    device = (device_t *)malloc (sizeof (device_t));
-    if (!device)
-    {
-        pluginlog->panic("can't allocate device_t");
-    }
-
-    device->name = name;
-    device->device_init_mem = init1;
-    device->device_init_dev = init2;
-    device->device_reset = reset;
-    device->device_load_state = load;
-    device->device_save_state = save;
-    device->next = NULL;
-
-    if (!devices)
-    {
-        /* Empty list, this become the first entry. */
-        devices = device;
-    }
-    else
-    {
-        /* Non-empty list.  Add to end. */
-        device_t *temp = devices;
-
-        while (temp->next)
-            temp = temp->next;
-
-        temp->next = device;
-    }
 }
 
 /************************************************************************/
@@ -550,7 +523,7 @@ plugin_abort (void)
 
 
 /************************************************************************/
-/* Plugin system: plex86 startup function                               */
+/* Plugin system: initialisation of plugins entry points                */
 /************************************************************************/
 
   void
@@ -576,6 +549,9 @@ plugin_startup(void)
   pluginVGARefresh     = builtinVGARefresh;
   pluginVGASetUpdateInterval = builtinVGASetUpdateInterval;
 
+  pluginFloppyGetMediaStatus = builtinFloppyGetMediaStatus;
+  pluginFloppySetMediaStatus = builtinFloppySetMediaStatus;
+
   pluginRegisterIRQ = builtinRegisterIRQ;
   pluginUnregisterIRQ = builtinUnregisterIRQ;
   pluginRaiseIRQ = builtinRaiseIRQ;
@@ -597,6 +573,67 @@ plugin_startup(void)
 }
 
 
+/************************************************************************/
+/* Plugin system: Device registration                                   */
+/************************************************************************/
+
+void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
+		          deviceReset_t reset, deviceLoad_t load, 
+                          deviceSave_t save, char *name)
+{
+    device_t *device;
+
+    device = (device_t *)malloc (sizeof (device_t));
+    if (!device)
+    {
+        pluginlog->panic("can't allocate device_t");
+    }
+
+    device->name = name;
+    device->device_init_mem = init1;
+    device->device_init_dev = init2;
+    device->device_reset = reset;
+    device->device_load_state = load;
+    device->device_save_state = save;
+    device->next = NULL;
+
+    if (!devices)
+    {
+        /* Empty list, this become the first entry. */
+        devices = device;
+    }
+    else
+    {
+        /* Non-empty list.  Add to end. */
+        device_t *temp = devices;
+
+        while (temp->next)
+            temp = temp->next;
+
+        temp->next = device;
+    }
+}
+
+/************************************************************************/
+/* Plugin system: Check if a plugin is loaded                           */
+/************************************************************************/
+
+Boolean pluginDevicePresent(char *name)
+{
+    device_t *device;
+
+    for (device = devices; device; device = device->next)
+    {
+      if (strcmp(device->name,name)==0) return true;
+    }
+
+    return false;
+}
+
+/************************************************************************/
+/* Plugin system: Load one plugin                                       */
+/************************************************************************/
+
 #define PLUGIN_PATH ""
 int bx_load_plugin (const char *name)
 {
@@ -614,6 +651,10 @@ int bx_load_plugin (const char *name)
   return 0;
 }
 
+/************************************************************************/
+/* Plugin system: Load ALL plugins                                      */
+/************************************************************************/
+
 int bx_load_plugins (void)
 {
   pluginlog = new logfunctions();
@@ -628,6 +669,7 @@ int bx_load_plugins (void)
   bx_load_plugin("biosdev.so");
   bx_load_plugin("cmos.so");
   bx_load_plugin("vga.so");
+  bx_load_plugin("floppy.so");
 
   // quick and dirty gui plugin selection
   fprintf (stderr, 
@@ -663,6 +705,10 @@ int bx_load_plugins (void)
   return 0;
 }
 
+/*************************************************************************/
+/* Plugin system: Execute init function of all registered plugin-devices */
+/*************************************************************************/
+
 void bx_init_plugins()
 {
     device_t *device;
@@ -684,6 +730,10 @@ void bx_init_plugins()
 	}
     }
 }
+
+/**************************************************************************/
+/* Plugin system: Execute reset function of all registered plugin-devices */
+/**************************************************************************/
 
 void bx_reset_plugins(unsigned signal)
 {

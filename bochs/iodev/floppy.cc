@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.1 2002-10-06 23:17:51 cbothamy Exp $
+// $Id: floppy.cc,v 1.51.2.2 2002-10-07 17:50:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,6 +43,10 @@ extern "C" {
 // windows.h included by bochs.h
 #define LOG_THIS bx_floppy.
 
+#if BX_PLUGINS
+#include "floppy.h"
+#endif
+
 
 bx_floppy_ctrl_c bx_floppy;
 
@@ -68,9 +72,39 @@ bx_floppy_ctrl_c bx_floppy;
 #define FLOPPY_DMA_CHAN 2
 
 
+#if BX_PLUGINS
+
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  bx_floppy_ctrl_c        *floppy;
+
+  floppy = &bx_floppy;
+
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+
+#endif
+
 
 bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
+
+#if BX_PLUGINS
+
+  pluginFloppyGetMediaStatus = bx_floppy.get_media_status;
+  pluginFloppySetMediaStatus = bx_floppy.set_media_status;
+
+  // Register plugin basic entry points
+  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_FLOPPY);
+
+#endif
+
 	put("FDD");
 	settype(FDLOG);
 }
@@ -87,16 +121,14 @@ bx_floppy_ctrl_c::init(bx_devices_c *d)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.1 2002-10-06 23:17:51 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.2 2002-10-07 17:50:51 cbothamy Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
-  BX_FD_THIS devices->register_irq(6, "Floppy Drive");
+  BX_REGISTER_IRQ(BX_FD_THIS, 6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
-    BX_FD_THIS devices->register_io_read_handler(this, read_handler,
-                                      addr, "Floppy Drive");
-    BX_FD_THIS devices->register_io_write_handler(this, write_handler,
-                                      addr, "Floppy Drive");
+    BX_REGISTER_IOREAD_HANDLER(BX_FD_THIS, this, read_handler, addr, "Floppy Drive", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_FD_THIS, this, write_handler, addr, "Floppy Drive", 7);
     }
 
 
@@ -276,7 +308,7 @@ bx_floppy_ctrl_c::reset(unsigned type)
 
   BX_FD_THIS s.floppy_buffer_index = 0;
 
-  BX_FD_THIS devices->pic->lower_irq(6);
+  BX_PIC_LOWER_IRQ(BX_FD_THIS, 6);
   BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
 }
 
@@ -337,7 +369,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
         BX_FD_THIS s.result[0] = value;
         BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
         if (!BX_FD_THIS s.reset_sensei) BX_FD_THIS s.pending_irq = 0;
-        BX_FD_THIS devices->pic->lower_irq(6);
+	BX_PIC_LOWER_IRQ(BX_FD_THIS, 6);
         }
       return(value);
       break;
@@ -359,7 +391,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       
     case 0x3F6: // Reserved for future floppy controllers
                 // This address shared with the hard drive controller
-      value = BX_FD_THIS devices->hard_drive->read_handler(BX_FD_THIS devices->hard_drive, address, io_len);
+      value = BX_HD_READ_HANDLER(BX_FD_THIS, address, io_len);
       return( value );
       break;
 
@@ -367,7 +399,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       // This address shared with the hard drive controller:
       //   Bit  7   : floppy
       //   Bits 6..0: hard drive
-      value = BX_FD_THIS devices->hard_drive->read_handler(BX_FD_THIS devices->hard_drive, address, io_len);
+      value = BX_HD_READ_HANDLER(BX_FD_THIS, address, io_len);
       value &= 0x7f;
       // add in diskette change line
       value |= (BX_FD_THIS s.DIR[BX_FD_THIS s.DOR & 0x03] & 0x80);
@@ -542,7 +574,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3F6: /* diskette controller (reserved) */
       BX_DEBUG(("io_write: reserved register unsupported"));
       // this address shared with the hard drive controller
-      BX_FD_THIS devices->hard_drive->write_handler(BX_FD_THIS devices->hard_drive, address, value, io_len);
+      BX_HD_WRITE_HANDLER(BX_FD_THIS, address, value, io_len);
       break;
 
 #if BX_DMA_FLOPPY_IO
@@ -1325,7 +1357,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
   void
 bx_floppy_ctrl_c::raise_interrupt(void)
 {
-  BX_FD_THIS devices->pic->raise_irq(6);
+  BX_PIC_RAISE_IRQ(BX_FD_THIS, 6);
   BX_FD_THIS s.pending_irq = 1;
   BX_FD_THIS s.reset_sensei = 0;
 }
