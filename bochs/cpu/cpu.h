@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.58 2002-09-17 04:20:42 kevinlawton Exp $
+// $Id: cpu.h,v 1.59 2002-09-17 14:36:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -261,6 +261,8 @@ typedef Bit32u bx_address;
 #define BX_PF_EXCEPTION  14
 #define BX_MF_EXCEPTION  16
 #define BX_AC_EXCEPTION  17
+#define BX_MC_EXCEPTION  18
+#define BX_XF_EXCEPTION  19
 
 /* MSR registers */
 #define BX_MSR_P5_MC_ADDR	0x0000

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.10 2002-09-16 16:58:35 bdenney Exp $
+// $Id: ctrl_xfer32.cc,v 1.11 2002-09-17 14:36:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -175,7 +175,6 @@ BX_CPU_C::RETfar32_Iw(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
   void
@@ -205,7 +204,6 @@ BX_CPU_C::RETfar32(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
 
@@ -265,7 +263,6 @@ BX_CPU_C::CALL32_Ap(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
   void
@@ -344,7 +341,6 @@ BX_CPU_C::CALL32_Ep(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
 
@@ -449,7 +445,6 @@ BX_CPU_C::JMP_Ap(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
 
@@ -517,7 +512,6 @@ BX_CPU_C::JMP32_Ep(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
   void
@@ -561,5 +555,4 @@ BX_CPU_C::IRET32(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }

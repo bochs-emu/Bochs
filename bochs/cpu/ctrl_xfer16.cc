@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.7 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: ctrl_xfer16.cc,v 1.8 2002-09-17 14:36:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -173,7 +173,6 @@ BX_CPU_C::RETfar16_Iw(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
   void
@@ -202,7 +201,6 @@ BX_CPU_C::RETfar16(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
 
@@ -264,7 +262,6 @@ BX_CPU_C::CALL16_Ap(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
   void
@@ -346,7 +343,6 @@ BX_CPU_C::CALL16_Ep(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
 
@@ -492,7 +488,6 @@ BX_CPU_C::JMP16_Ep(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
 
   void
@@ -532,5 +527,4 @@ BX_CPU_C::IRET16(BxInstruction_t *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  return;
 }
