@@ -1035,7 +1035,7 @@ void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
   op1.xmm64u(1) = op2.xmm64u(0);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PUNPCKLQDQ_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1081,11 +1081,11 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 
   /* val32 is a register or memory reference */
   if (i->modC0()) {
-    value = BX_READ_32BIT_REG(i->rm());
+    val32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &value);
+    read_virtual_dword(i->seg(), RMAddr(i), &val32);
   }
 
   op.xmm64u(1) = 0;
@@ -1118,7 +1118,7 @@ void BX_CPU_C::MOVDQA_VdqWdq(bxInstruction_c *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVDQA_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
