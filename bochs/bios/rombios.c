@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.108 2004-02-09 16:48:50 vruppert Exp $
+// $Id: rombios.c,v 1.109 2004-04-28 16:59:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -925,10 +925,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.108 $";
-static char bios_date_string[] = "$Date: 2004-02-09 16:48:50 $";
+static char bios_cvs_version_string[] = "$Revision: 1.109 $";
+static char bios_date_string[] = "$Date: 2004-04-28 16:59:52 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.108 2004-02-09 16:48:50 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.109 2004-04-28 16:59:52 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3146,10 +3146,6 @@ cdrom_boot()
     write_byte(ebda_seg,&EbdaData->cdemu.emulated_drive,0x00);
   else
     write_byte(ebda_seg,&EbdaData->cdemu.emulated_drive,0x80);
-
-  // FIXME ElTorito Harddisk. current code can only emulate a floppy
-  //if(read_byte(ebda_seg,&EbdaData->cdemu.emulated_drive)!=0x00)
-  //  BX_PANIC("El-Torito: Cannot boot as a harddisk yet\n");
 
   write_byte(ebda_seg,&EbdaData->cdemu.controller_index,device/2);
   write_byte(ebda_seg,&EbdaData->cdemu.device_spec,device%2);
