@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.22 2002-08-27 17:03:03 bdenney Exp $
+// $Id: logio.cc,v 1.23 2002-08-28 03:06:12 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -409,14 +409,13 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   // BX_PANIC that could call ask() again, leading to infinite
   // recursion and infinite asks.
   static char in_ask_already = 0;
-  char buf1[1024], buf2[1024];
+  char buf1[1024];
   if (in_ask_already) {
     fprintf (stderr, "logfunctions::ask() should not reenter!!\n");
     return;
   }
   in_ask_already = 1;
   vsprintf (buf1, fmt, ap);
-  sprintf (buf2, "%s %s", prefix, buf1);
   // FIXME: facility set to 0 because it's unknown.
 
   // update vga screen.  This is useful because sometimes useful messages
@@ -425,7 +424,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   // the reentry check above.
   if (SIM->get_init_done()) bx_vga.timer_handler(&bx_vga);
 
-  int val = SIM->log_msg (prefix, level, buf2);
+  int val = SIM->log_msg (prefix, level, buf1);
   switch (val)
   {
     case 0:   // user chose continue
