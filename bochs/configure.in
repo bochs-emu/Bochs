@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.105 2002-09-16 00:06:16 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.106 2002-09-16 11:53:35 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1663,6 +1663,8 @@ if test ! -d build/linux; then mkdir build/linux; fi
 if test "$use_x86_64" = 1; then
   # For x86-64, force support of the Physical Address Extension (PAE),
   # and Page Global Extension (PGE.
+  echo 'Because X86-64 is enabled, enabling Physical Address Extension (PAE).'
+  echo 'Because X86-64 is enabled, enabling Page Global Extension (PGE).'
   AC_DEFINE(BX_SupportPAE, 1)
   AC_DEFINE(BX_SupportGlobalPages, 1)
 else
