@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.86 2002-10-25 12:36:44 bdenney Exp $
+// $Id: harddrv.cc,v 1.87 2002-10-27 21:25:33 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.86 2002-10-25 12:36:44 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.87 2002-10-27 21:25:33 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -412,6 +412,63 @@ bx_hard_drive_c::init(void)
       DEV_cmos_set_reg(0x2c, bx_options.atadevice[0][1].Ospt->get ());
     }
 
+    DEV_cmos_set_reg(0x39, 0);
+    DEV_cmos_set_reg(0x3a, 0);
+    for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+      for (Bit8u device=0; device<2; device ++) {
+        if (bx_options.atadevice[channel][device].Opresent->get()) {
+          if (BX_DRIVE_IS_HD(channel,device)) {
+            Bit16u cylinders = bx_options.atadevice[channel][device].Ocylinders->get();
+            Bit16u heads = bx_options.atadevice[channel][device].Oheads->get();
+            Bit16u spt = bx_options.atadevice[channel][device].Ospt->get();
+            Bit32u size = cylinders * heads * spt;
+            Bit8u  translation = bx_options.atadevice[channel][device].Otranslation->get();
+
+            Bit8u reg = 0x39 + channel/2;
+            Bit8u bitshift = 2 * (device+(2 * (channel%2)));
+     
+            // Find the right translation if autodetect
+            if (translation == BX_ATA_TRANSLATION_AUTO) {
+              if((cylinders <= 1024) && (heads <= 16) && (spt <= 63)) {
+                translation = BX_ATA_TRANSLATION_NONE;
+                } 
+              else if (((Bit32u)cylinders * (Bit32u)heads) <= 131072) {
+                translation = BX_ATA_TRANSLATION_LARGE;
+                } 
+              else translation = BX_ATA_TRANSLATION_LBA;
+
+              BX_INFO(("translation on ata%d-%d set to '%s'",channel, device, 
+                        translation==BX_ATA_TRANSLATION_NONE?"none":
+                        translation==BX_ATA_TRANSLATION_LARGE?"large":
+                        "lba"));
+              }
+
+            // FIXME we should test and warn 
+            // - if LBA and spt != 63
+            // - if RECHS and heads != 16
+            // - if NONE and size > 1024*16*SPT blocks
+            // - if LARGE and size > 8192*16*SPT blocks
+            // - if RECHS and size > 1024*240*SPT blocks
+            // - if LBA and size > 1024*255*63, not that we can do much about it
+
+            switch(translation) {
+              case BX_ATA_TRANSLATION_NONE:
+                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (0 << bitshift));
+                break;
+              case BX_ATA_TRANSLATION_LBA:
+                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (1 << bitshift));
+                break;
+              case BX_ATA_TRANSLATION_LARGE:
+                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (2 << bitshift));
+                break;
+              case BX_ATA_TRANSLATION_RECHS:
+                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (3 << bitshift));
+                break;
+              }
+            }
+          }
+        }
+      }
 
     // Set the "non-extended" boot device. This will default to DISKC if cdrom
     if ( bx_options.Obootdrive->get () != BX_BOOT_FLOPPYA) {
@@ -2332,9 +2389,13 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
 		  (BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
 		  (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
 
-      if (logical_sector >=
-	  (BX_SELECTED_DRIVE(channel).hard_drive->cylinders * BX_SELECTED_DRIVE(channel).hard_drive->heads * BX_SELECTED_DRIVE(channel).hard_drive->sectors)) {
-            BX_ERROR (("calc_log_addr: out of bounds"));
+      Bit32u sector_count= 
+	   (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->cylinders * 
+           (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->heads * 
+           (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->sectors;
+
+      if (logical_sector >= sector_count) {
+            BX_ERROR (("calc_log_addr: out of bounds (%d/%d)", (Bit32u)logical_sector, sector_count));
 	    return false;
       }
       *sector = logical_sector;

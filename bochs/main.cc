@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.167 2002-10-26 13:22:47 bdenney Exp $
+// $Id: main.cc,v 1.168 2002-10-27 21:25:32 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -558,7 +558,7 @@ void bx_init_options ()
        "How the ata-disk translation is done by the bios",
        "Type of translation",
        atadevice_translation_names,
-       BX_ATA_TRANSLATION_LBA,
+       BX_ATA_TRANSLATION_AUTO,
        BX_ATA_TRANSLATION_NONE));
 
       bx_options.atadevice[channel][slave].Opresent->set_dependent_list (
@@ -2306,8 +2306,17 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strcmp(params[i], "translation=lba")) {
 	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LBA);
         }
-      else if (!strcmp(params[i], "translation=large")) {
+      else if (!strcmp(params[i], "translation=large")) { 
 	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
+        }
+      else if (!strcmp(params[i], "translation=echs")) { // synonym of large
+	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
+        }
+      else if (!strcmp(params[i], "translation=rechs")) {
+	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_RECHS);
+        }
+      else if (!strcmp(params[i], "translation=auto")) {
+	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_AUTO);
         }
       else if (!strcmp(params[i], "status=ejected")) {
 	bx_options.atadevice[channel][slave].Ostatus->set(BX_EJECTED);
@@ -3113,6 +3122,12 @@ bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_o
           break;
         case BX_ATA_TRANSLATION_LARGE:
           fprintf (fp, ", translation=large");
+          break;
+        case BX_ATA_TRANSLATION_RECHS:
+          fprintf (fp, ", translation=rechs");
+          break;
+        case BX_ATA_TRANSLATION_AUTO:
+          fprintf (fp, ", translation=auto");
           break;
         }
       }

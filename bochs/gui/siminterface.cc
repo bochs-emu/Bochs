@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.79 2002-10-25 12:36:43 bdenney Exp $
+// $Id: siminterface.cc,v 1.80 2002-10-27 21:25:33 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -413,7 +413,7 @@ char *atadevice_status_names[] = { "ejected", "inserted", NULL };
 int n_atadevice_status_names = 2;
 char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
 int n_atadevice_biosdetect_names = 3;
-char *atadevice_translation_names[] = { "none", "lba", "large", NULL };
+char *atadevice_translation_names[] = { "none", "lba", "large", "rechs", "auto", NULL };
 int n_atadevice_translation_names = 3;
 
 char *

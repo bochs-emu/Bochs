@@ -172,12 +172,12 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 #   spt=        only valid for disks
 #   status=     only valid for cdroms [inserted|ejected]
 #   biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
-#   translation=type of transation of the bios, only for disks [none|lba|large]
+#   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
 #   
 # Point this at a 10M, 20M, or 30M hard disk image file, cdrom iso file,
 # or physical cdrom device.  
-# To create # a hard disk image, try running bximage.  
+# To create a hard disk image, try running bximage.  
 # It will help you choose the size and then suggest a line that 
 # works with it.
 #
@@ -192,9 +192,9 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 # The path is mandatory for type=cdrom
 #
 # Default values are:
-#   biosdetect=auto, translation=lba, model="Generic 1234"
+#   biosdetect=auto, translation=auto, model="Generic 1234"
 #
-# The biosdetect and translation options have currently no effect on the bios
+# The biosdetect option has currently no effect on the bios
 #
 # Examples:
 #   ata0-master: type=disk, path=10M.sample, cylinders=306, heads=4, spt=17
