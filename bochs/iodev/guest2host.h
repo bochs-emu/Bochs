@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.h,v 1.7 2002-10-25 11:44:40 bdenney Exp $
+// $Id: guest2host.h,v 1.8 2002-12-06 18:48:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,8 +48,8 @@ public:
   ~bx_g2h_c(void);
   static void   init(void);
   void reset (unsigned type);
-  unsigned aquire_channel(bx_g2h_callback_t);
-  unsigned deaquire_channel(unsigned channel);
+  unsigned acquire_channel(bx_g2h_callback_t);
+  unsigned deacquire_channel(unsigned channel);
 
 private:
 

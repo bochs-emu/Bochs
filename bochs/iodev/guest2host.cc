@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.cc,v 1.12 2002-11-25 13:49:56 bdenney Exp $
+// $Id: guest2host.cc,v 1.13 2002-12-06 18:48:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ bx_g2h_c::~bx_g2h_c(void)
   void
 bx_g2h_c::init(void)
 {
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.12 2002-11-25 13:49:56 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.13 2002-12-06 18:48:07 bdenney Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     bx_devices.register_io_read_handler(&bx_g2h,
@@ -69,7 +69,7 @@ bx_g2h_c::reset(unsigned type)
 }
 
   unsigned
-bx_g2h_c::aquire_channel(bx_g2h_callback_t f)
+bx_g2h_c::acquire_channel(bx_g2h_callback_t f)
 {
   unsigned i;
 
@@ -81,16 +81,16 @@ bx_g2h_c::aquire_channel(bx_g2h_callback_t f)
       }
     }
 
-  BX_INFO(("g2h: attempt to aquire channel: maxed out"));
+  BX_INFO(("g2h: attempt to acquire channel: maxed out"));
   return(BX_G2H_ERROR); // No more free channels
 }
 
   unsigned
-bx_g2h_c::deaquire_channel(unsigned channel)
+bx_g2h_c::deacquire_channel(unsigned channel)
 {
   if ( (channel >= BX_MAX_G2H_CHANNELS) ||
        (bx_g2h.s.callback[channel].used==0) ) {
-    BX_PANIC(("g2h: attempt to deaquire channel %u: not aquired",
+    BX_PANIC(("g2h: attempt to deacquire channel %u: not acquired",
       channel));
     }
   bx_g2h.s.callback[channel].used = 0;
