@@ -611,7 +611,8 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
       break;
 
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
-    case 0x03c7: /* */
+    case 0x03c7: /* not sure but OpenBSD reads it a lot */
+    case 0x03cb: /* not sure but OpenBSD reads it a lot */
     case 0x03c8: /* */
     default:
       bx_panic("*** io read from vga port %x\n", (unsigned) address);
