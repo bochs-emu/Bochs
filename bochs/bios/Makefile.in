@@ -74,7 +74,8 @@ bios-clean:
 rombios.bin: rombios.c biosconfig.h
 	gcc -E $< > _rombios_.c
 #	cat _rombios.c | sed -e "s/##asm/#asm/g" -e "s/##endasm/#endasm/g" > _rombios_.c
-	bcc-cc1 -o rombios.s -c -D__i86__ -0 _rombios_.c
+#	bcc-cc1 -o rombios.s -c -D__i86__ -0 _rombios_.c
+	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
 	as86 _rombios_.s -b rombios.bin -u- -w- -g -0 -j -O -l rombios.txt
 	ls -l rombios.bin
