@@ -1,0 +1,157 @@
+----------------------------------------------------------------------
+Patch name: VBE Linear Frame Buffer support
+Author: Jeroen Janssen
+Date:   10 March 2002
+RCS Id: $Id$
+
+Detailed description:
+This patch will (together with an update vgabios) add support for 
+VBE Linear Frame Buffer modes.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 10 March 2002, release version 1.4pre1
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+*** iodev/vga.cc	10 Mar 2002 04:51:24 -0000	1.24
+--- iodev/vga.cc	10 Mar 2002 10:36:08 -0000
+@@ -2081,9 +2081,20 @@
+ bx_vga_c::vbe_mem_read(Bit32u addr)
+ {
+   Bit32u offset;        
+-  offset = addr - 0xA0000;
++  
++  if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
++  {
++    // LFB read
++    // FIXME: check for max VBE video memory size
++    offset = offset - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
++  }
++  else
++  {
++    // banked mode read
++    offset = BX_VGA_THIS s.vbe_bank*65536 + addr - 0xA0000;
++  }
+ 
+-  return (BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_bank*65536 + offset]);
++  return (BX_VGA_THIS s.vbe_memory[offset]);
+ }
+ 
+   void
+@@ -2091,7 +2102,18 @@
+ {
+   Bit32u offset;        
+   unsigned x_tileno, y_tileno;
+-  offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
++  
++  if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
++  {
++    // LFB write
++    // FIXME: check for max VBE video memory size
++    offset = offset - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
++  }
++  else
++  {
++    // banked mode write
++    offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
++  }
+ 
+   y_tileno = (offset / BX_VGA_THIS s.vbe_xres) / Y_TILESIZE;
+   x_tileno = (offset % BX_VGA_THIS s.vbe_xres) / X_TILESIZE;
+
+
+*** iodev/vga.h	10 Mar 2002 04:51:24 -0000	1.8
+--- iodev/vga.h	10 Mar 2002 10:36:11 -0000
+@@ -50,6 +50,8 @@
+ 
+   #define VBE_DISPI_DISABLED              0x00
+   #define VBE_DISPI_ENABLED               0x01
++  #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
++  
+ 
+ #define BX_MAX_XRES VBE_DISPI_MAX_XRES
+ #define BX_MAX_YRES VBE_DISPI_MAX_YRES
+
+
+*** memory/memory.cc	3 Oct 2001 13:10:38 -0000	1.9
+--- memory/memory.cc	10 Mar 2002 10:36:15 -0000
+@@ -224,6 +224,37 @@
+   data_ptr = (Bit8u *) data + (len - 1);
+ #endif
+ 
++
++#if BX_SUPPORT_VBE
++    // Check VBE LFB support
++    
++    if (a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
++    {
++      for (i = 0; i < len; i++) {
++        // FIXME: check for max VBE video memory size
++        
++        //if (a20addr < BX_MEM_THIS len) {
++          //vector[a20addr] = *data_ptr;
++          //BX_DBG_DIRTY_PAGE(a20addr >> 12);
++          //BX_DYN_DIRTY_PAGE(a20addr >> 12);
++          BX_VGA_MEM_WRITE(a20addr, *data_ptr);
++        //  }
++        
++        // otherwise ignore byte, since it overruns memory
++        addr++;
++        a20addr = A20ADDR(addr);
++#ifdef BX_LITTLE_ENDIAN
++        data_ptr++;
++#else // BX_BIG_ENDIAN
++        data_ptr--;
++#endif
++      }
++      return;
++    }
++    
++#endif    
++ 
++
+ #if BX_SUPPORT_APIC
+     bx_generic_apic_c *local_apic = &cpu->local_apic;
+     bx_generic_apic_c *ioapic = bx_devices.ioapic;
+@@ -422,6 +453,36 @@
+ #else // BX_BIG_ENDIAN
+     data_ptr = (Bit8u *) data + (len - 1);
+ #endif
++
++#if BX_SUPPORT_VBE
++    // Check VBE LFB support
++    
++    if (a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
++    {
++      for (i = 0; i < len; i++) {
++        // FIXME: check for max VBE video memory size
++        
++        //if (a20addr < BX_MEM_THIS len) {
++          //vector[a20addr] = *data_ptr;
++          //BX_DBG_DIRTY_PAGE(a20addr >> 12);
++          //BX_DYN_DIRTY_PAGE(a20addr >> 12);
++          *data_ptr = BX_VGA_MEM_READ(a20addr);
++        //  }
++        
++        // otherwise ignore byte, since it overruns memory
++        addr++;
++        a20addr = A20ADDR(addr);
++#ifdef BX_LITTLE_ENDIAN
++        data_ptr++;
++#else // BX_BIG_ENDIAN
++        data_ptr--;
++#endif
++      }
++      return;
++    }
++    
++#endif    
++
+ 
+ #if BX_SUPPORT_APIC
+     bx_generic_apic_c *local_apic = &cpu->local_apic;
+
+

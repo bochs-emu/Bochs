@@ -1,0 +1,317 @@
+# You many now use double quotes around pathnames, in case
+# your pathname includes spaces.
+
+#=======================================================================
+# ROMIMAGE:
+# You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
+# out most of the BIOS hooks, and replace them with real BIOS
+# support.  Normally, you can use a precompiled BIOS in the bios/
+# directory, named BIOS-bochs-yymmdd.  Use the latest one in there.
+#=======================================================================
+#romimage: bios/BIOS-bochs-970717a
+romimage: file=bios/BIOS-bochs-latest, address=0xf0000
+#romimage: file=bios/BIOS-bochs-2-processors, address=0xf0000
+#romimage: file=bios/BIOS-bochs-4-processors, address=0xf0000
+#romimage: file=bios/rombios.bin, address=0xf0000
+
+#=======================================================================
+# MEGS
+# set this to the default number of Megabytes of memory you want
+# to emulate.  You may also pass the '-megs xyz' option to bochs
+#
+# The default is 32MB, most OS's won't need more than that. 
+#=======================================================================
+#megs: 256
+#megs: 128
+#megs: 64
+megs: 32
+#megs: 16
+#megs: 8
+
+#=======================================================================
+# VGAROMIMAGE
+# You now need to load a VGA ROM BIOS into C0000.
+#=======================================================================
+vgaromimage: bios/VGABIOS-elpin-2.40
+
+#=======================================================================
+# FLOPPYA:
+# Point this to pathname of floppy image file or device
+# This should be of a bootable floppy(image/device) if you're 
+# booting from 'a'.
+#
+# You can set the initial status of the media to 'ejected' or 'inserted'.
+#   floppya: 2_88=path, status=ejected             (2.88M 3.5" floppy)
+#   floppya: 1_44=path, status=inserted            (1.44M 3.5" floppy)
+#   floppya: 1_2=path, status=ejected              (1.2M  5.25" floppy)
+#   floppya: 720k=path, status=inserted            (720K  3.5" floppy)
+#
+# The default is 1_44=/dev/fd0, at least I think that's what most people use.
+#=======================================================================
+#floppya: 1_44=/dev/fd0, status=ejected
+#floppya: file=../1.44, status=ejected
+#floppya: 1_44=/dev/fd0H1440, status=ejected
+#floppya: 1_2=../1_2, status=ejected
+floppya: 1_44=a.img, status=inserted
+
+#=======================================================================
+# FLOPPYB:
+# See FLOPPYA above for syntax
+#=======================================================================
+floppyb: 1_44=b.img, status=inserted
+
+#=======================================================================
+# DISKC: file=, cyl=, heads=, spt=
+# Point this at a 10M, 20M, or 30M hard disk image file.
+# Read INSTALL to create one.
+# Examples:
+#   diskc: file=10M.sample, cyl=306, heads=4, spt=17
+#   diskc: file=20M.sample, cyl=615, heads=4, spt=17
+#   diskc: file=30M.sample, cyl=615, heads=6, spt=17
+#   diskc: file=46M.sample, cyl=940, heads=6, spt=17
+#   diskc: file=62M.sample, cyl=940, heads=8, spt=17
+#   diskc: file=112M.sample, cyl=900, heads=15, spt=17
+#   diskc: file=483M.sample, cyl=1024, heads=15, spt=63
+#=======================================================================
+diskc: file="30M.sample", cyl=615, heads=6, spt=17
+
+#=======================================================================
+# DISKD:
+# See DISKC above for syntax
+#
+# NOTE: diskd and cdromd must not be used together!
+#=======================================================================
+#diskd: file="diskd.img", cyl=615, heads=6, spt=17
+
+#=======================================================================
+# CDROM
+# cdromd: dev=/dev/cdrom, status=inserted
+# cdromd: dev=/dev/cdrom, status=ejected
+#=======================================================================
+#cdromd: dev=/dev/cdrom, status=ejected
+#cdromd: dev=/dev/cdrom, status=inserted
+
+#=======================================================================
+# NEWHARDDRIVESUPPORT: enabled=[0|1]
+# As of cvs version on 5/17/2001, newharddrivesupport is on by default.
+#=======================================================================
+#newharddrivesupport: enabled=1
+
+#=======================================================================
+# BOOT:
+# This defines your boot drive.  You can either boot from 'a' or 'c'.
+# Examples:
+#   boot: c
+#   boot: a
+#=======================================================================
+#boot: a
+boot: c
+
+#=======================================================================
+# LOG:
+# Give the path of the log file you'd like Bochs debug and misc. verbage
+# to be written to.  If you really don't want it, make it /dev/null. :^(
+#
+# Examples:
+#   log: ./bochs.out
+#   log: /dev/tty
+#=======================================================================
+#log: /dev/null
+log: bochsout.txt
+
+#=======================================================================
+# LOG CONTROLS
+#
+# Bochs now has four severity levels for event logging.
+#   panic: cannot proceed.  If you choose to continue after a panic, 
+#          don't be surprised if you get strange behavior or crashes.
+#   error: something went wrong, but it is probably safe to continue the
+#          simulation.
+#   info: interesting or useful messages.
+#   debug: messages useful only when debugging the code.  This may
+#          spit out thousands per second.
+#
+# For events of each level, you can choose to crash, report, or ignore.
+# TODO: allow choice based on the facility: e.g. crash on panics from
+#       everything except the cdrom, and only report those.
+#
+# If you are experiencing many panics, it can be helpful to change
+# the panic action to report instead of fatal.  However, be aware
+# that anything executed after a panic is uncharted territory and can 
+# cause bochs to become unstable.  The panic is a "graceful exit," so
+# if you disable it you may get a spectacular disaster instead.
+#=======================================================================
+panic: action=ask
+error: action=report
+info: action=report
+debug: action=ignore
+
+#=======================================================================
+# SB16:
+# This defines the SB16 sound emulation. It can have several of the
+# following properties.
+# All properties are in the format sb16: property=value
+# midi: The filename is where the midi data is sent. This can be a
+#       device or just a file if you want to record the midi data.
+# midimode:
+#      0=no data
+#      1=output to device (system dependent. midi denotes the device driver)
+#      2=SMF file output, including headers
+#      3=output the midi data stream to the file (no midi headers and no
+#        delta times, just command and data bytes)
+# wave: This is the device/file where wave output is stored
+# wavemode:
+#      0=no data
+#      1=output to device (system dependent. wave denotes the device driver)
+#      2=VOC file output, incl. headers
+#      3=output the raw wave stream to the file
+# log:  The file to write the sb16 emulator messages to.
+# loglevel:
+#      0=no log
+#      1=only midi program and bank changes
+#      2=severe errors
+#      3=all errors
+#      4=all errors plus all port accesses
+#      5=all errors and port accesses plus a lot of extra info
+# dmatimer:
+#      microseconds per second for a DMA cycle.  Make it smaller to fix
+#      non-continous sound.  750000 is usually a good value.  This needs a
+#      reasonably correct setting for IPS.
+#
+# For an example look at the next line:
+#=======================================================================
+
+#sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, loglevel=2, log=sb16.log, dmatimer=600000
+
+#=======================================================================
+# VGA_UPDATE_INTERVAL:
+# Video memory is scanned for updates and screen updated every so many
+# virtual seconds.  The default is 300000, about 3Hz.  This is generally
+# plenty.  Keep in mind that you must tweak the 'ips:' directive
+# to be as close to the number of emulated instructions-per-second
+# your workstation can do, for this to be accurate.
+#
+# Examples:
+#   vga_update_interval: 250000
+#=======================================================================
+vga_update_interval: 300000
+
+# using for Winstone '98 tests
+#vga_update_interval:  100000
+
+#=======================================================================
+# KEYBOARD_SERIAL_DELAY:
+# Approximate time in microseconds that it takes one character to
+# be transfered from the keyboard to controller over the serial path.
+# Examples:
+#   keyboard_serial_delay: 200
+#=======================================================================
+keyboard_serial_delay: 250
+
+#=======================================================================
+# FLOPPY_COMMAND_DELAY:
+# Time in microseconds to wait before completing some floppy commands
+# such as read/write/seek/etc, which normally have a delay associated.
+# I had this hardwired to 50,000 before.
+#
+# Examples:
+#   floppy_command_delay: 50000
+#=======================================================================
+floppy_command_delay: 500
+
+#=======================================================================
+# IPS:
+# Emulated Instructions Per Second.  This is the number of IPS that bochs
+# is capable of running on your machine.  Read the note in config.h
+# on how to find this.  Make sure to recompile after.
+#
+# IPS is used to calibrate many time-dependent events within the bochs 
+# simulation.  For example, changing IPS affects the frequency of VGA
+# updates, the duration of time before a key starts to autorepeat, and 
+# the measurement of BogoMips and other benchmarks.
+#
+# Examples:
+# Machine                                         Mips
+# ________________________________________________________________
+# 650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66 2 to 2.5 Mips
+# 400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3  1 to 1.8 Mips
+# 166Mhz 64bit Sparc with Solaris 2.x             approx 0.75 Mips
+# 200Mhz Pentium with Linux 2.x                   approx 0.5 Mips
+#
+#=======================================================================
+ips: 1000000
+
+#=======================================================================
+# MAX_IPS and SYSTEM_CLOCK_SYNC
+# These two options are experimental, and may not even be implemented
+# yet.  If MAX_IPS is set to a value other than 0, Bochs will try to
+# slow down the simulation until the average instructions per unit time
+# reaches MAX_IPS.  This can be used to prevent Bochs from speeding through
+# wait intervals, which has caused problems with key autorepeats and
+# other time sensitive tasks.  SYSTEM_CLOCK_SYNC prohibits the Bochs 
+# simulation from running (very much) faster than the system clock, also
+# by inserting delays occasionally.  Some examples of how ips,max_ips,
+# and system_clock sync interact:
+# 1. ips=500000, max_ips=0, system_clock_sync disabled
+#    Bochs runs as fast as possible.  Timer interrupts are scheduled
+#    as if it was running at 500000 instructions per second.  This is
+#    the old behavior, and it's still the default.
+# 2. ips=500000, max_ips=700000, system_clock_sync enabled.
+#    Bochs will not run faster than system time, and if it gets behind
+#    it will run at a maximum of 40% faster than real time until it
+#    catches up.
+# 3. ips=500000, max_ips=500000, system_clock_sync disabled
+#    If Bochs gets behind, it will stay behind forever
+#    instead of running faster to catch up with the system clock.
+#=======================================================================
+max_ips: 0
+system_clock_sync: enabled=0
+
+#=======================================================================
+# mouse: Not used in any of the GUI specific modules, but the option
+#        bx_options.mouse_enabled is set to this value.  The idea,
+#        is that the GUI code should not generate mouse events when
+#        not enabled.  The hardware emualation itself is not disabled
+#        by this.  This is to facilitate deterministic runs of bochs.
+#
+# Examples:
+#   mouse: enabled=1
+#   mouse: enabled=0
+#
+# I wouldn't recommend enabling the mouse by default, unless you have a
+# really good reason to do so.
+#=======================================================================
+mouse: enabled=0
+
+#=======================================================================
+# private_colormap: Request that the GUI create and use it's own
+#                   non-shared colormap.  This colormap will be used
+#                   when in the bochs window.  If not enabled, a
+#                   shared colormap scheme may be used.  Not implemented
+#                   on all GUI's.
+#
+# Examples:
+#   private_colormap: enabled=1
+#   private_colormap: enabled=0
+#=======================================================================
+private_colormap: enabled=0
+
+#=======================================================================
+# other stuff
+#=======================================================================
+# magic_break
+# ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
+#load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
+#load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
+i440fxsupport: enabled=0
+#time0: 938581955
+
+
+#=======================================================================
+# for Macintosh, use the style of pathnames in the following
+# examples.
+#
+# vgaromimage: :bios:VGABIOS-elpin-2.20
+# romimage: file=:bios:BIOS-bochs-981222a, address=0xf0000
+# floppya: 1_44=[fd:], status=inserted
+#=======================================================================

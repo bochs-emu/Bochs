@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# These options should work on Amiga/MorphOS
+#
+
+./configure --enable-cdrom ${CONFIGURE_ARGS}

@@ -1,0 +1,142 @@
+#!/bin/sh
+#
+# install-x11-fonts
+# $Id: install-x11-fonts.in,v 1.6 2001-12-08 15:18:28 bdenney Exp $
+#
+# This is designed help people to get the Bochs fonts installed on their 
+# system.
+#
+
+X11_FONT_PATH_CHOICES="/usr/X11R6/lib/X11/fonts /usr/local/lib/X11/fonts /usr/lib/X11/fonts /usr/openwin/lib/X11/fonts"
+FONTS=vga.pcf
+FONT_SOURCE_PATH_CHOICES="font ${srcdir+$srcdir/font} @prefix@/bochs/latest"
+
+die () {
+cat <<EOF
+
+install-x11-fonts failed.
+To try it again, su root and run $0.
+EOF
+exit 1
+}
+
+# this "if" is pulled from the autoconf-generated configure script.
+# it tests for systems that don't have echo -n, etc.
+if (echo "testing\c"; echo 1,2,3) | grep c >/dev/null; then
+  # Stardent Vistra SVR4 grep lacks -e, says ghazi@caip.rutgers.edu.
+  if (echo -n testing; echo 1,2,3) | sed s/-n/xn/ | grep xn >/dev/null; then
+    ac_n= ac_c='
+' ac_t='        '
+  else
+    ac_n=-n ac_c= ac_t=
+  fi
+else
+  ac_n= ac_c='\c' ac_t=
+fi
+
+
+echo $ac_n "Looking for fonts to install... "
+found=0
+for sourcepath in $FONT_SOURCE_PATH_CHOICES; do
+  #echo $ac_n "  $sourcepath/ ... "
+  if test -f $sourcepath/vga.pcf; then
+    echo $sourcepath/
+    found=1
+    break
+  fi
+done
+
+if test ! $found = 1; then 
+  echo FAILED
+  echo "ERROR: I could not find the Bochs fonts to install.  I looked in:"
+  echo "  $FONT_SOURCE_PATH_CHOICES"
+  die
+fi
+
+FONT_SOURCE_PATH=$sourcepath
+
+echo $ac_n "Looking for X11 Font Path... "
+found=0
+for fontpath in $X11_FONT_PATH_CHOICES; do
+  if test -d $fontpath -a -d $fontpath/misc; then
+    echo $fontpath
+    found=1
+    break
+  fi
+done
+
+if test ! $found = 1; then
+  echo FAILED
+  cat <<EOF
+ERROR: I could not find your X11 Font Path, so I can't guarantee that the
+Bochs VGA Font is installed correctly.  Please figure out where the X11 fonts
+are found on your system and post a bug report about the RPM Post-Install 
+Script.  I already looked in:
+  $X11_FONT_PATH_CHOICES
+EOF
+  die
+fi
+
+added_font=0
+for f in $FONTS; do
+  echo $ac_n "Installing $f as ${f}.gz ... "
+  if test ! -f $FONT_SOURCE_PATH/$f; then
+    echo FAILED
+    echo "ERROR: $f is on the list of fonts to install, and it wasn't found "
+    echo "       in $FONT_SOURCE_PATH"
+    die
+  elif test ! -f $fontpath/misc/${f}.gz; then
+    echo ok
+    added_font=1
+    rm -rf $fontpath/misc/${f}.gz
+    gzip -c $FONT_SOURCE_PATH/$f > $fontpath/misc/$f.gz
+    if test $? != 0; then
+      echo ERROR: compressing and installing the font failed; die
+    fi
+  else
+    echo "ok    (it was already there)"
+  fi
+  chmod a+r $fontpath/misc/$f.gz
+done
+
+echo Running mkfontdir...
+mkfontdir $fontpath/misc
+ret=$?
+if test $ret != 0; then
+  echo ERROR: mkfontdir returned $ret
+  die
+fi
+
+# try to run xset
+echo Running xset fp rehash...
+xset >& /dev/null
+XSET_STATUS=$?
+if test $? != 0; then
+  echo WARNING: I could not find xset in your path.  This step may not be
+  echo necessary, but if you have vga font problems, try to run 
+  echo \"xset fp rehash\" by hand.
+else
+  xset fp rehash >& /dev/null
+  if test $? != 0; then
+    echo WARNING: The xset program was found, but the \"xset fp rehash\"
+    echo command failed.  This step may not be necessary, but if you 
+    echo have vga font problems, try to run \"xset fp rehash\" by hand
+    echo and see what is going on.
+  fi
+fi
+
+# try to restart X font server, if we can figure out how.
+echo Restarting X font server...
+SCRIPT=/etc/rc.d/init.d/xfs
+# sorry I don't have any other systems to test this on...
+if test -f $SCRIPT -a -x $SCRIPT; then
+  echo Running $SCRIPT restart...
+  $SCRIPT restart
+else
+  echo WARNING: This script does not know how to restart the X font server
+  echo on your machine.  This step may not be necessary, but if you have
+  echo vga font problems, try to restart the X font server manually, or
+  echo reboot the machine so that it is forced to start again.
+fi
+
+echo Done installing Bochs fonts for X11.
