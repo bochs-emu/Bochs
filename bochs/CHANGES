@@ -94,6 +94,7 @@ Changes to next release:
   - checksum calculation for expansion ROMs
   - extended floppy parameter table (Mike Nordell, Derek Favcus)
   - PCI IRQ initialisation added
+  - boot sequence with up to 3 boot devices added
 
 - display libraries
   - status bar with indicators for cdrom, floppy, harddisk and keyboard added
@@ -151,7 +152,7 @@ Changes to next release:
   [888426] bochsrc to make vnet useful by m_suzu
  [1021758] GNU/k*BSD host support by Robert Millan
   [969967] int 15/ah=87h clearing cr0 by Ben Lunt
- [1048327] Russian Keymap 
+ [1048327] Russian Keymap by Dmitry Soshnikov
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
