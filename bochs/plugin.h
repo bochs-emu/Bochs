@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.5 2002-11-09 20:51:40 vruppert Exp $
+// $Id: plugin.h,v 1.6 2002-11-13 18:39:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -34,6 +34,7 @@ extern "C" {
 #define BX_PLUGIN_PIC      "pic"
 #define BX_PLUGIN_PCI      "pci"
 #define BX_PLUGIN_PCI2ISA  "pci2isa"
+#define BX_PLUGIN_SB16     "sb16"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
@@ -289,6 +290,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(floppy)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(amigaos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(beos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(carbon)

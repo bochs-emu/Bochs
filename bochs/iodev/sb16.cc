@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.28 2002-10-25 11:44:40 bdenney Exp $
+// $Id: sb16.cc,v 1.29 2002-11-13 18:39:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,9 +26,29 @@
 
 // This file (SB16.CC) written and donated by Josef Drexler
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
-#define LOG_THIS bx_sb16.
+#define LOG_THIS theSB16Device->
+
+bx_sb16_c *theSB16Device = NULL;
+
+  int
+libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theSB16Device = new bx_sb16_c ();
+  bx_devices.pluginSB16Device = theSB16Device;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
+  return(0); // Success
+}
+
+  void
+libsb16_LTX_plugin_fini(void)
+{
+}
 
 // some shortcuts to save typing
 #define LOGFILE         BX_SB16_THIS logfile
@@ -45,25 +65,17 @@
 // here's a safe way to print out null pointeres
 #define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
 
-bx_sb16_c bx_sb16;
-#if BX_USE_SB16_SMF
-#define this ((void *)&bx_sb16)
-#endif
-
 bx_sb16_c::bx_sb16_c(void)
 {
   put("SB16");
   settype(SB16LOG);
-  MPU.timer_handle = BX_NULL_TIMER_HANDLE;
-  DSP.timer_handle = BX_NULL_TIMER_HANDLE;
-  OPL.timer_handle = BX_NULL_TIMER_HANDLE;
+  mpu401.timer_handle = BX_NULL_TIMER_HANDLE;
+  dsp.timer_handle = BX_NULL_TIMER_HANDLE;
+  opl.timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
 bx_sb16_c::~bx_sb16_c(void)
 {
-  if (!bx_options.sb16.Opresent->get ())
-    return;
-
   switch (bx_options.sb16.Omidimode->get ())
     {
     case 2:
@@ -107,9 +119,6 @@ bx_sb16_c::~bx_sb16_c(void)
 void bx_sb16_c::init(void)
 {
   unsigned addr;
-
-  if (!bx_options.sb16.Opresent->get ())
-    return;
 
   if ( (strlen(bx_options.sb16.Ologfile->getptr ()) < 1) )
     bx_options.sb16.Ologlevel->set (0);
@@ -1368,7 +1377,7 @@ void bx_sb16_c::set_irq_dma()
 
   // And register the new 8bits DMA Channel
   if ( (!isInitialized) || (oldDMA8 != BX_SB16_DMAL) ) {
-    DEV_dma_register_8bit_channel(BX_SB16_DMAL, bx_sb16.dma_read8, bx_sb16.dma_write8, "SB16");
+    DEV_dma_register_8bit_channel(BX_SB16_DMAL, dma_read8, dma_write8, "SB16");
   }
 
   // and the 16 bit DMA
@@ -1403,7 +1412,7 @@ void bx_sb16_c::set_irq_dma()
 
   // And register the new 16bits DMA Channel
   if ( (BX_SB16_DMAH != 0) && (oldDMA16 != BX_SB16_DMAH) ) {
-    DEV_dma_register_16bit_channel(BX_SB16_DMAH, bx_sb16.dma_read16, bx_sb16.dma_write16, "SB16");
+    DEV_dma_register_16bit_channel(BX_SB16_DMAH, dma_read16, dma_write16, "SB16");
   }
 
   // If not already initialized

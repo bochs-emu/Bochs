@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.10 2002-11-10 10:14:55 vruppert Exp $
+// $Id: sb16.h,v 1.11 2002-11-13 18:39:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,8 +29,8 @@
 
 #if BX_USE_SB16_SMF
 #  define BX_SB16_SMF   static
-#  define BX_SB16_THIS  bx_sb16.
-#  define BX_SB16_THISP (&bx_sb16)
+#  define BX_SB16_THIS  theSB16Device->
+#  define BX_SB16_THISP (theSB16Device)
 #else
 #  define BX_SB16_SMF
 #  define BX_SB16_THIS  this->
@@ -59,10 +59,10 @@
 #define BX_SB16_IOMPULEN 4          // number of addresses covered
 #define BX_SB16_IOADLIB 0x388       // equivalent to 0x220..0x223 and 0x228..0x229
 #define BX_SB16_IOADLIBLEN 4        // number of addresses covered
-#define BX_SB16_IRQ     bx_sb16.currentirq
+#define BX_SB16_IRQ     theSB16Device->currentirq
 #define BX_SB16_IRQMPU  BX_SB16_IRQ // IRQ for the MPU401 part - same value
-#define BX_SB16_DMAL    bx_sb16.currentdma8
-#define BX_SB16_DMAH    bx_sb16.currentdma16
+#define BX_SB16_DMAL    theSB16Device->currentdma8
+#define BX_SB16_DMAH    theSB16Device->currentdma16
 
 /*
    A few notes:
@@ -189,13 +189,13 @@ private:
 class BX_SOUND_OUTPUT_C_DEF;
 
 // The actual emulator class, emulating the sound blaster ports
-class bx_sb16_c : public logfunctions {
+class bx_sb16_c : public bx_devmodel_c {
 public:
 
   bx_sb16_c(void);
   ~bx_sb16_c(void);
-  BX_SB16_SMF void init(void);
-  BX_SB16_SMF void reset(unsigned type);
+  virtual void init(void);
+  virtual void reset(unsigned type);
 
       /* Make writelog available to output functions */
   BX_SB16_SMF void   writelog(int loglevel, const char *str, ...);
@@ -403,8 +403,6 @@ public:
   BX_SOUND_VIRTUAL int    stopwaveplayback();
   BX_SOUND_VIRTUAL int    closewaveoutput();
 };
-
-extern bx_sb16_c bx_sb16;
 
 #define WRITELOG        sb16->writelog
 #define BOTHLOG(x)      (x)
