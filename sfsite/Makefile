@@ -1,6 +1,6 @@
 ###################################################################
 # Makefile
-# $Id: Makefile,v 1.5 2001-06-21 04:55:43 uninet Exp $
+# $Id: Makefile,v 1.6 2001-07-23 01:25:42 bdenney Exp $
 #
 # Runs a cvs update on the source forge shell account.
 # This will only work if you are a developer on the Bochs
@@ -9,7 +9,7 @@
 ###################################################################
 
 SSH=ssh -x
-REMOTE_HOST=shell.sf.net
+REMOTE_HOST=shell.sourceforge.net
 BOCHS_PATH=/home/groups/b/bo/bochs
 HTDOCS=$(BOCHS_PATH)/htdocs
 
