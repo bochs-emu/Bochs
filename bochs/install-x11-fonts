@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # install-x11-fonts
-# $Id: install-x11-fonts,v 1.3 2001-09-14 04:19:08 bdenney Exp $
+# $Id: install-x11-fonts,v 1.4 2001-09-30 14:55:20 bdenney Exp $
 #
 # This is designed help people to get the Bochs fonts installed on their 
 # system.
@@ -20,10 +20,25 @@ EOF
 exit 1
 }
 
-echo -n "Looking for fonts to install... "
+# this "if" is pulled from the autoconf-generated configure script.
+# it tests for systems that don't have echo -n, etc.
+if (echo "testing\c"; echo 1,2,3) | grep c >/dev/null; then
+  # Stardent Vistra SVR4 grep lacks -e, says ghazi@caip.rutgers.edu.
+  if (echo -n testing; echo 1,2,3) | sed s/-n/xn/ | grep xn >/dev/null; then
+    ac_n= ac_c='
+' ac_t='        '
+  else
+    ac_n=-n ac_c= ac_t=
+  fi
+else
+  ac_n= ac_c='\c' ac_t=
+fi
+
+
+echo $ac_n "Looking for fonts to install... "
 found=0
 for sourcepath in $FONT_SOURCE_PATH_CHOICES; do
-  #echo -n "  $sourcepath/ ... "
+  #echo $ac_n "  $sourcepath/ ... "
   if test -f $sourcepath/vga.pcf; then
     echo $sourcepath/
     found=1
@@ -32,7 +47,7 @@ for sourcepath in $FONT_SOURCE_PATH_CHOICES; do
 done
 
 if test ! $found = 1; then 
-  echo FAILE
+  echo FAILED
   echo "ERROR: I could not find the Bochs fonts to install.  I looked in:"
   echo "  $FONT_SOURCE_PATH_CHOICES"
   die
@@ -40,7 +55,7 @@ fi
 
 FONT_SOURCE_PATH=$sourcepath
 
-echo -n "Looking for X11 Font Path... "
+echo $ac_n "Looking for X11 Font Path... "
 found=0
 for fontpath in $X11_FONT_PATH_CHOICES; do
   if test -d $fontpath -a -d $fontpath/misc; then
@@ -64,7 +79,7 @@ fi
 
 added_font=0
 for f in $FONTS; do
-  echo -n "Installing $f... "
+  echo $ac_n "Installing $f... "
   if test ! -f $FONT_SOURCE_PATH/$f; then
     echo FAILED
     echo "ERROR: $f is on the list of fonts to install, and it wasn't found "
@@ -90,11 +105,36 @@ if test $ret != 0; then
   die
 fi
 
-if test $added_font = 1; then
-cat <<EOF
-NOTE: If you have trouble loading X fonts in this session, you might need
-to type "xset fp rehash."
-EOF
+# try to run xset
+echo Running xset fp rehash...
+xset >& /dev/null
+XSET_STATUS=$?
+if test $? != 0; then
+  echo WARNING: I could not find xset in your path.  This step may not be
+  echo necessary, but if you have vga font problems, try to run 
+  echo \"xset fp rehash\" by hand.
+else
+  xset fp rehash >& /dev/null
+  if test $? != 0; then
+    echo WARNING: The xset program was found, but the \"xset fp rehash\"
+    echo command failed.  This step may not be necessary, but if you 
+    echo have vga font problems, try to run \"xset fp rehash\" by hand
+    echo and see what is going on.
+  fi
+fi
+
+# try to restart X font server, if we can figure out how.
+echo Restarting X font server...
+SCRIPT=/etc/rc.d/init.d/xfs
+# sorry I don't have any other systems to test this on...
+if test -f $SCRIPT -a -x $SCRIPT; then
+  echo Running $SCRIPT restart...
+  $SCRIPT restart
+else
+  echo WARNING: This script does not know how to restart the X font server
+  echo on your machine.  This step may not be necessary, but if you have
+  echo vga font problems, try to restart the X font server manually, or
+  echo reboot the machine so that it is forced to start again.
 fi
 
 echo Done installing Bochs fonts for X11.
