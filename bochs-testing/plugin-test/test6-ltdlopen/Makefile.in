@@ -5,7 +5,7 @@ VPATH = @srcdir@
 CXX=@CXX@
 CXXFLAGS=@CXXFLAGS@
 LDFLAGS=@LDFLAGS@ @LT_LDFLAGS@
-LIBS=-L`pwd`/../ltdl -lltdl
+LIBS=@LIBS@
 
 LIBTOOL=@LIBTOOL@
 RPATH=`pwd`/lib
