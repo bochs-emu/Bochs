@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.4 2001-06-24 19:24:57 instinc Exp $
+// $Id: wx.cc,v 1.1.2.5 2001-06-24 19:30:22 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -82,29 +82,48 @@ private:
   DECLARE_EVENT_TABLE()
 };
 
+// I wanted to make this a static member of ParamEditor, but it gave me
+// link errors so I just put it outside for now.
+wxHashTable paramEditorsById;
+
 class ParamEditor: public wxPanel {
   bx_param_c *param;
+  DECLARE_EVENT_TABLE()
+  void OnEvent (wxCommandEvent& event);
+  virtual void OnEvent2 (wxCommandEvent& event) = 0;
 public:
   ParamEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
   static ParamEditor *createEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
+  bx_param_c *get_param ();
 };
+
+
+BEGIN_EVENT_TABLE(ParamEditor, wxPanel)
+  EVT_CHECKBOX (-1, ParamEditor::OnEvent)
+  EVT_CHOICE (-1, ParamEditor::OnEvent)
+  EVT_TEXT(-1, ParamEditor::OnEvent)
+  EVT_TEXT_ENTER(-1, ParamEditor::OnEvent)
+END_EVENT_TABLE()
 
 class ParamEditorBool : public ParamEditor {
   wxCheckBox *component;
 public:
   ParamEditorBool (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
+  virtual void OnEvent2 (wxCommandEvent& event);
 };
 
 class ParamEditorNum : public ParamEditor {
   wxTextCtrl *component;
 public:
   ParamEditorNum (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
+  virtual void OnEvent2 (wxCommandEvent& event);
 };
 
 class ParamEditorString : public ParamEditor {
   wxTextCtrl *component;
 public:
   ParamEditorString (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
+  virtual void OnEvent2 (wxCommandEvent& event);
 };
 
 class ParamEditorEnum : public ParamEditor {
@@ -113,12 +132,14 @@ class ParamEditorEnum : public ParamEditor {
   wxString *choices;
 public:
   ParamEditorEnum (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
+  virtual void OnEvent2 (wxCommandEvent& event);
 };
 
 class ParamEditorList : public ParamEditor {
   wxControl *component;
 public:
   ParamEditorList (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
+  virtual void OnEvent2 (wxCommandEvent& event);
 };
 
 
@@ -147,8 +168,9 @@ enum
   ID_Choice1,
   ID_Combo1,
   ID_Text1,
-  ID_THIS_IS_THE_LAST
+  ID_LAST_STATIC_ASSIGNED_ID
 };
+int wxid_count = ID_LAST_STATIC_ASSIGNED_ID;
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Quit,  MyFrame::OnQuit)
@@ -245,7 +267,8 @@ void MyPanel::buildParamList (int x, int y)
     if (param != NULL) {
       printf ("param %d is called %s\n", i, param->get_name ());
       new wxStaticText (this, i, param->get_name (), wxPoint (x, y));
-      ParamEditor *editor = ParamEditor::createEditor (param, this, -1, x+120, y);
+      int wxid = wxid_count++;
+      ParamEditor *editor = ParamEditor::createEditor (param, this, wxid, x+120, y);
       y+=30;
     }
   }
@@ -266,31 +289,43 @@ ParamEditor::createEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, i
 {
   printf ("ParamEditor::createEditor\n");
   Bit8u type = param->get_type ();
+  ParamEditor *it = NULL;
   switch (type) {
     case BXT_PARAM_BOOL:
-      return new ParamEditorBool (param, parent, id, x, y);
+      it = new ParamEditorBool (param, parent, id, x, y);
       break;
     case BXT_PARAM_NUM:
-      return new ParamEditorNum (param, parent, id, x, y);
+      it = new ParamEditorNum (param, parent, id, x, y);
       break;
     case BXT_PARAM_STRING:
-      return new ParamEditorString (param, parent, id, x, y);
+      it = new ParamEditorString (param, parent, id, x, y);
       break;
     case BXT_PARAM_ENUM:
-      return new ParamEditorEnum (param, parent, id, x, y);
+      it = new ParamEditorEnum (param, parent, id, x, y);
       break;
     case BXT_LIST:
-      return new ParamEditorList (param, parent, id, x, y);
+      it = new ParamEditorList (param, parent, id, x, y);
       break;
     default:
       printf ("ParamEditor::createEditor with unknown type %d\n", type);
+      it = NULL;
   }
+  paramEditorsById.Put (id, it);
+  return it;
 }
 
 ParamEditorBool::ParamEditorBool (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
   : ParamEditor (param, parent, id, x, y)
 {
   component = new wxCheckBox (this, id, "", wxPoint (0, 0));
+}
+
+void 
+ParamEditorBool::OnEvent2 (wxCommandEvent& event)
+{
+  printf ("ParamEditorBool::OnEvent2\n");
+  bx_param_bool_c *p = (bx_param_bool_c *) get_param ();
+  p->set (event.IsChecked ());
 }
 
 ParamEditorNum::ParamEditorNum (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
@@ -301,7 +336,13 @@ ParamEditorNum::ParamEditorNum (bx_param_c *param, wxWindow *parent, wxWindowID 
   bx_param_num_c *num = (bx_param_num_c *)param;
   wxString text;
   text.Printf ("%d", num->get ());
-  component = new wxTextCtrl (this, id, text, wxPoint (-1, -1), wxSize (-1, -1));
+  component = new wxTextCtrl (this, id, text, wxPoint (-1, -1), wxSize (-1, -1), wxTE_PROCESS_ENTER|wxTE_PROCESS_TAB);
+}
+
+void 
+ParamEditorNum::OnEvent2 (wxCommandEvent& event)
+{
+  printf ("ParamEditorNum::OnEvent2\n");
 }
 
 ParamEditorString::ParamEditorString (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
@@ -310,7 +351,13 @@ ParamEditorString::ParamEditorString (bx_param_c *param, wxWindow *parent, wxWin
   //SetBackgroundColour (wxColour ("red"));
   bx_param_string_c *string = (bx_param_string_c *)param;
   wxString text = wxString (string->getptr ());
-  component = new wxTextCtrl (this, id, text, wxPoint (-1, -1), wxSize (-1, -1));
+  component = new wxTextCtrl (this, id, text, wxPoint (-1, -1), wxSize (-1, -1), wxTE_PROCESS_ENTER);
+}
+
+void 
+ParamEditorString::OnEvent2 (wxCommandEvent& event)
+{
+  printf ("ParamEditorString::OnEvent2\n");
 }
 
 ParamEditorEnum::ParamEditorEnum (bx_param_c *genericparam, wxWindow *parent, wxWindowID id, int x, int y)
@@ -327,6 +374,13 @@ ParamEditorEnum::ParamEditorEnum (bx_param_c *genericparam, wxWindow *parent, wx
   component = new wxChoice (this, id, wxPoint (-1, -1), wxSize (-1, -1), n_choices, choices);
 }
 
+void 
+ParamEditorEnum::OnEvent2 (wxCommandEvent& event)
+{
+  printf ("ParamEditorEnum::OnEvent2\n");
+}
+
+
 
 ParamEditorList::ParamEditorList (bx_param_c *genericparam, wxWindow *parent, wxWindowID id, int x, int y)
   : ParamEditor (genericparam, parent, id, x, y)
@@ -334,4 +388,35 @@ ParamEditorList::ParamEditorList (bx_param_c *genericparam, wxWindow *parent, wx
   //SetBackgroundColour (wxColour ("red"));
   bx_list_c *param = (bx_list_c *) genericparam;
   component = new wxStaticText (this, id, "list param not implemented", wxPoint (-1, -1));
+}
+
+void 
+ParamEditorList::OnEvent2 (wxCommandEvent& event)
+{
+  printf ("ParamEditorList::OnEvent2\n");
+}
+
+bx_param_c *
+ParamEditor::get_param ()
+{
+  printf ("You called get_param on ParamEditor %p\n", this);
+  printf ("My param value is %p\n", this->param);
+  return this->param;
+}
+
+void
+ParamEditor::OnEvent (wxCommandEvent& evt)
+{
+  int id = evt.GetId ();
+  wxObject *object = evt.GetEventObject ();
+  printf ("ParamEditor::OnEvent, id=%d, object=%p\n", id, object);
+  ParamEditor *genericeditor = (ParamEditor *) paramEditorsById.Get (id);
+  if (genericeditor == NULL) {
+    printf ("I couldn't find the parameter editor for id=%d\n", id);
+    return;
+  }
+  bx_param_c *genericparam = genericeditor->get_param ();
+  wxASSERT (genericparam != NULL);
+  printf ("This event will be sent to %s\n", genericparam->get_name ());
+  genericeditor->OnEvent2 (evt);
 }
