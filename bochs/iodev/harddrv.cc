@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.49 2002-02-07 17:43:06 cbothamy Exp $
+// $Id: harddrv.cc,v 1.50 2002-02-12 16:03:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.49 2002-02-07 17:43:06 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.50 2002-02-12 16:03:00 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1364,7 +1364,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
                                     UNUSED(data_format);
                                     UNUSED(track_number);
 
-				    if (BX_SELECTED_HD.cdrom.ready) {
+				    if (!BX_SELECTED_HD.cdrom.ready) {
 					  atapi_cmd_error(SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT);
 					  raise_interrupt();
 				    } else {
