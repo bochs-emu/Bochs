@@ -40,7 +40,7 @@ CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
-PLUGIN_PATH=`pwd`/../plugins
+PLUGIN_PATH=@libdir@
 top_builddir    = ..
 LIBTOOL=@LIBTOOL@
 
@@ -112,26 +112,18 @@ all: libiodev.a plugins
 # special rule for hard drive, which can have multiple objects
 libharddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
 	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
-	mkdir -p $(PLUGIN_PATH)
-	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
 # special rule for keyboard, which has 2 objects
 libkeyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) $(CXX) -module keyboard.lo scancodes.lo -o libkeyboard.la -rpath $(PLUGIN_PATH)
-	mkdir -p $(PLUGIN_PATH)
-	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
 # special rule for pit, which has 3 objects
 libpit.la: pit.lo pit82c54.lo pit_wrap.lo
 	$(LIBTOOL) $(CXX) -module pit.lo pit82c54.lo pit_wrap.lo -o libpit.la -rpath $(PLUGIN_PATH)
-	mkdir -p $(PLUGIN_PATH)
-	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
 # default rule for linking plugins
 lib%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
-	mkdir -p $(PLUGIN_PATH)
-	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
 libiodev.a: $(BX_IODEV_OBJS)
 	$(LIBTOOL) @RMCOMMAND@ libiodev.a

@@ -42,7 +42,7 @@ LIBS = @LIBS@
 X_CFLAGS = @X_CFLAGS@
 BEOS_CFLAGS = -Wno-multichar
 RANLIB = @RANLIB@
-PLUGIN_PATH=`pwd`/../plugins
+PLUGIN_PATH=@libdir@
 top_builddir    = ..
 LIBTOOL=@LIBTOOL@
 
@@ -99,14 +99,10 @@ x.o: x.@CPP_SUFFIX@
 
 lib%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
-	mkdir -p $(PLUGIN_PATH)
-	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
 # special rule for wx, since it has 3 files
 libwx.la: $(GUI_OBJS_WX:.o=.lo)
 	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) -o $@ `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
-	mkdir -p $(PLUGIN_PATH)
-	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
 plugins: $(GUI_SO_OBJS:%.o=lib%.la)
 
