@@ -140,7 +140,8 @@ eth_ARPmaker::ishandler(const eth_packet& outpacket) {
      (!memcmp(outpacket.buf+12, ethtype_arp, 2)) &&
      (outpacket.len<PACKET_BUF_SIZE) &&
      ( (!memcmp(outpacket.buf, external_mac, 6))
-       || (!memcmp(outpacket.buf, broadcast_mac, 6)) )
+       || (!memcmp(outpacket.buf, broadcast_mac, 6)) ) &&
+     (!memcmp(outpacket.buf+38, external_ip, 4))
      ) {
     return 1;
   }
