@@ -47,31 +47,31 @@ class vmware3_image_t : public device_image_t
              __declspec(align(1))
 #endif
         struct _COW_Header {
-          char     id[4];
-          unsigned header_version;
-          unsigned flags;
-          unsigned total_sectors;
-          unsigned tlb_size_sectors;
-          unsigned flb_offset_sectors;
-          unsigned flb_count;
-          unsigned next_sector_to_allocate;
-          unsigned cylinders;
-          unsigned heads;
-          unsigned sectors;
-          char     PAD0[1016];
-          unsigned last_modified_time;
-          char     PAD1[572];
-          unsigned last_modified_time_save;
-          char     label[8];
-          unsigned chain_id;
-          unsigned number_of_chains;
-          unsigned cylinders_in_disk;
-          unsigned heads_in_disk;
-          unsigned sectors_in_disk;
-          unsigned total_sectors_in_disk;
-          char     PAD2[8];
-          unsigned vmware_version;
-          char     PAD3[364];
+          Bit8u    id[4];
+          Bit32u   header_version;
+          Bit32u   flags;
+          Bit32u   total_sectors;
+          Bit32u   tlb_size_sectors;
+          Bit32u   flb_offset_sectors;
+          Bit32u   flb_count;
+          Bit32u   next_sector_to_allocate;
+          Bit32u   cylinders;
+          Bit32u   heads;
+          Bit32u   sectors;
+          Bit8u    PAD0[1016];
+          Bit32u   last_modified_time;
+          Bit8u    PAD1[572];
+          Bit32u   last_modified_time_save;
+          Bit8u    label[8];
+          Bit32u   chain_id;
+          Bit32u   number_of_chains;
+          Bit32u   cylinders_in_disk;
+          Bit32u   heads_in_disk;
+          Bit32u   sectors_in_disk;
+          Bit32u   total_sectors_in_disk;
+          Bit8u    PAD2[8];
+          Bit32u   vmware_version;
+          Bit8u    PAD3[364];
       } COW_Header
 #if !defined(_MSC_VER)
         __attribute__((packed))
@@ -84,25 +84,31 @@ class vmware3_image_t : public device_image_t
       struct COW_Image {
           int fd;
           COW_Header header;
-          unsigned *  flb;
-          unsigned ** slb;
-          char *      tlb;
+          Bit32u   *  flb;
+          Bit32u   ** slb;
+          Bit8u    *  tlb;
           off_t offset;
           off_t min_offset;
           off_t max_offset;
           bool synced;
       } * images, * current; 
 
-      char * generate_cow_name(const char * filename, unsigned chain);
+      int read_header(int fd, COW_Header & header);
+      int write_header(int fd, COW_Header & header);
+
+      int read_ints(int fd, Bit32u *buffer, size_t count);
+      int write_ints(int fd, Bit32u *buffer, size_t count);
+
+      char * generate_cow_name(const char * filename, Bit32u   chain);
       bool is_valid_header(COW_Header & header);
       off_t perform_seek();
       bool sync();
 
-      const unsigned FL_SHIFT;
-      const unsigned FL_MASK;
+      const Bit32u   FL_SHIFT;
+      const Bit32u   FL_MASK;
 
       off_t requested_offset;
-      unsigned slb_count;
-      unsigned tlb_size;
+      Bit32u   slb_count;
+      Bit32u   tlb_size;
 };
 #endif
