@@ -154,6 +154,9 @@ bx_sb16.dll: sb16.o $(SOUNDLOW_OBJS)
 
 bx_ne2k.dll: ne2k.o $(NETLOW_OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o bx_ne2k.dll ne2k.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_gameport.dll: gameport.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_gameport.dll gameport.o $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
 ##### end DLL section
 
 clean:
