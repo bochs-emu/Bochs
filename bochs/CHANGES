@@ -211,7 +211,7 @@ Detailed change log :
            already applied: disable IME, split screen, write mode 2,
            BIOS INT16h/AH=05h
   #856506/#856510  Patch to fix compile-time iodev/cd-rom.cc error     (alden.dima at nist.gov)
-           Correct patch provided in SF bug report #843433
+           Correct patch provided in SF bug report #843433             (birkhofer at users.sourceforge.net)
 
 - patches applied
   - patch.highmem  (memory allocation) (Zwane Mwaikambo)
