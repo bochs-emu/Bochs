@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.70 2002-09-22 20:56:11 cbothamy Exp $
+// $Id: siminterface.h,v 1.71 2002-09-23 16:57:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1142,6 +1142,7 @@ public:
   // the buttons.  Some of these implementations call the siminterface.
   typedef BxEvent* (*sim_interface_callback_t)(void *theclass, BxEvent *event);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg) {}
+  virtual void get_notify_callback (sim_interface_callback_t *func, void **arg) {}
 
   // send an event from the simulator to the CI.
   virtual BxEvent* sim_to_ci_event (BxEvent *event) {return NULL;}
