@@ -286,6 +286,34 @@ uninstall::
 	for i in bochs bximage bochs-dlx $(BOCHS_SCRIPTS); do rm -f /usr/local/bin/$$i; done
 	for i in $(MAN_PAGE_LIST); do $(RM) -f $(man1dir)/$$i.1; done
 
+
+V6WORKSPACE_ZIP=build/win32/workspace.zip
+V6WORKSPACE_FILES=bochs.dsw bochs.dsp bochs.opt cpu/cpu.dsp \
+	memory/memory.dsp iodev/iodev.dsp instrument/stubs/stubs.dsp \
+	gui/gui.dsp fpu/fpu.dsp disasm/disasm.dsp debug/debug.dsp \
+	misc/niclist.dsp bximage.dsp wxthreadtest.dsp
+
+v6workspace:
+	zip $(V6WORKSPACE_ZIP) $(V6WORKSPACE_FILES)
+
+########
+# the win32_snap target is used to create a ZIP of bochs sources configured
+# for VC++.  This ZIP is stuck on the website every once in a while to make
+# it easier for VC++ users to compile bochs.  First, you should
+# run "sh .conf.win32-vcpp" to configure the source code, then do
+# "make win32_snap" to unzip the workspace files and create the ZIP.
+########
+win32_snap:
+	unzip $(V6WORKSPACE_ZIP)
+	make zip
+
+tar:
+	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; tar cf - $$NAME | $(GZIP) > $$NAME.tar.gz); ls -l ../$$NAME.tar.gz
+
+
+zip:
+	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(ZIP) $$NAME.zip -r $$NAME); ls -l ../$$NAME.zip
+
 rpm:: dist-clean
 	test -w $(SOURCES)
 	test -w $(SPECS)
