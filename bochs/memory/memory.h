@@ -51,8 +51,8 @@ public:
   BX_MEM_C(size_t memsize);
   ~BX_MEM_C(void);
   BX_MEM_SMF void    init_memory(int memsize);
-  BX_MEM_SMF void    read_physical(Bit32u addr, unsigned len, void *data);
-  BX_MEM_SMF void    write_physical(Bit32u addr, unsigned len, void *data);
+  BX_MEM_SMF void    read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
+  BX_MEM_SMF void    write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
   BX_MEM_SMF Boolean dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);

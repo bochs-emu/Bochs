@@ -33,7 +33,7 @@
 #if BX_PROVIDE_CPU_MEMORY
 
   void
-BX_MEM_C::write_physical(Bit32u addr, unsigned len, void *data)
+BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
   Bit32u a20addr;
@@ -219,8 +219,7 @@ inc_one:
 #endif
 
 #if BX_APIC_SUPPORT
-#warning CPU# hardcoded to 0
-    bx_apic_c *apic = &BX_CPU[0]->local_apic;
+    bx_apic_c *apic = &cpu->local_apic;
     if ((a20addr & ~0xfff) == (apic->get_base ())) {
       if ((addr & 0xf != 0) || (len != 4))
         bx_printf ("warning: misaligned or wrong-size APIC write");
@@ -250,7 +249,7 @@ inc_one:
 
 
   void
-BX_MEM_C::read_physical(Bit32u addr, unsigned len, void *data)
+BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
   Bit32u a20addr;
@@ -414,8 +413,7 @@ inc_one:
 #endif
 
 #if BX_APIC_SUPPORT
-#warning always CPU=0
-    bx_apic_c *apic = &BX_CPU[0]->local_apic;
+    bx_apic_c *apic = &cpu->local_apic;
     if ((a20addr & ~0xfff) == (apic->get_base ())) {
       Bit32u value;
       apic->read_handler (addr, &value, 4);
