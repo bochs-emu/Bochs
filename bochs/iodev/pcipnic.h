@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.h,v 1.1 2004-01-13 19:21:21 mcb30 Exp $
+// $Id: pcipnic.h,v 1.2 2004-03-26 03:22:46 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -37,6 +37,7 @@ typedef struct {
   Bit16u	base_ioaddr;
   Bit8u		irq;
   Bit8u		macaddr[6];
+  Bit8u		irqEnabled;
 
   Bit16u	rCmd;		// Command register
   Bit16u	rStatus;	// Status register

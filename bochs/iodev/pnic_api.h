@@ -39,6 +39,9 @@
 #define PNIC_CMD_RESET		0x0003
 #define PNIC_CMD_XMIT		0x0004
 #define PNIC_CMD_RECV		0x0005
+#define PNIC_CMD_RECV_QLEN	0x0006
+#define PNIC_CMD_MASK_IRQ	0x0007
+#define PNIC_CMD_FORCE_IRQ	0x0008
 
 /*
  * Status code definitions: read these from PNIC_REG_STAT
@@ -53,4 +56,4 @@
  * Other miscellaneous information
  */
 
-#define PNIC_API_VERSION	0x0100		/* 1.0 */
+#define PNIC_API_VERSION	0x0101		/* 1.1 */

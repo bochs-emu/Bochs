@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.3 2004-03-24 18:16:27 mcb30 Exp $
+// $Id: pcipnic.cc,v 1.4 2004-03-26 03:22:46 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -194,6 +194,10 @@ bx_pcipnic_c::reset(unsigned type)
   BX_PNIC_THIS s.rDataCursor = 0;
   BX_PNIC_THIS s.recvIndex = 0;
   BX_PNIC_THIS s.recvQueueLength = 0;
+  BX_PNIC_THIS s.irqEnabled = 0;
+
+  // Deassert IRQ
+  DEV_pic_lower_irq ( BX_PNIC_THIS s.irq );
 }
 
 
@@ -545,6 +549,36 @@ bx_pcipnic_c::exec_command(void)
       memcpy ( data, BX_PNIC_THIS s.recvRing[idx], olength );
       BX_PNIC_THIS s.recvQueueLength --;
     }
+    if ( ! BX_PNIC_THIS s.recvQueueLength ) {
+      DEV_pic_lower_irq ( BX_PNIC_THIS s.irq );
+    }
+    status = PNIC_STATUS_OK;
+    break;
+
+  case PNIC_CMD_RECV_QLEN :
+    Bit16u qlen;
+
+    qlen = BX_PNIC_THIS s.recvQueueLength;
+    olength = sizeof(qlen);
+    memcpy ( data, &qlen, sizeof(qlen) );
+    status = PNIC_STATUS_OK;
+    break;
+
+  case PNIC_CMD_MASK_IRQ :
+    Bit8u enabled;
+
+    enabled = *((Bit8u*)data);
+    BX_PNIC_THIS s.irqEnabled = enabled;
+    if ( enabled && BX_PNIC_THIS s.recvQueueLength ) {
+      DEV_pic_raise_irq ( BX_PNIC_THIS s.irq );
+    } else {
+      DEV_pic_lower_irq ( BX_PNIC_THIS s.irq );
+    }
+    status = PNIC_STATUS_OK;
+    break;
+
+  case PNIC_CMD_FORCE_IRQ :
+    DEV_pic_raise_irq ( BX_PNIC_THIS s.irq );
     status = PNIC_STATUS_OK;
     break;
 
@@ -602,6 +636,11 @@ bx_pcipnic_c::rx_frame(const void *buf, unsigned io_len)
   // Move to next ring entry
   BX_PNIC_THIS s.recvIndex = ( BX_PNIC_THIS s.recvIndex + 1) % PNIC_RECV_RINGS;
   BX_PNIC_THIS s.recvQueueLength ++;
+
+  // Generate interrupt if enabled
+  if ( BX_PNIC_THIS s.irqEnabled ) {
+    DEV_pic_raise_irq ( BX_PNIC_THIS s.irq );
+  }
 }
 
 #endif // BX_PCI_SUPPORT && BX_PCI_PNIC_SUPPORT
