@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.77 2004-02-15 11:30:28 vruppert Exp $
+// $Id: win32.cc,v 1.78 2004-02-16 21:47:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ static int mouse_button_state = 0;
 static int ms_xdelta=0, ms_ydelta=0;
 static int ms_lastx=0, ms_lasty=0;
 static int ms_savedx=0, ms_savedy=0;
-static BOOL mouseCaptureMode;
+static BOOL mouseCaptureMode, mouseCaptureNew, mouseToggleReq;
 static unsigned long workerThread = 0;
 static DWORD workerThreadID = 0;
 
@@ -588,6 +588,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   bx_headerbar_entries = 0;
   bx_hb_separator = 0;
   mouseCaptureMode = FALSE;
+  mouseCaptureNew = FALSE;
+  mouseToggleReq = FALSE;
 
   stInfo.hInstance = GetModuleHandle(NULL);
 
@@ -876,6 +878,21 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   return DefWindowProc (hwnd, iMsg, wParam, lParam);
 }
 
+void SetMouseCapture()
+{
+  RECT wndRect;
+
+  bx_options.Omouse_enabled->set (mouseCaptureMode);
+  ShowCursor(!mouseCaptureMode);
+  ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
+  GetWindowRect(stInfo.simWnd, &wndRect);
+  SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
+  cursorWarped();
+  if (mouseCaptureMode)
+    SetStatusText(0, "CTRL + 3rd button disables mouse", TRUE);
+  else
+    SetStatusText(0, "CTRL + 3rd button enables mouse", TRUE);
+}
 
 LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -893,6 +910,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 
   case WM_TIMER:
+    if (mouseToggleReq && (GetActiveWindow() == stInfo.mainWnd)) {
+      mouseCaptureMode = mouseCaptureNew;
+      SetMouseCapture();
+      mouseToggleReq = FALSE;
+    }
     // If mouse escaped, bring it back
     if ( mouseCaptureMode)
     {
@@ -946,16 +968,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_MBUTTONUP:
     if (wParam == (MK_CONTROL | MK_MBUTTON)) {
       mouseCaptureMode = !mouseCaptureMode;
-      bx_options.Omouse_enabled->set (mouseCaptureMode);
-      ShowCursor(!mouseCaptureMode);
-      ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
-      GetWindowRect(hwnd, &wndRect);
-      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
-      cursorWarped();
-      if (mouseCaptureMode)
-        SetStatusText(0, "CTRL + 3rd button disables mouse", TRUE);
-      else
-        SetStatusText(0, "CTRL + 3rd button enables mouse", TRUE);
+      SetMouseCapture();
       mouseModeChange = TRUE;
     } else if (mouseModeChange && (iMsg == WM_MBUTTONUP)) {
       mouseModeChange = FALSE;
@@ -1853,6 +1866,10 @@ void alarm (int time)
   void
 bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
+  if ((val != mouseCaptureMode) && !mouseToggleReq) {
+    mouseToggleReq = TRUE;
+    mouseCaptureNew = val;
+  }
 }
 
 #if BX_USE_WINDOWS_FONTS
