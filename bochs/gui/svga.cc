@@ -393,7 +393,8 @@ bx_bool bx_svga_gui_c::palette_change(
 void bx_svga_gui_c::dimension_update(
     unsigned x,
     unsigned y,
-    unsigned fheight)
+    unsigned fheight,
+    unsigned fwidth)
 {
   int newmode;
     
@@ -403,6 +404,9 @@ void bx_svga_gui_c::dimension_update(
   if( fheight > 0 )
   {
     fontheight = fheight;
+    if (fwidth != 8) {
+      x = x * 8 / fwidth;
+    }
     fontwidth = 8;
   }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.75 2003-05-10 12:00:58 vruppert Exp $
+// $Id: vga.cc,v 1.76 2003-05-11 15:07:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -725,8 +725,8 @@ bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, uns
 bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 {
   unsigned i;
-  bx_bool prev_video_enabled;
   Bit8u charmap1, charmap2, prev_memory_mapping;
+  bx_bool prev_video_enabled, prev_line_graphics;
   bx_bool prev_graphics_alpha, prev_chain_odd_even;
   bx_bool needs_update = 0;
 
@@ -845,6 +845,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             }
             break;
           case 0x10: // mode control register
+            prev_line_graphics = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics;
             BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha =
               (value >> 0) & 0x01;
             BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type =
@@ -859,6 +860,10 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
               (value >> 6) & 0x01;
             BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size =
               (value >> 7) & 0x01;
+            if (((value >> 2) & 0x01) != prev_line_graphics) {
+              bx_gui->set_text_charmap(
+                & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+            }
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: mode control: %02x h",
                 (unsigned) value);
@@ -1503,8 +1508,6 @@ bx_vga_c::update(void)
                   attribute = 6 - 2*(x % 4);
                   palette_reg_val = (BX_VGA_THIS s.vga_memory[byte_offset]) >> attribute;
                   palette_reg_val &= 3;
-                  palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics << 2;
-                  // palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity << 3;
                   DAC_regno = BX_VGA_THIS s.attribute_ctrl.palette_reg[palette_reg_val];
                   BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                 }
@@ -1620,14 +1623,13 @@ bx_vga_c::update(void)
     tm_info.line_compare = BX_VGA_THIS s.line_compare;
     tm_info.h_panning = BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning & 0x0f;
     tm_info.v_panning = BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f;
-    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics) {
+    tm_info.line_graphics = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics;
+    if ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 0) {
       if (tm_info.h_panning == 8)
         tm_info.h_panning = 0;
       else
         tm_info.h_panning++;
     }
-    // FIXME: this can be removed when we implement the char width switch
-    if (tm_info.h_panning == 8) tm_info.h_panning = 7;
 
     switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
       case 0: // 128K @ A0000
@@ -1636,7 +1638,7 @@ bx_vga_c::update(void)
 	iHeight = 16*25;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui->dimension_update(iWidth, iHeight, 16);
+	  bx_gui->dimension_update(iWidth, iHeight, 16, 8);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1668,7 +1670,7 @@ bx_vga_c::update(void)
 	iHeight = 16*25;
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
-	  bx_gui->dimension_update(iWidth, iHeight, 16);
+	  bx_gui->dimension_update(iWidth, iHeight, 16, 8);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
@@ -1696,7 +1698,7 @@ bx_vga_c::update(void)
         break;
 
       case 3: // B8000 .. BFFFF
-        unsigned VDE, MSL, rows;
+        unsigned VDE, MSL, rows, cWidth;
 
         // Verticle Display End: find out how many lines are displayed
         VDE = BX_VGA_THIS s.vertical_display_end;
@@ -1710,18 +1712,20 @@ bx_vga_c::update(void)
           // emulated CGA graphics mode 160x100x16 colors
           MSL = 3;
           rows = 100;
-          iWidth = 8 * BX_VGA_THIS s.CRTC.reg[1];
+          cWidth = 8;
+          iWidth = cWidth * BX_VGA_THIS s.CRTC.reg[1];
           iHeight = 400;
         } else {
           rows = (VDE+1)/(MSL+1);
           if (rows > BX_MAX_TEXT_LINES)
             BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
-          iWidth = 8 * (BX_VGA_THIS s.CRTC.reg[1] + 1);
+          cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
+          iWidth = cWidth * (BX_VGA_THIS s.CRTC.reg[1] + 1);
           iHeight = VDE+1;
         }
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) )
 	{
-	  bx_gui->dimension_update(iWidth, iHeight, MSL+1);
+	  bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	  old_MSL = MSL;
@@ -1735,8 +1739,8 @@ bx_vga_c::update(void)
           cursor_y = 0xffff;
           }
         else {
-          cursor_x = ((cursor_address - start_address)/2) % (iWidth/8);
-          cursor_y = ((cursor_address - start_address)/2) / (iWidth/8);
+          cursor_x = ((cursor_address - start_address)/2) % (iWidth/cWidth);
+          cursor_y = ((cursor_address - start_address)/2) / (iWidth/cWidth);
           }
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.64 2003-05-11 08:29:23 vruppert Exp $
+// $Id: x.cc,v 1.65 2003-05-11 15:07:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1299,9 +1299,12 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
 
 
   void
-bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
   if (fheight > 0) {
+    if (fwidth != 8) {
+      x = x * 8 / fwidth;
+    }
     font_height = fheight;
     font_width = 8;
     columns = x / font_width;

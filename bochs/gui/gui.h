@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.37 2003-05-07 19:15:46 vruppert Exp $
+// $Id: gui.h,v 1.38 2003-05-11 15:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,6 +31,7 @@ typedef struct bx_vga_tminfo_t {
   Bit16u line_compare;
   Bit8u h_panning;
   Bit8u v_panning;
+  bx_bool line_graphics;
 };
 
 
@@ -55,7 +56,7 @@ public:
   virtual void flush(void) = 0;
   virtual void clear_screen(void) = 0;
   virtual bx_bool palette_change(unsigned index, unsigned red, unsigned green, unsigned blue) = 0;
-  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0) = 0;
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0, unsigned fwidth=0) = 0;
   virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim) = 0;
   virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)) = 0;
   virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id) = 0;
@@ -156,7 +157,8 @@ protected:
   virtual void clear_screen(void);                                            \
   virtual bx_bool palette_change(unsigned index,                              \
       unsigned red, unsigned green, unsigned blue);                           \
-  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);  \
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
+                                unsigned fwidth=0);                           \
   virtual unsigned create_bitmap(const unsigned char *bmap,                   \
       unsigned xdim, unsigned ydim);                                          \
   virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \

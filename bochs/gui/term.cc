@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.26 2003-05-07 19:15:46 vruppert Exp $
+// $Id: term.cc,v 1.27 2003-05-11 15:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -621,11 +621,12 @@ bx_term_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
 	void
-bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
 	UNUSED(x);
 	UNUSED(y);
 	UNUSED(fheight);
+	UNUSED(fwidth);
 }
 
 

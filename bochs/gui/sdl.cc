@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.35 2003-05-10 17:03:36 vruppert Exp $
+// $Id: sdl.cc,v 1.36 2003-05-11 15:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -273,7 +273,7 @@ void bx_sdl_gui_c::text_update(
     bx_vga_tminfo_t tm_info,
     unsigned rows)
 {
-  unsigned char font_row, *pfont_row, *old_line, *new_line;
+  unsigned char *pfont_row, *old_line, *new_line;
   unsigned long x,y;
   int hchars,fontrows,fontpixels;
   int fgcolor_ndx;
@@ -282,8 +282,9 @@ void bx_sdl_gui_c::text_update(
   Uint32 bgcolor;
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
-  Bit8u cs_line, mask, cfwidth, cfheight;
-  bx_bool invert, forceUpdate;
+  Bit16u font_row, mask;
+  Bit8u cs_line, cfwidth, cfheight;
+  bx_bool gfxcharw9, invert, forceUpdate;
 
   forceUpdate = 0;
   if(charmap_updated)
@@ -357,7 +358,8 @@ void bx_sdl_gui_c::text_update(
 	fgcolor = palette[fgcolor_ndx];
 	bgcolor = palette[bgcolor_ndx];
 	invert = ( (y == cursor_y) && (x == cursor_x) && (tm_info.cs_start < tm_info.cs_end) );
-	
+	gfxcharw9 = ( (tm_info.line_graphics) && ((new_text[0] & 0xE0) == 0xC0) );
+
 	// Display this one char
 	fontrows = cfheight;
 	if (y > 0)
@@ -372,6 +374,14 @@ void bx_sdl_gui_c::text_update(
 	do
 	{
 	  font_row = *pfont_row++;
+	  if (gfxcharw9)
+	  {
+	    font_row = (font_row << 1) | (font_row & 0x01);
+	  }
+	  else
+	  {
+	    font_row <<= 1;
+	  }
 	  if (hchars > textres_x)
 	  {
 	    font_row <<= h_panning;
@@ -379,12 +389,12 @@ void bx_sdl_gui_c::text_update(
 	  fontpixels = cfwidth;
 	  cs_line = (fontheight - fontrows);
 	  if( (invert) && (cs_line >= tm_info.cs_start) && (cs_line <= tm_info.cs_end) )
-	    mask = 0x80;
+	    mask = 0x100;
 	  else
 	    mask = 0x00;
 	  do
 	  {
-	    if( (font_row & 0x80) == mask )
+	    if( (font_row & 0x100) == mask )
 	      *buf = bgcolor;
 	    else
 	      *buf = fgcolor;
@@ -864,12 +874,13 @@ bx_bool bx_sdl_gui_c::palette_change(
 void bx_sdl_gui_c::dimension_update(
     unsigned x,
     unsigned y,
-    unsigned fheight)
+    unsigned fheight,
+    unsigned fwidth)
 {
   if( fheight > 0 )
   {
     fontheight = fheight;
-    fontwidth = 8;
+    fontwidth = fwidth;
     textres_x = x / fontwidth;
     textres_y = y / fontheight;
   }
