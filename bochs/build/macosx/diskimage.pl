@@ -42,21 +42,27 @@ die "err: $folderName is not a directory\n" if(!-d $fullfolderPath);
 die "err: du failed with $?\n" if($?);
 
 # Inflate $folderSize for disk image overhead. Minimum 5 MB disk
-local $fiveMBImage=10240;
+local $fiveMBImage=20*(2048);
+# BBD: I had to raise this to 20meg or the ditto command would run 
+# out of disk space.  Apparently the technique of measuring the
+# amount of space required is not working right.
 
-$imageSectors = $folderSize + int($folderSize * 0.08);
+$imageSectors = $folderSize + int($folderSize * 0.15);
 if($imageSectors < $fiveMBImage)
 {
 	$imageSectors = $fiveMBImage;
 }
+print "Minimum sectors = $fiveMBImage\n";
+print "Folder sectors = $folderSize\n";
+print "Image sectors = $imageSectors\n";
 
 # Create image, overwriting prior version
 `hdiutil create -ov -sectors $imageSectors $imageTemp`;
 die "err: hdiutil create failed with $?\n" if($?);
 
 # Initialize the image
-local $hdid_info=`hdiutil attach -nomount $imageTemp`;
-die "err: hdiutil attach -nomount failed with $?\n" if($?);
+local $hdid_info=`hdid -nomount $imageTemp`;
+die "err: hdid  -nomount failed with $?\n" if($?);
 
 $hdid_info =~ s/( |\t|\n)+/~!/g;
 local (@hdid_info) = split(m/~!/, $hdid_info);
@@ -74,7 +80,7 @@ $hfs_dev =~ s/disk/rdisk/;
 if($?)
 {
 	local $err = $?;
-	`hdiutil detach $disk_dev`;
+	`hdiutil eject $disk_dev`;
 	die "err: newfs_hfs failed with $err\n";
 }
 
@@ -85,7 +91,7 @@ if($?)
 if($?)
 {
 	local $err = $?;
-	`hdiutil detach $disk_dev`;
+	`hdiutil eject $disk_dev`;
 	die "err: mount failed with $err\n";
 }
 
@@ -94,12 +100,12 @@ if($?)
 {
 	local $err = $?;
 	`umount $mount_dev`;
-	`hdiutil detach $disk_dev`;
+	`hdiutil eject $disk_dev`;
 	`rmdir $mount_point`;
 	die "err: ditto failed with $err\n";
 }
 `umount $mount_dev`;
-`hdiutil detach $disk_dev`;
+`hdiutil eject $disk_dev`;
 `rmdir $mount_point`;
 
 # Create the compressed image
