@@ -23,6 +23,7 @@
 
 
 #include "bochs.h"
+#include <assert.h>
 #include "state_file.h"
 
 extern "C" {
@@ -102,33 +103,40 @@ iofunctions::flush(void) {
 
 void
 iofunctions::init(void) {
+	// iofunctions methods must not be called before this magic
+	// number is set.
 	magic=MAGIC_LOGNUM;
 	showtick = 1;
-	logfd = NULL;
 	init_log(stderr);
 }
 
 void
 iofunctions::init_log(char *fn)
 {
-	logfd = stderr;
-	logfn = "/dev/stderr";
-	if( strcmp( fn, "-" ) ) {
-		logfd = fopen(fn, "w");
-		if(magic == MAGIC_LOGNUM && logfd != NULL) {
-			logfn = strdup(fn);
-			out( IOLOG, INFO, "[IO  ]", "opened log file '%s'.\n", fn );
+	assert (magic==MAGIC_LOGNUM);
+	// use newfd/newfn so that we can log the message to the OLD log
+	// file descriptor.
+	FILE *newfd = stderr;
+	char *newfn = "/dev/stderr";
+	if( strcmp( fn, "-" ) != 0 ) {
+		newfd = fopen(fn, "w");
+		if(newfd != NULL) {
+			newfn = strdup(fn);
+			out( IOLOG, LOGLEV_INFO, "[IO  ]", "opened log file '%s'.\n", fn );
 		} else {
-			out( IOLOG, INFO, "[IO  ]", "log file '%s' not there?\n", fn);
-			logfd = NULL;
+			out( IOLOG, LOGLEV_INFO, "[IO  ]", "log file '%s' not there?\n", fn);
+			newfd = NULL;
 			logfn = "(none)";
 		}
 	}
+	logfd = newfd;
+	logfn = newfn;
 }
 
 void
 iofunctions::init_log(FILE *fs)
 {
+	assert (magic==MAGIC_LOGNUM);
 	logfd = fs;
 
 	if(fs == stderr) {
@@ -143,6 +151,7 @@ iofunctions::init_log(FILE *fs)
 void
 iofunctions::init_log(int fd)
 {
+	assert (magic==MAGIC_LOGNUM);
 	FILE *tmpfd;
 	if( (tmpfd = fdopen(fd,"w")) == NULL ) {
 		fprintf(stderr, "Couldn't open fd %d as a stream for writing\n",
@@ -162,8 +171,24 @@ FILE *
 iofunctions::out(int f, int l, char *prefix, char *fmt, ...)
 {
 	va_list ap;
-	FILE *filst;
 
+	assert (magic==MAGIC_LOGNUM);
+	assert (this != NULL);
+	assert (logfd != NULL);
+	if( showtick ) {
+		fprintf(logfd, "%010lld ", bx_pc_system.time_ticks());
+	}
+	if(prefix != NULL) {
+		fprintf(logfd, "%s ", prefix);
+	}
+	va_start(ap, fmt);
+	vfprintf(logfd, fmt, ap);
+	va_end(ap);
+	fflush(logfd);
+	return logfd;
+
+#if 0
+	FILE *filst;
 	/* Unfortunately, this can get called before being instantiated. */
 	if(this == NULL || magic != MAGIC_LOGNUM) {
 		filst = stderr;
@@ -192,20 +217,21 @@ iofunctions::out(int f, int l, char *prefix, char *fmt, ...)
 	va_end(ap);
 	fflush(filst);
 	return filst;
+#endif
 }
 
 iofunctions::iofunctions(char *fn)
 {
 	init();
 	init_log(fn);
-	out( IOLOG, INFO, "[IO  ]", "Output log initialized: '%s'.\n", logfn);
+	out( IOLOG, LOGLEV_INFO, "[IO  ]", "Output log initialized: '%s'.\n", logfn);
 }
 
 iofunctions::iofunctions(int fd)
 {
 	init();
 	init_log(fd);
-	out( IOLOG, INFO, "[IO  ]" , "Output log initialized: '%s'.\n", logfn );
+	out( IOLOG, LOGLEV_INFO, "[IO  ]" , "Output log initialized: '%s'.\n", logfn );
 }
 	
 iofunctions::iofunctions(void)
@@ -215,8 +241,9 @@ iofunctions::iofunctions(void)
 
 iofunctions::~iofunctions(void)
 {
-	this->magic=0;
+	// flush before erasing magic number, or flush does nothing.
 	this->flush();
+	this->magic=0;
 }
 
 logfunctions::logfunctions(void)
@@ -226,26 +253,35 @@ logfunctions::logfunctions(void)
 	setio(io);
 }
 
+logfunctions::logfunctions(iofunc_t *iofunc)
+{
+	setprefix("[GEN ]", __FILE__, __LINE__);
+	settype(GENLOG);
+	setio(iofunc);
+}
+
+logfunctions::~logfunctions(void)
+{
+  fprintf (stderr, "logfunctions::~logfunctions was called\n");
+}
+
 void
 logfunctions::setio(iofunc_t *i)
 {
 	this->logio = i;
-	return;
 }
-	
+
 void
 logfunctions::setprefix(char *p,char *file, int line)
 {
 	//fprintf(stderr,"(this:0x%x) file:line -> %s,%d prefix:%s\n",this,file,line,p);
-	this->prefix=p;
-	return;
+	this->prefix=strdup(p);
 }
 
 void
 logfunctions::settype(int t)
 {
 	type=t;
-	return;
 }
 
 void
@@ -254,19 +290,24 @@ logfunctions::info(char *fmt, ...)
 	va_list ap;
 	FILE *fs;
 
-	fs = this->logio->out(this->type,INFO,this->prefix, "%s", "");
+	assert (this != NULL);
+	assert (this->logio != NULL);
+	fs = this->logio->out(this->type,LOGLEV_INFO,this->prefix, "%s", "");
 
 	va_start(ap, fmt);
 	vfprintf(fs,fmt,ap);
 	va_end(ap);
 }
+
 void
 logfunctions::error(char *fmt, ...)
 {
 	va_list ap;
 	FILE *fs;
 
-	fs = this->logio->out(this->type,ERROR,this->prefix, "%s", "");
+	assert (this != NULL);
+	assert (this->logio != NULL);
+	fs = this->logio->out(this->type,LOGLEV_ERROR,this->prefix, "%s", "");
 
 	va_start(ap, fmt);
 	vfprintf(fs,fmt,ap);
@@ -278,33 +319,48 @@ logfunctions::panic(char *fmt, ...)
 	va_list ap;
 	FILE *fs;
 
-	fs = this->logio->out(this->type,PANIC,this->prefix, "%s", "");
+	assert (this != NULL);
+	assert (this->logio != NULL);
+	fs = this->logio->out(this->type,LOGLEV_PANIC,this->prefix, "%s", "");
 
 	va_start(ap, fmt);
 	vfprintf(fs,fmt,ap);
 	va_end(ap);
+	bx_panic ("logfunctions::panic!");
 }
+
 void
 logfunctions::ldebug(char *fmt, ...)
 {
 	va_list ap;
 	FILE *fs;
 
-	fs = this->logio->out(this->type,DEBUG,this->prefix, "%s", "");
+	assert (this != NULL);
+	assert (this->logio != NULL);
+	fs = this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, "%s", "");
 
 	va_start(ap, fmt);
 	vfprintf(fs,fmt,ap);
 	va_end(ap);
 }
-	
+
 #endif
 
-iofunc_t *io;
-logfunc_t *genlog;
+iofunc_t *io = NULL;
+logfunc_t *genlog = NULL;
 
 int
 main(int argc, char *argv[])
 {
+  // To deal with initialization order problems inherent in C++, use
+  // the macros SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog"
+  // in all constructors or functions called by constructors.  The macros
+  // test for NULL and create the object if necessary, then return it.
+  // Ensure that io and genlog get created, by making one reference to
+  // each macro right here.  All other code can call them directly.
+  SAFE_GET_IOFUNC();
+  SAFE_GET_GENLOG();
+
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_bochs_init() and cpu_loop()
