@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.6 2002-11-30 17:15:59 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.7 2002-12-10 22:40:16 cbothamy Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -154,11 +154,11 @@ struct fpu__reg {
 } GCC_ATTRIBUTE((aligned(16), packed));
 
 #ifdef EMU_BIG_ENDIAN
-#define MAKE_REG(s,e,l,h) { h, l, \
-                           ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)) }
+#define MAKE_REG(s,e,l,h) { 0,0,0, \
+                           ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)) , h, l}
 #else
 #define MAKE_REG(s,e,l,h) { l, h, \
-                           ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)) }
+                           ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)), 0,0,0 }
 #endif
 
 typedef void (*FUNC)(void);
