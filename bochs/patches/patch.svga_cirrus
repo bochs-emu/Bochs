@@ -47,6 +47,8 @@ Detailed description:
     - fixed sequencer register 0x06 (WHATVGA.EXE detects Cirrus VGA)
     - fixed some compile problems
     - prepared memory PnP support
+    - some vga register now support 16-bit reads
+    - a bunch of updates sent by suzu295@melu.jp
 
 Patch was created with:
   diff -urN
@@ -161,8 +163,8 @@ diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
    ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
 diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 --- ../bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.cc	2004-06-10 09:37:48.000000000 +0200
-@@ -0,0 +1,2758 @@
++++ ./iodev/svga_cirrus.cc	2004-06-10 21:11:31.000000000 +0200
+@@ -0,0 +1,2762 @@
 +//
 +// limited PCI/ISA CLGD5446 support.
 +//
@@ -234,13 +236,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +#define ID_CLGD5446  (0x2E<<2)
 +
 +// sequencer 0x07
-+#define CIRRUS_SR7_BPP_MASK           0x0f
-+#define CIRRUS_SR7_BPP_VGA            0x00
-+#define CIRRUS_SR7_BPP_8              0x01
-+#define CIRRUS_SR7_BPP_16_DOUBLEVCLK  0x03
-+#define CIRRUS_SR7_BPP_24             0x05
-+#define CIRRUS_SR7_BPP_16             0x07
-+#define CIRRUS_SR7_BPP_32             0x09
++#define CIRRUS_SR7_BPP_MASK           0x0e
++#define CIRRUS_SR7_BPP_8              0x00
++#define CIRRUS_SR7_BPP_16_DOUBLEVCLK  0x02
++#define CIRRUS_SR7_BPP_24             0x04
++#define CIRRUS_SR7_BPP_16             0x06
++#define CIRRUS_SR7_BPP_32             0x08
 +#define CIRRUS_SR7_ISAADDR_MASK       0xe0
 +
 +// sequencer 0x0f
@@ -481,7 +482,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +  // 0x3c4-0x3c5
 +  BX_CIRRUS_THIS sequencer.reg[0x06] = 0xff;
-+  BX_CIRRUS_THIS sequencer.reg[0x07] = CIRRUS_SR7_BPP_VGA; // 0xf0:linearbase(0x00 if disabled)
++  BX_CIRRUS_THIS sequencer.reg[0x07] = 0x00; // 0xf0:linearbase(0x00 if disabled)
 +  BX_CIRRUS_THIS sequencer.reg[0x0F] = CIRRUS_MEMSIZE_2M;
 +#if BX_SUPPORT_SVGA_CIRRUS_PCI
 +  BX_CIRRUS_THIS sequencer.reg[0x17] = CIRRUS_BUSTYPE_PCI;
@@ -547,6 +548,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    }
 +}
 +
++#if BX_SUPPORT_SVGA_CIRRUS_PCI
 +  bx_bool
 +bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned long len,
 +                                          void *data, void *param)
@@ -569,6 +571,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  }
 +  return 1;
 +}
++#endif
 +
 +  Bit8u
 +bx_svga_cirrus_c::mem_read(Bit32u addr)
@@ -665,6 +668,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  return 0xff;
 +}
 +
++#if BX_SUPPORT_SVGA_CIRRUS_PCI
 +  bx_bool
 +bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len,
 +                                void *data, void *param)
@@ -687,6 +691,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  }
 +  return 1;
 +}
++#endif
 +
 +  void
 +bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
@@ -819,6 +824,13 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  UNUSED(this_ptr);
 +#endif // !BX_USE_CIRRUS_SMF
 +
++  if ((io_len == 2) && ((address & 1) == 0)) {
++    Bit32u value;
++    value = (Bit32u)SVGA_READ(address,1);
++    value = (Bit32u)SVGA_READ(address+1,1) << 8;
++    return value;
++    }
++
 +  if (io_len != 1) {
 +    BX_PANIC(("SVGA read: io_len != 1"));
 +    }
@@ -836,8 +848,10 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    case 0x03c4: /* VGA: Sequencer Index Register */
 +      return BX_CIRRUS_THIS sequencer.index;
 +    case 0x03c5: /* VGA: Sequencer Registers */
-+      if (BX_CIRRUS_THIS is_unlocked())
++      if ((BX_CIRRUS_THIS sequencer.index == 0x06) ||
++          (BX_CIRRUS_THIS is_unlocked())) {
 +        return BX_CIRRUS_THIS svga_read_sequencer(address,BX_CIRRUS_THIS sequencer.index);
++      }
 +      break;
 +
 +    case 0x03c6: /* Hidden DAC */
@@ -917,8 +931,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      if (BX_CIRRUS_THIS is_unlocked()) {
 +        if (BX_CIRRUS_THIS hidden_dac.index == 4) {
 +          BX_CIRRUS_THIS hidden_dac.reg = value;
-+          }
-+        if (value == 0x00) {
++          BX_CIRRUS_THIS hidden_dac.index++;
++        } else {
 +          BX_CIRRUS_THIS hidden_dac.index = 0;
 +        }
 +        return;
@@ -1003,31 +1017,25 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +       + ((BX_CIRRUS_THIS crtc.reg[0x1B] & 0x10) << 8);
 +  iBpp = 8;
 +  iDispBpp = 8;
-+  switch (BX_CIRRUS_THIS sequencer.reg[0x07] & CIRRUS_SR7_BPP_MASK) {
-+    case CIRRUS_SR7_BPP_VGA:
-+      iBpp = 4;
-+      iDispBpp = 8;
-+      width <<= 4;
-+      break;
++  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x1) == 0) {
++    BX_CIRRUS_THIS svga_draw_special = false;
++  } else {
++    switch (BX_CIRRUS_THIS sequencer.reg[0x07] & CIRRUS_SR7_BPP_MASK) {
 +    case CIRRUS_SR7_BPP_8:
 +      iBpp = 8;
 +      iDispBpp = 8;
 +      width <<= 3;
 +      break;
 +    case CIRRUS_SR7_BPP_16_DOUBLEVCLK:
++    case CIRRUS_SR7_BPP_16:
 +      iBpp = 16;
-+      iDispBpp = 15;
++      iDispBpp = (BX_CIRRUS_THIS hidden_dac.reg & 0x1) ? 16 : 15;
 +      width <<= 2;
 +      break;
 +    case CIRRUS_SR7_BPP_24:
 +      iBpp = 24;
 +      iDispBpp = 24;
 +      width = (width << 3) / 3;
-+      break;
-+    case CIRRUS_SR7_BPP_16:
-+      iBpp = 16;
-+      iDispBpp = 15;
-+      width <<= 2;
 +      break;
 +    case CIRRUS_SR7_BPP_32:
 +      iBpp = 32;
@@ -1038,10 +1046,10 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      BX_PANIC(("unknown bpp - seqencer.reg[0x07] = %02x",BX_CIRRUS_THIS sequencer.reg[0x07]));
 +      break;
 +    }
-+
++    BX_CIRRUS_THIS svga_draw_special = true;
++  }
 +  BX_INFO(("switched to %u x %u x %u",width,iHeight,iBpp));
 +
-+  BX_CIRRUS_THIS svga_draw_special = (iBpp >= 8);
 +  BX_CIRRUS_THIS svga_xres = width;
 +  BX_CIRRUS_THIS svga_yres = iHeight;
 +  BX_CIRRUS_THIS svga_bpp = iBpp;
@@ -1342,17 +1350,15 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    case 0x04:  // VGA
 +      break;
 +    case 0x6: // cirrus special
++      value &= 0x17;
 +      if (value == 0x12) {
 +        BX_CIRRUS_THIS svga_unlock_special = true;
-+        BX_CIRRUS_THIS svga_needs_update_mode = true;
 +        BX_CIRRUS_THIS sequencer.reg[0x6] = 0x12;
-+        return;
 +        }
-+      else if (value == 0xf) {
++      else {
 +        BX_CIRRUS_THIS svga_unlock_special = false;
-+        BX_CIRRUS_THIS svga_needs_update_mode = true;
++        BX_CIRRUS_THIS sequencer.reg[0x6] = 0x0f;
 +        }
-+      BX_CIRRUS_THIS sequencer.reg[0x6] = 0x0f;
 +      return;
 +    case 0x12:
 +      // FIXME - update only the cursor region.
@@ -3154,7 +3160,7 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +#endif // BX_SUPPORT_SVGA_CIRRUS
 diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
 --- ../bochs/iodev/vga.cc	2004-06-06 19:01:12.000000000 +0200
-+++ ./iodev/vga.cc	2004-06-06 21:13:46.000000000 +0200
++++ ./iodev/vga.cc	2004-06-10 20:55:43.000000000 +0200
 @@ -93,6 +93,13 @@
  
  unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0, old_BPP = 0;
@@ -3240,7 +3246,7 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
    for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
      DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
      DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-@@ -350,6 +336,47 @@
+@@ -350,6 +336,52 @@
  }
  
    void
@@ -3257,13 +3263,18 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
 +    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
 +    }
 +
-+  for (addr=0x03C0; addr<=0x03CF; addr++) {
++  for (addr=0x03C0; addr<=0x03CD; addr++) {
 +    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
 +    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
 +    }
 +
++  for (addr=0x03CE; addr<=0x03CF; addr++) {
++    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
++    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
++    }
++
 +  for (addr=0x03D4; addr<=0x03D5; addr++) {
-+    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
++    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
 +    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
 +    }
 +
@@ -3288,7 +3299,49 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
  bx_vga_c::reset(unsigned type)
  {
  }
-@@ -2085,20 +2112,22 @@
+@@ -435,7 +467,7 @@
+ #endif  // !BX_USE_VGA_SMF
+   bx_bool  horiz_retrace = 0, vert_retrace = 0;
+   Bit64u usec;
+-  Bit16u vertres;
++  Bit16u ret16, vertres;
+   Bit8u retval;
+ 
+ #if defined(VGA_TRACE_FEATURE)
+@@ -445,6 +477,17 @@
+ #define RETURN return
+ #endif
+ 
++  if (io_len == 2) {
++#if BX_USE_VGA_SMF
++    ret16 = bx_vga_c::read_handler(0, address, 1);
++    ret16 |= (bx_vga_c::read_handler(0, address+1, 1)) << 8;
++#else
++    ret16 = bx_vga_c::read(address, 1);
++    ret16 |= (bx_vga_c::read(address+1, 1) << 8;
++#endif
++    RETURN(ret16);
++    }
++
+ #ifdef __OS2__
+   if ( bx_options.videomode == BX_VIDEO_DIRECT )
+      {
+@@ -737,8 +780,12 @@
+ 
+ #if defined(VGA_TRACE_FEATURE)
+   read_return:
+-	BX_DEBUG(("8-bit read from %04x = %02x", (unsigned) address, ret));
+-  return ret;
++    if (io_len == 1) {
++      BX_DEBUG(("8-bit read from 0x%04x = 0x%02x", (unsigned) address, ret));
++    } else {
++      BX_DEBUG(("16-bit read from 0x%04x = 0x%04x", (unsigned) address, ret));
++    }
++    return ret;
+ #endif
+ }
+ #if defined(VGA_TRACE_FEATURE)
+@@ -2085,20 +2132,22 @@
  
        // 320 x 200 256 color mode: chained pixel representation
        BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] = value;
