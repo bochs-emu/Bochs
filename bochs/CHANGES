@@ -5,7 +5,7 @@ TO DO LIST:
 - check logs in gui
   - (DONE) carbon.cc
   - everyting else
-- check logs in iodev (Christophe is working on this, done biosdev to dma)
+- check logs in iodev (Christophe is working on this, done biosdev to keyboard)
 - (DONE) check logs in main directory
   - (DONE) check logs of configure.in
   - (DONE) Makefile.in
@@ -280,6 +280,7 @@ I'm listing them here to remind us about them:
     - implementation of the DMA controller reset (Volker)
     - the value of the command register must be always 0x00 (BX_ERROR fixed)
   - floppy (Volker)
+    - implemented Tape Drive Register (Dave)
     - added support for 360k floppy images
     - the skip flag (SK) in command 'read sector' is ignored now
     - floppy read and write function do not set the 'seek end' bit in status
@@ -288,22 +289,30 @@ I'm listing them here to remind us about them:
       The digital input register is now an array (DIR[4]).
     - apply patch [ 635021 ] floppy cleanup by Alex Thiel 
     - distinguish between floppy drive type and media type
-    - FIXME
   - hard drive
     - missing conditions for lower_irq() added (Volker)
     - several noncritical pancis replaced with BX_ERRORS and the controller
       returns an error code until we implement the features (Volker)
-    - FIXME
-  - ioapic
-    - FIXME
-  - iodebug
-    - FIXME
+    - applied patch from Carl Sopchak for booting  sco openserver
+    - allow disk block access only if concatenated images are not used
+      (Christophe)
+    - fix bug [ 419415 ] netbsd 1.5 rescue disk won't boot (Volker)
+    - multiple drq atapi data transfers corruption fixed (Christophe)
+    - added some commands to the unsupported "Set Feature" commands (Christophe)
+    - speedups in repeated IO transfers (Kevin)
+    - support for Peter Tattam's external disk simulator (Bryce)
+    - 4 channels / 8 devices support (Christophe)
+    - "inquiry" atapi command results corrected (Volker)
+    - check for incomplete devices configuration before starting the
+      simulation (Bryce)
+    - implemented the different bios disk translation scheme (Christophe)
   - keyboard and mouse
+    - add commands 0xd2, 0xdd and 0xdf (Dave)
+    - fix bug [ 613975 ] wxWindows: params redefined on restart (Bryce)
     - in function mouse_motion(): added parentheses to fix compilation problems
       with MSVC. See SF bug #575301. (Volker)
     - added missing register_irq() for the PS/2 mouse IRQ12 (Volker)
     - fix "AltGr" key on European keyboards wxWindows/win32, SDL (Volker)
-    - FIXME
   - NE2000
     - function reset() clears the IRQ line (Volker)
     - added TUN/TAP interface (Renzo Davoli, Christophe)
@@ -643,7 +652,6 @@ bug [ 533112 ] compile error in gui/siminterface.h
 bug [ 575349 ] Mac OS X cdrom_interface compile error
 bug [ 430982 ] HD lost ?
 bug [ 549452 ] bochsrc manpage belongs in section 5
-bug [ 419415 ] netbsd 1.5 rescue disk won't boot
 bug [ 503154 ] Very slow when no network activity
 bug [ 555562 ] gui.cc includes X windows headers
 bug [ 549821 ] warning proc_ctrl.cc line 1273: left-shift count >= type width
