@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.49 2002-04-10 23:23:00 instinc Exp $
+// $Id: rombios.c,v 1.50 2002-04-10 23:25:49 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -103,8 +103,7 @@
 //   - Current code is only able to boot mono-session cds 
 //   - Current code can not boot and emulate a hard-disk
 //     the bios will panic otherwise
-//   - Current code also use memory in EBDA segement. It's only 14+6 bytes so
-//     it could be moved in segment 0x40 (0x40:0xC0 seems to be available)
+//   - Current code also use memory in EBDA segement. 
 //   - I used cmos byte 0x3D to store extended information on boot-device
 //   - Code has to be modified modified to handle to handle multiple cdrom drives
 //   - Here are the cdrom boot failure codes:
@@ -751,7 +750,8 @@ typedef struct {
   #define REG_CONFIG_TYPE_ATA   0x02
   #define REG_CONFIG_TYPE_ATAPI 0x03
 
-  #define ATAPI_TYPE_CDROM	0x05
+  #define ATA_TYPE_HD    	0xFF
+  #define ATA_TYPE_CDROM	0x05
   
   #define DELAY400NS  { atapio_inbyte( CB_ASTAT ); atapio_inbyte( CB_ASTAT );  \
                         atapio_inbyte( CB_ASTAT ); atapio_inbyte( CB_ASTAT ); }
@@ -803,8 +803,8 @@ typedef struct {
     // returned by the reg_config() function.
     Bit8u  reg_config_info[BX_MAX_ATA_DEVICES];
 
-    // Type of atapi device 0 and 1
-    Bit8u  atapi_device_type[BX_MAX_ATA_DEVICES];
+    // Type of device 0 and 1
+    Bit8u  device_type[BX_MAX_ATA_DEVICES];
     
     // no delay if the flag is zero.
     Bit8u  reg_atapi_delay_flag;
@@ -848,7 +848,8 @@ typedef struct {
     Bit8u  active;
     Bit8u  media;
     Bit8u  emulated_drive;
-    Bit8u  device;
+    Bit8u  controller_index;
+    Bit16u device_spec;
     Bit32u ilba;
     Bit16u buffer_segment;
     Bit16u load_segment;
@@ -864,10 +865,12 @@ typedef struct {
   // for access to EBDA area
   typedef struct {
     unsigned char filler[0x5D]; // Can be splitted in data members if needed
-    atadrv_data_t atadrv_data;        // ATA/ATAPI Driver data
+    atadrv_data_t atadrv_data;  // ATA/ATAPI Driver data
 #if BX_ELTORITO_BOOT
     cdemu_data_t cdemu_data;    // El Torito Emulation data
 #endif // BX_ELTORITO_BOOT
+    Bit8u hdidmap[BX_MAX_ATA_DEVICES];  // map between bios hd id - 0x80 and ata channels
+    Bit8u cdidmap[BX_MAX_ATA_DEVICES];  // map between bios cd id - 0xE0 and ata channels
     } ebda_data_t;
   
   #define EbdaData ((ebda_data_t *) 0)
@@ -954,6 +957,7 @@ static void           int09_function();
 static void           int13_harddisk();
 static void           int13_cdrom();
 static void           int13_cdemu();
+static void           int13_eltorito();
 static void           int13_diskette_function();
 static void           int14_function();
 static void           int15_function();
@@ -1033,7 +1037,7 @@ Bit16u atapi_is_cdrom();
 Bit16u atapi_read_sectors2048();
 Bit16u atapi_read_sectors512();
 Bit16u atapi_read_sectors();
-void   ata_read_atapi_device_types();
+void   ata_read_device_types();
 void   ata_show_devices();
 Bit16u ata_is_ata();
 Bit16u ata_is_atapi();
@@ -1051,10 +1055,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.49 $";
-static char bios_date_string[] = "$Date: 2002-04-10 23:23:00 $";
+static char bios_cvs_version_string[] = "$Revision: 1.50 $";
+static char bios_date_string[] = "$Date: 2002-04-10 23:25:49 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.49 2002-04-10 23:23:00 instinc Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.50 2002-04-10 23:25:49 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3342,10 +3346,6 @@ printf("int13_f14\n");
     case 0x47: // IBM/MS extended seek
     case 0x48: // IBM/MS extended seek
     case 0x49: // IBM/MS extended media change
-    case 0x4a: // ElTorito - Initiate disk emu
-    case 0x4b: // ElTorito - Terminate disk emu
-    case 0x4c: // ElTorito - Initiate disk emu and boot
-    case 0x4d: // ElTorito - Return boot catalog
     case 0x4e: // ? - set hardware configuration
     case 0x50: // ? - send packet command
     case 0x66: // 
@@ -3376,25 +3376,26 @@ int13_cdrom(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   Bit16u error;
   Bit32u lba;
   Bit16u count,segment,offset, i;
+  Bit16u ebda_seg=read_word(0x40,0x0E);
 
   printf("BIOS: int13 cdrom: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
   printf("BIOS: int13 cdrom: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
   
-  device=GET_DL();
-
   set_disk_ret_status(0x00);
 
-  /* basic check : device should be 0x80+ */
-  if(device<0x80) {
+  /* basic check : device should be 0xE0+ */
+  if((GET_DL()<0xE0) || (GET_DL()>=0xE0+BX_MAX_ATA_DEVICES)) {
     SET_AH(0x01);
     set_disk_ret_status(0x01);
     SET_CF(); /* error occurred */
     return;
     }
-  else device -= 0x80;
 
-  /* basic check : device should be an ATAPI cdrom */
-  if((!ata_is_atapi(device))||(!atapi_is_cdrom(device))) {
+  // Get the ata channel
+  device=read_byte(ebda_seg,&EbdaData->cdidmap[GET_DL()-0xE0]);
+
+  /* basic check : device has to be valid  */
+  if(device>=BX_MAX_ATA_DEVICES) {
     SET_AH(0x01);
     set_disk_ret_status(0x01);
     SET_CF(); /* error occurred */
@@ -3499,27 +3500,70 @@ int13_cdrom(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
       return;
       break;
 
+    default:
+      panic("case 0x%x found in int13_cdrom()", (unsigned) GET_AH());
+      break;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// End of int13 for cdrom
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Start of int13 for eltorito functions
+// ---------------------------------------------------------------------------
+
+  void
+int13_eltorito(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
+  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
+{
+  Bit16u ebda_seg=read_word(0x40,0x0E);
+
+  printf("BIOS: int13 eltorito: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  printf("BIOS: int13 eltorito: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
+  
+  switch (GET_AH()) {
+
     // FIXME ElTorito Various. Should be implemented
     case 0x4a: // ElTorito - Initiate disk emu
     case 0x4c: // ElTorito - Initiate disk emu and boot
     case 0x4d: // ElTorito - Return Boot catalog
-      panic("Int13 cdrom call with AX=%04x. Please report\n",AX);
+      panic("Int13 eltorito call with AX=%04x. Please report\n",AX);
       SET_AH(0x01);  // code=invalid function in AH or invalid parameter
       set_disk_ret_status(0x01);
       SET_CF(); /* unsuccessful */
       return;
       break;
 
-    // all those functions should not be called when not emulating a device
     case 0x4b: // ElTorito - Terminate disk emu
-      SET_AH(0x01);  
-      set_disk_ret_status(0x01);
-      SET_CF(); 
+      // FIXME ElTorito Hardcoded
+      write_byte(DS,SI+0x00,0x13);
+      write_byte(DS,SI+0x01,read_byte(ebda_seg,&EbdaData->cdemu_data.media));
+      write_byte(DS,SI+0x02,read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive));
+      write_byte(DS,SI+0x03,read_byte(ebda_seg,&EbdaData->cdemu_data.media));
+      write_dword(DS,SI+0x04,read_dword(ebda_seg,&EbdaData->cdemu_data.ilba));
+      write_word(DS,SI+0x08,read_word(ebda_seg,&EbdaData->cdemu_data.device_spec));
+      write_word(DS,SI+0x0a,read_word(ebda_seg,&EbdaData->cdemu_data.buffer_segment));
+      write_word(DS,SI+0x0c,read_word(ebda_seg,&EbdaData->cdemu_data.load_segment));
+      write_word(DS,SI+0x0e,read_word(ebda_seg,&EbdaData->cdemu_data.sector_count));
+      write_byte(DS,SI+0x10,read_byte(ebda_seg,&EbdaData->cdemu_data.vcylinders));
+      write_byte(DS,SI+0x11,read_byte(ebda_seg,&EbdaData->cdemu_data.vsectors));
+      write_byte(DS,SI+0x12,read_byte(ebda_seg,&EbdaData->cdemu_data.vheads));
+
+      SET_AH(0x00);  
+      CLEAR_CF(); 
+
+      // If we have to terminate emulation
+      if(GET_AL()== 0x00) {
+        // FIXME ElTorito Various. Should be handled accordingly to spec
+        write_byte(ebda_seg,&EbdaData->cdemu_data.active, 0x00); // bye bye
+        }
       return;
       break;
 
     default:
-      panic("case 0x%x found in int13_cdrom()", (unsigned) GET_AH());
+      panic("case 0x%x found in int13_eltorito()", (unsigned) GET_AH());
       break;
     }
 }
@@ -3550,8 +3594,9 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   
   /* at this point, we are emulating a floppy/harddisk */
   // FIXME ElTorito Harddisk. Harddisk emulation is not implemented
-
-  device=read_byte(ebda_seg,&EbdaData->cdemu_data.device);
+  
+  // FIXME ElTorito Various. Should handle the controller
+  device=read_byte(ebda_seg,&EbdaData->cdemu_data.device_spec);
 
   set_disk_ret_status(0x00);
 
@@ -3705,26 +3750,6 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       SET_AH(0x01);  // code=invalid function in AH or invalid parameter
       set_disk_ret_status(0x01);
       SET_CF(); /* unsuccessful */
-      return;
-      break;
-
-    // all those functions should not be called when emulating a device
-    case 0x4a: // ElTorito - Initiate disk emu
-    case 0x4c: // ElTorito - Initiate disk emu and boot
-    case 0x4d: // ElTorito - Return Boot catalog
-      panic("Int13 cdemu call with AX=%04x. Please report\n",AX);
-      SET_AH(0x01);  // code=invalid function in AH or invalid parameter
-      set_disk_ret_status(0x01);
-      SET_CF(); /* unsuccessful */
-      return;
-      break;
-
-    // FIXME ElTorito Various. Should be handled accordingly to spec
-    case 0x4b: // ElTorito - Terminate disk emu
-      write_byte(ebda_seg,&EbdaData->cdemu_data.active, 0x00); // bye bye
-      SET_AH(0x00);  
-      set_disk_ret_status(0x00);
-      CLEAR_CF(); 
       return;
       break;
 
@@ -4624,7 +4649,7 @@ printf("floppy f18\n");
         printf("floppy: int13: 0x%02x\n", ah);
         return;
         }
-      panic("int13_diskette: AH=%02x", ah);
+      printf("int13_diskette: AH=%02x", ah);
     }
 }
 #else  // #if BX_SUPPORT_FLOPPY
@@ -4741,18 +4766,18 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
   if (drive == 0x80) {
     hd_type = inb_cmos(0x12) & 0xf0;
     if (hd_type != 0xf0)
-      panic(panic_msg_reg12h,0);
+      printf(panic_msg_reg12h,0);
     hd_type = inb_cmos(0x19); // HD0: extended type
     if (hd_type != 47)
-      panic(panic_msg_reg19h,0,0x19);
+      printf(panic_msg_reg19h,0,0x19);
     iobase = 0x1b;
   } else {
     hd_type = inb_cmos(0x12) & 0x0f;
     if (hd_type != 0x0f)
-      panic(panic_msg_reg12h,1);
+      printf(panic_msg_reg12h,1);
     hd_type = inb_cmos(0x1a); // HD0: extended type
     if (hd_type != 47)
-      panic(panic_msg_reg19h,0,0x1a);
+      printf(panic_msg_reg19h,0,0x1a);
     iobase = 0x24;
   }
 
@@ -7823,15 +7848,14 @@ atapi_is_cdrom(device)
   Bit8u device;
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
-  Bit8u  ldev = device & 0x7f;  
 
-  if(ldev>=BX_MAX_ATA_DEVICES)
+  if(device>=BX_MAX_ATA_DEVICES)
     return 0;
 
-  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ldev])!=REG_CONFIG_TYPE_ATAPI)
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device])!=REG_CONFIG_TYPE_ATAPI)
     return 0;
 
-  if(read_byte(ebda_seg,&EbdaData->atadrv_data.atapi_device_type[ldev])!=ATAPI_TYPE_CDROM)
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.device_type[device])!=ATA_TYPE_CDROM)
     return 0;
 
   return 1;
@@ -7926,25 +7950,45 @@ atapi_read_sectors(device,count,lba,head,tail,bufseg,bufoff)
 }
 
   void 
-ata_read_atapi_device_types( )
+ata_read_device_types( )
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit8u  buffer[0x800];
   Bit16u device;
-  Bit8u  type;
+  Bit8u  hdid=0,cdid=0,type;
   
   atareg_reset(0,0);
 
-  for(device=0;device<2;device++) {
+  // Initialisation of the disk and cdrom maps
+  for(device=0;device<BX_MAX_ATA_DEVICES;device++) {
+    write_byte(ebda_seg,&EbdaData->hdidmap[device],BX_MAX_ATA_DEVICES);
+    write_byte(ebda_seg,&EbdaData->cdidmap[device],BX_MAX_ATA_DEVICES);
+    }
+
+  for(device=0;device<BX_MAX_ATA_DEVICES;device++) {
     if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device])==REG_CONFIG_TYPE_ATAPI) {
       ata_clear_buffer(get_SS(),buffer,0x800);
       ata_identify(device,get_SS(),buffer);
       
       type=buffer[1]&0x1F;
       }
+    else if (read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device])==REG_CONFIG_TYPE_ATA) {
+      type=ATA_TYPE_HD;
+      }
     else type=0;
   
-    write_byte(ebda_seg,&EbdaData->atadrv_data.atapi_device_type[device],type);
+    // fill the hd and cd maps 
+    if(type==ATA_TYPE_HD) {
+      write_byte(ebda_seg,&EbdaData->hdidmap[hdid],device);
+      hdid+=1;
+      }
+    else if (type==ATA_TYPE_CDROM) {
+      write_byte(ebda_seg,&EbdaData->cdidmap[cdid],device);
+      cdid+=1;
+      }
+
+    // save the device type
+    write_byte(ebda_seg,&EbdaData->atadrv_data.device_type[device],type);
     }
 }
 
@@ -7953,12 +7997,11 @@ ata_is_ata(device)
   Bit8u device;
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
-  Bit8u  ldev = device & 0x7f;  
   
-  if(ldev>=BX_MAX_ATA_DEVICES)
+  if(device>=BX_MAX_ATA_DEVICES)
     return 0;
 
-  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ldev])!=REG_CONFIG_TYPE_ATA)
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device])!=REG_CONFIG_TYPE_ATA)
     return 0;
 
   return 1;
@@ -7969,12 +8012,11 @@ ata_is_atapi(device)
   Bit8u device;
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
-  Bit8u  ldev = device & 0x7f;  
 
-  if(ldev>=BX_MAX_ATA_DEVICES)
+  if(device>=BX_MAX_ATA_DEVICES)
     return 0;
 
-  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[ldev])!=REG_CONFIG_TYPE_ATAPI)
+  if(read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device])!=REG_CONFIG_TYPE_ATAPI)
     return 0;
 
   return 1;
@@ -7988,14 +8030,14 @@ ata_show_devices( )
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit8u  buffer[0x800],model[41],version;
-  Bit8u  atapidev, atatype;
+  Bit8u  atadev, atatype;
   Bit16u i, device, type, ataversion;
  
   atareg_reset(0,0);
 
   for(device=0;device<2;device++) {
     atatype=read_byte(ebda_seg,&EbdaData->atadrv_data.reg_config_info[device]);
-    atapidev=read_byte(ebda_seg,&EbdaData->atadrv_data.atapi_device_type[device]);
+    atadev=read_byte(ebda_seg,&EbdaData->atadrv_data.device_type[device]);
     if(atatype>REG_CONFIG_TYPE_NONE){
       if(atatype>REG_CONFIG_TYPE_UNKN){
         ata_clear_buffer(get_SS(),buffer,0x800);
@@ -8020,7 +8062,7 @@ ata_show_devices( )
             }
 
           if(atatype==REG_CONFIG_TYPE_ATA)type=0;
-          else if(atapidev==ATAPI_TYPE_CDROM)type=1;
+          else if(atadev==ATA_TYPE_CDROM)type=1;
           else type=2;
 
           bios_printf(BIOS_PRINTF_SCREEN, "IDE0-%d: ",device);
@@ -8160,7 +8202,8 @@ cdrom_boot()
     panic("El-Torito: Cannot boot as a harddisk yet\n");
 
   // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 1. Should be fixed if two ide interface
-  write_byte(ebda_seg,&EbdaData->cdemu_data.device,0x01);
+  write_byte(ebda_seg,&EbdaData->cdemu_data.controller_index,0x00);
+  write_byte(ebda_seg,&EbdaData->cdemu_data.device_spec,0x01);
 
   boot_segment=buffer[0x23]*0x100+buffer[0x22];
   if(boot_segment==0x0000)boot_segment=0x07C0;
@@ -8207,16 +8250,15 @@ cdrom_boot()
   if(read_byte(ebda_seg,&EbdaData->cdemu_data.media)!=0)
     write_byte(ebda_seg,&EbdaData->cdemu_data.active,0x01);
 
-  // if we are emulating a device
-  if(read_byte(ebda_seg,&EbdaData->cdemu_data.media)!=0) {
-    // Return emulated drive + noerror 
-    return (read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive)*0x100)+0;
+  // if we are not emulating a device
+  if(read_byte(ebda_seg,&EbdaData->cdemu_data.media)==0) {
+    // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 0xE0. 
+    // Win2000 cd boot needs this
+    write_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive,0xE0);
     }
-  else {
-    // FIXME ElTorito Hardcoded. cdrom is hardcoded as device 0x81. 
-    // Return boot device + noerror. Win2000 cd boot needs this
-    return 0x8100;
-    }
+  
+  // return the boot drive + no error
+  return (read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive)*0x100)+0;
 }
 
 // ---------------------------------------------------------------------------
@@ -8282,8 +8324,22 @@ carry_set:
 ;----------------------
 ;- INT13h (relocated) -
 ;----------------------
+;
+; int13_relocated is a little bit messed up since I played with it
+; I have to rewrite it:
+;   - call a function that detect which function to call
+;   - make all called C function get the same parameters list
+;
 int13_relocated:
 #if BX_ELTORITO_BOOT
+// check for an eltorito function
+  cmp   ah,#0x4a
+  jb    int13_not_eltorito
+  cmp   ah,#0x4d
+  ja    int13_not_eltorito
+  jmp   int13_eltorito
+
+int13_not_eltorito:
   push  ax
   push  bx
   push  cx
@@ -8296,13 +8352,13 @@ int13_relocated:
 
 // check if access to the emulated drive
   call  _cdemu_emulated_drive
-  pop dx
-  push dx
+  pop   dx
+  push  dx
   cmp   al,dl                ;; int13 on emulated drive
   je    int13_cdemu
 
 // otherwise 
-  and   dl,#0x80             ;; mask to get device class
+  and   dl,#0xE0             ;; mask to get device class, including cdroms
   cmp   al,dl                ;; al is 0x00 or 0x80
   jne   int13_cdemu_inactive ;; inactive for device class
   
@@ -8330,21 +8386,9 @@ int13_legacy:
 
 #if BX_ELTORITO_BOOT
 int13_disk_or_cdrom:
-    push  ax
-    push  bx
-    push  cx
-    push  dx
+    cmp   dl, #0xE0
+    jae   int13_cdrom
 
-    push  dx
-    call  _atapi_is_cdrom
-    pop   dx
-    cmp   al, #0x00
-
-    pop   dx
-    pop   cx
-    pop   bx
-    pop   ax
-    jne   int13_cdrom
 #endif // BX_ELTORITO_BOOT
 
 int13_disk:
@@ -8407,6 +8451,23 @@ int13_cdemu:
 
   pop   ds
   jmp iret_modify_cf
+
+int13_eltorito:
+
+  pushf
+  push  es
+  push  ds
+  push  ss
+  pop   ds
+  pusha
+  call  _int13_eltorito
+  popa
+  pop   ds
+  pop   es
+  popf
+
+  jmp iret_modify_cf
+
 #endif // BX_ELTORITO_BOOT
 
 ;----------
@@ -9222,7 +9283,7 @@ rom_scan_increment:
   ;;
   call _atadrv_init
   call _atareg_config
-  call _ata_read_atapi_device_types
+  call _ata_read_device_types
   call _ata_show_devices
 #endif // BX_USE_ATADRV
 
