@@ -21,7 +21,3 @@ export LDFLAGS
 ./configure --enable-cdrom \
 	    --enable-vbe \
 	    --enable-all-optimizations
-
-unset echo
-
-exit 0
