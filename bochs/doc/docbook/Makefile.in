@@ -1,17 +1,21 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.1 2002-12-13 16:02:00 bdenney Exp $
+# $Id: Makefile.in,v 1.2 2002-12-13 17:20:27 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
 #
 ###################################################################
 
+prefix          = @prefix@
+docdir          = $(prefix)/share/doc/bochs
+
 # name of the major documentation sections
 SECTIONS=user documentation development
+SECTION_HTML=$(SECTIONS:%=%/book1.html)
 
 # these files get installed in addition to the sections
-EXTRAS=README alldocs.html
+EXTRAS=README index.html
 
 # complete list of what to install
 INSTALL_LIST=$(SECTIONS) $(EXTRAS)
@@ -19,7 +23,7 @@ INSTALL_LIST=$(SECTIONS) $(EXTRAS)
 # ssh to this server to install the docs
 REMOTE_HOST=shell.sf.net
 
-# path of preexisting install in, on the remote server.  Each section
+# path of preexisting install on the remote server.  Each section
 # will go into a subdirectory of $REMOTE_PATH, as in
 # $REMOTE_PATH/user.
 REMOTE_PATH=/home/groups/b/bo/bochs/htdocs/doc/docbook
@@ -27,35 +31,43 @@ REMOTE_PATH=/home/groups/b/bo/bochs/htdocs/doc/docbook
 # -x means don't try to forward X authorization, it won't work for SF
 SSH=ssh -x
 
-all: $(SECTIONS)
+all: $(SECTION_HTML)
 
-# this assumes that for each section [S], there is a subdirectory
-# called [S] and the main file to render is [S]/[S].dbk.  The $@
-# expression is the target name, so when doing "make user" the $@ is
-# user.
-$(SECTIONS)::
-	# render the docbook for a section
-#	cd $@; docbook2ps $@.dbk
-#	cd $@; docbook2pdf $@.dbk
-	cd $@; docbook2html $@.dbk
+user/book1.html: user/user.dbk
+	cd user; docbook2html user.dbk
+documentation/book1.html: documentation/documentation.dbk
+	cd documentation; docbook2html documentation.dbk
+development/book1.html: development/development.dbk
+	cd development; docbook2html development.dbk
 
-# install the stuff on the remote server using ssh the bryce->bdenney
-# stuff is just because Bryce's local username and sourceforge
-# username don't match.  If your usernames match then the "whoami"
-# will work ok.
-webinst: all
+fixperm::
 	# fix permissions locally so that tar will install things right
 	chmod 664 `find $(INSTALL_LIST) -type f -print`
 	chmod 775 `find $(INSTALL_LIST) -type d -print`
+
+install: all
+	for i in $(INSTALL_LIST); do cp -r $$i $(DESTDIR)$(docdir); done
+
+test_sfuser:
+	@if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
+	  echo Your Source Forge username is $${SFUSER}.
+	@echo 'If this is not correct, set the environment variable $$SFUSER.'
+
+# Install the stuff on the remote server using ssh.  It will assume that your
+# local username is the same as your Source Forge username, unless you define
+# an environment variable SFUSER.
+webinst: all fixperm
 	# copy to remote
 	@echo Installing documentation on $(REMOTE_PATH)
-	if test "`whoami`" = bryce; then sfuser=bdenney; \
-	else sfuser=`whoami`; fi; \
-	tar cf - $(INSTALL_LIST) | \
-	  $(SSH) $$sfuser@$(REMOTE_HOST) "cd $(REMOTE_PATH) && umask 002 && tar xvf -"
+	if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
+	  tar cf - $(INSTALL_LIST) | \
+	  $(SSH) $${SFUSER}@$(REMOTE_HOST) "cd $(REMOTE_PATH) && umask 002 && tar xvf -"
 
 clean:
 	#remove generated files
 	for S in $(SECTIONS); do \
 	  rm -f $$S/*.html $$S/*.htm $$S/*.ps $$S/*.pdf $$S/*.out; \
 	done
+
+dist-clean:
+	@RMCOMMAND@ Makefile
