@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.47 2002-09-23 16:30:27 bdenney Exp $
+// $Id: x.cc,v 1.48 2002-09-25 07:21:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -927,8 +927,7 @@ xkeypress(KeySym keysym, int press_release)
         key_event = BX_KEY_KP_DELETE; break;
 
 #ifdef XK_KP_Enter
-      case XK_KP_Enter:
-        key_event = BX_KEY_KP_ENTER; break;
+      case XK_KP_Enter:    key_event = BX_KEY_KP_ENTER; break;
 #endif
 
       case XK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
@@ -947,6 +946,9 @@ xkeypress(KeySym keysym, int press_release)
       case XK_Delete:      key_event = BX_KEY_DELETE; break;
       case XK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
       case XK_Tab:         key_event = BX_KEY_TAB; break;
+#ifdef XK_ISO_Left_Tab
+      case XK_ISO_Left_Tab: key_event = BX_KEY_TAB; break;
+#endif
       case XK_Return:      key_event = BX_KEY_ENTER; break;
       case XK_Escape:      key_event = BX_KEY_ESC; break;
       case XK_F1:          key_event = BX_KEY_F1; break;
@@ -962,11 +964,26 @@ xkeypress(KeySym keysym, int press_release)
       case XK_F11:         key_event = BX_KEY_F11; break;
       case XK_F12:         key_event = BX_KEY_F12; break;
       case XK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+#ifdef XK_Control_R
+      case XK_Control_R:   key_event = BX_KEY_CTRL_R; break;
+#endif
       case XK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
       case XK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
+      case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+#ifdef XK_Alt_R
+      case XK_Alt_R:       key_event = BX_KEY_ALT_R; break;
+#endif
       case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
       case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
-      case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+#ifdef XK_Scroll_Lock
+      case XK_Scroll_Lock: key_event = BX_KEY_SCRL_LOCK; break;
+#endif
+#ifdef XK_Print
+      case XK_Print:       key_event = BX_KEY_PRINT; break;
+#endif
+#ifdef XK_Pause
+      case XK_Pause:       key_event = BX_KEY_PAUSE; break;
+#endif
 
       case XK_Insert:      key_event = BX_KEY_INSERT; break;
       case XK_Home:        key_event = BX_KEY_HOME; break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.28 2002-09-25 05:35:36 bdenney Exp $
+// $Id: wx.cc,v 1.29 2002-09-25 07:21:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -470,8 +470,9 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
         key_event = BX_KEY_KP_LEFT; break;
 
       case GDK_KP_5:
-      /* I get 0xFF9D (GDK_KP_Begin?) on my keyboard. -bbd */
-      case GDK_KP_Begin: 
+#ifdef GDK_KP_Begin
+      case GDK_KP_Begin:
+#endif
         key_event = BX_KEY_KP_5; break;
 
       case GDK_KP_6:
@@ -511,8 +512,7 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
         key_event = BX_KEY_KP_DELETE; break;
 
 #ifdef GDK_KP_Enter
-      case GDK_KP_Enter:
-        key_event = BX_KEY_KP_ENTER; break;
+      case GDK_KP_Enter:    key_event = BX_KEY_KP_ENTER; break;
 #endif
 
       case GDK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
@@ -531,6 +531,9 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
       case GDK_Delete:      key_event = BX_KEY_DELETE; break;
       case GDK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
       case GDK_Tab:         key_event = BX_KEY_TAB; break;
+#ifdef GDK_ISO_Left_Tab
+      case GDK_ISO_Left_Tab: key_event = BX_KEY_TAB; break;
+#endif
       case GDK_Return:      key_event = BX_KEY_ENTER; break;
       case GDK_Escape:      key_event = BX_KEY_ESC; break;
       case GDK_F1:          key_event = BX_KEY_F1; break;
@@ -546,11 +549,26 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
       case GDK_F11:         key_event = BX_KEY_F11; break;
       case GDK_F12:         key_event = BX_KEY_F12; break;
       case GDK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+#ifdef GDK_Control_R
+      case GDK_Control_R:   key_event = BX_KEY_CTRL_R; break;
+#endif
       case GDK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
       case GDK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
+      case GDK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+#ifdef GDK_Alt_R
+      case GDK_Alt_R:       key_event = BX_KEY_ALT_R; break;
+#endif
       case GDK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
       case GDK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
-      case GDK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+#ifdef GDK_Scroll_Lock
+      case GDK_Scroll_Lock: key_event = BX_KEY_SCRL_LOCK; break;
+#endif
+#ifdef GDK_Print
+      case GDK_Print:       key_event = BX_KEY_PRINT; break;
+#endif
+#ifdef GDK_Pause
+      case GDK_Pause:       key_event = BX_KEY_PAUSE; break;
+#endif
 
       case GDK_Insert:      key_event = BX_KEY_INSERT; break;
       case GDK_Home:        key_event = BX_KEY_HOME; break;
