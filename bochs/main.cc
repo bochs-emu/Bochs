@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.169 2002-10-29 20:18:26 bdenney Exp $
+// $Id: main.cc,v 1.170 2002-10-29 22:26:31 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -894,6 +894,10 @@ void bx_init_options ()
       "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
       1, BX_MAX_BIT32U,
       500000);
+  bx_options.Orealtime_pit = new bx_param_bool_c (BXP_REALTIME_PIT,
+      "Enable the realtime PIT",
+      "Keeps bochs in sync with real time, but sacrifices reproducibility",
+      0);
   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
       "Use a private colormap",
       "Request that the GUI create and use it's own non-shared colormap.  This colormap will be used when in the bochs window.  If not enabled, a shared colormap scheme may be used.  Not implemented on all GUI's.",
@@ -981,6 +985,7 @@ void bx_init_options ()
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
     bx_options.Oips,
+    bx_options.Orealtime_pit,
     bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS
     bx_options.Ofullscreen,
@@ -1303,6 +1308,7 @@ void bx_reset_options ()
   bx_options.Ovga_update_interval->reset();
   bx_options.Omouse_enabled->reset();
   bx_options.Oips->reset();
+  bx_options.Orealtime_pit->reset();
   bx_options.Oprivate_colormap->reset();
 #if BX_WITH_AMIGAOS
   bx_options.Ofullscreen->reset();
@@ -2739,6 +2745,24 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_ERROR(("%s: WARNING: ips is AWFULLY low!", context));
       }
     }
+  else if (!strcmp(params[0], "realtime_pit")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: realtime_pit directive: wrong # args.", context));
+      }
+    if (!strncmp(params[1], "enable", 6)) {
+      bx_options.Orealtime_pit->set (1);
+      }
+    else if (!strncmp(params[1], "disable", 7)) {
+      bx_options.Orealtime_pit->set (0);
+      }
+    else if (!strncmp(params[1], "reproducible", 12)) {
+      bx_options.Orealtime_pit->set (0);
+      }
+    else if (!strncmp(params[1], "realtime", 8)) {
+      bx_options.Orealtime_pit->set (1);
+      }
+    else bx_options.Orealtime_pit->set (!!(atol(params[1])));
+    }
   else if (!strcmp(params[0], "max_ips")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: max_ips directive: wrong # args.", context));
@@ -3311,6 +3335,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
   fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
+  fprintf (fp, "realtime_pit: %d\n", bx_options.Orealtime_pit->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
 #if BX_WITH_AMIGAOS

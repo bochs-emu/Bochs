@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.81 2002-10-27 21:25:33 cbothamy Exp $
+// $Id: siminterface.h,v 1.82 2002-10-29 22:26:31 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -121,6 +121,7 @@ typedef enum {
 typedef enum {
   BXP_NULL = 101,
   BXP_IPS,
+  BXP_REALTIME_PIT,
   BXP_VGA_UPDATE_INTERVAL,
   BXP_MOUSE_ENABLED,
   BXP_MEM_SIZE,

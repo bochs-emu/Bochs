@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.34 2002-10-28 05:55:47 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.35 2002-10-29 22:26:32 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -148,7 +148,7 @@ bx_pit_c::init( void )
   BX_PIT_THIS s.speaker_data_on = 0;
   BX_PIT_THIS s.refresh_clock_div2 = 0;
 
-  BX_PIT_THIS s.use_realtime = BX_USE_REALTIME_PIT;
+  BX_PIT_THIS s.use_realtime = bx_options.Orealtime_pit->get ();
 
   BX_PIT_THIS s.timer.init();
 
@@ -477,7 +477,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     }
 
     if(ticks_delta) {
-#if DEBUG_GETTIMEOFDAY_WITH_PRINTF
+#  if DEBUG_GETTIMEOFDAY_WITH_PRINTF
       if(((BX_PIT_THIS s.last_time + real_time_delta) / USEC_PER_SECOND) > (BX_PIT_THIS s.last_time / USEC_PER_SECOND)) {
 	printf("useconds: %lld, expected ticks: %lld, ticks: %lld, diff: %lld\n",
 	       (Bit64u) BX_PIT_THIS s.total_sec,
@@ -486,7 +486,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 	       (Bit64u)(REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec) - BX_PIT_THIS s.total_ticks)
 	       );
       }
-#endif
+#  endif
       BX_PIT_THIS s.last_time += real_time_delta;
       BX_PIT_THIS s.total_sec += real_time_delta;
       BX_PIT_THIS s.last_sec_usec += em_time_delta;
