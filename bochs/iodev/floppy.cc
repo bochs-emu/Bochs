@@ -1,5 +1,5 @@
-  ///////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.39 2002-06-16 15:02:27 vruppert Exp $
+/////////////////////////////////////////////////////////////////////////
+// $Id: floppy.cc,v 1.40 2002-06-23 18:04:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.39 2002-06-16 15:02:27 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.40 2002-06-23 18:04:07 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -833,7 +833,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       // reported in the head number field.  Real floppy drives are
       // picky about this, as reported in SF bug #439945, (Floppy drive
       // read input error checking).
-      if (head != (BX_FD_THIS s.command[1]>>2)&1) {
+      if (head != ((BX_FD_THIS s.command[1]>>2)&1)) {
         BX_ERROR(("head number in command[1] doesn't match head field"));
         BX_FD_THIS s.result_size = 7;
         BX_FD_THIS s.result_index = 0;
