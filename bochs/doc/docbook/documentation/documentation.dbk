@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.8 2001-09-25 22:36:51 vasudeva Exp $
+$Id: documentation.dbk,v 1.9 2001-11-17 17:14:42 bdenney Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -19,8 +19,9 @@ This is the top level file for the Bochs Documentation Manual.
 <bookinfo>
    <title>Bochs Documentation Manual</title>
    <authorgroup>
-   <author><firstname>Michael</firstname><surname>Calabrese</surname></author>
    <author><firstname>Bryce</firstname><surname>Denney</surname></author>
+   <author><firstname>Michael</firstname><surname>Calabrese</surname></author>
+   <editor><firstname>Vasudeva</firstname></editor>
    </authorgroup>
 </bookinfo>
 <chapter><title>Layout of Bochs Documentation</title>
