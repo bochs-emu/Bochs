@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.60 2002-11-11 14:29:01 cbothamy Exp $
+$Id: user.dbk,v 1.61 2002-11-12 08:40:28 ndavidg Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -53,7 +53,7 @@ have to be clear in our terminology to avoid confusion.  The host platform is
 the machine that runs the Bochs software.  The guest platform is the operating
 system and applications that Bochs is simulating.
 </para>
-</footnote>, including x86, PPC, Alpha, Sun, and MIPS.  No matter what the
+</footnote>, including x86, PPS, Alpha, Sun, and MIPS.  No matter what the
 host platform is, Bochs still simulates x86 software.  In other words, it
 does not depend on the native instructions of the host machine at all.
 This is both a strength and a weakness, and it's the major difference between
@@ -3388,6 +3388,26 @@ are very UNLIKELY to get flamed and insulted for being a Bochs beginner.
 Sending commercial promotions to the list probably will get you some angry
 responses though.
 </para> </listitem>
+
+<listitem><para>
+If you are having difficulty finding what you are looking for, try doing a search on <ulink url="http://www.google.com">Google</ulink>.  If you are searching for Bochs options, for example, you can use this syntax in the Google search box:
+<programlisting>
+configuration options site:bochs.sourceforge.net
+</programlisting>
+For best results, be sure not to put a space between "site:" and "bochs.sourceforge.net".  Be sure to look at more than the first item on the search results.
+</para></listitem>
+
+<listitem>
+<para>
+If you still cannot find what you are looking for, be sure you are prepared when you post your question, and post in the right forum.  Be sure you include important details, such as the operating system and version of your host, and what it is you are trying to do.   If you are getting errors or something is not working, summarize what you checked and what you changed.  This will help isolate the problem.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Bochs is for everyone.  If you are an experienced Boch user or developer and are helping someone else, be considerate of the other person's feelings.  We share a common interest, and we need to encourage each other and be supportive.
+</para>
+</listitem>
 
 <listitem> <para>
 Also, keep in mind that messages are limited to 40K, so if you want to share a
