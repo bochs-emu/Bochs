@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.11 2002-03-16 11:30:06 vruppert Exp $
+// $Id: sdl.cc,v 1.12 2002-03-16 13:20:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -268,7 +268,7 @@ void bx_gui_c::text_update(
     buf = buf_row;
     hchars = textres_x;
     x = 0;
-    y = 25 - rows;
+    y = textres_y - rows;
     do
     {
       // check if char needs to be updated
@@ -293,7 +293,7 @@ void bx_gui_c::text_update(
 	{
 	  font_row = *pfont_row++;
 	  fontpixels = fontwidth;
-	  cs_line = (16 - fontrows);
+	  cs_line = (fontheight - fontrows);
 	  if( (invert) && (cs_line >= cs_start) && (cs_line <= cs_end) )
 	    mask = 0x80;
 	  else
