@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.95 2004-01-24 20:50:45 vruppert Exp $
+// $Id: vga.cc,v 1.96 2004-02-22 13:02:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -123,6 +123,9 @@ bx_vga_c::init(void)
 {
   unsigned i;
   unsigned x,y;
+#if BX_SUPPORT_VBE  
+  Bit16u max_xres, max_yres, max_bpp;
+#endif
 
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
@@ -283,7 +286,24 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.vbe_virtual_start=0;
   BX_VGA_THIS s.vbe_line_byte_width=640;
   BX_VGA_THIS s.vbe_lfb_enabled=0;
-
+  BX_VGA_THIS s.vbe_get_capabilities=0;
+  bx_gui->get_capabilities(&max_xres, &max_yres,
+                           &max_bpp);
+  if (max_xres > VBE_DISPI_MAX_XRES) {
+    BX_VGA_THIS s.vbe_max_xres=VBE_DISPI_MAX_XRES;
+  } else {
+    BX_VGA_THIS s.vbe_max_xres=max_xres;
+  }
+  if (max_yres > VBE_DISPI_MAX_YRES) {
+    BX_VGA_THIS s.vbe_max_yres=VBE_DISPI_MAX_YRES;
+  } else {
+    BX_VGA_THIS s.vbe_max_yres=max_yres;
+  }
+  if (max_bpp > VBE_DISPI_MAX_BPP) {
+    BX_VGA_THIS s.vbe_max_bpp=VBE_DISPI_MAX_BPP;
+  } else {
+    BX_VGA_THIS s.vbe_max_bpp=max_bpp;
+  }
   
   BX_INFO(("VBE Bochs Display Extension Enabled"));
 #endif  
@@ -2592,22 +2612,35 @@ bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
       
       case VBE_DISPI_INDEX_XRES: // x resolution
       {
-        return BX_VGA_THIS s.vbe_xres;
+        if (BX_VGA_THIS s.vbe_get_capabilities) {
+          return BX_VGA_THIS s.vbe_max_xres;
+        } else {
+          return BX_VGA_THIS s.vbe_xres;
+        }
       } break;
 
       case VBE_DISPI_INDEX_YRES: // y resolution
       {
-        return BX_VGA_THIS s.vbe_yres;
+        if (BX_VGA_THIS s.vbe_get_capabilities) {
+          return BX_VGA_THIS s.vbe_max_yres;
+        } else {
+          return BX_VGA_THIS s.vbe_yres;
+        }
       } break;
       
       case VBE_DISPI_INDEX_BPP: // bpp
       {
-        return BX_VGA_THIS s.vbe_bpp;
+        if (BX_VGA_THIS s.vbe_get_capabilities) {
+          return BX_VGA_THIS s.vbe_max_bpp;
+        } else {
+          return BX_VGA_THIS s.vbe_bpp;
+        }
       } break;
 
       case VBE_DISPI_INDEX_ENABLE: // vbe enabled
       {
-        return BX_VGA_THIS s.vbe_enabled;
+        return BX_VGA_THIS s.vbe_enabled |
+               (BX_VGA_THIS s.vbe_get_capabilities << 1);
       } break;
       
       case VBE_DISPI_INDEX_BANK: // current bank
@@ -2686,7 +2719,8 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         {
           if ( (value == VBE_DISPI_ID0) ||
                (value == VBE_DISPI_ID1) ||
-               (value == VBE_DISPI_ID2) )
+               (value == VBE_DISPI_ID2) ||
+               (value == VBE_DISPI_ID3) )
           {
             // allow backwards compatible with previous dispi bioses
             BX_VGA_THIS s.vbe_cur_dispi=value;
@@ -2892,6 +2926,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_VGA_THIS s.vbe_lfb_enabled=0;
           }     
           BX_VGA_THIS s.vbe_enabled=(bx_bool)(value & VBE_DISPI_ENABLED);
+          BX_VGA_THIS s.vbe_get_capabilities=(bx_bool)(value & VBE_DISPI_GETCAPS);
         } break;
 
         case VBE_DISPI_INDEX_X_OFFSET:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.36 2003-12-31 10:33:27 vruppert Exp $
+// $Id: vga.h,v 1.37 2004-02-22 13:03:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,6 +32,7 @@
 
   #define VBE_DISPI_MAX_XRES              1024
   #define VBE_DISPI_MAX_YRES              768
+  #define VBE_DISPI_MAX_BPP               32
 
   #define VBE_DISPI_IOPORT_INDEX          0x01CE
   #define VBE_DISPI_IOPORT_DATA           0x01CF
@@ -53,6 +54,7 @@
   #define VBE_DISPI_ID0                   0xB0C0
   #define VBE_DISPI_ID1                   0xB0C1
   #define VBE_DISPI_ID2                   0xB0C2
+  #define VBE_DISPI_ID3                   0xB0C3
 
   #define VBE_DISPI_BPP_4                 0x04
   #define VBE_DISPI_BPP_8                 0x08
@@ -63,6 +65,7 @@
 
   #define VBE_DISPI_DISABLED              0x00
   #define VBE_DISPI_ENABLED               0x01
+  #define VBE_DISPI_GETCAPS               0x02
   #define VBE_DISPI_NOCLEARMEM            0x80
   #define VBE_DISPI_LFB_ENABLED           0x40
 
@@ -252,6 +255,9 @@ private:
     Bit16u  vbe_xres;
     Bit16u  vbe_yres;
     Bit16u  vbe_bpp;
+    Bit16u  vbe_max_xres;
+    Bit16u  vbe_max_yres;
+    Bit16u  vbe_max_bpp;
     Bit16u  vbe_bank;
     bx_bool vbe_enabled;
     Bit16u  vbe_curindex;
@@ -264,6 +270,7 @@ private:
     Bit32u  vbe_virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
     Bit8u   vbe_bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
     bx_bool vbe_lfb_enabled;
+    bx_bool vbe_get_capabilities;
 #endif    
     } s;  // state information
 

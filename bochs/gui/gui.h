@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.42 2004-02-07 14:34:34 vruppert Exp $
+// $Id: gui.h,v 1.43 2004-02-22 13:02:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,6 +88,7 @@ public:
 #endif
   virtual void beep_on(float frequency);
   virtual void beep_off();
+  virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
 
   // The following function(s) are defined already, and your
   // GUI code calls them

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.76 2004-02-07 14:34:34 vruppert Exp $
+// $Id: gui.cc,v 1.77 2004-02-22 13:02:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -600,7 +600,7 @@ bx_gui_c::beep_off()
   BX_INFO(( "GUI Beep OFF"));
 }
 
-int
+  int
 bx_gui_c::register_statusitem(const char *text)
 {
   if (statusitem_count < BX_MAX_STATUSITEMS) {
@@ -610,4 +610,12 @@ bx_gui_c::register_statusitem(const char *text)
   } else {
    return -1;
   }
+}
+
+  void
+bx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+{
+  *xres = 1024;
+  *yres = 768;
+  *bpp = 32;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.79 2004-02-15 19:46:13 vruppert Exp $
+// $Id: x.cc,v 1.80 2004-02-22 13:02:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -64,6 +64,7 @@ public:
   virtual void beep_on(float frequency);
   virtual void beep_off();
   virtual void statusbar_setitem(int element, bx_bool active);
+  virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1929,6 +1930,14 @@ bx_x_gui_c::beep_on(float frequency)
 bx_x_gui_c::beep_off()
 {
   BX_INFO(( "X11 Beep OFF"));
+}
+
+  void
+bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+{
+  *xres = 1024;
+  *yres = 768;
+  *bpp = imBPP;
 }
 
 #endif /* if BX_WITH_X11 */
