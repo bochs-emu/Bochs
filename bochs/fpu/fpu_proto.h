@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_proto.h,v 1.11 2003-10-04 12:32:56 sshwarts Exp $
+// $Id: fpu_proto.h,v 1.12 2003-10-04 12:52:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,6 @@
 #define _FPU_PROTO_H
 
 /* errors.c */
-extern void Un_impl(void);
 extern void FPU_illegal(void);
 asmlinkage void FPU_exception(int n);
 asmlinkage void FPU_internal(int n);

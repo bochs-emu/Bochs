@@ -211,7 +211,7 @@ fpu_get_user(bx_address ptr, unsigned len)
   return(val32);
 }
 
-  void BX_CPP_AttrRegparmN(2)
+  void BX_CPP_AttrRegparmN(3)
 fpu_put_user(unsigned val, bx_address ptr, unsigned len)
 {
   Bit32u val32;

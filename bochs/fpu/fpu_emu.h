@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.16 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.17 2003-10-04 12:52:29 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -37,7 +37,6 @@
 
 #define SIGN_Positive	(0)
 #define SIGN_Negative	(0x8000)
-
 
 /* Keep the order TAG_Valid, TAG_Zero, TW_Denormal */
 /* The following fold to 2 (Special) in the Tag Word */

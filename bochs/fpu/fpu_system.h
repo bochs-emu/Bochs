@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.16 2003-09-27 20:58:46 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.17 2003-10-04 12:52:29 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -52,10 +52,8 @@ typedef Bit8u u_char;
 #endif
 
 extern unsigned fpu_get_user(bx_address ptr, unsigned len) BX_CPP_AttrRegparmN(2);
-extern void fpu_put_user(unsigned val, bx_address ptr, unsigned len) BX_CPP_AttrRegparmN(2);
-
+extern void fpu_put_user(unsigned val, bx_address ptr, unsigned len) BX_CPP_AttrRegparmN(3);
 extern void fpu_verify_area(unsigned what, bx_address ptr, unsigned n) BX_CPP_AttrRegparmN(3);
-extern void math_emulate_init(void);
 extern unsigned fpu_get_ds(void);
 extern void fpu_set_ax(u16);
 
