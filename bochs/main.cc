@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.154 2002-10-01 23:34:52 bdenney Exp $
+// $Id: main.cc,v 1.155 2002-10-02 19:23:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,13 @@
 // C language prototype is found.  Otherwise SDL_main() will get its name 
 // mangled and not match what the SDL library is expecting.
 #include <SDL/SDL.h>
+
+#if defined(macintosh)
+// Work around a bug in SDL 1.2.4 on MacOS X, which redefines getenv to
+// SDL_getenv, but then neglects to provide SDL_getenv.  It happens
+// because we are defining -Dmacintosh.
+#undef getenv
+#endif
 #endif
 
 int enable_config_interface = 1;
