@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.107 2002-11-11 17:09:45 cbothamy Exp $
+// $Id: bochs.h,v 1.108 2002-11-15 18:31:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -250,7 +250,7 @@ typedef class BOCHSAPI logfunctions {
 	class iofunctions *logio;
 	// default log actions for all devices, declared and initialized
 	// in logio.cc.
-	BOCHSAPI static int default_onoff[N_LOGLEV];
+	BOCHSAPI_CYGONLY static int default_onoff[N_LOGLEV];
 public:
 	logfunctions(void);
 	logfunctions(class iofunctions *);

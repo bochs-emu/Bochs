@@ -389,7 +389,15 @@
 #  define BOCHSAPI
 #endif
 
-
+#if defined(__CYGWIN__)
+// Make BOCHSAPI_CYGONLY exactly the same as BOCHSAPI.  This symbol
+// will be used for any cases where Cygwin requires a special tag
+// but VC++ does not.
+#define BOCHSAPI_CYGONLY BOCHSAPI
+#else
+// define the symbol to be empty
+#define BOCHSAPI_CYGONLY /*empty*/
+#endif
 
 #define BX_DEFAULT_CONFIG_INTERFACE "defined_by_configure"
 #define BX_DEFAULT_DISPLAY_LIBRARY "defined_by_configure"
