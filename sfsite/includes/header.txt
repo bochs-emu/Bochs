@@ -35,7 +35,21 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net" class="sidebar">Home Page</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Project+Page&url=http://sourceforge.net/projects/bochs" class="sidebar">SF Project Page</a>
 
-<br><br><center><b>Get Bochs</b></center>
+<br><br><center><b>Search</b></center>
+<center><form method=GET action="http://bochs.sourceforge.net/cgi-bin/eglimpse.pl/search">
+<input type=hidden name="title"     value="Bochs">
+<input type=hidden name="file_base" value="/home/groups/b/bo/bochs/htdocs">
+<input type=hidden name="url_base"  value="http://bochs.sourceforge.net">
+<input type=hidden name="output_format"  value="standard">
+<input type=hidden name="case_sensitive" value="no">
+<input type=hidden name="words_only"     value="yes">
+<input type=hidden name="misspellings"   value="0">
+<input type=hidden name="file_pattern"   value="">
+<input type=hidden name="date_filter"    value="">
+<input name=query size=15>
+</form></center>
+
+<br><center><b>Get Bochs</b></center>
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="<!--#include virtual="release.txt" -->" class="sidebar">Download Current</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=See+All+Releases&url=http://sourceforge.net/project/showfiles.phpqmrkgroup_ideq12580" class="sidebar">See All Releases</a>
