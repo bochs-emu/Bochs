@@ -360,15 +360,6 @@ retrieving revision 1.16
 diff -u -r1.15 -r1.16
 --- cpu/init.cc	27 Mar 2002 16:04:05 -0000	1.15
 +++ cpu/init.cc	5 Jun 2002 21:51:30 -0000	1.16
-@@ -50,7 +50,7 @@
- 
- void BX_CPU_C::init(BX_MEM_C *addrspace)
- {
--  BX_DEBUG(( "Init $Id: init.cc,v 1.15 2002/03/27 16:04:05 bdenney Exp $"));
-+  BX_DEBUG(( "Init $Id: init.cc,v 1.16 2002/06/05 21:51:30 yakovlev Exp $"));
-   // BX_CPU_C constructor
-   BX_CPU_THIS_PTR set_INTR (0);
- #if BX_SUPPORT_APIC
 @@ -184,6 +184,19 @@
    DTSetFlagsOSZAPCPtr = (BxDTShim_t) DTASSetFlagsOSZAPC;
    DTIndBrHandler = (BxDTShim_t) DTASIndBrHandler;
