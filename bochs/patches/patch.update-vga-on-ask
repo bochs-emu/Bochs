@@ -4,6 +4,7 @@ before the vga display comes up.  Oops.
 
 I have updated this patch for the current CVS (logio 1.17) and added a check
 for the siminterface init state before calling the vga timer handler.
+The changes are present in CVS now (June 1st).
 -Volker
 
 ===================================================================
@@ -33,7 +34,7 @@ for the siminterface init state before calling the vga timer handler.
    int val = SIM->log_msg (prefix, level, buf2);
    switch (val)
    {
-@@ -400,6 +413,7 @@
+@@ -401,6 +414,7 @@
        // in gui/control.cc.
        fprintf (stderr, "WARNING: log_msg returned unexpected value %d\n", val);
    }
