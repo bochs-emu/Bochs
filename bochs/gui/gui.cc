@@ -158,10 +158,7 @@ bx_gui_c::floppyB_handler(void)
   void
 bx_gui_c::reset_handler(void)
 {
-  BX_INFO(( "system RESET callback.\n" ));
-  bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
-  for (int i=0; i<BX_SMP_PROCESSORS; i++)
-      BX_CPU(i)->reset(BX_RESET_HARDWARE);
+  BX_PANIC(( "RESET button was pressed.\n" ));
 }
 
   void
