@@ -284,6 +284,7 @@ bx_atexit(void)
       bx_devices.pci->print_i440fx_state(bx_logfd);
       }
 #endif
+    bx_printf("bochs exited, log file was '%s'\n", logfilename);
     fprintf(stderr, "bochs exited, log file was '%s'\n",
       logfilename);
     fflush(bx_logfd);
