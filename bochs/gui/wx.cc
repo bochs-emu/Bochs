@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.34 2002-10-03 21:07:01 bdenney Exp $
+// $Id: wx.cc,v 1.35 2002-10-04 10:52:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -913,13 +913,19 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned char cChar;
 	unsigned int ncols = wxScreenX / 8;
 	unsigned int nchars = ncols * nrows;
+	Boolean forceUpdate = 0;
+	if(bx_gui.charmap_updated) {
+		forceUpdate = 1;
+		bx_gui.charmap_updated = 0;
+	}
 	if((wxCursorY * ncols + wxCursorX) < nchars) {
 		cChar = new_text[(wxCursorY * ncols + wxCursorX) * 2];
 		DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&bx_gui.vga_charmap[cChar<<5], new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1], 1, 0);
 	}
 	
 	for(unsigned int i = 0; i < nchars * 2; i += 2) {
-		if((old_text[i] != new_text[i]) || (old_text[i+1] != new_text[i+1])) {
+		if(forceUpdate || (old_text[i] != new_text[i])
+		   || (old_text[i+1] != new_text[i+1])) {
 			cChar = new_text[i];
 			int x = (i / 2) % ncols;
 			int y = (i / 2) / ncols;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.22 2002-09-25 07:24:41 bdenney Exp $
+// $Id: sdl.cc,v 1.23 2002-10-04 10:52:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -253,11 +253,17 @@ void bx_gui_c::text_update(
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
   Bit8u cs_start, cs_end, cs_line, mask;
-  Boolean invert;
+  Boolean invert, forceUpdate;
 
   cs_start = (cursor_state >> 8) & 0x3f;
   cs_end = cursor_state & 0x1f;
 
+  forceUpdate = 0;
+  if(bx_gui.charmap_updated)
+  {
+    forceUpdate = 1;
+    bx_gui.charmap_updated = 0;
+  }
   if( sdl_screen )
   {
     disp = sdl_screen->pitch/4;
@@ -278,7 +284,7 @@ void bx_gui_c::text_update(
     do
     {
       // check if char needs to be updated
-      if( (old_text[0] != new_text[0])
+      if(forceUpdate || (old_text[0] != new_text[0])
 	  || (old_text[1] != new_text[1])
 	  || ((y == cursor_y) && (x == cursor_x))
 	  || ((y == prev_cursor_y) && (x == prev_cursor_x)) )
