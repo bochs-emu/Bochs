@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.85 2003-07-18 18:31:50 vruppert Exp $
+// $Id: vga.cc,v 1.86 2003-07-19 21:44:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -730,7 +730,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 {
   unsigned i;
   Bit8u charmap1, charmap2, prev_memory_mapping;
-  bx_bool prev_video_enabled, prev_line_graphics;
+  bx_bool prev_video_enabled, prev_line_graphics, prev_int_pal_size;
   bx_bool prev_graphics_alpha, prev_chain_odd_even;
   bx_bool needs_update = 0;
 
@@ -850,6 +850,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             break;
           case 0x10: // mode control register
             prev_line_graphics = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics;
+            prev_int_pal_size = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size;
             BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha =
               (value >> 0) & 0x01;
             BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type =
@@ -867,8 +868,11 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             if (((value >> 2) & 0x01) != prev_line_graphics) {
               bx_gui->set_text_charmap(
                 & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+              BX_VGA_THIS s.vga_mem_updated = 1;
             }
-            needs_update = 1;
+            if (((value >> 7) & 0x01) != prev_int_pal_size) {
+              needs_update = 1;
+            }
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: mode control: %02x h",
                 (unsigned) value));
@@ -1304,8 +1308,9 @@ bx_vga_c::update(void)
   if (BX_VGA_THIS s.vga_mem_updated==0)
     return;
 
-  /* skip screen update when the sequencer is in reset mode */
-  if (!BX_VGA_THIS s.sequencer.reset1 || !BX_VGA_THIS s.sequencer.reset2)
+  /* skip screen update when the sequencer is in reset mode or video is disabled */
+  if (!BX_VGA_THIS s.sequencer.reset1 || !BX_VGA_THIS s.sequencer.reset2
+      || !BX_VGA_THIS s.attribute_ctrl.video_enabled)
     return;
 
   /* skip screen update if the vertical retrace is in progress
@@ -1564,6 +1569,9 @@ bx_vga_c::update(void)
                       (((BX_VGA_THIS s.vga_memory[3*65536 + byte_offset] >> bit_no) & 0x01) << 3);
 
                     attribute &= BX_VGA_THIS s.attribute_ctrl.color_plane_enable;
+                    // undocumented feature ???: colors 0..7 high intensity, colors 8..15 blinking
+                    // using low/high intensity. Blinking is not implemented yet.
+                    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity) attribute ^= 0x08;
                     palette_reg_val = BX_VGA_THIS s.attribute_ctrl.palette_reg[attribute];
                     if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size) {
                       // use 4 lower bits from palette register
