@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.47 2004-02-29 21:16:18 vruppert Exp $
+// $Id: sdl.cc,v 1.48 2004-04-09 15:04:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -96,6 +96,7 @@ static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 static unsigned int text_cols = 80, text_rows = 25;
 Bit8u h_panning = 0, v_panning = 0;
+Bit16u line_compare = 1023;
 int fontwidth = 8, fontheight = 16;
 static unsigned vga_bpp=8;
 unsigned tilewidth, tileheight;
@@ -364,8 +365,9 @@ void bx_sdl_gui_c::text_update(
     unsigned nrows)
 {
   unsigned char *pfont_row, *old_line, *new_line;
-  unsigned long x,y;
-  unsigned int curs, hchars, offset;
+  unsigned char *text_base;
+  unsigned long cy, x, y;
+  unsigned int curs, hchars, offset, hpanning_orig;
   int rows,fontrows,fontpixels;
   int fgcolor_ndx;
   int bgcolor_ndx;
@@ -374,8 +376,8 @@ void bx_sdl_gui_c::text_update(
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
   Bit16u font_row, mask;
-  Bit8u cs_line, cfwidth, cfheight;
-  bx_bool cursor_visible, gfxcharw9, invert, forceUpdate;
+  Bit8u cs_line, cfwidth, cfheight, split_fontrow, split_textrow;
+  bx_bool cursor_visible, gfxcharw9, invert, forceUpdate, split_screen;
 
   UNUSED(nrows);
   forceUpdate = 0;
@@ -389,6 +391,12 @@ void bx_sdl_gui_c::text_update(
     forceUpdate = 1;
     h_panning = tm_info.h_panning;
     v_panning = tm_info.v_panning;
+  }
+  hpanning_orig = h_panning;
+  if(tm_info.line_compare != line_compare)
+  {
+    forceUpdate = 1;
+    line_compare = tm_info.line_compare;
   }
   if( sdl_screen )
   {
@@ -416,6 +424,11 @@ void bx_sdl_gui_c::text_update(
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
+  cy = 0;
+  text_base = new_text - tm_info.start_address;
+  split_textrow = (tm_info.line_compare + v_panning) / fontheight;
+  split_fontrow = ((tm_info.line_compare + v_panning) % fontheight) + 1;
+  split_screen = 0;
 
   do
   {
@@ -434,10 +447,14 @@ void bx_sdl_gui_c::text_update(
         cfheight = v_panning;
       }
     }
+    if (!split_screen && (y == split_textrow))
+    {
+      if (split_fontrow < cfheight) cfheight = split_fontrow;
+    }
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = y * tm_info.line_offset;
+    offset = cy * tm_info.line_offset;
     do
     {
       cfwidth = fontwidth;
@@ -470,10 +487,12 @@ void bx_sdl_gui_c::text_update(
 	if (y > 0)
 	{
 	  pfont_row = &vga_charmap[(new_text[0] << 5)];
+	  cs_line = 0;
 	}
 	else
 	{
 	  pfont_row = &vga_charmap[(new_text[0] << 5) + v_panning];
+	  cs_line = v_panning;
 	}
 	buf_char = buf;
 	do
@@ -492,7 +511,6 @@ void bx_sdl_gui_c::text_update(
 	    font_row <<= h_panning;
 	  }
 	  fontpixels = cfwidth;
-	  cs_line = (fontheight - fontrows);
 	  if( (invert) && (cs_line >= tm_info.cs_start) && (cs_line <= tm_info.cs_end) )
 	    mask = 0x100;
 	  else
@@ -508,6 +526,7 @@ void bx_sdl_gui_c::text_update(
 	  } while( --fontpixels );
 	  buf -= cfwidth;
 	  buf += disp;
+	  cs_line++;
 	} while( --fontrows );
 
 	// restore output buffer ptr to start of this char
@@ -527,10 +546,24 @@ void bx_sdl_gui_c::text_update(
 
     // go to next character row location
     buf_row += disp * cfheight;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
-    y++;
+    if (!split_screen && (y == split_textrow))
+    {
+      new_text = text_base;
+      rows++;
+      forceUpdate = 1;
+      split_screen = 1;
+      cy = 0;
+      if (tm_info.split_hpanning) h_panning = 0;
+    }
+    else
+    {
+      new_text = new_line + tm_info.line_offset;
+      old_text = old_line + tm_info.line_offset;
+      cy++;
+      y++;
+    }
   } while( --rows );
+  h_panning = hpanning_orig;
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
 }

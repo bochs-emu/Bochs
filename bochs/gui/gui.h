@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.43 2004-02-22 13:02:56 vruppert Exp $
+// $Id: gui.h,v 1.44 2004-04-09 15:04:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,13 +27,15 @@
 #define BX_MAX_STATUSITEMS 10
 
 typedef struct {
-  Bit8u cs_start;
-  Bit8u cs_end;
-  Bit16u line_offset;
-  Bit16u line_compare;
-  Bit8u h_panning;
-  Bit8u v_panning;
+  Bit16u  start_address;
+  Bit8u   cs_start;
+  Bit8u   cs_end;
+  Bit16u  line_offset;
+  Bit16u  line_compare;
+  Bit8u   h_panning;
+  Bit8u   v_panning;
   bx_bool line_graphics;
+  bx_bool split_hpanning;
 } bx_vga_tminfo_t;
 
 

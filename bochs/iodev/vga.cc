@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.99 2004-03-02 16:29:27 vruppert Exp $
+// $Id: vga.cc,v 1.100 2004-04-09 15:04:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1738,6 +1738,8 @@ bx_vga_c::update(void)
     bx_vga_tminfo_t tm_info;
 
 
+    tm_info.start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
+                            BX_VGA_THIS s.CRTC.reg[13]);
     tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
     tm_info.cs_end = BX_VGA_THIS s.CRTC.reg[0x0b] & 0x1f;
     tm_info.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 2;
@@ -1745,6 +1747,7 @@ bx_vga_c::update(void)
     tm_info.h_panning = BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning & 0x0f;
     tm_info.v_panning = BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f;
     tm_info.line_graphics = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics;
+    tm_info.split_hpanning =  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat;
     if ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 0) {
       if (tm_info.h_panning == 8)
         tm_info.h_panning = 0;
@@ -1766,8 +1769,8 @@ bx_vga_c::update(void)
 	}
         /* pass old text snapshot & new VGA memory contents */
         start_address = 0x0;
-        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) |
-                          BX_VGA_THIS s.CRTC.reg[0x0f]);
+        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
+                         BX_VGA_THIS s.CRTC.reg[0x0f]);
         if (cursor_address < start_address) {
           cursor_x = 0xffff;
           cursor_y = 0xffff;
@@ -1777,11 +1780,11 @@ bx_vga_c::update(void)
           cursor_y = ((cursor_address - start_address)/2) / 80;
           }
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
-                          &BX_VGA_THIS s.vga_memory[start_address],
-                           cursor_x, cursor_y, tm_info, 25);
+                            &BX_VGA_THIS s.vga_memory[start_address],
+                            cursor_x, cursor_y, tm_info, 25);
         // screen updated, copy new VGA memory contents into text snapshot
         memcpy(BX_VGA_THIS s.text_snapshot,
-              &BX_VGA_THIS s.vga_memory[start_address],
+               &BX_VGA_THIS s.vga_memory[start_address],
                2*80*25);
         BX_VGA_THIS s.vga_mem_updated = 0;
         break;
@@ -1822,9 +1825,10 @@ bx_vga_c::update(void)
           old_BPP = 8;
 	}
         // pass old text snapshot & new VGA memory contents
-        start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
-        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) |
-                          BX_VGA_THIS s.CRTC.reg[0x0f]);
+        start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
+                        BX_VGA_THIS s.CRTC.reg[13]);
+        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
+                         BX_VGA_THIS s.CRTC.reg[0x0f]);
         if (cursor_address < start_address) {
           cursor_x = 0xffff;
           cursor_y = 0xffff;
@@ -1834,11 +1838,11 @@ bx_vga_c::update(void)
           cursor_y = ((cursor_address - start_address)/2) / (iWidth/cWidth);
           }
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
-                          &BX_VGA_THIS s.vga_memory[start_address],
-                           cursor_x, cursor_y, tm_info, rows);
+                            &BX_VGA_THIS s.vga_memory[start_address],
+                            cursor_x, cursor_y, tm_info, rows);
         // screen updated, copy new VGA memory contents into text snapshot
         memcpy(BX_VGA_THIS s.text_snapshot,
-              &BX_VGA_THIS s.vga_memory[start_address],
+               &BX_VGA_THIS s.vga_memory[start_address],
                2*80*rows);
         BX_VGA_THIS s.vga_mem_updated = 0;
         break;
