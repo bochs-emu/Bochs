@@ -95,7 +95,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.27 2001-08-15 20:54:36 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.28 2001-08-31 16:06:32 fries Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -187,18 +187,18 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   /* open hard drive image file */
   if (bx_options.diskc.Opresent->get ()) {
-	BX_INFO(("Opening image for device 0"));
 	if ((BX_HD_THIS s[0].hard_drive->open(bx_options.diskc.Opath->getptr ())) < 0) {
 	      BX_PANIC(("could not open hard drive image file '%s'",
 		       bx_options.diskc.Opath->getptr ()));
 	}
+	BX_INFO(("hd0: '%s'",bx_options.diskc.Opath->getptr ()));
   }
   if (bx_options.diskd.Opresent->get () && !bx_options.cdromd.Opresent->get ()) {
-	BX_INFO(("Opening image for device 1"));
 	if ((BX_HD_THIS s[1].hard_drive->open(bx_options.diskd.Opath->getptr ())) < 0) {
 	      BX_PANIC(("could not open hard drive image file '%s'",
 		       bx_options.diskd.Opath->getptr ()));
 	}
+	BX_INFO(("hd1: '%s'",bx_options.diskd.Opath->getptr()));
   }
 
   // generate CMOS values for hard drive if not using a CMOS image

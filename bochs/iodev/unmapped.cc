@@ -265,12 +265,12 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if ( BX_UM_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
         BX_UM_THIS s.bios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        bioslog->info("BIOS message: %s", BX_UM_THIS s.bios_message);
+        bioslog->info("%s", BX_UM_THIS s.bios_message);
         }
       else if ((value & 0xff) == '\n') {
         BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i - 1 ] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        bioslog->info("BIOS message: %s", BX_UM_THIS s.bios_message);
+        bioslog->info("%s", BX_UM_THIS s.bios_message);
         }
       break;
 

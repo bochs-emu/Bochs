@@ -189,7 +189,7 @@ bx_gui_c::snapshot_handler(void)
 bx_gui_c::toggle_mouse_enable(void)
 {
   int old = bx_options.Omouse_enabled->get ();
-  BX_INFO (("toggle mouse_enabled, now %d", !old));
+  BX_DEBUG (("toggle mouse_enabled, now %d", !old));
   bx_options.Omouse_enabled->set (!old);
 }
 
@@ -199,7 +199,7 @@ bx_gui_c::mouse_enabled_changed (Boolean val)
   // This is only called when SIM->get_init_done is 1.  Note that VAL
   // is the new value of mouse_enabled, which may not match the old
   // value which is still in bx_options.Omouse_enabled->get ().
-  BX_INFO (("replacing the mouse bitmaps"));
+  BX_DEBUG (("replacing the mouse bitmaps"));
   if (val)
     replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
   else

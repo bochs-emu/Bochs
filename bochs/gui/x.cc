@@ -321,7 +321,6 @@ if (bx_options.Oprivate_colormap->get ()) {
   dimension_x = columns * font_width;
   dimension_y = rows * font_height + headerbar_y;
 
-  BX_INFO(("font %u wide x %u high", (unsigned) font_width, (unsigned) font_height));
 
   /* create opaque window */
   win = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
@@ -382,7 +381,8 @@ if (bx_options.Oprivate_colormap->get ()) {
   black_pixel = col_vals[0];
   white_pixel = col_vals[15];
 
-  BX_INFO(("default_depth = %d", default_depth));
+  BX_INFO(("font %u wide x %u high, display depth = %d",
+		(unsigned) font_width, (unsigned) font_height, default_depth));
 
   //select_visual();
 
@@ -523,7 +523,7 @@ if (bx_options.Oprivate_colormap->get ()) {
   void
 bx_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
-  BX_INFO (("mouse_enabled=%d, x11 specific code", val?1:0));
+  BX_DEBUG (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {
     BX_INFO(("[x] Mouse on"));
     mouse_enable_x = current_x;

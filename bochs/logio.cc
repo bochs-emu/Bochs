@@ -126,12 +126,22 @@ iofunctions::init_log(int fd)
 void
 iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
 {
+	char c=' ';
 	assert (magic==MAGIC_LOGNUM);
 	assert (this != NULL);
 	assert (logfd != NULL);
 
 	if( showtick )
-		fprintf(logfd, "%011lld ", bx_pc_system.time_ticks());
+		fprintf(logfd, "%011lld", bx_pc_system.time_ticks());
+
+	switch(l) {
+		case LOGLEV_INFO: c='i'; break;
+		case LOGLEV_PANIC: c='p'; break;
+		case LOGLEV_ERROR: c='e'; break;
+		case LOGLEV_DEBUG: c='d'; break;
+		default: break;
+	}
+	fprintf(logfd, "%c",c);
 
 	if(prefix != NULL)
 		fprintf(logfd, "%s ", prefix);

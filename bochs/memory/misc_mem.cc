@@ -87,7 +87,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.13 2001-06-27 20:27:49 fries Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.14 2001-08-31 16:06:32 fries Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -175,13 +175,13 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
 			path
 		));
   else
-    BX_INFO(("rom at 0x%06x/%u ('%s')",
+    BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
 #else  // #if BX_PCI_SUPPORT
-  BX_INFO(("rom at 0x%06x/%u ('%s')",
+  BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
  			path
