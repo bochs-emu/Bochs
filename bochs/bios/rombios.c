@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.48 2002-04-08 01:41:59 bdenney Exp $
+// $Id: rombios.c,v 1.49 2002-04-10 23:23:00 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1051,10 +1051,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.48 $";
-static char bios_date_string[] = "$Date: 2002-04-08 01:41:59 $";
+static char bios_cvs_version_string[] = "$Revision: 1.49 $";
+static char bios_date_string[] = "$Date: 2002-04-10 23:23:00 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.48 2002-04-08 01:41:59 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.49 2002-04-10 23:23:00 instinc Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1996,6 +1996,11 @@ protected_mode:
       cld
       rep
         movsw  ;; move CX words from DS:SI to ES:DI
+
+      ;; make sure DS and ES limits are 64KB
+      mov ax, #0x28
+      mov ds, ax
+      mov es, ax
 
       ;; clear CR3 and reset PG bit in CR0 ???
       xor  eax, eax
