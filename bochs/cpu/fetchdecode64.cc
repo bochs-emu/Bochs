@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.69 2004-12-12 22:12:41 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.70 2005-02-12 19:25:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,6 +73,10 @@
  *  The XCHG instruction always asserts the LOCK# signal regardless of the
  *  presence or absence of the LOCK prefix.
  */
+
+// Segment override prefixes
+// -------------------------
+// In 64-bit mode, the CS, DS, ES, and SS segment overrides are ignored.
 
 
 void BxResolveError(bxInstruction_c *);
@@ -2123,11 +2127,11 @@ another_byte:
           if (!instruction->os64L()) {
             instruction->setOs32B(0);
             offset = 0;
-            }
+          }
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
 
         case 0x67: // AddrSize
@@ -2136,7 +2140,7 @@ another_byte:
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
 
         case 0x40:
@@ -2162,14 +2166,14 @@ another_byte:
             instruction->assertOs64();
             instruction->assertOs32();
             offset = 512*2;
-            }
+          }
           if (b1 & 0x4) rex_r = 8;
           if (b1 & 0x2) rex_x = 8;
           if (b1 & 0x1) rex_b = 8;
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
 
         case 0xf2: // REPNE/REPNZ
@@ -2179,7 +2183,7 @@ another_byte:
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
 
         case 0xf3: // REP/REPE/REPZ
@@ -2189,71 +2193,77 @@ another_byte:
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
 
         case 0x2e: // CS:
           BX_INSTR_PREFIX_CS(BX_CPU_ID);
-          instruction->setSeg(BX_SEG_REG_CS);
+          /* instruction->setSeg(BX_SEG_REG_CS); */
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
+
         case 0x26: // ES:
           BX_INSTR_PREFIX_ES(BX_CPU_ID);
-          instruction->setSeg(BX_SEG_REG_ES);
+          /* instruction->setSeg(BX_SEG_REG_ES); */
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
+
         case 0x36: // SS:
           BX_INSTR_PREFIX_SS(BX_CPU_ID);
-          instruction->setSeg(BX_SEG_REG_SS);
+          /* instruction->setSeg(BX_SEG_REG_SS); */
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
+
         case 0x3e: // DS:
           BX_INSTR_PREFIX_DS(BX_CPU_ID);
-          instruction->setSeg(BX_SEG_REG_DS);
+          /* instruction->setSeg(BX_SEG_REG_DS); */
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
+
         case 0x64: // FS:
           BX_INSTR_PREFIX_FS(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_FS);
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
+
         case 0x65: // GS:
           BX_INSTR_PREFIX_GS(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_GS);
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
+
         case 0xf0: // LOCK:
           BX_INSTR_PREFIX_LOCK(BX_CPU_ID);
           lock = 1;
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
-            }
+          }
           return(0);
 
         default:
           BX_PANIC(("fetchdecode64: prefix default = 0x%02x", b1));
           return(0);
-        }
       }
+    }
     // opcode requires another byte
     if (ilen < remain) {
       ilen++;
@@ -2262,8 +2272,8 @@ another_byte:
         // 2-byte prefix
         b1 = 0x100 | b2;
         goto another_byte;
-        }
       }
+    }
     else
       return(0);
 
@@ -2280,7 +2290,7 @@ another_byte:
       instruction->modRMForm.modRMData |= rm;
       instruction->metaInfo |= (1<<22); // (modC0)
       goto modrm_done;
-      }
+    }
     if (rm != 4) rm |= rex_b;
     instruction->modRMForm.modRMData |= rm;
     if (instruction->as64L()) {
@@ -2296,12 +2306,12 @@ another_byte:
               iptr += 4;
               ilen += 4;
               goto modrm_done;
-              }
-            else return(0);
             }
+            else return(0);
+          }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
-          }
+        }
         if (mod == 0x40) { // mod == 01b
           instruction->ResolveModrm = BxResolve64Mod1or2[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
@@ -2312,9 +2322,9 @@ get_8bit_displ_1:
             instruction->modRMForm.displ32u = (Bit8s) *iptr++;
             ilen++;
             goto modrm_done;
-            }
-          else return(0);
           }
+          else return(0);
+        }
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve64Mod1or2[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
@@ -2325,18 +2335,18 @@ get_32bit_displ_1:
           iptr += 4;
           ilen += 4;
           goto modrm_done;
-          }
-        else return(0);
         }
+        else return(0);
+      }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
         if (ilen < remain) {
           sib = *iptr++;
           ilen++;
-          }
+        }
         else {
           return(0);
-          }
+        }
         base = (sib & 0x07) | rex_b; sib >>= 3;
         index = (sib & 0x07) | rex_x; sib >>= 3;
         scale = sib;
@@ -2351,20 +2361,20 @@ get_32bit_displ_1:
             goto get_32bit_displ_1;
           // mod==00b, rm==4, base!=5
           goto modrm_done;
-          }
+        }
         if (mod == 0x40) { // mod==01b, rm==4
           instruction->ResolveModrm = BxResolve64Mod1or2Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
           goto get_8bit_displ_1;
-          }
+        }
         // (mod == 0x80),  mod==10b, rm==4
         instruction->ResolveModrm = BxResolve64Mod1or2Base[base];
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
         goto get_32bit_displ_1;
-        }
       }
+    }
     else {
      // 32-bit addressing modes; note that mod==11b handled above
       if (rm != 4) { // no s-i-b byte
@@ -2378,12 +2388,12 @@ get_32bit_displ_1:
               iptr += 4;
               ilen += 4;
               goto modrm_done;
-              }
-            else return(0);
             }
+            else return(0);
+          }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
-          }
+        }
         if (mod == 0x40) { // mod == 01b
           instruction->ResolveModrm = BxResolve32Mod1or2[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
@@ -2394,9 +2404,9 @@ get_8bit_displ:
             instruction->modRMForm.displ32u = (Bit8s) *iptr++;
             ilen++;
             goto modrm_done;
-            }
-          else return(0);
           }
+          else return(0);
+        }
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve32Mod1or2[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
@@ -2407,18 +2417,18 @@ get_32bit_displ:
           iptr += 4;
           ilen += 4;
           goto modrm_done;
-          }
-        else return(0);
         }
+        else return(0);
+      }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
         if (ilen < remain) {
           sib = *iptr++;
           ilen++;
-          }
+        }
         else {
           return(0);
-          }
+        }
         base  = (sib & 0x07) | rex_b; sib >>= 3;
         index = (sib & 0x07) | rex_x; sib >>= 3;
         scale = sib;
@@ -2433,20 +2443,20 @@ get_32bit_displ:
             goto get_32bit_displ;
           // mod==00b, rm==4, base!=5
           goto modrm_done;
-          }
+        }
         if (mod == 0x40) { // mod==01b, rm==4
           instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
-          }
+        }
         // (mod == 0x80),  mod==10b, rm==4
         instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
         goto get_32bit_displ;
-        }
       }
+    }
 
 modrm_done:
 
@@ -2520,7 +2530,7 @@ modrm_done:
     // taken in all cases if a modrm byte is NOT required.
     instruction->execute = BxOpcodeInfo64[b1+offset].ExecutePtr;
     instruction->IxForm.opcodeReg = (b1 & 7) | rex_b;
-    }
+  }
 
   if (lock) { // lock prefix invalid opcode
       // lock prefix not allowed or destination operand is not memory
@@ -2537,10 +2547,10 @@ modrm_done:
         if (ilen < remain) {
           instruction->modRMForm.Ib = *iptr;
           ilen++;
-          }
+        }
         else {
           return(0);
-          }
+        }
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
         if (ilen < remain) {
@@ -2550,10 +2560,10 @@ modrm_done:
           else
             instruction->modRMForm.Iw = (Bit16s) temp8s;
           ilen++;
-          }
+        }
         else {
           return(0);
-          }
+        }
         break;
       case BxImmediate_Iv: // same as BxImmediate_BrOff32
       case BxImmediate_IvIw: // CALL_Ap
@@ -2562,38 +2572,37 @@ modrm_done:
             instruction->modRMForm.Id = FetchDWORD(iptr);
             iptr += 4;
             ilen += 4;
-            }
-          else return(0);
           }
+          else return(0);
+        }
         else {
           if ((ilen+1) < remain) {
             instruction->modRMForm.Iw = FetchWORD(iptr);
             iptr += 2;
             ilen += 2;
-            }
-          else return(0);
           }
+          else return(0);
+        }
         if (imm_mode != BxImmediate_IvIw)
           break;
         // Get Iw for BxImmediate_IvIw
         if ((ilen+1) < remain) {
           instruction->IxIxForm.Iw2 = FetchWORD(iptr);
           ilen += 2;
-          }
+        }
         else {
           return(0);
-          }
+        }
         break;
       case BxImmediate_Iq: // MOV Rx,imm64
         if ((ilen+7) < remain) {
           instruction->IqForm.Iq = FetchQWORD(iptr);
           ilen += 8;
-          }
+        }
         else {
           return(0);
-          }
+        }
         break;
-
       case BxImmediate_O:
         // For instructions which embed the address in the opcode.  Note
         // there is only 64/32-bit addressing available in long-mode.
@@ -2601,65 +2610,64 @@ modrm_done:
           if ((ilen+7) < remain) {
             instruction->IqForm.Iq = FetchQWORD(iptr);
             ilen += 8;
-            }
-          else return(0);
           }
+          else return(0);
+        }
         else {
           if ((ilen+3) < remain) {
             // Sign extend ???
             instruction->IqForm.Iq = FetchDWORD(iptr);
             ilen += 4;
-            }
-          else return(0);
           }
+          else return(0);
+        }
         break;
-
       case BxImmediate_Iw:
       case BxImmediate_IwIb:
         if ((ilen+1) < remain) {
           instruction->modRMForm.Iw = FetchWORD(iptr);
           iptr += 2;
           ilen += 2;
-          }
+        }
         else return(0);
         if (imm_mode == BxImmediate_Iw) break;
         if (ilen < remain) {
           instruction->IxIxForm.Ib2 = *iptr;
           ilen++;
-          }
+        }
         else {
           return(0);
-          }
+        }
         break;
       case BxImmediate_BrOff8:
         if (ilen < remain) {
           Bit8s temp8s = *iptr;
           instruction->modRMForm.Id = temp8s;
           ilen++;
-          }
+        }
         else {
           return(0);
-          }
+        }
         break;
       case BxImmediate_BrOff16:
         if ((ilen+1) < remain) {
           instruction->modRMForm.Id = (Bit16s) FetchWORD(iptr);
           ilen += 2;
-          }
+        }
         else {
           return(0);
-          }
+        }
         break;
       default:
         BX_INFO(("b1 was %x", b1));
         BX_PANIC(("fetchdecode: imm_mode = %u", imm_mode));
-      }
     }
+  }
 
 #if BX_SUPPORT_3DNOW
   if(b1 == 0x10f) {		// 3DNow! instruction set
      instruction->execute = Bx3DNowOpcodeInfo[instruction->modRMForm.Ib].ExecutePtr;
-    }
+  }
 #endif
 
   instruction->setB1(b1);
