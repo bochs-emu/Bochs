@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.104 2002-07-14 11:42:51 vruppert Exp $
+// $Id: main.cc,v 1.105 2002-07-14 13:22:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -955,8 +955,6 @@ void bx_init_options ()
 
 }
 
-void bx_print_header(void);
-
 void bx_print_header ()
 {
   fprintf (stderr, "%s\n", divider);
@@ -1053,6 +1051,9 @@ bx_init_main ()
 static void
 bx_do_text_config_interface (int argc, char *argv[])
 {
+  char *bochsrc = NULL;
+  int norcfile = 1;
+
   // detect -nocontrolpanel or -nocp argument before anything else
   int arg = 1;
   if (argc > 1 && 
@@ -1062,6 +1063,10 @@ bx_do_text_config_interface (int argc, char *argv[])
     arg++;
     SIM->set_enabled (0);
     enable_control_panel = 0;
+    if ((argc > 3) && (!strcmp ("-f", argv[arg]))) {
+      bochsrc = argv[arg+1];
+      arg += 2;
+    }
   }
 #if !BX_USE_CONTROL_PANEL
   enable_control_panel = 0;
@@ -1069,11 +1074,11 @@ bx_do_text_config_interface (int argc, char *argv[])
 
   if (!enable_control_panel || BX_WITH_WX) {
     /* parse configuration file and command line arguments */
-    char *bochsrc = bx_find_bochsrc ();
+    if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
     if (bochsrc)
-      bx_read_configuration (bochsrc);
+      norcfile = bx_read_configuration (bochsrc);
 
-    if (bochsrc == NULL && arg>=argc) {
+    if (norcfile && arg>=argc) {
       // no bochsrc used.  This is legal since they may have everything on the
       // command line.  However if they have no arguments then give them some
       // friendly advice.
@@ -1087,7 +1092,7 @@ bx_do_text_config_interface (int argc, char *argv[])
 #elif !defined(macintosh)
       fprintf (stderr, "\nFor UNIX installations, try running \"bochs-dlx\" for a demo.  This script\n");
       fprintf (stderr, "is basically equivalent to typing:\n");
-      fprintf (stderr, "   cd /usr/local/bochs/dlxlinux\n");
+      fprintf (stderr, "   cd /usr/share/bochs/dlxlinux\n");
       fprintf (stderr, "   bochs\n");
 #endif
       BX_EXIT(1);
@@ -1108,8 +1113,10 @@ bx_do_text_config_interface (int argc, char *argv[])
       io->set_log_action (level, action);
     }
     // Display the pre-simulation control panel.
+#if !BX_WITH_WX
     SIM->set_enabled (1);
     bx_control_panel (BX_CPANEL_START_MENU);
+#endif
   }
 }
 
@@ -1216,6 +1223,7 @@ bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
+#if !BX_USE_CONTROL_PANEL
   if (!SIM->get_enabled ()) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
@@ -1223,6 +1231,7 @@ bx_init_hardware()
       io->set_log_action (level, action);
     }
   }
+#endif
 
   bx_pc_system.init_ips(bx_options.Oips->get ());
 
@@ -1406,7 +1415,7 @@ parse_bochsrc(char *rcfile)
   // try several possibilities for the bochsrc before giving up
 
   fd = fopen (rcfile, "r");
-  if (!fd) return -1;
+  if (fd == NULL) return -1;
 
   do {
     ret = fgets(line, sizeof(line)-1, fd);
