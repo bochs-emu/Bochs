@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.19 2002-10-23 20:04:28 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.20 2002-10-24 09:54:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.19 2002-10-23 20:04:28 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.20 2002-10-24 09:54:51 cbothamy Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");
@@ -173,6 +173,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.expecting_port60h = 0;
   BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
+  BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
 
 //BX_DEBUG(( "# Okeyboard_serial_delay is %u usec",
 //        (unsigned) bx_options.Okeyboard_serial_delay->get ()));
