@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.h,v 1.7 2001-10-03 13:10:38 bdenney Exp $
+// $Id: pit.h,v 1.8 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,6 +68,7 @@ public:
   bx_pit_c( void );
   ~bx_pit_c( void );
   BX_PIT_SMF int init( bx_devices_c *);
+  BX_PIT_SMF void reset( unsigned type);
   BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
 
   BX_PIT_SMF int SaveState( class state_file *fd );

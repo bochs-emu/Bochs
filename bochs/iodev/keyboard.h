@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.14 2002-03-26 14:46:03 bdenney Exp $
+// $Id: keyboard.h,v 1.15 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,6 +52,7 @@ public:
   bx_keyb_c(void);
   ~bx_keyb_c(void);
   BX_KEY_SMF void     init(bx_devices_c *d, bx_cmos_c *cmos);
+  BX_KEY_SMF void     reset(unsigned type);
   BX_KEY_SMF void     gen_scancode(Bit32u   scancode);
   BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
   BX_KEY_SMF void     service_paste_buf ();

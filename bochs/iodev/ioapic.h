@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: ioapic.h,v 1.4 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 extern class bx_ioapic_c bx_ioapic;
@@ -42,6 +42,7 @@ public:
   bx_ioapic_c ();
   ~bx_ioapic_c ();
   virtual void init ();
+  virtual void reset (unsigned type);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
   virtual void write(Bit32u address, Bit32u *value, unsigned len);
   void trigger_irq (unsigned num, unsigned from);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.6 2002-01-20 16:35:32 vruppert Exp $
+// $Id: serial.h,v 1.7 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -154,6 +154,7 @@ public:
   bx_serial_c(void);
   ~bx_serial_c(void);
   BX_SER_SMF void   init(bx_devices_c *);
+  BX_SER_SMF void   reset(unsigned type);
 #if USE_RAW_SERIAL
   serial_raw* raw;
 #endif // USE_RAW_SERIAL

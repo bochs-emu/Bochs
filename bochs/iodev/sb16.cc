@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.21 2002-08-23 18:12:02 vruppert Exp $
+// $Id: sb16.cc,v 1.22 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -256,6 +256,10 @@ void bx_sb16_c::init(bx_devices_c *d)
   writelog(MIDILOG(4), "Timers initialized, midi %d, dma %d, opl %d",
 	   MPU.timer_handle, DSP.timer_handle, OPL.timer_handle );
   MPU.current_timer = 0;
+}
+
+void bx_sb16_c::reset(unsigned type)
+{
 }
 
   // the timer functions

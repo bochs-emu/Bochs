@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.37 2002-08-12 16:16:53 cbothamy Exp $
+// $Id: vga.cc,v 1.38 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -229,6 +229,10 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 #endif  
 }
 
+  void
+bx_vga_c::reset(unsigned type)
+{
+}
 
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.8 2002-07-29 12:44:47 cbothamy Exp $
+// $Id: unmapped.h,v 1.9 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,8 @@ class bx_unmapped_c : public logfunctions {
 public:
   bx_unmapped_c(void);
   ~bx_unmapped_c(void);
-  BX_UM_SMF void   init(bx_devices_c *d);
+  BX_UM_SMF void init(bx_devices_c *d);
+  BX_UM_SMF void reset (unsigned type);
 
 private:
 
@@ -51,6 +52,7 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+
 
   struct {
     Bit8u port80;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.17 2002-08-27 17:24:36 vruppert Exp $
+// $Id: cmos.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_cmos_c::~bx_cmos_c(void)
 bx_cmos_c::init(bx_devices_c *d)
 {
 	unsigned i;
-	BX_DEBUG(("Init $Id: cmos.cc,v 1.17 2002-08-27 17:24:36 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: cmos.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $"));
 
 	// CMOS RAM & RTC
 
@@ -162,7 +162,7 @@ bx_cmos_c::init(bx_devices_c *d)
 }
 
 	void
-bx_cmos_c::reset(void)
+bx_cmos_c::reset(unsigned type)
 {
 	BX_CMOS_THIS s.cmos_mem_address = 0;
 

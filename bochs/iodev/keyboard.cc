@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.57 2002-06-30 18:08:02 vruppert Exp $
+// $Id: keyboard.cc,v 1.58 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.57 2002-06-30 18:08:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.58 2002-08-27 19:54:46 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.57 2002-06-30 18:08:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.58 2002-08-27 19:54:46 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -184,6 +184,11 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   // mouse port installed on system board
   cmos->s.reg[0x14] |= 0x04;
 
+}
+
+  void
+bx_keyb_c::reset(unsigned type)
+{
 }
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.17 2002-07-30 08:48:03 cbothamy Exp $
+// $Id: unmapped.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,6 +62,10 @@ bx_unmapped_c::init(bx_devices_c *d)
     }
 }
 
+  void
+bx_unmapped_c::reset(unsigned type)
+{
+}
 
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions

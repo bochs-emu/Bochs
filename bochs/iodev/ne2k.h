@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: ne2k.h,v 1.7 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -198,6 +198,7 @@ public:
   bx_ne2k_c(void);
   ~bx_ne2k_c(void);
   BX_NE2K_SMF void   init(bx_devices_c *);
+  BX_NE2K_SMF void   reset(unsigned type);
   void print_info (FILE *file, int page, int reg, int nodups);
 
 private:
@@ -207,7 +208,6 @@ private:
 
   eth_pktmover_c *ethdev;
 
-  BX_NE2K_SMF void   reset_device(void);
   BX_NE2K_SMF Bit32u read_cr(void);
   BX_NE2K_SMF void   write_cr(Bit32u value);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.17 2002-08-17 09:23:42 vruppert Exp $
+// $Id: pci.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -107,7 +107,7 @@ bx_pci_c::init(bx_devices_c *d)
 }
 
   void
-bx_pci_c::reset(void)
+bx_pci_c::reset(unsigned type)
 {
   BX_PCI_THIS s.i440fx.confAddr = 0;
   BX_PCI_THIS s.i440fx.confData = 0;

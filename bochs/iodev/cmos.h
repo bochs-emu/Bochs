@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.5 2002-01-26 10:00:08 vruppert Exp $
+// $Id: cmos.h,v 1.6 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ public:
 
   BX_CMOS_SMF void init(bx_devices_c *);
   BX_CMOS_SMF void checksum_cmos(void);
-  BX_CMOS_SMF void reset(void);
+  BX_CMOS_SMF void reset(unsigned type);
 
   struct {
     int     periodic_timer_index;

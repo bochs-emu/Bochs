@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.h,v 1.5 2001-10-03 13:10:38 bdenney Exp $
+// $Id: slowdown_timer.h,v 1.6 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -22,7 +22,8 @@ private:
 public:
   bx_slowdown_timer_c();
 
-  int init();
+  void init(bx_devices_c *d);
+  void reset(unsigned type);
 
   static void timer_handler(void * this_ptr);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.9 2001-10-03 19:54:29 instinc Exp $
+// $Id: iodebug.cc,v 1.10 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -61,7 +61,9 @@ int bx_iodebug_c::init( bx_devices_c *d )
   return(1);
 }
 
-
+int bx_iodebug_c::reset(unsigned type)
+{
+}
 
 
 Bit32u bx_iodebug_c::read_handler(void *this_ptr, Bit32u addr, unsigned io_len)

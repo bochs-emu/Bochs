@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.15 2002-08-01 12:19:01 vruppert Exp $
+// $Id: iodev.h,v 1.16 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,8 +79,14 @@ class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
   ~bx_devices_c(void);
+  // Register I/O addresses and IRQ lines. Initialize any internal
+  // structures.  init() is called only once, even if the simulator
+  // reboots or is restarted.
   void init(BX_MEM_C *);
-  void reset(void);
+  // Enter reset state in response to a reset condition.
+  // The types of reset conditions are defined in bochs.h:
+  // power-on, hardware, or software.
+  void reset(unsigned type);
   BX_MEM_C *mem;  // address space associated with these devices
   Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
   Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );

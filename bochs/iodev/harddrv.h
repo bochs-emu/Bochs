@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.11 2002-08-05 15:51:06 cbothamy Exp $
+// $Id: harddrv.h,v 1.12 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -268,6 +268,7 @@ public:
   ~bx_hard_drive_c(void);
   BX_HD_SMF void   close_harddrive(void);
   BX_HD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
+  BX_HD_SMF void   reset(unsigned type);
   BX_HD_SMF unsigned get_cd_media_status(void);
   BX_HD_SMF unsigned set_cd_media_status(unsigned status);
 

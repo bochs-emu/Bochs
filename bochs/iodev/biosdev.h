@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.h,v 1.1 2002-04-01 21:53:23 cbothamy Exp $
+// $Id: biosdev.h,v 1.2 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,6 +43,7 @@ public:
   ~bx_biosdev_c(void);
 
   BX_BIOS_SMF void init(bx_devices_c *d);
+  BX_BIOS_SMF void reset (unsigned type);
 
 private:
 

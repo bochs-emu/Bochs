@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.7 2002-03-25 01:31:59 bdenney Exp $
+// $Id: pic.h,v 1.8 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,6 +72,7 @@ public:
   bx_pic_c(void);
   ~bx_pic_c(void);
   BX_PIC_SMF void   init(bx_devices_c *);
+  BX_PIC_SMF void   reset(unsigned type);
   BX_PIC_SMF void   lower_irq(unsigned irq_no);
   BX_PIC_SMF void   raise_irq(unsigned irq_no);
   BX_PIC_SMF Bit8u  IAC(void);

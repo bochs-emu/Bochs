@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.h,v 1.4 2001-10-03 13:10:38 bdenney Exp $
+// $Id: iodebug.h,v 1.5 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #ifndef _BX_IODEBUG_H
@@ -17,6 +17,7 @@ public:
   bx_iodebug_c( void );
   ~bx_iodebug_c( void );
   int init( bx_devices_c * );
+  void reset (unsigned type);
   static void mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
   static void mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
 

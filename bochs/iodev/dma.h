@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.8 2002-06-16 15:02:27 vruppert Exp $
+// $Id: dma.h,v 1.9 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,6 +46,7 @@ public:
   ~bx_dma_c(void);
 
   BX_DMA_SMF void     init(bx_devices_c *);
+  BX_DMA_SMF void     reset(unsigned type);
   BX_DMA_SMF void     raise_HLDA(void);
   BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
   BX_DMA_SMF unsigned get_TC(void);

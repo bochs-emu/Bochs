@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.11 2002-08-13 12:02:37 vruppert Exp $
+// $Id: floppy.h,v 1.12 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ public:
   bx_floppy_ctrl_c(void);
   ~bx_floppy_ctrl_c(void);
   BX_FD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
-  BX_FD_SMF void   reset(unsigned source);
+  BX_FD_SMF void   reset(unsigned type);
   BX_FD_SMF void   dma_write(Bit8u *data_byte);
   BX_FD_SMF void   dma_read(Bit8u *data_byte);
   BX_FD_SMF unsigned set_media_status(unsigned drive, unsigned status);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.13 2002-07-21 14:50:11 japj Exp $
+// $Id: vga.h,v 1.14 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,6 +95,7 @@ public:
   bx_vga_c(void);
   ~bx_vga_c(void);
   BX_VGA_SMF void   init(bx_devices_c *, bx_cmos_c *cmos);
+  BX_VGA_SMF void   reset(unsigned type);
   BX_VGA_SMF Bit8u  mem_read(Bit32u addr);
   // Note: either leave value of type Bit8u, or mask it when
   //       used to 8 bits, in memory.cc

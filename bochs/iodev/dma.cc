@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.20 2002-06-23 18:03:37 vruppert Exp $
+// $Id: dma.cc,v 1.21 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.20 2002-06-23 18:03:37 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.21 2002-08-27 19:54:46 bdenney Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -185,6 +185,10 @@ bx_dma_c::init(bx_devices_c *d)
   BX_INFO(("channel 4 used by cascade"));
 }
 
+  void
+bx_dma_c::reset(unsigned type)
+{
+}
 
 
   // index to find channel from register number (only [0],[1],[2],[6] used)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.8 2002-08-24 10:20:35 vruppert Exp $
+// $Id: parallel.h,v 1.9 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,6 +62,7 @@ public:
   bx_parallel_c(void);
   ~bx_parallel_c(void);
   BX_PAR_SMF void   init(bx_devices_c *);
+  BX_PAR_SMF void   reset(unsigned type);
 
 private:
   bx_par_t s;

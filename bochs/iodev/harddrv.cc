@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.68 2002-08-09 13:16:22 cbothamy Exp $
+// $Id: harddrv.cc,v 1.69 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.68 2002-08-09 13:16:22 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.69 2002-08-27 19:54:46 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -354,6 +354,11 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
 	BX_CONTROLLER(id).features            = 0;
   }
+}
+
+  void
+bx_hard_drive_c::reset(unsigned type)
+{
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.3 2002-04-24 11:52:13 cbothamy Exp $
+// $Id: biosdev.cc,v 1.4 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,6 +104,10 @@ bx_biosdev_c::init(bx_devices_c *d)
                                       0x0500, "VGABios Info Port");
 }
 
+  void
+bx_biosdev_c::reset(unsigned type)
+{
+}
 
   // static IO port write callback handler
   // redirects to non-static class handler to avoid virtual functions

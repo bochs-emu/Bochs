@@ -1,0 +1,912 @@
+----------------------------------------------------------------------
+Patch name: patch.iodev-add-reset
+Author: Bryce Denney
+Date: Tue Aug 27 15:50:47 EDT 2002
+
+Detailed description:
+Adds "void reset(unsigned type)" method to every I/O device.
+Some devices already had one.  Some I had to add an empty one.
+I did a little cleaning of init() methods to make them more uniform
+but generally I left them alone.
+
+Now in iodev/devices.cc, the reset() method calls reset(type) on 
+every I/O device.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/biosdev.cc,v
+retrieving revision 1.3
+diff -u -r1.3 biosdev.cc
+--- iodev/biosdev.cc	24 Apr 2002 11:52:13 -0000	1.3
++++ iodev/biosdev.cc	27 Aug 2002 19:50:05 -0000
+@@ -104,6 +104,10 @@
+                                       0x0500, "VGABios Info Port");
+ }
+ 
++  void
++bx_biosdev_c::reset(unsigned type)
++{
++}
+ 
+   // static IO port write callback handler
+   // redirects to non-static class handler to avoid virtual functions
+Index: iodev/biosdev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/biosdev.h,v
+retrieving revision 1.1
+diff -u -r1.1 biosdev.h
+--- iodev/biosdev.h	1 Apr 2002 21:53:23 -0000	1.1
++++ iodev/biosdev.h	27 Aug 2002 19:50:05 -0000
+@@ -43,6 +43,7 @@
+   ~bx_biosdev_c(void);
+ 
+   BX_BIOS_SMF void init(bx_devices_c *d);
++  BX_BIOS_SMF void reset (unsigned type);
+ 
+ private:
+ 
+Index: iodev/cdrom.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cdrom.cc,v
+retrieving revision 1.37
+diff -u -r1.37 cdrom.cc
+--- iodev/cdrom.cc	31 Jul 2002 05:21:46 -0000	1.37
++++ iodev/cdrom.cc	27 Aug 2002 19:50:05 -0000
+@@ -223,6 +223,11 @@
+ 	BX_DEBUG(("Exit"));
+ }
+ 
++void
++cdrom_interface::reset(unsigned type) {
++}
++
++
+   bool
+ cdrom_interface::insert_cdrom(char *dev)
+ {
+Index: iodev/cdrom.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cdrom.h,v
+retrieving revision 1.7
+diff -u -r1.7 cdrom.h
+--- iodev/cdrom.h	1 Feb 2002 16:46:27 -0000	1.7
++++ iodev/cdrom.h	27 Aug 2002 19:50:05 -0000
+@@ -33,6 +33,7 @@
+   cdrom_interface(char *dev);
+   ~cdrom_interface(void);
+   void init(void);
++  void reset (unsigned type);
+ 
+   // Load CD-ROM. Returns false if CD is not ready.
+   bool insert_cdrom(char *dev = NULL);
+Index: iodev/cmos.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cmos.cc,v
+retrieving revision 1.17
+diff -u -r1.17 cmos.cc
+--- iodev/cmos.cc	27 Aug 2002 17:24:36 -0000	1.17
++++ iodev/cmos.cc	27 Aug 2002 19:50:07 -0000
+@@ -162,7 +162,7 @@
+ }
+ 
+ 	void
+-bx_cmos_c::reset(void)
++bx_cmos_c::reset(unsigned type)
+ {
+ 	BX_CMOS_THIS s.cmos_mem_address = 0;
+ 
+Index: iodev/cmos.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cmos.h,v
+retrieving revision 1.5
+diff -u -r1.5 cmos.h
+--- iodev/cmos.h	26 Jan 2002 10:00:08 -0000	1.5
++++ iodev/cmos.h	27 Aug 2002 19:50:07 -0000
+@@ -44,7 +44,7 @@
+ 
+   BX_CMOS_SMF void init(bx_devices_c *);
+   BX_CMOS_SMF void checksum_cmos(void);
+-  BX_CMOS_SMF void reset(void);
++  BX_CMOS_SMF void reset(unsigned type);
+ 
+   struct {
+     int     periodic_timer_index;
+Index: iodev/devices.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/devices.cc,v
+retrieving revision 1.28
+diff -u -r1.28 devices.cc
+--- iodev/devices.cc	27 Aug 2002 17:25:18 -0000	1.28
++++ iodev/devices.cc	27 Aug 2002 19:50:07 -0000
+@@ -42,7 +42,7 @@
+ 
+ 
+ 
+-  // constructor for bx_devices_c
++// constructor for bx_devices_c
+ bx_devices_c::bx_devices_c(void)
+ {
+   put("DEV");
+@@ -231,13 +231,41 @@
+ 
+ 
+   void
+-bx_devices_c::reset(void)
++bx_devices_c::reset(unsigned type)
+ {
+ #if BX_PCI_SUPPORT
+-  pci->reset();
++  pci->reset(type);
++#endif
++#if BX_SUPPORT_IOAPIC
++  ioapic->reset (type);
++#endif
++  biosdev->reset(type);
++  cmos->reset(type);
++  dma->reset(type);
++  hard_drive->reset(type);
++  floppy->reset(type);
++#if BX_SUPPORT_SB16
++  sb16->reset(type);
++#endif
++#if BX_SUPPORT_VGA
++  vga->reset(type);
++#else
++  // reset hga hardware?
++#endif
++  pic->reset(type);
++  pit->reset(type);
++#if BX_USE_SLOWDOWN_TIMER
++  bx_slowdown_timer.reset(type);
++#endif
++  keyboard->reset(type);
++#if BX_IODEBUG_SUPPORT
++  iodebug->reset(type);
++#endif
++  parallel->reset(type);
++  serial->reset(type);
++#if BX_NE2K_SUPPORT
++  ne2k->reset(type);
+ #endif
+-  cmos->reset();
+-  floppy->reset(BX_RESET_HARDWARE);
+ }
+ 
+ 
+Index: iodev/dma.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/dma.cc,v
+retrieving revision 1.20
+diff -u -r1.20 dma.cc
+--- iodev/dma.cc	23 Jun 2002 18:03:37 -0000	1.20
++++ iodev/dma.cc	27 Aug 2002 19:50:08 -0000
+@@ -185,6 +185,10 @@
+   BX_INFO(("channel 4 used by cascade"));
+ }
+ 
++  void
++bx_dma_c::reset(unsigned type)
++{
++}
+ 
+ 
+   // index to find channel from register number (only [0],[1],[2],[6] used)
+Index: iodev/dma.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/dma.h,v
+retrieving revision 1.8
+diff -u -r1.8 dma.h
+--- iodev/dma.h	16 Jun 2002 15:02:27 -0000	1.8
++++ iodev/dma.h	27 Aug 2002 19:50:08 -0000
+@@ -46,6 +46,7 @@
+   ~bx_dma_c(void);
+ 
+   BX_DMA_SMF void     init(bx_devices_c *);
++  BX_DMA_SMF void     reset(unsigned type);
+   BX_DMA_SMF void     raise_HLDA(void);
+   BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
+   BX_DMA_SMF unsigned get_TC(void);
+Index: iodev/floppy.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.cc,v
+retrieving revision 1.48
+diff -u -r1.48 floppy.cc
+--- iodev/floppy.cc	13 Aug 2002 12:02:36 -0000	1.48
++++ iodev/floppy.cc	27 Aug 2002 19:50:09 -0000
+@@ -234,7 +234,7 @@
+ 
+ 
+   void
+-bx_floppy_ctrl_c::reset(unsigned source)
++bx_floppy_ctrl_c::reset(unsigned type)
+ {
+   Bit32u i;
+ 
+@@ -257,7 +257,7 @@
+   BX_FD_THIS s.status_reg3 = 0;
+ 
+   // software reset (via DOR port 0x3f2 bit 2) does not change DOR
+-  if (source == BX_RESET_HARDWARE) {
++  if (type == BX_RESET_HARDWARE) {
+     BX_FD_THIS s.DOR = 0x0c;
+     // motor off, drive 3..0
+     // DMA/INT enabled
+Index: iodev/floppy.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.h,v
+retrieving revision 1.11
+diff -u -r1.11 floppy.h
+--- iodev/floppy.h	13 Aug 2002 12:02:37 -0000	1.11
++++ iodev/floppy.h	27 Aug 2002 19:50:10 -0000
+@@ -53,7 +53,7 @@
+   bx_floppy_ctrl_c(void);
+   ~bx_floppy_ctrl_c(void);
+   BX_FD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
+-  BX_FD_SMF void   reset(unsigned source);
++  BX_FD_SMF void   reset(unsigned type);
+   BX_FD_SMF void   dma_write(Bit8u *data_byte);
+   BX_FD_SMF void   dma_read(Bit8u *data_byte);
+   BX_FD_SMF unsigned set_media_status(unsigned drive, unsigned status);
+Index: iodev/guest2host.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/guest2host.cc,v
+retrieving revision 1.9
+diff -u -r1.9 guest2host.cc
+--- iodev/guest2host.cc	3 Oct 2001 13:10:38 -0000	1.9
++++ iodev/guest2host.cc	27 Aug 2002 19:50:10 -0000
+@@ -63,6 +63,10 @@
+   memset(&bx_g2h.s, 0, sizeof(bx_g2h.s));
+ }
+ 
++  void
++bx_g2h_c::reset(unsigned type)
++{
++}
+ 
+   unsigned
+ bx_g2h_c::aquire_channel(bx_g2h_callback_t f)
+Index: iodev/guest2host.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/guest2host.h,v
+retrieving revision 1.4
+diff -u -r1.4 guest2host.h
+--- iodev/guest2host.h	3 Oct 2001 13:10:38 -0000	1.4
++++ iodev/guest2host.h	27 Aug 2002 19:50:10 -0000
+@@ -47,6 +47,7 @@
+   bx_g2h_c(void);
+   ~bx_g2h_c(void);
+   static void   init(bx_devices_c *d);
++  void reset (unsigned type);
+   unsigned aquire_channel(bx_g2h_callback_t);
+   unsigned deaquire_channel(unsigned channel);
+ 
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.68
+diff -u -r1.68 harddrv.cc
+--- iodev/harddrv.cc	9 Aug 2002 13:16:22 -0000	1.68
++++ iodev/harddrv.cc	27 Aug 2002 19:50:16 -0000
+@@ -356,6 +356,11 @@
+   }
+ }
+ 
++  void
++bx_hard_drive_c::reset(unsigned type)
++{
++}
++
+ 
+ #define GOTO_RETURN_VALUE  if(io_len==4){\
+                              goto return_value32;\
+Index: iodev/harddrv.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
+retrieving revision 1.11
+diff -u -r1.11 harddrv.h
+--- iodev/harddrv.h	5 Aug 2002 15:51:06 -0000	1.11
++++ iodev/harddrv.h	27 Aug 2002 19:50:16 -0000
+@@ -268,6 +268,7 @@
+   ~bx_hard_drive_c(void);
+   BX_HD_SMF void   close_harddrive(void);
+   BX_HD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
++  BX_HD_SMF void   reset(unsigned type);
+   BX_HD_SMF unsigned get_cd_media_status(void);
+   BX_HD_SMF unsigned set_cd_media_status(unsigned status);
+ 
+Index: iodev/ioapic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ioapic.cc,v
+retrieving revision 1.7
+diff -u -r1.7 ioapic.cc
+--- iodev/ioapic.cc	20 Mar 2002 02:41:19 -0000	1.7
++++ iodev/ioapic.cc	27 Aug 2002 19:50:16 -0000
+@@ -55,6 +55,11 @@
+ }
+ 
+ void 
++bx_ioapic_c::reset () 
++{
++}
++
++void 
+ bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
+ {
+   BX_DEBUG( ("I/O APIC read_aligned addr=%08x, len=%d", address, len));
+Index: iodev/ioapic.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ioapic.h,v
+retrieving revision 1.3
+diff -u -r1.3 ioapic.h
+--- iodev/ioapic.h	3 Oct 2001 13:10:38 -0000	1.3
++++ iodev/ioapic.h	27 Aug 2002 19:50:16 -0000
+@@ -42,6 +42,7 @@
+   bx_ioapic_c ();
+   ~bx_ioapic_c ();
+   virtual void init ();
++  virtual void reset (unsigned type);
+   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
+   virtual void write(Bit32u address, Bit32u *value, unsigned len);
+   void trigger_irq (unsigned num, unsigned from);
+Index: iodev/iodebug.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodebug.cc,v
+retrieving revision 1.9
+diff -u -r1.9 iodebug.cc
+--- iodev/iodebug.cc	3 Oct 2001 19:54:29 -0000	1.9
++++ iodev/iodebug.cc	27 Aug 2002 19:50:16 -0000
+@@ -61,7 +61,9 @@
+   return(1);
+ }
+ 
+-
++int bx_iodebug_c::reset(unsigned type)
++{
++}
+ 
+ 
+ Bit32u bx_iodebug_c::read_handler(void *this_ptr, Bit32u addr, unsigned io_len)
+Index: iodev/iodebug.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodebug.h,v
+retrieving revision 1.4
+diff -u -r1.4 iodebug.h
+--- iodev/iodebug.h	3 Oct 2001 13:10:38 -0000	1.4
++++ iodev/iodebug.h	27 Aug 2002 19:50:16 -0000
+@@ -17,6 +17,7 @@
+   bx_iodebug_c( void );
+   ~bx_iodebug_c( void );
+   int init( bx_devices_c * );
++  void reset (unsigned type);
+   static void mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
+   static void mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
+ 
+Index: iodev/iodev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
+retrieving revision 1.15
+diff -u -r1.15 iodev.h
+--- iodev/iodev.h	1 Aug 2002 12:19:01 -0000	1.15
++++ iodev/iodev.h	27 Aug 2002 19:50:16 -0000
+@@ -79,8 +79,14 @@
+ public:
+   bx_devices_c(void);
+   ~bx_devices_c(void);
++  // Register I/O addresses and IRQ lines. Initialize any internal
++  // structures.  init() is called only once, even if the simulator
++  // reboots or is restarted.
+   void init(BX_MEM_C *);
+-  void reset(void);
++  // Enter reset state in response to a reset condition.
++  // The types of reset conditions are defined in bochs.h:
++  // power-on, hardware, or software.
++  void reset(unsigned type);
+   BX_MEM_C *mem;  // address space associated with these devices
+   Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
+   Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
+Index: iodev/keyboard.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.cc,v
+retrieving revision 1.57
+diff -u -r1.57 keyboard.cc
+--- iodev/keyboard.cc	30 Jun 2002 18:08:02 -0000	1.57
++++ iodev/keyboard.cc	27 Aug 2002 19:50:18 -0000
+@@ -187,6 +187,11 @@
+ }
+ 
+   void
++bx_keyb_c::reset(unsigned type)
++{
++}
++
++  void
+ bx_keyb_c::paste_delay_changed()
+ {
+   BX_KEY_THIS pastedelay = bx_options.Okeyboard_paste_delay->get()/BX_IODEV_HANDLER_PERIOD;
+Index: iodev/keyboard.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.h,v
+retrieving revision 1.14
+diff -u -r1.14 keyboard.h
+--- iodev/keyboard.h	26 Mar 2002 14:46:03 -0000	1.14
++++ iodev/keyboard.h	27 Aug 2002 19:50:18 -0000
+@@ -52,6 +52,7 @@
+   bx_keyb_c(void);
+   ~bx_keyb_c(void);
+   BX_KEY_SMF void     init(bx_devices_c *d, bx_cmos_c *cmos);
++  BX_KEY_SMF void     reset(unsigned type);
+   BX_KEY_SMF void     gen_scancode(Bit32u   scancode);
+   BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
+   BX_KEY_SMF void     service_paste_buf ();
+Index: iodev/ne2k.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ne2k.cc,v
+retrieving revision 1.34
+diff -u -r1.34 ne2k.cc
+--- iodev/ne2k.cc	3 May 2002 13:52:53 -0000	1.34
++++ iodev/ne2k.cc	27 Aug 2002 19:50:20 -0000
+@@ -52,12 +52,12 @@
+ }
+ 
+ //
+-// reset_device - restore state to power-up, cancelling all i/o
++// reset - restore state to power-up, cancelling all i/o
+ //
+ void
+-bx_ne2k_c::reset_device(void)
++bx_ne2k_c::reset(unsigned type)
+ {
+-  BX_DEBUG (("reset_device"));
++  BX_DEBUG (("reset"));
+   // Zero out registers and memory
+   memset( & BX_NE2K_THIS s.CR,  0, sizeof(BX_NE2K_THIS s.CR) );
+   memset( & BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
+@@ -318,7 +318,7 @@
+     break;
+ 
+   case 0xf:  // Reset register
+-    reset_device();
++    reset(BX_RESET_HARDWARE);
+     break;
+ 
+   default:
+@@ -365,7 +365,7 @@
+     break;
+ 
+   case 0xf:  // Reset register
+-    reset_device();
++    reset(BX_RESET_HARDWARE);
+     break;
+ 
+   default: // this is invalid, but happens under win95 device detection
+@@ -1251,7 +1251,7 @@
+ 
+   if (bx_options.ne2k.Ovalid->get ()) {
+     // Bring the register state into power-up state
+-    reset_device();
++    reset(BX_RESET_HARDWARE);
+ 
+     // Read in values from config file
+     BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
+Index: iodev/ne2k.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ne2k.h,v
+retrieving revision 1.6
+diff -u -r1.6 ne2k.h
+--- iodev/ne2k.h	3 Oct 2001 13:10:38 -0000	1.6
++++ iodev/ne2k.h	27 Aug 2002 19:50:20 -0000
+@@ -198,6 +198,7 @@
+   bx_ne2k_c(void);
+   ~bx_ne2k_c(void);
+   BX_NE2K_SMF void   init(bx_devices_c *);
++  BX_NE2K_SMF void   reset(unsigned type);
+   void print_info (FILE *file, int page, int reg, int nodups);
+ 
+ private:
+@@ -207,7 +208,6 @@
+ 
+   eth_pktmover_c *ethdev;
+ 
+-  BX_NE2K_SMF void   reset_device(void);
+   BX_NE2K_SMF Bit32u read_cr(void);
+   BX_NE2K_SMF void   write_cr(Bit32u value);
+ 
+Index: iodev/parallel.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/parallel.cc,v
+retrieving revision 1.19
+diff -u -r1.19 parallel.cc
+--- iodev/parallel.cc	24 Aug 2002 17:11:33 -0000	1.19
++++ iodev/parallel.cc	27 Aug 2002 19:50:20 -0000
+@@ -99,6 +99,11 @@
+ }
+ 
+   void
++bx_parallel_c::reset(unsigned type)
++{
++}
++
++  void
+ bx_parallel_c::virtual_printer(void)
+ {
+   if (BX_PAR_THIS s.STATUS.slct) {
+Index: iodev/parallel.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/parallel.h,v
+retrieving revision 1.8
+diff -u -r1.8 parallel.h
+--- iodev/parallel.h	24 Aug 2002 10:20:35 -0000	1.8
++++ iodev/parallel.h	27 Aug 2002 19:50:20 -0000
+@@ -62,6 +62,7 @@
+   bx_parallel_c(void);
+   ~bx_parallel_c(void);
+   BX_PAR_SMF void   init(bx_devices_c *);
++  BX_PAR_SMF void   reset(unsigned type);
+ 
+ private:
+   bx_par_t s;
+Index: iodev/pci.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pci.cc,v
+retrieving revision 1.17
+diff -u -r1.17 pci.cc
+--- iodev/pci.cc	17 Aug 2002 09:23:42 -0000	1.17
++++ iodev/pci.cc	27 Aug 2002 19:50:21 -0000
+@@ -107,7 +107,7 @@
+ }
+ 
+   void
+-bx_pci_c::reset(void)
++bx_pci_c::reset(unsigned type)
+ {
+   BX_PCI_THIS s.i440fx.confAddr = 0;
+   BX_PCI_THIS s.i440fx.confData = 0;
+Index: iodev/pci.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pci.h,v
+retrieving revision 1.7
+diff -u -r1.7 pci.h
+--- iodev/pci.h	17 Aug 2002 09:23:42 -0000	1.7
++++ iodev/pci.h	27 Aug 2002 19:50:21 -0000
+@@ -56,7 +56,7 @@
+   bx_pci_c(void);
+   ~bx_pci_c(void);
+   BX_PCI_SMF void   init(bx_devices_c *);
+-  BX_PCI_SMF void   reset(void);
++  BX_PCI_SMF void   reset(unsigned type);
+   Boolean register_pci_handlers(void *this_ptr, bx_pci_read_handler_t f1,
+                                 bx_pci_write_handler_t f2, Bit8u devfunc,
+                                 const char *name);
+Index: iodev/pic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.cc,v
+retrieving revision 1.28
+diff -u -r1.28 pic.cc
+--- iodev/pic.cc	6 Aug 2002 14:11:03 -0000	1.28
++++ iodev/pic.cc	27 Aug 2002 19:50:22 -0000
+@@ -116,7 +116,10 @@
+   }
+ }
+ 
+-
++  void
++bx_pic_c::reset(unsigned type)
++{
++}
+ 
+   // static IO port read callback handler
+   // redirects to non-static class handler to avoid virtual functions
+Index: iodev/pic.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.h,v
+retrieving revision 1.7
+diff -u -r1.7 pic.h
+--- iodev/pic.h	25 Mar 2002 01:31:59 -0000	1.7
++++ iodev/pic.h	27 Aug 2002 19:50:22 -0000
+@@ -72,6 +72,7 @@
+   bx_pic_c(void);
+   ~bx_pic_c(void);
+   BX_PIC_SMF void   init(bx_devices_c *);
++  BX_PIC_SMF void   reset(unsigned type);
+   BX_PIC_SMF void   lower_irq(unsigned irq_no);
+   BX_PIC_SMF void   raise_irq(unsigned irq_no);
+   BX_PIC_SMF Bit8u  IAC(void);
+Index: iodev/pit.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit.cc,v
+retrieving revision 1.10
+diff -u -r1.10 pit.cc
+--- iodev/pit.cc	3 Oct 2001 13:10:38 -0000	1.10
++++ iodev/pit.cc	27 Aug 2002 19:50:22 -0000
+@@ -223,10 +223,8 @@
+   return(1);
+ }
+ 
+-
+-
+-
+-
++void bx_pit_c::reset(unsigned type) {
++}
+ 
+   // static IO port read callback handler
+   // redirects to non-static class handler to avoid virtual functions
+Index: iodev/pit.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit.h,v
+retrieving revision 1.7
+diff -u -r1.7 pit.h
+--- iodev/pit.h	3 Oct 2001 13:10:38 -0000	1.7
++++ iodev/pit.h	27 Aug 2002 19:50:23 -0000
+@@ -68,6 +68,7 @@
+   bx_pit_c( void );
+   ~bx_pit_c( void );
+   BX_PIT_SMF int init( bx_devices_c *);
++  BX_PIT_SMF void reset( unsigned type);
+   BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
+ 
+   BX_PIT_SMF int SaveState( class state_file *fd );
+Index: iodev/pit82c54.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit82c54.cc,v
+retrieving revision 1.19
+diff -u -r1.19 pit82c54.cc
+--- iodev/pit82c54.cc	21 Feb 2002 21:16:06 -0000	1.19
++++ iodev/pit82c54.cc	27 Aug 2002 19:50:23 -0000
+@@ -178,6 +178,9 @@
+     init();
+   }
+ 
++  void pit_82C54::reset (unsigned type) {
++  }
++
+ void pit_82C54::decrement_multiple(counter_type & thisctr, Bit32u cycles) {
+   while(cycles>0) {
+     if(cycles<=thisctr.count_binary) {
+Index: iodev/pit82c54.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit82c54.h,v
+retrieving revision 1.10
+diff -u -r1.10 pit82c54.h
+--- iodev/pit82c54.h	21 Feb 2002 19:22:42 -0000	1.10
++++ iodev/pit82c54.h	27 Aug 2002 19:50:23 -0000
+@@ -110,6 +110,7 @@
+ 
+ public:
+   void init (void);
++  void reset (unsigned type);
+   pit_82C54 (void);
+ 
+   void clock_all(Bit32u cycles);
+Index: iodev/pit_wrap.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit_wrap.cc,v
+retrieving revision 1.19
+diff -u -r1.19 pit_wrap.cc
+--- iodev/pit_wrap.cc	21 May 2002 15:07:45 -0000	1.19
++++ iodev/pit_wrap.cc	27 Aug 2002 19:50:24 -0000
+@@ -158,6 +158,10 @@
+   return(1);
+ }
+ 
++  void
++bx_pit_c::reset(unsigned type)
++{
++}
+ 
+ void
+ bx_pit_c::timer_handler(void *this_ptr) {
+Index: iodev/pit_wrap.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit_wrap.h,v
+retrieving revision 1.9
+diff -u -r1.9 pit_wrap.h
+--- iodev/pit_wrap.h	20 May 2002 21:53:26 -0000	1.9
++++ iodev/pit_wrap.h	27 Aug 2002 19:50:24 -0000
+@@ -50,6 +50,7 @@
+   bx_pit_c( void );
+   ~bx_pit_c( void );
+   BX_PIT_SMF int init( bx_devices_c *);
++  BX_PIT_SMF void reset( unsigned type);
+   BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
+ 
+   BX_PIT_SMF int SaveState( class state_file *fd );
+Index: iodev/sb16.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/sb16.cc,v
+retrieving revision 1.21
+diff -u -r1.21 sb16.cc
+--- iodev/sb16.cc	23 Aug 2002 18:12:02 -0000	1.21
++++ iodev/sb16.cc	27 Aug 2002 19:50:27 -0000
+@@ -258,6 +258,10 @@
+   MPU.current_timer = 0;
+ }
+ 
++void bx_sb16_c::reset(unsigned type)
++{
++}
++
+   // the timer functions
+ void bx_sb16_c::mpu_timer (void *this_ptr)
+ {
+Index: iodev/sb16.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/sb16.h,v
+retrieving revision 1.6
+diff -u -r1.6 sb16.h
+--- iodev/sb16.h	3 Oct 2001 13:10:38 -0000	1.6
++++ iodev/sb16.h	27 Aug 2002 19:50:28 -0000
+@@ -195,6 +195,7 @@
+   bx_sb16_c(void);
+   ~bx_sb16_c(void);
+   BX_SB16_SMF void init(bx_devices_c *);
++  BX_SB16_SMF void reset(unsigned type);
+ 
+       /* DMA input and output, 8 and 16 bit, have to be public */
+   BX_SB16_SMF void   dma_write8(Bit8u *data_byte);
+Index: iodev/serial.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/serial.cc,v
+retrieving revision 1.24
+diff -u -r1.24 serial.cc
+--- iodev/serial.cc	27 Aug 2002 17:24:36 -0000	1.24
++++ iodev/serial.cc	27 Aug 2002 19:50:29 -0000
+@@ -243,7 +243,10 @@
+ 
+ }
+ 
+-
++  void
++bx_serial_c::reset(unsigned type)
++{
++}
+ 
+   // static IO port read callback handler
+   // redirects to non-static class handler to avoid virtual functions
+Index: iodev/serial.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/serial.h,v
+retrieving revision 1.6
+diff -u -r1.6 serial.h
+--- iodev/serial.h	20 Jan 2002 16:35:32 -0000	1.6
++++ iodev/serial.h	27 Aug 2002 19:50:29 -0000
+@@ -154,6 +154,7 @@
+   bx_serial_c(void);
+   ~bx_serial_c(void);
+   BX_SER_SMF void   init(bx_devices_c *);
++  BX_SER_SMF void   reset(unsigned type);
+ #if USE_RAW_SERIAL
+   serial_raw* raw;
+ #endif // USE_RAW_SERIAL
+Index: iodev/slowdown_timer.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/slowdown_timer.cc,v
+retrieving revision 1.9
+diff -u -r1.9 slowdown_timer.cc
+--- iodev/slowdown_timer.cc	6 Mar 2002 01:19:50 -0000	1.9
++++ iodev/slowdown_timer.cc	27 Aug 2002 19:50:29 -0000
+@@ -32,8 +32,8 @@
+   s.timer_handle=BX_NULL_TIMER_HANDLE;
+ }
+ 
+-int
+-bx_slowdown_timer_c::init() {
++void
++bx_slowdown_timer_c::init(bx_devices_c *dev) {
+   s.MAXmultiplier=MAXMULT;
+   s.Q=Qval;
+ 
+@@ -46,7 +46,11 @@
+   s.timer_handle=bx_pc_system.register_timer(this, timer_handler, 100 , 1, 1);
+   bx_pc_system.deactivate_timer(s.timer_handle);
+   bx_pc_system.activate_timer(s.timer_handle,(Bit32u)s.Q,0);
+-  return 0;
++}
++
++void
++bx_slowdown_timer_c::reset(unsigned type)
++{
+ }
+ 
+ void
+Index: iodev/slowdown_timer.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/slowdown_timer.h,v
+retrieving revision 1.5
+diff -u -r1.5 slowdown_timer.h
+--- iodev/slowdown_timer.h	3 Oct 2001 13:10:38 -0000	1.5
++++ iodev/slowdown_timer.h	27 Aug 2002 19:50:29 -0000
+@@ -22,7 +22,8 @@
+ public:
+   bx_slowdown_timer_c();
+ 
+-  int init();
++  void init(bx_devices_c *d);
++  void reset(unsigned type);
+ 
+   static void timer_handler(void * this_ptr);
+ 
+Index: iodev/unmapped.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.cc,v
+retrieving revision 1.17
+diff -u -r1.17 unmapped.cc
+--- iodev/unmapped.cc	30 Jul 2002 08:48:03 -0000	1.17
++++ iodev/unmapped.cc	27 Aug 2002 19:50:29 -0000
+@@ -62,6 +62,10 @@
+     }
+ }
+ 
++  void
++bx_unmapped_c::reset(unsigned type)
++{
++}
+ 
+   // static IO port read callback handler
+   // redirects to non-static class handler to avoid virtual functions
+Index: iodev/unmapped.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.h,v
+retrieving revision 1.8
+diff -u -r1.8 unmapped.h
+--- iodev/unmapped.h	29 Jul 2002 12:44:47 -0000	1.8
++++ iodev/unmapped.h	27 Aug 2002 19:50:29 -0000
+@@ -41,7 +41,8 @@
+ public:
+   bx_unmapped_c(void);
+   ~bx_unmapped_c(void);
+-  BX_UM_SMF void   init(bx_devices_c *d);
++  BX_UM_SMF void init(bx_devices_c *d);
++  BX_UM_SMF void reset (unsigned type);
+ 
+ private:
+ 
+@@ -51,6 +52,7 @@
+   Bit32u read(Bit32u address, unsigned io_len);
+   void   write(Bit32u address, Bit32u value, unsigned io_len);
+ #endif
++
+ 
+   struct {
+     Bit8u port80;
+Index: iodev/vga.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/vga.cc,v
+retrieving revision 1.37
+diff -u -r1.37 vga.cc
+--- iodev/vga.cc	12 Aug 2002 16:16:53 -0000	1.37
++++ iodev/vga.cc	27 Aug 2002 19:50:32 -0000
+@@ -229,6 +229,10 @@
+ #endif  
+ }
+ 
++  void
++bx_vga_c::reset(unsigned type)
++{
++}
+ 
+ 
+   void
+Index: iodev/vga.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/vga.h,v
+retrieving revision 1.13
+diff -u -r1.13 vga.h
+--- iodev/vga.h	21 Jul 2002 14:50:11 -0000	1.13
++++ iodev/vga.h	27 Aug 2002 19:50:32 -0000
+@@ -95,6 +95,7 @@
+   bx_vga_c(void);
+   ~bx_vga_c(void);
+   BX_VGA_SMF void   init(bx_devices_c *, bx_cmos_c *cmos);
++  BX_VGA_SMF void   reset(unsigned type);
+   BX_VGA_SMF Bit8u  mem_read(Bit32u addr);
+   // Note: either leave value of type Bit8u, or mask it when
+   //       used to 8 bits, in memory.cc

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.28 2002-08-06 14:11:03 cbothamy Exp $
+// $Id: pic.cc,v 1.29 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,7 +116,10 @@ bx_pic_c::init(bx_devices_c *d)
   }
 }
 
-
+  void
+bx_pic_c::reset(unsigned type)
+{
+}
 
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: sb16.h,v 1.7 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,6 +195,7 @@ public:
   bx_sb16_c(void);
   ~bx_sb16_c(void);
   BX_SB16_SMF void init(bx_devices_c *);
+  BX_SB16_SMF void reset(unsigned type);
 
       /* DMA input and output, 8 and 16 bit, have to be public */
   BX_SB16_SMF void   dma_write8(Bit8u *data_byte);

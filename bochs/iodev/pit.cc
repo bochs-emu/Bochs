@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.10 2001-10-03 13:10:38 bdenney Exp $
+// $Id: pit.cc,v 1.11 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -223,10 +223,8 @@ bx_pit_c::init( bx_devices_c *d )
   return(1);
 }
 
-
-
-
-
+void bx_pit_c::reset(unsigned type) {
+}
 
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.19 2002-05-21 15:07:45 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.20 2002-08-27 19:54:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -158,6 +158,10 @@ bx_pit_c::init( bx_devices_c *d )
   return(1);
 }
 
+  void
+bx_pit_c::reset(unsigned type)
+{
+}
 
 void
 bx_pit_c::timer_handler(void *this_ptr) {
