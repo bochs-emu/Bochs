@@ -7,6 +7,7 @@ Changes since 1.2-pre1:
 - fixed iodev/unmapped.cc so that the line number written to PANIC_PORT
   is displayed as a BX_PANIC message.
 - added additional check for null pointer in debugger exit routine
+- now font/vga.pcf will be installed in the RPM package
 
 Changes in version 1.2-pre1 (5/25/2001):
 - major cleanup of .bochsrc
