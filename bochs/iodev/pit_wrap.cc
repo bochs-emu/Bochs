@@ -1,5 +1,5 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.40 2002-12-07 19:17:01 yakovlev Exp $
+////////////////////////////////////////////////////////////////////////
+// $Id: pit_wrap.cc,v 1.41 2002-12-07 19:51:42 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,6 +74,7 @@
 
 //FIXME
 Bit64u em_last_realtime;
+Bit64u last_realtime_delta;
 Bit64u last_realtime_ticks;
 Bit64u timer_accuracy;
 
@@ -116,7 +117,7 @@ Bit64u timer_accuracy;
 //DEBUG configuration:
 
 //Debug with printf options.
-#define DEBUG_REALTIME_WITH_PRINTF 1
+#define DEBUG_REALTIME_WITH_PRINTF 0
 
 //Use to test execution at multiples of real time.
 #define TIME_DIVIDER (1)
@@ -124,8 +125,7 @@ Bit64u timer_accuracy;
 #define TIME_HEADSTART (0)
 
 
-
-
+#define GET_PIT_REALTIME64_USEC() (((bx_get_realtime64_usec()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER)))
 //Set up Logging.
 #define LOG_THIS bx_pit.
 
@@ -230,9 +230,10 @@ bx_pit_c::init( void )
     BX_PIT_THIS s.total_sec=0;
     BX_PIT_THIS s.stored_delta=0;
 #if BX_HAVE_REALTIME_USEC
-    BX_PIT_THIS s.last_time=((bx_get_realtime64_usec()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
+    BX_PIT_THIS s.last_time=GET_PIT_REALTIME64_USEC()+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
     //FIXME
     em_last_realtime=0;
+    last_realtime_delta=0;
     last_realtime_ticks=0;
     timer_accuracy = USEC_PER_SECOND;
 #else
@@ -508,10 +509,11 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 
   if (BX_PIT_THIS s.use_realtime) {
 #if BX_HAVE_REALTIME_USEC
-    Bit64u real_time_delta = bx_get_realtime64_usec() - BX_PIT_THIS s.last_time;
+    Bit64u real_time_delta = GET_PIT_REALTIME64_USEC() - BX_PIT_THIS s.last_time;
     Bit64u real_time_total = real_time_delta + BX_PIT_THIS s.total_sec;
     Bit64u em_time_delta = (Bit64u)usec_delta + (Bit64u)BX_PIT_THIS s.stored_delta;
     if(real_time_delta) {
+      last_realtime_delta = real_time_delta;
       last_realtime_ticks = BX_PIT_THIS s.total_ticks;
       if(real_time_delta < timer_accuracy)
 	timer_accuracy = real_time_delta;
@@ -526,9 +528,9 @@ bx_pit_c::periodic( Bit32u   usec_delta )
       //  probably only an issue on startup, but it solves some problems.
       ticks_delta = 0;
     }
-    if(ticks_delta > REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(real_time_delta+timer_accuracy)))) {
+    if(ticks_delta + BX_PIT_THIS s.total_ticks - last_realtime_ticks > REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(last_realtime_delta)))) {
       //This keeps us from going too fast in relation to real time.
-      ticks_delta = REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(real_time_delta+timer_accuracy)));
+      ticks_delta = REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(last_realtime_delta))) + last_realtime_ticks - BX_PIT_THIS s.total_ticks;
       BX_PIT_THIS s.ticks_per_second = F2I(MAX_MULT * I2F(TICKS_PER_SECOND));
     }
     if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
