@@ -64,7 +64,7 @@ BX_PARSER_OBJS = \
 
 BX_INCLUDES = debug.h
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. 
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/.
 
 all: libdebug.a
 

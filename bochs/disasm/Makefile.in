@@ -51,7 +51,7 @@ BX_OBJS = \
 
 BX_INCLUDES = disasm.h
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
 all: libdisasm.a
 
