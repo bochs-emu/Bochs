@@ -23,7 +23,13 @@ void we_are_here(void)
 static unsigned prev_cursor_x=0;
 static unsigned prev_cursor_y=0;
 
-#define MAX_SDL_BITMAPS 10
+#ifdef linux
+#define FIX_SDL_SCANCODE(x) ((x)-8)
+#else
+#define FIX_SDL_SCANCODE(x) ((x))
+#endif
+
+#define MAX_SDL_BITMAPS 32
 struct bitmaps {
   SDL_Surface *surface;
   SDL_Rect src,dst;
@@ -424,7 +430,7 @@ void bx_gui_c::handle_events(void)
 
 	// convert scancode->bochs code
 	if( sdl_event.key.keysym.scancode > _SCN2BX_LAST_ ) break;
-	key_event = scancodes2bx[ sdl_event.key.keysym.scancode-8 ][1];
+	key_event = scancodes2bx[ FIX_SDL_SCANCODE(sdl_event.key.keysym.scancode) ][1];
 	if( key_event == 0 ) break;
 	bx_devices.keyboard->gen_scancode( key_event );
 	break;
@@ -436,7 +442,7 @@ void bx_gui_c::handle_events(void)
 	    && (sdl_event.key.keysym.scancode < _SCN2BX_LAST_ ))
 	{
 	  // convert scancode->bochs code
-	  key_event = scancodes2bx[ sdl_event.key.keysym.scancode-8 ][1];
+	  key_event = scancodes2bx[ FIX_SDL_SCANCODE(sdl_event.key.keysym.scancode) ][1];
 	  if( key_event == 0 ) break;
 	  bx_devices.keyboard->gen_scancode( key_event | BX_KEY_RELEASED );
 	}
