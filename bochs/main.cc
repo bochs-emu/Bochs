@@ -83,7 +83,9 @@ bx_options_t bx_options = {
   { 0, 0, 0, {0,0,0,0,0,0}, NULL, NULL }, // ne2k
   1,          // newHardDriveSupport
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
-  { 0, 1, 1, 2 }  // ignore debugs, report infos and errors, fatal on panics.
+  { 
+    ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_FATAL 
+  }  // ignore debugs, report infos and errors, fatal on panics.
   };
 
 static char bochsrc_path[512];
