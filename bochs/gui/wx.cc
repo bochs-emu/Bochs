@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35.2.8 2002-10-21 20:32:35 bdenney Exp $
+// $Id: wx.cc,v 1.35.2.9 2002-10-22 17:19:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -66,6 +66,7 @@ public:
 static bx_wx_gui_c *theGui = NULL;
 
 void MyPanel::OnPluginInit () {
+  theGui = new bx_wx_gui_c ();
   bx_gui = theGui;
 }
 
