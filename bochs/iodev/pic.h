@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.12 2004-07-06 19:59:10 vruppert Exp $
+// $Id: pic.h,v 1.13 2004-07-08 18:45:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -96,4 +96,5 @@ private:
   BX_PIC_SMF void   service_master_pic(void);
   BX_PIC_SMF void   service_slave_pic(void);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
+  BX_PIC_SMF void   check_irq_level(bx_pic_t *pic);
   };

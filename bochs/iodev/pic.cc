@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.35 2004-07-06 19:59:10 vruppert Exp $
+// $Id: pic.cc,v 1.36 2004-07-08 18:45:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_pic_c::init(void)
   BX_PIC_THIS s.master_pic.u.slave_connect_mask = 0x04;
   BX_PIC_THIS s.master_pic.sfnm = 0; /* normal nested mode */
   BX_PIC_THIS s.master_pic.buffered_mode = 0; /* unbuffered mode */
-  BX_PIC_THIS s.master_pic.master_slave  = 0; /* no meaning, buffered_mode=0 */
+  BX_PIC_THIS s.master_pic.master_slave  = 1; /* master PIC */
   BX_PIC_THIS s.master_pic.auto_eoi      = 0; /* manual EOI from CPU */
   BX_PIC_THIS s.master_pic.imr           = 0xFF; /* all IRQ's initially masked */
   BX_PIC_THIS s.master_pic.isr           = 0x00; /* no IRQ's in service */
@@ -109,7 +109,7 @@ bx_pic_c::init(void)
   BX_PIC_THIS s.slave_pic.u.slave_id = 0x02; /* slave PIC connected to IRQ2 of master */
   BX_PIC_THIS s.slave_pic.sfnm       = 0; /* normal nested mode */
   BX_PIC_THIS s.slave_pic.buffered_mode = 0; /* unbuffered mode */
-  BX_PIC_THIS s.slave_pic.master_slave  = 0; /* no meaning, buffered_mode=0 */
+  BX_PIC_THIS s.slave_pic.master_slave  = 0; /* slave PIC */
   BX_PIC_THIS s.slave_pic.auto_eoi      = 0; /* manual EOI from CPU */
   BX_PIC_THIS s.slave_pic.imr           = 0xFF; /* all IRQ's initially masked */
   BX_PIC_THIS s.slave_pic.isr           = 0x00; /* no IRQ's in service */
@@ -340,6 +340,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x65: /* specific EOI 5 */
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
+          check_irq_level(& BX_PIC_THIS s.master_pic);
           BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0x60));
           service_master_pic();
           break;
@@ -365,10 +366,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xE5: // specific EOI and rotate 5
         case 0xE6: // specific EOI and rotate 6
         case 0xE7: // specific EOI and rotate 7
+          check_irq_level(& BX_PIC_THIS s.master_pic);
           BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0xE0));
           BX_PIC_THIS s.master_pic.lowest_priority = (value - 0xE0);
           service_master_pic();
-
           break;
 
         default:
@@ -518,6 +519,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x65: /* specific EOI 5 */
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
+          check_irq_level(& BX_PIC_THIS s.slave_pic);
           BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0x60));
           service_slave_pic();
           break;
@@ -543,6 +545,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xE5: // specific EOI and rotate 5
         case 0xE6: // specific EOI and rotate 6
         case 0xE7: // specific EOI and rotate 7
+          check_irq_level(& BX_PIC_THIS s.slave_pic);
           BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0xE0));
           BX_PIC_THIS s.slave_pic.lowest_priority = (value - 0xE0);
           service_slave_pic();
@@ -671,6 +674,25 @@ bx_pic_c::set_mode(bx_bool ma_sl, Bit8u mode)
   }
 }
 
+  void
+bx_pic_c::check_irq_level(bx_pic_t *pic)
+{
+  int irq;
+
+  if ((pic->edge_level) > 0) {
+    for (irq = 0; irq < 8; irq++) {
+      if (pic->IRQ_line[irq] && (pic->edge_level & (1 << irq))) {
+        pic->irr |= (1 << irq);
+        if (pic->master_slave) {
+          service_master_pic();
+        } else {
+          service_slave_pic();
+        }
+      }
+    }
+  }
+}
+
 void  bx_pic_c::clear_highest_interrupt(bx_pic_t *pic)
 {
   int irq;
@@ -695,9 +717,10 @@ void  bx_pic_c::clear_highest_interrupt(bx_pic_t *pic)
       irq = 0;
   } while(irq != highest_priority);
 
+  check_irq_level(pic);
 }
 
-  /* */
+
   void
 bx_pic_c::service_master_pic(void)
 {

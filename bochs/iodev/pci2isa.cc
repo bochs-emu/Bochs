@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.17 2004-07-06 19:59:10 vruppert Exp $
+// $Id: pci2isa.cc,v 1.18 2004-07-08 18:45:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -276,14 +276,20 @@ bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_ERROR(("write: APM status register not supported yet"));
       break;
     case 0x04d0:
-      BX_P2I_THIS s.elcr1 = (value & 0xf8);
-      BX_ERROR(("write: ELCR1 changes have no effect yet (value = 0x%02x)", BX_P2I_THIS s.elcr1));
-      DEV_pic_set_mode(0, BX_P2I_THIS s.elcr1);
+      value &= 0xf8;
+      if (value != BX_P2I_THIS s.elcr1) {
+        BX_P2I_THIS s.elcr1 = value;
+        BX_INFO(("write: ELCR1 = 0x%02x", BX_P2I_THIS s.elcr1));
+        DEV_pic_set_mode(0, BX_P2I_THIS s.elcr1);
+      }
       break;
     case 0x04d1:
-      BX_P2I_THIS s.elcr2 = (value & 0xde);
-      BX_ERROR(("write: ELCR2 changes have no effect yet (value = 0x%02x)", BX_P2I_THIS s.elcr2));
-      DEV_pic_set_mode(1, BX_P2I_THIS s.elcr2);
+      value &= 0xde;
+      if (value != BX_P2I_THIS s.elcr2) {
+        BX_P2I_THIS s.elcr2 = value;
+        BX_INFO(("write: ELCR2 = 0x%02x", BX_P2I_THIS s.elcr2));
+        DEV_pic_set_mode(1, BX_P2I_THIS s.elcr2);
+      }
       break;
     case 0x0cf9:
       BX_INFO(("write: CPU reset register = 0x%02x", value));
