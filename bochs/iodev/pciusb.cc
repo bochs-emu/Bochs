@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.1 2003-01-28 16:58:10 vruppert Exp $
+// $Id: pciusb.cc,v 1.2 2003-02-02 10:24:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -111,6 +111,8 @@ bx_pciusb_c::init(void)
   void
 bx_pciusb_c::reset(unsigned type)
 {
+  unsigned i;
+
   static const struct reset_vals_t {
     unsigned      addr;
     unsigned char val;
@@ -135,7 +137,7 @@ bx_pciusb_c::reset(unsigned type)
     { 0xc1, 0x20 }                  // PIRQ enable
 
   };
-  for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
+  for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
       BX_USB_THIS hub[0].pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
 
@@ -143,7 +145,7 @@ bx_pciusb_c::reset(unsigned type)
   BX_USB_THIS global_reset = 0;
 
   // Put the USB registers into their RESET state
-  for (unsigned i=0; i<BX_USB_CONFDEV; i++) {
+  for (i=0; i<BX_USB_CONFDEV; i++) {
     BX_USB_THIS hub[i].usb_command.max_packet_size = 0;
     BX_USB_THIS hub[i].usb_command.configured = 0;
     BX_USB_THIS hub[i].usb_command.debug = 0;
