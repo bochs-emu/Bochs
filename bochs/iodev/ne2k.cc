@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.50 2003-05-20 15:01:34 yakovlev Exp $
+// $Id: ne2k.cc,v 1.51 2003-05-24 10:50:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1272,11 +1272,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.50 2003-05-20 15:01:34 yakovlev Exp $"));
-
-
-  // Bring the register state into power-up state
-  theNE2kDevice->reset(BX_RESET_HARDWARE);
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.51 2003-05-24 10:50:19 vruppert Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
@@ -1345,6 +1341,9 @@ bx_ne2k_c::init(void)
     if (BX_NE2K_THIS ethdev == NULL)
       BX_PANIC(("could not locate null module"));
   }
+
+  // Bring the register state into power-up state
+  theNE2kDevice->reset(BX_RESET_HARDWARE);
 }
 
 #if BX_DEBUGGER
