@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.59 2002-11-11 12:48:03 cbothamy Exp $
+$Id: user.dbk,v 1.60 2002-11-11 14:29:01 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -5678,7 +5678,6 @@ to
         <title>Windows ME</title>
         <para>
 	</para>
-</section>
         
                 <section><title>Installing Windows ME</title>
 <para>
@@ -5920,6 +5919,7 @@ Some bugs i've found
 
                 </para>
                 </section> <!-- end of Installing Windows ME -->
+</section>
 <section>
         <title>Windows 2000</title>
         <para>
