@@ -50,7 +50,6 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # are not used for the x86-64 compile because they have not
 # been synced yet.
 OBJS32 = \
-	cpu.o \
 	exception.o \
 	ctrl_xfer_pro.o \
 	flag_ctrl_pro.o \
@@ -77,6 +76,7 @@ OBJS32 = \
 # are used for either compile.
 OBJSXX = \
 	init.o \
+	cpu.o \
 	resolve32.o \
 	fetchdecode.o \
 	access.o \
