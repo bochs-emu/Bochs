@@ -109,7 +109,7 @@ cdrom_interface::insert_cdrom()
   ssize_t ret;
 
   // Load CD-ROM. Returns false if CD is not ready.
-  BX_INFO (("load cdrom with path=%s\n", path));
+  BX_INFO (("load cdrom with path=%s", path));
 #ifdef WIN32
     char drive[256];
     if ( (path[1] == ':') && (strlen(path) == 2) )
