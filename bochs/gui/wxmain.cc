@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.74 2002-11-01 15:19:48 bdenney Exp $
+// $Id: wxmain.cc,v 1.75 2002-11-01 15:28:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -161,15 +161,15 @@ static int ci_callback (void *userdata, ci_command_t command)
     case CI_START:
       //fprintf (stderr, "wxmain.cc: start\n");
 #ifdef __WXMSW__
-	  // on Windows only, wxEntry needs some data that is passed into WinMain.
-	  // So, in main.cc we define WinMain and fill in the bx_startup_flags
-	  // structure with the data, so that when we're ready to call wxEntry
-	  // it has access to the data.
-	  wxEntry (
-		bx_startup_flags.hInstance,
-		bx_startup_flags.hPrevInstance,
-		bx_startup_flags.m_lpCmdLine,
-		bx_startup_flags.nCmdShow);
+      // on Windows only, wxEntry needs some data that is passed into WinMain.
+      // So, in main.cc we define WinMain and fill in the bx_startup_flags
+      // structure with the data, so that when we're ready to call wxEntry
+      // it has access to the data.
+      wxEntry (
+            bx_startup_flags.hInstance,
+            bx_startup_flags.hPrevInstance,
+            bx_startup_flags.m_lpCmdLine,
+            bx_startup_flags.nCmdShow);
 #else
       wxEntry (bx_startup_flags.argc, bx_startup_flags.argv);
 #endif
@@ -260,12 +260,12 @@ MyApp::DefaultCallback (void *thisptr, BxEvent *event)
       wxString text;
       text.Printf ("Error: %s", event->u.logmsg.msg);
       if (wxBochsClosing) {
-	// gui closing down, do something simple and nongraphical.
-	fprintf (stderr, "%s\n", text.c_str ());
+        // gui closing down, do something simple and nongraphical.
+        fprintf (stderr, "%s\n", text.c_str ());
       } else {
-	wxMessageBox (text, "Error", wxOK | wxICON_ERROR );
-	// maybe I can make OnLogMsg display something that looks appropriate.
-	// theFrame->OnLogMsg (event);
+        wxMessageBox (text, "Error", wxOK | wxICON_ERROR );
+        // maybe I can make OnLogMsg display something that looks appropriate.
+        // theFrame->OnLogMsg (event);
       }
       event->retcode = BX_LOG_ASK_CHOICE_DIE;
       // There is only one thread at this point.  if I choose DIE here, it will
@@ -274,7 +274,7 @@ MyApp::DefaultCallback (void *thisptr, BxEvent *event)
     }
     case BX_SYNC_EVT_TICK:
       if (wxBochsClosing) 
-	event->retcode = -1;
+        event->retcode = -1;
       break;
     case BX_ASYNC_EVT_REFRESH:
     case BX_ASYNC_EVT_DBG_MSG:
@@ -800,8 +800,8 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
     // the initial value.
     for (mod=1; mod<SIM->get_n_log_modules (); mod++) {
       if (first != SIM->get_log_action (mod, level)) {
-	consensus = false;
-	break;
+        consensus = false;
+        break;
       }
     }
     if (consensus)
@@ -818,10 +818,10 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
       // ask the dialog what action the user chose for this type of event
       int action = dlg.GetAction (level);
       if (action != LOG_OPTS_NO_CHANGE) {
-	// set new default
+        // set new default
         SIM->set_default_log_action (level, action);
-	// apply that action to all modules (devices)
-	SIM->set_log_action (-1, level, action);
+        // apply that action to all modules (devices)
+        SIM->set_log_action (-1, level, action);
       }
     }
   }
@@ -885,7 +885,7 @@ void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
 #if BX_DEBUGGER
 void MyFrame::OnDebugLog(wxCommandEvent& WXUNUSED(event))
 {
-	wxASSERT (showDebugLog != NULL);
+  wxASSERT (showDebugLog != NULL);
   showDebugLog->CopyParamToGui ();
   showDebugLog->Show (TRUE);
 }
@@ -982,8 +982,8 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
       // This should only be used if the simulation stops due to error.
       // Obviously if the user asked it to stop, they don't need to be told.
       if (popupNotify)
-	    wxMessageBox("Bochs simulation has stopped.", "Bochs Stopped", 
-		    wxOK | wxICON_INFORMATION);
+        wxMessageBox("Bochs simulation has stopped.", "Bochs Stopped", 
+            wxOK | wxICON_INFORMATION);
       break;
     case Pause: // pause
       wxLogStatus ("Pausing simulation");
@@ -1033,10 +1033,10 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
 {
   wxCriticalSectionLocker lock(sim_thread_lock);
   if (sim_thread != NULL) {
-	wxMessageBox (
-	  "Can't start Bochs simulator, because it is already running",
-	  "Already Running", wxOK | wxICON_ERROR);
-	return;
+        wxMessageBox (
+          "Can't start Bochs simulator, because it is already running",
+          "Already Running", wxOK | wxICON_ERROR);
+        return;
   }
   // check that display library is set to wx.  If not, give a warning and
   // change it to wx.  It is technically possible to use other vga libraries
@@ -1057,9 +1057,9 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
   // give warning about restarting the simulation
   start_bochs_times++;
   if (start_bochs_times>1) {
-	wxMessageBox (
-	"You have already started the simulator once this session. Due to memory leaks and bugs in init code, you may get unstable behavior.",
-	"2nd time warning", wxOK | wxICON_WARNING);
+        wxMessageBox (
+        "You have already started the simulator once this session. Due to memory leaks and bugs in init code, you may get unstable behavior.",
+        "2nd time warning", wxOK | wxICON_WARNING);
   }
   num_events = 0;  // clear the queue of events for bochs to handle
   sim_thread = new SimThread (this);
@@ -1077,11 +1077,11 @@ void MyFrame::OnPauseResumeSim(wxCommandEvent& WXUNUSED(event))
   if (sim_thread) {
     if (sim_thread->IsPaused ()) {
       simStatusChanged (Resume);
-	  sim_thread->Resume ();
-	} else {
+          sim_thread->Resume ();
+        } else {
       simStatusChanged (Pause);
-	  sim_thread->Pause ();
-	}
+          sim_thread->Pause ();
+        }
   }
 }
 
@@ -1123,32 +1123,32 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
   wxDialog *dialog = NULL;
   if (n_opt & param->IS_FILENAME) {
     // use file open dialog
-	long style = 
-	  (n_opt & param->SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
+        long style = 
+          (n_opt & param->SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
         wxLogDebug ("HandleAskParamString: create dialog");
-	wxFileDialog *fdialog = new wxFileDialog (this, msg, "", "", "*.*", style);
+        wxFileDialog *fdialog = new wxFileDialog (this, msg, "", "", "*.*", style);
         wxLogDebug ("HandleAskParamString: before showmodal");
-	if (fdialog->ShowModal() == wxID_OK)
-	  newval = (char *)fdialog->GetPath().c_str ();
+        if (fdialog->ShowModal() == wxID_OK)
+          newval = (char *)fdialog->GetPath().c_str ();
         wxLogDebug ("HandleAskParamString: after showmodal");
-	dialog = fdialog; // so I can delete it
+        dialog = fdialog; // so I can delete it
   } else {
     // use simple string dialog
-	long style = wxOK|wxCANCEL;
-	wxTextEntryDialog *tdialog = new wxTextEntryDialog (this, msg, "Enter new value", wxString(param->getptr ()), style);
-	if (tdialog->ShowModal() == wxID_OK)
-	  newval = (char *)tdialog->GetValue().c_str ();
-	dialog = tdialog; // so I can delete it
+        long style = wxOK|wxCANCEL;
+        wxTextEntryDialog *tdialog = new wxTextEntryDialog (this, msg, "Enter new value", wxString(param->getptr ()), style);
+        if (tdialog->ShowModal() == wxID_OK)
+          newval = (char *)tdialog->GetValue().c_str ();
+        dialog = tdialog; // so I can delete it
   }
   // newval points to memory inside the dialog.  As soon as dialog is deleted,
   // newval points to junk.  So be sure to copy the text out before deleting
   // it!
   if (newval && strlen(newval)>0) {
-	// change floppy path to this value.
-	wxLogDebug ("Setting param %s to '%s'", param->get_name (), newval);
-	param->set (newval);
-	delete dialog;
-	return 1;
+        // change floppy path to this value.
+        wxLogDebug ("Setting param %s to '%s'", param->get_name (), newval);
+        param->set (newval);
+        delete dialog;
+        return 1;
   }
   delete dialog;
   return -1;
@@ -1179,11 +1179,11 @@ MyFrame::HandleAskParam (BxEvent *event)
     return HandleAskParamString ((bx_param_string_c *)param);
   default:
     {
-	  wxString msg;
-	  msg.Printf ("ask param for parameter type %d is not implemented in wxWindows");
-	  wxMessageBox( msg, "not implemented", wxOK | wxICON_ERROR );
-	  return -1;
-	}
+          wxString msg;
+          msg.Printf ("ask param for parameter type %d is not implemented in wxWindows");
+          wxMessageBox( msg, "not implemented", wxOK | wxICON_ERROR );
+          return -1;
+        }
   }
 #if 0
   switch (param) {
@@ -1192,37 +1192,37 @@ MyFrame::HandleAskParam (BxEvent *event)
   case BXP_DISKC_PATH:
   case BXP_DISKD_PATH:
   case BXP_CDROM_PATH:
-	{
-	  Raise();  // bring window to front so dialog shows
-	  char *msg;
-	  if (param==BXP_FLOPPYA_PATH || param==BXP_FLOPPYB_PATH)
-	    msg = "Choose new floppy disk image file";
+        {
+          Raise();  // bring window to front so dialog shows
+          char *msg;
+          if (param==BXP_FLOPPYA_PATH || param==BXP_FLOPPYB_PATH)
+            msg = "Choose new floppy disk image file";
       else if (param==BXP_DISKC_PATH || param==BXP_DISKD_PATH)
-	    msg = "Choose new hard disk image file";
+            msg = "Choose new hard disk image file";
       else if (param==BXP_CDROM_PATH)
-	    msg = "Choose new CDROM image file";
-	  else
-	    msg = "Choose new image file";
-	  wxFileDialog dialog(this, msg, "", "", "*.*", 0);
-	  int ret = dialog.ShowModal();
-	  if (ret == wxID_OK)
-	  {
-	    char *newpath = (char *)dialog.GetPath().c_str ();
-	    if (newpath && strlen(newpath)>0) {
-	      // change floppy path to this value.
-	      bx_param_string_c *Opath = SIM->get_param_string (param);
-	      assert (Opath != NULL);
-	      wxLogDebug ("Setting floppy %c path to '%s'", 
-		    param == BXP_FLOPPYA_PATH ? 'A' : 'B',
-		    newpath);
-	      Opath->set (newpath);
-	      return 1;
-	    }
-	  }
-	  return 0;
-	}
+            msg = "Choose new CDROM image file";
+          else
+            msg = "Choose new image file";
+          wxFileDialog dialog(this, msg, "", "", "*.*", 0);
+          int ret = dialog.ShowModal();
+          if (ret == wxID_OK)
+          {
+            char *newpath = (char *)dialog.GetPath().c_str ();
+            if (newpath && strlen(newpath)>0) {
+              // change floppy path to this value.
+              bx_param_string_c *Opath = SIM->get_param_string (param);
+              assert (Opath != NULL);
+              wxLogDebug ("Setting floppy %c path to '%s'", 
+                    param == BXP_FLOPPYA_PATH ? 'A' : 'B',
+                    newpath);
+              Opath->set (newpath);
+              return 1;
+            }
+          }
+          return 0;
+        }
   default:
-	wxLogError ("HandleAskParam: parameter %d, not implemented", event->u.param.id);
+        wxLogError ("HandleAskParam: parameter %d, not implemented", event->u.param.id);
   }
 #endif
   return -1;  // could not display
@@ -1272,8 +1272,8 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
       debugCommandEvent = be;
       //
       if (showCpu == NULL || !showCpu->IsShowing ()) {
-	wxCommandEvent unused;
-	OnShowCpu (unused);
+        wxCommandEvent unused;
+        OnShowCpu (unused);
       }
     } else {
       // a debugger command is waiting for us!
@@ -1549,20 +1549,20 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
   int async = BX_EVT_IS_ASYNC(event->type);
   if (!async) {
     // for synchronous events, clear away any previous response.  There
-	// can only be one synchronous event pending at a time.
+        // can only be one synchronous event pending at a time.
     ClearSyncResponse ();
-	event->retcode = -1;   // default to error
+        event->retcode = -1;   // default to error
   }
 
   // tick event must be handled right here in the bochs thread.
   if (event->type == BX_SYNC_EVT_TICK) {
-	if (TestDestroy ()) {
-	  // tell simulator to quit
-	  event->retcode = -1;
-	} else {
-	  event->retcode = 0;
-	}
-	return event;
+        if (TestDestroy ()) {
+          // tell simulator to quit
+          event->retcode = -1;
+        } else {
+          event->retcode = 0;
+        }
+        return event;
   }
 
   // prune refresh events if the frame is going to ignore them anyway
@@ -1584,17 +1584,17 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
     // now wait forever for the GUI to post a response.
     BxEvent *response = NULL;
     while (response == NULL) {
-	  response = GetSyncResponse ();
-	  if (!response) {
-	    //wxLogDebug ("no sync response yet, waiting");
-	    this->Sleep (20);
-	  }
-	  // don't get stuck here if the gui is trying to close.
-	  if (wxBochsClosing) {
-	    wxLogDebug ("breaking out of sync event wait because gui is closing");
-	    event->retcode = -1;
-	    return event;
-	  }
+          response = GetSyncResponse ();
+          if (!response) {
+            //wxLogDebug ("no sync response yet, waiting");
+            this->Sleep (20);
+          }
+          // don't get stuck here if the gui is trying to close.
+          if (wxBochsClosing) {
+            wxLogDebug ("breaking out of sync event wait because gui is closing");
+            event->retcode = -1;
+            return event;
+          }
     }
     wxASSERT (response != NULL);
     return response;
