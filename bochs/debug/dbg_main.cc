@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.92 2002-11-20 19:34:51 bdenney Exp $
+// $Id: dbg_main.cc,v 1.93 2002-11-21 18:22:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3533,7 +3533,7 @@ bx_dbg_instrument_command(char *comm)
     BX_INSTR_STOP ();
     }
   else if ( !strcmp(comm, "reset") ) {
-    BX_INSTR_RESET ();
+    BX_INSTR_RESET (dbg_cpu);
     }
   else if ( !strcmp(comm, "print") ) {
     BX_INSTR_PRINT ();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.18 2002-11-19 05:47:43 bdenney Exp $
+// $Id: ctrl_xfer64.cc,v 1.19 2002-11-21 18:22:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -457,7 +457,7 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
@@ -471,7 +471,7 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
@@ -507,7 +507,7 @@ BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
@@ -541,7 +541,7 @@ BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
@@ -575,7 +575,7 @@ BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.117 2002-11-15 18:12:04 bdenney Exp $
+// $Id: cpu.h,v 1.118 2002-11-21 18:22:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -234,7 +234,11 @@
 #endif
 
 
-#define CPU_ID (BX_CPU_THIS_PTR which_cpu())
+#if BX_SMP_PROCESSORS==1
+#define CPU_ID 0
+#else
+#define CPU_ID (BX_CPU_THIS_PTR local_apic.get_id())
+#endif
 
 #ifndef CPL
 #define CPL  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
@@ -2876,8 +2880,6 @@ union {
   BX_CPP_INLINE Bit8u  get_CPL(void);
   BX_CPP_INLINE Bit32u get_EIP(void);
 
-  BX_SMF BX_CPP_INLINE int which_cpu(void);
-
   BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
@@ -2936,15 +2938,6 @@ BX_CPP_INLINE Bit32u bxICache_c::createFetchModeMask(BX_CPU_C *cpu) {
 #define BX_HWDebugIO            0x02
 #define BX_HWDebugMemRW         0x03
 #endif
-
-BX_SMF BX_CPP_INLINE int BX_CPU_C_PREFIX which_cpu(void)
-{ 
-#if (BX_SMP_PROCESSORS==1)
-   return 0;
-#else
-   return local_apic.get_id();
-#endif
-}
 
 IMPLEMENT_8LBIT_REGISTER_ACCESSORS(AL);
 IMPLEMENT_8HBIT_REGISTER_ACCESSORS(AH);
