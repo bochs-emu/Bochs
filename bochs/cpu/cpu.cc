@@ -56,8 +56,8 @@ const Boolean bx_parity_lookup[256] = {
 #endif
 
 
-BX_CPU_C    BX_CPU[BX_SMP_PROCESSORS];
-BX_MEM_C    BX_MEM[BX_ADDRESS_SPACES];
+BX_CPU_C    *BX_CPU[BX_SMP_PROCESSORS];
+BX_MEM_C    *BX_MEM[BX_ADDRESS_SPACES];
 
 
 
@@ -369,6 +369,9 @@ handle_async_event:
 
   if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
     // I made up the bitmask above to mean HALT state.
+#if 0
+/* single processor simulation: halt until time event wakes us up.
+   After wakeup, debug_trap and inhibit_mask are cleared. */
     BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
     BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     // Need to fix this for cosimulation.
@@ -378,7 +381,22 @@ handle_async_event:
         }
       BX_TICK1();
       }
+#endif
+    /* for SMP simulation, there's no guarantee that debug_trap will be
+       cleared. */
+    if (BX_INTR && BX_CPU_THIS_PTR eflags.if_) {
+      /* HALT condition has gone away */
+      BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
+      BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
+      bx_printf ("halt condition has been cleared in %s\n", name);
+    } else {
+      /* HALT condition remains. just increment time */
+      //bx_printf ("doing nothing in halted processor %s\n", name);
+      BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
+      return;
     }
+  }
+
 
   // Priority 1: Hardware Reset and Machine Checks
   //   RESET
@@ -581,14 +599,14 @@ extern unsigned int dbg_show_mask;
 BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                     Bit32u is_32)
 {
-  bx_guard_found[BX_SIM_ID].cs  = cs;
-  bx_guard_found[BX_SIM_ID].eip = eip;
-  bx_guard_found[BX_SIM_ID].laddr = laddr;
-  bx_guard_found[BX_SIM_ID].is_32bit_code = is_32;
+  guard_found.cs  = cs;
+  guard_found.eip = eip;
+  guard_found.laddr = laddr;
+  guard_found.is_32bit_code = is_32;
 
   // BW mode switch breakpoint
   // instruction which generate exceptions never reach the end of the
-  // loop due to a long jump. Thats why we check at start fo instr.
+  // loop due to a long jump. Thats why we check at start of instr.
   // Downside is that we show the instruction about to be executed
   // (not the one generating the mode switch).
   if (BX_CPU_THIS_PTR mode_break && 
@@ -609,12 +627,12 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
 #if BX_DBG_SUPPORT_VIR_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
-      if (bx_guard_found[BX_SIM_ID].icount!=0) {
+      if (guard_found.icount!=0) {
         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
           if ( (bx_guard.iaddr.vir[i].cs  == cs) &&
                (bx_guard.iaddr.vir[i].eip == eip) ) {
-            bx_guard_found[BX_SIM_ID].guard_found = BX_DBG_GUARD_IADDR_VIR;
-            bx_guard_found[BX_SIM_ID].iaddr_index = i;
+            guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
+            guard_found.iaddr_index = i;
             return(1); // on a breakpoint
             }
           }
@@ -623,11 +641,11 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 #endif
 #if BX_DBG_SUPPORT_LIN_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
-      if (bx_guard_found[BX_SIM_ID].icount!=0) {
+      if (guard_found.icount!=0) {
         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
-          if ( bx_guard.iaddr.lin[i].addr == bx_guard_found[BX_SIM_ID].laddr ) {
-            bx_guard_found[BX_SIM_ID].guard_found = BX_DBG_GUARD_IADDR_LIN;
-            bx_guard_found[BX_SIM_ID].iaddr_index = i;
+          if ( bx_guard.iaddr.lin[i].addr == guard_found.laddr ) {
+            guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
+            guard_found.iaddr_index = i;
             return(1); // on a breakpoint
             }
           }
@@ -638,13 +656,13 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       Bit32u phy;
       Boolean valid;
-      dbg_xlate_linear2phy(bx_guard_found[BX_SIM_ID].laddr,
+      dbg_xlate_linear2phy(guard_found.laddr,
                               &phy, &valid);
-      if ( (bx_guard_found[BX_SIM_ID].icount!=0) && valid ) {
+      if ( (guard_found.icount!=0) && valid ) {
         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
           if ( bx_guard.iaddr.phy[i].addr == phy ) {
-            bx_guard_found[BX_SIM_ID].guard_found = BX_DBG_GUARD_IADDR_PHY;
-            bx_guard_found[BX_SIM_ID].iaddr_index = i;
+            guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+            guard_found.iaddr_index = i;
             return(1); // on a breakpoint
             }
           }
@@ -660,16 +678,16 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                   Bit32u is_32)
 {
-  bx_guard_found[BX_SIM_ID].icount++;
+  guard_found.icount++;
 
   // see if debugger requesting icount guard
   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
-    if (bx_guard_found[BX_SIM_ID].icount >= bx_guard.icount) {
-      bx_guard_found[BX_SIM_ID].cs  = cs;
-      bx_guard_found[BX_SIM_ID].eip = eip;
-      bx_guard_found[BX_SIM_ID].laddr = laddr;
-      bx_guard_found[BX_SIM_ID].is_32bit_code = is_32;
-      bx_guard_found[BX_SIM_ID].guard_found = BX_DBG_GUARD_ICOUNT;
+    if (guard_found.icount >= bx_guard.icount) {
+      guard_found.cs  = cs;
+      guard_found.eip = eip;
+      guard_found.laddr = laddr;
+      guard_found.is_32bit_code = is_32;
+      guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
       return(1);
       }
     }
@@ -677,7 +695,7 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   // convenient point to see if user typed Ctrl-C
   if (bx_guard.interrupt_requested &&
       (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
-    bx_guard_found[BX_SIM_ID].guard_found = BX_DBG_GUARD_CTRL_C;
+    guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
     return(1);
     }
 
