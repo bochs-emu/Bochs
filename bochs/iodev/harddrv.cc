@@ -124,6 +124,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_HD_THIS s[1].hard_drive->cylinders = bx_options.diskd.cylinders;
   BX_HD_THIS s[1].hard_drive->heads     = bx_options.diskd.heads;
   BX_HD_THIS s[1].hard_drive->sectors   = bx_options.diskd.spt;
+  BX_HD_THIS s[1].device_type           = IDE_DISK;
 
   if (bx_options.cdromd.present) {
 	bx_options.diskd.present = 1;
@@ -177,8 +178,6 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 #ifdef LOWLEVEL_CDROM
 	}
 #endif
-  } else {
-	BX_HD_THIS s[1].device_type = IDE_DISK;
   }
 
   /* open hard drive image file */
@@ -1507,7 +1506,6 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(value);
 	  }
           break;
-
 	case 0xc6: // (mch) set multiple mode
 	      if (BX_SELECTED_CONTROLLER.sector_count != 128 &&
 		  BX_SELECTED_CONTROLLER.sector_count != 64 &&
