@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.27 2002-09-22 01:52:21 kevinlawton Exp $
+// $Id: access.cc,v 1.28 2002-09-22 21:47:57 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -290,16 +290,8 @@ accessOK:
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
       lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-      Bit32u *pageStamp;
-      pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
-      if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-           && (*pageStamp & ICacheWriteStampMask)
-#endif
-           ) {
+      if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)))
+        {
         Bit32u accessBits;
         Bit32u hostPageAddr;
         Bit8u *hostAddr;
@@ -310,8 +302,17 @@ accessOK:
         hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
         accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
         if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+          Bit32u *pageStamp;
+          pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+              BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
           // Current write access has privilege.
-          if (hostPageAddr) {
+          if (hostPageAddr
+#if BX_SupportICache
+           && (*pageStamp & ICacheWriteStampMask)
+#endif
+              ) {
             *hostAddr = *data;
 #if BX_SupportICache
             (*pageStamp)--;
@@ -354,15 +355,7 @@ accessOK:
       if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-        Bit32u *pageStamp;
-        pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-              && (*pageStamp & ICacheWriteStampMask)
-#endif
              ) {
           Bit32u accessBits;
           Bit32u  hostPageAddr;
@@ -374,8 +367,17 @@ accessOK:
           hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+            Bit32u *pageStamp;
+            pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
             // Current write access has privilege.
-            if (hostPageAddr) {
+            if (hostPageAddr
+#if BX_SupportICache
+              && (*pageStamp & ICacheWriteStampMask)
+#endif
+                ) {
               WriteHostWordToLittleEndian(hostAddr, *data);
 #if BX_SupportICache
               (*pageStamp)--;
@@ -419,15 +421,7 @@ accessOK:
       if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-        Bit32u *pageStamp;
-        pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-             && (*pageStamp & ICacheWriteStampMask)
-#endif
              ) {
           Bit32u accessBits;
           Bit32u  hostPageAddr;
@@ -439,8 +433,17 @@ accessOK:
           hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+            Bit32u *pageStamp;
+            pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
             // Current write access has privilege.
-            if (hostPageAddr) {
+            if (hostPageAddr
+#if BX_SupportICache
+             && (*pageStamp & ICacheWriteStampMask)
+#endif
+                ) {
               WriteHostDWordToLittleEndian(hostAddr, *data);
 #if BX_SupportICache
               (*pageStamp)--;
@@ -647,15 +650,7 @@ accessOK:
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
       lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-      Bit32u *pageStamp;
-      pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
       if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-            && (*pageStamp & ICacheWriteStampMask)
-#endif
            ) {
         Bit32u accessBits;
         Bit32u hostPageAddr;
@@ -667,8 +662,17 @@ accessOK:
         hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
         accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
         if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+          Bit32u *pageStamp;
+          pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+              BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
           // Current write access has privilege.
-          if (hostPageAddr) {
+          if (hostPageAddr
+#if BX_SupportICache
+            && (*pageStamp & ICacheWriteStampMask)
+#endif
+              ) {
             *data = *hostAddr;
             BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
 #if BX_SupportICache
@@ -715,15 +719,7 @@ accessOK:
       if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-        Bit32u *pageStamp;
-        pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-             && (*pageStamp & ICacheWriteStampMask)
-#endif
              ) {
           Bit32u accessBits;
           Bit32u  hostPageAddr;
@@ -735,8 +731,17 @@ accessOK:
           hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+            Bit32u *pageStamp;
+            pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
             // Current write access has privilege.
-            if (hostPageAddr) {
+            if (hostPageAddr
+#if BX_SupportICache
+             && (*pageStamp & ICacheWriteStampMask)
+#endif
+                ) {
               ReadHostWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
 #if BX_SupportICache
@@ -781,15 +786,7 @@ accessOK:
       if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-        Bit32u *pageStamp;
-        pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-             && (*pageStamp & ICacheWriteStampMask)
-#endif
              ) {
           Bit32u accessBits;
           Bit32u  hostPageAddr;
@@ -801,8 +798,17 @@ accessOK:
           hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+            Bit32u *pageStamp;
+            pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
             // Current write access has privilege.
-            if (hostPageAddr) {
+            if (hostPageAddr
+#if BX_SupportICache
+             && (*pageStamp & ICacheWriteStampMask)
+#endif
+                ) {
               ReadHostDWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
 #if BX_SupportICache
@@ -931,15 +937,7 @@ accessOK:
       if (pageOffset <= 0xff8) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-        Bit32u *pageStamp;
-        pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-             && (*pageStamp & ICacheWriteStampMask)
-#endif
              ) {
           Bit32u accessBits;
           Bit32u  hostPageAddr;
@@ -951,8 +949,17 @@ accessOK:
           hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+            Bit32u *pageStamp;
+            pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
             // Current write access has privilege.
-            if (hostPageAddr) {
+            if (hostPageAddr
+#if BX_SupportICache
+             && (*pageStamp & ICacheWriteStampMask)
+#endif
+                ) {
               WriteHostQWordToLittleEndian(hostAddr, *data);
 #if BX_SupportICache
               (*pageStamp)--;
@@ -1087,15 +1094,7 @@ accessOK:
       if (pageOffset <= 0xff8) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
-#if BX_SupportICache
-        Bit32u *pageStamp;
-        pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
-#endif
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
-#if BX_SupportICache
-             && (*pageStamp & ICacheWriteStampMask)
-#endif
              ) {
           Bit32u accessBits;
           Bit32u  hostPageAddr;
@@ -1107,8 +1106,17 @@ accessOK:
           hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
           accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
           if ( accessBits & (1 << (2 | pl)) ) {
+#if BX_SupportICache
+            Bit32u *pageStamp;
+            pageStamp = & BX_CPU_THIS_PTR iCache.pageWriteStampTable[
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf>>12];
+#endif
             // Current write access has privilege.
-            if (hostPageAddr) {
+            if (hostPageAddr
+#if BX_SupportICache
+             && (*pageStamp & ICacheWriteStampMask)
+#endif
+                ) {
               ReadHostQWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
 #if BX_SupportICache
