@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.60 2003-01-18 12:05:46 vruppert Exp $
+// $Id: x.cc,v 1.61 2003-01-30 18:41:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,6 +108,8 @@ static void disable_cursor();
 static void enable_cursor();
 
 static Bit32u convertStringToXKeysym (const char *string);
+
+static bx_bool x_init_done = false;
 
 static Pixmap vgafont[256];
 
@@ -575,6 +577,8 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   if (imBPP < imDepth) {
     BX_PANIC(("vga_x: bits_per_pixel < depth ?"));
     }
+
+  x_init_done = true;
 
 }
 
@@ -1419,6 +1423,8 @@ headerbar_click(int x, int y)
   void
 bx_x_gui_c::exit(void)
 {
+  if (!x_init_done) return;
+
   // Delete the font bitmaps
   for (int i=0; i<256; i++) {
     //if (vgafont[i] != NULL) 
