@@ -43,9 +43,6 @@ void     (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot,
 void     (* pluginVGARefresh)(void *) = 0;
 void     (* pluginVGASetUpdateInterval)(unsigned) = 0;
 
-unsigned (* pluginFloppyGetMediaStatus)(unsigned drive) = 0;
-unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status) = 0;
-
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
 
@@ -113,18 +110,6 @@ void builtinVGARefresh(void *v)
 void builtinVGASetUpdateInterval(unsigned val)
 {
   pluginlog->panic("builtinVGASetUpdateInterval called, no VGA plugin loaded?");
-}
-
-static unsigned builtinFloppyGetMediaStatus(unsigned drive) 
-{
-  pluginlog->panic("builtinFloppyGetMediaStatus called, no floppy plugin loaded?");
-  return 0;
-}
-
-static unsigned builtinFloppySetMediaStatus(unsigned drive, unsigned status) 
-{
-  pluginlog->panic("builtinFloppySetMediaStatus called, no floppy plugin loaded?");
-  return 0;
 }
 
   static void  
@@ -439,9 +424,6 @@ plugin_startup(void)
   pluginVGAGetTextSnapshot = builtinVGAGetTextSnapshot;
   pluginVGARefresh     = builtinVGARefresh;
   pluginVGASetUpdateInterval = builtinVGASetUpdateInterval;
-
-  pluginFloppyGetMediaStatus = builtinFloppyGetMediaStatus;
-  pluginFloppySetMediaStatus = builtinFloppySetMediaStatus;
 
   pluginRegisterIRQ = builtinRegisterIRQ;
   pluginUnregisterIRQ = builtinUnregisterIRQ;

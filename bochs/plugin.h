@@ -65,10 +65,6 @@ extern "C" {
 #define BX_VGA_REFRESH() pluginVGARefresh(bx_devices.pluginVgaDevice)
 #define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
 
-#define BX_FLOPPY_GET_MEDIA_STATUS(drive) pluginFloppyGetMediaStatus(drive)
-#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) pluginFloppySetMediaStatus(drive, status)
-
-#define BX_FLOPPY_PRESENT() (pluginDevicePresent(BX_PLUGIN_FLOPPY))
 
 #define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
@@ -94,11 +90,6 @@ extern "C" {
 #define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) pluginVGAGetTextSnapshot(rawsnap, height, width)
 #define BX_VGA_REFRESH() pluginVGARefresh(bx_devices.pluginVgaDevice)
 #define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
-
-#define BX_FLOPPY_GET_MEDIA_STATUS(drive) pluginFloppyGetMediaStatus(drive)
-#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) pluginFloppySetMediaStatus(drive, status)
-
-#define BX_FLOPPY_PRESENT() (pluginDevicePresent(BX_PLUGIN_FLOPPY))
 
 #define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
@@ -146,6 +137,11 @@ extern "C" {
     (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
 #define BX_HD_CLOSE_HARDDRIVE()  bx_devices.pluginHardDrive->close_harddrive()
 #define BX_HARD_DRIVE_PRESENT() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
+
+///////// FLOPPY macros
+#define BX_FLOPPY_GET_MEDIA_STATUS(drive) bx_devices.pluginFloppyDevice->get_media_status(drive)
+#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
+#define BX_FLOPPY_PRESENT() (bx_devices.pluginFloppyDevice != &bx_devices.stubFloppy)
 
 ///////// DMA macros
 #define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \

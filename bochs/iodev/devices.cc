@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.19 2002-10-21 15:44:01 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.20 2002-10-21 22:11:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,7 +66,7 @@ bx_devices_c::bx_devices_c(void)
   pluginDmaDevice = &stubDma;
   pluginPicDevice = &stubPic;
   pluginVgaDevice = NULL;
-  pluginFloppyDevice = NULL;
+  pluginFloppyDevice = &stubFloppy;
 }
 
 
@@ -82,7 +82,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.19 2002-10-21 15:44:01 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.20 2002-10-21 22:11:11 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -110,12 +110,12 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   timer_handle = BX_NULL_TIMER_HANDLE;
 
-  // unmapped is core because it must be initialized before anybody else
+#warning CB: UNMAPPED and BIOSDEV should maybe be optional
   BX_LOAD_PLUGIN(unmapped, PLUGTYPE_CORE);
+  BX_LOAD_PLUGIN(biosdev, PLUGTYPE_CORE);
 
 #warning these should only be loaded if they are enabled.
 #warning and they should only be optional if the init order is irrelevant
-  BX_LOAD_PLUGIN(biosdev, PLUGTYPE_CORE);
   BX_LOAD_PLUGIN(cmos, PLUGTYPE_CORE);
   BX_LOAD_PLUGIN(dma, PLUGTYPE_CORE);
   BX_LOAD_PLUGIN(pic, PLUGTYPE_CORE);

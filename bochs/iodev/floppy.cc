@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.10 2002-10-18 19:37:09 bdenney Exp $
+// $Id: floppy.cc,v 1.51.2.11 2002-10-21 22:11:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,9 +80,6 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
   put("FDD");
   settype(FDLOG);
-
-  pluginFloppyGetMediaStatus = get_media_status;
-  pluginFloppySetMediaStatus = set_media_status;
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
@@ -97,7 +94,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.10 2002-10-18 19:37:09 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.11 2002-10-21 22:11:12 cbothamy Exp $"));
 
   BX_REGISTER_DMA8_CHANNEL(2, dma_read, dma_write, "Floppy Drive");
   BX_REGISTER_IRQ(6, "Floppy Drive");

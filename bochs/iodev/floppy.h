@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.12.4.3 2002-10-18 19:37:10 bdenney Exp $
+// $Id: floppy.h,v 1.12.4.4 2002-10-21 22:11:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,7 +47,7 @@ typedef struct {
   unsigned write_protected;
   } floppy_t;
 
-class bx_floppy_ctrl_c : public bx_devmodel_c {
+class bx_floppy_ctrl_c : public bx_floppy_stub_c {
 public:
 
   bx_floppy_ctrl_c(void);
@@ -56,8 +56,8 @@ public:
   virtual void   reset(unsigned type);
   BX_FD_SMF void   dma_write(Bit8u *data_byte);
   BX_FD_SMF void   dma_read(Bit8u *data_byte);
-  BX_FD_SMF unsigned set_media_status(unsigned drive, unsigned status);
-  BX_FD_SMF unsigned get_media_status(unsigned drive);
+  virtual unsigned set_media_status(unsigned drive, unsigned status);
+  virtual unsigned get_media_status(unsigned drive);
 
 private:
 

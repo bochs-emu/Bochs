@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.18 2002-10-20 21:56:36 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.19 2002-10-21 22:11:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,6 +151,16 @@ class bx_hard_drive_stub_c : public bx_devmodel_c {
   }
 };
 
+class bx_floppy_stub_c : public bx_devmodel_c {
+  public:
+  virtual unsigned get_media_status(unsigned drive) {
+    STUBFUNC(floppy,  get_media_status); return 0;
+  }
+  virtual unsigned set_media_status(unsigned drive, unsigned statu) {
+    STUBFUNC(floppy, set_media_status);
+  }
+};
+
 class bx_cmos_stub_c : public bx_devmodel_c {
   public:
   virtual Bit32u get_reg(unsigned reg) {
@@ -258,7 +268,7 @@ public:
   bx_dma_stub_c *pluginDmaDevice;
   bx_pic_stub_c *pluginPicDevice;
   bx_devmodel_c *pluginVgaDevice;
-  bx_devmodel_c *pluginFloppyDevice;
+  bx_floppy_stub_c *pluginFloppyDevice;
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
@@ -267,6 +277,7 @@ public:
   bx_hard_drive_stub_c stubHardDrive;
   bx_dma_stub_c  stubDma;
   bx_pic_stub_c  stubPic;
+  bx_floppy_stub_c  stubFloppy;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
