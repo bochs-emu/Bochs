@@ -1,0 +1,12 @@
+# this file is included by all the subdirectory makefiles
+
+test:
+	@echo "*** Running test in `pwd`"
+	-./uselib
+	@echo "*** Test done in `pwd`"
+
+uselib.out.expected::
+	-./uselib | ../filter-test-output > uselib.out.expected
+
+clean-common::
+	rm -rf .libs *.o *.lo *.la *.dll uselib uselib.exe bin lib uselib.out
