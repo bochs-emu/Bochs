@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.36 2004-11-20 23:26:29 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.37 2004-11-26 20:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,7 +34,6 @@
 
 void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 {
-  Bit16u imm16;
   Bit32u temp_ESP;
   Bit32u return_EIP;
 
@@ -42,15 +41,15 @@ void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
-    temp_ESP = ESP;
-  else
-    temp_ESP = SP;
-
-  imm16 = i->Iw();
+  Bit16u imm16 = i->Iw();
 
   if (protected_mode())
   {
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
+      temp_ESP = ESP;
+    else
+      temp_ESP = SP;
+
     if (! can_pop(4)) {
       BX_ERROR(("retnear_iw: can't pop EIP"));
       exception(BX_SS_EXCEPTION, 0, 0);
@@ -99,13 +98,13 @@ void BX_CPU_C::RETnear32(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
-    temp_ESP = ESP;
-  else
-    temp_ESP = SP;
-
   if (protected_mode())
   {
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
+      temp_ESP = ESP;
+    else
+      temp_ESP = SP;
+
     if (! can_pop(4)) {
       BX_ERROR(("retnear: can't pop EIP"));
       exception(BX_SS_EXCEPTION, 0, 0);

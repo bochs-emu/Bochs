@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.66 2004-11-20 23:26:31 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.67 2004-11-26 20:21:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -206,57 +206,6 @@ typedef struct BxOpcodeInfo_t {
 
 // common fetchdecode32/64 opcode tables
 #include "fetchdecode.h"
-
-
-static BxOpcodeInfo_t opcodesADD_EwIw[2] = {
-  { BxLockable, &BX_CPU_C::ADD_EEwIw },
-  { 0,          &BX_CPU_C::ADD_EGwIw }
-  };
-
-static BxOpcodeInfo_t opcodesADD_EdId[2] = {
-  { BxLockable, &BX_CPU_C::ADD_EEdId },
-  { 0,          &BX_CPU_C::ADD_EGdId }
-  };
-
-static BxOpcodeInfo_t opcodesADD_GwEw[2] = {
-  { 0, &BX_CPU_C::ADD_GwEEw },
-  { 0, &BX_CPU_C::ADD_GwEGw }
-  };
-
-static BxOpcodeInfo_t opcodesADD_GdEd[2] = {
-  { 0, &BX_CPU_C::ADD_GdEEd },
-  { 0, &BX_CPU_C::ADD_GdEGd }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_GbEb[2] = {
-  { 0, &BX_CPU_C::MOV_GbEEb },
-  { 0, &BX_CPU_C::MOV_GbEGb }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_GwEw[2] = {
-  { 0, &BX_CPU_C::MOV_GwEEw },
-  { 0, &BX_CPU_C::MOV_GwEGw }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_GdEd[2] = {
-  { 0, &BX_CPU_C::MOV_GdEEd },
-  { 0, &BX_CPU_C::MOV_GdEGd }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_EbGb[2] = {
-  { 0, &BX_CPU_C::MOV_EEbGb },
-  { 0, &BX_CPU_C::MOV_EGbGb }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_EwGw[2] = {
-  { 0, &BX_CPU_C::MOV_EEwGw },
-  { 0, &BX_CPU_C::MOV_EGwGw }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
-  { 0, &BX_CPU_C::MOV_EEdGd },
-  { 0, &BX_CPU_C::MOV_EGdGd }
-  };
 
 
 /* ************* */
@@ -655,9 +604,6 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 60 */  { 0, &BX_CPU_C::BxError },
   /* 61 */  { 0, &BX_CPU_C::BxError },
   /* 62 */  { 0, &BX_CPU_C::BxError },
-#ifdef __GNUC__
-#warning PRT: op=63 This needs checking on real hardware.  Manual says 16 bit version leaves upper 48 bits unchanged
-#endif
   /* 63 */  { BxAnother, &BX_CPU_C::MOVSX_GwEw }, // 
   /* 64 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // FS:
   /* 65 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // GS:
@@ -1180,9 +1126,6 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 60 */  { 0, &BX_CPU_C::BxError },
   /* 61 */  { 0, &BX_CPU_C::BxError },
   /* 62 */  { 0, &BX_CPU_C::BxError },
-#ifdef __GNUC__
-#warning PRT: This needs checking on real hardware.  Manual says 32 bit version zero extends result
-#endif
   /* 63 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GdEd },
   /* 64 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // FS:
   /* 65 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // GS:
@@ -2129,8 +2072,6 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   };
 
 
-
-
   unsigned
 BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction,
                       unsigned remain)
@@ -2349,7 +2290,6 @@ another_byte:
           instruction->ResolveModrm = BxResolve64Mod0[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
-ExtendedFieldCheck((rm&8) && ((rm&7)==5)); // KPL
           if (rm == 5) {
             if ((ilen+3) < remain) {
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
@@ -2407,7 +2347,6 @@ get_32bit_displ_1:
           instruction->ResolveModrm = BxResolve64Mod0Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
-ExtendedFieldCheck((base&8) && ((base&7)==5)); // KPL
           if (base == 0x05)
             goto get_32bit_displ_1;
           // mod==00b, rm==4, base!=5
@@ -2430,11 +2369,9 @@ ExtendedFieldCheck((base&8) && ((base&7)==5)); // KPL
      // 32-bit addressing modes; note that mod==11b handled above
       if (rm != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
-ExtendedFieldCheck(rm&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod0[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
-ExtendedFieldCheck((rm&8) && ((rm&7)==5)); // KPL
           if (rm == 5) {
             if ((ilen+3) < remain) {
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
@@ -2448,7 +2385,6 @@ ExtendedFieldCheck((rm&8) && ((rm&7)==5)); // KPL
           goto modrm_done;
           }
         if (mod == 0x40) { // mod == 01b
-ExtendedFieldCheck(rm&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod1or2[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01_rm32[rm]);
@@ -2462,7 +2398,6 @@ get_8bit_displ:
           else return(0);
           }
         // (mod == 0x80) mod == 10b
-ExtendedFieldCheck(rm&8); // KPL
         instruction->ResolveModrm = BxResolve32Mod1or2[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm32[rm]);
@@ -2491,25 +2426,21 @@ get_32bit_displ:
         instruction->modRMForm.modRMData |= (index<<16);
         instruction->modRMForm.modRMData |= (scale<<4);
         if (mod == 0x00) { // mod==00b, rm==4
-ExtendedFieldCheck(base&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod0Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
-ExtendedFieldCheck((base&8) && ((base&7)==5)); // KPL
           if (base == 0x05)
             goto get_32bit_displ;
           // mod==00b, rm==4, base!=5
           goto modrm_done;
           }
         if (mod == 0x40) { // mod==01b, rm==4
-ExtendedFieldCheck(base&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
           }
         // (mod == 0x80),  mod==10b, rm==4
-ExtendedFieldCheck(base&8); // KPL
         instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.31 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.32 2004-11-26 20:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,14 +33,14 @@
 
 void BX_CPU_C::MOV_RXIw(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx = i->Iw();
+  BX_WRITE_16BIT_REG(i->opcodeReg(), i->Iw());
 }
 
 void BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
 {
   Bit16u temp16 = AX;
-  AX = BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx = temp16;
+  AX = BX_READ_16BIT_REG(i->opcodeReg());
+  BX_WRITE_16BIT_REG(i->opcodeReg(), temp16);
 }
 
 void BX_CPU_C::MOV_EEwGw(bxInstruction_c *i)

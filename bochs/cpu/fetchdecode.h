@@ -17,13 +17,13 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
-
 #ifndef BX_COMMON_FETCHDECODE_TABLES_H
 #define BX_COMMON_FETCHDECODE_TABLES_H
 
 //
-// Common FetchDecode Opcode Tables
+// This file contains common IA-32/IA-64 opcode tables, like FPU opcode
+// table, 3DNow! opcode table or SSE opcode groups (choose the opcode
+// according to instruction prefixes)
 //
 
 BX_CPP_INLINE Bit16u FetchWORD(Bit8u *iptr)
@@ -40,18 +40,69 @@ BX_CPP_INLINE Bit32u FetchDWORD(Bit8u *iptr)
    return data;
 }
 
+#if BX_SUPPORT_X86_64
 BX_CPP_INLINE Bit64u FetchQWORD(Bit8u *iptr)
 {
    Bit64u data;
    ReadHostQWordFromLittleEndian(iptr, data);
    return data;
 }
+#endif
 
 //
-// This file contains common IA-32/IA-64 opcode tables, like FPU opcode
-// table, 3DNow! opcode table or SSE opcode groups (choose the opcode
-// according to instruction prefixes)
+// Common FetchDecode Opcode Tables
 //
+
+static BxOpcodeInfo_t opcodesADD_EwIw[2] = {
+  { BxLockable, &BX_CPU_C::ADD_EEwIw },
+  { 0,          &BX_CPU_C::ADD_EGwIw }
+  };
+
+static BxOpcodeInfo_t opcodesADD_EdId[2] = {
+  { BxLockable, &BX_CPU_C::ADD_EEdId },
+  { 0,          &BX_CPU_C::ADD_EGdId }
+  };
+
+static BxOpcodeInfo_t opcodesADD_GwEw[2] = {
+  { 0,          &BX_CPU_C::ADD_GwEEw },
+  { 0,          &BX_CPU_C::ADD_GwEGw }
+  };
+
+static BxOpcodeInfo_t opcodesADD_GdEd[2] = {
+  { 0,          &BX_CPU_C::ADD_GdEEd },
+  { 0,          &BX_CPU_C::ADD_GdEGd }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_GbEb[2] = {
+  { 0,          &BX_CPU_C::MOV_GbEEb },
+  { 0,          &BX_CPU_C::MOV_GbEGb }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_GwEw[2] = {
+  { 0,          &BX_CPU_C::MOV_GwEEw },
+  { 0,          &BX_CPU_C::MOV_GwEGw }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_GdEd[2] = {
+  { 0,          &BX_CPU_C::MOV_GdEEd },
+  { 0,          &BX_CPU_C::MOV_GdEGd }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_EbGb[2] = {
+  { 0,          &BX_CPU_C::MOV_EEbGb },
+  { 0,          &BX_CPU_C::MOV_EGbGb }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_EwGw[2] = {
+  { 0,          &BX_CPU_C::MOV_EEwGw },
+  { 0,          &BX_CPU_C::MOV_EGwGw }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
+  { 0,          &BX_CPU_C::MOV_EEdGd },
+  { 0,          &BX_CPU_C::MOV_EGdGd }
+  };
+
 
 #if BX_SUPPORT_FPU
 

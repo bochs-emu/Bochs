@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.19 2004-06-18 14:11:06 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.20 2004-11-26 20:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,14 +36,14 @@
 BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
 {
   Bit64u temp64 = RAX;
-  RAX = BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx;
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = temp64;
+  RAX = BX_READ_64BIT_REG(i->opcodeReg());
+  BX_WRITE_64BIT_REG(i->opcodeReg(), temp64);
 }
 
   void
 BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = i->Iq();
+  BX_WRITE_64BIT_REG(i->opcodeReg(), i->Iq());
 }
 
   void

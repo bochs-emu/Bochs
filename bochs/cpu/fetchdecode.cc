@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.71 2004-11-20 23:26:29 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.72 2004-11-26 20:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -137,57 +137,6 @@ typedef struct BxOpcodeInfo_t {
 
 // common fetchdecode32/64 opcode tables
 #include "fetchdecode.h"
-
-
-static BxOpcodeInfo_t opcodesADD_EwIw[2] = {
-  { BxLockable, &BX_CPU_C::ADD_EEwIw },
-  { 0,          &BX_CPU_C::ADD_EGwIw }
-  };
-
-static BxOpcodeInfo_t opcodesADD_EdId[2] = {
-  { BxLockable, &BX_CPU_C::ADD_EEdId },
-  { 0,          &BX_CPU_C::ADD_EGdId }
-  };
-
-static BxOpcodeInfo_t opcodesADD_GwEw[2] = {
-  { 0, &BX_CPU_C::ADD_GwEEw },
-  { 0, &BX_CPU_C::ADD_GwEGw }
-  };
-
-static BxOpcodeInfo_t opcodesADD_GdEd[2] = {
-  { 0, &BX_CPU_C::ADD_GdEEd },
-  { 0, &BX_CPU_C::ADD_GdEGd }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_GbEb[2] = {
-  { 0, &BX_CPU_C::MOV_GbEEb },
-  { 0, &BX_CPU_C::MOV_GbEGb }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_GwEw[2] = {
-  { 0, &BX_CPU_C::MOV_GwEEw },
-  { 0, &BX_CPU_C::MOV_GwEGw }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_GdEd[2] = {
-  { 0, &BX_CPU_C::MOV_GdEEd },
-  { 0, &BX_CPU_C::MOV_GdEGd }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_EbGb[2] = {
-  { 0, &BX_CPU_C::MOV_EEbGb },
-  { 0, &BX_CPU_C::MOV_EGbGb }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_EwGw[2] = {
-  { 0, &BX_CPU_C::MOV_EEwGw },
-  { 0, &BX_CPU_C::MOV_EGwGw }
-  };
-
-static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
-  { 0, &BX_CPU_C::MOV_EEdGd },
-  { 0, &BX_CPU_C::MOV_EGdGd }
-  };
 
 
 /* ************* */
