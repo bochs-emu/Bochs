@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.61.4.3 2002-10-20 17:22:58 bdenney Exp $
+// $Id: wxmain.cc,v 1.61.4.4 2002-10-21 12:26:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -717,7 +717,7 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   dlg.SetTitle ("Other Options");
-  dlg.AddParam (SIM->get_param (BXP_SEL_VGA_LIBRARY));
+  dlg.AddParam (SIM->get_param (BXP_SEL_DISPLAY_LIBRARY));
   dlg.AddParam (SIM->get_param (BXP_SEL_CONFIG_INTERFACE));
   dlg.AddParam (SIM->get_param (BXP_IPS));
   dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
@@ -1000,7 +1000,7 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
   // check that vga library is set to wx.  If not, give a warning and change it
   // to wx.  It is technically possible to use other vga libraries with the wx
   // config interface, but there are still some significant problems.
-  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_VGA_LIBRARY);
+  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_DISPLAY_LIBRARY);
   char *gui_name = gui_param->get_choice (gui_param->get ());
   if (strcmp (gui_name, "wx") != 0) {
     wxMessageBox (
