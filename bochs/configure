@@ -1024,9 +1024,9 @@ rm -f conftest.sh
 
 ac_config_headers="$ac_config_headers config.h"
 
-VERSION="1.4.pre1"
-VER_STRING="1.4.pre1"
-REL_STRING="March 5, 2002"
+VERSION="1.4.pre2"
+VER_STRING="1.4.pre2"
+REL_STRING="March 11, 2002"
 
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
