@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.10 2001-10-03 13:10:38 bdenney Exp $
+// $Id: iodev.h,v 1.11 2001-12-18 13:12:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,6 +90,8 @@ public:
 
   void dma_write8(unsigned channel, Bit8u *data);
   void dma_read8(unsigned channel, Bit8u *data);
+  void dma_write16(unsigned channel, Bit16u *data);
+  void dma_read16(unsigned channel, Bit16u *data);
   void drq(unsigned channel, Boolean val);
   void raise_hlda(void);
   static void timer_handler(void *);

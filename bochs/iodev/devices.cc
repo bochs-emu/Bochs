@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.18 2001-10-03 13:10:38 bdenney Exp $
+// $Id: devices.cc,v 1.19 2001-12-18 13:12:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.18 2001-10-03 13:10:38 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.19 2001-12-18 13:12:45 vruppert Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -338,7 +338,6 @@ bx_devices_c::raise_hlda(void)
   void
 bx_devices_c::dma_read8(unsigned channel, Bit8u *data_byte)
 {
-  //  UNUSED( channel );
   if (channel == 2) 
     floppy->dma_read(data_byte);
 #if BX_SUPPORT_SB16
@@ -350,12 +349,35 @@ bx_devices_c::dma_read8(unsigned channel, Bit8u *data_byte)
   void
 bx_devices_c::dma_write8(unsigned channel, Bit8u *data_byte)
 {
-  //  UNUSED( channel );
   if (channel == 2)
     floppy->dma_write(data_byte);
 #if BX_SUPPORT_SB16
   else if (channel == (unsigned) sb16->currentdma8)
     sb16->dma_write8(data_byte);
+#endif
+}
+
+  void
+bx_devices_c::dma_read16(unsigned channel, Bit16u *data_word)
+{
+#if BX_SUPPORT_SB16
+  if (channel == (unsigned) sb16->currentdma16)
+    sb16->dma_read16(data_word);
+#else
+  UNUSED(channel);
+  UNUSED(data_word);
+#endif
+}
+
+  void
+bx_devices_c::dma_write16(unsigned channel, Bit16u *data_word)
+{
+#if BX_SUPPORT_SB16
+  if (channel == (unsigned) sb16->currentdma16)
+    sb16->dma_write16(data_word);
+#else
+  UNUSED(channel);
+  UNUSED(data_word);
 #endif
 }
 

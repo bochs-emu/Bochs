@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.4 2001-10-03 13:10:38 bdenney Exp $
+// $Id: dma.h,v 1.5 2001-12-18 13:12:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -81,7 +81,7 @@ private:
       Bit16u  current_count;
       Bit8u   page_reg;
       } chan[4]; /* DMA channels 0..3 */
-    } s;  // state information
+    } s[2];  // state information DMA-1 / DMA-2
 
   bx_devices_c *devices;
   };
