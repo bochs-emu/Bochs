@@ -25,6 +25,7 @@ Changes to next release:
   [907163] ctrl_xfer8 clean/speed up
   [907161] clean/speed up of io.cc
   [899972] data xfer performance patch V 2.0.4
+  [904549] imul gives incorrect result in long mode
 
 - these S.F. bugs were closed 
   #923653 DAA instruction is broken
