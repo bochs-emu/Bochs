@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.1 2001-06-24 15:08:12 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.2 2001-06-24 17:38:59 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -109,6 +109,12 @@ public:
   ParamEditorEnum (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
 };
 
+class ParamEditorList : public ParamEditor {
+  wxControl *component;
+public:
+  ParamEditorList (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
+};
+
 BEGIN_EVENT_TABLE(BochsEventHandler, wxEvtHandler)
   EVT_MENU (-1, BochsEventHandler::OnEvent)
 END_EVENT_TABLE()
@@ -181,7 +187,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
   CreateStatusBar();
   SetStatusText( "Bochs Controls" );
-  MyPanel *panel = new MyPanel (this, 5, 5, 500, 500);
+  MyPanel *panel = new MyPanel (this, -1, -1, -1, -1);
 }
 
 
@@ -285,6 +291,8 @@ ParamEditor::createEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, i
       return new ParamEditorEnum (param, parent, id, x, y);
       break;
     case BXT_LIST:
+      return new ParamEditorList (param, parent, id, x, y);
+      break;
     default:
       printf ("ParamEditor::createEditor with unknown type %d\n", type);
   }
@@ -304,23 +312,21 @@ ParamEditorNum::ParamEditorNum (bx_param_c *param, wxWindow *parent, wxWindowID 
   bx_param_num_c *num = (bx_param_num_c *)param;
   wxString text;
   text.Printf ("%d", num->get ());
-  component = new wxTextCtrl (this, id, text, wxPoint (0, 0), wxSize (100, 30));
+  component = new wxTextCtrl (this, id, text, wxPoint (-1, -1), wxSize (-1, -1));
 }
 
 ParamEditorString::ParamEditorString (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
   : ParamEditor (param, parent, id, x, y)
 {
-  // background color helps to visualize the borders of the panel
   //SetBackgroundColour (wxColour ("red"));
   bx_param_string_c *string = (bx_param_string_c *)param;
   wxString text = wxString (string->getptr ());
-  component = new wxTextCtrl (this, id, text, wxPoint (0, 0), wxSize (100, 30));
+  component = new wxTextCtrl (this, id, text, wxPoint (-1, -1), wxSize (-1, -1));
 }
 
 ParamEditorEnum::ParamEditorEnum (bx_param_c *genericparam, wxWindow *parent, wxWindowID id, int x, int y)
   : ParamEditor (genericparam, parent, id, x, y)
 {
-  // background color helps to visualize the borders of the panel
   //SetBackgroundColour (wxColour ("red"));
   
   // build the array of choices
@@ -329,5 +335,14 @@ ParamEditorEnum::ParamEditorEnum (bx_param_c *genericparam, wxWindow *parent, wx
   choices = new wxString[n_choices];
   for (int i=0; i<n_choices; i++)
     choices[i] = param->get_choice (i);
-  component = new wxChoice (this, id, wxPoint (0, 0), wxSize (100, 30), n_choices, choices);
+  component = new wxChoice (this, id, wxPoint (-1, -1), wxSize (-1, -1), n_choices, choices);
+}
+
+
+ParamEditorList::ParamEditorList (bx_param_c *genericparam, wxWindow *parent, wxWindowID id, int x, int y)
+  : ParamEditor (genericparam, parent, id, x, y)
+{
+  //SetBackgroundColour (wxColour ("red"));
+  bx_list_c *param = (bx_list_c *) genericparam;
+  component = new wxStaticText (this, id, "list param not implemented", wxPoint (-1, -1));
 }
