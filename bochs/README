@@ -34,13 +34,15 @@ CVS version instead.
 
 WHERE ARE THE DOCS?
 
-The Bochs documentation in transition between the old documentation
-written in HTML and the new documentation written in Docbook format.
-The new documentation is online at
-  http://bochs.sf.net/doc/docbook/alldocs.html
-and it is the most current.  Some information has not yet been
-transferred from the old HTML docs.  This can be found at
-  http://bochs.sf.net/docs-html
+The Bochs documentation is written in Docbook.  Docbook is a text 
+format that can be rendered to many popular browser formats such 
+as HTML, PDF, and Postscript.  Each binary release contains the
+HTML rendering of the documentation.  Also, you can view the
+latest documentation on the web at
+  http://bochs.sf.net/doc/docbook/index.html
+
+Some information has not yet been transferred from the older
+HTML docs.  This can be found at http://bochs.sf.net/docs-html
 
 WHERE CAN I GET MORE INFORMATION?  HOW DO I REPORT PROBLEMS?
 
@@ -74,8 +76,7 @@ thing without realizing it.
 
 If you are a Bochs user, not a hardware/C++ guru, there are still
 many ways you could help out.  For example:
-  - improving win32 binary releases
-  - building up a set of useful tools to include in those releases
+  - write instructions on how to install a particular operating system
   - writing/cleaning up documentation
   - testing out Bochs on every imaginable operating system and 
     reporting how it goes.
