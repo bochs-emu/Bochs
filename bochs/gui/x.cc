@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.75 2003-07-12 17:29:16 vruppert Exp $
+// $Id: x.cc,v 1.76 2003-08-11 19:27:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,12 +41,12 @@ extern "C" {
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
-#ifdef BX_HAVE_XPM_H
+#if BX_HAVE_XPM_H
 #include <X11/xpm.h>
 #endif
 }
 
-#ifdef BX_HAVE_XPM_H
+#if BX_HAVE_XPM_H
 #include "icon_bochs.xpm"
 #else
 #include "icon_bochs.h"
@@ -344,7 +344,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 #endif
   char *icon_name = "Bochs";
   Pixmap icon_pixmap;
-#ifdef BX_HAVE_XPM_H
+#if BX_HAVE_XPM_H
   Pixmap icon_mask;
 #endif
   XSizeHints size_hints;
@@ -466,7 +466,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 
   /* Get available icon sizes from Window manager */
 
-#ifdef BX_HAVE_XPM_H
+#if BX_HAVE_XPM_H
   /* Create pixmap from XPM for icon */
   XCreatePixmapFromData(bx_x_display, win, icon_bochs_xpm, &icon_pixmap, &icon_mask, NULL);
 #else
@@ -512,7 +512,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   wm_hints.initial_state = NormalState;
   wm_hints.input = True;
   wm_hints.icon_pixmap = icon_pixmap;
-#ifdef BX_HAVE_XPM_H
+#if BX_HAVE_XPM_H
   wm_hints.icon_mask = icon_mask;
   wm_hints.flags = StateHint | IconPixmapHint | IconMaskHint | InputHint;
 #else
