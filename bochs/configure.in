@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.93 2002-09-05 15:49:48 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.94 2002-09-05 19:59:20 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -750,6 +750,7 @@ AC_ARG_ENABLE(readline,
     ]
  )
 
+use_readline=0
 AC_MSG_CHECKING(whether to use readline)
 if test "$want_readline" = yes; then
   if test "$bx_debugger" = 1; then
@@ -757,10 +758,12 @@ if test "$want_readline" = yes; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(HAVE_LIBREADLINE, 1)
       READLINE_LIB="-lreadline"
+      use_readline=1
     elif test "$rl_with_curses_ok" = yes; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(HAVE_LIBREADLINE, 1)
       READLINE_LIB="-lreadline -lcurses"
+      use_readline=1
     else
       AC_MSG_RESULT(no)
       echo WARNING: The readline library was disabled because it was not found.
@@ -1271,6 +1274,15 @@ elif test "$with_wx" = yes; then
   # wxwindows is the only one without control.o in GUI_OBJS
   GUI_OBJS='$(GUI_OBJS_WX)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
+  # using debugger with readline is failing due to thread/signal handler
+  # problems.
+  if test "$use_readline" = 1 -a "$bx_debugger" = 1; then
+    echo ERROR: You have selected wxWindows, the debugger, and the readline 
+    echo library.  This combination is known to trigger problems with SIGINT 
+    echo handling.  Please run configure again with --disable-readline to 
+    echo correct this.
+    exit 1
+  fi
 else
   AC_MSG_RESULT(none)
   AC_DEFINE(BX_WITH_NOGUI, 1)
