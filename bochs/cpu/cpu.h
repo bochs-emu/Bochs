@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.124 2002-12-22 20:12:59 sshwarts Exp $
+// $Id: cpu.h,v 1.125 2002-12-22 20:48:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2061,8 +2061,6 @@ union {
   BX_SMF void MOVSS_WssVss(bxInstruction_c *i);
   BX_SMF void MOVLPS_VpsMq(bxInstruction_c *i);
   BX_SMF void MOVLPS_MqVps(bxInstruction_c *i);
-  BX_SMF void UNPCKLPS_VpsWq(bxInstruction_c *i);
-  BX_SMF void UNPCKHPS_VpsWq(bxInstruction_c *i);
   BX_SMF void MOVHPS_VpsMq(bxInstruction_c *i);
   BX_SMF void MOVHPS_MqVps(bxInstruction_c *i);
   BX_SMF void MOVAPS_VpsWps(bxInstruction_c *i);
@@ -2118,8 +2116,6 @@ union {
   /* SSE2 */
   BX_SMF void MOVSD_VsdWsd(bxInstruction_c *i);
   BX_SMF void MOVSD_WsdVsd(bxInstruction_c *i);
-  BX_SMF void UNPCKLPD_VpdWq(bxInstruction_c *i);
-  BX_SMF void UNPCKHPD_VpdWq(bxInstruction_c *i);
   BX_SMF void CVTPI2PD_VpdQd(bxInstruction_c *i);
   BX_SMF void CVTSI2SD_VsdEd(bxInstruction_c *i);
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *i);
