@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.55 2003-06-20 08:58:12 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.56 2003-08-15 13:08:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1759,21 +1759,15 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
             instruction->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
             if ((ilen+3) < remain) {
-              Bit32u imm32u;
-              imm32u = *iptr++;
-              imm32u |= (*iptr++) << 8;
-              imm32u |= (*iptr++) << 16;
-              imm32u |= (*iptr++) << 24;
-              instruction->modRMForm.displ32u = imm32u;
+              instruction->modRMForm.displ32u = FetchDWORD(iptr);
+              iptr += 4;
               ilen += 4;
 #if BX_DYNAMIC_TRANSLATION
               instruction->DTMemRegsUsed = 0;
 #endif
               goto modrm_done;
               }
-            else {
-              return(0);
-              }
+            else return(0);
             }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
@@ -1792,9 +1786,7 @@ get_8bit_displ:
             ilen++;
             goto modrm_done;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve32Mod1or2[rm];
@@ -1805,18 +1797,12 @@ get_8bit_displ:
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm32[rm]);
 get_32bit_displ:
         if ((ilen+3) < remain) {
-          Bit32u imm32u;
-          imm32u = *iptr++;
-          imm32u |= (*iptr++) << 8;
-          imm32u |= (*iptr++) << 16;
-          imm32u |= (*iptr++) << 24;
-          instruction->modRMForm.displ32u = imm32u;
+          instruction->modRMForm.displ32u = FetchDWORD(iptr);
+          iptr += 4;
           ilen += 4;
           goto modrm_done;
           }
-        else {
-          return(0);
-          }
+        else return(0);
         }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -1896,9 +1882,7 @@ get_32bit_displ:
           ilen++;
           goto modrm_done;
           }
-        else {
-          return(0);
-          }
+        else return(0);
         }
       if (mod == 0x80) { // mod == 10b
         instruction->ResolveModrm = BxResolve16Mod1or2[rm];
@@ -1911,16 +1895,12 @@ get_32bit_displ:
         instruction->DTMemRegsUsed = BxMemRegsUsed16[rm];
 #endif
         if ((ilen+1) < remain) {
-          Bit16u displ16u;
-          displ16u = *iptr++;
-          displ16u |= (*iptr++) << 8;
-          instruction->modRMForm.displ16u = displ16u;
+          instruction->modRMForm.displ16u = FetchWORD(iptr);
+          iptr += 2;
           ilen += 2;
           goto modrm_done;
           }
-        else {
-          return(0);
-          }
+        else return(0);
         }
       // mod must be 00b at this point
       instruction->ResolveModrm = BxResolve16Mod0[rm];
@@ -1931,17 +1911,12 @@ get_32bit_displ:
         instruction->setSeg(BX_CPU_THIS_PTR sreg_mod00_rm16[rm]);
       if (rm == 0x06) {
         if ((ilen+1) < remain) {
-          Bit16u displ16u;
-          displ16u = *iptr++;
-          displ16u |= (*iptr++) << 8;
-          //RMAddr(instruction) = displ16u;
-          instruction->modRMForm.displ16u = displ16u;
+          instruction->modRMForm.displ16u = FetchWORD(iptr);
+          iptr += 2;
           ilen += 2;
           goto modrm_done;
           }
-        else {
-          return(0);
-          }
+        else return(0);
         }
       // mod=00b rm!=6
 #if BX_DYNAMIC_TRANSLATION
@@ -2055,39 +2030,25 @@ modrm_done:
       case BxImmediate_IvIw: // CALL_Ap
         if (instruction->os32L()) {
           if ((ilen+3) < remain) {
-            Bit32u imm32u;
-            imm32u = *iptr++;
-            imm32u |= (*iptr++) << 8;
-            imm32u |= (*iptr++) << 16;
-            imm32u |= (*iptr) << 24;
-            instruction->modRMForm.Id = imm32u;
+            instruction->modRMForm.Id = FetchDWORD(iptr);
+            iptr += 4;
             ilen += 4;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         else {
           if ((ilen+1) < remain) {
-            Bit16u imm16u;
-            imm16u = *iptr++;
-            imm16u |= (*iptr) << 8;
-            instruction->modRMForm.Iw = imm16u;
+            instruction->modRMForm.Iw = FetchWORD(iptr);
+            iptr += 2;
             ilen += 2;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         if (imm_mode != BxImmediate_IvIw)
           break;
-        iptr++;
         // Get Iw for BxImmediate_IvIw
         if ((ilen+1) < remain) {
-          Bit16u imm16u;
-          imm16u = *iptr++;
-          imm16u |= (*iptr) << 8;
-          instruction->IxIxForm.Iw2 = imm16u;
+          instruction->IxIxForm.Iw2 = FetchWORD(iptr);
           ilen += 2;
           }
         else {
@@ -2098,46 +2059,31 @@ modrm_done:
         if (instruction->as32L()) {
           // fetch 32bit address into Id
           if ((ilen+3) < remain) {
-            Bit32u imm32u;
-            imm32u = *iptr++;
-            imm32u |= (*iptr++) << 8;
-            imm32u |= (*iptr++) << 16;
-            imm32u |= (*iptr) << 24;
-            instruction->modRMForm.Id = imm32u;
+            instruction->modRMForm.Id = FetchDWORD(iptr);
             ilen += 4;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         else {
           // fetch 16bit address into Id
           if ((ilen+1) < remain) {
-            Bit32u imm32u;
-            imm32u = *iptr++;
-            imm32u |= (*iptr) << 8;
-            instruction->modRMForm.Id = imm32u;
+            instruction->modRMForm.Id = (Bit32u) FetchWORD(iptr);
             ilen += 2;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         break;
       case BxImmediate_Iw:
       case BxImmediate_IwIb:
         if ((ilen+1) < remain) {
-          Bit16u imm16u;
-          imm16u = *iptr++;
-          imm16u |= (*iptr) << 8;
-          instruction->modRMForm.Iw = imm16u;
+          instruction->modRMForm.Iw = FetchWORD(iptr);
+          iptr += 2;
           ilen += 2;
           }
         else {
           return(0);
           }
         if (imm_mode == BxImmediate_Iw) break;
-        iptr++;
         if (ilen < remain) {
           instruction->IxIxForm.Ib2 = *iptr;
           ilen++;
@@ -2159,10 +2105,7 @@ modrm_done:
         break;
       case BxImmediate_BrOff16:
         if ((ilen+1) < remain) {
-          Bit16u imm16u;
-          imm16u = *iptr++;
-          imm16u |= (*iptr) << 8;
-          instruction->modRMForm.Id = (Bit16s) imm16u;
+          instruction->modRMForm.Id = (Bit16s) FetchWORD(iptr);
           ilen += 2;
           }
         else {

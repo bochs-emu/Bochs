@@ -26,6 +26,27 @@
 // Common FetchDecode Opcode Tables
 //
 
+BX_CPP_INLINE Bit16u FetchWORD(Bit8u *iptr)
+{
+   Bit16u data;
+   ReadHostWordFromLittleEndian(iptr, data);
+   return data;
+}
+
+BX_CPP_INLINE Bit32u FetchDWORD(Bit8u *iptr)
+{
+   Bit32u data;
+   ReadHostDWordFromLittleEndian(iptr, data);
+   return data;
+}
+
+BX_CPP_INLINE Bit64u FetchQWORD(Bit8u *iptr)
+{
+   Bit64u data;
+   ReadHostDWordFromLittleEndian(iptr, data);
+   return data;
+}
+
 //
 // This file contains common IA-32/IA-64 opcode tables, like FPU opcode
 // table, 3DNow! opcode table or SSE opcode groups (choose the opcode
