@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: mult8.cc,v 1.7 2002-09-13 21:34:00 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ BX_CPU_C::MUL_ALEb(BxInstruction_t *i)
 
   /* op2 is a register or memory reference */
   if (i->mod == 0xc0) {
-    op2 = BX_READ_8BIT_REG(i->rm);
+    op2 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -80,7 +80,7 @@ BX_CPU_C::IMUL_ALEb(BxInstruction_t *i)
 
   /* op2 is a register or memory reference */
   if (i->mod == 0xc0) {
-    op2 = BX_READ_8BIT_REG(i->rm);
+    op2 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -120,7 +120,7 @@ BX_CPU_C::DIV_ALEb(BxInstruction_t *i)
 
   /* op2 is a register or memory reference */
   if (i->mod == 0xc0) {
-    op2 = BX_READ_8BIT_REG(i->rm);
+    op2 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -165,7 +165,7 @@ BX_CPU_C::IDIV_ALEb(BxInstruction_t *i)
 
   /* op2 is a register or memory reference */
   if (i->mod == 0xc0) {
-    op2 = BX_READ_8BIT_REG(i->rm);
+    op2 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
