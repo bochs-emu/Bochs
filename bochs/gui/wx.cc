@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.3 2001-06-24 18:19:45 instinc Exp $
+// $Id: wx.cc,v 1.1.2.4 2001-06-24 19:24:57 instinc Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -25,6 +25,7 @@ extern "C" {
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 #include <wx/scrolwin.h>
+#include <wx/sizer.h>
 
 #ifdef __BORLANDC__
 #pragma hdrstop
@@ -60,13 +61,16 @@ private:
 class MyPanel: public wxScrolledWindow
 {
 private:
-  DECLARE_EVENT_TABLE()
-  void HandleEvent(wxCommandEvent& event);
   wxStaticText *text1;
   BochsThread *bochsThread;
   void buildParamList (int x, int y);
 public:
-  MyPanel (wxFrame *frame, int x, int y, int w, int h);
+  MyPanel () {};
+  MyPanel ( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
+  ~MyPanel();
+
+  DECLARE_DYNAMIC_CLASS(MyPanel)
+  DECLARE_EVENT_TABLE()
 };
 
 
@@ -117,6 +121,7 @@ public:
   ParamEditorList (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y);
 };
 
+
 BEGIN_EVENT_TABLE(BochsEventHandler, wxEvtHandler)
   EVT_MENU (-1, BochsEventHandler::OnEvent)
 END_EVENT_TABLE()
@@ -150,12 +155,8 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_StartBochs, MyFrame::OnAbout)
 END_EVENT_TABLE()
 
-BEGIN_EVENT_TABLE(MyPanel, wxPanel)
-  EVT_BUTTON (ID_StartBochs, MyPanel::HandleEvent)
-  EVT_CHECKBOX (ID_Check1, MyPanel::HandleEvent)
-  EVT_CHOICE (ID_Choice1, MyPanel::HandleEvent)
-  EVT_COMBOBOX (ID_Combo1, MyPanel::HandleEvent)
-  EVT_TEXT (ID_Combo1, MyPanel::HandleEvent)
+IMPLEMENT_DYNAMIC_CLASS(MyPanel, wxScrolledWindow)
+BEGIN_EVENT_TABLE(MyPanel, wxScrolledWindow)
 END_EVENT_TABLE()
 
 
@@ -189,7 +190,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
   CreateStatusBar();
   SetStatusText( "Bochs Controls" );
-  MyPanel *panel = new MyPanel ( this, -1, -1, -1, -1 );
+  MyPanel *panel = new MyPanel ( this, -1, wxPoint(0,0), wxSize(100,100) );
+  panel->SetScrollbars( 10, 10, 50, 100 );
 }
 
 
@@ -213,12 +215,9 @@ BochsThread::Entry (void)
   bx_continue_after_control_panel (argc, argv);
 }
 
-MyPanel::MyPanel (wxFrame *frame, int x, int y, int w, int h)
-  : wxScrolledWindow( frame, -1, wxPoint(x, y), wxSize(w, h), wxVSCROLL, "Bochs Controls" )
+MyPanel::MyPanel (wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
+  : wxScrolledWindow( parent, id, pos, size, wxSUNKEN_BORDER | wxTAB_TRAVERSAL, "Bochs Controls" )
 {
-  SetScrollbars( 0, 40, 0, 1000);
-  EnableScrolling( FALSE, TRUE );
-
   // the parent constructor makes this panel a child of frame, with 
   // proper size.
   bochsThread = NULL;
@@ -229,6 +228,10 @@ MyPanel::MyPanel (wxFrame *frame, int x, int y, int w, int h)
   //wxComboBox *combo1 = new wxComboBox (this, ID_Combo1, "Default Combo String", wxPoint (10, 130), wxSize (180, 80), 3, choices);
   //text1 = new wxStaticText (this, ID_Text1, "no text yet", wxPoint (0, 160));
   buildParamList (10, 40);
+}
+
+MyPanel::~MyPanel()
+{
 }
 
 
@@ -248,25 +251,6 @@ void MyPanel::buildParamList (int x, int y)
   }
 }
 
-void MyPanel::HandleEvent (wxCommandEvent& evt)
-{
-  printf ("Handle event with event id %d\n", evt.GetId ());
-  switch (evt.GetId ())
-  {
-    case ID_StartBochs:
-      if (bochsThread == NULL) {
-	printf ("Starting bochs thread\n");
-	bochsThread = new BochsThread ();
-	bochsThread->Create ();
-	bochsThread->Run ();
-      } else {
-	wxMessageBox (
-	    "Can't start Bochs simulator, because it is already running",
-	    "Already Running", wxOK | wxICON_ERROR);
-      }
-      break;
-  }
-}
 
 ParamEditor::ParamEditor (bx_param_c *param, wxWindow *parent, wxWindowID id, int x, int y)
   : wxPanel(parent, id, wxPoint(x, y), wxSize (300, 20))
