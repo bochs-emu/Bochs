@@ -1,0 +1,34 @@
+----------------------------------------------------------------------
+Patch name: patch.ne2k-multicast-packet
+Author: bochs@sigint.cs.purdue.edu
+Date: Thu, 21 Jun 2001 13:02:04 -0500
+
+Detailed description:
+
+Patch was created with:
+  cvs diff -u iodev/ne2k.cc
+Apply patch to what version:
+  current cvs
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: iodev/ne2k.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ne2k.cc,v
+retrieving revision 1.13
+diff -u -r1.13 ne2k.cc
+--- iodev/ne2k.cc	2001/06/21 19:27:05	1.13
++++ iodev/ne2k.cc	2001/06/22 04:16:58
+@@ -1109,7 +1109,9 @@
+   }
+ 
+   // Setup packet header
+-  pkthdr[0] = 0;	// rx status
++  pkthdr[0] = 1;       // rx status = packet ok
++  if (pktbuf[0] & 0x01)
++    pkthdr[0] |= 0x20;  // rx status += multicast packet
+   pkthdr[1] = nextpage;	// ptr to next packet
+   pkthdr[2] = (io_len + 8) & 0xff;	// length-low
+   pkthdr[3] = (io_len + 8) >> 8;	// length-hi
