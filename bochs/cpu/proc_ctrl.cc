@@ -1081,7 +1081,7 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 #if BX_CPU_LEVEL == 3
   BX_CPU_THIS_PTR cr0.val32 = val_32 | 0x7ffffff0;
 #elif BX_CPU_LEVEL == 4
-  BX_CPU_THIS_PTR cr0.val32 = val_32 & 0xe005002f;
+  BX_CPU_THIS_PTR cr0.val32 = (val_32 | 0x00000010) & 0xe005003f;
 #elif BX_CPU_LEVEL == 5
   BX_CPU_THIS_PTR cr0.val32 = val_32 | 0x00000010;
 #elif BX_CPU_LEVEL == 6
