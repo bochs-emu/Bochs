@@ -29,4 +29,5 @@
   --enable-sb16=linux \
   --enable-instrumentation \
   --enable-iodebug \
+  --enable-show-ips \
   --with-all-libs

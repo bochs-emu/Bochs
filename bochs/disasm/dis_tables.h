@@ -143,6 +143,13 @@ struct BxDisasmOpcodeInfo_t
 #define Mps &disassembler::OP_MEM, O_MODE
 #define Mpd &disassembler::OP_MEM, O_MODE
 
+ // jump
+#define Jb  &disassembler::Jb, 0
+#define Jv  &disassembler::Jv, 0
+
+ // call
+#define Ap  &disassembler::Ap, 0
+
  // still unsorted
 #define Gb  &disassembler::Gb, 0
 #define Gw  &disassembler::Gw, 0
@@ -155,12 +162,6 @@ struct BxDisasmOpcodeInfo_t
 #define Ev  &disassembler::Ev, 0
 #define Ea  &disassembler::Ea, 0
 #define Ep  &disassembler::Ep, 0
-
- // jump
-#define Jb  &disassembler::Jb, 0
-#define Jv  &disassembler::Jv, 0
-
-#define Ap  &disassembler::Ap, 0
 
 #define Ob  &disassembler::Ob, 0
 #define Ov  &disassembler::Ov, 0
@@ -2412,7 +2413,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 0F 0A */  { "(invalid)", 0,  XX,  XX, XX },
   /* 0F 0B */  { "ud2a",      0,  XX,  XX, XX },
   /* 0F 0C */  { "(invalid)", 0,  XX,  XX, XX },
-  /* 0F 0D */  { "(invalid)", 0,  XX,  XX, XX },        // 3DNow!
+  /* 0F 0D */  { "prefetch",  0,  Mb,  XX, XX },        // 3DNow!
   /* 0F 0E */  { "femms",     0,  XX,  XX, XX },        // 3DNow!
   /* 0F 0F */  { GRP3DNOW     },
   /* 0F 10 */  { GRPSSE(0f10) },

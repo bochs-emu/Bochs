@@ -345,12 +345,12 @@ void disassembler::sIb(unsigned attr)
 {
   if (i32bit_opsize)
   {
-    Bit32u imm32 =  (Bit8s) fetch_byte();
+    Bit32u imm32 = (Bit8s) fetch_byte();
     dis_sprintf("0x%x", imm32);
   }
   else
   {
-    Bit32u imm16 =  (Bit8s) fetch_byte();
+    Bit32u imm16 = (Bit8s) fetch_byte();
     dis_sprintf("0x%x", imm16);
   }
 }

@@ -26,6 +26,7 @@ Changes to next release:
     (Stanislav Shwartsman)
   - added missed GP(0) exception when loading incorrect flags combination 
     to CR0 (Stanislav Shwartsman)
+  - implemented CR8 register (aliased to APIC.TPR[7:4]) in x86-64 mode
 
 - FPU
   - totally rewritten all FPU code based on softfloat library 
@@ -39,6 +40,13 @@ Changes to next release:
     ! Unmasked underflow/overflow should correct the result 
       by magic number for all operations, including float32 
       and float64.
+
+- APIC (Zwane Mwaikambo)
+  - APIC arbitration
+  - Processor priority
+  - Various interrupt delivery fixes
+  - Focus processor checking
+  - ExtINT delivery
 
 - Disassembler
   - fixed MOV opcode 0x88, had exchanged the operands (h.johansson)
@@ -110,6 +118,8 @@ Changes to next release:
   - --enable-mmx enabled by default only if cpu-level > 4
   - fixes for Solaris SunPro (Robin Kay)
   - --enable-pni option added
+  - --enable-show-ips option added, enable Instruction Per Second counter 
+    in log file 
 
 - SF patches applied
   [894595] MSR_APICBASE always returns APIC ADDRESS 0 by Kangmo Kim

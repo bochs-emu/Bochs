@@ -210,7 +210,7 @@ unsigned disassembler::disasm(bx_bool is_32,
 
   // print prefixes
   for(unsigned i=0;i<n_prefixes;i++)
-        if (*(instr+i) == 0xF3 || *(instr+i) != 0xF2 || *(instr+i) != 0xF0) 
+        if (*(instr+i) == 0xF3 || *(instr+i) == 0xF2 || *(instr+i) == 0xF0) 
              dis_sprintf("%s ", BxDisasmOpcodes[*(instr+i)].Opcode);
 
   // print opcode
