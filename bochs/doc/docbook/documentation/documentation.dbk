@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.7 2001-09-25 19:00:45 vasudeva Exp $
+$Id: documentation.dbk,v 1.8 2001-09-25 22:36:51 vasudeva Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -211,9 +211,9 @@ need to read and understand this section, and render the docs yourself.  The
 </tip>
 
 <para>
-To render this source code into the nice readable form the end-user will 
-require, several tools are required.  These tools allow the .dbk file to be 
-rendered into such format as HTML, PDF, and PostScript.  This section
+To render DocBook source code into the nice readable form the end-user will
+require, several tools are needed.  These tools allow the .dbk file to be
+rendered into such formats as HTML, PDF, and PostScript.  This section
 describes the tools you need and the steps you take to render the Bochs
 documentation.
 </para>
@@ -248,7 +248,7 @@ Here is what the Linux Documentation Project says about jade:
 
 <para>
 What does all this mean?
-For purpose of Bochs documentation, jade reads the docbook source file and
+For purposes of Bochs documentation, jade reads the docbook source file and
 writes out a HTML/PDF/PS file.  Bochs documentation is in SGML format, though
 apparantly jade can handle XML Docbooks as well.  DSSSL stands for 
 <quote>Document Style Semantics and Specification Language</quote>, and it
@@ -282,6 +282,21 @@ he installed on Mandrake to get jade working:
   xml-common-0.1-3mdk
 </programlisting>
 
+Under Debian, the following packages seem to be a bare minimum to install
+DocBook and get it to render Bochs documentation into reader-friendly formats:
+
+<programlisting>
+  jade
+  docbook
+  docbook-dsssl
+</programlisting>
+
+It's worth mentioning that, at the time of this writing, at least some of
+the above-mentioned packages were in the testing or unstable branches of
+Debian.
+</para>
+
+<para>
 Hopefully, the required packages on other Linux distributions have
 similar names.  If you have jade working, please tell a documentation
 writer the package names that you used so that we can include it in the docs.
@@ -299,7 +314,12 @@ process is described in &docbookTDG; in Appendix III section A.  If you want
 to render to PostScript or Adobe PDF, you also need to install TeX and
 and some associated tools.  It is a nontrivial process.
 </para>
-<tip> <para> Just use the packages.  </para> </tip>
+
+<tip>
+<para>
+Just use the packages.
+</para>
+</tip>
 
 <para>
 For now, building the Bochs documentation also depends on some scripts called
