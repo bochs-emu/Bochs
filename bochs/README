@@ -5,10 +5,12 @@ BRANCH_PLUGINS_BASE that marks the point where the branch began.  The
 base marker will help at merge time.
 
 This branch is a place to experiment with Bochs plugins.  Bryce created
-the branch on October 4, 2002 and checked in patch.plugins3 with
-minor changes to get it to compile.  Plugins3 was a patch from 
-December 2001 that copied in some of the plugin architecture from
-plex86.  Here are the comments from that patch:
+the branch on October 4, 2002, and he and Christophe began working on
+Bochs plugins.
+
+We started from Bryce's patch.plugins3, which was a patch from December 2001
+that copied in some of the plugin architecture from plex86.  Here are the
+comments from that patch:
 
 > Patch name: patch.plugins3
 > Author: Bryce Denney
@@ -34,7 +36,7 @@ plex86.  Here are the comments from that patch:
 > kbd implementations.  I didn't change anything except to get it to compile.
 
 Christophe had made a plugins5 patch, so he checked it in, with these
-comments:
+changes:
  - plex86 keyboard device was marged with Bochs keyboard, as a plugin
  - plugin.cc was cleaned up
  - a device registration mechanism was set up
@@ -225,18 +227,6 @@ DONE:
 
 -----------------------------------------------
 random notes:
-
-how to make a gui into a plugin?
-virtual functions versus lots of function pointers.
-Make bx_gui_c a class with virtual methods to be supplied by the
-plugins.  Each gui will be a child class of bx_gui_c which supplies
-the required methods.
-
-How will the plugin loader know how to create new objects?
-It doesn't.  The .so file has a "global" variable like "bx_cmos"
-so the constructor must be called as the module loads.  For any
-device that needs to be initialized with new operator, I may need
-to add a static method to the class that can call the constructor.
 
 class heirarchy:
  logfunctions
