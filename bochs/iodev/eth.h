@@ -81,3 +81,6 @@ private:
 #if defined(linux)
 #define ETH_LINUX 1
 #endif
+#if defined(WIN32)
+#define ETH_WIN32 1
+#endif
