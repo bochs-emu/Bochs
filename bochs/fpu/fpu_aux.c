@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_aux.c                                                                |
- |  $Id: fpu_aux.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: fpu_aux.c,v 1.3 2003-05-15 16:19:38 sshwarts Exp $
  |                                                                           |
  | Code to implement some of the FPU auxiliary instructions.                 |
  |                                                                           |
@@ -67,7 +67,7 @@ void finit_()
 
 static void fstsw_ax(void)
 {
-  SET_AX(status_word()); // KPL
+  SET_AX(status_word());
   no_ip_update = 1;
 }
 

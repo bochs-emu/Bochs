@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.11 2003-05-15 16:11:29 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.12 2003-05-15 16:19:39 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -558,7 +558,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat)
              l[0] = 0xFFFFFFFF;   /* 8 byte real indefinite encoding */
              l[1] = 0x7FEFFFFF;
            }
-         else // rc == RC_RND
+         else /* rc == RC_RND */
            {
              l[0] = 0x00000000;	/* Set to */
              l[1] = 0x7ff00000;	/* + INF */
@@ -787,7 +787,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single)
              templ = 0x7F7FFFFF;  /* 4 byte real indefinite encoding */
          else if (rc == RC_UP && !signpositive(&tmp))
              templ = 0x7F7FFFFF;  /* 4 byte real indefinite encoding */
-         else // rc == RC_RND
+         else /* rc == RC_RND */
              templ = 0x7f800000;	/* Set to +INF */
 	    }
 	  else

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.8 2003-04-22 20:21:33 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.9 2003-05-15 16:19:38 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -145,10 +145,10 @@ math_emulate(fpu_addr_modes addr_modes,
   u_char    loaded_tag, st0_tag;
 
 
-  // assuming byte is 0xd8..0xdf or 0xdb==FWAIT
+  /* assuming byte is 0xd8..0xdf or 0xdb==FWAIT */
 
-  // lock is not a valid prefix for FPU instructions, +++
-  // let the cpu handle it to generate a SIGILL.
+  /* lock is not a valid prefix for FPU instructions, +++
+     let the cpu handle it to generate a SIGILL. */
 
 
   no_ip_update = 0;
@@ -217,7 +217,7 @@ do_the_FPU_interrupt:
                   unmasked &= ~0xff;
                   break;
                 case 1:
-                  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);  // bbd: was (u32 *)
+                  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);
                   break;
                 case 2:
                   unmasked = FPU_load_double((double *)data_address,
@@ -311,8 +311,8 @@ do_the_FPU_interrupt:
                   FPU_compare_st_data(&loaded_data, loaded_tag);
                   break;
                 case 3:         /* fcomp */
-		  // bbd: used to typecase to int first, but this corrupted the
-		  // pointer on 64 bit machines.
+		  /* bbd: used to typecase to int first, but this corrupted the
+		     pointer on 64 bit machines. */
                   if ( !FPU_compare_st_data(&loaded_data, loaded_tag)
                        && !unmasked )
                     FPU_pop();

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_tan.c                                                               |
- |  $Id: poly_tan.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: poly_tan.c,v 1.5 2003-05-15 16:19:39 sshwarts Exp $
  |                                                                           |
  | Compute the tan of a FPU_REG, using a polynomial approximation.           |
  |                                                                           |
@@ -17,8 +17,6 @@
 #include "fpu_system.h"
 #include "control_w.h"
 #include "poly.h"
-
-//#define DEBUG_POLY_TAN // ***********
 
 #define	HiPOWERop	3	/* odd poly, positive terms */
 static const u64 oddplterm[HiPOWERop] =

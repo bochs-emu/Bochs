@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_trig.c                                                               |
- |  $Id: fpu_trig.c,v 1.5 2002-07-03 20:13:31 vruppert Exp $
+ |  $Id: fpu_trig.c,v 1.6 2003-05-15 16:19:39 sshwarts Exp $
  |                                                                           |
  | Implementation of the FPU "transcendental" functions.                     |
  |                                                                           |
@@ -76,7 +76,7 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 
   if ( ((flags & FCOS) && !(q & 1)) || (!(flags & FCOS) && (q & 1)) )
     {
-      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, &CONST_PI2, FULL_PRECISION); //bbd: arg2 used to typecast to (int)
+      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, &CONST_PI2, FULL_PRECISION);
 
 #ifdef BETTER_THAN_486
       /* So far, the results are exact but based upon a 64 bit
