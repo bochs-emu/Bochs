@@ -1251,7 +1251,9 @@ bx_gui_c::exit(void)
 
 static void warp_cursor (int dx, int dy)
 {
-      if (bx_options.Omouse_enabled->get ()) {
+      if (bx_options.Omouse_enabled->get () &&
+	  (warp_dx || warp_dy || dx || dy)
+	  ) {
 	    warp_dx = dx;
 	    warp_dy = dy;
 	    XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);
