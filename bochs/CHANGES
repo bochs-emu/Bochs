@@ -2,8 +2,22 @@
 Changes in 1.4.1 (June 21, 2002):
 
 - now cdrom is enabled in configure, unless you specifically disable
-  it with --disable-cdrom.
-- fix compile error in main.cc when SMP or APIC is enabled
+  it with --disable-cdrom. (Christophe)
+- fix compile error in main.cc when SMP or APIC is enabled (Dave)
+- the runtime menu now displays 11 (continue) by default (Bryce)
+- fix dma PANIC when installing win95 (Volker)
+- first character of the vga bitmap is blank on win32 (Volker)
+- AltGr key on European keyboards works now on win32 (Volker)
+- fix problem with console/serial port on Bochs exit (Volker)
+- small documentation fixes (Volker)
+- fix compile error in gui.cc (Volker)
+- italian keymap added (Emanuele Goldoni)
+- fix win32 ethernet frames error (Peter Tattam)
+- BIOS fixes :
+  - win2k cd-boot (Christophe)
+  - emm386 crash (Dave)
+  - cs=0 at boot time (Christophe)
+  - keyboard failure in scandisk (Dave)
 
 --- This is not complete!
 
