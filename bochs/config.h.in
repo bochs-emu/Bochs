@@ -182,10 +182,6 @@
 // if set to 0, the simulation will panic.
 #define BX_RESET_ON_TRIPLE_FAULT 1
 
-// Support shadowing of ROM from C0000 to FFFFF.
-// This allows that region to be written to.
-#define BX_SHADOW_RAM 0
-
 // Number of CMOS registers
 #define BX_NUM_CMOS_REGS 64
 //#define BX_NUM_CMOS_REGS 128

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.33 2004-08-06 15:49:55 vruppert Exp $
+// $Id: memory.cc,v 1.34 2004-08-26 07:58:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -124,24 +124,15 @@ inc_one:
       }
     // adapter ROM     C0000 .. DFFFF
     // ROM BIOS memory E0000 .. FFFFF
-    // (ignore write)
-    //BX_INFO(("ROM lock %08x: len=%u",
-    //  (unsigned) a20addr, (unsigned) len));
 #if BX_SUPPORT_PCI == 0
-#if BX_SHADOW_RAM
-    // Write it since its in shadow RAM
-    vector[a20addr] = *data_ptr;
-    BX_DBG_DIRTY_PAGE(a20addr >> 12);
-#else
     // ignore write to ROM
-#endif
 #else
     // Write Based on 440fx Programming
     if (bx_options.Oi440FXSupport->get () &&
         ((a20addr >= 0xC0000) && (a20addr <= 0xFFFFF))) {
       switch (DEV_pci_wr_memtype(a20addr & 0xFC000)) {
         case 0x1:   // Writes to ShadowRAM
-//        BX_INFO(("Writing to ShadowRAM %08x, len %u ! ", (unsigned) a20addr, (unsigned) len));
+          BX_DEBUG(("Writing to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
           shadow[a20addr - 0xc0000] = *data_ptr;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           goto inc_one;
@@ -298,12 +289,11 @@ inc_one:
         switch (DEV_pci_rd_memtype(a20addr & 0xFC000)) {
           case 0x1:   // Read from ShadowRAM
             *data_ptr = shadow[a20addr - 0xc0000];
-            BX_INFO(("Reading from ShadowRAM %08x, Data %02x ", (unsigned) a20addr, *data_ptr));
+            BX_DEBUG(("Reading to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
             goto inc_one;
 
           case 0x0:   // Read from ROM
             *data_ptr = vector[a20addr];
-            //BX_INFO(("Reading from ROM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
             goto inc_one;
           default:
             BX_PANIC(("::readPhysicalPage: default case"));
@@ -350,12 +340,11 @@ inc_one:
             switch (DEV_pci_rd_memtype(a20addr & 0xFC000)) {
               case 0x0:   // Read from ROM
                 *data_ptr = vector[a20addr];
-                //BX_INFO(("Reading from ROM %08x, Data %02x ", (unsigned) a20addr, *data_ptr));
                 break;
 
               case 0x1:   // Read from Shadow RAM
                 *data_ptr = shadow[a20addr - 0xc0000];
-                BX_INFO(("Reading from ShadowRAM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
+                BX_DEBUG(("Reading to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
                 break;
               default:
                 BX_PANIC(("readPhysicalPage: default case"));

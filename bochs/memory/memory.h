@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.19 2004-08-06 15:49:55 vruppert Exp $
+// $Id: memory.h,v 1.20 2004-08-26 07:58:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ public:
   size_t  len;
   size_t  megabytes;  // (len in Megabytes)
 #if BX_SUPPORT_PCI
-  Bit8u   shadow[4*16*4096]; // 256k of memory
+  Bit8u   shadow[256*1024]; // 256k of memory
 #endif
 #if BX_DEBUGGER
   unsigned char dbg_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
@@ -75,7 +75,6 @@ public:
 #endif
 
   BX_MEM_C(void);
-  //BX_MEM_C(size_t memsize);
   ~BX_MEM_C(void);
   BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment) BX_CPP_AttrRegparmN(2);
   BX_MEM_SMF void    init_memory(int memsize);
@@ -85,9 +84,6 @@ public:
                                        unsigned len, void *data) BX_CPP_AttrRegparmN(3);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress, Bit8u type);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
-#if BX_SUPPORT_PCI
-  BX_MEM_SMF Bit8u*  pci_fetch_ptr(Bit32u addr) BX_CPP_AttrRegparmN(1);
-#endif
   BX_MEM_SMF bx_bool dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_crc32(

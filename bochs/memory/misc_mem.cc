@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.46 2004-08-06 15:49:55 vruppert Exp $
+// $Id: misc_mem.cc,v 1.47 2004-08-26 07:58:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,7 +61,6 @@ BX_MEM_C::BX_MEM_C(void)
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
 
-
 #if BX_PROVIDE_CPU_MEMORY
 void BX_CPP_AttrRegparmN(2)
 BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
@@ -87,27 +86,6 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
 }
 #endif
 
-// We can't use this because alloc_vector_aligned uses BX_INFO, but the object does not yet exists
-/*
-#if BX_PROVIDE_CPU_MEMORY
-  // BX_MEM_C constructor
-
-BX_MEM_C::BX_MEM_C(size_t memsize)
-{
-  char mem[6];
-  snprintf(mem, 6, "MEM%d", BX_SIM_ID);
-  put(mem);
-  settype(MEMLOG);
-
-  vector = NULL;
-  actual_vector = NULL;
-  alloc_vector_aligned (memsize, BX_MEM_VECTOR_ALIGN);
-  len    = memsize;
-  megabytes = len / (1024*1024);
-}
-#endif // #if BX_PROVIDE_CPU_MEMORY
-*/
-
 
 #if BX_PROVIDE_CPU_MEMORY
 // BX_MEM_C destructor
@@ -131,7 +109,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.46 2004-08-06 15:49:55 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.47 2004-08-26 07:58:33 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -168,17 +146,17 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 {
   struct stat stat_buf;
   int fd, ret;
-  unsigned long size, offset;
+  unsigned long size, max_size, offset;
 
   if (*path == '\0') {
     if (type == 2) {
-      BX_PANIC(( "ROM: Optional BIOS image undefined."));
+      BX_PANIC(( "ROM: Optional ROM image undefined"));
       }
     else if (type == 1) {
-      BX_PANIC(( "ROM: VGA BIOS image undefined."));
+      BX_PANIC(( "ROM: VGA BIOS image undefined"));
       }
     else {
-      BX_PANIC(( "ROM: System BIOS image undefined."));
+      BX_PANIC(( "ROM: System BIOS image undefined"));
       }
     return;
     }
@@ -210,10 +188,34 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 
   size = stat_buf.st_size;
 
-  if ( (romaddress + size) > BX_MEM_THIS len ) {
-    BX_PANIC(( "ROM: ROM address range > physical memsize!"));
+  if (type > 0) {
+    max_size = 0x10000;
+  } else {
+    max_size = 0x20000;
+  }
+  if (size > max_size) {
+    BX_PANIC(("ROM: ROM image too large"));
     return;
+  }
+  if (type == 0) {
+    if ( (romaddress + size) != 0x100000 ) {
+      BX_PANIC(("ROM: Sytem BIOS must end at 0xfffff"));
+      return;
     }
+  } else {
+    if ((size % 512) != 0) {
+      BX_PANIC(("ROM: ROM image size must multiple of 512"));
+      return;
+    }
+    if ((romaddress % 2048) != 0) {
+      BX_PANIC(("ROM: ROM image must start at a 2k boundary"));
+      return;
+    }
+    if ((romaddress < 0xc0000) || ((romaddress + size) > 0xf0000)) {
+      BX_PANIC(("ROM: ROM address space out of range"));
+      return;
+    }
+  }
 
   offset = 0;
   while (size > 0) {
@@ -232,27 +234,6 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 		));
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
-
-#if BX_SUPPORT_PCI
-  Bit8u* BX_CPP_AttrRegparmN(1)
-BX_MEM_C::pci_fetch_ptr(Bit32u addr)
-{
-  if (bx_options.Oi440FXSupport->get ()) {
-    switch (DEV_pci_rd_memtype (addr)) {
-      case 0x1:   // Read from ShadowRAM
-        return (&BX_MEM_THIS shadow[addr - 0xc0000]);
-
-      case 0x0:   // Read from ROM
-        return (&BX_MEM_THIS vector[addr]);
-      default:
-        BX_PANIC(("pci_fetch_ptr(): default case"));
-        return(0);
-      }
-    }
-  else
-    return (&BX_MEM_THIS vector[addr]);
-}
-#endif
 
 
 #if ( BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
