@@ -88,8 +88,8 @@ libgui.a: $(NONPLUGIN_OBJS)
 	@RANLIB@ libgui.a
 
 # standard compile rule for C++ files
-%.o: %.@CPP_SUFFIX@
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+.@CPP_SUFFIX@.o:
+	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
 ##### building plugins with libtool
 %.lo: %.@CPP_SUFFIX@
