@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.109 2004-04-28 16:59:52 cbothamy Exp $
+// $Id: rombios.c,v 1.110 2004-05-31 13:11:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -925,10 +925,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.109 $";
-static char bios_date_string[] = "$Date: 2004-04-28 16:59:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.110 $";
+static char bios_date_string[] = "$Date: 2004-05-31 13:11:27 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.109 2004-04-28 16:59:52 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.110 2004-05-31 13:11:27 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2254,6 +2254,7 @@ void ata_detect( )
       type      = read_byte(get_SS(),buffer+1) & 0x1f;
       removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
       mode      = read_byte(get_SS(),buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
+      blksize   = 2048;
 
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device, type);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].removable, removable);
@@ -3374,6 +3375,8 @@ ASM_START
       and al,#0x10
       mov ah, al
 
+      or ecx, ecx
+      je int1586_tick_end
 int1586_tick:
       in al, #0x61
       and al,#0x10
@@ -3382,6 +3385,7 @@ int1586_tick:
       mov ah, al
       dec ecx
       jnz int1586_tick
+int1586_tick_end:
 ASM_END
 
       break;
@@ -3777,7 +3781,17 @@ BX_DEBUG_INT15("case 7:\n");
           write_word(ebda_seg, 0x0022, mouse_driver_offset);
           write_word(ebda_seg, 0x0024, mouse_driver_seg);
           mouse_flags_2 = read_byte(ebda_seg, 0x0027);
+          if (mouse_driver_offset == 0 &&
+              mouse_driver_seg == 0) {
+              /* remove handler */
+              if ( (mouse_flags_2 & 0x80) != 0 ) {
+                  mouse_flags_2 &= ~0x80;
+                  inhibit_mouse_int_and_events(); // disable IRQ12 and packets
+              }
+          } else {
+              /* install handler */
           mouse_flags_2 |= 0x80;
+          }
           write_byte(ebda_seg, 0x0027, mouse_flags_2);
           CLEAR_CF();
           regs.u.r8.ah = 0;
@@ -4405,7 +4419,8 @@ BX_DEBUG_INT74("int74: read byte %02x\n", in_byte);
   mouse_flags_2 = read_byte(ebda_seg, 0x0027);
 
   if ( (mouse_flags_2 & 0x80) != 0x80 ) {
-    BX_PANIC("int74_function:\n");
+      //    BX_PANIC("int74_function:\n");
+      return;
     }
 
   package_count = mouse_flags_2 & 0x07;
@@ -4829,8 +4844,10 @@ int13_success_noah:
 // ---------------------------------------------------------------------------
 
   void
-int13_cdrom(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
+int13_cdrom(DI, DIH, SI, SIH, BP, BPH, SP, SPH, BX, BXH, DX, DXH, CX, CXH, AX, AXH,
+            DS, ES, FLAGS)
+  Bit16u DI, DIH, SI, SIH, BP, BPH, SP, SPH, BX, BXH, DX, DXH, CX, CXH, AX, AXH,
+         DS, ES, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit8u  device, status, locks;
@@ -7688,9 +7705,12 @@ int13_cdrom:
   push  ds
   push  ss
   pop   ds
-  pusha
+  // ebx is modified: BSD 5.2.1 boot loader problem, so we save all
+  // the 32 bit registers. It should be done in all the bios or no 32
+  // bit register should be used without saving it first.
+  pushad
   call  _int13_cdrom
-  popa
+  popad
   pop   ds
   pop   es
   popf
@@ -8397,57 +8417,69 @@ pci_pro_f08: ;; read configuration byte
   cmp al, #0x08
   jne pci_pro_f09
   call pci_pro_select_reg
+  push edx
   mov dx, di
   and dx, #0x03
   add dx, #0x0cfc
   in  al, dx
+  pop edx
   mov cl, al
   jmp pci_pro_ok
 pci_pro_f09: ;; read configuration word
   cmp al, #0x09
   jne pci_pro_f0a
   call pci_pro_select_reg
+  push edx
   mov dx, di
   and dx, #0x02
   add dx, #0x0cfc
   in  ax, dx
+  pop edx
   mov cx, ax
   jmp pci_pro_ok
 pci_pro_f0a: ;; read configuration dword
   cmp al, #0x0a
   jne pci_pro_f0b
   call pci_pro_select_reg
+  push edx
   mov dx, #0x0cfc
   in  eax, dx
+  pop edx
   mov ecx, eax
   jmp pci_pro_ok
 pci_pro_f0b: ;; write configuration byte
   cmp al, #0x0b
   jne pci_pro_f0c
   call pci_pro_select_reg
+  push edx
   mov dx, di
   and dx, #0x03
   add dx, #0x0cfc
   mov al, cl
   out dx, al
+  pop edx
   jmp pci_pro_ok
 pci_pro_f0c: ;; write configuration word
   cmp al, #0x0c
   jne pci_pro_f0d
   call pci_pro_select_reg
+  push edx
   mov dx, di
   and dx, #0x02
   add dx, #0x0cfc
   mov ax, cx
   out dx, ax
+  pop edx
   jmp pci_pro_ok
 pci_pro_f0d: ;; write configuration dword
   cmp al, #0x0d
   jne pci_pro_unknown
   call pci_pro_select_reg
+  push edx
   mov dx, #0x0cfc
   mov eax, ecx
   out dx, eax
+  pop edx
   jmp pci_pro_ok
 pci_pro_unknown:
   mov ah, #0x81
@@ -8464,6 +8496,7 @@ pci_pro_ok:
   retf
 
 pci_pro_select_reg:
+  push edx
   mov eax, #0x800000
   mov ax,  bx
   shl eax, #8
@@ -8472,6 +8505,7 @@ pci_pro_select_reg:
   and al,  #0xfc
   mov dx, #0x0cf8
   out dx,  eax
+  pop edx
   ret
 
 use16 386
@@ -8532,57 +8566,69 @@ pci_real_f08: ;; read configuration byte
   cmp al, #0x08
   jne pci_real_f09
   call pci_real_select_reg
+  push dx
   mov dx, di
   and dx, #0x03
   add dx, #0x0cfc
   in  al, dx
+  pop dx
   mov cl, al
   jmp pci_real_ok
 pci_real_f09: ;; read configuration word
   cmp al, #0x09
   jne pci_real_f0a
   call pci_real_select_reg
+  push dx
   mov dx, di
   and dx, #0x02
   add dx, #0x0cfc
   in  ax, dx
+  pop dx
   mov cx, ax
   jmp pci_real_ok
 pci_real_f0a: ;; read configuration dword
   cmp al, #0x0a
   jne pci_real_f0b
   call pci_real_select_reg
+  push dx
   mov dx, #0x0cfc
   in  eax, dx
+  pop dx
   mov ecx, eax
   jmp pci_real_ok
 pci_real_f0b: ;; write configuration byte
   cmp al, #0x0b
   jne pci_real_f0c
   call pci_real_select_reg
+  push dx
   mov dx, di
   and dx, #0x03
   add dx, #0x0cfc
   mov al, cl
   out dx, al
+  pop dx
   jmp pci_real_ok
 pci_real_f0c: ;; write configuration word
   cmp al, #0x0c
   jne pci_real_f0d
   call pci_real_select_reg
+  push dx
   mov dx, di
   and dx, #0x02
   add dx, #0x0cfc
   mov ax, cx
   out dx, ax
+  pop dx
   jmp pci_real_ok
 pci_real_f0d: ;; write configuration dword
   cmp al, #0x0d
   jne pci_real_unknown
   call pci_real_select_reg
+  push dx
   mov dx, #0x0cfc
   mov eax, ecx
   out dx, eax
+  pop dx
   jmp pci_real_ok
 pci_real_unknown:
   mov ah, #0x81
@@ -8595,6 +8641,7 @@ pci_real_ok:
   ret
 
 pci_real_select_reg:
+  push dx
   mov eax, #0x800000
   mov ax,  bx
   shl eax, #8
@@ -8603,6 +8650,7 @@ pci_real_select_reg:
   and al,  #0xfc
   mov dx, #0x0cf8
   out dx,  eax
+  pop dx
   ret
   
 .align 16
