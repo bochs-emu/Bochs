@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-de.map,v 1.7 2002-10-24 21:06:56 bdenney Exp $
+# $Id: x11-pc-de.map,v 1.8 2004-06-05 15:45:05 vruppert Exp $
 # Target: PC(x86) keyboard, DE keymap
 # Author: Volker Ruppert
 #
@@ -155,6 +155,7 @@ BX_KEY_ALT_L                                  none       XK_Meta_L
 BX_KEY_ALT_R                                  none       XK_Alt_R
 BX_KEY_ALT_R                                  none       XK_Mode_switch
 BX_KEY_ALT_R                                  none       XK_Multi_key
+BX_KEY_ALT_R                                  none       XK_ISO_Level3_Shift
 BX_KEY_BACKSLASH                              apostrophe XK_apostrophe
 BX_KEY_BACKSLASH                              '#'        XK_numbersign
 BX_KEY_BACKSPACE                              none       XK_BackSpace
