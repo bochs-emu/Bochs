@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.21 2002-10-24 21:05:44 bdenney Exp $
+// $Id: io.cc,v 1.22 2004-03-02 20:48:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,11 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
-
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -61,6 +56,7 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
       }
     }
 
+#if BX_SUPPORT_X86_64
   if (i->as64L()) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
@@ -71,14 +67,14 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
     /* no seg override possible */
     write_virtual_byte(BX_SEG_REG_ES, RDI, &value8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
-      RDI = RDI - 1;
-      }
-    else {
-      RDI = RDI + 1;
-      }
+    if (BX_CPU_THIS_PTR get_DF ())
+      RDI--;
+    else
+      RDI++;
     }
-  else if (i->as32L()) {
+  else
+#endif
+   if (i->as32L()) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
     write_virtual_byte(BX_SEG_REG_ES, EDI, &value8);
@@ -105,13 +101,11 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
     /* no seg override possible */
     write_virtual_byte(BX_SEG_REG_ES, DI, &value8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
-      DI = DI - 1;
-      }
-    else {
-      DI = DI + 1;
-      }
-    }
+    if (BX_CPU_THIS_PTR get_DF ())
+      DI--;
+    else
+      DI++;
+  }
 }
 
   void
@@ -121,9 +115,12 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
   bx_address edi;
   unsigned int incr;
 
+#if BX_SUPPORT_X86_64
   if (i->as64L())  // This was coded as   if (i->as_64) ???
     edi = RDI;
-  else if (i->as32L())
+  else
+#endif
+   if (i->as32L())
     edi = EDI;
   else
     edi = DI;
@@ -151,9 +148,8 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
     Bit16u value16=0;
 
     if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
-      if ( !BX_CPU_THIS_PTR allow_io(DX, 2) ) {
+      if ( !BX_CPU_THIS_PTR allow_io(DX, 2) )
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
       }
 
 #if BX_SupportRepeatSpeedups
@@ -334,6 +330,7 @@ doIncr:
 #endif
 #endif
 
+#if BX_SUPPORT_X86_64
   if (i->as64L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RDI = RDI - incr;
@@ -341,6 +338,7 @@ doIncr:
       RDI = RDI + incr;
     }
   else
+#endif
   if (i->as32L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RDI = EDI - incr;
@@ -375,9 +373,12 @@ BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
     seg = BX_SEG_REG_DS;
     }
 
+#if BX_SUPPORT_X86_64
   if (i->as64L())
     esi = RSI;
-  else if (i->as32L())
+  else
+#endif
+  if (i->as32L())
     esi = ESI;
   else
     esi = SI;
@@ -386,23 +387,26 @@ BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 
   BX_OUTP(DX, value8, 1);
 
+#if BX_SUPPORT_X86_64
   if (i->as64L()) {
     if (BX_CPU_THIS_PTR get_DF ())
-      RSI -= 1;
+      RSI--;
     else
-      RSI += 1;
+      RSI++;
     }
-  else if (i->as32L()) {
+  else
+#endif
+  if (i->as32L()) {
     if (BX_CPU_THIS_PTR get_DF ())
-      RSI -= 1;
+      RSI--;
     else
-      RSI += 1;
+      RSI++;
     }
   else {
     if (BX_CPU_THIS_PTR get_DF ())
-      SI -= 1;
+      SI--;
     else
-      SI += 1;
+      SI++;
     }
 }
 
@@ -421,9 +425,12 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
     seg = BX_SEG_REG_DS;
     }
 
+#if BX_SUPPORT_X86_64
   if (i->as64L())
     esi = RSI;
-  else if (i->as32L())
+  else
+#endif
+  if (i->as32L())
     esi = ESI;
   else
     esi = SI;
@@ -624,13 +631,16 @@ doIncr:
 #endif
 #endif
 
+#if BX_SUPPORT_X86_64
   if (i->as64L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI = RSI - incr;
     else
       RSI = RSI + incr;
     }
-  else if (i->as32L()) {
+  else
+#endif
+  if (i->as32L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI = ESI - incr;
     else
@@ -644,82 +654,53 @@ doIncr:
     }
 }
 
-
   void
 BX_CPU_C::IN_ALIb(bxInstruction_c *i)
 {
-  Bit8u al, imm8;
-
-  imm8 = i->Ib();
-
-  al = BX_CPU_THIS_PTR inp8(imm8);
-
-  AL = al;
+  AL = BX_CPU_THIS_PTR inp8(i->Ib());
 }
 
   void
 BX_CPU_C::IN_eAXIb(bxInstruction_c *i)
 {
-  Bit8u imm8;
-
-
-  imm8 = i->Ib();
 
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
-    Bit32u eax;
-
-    eax = BX_CPU_THIS_PTR inp32(imm8);
+    Bit32u eax = BX_CPU_THIS_PTR inp32(i->Ib());
     RAX = eax;
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */
     {
-    Bit16u ax;
-
-    ax = BX_CPU_THIS_PTR inp16(imm8);
-    AX = ax;
+    AX = BX_CPU_THIS_PTR inp16(i->Ib());
     }
 }
 
   void
 BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
 {
-  Bit8u al, imm8;
-
-  imm8 = i->Ib();
-
-  al = AL;
-
-  BX_CPU_THIS_PTR outp8(imm8, al);
+  BX_CPU_THIS_PTR outp8(i->Ib(), AL);
 }
 
   void
 BX_CPU_C::OUT_IbeAX(bxInstruction_c *i)
 {
-  Bit8u imm8;
-
-  imm8 = i->Ib();
 
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
-    BX_CPU_THIS_PTR outp32(imm8, EAX);
+    BX_CPU_THIS_PTR outp32(i->Ib(), EAX);
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */
     {
-    BX_CPU_THIS_PTR outp16(imm8, AX);
+    BX_CPU_THIS_PTR outp16(i->Ib(), AX);
     }
 }
 
   void
 BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 {
-  Bit8u al;
-
-  al = BX_CPU_THIS_PTR inp8(DX);
-
-  AL = al;
+  AL = BX_CPU_THIS_PTR inp8(DX);
 }
 
   void
@@ -727,47 +708,33 @@ BX_CPU_C::IN_eAXDX(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
-    Bit32u eax;
-
-    eax = BX_CPU_THIS_PTR inp32(DX);
+    Bit32u eax = BX_CPU_THIS_PTR inp32(DX);
     RAX = eax;
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */
     {
-    Bit16u ax;
-
-    ax = BX_CPU_THIS_PTR inp16(DX);
-    AX = ax;
+    AX = BX_CPU_THIS_PTR inp16(DX);
     }
 }
 
   void
 BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
 {
-  Bit16u dx;
-  Bit8u al;
-
-  dx = DX;
-  al = AL;
-
-  BX_CPU_THIS_PTR outp8(dx, al);
+  BX_CPU_THIS_PTR outp8(DX, AL);
 }
 
   void
 BX_CPU_C::OUT_DXeAX(bxInstruction_c *i)
 {
-  Bit16u dx;
-
-  dx = DX;
 
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
-    BX_CPU_THIS_PTR outp32(dx, EAX);
+    BX_CPU_THIS_PTR outp32(DX, EAX);
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */
     {
-    BX_CPU_THIS_PTR outp16(dx, AX);
+    BX_CPU_THIS_PTR outp16(DX, AX);
     }
 }
