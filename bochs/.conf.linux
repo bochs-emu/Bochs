@@ -31,14 +31,17 @@ case $which_config in
                 --enable-ne2000 \
                 --enable-vbe \
                 --enable-all-optimizations \
-                ${CONFIGURE_ARGS}
+                ${CONFIGURE_ARGS} \
+                --enable-cpu-level=6 \
+                --enable-sse=1 \
+                --enable-pci \
+                --enable-clgd54xx
     ;;
 
   plugins)
     #######################################################################
     # configuration 2 for release binary RPMs
-    # Include lots of extra stuff
-    # plugins, every possible gui.
+    # Include plugins, every possible gui.
     #######################################################################
     ./configure --enable-cdrom \
                 --enable-sb16=linux \
@@ -46,9 +49,11 @@ case $which_config in
                 --enable-vbe \
                 --enable-all-optimizations \
                 ${CONFIGURE_ARGS} \
-                --enable-plugins \
+                --enable-cpu-level=6 \
+                --enable-sse=1 \
                 --enable-pci \
-                --enable-mmx \
+                --enable-clgd54xx \
+                --enable-plugins \
                 --with-all-libs
     ;;
 

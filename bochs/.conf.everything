@@ -30,4 +30,6 @@
   --enable-instrumentation \
   --enable-iodebug \
   --enable-show-ips \
+  --enable-clgd54xx \
+  --enable-usb \
   --with-all-libs

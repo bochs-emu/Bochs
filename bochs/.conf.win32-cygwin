@@ -16,9 +16,10 @@ export CXXFLAGS
 
 ./configure --enable-cdrom \
             --enable-sb16=win \
-	    --enable-ne2000 \
-            --enable-pci \
-	    --enable-vbe \
+            --enable-ne2000 \
+            --enable-vbe \
             --enable-all-optimizations \
             --enable-cpu-level=6 \
-            --enable-sse=2 
+            --enable-sse=1 \
+            --enable-pci \
+            --enable-clgd54xx

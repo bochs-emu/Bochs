@@ -26,6 +26,8 @@ export LDFLAGS
 	    --enable-vbe \
 	    --enable-all-optimizations \
 	    ${CONFIGURE_ARGS} \
-	    --enable-plugins \
-	    --enable-pci \
-	    --enable-mmx
+            --enable-cpu-level=6 \
+            --enable-sse=1 \
+            --enable-pci \
+            --enable-clgd54xx \
+	    --enable-plugins

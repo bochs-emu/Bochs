@@ -11,13 +11,17 @@ export CXX=cl
 #./configure --with-win32-vcpp --enable-disasm
 
 ./configure --target=pentium-windows \
-	    --enable-cdrom \
-	    --enable-ne2000 \
-	    --enable-vbe \
-	    --enable-all-optimizations \
-	    --disable-readline \
-	    --enable-sb16=win \
-	    --without-x
+            --enable-cdrom \
+            --enable-sb16=win \
+            --enable-ne2000 \
+            --enable-vbe \
+            --enable-all-optimizations \
+            --enable-cpu-level=6 \
+            --enable-sse=1 \
+            --enable-pci \
+            --enable-clgd54xx \
+            --disable-readline \
+            --without-x
 
 unset echo
 

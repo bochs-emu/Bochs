@@ -19,16 +19,16 @@ export CFLAGS
 export CXXFLAGS
 
 ./configure --target=ppc-macos \
-                --enable-cdrom \
-                --enable-sb16=osx \
-                --enable-vbe \
-                --enable-all-optimizations \
-                ${CONFIGURE_ARGS} \
-                --enable-plugins \
-                --enable-pci \
-                --enable-port-e9-hack \
-                --enable-mmx \
-                --enable-sse=2 \
-                --with-macos
+            --enable-cdrom \
+            --enable-sb16=osx \
+            --enable-vbe \
+            --enable-all-optimizations \
+            ${CONFIGURE_ARGS} \
+            --enable-cpu-level=6 \
+            --enable-sse=1 \
+            --enable-pci \
+            --enable-clgd54xx \
+            --enable-plugins \
+            --with-macos
 
 unset echo
