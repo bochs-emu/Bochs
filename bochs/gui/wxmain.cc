@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.26 2002-09-03 05:32:49 bdenney Exp $
+// $Id: wxmain.cc,v 1.27 2002-09-03 08:55:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -286,6 +286,13 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuBar->Append( menuLog, "&Log" );
   menuBar->Append( menuHelp, "&Help" );
   SetMenuBar( menuBar );
+
+  // disable things that don't work yet
+  menuDebug->Enable (ID_Debug_ShowCpu, FALSE);  // not implemented
+  menuDebug->Enable (ID_Debug_ShowMemory, FALSE);  // not implemented
+  menuLog->Enable (ID_Log_View, FALSE);  // not implemented
+  menuLog->Enable (ID_Log_PrefsDevice, FALSE);  // not implemented
+
   CreateStatusBar();
   SetStatusText( "Welcome to wxWindows!" );
 
@@ -505,34 +512,14 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
 {
-  ConfigKeyboardDialog dlg (this, -1);
-  for (int i=0; i<n_keyboard_type_names; i++)
-    dlg.AddType (keyboard_type_names[i]);
-  bx_param_enum_c *type = (bx_param_enum_c*) 
-    SIM->get_param (BXP_KBD_TYPE);
-  bx_param_num_c *serdel = (bx_param_num_c*) 
-    SIM->get_param (BXP_KBD_SERIAL_DELAY);
-  bx_param_num_c *pstdel = (bx_param_num_c*) 
-    SIM->get_param (BXP_KBD_PASTE_DELAY);
-  bx_param_bool_c *enableKeymap = (bx_param_bool_c*) 
-    SIM->get_param (BXP_KEYBOARD_USEMAPPING);
-  bx_param_string_c *keymap = (bx_param_string_c*) 
-    SIM->get_param (BXP_KEYBOARD_MAP);
-  dlg.SetType (type->get ());
-  dlg.SetSerialDelay (serdel->get ());
-  dlg.SetPasteDelay (pstdel->get ());
-  dlg.SetKeymapEnable (enableKeymap->get ());
-  dlg.SetKeymap (wxString (keymap->getptr ()));
-  int n = dlg.ShowModal ();
-  if (n == wxOK) {
-    type->set (dlg.GetType ());
-    serdel->set (dlg.GetSerialDelay ());
-    pstdel->set (dlg.GetPasteDelay ());
-    enableKeymap->set (dlg.GetKeymapEnable ());
-    char buf[1024];
-    safeWxStrcpy (buf, dlg.GetKeymap (), sizeof (buf));
-    keymap->set (buf);
-  }
+  ParamDialog dlg(this, -1);
+  dlg.SetTitle ("Configure Keyboard");
+  dlg.AddParam (SIM->get_param (BXP_KBD_TYPE));
+  dlg.AddParam (SIM->get_param (BXP_KBD_SERIAL_DELAY));
+  dlg.AddParam (SIM->get_param (BXP_KBD_PASTE_DELAY));
+  dlg.AddParam (SIM->get_param (BXP_KEYBOARD_USEMAPPING));
+  dlg.AddParam (SIM->get_param (BXP_KEYBOARD_MAP));
+  dlg.ShowModal ();
 }
 
 void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
@@ -548,7 +535,10 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditLoadHack(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
-  dlg.AddParam (SIM->get_param (BXP_LOAD32BITOS));
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_LOAD32BITOS);
+  dlg.SetTitle (list->get_name ());
+  for (int i=0; i<list->get_size (); i++)
+    dlg.AddParam (list->get (i));
   dlg.ShowModal ();
 }
 
@@ -556,6 +546,8 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   dlg.SetTitle ("Other Options");
+  dlg.AddParam (SIM->get_param (BXP_IPS));
+  dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
   dlg.AddParam (SIM->get_param (BXP_LOG_FILENAME));
   dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
   dlg.AddParam (SIM->get_param (BXP_MOUSE_ENABLED));
@@ -569,8 +561,6 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
   dlg.AddParam (SIM->get_param (BXP_SCREENMODE));
 #endif
   dlg.AddParam (SIM->get_param (BXP_I440FX_SUPPORT));
-  dlg.AddParam (SIM->get_param (BXP_IPS));
-  dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
 
   int n = dlg.ShowModal ();
 }
