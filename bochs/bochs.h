@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.141 2004-06-29 19:24:25 vruppert Exp $
+// $Id: bochs.h,v 1.142 2004-09-07 18:02:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -471,17 +471,6 @@ void bx_signal_handler (int signum);
 int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 
-
-
-/* Already in gui/siminterface.h ??? 
-#define BX_FLOPPY_NONE   10 // floppy not present
-#define BX_FLOPPY_1_2    11 // 1.2M  5.25"
-#define BX_FLOPPY_1_44   12 // 1.44M 3.5"
-#define BX_FLOPPY_2_88   13 // 2.88M 3.5"
-#define BX_FLOPPY_720K   14 // 720K  3.5"
-#define BX_FLOPPY_360K   15 // 360K  5.25"
-#define BX_FLOPPY_LAST   15 // last one
-*/
 
 
 #define BX_READ    0

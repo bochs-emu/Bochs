@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.10 2004-09-01 18:12:22 vruppert Exp $
+// $Id: config.cc,v 1.11 2004-09-07 18:02:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2047,10 +2047,57 @@ parse_line_unformatted(char *context, char *line)
 #define PARSE_WARN(x)  \
   BX_ERROR(x)
 
+/*
+ * this supports the "floppyx: image=" option.
+ * the functions returns the type of the floppy
+ * image (1.44, 360, etc.), based on the image file size.
+ */
+int get_floppy_type_from_image(const char *filename)
+{
+  struct stat stat_buf;
+
+  if (stat(filename, &stat_buf))
+  {
+    return BX_FLOPPY_NONE;
+  }
+
+  switch (stat_buf.st_size)
+  {
+    case 163840:
+      return BX_FLOPPY_160K;
+
+    case 184320:
+      return BX_FLOPPY_180K;
+
+    case 327680:
+      return BX_FLOPPY_320K;
+
+    case 368640:
+      return BX_FLOPPY_360K;
+
+    case 737280:
+      return BX_FLOPPY_720K;
+
+    case 1228800:
+      return BX_FLOPPY_1_2;
+
+    case 1474560:
+    case 1720320:
+    case 1763328:
+      return BX_FLOPPY_1_44;
+
+    case 2949120:
+      return BX_FLOPPY_2_88;
+
+    default:
+      return BX_FLOPPY_UNKNOWN;
+  }
+}
+
   static Bit32s
 parse_line_formatted(char *context, int num_params, char *params[])
 {
-  int i, slot;
+  int i, slot, t;
 
   if (num_params < 1) return 0;
   if (num_params < 2) {
@@ -2103,6 +2150,15 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strncmp(params[i], "320k=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_320K);
+        }
+      else if (!strncmp(params[i], "image=", 6)) {
+        /* "image=" means we should get floppy type from image */
+        bx_options.floppya.Opath->set (&params[i][6]);
+        t = get_floppy_type_from_image(&params[i][6]);
+        if (t != BX_FLOPPY_UNKNOWN)
+          bx_options.floppya.Otype->set (t);
+        else
+          PARSE_ERR(("%s: floppya image size doesn't match one of the supported types.", context));
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppya.Ostatus->set (BX_EJECTED);
@@ -2187,6 +2243,15 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strncmp(params[i], "320k=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_320K);
+        }
+      else if (!strncmp(params[i], "image=", 6)) {
+        /* "image=" means we should get floppy type from image */
+        bx_options.floppyb.Opath->set (&params[i][6]);
+        t = get_floppy_type_from_image(&params[i][6]);
+        if (t != BX_FLOPPY_UNKNOWN)
+          bx_options.floppyb.Otype->set (t);
+        else
+          PARSE_ERR(("%s: floppyb image size doesn't match one of the supported types.", context));
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppyb.Ostatus->set (BX_EJECTED);
