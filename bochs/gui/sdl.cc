@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.28 2002-10-24 21:06:31 bdenney Exp $
+// $Id: sdl.cc,v 1.29 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -100,7 +100,7 @@ Uint32 headerbar_fg, headerbar_bg;
 Bit8u old_mousebuttons=0, new_mousebuttons=0;
 int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
-Boolean just_warped = false;
+bx_bool just_warped = false;
 bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
 
@@ -279,7 +279,7 @@ void bx_sdl_gui_c::text_update(
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
   Bit8u cs_start, cs_end, cs_line, mask;
-  Boolean invert, forceUpdate;
+  bx_bool invert, forceUpdate;
 
   cs_start = (cursor_state >> 8) & 0x3f;
   cs_end = cursor_state & 0x1f;
@@ -791,7 +791,7 @@ void bx_sdl_gui_c::clear_screen(void)
 
 
 
-Boolean bx_sdl_gui_c::palette_change(
+bx_bool bx_sdl_gui_c::palette_change(
     unsigned index,
     unsigned red,
     unsigned green,
@@ -1074,7 +1074,7 @@ void bx_sdl_gui_c::show_headerbar(void)
 }
 
 
-void bx_sdl_gui_c::mouse_enabled_changed_specific (Boolean val)
+void bx_sdl_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   if( val == 1 )
   {

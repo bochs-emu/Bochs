@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.10 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: mult8.cc,v 1.11 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@ BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
 {
   Bit8u op2, op1;
   Bit16u product_16;
-  Boolean temp_flag;
+  bx_bool temp_flag;
 
   op1 = AL;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.2 2002-10-24 21:04:47 bdenney Exp $
+// $Id: plugin.cc,v 1.3 2002-10-25 11:44:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -46,9 +46,9 @@ int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t callbac
 int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                              const char *name, unsigned len) = 0;
 int (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
-			Bit32u useconds, Boolean continuous, 
-			Boolean active, const char* name) = 0;
-void (*pluginActivateTimer)(unsigned id, Bit32u usec, Boolean continuous) = 0;
+			Bit32u useconds, bx_bool continuous, 
+			bx_bool active, const char* name) = 0;
+void (*pluginActivateTimer)(unsigned id, Bit32u usec, bx_bool continuous) = 0;
 
 void (*pluginHRQHackCallback)(void);
 unsigned pluginHRQ = 0;
@@ -152,8 +152,8 @@ builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
 
   static int
 builtinRegisterTimer(void *this_ptr, void (*funct)(void *),
-			Bit32u useconds, Boolean continuous, 
-			Boolean active, const char* name)
+			Bit32u useconds, bx_bool continuous, 
+			bx_bool active, const char* name)
 {
   int id = bx_pc_system.register_timer (this_ptr, funct, useconds, continuous, active, name);
   pluginlog->ldebug("plugin %s registered timer %d", name, id);
@@ -161,7 +161,7 @@ builtinRegisterTimer(void *this_ptr, void (*funct)(void *),
 }
 
   static void
-builtinActivateTimer(unsigned id, Bit32u usec, Boolean continuous)
+builtinActivateTimer(unsigned id, Bit32u usec, bx_bool continuous)
 {
   bx_pc_system.activate_timer (id, usec, continuous);
   pluginlog->ldebug("plugin activated timer %d", id);
@@ -523,7 +523,7 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
 /* Plugin system: Check if a plugin is loaded                           */
 /************************************************************************/
 
-Boolean pluginDevicePresent(char *name)
+bx_bool pluginDevicePresent(char *name)
 {
     device_t *device;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.19 2002-10-24 21:07:38 bdenney Exp $
+// $Id: iodev.h,v 1.20 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -200,7 +200,7 @@ class BOCHSAPI bx_dma_stub_c : public bx_devmodel_c {
   virtual unsigned get_TC(void) {
     STUBFUNC(dma, get_TC); return 0;
   }
-  virtual void set_DRQ(unsigned channel, Boolean val) {
+  virtual void set_DRQ(unsigned channel, bx_bool val) {
     STUBFUNC(dma, set_DRQ);
   }
   virtual void raise_HLDA(void) {
@@ -258,12 +258,12 @@ public:
   // power-on, hardware, or software.
   void reset(unsigned type);
   BX_MEM_C *mem;  // address space associated with these devices
-  Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
-  Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
-  Boolean register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name );
-  Boolean register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name );
-  Boolean register_irq(unsigned irq, const char *name);
-  Boolean unregister_irq(unsigned irq, const char *name);
+  bx_bool register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
+  bx_bool register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
+  bx_bool register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name );
+  bx_bool register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name );
+  bx_bool register_irq(unsigned irq, const char *name);
+  bx_bool unregister_irq(unsigned irq, const char *name);
   void iodev_init(void);
   Bit32u inp(Bit16u addr, unsigned io_len);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len);
@@ -344,8 +344,8 @@ private:
   static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
   int timer_handle;
-  Boolean is_serial_enabled ();
-  Boolean is_parallel_enabled ();
+  bx_bool is_serial_enabled ();
+  bx_bool is_parallel_enabled ();
   };
 
 

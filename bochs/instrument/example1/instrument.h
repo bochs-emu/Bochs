@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.5 2002-10-24 21:06:58 bdenney Exp $
+// $Id: instrument.h,v 1.6 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,8 +59,8 @@ class bxInstruction_c;
 class bxInstrumentation {
 public:
 
-  Boolean  valid;        // is current instruction valid
-  Boolean active;        // is active
+  bx_bool  valid;        // is current instruction valid
+  bx_bool active;        // is active
 
   unsigned cpu_id;
 
@@ -68,7 +68,7 @@ public:
   unsigned opcode_size;
   unsigned nprefixes;
   Bit8u    opcode[MAX_OPCODE_SIZE];
-  Boolean  is32;
+  bx_bool  is32;
 
   /* memory accesses */
   unsigned num_data_accesses;
@@ -80,8 +80,8 @@ public:
   } data_access[MAX_DATA_ACCESSES];
 
   /* branch resolution and target */
-  Boolean is_branch;
-  Boolean is_taken;
+  bx_bool is_branch;
+  bx_bool is_taken;
   bx_address target_linear;
 
 public:
@@ -91,8 +91,8 @@ public:
  
   void activate() { active = 1; }
   void deactivate() { active = 0; }
-  Boolean toggle_active() { active = !active; }
-  Boolean is_active() const { return active; } 
+  bx_bool toggle_active() { active = !active; }
+  bx_bool is_active() const { return active; } 
 
   void bx_instr_reset();
   void bx_instr_new_instruction();
@@ -102,7 +102,7 @@ public:
   void bx_instr_ucnear_branch(unsigned what, bx_address new_eip);
   void bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_address new_eip);
 
-  void bx_instr_opcode(Bit8u *opcode, unsigned len, Boolean is32);
+  void bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32);
   void bx_instr_fetch_decode_completed(const bxInstruction_c *i);
 
   void bx_instr_prefix_as();

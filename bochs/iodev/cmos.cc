@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.25 2002-10-24 21:07:12 bdenney Exp $
+// $Id: cmos.cc,v 1.26 2002-10-25 11:44:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,7 +79,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.25 2002-10-24 21:07:12 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.26 2002-10-25 11:44:38 bdenney Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -576,7 +576,7 @@ bx_cmos_c::one_second_timer()
   // compare CMOS user copy of time/date to alarm time/date here
   if (BX_CMOS_THIS s.reg[0x0b] & 0x20) {
     // Alarm interrupts enabled
-    Boolean alarm_match = 1;
+    bx_bool alarm_match = 1;
     if ( (BX_CMOS_THIS s.reg[0x01] & 0xc0) != 0xc0 ) {
       // seconds alarm not in dont care mode
       if (BX_CMOS_THIS s.reg[0x00] != BX_CMOS_THIS s.reg[0x01])

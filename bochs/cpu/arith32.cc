@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.27 2002-10-24 21:05:18 bdenney Exp $
+// $Id: arith32.cc,v 1.28 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -181,7 +181,7 @@ BX_CPU_C::ADD_EAXId(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_EdGd(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -208,7 +208,7 @@ BX_CPU_C::ADC_EdGd(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_GdEd(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -235,7 +235,7 @@ BX_CPU_C::ADC_GdEd(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -258,7 +258,7 @@ BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
   void
 BX_CPU_C::SBB_EdGd(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -285,7 +285,7 @@ BX_CPU_C::SBB_EdGd(bxInstruction_c *i)
   void
 BX_CPU_C::SBB_GdEd(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -312,7 +312,7 @@ BX_CPU_C::SBB_GdEd(bxInstruction_c *i)
   void
 BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -334,7 +334,7 @@ BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
   void
 BX_CPU_C::SBB_EdId(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -650,7 +650,7 @@ BX_CPU_C::ADD_EGdId(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_EdId(bxInstruction_c *i)
 {
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.163 2002-10-24 21:04:43 bdenney Exp $
+// $Id: main.cc,v 1.164 2002-10-25 11:44:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1544,7 +1544,7 @@ bx_init_main (int argc, char *argv[])
   return 0;
 }
 
-Boolean load_and_init_display_lib () {
+bx_bool load_and_init_display_lib () {
   if (bx_gui != NULL) {
     // bx_gui has already been filled in.  This happens when you start
     // the simulation for the second time.
@@ -1859,7 +1859,7 @@ bx_init_bx_dbg (void)
 int
 bx_atexit(void)
 {
-  static Boolean been_here = 0;
+  static bx_bool been_here = 0;
   if (been_here) return 1;   // protect from reentry
   been_here = 1;
 
@@ -1986,7 +1986,7 @@ parse_line_unformatted(char *context, char *line)
   char string[512];
   char *params[MAX_PARAMS_LEN];
   int num_params;
-  Boolean inquotes = 0;
+  bx_bool inquotes = 0;
 
   memset(params, 0, sizeof(params));
   if (line == NULL) return 0;

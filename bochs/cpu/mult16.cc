@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.9 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: mult16.cc,v 1.10 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, product_16h, product_16l;
     Bit32u product_32;
-    Boolean temp_flag;
+    bx_bool temp_flag;
 
     op1_16 = AX;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.71 2002-10-24 21:05:01 bdenney Exp $
+// $Id: rombios.c,v 1.72 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -260,7 +260,7 @@ ASM_END
 
 typedef unsigned char  Bit8u;
 typedef unsigned short Bit16u;
-typedef unsigned short Boolean;
+typedef unsigned short bx_bool;
 typedef unsigned long  Bit32u;
 
 #if BX_USE_ATADRV
@@ -820,7 +820,7 @@ static void           outb_cmos();
 static Bit16u         inw();
 static void           outw();
 static void           init_rtc();
-static Boolean        rtc_updating();
+static bx_bool        rtc_updating();
 
 static Bit8u          read_byte();
 static Bit16u         read_word();
@@ -860,12 +860,12 @@ static void           get_hd_geometry();
 static void           set_diskette_ret_status();
 static void           set_diskette_current_cyl();
 static void           determine_floppy_media();
-static Boolean        floppy_drive_exists();
-static Boolean        floppy_drive_recal();
-static Boolean        floppy_media_known();
-static Boolean        floppy_media_sense();
+static bx_bool        floppy_drive_exists();
+static bx_bool        floppy_drive_recal();
+static bx_bool        floppy_media_known();
+static bx_bool        floppy_media_sense();
 static void           cli();
-static Boolean        set_enable_a20();
+static bx_bool        set_enable_a20();
 static void           debugger_on();
 static void           debugger_off();
 static void           keyboard_panic();
@@ -905,10 +905,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.71 $";
-static char bios_date_string[] = "$Date: 2002-10-24 21:05:01 $";
+static char bios_cvs_version_string[] = "$Revision: 1.72 $";
+static char bios_date_string[] = "$Date: 2002-10-25 11:44:34 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.71 2002-10-24 21:05:01 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.72 2002-10-25 11:44:34 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1222,7 +1222,7 @@ init_rtc()
   inb_cmos(0x0d);
 }
 
-  Boolean
+  bx_bool
 rtc_updating()
 {
   // This function checks to see if the update-in-progress bit
@@ -1453,7 +1453,7 @@ send(action, c)
 put_int(action, val, width, neg)
   Bit16u action;
   short val, width;
-  Boolean neg;
+  bx_bool neg;
 {
   short nval = UDIV16(val, 10);
   if (nval)
@@ -1480,7 +1480,7 @@ bios_printf(action, s)
   Bit8u *s;
 {
   Bit8u c, format_char;
-  Boolean  in_format;
+  bx_bool  in_format;
   short i;
   Bit16u  *arg_ptr;
   Bit16u   arg_seg, arg, nibble, shift_count, format_width;
@@ -1673,9 +1673,9 @@ log_bios_start()
   BX_INFO("%s\n", bios_version_string);
 }
 
-  Boolean
+  bx_bool
 set_enable_a20(val)
-  Boolean val;
+  bx_bool val;
 {
   Bit8u  oldval;
 
@@ -3075,7 +3075,7 @@ int15_function(regs, ES, DS, FLAGS)
   Bit16u mouse_driver_seg;
   Bit16u mouse_driver_offset;
   Bit8u  response, prev_command_byte;
-  Boolean prev_a20_enable;
+  bx_bool prev_a20_enable;
   Bit16u  base15_00;
   Bit8u   base23_16;
   Bit16u  ss;
@@ -5775,7 +5775,7 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
 // FLOPPY functions //
 //////////////////////
 
-  Boolean
+  bx_bool
 floppy_media_known(drive)
   Bit16u drive;
 {
@@ -5802,11 +5802,11 @@ floppy_media_known(drive)
   return(1);
 }
 
-  Boolean
+  bx_bool
 floppy_media_sense(drive)
   Bit16u drive;
 {
-  Boolean retval;
+  bx_bool retval;
   Bit16u  media_state_offset;
   Bit8u   drive_type, config_data, media_state;
 
@@ -5868,7 +5868,7 @@ floppy_media_sense(drive)
   return(retval);
 }
 
-  Boolean
+  bx_bool
 floppy_drive_recal(drive)
   Bit16u drive;
 {
@@ -5934,7 +5934,7 @@ ASM_END
 
 
 
-  Boolean
+  bx_bool
 floppy_drive_exists(drive)
   Bit16u drive;
 {

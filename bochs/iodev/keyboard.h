@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.18 2002-10-24 21:07:41 bdenney Exp $
+// $Id: keyboard.h,v 1.19 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -83,22 +83,22 @@ private:
   struct {
     struct {
       /* status bits matching the status port*/
-      Boolean pare; // Bit7, 1= parity error from keyboard/mouse - ignored.
-      Boolean tim;  // Bit6, 1= timeout from keyboard - ignored.
-      Boolean auxb; // Bit5, 1= mouse data waiting for CPU to read.
-      Boolean keyl; // Bit4, 1= keyswitch in lock position - ignored.
-      Boolean c_d; /*  Bit3, 1=command to port 64h, 0=data to port 60h */
-      Boolean sysf; // Bit2,
-      Boolean inpb; // Bit1,
-      Boolean outb; // Bit0, 1= keyboard data or mouse data ready for CPU
+      bx_bool pare; // Bit7, 1= parity error from keyboard/mouse - ignored.
+      bx_bool tim;  // Bit6, 1= timeout from keyboard - ignored.
+      bx_bool auxb; // Bit5, 1= mouse data waiting for CPU to read.
+      bx_bool keyl; // Bit4, 1= keyswitch in lock position - ignored.
+      bx_bool c_d; /*  Bit3, 1=command to port 64h, 0=data to port 60h */
+      bx_bool sysf; // Bit2,
+      bx_bool inpb; // Bit1,
+      bx_bool outb; // Bit0, 1= keyboard data or mouse data ready for CPU
                     //       check aux to see which. Or just keyboard
                     //       data before AT style machines
 
       /* internal to our version of the keyboard controller */
-      Boolean kbd_clock_enabled;
-      Boolean aux_clock_enabled;
-      Boolean allow_irq1;
-      Boolean allow_irq12;
+      bx_bool kbd_clock_enabled;
+      bx_bool aux_clock_enabled;
+      bx_bool allow_irq1;
+      bx_bool allow_irq12;
       Bit8u   kbd_output_buffer;
       Bit8u   aux_output_buffer;
       Bit8u   last_comm;
@@ -106,10 +106,10 @@ private:
       Bit8u   expecting_mouse_parameter;
       Bit8u   last_mouse_command;
       Bit32u   timer_pending;
-      Boolean irq1_requested;
-      Boolean irq12_requested;
-      Boolean scancodes_translate;
-      Boolean expecting_scancodes_set;
+      bx_bool irq1_requested;
+      bx_bool irq12_requested;
+      bx_bool scancodes_translate;
+      bx_bool expecting_scancodes_set;
       Bit8u   current_scancodes_set;
       } kbd_controller;
 
@@ -119,7 +119,7 @@ private:
       Bit8u   scaling;
       Bit8u   mode;
       Bit8u   saved_mode;  // the mode prior to entering wrap mode
-      Boolean enable;
+      bx_bool enable;
 
       Bit8u get_status_byte ()
 	{
@@ -168,12 +168,12 @@ private:
       int     num_elements;
       Bit8u   buffer[BX_KBD_ELEMENTS];
       int     head;
-      Boolean expecting_typematic;
-      Boolean expecting_led_write;
+      bx_bool expecting_typematic;
+      bx_bool expecting_led_write;
       Bit8u   delay;
       Bit8u   repeat_rate;
       Bit8u   led_status;
-      Boolean scanning_enabled;
+      bx_bool scanning_enabled;
       } kbd_internal_buffer;
 
     struct {
@@ -213,7 +213,7 @@ private:
   Bit32u pastebuf_ptr; // ptr to next byte to be added to hw buffer
   Bit32u pastedelay;   // count before paste
 
-  BX_KEY_SMF void     resetinternals(Boolean powerup);
+  BX_KEY_SMF void     resetinternals(bx_bool powerup);
   BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value);
   BX_KEY_SMF void     set_aux_clock_enable(Bit8u   value);
   BX_KEY_SMF void     kbd_ctrl_to_kbd(Bit8u   value);
@@ -222,7 +222,7 @@ private:
   BX_KEY_SMF void     kbd_enQ_imm(Bit8u   val);
   BX_KEY_SMF void     activate_timer(void);
   BX_KEY_SMF void     controller_enQ(Bit8u   data, unsigned source);
-  BX_KEY_SMF Boolean  mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3);
+  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3);
   BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
 
   static void   timer_handler(void *);

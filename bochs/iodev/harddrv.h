@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.17 2002-10-24 21:07:37 bdenney Exp $
+// $Id: harddrv.h,v 1.18 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -172,15 +172,15 @@ class dll_image_t : public device_image_t
 
 typedef struct {
   struct {
-    Boolean busy;
-    Boolean drive_ready;
-    Boolean write_fault;
-    Boolean seek_complete;
-    Boolean drq;
-    Boolean corrected_data;
-    Boolean index_pulse;
+    bx_bool busy;
+    bx_bool drive_ready;
+    bx_bool write_fault;
+    bx_bool seek_complete;
+    bx_bool drq;
+    bx_bool corrected_data;
+    bx_bool index_pulse;
     unsigned index_pulse_count;
-    Boolean err;
+    bx_bool err;
     } status;
   Bit8u    error_register;
   Bit8u    head_no;
@@ -212,8 +212,8 @@ typedef struct {
   Bit8u    sectors_per_block;
   Bit8u    lba_mode;
   struct {
-    Boolean reset;       // 0=normal, 1=reset controller
-    Boolean disable_irq; // 0=allow irq, 1=disable irq
+    bx_bool reset;       // 0=normal, 1=reset controller
+    bx_bool disable_irq; // 0=allow irq, 1=disable irq
     } control;
   Bit8u    reset_in_progress;
   Bit8u    features;
@@ -252,8 +252,8 @@ uint32 read_32bit(const uint8* buf);
 
 struct cdrom_t
 {
-  Boolean ready;
-  Boolean locked;
+  bx_bool ready;
+  bx_bool locked;
 #ifdef LOWLEVEL_CDROM
   LOWLEVEL_CDROM* cd;
 #endif
@@ -315,7 +315,7 @@ public:
 
 private:
 
-  BX_HD_SMF Boolean calculate_logical_address(Bit8u channel, off_t *sector);
+  BX_HD_SMF bx_bool calculate_logical_address(Bit8u channel, off_t *sector);
   BX_HD_SMF void increment_address(Bit8u channel);
   BX_HD_SMF void identify_drive(Bit8u channel);
   BX_HD_SMF void identify_ATAPI_drive(Bit8u channel);
@@ -359,7 +359,7 @@ private:
 #if BX_PDC20230C_VLBIDE_SUPPORT
 // pdc20630c is only available for 1st ata channel
   struct pdc20630c_t {
-    Boolean prog_mode;
+    bx_bool prog_mode;
     Bit8u   prog_count;
     Bit32u  p1f3_value;
     Bit32u  p1f4_value;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.34 2002-10-24 21:05:49 bdenney Exp $
+// $Id: paging.cc,v 1.35 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -486,7 +486,7 @@ BX_CPU_C::TLB_init(void)
 }
 
   void
-BX_CPU_C::TLB_flush(Boolean invalidateGlobal)
+BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 {
 #if InstrumentTLB
   if (invalidateGlobal)
@@ -575,7 +575,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   bx_address   lpf;
   Bit32u   ppf, poffset, TLB_index, error_code, paddress;
   Bit32u   pde, pde_addr;
-  Boolean  isWrite;
+  bx_bool  isWrite;
   Bit32u   accessBits, combined_access;
   unsigned priv_index;
 
@@ -1001,7 +1001,7 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 
 
   void
-BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, Boolean *valid)
+BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, bx_bool *valid)
 {
   Bit32u   lpf, ppf, poffset, TLB_index, paddress;
   Bit32u   pde, pde_addr;

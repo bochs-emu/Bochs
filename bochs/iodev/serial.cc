@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.31 2002-10-24 21:07:51 bdenney Exp $
+// $Id: serial.cc,v 1.32 2002-10-25 11:44:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -462,8 +462,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_SER_SMF
-  Boolean prev_cts, prev_dsr, prev_ri, prev_dcd;
-  Boolean gen_int = 0;
+  bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
+  bx_bool gen_int = 0;
 
   /* SERIAL PORT 1 */
 
@@ -787,7 +787,7 @@ bx_serial_c::rx_timer(void)
     if (tty_prefetch_char(tty_id)) {
       tty(tty_id, 1, &chbuf);
 #elif USE_RAW_SERIAL
-    Boolean rdy;
+    bx_bool rdy;
     uint16 data;
     if ((rdy = BX_SER_THIS raw->ready_receive())) {
       data = BX_SER_THIS raw->receive();

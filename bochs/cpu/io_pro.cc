@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.10 2002-09-24 18:33:38 kevinlawton Exp $
+// $Id: io_pro.cc,v 1.11 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ BX_CPU_C::outp8(Bit16u addr, Bit8u value)
 }
 
 
-  Boolean
+  bx_bool
 BX_CPU_C::allow_io(Bit16u addr, unsigned len)
 {
   Bit16u io_base, permission16;

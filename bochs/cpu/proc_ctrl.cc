@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.59 2002-10-24 21:05:51 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.60 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1515,7 +1515,7 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 {
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
-  Boolean prev_pe, prev_pg;
+  bx_bool prev_pe, prev_pg;
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
 
   prev_pe = BX_CPU_THIS_PTR cr0.pe;
@@ -1675,8 +1675,8 @@ BX_CPU_C::RSM(bxInstruction_c *i)
 BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  Boolean tsd = BX_CPU_THIS_PTR cr4.get_TSD();
-  Boolean cpl = CPL;
+  bx_bool tsd = BX_CPU_THIS_PTR cr4.get_TSD();
+  bx_bool cpl = CPL;
   if ((tsd==0) || (tsd==1 && cpl==0)) {
     // return ticks
     Bit64u ticks = bx_pc_system.time_ticks ();
@@ -1947,7 +1947,7 @@ BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
   // Support x86 hardware debug facilities (DR0..DR7)
   Bit32u dr7 = BX_CPU_THIS_PTR dr7;
 
-  Boolean ibpoint_found = 0;
+  bx_bool ibpoint_found = 0;
   Bit32u  laddr_n = laddr_0 + (size - 1);
   Bit32u  dr0, dr1, dr2, dr3;
   Bit32u  dr0_n, dr1_n, dr2_n, dr3_n;

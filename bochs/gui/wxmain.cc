@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.70 2002-10-24 21:06:48 bdenney Exp $
+// $Id: wxmain.cc,v 1.71 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -950,7 +950,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 }
 
 // update the menu items, status bar, etc.
-void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
+void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   switch (change) {
     case Start:  // running
       wxLogStatus ("Starting Bochs simulation");
@@ -1298,7 +1298,7 @@ void MyFrame::OnLogMsg (BxEvent *be) {
   dlg.SetContext (be->u.logmsg.prefix);
   dlg.SetMessage (be->u.logmsg.msg);
   int n = dlg.ShowModal ();
-  Boolean dontAsk = dlg.GetDontAsk ();
+  bx_bool dontAsk = dlg.GetDontAsk ();
   // turn the return value into the constant that logfunctions::ask is
   // expecting.  0=continue, 1=continue but ignore future messages from this
   // device, 2=die, 3=dump core, 4=debugger. FIXME: yuck. replace hardcoded

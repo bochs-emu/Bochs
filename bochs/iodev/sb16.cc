@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.27 2002-10-24 21:07:48 bdenney Exp $
+// $Id: sb16.cc,v 1.28 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1306,7 +1306,7 @@ void bx_sb16_c::mixer_writeregister(Bit32u value)
 
 void bx_sb16_c::set_irq_dma()
 {
-  static Boolean isInitialized=0;
+  static bx_bool isInitialized=0;
   int newirq;
   int oldDMA8, oldDMA16;
 
@@ -1591,7 +1591,7 @@ void bx_sb16_c::mpu_datawrite(Bit32u value)
 void bx_sb16_c::mpu_mididata(Bit32u value)
 {
   // first, find out if it is a midi command or midi data
-  Boolean ismidicommand = 0;
+  bx_bool ismidicommand = 0;
   if (value >= 0x80)
     {  // bit 8 usually denotes a midi command...
       ismidicommand = 1;
@@ -2531,7 +2531,7 @@ void bx_sb16_c::opl_setfreq(int channel)
 }
 
 // called when a note is possibly turned on or off
-void bx_sb16_c::opl_keyonoff(int channel, Boolean onoff)
+void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
 {
   int i;
 
@@ -2681,11 +2681,11 @@ int bx_sb16_c::currentdeltatime()
 
 // process the midi command stored in MPU.midicmd.to the midi driver
 
-void bx_sb16_c::processmidicommand(Boolean force)
+void bx_sb16_c::processmidicommand(bx_bool force)
 {
   int i, channel;
   Bit8u value;
-  Boolean needremap = 0;
+  bx_bool needremap = 0;
 
   channel = MPU.midicmd.currentcommand() & 0xf;
 
@@ -3253,7 +3253,7 @@ int bx_sb16_buffer::bytes(void)
 }
 
 // This puts one byte into the buffer
-Boolean bx_sb16_buffer::put(Bit8u data)
+bx_bool bx_sb16_buffer::put(Bit8u data)
 {
   if (full() != 0)
     return 0;	// buffer full
@@ -3265,7 +3265,7 @@ Boolean bx_sb16_buffer::put(Bit8u data)
 }
 
 // This writes a formatted string to the buffer
-Boolean bx_sb16_buffer::puts(char *data, ...)
+bx_bool bx_sb16_buffer::puts(char *data, ...)
 {
 
   if (data == NULL)
@@ -3295,7 +3295,7 @@ Boolean bx_sb16_buffer::puts(char *data, ...)
 }
 
 // This returns if the buffer is full, i.e. if a put will fail
-Boolean bx_sb16_buffer::full(void)
+bx_bool bx_sb16_buffer::full(void)
 {
   if (length == 0)
     return 1;   // not initialized
@@ -3307,7 +3307,7 @@ Boolean bx_sb16_buffer::full(void)
 }
 
 // This reads the next available byte from the buffer
-Boolean bx_sb16_buffer::get(Bit8u *data)
+bx_bool bx_sb16_buffer::get(Bit8u *data)
 {
   if (empty() != 0)
     { 
@@ -3325,7 +3325,7 @@ Boolean bx_sb16_buffer::get(Bit8u *data)
 }
 
 // Read a word in lo/hi order
-Boolean bx_sb16_buffer::getw(Bit16u *data)
+bx_bool bx_sb16_buffer::getw(Bit16u *data)
 {
   Bit8u dummy;
   if (bytes() < 2)
@@ -3347,7 +3347,7 @@ Boolean bx_sb16_buffer::getw(Bit16u *data)
 }
 
 // Read a word in hi/lo order
-Boolean bx_sb16_buffer::getw1(Bit16u *data)
+bx_bool bx_sb16_buffer::getw1(Bit16u *data)
 {
   Bit8u dummy;
   if (bytes() < 2)
@@ -3369,7 +3369,7 @@ Boolean bx_sb16_buffer::getw1(Bit16u *data)
 }
 
 // This returns if the buffer is empty, i.e. if a get will fail
-Boolean bx_sb16_buffer::empty(void)
+bx_bool bx_sb16_buffer::empty(void)
 {
   if (length == 0)
     return 1;   // not inialized
@@ -3418,7 +3418,7 @@ void bx_sb16_buffer::clearcommand(void)
 }
 
 // return if the command has received all necessary bytes
-Boolean bx_sb16_buffer::commanddone(void)
+bx_bool bx_sb16_buffer::commanddone(void)
 {
   if (hascommand() == 0)
     return 0;  // no command pending - not done then
@@ -3430,7 +3430,7 @@ Boolean bx_sb16_buffer::commanddone(void)
 }
 
 // return if there is a command pending
-Boolean bx_sb16_buffer::hascommand(void)
+bx_bool bx_sb16_buffer::hascommand(void)
 {
   return havecommand;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.19 2002-10-24 21:07:54 bdenney Exp $
+// $Id: vga.h,v 1.20 2002-10-25 11:44:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -130,14 +130,14 @@ private:
 
   struct {
     struct {
-      Boolean color_emulation;  // 1=color emulation, base address = 3Dx
+      bx_bool color_emulation;  // 1=color emulation, base address = 3Dx
                                 // 0=mono emulation,  base address = 3Bx
-      Boolean enable_ram;       // enable CPU access to video memory if set
+      bx_bool enable_ram;       // enable CPU access to video memory if set
       Bit8u   clock_select;     // 0=25Mhz 1=28Mhz
-      Boolean select_high_bank; // when in odd/even modes, select
+      bx_bool select_high_bank; // when in odd/even modes, select
                                 // high 64k bank if set
-      Boolean horiz_sync_pol;   // bit6: negative if set
-      Boolean vert_sync_pol;    // bit7: negative if set
+      bx_bool horiz_sync_pol;   // bit6: negative if set
+      bx_bool vert_sync_pol;    // bit7: negative if set
                                 //   bit7,bit6 represent number of lines on display:
                                 //   0 = reserved
                                 //   1 = 400 lines
@@ -151,22 +151,22 @@ private:
       } CRTC;
 
     struct {
-      Boolean  flip_flop; /* 0 = address, 1 = data-write */
+      bx_bool  flip_flop; /* 0 = address, 1 = data-write */
       unsigned address;  /* register number */
-      Boolean  video_enabled;
+      bx_bool  video_enabled;
       Bit8u    palette_reg[16];
       Bit8u    overscan_color;
       Bit8u    color_plane_enable;
       Bit8u    horiz_pel_panning;
       Bit8u    color_select;
       struct {
-        Boolean graphics_alpha;
-        Boolean display_type;
-        Boolean enable_line_graphics;
-        Boolean blink_intensity;
-        Boolean pixel_panning_compat;
-        Boolean pixel_clock_select;
-        Boolean internal_palette_size;
+        bx_bool graphics_alpha;
+        bx_bool display_type;
+        bx_bool enable_line_graphics;
+        bx_bool blink_intensity;
+        bx_bool pixel_panning_compat;
+        bx_bool pixel_clock_select;
+        bx_bool internal_palette_size;
         } mode_ctrl;
       } attribute_ctrl;
 
@@ -193,11 +193,11 @@ private:
       Bit8u   raster_op;
       Bit8u   read_map_select;
       Bit8u   write_mode;
-      Boolean read_mode;
-      Boolean odd_even;
-      Boolean chain_odd_even;
+      bx_bool read_mode;
+      bx_bool odd_even;
+      bx_bool chain_odd_even;
       Bit8u   shift_reg;
-      Boolean graphics_alpha;
+      bx_bool graphics_alpha;
       Bit8u   memory_mapping; /* 0 = use A0000-BFFFF
                                * 1 = use A0000-AFFFF EGA/VGA graphics modes
                                * 2 = use B0000-B7FFF Monochrome modes
@@ -211,21 +211,21 @@ private:
     struct {
       Bit8u   index;
       Bit8u   map_mask;
-      Boolean map_mask_bit[4];
-      Boolean reset1;
-      Boolean reset2;
+      bx_bool map_mask_bit[4];
+      bx_bool reset1;
+      bx_bool reset2;
       Bit8u   reg1;
       Bit8u   char_map_select;
-      Boolean extended_mem;
-      Boolean odd_even;
-      Boolean chain_four;
+      bx_bool extended_mem;
+      bx_bool odd_even;
+      bx_bool chain_four;
       } sequencer;
 
-    Boolean  vga_mem_updated;
+    bx_bool  vga_mem_updated;
     unsigned x_tilesize;
     unsigned y_tilesize;
     unsigned scan_bits;
-    Boolean  vga_tile_updated[BX_NUM_X_TILES][BX_NUM_Y_TILES];
+    bx_bool  vga_tile_updated[BX_NUM_X_TILES][BX_NUM_Y_TILES];
     Bit8u vga_memory[256 * 1024];
     Bit8u text_snapshot[2 * 80 * BX_MAX_TEXT_LINES]; // current text snapshot
     unsigned horiz_tick;
@@ -241,7 +241,7 @@ private:
     Bit16u  vbe_yres;
     Bit16u  vbe_bpp;
     Bit16u  vbe_bank;
-    Boolean vbe_enabled;
+    bx_bool vbe_enabled;
     Bit16u  vbe_curindex;
     Bit32u  vbe_visable_screen_size; // in bytes
     Bit16u  vbe_offset_x;
@@ -254,17 +254,17 @@ private:
 
 #if !BX_USE_VGA_SMF
   Bit32u read(Bit32u address, unsigned io_len);
-  void   write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
+  void   write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #else
-  void write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
+  void write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #endif
 
 #if BX_SUPPORT_VBE
 #if !BX_USE_VGA_SMF
   Bit32u vbe_read(Bit32u address, unsigned io_len);
-  void   vbe_write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
+  void   vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #else
-  void vbe_write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
+  void vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #endif
 #endif
 

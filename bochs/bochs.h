@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.102 2002-10-24 21:03:51 bdenney Exp $
+// $Id: bochs.h,v 1.103 2002-10-25 11:44:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -426,41 +426,41 @@ int bx_gdbstub_check(unsigned int eip);
 
 
 typedef struct {
-  Boolean floppy;
-  Boolean keyboard;
-  Boolean video;
-  Boolean disk;
-  Boolean pit;
-  Boolean pic;
-  Boolean bios;
-  Boolean cmos;
-  Boolean a20;
-  Boolean interrupts;
-  Boolean exceptions;
-  Boolean unsupported;
-  Boolean temp;
-  Boolean reset;
-  Boolean debugger;
-  Boolean mouse;
-  Boolean io;
-  Boolean xms;
-  Boolean v8086;
-  Boolean paging;
-  Boolean creg;
-  Boolean dreg;
-  Boolean dma;
-  Boolean unsupported_io;
-  Boolean serial;
-  Boolean cdrom;
+  bx_bool floppy;
+  bx_bool keyboard;
+  bx_bool video;
+  bx_bool disk;
+  bx_bool pit;
+  bx_bool pic;
+  bx_bool bios;
+  bx_bool cmos;
+  bx_bool a20;
+  bx_bool interrupts;
+  bx_bool exceptions;
+  bx_bool unsupported;
+  bx_bool temp;
+  bx_bool reset;
+  bx_bool debugger;
+  bx_bool mouse;
+  bx_bool io;
+  bx_bool xms;
+  bx_bool v8086;
+  bx_bool paging;
+  bx_bool creg;
+  bx_bool dreg;
+  bx_bool dma;
+  bx_bool unsupported_io;
+  bx_bool serial;
+  bx_bool cdrom;
 #ifdef MAGIC_BREAKPOINT
-  Boolean magic_break_enabled;
+  bx_bool magic_break_enabled;
 #endif /* MAGIC_BREAKPOINT */
 #if BX_SUPPORT_APIC
-  Boolean apic;
-  Boolean ioapic;
+  bx_bool apic;
+  bx_bool ioapic;
 #endif
 #if BX_DEBUG_LINUX
-  Boolean linux_syscall;
+  bx_bool linux_syscall;
 #endif
   void* record_io;
   } bx_debug_t;

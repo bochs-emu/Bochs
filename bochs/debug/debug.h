@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.15 2002-10-04 14:57:34 bdenney Exp $
+// $Id: debug.h,v 1.16 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,17 +74,17 @@ typedef struct {
 
 bx_num_range make_num_range (Bit64s from, Bit64s to);
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
-void bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset);
+void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
 void bx_dbg_trace_on_command(void);
 void bx_dbg_trace_off_command(void);
 void bx_dbg_trace_reg_on_command(void);
 void bx_dbg_trace_reg_off_command(void);
 void bx_dbg_ptime_command(void);
-void bx_dbg_timebp_command(Boolean absolute, Bit64u time);
+void bx_dbg_timebp_command(bx_bool absolute, Bit64u time);
 void bx_dbg_diff_memory(void);
-void bx_dbg_always_check(Bit32u page_start, Boolean on);
-void bx_dbg_sync_memory(Boolean set);
-void bx_dbg_sync_cpu(Boolean set);
+void bx_dbg_always_check(Bit32u page_start, bx_bool on);
+void bx_dbg_sync_memory(bx_bool set);
+void bx_dbg_sync_cpu(bx_bool set);
 void bx_dbg_fast_forward(Bit32u num);
 void bx_dbg_info_address(Bit32u seg_reg_num, Bit32u offset);
 #define MAX_CONCURRENT_BPS 5
@@ -105,9 +105,9 @@ void bx_dbg_continue_command(void);
 void bx_dbg_stepN_command(bx_dbg_icount_t count);
 void bx_dbg_set_command(char *p1, char *p2, char *p3);
 void bx_dbg_del_breakpoint_command(unsigned handle);
-void bx_dbg_vbreakpoint_command(Boolean specific, Bit32u cs, Bit32u eip);
-void bx_dbg_lbreakpoint_command(Boolean specific, Bit32u laddress);
-void bx_dbg_pbreakpoint_command(Boolean specific, Bit32u paddress);
+void bx_dbg_vbreakpoint_command(bx_bool specific, Bit32u cs, Bit32u eip);
+void bx_dbg_lbreakpoint_command(bx_bool specific, Bit32u laddress);
+void bx_dbg_pbreakpoint_command(bx_bool specific, Bit32u paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
@@ -121,8 +121,8 @@ void bx_dbg_info_ldt_command(bx_num_range);
 void bx_dbg_info_tss_command(bx_num_range);
 void bx_dbg_info_control_regs_command(void);
 void bx_dbg_info_linux_command(void);
-void bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
-                    Bit32u addr, Boolean addr_passed, int simulator);
+void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+                    Bit32u addr, bx_bool addr_passed, int simulator);
 void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
 void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
 void bx_dbg_query_command(char *);
@@ -137,7 +137,7 @@ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
 void bx_dbg_maths_command(char *command, int data1, int data2);
 void bx_dbg_maths_expression_command(char *expr);
 void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
-extern Boolean watchpoint_continue;
+extern bx_bool watchpoint_continue;
 void bx_dbg_linux_syscall ();
 void bx_dbg_info_ne2k(int page, int reg);
 void bx_dbg_help_command(char* command);
@@ -258,7 +258,7 @@ typedef struct {
   bx_dbg_icount_t icount; // stop after completing this many instructions
 
   // user typed Ctrl-C, requesting simulator stop at next convient spot
-  volatile Boolean interrupt_requested;
+  volatile bx_bool interrupt_requested;
 
   // when a triple fault occurs, Bochs panics.  If you continue through
   // the panic, it will generally produce another exception and panic
@@ -270,21 +270,21 @@ typedef struct {
   // bochs to NOT emulate the hardware behavior correctly.  The correct
   // behavior would be to reboot.  (Rebooting, if it is ever implemented,
   // will need some kind of unwinding too.)
-  Boolean special_unwind_stack;
+  bx_bool special_unwind_stack;
 
   // booleans to control whether simulator should report events
   // to debug controller
   struct {
-   Boolean irq;
-   Boolean a20;
-   Boolean io;
-   Boolean ucmem;
-   Boolean dma;
+   bx_bool irq;
+   bx_bool a20;
+   bx_bool io;
+   bx_bool ucmem;
+   bx_bool dma;
    } report;
 
   struct {
-    Boolean irq;  // should process IRQs asynchronously
-    Boolean dma;  // should process DMAs asynchronously
+    bx_bool irq;  // should process IRQs asynchronously
+    bx_bool dma;  // should process DMAs asynchronously
     } async;
 
 #define BX_DBG_ASYNC_PENDING_A20   0x01
@@ -299,9 +299,9 @@ typedef struct {
   // be checked, and ack'd.
   struct {
     unsigned which; // logical OR of above constants
-    Boolean a20;
-    Boolean reset;
-    Boolean nmi;
+    bx_bool a20;
+    bx_bool reset;
+    bx_bool nmi;
     } async_changes_pending;
   } bx_guard_t;
 
@@ -314,8 +314,8 @@ typedef struct bx_guard_found_t {
   Bit32u   cs;     // cs:eip and linear addr of instruction at guard point
   Bit32u   eip;
   Bit32u   laddr;
-  Boolean  is_32bit_code; // CS seg size at guard point
-  Boolean  ctrl_c; // simulator stopped due to Ctrl-C request
+  bx_bool  is_32bit_code; // CS seg size at guard point
+  bx_bool  ctrl_c; // simulator stopped due to Ctrl-C request
   } bx_guard_found_t;
 
 extern bx_guard_t        bx_guard;
@@ -366,14 +366,14 @@ typedef struct {
 
 typedef struct {
   // call back functions specific to each simulator
-  Boolean (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);
-  Boolean (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);
-  void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, Boolean *valid);
-  Boolean (*set_reg)(unsigned reg, Bit32u val);
+  bx_bool (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);
+  bx_bool (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);
+  void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, bx_bool *valid);
+  bx_bool (*set_reg)(unsigned reg, Bit32u val);
   Bit32u  (*get_reg)(unsigned reg);
-  Boolean (*get_sreg)(bx_dbg_sreg_t *sreg, unsigned sreg_no);
-  Boolean (*set_cpu)(bx_dbg_cpu_t *cpu);
-  Boolean (*get_cpu)(bx_dbg_cpu_t *cpu);
+  bx_bool (*get_sreg)(bx_dbg_sreg_t *sreg, unsigned sreg_no);
+  bx_bool (*set_cpu)(bx_dbg_cpu_t *cpu);
+  bx_bool (*get_cpu)(bx_dbg_cpu_t *cpu);
   unsigned       dirty_page_tbl_size;
   unsigned char *dirty_page_tbl;
   void    (*atexit)(void);
@@ -401,7 +401,7 @@ typedef struct {
 #if BX_USE_LOADER
   void    (*loader)(char *path, bx_loader_misc_t *misc_ptr);
 #endif
-  Boolean (*crc32)(unsigned long (*f)(unsigned char *buf, int len),
+  bx_bool (*crc32)(unsigned long (*f)(unsigned char *buf, int len),
                    Bit32u addr1, Bit32u addr2, Bit32u *crc);
   } bx_dbg_callback_t;
 
@@ -421,13 +421,13 @@ void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
 
 Bit8u   bx_dbg_ucmem_read(Bit32u addr);
 void    bx_dbg_ucmem_write(Bit32u addr, Bit8u value);
-void    bx_dbg_async_pin_request(unsigned what, Boolean val);
-void    bx_dbg_async_pin_ack(unsigned what, Boolean val);
+void    bx_dbg_async_pin_request(unsigned what, bx_bool val);
+void    bx_dbg_async_pin_ack(unsigned what, bx_bool val);
 Bit32u  bx_dbg_inp(Bit16u addr, unsigned len);
 void    bx_dbg_outp(Bit16u addr, Bit32u value, unsigned len);
 void    bx_dbg_raise_HLDA(void);
 Bit8u   bx_dbg_IAC(void);
-void    bx_dbg_set_INTR(Boolean b);
+void    bx_dbg_set_INTR(bx_bool b);
 void bx_dbg_disassemble_current (int which_cpu, int print_time);
 
 int bx_dbg_symbolic_output(void); /* BW */

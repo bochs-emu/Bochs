@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.4 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: mult64.cc,v 1.5 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -136,7 +136,7 @@ long_sub(Bit128u *a,Bit128u *b)
   return(a->hi > t);
 }
 
- Boolean
+ bx_bool
 long_le(Bit128u *a,Bit128u *b)
 {
   if (a->hi == b->hi) {
@@ -235,7 +235,7 @@ BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 {
     Bit64u op1_64, op2_64;
     Bit128u product_128;
-    Boolean temp_flag;
+    bx_bool temp_flag;
 
     op1_64 = RAX;
 

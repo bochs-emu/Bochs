@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.79 2002-10-24 21:06:35 bdenney Exp $
+// $Id: siminterface.h,v 1.80 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -563,7 +563,7 @@ typedef struct {
   // what was pressed?  This is a BX_KEY_* value.  For key releases,
   // BX_KEY_RELEASED is ORed with the base BX_KEY_*.
   Bit32u bx_key;
-  Boolean raw_scancode;
+  bx_bool raw_scancode;
 } BxKeyEvent;
 
 // Event type: BX_ASYNC_EVT_MOUSE
@@ -806,7 +806,7 @@ protected:
     Bit32s *p32bit;  // used by bx_shadow_num_c
     Bit16s *p16bit;  // used by bx_shadow_num_c
     Bit8s  *p8bit;    // used by bx_shadow_num_c
-    Boolean *pbool;  // used by bx_shadow_bool_c
+    bx_bool *pbool;  // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
   int base;
@@ -923,7 +923,7 @@ public:
   bx_shadow_bool_c (bx_id id,
       char *name,
       char *description,
-      Boolean *ptr_to_real_val,
+      bx_bool *ptr_to_real_val,
       Bit8u bitnum = 0);
   virtual Bit64s get64 ();
   virtual void set (Bit64s val);
@@ -1204,7 +1204,7 @@ public:
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags) {return -1;}
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic () {}
-  virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite) {return -3;}
+  virtual int create_disk_image (const char *filename, int sectors, bx_bool overwrite) {return -3;}
   // Tell the configuration interface (CI) that some parameter values have
   // changed.  The CI will reread the parameters and change its display if it's
   // appropriate.  Maybe later: mention which params have changed to save time.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.32 2002-10-24 21:06:23 bdenney Exp $
+// $Id: gui.h,v 1.33 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ public:
   virtual void handle_events(void) = 0;
   virtual void flush(void) = 0;
   virtual void clear_screen(void) = 0;
-  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue) = 0;
+  virtual bx_bool palette_change(unsigned index, unsigned red, unsigned green, unsigned blue) = 0;
   virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0) = 0;
   virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim) = 0;
   virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)) = 0;
@@ -52,7 +52,7 @@ public:
   virtual void show_headerbar(void) = 0;
   virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)  = 0;
   virtual int set_clipboard_text(char *snapshot, Bit32u len) = 0;
-  virtual void mouse_enabled_changed_specific (Boolean val) = 0;
+  virtual void mouse_enabled_changed_specific (bx_bool val) = 0;
   virtual void exit(void) = 0;
   // These are only needed for the term gui. For all other guis they will
   // have no effect.
@@ -70,7 +70,7 @@ public:
   void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
   void update_drive_status_buttons (void);
-  static void     mouse_enabled_changed (Boolean val);
+  static void     mouse_enabled_changed (bx_bool val);
   static void init_signal_handlers ();
 #if BX_USE_IDLE_HACK
   static void sim_is_idle(void);
@@ -92,9 +92,9 @@ protected:
   static void userbutton_handler(void);
   static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
 
-  Boolean floppyA_status;
-  Boolean floppyB_status;
-  Boolean cdromD_status;
+  bx_bool floppyA_status;
+  bx_bool floppyB_status;
+  bx_bool cdromD_status;
   unsigned floppyA_bmap_id, floppyA_eject_bmap_id, floppyA_hbar_id;
   unsigned floppyB_bmap_id, floppyB_eject_bmap_id, floppyB_hbar_id;
   unsigned cdromD_bmap_id, cdromD_eject_bmap_id, cdromD_hbar_id;
@@ -108,8 +108,8 @@ protected:
   unsigned user_bmap_id, user_hbar_id;
 
   unsigned char vga_charmap[0x2000];
-  Boolean charmap_updated;
-  Boolean char_changed[256];
+  bx_bool charmap_updated;
+  bx_bool char_changed[256];
   };
 
 
@@ -133,7 +133,7 @@ protected:
   virtual void handle_events(void);                                           \
   virtual void flush(void);                                                   \
   virtual void clear_screen(void);                                            \
-  virtual Boolean palette_change(unsigned index,                              \
+  virtual bx_bool palette_change(unsigned index,                              \
       unsigned red, unsigned green, unsigned blue);                           \
   virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);  \
   virtual unsigned create_bitmap(const unsigned char *bmap,                   \
@@ -144,7 +144,7 @@ protected:
   virtual void show_headerbar(void);                                          \
   virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);              \
   virtual int set_clipboard_text(char *snapshot, Bit32u len);                 \
-  virtual void mouse_enabled_changed_specific (Boolean val);                  \
+  virtual void mouse_enabled_changed_specific (bx_bool val);                  \
   virtual void exit(void);                                                    \
   /* end of DECLARE_GUI_VIRTUAL_METHODS */
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.16 2002-09-29 15:06:58 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.17 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -295,7 +295,7 @@ BX_CPU_C::JMP_Jq(bxInstruction_c *i)
   void
 BX_CPU_C::JCC_Jq(bxInstruction_c *i)
 {
-  Boolean condition;
+  bx_bool condition;
 
   switch (i->b1() & 0x0f) {
     case 0x00: /* JO */ condition = get_OF(); break;

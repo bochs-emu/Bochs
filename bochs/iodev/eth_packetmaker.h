@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.h,v 1.5 2001-10-03 13:10:38 bdenney Exp $
+// $Id: eth_packetmaker.h,v 1.6 2002-10-25 11:44:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -30,33 +30,33 @@ public:
 
 class eth_packetmaker {
 public:
-  virtual Boolean getpacket(eth_packet& inpacket) = 0;
-  virtual Boolean ishandler(const eth_packet& outpacket) = 0;
-  virtual Boolean sendpacket(const eth_packet& outpacket) = 0;
+  virtual bx_bool getpacket(eth_packet& inpacket) = 0;
+  virtual bx_bool ishandler(const eth_packet& outpacket) = 0;
+  virtual bx_bool sendpacket(const eth_packet& outpacket) = 0;
 };
 
 
 class eth_ARPmaker : public eth_packetmaker {
 public:
   void init(void);
-  Boolean ishandler(const eth_packet& outpacket);
-  Boolean sendpacket(const eth_packet& outpacket);
-  Boolean getpacket(eth_packet& inpacket);
+  bx_bool ishandler(const eth_packet& outpacket);
+  bx_bool sendpacket(const eth_packet& outpacket);
+  bx_bool getpacket(eth_packet& inpacket);
 private:
   eth_packet pending;
-  Boolean is_pending;
+  bx_bool is_pending;
 };
 
 
 class eth_IPmaker : eth_packetmaker {
 public:
   void init(void);
-  virtual Boolean ishandler(const eth_packet& outpacket)=0;
-  virtual Boolean sendpacket(const eth_packet& outpacket)=0;
-  virtual Boolean getpacket(eth_packet& inpacket)=0;
+  virtual bx_bool ishandler(const eth_packet& outpacket)=0;
+  virtual bx_bool sendpacket(const eth_packet& outpacket)=0;
+  virtual bx_bool getpacket(eth_packet& inpacket)=0;
 
 protected:
-  Boolean sendable(const eth_packet& outpacket);
+  bx_bool sendable(const eth_packet& outpacket);
 
   Bit32u source(const eth_packet& outpacket);
   Bit32u destination(const eth_packet& outpacket);
@@ -69,7 +69,7 @@ protected:
   Bit32u build_packet_header(Bit32u source, Bit32u dest, Bit8u protocol, Bit32u datalen);
 
   eth_packet pending;
-  Boolean is_pending;
+  bx_bool is_pending;
 
   //Bit8u Version; //=4 (4 bits)
   //It better be!
@@ -122,9 +122,9 @@ class eth_ETHmaker : public eth_packetmaker {
 public:
   //handles all packets to a MAC addr.
   void init(void);
-  virtual Boolean getpacket(eth_packet& inpacket);
-  virtual Boolean ishandler(const eth_packet& outpacket);
-  virtual Boolean sendpacket(const eth_packet& outpacket);
+  virtual bx_bool getpacket(eth_packet& inpacket);
+  virtual bx_bool ishandler(const eth_packet& outpacket);
+  virtual bx_bool sendpacket(const eth_packet& outpacket);
 private:
   eth_ARPmaker arper;
 };

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.11 2002-10-04 17:04:33 kevinlawton Exp $
+// $Id: lazy_flags.cc,v 1.12 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
 
 
 
-  Boolean
+  bx_bool
 BX_CPU_C::get_CFLazy(void)
 {
   unsigned cf;
@@ -266,7 +266,7 @@ BX_CPU_C::get_CFLazy(void)
 }
 
 
-  Boolean
+  bx_bool
 BX_CPU_C::get_AFLazy(void)
 {
   unsigned af;
@@ -428,7 +428,7 @@ BX_CPU_C::get_AFLazy(void)
 }
 
 
-  Boolean
+  bx_bool
 BX_CPU_C::get_ZFLazy(void)
 {
   unsigned zf;
@@ -551,7 +551,7 @@ BX_CPU_C::get_ZFLazy(void)
 }
 
 
-  Boolean
+  bx_bool
 BX_CPU_C::get_SFLazy(void)
 {
   unsigned sf;
@@ -673,7 +673,7 @@ BX_CPU_C::get_SFLazy(void)
     }
 }
 
-  Boolean
+  bx_bool
 BX_CPU_C::get_OFLazy(void)
 {
   Bit8u op1_b7, op2_b7, result_b7;
@@ -915,7 +915,7 @@ BX_CPU_C::get_OFLazy(void)
     }
 }
 
-  Boolean
+  bx_bool
 BX_CPU_C::get_PFLazy(void)
 {
   unsigned pf;

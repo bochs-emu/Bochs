@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.47 2002-10-24 21:06:39 bdenney Exp $
+// $Id: wx.cc,v 1.48 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -416,8 +416,8 @@ wxAsciiKey[0x5f] = {
 #endif
 
 // MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode & 2.
-Boolean
-MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
+bx_bool
+MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 {
 #if defined(wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
   IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_MSW. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags));
@@ -446,8 +446,8 @@ MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
 #endif
 
 // GTK specific key mapping, which uses wxKeyEvent::m_rawCode.
-Boolean
-MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
+bx_bool
+MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 {
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
   IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_GTK. key code %ld, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags));
@@ -623,8 +623,8 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
 #endif
 }
 
-Boolean
-MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
+bx_bool
+MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 {
   // Use raw codes if they are available.  Raw codes are a nonstandard addition
   // to the wxWindows library.  At present, the only way to use the "RAW_CODES"
@@ -977,7 +977,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char cChar;
   unsigned int ncols = wxScreenX / 8;
   unsigned int nchars = ncols * nrows;
-  Boolean forceUpdate = 0;
+  bx_bool forceUpdate = 0;
   if(charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
@@ -1017,7 +1017,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen update needed (redraw using current colormap)
 
-  Boolean
+  bx_bool
 bx_wx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   IFDBG_VGA(wxLogDebug ("palette_change"));
@@ -1185,7 +1185,7 @@ bx_wx_gui_c::exit(void)
 }
 
   void
-bx_wx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_wx_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
 

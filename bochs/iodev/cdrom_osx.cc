@@ -55,11 +55,6 @@
 #include <paths.h>
 #include <sys/param.h>
 
-// This is needed to avoid a collision between
-// with Boolean as used elsewhere.  
-#define Boolean _ourBoolean
-typedef unsigned char _ourBoolean;
-
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOBSD.h>
 #include <IOKit/storage/IOCDMedia.h>
@@ -311,7 +306,7 @@ cdrom_interface::~cdrom_interface(void)
 
 }
 
-bool
+bx_bool
 cdrom_interface::insert_cdrom(char *dev)
 {
 
@@ -373,8 +368,8 @@ cdrom_interface::eject_cdrom()
 }
 
 
-bool
-cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
+bx_bool
+cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track)
 {
   // Read CD TOC. Returns false if start track is out of bounds.
 

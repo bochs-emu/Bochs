@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.9 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: data_xfer64.cc,v 1.10 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -428,7 +428,7 @@ BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
   //       of whether condition is true or not.  Thus, exceptions may
   //       occur even if the MOV does not take place.
 
-  Boolean condition;
+  bx_bool condition;
   Bit64u op2_64;
 
 

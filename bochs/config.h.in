@@ -518,14 +518,9 @@ typedef Bit32u bx_address;
 #  error "could not define bx_ptr_equiv_t to size of int*"
 #endif
 
-#if BX_WITH_CARBON
-// Boolean is defined as unsigned char in Carbon header files.
-typedef unsigned char Boolean;
-#elif BX_WITH_MACOS
-// don't define Boolean at all
-#else
-typedef unsigned int Boolean;
-#endif
+// Use a boolean type that will not conflict with the builtin type
+// on any system.
+typedef Bit32u bx_bool;
 
 #if BX_WITH_MACOS
 #  define bx_ptr_t char *

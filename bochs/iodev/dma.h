@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.11 2002-10-24 21:07:24 bdenney Exp $
+// $Id: dma.h,v 1.12 2002-10-25 11:44:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ public:
   virtual void     init(void);
   virtual void     reset(unsigned type);
   virtual void     raise_HLDA(void);
-  virtual void     set_DRQ(unsigned channel, Boolean val);
+  virtual void     set_DRQ(unsigned channel, bx_bool val);
   virtual unsigned get_TC(void);
 
   virtual unsigned registerDMA8Channel(unsigned channel,
@@ -69,15 +69,15 @@ private:
   Bit32u   read( Bit32u   address, unsigned io_len);
   void     write(Bit32u   address, Bit32u   value, unsigned io_len);
 #endif
-  BX_DMA_SMF void control_HRQ(Boolean ma_sl);
+  BX_DMA_SMF void control_HRQ(bx_bool ma_sl);
   BX_DMA_SMF void reset_controller(unsigned num);
 
   struct {
-    Boolean DRQ[4];  // DMA Request
-    Boolean DACK[4]; // DMA Acknowlege
+    bx_bool DRQ[4];  // DMA Request
+    bx_bool DACK[4]; // DMA Acknowlege
 
-    Boolean mask[4];
-    Boolean flip_flop;
+    bx_bool mask[4];
+    bx_bool flip_flop;
     Bit8u   status_reg;
     Bit8u   command_reg;
     Bit8u   request_reg;
@@ -94,12 +94,12 @@ private:
       Bit16u  base_count;
       Bit16u  current_count;
       Bit8u   page_reg;
-      Boolean used;
+      bx_bool used;
       } chan[4]; /* DMA channels 0..3 */
     } s[2];  // state information DMA-1 / DMA-2
 
-  Boolean HLDA;    // Hold Acknowlege
-  Boolean TC;      // Terminal Count
+  bx_bool HLDA;    // Hold Acknowlege
+  bx_bool TC;      // Terminal Count
 
   struct {
     void (* dmaRead8)(Bit8u *data_byte);

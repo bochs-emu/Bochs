@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.12 2002-10-24 21:07:55 bdenney Exp $
+// $Id: memory.h,v 1.13 2002-10-25 11:44:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,9 +71,9 @@ public:
 #if BX_PCI_SUPPORT
   BX_MEM_SMF Bit8u*  pci_fetch_ptr(Bit32u addr);
 #endif
-  BX_MEM_SMF Boolean dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
-  BX_MEM_SMF Boolean dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
-  BX_MEM_SMF Boolean dbg_crc32(
+  BX_MEM_SMF bx_bool dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
+  BX_MEM_SMF bx_bool dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
+  BX_MEM_SMF bx_bool dbg_crc32(
     unsigned long (*f)(unsigned char *buf, int len),
     Bit32u addr1, Bit32u addr2, Bit32u *crc);
   BX_MEM_SMF Bit8u * getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.13 2002-10-24 21:06:25 bdenney Exp $
+// $Id: keymap.cc,v 1.14 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -103,7 +103,7 @@ bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*))
 }
 
 
-Boolean 
+bx_bool 
 bx_keymap_c::isKeymapLoaded ()
 {
   return (keymapCount > 0);

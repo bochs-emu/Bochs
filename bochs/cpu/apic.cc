@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.24 2002-10-24 21:05:11 bdenney Exp $
+// $Id: apic.cc,v 1.25 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -77,7 +77,7 @@ bx_generic_apic_c::get_name () {
   return NULL;
 }
 
-Boolean
+bx_bool
 bx_generic_apic_c::is_selected (Bit32u addr, Bit32u len)
 {
   if ((addr & ~0xfff) == get_base ()) {
@@ -139,7 +139,7 @@ void bx_generic_apic_c::untrigger_irq (unsigned num, unsigned from)
   BX_PANIC(("untrigger_irq called on base class"));
 }
 
-Boolean bx_generic_apic_c::match_logical_addr (Bit8u address) {
+bx_bool bx_generic_apic_c::match_logical_addr (Bit8u address) {
   BX_PANIC(("match_logical_addr called on base class"));
   return false;
 }
@@ -176,7 +176,7 @@ bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
   return mask;
 }
 
-Boolean
+bx_bool
 bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
 {
   // return false if we can't deliver for any reason, so that the caller
@@ -248,7 +248,7 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
   return true;
 }
 
-Boolean
+bx_bool
 bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
 {
   // In this function, implement only the behavior that is specific to
@@ -435,7 +435,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         // This local_apic class redefines get_delivery_bitmask to 
         // implement the destination shorthand field, which doesn't exist
         // for all APICs.
-        Boolean accepted = 
+        bx_bool accepted = 
            deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
         if (!accepted)
           err_status |= APIC_ERR_TX_ACCEPT_ERR;
@@ -477,7 +477,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       timer_active = true;
 //timer_divide_counter = 0; // KPL: delete this field.
       Bit32u timervec = lvt[APIC_LVT_TIMER];
-      Boolean continuous = (timervec & 0x20000) > 0;
+      bx_bool continuous = (timervec & 0x20000) > 0;
       ticksInitial = bx_pc_system.getTicksTotal(); // Take a reading.
       bx_pc_system.activate_timer_ticks(timer_handle,
           Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
@@ -696,7 +696,7 @@ void bx_local_apic_c::print_status () {
   BX_INFO(("}", cpu->name));
 }
 
-Boolean bx_local_apic_c::match_logical_addr (Bit8u address) 
+bx_bool bx_local_apic_c::match_logical_addr (Bit8u address) 
 {
   if (dest_format != 0xf) {
     BX_PANIC(("bx_local_apic_c::match_logical_addr: cluster model addressing not implemented"));
@@ -706,7 +706,7 @@ Boolean bx_local_apic_c::match_logical_addr (Bit8u address)
     BX_DEBUG (("%s: MDA=0xff matches everybody", cpu->name));
     return true;
   }
-  Boolean match = ((address & log_dest) != 0);
+  bx_bool match = ((address & log_dest) != 0);
   BX_DEBUG (("%s: comparing MDA %02x to my LDR %02x -> %s", cpu->name,
     address, log_dest, match? "Match" : "Not a match"));
   return match;

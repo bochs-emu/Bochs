@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.17 2002-10-24 21:06:28 bdenney Exp $
+// $Id: nogui.cc,v 1.18 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -183,7 +183,7 @@ bx_nogui_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-  Boolean
+  bx_bool
 bx_nogui_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   UNUSED(index);
@@ -326,6 +326,6 @@ bx_nogui_gui_c::exit(void)
 }
 
   void
-bx_nogui_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_nogui_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }

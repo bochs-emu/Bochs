@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.3 2002-09-29 16:50:29 sshwarts Exp $
+// $Id: instrument.cc,v 1.4 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,7 +121,7 @@ void bxInstrumentation::bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_add
   branch_taken(new_eip);
 }
 
-void bxInstrumentation::bx_instr_opcode(Bit8u *opcode, unsigned len, Boolean is32)
+void bxInstrumentation::bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32)
 {
   if (!active) 
   {
@@ -191,7 +191,7 @@ void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_addr
 void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigned rw)
 {
   bx_address phy;
-  Boolean page_valid;
+  bx_bool page_valid;
 
   if(!active)
   {

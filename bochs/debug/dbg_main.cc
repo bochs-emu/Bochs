@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.80 2002-10-24 21:05:58 bdenney Exp $
+// $Id: dbg_main.cc,v 1.81 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,8 +73,8 @@ static char *argv0 = NULL;
 
 static unsigned bx_dbg_cosimulateN(bx_dbg_icount_t count);
 static int      bx_dbg_compare_sim_iaddr(void);
-static Boolean  bx_dbg_compare_sim_cpu(void);
-static Boolean  bx_dbg_compare_sim_memory(void);
+static bx_bool  bx_dbg_compare_sim_cpu(void);
+static bx_bool  bx_dbg_compare_sim_memory(void);
 static void     bx_dbg_journal_a20_event(unsigned val);
 #endif
 
@@ -133,17 +133,17 @@ static struct {
     } async_journal;
 
   struct {
-    Boolean iaddr;
-    Boolean cpu;
-    Boolean memory;
+    bx_bool iaddr;
+    bx_bool cpu;
+    bx_bool memory;
     } compare_at_sync;
 
-  Boolean fast_forward_mode;
+  bx_bool fast_forward_mode;
 
 #endif  // #if BX_NUM_SIMULATORS >= 2
 
   // some fields used for single CPU debugger
-  Boolean  auto_disassemble;
+  bx_bool  auto_disassemble;
   unsigned disassemble_size;
   char     default_display_format;
   char     default_unit_size;
@@ -753,7 +753,7 @@ Bit64u timebp_queue[MAX_CONCURRENT_BPS];
 int timebp_queue_size = 0;
 
 void
-bx_dbg_timebp_command(Boolean absolute, Bit64u time)
+bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
 {
       Bit64u diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
       Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
@@ -821,7 +821,7 @@ bx_dbg_diff_memory(void)
 }
 
 void
-bx_dbg_sync_memory(Boolean set)
+bx_dbg_sync_memory(bx_bool set)
 {
 #if BX_NUM_SIMULATORS < 2
 	printf("sync-memory supported only in cosimulation mode\n");
@@ -832,7 +832,7 @@ bx_dbg_sync_memory(Boolean set)
 }
 
 void
-bx_dbg_sync_cpu(Boolean set)
+bx_dbg_sync_cpu(bx_bool set)
 {
 #if BX_NUM_SIMULATORS < 2
 	printf("sync-cpu supported only in cosimulation mode\n");
@@ -1045,7 +1045,7 @@ bx_dbg_where_command()
       dbg_printf ( "(%d) 0x%08x\n", 0, ip);
       for (int i = 1; i < 50; i++) {
 	    // Up
-	    Boolean paddr_valid;
+	    bx_bool paddr_valid;
 	    Bit32u paddr;
 	    Bit8u buf[4];
 
@@ -1088,7 +1088,7 @@ bx_dbg_print_string_command(Bit32u start_addr)
       dbg_printf ( "0x%08x: ", start_addr);
       for (int i = 0; ; i++) {
 	    Bit32u paddr;
-	    Boolean paddr_valid;
+	    bx_bool paddr_valid;
 	    Bit8u buf[1];
 	    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(start_addr+i, &paddr, &paddr_valid);
 	    if (paddr_valid) {
@@ -1112,8 +1112,8 @@ bx_dbg_print_string_command(Bit32u start_addr)
 }
 
 static bx_address last_cr3;
-static Boolean last_pe = 0;
-static Boolean last_vm = 0;
+static bx_bool last_pe = 0;
+static bx_bool last_vm = 0;
 
 unsigned int dbg_show_mask = 0;
 // 0x80 print mode
@@ -1127,7 +1127,7 @@ unsigned int dbg_show_mask = 0;
 // 0x8 iret
 // 0x10 interrupts (includes iret)
 
-static void dbg_dump_table(Boolean);
+static void dbg_dump_table(bx_bool);
 
 void bx_dbg_show_command(char* arg)
 {
@@ -1293,7 +1293,7 @@ bx_dbg_print_stack_command(int nwords)
 
 	for (int i = 0; i < nwords; i++) {
 		Bit32u paddr;
-		Boolean paddr_valid;
+		bx_bool paddr_valid;
 		BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(sp, &paddr, &paddr_valid);
 		if (paddr_valid) {
 			if (BX_MEM(0)->dbg_fetch_mem(paddr, 2, buf))
@@ -1314,7 +1314,7 @@ static char *BX_HAVE_HASH_MAP_ERR = "context not implemented because BX_HAVE_HAS
 char*
 bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
-  static Boolean first = true;
+  static bx_bool first = true;
   if (first) {
     dbg_printf ( BX_HAVE_HASH_MAP_ERR);
     first = false;
@@ -1331,7 +1331,7 @@ bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
 
 
 void
-bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
+bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
 {
   dbg_printf ( BX_HAVE_HASH_MAP_ERR);
 }
@@ -1466,7 +1466,7 @@ bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
 }
 
 void
-bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
+bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
 {
       if (filename[0] == '"')
 	    filename++;
@@ -1520,7 +1520,7 @@ int num_write_watchpoints = 0;
 int num_read_watchpoints = 0;
 Bit32u write_watchpoint[MAX_WRITE_WATCHPOINTS];
 Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
-Boolean watchpoint_continue = 0;
+bx_bool watchpoint_continue = 0;
 
 void
 bx_dbg_watch(int read, Bit32u address)
@@ -1731,10 +1731,10 @@ bx_dbg_cosimulateN(bx_dbg_icount_t count)
 
   unsigned master, slave;
   bx_dbg_icount_t master_icount, slave_icount;
-  Boolean bail_out = 0;
+  bx_bool bail_out = 0;
   unsigned ret = 0;
-  Boolean save_INTR;
-  Boolean pre_A20, post_A20;
+  bx_bool save_INTR;
+  bx_bool pre_A20, post_A20;
   unsigned async_head;
   bx_dbg_icount_t async_icount, curr_icount;
 
@@ -1942,7 +1942,7 @@ bx_dbg_compare_sim_iaddr(void)
   return(0); // same
 }
 
-  Boolean
+  bx_bool
 bx_dbg_compare_sim_cpu(void)
 {
 	// (mch) Get cpu structures from both simulators
@@ -1954,8 +1954,8 @@ bx_dbg_compare_sim_cpu(void)
 	BX_MEM(0)->dbg_get_cpu(regs + 0);
 	BX_MEM(1)->dbg_get_cpu(regs + 1);
 
-	Boolean ret = 0;
-	Boolean warn = 0;
+	bx_bool ret = 0;
+	bx_bool warn = 0;
 
 	// (mch) Yes I know these are macros. The would have been
 	// inner functions if g++ had supported it.
@@ -2069,25 +2069,25 @@ clear_dirty_bits (void)
 	}
 }
 
-Boolean always_check_page[128 * 1024 / 4];
+bx_bool always_check_page[128 * 1024 / 4];
 
 void
-bx_dbg_always_check(Bit32u page_start, Boolean on)
+bx_dbg_always_check(Bit32u page_start, bx_bool on)
 {
 	always_check_page[page_start / (4 * 1024)] = on;
 	printf("Forced check on page %08x %s\n",
 	       page_start, on ? "enabled" : "disabled");
 }
 
-  Boolean
+  bx_bool
 bx_dbg_compare_sim_memory(void)
 {
-	Boolean ret = 0;
+	bx_bool ret = 0;
 	int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
 
 	for (int i = 0; i < num_pages; i++) {
-		Boolean sim0_dirty = BX_MEM(0)->dbg_dirty_pages[i];
-		Boolean sim1_dirty = BX_MEM(1)->dbg_dirty_pages[i];
+		bx_bool sim0_dirty = BX_MEM(0)->dbg_dirty_pages[i];
+		bx_bool sim1_dirty = BX_MEM(1)->dbg_dirty_pages[i];
 		Bit32u page_start = i * 1024 * 4;
 
 		if ((sim0_dirty != sim1_dirty) || sim0_dirty || always_check_page[i]) {
@@ -2132,7 +2132,7 @@ bx_dbg_compare_sim_memory(void)
 void bx_dbg_disassemble_current (int which_cpu, int print_time)
 {
   Bit32u phy;
-  Boolean valid;
+  bx_bool valid;
 
   if (which_cpu < 0) {
     // iterate over all of them.
@@ -2360,7 +2360,7 @@ done:
 }
 
   void
-bx_dbg_vbreakpoint_command(Boolean specific, Bit32u cs, Bit32u eip)
+bx_dbg_vbreakpoint_command(bx_bool specific, Bit32u cs, Bit32u eip)
 {
 #if BX_DBG_SUPPORT_VIR_BPOINT
   if (specific == 0) {
@@ -2387,7 +2387,7 @@ bx_dbg_vbreakpoint_command(Boolean specific, Bit32u cs, Bit32u eip)
 }
 
   void
-bx_dbg_lbreakpoint_command(Boolean specific, Bit32u laddress)
+bx_dbg_lbreakpoint_command(bx_bool specific, Bit32u laddress)
 {
 #if BX_DBG_SUPPORT_LIN_BPOINT
   if (specific == 0) {
@@ -2413,7 +2413,7 @@ bx_dbg_lbreakpoint_command(Boolean specific, Bit32u laddress)
 }
 
   void
-bx_dbg_pbreakpoint_command(Boolean specific, Bit32u paddress)
+bx_dbg_pbreakpoint_command(bx_bool specific, Bit32u paddress)
 {
 #if BX_DBG_SUPPORT_PHY_BPOINT
   if (specific == 0) {
@@ -2683,14 +2683,14 @@ bx_dbg_dump_cpu_command(void)
 
 
   void
-bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
-               Bit32u addr, Boolean addr_passed, int simulator)
+bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+               Bit32u addr, bx_bool addr_passed, int simulator)
 {
   unsigned repeat_count, i;
   char ch, display_format, unit_size;
-  Boolean iteration;
+  bx_bool iteration;
   unsigned data_size;
-  Boolean paddr_valid;
+  bx_bool paddr_valid;
   Bit32u  paddr;
   Bit8u   data8;
   Bit16u  data16;
@@ -2698,7 +2698,7 @@ bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
   unsigned columns, per_line, offset;
   unsigned char digit;
   unsigned biti;
-  Boolean is_linear;
+  bx_bool is_linear;
   unsigned char databuf[8];
 
   if (simulator == 0)
@@ -2935,7 +2935,7 @@ bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
   void
 bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val)
 {
-  Boolean is_OK;
+  bx_bool is_OK;
   Bit8u   buf[4];
 
   switch ( len ) {
@@ -2966,7 +2966,7 @@ bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val)
   void
 bx_dbg_set_symbol_command(char *symbol, Bit32u val)
 {
-  Boolean is_OK;
+  bx_bool is_OK;
   symbol++; // get past '$'
 
   if ( !strcmp(symbol, "eax") ) {
@@ -3096,7 +3096,7 @@ bx_dbg_set_cpu_command(void)
   FILE *fp;
   int   reti;
   char *rets;
-  Boolean retb;
+  bx_bool retb;
   unsigned long ul1, ul2, ul3, ul4;
 
   bx_dbg_cpu_t cpu;
@@ -3321,7 +3321,7 @@ scanf_error:
 bx_dbg_disassemble_command(bx_num_range range)
 {
 #if BX_DISASM
-  Boolean paddr_valid;
+  bx_bool paddr_valid;
   Bit32u  paddr;
   unsigned ilen;
 
@@ -3730,7 +3730,7 @@ bx_dbg_info_idt_command(bx_num_range range) {
     dbg_printf ( "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
   for (n = range.from; n<=range.to; n++) {
     Bit32u paddr;
-    Boolean paddr_valid;
+    bx_bool paddr_valid;
     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.idtr.base + 8*n, &paddr, &paddr_valid);
     if (!paddr_valid) {
       dbg_printf ( "error: IDTR+8*%d points to invalid linear address %p\n",
@@ -3761,7 +3761,7 @@ bx_dbg_info_gdt_command(bx_num_range range) {
     dbg_printf ( "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
   for (n = range.from; n<=range.to; n++) {
     Bit32u paddr;
-    Boolean paddr_valid;
+    bx_bool paddr_valid;
     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.gdtr.base + 8*n, &paddr, &paddr_valid);
     if (!paddr_valid) {
       dbg_printf ( "error: GDTR+8*%d points to invalid linear address %p\n",
@@ -4238,7 +4238,7 @@ bx_dbg_ucmem_write(Bit32u addr, Bit8u value)
 }
 
   void
-bx_dbg_async_pin_request(unsigned what, Boolean val)
+bx_dbg_async_pin_request(unsigned what, bx_bool val)
 {
   // Request from IO devices for change in pin external to CPU.
   // This is pended until CPU ack's with bx_dbg_async_pin_ack().
@@ -4266,7 +4266,7 @@ bx_dbg_async_pin_request(unsigned what, Boolean val)
 
 
   void
-bx_dbg_async_pin_ack(unsigned what, Boolean val)
+bx_dbg_async_pin_ack(unsigned what, bx_bool val)
 {
   // Acknowledgement from master simulator for pending change in pin
   // external to CPU.
@@ -4459,7 +4459,7 @@ bx_dbg_IAC(void)
 }
 
   void
-bx_dbg_set_INTR(Boolean b)
+bx_dbg_set_INTR(bx_bool b)
 {
   if ( bx_debugger.master_slave_mode == BX_DBG_SLAVE_MODE ) {
     dbg_printf ( "Error: set_INTR in slave mode.\n");
@@ -4528,7 +4528,7 @@ bx_dbg_symbolic_output(void)
       /* calls */
       if(BX_CPU(dbg_cpu)->show_flag & 0x1) {
 	    Bit32u phy = 0;
-	    Boolean valid;
+	    bx_bool valid;
 
 	    if (dbg_show_mask & 0x20) {
 		  BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr,
@@ -4569,7 +4569,7 @@ bx_dbg_symbolic_output(void)
 // BW added to dump page table
 
 static void 
-dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u *tlb_phy, Boolean *tlb_valid) {
+dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, bx_bool *valid, Bit32u *tlb_phy, bx_bool *tlb_valid) {
   Bit32u   lpf, ppf, poffset, TLB_index, paddress;
   Bit32u   pde, pde_addr;
   Bit32u   pte, pte_addr;
@@ -4627,11 +4627,11 @@ page_fault:
   return;
 }
 
-static void dbg_dump_table(Boolean all) 
+static void dbg_dump_table(bx_bool all) 
 {
   Bit32u   lina;
   Bit32u phy, tlb_phy;
-  Boolean valid, tlb_valid;
+  bx_bool valid, tlb_valid;
 
   Bit32u start_lina, start_phy;	// start of a valid translation interval
 

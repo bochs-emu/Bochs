@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.7 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: eth_arpback.cc,v 1.8 2002-10-25 11:44:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ private:
   FILE *txlog, *txlog_txt;
   //Bit8u arpbuf[MAX_FRAME_SIZE];
   //Bit32u buflen;
-  //Boolean bufvalid;
+  //bx_bool bufvalid;
   //CRC_Generator mycrc;
   eth_ETHmaker packetmaker;
 };

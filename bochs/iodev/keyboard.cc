@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.70 2002-10-24 21:07:39 bdenney Exp $
+// $Id: keyboard.cc,v 1.71 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,7 +97,7 @@ bx_keyb_c::~bx_keyb_c(void)
 
 // flush internal buffer and reset keyboard settings to power-up condition
   void
-bx_keyb_c::resetinternals(Boolean powerup)
+bx_keyb_c::resetinternals(bx_bool powerup)
 {
   Bit32u   i;
 
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.70 2002-10-24 21:07:39 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.71 2002-10-25 11:44:40 bdenney Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -203,7 +203,7 @@ bx_keyb_c::init(void)
   DEV_cmos_set_reg(0x14, DEV_cmos_get_reg(0x14) | 0x04);
 
 #if BX_WITH_WX
-  static Boolean first_time = 1;
+  static bx_bool first_time = 1;
   if (first_time) {
     first_time = 0;
     // register shadow params (Experimental, not a complete list by far)
@@ -433,7 +433,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         switch (BX_KEY_THIS s.kbd_controller.last_comm) {
           case 0x60: // write command byte
             {
-            Boolean scan_convert, disable_keyboard,
+            bx_bool scan_convert, disable_keyboard,
                     disable_aux;
 
             scan_convert = (value >> 6) & 0x01;
@@ -783,7 +783,7 @@ bx_keyb_c::gen_scancode(Bit32u   key)
   void
 bx_keyb_c::set_kbd_clock_enable(Bit8u   value)
 {
-  Boolean prev_kbd_clock_enabled;
+  bx_bool prev_kbd_clock_enabled;
 
   if (value==0) {
     BX_KEY_THIS s.kbd_controller.kbd_clock_enabled = 0;
@@ -804,7 +804,7 @@ bx_keyb_c::set_kbd_clock_enable(Bit8u   value)
   void
 bx_keyb_c::set_aux_clock_enable(Bit8u   value)
 {
-  Boolean prev_aux_clock_enabled;
+  bx_bool prev_aux_clock_enabled;
 
   BX_DEBUG(("set_aux_clock_enable(%u)", (unsigned) value));
   if (value==0) {
@@ -925,7 +925,7 @@ bx_keyb_c::kbd_enQ(Bit8u   scancode)
 //BX_DEBUG(( "#   out_buffer = %u", (unsigned) BX_KEY_THIS s.kbd_controller.kbd_output_buffer);
 }
 
-  Boolean
+  bx_bool
 bx_keyb_c::mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3)
 {
   if ((BX_KEY_THIS s.mouse_internal_buffer.num_elements + 3) >= BX_MOUSE_BUFF_SIZE) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.23 2002-10-24 21:05:29 bdenney Exp $
+// $Id: ctrl_xfer32.cc,v 1.24 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -376,7 +376,7 @@ BailBigRSP("JMP_Jd");
   void
 BX_CPU_C::JCC_Jd(bxInstruction_c *i)
 {
-  Boolean condition;
+  bx_bool condition;
 
   switch (i->b1() & 0x0f) {
     case 0x00: /* JO */ condition = get_OF(); break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.5 2001-10-03 13:10:38 bdenney Exp $
+// $Id: eth_packetmaker.cc,v 1.6 2002-10-25 11:44:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -9,7 +9,7 @@
 #include "eth_packetmaker.h"
 
 
-Boolean sendable(const eth_packet& outpacket) {
+bx_bool sendable(const eth_packet& outpacket) {
   //FINISH ME!
 }
 
@@ -98,12 +98,12 @@ eth_ETHmaker::init(void) {
   arper.init();
 }
 
-Boolean
+bx_bool
 eth_ETHmaker::getpacket(eth_packet& inpacket) {
   return arper.getpacket(inpacket);
 }
 
-Boolean
+bx_bool
 eth_ETHmaker::ishandler(const eth_packet& outpacket) {
   if((outpacket.len>=60) &&
      ( (!memcmp(outpacket.buf, external_mac, 6))
@@ -117,7 +117,7 @@ eth_ETHmaker::ishandler(const eth_packet& outpacket) {
   return 0;  
 }
 
-Boolean
+bx_bool
 eth_ETHmaker::sendpacket(const eth_packet& outpacket) {
   return arper.sendpacket(outpacket);
 }
@@ -130,7 +130,7 @@ eth_ARPmaker::init(void) {
   pending.len=0;
 }
 
-Boolean
+bx_bool
 eth_ARPmaker::getpacket(eth_packet& inpacket) {
   if(is_pending) {
     memcpy(inpacket.buf,pending.buf,pending.len);
@@ -141,7 +141,7 @@ eth_ARPmaker::getpacket(eth_packet& inpacket) {
   return 0;
 }
 
-Boolean
+bx_bool
 eth_ARPmaker::ishandler(const eth_packet& outpacket) {
   if((outpacket.len>=60) &&
      (!memcmp(outpacket.buf+12, ethtype_arp, 2)) &&
@@ -155,7 +155,7 @@ eth_ARPmaker::ishandler(const eth_packet& outpacket) {
   return 0;
 }
 
-Boolean
+bx_bool
 eth_ARPmaker::sendpacket(const eth_packet& outpacket) {
   if(is_pending || !ishandler(outpacket)) {
     return 0;

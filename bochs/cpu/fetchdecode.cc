@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.29 2002-10-24 21:05:32 bdenney Exp $
+// $Id: fetchdecode.cc,v 1.30 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2320,7 +2320,7 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
 {
   // remain must be at least 1
 
-  Boolean is_32;
+  bx_bool is_32;
   unsigned b1, b2, ilen=1, attr, os_32;
   unsigned imm_mode, offset;
   unsigned rm, mod, nnn;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.h,v 1.6 2002-10-24 21:07:34 bdenney Exp $
+// $Id: guest2host.h,v 1.7 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,7 +60,7 @@ private:
   struct {
     struct {
       bx_g2h_callback_t f;
-      Boolean used;
+      bx_bool used;
       } callback[BX_MAX_G2H_CHANNELS];
 
     // Define the data received from the guest OS.

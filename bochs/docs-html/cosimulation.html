@@ -63,13 +63,13 @@ of each field in the callback structure.
 <P>
 <PRE>
   typedef struct {
-    Boolean (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);
-    Boolean (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);
-    void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, Boolean *valid);
-    Boolean (*set_reg)(unsigned reg, Bit32u val);
+    bx_bool (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);
+    bx_bool (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);
+    void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, bx_bool *valid);
+    bx_bool (*set_reg)(unsigned reg, Bit32u val);
     Bit32u  (*get_reg)(unsigned reg);
-    Boolean (*set_cpu)(bx_dbg_cpu_t *cpu);
-    Boolean (*get_cpu)(bx_dbg_cpu_t *cpu);
+    bx_bool (*set_cpu)(bx_dbg_cpu_t *cpu);
+    bx_bool (*get_cpu)(bx_dbg_cpu_t *cpu);
     unsigned       dirty_page_tbl_size;
     unsigned char *dirty_page_tbl;
     void    (*atexit)(void);
@@ -99,19 +99,19 @@ of each field in the callback structure.
     } bx_dbg_callback_t;
 </PRE>
 
-<P><B>Boolean (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);</B>
+<P><B>bx_bool (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);</B>
 <P>Set (write to) physical memory of simulator at address <I>addr</I> from the
 <I>len</I> bytes in <I>buf</I>.  The bytes in <I>buf</I> should be copied to the simulator's
 physical memory byte-at-a-time with no concern for endian-ness.  Return 1
 if the write is OK, 0 if an error occurs.
 
-<P><B>Boolean (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);</B>
+<P><B>bx_bool (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);</B>
 <P>Get (read from) physical memory of simulator at address <I>addr</I> to the
 <I>len</I> bytes in <I>buf</I>.  The bytes in <I>buf</I> should be copied from the simulator's
 physical memory byte-at-a-time with no concern for endian-ness.  Return 1
 if the read is OK, 0 if an error occurs.
 
-<P><B>void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, Boolean *valid);</B>
+<P><B>void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, bx_bool *valid);</B>
 <P>Translate a linear to a physical address, without generating an exception
 or updating the paging tables.  The debugger passes the simulator the
 <I>linear</I> address.  The simulator is expected to set <I>phy</I> to
@@ -120,7 +120,7 @@ which should be set to 1 if the physical address was available, and 0
 if not.  It is possible, the address is not in the paging tables, and
 thus not available.
 
-<P><B>Boolean (*set_reg)(unsigned reg, Bit32u val);</B>
+<P><B>bx_bool (*set_reg)(unsigned reg, Bit32u val);</B>
 <P>Set a specific CPU register as determined by <I>reg</I> in the
 simulator to <I>val</I>.  The value of <I>reg</I> will be one of the
 defines, such as BX_DBG_REG_EAX defined in <I>debug/debug.h</I>.  The
@@ -132,11 +132,11 @@ function should return a 1 if the operation is successful, and 0 if not.
 determined by <I>reg</I>, whose value is of the same range
 as those passed into <I>set_reg()</I>
 
-<P><B>Boolean (*set_cpu)(bx_dbg_cpu_t *cpu);</B>
+<P><B>bx_bool (*set_cpu)(bx_dbg_cpu_t *cpu);</B>
 <P>Set all the registers in the CPU simulator to those in the structure
 <I>cpu</I>.  The <I>bx_dbg_cpu_t</I> structure is defined in debug/debug.h.
 
-<P><B>Boolean (*get_cpu)(bx_dbg_cpu_t *cpu);</B>
+<P><B>bx_bool (*get_cpu)(bx_dbg_cpu_t *cpu);</B>
 <P>Get values for all the registers in the CPU simulator, and place them in
 the structure <I>cpu</I>.  The <I>bx_dbg_cpu_t</I> structure is defined in debug/debug.h.
 
@@ -303,7 +303,7 @@ accesses in this range.  For <I>bx_dbg_ucmem_read()</I>, pass the physical addre
 <I>addr</I>, and the value of the read is returned.  For <I>bx_dbg_ucmem_write()</I>,
 pass the physical address <I>addr</I> and value <I>value</I> of the write.
 
-<P><B>void bx_dbg_async_pin_ack(unsigned what, Boolean val)</B>
+<P><B>void bx_dbg_async_pin_ack(unsigned what, bx_bool val)</B>
 <P>In order for the master and slave simulators to accept changes in pins
 such as the A20 line, at the same point, the debugger provides a mechanism
 for pending the pin change, until it is acknowledged by the master simulator.
@@ -400,21 +400,21 @@ typedef struct {
   bx_dbg_icount_t icount; // stop after completing this many instructions
 
   // user typed Ctrl-C, requesting simulator stop at next convient spot
-  volatile Boolean interrupt_requested;
+  volatile bx_bool interrupt_requested;
 
   // booleans to control whether simulator should report events
   // to debug controller
   struct {
-   Boolean irq;
-   Boolean a20;
-   Boolean io;
-   Boolean ucmem;
-   Boolean dma;
+   bx_bool irq;
+   bx_bool a20;
+   bx_bool io;
+   bx_bool ucmem;
+   bx_bool dma;
    } report;
 
   struct {
-    Boolean irq;  // should process IRQs asynchronously
-    Boolean dma;  // should process DMAs asynchronously
+    bx_bool irq;  // should process IRQs asynchronously
+    bx_bool dma;  // should process DMAs asynchronously
     } async;
 
 #define BX_DBG_ASYNC_PENDING_A20   0x01
@@ -429,9 +429,9 @@ typedef struct {
   // be checked, and ack'd.
   struct {
     unsigned which; // logical OR of above constants
-    Boolean a20;
-    Boolean reset;
-    Boolean nmi;
+    bx_bool a20;
+    bx_bool reset;
+    bx_bool nmi;
     } async_changes_pending;
   } bx_guard_t;
 
@@ -442,8 +442,8 @@ typedef struct {
   Bit32u   cs;     // cs:eip and linear addr of instruction at guard point
   Bit32u   eip;
   Bit32u   laddr;
-  Boolean  is_32bit_code; // CS seg size at guard point
-  Boolean  ctrl_c; // simulator stopped due to Ctrl-C request
+  bx_bool  is_32bit_code; // CS seg size at guard point
+  bx_bool  ctrl_c; // simulator stopped due to Ctrl-C request
   } bx_guard_found_t;
 
 extern bx_guard_t        bx_guard;
@@ -477,7 +477,7 @@ executed, when the guard was encountered.
 <P><B>Bit32u   cs;</B>
 <BR><B>Bit32u   eip;</B>
 <BR><B>Bit32u   laddr;</B>
-<BR><B>Boolean  is_32bit_code;</B>
+<BR><B>bx_bool  is_32bit_code;</B>
 These all relate to the same instruction address.  From the debugger's
 point of view, instruction addresses can be only at the beginning of
 the instruction.  Once an instruction is completed, use the address
@@ -487,7 +487,7 @@ Set <I>laddr</I> to the instruction's corresponding linear address.
 Set <I>is_32bit_code</I> to the size (0=16bit, 1=32bit) of the code
 segment when the guard is encountered.  This is used for disassembly.
 
-<P><B>Boolean  ctrl_c;</B>
+<P><B>bx_bool  ctrl_c;</B>
 To allow the user to interrupt a simulator from the debug prompt, the
 debugger traps Ctrl-C interrupts, and sets <I>bx_guard.interrupt_requested</I>.
 Your simulator can optionally look for this, provided that the
@@ -582,7 +582,7 @@ bx_guard_found[ID].is_32bit_code = .. // 0=16bit code, 1=32bit code
 </PRE>
 
 
-<P><B>volatile Boolean interrupt_requested;</B>
+<P><B>volatile bx_bool interrupt_requested;</B>
 <P>If the debugger has turned on the guard for a user interrupt, and
 the user has indeed requested one (Ctrl-C), the debugger will set
 this field to 1.  The simulator should record this in the guard found

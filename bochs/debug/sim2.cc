@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sim2.cc,v 1.3 2001-10-03 13:10:37 bdenney Exp $
+// $Id: sim2.cc,v 1.4 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,13 +35,13 @@
 //        one set of device models, managed by the debugger.
 
 
-Boolean  sim2_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
-Boolean  sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
-void     sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, Boolean *valid);
-Boolean  sim2_set_reg(unsigned reg, Bit32u val);
+bx_bool  sim2_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
+bx_bool  sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
+void     sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid);
+bx_bool  sim2_set_reg(unsigned reg, Bit32u val);
 Bit32u   sim2_get_reg(unsigned reg);
-Boolean  sim2_set_cpu(bx_dbg_cpu_t *cpu);
-Boolean  sim2_get_cpu(bx_dbg_cpu_t *cpu);
+bx_bool  sim2_set_cpu(bx_dbg_cpu_t *cpu);
+bx_bool  sim2_get_cpu(bx_dbg_cpu_t *cpu);
 unsigned       dirty_page_tbl_size;
 unsigned char sim2_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
 void     sim2_atexit(void);
@@ -123,21 +123,21 @@ sim2_init(bx_dbg_callback_t *callback, int argc, char *argv[])
 #endif
 }
 
-  Boolean
+  bx_bool
 sim2_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   return(0);
 }
-  Boolean
+  bx_bool
 sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   return(0);
 }
   void
-sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, Boolean *valid)
+sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid)
 {
 }
-  Boolean
+  bx_bool
 sim2_set_reg(unsigned reg, Bit32u val)
 {
   return(0);
@@ -147,12 +147,12 @@ sim2_get_reg(unsigned reg)
 {
   return(0);
 }
-  Boolean
+  bx_bool
 sim2_set_cpu(bx_dbg_cpu_t *cpu)
 {
   return(0);
 }
-  Boolean
+  bx_bool
 sim2_get_cpu(bx_dbg_cpu_t *cpu)
 {
   return(0);

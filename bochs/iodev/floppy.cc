@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.56 2002-10-24 21:07:30 bdenney Exp $
+// $Id: floppy.cc,v 1.57 2002-10-25 11:44:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,7 +101,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.56 2002-10-24 21:07:30 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.57 2002-10-25 11:44:39 bdenney Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1449,7 +1449,7 @@ bx_floppy_ctrl_c::get_media_status(unsigned drive)
 #define BX_RDWR O_RDWR
 #endif
 
-  Boolean
+  bx_bool
 bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 {
   struct stat stat_buf;

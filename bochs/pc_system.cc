@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.30 2002-10-24 21:04:46 bdenney Exp $
+// $Id: pc_system.cc,v 1.31 2002-10-25 11:44:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -103,7 +103,7 @@ bx_pc_system_c::init_ips(Bit32u ips)
 }
 
   void
-bx_pc_system_c::set_HRQ(Boolean val)
+bx_pc_system_c::set_HRQ(bx_bool val)
 {
   HRQ = val;
   if (val)
@@ -113,7 +113,7 @@ bx_pc_system_c::set_HRQ(Boolean val)
 
 #if (BX_NUM_SIMULATORS < 2)
   void
-bx_pc_system_c::set_INTR(Boolean value)
+bx_pc_system_c::set_INTR(bx_bool value)
 {
   if (bx_dbg.interrupts)
     BX_INFO(("pc_system: Setting INTR=%d on bootstrap processor %d", (int)value, BX_BOOTSTRAP_PROCESSOR));
@@ -188,7 +188,7 @@ bx_pc_system_c::set_enable_a20(Bit8u value)
 #endif
 }
 
-  Boolean
+  bx_bool
 bx_pc_system_c::get_enable_a20(void)
 {
 #if BX_SUPPORT_A20
@@ -241,7 +241,7 @@ bx_pc_system_c::exit(void)
 
   int
 bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
-  Bit32u useconds, Boolean continuous, Boolean active, const char *id)
+  Bit32u useconds, bx_bool continuous, bx_bool active, const char *id)
 {
   Bit64u ticks;
 
@@ -253,7 +253,7 @@ bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
 
   int
 bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
-    Bit64u ticks, Boolean continuous, Boolean active, const char *id)
+    Bit64u ticks, bx_bool continuous, bx_bool active, const char *id)
 {
   unsigned i;
 
@@ -315,7 +315,7 @@ bx_pc_system_c::countdownEvent(void)
 {
   unsigned i;
   Bit64u   minTimeToFire;
-  Boolean  triggered[BX_MAX_TIMERS];
+  bx_bool  triggered[BX_MAX_TIMERS];
 
   // The countdown decremented to 0.  We need to service all the active
   // timers, and invoke callbacks from those timers which have fired.
@@ -430,7 +430,7 @@ bx_pc_system_c::start_timers(void)
 }
 
   void
-bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, Boolean continuous)
+bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bx_bool continuous)
 {
 #if BX_TIMER_DEBUG
   if (i >= numTimers)
@@ -464,7 +464,7 @@ bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, Boolean continuou
 }
 
   void
-bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, Boolean continuous)
+bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, bx_bool continuous)
 {
   Bit64u ticks;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.18 2002-09-29 19:21:36 kevinlawton Exp $
+// $Id: data_xfer32.cc,v 1.19 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -296,7 +296,7 @@ BX_CPU_C::CMOV_GdEd(bxInstruction_c *i)
   //       of whether condition is true or not.  Thus, exceptions may
   //       occur even if the MOV does not take place.
 
-  Boolean condition;
+  bx_bool condition;
   Bit32u op2_32;
 
 

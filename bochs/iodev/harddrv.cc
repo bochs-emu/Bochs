@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.84 2002-10-24 21:07:35 bdenney Exp $
+// $Id: harddrv.cc,v 1.85 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -174,7 +174,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.84 2002-10-24 21:07:35 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.85 2002-10-25 11:44:40 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1022,7 +1022,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_HD_SMF
   off_t logical_sector;
   off_t ret;
-  Boolean prev_control_reset;
+  bx_bool prev_control_reset;
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
   Bit32u port;
@@ -1254,9 +1254,9 @@ if ( quantumsMax == 0)
 			      break;
 			      
 			      case 0x1b: { // start stop unit
-				    //Boolean Immed = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 0) & 1;
-				    Boolean LoEj = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 1) & 1;
-				    Boolean Start = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 0) & 1;
+				    //bx_bool Immed = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 0) & 1;
+				    bx_bool LoEj = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 1) & 1;
+				    bx_bool Start = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 0) & 1;
 
 				    if (!LoEj && !Start) { // stop the disc
 					  BX_PANIC(("Stop disc not implemented"));
@@ -2314,7 +2314,7 @@ bx_hard_drive_c::close_harddrive(void)
 }
 
 
-  Boolean
+  bx_bool
 bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
 {
       off_t logical_sector;

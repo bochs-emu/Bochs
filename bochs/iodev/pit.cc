@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.12 2002-10-24 21:07:46 bdenney Exp $
+// $Id: pit.cc,v 1.13 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -445,7 +445,7 @@ BX_INFO(("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u",
   void
 bx_pit_c::write_count_reg( Bit8u   value, unsigned timerid )
 {
-  Boolean xfer_complete;
+  bx_bool xfer_complete;
 
   switch ( BX_PIT_THIS s.timer[timerid].latch_mode ) {
     case BX_PIT_LATCH_MODE_16BIT: /* write1=LSB, write2=MSB */
@@ -752,10 +752,10 @@ bx_kbd_port61h_write(Bit8u   value)
 #endif
 
 
-  Boolean
+  bx_bool
 bx_pit_c::periodic( Bit32u   usec_delta )
 {
-  Boolean prev_timer0_out;
+  bx_bool prev_timer0_out;
 
   prev_timer0_out = BX_PIT_THIS s.timer[0].OUT;
 

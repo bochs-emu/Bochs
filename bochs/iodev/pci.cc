@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.21 2002-10-24 21:07:44 bdenney Exp $
+// $Id: pci.cc,v 1.22 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -436,7 +436,7 @@ bx_pci_c::print_i440fx_state()
 #endif /* DUMP_FULL_I440FX */
 }
 
-  Boolean
+  bx_bool
 bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
                                  bx_pci_write_handler_t f2, Bit8u devfunc,
                                  const char *name)

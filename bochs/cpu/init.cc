@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.39 2002-10-24 21:05:44 bdenney Exp $
+// $Id: init.cc,v 1.40 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.39 2002-10-24 21:05:44 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.40 2002-10-25 11:44:35 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -326,7 +326,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sprintf (name, "CPU %p", this);
 
 #if BX_WITH_WX
-  static Boolean first_time = 1;
+  static bx_bool first_time = 1;
   if (first_time) {
     first_time = 0;
     // Register some of the CPUs variables as shadow parameters so that
@@ -960,7 +960,7 @@ BX_CPU_C::sanity_checks(void)
 
 
   void
-BX_CPU_C::set_INTR(Boolean value)
+BX_CPU_C::set_INTR(bx_bool value)
 {
   BX_CPU_THIS_PTR INTR = value;
   BX_CPU_THIS_PTR async_event = 1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.13 2002-10-24 21:07:32 bdenney Exp $
+// $Id: floppy.h,v 1.14 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,11 +67,11 @@ private:
     Bit8u   command[10]; /* largest command size ??? */
     Bit8u   command_index;
     Bit8u   command_size;
-    Boolean command_complete;
+    bx_bool command_complete;
     Bit8u   pending_command;
 
-    Boolean multi_track;
-    Boolean pending_irq;
+    bx_bool multi_track;
+    bx_bool pending_irq;
     Bit8u   reset_sensei;
     Bit8u   format_count;
     Bit8u   format_fillbyte;
@@ -111,7 +111,7 @@ private:
     Bit8u    floppy_buffer[512+2]; // 2 extra for good measure
     unsigned floppy_buffer_index;
     int      floppy_timer_index;
-    Boolean  media_present[2];
+    bx_bool  media_present[2];
     Bit8u    device_type[4];
     Bit8u    DIR[4]; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
@@ -132,5 +132,5 @@ private:
 public:
   BX_FD_SMF void   timer(void);
   BX_FD_SMF void   increment_sector(void);
-  BX_FD_SMF Boolean evaluate_media(unsigned type, char *path, floppy_t *floppy);
+  BX_FD_SMF bx_bool evaluate_media(unsigned type, char *path, floppy_t *floppy);
   };

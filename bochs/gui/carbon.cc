@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.13 2002-10-24 21:06:14 bdenney Exp $
+// $Id: carbon.cc,v 1.14 2002-10-25 11:44:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,6 +47,14 @@
 // MAC OS INCLUDES
 #include <Carbon/Carbon.h>
 #include <ApplicationServices/ApplicationServices.h>
+
+// NOTE about use of Boolean versus bx_bool:
+// Boolean is defined as unsigned char in the Carbon headers, so when
+// you are talking to the Carbon API, it expects to find Boolean variables
+// and pointers to Booleans.  The rest of Bochs uses bx_bool to represent
+// booleans, which are defined to be 32 bit unsigned, so member function
+// definitions and booleans outside this file will be bx_bools.  "Boolean"
+// should only be used in Carbon specific code such as in this file.
 
 // CONSTANTS
 
@@ -1162,7 +1170,7 @@ bx_carbon_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-Boolean bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	PaletteHandle	thePal, oldpal;
 	GDHandle	saveDevice;
@@ -1875,7 +1883,7 @@ unsigned char reverse_bitorder(unsigned char b)
 }
 
   void
-bx_carbon_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_carbon_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
 

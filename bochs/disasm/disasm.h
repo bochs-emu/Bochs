@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.7 2002-09-28 06:29:55 ptrumpet Exp $
+// $Id: disasm.h,v 1.8 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,13 +40,13 @@
 class bx_disassemble_c : public logfunctions {
 public:
   bx_disassemble_c(void);
-  unsigned disasm(Boolean is_32, Bit32u ip, Bit8u *instr, char *disbuf);
+  unsigned disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf);
 
 private:
-  Boolean db_32bit_opsize;
-  Boolean db_32bit_addrsize;
-  Boolean db_rep_prefix;
-  Boolean db_repne_prefix;
+  bx_bool db_32bit_opsize;
+  bx_bool db_32bit_addrsize;
+  bx_bool db_rep_prefix;
+  bx_bool db_repne_prefix;
   Bit32u db_eip;
   Bit8u *instruction_begin;  // keep track of where instruction starts
   Bit8u *instruction;        // for fetching of next byte of instruction

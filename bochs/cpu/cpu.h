@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.106 2002-10-24 21:05:25 bdenney Exp $
+// $Id: cpu.h,v 1.107 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -386,7 +386,7 @@ typedef struct {
   BX_CPP_INLINE void    assert_##name ();                                    \
   BX_CPP_INLINE void    clear_##name ();                                     \
   BX_CPP_INLINE Bit32u  get_##name ();                                       \
-  BX_CPP_INLINE Boolean getB_##name ();                                      \
+  BX_CPP_INLINE bx_bool getB_##name ();                                      \
   BX_CPP_INLINE void    set_##name (Bit8u val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                                \
@@ -396,7 +396,7 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::clear_##name () {                             \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                            \
   }                                                                          \
-  BX_CPP_INLINE Boolean BX_CPU_C::getB_##name () {                           \
+  BX_CPP_INLINE bx_bool BX_CPU_C::getB_##name () {                           \
     return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);                     \
   }                                                                          \
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_##name () {                            \
@@ -411,7 +411,7 @@ typedef struct {
   BX_CPP_INLINE void    assert_VM();                                         \
   BX_CPP_INLINE void    clear_VM();                                          \
   BX_CPP_INLINE Bit32u  get_VM();                                            \
-  BX_CPP_INLINE Boolean getB_VM();                                           \
+  BX_CPP_INLINE bx_bool getB_VM();                                           \
   BX_CPP_INLINE void    set_VM(Bit32u val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR_VM(bitnum)                                  \
@@ -434,7 +434,7 @@ typedef struct {
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                                 \
     return BX_CPU_THIS_PTR eflags.VM_cached;                                 \
     }                                                                        \
-  BX_CPP_INLINE Boolean BX_CPU_C::getB_VM() {                                \
+  BX_CPP_INLINE bx_bool BX_CPU_C::getB_VM() {                                \
     return (BX_CPU_THIS_PTR eflags.VM_cached>0);                             \
     }                                                                        \
   BX_CPP_INLINE void BX_CPU_C::set_VM(Bit32u val) {                          \
@@ -516,7 +516,7 @@ typedef struct {
 
   // bitfields broken out for efficient access
 #if BX_CPU_LEVEL >= 3
-  Boolean pg; // paging
+  bx_bool pg; // paging
 #endif
 
 // CR0 notes:
@@ -539,17 +539,17 @@ typedef struct {
 //   486DX2/Pentium-II: reserved bits are hardwired to 0
 
 #if BX_CPU_LEVEL >= 4
-  Boolean cd; // cache disable
-  Boolean nw; // no write-through
-  Boolean am; // alignment mask
-  Boolean wp; // write-protect
-  Boolean ne; // numerics exception
+  bx_bool cd; // cache disable
+  bx_bool nw; // no write-through
+  bx_bool am; // alignment mask
+  bx_bool wp; // write-protect
+  bx_bool ne; // numerics exception
 #endif
 
-  Boolean ts; // task switched
-  Boolean em; // emulate math coprocessor
-  Boolean mp; // monitor coprocessor
-  Boolean pe; // protected mode enable
+  bx_bool ts; // task switched
+  bx_bool em; // emulate math coprocessor
+  bx_bool mp; // monitor coprocessor
+  bx_bool pe; // protected mode enable
   } bx_cr0_t;
 #endif
 
@@ -559,7 +559,7 @@ typedef struct {
 
   // Accessors for all cr4 bitfields.
 #define IMPLEMENT_CR4_ACCESSORS(name,bitnum)                                 \
-  BX_CPP_INLINE Boolean get_##name () {                                      \
+  BX_CPP_INLINE bx_bool get_##name () {                                      \
     return 1 & (registerValue >> bitnum);                                    \
     }                                                                        \
   BX_CPP_INLINE void set_##name (Bit8u val) {                                \
@@ -587,9 +587,9 @@ typedef struct {
 
 #if BX_SUPPORT_X86_64
   // x86-64 EFER bits
-  Boolean sce;
-  Boolean lme;
-  Boolean lma;
+  bx_bool sce;
+  bx_bool lme;
+  bx_bool lma;
 
   Bit64u star;
   Bit64u lstar;
@@ -620,12 +620,12 @@ typedef struct {
 #define SegValidCache 0x1
 #define SegAccessROK  0x2
 #define SegAccessWOK  0x4
-  Boolean valid;         // Holds above values, Or'd together.  Used to
+  bx_bool valid;         // Holds above values, Or'd together.  Used to
                          // hold only 0 or 1.
 
-  Boolean p;             /* present */
+  bx_bool p;             /* present */
   Bit8u   dpl;           /* descriptor privilege level 0..3 */
-  Boolean segment;       /* 0 = system/gate, 1 = data/code segment */
+  bx_bool segment;       /* 0 = system/gate, 1 = data/code segment */
   Bit8u   type;          /* For system & gate descriptors, only
                           *  0 = invalid descriptor (reserved)
                           *  1 = 286 available Task State Segment (TSS)
@@ -645,11 +645,11 @@ typedef struct {
                           * 15 = 386 trap gate */
   union {
   struct {
-    Boolean executable;    /* 1=code, 0=data or stack segment */
-    Boolean c_ed;          /* for code: 1=conforming,
+    bx_bool executable;    /* 1=code, 0=data or stack segment */
+    bx_bool c_ed;          /* for code: 1=conforming,
                               for data/stack: 1=expand down */
-    Boolean r_w;           /* for code: readable?, for data/stack: writeable? */
-    Boolean a;             /* accessed? */
+    bx_bool r_w;           /* for code: readable?, for data/stack: writeable? */
+    bx_bool a;             /* accessed? */
     bx_address  base;      /* base address: 286=24bits, 386=32bits, long=64 */
     Bit32u  limit;         /* limit: 286=16bits, 386=20bits */
     Bit32u  limit_scaled;  /* for efficiency, this contrived field is set to
@@ -657,12 +657,12 @@ typedef struct {
                             * (limit << 12) | 0xfff for page granular seg's
                             */
 #if BX_CPU_LEVEL >= 3
-    Boolean g;             /* granularity: 0=byte, 1=4K (page) */
-    Boolean d_b;           /* default size: 0=16bit, 1=32bit */
+    bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
+    bx_bool d_b;           /* default size: 0=16bit, 1=32bit */
 #if BX_SUPPORT_X86_64
-    Boolean l;             /* long mode: 0=compat, 1=64 bit */
+    bx_bool l;             /* long mode: 0=compat, 1=64 bit */
 #endif
-    Boolean avl;           /* available for use by system */
+    bx_bool avl;           /* available for use by system */
 #endif
     } segment;
   struct {
@@ -691,8 +691,8 @@ typedef struct {
     bx_address  base;      /* 32/64 bit 386 TSS base */
     Bit32u  limit;         /* 20 bit 386 TSS limit */
     Bit32u  limit_scaled;  // Same notes as for 'segment' field
-    Boolean g;             /* granularity: 0=byte, 1=4K (page) */
-    Boolean avl;           /* available for use by system */
+    bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
+    bx_bool avl;           /* available for use by system */
     } tss386;
 #endif
   struct {
@@ -845,7 +845,7 @@ public:
   // Info in the metaInfo field.
   // Note: the 'L' at the end of certain flags, means the value returned
   // is for Logical comparisons, eg if (i->os32L() && i->as32L()).  If you
-  // want a Boolean value, use os32B() etc.  This makes for smaller
+  // want a bx_bool value, use os32B() etc.  This makes for smaller
   // code, when a strict 0 or 1 is not necessary.
   BX_CPP_INLINE void initMetaInfo(unsigned seg,
                                   unsigned os32, unsigned as32,
@@ -1174,7 +1174,7 @@ public:
   Bit8u get_id () { return id; }
   static void reset_all_ids ();
   virtual char *get_name();
-  Boolean is_selected (Bit32u addr, Bit32u len);
+  bx_bool is_selected (Bit32u addr, Bit32u len);
   void read (Bit32u addr, void *data, unsigned len);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
   virtual void write(Bit32u address, Bit32u *value, unsigned len);
@@ -1184,8 +1184,8 @@ public:
   virtual void trigger_irq (unsigned num, unsigned from);
   virtual void untrigger_irq (unsigned num, unsigned from);
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  virtual Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
-  virtual Boolean match_logical_addr (Bit8u address);
+  virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
+  virtual bx_bool match_logical_addr (Bit8u address);
   virtual bx_apic_type_t get_type ();
   virtual void set_arb_id (int newid);  // only implemented on local apics
 };
@@ -1212,7 +1212,7 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c {
 #define APIC_LVT_LINT1   4
 #define APIC_LVT_ERROR   5
   Bit32u timer_initial, timer_current, timer_divconf;
-  Boolean timer_active;  // internal state, not accessible from bus
+  bx_bool timer_active;  // internal state, not accessible from bus
   Bit32u timer_divide_counter, timer_divide_factor;
   Bit32u icr_high, icr_low;
   Bit32u err_status;
@@ -1228,7 +1228,7 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c {
   Bit64u ticksInitial; // System ticks count when APIC timer is started.
 
 public:
-  Boolean INTR;
+  bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *mycpu);
   virtual ~bx_local_apic_c(void);
   BX_CPU_C *cpu;
@@ -1249,11 +1249,11 @@ public:
   int highest_priority_int (Bit8u *array);
   void service_local_apic ();
   void print_status ();
-  virtual Boolean match_logical_addr (Bit8u address);
-  virtual Boolean is_local_apic () { return true; }
+  virtual bx_bool match_logical_addr (Bit8u address);
+  virtual bx_bool is_local_apic () { return true; }
   virtual bx_apic_type_t get_type () { return APIC_TYPE_LOCAL_APIC; }
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  virtual Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
+  virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   Bit8u get_ppr ();
   Bit8u get_apr ();
   static void periodic_smf(void *); // KPL
@@ -1420,18 +1420,18 @@ union {
   // pointer to the address space that this processor uses.
   BX_MEM_C *mem;
 
-  Boolean EXT; /* 1 if processing external interrupt or exception
+  bx_bool EXT; /* 1 if processing external interrupt or exception
                 * or if not related to current instruction,
                 * 0 if current CS:IP caused exception */
   unsigned errorno;   /* signal exception during instruction emulation */
 
   Bit32u   debug_trap; // holds DR6 value to be set as well
-  volatile Boolean async_event;
-  volatile Boolean INTR;
-  volatile Boolean kill_bochs_request;
+  volatile bx_bool async_event;
+  volatile bx_bool INTR;
+  volatile bx_bool kill_bochs_request;
 
   /* wether this CPU is the BSP always set for UP */
-  Boolean bsp;
+  bx_bool bsp;
   // for accessing registers by index number
   Bit16u *_16bit_base_reg[8];
   Bit16u *_16bit_index_reg[8];
@@ -1457,7 +1457,7 @@ union {
   jmp_buf jmp_buf_env;
   Bit8u curr_exception[2];
 
-  static const Boolean is_exception_OK[3][3];
+  static const bx_bool is_exception_OK[3][3];
 
   bx_segment_reg_t save_cs;
   bx_segment_reg_t save_ss;
@@ -1490,7 +1490,7 @@ union {
   Bit8u trace;
   Bit8u trace_reg;
   Bit8u mode_break; /* BW */
-  Boolean debug_vm; /* BW contains current mode*/
+  bx_bool debug_vm; /* BW contains current mode*/
   Bit8u show_eip;   /* BW record eip at special instr f.ex eip */
   Bit8u show_flag;  /* BW shows instr class executed */
   bx_guard_found_t guard_found;
@@ -1549,15 +1549,15 @@ union {
 #endif
 
 #define ArithmeticalFlag(flag, lfMaskShift, eflagsBitShift) \
-  BX_SMF Boolean get_##flag##Lazy(void); \
-  BX_SMF Boolean getB_##flag(void) { \
+  BX_SMF bx_bool get_##flag##Lazy(void); \
+  BX_SMF bx_bool getB_##flag(void) { \
     if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
          ((Bit32u) (BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
       return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
     else \
       return get_##flag##Lazy(); \
     } \
-  BX_SMF Boolean get_##flag(void) { \
+  BX_SMF bx_bool get_##flag(void) { \
     if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
          ((Bit32u) (BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
       return BX_CPU_THIS_PTR eflags.val32 & (1<<eflagsBitShift); \
@@ -2661,22 +2661,22 @@ union {
   BX_SMF void     dbg_take_irq(void);
   BX_SMF void     dbg_force_interrupt(unsigned vector);
   BX_SMF void     dbg_take_dma(void);
-  BX_SMF Boolean  dbg_get_cpu(bx_dbg_cpu_t *cpu);
-  BX_SMF Boolean  dbg_set_cpu(bx_dbg_cpu_t *cpu);
-  BX_SMF Boolean  dbg_set_reg(unsigned reg, Bit32u val);
+  BX_SMF bx_bool  dbg_get_cpu(bx_dbg_cpu_t *cpu);
+  BX_SMF bx_bool  dbg_set_cpu(bx_dbg_cpu_t *cpu);
+  BX_SMF bx_bool  dbg_set_reg(unsigned reg, Bit32u val);
   BX_SMF Bit32u   dbg_get_reg(unsigned reg);
-  BX_SMF Boolean  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
+  BX_SMF bx_bool  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
   BX_SMF unsigned dbg_query_pending(void);
   BX_SMF Bit32u   dbg_get_descriptor_l(bx_descriptor_t *);
   BX_SMF Bit32u   dbg_get_descriptor_h(bx_descriptor_t *);
   BX_SMF Bit32u   dbg_get_eflags(void);
-  BX_SMF Boolean  dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
+  BX_SMF bx_bool  dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                             Bit32u is_32);
-  BX_SMF Boolean  dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip,
+  BX_SMF bx_bool  dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip,
                                           Bit32u laddr, Bit32u is_32);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
-  BX_SMF void     dbg_xlate_linear2phy(Bit32u linear, Bit32u *phy, Boolean *valid);
+  BX_SMF void     dbg_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid);
 #endif
   BX_SMF void     atexit(void);
 
@@ -2732,14 +2732,14 @@ union {
                      unsigned rw, void *data);
   BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl);
   BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw);
-  BX_SMF void TLB_flush(Boolean invalidateGlobal);
+  BX_SMF void TLB_flush(bx_bool invalidateGlobal);
   BX_SMF void TLB_init(void);
-  BX_SMF void set_INTR(Boolean value);
+  BX_SMF void set_INTR(bx_bool value);
   BX_SMF char *strseg(bx_segment_reg_t *seg);
-  BX_SMF void interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
+  BX_SMF void interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
                  Bit16u error_code);
 #if BX_CPU_LEVEL >= 2
-  BX_SMF void exception(unsigned vector, Bit16u error_code, Boolean is_INT)
+  BX_SMF void exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
                   BX_CPP_AttrNoReturn();
 #endif
   BX_SMF int  int_number(bx_segment_reg_t *seg);
@@ -2769,9 +2769,9 @@ union {
 #if BX_SUPPORT_X86_64
   BX_SMF void get_RSP_from_TSS(unsigned pl, Bit64u *rsp);
 #endif
-  BX_SMF void write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF);
-  BX_SMF void write_eflags(Bit32u eflags, Boolean change_IOPL, Boolean change_IF,
-                    Boolean change_VM, Boolean change_RF);
+  BX_SMF void write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF);
+  BX_SMF void write_eflags(Bit32u eflags, bx_bool change_IOPL, bx_bool change_IF,
+                    bx_bool change_VM, bx_bool change_RF);
   BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask); // Newer variant.
   BX_SMF Bit16u read_flags(void);
   BX_SMF Bit32u read_eflags(void);
@@ -2783,7 +2783,7 @@ union {
   BX_SMF void    outp16(Bit16u addr, Bit16u value);
   BX_SMF Bit32u  inp32(Bit16u addr);
   BX_SMF void    outp32(Bit16u addr, Bit32u value);
-  BX_SMF Boolean allow_io(Bit16u addr, unsigned len);
+  BX_SMF bx_bool allow_io(Bit16u addr, unsigned len);
   BX_SMF void    enter_protected_mode(void);
   BX_SMF void    enter_real_mode(void);
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector);
@@ -2798,7 +2798,7 @@ union {
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
                                    bx_address base, unsigned dpl);
 #endif
-  BX_SMF Boolean fetch_raw_descriptor2(bx_selector_t *selector,
+  BX_SMF bx_bool fetch_raw_descriptor2(bx_selector_t *selector,
                                 Bit32u *dword1, Bit32u *dword2);
   BX_SMF void    push_16(Bit16u value16);
   BX_SMF void    push_32(Bit32u value32);
@@ -2810,14 +2810,14 @@ union {
 #if BX_SUPPORT_X86_64
   BX_SMF void    pop_64(Bit64u *value64_ptr);
 #endif
-  BX_SMF Boolean can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes);
-  BX_SMF Boolean can_pop(Bit32u bytes);
+  BX_SMF bx_bool can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes);
+  BX_SMF bx_bool can_pop(Bit32u bytes);
   BX_SMF void    sanity_checks(void);
 
   BX_SMF void    debug(Bit32u offset);
 
 #if BX_EXTERNAL_DEBUGGER
-  BX_SMF void    trap_debugger(Boolean callnow);
+  BX_SMF void    trap_debugger(bx_bool callnow);
 #endif
 
 #if BX_X86_DEBUGGER
@@ -2841,12 +2841,12 @@ union {
   DECLARE_EFLAG_ACCESSOR   (IF,   9)
   DECLARE_EFLAG_ACCESSOR   (TF,   8)
 
-  BX_SMF BX_CPP_INLINE void set_CF(Boolean val);
-  BX_SMF BX_CPP_INLINE void set_AF(Boolean val);
-  BX_SMF BX_CPP_INLINE void set_ZF(Boolean val);
-  BX_SMF BX_CPP_INLINE void set_SF(Boolean val);
-  BX_SMF BX_CPP_INLINE void set_OF(Boolean val);
-  BX_SMF BX_CPP_INLINE void set_PF(Boolean val);
+  BX_SMF BX_CPP_INLINE void set_CF(bx_bool val);
+  BX_SMF BX_CPP_INLINE void set_AF(bx_bool val);
+  BX_SMF BX_CPP_INLINE void set_ZF(bx_bool val);
+  BX_SMF BX_CPP_INLINE void set_SF(bx_bool val);
+  BX_SMF BX_CPP_INLINE void set_OF(bx_bool val);
+  BX_SMF BX_CPP_INLINE void set_PF(bx_bool val);
   BX_SMF BX_CPP_INLINE void set_PF_base(Bit8u val);
 
   DECLARE_8BIT_REGISTER_ACCESSORS(AL);
@@ -2881,9 +2881,9 @@ union {
 
   BX_SMF BX_CPP_INLINE int which_cpu(void);
 
-  BX_SMF BX_CPP_INLINE Boolean real_mode(void);
-  BX_SMF BX_CPP_INLINE Boolean protected_mode(void);
-  BX_SMF BX_CPP_INLINE Boolean v8086_mode(void);
+  BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
+  BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
+  BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
 #if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
 #endif
@@ -2989,44 +2989,44 @@ BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
 }
 
 
-  BX_CPP_INLINE Boolean
+  BX_CPP_INLINE bx_bool
 BX_CPU_C::real_mode(void) {
   return( BX_CPU_THIS_PTR realMode );
   };
 
-  BX_CPP_INLINE Boolean
+  BX_CPP_INLINE bx_bool
 BX_CPU_C::v8086_mode(void) {
   return( BX_CPU_THIS_PTR v8086Mode );
   }
 
-  BX_CPP_INLINE Boolean
+  BX_CPP_INLINE bx_bool
 BX_CPU_C::protected_mode(void) {
   return( BX_CPU_THIS_PTR protectedMode );
   }
 
     BX_CPP_INLINE void
-BX_CPU_C::set_CF(Boolean val) {
+BX_CPU_C::set_CF(bx_bool val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xfffff0;
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<0);
     BX_CPU_THIS_PTR eflags.val32 |= (!!val);
     }
 
     BX_CPP_INLINE void
-BX_CPU_C::set_AF(Boolean val) {
+BX_CPU_C::set_AF(bx_bool val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<4);
     BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<4;
     }
 
     BX_CPP_INLINE void
-BX_CPU_C::set_ZF(Boolean val) {
+BX_CPU_C::set_ZF(bx_bool val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<6);
     BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<6;
     }
 
     BX_CPP_INLINE void
-BX_CPU_C::set_SF(Boolean val) {
+BX_CPU_C::set_SF(bx_bool val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<7);
     BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<7;
@@ -3034,20 +3034,20 @@ BX_CPU_C::set_SF(Boolean val) {
 
 
     BX_CPP_INLINE void
-BX_CPU_C::set_OF(Boolean val) {
+BX_CPU_C::set_OF(bx_bool val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<11);
     BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<11;
     }
 
     BX_CPP_INLINE void
-BX_CPU_C::set_PF(Boolean val) {
+BX_CPU_C::set_PF(bx_bool val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
     BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<2;
     }
 
-BOCHSAPI extern const Boolean bx_parity_lookup[256];
+BOCHSAPI extern const bx_bool bx_parity_lookup[256];
 
     BX_CPP_INLINE void
 BX_CPU_C::set_PF_base(Bit8u val) {

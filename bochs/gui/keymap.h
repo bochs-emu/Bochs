@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.7 2002-10-24 21:06:25 bdenney Exp $
+// $Id: keymap.h,v 1.8 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ public:
 
   void   loadKeymap(Bit32u(*)(const char*));
   void   loadKeymap(Bit32u(*)(const char*),const char *filename);
-  Boolean isKeymapLoaded ();
+  bx_bool isKeymapLoaded ();
 
   BXKeyEntry *findHostKey(Bit32u hostkeynum);
   BXKeyEntry *findAsciiChar(Bit8u ascii);

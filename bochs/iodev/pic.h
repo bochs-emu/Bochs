@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.9 2002-10-24 21:07:46 bdenney Exp $
+// $Id: pic.h,v 1.10 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,16 +53,16 @@ typedef struct {
   Bit8u read_reg_select;   /* 0=IRR, 1=ISR */
   Bit8u irq;               /* current IRQ number */
   Bit8u lowest_priority;   /* current lowest priority irq */
-  Boolean INT;             /* INT request pin of PIC */
-  Boolean IRQ_line[8];     /* IRQ pins of PIC */
+  bx_bool INT;             /* INT request pin of PIC */
+  bx_bool IRQ_line[8];     /* IRQ pins of PIC */
   struct {
-    Boolean    in_init;
-    Boolean    requires_4;
+    bx_bool    in_init;
+    bx_bool    requires_4;
     int        byte_expected;
     } init;
-  Boolean special_mask;
-  Boolean polled;            /* Set when poll command is issued. */
-  Boolean rotate_on_autoeoi; /* Set when should rotate in auto-eoi mode. */
+  bx_bool special_mask;
+  bx_bool polled;            /* Set when poll command is issued. */
+  bx_bool rotate_on_autoeoi; /* Set when should rotate in auto-eoi mode. */
   } bx_pic_t;
 
 

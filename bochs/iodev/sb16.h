@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.8 2002-10-24 21:07:51 bdenney Exp $
+// $Id: sb16.h,v 1.9 2002-10-25 11:44:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -132,11 +132,11 @@ typedef struct {
   int opnum[4];     // operator numbers
   Bit16u freq;      // frequency (in a special code)
   Bit32u afreq;     // actual frequency in milli-Hertz (10^-3 Hz)
-  Boolean freqch;   // byte of the frequency that has changed recently
+  bx_bool freqch;   // byte of the frequency that has changed recently
   Bit8u midichan;   // assigned midi channel
-  Boolean needprogch;  // has the instrument changed
+  bx_bool needprogch;  // has the instrument changed
   Bit8u midinote;   // currently playing midi note
-  Boolean midion;     // is the note on
+  bx_bool midion;     // is the note on
   Bit16u midibend;  // current value of the pitch bender
   Bit8u outputlevel[4];// 6-bit output level attenuations
   Bit8u midivol;    // current midi volume (velocity)
@@ -155,13 +155,13 @@ public:
   BX_SB16_BUFINL void reset();
 
       /* These functions return 1 on success and 0 on error */
-  BX_SB16_BUFINL Boolean put(Bit8u data);    // write one byte in the buffer
-  BX_SB16_BUFINL Boolean puts(char *data, ...);  // write a formatted string to the buffer
-  BX_SB16_BUFINL Boolean get(Bit8u *data);   // read the next available byte
-  BX_SB16_BUFINL Boolean getw(Bit16u *data); // get word, in order lo/hi
-  BX_SB16_BUFINL Boolean getw1(Bit16u *data);// get word, in order hi/lo
-  BX_SB16_BUFINL Boolean full(void);         // is the buffer full?
-  BX_SB16_BUFINL Boolean empty(void);        // is it empty?
+  BX_SB16_BUFINL bx_bool put(Bit8u data);    // write one byte in the buffer
+  BX_SB16_BUFINL bx_bool puts(char *data, ...);  // write a formatted string to the buffer
+  BX_SB16_BUFINL bx_bool get(Bit8u *data);   // read the next available byte
+  BX_SB16_BUFINL bx_bool getw(Bit16u *data); // get word, in order lo/hi
+  BX_SB16_BUFINL bx_bool getw1(Bit16u *data);// get word, in order hi/lo
+  BX_SB16_BUFINL bx_bool full(void);         // is the buffer full?
+  BX_SB16_BUFINL bx_bool empty(void);        // is it empty?
 
   BX_SB16_BUFINL void flush(void);           // empty the buffer
   BX_SB16_BUFINL int bytes(void);            // return number of bytes in the buffer
@@ -171,8 +171,8 @@ public:
   BX_SB16_BUFINL void newcommand(Bit8u newcmd, int bytes);   // start a new command with length bytes
   BX_SB16_BUFINL Bit8u currentcommand(void); // return the current command
   BX_SB16_BUFINL void clearcommand(void);    // clear the command
-  BX_SB16_BUFINL Boolean commanddone(void);  // return if all bytes have arrived
-  BX_SB16_BUFINL Boolean hascommand(void);   // return if there is a pending command
+  BX_SB16_BUFINL bx_bool commanddone(void);  // return if all bytes have arrived
+  BX_SB16_BUFINL bx_bool hascommand(void);   // return if there is a pending command
   BX_SB16_BUFINL int commandbytes(void);     // return the length of the command
 
 
@@ -180,7 +180,7 @@ private:
   Bit8u *buffer;
   int head,tail,length;
   Bit8u command;
-  Boolean havecommand;
+  bx_bool havecommand;
   int bytesneeded;
 };
 
@@ -223,7 +223,7 @@ private:
   // the MPU 401 relevant variables
   struct bx_sb16_mpu_struct {
     bx_sb16_buffer datain, dataout, cmd, midicmd;
-    Boolean uartmode, irqpending, forceuartmode, singlecommand;
+    bx_bool uartmode, irqpending, forceuartmode, singlecommand;
 
     int banklsb[BX_SB16_PATCHTABLESIZE];
     int bankmsb[BX_SB16_PATCHTABLESIZE];   // current patch lists
@@ -239,8 +239,8 @@ private:
     bx_sb16_buffer datain, dataout;
     Bit8u resetport;                           // last value written to the reset port
     Bit8u speaker,prostereo;                   // properties of the sound input/output
-    Boolean irqpending;                        // Is an IRQ pending (not ack'd)
-    Boolean midiuartmode;                      // Is the DSP in MIDI UART mode
+    bx_bool irqpending;                        // Is an IRQ pending (not ack'd)
+    bx_bool midiuartmode;                      // Is the DSP in MIDI UART mode
     struct bx_sb16_dsp_dma_struct {
       // Properties of the current DMA transfer:
       // mode= 0: no transfer, 1: single-cycle transfer, 2: auto-init DMA
@@ -352,12 +352,12 @@ private:
   BX_SB16_SMF void   opl_setpercussion(Bit8u value, int chipid);
   BX_SB16_SMF void   opl_setvolume(int channel, int opnum, int outlevel);
   BX_SB16_SMF void   opl_setfreq(int channel);
-  BX_SB16_SMF void   opl_keyonoff(int channel, Boolean onoff);
+  BX_SB16_SMF void   opl_keyonoff(int channel, bx_bool onoff);
   BX_SB16_SMF void   opl_midichannelinit(int channel);
 
       /* several high level sound handlers */
   BX_SB16_SMF int    currentdeltatime();
-  BX_SB16_SMF void   processmidicommand(Boolean force);
+  BX_SB16_SMF void   processmidicommand(bx_bool force);
   BX_SB16_SMF void   midiremapprogram(int channel);  // remap program change
   BX_SB16_SMF int    converttodeltatime(Bit32u deltatime, Bit8u value[4]);
   BX_SB16_SMF void   writemidicommand(int command, int length, Bit8u data[]);

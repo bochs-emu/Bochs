@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.8 2002-10-24 21:06:56 bdenney Exp $
+// $Id: instrument.h,v 1.9 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ void bx_instr_cnear_branch_not_taken(unsigned cpu);
 void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip);
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip);
 
-void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, Boolean is32);
+void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32);
 void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i);
 
 void bx_instr_prefix_as(unsigned cpu);

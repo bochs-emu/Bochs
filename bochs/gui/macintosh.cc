@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.14 2002-10-24 21:06:27 bdenney Exp $
+// $Id: macintosh.cc,v 1.15 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(macintosh)
 // GLOBALS
 WindowPtr			win, toolwin, fullwin, backdrop, hidden, SouixWin;
 SInt16				gOldMBarHeight;
-Boolean				menubarVisible = true, cursorVisible = true;
+bx_bool				menubarVisible = true, cursorVisible = true;
 RgnHandle			mBarRgn, cnrRgn;
 unsigned			mouse_button_state = 0;
 CTabHandle		gCTable;
@@ -896,7 +896,7 @@ bx_amigaos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-Boolean bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	PaletteHandle	thePal, oldpal;
 	GDHandle	saveDevice;
@@ -1561,6 +1561,6 @@ unsigned char reverse_bitorder(unsigned char b)
 }
 
   void
-bx_amigaos_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_amigaos_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }

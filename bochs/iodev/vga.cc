@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.49 2002-10-24 21:07:53 bdenney Exp $
+// $Id: vga.cc,v 1.50 2002-10-25 11:44:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -339,7 +339,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_VGA_SMF
-  Boolean  horiz_retrace, vert_retrace;
+  bx_bool  horiz_retrace, vert_retrace;
   Bit8u retval;
 
 #if defined(VGA_TRACE_FEATURE)
@@ -694,13 +694,13 @@ bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, uns
 }
 
   void
-bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log)
+bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 {
   unsigned i;
-  Boolean prev_video_enabled;
+  bx_bool prev_video_enabled;
   Bit8u charmap1, charmap2, prev_memory_mapping;
-  Boolean prev_graphics_alpha, prev_chain_odd_even;
-  Boolean needs_update;
+  bx_bool prev_graphics_alpha, prev_chain_odd_even;
+  bx_bool needs_update;
 
 #if defined(VGA_TRACE_FEATURE)
   if (!no_log)
@@ -2519,7 +2519,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         {
           BX_INFO(("VBE disabling"));
         }     
-        BX_VGA_THIS s.vbe_enabled=(Boolean) value;
+        BX_VGA_THIS s.vbe_enabled=(bx_bool) value;
       } break;
       
       case VBE_DISPI_INDEX_X_OFFSET:

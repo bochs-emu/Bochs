@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.24 2002-10-24 06:26:37 bdenney Exp $
+// $Id: debugstuff.cc,v 1.25 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -146,7 +146,7 @@ BX_CPU_C::debug(Bit32u offset)
 
 
 #if BX_DISASM
-  Boolean valid;
+  bx_bool valid;
   Bit32u  phy_addr;
   Bit8u   instr_buf[32];
   char    char_buf[256];
@@ -203,7 +203,7 @@ BX_CPU_C::dbg_get_reg(unsigned reg)
     }
 }
 
-  Boolean
+  bx_bool
 BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
 {
   // returns 1=OK, 0=can't change
@@ -426,7 +426,7 @@ BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
     }
 }
 
-  Boolean
+  bx_bool
 BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
 {
   if (sreg_no > 5)
@@ -438,7 +438,7 @@ BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
   return(1);
 }
 
-  Boolean
+  bx_bool
 BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
 {
   cpu->eax = EAX;
@@ -526,7 +526,7 @@ BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   return(1);
 }
 
-  Boolean
+  bx_bool
 BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
 {
   // returns 1=OK, 0=Error

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.33 2002-10-24 21:04:32 bdenney Exp $
+// $Id: logio.cc,v 1.34 2002-10-25 11:44:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -508,7 +508,7 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
 #if !BX_DEBUGGER
   BX_EXIT(1);
 #else
-  static Boolean dbg_exit_called = 0;
+  static bx_bool dbg_exit_called = 0;
   if (dbg_exit_called == 0) {
     dbg_exit_called = 1;
     bx_dbg_exit(1);

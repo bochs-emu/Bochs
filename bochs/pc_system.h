@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.21 2002-10-24 21:04:47 bdenney Exp $
+// $Id: pc_system.h,v 1.22 2002-10-25 11:44:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,11 +53,11 @@ private:
   // ===============================
 
   struct {
-    Boolean inUse;      // Timer slot is in-use (currently registered).
+    bx_bool inUse;      // Timer slot is in-use (currently registered).
     Bit64u  period;     // Timer periodocity in cpu ticks.
     Bit64u  timeToFire; // Time to fire next (in absolute ticks).
-    Boolean active;     // 0=inactive, 1=active.
-    Boolean continuous; // 0=one-shot timer, 1=continuous periodicity.
+    bx_bool active;     // 0=inactive, 1=active.
+    bx_bool continuous; // 0=one-shot timer, 1=continuous periodicity.
     bx_timer_handler_t funct;  // A callback function for when the
                                //   timer fires.
     void *this_ptr;            // The this-> pointer for C++ callbacks
@@ -97,11 +97,11 @@ public:
 
   void   init_ips(Bit32u ips);
   int    register_timer( void *this_ptr, bx_timer_handler_t, Bit32u useconds,
-                         Boolean continuous, Boolean active, const char *id);
+                         bx_bool continuous, bx_bool active, const char *id);
   unsigned unregisterTimer(int timerID);
   void   start_timers(void);
   void   activate_timer( unsigned timer_index, Bit32u useconds,
-                         Boolean continuous );
+                         bx_bool continuous );
   void   deactivate_timer( unsigned timer_index );
   static BX_CPP_INLINE void tick1(void) {
 #if BX_SHOW_IPS
@@ -133,9 +133,9 @@ public:
     }
 
   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
-                           Boolean continuous, Boolean active, const char *id);
+                           bx_bool continuous, bx_bool active, const char *id);
   void activate_timer_ticks(unsigned index, Bit64u instructions,
-                            Boolean continuous);
+                            bx_bool continuous);
   Bit64u time_usec();
   static BX_CPP_INLINE Bit64u time_ticks() {
     return bx_pc_system.ticksTotal +
@@ -157,15 +157,15 @@ public:
   // Non-timer oriented features
   // ===========================
 
-  Boolean HRQ;     // Hold Request
-  //Boolean INTR;    // Interrupt
+  bx_bool HRQ;     // Hold Request
+  //bx_bool INTR;    // Interrupt
 
 
     // Address line 20 control:
     //   1 = enabled: extended memory is accessible
     //   0 = disabled: A20 address line is forced low to simulate
     //       an 8088 address map
-  Boolean enable_a20;
+  bx_bool enable_a20;
 
     // start out masking physical memory addresses to:
     //   8086:      20 bits
@@ -177,8 +177,8 @@ public:
     //
   Bit32u  a20_mask;
 
-  void set_HRQ(Boolean val);  // set the Hold ReQuest line
-  void set_INTR(Boolean value); // set the INTR line to value
+  void set_HRQ(bx_bool val);  // set the Hold ReQuest line
+  void set_INTR(bx_bool value); // set the INTR line to value
 
   int IntEnabled( void );
   int InterruptSignal( PCS_OP operation );
@@ -190,7 +190,7 @@ public:
   Bit32u  inp(Bit16u addr, unsigned io_len);
   void    outp(Bit16u addr, Bit32u value, unsigned io_len);
   void    set_enable_a20(Bit8u value);
-  Boolean get_enable_a20(void);
+  bx_bool get_enable_a20(void);
   void    exit(void);
 
   };

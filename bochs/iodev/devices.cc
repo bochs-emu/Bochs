@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.37 2002-10-24 21:07:18 bdenney Exp $
+// $Id: devices.cc,v 1.38 2002-10-25 11:44:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.37 2002-10-24 21:07:18 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.38 2002-10-25 11:44:38 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -329,7 +329,7 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_DEV_SMF
-  Boolean bx_cpu_reset;
+  bx_bool bx_cpu_reset;
 
   if (io_len > 1)
     BX_PANIC(("port 92h: io read from address %08x, len=%u",
@@ -402,7 +402,7 @@ bx_devices_c::timer()
 }
 
 
-  Boolean
+  bx_bool
 bx_devices_c::register_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
@@ -419,7 +419,7 @@ bx_devices_c::register_irq(unsigned irq, const char *name)
   return true;
 }
 
-  Boolean
+  bx_bool
 bx_devices_c::unregister_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
@@ -443,7 +443,7 @@ bx_devices_c::unregister_irq(unsigned irq, const char *name)
   return true;
 }
 
-  Boolean
+  bx_bool
 bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
                                         Bit32u addr, const char *name )
 {
@@ -483,7 +483,7 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
 
 
 
-  Boolean
+  bx_bool
 bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
                                         Bit32u addr, const char *name )
 {
@@ -527,7 +527,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
 // unregisterd io address will get handled by the default function
 // This will be helpful when we want to unregister io handlers
 
-  Boolean
+  bx_bool
 bx_devices_c::register_default_io_read_handler( void *this_ptr, bx_read_handler_t f,
                                         const char *name )
 {
@@ -550,7 +550,7 @@ bx_devices_c::register_default_io_read_handler( void *this_ptr, bx_read_handler_
 
 
 
-  Boolean
+  bx_bool
 bx_devices_c::register_default_io_write_handler( void *this_ptr, bx_write_handler_t f,
                                         const char *name )
 {
@@ -614,7 +614,7 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
                      (Bit32u) addr, value, io_len);
 }
 
-Boolean bx_devices_c::is_serial_enabled ()
+bx_bool bx_devices_c::is_serial_enabled ()
 {
   for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
     if (SIM->get_param_bool (BXP_COMx_ENABLED(i+1))->get())
@@ -623,7 +623,7 @@ Boolean bx_devices_c::is_serial_enabled ()
   return false;
 }
 
-Boolean bx_devices_c::is_parallel_enabled ()
+bx_bool bx_devices_c::is_parallel_enabled ()
 {
   for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
     if (SIM->get_param_bool (BXP_PARPORTx_ENABLED(i+1))->get())

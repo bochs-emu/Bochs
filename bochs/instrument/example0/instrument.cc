@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.6 2002-09-29 16:05:13 sshwarts Exp $
+// $Id: instrument.cc,v 1.7 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,15 +38,15 @@
 // Use this variable to turn on/off collection of instrumentation data
 // If you are not using the debugger to turn this on/off, then possibly
 // start this at 1 instead of 0.
-static Boolean active = 1;
+static bx_bool active = 1;
 
 
 static struct instruction_t {
-  Boolean  valid;        // is current instruction valid
+  bx_bool  valid;        // is current instruction valid
   unsigned opcode_size;
   unsigned nprefixes;
   Bit8u    opcode[MAX_OPCODE_SIZE];
-  Boolean  is32;
+  bx_bool  is32;
   unsigned num_data_accesses;
   struct {
     bx_address laddr; // linear address
@@ -54,8 +54,8 @@ static struct instruction_t {
     unsigned op;      // BX_READ or BX_WRITE
     unsigned size;    // 1 .. 8
   } data_access[MAX_DATA_ACCESSES];
-  Boolean is_branch;
-  Boolean is_taken;
+  bx_bool is_branch;
+  bx_bool is_taken;
   bx_address target_linear;
 } instruction[BX_SMP_PROCESSORS];
 
@@ -170,7 +170,7 @@ void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address 
   branch_taken(cpu, new_eip);
 }
 
-void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, Boolean is32)
+void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32)
 {
   if (!active) 
   {
@@ -241,7 +241,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 {
   unsigned index;
   bx_address phy;
-  Boolean page_valid;
+  bx_bool page_valid;
 
   if(!active)
   {

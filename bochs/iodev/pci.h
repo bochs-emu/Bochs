@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.11 2002-10-24 21:07:44 bdenney Exp $
+// $Id: pci.h,v 1.12 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ public:
   ~bx_pci_c(void);
   BX_PCI_SMF void   init(void);
   BX_PCI_SMF void   reset(unsigned type);
-  Boolean register_pci_handlers(void *this_ptr, bx_pci_read_handler_t f1,
+  bx_bool register_pci_handlers(void *this_ptr, bx_pci_read_handler_t f1,
                                 bx_pci_write_handler_t f2, Bit8u devfunc,
                                 const char *name);
   BX_PCI_SMF void   print_i440fx_state( );

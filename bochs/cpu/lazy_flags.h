@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.5 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: lazy_flags.h,v 1.6 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ typedef struct {
   Bit64u result_64;
 #endif
 
-  Boolean prev_CF;
+  bx_bool prev_CF;
   unsigned instr;
   } bx_lf_flags_entry;
 

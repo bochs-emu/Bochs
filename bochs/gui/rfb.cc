@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.18 2002-10-24 21:06:30 bdenney Exp $
+// $Id: rfb.cc,v 1.19 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -595,7 +595,7 @@ bx_rfb_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-Boolean bx_rfb_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_rfb_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	rfbPallet[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
 	return(1);
@@ -1322,6 +1322,6 @@ void rfbMouseMove(int x, int y, int bmask)
 }
 
   void
-bx_rfb_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }

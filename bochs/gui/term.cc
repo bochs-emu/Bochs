@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.22 2002-10-24 21:06:36 bdenney Exp $
+// $Id: term.cc,v 1.23 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(term)
 
 #define LOG_THIS theGui->
 
-Boolean initialized = 0;
+bx_bool initialized = 0;
 
 static short curses_color[8] = {
   /* 0 */ COLOR_BLACK,
@@ -567,7 +567,7 @@ bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-	Boolean
+	bx_bool
 bx_term_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	BX_DEBUG(("color pallete request (%d,%d,%d,%d) ignored",
@@ -712,6 +712,6 @@ bx_term_gui_c::exit(void)
 }
 
   void
-bx_term_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_term_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }

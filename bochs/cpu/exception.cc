@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.29 2002-10-24 21:05:31 bdenney Exp $
+// $Id: exception.cc,v 1.30 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 #define BX_ET_DOUBLE_FAULT 10
 
 
-const Boolean BX_CPU_C::is_exception_OK[3][3] = {
+const bx_bool BX_CPU_C::is_exception_OK[3][3] = {
     { 1, 1, 1 }, /* 1st exception is BENIGN */
     { 1, 0, 1 }, /* 1st exception is CONTRIBUTORY */
     { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
@@ -49,7 +49,7 @@ const Boolean BX_CPU_C::is_exception_OK[3][3] = {
 
 
   void
-BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
+BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
                     Bit16u error_code)
 {
 #if BX_DEBUGGER
@@ -801,11 +801,11 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
 
   void
-BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
+BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   // vector:     0..255: vector in IDT
   // error_code: if exception generates and error, push this error code
 {
-  Boolean  push_error;
+  bx_bool  push_error;
   Bit8u    exception_type;
   unsigned prev_errno;
 

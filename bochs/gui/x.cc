@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.51 2002-10-24 21:06:52 bdenney Exp $
+// $Id: x.cc,v 1.52 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -275,11 +275,11 @@ static unsigned x_tilesize, y_tilesize;
 // up the color cells so that we don't add to the problem!)  This is used
 // to determine whether Bochs should use a private colormap even when the
 // user did not specify it.
-static Boolean
+static bx_bool
 test_alloc_colors (Colormap cmap, Bit32u n_tries) {
   XColor color;
   unsigned long pixel[MAX_VGA_COLORS];
-  Boolean pixel_valid[MAX_VGA_COLORS];
+  bx_bool pixel_valid[MAX_VGA_COLORS];
   Bit32u n_allocated = 0;
   Bit32u i;
   color.flags = DoRed | DoGreen | DoBlue;
@@ -590,7 +590,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 // bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
   void
-bx_x_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   BX_DEBUG (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {
@@ -631,7 +631,7 @@ bx_x_gui_c::handle_events(void)
   char buffer[MAX_MAPPED_STRING_LENGTH];
   int bufsize = MAX_MAPPED_STRING_LENGTH;
   int charcount;
-  Boolean mouse_update;
+  bx_bool mouse_update;
 
 
   XPointerMovedEvent *pointer_event;
@@ -1227,7 +1227,7 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 }
 
 
-  Boolean
+  bx_bool
 bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   // returns: 0=no screen update needed (color map change has direct effect)

@@ -73,7 +73,7 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
   void *data_address;
   struct address data_sel_off;
   struct address entry_sel_off;
-  Boolean is_32;
+  bx_bool is_32;
 
   fpu_iptr = i;
   fpu_cpu_ptr = this;

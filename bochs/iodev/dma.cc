@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.24 2002-10-24 21:07:21 bdenney Exp $
+// $Id: dma.cc,v 1.25 2002-10-25 11:44:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -117,7 +117,7 @@ bx_dma_c::registerDMA16Channel(
   unsigned
 bx_dma_c::unregisterDMAChannel(unsigned channel)
 {
-  Boolean ma_sl = (channel > 3);
+  bx_bool ma_sl = (channel > 3);
   BX_DMA_THIS s[ma_sl].chan[channel & 0x03].used = 0;
   BX_INFO(("channel %u no longer used", channel));
   return 1;
@@ -134,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.24 2002-10-24 21:07:21 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.25 2002-10-25 11:44:38 bdenney Exp $"));
 
   /* 8237 DMA controller */
 
@@ -231,7 +231,7 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
 
   Bit8u retval;
   Bit8u channel;
-  Boolean ma_sl;
+  bx_bool ma_sl;
 
   if (io_len > 1) {
     BX_ERROR(("io read from address %08x, len=%u",
@@ -362,7 +362,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
 #endif  // !BX_USE_DMA_SMF
   Bit8u set_mask_bit;
   Bit8u channel;
-  Boolean ma_sl;
+  bx_bool ma_sl;
 
   if (io_len > 1) {
     if ( (io_len == 2) && (address == 0x0b) ) {
@@ -583,10 +583,10 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
 }
 
   void
-bx_dma_c::set_DRQ(unsigned channel, Boolean val)
+bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
 {
   Bit32u dma_base, dma_roof;
-  Boolean ma_sl;
+  bx_bool ma_sl;
 
   if (channel > 7) {
     BX_PANIC(("set_DRQ() channel > 7"));
@@ -649,7 +649,7 @@ bx_dma_c::set_DRQ(unsigned channel, Boolean val)
 }
 
   void
-bx_dma_c::control_HRQ(Boolean ma_sl)
+bx_dma_c::control_HRQ(bx_bool ma_sl)
 {
   unsigned channel;
 
@@ -683,8 +683,8 @@ bx_dma_c::raise_HLDA(void)
 {
   unsigned channel;
   Bit32u phy_addr;
-  Boolean count_expired = 0;
-  Boolean ma_sl = 0;
+  bx_bool count_expired = 0;
+  bx_bool ma_sl = 0;
 
   BX_DMA_THIS HLDA = 1;
   // find highest priority channel

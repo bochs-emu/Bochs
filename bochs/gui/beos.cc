@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.18 2002-10-24 21:06:10 bdenney Exp $
+// $Id: beos.cc,v 1.19 2002-10-25 11:44:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -422,7 +422,7 @@ bx_beos_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 }
 
 
-  Boolean
+  bx_bool
 bx_beos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   cmap_index[index] = screen->IndexForColor(
@@ -1208,7 +1208,7 @@ bx_beos_gui_c::exit(void)
 // In all those cases, setting the parameter value will get you here.
 
   void
-bx_beos_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_beos_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   BX_DEBUG (("mouse_enabled=%d, BeOS specific code", val?1:0));
   if (val) {

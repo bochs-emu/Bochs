@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.22 2002-10-24 21:05:53 bdenney Exp $
+// $Id: segment_ctrl_pro.cc,v 1.23 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -624,7 +624,7 @@ BX_INFO(("-----------------------------------"));
 
 
 
-  Boolean
+  bx_bool
 BX_CPU_C::fetch_raw_descriptor2(bx_selector_t *selector,
                         Bit32u *dword1, Bit32u *dword2)
 {

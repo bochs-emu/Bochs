@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.67 2002-10-24 21:05:23 bdenney Exp $
+// $Id: cpu.cc,v 1.68 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@
 // This array defines a look-up table for the even parity-ness
 // of an 8bit quantity, for optimal assignment of the parity bit
 // in the EFLAGS register
-const Boolean bx_parity_lookup[256] = {
+const bx_bool bx_parity_lookup[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
@@ -880,7 +880,7 @@ BX_CPU_C::ask (int level, const char *prefix, const char *fmt, va_list ap)
 #if BX_EXTERNAL_DEBUGGER
 
   void
-BX_CPU_C::trap_debugger (Boolean callnow)
+BX_CPU_C::trap_debugger (bx_bool callnow)
 {
   regs.debug_state = debug_step;
   if (callnow) {
@@ -897,7 +897,7 @@ BX_CPU_C::trap_debugger (Boolean callnow)
 #if BX_DEBUGGER
 extern unsigned int dbg_show_mask;
 
-  Boolean
+  bx_bool
 BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                     Bit32u is_32)
 {
@@ -958,7 +958,7 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 #if BX_DBG_SUPPORT_PHY_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       Bit32u phy;
-      Boolean valid;
+      bx_bool valid;
       dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr,
                               &phy, &valid);
       // The "guard_found.icount!=0" condition allows you to step or
@@ -981,7 +981,7 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 }
 
 
-  Boolean
+  bx_bool
 BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                   Bit32u is_32)
 {

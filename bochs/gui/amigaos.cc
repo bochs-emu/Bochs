@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.9 2002-10-24 21:06:08 bdenney Exp $
+// $Id: amigaos.cc,v 1.10 2002-10-25 11:44:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -153,7 +153,7 @@ setup_inputhandler(void)
     	printf(("Amiga: Could not create message port"));
 }
 
-Boolean
+bx_bool
 open_screen(void)
 {
 
@@ -460,7 +460,7 @@ bx_amigaos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 }
 
 
-  Boolean
+  bx_bool
 bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 
@@ -686,7 +686,7 @@ hide_pointer(void)
 }
 
   void
-bx_amigaos_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_amigaos_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   BX_INFO (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {

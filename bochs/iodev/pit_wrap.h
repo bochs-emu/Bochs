@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.13 2002-10-24 21:07:48 bdenney Exp $
+// $Id: pit_wrap.h,v 1.14 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ public:
   ~bx_pit_c( void );
   BX_PIT_SMF int init( void );
   BX_PIT_SMF void reset( unsigned type);
-  BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
+  BX_PIT_SMF bx_bool periodic( Bit32u   usec_delta );
 
   BX_PIT_SMF int SaveState( class state_file *fd );
   BX_PIT_SMF int LoadState( class state_file *fd );
@@ -68,7 +68,7 @@ private:
   struct s_type {
     pit_82C54 timer;
     Bit8u   speaker_data_on;
-    Boolean refresh_clock_div2;
+    bx_bool refresh_clock_div2;
     int  timer_handle[3];
     Bit64u last_usec;
     Bit32u last_next_event_time;

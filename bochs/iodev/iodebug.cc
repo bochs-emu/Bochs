@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.11 2002-10-24 21:07:38 bdenney Exp $
+// $Id: iodebug.cc,v 1.12 2002-10-25 11:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -10,7 +10,7 @@ bx_iodebug_c bx_iodebug;
 bx_iodebug_c *bx_iodebug_ptr;
 
   struct bx_iodebug_s_type {
-    Boolean enabled;
+    bx_bool enabled;
     unsigned int register_select;
     Bit32u registers[2];
     Bit32u monitored_mem_areas_start[BX_IODEBUG_MAX_AREAS];

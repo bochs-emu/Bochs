@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.17 2002-10-24 21:05:56 bdenney Exp $
+// $Id: tasking.cc,v 1.18 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -551,7 +551,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
 // ??? is LDT loaded in v8086 mode
   if ( (raw_ldt_selector & 0xfffc) != 0 ) {
-    Boolean good;
+    bx_bool good;
     good = fetch_raw_descriptor2(&ldt_selector, &dword1, &dword2);
     if (!good) {
       BX_INFO(("task_switch: bad LDT fetch"));
@@ -599,7 +599,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
   // CS
   if ( (raw_cs_selector & 0xfffc) != 0 ) {
-    Boolean good;
+    bx_bool good;
     good = fetch_raw_descriptor2(&cs_selector, &dword1, &dword2);
     if (!good) {
       BX_INFO(("task_switch: bad CS fetch"));
@@ -655,7 +655,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
   // SS
   if ( (raw_ss_selector & 0xfffc) != 0 ) {
-    Boolean good;
+    bx_bool good;
     good = fetch_raw_descriptor2(&ss_selector, &dword1, &dword2);
     if (!good) {
       BX_INFO(("task_switch: bad SS fetch"));
@@ -738,7 +738,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
   // DS
   if ( (raw_ds_selector & 0xfffc) != 0 ) {
-    Boolean good;
+    bx_bool good;
     good = fetch_raw_descriptor2(&ds_selector, &dword1, &dword2);
     if (!good) {
       BX_INFO(("task_switch: bad DS fetch"));
@@ -780,7 +780,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
   // ES
   if ( (raw_es_selector & 0xfffc) != 0 ) {
-    Boolean good;
+    bx_bool good;
     good = fetch_raw_descriptor2(&es_selector, &dword1, &dword2);
     if (!good) {
       BX_INFO(("task_switch: bad ES fetch"));
@@ -823,7 +823,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
   // FS
   if ( (raw_fs_selector & 0xfffc) != 0 ) { // not NULL
-    Boolean good;
+    bx_bool good;
     good = fetch_raw_descriptor2(&fs_selector, &dword1, &dword2);
     if (!good) {
       BX_INFO(("task_switch: bad FS fetch"));
@@ -865,7 +865,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
   // GS
   if ( (raw_gs_selector & 0xfffc) != 0 ) {
-    Boolean good;
+    bx_bool good;
     good = fetch_raw_descriptor2(&gs_selector, &dword1, &dword2);
     if (!good) {
       BX_INFO(("task_switch: bad GS fetch"));

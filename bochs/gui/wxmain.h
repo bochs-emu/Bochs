@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.35 2002-10-24 21:06:51 bdenney Exp $
+// $Id: wxmain.h,v 1.36 2002-10-25 11:44:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -133,9 +133,9 @@ void safeWxStrcpy (char *dest, wxString src, int destlen);
 /// the MyPanel methods are defined in wx.cc
 class MyPanel: public wxPanel
 {
-  Boolean fillBxKeyEvent (wxKeyEvent& event, BxKeyEvent& bxev, Boolean release);  // for all platforms
-  Boolean fillBxKeyEvent_MSW (wxKeyEvent& event, BxKeyEvent& bxev, Boolean release);
-  Boolean fillBxKeyEvent_GTK (wxKeyEvent& event, BxKeyEvent& bxev, Boolean release);
+  bx_bool fillBxKeyEvent (wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);  // for all platforms
+  bx_bool fillBxKeyEvent_MSW (wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
+  bx_bool fillBxKeyEvent_GTK (wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
 public:
   MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = "panel");
   ~MyPanel();
@@ -164,7 +164,7 @@ public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
   ~MyFrame();
   enum StatusChange { Start, Stop, Pause, Resume };
-  void simStatusChanged (StatusChange change, Boolean popupNotify=false);
+  void simStatusChanged (StatusChange change, bx_bool popupNotify=false);
   void OnConfigNew(wxCommandEvent& event);
   void OnConfigRead(wxCommandEvent& event);
   void OnConfigSave(wxCommandEvent& event);

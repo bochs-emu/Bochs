@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.21 2002-10-24 21:05:22 bdenney Exp $
+// $Id: arith8.cc,v 1.22 2002-10-25 11:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -102,7 +102,7 @@ BX_CPU_C::ADD_ALIb(bxInstruction_c *i)
 BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1, sum;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -127,7 +127,7 @@ BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
 BX_CPU_C::ADC_GbEb(bxInstruction_c *i)
 {
   Bit8u op1, op2, sum;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -153,7 +153,7 @@ BX_CPU_C::ADC_GbEb(bxInstruction_c *i)
 BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
 {
   Bit8u op1, op2, sum;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -174,7 +174,7 @@ BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
 BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
 {
   Bit8u op2_8, op1_8, diff_8;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -201,7 +201,7 @@ BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
 BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -227,7 +227,7 @@ BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
 BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -247,7 +247,7 @@ BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
 BX_CPU_C::SBB_EbIb(bxInstruction_c *i)
 {
   Bit8u op2_8, op1_8, diff_8;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 
@@ -476,7 +476,7 @@ BX_CPU_C::ADD_EbIb(bxInstruction_c *i)
 BX_CPU_C::ADC_EbIb(bxInstruction_c *i)
 {
   Bit8u op2, op1, sum;
-  Boolean temp_CF;
+  bx_bool temp_CF;
 
   temp_CF = getB_CF();
 

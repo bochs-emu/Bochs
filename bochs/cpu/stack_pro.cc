@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.9 2002-09-24 08:29:06 bdenney Exp $
+// $Id: stack_pro.cc,v 1.10 2002-10-25 11:44:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -238,7 +238,7 @@ BX_CPU_C::pop_64(Bit64u *value64_ptr)
 
 
 #if BX_CPU_LEVEL >= 2
-  Boolean
+  bx_bool
 BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 {
 #if BX_SUPPORT_X86_64
@@ -329,7 +329,7 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 
 
 #if BX_CPU_LEVEL >= 2
-  Boolean
+  bx_bool
 BX_CPU_C::can_pop(Bit32u bytes)
 {
   Bit32u temp_ESP, expand_down_limit;
