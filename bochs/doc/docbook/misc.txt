@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.21 2002-12-15 18:00:28 bdenney Exp $
+$Id: misc.txt,v 1.22 2003-03-27 15:17:40 cbothamy Exp $
 
 Testing testing....
 
@@ -475,4 +475,46 @@ Then changed to seven 1_44m disks and installed Win16.
 Each time either OS asked for a new disk, I simply
 copied the expected image to a.img and continued.
 
+
+------------------------------------------
+WinNT4 guest network problems
+
+From: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
+To: bochs-developers@lists.sourceforge.net
+Subject: [Bochs-developers] Odd network errors with NT4 Guest OS
+
+I'm having trouble transferring files over the network to the guest OS 
+(NT4 SP1). If I'm using SMB then the it errors out early on with a 
+session cancelled. The file is 36Mb (SP6). I've tried with various file 
+sizes, 3Meg files work, 5 meg files do not.
+
+I've also tried shuffling the files over http with similar problems, 
+small files are fine (can browse websites) but large files just error out.
+
+The system is a 1Ghz Windows XP SP1 box with bochs 2.02, guest OS is 
+allocated 64Mb of RAM and running Windows NT4 SP1.
+
+Any clues, anyone experiencing similar problems?
+
+--
+
+From: didier <dgautheron at magic.fr>
+To: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
+Cc: bochs-developers@lists.sourceforge.net
+Subject: Re: [Bochs-developers] Odd network errors with NT4 Guest OS
+
+Did you try with a big IPS? start the guest clock applet and try to get 
+a more or less accurate time, with 1 Ghz should be in the 50 000 000 range.
+IIRC NT timeout and abort before it send the whole packet.
+
+--
+
+From: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
+To: didier <dgautheron at magic.fr>, bochs-developers@lists.sourceforge.net
+Subject: Re: [Bochs-developers] Odd network errors with NT4 Guest OS
+
+Thanks, 60 000 000 seems to have done the trick (I can copy sp6 across 
+anyway). My original guess of 4000000 IPS was probably a bit low :)
+
+thanks again
 
