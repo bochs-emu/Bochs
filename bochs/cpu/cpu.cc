@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.53 2002-09-28 00:54:04 kevinlawton Exp $
+// $Id: cpu.cc,v 1.54 2002-09-28 09:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -114,19 +114,11 @@ extern void REGISTER_IADDR(bx_addr addr);
 BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
   unsigned ret;
-  bxInstruction_c *i;
   bxInstruction_c iStorage BX_CPP_AlignN(32);
-  i = &iStorage;
+  bxInstruction_c *i = &iStorage;
 
-#if BX_USE_CPU_SMF
-#define DeclareExecute()      void (*execute)(bxInstruction_c *)
-#define DeclareResolveModRM() void (*resolveModRM)(bxInstruction_c *)
-#else
-#define DeclareExecute()      void (BX_CPU_C::*execute)(bxInstruction_c *)
-#define DeclareResolveModRM() void (BX_CPU_C::*resolveModRM)(bxInstruction_c *)
-#endif
-
-  DeclareExecute();
+  BxExecutePtr_t execute;
+  BxExecutePtr_t resolveModRM;
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
@@ -206,8 +198,7 @@ async_events_processed:
 
     // iCache hit.  Instruction is already decoded and stored in
     // the instruction cache.
-    DeclareResolveModRM();
-    resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
+    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation.
 
     execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
@@ -254,8 +245,7 @@ async_events_processed:
       ret = fetchDecode(fetchPtr, i, maxFetch);
       }
 
-    DeclareResolveModRM();
-    resolveModRM = i->ResolveModrm; // Get function pointers as early
+    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get function pointers as early
     if (ret==0) {
 #if BX_SupportICache
       // Invalidate entry, since fetch-decode failed with partial updates

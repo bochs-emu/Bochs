@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.24 2002-09-28 05:38:11 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.25 2002-09-28 09:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -533,7 +533,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 88 */  { BxAnother,  &BX_CPU_C::MOV_EbGb },
   /* 89 */  { BxAnother,  &BX_CPU_C::MOV_EwGw },
   /* 8A */  { BxAnother,  &BX_CPU_C::MOV_GbEb },
-  /* 8B */  { BxAnother | SplitMod11b, (BxExecutePtr_t)opcodesMOV_GwEw },
+  /* 8B */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GwEw },
   /* 8C */  { BxAnother,  &BX_CPU_C::MOV_EwSw },
   /* 8D */  { BxAnother,  &BX_CPU_C::LEA_GwM },
   /* 8E */  { BxAnother,  &BX_CPU_C::MOV_SwEw },
@@ -1062,7 +1062,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 88 */  { BxAnother,  &BX_CPU_C::MOV_EbGb },
   /* 89 */  { BxAnother,  &BX_CPU_C::MOV_EdGd },
   /* 8A */  { BxAnother,  &BX_CPU_C::MOV_GbEb },
-  /* 8B */  { BxAnother | SplitMod11b, (BxExecutePtr_t)opcodesMOV_GdEd },
+  /* 8B */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GdEd },
   /* 8C */  { BxAnother,  &BX_CPU_C::MOV_EwSw },
   /* 8D */  { BxAnother,  &BX_CPU_C::LEA_GdM },
   /* 8E */  { BxAnother,  &BX_CPU_C::MOV_SwEw },
@@ -1860,9 +1860,9 @@ modrm_done:
       // For high frequency opcodes, two variants of the instruction are
       // implemented; one for the mod=11b case (Reg-Reg), and one for
       // the other cases (Reg-Mem).
-      if (attr & SplitMod11b) {
+      if (attr & BxSplitMod11b) {
         BxOpcodeInfo_t *OpcodeInfoPtr;
-        OpcodeInfoPtr = (BxOpcodeInfo_t *) instruction->execute;
+        OpcodeInfoPtr = BxOpcodeInfo[b1+offset].AnotherArray;
         instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
         }
       }

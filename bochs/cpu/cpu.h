@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.86 2002-09-28 05:38:11 kevinlawton Exp $
+// $Id: cpu.h,v 1.87 2002-09-28 09:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2963,7 +2963,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 
 #define BxPrefix          0x0010 // bit  4
 #define BxAnother         0x0020 // bit  5
-#define SplitMod11b       0x0040 // bit  6
+#define BxSplitMod11b     0x0040 // bit  6
 #define BxRepeatable      0x0800 // bit 11 (pass through to metaInfo field)
 #define BxRepeatableZF    0x1000 // bit 12 (pass through to metaInfo field)
 #define BxGroupN          0x0100 // bits 8
