@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.18 2004-02-26 19:17:40 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.19 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,10 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -71,7 +67,6 @@ BX_CPU_C::MOV_GbEEb(bxInstruction_c *i)
 BX_CPU_C::MOV_GbEGb(bxInstruction_c *i)
 {
   Bit8u op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op2);
 }
 
@@ -93,7 +88,6 @@ BX_CPU_C::MOV_ALOb(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_ObAL(bxInstruction_c *i)
 {
-  Bit8u  temp_8;
   bx_address addr = i->Id();
 
   /* write to memory address and write to register */

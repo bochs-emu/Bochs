@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.11 2002-10-25 11:44:35 bdenney Exp $
+// $Id: mult32.cc,v 1.12 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,10 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -76,7 +72,6 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
     temp_flag = (product_32h != 0);
     SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
-
 
 
   void
@@ -144,14 +139,16 @@ BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
 
     if (op2_32 == 0) {
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
+    }
+
     quotient_64 = op1_64 / op2_32;
     remainder_32 = (Bit32u) (op1_64 % op2_32);
     quotient_32l = (Bit32u) (quotient_64 & 0xFFFFFFFF);
 
-    if (quotient_64 != quotient_32l) {
+    if (quotient_64 != quotient_32l)
+    {
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
+    }
 
     /* set EFLAGS:
      * DIV affects the following flags: O,S,Z,A,P,C are undefined
@@ -183,14 +180,16 @@ BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
 
     if (op2_32 == 0) {
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
+    }
+
     quotient_64 = op1_64 / op2_32;
     remainder_32 = (Bit32s) (op1_64 % op2_32);
     quotient_32l = (Bit32s) (quotient_64 & 0xFFFFFFFF);
 
-    if (quotient_64 != quotient_32l) {
+    if (quotient_64 != quotient_32l)
+    {
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
+    }
 
     /* set EFLAGS:
      * IDIV affects the following flags: O,S,Z,A,P,C are undefined
@@ -206,11 +205,6 @@ BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
   void
 BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("IMUL_GdEdId() unsupported on 8086!"));
-#else
-
-
     Bit32s op2_32, op3_32, product_32;
     Bit64s product_64;
 
@@ -243,17 +237,12 @@ BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
     else {
       SET_FLAGS_OxxxxC(1, 1);
       }
-#endif
 }
 
 
   void
 BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("IMUL_GvEv() unsupported on 8086!"));
-#else
-
     Bit32s op1_32, op2_32, product_32;
     Bit64s product_64;
 
@@ -286,5 +275,4 @@ BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
     else {
       SET_FLAGS_OxxxxC(1, 1);
       }
-#endif
 }

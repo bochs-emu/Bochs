@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.18 2004-02-15 17:57:45 cbothamy Exp $
+// $Id: shift16.cc,v 1.19 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,14 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 
   void
@@ -49,7 +44,6 @@ BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1f; // use only 5 LSB's
-
 
     if (!count) return; /* NOP */
     // count is 1..31
@@ -97,7 +91,8 @@ BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
 BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("shrd_evgvib: not supported on < 386"));
+  BX_INFO(("SHRD_EwGw: not supported on < 386"));
+  UndefinedOpcode(i)
 #else
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
@@ -155,12 +150,10 @@ BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
 }
 
 
-
   void
 BX_CPU_C::ROL_Ew(bxInstruction_c *i)
 {
-
-    Bit16u op1_16, result_16;
+  Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1() == 0xc1 )
@@ -202,13 +195,10 @@ BX_CPU_C::ROL_Ew(bxInstruction_c *i)
       }
 }
 
-
-
-
   void
 BX_CPU_C::ROR_Ew(bxInstruction_c *i)
 {
-    Bit16u op1_16, result_16, result_b15;
+  Bit16u op1_16, result_16, result_b15;
   unsigned count;
 
   if ( i->b1() == 0xc1 )
@@ -250,8 +240,6 @@ BX_CPU_C::ROR_Ew(bxInstruction_c *i)
         set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
       }
 }
-
-
 
   void
 BX_CPU_C::RCL_Ew(bxInstruction_c *i)
@@ -312,7 +300,6 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
 }
 
 
-
   void
 BX_CPU_C::RCR_Ew(bxInstruction_c *i)
 {
@@ -362,8 +349,6 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
 }
 
 
-
-
   void
 BX_CPU_C::SHL_Ew(bxInstruction_c *i)
 {
@@ -403,9 +388,6 @@ BX_CPU_C::SHL_Ew(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHL16);
 }
 
-
-
-
   void
 BX_CPU_C::SHR_Ew(bxInstruction_c *i)
 {
@@ -434,13 +416,11 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Shr16)
     Bit32u flags32;
-
     asmShr16(result_16, op1_16, count, flags32);
     setEFlagsOSZAPC(flags32);
 #else
     result_16 = (op1_16 >> count);
 #endif
-
 
     /* now write result back to destination */
     if (i->modC0()) {
@@ -454,7 +434,6 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHR16);
 #endif
 }
-
 
 
   void
@@ -499,8 +478,6 @@ BX_CPU_C::SAR_Ew(bxInstruction_c *i)
         result_16 = 0;
         }
       }
-
-
 
     /* now write result back to destination */
     if (i->modC0()) {

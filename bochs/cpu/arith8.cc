@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.25 2004-02-15 17:57:43 cbothamy Exp $
+// $Id: arith8.cc,v 1.26 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,8 +34,6 @@
 
 
 
-
-
   void
 BX_CPU_C::ADD_EbGb(bxInstruction_c *i)
 {
@@ -56,7 +54,6 @@ BX_CPU_C::ADD_EbGb(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 }
-
 
 
   void
@@ -86,12 +83,9 @@ BX_CPU_C::ADD_ALIb(bxInstruction_c *i)
 {
   Bit8u op1, op2, sum;
 
-
   op1 = AL;
   op2 = i->Ib();
-
   sum = op1 + op2;
-
   AL = sum;
 
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
@@ -102,9 +96,7 @@ BX_CPU_C::ADD_ALIb(bxInstruction_c *i)
 BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1, sum;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
@@ -127,9 +119,7 @@ BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
 BX_CPU_C::ADC_GbEb(bxInstruction_c *i)
 {
   Bit8u op1, op2, sum;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op1 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
@@ -153,20 +143,14 @@ BX_CPU_C::ADC_GbEb(bxInstruction_c *i)
 BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
 {
   Bit8u op1, op2, sum;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
-
+  bx_bool temp_CF = getB_CF();
 
   op1 = AL;
   op2 = i->Ib();
-
   sum = op1 + op2 + temp_CF;
-
   AL = sum;
 
-  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8,
-                           temp_CF);
+  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8, temp_CF);
 }
 
 
@@ -174,10 +158,7 @@ BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
 BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
 {
   Bit8u op2_8, op1_8, diff_8;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
-
+  bx_bool temp_CF = getB_CF();
 
   op2_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
@@ -192,8 +173,7 @@ BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(diff_8);
     }
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8,
-                           temp_CF);
+  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
 }
 
 
@@ -201,9 +181,7 @@ BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
 BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op1_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
@@ -218,8 +196,7 @@ BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), diff_8);
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8,
-                           temp_CF);
+  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
 }
 
 
@@ -227,19 +204,14 @@ BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
 BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op1_8 = AL;
   op2_8 = i->Ib();
-
   diff_8 = op1_8 - (op2_8 + temp_CF);
-
   AL = diff_8;
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8,
-                           temp_CF);
+  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
 }
 
 
@@ -247,9 +219,7 @@ BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
 BX_CPU_C::SBB_EbIb(bxInstruction_c *i)
 {
   Bit8u op2_8, op1_8, diff_8;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op2_8 = i->Ib();
 
@@ -264,10 +234,8 @@ BX_CPU_C::SBB_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(diff_8);
     }
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8,
-                           temp_CF);
+  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
 }
-
 
 
   void
@@ -321,14 +289,11 @@ BX_CPU_C::SUB_ALIb(bxInstruction_c *i)
 
   op1_8 = AL;
   op2_8 = i->Ib();
-
   diff_8 = op1_8 - op2_8;
-
   AL = diff_8;
 
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
 }
-
 
 
   void
@@ -347,13 +312,11 @@ BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Cmp8)
   Bit32u flags32;
-
   asmCmp8(op1_8, op2_8, flags32);
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
-
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
 #endif
 }
@@ -375,17 +338,14 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Cmp8)
   Bit32u flags32;
-
   asmCmp8(op1_8, op2_8, flags32);
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
-
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
 #endif
 }
-
 
 
   void
@@ -394,18 +354,15 @@ BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
   Bit8u op1_8, op2_8;
 
   op1_8 = AL;
-
   op2_8 = i->Ib();
 
 #if defined(BX_HostAsm_Cmp8)
   Bit32u flags32;
-
   asmCmp8(op1_8, op2_8, flags32);
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
-
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
 #endif
 }
@@ -415,7 +372,6 @@ BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
 BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit8u op2, op1, sum;
 
   /* XADD dst(r/m8), src(r8)
@@ -446,7 +402,8 @@ BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_XADD8);
 #else
-  BX_PANIC(("XADD_EbGb: not supported on < 80486"));
+  BX_INFO(("XADD_EbGb: not supported on < 80486"));
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -476,9 +433,7 @@ BX_CPU_C::ADD_EbIb(bxInstruction_c *i)
 BX_CPU_C::ADC_EbIb(bxInstruction_c *i)
 {
   Bit8u op2, op1, sum;
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op2 = i->Ib();
 
@@ -493,8 +448,7 @@ BX_CPU_C::ADC_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(sum);
     }
 
-  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8,
-                           temp_CF);
+  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8, temp_CF);
 }
 
 
@@ -535,13 +489,11 @@ BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Cmp8)
   Bit32u flags32;
-
   asmCmp8(op1_8, op2_8, flags32);
   setEFlagsOSZAPC(flags32);
 #else
   Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
-
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
 #endif
 }
@@ -613,7 +565,6 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit8u op2_8, op1_8, diff_8;
 
-
   if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
@@ -646,6 +597,6 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
     }
 
 #else
-  BX_PANIC(("CMPXCHG_EbGb:"));
+  BX_PANIC(("CMPXCHG_EbGb: not supported for cpulevel <= 3"));
 #endif
 }

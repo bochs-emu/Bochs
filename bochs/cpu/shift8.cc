@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.14 2002-10-25 18:26:29 sshwarts Exp $
+// $Id: shift8.cc,v 1.15 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,16 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-
-
 
 
   void
@@ -81,8 +74,6 @@ BX_CPU_C::ROL_Eb(bxInstruction_c *i)
       set_OF(((op1_8 ^ result_8) & 0x80) > 0);
     }
 }
-
-
 
 
   void
@@ -134,7 +125,6 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
 }
 
 
-
   void
 BX_CPU_C::RCL_Eb(bxInstruction_c *i)
 {
@@ -149,7 +139,6 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
     count = CL;
 
   count = (count & 0x1F) % 9;
-
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -181,7 +170,6 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
     set_CF((op1_8 >> (8 - count)) & 0x01);
     }
 }
-
 
 
   void
@@ -232,8 +220,6 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
 }
 
 
-
-
   void
 BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 {
@@ -274,7 +260,6 @@ BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 }
 
 
-
   void
 BX_CPU_C::SHR_Eb(bxInstruction_c *i)
 {
@@ -313,9 +298,6 @@ BX_CPU_C::SHR_Eb(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SHR8);
 }
-
-
-
 
   void
 BX_CPU_C::SAR_Eb(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.8 2004-04-07 19:23:06 sshwarts Exp $
+// $Id: logical64.cc,v 1.9 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,17 +25,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_X86_64
-
-
 
   void
 BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
@@ -100,9 +94,7 @@ BX_CPU_C::XOR_RAXId(bxInstruction_c *i)
     Bit64u op1_64, op2_64, sum_64;
 
     op1_64 = RAX;
-
     op2_64 = (Bit32s) i->Id();
-
     sum_64 = op1_64 ^ op2_64;
 
     /* now write sum back to destination */
@@ -254,9 +246,7 @@ BX_CPU_C::OR_RAXId(bxInstruction_c *i)
     Bit64u op1_64, op2_64, sum_64;
 
     op1_64 = RAX;
-
     op2_64 = (Bit32s) i->Id();
-
     sum_64 = op1_64 | op2_64;
 
     /* now write sum back to destination */
@@ -325,9 +315,7 @@ BX_CPU_C::AND_RAXId(bxInstruction_c *i)
     Bit64u op1_64, op2_64, sum_64;
 
     op1_64 = RAX;
-
     op2_64 = (Bit32s) i->Id();
-
     sum_64 = op1_64 & op2_64;
 
     /* now write sum back to destination */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.167 2004-07-29 20:15:17 sshwarts Exp $
+// $Id: cpu.h,v 1.168 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3240,9 +3240,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (NT, 14)
 IMPLEMENT_EFLAG_ACCESSOR_IOPL(  12)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,  9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
-
-
-
 
 
 

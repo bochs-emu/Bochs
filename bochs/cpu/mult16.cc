@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.10 2002-10-25 11:44:35 bdenney Exp $
+// $Id: mult16.cc,v 1.11 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,15 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-
 
 
   void
@@ -71,7 +65,6 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
     temp_flag = (product_16h != 0);
     SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
-
 
 
   void
@@ -209,11 +202,6 @@ BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
   void
 BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("IMUL_GvEvIv() unsupported on 8086!"));
-#else
-
-
     Bit16u product_16l;
     Bit16s op2_16, op3_16;
     Bit32s product_32;
@@ -230,7 +218,6 @@ BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
       }
 
     product_32 = op2_16 * op3_16;
-
     product_16l = (product_32 & 0xFFFF);
 
     /* now write product back to destination */
@@ -248,16 +235,11 @@ BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
     else {
       SET_FLAGS_OxxxxC(1, 1);
       }
-#endif
 }
 
   void
 BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("IMUL_GvEv() unsupported on 8086!"));
-#else
-
     Bit16u product_16l;
     Bit16s op1_16, op2_16;
     Bit32s product_32;
@@ -274,7 +256,6 @@ BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     product_32 = op1_16 * op2_16;
-
     product_16l = (product_32 & 0xFFFF);
 
     /* now write product back to destination */
@@ -292,5 +273,4 @@ BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
     else {
       SET_FLAGS_OxxxxC(1, 1);
       }
-#endif
 }

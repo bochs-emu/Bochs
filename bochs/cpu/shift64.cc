@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.11 2004-04-07 19:23:06 sshwarts Exp $
+// $Id: shift64.cc,v 1.12 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,13 +25,10 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
 
 #if BX_SUPPORT_X86_64
 
@@ -41,7 +38,7 @@ BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
 
-  /* op1:op2 << count.  result stored in op1 */
+  /* op1:op2 << count. result stored in op1 */
 
   if (i->b1() == 0x1a4)
     count = i->Ib() & 0x3f;

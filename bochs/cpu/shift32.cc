@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.19 2004-02-15 17:57:45 cbothamy Exp $
+// $Id: shift32.cc,v 1.20 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,10 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -85,7 +81,8 @@ BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
 BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("shrd_evgvib: not supported on < 386"));
+  BX_PANIC(("SHRD_EdGd: not supported on < 386"));
+  UndefinedOpcode(i)
 #else
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -96,7 +93,6 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
     count = CL & 0x1f;
 
   if (!count) return; /* NOP */
-
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {
@@ -133,11 +129,9 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 }
 
 
-
   void
 BX_CPU_C::ROL_Ed(bxInstruction_c *i)
 {
-
   Bit32u op1_32, result_32;
   unsigned count;
 
@@ -178,13 +172,10 @@ BX_CPU_C::ROL_Ed(bxInstruction_c *i)
       }
 }
 
-
-
-
   void
 BX_CPU_C::ROR_Ed(bxInstruction_c *i)
 {
-    Bit32u op1_32, result_32, result_b31;
+  Bit32u op1_32, result_32, result_b31;
   unsigned count;
 
   if (i->b1() == 0xc1)
@@ -225,8 +216,6 @@ BX_CPU_C::ROR_Ed(bxInstruction_c *i)
       }
 }
 
-
-
   void
 BX_CPU_C::RCL_Ed(bxInstruction_c *i)
 {
@@ -239,7 +228,6 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
     count = 1;
   else // (i->b1() == 0xd3)
     count = CL & 0x1f;
-
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {
@@ -278,7 +266,6 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
 }
 
 
-
   void
 BX_CPU_C::RCR_Ed(bxInstruction_c *i)
 {
@@ -291,7 +278,6 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
     count = 1;
   else // (i->b1() == 0xd3)
     count = CL & 0x1f;
-
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {
@@ -330,9 +316,6 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
       set_OF(((op1_32 ^ result_32) & 0x80000000) > 0);
 }
 
-
-
-
   void
 BX_CPU_C::SHL_Ed(bxInstruction_c *i)
 {
@@ -370,9 +353,6 @@ BX_CPU_C::SHL_Ed(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHL32);
 }
 
-
-
-
   void
 BX_CPU_C::SHR_Ed(bxInstruction_c *i)
 {
@@ -399,7 +379,6 @@ BX_CPU_C::SHR_Ed(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Shr32)
     Bit32u flags32;
-
     asmShr32(result_32, op1_32, count, flags32);
     setEFlagsOSZAPC(flags32);
 #else
@@ -418,8 +397,6 @@ BX_CPU_C::SHR_Ed(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHR32);
 #endif
 }
-
-
 
   void
 BX_CPU_C::SAR_Ed(bxInstruction_c *i)

@@ -107,8 +107,7 @@ OBJS = \
 	bit.o \
 	string.o \
 	paging.o \
-	$(EXT_DEBUG_OBJS) \
-
+	$(EXT_DEBUG_OBJS)
 	
 # Objects which are only used for x86-64 code
 OBJS64 = \
@@ -120,8 +119,7 @@ OBJS64 = \
 	mult64.o \
 	resolve64.o \
 	shift64.o \
-	stack64.o \
-	
+	stack64.o
 
 BX_INCLUDES = ../bochs.h ../config.h
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.28 2004-06-18 14:11:06 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.29 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,9 +35,8 @@
   void
 BX_CPU_C::XCHG_ERXEAX(bxInstruction_c *i)
 {
-  Bit32u temp32;
+  Bit32u temp32 = EAX;
 
-  temp32 = EAX;
 #if BX_SUPPORT_X86_64
   RAX = BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx = temp32;
@@ -84,7 +83,6 @@ BX_CPU_C::MOV_GdEEd(bxInstruction_c *i)
   // 2nd modRM operand Ex, is known to be a memory operand, Ed.
 
   BX_CLEAR_64BIT_HIGH(i->nnn());
-
   read_virtual_dword(i->seg(), RMAddr(i), &BX_READ_32BIT_REG(i->nnn()));
 }
 
@@ -145,7 +143,8 @@ BX_CPU_C::MOV_EdId(bxInstruction_c *i)
 BX_CPU_C::MOVZX_GdEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEb: not supported on < 386"));
+  BX_INFO(("MOVZX_GvEb: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit8u  op2_8;
 
@@ -166,7 +165,8 @@ BX_CPU_C::MOVZX_GdEb(bxInstruction_c *i)
 BX_CPU_C::MOVZX_GdEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEw: not supported on < 386"));
+  BX_INFO(("MOVZX_GvEw: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit16u op2_16;
 
@@ -187,7 +187,8 @@ BX_CPU_C::MOVZX_GdEw(bxInstruction_c *i)
 BX_CPU_C::MOVSX_GdEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEb: not supported on < 386"));
+  BX_INFO(("MOVSX_GvEb: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit8u op2_8;
 
@@ -208,7 +209,8 @@ BX_CPU_C::MOVSX_GdEb(bxInstruction_c *i)
 BX_CPU_C::MOVSX_GdEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
+  BX_INFO(("MOVSX_GvEw: not supported on < 386"));
+  UndefinedOpcode(i);
 #else
   Bit16u op2_16;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.29 2004-02-15 17:57:43 cbothamy Exp $
+// $Id: arith16.cc,v 1.30 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,13 +38,11 @@ BX_CPU_C::INC_RX(bxInstruction_c *i)
 {
 #if defined(BX_HostAsm_Inc16)
   Bit32u flags32;
-
   asmInc16(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx, flags32);
   setEFlagsOSZAP(flags32);
 #else
   Bit16u rx;
   rx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
-
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_INC16);
 #endif
 }
@@ -54,14 +52,11 @@ BX_CPU_C::DEC_RX(bxInstruction_c *i)
 {
 #if defined(BX_HostAsm_Dec16)
   Bit32u flags32;
-
   asmDec16(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx, flags32);
   setEFlagsOSZAP(flags32);
 #else
   Bit16u rx;
-
   rx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
-
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_DEC16);
 #endif
 }
@@ -101,7 +96,6 @@ BX_CPU_C::ADD_GwEEw(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Add16)
   Bit32u flags32;
-
   asmAdd16(sum_16, op1_16, op2_16, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -159,10 +153,9 @@ BX_CPU_C::ADD_AXIw(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
   Bit16u op2_16, op1_16, sum_16;
 
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -177,19 +170,15 @@ BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(sum_16);
     }
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16,
-                         temp_CF);
+  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
 }
 
 
   void
 BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
   Bit16u op1_16, op2_16, sum_16;
-
-  temp_CF = getB_CF();
-
+  bx_bool temp_CF = getB_CF();
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -204,18 +193,15 @@ BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16,
-                         temp_CF);
+  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
 }
 
 
   void
 BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
   Bit16u op1_16, op2_16, sum_16;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op1_16 = AX;
   op2_16 = i->Iw();
@@ -224,11 +210,8 @@ BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
 
   AX = sum_16;
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16,
-                         temp_CF);
+  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
 }
-
-
 
 
   void
@@ -260,11 +243,8 @@ BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
   void
 BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
-
-  temp_CF = getB_CF();
-
   Bit16u op1_16, op2_16, diff_16;
+  bx_bool temp_CF = getB_CF();
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -287,10 +267,8 @@ BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
   void
 BX_CPU_C::SBB_AXIw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
   Bit16u op1_16, op2_16, diff_16;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op1_16 = AX;
   op2_16 = i->Iw();
@@ -303,15 +281,11 @@ BX_CPU_C::SBB_AXIw(bxInstruction_c *i)
                          temp_CF);
 }
 
-
-
   void
 BX_CPU_C::SBB_EwIw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
   Bit16u op2_16, op1_16, diff_16;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op2_16 = i->Iw();
 
@@ -342,7 +316,6 @@ BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
 #if defined(BX_HostAsm_Sub16)
     Bit32u flags32;
-
     asmSub16(diff_16, op1_16, op2_16, flags32);
     setEFlagsOSZAPC(flags32);
 #else
@@ -354,7 +327,6 @@ BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
 #if defined(BX_HostAsm_Sub16)
     Bit32u flags32;
-
     asmSub16(diff_16, op1_16, op2_16, flags32);
     setEFlagsOSZAPC(flags32);
 #else
@@ -386,7 +358,6 @@ BX_CPU_C::SUB_GwEw(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Sub16)
   Bit32u flags32;
-
   asmSub16(diff_16, op1_16, op2_16, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -410,7 +381,6 @@ BX_CPU_C::SUB_AXIw(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Sub16)
   Bit32u flags32;
-
   asmSub16(diff_16, op1_16, op2_16, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -491,7 +461,6 @@ BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Cmp16)
   Bit32u flags32;
-
   asmCmp16(op1_16, op2_16, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -565,7 +534,6 @@ BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
 }
 
 
-
   void
 BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
 {
@@ -577,7 +545,6 @@ BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Add16)
   Bit32u flags32;
-
   asmAdd16(sum_16, op1_16, op2_16, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -601,7 +568,6 @@ BX_CPU_C::ADD_EGwIw(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Add16)
   Bit32u flags32;
-
   asmAdd16(sum_16, op1_16, op2_16, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -617,10 +583,8 @@ BX_CPU_C::ADD_EGwIw(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
   Bit16u op2_16, op1_16, sum_16;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op2_16 = i->Iw();
 
@@ -635,8 +599,7 @@ BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(sum_16);
     }
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16,
-                         temp_CF);
+  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
 }
 
 
@@ -644,7 +607,6 @@ BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
 BX_CPU_C::SUB_EwIw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16, diff_16;
-
 
   op2_16 = i->Iw();
 
@@ -694,7 +656,6 @@ BX_CPU_C::CMP_EwIw(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Cmp16)
   Bit32u flags32;
-
   asmCmp16(op1_16, op2_16, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -711,7 +672,6 @@ BX_CPU_C::CMP_EwIw(bxInstruction_c *i)
 BX_CPU_C::NEG_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, diff_16;
-
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
@@ -756,7 +716,6 @@ BX_CPU_C::DEC_Ew(bxInstruction_c *i)
   if (i->modC0()) {
 #if defined(BX_HostAsm_Dec16)
     Bit32u flags32;
-
     asmDec16(BX_CPU_THIS_PTR gen_reg[i->rm()].word.rx, flags32);
     setEFlagsOSZAP(flags32);
 #else
@@ -788,7 +747,6 @@ BX_CPU_C::DEC_Ew(bxInstruction_c *i)
 BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit16u op2_16, op1_16, diff_16;
 
   if (i->modC0()) {
@@ -823,6 +781,7 @@ BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
     }
 
 #else
-  BX_PANIC(("CMPXCHG_EwGw:"));
+  BX_INFO(("CMPXCHG_EwGw: not supported for cpulevel <= 3"));
+  UndefinedOpcode(i);
 #endif
 }

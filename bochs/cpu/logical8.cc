@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.22 2004-02-15 17:57:45 cbothamy Exp $
+// $Id: logical8.cc,v 1.23 2004-08-09 21:28:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,14 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 
   void
@@ -85,9 +80,7 @@ BX_CPU_C::XOR_ALIb(bxInstruction_c *i)
 
   op1 = AL;
   op2 = i->Ib();
-
   sum = op1 ^ op2;
-
   AL = sum;
 
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_XOR8);
@@ -195,7 +188,6 @@ BX_CPU_C::OR_GbEb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Or8)
   Bit32u flags32;
-
   asmOr8(result, op1, op2, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -248,7 +240,6 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_And8)
     Bit32u flags32;
-
     asmAnd8(result, op1, op2, flags32);
     setEFlagsOSZAPC(flags32);
 #else
@@ -262,7 +253,6 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_And8)
     Bit32u flags32;
-
     asmAnd8(result, op1, op2, flags32);
     setEFlagsOSZAPC(flags32);
 #else
@@ -294,7 +284,6 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_And8)
   Bit32u flags32;
-
   asmAnd8(result, op1, op2, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -320,7 +309,6 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_And8)
   Bit32u flags32;
-
   asmAnd8(result, op1, op2, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -342,7 +330,6 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
-
   op2 = i->Ib();
 
   if (i->modC0()) {
@@ -350,7 +337,6 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_And8)
     Bit32u flags32;
-
     asmAnd8(result, op1, op2, flags32);
     setEFlagsOSZAPC(flags32);
 #else
@@ -364,7 +350,6 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_And8)
     Bit32u flags32;
-
     asmAnd8(result, op1, op2, flags32);
     setEFlagsOSZAPC(flags32);
 #else
@@ -396,7 +381,6 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Test8)
   Bit32u flags32;
-
   asmTest8(op1, op2, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -447,7 +431,6 @@ BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Test8)
   Bit32u flags32;
-
   asmTest8(op1, op2, flags32);
   setEFlagsOSZAPC(flags32);
 #else
