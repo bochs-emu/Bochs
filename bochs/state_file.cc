@@ -27,84 +27,73 @@
 
 
 #include "bochs.h"
+#define LOG_THIS genlog->
 
 
 FILE *state_file::get_handle()
 {
-  fprintf(stderr, "# state_file::get_handle()\n");
+  BX_INFO(("state_file::get_handle()\n"));
   return NULL;
 }
 	
 void state_file::write(Bit8u)
 {
-  fprintf(stderr, "# state_file::write(Bit8u)\n");
-  exit(1);
+  BX_PANIC(("state_file::write(Bit8u)\n"));
 }
 
 void state_file::write(Bit16u)
 {
-  fprintf(stderr, "# state_file::write(Bit16u)\n");
-  exit(1);
+  BX_PANIC(("state_file::write(Bit16u)\n"));
 }
 
 void state_file::write(Bit32u)
 {
-  fprintf(stderr, "# state_file::write(Bit32u)\n");
-  exit(1);
+  BX_PANIC(("state_file::write(Bit32u)\n"));
 }
 
 void state_file::write(Bit64u)
 {
-  fprintf(stderr, "# state_file::write(Bit64u)\n");
-  exit(1);
+  BX_PANIC(("state_file::write(Bit64u)\n"));
 }
 
 void state_file::write(const void *, size_t)
 {
-  fprintf(stderr, "# state_file::write(const void *, size_t)\n");
-  exit(1);
+  BX_PANIC(("state_file::write(const void *, size_t)\n"));
 }
 
 void state_file::read(Bit8u &)
 {
-  fprintf(stderr, "# state_file::read(uint8 &)\n");
-  exit(1);
+  BX_PANIC(("state_file::read(uint8 &)\n"));
 }
 
 void state_file::read(Bit16u &)
 {
-  fprintf(stderr, "# state_file::read(uint16 &)\n");
-  exit(1);
+  BX_PANIC(("state_file::read(uint16 &)\n"));
 }
 
 void state_file::read(Bit32u &)
 {
-  fprintf(stderr, "# state_file::read(uint32 &)\n");
-  exit(1);
+  BX_PANIC(("state_file::read(uint32 &)\n"));
 }
 
 void state_file::read(Bit64u &)
 {
-  fprintf(stderr, "# state_file::read(uint64 &)\n");
-  exit(1);
+  BX_PANIC(("state_file::read(uint64 &)\n"));
 }
 
 void state_file::read(void *, size_t)
 {
-  fprintf(stderr, "# state_file::read(void *, size_t)\n");
-  exit(1);
+  BX_PANIC(("state_file::read(void *, size_t)\n"));
 }
 
 void state_file::write_check(const char *)
 {
-  fprintf(stderr, "# state_file::write_check()\n");
-  exit(1);
+  BX_PANIC(("state_file::write_check()\n"));
 }
 
 void state_file::read_check (const char *)
 {
-  fprintf(stderr, "# state_file::read_check()\n");
-  exit(1);
+  BX_PANIC(("state_file::read_check()\n"));
 }
 
 state_file::state_file (const char *name, const char *options)
@@ -122,5 +111,5 @@ state_file::state_file (FILE *f)
 
 state_file::~state_file()
 {
-  genlog->info("state_file::~state_file()\n");
+  BX_INFO(("state_file::~state_file()\n"));
 }

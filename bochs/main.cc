@@ -457,7 +457,7 @@ bx_bochs_init(int argc, char *argv[])
   bx_pc_system.start_timers();
 #endif
 
-  genlog->info("bx_bochs_init is setting signal handlers\n");
+  BX_INFO(("bx_bochs_init is setting signal handlers\n"));
 // if not using debugger, then we can take control of SIGINT.
 // If using debugger, it needs control of this.
 #if BX_DEBUGGER==0
@@ -530,7 +530,7 @@ bx_atexit(void)
       bx_devices.pci->print_i440fx_state();
       }
 #endif
-    genlog->info("bochs exited, log file was '%s'\n", logfilename);
+    BX_INFO(("bochs exited, log file was '%s'\n", logfilename));
 }
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
@@ -580,10 +580,10 @@ parse_bochsrc(void)
       return;
       }
     else
-      genlog->info("using rc file '%s'.\n", bochsrc_path);
+      BX_INFO(("using rc file '%s'.\n", bochsrc_path));
     }
   else
-    genlog->info("using rc file '%s'.\n", bochsrc_path);
+    BX_INFO(("using rc file '%s'.\n", bochsrc_path));
 
 #else
   // try opening file bochsrc only in current directory for win32
