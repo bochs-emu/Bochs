@@ -111,7 +111,7 @@ AC_SUBST(BX_USE_NEW_PIT)
 
 AC_MSG_CHECKING(for slowdown timer)
 AC_ARG_ENABLE(slowdown,
-  [  --enable-slowdown                 use slowdown timer],
+  [  --enable-slowdown                 use Greg Alexander's slowdown timer],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_USE_SLOWDOWN_TIMER, 1)
@@ -129,6 +129,23 @@ AC_ARG_ENABLE(slowdown,
   )
 AC_SUBST(BX_USE_SLOWDOWN_TIMER)
 AC_SUBST(SLOWDOWN_OBJS)
+
+AC_MSG_CHECKING(for idle hack)
+AC_ARG_ENABLE(idle-hack,
+  [  --enable-idle-hack                 use Roland Mainz's idle hack],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_USE_IDLE_HACK, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_USE_IDLE_HACK, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_USE_IDLE_HACK, 0)
+    ]
+  )
+AC_SUBST(BX_USE_IDLE_HACK)
 
 
 AC_MSG_CHECKING(for number of processors)
