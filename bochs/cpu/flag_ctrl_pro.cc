@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.7 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: flag_ctrl_pro.cc,v 1.8 2002-09-11 03:55:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ BX_CPU_C::write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF)
 #endif
   if (change_IF) {
     changeMask |= (1<<9);
-    BX_CPU_THIS_PTR eflags.if_ = (flags >> 9) & 0x01;
+    BX_CPU_THIS_PTR eflags.set_IF ((flags >> 9) & 0x01);
     }
 
 
@@ -92,22 +92,17 @@ BX_CPU_C::write_eflags(Bit32u eflags_raw, Boolean change_IOPL, Boolean change_IF
 #endif
   if (change_IOPL)
     changeMask |= (3<<12);
-  if (change_IF) {
+  if (change_IF)
     changeMask |= (1<<9);
-    BX_CPU_THIS_PTR eflags.if_ = (eflags_raw >> 9) & 0x01;
-    }
   if (change_VM) {
-    BX_CPU_THIS_PTR eflags.vm = (eflags_raw >> 17) & 0x01;
     changeMask |= (1<<17);
 #if BX_SUPPORT_V8086_MODE == 0
     if ( eflags_raw & (1<<17) )
       BX_PANIC(("write_eflags: VM bit set: BX_SUPPORT_V8086_MODE==0"));
 #endif
     }
-  if (change_RF) {
-    BX_CPU_THIS_PTR eflags.rf = (eflags_raw >> 16) & 0x01;
+  if (change_RF)
     changeMask |= (1<<16);
-    }
 
   BX_CPU_THIS_PTR eflags.val32 =
     (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (eflags_raw & changeMask);

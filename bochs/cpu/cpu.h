@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.39 2002-09-10 00:01:01 kevinlawton Exp $
+// $Id: cpu.h,v 1.40 2002-09-11 03:55:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -240,58 +240,77 @@ typedef struct {
   Bit32u val32; // Raw 32-bit value in x86 bit position.  Used to store
                 //   some eflags which are not cached in separate fields.
 
-  // Some cached fields.
-  Boolean if_;
-#if BX_CPU_LEVEL >= 3
-  Boolean rf;
-  Boolean vm;
-#endif
+  // accessors for all eflags (except for lazy flags)
+  // The macro is used once for each flag bit.
+#define IMPLEMENT_EFLAGS_ACCESSORS(name,bitnum)                            \
+  BX_CPP_INLINE void    assert_##name () { val32 |= (1<<bitnum); }         \
+  BX_CPP_INLINE void    clear_##name ()  { val32 &= ~(1<<bitnum); }        \
+  BX_CPP_INLINE Boolean get_##name ()    { return 1 & (val32 >> bitnum); } \
+  BX_CPP_INLINE void    set_##name (Bit32u val) {                          \
+    val32 = (val32&(1<<bitnum)) | (val ? (1<<bitnum) : 0);                 \
+  }
+
+  IMPLEMENT_EFLAGS_ACCESSORS(DF, 10);
+  IMPLEMENT_EFLAGS_ACCESSORS(ID, 21)
+  IMPLEMENT_EFLAGS_ACCESSORS(VP, 20)
+  IMPLEMENT_EFLAGS_ACCESSORS(VF, 19)
+  IMPLEMENT_EFLAGS_ACCESSORS(AC, 18)
+  IMPLEMENT_EFLAGS_ACCESSORS(VM, 17)
+  IMPLEMENT_EFLAGS_ACCESSORS(RF, 16)
+  IMPLEMENT_EFLAGS_ACCESSORS(NT, 14)
+  IMPLEMENT_EFLAGS_ACCESSORS(IF,  9)
+  IMPLEMENT_EFLAGS_ACCESSORS(TF,  8)
+#undef IMPLEMENT_EFLAGS_ACCESSORS
+
+  BX_CPP_INLINE void    set_IOPL(Bit8u val) {
+    const Bit32u mask = (1<<12) | (1<<13);
+    val32 &= ~mask;
+    val32 |= ((3&val) << 12);
+  }
+  BX_CPP_INLINE Boolean get_IOPL() { return 3 & (val32 >> 12); }
+  BX_CPP_INLINE Boolean get_bit1() { return 1; }
+  BX_CPP_INLINE Boolean get_bit3() { return 0; }
+  BX_CPP_INLINE Boolean get_bit5() { return 0; }
+  BX_CPP_INLINE Boolean get_bit15() { return 0; }
   } bx_flags_reg_t;
 
 // EFlags.DF
-#define GetEFlagsDFLogical()    (BX_CPU_THIS_PTR eflags.val32 & (1<<10))
-#define ClearEFlagsDF()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<10)
-#define SetEFlagsDF()           BX_CPU_THIS_PTR eflags.val32 |= (1<<10)
+#define GetEFlagsDFLogical()    (BX_CPU_THIS_PTR eflags.get_DF ())
+#define ClearEFlagsDF()         (BX_CPU_THIS_PTR eflags.clear_DF ())
+#define SetEFlagsDF()           (BX_CPU_THIS_PTR eflags.assert_DF ())
 
 
 // EFlags.TF
-#define GetEFlagsTFLogical()    (BX_CPU_THIS_PTR eflags.val32 & (1<<8))
-#define ClearEFlagsTF()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<8)
-#define SetEFlagsTF()           BX_CPU_THIS_PTR eflags.val32 |= (1<<8)
+#define GetEFlagsTFLogical()    (BX_CPU_THIS_PTR eflags.get_TF ())
+#define ClearEFlagsTF()         (BX_CPU_THIS_PTR eflags.clear_TF ())
+#define SetEFlagsTF()           (BX_CPU_THIS_PTR eflags.assert_TF ())
 
 // EFlags.IF
-#define GetEFlagsIFLogical()    (BX_CPU_THIS_PTR eflags.if_)
-#define ClearEFlagsIF()         BX_CPU_THIS_PTR eflags.if_ = 0, \
-                                BX_CPU_THIS_PTR eflags.val32 &= ~(1<<9)
-#define SetEFlagsIF()           BX_CPU_THIS_PTR eflags.if_ = 1, \
-                                BX_CPU_THIS_PTR eflags.val32 |= (1<<9)
+#define GetEFlagsIFLogical()    (BX_CPU_THIS_PTR eflags.get_IF ())
+#define ClearEFlagsIF()         (BX_CPU_THIS_PTR eflags.clear_IF ())
+#define SetEFlagsIF()           (BX_CPU_THIS_PTR eflags.assert_IF ())
 
 // EFlags.RF
-#define GetEFlagsRFLogical()    (BX_CPU_THIS_PTR eflags.rf)
-#define ClearEFlagsRF()         BX_CPU_THIS_PTR eflags.rf = 0, \
-                                BX_CPU_THIS_PTR eflags.val32 &= ~(1<<16)
-#define SetEFlagsRF()           BX_CPU_THIS_PTR eflags.rf = 1, \
-                                BX_CPU_THIS_PTR eflags.val32 |= (1<<16)
+#define GetEFlagsRFLogical()    (BX_CPU_THIS_PTR eflags.get_RF ())
+#define ClearEFlagsRF()         (BX_CPU_THIS_PTR eflags.clear_RF ())
+#define SetEFlagsRF()           (BX_CPU_THIS_PTR eflags.assert_RF ())
 
 // EFlags.VM
-#define GetEFlagsVMLogical()    (BX_CPU_THIS_PTR eflags.vm)
-#define ClearEFlagsVM()         BX_CPU_THIS_PTR eflags.vm = 0, \
-                                BX_CPU_THIS_PTR eflags.val32 &= ~(1<<17)
-#define SetEFlagsVM()           BX_CPU_THIS_PTR eflags.vm = 1, \
-                                BX_CPU_THIS_PTR eflags.val32 |= (1<<17)
+#define GetEFlagsVMLogical()    (BX_CPU_THIS_PTR eflags.get_VM ())
+#define ClearEFlagsVM()         (BX_CPU_THIS_PTR eflags.clear_VM ())
+#define SetEFlagsVM()           (BX_CPU_THIS_PTR eflags.assert_VM ())
 
 // EFlags.NT
-#define GetEFlagsNTLogical()    (BX_CPU_THIS_PTR eflags.val32 & (1<<14))
-#define ClearEFlagsNT()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<14)
-#define SetEFlagsNT()           BX_CPU_THIS_PTR eflags.val32 |= (1<<14)
+#define GetEFlagsNTLogical()    (BX_CPU_THIS_PTR eflags.get_NT ())
+#define ClearEFlagsNT()         (BX_CPU_THIS_PTR eflags.clear_NT ())
+#define SetEFlagsNT()           (BX_CPU_THIS_PTR eflags.assert_NT ())
 
 // AC
-#define ClearEFlagsAC()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<18)
+#define ClearEFlagsAC()         (BX_CPU_THIS_PTR eflags.clear_AC ())
 
 // IOPL
-#define IOPL                    ((BX_CPU_THIS_PTR eflags.val32 >> 12) & 3)
-#define ClearEFlagsIOPL()       BX_CPU_THIS_PTR eflags.val32 &= ~(3<<12)
-
+#define IOPL                    (BX_CPU_THIS_PTR eflags.get_IOPL ())
+#define ClearEFlagsIOPL()       (BX_CPU_THIS_PTR eflags.set_IOPL (0))
 
 
 #if BX_CPU_LEVEL >= 2
@@ -454,7 +473,6 @@ typedef struct {
   } bx_segment_reg_t;
 
 typedef void * (*BxVoidFPtr_t)(void);
-class BX_CPU_C;
 
 typedef struct BxInstruction_tag {
   // prefix stuff here...
@@ -1821,12 +1839,12 @@ BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
 #  if BX_SUPPORT_V8086_MODE
   BX_CPP_INLINE Boolean
 BX_CPU_C::v8086_mode(void) {
-  return(BX_CPU_THIS_PTR eflags.vm);
+  return (BX_CPU_THIS_PTR eflags.get_VM ());
   }
 
   BX_CPP_INLINE Boolean
 BX_CPU_C::protected_mode(void) {
-  return(BX_CPU_THIS_PTR cr0.pe && !BX_CPU_THIS_PTR eflags.vm);
+  return(BX_CPU_THIS_PTR cr0.pe && !BX_CPU_THIS_PTR eflags.get_VM ());
   }
 #  else
   BX_CPP_INLINE Boolean

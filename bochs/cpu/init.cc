@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.20 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: init.cc,v 1.21 2002-09-11 03:55:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,32 +49,114 @@ BX_CPU_C::BX_CPU_C()
 }
 
 #if BX_WITH_WX
+
+#define CASE_SEG_REG_GET(x) \
+  case BXP_CPU_SEG_##x: \
+    return BX_CPU_THIS_PTR sregs[BX_SEG_REG_##x].selector.value;
+#define CASE_SEG_REG_SET(reg, val) \
+  case BXP_CPU_SEG_##reg: \
+    BX_CPU_THIS_PTR load_seg_reg (&BX_CPU_THIS_PTR sregs[BX_SEG_REG_##reg],val); \
+    break;
+#define CASE_LAZY_EFLAG_GET(flag) \
+    case BXP_CPU_EFLAGS_##flag: \
+      return BX_CPU_THIS_PTR get_##flag ();
+#define CASE_LAZY_EFLAG_SET(flag, val) \
+    case BXP_CPU_EFLAGS_##flag: \
+      BX_CPU_THIS_PTR set_##flag(val); \
+      break;
+#define CASE_EFLAG_GET(flag) \
+    case BXP_CPU_EFLAGS_##flag: \
+      return BX_CPU_THIS_PTR eflags.get_##flag ();
+#define CASE_EFLAG_SET(flag, val) \
+    case BXP_CPU_EFLAGS_##flag: \
+      BX_CPU_THIS_PTR eflags.set_##flag(val); \
+      break;
+
+
 // implement get/set handler for parameters that need unusual set/get
 static Bit32s
 cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 {
   bx_id id = param->get_id ();
-  if (!set) {
+  if (set) {
     switch (id) {
-      case BXP_CPU_CS: 
-	return BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-      default: break;
+      CASE_SEG_REG_SET (CS, val);
+      CASE_SEG_REG_SET (DS, val);
+      CASE_SEG_REG_SET (SS, val);
+      CASE_SEG_REG_SET (ES, val);
+      CASE_SEG_REG_SET (FS, val);
+      CASE_SEG_REG_SET (GS, val);
+      case BXP_CPU_SEG_LDTR:
+        BX_PANIC(("setting LDTR not implemented"));
+	break;
+      case BXP_CPU_SEG_TR:
+        BX_PANIC(("setting TR not implemented"));
+	break;
+      CASE_LAZY_EFLAG_SET (OF, val);
+      CASE_LAZY_EFLAG_SET (SF, val);
+      CASE_LAZY_EFLAG_SET (ZF, val);
+      CASE_LAZY_EFLAG_SET (AF, val);
+      CASE_LAZY_EFLAG_SET (PF, val);
+      CASE_LAZY_EFLAG_SET (CF, val);
+      CASE_EFLAG_SET (ID,   val);
+      //CASE_EFLAG_SET (VIP,  val);
+      //CASE_EFLAG_SET (VIF,  val);
+      CASE_EFLAG_SET (AC,   val);
+      CASE_EFLAG_SET (VM,   val);
+      CASE_EFLAG_SET (RF,   val);
+      CASE_EFLAG_SET (NT,   val);
+      CASE_EFLAG_SET (IOPL, val);
+      CASE_EFLAG_SET (DF,   val);
+      CASE_EFLAG_SET (IF,   val);
+      CASE_EFLAG_SET (TF,   val);
+      default:
+        BX_PANIC (("cpu_param_handler set id %d not handled", id));
     }
   } else {
     switch (id) {
-      case BXP_CPU_CS:
-        BX_CPU_THIS_PTR load_seg_reg (&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], val);
-	break;
-      default: break;
+      CASE_SEG_REG_GET (CS);
+      CASE_SEG_REG_GET (DS);
+      CASE_SEG_REG_GET (SS);
+      CASE_SEG_REG_GET (ES);
+      CASE_SEG_REG_GET (FS);
+      CASE_SEG_REG_GET (GS);
+      case BXP_CPU_SEG_LDTR:
+        return BX_CPU_THIS_PTR ldtr.selector.value;
+        break;
+      case BXP_CPU_SEG_TR:
+        return BX_CPU_THIS_PTR tr.selector.value;
+        break;
+      CASE_LAZY_EFLAG_GET (OF);
+      CASE_LAZY_EFLAG_GET (SF);
+      CASE_LAZY_EFLAG_GET (ZF);
+      CASE_LAZY_EFLAG_GET (AF);
+      CASE_LAZY_EFLAG_GET (PF);
+      CASE_LAZY_EFLAG_GET (CF);
+      CASE_EFLAG_GET (ID);
+      //CASE_EFLAG_GET (VIP);
+      //CASE_EFLAG_GET (VIF);
+      CASE_EFLAG_GET (AC);
+      CASE_EFLAG_GET (VM);
+      CASE_EFLAG_GET (RF);
+      CASE_EFLAG_GET (NT);
+      CASE_EFLAG_GET (IOPL);
+      CASE_EFLAG_GET (DF);
+      CASE_EFLAG_GET (IF);
+      CASE_EFLAG_GET (TF);
+      default:
+        BX_PANIC (("cpu_param_handler get id %d ('%s') not handled", id, param->get_name ()));
     }
   }
   return val;
 }
+#undef CASE_SEG_REG_GET
+#undef CASE_SEG_REG_SET
+
 #endif
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.20 2002-09-08 04:08:14 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.21 2002-09-11 03:55:22 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -82,30 +164,6 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 #endif
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
-
-#if BX_WITH_WX
-  // Register some of the CPUs variables as shadow parameters so that
-  // they can be visible in the config interface.
-  // (Experimental, obviously not a complete list)
-  const char *fmt16 = "%04X";
-  const char *fmt32 = "%08X";
-  Bit32u oldbase = bx_param_num_c::set_default_base (16);
-  const char *oldfmt = bx_param_num_c::set_default_format (fmt32);
-  bx_list_c *list = new bx_list_c (BXP_CPU_PARAMETERS, "CPU State", "", 8);
-  list->add (new bx_shadow_num_c (BXP_CPU_EAX, "EAX", &EAX));
-  list->add (new bx_shadow_num_c (BXP_CPU_EBX, "EBX", &EBX));
-  list->add (new bx_shadow_num_c (BXP_CPU_ECX, "ECX", &ECX));
-  list->add (new bx_shadow_num_c (BXP_CPU_EDX, "EDX", &EDX));
-  list->add (new bx_shadow_num_c (BXP_CPU_EIP, "EIP", &EIP));
-  // CS has a special get/set technique, so it needs a handler function
-  bx_param_num_c *param;
-  list->add (param = new bx_param_num_c (BXP_CPU_CS, "CS", "", 0, 0xffff, 0));
-  param->set_handler (cpu_param_handler);
-  param->set_format (fmt16);
-  // restore defaults
-  bx_param_num_c::set_default_base (oldbase);
-  bx_param_num_c::set_default_format (oldfmt);
-#endif
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
      you can assume there's always a base & index register used.  For
@@ -238,6 +296,115 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sprintf (name, "CPU %p", this);
 
   BX_INSTR_INIT();
+
+#if BX_WITH_WX
+  // Register some of the CPUs variables as shadow parameters so that
+  // they can be visible in the config interface.
+  // (Experimental, obviously not a complete list)
+  bx_param_num_c *param;
+  const char *fmt16 = "%04X";
+  const char *fmt32 = "%08X";
+  Bit32u oldbase = bx_param_num_c::set_default_base (16);
+  const char *oldfmt = bx_param_num_c::set_default_format (fmt32);
+  bx_list_c *list = new bx_list_c (BXP_CPU_PARAMETERS, "CPU State", "", 60);
+#define DEFPARAM_NORMAL(name,field) \
+  list->add (new bx_shadow_num_c (BXP_CPU_##name, #name, &(field)))
+
+
+    DEFPARAM_NORMAL (EAX, EAX);
+    DEFPARAM_NORMAL (EBX, EBX);
+    DEFPARAM_NORMAL (ECX, ECX);
+    DEFPARAM_NORMAL (EDX, EDX);
+    DEFPARAM_NORMAL (ESP, ESP);
+    DEFPARAM_NORMAL (EBP, EBP);
+    DEFPARAM_NORMAL (ESI, ESI);
+    DEFPARAM_NORMAL (EDI, EDI);
+    DEFPARAM_NORMAL (EIP, EIP);
+    DEFPARAM_NORMAL (DR0, dr0);
+    DEFPARAM_NORMAL (DR1, dr1);
+    DEFPARAM_NORMAL (DR2, dr2);
+    DEFPARAM_NORMAL (DR3, dr3);
+    DEFPARAM_NORMAL (DR6, dr6);
+    DEFPARAM_NORMAL (DR7, dr7);
+
+  // segment registers require a handler function because they have
+  // special get/set requirements.
+#define DEFPARAM_SEG_REG(x) \
+  list->add (param = new bx_param_num_c (BXP_CPU_SEG_##x, \
+    #x, "", 0, 0xffff, 0)); \
+  param->set_handler (cpu_param_handler); \
+  param->set_format (fmt16);
+#define DEFPARAM_GLOBAL_SEG_REG(name,field) \
+  list->add (param = new bx_shadow_num_c (BXP_CPU_##name##_BASE,  \
+        #name" base", \
+	& BX_CPU_THIS_PTR field.base)); \
+  list->add (param = new bx_shadow_num_c (BXP_CPU_##name##_LIMIT, \
+        #name" limit", \
+	& BX_CPU_THIS_PTR field.limit));
+
+  DEFPARAM_SEG_REG(CS);
+  DEFPARAM_SEG_REG(DS);
+  DEFPARAM_SEG_REG(SS);
+  DEFPARAM_SEG_REG(ES);
+  DEFPARAM_SEG_REG(FS);
+  DEFPARAM_SEG_REG(GS);
+  DEFPARAM_SEG_REG(LDTR);
+  DEFPARAM_SEG_REG(TR);
+  DEFPARAM_GLOBAL_SEG_REG(GDTR, gdtr);
+  DEFPARAM_GLOBAL_SEG_REG(IDTR, idtr);
+#undef DEFPARAM_SEGREG
+
+  // flags implemented in lazy_flags.cc must be done with a handler
+  // that calls their get function, to force them to be computed.
+#define DEFPARAM_EFLAG(name) \
+  list->add ( \
+      param = new bx_param_bool_c ( \
+	BXP_CPU_EFLAGS_##name, \
+        #name, "", eflags.get_##name())); \
+  param->set_handler (cpu_param_handler);
+#define DEFPARAM_LAZY_EFLAG(name) \
+  list->add ( \
+      param = new bx_param_bool_c ( \
+	BXP_CPU_EFLAGS_##name, \
+        #name, "", get_##name())); \
+  param->set_handler (cpu_param_handler);
+
+#if BX_CPU_LEVEL >= 4
+  DEFPARAM_EFLAG(ID);
+  //DEFPARAM_EFLAG(VIP);
+  //DEFPARAM_EFLAG(VIF);
+  DEFPARAM_EFLAG(AC);
+#endif
+#if BX_CPU_LEVEL >= 3
+  DEFPARAM_EFLAG(VM);
+  DEFPARAM_EFLAG(RF);
+#endif
+#if BX_CPU_LEVEL >= 2
+  DEFPARAM_EFLAG(NT);
+  // IOPL is a special case because it is 2 bits wide.
+  list->add (
+      param = new bx_shadow_num_c (
+	BXP_CPU_EFLAGS_IOPL,
+        "IOPL", "", 0, 3, 
+	&eflags.val32,
+	12, 13));
+#endif
+  DEFPARAM_LAZY_EFLAG(OF);
+  DEFPARAM_EFLAG(DF);
+  DEFPARAM_EFLAG(IF);
+  DEFPARAM_EFLAG(TF);
+  DEFPARAM_LAZY_EFLAG(SF);
+  DEFPARAM_LAZY_EFLAG(ZF);
+  DEFPARAM_LAZY_EFLAG(AF);
+  DEFPARAM_LAZY_EFLAG(PF);
+  DEFPARAM_LAZY_EFLAG(CF);
+
+
+  // restore defaults
+  bx_param_num_c::set_default_base (oldbase);
+  bx_param_num_c::set_default_format (oldfmt);
+#endif
+
 }
 
 
