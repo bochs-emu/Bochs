@@ -315,10 +315,20 @@ fullscreen: enabled=0
 screenmode: name="sample"
 
 #=======================================================================
+# ne2k: NE2000 compatible ethernet adapter
+#
+# Examples:
+# ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
+# ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+# ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=win32, ethdev=MYCARD
+# ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+#=======================================================================
+
+#=======================================================================
 # other stuff
 #=======================================================================
 # magic_break
-# ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
+
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 i440fxsupport: enabled=0
