@@ -41,6 +41,9 @@ Changes in 2.1 (July ??, 2003):
 [+] Fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
   in 32bit mode.
 
+[+] Fixed fetchdecode bug caused wrong decoding of opcodes containing
+    BxImmediate_IvIw or BxImmediate_IwIb in x86-64.
+
 [+] Hundreds of bugfixes in FPU emulation after checking of the emulation
   with testfloat. Fixed cases:
 
