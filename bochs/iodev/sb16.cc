@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.15 2002-01-05 10:30:24 vruppert Exp $
+// $Id: sb16.cc,v 1.16 2002-01-13 17:07:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -193,6 +193,11 @@ void bx_sb16_c::init(bx_devices_c *d)
   dsp_reset(0);       // (reset is 1 to 0 transition)
 
   BX_SB16_IRQ = -1; // will be initialized later by the mixer reset
+
+  MIXER.reg[0x80] = 2;  // IRQ 5
+  MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
+  MIXER.reg[0x82] = 0;  // no IRQ pending
+  set_irq_dma();        // set the IRQ and DMA
 
   // call the mixer reset
   mixer_writeregister(0x00);
@@ -1245,12 +1250,8 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
     case 0:  // initialize mixer
 
       writelog(BOTHLOG(4), "Initializing mixer...");
-      for (i=0; i<BX_SB16_MIX_REG; i++)
+      for (i=0; i<0x80; i++)
 	MIXER.reg[i] = 0;
-      MIXER.reg[0x80] = 2;  // IRQ 5
-      MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
-
-      set_irq_dma();        // set the IRQ and DMA
 
       MIXER.regindex = 0;   // next mixer register read is register 0
       break;
@@ -3139,10 +3140,7 @@ void bx_sb16_c::writelog(int loglevel, const char *str, ...)
 // append a line to the log file, if desired
   if ( (int) bx_options.sb16.Ologlevel->get () >= loglevel)
     {
-	time_t timep = time(NULL);
-	tm *t = localtime(&timep);
-	fprintf(LOGFILE, "%02d:%02d:%02d (%i): ",
-		t->tm_hour, t->tm_min, t->tm_sec, loglevel );
+        fprintf(LOGFILE, "%011lld (%i) ", bx_pc_system.time_ticks(), loglevel);
 	va_list ap;
 	va_start(ap, str);
 	vfprintf(LOGFILE, str, ap);
