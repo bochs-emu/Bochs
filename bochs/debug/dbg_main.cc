@@ -468,7 +468,7 @@ bx_get_command(void)
 #if HAVE_LIBREADLINE
   if (bx_infile_stack_index == 0) {
     charptr_ret = readline (prompt);
-    // beward, returns NULL on end of file
+    // beware, returns NULL on end of file
     if (charptr_ret && strlen(charptr_ret) > 0) {
       add_history (charptr_ret);
       strcpy (tmp_buf, charptr_ret);
