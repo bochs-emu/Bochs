@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.82 2002-09-26 21:32:25 kevinlawton Exp $
+// $Id: cpu.h,v 1.83 2002-09-27 07:01:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2236,6 +2236,10 @@ union {
 
   BX_SMF void SWAPGS(bxInstruction_c *i);
 
+  BX_SMF void LOOPNE64_Jb(bxInstruction_c *);
+  BX_SMF void LOOPE64_Jb(bxInstruction_c *);
+  BX_SMF void LOOP64_Jb(bxInstruction_c *);
+  BX_SMF void JCXZ64_Jb(bxInstruction_c *);
 #endif  // #if BX_SUPPORT_X86_64
 
   // mch added

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.13 2002-09-26 22:34:06 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.14 2002-09-27 07:01:02 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -289,12 +289,8 @@ BX_CPU_C::JMP_Jq(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   RIP += (Bit32s) i->Id();
-  if (i->os32L()==0) {
-    // For 16-bit opSize, upper bits of RIP are cleared, as in
-    // 32-bit counterpart JMP_Jd.
-    BX_CPU_THIS_PTR dword.rip_upper = 0;
-    BX_CPU_THIS_PTR dword.eip &= 0x0000ffff;
-    }
+  if (i->os32L()==0)
+    RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
   BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_RIP);
 }
 
@@ -331,6 +327,8 @@ BX_CPU_C::JCC_Jq(bxInstruction_c *i)
   if (condition) {
 
     RIP += (Bit32s) i->Id();
+    if (i->os32L()==0)
+      RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
     BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
     revalidate_prefetch_q();
     }
@@ -450,4 +448,142 @@ BX_CPU_C::IRET64(bxInstruction_c *i)
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
+}
+
+
+  void
+BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
+{
+  if (i->as64L()) {
+    if ( RCX == 0 ) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+  else {
+    if ( ECX == 0 ) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+  }
+}
+
+
+
+  void
+BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
+{
+  if (i->as64L()) {
+
+    if ( ((--RCX)!=0) && (get_ZF()==0) ) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+  else {
+    if ( ((--ECX)!=0) && (get_ZF()==0) ) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+}
+
+  void
+BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
+{
+  if (i->as64L()) {
+
+    if ( ((--RCX)!=0) && (get_ZF()) ) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+  else {
+    if ( ((--ECX)!=0) && get_ZF()) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+}
+
+  void
+BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
+{
+  if (i->as64L()) {
+
+    if ((--RCX) != 0) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+  else {
+    if ((--ECX) != 0) {
+      RIP += (Bit32s) i->Id();
+      if (i->os32L()==0)
+        RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
 }

@@ -608,9 +608,6 @@ typedef
 // soon and there is no configure option for them (on purpose).
 // By default, they are not compiled in.
 
-// Set this to 1 if you want to try my 64-bit hacks to get Linux booting.
-#define KPL64Hacks 0
-
 // I set this to 1 to bail in instructions which may not be honoring
 // the 64-bit widths of RIP/RSP.  If I trip a panic, then I clean
 // the function up and remove the panic.  You don't have to use

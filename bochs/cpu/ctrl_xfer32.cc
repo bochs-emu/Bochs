@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.18 2002-09-24 00:44:55 kevinlawton Exp $
+// $Id: ctrl_xfer32.cc,v 1.19 2002-09-27 07:01:02 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -405,31 +405,21 @@ BX_CPU_C::JCC_Jd(bxInstruction_c *i)
     }
 
   if (condition) {
-#if BX_SUPPORT_X86_64
-#if KPL64Hacks
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      RIP += (Bit32s) i->Id();
-      }
-    else
-#endif
-#endif
-      {
 BailBigRSP("JCC_Jd");
-      Bit32u new_EIP;
+    Bit32u new_EIP;
 
-      new_EIP = EIP + (Bit32s) i->Id();
+    new_EIP = EIP + (Bit32s) i->Id();
 #if BX_CPU_LEVEL >= 2
-      if (protected_mode()) {
-        if ( new_EIP >
-             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled )
-          {
-          BX_PANIC(("jo_routine: offset outside of CS limits"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-          }
+    if (protected_mode()) {
+      if ( new_EIP >
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled )
+        {
+        BX_PANIC(("jo_routine: offset outside of CS limits"));
+        exception(BX_GP_EXCEPTION, 0, 0);
         }
-#endif
-      EIP = new_EIP;
       }
+#endif
+    EIP = new_EIP;
     BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
     revalidate_prefetch_q();
     }
