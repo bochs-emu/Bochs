@@ -43,10 +43,7 @@ and other OS's, all on your workstation.
 	/usr/local/bochs/@VERSION@
 	/usr/local/bochs/dlxlinux
 	/usr/local/bochs/latest
-	/usr/man/man1/bochs.1
-	/usr/man/man1/bochsrc.1
-	/usr/man/man1/bochs-dlx.1
-	/usr/man/man1/bximage.1
+	/usr/man/man1/*
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs
 	if test "/" != $RPM_BUILD_ROOT; then
