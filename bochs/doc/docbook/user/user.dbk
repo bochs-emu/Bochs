@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.151 2004-10-10 07:31:22 vruppert Exp $
+$Id: user.dbk,v 1.152 2004-10-30 16:05:44 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -555,21 +555,33 @@ currently work with.
 
 <section id="supported-platforms"><title>Supported Platforms</title>
 <para>
-       &FIXME; should add a column with supported display library (X11, SDL, wx, etc...)
+The following table shows the supported platforms with a small decription and
+the available display libraries on these platforms. The display library is the
+code that displays the Bochs VGA screen and handles keyboard and mouse events.
 </para>
 <table><title>Supported platforms</title>
-   <tgroup cols="2" align="left" colsep="1" rowsep="1">
-   <tbody>
-   <row>
+  <tgroup cols="3" align="left" colsep="1" rowsep="1">
+  <thead>
+    <row>
+      <entry>Platform</entry>
+      <entry>Description</entry>
+      <entry>Display Libraries</entry>
+    </row>
+  </thead>
+  <tbody>
+    <row>
       <entry>Unix/X11</entry>
       <entry>X windows has always been well supported because it was
       Kevin Lawton's main development platform.  Bryce Denney maintains
       the Unix/X11 platform now.  Most features and fixes (not all) are
       tried first in Unix and then ported to the others.
       </entry>
-   </row>
+      <entry>
+      x, sdl, wx, term, rfb
+      </entry>
+    </row>
 
-   <row>
+    <row>
       <entry>Win32</entry>
       <entry>This port was done by David Ross and is now maintained
       by Don Becker.  You can compile with MS Visual C++ 5.0 or 6.0,
@@ -579,9 +591,12 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 </footnote>.
       See <xref linkend="compiling-win32"> for compile
       instructions.  </entry> 
+      <entry>
+      win32, sdl, wx, rfb
+      </entry>
     </row>
 
-   <row>
+    <row>
       <entry>BeOS</entry>
       <entry>Kevin Lawton wrote this port, originally to R3/PPC using
       CodeWarrior.  It now works on R4/x86 with egcs. Simon Huet picked up
@@ -591,17 +606,23 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
       over the BeOS/Zeta port.  Use the same compile and install process as
       Unix.
       </entry>
-   </row>
+      <entry>
+      beos
+      </entry>
+    </row>
 
-   <row>
-     <entry>MacOS X</entry>
-     <entry>
-     Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
-     Jeremy Parsons (Br'fin) has been maintaining the MacOS X port since
-     March 2002.
-     </entry>
-   </row>
-   <row>
+    <row>
+      <entry>MacOS X</entry>
+      <entry>
+      Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
+      Jeremy Parsons (Br'fin) has been maintaining the MacOS X port since
+      March 2002.
+      </entry>
+      <entry>
+      carbon
+      </entry>
+    </row>
+    <row>
       <entry>Macintosh</entry>
       <entry>David Batterham drbatter@socs.uts.edu.au or drbatter@yahoo.com
       ported bochs to the Mac.  He compiled with CodeWarrior Pro R1 (CW12).  To
@@ -610,16 +631,22 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
       not had time to maintain the page or the Mac port since early 2000. If
       you have Mac development tools and want to contribute, contact the
       &devlist;. </entry>
-   </row>
+      <entry>
+      macos
+      </entry>
+    </row>
 
-   <row>
+    <row>
       <entry>Amiga MorphOS</entry>
       <entry>
       This port is written and maintained by Nicholai Benalal.
       </entry>
-   </row>
+      <entry>
+      amigaos
+      </entry>
+    </row>
 
-   <row>
+    <row>
       <entry>OS/2</entry>
       <entry> Nick Behnken used PE2LX to translate David Ross's Win32
       port to an OS/2 program.  This hasn't been updated in more than
@@ -628,7 +655,10 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
       disappeared and his port has not been updated since March 2000.
       If you want to bring the OS/2 port up to date, contact the &devlist;.
       </entry>
-   </row>
+      <entry>
+      ???
+      </entry>
+    </row>
 
    </tbody>
    </tgroup>
@@ -963,7 +993,9 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 If you have write access to the Bochs CVS tree, the checkout
 command is different for you.  See the Developers Guide<footnote>
 <para>
-&FIXME; not written yet.  For now, look at http://sourceforge.net/cvs/?group_id=12580 for instructions. See "Developer CVS access using SSH."
+See the <ulink url="../development/resources.html">Developers Guide</ulink>
+and/or look at <ulink url="http://sourceforge.net/cvs/?group_id=12580">CVS repository information</ulink>,
+section "Developer CVS Access via SSH", for instructions.
 </para>
 </footnote> for details.
 </para>
@@ -1041,9 +1073,10 @@ below.
       </row>
       <row>
         <entry>P</entry>
-        <entry>-</entry>
+        <entry>patch</entry>
         <entry>
-        P is the same as U, as far as I can tell
+        This does the same as U, but instead of sending the whole file
+        (update), only a diff/patch is sent, thus, less bandwidth is used.
         </entry>
       </row>
       <row>
@@ -1691,14 +1724,43 @@ at least to erase any files that it created.
 Once the program has been built, the next step is typically to run
 <command>make install</command> to copy the executables, documentation, and
 other required files into a public place so that all users can use it.
+By default the files are copied to some directories in /usr/local. The following
+tables shows the directories and their contents.
 <footnote><para>
-&FIXME; We should mention what gets installed, and where.
-    /usr/local/bin/bochs (and bximage, bxcommit)
-    /usr/local/share/bochs/*
-    /usr/local/share/man/man1/bochs*.1 (and bximage.1, bxcommit.1)
+&FIXME;
     make install_dlx option
 </para></footnote>
 </para>
+<table><title>Installed files</title>
+  <tgroup cols="2" align="left" colsep="1" rowsep="1">
+  <tbody>
+    <row>
+      <entry>bin</entry>
+      <entry>binary executables (bochs, bxcommit, bximage)</entry>
+    </row>
+    <row>
+      <entry>lib/bochs/plugins</entry>
+      <entry>plugins (if present)</entry>
+    </row>
+    <row>
+      <entry>man/man1</entry>
+      <entry>manpages for installed binaries</entry>
+    </row>
+    <row>
+      <entry>man/man5</entry>
+      <entry>manpage for the config file (bochsrc)</entry>
+    </row>
+    <row>
+      <entry>share/bochs</entry>
+      <entry>BIOS images, VGABIOS images, keymaps</entry>
+    </row>
+    <row>
+      <entry>share/doc/bochs</entry>
+      <entry>HTML docs, license, readme, changes, bochsrc sample</entry>
+    </row>
+  </tbody>
+  </tgroup>
+</table>
 </section>
 
 </section>  <!-- end of Compiling:Unix section -->
@@ -2058,7 +2120,7 @@ turn it off.
     </row>
     <row>
       <entry>--enable-ignore-bad-msr</entry>
-      <entry>no</entry>
+      <entry>yes</entry>
       <entry>ignore MSR references that Bochs does not understand, instead of doing a panic</entry>
     </row>
     <row>
@@ -2284,6 +2346,13 @@ turn it off.
       <entry>
       Enables the check for the XPM library. This option is only valid if the
       x display library is enabled (<option>--with-x11</option>).
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-show-ips</entry>
+      <entry>no</entry>
+      <entry>
+      Enables logging of measured IPS, see <link linkend="bochsopt-ips">ips option</link>.
       </entry>
     </row>
   </tbody>
@@ -3159,7 +3228,7 @@ the "wx" display library.
 
 </section>
 
-<section><title>log</title>
+<section id="bochsopt-log"><title>log</title>
 <para>
 Examples:
 <screen>
@@ -3242,9 +3311,9 @@ just a configuration problem like "could not find hard drive image."
 <para>
 Examples:
 <screen>
-  log: debugger.out
-  log: /dev/null              (unix only)
-  log: -
+  debugger_log: debugger.out
+  debugger_log: /dev/null              (unix only)
+  debugger_log: -
 </screen>
 Give the path of the log file you'd like Bochs to log debugger output.
 If you really don't want it, make it '/dev/null', or '-'.
@@ -3414,16 +3483,16 @@ was  once  hardwired  to 50000 but now you can adjust it.
 </para>
 </section>
 
-<section><title>ips</title>
+<section id="bochsopt-ips"><title>ips</title>
 <para>
 Examples:
 <screen>
   ips: 1000000
 </screen>
-Emulated Instructions Per Second.  This is the number of IPS that bochs is
-capable of running on your  machine.  You  can  recompile  Bochs, using
-instructions  included in  config.h (in the source code),  to find  your
-workstation's capability.
+Emulated Instructions Per Second.  This is the number of IPS that Bochs is
+capable of running on your machine.  You can recompile Bochs with
+--enable-show-ips option enabled, to find your workstation's capability.
+Measured IPS value will then be logged into your <link linkend="bochsopt-log">log file</link>.
 </para>
 
 <para>
@@ -9726,7 +9795,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.151 2004-10-10 07:31:22 vruppert Exp $
+        $Id: user.dbk,v 1.152 2004-10-30 16:05:44 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
