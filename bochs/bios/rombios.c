@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.39 2002-03-20 21:06:12 cbothamy Exp $
+// $Id: rombios.c,v 1.40 2002-03-24 23:04:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -995,10 +995,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.39 $";
-static char bios_date_string[] = "$Date: 2002-03-20 21:06:12 $";
+static char bios_cvs_version_string[] = "$Revision: 1.40 $";
+static char bios_date_string[] = "$Date: 2002-03-24 23:04:58 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.39 2002-03-20 21:06:12 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.40 2002-03-24 23:04:58 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2728,12 +2728,14 @@ outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
 	xor	ebx,ebx
 	mov	bl,6[bp]
 	imul	ebx
-	add	al,8[bp]
-	adc	ah,#0
+
+	mov 	bl,8[bp]
+	add 	eax,ebx
 	mov	bl,10[bp]
 	imul	ebx
-	add	al,12[bp]
-	adc	ah,#0
+	mov 	bl,12[bp]
+	add 	eax,ebx
+
 	dec	eax
 	mov	dx,#0x1f3
 	out	dx,al
