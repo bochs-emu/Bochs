@@ -13,14 +13,16 @@ Detailed description:
 
   Here is the list of changes:
   
-  * userbutton.h added in gui/bitmaps
+  * userbutton.h and userbutton.xpm added in gui/bitmaps
   * config options for the userbutton shortcut added
   * initialize the new button in the gui.cc
   * the new userbutton handler generates keypresses and relaeses depending on
     the shortcut keyword
   * the gui stops adding buttons to the headerbar if not enough space is left.
-    This can happen when the screen width is 320 pixels. Done for X11 and Win32.
+    This can happen when the screen width is 320 pixels (done for X11 only).
   * TODO: build a dialog box for the wxWindows gui
+
+  The changes are present in CVS now.
 
 Patch was created with:
   diff -u
@@ -67,7 +69,7 @@ diff -urN ../bochs/gui/bitmaps/userbutton.h ./gui/bitmaps/userbutton.h
 +++ ./gui/bitmaps/userbutton.h	Thu Aug  8 00:14:02 2002
 @@ -0,0 +1,19 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.userbutton,v 1.3 2002-08-08 08:05:19 vruppert Exp $
++// $Id: patch.userbutton,v 1.4 2002-08-09 07:41:43 vruppert Exp $
 +/////////////////////////////////////////////////////////////////////////
 +#define BX_USER_BMAP_X 32
 +#define BX_USER_BMAP_Y 32
@@ -311,38 +313,6 @@ diff -urN ../bochs/gui/siminterface.h ./gui/siminterface.h
  } bx_toolbar_buttons;
  
  // Log level defines
-diff -urN ../bochs/gui/win32.cc ./gui/win32.cc
---- ../bochs/gui/win32.cc	Sat Apr 20 09:19:35 2002
-+++ ./gui/win32.cc	Thu Aug  8 00:14:02 2002
-@@ -1019,6 +1019,7 @@
- 
- void bx_gui_c::show_headerbar(void) {
-   unsigned xorigin;
-+  int xleft, xright;
-   HGDIOBJ oldObj;
- 
-   if (!headerbar_changed || !stInfo.UIinited) return;
-@@ -1028,11 +1029,18 @@
-   oldObj = SelectObject(MemoryDC, MemoryBitmap);
-   PatBlt (MemoryDC, 0, 0, dimension_x, bx_headerbar_y, BLACKNESS);
- 	
-+  xleft = 0;
-+  xright = dimension_x;
-   for (unsigned i=0; i<bx_headerbar_entries; i++) {
--    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
-+    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT) {
-       xorigin = bx_headerbar_entry[i].xorigin;
--    else
-+      xleft += bx_headerbar_entry[i].xdim;
-+      }
-+    else {
-       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
-+      xright = xorigin;
-+      }
-+    if (xright < xleft) break;
-     DrawBitmap(MemoryDC, bx_headerbar_entry[i].bitmap, xorigin, 0, SRCCOPY, 0x7);
-   }
- 
 diff -urN ../bochs/gui/wx.cc ./gui/wx.cc
 --- ../bochs/gui/wx.cc	Sat Apr 20 09:19:35 2002
 +++ ./gui/wx.cc	Thu Aug  8 09:31:24 2002
