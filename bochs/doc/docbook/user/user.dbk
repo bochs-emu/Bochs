@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.117 2003-04-28 12:26:01 cbothamy Exp $
+$Id: user.dbk,v 1.118 2003-05-11 19:00:37 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1230,8 +1230,8 @@ please read <xref linkend="vgafont">.
 </para>
 
 <para>
-The Bochs RPM installs three new commands and associated manual pages: bochs,
-bochs-dlx, and bximage.  First, let's try out the DLX Linux demo by typing
+The Bochs RPM installs four new commands and associated manual pages: bochs,
+bochs-dlx, bximage and bxcommit.  First, let's try out the DLX Linux demo by typing
 <command>bochs-dlx</command>.  
 
 <screen>
@@ -1323,8 +1323,9 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/COPYING</entry> <entry> copy of the LGPL license </entry> </row>
 <row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>/usr/bin/bximage </entry> <entry> tool for making new disk images </entry> </row>
+<row><entry>/usr/bin/bxcommit </entry> <entry> tool for committing redologs to flat disk images </entry> </row>
 <row><entry>/usr/share/doc/bochs/bochsrc-sample.txt</entry> <entry> sample Bochs configuration file </entry> </row>
-<row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx and bximage </entry> </row>
+<row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx, bximage and bxcommit</entry> </row>
 <row><entry>/usr/share/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/bochs/BIOS-* </entry> <entry> ROM BIOS images for Bochs.  Normally you would only use BIOS-bochs-latest unless you are simulating multiple processors.  </entry> </row>
@@ -1582,9 +1583,9 @@ Once the program has been built, the next step is typically to run
 other required files into a public place so that all users can use it.
 <footnote><para>
 &FIXME; We should mention what gets installed, and where.
-    /usr/local/bin/bochs (and bximage)
+    /usr/local/bin/bochs (and bximage, bxcommit)
     /usr/local/share/bochs/*
-    /usr/local/share/man/man1/bochs*.1 (and bximage.1)
+    /usr/local/share/man/man1/bochs*.1 (and bximage.1, bxcommit.1)
     make install_dlx option
 </para></footnote>
 </para>
@@ -1977,16 +1978,11 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-split-hd</entry>
-      <entry>yes</entry>
+      <entry>--enable-compressed-hd</entry>
+      <entry>no</entry>
       <entry>
-      When enabled, this allows a series of partial hard disk image files to be
-      treated as if it was one large file.  The .bochsrc specifies the first
-      partial HD image (example win95-1) and then bochs searches for the other
-      partial images in as a sequence (win95-2, win95-3, etc.) and opens them
-      all.  Then, it treats the series as if there was a single large file
-      created by "cat win95-1 win95-2 win95-3".  This trick works for both
-      diskc and diskd.  All files must be a multiple of 512 bytes.
+      Add suport for read-only gzipped compressed disk.
+      zlib must be installed on your system, as it will be dynamically linked to Bochs.
       </entry>
     </row>
     <row>
@@ -2297,7 +2293,8 @@ find the workspace file called <filename>bochs.dsw</filename> and load it in
 VC++.  Choose <command>Project:Set Active Project</command> and be sure that
 "bochs" is selected.  Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the auxiliary
-programs <filename>bximage.exe</filename> and <filename>niclist.exe</filename>.
+programs <filename>bximage.exe</filename>, <filename>bxcommit.exe</filename> 
+and <filename>niclist.exe</filename>.
 </para>
 
 <para>
@@ -2792,10 +2789,10 @@ ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 <para>
 Examples:
 <screen>
-ata0-master: type=disk, path=10M.img, cylinders=306, heads=4, spt=17, translation=none
-ata1-master: type=disk, path=2GB.img, cylinders=5242, heads=16, spt=50, translation=echs
-ata1-slave:  type=disk, path=3GB.img, cylinders=6541, heads=16, spt=63, translation=auto
-ata2-master: type=disk, path=7GB.img, cylinders=14563, heads=16, spt=63, translation=lba
+ata0-master: type=disk, path=10M.img, mode=flat, cylinders=306, heads=4, spt=17, translation=none
+ata1-master: type=disk, path=2GB.cow, mode=vmware3, cylinders=5242, heads=16, spt=50, translation=echs
+ata1-slave:  type=disk, path=3GB.img, mode=sparse, cylinders=6541, heads=16, spt=63, translation=auto
+ata2-master: type=disk, path=7GB.img, mode=undoable, cylinders=14563, heads=16, spt=63, translation=lba
 ata2-slave:  type=cdrom, path=iso.sample, status=inserted
 
 </screen>
@@ -2815,15 +2812,20 @@ This defines the type and characteristics of all attached ata devices:
 </row>
 </thead>
 <tbody>
-<row> <entry> type </entry> <entry> type of attached device </entry> <entry> [disk|cdrom] </entry> </row>
+<row> <entry> type </entry> <entry> type of attached device </entry> <entry> [disk | cdrom] </entry> </row>
 <row> <entry> path  </entry> <entry> path of the image </entry> </row>
+<row> 
+  <entry> mode  </entry> 
+  <entry> image type, only valid for disks </entry> 
+  <entry> [flat | concat | external | dll | sparse | vmware3 | undoable | growable | volatile | z-undoable | z-volatile]</entry> 
+</row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> spt </entry> <entry> only valid for disks </entry> </row>
-<row> <entry> status </entry> <entry> only valid for cdroms </entry> <entry> [inserted|ejected] </entry> </row>
-<row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [none|auto], only for disks on ata0 [cmos] </entry> </row>
-<row> <entry> translation </entry> <entry> type of translation done by the bios (legacy int13), only for disks </entry> <entry> [none|lba|large|rechs|auto] </entry> </row>
-<row> <entry> model </entry> <entry> string returned by identify device command </entry> </row>
+<row> <entry> status </entry> <entry> only valid for cdroms </entry> <entry> [inserted | ejected] </entry> </row>
+<row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [none | auto], only for disks on ata0 [cmos] </entry> </row>
+<row> <entry> translation </entry> <entry> type of translation done by the bios (legacy int13), only for disks </entry> <entry> [none | lba | large | rechs | auto] </entry> </row>
+<row> <entry> model </entry> <entry> string returned by identify device ATA command </entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -2854,7 +2856,8 @@ The path is mandatory for type=cdrom
 </para>
 
 <para>
-The disk translation scheme (implemented in legacy int13 bios functions, and used by
+The disk translation scheme 
+(implemented in legacy int13 bios functions, and used by
 older operating systems like MS-DOS), can be defined as:
 <itemizedlist>
 <listitem><para>
@@ -2873,8 +2876,59 @@ lba : a standard lba-assisted algorithm, for disks up to 8.4GB (16450560 sectors
 auto : autoselection of best translation scheme. (it should be changed if system does not boot)
 </para></listitem>
 </itemizedlist>
+Please see <xref linkend="bios-disk-translation"> for a discussion on translation scheme.
 </para>
 
+<para>
+The mode option defines how the disk image is handled. Disks can be defined as:
+<itemizedlist>
+<listitem><para>
+flat : one file flat layout
+</para></listitem>
+<listitem><para>
+concat : multiple files layout
+</para></listitem>
+<listitem><para>
+external : developer's specific, through a C++ class
+</para></listitem>
+<listitem><para>
+dll : developer's specific, through a DLL
+</para></listitem>
+<listitem><para>
+sparse : stackable, commitable, rollbackable
+</para></listitem>
+<listitem><para>
+vmware3 : vmware3 disk support
+</para></listitem>
+<listitem><para>
+undoable : flat file with commitable redolog
+</para></listitem>
+<listitem><para>
+growable : growing file
+</para></listitem>
+<listitem><para>
+volatile : flat file with volatile redolog
+</para></listitem>
+<listitem><para>
+z-undoable : gziped flat file with commitable redolog (available only if enabled at compile time)
+</para></listitem>
+<listitem><para>
+z-volatile : gziped flat file with volatile redolog (available only if enabled at compile time)
+</para></listitem>
+</itemizedlist>
+Please see <xref linkend="harddisk-modes"> for a discussion on disk mode formats.
+</para>
+
+<para>
+Default values are:
+<screen>
+   mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
+</screen>
+</para>
+
+<para>
+The biosdetect option has currently no effect on the bios
+</para>
 </section>
 
 <section><title>diskc/diskd</title>
@@ -4133,8 +4187,17 @@ Please type hd or fd. [hd]
 
 Since we are creating a hard disk image, accept the default of hd by
 pressing <command>Enter</command> or typing 'hd' and pressing
-<command>Enter</command>.  Next, bximage will ask for the size of the disk
-image you want to create, in Megabytes:
+<command>Enter</command>. Next bximage will ask for the type of
+hd to create :
+
+
+What kind of image should I create?
+Please type flat, sparse or growable. [flat] 
+
+
+We want to create a simple flat image, so accept the default
+by pressing <command>Enter</command>.  Then, bximage will ask 
+for the size of the disk image you want to create, in Megabytes:
 
 
 Enter the hard disk size in megabytes, between 1 and 32255
@@ -4256,7 +4319,9 @@ instructions specific to Bochs, we can add it right here.
 </para>
 </section>
 
-<section id="winimage"><title>Win32 only: Use winimage to manipulate disk images</title>
+<section id="winimage"><title>Win32 only: Tools to manipulate disk images</title>
+
+<section> <title>Winimage</title>
 <para>
 Someone on the bochs-developers list mentioned that they use a program
 called WinImage, from <ulink url="http://www.winimage.com">www.winimage.com</ulink>
@@ -4266,6 +4331,26 @@ commercial product with a 30-day trial.
 <para>
 If anyone wants to write a tutorial, send mail to &devlist; and volunteer.
 </para>
+</section>
+
+<section> <title>DiskExplorer</title>
+<para>
+This section was contributed by Luca Cassioli and Stanislav Shwartsman
+</para>
+<para>
+I eventually found what all of you were looking for for a long time: a
+freeware, graphical, win32 compatible HardDisk image editor! It can 
+handle a large variety of formats, but the one you need is VMWARE
+2.0 PLAIN DISK: you can import/export to/from bochs images COMPLETE
+DIRECTORIES! 
+</para>
+<para>
+You can find it at 
+<ulink url="http://http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html">
+http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html</ulink>
+</para>
+</section>
+
 </section>
 
 <section id="xcolormap"><title>X Windows: Color allocation problems</title>
@@ -5472,7 +5557,7 @@ definitely not happen.
 </para>
         </section>
 
-        <section> 
+        <section id="bios-disk-translation"> 
         <title>Disk translation</title>
         <para>
 Since the beginning of the PC era, disks have grown in size by a factor of 10000. Due to 
@@ -5684,6 +5769,182 @@ Interesting Facts:
 </itemizedlist>
 </para>
 
+</section>
+
+<section id="harddisk-modes"><title>Disk Image Modes</title>
+<para>
+Bochs can handle independent disk image format for each
+disk present on the ata interfaces. 
+
+The disk image type is selected in the configuration file 
+by the "mode" option of the ataX-xxx directives. 
+If unspecified, the default "mode" is flat. Example:
+
+<screen>
+ata0-master: type=disk, mode=flat, path=10M.sample, cylinders=306, heads=4, spt=17
+</screen>
+
+<table><title>Supported Disk Modes</title>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
+<thead>
+ <row>
+  <entry>Name</entry>
+  <entry>Description</entry>
+  <entry>Features</entry>
+ </row>
+</thead>
+<tbody>
+ <row> <entry> flat </entry> <entry> one file, flat layout </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> concat </entry> <entry> multiple files, concatenated </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> dll </entry> <entry> accessed through a DLL (developer specific, windows only) </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> sparse </entry> <entry> stackable, commitable disks </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> vmware3 </entry> <entry> vmware3 disk support </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> undoable </entry> <entry> flat file with a commitable redolog </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> growable </entry> <entry>  one growing file </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> volatile </entry> <entry> flat file with a volatile redolog </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> z-undoable </entry> <entry> gziped flat file with a commitable redolog </entry> 
+       <entry> 
+       </entry>
+ </row>
+ <row> <entry> z-volatile </entry> <entry> gziped flat file with a volatile redolog </entry> 
+       <entry> 
+       </entry>
+ </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+
+<note>
+<para>
+z-undoable and z-volatile modes are only available if the "--enable-compressed-hd" parameter
+was set at compile time.
+</para>
+</note>
+<note>
+<para>
+Please note for z-undoable and z-volatile modes, that, since reads are emulated by zlib, 
+disk accesses are _VERY_ slow.
+</para>
+</note>
+
+<section><title>flat</title>
+<para>
+</para>
+</section>
+
+<section><title>concat</title>
+<para>
+</para>
+</section>
+
+<section><title>external</title>
+<para>
+</para>
+</section>
+
+<section><title>dll</title>
+<para>
+</para>
+</section>
+
+<section><title>sparse</title>
+<para>
+</para>
+</section>
+
+<section><title>vmware3</title>
+<para>
+</para>
+</section>
+
+<section><title>undoable</title>
+<para>
+</para>
+</section>
+
+<section><title>growable</title>
+<para>
+</para>
+</section>
+
+<section><title>volatile</title>
+<para>
+</para>
+</section>
+
+<section><title>z-undoable</title>
+<para>
+</para>
+</section>
+
+<section><title>z-volatile</title>
+<para>
+</para>
+</section>
+
+
+</section>
+
+<section id="using-bxcommit"><title>Using the bxcommit tool</title>
+<para>
+This tool can commit redologs into flat images. 
+</para>
+<para>
+For now, only "undoable" redologs to flat image commits are supported. 
+"z-undoable" redologs can also be used, but you have to manually 
+decompress the gzipped flat file before using bxcommit.
+Sparse disk image commits may be added in the future. 
+</para>
+<para>
+This tool is completely interactive, and does not need any command line parameter.
+Bxcommit asks for the flat image name, the redolog name, and wether to remove
+to redolog file after it commits it.
+</para>
+<para>
+Session example :
+<screen>
+$ ./bxcommit 
+========================================================================
+                               bxcommit
+              Undoable Disk Image Commit Tool for Bochs
+      $Id: user.dbk,v 1.118 2003-05-11 19:00:37 cbothamy Exp $
+========================================================================
+
+What is the flat image name?
+[c.img] myfile.img
+
+What is the redolog name?
+[myfile.img.redolog] toapply.redolog
+
+Shall I remove the redolog afterwards?
+[yes] 
+</screen>
+</para>
 </section>
 
 </chapter>
@@ -7089,6 +7350,9 @@ directory called ~/win98 .
 Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
 
+What kind of image should I create?
+Please type flat, sparse or growable. [flat] 
+
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 1
 
@@ -7399,6 +7663,9 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 
 Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
+
+What kind of image should I create?
+Please type flat, sparse or growable. [flat] 
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 1000
@@ -8092,11 +8359,14 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.117 2003-04-28 12:26:01 cbothamy Exp $
+        $Id: user.dbk,v 1.118 2003-05-11 19:00:37 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
+
+What kind of image should I create?
+Please type flat, sparse or growable. [flat] 
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 2048
