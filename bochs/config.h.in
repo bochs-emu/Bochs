@@ -301,6 +301,7 @@
 #define SIZEOF_UNSIGNED_INT       0
 #define SIZEOF_UNSIGNED_LONG      0
 #define SIZEOF_UNSIGNED_LONG_LONG 0
+#define SIZEOF_INT_P              0
 
 #if BX_WITH_WIN32
   typedef unsigned char      Bit8u;
@@ -365,8 +366,18 @@
 
 #endif // BX_WITH_WIN32
 
-
-
+// create an unsigned integer type that is the same size as a pointer.
+// You can typecast a pointer to a bx_pr_equiv_t without losing any 
+// bits (and without getting the compiler excited).  This is used in
+// the FPU emulation code, where pointers and integers are often 
+// used interchangeably.
+#if SIZEOF_INT_P == 4
+  typedef Bit32u bx_ptr_equiv_t;
+#elif SIZEOF_INT_P == 8
+  typedef Bit64u bx_ptr_equiv_t;
+#else
+#  error "could define bx_ptr_equiv_t to size of int*"
+#endif
 
 #if BX_WITH_MACOS == 0
 typedef unsigned int Boolean;
