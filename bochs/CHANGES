@@ -1,46 +1,30 @@
 -------------------------------------------------------------------------
-Changes in 1.4.1 (June 21, 2002):
+Changes in 1.4.1 (June 22, 2002):
 
 - now cdrom is enabled in configure, unless you specifically disable
   it with --disable-cdrom. (Christophe)
 - fix compile error in main.cc when SMP or APIC is enabled (Dave)
 - the runtime menu now displays 11 (continue) by default (Bryce)
-- fix dma PANIC when installing win95 (Volker)
+- initialize DMA controller before floppy and SB16
+- fix DMA panic when installing win95 (Volker)
 - first character of the vga bitmap is blank on win32 (Volker)
+  Before, it was incorrectly coded as a '@'.
 - AltGr key on European keyboards works now on win32 (Volker)
 - fix problem with console/serial port on Bochs exit (Volker)
+- enable serial port for GNU and GNU/Linux (Volker)
 - small documentation fixes (Volker)
-- fix compile error in gui.cc (Volker)
+- remove unnecessary include statements for X11 (Volker)
 - italian keymap added (Emanuele Goldoni)
-- fix win32 ethernet frames error (Peter Tattam)
+- fix win32 ethernet frames error. It will no longer reject packets
+  that are less than 60 bytes long. (Peter Tattam)
 - BIOS fixes :
   - win2k cd-boot (Christophe)
   - emm386 crash (Dave)
   - cs=0 at boot time (Christophe)
   - keyboard failure in scandisk (Dave)
-
---- This is not complete!
-
-Just to us write the changes file, here are all the files that 
-changed since 1.4:
-  configure
-  configure.in
-  main.cc
-  bios/BIOS-bochs-latest
-  bios/rombios.c
-  build/linux/DOC-linux.html.in
-  build/linux/bochs-docs.in
-  doc/docbook/user/user.dbk
-  font/vga.bitmap.h
-  gui/gui.cc
-  gui/win32.cc
-  iodev/cdrom.cc
-  iodev/devices.cc
-  iodev/dma.h
-  iodev/eth_win32.cc
-  iodev/ne2k.cc
-  iodev/serial.cc
-
+- fix bug in forming the 64-bit APIC base address from two 32-bit registers.
+  A compiler warning in cpu/proc_ctrl.cc pointed this out.
+- fix default choice in the runtime options menu
 
 -------------------------------------------------------------------------
 Changes in 1.4 (March 27, 2002):
