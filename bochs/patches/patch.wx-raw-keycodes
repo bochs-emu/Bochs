@@ -1,0 +1,83 @@
+----------------------------------------------------------------------
+THIS IS A PATCH FOR WXWINDOWS, NOT FOR BOCHS
+----------------------------------------------------------------------
+Patch name: patch.raw-keycodes
+Author: Bryce Denney <bryce@tlw.com>
+Date: Mon Mar 25 13:54:41 EST 2002
+
+Detailed description:
+This patch adds two 32-bit fields to the wxKeyEvent structure, m_rawCode1 and
+m_rawCode2.  On supported wxWindows ports, these two fields will be filled with
+the raw key information from the underlying graphic toolkit.  On unsupported
+ports, the value in m_rawCode1 and 2 will be unpredictable.
+
+The only toolkit supported by this patch is wxGTK.  It copies the GTK keyval
+into m_rawCode1 and sets m_rawCode2 to zero.  The application can then compare
+m_rawCode1 against the GTK key symbols such as GDK_C, GDK_colon, GDK_Alt_L,
+etc.  See <gdk/gdkkeysyms.h> for the complete list.
+
+It is trivial to add support for other toolkits.  Just find the code that
+fills in the wxKeyEvent structure, and set m_rawCode1 (and 2 if not all
+the information fits in 32 bits).  For GTK and MSW ports, look in
+src/gtk/window.cpp and src/msw/window.cpp.  I haven't looked at the
+others.
+
+Patch was created with:
+  diff -ur between two directories
+Apply patch to what version:
+  wxWindows 2.3.2, GTK version
+Instructions:
+  To patch, go to main wxGTK-2.3.2 directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -u -r wxGTK-2.3.2-orig/include/wx/event.h wxGTK-2.3.2/include/wx/event.h
+--- wxGTK-2.3.2-orig/include/wx/event.h	Mon Dec 10 14:07:01 2001
++++ wxGTK-2.3.2/include/wx/event.h	Mon Mar 25 13:21:06 2002
+@@ -763,6 +763,8 @@
+  wxEVT_KEY_UP
+  */
+ 
++#define wxKEY_EVENT_HAS_RAW_CODES 1
++
+ class WXDLLEXPORT wxKeyEvent : public wxEvent
+ {
+ public:
+@@ -825,6 +827,8 @@
+         m_altDown = evt.m_altDown;
+         m_metaDown = evt.m_metaDown;
+         m_scanCode = evt.m_scanCode;
++        m_rawCode1 = evt.m_rawCode1;
++        m_rawCode2 = evt.m_rawCode2;
+ 
+         return *this;
+     }
+@@ -839,6 +843,8 @@
+     bool          m_altDown;
+     bool          m_metaDown;
+     bool          m_scanCode;
++    wxUint32      m_rawCode1;
++    wxUint32      m_rawCode2;
+ 
+ private:
+     DECLARE_DYNAMIC_CLASS(wxKeyEvent)
+diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
+--- wxGTK-2.3.2-orig/src/gtk/window.cpp	Mon Dec 10 14:07:06 2001
++++ wxGTK-2.3.2/src/gtk/window.cpp	Mon Mar 25 13:26:41 2002
+@@ -1043,6 +1043,8 @@
+     event.m_metaDown = (gdk_event->state & GDK_MOD2_MASK);
+     event.m_keyCode = key_code;
+     event.m_scanCode = gdk_event->keyval;
++    event.m_rawCode1 = (wxUint32) gdk_event->keyval;
++    event.m_rawCode2 = 0;
+     event.m_x = x;
+     event.m_y = y;
+     event.SetEventObject( win );
+@@ -1195,6 +1197,8 @@
+     event.m_metaDown = (gdk_event->state & GDK_MOD2_MASK);
+     event.m_keyCode = key_code;
+     event.m_scanCode = gdk_event->keyval;
++    event.m_rawCode1 = (wxUint32) gdk_event->keyval;
++    event.m_rawCode2 = 0;
+     event.m_x = x;
+     event.m_y = y;
+     event.SetEventObject( win );
