@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.16 2005-02-24 12:58:48 akrisak Exp $
+// $Id: dbg_main.cc,v 1.17 2005-03-19 16:38:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2406,7 +2406,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 
     BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
 
-    if (BX_CPU(which_cpu)->protectedMode) { // 16bit & 32bit protected mode
+    if (BX_CPU(which_cpu)->cpu_mode == BX_MODE_IA32_PROTECTED) { // 16bit & 32bit protected mode
      Base=BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.base;
     }
     else {
@@ -2450,7 +2450,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
       dbg_printf ( "(%u).[" FMT_LL "d] ", which_cpu, bx_pc_system.time_ticks());
     else
       dbg_printf ( "(%u) ", which_cpu);
-    if (BX_CPU(which_cpu)->protectedMode) { // 16bit & 32bit protected mode
+    if (BX_CPU(which_cpu)->cpu_mode == BX_MODE_IA32_PROTECTED) { // 16bit & 32bit protected mode
       dbg_printf ( "[0x%08x] %04x:%08x (%s): ", 
 	phy,
         (unsigned) BX_CPU(which_cpu)->guard_found.cs,
@@ -3791,7 +3791,7 @@ bx_dbg_disassemble_command(const char *format, bx_num_range range)
       range.to = BX_MAX_BIT64S; // Disassemble just X lines
     }
 /*
-  if (BX_CPU(dbg_cpu)->protectedMode) { // 16bit & 32bit protected mode
+  if (BX_CPU(dbg_cpu)->cpu_mode == BX_MODE_IA32_PROTECTED) { // 16bit & 32bit protected mode
    Base=BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.base;
   }
   else {
