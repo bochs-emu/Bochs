@@ -1,3 +1,7 @@
+# This script tries to turn on nearly every configure option.
+# It is useful for finding compile problems, but it may turn on
+# more things than you actually want.
+
 ./configure \
   --enable-processors=2  \
   --enable-x86-64 \
