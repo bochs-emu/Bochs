@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.69 2002-11-20 20:27:53 bdenney Exp $
+$Id: user.dbk,v 1.70 2002-11-20 20:58:48 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -539,8 +539,8 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      <entry>MacOS X</entry>
      <entry>
      Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
-     He has been too busy to maintain it, so if you are interested in working
-     on it, contact the &devlist;.
+     Jeremy Parsons (Br'fin) has been maintaining the MacOS X port since
+     March 2002.
      </entry>
    </row>
    <row>
