@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.14 2001-06-11 21:03:05 bdenney Exp $
+ * $Id: control.cc,v 1.15 2001-06-13 08:14:49 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -260,10 +260,10 @@ static char *startup_options_prompt =
 "\n"
 "Please choose one: [0] ";
 
-static char *startup_boot_options_prompt =
-"------------------\n"
-"Bochs Boot Options\n"
-"------------------\n"
+static char *startup_mem_options_prompt =
+"--------------------\n"
+"Bochs Memory Options\n"
+"--------------------\n"
 "0. Return to previous menu\n"
 "1. Memory in Megabytes: %d\n"
 "2. VGA ROM image: %s\n"
@@ -279,7 +279,7 @@ static char *startup_interface_options =
 "0. Return to previous menu\n"
 "1. VGA Update Interval: %d\n"
 "2. Mouse: %s\n"
-"3. Emulated instructions per second (IPS): %d\n"
+"3. Emulated instructions per second (IPS): %u\n"
 "4. Private Colormap: %s\n"
 "\n"
 "Please choose one: [0] ";
@@ -329,23 +329,25 @@ static char *runtime_menu_prompt =
 "---------------------\n"
 "Bochs Runtime Options\n"
 "---------------------\n"
-"1. Floppy disk 0 (example:a.img, 1.44MB, inserted)\n"
-"2. Floppy disk 1 (example:b.img, 1.44MB, inserted)\n"
-"3. Emulated instructions per second (IPS)\n"
-"4. Logging options\n"
-"5. VGA Update Interval\n"
-"6. Mouse: enabled\n"
-"7. Instruction tracing: off (doesn't exist yet)\n"
-"8. Continue simulation\n"
-"9. Quit now\n"
+"1. Floppy disk 0: %s\n"
+"2. Floppy disk 1: %s\n"
+"3. CDROM: %s\n"
+"4. Emulated instructions per second (IPS): %u\n"
+"5. Log options for all devices\n"
+"6. Log options for individual devices\n"
+"7. VGA Update Interval: %d\n"
+"8. Mouse: %s\n"
+"9. Instruction tracing: off (doesn't exist yet)\n"
+"10. Continue simulation\n"
+"11. Quit now\n"
 "\n"
-"Please choose one:  [8] ";
+"Please choose one:  [9] ";
 
 char *menu_prompt_list[BX_CPANEL_N_MENUS] = {
   ask_about_control_panel,
   startup_menu_prompt,
   startup_options_prompt,
-  startup_boot_options_prompt,
+  startup_mem_options_prompt,
   startup_interface_options,
   startup_disk_options_prompt,
   startup_sound_options_prompt,
@@ -392,6 +394,28 @@ void build_disk_options_prompt (char *format, char *buf, int size)
   int conflict = (diskop.present && cdromop.present);
   char *diskd_cdromd_conflict_msg = "\nERROR:\nThis configuration has both a cdrom and a hard disk enabled.\nYou cannot have both!";
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], conflict? diskd_cdromd_conflict_msg : "");
+}
+
+void build_runtime_options_prompt (char *format, char *buf, int size)
+{
+  bx_floppy_options floppyop;
+  bx_cdrom_options cdromop;
+  char buffer[3][128];
+  for (int i=0; i<2; i++) {
+    SIM->get_floppy_options (i, &floppyop);
+    sprintf (buffer[i], "%s, size=%s, %s", floppyop.path,
+	  SIM->get_floppy_type_name (floppyop.type),
+	  floppyop.initial_status ? "inserted" : "ejected");
+    if (!floppyop.path[0]) strcpy (buffer[i], "none");
+  }
+  SIM->get_cdrom_options (0, &cdromop);
+  sprintf (buffer[2], "%s, %spresent, %s",
+     cdromop.dev, cdromop.present?"":"not ",
+     cdromop.inserted?"inserted":"ejected");
+  snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
+      SIM->getips (), 
+      SIM->get_vga_update_interval (), 
+      SIM->get_mouse_enabled () ? "enabled" : "disabled");
 }
 
 // return value of bx_control_panel:
@@ -441,7 +465,7 @@ int bx_control_panel (int menu)
 	 case 1: bx_log_file (); break;
 	 case 2: bx_log_options (0); break;
 	 case 3: bx_log_options (1); break;
-	 case 4: bx_control_panel (BX_CPANEL_START_OPTS_BOOT); break;
+	 case 4: bx_control_panel (BX_CPANEL_START_OPTS_MEM); break;
 	 case 5: bx_control_panel (BX_CPANEL_START_OPTS_INTERFACE); break;
 	 case 6: bx_control_panel (BX_CPANEL_START_OPTS_DISK); break;
 	 case 7: bx_control_panel (BX_CPANEL_START_OPTS_SOUND); break;
@@ -450,14 +474,14 @@ int bx_control_panel (int menu)
        }
      }
      break;
-   case BX_CPANEL_START_OPTS_BOOT:
+   case BX_CPANEL_START_OPTS_MEM:
      {
        char prompt[CPANEL_PATH_LEN], vgapath[CPANEL_PATH_LEN], rompath[CPANEL_PATH_LEN];
        if (SIM->get_rom_path (rompath, CPANEL_PATH_LEN) < 0)
 	 strcpy (rompath, "none");
        if (SIM->get_vga_path (vgapath, CPANEL_PATH_LEN) < 0)
 	 strcpy (vgapath, "none");
-       sprintf (prompt, startup_boot_options_prompt, 
+       sprintf (prompt, startup_mem_options_prompt, 
 	  SIM->get_mem_size (),
 	  vgapath, rompath,
 	  SIM->get_rom_address ());
@@ -511,17 +535,21 @@ int bx_control_panel (int menu)
      }
    break;
    case BX_CPANEL_RUNTIME:
-     if (ask_int (runtime_menu_prompt, 1, 9, 8, &choice) < 0) return -1;
+     char prompt[1024];
+     build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
+     if (ask_int (prompt, 1, 11, 10, &choice) < 0) return -1;
      switch (choice) {
        case 1: bx_edit_floppy (0); break;
        case 2: bx_edit_floppy (1); break;
-       case 3: bx_ips_change (); break;
-       case 4: bx_log_options (1); break;
-       case 5: bx_vga_update_interval (); break;
-       case 6: bx_mouse_enable (); break;
-       case 7: NOT_IMPLEMENTED (choice); break;
-       case 8: fprintf (stderr, "Continuing simulation\n"); return 0;
-       case 9:
+       case 3: bx_edit_cdrom (); break;
+       case 4: bx_ips_change (); break;
+       case 5: bx_log_options (0); break;
+       case 6: bx_log_options (1); break;
+       case 7: bx_vga_update_interval (); break;
+       case 8: bx_mouse_enable (); break;
+       case 9: NOT_IMPLEMENTED (choice); break;
+       case 10: fprintf (stderr, "Continuing simulation\n"); return 0;
+       case 11:
 	 fprintf (stderr, "You chose quit on the control panel.\n");
 	 SIM->quit_sim (1);
 	 return -1;
@@ -688,7 +716,8 @@ static void bx_print_log_action_table ()
 }
 
 static char *log_options_prompt1 = "Enter the ID of the device to edit, or -1 to return: [-1] ";
-static char *log_level_choices[] = { "ignore", "report", "fatal", "no change" };
+static char *log_level_choices[] = { "ignore", "report", "ask", "fatal", "no change" };
+static int log_level_n_choices_normal = 4;
 
 void bx_log_options (int individual)
 {
@@ -707,7 +736,7 @@ void bx_log_options (int individual)
 	int default_action = SIM->get_log_action (id, level);
 	sprintf (prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name (level), SIM->get_action_name(default_action));
 	// don't show the no change choice (choices=3)
-	if (ask_menu (prompt, 3, log_level_choices, default_action, &action)<0)
+	if (ask_menu (prompt, log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
 	  return;
 	SIM->set_log_action (id, level, action);
       }
@@ -720,7 +749,7 @@ void bx_log_options (int individual)
       int action, default_action = 3;  // default to no change
       sprintf (prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name (level));
 	// do show the no change choice (choices=4)
-      if (ask_menu (prompt, 4, log_level_choices, default_action, &action)<0)
+      if (ask_menu (prompt, log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
 	return;
       if (action < 3) {
 	for (int i=0; i<SIM->get_n_log_modules (); i++)
