@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.8 2002-10-10 17:25:38 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.147.2.9 2002-10-10 20:54:10 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -74,6 +74,7 @@ esac
 if test "${ADD_FLAGS:+set}" = set; then
       CFLAGS="$CFLAGS $ADD_FLAGS"
       CXXFLAGS="$CXXFLAGS $ADD_FLAGS"
+	  CPPFLAGS="$CPPFLAGS $ADD_FLAGS"
 fi
 
 AC_MSG_CHECKING(for standard CFLAGS on this platform)
