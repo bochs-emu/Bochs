@@ -451,7 +451,7 @@ handle_async_event:
     // NOTE: similar code in ::take_irq()
 #if BX_APIC_SUPPORT
     if (BX_CPU_THIS_PTR int_from_local_apic)
-      vector = local_apic.acknowledge_int ();
+      vector = BX_CPU_THIS_PTR local_apic.acknowledge_int ();
     else
       vector = BX_IAC(); // may set INTR with next interrupt
 #else

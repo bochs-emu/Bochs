@@ -278,6 +278,10 @@ void bx_local_apic_c::set_id (Bit8u newid) {
   } else {
     BX_INFO (("naming convention for apics requires id=0-15 only"));
   }
+  if(BX_CPU_LEVEL<2)
+    BX_INFO(( "8086\n" ));
+  else
+    BX_INFO(( "80%d86\n", BX_CPU_LEVEL ));
 }
 
 char *

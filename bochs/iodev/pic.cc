@@ -398,7 +398,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         else if (special_mask == 0x03) { /* set specific mask */
           BX_PIC_THIS s.slave_pic.special_mask = 1;
           service_slave_pic();
-          BX_INFO(("pic:slave: OCW3 not implemented (%02x)\n",
+          BX_ERROR(("pic:slave: OCW3 not implemented (%02x)\n",
             (unsigned) value));
           }
         return;

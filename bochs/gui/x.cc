@@ -576,17 +576,17 @@ bx_gui_c::handle_events(void)
       break;
 
     case ConfigureNotify:
-      BX_INFO(("ConfigureNotify Xevent\n"));
+      BX_DEBUG(("ConfigureNotify Xevent\n"));
       show_headerbar();
       break;
 
     case ButtonPress:
       button_event = (XButtonEvent *) &report;
-//BX_INFO(("xxx: buttonpress\n");
+		BX_DEBUG(("xxx: buttonpress\n"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-//BX_INFO(("xxx:   in headerbar\n"));
+		BX_DEBUG(("xxx:   in headerbar\n"));
         if (mouse_update) {
-//BX_INFO(("xxx:   mouse_update=1\n"));
+		  BX_DEBUG(("xxx:   mouse_update=1\n"));
           send_keyboard_mouse_status();
           mouse_update = 0;
           }
@@ -598,28 +598,28 @@ bx_gui_c::handle_events(void)
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-//BX_INFO(("xxx:   x,y=(%d,%d)\n", current_x, current_y));
+	  BX_DEBUG(("xxx:   x,y=(%d,%d)\n", current_x, current_y));
       switch (button_event->button) {
         case Button1:
-//BX_INFO(("xxx:   button1\n"));
+		  BX_DEBUG(("xxx:   button1\n"));
           mouse_button_state |= 0x01;
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
-//BX_INFO(("xxx:   button2\n"));
+		  BX_DEBUG(("XXX:   button2\n"));
 
 	      // (mch) Hack for easier mouse handling (toggle mouse enable)
 	      mouse_handler();
 	      if (bx_options.mouse_enabled) {
-		    BX_INFO(("[x] Mouse enabled\n"));
+		    BX_INFO(("[x] Mouse on\n"));
 		    mouse_enable_x = current_x;
 		    mouse_enable_y = current_y;
 		    disable_cursor();
 		    // Move the cursor to a 'safe' place
 		    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 	      } else {
-		    BX_INFO(("[x] Mouse disabled\n"));
+		    BX_INFO(("[x] Mouse off\n"));
 		    enable_cursor();
 		    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
 	      }
@@ -629,7 +629,7 @@ bx_gui_c::handle_events(void)
           //mouse_update = 0;
           break;
         case Button3:
-//BX_INFO(("xxx:   button3\n"));
+		  BX_DEBUG(("xxx:   button3\n"));
           mouse_button_state |= 0x02;
           send_keyboard_mouse_status();
           mouse_update = 0;
@@ -722,7 +722,7 @@ bx_gui_c::handle_events(void)
 
     default:
 	  // (mch) Ignore...
-	  // BX_INFO(("xxx: default Xevent type\n"));
+	  BX_DEBUG(("XXX: default Xevent type\n"));
       /* all events selected by StructureNotifyMask are thrown away here,
        * since nothing is done with them */
       break;
@@ -730,7 +730,7 @@ bx_gui_c::handle_events(void)
   } /* end while */
 
   if (mouse_update) {
-    //BX_INFO(("xxx: bottom, send status\n"));
+    BX_DEBUG(("XXX: bottom, send status\n"));
     send_keyboard_mouse_status();
     }
 }
@@ -739,8 +739,8 @@ bx_gui_c::handle_events(void)
   void
 send_keyboard_mouse_status(void)
 {
-//BX_INFO(("xxx: prev=(%d,%d) curr=(%d,%d)\n",
-//  prev_x, prev_y, current_x, current_y));
+	BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)\n",
+			prev_x, prev_y, current_x, current_y));
 
   if ( (prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) {
     int dx, dy;

@@ -656,7 +656,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       break;
 
     case 0x13: // Configure
-      BX_INFO(("floppy io: configure (mode=%02xh, pretrack=%02xh)\n",
+      BX_DEBUG(("io: configure (mode=%02xh, pretrack=%02xh)\n",
 (unsigned)(BX_FD_THIS s.command[2]), (unsigned)(BX_FD_THIS s.command[3]) ));
       BX_FD_THIS s.result_size = 0;
       BX_FD_THIS s.result_index = 0;
@@ -675,7 +675,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       if (motor_on == 0)
         BX_PANIC(("floppy_command(): 4a: motor not on\n"));
       if (drive > 1)
-        BX_PANIC(("floppy io: 4a: bad drive #\n"));
+        BX_PANIC(("io: 4a: bad drive #\n"));
       BX_FD_THIS s.result_size = 7;
       BX_FD_THIS s.result_index = 0;
       BX_FD_THIS s.result[0] = 0; /* ??? */
@@ -723,9 +723,9 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_INFO(("  eot      = %u\n", (unsigned) eot));
         }
       if (drive > 1)
-        BX_PANIC(("floppy io: bad drive #\n"));
+        BX_PANIC(("io: bad drive #\n"));
       if (head > 1)
-        BX_PANIC(("floppy io: bad head #\n"));
+        BX_PANIC(("io: bad head #\n"));
 
       if ( BX_FD_THIS s.media_present[drive] == 0 ) {
         // media not in drive, return error
@@ -753,7 +753,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_PANIC(("sector_size not 512\n"));
         }
       if ( cylinder >= BX_FD_THIS s.media[drive].tracks ) {
-        BX_INFO(("\nfloppy io: normal read/write: params out of range\n"));
+        BX_INFO(("\nio: normal read/write: params out of range\n"));
         BX_INFO(("*** sector # %02xh\n", (unsigned) sector));
         BX_INFO(("*** cylinder #%02xh\n", (unsigned) cylinder));
         BX_INFO(("*** eot #%02xh\n", (unsigned) eot));
@@ -797,18 +797,18 @@ bx_floppy_ctrl_c::floppy_command(void)
 
 #if 0
       if (eot != BX_FD_THIS s.media[drive].sectors_per_track)
-        BX_INFO(("floppy io: bad eot #%02xh\n", (unsigned) eot);
+        BX_DEBUG(("io: bad eot #%02xh\n", (unsigned) eot));
 #endif
 
       if (cylinder != BX_FD_THIS s.cylinder[drive])
-        BX_INFO(("floppy io: cylinder request != current cylinder\n"));
+        BX_DEBUG(("io: cylinder request != current cylinder\n"));
 
       logical_sector = (cylinder * 2 * BX_FD_THIS s.media[drive].sectors_per_track) +
                        (head * BX_FD_THIS s.media[drive].sectors_per_track) +
                        (sector - 1);
 
       if (logical_sector >= BX_FD_THIS s.media[drive].sectors) {
-        BX_PANIC(("floppy io: logical sector out of bounds\n"));
+        BX_PANIC(("io: logical sector out of bounds\n"));
         }
 
       BX_FD_THIS s.cylinder[drive] = cylinder;
