@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.13 2003-10-31 17:23:56 vruppert Exp $
+// $Id: serial.h,v 1.14 2003-11-09 00:14:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,6 +54,7 @@ enum {
   BX_SER_INT_TXHOLD,
   BX_SER_INT_RXLSTAT,
   BX_SER_INT_MODSTAT,
+  BX_SER_INT_FIFO
 };
 
 typedef struct {
@@ -64,17 +65,23 @@ typedef struct {
   bx_bool  ms_interrupt;
   bx_bool  rx_interrupt;
   bx_bool  tx_interrupt;
+  bx_bool  fifo_interrupt;
   bx_bool  ls_ipending;
   bx_bool  ms_ipending;
   bx_bool  rx_ipending;
+  bx_bool  fifo_ipending;
 
   Bit8u IRQ;
+
+  Bit8u rx_fifo_end;
+  Bit8u tx_fifo_end;
 
   int  baudrate;
   int  tx_timer_index;
 
   int  rx_pollstate;
   int  rx_timer_index;
+  int  fifo_timer_index;
 
 #define RX_CB_SIZE  80
   int  rx_cb_start;
@@ -97,14 +104,10 @@ typedef struct {
   struct {
     bx_bool    ipending;           /* 0=interrupt pending */
     Bit8u      int_ID;             /* 3-bit interrupt ID */
-    Bit8u      fifo_enabled;       /* 2-bit, set to b11 when FCR0 enabled */
   } int_ident;
   /* FIFO Control Register (w/o) */
   struct {
     bx_bool    enable;             /* 1=enable tx and rx FIFOs */
-    bx_bool    rxreset;            /* 1=clear rx fifo. self-clearing */
-    bx_bool    txreset;            /* 1=clear tx fifo. self-clearing */
-    bx_bool    dmamode;            /* 1=DMA mode 1 (unused on PC ?) */
     Bit8u      rxtrigger;          /* 2-bit code for rx fifo trigger level */
   } fifo_cntl;
   /* Line Control Register (r/w) */
@@ -150,6 +153,8 @@ typedef struct {
 
   Bit8u  scratch;       /* Scratch Register (r/w) */
   Bit8u  tsrbuffer;     /* transmit shift register (internal) */
+  Bit8u  rx_fifo[16];   /* receive FIFO (internal) */
+  Bit8u  tx_fifo[16];   /* transmit FIFO (internal) */
   Bit8u  divisor_lsb;   /* Divisor latch, least-sig. byte */
   Bit8u  divisor_msb;   /* Divisor latch, most-sig. byte */
 } bx_serial_t;
@@ -172,11 +177,16 @@ private:
   static void lower_interrupt(Bit8u port);
   static void raise_interrupt(Bit8u port, int type);
 
+  static void rx_fifo_enq(Bit8u port, Bit8u data);
+
   static void tx_timer_handler(void *);
   BX_SER_SMF void tx_timer(void);
 
   static void rx_timer_handler(void *);
   BX_SER_SMF void rx_timer(void);
+
+  static void fifo_timer_handler(void *);
+  BX_SER_SMF void fifo_timer(void);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
