@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.70 2003-07-15 21:02:05 vruppert Exp $
+// $Id: gui.cc,v 1.71 2003-07-17 15:49:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -212,6 +212,8 @@ bx_gui_c::update_drive_status_buttons (void) {
   void
 bx_gui_c::floppyA_handler(void)
 {
+  if (bx_options.floppya.Odevtype->get() == BX_FLOPPY_NONE)
+    return; // no primary floppy device present
 #ifdef WIN32
   // instead of just toggling the status, call win32dialog to bring up
   // a dialog asking what disk image you want to switch to.
@@ -233,6 +235,8 @@ bx_gui_c::floppyA_handler(void)
   void
 bx_gui_c::floppyB_handler(void)
 {
+  if (bx_options.floppyb.Odevtype->get() == BX_FLOPPY_NONE)
+    return; // no secondary floppy device present
 #ifdef WIN32
   // instead of just toggling the status, call win32dialog to bring up
   // a dialog asking what disk image you want to switch to.
