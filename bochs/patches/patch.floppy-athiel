@@ -1,0 +1,994 @@
+----------------------------------------------------------------------
+Patch name: patch.floppy-athiel
+Author: Alex Thiel (uploaded by cbothamy)
+Date: 8 Nov 2002
+
+Detailed description:
+The first part only does some cleanup and should not break anything. I have 
+only tested it with Linux as the guest OS though, so it would be nice if 
+someone could test it with some other OSes, especially Microsoft's.
+
+The second part introduces the implicit termination of data transfer via 
+end-of-track and data overrun/underrun conditions, as well as non-DMA mode.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 8 Nov 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: iodev/floppy.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.cc,v
+retrieving revision 1.57
+diff -u -r1.57 floppy.cc
+--- iodev/floppy.cc	25 Oct 2002 11:44:39 -0000	1.57
++++ iodev/floppy.cc	8 Nov 2002 20:28:40 -0000
+@@ -61,6 +61,10 @@
+ #define FD_MS_ACTB 0x02
+ #define FD_MS_ACTA 0x01
+ 
++/* for status registers */
++#define FD_ST_EOT      0x80
++#define FD_ST_OVERRUN  0x10
++
+ #define FROM_FLOPPY 10
+ #define TO_FLOPPY   11
+ 
+@@ -161,10 +165,10 @@
+                    & BX_FD_THIS s.media[0]))
+         BX_FD_THIS s.media_present[0] = 1;
+       else
+-	bx_options.floppya.Ostatus->set(BX_EJECTED);
++        bx_options.floppya.Ostatus->set(BX_EJECTED);
+ #define MED (BX_FD_THIS s.media[0])
+-    	BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppya.Opath->getptr(),
+-			MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
++        BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppya.Opath->getptr(),
++        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+ #undef MED
+       }
+     }
+@@ -212,15 +216,16 @@
+                    & BX_FD_THIS s.media[1]))
+         BX_FD_THIS s.media_present[1] = 1;
+       else
+-	bx_options.floppyb.Ostatus->set(BX_EJECTED);
++        bx_options.floppyb.Ostatus->set(BX_EJECTED);
+ #define MED (BX_FD_THIS s.media[1])
+-    	BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppyb.Opath->getptr(),
+-			MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
++        BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppyb.Opath->getptr(),
++        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+ #undef MED
+       }
+     }
+ 
+-
++#define FD_TIMEOUT  15  // for FIFO overrun/underrun
++#define FD_IRQ_DELAY   2  // delay so the system can detect a INT change
+ 
+   /* CMOS Equipment Byte register */
+   if (BX_FD_THIS s.num_supported_floppies > 0)
+@@ -233,7 +238,7 @@
+   if (BX_FD_THIS s.floppy_timer_index == BX_NULL_TIMER_HANDLE) {
+     BX_FD_THIS s.floppy_timer_index =
+       bx_pc_system.register_timer( this, timer_handler,
+-	bx_options.Ofloppy_command_delay->get (), 0,0, "floppy");
++      bx_options.Ofloppy_command_delay->get (), 0,0, "floppy");
+   }
+ 
+   BX_DEBUG(("bx_options.Ofloppy_command_delay = %u",
+@@ -247,19 +252,10 @@
+ {
+   Bit32u i;
+ 
+-  BX_FD_THIS s.command_complete = 1; /* waiting for new command */
+-  BX_FD_THIS s.command_index = 0;
+-  BX_FD_THIS s.command_size = 0;
+-  BX_FD_THIS s.pending_command = 0;
+-
+   BX_FD_THIS s.pending_irq = 0;
+   BX_FD_THIS s.reset_sensei = 0; /* no reset result present */
+ 
+-  BX_FD_THIS s.result_index = 0;
+-  BX_FD_THIS s.result_size = 0;
+-
+-  /* data register ready, not in DMA mode */
+-  BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
++  BX_FD_THIS s.main_status_reg = 0;
+   BX_FD_THIS s.status_reg0 = 0;
+   BX_FD_THIS s.status_reg1 = 0;
+   BX_FD_THIS s.status_reg2 = 0;
+@@ -286,10 +282,9 @@
+     BX_FD_THIS s.sector[i] = 0;
+     }
+ 
+-  BX_FD_THIS s.floppy_buffer_index = 0;
+-
+   DEV_pic_lower_irq(6);
+   DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
++  enter_idle_phase();
+ }
+ 
+ 
+@@ -335,6 +330,20 @@
+       break;
+ 
+     case 0x3F5: /* diskette controller data */
++
++      /* data transfer in non-DMA mode */
++      if (BX_FD_THIS s.main_status_reg & FD_MS_NDMA) {
++        BX_FD_THIS dma_write(&value); // write: from controller to memory
++
++       /* This simulates the FIFO latency, see comment in timer() below. */
++        BX_FD_THIS lower_interrupt();
++        BX_FD_THIS s.main_status_reg &= ~FD_MS_MRQ;
++        // overrides the timer set in dma_write()
++        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, 
++                                    FD_IRQ_DELAY, 0); 
++        return(value);
++        }
++
+       if (BX_FD_THIS s.result_size == 0) {
+         BX_ERROR(("port 0x3f5: no results to read"));
+         BX_FD_THIS s.main_status_reg = 0;
+@@ -344,12 +353,9 @@
+       value = BX_FD_THIS s.result[BX_FD_THIS s.result_index++];
+       BX_FD_THIS s.main_status_reg &= 0xF0;
+       if (BX_FD_THIS s.result_index >= BX_FD_THIS s.result_size) {
+-        BX_FD_THIS s.result_size = 0;
+-        BX_FD_THIS s.result_index = 0;
+-        BX_FD_THIS s.result[0] = value;
+-        BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
+         if (!BX_FD_THIS s.reset_sensei) BX_FD_THIS s.pending_irq = 0;
+-	DEV_pic_lower_irq(6);
++        DEV_pic_lower_irq(6);
++        enter_idle_phase();
+         }
+       return(value);
+       break;
+@@ -360,12 +366,12 @@
+ 
+       switch( BX_FD_THIS s.DOR & 0x03 )
+       {
+-	case 0x00:
+-	  if( (BX_FD_THIS s.DOR & 0x10) == 0) break;
+-	  return(2);
+-	case 0x01:
+-	  if( (BX_FD_THIS s.DOR & 0x20) == 0) break;
+-	  return(1);
++        case 0x00:
++          if( (BX_FD_THIS s.DOR & 0x10) == 0) break;
++          return(2);
++        case 0x01:
++          if( (BX_FD_THIS s.DOR & 0x20) == 0) break;
++          return(1);
+       }
+       return(3);
+       
+@@ -469,6 +475,20 @@
+       break;
+ 
+     case 0x3F5: /* diskette controller data */
++
++      /* data transfer in non-DMA mode */
++      if (BX_FD_THIS s.main_status_reg & FD_MS_NDMA) {
++        BX_FD_THIS dma_read((Bit8u *) &value); // read: from memory to controller
++       
++        /* This simulates the FIFO latency, see comment in timer() below. */
++        BX_FD_THIS lower_interrupt();
++        BX_FD_THIS s.main_status_reg &= ~FD_MS_MRQ;
++        // overrides the timer set in dma_read()
++        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
++                                    FD_IRQ_DELAY, 0); 
++        break;
++        }
++
+       BX_DEBUG(("command = %02x", (unsigned) value));
+       if (BX_FD_THIS s.command_complete) {
+         if (BX_FD_THIS s.pending_command!=0)
+@@ -524,15 +544,17 @@
+             // the enhanced controller.
+             BX_DEBUG(("io_write: 0x3f5: unsupported floppy command 0x%02x",
+               (unsigned) value));
+-            BX_FD_THIS s.command_size = 1;
++            BX_FD_THIS s.command_size = 0;   // make sure we don't try to process this command
+             BX_FD_THIS s.status_reg0 = 0x80; // status: invalid command
++            enter_result_phase();
+             break;
+ 
+           default:
+             BX_ERROR(("io_write: 0x3f5: invalid floppy command 0x%02x",
+               (unsigned) value));
+-            BX_FD_THIS s.command_size = 1;
++            BX_FD_THIS s.command_size = 0;   // make sure we don't try to process this command
+             BX_FD_THIS s.status_reg0 = 0x80; // status: invalid command
++            enter_result_phase();
+             break;
+           }
+         }
+@@ -600,33 +622,28 @@
+   for (i=0; i<BX_FD_THIS s.command_size; i++)
+     BX_DEBUG(("[%02x] ", (unsigned) BX_FD_THIS s.command[i]));
+ 
+-#if 0
+-  /* execute phase of command is in progress (non DMA mode) */
+-  BX_FD_THIS s.main_status_reg |= 20;
+-#endif
+-
+-  switch (BX_FD_THIS s.command[0]) {
++  BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
++  switch (BX_FD_THIS s.pending_command) {
+     case 0x03: // specify
+       // execution: specified parameters are loaded
+       // result: no result bytes, no interrupt
+       step_rate_time = BX_FD_THIS s.command[1] >> 4;
+       head_unload_time = BX_FD_THIS s.command[1] & 0x0f;
+       head_load_time = BX_FD_THIS s.command[2] >> 1;
+-      if (BX_FD_THIS s.command[2] & 0x01)
+-        BX_ERROR(("non DMA mode selected"));
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
++      BX_FD_THIS s.non_dma = BX_FD_THIS s.command[2] & 0x01;
++      if (BX_FD_THIS s.non_dma)
++        BX_INFO(("non DMA mode selected"));
++      enter_idle_phase();
+       return;
+       break;
+ 
+     case 0x04: // get status
+       drive = (BX_FD_THIS s.command[1] & 0x03);
+       BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
+-      BX_FD_THIS s.result[0] = 0x28 | (BX_FD_THIS s.head[drive]<<2) | drive
++      BX_FD_THIS s.status_reg3 = 0x28 | (BX_FD_THIS s.head[drive]<<2) | drive
+         | (BX_FD_THIS s.media[drive].write_protected ? 0x40 : 0x00);
+-      if (BX_FD_THIS s.cylinder[drive] == 0) BX_FD_THIS s.result[0] |= 0x10;
+-      BX_FD_THIS s.result_size = 1;
+-      BX_FD_THIS s.result_index = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
++      if (BX_FD_THIS s.cylinder[drive] == 0) BX_FD_THIS s.status_reg3 |= 0x10;
++      enter_result_phase();
+       return;
+       break;
+ 
+@@ -651,10 +668,10 @@
+        * controller set to non-busy
+        * error condition noted in Status reg 0's equipment check bit
+        * seek end bit set to 1 in Status reg 0 regardless of outcome
++       * The last two are taken care of in timer().
+        */
+-      /* data reg not ready, drive busy */
++      BX_FD_THIS s.cylinder[drive] = 0;
+       BX_FD_THIS s.main_status_reg = (1 << drive);
+-      BX_FD_THIS s.pending_command = 0x07; // recalibrate pending
+       return;
+       break;
+ 
+@@ -669,7 +686,6 @@
+       drive = BX_FD_THIS s.DOR & 0x03;
+       if (!BX_FD_THIS s.pending_irq) {
+         BX_FD_THIS s.status_reg0 = 0x80;
+-        BX_FD_THIS s.result_size = 1;
+         }
+       else {
+         if (BX_FD_THIS s.reset_sensei > 0) {
+@@ -677,17 +693,11 @@
+           BX_FD_THIS s.status_reg0 &= 0xf8;
+           BX_FD_THIS s.status_reg0 |= (BX_FD_THIS s.head[drive] << 2) | drive;
+           BX_FD_THIS s.reset_sensei--;
+-	  }
+-        BX_FD_THIS s.result[1] = BX_FD_THIS s.cylinder[drive];
+-        BX_FD_THIS s.result_size = 2;
+-        }
+-      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-      BX_FD_THIS s.result_index = 0;
+-
+-      /* read ready */
+-      BX_FD_THIS s.main_status_reg &= 0x0f;
+-      BX_FD_THIS s.main_status_reg |= (FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY);
++          }
++        }
++
+       BX_DEBUG(("sense interrupt status"));
++      enter_result_phase();
+       return;
+       break;
+ 
+@@ -712,7 +722,6 @@
+         bx_options.Ofloppy_command_delay->get (), 0 );
+       /* data reg not ready, drive busy */
+       BX_FD_THIS s.main_status_reg = (1 << drive);
+-      BX_FD_THIS s.pending_command = 0x0f; /* seek pending */
+       return;
+       break;
+ 
+@@ -722,10 +731,7 @@
+       BX_DEBUG(("configure (no poll = 0x%02x)", BX_FD_THIS s.command[2] & 0x10 ));
+       BX_DEBUG(("configure (fifothr = 0x%02x)", BX_FD_THIS s.command[2] & 0x0f ));
+       BX_DEBUG(("configure (pretrk  = 0x%02x)", BX_FD_THIS s.command[3] ));
+-      BX_FD_THIS s.result_size = 0;
+-      BX_FD_THIS s.result_index = 0;
+-      BX_FD_THIS s.pending_command = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_BUSY;
++      enter_idle_phase();
+       return;
+       break;
+ 
+@@ -743,20 +749,11 @@
+         }
+       if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
+         BX_PANIC(("floppy_command(): read ID: bad drive #%d", drive));
+-      BX_FD_THIS s.result_size = 7;
+-      BX_FD_THIS s.result_index = 0;
+-      // setting result[0] in timer handler
+-      BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
+-      BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
+-      BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+-      BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+-      BX_FD_THIS s.result[5] = 1; /* sector at completion */
+-      BX_FD_THIS s.result[6] = 2; /* sector size code */
++      BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive]<<2) | drive;
+       bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
+         bx_options.Ofloppy_command_delay->get (), 0 );
+       /* data reg not ready, controller busy */
+       BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+-      BX_FD_THIS s.pending_command = 0x4a; /* read ID pending */
+       return;
+       break;
+ 
+@@ -784,42 +781,34 @@
+         if ( BX_FD_THIS s.media_present[drive] == 0 ) {
+           // media not in drive, return error
+           BX_INFO(("attempt to format track with media not present"));
+-          BX_FD_THIS s.result_size = 7;
+-          BX_FD_THIS s.result_index = 0;
+           BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
+-          BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-          BX_FD_THIS s.result[1] = 0x25; // 0010 0101
+-          BX_FD_THIS s.result[2] = 0x31; // 0011 0001
+-          // 4 result bytes are unused
+-          BX_FD_THIS s.pending_command = 0;
+-          BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-          raise_interrupt();
++          BX_FD_THIS s.status_reg1 = 0x25; // 0010 0101
++          BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
++          enter_result_phase();
+           return;
+           }
+         if (BX_FD_THIS s.media[drive].write_protected) {
+           // media write-protected, return error
+           BX_INFO(("attempt to format track with media write-protected"));
+-          BX_FD_THIS s.result_size = 7;
+-          BX_FD_THIS s.result_index = 0;
+           BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
+-          BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-          BX_FD_THIS s.result[1] = 0x27; // 0010 0111
+-          BX_FD_THIS s.result[2] = 0x31; // 0011 0001
+-          // 4 result bytes are unused
+-          BX_FD_THIS s.pending_command = 0;
+-          BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-          raise_interrupt();
++          BX_FD_THIS s.status_reg1 = 0x27; // 0010 0111
++          BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
++          enter_result_phase();
+           return;
+           }
+ 
+       /* 4 header bytes per sector are required */
+       BX_FD_THIS s.format_count <<= 2;
+ 
+-      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+-
+-      /* data reg not ready, controller busy */
+-      BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+-      BX_FD_THIS s.pending_command = 0x4d; /* format track pending */
++      if (BX_FD_THIS s.non_dma) {
++        BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_NDMA | FD_MS_BUSY;
++        BX_FD_THIS raise_interrupt();
++        } 
++      else {
++        /* data reg not ready, controller busy */
++        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
++        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
++        }
+       BX_DEBUG(("format track"));
+       return;
+       break;
+@@ -862,20 +851,10 @@
+       // read input error checking).
+       if (head != ((BX_FD_THIS s.command[1]>>2)&1)) {
+         BX_ERROR(("head number in command[1] doesn't match head field"));
+-        BX_FD_THIS s.result_size = 7;
+-        BX_FD_THIS s.result_index = 0;
+         BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
+-        BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-        BX_FD_THIS s.result[1] = 0x04; // 0000 0100
+-        BX_FD_THIS s.result[2] = 0x00; // 0000 0000
+-        BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+-        BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+-        BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+-        BX_FD_THIS s.result[6] = 2; // sector size = 512
+-
+-        BX_FD_THIS s.pending_command = 0;
+-        BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-        raise_interrupt();
++        BX_FD_THIS s.status_reg1 = 0x04; // 0000 0100
++        BX_FD_THIS s.status_reg2 = 0x00; // 0000 0000
++        enter_result_phase();
+         return;
+       }
+ 
+@@ -885,20 +864,10 @@
+         BX_INFO(("attempt to read/write sector %u,"
+                      " sectors/track=%u", (unsigned) sector,
+                      (unsigned) BX_FD_THIS s.media[drive].sectors_per_track));
+-        BX_FD_THIS s.result_size = 7;
+-        BX_FD_THIS s.result_index = 0;
+         BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
+-        BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-        BX_FD_THIS s.result[1] = 0x25; // 0010 0101
+-        BX_FD_THIS s.result[2] = 0x31; // 0011 0001
+-        BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+-        BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+-        BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+-        BX_FD_THIS s.result[6] = 2; // sector size = 512
+-
+-        BX_FD_THIS s.pending_command = 0;
+-        BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-        raise_interrupt();
++        BX_FD_THIS s.status_reg1 = 0x25; // 0010 0101
++        BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
++        enter_result_phase();
+         return;
+         }
+ 
+@@ -906,9 +875,9 @@
+         BX_PANIC(("sector_size not 512"));
+         }
+       if ( cylinder >= BX_FD_THIS s.media[drive].tracks ) {
+-		BX_PANIC(("io: norm r/w parms out of range: sec#%02xh cyl#%02xh eot#%02xh head#%02xh",
+-				(unsigned) sector, (unsigned) cylinder, (unsigned) eot,
+-				(unsigned) head));
++        BX_PANIC(("io: norm r/w parms out of range: sec#%02xh cyl#%02xh eot#%02xh head#%02xh",
++          (unsigned) sector, (unsigned) cylinder, (unsigned) eot,
++          (unsigned) head));
+         return;
+       }
+ 
+@@ -923,34 +892,20 @@
+         BX_FD_THIS s.head[drive]     = head;
+         BX_FD_THIS s.sector[drive]   = BX_FD_THIS s.media[drive].sectors_per_track;
+ 
+-        BX_FD_THIS s.result_size = 7;
+-
+-        BX_FD_THIS s.result_index = 0;
+         // 0100 0HDD abnormal termination
+         BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
+-        BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+         // 1000 0101 end of cyl/NDAT/NID
+-        BX_FD_THIS s.result[1] = 0x85;
++        BX_FD_THIS s.status_reg1 = 0x85;
+         // 0000 0000
+-        BX_FD_THIS s.result[2] = 0x00;
+-        BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+-        BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+-        BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+-        BX_FD_THIS s.result[6] = 2; // sector size = 512
++        BX_FD_THIS s.status_reg2 = 0x00;
+ 
+         bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
+           bx_options.Ofloppy_command_delay->get (), 0 );
+         /* data reg not ready, controller busy */
+         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+-        BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
+         return;
+         }
+ 
+-#if 0
+-      if (eot != BX_FD_THIS s.media[drive].sectors_per_track)
+-        BX_DEBUG(("io: bad eot #%02xh", (unsigned) eot));
+-#endif
+-
+       if (cylinder != BX_FD_THIS s.cylinder[drive])
+         BX_DEBUG(("io: cylinder request != current cylinder"));
+ 
+@@ -969,24 +924,28 @@
+       if ((BX_FD_THIS s.command[0] & 0x4f) == 0x46) { // read
+         floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+                     512, FROM_FLOPPY);
+-        BX_FD_THIS s.floppy_buffer_index = 0;
+ 
+-        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+-
+-        /* data reg not ready, controller busy */
+-        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+-        BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
+-        return;
++        if (BX_FD_THIS s.non_dma) {
++          BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_NDMA | FD_MS_DIO | FD_MS_BUSY;
++          BX_FD_THIS raise_interrupt();
++          } 
++        else {
++          /* data reg not ready, controller busy */
++          BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
++          DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
++          }
+         }
+       else if ((BX_FD_THIS s.command[0] & 0x7f) == 0x45) { // write
+-        BX_FD_THIS s.floppy_buffer_index = 0;
+-
+-        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+ 
+-        /* data reg not ready, controller busy */
+-        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+-        BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
+-        return;
++        if (BX_FD_THIS s.non_dma) {
++          BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_NDMA | FD_MS_BUSY;
++          BX_FD_THIS raise_interrupt();
++          } 
++        else {
++          /* data reg not ready, controller busy */
++          BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
++          DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
++          }
+         }
+       else
+         BX_PANIC(("floppy_command(): unknown read/write command"));
+@@ -994,12 +953,9 @@
+       return;
+       break;
+ 
+-    default: // invalid or unsupported command
+-      BX_FD_THIS s.result_size = 1;
+-      BX_FD_THIS s.result_index = 0;
+-      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-      BX_FD_THIS s.status_reg0 = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
++    default: // invalid or unsupported command; these are captured in write() above
++      BX_PANIC(("You should never get here! cmd = 0x%02x", 
++                BX_FD_THIS s.command[0]));
+     }
+ #endif
+ }
+@@ -1084,27 +1040,7 @@
+   drive = BX_FD_THIS s.DOR & 0x03;
+   switch ( BX_FD_THIS s.pending_command ) {
+     case 0x07: // recal
+-      BX_FD_THIS s.pending_command = 0;
+-      /* write ready, not busy */
+-      BX_FD_THIS s.cylinder[drive] = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
+-      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
+-      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE) {
+-        BX_FD_THIS s.status_reg0 |= 0x50;
+-        }
+-      else if (BX_FD_THIS s.media_present[drive] == 0) {
+-        BX_FD_THIS s.status_reg0 |= 0x40;
+-        BX_FD_THIS s.status_reg1 = 0x25;
+-        BX_FD_THIS s.status_reg2 = 0x31;
+-        }
+-      raise_interrupt();
+-      goto reset_changeline;
+-      break;
+-
+     case 0x0f: // seek
+-      BX_FD_THIS s.pending_command = 0;
+-      /* write ready, not busy */
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
+       BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
+       if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE) {
+         BX_FD_THIS s.status_reg0 |= 0x50;
+@@ -1114,36 +1050,50 @@
+         BX_FD_THIS s.status_reg1 = 0x25;
+         BX_FD_THIS s.status_reg2 = 0x31;
+         }
+-      raise_interrupt();
+-      goto reset_changeline;
++
++      /* reset changeline */
++      if (drive > 1) return;
++      if (BX_FD_THIS s.media_present[drive])
++        BX_FD_THIS s.DIR[drive] &= ~0x80; // clear disk change line
++
++      enter_idle_phase();
++      BX_FD_THIS raise_interrupt();
+       break;
+ 
+     case 0x4a: /* read ID */
+-      BX_FD_THIS s.pending_command = 0;
+-      /* read ready, busy */
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO;
+-      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-      raise_interrupt();
++      enter_result_phase();
+       break;
+ 
++    case 0x4d: // format track
+     case 0x46: // read normal data
+-    case 0x66:
++    case 0x66: 
+     case 0xc6:
+     case 0xe6:
+     case 0x45: // write normal data
+-    case 0xc5:
+-      BX_FD_THIS s.pending_command = 0;
+-      /* read ready, busy */
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+-      BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive]<<2) | drive;
+-      raise_interrupt();
++    case 0xc5: 
++      /* During non-DMA operation, the state of the FDC oscillates
++         between IRQ low/MRQ clear (set after data is transferred via 0x3f5)
++         and IRQ high/MRQ set. 
++         Whenever the timer is triggered in DMA mode, or in non-DMA mode with
++         MRQ set, we have a data overrun/underrun. */
++      if ((BX_FD_THIS s.main_status_reg & (FD_MS_MRQ | FD_MS_NDMA)) 
++          == FD_MS_NDMA) { // NDMA & !MRQ
++        BX_FD_THIS raise_interrupt();
++        BX_FD_THIS s.main_status_reg |= FD_MS_MRQ;
++        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, 
++                                    FD_TIMEOUT, 0 ); 
++      }
++      else { // timeout
++        BX_FD_THIS s.status_reg1 |= FD_ST_OVERRUN;
++        enter_result_phase();
++      } 
+       break;
+ 
+     case 0xfe: // (contrived) RESET
+       theFloppyController->reset(BX_RESET_SOFTWARE);
+       BX_FD_THIS s.pending_command = 0;
+       BX_FD_THIS s.status_reg0 = 0xc0;
+-      raise_interrupt();
++      BX_FD_THIS raise_interrupt();
+       BX_FD_THIS s.reset_sensei = 4;
+       break;
+     
+@@ -1155,11 +1105,6 @@
+         (unsigned) BX_FD_THIS s.pending_command));
+     }
+   return;
+-
+-reset_changeline:
+-  if (drive > 1) return;
+-  if (BX_FD_THIS s.media_present[drive])
+-    BX_FD_THIS s.DIR[drive] &= ~0x80; // clear disk change line
+ }
+ 
+   void
+@@ -1169,9 +1114,11 @@
+   // We need to return then next data byte from the floppy buffer
+   // to be transfered via the DMA to memory. (read block from floppy)
+ 
+-
+   *data_byte = BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++];
+ 
++  // reschedule timeout
++  bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index, FD_TIMEOUT, 0 ); 
++
+   if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+     Bit8u drive;
+ 
+@@ -1179,18 +1126,8 @@
+     increment_sector(); // increment to next sector before retrieving next one
+     BX_FD_THIS s.floppy_buffer_index = 0;
+     if (DEV_dma_get_tc()) { // Terminal Count line, done
+-      BX_FD_THIS s.pending_command = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+-      BX_FD_THIS s.result_size = 7;
+-      BX_FD_THIS s.result_index = 0;
+       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+-      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-      BX_FD_THIS s.result[1] = 0;
+-      BX_FD_THIS s.result[2] = 0;
+-      BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+-      BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+-      BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+-      BX_FD_THIS s.result[6] = 2;
++      BX_FD_THIS s.status_reg2 = 0;
+ 
+       if (bx_dbg.floppy) {
+         BX_INFO(("<<READ DONE>>"));
+@@ -1201,8 +1138,8 @@
+         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+         }
+ 
+-      raise_interrupt();
+       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
++      enter_result_phase();
+       }
+     else { // more data to transfer
+       Bit32u logical_sector;
+@@ -1227,6 +1164,9 @@
+   Bit8u drive;
+   Bit32u logical_sector;
+ 
++  // reschedule timeout
++  bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index, FD_TIMEOUT, 0 ); 
++
+   drive = BX_FD_THIS s.DOR & 0x03;
+   if (BX_FD_THIS s.pending_command == 0x4d) { // format track in progress
+     --BX_FD_THIS s.format_count;
+@@ -1258,17 +1198,9 @@
+       }
+     if ((BX_FD_THIS s.format_count == 0) || (DEV_dma_get_tc())) {
+       BX_FD_THIS s.format_count = 0;
+-      BX_FD_THIS s.pending_command = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+-      BX_FD_THIS s.result_size = 7;
+-      BX_FD_THIS s.result_index = 0;
+       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+-      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-      BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
+-      BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
+-      // 4 result bytes are unused
+-      raise_interrupt();
+       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
++      enter_result_phase();
+       }
+     return;
+     }
+@@ -1282,22 +1214,13 @@
+   if ( BX_FD_THIS s.media[drive].write_protected ) {
+     // write protected error
+     BX_INFO(("tried to write disk %u, which is write-protected", drive));
+-    BX_FD_THIS s.result_size = 7;
+-    BX_FD_THIS s.result_index = 0;
+     // ST0: IC1,0=01  (abnormal termination: started execution but failed)
+-    BX_FD_THIS s.result[0] = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
++    BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
+     // ST1: DataError=1, NDAT=1, NotWritable=1, NID=1
+-    BX_FD_THIS s.result[1] = 0x27; // 0010 0111
++    BX_FD_THIS s.status_reg1 = 0x27; // 0010 0111
+     // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
+-    BX_FD_THIS s.result[2] = 0x31; // 0011 0001
+-    BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+-    BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+-    BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+-    BX_FD_THIS s.result[6] = 2; // sector size = 512
+-
+-    BX_FD_THIS s.pending_command = 0;
+-    BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+-    raise_interrupt();
++    BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
++    enter_result_phase();
+     return;
+     }
+     floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+@@ -1305,18 +1228,9 @@
+     increment_sector(); // increment to next sector after writing current one
+     BX_FD_THIS s.floppy_buffer_index = 0;
+     if (DEV_dma_get_tc()) { // Terminal Count line, done
+-      BX_FD_THIS s.pending_command = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-      BX_FD_THIS s.result_size = 7;
+-      BX_FD_THIS s.result_index = 0;
+       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+-      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-      BX_FD_THIS s.result[1] = 0;
+-      BX_FD_THIS s.result[2] = 0;
+-      BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+-      BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+-      BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+-      BX_FD_THIS s.result[6] = 2;
++      BX_FD_THIS s.status_reg2 = 0;
++
+       if (bx_dbg.floppy) {
+         BX_INFO(("<<WRITE DONE>>"));
+         BX_INFO(("AFTER"));
+@@ -1326,8 +1240,8 @@
+         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+         }
+ 
+-      raise_interrupt();
+       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
++      enter_result_phase();
+       }
+     else { // more data to transfer
+       } // else
+@@ -1342,6 +1256,13 @@
+   BX_FD_THIS s.reset_sensei = 0;
+ }
+ 
++  void
++bx_floppy_ctrl_c::lower_interrupt(void)
++{
++  DEV_pic_lower_irq(6);
++  BX_FD_THIS s.pending_irq = 0;
++}
++
+ 
+   void
+ bx_floppy_ctrl_c::increment_sector(void)
+@@ -1350,6 +1271,14 @@
+ 
+   drive = BX_FD_THIS s.DOR & 0x03;
+ 
++  if (BX_FD_THIS s.status_reg1 & FD_ST_EOT) {
++    /* increment past EOT: abnormal termination */
++    BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
++    DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
++    enter_result_phase();
++    return;
++  }
++
+   // values after completion of data xfer
+   // ??? calculation depends on base_count being multiple of 512
+   BX_FD_THIS s.sector[drive] ++;
+@@ -1372,6 +1301,11 @@
+       BX_INFO(("increment_sector: clamping cylinder to max"));
+       }
+     }
++
++  /* check end-of-track condition */
++  if ((BX_FD_THIS s.multi_track == BX_FD_THIS s.head[drive]) &&
++      (BX_FD_THIS s.sector[drive] == BX_FD_THIS s.media[drive].sectors_per_track)) 
++    BX_FD_THIS s.status_reg1 |= FD_ST_EOT;
+ }
+ 
+   unsigned
+@@ -1475,11 +1409,11 @@
+ #endif
+ #ifdef WIN32
+     if ( (path[1] == ':') && (strlen(path) == 2) ) {
+-	  wsprintf(sTemp, "\\\\.\\%s", path);
+-	  media->fd = open(sTemp, BX_RDWR);
+-	} else {
+-		media->fd = open(path, BX_RDWR);
+-	} 
++      wsprintf(sTemp, "\\\\.\\%s", path);
++      media->fd = open(sTemp, BX_RDWR);
++    } else {
++      media->fd = open(path, BX_RDWR);
++    } 
+ #else
+     media->fd = open(path, BX_RDWR);
+ #endif
+@@ -1494,11 +1428,11 @@
+ #endif
+ #ifdef WIN32
+     if ( (path[1] == ':') && (strlen(path) == 2) ) {
+-	  wsprintf(sTemp, "\\\\.\\%s", path);
+-	  media->fd = open(sTemp, BX_RDONLY);
+-	} else {
+-		media->fd = open(path, BX_RDONLY);
+-	}
++      wsprintf(sTemp, "\\\\.\\%s", path);
++      media->fd = open(sTemp, BX_RDONLY);
++    } else {
++      media->fd = open(path, BX_RDONLY);
++    }
+ #else
+     media->fd = open(path, BX_RDONLY);
+ #endif
+@@ -1566,11 +1500,11 @@
+           media->tracks            = 80;
+           media->heads             = 2;
+           }
+-	else if (stat_buf.st_size == 1763328) {
++        else if (stat_buf.st_size == 1763328) {
+           media->sectors_per_track = 21;
+           media->tracks            = 82;
+           media->heads             = 2;
+-	  }
++          }
+         else {
+           BX_INFO(("evaluate_media: file '%s' of unknown size %lu",
+             path, (unsigned long) stat_buf.st_size));
+@@ -1641,5 +1575,86 @@
+     BX_INFO(("unknown mode type"));
+     return(0);
+     }
++}
++
++
++void
++bx_floppy_ctrl_c::enter_result_phase(void)
++{
++
++  Bit8u drive;
++
++  drive = BX_FD_THIS s.DOR & 0x03;
++
++  /* these are always the same */
++  BX_FD_THIS s.result_index = 0;
++  BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
++
++  /* invalid command */
++  if ((BX_FD_THIS s.status_reg0 & 0xc0) == 0x80) {
++    BX_FD_THIS s.result_size = 1;
++    BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
++    return;
++  } 
++
++  switch (BX_FD_THIS s.pending_command) {
++  case 0x04: // get status
++    BX_FD_THIS s.result_size = 1;
++    BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg3;
++    break;
++  case 0x08: // sense interrupt
++    BX_FD_THIS s.result_size = 2;
++    BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
++    BX_FD_THIS s.result[1] = BX_FD_THIS s.cylinder[drive];
++    break;
++  case 0x46: // read normal data
++  case 0x66:
++  case 0xc6:
++  case 0xe6:
++  case 0x45: // write normal data
++  case 0xc5:
++    /* increment sector once more if we terminated normally at EOT */
++    if ((BX_FD_THIS s.status_reg0 & 0xc0) == 0x00 &&
++	 (BX_FD_THIS s.status_reg1 & FD_ST_EOT)) {
++      BX_FD_THIS s.status_reg1 &= ~FD_ST_EOT;  // clear EOT flag
++      increment_sector();
++      // reset the head bit
++      BX_FD_THIS s.status_reg0 &= 0xfb;
++      BX_FD_THIS s.status_reg0 |= (BX_FD_THIS s.head[drive] << 2);
++    }
++  case 0x4a: // read ID
++  case 0x4d: // format track
++    BX_FD_THIS s.result_size = 7;
++    BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;    
++    BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
++    BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
++    BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
++    BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
++    BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
++    BX_FD_THIS s.result[6] = 2; /* sector size code */
++
++    bx_pc_system.deactivate_timer( BX_FD_THIS s.floppy_timer_index ); // clear pending timeout
++    BX_FD_THIS raise_interrupt();
++    break;
++  }
++}
++
++void
++bx_floppy_ctrl_c::enter_idle_phase(void)
++{
++  BX_FD_THIS s.main_status_reg &= 0x0f;      // leave drive status untouched
++  BX_FD_THIS s.main_status_reg |= FD_MS_MRQ; // data register ready
++
++  /* do not touch ST0 and ST3 since these may be queried later via
++     commands 0x08 and 0x04, respectively. */
++  BX_FD_THIS s.status_reg1 = 0;
++  BX_FD_THIS s.status_reg2 = 0;
++
++  BX_FD_THIS s.command_complete = 1; /* waiting for new command */
++  BX_FD_THIS s.command_index = 0;
++  BX_FD_THIS s.command_size = 0;
++  BX_FD_THIS s.pending_command = 0;
++
++  BX_FD_THIS s.floppy_buffer_index = 0;
+ }
+ 
+Index: iodev/floppy.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.h,v
+retrieving revision 1.14
+diff -u -r1.14 floppy.h
+--- iodev/floppy.h	25 Oct 2002 11:44:40 -0000	1.14
++++ iodev/floppy.h	8 Nov 2002 20:28:49 -0000
+@@ -116,6 +116,7 @@
+     Bit8u    DIR[4]; // Digital Input Register:
+                   // b7: 0=diskette is present and has not been changed
+                   //     1=diskette missing or changed
++    Bit8u    non_dma;
+     } s;  // state information
+ 
+   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+@@ -127,7 +128,10 @@
+   BX_FD_SMF void   floppy_command(void);
+   BX_FD_SMF void   floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer, Bit32u bytes, Bit8u direction);
+   BX_FD_SMF void   raise_interrupt(void);
+-  static void   timer_handler(void *);
++  BX_FD_SMF void   lower_interrupt(void);
++  BX_FD_SMF void   enter_idle_phase(void);
++  BX_FD_SMF void   enter_result_phase(void);
++  static void      timer_handler(void *);
+ 
+ public:
+   BX_FD_SMF void   timer(void);
