@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.15 2003-07-12 08:17:10 vruppert Exp $
+// $Id: keymap.cc,v 1.16 2003-10-11 10:43:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -112,7 +112,7 @@ bx_keymap_c::isKeymapLoaded ()
 
 ///////////////////
 // I'll add these to the keymap object in a minute.
-static char *lineptr = NULL;
+static unsigned char *lineptr = NULL;
 static int lineCount;
 
 static void
@@ -125,7 +125,7 @@ static void
 init_parse_line (char *line_to_parse)
 {
   // chop off newline
-  lineptr = line_to_parse;
+  lineptr = (unsigned char *)line_to_parse;
   char *nl;
   if( (nl = strchr(line_to_parse,'\n')) != NULL) {
     *nl = 0;
