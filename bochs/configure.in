@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.124 2002-09-24 08:15:26 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.125 2002-09-24 18:00:21 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -207,6 +207,23 @@ AC_ARG_ENABLE(new-pit,
     ]
   )
 AC_SUBST(BX_USE_NEW_PIT)
+
+AC_MSG_CHECKING(for realtime PIT)
+AC_ARG_ENABLE(realtime-pit,
+  [  --enable-realtime-pit                  try to keep clk in sync w/ real time],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_USE_REALTIME_PIT, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_USE_REALTIME_PIT, 0)
+   fi],
+  [
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_USE_REALTIME_PIT, 1)
+    ]
+  )
+AC_SUBST(BX_USE_REALTIME_PIT)
 
 AC_MSG_CHECKING(for slowdown timer)
 AC_ARG_ENABLE(slowdown,
