@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.1 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: parser.y,v 1.2 2004-06-21 10:45:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -164,9 +164,14 @@
 %left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
 %left NOT NEG
 
-%start command
+%start commands
 
 %%
+commands:
+      comamnds command
+    | command
+;
+
 command:
       continue_command
     | stepN_command

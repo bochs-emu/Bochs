@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.1 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: lexer.l,v 1.2 2004-06-21 10:45:37 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -177,13 +177,14 @@ calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
 "!"             { return ('!'); }
 "("             { return ('('); }
 ")"             { return (')'); }
-\'[^\'\n]*\'    |
-\"[^\"\n]*\"    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STRING); }
+\'([^\\\'\n]|(\\.))*\'    |
+\"([^\\\"\n]|(\\.))*\"    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STRING); }
 0x[0-9a-fA-F]+  { bxlval.uval = strtoul(bxtext+2, NULL, 16); return(BX_TOKEN_NUMERIC); }
 0[0-7]+         { bxlval.uval = strtoul(bxtext+1, NULL, 8); return(BX_TOKEN_NUMERIC); }
 [0-9]+L         { bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
 [0-9]+          { bxlval.uval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_NUMERIC); }
 $[a-zA-Z_][a-zA-Z0-9_]* { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLNAME); }
+<*>";"          { return ('\n'); }
 <*>\n           { return('\n'); }
 [#][^\n]*    ; // eat up comments '//'
 .               { return(bxtext[0]); }
