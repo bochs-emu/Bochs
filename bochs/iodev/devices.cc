@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.33 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: devices.cc,v 1.34 2002-10-03 15:47:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,7 +85,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.33 2002-10-02 05:16:01 kevinlawton Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34 2002-10-03 15:47:13 kevinlawton Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -364,12 +364,7 @@ bx_devices_c::timer()
   if (retval & 0x02)
     pic->raise_irq(12);
 
-#if BX_SUPPORT_APIC
-  // update local APIC timers
-  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->local_apic.periodic (BX_IODEV_HANDLER_PERIOD);
-  }
-#endif
+// KPL Removed lapic periodic timer registration here.
 }
 
 

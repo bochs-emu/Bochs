@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.20 2002-10-03 04:45:17 bdenney Exp $
+// $Id: apic.cc,v 1.21 2002-10-03 15:47:12 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -8,6 +8,7 @@
 #define LOG_THIS this->
 
 bx_generic_apic_c *apic_index[APIC_MAX_ID];
+
 
 bx_generic_apic_c::bx_generic_apic_c () 
 {
@@ -303,6 +304,7 @@ void
 bx_local_apic_c::init ()
 {
   bx_generic_apic_c::init ();
+
   BX_INFO(("local apic in %s initializing", 
       (cpu && cpu->name) ? cpu->name : "?"));
   // default address for a local APIC, can be moved
@@ -316,6 +318,11 @@ bx_local_apic_c::init ()
   }
   icr_high = icr_low = log_dest = task_priority = 0;
   spurious_vec = 0xff;   // software disabled (bit 8)
+
+  // KPL
+  // Register a non-active timer for use when the timer is started.
+  timer_handle = bx_pc_system.register_timer_ticks(this,
+	    BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
 }
 
 BX_CPU_C 
@@ -455,12 +462,25 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       lvt[APIC_LVT_ERROR] = *data & 0x117ff;
       break;
     case 0x380: // initial count for timer
+      {
+      // If active before, deactive the current timer before changing it.
+      if (timer_active)
+        bx_pc_system.deactivate_timer(timer_handle);
       timer_initial = *data;
+      if (timer_initial == 0)
+        BX_PANIC(("APIC: W(init timer count): count=0"));
       // This should trigger the counter to start.  If already started,
       // restart from the new start value.
+//fprintf(stderr, "APIC: W(Initial Count Register) = %u\n", *data);
       timer_current = timer_initial;
       timer_active = true;
-      timer_divide_counter = 0;
+//timer_divide_counter = 0; // KPL: delete this field.
+      Bit32u timervec = lvt[APIC_LVT_TIMER];
+      Boolean continuous = (timervec & 0x20000) > 0;
+      ticksInitial = bx_pc_system.getTicksTotal(); // Take a reading.
+      bx_pc_system.activate_timer_ticks(timer_handle,
+          Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
+      }
       break;
     case 0x3e0: // timer divide configuration
       // only bits 3, 1, and 0 are writable
@@ -563,9 +583,26 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
       break;
     }
   case 0x380: // initial count for timer
-    *data = timer_initial; break;
+    *data = timer_initial;
+//fprintf(stderr, "APIC: R(Initial Count Register) = %u\n", *data);
+    break;
   case 0x390: // current count for timer
-    *data = timer_current; break;
+    {
+    if (timer_active==0)
+      *data = timer_current;
+    else {
+      Bit64u delta64;
+      Bit32u delta32;
+      delta64 = (bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
+      delta32 = (Bit32u) delta64;
+      if (delta32 > timer_initial)
+        BX_PANIC(("APIC: R(curr timer count): delta < initial"));
+      timer_current = timer_initial - delta32;
+      *data = timer_current;
+      }
+//fprintf(stderr, "APIC: R(Current Count Register) = %u\n", *data);
+    }
+    break;
   case 0x3e0: // timer divide configuration
     *data = timer_divconf; break;
   default:
@@ -717,50 +754,43 @@ Bit8u bx_local_apic_c::get_apr ()
   return arb_id;
 }
 
-void
-bx_local_apic_c::periodic (Bit32u usec_delta)
+  void
+bx_local_apic_c::periodic_smf(void *this_ptr)
 {
-  if (!timer_active) return;
-  BX_DEBUG(("%s: bx_local_apic_c::periodic called with %d usec",
-    cpu->name, usec_delta));
-  // unless usec_delta is guaranteed to be a multiple of 128, I can't
-  // just divide usec_delta by the divide-down value.  Instead, it will
-  // have a similar effect to implement the divide-down by ignoring
-  // some fraction of calls to this function.  This can be improved if
-  // more granularity is important.
-  timer_divide_counter = (timer_divide_counter + 1) % timer_divide_factor;
-  if (timer_divide_counter != 0) return;
-  if (timer_current > usec_delta) {
-    timer_current -= usec_delta;
-    //BX_INFO(("%s: local apic timer is now 0x%08x", cpu->name, timer_current));
+  bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
+
+  class_ptr->periodic();
+}
+
+  void
+bx_local_apic_c::periodic(void) // KPL: changed prototype
+{
+  if (!timer_active) {
+    BX_PANIC(("%s: bx_local_apic_c::periodic called, timer_active==0", cpu->name));
     return;
-  }
+    }
+  BX_DEBUG(("%s: bx_local_apic_c::periodic called", cpu->name));
+
   // timer reached zero since the last call to periodic.
   Bit32u timervec = lvt[APIC_LVT_TIMER];
   if (timervec & 0x20000) {
-    // periodic mode.  Always trigger the interrupt when we reach zero.
-    trigger_irq (timervec & 0xff, id);
-    if (timer_initial == 0) {
-      usec_delta = 0;
-      timer_current = 0;
-    } else {
-      // timer_initial might be smaller than usec_delta.  I can't trigger
-      // multiple interrupts, so just try to get the timer_current right.
-      while (usec_delta > timer_initial)
-	usec_delta -= timer_initial;
-      timer_current = timer_current + timer_initial - usec_delta;
-      // sanity check. all these are unsigned so I can't check for
-      // negative timer_current.
-      BX_ASSERT ((timer_current + timer_initial) >= usec_delta);
-    }
+    // Periodic mode.
+    // If timer is not masked, trigger interrupt.
+    if ( (timervec & 0x10000)==0 )
+      trigger_irq (timervec & 0xff, id);
+    // Reload timer values.
+    timer_current = timer_initial;
+    ticksInitial = bx_pc_system.getTicksTotal(); // Take a reading.
     BX_DEBUG(("%s: local apic timer (periodic) triggered int, reset counter to 0x%08x", cpu->name, timer_current));
-  } else {
+    }
+  else {
     // one-shot mode
     timer_current = 0;
-    if (timer_active) {
+    // If timer is not masked, trigger interrupt.
+    if ( (timervec & 0x10000)==0 )
       trigger_irq (timervec & 0xff, id);
-      timer_active = false;
-      BX_DEBUG (("%s: local apic timer (one-shot) triggered int", cpu->name));
+    timer_active = false;
+    BX_DEBUG (("%s: local apic timer (one-shot) triggered int", cpu->name));
+    bx_pc_system.deactivate_timer(timer_handle); // Make sure.
     }
-  }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.15 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: pc_system.h,v 1.16 2002-10-03 15:47:12 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,7 +28,7 @@
 
 
 #define BX_MAX_TIMERS 16
-#define BX_NULL_TIMER_HANDLE 10000 /* set uninitialized timer handles to this */
+#define BX_NULL_TIMER_HANDLE 10000
 
 
 #if BX_SHOW_IPS
@@ -54,38 +54,28 @@ private:
 
   struct {
     Bit64u  period;     // Timer periodocity in cpu ticks.
-    Bit64u  remaining;  // Remaining cpu ticks until current period elapses.
+    Bit64u  timeToFire; // Time to fire next (in absolute ticks).
     Boolean active;     // 0=inactive, 1=active.
     Boolean continuous; // 0=one-shot timer, 1=continuous periodicity.
-    Boolean triggered;  // 0=timer was just triggered by recent number of
-                        //   elapsed cpu ticks.  It is possible for more
-                        //   than one timer to fire on the same ticks
-                        //   boundary, thus there is one flag for each
-                        //   possible timer here.
     bx_timer_handler_t funct;  // A callback function for when the
                                //   timer fires.
     void *this_ptr;            // The this-> pointer for C++ callbacks
                                //   has to be stored as well.
+#define BxMaxTimerIDLen 32
+    char id[BxMaxTimerIDLen]; // String ID of timer.
     } timer[BX_MAX_TIMERS];
 
-  unsigned   num_timers;  // Number of currently allocated timers.
-  Bit64u     num_cpu_ticks_in_period; // Num cpu ticks in current period.
-  Bit64u     num_cpu_ticks_left; // Num ticks remaining before current period
-                                 //   elapses.  Always <= num_cpu_ticks_in_period.
-  //
-  // The following 4 appear to be a giant hack.  I'm going to look into
-  // cleaning this up.  (KPL)
-  //
-  Bit64u     counter;
-  int        counter_timer_index;
-  static const Bit64u COUNTER_INTERVAL;
-  static void counter_timer_handler(void* this_ptr);
+  unsigned   numTimers;  // Number of currently allocated timers.
+  Bit64u     currCountdown; // Current countdown ticks value (decrements to 0).
+  Bit64u     currCountdownPeriod; // Length of current countdown period.
+  Bit64u     ticksTotal; // Num ticks total since start of emulator execution.
 
-  // When any kind of event occurs, including the registration of a
-  // new timer, this convenience function is used to expire the number
-  // of ticks which have occurred thus far in the current interval
-  // for each of the active timers.
-  void       expire_ticks(void);
+  // A special null timer is always inserted in the timer[0] slot.  This
+  // make sure that at least one timer is always active, and that the
+  // duration is always less than a maximum 32-bit integer, so a 32-bit
+  // counter can be used for the current countdown.
+  static const Bit64u NullTimerInterval;
+  static void nullTimer(void* this_ptr);
 
 #if !defined(PROVIDE_M_IPS)
   // This is the emulator speed, as measured in millions of
@@ -94,9 +84,9 @@ private:
   double     m_ips; // Millions of Instructions Per Second
 #endif
 
-  // This handler is called when the function which increment the clock
+  // This handler is called when the function which decrements the clock
   // ticks finds that an event has occurred.
-  void   timer_handler(void);
+  void   countdownEvent(void);
 
 public:
 
@@ -118,8 +108,8 @@ public:
   ips_count++;
   }
 #endif
-    if (--bx_pc_system.num_cpu_ticks_left == 0) {
-      bx_pc_system.timer_handler();
+    if (--bx_pc_system.currCountdown == 0) {
+      bx_pc_system.countdownEvent();
       }
     }
   static BX_CPP_INLINE void tickn(Bit64u n) {
@@ -129,24 +119,32 @@ public:
   ips_count += n;
   }
 #endif
-    if (bx_pc_system.num_cpu_ticks_left > n) {
-      bx_pc_system.num_cpu_ticks_left -= n;
-      return;
-      }
-    while (n >= bx_pc_system.num_cpu_ticks_left) {
-      n -= bx_pc_system.num_cpu_ticks_left;
-      bx_pc_system.num_cpu_ticks_left = 0;
-      bx_pc_system.timer_handler();
-      }
+    while (n >= bx_pc_system.currCountdown) {
+      n -= bx_pc_system.currCountdown;
+      bx_pc_system.currCountdown = 0;
+      bx_pc_system.countdownEvent();
+      // bx_pc_system.currCountdown is adjusted to new value by countdownevent().
+      };
+    // 'n' is not (or no longer) >= the countdown size.  We can just decrement
+    // the remaining requested ticks and continue.
+    bx_pc_system.currCountdown -= n;
     }
 
-  int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks, Boolean continuous, Boolean active, const char *id);
-  void activate_timer_ticks(unsigned index, Bit64u instructions, Boolean continuous);
+  int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
+                           Boolean continuous, Boolean active, const char *id);
+  void activate_timer_ticks(unsigned index, Bit64u instructions,
+                            Boolean continuous);
   Bit64u time_usec();
-  Bit64u time_ticks();
+  static BX_CPP_INLINE Bit64u time_ticks() {
+    return bx_pc_system.ticksTotal +
+      (bx_pc_system.currCountdownPeriod - bx_pc_system.currCountdown);
+    }
+  static BX_CPP_INLINE Bit64u getTicksTotal(void) {
+    return bx_pc_system.ticksTotal;
+    }
 
   static BX_CPP_INLINE Bit64u  getNumCpuTicksLeftNextEvent(void) {
-    return bx_pc_system.num_cpu_ticks_left;
+    return bx_pc_system.currCountdown;
     }
 #if BX_DEBUGGER
   static void timebp_handler(void* this_ptr);

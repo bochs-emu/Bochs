@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.20 2002-09-29 19:21:38 kevinlawton Exp $
+// $Id: fetchdecode64.cc,v 1.21 2002-10-03 15:47:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,18 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if 0
+// KPL.  A number of cases are testing field values after they have
+// been 16-register extended, but should be testing the pre-extension
+// value.  Or, are causing use of extended values on 32-bit case arrays
+// which are only 8-registers wide.
+#define ExtendedFieldCheck(panicCondition) { \
+  if ( panicCondition ) \
+    BX_PANIC(("Extended Field Check macro, extended field found.")); \
+  }
+#else
+#define ExtendedFieldCheck(panicCondition) 
+#endif
 
 ///////////////////////////
 // prefix bytes
@@ -2342,6 +2354,7 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
 #endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
+ExtendedFieldCheck((rm&8) && ((rm&7)==5)); // KPL
           if (rm == 5) {
             if ((ilen+3) < remain) {
               Bit32u imm32u;
@@ -2431,6 +2444,7 @@ get_32bit_displ_1:
 #endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
+ExtendedFieldCheck((base&8) && ((base&7)==5)); // KPL
           if (base == 0x05) {
             goto get_32bit_displ_1;
             }
@@ -2470,12 +2484,14 @@ get_32bit_displ_1:
         instruction->DTMemRegsUsed = 1<<rm; // except for mod=00b rm=100b
 #endif
         if (mod == 0x00) { // mod == 00b
+ExtendedFieldCheck(rm&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod0[rm];
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod0[rm];
 #endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
+ExtendedFieldCheck((rm&8) && ((rm&7)==5)); // KPL
           if (rm == 5) {
             if ((ilen+3) < remain) {
               Bit32u imm32u;
@@ -2499,6 +2515,7 @@ get_32bit_displ_1:
           goto modrm_done;
           }
         if (mod == 0x40) { // mod == 01b
+ExtendedFieldCheck(rm&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod1or2[rm];
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2[rm];
@@ -2517,6 +2534,7 @@ get_8bit_displ:
             }
           }
         // (mod == 0x80) mod == 10b
+ExtendedFieldCheck(rm&8); // KPL
         instruction->ResolveModrm = BxResolve32Mod1or2[rm];
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2[rm];
@@ -2560,12 +2578,14 @@ get_32bit_displ:
           instruction->DTMemRegsUsed = 1<<instruction->modRMForm.index;
 #endif
         if (mod == 0x00) { // mod==00b, rm==4
+ExtendedFieldCheck(base&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod0Base[base];
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod0Base[base];
 #endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
+ExtendedFieldCheck((base&8) && ((base&7)==5)); // KPL
           if (base == 0x05) {
             goto get_32bit_displ;
             }
@@ -2580,6 +2600,7 @@ get_32bit_displ:
         instruction->DTMemRegsUsed |= 1<<base;
 #endif
         if (mod == 0x40) { // mod==01b, rm==4
+ExtendedFieldCheck(base&8); // KPL
           instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2Base[base];
@@ -2589,6 +2610,7 @@ get_32bit_displ:
           goto get_8bit_displ;
           }
         // (mod == 0x80),  mod==10b, rm==4
+ExtendedFieldCheck(base&8); // KPL
         instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2Base[base];
@@ -2616,6 +2638,7 @@ modrm_done:
       BxOpcodeInfo_t *OpcodeInfoPtr;
 
       OpcodeInfoPtr = BxOpcodeInfo64[b1+offset].AnotherArray;
+ExtendedFieldCheck(nnn&8); // KPL
       // get additional attributes from group table
       attr |= OpcodeInfoPtr[nnn].Attr;
       instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));

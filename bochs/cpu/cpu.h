@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.91 2002-10-03 04:53:53 bdenney Exp $
+// $Id: cpu.h,v 1.92 2002-10-03 15:47:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1231,6 +1231,10 @@ class bx_local_apic_c : public bx_generic_apic_c {
 #define APIC_ERR_TX_ACCEPT_ERR   0x04
 #define APIC_ERR_RX_CHECKSUM     0x02
 #define APIC_ERR_TX_CHECKSUM     0x01
+
+  int timer_handle; // KPL
+  Bit64u ticksInitial; // System ticks count when APIC timer is started.
+
 public:
   bx_local_apic_c(BX_CPU_C *mycpu);
   virtual ~bx_local_apic_c(void);
@@ -1259,7 +1263,8 @@ public:
   virtual Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   Bit8u get_ppr ();
   Bit8u get_apr ();
-  void periodic (Bit32u usec_delta);
+  static void periodic_smf(void *); // KPL
+  void periodic(void); // KPL
   void set_divide_configuration (Bit32u value);
   virtual void update_msr_apicbase(Bit32u newaddr);
   virtual void set_arb_id (int newid);

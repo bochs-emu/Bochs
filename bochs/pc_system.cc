@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.25 2002-10-02 05:16:00 kevinlawton Exp $
+// $Id: pc_system.cc,v 1.26 2002-10-03 15:47:12 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,22 +44,45 @@ unsigned long ips_count=0;
 double     m_ips; // Millions of Instructions Per Second
 #endif
 
-const Bit64u bx_pc_system_c::COUNTER_INTERVAL = 100000;
+// Option for turning off BX_TIMER_DEBUG?
+// Check out m_ips and ips
+
+#define SpewPeriodicTimerInfo 0
+#define MinAllowableTimerPeriod 1
+
+
+#if SpewPeriodicTimerInfo
+// If debugging, set the heartbeat to 5M cycles.  Each heartbeat
+// spews the active timer info.
+const Bit64u bx_pc_system_c::NullTimerInterval = 5000000;
+#else
+// This must be the maximum 32-bit unsigned int value, NOT (Bit64u) -1.
+const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
+#endif
 
   // constructor
 bx_pc_system_c::bx_pc_system_c(void)
 {
   this->put("SYS");
+
+  // Timer[0] is the null timer.  It is initialized as a special
+  // case here.  It should never be turned off or modified, and its
+  // duration should always remain the same.
+  ticksTotal = 0; // Reset ticks since emulator started.
+  timer[0].period     = NullTimerInterval;
+  timer[0].timeToFire = ticksTotal + NullTimerInterval;
+  timer[0].active     = 1;
+  timer[0].continuous = 1;
+  timer[0].funct      = nullTimer;
+  timer[0].this_ptr   = this;
+  currCountdown       = timer[0].period;
+  currCountdownPeriod = timer[0].period;
+  numTimers = 1; // So far, only the nullTimer.
 }
 
   void
 bx_pc_system_c::init_ips(Bit32u ips)
 {
-  num_timers = 0;
-  // set ticks period and remaining to max Bit32u value
-  num_cpu_ticks_in_period = num_cpu_ticks_left = (Bit32u) -1;
-  m_ips = 0.0L;
-
   HRQ = 0;
 
   enable_a20 = 1;
@@ -73,11 +96,9 @@ bx_pc_system_c::init_ips(Bit32u ips)
   a20_mask   = 0xffffffff;
 #endif
 
-  counter = 0;
-  counter_timer_index = register_timer_ticks(this, bx_pc_system_c::counter_timer_handler, COUNTER_INTERVAL, 1, 1, "pc_system");
-
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
+
   BX_DEBUG(("ips = %u", (unsigned) ips));
 }
 
@@ -212,165 +233,164 @@ bx_pc_system_c::exit(void)
 }
 
 
-//
-// bochs timer support
-//
+// ================================================
+// Bochs internal timer delivery framework features
+// ================================================
+
+  int
+bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
+  Bit32u useconds, Boolean continuous, Boolean active, const char *id)
+{
+  Bit64u ticks;
+
+  // Convert useconds to number of ticks.
+  ticks = (Bit64u) (double(useconds) * m_ips);
+
+  return register_timer_ticks(this_ptr, funct, ticks, continuous, active, id);
+}
+
+  int
+bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
+    Bit64u ticks, Boolean continuous, Boolean active, const char *id)
+{
+  unsigned i;
+
+#if BX_TIMER_DEBUG
+  if (numTimers >= BX_MAX_TIMERS) {
+    BX_PANIC(("register_timer: too many registered timers."));
+    }
+  if (this_ptr == NULL)
+    BX_PANIC(("register_timer_ticks: this_ptr is NULL"));
+  if (funct == NULL)
+    BX_PANIC(("register_timer_ticks: funct is NULL"));
+#endif
+
+  // If the timer frequency is rediculously low, make it more sane.
+  // This happens when 'ips' is too low.
+  if (ticks < MinAllowableTimerPeriod) {
+    //BX_INFO(("register_timer_ticks: adjusting ticks of %llu to min of %u",
+    //          ticks, MinAllowableTimerPeriod));
+    ticks = MinAllowableTimerPeriod;
+    }
+
+  i = numTimers;
+  timer[i].period     = ticks;
+  timer[i].timeToFire = (ticksTotal + (currCountdownPeriod-currCountdown)) +
+                        ticks;
+  timer[i].active     = active;
+  timer[i].continuous = continuous;
+  timer[i].funct      = funct;
+  timer[i].this_ptr   = this_ptr;
+  strncpy(timer[i].id, id, BxMaxTimerIDLen);
+  timer[i].id[BxMaxTimerIDLen-1] = 0; // Null terminate if not already.
+
+  if (active) {
+    if (ticks < currCountdown) {
+      // This new timer needs to fire before the current countdown.
+      // Skew the current countdown and countdown period to be smaller
+      // by the delta.
+      currCountdownPeriod -= (currCountdown - ticks);
+      currCountdown = ticks;
+      }
+    }
+
+  numTimers++; // One new timer installed.
+
+  // Return timer id.
+  return(i);
+}
 
 
   void
-bx_pc_system_c::timer_handler(void)
+bx_pc_system_c::countdownEvent(void)
 {
-  Bit64u min;
   unsigned i;
-  Bit64u delta;
+  Bit64u   minTimeToFire;
+  Boolean  triggered[BX_MAX_TIMERS];
 
-  //  BX_ERROR(( "Time handler ptime = %d", bx_pc_system.time_ticks() ));
-
-  delta = num_cpu_ticks_in_period - num_cpu_ticks_left;
+  // The countdown decremented to 0.  We need to service all the active
+  // timers, and invoke callbacks from those timers which have fired.
 #if BX_TIMER_DEBUG
-  if (num_cpu_ticks_left != 0)
-    BX_PANIC(("timer_handler: ticks_left!=0"));
+  if (currCountdown != 0)
+    BX_PANIC(("countdownEvent: ticks!=0"));
 #endif
 
-  for (i=0; i < num_timers; i++) {
-    timer[i].triggered = 0;
+  // Increment global ticks counter by number of ticks which have
+  // elapsed since the last update.
+  ticksTotal += currCountdownPeriod;
+  minTimeToFire = (Bit64u) -1;
+
+  for (i=0; i < numTimers; i++) {
+    triggered[i] = 0; // Reset triggered flag.
     if (timer[i].active) {
 #if BX_TIMER_DEBUG
-      if (timer[i].remaining < delta) {
-        BX_PANIC(("timer_handler: remain < delta"));
-        }
+      if (ticksTotal > timer[i].timeToFire)
+        BX_PANIC(("countdownEvent: ticksTotal > timeToFire[%u], D %llu", i,
+                  timer[i].timeToFire-ticksTotal));
 #endif
-      timer[i].remaining -= delta;
-      if (timer[i].remaining == 0) {
-        timer[i].triggered = 1;
-        // reset remaining period for triggered timer
-        timer[i].remaining = timer[i].period;
+      if (ticksTotal == timer[i].timeToFire) {
+        // This timer is ready to fire.
+        triggered[i] = 1;
 
-        // if triggered timer is one-shot, deactive
-        if (timer[i].continuous==0)
+        if (timer[i].continuous==0) {
+          // If triggered timer is one-shot, deactive.
           timer[i].active = 0;
+          }
+        else {
+          // Continuous timer, increment time-to-fire by period.
+          timer[i].timeToFire += timer[i].period;
+          if (timer[i].timeToFire < minTimeToFire)
+            minTimeToFire = timer[i].timeToFire;
+          }
+        }
+      else {
+        // This timer is not ready to fire yet.
+        if (timer[i].timeToFire < minTimeToFire)
+          minTimeToFire = timer[i].timeToFire;
         }
       }
     }
 
-  min = (Bit64u) -1; // max number in Bit64u range
-  for (i=0; i < num_timers; i++) {
-    if (timer[i].active && (timer[i].remaining < min))
-      min = timer[i].remaining;
-    }
-  num_cpu_ticks_in_period = num_cpu_ticks_left = min;
+  // Calculate next countdown period.  We need to do this before calling
+  // any of the callbacks, as they may call timer features, which need
+  // to be advanced to the next countdown cycle.
+  currCountdown = currCountdownPeriod =
+      (minTimeToFire - ticksTotal);
 
-  for (i=0; i < num_timers; i++) {
-    // call requested timer function.  It may request a different
-    // timer period or deactivate, all cases handled below
-    if (timer[i].triggered) {
+  for (i=0; i < numTimers; i++) {
+    // Call requested timer function.  It may request a different
+    // timer period or deactivate etc.
+    if (triggered[i]) {
       timer[i].funct(timer[i].this_ptr);
       }
     }
 }
 
   void
-bx_pc_system_c::expire_ticks(void)
+bx_pc_system_c::nullTimer(void* this_ptr)
 {
-  unsigned i;
-  Bit64u ticks_delta;
+  // This function is always inserted in timer[0].  It is sort of
+  // a heartbeat timer.  It ensures that at least one timer is
+  // always active to make the timer logic more simple, and has
+  // a duration of less than the maximum 32-bit integer, so that
+  // a 32-bit size can be used for the hot countdown timer.  The
+  // rest of the timer info can be 64-bits.  This is also a good
+  // place for some logic to report actual emulated
+  // instructions-per-second (IPS) data when measured relative to
+  // the host computer's wall clock.
 
-  ticks_delta = num_cpu_ticks_in_period - num_cpu_ticks_left;
-  if (ticks_delta == 0) return; // no ticks occurred since
-  for (i=0; i<num_timers; i++) {
-    if (timer[i].active) {
-#if BX_TIMER_DEBUG
-      if (timer[i].remaining <= ticks_delta) {
-for (unsigned j=0; j<num_timers; j++) {
-  BX_INFO(("^^^timer[%u]", j));
-  BX_INFO(("^^^remaining = %u, period = %u",
-    timer[j].remaining, timer[j].period));
-  }
-        BX_PANIC(("expire_ticks: i=%u, remain(%u) <= delta(%u)",
-          i, timer[i].remaining, (unsigned) ticks_delta));
-        }
+  UNUSED(this_ptr);
+
+#if SpewPeriodicTimerInfo
+  BX_INFO(("==================================="));
+  for (unsigned i=0; i < bx_pc_system.numTimers; i++) {
+    if (bx_pc_system.timer[i].active) {
+      BX_INFO(("BxTimer(%s): period=%llu, continuous=%u",
+               bx_pc_system.timer[i].id, bx_pc_system.timer[i].period,
+               bx_pc_system.timer[i].continuous));
+      }
+    }
 #endif
-      timer[i].remaining -= ticks_delta; // must be >= 1 here
-      }
-    }
-
-  // set new period to number of ticks left
-  num_cpu_ticks_in_period = num_cpu_ticks_left;
-}
-
-  int
-bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
-  Bit32u useconds, Boolean continuous, Boolean active, const char *id)
-{
-  Bit64u instructions;
-
-  if (num_timers >= BX_MAX_TIMERS) {
-    BX_PANIC(("register_timer: too many registered timers."));
-    }
-
-  if (this_ptr == NULL)
-    BX_PANIC(("register_timer: this_ptr is NULL"));
-  if (funct == NULL)
-    BX_PANIC(("register_timer: funct is NULL"));
-
-  // account for ticks up to now
-  expire_ticks();
-
-  // convert useconds to number of instructions
-  instructions = (Bit64u) (double(useconds) * m_ips);
-  if((useconds!=0) && (instructions==0)) instructions = 1;
-
-  return register_timer_ticks(this_ptr, funct, instructions, continuous, active,
-      id);
-}
-
-  int
-bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct, Bit64u instructions, Boolean continuous, Boolean active, const char *id)
-{
-  unsigned i;
-
-  if (num_timers >= BX_MAX_TIMERS) {
-    BX_PANIC(("register_timer: too many registered timers."));
-    }
-
-  if (this_ptr == NULL)
-    BX_PANIC(("register_timer: this_ptr is NULL"));
-  if (funct == NULL)
-    BX_PANIC(("register_timer: funct is NULL"));
-
-  i = num_timers;
-  num_timers++;
-  timer[i].period    = instructions;
-  timer[i].remaining = instructions;
-  timer[i].active    = active;
-  timer[i].funct     = funct;
-  timer[i].continuous = continuous;
-  timer[i].this_ptr   = this_ptr;
-
-  if (active) {
-    if (num_cpu_ticks_in_period == 0) {
-      // no active timers
-      num_cpu_ticks_in_period = instructions;
-      num_cpu_ticks_left      = instructions;
-      }
-    else {
-      if (instructions < num_cpu_ticks_left) {
-        num_cpu_ticks_in_period = instructions;
-        num_cpu_ticks_left      = instructions;
-        }
-      }
-    }
-
-  // return timer id
-  return(i);
-}
-
-  void
-bx_pc_system_c::counter_timer_handler(void* this_ptr)
-{
-      UNUSED(this_ptr);
-
-      bx_pc_system.counter++;
 }
 
 #if BX_DEBUGGER
@@ -390,17 +410,9 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
 }
 #endif // BX_DEBUGGER
 
-Bit64u
+  Bit64u
 bx_pc_system_c::time_usec() {
   return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips );
-}
-
-  Bit64u
-bx_pc_system_c::time_ticks()
-{
-      return (counter + 1) * COUNTER_INTERVAL 
-	    - timer[counter_timer_index].remaining
-	    + ((Bit64u)num_cpu_ticks_in_period - (Bit64u)num_cpu_ticks_left);
 }
 
   void
@@ -409,77 +421,79 @@ bx_pc_system_c::start_timers(void)
 }
 
   void
-bx_pc_system_c::activate_timer_ticks (unsigned timer_index, Bit64u instructions, Boolean continuous)
+bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, Boolean continuous)
 {
-  if (timer_index >= num_timers)
-    BX_PANIC(("activate_timer(): bad timer index given"));
+#if BX_TIMER_DEBUG
+  if (i >= numTimers)
+    BX_PANIC(("activate_timer_ticks: timer %u OOB", i));
+  if (timer[i].period < MinAllowableTimerPeriod)
+    BX_PANIC(("activate_timer_ticks: timer[%u].period of %llu < min of %u",
+              i, timer[i].period, MinAllowableTimerPeriod));
+#endif
 
-  // set timer continuity to new value (1=continuous, 0=one-shot)
-  timer[timer_index].continuous = continuous;
-
-  timer[timer_index].active = 1;
-  timer[timer_index].remaining = instructions;
-
-  if (num_cpu_ticks_in_period == 0) {
-    // no active timers
-    num_cpu_ticks_in_period = instructions;
-    num_cpu_ticks_left      = instructions;
+  // If the timer frequency is rediculously low, make it more sane.
+  // This happens when 'ips' is too low.
+  if (ticks < MinAllowableTimerPeriod) {
+    //BX_INFO(("activate_timer_ticks: adjusting ticks of %llu to min of %u",
+    //          ticks, MinAllowableTimerPeriod));
+    ticks = MinAllowableTimerPeriod;
     }
-  else {
-    if (instructions < num_cpu_ticks_left) {
-      num_cpu_ticks_in_period = instructions;
-      num_cpu_ticks_left      = instructions;
-      }
+
+  timer[i].period = ticks;
+  timer[i].timeToFire = (ticksTotal + (currCountdownPeriod-currCountdown)) +
+                        ticks;
+  timer[i].active     = 1;
+  timer[i].continuous = continuous;
+
+  if (ticks < currCountdown) {
+    // This new timer needs to fire before the current countdown.
+    // Skew the current countdown and countdown period to be smaller
+    // by the delta.
+    currCountdownPeriod -= (currCountdown - ticks);
+    currCountdown = ticks;
     }
 }
 
   void
-bx_pc_system_c::activate_timer( unsigned timer_index,
-    Bit32u useconds, Boolean continuous )
+bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, Boolean continuous)
 {
-  Bit64u instructions;
+  Bit64u ticks;
 
-  if (timer_index >= num_timers)
-    BX_PANIC(("activate_timer(): bad timer index given"));
-
-  // account for ticks up to now
-  expire_ticks();
-
-  // set timer continuity to new value (1=continuous, 0=one-shot)
-  timer[timer_index].continuous = continuous;
+#if BX_TIMER_DEBUG
+  if (i >= numTimers)
+    BX_PANIC(("activate_timer: timer %u OOB", i));
+#endif
 
   // if useconds = 0, use default stored in period field
   // else set new period from useconds
-  if (useconds==0)
-    instructions = timer[timer_index].period;
-  else {
-    // convert useconds to number of instructions
-    instructions = (Bit64u) (double(useconds) * m_ips);
-    if(instructions==0) instructions = 1;
-    timer[timer_index].period = instructions;
-    }
-
-  timer[timer_index].active = 1;
-  timer[timer_index].remaining = instructions;
-
-  if (num_cpu_ticks_in_period == 0) {
-    // no active timers
-    num_cpu_ticks_in_period = instructions;
-    num_cpu_ticks_left      = instructions;
+  if (useconds==0) {
+    ticks = timer[i].period;
     }
   else {
-    if (instructions < num_cpu_ticks_left) {
-      num_cpu_ticks_in_period = instructions;
-      num_cpu_ticks_left      = instructions;
+    // convert useconds to number of ticks
+    ticks = (Bit64u) (double(useconds) * m_ips);
+
+    // If the timer frequency is rediculously low, make it more sane.
+    // This happens when 'ips' is too low.
+    if (ticks < MinAllowableTimerPeriod) {
+      //BX_INFO(("activate_timer: adjusting ticks of %llu to min of %u",
+      //          ticks, MinAllowableTimerPeriod));
+      ticks = MinAllowableTimerPeriod;
       }
+
+    timer[i].period = ticks;
     }
+
+  activate_timer_ticks(i, ticks, continuous);
 }
 
   void
-bx_pc_system_c::deactivate_timer( unsigned timer_index )
+bx_pc_system_c::deactivate_timer( unsigned i )
 {
-  if (timer_index >= num_timers)
-    BX_PANIC(("deactivate_timer(): bad timer index given"));
+#if BX_TIMER_DEBUG
+  if (i >= numTimers)
+    BX_PANIC(("deactivate_timer: timer %u OOB", i));
+#endif
 
-  timer[timer_index].active = 0;
+  timer[i].active = 0;
 }
