@@ -3,8 +3,21 @@ updated Mon Mar 18 15:56:58  2002
 Bryce Denney
 
 -------------
-Mar 17: This code now has all the changes from the main branch up to
-the latest release 1.4.pre2.
+April 8: This code now has all the changes from the main branch up to
+the latest release 1.4.  It is very close to being ready to merge with
+the main branch.
+
+TO DO:
+- decide the final location for wxmain.cc.  Its current location doesn't
+  really seem right.  Should the wx gui code go into gui/wx.cc and the main
+  stuff go into gui/wxmain.cc ?  
+- test with --with-wx and debugger.  The console debugger doesn't pop up
+  at all if you use --with-wx.  I'll have to figure this out.
+- start using the rawCode/rawFlag notation that Vadim checked in, so that
+  when wxWindows 2.3.4 arrives bochs will be prepared for it.
+- add comments in the split-up main to explain why it is split the way it is.
+  Maybe there are more useful names than bx_init_before_control_panel and
+  bx_continue_after_control_panel.
 -------------
 
 wxWindows Configuration Interface
