@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.27 2003-12-07 23:53:28 cbothamy Exp $
+$Id: misc.txt,v 1.28 2003-12-11 13:06:45 cbothamy Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -372,7 +372,7 @@ cp -a clean-anon bochs-2.0.pre3
 cd bochs-2.0.pre3
 cvs upd -r REL_2_0_pre3_FINAL
 cd ..
-tar czvf bochs-2.0.pre3.tar.gz --exclude CVS bochs-2.0.pre3
+tar czvf bochs-2.0.pre3.tar.gz --exclude CVS --exclude .cvsignore bochs-2.0.pre3
 
 The source TAR file bochs-2.0.pre3.tar.gz is ready to upload.
 
