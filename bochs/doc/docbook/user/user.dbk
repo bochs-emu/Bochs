@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.153 2004-11-06 10:50:03 vruppert Exp $
+$Id: user.dbk,v 1.154 2004-11-18 19:35:23 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -555,7 +555,7 @@ currently work with.
 
 <section id="supported-platforms"><title>Supported Platforms</title>
 <para>
-The following table shows the supported platforms with a small decription and
+The following table shows the supported platforms with a small description and
 the available display libraries on these platforms. The display library is the
 code that displays the Bochs VGA screen and handles keyboard and mouse events.
 </para>
@@ -1133,6 +1133,14 @@ The tag tells which release you want, and it can be one of the following:
       </row>
     </thead>
     <tbody>
+      <row>
+        <entry>2.1.1 (bugfix1)</entry>
+        <entry>REL_2_1_1_FINAL</entry>
+      </row>
+      <row>
+        <entry>2.1</entry>
+        <entry>REL_2_1_FINAL</entry>
+      </row>
       <row>
         <entry>2.0.2 (bugfix2)</entry>
         <entry>REL_2_0_2_FINAL</entry>
@@ -1839,7 +1847,7 @@ In Bochs 1.3 and before, the X11 gui was always the default.
 </table>
 
 <table><title>Configure Options to Select the Display Library (optional)</title>
-<tgroup cols="3">
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
   <thead>
     <row>
       <entry>Option</entry>
@@ -1923,8 +1931,8 @@ In Bochs 1.3 and before, the X11 gui was always the default.
     </row>
     <row>
       <entry>--with-wx</entry>
-      <entry>wxWindows is a cross-platform C++ user interface library which
-      you can download for free at http://wxwindows.org.  The wxWindows
+      <entry>wxWidgets is a cross-platform C++ user interface library which
+      you can download for free at <ulink url="http://wxwidgets.org/">wxwidgets.org</ulink>.  The wxWidgets
       port of Bochs provides both a graphical configuration interface (for
       editing bochsrc options) and a display.  It was written by Bryce Denney,
       Don Becker, Dave Poirier, and Volker Ruppert.
@@ -1963,8 +1971,12 @@ such as --enable-cdrom, you can also write --disable-cdrom to explicitly
 turn it off.
 </para>
 
+<para>
+&NEEDHELP; Link CPU link to the proper row, not to the beginning of the whole table, as it is now.
+</para>
+
 <table><title>Configure Options</title>
-<tgroup cols="3">
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
   <thead>
     <row>
       <entry>Option</entry>
@@ -1973,7 +1985,7 @@ turn it off.
    </row>
   </thead>
   <tbody>
-    <row>
+    <row id="configure-enable-cpu-level">
       <entry>--enable-cpu-level={<option>3,4,5,6</option>}</entry>
       <entry>5</entry>
       <entry>
@@ -1989,7 +2001,7 @@ turn it off.
       Enable use of a real CDROM.  The cdrom emulation is always present, and
       emulates a drive without media by default.  You can use this option to
       compile in support for accessing the media in your workstation's cdrom
-      drive.  The supported platforms are Linux, Solaris, OpenBSD, and Windows.
+      drive.  The supported platforms are Linux, Solaris, FreeBSD, OpenBSD, and Windows.
       For other platforms, a small amount of code specific to your platform
       must be written.  The module iodev/cdrom.cc is the place to add more
       support.  For the most part, you need to figure out the right set of
@@ -2028,7 +2040,7 @@ turn it off.
       before starting the simulation.  Also enables a runtime menu which lets
       you change certain settings during simulation.  See the config_interface
       option in bochsrc for how to select between the text interface and
-      wxWindows.
+      wxWidgets.
       </entry>
     </row>
     <row>
@@ -2109,14 +2121,26 @@ turn it off.
     </row>
     <row>
       <entry>--enable-host-specific-asms</entry>
-      <entry>no</entry>
+      <entry>yes</entry>
       <entry>support for running native x86 instructions on an x86 machine</entry>
+    </row>
+    <row>
+      <entry>--enable-fast-function-calls</entry>
+      <entry>no</entry>
+      <entry>support for fast function calls (gcc on x86 only)</entry>
     </row>
     <row>
       <entry>--enable-all-optimizations</entry>
       <entry>no</entry>
-      <entry>Turn on the enables for all speed optimizations that the 
-      developers believe are safe to use.</entry>
+      <entry>
+        Turn on the enables for all speed optimizations that the
+        developers believe are safe to use:
+         --enable-guest2host-tlb,
+         --enable-repeat-speedups,
+         --enable-icache,
+         --enable-host-specific-asms,
+         --enable-fast-function-calls.
+      </entry>
     </row>
     <row>
       <entry>--enable-ignore-bad-msr</entry>
@@ -2134,7 +2158,7 @@ turn it off.
     </row>
     <row>
       <entry>--enable-mmx</entry>
-      <entry>no</entry>
+      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> >= 5)</entry>
       <entry>
       Add support for MMX instructions, written by Stanislav Shwartsman.
       </entry>
@@ -2146,6 +2170,21 @@ turn it off.
       Add support for SSE instructions, written by Stanislav Shwartsman.
       For SSE only, use --enable-sse=1.  For SSE and SSE2, use --enable-sse=2.
       </entry>
+    </row>
+    <row>
+      <entry>--enable-pni</entry>
+      <entry>no</entry>
+      <entry>PNI support</entry>
+    </row>
+    <row>
+      <entry>--enable-sep</entry>
+      <entry>no</entry>
+      <entry>SYSENTER/SYSEXIT support</entry>
+    </row>
+    <row>
+      <entry>--enable-pnic</entry>
+      <entry>no</entry>
+      <entry>enable pseudo NIC support</entry>
     </row>
     <row>
       <entry>--enable-compressed-hd</entry>
@@ -2237,6 +2276,14 @@ turn it off.
           Don't use this option yet.</entry>
     </row>
     <row>
+      <entry>--enable-pcidev</entry>
+      <entry>no</entry>
+      <entry>
+        Enable PCI host device mapping support. This requires --enable-pci
+        to be set as well as Linux 2.4 or 2.6 as host.
+      </entry>
+    </row>
+    <row>
       <entry>--enable-usb</entry>
       <entry>no</entry>
       <entry>Enable limited i440FX PCI USB support. This is not complete.
@@ -2254,7 +2301,7 @@ turn it off.
     </row>
     <row>
       <entry>--enable-global-pages</entry>
-      <entry>no</entry>
+      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 5)</entry>
       <entry>support global pages</entry>
     </row>
     <row>
@@ -2354,6 +2401,11 @@ turn it off.
       <entry>
       Enables logging of measured IPS, see <link linkend="bochsopt-ips">ips option</link>.
       </entry>
+    </row>
+    <row>
+      <entry>--enable-reset-on-triple-fault</entry>
+      <entry>yes</entry>
+      <entry>reset when cpu detects a triple fault</entry>
     </row>
   </tbody>
 </tgroup>
@@ -2932,7 +2984,7 @@ You also need to load a VGA ROM BIOS at 0xC0000.
 <para> A free LGPL'd VGA BIOS is also provided in the source and binary distributions.</para>
 </section>
 
-<section><title>floppya/floppyb</title>
+<section id="bochsopt-floppyab"><title>floppya/floppyb</title>
 <para>
 Examples:
 <screen>
@@ -2959,7 +3011,7 @@ to ever write <constant>ejected</constant> in your bochsrc.
 </para>
 </section>
 
-<section><title>ata0, ata1, ata2, ata3</title>
+<section id="bochsopt-ata"><title>ata0, ata1, ata2, ata3</title>
 <para>
 Examples:
 <screen>
@@ -2976,7 +3028,7 @@ ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 </para>
 </section>
 
-<section><title>ata0-master, ata0-slave, ata1-*, ata2-*, ata3-*</title>
+<section id="bochsopt-ata-master-slave"><title>ata0-master, ata0-slave, ata1-*, ata2-*, ata3-*</title>
 <para>
 Examples:
 <screen>
@@ -2985,7 +3037,6 @@ ata1-master: type=disk, path=2GB.cow, mode=vmware3, cylinders=5242, heads=16, sp
 ata1-slave:  type=disk, path=3GB.img, mode=sparse, cylinders=6541, heads=16, spt=63, translation=auto
 ata2-master: type=disk, path=7GB.img, mode=undoable, cylinders=14563, heads=16, spt=63, translation=lba
 ata2-slave:  type=cdrom, path=iso.sample, status=inserted
-
 </screen>
 </para>
 
@@ -3165,7 +3216,7 @@ command.  If you do not write a config_interface line, Bochs will
 choose a default for you (usually textconfig).
 </para>
 <note><para>
-wxWindows provides both a configuration interface and a display library.
+wxWidgets provides both a configuration interface and a display library.
 So if you use the "wx" configuration interface, you must also use
 the "wx" display library.
 </para></note>
@@ -3207,7 +3258,7 @@ you.
 <row> <entry> svga       </entry><entry> use SVGALIB library for Linux, allows graphics without X windows</entry> </row>
 <row> <entry> term       </entry><entry> text only, uses curses/ncurses library, cross platform </entry> </row>
 <row> <entry> rfb        </entry><entry> provides an interface to AT&amp;T's VNC viewer, cross platform </entry> </row>
-<row> <entry> wx         </entry><entry> use wxWindows library, cross platform </entry> </row>
+<row> <entry> wx         </entry><entry> use wxWidgets library, cross platform </entry> </row>
 <row> <entry> nogui      </entry><entry> no display at all </entry> </row>
 </tbody>
 </tgroup>
@@ -3221,7 +3272,7 @@ Examples:
 </para>
 
 <note><para>
-wxWindows provides both a configuration interface and a display library.
+wxWidgets provides both a configuration interface and a display library.
 So if you use the "wx" configuration interface, you must also use
 the "wx" display library.
 </para></note>
@@ -3789,8 +3840,8 @@ Examples:
 This enables a remap of a physical localized keyboard to a
 virtualized U.S. keyboard, as the PC architecture expects.
 If enabled, the keymap file must be specified. Keyboard mapping is 
-available for X windows, SDL (Linux port) and wxWindows (GTK port).
-For SDL you have to use keymaps designed for SDL, the wxWindows gui 
+available for X windows, SDL (Linux port) and wxWidgets (GTK port).
+For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
 uses the keymaps for X windows.
 </para>
 </section>
@@ -3810,7 +3861,7 @@ exception is French macs, that do have a "at"-like keyboard.
 </para>
 </section>
 
-<section><title>user_shortcut</title>
+<section id="bochsopt-user-shortcut"><title>user_shortcut</title>
 <para>
 Examples:
 <screen>
@@ -3818,7 +3869,7 @@ Examples:
   user_shortcut: keys=ctrlaltesc
 </screen>
 This defines the keyboard shortcut to be sent when you press the "user"
-button in the headerbar. The shortcut string can be a combination of
+button in the <link linkend="headerbar">headerbar</link>. The shortcut string can be a combination of
 these key names: "alt", "bksp", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
 Up to 3 keys can be pressed at a time.
 </para>
@@ -4114,7 +4165,7 @@ Christophe Bothamy wrote the keymapping code for Bochs, and provided this
 documentation for how to create new keymaps.  Keymapping was first 
 implemented for X windows only, so there are many references to X-specific
 values in this section. In Bochs 2.0 keymapping is also available for SDL 
-(Linux port) and wxWindows (wxGTK port).
+(Linux port) and wxWidgets (wxGTK port).
 </para>
 <screen>
   The standard US Keyboard looks like this:
@@ -4398,7 +4449,7 @@ The configuration interface 'textconfig' is the text mode version of the Bochs
 configuration system. It is a series of menus (using stdin/stdout) that allows
 you to edit all the settings that control Bochs's behavior. If you do not write
 a config_interface line, Bochs will choose it as the default for you (unless Bochs
-is compiled for wxWindows only).
+is compiled for wxWidgets only).
 </para>
 <para>
 It consists of these three parts:
@@ -4442,7 +4493,8 @@ the item "Edit options". Don't forget to save the configuration if you want to u
 setup for another Bochs session.
 </para>
 </section>
-<section><title>The Bochs headerbar</title>
+
+<section id="headerbar"><title>The Bochs headerbar</title>
 <para>
 <graphic format="PNG" fileref="../images/headerbar.png">
 </para>
@@ -4452,21 +4504,34 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <itemizedlist>
 <listitem>
 <para>floppy buttons</para>
-<para>Here you can toggle the status of the floppy media (inserted/ejected). Bochs for
-win32 presents you a small dialog box for changing the floppy image.</para>
+<para>
+  Here you can toggle the status of the floppy media (inserted/ejected). Bochs for
+  win32 presents you a small dialog box for changing the floppy image. You can
+  setup floppy drives using <link linkend="bochsopt-floppyab">floppya/floppyb option</link>.
+</para>
 </listitem>
 <listitem>
 <para>cdrom button</para>
-<para>Here you can toggle the status of the cdrom media (inserted/ejected).</para>
+<para>
+  Here you can toggle the status of the cdrom media (inserted/ejected). CD-ROM drives
+  can be set up using <link linkend="bochsopt-ata-master-slave">ata(0-3)-master/-slave option</link>.
+</para>
 </listitem>
 <listitem>
-<para>mouse button</para>
-<para>Here you can enable/disable the creation of mouse events by the host.</para>
+<para>mouse button (keyboard shortcut: Ctrl+3rd mouse button)</para>
+<para>
+  Here you can enable the creation of mouse events by the host. Once mouse
+  events are captured, you cannot reach the button anymore, in order to disable
+  capturing again. In this case, use "Ctrl+3rd mouse button" to disable it.
+</para>
+<para>&FIXME; what if user only has 2 button mouse?</para>
 </listitem>
 <listitem>
 <para>user button</para>
-<para>Press this button if you want to send the keyboard shortcut defined with the
-'user_shortcut' option to the guest.</para>
+<para>
+  Press this button if you want to send the keyboard shortcut defined with the
+  <link linkend="bochsopt-user-shortcut">user_shortcut option</link> to the guest.
+</para>
 </listitem>
 <listitem>
 <para>copy button</para>
@@ -9469,7 +9534,7 @@ some space.
         
                 <section><title>Installing Windows ME</title>
 <para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install Windows 95 as a guest OS in Bochs.</para>
+<xref linkend="thirdparty"> before you install Windows ME as a guest OS in Bochs.</para>
 <para>
 This has been contributed by Sancho Roberto :
 </para>
@@ -9795,7 +9860,6 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.153 2004-11-06 10:50:03 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
