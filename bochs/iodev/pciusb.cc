@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.18 2004-12-30 14:50:37 vruppert Exp $
+// $Id: pciusb.cc,v 1.19 2005-01-14 18:28:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -172,8 +172,8 @@ bx_pciusb_c::reset(unsigned type)
   BX_USB_THIS last_connect = 0xFF;
   BX_USB_THIS global_reset = 0;
   BX_USB_THIS set_address_stk = 0;
-  BX_USB_THIS saved_key = 0;
-  BX_USB_THIS packet_key = 0;
+  memset(BX_USB_THIS saved_key, 0, 8);
+  memset(BX_USB_THIS key_pad_packet, 0, 8);
 
   // mouse packet stuff
   BX_USB_THIS mouse_delayed_dx = 0;
@@ -223,22 +223,44 @@ bx_pciusb_c::reset(unsigned type)
     for (j=0; j<USB_CUR_DEVS; j++)
       memset(&BX_USB_THIS hub[i].device[j], 0, sizeof(USB_DEVICE));
 
+  BX_USB_THIS keyboard_connected = 0;
+
   // include the device(s) initialize code
   #include "pciusb_devs.h"
 
-  // Check to see if we should connect the devices and other initialization items
-  if (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_USB) {
-    // If one of the devices is a mouse, enable it if the user has stated so in the rc file.
-    usb_set_connect_status(USB_DEV_TYPE_MOUSE, bx_options.Omouse_enabled->get());
-  } 
-  
-//if (bx_options.usb_keypad.Oenabled->get()) { // Key Pad
-  if (0) { // Key Pad disabled for now
-    // If one of the devices is a keypad, enable it if the user has stated so in the rc file.
-    usb_set_connect_status(USB_DEV_TYPE_KEYPAD, 1);
+  init_device(0, bx_options.usb[0].Oport1->getptr());
+  init_device(1, bx_options.usb[0].Oport2->getptr());
+
+}
+
+  void
+bx_pciusb_c::init_device(Bit8u port, char *devname)
+{
+  Bit8u type = USB_DEV_TYPE_NONE;
+  bx_bool connected = 0;
+
+  if (!strlen(devname)) return;
+
+  if (!strcmp(devname, "mouse")) {
+    type = USB_DEV_TYPE_MOUSE;
+    connected = bx_options.Omouse_enabled->get();
+    if (bx_options.Omouse_type->get() != BX_MOUSE_TYPE_USB) {
+      BX_ERROR(("USB mouse present, but other mouse type configured"));
+    }
+  } else if (!strcmp(devname, "keypad")) {
+    type = USB_DEV_TYPE_KEYPAD;
+    connected = 1;
+    BX_USB_THIS keyboard_connected = 1;
+  } else {
+    BX_PANIC(("unknown USB device: %s", devname));
+    return;
   }
-
-
+  for (int i=0; i<USB_CUR_DEVS; i++) {
+    if (BX_USB_THIS hub[0].device[i].dev_type == type) {
+      BX_USB_THIS hub[0].usb_port[port].device_num = i;
+    }
+  }
+  usb_set_connect_status(type, connected);
 }
 
   void
@@ -771,8 +793,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
           switch (protocol) {
             case 1:  // keypad
              
-              memset(device_buffer, 0, 8);
-              device_buffer[2] = BX_USB_THIS packet_key;
+              memcpy(device_buffer, BX_USB_THIS key_pad_packet, 8);
 
               BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
@@ -1514,13 +1535,29 @@ bx_pciusb_c::usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned butto
 }
 
   bx_bool
-bx_pciusb_c::usb_key_enq(Bit32u key)
+bx_pciusb_c::usb_key_enq(Bit8u *scan_code)
 {
 
+//  BX_INFO(("scan code: len = %i   0x%02x  0x%02x 0x%02x", strlen((char *) scan_code), scan_code[0], scan_code[1], scan_code[2]));
+//  return 0;
+
+  bx_bool is_break_code = 0;
+  Bit8u our_scan_code[8];
+
+  memset(our_scan_code, 0, 8);
+  int os = 0;
+  for (int s=0; s<8; s++) {
+    if ((scan_code[s] == 0xF0) && ((s == 0) || ((s == 1) && (scan_code[0] == 0xE0)))) {
+      is_break_code = 1;
+    } else {
+      if (!(our_scan_code[os++] = scan_code[s])) break;
+    }
+  }
+  
   // if it is the break code of the saved key, then clear our packet key.
-  if ((key & BX_KEY_RELEASED) && (BX_USB_THIS saved_key == (key & ~BX_KEY_RELEASED))) {
-    BX_USB_THIS packet_key = 0;
-    BX_USB_THIS saved_key = key;
+  if (is_break_code && !memcmp(BX_USB_THIS saved_key, our_scan_code, 8)) {
+    memset(BX_USB_THIS saved_key, 0, 8);
+    memset(BX_USB_THIS key_pad_packet, 0, 8);
     return 1; // tell the keyboard handler that we used it, and to return with out processing key
   }
 
@@ -1537,12 +1574,18 @@ bx_pciusb_c::usb_key_enq(Bit32u key)
           for (int l=0; l<dev->function.device_config[k].interfaces && !fnd; l++) {
             if ((dev->function.device_config[k].Interface[l].protocol == 1) 
               && dev->function.device_config[k].Interface[l].lookup_cnt) {
-              for (int m=0; m<dev->function.device_config[k].Interface[l].lookup_cnt; m++) {
-                if (dev->function.device_config[k].Interface[l].lookup[m].key == key) {
-                  BX_USB_THIS packet_key = dev->function.device_config[k].Interface[l].lookup[m].keypad;
-                  fnd = 1;
-                  break;
+              // Only do this if the keypad is in the configured state
+              if (dev->state == STATE_CONFIGURED) {
+                for (int m=0; m<dev->function.device_config[k].Interface[l].lookup_cnt; m++) {
+                  if (!memcmp(dev->function.device_config[k].Interface[l].lookup[m].scan_code, our_scan_code, 8)) {
+                    memcpy(BX_USB_THIS key_pad_packet, dev->function.device_config[k].Interface[l].lookup[m].keypad_packet, 8);
+                    fnd = 1;
+                    break;
+                  }
                 }
+              } else {
+                memset(BX_USB_THIS saved_key, 0, 8);
+                return 0;  // if keypad is not configured, it can't send scan codes. 
               }
             }
           }
@@ -1550,13 +1593,31 @@ bx_pciusb_c::usb_key_enq(Bit32u key)
       }
     }
   }
-
-  BX_USB_THIS saved_key = key;
-
-  if (!fnd) BX_USB_THIS packet_key = 0;
+  
+  if (!fnd) {
+    memset(BX_USB_THIS key_pad_packet, 0, 8);
+    memset(BX_USB_THIS saved_key, 0, 8);
+  } else {
+    memcpy(BX_USB_THIS saved_key, our_scan_code, 8);
+    // print a debug line to the log file
+    char bx_debug_code[128] = "";
+    char value[8];
+    for (unsigned i=0; i<strlen((char *) our_scan_code); i++) {
+      sprintf(value, "0x%02x", our_scan_code[i]);
+      if (i) strcat(bx_debug_code, "  ");
+      strcat(bx_debug_code, value);
+    }
+    BX_DEBUG(("Re-routing scan code (%s) to USB keypad", bx_debug_code));
+  }
 
   // tell the keyboard handler whether we used it or not.  (0 = no, 1 = yes and keyboard.cc ignores keystoke)
   return fnd;
+}
+
+  bx_bool
+bx_pciusb_c::usb_keyboard_connected()
+{
+  return BX_USB_THIS keyboard_connected;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

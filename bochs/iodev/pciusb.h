@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.7 2004-12-24 21:38:01 vruppert Exp $
+// $Id: pciusb.h,v 1.8 2005-01-14 18:28:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -95,8 +95,8 @@ struct REQUEST_PACKET {
 
 #define KEYPAD_LEN   128
 struct KEYPAD {
-  Bit32u key;
-  Bit8u  keypad;
+  Bit8u  scan_code[8];
+  Bit8u  keypad_packet[8];
 };
 
 #define USB_DEV_TYPE_NONE    0
@@ -355,7 +355,8 @@ public:
   virtual void  reset(unsigned);
   virtual void  usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
   virtual void  usb_mouse_enable(bx_bool enable);
-  virtual bx_bool usb_key_enq(Bit32u key);
+  virtual bx_bool usb_key_enq(Bit8u *scan_code);
+  virtual bx_bool usb_keyboard_connected();
 
 private:
 
@@ -373,8 +374,8 @@ private:
   Bit8s    mouse_z;
   Bit8u    b_state;
 
-  Bit32u   saved_key;
-  Bit8u    packet_key;
+  Bit8u    saved_key[8];
+  Bit8u    key_pad_packet[8];
 
   static void set_irq_level(bx_bool level);
   Bit8u  *device_buffer;
@@ -383,6 +384,9 @@ private:
   Bit8u    set_address[128];
 
   bx_bool  last_connect;
+  bx_bool  keyboard_connected;
+
+  static void  init_device(Bit8u port, char *devname);
   static void  usb_set_connect_status(int type, bx_bool connected);
 
   static void usb_timer_handler(void *);

@@ -516,8 +516,8 @@ floppy_command_delay: 500
 # With the mouse type option you can select the type of mouse to emulate.
 # The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 # on PS/2), 'serial', 'serial_wheel' (one com port requires setting
-# 'mode=mouse') and 'usb' (3-button mouse on USB port #1 - requires PCI and
-# USB support).
+# 'mode=mouse') and 'usb' (3-button mouse - one of the USB ports must be
+# connected with the 'mouse' device - requires PCI and USB support).
 #
 # Examples:
 #   mouse: enabled=1
@@ -649,11 +649,13 @@ keyboard_mapping: enabled=0, map=
 #=======================================================================
 # USB1:
 # This option controls the presence of the USB root hub which is a part
-# of the i440FX PCI chipset. If you enable USB and use the mouse option
-# 'type=usb' you'll have a 3-button mouse connected to port #1.
+# of the i440FX PCI chipset. With the portX option you can connect devices
+# to the hub (currently supported: 'mouse' and 'keypad'). If you connect
+# the mouse to one of the ports and use the mouse option 'type=usb' you'll
+# have a 3-button USB mouse.
 #
 # Example:
-#   usb1: enabled=1, ioaddr=0xFF80
+#   usb1: enabled=1, ioaddr=0xFF80, port1=mouse, port2=keypad
 #=======================================================================
 #usb1: enabled=1, ioaddr=0xFF80
 

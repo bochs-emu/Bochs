@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.57 2004-12-31 16:40:36 vruppert Exp $
+// $Id: iodev.h,v 1.58 2005-01-14 18:28:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -323,8 +323,11 @@ class BOCHSAPI bx_usb_stub_c : public bx_devmodel_c {
   virtual void usb_mouse_enable(bx_bool enable) {
     STUBFUNC(pciusb, usb_mouse_enable);
   }
-  virtual bx_bool usb_key_enq(Bit32u key) {
+  virtual bx_bool usb_key_enq(Bit8u *scan_code) {
     STUBFUNC(pciusb, usb_key_enq);
+    return 0;
+  }
+  virtual bx_bool usb_keyboard_connected() {
     return 0;
   }
 };
