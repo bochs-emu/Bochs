@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.18 2004-05-31 14:47:12 vruppert Exp $
+// $Id: floppy.h,v 1.19 2005-03-11 21:12:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,6 +118,7 @@ private:
     Bit8u    DIR[4]; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed
+    bx_bool  non_dma;
     int      statusbar_id[2]; // IDs of the status LEDs
     } s;  // state information
 
@@ -132,9 +133,10 @@ private:
   BX_FD_SMF void   floppy_command(void);
   BX_FD_SMF void   floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer, Bit32u bytes, Bit8u direction);
   BX_FD_SMF void   raise_interrupt(void);
+  BX_FD_SMF void   lower_interrupt(void);
   BX_FD_SMF void   enter_idle_phase(void);
   BX_FD_SMF void   enter_result_phase(void);
-  static void   timer_handler(void *);
+  static void      timer_handler(void *);
 
 public:
   BX_FD_SMF void   timer(void);

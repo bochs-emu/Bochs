@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.76 2005-01-16 15:58:40 vruppert Exp $
+// $Id: floppy.cc,v 1.77 2005-03-11 21:12:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.76 2005-01-16 15:58:40 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.77 2005-03-11 21:12:52 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -338,7 +338,8 @@ bx_floppy_ctrl_c::reset(unsigned type)
       BX_FD_THIS s.DIR[i] |= 0x80; // disk changed
       }
     BX_FD_THIS s.data_rate = 0; /* 500 Kbps */
-    }
+    BX_FD_THIS s.non_dma = 0;
+  }
 
   for (i=0; i<4; i++) {
     BX_FD_THIS s.cylinder[i] = 0;
@@ -659,11 +660,6 @@ bx_floppy_ctrl_c::floppy_command(void)
   for (i=0; i<BX_FD_THIS s.command_size; i++)
     BX_DEBUG(("[%02x] ", (unsigned) BX_FD_THIS s.command[i]));
 
-#if 0
-  /* execute phase of command is in progress (non DMA mode) */
-  BX_FD_THIS s.main_status_reg |= 20;
-#endif
-
   BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
   switch (BX_FD_THIS s.pending_command) {
     case 0x03: // specify
@@ -672,8 +668,9 @@ bx_floppy_ctrl_c::floppy_command(void)
       step_rate_time = BX_FD_THIS s.command[1] >> 4;
       head_unload_time = BX_FD_THIS s.command[1] & 0x0f;
       head_load_time = BX_FD_THIS s.command[2] >> 1;
-      if (BX_FD_THIS s.command[2] & 0x01)
-        BX_ERROR(("non DMA mode selected"));
+      BX_FD_THIS s.non_dma = BX_FD_THIS s.command[2] & 0x01;
+      if (BX_FD_THIS s.non_dma)
+        BX_ERROR(("non DMA mode not implemented yet"));
       enter_idle_phase();
       return;
       break;
@@ -1011,7 +1008,8 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       if (!BX_FD_THIS s.media[drive].raw_floppy_win95) {
         ret = lseek(BX_FD_THIS s.media[drive].fd, offset, SEEK_SET);
         if (ret < 0) {
-          BX_PANIC(("could not perform lseek() on floppy image file"));
+          BX_PANIC(("could not perform lseek() to %d on floppy image file", offset));
+          return;
         }
       }
     }
@@ -1133,7 +1131,7 @@ bx_floppy_ctrl_c::timer()
         BX_FD_THIS s.DIR[drive] &= ~0x80; // clear disk change line
 
       enter_idle_phase();
-      raise_interrupt();
+      BX_FD_THIS raise_interrupt();
       break;
 
     case 0x4a: /* read ID */
@@ -1144,7 +1142,7 @@ bx_floppy_ctrl_c::timer()
       theFloppyController->reset(BX_RESET_SOFTWARE);
       BX_FD_THIS s.pending_command = 0;
       BX_FD_THIS s.status_reg0 = 0xc0;
-      raise_interrupt();
+      BX_FD_THIS raise_interrupt();
       BX_FD_THIS s.reset_sensei = 4;
       break;
     
@@ -1307,6 +1305,13 @@ bx_floppy_ctrl_c::raise_interrupt(void)
   DEV_pic_raise_irq(6);
   BX_FD_THIS s.pending_irq = 1;
   BX_FD_THIS s.reset_sensei = 0;
+}
+
+  void
+bx_floppy_ctrl_c::lower_interrupt(void)
+{
+  DEV_pic_lower_irq(6);
+  BX_FD_THIS s.pending_irq = 0;
 }
 
 
@@ -1713,7 +1718,7 @@ bx_floppy_ctrl_c::enter_result_phase(void)
     BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
     BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
     BX_FD_THIS s.result[6] = 2; /* sector size code */
-    raise_interrupt();
+    BX_FD_THIS raise_interrupt();
     break;
   }
 }
