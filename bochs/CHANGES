@@ -70,6 +70,7 @@ Changes to next release:
   - int13_cdrom / 32 bit register update fixes for FreeBSD cdrom boot
     (Fabrice Bellard)
   - APM and system shutdown support (Fabrice Bellard)
+  - checksum calculation for expansion ROMs
 
 - display libraries
   - status bar with indicators for cdrom, floppy, harddisk and keyboard added
@@ -118,6 +119,8 @@ Changes to next release:
   [961665] WinXP patch to read physical CDROM's TOC by Ben Lunt
   [978793] CDROM_SENSE_MODE medium_type by Ben Lunt
   [615457] gif to png migration
+ [1021767] Portability in sb16ctrl.c by Robert Millan
+  [690400] gzip is confused by GZIP variable in Makefile
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op

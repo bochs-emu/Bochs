@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16ctrl.c,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: sb16ctrl.c,v 1.4 2004-09-04 08:24:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@
 #	include <dos.h>
 #endif
 
-#ifdef linux
+#ifdef __unix__
 #	include <sys/io.h>
 #	include <errno.h>
 #	define inp inb
@@ -80,7 +80,7 @@ void writeemul(int value)
 /* Enable access to the emulator port */
 void enableport()
 {
-#ifdef linux
+#ifdef __unix__
   if (ioperm(EMULPORT, 1, 1)) {
     printf("Could not access emulator port %03x: %s.\n", EMULPORT, strerror(errno));
     exit(1);
