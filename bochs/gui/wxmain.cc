@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.61.4.4 2002-10-21 12:26:31 bdenney Exp $
+// $Id: wxmain.cc,v 1.61.4.5 2002-10-22 23:48:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -36,6 +36,11 @@
 //////////////////////////////////////////////////////////////////////
 // includes
 //////////////////////////////////////////////////////////////////////
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.11 2002-10-21 12:25:39 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.12 2002-10-22 23:48:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -240,7 +240,7 @@ extern Bit8u DTPageDirty[];
 #define MAGIC_LOGNUM 0x12345678
 
 
-typedef class logfunctions {
+typedef class BOCHSAPI logfunctions {
 	char *prefix;
 	int type;
 // values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
@@ -253,7 +253,7 @@ typedef class logfunctions {
 	class iofunctions *logio;
 	// default log actions for all devices, declared and initialized
 	// in logio.cc.
-	static int default_onoff[N_LOGLEV];
+	BOCHSAPI static int default_onoff[N_LOGLEV];
 public:
 	logfunctions(void);
 	logfunctions(class iofunctions *);
@@ -301,7 +301,7 @@ enum {
   PLUGINLOG 
 };
 
-class iofunctions {
+class BOCHSAPI iofunctions {
 	int magic;
 	char logprefix[BX_LOGPREFIX_SIZE];
 	FILE *logfd;
@@ -352,7 +352,7 @@ protected:
 
 };
 
-typedef class iofunctions iofunc_t;
+typedef class BOCHSAPI iofunctions iofunc_t;
 
 
 #define SAFE_GET_IOFUNC() \
@@ -378,8 +378,8 @@ typedef class iofunctions iofunc_t;
 
 #endif
 
-extern iofunc_t *io;
-extern logfunc_t *genlog;
+BOCHSAPI extern iofunc_t *io;
+BOCHSAPI extern logfunc_t *genlog;
 
 #include "state_file.h"
 
@@ -460,7 +460,7 @@ typedef struct {
 #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 void bx_signal_handler (int signum);
 int bx_atexit(void);
-extern bx_debug_t bx_dbg;
+BOCHSAPI extern bx_debug_t bx_dbg;
 
 
 
@@ -504,10 +504,8 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 /* --- EXTERNS --- */
 
 #if ( BX_PROVIDE_DEVICE_MODELS==1 )
-extern bx_devices_c   bx_devices;
+BOCHSAPI extern bx_devices_c   bx_devices;
 #endif
-
-void bx_init_before_config_interface ();
 
 // This value controls how often each I/O device's periodic() method
 // gets called.  The timer is set up in iodev/devices.cc.
@@ -615,7 +613,7 @@ typedef struct {
 #define BX_N_SERIAL_PORTS 1
 #define BX_N_PARALLEL_PORTS 1
 
-typedef struct {
+typedef struct BOCHSAPI {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
   bx_ata_options    ata[BX_MAX_ATA_CHANNEL];
@@ -657,7 +655,7 @@ typedef struct {
   bx_param_enum_c *Osel_displaylib;
   } bx_options_t;
 
-extern bx_options_t bx_options;
+BOCHSAPI extern bx_options_t bx_options;
 
 void bx_center_print (FILE *file, char *line, int maxwidth);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.22 2002-10-22 17:25:25 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.23 2002-10-22 23:48:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,7 +102,7 @@ class bx_devmodel_c : public logfunctions {
 #define STUBFUNC(dev,method) \
    pluginlog->panic("%s called in %s stub. you must not have loaded the %s plugin", #dev, #method, #dev )
 
-class bx_keyb_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
   public:
   virtual ~bx_keyb_stub_c () {}
   // stubs for bx_keyb_c methods
@@ -126,7 +126,7 @@ class bx_keyb_stub_c : public bx_devmodel_c {
   }
 };
 
-class bx_hard_drive_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
   public:
   virtual void   close_harddrive(void) {
     STUBFUNC(HD, close_harddrive);
@@ -160,7 +160,7 @@ class bx_hard_drive_stub_c : public bx_devmodel_c {
   }
 };
 
-class bx_floppy_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_floppy_stub_c : public bx_devmodel_c {
   public:
   virtual unsigned get_media_status(unsigned drive) {
     STUBFUNC(floppy,  get_media_status); return 0;
@@ -170,7 +170,7 @@ class bx_floppy_stub_c : public bx_devmodel_c {
   }
 };
 
-class bx_cmos_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_cmos_stub_c : public bx_devmodel_c {
   public:
   virtual Bit32u get_reg(unsigned reg) {
     STUBFUNC(cmos, get_reg); return 0;
@@ -186,7 +186,7 @@ class bx_cmos_stub_c : public bx_devmodel_c {
   }
 };
 
-class bx_dma_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_dma_stub_c : public bx_devmodel_c {
   public:
   virtual unsigned registerDMA8Channel(
     unsigned channel,
@@ -218,7 +218,7 @@ class bx_dma_stub_c : public bx_devmodel_c {
   }
 };
 
-class bx_pic_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_pic_stub_c : public bx_devmodel_c {
   public:
   virtual void raise_irq(unsigned irq_no) {
     STUBFUNC(pic, raise_irq); 
@@ -231,7 +231,7 @@ class bx_pic_stub_c : public bx_devmodel_c {
   }
 };
 
-class bx_vga_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
   public:
   virtual void redraw_area(unsigned x0, unsigned y0, 
                            unsigned width, unsigned height) {
@@ -255,7 +255,7 @@ class bx_vga_stub_c : public bx_devmodel_c {
   }
 };
 
-class bx_devices_c : public logfunctions {
+class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
   ~bx_devices_c(void);

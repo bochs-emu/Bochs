@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.23.4.5 2002-10-20 20:49:04 cbothamy Exp $
+// $Id: dma.cc,v 1.23.4.6 2002-10-22 23:48:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 
@@ -129,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.5 2002-10-20 20:49:04 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.6 2002-10-22 23:48:40 bdenney Exp $"));
 
   /* 8237 DMA controller */
 

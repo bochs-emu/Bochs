@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.95 2002-10-04 22:25:22 bdenney Exp $
+// $Id: cpu.h,v 1.95.2.1 2002-10-22 23:48:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -355,10 +355,10 @@ class BX_CPU_C;
 
 #if BX_SMP_PROCESSORS==1
 // single processor simulation, so there's one of everything
-extern BX_CPU_C       bx_cpu;
+BOCHSAPI extern BX_CPU_C       bx_cpu;
 #else
 // multiprocessor simulation, we need an array of cpus and memories
-extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
+BOCHSAPI extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 #endif
 
 
@@ -1165,7 +1165,7 @@ typedef enum {
 #define APIC_BASE_ADDR 0xfee00000 // default APIC address
 
 #if BX_SUPPORT_APIC
-class bx_generic_apic_c : public logfunctions {
+class BOCHSAPI bx_generic_apic_c : public logfunctions {
 protected:
   Bit32u base_addr;
   Bit8u id;
@@ -1198,7 +1198,7 @@ public:
   virtual void set_arb_id (int newid);  // only implemented on local apics
 };
 
-class bx_local_apic_c : public bx_generic_apic_c {
+class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c {
 #define BX_LOCAL_APIC_MAX_INTS 256
   // TMR=trigger mode register.  Cleared for edge-triggered interrupts
   // and set for level-triggered interrupts.  If set, local APIC must send
@@ -1281,7 +1281,7 @@ class BX_MEM_C;
 
 #include "cpu/i387.h"
 
-class BX_CPU_C : public logfunctions {
+class BOCHSAPI BX_CPU_C : public logfunctions {
 
 public: // for now...
 
@@ -2815,7 +2815,7 @@ BX_CPU_C::set_PF(Boolean val) {
     BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<2;
     }
 
-extern const Boolean bx_parity_lookup[256];
+BOCHSAPI extern const Boolean bx_parity_lookup[256];
 
     BX_CPP_INLINE void
 BX_CPU_C::set_PF_base(Bit8u val) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.4.6.6 2002-10-18 19:37:07 bdenney Exp $
+// $Id: biosdev.cc,v 1.4.6.7 2002-10-22 23:48:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,6 +38,11 @@
 //  0x0502 : vgabios Panic port with line number
 //  0x0503 : vgabios Debug port with message
 
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 

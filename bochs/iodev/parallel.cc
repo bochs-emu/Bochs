@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.7 2002-10-18 16:53:58 bdenney Exp $
+// $Id: parallel.cc,v 1.20.4.8 2002-10-22 23:48:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,6 +28,11 @@
 // This code was just a few stubs until Volker.Ruppert@t-online.de 
 // fixed it up in November 2001.
 
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 
@@ -67,7 +72,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.7 2002-10-18 16:53:58 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.8 2002-10-22 23:48:42 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 

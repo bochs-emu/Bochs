@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.h,v 1.3 2002-04-01 22:43:01 cbothamy Exp $
+// $Id: scancodes.h,v 1.3.4.1 2002-10-22 23:48:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -20,7 +20,7 @@
 
 
 // Translation table of the 8042
-extern unsigned char translation8042[256];
+BOCHSAPI extern unsigned char translation8042[256];
 
 typedef struct { 
   const char *make;
@@ -28,4 +28,4 @@ typedef struct {
   }scancode;
 
 // Scancodes table
-extern scancode scancodes[BX_KEY_NBKEYS][3];
+BOCHSAPI extern scancode scancodes[BX_KEY_NBKEYS][3];

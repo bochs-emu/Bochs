@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.61.2.2 2002-10-21 15:19:25 bdenney Exp $
+// $Id: cpu.cc,v 1.61.2.3 2002-10-22 23:48:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,12 +62,12 @@ const Boolean bx_parity_lookup[256] = {
 
 #if BX_SMP_PROCESSORS==1
 // single processor simulation, so there's one of everything
-BX_CPU_C    bx_cpu;
-BX_MEM_C    bx_mem;
+BOCHSAPI BX_CPU_C    bx_cpu;
+BOCHSAPI BX_MEM_C    bx_mem;
 #else
 // multiprocessor simulation, we need an array of cpus and memories
-BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
-BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
+BOCHSAPI BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
+BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 #endif
 
 

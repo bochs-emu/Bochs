@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.8 2002-10-21 20:32:34 bdenney Exp $
+// $Id: gui.h,v 1.31.4.9 2002-10-22 23:48:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,12 +24,12 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-extern class bx_gui_c *bx_gui;
+BOCHSAPI extern class bx_gui_c *bx_gui;
 
 
 // The bx_gui_c class provides data and behavior that is common to
 // all guis.  Each gui implementation will override the abstract methods.
-class bx_gui_c : public logfunctions {
+class BOCHSAPI bx_gui_c : public logfunctions {
 public:
   bx_gui_c (void);
   virtual ~bx_gui_c ();

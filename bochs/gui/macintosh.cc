@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.13.4.6 2002-10-21 20:32:34 bdenney Exp $
+// $Id: macintosh.cc,v 1.13.4.7 2002-10-22 23:48:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,11 @@
 // macintosh.cc -- bochs GUI file for the Macintosh
 // written by David Batterham <drbatter@progsoc.uts.edu.au>
 // with contributions from Tim Senecal
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 // BOCHS INCLUDES
 #include "bochs.h"

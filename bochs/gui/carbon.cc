@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.11.2.6 2002-10-21 20:32:34 bdenney Exp $
+// $Id: carbon.cc,v 1.11.2.7 2002-10-22 23:48:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,12 @@
 // port to Carbon API by Emmanuel Maillard <e.rsz@libertysurf.fr>
 // slight overhaul of Carbon key event, graphics and window handling
 //		and SIM->notify alert support by Chris Thomas <cjack@cjack.com>
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 
 // BOCHS INCLUDES
 #include "bochs.h"

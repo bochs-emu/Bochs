@@ -23,7 +23,7 @@
 #include "extplugin.h"
 
 class bx_devices_c;
-extern logfunctions  *pluginlog;
+BOCHSAPI extern logfunctions  *pluginlog;
 
 #ifdef __cplusplus
 extern "C" {
@@ -197,58 +197,58 @@ typedef void (*deviceReset_t)(unsigned);
 typedef void (*deviceLoad_t)(void);
 typedef void (*deviceSave_t)(void);
 
-void pluginRegisterDevice(deviceInitMem_t init_mem, deviceInitDev_t init_dev,
+BOCHSAPI void pluginRegisterDevice(deviceInitMem_t init_mem, deviceInitDev_t init_dev,
                           deviceReset_t reset, deviceLoad_t load, 
                           deviceSave_t save, char *name);
-void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, char *name);
-Boolean pluginDevicePresent(char *name);
+BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, char *name);
+BOCHSAPI Boolean pluginDevicePresent(char *name);
 
 /* === IO port stuff === */
-extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
+BOCHSAPI extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
                                 unsigned base, const char *name, unsigned len);
-extern int (*pluginRegisterIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
+BOCHSAPI extern int (*pluginRegisterIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                                  unsigned base, const char *name, unsigned len);
-extern int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
+BOCHSAPI extern int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
                                 const char *name, unsigned len);
-extern int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
+BOCHSAPI extern int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                                  const char *name, unsigned len);
 
 /* === A20 enable line stuff === */
-extern unsigned (*pluginGetA20E)(void);
-extern void     (*pluginSetA20E)(unsigned val);
+BOCHSAPI extern unsigned (*pluginGetA20E)(void);
+BOCHSAPI extern void     (*pluginSetA20E)(unsigned val);
 
 /* === IRQ stuff === */
-extern void  (*pluginRegisterIRQ)(unsigned irq, const char *name);
-extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
+BOCHSAPI extern void  (*pluginRegisterIRQ)(unsigned irq, const char *name);
+BOCHSAPI extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
 
 /* === Floppy stuff ===*/
-extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);
-extern unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status);
+BOCHSAPI extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);
+BOCHSAPI extern unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status);
 
 /* === VGA stuff === */
-extern void (* pluginVGARedrawArea)(unsigned x0, unsigned y0,
+BOCHSAPI extern void (* pluginVGARedrawArea)(unsigned x0, unsigned y0,
                  unsigned width, unsigned height);
-extern Bit8u (* pluginVGAMemRead)(Bit32u addr);
-extern void  (* pluginVGAMemWrite)(Bit32u addr, Bit8u value);
-extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot, 
+BOCHSAPI extern Bit8u (* pluginVGAMemRead)(Bit32u addr);
+BOCHSAPI extern void  (* pluginVGAMemWrite)(Bit32u addr, Bit8u value);
+BOCHSAPI extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot, 
 		          unsigned *txHeight, unsigned *txWidth);
-extern void  (* pluginVGARefresh)(void *);
-extern void  (* pluginVGASetUpdateInterval)(unsigned);
+BOCHSAPI extern void  (* pluginVGARefresh)(void *);
+BOCHSAPI extern void  (* pluginVGASetUpdateInterval)(unsigned);
 
 /* === Timer stuff === */
-extern int      (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
+BOCHSAPI extern int      (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
                              Bit32u useconds, Boolean continuous,
                              Boolean active, const char *name);
 
-extern void     (*pluginActivateTimer)(unsigned id, Bit32u usec, Boolean continuous);
-extern void     (*pluginDeactivateTimer)(unsigned id);
+BOCHSAPI extern void     (*pluginActivateTimer)(unsigned id, Bit32u usec, Boolean continuous);
+BOCHSAPI extern void     (*pluginDeactivateTimer)(unsigned id);
 
 /* === HRQ stuff === */
-extern void     (*pluginSetHRQ)(unsigned val);
-extern void     (*pluginSetHRQHackCallback)( void (*callback)(void) );
+BOCHSAPI extern void     (*pluginSetHRQ)(unsigned val);
+BOCHSAPI extern void     (*pluginSetHRQHackCallback)( void (*callback)(void) );
 
 /* === Reset stuff === */
-extern void     (*pluginResetSignal)(unsigned sig);
+BOCHSAPI extern void     (*pluginResetSignal)(unsigned sig);
 
 void plugin_abort (void);
 

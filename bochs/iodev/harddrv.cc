@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.10 2002-10-21 14:24:35 bdenney Exp $
+// $Id: harddrv.cc,v 1.77.2.11 2002-10-22 23:48:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,6 +29,11 @@
 // working draft by T13 at www.t13.org
 
 
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 
@@ -169,7 +174,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.10 2002-10-21 14:24:35 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.11 2002-10-22 23:48:41 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {

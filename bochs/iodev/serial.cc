@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.26.2.6 2002-10-18 16:43:01 bdenney Exp $
+// $Id: serial.cc,v 1.26.2.7 2002-10-22 23:48:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,6 +35,11 @@
 
 // define USE_TTY_HACK to connect an xterm or similar (depends on tty.c)
 // to the serial port /AM
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.74.4.2 2002-10-21 12:26:31 bdenney Exp $
+// $Id: siminterface.h,v 1.74.4.3 2002-10-22 23:48:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -741,7 +741,7 @@ class bx_param_string_c;
 class bx_param_filename_c;
 class bx_list_c;
 
-class bx_object_c {
+class BOCHSAPI bx_object_c {
 private:
   bx_id id;
   bx_objtype type;
@@ -753,8 +753,8 @@ public:
   Bit8u get_type () { return type; }
 };
 
-class bx_param_c : public bx_object_c {
-  static const char *default_text_format;
+class BOCHSAPI bx_param_c : public bx_object_c {
+  BOCHSAPI static const char *default_text_format;
 protected:
   char *name;
   char *description;
@@ -786,8 +786,8 @@ public:
 
 typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
 
-class bx_param_num_c : public bx_param_c {
-  static Bit32u default_base;
+class BOCHSAPI bx_param_num_c : public bx_param_c {
+  BOCHSAPI static Bit32u default_base;
   // The dependent_list is initialized to NULL.  If dependent_list is modified
   // to point to a bx_list_c of other parameters, the set() method of
   // bx_param_bool_c will enable those parameters when this bool is true, and
@@ -838,7 +838,7 @@ public:
 // to keep a pointer to the actual data.  This is used to register
 // existing variables as parameters, without have to access it via
 // set/get methods.
-class bx_shadow_num_c : public bx_param_num_c {
+class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
   Bit8u varsize;   // must be 32, 16, or 8
   Bit8u lowbit;   // range of bits associated with this param
   Bit32u mask;     // mask is ANDed with value before it is returned from get
@@ -874,7 +874,7 @@ public:
   virtual void set (Bit32s val);
 };
 
-class bx_param_bool_c : public bx_param_num_c {
+class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
   // many boolean variables are used to enable/disable modules.  In the
   // user interface, the enable variable should enable/disable all the
   // other parameters associated with that module.
@@ -890,7 +890,7 @@ public:
 };
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
-class bx_shadow_bool_c : public bx_param_bool_c {
+class BOCHSAPI bx_shadow_bool_c : public bx_param_bool_c {
   // each bit of a bitfield can be a separate value.  bitnum tells which
   // bit is used.  get/set will only modify that bit.
   Bit8u bitnum;
@@ -904,7 +904,7 @@ public:
 };
 
 
-class bx_param_enum_c : public bx_param_num_c {
+class BOCHSAPI bx_param_enum_c : public bx_param_num_c {
   char **choices;
 public:
   bx_param_enum_c (bx_id id, 
@@ -924,7 +924,7 @@ public:
 
 typedef char* (*param_string_event_handler)(class bx_param_string_c *, int set, char *val, int maxlen);
 
-class bx_param_string_c : public bx_param_c {
+class BOCHSAPI bx_param_string_c : public bx_param_c {
   int maxsize;
   char *val, *initial_val;
   param_string_event_handler handler;
@@ -960,7 +960,7 @@ public:
 // Declare a filename class.  It is identical to a string, except that
 // it initializes the options differently.  This is just a shortcut
 // for declaring a string param and setting the options with BX_IS_FILENAME.
-class bx_param_filename_c : public bx_param_string_c {
+class BOCHSAPI bx_param_filename_c : public bx_param_string_c {
 public:
   bx_param_filename_c (bx_id id,
       char *name,
@@ -969,7 +969,7 @@ public:
       int maxsize=-1);
 };
 
-class bx_list_c : public bx_param_c {
+class BOCHSAPI bx_list_c : public bx_param_c {
 private:
   // just a list of bx_param_c objects.  size tells current number of
   // objects in the list, and maxsize tells how many list items are
@@ -1102,7 +1102,7 @@ typedef struct {
 enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
 
-class bx_simulator_interface_c {
+class BOCHSAPI bx_simulator_interface_c {
 public:
   bx_simulator_interface_c ();
   virtual void set_quit_context (jmp_buf *context) {}
@@ -1209,7 +1209,7 @@ public:
   virtual bool is_sim_thread () {return true;}
 };
 
-extern bx_simulator_interface_c *SIM;
+BOCHSAPI extern bx_simulator_interface_c *SIM;
 
-extern void bx_init_siminterface ();
-extern int bx_init_main (int argc, char *argv[]);
+BOCHSAPI extern void bx_init_siminterface ();
+BOCHSAPI extern int bx_init_main (int argc, char *argv[]);

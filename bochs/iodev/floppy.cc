@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.11 2002-10-21 22:11:12 cbothamy Exp $
+// $Id: floppy.cc,v 1.51.2.12 2002-10-22 23:48:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,6 +35,12 @@
 // And a port list:
 //   http://mudlist.eorbit.net/~adam/pickey/ports.html
 //
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 
 extern "C" {
 #include <errno.h>
@@ -94,7 +100,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.11 2002-10-21 22:11:12 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.12 2002-10-22 23:48:41 bdenney Exp $"));
 
   BX_REGISTER_DMA8_CHANNEL(2, dma_read, dma_write, "Floppy Drive");
   BX_REGISTER_IRQ(6, "Floppy Drive");

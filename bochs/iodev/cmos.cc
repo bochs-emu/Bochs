@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.8 2002-10-18 20:29:20 bdenney Exp $
+// $Id: cmos.cc,v 1.20.2.9 2002-10-22 23:48:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,6 +27,11 @@
 
 
 
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 
@@ -75,7 +80,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.8 2002-10-18 20:29:20 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.9 2002-10-22 23:48:40 bdenney Exp $"));
 
   // CMOS RAM & RTC
 
