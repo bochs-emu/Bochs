@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.20 2002-01-20 00:28:09 vruppert Exp $
+// $Id: vga.cc,v 1.21 2002-01-24 20:30:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1227,7 +1227,40 @@ bx_vga_c::update(void)
 
       case 1: // output the data in a CGA-compatible 320x200 4 color graphics
               // mode.  (modes 4 & 5)
-        BX_PANIC(("update: shift_reg == 1"));
+
+        /* CGA 320x200x4 start */
+        iHeight=200; iWidth=320;
+        bx_gui.dimension_update(iWidth, iHeight);
+
+        for (yti=0; yti<=iHeight/Y_TILESIZE; yti++)
+          for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
+            if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) {
+              for (r=0; r<Y_TILESIZE; r++) {
+                for (c=0; c<X_TILESIZE; c++) {
+
+                  /* 0 or 0x2000 */
+                  byte_offset = ((yti*Y_TILESIZE + r) & 1) << 13;
+                  /* to the start of the line */
+                  byte_offset += (320 / 4) * ((yti*Y_TILESIZE + r) / 2);
+                  /* to the byte start */
+                  byte_offset += ((xti*X_TILESIZE + c) / 4);
+
+                  attribute = 6 - 2*((xti*X_TILESIZE + c) % 4);
+                  palette_reg_val = (BX_VGA_THIS s.vga_memory[byte_offset]) >> attribute;
+                  palette_reg_val &= 3;
+                  palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics << 2;
+                  // palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity << 3;
+                  DAC_regno = BX_VGA_THIS s.attribute_ctrl.palette_reg[palette_reg_val];
+                  BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
+                }
+              }
+              bx_gui.graphics_tile_update(BX_VGA_THIS s.tile,
+                                         xti*X_TILESIZE, yti*Y_TILESIZE);
+              BX_VGA_THIS s.vga_tile_updated[xti][yti] = 0;
+            }
+          }
+        /* CGA 320x200x4 end */
+
         break; // case 1
 
       case 2: // output the data eight bits at a time from the 4 bit planeBX_VGA_THIS s.
@@ -1406,10 +1439,10 @@ bx_vga_c::mem_read(Bit32u addr)
     if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // 0xB8000 .. 0xBFFFF
       if (addr < 0xB8000)
         return(0xff);
-      // ??? offset = addr - 0xA0000;
       offset = addr - 0xB8000;
 
-      if (BX_VGA_THIS s.graphics_ctrl.shift_reg != 2)
+      if ( (BX_VGA_THIS s.graphics_ctrl.shift_reg != 1) &&
+           (BX_VGA_THIS s.graphics_ctrl.shift_reg != 2) )
         BX_PANIC(("vga_mem_read: shift_reg = %u",
                  (unsigned) BX_VGA_THIS s.graphics_ctrl.shift_reg));
       return(BX_VGA_THIS s.vga_memory[offset]);
@@ -1527,11 +1560,32 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       offset = addr - 0xA0000;
       }
     else if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // 0xB8000 .. 0xBFFFF
-      // unsigned x_tileno, y_tileno;
+      unsigned x_tileno, y_tileno, isEven;
 
       if ( (addr < 0xB8000) || (addr > 0xBFFFF) )
         return;
       offset = addr - 0xB8000;
+
+      /* CGA 320x200x4 start */
+      isEven = (offset>=0x2000)?1:0;
+      if (isEven) {
+        y_tileno = offset - 0x2000;
+        y_tileno /= (320/4);
+        y_tileno <<= 1; //2 * y_tileno;
+        y_tileno++;
+        x_tileno = (offset - 0x2000) % (320/4);
+        x_tileno <<= 2; //*= 4;
+      } else {
+        y_tileno = offset / (320/4);
+        y_tileno = offset<<1; //2 * offset;
+        x_tileno = offset % (320/4);
+        x_tileno <<= 2; //*=4;
+      }
+      x_tileno/=X_TILESIZE;
+      y_tileno/=Y_TILESIZE;
+      BX_VGA_THIS s.vga_mem_updated = 1;
+      BX_VGA_THIS s.vga_tile_updated[x_tileno][y_tileno] = 1;
+      /* CGA 320x200x4 end */
       }
     else {
       BX_PANIC(("vga_mem_write: graphics: mapping = %u",
