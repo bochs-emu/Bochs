@@ -74,7 +74,9 @@ NONINLINE_OBJS = \
 	main.o \
 	load32bitOShack.o \
 	state_file.o \
-	pc_system.o
+	pc_system.o \
+	snprintf.o \
+	strtoull.o
 
 EXTERN_ENVIRONMENT_OBJS = \
 	main.o \
@@ -90,7 +92,7 @@ FPU_LIB        = fpu/libfpu.a
 
 BX_OBJS = @NONINLINE_VAR@
 
-BX_INCLUDES = bochs.h config.h
+BX_INCLUDES = bochs.h config.h osdep.h
 
 
 .@CPP_SUFFIX@.o:
