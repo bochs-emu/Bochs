@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.54 2002-10-25 11:44:36 bdenney Exp $
+// $Id: gui.cc,v 1.55 2002-11-09 06:41:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -202,46 +202,48 @@ bx_gui_c::update_drive_status_buttons (void) {
   void
 bx_gui_c::floppyA_handler(void)
 {
-#if BX_WITH_WX
-  // instead of just toggling the status, call wxWindows to bring up 
-  // a dialog asking what disk image you want to switch to.
-  int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
-  if (ret < 0) return;  // cancelled
-  // eject and then insert the disk.  If the new path is invalid,
-  // the status will return 0.
-  unsigned new_status = DEV_floppy_set_media_status(0, 0);
-  printf ("eject disk, new_status is %d\n", new_status);
-  new_status = DEV_floppy_set_media_status(0, 1);
-  printf ("insert disk, new_status is %d\n", new_status);
-  fflush (stdout);
-  BX_GUI_THIS floppyA_status = new_status;
-#else
-  BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
-  DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
-#endif
+  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
+              "wx")) {
+    // instead of just toggling the status, call wxWindows to bring up 
+    // a dialog asking what disk image you want to switch to.
+    int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
+    if (ret < 0) return;  // cancelled
+    // eject and then insert the disk.  If the new path is invalid,
+    // the status will return 0.
+    unsigned new_status = DEV_floppy_set_media_status(0, 0);
+    printf ("eject disk, new_status is %d\n", new_status);
+    new_status = DEV_floppy_set_media_status(0, 1);
+    printf ("insert disk, new_status is %d\n", new_status);
+    fflush (stdout);
+    BX_GUI_THIS floppyA_status = new_status;
+  } else {
+    BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
+    DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
+  }
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
 bx_gui_c::floppyB_handler(void)
 {
-#if BX_WITH_WX
-  // instead of just toggling the status, call wxWindows to bring up 
-  // a dialog asking what disk image you want to switch to.
-  int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
-  if (ret < 0) return;  // cancelled
-  // eject and then insert the disk.  If the new path is invalid,
-  // the status will return 0.
-  unsigned new_status = DEV_floppy_set_media_status(1, 0);
-  printf ("eject disk, new_status is %d\n", new_status);
-  new_status = DEV_floppy_set_media_status(1, 1);
-  printf ("insert disk, new_status is %d\n", new_status);
-  fflush (stdout);
-  BX_GUI_THIS floppyB_status = new_status;
-#else
-  BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
-  DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
-#endif
+  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
+              "wx")) {
+    // instead of just toggling the status, call wxWindows to bring up 
+    // a dialog asking what disk image you want to switch to.
+    int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
+    if (ret < 0) return;  // cancelled
+    // eject and then insert the disk.  If the new path is invalid,
+    // the status will return 0.
+    unsigned new_status = DEV_floppy_set_media_status(1, 0);
+    printf ("eject disk, new_status is %d\n", new_status);
+    new_status = DEV_floppy_set_media_status(1, 1);
+    printf ("insert disk, new_status is %d\n", new_status);
+    fflush (stdout);
+    BX_GUI_THIS floppyB_status = new_status;
+  } else {
+    BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
+    DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
+  }
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
@@ -249,29 +251,30 @@ bx_gui_c::floppyB_handler(void)
 bx_gui_c::cdromD_handler(void)
 {
   Bit32u handle = DEV_hd_get_first_cd_handle();
-#if BX_WITH_WX
-  // instead of just toggling the status, call wxWindows to bring up 
-  // a dialog asking what disk image you want to switch to.
-  // BBD: for now, find the first cdrom and call ask_param on that.
-  // Since we could have multiple cdroms now, maybe we should be adding
-  // one cdrom button for each?
-  bx_param_c *cdrom = SIM->get_first_cdrom ();
-  if (cdrom == NULL)
-    return;  // no cdrom found
-  int ret = SIM->ask_param (cdrom->get_id ());
-  if (ret < 0) return;  // cancelled
-  // eject and then insert the disk.  If the new path is invalid,
-  // the status will return 0.
-  unsigned status = DEV_hd_set_cd_media_status(handle, 0);
-  printf ("eject disk, new_status is %d\n", status);
-  status = DEV_hd_set_cd_media_status(handle, 1);
-  printf ("insert disk, new_status is %d\n", status);
-  fflush (stdout);
-  BX_GUI_THIS cdromD_status = status;
-#else
-  BX_GUI_THIS cdromD_status =
-    DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
-#endif
+  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
+              "wx")) {
+    // instead of just toggling the status, call wxWindows to bring up 
+    // a dialog asking what disk image you want to switch to.
+    // BBD: for now, find the first cdrom and call ask_param on that.
+    // Since we could have multiple cdroms now, maybe we should be adding
+    // one cdrom button for each?
+    bx_param_c *cdrom = SIM->get_first_cdrom ();
+    if (cdrom == NULL)
+      return;  // no cdrom found
+    int ret = SIM->ask_param (cdrom->get_id ());
+    if (ret < 0) return;  // cancelled
+    // eject and then insert the disk.  If the new path is invalid,
+    // the status will return 0.
+    unsigned status = DEV_hd_set_cd_media_status(handle, 0);
+    printf ("eject disk, new_status is %d\n", status);
+    status = DEV_hd_set_cd_media_status(handle, 1);
+    printf ("insert disk, new_status is %d\n", status);
+    fflush (stdout);
+    BX_GUI_THIS cdromD_status = status;
+  } else {
+    BX_GUI_THIS cdromD_status =
+      DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
+  }
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
@@ -312,7 +315,7 @@ bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
     for (unsigned j=0; j<(txWidth*2); j+=2) {
       clean_snap[txt_addr++] = raw_snap[line_addr+j];
     }
-  while ((txt_addr > 0) && (clean_snap[txt_addr-1] == ' ')) txt_addr--;
+    while ((txt_addr > 0) && (clean_snap[txt_addr-1] == ' ')) txt_addr--;
 #ifdef WIN32
     clean_snap[txt_addr++] = 13;
 #endif
@@ -356,17 +359,18 @@ bx_gui_c::snapshot_handler(void)
   }
   //FIXME
   char filename[BX_PATHNAME_LEN];
-#if BX_WITH_WX
-  int ret = SIM->ask_filename (filename, sizeof(filename),
-    "Save snapshot as...", "snapshot.txt",
-	bx_param_string_c::SAVE_FILE_DIALOG);
-  if (ret < 0) { // cancelled
-    free(text_snapshot);
-    return;
+  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
+              "wx")) {
+    int ret = SIM->ask_filename (filename, sizeof(filename),
+                                 "Save snapshot as...", "snapshot.txt",
+                                 bx_param_string_c::SAVE_FILE_DIALOG);
+    if (ret < 0) { // cancelled
+      free(text_snapshot);
+      return;
+    }
+  } else {
+    strcpy (filename, "snapshot.txt");
   }
-#else
-  strcpy (filename, "snapshot.txt");
-#endif
   FILE *fp = fopen(filename, "wb");
   fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
   fclose(fp);
@@ -413,17 +417,15 @@ bx_gui_c::userbutton_handler(void)
   unsigned shortcut[4];
   unsigned p;
   char *user_shortcut;
-  int i, len;
+  int i, len, ret = 1;
 
   len = 0;
-#if BX_WITH_WX
-  int ret = SIM->ask_param (BXP_USER_SHORTCUT);
+  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
+              "wx")) {
+    ret = SIM->ask_param (BXP_USER_SHORTCUT);
+  }
   user_shortcut = bx_options.Ouser_shortcut->getptr();
   if ((ret > 0) && user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
-#else
-  user_shortcut = bx_options.Ouser_shortcut->getptr();
-  if (user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
-#endif
     len = 0;
     p = 0;
     while ((p < strlen(user_shortcut)) && (len < 3)) {
