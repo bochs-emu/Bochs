@@ -1,0 +1,23 @@
+start
+loading module1
+loading module from VARIES{xxx}
+handle is VARIES{xxx}
+module_init function is at VARIES{xxx}
+Calling module_init
+module1 init for main version uselib-test6-1.0
+register_module was called by module 'module1'
+module1's device is called 'BochsCellPhone'
+module1 can do 'Caller ID, Video Conferencing'
+Calling the device's print method:
+  [CellPhone name='BochsCellPhone', features='Caller ID, Video Conferencing']
+loading module from VARIES{xxx}
+handle is VARIES{xxx}
+module_init function is at VARIES{xxx}
+Calling module_init
+module2 init for main version uselib-test6-1.0
+register_module was called by module 'module2'
+module2's device is called 'BochsStarGPS 4.0'
+module2 can do 'High Accuracy, Low Power, Pentium Emulation'
+Calling the device's print method:
+  [GPS_Receiver name='BochsStarGPS 4.0', vendor='Bochs Project', resolution_meters='9.5000', feature_list='High Accuracy, Low Power, Pentium Emulation']
+stop

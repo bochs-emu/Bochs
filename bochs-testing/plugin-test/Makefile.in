@@ -1,4 +1,4 @@
-SUBDIRS = test1-static test2-dynamic test3-twomodules test4-interdep test5-execsymbols test6-ltdlopen test7-win32dll test8-execlass test9-modclass test10-modvirtual
+SUBDIRS = test1-static test2-dynamic test3-twomodules test4-interdep test5-execsymbols test6-ltdlopen test7-win32dll test8-execlass test9-modclass test10-modvirtual test11-modglobalconstr
 
 all: build_libltdl
 	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i && make all; echo Leaving $$i;); done
@@ -14,4 +14,4 @@ clean:
 
 dist-clean: clean
 	cd libltdl; make distclean
-	rm -rf Makefile */Makefile config.h config.log config.status libtool
+	rm -rf Makefile */Makefile config.h config.log config.status libtool testscript

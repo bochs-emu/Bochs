@@ -53,4 +53,4 @@ AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 AC_SUBST(LT_LDFLAGS)
 
-AC_OUTPUT(config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile test6-ltdlopen/Makefile test7-win32dll/Makefile test8-execlass/Makefile test9-modclass/Makefile test10-modvirtual/Makefile testscript)
+AC_OUTPUT(config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile test6-ltdlopen/Makefile test7-win32dll/Makefile test8-execlass/Makefile test9-modclass/Makefile test10-modvirtual/Makefile test11-modglobalconstr/Makefile testscript)
