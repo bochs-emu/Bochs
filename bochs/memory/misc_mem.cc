@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.53 2004-11-11 20:55:29 vruppert Exp $
+// $Id: misc_mem.cc,v 1.54 2004-11-14 14:06:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.53 2004-11-11 20:55:29 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.54 2004-11-14 14:06:43 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -281,6 +281,10 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
       }
     }
 #endif  // #if BX_SUPPORT_PCI
+    else if (addr >= 0xfffe0000)
+    {
+      *buf = rom[addr & 0x3ffff];
+    }
     else
     {
       if ( (addr & 0xfffc0000) == 0x000c0000 ) {
@@ -399,6 +403,10 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
       }
     }
 #endif
+    else if (a20Addr >= 0xfffe0000)
+    {
+      return( (Bit8u *) & rom[a20Addr & 0x3ffff]);
+    }
     else
     {
       if ( (a20Addr & 0xfffc0000) == 0x000c0000 ) {

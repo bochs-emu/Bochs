@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.36 2004-11-11 20:55:29 vruppert Exp $
+// $Id: memory.cc,v 1.37 2004-11-14 14:06:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -323,6 +323,8 @@ inc_one:
     for (i = 0; i < len; i++) {
       if (a20addr < BX_MEM_THIS len)
         *data_ptr = vector[a20addr];
+      else if (a20addr >= 0xfffe0000)
+        *data_ptr = rom[a20addr & 0x3ffff];
       else
         *data_ptr = 0xff;
       addr++;
