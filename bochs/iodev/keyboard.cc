@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.37 2001-12-05 20:36:03 vruppert Exp $
+// $Id: keyboard.cc,v 1.38 2001-12-08 14:02:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.37 2001-12-05 20:36:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.38 2001-12-08 14:02:57 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -97,7 +97,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.37 2001-12-05 20:36:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.38 2001-12-08 14:02:57 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -467,7 +467,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
           BX_DEBUG(("Self Test"));
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-		BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
+		BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
             }
 	  // (mch) Why is this commented out??? Enabling
