@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.2 2004-06-09 22:05:28 vruppert Exp $
+// $Id: pci_ide.h,v 1.3 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ private:
 
   struct {
     Bit8u pci_conf[256];
-    Bit16u bmide_addr;
+    Bit32u bmide_addr;
     Bit8u bmide_regs[16];
     } s;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.7 2004-07-04 17:07:49 vruppert Exp $
+// $Id: pciusb.cc,v 1.8 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -41,6 +41,9 @@
 #define LOG_THIS theUSBDevice->
 
 bx_pciusb_c* theUSBDevice = NULL;
+
+const Bit8u usb_iomask[32] = {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                              7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   int
 libpciusb_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -142,6 +145,11 @@ bx_pciusb_c::reset(unsigned type)
   for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
       BX_USB_THIS hub[0].pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
+  // This should be done by the PCI BIOS
+  DEV_pci_set_base_io(BX_USB_THIS_PTR, read_handler, write_handler,
+                      &BX_USB_THIS hub[0].base_ioaddr,
+                      &BX_USB_THIS hub[0].pci_conf[0x20],
+                      32, &usb_iomask[0], "USB Hub #1");
   DEV_pci_init_irq(0x0a, BX_PCI_INTD, bx_options.usb[0].Oirq->get());
 
   // reset locals
@@ -608,61 +616,45 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif // !BX_USE_PCIUSB_SMF
 
-  if (io_len > 4 || io_len == 0) {
-    BX_ERROR(("Experimental USB PCI write register 0x%02x, len=%u !",
-             (unsigned) address, (unsigned) io_len));
+  Bit8u value8, oldval;
+  bx_bool baseaddr_change = 0;
+
+  if (((address >= 0x10) && (address < 0x20)) ||
+      ((address > 0x23) && (address < 0x34)))
     return;
-  }
 
   // This odd code is to display only what bytes actually were written.
   char szTmp[9];
   char szTmp2[3];
   szTmp[0] = '\0';
   szTmp2[0] = '\0';
-  for (unsigned i=0; i<io_len; i++) {
-    const Bit8u value8 = (value >> (i*8)) & 0xFF;
-    switch (address+i) {
-      case 0x20: // Base address
-        BX_USB_THIS hub[0].pci_conf[address+i] = (value8 & 0xe0) | 0x01;
-        sprintf(szTmp2, "%02x", (value8 & 0xe0) | 0x01);
-        break;
-      case 0x10: // Reserved
-      case 0x11: //
-      case 0x12: //
-      case 0x13: //
-      case 0x14: //
-      case 0x15: //
-      case 0x16: //
-      case 0x17: //
-      case 0x18: //
-      case 0x19: //
-      case 0x1a: //
-      case 0x1b: //
-      case 0x1c: //
-      case 0x1d: //
-      case 0x1e: //
-      case 0x1f: //
-      case 0x22: // Always 0
-      case 0x23: //
-      case 0x24: // Reserved
-      case 0x25: //
-      case 0x26: //
-      case 0x27: //
-      case 0x30: // Oh, no, you're not writing to rom_base!
-      case 0x31: //
-      case 0x32: //
-      case 0x33: //
-      case 0x3d: //
-      case 0x05: // disallowing write to command hi-byte
-      case 0x06: // disallowing write to status lo-byte (is that expected?)
-        strcpy(szTmp2, "..");
-        break;
-      default:
-        BX_USB_THIS hub[0].pci_conf[address+i] = value8;
-        sprintf(szTmp2, "%02x", value8);
+  if (io_len <= 4) {
+    for (unsigned i=0; i<io_len; i++) {
+      value8 = (value >> (i*8)) & 0xFF;
+      oldval = BX_USB_THIS hub[0].pci_conf[address+i];
+      switch (address+i) {
+        case 0x3d: //
+        case 0x05: // disallowing write to command hi-byte
+        case 0x06: // disallowing write to status lo-byte (is that expected?)
+          strcpy(szTmp2, "..");
+          break;
+        case 0x20:
+        case 0x21:
+          baseaddr_change |= (value8 != oldval);
+        default:
+          BX_USB_THIS hub[0].pci_conf[address+i] = value8;
+          sprintf(szTmp2, "%02x", value8);
+      }
+      strrev(szTmp2);
+      strcat(szTmp, szTmp2);
     }
-    strrev(szTmp2);
-    strcat(szTmp, szTmp2);
+    if (baseaddr_change) {
+      DEV_pci_set_base_io(BX_USB_THIS_PTR, read_handler, write_handler,
+                          &BX_USB_THIS hub[0].base_ioaddr,
+                          &BX_USB_THIS hub[0].pci_conf[0x20],
+                          32, &usb_iomask[0], "USB Hub #1");
+      BX_INFO(("new base address: 0x%04x", BX_USB_THIS hub[0].base_ioaddr));
+    }
   }
   strrev(szTmp);
   BX_DEBUG(("Experimental USB PCI write register 0x%02x value 0x%s", address, szTmp));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.5 2004-06-29 19:24:34 vruppert Exp $
+// $Id: pci_ide.cc,v 1.6 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,6 +39,8 @@
 #define LOG_THIS thePciIdeController->
 
 bx_pci_ide_c *thePciIdeController = NULL;
+
+const Bit8u bmide_iomask[16] = {1, 0, 1, 0, 4, 0, 0, 0, 1, 0, 1, 0, 4, 0, 0, 0};
 
   int
 libpci_ide_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -87,8 +89,6 @@ bx_pci_ide_c::init(void)
   BX_PIDE_THIS s.pci_conf[0x0a] = 0x01;
   BX_PIDE_THIS s.pci_conf[0x0b] = 0x01;
   BX_PIDE_THIS s.pci_conf[0x0e] = 0x00;
-
-  BX_PIDE_THIS s.bmide_addr = 0x0000;
 }
 
   void
@@ -98,8 +98,6 @@ bx_pci_ide_c::reset(unsigned type)
   BX_PIDE_THIS s.pci_conf[0x05] = 0x00;
   BX_PIDE_THIS s.pci_conf[0x06] = 0x80;
   BX_PIDE_THIS s.pci_conf[0x07] = 0x02;
-  BX_PIDE_THIS s.pci_conf[0x20] = 0x01;
-  BX_PIDE_THIS s.pci_conf[0x21] = 0x00;
   if (bx_options.ata[0].Opresent->get ()) {
     BX_PIDE_THIS s.pci_conf[0x40] = 0x00;
     BX_PIDE_THIS s.pci_conf[0x41] = 0x80;
@@ -109,6 +107,11 @@ bx_pci_ide_c::reset(unsigned type)
     BX_PIDE_THIS s.pci_conf[0x43] = 0x80;
   }
   BX_PIDE_THIS s.pci_conf[0x44] = 0x00;
+  // This should be done by the PCI BIOS
+  WriteHostDWordToLittleEndian(&BX_PIDE_THIS s.pci_conf[0x20], 0x0000);
+  DEV_pci_set_base_io(this, read_handler, write_handler,
+                      &BX_PIDE_THIS s.bmide_addr, &BX_PIDE_THIS s.pci_conf[0x20],
+                      16, &bmide_iomask[0], "PIIX3 PCI IDE controller");
 }
 
 
@@ -242,11 +245,8 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           BX_PIDE_THIS s.pci_conf[address+i] = value8 & 0x05;
           break;
         case 0x20:
-          bmide_change = (value8 != oldval);
-          BX_PIDE_THIS s.pci_conf[address+i] = (value8 & 0xF0) | 0x01;
-          break;
         case 0x21:
-          bmide_change = (value8 != oldval);
+          bmide_change |= (value8 != oldval);
         default:
           BX_PIDE_THIS s.pci_conf[address+i] = value8;
           BX_DEBUG(("PIIX3 PCI IDE write register 0x%02x value 0x%02x", address,
@@ -254,27 +254,10 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       }
     }
     if (bmide_change) {
-      if (BX_PIDE_THIS s.bmide_addr > 0) {
-        DEV_unregister_ioread_handler_range(BX_PIDE_THIS_PTR, read_handler,
-                                            BX_PIDE_THIS s.bmide_addr,
-                                            BX_PIDE_THIS s.bmide_addr + 0x0F, 7);
-        DEV_unregister_iowrite_handler_range(BX_PIDE_THIS_PTR, write_handler,
-                                             BX_PIDE_THIS s.bmide_addr,
-                                             BX_PIDE_THIS s.bmide_addr + 0x0F, 7);
-      }
-      BX_PIDE_THIS s.bmide_addr = (BX_PIDE_THIS s.pci_conf[0x20] & 0xFE) |
-                                  (BX_PIDE_THIS s.pci_conf[0x21] << 8);
+      DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
+                          &BX_PIDE_THIS s.bmide_addr, &BX_PIDE_THIS s.pci_conf[0x20],
+                          16, &bmide_iomask[0], "PIIX3 PCI IDE controller");
       BX_INFO(("new BM-IDE address: 0x%04x", BX_PIDE_THIS s.bmide_addr));
-      if (BX_PIDE_THIS s.bmide_addr > 0) {
-        DEV_register_ioread_handler_range(BX_PIDE_THIS_PTR, read_handler,
-                                          BX_PIDE_THIS s.bmide_addr,
-                                          BX_PIDE_THIS s.bmide_addr + 0x0F,
-                                          "PIIX3 PCI IDE controller", 7);
-        DEV_register_iowrite_handler_range(BX_PIDE_THIS_PTR, write_handler,
-                                           BX_PIDE_THIS s.bmide_addr,
-                                           BX_PIDE_THIS s.bmide_addr + 0x0F,
-                                           "PIIX3 PCI IDE controller", 7);
-      }
     }
   }
 }

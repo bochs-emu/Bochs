@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.63 2004-07-04 17:07:49 vruppert Exp $
+// $Id: ne2k.cc,v 1.64 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,6 +42,9 @@
 #define LOG_THIS theNE2kDevice->
 
 bx_ne2k_c *theNE2kDevice = NULL;
+
+const Bit8u ne2k_iomask[32] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                               7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
   int
 libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -118,8 +121,13 @@ bx_ne2k_c::reset(unsigned type)
   BX_NE2K_THIS s.DCR.longaddr = 1;
 
   if ((type == BX_RESET_HARDWARE) && (BX_NE2K_THIS s.pci_enabled)) {
-    pci_write_handler(BX_NE2K_THIS_PTR, 0x10, BX_NE2K_THIS s.base_address, 2);
-    BX_NE2K_THIS s.pci_conf[0x3c] = BX_NE2K_THIS s.base_irq;
+    // This should be done by the PCI BIOS
+    Bit32u baseaddr = bx_options.ne2k.Oioaddr->get ();
+    WriteHostDWordToLittleEndian(&BX_NE2K_THIS s.pci_conf[0x10], baseaddr);
+    DEV_pci_set_base_io(this, read_handler, write_handler,
+                        &BX_NE2K_THIS s.base_address, &BX_NE2K_THIS s.pci_conf[0x10],
+                        32, &ne2k_iomask[0], "NE2000 PCI NIC");
+    BX_NE2K_THIS s.pci_conf[0x3c] = bx_options.ne2k.Oirq->get ();
     DEV_pci_init_irq(BX_NE2K_THIS s.devfunc, BX_NE2K_THIS s.pci_conf[0x3d], BX_NE2K_THIS s.base_irq);
   }
   set_irq_level(0);
@@ -1293,11 +1301,9 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.63 2004-07-04 17:07:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.64 2004-07-11 20:38:48 vruppert Exp $"));
 
   // Read in values from config file
-  BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
-  BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
   BX_NE2K_THIS s.pci_enabled = 0;
   strcpy(devname, "NE2000 NIC");
@@ -1323,6 +1329,7 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS s.pci_conf[0x0b] = 0x02;
     BX_NE2K_THIS s.pci_conf[0x0e] = 0x00;
     BX_NE2K_THIS s.pci_conf[0x3d] = BX_PCI_INTA;
+    BX_NE2K_THIS s.base_address = 0x0;
   }
 #endif
 
@@ -1333,39 +1340,42 @@ bx_ne2k_c::init(void)
   }
   // Register the IRQ and i/o port addresses
   if (!BX_NE2K_THIS s.pci_enabled) {
+    BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
+    BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
+
     DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
+
+    DEV_register_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
+                                      BX_NE2K_THIS s.base_address,
+                                      BX_NE2K_THIS s.base_address + 0x0F,
+                                      devname, 3);
+    DEV_register_iowrite_handler_range(BX_NE2K_THIS_PTR, write_handler,
+                                       BX_NE2K_THIS s.base_address,
+                                       BX_NE2K_THIS s.base_address + 0x0F,
+                                       devname, 3);
+    DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
+                                BX_NE2K_THIS s.base_address + 0x10,
+                                devname, 3);
+    DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
+                                 BX_NE2K_THIS s.base_address + 0x10,
+                                 devname, 3);
+    DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
+                                BX_NE2K_THIS s.base_address + 0x1F,
+                                devname, 1);
+    DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
+                                 BX_NE2K_THIS s.base_address + 0x1F,
+                                 devname, 1);
+
+    BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
+             BX_NE2K_THIS s.base_address,
+             BX_NE2K_THIS s.base_irq,
+             BX_NE2K_THIS s.physaddr[0],
+             BX_NE2K_THIS s.physaddr[1],
+             BX_NE2K_THIS s.physaddr[2],
+             BX_NE2K_THIS s.physaddr[3],
+             BX_NE2K_THIS s.physaddr[4],
+             BX_NE2K_THIS s.physaddr[5]));
   }
-
-  DEV_register_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
-                                    BX_NE2K_THIS s.base_address,
-                                    BX_NE2K_THIS s.base_address + 0x0F,
-                                    devname, 3);
-  DEV_register_iowrite_handler_range(BX_NE2K_THIS_PTR, write_handler,
-                                     BX_NE2K_THIS s.base_address,
-                                     BX_NE2K_THIS s.base_address + 0x0F,
-                                     devname, 3);
-  DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                              BX_NE2K_THIS s.base_address + 0x10,
-                              devname, BX_NE2K_THIS s.pci_enabled ? 7 : 3);
-  DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                               BX_NE2K_THIS s.base_address + 0x10,
-                               devname, BX_PCI_SUPPORT ? 7 : 3);
-  DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                              BX_NE2K_THIS s.base_address + 0x1F,
-                              devname, 1);
-  DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                               BX_NE2K_THIS s.base_address + 0x1F,
-                               devname, 1);
-
-  BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
-           BX_NE2K_THIS s.base_address,
-           BX_NE2K_THIS s.base_irq,
-           BX_NE2K_THIS s.physaddr[0],
-           BX_NE2K_THIS s.physaddr[1],
-           BX_NE2K_THIS s.physaddr[2],
-           BX_NE2K_THIS s.physaddr[3],
-           BX_NE2K_THIS s.physaddr[4],
-           BX_NE2K_THIS s.physaddr[5]));
 
   // Initialise the mac address area by doubling the physical address
   BX_NE2K_THIS s.macaddr[0]  = BX_NE2K_THIS s.physaddr[0];
@@ -1478,7 +1488,6 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 
   Bit8u value8, oldval;
   bx_bool baseaddr_change = 0;
-  char devname[16] = "NE2000 PCI NIC";
 
   if ((address > 0x11) && (address < 0x34))
     return;
@@ -1494,18 +1503,15 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x04:
           BX_NE2K_THIS s.pci_conf[address+i] = value8 & 0x01;
           break;
-        case 0x10:
-          baseaddr_change = (value8 != oldval);
-          BX_NE2K_THIS s.pci_conf[address+i] = (value8 & 0xE0) | 0x01;
-          break;
         case 0x3c:
           if (value8 != oldval) {
             BX_INFO(("new irq line = %d", value8));
             BX_NE2K_THIS s.pci_conf[address+i] = value8;
           }
           break;
+        case 0x10:
         case 0x11:
-          baseaddr_change = (value8 != oldval);
+          baseaddr_change |= (value8 != oldval);
         default:
           BX_NE2K_THIS s.pci_conf[address+i] = value8;
           BX_DEBUG(("NE2000 PCI NIC write register 0x%02x value 0x%02x", address,
@@ -1513,47 +1519,11 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       }
     }
     if (baseaddr_change) {
-      if (BX_NE2K_THIS s.base_address > 0) {
-        DEV_unregister_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
-                                            BX_NE2K_THIS s.base_address,
-                                            BX_NE2K_THIS s.base_address + 0x0F, 3);
-        DEV_unregister_iowrite_handler_range(BX_NE2K_THIS_PTR, write_handler,
-                                             BX_NE2K_THIS s.base_address,
-                                             BX_NE2K_THIS s.base_address + 0x0F, 3);
-        DEV_unregister_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                                      BX_NE2K_THIS s.base_address + 0x10, 7);
-        DEV_unregister_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                                       BX_NE2K_THIS s.base_address + 0x10, 7);
-        DEV_unregister_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                                      BX_NE2K_THIS s.base_address + 0x1F, 1);
-        DEV_unregister_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                                       BX_NE2K_THIS s.base_address + 0x1F, 1);
-      }
-      BX_NE2K_THIS s.base_address = (BX_NE2K_THIS s.pci_conf[0x10] & 0xFE) |
-                                    (BX_NE2K_THIS s.pci_conf[0x11] << 8);
-      if (BX_NE2K_THIS s.base_address > 0) {
-        BX_INFO(("new base address: 0x%04x", BX_NE2K_THIS s.base_address));
-        DEV_register_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
-                                          BX_NE2K_THIS s.base_address,
-                                          BX_NE2K_THIS s.base_address + 0x0F,
-                                          devname, 3);
-        DEV_register_iowrite_handler_range(BX_NE2K_THIS_PTR, write_handler,
-                                           BX_NE2K_THIS s.base_address,
-                                           BX_NE2K_THIS s.base_address + 0x0F,
-                                           devname, 3);
-        DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                                    BX_NE2K_THIS s.base_address + 0x10,
-                                    devname, 7);
-        DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                                     BX_NE2K_THIS s.base_address + 0x10,
-                                     devname, 7);
-        DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
-                                    BX_NE2K_THIS s.base_address + 0x1F,
-                                    devname, 1);
-        DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
-                                     BX_NE2K_THIS s.base_address + 0x1F,
-                                     devname, 1);
-      }
+      DEV_pci_set_base_io(BX_NE2K_THIS_PTR, read_handler, write_handler,
+                          &BX_NE2K_THIS s.base_address,
+                          &BX_NE2K_THIS s.pci_conf[0x10],
+                          32, &ne2k_iomask[0], "NE2000 PCI NIC");
+      BX_INFO(("new base address: 0x%04x", BX_NE2K_THIS s.base_address));
     }
   }
 }

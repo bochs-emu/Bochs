@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.34 2004-07-09 16:25:42 vruppert Exp $
+// $Id: pci.cc,v 1.35 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -510,6 +510,60 @@ bx_pci_c::is_pci_device(const char *name)
     }
   }
   return 0;
+}
+
+  void
+bx_pci_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
+                           Bit32u *addr, Bit8u *pci_conf, unsigned size)
+{
+  Bit32u baseaddr = *addr;
+  if (baseaddr > 0) {
+    DEV_unregister_memory_handlers(f1, f2, baseaddr, baseaddr + size - 1);
+  }
+  Bit32u mask = ~(size - 1);
+  pci_conf[0x00] &= (mask & 0xf0);
+  pci_conf[0x01] &= (mask >> 8) & 0xff;
+  pci_conf[0x02] &= (mask >> 16) & 0xff;
+  pci_conf[0x03] &= (mask >> 24) & 0xff;
+  ReadHostDWordFromLittleEndian(pci_conf, baseaddr);
+  if (baseaddr > 0) {
+    DEV_register_memory_handlers(f1, this_ptr, f2, this_ptr, baseaddr, baseaddr + size - 1);
+  }
+  *addr = baseaddr;
+}
+
+  void
+bx_pci_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
+                          Bit32u *addr, Bit8u *pci_conf, unsigned size,
+                          const Bit8u *iomask, const char *name)
+{
+  unsigned i;
+
+  Bit32u baseaddr = *addr;
+  if (baseaddr > 0) {
+    for (i=0; i<size; i++) {
+      if (iomask[i] > 0) {
+        DEV_unregister_ioread_handler(this_ptr, f1, baseaddr + i, iomask[i]);
+        DEV_unregister_iowrite_handler(this_ptr, f2, baseaddr + i, iomask[i]);
+      }
+    }
+  }
+  Bit16u mask = ~(size - 1);
+  pci_conf[0x00] &= (mask & 0xfe);
+  pci_conf[0x01] &= (mask >> 8);
+  pci_conf[0x02] = 0x00;
+  pci_conf[0x03] = 0x00;
+  ReadHostDWordFromLittleEndian(pci_conf, baseaddr);
+  pci_conf[0x00] |= 0x01;
+  if (baseaddr > 0) {
+    for (i=0; i<size; i++) {
+      if (iomask[i] > 0) {
+        DEV_register_ioread_handler(this_ptr, f1, baseaddr + i, name, iomask[i]);
+        DEV_register_iowrite_handler(this_ptr, f2, baseaddr + i, name, iomask[i]);
+      }
+    }
+  }
+  *addr = baseaddr;
 }
 
 #endif /* BX_PCI_SUPPORT */

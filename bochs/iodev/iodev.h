@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.47 2004-07-06 19:59:10 vruppert Exp $
+// $Id: iodev.h,v 1.48 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -265,6 +265,17 @@ class BOCHSAPI bx_pci_stub_c : public bx_devmodel_c {
   virtual bx_bool is_pci_device (const char *name) {
     return 0;
   }
+  virtual void pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
+                                Bit32u *addr, Bit8u *pci_conf, unsigned size) {
+    STUBFUNC(pci, pci_set_base_mem);
+  }
+
+  virtual void pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
+                              Bit32u *addr, Bit8u *pci_conf, unsigned size,
+                              const Bit8u *iomask, const char *name) {
+    STUBFUNC(pci, pci_set_base_io);
+  }
+
   virtual Bit8u rd_memType (Bit32u addr) {
     return 0;
   }

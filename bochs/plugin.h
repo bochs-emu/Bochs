@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.29 2004-07-06 19:59:10 vruppert Exp $
+// $Id: plugin.h,v 1.30 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -178,6 +178,10 @@ extern "C" {
 #define DEV_is_pci_device(name) bx_devices.pluginPciBridge->is_pci_device(name)
 #define DEV_pci_init_irq(a,b,c) bx_devices.pluginPci2IsaBridge->pci_init_irq(a,b,c)
 #define DEV_pci_set_irq(a,b,c) bx_devices.pluginPci2IsaBridge->pci_set_irq(a,b,c)
+#define DEV_pci_set_base_mem(a,b,c,d,e,f) \
+  (bx_devices.pluginPciBridge->pci_set_base_mem(a,b,c,d,e,f))
+#define DEV_pci_set_base_io(a,b,c,d,e,f,g,h) \
+  (bx_devices.pluginPciBridge->pci_set_base_io(a,b,c,d,e,f,g,h))
 #define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
 #define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
 #define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.19 2004-07-09 16:25:42 vruppert Exp $
+// $Id: pci.h,v 1.20 2004-07-11 20:38:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,6 +67,13 @@ public:
                                         Bit8u *devfunc, const char *name,
                                         const char *descr);
   virtual bx_bool is_pci_device(const char *name);
+  virtual void pci_set_base_mem(void *this_ptr, memory_handler_t f1,
+                                memory_handler_t f2, Bit32u *addr,
+                                Bit8u *pci_conf, unsigned size);
+  virtual void pci_set_base_io(void *this_ptr, bx_read_handler_t f1,
+                               bx_write_handler_t f2, Bit32u *addr,
+                               Bit8u *pci_conf, unsigned size,
+                               const Bit8u *iomask, const char *name);
   virtual void   print_i440fx_state(void);
   virtual Bit8u rd_memType (Bit32u addr);
   virtual Bit8u wr_memType (Bit32u addr);
