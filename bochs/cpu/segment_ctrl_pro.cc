@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.31 2005-02-24 19:50:36 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.32 2005-03-12 18:38:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -314,8 +314,19 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   }
 
   /* real mode */
-  /* seg->limit = ; ??? different behaviours depening on seg reg. */
-  /* something about honoring previous values */
+
+  /* www.x86.org:
+    According  to  Intel, each time any segment register is loaded in real
+    mode,  the  base  address is calculated as 16 times the segment value,
+    while  the  access  rights  and size limit attributes are given fixed,
+    "real-mode  compatible" values. This is not true. In fact, only the CS
+    descriptor  caches  for  the  286,  386, and 486 get loaded with fixed
+    values  each  time  the segment register is loaded. Loading CS, or any
+    other segment register in real mode, on later Intel processors doesn't
+    change  the  access rights or the segment size limit attributes stored
+    in  the  descriptor  cache  registers.  For these segments, the access
+    rights and segment size limit attributes from any previous setting are
+    honored. */
 
   /* ??? */
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
