@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.14 2001-11-13 00:01:57 bdenney Exp $
+$Id: user.dbk,v 1.15 2001-11-13 07:00:09 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -99,7 +99,8 @@ operating system has not been written.
 <!-- really more like Background or Bochs History, but maybe it doesn't need its own section unless it gets to 3 paras or so  -->
 
 Bochs was written by Kevin Lawton starting in 1994.  It began as a 
-commercial product, which ...&NEEDHELP; <footnote>
+commercial product, which you could buy with source code for $25...
+&NEEDHELP; <footnote>
 <para>
 We need a Bochs historian to help out here.  For background, it would be
 interesting to know how much Bochs used to cost and what it was used for.  I
@@ -121,17 +122,29 @@ jobs."
 The last version of Bochs that he released was 3/25/2000, three days after the
 Mandrake press release.
 -->
-In March 2001, Kevin helped a few developers to move all Bochs activities from bochs.com to a new site at bochs.sourceforge.net.  Since then the Bochs Project has settled into its new home, and around release times has even hit #1 most active project of the week at Source Forge.  </para> </section>  <!-- end of Introduction:What is Bochs? section --> <section><title>Who uses Bochs?</title> <para> It is hard to estimate how many people have tried Bochs or use it on a regular basis, but a few statistics give an indication.  The bochs-developers mailing list, which is the primary source of news on bugs and releases, has over 300 subscribers.  The latest version has been downloaded over 40,000 times from SourceForge, not counting mirrors or CVS users.
+In March 2001, Kevin helped a few developers to move all Bochs activities from
+bochs.com to a new site at bochs.sourceforge.net.  Since then the Bochs Project
+has settled into its new home, and around release times has even hit #1 most
+active project of the week at Source Forge.  
+</para> </section>  <!-- end of Introduction:What is Bochs? section -->
+
+<section><title>Who uses Bochs?</title>
+<para> It is hard to estimate how many people have tried Bochs or use it on a
+regular basis, but a few statistics give an indication.  The <link
+linkend="mailinglist">bochs-developers mailing list</link>, which is the
+primary source of news on bugs and releases, has over 300 subscribers.  The
+latest version has been downloaded over 40,000 times from SourceForge, not
+counting mirrors or CVS users.
 </para>
 
 <para>
-Bochs has many different uses, and different people use it for different 
+Bochs has many possible uses, and different people use it for different 
 things.  Many people use it to run applications in a second operating system 
 without needing two different computers or dual-booting.  Running 
-Windows software on a non-x86 workstation or on an x86 Linux box are common
+Windows software on a non-x86 workstation or on an x86 UNIX box are common
 uses.  Also, because every hardware instruction and every line of simulator
 code is accessible, Bochs is used extensively for debugging new operating
-systems and profiling.  If you were writing boot code for your home-brewed
+systems.  If you were writing boot code for your home-brewed
 x86 operating system and it didn't work right, booting it in Bochs could
 give you great visibility into what is really going on.  The Bochs 
 debugger lets you simulate quickly or slowly, pausing whenever you want
@@ -142,10 +155,10 @@ Bochs to measure often pieces of the code were executed.
 
 <para>
 Bochs has been used as a teaching tool in Operating Systems classes, in which
-students used it to learn how the PC hardware works.  As a final project the
-students had to add a new peripheral device, so they had to learn all about I/O
-ports, interrupts, and device drivers.  Also, it has been used as a 
-reference model to test x86-compatible hardware.
+students used and modified it to learn how the PC hardware works.  As a final
+project the students had to add a new peripheral device, so they had to learn
+all about I/O ports, interrupts, and device drivers.  Also, it has been used as
+a reference model to test x86-compatible hardware.  
 </para>
 
 <para>
@@ -322,7 +335,7 @@ top of every source code file in the Bochs distribution:
      </para></question>
      <answer><para>
      Yes.  For instructions on joining, refer to 
-     <xref linkend="ch07" />
+     <xref linkend="mailinglist" />
      </para></answer>
   </qandaentry>
 
@@ -451,59 +464,66 @@ Example: networking on *bsd, linux only.  cdrom on ....
    <tbody>
    <row>
       <entry>Unix/X11</entry>
-      <entry>This was Kevin's main development platform.</entry>
-   </row>
-   <row>
-      <entry>BeOS</entry>
-      <entry>Kevin Lawton also did this port, originally to R3/PPC using CodeWarrior.
-      It now works on R4/x86 with egcs. Simon Huet picked up
-      maintaining/reworking the BeOS GUI port. Check out Simon's 
-      BeBochs page.
-      </entry>
+      <entry>X windows has always been well supported because it was
+      Kevin's Lawton's main development platform.  Bryce Denney maintains
+      the Unix/X11 platform now.  Most features and fixes (not all) are
+      tried first in Unix and then ported to the others.
    </row>
 
    <row>
       <entry>Win32</entry>
-      <entry> This port was done by David Ross. 
-      You can compile with either the MS Visual C++ 5.0 or 6.0, or
-      GNU-Win32 environments such as cygwin. 
-      See <xref linkend="compiling-win32">.
-      </entry> </row>
+      <entry>This port was done by David Ross and is now maintained
+      by Don Becker.  You can compile with MS Visual C++ 5.0 or 6.0,
+      or cygwin<footnote>
+<para>Cygwin is a free Unix-like environment for Windows written by
+Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed it--<ulink url="http://www.cygwin.com">www.cygwin.com</ulink></para>
+</footnote>.
+      See <xref linkend="compiling-win32"> for compile
+      instructions.  </entry> 
+    </row>
+
+   <row>
+      <entry>BeOS</entry>
+      <entry>Kevin Lawton did this port, originally to R3/PPC using
+      CodeWarrior.  It now works on R4/x86 with egcs. Simon Huet picked up
+      maintaining/reworking the BeOS GUI port.  In September 2001, Bernd Korz
+      of Inside Beos magazine 
+      (<ulink url="http://www.insidebeos.com">www.insidebeos.com</ulink>), took
+      over the BeOS port.  Uses the same compile and install process as Unix.
+      </entry>
+   </row>
+
+   <row>
+     <entry>MacOS X</entry>
+     <entry>
+     Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
+     He has been too busy to maintain it, so if you are interested in working
+     on it, contact the &devlist;.
+     </entry>
+   </row>
+   <row>
+      <entry>Macintosh</entry>
+      <entry>David Batterham drbatter@socs.uts.edu.au or drbatter@yahoo.com
+      ported bochs to the Mac.  He compiled with CodeWarrior Pro R1 (CW12).  To
+      compile, you have to build headers and Makefiles on a Unix machine using
+      "configure --with-macos".  Check out David's MacBochs website.  David has
+      not had time to maintain the page or the Mac port since early 2000. If
+      you have Mac development tools and want to contribute, contact the
+      &devlist;. </entry>
+   </row>
 
    <row>
       <entry>OS/2</entry>
       <entry> Nick Behnken used PE2LX to translate David Ross's Win32
-      port to an OS/2 program. Check out Nick Behnken's page. 
-      </entry>
-   </row>
-   <row>
-      <entry>OS/2</entry>
-      <entry> Craig Ballantyne ported bochs to OS/2.
-      Check out the guiSoft Corp.  home page.
+      port to an OS/2 program.  This hasn't been updated in more than
+      a year, and Nick Behnken's page seems to be inactive.
+      Also, Craig Ballantyne ported bochs to OS/2, but his web page has
+      disappeared and his port has not been updated since March 2000.
+      His latest sources are at <ulink url="http://www.os2world.com/emulator/computer.html">http://www.os2world.com/emulator/computer.html</ulink>.
+      If you want to bring the OS/2 port up to date, contact the &devlist;.
       </entry>
    </row>
 
-   <row>
-      <entry>Macintosh</entry>
-      <entry>David Batterham drbatter@socs.uts.edu.au or
-      drbatter@yahoo.com ported bochs to the Mac. His changes are
-      integrated, though it is work in progress. 
-      He compiled with CodeWarrior
-      Pro R1 (CW12), and included a project file 'Bochs.proj'
-      in the top-level
-      directory of source code, which you may need to modify. I
-      added a '--with-macos' option to configure, so you can use a Unix
-      machine to generate header files for the Mac. Check out David's
-      MacBochs website. David has not had time to maintain the page or the
-      Mac port since early 2000. If you have Mac 
-      development tools and want
-      to contribute, contact the developers list. </entry>
-   </row>
-   <row>
-      <entry>FreeDOS for Bochs</entry>
-      <entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
-      For more info about FreeDOS, see FreeDOS Web page</entry>
-   </row>
    </tbody>
    </tgroup>
 
@@ -683,7 +703,7 @@ below.
     <thead>
       <row>
 	<entry>Letter</entry>
-	<entry>Mnemonic</entry>
+	<entry>Meaning</entry>
 	<entry>Description</entry>
       </row>
     </thead>
@@ -1172,7 +1192,7 @@ How to build an RPM in Linux
     </section>  <!-- end of Compiling:win32 -->
 
 <section><title>Instructions for cygwin?</title>
-   <para>I have no idea.</para>
+   <para>&FIXME;</para>
 </section>  <!-- end of Compiling:Instructions for cygwin? -->
 
 <section id="config-opts"><title>Configure Options</title>
@@ -1985,7 +2005,7 @@ and 0 turns it off.
     </para>
 </chapter>
 
-<chapter id="ch07">
+<chapter id="mailinglist">
 <title>Developer's Mailing List</title>
     <para>
         To provide a forum for the development of the Bochs x86 PC emulation software, and to keep interested parties apprised of developments, there is a developer's email list available to anyone willing to join. After joining, you may email to bochs-developers@lists.sourceforge.net. Please note that your email will be sent to EVERYONE on the list.
