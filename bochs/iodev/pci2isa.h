@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.7 2004-07-05 18:42:48 vruppert Exp $
+// $Id: pci2isa.h,v 1.8 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,6 +52,7 @@ private:
     Bit8u elcr2;
     Bit8u irq_registry[16];
     Bit32u irq_level[16];
+    Bit8u pci_reset;
     } s;
 
   static void pci_register_irq(unsigned pirq, unsigned irq);

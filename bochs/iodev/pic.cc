@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.34 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pic.cc,v 1.35 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,6 +102,7 @@ bx_pic_c::init(void)
   BX_PIC_THIS s.master_pic.lowest_priority = 7;
   BX_PIC_THIS s.master_pic.polled = 0;
   BX_PIC_THIS s.master_pic.rotate_on_autoeoi = 0;
+  BX_PIC_THIS s.master_pic.edge_level = 0;
 
   BX_PIC_THIS s.slave_pic.single_PIC = 0;
   BX_PIC_THIS s.slave_pic.interrupt_offset = 0x70; /* IRQ8 = INT 0x70 */
@@ -123,6 +124,7 @@ bx_pic_c::init(void)
   BX_PIC_THIS s.slave_pic.lowest_priority = 7;
   BX_PIC_THIS s.slave_pic.polled = 0;
   BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = 0;
+  BX_PIC_THIS s.slave_pic.edge_level = 0;
 
   for (unsigned i=0; i<8; i++) { /* all IRQ lines low */
     BX_PIC_THIS s.master_pic.IRQ_line[i] = 0;
@@ -614,7 +616,7 @@ bx_pic_c::lower_irq(unsigned irq_no)
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
   if (DEV_ioapic_present())
-    bx_devices.ioapic->untrigger_irq (irq_no, -1);
+    bx_devices.ioapic->lower_irq (irq_no, (unsigned)-1);
 #endif
 
   if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
@@ -642,7 +644,7 @@ bx_pic_c::raise_irq(unsigned irq_no)
 {
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
-  bx_devices.ioapic->trigger_irq (irq_no, -1);
+  bx_devices.ioapic->raise_irq (irq_no, (unsigned)-1);
 #endif
 
   if ((irq_no <= 7) && (!BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
@@ -656,6 +658,16 @@ bx_pic_c::raise_irq(unsigned irq_no)
     BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 1;
     BX_PIC_THIS s.slave_pic.irr |= (1 << (irq_no - 8));
     service_slave_pic();
+  }
+}
+
+  void
+bx_pic_c::set_mode(bx_bool ma_sl, Bit8u mode)
+{
+  if (ma_sl) {
+    BX_PIC_THIS s.master_pic.edge_level = mode;
+  } else {
+    BX_PIC_THIS s.slave_pic.edge_level = mode;
   }
 }
 

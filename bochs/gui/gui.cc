@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.78 2004-06-19 15:20:09 sshwarts Exp $
+// $Id: gui.cc,v 1.79 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -285,9 +285,7 @@ bx_gui_c::cdromD_handler(void)
 bx_gui_c::reset_handler(void)
 {
   BX_INFO(( "system RESET callback." ));
-  bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
-  for (int i=0; i<BX_SMP_PROCESSORS; i++)
-      BX_CPU(i)->reset(BX_RESET_HARDWARE);
+  bx_pc_system.Reset( BX_RESET_HARDWARE );
 }
 
   void

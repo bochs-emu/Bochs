@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.87 2004-06-21 10:39:24 cbothamy Exp $
+// $Id: keyboard.cc,v 1.88 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.87 2004-06-21 10:39:24 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.88 2004-07-06 19:59:10 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -647,7 +647,6 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
 
         case 0xfe: // System (cpu?) Reset, transition to real mode
           BX_INFO(("io write 0x64: command 0xfe: reset cpu"));
-          //bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
           bx_pc_system.Reset( BX_RESET_SOFTWARE );
           break;
 

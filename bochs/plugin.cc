@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.11 2004-06-19 15:20:06 sshwarts Exp $
+// $Id: plugin.cc,v 1.12 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -32,8 +32,6 @@
 
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
-
-void  (* pluginResetSignal)(unsigned sig) = 0;
 
 void (*pluginSetHRQ)(unsigned val) = 0;
 void (*pluginSetHRQHackCallback)( void (*callback)(void) ) = 0;
@@ -117,12 +115,6 @@ builtinSetHRQHackCallback( void (*callback)(void) )
 #else
   pluginHRQHackCallback = callback;
 #endif
-}
-
-  static void
-builtinResetSignal( unsigned )
-{
-  pluginlog->panic("builtinResetSignal called, no plugin loaded?");
 }
 
   static int
@@ -462,8 +454,6 @@ plugin_startup(void)
 {
   pluginRegisterIRQ = builtinRegisterIRQ;
   pluginUnregisterIRQ = builtinUnregisterIRQ;
-
-  pluginResetSignal = builtinResetSignal;
 
   pluginSetHRQHackCallback = builtinSetHRQHackCallback;
   pluginSetHRQ = builtinSetHRQ;

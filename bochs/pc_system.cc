@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.38 2004-06-21 10:39:23 cbothamy Exp $
+// $Id: pc_system.cc,v 1.39 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -205,19 +205,6 @@ bx_pc_system_c::get_enable_a20(void)
   BX_INFO(("get_enable_a20: ignoring: SUPPORT_A20 = 0"));
   return(1);
 #endif  // #if BX_SUPPORT_A20
-}
-
-  int
-bx_pc_system_c::ResetSignal( PCS_OP operation )
-{
-  UNUSED( operation );
-  // Reset the processor.
-
-  BX_ERROR(( "bx_pc_system_c::ResetSignal() called" ));
-  for (int i=0; i<BX_SMP_PROCESSORS; i++)
-    BX_CPU(i)->reset(BX_RESET_SOFTWARE);
-  DEV_reset_devices(BX_RESET_SOFTWARE);
-  return(0);
 }
 
   int

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.46 2004-07-04 17:07:48 vruppert Exp $
+// $Id: iodev.h,v 1.47 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -214,6 +214,9 @@ class BOCHSAPI bx_pic_stub_c : public bx_devmodel_c {
   }
   virtual void lower_irq(unsigned irq_no) {
     STUBFUNC(pic, lower_irq); 
+  }
+  virtual void set_mode(bx_bool ma_sl, Bit8u mode) {
+    STUBFUNC(pic, set_mode); 
   }
   virtual Bit8u IAC(void) {
     STUBFUNC(pic, IAC); return 0;

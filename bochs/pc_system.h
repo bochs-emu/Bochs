@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.28 2004-06-21 10:39:23 cbothamy Exp $
+// $Id: pc_system.h,v 1.29 2004-07-06 19:59:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -189,7 +189,8 @@ public:
 
   int IntEnabled( void );
   int InterruptSignal( PCS_OP operation );
-  int ResetSignal( PCS_OP operation );
+  // Cpu and System Reset
+  int Reset( unsigned type );
   Bit8u  IAC(void);
 
   bx_pc_system_c(void);
@@ -199,7 +200,4 @@ public:
   void    set_enable_a20(Bit8u value) BX_CPP_AttrRegparmN(1);
   bx_bool get_enable_a20(void);
   void    exit(void);
-
-  // Cpu and System Reset
-  int Reset( unsigned type );
   };
