@@ -48,7 +48,7 @@ LOCAL_CXXFLAGS =
 
 
 .@CPP_SUFFIX@.o:
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 bios: rombios.bin

@@ -25,6 +25,8 @@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
 
 SHELL = /bin/sh
 
@@ -49,12 +51,12 @@ BX_OBJS = \
 
 BX_INCLUDES = disasm.h
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
 
 all: libdisasm.a
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 

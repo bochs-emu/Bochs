@@ -25,6 +25,8 @@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
 
 SHELL = /bin/sh
 
@@ -41,7 +43,7 @@ RANLIB = @RANLIB@
 
 
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
 
 APIC_OBJS = @APIC_OBJS@
 EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
@@ -120,7 +122,7 @@ BX_INCLUDES = ../bochs.h ../config.h
 all: libcpu.a
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 libcpu.a: $(OBJS) @OBJS64@

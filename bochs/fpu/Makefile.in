@@ -24,6 +24,8 @@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
 
 SHELL = /bin/sh
 
@@ -48,7 +50,7 @@ PARANOID = -DPARANOID
 L_TARGET = libfpu.a
 
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. -I./stubs -I$(srcdir)/./stubs
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. -I./stubs -I$(srcdir)/./stubs 
 
 FPU_FLAGS = -DUSE_WITH_CPU_SIM $(PARANOID) $(DEBUG) -DNO_ASSEMBLER
 FPU_GLUE_OBJ = wmFPUemu_glue.o
@@ -80,7 +82,7 @@ BX_INCLUDES = ../bochs.h ../config.h
 all: libfpu.a
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(CXXFLAGS) $(FPU_FLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) $(FPU_FLAGS) @CXXFP@$< @OFP@$@
 
 .S.o:
 	$(CC) -I./stubs -D__ASSEMBLY__ $(PARANOID) -c $<

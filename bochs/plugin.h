@@ -20,6 +20,8 @@
 #ifndef __PLUGIN_H
 #define __PLUGIN_H
 
+#include <ltdl.h>
+
 class bx_devices_c;
 extern logfunctions  *pluginlog;
 
@@ -202,7 +204,7 @@ typedef void   (*ioWriteHandler_t)(void *, Bit32u, Bit32u, unsigned);
 typedef struct _plugin_t
 {
     int  initialized;
-    void *handle;
+    lt_dlhandle handle;
     int  argc;
     char *name, *args, *argv[MAX_ARGC];
     int  (*plugin_init)(struct _plugin_t *plugin, int argc, char *argv[]);

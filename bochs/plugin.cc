@@ -153,7 +153,7 @@ builtinCMOSChecksum(void)
   static time_t
 builtinGetCMOSTimeval(void)
 {
-  pluginlog->panic("builtinbuiltinGetCMOSTimeval called, no CMOS plugin loaded?");
+  pluginlog->panic("builtinGetCMOSTimeval called, no CMOS plugin loaded?");
   return 0;
 }
 
@@ -425,7 +425,7 @@ plugin_init_all (void)
 {
     plugin_t *plugin;
 
-    pluginlog->info("Initializing plugins", plugin->name);
+    pluginlog->info("Initializing plugins");
 
     for (plugin = plugins; plugin; plugin = plugin->next)
     {
@@ -505,13 +505,12 @@ plugin_init_one(plugin_t *plugin)
   plugin_t *
 plugin_unload(plugin_t *plugin)
 {
-    int i;
     plugin_t *dead_plug;
 
     if (plugin->initialized)
         plugin->plugin_fini ();
 
-    dlclose (plugin->handle);
+    lt_dlclose (plugin->handle);
     free (plugin->name);
     free (plugin->args);
 
@@ -533,12 +532,10 @@ plugin_fini_all (void)
     return;
 }
 
-
   void
 plugin_load (char *name, char *args)
 {
     plugin_t *plugin;
-    const char *plug_err;
 
     plugin = (plugin_t *)malloc (sizeof (plugin_t));
     if (!plugin)
@@ -550,27 +547,26 @@ plugin_load (char *name, char *args)
     plugin->args = args;
     plugin->initialized = 0;
 
-    plugin->handle = dlopen (name, RTLD_LAZY);
+    plugin->handle = lt_dlopen (name);
+    fprintf (stderr, "lt_dlhandle is %p\n", plugin->handle);
     if (!plugin->handle)
     {
-      BX_PANIC (("dlopen failed: %s", dlerror ()));
+      BX_PANIC (("dlopen failed for module '%s': %s", name, lt_dlerror ()));
       free (plugin);
       return;
     }
 
     plugin->plugin_init =  
       (int  (*)(struct _plugin_t *, int, char *[])) /* monster typecast */
-      dlsym (plugin->handle, PLUGIN_INIT);
-    if ((plug_err = dlerror ()) != NULL)
-    {
-        pluginlog->panic("could not find plugin_init: %s", plug_err);
+      lt_dlsym (plugin->handle, PLUGIN_INIT);
+    if (plugin->plugin_init == NULL) {
+        pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
         plugin_abort ();
     }
 
-    plugin->plugin_fini = (void (*)(void)) dlsym (plugin->handle, PLUGIN_FINI);
-    if ((plug_err = dlerror ()) != NULL)
-    {
-        pluginlog->panic("could not find plugin_fini: %s", plug_err);
+    plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, PLUGIN_FINI);
+    if (plugin->plugin_init == NULL) {
+        pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
         plugin_abort ();
     }
 
@@ -661,6 +657,12 @@ plugin_startup(void)
 
   pluginRegisterTimer = builtinRegisterTimer;
   pluginActivateTimer = builtinActivateTimer;
+
+  int status = lt_dlinit ();
+  if (status != 0) {
+    BX_ERROR (("initialization error in ltdl library (for loading plugins)"));
+    BX_PANIC (("error message was: %s", lt_dlerror ()));
+  }
 }
 
 
@@ -771,17 +773,16 @@ Boolean pluginDevicePresent(char *name)
 /************************************************************************/
 
 #define PLUGIN_PATH ""
-int bx_load_plugin (const char *name)
+int bx_load_plugin (const char *format, const char *name)
 {
-  char plugin_filename[BX_PATHNAME_LEN];
-
-  sprintf(plugin_filename,"%s%s",PLUGIN_PATH,name);
-
+  char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
+  sprintf (buf, format, name);
+  sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
   plugin_load (plugin_filename, "");
-  void *handle = dlopen (plugin_filename, RTLD_LAZY);
+  lt_dlhandle handle = lt_dlopen (plugin_filename);
   if (!handle) {
     pluginlog->error("could not open plugin %s", plugin_filename);
-    pluginlog->panic("dlopen error: %s", dlerror ());
+    pluginlog->panic("dlopen error: %s", lt_dlerror ());
   }
   pluginlog->info("loaded plugin %s",plugin_filename);
   return 0;
@@ -801,17 +802,18 @@ int bx_load_plugins (void)
   plugin_startup();
 
 #if BX_PLUGINS
-  bx_load_plugin("libunmapped.so");
-  bx_load_plugin("libbiosdev.so");
-  bx_load_plugin("libcmos.so");
-  bx_load_plugin("libdma.so");
-  bx_load_plugin("libpic.so");
-  bx_load_plugin("libvga.so");
-  bx_load_plugin("libfloppy.so");
-  bx_load_plugin("libparallel.so");
-  bx_load_plugin("libserial.so");
-  bx_load_plugin("libkeyboard.so");
-  bx_load_plugin("libharddrv.so");
+  const char *format = "lib%s.la";
+  bx_load_plugin(format, "unmapped");
+  bx_load_plugin(format, "biosdev");
+  bx_load_plugin(format, "cmos");
+  bx_load_plugin(format, "dma");
+  bx_load_plugin(format, "pic");
+  bx_load_plugin(format, "vga");
+  bx_load_plugin(format, "floppy");
+  bx_load_plugin(format, "parallel");
+  bx_load_plugin(format, "serial");
+  bx_load_plugin(format, "keyboard");
+  bx_load_plugin(format, "harddrv");
 
 
   // quick and dirty gui plugin selection
@@ -835,9 +837,7 @@ int bx_load_plugins (void)
   do {
     fprintf (stderr, "--> ");
   } while (scanf ("%d", &which) != 1 || !(which>=0 && which<imax));
-  char soname[64];
-  sprintf (soname, "lib%s.so", gui_names[which]);
-  bx_load_plugin (soname);
+  bx_load_plugin (format, gui_names[which]);
 
   if (bx_gui == NULL) {
     BX_PANIC (("No gui has been loaded.  It is not safe to continue. Exiting."));

@@ -26,6 +26,8 @@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
 
 SHELL = /bin/sh
 
@@ -62,16 +64,16 @@ BX_PARSER_OBJS = \
 
 BX_INCLUDES = debug.h
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/.
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. 
 
 all: libdebug.a
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 .c.o:
-	$(CC) @DASH@c $(CFLAGS) $(BX_INCDIRS) @CFP@$< @OFP@$@
+	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) @CFP@$< @OFP@$@
 
 
 

@@ -2,8 +2,8 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.7 2002-10-09 06:23:07 bdenney Exp $]])
-AC_CONFIG_HEADER(config.h)
+AC_REVISION([[$Id: configure.in,v 1.147.2.8 2002-10-10 17:25:38 bdenney Exp $]])
+AC_CONFIG_HEADER(config.h ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
@@ -101,10 +101,18 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
 
-# Configure libtool, and default to shared libraries.  Libtool will only be
-# used for compiling and linking plugins.
+dnl------------ libtool configuration
+dnl Configure libtool, and default to shared libraries.  Libtool will only be
+dnl used for compiling and linking plugins.
 AC_DISABLE_STATIC
+dnl Check for dlopen support
+AC_LIBTOOL_DLOPEN
+dnl Configure libtool
 AC_PROG_LIBTOOL
+dnl Configure the ltdl library.  This must go after AC_PROG_LIBTOOL or
+dnl else it disables shared libraries somehow.  The values from this macro
+dnl are written to ltdlconf.h.
+AC_LIB_LTDL
 
 AC_PATH_XTRA
 
@@ -297,8 +305,8 @@ AC_ARG_ENABLE(plugins,
     BX_IODEV_PLUGINS_OBJ='$(BX_IODEV_OBJS_PLUGINABLE)'
     GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE)'
     GUI_PLUGINS_OBJ='$(GUI_OBJS_PLUGINABLE)'
-    EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -ldl"
-    PLUGIN_VAR='plugin.o'
+    LIBS="$LIBS $LIBADD_DL"
+    PLUGIN_VAR='plugin.o ltdl.o'
    else
     AC_MSG_RESULT(no)
     bx_plugins=0
@@ -1470,6 +1478,8 @@ if test "$with_x11" = yes; then
   fi
   AC_DEFINE(BX_WITH_X11, 1)
   SPECIFIC_GUI_OBJS='$(GUI_OBJS_X11)'
+  GUI_CFLAGS="$GUI_CFLAGS "'$(X_CFLAGS)'
+  GUI_CXXFLAGS="$GUI_CXXFLAGS "'$(X_CFLAGS)'
   GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
