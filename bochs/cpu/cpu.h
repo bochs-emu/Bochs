@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.209 2005-03-23 01:45:15 kevinlawton Exp $
+// $Id: cpu.h,v 1.210 2005-03-25 21:33:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1422,7 +1422,6 @@ public: // for now...
   BX_SMF void LEA_GdM(bxInstruction_c *);
   BX_SMF void LEA_GwM(bxInstruction_c *);
   BX_SMF void MOV_SwEw(bxInstruction_c *);
-  BX_SMF void POP_Ev(bxInstruction_c *);
 
   BX_SMF void CBW(bxInstruction_c *);
   BX_SMF void CWD(bxInstruction_c *);
@@ -2297,8 +2296,6 @@ public: // for now...
   BX_SMF void CMP_GqEq(bxInstruction_c *);
   BX_SMF void CMP_RAXId(bxInstruction_c *);
 
-  BX_SMF void PUSHAD64(bxInstruction_c *);
-  BX_SMF void POPAD64(bxInstruction_c *);
   BX_SMF void PUSH64_Id(bxInstruction_c *);
 
   BX_SMF void TEST_RAXId(bxInstruction_c *);
@@ -2332,7 +2329,6 @@ public: // for now...
 
   BX_SMF void IRET64(bxInstruction_c *);
 
-  BX_SMF void CALL64_Ap(bxInstruction_c *);
   BX_SMF void CALL_Aq(bxInstruction_c *);
   BX_SMF void JMP_Jq(bxInstruction_c *);
 
@@ -2340,8 +2336,6 @@ public: // for now...
   BX_SMF void MOV_DqRq(bxInstruction_c *);
   BX_SMF void MOV_RqCq(bxInstruction_c *);
   BX_SMF void MOV_RqDq(bxInstruction_c *);
-  BX_SMF void MOV_TqRq(bxInstruction_c *);
-  BX_SMF void MOV_RqTq(bxInstruction_c *);
 
   BX_SMF void JCC_Jq(bxInstruction_c *);
 
@@ -2416,24 +2410,15 @@ public: // for now...
   BX_SMF void CMOV_GqEq(bxInstruction_c *);
 
   BX_SMF void MOV_RRXIq(bxInstruction_c *);
-  BX_SMF void INC_RRX(bxInstruction_c *);
-  BX_SMF void DEC_RRX(bxInstruction_c *);
   BX_SMF void PUSH_RRX(bxInstruction_c *);
   BX_SMF void POP_RRX(bxInstruction_c *);
   BX_SMF void POP_Eq(bxInstruction_c *);
   BX_SMF void XCHG_RRXRAX(bxInstruction_c *);
 
-  BX_SMF void PUSH64_CS(bxInstruction_c *);
-  BX_SMF void PUSH64_DS(bxInstruction_c *);
-  BX_SMF void POP64_DS(bxInstruction_c *);
-  BX_SMF void PUSH64_ES(bxInstruction_c *);
-  BX_SMF void POP64_ES(bxInstruction_c *);
   BX_SMF void PUSH64_FS(bxInstruction_c *);
   BX_SMF void POP64_FS(bxInstruction_c *);
   BX_SMF void PUSH64_GS(bxInstruction_c *);
   BX_SMF void POP64_GS(bxInstruction_c *);
-  BX_SMF void PUSH64_SS(bxInstruction_c *);
-  BX_SMF void POP64_SS(bxInstruction_c *);
 
   BX_SMF void SYSCALL(bxInstruction_c *i);
   BX_SMF void SYSRET(bxInstruction_c *i);
