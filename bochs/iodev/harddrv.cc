@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.78 2002-10-05 16:49:03 vruppert Exp $
+// $Id: harddrv.cc,v 1.79 2002-10-05 19:40:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.78 2002-10-05 16:49:03 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.79 2002-10-05 19:40:51 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -430,6 +430,10 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   void
 bx_hard_drive_c::reset(unsigned type)
 {
+  for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+    if (BX_HD_THIS channels[channel].irq)
+      BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
+  }
 }
 
 
@@ -1739,6 +1743,8 @@ if ( quantumsMax == 0)
 	  // are ignored if no secondary device is present
       if ((BX_SLAVE_SELECTED(channel)) && (!BX_SLAVE_IS_PRESENT(channel)))
 	    break;
+      // Writes to the command register clear the IRQ
+      BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
 
       if (BX_SELECTED_CONTROLLER(channel).status.busy)
         BX_PANIC(("hard disk: command sent, controller BUSY"));
@@ -2242,6 +2248,7 @@ if ( quantumsMax == 0)
 		      BX_CONTROLLER(channel,id).lba_mode          = 0;
 
 		      BX_CONTROLLER(channel,id).control.disable_irq = 0;
+		      BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
 		}
 	  } else if (BX_SELECTED_CONTROLLER(channel).reset_in_progress &&
 		     !BX_SELECTED_CONTROLLER(channel).control.reset) {
