@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.17 2002-09-13 04:33:42 kevinlawton Exp $
+// $Id: apic.cc,v 1.18 2002-09-25 01:50:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -325,7 +325,7 @@ bx_local_apic_c::~bx_local_apic_c(void)
 void bx_local_apic_c::set_id (Bit8u newid) {
   bx_generic_apic_c::set_id (newid);
   sprintf (cpu->name, "CPU apicid=%02x", (Bit32u)id);
-  if (id >= 0 && id <= 15) {
+  if (id <= 15) {
     char buffer[16];
     sprintf (buffer, "APIC%x", id);
     put(buffer);
