@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.27 2002-10-24 03:50:35 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.28 2002-10-24 07:36:39 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,10 @@
 /* maximum number of emulated devices allowed.  floppy, mda, etc...
    you can increase this to anything below 256 since an 8-bit handle
    is used for each device */
-#define BX_MAX_IO_DEVICES 20
+#define BX_MAX_IO_DEVICES 21
+
+/* the last device in the array is the "default" I/O device */
+#define BX_DEFAULT_IO_DEVICE   (BX_MAX_IO_DEVICES-1)
 
 /* number of IRQ lines supported.  In an ISA PC there are two
    PIC chips cascaded together.  each has 8 IRQ lines, so there
@@ -317,7 +320,7 @@ private:
     bx_read_handler_t funct;
     void             *this_ptr;
     const char       *handler_name;  // name of device
-    } io_read_handler[BX_MAX_IO_DEVICES + 1];
+    } io_read_handler[BX_MAX_IO_DEVICES];
   unsigned              num_read_handles;
 
   Bit8u                 write_handler_id[0x10000]; // 64K
@@ -325,7 +328,7 @@ private:
     bx_write_handler_t funct;
     void              *this_ptr;
     const char        *handler_name;  // name of device
-    } io_write_handler[BX_MAX_IO_DEVICES + 1];
+    } io_write_handler[BX_MAX_IO_DEVICES];
   unsigned              num_write_handles;
 
   signed int            default_read_handler_id;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34.2.26 2002-10-24 03:08:13 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.27 2002-10-24 07:36:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.26 2002-10-24 03:08:13 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.27 2002-10-24 07:36:38 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -98,14 +98,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
   default_write_handler_id = -1;
 
   /* set unused elements to appropriate values */
-  for (i=0; i < BX_MAX_IO_DEVICES + 1; i++) {
+  for (i=0; i < BX_MAX_IO_DEVICES; i++) {
     io_read_handler[i].funct  = NULL;
     io_write_handler[i].funct = NULL;
     }
 
+  /* set handlers to the default one */
   for (i=0; i < 0x10000; i++) {
-    read_handler_id[i] = BX_MAX_IO_DEVICES;  // not assigned
-    write_handler_id[i] = BX_MAX_IO_DEVICES;  // not assigned
+    read_handler_id[i] = BX_DEFAULT_IO_DEVICE; 
+    write_handler_id[i] = BX_DEFAULT_IO_DEVICE;
     }
 
   for (i=0; i < BX_MAX_IRQS; i++) {
@@ -433,7 +434,7 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
 
   if (handle >= num_read_handles) {
     /* no existing handle found, create new one */
-    if (num_read_handles >= BX_MAX_IO_DEVICES) {
+    if (num_read_handles >= BX_DEFAULT_IO_DEVICE) {
       BX_INFO(("too many IO devices installed."));
       BX_PANIC(("  try increasing BX_MAX_IO_DEVICES"));
       }
@@ -444,7 +445,7 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
     }
 
   /* change table to reflect new handler id for that address */
-  if (read_handler_id[addr] < BX_MAX_IO_DEVICES) {
+  if (read_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
     // another handler is already registered for that address
 
     // if it is not the Unmapped port handler, bail
@@ -477,7 +478,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
 
   if (handle >= num_write_handles) {
     /* no existing handle found, create new one */
-    if (num_write_handles >= BX_MAX_IO_DEVICES) {
+    if (num_write_handles >= BX_DEFAULT_IO_DEVICE) {
       BX_INFO(("too many IO devices installed."));
       BX_PANIC(("  try increasing BX_MAX_IO_DEVICES"));
       }
@@ -488,7 +489,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
     }
 
   /* change table to reflect new handler id for that address */
-  if (write_handler_id[addr] < BX_MAX_IO_DEVICES) {
+  if (write_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
     // another handler is already registered for that address
  
     // if it is not the Unmapped port handler, bail
@@ -507,7 +508,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
 
 // Registration of default handlers (mainly be the unmapped device)
 // The trick here is to define a handler for the max index, so
-// unregisterd io address will get handled ny the default function
+// unregisterd io address will get handled by the default function
 // This will be helpful when we want to unregister io handlers
 
   Boolean
@@ -516,8 +517,8 @@ bx_devices_c::register_default_io_read_handler( void *this_ptr, bx_read_handler_
 {
   unsigned handle;
 
-  /* handle is fixed to the MAX */
-  handle = BX_MAX_IO_DEVICES;
+  /* handle is fixed to the default I/O device */
+  handle = BX_DEFAULT_IO_DEVICE;
 
   if (io_read_handler[handle].funct != NULL) {
     BX_INFO(("Default io read handler already registered '%s'",io_read_handler[handle].handler_name));
@@ -540,7 +541,7 @@ bx_devices_c::register_default_io_write_handler( void *this_ptr, bx_write_handle
   unsigned handle;
 
   /* handle is fixed to the MAX */
-  handle = BX_MAX_IO_DEVICES;
+  handle = BX_DEFAULT_IO_DEVICE;
 
   if (io_write_handler[handle].funct != NULL) {
     BX_INFO(("Default io write handler already registered '%s'",io_write_handler[handle].handler_name));
