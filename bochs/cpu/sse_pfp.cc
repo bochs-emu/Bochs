@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002 Stanislav Shwartsman
+//   Copyright (c) 2003 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman <gate@fidonet.org.il>
 //
 //  This library is free software; you can redistribute it and/or
@@ -22,10 +22,9 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#include "softfloat.h"
-
-
 #if BX_SUPPORT_SSE
+
+#include "softfloat.h"
 
 void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
 {
