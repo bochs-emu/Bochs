@@ -4317,7 +4317,7 @@ EOF
       CDROM_OBJS="cdrom_amigaos.o"
     elif test "$with_beos" = yes; then
       # use the beos cdrom file instead
-      CDROM_OBJS="cdrom_beos.o"
+      CDROM_OBJS="$CDROM_OBJS cdrom_beos.o"
     fi
     cat >> confdefs.h <<\EOF
 #define BX_SUPPORT_CDROM 1
