@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.21 2002-01-30 18:33:41 vruppert Exp $
+// $Id: pic.cc,v 1.22 2002-02-11 08:50:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -572,8 +572,9 @@ bx_pic_c::raise_irq(unsigned irq_no)
   }
 }
 
-// old IRQ handling routines (unused)
+// old IRQ handling routines (disabled)
 
+#if 0
   void
 bx_pic_c::trigger_irq(unsigned irq_no)
 {
@@ -631,6 +632,7 @@ bx_pic_c::untrigger_irq(unsigned irq_no)
     }
   }
 }
+#endif
 
   /* */
   void
