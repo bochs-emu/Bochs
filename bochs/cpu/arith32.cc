@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.30 2002-10-25 18:26:27 sshwarts Exp $
+// $Id: arith32.cc,v 1.31 2003-04-05 12:16:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -863,7 +863,7 @@ BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
     }
 
 #else
-  BX_INFO(("CMPXCHG8B: not implemented yet"));
+  BX_INFO(("CMPXCHG8B: not implemented in CPU_LEVEL < 5"));
   UndefinedOpcode(i);
 #endif
 }
