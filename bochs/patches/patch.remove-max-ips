@@ -1,0 +1,123 @@
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.51
+diff -u -r1.51 bochs.h
+--- bochs.h	2001/10/06 22:31:31	1.51
++++ bochs.h	2001/10/07 00:57:06
+@@ -603,8 +603,6 @@
+   bx_param_num_c    *Okeyboard_serial_delay;
+   bx_param_num_c    *Ofloppy_command_delay;
+   bx_param_num_c    *Oips;
+-  bx_param_num_c    *Omax_ips;
+-  bx_param_bool_c   *Osystem_clock_sync;
+   bx_param_bool_c   *Omouse_enabled;
+   bx_param_bool_c   *Oprivate_colormap;
+ #if BX_WITH_AMIGAOS
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.71
+diff -u -r1.71 main.cc
+--- main.cc	2001/10/06 22:31:31	1.71
++++ main.cc	2001/10/07 00:57:08
+@@ -499,23 +499,10 @@
+       "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
+       1, BX_MAX_INT,
+       500000);
+-  bx_options.Omax_ips = new bx_param_num_c (BXP_MAX_IPS, 
+-      "Maximum allowed IPS",
+-      "Maximum allowed IPS, if nonzero, causes Bochs to slow down if it runs faster MAX_IPS for a short time period",
+-      0, BX_MAX_INT,
+-      0);
+   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
+       "Use a private colormap",
+       "Request that the GUI create and use it's own non-shared colormap.  This colormap will be used when in the bochs window.  If not enabled, a shared colormap scheme may be used.  Not implemented on all GUI's.",
+       0);
+-  bx_options.Osystem_clock_sync = new bx_param_bool_c (BXP_SYSTEM_CLOCK_SYNC,
+-      "Sync with system clock",
+-      "This option slows down bochs if it starts to run ahead of the system clock",
+-      0);
+-  bx_options.Osystem_clock_sync = new bx_param_bool_c (BXP_SYSTEM_CLOCK_SYNC,
+-      "Sync with system clock",
+-      "This option slows down bochs if it starts to run ahead of the system clock",
+-      0);
+ #if BX_WITH_AMIGAOS
+   bx_options.Ofullscreen = new bx_param_bool_c (BXP_FULLSCREEN,
+       "Use full screen mode",
+@@ -531,8 +518,6 @@
+     bx_options.Ovga_update_interval,
+     bx_options.Omouse_enabled,
+     bx_options.Oips,
+-    bx_options.Omax_ips,
+-    bx_options.Osystem_clock_sync,
+     bx_options.Oprivate_colormap,
+ #if BX_WITH_AMIGAOS
+     bx_options.Ofullscreen,
+@@ -1464,7 +1449,7 @@
+     if (num_params != 2) {
+       BX_PANIC(("%s: max_ips directive: wrong # args.", context));
+       }
+-    bx_options.Omax_ips->set (atol(params[1]));
++    BX_INFO(("WARNING: max_ips not implemented"));
+     }
+   else if (!strcmp(params[0], "system_clock_sync")) {
+     if (num_params != 2) {
+@@ -1474,7 +1459,7 @@
+       BX_PANIC(("%s: system_clock_sync directive malformed.", context));
+       }
+     if (params[1][8] == '0' || params[1][8] == '1')
+-      bx_options.Osystem_clock_sync->set (params[1][8] - '0');
++      BX_INFO (("WARNING: system_clock_sync not implemented"));
+     else
+       BX_PANIC(("%s: system_clock_sync directive malformed.", context));
+     }
+@@ -1892,8 +1877,6 @@
+   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
+   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
+   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
+-  fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
+-  fprintf (fp, "max_ips: %u\n", bx_options.Omax_ips->get ());
+   fprintf (fp, "system_clock_sync: enabled=%d\n", bx_options.Osystem_clock_sync->get ());
+   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
+   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
+Index: .bochsrc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/.bochsrc,v
+retrieving revision 1.21
+diff -u -r1.21 .bochsrc
+--- .bochsrc	2001/08/16 02:00:31	1.21
++++ .bochsrc	2001/10/07 00:57:08
+@@ -242,32 +242,6 @@
+ ips: 1000000
+ 
+ #=======================================================================
+-# MAX_IPS and SYSTEM_CLOCK_SYNC
+-# These two options are experimental, and may not even be implemented
+-# yet.  If MAX_IPS is set to a value other than 0, Bochs will try to
+-# slow down the simulation until the average instructions per unit time
+-# reaches MAX_IPS.  This can be used to prevent Bochs from speeding through
+-# wait intervals, which has caused problems with key autorepeats and
+-# other time sensitive tasks.  SYSTEM_CLOCK_SYNC prohibits the Bochs 
+-# simulation from running (very much) faster than the system clock, also
+-# by inserting delays occasionally.  Some examples of how ips,max_ips,
+-# and system_clock sync interact:
+-# 1. ips=500000, max_ips=0, system_clock_sync disabled
+-#    Bochs runs as fast as possible.  Timer interrupts are scheduled
+-#    as if it was running at 500000 instructions per second.  This is
+-#    the old behavior, and it's still the default.
+-# 2. ips=500000, max_ips=700000, system_clock_sync enabled.
+-#    Bochs will not run faster than system time, and if it gets behind
+-#    it will run at a maximum of 40% faster than real time until it
+-#    catches up.
+-# 3. ips=500000, max_ips=500000, system_clock_sync disabled
+-#    If Bochs gets behind, it will stay behind forever
+-#    instead of running faster to catch up with the system clock.
+-#=======================================================================
+-max_ips: 0
+-system_clock_sync: enabled=0
+-
+-#=======================================================================
+ # mouse: Not used in any of the GUI specific modules, but the option
+ #        bx_options.mouse_enabled is set to this value.  The idea,
+ #        is that the GUI code should not generate mouse events when
