@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.22 2002-09-03 08:53:41 bdenney Exp $
+// $Id: wxdialog.h,v 1.23 2002-09-03 17:48:21 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -18,6 +18,15 @@
 #define BTNLABEL_CREATE_IMG "Create Image"
 #define BTNLABEL_ADVANCED "Advanced"
 #define BTNLABEL_BROWSE "<--Browse"
+
+#if defined(WIN32)
+// On win32, apparantly the spinctrl depends on a native control which only
+// has a 16bit signed value.  If you try to set the max above 32767, it
+// overflows and does stupid things.
+#define SPINCTRL_FIX_MAX(x) ((x)>32767 ? 32767 : (x))
+#else
+#define SPINCTRL_FIX_MAX(x) x
+#endif
 
 // utility function prototype
 void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext);
@@ -246,7 +255,7 @@ public:
   void SetDriveName (wxString n);
   void SetGeom (int n, int value);
   int GetGeom (int n) { return geom[n]->GetValue (); }
-  void SetGeomRange (int n, int min, int max) { geom[n]->SetRange (min, max); }
+  void SetGeomRange (int n, int min, int max);
   float UpdateMegs ();
   void EnableChanged ();
   void SetEnable (bool val) { enable->SetValue (val); EnableChanged (); }

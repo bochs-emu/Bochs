@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.23 2002-09-03 16:02:21 bdenney Exp $
+// $Id: wxdialog.cc,v 1.24 2002-09-03 17:48:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -481,6 +481,13 @@ void HDConfigDialog::SetGeom (int n, int value) {
   geom[n]->SetValue (value); 
   printf ("now geom[%d] has value %d\n", n, geom[n]->GetValue ());
   UpdateMegs ();
+}
+
+void HDConfigDialog::SetGeomRange (int n, int min, int max)
+{
+  wxLogDebug ("Setting range of geom[%d] to min=%d, max=%d", n, min, max);
+  geom[n]->SetRange (min, SPINCTRL_FIX_MAX(max)); 
+  wxLogDebug ("now min=%d, max=%d", geom[n]->GetMin (), geom[n]->GetMax ());
 }
 
 float
