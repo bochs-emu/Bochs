@@ -253,7 +253,7 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_INFO(("BIOS message: %s", BX_UM_THIS s.bios_message));
         }
       else if ((value & 0xff) == '\n') {
-        BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i ] = 0;
+        BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i - 1 ] = 0;
         BX_UM_THIS s.bios_message_i = 0;
         BX_INFO(("BIOS message: %s", BX_UM_THIS s.bios_message));
         }
