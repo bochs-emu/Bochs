@@ -114,12 +114,12 @@ iofunctions::init(void) {
 	// number is set.
 	magic=MAGIC_LOGNUM;
 	showtick = 1;
+	n_logfn = 0;
 	init_log(stderr);
 	log = new logfunc_t(this);
 	LOG_THIS setprefix("[IO  ]");
 	LOG_THIS settype(IOLOG);
 	BX_DEBUG(("Init(log file: '%s').\n",logfn));
-	n_logfn = 0;
 }
 
 void
