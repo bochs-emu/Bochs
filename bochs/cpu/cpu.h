@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.36 2002-09-07 05:21:28 kevinlawton Exp $
+// $Id: cpu.h,v 1.37 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -167,11 +167,6 @@
 
 
 
-#define TF BX_CPU_THIS_PTR eflags.tf
-#define IF BX_CPU_THIS_PTR eflags.if_
-#define DF BX_CPU_THIS_PTR eflags.df
-
-#define IOPL BX_CPU_THIS_PTR eflags.iopl
 #ifndef CPL
 #define CPL  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
 #endif
@@ -242,39 +237,61 @@ typedef struct {
    * ==|==|=====|==|==|==|==|==|==|==|==|==|==|==|==
    *  0|NT| IOPL|OF|DF|IF|TF|SF|ZF| 0|AF| 0|PF| 1|CF
    */
+  Bit32u val32; // Raw 32-bit value in x86 bit position.  Used to store
+                //   some eflags which are not cached in separate fields.
 
-  // In order to get access to these fields from the Dynamic Translation
-  // code, using only 8bit offsets, I needed to move these fields
-  // together.
-  Bit32u  cf;
-  Bit32u  af;
-  Bit32u  zf;
-  Bit32u  sf;
-  Bit32u  of;
-
-  Boolean bit1;
-  Bit8u   pf_byte;  /* PF derived from last result byte when needed */
-  Boolean bit3;
-  Boolean bit5;
-  Boolean tf;
+  // Some cached fields.
   Boolean if_;
-  Boolean df;
-#if BX_CPU_LEVEL >= 2
-  Bit8u   iopl;
-  Boolean nt;
-#endif
-  Boolean bit15;
 #if BX_CPU_LEVEL >= 3
   Boolean rf;
   Boolean vm;
 #endif
-#if BX_CPU_LEVEL >= 4
-  Boolean ac;  // alignment check
-  // Boolean vif; // Virtual Interrupt Flag
-  // Boolean vip; // Virtual Interrupt Pending
-  Boolean id;  // late model 486 and beyond had CPUID
-#endif
   } bx_flags_reg_t;
+
+// EFlags.DF
+#define GetEFlagsDFLogical()    (BX_CPU_THIS_PTR eflags.val32 & (1<<10))
+#define ClearEFlagsDF()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<10)
+#define SetEFlagsDF()           BX_CPU_THIS_PTR eflags.val32 |= (1<<10)
+
+
+// EFlags.TF
+#define GetEFlagsTFLogical()    (BX_CPU_THIS_PTR eflags.val32 & (1<<8))
+#define ClearEFlagsTF()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<8)
+#define SetEFlagsTF()           BX_CPU_THIS_PTR eflags.val32 |= (1<<8)
+
+// EFlags.IF
+#define GetEFlagsIFLogical()    (BX_CPU_THIS_PTR eflags.if_)
+#define ClearEFlagsIF()         BX_CPU_THIS_PTR eflags.if_ = 0, \
+                                BX_CPU_THIS_PTR eflags.val32 &= ~(1<<9)
+#define SetEFlagsIF()           BX_CPU_THIS_PTR eflags.if_ = 1, \
+                                BX_CPU_THIS_PTR eflags.val32 |= (1<<9)
+
+// EFlags.RF
+#define GetEFlagsRFLogical()    (BX_CPU_THIS_PTR eflags.rf)
+#define ClearEFlagsRF()         BX_CPU_THIS_PTR eflags.rf = 0, \
+                                BX_CPU_THIS_PTR eflags.val32 &= ~(1<<16)
+#define SetEFlagsRF()           BX_CPU_THIS_PTR eflags.rf = 1, \
+                                BX_CPU_THIS_PTR eflags.val32 |= (1<<16)
+
+// EFlags.VM
+#define GetEFlagsVMLogical()    (BX_CPU_THIS_PTR eflags.vm)
+#define ClearEFlagsVM()         BX_CPU_THIS_PTR eflags.vm = 0, \
+                                BX_CPU_THIS_PTR eflags.val32 &= ~(1<<17)
+#define SetEFlagsVM()           BX_CPU_THIS_PTR eflags.vm = 1, \
+                                BX_CPU_THIS_PTR eflags.val32 |= (1<<17)
+
+// EFlags.NT
+#define GetEFlagsNTLogical()    (BX_CPU_THIS_PTR eflags.val32 & (1<<14))
+#define ClearEFlagsNT()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<14)
+#define SetEFlagsNT()           BX_CPU_THIS_PTR eflags.val32 |= (1<<14)
+
+// AC
+#define ClearEFlagsAC()         BX_CPU_THIS_PTR eflags.val32 &= ~(1<<18)
+
+// IOPL
+#define IOPL                    ((BX_CPU_THIS_PTR eflags.val32 >> 12) & 3)
+#define ClearEFlagsIOPL()       BX_CPU_THIS_PTR eflags.val32 &= ~(3<<12)
+
 
 
 #if BX_CPU_LEVEL >= 2
@@ -760,7 +777,6 @@ public: // for now...
 
   // status and control flags register set
   Bit32u   lf_flags_status;
-  Boolean  lf_pf;
   bx_flags_reg_t eflags;
 
   bx_lf_flags_entry oszapc;
@@ -1740,44 +1756,54 @@ BX_CPU_C::protected_mode(void) {
     BX_CPP_INLINE void
 BX_CPU_C::set_CF(Boolean val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xfffff0;
-    BX_CPU_THIS_PTR eflags.cf = val;
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<0);
+    BX_CPU_THIS_PTR eflags.val32 |= (!!val);
     }
 
     BX_CPP_INLINE void
 BX_CPU_C::set_AF(Boolean val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
-    BX_CPU_THIS_PTR eflags.af = val;
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<4);
+    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<4;
     }
 
     BX_CPP_INLINE void
 BX_CPU_C::set_ZF(Boolean val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
-    BX_CPU_THIS_PTR eflags.zf = val;
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<6);
+    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<6;
     }
 
     BX_CPP_INLINE void
 BX_CPU_C::set_SF(Boolean val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
-    BX_CPU_THIS_PTR eflags.sf = val;
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<7);
+    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<7;
     }
 
 
     BX_CPP_INLINE void
 BX_CPU_C::set_OF(Boolean val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
-    BX_CPU_THIS_PTR eflags.of = val;
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<11);
+    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<11;
     }
 
     BX_CPP_INLINE void
 BX_CPU_C::set_PF(Boolean val) {
     BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
-    BX_CPU_THIS_PTR lf_pf = val;
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
+    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<2;
     }
+
+extern const Boolean bx_parity_lookup[256];
 
     BX_CPP_INLINE void
 BX_CPU_C::set_PF_base(Bit8u val) {
-    BX_CPU_THIS_PTR eflags.pf_byte = val;
-    BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0xffff0f) | BX_LF_MASK_P;
+    BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
+    val = bx_parity_lookup[val]; // Always returns 0 or 1.
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
+    BX_CPU_THIS_PTR eflags.val32 |= val<<2;
     }
 
 
@@ -1858,8 +1884,8 @@ BX_CPU_C::set_PF_base(Bit8u val) {
     }
 
 #define SET_FLAGS_OxxxxC(new_of, new_cf) { \
-    BX_CPU_THIS_PTR eflags.of = (Boolean) new_of; \
-    BX_CPU_THIS_PTR eflags.cf = (Boolean) new_cf; \
+    BX_CPU_THIS_PTR eflags.val32 &= ~((1<<11) | (1<<0)); \
+    BX_CPU_THIS_PTR eflags.val32 |= ((!!new_of)<<11) | ((!!new_cf)<<0); \
     BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0; \
     /* ??? could also mark other bits undefined here */ \
     }
@@ -1869,7 +1895,6 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 
 
 
-extern const Boolean bx_parity_lookup[256];
 
 #define BX_REPE_PREFIX  10
 #define BX_REPNE_PREFIX 11

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.19 2002-09-06 16:43:18 bdenney Exp $
+// $Id: init.cc,v 1.20 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.19 2002-09-06 16:43:18 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.20 2002-09-08 04:08:14 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -266,32 +266,16 @@ BX_CPU_C::reset(unsigned source)
 
   // all status flags at known values, use BX_CPU_THIS_PTR eflags structure
   BX_CPU_THIS_PTR lf_flags_status = 0x000000;
-  BX_CPU_THIS_PTR lf_pf = 0;
 
   // status and control flags register set
-  BX_CPU_THIS_PTR set_CF(0);
-  BX_CPU_THIS_PTR eflags.bit1 = 1;
-  BX_CPU_THIS_PTR set_PF(0);
-  BX_CPU_THIS_PTR eflags.bit3 = 0;
-  BX_CPU_THIS_PTR set_AF(0);
-  BX_CPU_THIS_PTR eflags.bit5 = 0;
-  BX_CPU_THIS_PTR set_ZF(0);
-  BX_CPU_THIS_PTR set_SF(0);
-  BX_CPU_THIS_PTR eflags.tf = 0;
-  BX_CPU_THIS_PTR eflags.if_ = 0;
-  BX_CPU_THIS_PTR eflags.df = 0;
-  BX_CPU_THIS_PTR set_OF(0);
-#if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR eflags.iopl = 0;
-  BX_CPU_THIS_PTR eflags.nt = 0;
-#endif
-  BX_CPU_THIS_PTR eflags.bit15 = 0;
+  BX_CPU_THIS_PTR eflags.val32 = 0x2; // Bit1 is always set
+  ClearEFlagsIF();
 #if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR eflags.rf = 0;
-  BX_CPU_THIS_PTR eflags.vm = 0;
+  ClearEFlagsRF();
+  ClearEFlagsVM();
 #endif
 #if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR eflags.ac = 0;
+  ClearEFlagsAC();
 #endif
 
   BX_CPU_THIS_PTR inhibit_mask = 0;

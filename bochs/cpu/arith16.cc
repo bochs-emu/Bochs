@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.7 2002-09-06 21:54:56 kevinlawton Exp $
+// $Id: arith16.cc,v 1.8 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -568,31 +568,48 @@ BX_CPU_C::XADD_EwGw(BxInstruction_t *i)
   void
 BX_CPU_C::ADD_EwIw(BxInstruction_t *i)
 {
-    Bit16u op2_16, op1_16, sum_16;
+  Bit16u op2_16, op1_16, sum_16;
 
+  op2_16 = i->Iw;
 
-    op2_16 = i->Iw;
+  /* op1_16 is a register or memory reference */
+  if (i->mod == 0xc0) {
+    op1_16 = BX_READ_16BIT_REG(i->rm);
+    }
+  else {
+    /* pointer, segment address pair */
+    read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+    }
 
-    /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
-      }
-    else {
-      /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
-      }
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm volatile (
+    "addw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "memory", "cc"
+    );
+#else
+  sum_16 = op1_16 + op2_16;
+#endif
 
-    sum_16 = op1_16 + op2_16;
+  /* now write sum back to destination */
+  if (i->mod == 0xc0) {
+    BX_WRITE_16BIT_REG(i->rm, sum_16);
+    }
+  else {
+    Write_RMW_virtual_word(sum_16);
+    }
 
-    /* now write sum back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, sum_16);
-      }
-    else {
-      Write_RMW_virtual_word(sum_16);
-      }
-
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+#if (defined(__i386__) && defined(__GNUC__))
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+#endif
 }
 
   void

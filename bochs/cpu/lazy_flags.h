@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.3 2001-10-03 13:10:37 bdenney Exp $
+// $Id: lazy_flags.h,v 1.4 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -101,11 +101,9 @@
 #define BX_LF_INDEX_KNOWN   0
 #define BX_LF_INDEX_OSZAPC  1
 #define BX_LF_INDEX_OSZAP   2
-#define BX_LF_INDEX_P       3
 
 #define BX_LF_MASK_OSZAPC 0x111111
 #define BX_LF_MASK_OSZAP  0x222220
-#define BX_LF_MASK_P      0x000030
 
 
 typedef struct {

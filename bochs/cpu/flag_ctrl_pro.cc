@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: flag_ctrl_pro.cc,v 1.7 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,42 +37,45 @@
   void
 BX_CPU_C::write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF)
 {
-  BX_CPU_THIS_PTR set_CF(flags & 0x01);
-  BX_CPU_THIS_PTR set_PF((flags >> 2) & 0x01);
-  BX_CPU_THIS_PTR set_AF((flags >> 4) & 0x01);
-  BX_CPU_THIS_PTR set_ZF((flags >> 6) & 0x01);
-  BX_CPU_THIS_PTR set_SF((flags >> 7) & 0x01);
+  Bit32u changeMask; // Really should be passed in.
+
+  changeMask = 0x0dd5;
+
+#if BX_CPU_LEVEL <= 2
+  // NT = 0
+#else
+  changeMask |= (1<<14); // NT is modified as requested.
+#endif
+
+#if BX_CPU_LEVEL >= 3
+  if (change_IOPL)
+    changeMask |= (3<<12); // IOPL is modified as requested.
+#else
+  // IOPL = 0
+#endif
+  if (change_IF) {
+    changeMask |= (1<<9);
+    BX_CPU_THIS_PTR eflags.if_ = (flags >> 9) & 0x01;
+    }
+
+
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (flags & changeMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
 
 #if 0
 // +++
-if (BX_CPU_THIS_PTR eflags.tf==0 && (flags&0x0100))
+if (GetEFlagsTFLogical()==0 && (flags&0x0100))
   BX_DEBUG(( "TF 0->1" ));
-else if (BX_CPU_THIS_PTR eflags.tf && !(flags&0x0100))
+else if (GetEFlagsTFLogical() && !(flags&0x0100))
   BX_DEBUG(( "TF 1->0" ));
-else if (BX_CPU_THIS_PTR eflags.tf && (flags&0x0100))
+else if (GetEFlagsTFLogical() && (flags&0x0100))
   BX_DEBUG(( "TF 1->1" ));
 #endif
 
-  BX_CPU_THIS_PTR eflags.tf = (flags >> 8) & 0x01;
-  if (BX_CPU_THIS_PTR eflags.tf) {
-    BX_CPU_THIS_PTR async_event = 1;
+  if ( flags & (1 << 8) ) {
+    BX_CPU_THIS_PTR async_event = 1; // TF = 1
     }
-
-  if (change_IF)
-    BX_CPU_THIS_PTR eflags.if_ = (flags >> 9) & 0x01;
-
-  BX_CPU_THIS_PTR eflags.df = (flags >> 10) & 0x01;
-  BX_CPU_THIS_PTR set_OF((flags >> 11) & 0x01);
-
-
-#if BX_CPU_LEVEL == 2
-  BX_CPU_THIS_PTR eflags.iopl = 0;
-  BX_CPU_THIS_PTR eflags.nt = 0;
-#else
-  if (change_IOPL)
-    BX_CPU_THIS_PTR eflags.iopl = (flags >> 12) & 0x03;
-  BX_CPU_THIS_PTR eflags.nt = (flags >> 14) & 0x01;
-#endif
 }
 
 
@@ -81,53 +84,48 @@ else if (BX_CPU_THIS_PTR eflags.tf && (flags&0x0100))
 BX_CPU_C::write_eflags(Bit32u eflags_raw, Boolean change_IOPL, Boolean change_IF,
                 Boolean change_VM, Boolean change_RF)
 {
-  BX_CPU_THIS_PTR set_CF(eflags_raw & 0x01);
-  BX_CPU_THIS_PTR set_PF((eflags_raw >> 2) & 0x01);
-  BX_CPU_THIS_PTR set_AF((eflags_raw >> 4) & 0x01);
-  BX_CPU_THIS_PTR set_ZF((eflags_raw >> 6) & 0x01);
-  BX_CPU_THIS_PTR set_SF((eflags_raw >> 7) & 0x01);
+  Bit32u changeMask; // Really should be passed in.
 
-#if 0
-// +++
-if (BX_CPU_THIS_PTR eflags.tf==0 && (eflags_raw&0x0100))
-  BX_DEBUG(( "TF 0->1" ));
-else if (BX_CPU_THIS_PTR eflags.tf && !(eflags_raw&0x0100))
-  BX_DEBUG(( "TF 1->0" ));
-else if (BX_CPU_THIS_PTR eflags.tf && (eflags_raw&0x0100))
-  BX_DEBUG(( "TF 1->1" ));
+  changeMask = 0x4dd5;
+#if BX_CPU_LEVEL >= 4
+  changeMask |= ((1<<21) | (1<<18)); // ID/AC
 #endif
-
-  BX_CPU_THIS_PTR eflags.tf = (eflags_raw >> 8) & 0x01;
-  if (BX_CPU_THIS_PTR eflags.tf) {
-    BX_CPU_THIS_PTR async_event = 1;
-    }
-
-  if (change_IF)
-    BX_CPU_THIS_PTR eflags.if_ = (eflags_raw >> 9) & 0x01;
-
-  BX_CPU_THIS_PTR eflags.df = (eflags_raw >> 10) & 0x01;
-  BX_CPU_THIS_PTR set_OF((eflags_raw >> 11) & 0x01);
-
   if (change_IOPL)
-    BX_CPU_THIS_PTR eflags.iopl = (eflags_raw >> 12) & 0x03;
-  BX_CPU_THIS_PTR eflags.nt = (eflags_raw >> 14) & 0x01;
-
+    changeMask |= (3<<12);
+  if (change_IF) {
+    changeMask |= (1<<9);
+    BX_CPU_THIS_PTR eflags.if_ = (eflags_raw >> 9) & 0x01;
+    }
   if (change_VM) {
     BX_CPU_THIS_PTR eflags.vm = (eflags_raw >> 17) & 0x01;
+    changeMask |= (1<<17);
 #if BX_SUPPORT_V8086_MODE == 0
-    if (BX_CPU_THIS_PTR eflags.vm)
+    if ( eflags_raw & (1<<17) )
       BX_PANIC(("write_eflags: VM bit set: BX_SUPPORT_V8086_MODE==0"));
 #endif
     }
   if (change_RF) {
     BX_CPU_THIS_PTR eflags.rf = (eflags_raw >> 16) & 0x01;
+    changeMask |= (1<<16);
     }
 
-#if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR eflags.ac = (eflags_raw >> 18) & 0x01;
-  BX_CPU_THIS_PTR eflags.id = (eflags_raw >> 21) & 0x01;
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (eflags_raw & changeMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
+
+#if 0
+// +++
+if (GetEFlagsTFLogical()==0 && (eflags_raw&0x0100))
+  BX_DEBUG(( "TF 0->1" ));
+else if (GetEFlagsTFLogical() && !(eflags_raw&0x0100))
+  BX_DEBUG(( "TF 1->0" ));
+else if (GetEFlagsTFLogical() && (eflags_raw&0x0100))
+  BX_DEBUG(( "TF 1->1" ));
 #endif
 
+  if (eflags_raw & (1 << 8)) {
+    BX_CPU_THIS_PTR async_event = 1; // TF = 1
+    }
 }
 #endif /* BX_CPU_LEVEL >= 3 */
 
@@ -135,23 +133,18 @@ else if (BX_CPU_THIS_PTR eflags.tf && (eflags_raw&0x0100))
   Bit16u
 BX_CPU_C::read_flags(void)
 {
-  Bit16u flags;
+  Bit16u flags16;
 
-  flags = (get_CF()) |
-          (BX_CPU_THIS_PTR eflags.bit1 << 1) |
-          ((get_PF()) << 2) |
-          (BX_CPU_THIS_PTR eflags.bit3 << 3) |
-          ((get_AF()>0) << 4) |
-          (BX_CPU_THIS_PTR eflags.bit5 << 5) |
-          ((get_ZF()>0) << 6) |
-          ((get_SF()>0) << 7) |
-          (BX_CPU_THIS_PTR eflags.tf << 8) |
-          (BX_CPU_THIS_PTR eflags.if_ << 9) |
-          (BX_CPU_THIS_PTR eflags.df << 10) |
-          ((get_OF()>0) << 11) |
-          (BX_CPU_THIS_PTR eflags.iopl << 12) |
-          (BX_CPU_THIS_PTR eflags.nt << 14) |
-          (BX_CPU_THIS_PTR eflags.bit15 << 15);
+  // Cause arithmetic flags to be in known state and cached in val32.
+  if (BX_CPU_THIS_PTR lf_flags_status) {
+    (void) get_CF();
+    (void) get_PF();
+    (void) get_AF();
+    (void) get_ZF();
+    (void) get_SF();
+    (void) get_OF();
+    }
+  flags16 = (Bit16u) BX_CPU_THIS_PTR eflags.val32;
 
   /* 8086: bits 12-15 always set to 1.
    * 286: in real mode, bits 12-15 always cleared.
@@ -159,15 +152,15 @@ BX_CPU_C::read_flags(void)
    *       protected-mode: bit 15 clear, bit 14 = last loaded, IOPL?
    */
 #if BX_CPU_LEVEL < 2
-  flags |= 0xF000;  /* 8086 nature */
+  flags16 |= 0xF000;  /* 8086 nature */
 #elif BX_CPU_LEVEL == 2
   if (real_mode()) {
-    flags &= 0x0FFF;  /* 80286 in real mode nature */
+    flags16 &= 0x0FFF;  /* 80286 in real mode nature */
     }
 #else /* 386+ */
 #endif
 
-  return(flags);
+  return(flags16);
 }
 
 
@@ -175,31 +168,18 @@ BX_CPU_C::read_flags(void)
   Bit32u
 BX_CPU_C::read_eflags(void)
 {
-  Bit32u eflags_raw;
+  Bit32u flags32;
 
-  eflags_raw =
-          (get_CF()) |
-          (BX_CPU_THIS_PTR eflags.bit1 << 1) |
-          ((get_PF()) << 2) |
-          (BX_CPU_THIS_PTR eflags.bit3 << 3) |
-          ((get_AF()>0) << 4) |
-          (BX_CPU_THIS_PTR eflags.bit5 << 5) |
-          ((get_ZF()>0) << 6) |
-          ((get_SF()>0) << 7) |
-          (BX_CPU_THIS_PTR eflags.tf << 8) |
-          (BX_CPU_THIS_PTR eflags.if_ << 9) |
-          (BX_CPU_THIS_PTR eflags.df << 10) |
-          ((get_OF()>0) << 11) |
-          (BX_CPU_THIS_PTR eflags.iopl << 12) |
-          (BX_CPU_THIS_PTR eflags.nt << 14) |
-          (BX_CPU_THIS_PTR eflags.bit15 << 15) |
-          (BX_CPU_THIS_PTR eflags.rf << 16) |
-          (BX_CPU_THIS_PTR eflags.vm << 17)
-#if BX_CPU_LEVEL >= 4
-          | (BX_CPU_THIS_PTR eflags.ac << 18)
-          | (BX_CPU_THIS_PTR eflags.id << 21)
-#endif
-           ;
+  // Cause arithmetic flags to be in known state and cached in val32.
+  if (BX_CPU_THIS_PTR lf_flags_status) {
+    (void) get_CF();
+    (void) get_PF();
+    (void) get_AF();
+    (void) get_ZF();
+    (void) get_SF();
+    (void) get_OF();
+    }
+  flags32 = BX_CPU_THIS_PTR eflags.val32;
 
 #if 0
   /*
@@ -208,6 +188,6 @@ BX_CPU_C::read_eflags(void)
    */
 #endif
 
-  return(eflags_raw);
+  return(flags32);
 }
 #endif /* BX_CPU_LEVEL >= 3 */

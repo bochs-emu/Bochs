@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.30 2002-09-07 05:21:28 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.31 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_CPU_C::HLT(BxInstruction_t *i)
     return;
     }
 
-  if ( ! BX_CPU_THIS_PTR eflags.if_ ) {
+  if ( ! GetEFlagsIFLogical() ) {
     BX_INFO(("WARNING: HLT instruction with IF=0!"));
     }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: io_pro.cc,v 1.7 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ BX_CPU_C::inp16(Bit16u addr)
 {
   Bit16u ret16;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR eflags.vm || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
     if ( !BX_CPU_THIS_PTR allow_io(addr, 2) ) {
       // BX_INFO(("cpu_inp16: GP0()!"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -61,7 +61,7 @@ BX_CPU_C::outp16(Bit16u addr, Bit16u value)
    * Otherwise, must check the IO permission map on >286.
    * On the 286, there is no IO permissions map */
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR eflags.vm || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
     if ( !BX_CPU_THIS_PTR allow_io(addr, 2) ) {
       // BX_INFO(("cpu_outp16: GP0()!"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -77,7 +77,7 @@ BX_CPU_C::inp32(Bit16u addr)
 {
   Bit32u ret32;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR eflags.vm || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
     if ( !BX_CPU_THIS_PTR allow_io(addr, 4) ) {
       // BX_INFO(("cpu_inp32: GP0()!"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -96,7 +96,7 @@ BX_CPU_C::outp32(Bit16u addr, Bit32u value)
    * Otherwise, must check the IO permission map on >286.
    * On the 286, there is no IO permissions map */
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR eflags.vm || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
     if ( !BX_CPU_THIS_PTR allow_io(addr, 4) ) {
       // BX_INFO(("cpu_outp32: GP0()!"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -112,7 +112,7 @@ BX_CPU_C::inp8(Bit16u addr)
 {
   Bit8u ret8;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR eflags.vm || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
     if ( !BX_CPU_THIS_PTR allow_io(addr, 1) ) {
       // BX_INFO(("cpu_inp8: GP0()!"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -132,7 +132,7 @@ BX_CPU_C::outp8(Bit16u addr, Bit8u value)
    * Otherwise, must check the IO permission map on >286.
    * On the 286, there is no IO permissions map */
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR eflags.vm || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
     if ( !BX_CPU_THIS_PTR allow_io(addr, 1) ) {
       // BX_INFO(("cpu_outp8: GP0()!"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -163,7 +163,7 @@ BX_CPU_C::allow_io(Bit16u addr, unsigned len)
                          &io_base);
   if (io_base <= 103) {
 BX_INFO(("PE is %u", BX_CPU_THIS_PTR cr0.pe));
-BX_INFO(("VM is %u", BX_CPU_THIS_PTR eflags.vm));
+BX_INFO(("VM is %u", GetEFlagsVMLogical()));
 BX_INFO(("CPL is %u", CPL));
 BX_INFO(("IOPL is %u", IOPL));
 BX_INFO(("addr is %u", addr));

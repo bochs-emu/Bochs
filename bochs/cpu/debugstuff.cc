@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.11 2001-10-09 21:15:14 bdenney Exp $
+// $Id: debugstuff.cc,v 1.12 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,9 +40,9 @@ BX_CPU_C::debug(Bit32u offset)
   BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x",
           (unsigned) ESP, (unsigned) EBP, (unsigned) ESI, (unsigned) EDI));
   BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s",
-    BX_CPU_THIS_PTR eflags.iopl,
+    IOPL,
     BX_CPU_THIS_PTR get_OF()       ? "OV" : "NV",
-    BX_CPU_THIS_PTR eflags.df  ? "DW" : "UP",
+    GetEFlagsDFLogical() ? "DW" : "UP",
     BX_CPU_THIS_PTR eflags.if_ ? "EI" : "DI",
     BX_CPU_THIS_PTR get_SF()       ? "NG" : "PL",
     BX_CPU_THIS_PTR get_ZF()       ? "ZR" : "NZ",

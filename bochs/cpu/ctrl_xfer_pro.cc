@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.10 2001-11-10 23:00:55 bdenney Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.11 2002-09-08 04:08:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1375,14 +1375,14 @@ BX_CPU_C::iret_protected(BxInstruction_t *i)
   Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
 
-  if (BX_CPU_THIS_PTR eflags.nt) { /* NT = 1: RETURN FROM NESTED TASK */
+  if ( GetEFlagsNTLogical() ) { /* NT = 1: RETURN FROM NESTED TASK */
     /* what's the deal with NT & VM ? */
     Bit32u base32;
     Bit16u raw_link_selector;
     bx_selector_t   link_selector;
     bx_descriptor_t tss_descriptor;
 
-    if (BX_CPU_THIS_PTR eflags.vm)
+    if ( GetEFlagsVMLogical() )
       BX_PANIC(("IRET: vm set?"));
 
     // TASK_RETURN:
