@@ -224,7 +224,7 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
 
-install: install_bin install_dlx
+install: all install_bin install_dlx
 
 install_bin::
 	for i in bochs-dlx bochs-docs; do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(BINPATH)/$$i; $(CHMOD) 755 $(BINPATH)/$$i; done
@@ -238,7 +238,8 @@ install_bin::
 	$(CP) -r docs-html $(PREFIX)/$(VERSION)
 	$(RM) -f $(PREFIX)/$(VERSION)/README
 	$(CAT) build/linux/README.linux-binary README > $(PREFIX)/$(VERSION)/README
-	$(CP) -r font/vga.pcf $(PREFIX)/$(VERSION)
+	$(CP) font/vga.pcf $(PREFIX)/$(VERSION)
+	$(CP) .bochsrc $(PREFIX)/$(VERSION)/bochsrc-sample.txt
 	$(LN_S) $(VERSION) $(PREFIX)/latest
 
 install_dlx::
@@ -246,6 +247,7 @@ install_dlx::
 	$(WGET) $(DLXLINUX_TAR_URL)
 	$(RM) -rf $(PREFIX)/dlxlinux
 	$(GUNZIP) -c $(DLXLINUX_TAR) | (cd $(PREFIX); tar -xvf -)
+	$(RM) -f $(DLXLINUX_TAR)
 	test -d $(PREFIX)/dlxlinux
 	(cd $(PREFIX)/dlxlinux; $(MV) bochsrc.txt bochsrc.txt.orig; $(SED) -e "s/1\.1\.2/$(VERSION)/g"< bochsrc.txt.orig > bochsrc.txt; rm -f bochsrc.txt.orig)
 	$(CHOWN) -R root.root $(PREFIX)/dlxlinux
