@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.22 2001-11-18 16:40:26 bdenney Exp $
+// $Id: rombios.c,v 1.23 2001-11-21 02:33:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -273,16 +273,28 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.22 2001-11-18 16:40:26 bdenney Exp $";
+
+static char bios_cvs_version_string[] = "$Revision: 1.23 $";
+static char bios_date_string[] = "$Date: 2001-11-21 02:33:05 $";
+
+static char CVSID[] = "$Id: rombios.c,v 1.23 2001-11-21 02:33:05 bdenney Exp $";
+/* Offset to skip the CVS $Id: prefix */ 
+#define bios_version_string  (CVSID + 4)
+
+#define BIOS_PRINTF_HALT     1
+#define BIOS_PRINTF_SCREEN   2
+#define BIOS_PRINTF_DEBUG    4
+#define BIOS_PRINTF_ALL      (BIOS_PRINTF_SCREEN | BIOS_PRINTF_DEBUG)
+#define BIOS_PRINTF_DEBHALT  (BIOS_PRINTF_SCREEN | BIOS_PRINTF_DEBUG | BIOS_PRINTF_HALT)
 
 #define DEBUG_ROMBIOS 0
 
 #if DEBUG_ROMBIOS
-#  define printf(format, p...) bios_printf(0, format, ##p)
-#  define panic(format, p...)  bios_printf(1, format, ##p)
+#  define printf(format, p...) bios_printf(BIOS_PRINTF_DEBUG, format, ##p)
+#  define panic(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
 #else
 #  define printf(format, p...)
-#  define panic(format, p...)  bios_printf(1, format, ##p)
+#  define panic(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
 #endif
 
 
@@ -607,6 +619,7 @@ read_word(seg, offset)
 write_byte(seg, offset, data)
   Bit16u seg;
   Bit16u offset;
+  Bit8u data;
 {
 #asm
   push bp
@@ -756,18 +769,50 @@ get_SS()
 }
 
   void
-put_int(val, width, neg)
+wrch(c)
+  Bit8u  c;
+{
+  #asm
+  push bp
+  mov  bp, sp
+
+  push bx
+  mov  ah, #$0e
+  mov  al, 4[bp]
+  xor  bx,bx
+  int  #$10
+  pop  bx
+
+  pop  bp
+  #endasm
+}
+ 
+  void
+send(action, c)
+  Bit16u action;
+  Bit8u  c;
+{
+  if (action & BIOS_PRINTF_DEBUG) outb(0xfff0, c);
+  if (action & BIOS_PRINTF_SCREEN) {
+    if (c == '\n') wrch('\r');
+    wrch(c);
+    }
+}
+
+  void
+put_int(action, val, width, neg)
+  Bit16u action;
   short val, width;
   Boolean neg;
 {
   short nval = UDIV16(val, 10);
   if (nval)
-    put_int(nval, width - 1, neg);
+    put_int(action, nval, width - 1, neg);
   else {
-    while (--width > 0) outb(0xfff0, ' ');
-    if (neg) outb(0xfff0, '-');
+    while (--width > 0) send(action, ' ');
+    if (neg) send(action, '-');
   }
-  outb(0xfff0, val - (nval * 10) + '0');
+  send(action, val - (nval * 10) + '0');
 }
 
 //--------------------------------------------------------------------------
@@ -775,10 +820,13 @@ put_int(val, width, neg)
 //   A compact variable argument printf function which prints its output via
 //   an I/O port so that it can be logged by Bochs.  Currently, only %x is
 //   supported (or %02x, %04x, etc).
+//
+//   Supports %[format_width][format]
+//   where format can be d,x,c,s
 //--------------------------------------------------------------------------
   void
-bios_printf(bomb, s)
-  Boolean bomb;
+bios_printf(action, s)
+  Bit16u action;
   Bit8u *s;
 {
   Bit8u c, format_char;
@@ -793,6 +841,10 @@ bios_printf(bomb, s)
   in_format = 0;
   format_width = 0;
 
+  if ((action & BIOS_PRINTF_DEBHALT) == BIOS_PRINTF_DEBHALT) {
+    bios_printf (BIOS_PRINTF_ALL, "FATAL: ");
+  }
+
   while (c = read_byte(0xf000, s)) {
     if ( c == '%' ) {
       in_format = 1;
@@ -802,39 +854,48 @@ bios_printf(bomb, s)
       if ( (c>='0') && (c<='9') ) {
         format_width = (format_width * 10) + (c - '0');
         }
-      else if (c == 'x') {
+      else {
         arg_ptr++; // increment to next arg
         arg = read_word(arg_seg, arg_ptr);
-        if (format_width == 0)
-          format_width = 4;
-        for (i=format_width-1; i>=0; i--) {
-          nibble = (arg >> (4 * i)) & 0x000f;
-          if (nibble <= 9)
-            outb(0xfff0, nibble + '0');
+        if (c == 'x') {
+          if (format_width == 0)
+            format_width = 4;
+          for (i=format_width-1; i>=0; i--) {
+            nibble = (arg >> (4 * i)) & 0x000f;
+	    send (action, (nibble<=9)? (nibble+'0') : (nibble-10+'A'));
+            }
+	  }
+        else if (c == 'd') {
+          if (arg & 0x8000)
+            put_int(action, -arg, format_width - 1, 1);
           else
-            outb(0xfff0, (nibble - 10) + 'A');
+            put_int(action, arg, format_width, 0);
           }
-        in_format = 0;
-        }
-      else if (c == 'd') {
-        arg_ptr++; // increment to next arg
-        arg = read_word(arg_seg, arg_ptr);
-        if (arg & 0x8000)
-          put_int(-arg, format_width - 1, 1);
+        else if (c == 's') {
+          bios_printf(action & (~BIOS_PRINTF_HALT), arg);
+          }
+        else if (c == 'c') {
+          send(action, arg);
+	  }
         else
-          put_int(arg, format_width, 0);
-        in_format = 0;
+          panic("bios_printf: unknown format");
+          in_format = 0;
         }
-      else
-        panic("bios_printf: unknown format");
       }
     else {
-      outb(0xfff0, c);
+      send(action, c);
       }
     s ++;
     }
 
-  if (bomb) {
+  if (action & BIOS_PRINTF_HALT) {
+    // freeze in a busy loop.  If I do a HLT instruction, then in versions
+    // 1.3.pre1 and earlier, it will panic without ever updating the VGA
+    // display, so the panic message will not be visible.  By waiting
+    // forever, you are certain to see the panic message on screen.
+    // After a few more versions have passed, we can turn this back into
+    // a halt or something.
+    do {} while (1);
 #asm
     HALT2(__LINE__)
 #endasm
@@ -855,32 +916,51 @@ keyboard_panic()
   panic("Keyboard RESET error");
 }
 
+/*
+This is called when the boot fails to print an appropriate message.
+If bit 16 is 0, the disk was not readable.
+If bit 16 is 1, the disk was readable but didn't have the boot signature.
+If bit 15 is 0, it tried to boot a floppy disk.
+If bit 15 is 1, it tried to boot a hard disk.
+Bits 14-0 are the drive number, usually just a 0 or 1.
+*/
   void
 boot_failure_msg(drive)
   Bit16u drive;
 {
-  if (drive < 0x80) {
-    bios_printf(0, "Booting from floppy drive %d.\n", drive);
-  } else {
-    bios_printf(0, "Booting from hard drive %d.\n", drive & 0x7f);
-  }
-  if (drive & 0x100)
-    panic("Not a bootable disk");
+  Bit16u drivenum = drive&0x7f;
+  //bios_printf(BIOS_PRINTF_SCREEN, "boot_failure_msg(%x)\n", drive);
+  if (drive & 0x80)
+    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from hard disk %d failed\n", drivenum);
   else
-    panic("Could not read the boot disk");
+    bios_printf(BIOS_PRINTF_DEBUG | BIOS_PRINTF_SCREEN, "Boot from floppy disk %d failed\n", drivenum);
+  if (drive & 0x100)
+    panic("Not a bootable disk\n");
+  else
+    panic("Could not read the boot disk\n");
 }
 
 void
 nmi_handler_msg()
 {
-  bios_printf(0, "NMI Handler called\n");
+  bios_printf(BIOS_PRINTF_DEBUG, "NMI Handler called\n");
+}
+
+void
+log_bios_start()
+{
+  bios_printf(BIOS_PRINTF_DEBUG, "%s\n", bios_version_string);
 }
 
 void
 print_bios_banner()
 {
-  bios_printf(0, bios_version_string);
-  bios_printf(0, "\n");
+  bios_printf(BIOS_PRINTF_SCREEN, "Bochs BIOS, %s %s\n\n", 
+    bios_cvs_version_string, bios_date_string);
+  /*
+  bios_printf(BIOS_PRINTF_SCREEN, "Test: x234=%3x, d-123=%d, c=%c, s=%s\n",
+	      0x1234, -123, '!', "ok");
+  */
 }
 
 
@@ -1896,6 +1976,9 @@ printf("int13_f01\n");
       if ( (num_sectors > 128) || (num_sectors == 0) )
         panic("int13_function(): num_sectors out of range!");
 
+      if (head > 15)
+        panic("hard drive BIOS:(read/verify) head > 15\n");
+
       if ( GET_AH() == 0x04 ) {
         SET_AH(0);
         set_disk_ret_status(0);
@@ -2038,6 +2121,9 @@ printf("int13_f03\n");
 
       if ( (num_sectors > 128) || (num_sectors == 0) )
         panic("int13_function(): num_sectors out of range!");
+
+      if (head > 15)
+        panic("hard drive BIOS:(read) head > 15\n");
 
       status = inb(0x1f7);
       if (status & 0x80) {
@@ -3617,8 +3703,7 @@ bootstrap_problem:
   ;; if dh=0, load failed.  if dh=1, signature check failed.
   push dx
   call _boot_failure_msg
-  int #0x18 ;; Boot failure
-  iret
+  hlt
 
 ;----------
 ;- INT18h -
@@ -4174,6 +4259,8 @@ normal_post:
   mov  ds, ax
   mov  ss, ax
 
+  call _log_bios_start
+
   ;; zero out BIOS data area (40:00..40:ff)
   mov  es, ax
   mov  cx, #0x0080 ;; 128 words
@@ -4230,6 +4317,7 @@ post_default_ints:
 
   ;; System Services
   SET_INT_VECTOR(0x15, #0xF000, #int15_handler)
+
   mov ax, #0x0000       ; mov EBDA seg into 40E
   mov ds, ax
   mov 0x40E, #EBDA_SEG
@@ -4387,6 +4475,8 @@ notrom:
   out  0x21, AL ;master pic: all IRQs unmasked
   out  0xA1, AL ;slave  pic: all IRQs unmasked
 
+  call _print_bios_banner
+
   ;;
   ;; Hard Drive setup
   ;;
@@ -4396,8 +4486,6 @@ notrom:
   ;; Floppy setup
   ;;
   call floppy_drive_post
-
-  call _print_bios_banner
 
   int  #0x19
   //JMP_EP(0x0064) ; INT 19h location
