@@ -1559,18 +1559,6 @@ diff -u -r1.58 siminterface.cc
  
  char *
  bx_real_sim_c::get_floppy_type_name (int type)
-@@ -776,9 +794,9 @@
-   : bx_param_num_c (id, name, description, 0, 1, initial_val)
- {
-   set_type (BXT_PARAM_BOOL);
--  // dependent_list must be initialized before the set(),
--  // because set calls update_dependents().
--  dependent_list = NULL;
-+  // dependent_list must be initialized before the set(),
-+  // because set calls update_dependents().
-+  dependent_list = NULL;
-   set (initial_val);
- }
  
 Index: gui/siminterface.h
 ===================================================================
@@ -1972,7 +1960,7 @@ diff -u -r1.71 harddrv.cc
 +  char  string[5];
 +
    BX_HD_THIS devices = d;
- 	BX_DEBUG(("Init $Id: harddrv.cc,v 1.71 2002/09/12 06:49:04 bdenney Exp $"));
+ 	BX_DEBUG(("Init $Id: harddrv.cc,v 1.72 2002/09/16 16:58:36 bdenney Exp $"));
  
 -  /* HARD DRIVE 0 */
 +  for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
