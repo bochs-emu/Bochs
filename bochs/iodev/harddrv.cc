@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.109 2003-09-17 12:02:54 cbothamy Exp $
+// $Id: harddrv.cc,v 1.110 2003-09-17 12:19:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.109 2003-09-17 12:02:54 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.110 2003-09-17 12:19:34 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1400,7 +1400,6 @@ if (channel == 0) {
 					  atapi_cmd_nop(channel);
 					  raise_interrupt(channel);
 				    } else if (!LoEj && Start) { // start (spin up) the disc
-                                          if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
 #ifdef LOWLEVEL_CDROM
 					  BX_SELECTED_DRIVE(channel).cdrom.cd->start_cdrom();
 #endif
