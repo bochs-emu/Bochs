@@ -556,7 +556,7 @@ typedef struct {
   bx_load32bitOSImage_t load32bitOSImage;
          // one array item for each log level, indexed by LOGLEV_*.
 	 // values: 0=ignore event, 1=report event in log, 2=crash
-  unsigned char log_actions[4];  
+  unsigned char log_actions[MAX_LOGLEV];  
   } bx_options_t;
 
 extern bx_options_t bx_options;
