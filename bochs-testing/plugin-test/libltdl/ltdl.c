@@ -1853,6 +1853,8 @@ lt_dlexit ()
   return errors;
 }
 
+// returns number of errors, so 0=success
+// returns handle in *handle, if one is found.
 static int
 tryall_dlopen (handle, filename)
      lt_dlhandle *handle;
@@ -2528,6 +2530,10 @@ free_vars (dlname, oldname, libdir, deplibs)
   return 0;
 }
 
+// returns number of errors, so 0=success.
+// phandle is a pointer to an lt_dlhandle, which must initially be NULL.
+// On success (return value=0), *phandle is changed to point to the new
+// lt_dlhandle.
 int
 try_dlopen (phandle, filename)
      lt_dlhandle *phandle;
@@ -2562,7 +2568,7 @@ try_dlopen (phandle, filename)
 
       if (tryall_dlopen (&newhandle, 0) != 0)
 	{
-	  LT_DLFREE (*phandle);
+	  LT_DLFREE (*phandle);  // this sets *phandle=NULL
 	  return 1;
 	}
 
@@ -2831,7 +2837,7 @@ try_dlopen (phandle, filename)
       free_vars (dlname, old_name, libdir, deplibs);
       if (errors)
 	{
-	  LT_DLFREE (*phandle);
+	  LT_DLFREE (*phandle);  // sets *phandle=NULL
 	  goto cleanup;
 	}
 
@@ -3368,8 +3374,7 @@ lt_dlsym (handle, symbol)
     }
 
   // Due to bugs in lt_dlopen*, some handles were being returned that have a
-  // NULL loader field.  If we continue into the LT_STRLEN, you will get
-  // an unexplained segfault.
+  // NULL loader field.  Check for this.
   assert (handle->loader);
 
   lensym = LT_STRLEN (symbol) + LT_STRLEN (handle->loader->sym_prefix)
