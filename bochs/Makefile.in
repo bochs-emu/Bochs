@@ -29,8 +29,12 @@ VERSION=1.2.pre2
 VER_STRING=1.2-pre2
 REL_STRING=June 1, 2001
 PREFIX=/usr/local/bochs
+MANPATH=/usr/man
+MAN_PAGE_LIST=bochs bochsrc bximage bochs-dlx
 BINPATH=/usr/local/bin
-INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bximage build/linux/DOC-linux.html
+INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bximage
+INSTALL_LIST_SED=DOC-linux.html
+BOCHS_SCRIPTS=bochs-dlx bochs-docs
 CP=cp
 CAT=cat
 RM=rm
@@ -47,6 +51,7 @@ SPECS=/usr/src/redhat/SPECS
 RPMS=/usr/src/redhat/RPMS
 SRPMS=/usr/src/redhat/SRPMS
 MKDIR=mkdir
+RMDIR=rmdir
 TAR=tar
 RPM=rpm
 CHMOD=chmod
@@ -224,14 +229,15 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
 
-install: all install_bin install_dlx
+install: all install_bin install_man install_dlx
 
 install_bin::
-	for i in bochs-dlx bochs-docs; do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(BINPATH)/$$i; $(CHMOD) 755 $(BINPATH)/$$i; done
 	-mkdir $(PREFIX)
 	-mkdir $(PREFIX)/$(VERSION)
 	test -d $(PREFIX)/$(VERSION)
 	test -w $(PREFIX)/$(VERSION)
+	for i in $(BOCHS_SCRIPTS); do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(BINPATH)/$$i; $(CHMOD) 755 $(BINPATH)/$$i; done
+	for i in $(INSTALL_LIST_SED); do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(PREFIX)/$(VERSION)/$$i; $(CHMOD) 644 $(PREFIX)/$(VERSION)/$$i; done
 	for i in $(INSTALL_LIST); do /bin/cp $$i $(PREFIX)/$(VERSION); done
 	$(LN_S) $(PREFIX)/$(VERSION)/bochs $(BINPATH)/bochs
 	$(LN_S) $(PREFIX)/$(VERSION)/bximage $(BINPATH)/bximage
@@ -241,6 +247,9 @@ install_bin::
 	$(CP) font/vga.pcf $(PREFIX)/$(VERSION)
 	$(CP) .bochsrc $(PREFIX)/$(VERSION)/bochsrc-sample.txt
 	$(LN_S) $(VERSION) $(PREFIX)/latest
+
+install_man::
+	for i in $(MAN_PAGE_LIST); do cat doc/man/$$i.1 | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(MANPATH)/man1/$$i.1; chmod 644 $(MANPATH)/man1/$$i.1; done
 
 install_dlx::
 	$(RM) -f $(DLXLINUX_TAR)
@@ -258,6 +267,9 @@ install_dlx::
 erase_install::
 	$(RM) -rf $(PREFIX)/$(VERSION)
 	$(RM) -rf $(PREFIX)/dlxlinux
+	$(RM) -rf $(PREFIX)/latest
+	-$(RMDIR) $(PREFIX)
+	for i in $(MAN_PAGE_LIST); do $(RM) -f $(MANPATH)/man1/$$i.1; done
 
 rpm:: dist-clean
 	test -w $(SOURCES)
