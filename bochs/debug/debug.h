@@ -42,6 +42,7 @@ void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
 
 #define BX_DBG_NO_HANDLE 1000
 
+#define EMPTY_ARG (-999)
 
 
 unsigned long crc32(unsigned char *buf, int len);
@@ -63,6 +64,12 @@ void bx_add_lex_input(char *buf);
 extern int bxparse(void);
 extern void bxerror(char *s);
 
+typedef struct {
+  Bit32u from;
+  Bit32u to;
+} bx_num_range;
+
+bx_num_range make_num_range (Bit32u from, Bit32u to);
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 void bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset);
 void bx_dbg_trace_on_command(void);
@@ -101,10 +108,10 @@ void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
 void bx_dbg_info_registers_command(void);
 void bx_dbg_info_dirty_command(void);
-void bx_dbg_info_idt_command(void);
-void bx_dbg_info_gdt_command(void);
-void bx_dbg_info_ldt_command(void);
-void bx_dbg_info_tss_command(void);
+void bx_dbg_info_idt_command(bx_num_range);
+void bx_dbg_info_gdt_command(bx_num_range);
+void bx_dbg_info_ldt_command(bx_num_range);
+void bx_dbg_info_tss_command(bx_num_range);
 void bx_dbg_info_control_regs_command(void);
 void bx_dbg_info_linux_command(void);
 void bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
@@ -115,7 +122,7 @@ void bx_dbg_query_command(char *);
 void bx_dbg_take_command(char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
 void bx_dbg_set_cpu_command(void);
-void bx_dbg_disassemble_command(Bit32u addr1, Bit32u addr2);
+void bx_dbg_disassemble_command(bx_num_range);
 void bx_dbg_instrument_command(char *);
 void bx_dbg_loader_command(char *);
 void bx_dbg_doit_command(unsigned);
