@@ -73,8 +73,6 @@
 %token <sval> BX_TOKEN_UNWATCH
 %token <sval> BX_TOKEN_READ
 %token <sval> BX_TOKEN_WRITE
-%token <sval> BX_TOKEN_STOP
-%token <sval> BX_TOKEN_CONTINUE
 %token <sval> BX_TOKEN_SHOW
 %token <sval> BX_TOKEN_SYMBOL
 %token <sval> BX_TOKEN_GLOBAL
