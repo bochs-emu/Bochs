@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.61 2002-07-11 07:44:32 cbothamy Exp $
+// $Id: harddrv.cc,v 1.62 2002-07-19 13:32:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.61 2002-07-11 07:44:32 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.62 2002-07-19 13:32:49 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -2568,9 +2568,12 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int allo
       if (BX_SELECTED_CONTROLLER.byte_count == 0)
 	    BX_PANIC(("ATAPI command with zero byte count"));
 
+      if (BX_SELECTED_CONTROLLER.byte_count == 0xffff)
+        BX_SELECTED_CONTROLLER.byte_count = 0xfffe;
+
       if ((BX_SELECTED_CONTROLLER.byte_count & 1)
           && !(alloc_length <= BX_SELECTED_CONTROLLER.byte_count)) {
-        BX_ERROR(("Odd byte count to ATAPI command"));
+        BX_ERROR(("Odd byte count to ATAPI command 0x%02x", command));
       }
       if (alloc_length <= 0)
 	    BX_PANIC(("Allocation length <= 0"));
