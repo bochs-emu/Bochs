@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.46 2004-06-19 15:20:06 sshwarts Exp $
+// $Id: logio.cc,v 1.47 2004-09-19 18:38:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,9 +156,6 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 	assert (this != NULL);
 	assert (logfd != NULL);
 
-	//if( showtick )
-	//	fprintf(logfd, "%011lld", bx_pc_system.time_ticks());
-
 	switch(l) {
 		case LOGLEV_INFO: c='i'; break;
 		case LOGLEV_PANIC: c='p'; break;
@@ -183,7 +180,7 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
                   fprintf(logfd, "%s", prefix==NULL?"":prefix);
 		  break;
 		case 't':
-                  fprintf(logfd, "%011lld", bx_pc_system.time_ticks());
+                  fprintf(logfd, FMT_TICK, bx_pc_system.time_ticks());
 		  break;
 		case 'i':
                   fprintf(logfd, "%08x", BX_CPU(0)==NULL?0:BX_CPU(0)->dword.eip);

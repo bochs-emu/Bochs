@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.9 2004-09-19 07:56:49 vruppert Exp $
+// $Id: dbg_main.cc,v 1.10 2004-09-19 18:38:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1269,7 +1269,7 @@ void bx_dbg_show_command(char* arg)
   last_pe = BX_CPU(dbg_cpu)->cr0.pe;
   last_vm = BX_CPU(dbg_cpu)->getB_VM ();
 
-  dbg_printf ("%10lld: address %04x:%08x %08x\n\n", 
+  dbg_printf (FMT_TICK ": address %04x:%08x %08x\n\n", 
     bx_pc_system.time_ticks(),
     BX_CPU(dbg_cpu)->guard_found.cs,
     BX_CPU(dbg_cpu)->guard_found.eip,
@@ -4905,68 +4905,68 @@ bx_dbg_set_INTR(bx_bool b)
 
 // BW added. return non zero to cause a stop
 #if BX_DEBUGGER
-static int symbol_level;
+static int symbol_level = 0;
 
 int 
 bx_dbg_symbolic_output(void) 
 {
+  /* modes & address spaces */
+  if(BX_CPU(dbg_cpu)->cr0.pe != last_pe) {
+    dbg_printf (FMT_TICK ": Switched %s protected mode\n", 
+      bx_pc_system.time_ticks(),
+      last_pe ? "from" : "to");
+    last_pe = !last_pe;
+  }
 
-      /* modes & address spaces */
-      if(BX_CPU(dbg_cpu)->cr0.pe != last_pe) {
-      dbg_printf ("%10lld: Switched %s protected mode\n", 
-        bx_pc_system.time_ticks(),
-        last_pe ? "from" : "to");
-      last_pe = !last_pe;
-      }
+  if(last_vm != BX_CPU(dbg_cpu)->getB_VM ()) {
+    dbg_printf (FMT_TICK ": %s V86 mode\n", 
+      bx_pc_system.time_ticks(), 
+      last_vm ? "Exited" : "Entered");
+    last_vm = !last_vm;
+  }
 
-      if(last_vm != BX_CPU(dbg_cpu)->getB_VM ()) {
-      dbg_printf ("%10lld: %s V86 mode\n", 
-        bx_pc_system.time_ticks(), 
-        last_vm ? "Exited" : "Entered");
-      last_vm = !last_vm;
-      }
+  if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
+    dbg_printf ("\n" FMT_TICK ": Address space switched since last trigger. CR3: 0x%08x\n", 
+      bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
 
-      if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
-      dbg_printf ("\n%10lld: Address space switched since last trigger. CR3: 0x%08x\n", 
-        bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
-
-      /* interrupts */
-      if (dbg_show_mask & 0x40) {
-      if(BX_CPU(dbg_cpu)->show_flag & 0x4) {
-      dbg_printf ("%10lld:  softint %04x:%08x %08x\n", 
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr);
-      }
-      if((BX_CPU(dbg_cpu)->show_flag & 0x10) && !(BX_CPU(dbg_cpu)->show_flag & 0x4)) {
-      dbg_printf ("\n%10lld:  exception (not softint) %04x:%08x %08x\n", 
+  /* interrupts */
+  if (dbg_show_mask & 0x40) {
+    if(BX_CPU(dbg_cpu)->show_flag & 0x4) {
+      dbg_printf (FMT_TICK ":  softint %04x:%08x %08x\n", 
         bx_pc_system.time_ticks(),
         BX_CPU(dbg_cpu)->guard_found.cs,
         BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
-      }
-      if(BX_CPU(dbg_cpu)->show_flag & 0x8) {
-      dbg_printf ("%10lld:  iret %04x:%08x %08x (from %08x)\n\n", 
+    }
+    if((BX_CPU(dbg_cpu)->show_flag & 0x10) && !(BX_CPU(dbg_cpu)->show_flag & 0x4)) {
+      dbg_printf ("\n" FMT_TICK ":  exception (not softint) %04x:%08x %08x\n", 
+        bx_pc_system.time_ticks(),
+        BX_CPU(dbg_cpu)->guard_found.cs,
+        BX_CPU(dbg_cpu)->guard_found.eip,
+        BX_CPU(dbg_cpu)->guard_found.laddr);
+    }
+    if(BX_CPU(dbg_cpu)->show_flag & 0x8) {
+      dbg_printf (FMT_TICK ":  iret %04x:%08x %08x (from %08x)\n\n", 
         bx_pc_system.time_ticks(),
         BX_CPU(dbg_cpu)->guard_found.cs,
         BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr,
         BX_CPU(dbg_cpu)->show_eip);
-      }
-      }
+    }
+  }
   
-      /* calls */
-      if(BX_CPU(dbg_cpu)->show_flag & 0x1) {
-      Bit32u phy = 0;
-      bx_bool valid;
+  /* calls */
+  if(BX_CPU(dbg_cpu)->show_flag & 0x1) {
+    Bit32u phy = 0;
+    bx_bool valid;
 
-      if (dbg_show_mask & 0x20) {
+    if (dbg_show_mask & 0x20) {
       BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr,
                &phy, &valid);
 
-      dbg_printf ("%10lld:%*s call %04x:%08x 0x%08x (%08x) %s",
-        bx_pc_system.time_ticks(),
+      // mingw doesn't like %ll and %*s in one statement
+      dbg_printf (FMT_TICK ":", bx_pc_system.time_ticks());
+      dbg_printf ("%*s call %04x:%08x 0x%08x (%08x) %s",
         symbol_level+1," ",
         BX_CPU(dbg_cpu)->guard_found.cs,
         BX_CPU(dbg_cpu)->guard_found.eip,
@@ -4976,24 +4976,24 @@ bx_dbg_symbolic_output(void)
               BX_CPU(dbg_cpu)->guard_found.eip,
               BX_CPU(dbg_cpu)->guard_found.laddr - BX_CPU(dbg_cpu)->guard_found.eip) );
       if(!valid)
-      dbg_printf (" phys not valid");
+        dbg_printf (" phys not valid");
       dbg_printf ("\n");
-      }
+    }
 
-      symbol_level++;
-      if(symbol_level > 40)
+    symbol_level++;
+    if(symbol_level > 40)
       symbol_level = 10;
-      }
+  }
 
-      if (BX_CPU(dbg_cpu)->show_flag & 0x2) {
-      symbol_level--;
-      if(symbol_level < 0)
+  if (BX_CPU(dbg_cpu)->show_flag & 0x2) {
+    symbol_level--;
+    if(symbol_level < 0)
       symbol_level = 0;
-      }
+  }
 
-      BX_CPU(dbg_cpu)->show_flag = 0;
-      last_cr3 = BX_CPU(dbg_cpu)->cr3;
-      return 0;
+  BX_CPU(dbg_cpu)->show_flag = 0;
+  last_cr3 = BX_CPU(dbg_cpu)->cr3;
+  return 0;
 }
 #endif
 
