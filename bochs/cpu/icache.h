@@ -47,30 +47,32 @@ class bxICacheEntry_c {
 
 class BOCHSAPI bxICache_c
 {
-  public:
-
-  bxICacheEntry_c entry[BxICacheEntries];
-
   // A table (dynamically allocated) to store write-stamp
   // generation IDs.  Each time a write occurs to a physical page,
   // a generation ID is decremented.  Only iCache entries which have
   // write stamps matching the physical page write stamp are valid.
   Bit32u *pageWriteStampTable; // Allocated later.
 
-  Bit32u  fetchModeMask;
+public:
+  bxICacheEntry_c entry[BxICacheEntries];
+  Bit32u fetchModeMask;
+  Bit32u memSizeInBytes;
 
+public:
   bxICache_c()
   {
     // Initially clear the iCache;
     memset(this, 0, sizeof(*this));
     pageWriteStampTable = NULL;
+    memSizeInBytes = 0;
     for (unsigned i=0; i<BxICacheEntries; i++) {
       entry[i].writeStamp = ICacheWriteStampInvalid;
     }
   }
 
-  BX_CPP_INLINE void alloc(unsigned memSizeInBytes)
+  BX_CPP_INLINE void alloc(Bit32u memSize)
   {
+    memSizeInBytes = memSize;
     pageWriteStampTable =
         (Bit32u*) malloc(sizeof(Bit32u) * (memSizeInBytes>>12));
     for (unsigned i=0; i<(memSizeInBytes>>12); i++) {
@@ -81,10 +83,24 @@ class BOCHSAPI bxICache_c
 
   BX_CPP_INLINE void decWriteStamp(Bit32u a20Addr);
 
-  BX_CPP_INLINE unsigned hash(Bit32u pAddr)
+  BX_CPP_INLINE unsigned hash(Bit32u pAddr) const
   {
     // A pretty dumb hash function for now.
     return pAddr & (BxICacheEntries-1);
+  }
+
+  BX_CPP_INLINE Bit32u getPageWriteStamp(Bit32u pAddr) const
+  {
+    if (pAddr < memSizeInBytes) 
+       return pageWriteStampTable[pAddr>>12];
+    else 
+       return ICacheWriteStampInvalid;
+  }
+
+  BX_CPP_INLINE void setPageWriteStamp(Bit32u pAddr, Bit32u pageWriteStamp)
+  {
+    if (pAddr < memSizeInBytes) 
+       pageWriteStampTable[pAddr>>12] = pageWriteStamp;
   }
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.94 2004-11-18 23:16:35 sshwarts Exp $
+// $Id: cpu.cc,v 1.95 2004-11-19 09:39:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -194,7 +194,7 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
   bxICacheEntry_c *cache_entry = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
   i = &(cache_entry->i);
 
-  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
+  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.getPageWriteStamp(pAddr);
 
   if ((cache_entry->pAddr == pAddr) &&
       (cache_entry->writeStamp == pageWriteStamp))
@@ -255,7 +255,7 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
       Bit32u fetchModeMask = BX_CPU_THIS_PTR iCache.fetchModeMask;
       pageWriteStamp &= ICacheWriteStampMask;  // Clear out old fetch mode bits.
       pageWriteStamp |= fetchModeMask;         // Add in new ones.
-      BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
+      BX_CPU_THIS_PTR iCache.setPageWriteStamp(pAddr, pageWriteStamp);
       cache_entry->pAddr = pAddr;
       cache_entry->writeStamp = pageWriteStamp;
 #endif
@@ -752,8 +752,7 @@ BX_CPU_C::prefetch(void)
     }
 
 #if BX_SUPPORT_ICACHE
-  Bit32u phyPageIndex   = pAddr >> 12;
-  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex];
+  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.getPageWriteStamp(pAddr);
   Bit32u fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
   if ((pageWriteStamp & ICacheFetchModeMask) != fetchModeMask)
   {
@@ -761,7 +760,7 @@ BX_CPU_C::prefetch(void)
     // physical page.
     pageWriteStamp &= ICacheWriteStampMask; // Clear out old fetch mode bits.
     pageWriteStamp |= fetchModeMask;        // Add in new ones.
-    BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex] = pageWriteStamp;
+    BX_CPU_THIS_PTR iCache.setPageWriteStamp(pAddr, pageWriteStamp);
   }
 #endif
 }
