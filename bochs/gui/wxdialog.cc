@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.73 2004-10-16 15:44:00 vruppert Exp $
+// $Id: wxdialog.cc,v 1.74 2004-10-24 20:04:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1676,10 +1676,6 @@ ConfigMemoryDialog::ConfigMemoryDialog(
 {
   bx_id standardList[] = {BXP_MEM_SIZE, BXP_ROM_PATH, BXP_ROM_ADDRESS,
                           BXP_VGA_ROM_PATH, BXP_NULL};
-  bx_id optionalList[] = {BXP_OPTROM1_PATH, BXP_OPTROM1_ADDRESS,
-                          BXP_OPTROM2_PATH, BXP_OPTROM2_ADDRESS,
-                          BXP_OPTROM3_PATH, BXP_OPTROM3_ADDRESS,
-                          BXP_OPTROM4_PATH, BXP_OPTROM4_ADDRESS, BXP_NULL};
   int insideStaticBoxMargin = 15;
   SetTitle (CONFIG_MEMORY_TITLE);
 
@@ -1687,10 +1683,6 @@ ConfigMemoryDialog::ConfigMemoryDialog(
   wxStaticBox *box1 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX1_TITLE);
   wxStaticBoxSizer *box1sizer = new wxStaticBoxSizer (box1, wxVERTICAL);
   mainSizer->Add (box1sizer, 0, wxALL|wxGROW, 10);
-
-  wxStaticBox *box2 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX2_TITLE);
-  wxStaticBoxSizer *box2sizer = new wxStaticBoxSizer (box2, wxVERTICAL);
-  mainSizer->Add (box2sizer, 0, wxALL|wxGROW, 10);
 
   // box1 contents
   box1gridSizer = new wxFlexGridSizer (3);
@@ -1700,10 +1692,10 @@ ConfigMemoryDialog::ConfigMemoryDialog(
   box1gridSizer->Add (vgabiosaddr1, 0, wxALIGN_RIGHT|wxALL, 2);
   wxStaticText *vgabiosaddr2 = new wxStaticText (this, -1, "0xC0000");
   box1gridSizer->Add (vgabiosaddr2, 0, wxALL, 2);
-  // box2 contents
-  box2gridSizer = new wxFlexGridSizer (3);
-  box2sizer->Add (box2gridSizer, 0, wxALL, insideStaticBoxMargin);
-  AddParamList (optionalList, box2gridSizer);
+
+  // box2 contains a list
+  bx_list_c *list = (bx_list_c *) SIM->get_param (BXP_OPTROM_LIST);
+  AddParam (list);
 }
 
 /////////////////////////////////////////////////////////////////

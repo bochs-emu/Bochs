@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.15 2004-10-17 16:25:10 vruppert Exp $
+// $Id: config.cc,v 1.16 2004-10-24 20:04:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1116,6 +1116,10 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
+#if BX_WITH_WX
+  menu = new bx_list_c (BXP_OPTROM_LIST, "Optional ROM Images", "optromlist", &memory_init_list[4]);
+  menu->get_options ()->set (menu->USE_BOX_TITLE);
+#endif
 
   // interface
   bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
@@ -1236,7 +1240,6 @@ void bx_init_options ()
     bx_options.Odisplaylib_options,
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
-    bx_options.Oips,
     bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS
     bx_options.Ofullscreen,
@@ -1377,14 +1380,16 @@ void bx_init_options ()
 #if !BX_WITH_WX
   bx_options.pnic.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
 #endif
-  bx_param_c *netdev_init_list[] = {
-    bx_options.ne2k.Opresent,
+  bx_param_c *ne2k_init_list[] = {
     bx_options.ne2k.Oioaddr,
     bx_options.ne2k.Oirq,
     bx_options.ne2k.Omacaddr,
     bx_options.ne2k.Oethmod,
     bx_options.ne2k.Oethdev,
     bx_options.ne2k.Oscript,
+    NULL
+  };
+  bx_param_c *pnic_init_list[] = {
     bx_options.pnic.Oenabled,
     bx_options.pnic.Oioaddr,
     bx_options.pnic.Oirq,
@@ -1394,22 +1399,22 @@ void bx_init_options ()
     bx_options.pnic.Oscript,
     NULL
   };
-  bx_param_c *ne2k_deps_list[] = {
-    bx_options.ne2k.Oioaddr,
-    bx_options.ne2k.Oirq,
-    bx_options.ne2k.Omacaddr,
-    bx_options.ne2k.Oethmod,
-    bx_options.ne2k.Oethdev,
-    bx_options.ne2k.Oscript,
+  menu = new bx_list_c (BXP_NE2K, "NE2000", "", ne2k_init_list);
+  menu->get_options ()->set (menu->USE_BOX_TITLE | menu->SHOW_PARENT);
+  bx_options.ne2k.Opresent->set_dependent_list (
+      new bx_list_c (BXP_NULL, "", "", ne2k_init_list));
+  menu = new bx_list_c (BXP_PNIC, "PCI Pseudo NIC", "", pnic_init_list);
+  menu->get_options ()->set (menu->USE_BOX_TITLE | menu->SHOW_PARENT);
+  bx_options.pnic.Oenabled->set_dependent_list (
+      new bx_list_c (BXP_NULL, "", "", pnic_init_list));
+
+  bx_param_c *netdev_init_list2[] = {
+    SIM->get_param (BXP_NE2K),
+    SIM->get_param (BXP_PNIC),
     NULL
   };
-  menu = new bx_list_c (BXP_NE2K, "Network Configuration", "", netdev_init_list);
+  menu = new bx_list_c (BXP_NETWORK, "Network Configuration", "", netdev_init_list2);
   menu->get_options ()->set (menu->SHOW_PARENT);
-  bx_options.ne2k.Opresent->set_dependent_list (
-      new bx_list_c (BXP_NULL, "", "", ne2k_deps_list));
-  bx_param_c **pnic_dependent_list = &netdev_init_list[8];
-  bx_options.pnic.Oenabled->set_dependent_list (
-      new bx_list_c (BXP_NULL, "", "", pnic_dependent_list));
 
   // SB16 options
   bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,
@@ -1537,17 +1542,18 @@ void bx_init_options ()
 
   // clock
   bx_options.clock.Otime0 = new bx_param_num_c (BXP_CLOCK_TIME0,
-      "clock:time0",
+      "Initial CMOS time",
       "Initial time for Bochs CMOS clock, used if you really want two runs to be identical",
       0, BX_MAX_BIT32U,
       BX_CLOCK_TIME0_LOCAL);
   bx_options.clock.Osync = new bx_param_enum_c (BXP_CLOCK_SYNC,
-      "clock:sync",
+      "Synchronisation method",
       "Host to guest time synchronization method",
       clock_sync_names,
       BX_CLOCK_SYNC_NONE,
       BX_CLOCK_SYNC_NONE);
   bx_param_c *clock_init_list[] = {
+    bx_options.Oips,
     bx_options.clock.Osync,
     bx_options.clock.Otime0,
     NULL
@@ -1561,7 +1567,7 @@ void bx_init_options ()
   bx_options.clock.Otime0->set_label ("Initial CMOS time for Bochs\n(1:localtime, 2:utc, other:time in seconds)");
   bx_options.clock.Osync->set_label ("Synchronisation method");
   menu = new bx_list_c (BXP_CLOCK, "Clock parameters", "", clock_init_list);
-  menu->get_options ()->set (menu->SERIES_ASK);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // other
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,

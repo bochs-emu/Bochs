@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.126 2004-10-17 16:25:10 vruppert Exp $
+// $Id: siminterface.h,v 1.127 2004-10-24 20:04:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -136,6 +136,7 @@ typedef enum {
   BXP_OPTROM2_ADDRESS,
   BXP_OPTROM3_ADDRESS,
   BXP_OPTROM4_ADDRESS,
+  BXP_OPTROM_LIST,
   BXP_KBD_SERIAL_DELAY,
   BXP_KBD_PASTE_DELAY,
   BXP_KBD_TYPE,
@@ -331,13 +332,6 @@ typedef enum {
   BXP_USB1_ENABLED,
   BXP_USB1_IOADDR,
   BXP_USB1_IRQ,
-  BXP_PNIC_ENABLED,
-  BXP_PNIC_IOADDR,
-  BXP_PNIC_IRQ,
-  BXP_PNIC_MACADDR,
-  BXP_PNIC_ETHMOD,
-  BXP_PNIC_ETHDEV,
-  BXP_PNIC_SCRIPT,
   BXP_PRIVATE_COLORMAP,
   BXP_FULLSCREEN,
   BXP_SCREENMODE,
@@ -381,6 +375,15 @@ typedef enum {
   BXP_NE2K_ETHDEV,
   BXP_NE2K_SCRIPT,
   BXP_NE2K,
+  BXP_PNIC_ENABLED,
+  BXP_PNIC_IOADDR,
+  BXP_PNIC_IRQ,
+  BXP_PNIC_MACADDR,
+  BXP_PNIC_ETHMOD,
+  BXP_PNIC_ETHDEV,
+  BXP_PNIC_SCRIPT,
+  BXP_PNIC,
+  BXP_NETWORK,
   BXP_PCIDEV_VENDOR,
   BXP_PCIDEV_DEVICE,
   BXP_PCIDEV,

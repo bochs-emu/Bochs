@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.27 2004-10-07 17:38:02 vruppert Exp $
+// $Id: textconfig.cc,v 1.28 2004-10-24 20:04:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -352,7 +352,11 @@ int do_menu (bx_id id) {
       bx_param_c *chosen = menu->get (index);
       assert (chosen != NULL);
       if (chosen->get_enabled ()) {
-        chosen->text_ask (stdin, stderr);
+        if (chosen->get_type () == BXT_LIST) {
+          do_menu(chosen->get_id ());
+        } else {
+          chosen->text_ask (stdin, stderr);
+        }
       }
     }
   }
@@ -448,7 +452,7 @@ int bx_config_interface (int menu)
 	 case 8: do_menu (BXP_MENU_DISK); break;
 	 case 9: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
 	 case 10: do_menu (BXP_SB16); break;
-	 case 11: do_menu (BXP_NE2K); break;
+	 case 11: do_menu (BXP_NETWORK); break;
 	 case 12: do_menu (BXP_MENU_KEYBOARD); break;
 	 case 13: do_menu (BXP_PCI); break;
 	 case 14: do_menu (BXP_MENU_MISC); break;
@@ -956,10 +960,14 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
       assert (list[i] != NULL);
       fprintf (fpout, "%d. ", i+1);
       if (list[i]->get_enabled ()) {
-        if ((options->get () & SHOW_GROUP_NAME) && (list[i]->get_group () != NULL))
-          fprintf (fpout, "%s ", list[i]->get_group ());
-        list[i]->text_print (fpout);
-	fprintf (fpout, "\n");
+        if (list[i]->get_type () == BXT_LIST) {
+          fprintf (fpout, "%s\n", list[i]->get_name ());
+        } else {
+          if ((options->get () & SHOW_GROUP_NAME) && (list[i]->get_group () != NULL))
+            fprintf (fpout, "%s ", list[i]->get_group ());
+          list[i]->text_print (fpout);
+          fprintf (fpout, "\n");
+        }
       } else
 	fprintf (fpout, "(disabled)\n");
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.108 2004-10-17 16:25:10 vruppert Exp $
+// $Id: wxmain.cc,v 1.109 2004-10-24 20:04:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -620,7 +620,6 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditTiming(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
-  dlg.AddParam (SIM->get_param (BXP_IPS));
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_CLOCK);
   dlg.SetTitle (list->get_name ());
   dlg.AddParam (list);
@@ -630,7 +629,7 @@ void MyFrame::OnEditTiming(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_NE2K);
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_NETWORK);
   dlg.SetTitle (list->get_name ());
   dlg.AddParam (list);
   dlg.ShowModal ();
@@ -1094,46 +1093,6 @@ MyFrame::HandleAskParam (BxEvent *event)
           return -1;
         }
   }
-#if 0
-  switch (param) {
-  case BXP_FLOPPYA_PATH:
-  case BXP_FLOPPYB_PATH:
-  case BXP_DISKC_PATH:
-  case BXP_DISKD_PATH:
-  case BXP_CDROM_PATH:
-        {
-          Raise();  // bring window to front so dialog shows
-          char *msg;
-          if (param==BXP_FLOPPYA_PATH || param==BXP_FLOPPYB_PATH)
-            msg = "Choose new floppy disk image file";
-      else if (param==BXP_DISKC_PATH || param==BXP_DISKD_PATH)
-            msg = "Choose new hard disk image file";
-      else if (param==BXP_CDROM_PATH)
-            msg = "Choose new CDROM image file";
-          else
-            msg = "Choose new image file";
-          wxFileDialog dialog(this, msg, "", "", "*.*", 0);
-          int ret = dialog.ShowModal();
-          if (ret == wxID_OK)
-          {
-            char *newpath = (char *)dialog.GetPath().c_str ();
-            if (newpath && strlen(newpath)>0) {
-              // change floppy path to this value.
-              bx_param_string_c *Opath = SIM->get_param_string (param);
-              assert (Opath != NULL);
-              wxLogDebug ("Setting floppy %c path to '%s'", 
-                    param == BXP_FLOPPYA_PATH ? 'A' : 'B',
-                    newpath);
-              Opath->set (newpath);
-              return 1;
-            }
-          }
-          return 0;
-        }
-  default:
-        wxLogError ("HandleAskParam: parameter %d, not implemented", event->u.param.id);
-  }
-#endif
   return -1;  // could not display
 }
 
