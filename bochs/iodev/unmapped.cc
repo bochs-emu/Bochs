@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.18.4.3 2002-10-08 08:29:08 bdenney Exp $
+// $Id: unmapped.cc,v 1.18.4.4 2002-10-10 13:10:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,12 +77,10 @@ bx_unmapped_c::~bx_unmapped_c(void)
 }
 
   void
-bx_unmapped_c::init(bx_devices_c *d)
+bx_unmapped_c::init(void)
 {
-  BX_UM_THIS devices = d;
-
-  BX_REGISTER_DEFAULT_IOREAD_HANDLER(BX_UM_THIS, this, read_handler, "Unmapped", 7);
-  BX_REGISTER_DEFAULT_IOWRITE_HANDLER(BX_UM_THIS, this, write_handler, "Unmapped", 7);
+  BX_REGISTER_DEFAULT_IOREAD_HANDLER(this, read_handler, "Unmapped", 7);
+  BX_REGISTER_DEFAULT_IOWRITE_HANDLER(this, write_handler, "Unmapped", 7);
 }
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.3 2002-10-08 17:16:36 cbothamy Exp $
+// $Id: parallel.cc,v 1.20.4.4 2002-10-10 13:10:54 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -84,21 +84,20 @@ bx_parallel_c::~bx_parallel_c(void)
 }
 
   void
-bx_parallel_c::init(bx_devices_c *d)
+bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.3 2002-10-08 17:16:36 cbothamy Exp $"));
-  BX_PAR_THIS devices = d;
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.4 2002-10-10 13:10:54 cbothamy Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
     /* PARALLEL PORT 1 */
 
-    BX_REGISTER_IRQ(BX_PAR_THIS, 7, "Parallel Port 1");
+    BX_REGISTER_IRQ(7, "Parallel Port 1");
     for (unsigned addr=0x0378; addr<=0x037A; addr++) {
-      BX_REGISTER_IOREAD_HANDLER(BX_PAR_THIS, this, read_handler, addr, "Parallel Port 1", 7);
+      BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "Parallel Port 1", 7);
       }
-    BX_REGISTER_IOWRITE_HANDLER(BX_PAR_THIS, this, write_handler, 0x0378, "Parallel Port 1", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_PAR_THIS, this, write_handler, 0x037A, "Parallel Port 1", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0378, "Parallel Port 1", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x037A, "Parallel Port 1", 7);
 
     BX_PAR_THIS s.STATUS.error = 1;
     BX_PAR_THIS s.STATUS.slct  = 1;

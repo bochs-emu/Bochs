@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.17.4.1 2002-10-06 23:17:52 cbothamy Exp $
+// $Id: vga.h,v 1.17.4.2 2002-10-10 13:10:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,7 +97,7 @@ public:
 
   bx_vga_c(void);
   ~bx_vga_c(void);
-  BX_VGA_SMF void   init(bx_devices_c *);
+  BX_VGA_SMF void   init(void);
   BX_VGA_SMF void   reset(unsigned type);
   BX_VGA_SMF Bit8u  mem_read(Bit32u addr);
   // Note: either leave value of type Bit8u, or mask it when
@@ -246,8 +246,6 @@ private:
 #endif    
     } s;  // state information
 
-
-  bx_devices_c *devices;
 
 #if !BX_USE_VGA_SMF
   Bit32u read(Bit32u address, unsigned io_len);

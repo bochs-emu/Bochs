@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.11 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: slowdown_timer.cc,v 1.11.2.1 2002-10-10 13:10:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -33,7 +33,7 @@ bx_slowdown_timer_c::bx_slowdown_timer_c() {
 }
 
 void
-bx_slowdown_timer_c::init(bx_devices_c *dev) {
+bx_slowdown_timer_c::init(void) {
   s.MAXmultiplier=MAXMULT;
   s.Q=Qval;
 

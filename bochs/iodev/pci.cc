@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.20 2002-08-31 15:35:51 vruppert Exp $
+// $Id: pci.cc,v 1.20.4.1 2002-10-10 13:10:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,11 +71,9 @@ bx_pci_c::~bx_pci_c(void)
 
 
   void
-bx_pci_c::init(bx_devices_c *d)
+bx_pci_c::init(void)
 {
   // called once when bochs initializes
-
-  BX_PCI_THIS devices = d;
 
   if (bx_options.Oi440FXSupport->get ()) {
     d->register_io_read_handler(this, read_handler, 0x0CF8, "i440FX");

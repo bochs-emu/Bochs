@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.4 2002-10-08 17:16:34 cbothamy Exp $
+// $Id: floppy.cc,v 1.51.2.5 2002-10-10 13:10:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -113,22 +113,21 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
 
 
   void
-bx_floppy_ctrl_c::init(bx_devices_c *d)
+bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.4 2002-10-08 17:16:34 cbothamy Exp $"));
-  BX_FD_THIS devices = d;
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.5 2002-10-10 13:10:50 cbothamy Exp $"));
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
-  BX_REGISTER_IRQ(BX_FD_THIS, 6, "Floppy Drive");
+  BX_REGISTER_IRQ(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_FD_THIS, this, read_handler, addr, "Floppy Drive", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_FD_THIS, this, write_handler, addr, "Floppy Drive", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "Floppy Drive", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "Floppy Drive", 7);
     }
 
 
-  BX_SET_CMOS_REG(BX_FD_THIS, 0x10, 0x00); /* start out with: no drive 0, no drive 1 */
+  BX_SET_CMOS_REG(0x10, 0x00); /* start out with: no drive 0, no drive 1 */
 
   BX_FD_THIS s.num_supported_floppies = 0;
 
@@ -150,22 +149,22 @@ bx_floppy_ctrl_c::init(bx_devices_c *d)
 
   switch (BX_FD_THIS s.device_type[0]) {
     case BX_FLOPPY_NONE:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0x0f) | 0x00);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0x0f) | 0x00);
       break;
     case BX_FLOPPY_360K:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0x0f) | 0x10);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0x0f) | 0x10);
       break;
     case BX_FLOPPY_1_2:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0x0f) | 0x20);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0x0f) | 0x20);
       break;
     case BX_FLOPPY_720K:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0x0f) | 0x30);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0x0f) | 0x30);
       break;
     case BX_FLOPPY_1_44:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0x0f) | 0x40);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0x0f) | 0x40);
       break;
     case BX_FLOPPY_2_88:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0x0f) | 0x50);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0x0f) | 0x50);
       break;
     default:
       BX_PANIC(("unknown floppya type"));
@@ -201,22 +200,22 @@ bx_floppy_ctrl_c::init(bx_devices_c *d)
 
   switch (BX_FD_THIS s.device_type[1]) {
     case BX_FLOPPY_NONE:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0xf0) | 0x00);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0xf0) | 0x00);
       break;
     case BX_FLOPPY_360K:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0xf0) | 0x01);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0xf0) | 0x01);
       break;
     case BX_FLOPPY_1_2:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0xf0) | 0x02);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0xf0) | 0x02);
       break;
     case BX_FLOPPY_720K:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0xf0) | 0x03);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0xf0) | 0x03);
       break;
     case BX_FLOPPY_1_44:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0xf0) | 0x04);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0xf0) | 0x04);
       break;
     case BX_FLOPPY_2_88:
-      BX_SET_CMOS_REG(BX_FD_THIS, 0x10, (BX_GET_CMOS_REG(BX_FD_THIS, 0x10) & 0xf0) | 0x05);
+      BX_SET_CMOS_REG(0x10, (BX_GET_CMOS_REG(0x10) & 0xf0) | 0x05);
       break;
     default:
       BX_PANIC(("unknown floppyb type"));
@@ -242,10 +241,10 @@ bx_floppy_ctrl_c::init(bx_devices_c *d)
 
   /* CMOS Equipment Byte register */
   if (BX_FD_THIS s.num_supported_floppies > 0)
-    BX_SET_CMOS_REG(BX_FD_THIS, 0x14, (BX_GET_CMOS_REG(BX_FD_THIS, 0x14) & 0x3e) |
+    BX_SET_CMOS_REG(0x14, (BX_GET_CMOS_REG(0x14) & 0x3e) |
                           ((BX_FD_THIS s.num_supported_floppies-1) << 6) | 1);
   else
-    BX_SET_CMOS_REG(BX_FD_THIS, 0x14, (BX_GET_CMOS_REG(BX_FD_THIS, 0x14) & 0x3e));
+    BX_SET_CMOS_REG(0x14, (BX_GET_CMOS_REG(0x14) & 0x3e));
 
 
   BX_FD_THIS s.floppy_timer_index =

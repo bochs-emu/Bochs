@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43.2.4 2002-10-08 08:29:08 bdenney Exp $
+// $Id: vga.cc,v 1.43.2.5 2002-10-10 13:10:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -99,37 +99,35 @@ bx_vga_c::~bx_vga_c(void)
 
 
   void
-bx_vga_c::init(bx_devices_c *d)
+bx_vga_c::init(void)
 {
   unsigned i;
   unsigned x,y;
 
-  BX_VGA_THIS devices = d;
-
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03BA; addr<=0x03BA; addr++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03C0; addr<=0x03CF; addr++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03D4; addr<=0x03D5; addr++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "vga video", 7);
     }
 
   for (addr=0x03DA; addr<=0x03DA; addr++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, read_handler, addr, "vga video", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, write_handler, addr, "vga video", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "vga video", 7);
     }
 
 
@@ -228,7 +226,7 @@ bx_vga_c::init(bx_devices_c *d)
      bx_options.Ovga_update_interval->get (), 1, 1, "vga");
 
   /* video card with BIOS ROM */
-  BX_SET_CMOS_REG(BX_VGA_THIS, 0x14, (BX_GET_CMOS_REG(BX_VGA_THIS, 0x14) & 0xcf) | 0x00); 
+  BX_SET_CMOS_REG(0x14, (BX_GET_CMOS_REG(0x14) & 0xcf) | 0x00); 
 
   BX_VGA_THIS s.horiz_tick = 0;
   BX_VGA_THIS s.vert_tick = 0;
@@ -240,8 +238,8 @@ bx_vga_c::init(bx_devices_c *d)
   // FIXME: change 0xff80 & 0xff81 into some nice constants
   
   for (addr=0xff80; addr<=0xff81; addr++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_VGA_THIS, this, vbe_read_handler, addr, "vga video", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_VGA_THIS, this, vbe_write_handler, addr, "vga video", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, vbe_read_handler, addr, "vga video", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, vbe_write_handler, addr, "vga video", 7);
   }    
   BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
   BX_VGA_THIS s.vbe_xres=640;

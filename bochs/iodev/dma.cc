@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.23.4.1 2002-10-08 17:16:34 cbothamy Exp $
+// $Id: dma.cc,v 1.23.4.2 2002-10-10 13:10:49 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,12 +151,10 @@ bx_dma_c::get_TC(void)
 
 
   void
-bx_dma_c::init(bx_devices_c *d)
+bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.1 2002-10-08 17:16:34 cbothamy Exp $"));
-
-  BX_DMA_THIS devices = d;
+  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.2 2002-10-10 13:10:49 cbothamy Exp $"));
 
   /* 8237 DMA controller */
 
@@ -171,20 +169,20 @@ bx_dma_c::init(bx_devices_c *d)
 
   // 0000..000F
   for (i=0x0000; i<=0x000F; i++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_DMA_THIS, this, read_handler, i, "DMA controller", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_DMA_THIS, this, write_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, i, "DMA controller", 7);
     }
 
   // 00081..008F
   for (i=0x0081; i<=0x008F; i++) {
-    BX_REGISTER_IOREAD_HANDLER(BX_DMA_THIS, this, read_handler, i, "DMA controller", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_DMA_THIS, this, write_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, i, "DMA controller", 7);
     }
 
   // 000C0..00DE
   for (i=0x00C0; i<=0x00DE; i+=2) {
-    BX_REGISTER_IOREAD_HANDLER(BX_DMA_THIS, this, read_handler, i, "DMA controller", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_DMA_THIS, this, write_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, i, "DMA controller", 7);
     }
 
 

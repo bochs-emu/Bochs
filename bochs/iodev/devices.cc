@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.9 2002-10-08 21:00:21 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.10 2002-10-10 13:10:49 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,10 +89,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.9 2002-10-08 21:00:21 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.10 2002-10-10 13:10:49 cbothamy Exp $"));
   mem = newmem;
-
-  devices=this;
 
   /* no read / write handlers defined */
   num_read_handles = 0;
@@ -123,20 +121,20 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
   unmapped = &bx_unmapped;
-  unmapped->init(this);
+  unmapped->init();
  
   // BIOS log 
   biosdev = &bx_biosdev;
-  biosdev->init(this);
+  biosdev->init();
 
   // CMOS RAM & RTC
   cmos = &bx_cmos;
-  cmos->init(this);
+  cmos->init();
 
 #if BX_SUPPORT_VGA
   /*--- VGA adapter ---*/
   vga = & bx_vga;
-  vga->init(this);
+  vga->init();
 #else
   /*--- HGA adapter ---*/
   bx_init_hga_hardware();
@@ -147,9 +145,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_PCI_SUPPORT
   // PCI logic (i440FX)
   pci = & bx_pci;
-  pci->init(this);
+  pci->init();
   pci2isa = & bx_pci2isa;
-  pci2isa->init(this);
+  pci2isa->init();
 #endif
 
 #if BX_SUPPORT_APIC
@@ -162,30 +160,30 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   /*--- 8237 DMA ---*/
   dma = &bx_dma;
-  dma->init(this);
+  dma->init();
 
   //--- FLOPPY ---
   floppy = &bx_floppy;
-  floppy->init(this);
+  floppy->init();
 
   /*--- HARD DRIVE ---*/
   hard_drive = &bx_hard_drive;
-  hard_drive->init(this);
+  hard_drive->init();
 
   /*--- PARALLEL PORT ---*/
   parallel = &bx_parallel;
-  parallel->init(this);
+  parallel->init();
 
   /*--- SERIAL PORT ---*/
   serial = &bx_serial;
-  serial->init(this);
+  serial->init();
 
   /*--- KEYBOARD ---*/
-  pluginKeyboard->init(this);
+  pluginKeyboard->init();
 
   /*--- 8259A PIC ---*/
   pic = & bx_pic;
-  pic->init(this);
+  pic->init();
 
 #endif
 
@@ -193,26 +191,26 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_SB16
   //--- SOUND ---
   sb16 = &bx_sb16;
-  sb16->init(this);
+  sb16->init();
 #endif
 
   /*--- 8254 PIT ---*/
   pit = & bx_pit;
-  pit->init(this);
+  pit->init();
 
 #if BX_USE_SLOWDOWN_TIMER
-  bx_slowdown_timer.init(this);
+  bx_slowdown_timer.init();
 #endif
 
 #if BX_IODEBUG_SUPPORT
   iodebug = &bx_iodebug;
-  iodebug->init(this);
+  iodebug->init();
 #endif
 
 #if BX_NE2K_SUPPORT
   // NE2000 NIC
   ne2k = &bx_ne2k;
-  ne2k->init(this);
+  ne2k->init();
   BX_DEBUG(("ne2k"));
 #endif  // #if BX_NE2K_SUPPORT
 
@@ -220,7 +218,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // Guest to Host interface.  Used with special guest drivers
   // which move data to/from the host environment.
   g2h = &bx_g2h;
-  g2h->init(this);
+  g2h->init();
 #endif
 
   // system hardware
@@ -235,15 +233,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   // misc. CMOS
   Bit16u extended_memory_in_k = mem->get_memory_in_k() - 1024;
-  BX_SET_CMOS_REG(BX_DEV_THIS, 0x15, (Bit8u) BASE_MEMORY_IN_K);
-  BX_SET_CMOS_REG(BX_DEV_THIS, 0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
-  BX_SET_CMOS_REG(BX_DEV_THIS, 0x17, (Bit8u) extended_memory_in_k);
-  BX_SET_CMOS_REG(BX_DEV_THIS, 0x18, (Bit8u) (extended_memory_in_k >> 8));
-  BX_SET_CMOS_REG(BX_DEV_THIS, 0x30, (Bit8u) extended_memory_in_k);
-  BX_SET_CMOS_REG(BX_DEV_THIS, 0x31, (Bit8u) (extended_memory_in_k >> 8));
+  BX_SET_CMOS_REG(0x15, (Bit8u) BASE_MEMORY_IN_K);
+  BX_SET_CMOS_REG(0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
+  BX_SET_CMOS_REG(0x17, (Bit8u) extended_memory_in_k);
+  BX_SET_CMOS_REG(0x18, (Bit8u) (extended_memory_in_k >> 8));
+  BX_SET_CMOS_REG(0x30, (Bit8u) extended_memory_in_k);
+  BX_SET_CMOS_REG(0x31, (Bit8u) (extended_memory_in_k >> 8));
 
   /* now perform checksum of CMOS memory */
-  BX_CMOS_CHECKSUM(BX_DEV_THIS);
+  BX_CMOS_CHECKSUM();
 
   timer_handle = bx_pc_system.register_timer( this, timer_handler,
     (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");

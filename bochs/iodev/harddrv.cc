@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.3 2002-10-08 17:16:35 cbothamy Exp $
+// $Id: harddrv.cc,v 1.77.2.4 2002-10-10 13:10:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -191,13 +191,12 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 
 
   void
-bx_hard_drive_c::init(bx_devices_c *d)
+bx_hard_drive_c::init(void)
 {
   Bit8u channel;
   char  string[5];
 
-  BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.3 2002-10-08 17:16:35 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.4 2002-10-10 13:10:52 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -227,13 +226,13 @@ bx_hard_drive_c::init(bx_devices_c *d)
     sprintf(string ,"ATA%d", channel);
 
     if (BX_HD_THIS channels[channel].irq != 0) 
-      BX_REGISTER_IRQ(BX_HD_THIS, BX_HD_THIS channels[channel].irq, strdup(string));
+      BX_REGISTER_IRQ(BX_HD_THIS channels[channel].irq, strdup(string));
 
     if (BX_HD_THIS channels[channel].ioaddr1 != 0) {
       for (unsigned addr=0x0; addr<=0x7; addr++) {
-        BX_REGISTER_IOREAD_HANDLER(BX_HD_THIS, this, read_handler,
+        BX_REGISTER_IOREAD_HANDLER(this, read_handler,
                              BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
-        BX_REGISTER_IOWRITE_HANDLER(BX_HD_THIS, this, write_handler,
+        BX_REGISTER_IOWRITE_HANDLER(this, write_handler,
                              BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
         }
       }
@@ -241,9 +240,9 @@ bx_hard_drive_c::init(bx_devices_c *d)
     // We don't want to register addresses 0x3f6 and 0x3f7 as they are handled by the floppy controller
     if ((BX_HD_THIS channels[channel].ioaddr2 != 0) && (BX_HD_THIS channels[channel].ioaddr2 != 0x3f0)) {
       for (unsigned addr=0x6; addr<=0x7; addr++) {
-        BX_REGISTER_IOREAD_HANDLER(BX_HD_THIS, this, read_handler,
+        BX_REGISTER_IOREAD_HANDLER(this, read_handler,
                               BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
-        BX_REGISTER_IOWRITE_HANDLER(BX_HD_THIS, this, write_handler,
+        BX_REGISTER_IOWRITE_HANDLER(this, write_handler,
                               BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
         }
       }
@@ -375,88 +374,88 @@ bx_hard_drive_c::init(bx_devices_c *d)
 
   // generate CMOS values for hard drive if not using a CMOS image
   if (!bx_options.cmos.OcmosImage->get ()) {
-    BX_SET_CMOS_REG(BX_HD_THIS, 0x12, 0x00); // start out with: no drive 0, no drive 1
+    BX_SET_CMOS_REG(0x12, 0x00); // start out with: no drive 0, no drive 1
 
     if (BX_DRIVE_IS_HD(0,0)) {
       // Flag drive type as Fh, use extended CMOS location as real type
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x12, (BX_GET_CMOS_REG(BX_HD_THIS, 0x12) & 0x0f) | 0xf0);
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x19, 47); // user definable type
+      BX_SET_CMOS_REG(0x12, (BX_GET_CMOS_REG(0x12) & 0x0f) | 0xf0);
+      BX_SET_CMOS_REG(0x19, 47); // user definable type
       // AMI BIOS: 1st hard disk #cyl low byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x1b, (bx_options.atadevice[0][0].Ocylinders->get () & 0x00ff));
+      BX_SET_CMOS_REG(0x1b, (bx_options.atadevice[0][0].Ocylinders->get () & 0x00ff));
       // AMI BIOS: 1st hard disk #cyl high byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x1c, (bx_options.atadevice[0][0].Ocylinders->get () & 0xff00) >> 8);
+      BX_SET_CMOS_REG(0x1c, (bx_options.atadevice[0][0].Ocylinders->get () & 0xff00) >> 8);
       // AMI BIOS: 1st hard disk #heads
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x1d, (bx_options.atadevice[0][0].Oheads->get ()));
+      BX_SET_CMOS_REG(0x1d, (bx_options.atadevice[0][0].Oheads->get ()));
       // AMI BIOS: 1st hard disk write precompensation cylinder, low byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x1e, 0xff); // -1
+      BX_SET_CMOS_REG(0x1e, 0xff); // -1
       // AMI BIOS: 1st hard disk write precompensation cylinder, high byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x1f, 0xff); // -1
+      BX_SET_CMOS_REG(0x1f, 0xff); // -1
       // AMI BIOS: 1st hard disk control byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x20, (0xc0 | ((bx_options.atadevice[0][0].Oheads->get () > 8) << 3)));
+      BX_SET_CMOS_REG(0x20, (0xc0 | ((bx_options.atadevice[0][0].Oheads->get () > 8) << 3)));
       // AMI BIOS: 1st hard disk landing zone, low byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x21, BX_GET_CMOS_REG(BX_HD_THIS, 0x1b));
+      BX_SET_CMOS_REG(0x21, BX_GET_CMOS_REG(0x1b));
       // AMI BIOS: 1st hard disk landing zone, high byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x22, BX_GET_CMOS_REG(BX_HD_THIS, 0x1c));
+      BX_SET_CMOS_REG(0x22, BX_GET_CMOS_REG(0x1c));
       // AMI BIOS: 1st hard disk sectors/track
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x23, bx_options.atadevice[0][0].Ospt->get ());
+      BX_SET_CMOS_REG(0x23, bx_options.atadevice[0][0].Ospt->get ());
     }
 
     //set up cmos for second hard drive
     if (BX_DRIVE_IS_HD(0,1)) {
       BX_DEBUG(("1: I will put 0xf into the second hard disk field"));
       // fill in lower 4 bits of 0x12 for second HD
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x12, (BX_GET_CMOS_REG(BX_HD_THIS, 0x12) & 0xf0) | 0x0f);
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x1a, 47); // user definable type
+      BX_SET_CMOS_REG(0x12, (BX_GET_CMOS_REG(0x12) & 0xf0) | 0x0f);
+      BX_SET_CMOS_REG(0x1a, 47); // user definable type
       // AMI BIOS: 2nd hard disk #cyl low byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x24, (bx_options.atadevice[0][1].Ocylinders->get () & 0x00ff));
+      BX_SET_CMOS_REG(0x24, (bx_options.atadevice[0][1].Ocylinders->get () & 0x00ff));
       // AMI BIOS: 2nd hard disk #cyl high byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x25, (bx_options.atadevice[0][1].Ocylinders->get () & 0xff00) >> 8);
+      BX_SET_CMOS_REG(0x25, (bx_options.atadevice[0][1].Ocylinders->get () & 0xff00) >> 8);
       // AMI BIOS: 2nd hard disk #heads
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x26, (bx_options.atadevice[0][1].Oheads->get ()));
+      BX_SET_CMOS_REG(0x26, (bx_options.atadevice[0][1].Oheads->get ()));
       // AMI BIOS: 2nd hard disk write precompensation cylinder, low byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x27, 0xff); // -1
+      BX_SET_CMOS_REG(0x27, 0xff); // -1
       // AMI BIOS: 2nd hard disk write precompensation cylinder, high byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x28, 0xff); // -1
+      BX_SET_CMOS_REG(0x28, 0xff); // -1
       // AMI BIOS: 2nd hard disk, 0x80 if heads>8
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x29, (bx_options.atadevice[0][1].Oheads->get () > 8) ? 0x80 : 0x00);
+      BX_SET_CMOS_REG(0x29, (bx_options.atadevice[0][1].Oheads->get () > 8) ? 0x80 : 0x00);
       // AMI BIOS: 2nd hard disk landing zone, low byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x2a, BX_GET_CMOS_REG(BX_HD_THIS, 0x24));
+      BX_SET_CMOS_REG(0x2a, BX_GET_CMOS_REG(0x24));
       // AMI BIOS: 2nd hard disk landing zone, high byte
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x2b, BX_GET_CMOS_REG(BX_HD_THIS, 0x25));
+      BX_SET_CMOS_REG(0x2b, BX_GET_CMOS_REG(0x25));
       // AMI BIOS: 2nd hard disk sectors/track
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x2c, bx_options.atadevice[0][1].Ospt->get ());
+      BX_SET_CMOS_REG(0x2c, bx_options.atadevice[0][1].Ospt->get ());
     }
 
 
     // Set the "non-extended" boot device. This will default to DISKC if cdrom
     if ( bx_options.Obootdrive->get () != BX_BOOT_FLOPPYA) {
       // system boot sequence C:, A:
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x2d, BX_GET_CMOS_REG(BX_HD_THIS, 0x2d) & 0xdf);
+      BX_SET_CMOS_REG(0x2d, BX_GET_CMOS_REG(0x2d) & 0xdf);
       }
     else { // 'a'
       // system boot sequence A:, C:
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x2d, BX_GET_CMOS_REG(BX_HD_THIS, 0x2d) | 0x20);
+      BX_SET_CMOS_REG(0x2d, BX_GET_CMOS_REG(0x2d) | 0x20);
       }
 
     // Set the "extended" boot device, byte 0x3D (needed for cdrom booting)
     if ( bx_options.Obootdrive->get () == BX_BOOT_FLOPPYA) {
       // system boot sequence A:
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x3d, 0x01);
+      BX_SET_CMOS_REG(0x3d, 0x01);
       BX_INFO(("Boot device will be 'a'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) { 
       // system boot sequence C:
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x3d, 0x02);
+      BX_SET_CMOS_REG(0x3d, 0x02);
       BX_INFO(("Boot device will be 'c'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_CDROM) { 
       // system boot sequence cdrom
-      BX_SET_CMOS_REG(BX_HD_THIS, 0x3d, 0x03);
+      BX_SET_CMOS_REG(0x3d, 0x03);
       BX_INFO(("Boot device will be 'cdrom'"));
       }
       
     // Set the signature check flag in cmos, inverted for compatibility
-    BX_SET_CMOS_REG(BX_HD_THIS, 0x38, bx_options.OfloppySigCheck->get());
+    BX_SET_CMOS_REG(0x38, bx_options.OfloppySigCheck->get());
     BX_INFO(("Floppy boot signature check is %sabled", bx_options.OfloppySigCheck->get() ? "dis" : "en"));
     }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.23 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: sb16.cc,v 1.23.2.1 2002-10-10 13:10:57 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,9 +101,8 @@ bx_sb16_c::~bx_sb16_c(void)
     fclose(LOGFILE);
 }
 
-void bx_sb16_c::init(bx_devices_c *d)
+void bx_sb16_c::init(void)
 {
-  BX_SB16_THIS devices = d;
   unsigned addr;
 
   if (!bx_options.sb16.Opresent->get ())

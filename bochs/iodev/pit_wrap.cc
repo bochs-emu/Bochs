@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.29.2.1 2002-10-08 17:16:36 cbothamy Exp $
+// $Id: pit_wrap.cc,v 1.29.2.2 2002-10-10 13:10:56 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,22 +128,20 @@ bx_pit_c::~bx_pit_c( void )
 }
 
   int
-bx_pit_c::init( bx_devices_c *d )
+bx_pit_c::init( void )
 {
-  BX_PIT_THIS devices = d;
+  bx_devices.register_irq(0, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0040, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0041, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0042, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0043, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0061, "8254 PIT");
 
-  BX_PIT_THIS devices->register_irq(0, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0040, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0041, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0042, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0043, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0061, "8254 PIT");
-
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0040, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0041, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0042, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0043, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0061, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0040, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0041, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0042, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0043, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0061, "8254 PIT");
 
   BX_DEBUG(("pit: starting init"));
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.7 2002-10-08 22:50:31 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.8 2002-10-10 13:10:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,23 +139,21 @@ bx_keyb_c::resetinternals(Boolean powerup)
 
 
   void
-bx_keyb_c::init(bx_devices_c *d)
+bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.7 2002-10-08 22:50:31 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.8 2002-10-10 13:10:53 cbothamy Exp $"));
   Bit32u   i;
 
-  BX_KEY_THIS devices = d;
+  BX_REGISTER_IRQ(1, "8042 Keyboard controller");
+  BX_REGISTER_IRQ(12, "8042 Keyboard controller (PS/2 mouse)");
 
-  BX_REGISTER_IRQ(BX_KEY_THIS, 1, "8042 Keyboard controller");
-  BX_REGISTER_IRQ(BX_KEY_THIS, 12, "8042 Keyboard controller (PS/2 mouse)");
-
-  BX_REGISTER_IOREAD_HANDLER(BX_KEY_THIS, this, read_handler,
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler,
                                       0x0060, "8042 Keyboard controller", 3);
-  BX_REGISTER_IOREAD_HANDLER(BX_KEY_THIS, this, read_handler,
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler,
                                       0x0064, "8042 Keyboard controller", 3);
-  BX_REGISTER_IOWRITE_HANDLER(BX_KEY_THIS, this, write_handler,
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler,
                                       0x0060, "8042 Keyboard controller", 3);
-  BX_REGISTER_IOWRITE_HANDLER(BX_KEY_THIS, this, write_handler,
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler,
                                       0x0064, "8042 Keyboard controller", 3);
   BX_KEY_THIS timer_handle = bx_pc_system.register_timer( this, timer_handler,
                                  bx_options.Okeyboard_serial_delay->get(), 1, 1,
@@ -217,7 +215,7 @@ bx_keyb_c::init(bx_devices_c *d)
   BX_KEY_THIS paste_delay_changed ();
 
   // mouse port installed on system board
-  BX_SET_CMOS_REG(BX_KEY_THIS, 0x14, BX_GET_CMOS_REG(BX_KEY_THIS, 0x14) | 0x04);
+  BX_SET_CMOS_REG(0x14, BX_GET_CMOS_REG(0x14) | 0x04);
 
 #if BX_WITH_WX
   static Boolean first_time = 1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.10 2002-08-28 19:39:00 vruppert Exp $
+// $Id: dma.h,v 1.10.4.1 2002-10-10 13:10:49 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ public:
   bx_dma_c();
   ~bx_dma_c(void);
 
-  BX_DMA_SMF void     init(bx_devices_c *);
+  BX_DMA_SMF void     init(void);
   BX_DMA_SMF void     reset(unsigned type);
   BX_DMA_SMF void     raise_HLDA(void);
   BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
@@ -108,7 +108,6 @@ private:
     void (* dmaWrite16)(Bit16u *data_word);
     } h[4]; // DMA read and write handlers
 
-  bx_devices_c *devices;
   };
 
 extern bx_dma_c bx_dma;

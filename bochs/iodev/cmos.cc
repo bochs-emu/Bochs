@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.4 2002-10-08 17:16:33 cbothamy Exp $
+// $Id: cmos.cc,v 1.20.2.5 2002-10-10 13:10:49 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -114,19 +114,17 @@ bx_cmos_c::~bx_cmos_c(void)
 
 
   void
-bx_cmos_c::init(bx_devices_c *d)
+bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.4 2002-10-08 17:16:33 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.5 2002-10-10 13:10:49 cbothamy Exp $"));
 
   // CMOS RAM & RTC
 
-  BX_CMOS_THIS devices = d;
-
-  BX_REGISTER_IOREAD_HANDLER(BX_CMOS_THIS, this, read_handler, 0x0070, "CMOS RAM", 7);
-  BX_REGISTER_IOREAD_HANDLER(BX_CMOS_THIS, this, read_handler, 0x0071, "CMOS RAM", 7);
-  BX_REGISTER_IOWRITE_HANDLER(BX_CMOS_THIS, this, write_handler, 0x0070, "CMOS RAM", 7);
-  BX_REGISTER_IOWRITE_HANDLER(BX_CMOS_THIS, this, write_handler, 0x0071, "CMOS RAM", 7);
-  BX_REGISTER_IRQ(BX_CMOS_THIS, 8, "CMOS RTC"); 
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x0070, "CMOS RAM", 7);
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x0071, "CMOS RAM", 7);
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0070, "CMOS RAM", 7);
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0071, "CMOS RAM", 7);
+  BX_REGISTER_IRQ(8, "CMOS RTC"); 
 
   BX_CMOS_THIS s.periodic_timer_index =
     BX_REGISTER_TIMER(this, periodic_timer_handler,

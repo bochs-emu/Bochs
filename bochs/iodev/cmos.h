@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.6 2002-08-27 19:54:46 bdenney Exp $
+// $Id: cmos.h,v 1.6.4.1 2002-10-10 13:10:49 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ public:
   bx_cmos_c(void);
   ~bx_cmos_c(void);
 
-  BX_CMOS_SMF void init(bx_devices_c *);
+  BX_CMOS_SMF void init(void);
   BX_CMOS_SMF void checksum_cmos(void);
   BX_CMOS_SMF void reset(unsigned type);
 
@@ -57,8 +57,6 @@ public:
     } s;  // state information
 
 private:
-  bx_devices_c *devices;
-
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_CMOS_SMF

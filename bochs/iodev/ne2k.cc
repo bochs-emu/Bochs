@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.38 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: ne2k.cc,v 1.38.2.1 2002-10-10 13:10:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.38 2002-10-02 05:16:01 kevinlawton Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.38.2.1 2002-10-10 13:10:53 cbothamy Exp $"));
 	// nothing for now
 }
 
@@ -1243,10 +1243,9 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 }
 
 void
-bx_ne2k_c::init(bx_devices_c *d)
+bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.38 2002-10-02 05:16:01 kevinlawton Exp $"));
-  BX_NE2K_THIS devices = d;
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.38.2.1 2002-10-10 13:10:53 cbothamy Exp $"));
 
 
   if (bx_options.ne2k.Ovalid->get ()) {

@@ -877,10 +877,10 @@ void bx_init_plugins()
       if (!device->use_devmodel_interface) {
         if (device->device_init_dev != NULL) {
             pluginlog->info("Initialisation of '%s' plugin device",device->name);
-            device->device_init_dev(NULL);
+            device->device_init_dev();
 	}
       } else {
-	device->devmodel->init (NULL);
+	device->devmodel->init ();
       }
     } 
 }

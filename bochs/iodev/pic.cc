@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.29.4.1 2002-10-08 17:16:36 cbothamy Exp $
+// $Id: pic.cc,v 1.29.4.2 2002-10-10 13:10:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,20 +82,18 @@ bx_pic_c::~bx_pic_c(void)
 
 
   void
-bx_pic_c::init(bx_devices_c *d)
+bx_pic_c::init(void)
 {
-  BX_PIC_THIS devices = d;
-
   /* 8259 PIC (Programmable Interrupt Controller) */
-  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x0020, "8259 PIC", 7);
-  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x0021, "8259 PIC", 7);
-  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x00A0, "8259 PIC", 7);
-  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x00A1, "8259 PIC", 7);
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x0020, "8259 PIC", 7);
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x0021, "8259 PIC", 7);
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x00A0, "8259 PIC", 7);
+  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x00A1, "8259 PIC", 7);
 
-  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x0020, "8259 PIC", 7);
-  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x0021, "8259 PIC", 7);
-  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x00A0, "8259 PIC", 7);
-  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x00A1, "8259 PIC", 7);
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0020, "8259 PIC", 7);
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0021, "8259 PIC", 7);
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x00A0, "8259 PIC", 7);
+  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x00A1, "8259 PIC", 7);
 
 
   BX_PIC_THIS s.master_pic.single_PIC = 0;

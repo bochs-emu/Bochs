@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.8 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pic.h,v 1.8.4.1 2002-10-10 13:10:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,7 +71,7 @@ class bx_pic_c : public logfunctions {
 public:
   bx_pic_c(void);
   ~bx_pic_c(void);
-  BX_PIC_SMF void   init(bx_devices_c *);
+  BX_PIC_SMF void   init(void);
   BX_PIC_SMF void   reset(unsigned type);
   BX_PIC_SMF void   lower_irq(unsigned irq_no);
   BX_PIC_SMF void   raise_irq(unsigned irq_no);
@@ -82,8 +82,6 @@ private:
     bx_pic_t master_pic;
     bx_pic_t slave_pic;
     } s;
-
-  bx_devices_c *devices;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

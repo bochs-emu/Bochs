@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.8 2002-10-10 04:58:54 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.9 2002-10-10 13:10:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,7 +89,7 @@ class bx_devmodel_c : public logfunctions {
   public:
   virtual ~bx_devmodel_c () {}
   virtual void init_mem(BX_MEM_C *) {}
-  virtual void init(bx_devices_c *d) {}
+  virtual void init(void) {}
   virtual void reset(unsigned type) {}
   virtual void device_load_state () {}
   virtual void device_save_state () {}
@@ -188,8 +188,6 @@ public:
   Bit32u   bulkIOHostAddr;
   unsigned bulkIOQuantumsRequested;
   unsigned bulkIOQuantumsTransferred;
-
-  bx_devices_c *devices;
 
 private:
 

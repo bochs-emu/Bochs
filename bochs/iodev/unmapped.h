@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.9.4.1 2002-10-06 23:17:52 cbothamy Exp $
+// $Id: unmapped.h,v 1.9.4.2 2002-10-10 13:10:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ public:
   bx_unmapped_c(void);
   ~bx_unmapped_c(void);
 
-  BX_UM_SMF void init(bx_devices_c *d);
+  BX_UM_SMF void init(void);
   BX_UM_SMF void reset (unsigned type);
 
 private:
@@ -61,7 +61,6 @@ private:
     Bit8u shutdown;
     } s;  // state information
 
-  bx_devices_c *devices;
   };
 
 extern bx_unmapped_c bx_unmapped;

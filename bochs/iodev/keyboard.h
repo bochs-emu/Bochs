@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.17.4.2 2002-10-08 21:00:27 bdenney Exp $
+// $Id: keyboard.h,v 1.17.4.3 2002-10-10 13:10:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ public:
   bx_keyb_c(void);
   ~bx_keyb_c(void);
   // implement bx_devmodel_c interface
-  virtual void     init(bx_devices_c *d);
+  virtual void     init(void);
   virtual void     reset(unsigned type);
   // override stubs from bx_keyb_stub_c
   virtual void     gen_scancode(Bit32u   scancode);
@@ -186,8 +186,6 @@ private:
     unsigned controller_Qsize;
     unsigned controller_Qsource; // 0=keyboard, 1=mouse
     } s; // State information for saving/loading
-
-  bx_devices_c *devices;
 
   // The paste buffer does NOT exist in the hardware.  It is a bochs
   // construction that allows the user to "paste" arbitrary length sequences of

@@ -47,17 +47,17 @@ extern "C" {
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); bx_init_plugins();}
 #define BX_RESET_DEVICES(type) {bx_devices.reset(type); bx_reset_plugins(type);}
 
-#define BX_REGISTER_IOREAD_HANDLER(a,b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
-#define BX_REGISTER_IOWRITE_HANDLER(a,b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
-#define BX_REGISTER_DEFAULT_IOREAD_HANDLER(a,b,c,d,e) pluginRegisterDefaultIOReadHandler(b,c,d,e)
-#define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(a,b,c,d,e) pluginRegisterDefaultIOWriteHandler(b,c,d,e)
+#define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
+#define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
+#define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) pluginRegisterDefaultIOReadHandler(b,c,d,e)
+#define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(b,c,d,e) pluginRegisterDefaultIOWriteHandler(b,c,d,e)
 
-#define BX_REGISTER_IRQ(a,b,c) pluginRegisterIRQ(b,c)
-#define BX_UNREGISTER_IRQ(a,b) pluginUnregisterIRQ(b)
+#define BX_REGISTER_IRQ(b,c) pluginRegisterIRQ(b,c)
+#define BX_UNREGISTER_IRQ(b) pluginUnregisterIRQ(b)
 
-#define BX_GET_CMOS_REG(a,b) pluginGetCMOSReg(b)
-#define BX_SET_CMOS_REG(a,b,c) pluginSetCMOSReg(b,c)
-#define BX_CMOS_CHECKSUM(a) pluginCMOSChecksum()
+#define BX_GET_CMOS_REG(b) pluginGetCMOSReg(b)
+#define BX_SET_CMOS_REG(b,c) pluginSetCMOSReg(b,c)
+#define BX_CMOS_CHECKSUM() pluginCMOSChecksum()
 #define BX_GET_CMOS_TIMEVAL(a) pluginGetCMOSTimeval()
 
 #define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
@@ -82,9 +82,9 @@ extern "C" {
 
 #define BX_HARD_DRIVE_PRESENT() (pluginDevicePresent(BX_PLUGIN_HARDDRV))
 
-#define BX_BULK_IO_QUANTUM_REQUESTED(a) (bx_devices.bulkIOQuantumsRequested)
-#define BX_BULK_IO_QUANTUM_TRANSFERRED(a) (bx_devices.bulkIOQuantumsTransferred)
-#define BX_BULK_IO_HOST_ADDR(a) (bx_devices.bulkIOHostAddr)
+#define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
+#define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
+#define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
 
 #define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
   pluginRegisterDMA8Channel(channel, dmaRead, dmaWrite, name)
@@ -105,17 +105,17 @@ extern "C" {
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
 #define BX_RESET_DEVICES(type) {bx_devices.reset(type); }
 
-#define BX_REGISTER_IOREAD_HANDLER(a,b,c,d,e,f) a devices->register_io_read_handler(b,c,d,e)
-#define BX_REGISTER_IOWRITE_HANDLER(a,b,c,d,e,f) a devices->register_io_write_handler(b,c,d,e)
-#define BX_REGISTER_DEFAULT_IOREAD_HANDLER(a,b,c,d,e) a devices->register_default_io_read_handler(b,c,d)
-#define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(a,b,c,d,e) a devices->register_default_io_write_handler(b,c,d)
-#define BX_REGISTER_IRQ(a,b,c) a devices->register_irq(b,c)
-#define BX_UNREGISTER_IRQ(a,b) a devices->unregister_irq(b)
+#define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e)
+#define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e)
+#define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) bx_devices.register_default_io_read_handler(b,c,d)
+#define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(b,c,d,e) bx_devices.register_default_io_write_handler(b,c,d)
+#define BX_REGISTER_IRQ(b,c) bx_devices.register_irq(b,c)
+#define BX_UNREGISTER_IRQ(b) bx_devices.unregister_irq(b)
 
-#define BX_GET_CMOS_REG(a,b) (a devices->cmos->s.reg[b])
-#define BX_SET_CMOS_REG(a,b,c) a devices->cmos->s.reg[b]=c
-#define BX_CMOS_CHECKSUM(a) a devices->cmos->checksum_cmos()
-#define BX_GET_CMOS_TIMEVAL(a) a devices->cmos->s.timeval
+#define BX_GET_CMOS_REG(b) (bx_devices.cmos->s.reg[b])
+#define BX_SET_CMOS_REG(b,c) (bx_devices.cmos->s.reg[b]=c)
+#define BX_CMOS_CHECKSUM() (bx_devices.cmos->checksum_cmos())
+#define BX_GET_CMOS_TIMEVAL() (bx_devices.cmos->s.timeval)
 
 #define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
 #define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
@@ -133,10 +133,10 @@ extern "C" {
 
 #define BX_FLOPPY_PRESENT() (bx_devices.floppy)
 
-#define BX_HD_READ_HANDLER(a, b, c) \
-    (a devices->hard_drive->read_handler(a devices->hard_drive, b, c))
-#define BX_HD_WRITE_HANDLER(a, b, c, d) \
-    (a devices->hard_drive->write_handler(a devices->hard_drive, b, c, d))
+#define BX_HD_READ_HANDLER(b, c) \
+    (bx_devices.hard_drive->read_handler(bx_devices.hard_drive, b, c))
+#define BX_HD_WRITE_HANDLER(b, c, d) \
+    (bx_devices.hard_drive->write_handler(bx_devices.hard_drive, b, c, d))
 #define BX_HD_GET_FIRST_CD_HANDLE() \
     (bx_devices.hard_drive->get_first_cd_handle())
 #define BX_HD_GET_DEVICE_HANDLE(a,b) \
@@ -149,9 +149,9 @@ extern "C" {
 
 #define BX_HARD_DRIVE_PRESENT() (bx_devices.hard_drive)
 
-#define BX_BULK_IO_QUANTUM_REQUESTED(a) (a devices->bulkIOQuantumsRequested)
-#define BX_BULK_IO_QUANTUM_TRANSFERRED(a) (a devices->bulkIOQuantumsTransferred)
-#define BX_BULK_IO_HOST_ADDR(a) (a devices->bulkIOHostAddr)
+#define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
+#define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
+#define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
 
 #define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
   bx_dma.registerDMA8Channel(channel, dmaRead, dmaWrite, name)
@@ -217,7 +217,7 @@ typedef struct _device_t
 {
     const char *name;
     void (*device_init_mem)(BX_MEM_C *);
-    void (*device_init_dev)(bx_devices_c *);
+    void (*device_init_dev)();
     void (*device_reset)(unsigned);
     void (*device_load_state)();
     void (*device_save_state)();
@@ -239,7 +239,7 @@ void plugin_fini_all (void);
 
 /* === Device Stuff === */
 typedef void (*deviceInitMem_t)(BX_MEM_C *);
-typedef void (*deviceInitDev_t)(bx_devices_c *);
+typedef void (*deviceInitDev_t)(void);
 typedef void (*deviceReset_t)(unsigned);
 typedef void (*deviceLoad_t)(void);
 typedef void (*deviceSave_t)(void);

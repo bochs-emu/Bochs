@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.2 2002-09-21 11:38:12 vruppert Exp $
+// $Id: pci2isa.cc,v 1.2.4.1 2002-10-10 13:10:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -57,11 +57,9 @@ bx_pci2isa_c::~bx_pci2isa_c(void)
 
 
   void
-bx_pci2isa_c::init(bx_devices_c *d)
+bx_pci2isa_c::init(void)
 {
   // called once when bochs initializes
-
-  BX_P2I_THIS devices = d;
 
   if (bx_options.Oi440FXSupport->get ()) {
     BX_REGISTER_PCI_HANDLERS(this, pci_read_handler, pci_write_handler,

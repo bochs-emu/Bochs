@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.12.4.1 2002-10-06 23:17:51 cbothamy Exp $
+// $Id: floppy.h,v 1.12.4.2 2002-10-10 13:10:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ public:
 
   bx_floppy_ctrl_c(void);
   ~bx_floppy_ctrl_c(void);
-  BX_FD_SMF void   init(bx_devices_c *d);
+  BX_FD_SMF void   init(void);
   BX_FD_SMF void   reset(unsigned type);
   BX_FD_SMF void   dma_write(Bit8u *data_byte);
   BX_FD_SMF void   dma_read(Bit8u *data_byte);
@@ -117,8 +117,6 @@ private:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed
     } s;  // state information
-
-  bx_devices_c *devices;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

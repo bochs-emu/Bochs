@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.26.2.3 2002-10-08 17:16:36 cbothamy Exp $
+// $Id: serial.cc,v 1.26.2.4 2002-10-10 13:10:57 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -121,7 +121,7 @@ bx_serial_c::~bx_serial_c(void)
 
 
   void
-bx_serial_c::init(bx_devices_c *d)
+bx_serial_c::init(void)
 {
   if (!bx_options.com[0].Oenabled->get ())
     return;
@@ -162,9 +162,7 @@ bx_serial_c::init(bx_devices_c *d)
   this->raw = new serial_raw("/dev/cua0", SIGUSR1);
 #endif // USE_RAW_SERIAL
 
-  BX_SER_THIS devices = d;
-
-  BX_REGISTER_IRQ(BX_SER_THIS, 4, "Serial Port 1");
+  BX_REGISTER_IRQ(4, "Serial Port 1");
 
 #if defined (USE_TTY_HACK)
   tty_id = tty_alloc("Bx Serial Console, Your Window to the 8250");
@@ -266,8 +264,8 @@ bx_serial_c::init(bx_devices_c *d)
 
   for (unsigned addr=0x03F8; addr<=0x03FF; addr++) {
 	BX_DEBUG(("register read/write: 0x%04x",addr));
-    BX_REGISTER_IOREAD_HANDLER(BX_SER_THIS, this, read_handler, addr, "Serial Port 1", 7);
-    BX_REGISTER_IOWRITE_HANDLER(BX_SER_THIS, this, write_handler, addr, "Serial Port 1", 7);
+    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "Serial Port 1", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "Serial Port 1", 7);
     }
 
   BX_INFO(( "com1 at 0x3f8/8 irq 4" ));
