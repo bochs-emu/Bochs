@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.cc,v 1.3 2003-01-09 17:14:20 vruppert Exp $
+// $Id: extfpuirq.cc,v 1.4 2003-06-21 09:52:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ bx_extfpuirq_c *theExternalFpuIrq = NULL;
 libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theExternalFpuIrq = new bx_extfpuirq_c ();
-  bx_devices.pluginPci2IsaBridge = theExternalFpuIrq;
+  bx_devices.pluginExtFpuIrq = theExternalFpuIrq;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theExternalFpuIrq, BX_PLUGIN_EXTFPUIRQ);
   return(0); // Success
 }
