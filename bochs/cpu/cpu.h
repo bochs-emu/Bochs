@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.139 2003-05-15 16:41:14 sshwarts Exp $
+// $Id: cpu.h,v 1.140 2003-06-08 09:55:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1399,7 +1399,7 @@ union {
   bx_global_segment_reg_t gdtr; /* global descriptor table register */
   bx_global_segment_reg_t idtr; /* interrupt descriptor table register */
 #endif
-  bx_segment_reg_t        ldtr; /* interrupt descriptor table register */
+  bx_segment_reg_t        ldtr; /* local descriptor table register */
   bx_segment_reg_t        tr;   /* task register */
 
 
