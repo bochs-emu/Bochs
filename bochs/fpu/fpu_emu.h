@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.20 2003-10-25 10:32:54 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.21 2004-02-10 00:23:12 danielg4 Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -81,6 +81,9 @@ extern u_char emulating;
 #define OP_SIZE_PREFIX 0x66
 #define ADDR_SIZE_PREFIX 0x67
 
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=packed
+#endif
 struct address {
   bx_address offset;
 #ifdef EMU_BIG_ENDIAN
@@ -103,6 +106,9 @@ typedef struct { u_char address_size, operand_size, segment; }
 typedef struct { overrides override;
 		 u_char default_mode; } 
     GCC_ATTRIBUTE((packed)) fpu_addr_modes;
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
 
 /* PROTECTED has a restricted meaning in the emulator; it is used
    to signal that the emulator needs to do special things to ensure
