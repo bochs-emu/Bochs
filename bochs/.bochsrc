@@ -1,10 +1,9 @@
 romimage: file=bios/BIOS-bochs-990925a, address=0xf0000
 megs: 32
 vgaromimage: bios/VGABIOS-elpin-2.20
-#floppya: 1_44=images/redhat-boot.img, status=inserted
-floppya: 1_44=images/a.img, status=inserted
-floppyb: 1_44=images/rescue.img, status=inserted
-diskc: file=images/c.img, cyl=989, heads=12, spt=35
+floppya: 1_44=../images/a.img, status=inserted
+floppyb: 1_44=../images/b.img, status=inserted
+diskc: file=../images/c.img, cyl=989, heads=12, spt=35
 boot: c
 log: /dev/tty
 #./bochs.out
