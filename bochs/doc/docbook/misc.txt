@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.6 2001-11-15 17:38:52 bdenney Exp $
+$Id: misc.txt,v 1.7 2001-11-15 17:44:50 bdenney Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -325,5 +325,30 @@ downloaded it last.
   bdenney@cvs.sf.net's password:   <--password
   [then it starts an editor so you can type a log message.  The default is
   usually vi.  If you want a different editor, set the EDITOR env variable
-  to the name of your preferred editor.]
+  to the name of your preferred editor.  When you're done, just save the
+  file and quit the editor.]
+
+Unless there's some problem, you will see a message that says what the new
+revision number for the file is, and then it says "done".  If when you're
+editing, you decide that you don't want to commit after all, DON'T save the
+file.  Quit the editor and when it asks where the log message went, tell it
+to abort.  Here is a successful checkin:
+
+  $ cvs commit misc.txt
+  bdenney@cvs.sf.net's password:   <--password
+  [edit log msg]
+  Checking in misc.txt;
+  /cvsroot/bochs/bochs/doc/docbook/misc.txt,v  <--  misc.txt
+  new revision: 1.6; previous revision: 1.5
+  done
+
+Here is an aborted one:
+
+  $ cvs commit misc.txt
+  bdenney@cvs.sf.net's password:   <--password
+  [quit editor without saving]
+  Log message unchanged or not specified
+  a)bort, c)ontinue, e)dit, !)reuse this message unchanged for remaining dirs
+  Action: a
+  cvs [commit aborted]: aborted by user
 
