@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.75.2.3 2002-10-20 13:57:49 bdenney Exp $
+// $Id: dbg_main.cc,v 1.75.2.4 2002-10-21 15:14:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,7 +387,7 @@ process_sim2:
   BX_RESET_DEVICES(BX_RESET_HARDWARE);
   SIM->set_init_done (1);
 
-  bx_gui.init_signal_handlers ();
+  bx_gui->init_signal_handlers ();
   bx_pc_system.start_timers();
 
   // create a boolean parameter that will tell if the simulation is
@@ -1266,7 +1266,7 @@ void
 playback_entry_t::trigger ()
 {
       if (!strcmp("gen_scancode", command)) {
-	    bx_devices.keyboard->gen_scancode(argument);
+	    DEV_kbd_gen_scancode(argument);
       } else {
 	    dbg_printf ( "Unknown playback command '%s'\n", command);
 	    return;
