@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.17 2002-10-07 22:51:57 kevinlawton Exp $
+// $Id: logical8.cc,v 1.18 2002-10-11 13:50:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -230,7 +230,7 @@ BX_CPU_C::OR_ALIb(bxInstruction_c *i)
   AL = result;
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_OR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
 #endif
 }
 
