@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.37 2002-10-30 23:54:29 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.38 2002-12-04 19:51:51 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -523,12 +523,15 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     if(ticks_delta) {
 #  if DEBUG_REALTIME_WITH_PRINTF
       if(((BX_PIT_THIS s.last_time + real_time_delta) / USEC_PER_SECOND) > (BX_PIT_THIS s.last_time / USEC_PER_SECOND)) {
-	printf("useconds: %lld, expected ticks: %lld, ticks: %lld, diff: %lld\n",
-	       (Bit64u) BX_PIT_THIS s.total_sec,
-	       (Bit64u)REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec),
-	       (Bit64u)BX_PIT_THIS s.total_ticks,
-	       (Bit64u)(REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec) - BX_PIT_THIS s.total_ticks)
-	       );
+	Bit64u temp1, temp2, temp3, temp4;
+	temp1 = (Bit64u) BX_PIT_THIS s.total_sec;
+	temp2 = REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec);
+	temp3 = (Bit64u)BX_PIT_THIS s.total_ticks;
+	temp4 = (Bit64u)(REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec) - BX_PIT_THIS s.total_ticks);
+	printf("useconds: %llu, ",temp1);
+	printf("expect ticks: %llu, ",temp2);
+	printf("ticks: %llu, ",temp3);
+	printf("diff: %llu\n",temp4);
       }
 #  endif
       BX_PIT_THIS s.last_time += real_time_delta;
@@ -543,8 +546,11 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 
     Bit64u a,b;
     a=(BX_PIT_THIS s.usec_per_second);
-    b=((Bit64u)USEC_PER_SECOND * em_time_delta / real_time_delta);
-
+    if(real_time_delta) {
+      b=((Bit64u)USEC_PER_SECOND * em_time_delta / real_time_delta);
+    } else {
+      b=a;
+    }
     BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(a,b);
 #else
     ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));
