@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.2 2002-09-15 14:35:38 bdenney Exp $
+# $Id: batch-build.perl,v 1.3 2002-09-16 13:09:50 bdenney Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -59,6 +59,22 @@ add_configuration ('wx-64bit',
   '--with-wx --enable-x86-64');
 add_configuration ('wx-64bit-d',
   '--with-wx --enable-x86-64 --enable-debugger --disable-readline');
+add_configuration ('nogui',
+  '--with-nogui');
+add_configuration ('nogui-d',
+  '--with-nogui --enable-debugger');
+add_configuration ('sdl',
+  '--with-sdl');
+add_configuration ('sdl-d',
+  '--with-sdl --enable-debugger');
+add_configuration ('term',
+  '--with-term');
+add_configuration ('term-d',
+  '--with-term --enable-debugger');
+add_configuration ('rfb',
+  '--with-rfb');
+add_configuration ('rfb-d',
+  '--with-rfb --enable-debugger');
 
 my $nohup = 0;
 my $parallel = 0;
