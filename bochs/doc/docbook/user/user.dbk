@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.163 2005-02-25 11:49:31 sshwarts Exp $
+$Id: user.dbk,v 1.164 2005-03-09 21:59:33 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -33,14 +33,15 @@ This is the top level file for the Bochs Users Manual.
 <section id="whatisbochs"><title>What is Bochs?</title>
 <para>
 Bochs is a program that simulates a complete Intel x86 computer.  It 
-can be configured to act like a <!--286,--> 386, 486, Pentium, or Pentium Pro.
+can be configured to act like a <!--286,--> 386, 486, Pentium, Pentium Pro, or
+AMD64 CPU, including optional MMX, SSE, SSE2 and 3DNow! instructions.
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
 VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
 simulates the whole PC environment, the software running in the simulation
 "believes" it is running on a real machine.  This approach allows Bochs
 to run a wide variety of software with no modification, include most popular
-x86 operating systems: Windows 95/98/NT, all Linux flavors, all BSD flavors,
+x86 operating systems: Windows 95/98/NT/2000, all Linux flavors, all BSD flavors,
 and more.
 </para>
 
@@ -135,7 +136,7 @@ active project of the week at Source Forge.
 regular basis, but a few statistics give an indication.  The <link
 linkend="bochs-developers">bochs-developers mailing list</link>, which is the
 primary source of news on bugs and releases, has over 400 subscribers.  The
-latest version has been downloaded over 50,000 times from SourceForge, not
+latest version has been downloaded over 150,000 times from SourceForge, not
 counting any mirror website or CVS users.
 </para>
 
@@ -340,13 +341,18 @@ currently work with.
   <row>
     <entry>386,486,Pentium Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate on of several families of Intel hardware. Some Pentium features are unsupported, such as the Time Stamp Counter.</entry>
+    <entry>Bochs can be configured to emulate one of several families of Intel hardware. Some Pentium features are unsupported, such as the Time Stamp Counter.</entry>
   </row>
   <row>
     <entry>Pentium Pro Emulation</entry>
     <entry>Incomplete</entry>
-    <entry>A few Pentium Pro features is incomplete, such as an on-chip APIC for SMP simulation.
+    <entry>A few Pentium Pro features are incomplete, such as an on-chip APIC for SMP simulation.
     </entry>
+  </row>
+  <row>
+    <entry>AMD x86-64 Emulation</entry>
+    <entry>Incomplete</entry>
+    <entry>The AMD x86-64 support is about 90% complete and is still experimental.</entry>
   </row>
   <row>
     <entry>Command Line Debugger</entry>
@@ -358,7 +364,7 @@ currently work with.
   <row>
     <entry>Floating Point</entry>
     <entry>Yes</entry>
-    <entry>Uses software floating point engine based on SoftFloat floating point emulation library (http://www.jhauser.us/arithmetic/SoftFloat.html)
+    <entry>Uses software floating point engine based on <ulink url="http://www.jhauser.us/arithmetic/SoftFloat.html">SoftFloat floating point emulation library</ulink>.
     </entry>
   </row>
   <row>
@@ -426,7 +432,7 @@ currently work with.
   <row>
     <entry>Mouse</entry>
     <entry>Yes</entry>
-    <entry>Emulates a PS/2 mouse with 3 buttons.
+    <entry>Emulates a serial, PS/2 or USB mouse with 3 buttons (mouse wheel).
     </entry>
   </row>
   <row>
@@ -550,7 +556,7 @@ currently work with.
 </tbody>
 </tgroup>
 </table>
-</section> <!-- End of Features -->
+</section><!-- End of Features -->
 
 <section id="supported-platforms"><title>Supported Platforms</title>
 <para>
@@ -2856,6 +2862,11 @@ at least one bootable media, either as disk image (floppy, hard disk or CD-ROM) 
 </listitem>
 </itemizedlist>
 </para>
+
+<note><para>
+Both VGA BIOS versions as well as the ROM BIOS are part of Bochs. No separate download is necessary.
+</para></note>
+
 <para>
 In that case you have to pass the configuration options on the command
 line or to use the configuration interface to set up Bochs for the simulation.
@@ -2973,16 +2984,21 @@ Put this on top of your config file if the global configuration is stored in /et
 The section below lists all the supported <filename>bochsrc</filename> options.
 </para>
 
-<section><title>megs</title>
+<section id="bochsopt-megs"><title>megs</title>
 <para>
 Examples:
 <screen>
   megs: 32
   megs: 128
 </screen>
-Set this to the default number of megabytes of memory you want to emulate.  The
-default is 32, since most operating systems won't need more than that.
+Set the number of megabytes of physical memory you want to emulate. The default
+is 32MB; most OS's won't need more than that. The maximum amount of memory
+supported is 2048MB.
 </para>
+
+<note><para>
+Due to limitations in the host OS, Bochs fails to allocated even 1024MB on most systems.
+</para></note>
 </section>
 
 <section><title>romimage</title>
@@ -3147,7 +3163,8 @@ This defines the type and characteristics of all attached ata devices:
 </para>
 
 <para>
-You have to tell the type of the attached device. For Bochs version2.0, it can by disk or cdrom
+  You have to tell the type of the attached device. For Bochs 2.0 or later, it can be
+  <parameter>disk</parameter> or <parameter>cdrom </parameter>.
 </para>
 
 <para>
@@ -3236,8 +3253,13 @@ Default values are:
 </para>
 
 <para>
-The biosdetect option has currently no effect on the bios
+  The <parameter>biosdetect</parameter> option has currently no effect on the BIOS.
 </para>
+
+<note><para>
+  Make sure the proper <link linkend="bochsopt-ata">ata option</link> is enabled when
+  using a device on that ata channel.
+</para></note>
 </section>
 
 <section><title>boot</title>
@@ -4762,6 +4784,21 @@ file yet.
     </para>
     <para>
       &FIXME; Mouse behavior
+    </para>
+  </section>
+
+  <section id="textmode-problems">
+    <title>Text-mode is broken in some ancient DOS program</title>
+
+    <para>
+      If you are using a program written for DOS which seems to use the text-mode but
+      doesn't display the text properly, you can try the other VGA BIOS, either
+      <filename>VGABIOS-lgpl-latest</filename> or <filename>VGABIOS-elpin-2.40</filename>,
+      see the <link linkend="bochsopt-vgaromimage">vgaromimage option</link>.
+    </para>
+
+    <para>
+      &NEEDHELP; Maybe it is a bug in the LGPL VGA BIOS, but for now, it seems to work.
     </para>
   </section>
 </chapter>
@@ -6697,23 +6734,34 @@ the cursor back in the Bochs window and press <keycap>delete</keycap>.
 This should work for any key combination. 
 </para>
 <para>
-You can also define one <link linkend="bochsopt-user-shortcut">user key combination</link>
+If you need one key combination frequently, set it up as <link linkend="bochsopt-user-shortcut">user key combination</link>
 in your configuration file.  This key combination is sent to the guest OS
 when you press the user button in the <link linkend="headerbar">headerbar</link>.
 </para>
 </section>
 
-<section id="vesa-notes"><title>Notes about VESA usage</title>
+<section id="vesa-notes">
+  <title>Notes about VESA usage</title>
 
-<para>
-Since Bochs version 1.4 it's possible to use VESA graphics. There are some limitations in the current implementation,
-but in general it should work ok (we have run several test programs, the XFree86 VESA display driver, etc)
-</para>
+  <para>
+    Since Bochs 1.4 it is possible to use VESA graphics. There are some limitations in
+    the current implementation, but in general it should work ok (we have run several test
+    programs, the XFree86 VESA display driver, etc.)
+  </para>
 
-<note><para>
-You will need to use the <ulink url="http://savannah.nongnu.org/projects/vgabios">LGPL'd VGABIOS</ulink>
-in order for application to correctly detect VESA support.
-</para></note>
+  <para>
+    In order to use VESA VBE, you need to compile Bochs using the <option>--enable-vbe</option>
+    option and enable it in your <filename>bochsrc</filename> by setting the
+    <link linkend="bochsopt-vga">vga option</link> to <parameter>vbe</parameter>.
+    Finally, you need to use the
+    <ulink url="http://savannah.nongnu.org/projects/vgabios/">LGPL'd VGABIOS</ulink>
+    as <link linkend="bochsopt-vgaromimage">vgaromimage option</link> for
+    applications to correctly detect VESA support.
+  </para>
+
+  <note><para>
+    The VGABIOS is already included in the Bochs release, so no separate download is necessary.
+  </para></note>
 
 <para>
 Current limitations:
@@ -7579,6 +7627,51 @@ Known problems
   </para>
 </section>
 
+<section id="guest-knoppix">
+  <title>Knoppix</title>
+
+  <para>
+    Contributed by Alexander Schuch.
+  </para>
+
+  <section>
+    <title>Getting Knoppix</title>
+
+    <para>
+      Knoppix is a live CD (700M) based on Debian GNU/Linux, with lots of ready-to-run programs
+      (web browser, office suite, a few games, and more). It can be booted directly from CD, without
+      any installation needed. You can download it from
+      <ulink url="http://www.knoppix.org/">knoppix.org</ulink>.
+    </para>
+  </section>
+
+  <section>
+    <title>Preparing Bochs</title>
+
+    <para>
+      As Knoppix runs completely from CD, you don't need to setup a hard disk. You just need to set up
+      the location of the downloaded ISO image in your <filename>bochsrc</filename>, and make Bochs boot
+      from it. Because Knoppix contains a graphical user interface, and has no other storage space but
+      the emulated RAM, it needs at least 128MB of it, see
+      <link linkend="bochsopt-megs">megs option</link>. Furthermore, you need to enable VBE support in
+      Bochs (see <xref linkend="vesa-notes">).
+    </para>
+  </section>
+
+  <section>
+    <title>Using Knoppix</title>
+
+    <para>
+      There is nothing more to do! Just start Bochs and wait for Knoppix to load...
+    </para>
+
+    <note><para>
+      You are logged in as normal user, if you want to become super user, just <command>su</command>.
+      There is no password needed (empty password).
+    </para></note>
+  </section>
+</section>
+
 <section id="guest-minix"><title>Minix</title>
 <para>
 Please see the <ulink url="http://minix1.hampshire.edu/faq/bxmxhowto.html">Minix on Bochs on Windows How-To</ulink> by Al Woodhull.
@@ -7680,7 +7773,7 @@ Please see the <ulink url="http://minix1.hampshire.edu/faq/bxmxhowto.html">Minix
     </para>
 
     <para>
-      Now, while FreeBSD installs, it is a very good time to have a look at the
+      Now, while FreeBSD installs, it is a very good time to take a look at the
       <ulink url="http://www.freebsd.org/docs.html">FreeBSD documentation</ulink>, especially
       the <ulink url="http://www.freebsd.org/doc/handbook/index.html">FreeBSD handbook</ulink>
       and the <ulink url="http://www.freebsd.org/doc/faq/index.html">FreeBSD FAQ</ulink>.
