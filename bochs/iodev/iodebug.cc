@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.7 2001-10-03 13:10:38 bdenney Exp $
+// $Id: iodebug.cc,v 1.8 2001-10-03 19:06:17 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -152,8 +152,18 @@ void bx_iodebug_c::write( Bit32u addr, Bit32u dvalue, unsigned int io_len )
 
 #if BX_DEBUGGER
     case( 0x8AE0 ):
-      fprintf( stdout, "request return to dbg prompt received, 0x8AE0 command (iodebug)\n");
+      fprintf( stderr, "request return to dbg prompt received, 0x8AE0 command (iodebug)\n");
       bx_guard.interrupt_requested=1;
+      break;
+
+    case( 0x8AE2):
+      fprintf( stderr, "request made by the guest os to disable tracing, iodebug port 0x8A00->0x8AE2\n");
+      BX_CPU(dbg_cpu)->trace = 0;
+      break;
+
+    case( 0x8AE3 ):
+      fprintf( stderr, "request made by the guest os to enable tracing, iodebug port 0x8A00->0x8AE3\n");
+      BX_CPU(dbg_cpu)->trace = 1;
       break;
 #endif
 
