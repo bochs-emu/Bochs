@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.92 2002-09-05 15:12:10 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.93 2002-09-05 15:49:48 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1257,6 +1257,7 @@ elif test "$with_term" = yes; then
 elif test "$with_wx" = yes; then
   AC_MSG_RESULT(wxWindows)
   AC_DEFINE(BX_WITH_WX, 1)
+  WX_CONFIG=wx-config
   WX_CFLAGS="\`$WX_CONFIG --cflags\`"
   WX_CXXFLAGS="\`$WX_CONFIG --cxxflags\`"
   GUI_LINK_OPTS_WX="\`$WX_CONFIG --libs\`"
