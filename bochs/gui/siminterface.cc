@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.71 2002-10-06 02:37:27 bdenney Exp $
+// $Id: siminterface.cc,v 1.72 2002-10-14 13:31:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -309,6 +309,7 @@ bx_real_sim_c::get_default_rc (char *path, int len)
   char *rc = bx_find_bochsrc ();
   if (rc == NULL) return -1;
   strncpy (path, rc, len);
+  path[len-1] = 0;
   return 0;
 }
 
