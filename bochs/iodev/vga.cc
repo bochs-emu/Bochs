@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.27 2002-03-13 19:01:39 japj Exp $
+// $Id: vga.cc,v 1.28 2002-03-16 10:22:57 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2093,11 +2093,6 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   unsigned x_tileno, y_tileno;
   offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
 
-  y_tileno = (offset / BX_VGA_THIS s.vbe_xres) / Y_TILESIZE;
-  x_tileno = (offset % BX_VGA_THIS s.vbe_xres) / X_TILESIZE;
-  BX_VGA_THIS s.vga_mem_updated = 1;
-  BX_VGA_THIS s.vga_tile_updated[x_tileno][y_tileno] = 1;
-
   // check for out of memory write
   if (offset < sizeof(BX_VGA_THIS s.vbe_memory))
   {
@@ -2113,6 +2108,16 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
       BX_INFO(("VBE_mem_write out of video memory write at %x",offset));
     }
   }
+  
+  // only update the UI when writing 'onscreen'
+  // FIXME: deal with logical scan lengths & display start sometime (when new DISPI)
+  if (offset < BX_VGA_THIS s.vbe_visable_screen_size)
+  {
+    y_tileno = (offset / BX_VGA_THIS s.vbe_xres) / Y_TILESIZE;
+    x_tileno = (offset % BX_VGA_THIS s.vbe_xres) / X_TILESIZE;
+    BX_VGA_THIS s.vga_mem_updated = 1;
+    BX_VGA_THIS s.vga_tile_updated[x_tileno][y_tileno] = 1;
+  }  
 }
 
   Bit32u
@@ -2316,7 +2321,8 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         {
           // FIXME: VBE allows for *not* clearing the screen when setting a mode
           // FIXME: make dependant on bpp (currently only 8bpp = 1byte)
-          memset(BX_VGA_THIS s.vbe_memory, 0, (BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres));
+          BX_VGA_THIS s.vbe_visable_screen_size = (BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres) * 1;
+          memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
           
           BX_INFO(("VBE enabling x %d, y %d, bpp %d (0=8bpp)", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
           bx_gui.dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);

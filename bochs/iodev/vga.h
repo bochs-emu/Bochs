@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.9 2002-03-13 18:33:00 japj Exp $
+// $Id: vga.h,v 1.10 2002-03-16 10:22:57 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -225,6 +225,7 @@ private:
     Bit16u  vbe_bank;
     Boolean vbe_enabled;
     Bit16u  vbe_curindex;
+    Bit32u  vbe_visable_screen_size; // in bytes
 #endif    
     } s;  // state information
 
