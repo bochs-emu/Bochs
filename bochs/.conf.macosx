@@ -6,8 +6,6 @@ set echo
 CFLAGS="-pipe -O2"
 CXXFLAGS="$CFLAGS"
 
-export CC
-export CXX
 export CFLAGS
 export CXXFLAGS
 
