@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.63 2002-09-24 22:50:51 cbothamy Exp $
+// $Id: keyboard.cc,v 1.64 2002-09-24 23:09:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.63 2002-09-24 22:50:51 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.64 2002-09-24 23:09:52 cbothamy Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.63 2002-09-24 22:50:51 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.64 2002-09-24 23:09:52 cbothamy Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -699,13 +699,15 @@ bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
   if (BX_KEY_THIS pastebuf) {
     BX_ERROR (("previous paste was not completed!  %d chars lost", 
 	  BX_KEY_THIS pastebuf_len - BX_KEY_THIS pastebuf_ptr));
-    delete [] BX_KEY_THIS pastebuf;
+    free(BX_KEY_THIS pastebuf);
   }
   BX_KEY_THIS pastebuf = (Bit8u *) malloc (length);
   memcpy (BX_KEY_THIS pastebuf, bytes, length);
   BX_KEY_THIS pastebuf_ptr = 0;
   BX_KEY_THIS pastebuf_len = length;
   BX_KEY_THIS service_paste_buf ();
+
+  delete [] bytes;
 }
 
   void
