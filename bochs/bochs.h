@@ -681,7 +681,7 @@ typedef struct {
 
 extern bx_options_t bx_options;
 
-
+void bx_center_print (FILE *file, char *line, int maxwidth);
 
 #if BX_PROVIDE_CPU_MEMORY==1
 #else
