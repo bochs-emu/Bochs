@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.121 2004-10-15 15:34:44 vruppert Exp $
+// $Id: rombios.c,v 1.122 2004-12-05 16:38:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -912,10 +912,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.121 $";
-static char bios_date_string[] = "$Date: 2004-10-15 15:34:44 $";
+static char bios_cvs_version_string[] = "$Revision: 1.122 $";
+static char bios_date_string[] = "$Date: 2004-12-05 16:38:31 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.121 2004-10-15 15:34:44 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.122 2004-12-05 16:38:31 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3575,13 +3575,8 @@ ASM_END
       break;
 
     case 0xc1:
-#if BX_USE_PS2_MOUSE
-      ES = read_word(0x0040, 0x000E);
+      ES = ebda_seg;
       CLEAR_CF();
-#else
-      SET_CF();
-      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
-#endif
       break;
 
     case 0xd8:
@@ -3698,7 +3693,7 @@ BX_DEBUG_INT15("case 1 or 5:\n");
             }
 
           inhibit_mouse_int_and_events(); // disable IRQ12 and packets
-          ret = send_to_mouse_ctrl(0xFF); // disable mouse command
+          ret = send_to_mouse_ctrl(0xFF); // reset mouse command
           if (ret == 0) {
             ret = get_mouse_data(&mouse_data3);
             if (mouse_data3 != 0xfa)
@@ -3728,19 +3723,33 @@ BX_DEBUG_INT15("case 1 or 5:\n");
         case 2: // Set Sample Rate
 BX_DEBUG_INT15("case 2:\n");
           switch (regs.u.r8.bh) {
-            case 0: //  10 reports/sec
-            case 1: //  20 reports/sec
-            case 2: //  40 reports/sec
-            case 3: //  60 reports/sec
-            case 4: //  80 reports/sec
-            case 5: // 100 reports/sec (default)
-            case 6: // 200 reports/sec
+            case 0: mouse_data1 = 10; break; //  10 reports/sec
+            case 1: mouse_data1 = 20; break; //  20 reports/sec
+            case 2: mouse_data1 = 40; break; //  40 reports/sec
+            case 3: mouse_data1 = 60; break; //  60 reports/sec
+            case 4: mouse_data1 = 80; break; //  80 reports/sec
+            case 5: mouse_data1 = 100; break; // 100 reports/sec (default)
+            case 6: mouse_data1 = 200; break; // 200 reports/sec
+            default: mouse_data1 = 0;
+          }
+          if (mouse_data1 > 0) {
+            ret = send_to_mouse_ctrl(0xF3); // set sample rate command
+            if (ret == 0) {
+              ret = get_mouse_data(&mouse_data2);
+              ret = send_to_mouse_ctrl(mouse_data1);
+              ret = get_mouse_data(&mouse_data2);
               CLEAR_CF();
               regs.u.r8.ah = 0;
-              break;
-            default:
-              BX_PANIC("INT 15h C2 AL=2, BH=%02x\n", (unsigned) regs.u.r8.bh);
+            } else {
+              // error
+              SET_CF();
+              regs.u.r8.ah = UNSUPPORTED_FUNCTION;
             }
+          } else {
+            // error
+            SET_CF();
+            regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+          }
           break;
 
         case 3: // Set Resolution
@@ -3756,9 +3765,19 @@ BX_DEBUG_INT15("case 3:\n");
 
         case 4: // Get Device ID
 BX_DEBUG_INT15("case 4:\n");
-          CLEAR_CF();
-          regs.u.r8.ah = 0;
-          regs.u.r8.bh = 0;
+          inhibit_mouse_int_and_events(); // disable IRQ12 and packets
+          ret = send_to_mouse_ctrl(0xF2); // get mouse ID command
+          if (ret == 0) {
+            ret = get_mouse_data(&mouse_data1);
+            ret = get_mouse_data(&mouse_data2);
+            CLEAR_CF();
+            regs.u.r8.ah = 0;
+            regs.u.r8.bh = mouse_data2;
+          } else {
+            // error
+            SET_CF();
+            regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+          }
           break;
 
         case 6: // Return Status & Set Scaling Factor...
