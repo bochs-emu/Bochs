@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.13 2002-09-15 15:10:21 kevinlawton Exp $
+// $Id: io.cc,v 1.14 2002-09-16 20:23:38 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -366,7 +366,13 @@ BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
 
   BX_OUTP(DX, value8, 1);
 
-  if (i->as_32) {
+  if (i->as_64) {
+    if (BX_CPU_THIS_PTR get_DF ())
+      RSI -= 1;
+    else
+      RSI += 1;
+    }
+  else if (i->as_32) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI -= 1;
     else
@@ -584,7 +590,7 @@ doIncr:
 #endif
 #endif
 
-  if (i->as_64) { // Was coded as  if (i->as_32)
+  if (i->as_64) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI = RSI - incr;
     else

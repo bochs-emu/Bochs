@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.56 2002-09-16 16:58:35 bdenney Exp $
+// $Id: cpu.h,v 1.57 2002-09-16 20:23:38 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -739,16 +739,8 @@ typedef struct {
   typedef struct {
     bx_address lpf; // linear page frame
     Bit32u ppf; // physical page frame
-#if BX_SUPPORT_X86_64
-    // This is the old style TLB permissions caching.
-    Bit32u pte_addr; // Page Table Address for updating A & D bits
-    Bit32u combined_access;
-#else
-    // This is the new style TLB permissions caching.  Eventually
-    // I'll update the cpu64 code to use this.
     Bit32u accessBits; // Page Table Address for updating A & D bits
     Bit32u hostPageAddr;
-#endif
     } bx_TLB_entry;
 #endif  // #if BX_USE_TLB
 
@@ -1184,16 +1176,13 @@ union {
         __attribute__ ((aligned (16)))
 #endif
         ;
-#if BX_SUPPORT_X86_64
-    Bit16u generation;
-#else
+
 #if BX_USE_QUICK_TLB_INVALIDATE
 #  define BX_TLB_LPF_VALUE(lpf) (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)
     Bit32u tlb_invalidate;
 #else
 #  define BX_TLB_LPF_VALUE(lpf) (lpf)
 #endif
-#endif  // #if BX_SUPPORT_X86_64
     } TLB;
 #endif  // #if BX_USE_TLB
 
@@ -2109,8 +2098,8 @@ union {
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
                      unsigned rw, void *data);
-  BX_SMF Bit32u itranslate_linear(bx_address laddress, unsigned pl);
-  BX_SMF Bit32u dtranslate_linear(bx_address laddress, unsigned pl, unsigned rw);
+  BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl);
+  BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw);
   BX_SMF void TLB_flush(Boolean invalidateGlobal);
   BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(Boolean value);

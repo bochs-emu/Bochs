@@ -3,7 +3,7 @@
 #ifdef WIN32
 #  include <windows.h>
 #else
-#  error "extdb.cc only supported in win32 environment"
+//#  error "extdb.cc only supported in win32 environment"
 #endif
 
 TRegs regs;
@@ -15,6 +15,7 @@ void (*call_debugger)(TRegs *,Bit8u *, Bit32u);
 
 void bx_external_debugger(BX_CPU_C *cpu)
 {
+#if 0
      //printf("Calling debugger state=%d\n",regs.debug_state);
      switch (regs.debug_state) {
      case debug_run:
@@ -84,4 +85,5 @@ void bx_external_debugger(BX_CPU_C *cpu)
        bx_vga.timer();
        call_debugger(&regs,cpu->mem->vector,cpu->mem->len);
      }
+#endif
 }

@@ -50,7 +50,6 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # are not used for the x86-64 compile because they have not
 # been synced yet.
 OBJS32 = \
-	paging.o \
 
 
 # Objects which are synced between the cpu and cpu64 code and
@@ -104,6 +103,7 @@ OBJSXX = \
 	io.o \
 	bit.o \
 	string.o \
+	paging.o \
 	$(EXT_DEBUG_OBJS) \
 
 	
