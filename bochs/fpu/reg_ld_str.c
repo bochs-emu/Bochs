@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.17 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.18 2003-10-25 10:32:54 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -60,15 +60,12 @@ normalize_no_excep(FPU_REG *r, int exp, int sign)
 }
 
 
-int  BX_CPP_AttrRegparmN(1)
-FPU_tagof(FPU_REG *ptr)
+int BX_CPP_AttrRegparmN(1) FPU_tagof(FPU_REG *reg)
 {
-  int exp;
-
-  exp = exponent16(ptr) & 0x7fff;
+  int exp = exponent16(reg) & 0x7fff;
   if (exp == 0)
     {
-      if (!(ptr->sigh | ptr->sigl))
+      if (!(reg->sigh | reg->sigl))
 	{
 	  return TAG_Zero;
 	}
@@ -82,7 +79,7 @@ FPU_tagof(FPU_REG *ptr)
       return TAG_Special;
     }
 
-  if (!(ptr->sigh & 0x80000000))
+  if (!(reg->sigh & 0x80000000))
     {
       /* Unsupported data type. */
       /* Valid numbers have the ms bit set to 1. */
@@ -92,7 +89,6 @@ FPU_tagof(FPU_REG *ptr)
 
   return TAG_Valid;
 }
-
 
 /* Get a long double from user memory */
 int  BX_CPP_AttrRegparmN(2)

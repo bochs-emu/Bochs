@@ -71,6 +71,8 @@ struct bx_fpu_reg_t {
 } GCC_ATTRIBUTE((aligned(16), packed));
 #endif
 
+typedef struct bx_fpu_reg_t FPU_REG;
+
 #define BX_FPU_REG(index) \
     (BX_CPU_THIS_PTR the_i387.st_space[index*2])
 
@@ -80,6 +82,14 @@ struct bx_fpu_reg_t {
 
 #define FPU_SW_SUMMARY         (0x0080)		/* exception summary */
 
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
+  int FPU_tagof(FPU_REG *reg) BX_CPP_AttrRegparmN(1);
+#ifdef __cplusplus
+}
+#endif
 
 #if BX_SUPPORT_MMX
 

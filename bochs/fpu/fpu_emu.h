@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.19 2003-10-05 12:26:11 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.20 2003-10-25 10:32:54 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -63,8 +63,6 @@
 #define FPU_Exception   (0x80000000)   /* Added to tag returns. */
 
 #include "fpu_system.h"
-
-typedef struct bx_fpu_reg_t FPU_REG;
 
 /*
 #define RE_ENTRANT_CHECKING
