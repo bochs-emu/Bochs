@@ -9,7 +9,7 @@ CXXFLAGS=@CXXFLAGS@ @INCLTDL@
 all: uselib module1.dll module2.dll
 
 uselib: main.cc main.h
-	$(CXX) $(CXXFLAGS) -c -o main.o main.cc
+	$(CXX) $(CXXFLAGS) -c -o main.o ${srcdir}/main.cc
 	dlltool --export-all --output-def uselib.def main.o
 	dlltool --dllname uselib.exe --def uselib.def --output-lib uselib.a
 	dlltool --dllname uselib.exe --output-exp uselib.exp --def uselib.def
@@ -17,10 +17,10 @@ uselib: main.cc main.h
 	rm uselib.exp uselib.def
 
 module1.dll: module1.cc main.h
-	$(CXX) $(CXXFLAGS) -shared -o module1.dll module1.cc uselib.a
+	$(CXX) $(CXXFLAGS) -shared -o module1.dll ${srcdir}/module1.cc uselib.a
 
 module2.dll: module2.cc main.h
-	$(CXX) $(CXXFLAGS) -shared -o module2.dll module2.cc uselib.a
+	$(CXX) $(CXXFLAGS) -shared -o module2.dll ${srcdir}/module2.cc uselib.a
 
 %.o: %.cc
 	$(CXX) $(CXXFLAGS) -c $<
