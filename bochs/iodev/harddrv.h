@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.10 2002-04-09 16:53:15 japj Exp $
+// $Id: harddrv.h,v 1.11 2002-08-05 15:51:06 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -179,7 +179,8 @@ typedef struct {
     Bit16u   byte_count;
   };
   Bit8u    buffer[2048];
-  unsigned buffer_index;
+  Bit32u   buffer_index;
+  Bit32u   drq_index;
   Bit8u    current_command;
   Bit8u    sectors_per_block;
   Bit8u    lba_mode;
