@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.52 2004-12-16 22:21:35 sshwarts Exp $
+// $Id: paging.cc,v 1.53 2005-01-19 20:48:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -951,10 +951,11 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
   return(paddress);
 
+// error checking order - page not present, reserved bits, protection
 #define ERROR_NOT_PRESENT       0x00
 #define ERROR_PROTECTION        0x01
 #define ERROR_RESERVED          0x08
-#define ERROR_ID                0x10
+#define ERROR_CODE_ACCESS       0x10
 
 /* keep compiler happy until it actually used
 page_fault_reserved:
@@ -968,7 +969,7 @@ page_fault_not_present:
   error_code |= (pl << 2) | (isWrite << 1);
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.nxe && (access_type == CODE_ACCESS))
-    error_code |= ERROR_ID;       // I/D = 1
+    error_code |= ERROR_CODE_ACCESS; // I/D = 1
 #endif
   BX_CPU_THIS_PTR cr2 = laddr;
   // Invalidate TLB entry.
