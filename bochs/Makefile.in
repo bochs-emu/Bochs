@@ -20,6 +20,18 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+VERSION=1.1.2
+PREFIX=/usr/local/bochs
+BINPATH=/usr/local/bin
+INSTALL_LIST=bios/BIOS-* CHANGES.txt COPYING README bios/VGABIOS*
+CP=cp
+CAT=cat
+RM=rm
+LN_S=ln -sf
+DLXLINUX_TAR=dlxlinux1.tar.gz
+DLXLINUX_TAR_URL=http://bochs.sourceforge.net/guestos/${DLXLINUX_TAR}
+GUNZIP=gunzip
+WGET=wget
 
 @SUFFIX_LINE@
 
@@ -177,6 +189,34 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	-rm -f libbochs_cpu.a
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
+
+install: install_bin install_dlx
+
+install_bin::
+	${CP} bochs ${BINPATH}/bochs-${VERSION}
+	${RM} -f ${BINPATH}/bochs
+	${LN_S} bochs-${VERSION} ${BINPATH}/bochs
+	for i in bochs-dlx bochs-docs; do cp build/linux/$$i ${BINPATH}; done
+	-mkdir ${PREFIX}
+	-mkdir ${PREFIX}/${VERSION}
+	test -d ${PREFIX}/${VERSION}
+	test -w ${PREFIX}/${VERSION}
+	for i in ${INSTALL_LIST}; do /bin/cp $$i ${PREFIX}/${VERSION}; done
+	${CP} -r docs-html ${PREFIX}/${VERSION}
+	${RM} -f ${PREFIX}/${VERSION}/README
+	${CAT} build/linux/README.linux-binary README > ${PREFIX}/${VERSION}/README
+
+install_dlx::
+	${RM} -f ${DLXLINUX_TAR}
+	${WGET} ${DLXLINUX_TAR_URL}
+	${RM} -rf ${PREFIX}/dlxlinux
+	${GUNZIP} -c ${DLXLINUX_TAR} | (cd ${PREFIX}; tar -xvf -)
+	test -d ${PREFIX}/dlxlinux
+
+erase_install::
+	${RM} -rf ${PREFIX}/${VERSION}
+	${RM} -rf ${PREFIX}/dlxlinux
+
 
 clean:
 	@RMCOMMAND@ *.o
