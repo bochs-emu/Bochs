@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.23 2002-03-06 21:52:16 bdenney Exp $
+// $Id: pic.cc,v 1.24 2002-03-25 01:31:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,6 +85,9 @@ bx_pic_c::init(bx_devices_c *d)
   BX_PIC_THIS s.master_pic.init.requires_4 = 0;
   BX_PIC_THIS s.master_pic.init.byte_expected = 0;
   BX_PIC_THIS s.master_pic.special_mask = 0;
+  BX_PIC_THIS s.master_pic.lowest_priority = 7;
+  BX_PIC_THIS s.master_pic.polled = 0;
+  BX_PIC_THIS s.master_pic.rotate_on_autoeoi = 0;
 
   BX_PIC_THIS s.slave_pic.single_PIC = 0;
   BX_PIC_THIS s.slave_pic.interrupt_offset = 0x70; /* IRQ8 = INT 0x70 */
@@ -103,6 +106,10 @@ bx_pic_c::init(bx_devices_c *d)
   BX_PIC_THIS s.slave_pic.init.requires_4 = 0;
   BX_PIC_THIS s.slave_pic.init.byte_expected = 0;
   BX_PIC_THIS s.slave_pic.special_mask = 0;
+  BX_PIC_THIS s.slave_pic.lowest_priority = 7;
+  BX_PIC_THIS s.slave_pic.polled = 0;
+  BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = 0;
+
   for (unsigned i=0; i<8; i++) { /* all IRQ lines low */
     BX_PIC_THIS s.master_pic.IRQ_line[i] = 0;
     BX_PIC_THIS s.slave_pic.IRQ_line[i] = 0;
@@ -140,6 +147,23 @@ bx_pic_c::read(Bit32u address, unsigned io_len)
   /*
    8259A PIC
    */
+
+  if((address == 0x20 || address == 0x21) && BX_PIC_THIS s.master_pic.polled) {
+    // In polled mode. Treat this as an interrupt acknowledge
+    clear_highest_interrupt(& BX_PIC_THIS s.master_pic);
+    BX_PIC_THIS s.master_pic.polled = 0;
+    service_master_pic();
+    return BX_PIC_THIS s.master_pic.irq;  // Return the current irq requested
+  }
+
+  if((address == 0xa0 || address == 0xa1) && BX_PIC_THIS s.slave_pic.polled) {
+    // In polled mode. Treat this as an interrupt acknowledge
+    clear_highest_interrupt(& BX_PIC_THIS s.slave_pic);
+    BX_PIC_THIS s.slave_pic.polled = 0;
+    service_slave_pic();
+    return BX_PIC_THIS s.slave_pic.irq;  // Return the current irq requested
+  }
+
 
   switch (address) {
     case 0x20:
@@ -201,7 +225,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_PIC_SMF
-  int irq;
 
   if (io_len > 1)
     BX_PANIC(("io write to port %04x, len=%u", (unsigned) address,
@@ -233,7 +256,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.master_pic.imr           = 0xFF; /* all IRQ's initially masked */
         BX_PIC_THIS s.master_pic.isr           = 0x00; /* no IRQ's in service */
         BX_PIC_THIS s.master_pic.irr           = 0x00; /* no IRQ's requested */
+        BX_PIC_THIS s.master_pic.lowest_priority = 7;
         BX_PIC_THIS s.master_pic.INT = 0; /* reprogramming clears previous INTR request */
+        BX_PIC_THIS s.master_pic.auto_eoi = 0;
+        BX_PIC_THIS s.master_pic.rotate_on_autoeoi = 0;
         if ( (value & 0x02) == 1 )
           BX_PANIC(("master: ICW1: single mode not supported"));
         if ( (value & 0x08) == 1 ) {
@@ -252,8 +278,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         special_mask = (value & 0x60) >> 5;
         poll         = (value & 0x04) >> 2;
         read_op      = (value & 0x03);
-        if (poll)
-          BX_PANIC(("master: OCW3: poll bit set"));
+        if (poll) {
+          BX_PIC_THIS s.master_pic.polled = 1;
+          return;
+        }
         if (read_op == 0x02) /* read IRR */
 	  BX_PIC_THIS s.master_pic.read_reg_select = 0;
         else if (read_op == 0x03) /* read ISR */
@@ -270,8 +298,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
       /* OCW2 */
       switch (value) {
-        case 0x00: // Rotate in Auto-EOI mode
-          BX_PANIC(("Rotate in Auto-EOI mode command received."));
+        case 0x00: // Rotate in auto eoi mode clear
+        case 0x80: // Rotate in auto eoi mode set
+          BX_PIC_THIS s.master_pic.rotate_on_autoeoi = (value != 0);
+          break;
 	case 0x0A: /* select read interrupt request register */
 	  BX_PIC_THIS s.master_pic.read_reg_select = 0;
 	  break;
@@ -279,16 +309,23 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  BX_PIC_THIS s.master_pic.read_reg_select = 1;
 	  break;
 
-	case 0x20: /* end of interrupt command */
-          /* clear highest current in service bit */
-          for (irq=0; irq<=7; irq++) {
-            if (BX_PIC_THIS s.master_pic.isr & (1 << irq)) {
-              BX_PIC_THIS s.master_pic.isr &= ~(1 << irq);
-              break; /* out of for loop */
-              }
-            }
+        case 0xA0: // Rotate on non-specific end of interrupt
+        case 0x20: /* end of interrupt command */
+
+          clear_highest_interrupt(& BX_PIC_THIS s.master_pic);
+
+          if(value == 0xA0) {// Rotate in Auto-EOI mode
+            BX_PIC_THIS s.master_pic.lowest_priority ++;
+            if(BX_PIC_THIS s.master_pic.lowest_priority > 7)
+              BX_PIC_THIS s.master_pic.lowest_priority = 0;
+          }
+
           service_master_pic();
-	  break;
+          break;
+
+        case 0x40: // Intel PIC spec-sheet seems to indicate this should be ignored
+          BX_INFO(("IRQ no-op"));
+          break;
 
         case 0x60: /* specific EOI 0 */
         case 0x61: /* specific EOI 1 */
@@ -300,7 +337,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x67: /* specific EOI 7 */
           BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0x60));
           service_master_pic();
-	  break;
+          break;
 
         // IRQ lowest priority commands
         case 0xC0: // 0 7 6 5 4 3 2 1
@@ -311,8 +348,22 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xC5: // 5 4 3 2 1 0 7 6
         case 0xC6: // 6 5 4 3 2 1 0 7
         case 0xC7: // 7 6 5 4 3 2 1 0
-          // ignore for now
           BX_INFO(("IRQ lowest command 0x%x", value));
+          BX_PIC_THIS s.master_pic.lowest_priority = value - 0xC0;
+          break;
+
+        case 0xE0: // specific EOI and rotate 0
+        case 0xE1: // specific EOI and rotate 1
+        case 0xE2: // specific EOI and rotate 2
+        case 0xE3: // specific EOI and rotate 3
+        case 0xE4: // specific EOI and rotate 4
+        case 0xE5: // specific EOI and rotate 5
+        case 0xE6: // specific EOI and rotate 6
+        case 0xE7: // specific EOI and rotate 7
+          BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0xE0));
+          BX_PIC_THIS s.master_pic.lowest_priority = (value - 0xE0);
+          service_master_pic();
+
           break;
 
         default:
@@ -346,11 +397,15 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             return;
             break;
           case 4:
-	    if (bx_dbg.pic) {
-		  BX_INFO(("master: init command 4 = %02x", (unsigned) value));
-		  if (value & 0x02) BX_INFO(("       auto EOI"));
-		  else BX_INFO(("normal EOI interrupt"));
-	    }
+            BX_DEBUG(("master: init command 4 = %02x", (unsigned) value));
+            if (value & 0x02) {
+              BX_DEBUG(("       auto EOI"));
+              BX_PIC_THIS s.master_pic.auto_eoi = 1;
+              }
+            else {
+              BX_DEBUG(("normal EOI interrupt"));
+              BX_PIC_THIS s.master_pic.auto_eoi = 0;
+              }
 	    if (value & 0x01) {
 		  if (bx_dbg.pic)
 			BX_INFO(("       80x86 mode"));
@@ -385,7 +440,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.slave_pic.imr           = 0xFF; /* all IRQ's initially masked */
         BX_PIC_THIS s.slave_pic.isr           = 0x00; /* no IRQ's in service */
         BX_PIC_THIS s.slave_pic.irr           = 0x00; /* no IRQ's requested */
+        BX_PIC_THIS s.slave_pic.lowest_priority = 7;
         BX_PIC_THIS s.slave_pic.INT = 0; /* reprogramming clears previous INTR request */
+        BX_PIC_THIS s.slave_pic.auto_eoi = 0;
+        BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = 0;
         if ( (value & 0x02) == 1 )
           BX_PANIC(("slave: ICW1: single mode not supported"));
         if ( (value & 0x08) == 1 ) {
@@ -403,8 +461,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         special_mask = (value & 0x60) >> 5;
         poll         = (value & 0x04) >> 2;
         read_op      = (value & 0x03);
-        if (poll)
-          BX_PANIC(("slave:OCW3: poll bit set"));
+        if (poll) {
+          BX_PIC_THIS s.slave_pic.polled = 1;
+          return;
+        }
         if (read_op == 0x02) /* read IRR */
 	  BX_PIC_THIS s.slave_pic.read_reg_select = 0;
         else if (read_op == 0x03) /* read ISR */
@@ -420,22 +480,35 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
 
       switch (value) {
+        case 0x00: // Rotate in auto eoi mode clear
+        case 0x80: // Rotate in auto eoi mode set
+          BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = (value != 0);
+          break;
+
 	case 0x0A: /* select read interrupt request register */
 	  BX_PIC_THIS s.slave_pic.read_reg_select = 0;
 	  break;
 	case 0x0B: /* select read interrupt in-service register */
 	  BX_PIC_THIS s.slave_pic.read_reg_select = 1;
 	  break;
-	case 0x20: /* end of interrupt command */
-          /* clear highest current in service bit */
-          for (irq=0; irq<=7; irq++) {
-            if (BX_PIC_THIS s.slave_pic.isr & (1 << irq)) {
-              BX_PIC_THIS s.slave_pic.isr &= ~(1 << irq);
-              break; /* out of for loop */
-              }
-            }
+
+        case 0xA0: // Rotate on non-specific end of interrupt
+        case 0x20: /* end of interrupt command */
+
+          clear_highest_interrupt(& BX_PIC_THIS s.slave_pic);
+
+          if(value == 0xA0) {// Rotate in Auto-EOI mode
+            BX_PIC_THIS s.slave_pic.lowest_priority ++;
+            if(BX_PIC_THIS s.slave_pic.lowest_priority > 7)
+              BX_PIC_THIS s.slave_pic.lowest_priority = 0;
+          }
+
           service_slave_pic();
-	  break;
+          break;
+
+        case 0x40: // Intel PIC spec-sheet seems to indicate this should be ignored
+          BX_INFO(("IRQ no-op"));
+          break;
 
         case 0x60: /* specific EOI 0 */
         case 0x61: /* specific EOI 1 */
@@ -447,7 +520,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x67: /* specific EOI 7 */
           BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0x60));
           service_slave_pic();
-	  break;
+          break;
 
         // IRQ lowest priority commands
         case 0xC0: // 0 7 6 5 4 3 2 1
@@ -458,8 +531,22 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xC5: // 5 4 3 2 1 0 7 6
         case 0xC6: // 6 5 4 3 2 1 0 7
         case 0xC7: // 7 6 5 4 3 2 1 0
-          // ignore for now
           BX_INFO(("IRQ lowest command 0x%x", value));
+          BX_PIC_THIS s.slave_pic.lowest_priority = value - 0xC0;
+          break;
+
+        case 0xE0: // specific EOI and rotate 0
+        case 0xE1: // specific EOI and rotate 1
+        case 0xE2: // specific EOI and rotate 2
+        case 0xE3: // specific EOI and rotate 3
+        case 0xE4: // specific EOI and rotate 4
+        case 0xE5: // specific EOI and rotate 5
+        case 0xE6: // specific EOI and rotate 6
+        case 0xE7: // specific EOI and rotate 7
+          BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0xE0));
+          BX_PIC_THIS s.slave_pic.lowest_priority = (value - 0xE0);
+          service_slave_pic();
+
           break;
 
         default:
@@ -491,15 +578,20 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             return;
             break;
           case 4:
-		if (bx_dbg.pic) {
-		      BX_DEBUG(("slave: init command 4 = %02x", (unsigned) value));
-		      if (value & 0x02) BX_INFO(("      auto EOI"));
-		      else BX_DEBUG(("normal EOI interrupt"));
-		}
-		if (value & 0x01) {
-		      if (bx_dbg.pic)
-			    BX_INFO(("      80x86 mode"));
-		} else BX_PANIC(("not 80x86 mode"));
+            BX_DEBUG(("slave: init command 4 = %02x", (unsigned) value));
+            if (value & 0x02) {
+              BX_DEBUG(("       auto EOI"));
+              BX_PIC_THIS s.slave_pic.auto_eoi = 1;
+              }
+            else {
+              BX_DEBUG(("normal EOI interrupt"));
+              BX_PIC_THIS s.slave_pic.auto_eoi = 0;
+              }
+	    if (value & 0x01) {
+		  if (bx_dbg.pic)
+			BX_INFO(("       80x86 mode"));
+	    } else
+		  BX_PANIC(("       not 80x86 mode"));
             BX_PIC_THIS s.slave_pic.init.in_init = 0;
             return;
             break;
@@ -573,6 +665,32 @@ bx_pic_c::raise_irq(unsigned irq_no)
   }
 }
 
+void  bx_pic_c::clear_highest_interrupt(bx_pic_t *pic)
+{
+  int irq;
+  int lowest_priority;
+  int highest_priority;
+
+  /* clear highest current in service bit */
+  lowest_priority = pic->lowest_priority;
+  highest_priority = lowest_priority + 1;
+  if(highest_priority > 7)
+    highest_priority = 0;
+
+  irq = highest_priority;
+  do {
+    if (pic->isr & (1 << irq)) {
+      pic->isr &= ~(1 << irq);
+      break; /* Return mask of bit cleared. */
+    }
+
+    irq ++;
+    if(irq > 7)
+      irq = 0;
+  } while(irq != highest_priority);
+
+}
+
 // old IRQ handling routines (disabled)
 
 #if 0
@@ -642,6 +760,9 @@ bx_pic_c::service_master_pic(void)
   Bit8u unmasked_requests;
   int irq;
   Bit8u isr, max_irq;
+  Bit8u highest_priority = BX_PIC_THIS s.master_pic.lowest_priority + 1;
+  if(highest_priority > 7)
+    highest_priority = 0;
 
   if (BX_PIC_THIS s.master_pic.INT) { /* last interrupt still not acknowleged */
     return;
@@ -651,28 +772,31 @@ bx_pic_c::service_master_pic(void)
     /* all priorities may be enabled.  check all IRR bits except ones
      * which have corresponding ISR bits set
      */
-    max_irq = 7;
+    max_irq = highest_priority;
     }
   else { /* normal mode */
     /* Find the highest priority IRQ that is enabled due to current ISR */
     isr = BX_PIC_THIS s.master_pic.isr;
     if (isr) {
-      max_irq = 0;
-      while ( (isr & 0x01) == 0 ) {
-        isr >>= 1;
+      max_irq = highest_priority;
+      while ( (isr & (1 << max_irq)) == 0) {
         max_irq++;
+        if(max_irq > 7)
+          max_irq = 0;
         }
-      if (max_irq == 0 ) return; /* IRQ0 in-service, no other priorities allowed */
+      if (max_irq == highest_priority ) return; /* Highest priority interrupt in-service,
+                                                 * no other priorities allowed */
       if (max_irq > 7) BX_PANIC(("error in service_master_pic()"));
       }
     else
-      max_irq = 7; /* 0..7 bits in ISR are cleared */
+      max_irq = highest_priority; /* 0..7 bits in ISR are cleared */
     }
 
 
   /* now, see if there are any higher priority requests */
   if ((unmasked_requests = (BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr)) ) {
-    for (irq=0; irq<=max_irq; irq++) {
+    irq = highest_priority;
+    do {
       /* for special mode, since we're looking at all IRQ's, skip if
        * current IRQ is already in-service
        */
@@ -685,7 +809,11 @@ bx_pic_c::service_master_pic(void)
         BX_PIC_THIS s.master_pic.irq = irq;
         return;
         } /* if (unmasked_requests & ... */
-      } /* for (irq=7 ... */
+
+      irq ++;
+      if(irq > 7)
+        irq = 0;
+      } while(irq != max_irq); /* do ... */
     } /* if (unmasked_requests = ... */
 }
 
@@ -695,7 +823,10 @@ bx_pic_c::service_slave_pic(void)
 {
   Bit8u unmasked_requests;
   int irq;
-  Bit8u isr, lowest_priority_irq;
+  Bit8u isr, max_irq;
+  Bit8u highest_priority = BX_PIC_THIS s.slave_pic.lowest_priority + 1;
+  if(highest_priority > 7)
+    highest_priority = 0;
 
   if (BX_PIC_THIS s.slave_pic.INT) { /* last interrupt still not acknowleged */
     return;
@@ -705,42 +836,49 @@ bx_pic_c::service_slave_pic(void)
     /* all priorities may be enabled.  check all IRR bits except ones
      * which have corresponding ISR bits set
      */
-    lowest_priority_irq = 8;
-    }
-  else {
-  /* Find the highest priority IRQ that is enabled due to current ISR */
-  isr = BX_PIC_THIS s.slave_pic.isr;
-  if (isr) {
-    lowest_priority_irq = 0;
-    while ( !(isr & 0x01) ) {
-      isr >>= 1;
-      lowest_priority_irq++;
+    max_irq = highest_priority;
+  }
+  else { /* normal mode */
+    /* Find the highest priority IRQ that is enabled due to current ISR */
+    isr = BX_PIC_THIS s.slave_pic.isr;
+    if (isr) {
+      max_irq = highest_priority;
+      while ( (isr & (1 << max_irq)) == 0) {
+        max_irq++;
+        if(max_irq > 7)
+          max_irq = 0;
+        }
+      if (max_irq == highest_priority ) return; /* Highest priority interrupt in-service,
+                                                 * no other priorities allowed */
+      if (max_irq > 7) BX_PANIC(("error in service_master_pic()"));
       }
-    if (lowest_priority_irq > 7) BX_PANIC(("error in service_slave_pic()"));
-    }
-  else
-    lowest_priority_irq = 8;
+    else
+      max_irq = highest_priority; /* 0..7 bits in ISR are cleared */
   }
 
 
   /* now, see if there are any higher priority requests */
   if ((unmasked_requests = (BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr)) ) {
-    for (irq=0; irq<lowest_priority_irq; irq++) {
+    irq = highest_priority;
+    do {
       /* for special mode, since we're looking at all IRQ's, skip if
        * current IRQ is already in-service
        */
       if ( BX_PIC_THIS s.slave_pic.special_mask && ((BX_PIC_THIS s.slave_pic.isr >> irq) & 0x01) )
         continue;
       if (unmasked_requests & (1 << irq)) {
-        if (bx_dbg.pic)
-          BX_DEBUG(("slave: signalling IRQ(%u)",
-            (unsigned) 8 + irq));
+        BX_DEBUG(("slave: signalling IRQ(%u)", (unsigned) 8 + irq));
+
         BX_PIC_THIS s.slave_pic.INT = 1;
-        raise_irq(2); /* request IRQ 2 on master pic */
         BX_PIC_THIS s.slave_pic.irq = irq;
+        raise_irq(2); /* request IRQ 2 on master pic */
         return;
         } /* if (unmasked_requests & ... */
-      } /* for (irq=7 ... */
+
+        irq ++;
+        if(irq > 7)
+          irq = 0;
+      } while(irq != max_irq); /* do ... */
     } /* if (unmasked_requests = ... */
 }
 
@@ -754,8 +892,12 @@ bx_pic_c::IAC(void)
 
   BX_SET_INTR(0);
   BX_PIC_THIS s.master_pic.INT = 0;
-  BX_PIC_THIS s.master_pic.isr |= (1 << BX_PIC_THIS s.master_pic.irq);
   BX_PIC_THIS s.master_pic.irr &= ~(1 << BX_PIC_THIS s.master_pic.irq);
+  // In autoeoi mode don't set the isr bit.
+  if(!BX_PIC_THIS s.master_pic.auto_eoi)
+    BX_PIC_THIS s.master_pic.isr |= (1 << BX_PIC_THIS s.master_pic.irq);
+  else if(BX_PIC_THIS s.slave_pic.rotate_on_autoeoi)
+    BX_PIC_THIS s.slave_pic.lowest_priority = BX_PIC_THIS s.master_pic.irq;
 
   if (BX_PIC_THIS s.master_pic.irq != 2) {
     irq    = BX_PIC_THIS s.master_pic.irq;
@@ -766,8 +908,12 @@ bx_pic_c::IAC(void)
     BX_PIC_THIS s.master_pic.IRQ_line[2] = 0;
     irq    = BX_PIC_THIS s.slave_pic.irq;
     vector = irq + BX_PIC_THIS s.slave_pic.interrupt_offset;
-    BX_PIC_THIS s.slave_pic.isr |= (1 << BX_PIC_THIS s.slave_pic.irq);
     BX_PIC_THIS s.slave_pic.irr &= ~(1 << BX_PIC_THIS s.slave_pic.irq);
+    // In autoeoi mode don't set the isr bit.
+    if(!BX_PIC_THIS s.slave_pic.auto_eoi)
+      BX_PIC_THIS s.slave_pic.isr |= (1 << BX_PIC_THIS s.slave_pic.irq);
+    else if(BX_PIC_THIS s.slave_pic.rotate_on_autoeoi)
+      BX_PIC_THIS s.slave_pic.lowest_priority = BX_PIC_THIS s.slave_pic.irq;
     service_slave_pic();
     irq += 8; // for debug printing purposes
     }
