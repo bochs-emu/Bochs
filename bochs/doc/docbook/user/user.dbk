@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.109 2003-01-16 21:41:00 cbothamy Exp $
+$Id: user.dbk,v 1.110 2003-01-17 10:02:18 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4186,7 +4186,7 @@ instructions specific to Bochs, we can add it right here.
 <section id="winimage"><title>Win32 only: Use winimage to manipulate disk images</title>
 <para>
 Someone on the bochs-developers list mentioned that they use a program
-called WinImage, from <ulink url="www.winimage.com">www.winimage.com</ulink>
+called WinImage, from <ulink url="http://www.winimage.com">www.winimage.com</ulink>
 to read and write disk images (floppy and hard disk).  Winimage is a
 commercial product with a 30-day trial.
 </para>
