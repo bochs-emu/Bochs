@@ -1,0 +1,936 @@
+----------------------------------------------------------------------
+Patch name: patch.dma-register
+Author:     Volker Ruppert <Volker.Ruppert@t-online.de>
+Date:       Tue Jun  4 20:12:47 2002
+
+Detailed description:
+  This patch adds register and unregister functions for DMA channels and
+  defines macros for DMA functions.
+  Here is the list of changes:
+
+  * register/unregister functions for DMA channels added. The DMA controller
+    can use the DMA read/write handlers of registered devices directly.
+  * "hardwired" code in dma.cc removed
+  * all DMA related code in devices.cc and iodev.h removed
+  * DMA related code in pc_system.* removed except HRQ handling
+  * macros for DMA functions defined
+  * floppy and SB16 code modified to use the changes described above
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  cvs checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -urN bochs/bochs.h bochs-current/bochs.h
+--- bochs/bochs.h	Thu May  2 16:50:50 2002
++++ bochs-current/bochs.h	Sun Jun  2 19:37:54 2002
+@@ -132,14 +132,28 @@
+ // #define BX_OUTP(addr, val, len)  bx_pc_system.outp(addr, val, len)
+ #define BX_INP(addr, len)           bx_devices.inp(addr, len)
+ #define BX_OUTP(addr, val, len)     bx_devices.outp(addr, val, len)
+-#define BX_HRQ                      (bx_pc_system.HRQ)
+-#define BX_RAISE_HLDA()             bx_pc_system.raise_HLDA()
+ #define BX_TICK1()                  bx_pc_system.tick1()
+ #define BX_TICKN(n)                 bx_pc_system.tickn(n)
+ #define BX_INTR                     bx_pc_system.INTR
+ #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
+ #define BX_CPU_C                    bx_cpu_c
+ #define BX_MEM_C                    bx_mem_c
++// macros for DMA handling
++#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
++  bx_dma.registerDMA8Channel(channel, dmaRead, dmaWrite, name)
++#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
++  bx_dma.registerDMA16Channel(channel, dmaRead, dmaWrite, name)
++#define BX_UNREGISTER_DMA_CHANNEL(channel) \
++  bx_dma.unregisterDMAChannel(channel)
++#define BX_DMA_SET_DRQ(channel, val) bx_dma.set_DRQ(channel, val)
++#define BX_DMA_GET_TC()             bx_dma.get_TC()
++#define BX_HRQ                      (bx_pc_system.HRQ)
++#define BX_RAISE_HLDA()             bx_dma.raise_HLDA()
++#define BX_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
++  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, len, ptr)
++#define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
++  BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, len, ptr)
++
+ #if BX_SMP_PROCESSORS==1
+ #define BX_CPU(x)                   (&bx_cpu)
+ #define BX_MEM(x)                   (&bx_mem)
+diff -urN bochs/iodev/devices.cc bochs-current/iodev/devices.cc
+--- bochs/iodev/devices.cc	Sun Jun  2 13:53:19 2002
++++ bochs-current/iodev/devices.cc	Sun Jun  2 19:32:46 2002
+@@ -325,64 +325,6 @@
+ }
+ 
+ 
+-  void
+-bx_devices_c::drq(unsigned channel, Boolean val)
+-{
+-  dma->DRQ(channel, val);
+-}
+-
+-  void
+-bx_devices_c::raise_hlda(void)
+-{
+-  dma->raise_HLDA( &bx_pc_system );
+-}
+-
+-  void
+-bx_devices_c::dma_read8(unsigned channel, Bit8u *data_byte)
+-{
+-  if (channel == 2) 
+-    floppy->dma_read(data_byte);
+-#if BX_SUPPORT_SB16
+-  else if (channel == (unsigned) sb16->currentdma8)
+-    sb16->dma_read8(data_byte);
+-#endif
+-}
+-
+-  void
+-bx_devices_c::dma_write8(unsigned channel, Bit8u *data_byte)
+-{
+-  if (channel == 2)
+-    floppy->dma_write(data_byte);
+-#if BX_SUPPORT_SB16
+-  else if (channel == (unsigned) sb16->currentdma8)
+-    sb16->dma_write8(data_byte);
+-#endif
+-}
+-
+-  void
+-bx_devices_c::dma_read16(unsigned channel, Bit16u *data_word)
+-{
+-#if BX_SUPPORT_SB16
+-  if (channel == (unsigned) sb16->currentdma16)
+-    sb16->dma_read16(data_word);
+-#else
+-  UNUSED(channel);
+-  UNUSED(data_word);
+-#endif
+-}
+-
+-  void
+-bx_devices_c::dma_write16(unsigned channel, Bit16u *data_word)
+-{
+-#if BX_SUPPORT_SB16
+-  if (channel == (unsigned) sb16->currentdma16)
+-    sb16->dma_write16(data_word);
+-#else
+-  UNUSED(channel);
+-  UNUSED(data_word);
+-#endif
+-}
+-
+   Boolean
+ bx_devices_c::register_irq(unsigned irq, const char *name)
+ {
+diff -urN bochs/iodev/dma.cc bochs-current/iodev/dma.cc
+--- bochs/iodev/dma.cc	Sat May 11 15:42:52 2002
++++ bochs-current/iodev/dma.cc	Mon Jun  3 18:36:32 2002
+@@ -42,11 +42,10 @@
+ #endif
+ 
+ 
+-
+ bx_dma_c::bx_dma_c(void)
+ {
+-	put("DMA");
+-	settype(DMALOG);
++  put("DMA");
++  settype(DMALOG);
+ }
+ 
+ bx_dma_c::~bx_dma_c(void)
+@@ -54,6 +53,68 @@
+ 	BX_DEBUG(("Exit."));
+ }
+ 
++  unsigned
++bx_dma_c::registerDMA8Channel(
++    unsigned channel,
++    void (* dmaRead)(Bit8u *data_byte),
++    void (* dmaWrite)(Bit8u *data_byte),
++    const char *name
++    )
++{
++  if (channel > 3) {
++    BX_PANIC(("registerDMA8Channel: invalid channel number(%u).", channel));
++    return 0; // Fail.
++    }
++  if (bx_dma.s[0].chan[channel].used) {
++    BX_PANIC(("registerDMA8Channel: channel(%u) already in use.", channel));
++    return 0; // Fail.
++    }
++  BX_INFO(("channel %u used by %s", channel, name));
++  bx_dma.h[channel].dmaRead8  = dmaRead;
++  bx_dma.h[channel].dmaWrite8 = dmaWrite;
++  bx_dma.s[0].chan[channel].used = 1;
++  return 1; // OK.
++}
++
++  unsigned
++bx_dma_c::registerDMA16Channel(
++    unsigned channel,
++    void (* dmaRead)(Bit16u *data_word),
++    void (* dmaWrite)(Bit16u *data_word),
++    const char *name
++    )
++{
++  if ((channel < 4) || (channel > 7)) {
++    BX_PANIC(("registerDMA16Channel: invalid channel number(%u).", channel));
++    return 0; // Fail.
++    }
++  if (bx_dma.s[1].chan[channel & 0x03].used) {
++    BX_PANIC(("registerDMA16Channel: channel(%u) already in use.", channel));
++    return 0; // Fail.
++    }
++  BX_INFO(("channel %u used by %s", channel, name));
++  channel &= 0x03;
++  bx_dma.h[channel].dmaRead16  = dmaRead;
++  bx_dma.h[channel].dmaWrite16 = dmaWrite;
++  bx_dma.s[1].chan[channel].used = 1;
++  return 1; // OK.
++}
++
++  unsigned
++bx_dma_c::unregisterDMAChannel(unsigned channel)
++{
++  Boolean ma_sl = (channel > 3);
++  bx_dma.s[ma_sl].chan[channel & 0x03].used = 0;
++  BX_INFO(("channel %u no longer used", channel));
++  return 1;
++}
++
++  unsigned
++bx_dma_c::get_TC(void)
++{
++  return BX_DMA_THIS TC;
++}
++
+ 
+   void
+ bx_dma_c::init(bx_devices_c *d)
+@@ -65,6 +126,15 @@
+ 
+   /* 8237 DMA controller */
+ 
++  for (unsigned int i=0; i < 2; i++) {
++    for (unsigned int j=0; j < 4; j++) {
++      BX_DMA_THIS s[i].DRQ[j] = 0;
++      BX_DMA_THIS s[i].DACK[j] = 0;
++      }
++    }
++  BX_DMA_THIS HLDA = 0;
++  BX_DMA_THIS TC = 0;
++
+   // 0000..000F
+   unsigned i;
+   for (i=0x0000; i<=0x000F; i++) {
+@@ -109,8 +179,11 @@
+       BX_DMA_THIS s[i].chan[c].base_count = 0;
+       BX_DMA_THIS s[i].chan[c].current_count = 0;
+       BX_DMA_THIS s[i].chan[c].page_reg = 0;
++      BX_DMA_THIS s[i].chan[c].used = 0;
+       }
+     }
++  BX_DMA_THIS s[1].chan[0].used = 1; // cascade channel in use
++  BX_INFO(("channel 4 used by cascade"));
+ }
+ 
+ 
+@@ -288,7 +361,7 @@
+ 
+     BX_ERROR(("io write to address %08x, len=%u",
+              (unsigned) address, (unsigned) io_len));
+-	return;
++    return;
+     }
+ 
+   BX_DEBUG(("write: address=%04x value=%02x",
+@@ -318,9 +391,9 @@
+       else { /* 2nd byte */
+         BX_DMA_THIS s[ma_sl].chan[channel].base_address |= (value << 8);
+         BX_DMA_THIS s[ma_sl].chan[channel].current_address |= (value << 8);
+-          BX_DEBUG(("    base = %04x",
++        BX_DEBUG(("    base = %04x",
+             (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_address));
+-          BX_DEBUG(("    curr = %04x",
++        BX_DEBUG(("    curr = %04x",
+             (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].current_address));
+         }
+       BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
+@@ -474,9 +547,9 @@
+       break;
+ 
+     case 0x89: /* DMA-2 page register, channel 2 */
+-    case 0x8A: /* DMA-2 page register, channel 3 */
+-    case 0x8B: /* DMA-2 page register, channel 1 */
+-    case 0x8F: /* DMA-2 page register, channel 0 */
++    case 0x8a: /* DMA-2 page register, channel 3 */
++    case 0x8b: /* DMA-2 page register, channel 1 */
++    case 0x8f: /* DMA-2 page register, channel 0 */
+       /* address bits A16-A23 for DMA channel */
+       channel = channelindex[address - 0x89];
+       BX_DMA_THIS s[1].chan[channel].page_reg = value;
+@@ -488,9 +561,9 @@
+     case 0x0085:
+     case 0x0086:
+     case 0x0088:
+-    case 0x008C:
+-    case 0x008D:
+-    case 0x008E:
++    case 0x008c:
++    case 0x008d:
++    case 0x008e:
+       BX_DEBUG(("write: extra page register 0x%04x unsupported", (unsigned) address));
+       return;
+       break;
+@@ -502,23 +575,21 @@
+ }
+ 
+   void
+-bx_dma_c::DRQ(unsigned channel, Boolean val)
++bx_dma_c::set_DRQ(unsigned channel, Boolean val)
+ {
+   Bit32u dma_base, dma_roof;
+   Boolean ma_sl;
+ 
+-#if BX_SUPPORT_SB16
+-  if ( (channel != 2) && (channel != 4) &&
+-       (channel != (unsigned) BX_SB16_DMAL) &&
+-       (channel != (unsigned) BX_SB16_DMAH) )
+-    BX_PANIC(("DRQ(): channel %d != 2 or 4 or %d (SB16) or %d (SB16)",
+-	     channel, BX_SB16_DMAL, BX_SB16_DMAH));
+-#else
+-  if ( ( channel != 2 ) && ( channel != 4 ) )
+-    BX_PANIC(("DRQ(): channel %d != 2 (floppy) or 4 (cascade)",
+-	     channel));
+-#endif
++  if (channel > 7) {
++    BX_PANIC(("set_DRQ() channel > 7"));
++    return;
++  }
+   ma_sl = (channel > 3);
++  BX_DMA_THIS s[ma_sl].DRQ[channel & 0x03] = val;
++  if (!BX_DMA_THIS s[ma_sl].chan[channel & 0x03].used) {
++    BX_PANIC(("set_DRQ(): channel %d not connected to device", channel));
++    return;
++  }
+   channel &= 0x03;
+   if (!val) {
+     //BX_DEBUG(("bx_dma_c::DRQ(): val == 0"));
+@@ -549,7 +620,7 @@
+   if ( (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_SINGLE) &&
+        (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_DEMAND) &&
+        (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_CASCADE) )
+-    BX_PANIC(("DRQ: mode_type(%02x) not handled",
++    BX_PANIC(("set_DRQ: mode_type(%02x) not handled",
+       (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
+ 
+   dma_base = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
+@@ -579,7 +650,7 @@
+     if (ma_sl) {
+       bx_pc_system.set_HRQ(0);
+     } else {
+-      bx_pc_system.set_DRQ(4, 0);
++      BX_DMA_THIS set_DRQ(4, 0);
+     }
+     return;
+   }
+@@ -592,7 +663,7 @@
+         bx_pc_system.set_HRQ(1);
+       } else {
+         // send DRQ to cascade channel of the master
+-        bx_pc_system.set_DRQ(4, 1);
++        BX_DMA_THIS set_DRQ(4, 1);
+       }
+       break;
+     }
+@@ -600,13 +671,14 @@
+ }
+ 
+   void
+-bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
++bx_dma_c::raise_HLDA(void)
+ {
+   unsigned channel;
+   Bit32u phy_addr;
+   Boolean count_expired = 0;
+   Boolean ma_sl = 0;
+ 
++  BX_DMA_THIS HLDA = 1;
+   // find highest priority channel
+   for (channel=0; channel<4; channel++) {
+     if ( (BX_DMA_THIS s[1].status_reg & (1 << (channel+4))) &&
+@@ -616,7 +688,7 @@
+       }
+     }
+   if (channel == 0) { // master cascade channel
+-    bx_pc_system.set_DACK(channel + (ma_sl << 2), 1);
++    BX_DMA_THIS s[1].DACK[0] = 1;
+     for (channel=0; channel<4; channel++) {
+       if ( (BX_DMA_THIS s[0].status_reg & (1 << (channel+4))) &&
+            (BX_DMA_THIS s[0].mask[channel]==0) ) {
+@@ -634,7 +706,7 @@
+   phy_addr = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
+              (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
+ 
+-  bx_pc_system.set_DACK(channel + (ma_sl << 2), 1);
++  BX_DMA_THIS s[ma_sl].DACK[channel] = 1;
+   // check for expiration of count, so we can signal TC and DACK(n)
+   // at the same time.
+   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement==0)
+@@ -646,7 +718,7 @@
+     // count expired, done with transfer
+     // assert TC, deassert HRQ & DACK(n) lines
+     BX_DMA_THIS s[ma_sl].status_reg |= (1 << channel); // hold TC in status reg
+-    bx_pc_system.set_TC(1);
++    BX_DMA_THIS TC = 1;
+     count_expired = 1;
+     if (BX_DMA_THIS s[ma_sl].chan[channel].mode.autoinit_enable == 0) {
+       // set mask bit if not in autoinit mode
+@@ -662,31 +734,67 @@
+       }
+     }
+ 
++  Bit8u data_byte;
++  Bit16u data_word;
++
+   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 1) { // write
+-    // xfer from I/O to Memory
++    // DMA controlled xfer of byte from I/O to Memory
++
+     if (!ma_sl) {
+-      pc_sys->dma_write8(phy_addr, channel, 0);
++      if (BX_DMA_THIS h[channel].dmaWrite8)
++        BX_DMA_THIS h[channel].dmaWrite8(&data_byte);
++      else
++        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
++
++      BX_MEM_WRITE_PHYSICAL(phy_addr, 1, &data_byte);
++
++      BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
+       }
+     else {
+-      pc_sys->dma_write16(phy_addr, channel+4, 0);
++      if (BX_DMA_THIS h[channel].dmaWrite16)
++        BX_DMA_THIS h[channel].dmaWrite16(&data_word);
++      else
++        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
++
++      BX_MEM_WRITE_PHYSICAL(phy_addr, 2, &data_word);
++
++      BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
+       }
+     }
+   else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 2) { // read
+-    // xfer from Memory to I/O
++    // DMA controlled xfer of byte from Memory to I/O
++
+     if (!ma_sl) {
+-      pc_sys->dma_read8(phy_addr, channel);
++      BX_MEM_READ_PHYSICAL(phy_addr, 1, &data_byte);
++
++      if (BX_DMA_THIS h[channel].dmaRead8)
++        BX_DMA_THIS h[channel].dmaRead8(&data_byte);
++
++      BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
+       }
+     else {
+-      pc_sys->dma_read16(phy_addr, channel+4);
++      BX_MEM_READ_PHYSICAL(phy_addr, 2, &data_word);
++
++      if (BX_DMA_THIS h[channel].dmaRead16)
++        BX_DMA_THIS h[channel].dmaRead16(&data_word);
++
++      BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
+       }
+     }
+   else if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 0) {
+     // verify
++
+     if (!ma_sl) {
+-      pc_sys->dma_write8(phy_addr, channel, 1);
++      if (BX_DMA_THIS h[channel].dmaWrite8)
++        BX_DMA_THIS h[channel].dmaWrite8(&data_byte);
++      else
++        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+       }
+     else {
+-      pc_sys->dma_write16(phy_addr, channel+4, 1);
++      if (BX_DMA_THIS h[channel].dmaWrite16)
++        BX_DMA_THIS h[channel].dmaWrite16(&data_word);
++      else
++        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+       }
+     }
+   else {
+@@ -694,12 +802,13 @@
+     }
+ 
+   if (count_expired) {
+-    bx_pc_system.set_TC(0);            // clear TC, adapter card already notified
++    BX_DMA_THIS TC = 0;            // clear TC, adapter card already notified
++    BX_DMA_THIS HLDA = 0;
+     bx_pc_system.set_HRQ(0);           // clear HRQ to CPU
+-    bx_pc_system.set_DACK(channel + (ma_sl << 2), 0); // clear DACK to adapter card
++    BX_DMA_THIS s[ma_sl].DACK[channel] = 0; // clear DACK to adapter card
+     if (!ma_sl) {
+-      bx_pc_system.set_DRQ(4, 0); // clear DRQ to cascade
+-      bx_pc_system.set_DACK(4, 0); // clear DACK to cascade
++      BX_DMA_THIS set_DRQ(4, 0); // clear DRQ to cascade
++      BX_DMA_THIS s[1].DACK[0] = 0; // clear DACK to cascade
+       }
+     }
+ }
+diff -urN bochs/iodev/dma.h bochs-current/iodev/dma.h
+--- bochs/iodev/dma.h	Sun Jun  2 13:53:49 2002
++++ bochs-current/iodev/dma.h	Sun Jun  2 19:43:18 2002
+@@ -29,7 +29,6 @@
+ #define _PCDMA_H
+ 
+ 
+-
+ #if BX_USE_DMA_SMF
+ #  define BX_DMA_SMF  static
+ #  define BX_DMA_THIS bx_dma.
+@@ -47,8 +46,19 @@
+   ~bx_dma_c(void);
+ 
+   BX_DMA_SMF void     init(bx_devices_c *);
+-  BX_DMA_SMF void     DRQ(unsigned channel, Boolean val);
+-  BX_DMA_SMF void     raise_HLDA(bx_pc_system_c *pc_sys);
++  BX_DMA_SMF void     raise_HLDA(void);
++  BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
++  BX_DMA_SMF unsigned get_TC(void);
++
++  BX_DMA_SMF unsigned registerDMA8Channel(unsigned channel,
++    void (* dmaRead)(Bit8u *data_byte),
++    void (* dmaWrite)(Bit8u *data_byte),
++    const char *name);
++  BX_DMA_SMF unsigned registerDMA16Channel(unsigned channel,
++    void (* dmaRead)(Bit16u *data_word),
++    void (* dmaWrite)(Bit16u *data_word),
++    const char *name);
++  BX_DMA_SMF unsigned unregisterDMAChannel(unsigned channel);
+ 
+ private:
+ 
+@@ -61,6 +71,9 @@
+   BX_DMA_SMF void control_HRQ(Boolean ma_sl);
+ 
+   struct {
++    Boolean DRQ[4];  // DMA Request
++    Boolean DACK[4]; // DMA Acknowlege
++
+     Boolean mask[4];
+     Boolean flip_flop;
+     Bit8u   status_reg;
+@@ -79,8 +92,19 @@
+       Bit16u  base_count;
+       Bit16u  current_count;
+       Bit8u   page_reg;
++      Boolean used;
+       } chan[4]; /* DMA channels 0..3 */
+     } s[2];  // state information DMA-1 / DMA-2
++
++  Boolean HLDA;    // Hold Acknowlege
++  Boolean TC;      // Terminal Count
++
++  struct {
++    void (* dmaRead8)(Bit8u *data_byte);
++    void (* dmaWrite8)(Bit8u *data_byte);
++    void (* dmaRead16)(Bit16u *data_word);
++    void (* dmaWrite16)(Bit16u *data_word);
++    } h[4]; // DMA read and write handlers
+ 
+   bx_devices_c *devices;
+   };
+diff -urN bochs/iodev/floppy.cc bochs-current/iodev/floppy.cc
+--- bochs/iodev/floppy.cc	Thu Apr 11 12:38:32 2002
++++ bochs-current/iodev/floppy.cc	Sun Jun  2 18:34:52 2002
+@@ -90,6 +90,7 @@
+ 	BX_DEBUG(("Init $Id: patch.dma-register,v 1.1 2002-06-04 18:31:27 vruppert Exp $"));
+   BX_FD_THIS devices = d;
+ 
++  BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
+   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
+   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
+     BX_FD_THIS devices->register_io_read_handler(this, read_handler,
+@@ -259,7 +260,7 @@
+   BX_FD_THIS s.floppy_buffer_index = 0;
+ 
+   BX_FD_THIS devices->pic->lower_irq(6);
+-  bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
++  BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+ }
+ 
+ 
+@@ -787,7 +788,7 @@
+       /* 4 header bytes per sector are required */
+       BX_FD_THIS s.format_count <<= 2;
+ 
+-      bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 1);
++      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 1);
+ 
+       /* data reg not ready, controller busy */
+       BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+@@ -943,7 +944,7 @@
+                     512, FROM_FLOPPY);
+         BX_FD_THIS s.floppy_buffer_index = 0;
+ 
+-        bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 1);
++        BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 1);
+ 
+         /* data reg not ready, controller busy */
+         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+@@ -953,7 +954,7 @@
+       else if ((BX_FD_THIS s.command[0] & 0x7f) == 0x45) { // write
+         BX_FD_THIS s.floppy_buffer_index = 0;
+ 
+-        bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 1);
++        BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 1);
+ 
+         /* data reg not ready, controller busy */
+         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+@@ -1132,7 +1133,7 @@
+     drive = BX_FD_THIS s.DOR & 0x03;
+     increment_sector(); // increment to next sector before retrieving next one
+     BX_FD_THIS s.floppy_buffer_index = 0;
+-    if (bx_pc_system.TC) { // Terminal Count line, done
++    if (BX_DMA_GET_TC()) { // Terminal Count line, done
+       BX_FD_THIS s.pending_command = 0;
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+       BX_FD_THIS s.result_size = 7;
+@@ -1156,7 +1157,7 @@
+         }
+ 
+       raise_interrupt();
+-      bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
++      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+       }
+     else { // more data to transfer
+       Bit32u logical_sector;
+@@ -1210,7 +1211,7 @@
+                     512, TO_FLOPPY);
+         break;
+       }
+-    if ((BX_FD_THIS s.format_count == 0) || (bx_pc_system.TC)) {
++    if ((BX_FD_THIS s.format_count == 0) || (BX_DMA_GET_TC())) {
+       BX_FD_THIS s.format_count = 0;
+       BX_FD_THIS s.pending_command = 0;
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+@@ -1222,7 +1223,7 @@
+       BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
+       // 4 result bytes are unused
+       raise_interrupt();
+-      bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
++      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+       }
+     return;
+     }
+@@ -1258,7 +1259,7 @@
+                 512, TO_FLOPPY);
+     increment_sector(); // increment to next sector after writing current one
+     BX_FD_THIS s.floppy_buffer_index = 0;
+-    if (bx_pc_system.TC) { // Terminal Count line, done
++    if (BX_DMA_GET_TC()) { // Terminal Count line, done
+       BX_FD_THIS s.pending_command = 0;
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+       BX_FD_THIS s.result_size = 7;
+@@ -1281,7 +1282,7 @@
+         }
+ 
+       raise_interrupt();
+-      bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
++      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+       }
+     else { // more data to transfer
+       } // else
+diff -urN bochs/iodev/iodev.h bochs-current/iodev/iodev.h
+--- bochs/iodev/iodev.h	Wed Apr  3 16:53:37 2002
++++ bochs-current/iodev/iodev.h	Sun Jun  2 19:31:41 2002
+@@ -89,12 +89,6 @@
+   Bit32u inp(Bit16u addr, unsigned io_len);
+   void   outp(Bit16u addr, Bit32u value, unsigned io_len);
+ 
+-  void dma_write8(unsigned channel, Bit8u *data);
+-  void dma_read8(unsigned channel, Bit8u *data);
+-  void dma_write16(unsigned channel, Bit16u *data);
+-  void dma_read16(unsigned channel, Bit16u *data);
+-  void drq(unsigned channel, Boolean val);
+-  void raise_hlda(void);
+   static void timer_handler(void *);
+   void timer(void);
+ 
+diff -urN bochs/iodev/sb16.cc bochs-current/iodev/sb16.cc
+--- bochs/iodev/sb16.cc	Wed Apr 10 12:38:25 2002
++++ bochs-current/iodev/sb16.cc	Mon Jun  3 18:39:36 2002
+@@ -270,9 +270,9 @@
+ 	 (This->dsp.dma.count > 0) ) ||
+        (This->output->waveready() == BX_SOUND_OUTPUT_OK) ) {
+     if (DSP.dma.bits == 8)
+-      bx_pc_system.set_DRQ(BX_SB16_DMAL, 1);
++      BX_DMA_SET_DRQ(BX_SB16_DMAL, 1);
+     else
+-      bx_pc_system.set_DRQ(BX_SB16_DMAH, 1);
++      BX_DMA_SET_DRQ(BX_SB16_DMAH, 1);
+     }
+ }
+ 
+@@ -1166,7 +1166,7 @@
+ // and write = from soundcard to application (input)
+ void bx_sb16_c::dma_read8(Bit8u *data_byte)
+ {
+-  bx_pc_system.set_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
++  BX_DMA_SET_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
+ 
+   if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
+     writelog( WAVELOG(5), "Received 8-bit DMA %2x, %d remaining ",
+@@ -1181,7 +1181,7 @@
+ 
+ void bx_sb16_c::dma_write8(Bit8u *data_byte)
+ {
+-  bx_pc_system.set_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
++  BX_DMA_SET_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
+ 
+   DSP.dma.count--;
+ 
+@@ -1197,7 +1197,7 @@
+ 
+ void bx_sb16_c::dma_read16(Bit16u *data_word)
+ {
+-  bx_pc_system.set_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
++  BX_DMA_SET_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
+ 
+   if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
+     writelog( WAVELOG(5), "Received 16-bit DMA %4x, %d remaining ",
+@@ -1216,7 +1216,7 @@
+ {
+   Bit8u byte1, byte2;
+ 
+-  bx_pc_system.set_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
++  BX_DMA_SET_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
+ 
+   DSP.dma.count--;
+ 
+@@ -1286,7 +1286,9 @@
+ 
+ void bx_sb16_c::set_irq_dma()
+ {
++  static Boolean isInitialized=0;
+   int newirq;
++  int oldDMA8, oldDMA16;
+ 
+   // set the IRQ according to the value in mixer register 0x80
+   switch (MIXER.reg[0x80]) 
+@@ -1319,6 +1321,7 @@
+     }
+ 
+   // set the 8 bit DMA
++  oldDMA8=BX_SB16_DMAL;
+   switch (MIXER.reg[0x81] & 0x0f)
+     {
+     case 1: 
+@@ -1338,7 +1341,18 @@
+       MIXER.reg[0x81] |= (1 << BX_SB16_DMAL);
+     }
+ 
++  // Unregister the previous DMA if initialized
++  if ( (isInitialized) && (oldDMA8 != BX_SB16_DMAL) ) {
++    BX_UNREGISTER_DMA_CHANNEL(oldDMA8);
++  }
++
++  // And register the new 8bits DMA Channel
++  if ( (!isInitialized) || (oldDMA8 != BX_SB16_DMAL) ) {
++    BX_REGISTER_DMA8_CHANNEL(BX_SB16_DMAL, bx_sb16.dma_read8, bx_sb16.dma_write8, "SB16");
++  }
++
+   // and the 16 bit DMA
++  oldDMA16=BX_SB16_DMAH;
+   switch (MIXER.reg[0x81] >> 4)
+     {
+     case 0:
+@@ -1361,6 +1375,21 @@
+       // MIXER.reg[0x81] |= (1 << BX_SB16_DMAH);
+       // no default 16 bit channel!
+     }
++
++  // Unregister the previous DMA if initialized
++  if ( (isInitialized) && (oldDMA16 != 0) && (oldDMA16 != BX_SB16_DMAH) ) {
++    BX_UNREGISTER_DMA_CHANNEL(oldDMA16);
++  }
++
++  // And register the new 16bits DMA Channel
++  if ( (BX_SB16_DMAH != 0) && (oldDMA16 != BX_SB16_DMAH) ) {
++    BX_REGISTER_DMA16_CHANNEL(BX_SB16_DMAH, bx_sb16.dma_read16, bx_sb16.dma_write16, "SB16");
++  }
++
++  // If not already initialized
++  if(!isInitialized) {
++    isInitialized=1;
++  }
+ 
+   writelog(BOTHLOG(4), "Resources set to I%d D%d H%d", 
+ 	   BX_SB16_IRQ, BX_SB16_DMAL, BX_SB16_DMAH);
+diff -urN bochs/pc_system.cc bochs-current/pc_system.cc
+--- bochs/pc_system.cc	Wed Dec 26 15:56:15 2001
++++ bochs-current/pc_system.cc	Sun Jun  2 19:49:29 2002
+@@ -56,13 +56,7 @@
+   num_cpu_ticks_in_period = num_cpu_ticks_left = (Bit32u) -1;
+   m_ips = 0.0L;
+ 
+-  for (unsigned int i=0; i < 8; i++) {
+-    DRQ[i] = 0;
+-    DACK[i] = 0;
+-    }
+-  TC = 0;
+   HRQ = 0;
+-  HLDA = 0;
+ 
+   enable_a20 = 1;
+   //set_INTR (0);
+@@ -88,102 +82,11 @@
+ }
+ 
+   void
+-bx_pc_system_c::raise_HLDA(void)
+-{
+-  HLDA = 1;
+-  bx_devices.raise_hlda();
+-  HLDA = 0;
+-}
+-
+-  void
+-bx_pc_system_c::set_DRQ(unsigned channel, Boolean val)
+-{
+-  if (channel > 7)
+-    BX_PANIC(("set_DRQ() channel > 7"));
+-  DRQ[channel] = val;
+-  bx_devices.drq(channel, val);
+-}
+-
+-  void
+ bx_pc_system_c::set_HRQ(Boolean val)
+ {
+   HRQ = val;
+   if (val)
+     BX_CPU(0)->async_event = 1;
+-  else
+-    HLDA = 0; // ??? needed?
+-}
+-
+-  void
+-bx_pc_system_c::set_TC(Boolean val)
+-{
+-  TC = val;
+-}
+-
+-  void
+-bx_pc_system_c::set_DACK(unsigned channel, Boolean val)
+-{
+-  DACK[channel] = val;
+-}
+-
+-
+-  void
+-bx_pc_system_c::dma_write8(Bit32u phy_addr, unsigned channel, Boolean verify)
+-{
+-  // DMA controlled xfer of byte from I/O to Memory
+-
+-  Bit8u data_byte;
+-
+-  bx_devices.dma_write8(channel, &data_byte);
+-  if (!verify) {
+-    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 1, &data_byte);
+-
+-    BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
+-    }
+-}
+-
+-
+-  void
+-bx_pc_system_c::dma_read8(Bit32u phy_addr, unsigned channel)
+-{
+-  // DMA controlled xfer of byte from Memory to I/O
+-
+-  Bit8u data_byte;
+-
+-  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 1, &data_byte);
+-  bx_devices.dma_read8(channel, &data_byte);
+-
+-  BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
+-}
+-
+-
+-  void
+-bx_pc_system_c::dma_write16(Bit32u phy_addr, unsigned channel, Boolean verify)
+-{
+-  // DMA controlled xfer of word from I/O to Memory
+-
+-  Bit16u data_word;
+-
+-  bx_devices.dma_write16(channel, &data_word);
+-  if (!verify) {
+-    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 2, &data_word);
+-
+-    BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
+-    }
+-}
+-
+-
+-  void
+-bx_pc_system_c::dma_read16(Bit32u phy_addr, unsigned channel)
+-{
+-  // DMA controlled xfer of word from Memory to I/O
+-
+-  Bit16u data_word;
+-
+-  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 2, &data_word);
+-  bx_devices.dma_read16(channel, &data_word);
+-
+-  BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
+ }
+ 
+ 
+diff -urN bochs/pc_system.h bochs-current/pc_system.h
+--- bochs/pc_system.h	Wed Dec 26 15:56:15 2001
++++ bochs-current/pc_system.h	Sun Jun  2 19:29:02 2002
+@@ -68,11 +68,7 @@
+ 
+ public:
+ 
+-  Boolean DRQ[8];  // DMA Request
+-  Boolean DACK[8]; // DMA Acknowlege
+-  Boolean TC;      // Terminal Count
+   Boolean HRQ;     // Hold Request
+-  Boolean HLDA;    // Hold Acknowlege
+   //Boolean INTR;    // Interrupt
+ 
+ 
+@@ -92,11 +88,7 @@
+     //
+   Bit32u  a20_mask;
+ 
+-  void set_DRQ(unsigned channel, Boolean val);
+-  void set_DACK(unsigned channel, Boolean val);
+-  void set_TC(Boolean val);   // set the Terminal Count line
+   void set_HRQ(Boolean val);  // set the Hold ReQuest line
+-  void raise_HLDA(void); // raise the HoLD Acknowlege line
+   void set_INTR(Boolean value); // set the INTR line to value
+ 
+   int IntEnabled( void );
+@@ -159,11 +151,6 @@
+   int counter_timer_index;
+   Bit64u time_usec();
+   Bit64u time_ticks();
+-
+-  void dma_write8(Bit32u phy_addr, unsigned channel, Boolean verify);
+-  void dma_read8(Bit32u phy_addr, unsigned channel);
+-  void dma_write16(Bit32u phy_addr, unsigned channel, Boolean verify);
+-  void dma_read16(Bit32u phy_addr, unsigned channel);
+ 
+   Bit32u  inp(Bit16u addr, unsigned io_len);
+   void    outp(Bit16u addr, Bit32u value, unsigned io_len);
