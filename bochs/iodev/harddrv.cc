@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.91 2002-12-12 15:29:17 cbothamy Exp $
+// $Id: harddrv.cc,v 1.92 2002-12-12 18:30:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.91 2002-12-12 15:29:17 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.92 2002-12-12 18:30:03 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3057,6 +3057,7 @@ bx_hard_drive_c::get_cd_media_status(Bit32u handle)
   unsigned
 bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
 {
+  BX_DEBUG (("set_cd_media_status handle=%d status=%d", handle, status));
   if ( handle >= BX_MAX_ATA_CHANNEL*2 ) return 0;
 
   Bit8u channel = handle / 2;
