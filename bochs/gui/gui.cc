@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.18.2.6 2002-03-18 02:46:04 bdenney Exp $
+// $Id: gui.cc,v 1.18.2.7 2002-03-18 20:08:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -203,7 +203,7 @@ bx_gui_c::floppyA_handler(void)
 #if USE_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
-  int ret = SIM->vga_gui_button_pressed (BXP_FLOPPYA_PATH);
+  int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
   unsigned new_status = bx_devices.floppy->set_media_status(0, 0);
@@ -225,7 +225,7 @@ bx_gui_c::floppyB_handler(void)
 #if USE_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
-  int ret = SIM->vga_gui_button_pressed (BXP_FLOPPYB_PATH);
+  int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
   unsigned new_status = bx_devices.floppy->set_media_status(1, 0);
@@ -247,7 +247,7 @@ bx_gui_c::cdromD_handler(void)
 #if USE_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
-  int ret = SIM->vga_gui_button_pressed (BXP_CDROM_PATH);
+  int ret = SIM->ask_param (BXP_CDROM_PATH);
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
   unsigned status = bx_devices.hard_drive->set_cd_media_status(0);
@@ -361,7 +361,9 @@ bx_gui_c::snapshot_handler(void)
   //FIXME
   char filename[BX_PATHNAME_LEN];
 #if USE_WX
-  int ret = SIM->ask_pathname (filename, sizeof(filename), "Save snapshot as...", "snapshot.txt");
+  int ret = SIM->ask_filename (filename, sizeof(filename), 
+    "Save snapshot as...", "snapshot.txt", 
+	bx_param_string_c::BX_SAVE_FILE_DIALOG);
   if (ret < 0) return;  // cancelled
 #else
   strcpy (filename, "snapshot.txt");
