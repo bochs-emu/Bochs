@@ -687,23 +687,45 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op;
-  Bit32u val32;
+  BxPackedXmmRegister op1;
+  op1.xmm64u(1) = 0;
 
-  /* val32 is a register or memory reference */
-  if (i->modC0()) {
-    val32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &val32);
-  }
+#if BX_SUPPORT_X86_64
+  if (i->os64L())  /* 64 bit operand size mode */
+  {
+    Bit64u op2;
 
-  op.xmm64u(1) = 0;
-  op.xmm64u(0) = (Bit64u)(val32);
+    /* op2 is a register or memory reference */
+    if (i->modC0()) {
+      op2 = BX_READ_64BIT_REG(i->rm());
+    }
+    else {
+      /* pointer, segment address pair */
+      read_virtual_qword(i->seg(), RMAddr(i), &op2);
+    }
+
+    op1.xmm64u(0) = op2;
+  }
+  else
+#else
+  {
+    Bit32u op2;
+
+    /* op2 is a register or memory reference */
+    if (i->modC0()) {
+      op2 = BX_READ_32BIT_REG(i->rm());
+    }
+    else {
+      /* pointer, segment address pair */
+      read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    }
+
+    op1.xmm64u(0) = (Bit64u)(op2);
+  }
+#endif
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), op);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("MOVD_VdqEd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -716,17 +738,38 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
-  Bit32u val32 = op.xmm32u(0);
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
 
-  /* destination is a register or memory reference */
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REG(i->rm(), val32);
+#if BX_SUPPORT_X86_64
+  if (i->os64L())  /* 64 bit operand size mode */
+  {
+    Bit64u op2 = op1.xmm64u(0);
+
+    /* destination is a register or memory reference */
+    if (i->modC0()) {
+      BX_WRITE_64BIT_REG(i->rm(), op2);
+    }
+    else {
+      /* pointer, segment address pair */
+      write_virtual_qword(i->seg(), RMAddr(i), &op2);
+    }
   }
-  else {
-    write_virtual_dword(i->seg(), RMAddr(i), &val32);
-  }
+  else
 #else
+  {
+    Bit32u op2 = op1.xmm32u(0);
+
+    /* destination is a register or memory reference */
+    if (i->modC0()) {
+      BX_WRITE_32BIT_REG(i->rm(), op2);
+    }
+    else {
+      /* pointer, segment address pair */
+      write_virtual_dword(i->seg(), RMAddr(i), &op2);
+    }
+  }
+#endif
+
   BX_INFO(("MOVD_EdVd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif

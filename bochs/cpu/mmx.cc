@@ -490,16 +490,34 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op;
-  MMXUD1(op) = 0;
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
+#if BX_SUPPORT_X86_64
+  if (i->os64L())  /* 64 bit operand size mode */
+  {
+    /* op is a register or memory reference */
+    if (i->modC0()) {
+      MMXUQ(op) = BX_READ_64BIT_REG(i->rm());
+    }
+    else {
+      /* pointer, segment address pair */
+      read_virtual_qword(i->seg(), RMAddr(i), &(MMXUQ(op)));
+    }
   }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
+  else
+#else
+  {
+    MMXUD1(op) = 0;
+
+    /* op is a register or memory reference */
+    if (i->modC0()) {
+      MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
+    }
+    else {
+      /* pointer, segment address pair */
+      read_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
+    }
   }
+#endif
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
@@ -686,13 +704,30 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
-  /* destination is a register or memory reference */
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REG(i->rm(), MMXUD0(op));
+#if BX_SUPPORT_X86_64
+  if (i->os64L())  /* 64 bit operand size mode */
+  {
+    /* destination is a register or memory reference */
+    if (i->modC0()) {
+      BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
+    }
+    else {
+      write_virtual_qword(i->seg(), RMAddr(i), &(MMXUQ(op)));
+    }
   }
-  else {
-    write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
+  else
+#else
+  {
+    /* destination is a register or memory reference */
+    if (i->modC0()) {
+      BX_WRITE_32BIT_REG(i->rm(), MMXUD0(op));
+    }
+    else {
+      write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
+    }
   }
+#endif
+
 #else
   BX_INFO(("MOVD_EdPd: MMX not supported in current configuration"));
   UndefinedOpcode(i);
