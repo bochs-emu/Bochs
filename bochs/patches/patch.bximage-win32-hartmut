@@ -1,0 +1,147 @@
+----------------------------------------------------------------------
+Patch name: patch.bximage-win32-hartmut
+Author: Hartmut Birr (uploaded by cbothamy)
+Date:  28 oct 2002
+
+Detailed description:
+With this patch, on windows platforms, bximage can create
+compressed image files up to 32GiB (NTFS only).
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 28 oct 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: misc/bximage.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/misc/bximage.c,v
+retrieving revision 1.14
+diff -u -r1.14 bximage.c
+--- misc/bximage.c	24 Oct 2002 21:07:56 -0000	1.14
++++ misc/bximage.c	28 Oct 2002 21:13:14 -0000
+@@ -12,7 +12,9 @@
+ #include <ctype.h>
+ #include <assert.h>
+ #ifdef WIN32
+-#  include <conio.h>
++#include <conio.h>
++#include <windows.h>
++#include <winioctl.h>
+ #endif
+ #include "config.h"
+ 
+@@ -188,24 +190,45 @@
+ /* produce the image file */
+ int make_image (Bit64u sec, char *filename)
+ {
++#ifdef WIN32
++  HANDLE hFile;
++  LARGE_INTEGER pos;
++  DWORD dwCount;
++  USHORT mode;
++#else
+   FILE *fp;
++#endif
+   char buffer[1024];
+ 
+   // check if it exists before trashing someone's disk image
++#ifdef WIN32
++  hFile = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL , NULL);
++  if (hFile != INVALID_HANDLE_VALUE) {
++#else
+   fp = fopen (filename, "r");
+   if (fp) {
++#endif
+     int confirm;
+     sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. [no] ", filename);
+     if (ask_yn (buffer, 0, &confirm) < 0)
+       fatal (EOF_ERR);
+     if (!confirm) 
+       fatal ("ERROR: Aborted");
++#ifdef WIN32
++    CloseHandle(hFile);
++#else
+     fclose (fp);
++#endif
+   }
+ 
+   // okay, now open it for writing
++#ifdef WIN32 
++  hFile = CreateFile(filename, GENERIC_WRITE|GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
++  if (hFile == INVALID_HANDLE_VALUE) {
++#else
+   fp = fopen (filename, "w");
+   if (fp == NULL) {
++#endif
+     // attempt to print an error
+ #ifdef HAVE_PERROR
+     sprintf (buffer, "while opening '%s' for writing", filename);
+@@ -215,7 +238,20 @@
+   }
+ 
+   printf ("\nWriting: [");
+-
++#ifdef WIN32 
++  SetLastError(NO_ERROR);
++  mode = COMPRESSION_FORMAT_DEFAULT;
++  dwCount = 0;
++  memset(buffer, 0, 512);
++  WriteFile(hFile, buffer, 512, &dwCount, NULL); // set the first sector to 0, Win98 doesn't zero out the file
++                                                 // if there is a write at/over the end
++  DeviceIoControl(hFile, FSCTL_SET_COMPRESSION, &mode, sizeof(mode), NULL, 0, &dwCount, NULL);
++  pos.u.LowPart = (sec - 1) << 9;
++  pos.u.HighPart = (sec - 1) >> 23;
++  pos.u.LowPart = SetFilePointer(hFile, pos.u.LowPart, &pos.u.HighPart, FILE_BEGIN);
++  memset(buffer, 0, 512);
++  if ((pos.u.LowPart == 0xffffffff && GetLastError() != NO_ERROR) || !WriteFile(hFile, buffer, 512, &dwCount, NULL) || dwCount != 512)
++#else  
+   /*
+    * seek to sec*512-1 and write a single character.
+    * can't just do: fseek(fp, 512*sec-1, SEEK_SET)
+@@ -233,13 +269,22 @@
+ 
+   fseek(fp, -1, SEEK_CUR);
+   if (fputc('\0', fp) == EOF)
++#endif
+   {
++#ifdef WIN32
++    CloseHandle(hFile);
++#else
+     fclose (fp);
++#endif
+     fatal ("ERROR: The disk image is not complete!");
+   }
+ 
+   printf ("] Done.\n");
++#if WIN32
++  CloseHandle(hFile);
++#else
+   fclose (fp);
++#endif
+   return 0;
+ }
+ 
+@@ -265,7 +310,7 @@
+     printf ("  heads=%d\n", heads);
+     printf ("  sectors per track=%d\n", spt);
+     printf ("  total sectors=%lld\n", sectors);
+-    printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
++    printf ("  total size=%.2f megabytes\n", (float)(Bit64s)(sectors/2)/1024.0);
+     if (ask_string ("\nWhat should I name the image?\n[c.img] ", "c.img", filename) < 0)
+       fatal (EOF_ERR);
+     sprintf (bochsrc_line, "ata0-master: type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d", filename, cyl, heads, spt);
+@@ -299,7 +344,11 @@
+   if (strlen (filename) < 1)
+     fatal ("ERROR: Illegal filename");
+   make_image (sectors, filename);
++#ifdef WIN32
++  printf ("\nI wrote %I64u bytes to %s.\n", sectors*512, filename);
++#else
+   printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
++#endif
+   printf ("\nThe following line should appear in your bochsrc:\n");
+   printf ("  %s\n", bochsrc_line);
+   return 0;
