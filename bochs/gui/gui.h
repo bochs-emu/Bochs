@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.38 2003-05-11 15:07:53 vruppert Exp $
+// $Id: gui.h,v 1.39 2003-05-18 10:44:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-typedef struct bx_vga_tminfo_t {
+typedef struct {
   Bit8u cs_start;
   Bit8u cs_end;
   Bit16u line_offset;
@@ -32,7 +32,7 @@ typedef struct bx_vga_tminfo_t {
   Bit8u h_panning;
   Bit8u v_panning;
   bx_bool line_graphics;
-};
+} bx_vga_tminfo_t;
 
 
 BOCHSAPI extern class bx_gui_c *bx_gui;
