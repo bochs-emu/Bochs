@@ -291,19 +291,36 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       // long mode supported.
       features = get_std_cpuid_features ();
       RAX = features;
-      // Many of the bits in EDX are the same as EAX
-      // [18:19] Reserved
-      // [20:20] No-Execute page protection
-      // [21:21] Reserved
-      // [22:22] AMD MMX Extensions
-      // [25:25] Fast FXSAVE/FXRSTOR mode support
-      // [25:28] Reserved
-      // [29:29] Long Mode
-      // [30:30] AMD 3DNow! Extensions
-      // [31:31] AMD 3DNow! Instructions
-//    features = features & 0x0183F3FF;
-      features = features & 0x0193F3FF;	/* NX is still not emulated by Bochs */
-      RDX = features | (1 << 29) | (1 << 11);
+      // Many of the bits in EDX are the same as EAX [*]
+      // [*] [0:0]   FPU on chip
+      // [*] [1:1]   VME: Virtual-8086 Mode enhancements
+      // [*] [2:2]   DE: Debug Extensions (I/O breakpoints)
+      // [*] [3:3]   PSE: Page Size Extensions
+      // [*] [4:4]   TSC: Time Stamp Counter
+      // [*] [5:5]   MSR: RDMSR and WRMSR support
+      // [*] [6:6]   PAE: Physical Address Extensions
+      // [*] [7:7]   MCE: Machine Check Exception
+      // [*] [8:8]   CXS: CMPXCHG8B instruction
+      // [*] [9:9]   APIC: APIC on Chip
+      // [*] [10:10] Reserved
+      //     [11:11] SYSCALL/SYSRET support
+      // [*] [12:12] MTRR: Memory Type Range Reg
+      // [*] [13:13] PGE/PTE Global Bit
+      // [*] [14:14] MCA: Machine Check Architecture
+      // [*] [15:15] CMOV: Cond Mov/Cmp Instructions
+      // [*] [16:16] PAT: Page Attribute Table
+      // [*] [17:17] PSE: Page-Size Extensions
+      //     [18:19] Reserved
+      //     [20:20] No-Execute page protection
+      //     [21:21] Reserved
+      //     [22:22] AMD MMX Extensions
+      //     [25:25] Fast FXSAVE/FXRSTOR mode support
+      //     [25:28] Reserved
+      //     [29:29] Long Mode
+      //     [30:30] AMD 3DNow! Extensions
+      //     [31:31] AMD 3DNow! Instructions
+      features = features & 0x00003F3FF;
+      RDX = features | (1 << 29) | (1 << 25) | (1 << 22) | (1 << 20) | (1 << 11);
       RBX = 0;
       RCX = 0;
       break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.53 2005-01-19 20:48:51 sshwarts Exp $
+// $Id: paging.cc,v 1.54 2005-01-20 19:37:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -653,8 +653,15 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       Bit32u pml4_addr = BX_CPU_THIS_PTR cr3_masked |
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
+
       if ( !(pml4 & 0x01) ) {
         goto page_fault_not_present; // PML4 Entry NOT present
+      }
+      if (pml4 & PAGE_DIRECTORY_NX_BIT) {
+        if (! BX_CPU_THIS_PTR msr.nxe)
+          goto page_fault_reserved;
+        else if (access_type == CODE_ACCESS)
+          goto page_fault_access;
       }
       if ( !(pml4 & 0x20) )
       {
@@ -673,9 +680,21 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     }
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdp_addr, sizeof(bx_address), &pdp);
+
     if ( !(pdp & 0x01) ) {
       goto page_fault_not_present; // PDP Entry NOT present
     }
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR msr.lma)
+    {
+      if (pdp & PAGE_DIRECTORY_NX_BIT) {
+        if (! BX_CPU_THIS_PTR msr.nxe)
+          goto page_fault_reserved;
+        else if (access_type == CODE_ACCESS)
+          goto page_fault_access;
+      }
+    }
+#endif
     if ( !(pdp & 0x20) ) {
       pdp |= 0x20;
       BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pdp_addr, sizeof(bx_address), &pdp);
@@ -685,9 +704,19 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     pde_addr = (pdp & 0xfffff000) | ((laddr & 0x3fe00000) >> 18);
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
+
     if ( !(pde & 0x01) ) {
       goto page_fault_not_present; // Page Directory Entry NOT present
     }
+
+#if BX_SUPPORT_X86_64
+    if (pde & PAGE_DIRECTORY_NX_BIT) {
+      if (! BX_CPU_THIS_PTR msr.nxe)
+        goto page_fault_reserved;
+      else if (access_type == CODE_ACCESS)
+        goto page_fault_access;
+    }
+#endif
 
 #if BX_SUPPORT_4MEG_PAGES
     // (KPL) Weird.  I would think the processor would consult CR.PSE?
@@ -733,6 +762,18 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, sizeof(bx_address), &pte);
 
+      if ( !(pte & 0x01) ) {
+        goto page_fault_not_present; 
+      }
+#if BX_SUPPORT_X86_64
+    if (pte & PAGE_DIRECTORY_NX_BIT) {
+      if (! BX_CPU_THIS_PTR msr.nxe)
+        goto page_fault_reserved;
+      else if (access_type == CODE_ACCESS)
+        goto page_fault_access;
+    }
+#endif
+
       combined_access  = (pde & pte) & 0x06; // U/S and R/W
       // Make up the physical page frame address.
       ppf = pte & 0xfffff000;
@@ -742,10 +783,6 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         combined_access |= (pte & 0x100);  // G
       }
 #endif
-
-      if ( !(pte & 0x01) ) {
-        goto page_fault_not_present; 
-      }
 
       priv_index =
 #if BX_CPU_LEVEL >= 4
@@ -864,6 +901,10 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
 
+      if ( !(pte & 0x01) ) {
+        goto page_fault_not_present; // Page Table Entry NOT present
+      }
+
       // 386 and 486+ have different bahaviour for combining
       // privilege from PDE and PTE.
 #if BX_CPU_LEVEL == 3
@@ -880,10 +921,6 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
       // Make up the physical page frame address.
       ppf = pte & 0xfffff000;
-
-      if ( !(pte & 0x01) ) {
-        goto page_fault_not_present; // Page Table Entry NOT present
-      }
 
       priv_index =
 #if BX_CPU_LEVEL >= 4
@@ -957,10 +994,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 #define ERROR_RESERVED          0x08
 #define ERROR_CODE_ACCESS       0x10
 
-/* keep compiler happy until it actually used
 page_fault_reserved:
   error_code |= ERROR_RESERVED;   // RSVD = 1
-*/
 
 page_fault_access:
   error_code |= ERROR_PROTECTION; // P = 1
@@ -1038,22 +1073,20 @@ BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, bx_bool *valid)
 #endif
 
   // Get page dir entry
-  pde_addr = BX_CPU_THIS_PTR cr3_masked |
-             ((laddr & 0xffc00000) >> 20);
+  pde_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xffc00000) >> 20);
+
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
-    // Page Directory Entry NOT present
-    goto page_fault;
-    }
+    goto page_fault; // Page Directory Entry NOT present
+  }
 
   // Get page table entry
-  pte_addr = (pde & 0xfffff000) |
-             ((laddr & 0x003ff000) >> 10);
+  pte_addr = (pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10);
+
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
   if ( !(pte & 0x01) ) {
-    // Page Table Entry NOT present
-    goto page_fault;
-    }
+    goto page_fault; // Page Table Entry NOT present
+  }
 
   ppf = pte & 0xfffff000;
   paddress = ppf | poffset;
