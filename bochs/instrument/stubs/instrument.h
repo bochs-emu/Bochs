@@ -181,6 +181,10 @@ void bx_instr_print(void);
 
 #  define BX_INSTR_LIN_READ(lin, phy, len)  bx_instr_lin_read(lin, phy, len)
 #  define BX_INSTR_LIN_WRITE(lin, phy, len) bx_instr_lin_write(lin, phy, len)
+#  define BX_INSTR_START()                   bx_instr_start ()
+#  define BX_INSTR_STOP()                    bx_instr_stop ()
+#  define BX_INSTR_RESET()                   bx_instr_reset ()
+#  define BX_INSTR_PRINT()                   bx_instr_print ()
 
 #else  // #if BX_INSTRUMENTATION
 #  define BX_INSTR_INIT()
@@ -252,6 +256,10 @@ void bx_instr_print(void);
 
 #  define BX_INSTR_LIN_READ(lin, phy, len)
 #  define BX_INSTR_LIN_WRITE(lin, phy, len)
+#  define BX_INSTR_START()                   
+#  define BX_INSTR_STOP()                    
+#  define BX_INSTR_RESET()                   
+#  define BX_INSTR_PRINT()                   
 
 #endif  // #if BX_INSTRUMENTATION
 
