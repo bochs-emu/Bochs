@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.67 2002-10-08 18:28:58 bdenney Exp $
+// $Id: wxmain.cc,v 1.68 2002-10-10 15:44:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -258,7 +258,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Debug_ShowCpu, MyFrame::OnShowCpu)
   EVT_MENU(ID_Debug_ShowKeyboard, MyFrame::OnShowKeyboard)
 #if BX_DEBUGGER
-  EVT_MENU(ID_Debug_Log, MyFrame::OnDebugLog)
+  EVT_MENU(ID_Debug_Console, MyFrame::OnDebugLog)
 #endif
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
@@ -377,7 +377,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuDebug = new wxMenu;
   menuDebug->Append (ID_Debug_ShowCpu, "Show &CPU");
   menuDebug->Append (ID_Debug_ShowKeyboard, "Show &Keyboard");
-  menuDebug->Append (ID_Debug_Log, "Show Log");
+#if BX_DEBUGGER
+  menuDebug->Append (ID_Debug_Console, "Debug Console");
+#endif
   menuDebug->Append (ID_Debug_ShowMemory, "Show &memory");
 
   menuLog = new wxMenu;
