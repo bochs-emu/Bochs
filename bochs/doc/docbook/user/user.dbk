@@ -1,13 +1,15 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.2 2001-09-10 03:59:11 bdenney Exp $
+$Id: user.dbk,v 1.3 2001-09-11 14:01:55 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
 -->
 
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+<!ENTITY FIXME '<inlinegraphic format="GIF" fileref="../images/undercon.gif">'>
+]>
 <book>
 <bookinfo>
    <title>Bochs User Manual</title>
@@ -19,89 +21,181 @@ This is the top level file for the Bochs Users Manual.
 </bookinfo>
 
 <!-- *************************************************************** -->
-<chapter><title>What is Bochs?</title>
-   <section><title>I don't know whant to call this section...</title>
-      <para>
-      Bochs is a portable x86 PC emulation software package that emulates
-      enough of the x86 CPU, related AT hardware, and BIOS to run DOS,
-      Windows '95, Minix 2.0, and other OS's, all on your workstation.
-      </para>
+<chapter><title>Introduction to Bochs</title>
+<section><title>What is Bochs?</title>
+<para>
+Bochs is a program that simulates a complete Intel x86 computer.  It 
+can be configured to act like a 286, 386, 486, Pentium, or Pentium Pro.
+Bochs interprets every instruction from power-up to reboot, and has
+device models for all of the standard PC peripherals: keyboard, mouse,
+VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
+simulates the whole PC environment, the the software running in the simulation
+"believes" it is running on a real machine.  This approach allows Bochs
+to run a wide variety of software with no modification, include most popular
+x86 operating systems: Windows 95/98/NT, all Linux flavors, all BSD flavors,
+and more.
+</para>
 
-      <para>
-      Bochs is an open source project distributed under the GNU Lesser General
-      Public License. It was originally a commercial product, but in
-      March 2000 MandrakeSoft bought Bochs and committed it to Open Source.
-      Here is the press release.
-      </para>
+<para>
+Bochs is written in the C++ programming language, and is designed to run
+on many different host platforms<footnote>
+<para>
+Since Bochs can run on one kind of machine and simulate another machine, we
+have to be clear in our terminology to avoid confusion.  The host platform is
+the machine that runs the Bochs software.  The guest platform is the operating
+system and applications that Bochs is simulating.
+</para>
+</footnote>: x86, PPC, Alpha, Sun, MIPS, and probably more.  To do anything
+useful, the simulated Bochs machine needs to communicate with the operating
+system on the host platform (the host OS).  When you press a key in the
+Bochs window, a key event goes into the device model for the keyboard.  When
+the simulated machine reads from the simulated hard disk, Bochs reads from
+a disk image file on the host machine.  When the simulated machine sends
+a network packet to the local network, Bochs uses the host platform's network
+card to send the packet out into the real world.  These interactions between
+Bochs and the host operating system can be complicated, and are sometimes
+host-platform-specific.  (Sending a network packet in FreeBSD requires
+different code than sending the packet in Windows 95.)  The interactions
+between Bochs and the host OS are sometimes non-portable, but the core
+CPU simulation and device models are portable to any platform with a C++
+compiler.
+</para>
 
-      <para>
-      Bochs now compiles/runs on many platforms. See the following list for
-      supported platforms and special notes:
-      </para>
+<para>
+<!-- really more like Background or Bochs History, but maybe it doesn't need its own section unless it gets to 3 paras or so  -->
 
-      <table><title>Supported platforms</title>
-         <tgroup cols=2 align=left colsep=1 rowsep=1>
-         <tbody>
-         <row>
-            <entry>Unix/X11</entry>
-            <entry>This is my main development platform.</entry>
-         </row>
-         <row>
-            <entry>BeOS</entry>
-            <entry>I also did this port, originally to R3/PPC using CodeWarrior.
-            It now works on R4/x86 with egcs. Simon Huet picked up
-            maintaining/reworking the BeOS GUI port. Check out Simon's 
-            BeBochs page.
-            </entry>
-         </row>
+Bochs was written by Kevin Lawton starting in &FIXME;.  It began as a 
+commercial product, which you could try out for 30 days and then buy
+for &FIXME;.  [We need a Bochs historian here. There's an interview
+out there somewhere where Kevin says why he started it and some more
+background information.]  Finally, in March 2000, Mandrakesoft bought 
+Bochs and made it open source under the GNU LGPL.  In March 2001,
+Kevin helped a few developers to move all Bochs activities from bochs.com
+to a new site at bochs.sourceforge.net.  Since then the Bochs Project has
+settled into its new home, and around release times has even hit #1 most
+active project of the week at Source Forge.
+</para>
 
-         <row>
-            <entry>Win32</entry>
-            <entry> This port was done by David Ross. I've enhanced
-            the build process
-            for Win32. You can compile with either the MS Visual C++ 5.0
-            or GNU-Win32 environments. Go to Compiling Bochs on Win32 </entry>
-         </row>
+<!-- we should make it clear that Kevin is no longer working on bochs,
+but I want to get some more background.  Did he get hired by Mandrakesoft
+to do plex86 at the same time as Bochs was bought?  The last version of
+Bochs that he released was 3/25/2000, three days after the Mandrake press
+release.  -->
 
-         <row>
-            <entry>OS/2</entry>
-            <entry> Nick Behnken used PE2LX to translate David Ross's Win32
-            port to an OS/2 program. Check out Nick Behnken's page. 
-            </entry>
-         </row>
-         <row>
-            <entry>OS/2</entry>
-            <entry> Craig Ballantyne ported bochs to OS/2. I will 
-            integrate this back
-            into the main bochs source soon. Check out the guiSoft Corp.
-            home page.
-            </entry>
-         </row>
+</section>  <!-- end of Introduction:What is Bochs? section -->
+<section><title>Who uses Bochs?</title>
+<para>
+</para>
 
-         <row>
-            <entry>Macintosh</entry>
-            <entry>David Batterham drbatter@socs.uts.edu.au or
-            drbatter@yahoo.com ported bochs to the Mac. His changes are
-            integrated, though it is work in progress. 
-            He compiled with CodeWarrior
-            Pro R1 (CW12), and included a project file 'Bochs.proj'
-            in the top-level
-            directory of source code, which you may need to modify. I
-            added a '--with-macos' option to configure, so you can use a Unix
-            machine to generate header files for the Mac. Check out David's
-            MacBochs website. David has not had time to maintain the page or the
-            Mac port since early 2000. If you have Mac 
-            development tools and want
-            to contribute, contact the developers list. </entry>
-         </row>
-         <row>
-            <entry>FreeDOS for Bochs</entry>
-            <entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
-            For more info about FreeDOS, see FreeDOS Web page</entry>
-         </row>
-         </tbody>
-         </tgroup>
-      </table>
+   <para>
+      run more than one operating system without rebooting
+   </para>
+   <para>
+         OS developers use Bochs to system software without endangering
+        their development machine or rebooting.
+   </para>
+   <para>
+      students use Bochs to learn about how PC hardware works
+      hardware designers use bochs to help test new hardware
+   </para>
+</section>  <!-- end of Introduction:Who uses Bochs? section -->
+<section><title>Will it work for me?</title>
+<para>
+</para>
+</section>  <!-- end of Introduction:Will it work for me? section -->
+<section><title>License</title>
+<para>
+</para>
+</section>  <!-- end of Introduction:License section -->
+
+<section><title>--------------Ignore the sections after this--------------</title>
+<para>
+</para>
+</section>  <!-- end of Introduction:License section -->
+
+   <section><title>I don't know what to call this section...</title>
+
+<para>
+Bochs is a portable x86 PC emulation software package that emulates
+enough of the x86 CPU, related AT hardware, and BIOS to run DOS,
+Windows '95, Minix 2.0, and other OS's, all on your workstation.
+</para>
+
+<para>
+Bochs is an open source project distributed under the GNU Lesser General
+Public License. It was originally a commercial product, but in
+March 2000 MandrakeSoft bought Bochs and committed it to Open Source.
+Here is the press release.
+</para>
+
+<para>
+Bochs now compiles/runs on many platforms. See the following list for
+supported platforms and special notes:
+</para>
+
+<table><title>Supported platforms</title>
+   <tgroup cols=2 align=left colsep=1 rowsep=1>
+   <tbody>
+   <row>
+      <entry>Unix/X11</entry>
+      <entry>This is my main development platform.</entry>
+   </row>
+   <row>
+      <entry>BeOS</entry>
+      <entry>I also did this port, originally to R3/PPC using CodeWarrior.
+      It now works on R4/x86 with egcs. Simon Huet picked up
+      maintaining/reworking the BeOS GUI port. Check out Simon's 
+      BeBochs page.
+      </entry>
+   </row>
+
+   <row>
+      <entry>Win32</entry>
+      <entry> This port was done by David Ross. I've enhanced
+      the build process
+      for Win32. You can compile with either the MS Visual C++ 5.0
+      or GNU-Win32 environments. Go to Compiling Bochs on Win32 </entry>
+   </row>
+
+   <row>
+      <entry>OS/2</entry>
+      <entry> Nick Behnken used PE2LX to translate David Ross's Win32
+      port to an OS/2 program. Check out Nick Behnken's page. 
+      </entry>
+   </row>
+   <row>
+      <entry>OS/2</entry>
+      <entry> Craig Ballantyne ported bochs to OS/2. I will 
+      integrate this back
+      into the main bochs source soon. Check out the guiSoft Corp.
+      home page.
+      </entry>
+   </row>
+
+   <row>
+      <entry>Macintosh</entry>
+      <entry>David Batterham drbatter@socs.uts.edu.au or
+      drbatter@yahoo.com ported bochs to the Mac. His changes are
+      integrated, though it is work in progress. 
+      He compiled with CodeWarrior
+      Pro R1 (CW12), and included a project file 'Bochs.proj'
+      in the top-level
+      directory of source code, which you may need to modify. I
+      added a '--with-macos' option to configure, so you can use a Unix
+      machine to generate header files for the Mac. Check out David's
+      MacBochs website. David has not had time to maintain the page or the
+      Mac port since early 2000. If you have Mac 
+      development tools and want
+      to contribute, contact the developers list. </entry>
+   </row>
+   <row>
+      <entry>FreeDOS for Bochs</entry>
+      <entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
+      For more info about FreeDOS, see FreeDOS Web page</entry>
+   </row>
+   </tbody>
+   </tgroup>
+</table>
       <para>
       There's more! You can find more detailed testing information on the testing status page on bochs.sourceforge.net.
       </para>
@@ -115,21 +209,6 @@ This is the top level file for the Bochs Users Manual.
        of the Linux-Mandrake distribution.
       </para>
    </section>
-</chapter>
-
-<!-- *************************************************************** -->
-<chapter><title>Why do people use Bochs anyway?</title>
-   <para>
-      run more than one operating system without rebooting
-   </para>
-   <para>
-         OS developers use Bochs to system software without endangering
-        their development machine or rebooting.
-   </para>
-   <para>
-      students use Bochs to learn about how PC hardware works
-      hardware designers use bochs to help test new hardware
-   </para>
 </chapter>
 
 <!-- *************************************************************** -->
