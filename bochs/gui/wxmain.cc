@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.100 2003-09-19 17:04:45 vruppert Exp $
+// $Id: wxmain.cc,v 1.101 2003-10-24 15:39:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -1218,15 +1218,11 @@ void MyFrame::OnLogMsg (BxEvent *be) {
   dlg.SetContext (be->u.logmsg.prefix);
   dlg.SetMessage (be->u.logmsg.msg);
   int n = dlg.ShowModal ();
-  bx_bool dontAsk = dlg.GetDontAsk ();
   // turn the return value into the constant that logfunctions::ask is
   // expecting.  0=continue, 1=continue but ignore future messages from this
-  // device, 2=die, 3=dump core, 4=debugger. FIXME: yuck. replace hardcoded
-  // constants in logfunctions::ask with enum or defined constant.
-  if (n==0) {
-    n = dontAsk? 1 : 0; 
-  } else {
-    n=n+1;
+  // device, 2=die, 3=dump core, 4=debugger.
+  if (n==BX_LOG_ASK_CHOICE_CONTINUE) {
+    if (dlg.GetDontAsk ()) n = BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS; 
   }
   be->retcode = n;
   wxLogDebug ("you chose %d", n);

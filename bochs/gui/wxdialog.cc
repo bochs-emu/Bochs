@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.68 2003-09-13 16:49:09 vruppert Exp $
+// $Id: wxdialog.cc,v 1.69 2003-10-24 15:39:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -139,10 +139,10 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
   int id = event.GetId ();
   int ret = -1;
   switch (id) {
-    case ID_Continue:   ret = CONT;  break;
-    case ID_Die:        ret = DIE;   break;
-    case ID_DumpCore:   ret = DUMP;  break;
-    case ID_Debugger:   ret = DEBUG; break;
+    case ID_Continue:   ret = BX_LOG_ASK_CHOICE_CONTINUE;  break;
+    case ID_Die:        ret = BX_LOG_ASK_CHOICE_DIE;   break;
+    case ID_DumpCore:   ret = BX_LOG_ASK_CHOICE_DUMP_CORE;  break;
+    case ID_Debugger:   ret = BX_LOG_ASK_CHOICE_ENTER_DEBUG; break;
     case wxID_HELP: ShowHelp (); return;
     default:
       return;  // without EndModal

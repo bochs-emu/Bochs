@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.9 2003-09-18 17:37:46 vruppert Exp $
+// $Id: win32dialog.cc,v 1.10 2003-10-24 15:39:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -74,7 +74,7 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
       SetFocus(GetDlgItem(hDlg, IDASKLIST));
       return FALSE;
     case WM_CLOSE:
-      EndDialog(hDlg, 2);
+      EndDialog(hDlg, BX_LOG_ASK_CHOICE_DIE);
       break;
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
@@ -82,7 +82,7 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
           EndDialog(hDlg, SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_GETCURSEL, 0, 0));
           break;
         case IDCANCEL:
-          EndDialog(hDlg, 2);
+          EndDialog(hDlg, BX_LOG_ASK_CHOICE_DIE);
           break;
     }
   }
