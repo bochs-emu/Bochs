@@ -128,7 +128,7 @@ libcpu.a: $(OBJS) @OBJS64@
 
 $(OBJS): $(BX_INCLUDES)
 
-$(OBJS64_CPU): $(BX_INCLUDES)
+$(OBJS64): $(BX_INCLUDES)
 
 clean:
 	@RMCOMMAND@ *.o
