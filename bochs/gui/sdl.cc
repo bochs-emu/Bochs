@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.30 2002-11-19 05:47:44 bdenney Exp $
+// $Id: sdl.cc,v 1.31 2002-12-06 19:34:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,6 +46,7 @@ class bx_sdl_gui_c : public bx_gui_c {
 public:
   bx_sdl_gui_c (void);
   DECLARE_GUI_VIRTUAL_METHODS()
+  virtual void set_display_mode (disp_mode_t newmode);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1151,6 +1152,29 @@ static Bit32u convertStringToSDLKey (const char *string)
       return ptr->value;
   }
   return BX_KEYMAP_UNKNOWN;
+}
+
+void 
+bx_sdl_gui_c::set_display_mode (disp_mode_t newmode)
+{
+  // if no mode change, do nothing.
+  if (disp_mode == newmode) return;
+  // remember the display mode for next time
+  disp_mode = newmode;
+  // If fullscreen mode is on, we must switch back to windowed mode if
+  // the user needs to see the text console.
+  if (sdl_fullscreen_toggle) {
+    switch (newmode) {
+      case DISP_MODE_CONFIG:
+	BX_DEBUG (("switch to configuration mode (windowed)"));
+	switch_to_windowed ();
+	break;
+      case DISP_MODE_SIM:
+	BX_DEBUG (("switch to simulation mode (fullscreen)"));
+	switch_to_fullscreen ();
+	break;
+    }
+  }
 }
 
 #endif /* if BX_WITH_SDL */

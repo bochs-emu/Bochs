@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.202 2002-12-03 18:55:23 vruppert Exp $
+// $Id: main.cc,v 1.203 2002-12-06 19:34:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2215,6 +2215,9 @@ bx_atexit(void)
   if (been_here) return 1;   // protect from reentry
   been_here = 1;
 
+  // in case we ended up in simulation mode, change back to config mode
+  // so that the user can see any messages left behind on the console.
+  SIM->set_display_mode (DISP_MODE_CONFIG);
 
 #if BX_PROVIDE_DEVICE_MODELS==1
   bx_pc_system.exit();

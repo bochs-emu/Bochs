@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.90 2002-12-02 21:26:05 cbothamy Exp $
+// $Id: siminterface.h,v 1.91 2002-12-06 19:34:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1156,6 +1156,16 @@ typedef struct {
 enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
 
+// bx_gui->set_display_mode() changes the mode between the configuration
+// interface and the simulation.  This is primarily intended for display
+// libraries which have a full-screen mode such as SDL, term, and svgalib.  The
+// display mode is set to DISP_MODE_CONFIG before displaying any configuration
+// menus, for panics that requires user input, when entering the debugger, etc.
+// It is set to DISP_MODE_SIM when the Bochs simulation resumes.  The constants
+// are defined here so that configuration interfaces can use them with the
+// bx_simulator_interface_c::set_display_mode() method.
+enum disp_mode_t { DISP_MODE_CONFIG=100, DISP_MODE_SIM };
+
 class BOCHSAPI bx_simulator_interface_c {
 public:
   bx_simulator_interface_c ();
@@ -1264,6 +1274,9 @@ public:
   }
   virtual bool is_sim_thread () {return true;}
   virtual bool is_wx_selected () {return false;}
+  // provide interface to bx_gui->set_display_mode() method for config
+  // interfaces to use.
+  virtual void set_display_mode (disp_mode_t newmode) {}
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;

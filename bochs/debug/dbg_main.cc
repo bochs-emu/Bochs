@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.94 2002-12-02 21:26:04 cbothamy Exp $
+// $Id: dbg_main.cc,v 1.95 2002-12-06 19:34:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -473,6 +473,7 @@ bx_dbg_user_input_loop(void)
 
   while ( 1 ) {
     SIM->refresh_ci ();
+    SIM->set_display_mode (DISP_MODE_CONFIG);
     bx_get_command();
     if ( (*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0) ) {
       if (bx_infile_stack_index == 0)
@@ -1634,6 +1635,10 @@ bx_dbg_continue_command(void)
   sim_running->set (1);
   SIM->refresh_ci ();
 
+  // use simulation mode while executing instructions.  When the prompt
+  // is printed, we will return to config mode.
+  SIM->set_display_mode (DISP_MODE_SIM);
+
   bx_guard.interrupt_requested = 0;
   bx_guard.special_unwind_stack = 0;
   int stop = 0;
@@ -1717,6 +1722,10 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
     dbg_printf ( "Error: stepN: count=0\n");
     return;
     }
+
+  // use simulation mode while executing instructions.  When the prompt
+  // is printed, we will return to config mode.
+  SIM->set_display_mode (DISP_MODE_SIM);
 
 #if BX_NUM_SIMULATORS >= 2
   bx_guard.interrupt_requested = 0;

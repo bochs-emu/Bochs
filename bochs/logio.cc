@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.37 2002-12-02 21:19:09 cbothamy Exp $
+// $Id: logio.cc,v 1.38 2002-12-06 19:34:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -442,6 +442,8 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   if (SIM->get_init_done()) DEV_vga_refresh();
 
 #if !BX_EXTERNAL_DEBUGGER
+  // ensure the text screen is showing
+  SIM->set_display_mode (DISP_MODE_CONFIG);
   int val = SIM->log_msg (prefix, level, buf1);
   switch (val)
   {
@@ -487,6 +489,8 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 #else
   // external debugger ask code goes here
 #endif
+  // return to simulation mode
+  SIM->set_display_mode (DISP_MODE_SIM);
   in_ask_already = 0;
 }
 

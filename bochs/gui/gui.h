@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.34 2002-10-27 23:33:13 bdenney Exp $
+// $Id: gui.h,v 1.35 2002-12-06 19:34:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,6 +54,14 @@ public:
   virtual int set_clipboard_text(char *snapshot, Bit32u len) = 0;
   virtual void mouse_enabled_changed_specific (bx_bool val) = 0;
   virtual void exit(void) = 0;
+  // set_display_mode() changes the mode between the configuration interface
+  // and the simulation.  This is primarily intended for display libraries
+  // which have a full-screen mode such as SDL, term, and svgalib.  The display
+  // mode is set to DISP_MODE_CONFIG before displaying any configuration menus,
+  // for panics that requires user input, when entering the debugger, etc.  It
+  // is set to DISP_MODE_SIM when the Bochs simulation resumes.  The
+  // enum is defined in gui/siminterface.h.
+  virtual void set_display_mode (disp_mode_t newmode) { /* default=no action*/ }
   // These are only needed for the term gui. For all other guis they will
   // have no effect.
   // returns 32-bit bitmask in which 1 means the GUI should handle that signal
@@ -111,6 +119,7 @@ protected:
   unsigned char vga_charmap[0x2000];
   bx_bool charmap_updated;
   bx_bool char_changed[256];
+  disp_mode_t disp_mode;
   };
 
 

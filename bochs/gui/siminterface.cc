@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.87 2002-12-02 21:26:05 cbothamy Exp $
+// $Id: siminterface.cc,v 1.88 2002-12-06 19:34:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -116,6 +116,12 @@ public:
   virtual bool is_sim_thread ();
   bool wxsel;
   virtual bool is_wx_selected () { return wxsel; }
+  // provide interface to bx_gui->set_display_mode() method for config
+  // interfaces to use.
+  virtual void set_display_mode (disp_mode_t newmode) {
+    if (bx_gui != NULL)
+      bx_gui->set_display_mode (newmode);
+  }
 };
 
 bx_param_c *
@@ -712,7 +718,11 @@ bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
     wxsel = true;
   else
     wxsel = false;
-  return (*ci_callback)(ci_callback_data, command);
+  // enter configuration mode, just while running the configuration interface
+  set_display_mode (DISP_MODE_CONFIG);
+  int retval = (*ci_callback)(ci_callback_data, command);
+  set_display_mode (DISP_MODE_SIM);
+  return retval;
 }
 
 int 
