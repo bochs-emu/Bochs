@@ -45,7 +45,7 @@ typedef enum {
 
 class BOCHSAPI bx_generic_apic_c : public logfunctions {
 protected:
-  Bit32u base_addr;
+  bx_address base_addr;
   Bit8u id;
 #define APIC_UNKNOWN_ID 0xff
 public:
@@ -53,13 +53,13 @@ public:
   virtual ~bx_generic_apic_c () { }
   virtual void init ();
   virtual void hwreset () { }
-  Bit32u get_base (void) const { return base_addr; }
-  void set_base (Bit32u newbase);
+  bx_address get_base (void) const { return base_addr; }
+  void set_base (bx_address newbase);
   void set_id (Bit8u newid);
   Bit8u get_id () const { return id; }
   static void reset_all_ids ();
   virtual char *get_name();
-  bx_bool is_selected (Bit32u addr, Bit32u len);
+  bx_bool is_selected (bx_address addr, Bit32u len);
   void read (Bit32u addr, void *data, unsigned len);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len) = 0;
   virtual void write(Bit32u address, Bit32u *value, unsigned len) = 0;
@@ -132,18 +132,18 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 #define APIC_ERR_TX_ACCEPT_ERR   0x04
 #define APIC_ERR_RX_CHECKSUM     0x02
 #define APIC_ERR_TX_CHECKSUM     0x01
+  BX_CPU_C *cpu;
 
   int timer_handle; // KPL
   Bit64u ticksInitial; // System ticks count when APIC timer is started.
 
 public:
   bx_bool INTR;
-  bx_local_apic_c(BX_CPU_C *mycpu);
+  bx_local_apic_c(BX_CPU_C *cpu);
   virtual ~bx_local_apic_c(void) { }
-  BX_CPU_C *cpu;
   virtual void hwreset ();
   virtual void init ();
-  BX_CPU_C *get_cpu (Bit8u id);
+  BX_CPU_C *get_cpu () { return cpu; }
   void set_id (Bit8u newid);   // redefine to set cpu->name
   virtual char *get_name();
   virtual void write (Bit32u addr, Bit32u *data, unsigned len);
@@ -174,7 +174,6 @@ public:
   static void periodic_smf(void *); // KPL
   void periodic(void); // KPL
   void set_divide_configuration (Bit32u value);
-  virtual void update_msr_apicbase(Bit32u newaddr);
   virtual void set_arb_id (int newid);
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.36 2004-12-14 20:41:55 sshwarts Exp $
+// $Id: apic.cc,v 1.37 2005-01-13 19:03:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -29,17 +29,10 @@ void bx_generic_apic_c::init ()
 {
 }
 
-void bx_local_apic_c::update_msr_apicbase(Bit32u newbase)
+void bx_generic_apic_c::set_base (bx_address newbase)
 {
-  Bit64u val64 = newbase;
-  val64 <<= 12; /* push the APIC base address to bits 12:35 */
-  val64 |= cpu->msr.apicbase & 0x0900; /* don't modify other apicbase or reserved bits */
-  cpu->msr.apicbase = val64;
-}
-
-void bx_generic_apic_c::set_base (Bit32u newbase)
-{
-  BX_INFO(("relocate APIC id=%d to %8x", id, newbase));
+  newbase &= (~0xfff);
+  BX_INFO(("relocate APIC id=%d to " FMT_ADDRX, id, newbase));
   base_addr = newbase;
 }
 
@@ -74,11 +67,11 @@ char *bx_generic_apic_c::get_name ()
   return NULL;
 }
 
-bx_bool bx_generic_apic_c::is_selected (Bit32u addr, Bit32u len)
+bx_bool bx_generic_apic_c::is_selected (bx_address addr, Bit32u len)
 {
   if ((addr & ~0xfff) == get_base ()) {
     if ((addr & 0xf != 0) || (len != 4))
-      BX_INFO(("warning: misaligned or wrong-size APIC write. addr=%08x, len=%d", addr, len));
+      BX_INFO(("warning: misaligned or wrong-size APIC write. addr=" FMT_ADDRX " len=%d", addr, len));
     return true;
   }
   return false;
@@ -377,7 +370,6 @@ void bx_local_apic_c::init ()
 
   // default address for a local APIC, can be moved
   base_addr = APIC_BASE_ADDR;
-  update_msr_apicbase(base_addr);
   bypass_irr_isr = false;
   err_status = 0;
   log_dest = 0;
@@ -392,12 +384,6 @@ void bx_local_apic_c::init ()
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
             BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
-}
-
-BX_CPU_C *bx_local_apic_c::get_cpu (Bit8u id)
-{
-  BX_ASSERT (id < APIC_MAX_ID);
-  return cpu;
 }
 
 void bx_local_apic_c::set_id (Bit8u newid)

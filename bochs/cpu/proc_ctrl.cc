@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.89 2005-01-09 08:14:15 vruppert Exp $
+// $Id: proc_ctrl.cc,v 1.90 2005-01-13 19:03:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1716,6 +1716,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
       {
         BX_CPU_THIS_PTR msr.apicbase = ((Bit64u) EDX << 32) + EAX;
         BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", EDX, EAX));
+        BX_CPU_THIS_PTR local_apic.set_base(BX_CPU_THIS_PTR msr.apicbase);
       }
       else {
         BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));

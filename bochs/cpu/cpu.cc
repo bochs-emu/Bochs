@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.95 2004-11-19 09:39:30 sshwarts Exp $
+// $Id: cpu.cc,v 1.96 2005-01-13 19:03:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -744,12 +744,12 @@ BX_CPU_C::prefetch(void)
   // Sanity checks
   if ( !BX_CPU_THIS_PTR eipFetchPtr ) {
     if ( pAddr >= BX_CPU_THIS_PTR mem->len ) {
-      BX_PANIC(("prefetch : running in bogus memory, pAddr=0x%X", pAddr));
-      }
-    else {
-      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%X", pAddr));
-      }
+      BX_PANIC(("prefetch : running in bogus memory, pAddr=0x%08x", pAddr));
     }
+    else {
+      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%08x", pAddr));
+    }
+  }
 
 #if BX_SUPPORT_ICACHE
   Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.getPageWriteStamp(pAddr);

@@ -221,11 +221,6 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
     }
 #endif
 
-  if ( real_mode() ) { /* code not needed ??? */
-    BX_PANIC(("can_push(): called in real mode"));
-    return(0); /* never gets here */
-    }
-
   // small stack compares against 16-bit SP
   if (!descriptor->u.segment.d_b)
     esp &= 0x0000ffff;
@@ -313,9 +308,6 @@ BX_CPU_C::can_pop(Bit32u bytes)
     return(1);
     }
 #endif
-
-  /* ??? */
-  if (real_mode()) BX_PANIC(("can_pop(): called in real mode?"));
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* Big bit set: use ESP */
     temp_ESP = ESP;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.151 2004-12-16 22:21:19 sshwarts Exp $
+// $Id: bochs.h,v 1.152 2005-01-13 19:03:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -392,6 +392,11 @@ BOCHSAPI extern logfunc_t *genlog;
 #define uint16  Bit16u
 #define uint32  Bit32u
 
+#if BX_SUPPORT_X86_64
+#define FMT_ADDRX FMT_LL "x"
+#else
+#define FMT_ADDRX "%08x"
+#endif
 
 #if BX_PROVIDE_CPU_MEMORY==1
 #  include "cpu/cpu.h"

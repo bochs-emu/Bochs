@@ -177,6 +177,11 @@ Changes to next release:
  [1079240] Wheel Mouse by Ben Lunt
  [1087537] Fix for Win9x CD boot by lukewarm
  [1083218] Start of wheel for USB #2 by Ben Lunt
+ [1098480] bochsrc: fixed floppya example by ci-dev 
+ [1094407] configure.in: changed wxWindows to wxWidgets by ci-dev
+ [1092058] serial.cc debug output cleanup by Ben Lunt
+ [1101165] APIC base address by Christian Neubert (flashburn)
+
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
@@ -188,6 +193,24 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+ #1101168 APIC base address change
+  #680737 panic when installing winme
+ #1097187 Install FC3 on bochs-win failed
+  #875461 vgabios-lgpl should be default
+  #594797 Bochs segfaults
+  #602994 bochs breaks boot kernel
+  #571539 FreeBSD Install from CD Fails
+  #774257 Device doesn't work under W98
+  #759228 Installing Suse 8.2 in Bochs on WinME
+  #792561 cant boot freebsd 5.1 from cdrom
+  #804004 Live cd will halt on boot..
+  #956173 FreeBSD won't boot iso install images in Bochs v2.1 or 2.2.
+  #864401 >>PANIC<< jmp_ev: IP out of CS limits!
+  #853831 Error on int 15h
+ #1094150 DR-DOS 7.03: panics when using multitasker
+  #655592 win98 hardwaredetection
+ #1093786 Solaris 9 installation CD fails
+  #959585 USB UHCI IO-Device 
   #963314 Redhat Fedora Installer Kernel Panic and Crash
  #1086920 Bochs (cvs) doesn't compile on FreeBSD 5
   #879050 Bochs reports enabled APIC without support
