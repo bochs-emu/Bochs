@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.13 2002-08-31 00:35:25 bdenney Exp $
+// $Id: wxdialog.h,v 1.14 2002-09-01 15:27:33 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -63,8 +63,8 @@ public:
       wxWindowID id,
       const wxString& title);
   void EnableButton (button_t btn, bool en) { enabled[(int)btn] = en; }
-  void SetContext (char *s);
-  void SetMessage (char *s);
+  void SetContext (wxString s);
+  void SetMessage (wxString s);
   bool GetDontAsk () { return dontAsk->GetValue (); }
   void OnEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
@@ -150,7 +150,7 @@ private:
   wxStaticText *instr;
 #define FLOPPY_MAX_RBTNS 4
   wxRadioButton *rbtn[FLOPPY_MAX_RBTNS];
-  char *equivalentFilename[FLOPPY_MAX_RBTNS];
+  wxString equivalentFilename[FLOPPY_MAX_RBTNS];
   int n_rbtns;
   wxRadioButton *diskImageRadioBtn;
   wxTextCtrl *filename;
@@ -164,15 +164,17 @@ public:
   void OnTextEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   void SetRadio (int val);
-  void SetFilename (const char *f);
+  void SetFilename (wxString f);
+  // Use char* instead of wxString because the array we use is already
+  // expressed as a char *[].
   void SetCapacityChoices (int n, char *choices[]);
   void SetCapacity (int cap) { capacity->SetSelection (cap); }
   int GetRadio ();
   int GetCapacity () { return capacity->GetSelection (); }
-  char *GetFilename ();
-  void SetDriveName (const char *name);
+  wxString GetFilename ();
+  void SetDriveName (wxString name);
   void SetValidateFunc (validateFunc_t v) { validate = v; }
-  void AddRadio (char *description, char *filename);
+  void AddRadio (const wxString& description, const wxString& filename);
 DECLARE_EVENT_TABLE()
 };
 
@@ -225,9 +227,9 @@ public:
   HDConfigDialog(wxWindow* parent, wxWindowID id);
   void OnEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetFilename (const char *f) { filename->SetValue (wxString (f)); }
-  char *GetFilename () { return (char *)filename->GetValue().c_str (); }
-  void SetDriveName (const char *name);
+  void SetFilename (wxString f) { filename->SetValue (f); }
+  wxString GetFilename () { return filename->GetValue(); }
+  void SetDriveName (wxString n);
   void SetGeom (int n, int value);
   int GetGeom (int n) { return geom[n]->GetValue (); }
   void SetGeomRange (int n, int min, int max) { geom[n]->SetRange (min, max); }
@@ -295,19 +297,19 @@ private:
   wxRadioButton *diskImageRadioBtn;
 #define CDROM_MAX_RBTNS 2
   wxRadioButton *rbtn[CDROM_MAX_RBTNS];
-  char *equivalentFilename[CDROM_MAX_RBTNS];
+  wxString equivalentFilename[CDROM_MAX_RBTNS];
   int n_rbtns;
 public:
   CdromConfigDialog(wxWindow* parent, wxWindowID id);
   void OnEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetFilename (const char *f);
-  char *GetFilename ();
-  void SetDriveName (const char *name);
+  void SetFilename (wxString f);
+  wxString GetFilename ();
+  void SetDriveName (wxString f);
   void EnableChanged ();
   void SetEnable (bool val) { enable->SetValue (val); EnableChanged (); }
   bool GetEnable () { return enable->GetValue (); }
-  void AddRadio (const char *descr, char *path);
+  void AddRadio (const wxString& descr, const wxString& path);
   // rbtn[0] will always be the "ejected" button
   void SetEjected (bool val) { if (val) rbtn[0]->SetValue (TRUE); }
   bool GetEjected () { return rbtn[0]->GetValue (); }
@@ -485,7 +487,6 @@ disk c, or cdrom.  The boot selection could be as simple as
 |  Choose boot drive                        |
 |    [ ] Floppy A                           |
 |    [X] Hard Disk C                        |
-|    [ ] CD-ROM                             |
 |    [ ] CD-ROM                             |
 |                [ Help ] [ Cancel ] [ Ok ] |
 +-------------------------------------------+

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.13 2002-08-30 22:52:32 bdenney Exp $
+// $Id: wxdialog.cc,v 1.14 2002-09-01 15:27:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -92,15 +92,15 @@ LogMsgAskDialog::LogMsgAskDialog(
   // so that caller has time to configure the dialog.
 }
 
-void LogMsgAskDialog::SetContext (char *s) {
+void LogMsgAskDialog::SetContext (wxString s) {
   wxString text;
-  text.Printf (LOG_MSG_CONTEXT, s);
+  text.Printf (LOG_MSG_CONTEXT, s.c_str ());
   ChangeStaticText (vertSizer, context, text);
 }
 
-void LogMsgAskDialog::SetMessage (char *s) {
+void LogMsgAskDialog::SetMessage (wxString s) {
   wxString text;
-  text.Printf (LOG_MSG_MSG, s);
+  text.Printf (LOG_MSG_MSG, s.c_str ());
   ChangeStaticText (vertSizer, message, text);
 }
 
@@ -229,7 +229,9 @@ FloppyConfigDialog::FloppyConfigDialog(
   // AddRadio().  The diskImageSizer will be added last, in Init().
 }
 
-void FloppyConfigDialog::AddRadio (char *description, char *filename)
+void FloppyConfigDialog::AddRadio (
+    const wxString& description,
+    const wxString& filename)
 {
   if (n_rbtns >= FLOPPY_MAX_RBTNS) {
     wxLogError ("AddRadio failed: increase FLOPPY_MAX_RBTNS in wxdialog.h");
@@ -241,12 +243,11 @@ void FloppyConfigDialog::AddRadio (char *description, char *filename)
   n_rbtns++;
 }
 
-void FloppyConfigDialog::SetDriveName (const char *name)
-{
+void FloppyConfigDialog::SetDriveName (wxString name) {
   wxString text;
-  text.Printf (FLOPPY_CONFIG_TITLE, name);
+  text.Printf (FLOPPY_CONFIG_TITLE, name.c_str ());
   SetTitle (text);
-  text.Printf (FLOPPY_CONFIG_INSTRS, name);
+  text.Printf (FLOPPY_CONFIG_INSTRS, name.c_str ());
   ChangeStaticText (vertSizer, instr, text);
 }
 
@@ -298,11 +299,11 @@ FloppyConfigDialog::SetRadio (int n) {
   }
 }
 
-void FloppyConfigDialog::SetFilename (const char *f) {
+void FloppyConfigDialog::SetFilename (wxString f) {
   // search equivalentFilename[] for matches. if it matches, select the
   // radio button instead.
   for (int i=0; i<n_rbtns; i++) {
-    if (!strcmp (f, equivalentFilename[i])) {
+    if (!strcmp (f.c_str (), equivalentFilename[i])) {
       rbtn[i]->SetValue (TRUE);
       return;  // leaving filename text field unchanged
     }
@@ -311,14 +312,14 @@ void FloppyConfigDialog::SetFilename (const char *f) {
   diskImageRadioBtn->SetValue (TRUE);
 }
 
-char *
+wxString
 FloppyConfigDialog::GetFilename ()
 {
   int n = GetRadio ();
   if (n < n_rbtns) {
     return equivalentFilename[n];
   } else {
-    return (char *)filename->GetValue ().c_str ();
+    return filename->GetValue ().c_str ();
   }
 }
 
@@ -474,10 +475,9 @@ HDConfigDialog::HDConfigDialog(
   Center ();
 }
 
-void HDConfigDialog::SetDriveName (const char *name)
-{
+void HDConfigDialog::SetDriveName (wxString name) {
   wxString text;
-  text.Printf (HD_CONFIG_TITLE, name);
+  text.Printf (HD_CONFIG_TITLE, name.c_str ());
   SetTitle (text);
 }
 
@@ -682,10 +682,9 @@ void CdromConfigDialog::Init()
   Center ();
 }
 
-void CdromConfigDialog::SetDriveName (const char *name)
-{
+void CdromConfigDialog::SetDriveName (wxString name) {
   wxString text;
-  text.Printf (CDROM_CONFIG_TITLE, name);
+  text.Printf (CDROM_CONFIG_TITLE, name.c_str ());
   SetTitle (text);
 }
 
@@ -700,9 +699,9 @@ void CdromConfigDialog::EnableChanged ()
   diskImageRadioBtn->Enable (en);
 }
 
-void CdromConfigDialog::SetFilename (const char *f) {
+void CdromConfigDialog::SetFilename (wxString f) {
   for (int i=0; i<n_rbtns; i++) {
-    if (!strcmp (f, equivalentFilename[i])) {
+    if (!strcmp (f.c_str (), equivalentFilename[i])) {
       rbtn[i]->SetValue (TRUE);
       return;
     }
@@ -710,7 +709,7 @@ void CdromConfigDialog::SetFilename (const char *f) {
   filename->SetValue (wxString (f));
 }
 
-char *
+wxString
 CdromConfigDialog::GetFilename ()
 {
   if (enable->GetValue ()) {
@@ -723,11 +722,11 @@ CdromConfigDialog::GetFilename ()
     // be the last one.  That's what radio buttons do!
     wxASSERT (diskImageRadioBtn->GetValue ());
   }
-  return (char *)filename->GetValue().c_str ();
+  return filename->GetValue();
 }
 
 void 
-CdromConfigDialog::AddRadio (const char *description, char *filename)
+CdromConfigDialog::AddRadio (const wxString& description, const wxString& filename)
 {
   if (n_rbtns >= CDROM_MAX_RBTNS) {
     wxLogError ("AddRadio failed: increase CDROM_MAX_RBTNS in wxdialog.h");

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.19 2002-08-31 04:58:24 bdenney Exp $
+// $Id: wxmain.cc,v 1.20 2002-09-01 15:27:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -703,7 +703,7 @@ MyFrame::editFloppyValidate (FloppyConfigDialog *dialog)
 void MyFrame::editFloppyConfig (int drive)
 {
   FloppyConfigDialog dlg (this, -1);
-  dlg.SetDriveName (drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME);
+  dlg.SetDriveName (wxString (drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME));
   dlg.SetCapacityChoices (n_floppy_type_names, floppy_type_names);
   bx_list_c *list = (bx_list_c*) SIM->get_param ((drive==0)? BXP_FLOPPYA : BXP_FLOPPYB);
   if (!list) { wxLogError ("floppy object param is null"); return; }
@@ -733,9 +733,12 @@ void MyFrame::editFloppyConfig (int drive)
   int n = dlg.ShowModal ();
   printf ("floppy config returned %d\n", n);
   if (n==0) {
-    printf ("filename is '%s'\n", dlg.GetFilename ());
+    char filename[1024];
+    wxString fn (dlg.GetFilename ());
+    strncpy (filename, fn.c_str (), sizeof(filename));
+    printf ("filename is '%s'\n", filename);
     printf ("capacity = %d (%s)\n", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
-    fname->set (dlg.GetFilename ());
+    fname->set (filename);
     disktype->set (disktype->get_min () + dlg.GetCapacity ());
     if (dlg.GetRadio () == 0)
       disktype->set (BX_FLOPPY_NONE);
@@ -770,8 +773,11 @@ void MyFrame::editHDConfig (int drive)
   int n = dlg.ShowModal ();
   printf ("HD config returned %d\n", n);
   if (n==0) {
-    printf ("filename is '%s'\n", dlg.GetFilename ());
-    fname->set (dlg.GetFilename ());
+    char filename[1024];
+    wxString fn (dlg.GetFilename ());
+    strncpy (filename, fn.c_str (), sizeof (filename));
+    printf ("filename is '%s'\n", filename);
+    fname->set (filename);
     cyl->set (dlg.GetGeom (0));
     heads->set (dlg.GetGeom (1));
     spt->set (dlg.GetGeom (2));
@@ -812,12 +818,13 @@ void MyFrame::editCdromConfig ()
   int n = dlg.ShowModal ();
   printf ("cdrom config returned %d\n", n);
   if (n==0) {
-    char buffer[1024];
-    strncpy (buffer, dlg.GetFilename (), sizeof(buffer));
-    fname->set (buffer);    ///// doing something illegal?
+    char filename[1024];
+    wxString fn (dlg.GetFilename ());
+    strncpy (filename, fn.c_str (), sizeof(filename));
+    fname->set (filename);
     present->set (dlg.GetEnable ());
     status->set (dlg.GetEjected () ? BX_EJECTED : BX_INSERTED);
-    printf ("filename is '%s'\n", dlg.GetFilename ());
+    printf ("filename is '%s'\n", filename);
     printf ("enabled=%d ejected=%d\n", present->get(), status->get());
     // cdrom and hard disk D cannot both be enabled.
     if (present->get ()) {
