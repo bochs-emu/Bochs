@@ -158,6 +158,8 @@ Patches applied:
     - keyboard reset function (0xff) now resets the keyboard
   - gameport
     - new standard PC gameport device (real joystick connected on Linux only)
+  - serial
+    - FIFO emulation (UART type 16550A) implemented
 - general
   - fixes for compilation with MSVC (patch from Andrew Zabolotny)
   - fixes for cross-compilation (patch from Jeroen Janssen)
@@ -208,6 +210,7 @@ Patches applied:
   #748414  load32bitOShack bug                      (kyriazis at nvidia.com)
   #830079  Fix bochs's application error if ...     (???)
   #724466  enable building with CC=gcc-3.2 CXX=...  (Leonard Norrgard)
+  #834962  Fixed drawing graphics is broken         (???)
 
 - SF patches partially applied
   #707931  Support EGA/VGA write mode 2 and others  (???)
