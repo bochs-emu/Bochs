@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.83 2002-12-07 23:58:41 cbothamy Exp $
+$Id: user.dbk,v 1.84 2002-12-08 17:23:39 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -350,7 +350,7 @@ currently work with.
     <entry>Floppy disk</entry>
     <entry>Yes</entry>
     <entry>Supports floppy disk images on all platforms: 1.44M 3.5", 1.2M 5.25", and 720K 3.5".  
-    On Unix and Windows NT/2000, Bochs can access the physical floppy drive.
+    On Unix and Windows XP/NT/2000, Bochs can access the physical floppy drive.
     </entry>
   </row>
   <row>
@@ -6419,7 +6419,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.83 2002-12-07 23:58:41 cbothamy Exp $
+        $Id: user.dbk,v 1.84 2002-12-08 17:23:39 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6695,7 +6695,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.83 2002-12-07 23:58:41 cbothamy Exp $
+        $Id: user.dbk,v 1.84 2002-12-08 17:23:39 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
