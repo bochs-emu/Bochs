@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.102 2005-02-16 16:37:45 vruppert Exp $
+// $Id: keyboard.cc,v 1.103 2005-03-14 20:43:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.102 2005-02-16 16:37:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.103 2005-03-14 20:43:45 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -999,6 +999,8 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
         kbd_enQ(0xFF); // send ERROR
       }
     } else {
+      // Send ACK (SF patch #1159626)
+      kbd_enQ(0xFA);
       // Send current scancodes set to port 0x60
       kbd_enQ( 1 + (BX_KEY_THIS s.kbd_controller.current_scancodes_set) ); 
     }
