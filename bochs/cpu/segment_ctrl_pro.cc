@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.30 2005-02-01 21:17:54 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.31 2005-02-24 19:50:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,11 +37,11 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   if (v8086_mode()) {
     /* ??? don't need to set all these fields */
     seg->selector.value = new_value;
-    seg->selector.rpl = 3;
-    seg->cache.valid = 1;
-    seg->cache.p = 1;
-    seg->cache.dpl = 3;
-    seg->cache.segment = 1; /* regular segment */
+    seg->selector.rpl   = 3;
+    seg->cache.valid    = 1;
+    seg->cache.p        = 1;
+    seg->cache.dpl      = 3;
+    seg->cache.segment  = 1; /* regular segment */
     if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
       seg->cache.u.segment.executable = 1; /* code segment */
 #if BX_SUPPORT_ICACHE
@@ -69,23 +69,33 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 #endif
 
 #if BX_CPU_LEVEL >= 2
-  if (protected_mode()) {
-    if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]) {
-      Bit16u index;
-      Bit8u ti;
-      Bit8u rpl;
-      bx_descriptor_t descriptor;
-      Bit32u dword1, dword2;
-
+  if (protected_mode())
+  {
+    if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS])
+    {
       if ((new_value & 0xfffc) == 0) { /* null selector */
+#if BX_SUPPORT_X86_64
+        // allow SS = 0 in 64 bit mode with cpl != 3
+        if (BX_CPU_THIS_PTR msr.lma && CPL != 3) {
+          seg->selector.index = 0;
+          seg->selector.ti    = 0;
+          seg->selector.rpl   = 0;
+          seg->selector.value = 0;
+          seg->cache.valid    = 0; /* invalidate null selector */
+          return;
+        }
+#endif
         BX_ERROR(("load_seg_reg: SS: new_value == 0"));
         exception(BX_GP_EXCEPTION, 0, 0);
         return;
       }
 
-      index = new_value >> 3;
-      ti = (new_value >> 2) & 0x01;
-      rpl = (new_value & 0x03);
+      bx_descriptor_t descriptor;
+      Bit32u dword1, dword2;
+
+      Bit16u index = new_value >> 3;
+      Bit8u ti = (new_value >> 2) & 0x01;
+      Bit8u rpl = (new_value & 0x03);
 
       /* examine AR byte of destination selector for legal values: */
 
@@ -331,7 +341,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 #endif
 
 #if BX_SUPPORT_ICACHE
-      BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+    BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
     invalidate_prefetch_q();
   }
@@ -367,7 +377,7 @@ BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
   seg->cache.valid = 1;
   seg->cache.dpl = dpl; // (KPL) Not sure if we need this.
 
-  seg->selector.value        = selector;
+  seg->selector.value = selector;
 }
 #endif
 

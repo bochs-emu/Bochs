@@ -317,15 +317,15 @@ static void do_pc_breakpoint(int insert, unsigned long long addr, int len)
 {
   for (int i = 0; i < len; ++i)
     if (insert)
-      insert_breakpoint(addr);
+      insert_breakpoint(addr+i);
     else
-      remove_breakpoint(addr, 1);
+      remove_breakpoint(addr+i, 1);
 }
 
 static void do_breakpoint(int insert, char* buffer)
 {
   char* ebuf;
-  unsigned long type = strtoul(&buffer[1], &ebuf, 16);
+  unsigned long type = strtoul(buffer, &ebuf, 16);
   unsigned long long addr = strtoull(ebuf+1, &ebuf, 16);
   unsigned long len = strtoul(ebuf+1, &ebuf, 16);
   switch (type) {
@@ -333,8 +333,10 @@ static void do_breakpoint(int insert, char* buffer)
   case 1:
     do_pc_breakpoint(insert, addr, len);
     put_reply("OK");
+    break;
   default:
     put_reply("");
+    break;
   }
 }
 
