@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.19 2002-09-24 15:41:03 kevinlawton Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.20 2002-09-24 16:35:44 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,12 +38,6 @@
 #endif
 
 
-#define INIT_64_DESCRIPTOR(descriptor)            \
-{                                                    \
-  (descriptor).u.segment.base = 0;                  \
-  (descriptor).u.segment.limit_scaled = 0xffffffff; \
-  (descriptor).valid = 1; \
-}
 
 
 #if BX_CPU_LEVEL >= 2
@@ -1695,7 +1689,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
         }
       else {
-        INIT_64_DESCRIPTOR(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
+        loadSRegLMNominal(BX_SEG_REG_SS, raw_ss_selector, 0, cs_selector.rpl);
         }
       RSP = new_rsp;
 

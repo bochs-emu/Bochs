@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.17 2002-09-24 14:00:10 bdenney Exp $
+// $Id: segment_ctrl_pro.cc,v 1.18 2002-09-24 16:35:44 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,12 +34,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-#define INIT_64_DESCRIPTOR(descriptor)            \
-{                                                    \
-  (descriptor).u.segment.base = 0;                  \
-  (descriptor).u.segment.limit_scaled = 0xffffffff; \
-  (descriptor).valid = 1; \
-}
 
 
 
@@ -343,13 +337,6 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       BX_CPU_THIS_PTR iCache.fetchModeMask =
           BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
 #endif
-
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      INIT_64_DESCRIPTOR(seg->cache);
-      }
-#endif
-
     }
   else { /* SS, DS, ES, FS, GS */
     seg->selector.value = new_value;
@@ -366,6 +353,26 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   seg->cache.u.segment.base = new_value << 4;
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+  void
+BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
+                            unsigned dpl)
+{
+  bx_segment_reg_t *seg = & BX_CPU_THIS_PTR sregs[segI];
+
+  // Load a segment register in long-mode with nominal values,
+  // so descriptor cache values are compatible with existing checks.
+  seg->cache.u.segment.base = base;
+  // (KPL) I doubt we need limit_scaled.  If we do, it should be
+  // of type bx_addr and be maxed to 64bits, not 32.
+  seg->cache.u.segment.limit_scaled = 0xffffffff;
+  seg->cache.valid = 1;
+  seg->cache.dpl = dpl; // (KPL) Not sure if we need this.
+
+  seg->selector.value        = selector;
+}
+#endif
 
 
 #if BX_CPU_LEVEL >= 2
@@ -412,11 +419,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.avl          =  (dword2 & 0x00100000) > 0;
     temp->u.segment.base         |= (dword2 & 0xFF000000);
 
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      INIT_64_DESCRIPTOR(*temp);
-      }
-#endif
     if (temp->u.segment.g) {
       if ( (temp->u.segment.executable==0) && (temp->u.segment.c_ed) )
         temp->u.segment.limit_scaled = (temp->u.segment.limit << 12);
@@ -541,9 +543,9 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma) {
-    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
+    if (descriptor->u.segment.l) {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
-      INIT_64_DESCRIPTOR(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
+      loadSRegLMNominal(BX_SEG_REG_CS, selector->value, 0, cpl);
       }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
@@ -566,7 +568,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    INIT_64_DESCRIPTOR(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
+    loadSRegLMNominal(BX_SEG_REG_SS, selector->value, 0, cpl);
     return;
     }
 #endif
