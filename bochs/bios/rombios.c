@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.67 2002-10-07 16:15:07 vruppert Exp $
+// $Id: rombios.c,v 1.68 2002-10-16 07:38:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -881,10 +881,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.67 $";
-static char bios_date_string[] = "$Date: 2002-10-07 16:15:07 $";
+static char bios_cvs_version_string[] = "$Revision: 1.68 $";
+static char bios_date_string[] = "$Date: 2002-10-16 07:38:36 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.67 2002-10-07 16:15:07 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.68 2002-10-16 07:38:36 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3037,8 +3037,9 @@ int14_function(regs, ds, iret_addr)
 }
 
   void
-int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS;
+int15_function(EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX, ES, DS, FLAGS)
+  Bit32u EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX;
+  Bit16u ES, DS, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit8u  mouse_flags_1, mouse_flags_2;
@@ -3052,6 +3053,16 @@ int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
   Bit16u  ss;
   Bit8u   ret, mouse_data1, mouse_data2, mouse_data3;
   Bit8u   comm_byte, mf2_state;
+  Bit32u extended_memory_size=0; // 64bits long
+  Bit16u DI, SI, BP, SP, BX, DX, CX, AX;
+  DI = EDI;
+  SI = ESI;
+  BP = EBP;
+  SP = ESP;
+  BX = EBX;
+  DX = EDX;
+  CX = ECX;
+  AX = EAX;
 
 BX_DEBUG_INT15("int15 AX=%04x\n",AX);
 
@@ -3297,6 +3308,22 @@ BX_DEBUG_INT15("case 0: disable mouse\n");
                 if ( (ret == 0) || (mouse_data1 == 0xFA) ) {
                   CLEAR_CF();
                   SET_AH(0);
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
                   return;
                   }
                 }
@@ -3304,6 +3331,22 @@ BX_DEBUG_INT15("case 0: disable mouse\n");
               // error
               SET_CF();
               SET_AH(ret);
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
               return;
               break;
 
@@ -3314,6 +3357,22 @@ BX_DEBUG_INT15("case 1: enable mouse\n");
                 BX_DEBUG_INT15("INT 15h C2 Enable Mouse, no far call handler\n");
                 SET_CF();  // error
                 SET_AH(5); // no far call installed
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
                 return;
                 }
               inhibit_mouse_int_and_events(); // disable IRQ12 and packets
@@ -3324,17 +3383,65 @@ BX_DEBUG_INT15("case 1: enable mouse\n");
                   enable_mouse_int_and_events(); // turn IRQ12 and packet generation on
                   CLEAR_CF();
                   SET_AH(0);
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
                   return;
                   }
                 }
               SET_CF();
               SET_AH(ret);
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
               return;
 
             default: // invalid subfunction
               BX_DEBUG_INT15("INT 15h C2 AL=0, BH=%02x\n", (unsigned) GET_BH());
               SET_CF();  // error
               SET_AH(1); // invalid subfunction
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
               return;
             }
           break;
@@ -3369,6 +3476,22 @@ BX_DEBUG_INT15("case 1 or 5:\n");
                   SET_AH(0);
                   SET_BL(mouse_data1);
                   SET_BH(mouse_data2);
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
                   return;
                   }
                 }
@@ -3378,6 +3501,22 @@ BX_DEBUG_INT15("case 1 or 5:\n");
           // error
           SET_CF();
           SET_AH(ret);
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
           return;
 
         case 2: // Set Sample Rate
@@ -3439,6 +3578,22 @@ BX_DEBUG_INT15("case 6:\n");
                         SET_CL(mouse_data2);
                         SET_DL(mouse_data3);
                         set_kbd_command_byte(comm_byte); // restore IRQ12 and serial enable
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
                         return;
                         }
                       }
@@ -3450,6 +3605,22 @@ BX_DEBUG_INT15("case 6:\n");
               SET_CF();
               SET_AH(ret);
               set_kbd_command_byte(comm_byte); // restore IRQ12 and serial enable
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
               return;
 
             case 1: // Set Scaling Factor to 1:1
@@ -3483,9 +3654,103 @@ BX_DEBUG_INT15("case default:\n");
 #endif
       break;
 
-    case 0xC4:
-    case 0xD8:
-    case 0xE0:
+    case 0xe8:
+        switch(GET_AL())
+        {
+         case 0x20: // coded by osmaker aka K.J.
+            if(EDX == 0x534D4150)
+            {
+                switch(BX)
+                {
+                    case 0:
+                        write_word(ES, DI, 0x00);
+                        write_word(ES, DI+2, 0x00);
+                        write_word(ES, DI+4, 0x00);
+                        write_word(ES, DI+6, 0x00);
+
+                        write_word(ES, DI+8, 0xFC00);
+                        write_word(ES, DI+10, 0x0009);
+                        write_word(ES, DI+12, 0x0000);
+                        write_word(ES, DI+14, 0x0000);
+
+                        write_word(ES, DI+16, 0x1);
+                        write_word(ES, DI+18, 0x0);
+
+                        EBX = 1;
+                        EAX = 0x534D4150;
+                        ECX = 0x14;
+                        CLEAR_CF();
+                        return;
+                        break;
+                    case 1:
+                        extended_memory_size = inb_cmos(0x35);
+                        extended_memory_size <<= 8;
+                        extended_memory_size |= inb_cmos(0x34);
+                        extended_memory_size *= 64;
+                        if(extended_memory_size > 0x3bc000) // greater than EFF00000???
+                        {
+                            extended_memory_size = 0x3bc000; // everything after this is reserved memory until we get to 0x100000000
+                        }
+                        extended_memory_size *= 1024;
+                        extended_memory_size += 15728640; // make up for the 16mb of memory that is chopped off
+
+                        if(extended_memory_size <= 15728640)
+                        {
+                            extended_memory_size = inb_cmos(0x31);
+                            extended_memory_size <<= 8;
+                            extended_memory_size |= inb_cmos(0x30);
+                            extended_memory_size *= 1024;
+                        }
+
+                        write_word(ES, DI, 0x0000);
+                        write_word(ES, DI+2, 0x0010);
+                        write_word(ES, DI+4, 0x0000);
+                        write_word(ES, DI+6, 0x0000);
+
+                        write_word(ES, DI+8, extended_memory_size);
+                        extended_memory_size >>= 16;
+                        write_word(ES, DI+10, extended_memory_size);
+                        extended_memory_size >>= 16;
+                        write_word(ES, DI+12, extended_memory_size);
+                        extended_memory_size >>= 16;
+                        write_word(ES, DI+14, extended_memory_size);
+
+                        write_dword(ES, DI+16, 0x1);
+                        write_word(ES, DI+18, 0x0);
+
+                        EBX = 0;
+                        EAX = 0x534D4150;
+                        ECX = 0x14;
+                        CLEAR_CF();
+                        return;
+                        break;
+                    default:
+                        SET_CF();
+                        break;
+                }
+            }
+            break;
+
+        case 0x01: // coded by Hartmut Birr
+          in_byte = inb_cmos(0x34);
+          SET_AL(in_byte);
+          in_byte = inb_cmos(0x35);
+          SET_AH(in_byte);
+          if(AX)
+          {
+            BX = AX;
+            AX = 0x3c00;
+            CX = AX;
+            DX = BX;
+            CLEAR_CF();
+            break;
+          }
+          SET_AH(0xe8);
+          SET_AL(0x01);
+          break;
+       }
+       break;
+
     default:
       BX_INFO("*** int 15h function AX=%04x, BX=%04x not yet supported!\n",
         (unsigned) AX, (unsigned) BX);
@@ -3493,6 +3758,22 @@ BX_DEBUG_INT15("case default:\n");
       SET_AH(UNSUPPORTED_FUNCTION);
       break;
     }
+  EDI &= 0xFFFF0000;
+  ESI &= 0xFFFF0000;
+  EBP &= 0xFFFF0000;
+  ESP &= 0xFFFF0000;
+  EBX &= 0xFFFF0000;
+  EDX &= 0xFFFF0000;
+  ECX &= 0xFFFF0000;
+  EAX &= 0xFFFF0000;
+  EDI |= DI;
+  ESI |= SI;
+  EBP |= BP;
+  ESP |= SP;
+  EBX |= BX;
+  EDX |= DX;
+  ECX |= CX;
+  EAX |= AX;
 }
 
 
@@ -8915,9 +9196,9 @@ int15_handler:
   pushf
   push  ds
   push  es
-  pusha
+  pushad
   call _int15_function
-  popa
+  popad
   pop   es
   pop   ds
   popf

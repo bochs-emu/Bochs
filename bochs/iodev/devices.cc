@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.35 2002-10-06 19:04:47 bdenney Exp $
+// $Id: devices.cc,v 1.36 2002-10-16 07:38:37 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.35 2002-10-06 19:04:47 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.36 2002-10-16 07:38:37 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -223,6 +223,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
   cmos->s.reg[0x18] = (Bit8u) (extended_memory_in_k >> 8);
   cmos->s.reg[0x30] = (Bit8u) extended_memory_in_k;
   cmos->s.reg[0x31] = (Bit8u) (extended_memory_in_k >> 8);
+
+  Bit16u extended_memory_in_64k = mem->get_memory_in_k() > 16384 ? (mem->get_memory_in_k() - 16384) / 64 : 0;
+  cmos->s.reg[0x34] = (Bit8u) extended_memory_in_64k;
+  cmos->s.reg[0x35] = (Bit8u) (extended_memory_in_64k >> 8);
 
   /* now perform checksum of CMOS memory */
   cmos->checksum_cmos();
