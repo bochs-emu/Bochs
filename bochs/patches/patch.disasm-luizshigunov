@@ -2,6 +2,7 @@
 Patch name: patches/patch.disasm-luizshiguno
 Author: Luiz Henrique Shigunov (
 Date: Tue Jan 21 10:44:27 CET 2003
+Status: applied to main code
 
 Detailed description:
 I've implemented functions ALOb(), ObAL(), YbAL(),

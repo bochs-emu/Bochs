@@ -2,6 +2,7 @@
 Patch name: patch.extfpuirq
 Author: Christpohe Bothamy
 Date: Mon Jan  6 01:48:51 CET 2003
+Status: applied to main code
 
 Detailed description:
   This patch adds msdos compatibility FPU exception support. (irq 13)
@@ -1730,7 +1731,7 @@ diff -u -r1.26 iodev.h
 +++ iodev/extfpuirq.cc	Mon Jan  6 00:37:46 2003
 @@ -0,0 +1,135 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.extfpuirq,v 1.1 2003-01-06 02:17:24 cbothamy Exp $
++// $Id: patch.extfpuirq,v 1.2 2003-02-06 17:28:22 cbothamy Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1868,7 +1869,7 @@ diff -u -r1.26 iodev.h
 +++ iodev/extfpuirq.h	Sun Jan  5 23:22:35 2003
 @@ -0,0 +1,53 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.extfpuirq,v 1.1 2003-01-06 02:17:24 cbothamy Exp $
++// $Id: patch.extfpuirq,v 1.2 2003-02-06 17:28:22 cbothamy Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2002  MandrakeSoft S.A.

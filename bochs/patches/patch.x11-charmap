@@ -2,9 +2,10 @@
 Patch name: patch.x11-charmap
 Author: Christophe Bothamy
 Date: Fri Jan 17 19:09:24 CET 2003
+Status: applied to main code
 
 Detailed description:
-  This patch adds charmap changes support fox x11.
+  This patch adds charmap changes support for x11.
 
 Patch was created with:
   cvs diff -u

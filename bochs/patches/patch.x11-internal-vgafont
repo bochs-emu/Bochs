@@ -2,6 +2,7 @@
 Patch name: patch-x11-internal-vgafont
 Author: Christophe Bothamy
 Date: Thu Jan 16 18:11:16 CET 2003
+Status: applied to main code
 
 Detailed description:
   This patch removes the need for an external X11 vga font.
