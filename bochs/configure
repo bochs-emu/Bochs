@@ -42,7 +42,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-vga                      use VGA emulation"
 ac_help="$ac_help
-  --enable-fpu                      pass dir of external FPU emulation"
+  --enable-fpu                      compile in FPU emulation"
 ac_help="$ac_help
   --enable-x86-debugger             x86 debugger support"
 ac_help="$ac_help
@@ -3267,9 +3267,9 @@ EOF
    fi
 else
   
-    echo "$ac_t""no" 1>&6
+    echo "$ac_t""yes" 1>&6
     cat >> confdefs.h <<\EOF
-#define BX_SUPPORT_FPU 0
+#define BX_SUPPORT_FPU 1
 EOF
 
     
