@@ -564,7 +564,8 @@ extern bx_devices_c   bx_devices;
 
 
 char *bx_find_bochsrc (void);
-int bx_read_configuration (char *rcfile, int argc, char *argv[]);
+int bx_parse_cmdline (int argc, char *argv[]);
+int bx_read_configuration (char *rcfile);
 int bx_write_configuration (char *rcfile, int overwrite);
 
 #if BX_USE_CONTROL_PANEL==0

@@ -478,7 +478,7 @@ main(int argc, char *argv[])
     /* parse configuration file and command line arguments */
     char *bochsrc = bx_find_bochsrc ();
     if (bochsrc)
-      bx_read_configuration (bochsrc, argc, argv);
+      bx_read_configuration (bochsrc);
 
     if (bochsrc == NULL && argc == 1) {
       // no bochsrc used.  This is legal since they may have 
@@ -507,6 +507,12 @@ main(int argc, char *argv[])
   bx_dbg_main(argc, argv);
 #else
 
+  if (bx_parse_cmdline (argc, argv)) {
+    fprintf (stderr, "There were errors while parsing the command line.\n");
+    fprintf (stderr, "Bochs is exiting.\n");
+    exit (1);
+  }
+
   bx_init_hardware();
 
   if (bx_options.load32bitOSImage.whichOS) {
@@ -522,10 +528,11 @@ main(int argc, char *argv[])
     // only one processor, run as fast as possible by not messing with
     // quantums and loops.
     BX_CPU(0)->cpu_loop(1);
+    BX_PANIC (("cpu_loop should never return in a single-processor simulation"));
   } else {
-    // SMP simulation: do 5 instructions on each processor, then switch
-    // to another.  I'm sure that increasing quantum speeds up overall
-    // performance.
+    // SMP simulation: do a few instructions on each processor, then switch
+    // to another.  Increasing quantum speeds up overall performance, but
+    // reduces granularity of synchronization between processors.
     int processor = 0;
     int quantum = 5;
     while (1) {
@@ -542,7 +549,7 @@ main(int argc, char *argv[])
 }
 
 int
-bx_read_configuration (char *rcfile, int argc, char *argv[])
+bx_read_configuration (char *rcfile)
 {
   // parse rcfile first, then parse arguments in order.
   BX_INFO (("reading configuration from %s", rcfile));
@@ -550,7 +557,11 @@ bx_read_configuration (char *rcfile, int argc, char *argv[])
     BX_ERROR (("reading from %s failed", rcfile));
     return -1;
   }
+  return 0;
+}
 
+int bx_parse_cmdline (int argc, char *argv[])
+{
   if (argc > 1)
     BX_INFO (("parsing command line arguments"));
 

@@ -349,8 +349,11 @@ process_sim2:
   BX_SIM2_INIT(&bx_dbg_callback[1], sim2_argc, sim2_argv);
 #endif
 
-  // call init routine for overall framework and IO device setup
-  bx_bochs_init(bochs_argc, bochs_argv);
+  // parse any remaining args in the usual way
+  bx_parse_cmdline (bochs_argc, bochs_argv);
+
+  // initialize hardware
+  bx_init_hardware();   // doesn't this duplicate things?
 
 #if BX_NUM_SIMULATORS >= 2
   bx_debugger.compare_at_sync.cpu    = 0;

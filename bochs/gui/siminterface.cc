@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.11 2001-06-11 20:51:15 bdenney Exp $
+ * $Id: siminterface.cc,v 1.12 2001-06-13 13:36:12 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -190,7 +190,7 @@ bx_real_sim_c::get_default_rc (char *path, int len)
 int 
 bx_real_sim_c::read_rc (char *rc)
 {
-  return bx_read_configuration (rc, 0, NULL);
+  return bx_read_configuration (rc);
 }
 
 // return values:
