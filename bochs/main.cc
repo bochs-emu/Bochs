@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.160 2002-10-16 19:39:27 bdenney Exp $
+// $Id: main.cc,v 1.161 2002-10-21 11:13:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -721,7 +721,7 @@ void bx_init_options ()
   bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
       "megs",
       "Amount of RAM in megabytes",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       BX_DEFAULT_MEM_MEGS);
   bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
@@ -795,7 +795,7 @@ void bx_init_options ()
   bx_options.rom.Oaddress = new bx_param_num_c (BXP_ROM_ADDRESS,
       "romaddr",
       "The address at which the ROM image should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0xf0000);
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
   bx_options.rom.Oaddress->set_base (16);
@@ -808,7 +808,7 @@ void bx_init_options ()
   bx_options.optrom[0].Oaddress = new bx_param_num_c (BXP_OPTROM1_ADDRESS,
       "optional romaddr #1",
       "The address at which the optional ROM image #1 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[0].Oaddress->set_format ("optional ROM #1 address: 0x%05x");
   bx_options.optrom[0].Oaddress->set_base (16);
@@ -821,7 +821,7 @@ void bx_init_options ()
   bx_options.optrom[1].Oaddress = new bx_param_num_c (BXP_OPTROM2_ADDRESS,
       "optional romaddr #2",
       "The address at which the optional ROM image #2 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[1].Oaddress->set_format ("optional ROM #2 address: 0x%05x");
   bx_options.optrom[1].Oaddress->set_base (16);
@@ -834,7 +834,7 @@ void bx_init_options ()
   bx_options.optrom[2].Oaddress = new bx_param_num_c (BXP_OPTROM3_ADDRESS,
       "optional romaddr #3",
       "The address at which the optional ROM image #3 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[2].Oaddress->set_format ("optional ROM #3 address: 0x%05x");
   bx_options.optrom[2].Oaddress->set_base (16);
@@ -847,7 +847,7 @@ void bx_init_options ()
   bx_options.optrom[3].Oaddress = new bx_param_num_c (BXP_OPTROM4_ADDRESS,
       "optional romaddr #4",
       "The address at which the optional ROM image #4 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[3].Oaddress->set_format ("optional ROM #4 address: 0x%05x");
   bx_options.optrom[3].Oaddress->set_base (16);
@@ -879,7 +879,7 @@ void bx_init_options ()
   bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
       "VGA Update Interval",
       "Number of microseconds between VGA updates",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       30000);
   bx_options.Ovga_update_interval->set_handler (bx_param_handler);
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
@@ -891,7 +891,7 @@ void bx_init_options ()
   bx_options.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       500000);
   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
       "Use a private colormap",
@@ -992,22 +992,22 @@ void bx_init_options ()
   bx_options.sb16.Omidimode = new bx_param_num_c (BXP_SB16_MIDIMODE,
       "Midi mode",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Owavemode = new bx_param_num_c (BXP_SB16_WAVEMODE,
       "Wave mode",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Ologlevel = new bx_param_num_c (BXP_SB16_LOGLEVEL,
       "Log mode",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Odmatimer = new bx_param_num_c (BXP_SB16_DMATIMER,
       "DMA timer",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_param_c *sb16_init_list[] = {
     bx_options.sb16.Opresent,
@@ -1084,18 +1084,18 @@ void bx_init_options ()
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       20000);
   bx_options.Okeyboard_paste_delay = new bx_param_num_c (BXP_KBD_PASTE_DELAY,
       "Keyboard paste delay",
       "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
-      1000, BX_MAX_INT,
+      1000, BX_MAX_BIT32U,
       100000);
   bx_options.Okeyboard_paste_delay->set_handler (bx_param_handler);
   bx_options.Ofloppy_command_delay = new bx_param_num_c (BXP_FLOPPY_CMD_DELAY,
       "Floppy command delay",
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       50000);
   bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
       "PCI i440FX Support",
@@ -1116,7 +1116,7 @@ void bx_init_options ()
   bx_options.cmos.Otime0 = new bx_param_num_c (BXP_CMOS_TIME0,
       "Initial CMOS time for Bochs",
       "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
 
   // Keyboard mapping

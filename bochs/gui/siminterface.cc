@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.75 2002-10-21 01:05:53 bdenney Exp $
+// $Id: siminterface.cc,v 1.76 2002-10-21 11:13:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -796,7 +796,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit64s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT64S, BX_MAX_BIT64S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -811,7 +811,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit64u *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT64U, BX_MAX_BIT64U, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -826,7 +826,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit32s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -841,7 +841,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit32u *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT32U, BX_MAX_BIT32U, *ptr_to_real_val)
 {
   this->varsize = 32;
   this->lowbit = lowbit;
@@ -856,7 +856,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit16s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT16S, BX_MAX_BIT16S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -871,7 +871,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit16u *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT16U, BX_MAX_BIT16U, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -886,7 +886,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit8s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -901,7 +901,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     Bit8u *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
+: bx_param_num_c (id, name, description, BX_MIN_BIT8U, BX_MAX_BIT8U, *ptr_to_real_val)
 {
   this->varsize = 8;
   this->lowbit = lowbit;
@@ -1017,7 +1017,7 @@ bx_param_enum_c::bx_param_enum_c (bx_id id,
       char **choices,
       Bit64s initial_val,
       Bit64s value_base)
-  : bx_param_num_c (id, name, description, value_base, BX_MAX_INT, initial_val)
+  : bx_param_num_c (id, name, description, value_base, BX_MAX_BIT64S, initial_val)
 {
   set_type (BXT_PARAM_ENUM);
   this->choices = choices;
@@ -1025,7 +1025,7 @@ bx_param_enum_c::bx_param_enum_c (bx_id id,
   char **p = choices;
   while (*p != NULL) p++;
   this->min = value_base;
-  // now that the max is known, replace the BX_MAX_INT sent to the parent
+  // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
   // class constructor with the real max.
   this->max = value_base + (p - choices - 1);
   set (initial_val);
@@ -1048,7 +1048,7 @@ bx_param_string_c::bx_param_string_c (bx_id id,
   strncpy (this->val, initial_val, maxsize);
   strncpy (this->initial_val, initial_val, maxsize);
   this->options = new bx_param_num_c (BXP_NULL,
-      "stringoptions", NULL, 0, BX_MAX_INT, 0);
+      "stringoptions", NULL, 0, BX_MAX_BIT64S, 0);
   set (initial_val);
 }
 
@@ -1190,10 +1190,10 @@ bx_list_c::init ()
       "",
       get_name (), 80);
   this->options = new bx_param_num_c (BXP_NULL,
-      "list_option", "", 0, BX_MAX_INT,
+      "list_option", "", 0, BX_MAX_BIT64S,
       0);
   this->choice = new bx_param_num_c (BXP_NULL,
-      "list_choice", "", 0, BX_MAX_INT,
+      "list_choice", "", 0, BX_MAX_BIT64S,
       1);
   this->parent = NULL;
 }
