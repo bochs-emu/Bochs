@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77 2002-09-30 14:19:45 bdenney Exp $
+// $Id: harddrv.cc,v 1.78 2002-10-05 16:49:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.77 2002-09-30 14:19:45 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.78 2002-10-05 16:49:03 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1431,18 +1431,18 @@ if ( quantumsMax == 0)
 				    BX_SELECTED_CONTROLLER(channel).buffer[7] = 0x00; // reserved
 
 				    // Vendor ID
-				    const char* vendor_id = "VTAB\0\0\0\0";
+				    const char* vendor_id = "VTAB    ";
                                     int i;
 				    for (i = 0; i < 8; i++)
 					  BX_SELECTED_CONTROLLER(channel).buffer[8+i] = vendor_id[i];
 
 				    // Product ID
-				    const char* product_id = "Turbo CD-ROM\0\0\0\0";
+				    const char* product_id = "Turbo CD-ROM    ";
 				    for (i = 0; i < 16; i++)
 					  BX_SELECTED_CONTROLLER(channel).buffer[16+i] = product_id[i];
 
 				    // Product Revision level
-				    const char* rev_level = "R0\0\0";
+				    const char* rev_level = "1.0 ";
 				    for (i = 0; i < 4; i++)
 					  BX_SELECTED_CONTROLLER(channel).buffer[32+i] = rev_level[i];
 
@@ -1782,8 +1782,11 @@ if ( quantumsMax == 0)
            * sector count of 0 means 256 sectors
            */
 
-	  if (!BX_SELECTED_IS_HD(channel))
-		BX_PANIC(("read multiple issued to non-disk"));
+	  if (!BX_SELECTED_IS_HD(channel)) {
+		BX_ERROR(("read multiple issued to non-disk"));
+		command_aborted(channel, value);
+		break;
+	  }
 
           BX_SELECTED_CONTROLLER(channel).current_command = value;
 
