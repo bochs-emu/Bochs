@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.2 2002-11-21 08:00:14 bdenney Exp $
+; $Id: bochs.nsi.in,v 1.3 2002-12-15 16:26:57 bdenney Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -85,8 +85,11 @@ SectionEnd
 
 Section "Documentation in HTML" SecDocs
   SectionIn 1 2 
-  SetOutPath "$INSTDIR\docs-html"
-  File "${SRCDIR}\docs-html\*"
+  SetOutPath "$INSTDIR"
+  File "${SRCDIR}\index.html"
+  File "${SRCDIR}\user\*"
+  File "${SRCDIR}\development\*"
+  File "${SRCDIR}\documentation\*"
 SectionEnd
 
 Section "DLX Linux Demo" SecDLX
@@ -126,7 +129,7 @@ Section "Add Bochs to the Start Menu and Desktop" SecIcons
                  "$INSTDIR\niclist.exe"
 
   WriteINIStr "${PGDIR}\Help.url" \
-	      "InternetShortcut" "URL" "file://$INSTDIR/docs-html/index.html"
+	      "InternetShortcut" "URL" "file://$INSTDIR/index.html"
 
   WriteINIStr "${PGDIR}\Home Page.url" \
 	      "InternetShortcut" "URL" "http://bochs.sourceforge.net/"
@@ -328,11 +331,16 @@ Section "Uninstall"
   Delete "$INSTDIR\BIOS-*"
   Delete "$INSTDIR\VGABIOS-*"
   Delete "$INSTDIR\dlxlinux\*"
-  Delete "$INSTDIR\docs-html\*"
+  Delete "$INSTDIR\index.html"
+  Delete "$INSTDIR\user\*"
+  Delete "$INSTDIR\development\*"
+  Delete "$INSTDIR\documentation\*"
 
   RMDIR "$INSTDIR\keymaps"
   RMDIR "$INSTDIR\dlxlinux"
-  RMDIR "$INSTDIR\docs-html"
+  RMDIR "$INSTDIR\user"
+  RMDIR "$INSTDIR\development"
+  RMDIR "$INSTDIR\documentation"
   RMDIR "$INSTDIR"
 
   !insertmacro MUI_FINISHHEADER un.SetHeader
