@@ -2,15 +2,14 @@ NOTE: this is a nice idea but it can cause segfaults if a panic happens
 before the vga display comes up.  Oops.
 -Bryce
 
+I have updated this patch for the current CVS (logio 1.17) and added a check
+for the siminterface init state before calling the vga timer handler.
+-Volker
 
-Index: logio.cc
 ===================================================================
-RCS file: /cvsroot/bochs/bochs/logio.cc,v
-retrieving revision 1.12
-diff -u -r1.12 logio.cc
---- logio.cc	2001/11/12 18:28:07	1.12
-+++ logio.cc	2001/11/18 16:33:25
-@@ -342,10 +342,23 @@
+--- ../bochs/logio.cc	Thu Apr 18 16:53:08 2002
++++ logio.cc	Sun May 26 11:41:41 2002
+@@ -359,10 +359,23 @@
  void
  logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
  {
@@ -29,14 +28,14 @@ diff -u -r1.12 logio.cc
 +  // are printed on the screen just before a panic.  It's also potentially
 +  // dangerous if this function calls ask again...  That's why I added
 +  // the reentry check above.
-+  bx_vga.timer_handler(&bx_vga);
++  if (SIM->get_init_done()) bx_vga.timer_handler(&bx_vga);
 +
-   int val = SIM->LOCAL_log_msg (prefix, level, buf2);
+   int val = SIM->log_msg (prefix, level, buf2);
    switch (val)
    {
-@@ -383,6 +396,7 @@
+@@ -400,6 +413,7 @@
        // in gui/control.cc.
-       fprintf (stderr, "WARNING: LOCAL_log_msg returned unexpected value %d\n", val);
+       fprintf (stderr, "WARNING: log_msg returned unexpected value %d\n", val);
    }
 +  in_ask_already = 0;
  }
