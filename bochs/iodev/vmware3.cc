@@ -211,10 +211,15 @@ int vmware3_image_t::open(const char * pathname)
 
     tlb_size  = header.tlb_size_sectors * 512;
     slb_count = (1 << FL_SHIFT) / tlb_size;
-    images = new COW_Image [header.number_of_chains];
+    
+    // we must have at least one chain
+    unsigned count = header.number_of_chains;
+    if (count < 1) count = 1;
+
+    images = new COW_Image [count];
 
     off_t offset = 0;
-    for (unsigned i = 0; i <= header.number_of_chains; ++i)
+    for (unsigned i = 0; i < count; ++i)
     {
         char * filename = generate_cow_name(pathname, i);
         current = &images[i];
@@ -490,6 +495,7 @@ void vmware3_image_t::close()
         return;
 
     unsigned count = current->header.number_of_chains;
+    if (count < 1) count = 1;
     for(unsigned i = 0; i < count; ++i)
     {
         if (images != NULL)
