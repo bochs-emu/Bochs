@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.32 2002-10-11 13:55:26 kevinlawton Exp $
+// $Id: access.cc,v 1.33 2002-10-11 16:18:00 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1160,14 +1160,38 @@ accessOK:
 
 #if BX_SUPPORT_SSE
 
+// Some macro defs to make things cleaner for endian-ness issues.
+// The following routines access a double qword, ie 16-bytes.
+// For the moment, I redirect these to use the single qword routines
+// by splitting one access into two.
+//
+// Endian  Host byte order         Guest (x86) byte order
+// ======================================================
+// Little  0..7 8..15               0..7 8..15
+// Big    15..8 7...0               0..7 8..15
+//
+// Below are the host memory offsets to each of 2 single quadwords, which
+// are different across big an little endian machines.  The memory
+// accessing routines take care of the access endian issues when accessing
+// the physical memory image.
+
+#ifdef BX_LITTLE_ENDIAN
+#  define Host1stDWordOffset 0
+#  define Host2ndDWordOffset 8
+#else
+#  define Host1stDWordOffset 8
+#  define Host2ndDWordOffset 0
+#endif
+
+
   void
 BX_CPU_C::readVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
 {
   // Read Double Quadword.
   Bit64u *qwords = (Bit64u*) data;
 
-  read_virtual_qword(s, offset+0, &qwords[0]);
-  read_virtual_qword(s, offset+8, &qwords[1]);
+  read_virtual_qword(s, offset+Host1stDWordOffset, &qwords[0]);
+  read_virtual_qword(s, offset+Host2ndDWordOffset, &qwords[1]);
 }
 
   void
@@ -1180,8 +1204,8 @@ BX_CPU_C::readVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
   if (offset & 0xf)
     exception(BX_GP_EXCEPTION, 0, 0);
 
-  read_virtual_qword(s, offset+0, &qwords[0]);
-  read_virtual_qword(s, offset+8, &qwords[1]);
+  read_virtual_qword(s, offset+Host1stDWordOffset, &qwords[0]);
+  read_virtual_qword(s, offset+Host2ndDWordOffset, &qwords[1]);
 }
 
   void
@@ -1190,8 +1214,8 @@ BX_CPU_C::writeVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
   // Write Double Quadword.
   Bit64u *qwords = (Bit64u*) data;
 
-  write_virtual_qword(s, offset+0, &qwords[0]);
-  write_virtual_qword(s, offset+8, &qwords[1]);
+  write_virtual_qword(s, offset+Host1stDWordOffset, &qwords[0]);
+  write_virtual_qword(s, offset+Host2ndDWordOffset, &qwords[1]);
 }
 
 
@@ -1205,8 +1229,8 @@ BX_CPU_C::writeVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
   if (offset & 0xf)
     exception(BX_GP_EXCEPTION, 0, 0);
 
-  write_virtual_qword(s, offset+0, &qwords[0]);
-  write_virtual_qword(s, offset+8, &qwords[1]);
+  write_virtual_qword(s, offset+Host1stDWordOffset, &qwords[0]);
+  write_virtual_qword(s, offset+Host2ndDWordOffset, &qwords[1]);
 }
 
 #endif  // #if BX_SUPPORT_SSE
