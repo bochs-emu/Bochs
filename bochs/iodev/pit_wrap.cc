@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.10 2001-10-11 13:01:27 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.11 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -131,7 +131,9 @@ bx_pit_c::handle_timer() {
   BX_DEBUG(("pit: entering timer handler"));
 
   if(time_passed32 && periodic(time_passed32)) {
-    bx_pic.trigger_irq(0);
+    // This is a hack to make the IRQ0 work
+    bx_pic.lower_irq(0);
+    bx_pic.raise_irq(0);
   }
   BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
   if(time_passed ||
@@ -243,7 +245,9 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   BX_DEBUG(("pit: entering write handler"));
 
   if(time_passed32 && periodic(time_passed32)) {
-    bx_pic.trigger_irq(0);
+    // This is a hack to make the IRQ0 work
+    bx_pic.lower_irq(0);
+    bx_pic.raise_irq(0);
   }
   BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
 
@@ -347,7 +351,6 @@ bx_kbd_port61h_write(Bit8u   value)
   Boolean
 bx_pit_c::periodic( Bit32u   usec_delta )
 {
-  Bit32u i=0;
   Boolean prev_timer0_out = BX_PIT_THIS s.timer.read_OUT(0);
   Boolean want_interrupt = 0;
   Bit32u ticks_delta=(Bit32u)(USEC_TO_TICKS((Bit64u)(usec_delta)));

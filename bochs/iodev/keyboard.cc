@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.43 2002-01-27 00:41:38 vruppert Exp $
+// $Id: keyboard.cc,v 1.44 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.43 2002-01-27 00:41:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.44 2002-01-29 17:20:11 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.43 2002-01-27 00:41:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.44 2002-01-29 17:20:11 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -295,8 +295,8 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
           (BX_KEY_THIS s.kbd_controller.sysf << 2)  |
           (BX_KEY_THIS s.kbd_controller.inpb << 1)  |
           BX_KEY_THIS s.kbd_controller.outb;
-    BX_KEY_THIS devices->pic->untrigger_irq(1);
-    BX_KEY_THIS devices->pic->untrigger_irq(12);
+    BX_KEY_THIS devices->pic->lower_irq(1);
+    BX_KEY_THIS devices->pic->lower_irq(12);
     RETURN(val);
     }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.16 2002-01-20 16:35:32 vruppert Exp $
+// $Id: serial.cc,v 1.17 2002-01-29 17:20:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -272,7 +272,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
         if ((BX_SER_THIS s[0].tx_interrupt == 0) &&
             (BX_SER_THIS s[0].ls_interrupt == 0) &&
             (BX_SER_THIS s[0].ms_interrupt == 0)) {
-          BX_SER_THIS devices->pic->untrigger_irq(4);
+          BX_SER_THIS devices->pic->lower_irq(4);
         }
         BX_SER_THIS s[0].rx_interrupt = 0;
         BX_SER_THIS s[0].rx_ipending = 0;
@@ -315,7 +315,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].ls_interrupt == 0) &&
           (BX_SER_THIS s[0].ms_interrupt == 0)) {
-        BX_SER_THIS devices->pic->untrigger_irq(4);
+        BX_SER_THIS devices->pic->lower_irq(4);
       }
 
       BX_SER_THIS s[0].tx_interrupt = 0;
@@ -359,7 +359,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].tx_interrupt == 0) &&
           (BX_SER_THIS s[0].ms_interrupt == 0)) {
-        BX_SER_THIS devices->pic->untrigger_irq(4);
+        BX_SER_THIS devices->pic->lower_irq(4);
       }
       BX_SER_THIS s[0].ls_interrupt = 0;
       BX_SER_THIS s[0].ls_ipending = 0;
@@ -382,7 +382,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].tx_interrupt == 0) &&
           (BX_SER_THIS s[0].ls_interrupt == 0)) {
-        BX_SER_THIS devices->pic->untrigger_irq(4);
+        BX_SER_THIS devices->pic->lower_irq(4);
       }
       BX_SER_THIS s[0].ms_interrupt = 0;
       BX_SER_THIS s[0].ms_ipending = 0;
@@ -459,7 +459,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
               (BX_SER_THIS s[0].ls_interrupt == 0) &&
               (BX_SER_THIS s[0].ms_interrupt == 0)) {
-            BX_SER_THIS devices->pic->untrigger_irq(4);
+            BX_SER_THIS devices->pic->lower_irq(4);
           }
           BX_SER_THIS s[0].tx_interrupt = 0;
           BX_SER_THIS s[0].tx_ipending = 0;
@@ -516,7 +516,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         }
         if (gen_int == 1)
-          BX_SER_THIS devices->pic->trigger_irq(4);
+          BX_SER_THIS devices->pic->raise_irq(4);
       }
       break;
 
@@ -708,7 +708,7 @@ bx_serial_c::tx_timer(void)
   }
 
   if (gen_int) {
-    BX_SER_THIS devices->pic->trigger_irq(4);
+    BX_SER_THIS devices->pic->raise_irq(4);
   }
 }
 
@@ -777,7 +777,7 @@ bx_serial_c::rx_timer(void)
         BX_SER_THIS s[0].rx_empty = 0;
         if (BX_SER_THIS s[0].int_enable.rxdata_enable) {
           BX_SER_THIS s[0].rx_interrupt = 1;
-          BX_SER_THIS devices->pic->trigger_irq(4);
+          BX_SER_THIS devices->pic->raise_irq(4);
         } else {
           BX_SER_THIS s[0].rx_ipending = 1;
         }

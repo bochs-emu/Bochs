@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.17 2002-01-25 20:31:42 vruppert Exp $
+// $Id: sb16.cc,v 1.18 2002-01-29 17:20:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -321,7 +321,7 @@ void bx_sb16_c::dsp_reset(Bit32u value)
 
       if (DSP.irqpending != 0)
 	{
-	  BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
 	  writelog(WAVELOG(4), "DSP reset: IRQ untriggered");
 	}
       if (DSP.dma.mode != 0)
@@ -855,7 +855,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	  DSP.dataout.put(0xaa);
 	  DSP.irqpending = 1;
 	  MIXER.reg[0x82] |= 1; // reg 82 shows the kind of IRQ
-	  BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQ);
+	  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
 	  break;
 
 	  // unknown command
@@ -997,7 +997,7 @@ Bit32u bx_sb16_c::dsp_status()
       writelog( WAVELOG(4), "8-bit DMA or SBMIDI IRQ acknowledged");
       if (MIXER.reg[0x82] == 0) {
         DSP.irqpending = 0;
-        BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
       }
     }
 
@@ -1020,7 +1020,7 @@ Bit32u bx_sb16_c::dsp_irq16ack()
       MIXER.reg[0x82] &= (~0x02);
       if (MIXER.reg[0x82] == 0) {
         DSP.irqpending = 0;
-        BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
       }
       writelog( WAVELOG(4), "16-bit DMA IRQ acknowledged");
     }
@@ -1145,7 +1145,7 @@ void bx_sb16_c::dsp_dmadone()
  else
     MIXER.reg[0x82] |= 2;
 
-  BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQ);
+  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
   DSP.irqpending = 1;
 
   //if auto-DMA, reinitialize
@@ -1430,7 +1430,7 @@ void bx_sb16_c::mpu_command(Bit32u value)
 	  if (BX_SB16_IRQMPU != -1)
 	    {
 	      MIXER.reg[0x82] |= 4;
-	      BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQMPU);
+	      BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQMPU);
 	    }
 	  break;
 
@@ -1493,7 +1493,7 @@ Bit32u bx_sb16_c::mpu_dataread()
 	MPU.irqpending = 0;
 	MIXER.reg[0x82] &= (~4);
 	if (MIXER.reg[0x82] == 0)
-	  BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQMPU);
+	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQMPU);
 	writelog(MIDILOG(4), "MPU IRQ acknowledged");
       }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.31 2002-01-27 21:56:53 vruppert Exp $
+// $Id: floppy.cc,v 1.32 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.31 2002-01-27 21:56:53 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.32 2002-01-29 17:20:11 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -315,7 +315,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
         BX_FD_THIS s.result_index = 0;
         BX_FD_THIS s.result[0] = value;
         BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
-        BX_FD_THIS devices->pic->untrigger_irq(6);
+        BX_FD_THIS devices->pic->lower_irq(6);
         BX_FD_THIS s.pending_irq = 0;
         }
       return(value);
@@ -737,7 +737,7 @@ bx_floppy_ctrl_c::floppy_command(void)
           // 4 result bytes are unused
           BX_FD_THIS s.pending_command = 0;
           BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
-          BX_FD_THIS devices->pic->trigger_irq(6);
+          BX_FD_THIS devices->pic->raise_irq(6);
           BX_FD_THIS s.pending_irq = 1;
           return;
           }
@@ -753,7 +753,7 @@ bx_floppy_ctrl_c::floppy_command(void)
           // 4 result bytes are unused
           BX_FD_THIS s.pending_command = 0;
           BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
-          BX_FD_THIS devices->pic->trigger_irq(6);
+          BX_FD_THIS devices->pic->raise_irq(6);
           BX_FD_THIS s.pending_irq = 1;
           return;
           }
@@ -821,7 +821,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 
         BX_FD_THIS s.pending_command = 0;
         BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
-        BX_FD_THIS devices->pic->trigger_irq(6);
+        BX_FD_THIS devices->pic->raise_irq(6);
         BX_FD_THIS s.pending_irq = 1;
         return;
       }
@@ -845,7 +845,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 
         BX_FD_THIS s.pending_command = 0;
         BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
-        BX_FD_THIS devices->pic->trigger_irq(6);
+        BX_FD_THIS devices->pic->raise_irq(6);
         BX_FD_THIS s.pending_irq = 1;
         return;
         }
@@ -1036,7 +1036,7 @@ bx_floppy_ctrl_c::timer()
       /* write ready, not busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | drive;
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       BX_FD_THIS s.pending_irq = 1;
       goto reset_changeline;
       break;
@@ -1046,7 +1046,7 @@ bx_floppy_ctrl_c::timer()
       /* write ready, not busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | drive;
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       BX_FD_THIS s.pending_irq = 1;
       goto reset_changeline;
       break;
@@ -1057,7 +1057,7 @@ bx_floppy_ctrl_c::timer()
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO;
       BX_FD_THIS s.status_reg0 = 0x20 | drive;
       BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       BX_FD_THIS s.pending_irq = 1;
       break;
 
@@ -1069,7 +1069,7 @@ bx_floppy_ctrl_c::timer()
       /* read ready, busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | drive;
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       BX_FD_THIS s.pending_irq = 1;
       break;
 
@@ -1077,7 +1077,7 @@ bx_floppy_ctrl_c::timer()
       reset(BX_RESET_SOFTWARE);
       BX_FD_THIS s.pending_command = 0;
       BX_FD_THIS s.status_reg0 = 0xc0;
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       BX_FD_THIS s.pending_irq = 1;
       break;
 
@@ -1132,7 +1132,7 @@ bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
         }
 
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
       }
     else { // more data to transfer
@@ -1198,7 +1198,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
       BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
       BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
       // 4 result bytes are unused
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       BX_FD_THIS s.pending_irq = 1;
       bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
       }
@@ -1229,7 +1229,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
 
     BX_FD_THIS s.pending_command = 0;
     BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
-    BX_FD_THIS devices->pic->trigger_irq(6);
+    BX_FD_THIS devices->pic->raise_irq(6);
     return;
     }
     floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
@@ -1258,7 +1258,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
         }
 
-      BX_FD_THIS devices->pic->trigger_irq(6);
+      BX_FD_THIS devices->pic->raise_irq(6);
       bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
       }
     else { // more data to transfer

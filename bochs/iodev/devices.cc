@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.19 2001-12-18 13:12:45 vruppert Exp $
+// $Id: devices.cc,v 1.20 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -105,7 +105,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.19 2001-12-18 13:12:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.20 2002-01-29 17:20:11 vruppert Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -301,18 +301,18 @@ bx_devices_c::timer()
 
 #if (BX_USE_NEW_PIT==0)
   if ( pit->periodic( TIMER_DELTA ) ) {
-    pic->trigger_irq(0);
+    // This is a hack to make the IRQ0 work
+    pic->lower_irq(0);
+    pic->raise_irq(0);
     }
 #endif
 
   retval = keyboard->periodic( TIMER_DELTA );
-  if (retval & 0x01) {
-    if (bx_dbg.keyboard)
-      BX_INFO(("keyboard: interrupt(1)"));
-    pic->trigger_irq(1);
-    }
+  if (retval & 0x01)
+    pic->raise_irq(1);
+
   if (retval & 0x02)
-    pic->trigger_irq(12);
+    pic->raise_irq(12);
 
 #if BX_SUPPORT_APIC
   // update local APIC timers

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.19 2002-01-26 12:03:55 vruppert Exp $
+// $Id: pic.cc,v 1.20 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -520,21 +520,49 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
   return;
 }
 
-// new IRQ signal handling routines (under construction)
+// new IRQ signal handling routines
 
   void
 bx_pic_c::lower_irq(unsigned irq_no)
 {
-  UNUSED(irq_no);
+  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
+    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
+    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 0;
+    BX_PIC_THIS s.master_pic.irr &= ~(1 << irq_no);
+    if ((BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr) == 0) {
+      BX_SET_INTR(0);
+      BX_PIC_THIS s.master_pic.INT = 0;
+    }
+  } else if ((irq_no > 7) && (irq_no <= 15) &&
+             (BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
+    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
+    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 0;
+    BX_PIC_THIS s.slave_pic.irr &= ~(1 << (irq_no - 8));
+    if ((BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr) == 0) {
+      BX_PIC_THIS s.slave_pic.INT = 0;
+      lower_irq(2);
+    }
+  }
 }
 
   void
 bx_pic_c::raise_irq(unsigned irq_no)
 {
-  UNUSED(irq_no);
+  if ((irq_no <= 7) && (!BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
+    BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
+    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 1;
+    BX_PIC_THIS s.master_pic.irr |= (1 << irq_no);
+    service_master_pic();
+  } else if ((irq_no > 7) && (irq_no <= 15) &&
+             (!BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
+    BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
+    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 1;
+    BX_PIC_THIS s.slave_pic.irr |= (1 << (irq_no - 8));
+    service_slave_pic();
+  }
 }
 
-// current IRQ handling routines
+// old IRQ handling routines (unused)
 
   void
 bx_pic_c::trigger_irq(unsigned irq_no)
@@ -695,9 +723,8 @@ bx_pic_c::service_slave_pic(void)
           BX_DEBUG(("slave: signalling IRQ(%u)",
             (unsigned) 8 + irq));
         BX_PIC_THIS s.slave_pic.INT = 1;
-        BX_PIC_THIS s.master_pic.irr |= 0x04; /* request IRQ 2 on master pic */
+        raise_irq(2); /* request IRQ 2 on master pic */
         BX_PIC_THIS s.slave_pic.irq = irq;
-        service_master_pic();
         return;
         } /* if (unmasked_requests & ... */
       } /* for (irq=7 ... */
@@ -723,6 +750,7 @@ bx_pic_c::IAC(void)
     }
   else { /* IRQ2 = slave pic IRQ8..15 */
     BX_PIC_THIS s.slave_pic.INT = 0;
+    BX_PIC_THIS s.master_pic.IRQ_line[2] = 0;
     irq    = BX_PIC_THIS s.slave_pic.irq;
     vector = irq + BX_PIC_THIS s.slave_pic.interrupt_offset;
     BX_PIC_THIS s.slave_pic.isr |= (1 << BX_PIC_THIS s.slave_pic.irq);

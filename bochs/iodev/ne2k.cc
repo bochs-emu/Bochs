@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.28 2002-01-25 20:31:00 vruppert Exp $
+// $Id: ne2k.cc,v 1.29 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.28 2002-01-25 20:31:00 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.29 2002-01-29 17:20:11 vruppert Exp $"));
 	// nothing for now
 }
 
@@ -207,7 +207,7 @@ bx_ne2k_c::write_cr(Bit32u value)
       BX_NE2K_THIS s.remote_bytes == 0) {
     BX_NE2K_THIS s.ISR.rdma_done = 1;
     if (BX_NE2K_THIS s.IMR.rdma_inte) {
-      BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+      BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
     }
   }
 }
@@ -306,7 +306,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
 	if (BX_NE2K_THIS s.remote_bytes == 0) {
 	    BX_NE2K_THIS s.ISR.rdma_done = 1;
 	    if (BX_NE2K_THIS s.IMR.rdma_inte) {
-		BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+		BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
 	    }
 	}
     break;
@@ -349,7 +349,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     if (BX_NE2K_THIS s.remote_bytes == 0) {
       BX_NE2K_THIS s.ISR.rdma_done = 1;
       if (BX_NE2K_THIS s.IMR.rdma_inte) {
-	  BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+	  BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
       }
     }
     break;
@@ -546,7 +546,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
               (BX_NE2K_THIS s.IMR.tx_inte << 1) |
               (BX_NE2K_THIS s.IMR.rx_inte));
     if (value == 0)
-      BX_NE2K_THIS devices->pic->untrigger_irq(BX_NE2K_THIS s.base_irq);
+      BX_NE2K_THIS devices->pic->lower_irq(BX_NE2K_THIS s.base_irq);
     break;
 
   case 0x8:  // RSAR0
@@ -947,7 +947,7 @@ bx_ne2k_c::tx_timer(void)
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
     BX_NE2K_THIS s.ISR.pkt_tx = 1;
-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
   }
   BX_NE2K_THIS s.tx_timer_active = 0;
 }
@@ -1226,7 +1226,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   BX_NE2K_THIS s.ISR.pkt_rx = 1;
 
   if (BX_NE2K_THIS s.IMR.rx_inte) {
-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
   }
 
 }
@@ -1234,7 +1234,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.28 2002-01-25 20:31:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.29 2002-01-29 17:20:11 vruppert Exp $"));
   BX_NE2K_THIS devices = d;
 
 

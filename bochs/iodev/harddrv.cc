@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.44 2002-01-27 21:58:41 vruppert Exp $
+// $Id: harddrv.cc,v 1.45 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.44 2002-01-27 21:58:41 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.45 2002-01-29 17:20:11 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -733,7 +733,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         BX_SELECTED_CONTROLLER.status.index_pulse_count = 0;
         }
       }
-      if (address == 0x1f7) BX_HD_THIS devices->pic->untrigger_irq(14);
+      if (address == 0x1f7) BX_HD_THIS devices->pic->lower_irq(14);
       goto return_value8;
       break;
 
@@ -2579,7 +2579,7 @@ bx_hard_drive_c::raise_interrupt()
 	    Bit32u irq = 14;  // always 1st IDE controller
 	    // for second controller, you would want irq 15
 		BX_DEBUG(("Raising interrupt %d {%s}", irq, DEVICE_TYPE_STRING));
-	    BX_HD_THIS devices->pic->trigger_irq(irq);
+	    BX_HD_THIS devices->pic->raise_irq(irq);
       } else {
 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
 		  BX_INFO(("Interrupt masked {%s}", DEVICE_TYPE_STRING));

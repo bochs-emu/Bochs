@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.16 2002-01-18 16:33:07 vruppert Exp $
+// $Id: parallel.cc,v 1.17 2002-01-29 17:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.16 2002-01-18 16:33:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.17 2002-01-29 17:20:11 vruppert Exp $"));
   BX_PAR_THIS devices = d;
 
   /* PARALLEL PORT 1 */
@@ -104,7 +104,7 @@ bx_parallel_c::virtual_printer(void)
       fflush (OUTPUT);
       }
     if (BX_PAR_THIS s.CONTROL.irq == 1) {
-      BX_PAR_THIS devices->pic->trigger_irq(7);
+      BX_PAR_THIS devices->pic->raise_irq(7);
       }
     BX_PAR_THIS s.STATUS.ack = 0;
     BX_PAR_THIS s.STATUS.busy = 1;
@@ -157,7 +157,7 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
 	  if (BX_PAR_THIS s.STATUS.ack == 0) {
 	    BX_PAR_THIS s.STATUS.ack = 1;
             if (BX_PAR_THIS s.CONTROL.irq == 1) {
-              BX_PAR_THIS devices->pic->untrigger_irq(7);
+              BX_PAR_THIS devices->pic->lower_irq(7);
 	      }
 	    }
 	  if (BX_PAR_THIS initmode == 1) {
