@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.11 2002-09-22 20:56:11 cbothamy Exp $
+ * $Id: bximage.c,v 1.12 2002-09-30 22:33:52 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -14,7 +14,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.11 2002-09-22 20:56:11 cbothamy Exp $";
+char *rcsid = "$Id: bximage.c,v 1.12 2002-09-30 22:33:52 bdenney Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -179,7 +179,7 @@ ask_string (char *prompt, char *the_default, char *out)
 }
 
 /* produce the image file */
-int make_image (int sec, char *filename)
+int make_image (Bit64u sec, char *filename)
 {
   FILE *fp;
   char buffer[1024];
@@ -219,7 +219,7 @@ int make_image (int sec, char *filename)
     /* temp <-- min(sec, 4194303)
      * 4194303 is (int)(0x7FFFFFFF/512)
      */
-    int temp = ((sec < 4194303) ? sec : 4194303);
+    long temp = ((sec < 4194303) ? sec : 4194303);
     fseek(fp, 512*temp, SEEK_CUR);
     sec -= temp;
   }
@@ -239,7 +239,7 @@ int make_image (int sec, char *filename)
 int main()
 {
   int hd;
-  int sectors = 0;
+  Bit64u sectors = 0;
   char filename[256];
   char bochsrc_line[256];
   print_banner ();
@@ -257,7 +257,7 @@ int main()
     printf ("  cyl=%d\n", cyl);
     printf ("  heads=%d\n", heads);
     printf ("  sectors per track=%d\n", spt);
-    printf ("  total sectors=%d\n", sectors);
+    printf ("  total sectors=%lld\n", sectors);
     printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
     if (ask_string ("\nWhat should I name the image?\n[c.img] ", "c.img", filename) < 0)
       fatal (EOF_ERR);
@@ -281,8 +281,8 @@ int main()
     printf ("  cyl=%d\n", cyl);
     printf ("  heads=%d\n", heads);
     printf ("  sectors per track=%d\n", spt);
-    printf ("  total sectors=%d\n", sectors);
-    printf ("  total bytes=%d\n", sectors*512);
+    printf ("  total sectors=%lld\n", sectors);
+    printf ("  total bytes=%lld\n", sectors*512);
     if (ask_string ("\nWhat should I name the image?\n[a.img] ", "a.img", filename) < 0)
       fatal (EOF_ERR);
     sprintf (bochsrc_line, "floppya: %s=\"%s\", status=inserted", name, filename);
@@ -292,7 +292,7 @@ int main()
   if (strlen (filename) < 1)
     fatal ("ERROR: Illegal filename");
   make_image (sectors, filename);
-  printf ("\nI wrote %d bytes to %s.\n", sectors*512, filename);
+  printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
   return 0;
