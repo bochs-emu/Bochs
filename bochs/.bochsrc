@@ -40,7 +40,7 @@
 #   svga           use SVGALIB library for Linux, allows graphics without X11
 #   term           text only, uses curses/ncurses library, cross platform
 #   rfb            provides an interface to AT&T's VNC viewer, cross platform
-#   wx             use wxWindows library, cross platform
+#   wx             use wxWidgets library, cross platform
 #   nogui          no display at all
 #
 # NOTE: if you use the "wx" configuration interface, you must also use
@@ -109,12 +109,12 @@ megs: 32
 #=======================================================================
 #vgaromimage: file=bios/VGABIOS-lgpl-latest
 #vgaromimage: file=bios/VGABIOS-elpin-2.40
-vgaromimage: file=$BXSHARE/VGABIOS-elpin-2.40
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
 #=======================================================================
 # FLOPPYA:
 # Point this to pathname of floppy image file or device
-# This should be of a bootable floppy(image/device) if you're 
+# This should be of a bootable floppy(image/device) if you're
 # booting from 'a' (or 'floppy').
 #
 # You can set the initial status of the media to 'ejected' or 'inserted'.
@@ -128,13 +128,13 @@ vgaromimage: file=$BXSHARE/VGABIOS-elpin-2.40
 #   floppya: 160k=path, status=inserted            (160K  5.25" floppy)
 #   floppya: image=path, status=inserted           (guess type from image size)
 #
-# The path should be the name of a disk image file.  On unix, you can use a raw
+# The path should be the name of a disk image file.  On Unix, you can use a raw
 # device name such as /dev/fd0 on Linux.  On win32 platforms, use drive letters
 # such as a: or b: as the path.  The parameter 'image' works with image files
 # only. In that case the size must match one of the supported types.
 #=======================================================================
 floppya: 1_44=/dev/fd0, status=inserted
-#floppya: file=../1.44, status=inserted
+#floppya: image=../1.44, status=inserted
 #floppya: 1_44=/dev/fd0H1440, status=inserted
 #floppya: 1_2=../1_2, status=inserted
 #floppya: 1_44=a:, status=inserted
@@ -308,7 +308,9 @@ floppy_bootsig_check: disabled=0
 #=======================================================================
 # LOG:
 # Give the path of the log file you'd like Bochs debug and misc. verbage
-# to be written to.  If you really don't want it, make it /dev/null. :^(
+# to be written to. If you don't use this option or set the filename to
+# '-' the output is written to the console. If you really don't want it,
+# make it "/dev/null" (Unix) or "nul" (win32). :^(
 #
 # Examples:
 #   log: ./bochs.out
@@ -511,7 +513,7 @@ floppy_command_delay: 500
 # the mouse by default, it is recommended that you leave it off.
 # You can also toggle the mouse usage at runtime (control key + middle
 # mouse button on X11, SDL, wxWidgets and Win32).
-# With the new mouse type option you can select the type of mouse to emulate.
+# With the mouse type option you can select the type of mouse to emulate.
 # The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 # on PS/2), 'serial', 'serial_wheel' (one com port requires setting
 # 'mode=mouse') and 'usb' (3-button mouse on USB port #1 - requires PCI and
@@ -633,16 +635,27 @@ keyboard_mapping: enabled=0, map=
 
 #=======================================================================
 # I440FXSUPPORT:
-# This option controls the usage of the i440FX PCI chipset. You can also
-# specify the devices connected to PCI slots. Up to 5 slots are available
-# now. These devices are currently supported: ne2k, pcivga, pcidev and
-# pcipnic. If Bochs is compiled with Cirrus SVGA support you'll have the
-# choice 'cirrus' instead of 'pcivga'.
+# This option controls the presence of the i440FX PCI chipset. You can
+# also specify the devices connected to PCI slots. Up to 5 slots are
+# available now. These devices are currently supported: ne2k, pcivga,
+# pcidev and pcipnic. If Bochs is compiled with Cirrus SVGA support
+# you'll have the choice 'cirrus' instead of 'pcivga'.
 #
 # Example:
 #   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
 #=======================================================================
 #i440fxsupport: enabled=1
+
+#=======================================================================
+# USB1:
+# This option controls the presence of the USB root hub which is a part
+# of the i440FX PCI chipset. If you enable USB and use the mouse option
+# 'type=usb' you'll have a 3-button mouse connected to port #1.
+#
+# Example:
+#   usb1: enabled=1, ioaddr=0xFF80
+#=======================================================================
+#usb1: enabled=1, ioaddr=0xFF80
 
 #=======================================================================
 # other stuff
@@ -651,7 +664,6 @@ keyboard_mapping: enabled=0, map=
 #cmosimage: cmos.img
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
-usb1: enabled=1, ioaddr=0xFF80, irq=10
 #text_snapshot_check: enable
 
 #-------------------------
