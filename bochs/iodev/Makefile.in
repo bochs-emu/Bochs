@@ -142,10 +142,7 @@ plugins: $(BX_IODEV_SO_OBJS:%.o=lib%.la)
 $(BX_OBJS): $(BX_INCLUDES)
 
 clean:
-	if test -x $(LIBTOOL); then \
-	  $(LIBTOOL) @RMCOMMAND@ *.lo *.o *.la *.a; \
-	fi
-	@RMCOMMAND@ *.lo *.o *.la *.a
+	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

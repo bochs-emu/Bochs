@@ -111,11 +111,7 @@ libwx.la: $(GUI_OBJS_WX:.o=.lo)
 plugins: $(GUI_SO_OBJS:%.o=lib%.la)
 
 clean:
-	if test -x $(LIBTOOL); then \
-	  $(LIBTOOL) @RMCOMMAND@ *.la *.a *.lo *.o; \
-	fi
-	@RMCOMMAND@ *.la *.a *.lo *.o; \
-
+	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile

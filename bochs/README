@@ -42,7 +42,6 @@ comments:
 
 TO DO:
 - convert remaining devices
-- make dist-clean doesn't delete the .libs directories and the *.lo files
 - --enable-all-optimizations fails at harddrv.cc
 
 - some plugins, such as the GUI, PIT, SB, and NE2000, have several different
