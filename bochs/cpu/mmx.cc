@@ -1809,14 +1809,14 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  if(MMXUW0(op1) == 0x80008000 && MMXUW0(op2) == 0x80008000) {
+  if(MMXUD0(op1) == 0x80008000 && MMXUD0(op2) == 0x80008000) {
     MMXUD0(result) = 0x80000000;
   }
   else {
     MMXUD0(result) = Bit32s(MMXSW0(op1))*Bit32s(MMXSW0(op2)) + Bit32s(MMXSW1(op1))*Bit32s(MMXSW1(op2));
   }
 
-  if(MMXUW2(op1) == 0x80008000 && MMXUW2(op2) == 0x80008000) {
+  if(MMXUD2(op1) == 0x80008000 && MMXUD2(op2) == 0x80008000) {
     MMXUD1(result) = 0x80000000;
   }
   else {
