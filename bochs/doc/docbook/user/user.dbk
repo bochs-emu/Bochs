@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.116 2003-02-27 14:13:51 cbothamy Exp $
+$Id: user.dbk,v 1.117 2003-04-28 12:26:01 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6883,9 +6883,31 @@ what happens when you run an existing installation for the first time in Bochs.
 
 <section id="win98method1"><title>Windows 98 Method 1: mcopy Windows 98 into Hard Disk Image (Linux Host)</title>
 <para>
-In this method, files will simply be copied from a functional Windows 98 partition.
+In this method, files will simply be copied from a functional Windows
+98 partition. For the impatient, here is a short summary:
 </para>
+
+<itemizedlist>
+<listitem><para>
+Remove unnecessary files from your Windows partition.
+</para></listitem>
+<listitem><para>
+Create a disk image with <command>bximage</command>.
+</para></listitem>
+<listitem><para>
+Update your <filename>.bochsrc</filename> configuration file for the diskimage.
+</para></listitem>
+<listitem><para>
+Use <command>mtools</command> to partition and format the image; the 
+copy all the windows files to the image.
+</para></listitem>
+<listitem><para>
+Finally, start the simulation and let Windows reconfigure itself.
+</para></listitem>
+</itemizedlist>
+
 </section>
+
 <section><title>Locating Your Partitions</title>
 <para>
 Make sure that your MS Windows partition is mounted.  Check
@@ -7268,6 +7290,42 @@ process could take up to 12 hours, so I recommended that you begin at the end of
 your day.  You could check on it once or twice when you get up for the midnight
 snack, and continue in the morning.
 </para>
+
+<para>
+Here's a summary for the impatient:
+</para>
+
+<itemizedlist>
+<listitem><para>
+Copy the cdimage to harddisk to increase speed.
+</para></listitem>
+<listitem><para>
+Create a disk image with <command>bximage</command>.
+</para></listitem>
+<listitem><para>
+Update your <filename>.bochsrc</filename> configuration file for the 
+diskimage and the cdimage. Make sure that to disable the 
+<command>IPS</command> parameter for full speed, unless you really need
+it to slow down the boot prompts.
+</para></listitem>
+<listitem><para>
+Boot from CD, then use <command>fdisk</command> to partition the image
+and <command>format c: /s</command> to format it.
+</para></listitem>
+<listitem><para>
+Start the installation with <command>setup</command> from the commandline.
+Enter information as necessary.
+</para></listitem>
+<listitem><para>
+You can either use the keyboard only to give information, or enable and
+disable the mouse with the middle button or <keysym>F12</keysym>.
+</para></listitem>
+<listitem><para>
+When there are CPU panics, choose <command>alwayscont</command> to ignore
+them. Amazingly, the install will work in spite of them.
+</para></listitem>
+</itemizedlist>
+
 </section>
 
 <section id="makewin98image"><title>Saving Your Windows 98 CD as a Disk
@@ -7444,9 +7502,11 @@ Microsoft Windows 98 CD-ROM Startu Menu
 Enter your choice: _
 </programlisting>
 
+<tip>
+
 <para>
-If you are not given enough
-time to make this choice, close Bochs, and add the following line to your .bochsrc:
+If you are not given enough time to make this choice, close Bochs, and
+add the following line to your <filename>.bochsrc</filename>:
 </para>
 
 <programlisting>
@@ -7459,6 +7519,13 @@ will keep you on your toes when it comes time to select the CD-ROM.
 Just be sure to comment this line out or delete it before you begin the actual
 installation, otherwise it will take too long to complete this project.
 </para>
+
+<para>
+However, if you can manage to press quickly any key before the time is up,
+you don't need to do use this trick.
+</para>
+</tip>
+
 
 <para>
 After you select the CD-ROM as your boot method, you will now see a menu with three choices:
@@ -7581,7 +7648,7 @@ A:/>D:
 
 D:/>cd WIN98
 
-D:/WIN98>format c:
+D:/WIN98>format c: /s
 
 WARNING, ALL DATA ON NON-REMOVABLE DISK
 DRIVE C: WILL BE LOST!
@@ -7619,13 +7686,9 @@ D:\WIN98>
 
 <para>
 It is now time to comment out the "ips: 1000000" line in your ~/win98/.bochsrc file.  Close Bochs
-by clicking the Bochs power button with your mouse (or Thinkpad pointer, which is what I have).
-Open up ~/win98/.bochsrc with your favorite editor and put a hash (#) mark in front of the ips line:
+by clicking the Bochs power button with your mouse.
+Open up ~/win98/.bochsrc with your favorite editor and put a hash (#) mark in front of the ips line.
 </para>
-
-<programlisting>
-# ips: 1000000
-</programlisting>
 
 <para>
 You are now ready to begin the installation.
@@ -7645,8 +7708,47 @@ D:\>cd WIN98
 D:\WIN98>setup
 </programlisting>
 
+<tip>
 <para>
-&FIXME; Finish method 2
+You can also use <command>setup /is</command> to bypass scandisk.
+</para>
+</tip>
+
+<para>
+Answer the question of the Windows 98 installer. You can either supply
+answers with the keyboard including the arrow keys, or activate the 
+mouse with the middle mouse button or <keysym>F12</keysym>.
+</para>
+
+<para>
+I choose a minimal installation to save space on the harddisk image,
+but others should probably also work.
+</para>
+
+<para>
+&FIXME; (Add additional detailed step-by-step information here if really
+necessary)
+</para>
+
+<para>
+At some stage during the installation, the simulation will stop with
+an audible beep and notify you about a CPU panic. Don't worry, choose
+<command>alwayscont</command> to ignore all such future panics (there
+will be several others). Windows will install properly in spite of those
+errors.
+</para>
+
+<para>
+If you want, you can create checkpoints of your harddisk image at 
+apropriate times (before a reboot, for example). Stop the simulation
+by clicking on the <command>Tool</command> icon, copy the image file,
+and continue by pressing return in the bochs terminal window.
+Optionally, <command>gzip</command> the copied disk image to conserve
+some space.
+</para>
+
+<para>
+&FIXME; Add more details, if needed.
 </para>
 
 </section>
@@ -7990,7 +8092,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.116 2003-02-27 14:13:51 cbothamy Exp $
+        $Id: user.dbk,v 1.117 2003-04-28 12:26:01 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
