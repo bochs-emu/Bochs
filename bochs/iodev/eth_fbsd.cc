@@ -253,13 +253,24 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
   txlog_txt = fopen ("ne2k-txdump.txt", "wb");
   if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
+  rxlog = fopen ("ne2k-rx.log", "wb");
+  if (!rxlog) BX_PANIC (("open ne2k-rx.log failed"));
+  rxlog_txt = fopen ("ne2k-rxdump.txt", "wb");
+  if (!rxlog_txt) BX_PANIC (("open ne2k-rxdump.txt failed"));
   fprintf (txlog_txt, "null packetmover readable log file\n");
   fprintf (txlog_txt, "net IF = %s\n", netif);
   fprintf (txlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++) 
+  fprintf (rxlog_txt, "null packetmover readable log file\n");
+  fprintf (rxlog_txt, "net IF = %s\n", netif);
+  fprintf (rxlog_txt, "MAC address = ");
+  for (int i=0; i<6; i++)  {
     fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+    fprintf (rxlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  }
   fprintf (txlog_txt, "\n--\n");
   fflush (txlog_txt);
+  fprintf (rxlog_txt, "\n--\n");
+  fflush (rxlog_txt);
 #endif
 }
 
