@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.31 2002-01-24 20:31:40 vruppert Exp $
+// $Id: rombios.c,v 1.32 2002-01-27 09:25:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -273,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.31 $";
-static char bios_date_string[] = "$Date: 2002-01-24 20:31:40 $";
+static char bios_cvs_version_string[] = "$Revision: 1.32 $";
+static char bios_date_string[] = "$Date: 2002-01-27 09:25:42 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.31 2002-01-24 20:31:40 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.32 2002-01-27 09:25:42 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -4660,11 +4660,6 @@ post_default_ints:
   /* keyboard end of buffer pointer */
   mov  0x041C, bx
 
-  /* keyboard buffer */
-// for (i=0; i<16; i++)
-//    bx_mem.access_physical(0x41E + i*2, 2, BX_WRITE, &zero16);
-
-
   /* keyboard pointer to start of buffer */
   mov  bx, #0x001E
   mov  0x0480, bx
@@ -4676,26 +4671,20 @@ post_default_ints:
   /* (mch) Keyboard self-test */
   mov  al, #0xaa
   out  0x64, al
+kbd_wait1:
+  in   al, 0x64
+  test al, #0x01
+  jz   kbd_wait1
   in   al, 0x60
   cmp  al, #0x55
   je   keyboard_ok
   call _keyboard_panic
- keyboard_ok:
-
-
-#if BX_USE_PS2_MOUSE
-  in   al, 0xa1
-  and  al, #0xef
-  out  0xa1, al
-
-  // hack to tell CMOS & BIOS data area that we have a mouse
-
-  mov  al, #0x14
-  out  0x70, al
-  in   al, 0x71
-  or   al, #0x04
-  out  0x71, al
-#endif
+keyboard_ok:
+  mov  cx, 0x0100
+kbd_wait2:
+  nop
+  loop kbd_wait2
+  in   al, 0x64 ; read status to clear IRQ
 
   ;; mov CMOS Equipment Byte to BDA Equipment Word
   mov  ax, 0x0410
@@ -4814,7 +4803,11 @@ rom_scan_increment:
   out 0xa1, al
   mov  al, #0xb8
   out  0x21, AL ;master pic: unmask IRQ 0, 1, 2, 6
+#if BX_USE_PS2_MOUSE
   mov  al, #0x8f
+#else
+  mov  al, #0x9f
+#endif
   out  0xa1, AL ;slave  pic: unmask IRQ 12, 13, 14
 
   call _print_bios_banner
