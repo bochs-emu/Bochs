@@ -210,6 +210,9 @@
 #define BX_HAVE_MKSTEMP 0
 #define BX_HAVE_SYS_MMAN_H 0
 #define BX_HAVE_XPM_H 0
+#define BX_HAVE_LOCALTIME 0
+#define BX_HAVE_TIMEZONE 0
+#define BX_HAVE_DAYLIGHT 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
 // gui. If people try to enable it elsewhere, give a compile error after the
