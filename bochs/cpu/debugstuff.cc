@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.15 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: debugstuff.cc,v 1.16 2002-09-13 05:03:37 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -299,33 +299,7 @@ BX_CPU_C::dbg_query_pending(void)
   Bit32u
 BX_CPU_C::dbg_get_eflags(void)
 {
-  Bit32u val32;
-
-  val32 =
-    (BX_CPU_THIS_PTR get_CF()) |
-    (BX_CPU_THIS_PTR eflags.get_bit1 () << 1) |
-    ((BX_CPU_THIS_PTR get_PF()) << 2) |
-    (BX_CPU_THIS_PTR eflags.get_bit3 () << 3) |
-    ((BX_CPU_THIS_PTR get_AF()>0) << 4) |
-    (BX_CPU_THIS_PTR eflags.get_bit5 () << 5) |
-    ((BX_CPU_THIS_PTR get_ZF()>0) << 6) |
-    ((BX_CPU_THIS_PTR get_SF()>0) << 7) |
-    (BX_CPU_THIS_PTR get_TF () << 8) |
-    (BX_CPU_THIS_PTR get_IF () << 9) |
-    (BX_CPU_THIS_PTR get_DF () << 10) |
-    ((BX_CPU_THIS_PTR get_OF()>0) << 11) |
-    (BX_CPU_THIS_PTR get_IOPL () << 12) |
-    (BX_CPU_THIS_PTR get_NT () << 14) |
-    (BX_CPU_THIS_PTR eflags.get_bit15 () << 15) |
-    (BX_CPU_THIS_PTR get_RF () << 16) |
-    (BX_CPU_THIS_PTR get_VM () << 17);
-#if BX_CPU_LEVEL >= 4
-  val32 |= (BX_CPU_THIS_PTR get_AC () << 18);
-  //val32 |= (BX_CPU_THIS_PTR eflags.get_VIF () << 19);
-  //val32 |= (BX_CPU_THIS_PTR eflags.get_VIP () << 20);
-  val32 |= (BX_CPU_THIS_PTR get_ID () << 21);
-#endif
-  return(val32);
+  return(BX_CPU_THIS_PTR eflags.val32);
 }
 
 
