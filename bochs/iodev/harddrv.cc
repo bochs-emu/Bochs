@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.103 2003-07-28 18:52:14 vruppert Exp $
+// $Id: harddrv.cc,v 1.104 2003-07-29 16:08:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.103 2003-07-28 18:52:14 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.104 2003-07-29 16:08:54 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -646,7 +646,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       channel = 0;
       port = address - 0x03e0;
     }
-    }
+  }
 
 #if BX_PDC20230C_VLBIDE_SUPPORT
 // pdc20230c is only available for first ata channel
@@ -1245,7 +1245,8 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
   switch (port) {
     case 0x00: // 0x1f0
       if (io_len == 1) {
-        BX_PANIC(("byte IO write to 0x%04x", address));
+        BX_ERROR(("byte IO write to 0x%04x ignored", address));
+        return;
         }
       switch (BX_SELECTED_CONTROLLER(channel).current_command) {
         case 0x30: // WRITE SECTORS
