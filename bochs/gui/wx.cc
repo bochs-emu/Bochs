@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.11 2002-09-01 07:32:03 vruppert Exp $
+// $Id: wx.cc,v 1.12 2002-09-04 15:51:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -95,8 +95,9 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 	wxPaintDC dc(this);
 	//PrepareDC(dc);
 
+	IFDBG_VGA(wxLogDebug ("MyPanel::OnPaint trying to get lock. wxScreen=%p", wxScreen));
 	wxCriticalSectionLocker lock(wxScreen_lock);
-	IFDBG_VGA(wxLogDebug ("MyPanel::OnPaint called with wxScreen = %p", wxScreen));
+	IFDBG_VGA(wxLogDebug ("MyPanel::OnPaint got lock. wxScreen=%p", wxScreen));
 	if(wxScreen != NULL) {
 	  wxPoint pt = GetClientAreaOrigin();
 	  wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
@@ -610,7 +611,9 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
   wxScreenX = 640;
   wxScreenY = 480;
+  IFDBG_VGA(wxLogDebug ("MyPanel::specific_init trying to get lock. wxScreen=%p", wxScreen));
   wxCriticalSectionLocker lock(wxScreen_lock);
+  IFDBG_VGA(wxLogDebug ("MyPanel::specific_init got lock. wxScreen=%p", wxScreen));
   wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 
@@ -692,14 +695,18 @@ bx_gui_c::flush(void)
   void
 bx_gui_c::clear_screen(void)
 {
+  IFDBG_VGA(wxLogDebug ("MyPanel::clear_screen trying to get lock. wxScreen=%p", wxScreen));
   wxCriticalSectionLocker lock(wxScreen_lock);
+  IFDBG_VGA(wxLogDebug ("MyPanel::clear_screen got lock. wxScreen=%p", wxScreen));
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 }
 
 static void 
 UpdateScreen(char *newBits, int x, int y, int width, int height) 
 {
+	IFDBG_VGA(wxLogDebug ("MyPanel::UpdateScreen trying to get lock. wxScreen=%p", wxScreen));
 	wxCriticalSectionLocker lock(wxScreen_lock);
+	IFDBG_VGA(wxLogDebug ("MyPanel::UpdateScreen got lock. wxScreen=%p", wxScreen));
 	if(wxScreen != NULL) {
 		for(int i = 0; i < height; i++) {
 			for(int c = 0; c < width; c++) {
@@ -765,7 +772,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
 		      Bit16u cursor_state, unsigned nrows)
 {
-  IFDBG_VGA(wxLogDebug ("text_update"));
+	IFDBG_VGA(wxLogDebug ("text_update"));
 	Bit8u cs_start = (cursor_state >> 8) & 0x3f;
 	Bit8u cs_end = cursor_state & 0x1f;
 	unsigned char cChar;
@@ -840,7 +847,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 // ::DIMENSION_UPDATE()
 //
-// Called when the VGA mode changes it's X,Y dimensions.
+// Called from the simulator when the VGA mode changes it's X,Y dimensions.
 // Resize the window to this size, but you need to add on
 // the height of the headerbar to the Y value.
 //
@@ -849,22 +856,37 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
-  IFDBG_VGA (wxLogDebug ("dimension_update"));
-  wxCriticalSectionLocker lock(wxScreen_lock);
+  IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen));
+  wxScreen_lock.Enter ();
+  IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen));
   if (fheight > 0) {
-    if (fheight != 16) {
-      y = y * 16 / fheight;
-    }
+	if (fheight != 16) {
+	  y = y * 16 / fheight;
+	}
   }
   wxScreenX = x;
   wxScreenY = y;
   wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
   wxASSERT (wxScreen != NULL);
+  wxScreen_lock.Leave ();
+  IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update gave up lock. wxScreen=%p", wxScreen));
+  // Note: give up wxScreen_lock before calling SetClientSize.  I did
+  // this because I was sometimes seeing thread deadlock in win32, apparantly 
+  // related to wxStreen_lock.  The wxWindows GUI thread was sitting in OnPaint
+  // trying to get the wxScreen_lock, and the simulation thread was stuck in some
+  // native win32 function called by SetClientSize (below).  As with many
+  // thread problems, it happened sporadically so it's hard to prove that this
+  // really fixed it. -bbd
   
+  // this method is called from the simulation thread, so we must get the GUI
+  // thread mutex first to be safe.
+  wxMutexGuiEnter ();
   //theFrame->SetSize(-1, -1, wxScreenX + 6, wxScreenY + 100, 0);
   //wxSize size = theFrame->GetToolBar()->GetToolSize();
   theFrame->SetClientSize(wxScreenX, wxScreenY); // + size.GetHeight());
   //thePanel->MyRefresh ();
+  theFrame->Layout ();
+  wxMutexGuiLeave ();
 }
 
 
