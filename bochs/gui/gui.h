@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.30 2002-09-19 18:59:49 vruppert Exp $
+// $Id: gui.h,v 1.31 2002-09-21 19:38:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,7 +104,8 @@ private:
   unsigned user_bmap_id, user_hbar_id;
 
   unsigned char vga_charmap[0x2000];
-  Boolean charmap_changed[256];
+  Boolean charmap_updated;
+  Boolean char_changed[256];
   };
 
 

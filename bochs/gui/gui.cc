@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.47 2002-09-19 18:59:49 vruppert Exp $
+// $Id: gui.cc,v 1.48 2002-09-21 19:38:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -347,14 +347,17 @@ bx_gui_c::snapshot_handler(void)
   //FIXME
   char filename[BX_PATHNAME_LEN];
 #if BX_WITH_WX
-  int ret = SIM->ask_filename (filename, sizeof(filename), 
-    "Save snapshot as...", "snapshot.txt", 
+  int ret = SIM->ask_filename (filename, sizeof(filename),
+    "Save snapshot as...", "snapshot.txt",
 	bx_param_string_c::BX_SAVE_FILE_DIALOG);
-  if (ret < 0) return;  // cancelled
+  if (ret < 0) { // cancelled
+    free(text_snapshot);
+    return;
+  }
 #else
   strcpy (filename, "snapshot.txt");
 #endif
-  FILE *fp = fopen(filename, "w");
+  FILE *fp = fopen(filename, "wb");
   fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
   fclose(fp);
   free(text_snapshot);
@@ -468,7 +471,7 @@ bx_gui_c::mouse_enabled_changed (Boolean val)
   mouse_enabled_changed_specific (val);
 }
 
-void 
+void
 bx_gui_c::init_signal_handlers ()
 {
 #if BX_GUI_SIGHANDLER
@@ -485,12 +488,14 @@ bx_gui_c::init_signal_handlers ()
 bx_gui_c::set_text_charmap(Bit8u *fbuffer)
 {
   memcpy(& BX_GUI_THIS vga_charmap, fbuffer, 0x2000);
-  for (unsigned i=0; i<256; i++) BX_GUI_THIS charmap_changed[i] = 1;
+  for (unsigned i=0; i<256; i++) BX_GUI_THIS char_changed[i] = 1;
+  BX_GUI_THIS charmap_updated = 1;
 }
 
   void
 bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
 {
   BX_GUI_THIS vga_charmap[address] = data;
-  BX_GUI_THIS charmap_changed[address >> 5] = 1;
+  BX_GUI_THIS char_changed[address >> 5] = 1;
+  BX_GUI_THIS charmap_updated = 1;
 }
