@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.47 2002-03-11 15:04:58 bdenney Exp $
+// $Id: keyboard.cc,v 1.48 2002-03-11 16:25:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.47 2002-03-11 15:04:58 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.48 2002-03-11 16:25:52 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.47 2002-03-11 15:04:58 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.48 2002-03-11 16:25:52 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -626,7 +626,9 @@ bx_keyb_c::service_paste_buf ()
 
 // paste_bytes schedules an arbitrary number of ASCII characters to be
 // inserted into the hardware queue as it become available.  Any previous
-// paste which is still in progress will be thrown out.
+// paste which is still in progress will be thrown out.  BYTES is a pointer
+// to a region of memory containing the chars to be pasted. When the paste
+// is complete, the keyboard code will call free(BYTES).
 void
 bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
 {
