@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.210 2005-03-25 21:33:47 kevinlawton Exp $
+// $Id: cpu.h,v 1.211 2005-03-29 21:37:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -329,10 +329,10 @@
 #endif
 
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0
-#define BX_MODE_IA32_PROTECTED  0x1   // CR0.PE=1, EFLAGS.VM=0
-#define BX_MODE_IA32_V8086      0x2   // CR0.PE=1, EFLAGS.VM=1
-#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 0, EFER.LME = 1
-#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, EFER.LME = 1
+#define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1
+#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0
+#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 0, EFER.LME = 1, CR0.PE=1
+#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, EFER.LME = 1, CR0.PE=1
 
 #if BX_SUPPORT_X86_64
 #define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -2941,7 +2941,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void)
 
 BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
 {
-  return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_PROTECTED);
+  return (BX_CPU_THIS_PTR cpu_mode >= BX_MODE_IA32_PROTECTED);
 }
 
     BX_CPP_INLINE void
