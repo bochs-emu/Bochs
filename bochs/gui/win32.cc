@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.79 2004-02-23 16:33:52 vruppert Exp $
+// $Id: win32.cc,v 1.80 2004-02-24 19:21:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -573,10 +573,9 @@ void terminateEmul(int reason) {
 
 void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
                                    tilewidth, unsigned tileheight,
-                                   unsigned headerbar_y) {
-  char *ptr;
-  char string[512];
-  int i, string_i;
+                                   unsigned headerbar_y)
+{
+  int i;
 
   put("WGUI");
   static RGBQUAD black_quad={ 0, 0, 0, 0};
@@ -657,20 +656,13 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     }
 
   // parse win32 specific options
-  if (argc == 2) {
-    ptr = strtok(argv[1], ",");
-    while (ptr) {
-      string_i = 0;
-      for (i=0; i<strlen(ptr); i++) {
-        if (!isspace(ptr[i])) string[string_i++] = ptr[i];
-      }
-      string[string_i] = '\0';
-      if (!strcmp(string, "legacyF12")) {
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!strcmp(argv[i], "legacyF12")) {
         legacyF12 = TRUE;
       } else {
-        BX_PANIC(("Unknown win32 option '%s'", string));
+        BX_PANIC(("Unknown win32 option '%s'", argv[i]));
       }
-      ptr = strtok(NULL, ",");
     }
   }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.97 2004-02-22 18:51:38 vruppert Exp $
+// $Id: vga.cc,v 1.98 2004-02-24 19:21:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -121,13 +121,15 @@ bx_vga_c::~bx_vga_c(void)
   void
 bx_vga_c::init(void)
 {
-  unsigned i;
+  unsigned i,string_i;
   unsigned x,y;
 #if BX_SUPPORT_VBE  
   Bit16u max_xres, max_yres, max_bpp;
 #endif
   int argc;
-  char *argv[2];
+  char *argv[16];
+  char *ptr;
+  char string[512];
 
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
@@ -241,14 +243,37 @@ bx_vga_c::init(void)
     for (x=0; x<640/X_TILESIZE; x++)
       SET_TILE_UPDATED (x, y, 0);
 
-  {
+  memset(argv, 0, sizeof(argv));
   argc = 1;
   argv[0] = "bochs";
   if (strlen(bx_options.Odisplaylib_options->getptr())) {
-    argc = 2;
-    argv[1] = bx_options.Odisplaylib_options->getptr();
+    ptr = strtok(bx_options.Odisplaylib_options->getptr(), ",");
+    while (ptr) {
+      string_i = 0;
+      for (i=0; i<strlen(ptr); i++) {
+        if (!isspace(ptr[i])) string[string_i++] = ptr[i];
+      }
+      string[string_i] = '\0';
+      if (argv[argc] != NULL) {
+        free(argv[argc]);
+        argv[argc] = NULL;
+      }
+      if (argc < 16) {
+        argv[argc++] = strdup(string);
+      } else {
+        BX_PANIC (("too many parameters, max is 16\n"));
+      }
+      ptr = strtok(NULL, ",");
+    }
   }
   bx_gui->init(argc, argv, BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
+  for (i = 1; i < 16; i++)
+  {
+    if ( argv[i] != NULL )
+    {
+        free(argv[i]);
+        argv[i] = NULL;
+    }
   }
 
   BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));
