@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.17 2004-01-15 02:08:37 danielg4 Exp $
+// $Id: memory.h,v 1.18 2004-06-06 17:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@
 // alignment of memory vector, must be a power of 2
 #define BX_MEM_VECTOR_ALIGN 4096
 
-typedef bool (*memory_handler_t)(unsigned long addr, unsigned long len, void *data, void *param);
+typedef bx_bool (*memory_handler_t)(unsigned long addr, unsigned long len, void *data, void *param);
 
 struct memory_handler_struct {
 	struct memory_handler_struct *next;

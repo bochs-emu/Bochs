@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.42 2004-01-15 02:08:37 danielg4 Exp $
+// $Id: misc_mem.cc,v 1.43 2004-06-06 17:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,7 +135,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.42 2004-01-15 02:08:37 danielg4 Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.43 2004-06-06 17:01:19 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -424,7 +424,7 @@ BX_MEM_C::registerMemoryHandlers(memory_handler_t read_handler, void *read_param
 		return false;
 	if (!write_handler)
 		return false;
-	for (int page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+	for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
 		struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
 		memory_handler->next = memory_handlers[page_idx];
 		memory_handlers[page_idx] = memory_handler;
@@ -444,7 +444,7 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
 		unsigned long begin_addr, unsigned long end_addr)
 {
 	bx_bool ret = true;
-	for (int page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+	for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
 		struct memory_handler_struct *memory_handler = memory_handlers[page_idx];
 		struct memory_handler_struct *prev = NULL;
 		while (memory_handler && 

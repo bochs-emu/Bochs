@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.28 2004-01-15 02:08:35 danielg4 Exp $
+// $Id: memory.cc,v 1.29 2004-06-06 17:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -181,35 +181,6 @@ inc_one:
 #endif
 
 
-#if BX_SUPPORT_VBE
-    // Check VBE LFB support
-    
-    if ((a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS) &&
-        (a20addr <  (VBE_DISPI_LFB_PHYSICAL_ADDRESS +  VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)))
-    {
-      for (i = 0; i < len; i++) {
-        
-        //if (a20addr < BX_MEM_THIS len) {
-          //vector[a20addr] = *data_ptr;
-          //BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          DEV_vga_mem_write(a20addr, *data_ptr);
-        //  }
-        
-        // otherwise ignore byte, since it overruns memory
-        addr++;
-        a20addr = (addr);
-#ifdef BX_LITTLE_ENDIAN
-        data_ptr++;
-#else // BX_BIG_ENDIAN
-        data_ptr--;
-#endif
-      }
-      return;
-    }
-    
-#endif    
- 
-
 #if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;
     bx_generic_apic_c *ioapic = bx_devices.ioapic;
@@ -372,34 +343,6 @@ inc_one:
 #else // BX_BIG_ENDIAN
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
-
-#if BX_SUPPORT_VBE
-    // Check VBE LFB support
-    
-    if ((a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS) &&
-        (a20addr <  (VBE_DISPI_LFB_PHYSICAL_ADDRESS +  VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)))
-    {
-      for (i = 0; i < len; i++) {
-        
-        //if (a20addr < BX_MEM_THIS len) {
-          //vector[a20addr] = *data_ptr;
-          //BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          *data_ptr = DEV_vga_mem_read(a20addr);
-        //  }
-        
-        // otherwise ignore byte, since it overruns memory
-        addr++;
-        a20addr = (addr);
-#ifdef BX_LITTLE_ENDIAN
-        data_ptr++;
-#else // BX_BIG_ENDIAN
-        data_ptr--;
-#endif
-      }
-      return;
-    }
-    
-#endif    
 
 
 #if BX_SUPPORT_APIC

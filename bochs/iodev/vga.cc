@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.102 2004-05-04 20:41:52 vruppert Exp $
+// $Id: vga.cc,v 1.103 2004-06-06 17:01:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -307,6 +307,9 @@ bx_vga_c::init(void)
     DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
   }    
 #endif
+  DEV_register_memory_handlers(vbe_mem_read_handler, theVga, vbe_mem_write_handler,
+                               theVga, VBE_DISPI_LFB_PHYSICAL_ADDRESS,
+                               VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
   BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
   BX_VGA_THIS s.vbe_xres=640;
   BX_VGA_THIS s.vbe_yres=480;
@@ -2538,6 +2541,29 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 
 #if BX_SUPPORT_VBE
+  bx_bool
+bx_vga_c::vbe_mem_read_handler(unsigned long addr, unsigned long len,
+                               void *data, void *param)
+{
+  Bit8u *data_ptr;
+
+#ifdef BX_LITTLE_ENDIAN
+  data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    *data_ptr = vbe_mem_read(addr);
+    addr++;
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
+  }
+  return 1;
+}
+
   Bit8u  BX_CPP_AttrRegparmN(1)
 bx_vga_c::vbe_mem_read(Bit32u addr)
 {
@@ -2559,6 +2585,29 @@ bx_vga_c::vbe_mem_read(Bit32u addr)
     return 0;
 
   return (BX_VGA_THIS s.vbe_memory[offset]);
+}
+
+  bx_bool
+bx_vga_c::vbe_mem_write_handler(unsigned long addr, unsigned long len,
+                                void *data, void *param)
+{
+  Bit8u *data_ptr;
+
+#ifdef BX_LITTLE_ENDIAN
+  data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    vbe_mem_write(addr, *data_ptr);
+    addr++;
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
+  }
+  return 1;
 }
 
   void BX_CPP_AttrRegparmN(2)
