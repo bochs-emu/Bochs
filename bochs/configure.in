@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.244 2004-01-29 17:49:02 mcb30 Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.245 2004-01-29 19:28:46 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2232,6 +2232,9 @@ if test "$display_libs" = " wxWindows"; then
   AC_MSG_RESULT(wxWindows)
   AC_DEFINE(BX_DEFAULT_CONFIG_INTERFACE, "wx")
   AC_DEFINE(BX_DEFAULT_DISPLAY_LIBRARY, "wx")
+  AC_DEFINE(BX_USE_TEXTCONFIG, 0)
+else
+  AC_DEFINE(BX_USE_TEXTCONFIG, 1)
 fi
 
 if test "$bx_plugins" = 1; then
