@@ -609,6 +609,23 @@ Example:
   private_colormap: enabled=1
 
 .TP
+.I "i440fxsupport:"
+Enables limited i440fx PCI chipset support.
+
+Example:
+  i440fxsupport: enabled=1
+
+.TP
+.I "time0:"
+Specifies the start (boot) time of the virtual machine. Use a
+time value as returned by the time(2) system call. Time
+equal to 1 is a special case which starts the virtual machine at the
+current time of the simulator host.
+
+Example:
+  time0: 938581955
+
+.TP
 .I "ne2k:"
 Defines the characteristics of an attached ne2000 isa card :
    ioaddr=IOADDR,
