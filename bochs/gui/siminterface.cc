@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.52 2002-09-05 07:01:29 bdenney Exp $
+// $Id: siminterface.cc,v 1.53 2002-09-05 15:51:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -424,6 +424,7 @@ bx_real_sim_c::periodic ()
   delete tick;
   if (retcode < 0) {
     BX_INFO (("Bochs thread has been asked to quit."));
+    bx_atexit ();
     quit_sim (0);
   }
 #if 0

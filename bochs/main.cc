@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.137 2002-09-05 07:48:38 bdenney Exp $
+// $Id: main.cc,v 1.138 2002-09-05 15:51:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1477,7 +1477,7 @@ bx_init_hardware()
   BX_DEBUG(("bx_init_hardware is setting signal handlers"));
 // if not using debugger, then we can take control of SIGINT.
 // If using debugger, it needs control of this.
-#if !BX_DEBUGGER /* && !BX_WITH_WX  seems like an improvement */
+#if !BX_DEBUGGER
   signal(SIGINT, bx_signal_handler);
 #endif
 
@@ -1548,9 +1548,21 @@ bx_atexit(void)
 #endif
 
 #if BX_PCI_SUPPORT
-    if (bx_options.Oi440FXSupport->get ()) {
-      bx_devices.pci->print_i440fx_state();
-      }
+  if (bx_options.Oi440FXSupport->get ()) {
+    bx_devices.pci->print_i440fx_state();
+    }
+#endif
+
+  // restore signal handling to defaults
+#if !BX_DEBUGGER
+  BX_INFO (("restoring default signal behavior"));
+  signal(SIGINT, SIG_DFL);
+#endif
+
+#if BX_SHOW_IPS
+#ifndef __MINGW32__
+  signal(SIGALRM, SIG_DFL);
+#endif
 #endif
 	return 0;
 }
