@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.38 2002-09-22 02:42:07 bdenney Exp $
+// $Id: wxdialog.h,v 1.39 2002-09-22 04:52:55 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -680,6 +680,7 @@ public:
   void Execute (bool clearCommand);
   void AppendCommand (const char *);
   void AppendText (wxString text);
+  void CopyParamToGui () { /* empty for now */ }
 DECLARE_EVENT_TABLE()
 };
 
