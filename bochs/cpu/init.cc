@@ -38,6 +38,9 @@ BX_CPU_C::BX_CPU_C(BX_MEM_C *addrspace)
 {
   // BX_CPU_C constructor
 
+  INTR = 0;
+  local_apic.init ();
+
   bx_printf("(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
@@ -660,5 +663,6 @@ BX_CPU_C::sanity_checks(void)
   void
 BX_CPU_C::set_INTR(Boolean value)
 {
+  this->INTR = value;
   BX_CPU_THIS_PTR async_event = 1;
 }
