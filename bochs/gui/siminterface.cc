@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.1 2001-06-24 06:25:00 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.2 2001-06-24 15:03:24 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -69,8 +69,8 @@ bx_real_sim_c::get_param (bx_id id)
   BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
   int index = (int)id - BXP_NULL;
   bx_param_c *retval = param_registry[index];
-  if (!retval)
-    BX_PANIC (("get_param can't find id %u", id));
+  if (!retval) 
+    BX_INFO (("get_param can't find id %u", id));
   return retval;
 }
 
@@ -101,13 +101,14 @@ bx_real_sim_c::get_param_string (bx_id id) {
   return NULL;
 }
 
-void init_siminterface ()
+void siminterface_init ()
 {
   siminterface_log = new logfunctions ();
   siminterface_log->setprefix ("CTRL");
   siminterface_log->settype(CTRLLOG);
   if (SIM == NULL) 
     SIM = new bx_real_sim_c();
+  bx_init_before_control_panel ();
 }
 
 bx_simulator_interface_c::bx_simulator_interface_c ()
@@ -125,13 +126,19 @@ bx_real_sim_c::bx_real_sim_c ()
   init_done = 0;
   registry_alloc_size = BXP_THIS_IS_THE_LAST - BXP_NULL;
   param_registry = new bx_param_c*  [registry_alloc_size];
+  for (int i=0; i<registry_alloc_size; i++)
+    param_registry[i] = NULL;
 }
 
 int
 bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
 {
+  if (id == BXP_NULL) return 0;
   BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
   int index = (int)id - BXP_NULL;
+  if (this->param_registry[index] != NULL) {
+    BX_INFO (("register_param is overwriting parameter id %d", id));
+  }
   this->param_registry[index] = it;
   return 0;
 }

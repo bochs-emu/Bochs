@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.1 2001-06-24 06:25:00 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.2 2001-06-24 15:03:24 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -96,7 +96,6 @@ typedef enum {
 
 typedef enum {
   BXT_OBJECT = 201,
-  BXT_NODE,
   BXT_PARAM,
   BXT_PARAM_NUM,
   BXT_PARAM_BOOL,
@@ -164,6 +163,8 @@ public:
   Bit32s get ();
   void set (Bit32s val);
   void set_base (int base) { this->base = base; }
+  Bit32s get_min () { return min; }
+  Bit32s get_max () { return max; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -191,6 +192,7 @@ public:
       char **choices,
       Bit32s initial_val,
       Bit32s value_base = 0);
+  char *get_choice (int n) { return choices[n]; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -314,6 +316,7 @@ struct bx_cdrom_options
 
 
 ////////////////////////////////////////////////////////////////////
+extern int bx_main (int argc, char *argv[]);
 
 class bx_simulator_interface_c {
 public:
@@ -356,4 +359,5 @@ public:
 
 extern bx_simulator_interface_c *SIM;
 
-extern void init_siminterface ();
+extern void siminterface_init ();
+extern int bx_continue_after_control_panel (int argc, char *argv[]);
