@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.189 2002-12-13 20:37:37 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.190 2002-12-13 22:02:05 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -40,6 +40,7 @@ fi
 # into the configure.in file, since people will want to be able to change
 # those settings by defining CFLAGS and CXXFLAGS before running configure.
 NO_LT=0
+need_dlcompat_for_plugins=0
 case "$target" in
   *-pc-windows* | *-pc-winnt*)
     DEFAULT_GUI=win32                 # default to win32 gui
@@ -60,6 +61,7 @@ case "$target" in
   *-macosx* | *-darwin*)
     ADD_FLAGS="-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh"      # required for macosx compile
     DEFAULT_GUI=carbon                # default to carbon
+    need_dlcompat_for_plugins=1
     ;;
   *-macos*)
     DEFAULT_GUI=macos                 # macos defaults to macos
@@ -482,6 +484,22 @@ AC_SUBST(DEFINE_PLUGIN_PATH)
 # objs list, according to which display libraries are enabled.
 IODEV_NON_PLUGIN_OBJS=$GUI_NON_PLUGIN_OBJS
 IODEV_PLUGIN_OBJS=$GUI_PLUGIN_OBJS
+
+# on MacOSX if they enabled plugins, make sure that dlopen() was found.
+# It is provided by a library called dlcompat.
+if test "$bx_plugins" = 1 -a "$need_dlcompat_for_plugins" = 1; then
+  have_dlopen=0
+  AC_CHECK_LIB(dl, dlopen, [have_dlopen=1])
+  AC_MSG_CHECKING(if you have dlcompat, required for MacOSX plugins)
+  if test "$have_dlopen" = 0; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR([To use plugins on MacOSX you must use a library called dlcompat.  The configure script was not able to find dlcompat.  If it is already installed then you must set up your environment variables to point to it, as is done in .conf.macosx.  If you cannot resolve this, you should turn off plugins.])
+  else
+    AC_MSG_RESULT(yes)
+  fi
+fi
+
+
 
 AC_MSG_CHECKING(for number of processors)
 AC_ARG_ENABLE(processors,
