@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.14 2002-09-05 06:08:47 bdenney Exp $
+// $Id: wx.cc,v 1.15 2002-09-05 13:38:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -40,6 +40,7 @@
 #include <wx/wx.h>
 #endif
 #include <wx/image.h>
+#include <wx/clipbrd.h>
 
 #include "bochs.h"
 #include "gui/icon_bochs.h"
@@ -627,6 +628,10 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
   wxTileX = tilewidth;
   wxTileY = tileheight;
+
+  // load keymap tables
+  if(bx_options.keyboard.OuseMapping->get())
+    bx_keymap.loadKeymap(NULL);
 }
 
 // ::HANDLE_EVENTS()
@@ -995,17 +1000,42 @@ bx_gui_c::mouse_enabled_changed_specific (Boolean val)
   int
 bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
-  UNUSED(bytes);
-  UNUSED(nbytes);
-  return 0;
+  int ret = 0;
+  wxMutexGuiEnter ();
+  if (wxTheClipboard->Open ()) {
+    if (wxTheClipboard->IsSupported (wxDF_TEXT)) {
+      wxTextDataObject data;
+      wxTheClipboard->GetData (data);
+      wxString str = data.GetText ();
+      int len = str.Len ();
+      Bit8u *buf = (Bit8u *) malloc (len);
+      memcpy (buf, str.c_str (), len);
+      *bytes = buf;
+      *nbytes = len;
+      ret = 1;
+      // buf will be free()d in bx_keyb_c::paste_bytes or 
+      // bx_keyb_c::service_paste_buf.
+    }
+    wxTheClipboard->Close ();
+  }
+  wxMutexGuiLeave ();
+  return ret;
 }
 
   int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
-  UNUSED(text_snapshot);
-  UNUSED(len);
-  return 0;
+  wxMutexGuiEnter ();
+  int ret = 0;
+  if (wxTheClipboard->Open ()) {
+    wxString string (text_snapshot, len);
+    wxTheClipboard->SetData (new wxTextDataObject (string));
+    wxTheClipboard->Close ();
+    wxMutexGuiLeave ();
+    ret = 1;
+  }
+  wxMutexGuiLeave ();
+  return ret;
 }
 
 

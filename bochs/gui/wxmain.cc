@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.35 2002-09-05 07:48:39 bdenney Exp $
+// $Id: wxmain.cc,v 1.36 2002-09-05 13:38:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -46,6 +46,7 @@
 #include <wx/wx.h>
 #endif
 #include <wx/image.h>
+#include <wx/clipbrd.h>
 
 #include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff
@@ -137,6 +138,7 @@ bool MyApp::OnInit()
   theFrame = frame;  // hack alert
   frame->Show( TRUE );
   SetTopWindow( frame );
+  wxTheClipboard->UsePrimarySelection (true);
   // if quickstart is enabled, kick off the simulation
   if (SIM->get_param_bool(BXP_QUICK_START)->get ()) {
     wxCommandEvent unusedEvent;
