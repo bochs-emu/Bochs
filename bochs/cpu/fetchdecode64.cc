@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.60 2004-05-03 17:58:36 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.61 2004-09-06 20:22:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,37 +53,9 @@
 ///////////////////////////
 
 
-
-// sign extended to osize:
-//   6a push ib
-//   6b imul gvevib
-//   70..7f jo..jnle
-//   83 G1 0..7 ADD..CMP Evib
-
-// is 6b imul_gvevib sign extended?  don't think
-//   I'm sign extending it properly in old decode/execute
-
-// check all the groups.  Make sure to add duplicates rather
-// than error.
-
-// mark instructions as changing control transfer, then
-// don't always load from fetch_ptr, etc.
-
-// cant use immediate as another because of Group3 where
-// some have immediate and some don't, and those won't
-// be picked up by logic until indirection.
-
-// get attr and execute ptr at same time
-
-// maybe move 16bit only i's like  MOV_EwSw, MOV_SwEw
-// to 32 bit modules.
-
-// use 0F as a prefix too?
-
 // UD2 opcode (according to Intel manuals):
 // Use the 0F0B opcode (UD2 instruction) or the 0FB9H opcode when deliberately 
 // trying to generate an invalid opcode exception (#UD).
-
 
 
 void BxResolveError(bxInstruction_c *);
@@ -2228,25 +2200,14 @@ another_byte:
           BX_INSTR_PREFIX_EXTEND8B(BX_CPU_ID);
 
           instruction->assertExtend8bit();
-          //BX_DEBUG (("REX byte = %02x",b1));
           if (b1 & 0x8) {
             instruction->assertOs64();
             instruction->assertOs32();
             offset = 512*2;
-            //BX_DEBUG ((" 64bit")):
             }
-          if (b1 & 0x4) {
-            rex_r = 8;
-            //BX_DEBUG((" reg+8"));
-            }
-          if (b1 & 0x2) {
-            rex_x = 8;
-            //BX_DEBUG((" index+8"));
-            }
-          if (b1 & 0x1) {
-            rex_b = 8;
-            //BX_DEBUG((" base+8"));
-            }
+          if (b1 & 0x4) rex_r = 8;
+          if (b1 & 0x2) rex_x = 8;
+          if (b1 & 0x1) rex_b = 8;
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
@@ -2362,9 +2323,7 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
       instruction->metaInfo |= (1<<22); // (modC0)
       goto modrm_done;
       }
-    if (rm != 4) {
-      rm |= rex_b;
-      }
+    if (rm != 4) rm |= rex_b;
     instruction->modRMForm.modRMData |= rm;
     if (instruction->as64L()) {
       // 64-bit addressing modes; note that mod==11b handled above
@@ -2638,8 +2597,7 @@ modrm_done:
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
         if (ilen < remain) {
-          Bit8s temp8s;
-          temp8s = *iptr;
+          Bit8s temp8s = *iptr;
           if (instruction->os32L())
             instruction->modRMForm.Id = (Bit32s) temp8s;
           else
@@ -2716,9 +2674,7 @@ modrm_done:
           iptr += 2;
           ilen += 2;
           }
-        else {
-          return(0);
-          }
+        else return(0);
         if (imm_mode == BxImmediate_Iw) break;
         if (ilen < remain) {
           instruction->IxIxForm.Ib2 = *iptr;
@@ -2730,8 +2686,7 @@ modrm_done:
         break;
       case BxImmediate_BrOff8:
         if (ilen < remain) {
-          Bit8s temp8s;
-          temp8s = *iptr;
+          Bit8s temp8s = *iptr;
           instruction->modRMForm.Id = temp8s;
           ilen++;
           }
