@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.86 2002-11-07 15:58:05 shap Exp $
+// $Id: dbg_main.cc,v 1.87 2002-11-15 22:11:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2681,7 +2681,7 @@ bx_dbg_dump_cpu_command(void)
 
 #if BX_PCI_SUPPORT
   if (bx_options.Oi440FXSupport->get ()) {
-    bx_devices.pci->print_i440fx_state();
+    DEV_pci_print_i440fx_state();
     }
 #endif
 

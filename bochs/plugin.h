@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.6 2002-11-13 18:39:35 vruppert Exp $
+// $Id: plugin.h,v 1.7 2002-11-15 22:11:23 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -155,6 +155,7 @@ extern "C" {
   (bx_devices.pluginPciBridge->register_pci_handlers(b,c,d,e,f))
 #define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
 #define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
+#define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()
 
 
 #if BX_HAVE_DLFCN_H
