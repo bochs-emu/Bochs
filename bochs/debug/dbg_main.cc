@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.47 2002-08-05 16:35:08 vruppert Exp $
+// $Id: dbg_main.cc,v 1.48 2002-08-27 20:09:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -380,7 +380,7 @@ process_sim2:
 
   // (mch) Moved from main.cc
   bx_devices.init(BX_MEM(0));
-  bx_devices.reset();
+  bx_devices.reset(BX_RESET_HARDWARE);
   SIM->set_init_done (1);
 
   bx_gui.init_signal_handlers ();
