@@ -51,12 +51,10 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # been synced yet.
 OBJS32 = \
 	init.o \
-	access.o \
-	cpu.o mmx.o resolve32.o fetchdecode.o \
+	cpu.o resolve32.o fetchdecode.o \
 	exception.o \
 	ctrl_xfer_pro.o \
 	flag_ctrl_pro.o \
-	io_pro.o \
 	protect_ctrl_pro.o \
 	segment_ctrl_pro.o \
 	stack_pro.o \
@@ -69,7 +67,6 @@ OBJS32 = \
 	mult32.o \
 	data_xfer32.o \
 	logical32.o \
-	ctrl_xfer32.o \
 	stack32.o \
 	shift32.o \
 	arith8.o \
@@ -78,12 +75,8 @@ OBJS32 = \
 	logical8.o \
 	ctrl_xfer8.o \
 	shift8.o \
-	resolve16.o \
 	arith16.o \
-	mult16.o \
 	data_xfer16.o \
-	logical16.o \
-	ctrl_xfer16.o \
 	stack16.o \
 	bit.o \
 	flag_ctrl.o \
@@ -91,16 +84,24 @@ OBJS32 = \
 	proc_ctrl.o \
 	protect_ctrl.o \
 	segment_ctrl.o \
-	soft_int.o \
 	string.o \
-	bcd.o \
 	$(EXT_DEBUG_OBJS) \
-	$(APIC_OBJS)
 
 # Objects which are synced between the cpu and cpu64 code and
 # are used for either compile.
 OBJSXX = \
+	access.o \
 	shift16.o \
+	logical16.o \
+	resolve16.o \
+	ctrl_xfer32.o \
+	ctrl_xfer16.o \
+	mmx.o \
+	soft_int.o \
+	io_pro.o \
+	$(APIC_OBJS) \
+	bcd.o \
+	mult16.o \
 	
 
 BX_INCLUDES = ../bochs.h ../config.h

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.16 2002-07-23 15:32:14 bdenney Exp $
+// $Id: apic.cc,v 1.17 2002-09-13 04:33:42 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -488,9 +488,9 @@ void bx_local_apic_c::startup_msg (Bit32u vector)
 {
   if (cpu->debug_trap & 0x80000000) {
     cpu->debug_trap &= ~0x80000000;
-    cpu->eip = 0;
+    cpu->dword.eip = 0;
     cpu->load_seg_reg (&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
-    BX_INFO(("%s started up at 0x%x by APIC", cpu->name, cpu->eip));
+    BX_INFO(("%s started up at 0x%x by APIC", cpu->name, cpu->dword.eip));
   } else {
     BX_INFO(("%s started up by APIC, but was not halted at the time", cpu->name));
   }
