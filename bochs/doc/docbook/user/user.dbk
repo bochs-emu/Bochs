@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.40 2002-04-18 01:33:36 bdenney Exp $
+$Id: user.dbk,v 1.41 2002-06-02 18:34:41 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1936,7 +1936,7 @@ turn it off.
       <entry>yes</entry>
       <entry>
       Enables text-mode configuration menus when you first start Bochs.  The
-      menus let you read in a bochsrc file, edit some options, and safe the new
+      menus let you read in a bochsrc file, edit some options, and save the new
       bochsrc before starting the simulation.  Also enables a runtime
       menu (controlled by a Config button on the Bochs display) which
       lets you change certain settings during simulation.  The control panel
@@ -2678,7 +2678,8 @@ This option prevents Bochs from creating mouse "events"  unless  a  mouse  is
 enabled.  The hardware emulation  itself is not disabled  by this. You  can
 turn the mouse on  by  setting enabled to  1,  or  turn  it  off  by  setting
 enabled to 0. Unless  you  have  a  particular reason  for enabling  the  mouse
-by  default, it is recommended that you leave it off.
+by default, it is recommended that you leave it off. You can also toggle the
+mouse usage at runtime (middle mouse button on X11 and SDL, F12 on Win32).
 </para>
 </section>
 
