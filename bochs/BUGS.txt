@@ -1,3 +1,15 @@
+Bugs fixed in bugfix-2001-04-09:
+- in soundwin.cc, arg 3 should be typecast to LPWAVEFORMATEX
+- in fpu_entry.c, Bryce mistyped his own initials!
+- in configure.in and configure, define good defaults for VC++
+   #define BX_64BIT_CONSTANTS_USE_LL 0
+   #define inline __inline
+   #define BX_NO_EMPTY_STRUCTS 1
+   #define BX_NO_ATTRIBUTES 1
+   #define BX_HAVE_HASH_MAP 0
+- in config.h.in, fixed typo in #error message
+
+
 Bugs fixed in bugfix-2001-04-06:
 
 (FIXED, patch #414360: update copyrights)
