@@ -1,0 +1,479 @@
+From darkelf@ukr.net Mon Jul 28 16:24:06 2003
+Date: Mon, 28 Jul 2003 12:25:46 +0300
+From: DarkElf <darkelf@ukr.net>
+To: Bryce Denney <bdenney@users.sourceforge.net>
+Subject: info ivt debugger command patch
+
+Hello Bryce,
+
+----------------------------------------------------------------------
+Patch name: patch.info_ivt_command
+Author:     Alexander Krisak
+Date:       28 july 2003
+Status:
+
+Detailed description:
+Here is some changes for the help command of debugger and
+implementation of info ivt command of debugger - information about
+interrupt vector table in real mode.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bochs/debug/dbg_main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/dbg_main.cc,v
+retrieving revision 1.100
+diff -u -r1.100 dbg_main.cc
+--- bochs/debug/dbg_main.cc     7 Jun 2003 19:16:53 -0000       1.100
++++ bochs/debug/dbg_main.cc     28 Jul 2003 09:05:45 -0000
+@@ -4772,19 +4772,96 @@
+          start_lina, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lina));
+ }
+ 
++/*form RB list*/
++static char* bx_dbg_ivt_desc(int intnum)
++{ char* ret = "";
++  switch (intnum)
++  { case 0x00 : ret = "DEVIDE ERROR"                        ; break;
++    case 0x01 : ret = "SINGLE STEP"                         ; break;
++    case 0x02 : ret = "NON-MASKABLE INTERRUPT"              ; break;
++    case 0x03 : ret = "BREAKPOINT"                          ; break;
++    case 0x04 : ret = "INT0 DETECTED OVERFLOW"              ; break;
++    case 0x05 : ret = "BOUND RANGE EXCEED"                  ; break;
++    case 0x06 : ret = "INVALID OPCODE"                      ; break;
++    case 0x07 : ret = "PROCESSOR EXTENSION NOT AVAILABLE"   ; break;
++    case 0x08 : ret = "IRQ0 - SYSTEM TIMER"                 ; break;
++    case 0x09 : ret = "IRQ1 - KEYBOARD DATA READY"          ; break;
++    case 0x0a : ret = "IRQ2 - LPT2"                         ; break;
++    case 0x0b : ret = "IRQ3 - COM2"                         ; break;
++    case 0x0c : ret = "IRQ4 - COM1"                         ; break;
++    case 0x0d : ret = "IRQ5 - FIXED DISK"                   ; break;
++    case 0x0e : ret = "IRQ6 - DISKETTE CONTROLLER"          ; break;
++    case 0x0f : ret = "IRQ7 - PARALLEL PRINTER"             ; break;
++    case 0x10 : ret = "VIDEO"                               ; break;
++    case 0x11 : ret = "GET EQUIPMENT LIST"                  ; break;
++    case 0x12 : ret = "GET MEMORY SIZE"                     ; break;
++    case 0x13 : ret = "DISK"                                ; break;
++    case 0x14 : ret = "SERIAL"                              ; break;
++    case 0x15 : ret = "SYSTEM"                              ; break;
++    case 0x16 : ret = "KEYBOARD"                            ; break;
++    case 0x17 : ret = "PRINTER"                             ; break;
++    case 0x18 : ret = "CASETTE BASIC"                       ; break;
++    case 0x19 : ret = "BOOTSTRAP LOADER"                    ; break;
++    case 0x1a : ret = "TIME"                                ; break;
++    case 0x1b : ret = "KEYBOARD - CONTROL-BREAK HANDLER"    ; break;
++    case 0x1c : ret = "TIME - SYSTEM TIMER TICK"            ; break;
++    case 0x1d : ret = "SYSTEM DATA - VIDEO PARAMETER TABLES"; break;
++    case 0x1e : ret = "SYSTEM DAYA - DISKETTE PARAMETERS"   ; break;
++    case 0x1f : ret = "SYSTEM DATA - 8x8 GRAPHICS FONT"     ; break;
++    default   : ret = ""                                    ; break;
++  }
++  return ret;
++}
++
++void
++bx_dbg_info_ivt_command(bx_num_range r)
++{ bx_dbg_cpu_t cpu;
++  int i;
++  unsigned char buff[4];
++  Bit16u seg;
++  Bit16u off;
++
++  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
++  
++  if ((cpu.cr0 & 1) == 0)
++  { if ((r.from == -1L) && (r.to == -1L))
++    { r.from = 0;
++      r.to = 255;
++    } 
++    else if (r.to == r.from)
++    { r.to = r.from + 1L;
++    }
++    for (i = r.from; i < r.to; i++)
++    { BX_MEM(simulator)->dbg_fetch_mem(i * 4, sizeof(buff), buff);
++#ifdef BX_LITTLE_ENDIAN
++      seg = *(Bit16u*)(&buff[2]);
++      off = *(Bit16u*)(&buff[0]);
++#else
++      seg = (buff[3] << 8) | buff[2];
++      off = (buff[1] << 8) | buff[0];
++#endif
++      dbg_printf("INT# %02x > %04X:%04X (%08X) %s\n", i, seg, off, (seg << 4) | off, bx_dbg_ivt_desc(i));
++    }
++  }
++  else
++    dbg_printf("cpu in protected mode, use info idt\n");
++
++  return;
++}
++
+ void
+ bx_dbg_help_command(char* command)
+ { char* p;
+ 
+   if (command == NULL)
+   {
+-    fprintf(stderr, "help - show list of debugger commands\n");
+-    fprintf(stderr, "help \"command\" - show short command description\n");
+-    fprintf(stderr, "debugger commands are:\n");
+-    fprintf(stderr, "help, quit, q, c, stepi, si, step, s, vbreak, v, lbreak, lb, pbreak, pb, break\n");
+-    fprintf(stderr, "b, delete, del, d, xp, x, setpmem, crc, info, set, dump_cpu, set_cpu, disas\n");
+-    fprintf(stderr, "disassemble, instrument, trace-on, trace-off, ptime, sb, sba, record, playback\n");
+-    fprintf(stderr, "print-stack, watch, unwatch, load-symbols, show, modebp\n");
++    dbg_printf("help - show list of debugger commands\n");
++    dbg_printf("help \"command\" - show short command description\n");
++    dbg_printf("debugger commands are:\n");
++    dbg_printf("help, quit, q, c, stepi, si, step, s, vbreak, v, lbreak, lb, pbreak, pb, break\n");
++    dbg_printf("b, delete, del, d, xp, x, setpmem, crc, info, set, dump_cpu, set_cpu, disas\n");
++    dbg_printf("disassemble, instrument, trace-on, trace-off, ptime, sb, sba, record, playback\n");
++    dbg_printf("print-stack, watch, unwatch, load-symbols, show, modebp\n");
+   }
+   else
+   {
+@@ -4794,7 +4871,7 @@
+     p = command;
+     for (; *p != 0 && *p != '\"'; p++); p++;
+ 
+-    fprintf(stderr, "help %s\n", p);
++    dbg_printf("help %s\n", p);
+ 
+     if (strcmp(p, "help") == 0)
+     { 
+@@ -4804,12 +4881,12 @@
+     if ((strcmp(p, "quit") == 0) ||
+         (strcmp(p, "q") == 0))
+     {
+-      fprintf(stderr, "%s - quit debugger and execution\n", p);
++      dbg_printf("%s - quit debugger and execution\n", p);
+     }
+     else
+     if (strcmp(p, "c") == 0)
+     {
+-      fprintf(stderr, "%s - continue executing\n", p);
++      dbg_printf("%s - continue executing\n", p);
+     }
+     else
+     if ((strcmp(p, "stepi") == 0) ||
+@@ -4817,19 +4894,19 @@
+         (strcmp(p, "si") == 0) ||
+        (strcmp(p, "s") == 0))
+     {
+-      fprintf(stderr, "%s [count] - execute count instructions, default is 1\n", p);
++      dbg_printf("%s [count] - execute count instructions, default is 1\n", p);
+     }
+     else
+     if ((strcmp(p, "vbreak") == 0) ||
+         (strcmp(p, "vb") == 0))
+     {
+-      fprintf(stderr, "%s seg:off - set a virtual address instruction breakpoint\n", p);
++      dbg_printf("%s seg:off - set a virtual address instruction breakpoint\n", p);
+     }
+     else
+     if ((strcmp(p, "lbreak") == 0) ||
+         (strcmp(p, "lb") == 0))
+     {
+-      fprintf(stderr, "%s addr - set a linear address instruction breakpoint\n", p);
++      dbg_printf("%s addr - set a linear address instruction breakpoint\n", p);
+     }
+     else
+     if ((strcmp(p, "pbreak") == 0) ||
+@@ -4837,168 +4914,170 @@
+        (strcmp(p, "pb") == 0) ||
+        (strcmp(p, "b") == 0))
+     {
+-       fprintf(stderr, "%s [*] addr - set a physical address instruction preakpoint\n", p);
++       dbg_printf("%s [*] addr - set a physical address instruction preakpoint\n", p);
+     }
+     else
+     if ((strcmp(p, "delete") == 0) ||
+         (strcmp(p, "del") == 0) ||
+        (strcmp(p, "d") == 0))
+     {
+-      fprintf(stderr, "%s n - delete a breakpoint\n", p);
++      dbg_printf("%s n - delete a breakpoint\n", p);
+     }
+     else
+     if (strcmp(p, "xp") == 0)
+     {
+-      fprintf(stderr, "%s /nuf addr - examine memory at physical address\n", p);
++      dbg_printf("%s /nuf addr - examine memory at physical address\n", p);
+     }
+     else
+     if (strcmp(p, "x") == 0)
+     {
+-      fprintf(stderr, "%s /nuf addr - examine memory at linear address\n", p);
++      dbg_printf("%s /nuf addr - examine memory at linear address\n", p);
+     }
+     else
+     if (strcmp(p, "setpmem") == 0)
+     {
+-      fprintf(stderr, "%s addr datasize val - set physical memory location of size datasize to value val\n", p);
++      dbg_printf("%s addr datasize val - set physical memory location of size datasize to value val\n", p);
+     }
+     else
+     if (strcmp(p, "crc") == 0)
+     {
+-      fprintf(stderr, "%s addr1 addr2 - show CRC for physical memory range addr1..addr2\n", p);
++      dbg_printf("%s addr1 addr2 - show CRC for physical memory range addr1..addr2\n", p);
+     }
+     else
+     if (strcmp(p, "info") == 0)
+     {
+-      fprintf(stderr, "%s break - show information about current breakpoint status\n", p);
+-      fprintf(stderr, "%s dirty - show physical pages dirtied (written to) since last display\n", p);
+-      fprintf(stderr, "%s program - execution status of the program\n", p);
+-      fprintf(stderr, "%s registers - list of CPU integer registers and their contents\n", p);
+-      fprintf(stderr, "%s fpu - list of FPU registers and their contents\n", p);
+-      fprintf(stderr, "%s idt - show interrupt descriptor table\n", p);
+-      fprintf(stderr, "%s gdt - show global descriptor table\n", p);
+-      fprintf(stderr, "%s tss - show task ???\n", p);
+-      fprintf(stderr, "%s cr - show CR0-4 registers\n", p);
+-      fprintf(stderr, "%s ne2000 - show NE2000 registers\n", p);
++      dbg_printf("%s break - show information about current breakpoint status\n", p);
++      dbg_printf("%s dirty - show physical pages dirtied (written to) since last display\n", p);
++      dbg_printf("%s program - execution status of the program\n", p);
++      dbg_printf("%s registers - list of CPU integer registers and their contents\n", p);
++      dbg_printf("%s fpu - list of FPU registers and their contents\n", p);
++      dbg_printf("%s idt - show interrupt descriptor table\n", p);
++      dbg_printf("%s ivt - show interrupt vector table\n", p);
++      dbg_printf("%s gdt - show global descriptor table\n", p);
++      dbg_printf("%s tss - show task ???\n", p);
++      dbg_printf("%s cr - show CR0-4 registers\n", p);
++      dbg_printf("%s ne2000 - show NE2000 registers\n", p);
+     }
+     else
+     if (strcmp(p, "set") == 0)
+     {
+-      fprintf(stderr, "%s $reg = val - change CPU register to value val\n", p);
+-      fprintf(stderr, "%s $disassemble_size = n - tell debugger what segment size [16|32] to use\n", p);
+-      fprintf(stderr, "when \"disassemble\" command is used. Default is 32\n");
+-      fprintf(stderr, "%s $auto_disassemble = n - cause debugger to disassemble current instruction\n", p);
+-      fprintf(stderr, "every time execution stops if n = 1. Default is 0\n");
++      dbg_printf("%s $reg = val - change CPU register to value val\n", p);
++      dbg_printf("%s $disassemble_size = n - tell debugger what segment size [16|32] to use\n", p);
++      dbg_printf("when \"disassemble\" command is used. Default is 32\n");
++      dbg_printf("%s $auto_disassemble = n - cause debugger to disassemble current instruction\n", p);
++      dbg_printf("every time execution stops if n = 1. Default is 0\n");
+     }
+     else
+     if (strcmp(p, "dump_cpu") == 0)
+     {
+-      fprintf(stderr, "%s - dump complete cpu state\n", p);
++      dbg_printf("%s - dump complete cpu state\n", p);
+     }
+     else
+     if (strcmp(p, "set_cpu") == 0)
+     {
+-      fprintf(stderr, "%s - set complete cpu state\n", p);
++      dbg_printf("%s - set complete cpu state\n", p);
+     }
+     else
+     if ((strcmp(p, "disassemble") == 0) ||
+         (strcmp(p, "disas") == 0))
+     {
+-      fprintf(stderr, "%s start end - disassemble instructions for given linear adress\n", p);
++      dbg_printf("%s start end - disassemble instructions for given linear adress\n", p);
+     }
+     else
+     if (strcmp(p, "instrument") == 0)
+     {
+-      fprintf(stderr, "%s start - calls bx_instr_start()\n", p);
+-      fprintf(stderr, "%s stop  - calls bx_instr_stop()\n", p);
+-      fprintf(stderr, "%s reset - calls bx_instr_reset()\n", p);
+-      fprintf(stderr, "%s print - calls bx_instr_print()\n", p);
++      dbg_printf("%s start - calls bx_instr_start()\n", p);
++      dbg_printf("%s stop  - calls bx_instr_stop()\n", p);
++      dbg_printf("%s reset - calls bx_instr_reset()\n", p);
++      dbg_printf("%s print - calls bx_instr_print()\n", p);
+     }
+     else
+     if (strcmp(p, "trace-on") == 0)
+     {
+-      fprintf(stderr, "%s - disassemble every executed instruction\n", p);
++      dbg_printf("%s - disassemble every executed instruction\n", p);
+     }
+     else
+     if (strcmp(p, "trace-off") == 0)
+     {
+-      fprintf(stderr, "%s - disable tracing\n", p);
++      dbg_printf("%s - disable tracing\n", p);
+     }
+     else
+     if (strcmp(p, "ptime") == 0)
+     {
+-      fprintf(stderr, "%s - print current time (number of ticks since start of simulation)\n", p);
++      dbg_printf("%s - print current time (number of ticks since start of simulation)\n", p);
+     }
+     else
+     if (strcmp(p, "sb") == 0)
+     {
+-      fprintf(stderr, "%s delta - insert a time breakpoint delta instruction into the future\n", p);
++      dbg_printf("%s delta - insert a time breakpoint delta instruction into the future\n", p);
+     }
+     else
+     if (strcmp(p, "sba") == 0)
+     {
+-      fprintf(stderr, "%s time - insert a time breakpoint at time\n", p);
++      dbg_printf("%s time - insert a time breakpoint at time\n", p);
+     }
+     else
+     if (strcmp(p, "record") == 0)
+     {
+-      fprintf(stderr, "%s filename - record console input to file filename\n", p);
++      dbg_printf("%s filename - record console input to file filename\n", p);
+     }
+     else
+     if (strcmp(p, "playback") == 0)
+     {
+-      fprintf(stderr, "%s filename - playbackconsole input from file filename\n", p);
++      dbg_printf("%s filename - playbackconsole input from file filename\n", p);
+     }
+     else
+     if (strcmp(p, "print-stack") == 0)
+     {
+-      fprintf(stderr, "%s [num_words] - print the num_words top 16 bit words on the stack\n", p);
++      dbg_printf("%s [num_words] - print the num_words top 16 bit words on the stack\n", p);
+     }
+     else
+     if (strcmp(p, "watch") == 0)
+     {
+-      fprintf(stderr, "%s - print current watch point status\n", p);
+-      fprintf(stderr, "%s stop - stop simulation whena watchpoint is encountred\n", p);
+-      fprintf(stderr, "%s continue - do not stop the simulation when watch point is encountred\n", p);
+-      fprintf(stderr, "%s read addr - insert a read watch point at physical address addr\n", p);
+-      fprintf(stderr, "%s write addr - insert a write watch point at physical address addr\n", p);
++      dbg_printf("%s - print current watch point status\n", p);
++      dbg_printf("%s stop - stop simulation whena watchpoint is encountred\n", p);
++      dbg_printf("%s continue - do not stop the simulation when watch point is encountred\n", p);
++      dbg_printf("%s read addr - insert a read watch point at physical address addr\n", p);
++      dbg_printf("%s write addr - insert a write watch point at physical address addr\n", p);
+     }
+     else
+     if (strcmp(p, "unwatch") == 0)
+     {
+-      fprintf(stderr, "%s - remove all watch points\n", p);
+-      fprintf(stderr, "%s read addr - remove a read watch point at physical address addr\n", p);
+-      fprintf(stderr, "%s write addr - remove a write watch point at physical address addr\n", p);
++      dbg_printf("%s - remove all watch points\n", p);
++      dbg_printf("%s read addr - remove a read watch point at physical address addr\n", p);
++      dbg_printf("%s write addr - remove a write watch point at physical address addr\n", p);
+     }
+     else
+     if (strcmp(p, "load-symbols") == 0)
+     {
+-      fprintf(stderr, "%s [global] filename [offset] - load symbols from file filename\n", p);
++      dbg_printf("%s [global] filename [offset] - load symbols from file filename\n", p);
+     }
+     else
+     if (strcmp(p, "modebp") == 0)
+     {
+-      fprintf(stderr, "%s - toggles vm86 mode switch breakpoint\n", p);
++      dbg_printf("%s - toggles vm86 mode switch breakpoint\n", p);
+     }
+     else
+     if (strcmp(p, "show") == 0)
+     {
+-      fprintf(stderr, "%s [string] - toggles show symbolic info (calls to begin with)\n", p);
+-      fprintf(stderr, "%s - shows current show mode\n", p);
+-      fprintf(stderr, "%s \"mode\" - show, when processor switch mode\n", p);
+-      fprintf(stderr, "%s \"int\" - show, when interrupt is happens\n", p);
+-      fprintf(stderr, "%s \"call\" - show, when call is happens\n", p);
+-      fprintf(stderr, "%s \"ret\" - show, when iret is happens\n", p);
+-      fprintf(stderr, "%s \"off\" - toggles off symbolic info\n", p);
+-      fprintf(stderr, "%s \"dbg-all\" - turn on all show flags\n", p);
+-      fprintf(stderr, "%s \"none\" - turn off all show flags\n", p);
+-      fprintf(stderr, "%s \"tab\" - show page tables\n", p);
++      dbg_printf("%s [string] - toggles show symbolic info (calls to begin with)\n", p);
++      dbg_printf("%s - shows current show mode\n", p);
++      dbg_printf("%s \"mode\" - show, when processor switch mode\n", p);
++      dbg_printf("%s \"int\" - show, when interrupt is happens\n", p);
++      dbg_printf("%s \"call\" - show, when call is happens\n", p);
++      dbg_printf("%s \"ret\" - show, when iret is happens\n", p);
++      dbg_printf("%s \"off\" - toggles off symbolic info\n", p);
++      dbg_printf("%s \"dbg-all\" - turn on all show flags\n", p);
++      dbg_printf("%s \"none\" - turn off all show flags\n", p);
++      dbg_printf("%s \"tab\" - show page tables\n", p);
+     }
+     else
+     {
+-      fprintf(stderr, "%s - unknow command, try help\n", p);
++      dbg_printf("%s - unknow command, try help\n", p);
+     }
+   }
+   return;
+ }
++
+ 
+ #endif /* if BX_DEBUGGER */
+Index: bochs/debug/debug.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/debug.h,v
+retrieving revision 1.17
+diff -u -r1.17 debug.h
+--- bochs/debug/debug.h 2 Apr 2003 17:03:32 -0000       1.17
++++ bochs/debug/debug.h 28 Jul 2003 09:05:49 -0000
+@@ -141,7 +141,7 @@
+ void bx_dbg_linux_syscall ();
+ void bx_dbg_info_ne2k(int page, int reg);
+ void bx_dbg_help_command(char* command);
+-
++void bx_dbg_info_ivt_command(bx_num_range);
+ #ifdef __cplusplus
+ }
+ #endif
+Index: bochs/debug/lexer.l
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/lexer.l,v
+retrieving revision 1.10
+diff -u -r1.10 lexer.l
+--- bochs/debug/lexer.l 19 Nov 2002 05:47:44 -0000      1.10
++++ bochs/debug/lexer.l 28 Jul 2003 09:05:59 -0000
+@@ -51,6 +51,7 @@
+ fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
+ all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
+ idt            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }
++ivt            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IVT); }
+ gdt            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GDT); }
+ ldt            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LDT); }
+ tss            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TSS); }
+Index: bochs/debug/parser.y
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/parser.y,v
+retrieving revision 1.8
+diff -u -r1.8 parser.y
+--- bochs/debug/parser.y        19 Nov 2002 05:47:44 -0000      1.8
++++ bochs/debug/parser.y        28 Jul 2003 09:06:04 -0000
+@@ -117,6 +117,7 @@
+ %token <sval> BX_TOKEN_TRACEREGON
+ %token <sval> BX_TOKEN_TRACEREGOFF
+ %token <sval> BX_TOKEN_HELP
++%token <sval> BX_TOKEN_IVT
+ %type <uval> segment_register
+ %type <uval> optional_numeric
+ %type <uval_range> numeric_range optional_numeric_range
+@@ -508,6 +509,11 @@
+         bx_dbg_info_idt_command($3);
+         free($1); free($2);
+         }
++    | BX_TOKEN_INFO BX_TOKEN_IVT optional_numeric_range '\n'
++       {
++       bx_dbg_info_ivt_command($3);
++       free($1); free($2);
++       }
+     | BX_TOKEN_INFO BX_TOKEN_GDT optional_numeric_range '\n'
+         {
+         bx_dbg_info_gdt_command($3);
+----------------------------------------------------------------------
+
+-- 
+Best regards,
+ DarkElf                          mailto:darkelf@ukr.net
+
+
+
