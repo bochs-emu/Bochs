@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.3 2001-06-24 21:47:00 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.4 2001-06-28 04:08:55 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -345,8 +345,8 @@ public:
   virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out) {return -1;}
   virtual char *get_floppy_type_name (int type) {return NULL;}
-  typedef int (*sim_interface_callback_t)(int code);
-  virtual void set_notify_callback (sim_interface_callback_t func) {}
+  typedef int (*sim_interface_callback_t)(void *theclass, int code);
+  virtual void set_notify_callback (sim_interface_callback_t func, void *arg) {}
   virtual int notify_return (int retcode) {return -1;}
   // methods marked LOCAL should only be called by the simulator, not
   // from the control panel.

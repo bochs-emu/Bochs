@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.3 2001-06-24 21:29:09 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.4 2001-06-28 04:08:55 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -16,6 +16,7 @@ logfunctions *siminterface_log = NULL;
 
 class bx_real_sim_c : public bx_simulator_interface_c {
   sim_interface_callback_t callback;
+  void *callback_ptr;
 #define BX_NOTIFY_MAX_ARGS 10
   int notify_return_val;
   int notify_int_args[BX_NOTIFY_MAX_ARGS];
@@ -54,7 +55,7 @@ public:
   virtual int get_floppy_options (int drive, bx_floppy_options *out);
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
   virtual char *get_floppy_type_name (int type);
-  virtual void set_notify_callback (sim_interface_callback_t func);
+  virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
   virtual int notify_return (int retcode);
   virtual int LOCAL_notify (int code);
   virtual int LOCAL_log_msg (char *prefix, int level, char *msg);
@@ -119,6 +120,7 @@ bx_real_sim_c::bx_real_sim_c ()
 {
   callback = NULL;
   notify_return_val = -1;
+  enabled = 1;
   for (int i=0; i<BX_NOTIFY_MAX_ARGS; i++) {
     notify_int_args[i] = -1;
     notify_string_args[i] = NULL;
@@ -267,7 +269,7 @@ bx_real_sim_c::get_floppy_type_name (int type)
 }
 
 void 
-bx_real_sim_c::set_notify_callback (sim_interface_callback_t func)
+bx_real_sim_c::set_notify_callback (sim_interface_callback_t func, void *arg)
 {
   callback = func;
 }
@@ -287,7 +289,7 @@ bx_real_sim_c::LOCAL_notify (int code)
     return -1;
   } else {
     notify_return_val = -999;
-    (*callback)(code);
+    (*callback)(callback_ptr, code);
     if (notify_return_val == -999)
       BX_ERROR (("notify callback returned without setting the return value"));
     return notify_return_val;

@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.h
-// $Id: wx.h,v 1.1.2.2 2001-06-25 07:09:25 bdenney Exp $
+// $Id: wx.h,v 1.1.2.3 2001-06-28 04:08:56 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -51,6 +51,8 @@ public:
   void HandleEvent(wxCommandEvent& event);
   int ReadConfiguration (int ask_name);
   int WriteConfiguration (int ask_name);
+  static int ProcessBochsEvent (void *class_ptr, int id);
+  int ProcessBochsEvent2 (int id);
 };
 
 class MyPanel: public wxScrolledWindow

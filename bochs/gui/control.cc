@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.30.2.1 2001-06-25 06:37:17 bdenney Exp $
+ * $Id: control.cc,v 1.30.2.2 2001-06-28 04:08:55 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -592,7 +592,7 @@ A panic has occurred.  Do you want to:
 char *log_action_ask_choices[] = { "cont", "alwayscont", "die" };
 int log_action_n_choices = 3;
 
-int control_panel_notify_callback (int code)
+int control_panel_notify_callback (void *ptr, int code)
 {
   switch (code)
   {
@@ -627,7 +627,7 @@ int control_panel_notify_callback (int code)
 
 void bx_control_panel_init () {
   //fprintf (stderr, "bx_control_panel_init()\n");
-  SIM->set_notify_callback (control_panel_notify_callback);
+  SIM->set_notify_callback (control_panel_notify_callback, (void *)0);
 }
 
 /////////////////////////////////////////////////////////////////////
