@@ -7,18 +7,6 @@ echo Removing $CVSPATH
 echo Checking out in $CVSPATH
 cvs -q checkout -d $CVSPATH bochs
 
-#TAG=REL_1_2_FINAL; BIN=bochs000
-#cvs checkout -d buildbochs -r $TAG bochs
-#(cd buildbochs; ./configure && make && cp bochs ../$BIN; make dist-clean)
-#TAG=REL_1_2_FINAL; BIN=bochs004
-#(cd buildbochs; ./configure --with-nogui && make && cp bochs ../$BIN; make dist-clean)
-#TAG=REL_1_2_FINAL; BIN=bochs005
-#(cd buildbochs; ./configure --with-debugger && make && cp bochs ../$BIN; make dist-clean)
-#TAG=REL_1_2_FINAL; BIN=bochs010
-#(cd buildbochs; ./configure --enable-processors=2 && make && cp bochs ../$BIN; make dist-clean)
-#TAG=REL_1_2_FINAL; BIN=bochs015
-#(cd buildbochs; ./configure --enable-processors=4 && make && cp bochs ../$BIN; make dist-clean)
-
 function Buildone {
   BIN=$1; TAG=$2; CONFIG_ARGS=$3; PATCH=$4
   cvs checkout -d $CVSPATH -r $TAG bochs
@@ -27,33 +15,34 @@ function Buildone {
   if test -n "$PATCH"; then patch -p0 -R < $PATCH; fi
 }
 
+# See notes for some results from running these different binaries.
 
-#Buildone bochs000 REL_1_2_FINAL ""
-#Buildone bochs001 REL_1_2_FINAL "" patch.disable-smf-cpu
-#Buildone bochs002 REL_1_2_FINAL "" patch.disable-smf
-#Buildone bochs004 REL_1_2_FINAL "--with-nogui"
-#Buildone bochs005 REL_1_2_FINAL "--with-debugger"
-#Buildone bochs006 REL_1_2_FINAL "--enable-cdrom --enable-sb16=linux --enable-debugger"
-#Buildone bochs006a REL_1_2_FINAL "--enable-cdrom"
-#Buildone bochs006b REL_1_2_FINAL "--enable-sb16=linux"
-#Buildone bochs006c REL_1_2_FINAL "--enable-cdrom --enable-sb16=linux"
-#Buildone bochs006d REL_1_2_FINAL ""
-#Buildone bochs006e REL_1_2_FINAL "--enable-cdrom --enable-debugger"
-#Buildone bochs006f REL_1_2_FINAL "--enable-sb16=linux --enable-debugger"
-#Buildone bochs007 REL_1_2_FINAL "" patch.no-logging
-#export CFLAGS=""; export CXXFLAGS="$CFLAGS"
-#Buildone bochs008 REL_1_2_FINAL ""
-#export CFLAGS="-O2 -fomit-frame-pointer"; export CXXFLAGS="$CFLAGS"
-#Buildone bochs008a REL_1_2_FINAL ""
-#export CFLAGS="-O6 -fomit-frame-pointer"; export CXXFLAGS="$CFLAGS"
-#Buildone bochs008b REL_1_2_FINAL ""
-#unset CFLAGS; unset CXXFLAGS
-#Buildone bochs010 REL_1_2_FINAL "--enable-processors=2"
-#Buildone bochs011 REL_1_2_FINAL "--enable-processors=2 --enable-debugger"
-#Buildone bochs015 REL_1_2_FINAL "--enable-processors=4" "patch.boost-logfns"
-#Buildone bochs016 REL_1_2_FINAL "--enable-processors=4 --enable-debugger" "patch.boost-logfns"
-#Buildone bochs020 REL_1_1_2_BASE ""
-#Buildone bochs021 REL_1_1_2_BASE "--enable-debugger"
-#Buildone bochs030 REL-bochs-2000-03-25 "--enable-fpu"
-#Buildone bochs031 REL-bochs-2000-03-25 "--enable-fpu --enable-debugger --enable-disas"
+Buildone bochs000 REL_1_2_FINAL ""
+Buildone bochs001 REL_1_2_FINAL "" patch.disable-smf-cpu
+Buildone bochs002 REL_1_2_FINAL "" patch.disable-smf
+Buildone bochs004 REL_1_2_FINAL "--with-nogui"
+Buildone bochs005 REL_1_2_FINAL "--with-debugger"
+Buildone bochs006 REL_1_2_FINAL "--enable-cdrom --enable-sb16=linux --enable-debugger"
+Buildone bochs006a REL_1_2_FINAL "--enable-cdrom"
+Buildone bochs006b REL_1_2_FINAL "--enable-sb16=linux"
+Buildone bochs006c REL_1_2_FINAL "--enable-cdrom --enable-sb16=linux"
+Buildone bochs006d REL_1_2_FINAL ""
+Buildone bochs006e REL_1_2_FINAL "--enable-cdrom --enable-debugger"
+Buildone bochs006f REL_1_2_FINAL "--enable-sb16=linux --enable-debugger"
+Buildone bochs007 REL_1_2_FINAL "" patch.no-logging
+export CFLAGS=""; export CXXFLAGS="$CFLAGS"
+Buildone bochs008 REL_1_2_FINAL ""
+export CFLAGS="-O2 -fomit-frame-pointer"; export CXXFLAGS="$CFLAGS"
+Buildone bochs008a REL_1_2_FINAL ""
+export CFLAGS="-O6 -fomit-frame-pointer"; export CXXFLAGS="$CFLAGS"
+Buildone bochs008b REL_1_2_FINAL ""
+unset CFLAGS; unset CXXFLAGS
+Buildone bochs010 REL_1_2_FINAL "--enable-processors=2"
+Buildone bochs011 REL_1_2_FINAL "--enable-processors=2 --enable-debugger"
+Buildone bochs015 REL_1_2_FINAL "--enable-processors=4" "patch.boost-logfns"
+Buildone bochs016 REL_1_2_FINAL "--enable-processors=4 --enable-debugger" "patch.boost-logfns"
+Buildone bochs020 REL_1_1_2_BASE ""
+Buildone bochs021 REL_1_1_2_BASE "--enable-debugger"
+Buildone bochs030 REL-bochs-2000-03-25 "--enable-fpu"
+Buildone bochs031 REL-bochs-2000-03-25 "--enable-fpu --enable-debugger --enable-disas"
 Buildone bochs091 stay-in-cpu-loop-for-1proc "" "patch.make-reset-panic"
