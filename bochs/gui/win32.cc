@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.24 2002-03-10 04:51:24 bdenney Exp $
+// $Id: win32.cc,v 1.25 2002-03-11 16:35:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -336,6 +336,11 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 
   if (bx_options.Oprivate_colormap->get ())
     BX_INFO(( "private_colormap option ignored."));
+
+  // load keymap tables
+  if(bx_options.keyboard.OuseMapping->get()) {
+    bx_keymap.loadKeymap(NULL);  // I have no function to convert X windows symbols
+    }
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.33 2002-03-11 15:45:34 bdenney Exp $
+// $Id: gui.cc,v 1.34 2002-03-11 16:35:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -335,7 +335,23 @@ bx_gui_c::paste_handler(void)
     BX_ERROR (("keyboard_mapping disabled, so paste cannot work"));
     return;
   }
-#if BX_WITH_X11
+#ifdef WIN32
+  HANDLE hMem = GetClipboardData (CF_TEXT);
+  if (!OpenClipboard(NULL)) {
+    BX_ERROR (("paste: could not open clipboard"));
+    return;
+  }
+  HGLOBAL hg = GetClipboardData(CF_TEXT);
+  char *data = (char *)GlobalLock(hg);
+  nbytes = strlen(data);
+  bytes = (Bit8u *)malloc (nbytes+1);
+  BX_INFO (("found %d bytes on the clipboard", nbytes));
+  memcpy (bytes, data, nbytes+1);
+  BX_INFO (("first byte is 0x%02x", bytes[0]));
+  GlobalUnlock(hg);
+  CloseClipboard();
+
+#elif BX_WITH_X11
   extern Display *bx_x_display;
   bytes = (Bit8u *)XFetchBytes (bx_x_display, &nbytes);
 #else
