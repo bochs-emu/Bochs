@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.10 2002-04-01 04:43:26 instinc Exp $
+// $Id: memory.cc,v 1.11 2002-04-03 16:48:15 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -225,6 +225,37 @@ inc_one:
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
+
+#if BX_SUPPORT_VBE
+    // Check VBE LFB support
+    
+    if (a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    {
+      for (i = 0; i < len; i++) {
+        // FIXME: check for max VBE video memory size
+        
+        //if (a20addr < BX_MEM_THIS len) {
+          //vector[a20addr] = *data_ptr;
+          //BX_DBG_DIRTY_PAGE(a20addr >> 12);
+          //BX_DYN_DIRTY_PAGE(a20addr >> 12);
+          BX_VGA_MEM_WRITE(a20addr, *data_ptr);
+        //  }
+        
+        // otherwise ignore byte, since it overruns memory
+        addr++;
+        a20addr = A20ADDR(addr);
+#ifdef BX_LITTLE_ENDIAN
+        data_ptr++;
+#else // BX_BIG_ENDIAN
+        data_ptr--;
+#endif
+      }
+      return;
+    }
+    
+#endif    
+ 
+
 #if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;
     bx_generic_apic_c *ioapic = bx_devices.ioapic;
@@ -424,6 +455,36 @@ inc_one:
 #else // BX_BIG_ENDIAN
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
+
+#if BX_SUPPORT_VBE
+    // Check VBE LFB support
+    
+    if (a20addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    {
+      for (i = 0; i < len; i++) {
+        // FIXME: check for max VBE video memory size
+        
+        //if (a20addr < BX_MEM_THIS len) {
+          //vector[a20addr] = *data_ptr;
+          //BX_DBG_DIRTY_PAGE(a20addr >> 12);
+          //BX_DYN_DIRTY_PAGE(a20addr >> 12);
+          *data_ptr = BX_VGA_MEM_READ(a20addr);
+        //  }
+        
+        // otherwise ignore byte, since it overruns memory
+        addr++;
+        a20addr = A20ADDR(addr);
+#ifdef BX_LITTLE_ENDIAN
+        data_ptr++;
+#else // BX_BIG_ENDIAN
+        data_ptr--;
+#endif
+      }
+      return;
+    }
+    
+#endif    
+
 
 #if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;

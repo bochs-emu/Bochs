@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.29 2002-03-16 11:37:43 japj Exp $
+// $Id: vga.cc,v 1.30 2002-04-03 16:48:15 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2081,9 +2081,20 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 bx_vga_c::vbe_mem_read(Bit32u addr)
 {
   Bit32u offset;        
-  offset = addr - 0xA0000;
+  
+  if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  {
+    // LFB read
+    // FIXME: check for max VBE video memory size
+    offset = offset - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+  }
+  else
+  {
+    // banked mode read
+    offset = BX_VGA_THIS s.vbe_bank*65536 + addr - 0xA0000;
+  }
 
-  return (BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_bank*65536 + offset]);
+  return (BX_VGA_THIS s.vbe_memory[offset]);
 }
 
   void
@@ -2091,7 +2102,18 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
 {
   Bit32u offset;        
   unsigned x_tileno, y_tileno;
-  offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
+  
+  if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  {
+    // LFB write
+    // FIXME: check for max VBE video memory size
+    offset = offset - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+  }
+  else
+  {
+    // banked mode write
+    offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
+  }
 
   // check for out of memory write
   if (offset < sizeof(BX_VGA_THIS s.vbe_memory))

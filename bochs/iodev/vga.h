@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.10 2002-03-16 10:22:57 japj Exp $
+// $Id: vga.h,v 1.11 2002-04-03 16:48:15 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,6 +52,8 @@
 
   #define VBE_DISPI_DISABLED              0x00
   #define VBE_DISPI_ENABLED               0x01
+  #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
+  
 
 #define BX_MAX_XRES VBE_DISPI_MAX_XRES
 #define BX_MAX_YRES VBE_DISPI_MAX_YRES
