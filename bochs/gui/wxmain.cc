@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.63 2002-10-06 19:21:05 bdenney Exp $
+// $Id: wxmain.cc,v 1.64 2002-10-07 04:00:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -73,6 +73,21 @@
 MyFrame *theFrame = NULL;
 MyPanel *thePanel = NULL;
 
+// The wxBochsClosing flag is used to keep track of when the wxWindows GUI is
+// shutting down.  Shutting down can be somewhat complicated because the
+// simulation may be running for a while in another thread before it realizes
+// that it should shut down.  The wxBochsClosing flag is a global variable, as
+// opposed to a field of some C++ object, so that it will be valid at any stage
+// of the program.  wxBochsClosing starts out false (not wxBochsClosing).  When
+// the GUI decides to shut down, it sets wxBochsClosing=true.  If there
+// is not a simulation running, everything is quite simple and it can just
+// call Close(TRUE).  If a simulation is running, it calls OnKillSim to
+// ask the simulation to stop.  When the simulation thread stops, it calls
+// Close(TRUE) on the frame.  During the time that the simulation is 
+// still running and afterward, the wxBochsClosing flag is used to suppress
+// any events that might reference parts of the GUI or create new dialogs.
+bool wxBochsClosing = false;
+
 bool isSimThread () {
   wxThread *current = wxThread::This ();
   if (current == (wxThread*) theFrame->GetSimThread ()) {
@@ -96,7 +111,6 @@ virtual int OnExit();
   // so that events coming from the simulator code can be handled.
   // The primary culprit is panics which cause an BX_SYNC_EVT_LOG_ASK.
   static BxEvent *DefaultCallback (void *thisptr, BxEvent *event);
-  BxEvent *DefaultCallback2 (BxEvent *event);
 };
 
 // SimThread is the thread in which the Bochs simulator runs.  It is created
@@ -172,31 +186,32 @@ int MyApp::OnExit ()
 BxEvent *
 MyApp::DefaultCallback (void *thisptr, BxEvent *event)
 {
-  MyApp *me = (MyApp *)thisptr;
-  // call the normal non-static method now that we know the this pointer.
-  return me->DefaultCallback2 (event);
-}
-
-BxEvent *
-MyApp::DefaultCallback2 (BxEvent *event)
-{
-  wxLogDebug ("DefaultCallback2: event type %d", event->type);
+  wxLogDebug ("DefaultCallback: event type %d", event->type);
   event->retcode = -1;  // default return code
   switch (event->type)
   {
     case BX_ASYNC_EVT_LOG_MSG:
     case BX_SYNC_EVT_LOG_ASK: {
-      wxLogDebug ("DefaultCallback2: log ask event");
+      wxLogDebug ("DefaultCallback: log ask event");
       wxString text;
       text.Printf ("Error: %s", event->u.logmsg.msg);
-      wxMessageBox (text, "Error", wxOK | wxICON_ERROR );
-      // maybe I can make OnLogMsg display something that looks appropriate.
-      // theFrame->OnLogMsg (event);
-      event->retcode = BX_LOG_ASK_CHOICE_CONTINUE;
+      if (wxBochsClosing) {
+	// gui closing down, do something simple and nongraphical.
+	fprintf (stderr, "%s\n", text.c_str ());
+      } else {
+	wxMessageBox (text, "Error", wxOK | wxICON_ERROR );
+	// maybe I can make OnLogMsg display something that looks appropriate.
+	// theFrame->OnLogMsg (event);
+      }
+      event->retcode = BX_LOG_ASK_CHOICE_DIE;
       // There is only one thread at this point.  if I choose DIE here, it will
       // call fatal() and kill the whole app.
       break;
     }
+    case BX_SYNC_EVT_TICK:
+      if (wxBochsClosing) 
+	event->retcode = -1;
+      break;
     case BX_ASYNC_EVT_REFRESH:
     case BX_ASYNC_EVT_DBG_MSG:
       break;  // ignore
@@ -204,7 +219,7 @@ MyApp::DefaultCallback2 (BxEvent *event)
     case BX_SYNC_EVT_GET_DBG_COMMAND:
       break;  // ignore
     default:
-      wxLogDebug ("unknown event type %d", event->type);
+      wxLogDebug ("DefaultCallback: unknown event type %d", event->type);
   }
   if (BX_EVT_IS_ASYNC(event->type)) {
     delete event;
@@ -212,7 +227,6 @@ MyApp::DefaultCallback2 (BxEvent *event)
   }
   return event;
 }
-
 
 //////////////////////////////////////////////////////////////////////
 // MyFrame: the top level frame for the Bochs application
@@ -323,7 +337,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // init variables
   sim_thread = NULL;
   start_bochs_times = 0;
-  closing = false;
   showCpu = NULL;
   showKbd = NULL;
   debugCommand = NULL;
@@ -859,13 +872,16 @@ MyFrame::DebugCommand (const char *cmd)
 
 void MyFrame::OnQuit(wxCommandEvent& event)
 {
-  closing = true;
-  Close( TRUE );
-  OnKillSim (event);
-#if 0
-  if (SIM)
-	SIM->quit_sim(0);  // give bochs a chance to shut down
-#endif
+  wxBochsClosing = true;
+  if (!sim_thread) {
+    // no simulation thread is running. Just close the window.
+    Close( TRUE );
+  } else {
+    SIM->set_notify_callback (&MyApp::DefaultCallback, this);
+    // ask the simulator to stop.  When it stops it will close this frame.
+    SetStatusText ("Waiting for simulation to stop...");
+    OnKillSim (event);
+  }
 }
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
@@ -1372,11 +1388,9 @@ SimThread::Entry (void)
   //   - sim continues to run until the next time it reaches SIM->periodic().
   //   - SIM->periodic() sends a synchronous tick event to the GUI, which
   //     finally calls TestDestroy() and realizes it needs to stop.  It
-  //     sets the sync event return code to -1.  SIM->periodic() sets the
-  //     kill_bochs_request flag in cpu #0.
-  //   - cpu loop notices kill_bochs_request and returns to main.cc:
-  //     bx_continue_after_config_interface(), which notices the
-  //     kill_bochs_request and returns back to this Entry() function.
+  //     sets the sync event return code to -1.  SIM->periodic() notices
+  //     the -1 and calls quit_sim, which longjumps to quit_context, which is
+  //     right here in SimThread::Entry.
   //   - Entry() exits and the thread stops. Whew.
   wxLogDebug ("in SimThread, starting at bx_continue_after_config_interface");
   static jmp_buf context;  // this must not go out of scope. maybe static not needed
@@ -1392,11 +1406,18 @@ SimThread::Entry (void)
   SIM->set_quit_context (NULL);
   // it is possible that the whole interface has already been shut down.
   // If so, we must end immediately.
-  if (!theFrame->IsClosing ()) {
-    wxMutexGuiEnter();
+  // we're in the sim thread, so we must get a gui mutex before calling
+  // wxwindows methods.
+  wxLogDebug ("SimThread::Entry: get gui mutex");
+  wxMutexGuiEnter();
+  if (!wxBochsClosing) {
+    wxLogDebug ("SimThread::Entry: sim thread ending.  call simStatusChanged");
     theFrame->simStatusChanged (theFrame->Stop, true);
-    wxMutexGuiLeave();
+  } else {
+    wxLogMessage ("SimThread::Entry: the gui is waiting for sim to finish.  Now that it has finished, I will close the frame.");
+    theFrame->Close (TRUE);
   }
+  wxMutexGuiLeave();
   return NULL;
 }
 

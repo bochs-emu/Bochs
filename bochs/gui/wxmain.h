@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.31 2002-09-25 18:40:15 bdenney Exp $
+// $Id: wxmain.h,v 1.32 2002-10-07 04:01:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -15,6 +15,9 @@ class ParamDialog;
 //hack alert; yuck; FIXME
 extern MyFrame *theFrame;
 extern MyPanel *thePanel;
+
+// wxBochsClosing flag, see comments in wxmain.h
+extern bool wxBochsClosing;
 
 #define MAX_EVENTS 256
 extern unsigned long num_events;
@@ -156,15 +159,10 @@ private:
 class MyFrame: public wxFrame
 {
   MyPanel *panel;
-  // closing is set as soon as the Close(TRUE) is called.  This informs any
-  // actions that may occur after the closing of the frame, so that they can
-  // quit A.S.A.P.
-  bool closing;
 public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
   ~MyFrame();
   enum StatusChange { Start, Stop, Pause, Resume };
-  bool IsClosing () { return closing; }
   void simStatusChanged (StatusChange change, Boolean popupNotify=false);
   void OnConfigNew(wxCommandEvent& event);
   void OnConfigRead(wxCommandEvent& event);
