@@ -1061,6 +1061,7 @@ elif test "$with_beos" = yes; then
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
 elif test "$with_sdl" = yes; then
   AC_MSG_RESULT(sdl)
+  CFLAGS="$CFLAGS \`sdl-config --cflags\`"
   AC_DEFINE(BX_WITH_SDL, 1)
   GUI_OBJS='$(GUI_OBJS_SDL)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_SDL)'
