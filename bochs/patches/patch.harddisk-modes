@@ -40,17 +40,18 @@ Detailed description:
     - implement additionnal mode volatile
     - implement additionnal mode z-undowable
     - implement additionnal mode z-volatile
-
-  Still to do :
     - check for mkstemp on win32/configure. Provide a replacement
     - check for zlib.h in ./configure
     - fail nicely when compiling when --enable-compressed-hd and no zlib.h
     - check availability of zlib for win32
+
+  Still to do :
     - implement additionnal mode split
     - update bximage to create split disks
     - add command line switches to bximage
     - handle new "mode" option in wxwindow config interface
     - update user doc (see misc.txt)
+    - update developer doc 
     - update bximage to convert/commit various modes
 
 Patch was created with:
@@ -67,7 +68,7 @@ RCS file: /cvsroot/bochs/bochs/.bochsrc,v
 retrieving revision 1.67
 diff -u -r1.67 .bochsrc
 --- .bochsrc	10 Mar 2003 11:45:26 -0000	1.67
-+++ .bochsrc	18 Mar 2003 22:46:25 -0000
++++ .bochsrc	19 Mar 2003 18:00:20 -0000
 @@ -150,7 +150,7 @@
  # ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
  # 
@@ -77,16 +78,17 @@ diff -u -r1.67 .bochsrc
  # 
  # ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
  #
-@@ -170,6 +170,8 @@
+@@ -170,6 +170,9 @@
  #
  # This defines the type and characteristics of all attached ata devices:
  #   type=       type of attached device [disk|cdrom] 
 +#   mode=       only valid for disks [flat|concat|external|dll|sparse|vmware3]
-+#   mode=       not implemented yet [undoable|growable|split|volatile|z-undoable|z-volatile]
++#   mode=       only valid for disks [undoable|growable|volatile|z-undoable|z-volatile]
++#   mode=       not implemented yet [split]
  #   path=       path of the image
  #   cylinders=  only valid for disks
  #   heads=      only valid for disks
-@@ -195,21 +197,21 @@
+@@ -195,21 +198,21 @@
  # The path is mandatory for type=cdrom
  #
  # Default values are:
@@ -123,7 +125,7 @@ RCS file: /cvsroot/bochs/bochs/bochs.h,v
 retrieving revision 1.120
 diff -u -r1.120 bochs.h
 --- bochs.h	26 Feb 2003 02:41:29 -0000	1.120
-+++ bochs.h	18 Mar 2003 22:46:26 -0000
++++ bochs.h	19 Mar 2003 18:00:23 -0000
 @@ -49,6 +49,8 @@
  #include <stdio.h>
  #include <stdlib.h>
@@ -139,8 +141,16 @@ RCS file: /cvsroot/bochs/bochs/config.h.in,v
 retrieving revision 1.108
 diff -u -r1.108 config.h.in
 --- config.h.in	11 Mar 2003 19:45:34 -0000	1.108
-+++ config.h.in	18 Mar 2003 22:46:29 -0000
-@@ -285,15 +285,8 @@
++++ config.h.in	19 Mar 2003 18:00:23 -0000
+@@ -196,6 +196,7 @@
+ #define BX_HAVE_SOCKADDR_IN_SIN_LEN 0
+ #define BX_HAVE_GETTIMEOFDAY 0
+ #define BX_HAVE_REALTIME_USEC (BX_HAVE_GETTIMEOFDAY || defined(WIN32))
++#define BX_HAVE_MKSTEMP 0
+ 
+ // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
+ // gui. If people try to enable it elsewhere, give a compile error after the
+@@ -285,15 +286,13 @@
  
  #define BX_GDBSTUB 0
  
@@ -155,6 +165,11 @@ diff -u -r1.108 config.h.in
 -#define BX_SPLIT_HD_SUPPORT 0
 +// This option enables compressed (zlib) hd support
 +#define BX_COMPRESSED_HD_SUPPORT 0
++#define BX_HAVE_ZLIB 0
++
++#if BX_COMPRESSED_HD_SUPPORT && !BX_HAVE_ZLIB
++#error You must have zlib to enable compressed hd support
++#endif
  
  // This option defines the number of supported ATA channels.
  // There are up to two drives per ATA channel.
@@ -164,7 +179,7 @@ RCS file: /cvsroot/bochs/bochs/configure,v
 retrieving revision 1.202
 diff -u -r1.202 configure
 --- configure	2 Mar 2003 23:59:03 -0000	1.202
-+++ configure	18 Mar 2003 22:47:26 -0000
++++ configure	19 Mar 2003 18:00:27 -0000
 @@ -1,12 +1,179 @@
  #! /bin/sh
 -# From configure.in Id: configure.in,v 1.201 2003/02/21 14:40:59 cisc Exp .
@@ -468,23 +483,68 @@ diff -u -r1.202 configure
  	     CONFIG_SHELL=$as_dir/$as_base
  	     export CONFIG_SHELL
  	     exec "$CONFIG_SHELL" "$0" ${1+"$@"}
-@@ -216,12 +370,6 @@
- fi
- rm -f conf$$ conf$$.exe conf$$.file
- 
+@@ -180,224 +334,59 @@
+   # (the dirname of $[0] is not the place where we might find the
+   # original and so on.  Autoconf is especially sensible to this).
+   . ./$as_me.lineno
+-  # Exit status is that of the last command.
+-  exit
+-}
+-
+-
+-case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
+-  *c*,-n*) ECHO_N= ECHO_C='
+-' ECHO_T='	' ;;
+-  *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
+-  *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
+-esac
+-
+-if expr a : '\(a\)' >/dev/null 2>&1; then
+-  as_expr=expr
+-else
+-  as_expr=false
+-fi
+-
+-rm -f conf$$ conf$$.exe conf$$.file
+-echo >conf$$.file
+-if ln -s conf$$.file conf$$ 2>/dev/null; then
+-  # We could just check for DJGPP; but this test a) works b) is more generic
+-  # and c) will remain valid once DJGPP supports symlinks (DJGPP 2.04).
+-  if test -f conf$$.exe; then
+-    # Don't use ln at all; we don't have any links
+-    as_ln_s='cp -p'
+-  else
+-    as_ln_s='ln -s'
+-  fi
+-elif ln conf$$.file conf$$ 2>/dev/null; then
+-  as_ln_s=ln
+-else
+-  as_ln_s='cp -p'
+-fi
+-rm -f conf$$ conf$$.exe conf$$.file
+-
 -if mkdir -p . 2>/dev/null; then
 -  as_mkdir_p=:
 -else
 -  as_mkdir_p=false
 -fi
 -
- as_executable_p="test -f"
- 
- # Sed expression to map a string onto a valid CPP name.
-@@ -238,166 +386,7 @@
- IFS=" 	$as_nl"
- 
- # CDPATH.
+-as_executable_p="test -f"
+-
+-# Sed expression to map a string onto a valid CPP name.
+-as_tr_cpp="sed y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g"
+-
+-# Sed expression to map a string onto a valid variable name.
+-as_tr_sh="sed y%*+%pp%;s%[^_$as_cr_alnum]%_%g"
+-
+-
+-# IFS
+-# We need space, tab and new line, in precisely that order.
+-as_nl='
+-'
+-IFS=" 	$as_nl"
+-
+-# CDPATH.
 -$as_unset CDPATH
 -
 -
@@ -615,7 +675,10 @@ diff -u -r1.202 configure
 -      else
 -	# maybe with a smaller string...
 -	prev=:
--
++  # Exit status is that of the last command.
++  exit
++}
+ 
 -	for cmd in 'echo test' 'sed 2q "$0"' 'sed 10q "$0"' 'sed 20q "$0"' 'sed 50q "$0"'; do
 -	  if (test "X$echo_test_string" = "X`eval $cmd`") 2>/dev/null
 -	  then
@@ -623,7 +686,7 @@ diff -u -r1.202 configure
 -	  fi
 -	  prev="$cmd"
 -	done
--
+ 
 -	if test "$prev" != 'sed 50q "$0"'; then
 -	  echo_test_string=`eval $prev`
 -	  export echo_test_string
@@ -636,15 +699,58 @@ diff -u -r1.202 configure
 -    fi
 -  fi
 -fi
--fi
--
++case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
++  *c*,-n*) ECHO_N= ECHO_C='
++' ECHO_T='	' ;;
++  *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
++  *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
++esac
++
++if expr a : '\(a\)' >/dev/null 2>&1; then
++  as_expr=expr
++else
++  as_expr=false
+ fi
+ 
 -# Copy echo and quote the copy suitably for passing to libtool from
 -# the Makefile, instead of quoting the original, which is used later.
 -ECHO=$echo
 -if test "X$ECHO" = "X$CONFIG_SHELL $0 --fallback-echo"; then
 -   ECHO="$CONFIG_SHELL \\\$\$0 --fallback-echo"
--fi
--
++rm -f conf$$ conf$$.exe conf$$.file
++echo >conf$$.file
++if ln -s conf$$.file conf$$ 2>/dev/null; then
++  # We could just check for DJGPP; but this test a) works b) is more generic
++  # and c) will remain valid once DJGPP supports symlinks (DJGPP 2.04).
++  if test -f conf$$.exe; then
++    # Don't use ln at all; we don't have any links
++    as_ln_s='cp -p'
++  else
++    as_ln_s='ln -s'
++  fi
++elif ln conf$$.file conf$$ 2>/dev/null; then
++  as_ln_s=ln
++else
++  as_ln_s='cp -p'
+ fi
++rm -f conf$$ conf$$.exe conf$$.file
++
++as_executable_p="test -f"
++
++# Sed expression to map a string onto a valid CPP name.
++as_tr_cpp="sed y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g"
++
++# Sed expression to map a string onto a valid variable name.
++as_tr_sh="sed y%*+%pp%;s%[^_$as_cr_alnum]%_%g"
++
++
++# IFS
++# We need space, tab and new line, in precisely that order.
++as_nl='
++'
++IFS=" 	$as_nl"
+ 
++# CDPATH.
 +$as_unset CDPATH || test "${CDPATH+set}" != set || { CDPATH=$PATH_SEPARATOR; export CDPATH; }
  
  
@@ -716,7 +822,8 @@ diff -u -r1.202 configure
  ac_sep=
 -ac_must_keep_next=false
 -for ac_pass in 1 2
--do
++for ac_arg
+ do
 -  for ac_arg
 -  do
 -    case $ac_arg in
@@ -752,8 +859,6 @@ diff -u -r1.202 configure
 -      ;;
 -    esac
 -  done
-+for ac_arg
-+do
 +  case $ac_arg in
 +  -no-create | --no-create | --no-creat | --no-crea | --no-cre \
 +  | --no-cr | --no-c | -n ) continue ;;
@@ -1420,8 +1525,8 @@ diff -u -r1.202 configure
 -  # <limits.h> exists even on freestanding compilers.
    # On the NeXT, cc -E runs the code through the compiler's parser,
    # not just through cpp. "Syntax error" is here to catch this case.
-   cat >conftest.$ac_ext <<_ACEOF
- #line $LINENO "configure"
+-  cat >conftest.$ac_ext <<_ACEOF
+-#line $LINENO "configure"
 -/* confdefs.h.  */
 -_ACEOF
 -cat confdefs.h >>conftest.$ac_ext
@@ -1432,6 +1537,8 @@ diff -u -r1.202 configure
 -#else
 -# include <assert.h>
 -#endif
++  cat >conftest.$ac_ext <<_ACEOF
++#line $LINENO "configure"
 +#include "confdefs.h"
 +#include <assert.h>
                       Syntax error
@@ -7112,14 +7219,37 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -15045,51 +14530,11 @@
+@@ -15045,59 +14530,98 @@
    ac_cv_member_struct_sockaddr_in_sin_len=yes
  else
    echo "$as_me: failed program was:" >&5
 -sed 's/^/| /' conftest.$ac_ext >&5
--
++cat conftest.$ac_ext >&5
++ac_cv_member_struct_sockaddr_in_sin_len=no
++fi
++rm -f conftest.$ac_objext conftest.$ac_ext
++fi
++echo "$as_me:$LINENO: result: $ac_cv_member_struct_sockaddr_in_sin_len" >&5
++echo "${ECHO_T}$ac_cv_member_struct_sockaddr_in_sin_len" >&6
++if test $ac_cv_member_struct_sockaddr_in_sin_len = yes; then
++  cat >>confdefs.h <<\_ACEOF
++#define BX_HAVE_SOCKADDR_IN_SIN_LEN 1
++_ACEOF
+ 
 -cat >conftest.$ac_ext <<_ACEOF
--#line $LINENO "configure"
++fi
++
++
++for ac_func in mkstemp
++do
++as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
++echo "$as_me:$LINENO: checking for $ac_func" >&5
++echo $ECHO_N "checking for $ac_func... $ECHO_C" >&6
++if eval "test \"\${$as_ac_var+set}\" = set"; then
++  echo $ECHO_N "(cached) $ECHO_C" >&6
++else
++  cat >conftest.$ac_ext <<_ACEOF
+ #line $LINENO "configure"
 -/* confdefs.h.  */
 -_ACEOF
 -cat confdefs.h >>conftest.$ac_ext
@@ -7127,45 +7257,96 @@ diff -u -r1.202 configure
 -/* end confdefs.h.  */
 -#include <sys/socket.h>
 -#include <netinet/in.h>
--
--int
--main ()
--{
++#include "confdefs.h"
++/* System header to define __stub macros and hopefully few prototypes,
++    which can conflict with char $ac_func (); below.  */
++#include <assert.h>
++/* Override any gcc2 internal prototype to avoid an error.  */
++#ifdef __cplusplus
++extern "C"
++#endif
++/* We use char because int might match the return type of a gcc2
++   builtin and then its argument prototype would still apply.  */
++char $ac_func ();
++char (*f) ();
+ 
++#ifdef F77_DUMMY_MAIN
++#  ifdef __cplusplus
++     extern "C"
++#  endif
++   int F77_DUMMY_MAIN() { return 1; }
++#endif
+ int
+ main ()
+ {
 -static struct sockaddr_in ac_aggr;
 -if (sizeof ac_aggr.sin_len)
 -return 0;
--  ;
--  return 0;
--}
--_ACEOF
++/* The GNU C library defines this for functions which it implements
++    to always fail with ENOSYS.  Some functions are actually named
++    something starting with __ and the normal name is an alias.  */
++#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
++choke me
++#else
++f = $ac_func;
++#endif
++
+   ;
+   return 0;
+ }
+ _ACEOF
 -rm -f conftest.$ac_objext
 -if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
 -  (eval $ac_compile) 2>&5
--  ac_status=$?
--  echo "$as_me:$LINENO: \$? = $ac_status" >&5
--  (exit $ac_status); } &&
++rm -f conftest.$ac_objext conftest$ac_exeext
++if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
++  (eval $ac_link) 2>&5
+   ac_status=$?
+   echo "$as_me:$LINENO: \$? = $ac_status" >&5
+   (exit $ac_status); } &&
 -         { ac_try='test -s conftest.$ac_objext'
--  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
--  (eval $ac_try) 2>&5
--  ac_status=$?
--  echo "$as_me:$LINENO: \$? = $ac_status" >&5
--  (exit $ac_status); }; }; then
++         { ac_try='test -s conftest$ac_exeext'
+   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+   (eval $ac_try) 2>&5
+   ac_status=$?
+   echo "$as_me:$LINENO: \$? = $ac_status" >&5
+   (exit $ac_status); }; }; then
 -  ac_cv_member_struct_sockaddr_in_sin_len=yes
--else
--  echo "$as_me: failed program was:" >&5
++  eval "$as_ac_var=yes"
+ else
+   echo "$as_me: failed program was:" >&5
 -sed 's/^/| /' conftest.$ac_ext >&5
 -
+-ac_cv_member_struct_sockaddr_in_sin_len=no
+-fi
+-rm -f conftest.$ac_objext conftest.$ac_ext
 +cat conftest.$ac_ext >&5
- ac_cv_member_struct_sockaddr_in_sin_len=no
- fi
- rm -f conftest.$ac_objext conftest.$ac_ext
++eval "$as_ac_var=no"
  fi
 -rm -f conftest.$ac_objext conftest.$ac_ext
--fi
- echo "$as_me:$LINENO: result: $ac_cv_member_struct_sockaddr_in_sin_len" >&5
- echo "${ECHO_T}$ac_cv_member_struct_sockaddr_in_sin_len" >&6
- if test $ac_cv_member_struct_sockaddr_in_sin_len = yes; then
-@@ -15116,13 +14561,15 @@
++rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+ fi
+-echo "$as_me:$LINENO: result: $ac_cv_member_struct_sockaddr_in_sin_len" >&5
+-echo "${ECHO_T}$ac_cv_member_struct_sockaddr_in_sin_len" >&6
+-if test $ac_cv_member_struct_sockaddr_in_sin_len = yes; then
+-  cat >>confdefs.h <<\_ACEOF
+-#define BX_HAVE_SOCKADDR_IN_SIN_LEN 1
++echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_var'}'`" >&5
++echo "${ECHO_T}`eval echo '${'$as_ac_var'}'`" >&6
++if test `eval echo '${'$as_ac_var'}'` = yes; then
++  cat >>confdefs.h <<_ACEOF
++#define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
++_ACEOF
++ cat >>confdefs.h <<\_ACEOF
++#define BX_HAVE_MKSTEMP 1
+ _ACEOF
+ 
+ fi
++done
+ 
+ 
+ # Check whether --enable-largefile or --disable-largefile was given.
+@@ -15116,13 +14640,15 @@
  
            cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7186,7 +7367,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -15149,8 +14596,7 @@
+@@ -15149,8 +14675,7 @@
    ac_cv_sys_file_offset_bits=64
  else
    echo "$as_me: failed program was:" >&5
@@ -7196,7 +7377,7 @@ diff -u -r1.202 configure
  ac_cv_sys_file_offset_bits=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -15178,13 +14624,15 @@
+@@ -15178,13 +14703,15 @@
  
            cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7217,7 +7398,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -15211,8 +14659,7 @@
+@@ -15211,8 +14738,7 @@
    ac_cv_sys_large_files=1
  else
    echo "$as_me: failed program was:" >&5
@@ -7227,7 +7408,7 @@ diff -u -r1.202 configure
  ac_cv_sys_large_files=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -15269,44 +14716,37 @@
+@@ -15269,44 +14795,37 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7287,7 +7468,7 @@ diff -u -r1.202 configure
    ;
    return 0;
  }
-@@ -15326,8 +14766,7 @@
+@@ -15326,8 +14845,7 @@
    eval "$as_ac_var=yes"
  else
    echo "$as_me: failed program was:" >&5
@@ -7297,7 +7478,7 @@ diff -u -r1.202 configure
  eval "$as_ac_var=no"
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -15353,44 +14792,37 @@
+@@ -15353,44 +14871,37 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7357,7 +7538,7 @@ diff -u -r1.202 configure
    ;
    return 0;
  }
-@@ -15410,8 +14842,7 @@
+@@ -15410,8 +14921,7 @@
    eval "$as_ac_var=yes"
  else
    echo "$as_me: failed program was:" >&5
@@ -7367,7 +7548,7 @@ diff -u -r1.202 configure
  eval "$as_ac_var=no"
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -15449,44 +14880,37 @@
+@@ -15449,44 +14959,37 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7427,7 +7608,7 @@ diff -u -r1.202 configure
    ;
    return 0;
  }
-@@ -15506,8 +14930,7 @@
+@@ -15506,8 +15009,7 @@
    eval "$as_ac_var=yes"
  else
    echo "$as_me: failed program was:" >&5
@@ -7437,7 +7618,7 @@ diff -u -r1.202 configure
  eval "$as_ac_var=no"
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -15533,44 +14956,37 @@
+@@ -15533,44 +15035,37 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7497,7 +7678,7 @@ diff -u -r1.202 configure
    ;
    return 0;
  }
-@@ -15590,8 +15006,7 @@
+@@ -15590,8 +15085,7 @@
    eval "$as_ac_var=yes"
  else
    echo "$as_me: failed program was:" >&5
@@ -7507,7 +7688,7 @@ diff -u -r1.202 configure
  eval "$as_ac_var=no"
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -15623,12 +15038,14 @@
+@@ -15623,12 +15117,14 @@
  echo $ECHO_N "checking for struct timeval... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7527,7 +7708,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -15659,8 +15076,7 @@
+@@ -15659,8 +15155,7 @@
  
  else
    echo "$as_me: failed program was:" >&5
@@ -7537,7 +7718,7 @@ diff -u -r1.202 configure
  echo "$as_me:$LINENO: result: no" >&5
  echo "${ECHO_T}no" >&6
  fi
-@@ -15670,12 +15086,14 @@
+@@ -15670,12 +15165,14 @@
  echo $ECHO_N "checking if compiler allows empty structs... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7557,7 +7738,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -15700,8 +15118,7 @@
+@@ -15700,8 +15197,7 @@
  echo "${ECHO_T}yes" >&6
  else
    echo "$as_me: failed program was:" >&5
@@ -7567,7 +7748,7 @@ diff -u -r1.202 configure
  
        cat >>confdefs.h <<\_ACEOF
  #define BX_NO_EMPTY_STRUCTS 1
-@@ -15717,12 +15134,14 @@
+@@ -15717,12 +15213,14 @@
  echo $ECHO_N "checking if compiler allows __attribute__... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7587,7 +7768,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -15747,8 +15166,7 @@
+@@ -15747,8 +15245,7 @@
  echo "${ECHO_T}yes" >&6
  else
    echo "$as_me: failed program was:" >&5
@@ -7597,7 +7778,7 @@ diff -u -r1.202 configure
  
        echo "$as_me:$LINENO: result: no" >&5
  echo "${ECHO_T}no" >&6
-@@ -15773,12 +15191,14 @@
+@@ -15773,12 +15270,14 @@
  
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7617,7 +7798,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -15809,8 +15229,7 @@
+@@ -15809,8 +15308,7 @@
  
  else
    echo "$as_me: failed program was:" >&5
@@ -7627,7 +7808,7 @@ diff -u -r1.202 configure
  echo "$as_me:$LINENO: result: no" >&5
  echo "${ECHO_T}no" >&6
  fi
-@@ -15843,11 +15262,7 @@
+@@ -15843,11 +15341,7 @@
  echo $ECHO_N "checking app/Application.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7640,7 +7821,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <app/Application.h>
  _ACEOF
-@@ -15866,8 +15281,7 @@
+@@ -15866,8 +15360,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7650,7 +7831,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -15879,17 +15293,13 @@
+@@ -15879,17 +15372,13 @@
  echo $ECHO_N "checking app/Application.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7670,7 +7851,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -15906,8 +15316,7 @@
+@@ -15906,8 +15395,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7680,7 +7861,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -15920,32 +15329,14 @@
+@@ -15920,32 +15408,14 @@
      { echo "$as_me:$LINENO: WARNING: app/Application.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: app/Application.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: app/Application.h: proceeding with the preprocessor's result" >&5
@@ -7715,7 +7896,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for app/Application.h" >&5
  echo $ECHO_N "checking for app/Application.h... $ECHO_C" >&6
-@@ -15979,11 +15370,7 @@
+@@ -15979,11 +15449,7 @@
  echo $ECHO_N "checking interface/Window.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7728,7 +7909,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <interface/Window.h>
  _ACEOF
-@@ -16002,8 +15389,7 @@
+@@ -16002,8 +15468,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7738,7 +7919,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16015,17 +15401,13 @@
+@@ -16015,17 +15480,13 @@
  echo $ECHO_N "checking interface/Window.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7758,7 +7939,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -16042,8 +15424,7 @@
+@@ -16042,8 +15503,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7768,7 +7949,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -16056,32 +15437,14 @@
+@@ -16056,32 +15516,14 @@
      { echo "$as_me:$LINENO: WARNING: interface/Window.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: interface/Window.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: interface/Window.h: proceeding with the preprocessor's result" >&5
@@ -7803,7 +7984,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for interface/Window.h" >&5
  echo $ECHO_N "checking for interface/Window.h... $ECHO_C" >&6
-@@ -16115,11 +15478,7 @@
+@@ -16115,11 +15557,7 @@
  echo $ECHO_N "checking interface/View.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7816,7 +7997,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <interface/View.h>
  _ACEOF
-@@ -16138,8 +15497,7 @@
+@@ -16138,8 +15576,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7826,7 +8007,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16151,17 +15509,13 @@
+@@ -16151,17 +15588,13 @@
  echo $ECHO_N "checking interface/View.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7846,7 +8027,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -16178,8 +15532,7 @@
+@@ -16178,8 +15611,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7856,7 +8037,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -16192,32 +15545,14 @@
+@@ -16192,32 +15624,14 @@
      { echo "$as_me:$LINENO: WARNING: interface/View.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: interface/View.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: interface/View.h: proceeding with the preprocessor's result" >&5
@@ -7891,7 +8072,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for interface/View.h" >&5
  echo $ECHO_N "checking for interface/View.h... $ECHO_C" >&6
-@@ -16258,11 +15593,7 @@
+@@ -16258,11 +15672,7 @@
  echo $ECHO_N "checking proto/intuition.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7904,7 +8085,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <proto/intuition.h>
  _ACEOF
-@@ -16281,8 +15612,7 @@
+@@ -16281,8 +15691,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7914,7 +8095,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16294,17 +15624,13 @@
+@@ -16294,17 +15703,13 @@
  echo $ECHO_N "checking proto/intuition.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7934,7 +8115,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -16321,8 +15647,7 @@
+@@ -16321,8 +15726,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -7944,7 +8125,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -16335,32 +15660,14 @@
+@@ -16335,32 +15739,14 @@
      { echo "$as_me:$LINENO: WARNING: proto/intuition.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: proto/intuition.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: proto/intuition.h: proceeding with the preprocessor's result" >&5
@@ -7979,7 +8160,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for proto/intuition.h" >&5
  echo $ECHO_N "checking for proto/intuition.h... $ECHO_C" >&6
-@@ -16394,11 +15701,7 @@
+@@ -16394,11 +15780,7 @@
  echo $ECHO_N "checking intuition/intuitionbase.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -7992,7 +8173,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <intuition/intuitionbase.h>
  _ACEOF
-@@ -16417,8 +15720,7 @@
+@@ -16417,8 +15799,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8002,7 +8183,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16430,17 +15732,13 @@
+@@ -16430,17 +15811,13 @@
  echo $ECHO_N "checking intuition/intuitionbase.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8022,7 +8203,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -16457,8 +15755,7 @@
+@@ -16457,8 +15834,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8032,7 +8213,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -16471,32 +15768,14 @@
+@@ -16471,32 +15847,14 @@
      { echo "$as_me:$LINENO: WARNING: intuition/intuitionbase.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: intuition/intuitionbase.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: intuition/intuitionbase.h: proceeding with the preprocessor's result" >&5
@@ -8067,7 +8248,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for intuition/intuitionbase.h" >&5
  echo $ECHO_N "checking for intuition/intuitionbase.h... $ECHO_C" >&6
-@@ -16530,11 +15809,7 @@
+@@ -16530,11 +15888,7 @@
  echo $ECHO_N "checking cybergraphx/cybergraphics.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8080,7 +8261,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <cybergraphx/cybergraphics.h>
  _ACEOF
-@@ -16553,8 +15828,7 @@
+@@ -16553,8 +15907,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8090,7 +8271,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16566,17 +15840,13 @@
+@@ -16566,17 +15919,13 @@
  echo $ECHO_N "checking cybergraphx/cybergraphics.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8110,7 +8291,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -16593,8 +15863,7 @@
+@@ -16593,8 +15942,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8120,7 +8301,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -16607,32 +15876,14 @@
+@@ -16607,32 +15955,14 @@
      { echo "$as_me:$LINENO: WARNING: cybergraphx/cybergraphics.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: cybergraphx/cybergraphics.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: cybergraphx/cybergraphics.h: proceeding with the preprocessor's result" >&5
@@ -8140,7 +8321,7 @@ diff -u -r1.202 configure
  echo "$as_me: WARNING: cybergraphx/cybergraphics.h: present but cannot be compiled" >&2;}
      { echo "$as_me:$LINENO: WARNING: cybergraphx/cybergraphics.h: check for missing prerequisite headers?" >&5
  echo "$as_me: WARNING: cybergraphx/cybergraphics.h: check for missing prerequisite headers?" >&2;}
--    { echo "$as_me:$LINENO: WARNING: cybergraphx/cybergraphics.h: proceeding with the preprocessor's result" >&5
+     { echo "$as_me:$LINENO: WARNING: cybergraphx/cybergraphics.h: proceeding with the preprocessor's result" >&5
 -echo "$as_me: WARNING: cybergraphx/cybergraphics.h: proceeding with the preprocessor's result" >&2;}
 -    (
 -      cat <<\_ASBOX
@@ -8151,12 +8332,11 @@ diff -u -r1.202 configure
 -    ) |
 -      sed "s/^/$as_me: WARNING:     /" >&2
 -    ;;
-+    { echo "$as_me:$LINENO: WARNING: cybergraphx/cybergraphics.h: proceeding with the preprocessor's result" >&5
 +echo "$as_me: WARNING: cybergraphx/cybergraphics.h: proceeding with the preprocessor's result" >&2;};;
  esac
  echo "$as_me:$LINENO: checking for cybergraphx/cybergraphics.h" >&5
  echo $ECHO_N "checking for cybergraphx/cybergraphics.h... $ECHO_C" >&6
-@@ -16666,11 +15917,7 @@
+@@ -16666,11 +15996,7 @@
  echo $ECHO_N "checking devices/trackdisk.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8169,7 +8349,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <devices/trackdisk.h>
  _ACEOF
-@@ -16689,8 +15936,7 @@
+@@ -16689,8 +16015,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8179,7 +8359,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16702,17 +15948,13 @@
+@@ -16702,17 +16027,13 @@
  echo $ECHO_N "checking devices/trackdisk.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8199,7 +8379,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -16729,8 +15971,7 @@
+@@ -16729,8 +16050,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8209,7 +8389,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -16743,32 +15984,14 @@
+@@ -16743,32 +16063,14 @@
      { echo "$as_me:$LINENO: WARNING: devices/trackdisk.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: devices/trackdisk.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: devices/trackdisk.h: proceeding with the preprocessor's result" >&5
@@ -8244,7 +8424,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for devices/trackdisk.h" >&5
  echo $ECHO_N "checking for devices/trackdisk.h... $ECHO_C" >&6
-@@ -16809,11 +16032,7 @@
+@@ -16809,11 +16111,7 @@
  echo $ECHO_N "checking Quickdraw.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8257,7 +8437,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <Quickdraw.h>
  _ACEOF
-@@ -16832,8 +16051,7 @@
+@@ -16832,8 +16130,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8267,7 +8447,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16845,17 +16063,13 @@
+@@ -16845,17 +16142,13 @@
  echo $ECHO_N "checking Quickdraw.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8287,7 +8467,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -16872,8 +16086,7 @@
+@@ -16872,8 +16165,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8297,7 +8477,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -16886,32 +16099,14 @@
+@@ -16886,32 +16178,14 @@
      { echo "$as_me:$LINENO: WARNING: Quickdraw.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: Quickdraw.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: Quickdraw.h: proceeding with the preprocessor's result" >&5
@@ -8332,7 +8512,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for Quickdraw.h" >&5
  echo $ECHO_N "checking for Quickdraw.h... $ECHO_C" >&6
-@@ -16945,11 +16140,7 @@
+@@ -16945,11 +16219,7 @@
  echo $ECHO_N "checking Dialogs.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8345,7 +8525,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <Dialogs.h>
  _ACEOF
-@@ -16968,8 +16159,7 @@
+@@ -16968,8 +16238,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8355,7 +8535,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -16981,17 +16171,13 @@
+@@ -16981,17 +16250,13 @@
  echo $ECHO_N "checking Dialogs.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8375,7 +8555,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17008,8 +16194,7 @@
+@@ -17008,8 +16273,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8385,7 +8565,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -17022,32 +16207,14 @@
+@@ -17022,32 +16286,14 @@
      { echo "$as_me:$LINENO: WARNING: Dialogs.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: Dialogs.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: Dialogs.h: proceeding with the preprocessor's result" >&5
@@ -8420,7 +8600,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for Dialogs.h" >&5
  echo $ECHO_N "checking for Dialogs.h... $ECHO_C" >&6
-@@ -17088,11 +16255,7 @@
+@@ -17088,11 +16334,7 @@
  echo $ECHO_N "checking Carbon.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8433,7 +8613,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <Carbon.h>
  _ACEOF
-@@ -17111,8 +16274,7 @@
+@@ -17111,8 +16353,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8443,7 +8623,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -17124,17 +16286,13 @@
+@@ -17124,17 +16365,13 @@
  echo $ECHO_N "checking Carbon.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8463,7 +8643,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17151,8 +16309,7 @@
+@@ -17151,8 +16388,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8473,7 +8653,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -17165,32 +16322,14 @@
+@@ -17165,32 +16401,14 @@
      { echo "$as_me:$LINENO: WARNING: Carbon.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: Carbon.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: Carbon.h: proceeding with the preprocessor's result" >&5
@@ -8508,7 +8688,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for Carbon.h" >&5
  echo $ECHO_N "checking for Carbon.h... $ECHO_C" >&6
-@@ -17224,11 +16363,7 @@
+@@ -17224,11 +16442,7 @@
  echo $ECHO_N "checking ApplicationServices/ApplicationServices.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8521,7 +8701,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <ApplicationServices/ApplicationServices.h>
  _ACEOF
-@@ -17247,8 +16382,7 @@
+@@ -17247,8 +16461,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8531,7 +8711,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -17260,17 +16394,13 @@
+@@ -17260,17 +16473,13 @@
  echo $ECHO_N "checking ApplicationServices/ApplicationServices.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8551,7 +8731,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17287,8 +16417,7 @@
+@@ -17287,8 +16496,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8561,7 +8741,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -17301,32 +16430,14 @@
+@@ -17301,32 +16509,14 @@
      { echo "$as_me:$LINENO: WARNING: ApplicationServices/ApplicationServices.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: ApplicationServices/ApplicationServices.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: ApplicationServices/ApplicationServices.h: proceeding with the preprocessor's result" >&5
@@ -8596,7 +8776,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for ApplicationServices/ApplicationServices.h" >&5
  echo $ECHO_N "checking for ApplicationServices/ApplicationServices.h... $ECHO_C" >&6
-@@ -17367,11 +16478,7 @@
+@@ -17367,11 +16557,7 @@
  echo $ECHO_N "checking windows.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8609,7 +8789,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <windows.h>
  _ACEOF
-@@ -17390,8 +16497,7 @@
+@@ -17390,8 +16576,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8619,7 +8799,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -17403,17 +16509,13 @@
+@@ -17403,17 +16588,13 @@
  echo $ECHO_N "checking windows.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8639,7 +8819,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17430,8 +16532,7 @@
+@@ -17430,8 +16611,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8649,7 +8829,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -17444,32 +16545,14 @@
+@@ -17444,32 +16624,14 @@
      { echo "$as_me:$LINENO: WARNING: windows.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: windows.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: windows.h: proceeding with the preprocessor's result" >&5
@@ -8684,7 +8864,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for windows.h" >&5
  echo $ECHO_N "checking for windows.h... $ECHO_C" >&6
-@@ -17503,11 +16586,7 @@
+@@ -17503,11 +16665,7 @@
  echo $ECHO_N "checking commctrl.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8697,7 +8877,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <commctrl.h>
  _ACEOF
-@@ -17526,8 +16605,7 @@
+@@ -17526,8 +16684,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8707,7 +8887,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -17539,17 +16617,13 @@
+@@ -17539,17 +16696,13 @@
  echo $ECHO_N "checking commctrl.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8727,7 +8907,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17566,8 +16640,7 @@
+@@ -17566,8 +16719,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8737,7 +8917,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -17580,32 +16653,14 @@
+@@ -17580,32 +16732,14 @@
      { echo "$as_me:$LINENO: WARNING: commctrl.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: commctrl.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: commctrl.h: proceeding with the preprocessor's result" >&5
@@ -8772,7 +8952,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for commctrl.h" >&5
  echo $ECHO_N "checking for commctrl.h... $ECHO_C" >&6
-@@ -17646,11 +16701,7 @@
+@@ -17646,11 +16780,7 @@
  echo $ECHO_N "checking SDL/SDL.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8785,7 +8965,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <SDL/SDL.h>
  _ACEOF
-@@ -17669,8 +16720,7 @@
+@@ -17669,8 +16799,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8795,7 +8975,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -17682,17 +16732,13 @@
+@@ -17682,17 +16811,13 @@
  echo $ECHO_N "checking SDL/SDL.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8815,7 +8995,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17709,8 +16755,7 @@
+@@ -17709,8 +16834,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8825,7 +9005,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -17723,32 +16768,14 @@
+@@ -17723,32 +16847,14 @@
      { echo "$as_me:$LINENO: WARNING: SDL/SDL.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: SDL/SDL.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: SDL/SDL.h: proceeding with the preprocessor's result" >&5
@@ -8860,7 +9040,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for SDL/SDL.h" >&5
  echo $ECHO_N "checking for SDL/SDL.h... $ECHO_C" >&6
-@@ -17782,11 +16809,7 @@
+@@ -17782,11 +16888,7 @@
  echo $ECHO_N "checking SDL/SDL_main.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8873,7 +9053,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <SDL/SDL_main.h>
  _ACEOF
-@@ -17805,8 +16828,7 @@
+@@ -17805,8 +16907,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8883,7 +9063,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -17818,17 +16840,13 @@
+@@ -17818,17 +16919,13 @@
  echo $ECHO_N "checking SDL/SDL_main.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8903,7 +9083,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17845,8 +16863,7 @@
+@@ -17845,8 +16942,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8913,7 +9093,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -17859,32 +16876,14 @@
+@@ -17859,32 +16955,14 @@
      { echo "$as_me:$LINENO: WARNING: SDL/SDL_main.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: SDL/SDL_main.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: SDL/SDL_main.h: proceeding with the preprocessor's result" >&5
@@ -8948,7 +9128,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for SDL/SDL_main.h" >&5
  echo $ECHO_N "checking for SDL/SDL_main.h... $ECHO_C" >&6
-@@ -17925,11 +16924,7 @@
+@@ -17925,11 +17003,7 @@
  echo $ECHO_N "checking vga.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8961,7 +9141,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <vga.h>
  _ACEOF
-@@ -17948,8 +16943,7 @@
+@@ -17948,8 +17022,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -8971,7 +9151,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -17961,17 +16955,13 @@
+@@ -17961,17 +17034,13 @@
  echo $ECHO_N "checking vga.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -8991,7 +9171,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -17988,8 +16978,7 @@
+@@ -17988,8 +17057,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9001,7 +9181,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18002,32 +16991,14 @@
+@@ -18002,32 +17070,14 @@
      { echo "$as_me:$LINENO: WARNING: vga.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: vga.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: vga.h: proceeding with the preprocessor's result" >&5
@@ -9036,7 +9216,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for vga.h" >&5
  echo $ECHO_N "checking for vga.h... $ECHO_C" >&6
-@@ -18061,11 +17032,7 @@
+@@ -18061,11 +17111,7 @@
  echo $ECHO_N "checking vgagl.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9049,7 +9229,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <vgagl.h>
  _ACEOF
-@@ -18084,8 +17051,7 @@
+@@ -18084,8 +17130,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9059,7 +9239,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -18097,17 +17063,13 @@
+@@ -18097,17 +17142,13 @@
  echo $ECHO_N "checking vgagl.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9079,7 +9259,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -18124,8 +17086,7 @@
+@@ -18124,8 +17165,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9089,10 +9269,11 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18138,32 +17099,14 @@
+@@ -18137,33 +17177,15 @@
+   yes:no )
      { echo "$as_me:$LINENO: WARNING: vgagl.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: vgagl.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
-     { echo "$as_me:$LINENO: WARNING: vgagl.h: proceeding with the preprocessor's result" >&5
+-    { echo "$as_me:$LINENO: WARNING: vgagl.h: proceeding with the preprocessor's result" >&5
 -echo "$as_me: WARNING: vgagl.h: proceeding with the preprocessor's result" >&2;}
 -    (
 -      cat <<\_ASBOX
@@ -9103,6 +9284,7 @@ diff -u -r1.202 configure
 -    ) |
 -      sed "s/^/$as_me: WARNING:     /" >&2
 -    ;;
++    { echo "$as_me:$LINENO: WARNING: vgagl.h: proceeding with the preprocessor's result" >&5
 +echo "$as_me: WARNING: vgagl.h: proceeding with the preprocessor's result" >&2;};;
    no:yes )
      { echo "$as_me:$LINENO: WARNING: vgagl.h: present but cannot be compiled" >&5
@@ -9124,7 +9306,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for vgagl.h" >&5
  echo $ECHO_N "checking for vgagl.h... $ECHO_C" >&6
-@@ -18204,11 +17147,7 @@
+@@ -18204,11 +17226,7 @@
  echo $ECHO_N "checking X11/Xlib.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9137,7 +9319,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <X11/Xlib.h>
  _ACEOF
-@@ -18227,8 +17166,7 @@
+@@ -18227,8 +17245,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9147,7 +9329,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -18240,17 +17178,13 @@
+@@ -18240,17 +17257,13 @@
  echo $ECHO_N "checking X11/Xlib.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9167,7 +9349,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -18267,8 +17201,7 @@
+@@ -18267,8 +17280,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9177,7 +9359,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18281,32 +17214,14 @@
+@@ -18281,32 +17293,14 @@
      { echo "$as_me:$LINENO: WARNING: X11/Xlib.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: X11/Xlib.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: X11/Xlib.h: proceeding with the preprocessor's result" >&5
@@ -9212,7 +9394,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for X11/Xlib.h" >&5
  echo $ECHO_N "checking for X11/Xlib.h... $ECHO_C" >&6
-@@ -18340,11 +17255,7 @@
+@@ -18340,11 +17334,7 @@
  echo $ECHO_N "checking X11/Xutil.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9225,7 +9407,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <X11/Xutil.h>
  _ACEOF
-@@ -18363,8 +17274,7 @@
+@@ -18363,8 +17353,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9235,7 +9417,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -18376,17 +17286,13 @@
+@@ -18376,17 +17365,13 @@
  echo $ECHO_N "checking X11/Xutil.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9255,7 +9437,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -18403,8 +17309,7 @@
+@@ -18403,8 +17388,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9265,7 +9447,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18417,32 +17322,14 @@
+@@ -18417,32 +17401,14 @@
      { echo "$as_me:$LINENO: WARNING: X11/Xutil.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: X11/Xutil.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: X11/Xutil.h: proceeding with the preprocessor's result" >&5
@@ -9300,7 +9482,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for X11/Xutil.h" >&5
  echo $ECHO_N "checking for X11/Xutil.h... $ECHO_C" >&6
-@@ -18485,11 +17372,7 @@
+@@ -18485,11 +17451,7 @@
  echo $ECHO_N "checking winsock.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9313,7 +9495,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <winsock.h>
  _ACEOF
-@@ -18508,8 +17391,7 @@
+@@ -18508,8 +17470,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9323,7 +9505,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -18521,17 +17403,13 @@
+@@ -18521,17 +17482,13 @@
  echo $ECHO_N "checking winsock.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9343,7 +9525,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -18548,8 +17426,7 @@
+@@ -18548,8 +17505,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9353,7 +9535,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18562,32 +17439,14 @@
+@@ -18562,32 +17518,14 @@
      { echo "$as_me:$LINENO: WARNING: winsock.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: winsock.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: winsock.h: proceeding with the preprocessor's result" >&5
@@ -9388,7 +9570,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for winsock.h" >&5
  echo $ECHO_N "checking for winsock.h... $ECHO_C" >&6
-@@ -18621,11 +17480,7 @@
+@@ -18621,11 +17559,7 @@
  echo $ECHO_N "checking process.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9401,7 +9583,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <process.h>
  _ACEOF
-@@ -18644,8 +17499,7 @@
+@@ -18644,8 +17578,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9411,7 +9593,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -18657,17 +17511,13 @@
+@@ -18657,17 +17590,13 @@
  echo $ECHO_N "checking process.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9431,7 +9613,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -18684,8 +17534,7 @@
+@@ -18684,8 +17613,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9441,7 +9623,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18698,32 +17547,14 @@
+@@ -18698,32 +17626,14 @@
      { echo "$as_me:$LINENO: WARNING: process.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: process.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: process.h: proceeding with the preprocessor's result" >&5
@@ -9476,7 +9658,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for process.h" >&5
  echo $ECHO_N "checking for process.h... $ECHO_C" >&6
-@@ -18759,11 +17590,7 @@
+@@ -18759,11 +17669,7 @@
  echo $ECHO_N "checking sys/socket.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9489,7 +9671,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <sys/socket.h>
  _ACEOF
-@@ -18782,8 +17609,7 @@
+@@ -18782,8 +17688,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9499,7 +9681,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -18795,17 +17621,13 @@
+@@ -18795,17 +17700,13 @@
  echo $ECHO_N "checking sys/socket.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9519,7 +9701,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -18822,8 +17644,7 @@
+@@ -18822,8 +17723,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9529,7 +9711,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18836,32 +17657,14 @@
+@@ -18836,32 +17736,14 @@
      { echo "$as_me:$LINENO: WARNING: sys/socket.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: sys/socket.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: sys/socket.h: proceeding with the preprocessor's result" >&5
@@ -9564,7 +9746,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for sys/socket.h" >&5
  echo $ECHO_N "checking for sys/socket.h... $ECHO_C" >&6
-@@ -18895,11 +17698,7 @@
+@@ -18895,11 +17777,7 @@
  echo $ECHO_N "checking netinet/tcp.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9577,7 +9759,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <netinet/tcp.h>
  _ACEOF
-@@ -18918,8 +17717,7 @@
+@@ -18918,8 +17796,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9587,7 +9769,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -18931,17 +17729,13 @@
+@@ -18931,17 +17808,13 @@
  echo $ECHO_N "checking netinet/tcp.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9607,7 +9789,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -18958,8 +17752,7 @@
+@@ -18958,8 +17831,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9617,7 +9799,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -18972,32 +17765,14 @@
+@@ -18972,32 +17844,14 @@
      { echo "$as_me:$LINENO: WARNING: netinet/tcp.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: netinet/tcp.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: netinet/tcp.h: proceeding with the preprocessor's result" >&5
@@ -9652,7 +9834,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for netinet/tcp.h" >&5
  echo $ECHO_N "checking for netinet/tcp.h... $ECHO_C" >&6
-@@ -19031,11 +17806,7 @@
+@@ -19031,11 +17885,7 @@
  echo $ECHO_N "checking pthread.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9665,7 +9847,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <pthread.h>
  _ACEOF
-@@ -19054,8 +17825,7 @@
+@@ -19054,8 +17904,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9675,7 +9857,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -19067,17 +17837,13 @@
+@@ -19067,17 +17916,13 @@
  echo $ECHO_N "checking pthread.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9695,7 +9877,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -19094,8 +17860,7 @@
+@@ -19094,8 +17939,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9705,7 +9887,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -19108,32 +17873,14 @@
+@@ -19108,32 +17952,14 @@
      { echo "$as_me:$LINENO: WARNING: pthread.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: pthread.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: pthread.h: proceeding with the preprocessor's result" >&5
@@ -9740,7 +9922,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for pthread.h" >&5
  echo $ECHO_N "checking for pthread.h... $ECHO_C" >&6
-@@ -19176,11 +17923,7 @@
+@@ -19176,11 +18002,7 @@
  echo $ECHO_N "checking curses.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9753,7 +9935,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <curses.h>
  _ACEOF
-@@ -19199,8 +17942,7 @@
+@@ -19199,8 +18021,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9763,7 +9945,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -19212,17 +17954,13 @@
+@@ -19212,17 +18033,13 @@
  echo $ECHO_N "checking curses.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9783,7 +9965,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -19239,8 +17977,7 @@
+@@ -19239,8 +18056,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9793,7 +9975,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -19253,32 +17990,14 @@
+@@ -19253,32 +18069,14 @@
      { echo "$as_me:$LINENO: WARNING: curses.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: curses.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: curses.h: proceeding with the preprocessor's result" >&5
@@ -9828,7 +10010,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for curses.h" >&5
  echo $ECHO_N "checking for curses.h... $ECHO_C" >&6
-@@ -19312,11 +18031,7 @@
+@@ -19312,11 +18110,7 @@
  echo $ECHO_N "checking signal.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9841,7 +10023,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <signal.h>
  _ACEOF
-@@ -19335,8 +18050,7 @@
+@@ -19335,8 +18129,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9851,7 +10033,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -19348,17 +18062,13 @@
+@@ -19348,17 +18141,13 @@
  echo $ECHO_N "checking signal.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9871,7 +10053,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -19375,8 +18085,7 @@
+@@ -19375,8 +18164,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9881,7 +10063,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -19389,32 +18098,14 @@
+@@ -19389,32 +18177,14 @@
      { echo "$as_me:$LINENO: WARNING: signal.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: signal.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: signal.h: proceeding with the preprocessor's result" >&5
@@ -9916,7 +10098,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for signal.h" >&5
  echo $ECHO_N "checking for signal.h... $ECHO_C" >&6
-@@ -19597,11 +18288,7 @@
+@@ -19597,11 +18367,7 @@
  echo $ECHO_N "checking dlfcn.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9929,7 +10111,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <dlfcn.h>
  _ACEOF
-@@ -19620,8 +18307,7 @@
+@@ -19620,8 +18386,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9939,7 +10121,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -19633,17 +18319,13 @@
+@@ -19633,17 +18398,13 @@
  echo $ECHO_N "checking dlfcn.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -9959,7 +10141,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -19660,8 +18342,7 @@
+@@ -19660,8 +18421,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -9969,7 +10151,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -19674,32 +18355,14 @@
+@@ -19674,32 +18434,14 @@
      { echo "$as_me:$LINENO: WARNING: dlfcn.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: dlfcn.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: dlfcn.h: proceeding with the preprocessor's result" >&5
@@ -10004,7 +10186,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for dlfcn.h" >&5
  echo $ECHO_N "checking for dlfcn.h... $ECHO_C" >&6
-@@ -19734,11 +18397,7 @@
+@@ -19734,11 +18476,7 @@
  echo $ECHO_N "checking assert.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10017,7 +10199,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <assert.h>
  _ACEOF
-@@ -19757,8 +18416,7 @@
+@@ -19757,8 +18495,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10027,7 +10209,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -19770,17 +18428,13 @@
+@@ -19770,17 +18507,13 @@
  echo $ECHO_N "checking assert.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10047,7 +10229,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -19797,8 +18451,7 @@
+@@ -19797,8 +18530,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10057,7 +10239,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -19811,32 +18464,14 @@
+@@ -19811,32 +18543,14 @@
      { echo "$as_me:$LINENO: WARNING: assert.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: assert.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: assert.h: proceeding with the preprocessor's result" >&5
@@ -10092,7 +10274,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for assert.h" >&5
  echo $ECHO_N "checking for assert.h... $ECHO_C" >&6
-@@ -19922,11 +18557,7 @@
+@@ -19922,11 +18636,7 @@
  LIBS="-ldl  $LIBS"
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10105,7 +10287,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -19935,6 +18566,12 @@
+@@ -19935,6 +18645,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char dlopen ();
@@ -10118,7 +10300,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -19958,8 +18595,7 @@
+@@ -19958,8 +18674,7 @@
    ac_cv_lib_dl_dlopen=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10128,7 +10310,7 @@ diff -u -r1.202 configure
  ac_cv_lib_dl_dlopen=no
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -20119,12 +18755,14 @@
+@@ -20119,12 +18834,14 @@
  echo $ECHO_N "checking if compiler allows blank labels... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10148,7 +10330,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -20149,8 +18787,7 @@
+@@ -20149,8 +18866,7 @@
  echo "${ECHO_T}yes" >&6
  else
    echo "$as_me: failed program was:" >&5
@@ -10158,7 +10340,7 @@ diff -u -r1.202 configure
  
        echo "$as_me:$LINENO: result: no" >&5
  echo "${ECHO_T}no" >&6
-@@ -20166,12 +18803,14 @@
+@@ -20166,12 +18882,14 @@
  echo $ECHO_N "checking if compiler allows LL for 64-bit constants... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10178,7 +10360,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -20196,8 +18835,7 @@
+@@ -20196,8 +18914,7 @@
  echo "${ECHO_T}yes" >&6
  else
    echo "$as_me: failed program was:" >&5
@@ -10188,7 +10370,189 @@ diff -u -r1.202 configure
  
        echo "$as_me:$LINENO: result: no" >&5
  echo "${ECHO_T}no" >&6
-@@ -20405,23 +19043,24 @@
+@@ -20396,32 +19113,201 @@
+ #define BX_SUPPORT_APIC 0
+ _ACEOF
+ 
+-      IOAPIC_OBJS=''
+-      APIC_OBJS=''
+-     fi
+-
++      IOAPIC_OBJS=''
++      APIC_OBJS=''
++     fi
++
++
++fi;
++
++
++
++if test "${ac_cv_header_zlib_h+set}" = set; then
++  echo "$as_me:$LINENO: checking for zlib.h" >&5
++echo $ECHO_N "checking for zlib.h... $ECHO_C" >&6
++if test "${ac_cv_header_zlib_h+set}" = set; then
++  echo $ECHO_N "(cached) $ECHO_C" >&6
++fi
++echo "$as_me:$LINENO: result: $ac_cv_header_zlib_h" >&5
++echo "${ECHO_T}$ac_cv_header_zlib_h" >&6
++else
++  # Is the header compilable?
++echo "$as_me:$LINENO: checking zlib.h usability" >&5
++echo $ECHO_N "checking zlib.h usability... $ECHO_C" >&6
++cat >conftest.$ac_ext <<_ACEOF
++#line $LINENO "configure"
++#include "confdefs.h"
++$ac_includes_default
++#include <zlib.h>
++_ACEOF
++rm -f conftest.$ac_objext
++if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
++  (eval $ac_compile) 2>&5
++  ac_status=$?
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } &&
++         { ac_try='test -s conftest.$ac_objext'
++  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
++  (eval $ac_try) 2>&5
++  ac_status=$?
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); }; }; then
++  ac_header_compiler=yes
++else
++  echo "$as_me: failed program was:" >&5
++cat conftest.$ac_ext >&5
++ac_header_compiler=no
++fi
++rm -f conftest.$ac_objext conftest.$ac_ext
++echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
++echo "${ECHO_T}$ac_header_compiler" >&6
++
++# Is the header present?
++echo "$as_me:$LINENO: checking zlib.h presence" >&5
++echo $ECHO_N "checking zlib.h presence... $ECHO_C" >&6
++cat >conftest.$ac_ext <<_ACEOF
++#line $LINENO "configure"
++#include "confdefs.h"
++#include <zlib.h>
++_ACEOF
++if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
++  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
++  ac_status=$?
++  egrep -v '^ *\+' conftest.er1 >conftest.err
++  rm -f conftest.er1
++  cat conftest.err >&5
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } >/dev/null; then
++  if test -s conftest.err; then
++    ac_cpp_err=$ac_c_preproc_warn_flag
++  else
++    ac_cpp_err=
++  fi
++else
++  ac_cpp_err=yes
++fi
++if test -z "$ac_cpp_err"; then
++  ac_header_preproc=yes
++else
++  echo "$as_me: failed program was:" >&5
++  cat conftest.$ac_ext >&5
++  ac_header_preproc=no
++fi
++rm -f conftest.err conftest.$ac_ext
++echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
++echo "${ECHO_T}$ac_header_preproc" >&6
++
++# So?  What about this header?
++case $ac_header_compiler:$ac_header_preproc in
++  yes:no )
++    { echo "$as_me:$LINENO: WARNING: zlib.h: accepted by the compiler, rejected by the preprocessor!" >&5
++echo "$as_me: WARNING: zlib.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
++    { echo "$as_me:$LINENO: WARNING: zlib.h: proceeding with the preprocessor's result" >&5
++echo "$as_me: WARNING: zlib.h: proceeding with the preprocessor's result" >&2;};;
++  no:yes )
++    { echo "$as_me:$LINENO: WARNING: zlib.h: present but cannot be compiled" >&5
++echo "$as_me: WARNING: zlib.h: present but cannot be compiled" >&2;}
++    { echo "$as_me:$LINENO: WARNING: zlib.h: check for missing prerequisite headers?" >&5
++echo "$as_me: WARNING: zlib.h: check for missing prerequisite headers?" >&2;}
++    { echo "$as_me:$LINENO: WARNING: zlib.h: proceeding with the preprocessor's result" >&5
++echo "$as_me: WARNING: zlib.h: proceeding with the preprocessor's result" >&2;};;
++esac
++echo "$as_me:$LINENO: checking for zlib.h" >&5
++echo $ECHO_N "checking for zlib.h... $ECHO_C" >&6
++if test "${ac_cv_header_zlib_h+set}" = set; then
++  echo $ECHO_N "(cached) $ECHO_C" >&6
++else
++  ac_cv_header_zlib_h=$ac_header_preproc
++fi
++echo "$as_me:$LINENO: result: $ac_cv_header_zlib_h" >&5
++echo "${ECHO_T}$ac_cv_header_zlib_h" >&6
++
++fi
++if test $ac_cv_header_zlib_h = yes; then
++  echo "$as_me:$LINENO: checking for gzopen in -lz" >&5
++echo $ECHO_N "checking for gzopen in -lz... $ECHO_C" >&6
++if test "${ac_cv_lib_z_gzopen+set}" = set; then
++  echo $ECHO_N "(cached) $ECHO_C" >&6
++else
++  ac_check_lib_save_LIBS=$LIBS
++LIBS="-lz  $LIBS"
++cat >conftest.$ac_ext <<_ACEOF
++#line $LINENO "configure"
++#include "confdefs.h"
++
++/* Override any gcc2 internal prototype to avoid an error.  */
++#ifdef __cplusplus
++extern "C"
++#endif
++/* We use char because int might match the return type of a gcc2
++   builtin and then its argument prototype would still apply.  */
++char gzopen ();
++#ifdef F77_DUMMY_MAIN
++#  ifdef __cplusplus
++     extern "C"
++#  endif
++   int F77_DUMMY_MAIN() { return 1; }
++#endif
++int
++main ()
++{
++gzopen ();
++  ;
++  return 0;
++}
++_ACEOF
++rm -f conftest.$ac_objext conftest$ac_exeext
++if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
++  (eval $ac_link) 2>&5
++  ac_status=$?
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } &&
++         { ac_try='test -s conftest$ac_exeext'
++  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
++  (eval $ac_try) 2>&5
++  ac_status=$?
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); }; }; then
++  ac_cv_lib_z_gzopen=yes
++else
++  echo "$as_me: failed program was:" >&5
++cat conftest.$ac_ext >&5
++ac_cv_lib_z_gzopen=no
++fi
++rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
++LIBS=$ac_check_lib_save_LIBS
++fi
++echo "$as_me:$LINENO: result: $ac_cv_lib_z_gzopen" >&5
++echo "${ECHO_T}$ac_cv_lib_z_gzopen" >&6
++if test $ac_cv_lib_z_gzopen = yes; then
++  cat >>confdefs.h <<\_ACEOF
++#define BX_HAVE_ZLIB 1
++_ACEOF
++
++fi
+ 
+-fi;
++fi
  
  
  
@@ -10220,7 +10584,7 @@ diff -u -r1.202 configure
  _ACEOF
  
     fi
-@@ -20430,7 +19069,7 @@
+@@ -20430,7 +19316,7 @@
      echo "$as_me:$LINENO: result: yes" >&5
  echo "${ECHO_T}yes" >&6
      cat >>confdefs.h <<\_ACEOF
@@ -10229,7 +10593,7 @@ diff -u -r1.202 configure
  _ACEOF
  
  
-@@ -20466,11 +19105,7 @@
+@@ -20466,11 +19352,7 @@
  echo $ECHO_N "checking net/bpf.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10242,7 +10606,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <net/bpf.h>
  _ACEOF
-@@ -20489,8 +19124,7 @@
+@@ -20489,8 +19371,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10252,7 +10616,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -20502,17 +19136,13 @@
+@@ -20502,17 +19383,13 @@
  echo $ECHO_N "checking net/bpf.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10272,7 +10636,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -20529,8 +19159,7 @@
+@@ -20529,8 +19406,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10282,7 +10646,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -20543,32 +19172,14 @@
+@@ -20543,32 +19419,14 @@
      { echo "$as_me:$LINENO: WARNING: net/bpf.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: net/bpf.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: net/bpf.h: proceeding with the preprocessor's result" >&5
@@ -10317,7 +10681,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for net/bpf.h" >&5
  echo $ECHO_N "checking for net/bpf.h... $ECHO_C" >&6
-@@ -20600,11 +19211,7 @@
+@@ -20600,11 +19458,7 @@
  echo $ECHO_N "checking netpacket/packet.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10330,7 +10694,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <netpacket/packet.h>
  _ACEOF
-@@ -20623,8 +19230,7 @@
+@@ -20623,8 +19477,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10340,7 +10704,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -20636,17 +19242,13 @@
+@@ -20636,17 +19489,13 @@
  echo $ECHO_N "checking netpacket/packet.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10360,7 +10724,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -20663,8 +19265,7 @@
+@@ -20663,8 +19512,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10370,7 +10734,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -20677,32 +19278,14 @@
+@@ -20677,32 +19525,14 @@
      { echo "$as_me:$LINENO: WARNING: netpacket/packet.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: netpacket/packet.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: netpacket/packet.h: proceeding with the preprocessor's result" >&5
@@ -10405,7 +10769,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for netpacket/packet.h" >&5
  echo $ECHO_N "checking for netpacket/packet.h... $ECHO_C" >&6
-@@ -20727,11 +19310,7 @@
+@@ -20727,11 +19557,7 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10418,7 +10782,7 @@ diff -u -r1.202 configure
  
  	#include <asm/types.h>
  	#include <sys/socket.h>
-@@ -20754,8 +19333,7 @@
+@@ -20754,8 +19580,7 @@
    ac_cv_header_linux_netlink_h=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10428,7 +10792,7 @@ diff -u -r1.202 configure
  ac_cv_header_linux_netlink_h=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -20780,11 +19358,7 @@
+@@ -20780,11 +19605,7 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10441,7 +10805,7 @@ diff -u -r1.202 configure
  
  	#include <asm/types.h>
  	#include <sys/socket.h>
-@@ -20807,8 +19381,7 @@
+@@ -20807,8 +19628,7 @@
    ac_cv_header_linux_if_tun_h=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10451,7 +10815,7 @@ diff -u -r1.202 configure
  ac_cv_header_linux_if_tun_h=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -21548,19 +20121,13 @@
+@@ -21548,19 +20368,13 @@
  OLD_LIBS=$LIBS
  LIBS="$LIBS -lreadline"
  if test "$cross_compiling" = yes; then
@@ -10474,7 +10838,7 @@ diff -u -r1.202 configure
  
    #include <stdio.h>
    #include <readline/readline.h>
-@@ -21584,32 +20151,25 @@
+@@ -21584,32 +20398,25 @@
  else
    echo "$as_me: program exited with status $ac_status" >&5
  echo "$as_me: failed program was:" >&5
@@ -10512,7 +10876,7 @@ diff -u -r1.202 configure
  
    #include <stdio.h>
    #include <readline/readline.h>
-@@ -21633,14 +20193,13 @@
+@@ -21633,14 +20440,13 @@
  else
    echo "$as_me: program exited with status $ac_status" >&5
  echo "$as_me: failed program was:" >&5
@@ -10529,7 +10893,7 @@ diff -u -r1.202 configure
  fi
  LIBS=$OLD_LIBS
  
-@@ -21719,11 +20278,7 @@
+@@ -21719,11 +20525,7 @@
  echo $ECHO_N "checking readline/history.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10542,7 +10906,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <readline/history.h>
  _ACEOF
-@@ -21742,8 +20297,7 @@
+@@ -21742,8 +20544,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10552,7 +10916,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -21755,17 +20309,13 @@
+@@ -21755,17 +20556,13 @@
  echo $ECHO_N "checking readline/history.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10572,7 +10936,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -21782,8 +20332,7 @@
+@@ -21782,8 +20579,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10582,7 +10946,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -21796,32 +20345,14 @@
+@@ -21796,32 +20592,14 @@
      { echo "$as_me:$LINENO: WARNING: readline/history.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: readline/history.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: readline/history.h: proceeding with the preprocessor's result" >&5
@@ -10617,7 +10981,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for readline/history.h" >&5
  echo $ECHO_N "checking for readline/history.h... $ECHO_C" >&6
-@@ -22235,11 +20766,7 @@
+@@ -22235,11 +21013,7 @@
  echo $ECHO_N "checking IOKit/storage/IOCDMedia.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10630,7 +10994,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <IOKit/storage/IOCDMedia.h>
  _ACEOF
-@@ -22258,8 +20785,7 @@
+@@ -22258,8 +21032,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10640,7 +11004,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -22271,17 +20797,13 @@
+@@ -22271,17 +21044,13 @@
  echo $ECHO_N "checking IOKit/storage/IOCDMedia.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10660,7 +11024,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -22298,8 +20820,7 @@
+@@ -22298,8 +21067,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10670,7 +11034,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -22312,32 +20833,14 @@
+@@ -22312,32 +21080,14 @@
      { echo "$as_me:$LINENO: WARNING: IOKit/storage/IOCDMedia.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: IOKit/storage/IOCDMedia.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: IOKit/storage/IOCDMedia.h: proceeding with the preprocessor's result" >&5
@@ -10705,7 +11069,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for IOKit/storage/IOCDMedia.h" >&5
  echo $ECHO_N "checking for IOKit/storage/IOCDMedia.h... $ECHO_C" >&6
-@@ -23237,11 +21740,7 @@
+@@ -23237,11 +21987,7 @@
  LIBS="-lmingwex  $LIBS"
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10718,7 +11082,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -23250,6 +21749,12 @@
+@@ -23250,6 +21996,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char opendir ();
@@ -10731,7 +11095,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -23273,8 +21778,7 @@
+@@ -23273,8 +22025,7 @@
    ac_cv_lib_mingwex_opendir=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10741,7 +11105,7 @@ diff -u -r1.202 configure
  ac_cv_lib_mingwex_opendir=no
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23304,11 +21808,7 @@
+@@ -23304,11 +22055,7 @@
  LIBS="-lcurses  $LIBS"
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10754,7 +11118,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -23317,6 +21817,12 @@
+@@ -23317,6 +22064,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char mvaddch ();
@@ -10767,7 +11131,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -23340,8 +21846,7 @@
+@@ -23340,8 +22093,7 @@
    ac_cv_lib_curses_mvaddch=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10777,7 +11141,7 @@ diff -u -r1.202 configure
  ac_cv_lib_curses_mvaddch=no
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23362,11 +21867,7 @@
+@@ -23362,11 +22114,7 @@
  LIBS="-lncurses  $LIBS"
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10790,7 +11154,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -23375,6 +21876,12 @@
+@@ -23375,6 +22123,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char mvaddch ();
@@ -10803,7 +11167,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -23398,8 +21905,7 @@
+@@ -23398,8 +22152,7 @@
    ac_cv_lib_ncurses_mvaddch=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10813,7 +11177,7 @@ diff -u -r1.202 configure
  ac_cv_lib_ncurses_mvaddch=no
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23420,11 +21926,7 @@
+@@ -23420,11 +22173,7 @@
  LIBS="-ltermlib  $LIBS"
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10826,7 +11190,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -23433,6 +21935,12 @@
+@@ -23433,6 +22182,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char mvaddch ();
@@ -10839,7 +11203,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -23456,8 +21964,7 @@
+@@ -23456,8 +22211,7 @@
    ac_cv_lib_termlib_mvaddch=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10849,7 +11213,7 @@ diff -u -r1.202 configure
  ac_cv_lib_termlib_mvaddch=no
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23478,11 +21985,7 @@
+@@ -23478,11 +22232,7 @@
  LIBS="-lpdcurses  $LIBS"
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10862,7 +11226,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -23491,6 +21994,12 @@
+@@ -23491,6 +22241,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char mvaddch ();
@@ -10875,7 +11239,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -23514,8 +22023,7 @@
+@@ -23514,8 +22270,7 @@
    ac_cv_lib_pdcurses_mvaddch=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -10885,7 +11249,7 @@ diff -u -r1.202 configure
  ac_cv_lib_pdcurses_mvaddch=no
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23547,44 +22055,37 @@
+@@ -23547,44 +22302,37 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -10945,7 +11309,7 @@ diff -u -r1.202 configure
    ;
    return 0;
  }
-@@ -23604,8 +22105,7 @@
+@@ -23604,8 +22352,7 @@
    eval "$as_ac_var=yes"
  else
    echo "$as_me: failed program was:" >&5
@@ -10955,7 +11319,7 @@ diff -u -r1.202 configure
  eval "$as_ac_var=no"
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23639,44 +22139,37 @@
+@@ -23639,44 +22386,37 @@
  else
    cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -11015,7 +11379,7 @@ diff -u -r1.202 configure
    ;
    return 0;
  }
-@@ -23696,8 +22189,7 @@
+@@ -23696,8 +22436,7 @@
    eval "$as_ac_var=yes"
  else
    echo "$as_me: failed program was:" >&5
@@ -11025,7 +11389,7 @@ diff -u -r1.202 configure
  eval "$as_ac_var=no"
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23722,11 +22214,7 @@
+@@ -23722,11 +22461,7 @@
  LIBS="-lsocket  $LIBS"
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -11038,7 +11402,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -23735,6 +22223,12 @@
+@@ -23735,6 +22470,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char socket ();
@@ -11051,7 +11415,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -23758,8 +22252,7 @@
+@@ -23758,8 +22499,7 @@
    ac_cv_lib_socket_socket=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -11061,7 +11425,7 @@ diff -u -r1.202 configure
  ac_cv_lib_socket_socket=no
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -23806,11 +22299,7 @@
+@@ -23806,11 +22546,7 @@
  echo $ECHO_N "checking pthread.h usability... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -11074,7 +11438,7 @@ diff -u -r1.202 configure
  $ac_includes_default
  #include <pthread.h>
  _ACEOF
-@@ -23829,8 +22318,7 @@
+@@ -23829,8 +22565,7 @@
    ac_header_compiler=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -11084,7 +11448,7 @@ diff -u -r1.202 configure
  ac_header_compiler=no
  fi
  rm -f conftest.$ac_objext conftest.$ac_ext
-@@ -23842,17 +22330,13 @@
+@@ -23842,17 +22577,13 @@
  echo $ECHO_N "checking pthread.h presence... $ECHO_C" >&6
  cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -11104,7 +11468,7 @@ diff -u -r1.202 configure
    rm -f conftest.er1
    cat conftest.err >&5
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-@@ -23869,8 +22353,7 @@
+@@ -23869,8 +22600,7 @@
    ac_header_preproc=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -11114,7 +11478,7 @@ diff -u -r1.202 configure
    ac_header_preproc=no
  fi
  rm -f conftest.err conftest.$ac_ext
-@@ -23883,32 +22366,14 @@
+@@ -23883,32 +22613,14 @@
      { echo "$as_me:$LINENO: WARNING: pthread.h: accepted by the compiler, rejected by the preprocessor!" >&5
  echo "$as_me: WARNING: pthread.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
      { echo "$as_me:$LINENO: WARNING: pthread.h: proceeding with the preprocessor's result" >&5
@@ -11149,7 +11513,7 @@ diff -u -r1.202 configure
  esac
  echo "$as_me:$LINENO: checking for pthread.h" >&5
  echo $ECHO_N "checking for pthread.h... $ECHO_C" >&6
-@@ -23947,11 +22412,7 @@
+@@ -23947,11 +22659,7 @@
  echo $ECHO_N "checking for pthread_join in LIBS=$PTHREAD_LIBS with CFLAGS=$PTHREAD_CFLAGS... $ECHO_C" >&6
  	cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -11162,7 +11526,7 @@ diff -u -r1.202 configure
  
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
-@@ -23960,6 +22421,12 @@
+@@ -23960,6 +22668,12 @@
  /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
  char pthread_join ();
@@ -11175,7 +11539,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -23983,8 +22450,7 @@
+@@ -23983,8 +22697,7 @@
    acx_pthread_ok=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -11185,7 +11549,7 @@ diff -u -r1.202 configure
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
  	echo "$as_me:$LINENO: result: $acx_pthread_ok" >&5
-@@ -24074,12 +22540,14 @@
+@@ -24074,12 +22787,14 @@
  	# We try pthread_create on general principles.
  	cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -11205,7 +11569,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -24105,8 +22573,7 @@
+@@ -24105,8 +22820,7 @@
    acx_pthread_ok=yes
  else
    echo "$as_me: failed program was:" >&5
@@ -11215,7 +11579,7 @@ diff -u -r1.202 configure
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
  
-@@ -24137,12 +22604,14 @@
+@@ -24137,12 +22851,14 @@
  echo $ECHO_N "checking for joinable pthread attribute... $ECHO_C" >&6
  	cat >conftest.$ac_ext <<_ACEOF
  #line $LINENO "configure"
@@ -11235,7 +11599,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -24166,20 +22635,21 @@
+@@ -24166,20 +22882,21 @@
    ok=PTHREAD_CREATE_JOINABLE
  else
    echo "$as_me: failed program was:" >&5
@@ -11264,7 +11628,7 @@ diff -u -r1.202 configure
  int
  main ()
  {
-@@ -24203,8 +22673,7 @@
+@@ -24203,8 +22920,7 @@
    ok=PTHREAD_CREATE_UNDETACHED
  else
    echo "$as_me: failed program was:" >&5
@@ -11274,7 +11638,7 @@ diff -u -r1.202 configure
  ok=unknown
  fi
  rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-@@ -24442,7 +22911,7 @@
+@@ -24442,7 +23158,7 @@
  fi
  
  
@@ -11283,7 +11647,7 @@ diff -u -r1.202 configure
  cat >confcache <<\_ACEOF
  # This file is a shell script that caches the results of configure
  # tests run on this system so they can be shared between configure
-@@ -24453,7 +22922,7 @@
+@@ -24453,7 +23169,7 @@
  # config.status only pays attention to the cache file if you give it
  # the --recheck option to rerun configure.
  #
@@ -11292,7 +11656,7 @@ diff -u -r1.202 configure
  # loading this file, other *unset* `ac_cv_foo' will be assigned the
  # following values.
  
-@@ -24488,7 +22957,7 @@
+@@ -24488,7 +23204,7 @@
       t end
       /^ac_cv_env/!s/^\([^=]*\)=\(.*\)$/\1=${\1=\2}/
       : end' >>confcache
@@ -11301,7 +11665,7 @@ diff -u -r1.202 configure
    if test -w $cache_file; then
      test "x$cache_file" != "x/dev/null" && echo "updating cache $cache_file"
      cat confcache >$cache_file
-@@ -24519,21 +22988,6 @@
+@@ -24519,21 +23235,6 @@
  
  DEFS=-DHAVE_CONFIG_H
  
@@ -11323,7 +11687,7 @@ diff -u -r1.202 configure
  
  : ${CONFIG_STATUS=./config.status}
  ac_clean_files_save=$ac_clean_files
-@@ -24548,12 +23002,11 @@
+@@ -24548,12 +23249,11 @@
  # configure, is in config.log if it exists.
  
  debug=false
@@ -11337,7 +11701,7 @@ diff -u -r1.202 configure
  ## --------------------- ##
  ## M4sh Initialization.  ##
  ## --------------------- ##
-@@ -24562,13 +23015,11 @@
+@@ -24562,13 +23262,11 @@
  if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
    emulate sh
    NULLCMD=:
@@ -11352,7 +11716,7 @@ diff -u -r1.202 configure
  # Support unset when possible.
  if (FOO=FOO; unset FOO) >/dev/null 2>&1; then
    as_unset=unset
-@@ -24576,42 +23027,34 @@
+@@ -24576,42 +23274,34 @@
    as_unset=false
  fi
  
@@ -11420,7 +11784,7 @@ diff -u -r1.202 configure
  $as_expr X/"$0" : '.*/\([^/][^/]*\)/*$' \| \
  	 X"$0" : 'X\(//\)$' \| \
  	 X"$0" : 'X\(/\)$' \| \
-@@ -24622,7 +23065,6 @@
+@@ -24622,7 +23312,6 @@
    	  /^X\/\(\/\).*/{ s//\1/; q; }
    	  s/.*/./; q'`
  
@@ -11428,7 +11792,7 @@ diff -u -r1.202 configure
  # PATH needs CR, and LINENO needs CR and PATH.
  # Avoid depending upon Character Ranges.
  as_cr_letters='abcdefghijklmnopqrstuvwxyz'
-@@ -24633,15 +23075,15 @@
+@@ -24633,15 +23322,15 @@
  
  # The user is always right.
  if test "${PATH_SEPARATOR+set}" != set; then
@@ -11449,7 +11813,7 @@ diff -u -r1.202 configure
  fi
  
  
-@@ -24690,8 +23132,6 @@
+@@ -24690,8 +23379,6 @@
    as_lineno_3=`(expr $as_lineno_1 + 1) 2>/dev/null`
    test "x$as_lineno_1" != "x$as_lineno_2" &&
    test "x$as_lineno_3"  = "x$as_lineno_2" ') 2>/dev/null; then
@@ -11458,7 +11822,7 @@ diff -u -r1.202 configure
  	     CONFIG_SHELL=$as_dir/$as_base
  	     export CONFIG_SHELL
  	     exec "$CONFIG_SHELL" "$0" ${1+"$@"}
-@@ -24765,12 +23205,6 @@
+@@ -24765,12 +23452,6 @@
  fi
  rm -f conf$$ conf$$.exe conf$$.file
  
@@ -11471,7 +11835,7 @@ diff -u -r1.202 configure
  as_executable_p="test -f"
  
  # Sed expression to map a string onto a valid CPP name.
-@@ -24787,7 +23221,7 @@
+@@ -24787,7 +23468,7 @@
  IFS=" 	$as_nl"
  
  # CDPATH.
@@ -11480,7 +11844,7 @@ diff -u -r1.202 configure
  
  exec 6>&1
  
-@@ -24804,7 +23238,7 @@
+@@ -24804,7 +23485,7 @@
  cat >&5 <<_CSEOF
  
  This file was extended by $as_me, which was
@@ -11489,7 +11853,7 @@ diff -u -r1.202 configure
  
    CONFIG_FILES    = $CONFIG_FILES
    CONFIG_HEADERS  = $CONFIG_HEADERS
-@@ -24844,7 +23278,6 @@
+@@ -24844,7 +23525,6 @@
  
    -h, --help       print this help, then exit
    -V, --version    print version number, then exit
@@ -11497,7 +11861,7 @@ diff -u -r1.202 configure
    -d, --debug      don't remove temporary files
        --recheck    update $as_me by reconfiguring in the same conditions
    --file=FILE[:TEMPLATE]
-@@ -24864,7 +23297,7 @@
+@@ -24864,7 +23544,7 @@
  cat >>$CONFIG_STATUS <<_ACEOF
  ac_cs_version="\\
  config.status
@@ -11506,7 +11870,7 @@ diff -u -r1.202 configure
    with options \\"`echo "$ac_configure_args" | sed 's/[\\""\`\$]/\\\\&/g'`\\"
  
  Copyright 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001
-@@ -24884,25 +23317,25 @@
+@@ -24884,25 +23564,25 @@
    --*=*)
      ac_option=`expr "x$1" : 'x\([^=]*\)='`
      ac_optarg=`expr "x$1" : 'x[^=]*=\(.*\)'`
@@ -11542,7 +11906,7 @@ diff -u -r1.202 configure
    --version | --vers* | -V )
      echo "$ac_cs_version"; exit 0 ;;
    --he | --h)
-@@ -24917,16 +23350,13 @@
+@@ -24917,16 +23597,13 @@
    --debug | --d* | -d )
      debug=: ;;
    --file | --fil | --fi | --f )
@@ -11563,7 +11927,7 @@ diff -u -r1.202 configure
  
    # This is an error.
    -*) { { echo "$as_me:$LINENO: error: unrecognized option: $1
-@@ -24941,20 +23371,6 @@
+@@ -24941,20 +23618,6 @@
    shift
  done
  
@@ -11584,7 +11948,7 @@ diff -u -r1.202 configure
  _ACEOF
  
  
-@@ -25001,9 +23417,6 @@
+@@ -25001,9 +23664,6 @@
    test "${CONFIG_HEADERS+set}" = set || CONFIG_HEADERS=$config_headers
  fi
  
@@ -11594,7 +11958,7 @@ diff -u -r1.202 configure
  # Create a temporary directory, and hook for its removal unless debugging.
  $debug ||
  {
-@@ -25012,17 +23425,17 @@
+@@ -25012,17 +23672,17 @@
  }
  
  # Create a (secure) tmp directory for tmp files.
@@ -11616,7 +11980,7 @@ diff -u -r1.202 configure
     { (exit 1); exit 1; }
  }
  
-@@ -25100,7 +23513,6 @@
+@@ -25100,7 +23760,6 @@
  s,@STRIP@,$STRIP,;t t
  s,@ac_ct_STRIP@,$ac_ct_STRIP,;t t
  s,@CPP@,$CPP,;t t
@@ -11624,7 +11988,7 @@ diff -u -r1.202 configure
  s,@LIBTOOL@,$LIBTOOL,;t t
  s,@LIBADD_DL@,$LIBADD_DL,;t t
  s,@X_CFLAGS@,$X_CFLAGS,;t t
-@@ -25115,7 +23527,7 @@
+@@ -25115,7 +23774,7 @@
  s,@OBJS64@,$OBJS64,;t t
  s,@IOAPIC_OBJS@,$IOAPIC_OBJS,;t t
  s,@APIC_OBJS@,$APIC_OBJS,;t t
@@ -11633,7 +11997,7 @@ diff -u -r1.202 configure
  s,@NE2K_OBJS@,$NE2K_OBJS,;t t
  s,@NETLOW_OBJS@,$NETLOW_OBJS,;t t
  s,@PCI_OBJ@,$PCI_OBJ,;t t
-@@ -25187,8 +23599,6 @@
+@@ -25187,8 +23846,6 @@
  s,@INSTALL_PLUGINS_VAR@,$INSTALL_PLUGINS_VAR,;t t
  s,@GZIP@,$GZIP,;t t
  s,@TAR@,$TAR,;t t
@@ -11642,7 +12006,7 @@ diff -u -r1.202 configure
  CEOF
  
  _ACEOF
-@@ -25259,30 +23669,25 @@
+@@ -25259,30 +23916,25 @@
    	  /^X\(\/\/\)$/{ s//\1/; q; }
    	  /^X\(\/\).*/{ s//\1/; q; }
    	  s/.*/./; q'`
@@ -11692,7 +12056,7 @@ diff -u -r1.202 configure
  
    ac_builddir=.
  
-@@ -25312,7 +23717,7 @@
+@@ -25312,7 +23964,7 @@
  # Don't blindly perform a `cd "$ac_dir"/$ac_foo && pwd` since $ac_foo can be
  # absolute.
  ac_abs_builddir=`cd "$ac_dir" && cd $ac_builddir && pwd`
@@ -11701,7 +12065,7 @@ diff -u -r1.202 configure
  ac_abs_srcdir=`cd "$ac_dir" && cd $ac_srcdir && pwd`
  ac_abs_top_srcdir=`cd "$ac_dir" && cd $ac_top_srcdir && pwd`
  
-@@ -25497,7 +23902,7 @@
+@@ -25497,7 +24149,7 @@
  # Break up conftest.defines because some shells have a limit on the size
  # of here documents, and old seds have small limits too (100 cmds).
  echo '  # Handle all the #define templates only if necessary.' >>$CONFIG_STATUS
@@ -11710,7 +12074,7 @@ diff -u -r1.202 configure
  echo '  # If there are no defines, we may have an empty if/fi' >>$CONFIG_STATUS
  echo '  :' >>$CONFIG_STATUS
  rm -f conftest.tail
-@@ -25521,7 +23926,7 @@
+@@ -25521,7 +24173,7 @@
    mv conftest.tail conftest.defines
  done
  rm -f conftest.defines
@@ -11719,7 +12083,7 @@ diff -u -r1.202 configure
  echo >>$CONFIG_STATUS
  
  # Break up conftest.undefs because some shells have a limit on the size
-@@ -25561,7 +23966,7 @@
+@@ -25561,7 +24213,7 @@
    cat $tmp/in >>$tmp/config.h
    rm -f $tmp/in
    if test x"$ac_file" != x-; then
@@ -11728,7 +12092,7 @@ diff -u -r1.202 configure
        { echo "$as_me:$LINENO: $ac_file is unchanged" >&5
  echo "$as_me: $ac_file is unchanged" >&6;}
      else
-@@ -25577,30 +23982,25 @@
+@@ -25577,30 +24229,25 @@
    	  /^X\(\/\/\)$/{ s//\1/; q; }
    	  /^X\(\/\).*/{ s//\1/; q; }
    	  s/.*/./; q'`
@@ -11778,7 +12142,7 @@ diff -u -r1.202 configure
  
        rm -f $ac_file
        mv $tmp/config.h $ac_file
-@@ -25630,11 +24030,8 @@
+@@ -25630,11 +24277,8 @@
  # need to make the FD available again.
  if test "$no_create" != yes; then
    ac_cs_success=:
@@ -11797,14 +12161,24 @@ RCS file: /cvsroot/bochs/bochs/configure.in,v
 retrieving revision 1.202
 diff -u -r1.202 configure.in
 --- configure.in	2 Mar 2003 23:59:08 -0000	1.202
-+++ configure.in	18 Mar 2003 22:47:34 -0000
-@@ -684,22 +684,23 @@
++++ configure.in	19 Mar 2003 18:00:28 -0000
+@@ -149,6 +149,7 @@
+ #include <sys/socket.h>])
+ AC_CHECK_MEMBER(struct sockaddr_in.sin_len, AC_DEFINE(BX_HAVE_SOCKADDR_IN_SIN_LEN), , [#include <sys/socket.h>
+ #include <netinet/in.h> ])
++AC_CHECK_FUNCS(mkstemp, AC_DEFINE(BX_HAVE_MKSTEMP))
+ 
+ dnl As of autoconf 2.53, the standard largefile test fails for Linux/gcc.
+ dnl It does not put the largefiles arguments into CFLAGS, even though Linux/gcc
+@@ -684,22 +685,25 @@
  AC_SUBST(IOAPIC_OBJS)
  AC_SUBST(APIC_OBJS)
  
 -AC_MSG_CHECKING(for split hard disk image support)
 -AC_ARG_ENABLE(split-hd,
 -  [  --enable-split-hd                 allows split hard disk image],
++AC_CHECK_HEADER(zlib.h, [AC_CHECK_LIB(z, gzopen, AC_DEFINE(BX_HAVE_ZLIB,1))] )
++
 +AC_MSG_CHECKING(for compressed hard disk image support)
 +AC_ARG_ENABLE(compressed-hd,
 +  [  --enable-compressed-hd            allows compressed (zlib) hard disk image],
@@ -11835,7 +12209,7 @@ RCS file: /cvsroot/bochs/bochs/main.cc,v
 retrieving revision 1.223
 diff -u -r1.223 main.cc
 --- main.cc	13 Feb 2003 15:51:12 -0000	1.223
-+++ main.cc	18 Mar 2003 22:47:57 -0000
++++ main.cc	19 Mar 2003 18:00:28 -0000
 @@ -195,6 +195,7 @@
          switch (val) {
            case BX_ATA_DEVICE_DISK:
@@ -12001,7 +12375,7 @@ RCS file: /cvsroot/bochs/bochs/doc/docbook/misc.txt,v
 retrieving revision 1.21
 diff -u -r1.21 misc.txt
 --- doc/docbook/misc.txt	15 Dec 2002 18:00:28 -0000	1.21
-+++ doc/docbook/misc.txt	18 Mar 2003 22:48:00 -0000
++++ doc/docbook/misc.txt	19 Mar 2003 18:00:29 -0000
 @@ -476,3 +476,70 @@
  copied the expected image to a.img and continued.
  
@@ -12079,7 +12453,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
 retrieving revision 1.94
 diff -u -r1.94 siminterface.cc
 --- gui/siminterface.cc	6 Feb 2003 23:16:55 -0000	1.94
-+++ gui/siminterface.cc	18 Mar 2003 22:48:06 -0000
++++ gui/siminterface.cc	19 Mar 2003 18:00:29 -0000
 @@ -442,14 +442,17 @@
  
  char *floppy_status_names[] = { "ejected", "inserted", NULL };
@@ -12106,7 +12480,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
 retrieving revision 1.99
 diff -u -r1.99 siminterface.h
 --- gui/siminterface.h	6 Feb 2003 23:16:54 -0000	1.99
-+++ gui/siminterface.h	18 Mar 2003 22:48:10 -0000
++++ gui/siminterface.h	19 Mar 2003 18:00:29 -0000
 @@ -199,6 +199,14 @@
    BXP_ATA2_SLAVE_TYPE,
    BXP_ATA3_MASTER_TYPE,
@@ -12166,7 +12540,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
 retrieving revision 1.40
 diff -u -r1.40 Makefile.in
 --- iodev/Makefile.in	3 Mar 2003 17:39:16 -0000	1.40
-+++ iodev/Makefile.in	18 Mar 2003 22:48:17 -0000
++++ iodev/Makefile.in	19 Mar 2003 18:00:30 -0000
 @@ -92,6 +92,7 @@
  
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
@@ -13768,7 +14142,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
 retrieving revision 1.97
 diff -u -r1.97 harddrv.cc
 --- iodev/harddrv.cc	5 Mar 2003 10:43:52 -0000	1.97
-+++ iodev/harddrv.cc	18 Mar 2003 22:48:32 -0000
++++ iodev/harddrv.cc	19 Mar 2003 18:00:30 -0000
 @@ -31,12 +31,14 @@
  
  
@@ -14554,7 +14928,7 @@ diff -u -r1.97 harddrv.cc
  
  error_recovery_t::error_recovery_t ()
  {
-@@ -3405,3 +4018,737 @@
+@@ -3405,3 +4018,755 @@
  {
        return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
  }
@@ -15048,10 +15422,19 @@ diff -u -r1.97 harddrv.cc
 +
 +        redolog_name = (char*)malloc(strlen(pathname) + strlen(".XXXXXX") + 1);
 +        sprintf (redolog_name, "%s%s", pathname, ".XXXXXX");
-+#if defined(WIN32)
-+#error mkstemp does not exist on win32
-+#endif
-+        if ((filedes=mkstemp (redolog_name)) < 0)
++
++#if BX_HAVE_MKSTEMP
++        filedes = mkstemp (redolog_name);
++#else // BX_HAVE_MKSTEMP
++        mktemp(redolog_name);
++        filedes = ::open(redolog_name, O_RDWR | O_CREAT | O_TRUNC
++#  ifdef O_BINARY
++            | O_BINARY
++#  endif
++              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
++#endif // BX_HAVE_MKSTEMP
++
++        if (filedes < 0)
 +        {
 +                BX_PANIC(("Can't create volatile redolog"));
 +                return -1;
@@ -15239,10 +15622,19 @@ diff -u -r1.97 harddrv.cc
 +
 +        redolog_name = (char*)malloc(strlen(pathname) + strlen(".XXXXXX") + 1);
 +        sprintf (redolog_name, "%s%s", pathname, ".XXXXXX");
-+#if defined(WIN32)
-+#error mkstemp does not exist on win32
-+#endif
-+        if ((filedes=mkstemp (redolog_name)) < 0)
++
++#if BX_HAVE_MKSTEMP
++        filedes = mkstemp (redolog_name);
++#else // BX_HAVE_MKSTEMP
++        mktemp(redolog_name);
++        filedes = ::open(redolog_name, O_RDWR | O_CREAT | O_TRUNC
++#  ifdef O_BINARY
++            | O_BINARY
++#  endif
++              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
++#endif // BX_HAVE_MKSTEMP
++
++        if (filedes < 0)
 +        {
 +                BX_PANIC(("Can't create volatile redolog"));
 +                return -1;
@@ -15298,7 +15690,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
 retrieving revision 1.19
 diff -u -r1.19 harddrv.h
 --- iodev/harddrv.h	2 Mar 2003 23:59:11 -0000	1.19
-+++ iodev/harddrv.h	18 Mar 2003 22:48:36 -0000
++++ iodev/harddrv.h	19 Mar 2003 18:00:31 -0000
 @@ -24,6 +24,81 @@
  //  License along with this library; if not, write to the Free Software
  //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
@@ -15739,7 +16131,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
 retrieving revision 1.31
 diff -u -r1.31 iodev.h
 --- iodev/iodev.h	2 Mar 2003 23:59:11 -0000	1.31
-+++ iodev/iodev.h	18 Mar 2003 22:48:37 -0000
++++ iodev/iodev.h	19 Mar 2003 18:00:31 -0000
 @@ -397,6 +397,7 @@
  #include "iodev/dma.h"
  #include "iodev/floppy.h"
@@ -15754,12 +16146,12 @@ RCS file: /cvsroot/bochs/bochs/misc/bximage.c,v
 retrieving revision 1.17
 diff -u -r1.17 bximage.c
 --- misc/bximage.c	26 Nov 2002 11:21:31 -0000	1.17
-+++ misc/bximage.c	18 Mar 2003 22:48:39 -0000
++++ misc/bximage.c	19 Mar 2003 18:00:31 -0000
 @@ -1,4 +1,4 @@
 -/* 
 +/*
   * misc/bximage.c
-  * $Id: patch.harddisk-modes,v 1.6 2003-03-18 23:01:23 cbothamy Exp $
+  * $Id: patch.harddisk-modes,v 1.7 2003-03-19 23:39:40 cbothamy Exp $
   *
 @@ -16,6 +16,15 @@
  #endif
@@ -15775,7 +16167,7 @@ diff -u -r1.17 bximage.c
 +#include "../iodev/harddrv.h"
 +
  char *EOF_ERR = "ERROR: End of input";
- char *rcsid = "$Id: patch.harddisk-modes,v 1.6 2003-03-18 23:01:23 cbothamy Exp $";
+ char *rcsid = "$Id: patch.harddisk-modes,v 1.7 2003-03-19 23:39:40 cbothamy Exp $";
  char *divider = "========================================================================";
 @@ -30,6 +39,11 @@
  char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
@@ -16082,8 +16474,8 @@ diff -u -r1.17 bximage.c
 +  // even though we leave via 'myexit' just above
    return 0;
  }
---- /dev/null	Sat Oct 19 13:09:11 2002
-+++ iodev/vmware3.cc	Tue Mar 18 23:23:09 2003
+--- /dev/null	Fri Oct 18 15:15:18 2002
++++ iodev/vmware3.cc	Wed Mar 19 10:11:00 2003
 @@ -0,0 +1,392 @@
 +/*
 + * This file provides support for VMWare's virtual disk image
@@ -16477,8 +16869,8 @@ diff -u -r1.17 bximage.c
 +    delete[] images;
 +    current = 0;
 +}
---- /dev/null	Sat Oct 19 13:09:11 2002
-+++ iodev/vmware3.h	Tue Mar 18 23:23:09 2003
+--- /dev/null	Fri Oct 18 15:15:18 2002
++++ iodev/vmware3.h	Wed Mar 19 10:11:00 2003
 @@ -0,0 +1,95 @@
 +/*
 + * This file provides the interface for using VMWare's virtual
