@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147 2002-10-03 21:03:16 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.148 2002-10-05 12:07:51 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1395,7 +1395,6 @@ fi
 AC_MSG_CHECKING(for wxWindows configuration script)
 AC_MSG_RESULT($WX_CONFIG)
   
-  AC_MSG_NOTICE([using $WX_CONFIG as wxWindows configuration script])
 ok_wx_version=0
 AC_MSG_CHECKING(for wxWindows library version)
 if test x$WX_CONFIG != xnot_found; then

@@ -10908,8 +10908,6 @@ echo $ECHO_N "checking for wxWindows configuration script... $ECHO_C" >&6
 echo "$as_me:$LINENO: result: $WX_CONFIG" >&5
 echo "${ECHO_T}$WX_CONFIG" >&6
 
-  { echo "$as_me:$LINENO: using $WX_CONFIG as wxWindows configuration script" >&5
-echo "$as_me: using $WX_CONFIG as wxWindows configuration script" >&6;}
 ok_wx_version=0
 echo "$as_me:$LINENO: checking for wxWindows library version" >&5
 echo $ECHO_N "checking for wxWindows library version... $ECHO_C" >&6
