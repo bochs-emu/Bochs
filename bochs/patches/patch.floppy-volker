@@ -18,12 +18,13 @@ Detailed description:
     'invalid command' - BX_PANIC not necessary
   * flag FS_MS_DIO is not set while a floppy command is pending
   * floppy command 'specify': cause a BX_ERROR when non-DMA mode is selected
-  * floppy command 'sense interrupt status' returns an error is no interrupt
+  * floppy command 'sense interrupt status' returns an error if no interrupt
     is pending
   * floppy command 'read ID' sets the 'busy' flag and returns no data if the
     motor is not on
   * removed SIMX86 section (not defined in bochs)
   * define variable 'sTemp' for win32 only
+  * removed commented BX_INFO statements
 
 Patch was created with:
   diff -u
