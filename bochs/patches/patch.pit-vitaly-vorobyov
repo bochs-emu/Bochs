@@ -1,0 +1,82 @@
+----------------------------------------------------------------------
+Patch name: patch.pit-vitaly-vorobyov
+Author: Vitaly Vorobyov
+Date: 03/08/2003
+Status: New
+
+Detailed description:
+
+PATCH 3: 
+ Timer fixes:
+  [x] allow sequential read of timer ports (ex: in eax,40h)
+
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 3 Aug 2003
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: iodev/pit_wrap.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit_wrap.cc,v
+retrieving revision 1.51
+diff -u -r1.51 pit_wrap.cc
+--- iodev/pit_wrap.cc	31 Jul 2003 12:04:48 -0000	1.51
++++ iodev/pit_wrap.cc	4 Aug 2003 14:31:20 -0000
+@@ -326,12 +326,24 @@
+   switch (address) {
+ 
+     case 0x40: /* timer 0 - system ticks */
++      if(io_len==2)
++       return (BX_PIT_THIS s.timer.read(1)<<8) | (BX_PIT_THIS s.timer.read(0));
++      else
++      if(io_len==4)
++       return (BX_PIT_THIS s.timer.read(3)<<24) | 
++              (BX_PIT_THIS s.timer.read(2)<<16) |
++              (BX_PIT_THIS s.timer.read(1)<<8)  |
++              (BX_PIT_THIS s.timer.read(0));
+       return(BX_PIT_THIS s.timer.read(0));
+       break;
+     case 0x41: /* timer 1 read */
++      if(io_len==2)
++       return (BX_PIT_THIS s.timer.read(2)<<8) | (BX_PIT_THIS s.timer.read(1));
+       return(BX_PIT_THIS s.timer.read(1));
+       break;
+     case 0x42: /* timer 2 read */
++      if(io_len==2)
++       return (BX_PIT_THIS s.timer.read(3)<<8) | (BX_PIT_THIS s.timer.read(2));
+       return(BX_PIT_THIS s.timer.read(2));
+       break;
+     case 0x43: /* timer 1 read */
+Index: iodev/pit.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit.cc,v
+retrieving revision 1.15
+diff -u -r1.15 pit.cc
+--- iodev/pit.cc	31 Jul 2003 12:04:48 -0000	1.15
++++ iodev/pit.cc	4 Aug 2003 14:31:20 -0000
+@@ -243,12 +243,21 @@
+ #else
+   UNUSED(this_ptr);
+ #endif  // !BX_USE_PIT_SMF
++
+   if (bx_dbg.pit)
+     BX_INFO(("pit: io read from port %04x", (unsigned) address));
+ 
+   switch (address) {
+     case 0x40: /* timer 0 - system ticks */
++      if(io_len==2)
++       return read_counter(1)<<8 | read_counter(0);
+       return( read_counter(0) );
++      break;
++
++    case 0x41: /* timer 2 read */
++      if(io_len==2)
++       return read_counter(2)<<8 | read_counter(1);
++      return( read_counter(1) );
+       break;
+ 
+     case 0x42: /* timer 2 read */

@@ -1,0 +1,114 @@
+----------------------------------------------------------------------
+Patch name: patch.rombios-vitaly-vorobyov
+Author: Vitaly Vorobyov
+Date: 03/08/2003
+Status: New
+
+Detailed description:
+
+PATCH 1: ROMBIOS fix
+ [x] int vector 0x79 is set to 0:0 instead of dummy iret
+     instruction.
+     Zero value of this vector is checked by 'gardian angel'
+     protection system, on real computer this vector is zero and
+     'gardian angel' use it as antidebugging trick.
+ [x] int 0x16 service 05 realized
+
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 3 Aug 2003
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bios/rombios.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bios/rombios.c,v
+retrieving revision 1.93
+diff -u -r1.93 rombios.c
+--- bios/rombios.c	25 Apr 2003 22:13:24 -0000	1.93
++++ bios/rombios.c	4 Aug 2003 14:33:47 -0000
+@@ -877,7 +877,7 @@
+ //static Bit16u         get_DS();
+ //static void           set_DS();
+ static Bit16u         get_SS();
+-static void           enqueue_key();
++static bx_bool        enqueue_key();
+ static unsigned int   dequeue_key();
+ static void           get_hd_geometry();
+ static void           set_diskette_ret_status();
+@@ -3953,6 +3953,13 @@
+       SET_AL(shift_flags);
+       break;
+ 
++    case 0x05:
++      if(!enqueue_key( CX>>4, CX)) {
++       SET_AL(1);
++       return;
++      }
++      SET_AL(0);
++      break;
+     case 0x09: /* GET KEYBOARD FUNCTIONALITY */
+       // bit Bochs Description     
+       //  7    0   reserved
+@@ -4327,7 +4334,7 @@
+   mf2_state &= ~0x01;
+ }
+ 
+-  void
++bx_bool
+ enqueue_key(scan_code, ascii_code)
+   Bit8u scan_code, ascii_code;
+ {
+@@ -4355,12 +4362,13 @@
+   if (buffer_tail == buffer_head) {
+     BX_PANIC("KBD: dropped key scan=%02x, ascii=%02x\n",
+       (int) scan_code, (int) ascii_code);
+-    return;
++    return 0;
+     }
+ 
+    write_byte(0x0040, temp_tail, ascii_code);
+    write_byte(0x0040, temp_tail+1, scan_code);
+    write_word(0x0040, 0x001C, buffer_tail);
++  return 1;
+ }
+ 
+ 
+@@ -6211,6 +6219,7 @@
+ {
+   Bit8u  val8, dor;
+   Bit16u curr_cyl_offset;
++//  Bit8u  master_mask;
+ 
+   // set 40:3e bit 7 to 0
+   val8 = read_byte(0x0000, 0x043e);
+@@ -6301,6 +6310,7 @@
+   Bit8u  return_status[7];
+   Bit8u  drive_type, num_floppies, ah;
+   Bit16u es, last_addr;
++//  Bit8u  master_mask;
+ 
+   BX_DEBUG_INT13_FL("int13_diskette: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+   // BX_DEBUG_INT13_FL("int13_diskette: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), get_DS(), ES, DI, SI);
+@@ -6804,6 +6814,7 @@
+   ASM_START
+       cli
+   ASM_END
++
+       // set 40:3e bit 7 to 0
+       val8 = read_byte(0x0000, 0x043e);
+       val8 &= 0x7f;
+@@ -8724,6 +8735,10 @@
+   inc  bx
+   inc  bx
+   loop post_default_ints
++
++  ;; set vector 0x79 to zero
++  ;; this is used by 'gardian angel' protection system
++  mov  dword ptr [0x1e4], #0
+ 
+   ;; base memory in K 40:13 (word)
+   mov  ax, #BASE_MEM_IN_K
