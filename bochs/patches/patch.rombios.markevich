@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------
-Patch name: BIOS Int 15 Func D8 (EISA CMOS)
+Patch name: patch.rombios.markevich
 Author: Kory Markevich
 Date: 6/20/2003
 Status: new
@@ -43,17 +43,14 @@ diff -u -r1.93 rombios.c
 +
 +          write_byte( 0x40, 0xA0, 1 );  // Set status byte.
 +          write_word( 0x40, 0x98, ES ); // Byte location, segment.
-+          write_word( 0x40, 0x9A, regs.u.r16.bx ); // Byte location, 
-offset.
++          write_word( 0x40, 0x9A, regs.u.r16.bx ); // Byte location, offset.
 +          write_word( 0x40, 0x9C, regs.u.r16.dx ); // Low word, delay.
 +          write_word( 0x40, 0x9E, regs.u.r16.cx ); // High word, delay.
 +          CLEAR_CF( );
 +          irqDisable = inb( 0xA1 );
 +          outb( 0xA1, irqDisable & 0xFE );
-+          bRegister = inb_cmos( 0xB );  // Unmask IRQ8 so INT70 will get 
-through.
-+          outb_cmos( 0xB, bRegister | 0x40 ); // Turn on the Periodic 
-Interrupt timer
++          bRegister = inb_cmos( 0xB );  // Unmask IRQ8 so INT70 will get through.
++          outb_cmos( 0xB, bRegister | 0x40 ); // Turn on the Periodic Interrupt timer
 +        } else {
 +          // Interval already set.
 +          BX_DEBUG_INT15("int15: Func 83h, failed, already waiting.\n" );
@@ -67,8 +64,7 @@ Interrupt timer
 +        write_byte( 0x40, 0xA0, 0 );  // Clear status byte
 +        CLEAR_CF( );
 +        bRegister = inb_cmos( 0xB );
-+        outb_cmos( 0xB, bRegister & ~0x40 );  // Turn off the Periodic 
-Interrupt timer
++        outb_cmos( 0xB, bRegister & ~0x40 );  // Turn off the Periodic Interrupt timer
 +      } else {
 +        BX_DEBUG_INT15("int15: Func 83h, failed.\n" );
 +        SET_CF();
@@ -83,7 +79,7 @@ Interrupt timer
        // Wait for CX:DX microseconds. currently using the
 @@ -7479,25 +7521,50 @@
    iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
-{
+  {
    // INT 70h: IRQ 8 - CMOS RTC interrupt from periodic or alarm modes
 -  Bit8u val8;
 -
@@ -102,7 +98,7 @@ Interrupt timer
 +  if( ( registerB & 0x60 ) != 0 ) {
 +    if( ( registerC & 0x20 ) != 0 ) {
 +      // Handle Alarm Interrupt.
-ASM_START
+ ASM_START
 -    sti
 -    //pushf
 -    //;; call_ep [ds:loc]
@@ -115,7 +111,7 @@ ASM_START
 +      //CALL_EP( 0x4a << 2 )
 +      int #0x4a
 +      cli
-ASM_END
+ ASM_END
      }
 -
 -  ; //FIXME BCC BUG
@@ -134,10 +130,8 @@ ASM_END
 +          offset = read_word( 0x40, 0x98 );
 +          segment = read_word( 0x40, 0x9A );
 +          write_byte( 0x40, 0xA0, 0 );  // Turn of status byte.
-+          outb_cmos( 0xB, registerB & 0x37 ); // Clear the Periodic 
-Interrupt.
-+          write_byte( segment, offset, 0x80 );  // Write to specified flag 
-byte.
++          outb_cmos( 0xB, registerB & 0x37 ); // Clear the Periodic Interrupt.
++          write_byte( segment, offset, 0x80 );  // Write to specified flag byte.
 +        } else {
 +          // Continue waiting.
 +          time -= 0x3D1;
@@ -147,6 +141,6 @@ byte.
 +    }
 +  }
 +
-ASM_START
+ ASM_START
    call eoi_both_pics
-ASM_END
+ ASM_END
