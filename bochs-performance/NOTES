@@ -101,6 +101,5 @@ name           seconds   Percent performance of 3/25/2000 snapshot
 ../bochs031	22.58	 80.91     3/25: debugger
 ../bochs091	20.91    87.37     cvs, never exit cpu_loop
 ../bochs092	19.03    96.01     cvs, use bx_mem and bx_cpu instead of array
-../bochs093	                   cvs, use bx_mem and bx_cpu instead of array
-
-
+../bochs093	19.12    95.55     use bx_mem and bx_cpu instead of array
+../bochs094	27.63    66.12     use bx_mem and bx_cpu instead of array, 4proc
