@@ -26,7 +26,7 @@
   --enable-3dnow \
   --enable-x86-debugger \
   --enable-cdrom \
-  --enable-sb16=linux \
+  --enable-sb16 \
   --enable-instrumentation \
   --enable-iodebug \
   --enable-show-ips \
