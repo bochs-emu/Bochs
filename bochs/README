@@ -43,7 +43,9 @@ changes:
  - the biosdev and unmapped devices were plugin-ized
 
 TO DO:
+- decide between DEV_function_name() macros and BX_DEV_FUNCTION_NAME() macros.
 - convert remaining devices
+- does bx_start_simulation actually need argc,argv???  Who uses this stuff?
 - some plugins, such as the GUI, PIT, SB, and NE2000, have several different
   possible implementations.  In this case, all implementations should be
   children of a single stub class.  The stub's methods produce errors or
@@ -52,8 +54,16 @@ TO DO:
   used if none of the implementation plugins is loaded.  Either an optional
   plugin or a user plugin can fill in these slots.
 
+- some plugins require multiple object files, like harddrv needs cdrom, 
+  and keyboard needs scancodes.  In fact on win32 which is really picky
+  when linking DLLs you aren't even allowed to compile them separately.
+  We have two categories for .o files: pluggable or nonpluggable.  Maybe
+  we need a third for files like scancodes.cc that are part of a plugin, 
+  but we shouldn't try to make a separate shared library for them.
+
 - platform specific issues
   - make sure LTDL works on VC++
+    - nmake build: we must use lib.exe, not $(LIBTOOL) $(CXX) stuff
 
 - configure script work
   - LTDL has a feature called dlpreload which sort of emulates dlopen
