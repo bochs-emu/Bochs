@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.63 2002-07-27 18:42:31 vruppert Exp $
+// $Id: harddrv.cc,v 1.64 2002-07-30 09:54:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.63 2002-07-27 18:42:31 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.64 2002-07-30 09:54:26 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -868,7 +868,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
   switch (address) {
     case 0x1f0:
       if (io_len == 1) {
-        BX_PANIC(("byte IO read from %04x", (unsigned) address));
+        BX_PANIC(("byte IO write to 0x1f0"));
         }
       switch (BX_SELECTED_CONTROLLER.current_command) {
         case 0x30: // WRITE SECTORS
@@ -1393,7 +1393,10 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 					  int ret_len = 4; // header size
 
 					  if (sub_q) { // !sub_q == header only
-						BX_PANIC(("Read sub-channel with SubQ not implemented"));
+						BX_ERROR(("Read sub-channel with SubQ not implemented"));
+						atapi_cmd_error(SENSE_ILLEGAL_REQUEST,
+								ASC_INV_FIELD_IN_CMD_PACKET);
+					    raise_interrupt();
 					  }
 
 					  init_send_atapi_command(atapi_command, ret_len, alloc_length);
@@ -2577,8 +2580,10 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int allo
           && !(alloc_length <= BX_SELECTED_CONTROLLER.byte_count)) {
         BX_ERROR(("Odd byte count to ATAPI command 0x%02x", command));
       }
-      if (alloc_length <= 0)
-	    BX_PANIC(("Allocation length <= 0"));
+      if (alloc_length < 0)
+	    BX_PANIC(("Allocation length < 0"));
+      if (alloc_length == 0)
+	    alloc_length = BX_SELECTED_CONTROLLER.byte_count;
 
       BX_SELECTED_CONTROLLER.interrupt_reason.i_o = 1;
       BX_SELECTED_CONTROLLER.interrupt_reason.c_d = 0;
