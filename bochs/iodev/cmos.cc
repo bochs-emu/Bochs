@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.14 2001-10-03 13:10:38 bdenney Exp $
+// $Id: cmos.cc,v 1.15 2002-01-26 10:00:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -62,7 +62,7 @@ bx_cmos_c::~bx_cmos_c(void)
 bx_cmos_c::init(bx_devices_c *d)
 {
 	unsigned i;
-	BX_DEBUG(("Init $Id: cmos.cc,v 1.14 2001-10-03 13:10:38 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: cmos.cc,v 1.15 2002-01-26 10:00:08 vruppert Exp $"));
 
 	// CMOS RAM & RTC
 
@@ -249,8 +249,10 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
 
       ret8 = BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address];
       // all bits of Register C are cleared after a read occurs.
-      if (BX_CMOS_THIS s.cmos_mem_address == 0x0c)
-		 BX_CMOS_THIS s.reg[0x0c] = 0x00;
+      if (BX_CMOS_THIS s.cmos_mem_address == 0x0c) {
+        BX_CMOS_THIS s.reg[0x0c] = 0x00;
+        BX_CMOS_THIS devices->pic->untrigger_irq(8);
+        }
       return(ret8);
       break;
 
@@ -499,60 +501,72 @@ bx_cmos_c::checksum_cmos(void)
 	void
 bx_cmos_c::periodic_timer_handler(void *this_ptr)
 {
-	bx_cmos_c *class_ptr = (bx_cmos_c *) this_ptr;
+  bx_cmos_c *class_ptr = (bx_cmos_c *) this_ptr;
 
-	// if periodic interrupts are enabled, trip IRQ 8, and
-	// update status register C
-	if (class_ptr->s.reg[0x0b] & 0x40) {
-    class_ptr->s.reg[0x0c] |= 0xc0; // Interrupt Request, Periodic Int
-    class_ptr->devices->pic->trigger_irq(8);
+  class_ptr->periodic_timer();
+}
+
+  void
+bx_cmos_c::periodic_timer()
+{
+  // if periodic interrupts are enabled, trip IRQ 8, and
+  // update status register C
+  if (BX_CMOS_THIS s.reg[0x0b] & 0x40) {
+    BX_CMOS_THIS s.reg[0x0c] |= 0xc0; // Interrupt Request, Periodic Int
+    BX_CMOS_THIS devices->pic->trigger_irq(8);
     }
 }
 
 	void
 bx_cmos_c::one_second_timer_handler(void *this_ptr)
 {
-	bx_cmos_c *class_ptr = (bx_cmos_c *) this_ptr;
+  bx_cmos_c *class_ptr = (bx_cmos_c *) this_ptr;
 
-	// update internal time/date buffer
-	class_ptr->s.timeval++;
+  class_ptr->one_second_timer();
+}
 
-	// Dont update CMOS user copy of time/date if CRB bit7 is 1
-	// Nothing else do to
-	if (class_ptr->s.reg[0x0b] & 0x80)
+  void
+bx_cmos_c::one_second_timer()
+{
+  // update internal time/date buffer
+  BX_CMOS_THIS s.timeval++;
+
+  // Dont update CMOS user copy of time/date if CRB bit7 is 1
+  // Nothing else do to
+  if (BX_CMOS_THIS s.reg[0x0b] & 0x80)
     return;
 
-	class_ptr->update_clock();
+  update_clock();
 
-	// if update interrupts are enabled, trip IRQ 8, and
-	// update status register C
-	if (class_ptr->s.reg[0x0b] & 0x10) {
-    class_ptr->s.reg[0x0c] |= 0x90; // Interrupt Request, Update Ended
-    class_ptr->devices->pic->trigger_irq(8);
+  // if update interrupts are enabled, trip IRQ 8, and
+  // update status register C
+  if (BX_CMOS_THIS s.reg[0x0b] & 0x10) {
+    BX_CMOS_THIS s.reg[0x0c] |= 0x90; // Interrupt Request, Update Ended
+    BX_CMOS_THIS devices->pic->trigger_irq(8);
     }
 
-	// compare CMOS user copy of time/date to alarm time/date here
-	if (class_ptr->s.reg[0x0b] & 0x20) {
+  // compare CMOS user copy of time/date to alarm time/date here
+  if (BX_CMOS_THIS s.reg[0x0b] & 0x20) {
     // Alarm interrupts enabled
     Boolean alarm_match = 1;
-    if ( (class_ptr->s.reg[0x01] & 0xc0) != 0xc0 ) {
+    if ( (BX_CMOS_THIS s.reg[0x01] & 0xc0) != 0xc0 ) {
       // seconds alarm not in dont care mode
-      if (class_ptr->s.reg[0x00] != class_ptr->s.reg[0x01])
+      if (BX_CMOS_THIS s.reg[0x00] != BX_CMOS_THIS s.reg[0x01])
 		 alarm_match = 0;
       }
-    if ( (class_ptr->s.reg[0x03] & 0xc0) != 0xc0 ) {
+    if ( (BX_CMOS_THIS s.reg[0x03] & 0xc0) != 0xc0 ) {
       // minutes alarm not in dont care mode
-      if (class_ptr->s.reg[0x02] != class_ptr->s.reg[0x03])
+      if (BX_CMOS_THIS s.reg[0x02] != BX_CMOS_THIS s.reg[0x03])
 		 alarm_match = 0;
       }
-    if ( (class_ptr->s.reg[0x05] & 0xc0) != 0xc0 ) {
+    if ( (BX_CMOS_THIS s.reg[0x05] & 0xc0) != 0xc0 ) {
       // hours alarm not in dont care mode
-      if (class_ptr->s.reg[0x04] != class_ptr->s.reg[0x05])
+      if (BX_CMOS_THIS s.reg[0x04] != BX_CMOS_THIS s.reg[0x05])
 		 alarm_match = 0;
       }
     if (alarm_match) {
-      class_ptr->s.reg[0x0c] |= 0xa0; // Interrupt Request, Alarm Int
-      class_ptr->devices->pic->trigger_irq(8);
+      BX_CMOS_THIS s.reg[0x0c] |= 0xa0; // Interrupt Request, Alarm Int
+      BX_CMOS_THIS devices->pic->trigger_irq(8);
       }
     }
 }
