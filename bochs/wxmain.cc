@@ -28,15 +28,27 @@
 #ifndef WX_PRECOMP
 #include "wx/wx.h"
 #endif
+#include "wx/image.h"
+//#include <wx/xpmhand.h>
 
 #include "config.h"
 extern "C" {
 // siminterface needs stdio.h
 #include <stdio.h>
 }
+
+#include "bochs.h"
+#include "gui/icon_bochs.h"
 #include "osdep.h"
-#include "gui/control.h"
-#include "gui/siminterface.h"
+#include "font/vga.bitmap.h"
+#define LOG_THIS bx_gui.
+
+#include "gui/wx_toolbar.h"
+
+enum {
+	IDM_TOOLBAR_POWER = 200
+};
+//#include "gui/siminterface.h"
 
 class MyApp: public wxApp
 {
@@ -74,14 +86,15 @@ private:
 class MyFrame: public wxFrame
 {
 public:
-MyFrame(const wxString& title, const wxPoint& pos, const wxSize&
-size);
+MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+void OnPaint(wxPaintEvent& event);
 void OnQuit(wxCommandEvent& event);
 void OnAbout(wxCommandEvent& event);
 void OnStartSim(wxCommandEvent& event);
 void OnPauseResumeSim(wxCommandEvent& event);
 void OnKillSim(wxCommandEvent& event);
 void OnSim2GuiEvent(wxCommandEvent& event);
+void OnToolbarClick(wxCommandEvent& event);
 int HandleAskParam (BxEvent *event);
 int HandleAskParamString (bx_param_string_c *param);
 
@@ -91,7 +104,6 @@ void OnSimThreadExit ();
 private:
 wxCriticalSection sim_thread_lock;
 SimThread *sim_thread; // get the lock before accessing sim_thread
-int HandleVgaGuiButton (bx_id param);
 int start_bochs_times;
 wxMenu *menuConfiguration;
 wxMenu *menuEdit;
@@ -105,48 +117,69 @@ DECLARE_EVENT_TABLE()
 
 enum
 {
-ID_Quit = 1,
-ID_Config_New,
-ID_Config_Read,
-ID_Config_Save,
-ID_Edit_Disks,
-ID_Edit_Boot,
-ID_Edit_Vga,
-ID_Edit_Memory,
-ID_Edit_Sound,
-ID_Edit_Network,
-ID_Edit_Keyboard,
-ID_Edit_Other,
-ID_Simulate_Start,
-ID_Simulate_PauseResume,
-ID_Simulate_Stop,
-ID_Simulate_Speed,
-ID_Debug_ShowCpu,
-ID_Debug_ShowMemory,
-ID_Log_View,
-ID_Log_Prefs,
-ID_Log_PrefsDevice,
-ID_Help_About,
-ID_Sim2Gui_Event,
+  ID_Quit = 1,
+  ID_Config_New,
+  ID_Config_Read,
+  ID_Config_Save,
+  ID_Edit_Disks,
+  ID_Edit_Boot,
+  ID_Edit_Vga,
+  ID_Edit_Memory,
+  ID_Edit_Sound,
+  ID_Edit_Network,
+  ID_Edit_Keyboard,
+  ID_Edit_Other,
+  ID_Simulate_Start,
+  ID_Simulate_PauseResume,
+  ID_Simulate_Stop,
+  ID_Simulate_Speed,
+  ID_Debug_ShowCpu,
+  ID_Debug_ShowMemory,
+  ID_Log_View,
+  ID_Log_Prefs,
+  ID_Log_PrefsDevice,
+  ID_Help_About,
+  ID_Sim2Gui_Event,
 };
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
-EVT_MENU(ID_Quit, MyFrame::OnQuit)
-EVT_MENU(ID_Help_About, MyFrame::OnAbout)
-EVT_MENU(ID_Simulate_Start, MyFrame::OnStartSim)
-EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
-EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
-EVT_MENU(ID_Sim2Gui_Event, MyFrame::OnSim2GuiEvent)
+  EVT_MENU(ID_Quit, MyFrame::OnQuit)
+  EVT_MENU(ID_Help_About, MyFrame::OnAbout)
+  EVT_MENU(ID_Simulate_Start, MyFrame::OnStartSim)
+  EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
+  EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
+  EVT_MENU(ID_Sim2Gui_Event, MyFrame::OnSim2GuiEvent)
+  EVT_PAINT(MyFrame::OnPaint)
+  EVT_MENU(IDM_TOOLBAR_POWER, MyFrame::OnToolbarClick)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(MyApp)
+
+static char *wxScreen = NULL;
+static long wxScreenX = 0;
+static long wxScreenY = 0;
+static long wxTileX = 0;
+static long wxTileY = 0;
+static unsigned long wxCursorX = 0;
+static unsigned long wxCursorY = 0;
+//hack alert
+static MyFrame *theFrame = NULL;
+
+void UpdateScreen(char *newBits, int x, int y, int width, int heigh);
+void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color);
+
+struct {
+	unsigned char red;
+	unsigned char green;
+	unsigned char blue;
+} wxBochsPalette[256];
 
 bool MyApp::OnInit()
 {
   wxLog::AddTraceMask (_T("mime"));
   siminterface_init ();
-  MyFrame *frame = new MyFrame( "Bochs Control Panel", wxPoint(50,50),
-  wxSize(450,340) );
+  MyFrame *frame = new MyFrame( "Bochs Control Panel", wxPoint(50,50), wxSize(450,340) );
+  theFrame = frame;  // hack alert
   frame->Show( TRUE );
   SetTopWindow( frame );
   return TRUE;
@@ -209,6 +242,28 @@ wxSize& size)
   SetMenuBar( menuBar );
   CreateStatusBar();
   SetStatusText( "Welcome to wxWindows!" );
+
+  CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
+  wxToolBar *tb = GetToolBar();
+  tb->SetToolBitmapSize(wxSize(16, 16));
+
+  wxBitmap toolBarBitmaps[4];
+  toolBarBitmaps[0] = wxBitmap(xpm_power);
+  toolBarBitmaps[1] = wxBitmap(xpm_reset);
+  toolBarBitmaps[2] = wxBitmap(xpm_floppya);
+  toolBarBitmaps[3] = wxBitmap(xpm_floppyb);
+
+  int currentX = 5;
+  tb->AddTool(16780, toolBarBitmaps[0], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Turn power on/off");
+  currentX += 34;
+  tb->AddTool(16781, toolBarBitmaps[1], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Reset the system");
+  currentX += 34;
+  tb->AddTool(16782, toolBarBitmaps[2], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Enable/Disable Floppy A");
+  currentX += 34;
+  tb->AddTool(16783, toolBarBitmaps[3], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Enable/Disable Floppy B");
+  currentX += 34;
+
+  tb->Realize();
 }
 
 void MyFrame::OnQuit(wxCommandEvent& event)
@@ -223,8 +278,7 @@ void MyFrame::OnQuit(wxCommandEvent& event)
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-wxMessageBox( "wxWindows Control Panel for Bochs. (Very Experimental)",
-"Bochs Control Panel", wxOK | wxICON_INFORMATION );
+  wxMessageBox( "wxWindows Control Panel for Bochs. (Very Experimental)", "Bochs Control Panel", wxOK | wxICON_INFORMATION );
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
@@ -452,6 +506,24 @@ MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
   wxASSERT_MSG (0, "switch stmt should have returned");
 }
 
+void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event))
+{
+	wxPaintDC dc(this);
+	//PrepareDC(dc);
+
+	if(wxScreen != NULL) {
+	  wxPoint pt = GetClientAreaOrigin();
+	  wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
+	  dc.DrawBitmap(screenImage.ConvertToBitmap(), pt.x, pt.y, FALSE);
+	}
+	
+}
+
+void MyFrame::OnToolbarClick(wxCommandEvent& event)
+{
+
+}
+
 /////////////// bochs thread
 
 void *
@@ -487,26 +559,6 @@ SimThread::OnExit ()
   frame->OnSimThreadExit ();
   // don't use this SimThread's callback function anymore.
   SIM->set_notify_callback (NULL, NULL);
-}
-
-// return 1 if the user selected a value.
-// return 0 if the question was displayed and the user cancelled.
-// return -1 if we don't know how to display the question.
-int
-MyFrame::HandleVgaGuiButton (bx_id param)
-{
-  wxLogDebug ("HandleVgaGuiButton: button %d was pressed\n", (int)param);
-  switch (param)
-  {
-	case BXP_FLOPPYA_PATH:
-	case BXP_FLOPPYB_PATH:
-	case BXP_DISKC_PATH:
-	case BXP_DISKD_PATH:
-	case BXP_CDROM_PATH:
-	default:
-	  wxLogDebug ("HandleVgaGuiButton: button %d not recognized\n", param);
-	  return -1;
-  }
 }
 
 // This function is declared static so that I can get a usable function
@@ -599,4 +651,324 @@ SimThread::GetSyncResponse ()
   BxEvent *event = sim2gui_mailbox;
   sim2gui_mailbox = NULL;
   return event;
+}
+
+
+  void
+bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+                     unsigned headerbar_y)
+{
+  th->put("NGUI");
+  if (bx_options.Oprivate_colormap->get ()) {
+    BX_INFO(("private_colormap option ignored."));
+  }
+
+  for(int i = 0; i < 256; i++) {
+	  wxBochsPalette[i].red = 0;
+	  wxBochsPalette[i].green = 0;
+	  wxBochsPalette[i].blue = 0;
+  }
+
+  wxScreenX = 640;
+  wxScreenY = 480;
+  wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
+  memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+
+  wxTileX = tilewidth;
+  wxTileY = tileheight;
+}
+
+
+// ::HANDLE_EVENTS()
+//
+// Called periodically (vga_update_interval in .bochsrc) so the
+// the gui code can poll for keyboard, mouse, and other
+// relevant events.
+
+  void
+bx_gui_c::handle_events(void)
+{
+}
+
+
+// ::FLUSH()
+//
+// Called periodically, requesting that the gui code flush all pending
+// screen update requests.
+
+  void
+bx_gui_c::flush(void)
+{
+}
+
+
+// ::CLEAR_SCREEN()
+//
+// Called to request that the VGA region is cleared.  Don't
+// clear the area that defines the headerbar.
+
+  void
+bx_gui_c::clear_screen(void)
+{
+  memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+}
+
+
+
+// ::TEXT_UPDATE()
+//
+// Called in a VGA text mode, to update the screen with
+// new content.
+//
+// old_text: array of character/attributes making up the contents
+//           of the screen from the last call.  See below
+// new_text: array of character/attributes making up the current
+//           contents, which should now be displayed.  See below
+//
+// format of old_text & new_text: each is 4000 bytes long.
+//     This represents 80 characters wide by 25 high, with
+//     each character being 2 bytes.  The first by is the
+//     character value, the second is the attribute byte.
+//     I currently don't handle the attribute byte.
+//
+// cursor_x: new x location of cursor
+// cursor_y: new y location of cursor
+
+void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+                      unsigned long cursor_x, unsigned long cursor_y,
+		      Bit16u cursor_state, unsigned nrows)
+{
+	unsigned char cChar;
+	unsigned int nchars = 80 * nrows;
+	if((wxCursorY * 80 + wxCursorX) < nchars) {
+		cChar = new_text[(wxCursorY * 80 + wxCursorX) * 2];
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * 80 + wxCursorX) * 2) + 1]);
+	}
+	
+	for(int i = 0; i < nchars * 2; i += 2) {
+		if((old_text[i] != new_text[i]) || (old_text[i+1] != new_text[i+1])) {
+			cChar = new_text[i];
+			int x = (i / 2) % 80;
+			int y = (i / 2) / 80;
+			DrawBochsBitmap(x * 8, y * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i+1]);
+		}
+	}
+	wxCursorX = cursor_x;
+	wxCursorY = cursor_y;
+
+	if((cursor_y * 80 + cursor_x) < nchars) {
+		cChar = new_text[(cursor_y * 80 + cursor_x) * 2];
+		char cAttr = new_text[((cursor_y * 80 + cursor_x) * 2) + 1];
+		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr);
+	}
+
+	theFrame->Refresh(FALSE);
+}
+
+
+// ::PALETTE_CHANGE()
+//
+// Allocate a color in the native GUI, for this color, and put
+// it in the colormap location 'index'.
+// returns: 0=no screen update needed (color map change has direct effect)
+//          1=screen updated needed (redraw using current colormap)
+
+  Boolean
+bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+{
+  wxBochsPalette[index].red = red;
+  wxBochsPalette[index].green = green;
+  wxBochsPalette[index].blue = blue;
+  return(0);
+}
+
+
+// ::GRAPHICS_TILE_UPDATE()
+//
+// Called to request that a tile of graphics be drawn to the
+// screen, since info in this region has changed.
+//
+// tile: array of 8bit values representing a block of pixels with
+//       dimension equal to the 'tilewidth' & 'tileheight' parameters to
+//       ::specific_init().  Each value specifies an index into the
+//       array of colors you allocated for ::palette_change()
+// x0: x origin of tile
+// y0: y origin of tile
+//
+// note: origin of tile and of window based on (0,0) being in the upper
+//       left of the window.
+
+void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+{
+	UpdateScreen((char *)tile, x0, y0, wxTileX, wxTileY);
+}
+
+
+
+// ::DIMENSION_UPDATE()
+//
+// Called when the VGA mode changes it's X,Y dimensions.
+// Resize the window to this size, but you need to add on
+// the height of the headerbar to the Y value.
+//
+// x: new VGA x size
+// y: new VGA y size (add headerbar_y parameter from ::specific_init().
+
+void bx_gui_c::dimension_update(unsigned x, unsigned y)
+{
+  wxScreenX = x;
+  wxScreenY = y;
+  wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
+  
+  //theFrame->SetSize(-1, -1, wxScreenX + 6, wxScreenY + 100, 0);
+  //wxSize size = theFrame->GetToolBar()->GetToolSize();
+  theFrame->SetClientSize(wxScreenX, wxScreenY); // + size.GetHeight());
+}
+
+
+// ::CREATE_BITMAP()
+//
+// Create a monochrome bitmap of size 'xdim' by 'ydim', which will
+// be drawn in the headerbar.  Return an integer ID to the bitmap,
+// with which the bitmap can be referenced later.
+//
+// bmap: packed 8 pixels-per-byte bitmap.  The pixel order is:
+//       bit0 is the left most pixel, bit7 is the right most pixel.
+// xdim: x dimension of bitmap
+// ydim: y dimension of bitmap
+
+  unsigned
+bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+{
+  UNUSED(bmap);
+  UNUSED(xdim);
+  UNUSED(ydim);
+  return(0);
+}
+
+
+// ::HEADERBAR_BITMAP()
+//
+// Called to install a bitmap in the bochs headerbar (toolbar).
+//
+// bmap_id: will correspond to an ID returned from
+//     ::create_bitmap().  'alignment' is either BX_GRAVITY_LEFT
+//     or BX_GRAVITY_RIGHT, meaning install the bitmap in the next
+//     available leftmost or rightmost space.
+// alignment: is either BX_GRAVITY_LEFT or BX_GRAVITY_RIGHT,
+//     meaning install the bitmap in the next
+//     available leftmost or rightmost space.
+// f: a 'C' function pointer to callback when the mouse is clicked in
+//     the boundaries of this bitmap.
+
+  unsigned
+bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+{
+  UNUSED(bmap_id);
+  UNUSED(alignment);
+  UNUSED(f);
+  return(0);
+}
+
+
+// ::SHOW_HEADERBAR()
+//
+// Show (redraw) the current headerbar, which is composed of
+// currently installed bitmaps.
+
+  void
+bx_gui_c::show_headerbar(void)
+{
+}
+
+
+// ::REPLACE_BITMAP()
+//
+// Replace the bitmap installed in the headerbar ID slot 'hbar_id',
+// with the one specified by 'bmap_id'.  'bmap_id' will have
+// been generated by ::create_bitmap().  The old and new bitmap
+// must be of the same size.  This allows the bitmap the user
+// sees to change, when some action occurs.  For example when
+// the user presses on the floppy icon, it then displays
+// the ejected status.
+//
+// hbar_id: headerbar slot ID
+// bmap_id: bitmap ID
+
+  void
+bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+{
+  UNUSED(hbar_id);
+  UNUSED(bmap_id);
+}
+
+
+// ::EXIT()
+//
+// Called before bochs terminates, to allow for a graceful
+// exit from the native GUI mechanism.
+
+  void
+bx_gui_c::exit(void)
+{
+  BX_INFO(("bx_gui_c::exit() not implemented yet."));
+}
+
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+}
+
+void UpdateScreen(char *newBits, int x, int y, int width, int height) 
+{
+	if(wxScreen != NULL) {
+		for(int i = 0; i < height; i++) {
+			for(int c = 0; c < width; c++) {
+				wxScreen[(y * wxScreenX * 3) + ((x+c) * 3)] = wxBochsPalette[newBits[(i * width) + c]].red;
+				wxScreen[(y * wxScreenX * 3) + ((x+c) * 3) + 1] = wxBochsPalette[newBits[(i * width) + c]].green;
+				wxScreen[(y * wxScreenX * 3) + ((x+c) * 3) + 2] = wxBochsPalette[newBits[(i * width) + c]].blue;
+			}
+			y++;
+		}
+	}
+}
+
+void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color)
+{
+	char vgaPallet[] = { (char)0x00, //Black 
+						 (char)0x01, //Dark Blue
+						 (char)0x02, //Dark Green
+						 (char)0x03, //Dark Cyan
+						 (char)0x04, //Dark Red
+						 (char)0x05, //Dark Magenta
+						 (char)0x06, //Brown
+						 (char)0x07, //Light Gray
+						 (char)0x38, //Dark Gray
+						 (char)0x09, //Light Blue
+						 (char)0x12, //Green
+						 (char)0x1B, //Cyan
+						 (char)0x24, //Light Red
+						 (char)0x2D, //Magenta
+						 (char)0x36, //Yellow
+						 (char)0x3F  //White
+						};
+
+	char bgcolor = vgaPallet[(color >> 4) & 0xF];
+	char fgcolor = vgaPallet[color & 0xF];
+
+	char *newBits = (char *)malloc(width * height);
+	memset(newBits, 0, (width * height));
+	for(int i = 0; i < (width * height) / 8; i++) {
+		newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
+		newBits[i * 8 + 1] = (bmap[i] & 0x02) ? fgcolor : bgcolor;
+		newBits[i * 8 + 2] = (bmap[i] & 0x04) ? fgcolor : bgcolor;
+		newBits[i * 8 + 3] = (bmap[i] & 0x08) ? fgcolor : bgcolor;
+		newBits[i * 8 + 4] = (bmap[i] & 0x10) ? fgcolor : bgcolor;
+		newBits[i * 8 + 5] = (bmap[i] & 0x20) ? fgcolor : bgcolor;
+		newBits[i * 8 + 6] = (bmap[i] & 0x40) ? fgcolor : bgcolor;
+		newBits[i * 8 + 7] = (bmap[i] & 0x80) ? fgcolor : bgcolor;
+	}
+	UpdateScreen(newBits, x, y, width, height);
+	free(newBits);
 }
