@@ -20,6 +20,11 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+// Useful docs:
+// AT Attachment with Packet Interface
+// working draft by T13 at www.t13.org
+
+
 
 #include "bochs.h"
 #define LOG_THIS bx_hard_drive.
@@ -95,7 +100,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.32 2001-09-19 15:30:44 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.33 2001-09-28 07:14:50 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -338,8 +343,8 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       BX_DEBUG(("IO read(1f0h): current command is %02xh",
             (unsigned) BX_SELECTED_CONTROLLER.current_command));
       switch (BX_SELECTED_CONTROLLER.current_command) {
-        case 0x20: // read sectors, with retries
-        case 0x21: // read sectors, without retries
+        case 0x20: // READ SECTORS, with retries
+        case 0x21: // READ SECTORS, without retries
           if (io_len != 2) {
             BX_PANIC(("non-word IO read from %04x",
                      (unsigned) address));
@@ -399,7 +404,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	  goto return_value16;
           break;
 
-        case 0xec:    // Drive ID Command
+        case 0xec:    // IDENTIFY DEVICE
 	case 0xa1:
           if (bx_options.OnewHardDriveSupport->get ()) {
             unsigned index;
@@ -715,7 +720,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
         BX_PANIC(("non-word IO read from %04x", (unsigned) address));
         }
       switch (BX_SELECTED_CONTROLLER.current_command) {
-        case 0x30:
+        case 0x30: // WRITE SECTORS
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
             BX_PANIC(("IO write(1f0): buffer_index >= 512"));
           BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index] = value;
@@ -1304,7 +1309,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
         value = 0x10;
       switch (value) {
 
-        case 0x10: // calibrate drive
+        case 0x10: // CALIBRATE DRIVE
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
 		BX_PANIC(("calibrate drive issued to non-disk"));
           if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.Opresent->get ()) {
@@ -1330,8 +1335,8 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
           break;
 
-        case 0x20: // read multiple sectors, with retries
-        case 0x21: // read multiple sectors, without retries
+        case 0x20: // READ MULTIPLE SECTORS, with retries
+        case 0x21: // READ MULTIPLE SECTORS, without retries
           /* update sector_no, always points to current sector
            * after each sector is read to buffer, DRQ bit set and issue IRQ 14
            * if interrupt handler transfers all data words into main memory,
@@ -1380,7 +1385,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
           break;
 
-        case 0x30: /* write multiple sectors, with retries */
+        case 0x30: /* WRITE SECTORS, with retries */
           /* update sector_no, always points to current sector
            * after each sector is read to buffer, DRQ bit set and issue IRQ 14
            * if interrupt handler transfers all data words into main memory,
@@ -1407,7 +1412,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
           BX_SELECTED_CONTROLLER.buffer_index = 0;
           break;
 
-        case 0x90: // Drive Diagnostic
+        case 0x90: // EXECUTE DEVICE DIAGNOSTIC
           if (BX_SELECTED_CONTROLLER.status.busy) {
             BX_PANIC(("diagnostic command: BSY bit set"));
             }
@@ -1419,7 +1424,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
           BX_SELECTED_CONTROLLER.status.err = 0;
           break;
 
-        case 0x91: // initialize drive parameters
+        case 0x91: // INITIALIZE DRIVE PARAMETERS
           if (BX_SELECTED_CONTROLLER.status.busy) {
             BX_PANIC(("init drive parameters command: BSY bit set"));
             }
@@ -1451,7 +1456,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
           break;
 
-        case 0xec: // Get Drive Info
+        case 0xec: // IDENTIFY DEVICE
           if (bx_options.OnewHardDriveSupport->get ()) {
 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
 		  BX_INFO(("Drive ID Command issued : 0xec "));
@@ -1492,7 +1497,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  }
           break;
 
-        case 0xef: // set features
+        case 0xef: // SET FEATURES
 	  switch(BX_SELECTED_CONTROLLER.features) {
 	    case 0x02: // Enable and
 	    case 0x82: //  Disable write cache.
@@ -1507,7 +1512,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  }
 	  break;
 
-        case 0x40: //
+        case 0x40: // READ VERIFY SECTORS
           if (bx_options.OnewHardDriveSupport->get ()) {
 	    if (BX_SELECTED_HD.device_type != IDE_DISK)
 		BX_PANIC(("read verify issued to non-disk"));
@@ -1523,7 +1528,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
             command_aborted(value);
 	  }
           break;
-	case 0xc6: // (mch) set multiple mode
+	case 0xc6: // SET MULTIPLE MODE (mch)
 	      if (BX_SELECTED_CONTROLLER.sector_count != 128 &&
 		  BX_SELECTED_CONTROLLER.sector_count != 64 &&
 		  BX_SELECTED_CONTROLLER.sector_count != 32 &&
@@ -1545,7 +1550,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	      break;
 
         // ATAPI commands
-        case 0xa1: // identify ATAPI device
+        case 0xa1: // IDENTIFY PACKET DEVICE
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
 		    BX_SELECTED_CONTROLLER.current_command = value;
 		    BX_SELECTED_CONTROLLER.error_register = 0;
@@ -1567,7 +1572,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	      }
 	      break;
 
-        case 0x08: // ATAPI soft reset command
+        case 0x08: // DEVICE RESET (atapi)
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
 		    BX_SELECTED_CONTROLLER.status.busy = 1;
 		    BX_SELECTED_CONTROLLER.error_register &= ~(1 << 7);
@@ -1585,9 +1590,11 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
 		    BX_SELECTED_CONTROLLER.status.busy = 0;
 
-		    break;
+	      } else {
+		command_aborted(0x08);
 	      }
-        case 0xa0: // send a packet command
+	      break;
+        case 0xa0: // SEND PACKET (atapi)
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
 		    // PACKET
 		    if (BX_SELECTED_CONTROLLER.features & (1 << 0))
@@ -1609,7 +1616,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
 		    break;
 	      }
-        case 0xa2: // ATAPI service (optional)
+        case 0xa2: // SERVICE (atapi), optional
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
 		    BX_PANIC(("ATAPI SERVICE not implemented"));
 	      }
@@ -1619,8 +1626,13 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
           command_aborted(value);
           break;
 
+	case 0xe1: // IDLE IMMEDIATE
+	  BX_INFO (("IO write(1f7h): idle immediate ignored"));
+          command_aborted(value);
+          break;
+
         // power management
-	case 0xe5: // Check power mode
+	case 0xe5: // CHECK POWER MODE
 	  BX_SELECTED_CONTROLLER.status.busy = 0;
 	  BX_SELECTED_CONTROLLER.status.drive_ready = 1;
 	  BX_SELECTED_CONTROLLER.status.write_fault = 0;
@@ -1630,13 +1642,12 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
 	  break;
 	
-	// flush cache.  We don't have a cache!
-	// This is showing up in win2000 and freebsd.
-	case 0xe7:
+	case 0xe7: // FLUSH CACHE
+	  // We don't have a cache!  This is showing up in win2000 and freebsd.
 	  BX_INFO(("IO write(1f7h): flush cache ignored"));
           command_aborted(value);
           break;
-
+	
         default:
           BX_PANIC(("IO write(1f7h): command 0x%02x", (unsigned) value));
 	  // if user foolishly decides to continue, abort the command
