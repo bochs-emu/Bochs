@@ -244,29 +244,6 @@ Examples:
    ata3-slave:  type=cdrom, path=iso.sample, status=inserted
 
 .TP
-.I "diskc:"
-or
-.I "diskd:"
-
-The \fBdiskc\fR and \fBdiskd\fR options are deprecated. Use \fBata*\fR
-options instead.
-
-Point  this at the disk image you want to  use
-as for a hard disk. If you  use bximage(1)  to
-create   the  image,  it  will  give  you  the
-required  cyl,  head, and spt information.
-diskc is the first hard drive, and diskd is the
-second hard drive.
-
-.B NOTE:
-You cannot use both diskd and cdromd together.
-
-Example:
-  diskc: file=10M.i, cyl=306, heads=4, spt=17
-  diskc: file=112M.i, cyl=900, heads=15, spt=17
-  diskd: file=483.i, cyl=1024, heads=15, spt=63
-
-.TP
 .I "com1:"
 This defines a serial (COM) port. You can specify a device to use as com1.
 This can be a real serial line, or a pty.  To use a pty (under X/Unix),
@@ -292,22 +269,6 @@ Examples:
   parport1: enabled=1, file=parport.out
   parport1: enabled=1, file="/dev/lp0"
   parport1: enabled=0
-
-.TP
-.I "cdromd:"
-
-The \fBcdromd\fR option is deprecated. Use \fBata*\fR options instead.
-
-Point this to a pathname of a raw CD-ROM device.
-There is no cdromc option, only cdromd.
-
-.B NOTE:
-You cannot use both diskd and cdromd together.
-
-
-Example:
-  cdromd: dev=/dev/cdrom, status=inserted
-  cdromd: dev=/dev/cdrom, status=ejected
 
 .TP
 .I "newharddrivesupport:"
@@ -601,15 +562,29 @@ Example:
   ips: 1000000
 
 .TP
-.I "pit:"
-The PIT is the programmable interval timer.  It has an option that tries to
-keep the PIT in sync with real time.  This feature is still experimental,
-but it may be useful if you want to prevent Bochs from running too fast, for
-example a DOS video game.  Be aware that with the realtime pit option, your
-simulation will not be repeatable; this can a problem if you are debugging.
+.I "clock:"
+This defines the parameters of the clock inside Bochs.
+
+sync
+
+TO BE COMPLETED (see Greg explaination in bug #536329)
+
+time0
+
+Specifies the start (boot) time of the virtual machine. Use a time 
+value as returned by the time(2) system call. If no time0 value is 
+set or if time0 equal to 1 (special case) or if time0 equal 'local', 
+the simulation will be started at the current local host time.
+If time0 equal to 2 (special case) or if time0 equal 'utc',
+the simulation will be started at the current utc time.
+
+Syntax:
+  clock: sync=[none|slowdown|realtime], time0=[timeValue|local|utc]
+
+Default value are sync=none, time0=local
 
 Example:
-  pit: realtime=1
+  clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
 
 .TP
 .I "mouse:"
@@ -644,16 +619,6 @@ Enables limited i440fx PCI chipset support.
 
 Example:
   i440fxsupport: enabled=1
-
-.TP
-.I "time0:"
-Specifies the start (boot) time of the virtual machine. Use a
-time value as returned by the time(2) system call. Time
-equal to 1 is a special case which starts the virtual machine at the
-current time of the simulator host.
-
-Example:
-  time0: 938581955
 
 .TP
 .I "ne2k:"
@@ -750,6 +715,70 @@ are not implemented yet. PCI support must be enabled, too.
 
 Example:
   usb1: enabled=1, ioaddr=0xFF80, irq=10
+
+.TP
+.I "diskc:"
+or
+.I "diskd:"
+
+The \fBdiskc\fR and \fBdiskd\fR options are deprecated. Use \fBata*\fR
+options instead.
+
+Point  this at the disk image you want to  use
+as for a hard disk. If you  use bximage(1)  to
+create   the  image,  it  will  give  you  the
+required  cyl,  head, and spt information.
+diskc is the first hard drive, and diskd is the
+second hard drive.
+
+.B NOTE:
+You cannot use both diskd and cdromd together.
+
+Example:
+  diskc: file=10M.i, cyl=306, heads=4, spt=17
+  diskc: file=112M.i, cyl=900, heads=15, spt=17
+  diskd: file=483.i, cyl=1024, heads=15, spt=63
+
+.TP
+.I "cdromd:"
+
+The \fBcdromd\fR option is deprecated. Use \fBata*\fR options instead.
+
+Point this to a pathname of a raw CD-ROM device.
+There is no cdromc option, only cdromd.
+
+.B NOTE:
+You cannot use both diskd and cdromd together.
+
+
+Example:
+  cdromd: dev=/dev/cdrom, status=inserted
+  cdromd: dev=/dev/cdrom, status=ejected
+
+.TP
+.I "pit:"
+The \fBpit\fR option is deprecated. Use the \fBclock\fR option instead.
+
+The PIT is the programmable interval timer.  It has an option that tries to
+keep the PIT in sync with real time.  This feature is still experimental,
+but it may be useful if you want to prevent Bochs from running too fast, for
+example a DOS video game.  Be aware that with the realtime pit option, your
+simulation will not be repeatable; this can a problem if you are debugging.
+
+Example:
+  pit: realtime=1
+
+.TP
+.I "time0:"
+The \fBtime0\fR option is deprecated. Use the \fBclock\fR option instead.
+
+Specifies the start (boot) time of the virtual machine. Use a
+time value as returned by the time(2) system call. Time
+equal to 1 is a special case which starts the virtual machine at the
+current time of the simulator host.
+
+Example:
+  time0: 938581955
 
 .\"SKIP_SECTION"
 .SH LICENSE
