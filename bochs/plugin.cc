@@ -22,8 +22,16 @@
 
 #define LOG_THIS genlog->
 
-#define PLUGIN_INIT  "plugin_init"
-#define PLUGIN_FINI  "plugin_fini"
+#define PLUGIN_INIT_FMT_STRING  "lib%s_LTX_plugin_init"
+#define PLUGIN_FINI_FMT_STRING  "lib%s_LTX_plugin_fini"
+#define PLUGIN_PATH ""
+
+#ifndef WIN32
+#define PLUGIN_FILENAME_FORMAT "lib%s.la"
+#else
+#define PLUGIN_FILENAME_FORMAT "%s.dll"
+#endif
+
 
 
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
@@ -292,13 +300,17 @@ plugin_load (char *name, char *args, plugintype_t type)
     plugin->name = name;
     plugin->args = args;
     plugin->initialized = 0;
+	
+	char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
+	sprintf (buf, PLUGIN_FILENAME_FORMAT, name);
+	sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
 
     // Set context so that any devices that the plugin registers will
     // be able to see which plugin created them.  The registration will
     // be called from either dlopen (global constructors) or plugin_init.
     BX_ASSERT (current_plugin_context == NULL);
     current_plugin_context = plugin;
-    plugin->handle = lt_dlopen (name);
+    plugin->handle = lt_dlopen (plugin_filename);
     BX_INFO (("lt_dlhandle is %p", plugin->handle));
     if (!plugin->handle)
     {
@@ -308,19 +320,22 @@ plugin_load (char *name, char *args, plugintype_t type)
       return;
     }
 
+	sprintf (buf, PLUGIN_INIT_FMT_STRING, name);
     plugin->plugin_init =  
       (int  (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
-      lt_dlsym (plugin->handle, PLUGIN_INIT);
+      lt_dlsym (plugin->handle, buf);
     if (plugin->plugin_init == NULL) {
         pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
         plugin_abort ();
     }
 
-    plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, PLUGIN_FINI);
+	sprintf (buf, PLUGIN_FINI_FMT_STRING, name);
+    plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, buf);
     if (plugin->plugin_init == NULL) {
         pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
         plugin_abort ();
     }
+    pluginlog->info("loaded plugin %s",plugin_filename);
 
 
     /* Insert plugin at the _end_ of the plugin linked list. */
@@ -530,21 +545,11 @@ Boolean pluginDevicePresent(char *name)
 /* Plugin system: Load one plugin                                       */
 /************************************************************************/
 
-#define PLUGIN_PATH ""
-#define PLUGIN_FILENAME_FORMAT "lib%s.la"
 int bx_load_plugin (const char *name, plugintype_t type)
 {
-  char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
-  sprintf (buf, PLUGIN_FILENAME_FORMAT, name);
-  sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
-  plugin_load (plugin_filename, "", type);
-  lt_dlhandle handle = lt_dlopen (plugin_filename);
-  if (!handle) {
-    pluginlog->error("could not open plugin %s", plugin_filename);
-    pluginlog->panic("dlopen error: %s", lt_dlerror ());
-    return -1;
-  }
-  pluginlog->info("loaded plugin %s",plugin_filename);
+  char *namecopy = new char[1+strlen(name)];
+  strcpy (namecopy, name);
+  plugin_load (namecopy, "", type);
   return 0;
 }
 
