@@ -200,6 +200,8 @@ Patches applied:
   --------------------------------------------------------------------------
 
 - Peter's changes...
+  - fix 64bit addresses FPU problem
+  - numerous x86-64 fixes
 
 - SF patches applied
   #658950  Bug in FPU                                                  (???)
