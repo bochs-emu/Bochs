@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.8 2001-09-16 06:44:58 bdenney Exp $
+$Id: user.dbk,v 1.9 2001-09-20 03:27:07 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -151,7 +151,7 @@ reference model to test x86-compatible hardware.
 <para>
 There may be as many uses of Bochs as there are users.  Do you want to run 
 your old DOS games?  Or learn to program under Linux, without leaving your
-Windows desktop?  You decide.
+Windows desktop?  Or reverse engineer your printer driver?  You decide.
 </para>
 </section>  <!-- end of Introduction:Who uses Bochs? section -->
 
@@ -997,21 +997,26 @@ a transcript of a successful compilation from start to finish.
 
 <para>
 There is a script called <command>configure</command> which tests your
-machine, C/C++ compiler and libraries to automatically configure Bochs
-on your system.  If you run <command>configure</command> with no arguments
-after it, defaults will be used for all settings.  To change the
-settings, you can run <command>configure</command> again with more options to
-override the usual defaults.  You can get a list of valid configure options
-by typing <command>configure --help</command>.  All configure options
-are documented in a <link linkend="config-opts">later section</link>.
-</para>
+machine, C/C++ compiler and libraries to discover what settings should work on
+your system.  If you run <command>configure</command> with no arguments after
+it, defaults will be used for all settings.  To change the settings, you can
+run <command>configure</command> again with options that override the 
+defaults.  You can get a list of valid configure options by typing
+<command>configure --help</command>.  All configure options are documented in a
+<link linkend="config-opts">later section</link>.  </para>
 
 <para>
 Among other things, the configure script tries to guess your compiler and
 a set of compile options that work.  If you want to control this,
 set these environment variables before running configure:
 <varname>CC</varname>, <varname>CXX</varname>, <varname>CFLAGS</varname>,
-<varname>CXXFLAGS</varname>.  The bash commands for setting the
+<varname>CXXFLAGS</varname>.  The bash/ksh<footnote>
+<para>
+In csh and variants, use the syntax <command>setenv <replaceable>VARIABLE</replaceable> <replaceable>value</replaceable></command> to change environment 
+variables.
+</para>
+</footnote>
+commands for setting the
 environment variables are:
 <screen>
   export CC=egcs
@@ -1028,13 +1033,11 @@ it creates a Makefile in every source code directory, and creates
 as preprocessor #defines.  The sources are ready to compile.
 </para>
 
-</section> <!-- end of Compiling:Unix:Configure -->
-
 <section><title>Configure Shortcut Scripts (optional)</title>
 <para>
 In the Bochs sources, there are a series of scripts called
 <filename>.conf.<replaceable>platform</replaceable></filename>.
-These scripts run the configure script for you, with a set of 
+These scripts run <command>configure</command> script for you, with a set of
 options that appropriate for that platform.  Examples include
 <filename>.conf.linux</filename>,
 <filename>.conf.win32-vcpp</filename>,
@@ -1044,17 +1047,90 @@ Run a shortcut script using Bourne shell, like this:
 <screen>
   sh .conf.win32-vcpp
 </screen>
-If you use a shortcut script, the script does the configure step for you.
+If you use a shortcut script, you don't need to run configure manually.
+If a shortcut script is "almost right" for you, just edit it and then run
+it!
 </para>
 </section>
 
-<section><title>make</title>
+</section> <!-- end of Compiling:Unix:Configure -->
+
+
+<section><title>Make</title>
 <para>
-The <command>make</command> command reads the &Makefile; in each source
-directory to know how to build Bochs.  A &Makefile; tells which files 
-depend on which other files, what commands to use to compile and link
-the code, and more.  After you have run <command>configure</command>,
-just type <command>make</command> to build the source code.
+The <command>make</command> command compiles Bochs.  Make is a program
+used by many software projects that reads the &Makefile; in each source
+directory and follows the instructions that it finds there.  A &Makefile; tells
+which files depend on which other files, what commands to use to compile and
+link the code, and more.  After you have finished the configure step, just type
+<command>make</command> to build the source code.  
+</para> 
+
+<para>
+The reason that make is so popular is that it is smart about when to compile
+and when not to compile.  If you run make once, it compiles every file.  But
+when you run it again, it checks to see if any source files have been modified;
+if not, there's nothing to do!  For example, the &Makefile; says that
+<filename>main.o</filename> depends on <filename>main.cc</filename>.  Knowing 
+this, it will only compile <filename>main.cc</filename> if it is newer than
+<filename>main.o</filename>.
+</para>
+
+<para>
+Of course, make can only do the right thing if the &Makefile; lists all the
+dependencies correctly, so human error can sometimes lead make astray.
+If make refuses to build something that you think it should, or you 
+are getting strange compile errors, try doing <command>make all-clean</command>
+and then <command>make</command> again.  All-clean means to clean up
+the compiled files in every subdirectory, while <command>make clean</command>
+means to clean up just the current directory<footnote>
+
+<para>
+This is different from the terminology of some other projects, and it may cause
+confusion.  Sometimes "clean" implies that all subdirectories are affected.
+</para>
+</footnote>.  However, it's important to note that <command>make
+all-clean</command> leaves the configuration intact.  You do not have
+to run <command>configure</command> again.
+</para>
+
+<para>
+If you're really in the mood for cleaning, <command>make dist-clean</command>
+erases all the configuration information too.  In theory, after a dist-clean
+your directory should look much like when you first untarred it or checked it
+out.  There's usually some extra stuff lying around, but the &Makefile; tries
+at least to erase any files that it created.
+</para>
+
+</section>
+
+<section><title>Make Install</title>
+<para>
+Once the program has been built, the next step is typically to run
+<command>make install</command> to copy the executables, documentation, and
+other required files into a public place so that all users can use it.
+&FIXME;
+</para>
+</section>
+
+<section><title>Compile Problems</title>
+<para>
+<screen>
+what if configure fails?
+- tar up config.* and send to bochs-testing@tlw.com
+- report the problem with a source forge bug report.
+
+what if make fails?
+- try make all-clean and make again
+- use configure options to disable options.  For example, if errors in 
+fpu/fpu_system.h, you could try --disable-fpu.
+- search for the error on the Bochs website (bug reports, patches)
+- if familiar with C++, many minor problems can be corrected
+- move toward more stable code.  if it's CVS, see if a release version will
+  compile.  Report problem to bochs-developers.
+- report the problem with a source forge bug report.
+</screen>
+
 </para>
 </section>
 
@@ -1062,8 +1138,6 @@ just type <command>make</command> to build the source code.
 <para>
 <screen>
 Things to not forget:
-  What to report if configure fails: Tar up config.* and send to
-    bochs-testing@tlw.com
   What to try if make fails: turn off configure options,
     look at SF bugs and patches section to see if it's a known
     problem, try to fix it yourself, if using CVS version try
