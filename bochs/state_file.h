@@ -29,7 +29,7 @@
 #include <stddef.h>
 
 
-class state_file {
+class state_file : logfunctions {
 public:
   FILE *file;
 

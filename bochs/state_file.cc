@@ -109,15 +109,15 @@ void state_file::read_check (const char *)
 
 state_file::state_file (const char *name, const char *options)
 {
-UNUSED(name);
-UNUSED(options);
-  genlog->info("state_file::state_file()\n");
+  UNUSED(name);
+  UNUSED(options);
+  SAFE_GET_GENLOG()->info("state_file::state_file()\n");
 }
 
 state_file::state_file (FILE *f)
 {
-UNUSED(f);
-  genlog->info("state_file::state_file(FILE *)\n");
+  UNUSED(f);
+  SAFE_GET_GENLOG()->info("state_file::state_file(FILE *)\n");
 }
 
 state_file::~state_file()
