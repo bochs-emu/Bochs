@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.9 2002-10-25 11:44:41 bdenney Exp $
+// $Id: serial.h,v 1.10 2003-09-14 20:16:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,8 +53,6 @@ typedef struct {
   /*
    * UART internal state
    */
-  bx_bool  rx_empty;
-  bx_bool  tx_empty;
   bx_bool  ls_interrupt;
   bx_bool  ms_interrupt;
   bx_bool  rx_interrupt;
@@ -79,7 +77,7 @@ typedef struct {
    * Register definitions
    */
   Bit8u     rxbuffer;     /* receiver buffer register (r/o) */
-  Bit8u     txbuffer;     /* transmit holding register (w/o) */
+  Bit8u     thrbuffer;    /* transmit holding register (w/o) */
   /* Interrupt Enable Register */
   struct {
     bx_bool    rxdata_enable;      /* 1=enable receive data interrupts */
@@ -126,8 +124,8 @@ typedef struct {
     bx_bool    parity_error;       /* 1=rx char has a bad parity bit */
     bx_bool    framing_error;      /* 1=no stop bit detected for rx char */
     bx_bool    break_int;          /* 1=break signal detected */
-    bx_bool    txhold_empty;       /* 1=tx hold register (or fifo) is empty */
-    bx_bool    txtransm_empty;     /* 1=shift reg and hold reg empty */
+    bx_bool    thr_empty;          /* 1=tx hold register (or fifo) is empty */
+    bx_bool    tsr_empty;          /* 1=shift reg and hold reg empty */
     bx_bool    fifo_error;         /* 1=at least 1 err condition in fifo */
   } line_status;
   /* Modem Status Register (r/w) */
@@ -143,6 +141,7 @@ typedef struct {
   } modem_status;
 
   Bit8u  scratch;       /* Scratch Register (r/w) */
+  Bit8u  tsrbuffer;     /* transmit shift register (internal) */
   Bit8u  divisor_lsb;   /* Divisor latch, least-sig. byte */
   Bit8u  divisor_msb;   /* Divisor latch, most-sig. byte */
 } bx_serial_t;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.34 2003-08-19 00:37:03 cbothamy Exp $
+// $Id: serial.cc,v 1.35 2003-09-14 20:16:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -169,8 +169,6 @@ bx_serial_c::init(void)
    */
   for (unsigned i=0; i<BX_SERIAL_CONFDEV; i++) {
     /* internal state */
-    BX_SER_THIS s[i].rx_empty = 1;
-    BX_SER_THIS s[i].tx_empty = 1;
     BX_SER_THIS s[i].ls_ipending = 0;
     BX_SER_THIS s[i].ms_ipending = 0;
     BX_SER_THIS s[i].rx_ipending = 0;
@@ -233,8 +231,8 @@ bx_serial_c::init(void)
     BX_SER_THIS s[i].line_status.parity_error = 0;
     BX_SER_THIS s[i].line_status.framing_error = 0;
     BX_SER_THIS s[i].line_status.break_int = 0;
-    BX_SER_THIS s[i].line_status.txhold_empty = 1;
-    BX_SER_THIS s[i].line_status.txtransm_empty = 1;
+    BX_SER_THIS s[i].line_status.thr_empty = 1;
+    BX_SER_THIS s[i].line_status.tsr_empty = 1;
     BX_SER_THIS s[i].line_status.fifo_error = 0;
 
     /* Modem Status register: bXXXX 0000 */
@@ -300,7 +298,6 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       } else {
         val = BX_SER_THIS s[0].rxbuffer;
         BX_SER_THIS s[0].line_status.rxdata_ready = 0;
-        BX_SER_THIS s[0].rx_empty = 1;
 
         /* If there are no more ints pending, clear the irq */
         if ((BX_SER_THIS s[0].tx_interrupt == 0) &&
@@ -384,8 +381,8 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 	(BX_SER_THIS s[0].line_status.parity_error   << 2) |
 	(BX_SER_THIS s[0].line_status.framing_error  << 3) |
 	(BX_SER_THIS s[0].line_status.break_int      << 4) |
-	(BX_SER_THIS s[0].line_status.txhold_empty   << 5) |
-	(BX_SER_THIS s[0].line_status.txtransm_empty << 6) |
+	(BX_SER_THIS s[0].line_status.thr_empty      << 5) |
+	(BX_SER_THIS s[0].line_status.tsr_empty      << 6) |
 	(BX_SER_THIS s[0].line_status.fifo_error     << 7);
       BX_SER_THIS s[0].line_status.overrun_error = 0;
       BX_SER_THIS s[0].line_status.break_int = 0;
@@ -479,23 +476,35 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif // USE_RAW_SERIAL
 	}
       } else {
-        if (BX_SER_THIS s[0].tx_empty) {
-          BX_SER_THIS s[0].tx_empty = 0;
-          BX_SER_THIS s[0].line_status.txtransm_empty = 0;
-          BX_SER_THIS s[0].line_status.txhold_empty = 0;
-          /* If there are no more ints pending, clear the irq */
-          if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
-              (BX_SER_THIS s[0].ls_interrupt == 0) &&
-              (BX_SER_THIS s[0].ms_interrupt == 0)) {
-            DEV_pic_lower_irq(4);
-          }
-          BX_SER_THIS s[0].tx_interrupt = 0;
-          BX_SER_THIS s[0].tx_ipending = 0;
+        if (BX_SER_THIS s[0].line_status.thr_empty) {
           Bit8u bitmask = 0xff >> (3 - BX_SER_THIS s[0].line_cntl.wordlen_sel);
-          BX_SER_THIS s[0].txbuffer = value & bitmask;
-          bx_pc_system.activate_timer(BX_SER_THIS s[0].tx_timer_index,
-                                      (int) (1000000.0 / (BX_SER_THIS s[0].baudrate / 8)),
-                                      0); /* not continuous */
+          BX_SER_THIS s[0].thrbuffer = value & bitmask;
+          if (BX_SER_THIS s[0].line_status.tsr_empty) {
+            BX_SER_THIS s[0].tsrbuffer = BX_SER_THIS s[0].thrbuffer;
+            BX_SER_THIS s[0].line_status.tsr_empty = 0;
+            if (BX_SER_THIS s[0].modem_cntl.out2) {
+              if (BX_SER_THIS s[0].int_enable.txhold_enable) {
+                BX_SER_THIS s[0].tx_interrupt = 1;
+                DEV_pic_raise_irq(4);
+              } else {
+                BX_SER_THIS s[0].tx_ipending = 1;
+              }
+            }
+            bx_pc_system.activate_timer(BX_SER_THIS s[0].tx_timer_index,
+                                        (int) (1000000.0 / BX_SER_THIS s[0].baudrate *
+                                        (BX_SER_THIS s[0].line_cntl.wordlen_sel + 5)),
+                                        0); /* not continuous */
+          } else {
+            BX_SER_THIS s[0].line_status.thr_empty = 0;
+            /* If there are no more ints pending, clear the irq */
+            if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
+                (BX_SER_THIS s[0].ls_interrupt == 0) &&
+                (BX_SER_THIS s[0].ms_interrupt == 0)) {
+              DEV_pic_lower_irq(4);
+            }
+            BX_SER_THIS s[0].tx_interrupt = 0;
+            BX_SER_THIS s[0].tx_ipending = 0;
+          }
         } else {
           BX_ERROR(("write to tx hold register when not empty"));
         }
@@ -689,22 +698,11 @@ bx_serial_c::tx_timer(void)
 {
   int gen_int = 0;
 
-  BX_SER_THIS s[0].tx_empty = 1;
-  BX_SER_THIS s[0].line_status.txtransm_empty = 1;
-  BX_SER_THIS s[0].line_status.txhold_empty = 1;
-  if (BX_SER_THIS s[0].int_enable.txhold_enable) {
-    gen_int = 1;
-    BX_SER_THIS s[0].tx_interrupt = 1;
-  } else {
-    BX_SER_THIS s[0].tx_ipending = 1;
-  }
-
   if (BX_SER_THIS s[0].modem_cntl.local_loopback) {
-    if (BX_SER_THIS s[0].rx_empty == 0)
+    if (BX_SER_THIS s[0].line_status.rxdata_ready == 1)
       BX_SER_THIS s[0].line_status.overrun_error = 1;
-    BX_SER_THIS s[0].rxbuffer = BX_SER_THIS s[0].txbuffer;
+    BX_SER_THIS s[0].rxbuffer = BX_SER_THIS s[0].tsrbuffer;
     BX_SER_THIS s[0].line_status.rxdata_ready = 1;
-    BX_SER_THIS s[0].rx_empty = 0;
     if (BX_SER_THIS s[0].modem_cntl.out2) {
       if (BX_SER_THIS s[0].int_enable.rxdata_enable) {
         gen_int = 1;
@@ -721,16 +719,35 @@ bx_serial_c::tx_timer(void)
     }
   } else {
 #if defined (USE_TTY_HACK)
-    tty(tty_id, 0, & BX_SER_THIS s[0].txbuffer);
+    tty(tty_id, 0, & BX_SER_THIS s[0].tsrbuffer);
 #elif USE_RAW_SERIAL
     if (!BX_SER_THIS raw->ready_transmit())
 	  BX_PANIC(("Not ready to transmit"));
-    BX_SER_THIS raw->transmit(BX_SER_THIS s[0].txbuffer);
+    BX_SER_THIS raw->transmit(BX_SER_THIS s[0].tsrbuffer);
 #endif
 #if defined(SERIAL_ENABLE)
-    BX_DEBUG(("write: '%c'", BX_SER_THIS s[0].txbuffer));
-    if (tty_id >= 0) write(tty_id, (bx_ptr_t) & BX_SER_THIS s[0].txbuffer, 1);
+    BX_DEBUG(("write: '%c'", BX_SER_THIS s[0].tsrbuffer));
+    if (tty_id >= 0) write(tty_id, (bx_ptr_t) & BX_SER_THIS s[0].tsrbuffer, 1);
 #endif
+  }
+
+  if (!BX_SER_THIS s[0].line_status.thr_empty) {
+    BX_SER_THIS s[0].tsrbuffer = BX_SER_THIS s[0].thrbuffer;
+    BX_SER_THIS s[0].line_status.thr_empty = 1;
+    if (BX_SER_THIS s[0].modem_cntl.out2) {
+      if (BX_SER_THIS s[0].int_enable.txhold_enable) {
+        gen_int = 1;
+        BX_SER_THIS s[0].tx_interrupt = 1;
+      } else {
+        BX_SER_THIS s[0].tx_ipending = 1;
+      }
+    }
+    bx_pc_system.activate_timer(BX_SER_THIS s[0].tx_timer_index,
+                                (int) (1000000.0 / BX_SER_THIS s[0].baudrate *
+                                (BX_SER_THIS s[0].line_cntl.wordlen_sel + 5)),
+                                0); /* not continuous */
+  } else {
+    BX_SER_THIS s[0].line_status.tsr_empty = 1;
   }
 
   if (gen_int) {
@@ -801,7 +818,6 @@ bx_serial_c::rx_timer(void)
 
         BX_SER_THIS s[0].rxbuffer = chbuf;
         BX_SER_THIS s[0].line_status.rxdata_ready = 1;
-        BX_SER_THIS s[0].rx_empty = 0;
         if (BX_SER_THIS s[0].int_enable.rxdata_enable) {
           BX_SER_THIS s[0].rx_interrupt = 1;
           DEV_pic_raise_irq(4);
