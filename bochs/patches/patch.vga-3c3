@@ -1,0 +1,33 @@
+----------------------------------------------------------------------
+From Greg Alexander
+
+Implement VGA enable register, at 0x3c3.
+
+To patch, go to main bochs directory.
+Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+*** bochs-2000_0325a/iodev/vga.cc	Sat Mar 25 21:28:49 2000
+--- iodev/vga.cc	Thu Dec 21 14:29:01 2000
+***************
+*** 439,444 ****
+--- 439,448 ----
+        RETURN(0);
+        break;
+  
++     case 0x03c3: /* VGA Enable Register */
++       RETURN(1);
++       break;
++ 
+      case 0x03c4: /* Sequencer Index Register */
+        RETURN(BX_VGA_THIS s.sequencer.index);
+        break;
+***************
+*** 588,594 ****
+        break;
+  
+      case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
+-     case 0x03c3: /* VGA enable */
+      case 0x03c7: /* */
+      case 0x03c8: /* */
+      default:
+--- 592,597 ----

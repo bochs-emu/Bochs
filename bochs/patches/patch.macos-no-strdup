@@ -1,0 +1,45 @@
+----------------------------------------------------------------------
+Patch name: macos-no-strdup
+Author: Bryce Denney
+Date: Fri Apr  6 03:38:27 EDT 2001
+
+Detailed description:
+In portable2, I gave configure the decision of whether strdup existed
+since that was the standard pattern.  But for --with-macos, the
+real compile environment is the mac, not the system that configure is
+running in.  So to activate the replace strdup, we have to tell 
+configure to define BX_HAVE_STRDUP=0 if macos is selected.
+
+Apply patch to:
+  bochs 3-25-2000 snapshot with portable1 and portable2 patches
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+*** clean-portable2/configure.in	Fri Apr  6 03:35:29 2001
+--- macos/configure.in	Fri Apr  6 03:34:21 2001
+***************
+*** 658,663 ****
+--- 658,664 ----
+    CD_UP_TWO="cd ..\.."
+  elif test "$with_macos" = yes; then
+    AC_DEFINE(BX_WITH_MACOS, 1)
++   AC_DEFINE(BX_HAVE_STRDUP, 0)
+    GUI_OBJS='$(GUI_OBJS_MACOS)'
+    GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
+  else
+*** clean-portable2/configure	Fri Apr  6 03:35:29 2001
+--- macos/configure	Fri Apr  6 03:34:22 2001
+***************
+*** 3576,3581 ****
+--- 3576,3585 ----
+  #define BX_WITH_MACOS 1
+  EOF
+  
++   cat >> confdefs.h <<\EOF
++ #define BX_HAVE_STRDUP 0
++ EOF
++ 
+    GUI_OBJS='$(GUI_OBJS_MACOS)'
+    GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
+  else
