@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.26 2003-04-28 18:15:31 vruppert Exp $
+// $Id: vga.h,v 1.27 2003-05-02 07:32:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -228,6 +228,8 @@ private:
     unsigned x_tilesize;
     unsigned y_tilesize;
     unsigned line_offset;
+    unsigned line_compare;
+    unsigned vertical_display_end;
     bx_bool  vga_tile_updated[BX_NUM_X_TILES][BX_NUM_Y_TILES];
     Bit8u vga_memory[256 * 1024];
     Bit8u text_snapshot[2 * 80 * BX_MAX_TEXT_LINES]; // current text snapshot
