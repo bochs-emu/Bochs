@@ -673,6 +673,10 @@ typedef
 #define BX_DEBUGGER 0
 #define BX_DISASM   0
 
+#if (BX_DEBUGGER == 1) && (BX_DISASM == 0)
+#error "Dissembler is required for BX_DEBUGGER !"
+#endif
+
 #define BX_PROVIDE_CPU_MEMORY    1
 #define BX_PROVIDE_DEVICE_MODELS 1
 
