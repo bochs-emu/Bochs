@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.h,v 1.1 2001-12-22 00:00:33 cbothamy Exp $
+// $Id: scancodes.h,v 1.2 2002-03-06 09:19:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  Christophe Bothamy
@@ -22,10 +22,10 @@
 // Translation table of the 8042
 extern unsigned char translation8042[256];
 
-typedef struct 
-{ const char *make;
+typedef struct { 
+  const char *make;
   const char *brek;
-}scancode;
+  }scancode;
 
 // Scancodes table
 extern scancode scancodes[BX_KEY_NBKEYS][3];
