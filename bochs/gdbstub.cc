@@ -159,7 +159,7 @@ static void put_reply(char* buffer)
    unsigned char csum;
    int i;
    
-   BX_INFO (("put_buffer %s", buffer));
+   BX_DEBUG (("put_buffer %s", buffer));
    
    do
      { 
@@ -322,6 +322,8 @@ int bx_gdbstub_check(unsigned int eip)
          }
      }
    
+   // why is trace before breakpoints? does that mean it would never
+   // hit a breakpoint during tracing?
    if (stub_trace_flag == 1)
      {
        last_stop_reason = GDBSTUB_TRACE;
@@ -446,7 +448,7 @@ static void debug_loop(void)
    while (ne == 0)
      {
        get_command(buffer);
-       BX_INFO (("get_buffer %s", buffer));
+       BX_DEBUG (("get_buffer %s", buffer));
        
        switch (buffer[0])
          {
@@ -470,7 +472,7 @@ static void debug_loop(void)
                  
                  stub_trace_flag = 0;
                  bx_cpu.cpu_loop(-1);              
-                 BX_VGA_THIS timer();
+                 bx_vga.timer();
                  
                  if (buffer[1] != 0)
                    {
@@ -498,9 +500,10 @@ static void debug_loop(void)
               {
                  char buf[255];
                  
+                 BX_INFO (("stepping"));
                  stub_trace_flag = 1;
                  bx_cpu.cpu_loop(-1);
-                 BX_VGA_THIS timer();
+                 bx_vga.timer();
                  stub_trace_flag = 0;
                  BX_INFO (("stopped with %x", last_stop_reason));
                  buf[0] = 'S';
