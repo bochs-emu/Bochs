@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.93 2004-11-15 19:38:42 sshwarts Exp $
+// $Id: cpu.cc,v 1.94 2004-11-18 23:16:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -253,8 +253,8 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
       // Therefore, in either case, we can keep the counter as-is and
       // replace the fetch mode bits.
       Bit32u fetchModeMask = BX_CPU_THIS_PTR iCache.fetchModeMask;
-      pageWriteStamp &= 0x1fffffff;    // Clear out old fetch mode bits.
-      pageWriteStamp |= fetchModeMask; // Add in new ones.
+      pageWriteStamp &= ICacheWriteStampMask;  // Clear out old fetch mode bits.
+      pageWriteStamp |= fetchModeMask;         // Add in new ones.
       BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
       cache_entry->pAddr = pAddr;
       cache_entry->writeStamp = pageWriteStamp;
@@ -270,7 +270,6 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
     execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM)
       BX_CPU_CALL_METHODR(resolveModRM, (i));
-
   }
 
   // An instruction will have been fetched using either the normal case,
@@ -753,20 +752,17 @@ BX_CPU_C::prefetch(void)
     }
 
 #if BX_SUPPORT_ICACHE
-  Bit32u pageWriteStamp;
-  Bit32u fetchModeMask;
-  Bit32u phyPageIndex;
-
-  phyPageIndex = pAddr >> 12;
-  pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex];
-  fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
-  if ( (pageWriteStamp & ICacheFetchModeMask ) != fetchModeMask) {
+  Bit32u phyPageIndex   = pAddr >> 12;
+  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex];
+  Bit32u fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
+  if ((pageWriteStamp & ICacheFetchModeMask) != fetchModeMask)
+  {
     // The current CPU mode does not match iCache entries for this
     // physical page.
     pageWriteStamp &= ICacheWriteStampMask; // Clear out old fetch mode bits.
-    pageWriteStamp |= fetchModeMask; // Add in new ones.
+    pageWriteStamp |= fetchModeMask;        // Add in new ones.
     BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex] = pageWriteStamp;
-    }
+  }
 #endif
 }
 

@@ -1,6 +1,4 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 
-/////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
@@ -29,9 +27,10 @@
 #  define BX_ICACHE_H 1
 
 #define BxICacheEntries (32 * 1024)  // Must be a power of 2.
-  // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
-  // bit30: 1=Long Mode, 0=not Long Mode.
-  // bit29: 1=iCache page, 0=Data.
+
+// bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
+// bit30: 1=Long Mode, 0=not Long Mode.
+// bit29: 1=iCache page, 0=Data.
 #define ICacheWriteStampInvalid   0x1fffffff
 #define ICacheWriteStampMax       0x1fffffff // Decrements from here.
 #define ICacheWriteStampMask      0x1fffffff
@@ -60,33 +59,33 @@ class BOCHSAPI bxICache_c
 
   Bit32u  fetchModeMask;
 
-  bxICache_c() {
+  bxICache_c()
+  {
     // Initially clear the iCache;
     memset(this, 0, sizeof(*this));
     pageWriteStampTable = NULL;
     for (unsigned i=0; i<BxICacheEntries; i++) {
       entry[i].writeStamp = ICacheWriteStampInvalid;
-      }
     }
+  }
 
-  BX_CPP_INLINE void alloc(unsigned memSizeInBytes) {
+  BX_CPP_INLINE void alloc(unsigned memSizeInBytes)
+  {
     pageWriteStampTable =
         (Bit32u*) malloc(sizeof(Bit32u) * (memSizeInBytes>>12));
     for (unsigned i=0; i<(memSizeInBytes>>12); i++) {
       pageWriteStampTable[i] = ICacheWriteStampInvalid;
-      }
     }
+    fetchModeMask = 0; // CS is 16-bit, Long Mode disabled, Data page
+  }
 
   BX_CPP_INLINE void decWriteStamp(Bit32u a20Addr);
 
-  BX_CPP_INLINE void clear(void) {
-    memset(this, 0, sizeof(*this));
-    }
-
-  BX_CPP_INLINE unsigned hash(Bit32u pAddr) {
+  BX_CPP_INLINE unsigned hash(Bit32u pAddr)
+  {
     // A pretty dumb hash function for now.
     return pAddr & (BxICacheEntries-1);
-    }
+  }
 };
 
 BX_CPP_INLINE void bxICache_c::decWriteStamp(Bit32u a20Addr)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.186 2004-11-14 19:29:34 sshwarts Exp $
+// $Id: cpu.h,v 1.187 2004-11-18 23:16:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1553,13 +1553,15 @@ public: // for now...
   BX_SMF void MOV_ObAL(bxInstruction_c *);
   BX_SMF void MOV_OdEAX(bxInstruction_c *);
   BX_SMF void MOV_OwAX(bxInstruction_c *);
+  BX_SMF void TEST_ALIb(bxInstruction_c *);
+  BX_SMF void TEST_EAXId(bxInstruction_c *);
+  BX_SMF void TEST_AXIw(bxInstruction_c *);
+
+  // repeatable instructions
   BX_SMF void MOVSB_XbYb(bxInstruction_c *);
   BX_SMF void MOVSW_XvYv(bxInstruction_c *);
   BX_SMF void CMPSB_XbYb(bxInstruction_c *);
   BX_SMF void CMPSW_XvYv(bxInstruction_c *);
-  BX_SMF void TEST_ALIb(bxInstruction_c *);
-  BX_SMF void TEST_EAXId(bxInstruction_c *);
-  BX_SMF void TEST_AXIw(bxInstruction_c *);
   BX_SMF void STOSB_YbAL(bxInstruction_c *);
   BX_SMF void STOSW_YveAX(bxInstruction_c *);
   BX_SMF void LODSB_ALXb(bxInstruction_c *);
@@ -2652,9 +2654,9 @@ public: // for now...
   BX_SMF void Resolve64Mod1or2Base15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
+  BX_SMF int REP(bxInstruction_c *);
+  BX_SMF int REP_ZF(bxInstruction_c *, unsigned rep_prefix);
 
-  BX_SMF void REP(void (*)(void));
-  BX_SMF void REP_ZF(void (*)(void), unsigned rep_prefix);
 #if BX_DEBUGGER
   BX_SMF void     dbg_take_irq(void);
   BX_SMF void     dbg_force_interrupt(unsigned vector);
