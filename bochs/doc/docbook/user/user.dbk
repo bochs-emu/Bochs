@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.136 2004-01-04 17:14:01 vruppert Exp $
+$Id: user.dbk,v 1.137 2004-01-10 17:49:51 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -464,6 +464,13 @@ currently work with.
     <entry>The serial port (single 16450 UART emulation) is usable, at least 
     on GNU/Linux as host and guest.  
     Status for other OSes (host and guest) is not known.
+    </entry>
+  </row>
+  <row>
+    <entry>Gameport</entry>
+    <entry>Yes</entry>
+    <entry>Emulates a standard PC gameport. The connection to a real joystick is
+    currently supported on Linux and win32 only.
     </entry>
   </row>
   <row>
@@ -1091,6 +1098,10 @@ The tag tells which release you want, and it can be one of the following:
       </row>
     </thead>
     <tbody>
+      <row>
+        <entry>2.0.2 (bugfix2)</entry>
+        <entry>REL_2_0_2_FINAL</entry>
+      </row>
       <row>
         <entry>2.0.1 (bugfix1)</entry>
         <entry>REL_2_0_1_FINAL</entry>
@@ -2671,7 +2682,7 @@ fpu/fpu_system.h, you could try --disable-fpu.
 
 <section id="vgafont"><title>Installing the VGA font (X windows only)</title>
 <para>
-This description will be obsolete in Bochs 2.1, since Bochs no longer requires
+This description is obsolete in Bochs 2.1, since Bochs no longer requires
 an external font. Now a changeable internal font is used.
 </para>
 <para>
@@ -3499,7 +3510,7 @@ speed.</para></footnote>.
 
 </section>
 
-<section><title>clock</title>
+<section id="bochsopt-clock"><title>clock</title>
 <para>
 This defines the parameters of the clock inside Bochs:
 </para>
@@ -4892,7 +4903,8 @@ shift or control) to restore the screen.
 There are two strategies to fix this problem.  One is to increase the "ips"
 setting in your configuration file.  This will cause the simulation time
 to pass more slowly.  The other strategy is to enable the experimental
-realtime PIT, which tries to keep Bochs in sync with real time.
+realtime PIT, which tries to keep Bochs in sync with real time. See the bochrc
+option <link linkend="bochsopt-clock">clock</link>.
 </para>
 
 </section>
@@ -5788,7 +5800,7 @@ Hitting ^C works. Example;
         This section describes what is possible to do with Bochs serial port emulation.
         These examples use dlxlinux disk image 
         (downloaded from 
-        <ulink url="http://bochs.sourceforge.net/guestos/dlxlinux3.tar.gz">
+        <ulink url="http://bochs.sourceforge.net/guestos/dlxlinux4.tar.gz">
         http://bochs.sourceforge.net/guestos/dlxlinux3.tar.gz</ulink>
         ) running as guest, on a debian x86 linux 2.4.19 host.
 </para>
@@ -9517,7 +9529,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.136 2004-01-04 17:14:01 vruppert Exp $
+        $Id: user.dbk,v 1.137 2004-01-10 17:49:51 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
