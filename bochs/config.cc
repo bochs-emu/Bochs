@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.21 2004-12-05 20:23:38 vruppert Exp $
+// $Id: config.cc,v 1.22 2004-12-07 21:06:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1139,6 +1139,7 @@ void bx_init_options ()
   bx_options.Omouse_enabled->set_runtime_param (1);
 
   static char *mouse_type_list[] = {
+    "none",
     "ps2",
     "imps2",
     "serial",
@@ -1147,7 +1148,7 @@ void bx_init_options ()
   };
   bx_options.Omouse_type = new bx_param_enum_c (BXP_MOUSE_TYPE,
       "Mouse type", 
-      "The mouse type can be one of these: 'ps2', 'imps2', 'serial', 'serial_wheel'", 
+      "The mouse type can be one of these: 'none', 'ps2', 'imps2', 'serial', 'serial_wheel'", 
       mouse_type_list,
       0,
       0);

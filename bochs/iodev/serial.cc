@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.60 2004-12-05 20:23:39 vruppert Exp $
+// $Id: serial.cc,v 1.61 2004-12-07 21:06:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -893,10 +893,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) {
           if (BX_SER_THIS detect_mouse == 2) {
             if (bx_options.Omouse_type->get() == MOUSE_TYPE_SERIAL) {
+              BX_SER_THIS mouse_internal_buffer.head = 0;
               BX_SER_THIS mouse_internal_buffer.num_elements = 1;
               BX_SER_THIS mouse_internal_buffer.buffer[0] = 'M';
             }
             if (bx_options.Omouse_type->get() == MOUSE_TYPE_SERIAL_WHEEL) {
+              BX_SER_THIS mouse_internal_buffer.head = 0;
               BX_SER_THIS mouse_internal_buffer.num_elements = 6;
               BX_SER_THIS mouse_internal_buffer.buffer[0] = 'M';
               BX_SER_THIS mouse_internal_buffer.buffer[1] = 'Z';
@@ -1248,6 +1250,10 @@ bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned bu
     return;
   }
 
+  // if the DTR and RTS lines aren't up, the mouse doesn't have any power to send packets.
+  if (!BX_SER_THIS s[BX_SER_THIS mouse_port].modem_cntl.dtr || !BX_SER_THIS s[BX_SER_THIS mouse_port].modem_cntl.rts)
+    return;
+
   // scale down the motion
   if ( (delta_x < -1) || (delta_x > 1) )
     delta_x /= 2;
@@ -1261,9 +1267,9 @@ bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned bu
 
   BX_SER_THIS mouse_delayed_dx+=delta_x;
   BX_SER_THIS mouse_delayed_dy-=delta_y;
-  BX_SER_THIS mouse_delayed_dz+=delta_z;
+  BX_SER_THIS mouse_delayed_dz =delta_z;
 
-  if ((BX_SER_THIS mouse_internal_buffer.num_elements + 3) >= BX_MOUSE_BUFF_SIZE) {
+  if ((BX_SER_THIS mouse_internal_buffer.num_elements + 4) >= BX_MOUSE_BUFF_SIZE) {
     return; /* buffer doesn't have the space */
   }
 
@@ -1287,20 +1293,11 @@ bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned bu
     delta_y = BX_SER_THIS mouse_delayed_dy;
     BX_SER_THIS mouse_delayed_dy = 0;
   }
-  if (BX_SER_THIS mouse_delayed_dz == 120) {
-    delta_z = 1;
-    BX_SER_THIS mouse_delayed_dz += 1;
-  } else if (BX_SER_THIS mouse_delayed_dz == 65416) {  // -120
-    delta_z = -1;
-    BX_SER_THIS mouse_delayed_dz -= 1;
-  } else {
-    delta_z = BX_SER_THIS mouse_delayed_dz;
-    BX_SER_THIS mouse_delayed_dz = 0;
-  }
 
-  b1 = (Bit8u)delta_x;
-  b2 = (Bit8u)delta_y;
-  b3 = (Bit8u)delta_z;
+  b1 = (Bit8u) delta_x;
+  b2 = (Bit8u) delta_y;
+  b3 = (Bit8u) -((Bit8s) delta_z);
+
   mouse_data[0] = 0x40 | ((b1 & 0xc0) >> 6) | ((b2 & 0xc0) >> 4);
   mouse_data[0] |= ((button_state & 0x01) << 5) | ((button_state & 0x02) << 3);
   mouse_data[1] = b1 & 0x3f;

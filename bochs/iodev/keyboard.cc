@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.94 2004-12-06 21:12:11 vruppert Exp $
+// $Id: keyboard.cc,v 1.95 2004-12-07 21:06:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.94 2004-12-06 21:12:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.95 2004-12-07 21:06:34 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -293,9 +293,9 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_KEY_SMF
+  Bit8u val;
 
   if (address == 0x60) { /* output buffer */
-    Bit8u   val;
     if (BX_KEY_THIS s.kbd_controller.auxb) { /* mouse byte available */
       val = BX_KEY_THIS s.kbd_controller.aux_output_buffer;
       BX_KEY_THIS s.kbd_controller.aux_output_buffer = 0;
@@ -360,7 +360,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
 #if BX_CPU_LEVEL >= 2
   else if (address == 0x64) { /* status register */
 
-    return (BX_KEY_THIS s.kbd_controller.pare << 7)  |
+    val = (BX_KEY_THIS s.kbd_controller.pare << 7)  |
           (BX_KEY_THIS s.kbd_controller.tim  << 6)  |
           (BX_KEY_THIS s.kbd_controller.auxb << 5)  |
           (BX_KEY_THIS s.kbd_controller.keyl << 4)  |
@@ -368,6 +368,8 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
           (BX_KEY_THIS s.kbd_controller.sysf << 2)  |
           (BX_KEY_THIS s.kbd_controller.inpb << 1)  |
           BX_KEY_THIS s.kbd_controller.outb;
+    BX_KEY_THIS s.kbd_controller.tim = 0;
+    return val;
     }
 
 #else /* BX_CPU_LEVEL > 0 */
@@ -1220,6 +1222,11 @@ bx_keyb_c::activate_timer(void)
   void
 bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
 {
+  // if we are not using a ps2 mouse, some of the following commands need to return different values
+  bx_bool is_ps2 = 0;
+  if ((bx_options.Omouse_type->get() == MOUSE_TYPE_PS2) ||
+      (bx_options.Omouse_type->get() == MOUSE_TYPE_IMPS2)) is_ps2 = 1;
+
   BX_DEBUG(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
   BX_DEBUG(("  enable = %u", (unsigned) BX_KEY_THIS s.mouse.enable));
   BX_DEBUG(("  allow_irq12 = %u",
@@ -1366,9 +1373,16 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
         break;
 
       case 0xf4: // Enable (in stream mode)
-        BX_KEY_THIS s.mouse.enable = 1;
-        controller_enQ(0xFA, 1); // ACK
-        BX_DEBUG(("[mouse] Mouse enabled (stream mode)"));
+        // is a mouse present?
+        if (is_ps2) {
+          BX_KEY_THIS s.mouse.enable = 1;
+          controller_enQ(0xFA, 1); // ACK
+          BX_DEBUG(("[mouse] Mouse enabled (stream mode)"));
+        } else {
+          // a mouse isn't present.  We need to return a 0xFE (resend) instead of a 0xFA (ACK)
+          controller_enQ(0xFE, 1); // RESEND
+          BX_KEY_THIS s.kbd_controller.tim = 1;
+        }
         break;
 
       case 0xf5: // Disable (in stream mode)
@@ -1388,19 +1402,26 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
         break;
 
       case 0xff: // Reset
-        BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
-        BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
-        BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
-        BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_RESET;
-        BX_KEY_THIS s.mouse.enable          = 0;
-        if (BX_KEY_THIS s.mouse.im_mode)
-          BX_INFO(("wheel mouse mode disabled"));
-        BX_KEY_THIS s.mouse.im_mode         = 0;
-        /* (mch) NT expects an ack here */
-        controller_enQ(0xFA, 1); // ACK
-        controller_enQ(0xAA, 1); // completion code
-        controller_enQ(0x00, 1); // ID code (standard after reset)
-        BX_DEBUG(("[mouse] Mouse reset"));
+        // is a mouse present?
+        if (is_ps2) {
+          BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
+          BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
+          BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
+          BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_RESET;
+          BX_KEY_THIS s.mouse.enable          = 0;
+          if (BX_KEY_THIS s.mouse.im_mode)
+            BX_INFO(("wheel mouse mode disabled"));
+          BX_KEY_THIS s.mouse.im_mode         = 0;
+          /* (mch) NT expects an ack here */
+          controller_enQ(0xFA, 1); // ACK
+          controller_enQ(0xAA, 1); // completion code
+          controller_enQ(0x00, 1); // ID code (standard after reset)
+          BX_DEBUG(("[mouse] Mouse reset"));
+        } else {
+          // a mouse isn't present.  We need to return a 0xFE (resend) instead of a 0xFA (ACK)
+          controller_enQ(0xFE, 1); // RESEND
+          BX_KEY_THIS s.kbd_controller.tim = 1;
+        }
         break;
 
       case 0xe9: // Get mouse information
