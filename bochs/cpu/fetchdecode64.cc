@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.38 2002-12-22 21:48:23 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.39 2003-02-08 05:51:38 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2137,8 +2137,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C7 */  { BxAnother | BxImmediate_Iv, &BX_CPU_C::MOV_EdId },
   /* C8 */  { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
   /* C9 */  { 0, &BX_CPU_C::LEAVE64 },
-  /* CA */  { BxImmediate_Iw, &BX_CPU_C::RETfar64_Iw },
-  /* CB */  { 0, &BX_CPU_C::RETfar64 },
+  /* CA */  { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
+  /* CB */  { 0, &BX_CPU_C::RETfar32 },
   /* CC */  { 0, &BX_CPU_C::INT3 },
   /* CD */  { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE */  { 0, &BX_CPU_C::BxError },
@@ -2652,7 +2652,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C7 */  { BxAnother | BxImmediate_Iv, &BX_CPU_C::MOV_EqId },
   /* C8 */  { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
   /* C9 */  { 0, &BX_CPU_C::LEAVE64 },
-  /* CA */  { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
+  /* CA */  { BxImmediate_Iw, &BX_CPU_C::RETfar64_Iw },
   /* CB */  { 0, &BX_CPU_C::RETfar64 },
   /* CC */  { 0, &BX_CPU_C::INT3 },
   /* CD */  { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
