@@ -29,21 +29,79 @@ plex86.  Here are the comments from that patch:
 > plex_* just to reduce confusion and mayhem when I was compiling with both
 > kbd implementations.  I didn't change anything except to get it to compile.
 
-There's a lot to do, but I think it will help to have a branch to work in.
-Christophe and I will probably be working on plugins together, and I
-didn't want to have to pass patches back and forth, with rejects and all.
+The difference between plugins3 and plugins5 is........  FIXME(cbothamy)
 
 The branch is called BRANCH_PLUGINS.  There is a normal tag called
 BRANCH_PLUGINS_BASE that marks the point where the branch began.  This
 will help at merge time.
 
-It's too early to even fill in the to do list, but here it is:
 
 TO DO:
-
+- make X11 gui into a plugin
+- toplevel makefile does "make -C subdir libsomething.a" which does
+  not cause the plugins in that directory to be remade.  Maybe it
+  should do make -C subdir all
+- it looks like each plugin's plugin_init gets called twice, once
+  when plugin_load calls plugin_init_one, and then again in
+  plugin_init_all.  Shouldn't we just call it once?
 
 DONE:
+- applied patch.plugins5
+- all gui references to I/O devices are turned into macros now
+- updated makefile dependencies now that plugin.h is in there
 
+-----------------------------------------------
+random notes:
+
+how to make a gui into a plugin?
+virtual functions versus lots of function pointers.
+Make bx_gui_c a class with virtual methods to be supplied by the
+plugins.  Each gui will be a child class of bx_gui_c which supplies
+the required methods.
+
+How will the plugin loader know how to create new objects?
+It doesn't.  The .so file has a "global" variable like "bx_cmos"
+so the constructor must be called as the module loads.  For any
+device that needs to be initialized with new operator, I may need
+to add a static method to the class that can call the constructor.
+
+
+------------------------------------------
+References
+
+From: Tero Pulkkinen (p150650@zori.cs.tut.fi)
+ Subject: Re: undefined reference to `pm virtual table' 
+ Newsgroups: gnu.g++.help
+ Date: 1996/11/15 
+
+
+> The compile goes off OK, but I get this error at link time:
+>   pm.o(.text+0xa8): undefined reference to `pm virtual table'
+
+This error comes from that the compiler didnt make virtual function
+table for object even though there's implemented functions that use
+objects of that type(constructor for example). Probably your pm-class
+has all implemented member functions *inline* and you still have
+(pure) virtual functions inside the class.
+
+The creation point of virtual function table usually (dunno if g++ does that)
+is at position of first seen noninline function body of that class.
+Now if every of your function is inline, there's no place where compiler
+could make virtual function table.
+
+Fix is to move body of for example constructor(any member is fine) to the .cc 
+file instead of keeping it in .h-file and linking that .o file to your 
+executable.
+
+Other sollution is to remove *all* implementations of functions from header
+file. If all functions of a class are pure virtual, there's no need for
+virtual function table. (Constructor must set pointer to virtual function
+table to the object, so, if you have constructor, you'll need virtual
+function table too, even in abstract classes...)
+
+> Can someone help me?  Thanks in advance.
+
+Hope this helps....
 
 ------------------------------------------------
 Bochs x86 Pentium Emulator
