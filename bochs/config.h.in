@@ -793,7 +793,7 @@ typedef
 #error "SSE is only supported with CPU_LEVEL >= 6 !"
 #endif
 
-#if (BX_SUPPORT_PNI && BX_SUPPORT_SSE <= 2)
+#if (BX_SUPPORT_PNI && BX_SUPPORT_SSE < 2)
 #error "PNI cannot be compiled without SSE/SSE2 support !"
 #endif
 

@@ -24,6 +24,8 @@ Changes to next release:
     instructions (Stanislav Shwartsman)
   - fixed CF flag handling for SHL instruction in x86-64 mode
     (Stanislav Shwartsman)
+  - added missed GP(0) exception when loading incorrect flags combination 
+    to CR0 (Stanislav Shwartsman)
 
 - FPU
   - totally rewritten all FPU code based on softfloat library 
@@ -97,6 +99,7 @@ Changes to next release:
     by default
   - --enable-mmx enabled by default only if cpu-level > 4
   - fixes for Solaris SunPro (Robin Kay)
+  - --enable-pni option added
 
 - SF patches applied
   [894595] MSR_APICBASE always returns APIC ADDRESS 0 by Kangmo Kim
@@ -1529,6 +1532,7 @@ Changes in 1.2.1 (June 12, 2001):
   added script called "install-x11-fonts" which should help people install
   the VGA font on X windows systems, if it isn't already there.
 
+-------------------------------------------------------------------------
 Changes in 1.2 (June 3, 2001):
 - [ #427259 ] rombios HALT calls don't print
   Fixed bios/rombios.c HALT macro so that it writes the line number of the
@@ -1578,6 +1582,7 @@ Changes in 1.2 (June 3, 2001):
 - added additional check for null pointer in debugger exit routine
 - added diskd to .bochsrc
 
+-------------------------------------------------------------------------
 Changes in version 1.2-pre1 (May 25, 2001):
 - major cleanup of .bochsrc
 - major cleanup of stderr output: prints bochs version information when
@@ -1622,6 +1627,7 @@ Changes in version 1.2-pre1 (May 25, 2001):
   become root and type "configure; make rpm".
 - applied some FreeBSD patches from Maxim Sobolev (cdrom and serial).
 
+-------------------------------------------------------------------------
 Changes in version 1.1.2 (bugfix3, May 16, 2001):
 - updated Elpin VGA BIOS to version 2.40, and changed pointer in .bochsrc
 - fixed .conf.x86 script so that it uses c++ instead of egcs for C++ files
@@ -1654,6 +1660,7 @@ Changes in version 1.1.2 (bugfix3, May 16, 2001):
 - remove all patches from patches subdir which have already been applied.
   The remaining ones are under consideration but not applied.
 
+-------------------------------------------------------------------------
 Changes in version 1.1.1 (bugfix2, April 9, 2001):
 - in soundwin.cc, arg 3 should be typecast to LPWAVEFORMATEX
 - in fpu_entry.c, Bryce mistyped his own initials!
@@ -1665,7 +1672,7 @@ Changes in version 1.1.1 (bugfix2, April 9, 2001):
    #define BX_HAVE_HASH_MAP 0
 - in config.h.in, fixed typo in #error message
 
-
+-------------------------------------------------------------------------
 Changes in version 1.1 (bugfix1, April 6, 2001):
 
 (FIXED, patch #414360: update copyrights)
@@ -1765,4 +1772,3 @@ WinME install dies with panic:
 bochs: panic, pit: outp(43h): comm Bh, mode 00, bcd 00 unhandled
 I think I had a similar problem.  All three timers should support modes
 0, 2, and 3.  Other modes really aren't implemented.
-
