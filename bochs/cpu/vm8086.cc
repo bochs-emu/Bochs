@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.9 2002-03-01 17:27:25 bdenney Exp $
+// $Id: vm8086.cc,v 1.10 2002-06-27 13:31:54 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,47 +125,47 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   void
 BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
 {
-  static Bit32u times = 0;
-  times++;
-  if (times<100) {
-    BX_ERROR(("stack_return_from_v86 may not be implemented right!"));
-  } else if (times==100) {
-    BX_ERROR(("stack_return_from_v86 called 100 times. I won't print this error any more"));
-  }
-  //exception(BX_GP_EXCEPTION, 0, 0);
-
-#if 1
   if (IOPL != 3) {
     // trap to virtual 8086 monitor
-    BX_ERROR(("stack_return_from_v86: IOPL != 3"));
+    BX_DEBUG(("IRET in vm86 with IOPL != 3"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+    return;
+  }
 
   if (i->os_32) {
     Bit32u eip, ecs_raw, eflags;
 
-// ??? should be some stack checks here
+    if( !can_pop(12) )
+    {
+      exception(BX_SS_EXCEPTION, 0, 0);
+      return;
+    }
+  
     pop_32(&eip);
     pop_32(&ecs_raw);
     pop_32(&eflags);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
     BX_CPU_THIS_PTR eip = eip;
-    write_eflags(eflags, /*IOPL*/ CPL==0, /*IF*/ 1, /*VM*/ 0, /*RF*/ 1);
+    write_eflags(eflags, /*IOPL*/ 0, /*IF*/ 1, /*VM*/ 0, /*RF*/ 1);
     }
   else {
     Bit16u ip, cs_raw, flags;
 
-// ??? should be some stack checks here
+    if( !can_pop(6) )
+    {
+      exception(BX_SS_EXCEPTION, 0, 0);
+      return;
+    }
+
     pop_16(&ip);
     pop_16(&cs_raw);
     pop_16(&flags);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
     BX_CPU_THIS_PTR eip = (Bit32u) ip;
-    write_flags(flags, /*IOPL*/ CPL==0, /*IF*/ 1);
+    write_flags(flags, /*IOPL*/ 0, /*IF*/ 1);
     }
-#endif
 }
 
 
