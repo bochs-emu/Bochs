@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.23 2001-06-19 21:36:09 fries Exp $
+ * $Id: siminterface.cc,v 1.24 2001-06-20 14:01:39 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -86,7 +86,8 @@ bx_real_sim_c::get_param_num (bx_id id) {
     BX_PANIC (("get_param_num(%u) could not find a parameter", id));
     return NULL;
   }
-  if (generic->get_type () == BXT_PARAM_NUM)
+  int type = generic->get_type ();
+  if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL)
     return (bx_param_num_c *)generic;
   BX_PANIC (("get_param_num %u could not find an integer parameter with that id", id));
   return NULL;
@@ -219,14 +220,14 @@ bx_real_sim_c::write_rc (char *rc, int overwrite)
 int 
 bx_real_sim_c::get_log_file (char *path, int len)
 {
-  strncpy (path, bx_options.log.filename, len);
+  strncpy (path, bx_options.log.Ofilename->getptr (), len);
   return 0;
 }
 
 int 
 bx_real_sim_c::set_log_file (char *path)
 {
-  strncpy (bx_options.log.filename, path, sizeof(bx_options.log.filename));
+  bx_options.log.Ofilename->set (path);
   return 0;
 }
 
@@ -294,17 +295,19 @@ bx_real_sim_c::set_cdrom_options (int drive, bx_cdrom_options *out)
 int 
 bx_real_sim_c::get_newhd_support ()
 {
-  return bx_options.newHardDriveSupport;
+  return bx_options.OnewHardDriveSupport->get ();
 }
 
 void 
 bx_real_sim_c::set_newhd_support (int en)
 {
-  bx_options.newHardDriveSupport = (en != 0);
+  bx_options.OnewHardDriveSupport->set (en != 0);
 }
 
-char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K" };
+char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", NULL };
 int n_floppy_type_names = 5;
+char *floppy_status_names[] = { "ejected", "inserted", NULL };
+int n_floppy_status_names = 2;
 
 char *
 bx_real_sim_c::get_floppy_type_name (int type)
@@ -317,14 +320,13 @@ bx_real_sim_c::get_floppy_type_name (int type)
 int 
 bx_real_sim_c::get_boot_hard_disk ()
 {
-  return bx_options.bootdrive[0] == 'c';
+  return bx_options.Obootdrive->get () == BX_BOOT_DISKC;
 }
 
 int 
 bx_real_sim_c::set_boot_hard_disk (int val)
 {
-  bx_options.bootdrive[0] = val?  'c' : 'a';
-  bx_options.bootdrive[1] = 0;
+  bx_options.Obootdrive->set (val?  BX_BOOT_DISKC : BX_BOOT_FLOPPYA);
   return 0;
 }
 
@@ -350,13 +352,13 @@ bx_real_sim_c::set_rom_path (char *path)
 int 
 bx_real_sim_c::get_private_colormap ()
 {
-  return bx_options.private_colormap;
+  return bx_options.Oprivate_colormap->get ();
 }
 
 void 
 bx_real_sim_c::set_private_colormap (int en)
 {
-  bx_options.private_colormap = en;
+  bx_options.Oprivate_colormap->set (en);
 }
 
 void 
@@ -451,7 +453,6 @@ bx_param_num_c::bx_param_num_c (bx_id id,
   this->val = initial_val;
   this->handler = NULL;
   this->base = 10;
-  SIM->register_param (id, this);
 }
 
 void 
@@ -482,6 +483,31 @@ bx_param_num_c::set (Bit32s newval)
     // just set the value.  This code does not check max/min.
     val = newval;
   }
+}
+
+bx_param_bool_c::bx_param_bool_c (bx_id id,
+    char *name,
+    char *description,
+    Bit32s initial_val)
+  : bx_param_num_c (id, name, description, 0, 1, initial_val)
+{
+  set_type (BXT_PARAM_BOOL);
+}
+
+bx_param_enum_c::bx_param_enum_c (bx_id id, 
+      char *name,
+      char *description,
+      char **choices,
+      Bit32s initial_val,
+      Bit32s value_base)
+  : bx_param_num_c (id, name, description, value_base, BX_MAX_INT, initial_val)
+{
+  this->choices = choices;
+  this->value_base = value_base;
+  // count number of choices, set max
+  char **p = choices;
+  while (*p != NULL) p++;
+  this->max = value_base + (p - choices - 1);
 }
 
 bx_param_string_c::bx_param_string_c (bx_id id,

@@ -282,8 +282,8 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
   th->setprefix("XGUI");
   UNUSED(th);
 
-if (bx_options.private_colormap) {
-  BX_ERROR(( "private_colormap option not handled yet." ));
+if (bx_options.Oprivate_colormap->get ()) {
+  BX_ERROR(( "Oprivate_colormap option not handled yet." ));
   }
 
   x_tilesize = tilewidth;
@@ -340,7 +340,7 @@ if (bx_options.private_colormap) {
   default_depth  = DefaultDepth(bx_x_display, bx_x_screen_num);
   default_visual = DefaultVisual(bx_x_display, bx_x_screen_num);
 
-  if (bx_options.private_colormap) {
+  if (bx_options.Oprivate_colormap->get ()) {
     default_cmap = XCreateColormap(bx_x_display, DefaultRootWindow(bx_x_display),
                                    default_visual, AllocNone);
     if (XAllocColorCells(bx_x_display, default_cmap, False,
@@ -610,7 +610,7 @@ bx_gui_c::handle_events(void)
 
 	      // (mch) Hack for easier mouse handling (toggle mouse enable)
 	      mouse_handler();
-	      if (bx_options.mouse_enabled->get ()) {
+	      if (bx_options.Omouse_enabled->get ()) {
 		    BX_INFO(("[x] Mouse on"));
 		    mouse_enable_x = current_x;
 		    mouse_enable_y = current_y;
@@ -1095,7 +1095,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
   color.green = green << 8;
   color.blue  = blue << 8;
 
-  if (bx_options.private_colormap) {
+  if (bx_options.Oprivate_colormap->get ()) {
     color.pixel = index;
     XStoreColor(bx_x_display, default_cmap, &color);
     return(0); // no screen update needed
@@ -1241,7 +1241,7 @@ bx_gui_c::exit(void)
 
 static void warp_cursor (int dx, int dy)
 {
-      if (bx_options.mouse_enabled->get ()) {
+      if (bx_options.Omouse_enabled->get ()) {
 	    warp_dx = dx;
 	    warp_dy = dy;
 	    XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);

@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.23 2001-06-19 14:55:34 fries Exp $
+ * $Id: control.cc,v 1.24 2001-06-20 14:01:39 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -232,9 +232,10 @@ ask_string (char *prompt, char *the_default, char *out)
 {
   char buffer[1024];
   char *clean;
+  assert (the_default != out);
   out[0] = 0;
   printf (prompt, the_default);
-  if (!fgets (buffer, sizeof(buffer), stdin))
+  if (fgets (buffer, sizeof(buffer), stdin) == NULL)
     return -1;
   clean = clean_string (buffer);
   if (strlen(clean) < 1) {
@@ -398,25 +399,26 @@ void build_disk_options_prompt (char *format, char *buf, int size)
   char buffer[7][128];
   for (int i=0; i<2; i++) {
     SIM->get_floppy_options (i, &floppyop);
-    sprintf (buffer[i], "%s, size=%s, %s", floppyop.path,
-	  SIM->get_floppy_type_name (floppyop.type),
-	  floppyop.initial_status ? "inserted" : "ejected");
-    if (!floppyop.path[0]) strcpy (buffer[i], "none");
+    sprintf (buffer[i], "%s, size=%s, %s", floppyop.Opath->getptr (),
+	  SIM->get_floppy_type_name (floppyop.Otype->get ()),
+	  floppyop.Oinitial_status->get () ? "inserted" : "ejected");
+    if (!floppyop.Opath->getptr()[0]) strcpy (buffer[i], "none");
     SIM->get_disk_options (i, &diskop);
     sprintf (buffer[2+i], "%s, %d cylinders, %d heads, %d sectors/track", 
-	diskop.path, diskop.cylinders, diskop.heads, diskop.spt);
-    if (!diskop.present) strcpy (buffer[2+i], "none");
+	diskop.Opath->getptr (), diskop.Ocylinders->get (), 
+	diskop.Oheads->get (), diskop.Ospt->get ());
+    if (!diskop.Opresent->get ()) strcpy (buffer[2+i], "none");
   }
   SIM->get_cdrom_options (0, &cdromop);
   sprintf (buffer[4], "%s, %spresent, %s",
-     cdromop.dev, cdromop.present?"":"not ",
-     cdromop.inserted?"inserted":"ejected");
-  if (!cdromop.dev[0]) strcpy (buffer[4], "none");
+     cdromop.Opath->getptr (), cdromop.Opresent->get ()?"":"not ",
+     cdromop.Oinserted?"inserted":"ejected");
+  if (!cdromop.Opath->getptr()[0]) strcpy (buffer[4], "none");
   sprintf (buffer[5], "%s", SIM->get_newhd_support () ? "yes":"no");
   sprintf (buffer[6], "%s", SIM->get_boot_hard_disk () ? "hard drive":"floppy drive");
   // check if diskd and cdromd are on at once
   SIM->get_disk_options (1, &diskop);
-  int conflict = (diskop.present && cdromop.present);
+  int conflict = (diskop.Opresent->get () && cdromop.Opresent->get ());
   char *diskd_cdromd_conflict_msg = "\nERROR:\nThis configuration has both a cdrom and a hard disk enabled.\nYou cannot have both!";
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], conflict? diskd_cdromd_conflict_msg : "");
 }
@@ -429,15 +431,15 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
   char buffer[3][128];
   for (int i=0; i<2; i++) {
     SIM->get_floppy_options (i, &floppyop);
-    sprintf (buffer[i], "%s, size=%s, %s", floppyop.path,
-	  SIM->get_floppy_type_name (floppyop.type),
-	  floppyop.initial_status ? "inserted" : "ejected");
-    if (!floppyop.path[0]) strcpy (buffer[i], "none");
+    sprintf (buffer[i], "%s, size=%s, %s", floppyop.Opath->getptr (),
+	  SIM->get_floppy_type_name (floppyop.Otype->get ()),
+	  floppyop.Oinitial_status->get () ? "inserted" : "ejected");
+    if (!floppyop.Opath->getptr ()[0]) strcpy (buffer[i], "none");
   }
   SIM->get_cdrom_options (0, &cdromop);
   sprintf (buffer[2], "%s, %spresent, %s",
-     cdromop.dev, cdromop.present?"":"not ",
-     cdromop.inserted?"inserted":"ejected");
+     cdromop.Opath->getptr (), cdromop.Opresent->get ()?"":"not ",
+     cdromop.Oinserted->get ()?"inserted":"ejected");
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
       ips->get (),
       SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
@@ -597,13 +599,15 @@ void bx_edit_floppy (int drive)
   assert (SIM->get_floppy_options (drive, &opt) >= 0);
   newopt = opt;
   fprintf (stderr, "Changing options for floppy drive %d\n", drive);
-  if (ask_string ("Enter new pathname: [%s] ", opt.path, newopt.path) < 0)
+  char the_default[512];
+  opt.Opath->get (the_default, sizeof(the_default));
+  if (ask_string ("Enter new pathname: [%s] ", the_default, newopt.Opath->getptr ()) < 0)
     return;
-  int newtype, oldtype = opt.type - BX_FLOPPY_NONE;
+  int newtype, oldtype = opt.Otype->get () - BX_FLOPPY_NONE;
   if (ask_menu ("What is the floppy disk size?\nChoices are 720K, 1.2M, 1.44M, 2.88M.  [%s] ", n_floppy_type_names, floppy_type_names, oldtype, &newtype) < 0) return;
-  newopt.type = newtype + BX_FLOPPY_NONE;
+  newopt.Otype->set (newtype + BX_FLOPPY_NONE);
   if (SIM->set_floppy_options (drive, &newopt) < 0) {
-    fprintf (stderr, "The disk image %s could not be opened.\n", newopt.path);
+    fprintf (stderr, "The disk image %s could not be opened.\n", newopt.Opath->getptr ());
   }
 }
 
@@ -613,24 +617,26 @@ void bx_edit_hard_disk (int drive)
   assert (SIM->get_disk_options (drive, &opt) >= 0);
   newopt = opt;
   fprintf (stderr, "Changing options for hard drive %d\n", drive);
-  if (ask_string ("Enter new pathname, or type 'none' for no disk: [%s] ", opt.path, newopt.path) < 0)
+  char buf[512];
+  opt.Opath->get (buf, sizeof (buf));
+  if (ask_string ("Enter new pathname, or type 'none' for no disk: [%s] ", buf, newopt.Opath->getptr ()) < 0)
     return;
-  newopt.present = (strcmp (newopt.path, "none") != 0);
-  if (newopt.present) {  // skip if "none" is the path.
+  newopt.Opresent->set (strcmp (newopt.Opath->getptr (), "none") != 0);
+  if (newopt.Opresent->get ()) {  // skip if "none" is the path.
     // ask cyl, head, sec.
     Bit32u n;
-    if (ask_uint ("How many cylinders? [%d] ", 1, 65535, opt.cylinders, &n, 10) < 0)
+    if (ask_uint ("How many cylinders? [%d] ", 1, 65535, opt.Ocylinders->get (), &n, 10) < 0)
       return;
-    newopt.cylinders = n;
-    if (ask_uint ("How many heads? [%d] ", 1, 256, opt.heads, &n, 10) < 0)
+    newopt.Ocylinders->set (n);
+    if (ask_uint ("How many heads? [%d] ", 1, 256, opt.Oheads->get (), &n, 10) < 0)
       return;
-    newopt.heads = n;
-    if (ask_uint ("How many sectors per track? [%d] ", 1, 255, opt.spt, &n, 10) < 0)
+    newopt.Oheads->set (n);
+    if (ask_uint ("How many sectors per track? [%d] ", 1, 255, opt.Ospt->get (), &n, 10) < 0)
       return;
-    newopt.spt = n;
+    newopt.Ospt->set (n);
   }
   if (SIM->set_disk_options (drive, &newopt) < 0) {
-    fprintf (stderr, "The disk image %s could not be opened.\n", newopt.path);
+    fprintf (stderr, "The disk image %s could not be opened.\n", newopt.Opath->getptr ());
   }
 }
 
@@ -639,15 +645,17 @@ void bx_edit_cdrom ()
   bx_cdrom_options opt, newopt;
   assert (SIM->get_cdrom_options (0, &opt) >= 0);
   newopt = opt;
-  newopt.present = 1;
-  if (ask_string ("Enter pathname of the cdrom device, or 'none' for no cdrom: [%s] ", opt.dev, newopt.dev) < 0)
+  newopt.Opresent->set (1);
+  char buf[512];
+  opt.Opath->get (buf, sizeof (buf));
+  if (ask_string ("Enter pathname of the cdrom device, or 'none' for no cdrom: [%s] ", buf, newopt.Opath->getptr ()) < 0)
     return;
-  if (!strcmp (newopt.dev, "none")) {
-    newopt.dev[0] = 0;
-    newopt.present = 0;
+  if (!strcmp (newopt.Opath->getptr (), "none")) {
+    newopt.Opath->getptr ()[0] = 0;
+    newopt.Opresent->set (0);
   }
   if (SIM->set_cdrom_options (0, &newopt) < 0) {
-    fprintf (stderr, "The device at %s could not be opened.\n", newopt.dev);
+    fprintf (stderr, "The device at %s could not be opened.\n", newopt.Opath->getptr ());
   }
 }
 
@@ -898,6 +906,18 @@ bx_param_num_c::text_print (FILE *fp)
 }
 
 void
+bx_param_bool_c::text_print (FILE *fp)
+{
+  if (get_format ()) {
+    fprintf (fp, get_format (), get ());
+    fprintf (fp, "\n");
+  } else {
+    char *format = "%s: %s\n"; 
+    fprintf (fp, format, get_name (), get () ? "yes" : "no");
+  }
+}
+
+void
 bx_param_string_c::text_print (FILE *fp)
 {
   //fprintf (fp, "string parameter, id=%u, name=%s\n", get_id (), get_name ());
@@ -945,6 +965,24 @@ bx_param_num_c::text_ask (FILE *fpin, FILE *fpout)
   set (n);
   return 0;
 }
+
+int 
+bx_param_bool_c::text_ask (FILE *fpin, FILE *fpout)
+{
+  fprintf (fpout, "\n");
+  int status;
+  char *prompt = get_ask_format ();
+  if (prompt == NULL) {
+    // default prompt, if they didn't set an ask format string
+    prompt = "Set %s to: [%s] ";
+  }
+  Bit32u n = get ();
+  status = ask_yn (prompt, n, &n);
+  if (status < 0) return status;
+  set (n);
+  return 0;
+}
+
 
 int 
 bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)

@@ -400,6 +400,10 @@
 
 #endif // BX_WITH_WIN32
 
+#define BX_MAX_UINT 4294967295
+#define BX_MAX_INT 2147483647
+
+
 // create an unsigned integer type that is the same size as a pointer.
 // You can typecast a pointer to a bx_pr_equiv_t without losing any 
 // bits (and without getting the compiler excited).  This is used in

@@ -138,8 +138,8 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
 
-//BX_DEBUG(( "# keyboard_serial_delay is %u usec",
-//        (unsigned) bx_options.keyboard_serial_delay));
+//BX_DEBUG(( "# Okeyboard_serial_delay is %u usec",
+//        (unsigned) bx_options.Okeyboard_serial_delay->get ()));
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
   // Mouse initialization stuff
@@ -1121,7 +1121,7 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
 bx_keyb_c::activate_timer(void)
 {
   if (BX_KEY_THIS s.kbd_controller.timer_pending == 0) {
-    BX_KEY_THIS s.kbd_controller.timer_pending = bx_options.keyboard_serial_delay;
+    BX_KEY_THIS s.kbd_controller.timer_pending = bx_options.Okeyboard_serial_delay->get ();
     }
 }
 
@@ -1327,7 +1327,7 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
 
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
-  if (bx_options.mouse_enabled->get () == 0)
+  if (bx_options.Omouse_enabled->get () == 0)
     return;
 
 

@@ -569,52 +569,25 @@ int bx_parse_cmdline (int argc, char *argv[]);
 int bx_read_configuration (char *rcfile);
 int bx_write_configuration (char *rcfile, int overwrite);
 
-#if BX_USE_CONTROL_PANEL==0
-// with control panel enabled, this is defined in gui/siminterface.h instead.
-
 #define BX_PATHNAME_LEN 512
 
-// for control panel, I moved these into gui/siminterface.h. BBD
 typedef struct {
-  char path[BX_PATHNAME_LEN];
-  unsigned type;
-  unsigned initial_status;
-  } bx_floppy_options;
-
-typedef struct {
-  Boolean present;
-  char path[BX_PATHNAME_LEN];
-  unsigned int cylinders;
-  unsigned int heads;
-  unsigned int spt;
-  } bx_disk_options;
-
-struct bx_cdrom_options
-{
-  Boolean present;
-  char dev[BX_PATHNAME_LEN];
-  Boolean inserted;
-};
-#endif    /* if BX_USE_CONTROL_PANEL==0 */
-
-typedef struct {
-  bx_param_string_c *path;
-  bx_param_num_c *address;
+  bx_param_string_c *Opath;
+  bx_param_num_c *Oaddress;
   } bx_rom_options;
 
 typedef struct {
-  bx_param_string_c *path;
+  bx_param_string_c *Opath;
   } bx_vgarom_options;
 
 typedef struct {
-  //size_t megs;
-  bx_param_num_c *size;
+  bx_param_num_c *Osize;
   } bx_mem_options;
 
 typedef struct {
-  char      *path;
-  Boolean   cmosImage;
-	unsigned int time0;
+  bx_param_string_c *Opath;
+  bx_param_bool_c *OcmosImage;
+  bx_param_num_c *Otime0;
   } bx_cmos_options;
 
 typedef struct {
@@ -634,14 +607,15 @@ typedef struct {
 // to implement real mode up front.
 #define Load32bitOSLinux       1
 #define Load32bitOSNullKernel  2 // being developed for freemware
-  unsigned whichOS;
-  char    *path;
-  char    *iolog;
-  char    *initrd;
+#define Load32bitOSLast        2
+  bx_param_num_c *OwhichOS;
+  bx_param_string_c *Opath;
+  bx_param_string_c *Oiolog;
+  bx_param_string_c *Oinitrd;
   } bx_load32bitOSImage_t;
 
 typedef struct {
-  char filename[BX_PATHNAME_LEN];
+  bx_param_string_c *Ofilename;
   // one array item for each log level, indexed by LOGLEV_*.
   // values: ACT_IGNORE, ACT_REPORT, ACT_ASK, ACT_FATAL
   unsigned char actions[N_LOGLEV];  
@@ -654,6 +628,9 @@ typedef struct {
   Bit32u dmatimer;
   } bx_sb16_options;
 
+#define BX_BOOT_FLOPPYA 0
+#define BX_BOOT_DISKC 0x80
+
 typedef struct {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
@@ -664,17 +641,17 @@ typedef struct {
   bx_vgarom_options vgarom;
   bx_mem_options    memory;
   bx_sb16_options   sb16;
-  char              bootdrive[2];
-  bx_param_num_c    *vga_update_interval;
-  unsigned long     keyboard_serial_delay;
-  unsigned long     floppy_command_delay;
-  bx_param_num_c    *ips;
-  bx_param_num_c    *mouse_enabled;
-  Boolean           private_colormap;
-  Boolean           i440FXSupport;
+  bx_param_num_c    *Obootdrive;  //0=floppya, 0x80=diskc
+  bx_param_num_c    *Ovga_update_interval;
+  bx_param_num_c    *Okeyboard_serial_delay;
+  bx_param_num_c    *Ofloppy_command_delay;
+  bx_param_num_c    *Oips;
+  bx_param_bool_c   *Omouse_enabled;
+  bx_param_bool_c   *Oprivate_colormap;
+  bx_param_bool_c   *Oi440FXSupport;
   bx_cmos_options   cmos;
   bx_ne2k_options   ne2k;
-  Boolean           newHardDriveSupport;
+  bx_param_bool_c   *OnewHardDriveSupport;
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;
   } bx_options_t;

@@ -122,17 +122,17 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   BX_HD_THIS drive_select = 0;
 
-  BX_HD_THIS s[0].hard_drive->cylinders = bx_options.diskc.cylinders;
-  BX_HD_THIS s[0].hard_drive->heads     = bx_options.diskc.heads;
-  BX_HD_THIS s[0].hard_drive->sectors   = bx_options.diskc.spt;
+  BX_HD_THIS s[0].hard_drive->cylinders = bx_options.diskc.Ocylinders->get ();
+  BX_HD_THIS s[0].hard_drive->heads     = bx_options.diskc.Oheads->get ();
+  BX_HD_THIS s[0].hard_drive->sectors   = bx_options.diskc.Ospt->get ();
   BX_HD_THIS s[0].device_type           = IDE_DISK;
-  BX_HD_THIS s[1].hard_drive->cylinders = bx_options.diskd.cylinders;
-  BX_HD_THIS s[1].hard_drive->heads     = bx_options.diskd.heads;
-  BX_HD_THIS s[1].hard_drive->sectors   = bx_options.diskd.spt;
+  BX_HD_THIS s[1].hard_drive->cylinders = bx_options.diskd.Ocylinders->get ();
+  BX_HD_THIS s[1].hard_drive->heads     = bx_options.diskd.Oheads->get ();
+  BX_HD_THIS s[1].hard_drive->sectors   = bx_options.diskd.Ospt->get ();
   BX_HD_THIS s[1].device_type           = IDE_DISK;
 
-  if (bx_options.cdromd.present) {
-	bx_options.diskd.present = 1;
+  if (bx_options.cdromd.Opresent->get ()) {
+	bx_options.diskd.Opresent->set (1);
 	BX_DEBUG(( "Experimental CDROM on target 1" ));
 	BX_HD_THIS s[1].device_type = IDE_CDROM;
 	BX_HD_THIS s[1].cdrom.locked = 0;
@@ -186,77 +186,77 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   }
 
   /* open hard drive image file */
-  if (bx_options.diskc.present) {
+  if (bx_options.diskc.Opresent->get ()) {
 	BX_INFO(("Opening image for device 0"));
-	if ((BX_HD_THIS s[0].hard_drive->open(bx_options.diskc.path)) < 0) {
+	if ((BX_HD_THIS s[0].hard_drive->open(bx_options.diskc.Opath->getptr ())) < 0) {
 	      BX_PANIC(("could not open hard drive image file '%s'",
-		       bx_options.diskc.path));
+		       bx_options.diskc.Opath->getptr ()));
 	}
   }
-  if (bx_options.diskd.present && !bx_options.cdromd.present) {
+  if (bx_options.diskd.Opresent->get () && !bx_options.cdromd.Opresent->get ()) {
 	BX_INFO(("Opening image for device 1"));
-	if ((BX_HD_THIS s[1].hard_drive->open(bx_options.diskd.path)) < 0) {
+	if ((BX_HD_THIS s[1].hard_drive->open(bx_options.diskd.Opath->getptr ())) < 0) {
 	      BX_PANIC(("could not open hard drive image file '%s'",
-		       bx_options.diskd.path));
+		       bx_options.diskd.Opath->getptr ()));
 	}
   }
 
   // generate CMOS values for hard drive if not using a CMOS image
-  if (!bx_options.cmos.cmosImage) {
+  if (!bx_options.cmos.OcmosImage->get ()) {
     cmos->s.reg[0x12] = 0x00; // start out with: no drive 0, no drive 1
 
-    if (bx_options.diskc.present) {
+    if (bx_options.diskc.Opresent->get ()) {
       // Flag drive type as Fh, use extended CMOS location as real type
       cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0x0f) | 0xf0;
       cmos->s.reg[0x19] = 47; // user definable type
       // AMI BIOS: 1st hard disk #cyl low byte
-      cmos->s.reg[0x1b] = (bx_options.diskc.cylinders & 0x00ff);
+      cmos->s.reg[0x1b] = (bx_options.diskc.Ocylinders->get () & 0x00ff);
       // AMI BIOS: 1st hard disk #cyl high byte
-      cmos->s.reg[0x1c] = (bx_options.diskc.cylinders & 0xff00) >> 8;
+      cmos->s.reg[0x1c] = (bx_options.diskc.Ocylinders->get () & 0xff00) >> 8;
       // AMI BIOS: 1st hard disk #heads
-      cmos->s.reg[0x1d] = (bx_options.diskc.heads);
+      cmos->s.reg[0x1d] = (bx_options.diskc.Oheads->get ());
       // AMI BIOS: 1st hard disk write precompensation cylinder, low byte
       cmos->s.reg[0x1e] = 0xff; // -1
       // AMI BIOS: 1st hard disk write precompensation cylinder, high byte
       cmos->s.reg[0x1f] = 0xff; // -1
       // AMI BIOS: 1st hard disk control byte
-      cmos->s.reg[0x20] = 0xc0 | ((bx_options.diskc.heads > 8) << 3);
+      cmos->s.reg[0x20] = 0xc0 | ((bx_options.diskc.Oheads->get () > 8) << 3);
       // AMI BIOS: 1st hard disk landing zone, low byte
       cmos->s.reg[0x21] = cmos->s.reg[0x1b];
       // AMI BIOS: 1st hard disk landing zone, high byte
       cmos->s.reg[0x22] = cmos->s.reg[0x1c];
       // AMI BIOS: 1st hard disk sectors/track
-      cmos->s.reg[0x23] = bx_options.diskc.spt;
+      cmos->s.reg[0x23] = bx_options.diskc.Ospt->get ();
     }
 
     //set up cmos for second hard drive
-    if (bx_options.diskd.present) {
+    if (bx_options.diskd.Opresent->get ()) {
       BX_DEBUG(("1: I will put 0xf into the second hard disk field"));
       // fill in lower 4 bits of 0x12 for second HD
       cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0xf0) | 0x0f;
       cmos->s.reg[0x1a] = 47; // user definable type
       // AMI BIOS: 2nd hard disk #cyl low byte
-      cmos->s.reg[0x24] = (bx_options.diskd.cylinders & 0x00ff);
+      cmos->s.reg[0x24] = (bx_options.diskd.Ocylinders->get () & 0x00ff);
       // AMI BIOS: 2nd hard disk #cyl high byte
-      cmos->s.reg[0x25] = (bx_options.diskd.cylinders & 0xff00) >> 8;
+      cmos->s.reg[0x25] = (bx_options.diskd.Ocylinders->get () & 0xff00) >> 8;
       // AMI BIOS: 2nd hard disk #heads
-      cmos->s.reg[0x26] = (bx_options.diskd.heads);
+      cmos->s.reg[0x26] = (bx_options.diskd.Oheads->get ());
       // AMI BIOS: 2nd hard disk write precompensation cylinder, low byte
       cmos->s.reg[0x27] = 0xff; // -1
       // AMI BIOS: 2nd hard disk write precompensation cylinder, high byte
       cmos->s.reg[0x28] = 0xff; // -1
       // AMI BIOS: 2nd hard disk, 0x80 if heads>8
-      cmos->s.reg[0x29] = (bx_options.diskd.heads > 8) ? 0x80 : 0x00;
+      cmos->s.reg[0x29] = (bx_options.diskd.Oheads->get () > 8) ? 0x80 : 0x00;
       // AMI BIOS: 2nd hard disk landing zone, low byte
       cmos->s.reg[0x2a] = cmos->s.reg[0x1b];
       // AMI BIOS: 2nd hard disk landing zone, high byte
       cmos->s.reg[0x2b] = cmos->s.reg[0x1c];
       // AMI BIOS: 2nd hard disk sectors/track
-      cmos->s.reg[0x2c] = bx_options.diskd.spt;
+      cmos->s.reg[0x2c] = bx_options.diskd.Ospt->get ();
     }
 
 
-    if ( bx_options.bootdrive[0] == 'c' ) {
+    if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) {
       // system boot sequence C:, A:
       cmos->s.reg[0x2d] &= 0xdf;
       }
@@ -361,7 +361,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             BX_SELECTED_CONTROLLER.status.busy = 0;
             BX_SELECTED_CONTROLLER.status.drive_ready = 1;
             BX_SELECTED_CONTROLLER.status.write_fault = 0;
-            if (bx_options.newHardDriveSupport)
+            if (bx_options.OnewHardDriveSupport->get ())
               BX_SELECTED_CONTROLLER.status.seek_complete = 1;
             else
               BX_SELECTED_CONTROLLER.status.seek_complete = 0;
@@ -399,7 +399,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
         case 0xec:    // Drive ID Command
 	case 0xa1:
-          if (bx_options.newHardDriveSupport) {
+          if (bx_options.OnewHardDriveSupport->get ()) {
             unsigned index;
 
             BX_SELECTED_CONTROLLER.status.busy = 0;
@@ -576,7 +576,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
     case 0x1f7: // Hard Disk Status
     case 0x3f6: // Hard Disk Alternate Status
-      if (BX_HD_THIS drive_select && !bx_options.diskd.present) {
+      if (BX_HD_THIS drive_select && !bx_options.diskd.Opresent->get ()) {
 	    // (mch) Just return zero for these registers
 	    value8 = 0;
       } else {
@@ -1280,7 +1280,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x1f7: // hard disk command
 	  // (mch) Writes to the command register with drive_select != 0
 	  // are ignored if no secondary device is present
-      if (BX_HD_THIS drive_select != 0 && value != 0x90 && !bx_options.diskd.present)
+      if (BX_HD_THIS drive_select != 0 && value != 0x90 && !bx_options.diskd.Opresent->get ())
 	    break;
 
       if (BX_SELECTED_CONTROLLER.status.busy)
@@ -1292,7 +1292,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x10: // calibrate drive
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
 		BX_PANIC(("calibrate drive issued to non-disk"));
-          if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.present) {
+          if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.Opresent->get ()) {
             BX_SELECTED_CONTROLLER.error_register = 0x02; // Track 0 not found
             BX_SELECTED_CONTROLLER.status.busy = 0;
             BX_SELECTED_CONTROLLER.status.drive_ready = 1;
@@ -1418,7 +1418,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             (unsigned) BX_HD_THIS drive_select));
           BX_INFO(("  head number = %u",
             (unsigned) BX_SELECTED_CONTROLLER.head_no));
-          if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.present) {
+          if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.Opresent->get ()) {
             BX_PANIC(("init drive params: drive != 0"));
             //BX_SELECTED_CONTROLLER.error_register = 0x12;
             BX_SELECTED_CONTROLLER.status.busy = 0;
@@ -1440,11 +1440,11 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0xec: // Get Drive Info
-          if (bx_options.newHardDriveSupport) {
+          if (bx_options.OnewHardDriveSupport->get ()) {
 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
 		  BX_INFO(("Drive ID Command issued : 0xec "));
 
-            if (BX_HD_THIS drive_select && !bx_options.diskd.present) {
+            if (BX_HD_THIS drive_select && !bx_options.diskd.Opresent->get ()) {
               BX_INFO(("2nd drive not present, aborting"));
               command_aborted(value);
               break;
@@ -1496,7 +1496,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  break;
 
         case 0x40: //
-          if (bx_options.newHardDriveSupport) {
+          if (bx_options.OnewHardDriveSupport->get ()) {
 	    if (BX_SELECTED_HD.device_type != IDE_DISK)
 		BX_PANIC(("read verify issued to non-disk"));
             BX_INFO(("Verify Command : 0x40 ! "));

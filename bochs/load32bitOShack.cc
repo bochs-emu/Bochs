@@ -43,7 +43,7 @@ bx_load32bitOSimagehack(void)
 
   FILE *fp;
 
-  fp = fopen(bx_options.load32bitOSImage.iolog, "r");
+  fp = fopen(bx_options.load32bitOSImage.Oiolog->getptr (), "r");
 
   if (fp == NULL) {
     BX_PANIC(("could not open IO init file."));
@@ -72,7 +72,7 @@ bx_load32bitOSimagehack(void)
     }
 
   // Invoke proper hack depending on which OS image we're loading
-  switch (bx_options.load32bitOSImage.whichOS) {
+  switch (bx_options.load32bitOSImage.OwhichOS->get ()) {
     case Load32bitOSLinux:
       bx_load_linux_hack();
       break;
@@ -175,13 +175,13 @@ bx_load_linux_hack(void)
   // Set CPU and memory features which are assumed at this point.
 
   // Load Linux kernel image
-  bx_load_kernel_image( bx_options.load32bitOSImage.path, 0x100000 );
+  bx_load_kernel_image( bx_options.load32bitOSImage.Opath->getptr (), 0x100000 );
 
   // Load initial ramdisk image if requested
-  if ( bx_options.load32bitOSImage.initrd )
+  if ( bx_options.load32bitOSImage.Oinitrd->getptr () )
   {
     initrd_start = 0x00800000;  /* FIXME: load at top of memory */
-    initrd_size  = bx_load_kernel_image( bx_options.load32bitOSImage.initrd, initrd_start );
+    initrd_size  = bx_load_kernel_image( bx_options.load32bitOSImage.Oinitrd->getptr (), initrd_start );
   }
 
   // Setup Linux startup parameters buffer
@@ -224,7 +224,7 @@ bx_load_null_kernel_hack(void)
   // The RESET function will have been called first.
   // Set CPU and memory features which are assumed at this point.
 
-  bx_load_kernel_image(bx_options.load32bitOSImage.path, 0x100000);
+  bx_load_kernel_image(bx_options.load32bitOSImage.Opath->getptr (), 0x100000);
 
   // EIP deltas
   BX_CPU(0)->prev_eip =

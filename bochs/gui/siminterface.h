@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.13 2001-06-18 14:11:55 bdenney Exp $
+ * $Id: siminterface.h,v 1.14 2001-06-20 14:01:39 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -15,40 +15,6 @@
  */
 
 #define BX_UI_TEXT 1
-
-#define BX_PATHNAME_LEN 512
-
-#define BX_FLOPPY_NONE   10 // floppy not present
-#define BX_FLOPPY_1_2    11 // 1.2M  5.25"
-#define BX_FLOPPY_1_44   12 // 1.44M 3.5"
-#define BX_FLOPPY_2_88   13 // 2.88M 3.5"
-#define BX_FLOPPY_720K   14 // 720K  3.5"
-#define BX_FLOPPY_LAST   14 // last legal value of floppy type
-#define BX_FLOPPY_GUESS  20 // decide based on image size
-
-extern char *floppy_type_names[];
-extern int n_floppy_type_names;
-
-typedef struct {
-  char path[BX_PATHNAME_LEN];
-  unsigned type;
-  unsigned initial_status;
-  } bx_floppy_options;
-
-typedef struct {
-  int present;
-  char path[BX_PATHNAME_LEN];
-  unsigned int cylinders;
-  unsigned int heads;
-  unsigned int spt;
-  } bx_disk_options;
-
-struct bx_cdrom_options
-{
-  int present;
-  char dev[BX_PATHNAME_LEN];
-  int inserted;
-};
 
 //////////////////////////////////////////////////////
 
@@ -65,6 +31,39 @@ typedef enum {
   BXP_LIST_OPTIONS,    //options field in any bx_list
   BXP_LIST_CHOICE,     //choice field in any bx_list
   BXP_MEMORY_OPTIONS_MENU,
+  BXP_KBD_SERIAL_DELAY,
+  BXP_FLOPPY_CMD_DELAY,
+  BXP_FLOPPYA_PATH,
+  BXP_FLOPPYA_TYPE,
+  BXP_FLOPPYA_STATUS,
+  BXP_FLOPPYB_PATH,
+  BXP_FLOPPYB_TYPE,
+  BXP_FLOPPYB_STATUS,
+  BXP_DISKC_PRESENT,
+  BXP_DISKC_PATH,
+  BXP_DISKC_CYLINDERS,
+  BXP_DISKC_HEADS,
+  BXP_DISKC_SPT,
+  BXP_DISKD_PRESENT,
+  BXP_DISKD_PATH,
+  BXP_DISKD_CYLINDERS,
+  BXP_DISKD_HEADS,
+  BXP_DISKD_SPT,
+  BXP_CDROM_PRESENT,
+  BXP_CDROM_PATH,
+  BXP_CDROM_INSERTED,
+  BXP_PRIVATE_COLORMAP,
+  BXP_I440FX_SUPPORT,
+  BXP_NEWHARDDRIVESUPPORT,
+  BXP_LOG_FILENAME,
+  BXP_CMOS_PATH,
+  BXP_CMOS_IMAGE,
+  BXP_CMOS_TIME0,
+  BXP_LOAD32BITOS_WHICH,
+  BXP_LOAD32BITOS_PATH,
+  BXP_LOAD32BITOS_IOLOG,
+  BXP_LOAD32BITOS_INITRD,
+  BXP_BOOTDRIVE,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -73,6 +72,8 @@ typedef enum {
   BXT_NODE,
   BXT_PARAM,
   BXT_PARAM_NUM,
+  BXT_PARAM_BOOL,
+  BXT_PARAM_ENUM,
   BXT_PARAM_STRING,
   BXT_LIST
 } bx_objtype;
@@ -159,6 +160,7 @@ public:
 typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
 
 class bx_param_num_c : public bx_param_c {
+protected:
   Bit32s min, max, val, initial_val;
   param_event_handler handler;
   int base;
@@ -175,6 +177,34 @@ public:
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
+#endif
+};
+
+class bx_param_bool_c : public bx_param_num_c {
+public:
+  bx_param_bool_c (bx_id id, 
+      char *name,
+      char *description,
+      Bit32s initial_val);
+#if BX_UI_TEXT
+  virtual void text_print (FILE *fp);
+  virtual int text_ask (FILE *fpin, FILE *fpout);
+#endif
+};
+
+class bx_param_enum_c : public bx_param_num_c {
+  Bit32s value_base;
+  char **choices;
+public:
+  bx_param_enum_c (bx_id id, 
+      char *name,
+      char *description,
+      char **choices,
+      Bit32s initial_val,
+      Bit32s value_base = 0);
+#if BX_UI_TEXT
+  //virtual void text_print (FILE *fp);
+  //virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
 };
 
@@ -254,6 +284,43 @@ public:
   virtual void text_print (FILE *);
   virtual int text_ask (FILE *fpin, FILE *fpout);
 #endif
+};
+
+////////////////////////////////////////////////////////////////
+
+
+#define BX_FLOPPY_NONE   10 // floppy not present
+#define BX_FLOPPY_1_2    11 // 1.2M  5.25"
+#define BX_FLOPPY_1_44   12 // 1.44M 3.5"
+#define BX_FLOPPY_2_88   13 // 2.88M 3.5"
+#define BX_FLOPPY_720K   14 // 720K  3.5"
+#define BX_FLOPPY_LAST   14 // last legal value of floppy type
+#define BX_FLOPPY_GUESS  20 // decide based on image size
+
+extern char *floppy_type_names[];
+extern int n_floppy_type_names;
+extern char *floppy_status_names[];
+extern int n_floppy_status_names;
+
+typedef struct {
+  bx_param_string_c *Opath;
+  bx_param_enum_c *Otype;
+  bx_param_enum_c *Oinitial_status;
+  } bx_floppy_options;
+
+typedef struct {
+  bx_param_bool_c *Opresent;
+  bx_param_string_c *Opath;
+  bx_param_num_c *Ocylinders;
+  bx_param_num_c *Oheads;
+  bx_param_num_c *Ospt;
+  } bx_disk_options;
+
+struct bx_cdrom_options
+{
+  bx_param_bool_c *Opresent;
+  bx_param_string_c *Opath;
+  bx_param_bool_c *Oinserted;
 };
 
 

@@ -100,10 +100,10 @@ bx_cmos_c::init(bx_devices_c *d)
   BX_CMOS_THIS s.timeval = BX_USE_SPECIFIED_TIME0;
 #endif
 
-  if (bx_options.cmos.time0 == 1)
+  if (bx_options.cmos.Otime0->get () == 1)
           BX_CMOS_THIS s.timeval = time(NULL);
-  else if (bx_options.cmos.time0 != 0)
-          BX_CMOS_THIS s.timeval = bx_options.cmos.time0;
+  else if (bx_options.cmos.Otime0->get () != 0)
+          BX_CMOS_THIS s.timeval = bx_options.cmos.Otime0->get ();
 
   char *tmptime;
   while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
@@ -116,19 +116,19 @@ bx_cmos_c::init(bx_devices_c *d)
   update_clock();
 
   // load CMOS from image file if requested.
-  if (bx_options.cmos.cmosImage) {
+  if (bx_options.cmos.OcmosImage->get ()) {
     // CMOS image file requested
     int fd, ret;
     struct stat stat_buf;
 
-    fd = open(bx_options.cmos.path, O_RDONLY
+    fd = open(bx_options.cmos.Opath->getptr (), O_RDONLY
 #ifdef O_BINARY
             | O_BINARY
 #endif
              );
     if (fd < 0) {
       BX_PANIC(("trying to open cmos image file '%s'",
-        bx_options.cmos.path));
+        bx_options.cmos.Opath->getptr ()));
       }
     ret = fstat(fd, &stat_buf);
     if (ret) {
@@ -144,7 +144,7 @@ bx_cmos_c::init(bx_devices_c *d)
       }
     close(fd);
     BX_INFO(("successfuly read from image file '%s'.",
-      bx_options.cmos.path));
+      bx_options.cmos.Opath->getptr ()));
     }
   else {
     // CMOS values generated
