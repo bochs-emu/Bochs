@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.10 2002-09-01 20:12:09 kevinlawton Exp $
+// $Id: paging.cc,v 1.11 2002-09-03 15:56:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -316,7 +316,11 @@
 //    +---------------> Current CR0.wp value
 
 
+#ifndef _MSC_VER
+// MSC++ doesn't understand a #warning
 #warning "Move priv_check to CPU fields, or init.cc"
+#endif
+
 unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 
