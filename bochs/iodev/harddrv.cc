@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.74 2002-09-22 23:47:34 cbothamy Exp $
+// $Id: harddrv.cc,v 1.75 2002-09-23 21:11:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.74 2002-09-22 23:47:34 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.75 2002-09-23 21:11:51 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -536,8 +536,8 @@ if ( quantumsMax == 0)
                 value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] << 8);
                 value32 |=  BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index];
               }
+            BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
             }
-          BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
 
           // if buffer completely read
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512) {
@@ -1024,7 +1024,6 @@ if ( quantumsMax == 0)
                 BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] = (Bit8u)(value >> 8);
                 BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index]   = (Bit8u) value;
               }
-
             BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
             }
 
