@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.126 2003-01-20 20:10:27 cbothamy Exp $
+// $Id: cpu.h,v 1.127 2003-02-09 13:30:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -237,7 +237,7 @@
 #if BX_SMP_PROCESSORS==1
 #define CPU_ID 0
 #else
-#define CPU_ID (BX_CPU_THIS_PTR local_apic.get_id())
+#define CPU_ID (BX_CPU_THIS - BX_CPU(0))
 #endif
 
 #ifndef CPL
