@@ -677,6 +677,7 @@ typedef
 
 // External Debugger
 #define BX_EXTERNAL_DEBUGGER 0
+#define BX_OVERRIDE_ASK 0
 
 #ifdef WIN32
 #define BX_FLOPPY0_NAME "Floppy Disk A:"
