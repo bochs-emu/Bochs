@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.64 2003-01-14 07:40:21 ptrumpet Exp $
+// $Id: proc_ctrl.cc,v 1.65 2003-01-14 07:46:05 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1334,36 +1334,12 @@ BX_PANIC(("LOADALL: handle CR0.val32"));
 #endif
 }
 
-
-  void
-BX_CPU_C::CPUID(bxInstruction_c *i)
+/* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
+  static inline Bit32u
+get_std_cpuid_features()
 {
-#if BX_CPU_LEVEL >= 4
-  unsigned type, family, model, stepping, features;
-#endif
+  unsigned features;
 
-  invalidate_prefetch_q();
-
-#if BX_CPU_LEVEL >= 4
-  switch (EAX) {
-    case 0:
-      // EAX: highest input value understood by CPUID
-      // EBX: vendor ID string
-      // EDX: vendor ID string
-      // ECX: vendor ID string
-      RAX = 1; // 486 or pentium
-#if BX_SUPPORT_X86_64
-      RBX = 0x68747541; // "Auth"
-      RDX = 0x69746e65; // "enti"
-      RCX = 0x444d4163; // "cAMD"
-#else
-      RBX = 0x756e6547; // "Genu"
-      RDX = 0x49656e69; // "ineI"
-      RCX = 0x6c65746e; // "ntel"
-#endif
-      break;
-
-    case 1:
       // EAX[3:0]   Stepping ID
       // EAX[7:4]   Model: starts at 1
       // EAX[11:8]  Family: 4=486, 5=Pentium, 6=PPro
@@ -1397,51 +1373,23 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [31:30] Reserved
 
       features = 0; // start with none
-      type = 0; // OEM
 
-#if BX_CPU_LEVEL == 4
-      family = 4;
 #  if BX_SUPPORT_FPU
-      // 486dx
-      model = 1;
-      stepping = 3;
       features |= 0x01;
-#  else
-      // 486sx
-      model = 2;
-      stepping = 3;
 #  endif
 
-#elif BX_CPU_LEVEL == 5
-      family = 5;
-      model = 1; // Pentium (60,66)
-      stepping = 3; // ???
+#if (BX_CPU_LEVEL >= 5)
+  features |= (1<<8);   // Support CMPXCHG8B instruction
       features |= (1<<4);   // implement TSC
-#  if BX_SUPPORT_FPU
-      features |= 0x01;
-#  endif
 #  if BX_SUPPORT_MMX
       features |= (1<<23);  // support MMX
 #  endif
-
-#elif BX_CPU_LEVEL == 6
-      family = 6;
-#if BX_SUPPORT_X86_64
-      model = 2; // Hammer returns what?
-#else
-      model = 1; // Pentium Pro
 #endif
-      stepping = 3; // ???
-      features |= (1<<4);   // implement TSC
+
+#if BX_CPU_LEVEL == 6
       features |= (1<<15);  // Implement CMOV instructions.
 #  if BX_SUPPORT_APIC
       features |= (1<<9);   // APIC on chip
-#  endif
-#  if BX_SUPPORT_FPU
-      features |= 0x01;     // support FPU
-#  endif
-#  if BX_SUPPORT_MMX
-      features |= (1<<23);  // support MMX
 #  endif
 #  if BX_SUPPORT_SSE >= 1
       features |= (1<<24);  // support FSAVE/FXRSTOR
@@ -1450,9 +1398,6 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 #  if BX_SUPPORT_SSE >= 2
       features |= (1<<26);  // support SSE2
 #  endif
-
-#else
-      BX_PANIC(("CPUID: not implemented for > 6"));
 #endif
 
 #if BX_SUPPORT_4MEG_PAGES
@@ -1467,14 +1412,75 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
       features |= (1<<6);   // Support PAE.
 #endif
 
-#if (BX_CPU_LEVEL >= 5)
-      features |= (1<<8);   // Support CMPXCHG8B instruction
+#if BX_SUPPORT_X86_64
+  features |= (1<<5); //AMD specific MSR's
 #endif
 
+  return features;
+}
+
+  void
+BX_CPU_C::CPUID(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 4
+  unsigned type, family, model, stepping, features;
+#endif
+
+  invalidate_prefetch_q();
+
+#if BX_CPU_LEVEL >= 4
+  switch (EAX) {
+    case 0:
+      // EAX: highest input value understood by CPUID
+      // EBX: vendor ID string
+      // EDX: vendor ID string
+      // ECX: vendor ID string
+      RAX = 1; // 486 or pentium
+#if BX_SUPPORT_X86_64
+      RBX = 0x68747541; // "Auth"
+      RDX = 0x69746e65; // "enti"
+      RCX = 0x444d4163; // "cAMD"
+#else
+      RBX = 0x756e6547; // "Genu"
+      RDX = 0x49656e69; // "ineI"
+      RCX = 0x6c65746e; // "ntel"
+#endif
+      break;
+
+    case 1:
+
+#if BX_CPU_LEVEL == 4
+  family = 4;
+#  if BX_SUPPORT_FPU
+  // 486dx
+  model = 1;
+  stepping = 3;
+#  else
+  // 486sx
+  model = 2;
+  stepping = 3;
+#  endif
+
+#elif BX_CPU_LEVEL == 5
+  family = 5;
+  model = 1; // Pentium (60,66)
+  stepping = 3; // ???
+
+#elif BX_CPU_LEVEL == 6
+  family = 6;
+#if BX_SUPPORT_X86_64
+  model = 2; // Hammer returns what?
+#else
+  model = 1; // Pentium Pro
+#endif
+  stepping = 3; // ???
+#else
+  BX_PANIC(("CPUID: not implemented for > 6"));
+#endif
 
       RAX = (family <<8) | (model<<4) | stepping;
       RBX = RCX = 0; // reserved
-      RDX = features;
+      RDX = get_std_cpuid_features ();
       break;
 
 #if BX_SUPPORT_X86_64
@@ -1489,8 +1495,21 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 
     case 0x80000001:
       // long mode supported.
-      // bug in manual - should be EDX not EAX
-      RDX = (1 << 29);
+      features = get_std_cpuid_features ();
+      RAX = features;
+      // Many of the bits in EDX are the same as EAX
+      // [10:10] Reserved
+      // [11:11] SYSCALL and SYSRET instructions
+      // [18:19] Reserved
+      // [20:20] No-Execute page protection
+      // [21:21] Reserved
+      // [22:22] AMD MMX Extensions
+      // [25:28] Reserved
+      // [29:29] Long Mode
+      // [30:30] AMD 3DNow Extensions
+      // [31:31] AMD 3DNow Intructions
+      features = features & 0x0183F3FF;
+      RDX = features | (1 << 29) | (1 << 11);
       RAX = RBX = RCX = 0;
       break;
 
