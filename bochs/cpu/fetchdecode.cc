@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.20 2002-09-25 12:54:41 ptrumpet Exp $
+// $Id: fetchdecode.cc,v 1.21 2002-09-26 18:58:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -660,7 +660,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 08 */  { 0,  &BX_CPU_C::INVD },
   /* 0F 09 */  { 0,  &BX_CPU_C::WBINVD },
   /* 0F 0A */  { 0,  &BX_CPU_C::BxError },
-  /* 0F 0B */  { 0,  &BX_CPU_C::BxError },
+  /* 0F 0B */  { 0,  &BX_CPU_C::UndefinedOpcode }, /* UD2 undefined opcode */
   /* 0F 0C */  { 0,  &BX_CPU_C::BxError },
   /* 0F 0D */  { 0,  &BX_CPU_C::BxError },
   /* 0F 0E */  { 0,  &BX_CPU_C::BxError },
