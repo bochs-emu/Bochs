@@ -185,7 +185,7 @@ inc_one:
 #endif
 #else
     // Write Based on 440fx Programming
-    if (bx_options.i440FXSupport &&
+    if (bx_options.Oi440FXSupport->get () &&
         ((a20addr >= 0xC0000) && (a20addr <= 0xFFFFF))) {
       switch (bx_devices.pci->wr_memType(a20addr & 0xFC000)) {
         case 0x0:   // Writes to ShadowRAM
@@ -381,7 +381,7 @@ inc_one:
       }
 
     // a20addr in C0000 .. FFFFF
-    if (!bx_options.i440FXSupport) {
+    if (!bx_options.Oi440FXSupport->get ()) {
       *data_ptr = vector[a20addr];
       goto inc_one;
       }
@@ -433,7 +433,7 @@ inc_one:
 #else   // BX_PCI_SUPPORT == 0
       if (a20addr < BX_MEM_THIS len) {
         if ((a20addr >= 0x000C0000) && (a20addr <= 0x000FFFFF)) {
-          if (!bx_options.i440FXSupport)
+          if (!bx_options.Oi440FXSupport->get ())
             *data_ptr = vector[a20addr];
           else {
             switch (bx_devices.pci->rd_memType(a20addr & 0xFC000)) {

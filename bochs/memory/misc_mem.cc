@@ -151,7 +151,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   offset = 0;
   while (size > 0) {
 #if BX_PCI_SUPPORT
-    if (bx_options.i440FXSupport)
+    if (bx_options.Oi440FXSupport->get ())
       ret = read(fd, (bx_ptr_t) &bx_devices.pci->s.i440fx.shadow[romaddress - 0xC0000 + offset],
                  size);
     else
@@ -167,7 +167,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
     }
   close(fd);
 #if BX_PCI_SUPPORT
-  if (bx_options.i440FXSupport)
+  if (bx_options.Oi440FXSupport->get ())
     BX_INFO(("rom in i440FX RAM 0x%06x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
@@ -209,7 +209,7 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 #if BX_PCI_SUPPORT == 0
       *buf = vector[addr];
 #else
-      if ( bx_options.i440FXSupport &&
+      if ( bx_options.Oi440FXSupport->get () &&
           ((addr >= 0x000C0000) && (addr <= 0x000FFFFF)) ) {
         switch (bx_devices.pci->rd_memType (addr)) {
           case 0x0:  // Fetch from ShadowRAM

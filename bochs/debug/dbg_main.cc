@@ -1922,7 +1922,7 @@ bx_dbg_compare_sim_cpu(void)
   void
 clear_dirty_bits (void)
 {
-	int num_pages = bx_options.memory.size->get () * 1024 / 4;
+	int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
 	for (int i = 0; i < num_pages; i++) {
 		BX_MEM(0)->dbg_dirty_pages[i] = 0;
 		BX_MEM(1)->dbg_dirty_pages[i] = 0;
@@ -1943,7 +1943,7 @@ bx_dbg_always_check(Bit32u page_start, Boolean on)
 bx_dbg_compare_sim_memory(void)
 {
 	Boolean ret = 0;
-	int num_pages = bx_options.memory.size->get () * 1024 / 4;
+	int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
 
 	for (int i = 0; i < num_pages; i++) {
 		Boolean sim0_dirty = BX_MEM(0)->dbg_dirty_pages[i];
@@ -2480,7 +2480,7 @@ bx_dbg_dump_cpu_command(void)
     }
 
 #if BX_PCI_SUPPORT
-  if (bx_options.i440FXSupport) {
+  if (bx_options.Oi440FXSupport->get ()) {
     bx_devices.pci->print_i440fx_state();
     }
 #endif

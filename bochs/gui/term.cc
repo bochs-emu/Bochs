@@ -139,7 +139,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 	nodelay(stdscr, TRUE);
 	noecho();
 
-	if (bx_options.private_colormap)
+	if (bx_options.Oprivate_colormap->get ())
 		if(bx_dbg.video)
 			BX_INFO(("#TERM] WARNING: private_colormap option ignored."));
 }

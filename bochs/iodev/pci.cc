@@ -68,7 +68,7 @@ bx_pci_c::init(bx_devices_c *d)
     }
 
   // should this go into ::reset() ???
-  if (bx_options.i440FXSupport) {
+  if (bx_options.Oi440FXSupport->get ()) {
     for (unsigned i=0; i<256; i++)
       BX_PCI_THIS s.i440fx.array[i] = 0x0;
     }
@@ -394,7 +394,7 @@ bx_pci_c::print_i440fx_state()
   Bit8u*
 bx_pci_c::i440fx_fetch_ptr(Bit32u addr)
 {
-  if (bx_options.i440FXSupport) {
+  if (bx_options.Oi440FXSupport->get ()) {
     switch (rd_memType (addr)) {
       case 0x0:   // Read from ShadowRAM
         return (&BX_PCI_THIS devices->mem->vector[addr]);

@@ -200,7 +200,7 @@ UNUSED(argv);
 UNUSED(window_name);
   th->setprefix("BGUI");
 
-if (bx_options.private_colormap) {
+if (bx_options.Oprivate_colormap->get ()) {
   BX_INFO(( "BeOS: private_colormap option not handled yet."));
   }
 

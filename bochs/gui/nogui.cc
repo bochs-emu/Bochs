@@ -69,7 +69,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
   UNUSED(bochs_icon_bits);  // global variable
 
-  if (bx_options.private_colormap) {
+  if (bx_options.Oprivate_colormap->get ()) {
     BX_INFO(("private_colormap option ignored."));
     }
 }

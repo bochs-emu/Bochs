@@ -131,7 +131,7 @@ bx_gui_c::floppyA_handler(void)
 #ifdef macintosh
     // If we are using the Mac floppy driver, eject the disk
     // from the floppy drive
-    if (!strcmp(bx_options.floppya.path, SuperDrive))
+    if (!strcmp(bx_options.floppya.Opath->get (), SuperDrive))
       DiskEject(1);
 #endif
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_eject_bmap_id);
