@@ -13,6 +13,7 @@ set echo
 	    --enable-ne2000 \
 	    --enable-vbe \
 	    --enable-cpp \
+		--enable-all-optimizations \
 	    --disable-readline
 
 unset echo
