@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.26 2002-10-10 18:02:08 vruppert Exp $
+// $Id: sdl.cc,v 1.27 2002-10-12 13:10:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -541,7 +541,7 @@ static Bit32u sdl_sym_to_bx_key (SDLKey sym)
     case SDLK_LCTRL:                return BX_KEY_CTRL_L;
     case SDLK_RALT:                 return BX_KEY_ALT_R;
     case SDLK_LALT:                 return BX_KEY_ALT_L;
-//  case SDLK_RMETA:                return BX_KEY_RMETA;
+    case SDLK_RMETA:                return BX_KEY_ALT_R;
 //  case SDLK_LMETA:                return BX_KEY_LMETA;
     case SDLK_LSUPER:               return BX_KEY_WIN_L;
     case SDLK_RSUPER:               return BX_KEY_WIN_R;
