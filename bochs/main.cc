@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.193 2002-11-25 17:53:53 bdenney Exp $
+// $Id: main.cc,v 1.194 2002-11-25 18:00:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1799,6 +1799,13 @@ bx_init_main (int argc, char *argv[])
     BX_INFO (("LTDL_LIBRARY_PATH not set. using compile time default '%s'", 
 	  BX_PLUGIN_PATH));
     setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
+  }
+  if (getenv("BXBIOS") != NULL) {
+    BX_INFO (("BXBIOS is set to '%s'", getenv("BXBIOS")));
+  } else {
+    BX_INFO (("BXBIOS not set. using compile time default '%s'", 
+	  BX_BIOS_DEFAULT_PATH));
+    setenv("BXBIOS", BX_BIOS_DEFAULT_PATH, 1);
   }
 #else
   // we don't have getenv or setenv.  Do nothing.
