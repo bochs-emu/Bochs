@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.25 2004-11-20 23:26:31 sshwarts Exp $
+// $Id: string.cc,v 1.26 2004-11-26 19:53:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,13 +35,6 @@
 #define RSI ESI
 #define RDI EDI
 #define RAX EAX
-#endif
-
-
-#if BX_SUPPORT_X86_64
-#define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-#else
-#define IsLongMode() (0)
 #endif
 
 

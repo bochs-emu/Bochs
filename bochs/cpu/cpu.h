@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.188 2004-11-20 23:26:29 sshwarts Exp $
+// $Id: cpu.h,v 1.189 2004-11-26 19:53:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -329,10 +329,16 @@
 #define BX_MODE_LONG_COMPAT     0x1
 #define BX_MODE_LONG_64         0x2
 
-#if BX_SUPPORT_APIC
-#define BX_CPU_INTR    (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
+#if BX_SUPPORT_X86_64
+#define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
 #else
-#define BX_CPU_INTR    BX_CPU_THIS_PTR INTR
+#define IsLongMode() (0)
+#endif
+
+#if BX_SUPPORT_APIC
+#define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
+#else
+#define BX_CPU_INTR  BX_CPU_THIS_PTR INTR
 #endif
 
 class BX_CPU_C;
