@@ -6848,7 +6848,7 @@ echo "${ECHO_T}libtool" >&6
     ;;
 esac
 
-ac_config_files="$ac_config_files config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile test6-ltdlopen/Makefile test7-win32dll/Makefile"
+ac_config_files="$ac_config_files config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile test6-ltdlopen/Makefile test7-win32dll/Makefile testscript"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -7188,7 +7188,8 @@ do
   "test5-execsymbols/Makefile" ) CONFIG_FILES="$CONFIG_FILES test5-execsymbols/Makefile" ;;
   "test6-ltdlopen/Makefile" ) CONFIG_FILES="$CONFIG_FILES test6-ltdlopen/Makefile" ;;
   "test7-win32dll/Makefile" ) CONFIG_FILES="$CONFIG_FILES test7-win32dll/Makefile" ;;
-  *) { { echo "$as_me:7191: error: invalid argument: $ac_config_target" >&5
+  "testscript" ) CONFIG_FILES="$CONFIG_FILES testscript" ;;
+  *) { { echo "$as_me:7192: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -7418,7 +7419,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:7421: creating $ac_file" >&5
+    { echo "$as_me:7422: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -7436,7 +7437,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:7439: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:7440: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -7449,7 +7450,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:7452: error: cannot find input file: $f" >&5
+           { { echo "$as_me:7453: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -7540,7 +7541,7 @@ if test "$no_recursion" != yes; then
     # parts of a large source tree are present.
     test -d $srcdir/$ac_subdir || continue
 
-    { echo "$as_me:7543: configuring in $ac_subdir" >&5
+    { echo "$as_me:7544: configuring in $ac_subdir" >&5
 echo "$as_me: configuring in $ac_subdir" >&6;}
     case $srcdir in
     .) ;;
@@ -7562,7 +7563,7 @@ done; }
 
        if test -d ./$ac_subdir; then :;
        else
-         { { echo "$as_me:7565: error: cannot create \`pwd\`/$ac_subdir" >&5
+         { { echo "$as_me:7566: error: cannot create \`pwd\`/$ac_subdir" >&5
 echo "$as_me: error: cannot create \`pwd\`/$ac_subdir" >&2;}
    { (exit 1); exit 1; }; }
        fi
@@ -7593,7 +7594,7 @@ echo "$as_me: error: cannot create \`pwd\`/$ac_subdir" >&2;}
     elif test -f $ac_sub_srcdir/configure.in; then
       ac_sub_configure=$ac_configure
     else
-      { echo "$as_me:7596: WARNING: no configuration information is in $ac_subdir" >&5
+      { echo "$as_me:7597: WARNING: no configuration information is in $ac_subdir" >&5
 echo "$as_me: WARNING: no configuration information is in $ac_subdir" >&2;}
       ac_sub_configure=
     fi
@@ -7607,12 +7608,12 @@ echo "$as_me: WARNING: no configuration information is in $ac_subdir" >&2;}
         ac_sub_cache_file=$ac_dots$cache_file ;;
       esac
 
-      { echo "$as_me:7610: running $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir" >&5
+      { echo "$as_me:7611: running $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir" >&5
 echo "$as_me: running $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir" >&6;}
       # The eval makes quoting arguments work.
       eval $ac_sub_configure $ac_sub_configure_args \
            --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir ||
-        { { echo "$as_me:7615: error: $ac_sub_configure failed for $ac_subdir" >&5
+        { { echo "$as_me:7616: error: $ac_sub_configure failed for $ac_subdir" >&5
 echo "$as_me: error: $ac_sub_configure failed for $ac_subdir" >&2;}
    { (exit 1); exit 1; }; }
     fi
