@@ -366,6 +366,25 @@
 #define BX_WITH_SDL 0
 #define BX_WITH_WX 0
 
+// add special export symbols for win32 DLL building.  The main code must
+// have __declspec(dllexport) on variables, functions, or classes that the
+// plugins can access.  The plugins should #define PLUGGABLE which will 
+// activate the __declspec(dllimport) instead.
+#if defined(WIN32) || defined(__CYGWIN__)
+#  if BX_PLUGINS && defined(BX_PLUGGABLE)
+#    warning I will import DLL symbols from Bochs main program.
+#    define BOCHSAPI __declspec(dllimport) 
+#  else
+#    warning I will export DLL symbols.
+#    define BOCHSAPI __declspec(dllexport) 
+#  endif
+#endif
+#ifndef BOCHSAPI
+#  define BOCHSAPI
+#endif
+
+
+
 #define BX_DEFAULT_CONFIG_INTERFACE "defined_by_configure"
 #define BX_DEFAULT_DISPLAY_LIBRARY "defined_by_configure"
 
