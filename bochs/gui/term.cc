@@ -30,6 +30,8 @@ extern "C" {
 #include <signal.h>
 };
 
+#define LOG_THIS bx_gui.
+
 static void
 do_scan(int key_event, int shift, int ctrl, int alt)
 {
