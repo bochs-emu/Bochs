@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.10 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: logical8.cc,v 1.11 2002-09-22 22:22:16 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -280,10 +280,8 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
-  /* op2 is a register, op2_addr is an index of a register */
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
-  /* op1 is a register or memory reference */
   if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
@@ -294,7 +292,6 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
 
   result = op1 & op2;
 
-  /* now write result back to destination */
   if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
     }
@@ -302,7 +299,23 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "andb %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (result)
+    : "1" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+#endif
 }
 
 
@@ -313,40 +326,68 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
 
   op1 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
-  /* op2 is a register or memory reference */
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
-    /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
   result = op1 & op2;
 
-  /* now write result back to destination, which is a register */
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "andb %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (result)
+    : "1" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+#endif
 }
 
 
   void
 BX_CPU_C::AND_ALIb(bxInstruction_c *i)
 {
-  Bit8u op1, op2, sum;
+  Bit8u op1, op2, result;
 
 
   op1 = AL;
 
   op2 = i->Ib();
 
-  sum = op1 & op2;
+  result = op1 & op2;
 
-  /* now write sum back to destination, which is a register */
-  AL = sum;
+  AL = result;
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_AND8);
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "andb %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (result)
+    : "1" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+#endif
 }
 
 
@@ -360,18 +401,15 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
 
   op2 = i->Ib();
 
-  /* op1 is a register or memory reference */
   if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
-    /* pointer, segment address pair */
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
   result = op1 & op2;
 
-  /* now write result back to destination */
   if (i->modC0()) {
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
     }
@@ -379,14 +417,30 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "andb %3, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32), "=r" (result)
+    : "1" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+#endif
 }
 
 
   void
 BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
 {
-  Bit8u op2, op1, result;
+  Bit8u op2, op1;
 
   /* op2 is a register, op2_addr is an index of a register */
   op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
@@ -400,16 +454,33 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "testb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit8u result;
   result = op1 & op2;
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_TEST8);
+#endif
 }
 
 
   void
 BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
 {
-  Bit8u op2, op1, result;
+  Bit8u op2, op1;
 
   /* op1 is the AL register */
   op1 = AL;
@@ -417,9 +488,26 @@ BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
   /* op2 is imm8 */
   op2 = i->Ib();
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "testb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit8u result;
   result = op1 & op2;
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_TEST8);
+#endif
 }
 
 
@@ -427,7 +515,7 @@ BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
   void
 BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
 {
-  Bit8u op2, op1, result;
+  Bit8u op2, op1;
 
   op2 = i->Ib();
 
@@ -440,7 +528,24 @@ BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "testb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1), "g" (op2)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit8u result;
   result = op1 & op2;
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_TEST8);
+#endif
 }

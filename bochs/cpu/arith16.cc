@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.16 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: arith16.cc,v 1.17 2002-09-22 22:22:16 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -479,63 +479,103 @@ BX_CPU_C::SUB_AXIw(bxInstruction_c *i)
   void
 BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
 {
-    Bit16u op2_16, op1_16, diff_16;
+  Bit16u op2_16, op1_16;
 
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-    /* op2_16 is a register, RMAddr(i) is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
+    }
+  else {
+    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+    }
 
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-      }
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpw %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit16u diff_16;
+  diff_16 = op1_16 - op2_16;
 
-    diff_16 = op1_16 - op2_16;
-
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+#endif
 }
 
 
   void
 BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
 {
-    Bit16u op1_16, op2_16, diff_16;
+  Bit16u op1_16, op2_16;
 
+  op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-    /* op1_16 is a register, RMAddr(i) is an index of a register */
-    op1_16 = BX_READ_16BIT_REG(i->nnn());
+  if (i->modC0()) {
+    op2_16 = BX_READ_16BIT_REG(i->rm());
+    }
+  else {
+    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    }
 
-    /* op2_16 is a register or memory reference */
-    if (i->modC0()) {
-      op2_16 = BX_READ_16BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-      }
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpw %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit16u diff_16;
+  diff_16 = op1_16 - op2_16;
 
-    diff_16 = op1_16 - op2_16;
-
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+#endif
 }
 
 
   void
 BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
 {
-    Bit16u op1_16, op2_16, diff_16;
+  Bit16u op1_16, op2_16;
 
-    op1_16 = AX;
+  op1_16 = AX;
 
-    op2_16 = i->Iw();
+  op2_16 = i->Iw();
 
-    diff_16 = op1_16 - op2_16;
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpw %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit16u diff_16;
+  diff_16 = op1_16 - op2_16;
 
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+#endif
 }
 
 
@@ -737,23 +777,36 @@ BX_CPU_C::SUB_EwIw(bxInstruction_c *i)
   void
 BX_CPU_C::CMP_EwIw(bxInstruction_c *i)
 {
-    Bit16u op2_16, op1_16, diff_16;
+  Bit16u op2_16, op1_16;
 
+  op2_16 = i->Iw();
 
-    op2_16 = i->Iw();
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
+    }
+  else {
+    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+    }
 
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-      }
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpw %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit16u diff_16;
+  diff_16 = op1_16 - op2_16;
 
-    diff_16 = op1_16 - op2_16;
-
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMP16);
+#endif
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.72 2002-09-22 19:06:46 bdenney Exp $
+// $Id: cpu.h,v 1.73 2002-09-22 22:22:16 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -445,6 +445,9 @@ typedef struct {
   BX_CPP_INLINE Boolean BX_CPU_C::get_IOPL() {                               \
     return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12);                         \
     }
+
+#define EFlagsOSZAPCMask 0x000008d5
+#define EFlagsOSZAPMask  0x000008d4
 
   } bx_flags_reg_t;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.12 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: arith8.cc,v 1.13 2002-09-22 22:22:16 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -409,47 +409,72 @@ BX_CPU_C::SUB_ALIb(bxInstruction_c *i)
   void
 BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
 {
-  Bit8u op2_8, op1_8, diff_8;
+  Bit8u op2_8, op1_8;
 
-
-  /* op2 is a register, RMAddr(i) is an index of a register */
   op2_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
-  /* op1_8 is a register or memory reference */
   if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
-    /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_8), "g" (op2_8)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
 
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+#endif
 }
 
 
   void
 BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
 {
-  Bit8u op1_8, op2_8, diff_8;
+  Bit8u op1_8, op2_8;
 
-  /* op1 is a register, RMAddr(i) is an index of a register */
   op1_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
-  /* op2 is a register or memory reference */
   if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
-    /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
     }
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_8), "g" (op2_8)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
 
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+#endif
 }
 
 
@@ -457,16 +482,31 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
   void
 BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
 {
-  Bit8u op1_8, op2_8, diff_8;
-
+  Bit8u op1_8, op2_8;
 
   op1_8 = AL;
 
   op2_8 = i->Ib();
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_8), "g" (op2_8)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
 
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+#endif
 }
 
 
@@ -617,22 +657,36 @@ BX_CPU_C::SUB_EbIb(bxInstruction_c *i)
   void
 BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
 {
-  Bit8u op2_8, op1_8, diff_8;
+  Bit8u op2_8, op1_8;
 
   op2_8 = i->Ib();
 
-  /* op1_8 is a register or memory reference */
   if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
-    /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
+#if (defined(__i386__) && defined(__GNUC__))
+  Bit32u flags32;
+  asm (
+    "cmpb %2, %1\n\t"
+    "pushfl     \n\t"
+    "popl %0"
+    : "=g" (flags32)
+    : "r" (op1_8), "g" (op2_8)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  Bit8u diff_8;
   diff_8 = op1_8 - op2_8;
 
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMP8);
+#endif
 }
 
 
