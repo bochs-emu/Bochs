@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: bcd.cc,v 1.6 2002-07-06 11:02:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -121,27 +121,42 @@ BX_CPU_C::AAM(BxInstruction_t *i)
 
   imm8 = i->Ib;
 
+  if (imm8 == 0) {
+    exception(BX_DE_EXCEPTION, 0, 0);
+    }
+
   al = AL;
   AH = al / imm8;
   AL = al % imm8;
 
+  /* AAM always clears the flags A and C */
+  set_AF(0);
+  set_CF(0);
   /* AAM affects the following flags: S,Z,P */
-  set_SF((AH & 0x80) > 0);
-  set_ZF(AX==0);
-  set_PF_base(AL); /* ??? */
+  set_SF((AL & 0x80) > 0);
+  set_ZF(AL == 0);
+  set_PF_base(AL);
 }
 
   void
 BX_CPU_C::AAD(BxInstruction_t *i)
 {
-  Bit8u imm8;
+  Bit8u al, imm8;
+  Bit16u ax1, ax2;
 
   imm8 = i->Ib;
 
-  AL = AH * imm8 + AL;
+  ax1 = AH * imm8;
+  ax2 = ax1 + AL;
+  al = AL;
+  AL = (Bit8u)ax2;
   AH = 0;
 
-  /* AAD effects the following flags: S,Z,P */
+  /* AAD effects the following flags: A,C,O,S,Z,P */
+  /* modification of flags A,C,O is undocumented */
+  set_AF((ax1 & 0x08) != (ax2 & 0x08));
+  set_CF(ax2 > 0xff);
+  set_OF((AL & 0x80) != (al & 0x80));
   set_SF(AL >= 0x80);
   set_ZF(AL == 0);
   set_PF_base(AL);
@@ -168,6 +183,8 @@ BX_CPU_C::DAA(BxInstruction_t *)
     al = al + 0x60;
     set_CF(1);
     }
+  else
+    set_CF(0);
 
   AL = al;
 
