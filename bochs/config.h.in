@@ -426,7 +426,11 @@
 #  error "could not define bx_ptr_equiv_t to size of int*"
 #endif
 
-#if BX_WITH_MACOS == 0
+#if BX_WITH_CARBON
+typedef unsigned char Boolean;
+#elif BX_WITH_MACOS
+// don't define Boolean at all
+#else
 typedef unsigned int Boolean;
 #endif
 
