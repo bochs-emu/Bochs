@@ -1,4 +1,5 @@
 #include <stdio.h>
+#define LT_SCOPE extern /* so that ltdl.h does not export anything */
 #include <ltdl.h>
 #define MAIN_DLL_EXPORT
 #include "main.h"
@@ -16,7 +17,7 @@ int load_module (const char *fmt, const char *name)
   char buf[512];
   sprintf (buf, fmt, name);
   printf ("loading module from %s\n", buf);
-  lt_dlhandle handle = lt_dlopen (buf);
+  lt_dlhandle handle = lt_dlopenext (buf);
   printf ("handle is %p\n", handle);
   if (!handle) {
     printf ("lt_dlopen error: %s\n", lt_dlerror ());
@@ -41,17 +42,22 @@ int main (int argc, char **argv)
     printf ("lt_dlinit error: %s\n", lt_dlerror ());
     return -1;
   }
+#ifdef WIN32
+  const char *module_name_format = "%s";
+#else
+  const char *module_name_format = "lib%s.la";
+#endif
   printf ("loading module1\n");
   // try to load module1
-  if (load_module ("lib%s.la", "module1") < 0) {
+  if (load_module (module_name_format, "module1") < 0) {
     printf ("load module1 failed\n");
   }
-  if (load_module ("lib%s.la", "module2") < 0) {
+  if (load_module (module_name_format, "module2") < 0) {
     printf ("load module2 failed\n");
   }
   int arg;
   for (int arg=1; arg < argc; arg++) {
-    if (load_module ("%s", argv[arg]) < 0) {
+    if (load_module (module_name_format, argv[arg]) < 0) {
       printf ("load %s failed\n", argv[arg]);
     }
   }
