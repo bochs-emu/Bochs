@@ -201,6 +201,7 @@ MacOS X specific:
   Carbon API.
 - The MacOS X application is built using (gasp) mkdir, copy, and rez.
   Surely this is not the right way, but it works.
+- raw cdrom supported if you configure with --enable-cdrom
 
 RFB mode:
 - apply patch.rfb-mouse by MURANAKA Masaki (monaka@users.sf.net)
