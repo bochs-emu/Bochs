@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.9 2002-08-31 12:24:41 vruppert Exp $
+// $Id: pci.h,v 1.10 2002-08-31 15:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,8 +60,8 @@ public:
                                 bx_pci_write_handler_t f2, Bit8u devfunc,
                                 const char *name);
   BX_PCI_SMF void   print_i440fx_state( );
-  BX_PCI_SMF Bit32u rd_memType (Bit32u addr);
-  BX_PCI_SMF Bit32u wr_memType (Bit32u addr);
+  BX_PCI_SMF Bit8u rd_memType (Bit32u addr);
+  BX_PCI_SMF Bit8u wr_memType (Bit32u addr);
 
 private:
   bx_devices_c *devices;
@@ -88,8 +88,6 @@ private:
   Bit32u pci_read(Bit8u address, unsigned io_len);
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
-  BX_PCI_SMF Bit32u mapRead (Bit32u val);
-  BX_PCI_SMF Bit32u mapWrite (Bit32u val);
   };
 
 #if BX_USE_PCI_SMF

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.24 2002-08-31 12:24:41 vruppert Exp $
+// $Id: misc_mem.cc,v 1.25 2002-08-31 15:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.24 2002-08-31 12:24:41 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.25 2002-08-31 15:35:51 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -183,10 +183,10 @@ BX_MEM_C::pci_fetch_ptr(Bit32u addr)
 {
   if (bx_options.Oi440FXSupport->get ()) {
     switch (bx_devices.pci->rd_memType (addr)) {
-      case 0x0:   // Read from ShadowRAM
+      case 0x1:   // Read from ShadowRAM
         return (&BX_MEM_THIS shadow[addr - 0xc0000]);
 
-      case 0x1:   // Read from ROM
+      case 0x0:   // Read from ROM
         return (&BX_MEM_THIS vector[addr]);
       default:
         BX_PANIC(("pci_fetch_ptr(): default case"));
@@ -221,12 +221,12 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
       if ( bx_options.Oi440FXSupport->get () &&
           ((addr >= 0x000C0000) && (addr <= 0x000FFFFF)) ) {
         switch (bx_devices.pci->rd_memType (addr)) {
-          case 0x0:  // Fetch from ShadowRAM
+          case 0x1:  // Fetch from ShadowRAM
             *buf = shadow[addr - 0xc0000];
 //          BX_INFO(("Fetching from ShadowRAM %06x, len %u !", (unsigned)addr, (unsigned)len));
             break;
 
-          case 0x1:  // Fetch from ROM
+          case 0x0:  // Fetch from ROM
             *buf = vector[addr];
 //          BX_INFO(("Fetching from ROM %06x, Data %02x ", (unsigned)addr, *buf));
             break;
