@@ -1,0 +1,265 @@
+----------------------------------------------------------------------
+Patch name: patch.lba
+Author: Bryce grabbed this from plex86
+Date: Thu May 17 17:36:31 EDT 2001
+
+Detailed description:
+Add LBA support.
+This builds okay, but I want to find a way to actually see that it's
+making some difference before committing it.  Anyway have an OS or
+diagnostic program that tests if LBA is in use?  What would LBA allow
+me to do that I can't do without it?
+
+Apply patch to:
+  current cvs sources
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bios/rombios.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bios/rombios.c,v
+retrieving revision 1.3
+diff -u -r1.3 rombios.c
+--- bios/rombios.c	2001/05/03 21:13:20	1.3
++++ bios/rombios.c	2001/05/17 18:09:55
+@@ -244,7 +244,7 @@
+ static void           debugger_off();
+ static void           keyboard_panic();
+ 
+-#define DEBUG_ROMBIOS 0
++#define DEBUG_ROMBIOS 1
+ 
+ #if DEBUG_ROMBIOS
+ #  define printf(format, p...) bios_printf(0, format, ##p)
+@@ -767,7 +767,7 @@
+   Boolean oldval;
+   Bit8u  temp8;
+ 
+-  // Use keyboard conroller to set A20 enable
++  // Use keyboard controller to set A20 enable
+ 
+   // get current Output Port settings first
+   if ( (inb(0x64) & 0x02) != 0 )
+@@ -1281,6 +1281,7 @@
+ {
+   Bit8u scan_code, ascii_code, shift_flags;
+ 
++
+   switch (GET_AH()) {
+     case 0x00: /* read keyboard input */
+ 
+@@ -1450,6 +1451,7 @@
+   // DS has been set to F000 before call
+   //
+ 
++
+   scancode = GET_AL();
+ 
+   if (scancode == 0) {
+@@ -1638,6 +1640,56 @@
+ 
+ 
+ 
++  void
++outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
++  Bit16u cylinder;
++  Bit16u hd_heads;
++  Bit16u head;
++  Bit16u hd_sectors;
++  Bit16u sector;
++  Bit16u dl;
++{
++#asm
++  	push	bp
++  	mov 	bp, sp
++	push	eax
++	push	ebx
++	push	edx
++	xor	eax,eax
++	mov	ax,4[bp]
++	xor	ebx,ebx
++	mov	bl,6[bp]
++	imul	ebx
++	add	al,8[bp]
++	adc	ah,#0
++	mov	bl,10[bp]
++	imul	ebx
++	add	al,12[bp]
++	adc	ah,#0
++	dec	eax
++	mov	dx,#0x1f3
++	out	dx,al
++	mov	dx,#0x1f4
++	mov	al,ah
++	out	dx,al
++	shr	eax,#16
++	mov	dx,#0x1f5
++	out	dx,al
++	and	ah,#0xf
++	mov	bl,14[bp]
++	and	bl,#1
++	shl	bl,#4
++	or	ah,bl
++	or	ah,#0xe0
++	mov	al,ah
++	mov	dx,#0x01f6
++	out	dx,al
++	pop	edx
++	pop	ebx
++	pop	eax
++  	pop	bp
++#endasm
++}
+ 
+ 
+   void
+@@ -1654,6 +1706,7 @@
+   Bit8u    sector_count;
+   unsigned int i;
+   Bit16u   tempbx;
++  Bit16u   lba;
+ 
+   write_byte(0x0040, 0x008e, 0);  // clear completion flag
+ 
+@@ -1742,9 +1795,6 @@
+         panic("int13_function(): num_sectors out of range!\n");
+ 
+ 
+-      if (head > 15)
+-        panic("hard drive BIOS:(read/verify) head > 15\n");
+-
+       if ( GET_AH() == 0x04 ) {
+         SET_AH(0);
+         set_disk_ret_status(0);
+@@ -1757,10 +1807,17 @@
+         panic("hard drive BIOS:(read/verify) BUSY bit set\n");
+         }
+       outb(0x01f2, num_sectors);
+-      outb(0x01f3, sector);
+-      outb(0x01f4, cylinder & 0x00ff);
+-      outb(0x01f5, cylinder >> 8);
+-      outb(0x01f6, 0xa0 | ((drive&1)<<4) | (head & 0x0f));
++      /* activate LBA? (tomv) */
++      if (hd_heads > 15) {
++printf("CHS: %x %x %x\n", cylinder, head, sector);
++	outLBA(cylinder,hd_heads,head,hd_sectors,sector,drive);
++        }
++      else {
++        outb(0x01f3, sector);
++        outb(0x01f4, cylinder & 0x00ff);
++        outb(0x01f5, cylinder >> 8);
++        outb(0x01f6, 0xa0 | ((drive & 0x01)<<4) | (head & 0x0f));
++        }
+       outb(0x01f7, 0x20);
+ 
+       while (1) {
+@@ -1879,19 +1936,24 @@
+       if ( (num_sectors > 128) || (num_sectors == 0) )
+         panic("int13_function(): num_sectors out of range!\n");
+ 
+-      if (head > 15)
+-        panic("hard drive BIOS:(read) head > 15\n");
+-
+       status = inb(0x1f7);
+       if (status & 0x80) {
+         panic("hard drive BIOS:(read) BUSY bit set\n");
+         }
+ // should check for Drive Ready Bit also in status reg
+       outb(0x01f2, num_sectors);
+-      outb(0x01f3, sector);
+-      outb(0x01f4, cylinder & 0x00ff);
+-      outb(0x01f5, cylinder >> 8);
+-      outb(0x01f6, 0xa0 | ((drive&1)<<4) | (head & 0x0f));
++
++      /* activate LBA? (tomv) */
++      if (hd_heads > 15) {
++printf("CHS (write): %x %x %x\n", cylinder, head, sector);
++	outLBA(cylinder,hd_heads,head,hd_sectors,sector,GET_DL());
++        }
++      else {
++        outb(0x01f3, sector);
++        outb(0x01f4, cylinder & 0x00ff);
++        outb(0x01f5, cylinder >> 8);
++        outb(0x01f6, 0xa0 | ((GET_DL() & 0x01)<<4) | (head & 0x0f));
++        }
+       outb(0x01f7, 0x30);
+ 
+       // wait for busy bit to turn off after seeking
+@@ -4242,7 +4304,7 @@
+ 
+ 
+ ;-------------------------------------------------
+-;- INT09h : Keyboard Harware Service Entry Point -
++;- INT09h : Keyboard Hardware Service Entry Point -
+ ;-------------------------------------------------
+ .org 0xe987
+ int09_handler:
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.10
+diff -u -r1.10 harddrv.cc
+--- iodev/harddrv.cc	2001/05/15 14:49:56	1.10
++++ iodev/harddrv.cc	2001/05/17 18:09:58
+@@ -566,13 +566,21 @@
+       goto return_value8;
+ 
+     case 0x1f6: // hard disk drive and head register
+-      value8 = (1 << 7) | // extended data field for ECC
+-               (0 << 7) | // 1=LBA mode, 0=CHSmode
++      // b7 Extended data field for ECC
++      // b6/b5: Used to be sector size.  00=256,01=512,10=1024,11=128
++      //   Since 512 was always used, bit 6 was taken to mean LBA mode:
++      //     b6 1=LBA mode, 0=CHS mode
++      //     b5 1
++      // b4: DRV
++      // b3..0 HD3..HD0
++      value8 = (1 << 7) |
++               ((BX_SELECTED_CONTROLLER.lba_mode>0) << 6) |
+                (1 << 5) | // 01b = 512 sector size
+                (BX_HD_THIS drive_select << 4) |
+                (BX_SELECTED_CONTROLLER.head_no << 0);
+       goto return_value8;
+       break;
++//BX_CONTROLLER(0).lba_mode
+ 
+     case 0x1f7: // Hard Disk Status
+     case 0x3f6: // Hard Disk Alternate Status
+@@ -1263,13 +1271,15 @@
+ 	  break;
+ 
+     case 0x1f6: // hard disk drive and head register
+-      // b7 1
+-      // b6 1=LBA mode, 0=CHS mode (LBA not supported)
+-      // b5 1
++      // b7 Extended data field for ECC
++      // b6/b5: Used to be sector size.  00=256,01=512,10=1024,11=128
++      //   Since 512 was always used, bit 6 was taken to mean LBA mode:
++      //     b6 1=LBA mode, 0=CHS mode
++      //     b5 1
+       // b4: DRV
+       // b3..0 HD3..HD0
+-      if ( (value & 0xe0) != 0xa0 ) // 101xxxxx
+-        BX_INFO(("disk: IO write 1f6 (%02x): not 101xxxxxb\n", (unsigned) value));
++      if ( (value & 0xa0) != 0xa0 ) // 1x1xxxxx
++        BX_INFO(("disk: IO write 1f6 (%02x): not 1x1xxxxxb\n", (unsigned) value));
+       BX_HD_THIS drive_select = (value >> 4) & 0x01;
+       WRITE_HEAD_NO(value & 0xf);
+       if (BX_SELECTED_CONTROLLER.lba_mode == 0 && ((value >> 6) & 1) == 1)
+@@ -1720,11 +1730,13 @@
+ {
+       Bit32u logical_sector;
+ 
+-      if (BX_SELECTED_CONTROLLER.lba_mode)
++      if (BX_SELECTED_CONTROLLER.lba_mode) {
++            //bx_printf ("disk: calculate: %d %d %d\n", ((Bit32u)BX_SELECTED_CONTROLLER.head_no), ((Bit32u)BX_SELECTED_CONTROLLER.cylinder_no), (Bit32u)BX_SELECTED_CONTROLLER.sector_no);
+ 	    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER.head_no) << 24 |
+ 		  ((Bit32u)BX_SELECTED_CONTROLLER.cylinder_no) << 8 |
+ 		  (Bit32u)BX_SELECTED_CONTROLLER.sector_no;
+-      else
++            //bx_printf ("disk: result: %u\n", logical_sector);
++      } else
+ 	    logical_sector = (BX_SELECTED_CONTROLLER.cylinder_no * BX_SELECTED_HD.hard_drive->heads *
+ 			      BX_SELECTED_HD.hard_drive->sectors) +
+ 		  (BX_SELECTED_CONTROLLER.head_no * BX_SELECTED_HD.hard_drive->sectors) +
