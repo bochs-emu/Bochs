@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.90 2004-10-29 21:15:47 sshwarts Exp $
+// $Id: cpu.cc,v 1.91 2004-11-05 10:13:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,11 +30,6 @@
 #include "bochs.h"
 #include "iodev/iodev.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_USE_CPU_SMF
-#define this (BX_CPU(0))
-#endif
-
 
 #if BX_SIM_ID == 0   // only need to define once
 // This array defines a look-up table for the even parity-ness
@@ -179,7 +174,7 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 
 #if BX_EXTERNAL_DEBUGGER
   if (regs.debug_state != debug_run) {
-    bx_external_debugger(this);
+    bx_external_debugger(BX_CPU_THIS);
   }
 #endif
 
@@ -741,8 +736,8 @@ BX_CPU_C::prefetch(void)
   BX_CPU_THIS_PTR eipPageBias = - eipPageOffset0;
   BX_CPU_THIS_PTR eipPageWindowSize = 4096; // FIXME:
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
-  BX_CPU_THIS_PTR eipFetchPtr=BX_CPU_THIS_PTR mem->getHostMemAddr(this, BX_CPU_THIS_PTR pAddrA20Page,
-                                          BX_READ);
+  BX_CPU_THIS_PTR eipFetchPtr =
+       BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, BX_CPU_THIS_PTR pAddrA20Page, BX_READ);
 
   // Sanity checks
   if ( !BX_CPU_THIS_PTR eipFetchPtr ) {
@@ -852,7 +847,7 @@ BX_CPU_C::trap_debugger (bx_bool callnow)
 {
   regs.debug_state = debug_step;
   if (callnow) {
-    bx_external_debugger(this);
+    bx_external_debugger(BX_CPU_THIS);
   }
 }
 
