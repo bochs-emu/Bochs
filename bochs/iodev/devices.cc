@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.30 2002-09-09 16:56:55 kevinlawton Exp $
+// $Id: devices.cc,v 1.31 2002-09-16 19:17:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,6 +50,7 @@ bx_devices_c::bx_devices_c(void)
 
 #if BX_PCI_SUPPORT
   pci = NULL;
+  pci2isa = NULL;
 #endif
   pit = NULL;
   keyboard = NULL;
@@ -84,7 +85,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.30 2002-09-09 16:56:55 kevinlawton Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.31 2002-09-16 19:17:51 vruppert Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -117,6 +118,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // PCI logic (i440FX)
   pci = & bx_pci;
   pci->init(this);
+  pci2isa = & bx_pci2isa;
+  pci2isa->init(this);
 #endif
 
 #if BX_SUPPORT_APIC
@@ -240,6 +243,7 @@ bx_devices_c::reset(unsigned type)
 {
 #if BX_PCI_SUPPORT
   pci->reset(type);
+  pci2isa->reset(type);
 #endif
 #if BX_SUPPORT_IOAPIC
   ioapic->reset (type);

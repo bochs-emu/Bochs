@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.17 2002-09-09 16:56:56 kevinlawton Exp $
+// $Id: iodev.h,v 1.18 2002-09-16 19:17:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,6 +52,7 @@ class bx_pic_c;
 class bx_hard_drive_c;
 class bx_sb16_c;
 class bx_pci_c;
+class bx_pci2isa_c;
 class bx_ioapic_c;
 class bx_ne2k_c;
 class bx_g2h_c;
@@ -102,6 +103,7 @@ public:
   bx_biosdev_c     *biosdev;
   bx_ioapic_c      *ioapic;
   bx_pci_c         *pci;
+  bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
   bx_keyb_c        *keyboard;
   bx_dma_c         *dma;
@@ -163,6 +165,7 @@ private:
 
 
 #include "iodev/pci.h"
+#include "iodev/pci2isa.h"
 #if BX_SUPPORT_VGA
 #  include "iodev/vga.h"
 #else

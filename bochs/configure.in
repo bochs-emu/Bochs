@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.108 2002-09-16 18:36:01 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.109 2002-09-16 19:17:51 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -575,7 +575,7 @@ AC_ARG_ENABLE(pci,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_PCI_SUPPORT, 1)
-    PCI_OBJ='pci.o'
+    PCI_OBJ='pci.o pci2isa.o'
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_PCI_SUPPORT, 0)

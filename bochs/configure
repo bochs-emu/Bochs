@@ -8882,7 +8882,7 @@ echo "${ECHO_T}yes" >&6
 #define BX_PCI_SUPPORT 1
 _ACEOF
 
-    PCI_OBJ='pci.o'
+    PCI_OBJ='pci.o pci2isa.o'
    else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
