@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: flag_ctrl.cc,v 1.7 2002-08-05 19:45:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -169,13 +169,16 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   if (v8086_mode()) {
     if (IOPL < 3) {
-      //BX_INFO(("popf_fv: IOPL < 3"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
     if (i->os_32) {
-      BX_PANIC(("POPFD(): not supported in virtual mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      Bit32u eflags;
+
+      pop_32(&eflags);
+
+      eflags &= 0x00277fd7;
+      write_eflags(eflags, /* change IOPL? */ 0, /* change IF? */ 1, 0, 0);
       return;
       }
     }
