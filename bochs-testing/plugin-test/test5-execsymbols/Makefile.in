@@ -1,4 +1,6 @@
 top_builddir = ..
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 CXX=@CXX@
 CXXFLAGS=@CXXFLAGS@
@@ -9,7 +11,7 @@ RPATH=`pwd`/lib
 all: uselib
 
 uselib: uselib.cc libmodule1.la libmodule2.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o uselib uselib.cc libmodule1.la libmodule2.la
+	$(LIBTOOL) $(CXX) $(LDFLAGS) -o uselib $(srcdir)/uselib.cc libmodule1.la libmodule2.la
 
 libmodule1.la: module1.lo libmodule2.la
 	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule1.la module1.lo -rpath ${RPATH} libmodule2.la
