@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.14 2002-10-22 23:48:42 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.15 2002-10-23 14:33:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -84,6 +84,7 @@ libkeyboard_LTX_plugin_fini(void)
 bx_keyb_c::bx_keyb_c(void)
 {
   // constructor
+  memset(&s, 0, sizeof(s));
   put("KBD");
   settype(KBDLOG);
   // install this object as the keyboard object, so that other devices
@@ -127,7 +128,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.14 2002-10-22 23:48:42 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.15 2002-10-23 14:33:38 cbothamy Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");
