@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.harddisk-modes
 Author: justin SB, Sharvil Nanavati, Christophe Bothamy
-Date: Tue Mar  4 09:51:39 CET 2003
+Date: Sun Mar 16 01:09:43 CET 2003
 Status: proposed, applyable
 
 Detailed description:
@@ -33,16 +33,16 @@ Detailed description:
     - handle modes in harddrive.cc
     - update iodev/Makefile.in
     - update bximage to create sparse disks
+    - update bximage to create growable disks
+    - implement redolog class
+    - implement additionnal mode growable
 
   Still to do :
-    - update bximage to create growable disks
     - update bximage to create split disks
     - add command line switches to bximage
     - check availability of zlib for win32
     - check for zlib in ./configure
-    - implement redolog class
     - implement additionnal mode undoable
-    - implement additionnal mode growable
     - implement additionnal mode split
     - implement additionnal mode volatile
     - implement additionnal mode z-undowable
@@ -62,10 +62,10 @@ Instructions:
 Index: .bochsrc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/.bochsrc,v
-retrieving revision 1.66
-diff -u -r1.66 .bochsrc
---- .bochsrc	9 Feb 2003 18:59:18 -0000	1.66
-+++ .bochsrc	5 Mar 2003 00:22:33 -0000
+retrieving revision 1.67
+diff -u -r1.67 .bochsrc
+--- .bochsrc	10 Mar 2003 11:45:26 -0000	1.67
++++ .bochsrc	16 Mar 2003 00:08:53 -0000
 @@ -150,7 +150,7 @@
  # ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
  # 
@@ -121,7 +121,7 @@ RCS file: /cvsroot/bochs/bochs/bochs.h,v
 retrieving revision 1.120
 diff -u -r1.120 bochs.h
 --- bochs.h	26 Feb 2003 02:41:29 -0000	1.120
-+++ bochs.h	5 Mar 2003 00:22:35 -0000
++++ bochs.h	16 Mar 2003 00:08:55 -0000
 @@ -49,6 +49,8 @@
  #include <stdio.h>
  #include <stdlib.h>
@@ -134,10 +134,10 @@ diff -u -r1.120 bochs.h
 Index: config.h.in
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/config.h.in,v
-retrieving revision 1.107
-diff -u -r1.107 config.h.in
---- config.h.in	2 Mar 2003 23:59:02 -0000	1.107
-+++ config.h.in	5 Mar 2003 00:22:37 -0000
+retrieving revision 1.108
+diff -u -r1.108 config.h.in
+--- config.h.in	11 Mar 2003 19:45:34 -0000	1.108
++++ config.h.in	16 Mar 2003 00:08:57 -0000
 @@ -285,15 +285,8 @@
  
  #define BX_GDBSTUB 0
@@ -162,7 +162,7 @@ RCS file: /cvsroot/bochs/bochs/configure,v
 retrieving revision 1.202
 diff -u -r1.202 configure
 --- configure	2 Mar 2003 23:59:03 -0000	1.202
-+++ configure	5 Mar 2003 00:23:34 -0000
++++ configure	16 Mar 2003 00:09:53 -0000
 @@ -1,5 +1,5 @@
  #! /bin/sh
 -# From configure.in Id: configure.in,v 1.201 2003/02/21 14:40:59 cisc Exp .
@@ -243,7 +243,7 @@ RCS file: /cvsroot/bochs/bochs/configure.in,v
 retrieving revision 1.202
 diff -u -r1.202 configure.in
 --- configure.in	2 Mar 2003 23:59:08 -0000	1.202
-+++ configure.in	5 Mar 2003 00:23:40 -0000
++++ configure.in	16 Mar 2003 00:09:58 -0000
 @@ -684,22 +684,22 @@
  AC_SUBST(IOAPIC_OBJS)
  AC_SUBST(APIC_OBJS)
@@ -280,7 +280,7 @@ RCS file: /cvsroot/bochs/bochs/main.cc,v
 retrieving revision 1.223
 diff -u -r1.223 main.cc
 --- main.cc	13 Feb 2003 15:51:12 -0000	1.223
-+++ main.cc	5 Mar 2003 00:23:50 -0000
++++ main.cc	16 Mar 2003 00:10:09 -0000
 @@ -195,6 +195,7 @@
          switch (val) {
            case BX_ATA_DEVICE_DISK:
@@ -380,22 +380,20 @@ diff -u -r1.223 main.cc
        else if (!strncmp(params[i], "path=", 5)) {
          bx_options.atadevice[channel][slave].Opath->set (&params[i][5]);
          }
-@@ -3702,9 +3752,47 @@
-   if (opt->Opresent->get()) {
+@@ -3703,8 +3753,46 @@
      fprintf (fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
  
--    if (opt->Otype->get() == BX_ATA_DEVICE_DISK) {
+     if (opt->Otype->get() == BX_ATA_DEVICE_DISK) {
 -      fprintf (fp, "type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d",
 -          opt->Opath->getptr(), opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
-+    if (opt->Omode->get() == BX_ATA_DEVICE_DISK) {
 +      fprintf (fp, "type=disk");
 +
-+      switch(opt->Otranslation->get()) {
++      switch(opt->Omode->get()) {
 +        case BX_ATA_MODE_FLAT:
 +          fprintf (fp, ", mode=flat");
 +          break;
 +        case BX_ATA_MODE_CONCAT:
-+          fprintf (fp, ", mode=flat");
++          fprintf (fp, ", mode=concat");
 +          break;
 +        case BX_ATA_MODE_EXTDISKSIM:
 +          fprintf (fp, ", mode=external");
@@ -431,12 +429,13 @@ diff -u -r1.223 main.cc
  
        switch(opt->Otranslation->get()) {
          case BX_ATA_TRANSLATION_NONE:
-@@ -3723,6 +3811,9 @@
+@@ -3723,6 +3811,10 @@
            fprintf (fp, ", translation=auto");
            break;
          }
 +
 +      fprintf (fp, ", path=\"%s\", cylinders=%d, heads=%d, spt=%d",
++          opt->Opath->getptr(), 
 +          opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
        }
      else if (opt->Otype->get() == BX_ATA_DEVICE_CDROM) {
@@ -447,7 +446,7 @@ RCS file: /cvsroot/bochs/bochs/doc/docbook/misc.txt,v
 retrieving revision 1.21
 diff -u -r1.21 misc.txt
 --- doc/docbook/misc.txt	15 Dec 2002 18:00:28 -0000	1.21
-+++ doc/docbook/misc.txt	5 Mar 2003 00:23:54 -0000
++++ doc/docbook/misc.txt	16 Mar 2003 00:10:11 -0000
 @@ -476,3 +476,70 @@
  copied the expected image to a.img and continued.
  
@@ -525,7 +524,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
 retrieving revision 1.94
 diff -u -r1.94 siminterface.cc
 --- gui/siminterface.cc	6 Feb 2003 23:16:55 -0000	1.94
-+++ gui/siminterface.cc	5 Mar 2003 00:23:56 -0000
++++ gui/siminterface.cc	16 Mar 2003 00:10:16 -0000
 @@ -442,14 +442,17 @@
  
  char *floppy_status_names[] = { "ejected", "inserted", NULL };
@@ -552,7 +551,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
 retrieving revision 1.99
 diff -u -r1.99 siminterface.h
 --- gui/siminterface.h	6 Feb 2003 23:16:54 -0000	1.99
-+++ gui/siminterface.h	5 Mar 2003 00:24:00 -0000
++++ gui/siminterface.h	16 Mar 2003 00:10:20 -0000
 @@ -199,6 +199,14 @@
    BXP_ATA2_SLAVE_TYPE,
    BXP_ATA3_MASTER_TYPE,
@@ -612,7 +611,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
 retrieving revision 1.40
 diff -u -r1.40 Makefile.in
 --- iodev/Makefile.in	3 Mar 2003 17:39:16 -0000	1.40
-+++ iodev/Makefile.in	5 Mar 2003 00:24:06 -0000
++++ iodev/Makefile.in	16 Mar 2003 00:10:27 -0000
 @@ -92,6 +92,7 @@
  
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
@@ -2211,11 +2210,16 @@ diff -u -r1.40 Makefile.in
 Index: iodev/harddrv.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
-retrieving revision 1.96
-diff -u -r1.96 harddrv.cc
---- iodev/harddrv.cc	2 Mar 2003 23:59:10 -0000	1.96
-+++ iodev/harddrv.cc	5 Mar 2003 00:24:19 -0000
-@@ -31,12 +31,14 @@
+retrieving revision 1.97
+diff -u -r1.97 harddrv.cc
+--- iodev/harddrv.cc	5 Mar 2003 10:43:52 -0000	1.97
++++ iodev/harddrv.cc	16 Mar 2003 00:10:42 -0000
+@@ -1,4 +1,3 @@
+-/////////////////////////////////////////////////////////////////////////
+ // $Id: patch.harddisk-modes,v 1.4 2003-03-16 00:28:04 cbothamy Exp $
+ /////////////////////////////////////////////////////////////////////////
+ //
+@@ -31,12 +30,14 @@
  
  
  // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -2231,7 +2235,7 @@ diff -u -r1.96 harddrv.cc
  #define LOG_THIS theHardDrive->
  
  // WARNING: dangerous options!
-@@ -118,37 +120,16 @@
+@@ -119,37 +120,16 @@
  #if DLL_HD_SUPPORT
  #   error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
  #endif
@@ -2272,10 +2276,15 @@ diff -u -r1.96 harddrv.cc
  bx_hard_drive_c::~bx_hard_drive_c(void)
  {
  	BX_DEBUG(("Exit."));
-@@ -249,6 +230,97 @@
+@@ -250,9 +230,104 @@
        if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_DISK) {
          BX_DEBUG(( "Hard-Disk on target %d/%d",channel,device));
          BX_HD_THIS channels[channel].drives[device].device_type           = IDE_DISK;
++
+         int cyl = bx_options.atadevice[channel][device].Ocylinders->get ();
+         int heads = bx_options.atadevice[channel][device].Oheads->get ();
+         int spt = bx_options.atadevice[channel][device].Ospt->get ();
++        Bit64u disk_size = (Bit64u)cyl * heads * heads * spt * 512;
 +
 +        /* instantiate the right class */
 +        switch (bx_options.atadevice[channel][device].Omode->get()) {
@@ -2332,13 +2341,15 @@ diff -u -r1.96 harddrv.cc
 +                                    bx_options.atadevice[channel][device].Opath->getptr ()));
 +            channels[channel].drives[device].hard_drive = new undoable_image_t();
 +            break;
++#endif
 +
 +          case BX_ATA_MODE_GROWABLE:
 +            BX_INFO(("HD on ata%d-%d: '%s' 'growable' mode ", channel, device, 
 +                                    bx_options.atadevice[channel][device].Opath->getptr ()));
-+            channels[channel].drives[device].hard_drive = new growable_image_t();
++            channels[channel].drives[device].hard_drive = new growable_image_t(disk_size);
 +            break;
 +
++#if 0
 +          case BX_ATA_MODE_VOLATILE:
 +            BX_INFO(("HD on ata%d-%d: '%s' 'volatile' mode ", channel, device, 
 +                                    bx_options.atadevice[channel][device].Opath->getptr ()));
@@ -2367,10 +2378,10 @@ diff -u -r1.96 harddrv.cc
 +            break;
 +        }
 +
-         int cyl = bx_options.atadevice[channel][device].Ocylinders->get ();
-         int heads = bx_options.atadevice[channel][device].Oheads->get ();
-         int spt = bx_options.atadevice[channel][device].Ospt->get ();
-@@ -264,7 +336,6 @@
+         BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
+         BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
+         BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
+@@ -265,7 +340,6 @@
          if ((BX_HD_THIS channels[channel].drives[device].hard_drive->open(bx_options.atadevice[channel][device].Opath->getptr ())) < 0) {
            BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
            }
@@ -2378,7 +2389,7 @@ diff -u -r1.96 harddrv.cc
          }
        else if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
          BX_DEBUG(( "CDROM on target %d/%d",channel,device));
-@@ -2382,8 +2453,10 @@
+@@ -2389,8 +2463,10 @@
  bx_hard_drive_c::close_harddrive(void)
  {
    for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
@@ -2391,7 +2402,21 @@ diff -u -r1.96 harddrv.cc
    }
  }
  
-@@ -3157,7 +3230,18 @@
+@@ -3122,7 +3198,12 @@
+ 
+ int default_image_t::open (const char* pathname)
+ {
+-      fd = ::open(pathname, O_RDWR
++      return open(pathname, O_RDWR);
++}
++
++int default_image_t::open (const char* pathname, int flags)
++{
++      fd = ::open(pathname, flags
+ #ifdef O_BINARY
+ 		  | O_BINARY
+ #endif
+@@ -3164,7 +3245,18 @@
        return ::write(fd, (char*) buf, count);
  }
  
@@ -2411,7 +2436,7 @@ diff -u -r1.96 harddrv.cc
  /*** concat_image_t function definitions ***/
  
  concat_image_t::concat_image_t ()
-@@ -3167,13 +3251,7 @@
+@@ -3174,13 +3266,7 @@
  
  void concat_image_t::increment_string (char *str)
  {
@@ -2426,7 +2451,7 @@ diff -u -r1.96 harddrv.cc
  }
  
  int concat_image_t::open (const char* pathname0)
-@@ -3283,7 +3361,7 @@
+@@ -3290,7 +3376,7 @@
    // notice if anyone does sequential read or write without seek in between.
    // This can be supported pretty easily, but needs additional checks for
    // end of a partial image.
@@ -2435,36 +2460,11 @@ diff -u -r1.96 harddrv.cc
      BX_PANIC( ("no seek before read"));
    return ::read(fd, (char*) buf, count);
  }
-@@ -3298,7 +3376,560 @@
+@@ -3305,7 +3391,535 @@
      BX_PANIC( ("no seek before write"));
    return ::write(fd, (char*) buf, count);
  }
 -#endif   /* BX_SPLIT_HD_SUPPORT */
-+
-+/* Do these utility functions maybe already exist elsewhere?
-+*/
-+inline uint32  little_to_local_endian(uint32 value)
-+{
-+#ifdef BX_LITTLE_ENDIAN
-+ // Already in local endian
-+ return value;
-+#else  /* BX_BIG_ENDIAN */
-+ return read_32bit((const uint8*)&value);
-+#endif
-+}
-+
-+
-+inline uint32  local_to_little_endian(uint32 value)
-+{
-+#ifdef BX_LITTLE_ENDIAN
-+ // Already in local endian
-+ return value;
-+#else  /* BX_BIG_ENDIAN */
-+ uint32 ret = (((value >> 0) & 0xff) << 24) + (((value >> 8) & 0xff) << 16) + (((value >> 16) & 0xff) << 8) + (((value >> 24) & 0xff) << 0);
-+
-+ return ret;
-+#endif
-+}
 +
 +/*** sparse_image_t function definitions ***/
 +sparse_image_t::sparse_image_t ()
@@ -2496,7 +2496,7 @@ diff -u -r1.96 harddrv.cc
 +
 +void sparse_image_t::read_header()
 +{
-+ BX_ASSERT(sizeof(header) == HEADER_SIZE);
++ BX_ASSERT(sizeof(header) == SPARSE_HEADER_SIZE);
 +
 + int ret = ::read(fd, &header, sizeof(header));
 +
@@ -2510,18 +2510,18 @@ diff -u -r1.96 harddrv.cc
 +   panic("could not read entire header");
 + }
 +
-+ if (little_to_local_endian(header.magic) != SPARSE_HEADER_MAGIC)
++ if (dtoh32(header.magic) != SPARSE_HEADER_MAGIC)
 + {
 +   panic("failed header magic check");
 + }
 +
-+ if (little_to_local_endian(header.version) != 1)
++ if (dtoh32(header.version) != 1)
 + {
 +   panic("unknown version in header");
 + }
 +
-+ pagesize = little_to_local_endian(header.pagesize);
-+ uint32 numpages = little_to_local_endian(header.numpages);
++ pagesize = dtoh32(header.pagesize);
++ uint32 numpages = dtoh32(header.numpages);
 +
 + total_size = pagesize;
 + total_size *= numpages;
@@ -2679,7 +2679,7 @@ diff -u -r1.96 harddrv.cc
 +
 + if ((offset % 512) != 0)
 +    BX_PANIC( ("lseek HD with offset not multiple of 512"));
-+   if (whence != SEEK_SET)
++ if (whence != SEEK_SET)
 +   BX_PANIC( ("lseek HD with whence not SEEK_SET"));
 +
 + BX_DEBUG(("sparse_image_t.lseek(%d)", whence));
@@ -2711,7 +2711,7 @@ diff -u -r1.96 harddrv.cc
 +{
 + position_virtual_page = new_virtual_page;
 +
-+ position_physical_page = little_to_local_endian(pagetable[position_virtual_page]);
++ position_physical_page = dtoh32(pagetable[position_virtual_page]);
 +}
 +
 +ssize_t sparse_image_t::read_page_fragment(uint32 read_virtual_page, uint32 read_page_offset, size_t read_size, void * buf)
@@ -2723,7 +2723,7 @@ diff -u -r1.96 harddrv.cc
 +
 + position_page_offset = read_page_offset;
 +
-+ if (position_physical_page == PAGE_NOT_ALLOCATED)
++ if (position_physical_page == SPARSE_PAGE_NOT_ALLOCATED)
 + {
 +   if (parent_image != NULL)
 +   {
@@ -2835,7 +2835,7 @@ diff -u -r1.96 harddrv.cc
 +
 +   BX_ASSERT (can_write != 0);
 +
-+   if (position_physical_page == PAGE_NOT_ALLOCATED)
++   if (position_physical_page == SPARSE_PAGE_NOT_ALLOCATED)
 +   {
 +     // We just add on another page at the end of the file
 +     // Reclamation, compaction etc should currently be done off-line
@@ -2847,7 +2847,7 @@ diff -u -r1.96 harddrv.cc
 +     uint32  data_size_pages = data_size / pagesize;
 +     uint32  next_data_page = data_size_pages;
 +
-+     pagetable[position_virtual_page] = local_to_little_endian(next_data_page);
++     pagetable[position_virtual_page] = htod32(next_data_page);
 +     position_physical_page = next_data_page;
 +
 +     off_t page_file_start = data_start + (position_physical_page << pagesize_shift);
@@ -2913,7 +2913,7 @@ diff -u -r1.96 harddrv.cc
 +     underlying_filesize = underlying_current_filepos = page_file_start + pagesize;
 +   }
 +
-+   BX_ASSERT(position_physical_page != PAGE_NOT_ALLOCATED);
++   BX_ASSERT(position_physical_page != SPARSE_PAGE_NOT_ALLOCATED);
 +
 +   off_t physical_offset = get_physical_offset();
 +
@@ -2997,7 +2997,7 @@ diff -u -r1.96 harddrv.cc
  
  #if DLL_HD_SUPPORT
  /*** dll_image_t function definitions ***/
-@@ -3369,7 +4000,7 @@
+@@ -3376,7 +3990,7 @@
           return -1;
        }
  }
@@ -3006,22 +3006,423 @@ diff -u -r1.96 harddrv.cc
  
  error_recovery_t::error_recovery_t ()
  {
+@@ -3405,3 +4019,400 @@
+ {
+       return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+ }
++
++// redolog implementation
++redolog_t::redolog_t ()
++{
++        fd = -1;
++        catalog = NULL;
++        bitmap = NULL;
++        extent_index = (Bit32u)0;
++        extent_offset = (Bit32u)0;
++        extent_next = (Bit32u)0;
++}
++
++void
++redolog_t::print_header()
++{
++        BX_INFO(("redolog : Standard Header : magic='%s', type='%s', version = %d",
++                header.standard.magic, header.standard.type,
++                dtoh32(header.standard.version)));
++        BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = %lld",
++                dtoh32(header.specific.catalog),
++                dtoh32(header.specific.bitmap),
++                dtoh32(header.specific.extent),
++                dtoh64(header.specific.disk)));
++}
++
++int 
++redolog_t::make_header (const char* type, Bit64u size)
++{
++        Bit32u entries, extent_size, bitmap_size;
++        Bit64u maxsize;
++
++        // Set standard header values
++        strcpy((char*)header.standard.magic, STANDARD_HEADER_MAGIC);
++        strcpy((char*)header.standard.type, type);
++        header.standard.version = htod32(STANDARD_HEADER_VERSION);
++        header.standard.header = htod32(STANDARD_HEADER_SIZE);
++
++        entries = 512;
++        bitmap_size = 1;
++
++        // Compute #entries and extent size values
++        do {
++                static Bit32u flip=0;
++                
++                extent_size = 8 * bitmap_size * 512;
++
++                header.specific.catalog = htod32(entries);
++                header.specific.bitmap = htod32(bitmap_size);
++                header.specific.extent = htod32(extent_size);
++                
++                maxsize = (Bit64u)entries * (Bit64u)extent_size;
++
++                flip++;
++
++                if(flip&0x01) bitmap_size *= 2;
++                else entries *= 2;
++        } while (maxsize < size);
++
++        header.specific.disk = htod64(size);
++        
++        print_header();
++
++        catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
++        bitmap = (Bit8u*)malloc(dtoh32(header.specific.bitmap));
++
++        if ((catalog == NULL) || (bitmap==NULL))
++                BX_PANIC(("redolog : could not malloc catalog or bitmap"));
++
++        for (Bit32u i=0; i<header.specific.catalog; i++)
++                catalog[i] = htod32(REDOLOG_PAGE_NOT_ALLOCATED);
++
++        bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
++        extent_blocs = 1 + (dtoh32(header.specific.extent) - 1) / 512;
++
++        BX_DEBUG(("redolog : each bitmap is %d blocs", bitmap_blocs));
++        BX_DEBUG(("redolog : each extent is %d blocs", extent_blocs));
++
++        return 0;
++}
++
++int 
++redolog_t::create (const char* filename, const char* type, Bit64u size)
++{
++        if (make_header(type, size) < 0)
++        {
++                return -1;
++        }
++
++        fd = ::open(filename, O_RDWR | O_CREAT | O_TRUNC
++#ifdef O_BINARY
++            | O_BINARY
++#endif
++              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
++        if (fd < 0)
++        {
++                // open failed.
++                return -1;
++        }
++        BX_INFO(("redolog : created image %s", filename));
++      
++        // Write header
++        ::write(fd, &header, header.standard.header);
++
++        // Write catalog
++        // FIXME could mmap
++        ::write(fd, &catalog, header.specific.catalog * sizeof (Bit32u));
++
++        return 0;
++}
++
++int 
++redolog_t::open (const char* filename, const char *type, Bit64u size)
++{
++        int res;
++
++        fd = ::open(filename, O_RDWR 
++#ifdef O_BINARY
++            | O_BINARY
++#endif
++              );
++        if (fd < 0)
++        {
++                BX_INFO(("redolog : could not open image %s", filename));
++                // open failed.
++                return -1;
++        }
++        BX_INFO(("redolog : open image %s", filename));
++      
++        res = ::read(fd, &header, sizeof(header));
++        if (res != STANDARD_HEADER_SIZE)
++        {
++               BX_PANIC(("redolog : could not read header")); 
++               return -1;
++        }
++
++        print_header();
++
++        if (strcmp((char*)header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
++        {
++               BX_PANIC(("redolog : Bad header magic")); 
++               return -1;
++        }
++
++        if (strcmp((char*)header.standard.type, type) != 0)
++        {
++               BX_PANIC(("redolog : Bad header type")); 
++               return -1;
++        }
++
++        if (dtoh32(header.standard.version) != STANDARD_HEADER_VERSION)
++        {
++               BX_PANIC(("redolog : Bad header version")); 
++               return -1;
++        }
++
++        catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
++        
++        // FIXME could mmap
++        ::lseek(fd,dtoh32(header.standard.header),SEEK_SET);
++        res = ::read(fd, catalog, dtoh32(header.specific.catalog) * sizeof(Bit32u)) ;
++
++        if (res !=  dtoh32(header.specific.catalog) * sizeof(Bit32u))
++        {
++               BX_PANIC(("redolog : could not read catalog %d=%d",res, dtoh32(header.specific.catalog))); 
++               return -1;
++        }
++
++        // check last used extent
++        extent_next = 0;
++        for (Bit32u i=0; i < dtoh32(header.specific.catalog); i++)
++        {
++                if (dtoh32(catalog[extent_index]) != REDOLOG_PAGE_NOT_ALLOCATED)
++                {
++                        if (dtoh32(catalog[extent_index]) >= extent_next)
++                                extent_next = dtoh32(catalog[extent_index]) + 1;
++                }
++        }
++        BX_INFO(("redolog : next extent will be at index %d",extent_next));
++      
++        // memory used for storing bitmaps
++        bitmap = (Bit8u *)malloc(dtoh32(header.specific.bitmap));
++
++        bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
++        extent_blocs = 1 + (dtoh32(header.specific.extent) - 1) / 512;
++
++        BX_DEBUG(("redolog : each bitmap is %d blocs", bitmap_blocs));
++        BX_DEBUG(("redolog : each extent is %d blocs", extent_blocs));
++}
++
++void 
++redolog_t::close ()
++{
++        if (fd >= 0)
++                ::close(fd);
++
++        if (catalog != NULL)
++                free(catalog);
++
++        if (bitmap != NULL)
++                free(bitmap);
++}
++
++off_t
++redolog_t::lseek (off_t offset, int whence)
++{
++        if ((offset % 512) != 0)
++                BX_PANIC( ("redolog : lseek HD with offset not multiple of 512"));
++        if (whence != SEEK_SET)
++                BX_PANIC( ("redolog : lseek HD with whence not SEEK_SET"));
++
++        if (offset > dtoh64(header.specific.disk))
++        {
++                BX_PANIC(("redolog : lseek to byte %ld failed", (long)offset));
++                return -1;
++        }
++
++        extent_index = offset / dtoh32(header.specific.extent);
++        extent_offset = (offset % dtoh32(header.specific.extent)) / 512;
++
++        BX_DEBUG(("redolog : lseeking extent index %d, offset %d",extent_index, extent_offset));
++}
++
++ssize_t
++redolog_t::read (void* buf, size_t count)
++{
++        off_t bloc_offset, bitmap_offset;
++
++        if (count != 512)
++                BX_PANIC( ("redolog : read HD with count not 512"));
++
++        BX_DEBUG(("redolog : reading index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
++
++        if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED)
++        {
++                // page not allocated
++                return 0;
++        }
++
++        bitmap_offset  = (off_t)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
++        bitmap_offset += (off_t)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs); 
++        bloc_offset    = bitmap_offset + ((off_t)512 * (bitmap_blocs + extent_offset));
++
++        BX_DEBUG(("redolog : bitmap offset is %x", (Bit32u)bitmap_offset));
++        BX_DEBUG(("redolog : bloc offset is %x", (Bit32u)bloc_offset));
++
++
++        // FIXME if same extent_index as before we can skip bitmap read
++
++        ::lseek(fd, bitmap_offset, SEEK_SET);
++
++        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != dtoh32(header.specific.bitmap))
++        {
++                BX_PANIC(("redolog : failed to read bitmap for extent %ld", extent_index));
++                return 0;
++        }
++
++        if ( (bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01 == 0x00 )
++        {
++                // bitmap says bloc not in reloglog
++                return 0;
++        }
++        
++        ::lseek(fd, bloc_offset, SEEK_SET);
++
++        return (::read(fd, buf, count));
++}
++
++ssize_t
++redolog_t::write (const void* buf, size_t count)
++{
++        Bit32u i;
++        off_t bloc_offset, bitmap_offset, catalog_offset;
++        ssize_t written;
++        bx_bool update_catalog = 0;
++
++        if (count != 512)
++                BX_PANIC( ("redolog : write HD with count not 512"));
++
++        BX_DEBUG(("redolog : writing index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
++        if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED)
++        {
++                if(extent_next >= dtoh32(header.specific.catalog))
++                {
++                        BX_PANIC(("redolog : can't allocate new extent... catalog is full"));
++                        return 0;
++                }
++
++                BX_DEBUG(("redolog : allocating new extent at %d", extent_next));
++
++                // Extent not allocated, allocate new
++                catalog[extent_index] = htod32(extent_next);
++                
++                extent_next += 1;
++
++                char *zerobuffer = (char*)malloc(512);
++                memset(zerobuffer, 0, 512);
++
++                // Write bitmap
++                bitmap_offset  = (off_t)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
++                bitmap_offset += (off_t)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs); 
++                ::lseek(fd, bitmap_offset, SEEK_SET);
++                for(i=0; i<bitmap_blocs; i++)
++                {
++                        ::write(fd, zerobuffer, 512);
++                }
++                // Write extent
++                for(i=0; i<extent_blocs; i++)
++                {
++                        ::write(fd, zerobuffer, 512);
++                }
++
++                free(zerobuffer);
++
++                update_catalog = 1;
++        }
++
++        bitmap_offset  = (off_t)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
++        bitmap_offset += (off_t)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs); 
++        bloc_offset    = bitmap_offset + ((off_t)512 * (bitmap_blocs + extent_offset));
++
++        BX_DEBUG(("redolog : bitmap offset is %x", (Bit32u)bitmap_offset));
++        BX_DEBUG(("redolog : bloc offset is %x", (Bit32u)bloc_offset));
++
++        // Write bloc
++        ::lseek(fd, bloc_offset, SEEK_SET);
++        written = ::write(fd, buf, count);
++
++        // Write bitmap
++        // FIXME if same extent_index as before we can skip bitmap read
++        ::lseek(fd, bitmap_offset, SEEK_SET);
++        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != dtoh32(header.specific.bitmap))
++        {
++                BX_PANIC(("redolog : failed to read bitmap for extent %ld", extent_index));
++                return 0;
++        }
++
++        // If bloc belongs to extent
++        if ( (bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01 != 0x00 )
++        {
++                BX_DEBUG(("redolog : writing bitmap"));
++
++                bitmap[extent_offset/8] = 1 << (extent_offset%8);
++                ::lseek(fd, bitmap_offset, SEEK_SET);
++                ::write(fd, bitmap,  dtoh32(header.specific.bitmap));
++        }
++
++        // Write catalog
++        if (update_catalog)
++        {
++                // FIXME if mmap
++                catalog_offset  = (off_t)STANDARD_HEADER_SIZE + (extent_index * sizeof(Bit32u));
++
++                BX_DEBUG(("redolog : writing catalog at offset %x", (Bit32u)catalog_offset));
++
++                ::lseek(fd, catalog_offset, SEEK_SET);
++                ::write(fd, &catalog[extent_index], sizeof(Bit32u));
++        }
++
++        return written;
++}
++
++
++/*** growable_image_t function definitions ***/
++
++growable_image_t::growable_image_t(Bit64u _size)
++{
++        redolog = new redolog_t();
++        size = _size;
++}
++
++int growable_image_t::open (const char* pathname)
++{
++        return redolog->open(pathname,REDOLOG_TYPE_GROWABLE,size);
++}
++
++void growable_image_t::close ()
++{
++        redolog->close();
++}
++
++off_t growable_image_t::lseek (off_t offset, int whence)
++{
++      return redolog->lseek(offset, whence);
++}
++
++ssize_t growable_image_t::read (void* buf, size_t count)
++{
++      memset(buf, 0, count);
++      redolog->read((char*) buf, count);
++      return count;
++}
++
++ssize_t growable_image_t::write (const void* buf, size_t count)
++{
++      return redolog->write((char*) buf, count);
++}
++
 Index: iodev/harddrv.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
 retrieving revision 1.19
 diff -u -r1.19 harddrv.h
 --- iodev/harddrv.h	2 Mar 2003 23:59:11 -0000	1.19
-+++ iodev/harddrv.h	5 Mar 2003 00:24:20 -0000
-@@ -24,6 +24,24 @@
++++ iodev/harddrv.h	16 Mar 2003 00:10:44 -0000
+@@ -24,6 +24,73 @@
  //  License along with this library; if not, write to the Free Software
  //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  
 +// SPARSE IMAGES HEADER
 +#define SPARSE_HEADER_MAGIC  (0x02468ace)
 +#define SPARSE_HEADER_VERSION  1
-+#define HEADER_SIZE        (256) // Plenty of room for later
-+#define PAGE_NOT_ALLOCATED (0xffffffff)
++#define SPARSE_HEADER_SIZE        (256) // Plenty of room for later
++#define SPARSE_PAGE_NOT_ALLOCATED (0xffffffff)
 +
 + typedef struct
 + {
@@ -3033,12 +3434,61 @@ diff -u -r1.19 harddrv.h
 +   uint32  padding[60];
 + } sparse_header_t;
 +
++#define STANDARD_HEADER_MAGIC     "Bochs Virtual HD Image"
++#define STANDARD_HEADER_VERSION   (0x00010000)
++#define STANDARD_HEADER_SIZE      (512)
++
++
++ // WARNING : headers are kept in x86 (little) endianness
++ typedef struct
++ {
++   Bit8u   magic[32];
++   Bit8u   type[16];
++   Bit32u  version;
++   Bit32u  header;
++ } standard_header_t;
++
++#define REDOLOG_TYPE_UNDOABLE "Undoable"
++#define REDOLOG_TYPE_VOLATILE "Volatile"
++#define REDOLOG_TYPE_GROWABLE "Growable"
++
++#define REDOLOG_PAGE_NOT_ALLOCATED (0xffffffff)
++ typedef struct
++ {
++   Bit32u  catalog;
++   Bit32u  bitmap;
++   Bit32u  extent;
++   Bit64u  disk;
++ } redolog_specific_header_t;
++
++ typedef struct
++ {
++   standard_header_t standard;
++   redolog_specific_header_t specific;
++
++   Bit8u padding[STANDARD_HEADER_SIZE - (sizeof (standard_header_t) + sizeof (redolog_specific_header_t))];
++ } redolog_header_t;
++
++// Do these utility functions maybe already exist elsewhere? 
++
++#if defined (BX_LITTLE_ENDIAN)
++#define htod32(val) (val)
++#define dtoh32(val) (val)
++#define htod64(val) (val)
++#define dtoh64(val) (val)
++#else
++#define htod32(val) ( (((val)&0xff000000)>>24) | (((val)&0xff0000)>>8) | (((val)&0xff00)<<8) | (((val)&0xff)<<24) )
++#define dtoh32(val) htod32(val)
++#define htod64(val) ( (((val)&0xff00000000000000LL)>>56) | (((val)&0xff000000000000LL)>>40) | (((val)&0xff0000000000LL)>>24) | (((val)&0xff00000000LL)>>8) | (((val)&0xff000000LL)<<8) | (((val)&0xff0000LL)<<24) | (((val)&0xff00LL)<<40) | (((val)&0xffLL)<<56) )
++#define dtoh64(val) htod64(val)
++#endif
++
 +#ifndef INCLUDE_ONLY_HD_HEADERS
 +
  typedef enum _sense {
        SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
        SENSE_UNIT_ATTENTION = 6
-@@ -64,6 +82,7 @@
+@@ -64,12 +131,16 @@
        unsigned sectors;
  };
  
@@ -3046,7 +3496,16 @@ diff -u -r1.19 harddrv.h
  class default_image_t : public device_image_t
  {
    public:
-@@ -87,10 +106,10 @@
+       // Open a image. Returns non-negative if successful.
+       int open (const char* pathname);
+ 
++      // Open an image with specific flags. Returns non-negative if successful.
++      int open (const char* pathname, int flags);
++
+       // Close the image.
+       void close ();
+ 
+@@ -87,10 +158,10 @@
  
    private:
        int fd;
@@ -3059,7 +3518,7 @@ diff -u -r1.19 harddrv.h
  class concat_image_t : public device_image_t
  {
    public:
-@@ -135,7 +154,81 @@
+@@ -135,7 +206,81 @@
        int fd;     // fd to use for reads and writes
        off_t thismin, thismax; // byte offset boundary of this image
  };
@@ -3142,7 +3601,72 @@ diff -u -r1.19 harddrv.h
  
  #if EXTERNAL_DISK_SIMULATOR
  #include "external-disk-simulator.h"
-@@ -367,3 +460,5 @@
+@@ -169,6 +314,64 @@
+ };
+ #endif
+ 
++// REDOLOG class
++class redolog_t 
++{
++  public:
++      redolog_t();
++      int make_header (const char* type, Bit64u size);
++      int create (const char* filename, const char* type, Bit64u size);
++      int open (const char* filename, const char* type, Bit64u size);
++      void close ();
++
++      off_t lseek (off_t offset, int whence);
++      ssize_t read (void* buf, size_t count);
++      ssize_t write (const void* buf, size_t count);
++
++  private:
++      void             print_header();
++      int              fd;
++      redolog_header_t header;     // Header is kept in x86 (little) endianness
++      Bit32u          *catalog;
++      Bit8u           *bitmap;
++      Bit32u           extent_index;
++      Bit32u           extent_offset;
++      Bit32u           extent_next;
++
++      Bit32u           bitmap_blocs;
++      Bit32u           extent_blocs;
++};
++
++// GROWABLE MODE
++class growable_image_t : public device_image_t
++{
++  public:
++      // Contructor
++      growable_image_t(Bit64u size);
++
++      // Open a image. Returns non-negative if successful.
++      int open (const char* pathname);
++
++      // Close the image.
++      void close ();
++
++      // Position ourselves. Return the resulting offset from the
++      // beginning of the file.
++      off_t lseek (off_t offset, int whence);
++
++      // Read count bytes to the buffer buf. Return the number of
++      // bytes read (count).
++      ssize_t read (void* buf, size_t count);
++
++      // Write count bytes from buf. Return the number of bytes
++      // written (count).
++      ssize_t write (const void* buf, size_t count);
++
++  private:
++      redolog_t *redolog;
++      Bit64u    size;
++};
++
+ 
+ typedef struct {
+   struct {
+@@ -367,3 +570,5 @@
  #endif
  
    };
@@ -3154,7 +3678,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
 retrieving revision 1.31
 diff -u -r1.31 iodev.h
 --- iodev/iodev.h	2 Mar 2003 23:59:11 -0000	1.31
-+++ iodev/iodev.h	5 Mar 2003 00:24:21 -0000
++++ iodev/iodev.h	16 Mar 2003 00:10:45 -0000
 @@ -397,6 +397,7 @@
  #include "iodev/dma.h"
  #include "iodev/floppy.h"
@@ -3169,12 +3693,12 @@ RCS file: /cvsroot/bochs/bochs/misc/bximage.c,v
 retrieving revision 1.17
 diff -u -r1.17 bximage.c
 --- misc/bximage.c	26 Nov 2002 11:21:31 -0000	1.17
-+++ misc/bximage.c	5 Mar 2003 00:24:22 -0000
++++ misc/bximage.c	16 Mar 2003 00:10:46 -0000
 @@ -1,4 +1,4 @@
 -/* 
 +/*
   * misc/bximage.c
-  * $Id: patch.harddisk-modes,v 1.3 2003-03-05 00:31:07 cbothamy Exp $
+  * $Id: patch.harddisk-modes,v 1.4 2003-03-16 00:28:04 cbothamy Exp $
   *
 @@ -16,6 +16,15 @@
  #endif
@@ -3190,21 +3714,21 @@ diff -u -r1.17 bximage.c
 +#include "../iodev/harddrv.h"
 +
  char *EOF_ERR = "ERROR: End of input";
- char *rcsid = "$Id: patch.harddisk-modes,v 1.3 2003-03-05 00:31:07 cbothamy Exp $";
+ char *rcsid = "$Id: patch.harddisk-modes,v 1.4 2003-03-16 00:28:04 cbothamy Exp $";
  char *divider = "========================================================================";
 @@ -30,6 +39,11 @@
  char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
  int fdsize_n_choices = 5;
  
 +/* menu data for choosing disk mode */
-+char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat or sparse. [flat] ";
-+                char *hdmode_choices[] = {"flat", "sparse" };
-+int hdmode_n_choices = 2;
++char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growable. [flat] ";
++                char *hdmode_choices[] = {"flat", "sparse", "growable" };
++int hdmode_n_choices = 3;
 +
  void myexit (int code)
  {
  #ifdef WIN32
-@@ -190,12 +204,105 @@
+@@ -190,12 +204,168 @@
    return 0;
  }
  
@@ -3231,6 +3755,42 @@ diff -u -r1.17 bximage.c
 +   left_to_write -= write;
 + }
 +
++}
++
++/* Create a suited redolog header */
++void make_redolog_header(redolog_header_t *header, const char* type, Bit64u size)
++{
++        Bit32u entries, extent_size, bitmap_size;
++        Bit64u maxsize;
++
++        // Set standard header values
++        strcpy((char*)header->standard.magic, STANDARD_HEADER_MAGIC);
++        strcpy((char*)header->standard.type, type);
++        header->standard.version = htod32(STANDARD_HEADER_VERSION);
++        header->standard.header = htod32(STANDARD_HEADER_SIZE);
++
++        entries = 512;
++        bitmap_size = 1;
++
++        // Compute #entries and extent size values
++        do {
++                static Bit32u flip=0;
++
++                extent_size = 8 * bitmap_size * 512;
++
++                header->specific.catalog = htod32(entries);
++                header->specific.bitmap = htod32(bitmap_size);
++                header->specific.extent = htod32(extent_size);
++                
++                maxsize = (Bit64u)entries * (Bit64u)extent_size;
++
++                flip++;
++
++                if(flip&0x01) bitmap_size *= 2;
++                else entries *= 2;
++        } while (maxsize < size);
++
++        header->specific.disk = htod64(size);
 +}
 +
 +/* produce a flat image file */
@@ -3269,15 +3829,15 @@ diff -u -r1.17 bximage.c
 +   size_t  padtopagesize;
 +
 +   memset(&header, 0, sizeof(header));
-+   header.magic = SPARSE_HEADER_MAGIC;
-+   header.version = SPARSE_HEADER_VERSION;
++   header.magic = htod32(SPARSE_HEADER_MAGIC);
++   header.version = htod32(SPARSE_HEADER_VERSION);
 +
-+   header.pagesize = (1 << 10) * 32; // Use 32 KB Pages - could be configurable
-+   numpages = (sec / (header.pagesize / 512)) + 1;
++   header.pagesize = htod32((1 << 10) * 32); // Use 32 KB Pages - could be configurable
++   numpages = (sec / (dtoh32(header.pagesize) / 512)) + 1;
 +
-+   header.numpages = numpages;
++   header.numpages = htod32(numpages);
 +
-+   if (numpages != header.numpages)
++   if (numpages != dtoh32(header.numpages))
 +   {
 +     fclose (fp);
 +     fatal ("ERROR: The disk image is too large for a sparse image!");
@@ -3291,14 +3851,41 @@ diff -u -r1.17 bximage.c
 +     fatal ("ERROR: The disk image is not complete - could not write header!");
 +   }
 +
-+   fileset(fp, 0xff, 4 * header.numpages);
++   fileset(fp, 0xff, 4 * dtoh32(header.numpages));
 +
-+   sizesofar = HEADER_SIZE + (4 * header.numpages);
-+   padtopagesize = header.pagesize - (sizesofar & (header.pagesize - 1));
++   sizesofar = SPARSE_HEADER_SIZE + (4 * dtoh32(header.numpages));
++   padtopagesize = dtoh32(header.pagesize) - (sizesofar & (dtoh32(header.pagesize) - 1));
 +
 +   fileset(fp, 0, padtopagesize);
 +
 +   return 0;
++}
++
++/* produce a growable image file */
++int make_growable_image(FILE *fp, Bit64u sec)
++{
++        redolog_header_t header;
++        Bit32u i, not_allocated = htod32(REDOLOG_PAGE_NOT_ALLOCATED);
++
++        memset(&header, 0, sizeof(header));
++        make_redolog_header(&header, REDOLOG_TYPE_GROWABLE, sec * 512);
++
++        if (fwrite(&header, sizeof(header), 1, fp) != 1)
++        {
++                fclose (fp);
++                fatal ("ERROR: The disk image is not complete - could not write header!");
++        }
++
++        for (i=0; i<dtoh32(header.specific.catalog); i++)
++        {
++                if (fwrite(&not_allocated, sizeof(Bit32u), 1, fp) != 1)
++                {
++                        fclose (fp);
++                        fatal ("ERROR: The disk image is not complete - could not write catalog!");
++                }
++        }
++
++        return 0;
 +}
 +
  /* produce the image file */
@@ -3313,7 +3900,7 @@ diff -u -r1.17 bximage.c
    // check if it exists before trashing someone's disk image
    fp = fopen (filename, "r");
    if (fp) {
-@@ -203,7 +310,7 @@
+@@ -203,7 +373,7 @@
      sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. [no] ", filename);
      if (ask_yn (buffer, 0, &confirm) < 0)
        fatal (EOF_ERR);
@@ -3322,7 +3909,7 @@ diff -u -r1.17 bximage.c
        fatal ("ERROR: Aborted");
      fclose (fp);
    }
-@@ -221,27 +328,8 @@
+@@ -221,27 +391,8 @@
  
    printf ("\nWriting: [");
  
@@ -3352,7 +3939,7 @@ diff -u -r1.17 bximage.c
  
    printf ("] Done.\n");
    fclose (fp);
-@@ -254,18 +342,26 @@
+@@ -254,18 +405,26 @@
    Bit64s sectors = 0;
    char filename[256];
    char bochsrc_line[256];
@@ -3380,7 +3967,7 @@ diff -u -r1.17 bximage.c
      printf ("  cyl=%d\n", cyl);
      printf ("  heads=%d\n", heads);
      printf ("  sectors per track=%d\n", spt);
-@@ -273,7 +369,16 @@
+@@ -273,7 +432,19 @@
      printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
      if (ask_string ("\nWhat should I name the image?\n[c.img] ", "c.img", filename) < 0)
        fatal (EOF_ERR);
@@ -3392,13 +3979,16 @@ diff -u -r1.17 bximage.c
 +      case 1:
 +        write_function=make_sparse_image;
 +        break;
++      case 2:
++        write_function=make_growable_image;
++        break;
 +      default:
 +        write_function=make_flat_image;
 +      }
    } else {
      int fdsize, cyl=0, heads=0, spt=0;
      char *name = NULL;
-@@ -285,7 +390,7 @@
+@@ -285,7 +456,7 @@
      case 2: name="1_2"; cyl=80; heads=2; spt=15; break;   /* 1.2 meg */
      case 3: name="1_44"; cyl=80; heads=2; spt=18; break;   /* 1.44 meg */
      case 4: name="2_88"; cyl=80; heads=2; spt=36; break;   /* 2.88 meg */
@@ -3407,7 +3997,7 @@ diff -u -r1.17 bximage.c
        fatal ("ERROR: fdsize out of range");
      }
      sectors = cyl*heads*spt;
-@@ -298,18 +403,20 @@
+@@ -298,18 +469,20 @@
      if (ask_string ("\nWhat should I name the image?\n[a.img] ", "a.img", filename) < 0)
        fatal (EOF_ERR);
      sprintf (bochsrc_line, "floppya: %s=\"%s\", status=inserted", name, filename);
@@ -3431,7 +4021,7 @@ diff -u -r1.17 bximage.c
    return 0;
  }
 --- /dev/null	2003-02-09 00:55:40.000000000 +0100
-+++ iodev/vmware3.cc	2003-03-05 00:14:44.000000000 +0100
++++ iodev/vmware3.cc	2003-03-15 12:33:14.000000000 +0100
 @@ -0,0 +1,392 @@
 +/*
 + * This file provides support for VMWare's virtual disk image
@@ -3826,7 +4416,7 @@ diff -u -r1.17 bximage.c
 +    current = 0;
 +}
 --- /dev/null	2003-02-09 00:55:40.000000000 +0100
-+++ iodev/vmware3.h	2003-03-05 00:14:44.000000000 +0100
++++ iodev/vmware3.h	2003-03-15 12:33:14.000000000 +0100
 @@ -0,0 +1,95 @@
 +/*
 + * This file provides the interface for using VMWare's virtual
