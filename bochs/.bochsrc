@@ -310,6 +310,30 @@ screenmode: name="sample"
 i440fxsupport: enabled=0
 #time0: 938581955
 
+#=======================================================================
+# KEYBOARD_MAPPING:
+# This enables a remap of a physical localized keyboard to a 
+# virtualized us keyboard, as the PC architecture waits for.
+# If enabled, the keymap must be specified and should be 
+# one of "us", "fr", "de". More tables will be implemented.
+# 
+# Examples:
+#   keyboard_mapping: enabled=1, keymap=de
+#=======================================================================
+keyboard_mapping: enabled=0, keymap=
+
+#=======================================================================
+# KEYBOARD_TYPE:
+# Type of keyboard return by a "identify keyboard" command to the
+# keyboard controler. It must be one of "xt", "at" or "mf".
+# Defaults to "mf". It should be ok for almost everybody. A known
+# exception is french macs, that do have a "at"-like keyboard.
+#
+# Examples:
+#   keyboard_type: mf
+#=======================================================================
+#keyboard_type: mf
+
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
@@ -319,3 +343,4 @@ i440fxsupport: enabled=0
 # romimage: file=:bios:BIOS-bochs-981222a, address=0xf0000
 # floppya: 1_44=[fd:], status=inserted
 #=======================================================================
+

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.80 2001-12-12 10:43:36 cbothamy Exp $
+// $Id: main.cc,v 1.81 2001-12-14 17:55:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,6 +98,7 @@ bx_options_t bx_options = {
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
   // log options: ignore debug, report info and error, crash on panic.
   { NULL, { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_ASK } },
+  { NULL, NULL }, // KeyboardMapping
   };
 
 static void parse_line_unformatted(char *context, char *line);
@@ -737,7 +738,17 @@ void bx_init_options ()
       0, BX_MAX_INT,
       0);
 
-  // keyboard type
+  // Keyboard mapping
+  bx_options.keyboard.OuseMapping = new bx_param_bool_c(BXP_KEYBOARD_USEMAPPING,
+      "Use keyboard mapping",
+      NULL,
+      0);
+  bx_options.keyboard.Okeymap = new bx_param_string_c (BXP_KEYBOARD_MAP,
+      "Keymap name",
+      NULL,
+      "", 10);
+
+ // Keyboard type
   bx_options.Okeyboard_type = new bx_param_enum_c (BXP_KBD_TYPE,
       "Keyboard type",
       "Keyboard type",
@@ -755,6 +766,8 @@ void bx_init_options ()
       bx_options.cmos.Opath,
       bx_options.cmos.Otime0,
       SIM->get_param (BXP_LOAD32BITOS),
+      bx_options.keyboard.OuseMapping,
+      bx_options.keyboard.Okeymap,
       bx_options.Okeyboard_type,
       NULL
   };
@@ -1803,6 +1816,19 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     }
 
+  else if (!strcmp(params[0], "keyboard_mapping")
+         ||!strcmp(params[0], "keyboardmapping")) {
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        bx_options.keyboard.OuseMapping->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "map=", 4)) {
+        bx_options.keyboard.Okeymap->set (strdup(&params[i][4]));
+        }
+    }
+  }
+
+
   else {
     BX_PANIC(( "%s: directive '%s' not understood", context, params[0]));
     }
@@ -1968,6 +1994,13 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
   return 0;
 }
 
+int
+bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
+{
+  fprintf (fp, "keyboard_mapping: enabled=%d, map=%s\n", opt->OuseMapping->get(), opt->Okeymap->getptr());
+  return 0;
+}
+
 // return values:
 //   0: written ok
 //  -1: failed
@@ -2023,6 +2056,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "newharddrivesupport: enabled=%d\n", bx_options.OnewHardDriveSupport->get ());
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
   bx_write_log_options (fp, &bx_options.log);
+  bx_write_keyboard_options (fp, &bx_options.keyboard);
   fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get ()==BX_KBD_XT_TYPE?"xt":
                                        bx_options.Okeyboard_type->get ()==BX_KBD_AT_TYPE?"at":"mf");
   fclose (fp);

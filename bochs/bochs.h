@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.56 2001-12-12 10:43:36 cbothamy Exp $
+// $Id: bochs.h,v 1.57 2001-12-14 17:55:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -493,6 +493,7 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 
 #include "gui/gui.h"
 #include "gui/control.h"
+#include "gui/keymap.h"
 extern bx_gui_c   bx_gui;
 #include "iodev/iodev.h"
 
@@ -590,6 +591,11 @@ typedef struct {
   bx_param_num_c *Odmatimer;
   } bx_sb16_options;
 
+typedef struct {
+  bx_param_bool_c *OuseMapping;
+  bx_param_string_c *Okeymap;
+  } bx_keyboard_options;
+
 #define BX_BOOT_FLOPPYA 0
 #define BX_BOOT_DISKC   1
 
@@ -627,6 +633,7 @@ typedef struct {
   bx_param_bool_c   *OnewHardDriveSupport;
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;
+  bx_keyboard_options keyboard;
   } bx_options_t;
 
 extern bx_options_t bx_options;

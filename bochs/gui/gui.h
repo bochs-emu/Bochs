@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.16 2001-12-13 18:36:29 vruppert Exp $
+// $Id: gui.h,v 1.17 2001-12-14 17:54:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -102,6 +102,8 @@ private:
 #define BX_KEY_PRESSED  0x00000000
 #define BX_KEY_RELEASED 0x80000000
 
+#define BX_KEY_UNHANDLED 0x10000000
+
 #define BX_KEY_CTRL_L   0
 #define BX_KEY_SHIFT_L  1
 
@@ -176,7 +178,6 @@ private:
 
 #define BX_KEY_LEFT_BRACKET  64
 #define BX_KEY_BACKSLASH     65
-#define BX_KEY_LEFT_BACKSLASH 72
 #define BX_KEY_RIGHT_BRACKET 66
 #define BX_KEY_MINUS         67
 #define BX_KEY_GRAVE         68
@@ -184,6 +185,12 @@ private:
 #define BX_KEY_BACKSPACE     69
 #define BX_KEY_ENTER         70
 #define BX_KEY_TAB           71
+
+#define BX_KEY_LEFT_BACKSLASH 72
+
+#define BX_KEY_PRINT        73
+#define BX_KEY_SCRL_LOCK    74
+#define BX_KEY_PAUSE        75
 
 #define BX_KEY_INSERT        76
 #define BX_KEY_DELETE        77
@@ -214,7 +221,3 @@ private:
 #define BX_KEY_KP_ENTER      99
 #define BX_KEY_KP_MULTIPLY  100
 #define BX_KEY_KP_DIVIDE    101
-
-#define BX_KEY_PRINT        73
-#define BX_KEY_SCRL_LOCK    74
-#define BX_KEY_PAUSE        75

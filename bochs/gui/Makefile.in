@@ -51,7 +51,7 @@ GUI_OBJS_NOGUI = nogui.o
 GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
-GUI_OBJS = gui.o control.o siminterface.o @GUI_OBJS@
+GUI_OBJS = keymap.o gui.o control.o siminterface.o @GUI_OBJS@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
@@ -89,7 +89,6 @@ rfb.o: rfb.@CPP_SUFFIX@ rfb.h rfbproto.h
 x.@CPP_SUFFIX@cc: gui.h
 
 beos.@CPP_SUFFIX@cc: gui.h
-
 
 clean:
 	@RMCOMMAND@ *.o
@@ -146,6 +145,7 @@ gui.o: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h \
  ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
  ../gui/bitmaps/snapshot.h ../gui/bitmaps/configbutton.h
+keymap.o: keymap.@CPP_SUFFIX@ ../bochs.h keymap.h
 macintosh.o: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h \
