@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.8 2004-07-28 19:36:42 vruppert Exp $
+// $Id: config.cc,v 1.9 2004-08-01 19:17:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1886,7 +1886,7 @@ parse_bochsrc(char *rcfile)
     ret = fgets(line, sizeof(line)-1, fd);
     line[sizeof(line) - 1] = '\0';
     int len = strlen(line);
-    if (len>0)
+    if ((len>0) && (line[len-1] < ' '))
       line[len-1] = '\0';
     if ((ret != NULL) && strlen(line)) {
       if (parse_line_unformatted(rcfile, line) < 0) {
