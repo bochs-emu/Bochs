@@ -1,4 +1,4 @@
-//  Copyright (C) 2000  MandrakeSoft S.A.
+//  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -1317,7 +1317,7 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
       static char buf[80];
       if (base != 0) {
-	    bx_snprintf (buf, 80, "non-zero base");
+	    snprintf (buf, 80, "non-zero base");
 	    return buf;
       }
       // Look up this context
@@ -1326,17 +1326,17 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 	    // Try global context
 	    cntx = context_t::get_context(0);
 	    if (!cntx) {
-		  bx_snprintf (buf, 80, "unknown context");
+		  snprintf (buf, 80, "unknown context");
 		  return buf;
 	    }
       }
 
       symbol_entry_t* entr = cntx->get_symbol_entry(eip);
       if (!entr) {
-	    bx_snprintf (buf, 80, "no symbol");
+	    snprintf (buf, 80, "no symbol");
 	    return buf;
       }
-      bx_snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
+      snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
       return buf;
 }
 
