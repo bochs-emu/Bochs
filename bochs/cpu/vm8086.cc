@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.12 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: vm8086.cc,v 1.13 2002-09-13 22:02:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,7 +116,11 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = raw_fs_selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = raw_gs_selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = raw_ss_selector;
+#if BX_SUPPORT_X86_64
+  RSP = new_esp;
+#else
   ESP = new_esp; // Full 32bits are loaded.
+#endif
 
   init_v8086_mode();
 }
@@ -130,7 +134,7 @@ BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
     BX_DEBUG(("IRET in vm86 with IOPL != 3"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
-  }
+    }
 
   if (i->os_32) {
     Bit32u eip, ecs_raw, eflags_tmp;

@@ -59,7 +59,6 @@ OBJS32 = \
 	stack_pro.o \
 	lazy_flags.o \
 	paging.o \
-	vm8086.o \
 	debugstuff.o \
 	arith32.o \
 	mult32.o \
@@ -103,6 +102,7 @@ OBJSXX = \
 	protect_ctrl_pro.o \
 	mult8.o \
 	data_xfer8.o \
+	vm8086.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
