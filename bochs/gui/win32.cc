@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.51 2003-02-17 19:08:12 vruppert Exp $
+// $Id: win32.cc,v 1.52 2003-05-04 16:03:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -547,6 +547,20 @@ VOID UIThread(PVOID pvoid) {
                       stInfo.hInstance,
                       NULL);
 
+    /* needed for the Japanese versions of Windows */
+    if (stInfo.simWnd) {
+      HMODULE hm;
+      hm = GetModuleHandle("USER32");
+      if (hm) {
+        BOOL (WINAPI *enableime)(HWND, BOOL);
+        enableime = (BOOL (WINAPI *)(HWND, BOOL))GetProcAddress(hm, "WINNLSEnableIME");
+        if (enableime) {
+          enableime(stInfo.simWnd, FALSE);
+          BX_INFO(("IME disabled"));
+        }
+      }
+    }
+
     ShowWindow(stInfo.simWnd, SW_SHOW);
     UpdateWindow (stInfo.simWnd);
     SetFocus(stInfo.simWnd);
@@ -646,8 +660,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
     StretchBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
            ps.rcPaint.right - ps.rcPaint.left + 1,
            ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
-           ps.rcPaint.left/stretch_factor, ps.rcPaint.top/stretch_factor,
-            (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor, (ps.rcPaint.bottom - ps.rcPaint.top+1)/stretch_factor,SRCCOPY);
+           ps.rcPaint.left/stretch_factor, ps.rcPaint.top,
+            (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor, (ps.rcPaint.bottom - ps.rcPaint.top+1),SRCCOPY);
 
     DeleteDC (hdcMem);
     EndPaint (hwnd, &ps);
@@ -1152,7 +1166,6 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
   while ( stretched_x<400)
   {
     stretched_x *= 2;
-    stretched_y *= 2;
     stretch_factor *= 2;
   }
 
@@ -1399,9 +1412,7 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
 
 void updateUpdated(int x1, int y1, int x2, int y2) {
   x1*=stretch_factor;
-  y1*=stretch_factor;
   x2*=stretch_factor;
-  y2*=stretch_factor;
   if (!updated_area_valid) {
     updated_area.left = x1 ;
     updated_area.top = y1 ;
