@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.71 2003-05-15 16:41:15 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.72 2003-06-20 08:58:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2026,6 +2026,7 @@ BX_CPU_C::SYSENTER (bxInstruction_c *i)
   ESP = BX_CPU_THIS_PTR sysenter_esp_msr;
   EIP = BX_CPU_THIS_PTR sysenter_eip_msr;
 #else
+  BX_INFO(("SYSENTER: use --enable-sep to enable SYSENTER/SYSEXIT support"));
   UndefinedOpcode (i);
 #endif
 }
@@ -2087,6 +2088,7 @@ BX_CPU_C::SYSEXIT (bxInstruction_c *i)
   ESP = ECX;
   EIP = EDX;
 #else
+  BX_INFO(("SYSEXIT: use --enable-sep to enable SYSENTER/SYSEXIT support"));
   UndefinedOpcode (i);
 #endif
 }
