@@ -1,3 +1,6 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: svga.cc,v 1.9 2004-02-19 21:10:26 vruppert Exp $
+/////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -137,6 +140,7 @@ void bx_svga_gui_c::text_update(
    char s[] = " ";
    static unsigned int previ;
    unsigned int cursori;
+   int fg, bg;
    
    cols = res_x/fontwidth;
 
@@ -152,10 +156,12 @@ void bx_svga_gui_c::text_update(
 	x = (i/2) % cols;
 	y = (i/2) / cols;
 
+	fg = DEV_vga_get_actl_pal_idx(new_text[i+1] & 0x0F);
+	bg = DEV_vga_get_actl_pal_idx((new_text[i+1] & 0xF0) >> 4);
 	if (i == cursori) {
-	    gl_setfontcolors(new_text[i+1] & 0x0F, (new_text[i+1] & 0xF0) >> 4);
+	    gl_setfontcolors(fg, bg);
 	} else {
-	    gl_setfontcolors((new_text[i+1] & 0xF0) >> 4, new_text[i+1] & 0x0F);
+	    gl_setfontcolors(bg, fg);
 	}
 	gl_write(x * fontwidth, y * fontheight, s);
 	}
