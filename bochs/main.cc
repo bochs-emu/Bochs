@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.102 2002-06-26 14:42:34 cbothamy Exp $
+// $Id: main.cc,v 1.103 2002-06-28 14:03:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1233,6 +1233,8 @@ bx_init_hardware()
     BX_INFO (("using log file %s", bx_options.log.Ofilename->getptr ()));
     io->init_log(bx_options.log.Ofilename->getptr ());
   }
+
+  io->set_log_prefix(bx_options.log.Oprefix->getptr());
 
   // set up memory and CPU objects
 #if BX_SUPPORT_APIC

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.19 2002-06-26 14:42:34 cbothamy Exp $
+// $Id: logio.cc,v 1.20 2002-06-28 14:03:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,40 +42,6 @@ void
 iofunctions::flush(void) {
 	if(logfd && magic == MAGIC_LOGNUM) {
 		fflush(logfd);
-	}
-}
-
-// This converts the option string to a printf style string with the following args:
-// 1. timer, 2. event, 3. cpu0 eip, 4. device
-void 
-iofunctions::setlogprefix(void) {
-	int  i=0;
-	char *s;
-	char *f;
-	
-	s=bx_options.log.Oprefix->getptr ();
-	strcpy(logprefix,"");
-	while (*s!=0) {
-		if (*s!='%') {
-			if (strlen(logprefix)<sizeof(logprefix)-1) 
-				strncat(logprefix,s,1);
-			else break;
-		}
-		else {
-			f="";
-			switch (*(++s)) {
-				case 't': f="%1$011lld"; break;
-				case 'i': f="%3$08x"; break;
-				case 'e': f="%2$c"; break;
-				case 'd': f="%4$s"; break;
-				case '%': f="%%"; break;
-			}
-			if(strlen(logprefix)+strlen(f)<sizeof(logprefix)-1)
-				strcat(logprefix,f);
-			else break;
-			if(*s==0)break;
-		}
-		s++;
 	}
 }
 
@@ -128,8 +94,6 @@ iofunctions::init_log(const char *fn)
 	}
 	logfd = newfd;
 	logfn = newfn;
-
-	setlogprefix();
 }
 
 void
@@ -161,6 +125,39 @@ iofunctions::init_log(int fd)
 	init_log(tmpfd);
 	return;
 };
+
+// This converts the option string to a printf style string with the following args:
+// 1. timer, 2. event, 3. cpu0 eip, 4. device
+void 
+iofunctions::set_log_prefix(const char* prefix) {
+	int   i=0;
+	char *s=(char *)prefix;
+	char *f;
+	
+	strcpy(logprefix,"");
+	while (*s!=0) {
+		if (*s!='%') {
+			if (strlen(logprefix)<sizeof(logprefix)-1) 
+				strncat(logprefix,s,1);
+			else break;
+		}
+		else {
+			f="";
+			switch (*(++s)) {
+				case 't': f="%1$011lld"; break;
+				case 'i': f="%3$08x"; break;
+				case 'e': f="%2$c"; break;
+				case 'd': f="%4$s"; break;
+				case '%': f="%%"; break;
+			}
+			if(strlen(logprefix)+strlen(f)<sizeof(logprefix)-1)
+				strcat(logprefix,f);
+			else break;
+			if(*s==0)break;
+		}
+		s++;
+	}
+}
 
 //  iofunctions::out( class, level, prefix, fmt, ap)
 //  DO NOT nest out() from ::info() and the like.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.67 2002-06-26 16:45:27 cbothamy Exp $
+// $Id: bochs.h,v 1.68 2002-06-28 14:03:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -287,7 +287,6 @@ class iofunctions {
 	class logfunctions *log;
 	void init(void);
 	void flush(void);
-	void setlogprefix(void);
 // Log Class defines
 #define    IOLOG           0
 #define    FDLOG           1
@@ -351,6 +350,7 @@ public:
 	void init_log(const char *fn);
 	void init_log(int fd);
 	void init_log(FILE *fs);
+	void set_log_prefix(const char *prefix);
 	int get_n_logfns () { return n_logfn; }
 	logfunc_t *get_logfn (int index) { return logfn_list[index]; }
 	void add_logfn (logfunc_t *fn);
