@@ -218,12 +218,12 @@ int float64_is_signaling_nan(float64);
 struct floatx80 {	// do not allow 16-byte extension of the structure
     Bit16u exp;
     Bit64u fraction;
-};
+} GCC_ATTRIBUTE((aligned(1), packed));
 #else
 struct floatx80 {	// do not allow 16-byte extension of the structure
     Bit64u fraction;
     Bit16u exp;
-};
+} GCC_ATTRIBUTE((aligned(1), packed));
 #endif
 
 /*----------------------------------------------------------------------------

@@ -2523,10 +2523,13 @@ float_class_t floatx80_class(floatx80 a)
 {
    Bit32s aExp = extractFloatx80Exp(a);
    Bit64u aSig = extractFloatx80Frac(a);
-   int  aSign = extractFloatx80Sign(a);
+   int   aSign = extractFloatx80Sign(a);
 
    if(aExp == 0x7fff) {
-       if (((Bit64u) (aSig<<1)) == 0)
+       if (((Bit64u) (aSig>>63)) == 0)	// report unsupported as NaN
+           return float_NaN;
+
+       if (((Bit64u) (aSig<< 1)) == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
 
        return float_NaN;

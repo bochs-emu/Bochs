@@ -381,9 +381,9 @@ static float64 propagateFloat64NaN(float64 a, float64 b, float_status_t &status)
 #define floatx80_default_nan_fraction BX_CONST64(0xFFFFFFFFFFFFFFFF)
 */
 
-#define floatx80_fraction extractFloat80Frac
-#define floatx80_exp extractFloat80Exp
-#define floatx80_sign extractFloat80Sign
+#define floatx80_fraction extractFloatx80Frac
+#define floatx80_exp extractFloatx80Exp
+#define floatx80_sign extractFloatx80Sign
 
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the extended double-precision floating-point
