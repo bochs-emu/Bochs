@@ -25,8 +25,8 @@
 # the following rules:
 #   use $(VAR) not ${VAR}
 
-VERSION=1.2.pre4
-VER_STRING=1.2-pre4
+VERSION=1.2
+VER_STRING=1.2
 REL_STRING=June 3, 2001
 PREFIX=/usr/local/bochs
 MANPATH=/usr/man
