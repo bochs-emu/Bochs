@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.88 2004-07-06 19:59:10 vruppert Exp $
+// $Id: keyboard.cc,v 1.89 2004-08-21 08:15:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.88 2004-07-06 19:59:10 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.89 2004-08-21 08:15:42 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -586,6 +586,9 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
         case 0xae: // enable keyboard
           set_kbd_clock_enable(1);
           BX_DEBUG(("keyboard enabled"));
+          break;
+        case 0xaf: // get controller version
+          BX_INFO(("'get controller version' not supported yet"));
           break;
         case 0xc0: // read input port
           // controller output buffer must be empty
