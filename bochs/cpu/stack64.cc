@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.19 2004-11-27 20:36:53 sshwarts Exp $
+// $Id: stack64.cc,v 1.20 2005-03-28 06:29:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,22 +68,6 @@ BX_CPU_C::POP_RRX(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = rrx;
 }
 
-
-  void
-BX_CPU_C::PUSH64_CS(bxInstruction_c *i)
-{
-  push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-}
-  void
-BX_CPU_C::PUSH64_DS(bxInstruction_c *i)
-{
-  push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-}
-  void
-BX_CPU_C::PUSH64_ES(bxInstruction_c *i)
-{
-  push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-}
   void
 BX_CPU_C::PUSH64_FS(bxInstruction_c *i)
 {
@@ -94,27 +78,7 @@ BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
 {
   push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
-  void
-BX_CPU_C::PUSH64_SS(bxInstruction_c *i)
-{
-  push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-}
 
-
-  void
-BX_CPU_C::POP64_DS(bxInstruction_c *i)
-{
-  Bit64u ds;
-  pop_64(&ds);
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], (Bit16u) ds);
-}
-  void
-BX_CPU_C::POP64_ES(bxInstruction_c *i)
-{
-  Bit64u es;
-  pop_64(&es);
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], (Bit16u) es);
-}
   void
 BX_CPU_C::POP64_FS(bxInstruction_c *i)
 {
@@ -128,78 +92,6 @@ BX_CPU_C::POP64_GS(bxInstruction_c *i)
   Bit64u gs;
   pop_64(&gs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
-}
-  void
-BX_CPU_C::POP64_SS(bxInstruction_c *i)
-{
-  Bit64u ss;
-  pop_64(&ss);
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], (Bit16u) ss);
-
-  // POP SS inhibits interrupts, debug exceptions and single-step
-  // trap exceptions until the execution boundary following the
-  // next instruction is reached.
-  // Same code as MOV_SwEw()
-  BX_CPU_THIS_PTR inhibit_mask |=
-    BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG;
-  BX_CPU_THIS_PTR async_event = 1;
-}
-
-
-  void
-BX_CPU_C::PUSHAD64(bxInstruction_c *i)
-{
-  Bit64u temp_RSP;
-  Bit64u rsp;
-
-  temp_RSP = RSP;
-  if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_RSP, 64) ) {
-    BX_ERROR(("PUSHAD(): stack doesn't have enough room!"));
-    exception(BX_SS_EXCEPTION, 0, 0);
-    return;
-    }
-
-  rsp = RSP;
-
-  /* ??? optimize this by using virtual write, all checks passed */
-  push_64(RAX);
-  push_64(RCX);
-  push_64(RDX);
-  push_64(RBX);
-  push_64(rsp);
-  push_64(RBP);
-  push_64(RSI);
-  push_64(RDI);
-}
-
-  void
-BX_CPU_C::POPAD64(bxInstruction_c *i)
-{
-    Bit64u rdi, rsi, rbp, rtmp, rbx, rdx, rcx, rax;
-
-    if ( !can_pop(64) ) {
-      BX_ERROR(("POPAD: not enough bytes on stack"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-      }
-
-    /* ??? optimize this */
-    pop_64(&rdi);
-    pop_64(&rsi);
-    pop_64(&rbp);
-    pop_64(&rtmp); /* value for ESP discarded */
-    pop_64(&rbx);
-    pop_64(&rdx);
-    pop_64(&rcx);
-    pop_64(&rax);
-
-    RDI = rdi;
-    RSI = rsi;
-    RBP = rbp;
-    RBX = rbx;
-    RDX = rdx;
-    RCX = rcx;
-    RAX = rax;
 }
 
   void
@@ -225,7 +117,6 @@ BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
 
     push_64(op1_64);
 }
-
 
   void
 BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
