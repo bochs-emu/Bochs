@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.9 2003-05-21 20:33:24 vruppert Exp $
+// $Id: textconfig.cc,v 1.10 2003-05-25 13:35:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -665,6 +665,10 @@ int log_action_n_choices = 4 + (BX_DEBUGGER?1:0);
 BxEvent *
 config_interface_notify_callback (void *unused, BxEvent *event)
 {
+#ifdef WIN32
+  bx_param_filename_c *param;
+  int opts;
+#endif
   event->retcode = -1;
   switch (event->type)
   {
@@ -672,6 +676,14 @@ config_interface_notify_callback (void *unused, BxEvent *event)
       event->retcode = 0;
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
+#ifdef WIN32
+      param = (bx_param_filename_c*)event->u.param.param;
+      opts = param->get_options()->get();
+      if (opts & bx_param_filename_c::IS_FILENAME) {
+        event->retcode = AskFilename(param);
+        return event;
+      }
+#endif
       event->u.param.param->text_ask (stdin, stderr);
       return event;
     case BX_SYNC_EVT_LOG_ASK:

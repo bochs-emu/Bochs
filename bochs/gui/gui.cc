@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.66 2003-05-24 10:51:00 vruppert Exp $
+// $Id: gui.cc,v 1.67 2003-05-25 13:35:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -429,7 +429,17 @@ bx_gui_c::snapshot_handler(void)
       return;
     }
   } else {
+#ifdef WIN32
+    int ret = SIM->ask_filename (filename, sizeof(filename),
+                                 "Save snapshot as...", "snapshot.txt",
+                                 bx_param_string_c::SAVE_FILE_DIALOG);
+    if (ret < 0) { // cancelled
+      free(text_snapshot);
+      return;
+    }
+#else
     strcpy (filename, "snapshot.txt");
+#endif
   }
   FILE *fp = fopen(filename, "wb");
   fwrite(text_snapshot, 1, len, fp);

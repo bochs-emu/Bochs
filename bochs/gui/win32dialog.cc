@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.1 2003-05-21 20:33:24 vruppert Exp $
+// $Id: win32dialog.cc,v 1.2 2003-05-25 13:35:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -66,6 +66,47 @@ void LogAskDialog(BxEvent *event)
 {
   event->retcode = DialogBoxParam(NULL, MAKEINTRESOURCE(ASK_DLG), GetBochsWindow(),
                                   (DLGPROC)LogAskProc, (LPARAM)event);
+}
+
+int AskFilename(bx_param_filename_c *param)
+{
+  const PCHAR Filter = "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0";
+  const PCHAR Ext    = "txt";
+  OPENFILENAME ofn;
+  int ret;
+  char filename[MAX_PATH];
+
+  param->get(filename, MAX_PATH);
+  ofn.lStructSize = sizeof(OPENFILENAME);
+  ofn.hwndOwner = GetBochsWindow();
+  ofn.hInstance   = NULL;
+  ofn.lpstrFilter = Filter;
+  ofn.lpstrCustomFilter = NULL;
+  ofn.nMaxCustFilter = 0;
+  ofn.nFilterIndex = 0;
+  ofn.lpstrFile   = filename;
+  ofn.nMaxFile    = MAX_PATH;
+  ofn.lpstrFileTitle = NULL;
+  ofn.nMaxFileTitle = 0;
+  ofn.lpstrInitialDir = NULL;
+  ofn.lpstrTitle = param->get_description();
+  ofn.nFileOffset = 0;
+  ofn.nFileExtension = 0;
+  ofn.lpstrDefExt = Ext;
+  ofn.lCustData = 0;
+  ofn.lpfnHook = NULL;
+  ofn.lpTemplateName = NULL;
+  ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
+  if (param->get_options()->get() & bx_param_filename_c::SAVE_FILE_DIALOG) {
+    ofn.Flags |= OFN_OVERWRITEPROMPT;
+    ret = GetSaveFileName(&ofn);
+  } else {
+    ofn.Flags |= OFN_FILEMUSTEXIST;
+    ret = GetOpenFileName(&ofn);
+  }
+  param->set(filename);
+  if (ret == 0) ret = -1;
+  return ret;
 }
 
 #endif // WIN32

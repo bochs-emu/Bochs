@@ -1,9 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.1 2003-05-21 20:33:24 vruppert Exp $
+// $Id: win32dialog.h,v 1.2 2003-05-25 13:35:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
 
 void LogAskDialog(BxEvent *event);
+int AskFilename(bx_param_filename_c *param);
 
 #endif
