@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.19 2002-09-22 22:22:16 kevinlawton Exp $
+// $Id: arith32.cc,v 1.20 2002-09-23 17:59:17 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@
   void
 BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "incl %1 \n\t"
@@ -66,7 +66,7 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
 #endif
 
-#if !(defined(__i386__) && defined(__GNUC__))
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
 #endif
 }
@@ -74,7 +74,7 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
   void
 BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "decl %1 \n\t"
@@ -97,7 +97,7 @@ BX_CPU_C::DEC_ERX(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
 #endif
 
-#if !(defined(__i386__) && defined(__GNUC__))
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
 #endif
 }
@@ -155,7 +155,7 @@ BX_CPU_C::ADD_GdEd(bxInstruction_c *i)
       read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
     asm (
       "addl %3, %1\n\t"
@@ -175,7 +175,7 @@ BX_CPU_C::ADD_GdEd(bxInstruction_c *i)
     /* now write sum back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
 
-#if !(defined(__i386__) && defined(__GNUC__))
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 }
@@ -520,7 +520,7 @@ BX_CPU_C::CMP_EdGd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpl %2, %1\n\t"
@@ -556,7 +556,7 @@ BX_CPU_C::CMP_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpl %2, %1\n\t"
@@ -587,7 +587,7 @@ BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
 
   op2_32 = i->Id();
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpl %2, %1\n\t"
@@ -722,7 +722,7 @@ BX_CPU_C::ADD_EdId(bxInstruction_c *i)
     if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
       Bit32u flags32;
       asm (
         "addl %3, %1\n\t"
@@ -745,7 +745,7 @@ BX_CPU_C::ADD_EdId(bxInstruction_c *i)
       /* pointer, segment address pair */
       read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
       Bit32u flags32;
       asm (
         "addl %3, %1\n\t"
@@ -765,7 +765,7 @@ BX_CPU_C::ADD_EdId(bxInstruction_c *i)
       Write_RMW_virtual_dword(sum_32);
       }
 
-#if !(defined(__i386__) && defined(__GNUC__))
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 }
@@ -850,7 +850,7 @@ BX_CPU_C::CMP_EdId(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpl %2, %1\n\t"

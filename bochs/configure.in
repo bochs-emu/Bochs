@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.121 2002-09-23 14:09:55 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.122 2002-09-23 17:59:17 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -615,6 +615,21 @@ AC_ARG_ENABLE(global-pages,
     ]
   )
 
+AC_MSG_CHECKING(for host specific inline assembly accelerations)
+AC_ARG_ENABLE(host-specific-asms,
+  [  --enable-host-specific-asms       support for host specific inline assembly],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SupportHostAsms, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SupportHostAsms, 0)
+   fi],
+  [
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SupportHostAsms, 1)
+    ]
+  )
 
 AC_MSG_CHECKING(for port e9 hack)
 AC_ARG_ENABLE(port-e9-hack,

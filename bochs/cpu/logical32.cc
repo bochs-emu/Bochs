@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.11 2002-09-22 22:22:16 kevinlawton Exp $
+// $Id: logical32.cc,v 1.12 2002-09-23 17:59:17 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -303,7 +303,7 @@ BX_CPU_C::AND_EdGd(bxInstruction_c *i)
     Write_RMW_virtual_dword(result_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andl %3, %1\n\t"
@@ -341,7 +341,7 @@ BX_CPU_C::AND_GdEd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andl %3, %1\n\t"
@@ -378,7 +378,7 @@ BX_CPU_C::AND_EAXId(bxInstruction_c *i)
   EAX = result_32;
 #endif
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andl %3, %1\n\t"
@@ -421,7 +421,7 @@ BX_CPU_C::AND_EdId(bxInstruction_c *i)
     Write_RMW_virtual_dword(result_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andl %3, %1\n\t"
@@ -458,7 +458,7 @@ BX_CPU_C::TEST_EdGd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testl %2, %1\n\t"
@@ -493,7 +493,7 @@ BX_CPU_C::TEST_EAXId(bxInstruction_c *i)
   /* op2 is imm32 */
   op2_32 = i->Id();
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testl %2, %1\n\t"
@@ -533,7 +533,7 @@ BX_CPU_C::TEST_EdId(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testl %2, %1\n\t"

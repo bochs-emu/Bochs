@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.17 2002-09-22 22:22:16 kevinlawton Exp $
+// $Id: arith16.cc,v 1.18 2002-09-23 17:59:17 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
   void
 BX_CPU_C::INC_RX(bxInstruction_c *i)
 {
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "incw %1 \n\t"
@@ -60,7 +60,7 @@ BX_CPU_C::INC_RX(bxInstruction_c *i)
   void
 BX_CPU_C::DEC_RX(bxInstruction_c *i)
 {
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "decw %1 \n\t"
@@ -133,7 +133,7 @@ BX_CPU_C::ADD_GwEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
     asm (
       "addw %3, %1 \n\t"
@@ -152,7 +152,7 @@ BX_CPU_C::ADD_GwEw(bxInstruction_c *i)
 
     BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
-#if !(defined(__i386__) && defined(__GNUC__))
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 #endif
 }
@@ -490,7 +490,7 @@ BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpw %2, %1\n\t"
@@ -526,7 +526,7 @@ BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpw %2, %1\n\t"
@@ -557,7 +557,7 @@ BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
 
   op2_16 = i->Iw();
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpw %2, %1\n\t"
@@ -663,7 +663,7 @@ BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
     asm (
       "addw %3, %1 \n\t"
@@ -685,7 +685,7 @@ BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
     asm (
       "addw %3, %1 \n\t"
@@ -704,7 +704,7 @@ BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(sum_16);
     }
 
-#if !(defined(__i386__) && defined(__GNUC__))
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 #endif
 }
@@ -788,7 +788,7 @@ BX_CPU_C::CMP_EwIw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpw %2, %1\n\t"

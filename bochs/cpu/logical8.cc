@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.12 2002-09-23 00:40:58 kevinlawton Exp $
+// $Id: logical8.cc,v 1.13 2002-09-23 17:59:18 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -299,7 +299,7 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andb %3, %1\n\t"
@@ -337,7 +337,7 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andb %3, %1\n\t"
@@ -371,7 +371,7 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
 
   AL = result;
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andb %3, %1\n\t"
@@ -417,7 +417,7 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andb %3, %1\n\t"
@@ -454,7 +454,7 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testb %2, %1\n\t"
@@ -488,7 +488,7 @@ BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
   /* op2 is imm8 */
   op2 = i->Ib();
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testb %2, %1\n\t"
@@ -528,7 +528,7 @@ BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testb %2, %1\n\t"

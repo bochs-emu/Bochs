@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.15 2002-09-23 00:40:58 kevinlawton Exp $
+// $Id: arith8.cc,v 1.16 2002-09-23 17:59:17 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -420,7 +420,7 @@ BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpb %2, %1\n\t"
@@ -456,7 +456,7 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpb %2, %1\n\t"
@@ -488,7 +488,7 @@ BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
 
   op2_8 = i->Ib();
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpb %2, %1\n\t"
@@ -668,7 +668,7 @@ BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "cmpb %2, %1\n\t"

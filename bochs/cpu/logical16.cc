@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.10 2002-09-22 22:22:16 kevinlawton Exp $
+// $Id: logical16.cc,v 1.11 2002-09-23 17:59:17 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -298,7 +298,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andw %3, %1\n\t"
@@ -336,7 +336,7 @@ BX_CPU_C::AND_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andw %3, %1\n\t"
@@ -369,7 +369,7 @@ BX_CPU_C::AND_AXIw(bxInstruction_c *i)
 
   AX = result_16;
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andw %3, %1\n\t"
@@ -411,7 +411,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "andw %3, %1\n\t"
@@ -448,7 +448,7 @@ BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testw %2, %1\n\t"
@@ -482,7 +482,7 @@ BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
   /* op2_16 is imm16 */
   op2_16 = i->Iw();
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testw %2, %1\n\t"
@@ -521,7 +521,7 @@ BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__))
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   Bit32u flags32;
   asm (
     "testw %2, %1\n\t"
