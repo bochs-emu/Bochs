@@ -1201,6 +1201,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 			      }
 			      break;
 
+			      case 0x51: { // read disc info
+                                // no-op to keep the Linux CD-ROM driver happy
+			        atapi_cmd_error(SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET);
+			        raise_interrupt();
+			      }
+			      break;
+
 			      case 0xa8: // read (12)
 			      case 0x55: // mode select
 			      case 0xa6: // load/unload cd
