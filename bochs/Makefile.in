@@ -25,9 +25,9 @@
 # the following rules:
 #   use $(VAR) not ${VAR}
 
-VERSION=1.2.pre2
-VER_STRING=1.2-pre2
-REL_STRING=June 1, 2001
+VERSION=1.2.pre3
+VER_STRING=1.2-pre3
+REL_STRING=June 3, 2001
 PREFIX=/usr/local/bochs
 MANPATH=/usr/man
 MAN_PAGE_LIST=bochs bochsrc bximage bochs-dlx
