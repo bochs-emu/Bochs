@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.242 2004-01-17 11:47:11 danielg4 Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.243 2004-01-17 20:33:19 danielg4 Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1441,6 +1441,22 @@ AC_ARG_ENABLE(time0,
     ]
   )
 
+
+AC_MSG_CHECKING(for raw serial support)
+AC_ARG_ENABLE(raw-serial,
+  [  --enable-raw-serial               use raw serial port access],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(USE_RAW_SERIAL, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(USE_RAW_SERIAL, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(USE_RAW_SERIAL, 0)
+    ]
+  )
 
 AC_MSG_CHECKING(for VESA BIOS extensions)
 AC_ARG_ENABLE(vbe,
