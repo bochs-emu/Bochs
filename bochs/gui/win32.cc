@@ -405,6 +405,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
   switch (iMsg) {
   case WM_CREATE:
     SetTimer (hwnd, 1, 330, NULL);
+    bx_options.Omouse_enabled->set (mouseCaptureMode);
     if (mouseCaptureMode)
       SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
     else
@@ -425,6 +426,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
         cursorWarped();
       }
     }
+    bx_options.Omouse_enabled->set (mouseCaptureMode);
     
     return 0;
 
@@ -484,6 +486,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
   case WM_SYSKEYDOWN:
     if (wParam == VK_F12) {
       mouseCaptureMode = !mouseCaptureMode;
+      bx_options.Omouse_enabled->set (mouseCaptureMode);
       ShowCursor(!mouseCaptureMode);
       ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
       GetWindowRect(hwnd, &wndRect);

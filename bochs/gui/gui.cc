@@ -200,6 +200,7 @@ bx_gui_c::mouse_enabled_changed (Boolean val)
     replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
   else
     replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS nomouse_bmap_id);
+  // ideally, this should update the gui too.
 }
 
 void 
