@@ -75,7 +75,8 @@ bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
   Bit8u *p1 = bytes+(addr&3);
   Bit8u *p2 = (Bit8u *)data;
   for (int i=0; i<len; i++) {
-    bx_printf ("apic: Copying byte %02x\n", (unsigned int) *p1);
+    if (bx_dbg.apic)
+      bx_printf ("apic: Copying byte %02x\n", (unsigned int) *p1);
     *p2++ = *p1++;
   }
 }
@@ -135,7 +136,8 @@ bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 	mask |= (1<<i);
     }
   }
-  bx_printf ("generic::get_delivery_bitmask returning 0x%04x\n", mask);
+  if (bx_dbg.apic)
+    bx_printf ("generic::get_delivery_bitmask returning 0x%04x\n", mask);
   return mask;
 }
 
@@ -150,7 +152,6 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
     bx_printf ("deliver failed: no APICs in destination bitmask\n");
     return false;
   }
-#warning delivery modes are crap
   switch (delivery_mode) {
     case 0:  // fixed
       break;
@@ -189,15 +190,18 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
     case 4:  // NMI
     case 7:  // ExtINT (I/O apic only)
     default:
-      bx_panic ("APIC delivery model %d not implemented\n", delivery_mode);
+      bx_panic ("APIC delivery mode %d not implemented\n", delivery_mode);
   }
-  bx_printf ("delivering vector=0x%02x to bitmask=%04x\n", (int)vector, deliver_bitmask);
+  // Fixed delivery mode
+  if (bx_dbg.apic)
+    bx_printf ("delivering vector=0x%02x to bitmask=%04x\n", (int)vector, deliver_bitmask);
   for (int bit=0; bit<APIC_MAX_ID; bit++) {
     if (deliver_bitmask & (1<<bit)) {
       if (apic_index[bit] == NULL)
 	bx_printf ("IOAPIC: delivering int0x%x to nonexistent id=%d!\n", (unsigned)vector, bit);
       else {
-	bx_printf ("IOAPIC: delivering int0x%x to apic#%d\n", (unsigned)vector, bit);
+        if (bx_dbg.apic)
+	  bx_printf ("IOAPIC: delivering int0x%x to apic#%d\n", (unsigned)vector, bit);
 	apic_index[bit]->trigger_irq (vector, id);
       }
     }
@@ -266,7 +270,8 @@ bx_local_apic_c::get_name()
 void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
 {
   assert (len == 4);
-  bx_printf ("%s: write %08x to APIC address %08x\n", cpu->name, *data, addr);
+  if (bx_dbg.apic)
+    bx_printf ("%s: write %08x to APIC address %08x\n", cpu->name, *data, addr);
   //assert (!(addr & 0xf));
   addr &= 0xff0;
   switch (addr) {
@@ -278,15 +283,19 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0xb0: // EOI
       {
-      bx_printf ("%s: Wrote 0x%04x to EOI\n", cpu->name, *data);
-      int vec = highest_priority_int (isr);
-      if (vec < 0) bx_printf ("EOI written without any bit in ISR\n");
-      else { 
-	bx_printf ("%s: local apic received EOI, hopefully for vector 0x%02x\n", cpu->name, vec);
-	isr[vec] = 0; 
-	service_local_apic ();
-      }
-      print_status ();
+	if (bx_dbg.apic)
+	  bx_printf ("%s: Wrote 0x%04x to EOI\n", cpu->name, *data);
+	int vec = highest_priority_int (isr);
+	if (vec < 0) {
+	  bx_printf ("EOI written without any bit in ISR\n");
+	} else {
+	  if (bx_dbg.apic)
+	    bx_printf ("%s: local apic received EOI, hopefully for vector 0x%02x\n", cpu->name, vec);
+	  isr[vec] = 0; 
+	  service_local_apic ();
+	}
+	if (bx_dbg.apic)
+	  print_status ();
       }
       break;
     case 0xd0: // logical destination
@@ -452,7 +461,8 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
   default:
     bx_printf ("APIC register %08x not implemented\n", addr);
   }
-  bx_printf ("%s: read from APIC address %08x = %08x\n", cpu->name, addr, *data);
+  if (bx_dbg.apic)
+    bx_printf ("%s: read from APIC address %08x = %08x\n", cpu->name, addr, *data);
 }
 
 int 
@@ -465,8 +475,10 @@ bx_local_apic_c::highest_priority_int (Bit8u *array)
 
 void bx_local_apic_c::service_local_apic ()
 {
-  bx_printf ("service_local_apic()\n");
-  print_status ();
+  if (bx_dbg.apic) {
+    bx_printf ("service_local_apic()\n");
+    print_status ();
+  }
   if (cpu->INTR) return;  // INTR already up; do nothing
   // find first interrupt in irr.
   int first_irr = highest_priority_int (irr);
@@ -479,26 +491,29 @@ void bx_local_apic_c::service_local_apic ()
   // interrupt has appeared in irr.  raise INTR.  When the CPU
   // acknowledges, we will run highest_priority_int again and
   // return it.
-  bx_printf ("service_local_apic(): setting INTR=1 for vector 0x%02x\n", first_irr);
+  if (bx_dbg.apic)
+    bx_printf ("service_local_apic(): setting INTR=1 for vector 0x%02x\n", first_irr);
   cpu->set_INTR (1);
   cpu->int_from_local_apic = 1;
 }
 
 void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from)
 {
-  bx_printf ("Local apic on %s: trigger interrupt vector=0x%x\n", cpu->name, vector);
+  if (bx_dbg.apic)
+    bx_printf ("Local apic on %s: trigger interrupt vector=0x%x\n", cpu->name, vector);
   irr[vector] = 1;
   service_local_apic ();
 }
 
 void bx_local_apic_c::untrigger_irq (unsigned vector, unsigned from)
 {
-  bx_printf ("Local apic on %s: untrigger interrupt vector=0x%x\n", cpu->name, vector);
+  if (bx_dbg.apic)
+    bx_printf ("Local apic on %s: untrigger interrupt vector=0x%x\n", cpu->name, vector);
   // hardware says "no more".  clear the bit.  If the CPU hasn't yet
   // acknowledged the interrupt, it will never be serviced.
   bx_assert (irr[vector] == 1);
   irr[vector] = 0;
-  print_status ();
+  if (bx_dbg.apic) print_status ();
 }
 
 Bit8u
@@ -510,13 +525,16 @@ bx_local_apic_c::acknowledge_int ()
   bx_assert (cpu->int_from_local_apic);
   int vector = highest_priority_int (irr);
   bx_assert (irr[vector] == 1);
-  bx_printf ("%s: acknowledge_int returning vector 0x%x\n", cpu->name, vector);
+  if (bx_dbg.apic)
+    bx_printf ("%s: acknowledge_int returning vector 0x%x\n", cpu->name, vector);
   // currently isr never gets cleared, so no point
   //bx_assert (isr[vector] == 0);
   irr[vector] = 0;
   isr[vector] = 1;
-  bx_printf ("Status after setting isr:\n");
-  print_status ();
+  if (bx_dbg.apic) {
+    bx_printf ("Status after setting isr:\n");
+    print_status ();
+  }
   cpu->INTR = 0;
   cpu->int_from_local_apic = 0;
   service_local_apic ();  // will set INTR again if another is ready
@@ -540,11 +558,14 @@ Boolean bx_local_apic_c::match_logical_addr (Bit8u address)
   }
   // if all address bits are 1, send to all local APICs. SDG3:7-27.
   if (address == 0xff) {
-    bx_printf ("%s: MDA=0xff matches everybody\n", cpu->name);
+    if (bx_dbg.apic) bx_printf ("%s: MDA=0xff matches everybody\n", cpu->name);
     return true;
   }
   Boolean match = ((address & log_dest) != 0);
-  bx_printf ("%s: comparing MDA %02x to my LDR %02x -> %s\n", cpu->name, address, log_dest, match? "Match" : "Not a match");
+  if (bx_dbg.apic) {
+    bx_printf ("%s: comparing MDA %02x to my LDR %02x -> %s\n", cpu->name,
+      address, log_dest, match? "Match" : "Not a match");
+  }
   return match;
 }
 
@@ -570,13 +591,14 @@ bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 	|| (apic_index[bit]->get_type () != APIC_TYPE_LOCAL_APIC))
       mask &= ~(1<<bit);
   }
-  bx_printf ("local::get_delivery_bitmask returning 0x%04x\n", mask);
+  if (bx_dbg.apic)
+    bx_printf ("local::get_delivery_bitmask returning 0x%04x\n", mask);
   return mask;
 }
 
 Bit8u bx_local_apic_c::get_ppr ()
 {
-#warning Local APIC Processor Priority is always 0
+  bx_printf ("WARNING: Local APIC Processor Priority not implemented, returning 0\n");
   // should look at TPR, vector of highest priority isr, etc.
   return 0;
 }
@@ -584,7 +606,7 @@ Bit8u bx_local_apic_c::get_ppr ()
 
 Bit8u bx_local_apic_c::get_apr ()
 {
-#warning Local APIC Arbitration Priority is always 0
+  bx_printf ("WARNING: Local APIC Arbitration Priority not implemented, returning 0\n");
   // should look at TPR, vector of highest priority isr, etc.
   return 0;
 }
