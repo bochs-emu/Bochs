@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.3 2004-06-29 19:24:27 vruppert Exp $
+// $Id: config.cc,v 1.4 2004-07-02 23:18:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3578,6 +3578,8 @@ bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
 int
 bx_write_configuration (char *rc, int overwrite)
 {
+  int i;
+
   BX_INFO (("write configuration to %s\n", rc));
   // check if it exists.  If so, only proceed if overwrite is set.
   FILE *fp = fopen (rc, "r");
@@ -3623,12 +3625,24 @@ bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, "optromimage3: file=%s, address=0x%05x\n", bx_options.optrom[2].Opath->getptr(), (unsigned int)bx_options.optrom[2].Oaddress->get ());
   if (strlen (bx_options.optrom[3].Opath->getptr ()) > 0)
     fprintf (fp, "optromimage4: file=%s, address=0x%05x\n", bx_options.optrom[3].Opath->getptr(), (unsigned int)bx_options.optrom[3].Oaddress->get ());
-  bx_write_parport_options (fp, &bx_options.par[0], 1);
-  //bx_write_parport_options (fp, &bx_options.par[1], 2);
-  bx_write_serial_options (fp, &bx_options.com[0], 1);
-  //bx_write_serial_options (fp, &bx_options.com[1], 2);
-  //bx_write_serial_options (fp, &bx_options.com[2], 3);
-  //bx_write_serial_options (fp, &bx_options.com[3], 4);
+  // parallel ports
+  for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
+    bx_write_parport_options (fp, &bx_options.par[i], i+1);
+  }
+  // serial ports
+  for (i=0; i<BX_N_SERIAL_PORTS; i++) {
+    bx_write_serial_options (fp, &bx_options.com[i], i+1);
+  }
+  // pci
+  fprintf (fp, "i440fxsupport: enabled=%d", bx_options.Oi440FXSupport->get ());
+  if (bx_options.Oi440FXSupport->get ()) {
+    for (i=0; i<BX_N_PCI_SLOTS; i++) {
+      if (bx_options.pcislot[i].Oused->get ()) {
+        fprintf (fp, ", slot%d=%s", i+1, bx_options.pcislot[i].Odevname->getptr ());
+      }
+    }
+  }
+  fprintf (fp, "\n");
   bx_write_usb_options (fp, &bx_options.usb[0], 1);
   bx_write_sb16_options (fp, &bx_options.sb16);
   fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get ());
@@ -3644,7 +3658,6 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "fullscreen: enabled=%d\n", bx_options.Ofullscreen->get ());
   fprintf (fp, "screenmode: name=\"%s\"\n", bx_options.Oscreenmode->getptr ());
 #endif
-  fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.Oi440FXSupport->get ());
   bx_write_clock_options (fp, &bx_options.clock);
   bx_write_ne2k_options (fp, &bx_options.ne2k);
   bx_write_pnic_options (fp, &bx_options.pnic);
