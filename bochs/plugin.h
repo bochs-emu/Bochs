@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.23 2004-01-24 18:04:18 danielg4 Exp $
+// $Id: plugin.h,v 1.24 2004-02-02 19:42:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -42,6 +42,7 @@ extern "C" {
 #define BX_PLUGIN_PCIUSB    "pciusb"
 #define BX_PLUGIN_PCIPNIC   "pcipnic"
 #define BX_PLUGIN_GAMEPORT  "gameport"
+#define BX_PLUGIN_SPEAKER   "speaker"
 
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
@@ -182,11 +183,16 @@ extern "C" {
 #define DEV_ne2k_print_info(file,page,reg,brief) \
     bx_devices.pluginNE2kDevice->print_info(file,page,reg,brief)
 
+///////// Speaker macro
+#define DEV_speaker_beep_on(frequency) bx_devices.pluginSpeaker->beep_on(frequency)
+#define DEV_speaker_beep_off() bx_devices.pluginSpeaker->beep_off()
+
 //////// Memory macros
 #define DEV_register_memory_handlers(rh,rp,wh,wp,b,e) \
     bx_devices.mem->registerMemoryHandlers(rh,rp,wh,wp,b,e)
 #define DEV_unregister_memory_handlers(rh,wh,b,e) \
     bx_devices.mem->unregisterMemoryHandlers(rh,wh,b,e)
+
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
@@ -337,6 +343,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ne2k)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(extfpuirq)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(gameport)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(speaker)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(amigaos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(beos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(carbon)
