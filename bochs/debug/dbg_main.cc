@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.29 2001-10-03 19:53:09 instinc Exp $
+// $Id: dbg_main.cc,v 1.30 2001-10-03 21:12:59 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2061,7 +2061,7 @@ void bx_dbg_disassemble_current (int which_cpu)
     // from here. (eks)
     if( BX_CPU(dbg_cpu)->trace_reg )
 	    fprintf( stderr,
-		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\n",
+		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u, af=%u, zf=%u, sf=%u, of=%u, tf=%u, if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
 		BX_CPU(which_cpu)->gen_reg[0],
 		BX_CPU(which_cpu)->gen_reg[1],
 		BX_CPU(which_cpu)->gen_reg[2],
@@ -2069,7 +2069,20 @@ void bx_dbg_disassemble_current (int which_cpu)
 		BX_CPU(which_cpu)->gen_reg[4],
 		BX_CPU(which_cpu)->gen_reg[5],
 		BX_CPU(which_cpu)->gen_reg[6],
-		BX_CPU(which_cpu)->gen_reg[7]);
+		BX_CPU(which_cpu)->gen_reg[7],
+		BX_CPU(which_cpu)->eflags.cf,
+		BX_CPU(which_cpu)->eflags.af,
+		BX_CPU(which_cpu)->eflags.zf,
+		BX_CPU(which_cpu)->eflags.sf,
+		BX_CPU(which_cpu)->eflags.of,
+		BX_CPU(which_cpu)->eflags.tf,
+		BX_CPU(which_cpu)->eflags.if_,
+		BX_CPU(which_cpu)->eflags.df,
+		BX_CPU(which_cpu)->eflags.iopl,
+		BX_CPU(which_cpu)->eflags.nt,
+		BX_CPU(which_cpu)->eflags.rf,
+		BX_CPU(which_cpu)->eflags.vm
+		);
     
     }
   else {
