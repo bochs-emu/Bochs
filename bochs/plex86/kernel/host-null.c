@@ -56,12 +56,12 @@ main(int argc, char *argv[])
 }
 
   void
-reserve_guest_pages(vm_t *vm)
+hostReserveGuestPages(vm_t *vm)
 {
 }
 
   void
-unreserve_guest_pages(vm_t *vm)
+hostUnreserveGuestPages(vm_t *vm)
 {
 }
 

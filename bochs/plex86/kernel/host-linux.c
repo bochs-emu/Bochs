@@ -231,14 +231,14 @@ init_module(void)
 
     /* retrieve the monitor physical pages */
     if (!retrieve_monitor_pages()) {
-      printk(KERN_ERR "retrieve_monitor_pages returned error\n");
+      printk(KERN_ERR "plex86: retrieve_monitor_pages returned error\n");
       err = -EINVAL;
       goto fail_retrieve_pages;
       }
 
     /* Kernel independent code to be run when kernel module is loaded. */
     if ( !genericModuleInit() ) {
-      printk(KERN_ERR "genericModuleInit returned error\n");
+      printk(KERN_ERR "plex86: genericModuleInit returned error\n");
       err = -EINVAL;
       goto fail_cpu_capabilities;
       }
@@ -320,7 +320,7 @@ plex86_release(struct inode *inode, struct file *filp)
     filp->private_data = NULL;
 
     /* Free the virtual memory. */
-    unreserve_guest_pages( vm );
+    hostUnreserveGuestPages( vm );
     unallocVmPages( vm );
 
     /* Free the VM structure. */
@@ -521,7 +521,7 @@ retrieve_vm_pages(Bit32u *page, int max_pages, void *addr, unsigned size)
 
     if ( n_pages > max_pages ) {
       printk(KERN_WARNING "plex86: retrieve_vm_pages: not enough pages!\n");
-      printk(KERN_WARNING "        npages(%u) > max_pages(%u)\n",
+      printk(KERN_WARNING "plex86: npages(%u) > max_pages(%u)\n",
              n_pages, max_pages);
       return 0;
       }
@@ -547,7 +547,7 @@ retrieve_vm_pages(Bit32u *page, int max_pages, void *addr, unsigned size)
         if (i >= max_pages)
         {
             printk(KERN_WARNING "plex86: page list is too small!\n");
-            printk(KERN_WARNING "n_pages=%u, max_pages=%u\n",
+            printk(KERN_WARNING "plex86: n_pages=%u, max_pages=%u\n",
                    n_pages, max_pages);
             return 0;
         }
@@ -581,10 +581,10 @@ retrieve_monitor_pages(void)
     n_pages = retrieve_vm_pages(monitor_pages.page, PLEX86_MAX_MONITOR_PAGES,
                                     start_addr, size);
     if (n_pages == 0) {
-      printk(KERN_ERR "retrieve_vm_pages returned error.\n");
+      printk(KERN_ERR "plex86: retrieve_vm_pages returned error.\n");
       return( 0 ); /* Error. */
       }
-    printk(KERN_WARNING "%u monitor pages located\n", n_pages);
+    printk(KERN_WARNING "plex86: %u monitor pages located\n", n_pages);
 
     monitor_pages.startOffset = (Bit32u)start_addr;
     monitor_pages.startOffsetPageAligned =
@@ -594,7 +594,7 @@ retrieve_monitor_pages(void)
 }
 
   void
-reserve_guest_pages(vm_t *vm)
+hostReserveGuestPages(vm_t *vm)
 {
     vm_pages_t *pg = &vm->pages;
     unsigned p;
@@ -623,7 +623,7 @@ reserve_guest_pages(vm_t *vm)
 }
 
   void
-unreserve_guest_pages(vm_t *vm)
+hostUnreserveGuestPages(vm_t *vm)
 {
     vm_pages_t *pg = &vm->pages;
     unsigned p;
@@ -689,12 +689,12 @@ retrieve_phy_pages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
       pte = ((pageEntry_t *)phys_to_virt(pde->fields.base << 12))
                          + ((laddr >> 12) & 0x3ff);
       if ( !pde->fields.P ) {
-        printk(KERN_ERR "retrieve_phy_pages: PDE.P==0: i=%u, n=%u laddr=0x%x\n",
+        printk(KERN_ERR "plex86: retrieve_phy_pages: PDE.P==0: i=%u, n=%u laddr=0x%x\n",
                i, n_pages, laddr);
         return 0;
         }
       if ( !pte->fields.P ) {
-        printk(KERN_ERR "retrieve_phy_pages: PTE.P==0: i=%u, n=%u laddr=0x%x\n",
+        printk(KERN_ERR "plex86: retrieve_phy_pages: PTE.P==0: i=%u, n=%u laddr=0x%x\n",
                i, n_pages, laddr);
         return 0;
         }
@@ -773,6 +773,8 @@ hostGetAllocedPagePhyPage(void *ptr)
   void
 hostPrint(char *fmt, ...)
 {
+#warning "Fix hostPrint"
+#if 0
   va_list args;
   int ret;
   unsigned char buffer[256];
@@ -780,11 +782,12 @@ hostPrint(char *fmt, ...)
   va_start(args, fmt);
   ret = mon_vsnprintf(buffer, 256, fmt, args);
   if (ret == -1) {
-    printk(KERN_ERR "hostPrint: vsnprintf returns error.\n");
+    printk(KERN_ERR "plex86: hostPrint: vsnprintf returns error.\n");
     }
   else {
-    printk(KERN_WARNING "%s\n", buffer);
+    printk(KERN_WARNING "plex86: %s\n", buffer);
     }
+#endif
 }
 
 
@@ -798,7 +801,7 @@ hostConvertPlex86Errno(unsigned ret)
     case Plex86ErrnoEFAULT: return(EFAULT);
     case Plex86ErrnoEINVAL: return(EINVAL);
     default:
-      printk(KERN_ERR "ioctlAllocVPhys: case %u\n", ret);
+      printk(KERN_ERR "plex86: ioctlAllocVPhys: case %u\n", ret);
       return(EINVAL);
     }
 }

@@ -22,7 +22,9 @@
 
 
 #include "plex86.h"
-#define IN_NEXUS_SPACE
+/* These functions are available from either space. */
+#define IN_MONITOR_SPACE
+#define IN_HOST_SPACE
 #include "monitor.h"
 
 

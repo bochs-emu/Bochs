@@ -72,7 +72,7 @@ main_target: $(HOST_TARGET) $(KERNEL_TARGET)
 	@FULL_LINK@
 
 $(KERNEL_TARGET): $(HOST_O) monitor-host.o \
-		nexus.o print-nexus.o \
+		nexus.o print-mon.o \
 		util-nexus.o \
 		fault-mon.o panic-mon.o \
 		paging-mon.o monitor-mon.o

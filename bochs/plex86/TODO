@@ -1,9 +1,12 @@
+Fix monPrint and friends.
+
+Could put the GDT/LDT in linear memory where the guest
+  expect them.
+
 Synchronize page writes with iCache in bochs.
 
 Deal with cycle counts of guest execution in VM, and in
   bochs/plex86 shim.
-
-Complete the CPUID info passing between bochs/plex86.
 
 Make a host-null.c file to demonstrate/test the OS-specific
   files that are needed for a host port.

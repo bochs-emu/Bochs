@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.2 2003-01-02 01:09:50 kevinlawton Exp $
+//// $Id: plex86-interface.cc,v 1.3 2003-01-02 02:11:40 kevinlawton Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -91,8 +91,6 @@ plex86CpuInfo(BX_CPU_C *cpu)
   bochsCPUID.vendorDWord2 = cpu->cpuidInfo.vendorDWord2;
   bochsCPUID.procSignature.raw = cpu->cpuidInfo.procSignature;
   bochsCPUID.featureFlags.raw  = cpu->cpuidInfo.featureFlags;
-fprintf(stderr, "CPUID.family passing as %u\n",
-bochsCPUID.procSignature.fields.family);
 
   fprintf(stderr, "Passing guest CPUID to plex86.\n");
   if ( ioctl(plex86FD, PLEX86_CPUID, &bochsCPUID) ) {

@@ -432,7 +432,6 @@ typedef struct {
     volatile unsigned error;  /* Error printing. (ex. string too long) */
     } log_buffer_info;
 
-  vm_addr_t         *addr;
   vm_pages_t         pages;  /* memory pages allocated by the host */
 
   /* Host specific fields.  These fields should NOT be accessed */
@@ -485,26 +484,12 @@ extern cpuid_info_t cpuid_info;
 
 
 
-#if !defined(IN_HOST_SPACE) && !defined(IN_MONITOR_SPACE) && \
-    !defined(IN_NEXUS_SPACE) && !defined(IN_R3_SPACE)
+#if !defined(IN_HOST_SPACE) && !defined(IN_MONITOR_SPACE)
 #error "No space defined for this file"
 #endif
 
-#if defined(IN_NEXUS_SPACE) || defined(IN_MONITOR_SPACE)
-void     sysFlushPrintBuf(vm_t *);
-#endif  /* {NEXUS, MONITOR} */
 
-#if defined(IN_HOST_SPACE) || defined(IN_MONITOR_SPACE) || \
-    defined(IN_NEXUS_SPACE)
-int  monprint(vm_t *, char *fmt, ...);
-int mon_vsnprintf(char *str, unsigned size, const char *fmt,
-                  va_list args);
-void resetPrintBuf(vm_t *);
-void  setINTR(vm_t *, unsigned val);
-Bit8u picIAC(vm_t *);
-
-#define cache_sreg(vm, sreg) ({})
-#define cache_selector(vm, sreg) ({})
+#if defined(IN_HOST_SPACE) || defined(IN_MONITOR_SPACE)
 
 void  mon_memzero(void *ptr, int size);
 void  mon_memcpy(void *dst, void *src, int size);
@@ -513,38 +498,7 @@ void *mon_memset(void *s, unsigned c, unsigned n);
 #define MON_BASE_FROM_LADDR(laddr) \
     ((laddr) - monitor_pages.startOffsetPageAligned)
 
-/* IO logic functions. */
-unsigned ioInit(vm_t *vm);
-int  registerIORHandler(vm_t *vm, unsigned space, void *thisPtr,void *callback,
-                        Bit32u base, unsigned len, char *name);
-int  registerIOWHandler(vm_t *vm, unsigned space, void *thisPtr, void *callback,
-                        Bit32u base, unsigned len, char *name);
 
-int  registerIRQ(vm_t *vm, unsigned space, unsigned irq,
-             const char *name);
-int  unregisterIRQ(vm_t *vm, unsigned space, unsigned irq,
-             const char *name);
-
-#if 0
-void dtInitialize(vm_t *vm);
-void dtInitHashTables(vm_t *vm);
-void dtInitG2THashTable(vm_t *vm);
-unsigned isPMR3NativeCompatible(vm_t *);
-
-#define DoZero    (1<<0)
-#define DontZero  (0<<0)
-#define AtHead    (1<<1)
-#define AtTail    (0<<1)
-  Bit32u
-dtTranslateG2T(vm_t *vm, Bit32u guestOff, Bit32u guestLinAddr,
-               Bit32u guestPhyAddr);
-#endif
-
-#endif  /* {HOST, MONITOR, NEXUS} */
-
-
-
-#if defined(IN_HOST_SPACE) || defined(IN_MONITOR_SPACE)
 /* ============================================================
  * These are the functions which are available in either of the
  * host or monitor/guest spaces.
@@ -561,12 +515,6 @@ dtTranslateG2T(vm_t *vm, Bit32u guestOff, Bit32u guestLinAddr,
     ( ((Bit32u)vm->guest.addr.nexus) + \
       (((Bit32u) &field) - ((Bit32u) &__nexus_start)) )
 
-/* Translate from guest laddr to monitor laddr */
-#define Guest2Monitor(vm, laddr) ( ((Bit32u) (laddr)) - \
-                                   vm->addr->nexus->mon_base )
-#define MonOff2Lin(vm, off) ( ((Bit32u) (off)) + \
-                              vm->addr->nexus->mon_base )
-
   static __inline__ Bit64u
 vm_rdtsc(void) {
   Bit64u ret;
@@ -576,7 +524,6 @@ vm_rdtsc(void) {
     );
   return ret;
   }
-
 #endif  /* {HOST, MONITOR} */
 
 
@@ -607,18 +554,36 @@ vm_rdtsc(void) {
         : "memory"                              \
     )
 
-int  initMonitor(vm_t *);
+#define Plex86ErrnoEBUSY      1
+#define Plex86ErrnoENOMEM     2
+#define Plex86ErrnoEFAULT     3
+#define Plex86ErrnoEINVAL     4
+
+#define vm_save_flags(x) \
+  asm volatile("pushfl ; popl %0": "=g" (x): :"memory")
+
+#define vm_restore_flags(x) \
+  asm volatile("pushl %0 ; popfl": :"g" (x): "memory", "cc")
+
+
+int      initMonitor(vm_t *);
 unsigned mapMonitor(vm_t *);
 unsigned initGuestPhyMem(vm_t *);
-void set_guest_context(vm_t *, guest_context_t *context);
-void get_guest_context(vm_t *, guest_context_t *context);
-int  runGuestLoop(vm_t *);
-void unallocVmPages(vm_t *);
-int  allocVmPages(vm_t *, unsigned nmegs);
-void initShadowPaging(vm_t *vm);
-void genericDeviceOpen(vm_t *);
+void     unallocVmPages(vm_t *);
+int      allocVmPages(vm_t *, unsigned nmegs);
+void     initShadowPaging(vm_t *vm);
+void     genericDeviceOpen(vm_t *);
 unsigned genericModuleInit(void);
+unsigned getCpuCapabilities(void);
+int      ioctlGeneric(vm_t *vm, void *inode, void *filp,
+                      unsigned int cmd, unsigned long arg);
+int      ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg);
+unsigned ioctlAllocVPhys(vm_t *vm, unsigned long arg);
+void     copyGuestStateToUserSpace(vm_t *vm);
 
+/* These are the functions that the host-OS-specific file of the
+ * plex86 device driver must define.
+ */
 unsigned hostIdle(void);
 void    *hostAllocZeroedMem(unsigned long size);
 void     hostFreeMem(void *ptr);
@@ -629,32 +594,13 @@ unsigned hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr,
 Bit32u   hostGetAllocedPagePhyPage(void *ptr);
 void     hostPrint(char *fmt, ...);
 Bit32u   hostKernelOffset(void);
-
-unsigned getCpuCapabilities(void);
-
-#define Plex86ErrnoEBUSY      1
-#define Plex86ErrnoENOMEM     2
-#define Plex86ErrnoEFAULT     3
-#define Plex86ErrnoEINVAL     4
-
-int ioctlGeneric(vm_t *vm, void *inode, void *filp,
-                 unsigned int cmd, unsigned long arg);
-int  ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg);
-unsigned ioctlAllocVPhys(vm_t *vm, unsigned long arg);
-void copyGuestStateToUserSpace(vm_t *vm);
-void reserve_guest_pages(vm_t *vm);
-void unreserve_guest_pages(vm_t *vm);
-int  hostConvertPlex86Errno(unsigned ret);
+void     hostReserveGuestPages(vm_t *vm);
+void     hostUnreserveGuestPages(vm_t *vm);
+int      hostConvertPlex86Errno(unsigned ret);
 unsigned hostMMapCheck(void *i, void *f);
-void hostModuleCountReset(vm_t *vm, void *inode, void *filp);
+void     hostModuleCountReset(vm_t *vm, void *inode, void *filp);
 unsigned long hostCopyFromUser(void *to, void *from, unsigned long len);
 unsigned long hostCopyToUser(void *to, void *from, unsigned long len);
-
-#define vm_save_flags(x) \
-  asm volatile("pushfl ; popl %0": "=g" (x): :"memory")
-
-#define vm_restore_flags(x) \
-  asm volatile("pushl %0 ; popfl": :"g" (x): "memory", "cc")
 
 #endif  /* HOST Space */
 
@@ -667,14 +613,21 @@ unsigned long hostCopyToUser(void *to, void *from, unsigned long len);
  * running in the monitor/guest space.
  */
 
+void sysFlushPrintBuf(vm_t *);
+void sysRemapMonitor(vm_t *);
+int  monprint(vm_t *, char *fmt, ...);
+int  mon_vsnprintf(char *str, unsigned size, const char *fmt,
+                   va_list args);
+void resetPrintBuf(vm_t *);
+
+/* Translate from guest laddr to monitor laddr. */
+#define Guest2Monitor(vm, laddr) ( ((Bit32u) (laddr)) - \
+                                   vm->guest.addr.nexus->mon_base )
 
 void monpanic(vm_t *, char *fmt, ...) __attribute__ ((noreturn));
 void monpanic_nomess(vm_t *);
 
-
-void sysRemapMonitor(vm_t *);
 void toHostGuestFault(vm_t *, unsigned fault);
-
 
 void guestPageFault(vm_t *, guest_context_t *context, Bit32u cr2);
 void *open_guest_phy_page(vm_t *, Bit32u ppage_index, Bit8u *mon_offset);

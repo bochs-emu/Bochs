@@ -126,9 +126,6 @@ initMonitor(vm_t *vm)
 
   vm->kernel_offset = hostKernelOffset();
 
-  /* Start out using pointers in host space. */
-  vm->addr = &vm->host.addr;
-
   vm->system.a20 = 1; /* start with A20 line enabled */
   vm->system.a20AddrMask  = 0xffffffff; /* all address lines contribute */
   vm->system.a20IndexMask = 0x000fffff; /* all address lines contribute */
@@ -523,9 +520,6 @@ initMonitor(vm_t *vm)
   vm->vmState |= VMStateInitMonitor;
   vm->mon_request = MonReqNone;
 
-  monprint(vm, "init_monitor OK -----------------\n");
-  monprint(vm, "nexus_size = 0x%x\n", nexus_size);
-
   return(1); /* all OK */
 
 error:
@@ -762,7 +756,7 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
        */
       vm->vmState &= ~VMStateMMapAll;
 
-      unreserve_guest_pages(vm);
+      hostUnreserveGuestPages(vm);
       unallocVmPages(vm);
 
       /* Reset state to only FD opened. */
@@ -1036,16 +1030,14 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
 #if ANAL_CHECKS
     if (!(eflags & 0x200)) {
       vm_restore_flags(eflags);
-      hostPrint("runGuestLoop: EFLAGS.IF==0\n");
+      hostPrint("ioctlExecute: EFLAGS.IF==0\n");
       retval = 12; /* Fail. */
       goto handlePanic;
       }
 #endif
 
     /* Call assembly routine to effect transition. */
-    vm->addr = &((vm_t *)vm->host.addr.nexus->vm)->guest.addr;
     vm->host.__host2mon();
-    vm->addr = &vm->host.addr;
 
     /* First check for an asynchronous event (interrupt redirection) */
     if ( vm->mon_request == MonReqRedirect ) {
@@ -1264,11 +1256,11 @@ hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
     }
 
   /* Mark guest pages as reserved (for mmap()). */
-  reserve_guest_pages( vm );
+  hostReserveGuestPages( vm );
 
   /* Initialize the guests physical memory. */
   if ( initGuestPhyMem(vm) ) {
-    unreserve_guest_pages(vm);
+    hostUnreserveGuestPages(vm);
     unallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
@@ -1276,7 +1268,7 @@ hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
   /* Initialize the monitor. */
   if ( !initMonitor(vm) ||
        !mapMonitor(vm) ) {
-    unreserve_guest_pages(vm);
+    hostUnreserveGuestPages(vm);
     unallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
@@ -1293,7 +1285,7 @@ ioctlSetA20E(vm_t *vm, unsigned long val)
     /* Disabling the A20 line with paging on, is not
      * currently handled.
      */
-    monprint(vm, "SetA20E: val=0, CR0.PG=1 unhandled\n");
+    xxxprint(vm, "SetA20E: val=0, CR0.PG=1 unhandled\n");
     return 0; /* fail */
     }
   val = (val > 0); /* make 0 or 1 */
@@ -1660,7 +1652,7 @@ mapMonitor(vm_t *vm)
 
   /* The monitor TSS. */
   nexus->mon_tss_sel = monTssSel.raw;
-  vm->addr->tss->esp0 = ((Bit32u)vm->guest.addr.nexus) + PAGESIZE;
+  vm->host.addr.tss->esp0 = ((Bit32u)vm->guest.addr.nexus) + PAGESIZE;
   vm->host.addr.tss->ss0  = monSsSel.raw;
 
   /* Monitor code and stack segments. */
@@ -1685,7 +1677,7 @@ initShadowPaging(vm_t *vm)
 #if 0
   cr3_page_index = A20Addr(vm, vm->guest_cpu.cr3) >> 12;
   if ( cr3_page_index >= vm->pages.guest_n_pages)
-    monpanic(vm, "monPagingRemap: CR3 conflicts with monitor space\n");
+    xxxpanic(vm, "monPagingRemap: CR3 conflicts with monitor space\n");
 #endif
 
   /* Reset page table heap */
@@ -1727,7 +1719,7 @@ initShadowPaging(vm_t *vm)
     pusage->attr.raw |= PageUsagePDir;
     pusage->attr.fields.access_perm = PagePermNA;
     if (pusage->attr.raw & PageBadUsage4PDir)
-      monpanic(vm, "monPagingRemap: BadUsage4PDir\n");
+      xxxpanic(vm, "monPagingRemap: BadUsage4PDir\n");
     }
 #endif
 }
