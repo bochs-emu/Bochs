@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.66 2003-12-06 13:59:30 vruppert Exp $
+// $Id: floppy.cc,v 1.67 2003-12-07 15:59:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,8 +45,20 @@
 extern "C" {
 #include <errno.h>
 }
+
+#ifdef __linux__
+extern "C" {
+#include <sys/ioctl.h>
+#include <linux/fd.h>
+}
+#endif
 #include "bochs.h"
 // windows.h included by bochs.h
+#ifdef WIN32
+extern "C" {
+#include <winioctl.h>
+}
+#endif
 #define LOG_THIS theFloppyController->
 
 bx_floppy_ctrl_c *theFloppyController;
@@ -120,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.66 2003-12-06 13:59:30 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.67 2003-12-07 15:59:32 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1347,10 +1359,16 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   struct stat stat_buf;
   int i, ret;
   int idx = -1;
+#ifdef __linux__
+  struct floppy_struct floppy_geom;
+#endif
 #ifdef WIN32
   char sTemp[1024];
   bx_bool raw_floppy = 0;
-  char buffer[512];
+  HANDLE hFile;
+  DWORD bytes;
+  DISK_GEOMETRY dg;
+  unsigned tracks, heads, spt;
 #endif
 
   if (type == BX_FLOPPY_NONE)
@@ -1372,6 +1390,23 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     if ( (isalpha(path[0])) && (path[1] == ':') && (strlen(path) == 2) ) {
       raw_floppy = 1;
       wsprintf(sTemp, "\\\\.\\%s", path);
+      hFile = CreateFile(sTemp, GENERIC_READ, FILE_SHARE_WRITE, NULL,
+                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+      if (hFile == INVALID_HANDLE_VALUE) {
+        BX_ERROR(("Cannot open floppy drive"));
+        return(0);
+      } else {
+        if (!DeviceIoControl(hFile, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0, &dg, sizeof(dg), &bytes, NULL)) {
+          BX_ERROR(("No media in floppy drive"));
+          CloseHandle(hFile);
+          return(0);
+        } else {
+          tracks = (unsigned)dg.Cylinders.QuadPart;
+          heads  = (unsigned)dg.TracksPerCylinder;
+          spt    = (unsigned)dg.SectorsPerTrack;
+        }
+        CloseHandle(hFile);
+      }
       media->fd = open(sTemp, BX_RDWR);
     } else {
       media->fd = open(path, BX_RDWR);
@@ -1413,17 +1448,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 #elif defined(WIN32)
   if (raw_floppy) {
     stat_buf.st_mode = S_IFCHR;
-    // FIXME: sets size of inserted raw disk.
-    stat_buf.st_size = 1474560;  /* temporary - unused for now */
-    // read first sector from floppy
-    if (::read(media->fd, &buffer, 512) < 1) {
-      close(media->fd);
-      media->fd = -1;
-      media->type = type;
-      return(0);
-    } else {
-      ret = 0;
-    }
+    ret = 0;
   } else {
     ret = fstat(media->fd, &stat_buf);
   }
@@ -1503,11 +1528,26 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     // character or block device
     // assume media is formatted to typical geometry for drive
     media->type              = type;
+#ifdef __linux__
+    if (ioctl(media->fd, FDGETPRM, &floppy_geom) < 0) {
+      BX_ERROR(("cannot determine media geometry"));
+      return(0);
+    }
+    media->tracks            = floppy_geom.track;
+    media->heads             = floppy_geom.head;
+    media->sectors_per_track = floppy_geom.sect;
+    media->sectors           = floppy_geom.size;
+#elif defined(WIN32)
+    media->tracks            = tracks;
+    media->heads             = heads;
+    media->sectors_per_track = spt;
+    media->sectors = media->heads * media->tracks * media->sectors_per_track;
+#else
     media->tracks            = floppy_type[idx].trk;
     media->heads             = floppy_type[idx].hd;
     media->sectors_per_track = floppy_type[idx].spt;
     media->sectors           = floppy_type[idx].sectors;
-    media->sectors = media->heads * media->tracks * media->sectors_per_track;
+#endif
     return(1); // success
     }
   else {
