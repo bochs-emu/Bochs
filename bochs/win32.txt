@@ -1,22 +1,31 @@
-Notes for the Win32 Port
-~~~~~~~~~~~~~~~~~~~~~~~~
+Building Bochs for Win32
+------------------------
 
-I changed things around so you can use a Unix machine to
-create the Makefiles and config files for use with MS Visual C++ 5.0
-Please check out "docs-html/win32.html"
+This has only been tested with MS Visual C++ 6.0.
 
--Kevin
+The normal build process on a unix system is to run configure to build all the
+makefiles and config.h, and then run make to compile Bochs.  Configure takes a
+large number of command line arguments, for example to disable floating point
+or to enable sound blaster emulation.  Configure works beautifully on unix
+systems to help make the code portable, however it cannot run on Windows.
+(Maybe, if you have cygwin.)  Therefore, you need to either 1) run configure
+on a unix box and copy the makefiles and config.h, or 2) download the
+makefiles which are distributed in a separate ZIP file.
 
-------- original text from David Ross -----------------------------------
-- Visual C++ 5.0 is required to build this release.
--
-- Unfortunately there are no makefiles yet.  In each directory where
-- a build.bat file exists, you must type "BUILD" to build the libraries.
-- The directories are: memory, gui, iodev, and cpu.  After you have done
-- this, type "BUILD" in the main directory to compile the remaining files
-- and link bochs.exe.
--
-- --
-- David Ross
-- dross@pobox.com
+If you want to run configure yourself, consider using the shell script
+".conf.win32-vcpp" since it has been tested.  Look at it to make sure
+the options make sense for you.  You can always run configure by hand too,
+just be sure to include the option --with-win32-vcpp so that it creates
+makefiles for win32.  Copy config.h, Makefile, and the Makefiles in all
+subdirectories over to your windows box into the same directory as the Bochs
+source.
 
+If you download the makefiles in a ZIP, just extract them into the
+same directory as the Bochs source.  The config.h and top level Makefile
+should end up in the same directory as Bochs.h.
+
+Once the makefiles are installed, building Bochs is easy.  Start up an MSDOS
+window, run the .BAT file that sets up the environment variables
+(C:\vc98\bin\vcvars32.bat on my system), and then run NMAKE in the Bochs
+source directory.  You will get lots of compile warnings, but hopefully no
+fatal errors!  At the end, you should see Bochs.exe in the source directory.
