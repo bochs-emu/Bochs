@@ -81,7 +81,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.16 2001-06-27 20:27:49 fries Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.17 2001-08-23 13:02:50 yakovlev Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -1199,6 +1199,12 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 
   if (type == BX_FLOPPY_NONE)
     return(0);
+
+  //If media file is already open, close it before reopening.
+  if(media->fd >=0) {
+    close(media->fd);
+    media->fd=-1;
+  }
 
   // open media file (image file or device)
   media->write_protected = 0;
