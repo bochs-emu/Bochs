@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.54 2002-11-05 17:46:39 bdenney Exp $
+$Id: user.dbk,v 1.55 2002-11-05 18:11:04 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -80,7 +80,7 @@ virtualization.
 </para>
 
 <para>
-To do anything interesting in the simulated machine, Bochs needs to communicate
+To do anything interesting in the simulated machine, Bochs needs to interact
 with the operating system on the host platform (the host OS).  When you press a
 key in the Bochs display window, a key event goes into the device model for the
 keyboard.  When the simulated machine needs to read from the simulated hard
@@ -134,9 +134,9 @@ active project of the week at Source Forge.
 <para> It is hard to estimate how many people have tried Bochs or use it on a
 regular basis, but a few statistics give an indication.  The <link
 linkend="bochs-developers">bochs-developers mailing list</link>, which is the
-primary source of news on bugs and releases, has over 300 subscribers.  The
-latest version has been downloaded over 40,000 times from SourceForge, not
-counting mirrors or CVS users.
+primary source of news on bugs and releases, has over 400 subscribers.  The
+latest version has been downloaded over 50,000 times from SourceForge, not
+counting any mirror website or CVS users.
 </para>
 
 <para>
@@ -152,20 +152,21 @@ give you great visibility into what is really going on.  The Bochs
 debugger lets you simulate quickly or slowly, pausing whenever you want
 to look at the contents of memory or the CPU registers.  Or, if you 
 wanted to study which parts of a program take the most time, you could use
-Bochs to measure often pieces of the code were executed.
+Bochs to measure how often certain pieces of the code were executed.
 </para>
 
 <para>
 Bochs has been used as a teaching tool in Operating Systems classes, in which
 students used and modified it to learn how the PC hardware works.  As a final
 project the students had to add a new peripheral device, so they had to learn
-all about I/O ports, interrupts, and device drivers.  Also, it has been used as
-a reference model to test x86-compatible hardware.  
+all about I/O ports, interrupts, and device drivers.  In industry, it is used
+to support legacy applications on modern hardware, and as a reference model
+when testing new x86-compatible hardware.  
 </para>
 
 <para>
 There may be as many uses of Bochs as there are users.  Do you want to run 
-your old DOS games?  Or learn to program under Linux, without leaving your
+your old DOS games?  Or learn how to program under Linux, without leaving your
 Windows desktop?  Or reverse engineer your printer driver?  You decide.
 </para>
 
@@ -212,9 +213,10 @@ UNIX (Alpha), and AIX (PowerPC).
 
 <para>
 You can also find more detailed testing information on the testing
-status page on the &bochswebsite;.  The testing status page tells which
-combinations of host platform and guest platform have been tried by other Bochs
-users.
+status page on the &bochswebsite;.  
+<!-- DISABLED: testing status page has been removed because it was so out of
+date...  The testing status page tells which combinations of host platform and
+guest platform have been tried by other Bochs users. -->
 </para>
 
 </section>  <!-- end of Introduction:Will it work for me? section -->
