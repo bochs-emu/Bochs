@@ -60,7 +60,7 @@ private:
   void write( Bit32u   addr, Bit32u   Value, unsigned int len );
 #endif
 
-  struct {
+  struct s_type {
     pit_82C54 timer;
     Bit8u   speaker_data_on;
     Boolean refresh_clock_div2;
