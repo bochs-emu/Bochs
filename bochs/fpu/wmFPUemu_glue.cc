@@ -277,7 +277,10 @@ math_abort(struct info *info, unsigned int signal)
     case SIGFPE:
       if (fpu_cpu_ptr->cr0.ne == 0) {
         // MSDOS compatibility external interrupt (IRQ13)
-        BX_PANIC (("math_abort: MSDOS compatibility not supported yet"));
+        BX_INFO (("math_abort: MSDOS compatibility FPU exception"));
+
+        DEV_pic_raise_irq(13);
+        return;
         }
       fpu_cpu_ptr->exception(BX_MF_EXCEPTION, 0, 0);
       // execution does not reach here

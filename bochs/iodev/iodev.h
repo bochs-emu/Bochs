@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.26 2002-12-28 11:49:17 vruppert Exp $
+// $Id: iodev.h,v 1.27 2003-01-06 02:20:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -311,6 +311,7 @@ public:
   bx_devmodel_c    *pluginSB16Device;
   bx_ne2k_stub_c   *pluginNE2kDevice;
   bx_g2h_c         *g2h;
+  bx_devmodel_c    *pluginExtFpuIrq;
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c	   *iodebug;
 #endif
@@ -404,3 +405,4 @@ private:
 #include "iodev/ne2k.h"
 #include "iodev/guest2host.h"
 #include "iodev/slowdown_timer.h"
+#include "iodev/extfpuirq.h"

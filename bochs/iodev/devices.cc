@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.47 2003-01-03 11:43:24 vruppert Exp $
+// $Id: devices.cc,v 1.48 2003-01-06 02:20:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,6 +66,7 @@ bx_devices_c::bx_devices_c(void)
   pluginHardDrive = &stubHardDrive;
   pluginSB16Device = NULL;
   pluginNE2kDevice =&stubNE2k;
+  pluginExtFpuIrq = NULL;
   g2h = NULL;
 #if BX_IODEBUG_SUPPORT
   iodebug = NULL;
@@ -86,7 +87,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.47 2003-01-03 11:43:24 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.48 2003-01-06 02:20:47 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -137,6 +138,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(serial, PLUGTYPE_OPTIONAL);
   if (is_parallel_enabled ()) 
     PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
+  PLUG_load_plugin(extfpuirq, PLUGTYPE_OPTIONAL);
 
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();
