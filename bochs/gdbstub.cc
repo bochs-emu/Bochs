@@ -3,11 +3,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <signal.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <ctype.h>
+#include <netdb.h>
 
 #define NEED_CPU_REG_SHORTCUTS 1
 
@@ -24,111 +23,6 @@ static int last_stop_reason = GDBSTUB_STOP_NO_REASON;
 
 static int listen_socket_fd;
 static int socket_fd;
-
-#if defined(__CYGWIN__)
-/*
- * Check whether "cp" is a valid ascii representation
- * of an Internet address and convert to a binary address.
- * Returns 1 if the address is valid, 0 if not.
- * This replaces inet_addr, the return value from which
- * cannot distinguish between failure and a local broadcast address.
- */
-int inet_aton(const char *cp, struct in_addr * addr)
-{
-  unsigned int val;
-  int                     base,n;
-  char            c;
-  u_int           parts[4];
-  u_int      *pp = parts;
-
-  for (;;)
-    {
-      
-      /*
-       * Collect number up to `.''. Values are specified as for C:
-       * 0x=hex, 0=octal, other=decimal.
-       */
-      val = 0;
-      base = 10;
-      if (*cp == '0')
-       {
-         if (*++cp == 'x' || *cp == 'X')
-           base = 16, cp++;
-         else
-           base = 8;
-       }
-      while ((c = *cp) != '\0')
-       {
-         if (isascii(c) && isdigit(c))
-           {
-             val = (val * base) + (c - '0');
-             cp++;
-             continue;
-           }
-         if (base == 16 && isascii(c) && isxdigit(c))
-           {
-             val = (val << 4) +
-               (c + 10 - (islower(c) ? 'a' : 'A'));
-             cp++;
-             continue;
-           }
-         break;
-       }
-      if (*cp == '.')
-       {
-         
-         /*
-          * Internet format: a.b.c.d a.b.c       (with c treated as
-          * 16-bits) a.b         (with b treated as 24 bits)
-          */
-         if (pp >= parts + 3 || val > 0xff)
-           return (0);
-         *pp++ = val, cp++;
-       }
-      else
-       break;
-    }
-  
-  /*
-   * Check for trailing characters.
-   */
-  if (*cp && (!isascii(*cp) || !isspace(*cp)))
-    return (0);
-  
-  /*
-   * Concoct the address according to the number of parts specified.
-   */
-  n = pp - parts + 1;
-  switch (n)
-    {
-      
-    case 1:                 /* a -- 32 bits */
-      break;
-
-    case 2:                 /* a.b -- 8.24 bits */
-      if (val > 0xffffff)
-       return (0);
-      val |= parts[0] << 24;
-      break;
-      
-    case 3:                 /* a.b.c -- 8.8.16 bits */
-      if (val > 0xffff)
-       return (0);
-      val |= (parts[0] << 24) | (parts[1] << 16);
-      break;
-      
-    case 4:                 /* a.b.c.d -- 8.8.8.8 bits */
-      if (val > 0xff)
-       return (0);
-      val |= (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8);
-      break;
-    }
-  if (addr)
-    addr->s_addr = htonl(val);
-  return (1);
-}
-#endif
-
 
 static int hex(char ch)
 {
@@ -417,7 +311,7 @@ static int access_linear(Bit32u laddress,
        return(valid);
      }
    
-   BX_CPU_THIS_PTR dbg_xlate_linear2phy((Bit32u)laddress, 
+   BX_CPU(0)->dbg_xlate_linear2phy((Bit32u)laddress, 
                                        (Bit32u*)&phys, 
                                        (Boolean*)&valid);
    if (!valid)
@@ -427,11 +321,11 @@ static int access_linear(Bit32u laddress,
    
    if (rw == BX_READ)
      {
-       valid = bx_mem.dbg_fetch_mem(phys, len, data);
+       valid = BX_MEM(0)->dbg_fetch_mem(phys, len, data);
      }
    else
      {
-       valid = bx_mem.dbg_set_mem(phys, len, data);
+       valid = BX_MEM(0)->dbg_set_mem(phys, len, data);
      }
    return(valid);
 }
@@ -463,11 +357,13 @@ static void debug_loop(void)
                       
                       BX_INFO (("continuing at %x", new_eip));
                       
-                      bx_cpu.invalidate_prefetch_q();
+		      for (int i=0; i<BX_SMP_PROCESSORS; i++) {
+                        BX_CPU(i)->invalidate_prefetch_q();
+		      }
                       
                       saved_eip = EIP;
                       
-                      BX_CPU_THIS_PTR dword.eip = new_eip;
+                      BX_CPU(0)->dword.eip = new_eip;
                    }
                  
                  stub_trace_flag = 0;
@@ -692,8 +588,7 @@ static void debug_loop(void)
                  sprintf(obuf,"%Lx", 1);
                  put_reply(obuf);
               }
-            else if (strncmp(&buffer[1], "Offsets", strlen("Offsets")) ==
-0)
+            else if (strncmp(&buffer[1], "Offsets", strlen("Offsets")) == 0)
               {
                  sprintf(obuf,
                          "Text=%x;Data=%x;Bss=%x",
@@ -722,8 +617,8 @@ static void debug_loop(void)
 static void wait_for_connect(int portn)
 {
    struct sockaddr_in sockaddr;
-   struct sockaddr csockaddr;
-   signed int csockaddr_len;
+   socklen_t sockaddr_len;
+   struct protoent *protoent;
    int r;
    int opt;
    
@@ -734,52 +629,73 @@ static void wait_for_connect(int portn)
        exit(1);
      }
    
+   /* Allow rapid reuse of this port */
+   opt = 1;
+   r = setsockopt(listen_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+   if (r == -1)
+     {
+       BX_INFO (("setsockopt(SO_REUSEADDR) failed\n"));
+     }
+   
+   memset (&sockaddr, '\000', sizeof sockaddr);
+#if 1
+   // if you don't have sin_len change that to #if 0.  This is the subject of
+   // bug [ 626840 ] no 'sin_len' in 'struct sockaddr_in'.
+   sockaddr.sin_len = sizeof sockaddr;
+#endif
    sockaddr.sin_family = AF_INET;
    sockaddr.sin_port = htons(portn);
-   inet_aton("127.0.0.1", &sockaddr.sin_addr);
-   
-   r = bind(listen_socket_fd, (struct sockaddr *)&sockaddr,
-sizeof(sockaddr));
+   sockaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+   r = bind(listen_socket_fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
    if (r == -1)
      {
        BX_PANIC (("Failed to bind socket\n"));
      }
-   
-   opt = 1;
-   setsockopt(listen_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt,
-sizeof(opt));
-   
+
    r = listen(listen_socket_fd, 0);
    if (r == -1)
      {
        BX_PANIC (("Failed to listen on socket\n"));
      }
    
-   csockaddr_len = sizeof csockaddr;
-   socket_fd = accept(listen_socket_fd, &csockaddr, (socklen_t *) &csockaddr_len);
+   sockaddr_len = sizeof sockaddr;
+   socket_fd = accept(listen_socket_fd, (struct sockaddr *)&sockaddr, &sockaddr_len);
    if (socket_fd == -1)
      {
        BX_PANIC (("Failed to accept on socket\n"));
      }
    close(listen_socket_fd);
    
+   protoent = getprotobyname ("tcp");
+   if (!protoent)
+     {
+       BX_INFO (("getprotobyname (\"tcp\") failed\n"));
+       return;
+     }
+
+   /* Disable Nagle - allow small packets to be sent without delay. */
    opt = 1;
-   setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+   r = setsockopt (socket_fd, protoent->p_proto, TCP_NODELAY, &opt, sizeof(opt));
+   if (r == -1)
+     {
+       BX_INFO (("setsockopt(TCP_NODELAY) failed\n"));
+     }
 }
 
 void bx_gdbstub_init(int argc, char* argv[])
 {
-   int portn= bx_options.gdbstub.port;
-   printf("Communicating with gdb on port %d\n", portn);
+   int portn = bx_options.gdbstub.port;
 
    bx_init_hardware();
-#if 1
+
    /* Wait for connect */
+
+   printf("Waiting for gdb connection on localhost:%d\n", portn);
    wait_for_connect(portn);
    
    /* Do debugger command loop */
    debug_loop();
-#endif   
 
    /* CPU loop */
    bx_cpu.cpu_loop(-1);

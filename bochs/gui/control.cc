@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.63.4.2 2002-10-20 13:57:53 bdenney Exp $
+// $Id: control.cc,v 1.63.4.3 2002-10-23 19:31:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -747,7 +747,7 @@ bx_param_string_c::text_print (FILE *fp)
 {
   char *value = getptr ();
   int opts = options->get ();
-  if (opts & BX_RAW_BYTES) {
+  if (opts & RAW_BYTES) {
     char buffer[1024];
     buffer[0] = 0;
     char sep_string[2];
@@ -779,15 +779,15 @@ bx_list_c::text_print (FILE *fp)
   /*
   fprintf (fp, "options=%s%s%s\n", 
       (options->get () == 0) ? "none" : "",
-      (options->get () & BX_SHOW_PARENT) ? "SHOW_PARENT " : "",
-      (options->get () & BX_SERIES_ASK) ? "SERIES_ASK " : "");
+      (options->get () & SHOW_PARENT) ? "SHOW_PARENT " : "",
+      (options->get () & SERIES_ASK) ? "SERIES_ASK " : "");
       */
   for (int i=0; i<size; i++) {
     //fprintf (fp, "param[%d] = %p\n", i, list[i]);
     assert (list[i] != NULL);
     if (list[i]->get_enabled ()) {
       list[i]->text_print (fp);
-      if (!(options->get () & BX_SERIES_ASK))
+      if (!(options->get () & SERIES_ASK))
         fprintf (fp, "\n");
     }
   }
@@ -895,7 +895,7 @@ bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
     int opts = options->get ();
     char buffer2[1024];
     strcpy (buffer2, buffer);
-    if (status == 1 && opts & BX_RAW_BYTES) {
+    if (status == 1 && opts & RAW_BYTES) {
       // copy raw hex into buffer
       status = parse_raw_bytes (buffer, buffer2, maxsize, separator);
       if (status < 0) {
@@ -918,13 +918,13 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
   fprintf (fpout, "\n%s\n", my_title);
   for (i=0; i<imax; i++) fprintf (fpout, "-");
   fprintf (fpout, "\n"); //fprintf (fp, "options=%s\n", options->get ());
-  if (options->get () & BX_SERIES_ASK) {
+  if (options->get () & SERIES_ASK) {
     for (int i=0; i<size; i++) {
       if (list[i]->get_enabled ())
         list[i]->text_ask (fpin, fpout);
     }
   } else {
-    if (options->get () & BX_SHOW_PARENT)
+    if (options->get () & SHOW_PARENT)
       fprintf (fpout, "0. Return to previous menu\n");
     for (int i=0; i<size; i++) {
       assert (list[i] != NULL);
@@ -937,7 +937,7 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
     }
     fprintf (fpout, "\n");
     Bit32u n = choice->get ();
-    int min = (options->get () & BX_SHOW_PARENT) ? 0 : 1;
+    int min = (options->get () & SHOW_PARENT) ? 0 : 1;
     int max = size;
     int status = ask_uint ("Please choose one: [%d] ", min, max, n, &n, 10);
     if (status < 0) return status;

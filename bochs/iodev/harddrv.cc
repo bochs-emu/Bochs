@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.11 2002-10-22 23:48:41 bdenney Exp $
+// $Id: harddrv.cc,v 1.77.2.12 2002-10-23 19:31:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -174,7 +174,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.11 2002-10-22 23:48:41 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.12 2002-10-23 19:31:52 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -248,13 +248,20 @@ bx_hard_drive_c::init(void)
       if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_DISK) {
         BX_DEBUG(( "Hard-Disk on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type           = IDE_DISK;
-        BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = bx_options.atadevice[channel][device].Ocylinders->get ();
-        BX_HD_THIS channels[channel].drives[device].hard_drive->heads     = bx_options.atadevice[channel][device].Oheads->get ();
-        BX_HD_THIS channels[channel].drives[device].hard_drive->sectors   = bx_options.atadevice[channel][device].Ospt->get ();
+        int cyl = bx_options.atadevice[channel][device].Ocylinders->get ();
+        int heads = bx_options.atadevice[channel][device].Oheads->get ();
+        int spt = bx_options.atadevice[channel][device].Ospt->get ();
+        BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
+        BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
+        BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
+
+        if (cyl == 0 || heads == 0 || spt == 0) {
+          BX_PANIC(("ata%d/%d cannot have zero cylinders, heads, or sectors/track", channel, device));
+          }
 
         /* open hard drive image file */
         if ((BX_HD_THIS channels[channel].drives[device].hard_drive->open(bx_options.atadevice[channel][device].Opath->getptr ())) < 0) {
-          BX_PANIC(("could not open hard drive image file '%s'", bx_options.atadevice[channel][device].Opath->getptr ()));
+          BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
           }
         BX_INFO(("HD on ata%d-%d: '%s'",channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
         }
@@ -442,6 +449,10 @@ bx_hard_drive_c::init(void)
   void
 bx_hard_drive_c::reset(unsigned type)
 {
+  for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+    if (BX_HD_THIS channels[channel].irq)
+      BX_PIC_LOWER_IRQ(BX_HD_THIS channels[channel].irq);
+  }
 }
 
 
@@ -651,7 +662,7 @@ if ( quantumsMax == 0)
 	      BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
 #endif
 	      if (!calculate_logical_address(channel, &logical_sector)) {
-	        BX_ERROR(("multi-sector read reached invalid sector %u, aborting", logical_sector));
+	        BX_ERROR(("multi-sector read reached invalid sector %lu, aborting", logical_sector));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	        GOTO_RETURN_VALUE ;
 	      }
@@ -663,8 +674,8 @@ if ( quantumsMax == 0)
 	      }
 	      ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
               if (ret < 512) {
-                BX_ERROR(("logical sector was %u", (unsigned) logical_sector));
-                BX_ERROR(("could not read() hard drive image file at byte %d", logical_sector*512));
+                BX_ERROR(("logical sector was %lu", logical_sector));
+                BX_ERROR(("could not read() hard drive image file at byte %lu", logical_sector*512));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	        GOTO_RETURN_VALUE ;
 	      }
@@ -1136,7 +1147,7 @@ if ( quantumsMax == 0)
 	    BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
 #endif
 	    if (!calculate_logical_address(channel, &logical_sector)) {
-	      BX_ERROR(("write reached invalid sector %u, aborting", logical_sector));
+	      BX_ERROR(("write reached invalid sector %lu, aborting", logical_sector));
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
             }
@@ -1145,13 +1156,13 @@ if ( quantumsMax == 0)
 #endif
 	    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
             if (ret < 0) {
-              BX_ERROR(("could not lseek() hard drive image file at byte %u", logical_sector * 512));
+              BX_ERROR(("could not lseek() hard drive image file at byte %lu", logical_sector * 512));
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
 	    }
 	    ret = BX_SELECTED_DRIVE(channel).hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
             if (ret < 512) {
-              BX_ERROR(("could not write() hard drive image file at byte %d", logical_sector*512));
+              BX_ERROR(("could not write() hard drive image file at byte %lu", logical_sector*512));
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
 	    }
@@ -1375,7 +1386,7 @@ if ( quantumsMax == 0)
 						      case 0x0e: // CD-ROM audio control
 						      case 0x2a: // CD-ROM capabilities & mech. status
 						      case 0x3f: // all
-							    BX_ERROR(("cdrom: MODE SENSE (chg), code=%x",
+							    BX_ERROR(("cdrom: MODE SENSE (chg), code=%x"
 								      " not implemented yet",
 								     PageCode));
 							    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST,
@@ -1445,18 +1456,18 @@ if ( quantumsMax == 0)
 				    BX_SELECTED_CONTROLLER(channel).buffer[7] = 0x00; // reserved
 
 				    // Vendor ID
-				    const char* vendor_id = "VTAB\0\0\0\0";
+				    const char* vendor_id = "VTAB    ";
                                     int i;
 				    for (i = 0; i < 8; i++)
 					  BX_SELECTED_CONTROLLER(channel).buffer[8+i] = vendor_id[i];
 
 				    // Product ID
-				    const char* product_id = "Turbo CD-ROM\0\0\0\0";
+				    const char* product_id = "Turbo CD-ROM    ";
 				    for (i = 0; i < 16; i++)
 					  BX_SELECTED_CONTROLLER(channel).buffer[16+i] = product_id[i];
 
 				    // Product Revision level
-				    const char* rev_level = "R0\0\0";
+				    const char* rev_level = "1.0 ";
 				    for (i = 0; i < 4; i++)
 					  BX_SELECTED_CONTROLLER(channel).buffer[32+i] = rev_level[i];
 
@@ -1753,6 +1764,8 @@ if ( quantumsMax == 0)
 	  // are ignored if no secondary device is present
       if ((BX_SLAVE_SELECTED(channel)) && (!BX_SLAVE_IS_PRESENT(channel)))
 	    break;
+      // Writes to the command register clear the IRQ
+      BX_PIC_LOWER_IRQ(BX_HD_THIS channels[channel].irq);
 
       if (BX_SELECTED_CONTROLLER(channel).status.busy)
         BX_PANIC(("hard disk: command sent, controller BUSY"));
@@ -1796,8 +1809,11 @@ if ( quantumsMax == 0)
            * sector count of 0 means 256 sectors
            */
 
-	  if (!BX_SELECTED_IS_HD(channel))
-		BX_PANIC(("read multiple issued to non-disk"));
+	  if (!BX_SELECTED_IS_HD(channel)) {
+		BX_ERROR(("read multiple issued to non-disk"));
+		command_aborted(channel, value);
+		break;
+	  }
 
           BX_SELECTED_CONTROLLER(channel).current_command = value;
 
@@ -1815,7 +1831,7 @@ if ( quantumsMax == 0)
 	  BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
 #endif
 	  if (!calculate_logical_address(channel, &logical_sector)) {
-	    BX_ERROR(("initial read from sector %u out of bounds, aborting", logical_sector));
+	    BX_ERROR(("initial read from sector %lu out of bounds, aborting", logical_sector));
 	    command_aborted(channel, value);
 	    break;
 	  }
@@ -1830,8 +1846,8 @@ if ( quantumsMax == 0)
 	  }
 	  ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
           if (ret < 512) {
-            BX_ERROR(("logical sector was %u", (unsigned) logical_sector));
-            BX_ERROR(("could not read() hard drive image file at byte %d", logical_sector*512));
+            BX_ERROR(("logical sector was %lu", logical_sector));
+            BX_ERROR(("could not read() hard drive image file at byte %lu", logical_sector*512));
 	    command_aborted(channel, value);
 	    break;
 	  }
@@ -1898,7 +1914,7 @@ if ( quantumsMax == 0)
             (unsigned) BX_HD_THIS channels[channel].drive_select,
             (unsigned) BX_SELECTED_CONTROLLER(channel).head_no));
           if (!BX_SELECTED_IS_PRESENT(channel)) {
-            BX_PANIC(("init drive params: disk ata%d-%d% not present", channel, BX_SLAVE_SELECTED(channel)));
+            BX_PANIC(("init drive params: disk ata%d-%d not present", channel, BX_SLAVE_SELECTED(channel)));
             //BX_SELECTED_CONTROLLER(channel).error_register = 0x12;
             BX_SELECTED_CONTROLLER(channel).status.busy = 0;
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
@@ -1908,7 +1924,7 @@ if ( quantumsMax == 0)
             break;
 	  }
           if (BX_SELECTED_CONTROLLER(channel).sector_count != BX_SELECTED_DRIVE(channel).hard_drive->sectors)
-            BX_PANIC(("init drive params: sector count doesnt match %ld!=%ld", BX_SELECTED_CONTROLLER(channel).sector_count, BX_SELECTED_DRIVE(channel).hard_drive->sectors));
+            BX_PANIC(("init drive params: sector count doesnt match %d!=%d", BX_SELECTED_CONTROLLER(channel).sector_count, BX_SELECTED_DRIVE(channel).hard_drive->sectors));
           if ( BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hard_drive->heads-1) )
             BX_PANIC(("init drive params: head number doesn't match %d != %d",BX_SELECTED_CONTROLLER(channel).head_no, BX_SELECTED_DRIVE(channel).hard_drive->heads-1));
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
@@ -2108,7 +2124,7 @@ if ( quantumsMax == 0)
 	  if (BX_SELECTED_IS_HD(channel)) {
 	    BX_DEBUG(("write cmd 0x70 (SEEK) executing"));
             if (!calculate_logical_address(channel, &logical_sector)) {
-	      BX_ERROR(("initial seek to sector %u out of bounds, aborting", logical_sector));
+	      BX_ERROR(("initial seek to sector %lu out of bounds, aborting", logical_sector));
               command_aborted(channel, value);
 	      break;
 	    }
@@ -2253,6 +2269,7 @@ if ( quantumsMax == 0)
 		      BX_CONTROLLER(channel,id).lba_mode          = 0;
 
 		      BX_CONTROLLER(channel,id).control.disable_irq = 0;
+		      BX_PIC_LOWER_IRQ(BX_HD_THIS channels[channel].irq);
 		}
 	  } else if (BX_SELECTED_CONTROLLER(channel).reset_in_progress &&
 		     !BX_SELECTED_CONTROLLER(channel).control.reset) {
@@ -3107,6 +3124,12 @@ int concat_image_t::open (const char* pathname0)
     if (ret) {
 	  BX_PANIC(("fstat() returns error!"));
     }
+#ifdef S_ISBLK
+    if (S_ISBLK(stat_buf.st_mode)) {
+      BX_PANIC(("block devices should REALLY NOT be used with --enable-split-hd. "
+                "Please reconfigure with --disable-split-hd"));
+    }
+#endif
     if ((stat_buf.st_size % 512) != 0) {
       BX_PANIC(("size of disk image must be multiple of 512 bytes"));
     }

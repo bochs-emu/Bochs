@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43.2.9 2002-10-22 23:48:43 bdenney Exp $
+// $Id: vga.cc,v 1.43.2.10 2002-10-23 19:31:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,7 +44,7 @@
 
 bx_vga_c *theVga = NULL;
 
-unsigned old_iHeight = 0, old_iWidth = 0;
+unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0;
 
   int
 libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -66,6 +66,7 @@ bx_vga_c::bx_vga_c(void)
   s.vga_mem_updated = 0;
   s.x_tilesize = X_TILESIZE;
   s.y_tilesize = Y_TILESIZE;
+  timer_id = BX_NULL_TIMER_HANDLE;
 }
 
 
@@ -177,8 +178,8 @@ bx_vga_c::init(void)
   for (i=0; i<4; i++) {
     BX_VGA_THIS s.sequencer.map_mask_bit[i] = 0;
     }
-  BX_VGA_THIS s.sequencer.bit0 = 0;
-  BX_VGA_THIS s.sequencer.bit1 = 0;
+  BX_VGA_THIS s.sequencer.reset1 = 1;
+  BX_VGA_THIS s.sequencer.reset2 = 1;
   BX_VGA_THIS s.sequencer.reg1 = 0;
   BX_VGA_THIS s.sequencer.char_map_select = 0;
   BX_VGA_THIS s.sequencer.extended_mem = 1; // display mem greater than 64K
@@ -198,9 +199,11 @@ bx_vga_c::init(void)
   bx_gui->init(1, &argv[0], BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
   }
 
-  BX_INFO(("interval=%lu", bx_options.Ovga_update_interval->get ()));
-  BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
-     bx_options.Ovga_update_interval->get (), 1, 1, "vga");
+  BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));
+  if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
+    BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
+       bx_options.Ovga_update_interval->get (), 1, 1, "vga");
+  }
 
   /* video card with BIOS ROM */
   BX_SET_CMOS_REG(0x14, (BX_GET_CMOS_REG(0x14) & 0xcf) | 0x00); 
@@ -283,7 +286,7 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
          BX_VGA_THIS s.CRTC.reg[9] == 0x40)
         {
         *piWidth = 640;
-        *piHeight = 352;
+        *piHeight = 350;
         }
       if (BX_VGA_THIS s.CRTC.reg[23] == 0xE3 &&
          BX_VGA_THIS s.CRTC.reg[20] == 0 &&
@@ -501,11 +504,11 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
     case 0x03c5: /* Sequencer Registers 00..04 */
       switch (BX_VGA_THIS s.sequencer.index) {
         case 0: /* sequencer: reset */
-		  BX_DEBUG(("io read 3c5 case 0: sequencer reset"));
-          RETURN(BX_VGA_THIS s.sequencer.bit0 | (BX_VGA_THIS s.sequencer.bit1<<1));
+          BX_DEBUG(("read 0x3c5: sequencer reset"));
+          RETURN(BX_VGA_THIS s.sequencer.reset1 | (BX_VGA_THIS s.sequencer.reset2<<1));
           break;
         case 1: /* sequencer: clocking mode */
-		  BX_DEBUG(("io read 3c5 case 1: sequencer clocking mode"));
+          BX_DEBUG(("read 0x3c5: sequencer clocking mode"));
           RETURN(BX_VGA_THIS s.sequencer.reg1);
           break;
         case 2: /* sequencer: map mask register */
@@ -920,11 +923,17 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log)
       switch (BX_VGA_THIS s.sequencer.index) {
         case 0: /* sequencer: reset */
 #if !defined(VGA_TRACE_FEATURE)
-          BX_DEBUG(("io write 3c5=%02x: reset reg: ignoring",
-                      (unsigned) value);
+          BX_DEBUG(("write 0x3c5: sequencer reset: value=0x%02x",
+                      (unsigned) value));
 #endif
-BX_VGA_THIS s.sequencer.bit0 = (value >> 0) & 0x01;
-BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
+          if (BX_VGA_THIS s.sequencer.reset1 && ((value & 0x01) == 0)) {
+            BX_VGA_THIS s.sequencer.char_map_select = 0;
+            BX_VGA_THIS s.charmap_address = 0;
+            bx_gui->set_text_charmap(
+              & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+          }
+          BX_VGA_THIS s.sequencer.reset1 = (value >> 0) & 0x01;
+          BX_VGA_THIS s.sequencer.reset2 = (value >> 1) & 0x01;
           break;
         case 1: /* sequencer: clocking mode */
 #if !defined(VGA_TRACE_FEATURE)
@@ -976,7 +985,7 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
     case 0x03c6: /* PEL mask */
       BX_VGA_THIS s.pel.mask = value;
       if (BX_VGA_THIS s.pel.mask != 0xff)
-        BX_DEBUG(("io write 3c6: PEL mask=0x%02x != 0xFF"));
+        BX_DEBUG(("io write 3c6: PEL mask=0x%02x != 0xFF", value));
       // BX_VGA_THIS s.pel.mask should be and'd with final value before
       // indexing into color registerBX_VGA_THIS s.
       break;
@@ -1217,18 +1226,21 @@ bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
 
+  /* skip screen update when the sequencer is in reset mode */
+  if (!BX_VGA_THIS s.sequencer.reset1 || !BX_VGA_THIS s.sequencer.reset2)
+    return;
+
   if (BX_VGA_THIS s.vga_mem_updated==0) {
     /* BX_DEBUG(("update(): updated=%u enabled=%u", (unsigned) BX_VGA_THIS s.vga_mem_updated, (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled)); */
     return;
     }
-  BX_VGA_THIS s.vga_mem_updated = 0;
 
 #if BX_SUPPORT_VBE  
   if (BX_VGA_THIS s.vbe_enabled)
   {
     // specific VBE code display update code
     // this is partly copied/modified from the 320x200x8 update more below
-    unsigned xti, yti;
+    unsigned xti, yti, y_tiles;
     Bit8u color;
     unsigned r, c;
     unsigned long byte_offset;
@@ -1239,8 +1251,9 @@ bx_vga_c::update(void)
 
     // incl virtual xres correction
     Bit32u start_offset = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_virtual_xres)) + BX_VGA_THIS s.vbe_offset_x;
+    y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
     
-    for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+    for (yti=0; yti<y_tiles; yti++)
       for (xti=0; xti<iWidth/X_TILESIZE; xti++) 
       {
         if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) 
@@ -1264,6 +1277,7 @@ bx_vga_c::update(void)
         }
       }
     
+    BX_VGA_THIS s.vga_mem_updated = 0;
     // after a vbe display update, don't try to do any 'normal vga' updates anymore
     return;
   }
@@ -1284,7 +1298,7 @@ bx_vga_c::update(void)
     Bit8u color;
     unsigned bit_no, r, c;
     unsigned long byte_offset;
-    unsigned xti, yti;
+    unsigned xti, yti, y_tiles;
 
 
 //BX_DEBUG(("update: shiftreg=%u, chain4=%u, mapping=%u",
@@ -1310,8 +1324,9 @@ bx_vga_c::update(void)
 	}
 
         start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
+        y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
 
-        for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+        for (yti=0; yti<y_tiles; yti++)
           for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
             if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) {
               for (r=0; r<Y_TILESIZE; r++) {
@@ -1365,7 +1380,9 @@ bx_vga_c::update(void)
 	  old_iHeight = iHeight;
 	}
 
-        for (yti=0; yti<=iHeight/Y_TILESIZE; yti++)
+        y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+
+        for (yti=0; yti<y_tiles; yti++)
           for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
             if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) {
               for (r=0; r<Y_TILESIZE; r++) {
@@ -1396,7 +1413,7 @@ bx_vga_c::update(void)
 
         break; // case 1
 
-      case 2: // output the data eight bits at a time from the 4 bit planeBX_VGA_THIS s.
+      case 2: // output the data eight bits at a time from the 4 bit plane
               // (format for VGA mode 13 hex)
         determine_screen_dimensions(&iHeight, &iWidth);
 
@@ -1413,7 +1430,10 @@ bx_vga_c::update(void)
 	    old_iHeight = iHeight;
 	    old_iWidth = iWidth;
 	  }
-          for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+
+          y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+
+          for (yti=0; yti<y_tiles; yti++)
             for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
               if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) { // }
               // if (1) {
@@ -1448,7 +1468,9 @@ bx_vga_c::update(void)
 	  }
 
           start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
-          for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+          y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+
+          for (yti=0; yti<y_tiles; yti++)
             for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
               // if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) { // }
               if (1) {
@@ -1564,16 +1586,21 @@ bx_vga_c::update(void)
               ((BX_VGA_THIS s.CRTC.reg[0x07]<<3)&0x200);
         // Maximum Scan Line: height of character cell
         MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
+        if (MSL == 0) {
+          BX_ERROR(("character height = 1, skipping text update"));
+          return;
+        }
         rows = (VDE+1)/(MSL+1);
         if (rows > BX_MAX_TEXT_LINES)
           BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
 	iWidth = 8 * (BX_VGA_THIS s.CRTC.reg[1] + 1);
 	iHeight = VDE+1;
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) )
 	{
 	  bx_gui->dimension_update(iWidth, iHeight, MSL+1);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
+	  old_MSL = MSL;
 	}
         // pass old text snapshot & new VGA memory contents
         start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.12 2002-10-22 23:48:33 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.13 2002-10-23 19:31:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -259,10 +259,10 @@ public:
 	logfunctions(class iofunctions *);
 	~logfunctions(void);
 
-	void info(const char *fmt, ...);
-	void error(const char *fmt, ...);
-	void panic(const char *fmt, ...);
-	void ldebug(const char *fmt, ...);
+	void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
+	void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+	void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+	void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
 	void fatal (const char *prefix, const char *fmt, va_list ap);
 	void ask (int level, const char *prefix, const char *fmt, va_list ap);
 	void put(char *);
@@ -405,6 +405,14 @@ BOCHSAPI extern logfunc_t *genlog;
 void bx_gdbstub_init(int argc, char* argv[]);
 int bx_gdbstub_check(unsigned int eip);
 #define GDBSTUB_STOP_NO_REASON   (0xac0)
+
+#if BX_SMP_PROCESSORS!=1
+#error GDB stub was written for single processor support.  If multiprocessor support is added, then we can remove this check.
+// The big problem is knowing which CPU gdb is referring to.  In other words,
+// what should we put for "n" in BX_CPU(n)->dbg_xlate_linear2phy() and
+// BX_CPU(n)->dword.eip, etc.
+#endif
+
 #endif
 
 #if BX_DISASM

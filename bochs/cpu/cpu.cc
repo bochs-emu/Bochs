@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.61.2.3 2002-10-22 23:48:43 bdenney Exp $
+// $Id: cpu.cc,v 1.61.2.4 2002-10-23 19:31:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -131,6 +131,15 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
 #endif
 
+#if BX_DEBUGGER
+  // If the exception() routine has encountered a nasty fault scenario,
+  // the debugger may request that control is returned to it so that
+  // the situation may be examined.
+  if (bx_guard.special_unwind_stack) {
+    return;
+    }
+#endif
+
   // We get here either by a normal function call, or by a longjmp
   // back from an exception() call.  In either case, commit the
   // new EIP/ESP, and set up other environmental fields.  This code
@@ -146,7 +155,10 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   // (traps) and ones which are asynchronous to the CPU
   // (hardware interrupts).
   if (BX_CPU_THIS_PTR async_event) {
-    handleAsyncEvent();
+    if (handleAsyncEvent()) {
+      // If request to return to caller ASAP.
+      return;
+      }
     }
 
 #if BX_DEBUGGER
@@ -243,7 +255,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
       ret = fetchDecode(fetchPtr, i, maxFetch);
       }
 
-    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get function pointers as early
+    BxExecutePtr_t resolveModRM = i->ResolveModrm; // Get function pointers early.
     if (ret==0) {
 #if BX_SupportICache
       // Invalidate entry, since fetch-decode failed with partial updates
@@ -294,7 +306,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
 #ifdef REGISTER_IADDR
-      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
+      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
@@ -369,7 +381,7 @@ repeat_loop:
       // shouldn't get here from above
 repeat_not_done:
 #ifdef REGISTER_IADDR
-      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
+      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
 
       BX_INSTR_REPEAT_ITERATION(CPU_ID);
@@ -393,7 +405,7 @@ repeat_done:
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
 #ifdef REGISTER_IADDR
-      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
+      REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
 
       BX_INSTR_REPEAT_ITERATION(CPU_ID);
@@ -480,7 +492,7 @@ debugger_check:
   }  // while (1)
 }
 
-  void
+  unsigned
 BX_CPU_C::handleAsyncEvent(void)
 {
   //
@@ -500,7 +512,7 @@ BX_CPU_C::handleAsyncEvent(void)
     while (1)
 #endif
       {
-      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF ()) {
+      if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
         break;
         }
       if (BX_CPU_THIS_PTR async_event == 0) {
@@ -514,7 +526,7 @@ BX_CPU_C::handleAsyncEvent(void)
     // must give the others a chance to simulate.  If an interrupt has 
     // arrived, then clear the HALT condition; otherwise just return from
     // the CPU loop with stop_reason STOP_CPU_HALTED.
-    if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF ()) {
+    if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
       // interrupt ends the HALT condition
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
@@ -524,12 +536,12 @@ BX_CPU_C::handleAsyncEvent(void)
 #if BX_DEBUGGER
       BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
 #endif
-      return;
+      return 1; // Return to caller of cpu_loop.
     }
 #endif
   } else if (BX_CPU_THIS_PTR kill_bochs_request) {
     // setting kill_bochs_request causes the cpu loop to return ASAP.
-    return;
+    return 1; // Return to caller of cpu_loop.
   }
 
 
@@ -575,13 +587,13 @@ BX_CPU_C::handleAsyncEvent(void)
     // an opportunity to check interrupts on the next instruction
     // boundary.
     }
-  else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () &&
+  else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () &&
            BX_DBG_ASYNC_INTR) {
     Bit8u vector;
 
     // NOTE: similar code in ::take_irq()
 #if BX_SUPPORT_APIC
-    if (BX_CPU_THIS_PTR int_from_local_apic)
+    if (BX_CPU_THIS_PTR local_apic.INTR)
       vector = BX_CPU_THIS_PTR local_apic.acknowledge_int ();
     else
       vector = BX_PIC_IAC(); // may set INTR with next interrupt
@@ -680,11 +692,13 @@ BX_CPU_C::handleAsyncEvent(void)
   // will be processed on the next boundary.
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  if ( !(BX_CPU_THIS_PTR INTR ||
+  if ( !(BX_CPU_INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
          BX_CPU_THIS_PTR get_TF ()) )
     BX_CPU_THIS_PTR async_event = 0;
+
+  return 0; // Continue executing cpu_loop.
 }
 
 
@@ -1015,7 +1029,7 @@ BX_CPU_C::dbg_take_irq(void)
 
   // NOTE: similar code in ::cpu_loop()
 
-  if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () ) {
+  if ( BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () ) {
     if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
       // normal return from setjmp setup
       vector = BX_PIC_IAC(); // may set INTR with next interrupt

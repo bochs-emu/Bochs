@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.10 2002-10-23 15:52:19 bdenney Exp $
+// $Id: cmos.cc,v 1.20.2.11 2002-10-23 19:31:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,12 +63,11 @@ libcmos_LTX_plugin_fini(void)
 
 bx_cmos_c::bx_cmos_c(void)
 {
-  put("CMOS");
-  settype(CMOSLOG);
-
   unsigned i;
   for (i=0; i<BX_NUM_CMOS_REGS; i++)
     s.reg[i] = 0;
+  s.periodic_timer_index = BX_NULL_TIMER_HANDLE;
+  s.one_second_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_cmos_c::~bx_cmos_c(void)
@@ -80,8 +79,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.10 2002-10-23 15:52:19 bdenney Exp $"));
-
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.11 2002-10-23 19:31:52 bdenney Exp $"));
   // CMOS RAM & RTC
 
   BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -89,13 +87,16 @@ bx_cmos_c::init(void)
   BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0070, "CMOS RAM", 7);
   BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0071, "CMOS RAM", 7);
   BX_REGISTER_IRQ(8, "CMOS RTC"); 
-
-  BX_CMOS_THIS s.periodic_timer_index =
-    BX_REGISTER_TIMER(this, periodic_timer_handler,
-      1000000, 1,0, "cmos"); // continuous, not-active
-  BX_CMOS_THIS s.one_second_timer_index =
-    BX_REGISTER_TIMER(this, one_second_timer_handler,
-      1000000, 1,0, "cmos"); // continuous, not-active
+  if (BX_CMOS_THIS s.periodic_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_CMOS_THIS s.periodic_timer_index =
+      BX_REGISTER_TIMER(this, periodic_timer_handler,
+	1000000, 1,0, "cmos"); // continuous, not-active
+  }
+  if (BX_CMOS_THIS s.one_second_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_CMOS_THIS s.one_second_timer_index =
+      BX_REGISTER_TIMER(this, one_second_timer_handler,
+	1000000, 1,0, "cmos"); // continuous, not-active
+  }
 
 #if BX_USE_SPECIFIED_TIME0 == 0
   // ??? this will not be correct for using an image file.

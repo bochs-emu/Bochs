@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.38.2.2 2002-10-21 19:15:51 bdenney Exp $
+// $Id: ne2k.cc,v 1.38.2.3 2002-10-23 19:31:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,10 +39,10 @@ bx_ne2k_c bx_ne2k;
 
 bx_ne2k_c::bx_ne2k_c(void)
 {
-	put("NE2K");
-	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.38.2.2 2002-10-21 19:15:51 bdenney Exp $"));
-	// nothing for now
+  put("NE2K");
+  settype(NE2KLOG);
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.38.2.3 2002-10-23 19:31:53 bdenney Exp $"));
+  BX_NE2K_THIS s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 
@@ -97,6 +97,7 @@ bx_ne2k_c::reset(unsigned type)
     BX_NE2K_THIS s.CR.rdma_cmd  = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
+  BX_NE2K_THIS devices->pic->lower_irq(BX_NE2K_THIS s.base_irq);
 }
 
 //
@@ -1245,7 +1246,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.38.2.2 2002-10-21 19:15:51 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.38.2.3 2002-10-23 19:31:53 bdenney Exp $"));
 
 
   if (bx_options.ne2k.Ovalid->get ()) {
@@ -1257,9 +1258,11 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
     memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
 
-    BX_NE2K_THIS s.tx_timer_index =
-      bx_pc_system.register_timer(this, tx_timer_handler, 0,
-				  0,0, "ne2k"); // one-shot, inactive
+    if (BX_NE2K_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
+      BX_NE2K_THIS s.tx_timer_index =
+	bx_pc_system.register_timer(this, tx_timer_handler, 0,
+				    0,0, "ne2k"); // one-shot, inactive
+    }
     // Register the IRQ and i/o port addresses
     BX_REGISTER_IRQ(BX_NE2K_THIS s.base_irq,
 				       "ne2000 ethernet NIC");
@@ -1306,7 +1309,7 @@ bx_ne2k_c::init(void)
 						this);
     
     if (BX_NE2K_THIS ethdev == NULL) {
-      BX_PANIC(("could not find eth module %s"));
+      BX_PANIC(("could not find eth module %s", bx_options.ne2k.Oethmod->getptr ()));
       // if they continue, use null.
       BX_INFO(("could not find eth module %s - using null instead",
 		bx_options.ne2k.Oethmod->getptr ()));

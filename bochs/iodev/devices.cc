@@ -1,4 +1,5 @@
-// $Id: devices.cc,v 1.34.2.23 2002-10-23 17:33:21 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+// $Id: devices.cc,v 1.34.2.24 2002-10-23 19:31:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,6 +77,7 @@ bx_devices_c::~bx_devices_c(void)
 {
   // nothing needed for now
   BX_DEBUG(("Exit."));
+  timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
 
@@ -84,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.23 2002-10-23 17:33:21 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.24 2002-10-23 19:31:52 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -109,8 +111,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   for (i=0; i < BX_MAX_IRQS; i++) {
     irq_handler_name[i] = NULL;
     }
-
-  timer_handle = BX_NULL_TIMER_HANDLE;
 
 #warning CB: UNMAPPED and BIOSDEV should maybe be optional
   BX_LOAD_PLUGIN(unmapped, PLUGTYPE_CORE);
@@ -223,11 +223,17 @@ bx_devices_c::init(BX_MEM_C *newmem)
   BX_SET_CMOS_REG(0x30, (Bit8u) extended_memory_in_k);
   BX_SET_CMOS_REG(0x31, (Bit8u) (extended_memory_in_k >> 8));
 
+  Bit16u extended_memory_in_64k = mem->get_memory_in_k() > 16384 ? (mem->get_memory_in_k() - 16384) / 64 : 0;
+  BX_SET_CMOS_REG(0x34, (Bit8u) extended_memory_in_64k);
+  BX_SET_CMOS_REG(0x35, (Bit8u) (extended_memory_in_64k >> 8));
+
   /* now perform checksum of CMOS memory */
   BX_CMOS_CHECKSUM();
 
-  timer_handle = bx_pc_system.register_timer( this, timer_handler,
-    (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
+  if (timer_handle != BX_NULL_TIMER_HANDLE) {
+    timer_handle = bx_pc_system.register_timer( this, timer_handler,
+      (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
+  }
 
   // Clear fields for bulk IO acceleration transfers.
   bulkIOHostAddr = 0;

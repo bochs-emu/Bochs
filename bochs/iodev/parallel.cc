@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.8 2002-10-22 23:48:42 bdenney Exp $
+// $Id: parallel.cc,v 1.20.4.9 2002-10-23 19:31:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,7 +72,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.8 2002-10-22 23:48:42 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.9 2002-10-23 19:31:53 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
@@ -104,7 +104,8 @@ bx_parallel_c::init(void)
     if (strlen(bx_options.par[0].Ooutfile->getptr ()) > 0) {
       OUTPUT = fopen(bx_options.par[0].Ooutfile->getptr (), "wb");
       if (!OUTPUT)
-        BX_PANIC (("Could not open '%s' to write parport1 output"));
+        BX_PANIC (("Could not open '%s' to write parport1 output",
+                   bx_options.par[0].Ooutfile->getptr ()));
     }
   }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.16 2002-10-21 12:25:39 bdenney Exp $
+// $Id: main.cc,v 1.156.2.17 2002-10-23 19:31:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,8 +90,8 @@ static Bit32s parse_line_unformatted(char *context, char *line);
 static Bit32s parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
 
-static Bit32s
-bx_param_handler (bx_param_c *param, int set, Bit32s val)
+static Bit64s
+bx_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
   switch (id) {
@@ -380,7 +380,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_FLOPPYA, "Floppy Disk 0", "All options for first floppy disk", floppya_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.floppya.Opath->set_handler (bx_param_string_handler);
   bx_options.floppya.Opath->set ("none");
   bx_options.floppya.Otype->set_handler (bx_param_handler);
@@ -426,7 +426,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_FLOPPYB, "Floppy Disk 1", "All options for second floppy disk", floppyb_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.floppyb.Opath->set_handler (bx_param_string_handler);
   bx_options.floppyb.Opath->set ("none");
   bx_options.floppyb.Otype->set_handler (bx_param_handler);
@@ -442,14 +442,14 @@ void bx_init_options ()
     "ATA channel 3",
     };
   char *s_atadevice[4][2] = {
-    { "Master ATA device on channel 0",
-      "Slave ATA device on channel 0" },
-    { "Master ATA device on channel 1",
-    "Slave ATA device on channel 1" },
-    { "Master ATA device on channel 2",
-    "Slave ATA device on channel 2" },
-    { "Master ATA device on channel 3",
-    "Slave ATA device on channel 3" }
+    { "First HD/CD on channel 0",
+      "Second HD/CD on channel 0" },
+    { "First HD/CD on channel 1",
+    "Second HD/CD on channel 1" },
+    { "First HD/CD on channel 2",
+    "Second HD/CD on channel 2" },
+    { "First HD/CD on channel 3",
+    "Second HD/CD on channel 3" }
     };
   Bit16u ata_default_ioaddr1[BX_MAX_ATA_CHANNEL] = {
     0x1f0, 0x170, 0x1e8, 0x168 
@@ -459,12 +459,13 @@ void bx_init_options ()
   };
 
   bx_list_c *ata[BX_MAX_ATA_CHANNEL];
+  bx_list_c *ata_menu[BX_MAX_ATA_CHANNEL];
 
   Bit8u channel;
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
     ata[channel] = new bx_list_c ((bx_id)(BXP_ATA0+channel), s_atachannel[channel], s_atachannel[channel], 8);
-    ata[channel]->get_options ()->set (ata[channel]->BX_SERIES_ASK);
+    ata[channel]->get_options ()->set (bx_list_c::SERIES_ASK);
 
     ata[channel]->add (bx_options.ata[channel].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_PRESENT+channel),
       "ata:present",                                
@@ -502,7 +503,7 @@ void bx_init_options ()
 	  s_atadevice[channel][slave], 
           s_atadevice[channel][slave],
 	  12 /* list max size */);
-      menu->get_options ()->set (menu->BX_SERIES_ASK);
+      menu->get_options ()->set (menu->SERIES_ASK);
 
       menu->add (bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_MASTER_PRESENT+channel*2+slave),
         "ata-device:present",                                
@@ -571,6 +572,17 @@ void bx_init_options ()
       bx_options.ata[channel].Opresent->get_dependent_list()->add (
 	  bx_options.atadevice[channel][slave].Opresent);
       }
+
+      // set up top level menu for ATA[i] controller configuration.  This list
+      // controls what will appear on the ATA configure dialog.  It now
+      // requests the USE_TAB_WINDOW display, which is implemented in wx.
+      char buffer[32];
+      sprintf (buffer, "Configure ATA%d", channel);
+      ata_menu[channel] = new bx_list_c ((bx_id)(BXP_ATA0_MENU+channel), strdup(buffer), "", 4);
+      ata_menu[channel]->add (ata[channel]);
+      ata_menu[channel]->add (bx_options.atadevice[channel][0].Omenu);
+      ata_menu[channel]->add (bx_options.atadevice[channel][1].Omenu);
+      ata_menu[channel]->get_options()->set (bx_list_c::USE_TAB_WINDOW);
     }
 
   // Enable first ata interface by default, disable the others.
@@ -584,7 +596,7 @@ void bx_init_options ()
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
     bx_options.ata[channel].Opresent->set_ask_format (
-	BX_WITH_WX? "Enable?"
+	BX_WITH_WX? "Enable this channel?"
 	: "Channel is enabled: [%s] ");
     bx_options.ata[channel].Oioaddr1->set_ask_format (
 	BX_WITH_WX? "I/O Address 1:"
@@ -607,7 +619,7 @@ void bx_init_options ()
     for (Bit8u slave=0; slave<2; slave++) {
 
       bx_options.atadevice[channel][slave].Opresent->set_ask_format (
-	  BX_WITH_WX? "Enable?"
+	  BX_WITH_WX? "Enable this device?"
 	  : "Device is enabled: [%s] ");
       bx_options.atadevice[channel][slave].Otype->set_ask_format (
 	  BX_WITH_WX? "Type of ATA device:"
@@ -707,13 +719,13 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "diskmenu", disk_menu_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // memory options menu
   bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
       "megs",
       "Amount of RAM in megabytes",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       BX_DEFAULT_MEM_MEGS);
   bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
@@ -777,7 +789,7 @@ void bx_init_options ()
 	  "Serial and Parallel Port Options",
 	  "serial_parallel_menu",
 	  par_ser_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
       "romimage",
@@ -787,7 +799,7 @@ void bx_init_options ()
   bx_options.rom.Oaddress = new bx_param_num_c (BXP_ROM_ADDRESS,
       "romaddr",
       "The address at which the ROM image should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0xf0000);
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
   bx_options.rom.Oaddress->set_base (16);
@@ -800,7 +812,7 @@ void bx_init_options ()
   bx_options.optrom[0].Oaddress = new bx_param_num_c (BXP_OPTROM1_ADDRESS,
       "optional romaddr #1",
       "The address at which the optional ROM image #1 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[0].Oaddress->set_format ("optional ROM #1 address: 0x%05x");
   bx_options.optrom[0].Oaddress->set_base (16);
@@ -813,7 +825,7 @@ void bx_init_options ()
   bx_options.optrom[1].Oaddress = new bx_param_num_c (BXP_OPTROM2_ADDRESS,
       "optional romaddr #2",
       "The address at which the optional ROM image #2 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[1].Oaddress->set_format ("optional ROM #2 address: 0x%05x");
   bx_options.optrom[1].Oaddress->set_base (16);
@@ -826,7 +838,7 @@ void bx_init_options ()
   bx_options.optrom[2].Oaddress = new bx_param_num_c (BXP_OPTROM3_ADDRESS,
       "optional romaddr #3",
       "The address at which the optional ROM image #3 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[2].Oaddress->set_format ("optional ROM #3 address: 0x%05x");
   bx_options.optrom[2].Oaddress->set_base (16);
@@ -839,7 +851,7 @@ void bx_init_options ()
   bx_options.optrom[3].Oaddress = new bx_param_num_c (BXP_OPTROM4_ADDRESS,
       "optional romaddr #4",
       "The address at which the optional ROM image #4 should be loaded",
-      0, BX_MAX_INT, 
+      0, BX_MAX_BIT32U, 
       0);
   bx_options.optrom[3].Oaddress->set_format ("optional ROM #4 address: 0x%05x");
   bx_options.optrom[3].Oaddress->set_base (16);
@@ -865,13 +877,13 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // interface
   bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
       "VGA Update Interval",
       "Number of microseconds between VGA updates",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       30000);
   bx_options.Ovga_update_interval->set_handler (bx_param_handler);
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
@@ -883,7 +895,7 @@ void bx_init_options ()
   bx_options.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       500000);
   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
       "Use a private colormap",
@@ -980,7 +992,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // NE2K options
   bx_options.ne2k.Ovalid = new bx_param_bool_c (BXP_NE2K_VALID,
@@ -1002,7 +1014,7 @@ void bx_init_options ()
       "MAC Address",
       "to be written",
       "", 6);
-  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->BX_RAW_BYTES);
+  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
   bx_options.ne2k.Omacaddr->set_separator (':');
   bx_options.ne2k.Oethmod = new bx_param_string_c (BXP_NE2K_ETHMOD,
       "Ethernet module",
@@ -1028,7 +1040,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
   bx_options.ne2k.Ovalid->set_handler (bx_param_handler);
   bx_options.ne2k.Ovalid->set (0);
 
@@ -1052,22 +1064,22 @@ void bx_init_options ()
   bx_options.sb16.Omidimode = new bx_param_num_c (BXP_SB16_MIDIMODE,
       "Midi mode",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Owavemode = new bx_param_num_c (BXP_SB16_WAVEMODE,
       "Wave mode",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Ologlevel = new bx_param_num_c (BXP_SB16_LOGLEVEL,
       "Log mode",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_options.sb16.Odmatimer = new bx_param_num_c (BXP_SB16_DMATIMER,
       "DMA timer",
       "to be written",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
   bx_param_c *sb16_init_list[] = {
     bx_options.sb16.Opresent,
@@ -1081,7 +1093,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_SB16, "SB16 Configuration", "", sb16_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
   // sb16_dependent_list is a null-terminated list including all the
   // sb16 fields except for the "present" field.  These will all be enabled/
   // disabled according to the value of the present field.
@@ -1136,7 +1148,7 @@ void bx_init_options ()
   bx_options.load32bitOSImage.Oiolog->set_ask_format ("Enter pathname of I/O log: [%s] ");
   bx_options.load32bitOSImage.Oinitrd->set_ask_format ("Enter pathname of initrd: [%s] ");
   menu = new bx_list_c (BXP_LOAD32BITOS, "32-bit OS Loader", "", loader_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.load32bitOSImage.OwhichOS->set_handler (bx_param_handler);
   bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
 
@@ -1144,18 +1156,18 @@ void bx_init_options ()
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       20000);
   bx_options.Okeyboard_paste_delay = new bx_param_num_c (BXP_KBD_PASTE_DELAY,
       "Keyboard paste delay",
       "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
-      1000, BX_MAX_INT,
+      1000, BX_MAX_BIT32U,
       100000);
   bx_options.Okeyboard_paste_delay->set_handler (bx_param_handler);
   bx_options.Ofloppy_command_delay = new bx_param_num_c (BXP_FLOPPY_CMD_DELAY,
       "Floppy command delay",
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
-      1, BX_MAX_INT,
+      1, BX_MAX_BIT32U,
       50000);
   bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
       "PCI i440FX Support",
@@ -1176,7 +1188,7 @@ void bx_init_options ()
   bx_options.cmos.Otime0 = new bx_param_num_c (BXP_CMOS_TIME0,
       "Initial CMOS time for Bochs",
       "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
-      0, BX_MAX_INT,
+      0, BX_MAX_BIT32U,
       0);
 
   // Keyboard mapping
@@ -1230,7 +1242,7 @@ void bx_init_options ()
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 }
 
 void bx_reset_options ()
@@ -1413,6 +1425,7 @@ int main (int argc, char *argv[]) {
   } else {
     // quit via longjmp
   }
+  SIM->set_quit_context (NULL);
   return 0;
 }
 
@@ -1553,7 +1566,7 @@ Boolean load_and_init_gui () {
     gui_name = gui_param->get_choice (gui_param->get ());
     if (!strcmp (gui_name, "wx")) {
       BX_PANIC (("no alternative VGA libraries are available"));
-      return 1;
+      return false;
     }
     BX_ERROR (("changing VGA library to '%s' instead", gui_name));
   }
@@ -2053,10 +2066,12 @@ parse_line_unformatted(char *context, char *line)
   return retval;
 }
 
-// This PARSE_ERR macro is called for all parse errors, so that we can easily
+// These macros are called for all parse errors, so that we can easily
 // change the behavior of all occurrences.
 #define PARSE_ERR(x)  \
   do { BX_PANIC(x); return -1; } while (0)
+#define PARSE_WARN(x)  \
+  BX_ERROR(x)
 
   static Bit32s
 parse_line_formatted(char *context, int num_params, char *params[])
@@ -2322,23 +2337,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
     // if enabled check if device ok
     if (bx_options.atadevice[channel][slave].Opresent->get() == 1) {
       if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_DISK) {
-        if ((strlen(bx_options.atadevice[channel][slave].Opath->getptr()) ==0) ||
-            (bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
+        if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) ==0)
+	  PARSE_WARN(("%s: ataX-master/slave has empty path", context));
+	if ((bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
             (bx_options.atadevice[channel][slave].Oheads->get() ==0 ) ||
             (bx_options.atadevice[channel][slave].Ospt->get() == 0)) {
-          PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
+          PARSE_WARN(("%s: ataX-master/slave cannot have zero cylinders, heads, or sectors/track", context));
           }
         }
       else if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_CDROM) {
         if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) == 0) {
-          PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
+          PARSE_WARN(("%s: ataX-master/slave has empty path", context));
           }
         }
       else {
-        PARSE_ERR(("%s: ataX-master/slave: type sould be specified ", context));
+        PARSE_WARN(("%s: ataX-master/slave: type should be specified", context));
         }
       }
-
     }
 
   // Legacy disk options emulation

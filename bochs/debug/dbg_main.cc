@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.75.2.4 2002-10-21 15:14:40 bdenney Exp $
+// $Id: dbg_main.cc,v 1.75.2.5 2002-10-23 19:31:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -508,11 +508,17 @@ bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     // wait for wxWindows to send another debugger command
     charptr_ret = SIM->debug_get_next_command ();
-    strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
-    strcat (tmp_buf, "\n");
-    // the returned string was allocated in wxmain.cc by "new char[]". free it.
-    delete charptr_ret;
-    charptr_ret = &tmp_buf[0];
+    if (charptr_ret) {
+      strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
+      strcat (tmp_buf, "\n");
+      // The returned string was allocated in wxmain.cc by "new char[]".
+      // Free it with delete[].
+      delete [] charptr_ret;
+      charptr_ret = &tmp_buf[0];
+    } else {
+      // if debug_get_next_command returned NULL, probably the GUI is
+      // shutting down
+    }
   }
 #elif HAVE_LIBREADLINE
   if (bx_infile_stack_index == 0) {
@@ -545,6 +551,7 @@ bx_get_command(void)
       else {
         // not nested, sitting at stdin prompt, user wants out
         bx_dbg_quit_command();
+	BX_PANIC (("bx_dbg_quit_command should not return, but it did"));
         }
 
       // call recursively
@@ -1029,7 +1036,7 @@ bx_dbg_where_command()
 	    dbg_printf ( "'where' only supported in protected mode\n");
 	    return;
       }
-      if (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.base != 0) {
+      if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base != 0) {
 	    dbg_printf ( "non-zero stack base\n");
 	    return;
       }
@@ -1278,10 +1285,10 @@ void
 bx_dbg_print_stack_command(int nwords)
 {
 	// Get linear address for stack top
-	Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.d_b)?
+	Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b)?
 	  BX_CPU(dbg_cpu)->get_ESP ()
 	  : BX_CPU(dbg_cpu)->get_SP ();
-	Bit32u linear_sp = sp + BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.base;
+	Bit32u linear_sp = sp + BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base;
 	Bit8u buf[8];
 
 	for (int i = 0; i < nwords; i++) {
@@ -2180,13 +2187,13 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
       dbg_printf ( "%04x:%08x (%s): ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
 	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
+	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.base));
       }
     else {
       dbg_printf ( "%04x:%04x (%s): ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
 	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-	      bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].selector.value));
+	      bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
       }
     for (unsigned j=0; j<ilen; j++)
       dbg_printf ( "%02x", (unsigned) bx_disasm_ibuf[j]);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.17.2.1 2002-10-22 23:48:33 bdenney Exp $
+// $Id: pc_system.h,v 1.17.2.2 2002-10-23 19:31:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 
 
-#define BX_MAX_TIMERS 16
+#define BX_MAX_TIMERS (15+BX_SMP_PROCESSORS)
 #define BX_NULL_TIMER_HANDLE 10000
 
 
@@ -53,6 +53,7 @@ private:
   // ===============================
 
   struct {
+    Boolean inUse;      // Timer slot is in-use (currently registered).
     Bit64u  period;     // Timer periodocity in cpu ticks.
     Bit64u  timeToFire; // Time to fire next (in absolute ticks).
     Boolean active;     // 0=inactive, 1=active.
@@ -97,6 +98,7 @@ public:
   void   init_ips(Bit32u ips);
   int    register_timer( void *this_ptr, bx_timer_handler_t, Bit32u useconds,
                          Boolean continuous, Boolean active, const char *id);
+  unsigned unregisterTimer(int timerID);
   void   start_timers(void);
   void   activate_timer( unsigned timer_index, Bit32u useconds,
                          Boolean continuous );

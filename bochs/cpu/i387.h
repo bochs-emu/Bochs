@@ -122,8 +122,8 @@ typedef union {
 typedef struct mmx_physical_reg_t
 {
    BxPackedMmxRegister packed_mmx_register;
-   Bit16u exp; /* 4 bytes: exponent of fp register, 
-                                    set to 0xFFFF by all mmx commands */
+   Bit16u exp;      /* 4 bytes: exponent of FP register, 
+                                    set to 0xffff by all MMX commands */
    Bit32u aligment; /* 4 bytes: aligment */
 } BxMmxRegister;
 

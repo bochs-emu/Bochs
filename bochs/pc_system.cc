@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.27.2.5 2002-10-10 17:04:17 bdenney Exp $
+// $Id: pc_system.cc,v 1.27.2.6 2002-10-23 19:31:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -229,7 +229,7 @@ bx_pc_system_c::exit(void)
   if (BX_HARD_DRIVE_PRESENT())
     BX_HD_CLOSE_HARDDRIVE();
 
-  BX_INFO(("Last time is %d", BX_GET_CMOS_TIMEVAL()));
+  BX_INFO(("Last time is %u", (unsigned) BX_GET_CMOS_TIMEVAL()));
 
   if (bx_gui) bx_gui->exit();
 }
@@ -275,7 +275,12 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
     ticks = MinAllowableTimerPeriod;
     }
 
-  i = numTimers;
+  for (i=0; i < numTimers; i++) {
+    if (timer[i].inUse == 0)
+      break;
+    }
+
+  timer[i].inUse      = 1;
   timer[i].period     = ticks;
   timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) +
                         ticks;
@@ -296,7 +301,9 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
       }
     }
 
-  numTimers++; // One new timer installed.
+  // If we didn't find a free slot, increment the bound, numTimers.
+  if (i==numTimers)
+    numTimers++; // One new timer installed.
 
   // Return timer id.
   return(i);
@@ -498,4 +505,35 @@ bx_pc_system_c::deactivate_timer( unsigned i )
 #endif
 
   timer[i].active = 0;
+}
+
+  unsigned
+bx_pc_system_c::unregisterTimer(int timerIndex)
+{
+  unsigned i = (unsigned) timerIndex;
+
+#if BX_TIMER_DEBUG
+  if (i >= numTimers)
+    BX_PANIC(("unregisterTimer: timer %u OOB", i));
+  if (i == 0)
+    BX_PANIC(("unregisterTimer: timer 0 is the nullTimer!"));
+  if (timer[i].inUse == 0)
+    BX_PANIC(("unregisterTimer: timer %u is not in-use!", i));
+#endif
+
+  if (timer[i].active) {
+    BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[i].id));
+    return(0); // Fail.
+    }
+
+  // Reset timer fields for good measure.
+  timer[i].inUse      = 0; // No longer registered.
+  timer[i].period     = Bit64s(-1); // Max value (invalid)
+  timer[i].timeToFire = Bit64s(-1); // Max value (invalid)
+  timer[i].continuous = 0;
+  timer[i].funct      = NULL;
+  timer[i].this_ptr   = NULL;
+  memset(timer[i].id, 0, BxMaxTimerIDLen);
+
+  return(1); // OK
 }

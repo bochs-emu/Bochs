@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.12 2002-10-22 23:48:41 bdenney Exp $
+// $Id: floppy.cc,v 1.51.2.13 2002-10-23 19:31:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,12 +86,13 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
   put("FDD");
   settype(FDLOG);
+  s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
 {
-	// nothing for now
-	BX_DEBUG(("Exit."));
+  // nothing for now
+  BX_DEBUG(("Exit."));
 }
 
 
@@ -100,8 +101,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.12 2002-10-22 23:48:41 bdenney Exp $"));
-
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.13 2002-10-23 19:31:52 bdenney Exp $"));
   BX_REGISTER_DMA8_CHANNEL(2, dma_read, dma_write, "Floppy Drive");
   BX_REGISTER_IRQ(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -230,9 +230,11 @@ bx_floppy_ctrl_c::init(void)
     BX_SET_CMOS_REG(0x14, (BX_GET_CMOS_REG(0x14) & 0x3e));
 
 
-  BX_FD_THIS s.floppy_timer_index =
-    bx_pc_system.register_timer( this, timer_handler,
-      bx_options.Ofloppy_command_delay->get (), 0,0, "floppy");
+  if (BX_FD_THIS s.floppy_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_FD_THIS s.floppy_timer_index =
+      bx_pc_system.register_timer( this, timer_handler,
+	bx_options.Ofloppy_command_delay->get (), 0,0, "floppy");
+  }
 
   BX_DEBUG(("bx_options.Ofloppy_command_delay = %u",
     (unsigned) bx_options.Ofloppy_command_delay->get ()));
@@ -550,7 +552,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // #if BX_DMA_FLOPPY_IO
 
     case 0x3F6: /* diskette controller (reserved) */
-      BX_DEBUG(("io_write: reserved register unsupported"));
+      BX_DEBUG(("io_write: reserved register 0x3f6 unsupported"));
       // this address shared with the hard drive controller
       BX_HD_WRITE_HANDLER(bx_devices.pluginHardDrive, address, value, io_len);
       break;
@@ -569,7 +571,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
    default:
-      BX_ERROR(("io_write ignored: 0x%04h = 0x%02h", (unsigned) address, (unsigned) value));
+      BX_ERROR(("io_write ignored: 0x%04x = 0x%02x", (unsigned) address, (unsigned) value));
       break;
 #endif  // #if BX_DMA_FLOPPY_IO
     }
@@ -1452,7 +1454,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 {
   struct stat stat_buf;
   int ret;
-#if BX_WITH_WIN32
+#ifdef WIN32
   char sTemp[1024];
 #endif
 
@@ -1471,7 +1473,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-#if BX_WITH_WIN32
+#ifdef WIN32
     if ( (path[1] == ':') && (strlen(path) == 2) ) {
 	  wsprintf(sTemp, "\\\\.\\%s", path);
 	  media->fd = open(sTemp, BX_RDWR);
@@ -1490,7 +1492,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-#if BX_WITH_WIN32
+#ifdef WIN32
     if ( (path[1] == ':') && (strlen(path) == 2) ) {
 	  wsprintf(sTemp, "\\\\.\\%s", path);
 	  media->fd = open(sTemp, BX_RDONLY);
@@ -1513,7 +1515,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     ret = fd_stat(&stat_buf);
   else
     ret = fstat(media->fd, &stat_buf);
-#elif BX_WITH_WIN32
+#elif defined(WIN32)
 //  if ( (path[1] == ':') && (strlen(path) == 2) ) {
     stat_buf.st_mode = S_IFCHR;
     // maybe replace with code that sets ret to -1 if the disk is not available

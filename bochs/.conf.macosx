@@ -3,9 +3,7 @@
 # this sets up the compile for MacOS X
 
 set echo
-CC="cc"
 CFLAGS="-pipe -g"
-CXX="$CC"
 CXXFLAGS="$CFLAGS"
 
 export CC

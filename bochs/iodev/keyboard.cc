@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.17 2002-10-23 18:52:48 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.18 2002-10-23 19:31:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.17 2002-10-23 18:52:48 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.18 2002-10-23 19:31:52 bdenney Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");
@@ -208,37 +208,37 @@ bx_keyb_c::init(void)
     // register shadow params (Experimental, not a complete list by far)
     bx_list_c *list = new bx_list_c (BXP_KBD_PARAMETERS, "Keyboard State", "", 20);
     list->add (new bx_shadow_bool_c (BXP_KBD_IRQ1_REQ, 
-	  "Keyboard IRQ1 requested: ", 
+	  "Keyboard IRQ1 requested: ", "",
 	  &BX_KEY_THIS s.kbd_controller.irq1_requested));
     list->add (new bx_shadow_bool_c (BXP_KBD_IRQ12_REQ,
-	  "Keyboard IRQ12 requested: ", 
+	  "Keyboard IRQ12 requested: ", "",
 	  &BX_KEY_THIS s.kbd_controller.irq12_requested));
     list->add (new bx_shadow_num_c (BXP_KBD_TIMER_PENDING,
-	"Keyboard timer pending: ", 
+	"Keyboard timer pending: ", "",
 	&BX_KEY_THIS s.kbd_controller.timer_pending));
     list->add (new bx_shadow_bool_c (BXP_KBD_PARE,
-	"Keyboard PARE", 
+	"Keyboard PARE", "",
 	&BX_KEY_THIS s.kbd_controller.pare));
     list->add (new bx_shadow_bool_c (BXP_KBD_TIM,
-	"Keyboard TIM", 
+	"Keyboard TIM", "",
 	&BX_KEY_THIS s.kbd_controller.tim));
     list->add (new bx_shadow_bool_c (BXP_KBD_AUXB,
-	"Keyboard AUXB", 
+	"Keyboard AUXB", "",
 	&BX_KEY_THIS s.kbd_controller.auxb));
     list->add (new bx_shadow_bool_c (BXP_KBD_KEYL,
-	"Keyboard KEYL", 
+	"Keyboard KEYL", "",
 	&BX_KEY_THIS s.kbd_controller.keyl));
     list->add (new bx_shadow_bool_c (BXP_KBD_C_D,
-	"Keyboard C_D", 
+	"Keyboard C_D", "",
 	&BX_KEY_THIS s.kbd_controller.c_d));
     list->add (new bx_shadow_bool_c (BXP_KBD_SYSF,
-	"Keyboard SYSF", 
+	"Keyboard SYSF", "",
 	&BX_KEY_THIS s.kbd_controller.sysf));
     list->add (new bx_shadow_bool_c (BXP_KBD_INPB,
-	"Keyboard INPB", 
+	"Keyboard INPB", "",
 	&BX_KEY_THIS s.kbd_controller.inpb));
     list->add (new bx_shadow_bool_c (BXP_KBD_OUTB,
-	"Keyboard OUTB", 
+	"Keyboard OUTB", "",
 	&BX_KEY_THIS s.kbd_controller.outb));
   }
 #endif
@@ -688,7 +688,7 @@ bx_keyb_c::service_paste_buf ()
     // there room in the buffer for a keypress and a key release.
     // send one keypress and a key release.
     Bit8u byte = BX_KEY_THIS pastebuf[BX_KEY_THIS pastebuf_ptr];
-    BXKeyEntry *entry = bx_keymap.getKeyASCII (byte);
+    BXKeyEntry *entry = bx_keymap.findAsciiChar (byte);
     if (!entry) {
       BX_ERROR (("paste character 0x%02x ignored", byte));
     } else {

@@ -129,7 +129,7 @@ floppya: 1_44=/dev/fd0, status=inserted
 #floppya: file=../1.44, status=inserted
 #floppya: 1_44=/dev/fd0H1440, status=inserted
 #floppya: 1_2=../1_2, status=inserted
-#floppya: 1_44=a:, status=inserted             # for win32
+#floppya: 1_44=a:, status=inserted
 #floppya: 1_44=a.img, status=inserted
 
 #=======================================================================
@@ -207,7 +207,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 #   ata3-slave:  type=cdrom, path=iso.sample, status=inserted
 #=======================================================================
 ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
-#ata0-slave: dev=D:, status=inserted             # for win32
+#ata0-slave: dev=D:, status=inserted
 #ata0-slave: dev=/dev/cdrom, status=inserted
 
 #=======================================================================
@@ -260,7 +260,7 @@ ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
 #
 # NOTE: diskd and cdromd must not be used together!
 #=======================================================================
-#cdromd: dev=D:, status=inserted             # for win32
+#cdromd: dev=D:, status=inserted
 #cdromd: dev=/dev/cdrom, status=inserted
 
 #=======================================================================

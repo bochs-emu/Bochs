@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.25 2002-10-03 04:52:39 bdenney Exp $
+// $Id: exception.cc,v 1.25.2.1 2002-10-23 19:31:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -238,6 +238,9 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
       // load new CS:IP values from gate
       // set CPL to new code segment DPL
+
+      CPL = cs_descriptor.dpl;
+
       // set RPL of CS to CPL
 
       // push long pointer to old stack onto new stack
@@ -806,11 +809,14 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   Bit8u    exception_type;
   unsigned prev_errno;
 
+  invalidate_prefetch_q();
+  UNUSED(is_INT);
+
 #if BX_DEBUGGER
   if (bx_guard.special_unwind_stack) {
     BX_INFO (("exception() returning early because special_unwind_stack is set"));
-    return;
-  }
+    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+    }
 #endif
 
 #if BX_EXTERNAL_DEBUGGER
@@ -822,11 +828,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   //trap_debugger(1);
 #endif
 
-
   BX_INSTR_EXCEPTION(CPU_ID, vector);
-  invalidate_prefetch_q();
-
-  UNUSED(is_INT);
 
   BX_DEBUG(("exception(%02x h)", (unsigned) vector));
 
@@ -846,7 +848,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
 #if BX_DEBUGGER
     bx_guard.special_unwind_stack = true;
 #endif
-    return;
+    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
     }
 
   /* careful not to get here with curr_exception[1]==DOUBLE_FAULT */
@@ -859,7 +861,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
 #if BX_DEBUGGER
     bx_guard.special_unwind_stack = true;
 #endif
-    return;
+    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
     }
 
   /* ??? this is not totally correct, should be done depending on

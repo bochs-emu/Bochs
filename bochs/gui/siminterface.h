@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.74.4.3 2002-10-22 23:48:37 bdenney Exp $
+// $Id: siminterface.h,v 1.74.4.4 2002-10-23 19:31:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -149,6 +149,10 @@ typedef enum {
   BXP_FLOPPYB_TYPE,
   BXP_FLOPPYB_STATUS,
   BXP_FLOPPYB,
+  BXP_ATA0_MENU,
+  BXP_ATA1_MENU,
+  BXP_ATA2_MENU,
+  BXP_ATA3_MENU,
   BXP_ATA0,
   BXP_ATA1,
   BXP_ATA2,
@@ -784,7 +788,7 @@ public:
 #endif
 };
 
-typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
+typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
 
 class BOCHSAPI bx_param_num_c : public bx_param_c {
   BOCHSAPI static Bit32u default_base;
@@ -795,12 +799,13 @@ class BOCHSAPI bx_param_num_c : public bx_param_c {
   bx_list_c *dependent_list;
   void update_dependents ();
 protected:
-  Bit32s min, max, initial_val;
+  Bit64s min, max, initial_val;
   union _uval_ {
-    Bit32s number;   // used by bx_param_num_c
+    Bit64s number;   // used by bx_param_num_c
+    Bit64s *p64bit;  // used by bx_shadow_num_c
     Bit32s *p32bit;  // used by bx_shadow_num_c
     Bit16s *p16bit;  // used by bx_shadow_num_c
-    Bit8s *p8bit;   // used by bx_shadow_num_c
+    Bit8s  *p8bit;    // used by bx_shadow_num_c
     Boolean *pbool;  // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
@@ -809,22 +814,21 @@ public:
   bx_param_num_c (bx_id id,
       char *name,
       char *description,
-      Bit32s min, Bit32s max, Bit32s initial_val);
+      Bit64s min, Bit64s max, Bit64s initial_val);
   void reset ();
   void set_handler (param_event_handler handler);
   virtual bx_list_c *get_dependent_list () { return dependent_list; }
-  void set_dependent_list (bx_list_c *l) {
-    dependent_list = l; 
-    update_dependents ();
-  }
+  void set_dependent_list (bx_list_c *l);
   virtual void set_enabled (int enabled);
-  virtual Bit32s get ();
-  virtual void set (Bit32s val);
+  virtual Bit32s get () { return (Bit32s) get64(); }
+  virtual Bit64s get64 ();
+  virtual void set (Bit64s val);
   void set_base (int base) { this->base = base; }
-  void set_initial_val (Bit32s initial_val) { this->val.number = this->initial_val = initial_val;}
+  void set_initial_val (Bit64s initial_val);
   int get_base () { return base; }
-  Bit32s get_min () { return min; }
-  Bit32s get_max () { return max; }
+  void set_range (Bit64u min, Bit64u max);
+  Bit64s get_min () { return min; }
+  Bit64s get_max () { return max; }
   static Bit32u set_default_base (Bit32u val);
   static Bit32u get_default_base () { return default_base; }
 #if BX_UI_TEXT
@@ -839,39 +843,60 @@ public:
 // existing variables as parameters, without have to access it via
 // set/get methods.
 class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
-  Bit8u varsize;   // must be 32, 16, or 8
+  Bit8u varsize;   // must be 64, 32, 16, or 8
   Bit8u lowbit;   // range of bits associated with this param
-  Bit32u mask;     // mask is ANDed with value before it is returned from get
+  Bit64u mask;     // mask is ANDed with value before it is returned from get
 public:
   bx_shadow_num_c (bx_id id,
       char *name,
       char *description,
-      Bit32s min, Bit32s max, Bit32s *ptr_to_real_val,
+      Bit64s *ptr_to_real_val,
+      Bit8u highbit = 63,
+      Bit8u lowbit = 0);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      char *description,
+      Bit64u *ptr_to_real_val,
+      Bit8u highbit = 63,
+      Bit8u lowbit = 0);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      char *description,
+      Bit32s *ptr_to_real_val,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c (bx_id id,
       char *name,
       char *description,
-      Bit32s min, Bit32s max, Bit32u *ptr_to_real_val,
-      Bit8u highbit = 31,
-      Bit8u lowbit = 0);
-  bx_shadow_num_c (bx_id id,
-      char *name,
       Bit32u *ptr_to_real_val,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c (bx_id id,
       char *name,
+      char *description,
       Bit16s *ptr_to_real_val,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c (bx_id id,
       char *name,
+      char *description,
       Bit16u *ptr_to_real_val,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
-  virtual Bit32s get ();
-  virtual void set (Bit32s val);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      char *description,
+      Bit8s *ptr_to_real_val,
+      Bit8u highbit = 7,
+      Bit8u lowbit = 0);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      char *description,
+      Bit8u *ptr_to_real_val,
+      Bit8u highbit = 7,
+      Bit8u lowbit = 0);
+  virtual Bit64s get64 ();
+  virtual void set (Bit64s val);
 };
 
 class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
@@ -882,7 +907,7 @@ public:
   bx_param_bool_c (bx_id id, 
       char *name,
       char *description,
-      Bit32s initial_val);
+      Bit64s initial_val);
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -897,10 +922,11 @@ class BOCHSAPI bx_shadow_bool_c : public bx_param_bool_c {
 public:
   bx_shadow_bool_c (bx_id id,
       char *name,
+      char *description,
       Boolean *ptr_to_real_val,
       Bit8u bitnum = 0);
-  virtual Bit32s get ();
-  virtual void set (Bit32s val);
+  virtual Bit64s get64 ();
+  virtual void set (Bit64s val);
 };
 
 
@@ -911,8 +937,8 @@ public:
       char *name,
       char *description,
       char **choices,
-      Bit32s initial_val,
-      Bit32s value_base = 0);
+      Bit64s initial_val,
+      Bit64s value_base = 0);
   char *get_choice (int n) { return choices[n]; }
   int find_by_name (const char *string);
   bool set_by_name (const char *string);
@@ -932,11 +958,11 @@ class BOCHSAPI bx_param_string_c : public bx_param_c {
   char separator;
 public:
   enum {
-    BX_RAW_BYTES = 1,          // use binary text editor, like MAC addr
-	BX_IS_FILENAME = 2,    // 1=yes it's a filename, 0=not a filename.
-	                       // Some guis have a file browser. This
-			       // bit suggests that they use it.
-	BX_SAVE_FILE_DIALOG = 4    // Use save dialog opposed to open file dialog
+    RAW_BYTES = 1,         // use binary text editor, like MAC addr
+    IS_FILENAME = 2,       // 1=yes it's a filename, 0=not a filename.
+                           // Some guis have a file browser. This
+                           // bit suggests that they use it.
+    SAVE_FILE_DIALOG = 4   // Use save dialog opposed to open file dialog
   } bx_string_opt_bits;
   bx_param_string_c (bx_id id,
       char *name,
@@ -959,7 +985,7 @@ public:
 
 // Declare a filename class.  It is identical to a string, except that
 // it initializes the options differently.  This is just a shortcut
-// for declaring a string param and setting the options with BX_IS_FILENAME.
+// for declaring a string param and setting the options with IS_FILENAME.
 class BOCHSAPI bx_param_filename_c : public bx_param_string_c {
 public:
   bx_param_filename_c (bx_id id,
@@ -994,11 +1020,16 @@ public:
   enum {
     // When a bx_list_c is displayed as a menu, SHOW_PARENT controls whether or
     // not the menu shows a "Return to parent menu" choice or not.
-    BX_SHOW_PARENT = (1<<0),
+    SHOW_PARENT = (1<<0),
     // Some lists are best displayed shown as menus, others as a series of
-    // related questions.  This bit suggests to the CI that the
-    // series of questions format is preferred.
-    BX_SERIES_ASK = (1<<1)
+    // related questions.  This bit suggests to the CI that the series of
+    // questions format is preferred.
+    SERIES_ASK = (1<<1),
+    // When a bx_list_c is displayed in a dialog, BX_USE_TAB_WINDOW suggests
+    // to the CI that each item in the list should be shown as a separate
+    // tab.  This would be most appropriate when each item is another list
+    // of parameters.
+    USE_TAB_WINDOW = (1<<2)
   } bx_listopt_bits;
   bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
