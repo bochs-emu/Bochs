@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.75 2004-11-16 19:19:12 sshwarts Exp $
+// $Id: floppy.cc,v 1.76 2005-01-16 15:58:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.75 2004-11-16 19:19:12 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.76 2005-01-16 15:58:40 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1636,8 +1636,12 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     media->type              = type;
 #ifdef __linux__
     if (ioctl(media->fd, FDGETPRM, &floppy_geom) < 0) {
-      BX_ERROR(("cannot determine media geometry"));
-      return(0);
+      BX_ERROR(("cannot determine media geometry, trying to use defaults"));
+      media->tracks            = floppy_type[idx].trk;
+      media->heads             = floppy_type[idx].hd;
+      media->sectors_per_track = floppy_type[idx].spt;
+      media->sectors           = floppy_type[idx].sectors;
+      return(1);
     }
     media->tracks            = floppy_geom.track;
     media->heads             = floppy_geom.head;
