@@ -25,6 +25,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 
@@ -509,7 +510,7 @@ BX_CPU_C::XADD_EbGb(BxInstruction_t *i)
 
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_XADD8);
 #else
-  BX_CPU_THIS_PTR panic("XADD_EbGb: not supported on < 80486\n");
+  BX_PANIC(("XADD_EbGb: not supported on < 80486\n"));
 #endif
 }
 
@@ -756,6 +757,6 @@ BX_CPU_C::CMPXCHG_EbGb(BxInstruction_t *i)
     }
 
 #else
-  BX_CPU_THIS_PTR panic("CMPXCHG_EbGb:\n");
+  BX_PANIC(("CMPXCHG_EbGb:\n"));
 #endif
 }

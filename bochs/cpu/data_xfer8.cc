@@ -26,6 +26,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
   void

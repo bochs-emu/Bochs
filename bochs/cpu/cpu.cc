@@ -24,6 +24,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 //unsigned counter[2] = { 0, 0 };
@@ -271,7 +272,7 @@ debugger_check:
 		      BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
 		      return;
 		default:
-		      BX_CPU_THIS_PTR panic("Weird break point condition");
+		      BX_PANIC(("Weird break point condition"));
 	  }
     }
 #ifdef MAGIC_BREAKPOINT
@@ -326,7 +327,7 @@ static Bit8u FetchBuffer[16];
 
     if (BX_CPU_THIS_PTR bytesleft < 16) {
       // make sure (bytesleft - remain) below doesn't go negative
-      BX_CPU_THIS_PTR panic("fetch_decode: bytesleft==0 after prefetch\n");
+      BX_PANIC(("fetch_decode: bytesleft==0 after prefetch\n"));
       }
     temp_ptr = fetch_ptr = BX_CPU_THIS_PTR fetch_ptr;
 
@@ -336,7 +337,7 @@ static Bit8u FetchBuffer[16];
       }
     ret = FetchDecode(FetchBuffer, &i, 16, is_32);
     if (ret==0)
-      BX_CPU_THIS_PTR panic("fetchdecode: cross boundary: ret==0\n");
+      BX_PANIC(("fetchdecode: cross boundary: ret==0\n"));
     if (i.ResolveModrm) {
       i.ResolveModrm(&i);
       }
@@ -500,7 +501,7 @@ BX_CPU_C::prefetch(void)
   new_linear_addr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + temp_eip;
   BX_CPU_THIS_PTR prev_linear_page = new_linear_addr & 0xfffff000;
   if (temp_eip > temp_limit) {
-    BX_CPU_THIS_PTR panic("prefetch: EIP > CS.limit\n");
+    BX_PANIC(("prefetch: EIP > CS.limit\n"));
     }
 
   if (BX_CPU_THIS_PTR cr0.pg) {
@@ -516,7 +517,7 @@ BX_CPU_C::prefetch(void)
     // don't take this out if dynamic translation enabled,
     // otherwise you must make a check to see if bytesleft is 0 after
     // a call to prefetch() in the dynamic code.
-    BX_CPU_THIS_PTR panic("prefetch: running in bogus memory\n");
+    BX_PANIC(("prefetch: running in bogus memory\n"));
     }
 
   // max physical address as confined by page boundary
@@ -679,7 +680,7 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       bx_dbg_async_pin_ack(BX_DBG_ASYNC_PENDING_A20,
                            bx_guard.async_changes_pending.a20);
     if (bx_guard.async_changes_pending.which) {
-      BX_CPU_THIS_PTR panic("decode: async pending unrecognized.\n");
+      BX_PANIC(("decode: async pending unrecognized.\n"));
       }
     }
 #endif

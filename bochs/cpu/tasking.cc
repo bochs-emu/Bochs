@@ -23,6 +23,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 
@@ -198,7 +199,7 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Task State Seg must be present, else #NP(TSS selector)
   if (tss_descriptor->p==0) {
-    BX_CPU_THIS_PTR info("task_switch: TSS.p == 0\n");
+    BX_INFO(("task_switch: TSS.p == 0\n"));
     exception(BX_NP_EXCEPTION, tss_selector->value & 0xfffc, 0);
     }
 
@@ -206,7 +207,7 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   if (tss_selector->ti ||
       tss_descriptor->valid==0 ||
       new_TSS_limit < new_TSS_max) {
-    BX_CPU_THIS_PTR panic("task_switch(): TR not valid\n");
+    BX_PANIC(("task_switch(): TR not valid\n"));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
     }
 
@@ -510,7 +511,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
   // LDTR
   if (ldt_selector.ti) {
     // LDT selector must be in GDT
-    BX_CPU_THIS_PTR info("task_switch: bad LDT selector TI=1\n");
+    BX_INFO(("task_switch: bad LDT selector TI=1\n"));
     exception_no = BX_TS_EXCEPTION;
     error_code   = raw_ldt_selector & 0xfffc;
     goto post_exception;
@@ -521,7 +522,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     Boolean good;
     good = fetch_raw_descriptor2(&ldt_selector, &dword1, &dword2);
     if (!good) {
-      BX_CPU_THIS_PTR info("task_switch: bad LDT fetch\n");
+      BX_INFO(("task_switch: bad LDT fetch\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ldt_selector & 0xfffc;
       goto post_exception;
@@ -534,7 +535,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
         ldt_descriptor.type!=2 ||
         ldt_descriptor.segment ||
         ldt_descriptor.u.ldt.limit<7) {
-      BX_CPU_THIS_PTR info("task_switch: bad LDT segment\n");
+      BX_INFO(("task_switch: bad LDT segment\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ldt_selector & 0xfffc;
       goto post_exception;
@@ -569,7 +570,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     Boolean good;
     good = fetch_raw_descriptor2(&cs_selector, &dword1, &dword2);
     if (!good) {
-      BX_CPU_THIS_PTR info("task_switch: bad CS fetch\n");
+      BX_INFO(("task_switch: bad CS fetch\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_cs_selector & 0xfffc;
       goto post_exception;
@@ -580,7 +581,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     // CS descriptor AR byte must indicate code segment else #TS(CS)
     if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
         cs_descriptor.u.segment.executable==0) {
-      BX_CPU_THIS_PTR panic("task_switch: CS not valid executable seg\n");
+      BX_PANIC(("task_switch: CS not valid executable seg\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_cs_selector & 0xfffc;
       goto post_exception;
@@ -588,7 +589,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     // if non-conforming then DPL must equal selector RPL else #TS(CS)
     else if (cs_descriptor.u.segment.c_ed==0 &&
         cs_descriptor.dpl!=cs_selector.rpl) {
-      BX_CPU_THIS_PTR info("task_switch: non-conforming: CS.dpl!=CS.RPL\n");
+      BX_INFO(("task_switch: non-conforming: CS.dpl!=CS.RPL\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_cs_selector & 0xfffc;
       goto post_exception;
@@ -596,14 +597,14 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     // if conforming then DPL must be <= selector RPL else #TS(CS)
     else if (cs_descriptor.u.segment.c_ed &&
         cs_descriptor.dpl>cs_selector.rpl) {
-      BX_CPU_THIS_PTR info("task_switch: conforming: CS.dpl>RPL\n");
+      BX_INFO(("task_switch: conforming: CS.dpl>RPL\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_cs_selector & 0xfffc;
       goto post_exception;
       }
     // Code segment is present in memory, else #NP(new code segment)
     else if (cs_descriptor.p==0) {
-      BX_CPU_THIS_PTR panic("task_switch: CS.p==0\n");
+      BX_PANIC(("task_switch: CS.p==0\n"));
       exception_no = BX_NP_EXCEPTION;
       error_code   = raw_cs_selector & 0xfffc;
       goto post_exception;
@@ -613,7 +614,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     }
   else {
     // If new cs selector is null #TS(CS)
-    BX_CPU_THIS_PTR panic("task_switch: CS NULL\n");
+    BX_PANIC(("task_switch: CS NULL\n"));
     exception_no = BX_TS_EXCEPTION;
     error_code   = raw_cs_selector & 0xfffc;
     goto post_exception;
@@ -625,7 +626,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     Boolean good;
     good = fetch_raw_descriptor2(&ss_selector, &dword1, &dword2);
     if (!good) {
-      BX_CPU_THIS_PTR info("task_switch: bad SS fetch\n");
+      BX_INFO(("task_switch: bad SS fetch\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ss_selector & 0xfffc;
       goto post_exception;
@@ -639,7 +640,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
         ss_descriptor.segment==0 ||
         ss_descriptor.u.segment.executable ||
         ss_descriptor.u.segment.r_w==0) {
-      BX_CPU_THIS_PTR info("task_switch: SS not valid\n");
+      BX_INFO(("task_switch: SS not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ss_selector & 0xfffc;
       goto post_exception;
@@ -649,7 +650,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     // Stack segment is present in memory, else #SF(new stack segment)
     //
     else if (ss_descriptor.p==0) {
-      BX_CPU_THIS_PTR panic("task_switch: SS not present\n");
+      BX_PANIC(("task_switch: SS not present\n"));
       exception_no = BX_SS_EXCEPTION;
       error_code   = raw_ss_selector & 0xfffc;
       goto post_exception;
@@ -657,7 +658,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
     // Stack segment DPL matches CS.RPL, else #TS(new stack segment)
     else if (ss_descriptor.dpl != cs_selector.rpl) {
-      BX_CPU_THIS_PTR panic("task_switch: SS.rpl != CS.RPL\n");
+      BX_PANIC(("task_switch: SS.rpl != CS.RPL\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ss_selector & 0xfffc;
       goto post_exception;
@@ -665,7 +666,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
     // Stack segment DPL matches selector RPL, else #TS(new stack segment)
     else if (ss_descriptor.dpl != ss_selector.rpl) {
-      BX_CPU_THIS_PTR panic("task_switch: SS.dpl != SS.rpl\n");
+      BX_PANIC(("task_switch: SS.dpl != SS.rpl\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ss_selector & 0xfffc;
       goto post_exception;
@@ -685,7 +686,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     }
   else {
     // SS selector is valid, else #TS(new stack segment)
-    BX_CPU_THIS_PTR panic("task_switch: SS NULL\n");
+    BX_PANIC(("task_switch: SS NULL\n"));
     exception_no = BX_TS_EXCEPTION;
     error_code   = raw_ss_selector & 0xfffc;
     goto post_exception;
@@ -708,7 +709,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     Boolean good;
     good = fetch_raw_descriptor2(&ds_selector, &dword1, &dword2);
     if (!good) {
-      BX_CPU_THIS_PTR info("task_switch: bad DS fetch\n");
+      BX_INFO(("task_switch: bad DS fetch\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ds_selector & 0xfffc;
       goto post_exception;
@@ -718,7 +719,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     if (ds_descriptor.valid==0 || ds_descriptor.segment==0 ||
         (ds_descriptor.u.segment.executable &&
          ds_descriptor.u.segment.r_w==0)) {
-      BX_CPU_THIS_PTR panic("task_switch: DS not valid\n");
+      BX_PANIC(("task_switch: DS not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ds_selector & 0xfffc;
       goto post_exception;
@@ -727,13 +728,13 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     else if (ds_descriptor.type<12 &&
         (ds_descriptor.dpl<cs_selector.rpl ||
          ds_descriptor.dpl<ds_selector.rpl)) {
-      BX_CPU_THIS_PTR panic("task_switch: DS.dpl not valid\n");
+      BX_PANIC(("task_switch: DS.dpl not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ds_selector & 0xfffc;
       goto post_exception;
       }
     else if (ds_descriptor.p==0) {
-      BX_CPU_THIS_PTR panic("task_switch: DS.p==0\n");
+      BX_PANIC(("task_switch: DS.p==0\n"));
       exception_no = BX_NP_EXCEPTION;
       error_code   = raw_ds_selector & 0xfffc;
       goto post_exception;
@@ -750,7 +751,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     Boolean good;
     good = fetch_raw_descriptor2(&es_selector, &dword1, &dword2);
     if (!good) {
-      BX_CPU_THIS_PTR info("task_switch: bad ES fetch\n");
+      BX_INFO(("task_switch: bad ES fetch\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_es_selector & 0xfffc;
       goto post_exception;
@@ -760,7 +761,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     if (es_descriptor.valid==0 || es_descriptor.segment==0 ||
         (es_descriptor.u.segment.executable &&
          es_descriptor.u.segment.r_w==0)) {
-      BX_CPU_THIS_PTR panic("task_switch: ES not valid\n");
+      BX_PANIC(("task_switch: ES not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_es_selector & 0xfffc;
       goto post_exception;
@@ -769,13 +770,13 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     else if (es_descriptor.type<12 &&
         (es_descriptor.dpl<cs_selector.rpl ||
          es_descriptor.dpl<es_selector.rpl)) {
-      BX_CPU_THIS_PTR panic("task_switch: ES.dpl not valid\n");
+      BX_PANIC(("task_switch: ES.dpl not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_es_selector & 0xfffc;
       goto post_exception;
       }
     else if (es_descriptor.p==0) {
-      BX_CPU_THIS_PTR panic("task_switch: ES.p==0\n");
+      BX_PANIC(("task_switch: ES.p==0\n"));
       exception_no = BX_NP_EXCEPTION;
       error_code   = raw_es_selector & 0xfffc;
       goto post_exception;
@@ -793,7 +794,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     Boolean good;
     good = fetch_raw_descriptor2(&fs_selector, &dword1, &dword2);
     if (!good) {
-      BX_CPU_THIS_PTR info("task_switch: bad FS fetch\n");
+      BX_INFO(("task_switch: bad FS fetch\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_fs_selector & 0xfffc;
       goto post_exception;
@@ -803,7 +804,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     if (fs_descriptor.valid==0 || fs_descriptor.segment==0 ||
         (fs_descriptor.u.segment.executable &&
          fs_descriptor.u.segment.r_w==0)) {
-      BX_CPU_THIS_PTR panic("task_switch: FS not valid\n");
+      BX_PANIC(("task_switch: FS not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_fs_selector & 0xfffc;
       goto post_exception;
@@ -812,13 +813,13 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     else if (fs_descriptor.type<12 &&
         (fs_descriptor.dpl<cs_selector.rpl ||
          fs_descriptor.dpl<fs_selector.rpl)) {
-      BX_CPU_THIS_PTR panic("task_switch: FS.dpl not valid\n");
+      BX_PANIC(("task_switch: FS.dpl not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_fs_selector & 0xfffc;
       goto post_exception;
       }
     else if (fs_descriptor.p==0) {
-      BX_CPU_THIS_PTR panic("task_switch: FS.p==0\n");
+      BX_PANIC(("task_switch: FS.p==0\n"));
       exception_no = BX_NP_EXCEPTION;
       error_code   = raw_fs_selector & 0xfffc;
       goto post_exception;
@@ -835,7 +836,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     Boolean good;
     good = fetch_raw_descriptor2(&gs_selector, &dword1, &dword2);
     if (!good) {
-      BX_CPU_THIS_PTR info("task_switch: bad GS fetch\n");
+      BX_INFO(("task_switch: bad GS fetch\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_gs_selector & 0xfffc;
       goto post_exception;
@@ -845,7 +846,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     if (gs_descriptor.valid==0 || gs_descriptor.segment==0 ||
         (gs_descriptor.u.segment.executable &&
          gs_descriptor.u.segment.r_w==0)) {
-      BX_CPU_THIS_PTR panic("task_switch: GS not valid\n");
+      BX_PANIC(("task_switch: GS not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_gs_selector & 0xfffc;
       goto post_exception;
@@ -854,13 +855,13 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
     else if (gs_descriptor.type<12 &&
         (gs_descriptor.dpl<cs_selector.rpl ||
          gs_descriptor.dpl<gs_selector.rpl)) {
-      BX_CPU_THIS_PTR panic("task_switch: GS.dpl not valid\n");
+      BX_PANIC(("task_switch: GS.dpl not valid\n"));
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_gs_selector & 0xfffc;
       goto post_exception;
       }
     else if (gs_descriptor.p==0) {
-      BX_CPU_THIS_PTR panic("task_switch: GS.p==0\n");
+      BX_PANIC(("task_switch: GS.p==0\n"));
       //exception(BX_NP_EXCEPTION, raw_gs_selector & 0xfffc, 0);
       exception_no = BX_NP_EXCEPTION;
       error_code   = raw_gs_selector & 0xfffc;
@@ -879,7 +880,7 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
   if ((tss_descriptor->type>=9) && (trap_word & 0x0001)) {
     BX_CPU_THIS_PTR debug_trap |= 0x00008000; // BT flag in DR6
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
-    BX_CPU_THIS_PTR info("task_switch: T bit set in new TSS.\n");
+    BX_INFO(("task_switch: T bit set in new TSS.\n"));
     }
 
 
@@ -893,8 +894,8 @@ BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 post_exception:
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
-  BX_CPU_THIS_PTR info("task switch: posting exception %u after commit point\n",
-    exception_no);
+  BX_INFO(("task switch: posting exception %u after commit point\n",
+    exception_no));
   exception(exception_no, error_code, 0);
   return;
 }
@@ -904,7 +905,7 @@ post_exception:
 BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
 {
   if (BX_CPU_THIS_PTR tr.cache.valid==0)
-    BX_CPU_THIS_PTR panic("get_SS_ESP_from_TSS: TR.cache invalid\n");
+    BX_PANIC(("get_SS_ESP_from_TSS: TR.cache invalid\n"));
 
   if (BX_CPU_THIS_PTR tr.cache.type==9) {
     // 32-bit TSS
@@ -938,8 +939,8 @@ BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     *esp = temp16; // truncate
     }
   else {
-    BX_CPU_THIS_PTR panic("get_SS_ESP_from_TSS: TR is bogus type (%u)\n",
-             (unsigned) BX_CPU_THIS_PTR tr.cache.type);
+    BX_PANIC(("get_SS_ESP_from_TSS: TR is bogus type (%u)\n",
+             (unsigned) BX_CPU_THIS_PTR tr.cache.type));
     }
 }
 #endif
@@ -964,7 +965,7 @@ BX_CPU_C::task_switch(bx_selector_t *selector,
   UNUSED(dword1);
   UNUSED(dword2);
 
-  BX_CPU_THIS_PTR info("task_switch(): not complete\n");
+  BX_INFO(("task_switch(): not complete\n"));
 }
 #endif
 

@@ -26,6 +26,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 
@@ -45,7 +46,7 @@ BX_CPU_C::push_16(Bit16u value16)
 #endif
       temp_ESP = SP;
     if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 2)) {
-      BX_CPU_THIS_PTR panic("push_16(): can't push on stack\n");
+      BX_PANIC(("push_16(): can't push on stack\n"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
@@ -63,13 +64,13 @@ BX_CPU_C::push_16(Bit16u value16)
     { /* real mode */
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
       if (ESP == 1)
-        BX_CPU_THIS_PTR panic("CPU shutting down due to lack of stack space, ESP==1\n");
+        BX_PANIC(("CPU shutting down due to lack of stack space, ESP==1\n"));
       ESP -= 2;
       temp_ESP = ESP;
       }
     else {
       if (SP == 1)
-        BX_CPU_THIS_PTR panic("CPU shutting down due to lack of stack space, SP==1\n");
+        BX_PANIC(("CPU shutting down due to lack of stack space, SP==1\n"));
       SP -= 2;
       temp_ESP = SP;
       }
@@ -89,13 +90,13 @@ BX_CPU_C::push_32(Bit32u value32)
     /* 32bit stack size: pushes use SS:ESP  */
     if (protected_mode()) {
       if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, ESP, 4)) {
-        BX_CPU_THIS_PTR panic("push_32(): push outside stack limits\n");
+        BX_PANIC(("push_32(): push outside stack limits\n"));
         /* #SS(0) */
         }
       }
     else { /* real mode */
       if ((ESP>=1) && (ESP<=3)) {
-        BX_CPU_THIS_PTR panic("push_32: ESP=%08x\n", (unsigned) ESP);
+        BX_PANIC(("push_32: ESP=%08x\n", (unsigned) ESP));
         }
       }
 
@@ -107,13 +108,13 @@ BX_CPU_C::push_32(Bit32u value32)
   else { /* 16bit stack size: pushes use SS:SP  */
     if (protected_mode()) {
       if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, SP, 4)) {
-        BX_CPU_THIS_PTR panic("push_32(): push outside stack limits\n");
+        BX_PANIC(("push_32(): push outside stack limits\n"));
         /* #SS(0) */
         }
       }
     else { /* real mode */
       if ((SP>=1) && (SP<=3)) {
-        BX_CPU_THIS_PTR panic("push_32: SP=%08x\n", (unsigned) SP);
+        BX_PANIC(("push_32: SP=%08x\n", (unsigned) SP));
         }
       }
 
@@ -140,7 +141,7 @@ BX_CPU_C::pop_16(Bit16u *value16_ptr)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if ( !can_pop(2) ) {
-      BX_CPU_THIS_PTR info("pop_16(): can't pop from stack\n");
+      BX_INFO(("pop_16(): can't pop from stack\n"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
@@ -172,7 +173,7 @@ BX_CPU_C::pop_32(Bit32u *value32_ptr)
   /* 16 bit stack mode: use SS:SP */
   if (protected_mode()) {
     if ( !can_pop(4) ) {
-      BX_CPU_THIS_PTR panic("pop_32(): can't pop from stack\n");
+      BX_PANIC(("pop_32(): can't pop from stack\n"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
@@ -195,7 +196,7 @@ BX_CPU_C::pop_32(Bit32u *value32_ptr)
 BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 {
   if ( real_mode() ) { /* code not needed ??? */
-    BX_CPU_THIS_PTR panic("can_push(): called in real mode\n");
+    BX_PANIC(("can_push(): called in real mode\n"));
     return(0); /* never gets here */
     }
 
@@ -205,12 +206,12 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 
 
   if (descriptor->valid==0) {
-    BX_CPU_THIS_PTR panic("can_push(): SS invalidated.\n");
+    BX_PANIC(("can_push(): SS invalidated.\n"));
     return(0);
     }
 
   if (descriptor->p==0) {
-    BX_CPU_THIS_PTR panic("can_push(): not present\n");
+    BX_PANIC(("can_push(): not present\n"));
     return(0);
     }
 
@@ -224,27 +225,27 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
       expand_down_limit = 0x0000ffff;
 
     if (esp==0) {
-      BX_CPU_THIS_PTR panic("can_push(): esp=0, wraparound?\n");
+      BX_PANIC(("can_push(): esp=0, wraparound?\n"));
       return(0);
       }
 
     if (esp < bytes) {
-      BX_CPU_THIS_PTR panic("can_push(): expand-down: esp < N\n");
+      BX_PANIC(("can_push(): expand-down: esp < N\n"));
       return(0);
       }
     if ( (esp - bytes) <= descriptor->u.segment.limit_scaled ) {
-      BX_CPU_THIS_PTR panic("can_push(): expand-down: esp-N < limit\n");
+      BX_PANIC(("can_push(): expand-down: esp-N < limit\n"));
       return(0);
       }
     if ( esp > expand_down_limit ) {
-      BX_CPU_THIS_PTR panic("can_push(): esp > expand-down-limit\n");
+      BX_PANIC(("can_push(): esp > expand-down-limit\n"));
       return(0);
       }
     return(1);
     }
   else { /* normal (expand-up) segment */
     if (descriptor->u.segment.limit_scaled==0) {
-      BX_CPU_THIS_PTR panic("can_push(): found limit of 0\n");
+      BX_PANIC(("can_push(): found limit of 0\n"));
       return(0);
       }
 
@@ -255,17 +256,17 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
         return(1);
       if ((descriptor->u.segment.d_b==0) && (descriptor->u.segment.limit_scaled>=0xffff))
         return(1);
-      BX_CPU_THIS_PTR panic("can_push(): esp=0, normal, wraparound? limit=%08x\n",
-        descriptor->u.segment.limit_scaled);
+      BX_PANIC(("can_push(): esp=0, normal, wraparound? limit=%08x\n",
+        descriptor->u.segment.limit_scaled));
       return(0);
       }
 
     if (esp < bytes) {
-      BX_CPU_THIS_PTR info("can_push(): expand-up: esp < N\n");
+      BX_INFO(("can_push(): expand-up: esp < N\n"));
       return(0);
       }
     if ((esp-1) > descriptor->u.segment.limit_scaled) {
-      BX_CPU_THIS_PTR info("can_push(): expand-up: SP > limit\n");
+      BX_INFO(("can_push(): expand-up: SP > limit\n"));
       return(0);
       }
     /* all checks pass */
@@ -282,7 +283,7 @@ BX_CPU_C::can_pop(Bit32u bytes)
   Bit32u temp_ESP, expand_down_limit;
 
   /* ??? */
-  if (real_mode()) BX_CPU_THIS_PTR panic("can_pop(): called in real mode?\n");
+  if (real_mode()) BX_PANIC(("can_pop(): called in real mode?\n"));
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* Big bit set: use ESP */
     temp_ESP = ESP;
@@ -294,19 +295,19 @@ BX_CPU_C::can_pop(Bit32u bytes)
     }
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0) {
-    BX_CPU_THIS_PTR panic("can_pop(): SS invalidated.\n");
+    BX_PANIC(("can_pop(): SS invalidated.\n"));
     return(0); /* never gets here */
     }
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p==0) { /* ??? */
-    BX_CPU_THIS_PTR panic("can_pop(): SS.p = 0\n");
+    BX_PANIC(("can_pop(): SS.p = 0\n"));
     return(0);
     }
 
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed) { /* expand down segment */
     if ( temp_ESP == expand_down_limit ) {
-      BX_CPU_THIS_PTR panic("can_pop(): found SP=ffff\n");
+      BX_PANIC(("can_pop(): found SP=ffff\n"));
       return(0);
       }
     if ( ((expand_down_limit - temp_ESP) + 1) >= bytes )
@@ -315,14 +316,14 @@ BX_CPU_C::can_pop(Bit32u bytes)
     }
   else { /* normal (expand-up) segment */
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled==0) {
-      BX_CPU_THIS_PTR panic("can_pop(): SS.limit = 0\n");
+      BX_PANIC(("can_pop(): SS.limit = 0\n"));
       }
     if ( temp_ESP == expand_down_limit ) {
-      BX_CPU_THIS_PTR panic("can_pop(): found SP=ffff\n");
+      BX_PANIC(("can_pop(): found SP=ffff\n"));
       return(0);
       }
     if ( temp_ESP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled ) {
-      BX_CPU_THIS_PTR panic("can_pop(): eSP > SS.limit\n");
+      BX_PANIC(("can_pop(): eSP > SS.limit\n"));
       return(0);
       }
     if ( ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled - temp_ESP) + 1) >= bytes )

@@ -499,7 +499,7 @@ typedef struct {
 
 typedef void (*BxDTShim_t)(void);
 
-class BX_CPU_C : logfunctions {
+class BX_CPU_C : public logfunctions {
 
 public: // for now...
 

@@ -22,6 +22,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 /* the device id and stepping id are loaded into DH & DL upon processor
@@ -38,7 +39,7 @@ BX_CPU_C::BX_CPU_C(void)
 
   BX_CPU_THIS_PTR setio(SAFE_GET_IOFUNC());
   BX_CPU_THIS_PTR setprefix(cpu, __FILE__, __LINE__);
-  BX_CPU_THIS_PTR info( "(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
+  BX_INFO(( "(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID));
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
      you can assume there's always a base & index register used.  For
@@ -173,7 +174,7 @@ fprintf(stderr, "&DTReadRMW8vShim is %x\n", (unsigned) &DTReadRMW8vShim);
 
 BX_CPU_C::~BX_CPU_C(void)
 {
-  BX_CPU_THIS_PTR info("(%u)BX_CPU_C::~BX_CPU_C(void) called\n", BX_SIM_ID);
+  BX_INFO(("(%u)BX_CPU_C::~BX_CPU_C(void) called\n", BX_SIM_ID));
   BX_INSTR_SHUTDOWN();
 }
 
@@ -592,7 +593,7 @@ BX_CPU_C::sanity_checks(void)
        ch != ((ECX >> 8) & 0xFF) ||
        dh != ((EDX >> 8) & 0xFF) ||
        bh != ((EBX >> 8) & 0xFF) ) {
-    BX_CPU_THIS_PTR panic("problems using BX_READ_8BIT_REG()!\n");
+    BX_PANIC(("problems using BX_READ_8BIT_REG()!\n"));
     }
 
   ax = AX;
@@ -612,7 +613,7 @@ BX_CPU_C::sanity_checks(void)
        bp != (EBP & 0xFFFF) ||
        si != (ESI & 0xFFFF) ||
        di != (EDI & 0xFFFF) ) {
-    BX_CPU_THIS_PTR panic("problems using BX_READ_16BIT_REG()!\n");
+    BX_PANIC(("problems using BX_READ_16BIT_REG()!\n"));
     }
 
 
@@ -627,11 +628,11 @@ BX_CPU_C::sanity_checks(void)
 
 
   if (sizeof(Bit8u)  != 1  ||  sizeof(Bit8s)  != 1)
-    BX_CPU_THIS_PTR panic("data type Bit8u or Bit8s is not of length 1 byte!\n");
+    BX_PANIC(("data type Bit8u or Bit8s is not of length 1 byte!\n"));
   if (sizeof(Bit16u) != 2  ||  sizeof(Bit16s) != 2)
-    BX_CPU_THIS_PTR panic("data type Bit16u or Bit16s is not of length 2 bytes!\n");
+    BX_PANIC(("data type Bit16u or Bit16s is not of length 2 bytes!\n"));
   if (sizeof(Bit32u) != 4  ||  sizeof(Bit32s) != 4)
-    BX_CPU_THIS_PTR panic("data type Bit32u or Bit32s is not of length 4 bytes!\n");
+    BX_PANIC(("data type Bit32u or Bit32s is not of length 4 bytes!\n"));
 
   fprintf(stderr, "#(%u)all sanity checks passed!\n", BX_SIM_ID);
 }

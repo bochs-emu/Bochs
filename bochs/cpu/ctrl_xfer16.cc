@@ -23,6 +23,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 
@@ -52,7 +53,7 @@ BX_CPU_C::RETnear16_Iw(BxInstruction_t *i)
 
     if (protected_mode()) {
       if ( !can_pop(2) ) {
-        BX_CPU_THIS_PTR panic("retnear_iw: can't pop IP\n");
+        BX_PANIC(("retnear_iw: can't pop IP\n"));
         /* ??? #SS(0) -or #GP(0) */
         }
 
@@ -60,11 +61,11 @@ BX_CPU_C::RETnear16_Iw(BxInstruction_t *i)
         2, CPL==3, BX_READ, &return_IP);
 
       if ( return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        BX_CPU_THIS_PTR panic("retnear_iw: IP > limit\n");
+        BX_PANIC(("retnear_iw: IP > limit\n"));
         }
 
       if ( !can_pop(2 + imm16) ) {
-        BX_CPU_THIS_PTR panic("retnear_iw: can't release bytes from stack\n");
+        BX_PANIC(("retnear_iw: can't release bytes from stack\n"));
         /* #GP(0) -or #SS(0) ??? */
         }
 
@@ -106,7 +107,7 @@ BX_CPU_C::RETnear16(BxInstruction_t *i)
 
     if (protected_mode()) {
       if ( !can_pop(2) ) {
-        BX_CPU_THIS_PTR panic("retnear: can't pop IP\n");
+        BX_PANIC(("retnear: can't pop IP\n"));
         /* ??? #SS(0) -or #GP(0) */
         }
 
@@ -114,7 +115,7 @@ BX_CPU_C::RETnear16(BxInstruction_t *i)
         2, CPL==3, BX_READ, &return_IP);
 
       if ( return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        BX_CPU_THIS_PTR panic("retnear: IP > limit\n");
+        BX_PANIC(("retnear: IP > limit\n"));
         }
 
       BX_CPU_THIS_PTR eip = return_IP;
@@ -217,7 +218,7 @@ BX_CPU_C::CALL_Aw(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if ( protected_mode() &&
        (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) ) {
-    BX_CPU_THIS_PTR panic("call_av: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit\n");
+    BX_PANIC(("call_av: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit\n"));
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 #endif
@@ -290,11 +291,11 @@ BX_CPU_C::CALL_Ew(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-        BX_CPU_THIS_PTR panic("call_ev: IP out of CS limits!\n");
+        BX_PANIC(("call_ev: IP out of CS limits!\n"));
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 2) ) {
-        BX_CPU_THIS_PTR panic("call_ev: can't push IP\n");
+        BX_PANIC(("call_ev: can't push IP\n"));
         }
       }
 #endif
@@ -318,7 +319,7 @@ BX_CPU_C::CALL16_Ep(BxInstruction_t *i)
 
     /* op1_16 is a register or memory reference */
     if (i->mod == 0xc0) {
-      BX_CPU_THIS_PTR panic("CALL_Ep: op1 is a register");
+      BX_PANIC(("CALL_Ep: op1 is a register"));
       }
 
     /* pointer, segment address pair */
@@ -358,7 +359,7 @@ BX_CPU_C::JMP_Jw(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      BX_CPU_THIS_PTR panic("jmp_jv: offset outside of CS limits\n");
+      BX_PANIC(("jmp_jv: offset outside of CS limits\n"));
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -403,7 +404,7 @@ BX_CPU_C::JCC_Jw(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        BX_CPU_THIS_PTR panic("jo_routine: offset outside of CS limits\n");
+        BX_PANIC(("jo_routine: offset outside of CS limits\n"));
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
@@ -443,7 +444,7 @@ BX_CPU_C::JMP_Ew(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_CPU_THIS_PTR panic("jmp_ev: IP out of CS limits!\n");
+      BX_PANIC(("jmp_ev: IP out of CS limits!\n"));
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -465,7 +466,7 @@ BX_CPU_C::JMP16_Ep(BxInstruction_t *i)
     /* op1_16 is a register or memory reference */
     if (i->mod == 0xc0) {
       /* far indirect must specify a memory address */
-      BX_CPU_THIS_PTR panic("JMP_Ep(): op1 is a register\n");
+      BX_PANIC(("JMP_Ep(): op1 is a register\n"));
       }
 
     /* pointer, segment address pair */

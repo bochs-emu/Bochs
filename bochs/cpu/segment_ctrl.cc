@@ -29,6 +29,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
 
@@ -40,7 +41,7 @@ BX_CPU_C::LES_GvMp(BxInstruction_t *i)
 {
   if (i->mod == 0xc0) {
     // (BW) NT seems to use this when booting.
-    BX_CPU_THIS_PTR info("invalid use of LES, must use memory reference!\n");
+    BX_INFO(("invalid use of LES, must use memory reference!\n"));
     UndefinedOpcode(i);
     }
 
@@ -74,7 +75,7 @@ BX_CPU_C::LES_GvMp(BxInstruction_t *i)
 BX_CPU_C::LDS_GvMp(BxInstruction_t *i)
 {
   if (i->mod == 0xc0) {
-    BX_CPU_THIS_PTR panic("invalid use of LDS, must use memory reference!\n");
+    BX_PANIC(("invalid use of LDS, must use memory reference!\n"));
     UndefinedOpcode(i);
     }
 
@@ -108,11 +109,11 @@ BX_CPU_C::LDS_GvMp(BxInstruction_t *i)
 BX_CPU_C::LFS_GvMp(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_CPU_THIS_PTR panic("lfs_gvmp: not supported on 8086\n");
+  BX_PANIC(("lfs_gvmp: not supported on 8086\n"));
 #else /* 386+ */
 
   if (i->mod == 0xc0) {
-    BX_CPU_THIS_PTR panic("invalid use of LFS, must use memory reference!\n");
+    BX_PANIC(("invalid use of LFS, must use memory reference!\n"));
     UndefinedOpcode(i);
     }
 
@@ -145,11 +146,11 @@ BX_CPU_C::LFS_GvMp(BxInstruction_t *i)
 BX_CPU_C::LGS_GvMp(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_CPU_THIS_PTR panic("lgs_gvmp: not supported on 8086\n");
+  BX_PANIC(("lgs_gvmp: not supported on 8086\n"));
 #else /* 386+ */
 
   if (i->mod == 0xc0) {
-    BX_CPU_THIS_PTR panic("invalid use of LGS, must use memory reference!\n");
+    BX_PANIC(("invalid use of LGS, must use memory reference!\n"));
     UndefinedOpcode(i);
     }
 
@@ -182,11 +183,11 @@ BX_CPU_C::LGS_GvMp(BxInstruction_t *i)
 BX_CPU_C::LSS_GvMp(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  BX_CPU_THIS_PTR panic("lss_gvmp: not supported on 8086\n");
+  BX_PANIC(("lss_gvmp: not supported on 8086\n"));
 #else /* 386+ */
 
   if (i->mod == 0xc0) {
-    BX_CPU_THIS_PTR panic("invalid use of LSS, must use memory reference!\n");
+    BX_PANIC(("invalid use of LSS, must use memory reference!\n"));
     UndefinedOpcode(i);
     }
 
