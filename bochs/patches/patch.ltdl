@@ -1,0 +1,110 @@
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.156.2.10
+diff -u -r1.156.2.10 main.cc
+--- main.cc	9 Oct 2002 07:03:32 -0000	1.156.2.10
++++ main.cc	9 Oct 2002 07:51:46 -0000
+@@ -69,7 +69,7 @@
+ void bx_init_bx_dbg (void);
+ void bx_emulate_hga_dumps_timer(void);
+ static char *divider = "========================================================================";
+-static logfunctions thePluginLog;
++logfunctions thePluginLog;
+ logfunctions *pluginlog = &thePluginLog;
+ 
+ 
+Index: plugin.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Attic/plugin.h,v
+retrieving revision 1.1.2.13
+diff -u -r1.1.2.13 plugin.h
+--- plugin.h	9 Oct 2002 06:58:56 -0000	1.1.2.13
++++ plugin.h	9 Oct 2002 07:51:46 -0000
+@@ -20,6 +20,8 @@
+ #ifndef __PLUGIN_H
+ #define __PLUGIN_H
+ 
++#include <ltdl.h>
++
+ class bx_devices_c;
+ extern logfunctions  *pluginlog;
+ 
+@@ -202,7 +204,7 @@
+ typedef struct _plugin_t
+ {
+     int  initialized;
+-    void *handle;
++    lt_dlhandle handle;
+     int  argc;
+     char *name, *args, *argv[MAX_ARGC];
+     int  (*plugin_init)(struct _plugin_t *plugin, int argc, char *argv[]);
+Index: plugin.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Attic/plugin.cc,v
+retrieving revision 1.1.2.18
+diff -u -r1.1.2.18 plugin.cc
+--- plugin.cc	9 Oct 2002 07:05:36 -0000	1.1.2.18
++++ plugin.cc	9 Oct 2002 07:51:46 -0000
+@@ -510,7 +510,7 @@
+     if (plugin->initialized)
+         plugin->plugin_fini ();
+ 
+-    dlclose (plugin->handle);
++    lt_dlclose (plugin->handle);
+     free (plugin->name);
+     free (plugin->args);
+ 
+@@ -532,7 +532,6 @@
+     return;
+ }
+ 
+-
+   void
+ plugin_load (char *name, char *args)
+ {
+@@ -549,25 +548,25 @@
+     plugin->args = args;
+     plugin->initialized = 0;
+ 
+-    plugin->handle = dlopen (name, RTLD_LAZY);
++    plugin->handle = lt_dlopen (name);
+     if (!plugin->handle)
+     {
+-      BX_PANIC (("dlopen failed: %s", dlerror ()));
++      BX_PANIC (("dlopen failed: %s", lt_dlerror ()));
+       free (plugin);
+       return;
+     }
+ 
+     plugin->plugin_init =  
+       (int  (*)(struct _plugin_t *, int, char *[])) /* monster typecast */
+-      dlsym (plugin->handle, PLUGIN_INIT);
+-    if ((plug_err = dlerror ()) != NULL)
++      lt_dlsym (plugin->handle, PLUGIN_INIT);
++    if ((plug_err = lt_dlerror ()) != NULL)
+     {
+         pluginlog->panic("could not find plugin_init: %s", plug_err);
+         plugin_abort ();
+     }
+ 
+-    plugin->plugin_fini = (void (*)(void)) dlsym (plugin->handle, PLUGIN_FINI);
+-    if ((plug_err = dlerror ()) != NULL)
++    plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, PLUGIN_FINI);
++    if ((plug_err = lt_dlerror ()) != NULL)
+     {
+         pluginlog->panic("could not find plugin_fini: %s", plug_err);
+         plugin_abort ();
+@@ -777,10 +776,10 @@
+   sprintf(plugin_filename,"%s%s",PLUGIN_PATH,name);
+ 
+   plugin_load (plugin_filename, "");
+-  void *handle = dlopen (plugin_filename, RTLD_LAZY);
++  lt_dlhandle handle = lt_dlopen (plugin_filename);
+   if (!handle) {
+     pluginlog->error("could not open plugin %s", plugin_filename);
+-    pluginlog->panic("dlopen error: %s", dlerror ());
++    pluginlog->panic("dlopen error: %s", lt_dlerror ());
+   }
+   pluginlog->info("loaded plugin %s",plugin_filename);
+   return 0;
