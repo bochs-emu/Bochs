@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.63 2003-08-19 00:37:03 cbothamy Exp $
+// $Id: cdrom.cc,v 1.64 2003-08-21 18:27:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -468,7 +468,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.63 2003-08-19 00:37:03 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.64 2003-08-21 18:27:01 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -679,6 +679,7 @@ cdrom_interface::start_cdrom()
     return(false); // OS not supported yet, return false always.
 #endif
     }
+  return(false);
 }
 
   void
