@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.62 2003-08-30 11:21:56 vruppert Exp $
+// $Id: wxdialog.cc,v 1.63 2003-08-30 17:58:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1285,6 +1285,7 @@ void ParamDialog::AddParam (
   int type = param_generic->get_type ();
   char *prompt = pstr->param->get_label ();
   if (!prompt) prompt = pstr->param->get_name ();
+  char *description = pstr->param->get_description ();
   wxASSERT (prompt != NULL);
 #define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (context->parent, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
   switch (type) {
@@ -1293,6 +1294,7 @@ void ParamDialog::AddParam (
 	if (!plain) ADD_LABEL (prompt);
 	wxCheckBox *ckbx = new wxCheckBox (context->parent, pstr->id, "");
 	ckbx->SetValue (param->get ());
+        if (description) ckbx->SetToolTip(description);
 	sizer->Add (ckbx);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	pstr->u.checkbox = ckbx;
@@ -1308,6 +1310,7 @@ void ParamDialog::AddParam (
 	if (!format)
 	  format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
 	SetTextCtrl (textctrl, format, param->get ());
+        if (description) textctrl->SetToolTip(description);
 	sizer->Add (textctrl);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	pstr->u.text = textctrl;
@@ -1319,6 +1322,7 @@ void ParamDialog::AddParam (
 	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
 	wxChoice *choice = new wxChoice (context->parent, pstr->id);
+        if (description) choice->SetToolTip(description);
 	sizer->Add (choice, 0, wxADJUST_MINSIZE);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	// fill in the choices
@@ -1337,6 +1341,7 @@ void ParamDialog::AddParam (
 	if (!plain) ADD_LABEL (prompt);
 	bool isFilename = param->get_options ()->get () & param->IS_FILENAME;
 	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : normalTextSize);
+        if (description) txtctrl->SetToolTip(description);
         if (param->get_options()->get () & param->RAW_BYTES) {
           char *value = param->getptr ();
           wxString buffer;
