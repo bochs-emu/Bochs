@@ -1,0 +1,31 @@
+<li><h2>
+<a href="http://sourceforge.net/cvs/?group_id=12580">Current CVS tree</a> (these notes updated 5/9/2001)
+</h2>
+  <ul>
+  <li> Fixed BX_PANIC_IS_FATAL bug, described below.  Also fixed bx_panic bug that would silently discard panic messages if the logfd had not been opened yet (such as while parsing .bochsrc).
+  <li> implement diskd (second hard drive).  You cannot have both a diskd and a cdromd
+  <li> applied Todd Fries' patch to add support for 2.88 floppy image
+  <li> applied Todd Fries' patch to do software reset instead of panic
+  <li> add --with-term GUI mode. uses text mode display only
+  <li> add --enable-split-hd.  Split hard drive mode allows several partial disk image files (e.g. win95-1, win95-2, win95-3) to be treated as one large file, so that you can store each partition in a separate file, if you get the file sizes to match the partition table boundaries.  Split hard disk patch requires a new rombios, BIOS-bochs-2001_0509.
+  </ul>
+
+There are also two active branches in addition to the main branch, 
+BRANCH-smp-bochs and BRANCH-io-cleanup.  
+
+<ul>
+<li>
+The SMP bochs branch allows
+Bochs to simulate a multiple processor machine.  It does NOT make Bochs
+perform better or run in different CPUs on a real SMP machine.  This branch 
+will be integrated into the main source tree in the near future.  It has
+not been tested much since REL-smpbochs-04-03-2001, but has most of the
+same bug fixes and features that the main branch had on 5/8/2001.  Est. time 
+frame to merge: next weekend 5/20.
+<li>
+The I/O cleanup branch was created 5/10 by Todd and Bryce, who are working
+on revamping the bochs logging code.  Since this involved so many files 
+and several commits, we are working on a branch to keep the main code
+clean until the new I/O code is ready.  Time frame to merge: end of this 
+weekend (5/13).
+<ul>
