@@ -248,8 +248,9 @@ class iofunctions {
 		  "VGA ",
 		  "ST  ",
 		  "DEV ",
-		  "MEM "
-		  "DIS "
+		  "MEM ",
+		  "DIS ",
+		  "GUI "
 		};
 		return logclass[i];
 	}
@@ -279,6 +280,7 @@ class iofunctions {
 #define    DEVLOG          21
 #define    MEMLOG          22
 #define    DISLOG          23
+#define    GUILOG          24
 
 
 public:
