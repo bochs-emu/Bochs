@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.13 2001-11-15 23:35:26 vruppert Exp $
+// $Id: parallel.cc,v 1.14 2001-12-18 21:58:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,23 +51,23 @@ bx_parallel_c::bx_parallel_c(void)
 
 bx_parallel_c::~bx_parallel_c(void)
 {
-  if (OUTPUT != NULL) 
+  if (OUTPUT != NULL)
     fclose(OUTPUT);
 }
 
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.13 2001-11-15 23:35:26 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.14 2001-12-18 21:58:59 vruppert Exp $"));
   BX_PAR_THIS devices = d;
 
   /* PARALLEL PORT 1 */
 
   BX_PAR_THIS devices->register_irq(7, "Parallel Port 1");
-  BX_PAR_THIS devices->register_io_read_handler(this,
-       read_handler, 0x0379, "Parallel Port 1");
-  BX_PAR_THIS devices->register_io_read_handler(this,
-       read_handler, 0x037A, "Parallel Port 1");
+  for (unsigned addr=0x0378; addr<=0x037A; addr++) {
+    BX_PAR_THIS devices->register_io_read_handler(this,
+         read_handler, addr, "Parallel Port 1");
+    }
   BX_PAR_THIS devices->register_io_write_handler(this,
        write_handler, 0x0378, "Parallel Port 1");
   BX_PAR_THIS devices->register_io_write_handler(this,
@@ -84,6 +84,7 @@ bx_parallel_c::init(bx_devices_c *d)
   BX_PAR_THIS s.CONTROL.init     = 1;
   BX_PAR_THIS s.CONTROL.slct_in  = 1;
   BX_PAR_THIS s.CONTROL.irq      = 0;
+  BX_PAR_THIS s.CONTROL.input    = 0;
 
   BX_PAR_THIS initmode = 0;
 
@@ -97,15 +98,17 @@ bx_parallel_c::init(bx_devices_c *d)
   void
 bx_parallel_c::virtual_printer(void)
 {
-  if (OUTPUT != NULL) {
-    fputc(BX_PAR_THIS s.data, OUTPUT);
-    fflush (OUTPUT);
+  if (BX_PAR_THIS s.STATUS.slct) {
+    if (OUTPUT != NULL) {
+      fputc(BX_PAR_THIS s.data, OUTPUT);
+      fflush (OUTPUT);
+      }
+    if (BX_PAR_THIS s.CONTROL.irq == 1) {
+      BX_PAR_THIS devices->pic->trigger_irq(7);
+      }
+    BX_PAR_THIS s.STATUS.ack = 0;
+    BX_PAR_THIS s.STATUS.busy = 1;
     }
-  if (BX_PAR_THIS s.CONTROL.irq == 1) {
-    BX_PAR_THIS devices->pic->trigger_irq(7);
-    }
-  BX_PAR_THIS s.STATUS.ack = 0;
-  BX_PAR_THIS s.STATUS.busy = 1;
 }
 
   // static IO port read callback handler
@@ -132,6 +135,15 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
 
   if (io_len == 1) {
     switch (address) {
+      case 0x0378:
+        if (!BX_PAR_THIS s.CONTROL.input) {
+          return (Bit32u)BX_PAR_THIS s.data;
+          }
+        else {
+          BX_ERROR(("read: input mode not supported"));
+          return (0xFF);
+          }
+        break;
       case 0x0379:
 	{
 	  retval = ((BX_PAR_THIS s.STATUS.busy  << 7) |
@@ -150,18 +162,19 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
 	    BX_PAR_THIS s.STATUS.slct  = 1;
 	    BX_PAR_THIS initmode = 0;
 	    }
-	  BX_DEBUG(("printer status register returns 0x%02x", retval));
+	  BX_DEBUG(("read: status register returns 0x%02x", retval));
 	  return retval;
 	}
 	break;
       case 0x037A:
-	{
-	  retval = ((BX_PAR_THIS s.CONTROL.irq      << 4) |
+        {
+          retval = ((BX_PAR_THIS s.CONTROL.input    << 5) |
+                    (BX_PAR_THIS s.CONTROL.irq      << 4) |
 		    (BX_PAR_THIS s.CONTROL.slct_in  << 3) |
 		    (BX_PAR_THIS s.CONTROL.init     << 2) |
 		    (BX_PAR_THIS s.CONTROL.autofeed << 1) |
 		    (BX_PAR_THIS s.CONTROL.strobe));
-	  BX_DEBUG(("printer control register returns 0x%02x", retval));
+	  BX_DEBUG(("read: control register returns 0x%02x", retval));
 	  return retval;
 	}
 	break;
@@ -194,10 +207,9 @@ bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
   if (io_len == 1) {
     switch (address) {
       case 0x0378:
-	{
-	  BX_PAR_THIS s.data = (Bit8u)value;
-	}
-	break;
+        BX_PAR_THIS s.data = (Bit8u)value;
+        BX_DEBUG(("write: data output register = 0x%02x", (Bit8u)value));
+        break;
       case 0x037A:
 	{
 	  if ((value & 0x01) == 0x01) {
@@ -224,7 +236,17 @@ bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	      BX_PAR_THIS s.CONTROL.init = 0;
 	      }
 	    }
-	  BX_PAR_THIS s.CONTROL.slct_in  = ((value & 0x08) == 0x08);
+	  if ((value & 0x08) == 0x08) {
+	    if (BX_PAR_THIS s.CONTROL.slct_in == 0) {
+	      BX_PAR_THIS s.CONTROL.slct_in = 1;
+	      BX_DEBUG(("printer now online"));
+	      }
+	  } else {
+	    if (BX_PAR_THIS s.CONTROL.slct_in == 1) {
+	      BX_PAR_THIS s.CONTROL.slct_in = 0;
+	      BX_DEBUG(("printer now offline"));
+	      }
+	    }
 	  BX_PAR_THIS s.STATUS.slct = BX_PAR_THIS s.CONTROL.slct_in;
 	  if ((value & 0x10) == 0x10) {
 	    if (BX_PAR_THIS s.CONTROL.irq == 0) {
@@ -237,8 +259,19 @@ bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	      BX_DEBUG(("polling mode selected"));
 	      }
 	    }
-	  if ((value & 0xE0) > 0) {
-	    BX_ERROR(("unsupported control bit set"));
+	  if ((value & 0x20) == 0x20) {
+	    if (BX_PAR_THIS s.CONTROL.input == 0) {
+	      BX_PAR_THIS s.CONTROL.input = 1;
+	      BX_DEBUG(("data input mode selected"));
+	      }
+	  } else {
+	    if (BX_PAR_THIS s.CONTROL.input == 1) {
+	      BX_PAR_THIS s.CONTROL.input = 0;
+	      BX_DEBUG(("data output mode selected"));
+	      }
+	    }
+	  if ((value & 0xC0) > 0) {
+	    BX_ERROR(("write: unsupported control bit ignored"));
 	    }
 	}
 	break;

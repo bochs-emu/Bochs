@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.6 2001-11-14 00:29:20 bdenney Exp $
+// $Id: parallel.h,v 1.7 2001-12-18 21:58:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,6 +48,7 @@ typedef struct {
     Boolean init;
     Boolean slct_in;
     Boolean irq;
+    Boolean input;
   } CONTROL;
 } bx_par_t;
 
