@@ -35,8 +35,13 @@ info            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO); }
 break           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
 b               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
 program         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PROGRAM); }
+cr		|
+cregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTROL_REGS); }
+r		|
+reg		|
 registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
 dirty           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIRTY); }
+linux           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LINUX); }
 dump_cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DUMP_CPU); }
 delete          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
 del             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
