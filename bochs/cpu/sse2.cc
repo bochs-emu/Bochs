@@ -1582,7 +1582,7 @@ void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_INFO(("PMINUB_VdqWdq: SSE2 instruction still not implemented"));
+  BX_PANIC(("PMINUB_VdqWdq: SSE2 instruction still not implemented"));
 #else
   BX_INFO(("PMINUB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
