@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.10 2002-03-06 18:04:58 bdenney Exp $
+// $Id: osdep.h,v 1.11 2002-03-08 04:45:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,6 +98,11 @@ extern "C" {
 #if !BX_HAVE_STRDUP
 #define strdup bx_strdup
   extern char *bx_strdup(const char *str);
+#endif
+
+#if !BX_HAVE_SOCKLEN_T
+// needed on MacOS X 10.1
+typedef int socklen_t;
 #endif
 
 //////////////////////////////////////////////////////////////////////

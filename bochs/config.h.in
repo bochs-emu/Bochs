@@ -191,6 +191,7 @@
 #define BX_HAVE_USLEEP 0
 #define BX_HAVE_NANOSLEEP 0
 #define BX_HAVE_ABORT 0
+#define BX_HAVE_SOCKLEN_T 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
 // gui. If people try to enable it elsewhere, give a compile error after the
