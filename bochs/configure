@@ -22194,6 +22194,7 @@ _ACEOF
     ;;
 esac
 
+DIALOG_OBJS=""
 case $target in
   *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw*)
 	if test "$bx_plugins" = 1; then
@@ -22261,8 +22262,10 @@ fi
 	  PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
 	fi
+    DIALOG_OBJS="win32dialog.o"
     ;;
 esac
+
 
 if test "$use_curses" = yes -a "$cross_configure" = 0; then
   echo "$as_me:$LINENO: checking for mvaddch in -lcurses" >&5
@@ -24054,6 +24057,7 @@ s,@GUI_CFLAGS@,$GUI_CFLAGS,;t t
 s,@GUI_CXXFLAGS@,$GUI_CXXFLAGS,;t t
 s,@WX_CFLAGS@,$WX_CFLAGS,;t t
 s,@WX_CXXFLAGS@,$WX_CXXFLAGS,;t t
+s,@DIALOG_OBJS@,$DIALOG_OBJS,;t t
 s,@PTHREAD_CC@,$PTHREAD_CC,;t t
 s,@PTHREAD_LIBS@,$PTHREAD_LIBS,;t t
 s,@PTHREAD_CFLAGS@,$PTHREAD_CFLAGS,;t t

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.8 2002-12-17 05:58:45 bdenney Exp $
+// $Id: textconfig.cc,v 1.9 2003-05-21 20:33:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -24,6 +24,9 @@ extern "C" {
 #include "textconfig.h"
 #include "siminterface.h"
 #include "extplugin.h"
+#ifdef WIN32
+#include "win32dialog.h"
+#endif
 
 #define CI_PATH_LENGTH 512
 
@@ -673,6 +676,9 @@ config_interface_notify_callback (void *unused, BxEvent *event)
       return event;
     case BX_SYNC_EVT_LOG_ASK:
     {
+#ifdef WIN32
+      LogAskDialog(event);
+#else
       int level = event->u.logmsg.level;
       fprintf (stderr, "========================================================================\n");
       fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
@@ -698,6 +704,7 @@ ask:
       fflush(stdout);
       fflush(stderr);
       event->retcode = choice;
+#endif
     }
     return event;
   case BX_ASYNC_EVT_REFRESH:
