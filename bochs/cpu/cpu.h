@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.205 2005-03-13 20:18:36 sshwarts Exp $
+// $Id: cpu.h,v 1.206 2005-03-15 19:00:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -326,9 +326,11 @@
 #define BX_MSR_KERNELGSBASE     0xc0000102
 #endif
 
-#define BX_MODE_IA32            0x0
-#define BX_MODE_LONG_COMPAT     0x1
-#define BX_MODE_LONG_64         0x2
+#define BX_MODE_IA32_REAL       0x0   // CR0.PE=0
+#define BX_MODE_IA32_PROTECTED  0x1   // CR0.PE=1, EFLAGS.VM=0
+#define BX_MODE_IA32_V8086      0x2   // CR0.PE=1, EFLAGS.VM=1
+#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 0, EFER.LME = 1
+#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, EFER.LME = 1
 
 #if BX_SUPPORT_X86_64
 #define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -399,9 +401,8 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::setEFlags(Bit32u val) {                       \
     BX_CPU_THIS_PTR eflags.val32 = val;                                      \
     BX_CPU_THIS_PTR eflags.VM_cached = val & (1<<17);                        \
-    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
-      BX_CPU_THIS_PTR v8086Mode = BX_CPU_THIS_PTR eflags.VM_cached;          \
-      BX_CPU_THIS_PTR protectedMode = ! BX_CPU_THIS_PTR v8086Mode;           \
+    if (BX_CPU_THIS_PTR cr0.pe && BX_CPU_THIS_PTR eflags.VM_cached) {        \
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;                         \
     }                                                                        \
   }
 
@@ -443,17 +444,15 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::assert_VM() {                                 \
     BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                             \
     BX_CPU_THIS_PTR eflags.VM_cached = 1;                                    \
-    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
-      BX_CPU_THIS_PTR protectedMode = 0;                                     \
-      BX_CPU_THIS_PTR v8086Mode = 1;                                         \
+    if (BX_CPU_THIS_PTR cr0.pe) {                                            \
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;                         \
     }                                                                        \
   }                                                                          \
   BX_CPP_INLINE void BX_CPU_C::clear_VM() {                                  \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                            \
     BX_CPU_THIS_PTR eflags.VM_cached = 0;                                    \
-    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
-      BX_CPU_THIS_PTR protectedMode = 1;                                     \
-      BX_CPU_THIS_PTR v8086Mode = 0;                                         \
+    if (BX_CPU_THIS_PTR cr0.pe) {                                            \
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;                     \
     }                                                                        \
   }                                                                          \
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                                 \
@@ -466,9 +465,8 @@ typedef struct {
     BX_CPU_THIS_PTR eflags.val32 =                                           \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
     BX_CPU_THIS_PTR eflags.VM_cached = val;                                  \
-    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
-      BX_CPU_THIS_PTR v8086Mode = val;                                       \
-      BX_CPU_THIS_PTR protectedMode = ! BX_CPU_THIS_PTR v8086Mode;           \
+    if (BX_CPU_THIS_PTR cr0.pe && BX_CPU_THIS_PTR eflags.VM_cached) {        \
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;                         \
     }                                                                        \
   }
 
@@ -1111,12 +1109,6 @@ public: // for now...
 #if BX_CPU_LEVEL >= 2
   bx_cr0_t      cr0;
 
-  // Some cached values, so we don't have to do the checks in real time
-  // in code that needs them.
-  unsigned      protectedMode; // CR0.PE=1, EFLAGS.VM=0
-  unsigned      v8086Mode;     // CR0.PE=1, EFLAGS.VM=1
-  unsigned      realMode;      // CR0.PE=0
-
   Bit32u        cr1;
   bx_address    cr2;
   bx_address    cr3;
@@ -1192,14 +1184,7 @@ public: // for now...
   Bit8u     *eipFetchPtr;
   Bit32u     pAddrA20Page; // Guest physical address of current instruction
                            // page with A20() already applied.
-
-#if BX_SUPPORT_X86_64
-  // for x86-64  (MODE_IA32,MODE_LONG,MODE_64)
   unsigned cpu_mode;
-#else
-  // x86-32 is always in IA32 mode.
-  enum { cpu_mode = BX_MODE_IA32 };
-#endif
 
 #if BX_DEBUGGER
   Bit32u watchpoint;
@@ -1243,7 +1228,7 @@ public: // for now...
 #else
 #  define BX_TLB_LPF_VALUE(lpf) (lpf)
 #endif
-    } TLB;
+  } TLB;
 #endif  // #if BX_USE_TLB
 
 
@@ -2884,17 +2869,17 @@ BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 
 BX_CPP_INLINE bx_bool BX_CPU_C::real_mode(void)
 {
-  return (BX_CPU_THIS_PTR realMode);
+  return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL);
 }
 
 BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void)
 {
-  return (BX_CPU_THIS_PTR v8086Mode);
+  return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_V8086);
 }
 
 BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
 {
-  return (BX_CPU_THIS_PTR protectedMode);
+  return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_PROTECTED);
 }
 
     BX_CPP_INLINE void

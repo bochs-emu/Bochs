@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.98 2005-03-03 20:24:52 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.99 2005-03-15 19:00:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,6 @@
 #define RCX ECX
 #define RDX EDX
 #endif
-
 
 void BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
@@ -1297,6 +1296,8 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
+  if (pe && BX_CPU_THIS_PTR get_VM()) BX_PANIC(("EFLAGS.VM=1, enter_PM"));
+
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
@@ -1334,21 +1335,13 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 #endif
   BX_CPU_THIS_PTR cr0.val32 = newCR0;
 
-  //if (BX_CPU_THIS_PTR cr0.ts)
-  //  BX_INFO(("MOV_CdRd:CR0.TS set 0x%x", (unsigned) val_32));
-
   if (prev_pe==0 && BX_CPU_THIS_PTR cr0.pe) {
     enter_protected_mode();
-    if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("EFLAGS.VM=1, enter_PM"));
-    BX_CPU_THIS_PTR protectedMode = 1;
-    BX_CPU_THIS_PTR v8086Mode = 0;
-    BX_CPU_THIS_PTR realMode = 0;
+    BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
   }
   else if (prev_pe==1 && BX_CPU_THIS_PTR cr0.pe==0) {
     enter_real_mode();
-    BX_CPU_THIS_PTR protectedMode = 0;
-    BX_CPU_THIS_PTR v8086Mode = 0;
-    BX_CPU_THIS_PTR realMode = 1;
+    BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
   }
 
 #if BX_SUPPORT_X86_64
@@ -1371,7 +1364,12 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
       }
       BX_CPU_THIS_PTR msr.lma = 0;
-      BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32;
+      if (BX_CPU_THIS_PTR cr0.pe) {
+        BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
+      }
+      else {
+        BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+      }
 #if BX_EXTERNAL_DEBUGGER
       //trap_debugger(0);
 #endif

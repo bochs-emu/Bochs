@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.67 2005-02-16 21:27:20 sshwarts Exp $
+// $Id: init.cc,v 1.68 2005-03-15 19:00:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.67 2005-02-16 21:27:20 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.68 2005-03-15 19:00:04 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -726,6 +726,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr7 = 0;   /* undefined */
 #endif
 
+  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+
 #if BX_CPU_LEVEL >= 2
   // MSW (Machine Status Word), so called on 286
   // CR0 (Control Register 0), so called on 386+
@@ -739,9 +741,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled
   // no change to cr0.val32
 #endif
-  BX_CPU_THIS_PTR protectedMode = 0;
-  BX_CPU_THIS_PTR v8086Mode = 0;
-  BX_CPU_THIS_PTR realMode = 1;
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr0.cd = 0;
@@ -750,10 +749,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr0.wp = 0; // disable write-protect
   BX_CPU_THIS_PTR cr0.ne = 0; // ndp exceptions through int 13H, DOS compat
   BX_CPU_THIS_PTR cr0.val32 |= 0x00000000;
-#endif
-
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32;
 #endif
 
   // handle reserved bits
