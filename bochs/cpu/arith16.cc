@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.35 2004-08-16 20:18:01 sshwarts Exp $
+// $Id: arith16.cc,v 1.36 2004-08-17 17:34:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -646,7 +646,7 @@ BX_CPU_C::NEG_Ew(bxInstruction_c *i)
     Write_RMW_virtual_word(diff_16);
     }
 
-  SET_FLAGS_OSZAPC_S1_16(op1_16, diff_16, BX_INSTR_NEG16);
+  SET_FLAGS_OSZAPC_RESULT_16(diff_16, BX_INSTR_NEG16);
 }
 
   void
@@ -721,8 +721,6 @@ BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_16(AX, op1_16, diff_16, BX_INSTR_COMPARE16);
 
   if (diff_16 == 0) {  // if accumulator == dest
-    // ZF = 1
-    set_ZF(1);
     // dest <-- src
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -734,8 +732,6 @@ BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
       }
     }
   else {
-    // ZF = 0
-    set_ZF(0);
     // accumulator <-- dest
     AX = op1_16;
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.31 2004-08-16 20:18:01 sshwarts Exp $
+// $Id: arith8.cc,v 1.32 2004-08-17 17:34:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -506,13 +506,13 @@ BX_CPU_C::NEG_Eb(bxInstruction_c *i)
     Write_RMW_virtual_byte(diff_8);
   }
 
-  SET_FLAGS_OSZAPC_S1_8(op1_8, diff_8, BX_INSTR_NEG8);
+  SET_FLAGS_OSZAPC_RESULT_8(diff_8, BX_INSTR_NEG8);
 }
 
   void
 BX_CPU_C::INC_Eb(bxInstruction_c *i)
 {
-  Bit8u  op1;
+  Bit8u op1;
 
   if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
@@ -565,8 +565,6 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_8(AL, op1_8, diff_8, BX_INSTR_COMPARE8);
 
   if (diff_8 == 0) {  // if accumulator == dest
-    // ZF = 1
-    set_ZF(1);
     // dest <-- src
     op2_8 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
 
@@ -578,8 +576,6 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
       }
   }
   else {
-    // ZF = 0
-    set_ZF(0);
     // accumulator <-- dest
     AL = op1_8;
   }

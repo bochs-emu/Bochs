@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.19 2004-08-16 20:18:01 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.20 2004-08-17 17:34:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,17 +144,17 @@ bx_bool BX_CPU_C::get_CFLazy(void)
           break;
 #endif
         case BX_INSTR_NEG8:
-          cf = BX_CPU_THIS_PTR oszapc.op1_8 != 0;
+          cf = BX_CPU_THIS_PTR oszapc.result_8 != 0;
           break;
         case BX_INSTR_NEG16:
-          cf = BX_CPU_THIS_PTR oszapc.op1_16 != 0;
+          cf = BX_CPU_THIS_PTR oszapc.result_16 != 0;
           break;
         case BX_INSTR_NEG32:
-          cf = BX_CPU_THIS_PTR oszapc.op1_32 != 0;
+          cf = BX_CPU_THIS_PTR oszapc.result_32 != 0;
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_NEG64:
-          cf = BX_CPU_THIS_PTR oszapc.op1_64 != 0;
+          cf = BX_CPU_THIS_PTR oszapc.result_64 != 0;
           break;
 #endif
         case BX_INSTR_LOGIC8:
@@ -310,17 +310,17 @@ bx_bool BX_CPU_C::get_AFLazy(void)
           break;
 #endif
         case BX_INSTR_NEG8:
-          af = (BX_CPU_THIS_PTR oszapc.op1_8 & 0x0f) > 0;
+          af = (BX_CPU_THIS_PTR oszapc.result_8 & 0x0f) != 0;
           break;
         case BX_INSTR_NEG16:
-          af = (BX_CPU_THIS_PTR oszapc.op1_16 & 0x0f) > 0;
+          af = (BX_CPU_THIS_PTR oszapc.result_16 & 0x0f) != 0;
           break;
         case BX_INSTR_NEG32:
-          af = (BX_CPU_THIS_PTR oszapc.op1_32 & 0x0f) > 0;
+          af = (BX_CPU_THIS_PTR oszapc.result_32 & 0x0f) != 0;
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_NEG64:
-          af = (BX_CPU_THIS_PTR oszapc.op1_64 & 0x0f) > 0;
+          af = (BX_CPU_THIS_PTR oszapc.result_64 & 0x0f) != 0;
           break;
 #endif
         case BX_INSTR_LOGIC8:
@@ -692,17 +692,17 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           break;
 #endif
         case BX_INSTR_NEG8:
-          of = (BX_CPU_THIS_PTR oszapc.op1_8 == 0x80);
+          of = (BX_CPU_THIS_PTR oszapc.result_8 == 0x80);
           break;
         case BX_INSTR_NEG16:
-          of = (BX_CPU_THIS_PTR oszapc.op1_16 == 0x8000);
+          of = (BX_CPU_THIS_PTR oszapc.result_16 == 0x8000);
           break;
         case BX_INSTR_NEG32:
-          of = (BX_CPU_THIS_PTR oszapc.op1_32 == 0x80000000);
+          of = (BX_CPU_THIS_PTR oszapc.result_32 == 0x80000000);
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_NEG64:
-          of = (BX_CPU_THIS_PTR oszapc.op1_64 == BX_CONST64(0x8000000000000000));
+          of = (BX_CPU_THIS_PTR oszapc.result_64 == BX_CONST64(0x8000000000000000));
           break;
 #endif
         case BX_INSTR_LOGIC8:
