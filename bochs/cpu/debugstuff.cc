@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.34 2005-03-15 19:00:04 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.35 2005-03-28 18:19:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,8 +32,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-  void
-BX_CPU_C::debug(Bit32u offset)
+void BX_CPU_C::debug(Bit32u offset)
 {
   BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x",
           (unsigned) EAX, (unsigned) EBX, (unsigned) ECX, (unsigned) EDX));
@@ -183,8 +182,7 @@ BX_CPU_C::debug(Bit32u offset)
 
 
 #if BX_DEBUGGER
-  Bit32u
-BX_CPU_C::dbg_get_reg(unsigned reg)
+Bit32u BX_CPU_C::dbg_get_reg(unsigned reg)
 {
   Bit32u return_val32;
 
@@ -213,8 +211,7 @@ BX_CPU_C::dbg_get_reg(unsigned reg)
     }
 }
 
-  bx_bool
-BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
+bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
 {
   // returns 1=OK, 0=can't change
   bx_segment_reg_t *seg;
@@ -305,8 +302,7 @@ BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
   return(0); // can't change when not in real mode
 }
 
-  unsigned
-BX_CPU_C::dbg_query_pending(void)
+unsigned BX_CPU_C::dbg_query_pending(void)
 {
   unsigned ret = 0;
 
@@ -321,14 +317,12 @@ BX_CPU_C::dbg_query_pending(void)
   return(ret);
 }
 
-  Bit32u
-BX_CPU_C::dbg_get_eflags(void)
+Bit32u BX_CPU_C::dbg_get_eflags(void)
 {
   return (BX_CPU_THIS_PTR read_eflags());
 }
 
-  Bit32u
-BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
+Bit32u BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
 {
   Bit32u val;
 
@@ -347,17 +341,17 @@ BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
         BX_ERROR(( "#get_descriptor_l(): type %d not finished", d->type ));
         return(0);
 
-      case 1: // available 16bit TSS
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
         val = ((d->u.tss286.base & 0xffff) << 16) |
                (d->u.tss286.limit & 0xffff);
         return(val);
 
-      case 2: // LDT
+      case BX_SYS_SEGMENT_LDT:
         val = ((d->u.ldt.base & 0xffff) << 16) |
               d->u.ldt.limit;
         return(val);
 
-      case 9: // available 32bit TSS
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
         val = ((d->u.tss386.base & 0xffff) << 16) |
                (d->u.tss386.limit & 0xffff);
         return(val);
@@ -369,8 +363,7 @@ BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
     }
 }
 
-  Bit32u
-BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
+Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
 {
   Bit32u val;
 
@@ -400,14 +393,14 @@ BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
         BX_ERROR(( "#get_descriptor_h(): type %d not finished", d->type ));
         return(0);
 
-      case 1: // available 16bit TSS
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
         val = ((d->u.tss286.base >> 16) & 0xff) |
               (d->type << 8) |
               (d->dpl << 13) |
               (d->p << 15);
         return(val);
 
-      case 2: // LDT
+      case BX_SYS_SEGMENT_LDT:
         val = ((d->u.ldt.base >> 16) & 0xff) |
               (d->type << 8) |
               (d->dpl << 13) |
@@ -415,7 +408,7 @@ BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
               (d->u.ldt.base & 0xff000000);
         return(val);
 
-      case 9: // available 32bit TSS
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
         val = ((d->u.tss386.base >> 16) & 0xff) |
               (d->type << 8) |
               (d->dpl << 13) |
@@ -433,8 +426,7 @@ BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
     }
 }
 
-  bx_bool
-BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
+bx_bool BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
 {
   if (sreg_no > 5)
     return(0);
@@ -445,8 +437,7 @@ BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
   return(1);
 }
 
-  bx_bool
-BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
+bx_bool BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
 {
   cpu->eax = EAX;
   cpu->ebx = EBX;
@@ -537,8 +528,7 @@ BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   return(1);
 }
 
-  bx_bool
-BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
+bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
 {
   // returns 1=OK, 0=Error
   Bit32u val;
@@ -945,8 +935,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
 #else
 #  define BX_DBG_NULL_CALLBACK bx_dbg_null_callback1
 #endif
-  void
-BX_DBG_NULL_CALLBACK(unsigned val)
+void BX_DBG_NULL_CALLBACK(unsigned val)
 {
   // bochs uses the pc_system variables, so this function is
   // a stub for notification by the debugger, that a change
@@ -1007,12 +996,18 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
 
 #endif  // #if BX_DEBUGGER
 
-  void
-BX_CPU_C::atexit(void)
+void BX_CPU_C::atexit(void)
 {
-  if (protected_mode()) BX_INFO(("protected mode"));
-  else if (v8086_mode()) BX_INFO(("v8086 mode"));
-  else BX_INFO(("real mode"));
+  static const char *cpu_mode_name[] = {
+     "real mode",
+     "protected mode",
+     "v8086 mode",
+     "compatibility mode",
+     "long mode"
+  };
+
+  if (BX_CPU_THIS_PTR cpu_mode < 5)
+    BX_INFO(("%s", cpu_mode_name[BX_CPU_THIS_PTR cpu_mode]));
   BX_INFO(("CS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
   BX_INFO(("SS.d_b = %u bit",
