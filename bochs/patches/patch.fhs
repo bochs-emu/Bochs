@@ -147,6 +147,17 @@ diff -u -r1.68 Makefile.in
  
  V6WORKSPACE_ZIP=build/win32/workspace.zip
  V6WORKSPACE_FILES=bochs.dsw bochs.dsp bochs.opt cpu/cpu.dsp \
+diff -urN ../bochs/build/linux/bochs-dlx.in ./build/linux/bochs-dlx.in
+--- ../bochs/build/linux/bochs-dlx.in	Fri Dec  7 16:46:13 2001
++++ ./build/linux/bochs-dlx.in	Wed Jun 26 21:08:22 2002
+@@ -1,6 +1,6 @@
+ #!/bin/sh
+ BOCHS=@prefix@/bin/bochs
+-DLXINST=@prefix@/bochs/dlxlinux
++DLXINST=@prefix@/share/bochs/dlxlinux
+ GZIP=@GZIP@
+ if [ ! -z $1 ]; then
+   DLXPATH=$1
 diff -urN ../bochs/build/linux/bochs-docs.in ./build/linux/bochs-docs.in
 --- ../bochs/build/linux/bochs-docs.in	Fri May 31 09:57:56 2002
 +++ ./build/linux/bochs-docs.in	Wed Jun 26 18:41:55 2002
