@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.12 2003-02-13 15:04:10 sshwarts Exp $
+// $Id: instrument.h,v 1.13 2003-02-13 15:53:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,8 +236,8 @@ void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
 #  define BX_INSTR_MEM_DATA(cpu_id, linear, size, rw)
 
 /* called from memory object */
-#  define BX_INSTR_PHY_WRITE(addr, len)
-#  define BX_INSTR_PHY_READ(addr, len)
+#  define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
+#  define BX_INSTR_PHY_READ(cpu_id, addr, len)
 
 /* feedback from device units */
 #  define BX_INSTR_INP(addr, len)
