@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.21 2001-11-14 01:39:22 bdenney Exp $
+// $Id: rombios.c,v 1.22 2001-11-18 16:40:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -273,7 +273,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.21 2001-11-14 01:39:22 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.22 2001-11-18 16:40:26 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -3605,13 +3605,16 @@ int19_loadsector:
   mov  cl, #0x01      ;; sector 1
   mov  dh, #0x00      ;; head 0
   int #0x13
-  xor dh,dh
-  jc bootstrap_problem 
-  inc dh
+  jc int19_load_failed
+  ;; read sector ok.  now check floppy signature.
+  mov dh, #0x01
   cmp WORD [0x7DFE], #0xAA55
   jne bootstrap_problem
-  JMP_AP(0x0000, 0x7c00)
+  JMP_AP(0x0000, 0x7c00)  ;; sig ok.  Now execute the code.
+int19_load_failed:
+  xor dh,dh
 bootstrap_problem:
+  ;; if dh=0, load failed.  if dh=1, signature check failed.
   push dx
   call _boot_failure_msg
   int #0x18 ;; Boot failure
