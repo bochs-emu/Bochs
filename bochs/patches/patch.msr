@@ -1,3 +1,15 @@
+Notes by Bryce:
+- normal configuration: one CPU and no APIC
+  FIXME: does not compile!
+- normal SMP configuration: >1 CPU and APIC
+  compiles and works better than before.  wli, mwane, bryce have been testing
+  in this config.
+- test with one CPU and APIC
+  compiles ok
+- test with BX_CPU_LEVEL<5: does it still compile?
+  tried --enable-cpu-level=4.  compiles ok
+
+-----------------
 I've managed to boot linux 2.2.21-pre1 with this patch, i was having 
 problems before when it tried to enable the APIC via the MSR registers. 
 Now i just need to fix the TSC skew problems (i managed to workaround it 
