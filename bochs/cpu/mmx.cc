@@ -504,7 +504,7 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
     }
   }
   else
-#else
+#endif
   {
     MMXUD1(op) = 0;
 
@@ -517,7 +517,6 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
       read_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
     }
   }
-#endif
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
@@ -716,7 +715,7 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
     }
   }
   else
-#else
+#endif
   {
     /* destination is a register or memory reference */
     if (i->modC0()) {
@@ -726,7 +725,6 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
       write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
     }
   }
-#endif
 
 #else
   BX_INFO(("MOVD_EdPd: MMX not supported in current configuration"));

@@ -707,7 +707,7 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
     op1.xmm64u(0) = op2;
   }
   else
-#else
+#endif
   {
     Bit32u op2;
 
@@ -722,7 +722,6 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 
     op1.xmm64u(0) = (Bit64u)(op2);
   }
-#endif
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
@@ -755,7 +754,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
     }
   }
   else
-#else
+#endif
   {
     Bit32u op2 = op1.xmm32u(0);
 
@@ -768,7 +767,6 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
       write_virtual_dword(i->seg(), RMAddr(i), &op2);
     }
   }
-#endif
 
   BX_INFO(("MOVD_EdVd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
