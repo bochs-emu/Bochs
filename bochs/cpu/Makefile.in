@@ -63,7 +63,6 @@ OBJS32 = \
 	bit.o \
 	flag_ctrl.o \
 	io.o \
-	proc_ctrl.o \
 	string.o \
 	$(EXT_DEBUG_OBJS) \
 
@@ -104,6 +103,7 @@ OBJSXX = \
 	data_xfer16.o \
 	data_xfer32.o \
 	exception.o \
+	proc_ctrl.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been

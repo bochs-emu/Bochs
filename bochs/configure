@@ -623,7 +623,7 @@ else
 fi
 
 
-# From configure.in Id: configure.in,v 1.100 2002/09/13 23:59:23 kevinlawton Exp 
+# From configure.in Id: configure.in,v 1.101 2002/09/14 05:46:57 kevinlawton Exp 
 
 
 VERSION="1.4.cvs"
@@ -6059,6 +6059,20 @@ if test ! -d instrument; then mkdir instrument; fi
 if test ! -d build; then mkdir build; fi
 if test ! -d build/linux; then mkdir build/linux; fi
 
+if test "$use_x86_64" = 1; then
+  # For x86-64, force support of the Physical Address Extension (PAE).
+  cat >> confdefs.h <<\EOF
+#define BX_SupportPAE 1
+EOF
+
+else
+  # Not an option yet for x86-32.
+  cat >> confdefs.h <<\EOF
+#define BX_SupportPAE 0
+EOF
+
+fi
+
 
 
 
@@ -6088,7 +6102,7 @@ if test ! -d build/linux; then mkdir build/linux; fi
 # Extract the first word of "gzip", so it can be a program name with args.
 set dummy gzip; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:6092: checking for $ac_word" >&5
+echo "configure:6106: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_GZIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -6123,7 +6137,7 @@ fi
 # Extract the first word of "tar", so it can be a program name with args.
 set dummy tar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:6127: checking for $ac_word" >&5
+echo "configure:6141: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -6361,6 +6375,7 @@ s%@WX_CXXFLAGS@%$WX_CXXFLAGS%g
 s%@PTHREAD_CC@%$PTHREAD_CC%g
 s%@PTHREAD_LIBS@%$PTHREAD_LIBS%g
 s%@PTHREAD_CFLAGS@%$PTHREAD_CFLAGS%g
+s%@BX_SupportPAE@%$BX_SupportPAE%g
 s%@INSTALL_TARGET@%$INSTALL_TARGET%g
 s%@INSTALL_LIST_FOR_PLATFORM@%$INSTALL_LIST_FOR_PLATFORM%g
 s%@RFB_LIBS@%$RFB_LIBS%g
