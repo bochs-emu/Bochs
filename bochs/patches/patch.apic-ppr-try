@@ -1,0 +1,98 @@
+----------------------------------------------------------------------
+Patch name: patch.apic-ppr-try
+Author: Bryce Denney
+Date: Wed Mar 27 10:43:15 EST 2002
+
+Detailed description:
+I have tried to return a sensible value for the Processor Priority Register,
+but it doesn't seem to help at all; in fact it makes things worse.  This
+needs more work.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/apic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/apic.cc,v
+retrieving revision 1.13
+diff -u -r1.13 apic.cc
+--- cpu/apic.cc	27 Mar 2002 03:47:45 -0000	1.13
++++ cpu/apic.cc	27 Mar 2002 09:37:44 -0000
+@@ -166,6 +166,14 @@
+   // knows not to clear its IRR.
+   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
+   // mask must include ONLY local APICs, or we will have problems.
++  if (delivery_mode == 1 && get_type () == APIC_TYPE_IOAPIC) {
++    // bitmask includes all local apics
++    deliver_bitmask = 0;
++    for (int i=0; i<APIC_MAX_ID; i++) {
++      if (apic_index[i] && apic_index[i]->get_type () == APIC_TYPE_LOCAL_APIC)
++	deliver_bitmask |= (1<<i);
++    }
++  }
+   if (!deliver_bitmask) {
+     BX_PANIC(("deliver failed for vector %02x: no APICs in destination bitmask", vector));
+     return false;
+@@ -180,12 +188,16 @@
+ 	for (int bit=0; bit<APIC_MAX_ID; bit++) {
+ 	  if (deliver_bitmask & (1<<bit)) {
+ 	    bx_local_apic_c *apic = (bx_local_apic_c *)apic_index[bit];
++	    int ppr = apic->get_ppr ();
++	    BX_DEBUG (("PPR of apic #%d = %d", bit, ppr));
+ 	    if (apic->get_ppr () < lowest_priority) {
+-	      lowest_priority = apic->get_ppr (); lowest_mask = 1<<bit;
++	      lowest_priority = apic->get_ppr (); 
++	      lowest_mask = 1<<bit;
+ 	    }
+ 	  }
+ 	}
+ 	deliver_bitmask = lowest_mask;
++	BX_DEBUG (("deliver to lowest priority cpu. delivery mask=0x%02x", deliver_bitmask));
+ 	BX_ASSERT (deliver_bitmask >= 0);
+       }
+       break;
+@@ -222,8 +234,7 @@
+       if (apic_index[bit] == NULL)
+ 	BX_INFO(("IOAPIC: delivering int0x%x to nonexistent id=%d!", (unsigned)vector, bit));
+       else {
+-        if (bx_dbg.apic)
+-	  BX_INFO(("IOAPIC: delivering int0x%x to apic#%d", (unsigned)vector, bit));
++	BX_DEBUG(("IOAPIC: delivering int0x%x to apic#%d", (unsigned)vector, bit));
+ 	apic_index[bit]->trigger_irq (vector, id);
+       }
+     }
+@@ -360,6 +371,7 @@
+       break;
+     case 0x80: // task priority
+       task_priority = *data & 0xff;
++      BX_DEBUG (("set task priority to %d", task_priority));
+       break;
+     case 0xb0: // EOI
+       {
+@@ -684,12 +696,15 @@
+ Bit8u bx_local_apic_c::get_ppr ()
+ {
+   static int warned = 0;
+-  if (warned < 10) {
+-    BX_ERROR(("WARNING: Local APIC Processor Priority not implemented, returning 0"));
+-    warned++;
+-  }
+-  // should look at TPR, vector of highest priority isr, etc.
+-  return 0;
++  int in_isr = highest_priority_int (isr);
++  // priority is vector/16
++  int ppr = 2;
++  if (in_isr > ppr)
++    ppr = (in_isr >> 4) & 0x0f;
++  // if task priority is higher, use it insteda
++  if (task_priority > ppr)
++    ppr = task_priority;
++  return ppr;
+ }
+ 
+ 
