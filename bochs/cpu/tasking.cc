@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.12 2002-09-10 01:39:40 kevinlawton Exp $
+// $Id: tasking.cc,v 1.13 2002-09-10 18:56:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -481,7 +481,7 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
 
   if ( (tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.pg) {
     CR3_change(newCR3); // Tell paging unit about new cr3 value
-    BX_DEBUG (("task_switch changing CR3 to 0x%08x\n", newCR3));
+    BX_DEBUG (("task_switch changing CR3 to 0x%08x", newCR3));
     BX_INSTR_TLB_CNTRL(BX_INSTR_TASKSWITCH, newCR3);
     }
 
