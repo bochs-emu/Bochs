@@ -1,0 +1,146 @@
+----------------------------------------------------------------------
+Patch name: patch.tsc-zwane
+Author: Zwane Mwaikambo <zwane@linuxpower.ca>, Bryce Denney <bryce@tlw.com>
+Date: Tue, 24 Sep 2002 19:44:51 -0400 (EDT)
+
+Detailed description:
+
+Zwane's original comments:
+This patch will seperate the TSC from the other timers, this helps a lot 
+in speeding up SMP boot and allows TSC synch to be possible. Seperation is 
+definitely necessary for writing to the TSC (e.g. via WRMSR)
+
+Bryce's comments:
+I took Zwane's patch and modified it so that
+1) the TSCs for each cpu increment with ticks, not with ticks/COUNTER_INTERVAL
+2) updating the TSC values do not cost any time per instruction.  The
+   TSC value for each CPU is computed only when it is needed.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.82
+diff -u -r1.82 cpu.h
+--- cpu/cpu.h	26 Sep 2002 21:32:25 -0000	1.82
++++ cpu/cpu.h	27 Sep 2002 03:17:41 -0000
+@@ -585,6 +585,13 @@
+ typedef struct {
+   Bit64u apicbase;
+ 
++  // TSC: Time Stamp Counter
++  // Instead of storing a counter and incrementing it every instruction, we
++  // remember the time in ticks that it was reset to zero.  With a little
++  // algebra, we can also support setting it to something other than zero.
++  // Don't read this directly; use get_tsc and set_tsc to access the TSC.
++  Bit64u tsc_last_reset_time;
++
+ #if BX_SUPPORT_X86_64
+   // x86-64 EFER bits
+   Boolean sce;
+@@ -1390,6 +1397,10 @@
+ 
+ #if BX_CPU_LEVEL >= 5
+   bx_regs_msr_t	msr;  
++
++  // these methods are implemented in proc_ctrl.cc
++  Bit64u get_TSC ();
++  void set_TSC (Bit64u newval);
+ #endif
+ 
+   i387_t the_i387;
+Index: cpu/init.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
+retrieving revision 1.32
+diff -u -r1.32 init.cc
+--- cpu/init.cc	22 Sep 2002 18:22:24 -0000	1.32
++++ cpu/init.cc	27 Sep 2002 03:17:42 -0000
+@@ -818,6 +818,9 @@
+ 
+ /* initialise MSR registers to defaults */
+ #if BX_CPU_LEVEL >= 5
++  // initialize tsc to zero
++  BX_CPU_THIS_PTR set_TSC (0);
++
+   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
+   BX_CPU_THIS_PTR msr.apicbase = (APIC_BASE_ADDR << 12) + 0x900;
+ #if BX_SUPPORT_X86_64
+Index: cpu/proc_ctrl.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
+retrieving revision 1.51
+diff -u -r1.51 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	25 Sep 2002 14:09:08 -0000	1.51
++++ cpu/proc_ctrl.cc	27 Sep 2002 03:17:44 -0000
+@@ -1644,6 +1644,20 @@
+ #endif
+ }
+ 
++
++
++Bit64u BX_CPU_C::get_TSC () {
++  return bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset_time;
++}
++
++void BX_CPU_C::set_TSC (Bit64u newval) {
++  // compute the correct setting of tsc_last_reset_time so that a get_TSC()
++  // will return newval.
++  BX_CPU_THIS_PTR msr.tsc_last_reset_time = bx_pc_system.time_ticks() - newval;
++  // verify
++  BX_ASSERT (get_TSC() == newval);
++}
++
+   void
+ BX_CPU_C::RDTSC(bxInstruction_c *i)
+ {
+@@ -1652,9 +1666,10 @@
+   Boolean cpl = CPL;
+   if ((tsd==0) || (tsd==1 && cpl==0)) {
+     // return ticks
+-    Bit64u ticks = bx_pc_system.time_ticks ();
++    Bit64u ticks = BX_CPU_THIS_PTR get_TSC ();
+     RAX = (Bit32u) (ticks & 0xffffffff);
+-    RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
++    RDX = (Bit32u) (ticks >> 32);
++
+     //BX_INFO(("RDTSC: returning EDX:EAX = %08x:%08x", EDX, EAX));
+   } else {
+     // not allowed to use RDTSC!
+@@ -1812,7 +1827,6 @@
+ 		/* The following registers are defined for Pentium only */
+ 		case BX_MSR_P5_MC_ADDR:
+ 		case BX_MSR_MC_TYPE:
+-		case BX_MSR_TSC:
+ 		case BX_MSR_CESR:
+ 			/* TODO */
+ 			return;
+@@ -1820,7 +1834,6 @@
+ 		/* These are noops on i686... */
+ 		case BX_MSR_P5_MC_ADDR:
+ 		case BX_MSR_MC_TYPE:
+-		case BX_MSR_TSC:
+ 			/* do nothing */
+ 			return;
+ 
+@@ -1830,6 +1843,12 @@
+ 		case BX_MSR_CTR1:
+ 			goto do_exception;
+ #endif	/* BX_CPU_LEVEL == 5 */
++
++		case BX_MSR_TSC:
++		/* we ignore the high 32bits */
++		  BX_CPU_THIS_PTR set_TSC (RAX & 0xffffffff);
++		  BX_INFO(("WRMSR: wrote %08x:%08x to MSR_TSC\n", 0, EAX));
++		  return;
+ 
+ 		/* MSR_APICBASE
+ 		   0:7		Reserved
