@@ -1,8 +1,8 @@
 dnl // Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.4)
+AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.115 2002-09-20 15:12:25 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.116 2002-09-20 15:34:51 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -393,75 +393,6 @@ AC_ARG_ENABLE(cpu-level,
   ]
   )
 
-
-AC_MSG_CHECKING(for dynamic translation support)
-AC_ARG_ENABLE(dynamic,
-  [  --enable-dynamic                  enable dynamic translation support],
-  [if test "$enableval" = no; then
-     AC_MSG_RESULT(no)
-     AC_DEFINE(BX_DYNAMIC_TRANSLATION, 0)
-     DYNAMIC_VAR=''
-     AS_DYNAMIC_OBJS=''
-     AS_DYNAMIC_INCS=''
-   else
-     if test "$enableval" = yes; then
-       echo " "
-       echo \!\!\!Error\!\!\!
-       echo "You must specify a CPU type to dynamic-translation option"
-       echo \!\!\!Error\!\!\!
-       exit 1
-     fi
-     case "$enableval" in
-       i386)
-         AC_DEFINE(BX_DYNAMIC_CPU_I386, 1)
-         AS_DYNAMIC_OBJS='$(X86_OBJS)'
-         AS_DYNAMIC_INCS='$(X86_H)'
-         ;;
-       sparc)
-         AC_DEFINE(BX_DYNAMIC_CPU_SPARC, 1)
-         AS_DYNAMIC_OBJS='$(SPARC_OBJS).o'
-         AS_DYNAMIC_INCS='$(SPARC_H)'
-         ;;
-       *)
-         echo " "
-         echo \!\!\!Error\!\!\!
-         echo "Sorry, dynamic translation is not yet available on your platform"
-         echo \!\!\!Error\!\!\!
-         AS_DYNAMIC_OBJS=''
-         AS_DYNAMIC_INCS=''
-         exit 1 ;;
-     esac
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_DYNAMIC_TRANSLATION, 1)
-     DYNAMIC_VAR='$(DYNAMIC_LIB)'
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_DYNAMIC_TRANSLATION, 0)
-    DYNAMIC_VAR=''
-    AS_DYNAMIC_OBJS=''
-    AS_DYNAMIC_INCS=''
-    ]
-  )
-AC_SUBST(DYNAMIC_VAR)
-AC_SUBST(AS_DYNAMIC_OBJS)
-AC_SUBST(AS_DYNAMIC_INCS)
-
-AC_MSG_CHECKING(for fetchdecode-cache support)
-AC_ARG_ENABLE(fetchdecode-cache,
-  [  --enable-fetchdecode-cache        enable fetchdecode-cache support],
-  [if test "$enableval" = no; then
-     AC_MSG_RESULT(no)
-     AC_DEFINE(BX_FETCHDECODE_CACHE, 0)
-   else
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_FETCHDECODE_CACHE, 1)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_FETCHDECODE_CACHE, 0)
-    ]
-  )
 
 AC_MSG_CHECKING(for APIC support)
 AC_ARG_ENABLE(apic,
@@ -1730,7 +1661,6 @@ AC_PATH_PROG(TAR, tar)
 AC_OUTPUT(Makefile iodev/Makefile debug/Makefile bios/Makefile \
 	 cpu/Makefile memory/Makefile gui/Makefile \
 	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
-	 dynamic/Makefile \
-         fpu/Makefile install-x11-fonts build/linux/bochs-dlx \
+	 fpu/Makefile install-x11-fonts build/linux/bochs-dlx \
 	 build/linux/bochs-docs bxversion.h \
 	 build/linux/DOC-linux.html)
