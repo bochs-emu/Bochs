@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.9 2001-11-17 17:14:42 bdenney Exp $
+$Id: documentation.dbk,v 1.10 2002-10-29 04:35:41 bdenney Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -85,7 +85,7 @@ Every paragraph must begin with the &lt;para&gt; tag and end with the
 corresponding end tag, &lt;/para&gt;.
 <programlisting>
 &lt;<ulink url="http://www.docbook.org/tdg/en/html/para.html">para</ulink>&gt;
-This is a paragram
+This is a paragraph.
 &lt;/para&gt;
 </programlisting>
 </para>
