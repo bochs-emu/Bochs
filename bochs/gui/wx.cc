@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.18 2002-09-06 04:43:03 bdenney Exp $
+// $Id: wx.cc,v 1.19 2002-09-06 14:40:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -47,6 +47,7 @@
 #include "osdep.h"
 #include "font/vga.bitmap.h"
 
+#include "wxdialog.h"
 // shared elements between wxmain.cc and this file
 #include "wxmain.h"
 
