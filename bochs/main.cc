@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.272 2004-02-23 16:33:51 vruppert Exp $
+// $Id: main.cc,v 1.273 2004-02-26 18:12:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2254,11 +2254,11 @@ bx_init_main (int argc, char *argv[])
   if (load_rcfile) {
     /* parse configuration file and command line arguments */
 #ifdef WIN32
-    LPTSTR *filepart;
     int length;
     if (bochsrc_filename != NULL) {
-      GetFullPathName(bochsrc_filename, MAX_PATH, bx_startup_flags.initial_dir, filepart);
-      length = lstrlen(bx_startup_flags.initial_dir) - lstrlen(*filepart);
+      lstrcpy(bx_startup_flags.initial_dir, bochsrc_filename);
+      length = lstrlen(bx_startup_flags.initial_dir);
+      while ((length > 1) && (bx_startup_flags.initial_dir[length-1] != 92)) length--;
       bx_startup_flags.initial_dir[length] = 0;
     } else {
       bx_startup_flags.initial_dir[0] = 0;
