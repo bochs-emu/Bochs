@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.61 2004-12-07 21:06:35 vruppert Exp $
+// $Id: serial.cc,v 1.62 2004-12-09 18:47:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -892,12 +892,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else {
         if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) {
           if (BX_SER_THIS detect_mouse == 2) {
-            if (bx_options.Omouse_type->get() == MOUSE_TYPE_SERIAL) {
+            if (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_SERIAL) {
               BX_SER_THIS mouse_internal_buffer.head = 0;
               BX_SER_THIS mouse_internal_buffer.num_elements = 1;
               BX_SER_THIS mouse_internal_buffer.buffer[0] = 'M';
             }
-            if (bx_options.Omouse_type->get() == MOUSE_TYPE_SERIAL_WHEEL) {
+            if (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_SERIAL_WHEEL) {
               BX_SER_THIS mouse_internal_buffer.head = 0;
               BX_SER_THIS mouse_internal_buffer.num_elements = 6;
               BX_SER_THIS mouse_internal_buffer.buffer[0] = 'M';
@@ -1307,7 +1307,7 @@ bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned bu
 
   /* enqueue mouse data in multibyte internal mouse buffer */
   int bytes = 3;
-  if (bx_options.Omouse_type->get() == MOUSE_TYPE_SERIAL_WHEEL) bytes = 4;
+  if (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_SERIAL_WHEEL) bytes = 4;
   for (int i = 0; i < bytes; i++) {
     tail = (BX_SER_THIS mouse_internal_buffer.head + BX_SER_THIS mouse_internal_buffer.num_elements) %
       BX_MOUSE_BUFF_SIZE;

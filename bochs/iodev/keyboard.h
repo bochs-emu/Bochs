@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.27 2004-12-07 21:06:35 vruppert Exp $
+// $Id: keyboard.h,v 1.28 2004-12-09 18:47:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,12 +45,6 @@
 #define MOUSE_MODE_STREAM 11
 #define MOUSE_MODE_REMOTE 12
 #define MOUSE_MODE_WRAP   13
-
-#define MOUSE_TYPE_NONE         0
-#define MOUSE_TYPE_PS2          1
-#define MOUSE_TYPE_IMPS2        2
-#define MOUSE_TYPE_SERIAL       3
-#define MOUSE_TYPE_SERIAL_WHEEL 4
 
 class bx_keyb_c : public bx_keyb_stub_c {
 public:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.128 2004-11-30 21:02:56 vruppert Exp $
+// $Id: siminterface.h,v 1.129 2004-12-09 18:47:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1272,6 +1272,12 @@ enum {
 
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2
+
+#define BX_MOUSE_TYPE_NONE         0
+#define BX_MOUSE_TYPE_PS2          1
+#define BX_MOUSE_TYPE_IMPS2        2
+#define BX_MOUSE_TYPE_SERIAL       3
+#define BX_MOUSE_TYPE_SERIAL_WHEEL 4
 
 BOCHSAPI extern char *bochs_start_names[];
 BOCHSAPI extern int n_bochs_start_names;
