@@ -1979,8 +1979,8 @@ printf("int13_f05\n");
 
     case 0x08: /* read disk drive parameters */
 printf("int13_f08\n");
-      // return geom for drive 0x80, they asked for "max" cylinders anyway
-      get_hd_geometry(0x80, &hd_cylinders, &hd_heads, &hd_sectors);
+      drive = GET_DL ();
+      get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 
       // translate CHS
       //
