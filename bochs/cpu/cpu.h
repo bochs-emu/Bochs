@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.79 2002-09-25 12:54:39 ptrumpet Exp $
+// $Id: cpu.h,v 1.80 2002-09-25 13:26:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -580,12 +580,6 @@ typedef struct {
 
 #if BX_CPU_LEVEL >= 5
 typedef struct {
-  Bit8u p5_mc_addr;
-  Bit8u p5_mc_type;
-  Bit8u tsc;
-  Bit8u cesr;
-  Bit8u ctr0;
-  Bit8u ctr1;
   Bit64u apicbase;
 
 #if BX_SUPPORT_X86_64
