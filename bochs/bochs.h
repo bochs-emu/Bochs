@@ -245,8 +245,9 @@ typedef class logfunctions {
 // values of onoff: 0=ignore, 1=report, 2=fatal
 #define ACT_IGNORE 0
 #define ACT_REPORT 1
-#define ACT_FATAL  2
-#define N_ACT      3
+#define ACT_ASK    2
+#define ACT_FATAL  3
+#define N_ACT      4
 	int onoff[N_LOGLEV];
 	class iofunctions *logio;
 public:
@@ -259,6 +260,7 @@ public:
 	void panic(char *fmt, ...);
 	void ldebug(char *fmt, ...);
 	void fatal (char *prefix, char *fmt, va_list ap);
+	void ask (int level, char *prefix, char *fmt, va_list ap);
 	void setprefix(char *);
 	void settype(int);
 	void setio(class iofunctions *);
@@ -398,8 +400,8 @@ public:
 		return loglevel[i];
 	}
 	char *getaction(int i) {
-	   static char *name[] = { "ignore", "report", "fatal" };
-	   assert (i>=ACT_IGNORE && i<=ACT_FATAL);
+	   static char *name[] = { "ignore", "report", "ask", "fatal" };
+	   assert (i>=ACT_IGNORE && i<N_ACT);
 	   return name[i];
 	}
 
@@ -637,7 +639,7 @@ typedef struct {
 typedef struct {
   char filename[BX_PATHNAME_LEN];
   // one array item for each log level, indexed by LOGLEV_*.
-  // values: ACT_IGNORE, ACT_REPORT, ACT_FATAL
+  // values: ACT_IGNORE, ACT_REPORT, ACT_ASK, ACT_FATAL
   unsigned char actions[N_LOGLEV];  
 } bx_log_options;
 

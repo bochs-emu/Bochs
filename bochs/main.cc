@@ -84,7 +84,7 @@ bx_options_t bx_options = {
   1,          // newHardDriveSupport
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
   // log options: ignore debug, report info and error, crash on panic.
-  { "-", { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_FATAL } },
+  { "-", { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_ASK } },
   };
 
 static void parse_line_unformatted(char *context, char *line);
@@ -309,7 +309,10 @@ logfunctions::info(char *fmt, ...)
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
-	if (onoff[LOGLEV_INFO] == ACT_FATAL) fatal (this->prefix, fmt, ap);
+	if (onoff[LOGLEV_INFO] == ACT_ASK) 
+	  ask (LOGLEV_INFO, this->prefix, fmt, ap);
+	if (onoff[LOGLEV_INFO] == ACT_FATAL) 
+	  fatal (this->prefix, fmt, ap);
 	va_end(ap);
 
 }
@@ -327,7 +330,10 @@ logfunctions::error(char *fmt, ...)
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
-	if (onoff[LOGLEV_ERROR] == ACT_FATAL) fatal (this->prefix, fmt, ap);
+	if (onoff[LOGLEV_ERROR] == ACT_ASK) 
+	  ask (LOGLEV_ERROR, this->prefix, fmt, ap);
+	if (onoff[LOGLEV_ERROR] == ACT_FATAL) 
+	  fatal (this->prefix, fmt, ap);
 	va_end(ap);
 }
 
@@ -344,7 +350,10 @@ logfunctions::panic(char *fmt, ...)
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
-	if (onoff[LOGLEV_PANIC] == ACT_FATAL) fatal (this->prefix, fmt, ap);
+	if (onoff[LOGLEV_PANIC] == ACT_ASK) 
+	  ask (LOGLEV_PANIC, this->prefix, fmt, ap);
+	if (onoff[LOGLEV_PANIC] == ACT_FATAL) 
+	  fatal (this->prefix, fmt, ap);
 	va_end(ap);
 }
 
@@ -361,8 +370,33 @@ logfunctions::ldebug(char *fmt, ...)
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
-	if (onoff[LOGLEV_DEBUG] == ACT_FATAL) fatal (this->prefix, fmt, ap);
+	if (onoff[LOGLEV_DEBUG] == ACT_ASK) 
+	  ask (LOGLEV_DEBUG, this->prefix, fmt, ap);
+	if (onoff[LOGLEV_DEBUG] == ACT_FATAL) 
+	  fatal (this->prefix, fmt, ap);
 	va_end(ap);
+}
+
+void
+logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
+{
+#if BX_USE_CONTROL_PANEL
+  char buf1[1024], buf2[1024];
+  vsprintf (buf1, fmt, ap);
+  sprintf (buf2, "%s %s", prefix, buf1);
+  // FIXME: facility set to 0 because it's unknown.
+  int val = SIM->LOCAL_log_msg (prefix, level, buf2);
+  switch (val)
+  {
+    case 0:   // user chose continue
+      break;
+    case 1:   // user said continue, and don't ask for this facility again.
+      setonoff (level, ACT_REPORT);
+      break;
+    case 2:   // user chose die
+      fatal (prefix, fmt, ap);
+  }
+#endif
 }
 
 void
@@ -922,6 +956,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.log.actions[LOGLEV_PANIC] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
       bx_options.log.actions[LOGLEV_PANIC] = ACT_IGNORE;
+    else if (!strcmp (action, "ask"))
+      bx_options.log.actions[LOGLEV_PANIC] = ACT_ASK;
     else {
       BX_PANIC(("%s: panic directive malformed.", context));
       }
@@ -940,6 +976,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.log.actions[LOGLEV_ERROR] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
       bx_options.log.actions[LOGLEV_ERROR] = ACT_IGNORE;
+    else if (!strcmp (action, "ask"))
+      bx_options.log.actions[LOGLEV_PANIC] = ACT_ASK;
     else {
       BX_PANIC(("%s: error directive malformed.", context));
       }
@@ -958,6 +996,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.log.actions[LOGLEV_INFO] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
       bx_options.log.actions[LOGLEV_INFO] = ACT_IGNORE;
+    else if (!strcmp (action, "ask"))
+      bx_options.log.actions[LOGLEV_PANIC] = ACT_ASK;
     else {
       BX_PANIC(("%s: info directive malformed.", context));
       }
@@ -976,6 +1016,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.log.actions[LOGLEV_DEBUG] = ACT_REPORT;
     else if (!strcmp (action, "ignore"))
       bx_options.log.actions[LOGLEV_DEBUG] = ACT_IGNORE;
+    else if (!strcmp (action, "ask"))
+      bx_options.log.actions[LOGLEV_PANIC] = ACT_ASK;
     else {
       BX_PANIC(("%s: debug directive malformed.", context));
       }

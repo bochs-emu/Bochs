@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.10 2001-06-11 06:48:37 bdenney Exp $
+ * $Id: control.cc,v 1.11 2001-06-11 14:03:35 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -75,6 +75,7 @@ extern "C" {
 #define CPANEL_PATH_LEN 512
 
 /* functions for changing particular options */
+void bx_control_panel_init ();
 void bx_edit_mem ();
 void bx_edit_rom_addr ();
 void bx_edit_floppy (int drive);
@@ -406,6 +407,7 @@ int bx_control_panel (int menu)
   switch (menu)
   {
    case BX_CPANEL_START_MAIN:
+     bx_control_panel_init ();
      {
      if (ask_yn (ask_about_control_panel, 1, &choice) < 0) return -1;
      if (choice == 0) return BX_DISABLE_CONTROL_PANEL;
@@ -811,6 +813,52 @@ void bx_edit_rom_addr ()
     }
     fprintf (stderr, "The value should be in hex, as in 'e0000'.\n");
   }
+}
+
+/*
+A panic has occurred.  Do you want to:
+  cont       - continue execution
+  alwayscont - continue execution, and do not ask again
+  die        - stop execution now
+*/
+
+char *log_action_ask_choices[] = { "cont", "alwayscont", "die" };
+int log_action_n_choices = 3;
+
+int control_panel_notify_callback (int code)
+{
+  switch (code)
+  {
+  case NOTIFY_CODE_LOGMSG:
+    {
+      int level;
+      char prefix[512], msg[512];
+      assert (SIM->log_msg_2 (prefix, &level, msg, sizeof(msg)) >= 0);
+      fprintf (stderr, "========================================================================\n");
+      fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
+      fprintf (stderr, "Device: %s\n", prefix);
+      fprintf (stderr, "Message: %s\n\n", msg);
+      fprintf (stderr, "A panic has occurred.  Do you want to:\n");
+      fprintf (stderr, "  cont       - continue execution\n");
+      fprintf (stderr, "  alwayscont - continue execution, and don't ask again.\n");
+      fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), prefix);
+      fprintf (stderr, "  die        - stop execution now\n");
+      int choice;
+      if (ask_menu ("Choose cont, alwayscont, or die. [%s] ", 3, 
+	    log_action_ask_choices, 2, &choice) < 0) 
+	return SIM->notify_return(-1);
+      // return 0 for continue, 1 for alwayscontinue, 2 for die.
+      SIM->notify_return(choice);
+    }
+    break;
+  default:
+    fprintf (stderr, "Control panel: notify callback called with unknown code %04x\n", code);
+  }
+}
+
+void bx_control_panel_init () {
+  //fprintf (stderr, "bx_control_panel_init()\n");
+  SIM->set_notify_callback (control_panel_notify_callback);
 }
 
 

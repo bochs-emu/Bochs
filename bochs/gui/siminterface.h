@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.5 2001-06-11 06:35:18 bdenney Exp $
+ * $Id: siminterface.h,v 1.6 2001-06-11 14:03:35 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -98,6 +98,15 @@ public:
   virtual int set_rom_address (int addr) {return -1;}
   virtual int get_private_colormap () { return -1; }
   virtual void set_private_colormap (int en) {}
+  typedef int (*sim_interface_callback_t)(int code);
+  virtual void set_notify_callback (sim_interface_callback_t func) {}
+  virtual int notify_return (int retcode) {return -1;}
+  // methods marked LOCAL should only be called by the simulator, not
+  // from the control panel.
+#define NOTIFY_CODE_LOGMSG  0x101
+  virtual int LOCAL_notify (int code) {}
+  virtual int LOCAL_log_msg (char *prefix, int level, char *msg) {return -1;}
+  virtual int log_msg_2 (char *prefix, int *level, char *msg, int len) {return -1;}
 };
 
 extern bx_simulator_interface_c *SIM;

@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.9 2001-06-11 06:48:37 bdenney Exp $
+ * $Id: siminterface.cc,v 1.10 2001-06-11 14:03:35 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -17,6 +17,14 @@ logfunctions *siminterface_log = NULL;
 #define LOG_THIS siminterface_log->
 
 class bx_real_sim_c : public bx_simulator_interface_c {
+  sim_interface_callback_t callback;
+  int notify_return_val;
+  int notify_int_args[10];
+  char *notify_string_args[10];
+#define NOTIFY_TYPE_INT
+#define NOTIFY_TYPE_STRING
+public:
+  bx_real_sim_c ();
   virtual int getips ();
   virtual void setips (int ips);
   virtual int get_vga_update_interval ();
@@ -57,6 +65,11 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   virtual int set_rom_address (int addr);
   virtual int get_private_colormap ();
   virtual void set_private_colormap (int en);
+  virtual void set_notify_callback (sim_interface_callback_t func);
+  virtual int notify_return (int retcode);
+  virtual int LOCAL_notify (int code);
+  virtual int LOCAL_log_msg (char *prefix, int level, char *msg);
+  virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
 };
 
 void init_siminterface ()
@@ -71,6 +84,11 @@ void init_siminterface ()
 bx_simulator_interface_c::bx_simulator_interface_c ()
 {
   init_done = 0;
+}
+
+bx_real_sim_c::bx_real_sim_c ()
+{
+  callback = NULL;
 }
 
 int 
@@ -362,6 +380,56 @@ void
 bx_real_sim_c::set_private_colormap (int en)
 {
   bx_options.private_colormap = en;
+}
+
+void 
+bx_real_sim_c::set_notify_callback (sim_interface_callback_t func)
+{
+  callback = func;
+}
+
+int 
+bx_real_sim_c::notify_return (int retcode)
+{
+  notify_return_val = retcode;
+  return 0;
+}
+
+int
+bx_real_sim_c::LOCAL_notify (int code)
+{
+  if (callback == NULL)
+    BX_ERROR (("notify called, but no callback function is registered"));
+  else {
+    notify_return_val = -999;
+    (*callback)(code);
+    if (notify_return_val == -999)
+      BX_ERROR (("notify callback returned without setting the return value"));
+    return notify_return_val;
+  }
+}
+
+// returns 0 for continue, 1 for alwayscontinue, 2 for die.
+int 
+bx_real_sim_c::LOCAL_log_msg (char *prefix, int level, char *msg)
+{
+  //fprintf (stderr, "calling notify.\n");
+  notify_string_args[0] = prefix;
+  notify_int_args[1] = level;
+  notify_string_args[2] = msg;
+  int val = LOCAL_notify (NOTIFY_CODE_LOGMSG);
+  //fprintf (stderr, "notify returned %d\n", val);
+  return val;
+}
+
+// called by control.cc
+int
+bx_real_sim_c::log_msg_2 (char *prefix, int *level, char *msg, int len)
+{
+  strncpy (prefix, notify_string_args[0], len);
+  *level= notify_int_args[1];
+  strncpy (msg, notify_string_args[2], len);
+  return 0;
 }
 
 #endif  // if BX_USE_CONTROL_PANEL==1
