@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.23 2002-02-07 19:04:30 vruppert Exp $
+// $Id: vga.cc,v 1.24 2002-03-10 04:51:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -201,6 +201,26 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   BX_VGA_THIS s.horiz_tick = 0;
   BX_VGA_THIS s.vert_tick = 0;
+  
+#if BX_SUPPORT_VBE  
+  // The following is for the vbe display extension
+  // FIXME: change 0xff80 & 0xff81 into some nice constants
+  
+  for (addr=0xff80; addr<=0xff81; addr++) {
+    BX_VGA_THIS devices->register_io_read_handler(this, vbe_read_handler,
+                                        addr, "vga video");
+    BX_VGA_THIS devices->register_io_write_handler(this, vbe_write_handler,
+                                        addr, "vga video");
+  }    
+  BX_VGA_THIS s.vbe_xres=640;
+  BX_VGA_THIS s.vbe_yres=400;
+  BX_VGA_THIS s.vbe_bpp=8;
+  BX_VGA_THIS s.vbe_bank=0;
+  BX_VGA_THIS s.vbe_enabled=0;
+  BX_VGA_THIS s.vbe_curindex=0;
+  
+  BX_INFO(("VBE Bochs Display Extension Enabled"));
+#endif  
 }
 
 
@@ -962,14 +982,26 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
         case 2:
           BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue = value;
           {
-          unsigned iHeight, iWidth;
-          determine_screen_dimensions(&iHeight, &iWidth);
-	  if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
-	  {
-	    bx_gui.dimension_update(iWidth, iHeight);
-	    old_iWidth = iWidth;
-	    old_iHeight = iHeight;
-	  }
+            unsigned iHeight, iWidth;
+#if BX_SUPPORT_VBE          
+            // when we are in a vbe enabled mode, better get the width/height from the vbe settings
+            if (BX_VGA_THIS s.vbe_enabled)
+            {
+              old_iWidth = iWidth = BX_VGA_THIS s.vbe_xres;
+              old_iHeight = iHeight = BX_VGA_THIS s.vbe_yres;
+            }
+            else
+#endif            
+            {
+              // 'normal vga' operation
+              determine_screen_dimensions(&iHeight, &iWidth);
+        	    if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	            {
+	              bx_gui.dimension_update(iWidth, iHeight);
+	              old_iWidth = iWidth;
+	              old_iHeight = iHeight;
+	            }
+	          }
           }
 
           needs_update = bx_gui.palette_change(BX_VGA_THIS s.pel.write_data_register,
@@ -1150,6 +1182,54 @@ bx_vga_c::timer(void)
 bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
+
+  if (BX_VGA_THIS s.vga_mem_updated==0) {
+    /* BX_DEBUG(("update(): updated=%u enabled=%u", (unsigned) BX_VGA_THIS s.vga_mem_updated, (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled)); */
+    return;
+    }
+  BX_VGA_THIS s.vga_mem_updated = 0;
+
+#if BX_SUPPORT_VBE  
+  if (BX_VGA_THIS s.vbe_enabled)
+  {
+    // specific VBE code display update code
+    // this is partly copied/modified from the 320x200x8 update more below
+    unsigned xti, yti;
+    Bit8u color;
+    unsigned r, c;
+    unsigned long byte_offset;
+    unsigned long pixely, pixelx;
+    
+    iWidth=BX_VGA_THIS s.vbe_xres;
+    iHeight=BX_VGA_THIS s.vbe_yres;
+    
+    for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+      for (xti=0; xti<iWidth/X_TILESIZE; xti++) 
+      {
+        if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) 
+        { 
+          for (r=0; r<Y_TILESIZE; r++) 
+          {
+            for (c=0; c<X_TILESIZE; c++) 
+            {
+              pixely = ((yti*Y_TILESIZE) + r);
+              pixelx = ((xti*X_TILESIZE) + c);    
+              
+              byte_offset = (pixely*iWidth) + (pixelx);
+              color = BX_VGA_THIS s.vbe_memory[byte_offset];
+              BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
+            }
+          }
+          bx_gui.graphics_tile_update(BX_VGA_THIS s.tile,
+            xti*X_TILESIZE, yti*Y_TILESIZE);
+          BX_VGA_THIS s.vga_tile_updated[xti][yti] = 0;
+        }
+      }
+    
+    // after a vbe display update, don't try to do any 'normal vga' updates anymore
+    return;
+  }
+#endif  
   // fields that effect the way video memory is serialized into screen output:
   // GRAPHICS CONTROLLER:
   //   BX_VGA_THIS s.graphics_ctrl.shift_reg:
@@ -1161,11 +1241,6 @@ bx_vga_c::update(void)
 //fprintf(stderr, "# update()");
 
   // if (BX_VGA_THIS s.vga_mem_updated==0 || BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
-  if (BX_VGA_THIS s.vga_mem_updated==0) {
-    /* BX_DEBUG(("update(): updated=%u enabled=%u", (unsigned) BX_VGA_THIS s.vga_mem_updated, (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled)); */
-    return;
-    }
-  BX_VGA_THIS s.vga_mem_updated = 0;
 
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     Bit8u color;
@@ -1458,6 +1533,13 @@ bx_vga_c::mem_read(Bit32u addr)
 {
   Bit32u offset;
 
+#if BX_SUPPORT_VBE  
+  // if in a vbe enabled mode, read from the vbe_memory
+  if (BX_VGA_THIS s.vbe_enabled)
+  {
+        return vbe_mem_read(addr);
+  }
+#endif  
 
 #if defined(VGA_TRACE_FEATURE)
 //	BX_DEBUG(("8-bit memory read from %08x", addr));
@@ -1577,6 +1659,15 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 {
   Bit32u offset;
   Bit8u new_bit, new_val[4], cpu_data_b[4];
+
+#if BX_SUPPORT_VBE
+  // if in a vbe enabled mode, write to the vbe_memory
+  if (BX_VGA_THIS s.vbe_enabled)
+  {
+        vbe_mem_write(addr,value);
+        return;
+  }
+#endif
 
 #if defined(VGA_TRACE_FEATURE)
 //	BX_DEBUG(("8-bit memory write to %08x = %02x", addr, value));
@@ -1983,3 +2074,156 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
     BX_VGA_THIS s.vga_mem_updated = 1;
     }
 }
+
+
+#if BX_SUPPORT_VBE
+  Bit8u
+bx_vga_c::vbe_mem_read(Bit32u addr)
+{
+  Bit32u offset;        
+  offset = addr - 0xA0000;
+
+  return (BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_bank*65536 + offset]);
+}
+
+  void
+bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
+{
+  Bit32u offset;        
+  unsigned x_tileno, y_tileno;
+  offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
+
+  y_tileno = (offset / BX_VGA_THIS s.vbe_xres) / Y_TILESIZE;
+  x_tileno = (offset % BX_VGA_THIS s.vbe_xres) / X_TILESIZE;
+  BX_VGA_THIS s.vga_mem_updated = 1;
+  BX_VGA_THIS s.vga_tile_updated[x_tileno][y_tileno] = 1;
+        
+  BX_VGA_THIS s.vbe_memory[offset]=value;
+}
+
+  Bit32u
+bx_vga_c::vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+{
+#if !BX_USE_VGA_SMF
+  bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
+
+  return( class_ptr->vbe_read(address, io_len) );
+}
+
+
+  Bit32u
+bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
+{
+#else
+  UNUSED(this_ptr);
+#endif  // !BX_USE_VGA_SMF
+
+//  BX_INFO(("VBE_read %x (len %x)", address, io_len));
+
+  if (address==VBE_DISPI_IOPORT_INDEX)
+  {
+    // index register
+    return (Bit32u) BX_VGA_THIS s.vbe_curindex;
+  }
+  else
+  {
+    // data register      
+    // FIXME: read from the data registers
+    switch (BX_VGA_THIS s.vbe_curindex)
+    {
+      case VBE_DISPI_INDEX_ID: // Display Interface ID check
+      {
+        return VBE_DISPI_ID0;
+      } break;
+
+      default:
+      {
+        BX_PANIC(("VBE unknown data read index 0x%x",BX_VGA_THIS s.vbe_curindex));
+      } break;
+    }      
+  }
+  BX_PANIC(("VBE_read shouldn't reach this"));
+}
+
+  void
+bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+{
+#if !BX_USE_VGA_SMF
+  bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
+
+  class_ptr->vbe_write(address, value, io_len);
+}
+
+  Bit32u
+bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
+{ 
+#else
+  UNUSED(this_ptr);
+#endif  
+
+//  BX_INFO(("VBE_write %x = %x (len %x)", address, value, io_len));
+  
+  if (address==VBE_DISPI_IOPORT_INDEX)
+  {
+    // index register
+    
+    BX_VGA_THIS s.vbe_curindex = (Bit16u) value;
+  }
+  else
+  {
+    // data register
+    // FIXME: maybe do some 'sanity' checks on received data?
+    
+    switch (BX_VGA_THIS s.vbe_curindex)
+    {
+      case VBE_DISPI_INDEX_ID: // Display Interface ID check
+      {
+        if (value != VBE_DISPI_ID0)
+        {
+          BX_PANIC(("VBE unknown Display Interface %x",value));
+        }
+        else
+        {
+          BX_INFO(("VBE known Display Interface %x",value));
+        }
+      } break;
+      
+      case VBE_DISPI_INDEX_XRES: // set xres
+      {
+        BX_VGA_THIS s.vbe_xres=(Bit16u) value;
+      } break;
+      
+      case VBE_DISPI_INDEX_YRES: // set yres
+      {
+        BX_VGA_THIS s.vbe_yres=(Bit16u) value;
+      } break;
+      
+      case VBE_DISPI_INDEX_BANK: // set bank
+      {
+        BX_INFO(("VBE set bank to %d", BX_VGA_THIS s.vbe_bank));
+        BX_VGA_THIS s.vbe_bank=(Bit16u) value & 0xff; // FIXME lobyte = vbe bank A?
+      } break;
+      
+      case VBE_DISPI_INDEX_ENABLE: // enable video
+      {
+        if (value)
+        {
+          BX_INFO(("VBE enabling x %d, y %d, bpp %d", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
+          bx_gui.dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);
+        }
+        else
+        {
+          BX_INFO(("VBE disabling"));
+        }     
+        BX_VGA_THIS s.vbe_enabled=(Boolean) value;
+      } break;
+
+      default:
+      {
+        BX_PANIC(("VBE unknown data write index 0x%x",BX_VGA_THIS s.vbe_curindex));
+      } break;      
+    }        
+  }
+}
+
+#endif

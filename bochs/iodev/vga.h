@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.7 2002-02-04 20:31:35 vruppert Exp $
+// $Id: vga.h,v 1.8 2002-03-10 04:51:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,14 +24,48 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#if BX_SUPPORT_VBE
+  #define VBE_DISPI_BANK_ADDRESS          0xA0000
+  #define VBE_DISPI_BANK_SIZE_KB          64
+  
+  #define VBE_DISPI_MAX_XRES              1024
+  #define VBE_DISPI_MAX_YRES              768
+  
+  #define VBE_DISPI_IOPORT_INDEX          0xFF80
+  #define VBE_DISPI_IOPORT_DATA           0xFF81
+  
+  #define VBE_DISPI_INDEX_ID              0x0
+  #define VBE_DISPI_INDEX_XRES            0x1
+  #define VBE_DISPI_INDEX_YRES            0x2
+  #define VBE_DISPI_INDEX_BPP             0x3
+  #define VBE_DISPI_INDEX_ENABLE          0x4
+  #define VBE_DISPI_INDEX_BANK            0x5
+  
+  #define VBE_DISPI_ID0                   0xB0C0
+  
+  #define VBE_DISPI_BPP_8                 0x0
+// The following is not support yet, but just for reference available.  
+//  #define VBE_DISPI_BPP_RGB565            0x1
+//  #define VBE_DISPI_BPP_RGB555            0x2
 
+  #define VBE_DISPI_DISABLED              0x00
+  #define VBE_DISPI_ENABLED               0x01
+
+#define BX_MAX_XRES VBE_DISPI_MAX_XRES
+#define BX_MAX_YRES VBE_DISPI_MAX_YRES
+
+#else
+
+#define BX_MAX_XRES 640
+#define BX_MAX_YRES 480
+
+#endif //BX_SUPPORT_VBE
 #define CGA_TEXT_ADDR(row, column) (0x18000 + ((row)*80 + (column))*2)
 
 #define X_TILESIZE 16
 #define Y_TILESIZE 16
-#define BX_NUM_X_TILES (640/X_TILESIZE)
-#define BX_NUM_Y_TILES (((65536 / (640/8)) / Y_TILESIZE) + 1)
-// #define BX_NUM_Y_TILES (480/Y_TILESIZE)
+#define BX_NUM_X_TILES (BX_MAX_XRES /X_TILESIZE)
+#define BX_NUM_Y_TILES (BX_MAX_YRES /Y_TILESIZE)
 
 // Support varying number of rows of text.  This used to
 // be limited to only 25 lines.
@@ -45,6 +79,7 @@
 #  define BX_VGA_THIS this->
 #endif
 
+
 class bx_vga_c : public logfunctions {
 public:
 
@@ -55,6 +90,12 @@ public:
   // Note: either leave value of type Bit8u, or mask it when
   //       used to 8 bits, in memory.cc
   BX_VGA_SMF void   mem_write(Bit32u addr, Bit8u value);
+
+#if BX_SUPPORT_VBE 
+  BX_VGA_SMF Bit8u  vbe_mem_read(Bit32u addr);
+  BX_VGA_SMF void   vbe_mem_write(Bit32u addr, Bit8u value);  
+#endif
+  
   BX_VGA_SMF void   redraw_area(unsigned x0, unsigned y0,
                                 unsigned width, unsigned height);
 
@@ -63,6 +104,11 @@ private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
   static void   write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
+#if BX_SUPPORT_VBE
+  static Bit32u vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+#endif
 
   struct {
     struct {
@@ -168,6 +214,16 @@ private:
     unsigned vert_tick;
     Bit8u rgb[3 * 256];
     Bit8u tile[X_TILESIZE * Y_TILESIZE];
+
+#if BX_SUPPORT_VBE    
+    Bit8u vbe_memory[1024 * 1024];
+    Bit16u  vbe_xres;
+    Bit16u  vbe_yres;
+    Bit16u  vbe_bpp;
+    Bit16u  vbe_bank;
+    Boolean vbe_enabled;
+    Bit16u  vbe_curindex;
+#endif    
     } s;  // state information
 
 
@@ -179,6 +235,16 @@ private:
 #else
   void write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
 #endif
+
+#if BX_SUPPORT_VBE
+#if !BX_USE_VGA_SMF
+  Bit32u vbe_read(Bit32u address, unsigned io_len);
+  void   vbe_write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
+#else
+  void vbe_write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
+#endif
+#endif
+
   int timer_id;
 
   public:

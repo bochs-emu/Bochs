@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.23 2002-02-24 17:20:19 vruppert Exp $
+// $Id: win32.cc,v 1.24 2002-03-10 04:51:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -386,7 +386,7 @@ VOID UIThread(PVOID pvoid) {
     cursorWarped();
 
     hdc = GetDC(stInfo.hwnd);
-    MemoryBitmap = CreateCompatibleBitmap(hdc, dimension_x, dimension_y);
+    MemoryBitmap = CreateCompatibleBitmap(hdc, BX_MAX_XRES, BX_MAX_YRES);
     MemoryDC = CreateCompatibleDC(hdc);
     ReleaseDC(stInfo.hwnd, hdc);
 
