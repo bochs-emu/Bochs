@@ -6,6 +6,19 @@ Date: Wed Oct  9 09:40:48 EDT 2002
 Detailed description:
 
 Switch over to using Libtool's ltdl library instead of the nonportable -ldl.
+I didn't include configure diffs in here.  You need to run autoconf yourself.
+
+Also the libltdl library comes from running this command:
+  libtoolize --ltdl
+
+I always get some warnings, like these:
+> You should add the contents of `/usr/local/share/aclocal/libtool.m4' to `aclocal.m4'.
+> libtoolize: `config.guess' exists: use `--force' to overwrite
+> libtoolize: `config.sub' exists: use `--force' to overwrite
+> libtoolize: `ltmain.sh' exists: use `--force' to overwrite
+
+I have already done what it says (that's where config.guess, config.sub,
+ltmain.sh, and aclocal.m4 came from) but it continues to warn me anyway.
 
 Patch was created with:
   cvs diff -u
@@ -15,14 +28,40 @@ Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
+
 Index: Makefile.in
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/Makefile.in,v
 retrieving revision 1.93.2.7
 diff -u -r1.93.2.7 Makefile.in
 --- Makefile.in	9 Oct 2002 06:10:35 -0000	1.93.2.7
-+++ Makefile.in	9 Oct 2002 13:38:24 -0000
-@@ -161,9 +161,9 @@
++++ Makefile.in	9 Oct 2002 17:11:26 -0000
+@@ -34,6 +34,7 @@
+ docdir          = $(prefix)/share/doc/bochs
+ sharedir        = $(prefix)/share/bochs
+ top_builddir    = .
++top_srcdir      = $(srcdir)
+ 
+ DESTDIR =
+ 
+@@ -111,11 +112,11 @@
+ 
+ BX_INCDIRS = -I. -I$(srcdir)/. -I@INSTRUMENT_DIR@ -I$(srcdir)/@INSTRUMENT_DIR@
+ 
+-MDEFINES = CC="$(CC)" CXX="$(CXX)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" \
+-  LDFLAGS="$(LDFLAGS)" LIBS="$(LIBS)" \
+-  X_LIBS="$(X_LIBS)" X_PRE_LIBS="$(X_PRE_LIBS)" \
+-  prefix="$(prefix)" exec_prefix="$(exec_prefix)" \
+-  bindir="$(bindir)" infodir="$(infodir)"
++#MDEFINES = CC="$(CC)" CXX="$(CXX)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" \
++#  LDFLAGS="$(LDFLAGS)" LIBS="$(LIBS)" \
++#  X_LIBS="$(X_LIBS)" X_PRE_LIBS="$(X_PRE_LIBS)" \
++#  prefix="$(prefix)" exec_prefix="$(exec_prefix)" \
++#  bindir="$(bindir)" infodir="$(infodir)"
+ 
+ #SUBDIRS = iodev debug
+ 
+@@ -161,17 +162,16 @@
  
  
  .@CPP_SUFFIX@.o:
@@ -33,8 +72,26 @@ diff -u -r1.93.2.7 Makefile.in
 +	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
  
  
- all: @PRIMARY_TARGET@  bximage@EXE@
-@@ -192,7 +192,7 @@
+-all: @PRIMARY_TARGET@  bximage@EXE@
+-
++all: @PRIMARY_TARGET@  bximage@EXE@  
+ 
+ @EXTERNAL_DEPENDENCY@
+ 
+-bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
++bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ libltdl/libltdl.la \
+            cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+            @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
+            $(SIMX86_OBJS) $(FPU_LIB) @GDBSTUB_VAR@ @PLUGIN_VAR@
+@@ -187,12 +187,15 @@
+ 		$(READLINE_LIB) \
+ 		$(EXTRA_LINK_OPTS)
+ 
++libltdl/libltdl.la:
++	cd libltdl && $(MAKE)
++
+ bximage@EXE@: misc/bximage.o
+ 	@LINK_CONSOLE@ misc/bximage.o
  
  # compile with console CXXFLAGS, not gui CXXFLAGS
  misc/bximage.o: misc/bximage.c
@@ -49,8 +106,8 @@ RCS file: /cvsroot/bochs/bochs/configure.in,v
 retrieving revision 1.147.2.7
 diff -u -r1.147.2.7 configure.in
 --- configure.in	9 Oct 2002 06:23:07 -0000	1.147.2.7
-+++ configure.in	9 Oct 2002 13:38:39 -0000
-@@ -101,10 +101,27 @@
++++ configure.in	9 Oct 2002 17:11:26 -0000
+@@ -101,10 +101,25 @@
  AC_PROG_CXX
  AC_PROG_MAKE_SET
  
@@ -73,29 +130,36 @@ diff -u -r1.147.2.7 configure.in
 +dnl Configure libltdl
 +AC_CONFIG_SUBDIRS(libltdl)
 +
-+dnl add libltdl to include path.  It must be at the END, so that we don't
-+dnl accidently include its config.h instead of our own.
-+CFLAGS="$CFLAGS "'-I$(top_builddir)/libltdl'
-+CXXFLAGS="$CXXFLAGS "'-I$(top_builddir)/libltdl'
++CFLAGS="$CFLAGS $INCLTDL"
++CXXFLAGS="$CXXFLAGS $INCLTDL"
  
  AC_PATH_XTRA
  
-@@ -297,7 +314,7 @@
+@@ -297,7 +312,7 @@
      BX_IODEV_PLUGINS_OBJ='$(BX_IODEV_OBJS_PLUGINABLE)'
      GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE)'
      GUI_PLUGINS_OBJ='$(GUI_OBJS_PLUGINABLE)'
 -    EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -ldl"
-+    EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -lltdl"
++    EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} $LIBLTDL"
      PLUGIN_VAR='plugin.o'
     else
      AC_MSG_RESULT(no)
+@@ -1470,6 +1485,8 @@
+   fi
+   AC_DEFINE(BX_WITH_X11, 1)
+   SPECIFIC_GUI_OBJS='$(GUI_OBJS_X11)'
++  GUI_CFLAGS="$GUI_CFLAGS "'$(X_CFLAGS)'
++  GUI_CXXFLAGS="$GUI_CXXFLAGS "'$(X_CFLAGS)'
+   GUI_NON_PLUGINS_OBJ="$GUI_NON_PLUGINS_OBJ control.o"
+   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
+   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
 Index: plugin.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/Attic/plugin.cc,v
 retrieving revision 1.1.2.18
 diff -u -r1.1.2.18 plugin.cc
 --- plugin.cc	9 Oct 2002 07:05:36 -0000	1.1.2.18
-+++ plugin.cc	9 Oct 2002 13:38:44 -0000
++++ plugin.cc	9 Oct 2002 17:11:26 -0000
 @@ -152,7 +152,7 @@
    static time_t
  builtinGetCMOSTimeval(void)
@@ -105,7 +169,22 @@ diff -u -r1.1.2.18 plugin.cc
    return 0;
  }
  
-@@ -510,7 +510,7 @@
+@@ -424,7 +424,7 @@
+ {
+     plugin_t *plugin;
+ 
+-    pluginlog->info("Initializing plugins", plugin->name);
++    pluginlog->info("Initializing plugins");
+ 
+     for (plugin = plugins; plugin; plugin = plugin->next)
+     {
+@@ -504,13 +504,12 @@
+   plugin_t *
+ plugin_unload(plugin_t *plugin)
+ {
+-    int i;
+     plugin_t *dead_plug;
+ 
      if (plugin->initialized)
          plugin->plugin_fini ();
  
@@ -114,7 +193,7 @@ diff -u -r1.1.2.18 plugin.cc
      free (plugin->name);
      free (plugin->args);
  
-@@ -532,7 +532,6 @@
+@@ -532,12 +531,10 @@
      return;
  }
  
@@ -122,12 +201,18 @@ diff -u -r1.1.2.18 plugin.cc
    void
  plugin_load (char *name, char *args)
  {
-@@ -549,27 +548,25 @@
+     plugin_t *plugin;
+-    const char *plug_err;
+ 
+     plugin = (plugin_t *)malloc (sizeof (plugin_t));
+     if (!plugin)
+@@ -549,27 +546,26 @@
      plugin->args = args;
      plugin->initialized = 0;
  
 -    plugin->handle = dlopen (name, RTLD_LAZY);
 +    plugin->handle = lt_dlopen (name);
++    fprintf (stderr, "lt_dlhandle is %p\n", plugin->handle);
      if (!plugin->handle)
      {
 -      BX_PANIC (("dlopen failed: %s", dlerror ()));
@@ -158,7 +243,7 @@ diff -u -r1.1.2.18 plugin.cc
          plugin_abort ();
      }
  
-@@ -660,6 +657,12 @@
+@@ -660,6 +656,12 @@
  
    pluginRegisterTimer = builtinRegisterTimer;
    pluginActivateTimer = builtinActivateTimer;
@@ -171,7 +256,7 @@ diff -u -r1.1.2.18 plugin.cc
  }
  
  
-@@ -777,10 +780,10 @@
+@@ -777,10 +779,10 @@
    sprintf(plugin_filename,"%s%s",PLUGIN_PATH,name);
  
    plugin_load (plugin_filename, "");
@@ -184,36 +269,7 @@ diff -u -r1.1.2.18 plugin.cc
    }
    pluginlog->info("loaded plugin %s",plugin_filename);
    return 0;
-@@ -800,17 +803,17 @@
-   plugin_startup();
- 
- #if BX_PLUGINS
--  bx_load_plugin("libunmapped.so");
--  bx_load_plugin("libbiosdev.so");
--  bx_load_plugin("libcmos.so");
--  bx_load_plugin("libdma.so");
--  bx_load_plugin("libpic.so");
--  bx_load_plugin("libvga.so");
--  bx_load_plugin("libfloppy.so");
--  bx_load_plugin("libparallel.so");
--  bx_load_plugin("libserial.so");
--  bx_load_plugin("libkeyboard.so");
--  bx_load_plugin("libharddrv.so");
-+  bx_load_plugin("libunmapped.la");
-+  bx_load_plugin("libbiosdev.la");
-+  bx_load_plugin("libcmos.la");
-+  bx_load_plugin("libdma.la");
-+  bx_load_plugin("libpic.la");
-+  bx_load_plugin("libvga.la");
-+  bx_load_plugin("libfloppy.la");
-+  bx_load_plugin("libparallel.la");
-+  bx_load_plugin("libserial.la");
-+  bx_load_plugin("libkeyboard.la");
-+  bx_load_plugin("libharddrv.la");
- 
- 
-   // quick and dirty gui plugin selection
-@@ -834,9 +837,9 @@
+@@ -834,9 +836,9 @@
    do {
      fprintf (stderr, "--> ");
    } while (scanf ("%d", &which) != 1 || !(which>=0 && which<imax));
@@ -221,7 +277,7 @@ diff -u -r1.1.2.18 plugin.cc
 -  sprintf (soname, "lib%s.so", gui_names[which]);
 -  bx_load_plugin (soname);
 +  char libname[64];
-+  sprintf (libname, "lib%s.la", gui_names[which]);
++  sprintf (libname, "lib%s.so", gui_names[which]);
 +  bx_load_plugin (libname);
  
    if (bx_gui == NULL) {
@@ -232,7 +288,7 @@ RCS file: /cvsroot/bochs/bochs/Attic/plugin.h,v
 retrieving revision 1.1.2.13
 diff -u -r1.1.2.13 plugin.h
 --- plugin.h	9 Oct 2002 06:58:56 -0000	1.1.2.13
-+++ plugin.h	9 Oct 2002 13:38:44 -0000
++++ plugin.h	9 Oct 2002 17:11:26 -0000
 @@ -20,6 +20,8 @@
  #ifndef __PLUGIN_H
  #define __PLUGIN_H
@@ -257,7 +313,7 @@ RCS file: /cvsroot/bochs/bochs/bios/Makefile.in,v
 retrieving revision 1.12
 diff -u -r1.12 Makefile.in
 --- bios/Makefile.in	4 Oct 2002 06:08:38 -0000	1.12
-+++ bios/Makefile.in	9 Oct 2002 13:38:44 -0000
++++ bios/Makefile.in	9 Oct 2002 17:11:26 -0000
 @@ -48,7 +48,7 @@
  
  
@@ -273,8 +329,26 @@ RCS file: /cvsroot/bochs/bochs/cpu/Makefile.in,v
 retrieving revision 1.45.2.2
 diff -u -r1.45.2.2 Makefile.in
 --- cpu/Makefile.in	9 Oct 2002 05:14:57 -0000	1.45.2.2
-+++ cpu/Makefile.in	9 Oct 2002 13:38:45 -0000
-@@ -120,7 +120,7 @@
++++ cpu/Makefile.in	9 Oct 2002 17:11:26 -0000
+@@ -25,6 +25,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -41,7 +43,7 @@
+ 
+ 
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+ 
+ APIC_OBJS = @APIC_OBJS@
+ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
+@@ -120,7 +122,7 @@
  all: libcpu.a
  
  .@CPP_SUFFIX@.o:
@@ -289,8 +363,23 @@ RCS file: /cvsroot/bochs/bochs/debug/Makefile.in,v
 retrieving revision 1.10.2.2
 diff -u -r1.10.2.2 Makefile.in
 --- debug/Makefile.in	9 Oct 2002 05:14:57 -0000	1.10.2.2
-+++ debug/Makefile.in	9 Oct 2002 13:38:47 -0000
-@@ -67,11 +67,11 @@
++++ debug/Makefile.in	9 Oct 2002 17:11:27 -0000
+@@ -26,6 +26,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -62,16 +64,16 @@
+ 
+ BX_INCLUDES = debug.h
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/.
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. 
+ 
  all: libdebug.a
  
  .@CPP_SUFFIX@.o:
@@ -310,8 +399,23 @@ RCS file: /cvsroot/bochs/bochs/disasm/Makefile.in,v
 retrieving revision 1.7.2.2
 diff -u -r1.7.2.2 Makefile.in
 --- disasm/Makefile.in	9 Oct 2002 05:14:57 -0000	1.7.2.2
-+++ disasm/Makefile.in	9 Oct 2002 13:38:47 -0000
-@@ -54,7 +54,7 @@
++++ disasm/Makefile.in	9 Oct 2002 17:11:27 -0000
+@@ -25,6 +25,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -49,12 +51,12 @@
+ 
+ BX_INCLUDES = disasm.h
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+ 
  all: libdisasm.a
  
  .@CPP_SUFFIX@.o:
@@ -326,8 +430,26 @@ RCS file: /cvsroot/bochs/bochs/dynamic/Makefile.in,v
 retrieving revision 1.4
 diff -u -r1.4 Makefile.in
 --- dynamic/Makefile.in	1 Oct 2002 23:37:49 -0000	1.4
-+++ dynamic/Makefile.in	9 Oct 2002 13:38:47 -0000
-@@ -51,7 +51,7 @@
++++ dynamic/Makefile.in	9 Oct 2002 17:11:27 -0000
+@@ -26,6 +26,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -38,7 +40,7 @@
+ LIBS = @LIBS@
+ RANLIB = @RANLIB@
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+ LOCAL_CXXFLAGS =
+ 
+ X86_OBJS = x86.o x86shim.o
+@@ -51,7 +53,7 @@
  
  
  .@CPP_SUFFIX@.o:
@@ -342,8 +464,26 @@ RCS file: /cvsroot/bochs/bochs/fpu/Makefile.in,v
 retrieving revision 1.8.2.2
 diff -u -r1.8.2.2 Makefile.in
 --- fpu/Makefile.in	9 Oct 2002 05:14:57 -0000	1.8.2.2
-+++ fpu/Makefile.in	9 Oct 2002 13:38:47 -0000
-@@ -80,7 +80,7 @@
++++ fpu/Makefile.in	9 Oct 2002 17:11:27 -0000
+@@ -24,6 +24,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -48,7 +50,7 @@
+ L_TARGET = libfpu.a
+ 
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. -I./stubs -I$(srcdir)/./stubs
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. -I./stubs -I$(srcdir)/./stubs 
+ 
+ FPU_FLAGS = -DUSE_WITH_CPU_SIM $(PARANOID) $(DEBUG) -DNO_ASSEMBLER
+ FPU_GLUE_OBJ = wmFPUemu_glue.o
+@@ -80,7 +82,7 @@
  all: libfpu.a
  
  .@CPP_SUFFIX@.o:
@@ -358,8 +498,26 @@ RCS file: /cvsroot/bochs/bochs/gui/Makefile.in,v
 retrieving revision 1.32.2.7
 diff -u -r1.32.2.7 Makefile.in
 --- gui/Makefile.in	9 Oct 2002 07:25:59 -0000	1.32.2.7
-+++ gui/Makefile.in	9 Oct 2002 13:38:48 -0000
-@@ -75,10 +75,10 @@
++++ gui/Makefile.in	9 Oct 2002 17:11:27 -0000
+@@ -27,6 +27,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -65,7 +67,7 @@
+ GUI_SO_OBJS = $(GUI_OBJS_PLUGINS)
+ OBJS = $(GUI_OBJS_NON_PLUGINS) $(GUI_OBJS_PLUGINS) $(GUI_OBJS_EXTERNAL)
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+ LOCAL_CXXFLAGS =
+ 
+ #
+@@ -75,10 +77,10 @@
  BX_GUI_OBJS = $(GUI_OBJS)
  
  %.o: %.cc
@@ -372,7 +530,7 @@ diff -u -r1.32.2.7 Makefile.in
  
  all: libgui.a plugins
  
-@@ -87,7 +87,7 @@
+@@ -87,7 +89,7 @@
  	$(LIBTOOL) $(CXX) -o $@ $(BX_GUI_OBJS)
  
  beos.lo: beos.@CPP_SUFFIX@
@@ -387,8 +545,26 @@ RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
 retrieving revision 1.20.2.12
 diff -u -r1.20.2.12 Makefile.in
 --- iodev/Makefile.in	9 Oct 2002 07:20:07 -0000	1.20.2.12
-+++ iodev/Makefile.in	9 Oct 2002 13:38:49 -0000
-@@ -102,10 +102,10 @@
++++ iodev/Makefile.in	9 Oct 2002 17:11:27 -0000
+@@ -27,6 +27,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -48,7 +50,7 @@
+ CDROM_OBJS = @CDROM_OBJS@
+ IOAPIC_OBJS = @IOAPIC_OBJS@
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+ LOCAL_CXXFLAGS = $(MCH_CFLAGS)
+ 
+ SB16_DUMMY_OBJS = sb16.o
+@@ -102,14 +104,14 @@
  all: libiodev.a plugins
  
  %.o: %.cc
@@ -400,15 +576,39 @@ diff -u -r1.20.2.12 Makefile.in
 +	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
  
  # special rule for hard drive, which can have multiple objects
- libharddrv.la: harddrv.lo $(CDROM_OBJS:.o:.lo)
+-libharddrv.la: harddrv.lo $(CDROM_OBJS:.o:.lo)
+-	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o:.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
++libharddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
++	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
+ 	mkdir -p $(PLUGIN_PATH)
+ 	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
+ 
 Index: memory/Makefile.in
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/memory/Makefile.in,v
 retrieving revision 1.6.2.2
 diff -u -r1.6.2.2 Makefile.in
 --- memory/Makefile.in	9 Oct 2002 05:14:58 -0000	1.6.2.2
-+++ memory/Makefile.in	9 Oct 2002 13:38:49 -0000
-@@ -50,7 +50,7 @@
++++ memory/Makefile.in	9 Oct 2002 17:11:27 -0000
+@@ -25,6 +25,8 @@
+ 
+ srcdir = @srcdir@
+ VPATH = @srcdir@
++top_builddir    = ..
++top_srcdir      = @top_srcdir@
+ 
+ SHELL = /bin/sh
+ 
+@@ -40,7 +42,7 @@
+ RANLIB = @RANLIB@
+ 
+ 
+-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
++BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+ 
+ BX_OBJS = \
+ 	memory.o misc_mem.o
+@@ -50,7 +52,7 @@
  all: libmemory.a
  
  .@CPP_SUFFIX@.o:
