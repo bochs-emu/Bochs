@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.1 2001-06-08 07:20:07 bdenney Exp $
+ * $Id: siminterface.cc,v 1.2 2001-06-08 18:00:25 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -13,7 +13,7 @@
 // this dummy only exists for purposes of log functions.  It would be
 // lovely to get rid of it.
 class siminterface_dummy_c : public logfunctions {
-  dummy () {
+  siminterface_dummy_c () {
     setprefix("[CTRL]"); // control panel
     settype(CTRLLOG);
   }
