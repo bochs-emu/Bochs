@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.99 2003-02-06 23:16:54 cbothamy Exp $
+// $Id: siminterface.h,v 1.100 2003-05-03 16:37:17 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -199,6 +199,14 @@ typedef enum {
   BXP_ATA2_SLAVE_TYPE,
   BXP_ATA3_MASTER_TYPE,
   BXP_ATA3_SLAVE_TYPE,
+  BXP_ATA0_MASTER_MODE,
+  BXP_ATA0_SLAVE_MODE,
+  BXP_ATA1_MASTER_MODE,
+  BXP_ATA1_SLAVE_MODE,
+  BXP_ATA2_MASTER_MODE,
+  BXP_ATA2_SLAVE_MODE,
+  BXP_ATA3_MASTER_MODE,
+  BXP_ATA3_SLAVE_MODE,
   BXP_ATA0_MASTER_PATH,
   BXP_ATA0_SLAVE_PATH,
   BXP_ATA1_MASTER_PATH,
@@ -1117,6 +1125,20 @@ enum {
 #define BX_ATA_TRANSLATION_AUTO      4
 #define BX_ATA_TRANSLATION_LAST      4
 
+#define BX_ATA_MODE_FLAT        0
+#define BX_ATA_MODE_CONCAT      1
+#define BX_ATA_MODE_EXTDISKSIM  2
+#define BX_ATA_MODE_DLL_HD      3
+#define BX_ATA_MODE_SPARSE      4
+#define BX_ATA_MODE_VMWARE3     5
+#define BX_ATA_MODE_SPLIT       6
+#define BX_ATA_MODE_UNDOABLE    7
+#define BX_ATA_MODE_GROWABLE    8
+#define BX_ATA_MODE_VOLATILE    9
+#define BX_ATA_MODE_Z_UNDOABLE  10
+#define BX_ATA_MODE_Z_VOLATILE  11
+#define BX_ATA_MODE_LAST        11
+
 BOCHSAPI extern char *bochs_start_names[];
 BOCHSAPI extern int n_bochs_start_names;
 BOCHSAPI extern char *floppy_type_names[];
@@ -1132,6 +1154,8 @@ BOCHSAPI extern char *keyboard_type_names[];
 BOCHSAPI extern int n_keyboard_type_names;
 BOCHSAPI extern char *atadevice_type_names[];
 BOCHSAPI extern int n_atadevice_type_names;
+BOCHSAPI extern char *atadevice_mode_names[];
+BOCHSAPI extern int n_atadevice_mode_names;
 BOCHSAPI extern char *atadevice_status_names[];
 BOCHSAPI extern int n_atadevice_status_names;
 BOCHSAPI extern char *atadevice_biosdetect_names[];
@@ -1150,6 +1174,7 @@ typedef struct {
   bx_list_c *Omenu;
   bx_param_bool_c *Opresent;
   bx_param_enum_c *Otype;
+  bx_param_enum_c *Omode;
   bx_param_string_c *Opath;
   bx_param_num_c *Ocylinders;
   bx_param_num_c *Oheads;

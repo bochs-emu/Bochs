@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.31 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: iodev.h,v 1.32 2003-05-03 16:37:17 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -397,6 +397,7 @@ private:
 #include "iodev/dma.h"
 #include "iodev/floppy.h"
 #include "iodev/harddrv.h"
+#include "iodev/vmware3.h"
 #if BX_IODEBUG_SUPPORT
 #   include "iodev/iodebug.h"
 #endif

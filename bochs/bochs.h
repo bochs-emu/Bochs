@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.120 2003-02-26 02:41:29 ptrumpet Exp $
+// $Id: bochs.h,v 1.121 2003-05-03 16:37:14 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,6 +49,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <errno.h>
+
 #ifndef WIN32
 #  include <unistd.h>
 #else

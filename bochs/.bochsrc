@@ -152,7 +152,7 @@ floppyb: 1_44=b.img, status=inserted
 # ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
 # 
 # These options enables up to 4 ata channels. For each channel
-# the two base io address and the irq must be specified.
+# the two base io addresses and the irq must be specified.
 # 
 # ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 #
@@ -172,6 +172,8 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 #
 # This defines the type and characteristics of all attached ata devices:
 #   type=       type of attached device [disk|cdrom] 
+#   mode=       only valid for disks [flat|concat|external|dll|sparse|vmware3]
+#   mode=       only valid for disks [undoable|growable|volatile|z-undoable|z-volatile]
 #   path=       path of the image
 #   cylinders=  only valid for disks
 #   heads=      only valid for disks
@@ -197,21 +199,21 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 # The path is mandatory for type=cdrom
 #
 # Default values are:
-#   biosdetect=auto, translation=auto, model="Generic 1234"
+#   mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
 #
 # The biosdetect option has currently no effect on the bios
 #
 # Examples:
-#   ata0-master: type=disk, path=10M.sample, cylinders=306, heads=4, spt=17
-#   ata0-slave:  type=disk, path=20M.sample, cylinders=615, heads=4, spt=17
-#   ata1-master: type=disk, path=30M.sample, cylinders=615, heads=6, spt=17
-#   ata1-slave:  type=disk, path=46M.sample, cylinders=940, heads=6, spt=17
-#   ata2-master: type=disk, path=62M.sample, cylinders=940, heads=8, spt=17
-#   ata2-slave:  type=disk, path=112M.sample, cylinders=900, heads=15, spt=17
-#   ata3-master: type=disk, path=483M.sample, cylinders=1024, heads=15, spt=63
+#   ata0-master: type=disk, mode=flat, path=10M.sample, cylinders=306, heads=4, spt=17
+#   ata0-slave:  type=disk, mode=flat, path=20M.sample, cylinders=615, heads=4, spt=17
+#   ata1-master: type=disk, mode=flat, path=30M.sample, cylinders=615, heads=6, spt=17
+#   ata1-slave:  type=disk, mode=flat, path=46M.sample, cylinders=940, heads=6, spt=17
+#   ata2-master: type=disk, mode=flat, path=62M.sample, cylinders=940, heads=8, spt=17
+#   ata2-slave:  type=disk, mode=flat, path=112M.sample, cylinders=900, heads=15, spt=17
+#   ata3-master: type=disk, mode=flat, path=483M.sample, cylinders=1024, heads=15, spt=63
 #   ata3-slave:  type=cdrom, path=iso.sample, status=inserted
 #=======================================================================
-ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
+ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, spt=17
 #ata0-slave: type=cdrom, path=D:, status=inserted
 #ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 #ata0-slave: type=cdrom, path="drive", status=inserted

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.225 2003-05-02 16:19:26 vruppert Exp $
+// $Id: main.cc,v 1.226 2003-05-03 16:37:16 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -195,6 +195,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
         switch (val) {
           case BX_ATA_DEVICE_DISK:
             SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODE + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_CYLINDERS + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_HEADS + device))->set_enabled (1);
@@ -206,6 +207,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
             break;
           case BX_ATA_DEVICE_CDROM:
             SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODE + device))->set_enabled (0);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_CYLINDERS + device))->set_enabled (0);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_HEADS + device))->set_enabled (0);
@@ -531,6 +533,13 @@ void bx_init_options ()
           BX_ATA_DEVICE_DISK,
           BX_ATA_DEVICE_DISK));
 
+      menu->add (bx_options.atadevice[channel][slave].Omode = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_MODE+channel*2+slave),
+          "ata-device:mode",
+          "Type of ATA device",
+          atadevice_mode_names,
+          BX_ATA_MODE_FLAT,
+          BX_ATA_MODE_FLAT));
+
       menu->add (bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_STATUS+channel*2+slave),
        "ata-device:status",
        "Inserted or ejected",
@@ -638,6 +647,9 @@ void bx_init_options ()
       bx_options.atadevice[channel][slave].Otype->set_ask_format (
           BX_WITH_WX? "Type of ATA device:"
           : "Enter type of ATA device, disk or cdrom: [%s] ");
+      bx_options.atadevice[channel][slave].Omode->set_ask_format (
+          BX_WITH_WX? "Policy of ATA device:"
+          : "Enter mode of ATA device, (flat, concat, etc.): [%s] ");
       bx_options.atadevice[channel][slave].Opath->set_ask_format (
           BX_WITH_WX? "Path or physical device name:"
           : "Enter new filename: [%s] ");
@@ -666,6 +678,7 @@ void bx_init_options ()
 #if !BX_WITH_WX
       bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
       bx_options.atadevice[channel][slave].Otype->set_format (", %s");
+      bx_options.atadevice[channel][slave].Omode->set_format (", mode %s");
       bx_options.atadevice[channel][slave].Opath->set_format (" on '%s'");
       bx_options.atadevice[channel][slave].Ocylinders->set_format (", %d cylinders");
       bx_options.atadevice[channel][slave].Oheads->set_format (", %d heads");
@@ -1336,6 +1349,7 @@ void bx_reset_options ()
     for (Bit8u slave=0; slave<2; slave++) {
       bx_options.atadevice[channel][slave].Opresent->reset();
       bx_options.atadevice[channel][slave].Otype->reset();
+      bx_options.atadevice[channel][slave].Omode->reset();
       bx_options.atadevice[channel][slave].Opath->reset();
       bx_options.atadevice[channel][slave].Ocylinders->reset();
       bx_options.atadevice[channel][slave].Oheads->reset();
@@ -2800,6 +2814,42 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strcmp(params[i], "type=cdrom")) {
         bx_options.atadevice[channel][slave].Otype->set (BX_ATA_DEVICE_CDROM);
         }
+      else if (!strcmp(params[i], "mode=flat")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_FLAT);
+        }
+      else if (!strcmp(params[i], "mode=concat")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_CONCAT);
+        }
+      else if (!strcmp(params[i], "mode=external")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_EXTDISKSIM);
+        }
+      else if (!strcmp(params[i], "mode=dll")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_DLL_HD);
+        }
+      else if (!strcmp(params[i], "mode=sparse")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_SPARSE);
+        }
+      else if (!strcmp(params[i], "mode=vmware3")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_VMWARE3);
+        }
+      else if (!strcmp(params[i], "mode=split")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_SPLIT);
+        }
+      else if (!strcmp(params[i], "mode=undoable")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_UNDOABLE);
+        }
+      else if (!strcmp(params[i], "mode=growable")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_GROWABLE);
+        }
+      else if (!strcmp(params[i], "mode=volatile")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_VOLATILE);
+        }
+      else if (!strcmp(params[i], "mode=z-undoable")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_UNDOABLE);
+        }
+      else if (!strcmp(params[i], "mode=z-volatile")) {
+        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_VOLATILE);
+        }
       else if (!strncmp(params[i], "path=", 5)) {
         bx_options.atadevice[channel][slave].Opath->set (&params[i][5]);
         }
@@ -3705,8 +3755,46 @@ bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_o
     fprintf (fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
 
     if (opt->Otype->get() == BX_ATA_DEVICE_DISK) {
-      fprintf (fp, "type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d",
-          opt->Opath->getptr(), opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
+      fprintf (fp, "type=disk");
+
+      switch(opt->Omode->get()) {
+        case BX_ATA_MODE_FLAT:
+          fprintf (fp, ", mode=flat");
+          break;
+        case BX_ATA_MODE_CONCAT:
+          fprintf (fp, ", mode=concat");
+          break;
+        case BX_ATA_MODE_EXTDISKSIM:
+          fprintf (fp, ", mode=external");
+          break;
+        case BX_ATA_MODE_DLL_HD:
+          fprintf (fp, ", mode=dll");
+          break;
+        case BX_ATA_MODE_SPARSE:
+          fprintf (fp, ", mode=sparse");
+          break;
+        case BX_ATA_MODE_VMWARE3:
+          fprintf (fp, ", mode=vmware3");
+          break;
+        case BX_ATA_MODE_SPLIT:
+          fprintf (fp, ", mode=split");
+          break;
+        case BX_ATA_MODE_UNDOABLE:
+          fprintf (fp, ", mode=undoable");
+          break;
+        case BX_ATA_MODE_GROWABLE:
+          fprintf (fp, ", mode=growable");
+          break;
+        case BX_ATA_MODE_VOLATILE:
+          fprintf (fp, ", mode=volatile");
+          break;
+        case BX_ATA_MODE_Z_UNDOABLE:
+          fprintf (fp, ", mode=z-undoable");
+          break;
+        case BX_ATA_MODE_Z_VOLATILE:
+          fprintf (fp, ", mode=z-volatile");
+          break;
+        }
 
       switch(opt->Otranslation->get()) {
         case BX_ATA_TRANSLATION_NONE:
@@ -3725,6 +3813,10 @@ bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_o
           fprintf (fp, ", translation=auto");
           break;
         }
+
+      fprintf (fp, ", path=\"%s\", cylinders=%d, heads=%d, spt=%d",
+          opt->Opath->getptr(), 
+          opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
       }
     else if (opt->Otype->get() == BX_ATA_DEVICE_CDROM) {
       fprintf (fp, "type=cdrom, path=\"%s\", status=%s", 

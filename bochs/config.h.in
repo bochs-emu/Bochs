@@ -196,6 +196,7 @@
 #define BX_HAVE_SOCKADDR_IN_SIN_LEN 0
 #define BX_HAVE_GETTIMEOFDAY 0
 #define BX_HAVE_REALTIME_USEC (BX_HAVE_GETTIMEOFDAY || defined(WIN32))
+#define BX_HAVE_MKSTEMP 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
 // gui. If people try to enable it elsewhere, give a compile error after the
@@ -285,15 +286,13 @@
 
 #define BX_GDBSTUB 0
 
-// This option enables "split hard drive" support, which means
-// that a series of partial hard disk images can be treated
-// as a single large image.  If you set up the partition sizes and
-// file sizes correctly, this allows you to store each partition
-// in a separate file, which is very convenient if you want to operate
-// on a single partition (e.g. mount with loopback, create filesystem,
-// fsck, etc.).
-// [[Provide example of partitioning]]
-#define BX_SPLIT_HD_SUPPORT 0
+// This option enables compressed (zlib) hd support
+#define BX_COMPRESSED_HD_SUPPORT 0
+#define BX_HAVE_ZLIB 0
+
+#if BX_COMPRESSED_HD_SUPPORT && !BX_HAVE_ZLIB
+#error You must have zlib to enable compressed hd support
+#endif
 
 // This option defines the number of supported ATA channels.
 // There are up to two drives per ATA channel.
