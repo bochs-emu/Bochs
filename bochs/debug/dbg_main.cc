@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.39 2002-03-20 02:49:07 bdenney Exp $
+// $Id: dbg_main.cc,v 1.40 2002-03-20 03:49:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1587,6 +1587,12 @@ bx_dbg_continue_command(void)
 		  if (BX_CPU(cpu)->guard_found.icount > max_executed)
 			max_executed = BX_CPU(cpu)->guard_found.icount;
 		}
+		// potential deadlock if all processors are halted.  Then 
+		// max_executed will be 0, tick will be incremented by zero, and
+		// there will never be a timed event to wake them up.  To avoid this,
+		// always tick by a minimum of 1.
+		if (max_executed < 1) max_executed=1;
+
 		BX_TICKN(max_executed);
 #endif /* BX_SMP_PROCESSORS>1 */
 	}
