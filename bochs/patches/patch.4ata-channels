@@ -297,15 +297,6 @@ diff -u -r1.141 main.cc
      case BXP_SCREENMODE:
        if (set==1) {
  	BX_INFO (("Screen mode changed to %s", val));
-@@ -274,7 +344,7 @@
-   bx_options.log.actions[2] = ACT_REPORT;
-   bx_options.log.actions[3] = ACT_ASK;
- 
--  // quick start option, set by command line arg
-+  // quick start  ption, set by command line arg
-   new bx_param_bool_c (BXP_QUICK_START,
-       "Quick start",
-       "Quick start option: if true, read the bochsrc and start simulation immediately",
 @@ -374,127 +444,301 @@
    bx_options.floppyb.Otype->set_handler (bx_param_handler);
    bx_options.floppyb.Ostatus->set_handler (bx_param_handler);
