@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.14 2003-05-06 20:28:12 cbothamy Exp $
+// $Id: osdep.cc,v 1.15 2004-02-06 22:27:59 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -235,6 +235,9 @@ char *bx_strrev(char *str)
 }
 #endif  /* !BX_HAVE_STRREV */
 
+#if BX_WITH_MACOS
+namespace std{extern "C" {char *mktemp(char *tpl);}}
+#endif
 #if !BX_HAVE_MKSTEMP
 int bx_mkstemp(char *tpl)
 {

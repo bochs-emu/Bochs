@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.117 2004-02-04 19:54:56 vruppert Exp $
+// $Id: siminterface.h,v 1.118 2004-02-06 22:28:00 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -907,7 +907,7 @@ public:
   enum {
     // When a bx_param_num_c is displayed in dialog, USE_SPIN_CONTROL controls
     // whether a spin control should be used instead of a simple text control.
-    USE_SPIN_CONTROL = (1<<0),
+    USE_SPIN_CONTROL = (1<<0)
   } bx_numopt_bits;
   bx_param_num_c (bx_id id,
       char *name,

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.15 2003-11-01 18:36:19 sshwarts Exp $
+ |  $Id: errors.c,v 1.16 2004-02-06 22:27:59 danielg4 Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -28,7 +28,9 @@
 #include "control_w.h"
 #include "reg_constant.h"
 #include "version.h"
-
+#ifdef __cplusplus
+extern "C"
+#endif
 int printk(const char * fmt, ...);
 
 /*
