@@ -1,0 +1,43 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+<book>
+<bookinfo>
+   <title>Bochs Documentation Manual</title>
+   <authorgroup>
+   <author><firstname>Michael</firstname><surname>Calabrese</surname></author>
+   </authorgroup>
+</bookinfo>
+<chapter><title>Layout</title>
+   <para>
+   Master document....Books...chapter...sections...toc...Index...glossary..remarks(comments)
+   </para>
+   </chapter>
+
+    <chapter><title>Docbook Basics</title>
+    <section><title>Small Tutorial</title>
+   <para>
+   text file...chapter...section..references (xref...web..)...graphics
+   </para>
+   </section>
+
+    <section><title>Refences and Other Tutorials</title>
+   <para>
+   docbook.org...
+   </para>
+   </section>
+
+
+   </chapter>
+
+    <chapter><title>Conventions</title>
+   <para>
+   lower case elements...indentation...remarks...master document/include files
+   </para>
+   </chapter>
+
+    <chapter><title>Rendering</title>
+   <para>
+   rendering tools ...jw/jade ... docbook tools...sgml tools (how to get/what to see)
+   </para>
+   </chapter>
+
+</book>

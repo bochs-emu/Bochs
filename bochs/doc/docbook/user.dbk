@@ -1,0 +1,286 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
+<book>
+<bookinfo>
+   <title>Bochs User Manual</title>
+   <authorgroup>
+   <author><firstname>Kevin</firstname><surname>Lawton</surname></author>
+   <author><firstname>Bryce</firstname><surname>Denney</surname></author>
+   <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
+   </authorgroup>
+</bookinfo>
+
+<!-- *************************************************************** -->
+<chapter><title>What is Bochs?</title>
+   <section><title>I don't know whant to call this section...</title>
+      <para>
+      Bochs is a portable x86 PC emulation software package that emulates
+      enough of the x86 CPU, related AT hardware, and BIOS to run DOS,
+      Windows '95, Minix 2.0, and other OS's, all on your workstation.
+      </para>
+
+      <para>
+      Bochs is an open source project distributed under the GNU Lesser General
+      Public License. It was originally a commercial product, but in
+      March 2000 MandrakeSoft bought Bochs and committed it to Open Source.
+      Here is the press release.
+      </para>
+
+      <para>
+      Bochs now compiles/runs on many platforms. See the following list for
+      supported platforms and special notes:
+      </para>
+
+      <table><title>Supported platforms</title>
+         <tgroup cols=2 align=left colsep=1 rowsep=1>
+         <tbody>
+         <row>
+            <entry>Unix/X11</entry><entry>This is my main development platform.</entry>
+         </row>
+         <row>
+            <entry>BeOS</entry><entry>I also did this port, originally to R3/PPC using CodeWarrior.
+            It now works on R4/x86 with egcs. Simon Huet picked up
+            maintaining/reworking the BeOS GUI port. Check out Simon's BeBochs page.
+            </entry>
+         </row>
+
+         <row>
+            <entry>Win32</entry><entry> This port was done by David Ross. I've enhanced the build process
+            for Win32. You can compile with either the MS Visual C++ 5.0
+            or GNU-Win32 environments. Go to Compiling Bochs on Win32 </entry>
+         </row>
+
+         <row>
+            <entry>OS/2</entry><entry> Nick Behnken used PE2LX to translate David Ross's Win32
+            port to an OS/2 program. Check out Nick Behnken's page. </entry>
+         </row>
+         <row>
+            <entry>OS/2</entry><entry> Craig Ballantyne ported bochs to OS/2. I will integrate this back
+            into the main bochs source soon. Check out the guiSoft Corp.
+            home page.
+            </entry>
+         </row>
+
+         <row>
+            <entry>Macintosh</entry><entry>David Batterham drbatter@socs.uts.edu.au or
+            drbatter@yahoo.com ported bochs to the Mac. His changes are
+            integrated, though it is work in progress. He compiled with CodeWarrior
+            Pro R1 (CW12), and included a project file 'Bochs.proj' in the top-level
+            directory of source code, which you may need to modify. I
+            added a '--with-macos' option to configure, so you can use a Unix
+            machine to generate header files for the Mac. Check out David's
+            MacBochs website. David has not had time to maintain the page or the
+            Mac port since early 2000. If you have Mac development tools and want
+            to contribute, contact the developers list. </entry>
+         </row>
+         <row>
+            <entry>FreeDOS for Bochs</entry><entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
+            For more info about FreeDOS, see FreeDOS Web page</entry>
+         </row>
+         </tbody>
+         </tgroup>
+      </table>
+    <para>
+    There's more! You can find more detailed testing information on the testing status page on bochs.sourceforge.net.
+    </para>
+
+   </section>
+
+   <section><title>Licensing</title>
+      <para>
+       Bochs is released under the <ulink url="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</ulink>,
+       much thanks to <ulink url="http://www.linux-mandrake.com">MandrakeSoft</ulink>, makers
+       of the Linux-Mandrake distribution.
+      </para>
+   </section
+</chapter>
+
+<!-- *************************************************************** -->
+<chapter><title>Why do people use Bochs anyway?</title>
+   <para>
+      run more than one operating system without rebooting
+   </para>
+   <para>
+         OS developers use Bochs to system software without endangering
+        their development machine or rebooting.
+   </para>
+   <para>
+      students use Bochs to learn about how PC hardware works
+      hardware designers use bochs to help test new hardware
+   </para>
+</chapter>
+
+<!-- *************************************************************** -->
+<chapter><title>FAQ</title>
+<qandaset>
+  <qandaentry>
+     <question>
+       <para>Is Bochs Open Source?</para>
+     </question>
+     <answer>
+       <para>
+       Yes! Bochs is released under the <ulink url="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</ulink>,
+       much thanks to <ulink url="http://www.linux-mandrake.com">MandrakeSoft</ulink>, makers
+       of the Linux-Mandrake distribution.
+       </para>
+     </answer>
+  </qandaentry>
+</qandaset>
+</chapter>
+
+<!-- *************************************************************** -->
+<chapter><title>Installation</title>
+<section><title>How to get it</title>
+    <para>
+       pointer to SF web site
+most stable version: latest release. binaries and source available
+latest version
+  by using CVS software
+  by downloading CVS snapshot
+  </para>
+</section>
+
+<section><title>Installing a Binary</title>
+    <section><title>Windows</title>
+       <para>
+       unzip into some directory.  Look for DOC-win32.html
+  for more instructions.  Quick start: find dlxlinux/start.bat and
+  double click
+       </para>
+   </section>
+   <section><title>Unix</title>
+     <para>
+     <command>rpm -i bochs-&lt;VERSION>;.rpm</command>
+     Look for <filename>/usr/local/bochs/latest/DOC-linux.html</filename>, man pages for
+     bochs.  Quick start: <command>run bochs-dlx</command>  (in <filename>/usr/local/bin</filename>)
+      </para>
+   </section>
+</section>
+
+<section><title>Compiling from source</title>
+
+  <section><title>Unix</title>
+  <para>
+  Run configure to make the Makefiles
+  List of configure arguments
+  Option of using .conf.* scripts
+  What to report if configure fails: Tar up config.* and send to
+    bochs-testing@tlw.com
+  Make
+  What to try if make fails: turn off configure options,
+    look at SF bugs and patches section to see if it's a known
+    problem, try to fix it yourself, if using CVS version try
+    a release source file instead, fix it yourself
+  Make install, what it installs and where
+    /usr/local/bochs/$VERSION/*
+    /usr/local/bin/bochs (and bximage)
+    /usr/man/man1/bochs*.1 (and bximage.1)
+    make install_dlx option
+  How to build an RPM in Linux
+  </para>
+  </section>
+
+
+  <section><title>Instructions for win32 VC++</title>
+  <para>
+  Getting the makefiles
+    Download them from web site in a zip, install them on top
+      of the source directory
+    Run configure on a unix box, copy the Makefiles and config.h
+      to your windows machine
+    RUN CONFIGURE IN BOCHS!  This would be awesome.
+    Cygwin?
+  Building it with NMAKE
+  Installation? Maybe download an existing windows binary package
+    and drop in your new binary.  There is no make install, though
+    this may be added some day.
+    </para>
+    </section>
+<section><title>Instructions for cygwin?</title>
+   <para>I have no idea.</para>
+</section>
+</section>
+</chapter>
+
+<chapter><title>Setup</title>
+   <section><title>What does Bochs need?</title>
+        <para>
+        bochsrc, BIOS, VGABIOS, VGA font, disk images.
+	table of bochsrc options and what they do
+	BIOS/VGABIOS, what do they do?
+	VGA font, how to install it
+	disk images
+	  where to find one pre-made
+	  make a blank one with bximage
+	  grab one from a real hard disk
+          </para>
+   </section>
+</chapter>
+
+<chapter><title>Using Bochs</title>
+    <para>
+      Resources for users
+        bochs-developers mailing list, archive
+	testing status page: tells what has been tried and who got it working
+	SourceForge
+	  look for bug reports
+	  how to report problems, make feature requests
+          </para>
+</chapter>
+
+<chapter><title>Common problems and what to do about them (Troubleshooting)</title>
+    <para>
+        What's a panic?  How to report it to bug tracker, how to make
+	  it non-fatal.
+        Mouse behavior, enabling and disabling
+	Keyboard mapping problems
+	[...]
+    </para>
+</chapter>
+
+<chapter><title>Tips and Techniques</title>
+    <para>
+	Mount disk image in loopback
+        Using two hard disks
+	[...]
+    </para>
+</chapter>
+<chapter><title>Guest operating systems</title>
+	<section><title>Linux</title>
+           <para>
+	    What disk images are available.
+	    Installing from scratch.
+	    What works
+	    Known problems
+            </para>
+          </section>
+	  <section><title>OpenBSD</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>FreeBSD</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>FreeDOS</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>DOS</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>Windows *</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>[...]</title>
+             <para>
+             </para>
+          </section>
+</chapter>
+
+
+
+
+
+</book>

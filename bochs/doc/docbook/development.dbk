@@ -1,0 +1,100 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
+<book>
+<bookinfo>
+   <title>Bochs Developers Guide</title>
+   <authorgroup>
+   <author><firstname>Kevin</firstname><surname>Lawton</surname></author>
+   <author><firstname>Bryce</firstname><surname>Denney</surname></author>
+   <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
+   </authorgroup>
+</bookinfo>
+
+<!-- *************************************************************** -->
+<chapter><title>Resources for developers</title>
+      <section><title>All the resources for users</title>
+         <para>
+         </para>
+      </section>
+
+      <section><title>CVS</title>
+        <para>
+        how to browse on web interface
+	anonymous CVS (read only)
+	write access CVS (must be officially a developer)
+	how to make a patch using CVS
+        </para>
+      </section>
+
+      <section><title>SourceForge bug, feature, and patch trackers</title>
+         <para>
+         </para>
+      </section>
+</chapter>
+
+ <chapter><title>About the code</title>
+    <section><title>Directory Structure</title>
+      <para>
+      cpu directory does this, iodev does that, gui does that
+      </para>
+    </section>
+
+     <section><title>Confure Scripting</title>
+      <para>
+      configure script, makefiles, header files
+      </para>
+     </section>
+
+      <section><title>Log Functions</title>
+      <para>
+      log functions: what is a panic, what is an error, etc.
+      </para>
+      </section>
+
+      <section><title>Emulator Objects</title>
+       <para>
+      objects that do all the work (cpu, mem)
+      </para>
+      </section>
+
+      <section><title>timers</title>
+      <para>
+      </para>
+      </section>
+</chapter>
+
+<chapter><title>Debugger</title>
+      <section><title>compile with debugger support</title>
+      <para>
+      </para>
+      </section>
+      <section><title>get started in debugger</title>
+      <para>
+      </para>
+      </section>
+      <section><title>command reference</title>
+      <para>
+      </para>
+      </section>
+      <section><title>techniques</title>
+      <para>
+      </para>
+      </section>
+</chapter>
+
+<chapter><title>Coding</title>
+      <section><title>coding conventions</title>
+      <para>
+      </para>
+      </section>
+      <section><title>patches:</title>
+      <para>
+      how to make, where to submit, what happens then?
+      </para
+      </section>
+
+      <section><title>life cycle of a CVS release</title>
+      <para>
+      </para>
+      </section>
+</chapter>
+</book>
