@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.176 2004-09-13 20:48:10 sshwarts Exp $
+// $Id: cpu.h,v 1.177 2004-09-14 20:19:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -124,7 +124,6 @@
 // access to 16 bit instruction pointer
 #define IP (* (Bit16u *) (((Bit8u *) &BX_CPU_THIS_PTR dword.eip) + BX_REG16_OFFSET))
 
-
 // accesss to 32 bit general registers
 #define EAX BX_CPU_THIS_PTR gen_reg[0].dword.erx
 #define ECX BX_CPU_THIS_PTR gen_reg[1].dword.erx
@@ -244,9 +243,7 @@
 
 #endif
 
-#ifndef CPL
 #define CPL  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
-#endif
 
 #if BX_SMP_PROCESSORS==1
 #define BX_CPU_ID 0
@@ -1002,7 +999,6 @@ typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN
 
 
 // ========== iCache =============================================
-
 #if BX_SUPPORT_ICACHE
 
 #define BxICacheEntries (32 * 1024)  // Must be a power of 2.
@@ -1186,11 +1182,16 @@ typedef struct {
 
 class BX_MEM_C;
 
-#if BX_SUPPORT_FPU
-#include "cpu/i387.h"
+#if BX_SUPPORT_X86_64
+# define BX_GENERAL_REGISTERS 16
+#else
+# define BX_GENERAL_REGISTERS 8
 #endif
 
+#if BX_SUPPORT_FPU
+#include "cpu/i387.h"
 #include "cpu/xmm.h"
+#endif
 
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
@@ -1209,47 +1210,42 @@ public: // for now...
   // esi: source index
   // edi: destination index
   // esp: stack pointer
+  bx_gen_reg_t  gen_reg[BX_GENERAL_REGISTERS];
+
+  // instruction pointer
 #if BX_SUPPORT_X86_64
-  bx_gen_reg_t  gen_reg[16];
-
-union {
-#ifdef BX_BIG_ENDIAN
-  struct {
-    Bit32u rip_upper;
-    Bit32u eip;
-    } dword;
-#else
-  struct {
-    Bit32u eip;
-    Bit32u rip_upper;
-    } dword;
-#endif
-  Bit64u rip;
-  };
-
-#else
-
-  bx_gen_reg_t  gen_reg[8];
-
   union {
-    Bit32u eip;    // instruction pointer
+#ifdef BX_BIG_ENDIAN
+    struct {
+      Bit32u rip_upper;
+      Bit32u eip;
+    } dword;
+#else
+    struct {
+      Bit32u eip;
+      Bit32u rip_upper;
+    } dword;
+#endif
+    Bit64u rip;
+  };
+#else
+    union {
+      Bit32u eip;    // instruction pointer
     } dword;
 #endif
 
-#if BX_CPU_LEVEL > 0
   // so that we can back up when handling faults, exceptions, etc.
   // we need to store the value of the instruction pointer, before
   // each fetch/execute cycle.
   bx_address prev_eip;
-#endif
+  bx_address prev_esp;
+
   // status and control flags register set
   Bit32u lf_flags_status;
   bx_flags_reg_t eflags;
 
   bx_lf_flags_entry oszapc;
   bx_lf_flags_entry oszap;
-
-  bx_address prev_esp;
 
 #define BX_INHIBIT_INTERRUPTS 0x01
 #define BX_INHIBIT_DEBUG      0x02
@@ -1354,8 +1350,6 @@ union {
   jmp_buf jmp_buf_env;
   Bit8u curr_exception[2];
 
-  static const bx_bool is_exception_OK[3][3];
-
   bx_segment_reg_t save_cs;
   bx_segment_reg_t save_ss;
   Bit32u           save_eip;
@@ -1449,13 +1443,6 @@ union {
                         //   normal cases) it is a native pointer and is used
                         //   for a direct write access.
     } address_xlation;
-
-#if BX_SUPPORT_X86_64
-  // data upper 32 bits - not used any longer
-  //Bit32s daddr_upper;    // upper bits must be canonical  (-virtmax --> + virtmax)
-  // instruction upper 32 bits - not used any longer
-  //Bit32s iaddr_upper;    // upper bits must be canonical  (-virtmax --> + virtmax)
-#endif
 
 #if BX_EXTERNAL_DEBUGGER
   virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
@@ -1594,19 +1581,14 @@ union {
 
   BX_SMF void MOV_EEbGb(bxInstruction_c *);
   BX_SMF void MOV_EGbGb(bxInstruction_c *);
-
   BX_SMF void MOV_EEdGd(bxInstruction_c *);
   BX_SMF void MOV_EGdGd(bxInstruction_c *);
-
   BX_SMF void MOV_EEwGw(bxInstruction_c *);
   BX_SMF void MOV_EGwGw(bxInstruction_c *);
-
   BX_SMF void MOV_GbEEb(bxInstruction_c *);
   BX_SMF void MOV_GbEGb(bxInstruction_c *);
-
   BX_SMF void MOV_GdEEd(bxInstruction_c *);
   BX_SMF void MOV_GdEGd(bxInstruction_c *);
-
   BX_SMF void MOV_GwEEw(bxInstruction_c *);
   BX_SMF void MOV_GwEGw(bxInstruction_c *);
 

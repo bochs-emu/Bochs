@@ -214,7 +214,9 @@ invalid:
     /* using float128 for approximation */
     /* ******************************** */
 
-    float128 x = normalizeRoundAndPackFloat128(0, aExp+0x3FEF, aSig, 0, status);
+    Bit64u zSig0, zSig1;
+    shift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
+    float128 x = packFloat128(0, aExp+0x3FFF, zSig0, zSig1);
     x = poly_l2(x, status);
     x = float128_add(x, floatx80_to_float128(int32_to_floatx80(ExpDiff), status), status);
     return floatx80_mul(b, x, status);
@@ -247,8 +249,8 @@ invalid:
 
 floatx80 fyl2xp1(floatx80 a, floatx80 b, float_status_t &status)
 {
-    Bit64u aSig, bSig;
     Bit32s aExp, bExp;
+    Bit64u aSig, bSig, zSig0, zSig1, zSig2;
     int aSign, bSign;
 
     // handle unsupported extended double-precision floating encodings
@@ -321,7 +323,6 @@ invalid:
     if (aExp < EXP_BIAS-70)
     {
         // first order approximation, return (a*b)/ln(2)
-        Bit64u zSig0, zSig1, zSig2;
         Bit32s zExp = aExp + FLOAT_LN2INV_EXP - 0x3FFE;
 
 	mul128By64To192(FLOAT_LN2INV_HI, FLOAT_LN2INV_LO, aSig, &zSig0, &zSig1, &zSig2);
@@ -345,7 +346,8 @@ invalid:
     /* using float128 for approximation */
     /* ******************************** */
 
-    float128 x = normalizeRoundAndPackFloat128(aSign, aExp-0x10, aSig, 0, status);
+    shift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
+    float128 x = packFloat128(aSign, aExp, zSig0, zSig1);
     x = poly_l2p1(x, status);
     return floatx80_mul(b, x, status);
 }

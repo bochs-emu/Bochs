@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.41 2004-08-28 08:41:46 sshwarts Exp $
+// $Id: exception.cc,v 1.42 2004-09-14 20:19:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,12 +41,11 @@
 
 #define BX_ET_DOUBLE_FAULT 10
 
-
-const bx_bool BX_CPU_C::is_exception_OK[3][3] = {
+static const bx_bool is_exception_OK[3][3] = {
     { 1, 1, 1 }, /* 1st exception is BENIGN */
     { 1, 0, 1 }, /* 1st exception is CONTRIBUTORY */
     { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
-    };
+};
 
 
   void
