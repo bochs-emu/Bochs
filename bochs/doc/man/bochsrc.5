@@ -666,7 +666,7 @@ Defines the characteristics of an attached ne2000 isa card :
    ethdev=DEVICE, 
    script=SCRIPT
 
-.B PROPERTIES FOR sb16:
+.B PROPERTIES FOR ne2k:
 
 ioaddr, irq:
 You probably won't need to change ioaddr and irq, unless there are IRQ conflicts.
@@ -731,11 +731,26 @@ Example:
 .I "user_shortcut:"
 This defines the keyboard shortcut to be sent when you press the "user"
 button in the headerbar. The shortcut string can be a combination of
-these key names: "alt", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
-Up to 3 keys can be pressed at a time.
+these key names: "alt", "bksp", "ctrl", "del", "esc", "f1", "f4", "tab",
+"win". Up to 3 keys can be pressed at a time.
 
 Example:
   user_shortcut: keys=ctrlaltdel
+
+.TP
+.I "cmosimage:"
+This defines image file that can be loaded into the CMOS RAM at startup.
+
+Example:
+  cmosimage: cmos.img
+
+.TP
+.I "usb1:"
+Enables the i440fx PCI USB root hub. USB devices with access to real hardware
+are not implemented yet. PCI support must be enabled, too.
+
+Example:
+  usb1: enabled=1, ioaddr=0xFF40, irq=9
 
 .\"SKIP_SECTION"
 .SH LICENSE
