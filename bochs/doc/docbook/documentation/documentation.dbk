@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.14 2004-11-22 17:23:14 vruppert Exp $
+$Id: documentation.dbk,v 1.15 2004-11-24 16:52:39 vruppert Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -253,6 +253,7 @@ along with a hint on how to spell them.
       </entry>
     </row>
   </tbody>
+  </tgroup>
 </table>
 </para>
 
