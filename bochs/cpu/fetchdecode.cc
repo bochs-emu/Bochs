@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.72 2004-11-26 20:21:27 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.73 2004-12-11 20:51:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1681,7 +1681,7 @@ another_byte:
         if (mod == 0x40) { // mod == 01b
           instruction->ResolveModrm = BxResolve32Mod1or2[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01_rm32[rm]);
+            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
 get_8bit_displ:
           if (ilen < remain) {
             // 8 sign extended to 32
@@ -1694,7 +1694,7 @@ get_8bit_displ:
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve32Mod1or2[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm32[rm]);
+          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
 get_32bit_displ:
         if ((ilen+3) < remain) {
           instruction->modRMForm.displ32u = FetchDWORD(iptr);
@@ -1746,7 +1746,7 @@ get_32bit_displ:
       if (mod == 0x40) { // mod == 01b
         instruction->ResolveModrm = BxResolve16Mod1or2[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01_rm16[rm]);
+          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm16[rm]);
         if (ilen < remain) {
           // 8 sign extended to 16
           instruction->modRMForm.displ16u = (Bit8s) *iptr++;
@@ -1758,7 +1758,7 @@ get_32bit_displ:
       if (mod == 0x80) { // mod == 10b
         instruction->ResolveModrm = BxResolve16Mod1or2[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm16[rm]);
+          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm16[rm]);
         if ((ilen+1) < remain) {
           instruction->modRMForm.displ16u = FetchWORD(iptr);
           iptr += 2;
