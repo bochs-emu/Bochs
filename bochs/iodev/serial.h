@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.11 2003-10-28 18:40:00 vruppert Exp $
+// $Id: serial.h,v 1.12 2003-10-29 21:00:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,6 @@
 #endif
 
 #define BX_SERIAL_MAXDEV   4
-#define BX_SERIAL_CONFDEV  1   /* only 1 serial port currently */
 
 #define  BX_PC_CLOCK_XTL   1843200.0
 
@@ -60,6 +59,8 @@ typedef struct {
   bx_bool  ls_ipending;
   bx_bool  ms_ipending;
   bx_bool  rx_ipending;
+
+  Bit8u IRQ;
 
   int  baudrate;
   int  tx_timer_index;
@@ -159,6 +160,8 @@ public:
 
 private:
     bx_serial_t s[BX_SERIAL_MAXDEV];
+
+  static void lower_interrupt(Bit8u port);
 
   static void tx_timer_handler(void *);
   BX_SER_SMF void tx_timer(void);
