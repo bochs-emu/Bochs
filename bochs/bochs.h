@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.153 2005-02-01 19:16:17 vruppert Exp $
+// $Id: bochs.h,v 1.154 2005-03-16 16:36:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -455,7 +455,7 @@ typedef struct {
 #if BX_MAGIC_BREAKPOINT
   bx_bool magic_break_enabled;
 #endif /* BX_MAGIC_BREAKPOINT */
-#ifdef BX_GDBSTUB
+#if BX_GDBSTUB
   bx_bool gdbstub_enabled;
 #endif
 #if BX_SUPPORT_APIC

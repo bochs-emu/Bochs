@@ -198,7 +198,7 @@ Bit64u read_little_endian_hex(char *&buf)
 static int continue_thread = -1;
 static int other_thread = 0;
 
-#ifndef BX_SUPPORT_X86_64
+#if !BX_SUPPORT_X86_64
 #define NUMREGS (16)
 #define NUMREGSBYTES (NUMREGS * 4)
 static int registers[NUMREGS];
@@ -550,7 +550,7 @@ static void debug_loop(void)
                  value = read_little_endian_hex(ebuf);
                  
                  BX_INFO (("reg %d set to %llx", reg, value));
-#ifndef BX_SUPPORT_X86_64                 
+#if !BX_SUPPORT_X86_64                 
                  switch (reg)
                    {
                     case 1:
@@ -671,7 +671,7 @@ static void debug_loop(void)
               }
             
           case 'g':
-#ifndef BX_SUPPORT_X86_64
+#if !BX_SUPPORT_X86_64
             registers[0] = EAX;
             registers[1] = ECX;
             registers[2] = EDX;

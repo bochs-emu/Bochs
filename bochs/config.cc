@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.32 2005-03-08 21:37:00 vruppert Exp $
+// $Id: config.cc,v 1.33 2005-03-16 16:36:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3124,7 +3124,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     }
   else if (!strcmp(params[0], "gdbstub")) {
-#ifdef BX_GDBSTUB
+#if BX_GDBSTUB
     if (num_params < 2) {
       PARSE_ERR(("%s: gdbstub directive: wrong # args.", context));
       }

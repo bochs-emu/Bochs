@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.285 2005-01-30 08:54:49 vruppert Exp $
+// $Id: main.cc,v 1.286 2005-03-16 16:36:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -962,7 +962,7 @@ bx_init_bx_dbg (void)
 #if BX_MAGIC_BREAKPOINT
   bx_dbg.magic_break_enabled = 0;
 #endif
-#ifdef BX_GDBSTUB
+#if BX_GDBSTUB
   bx_dbg.gdbstub_enabled = 0;
 #endif
 
