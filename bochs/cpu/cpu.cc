@@ -23,6 +23,7 @@
 
 
 
+#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 
 
@@ -55,8 +56,8 @@ const Boolean bx_parity_lookup[256] = {
 #endif
 
 
-BX_CPU_C    BX_CPU;
-BX_MEM_C    BX_MEM;
+BX_CPU_C    BX_CPU[BX_SMP_PROCESSORS];
+BX_MEM_C    BX_MEM[BX_ADDRESS_SPACES];
 
 
 
@@ -170,7 +171,9 @@ async_events_processed:
 
   if (ret) {
     if (i.ResolveModrm) {
-      i.ResolveModrm(&i);
+      // call method on BX_CPU_C object
+      BxExecutePtr_t func = i.ResolveModrm;
+      (this->*func) (&i);
       }
     BX_CPU_THIS_PTR fetch_ptr += i.ilen;
     BX_CPU_THIS_PTR bytesleft -= i.ilen;
@@ -181,7 +184,8 @@ repeat_loop:
       if (i.attr & BxRepeatableZF) {
         if (i.as_32) {
           if (ECX != 0) {
-            i.execute(&i);	    
+	    BxExecutePtr_t func = i.execute;
+	    (this->*func) (&i);
             ECX -= 1;
             }
           if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
@@ -191,7 +195,8 @@ repeat_loop:
           }
         else {
           if (CX != 0) {
-            i.execute(&i);
+	    BxExecutePtr_t func = i.execute;
+	    (this->*func) (&i);
             CX -= 1;
             }
           if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
@@ -203,7 +208,8 @@ repeat_loop:
       else { // normal repeat, no concern for ZF
         if (i.as_32) {
           if (ECX != 0) {
-            i.execute(&i);
+	    BxExecutePtr_t func = i.execute;
+	    (this->*func) (&i);
             ECX -= 1;
             }
           if (ECX == 0) goto repeat_done;
@@ -211,7 +217,8 @@ repeat_loop:
           }
         else { // 16bit addrsize
           if (CX != 0) {
-            i.execute(&i);
+	    BxExecutePtr_t func = i.execute;
+	    (this->*func) (&i);
             CX -= 1;
             }
           if (CX == 0) goto repeat_done;
@@ -239,7 +246,8 @@ repeat_done:
       }
     else {
       BX_CPU_THIS_PTR eip += i.ilen;
-      i.execute(&i);
+      BxExecutePtr_t func = i.execute;
+      (this->*func) (&i);
       }
 
     BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
@@ -338,7 +346,8 @@ static Bit8u FetchBuffer[16];
     if (ret==0)
       bx_panic("fetchdecode: cross boundary: ret==0\n");
     if (i.ResolveModrm) {
-      i.ResolveModrm(&i);
+      BxExecutePtr_t func = i.ResolveModrm;
+      (this->*func) (&i);
       }
     remain = i.ilen - remain;
 
@@ -512,7 +521,7 @@ BX_CPU_C::prefetch(void)
     new_phy_addr = A20ADDR(new_linear_addr);
     }
 
-  if ( new_phy_addr >= BX_MEM.len ) {
+  if ( new_phy_addr >= mem->len ) {
     // don't take this out if dynamic translation enabled,
     // otherwise you must make a check to see if bytesleft is 0 after
     // a call to prefetch() in the dynamic code.
@@ -528,7 +537,7 @@ BX_CPU_C::prefetch(void)
   //  }
 
   BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
-  BX_CPU_THIS_PTR fetch_ptr = &BX_MEM.vector[new_phy_addr];
+  BX_CPU_THIS_PTR fetch_ptr = &mem->vector[new_phy_addr];
 }
 
 
@@ -549,7 +558,7 @@ BX_CPU_C::revalidate_prefetch_q(void)
     new_linear_offset = new_linear_addr & 0x00000fff;
     new_phy_addr = BX_CPU_THIS_PTR prev_phy_page | new_linear_offset;
     BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
-    BX_CPU_THIS_PTR fetch_ptr = &BX_MEM.vector[new_phy_addr];
+    BX_CPU_THIS_PTR fetch_ptr = &mem->vector[new_phy_addr];
     }
   else {
     BX_CPU_THIS_PTR bytesleft = 0; // invalidate prefetch Q

@@ -21,6 +21,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 
 
@@ -164,6 +165,9 @@ fprintf(stderr, "&DTReadRMW8vShim is %x\n", (unsigned) &DTReadRMW8vShim);
   DTIndBrHandler = (BxDTShim_t) DTASIndBrHandler;
   DTDirBrHandler = (BxDTShim_t) DTASDirBrHandler;
 #endif
+
+#warning BX_CPU always uses memory space 0
+  mem = &BX_MEM[0];
 
   BX_INSTR_INIT();
 }

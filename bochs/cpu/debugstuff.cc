@@ -23,6 +23,7 @@
 
 
 
+#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 
 
@@ -137,7 +138,7 @@ BX_CPU_C::debug(Bit32u offset)
   dbg_xlate_linear2phy(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + offset,
                        &phy_addr, &valid);
   if (valid) {
-    BX_MEM.dbg_fetch_mem(phy_addr, 16, instr_buf);
+    mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
     isize = bx_disassemble.disasm(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
                         instr_buf, char_buf);
     for (unsigned j=0; j<isize; j++)
@@ -962,29 +963,30 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
   UNUSED(argc);
   UNUSED(argv);
 
-  callback->setphymem           = BX_MEM.dbg_set_mem;
-  callback->getphymem           = BX_MEM.dbg_fetch_mem;
-  callback->xlate_linear2phy    = BX_CPU.dbg_xlate_linear2phy;
-  callback->set_reg             = BX_CPU.dbg_set_reg;
-  callback->get_reg             = BX_CPU.dbg_get_reg;
-  callback->get_sreg            = BX_CPU.dbg_get_sreg;
-  callback->get_cpu             = BX_CPU.dbg_get_cpu;
-  callback->set_cpu             = BX_CPU.dbg_set_cpu;
-  callback->dirty_page_tbl_size = sizeof(BX_MEM.dbg_dirty_pages);
-  callback->dirty_page_tbl      = BX_MEM.dbg_dirty_pages;
-  callback->atexit              = BX_CPU.atexit;
-  callback->query_pending       = BX_CPU.dbg_query_pending;
-  callback->execute             = BX_CPU.cpu_loop;
-  callback->take_irq            = BX_CPU.dbg_take_irq;
-  callback->take_dma            = BX_CPU.dbg_take_dma;
-  callback->reset_cpu           = BX_CPU.reset;
-  callback->init_mem            = BX_MEM.init_memory;
-  callback->load_ROM            = BX_MEM.load_ROM;
+#warning hardcoding mem[0] and cpu[0]
+  callback->setphymem           = BX_MEM[0].dbg_set_mem;
+  callback->getphymem           = BX_MEM[0].dbg_fetch_mem;
+  callback->xlate_linear2phy    = BX_CPU[0].dbg_xlate_linear2phy;
+  callback->set_reg             = BX_CPU[0].dbg_set_reg;
+  callback->get_reg             = BX_CPU[0].dbg_get_reg;
+  callback->get_sreg            = BX_CPU[0].dbg_get_sreg;
+  callback->get_cpu             = BX_CPU[0].dbg_get_cpu;
+  callback->set_cpu             = BX_CPU[0].dbg_set_cpu;
+  callback->dirty_page_tbl_size = sizeof(BX_MEM[0].dbg_dirty_pages);
+  callback->dirty_page_tbl      = BX_MEM[0].dbg_dirty_pages;
+  callback->atexit              = BX_CPU[0].atexit;
+  callback->query_pending       = BX_CPU[0].dbg_query_pending;
+  callback->execute             = BX_CPU[0].cpu_loop;
+  callback->take_irq            = BX_CPU[0].dbg_take_irq;
+  callback->take_dma            = BX_CPU[0].dbg_take_dma;
+  callback->reset_cpu           = BX_CPU[0].reset;
+  callback->init_mem            = BX_MEM[0].init_memory;
+  callback->load_ROM            = BX_MEM[0].load_ROM;
   callback->set_A20             = NULL;
   callback->set_NMI             = BX_DBG_NULL_CALLBACK;
   callback->set_RESET           = BX_DBG_NULL_CALLBACK;
-  callback->set_INTR            = BX_CPU.set_INTR;
-  callback->force_interrupt     = BX_CPU.dbg_force_interrupt;
+  callback->set_INTR            = BX_CPU[0].set_INTR;
+  callback->force_interrupt     = BX_CPU[0].dbg_force_interrupt;
 
 #if BX_INSTRUMENTATION
   callback->instr_start         = bx_instr_start;
@@ -995,7 +997,7 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
 #if BX_USE_LOADER
   callback->loader              = bx_dbg_loader;
 #endif
-  callback->crc32               = BX_MEM.dbg_crc32;
+  callback->crc32               = BX_MEM[0].dbg_crc32;
 }
 
 #endif  // #if BX_DEBUGGER
@@ -1004,13 +1006,13 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
 BX_CPU_C::atexit(void)
 {
   bx_printf("\nCPU:%u\n", BX_SIM_ID);
-  if (BX_CPU.protected_mode()) bx_printf("protected mode\n");
-  else if (BX_CPU.v8086_mode()) bx_printf("v8086 mode\n");
+  if (protected_mode()) bx_printf("protected mode\n");
+  else if (v8086_mode()) bx_printf("v8086 mode\n");
   else bx_printf("real mode\n");
   bx_printf("CS.d_b = %u bit\n",
-    BX_CPU.sregs[BX_SREG_CS].cache.u.segment.d_b ? 32 : 16);
+    sregs[BX_SREG_CS].cache.u.segment.d_b ? 32 : 16);
   bx_printf("SS.d_b = %u bit\n",
-    BX_CPU.sregs[BX_SREG_SS].cache.u.segment.d_b ? 32 : 16);
+    sregs[BX_SREG_SS].cache.u.segment.d_b ? 32 : 16);
 
-  BX_CPU.debug(BX_CPU.prev_eip);
+  debug(prev_eip);
 }

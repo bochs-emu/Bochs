@@ -24,6 +24,7 @@
 
 
 
+#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 
 
