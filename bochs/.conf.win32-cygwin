@@ -6,7 +6,7 @@
 
 CC="gcc"
 CXX="g++"
-CFLAGS="-O6 -march=pentium -mpentium"
+CFLAGS="-O6 -march=pentium"
 CXXFLAGS="$CFLAGS"
 
 export CC
