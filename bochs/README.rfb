@@ -1,0 +1,3 @@
+The RFB server implementation is still lacking as of now, as a consequence
+you should force 8bit mode on the client to use it correctly, i.e. on Linux,
+use: "xvncviewer -8bit localhost" or similar.

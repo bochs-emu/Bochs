@@ -283,8 +283,7 @@ rfb.o: rfb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
  ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h \
- ../instrument/stubs/instrument.h icon_bochs.h ../font/vga.bitmap.h \
- rfbproto.h
+ ../instrument/stubs/instrument.h icon_bochs.h ../font/vga.bitmap.h
 sdl.o: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -468,8 +467,7 @@ rfb.lo: rfb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
  ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h \
- ../instrument/stubs/instrument.h icon_bochs.h ../font/vga.bitmap.h \
- rfbproto.h
+ ../instrument/stubs/instrument.h icon_bochs.h ../font/vga.bitmap.h
 sdl.lo: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
