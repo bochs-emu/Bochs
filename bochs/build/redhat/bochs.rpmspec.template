@@ -1,13 +1,12 @@
 Summary: Bochs Project x86 PC Emulator
 Name: bochs
-Version: @VERSION@
+Version: @SEDVERSION@
 Release: 1
 License: LGPL
 Group: Applications/Emulators
 URL:http://bochs.sourceforge.net
 Packager:Bryce Denney <bryce.denney@bigfoot.com>
 Source:bochs.tar.gz
-BuildRoot: /var/tmp/%{name}-buildroot
 
 %description
 Bochs is a portable x86 PC emulation software package that emulates enough of
@@ -19,7 +18,7 @@ and other OS's, all on your workstation.
 	tar xzvf $RPM_SOURCE_DIR/bochs.tar.gz
 %build
 	cd $RPM_BUILD_DIR/bochs
-	CONFIGURE_ARGS="--prefix $RPM_BUILD_ROOT/usr --mandir=$RPM_BUILD_ROOT/usr/man"
+	CONFIGURE_ARGS="--prefix=/usr --mandir=/usr/bochs/man"
 	export CONFIGURE_ARGS
 	sh .conf.linux
 	make
@@ -27,30 +26,23 @@ and other OS's, all on your workstation.
 	pwd
 	cd $RPM_BUILD_DIR/bochs
 	for i in "" usr usr/bin usr/man usr/man/man1; do 
-	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
+	  if ! test -d /$i; then mkdir /$i; fi
 	done
 	make install install_dlx
-	# fix up symlinks that point to buildroot
-        cd $RPM_BUILD_ROOT/usr/bin
-        rm -f bochs; ln -sf /usr/bochs/@VERSION@/bochs .
-        rm -f bximage; ln -sf /usr/bochs/@VERSION@/bximage .
 
 %files
 	/usr/bin/bochs
 	/usr/bin/bochs-docs
 	/usr/bin/bochs-dlx
 	/usr/bin/bximage
-	/usr/bochs/@VERSION@
+	/usr/bochs/@SEDVERSION@
 	/usr/bochs/dlxlinux
 	/usr/bochs/latest
-	/usr/man/man1/*
+	/usr/bochs/man/man1/*
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs
-	if test "/" != $RPM_BUILD_ROOT; then
-	  rm -rf $RPM_BUILD_ROOT
-	fi
 %post
-	/usr/bochs/@VERSION@/install-x11-fonts
+	/usr/bochs/@SEDVERSION@/install-x11-fonts
 %preun
 	# clean up the bochsout.txt that is always produced if you 
 	# run bochs-dlx.
