@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.9 2002-10-09 05:18:09 bdenney Exp $
+// $Id: main.cc,v 1.156.2.10 2002-10-09 07:03:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -69,6 +69,8 @@ void   bx_close_harddrive(void);
 void bx_init_bx_dbg (void);
 void bx_emulate_hga_dumps_timer(void);
 static char *divider = "========================================================================";
+static logfunctions thePluginLog;
+logfunctions *pluginlog = &thePluginLog;
 
 
 /* typedefs */

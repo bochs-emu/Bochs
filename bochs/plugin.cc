@@ -100,8 +100,6 @@ static void plugin_init_one(plugin_t *plugin);
 
 device_t *devices = NULL;      /* Head of the linked list of registered devices  */
 
-logfunctions  *pluginlog;
-
 #if BX_PLUGINS
 // When compiling with plugins, plugin.cc will provide the pluginKeyboard
 // pointer.  At first it will point to the stub so that calls to the methods
