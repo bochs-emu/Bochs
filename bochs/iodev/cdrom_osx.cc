@@ -43,6 +43,10 @@
 
 #include "bochs.h"
 
+#if BX_PLUGINS
+#include "harddrv.h"
+#endif
+
 #define LOG_THIS 
 
 #include <stdio.h>
