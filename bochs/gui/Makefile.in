@@ -27,6 +27,8 @@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
 
 SHELL = /bin/sh
 
@@ -65,7 +67,7 @@ GUI_OBJS = $(GUI_OBJS_NON_PLUGINS)
 GUI_SO_OBJS = $(GUI_OBJS_PLUGINS)
 OBJS = $(GUI_OBJS_NON_PLUGINS) $(GUI_OBJS_PLUGINS) $(GUI_OBJS_EXTERNAL)
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
 LOCAL_CXXFLAGS =
 
 #
@@ -75,10 +77,10 @@ LOCAL_CXXFLAGS =
 BX_GUI_OBJS = $(GUI_OBJS)
 
 %.o: %.cc
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
+	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 %.lo: %.cc
-	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
+	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 all: libgui.a plugins
 
@@ -87,7 +89,13 @@ libgui.a: $(BX_GUI_OBJS)
 	$(LIBTOOL) $(CXX) -o $@ $(BX_GUI_OBJS)
 
 beos.lo: beos.@CPP_SUFFIX@
-	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(BEOS_CFLAGS) $<
+	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $<
+beos.o: beos.@CPP_SUFFIX@
+	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $<
+x.lo: x.@CPP_SUFFIX@
+	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(X_CFLAGS) $<
+x.o: x.@CPP_SUFFIX@
+	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(X_CFLAGS) $<
 
 lib%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
