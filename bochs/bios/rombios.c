@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.79 2002-11-14 20:04:37 bdenney Exp $
+// $Id: rombios.c,v 1.80 2002-11-21 19:09:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -926,10 +926,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.79 $";
-static char bios_date_string[] = "$Date: 2002-11-14 20:04:37 $";
+static char bios_cvs_version_string[] = "$Revision: 1.80 $";
+static char bios_date_string[] = "$Date: 2002-11-21 19:09:36 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.79 2002-11-14 20:04:37 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.80 2002-11-21 19:09:36 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3825,11 +3825,14 @@ BX_DEBUG_INT15("case default:\n");
                         CLEAR_CF();
                         return;
                         break;
-                    default:
-                        SET_CF();
+                    default:  /* AX=E820, DX=534D4150, BX unrecognized */
+                        goto int15_unimplemented;
                         break;
                 }
-            }
+	    } else {
+	      // if DX != 0x534D4150)
+	      goto int15_unimplemented;
+	    }
             break;
 
         case 0x01: // coded by Hartmut Birr
@@ -3847,9 +3850,13 @@ BX_DEBUG_INT15("case default:\n");
           regs.u.r8.ah = 0xe8;
           regs.u.r8.al = 0x01;
           break;
+	default:  /* AH=0xE8?? but not implemented */
+	  goto int15_unimplemented;
        }
        break;
 
+    int15_unimplemented:
+       // fall into the default
     default:
       BX_INFO("*** int 15h function AX=%04x, BX=%04x not yet supported!\n",
         (unsigned) regs.u.r16.ax, (unsigned) regs.u.r16.bx);
