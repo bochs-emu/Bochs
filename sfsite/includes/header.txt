@@ -47,7 +47,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <input type=hidden name="misspellings" value="0">
 <input type=hidden name="file_pattern" value="">
 <input type=hidden name="date_filter" value="">
-<input name=query size=18 NOSHADE>
+<input name=query size=18>
 </form></center>
 
 <br><center><b>Get Bochs</b></center>
