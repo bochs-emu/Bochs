@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.8 2003-04-12 21:02:07 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.9 2003-04-19 15:48:30 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -1171,7 +1171,7 @@ FPU_round_to_int(FPU_REG *r, u_char tag)
   very_big = !(~(r->sigh) | ~(r->sigl));  /* test for 0xfff...fff */
 #define	half_or_more	(eax & 0x80000000)
 #define	frac_part	(eax)
-#define more_than_half  ((eax & 0x80000001) == 0x80000001)
+#define more_than_half  (eax > 0x80000000)
   switch (control_word & CW_RC)
     {
     case RC_RND:

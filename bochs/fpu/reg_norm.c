@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_norm.c                                                               |
- |  $Id: reg_norm.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_norm.c,v 1.3 2003-04-19 15:48:30 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1995,1997,1999                               |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -26,7 +26,7 @@ int FPU_normalize_nuo(FPU_REG *x, int bias)
 	{
 	  if ( x->sigl == 0 )
 	    {
-	      x->exp = EXP_UNDER;
+	      x->exp = 0;
 	      return TAG_Zero;
 	    }
 	  x->sigh = x->sigl;
