@@ -150,11 +150,13 @@ typedef union bx_xmm_reg_t {
 #define MXCSR_UM 0x00000800
 #define MXCSR_PM 0x00001000
 
+#define MXCSR_RESET 0x00001F80  /* reset value of the MXCSR register */
+
 struct bx_mxcsr_t 
 {
   Bit32u mxcsr;
 
-  bx_mxcsr_t (Bit32u val)
+  bx_mxcsr_t (Bit32u val = MXCSR_RESET)
 	: mxcsr(val) {}
 
 #define IMPLEMENT_MXCSR_ACCESSOR(name, bitmask, bitnum)        \
@@ -186,8 +188,6 @@ struct bx_mxcsr_t
   }
 
 };
-
-#define MXCSR_RESET 0x00001F80  /* reset value of the MXCSR register */
 
 #if BX_SUPPORT_DAZ
 #define MXCSR_MASK  0x0000FFFF  /* reset reserved bits */
