@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.16 2001-11-27 18:15:39 bdenney Exp $
+// $Id: pic.cc,v 1.17 2001-12-31 08:38:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -217,10 +217,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    // (mch) Ignore...
 	    // BX_INFO(("pic:master: init command 1 found %02x", (unsigned) value));
         if (bx_dbg.pic) {
-          BX_INFO(("pic:master: init command 1 found"));
-          BX_INFO(("            requires 4 = %u",
+          BX_INFO(("master: init command 1 found"));
+          BX_INFO(("        requires 4 = %u",
             (unsigned) (value & 0x01) ));
-          BX_INFO(("            cascade mode: [0=cascade,1=single] %u",
+          BX_INFO(("        cascade mode: [0=cascade,1=single] %u",
             (unsigned) ((value & 0x02) >> 1)));
           }
         BX_PIC_THIS s.master_pic.init.in_init = 1;
@@ -231,7 +231,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.master_pic.irr           = 0x00; /* no IRQ's requested */
         BX_PIC_THIS s.master_pic.INT = 0; /* reprogramming clears previous INTR request */
         if ( (value & 0x02) == 1 )
-          BX_PANIC(("pic:master: init command: single mode"));
+          BX_PANIC(("master: ICW1: single mode not supported"));
+        if ( (value & 0x08) == 1 ) {
+          BX_PANIC(("master: ICW1: level sensitive mode not supported"));
+	  }
+	else {
+          BX_DEBUG(("master: ICW1: edge triggered mode selected"));
+	  }
         BX_SET_INTR(0);
         return;
         }
@@ -243,7 +249,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         poll         = (value & 0x04) >> 2;
         read_op      = (value & 0x03);
         if (poll)
-          BX_PANIC(("pic:master:OCW3: poll bit set"));
+          BX_PANIC(("master: OCW3: poll bit set"));
         if (read_op == 0x02) /* read IRR */
 	  BX_PIC_THIS s.master_pic.read_reg_select = 0;
         else if (read_op == 0x03) /* read ISR */
@@ -261,7 +267,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       /* OCW2 */
       switch (value) {
         case 0x00: // Rotate in Auto-EOI mode
-          BX_PANIC(("PIC: Rotate in Auto-EOI mode command received."));
+          BX_PANIC(("Rotate in Auto-EOI mode command received."));
 	case 0x0A: /* select read interrupt request register */
 	  BX_PIC_THIS s.master_pic.read_reg_select = 0;
 	  break;
@@ -307,7 +313,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          BX_PANIC(("PIC: write to port 20h = %02x", value));
+          BX_PANIC(("write to port 20h = %02x", value));
 	} /* switch (value) */
       break;
 
@@ -319,15 +325,15 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PIC_THIS s.master_pic.interrupt_offset = value & 0xf8;
             BX_PIC_THIS s.master_pic.init.byte_expected = 3;
 	    if (bx_dbg.pic) {
-		  BX_INFO(("pic:master: init command 2 = %02x", (unsigned) value));
-		  BX_INFO(("            offset = INT %02x",
+		  BX_INFO(("master: init command 2 = %02x", (unsigned) value));
+		  BX_INFO(("        offset = INT %02x",
 			    BX_PIC_THIS s.master_pic.interrupt_offset));
 	    }
             return;
             break;
           case 3:
 	    if (bx_dbg.pic)
-		  BX_INFO(("pic:master: init command 3 = %02x", (unsigned) value));
+		  BX_INFO(("master: init command 3 = %02x", (unsigned) value));
             if (BX_PIC_THIS s.master_pic.init.requires_4) {
               BX_PIC_THIS s.master_pic.init.byte_expected = 4;
 	      }
@@ -338,7 +344,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           case 4:
 	    if (bx_dbg.pic) {
-		  BX_INFO(("pic:master: init command 4 = %02x", (unsigned) value));
+		  BX_INFO(("master: init command 4 = %02x", (unsigned) value));
 		  if (value & 0x02) BX_INFO(("       auto EOI"));
 		  else BX_INFO(("normal EOI interrupt"));
 	    }
@@ -351,7 +357,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             return;
             break;
           default:
-            BX_PANIC(("pic:master expecting bad init command"));
+            BX_PANIC(("master expecting bad init command"));
           }
         }
 
@@ -366,9 +372,9 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0xA0:
       if (value & 0x10) { /* initialization command 1 */
         BX_DEBUG(("slave: init command 1 found"));
-        BX_DEBUG(("           requires 4 = %u",
+        BX_DEBUG(("       requires 4 = %u",
             (unsigned) (value & 0x01) ));
-        BX_DEBUG(("           cascade mode: [0=cascade,1=single] %u",
+        BX_DEBUG(("       cascade mode: [0=cascade,1=single] %u",
             (unsigned) ((value & 0x02) >> 1)));
         BX_PIC_THIS s.slave_pic.init.in_init = 1;
         BX_PIC_THIS s.slave_pic.init.requires_4 = (value & 0x01);
@@ -378,7 +384,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.slave_pic.irr           = 0x00; /* no IRQ's requested */
         BX_PIC_THIS s.slave_pic.INT = 0; /* reprogramming clears previous INTR request */
         if ( (value & 0x02) == 1 )
-          BX_PANIC(("slave: init command: single mode"));
+          BX_PANIC(("slave: ICW1: single mode not supported"));
+        if ( (value & 0x08) == 1 ) {
+          BX_PANIC(("slave: ICW1: level sensitive mode not supported"));
+	  }
+	else {
+          BX_DEBUG(("slave: ICW1: edge triggered mode selected"));
+	  }
         return;
         }
 
@@ -449,7 +461,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          BX_PANIC(("PIC: write to port A0h = %02x", value));
+          BX_PANIC(("write to port A0h = %02x", value));
 	} /* switch (value) */
       break;
 
@@ -462,13 +474,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PIC_THIS s.slave_pic.init.byte_expected = 3;
 	    if (bx_dbg.pic) {
 		  BX_DEBUG(("slave: init command 2 = %02x", (unsigned) value));
-		  BX_DEBUG(("           offset = INT %02x",
+		  BX_DEBUG(("       offset = INT %02x",
 			    BX_PIC_THIS s.slave_pic.interrupt_offset));
 	    }
             return;
             break;
           case 3:
-		  BX_DEBUG(("slave: init command 3 = %02x", (unsigned) value));
+            BX_DEBUG(("slave: init command 3 = %02x", (unsigned) value));
             if (BX_PIC_THIS s.slave_pic.init.requires_4) {
               BX_PIC_THIS s.slave_pic.init.byte_expected = 4;
 	      	} else {
