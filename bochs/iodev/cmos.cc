@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.28 2002-12-03 21:01:48 cbothamy Exp $
+// $Id: cmos.cc,v 1.29 2002-12-04 21:09:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.28 2002-12-03 21:01:48 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.29 2002-12-04 21:09:36 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -332,9 +332,11 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
      case 0x07: // day of the month
      case 0x08: // month
      case 0x09: // year
+     case 0x32: // century
        //BX_INFO(("write reg 0x%02x: value = 0x%02x",
        //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
        BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
+       BX_ERROR(("changing time and date not supported yet"));
        return;
        break;
 
