@@ -256,7 +256,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.12 2001-06-07 13:33:32 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.13 2001-06-07 18:03:29 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -3978,8 +3978,6 @@ normal_post:
   mov  ax, #dummy_iret_handler
   mov  dx, #0xF000
 
-  call _print_bios_banner
-
 post_default_ints:
   mov  [bx], ax
   inc  bx
@@ -4184,6 +4182,8 @@ notrom:
   ;; Floppy setup
   ;;
   call floppy_drive_post
+
+  call _print_bios_banner
 
   int  #0x19
   //JMP_EP(0x0064) ; INT 19h location
