@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.12 2003-10-31 18:23:38 vruppert Exp $
+$Id: development.dbk,v 1.13 2003-11-02 10:23:59 cbothamy Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -19,6 +19,7 @@ This is the top level file for the Bochs Developers Manual.
    <authorgroup>
    <author><firstname>Kevin</firstname><surname>Lawton</surname></author>
    <author><firstname>Bryce</firstname><surname>Denney</surname></author>
+   <author><firstname>Christophe</firstname><surname>Bothamy</surname></author>
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
    </authorgroup>
 </bookinfo>
@@ -1123,6 +1124,7 @@ Each position is a Bit32u entity.
         Extent
 </title>
 <para>
+	 &FIXME;
 </para>
 </section>
 </section>
