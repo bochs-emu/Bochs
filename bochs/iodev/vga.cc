@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.35 2002-07-21 11:03:43 vruppert Exp $
+// $Id: vga.cc,v 1.36 2002-07-24 19:36:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -235,10 +235,14 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
 {
   int ai[0x20];
-  int i;
+  int i,h,v;
   BX_VGA_THIS s.scan_bits=640;
   for ( i = 0 ; i < 0x20 ; i++ )
    ai[i] = BX_VGA_THIS s.CRTC.reg[i];
+
+  h = (ai[1] + 1) * 8;
+  v = (ai[18] | ((ai[7] & 0x02) << 7) | ((ai[7] & 0x40) << 3)) + 1;
+  if ((ai[9] & 0x9f) > 0) v >>= 1;
 
   /*
   switch ( ( BX_VGA_THIS s.misc_output.vert_sync_pol << 1) | BX_VGA_THIS s.misc_output.horiz_sync_pol )
@@ -275,36 +279,24 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
          BX_VGA_THIS s.CRTC.reg[20] == 0 &&
          BX_VGA_THIS s.CRTC.reg[9] == 0xC0)
         {
-        if (BX_VGA_THIS s.CRTC.reg[19] == 0x14)
-          {
-          BX_VGA_THIS s.scan_bits=320;
-          *piWidth = 320;
-          *piHeight = 192;
-          }
-        else
-          {
-          *piWidth = 640;
-          *piHeight = 208;
-          }
+        BX_VGA_THIS s.scan_bits = BX_VGA_THIS s.CRTC.reg[19] << 4;
+        *piWidth = h;
+        *piHeight = v;
         }
       }
     }
   else if ( BX_VGA_THIS s.graphics_ctrl.shift_reg == 2 )
     {
-    *piWidth = 320;
 
     if ( BX_VGA_THIS s.sequencer.chain_four )
       {
-      *piHeight = 208;
+      *piWidth = 320;
+      *piHeight = 200;
       }
     else
       {
-      *piHeight = 240;
-
-      if (BX_VGA_THIS s.CRTC.reg[23] == 0xE3 &&
-         BX_VGA_THIS s.CRTC.reg[20] == 0 &&
-         BX_VGA_THIS s.CRTC.reg[9] == 0x40)
-        *piHeight = 400;
+      *piWidth = h / 2;
+      *piHeight = v;
       }
     }
   else
@@ -1277,6 +1269,7 @@ bx_vga_c::update(void)
       case 0: // output data in serial fashion with each display plane
               // output on its associated serial output.  Standard EGA/VGA format
         Bit8u attribute, palette_reg_val, DAC_regno;
+        unsigned long start_addr;
 
         determine_screen_dimensions(&iHeight, &iWidth);
 
@@ -1288,13 +1281,16 @@ bx_vga_c::update(void)
 	  old_iHeight = iHeight;
 	}
 
+        start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
+
         for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
           for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
             if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) {
               for (r=0; r<Y_TILESIZE; r++) {
                 for (c=0; c<X_TILESIZE; c++) {
                   bit_no = 7 - (c % 8);
-                  byte_offset = ((yti*Y_TILESIZE+r) * (BX_VGA_THIS s.scan_bits/8)) + (xti*X_TILESIZE+c)/8;
+                  byte_offset = start_addr + (xti*X_TILESIZE+c)/8 +
+		    ((yti*Y_TILESIZE+r) * (BX_VGA_THIS s.scan_bits/8));
                   attribute =
                     (((BX_VGA_THIS s.vga_memory[0*65536 + byte_offset] >> bit_no) & 0x01) << 0) |
                     (((BX_VGA_THIS s.vga_memory[1*65536 + byte_offset] >> bit_no) & 0x01) << 1) |
