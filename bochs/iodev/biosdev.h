@@ -1,5 +1,5 @@
 
-// $Id: biosdev.h,v 1.3 2002-10-24 21:07:09 bdenney Exp $
+// $Id: biosdev.h,v 1.4 2004-09-05 17:55:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,9 +55,11 @@ private:
   struct {
     Bit8u bios_message[BX_BIOS_MESSAGE_SIZE];
     unsigned int bios_message_i;
+    bx_bool bios_panic_flag;
 
     Bit8u vgabios_message[BX_BIOS_MESSAGE_SIZE];
     unsigned int vgabios_message_i;
+    bx_bool vgabios_panic_flag;
     } s;  // state information
 
   };
