@@ -1,10 +1,18 @@
 Plex86/Bochs VGABios
 --------------------
 
-The goal of this project is to have a LGPL'd Video Bios in plex86
-and bochs.
+The goal of this project is to have a LGPL'd Video Bios in plex86,
+Bochs and qemu.
 This VGA Bios is very specific to the emulated VGA card.
 It is NOT meant to drive a physical vga card.
+
+
+Cirrus SVGA extension
+---------------------
+
+The Cirrus SVGA extension is designed for the Cirrus emulation in Bochs and
+qemu. The initial patch for the Cirrus extension has been written by Makoto
+Suzuki (suzu).
 
 
 Install
@@ -15,12 +23,12 @@ To compile the VGA Bios you will need :
 - as86
 - ld86
 
-Untar the archive, and type make. You should get a "vgabios.bin" file.
-Alternatively, you can use the binary file "vgabios-XXX.bin", i have
-compiled for you.
+Untar the archive, and type make. You should get a "VGABIOS-lgpl-latest.bin"
+file. Alternatively, you can use the binary file "VGABIOS-lgpl-latest.bin",
+i have compiled for you.
 
 Edit your plex86/bochs conf file, and modify the load-rom command in the
-VGA BIOS section, to point to the new vgabios.bin file.
+VGA BIOS section, to point to the new vgabios image file.
 
 
 Debugging
@@ -38,7 +46,6 @@ Testing
 Look at the "testvga.c" file in the archive. This is a minimal Turbo C 2.0 
 source file that calls a few int10 functions. Feel free to modify it to suit 
 your needs.
-The VGA Bios in its current version has been very little tested.
 
 
 Copyright and License
@@ -75,13 +82,26 @@ The source code is based on information taken from :
 
 Feedback
 --------
-Please report any bugs, comments, patches for this VGA Bios to cbothamy@free.fr
+Please report any bugs, comments, patches for this VGA Bios to info@vruppert.de
 You can find the latest release at : http://www.nongnu.org/vgabios/
 For any information on bochs, visit the website http://bochs.sourceforge.net/
+For any information on qemu, visit the website http://fabrice.bellard.free.fr/qemu/
 
 
 History
 -------
+vgabios-0.5a : Mar 07 2005
+  - Volker
+    . Cirrus SVGA extension (initial patches from Makoto Suzuki, improvements
+      from Fabrice Bellard)
+    . vgabios image size is now exactly 32k with a checksum
+    . a lot of vgabios and vbe functions rewritten in assembler
+    . dynamicly generated VBE mode info list
+    . write character function for CGA and LINEAR8 modes
+    . read/write graphics pixel for some graphics modes
+    . text scroll feature for some graphics modes
+    . VBE 8-bit DAC support
+
 vgabios-0.4c : Nov 06 2003
   - Christophe
     . fix font problem on initial screen of NT4 Loader
@@ -97,12 +117,12 @@ vgabios-0.4b : Nov 04 2003
 
 vgabios-0.4a : Aug 17 2003
   - Volker
-    . LFB flagged VBE modes removed
+    . VBE mode search rewritten (VBE modes with LFB bit removed)
     . many bugfixes and optimizations
-    . write character function implemeted for graphic modes
+    . write character function implemented for graphics modes
     . support for 15bpp, 16bpp, 24bpp and 32bpp VBE modes added
-    . SVGA modes 0x6A added
-    . VBE mode 0x102, 0x117, 0x118, 0x142 (Bochs specific)
+    . SVGA mode 0x6A added
+    . VBE modes 0x102, 0x117, 0x118 and 0x142 (Bochs specific)
 
 vgabios-0.3b : Nov 23 2002
   - Christophe
