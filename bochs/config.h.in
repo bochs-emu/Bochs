@@ -43,11 +43,11 @@
 
 #define USE_WX 1
 
-#if 0
-extern void wxExit (int);
-#define BX_EXIT(x)  ::wxExit(x)
+#if 1
+// quit_sim is defined in gui/siminterface.h
+#define BX_EXIT(x)  SIM->quit_sim (x)
 #else
-// provide the real main
+// provide the real main and the usual exit.
 #define BX_EXIT(x)  ::exit(x)
 #endif
 
