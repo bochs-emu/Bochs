@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.149 2004-12-13 19:10:30 vruppert Exp $
+// $Id: bochs.h,v 1.150 2004-12-14 19:27:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -543,7 +543,7 @@ typedef struct {
   } bx_clock_options;
 
 typedef struct {
-  bx_param_bool_c *Opresent;
+  bx_param_bool_c *Oenabled;
   bx_param_num_c *Oioaddr;
   bx_param_num_c *Oirq;
   bx_param_string_c *Omacaddr;
@@ -576,7 +576,7 @@ typedef struct {
 } bx_log_options;
 
 typedef struct {
-  bx_param_bool_c *Opresent;
+  bx_param_bool_c *Oenabled;
   bx_param_string_c *Omidifile;
   bx_param_string_c *Owavefile;
   bx_param_string_c *Ologfile;

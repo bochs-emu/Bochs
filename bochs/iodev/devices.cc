@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.78 2004-12-11 08:35:32 vruppert Exp $
+// $Id: devices.cc,v 1.79 2004-12-14 19:27:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.78 2004-12-11 08:35:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.79 2004-12-14 19:27:42 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -206,7 +206,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   }
 
   // NE2000 NIC
-  if (bx_options.ne2k.Opresent->get ()) {
+  if (bx_options.ne2k.Oenabled->get ()) {
 #if BX_SUPPORT_NE2K
     PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
 #else
@@ -233,7 +233,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pluginFloppyDevice->init();
 
   //--- SOUND ---
-  if (bx_options.sb16.Opresent->get ()) {
+  if (bx_options.sb16.Oenabled->get ()) {
 #if BX_SUPPORT_SB16
     PLUG_load_plugin(sb16, PLUGTYPE_OPTIONAL);
 #else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.24 2004-12-11 08:35:31 vruppert Exp $
+// $Id: config.cc,v 1.25 2004-12-14 19:27:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1304,7 +1304,7 @@ void bx_init_options ()
   */
 
   // NE2K options
-  bx_options.ne2k.Opresent = new bx_param_bool_c (BXP_NE2K_PRESENT,
+  bx_options.ne2k.Oenabled = new bx_param_bool_c (BXP_NE2K_ENABLED,
       "Enable NE2K NIC emulation",
       "Enables the NE2K NIC emulation",
       0);
@@ -1413,6 +1413,7 @@ void bx_init_options ()
   bx_options.pnic.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
 #endif
   bx_param_c *ne2k_init_list[] = {
+    bx_options.ne2k.Oenabled,
     bx_options.ne2k.Oioaddr,
     bx_options.ne2k.Oirq,
     bx_options.ne2k.Omacaddr,
@@ -1433,7 +1434,7 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_NE2K, "NE2000", "", ne2k_init_list);
   menu->get_options ()->set (menu->USE_BOX_TITLE | menu->SHOW_PARENT);
-  bx_options.ne2k.Opresent->set_dependent_list (
+  bx_options.ne2k.Oenabled->set_dependent_list (
       new bx_list_c (BXP_NULL, "", "", ne2k_init_list));
   menu = new bx_list_c (BXP_PNIC, "PCI Pseudo NIC", "", pnic_init_list);
   menu->get_options ()->set (menu->USE_BOX_TITLE | menu->SHOW_PARENT);
@@ -1449,7 +1450,7 @@ void bx_init_options ()
   menu->get_options ()->set (menu->SHOW_PARENT);
 
   // SB16 options
-  bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,
+  bx_options.sb16.Oenabled = new bx_param_bool_c (BXP_SB16_ENABLED,
       "Enable SB16 emulation",
       "Enables the SB16 emulation",
       0);
@@ -1496,7 +1497,7 @@ void bx_init_options ()
   bx_options.sb16.Ologlevel->set_runtime_param (1);
   bx_options.sb16.Ologlevel->set_group ("SB16");
   bx_param_c *sb16_init_list[] = {
-    bx_options.sb16.Opresent,
+    bx_options.sb16.Oenabled,
     bx_options.sb16.Omidimode,
     bx_options.sb16.Omidifile,
     bx_options.sb16.Owavemode,
@@ -1512,7 +1513,7 @@ void bx_init_options ()
   // sb16 fields except for the "present" field.  These will all be enabled/
   // disabled according to the value of the present field.
   bx_param_c **sb16_dependent_list = &sb16_init_list[1];
-  bx_options.sb16.Opresent->set_dependent_list (
+  bx_options.sb16.Oenabled->set_dependent_list (
       new bx_list_c (BXP_NULL, "", "", sb16_dependent_list));
 
   bx_options.log.Ofilename = new bx_param_filename_c (BXP_LOG_FILENAME,
@@ -1802,7 +1803,7 @@ void bx_reset_options ()
 #endif
 
   // ne2k
-  bx_options.ne2k.Opresent->reset();
+  bx_options.ne2k.Oenabled->reset();
   bx_options.ne2k.Oioaddr->reset();
   bx_options.ne2k.Oirq->reset();
   bx_options.ne2k.Omacaddr->reset();
@@ -1815,7 +1816,7 @@ void bx_reset_options ()
   bx_options.pcidev.Odevice->reset();
   
   // SB16
-  bx_options.sb16.Opresent->reset();
+  bx_options.sb16.Oenabled->reset();
   bx_options.sb16.Omidifile->reset();
   bx_options.sb16.Owavefile->reset();
   bx_options.sb16.Ologfile->reset();
@@ -2698,55 +2699,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
-  else if (!strcmp(params[0], "pnic")) {
-    int tmp[6];
-    char tmpchar[6];
-    int valid = 0;
-    int n;
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.pnic.Oenabled->set (atol(&params[i][8]));
-	if ( bx_options.pnic.Oenabled->get() ) {
-		// Force ne2k to be enabled
-		bx_options.ne2k.Opresent->set (1);
-          }
-        }
-      else if (!strncmp(params[i], "ioaddr=", 7)) {
-        if ( (params[i][7] == '0') && (params[i][8] == 'x') )
-          bx_options.pnic.Oioaddr->set (strtoul (&params[i][7], NULL, 16));
-        else
-          bx_options.pnic.Oioaddr->set (strtoul (&params[i][7], NULL, 10));
-        bx_options.pnic.Oenabled->set (1);
-        }
-      else if (!strncmp(params[i], "irq=", 4)) {
-        bx_options.pnic.Oirq->set (atol(&params[i][4]));
-        }
-      else if (!strncmp(params[i], "mac=", 4)) {
-        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
-                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
-        if (n != 6) {
-          PARSE_ERR(("%s: pnic mac address malformed.", context));
-        }
-        for (n=0;n<6;n++)
-          tmpchar[n] = (unsigned char)tmp[n];
-        bx_options.pnic.Omacaddr->set (tmpchar);
-        valid |= 0x04;
-        }
-      else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!bx_options.pnic.Oethmod->set_by_name (strdup(&params[i][7])))
-          PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
-        }
-      else if (!strncmp(params[i], "ethdev=", 7)) {
-        bx_options.pnic.Oethdev->set (strdup(&params[i][7]));
-        }
-      else if (!strncmp(params[i], "script=", 7)) {
-        bx_options.pnic.Oscript->set (strdup(&params[i][7]));
-        }
-      else {
-        PARSE_ERR(("%s: unknown parameter for pnic ignored.", context));
-        }
-      }
-    }
   else if (!strcmp(params[0], "floppy_bootsig_check")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: floppy_bootsig_check directive malformed.", context));
@@ -3079,8 +3031,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
 
   else if (!strcmp(params[0], "sb16")) {
+    int enable = 1;
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "midi=", 5)) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        enable = atol(&params[i][8]);
+        }
+      else if (!strncmp(params[i], "midi=", 5)) {
         bx_options.sb16.Omidifile->set (strdup(&params[i][5]));
         }
       else if (!strncmp(params[i], "midimode=", 9)) {
@@ -3105,8 +3061,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
         BX_ERROR(("%s: unknown parameter for sb16 ignored.", context));
         }
       }
-    if (bx_options.sb16.Odmatimer->get () > 0)
-      bx_options.sb16.Opresent->set (1);
+    if ((enable != 0) && (bx_options.sb16.Odmatimer->get () > 0))
+      bx_options.sb16.Oenabled->set (1);
+    else
+      bx_options.sb16.Oenabled->set (0);
     }
 
   else if (!strcmp(params[0], "parport1")) {
@@ -3308,11 +3266,14 @@ parse_line_formatted(char *context, int num_params, char *params[])
     char tmpchar[6];
     int valid = 0;
     int n;
-    if (!bx_options.ne2k.Opresent->get ()) {
+    if (!bx_options.ne2k.Oenabled->get ()) {
       bx_options.ne2k.Oethmod->set_by_name ("null");
       }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "ioaddr=", 7)) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        if (atol(&params[i][8]) == 0) valid |= 0x80;
+        }
+      else if (!strncmp(params[i], "ioaddr=", 7)) {
         bx_options.ne2k.Oioaddr->set (strtoul(&params[i][7], NULL, 16));
         valid |= 0x01;
         }
@@ -3342,15 +3303,80 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.ne2k.Oscript->set (strdup(&params[i][7]));
         }
       else {
-        PARSE_ERR(("%s: ne2k directive malformed.", context));
+        PARSE_WARN(("%s: unknown parameter '%s' for ne2k ignored.", context, params[i]));
         }
     }
-    if (!bx_options.ne2k.Opresent->get ()) {
+    if (!bx_options.ne2k.Oenabled->get ()) {
       if (valid == 0x07) {
-        bx_options.ne2k.Opresent->set (1);
+        bx_options.ne2k.Oenabled->set (1);
         }
       else {
         PARSE_ERR(("%s: ne2k directive incomplete (ioaddr, irq and mac are required)", context));
+        }
+      }
+    else {
+      if (valid & 0x80) {
+        bx_options.ne2k.Oenabled->set (0);
+        }
+      }
+    }
+
+  else if (!strcmp(params[0], "pnic")) {
+    int tmp[6];
+    char tmpchar[6];
+    int valid = 0;
+    int n;
+    if (!bx_options.pnic.Oenabled->get ()) {
+      bx_options.pnic.Oethmod->set_by_name ("null");
+      }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        if (atol(&params[i][8]) == 0) valid |= 0x80;
+        }
+      else if (!strncmp(params[i], "ioaddr=", 7)) {
+        bx_options.pnic.Oioaddr->set (strtoul(&params[i][7], NULL, 16));
+        valid |= 0x01;
+        }
+      else if (!strncmp(params[i], "irq=", 4)) {
+        bx_options.pnic.Oirq->set (atol(&params[i][4]));
+        valid |= 0x02;
+        }
+      else if (!strncmp(params[i], "mac=", 4)) {
+        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
+                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
+        if (n != 6) {
+          PARSE_ERR(("%s: pnic mac address malformed.", context));
+        }
+        for (n=0;n<6;n++)
+          tmpchar[n] = (unsigned char)tmp[n];
+        bx_options.pnic.Omacaddr->set (tmpchar);
+        valid |= 0x04;
+        }
+      else if (!strncmp(params[i], "ethmod=", 7)) {
+        if (!bx_options.pnic.Oethmod->set_by_name (strdup(&params[i][7])))
+          PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
+        }
+      else if (!strncmp(params[i], "ethdev=", 7)) {
+        bx_options.pnic.Oethdev->set (strdup(&params[i][7]));
+        }
+      else if (!strncmp(params[i], "script=", 7)) {
+        bx_options.pnic.Oscript->set (strdup(&params[i][7]));
+        }
+      else {
+        PARSE_WARN(("%s: unknown parameter '%s' for pnic ignored.", context, params[i]));
+        }
+      }
+    if (!bx_options.pnic.Oenabled->get ()) {
+      if (valid == 0x07) {
+        bx_options.pnic.Oenabled->set (1);
+        }
+      else {
+        PARSE_ERR(("%s: pnic directive incomplete (ioaddr, irq and mac are required)", context));
+        }
+      }
+    else {
+      if (valid & 0x80) {
+        bx_options.pnic.Oenabled->set (0);
         }
       }
     }
@@ -3627,42 +3653,29 @@ bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
   if (opt->Oenabled->get ()) {
     char *ptr = opt->Omacaddr->getptr ();
     fprintf (fp, ", ioaddr=0x%04x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
-	     opt->Oioaddr->get (),
-	     opt->Oirq->get (),
-	     (unsigned int)(0xff & ptr[0]),
-	     (unsigned int)(0xff & ptr[1]),
-	     (unsigned int)(0xff & ptr[2]),
-	     (unsigned int)(0xff & ptr[3]),
-	     (unsigned int)(0xff & ptr[4]),
-	     (unsigned int)(0xff & ptr[5]),
-	     opt->Oethmod->get_choice(opt->Oethmod->get()),
-	     opt->Oethdev->getptr (),
-	     opt->Oscript->getptr () );
+      opt->Oioaddr->get (),
+      opt->Oirq->get (),
+      (unsigned int)(0xff & ptr[0]),
+      (unsigned int)(0xff & ptr[1]),
+      (unsigned int)(0xff & ptr[2]),
+      (unsigned int)(0xff & ptr[3]),
+      (unsigned int)(0xff & ptr[4]),
+      (unsigned int)(0xff & ptr[5]),
+      opt->Oethmod->get_choice(opt->Oethmod->get()),
+      opt->Oethdev->getptr (),
+      opt->Oscript->getptr ());
   }
   fprintf (fp, "\n");
   return 0;
 }
 
 int
-bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
-{
-  if (!opt->Opresent->get ()) {
-    fprintf (fp, "# no sb16\n");
-    return 0;
-  }
-  fprintf (fp, "sb16: midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d\n", opt->Omidimode->get (), opt->Omidifile->getptr (), opt->Owavemode->get (), opt->Owavefile->getptr (), opt->Ologlevel->get (), opt->Ologfile->getptr (), opt->Odmatimer->get ());
-  return 0;
-}
-
-int
 bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
 {
-  if (!opt->Opresent->get ()) {
-    fprintf (fp, "# no ne2k\n");
-    return 0;
-  }
-  char *ptr = opt->Omacaddr->getptr ();
-  fprintf (fp, "ne2k: ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s\n",
+  fprintf (fp, "ne2k: enabled=%d", opt->Oenabled->get ());
+  if (opt->Oenabled->get ()) {
+    char *ptr = opt->Omacaddr->getptr ();
+    fprintf (fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s\n",
       opt->Oioaddr->get (), 
       opt->Oirq->get (),
       (unsigned int)(0xff & ptr[0]),
@@ -3674,6 +3687,26 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
       opt->Oethmod->get_choice(opt->Oethmod->get()),
       opt->Oethdev->getptr (),
       opt->Oscript->getptr ());
+  }
+  fprintf (fp, "\n");
+  return 0;
+}
+
+int
+bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
+{
+  fprintf (fp, "sb16: enabled=%d", opt->Oenabled->get ());
+  if (opt->Oenabled->get ()) {
+    fprintf (fp, "sb16: midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d\n",
+      opt->Omidimode->get (),
+      opt->Omidifile->getptr (),
+      opt->Owavemode->get (),
+      opt->Owavefile->getptr (),
+      opt->Ologlevel->get (),
+      opt->Ologfile->getptr (),
+      opt->Odmatimer->get ());
+  }
+  fprintf (fp, "\n");
   return 0;
 }
 
