@@ -65,7 +65,7 @@ Changes to next release:
   - experimental support of AT&T syntax in disassembler (Stanislav)
 
   TODO:
-   - disassmbler X86-64 support
+   - X86-64 support
 
 - I/O devices
   - general
