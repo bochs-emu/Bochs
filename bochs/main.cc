@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.5 2002-10-07 17:50:47 cbothamy Exp $
+// $Id: main.cc,v 1.156.2.6 2002-10-07 19:47:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -152,7 +152,6 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_FLOPPYA_STATUS:
       if ((set) && (SIM->get_init_done ())) {
         BX_FLOPPY_SET_MEDIA_STATUS(0, val == BX_INSERTED);
-        bx_gui.update_drive_status_buttons ();
         bx_gui->update_drive_status_buttons ();
       }
       break;
