@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.6 2002-09-20 23:17:51 kevinlawton Exp $
+// $Id: stack64.cc,v 1.7 2002-10-06 21:38:02 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,9 +156,6 @@ BX_CPU_C::POP64_SS(bxInstruction_c *i)
   void
 BX_CPU_C::PUSHAD64(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("PUSHAD: not supported on an 8086"));
-#else
   Bit64u temp_RSP;
   Bit64u rsp;
 
@@ -180,15 +177,11 @@ BX_CPU_C::PUSHAD64(bxInstruction_c *i)
   push_64(RBP);
   push_64(RSI);
   push_64(RDI);
-#endif
 }
 
   void
 BX_CPU_C::POPAD64(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("POPAD not supported on an 8086"));
-#else /* 286+ */
     Bit64u rdi, rsi, rbp, rtmp, rbx, rdx, rcx, rax;
 
     if ( !can_pop(64) ) {
@@ -214,22 +207,16 @@ BX_CPU_C::POPAD64(bxInstruction_c *i)
     RDX = rdx;
     RCX = rcx;
     RAX = rax;
-#endif
 }
 
   void
 BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("PUSH_Id: not supported on 8086!"));
-#else
-
     Bit64u imm64;
 
     imm64 = (Bit32s) i->Id();
 
     push_64(imm64);
-#endif
 }
 
   void
@@ -253,9 +240,6 @@ BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
   void
 BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("ENTER_IwIb: not supported by 8086!"));
-#else
   Bit64u frame_ptr64;
   Bit16u frame_ptr16;
   Bit8u level;
@@ -315,15 +299,11 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   RBP = frame_ptr64;
 
   RSP = RSP - i->Iw();
-#endif
 }
 
   void
 BX_CPU_C::LEAVE64(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("LEAVE: not supported by 8086!"));
-#else
   // delete frame
   RSP = RBP;
 
@@ -334,5 +314,4 @@ BX_CPU_C::LEAVE64(bxInstruction_c *i)
   pop_64(&temp64);
   RBP = temp64;
   }
-#endif
 }
