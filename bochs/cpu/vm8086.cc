@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.18 2005-03-12 19:34:18 sshwarts Exp $
+// $Id: vm8086.cc,v 1.19 2005-03-13 20:18:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -272,7 +272,7 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.rpl                 = 3;
 }
 
-#if BX_CPU_LEVEL >= 4
+#if BX_SUPPORT_VME
 void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
 {
   BX_PANIC(("Redirection of interrupts through virtual-mode idt still not implemented"));

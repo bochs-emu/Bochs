@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.204 2005-03-12 19:34:18 sshwarts Exp $
+// $Id: cpu.h,v 1.205 2005-03-13 20:18:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2666,7 +2666,7 @@ public: // for now...
   BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
                                      Bit32u flags32);
   BX_SMF void stack_return_from_v86(bxInstruction_c *);
-#if BX_CPU_LEVEL >= 4
+#if BX_SUPPORT_VME
   BX_SMF void v86_redirect_interrupt(Bit32u vector);
 #endif
   BX_SMF void init_v8086_mode(void);

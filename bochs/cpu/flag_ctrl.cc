@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.19 2005-02-03 22:24:45 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.20 2005-03-13 20:18:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,7 +68,7 @@ void BX_CPU_C::CLI(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode())
   {
-#if BX_CPU_LEVEL >= 4
+#if BX_SUPPORT_VME
     if (BX_CPU_THIS_PTR cr4.get_PVI() && (cpl == 3))
     {
       if (IOPL < 3) {
@@ -89,7 +89,7 @@ void BX_CPU_C::CLI(bxInstruction_c *i)
   else if (v8086_mode())
   {
     if (IOPL != 3) {
-#if BX_CPU_LEVEL >= 4
+#if BX_SUPPORT_VME
       if (BX_CPU_THIS_PTR cr4.get_VME())
       {
         BX_CPU_THIS_PTR clear_VIF();
@@ -114,7 +114,7 @@ void BX_CPU_C::STI(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode())
   {
-#if BX_CPU_LEVEL >= 4
+#if BX_SUPPORT_VME
     if (BX_CPU_THIS_PTR cr4.get_PVI())
     {
       if (cpl == 3) {
@@ -141,7 +141,7 @@ void BX_CPU_C::STI(bxInstruction_c *i)
   else if (v8086_mode())
   {
     if (IOPL != 3) {
-#if BX_CPU_LEVEL >= 4
+#if BX_SUPPORT_VME
       if (! BX_CPU_THIS_PTR get_VIP () && BX_CPU_THIS_PTR cr4.get_VME())
       {
         BX_CPU_THIS_PTR assert_VIF();
