@@ -22,55 +22,18 @@
  workstation, displaying a window on your workstation, simulating a monitor on a PC.
 
 <BR><BR><BR>
-<font face="arial, helvetica" color="#1e029a" size="4"><b>New Pre-Release</b></font><BR>
-<b>Bochs 1.3.pre1</b> (November 17, 2001):
-Bochs 1.3.pre1 is a pre-release of Bochs 1.3.  
- ( <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/docs-html/changelog.html">Details</a> - <a href="<!--#include virtual="includes/release.txt" -->">Download Now</a> )
-The new features in this version include:
-<ul>
-<li> add support for MacOS X (Carbon API), BeOS, and Amiga/MorphOS
-<li> emulated NE2000 works in Linux and WinNT/2000
-<li> read raw CD in Win95/98, read ISO images on any platform
-<li> in WinNT/2000, reading from raw floppies is supported
-<li> debugger is supported on win32
-<li> new text mode configuration menus, as an alternative to editing .bochsrc
-<li> runtime configuration menu can change floppy disk images, turn debug logging on/off during simulation
-<li> polite panics.  If you write "panic: action=ask" in the bochsrc, bochs
-     will ask you what to do when a panic occurs.  Choices include: quit,
-     continue, or turn off this type of message.
-<li> parallel port emulation
-<li> new and improved model of PIT (programmable interval timer)
-<li> improved control over simulation time: option to stay in sync with real time, and an option to use less CPU time when Bochs is idle.
-<li> many small improvements in cpu and device emulation
-<li> simpler Win32/VC++ compile process, option to use VC++ workspaces
-<li> documentation is about 80% converted to docbook, with many sections
-     written from scratch.
-</ul>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Bochs 1.3 Released</b></font><BR>
+December 12, 2001: Bochs 1.3 is a feature release of Bochs, with many great improvements over Bochs 1.2. Enhancements
+include a new configuration system, networking support in Linux and Windows NT/2000,
+native MacOS X support, and the ability to use ISO image files
+ (<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Press+Release+for+Bochs+1.3&url=http://bochs.sourceforge.net/bochspr-20011210.txt">Press Release</a> - <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/docs-html/changelog.html">Details</a> - <a href="<!--#include virtual="includes/release.txt" -->">Download Now</a> ).
+
 
 <BR><BR><BR>
-<font face="arial, helvetica" color="#1e029a" size="4"><b>Previous Release</b></font><BR>
-<b>Bochs 1.2.1</b> (June 12, 2001):
-Bochs 1.2.1 is a bugfix release based on version 1.2.  Bochs 1.2 includes
-usability improvements such as improved control over error handling, an
-interactive disk image creator, and features including dual hard drive support,
-multiple processor emulation (SMP), and VNC remote viewer mode.
- ( <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Press+Release+for+Bochs+1.2&url=http://bochs.sourceforge.net/bochs-pr-20010604.txt">Press Release</a> - <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/docs-html/changelog.html">Details</a> - <a href="<!--#include virtual="includes/release.txt" -->">Download Now</a> )
-For the newest features, use the anonymous CVS server version. (<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Change+Log&url=http://bochs.sourceforge.net/docs-html/cvs-status.html">Details</a> - <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580">More Info</a>)
-
-<BR><BR><BR>
-<font face="arial, helvetica" color="#1e029a" size="4"><b>Bochs IRC Chat from June 19, 2001</b></font><BR>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Bochs IRC Chat Transcripts</b></font><BR>
 The Bochs community held an IRC open discussion chat on Tuesday, June
 19th, 2001. We covered a large array of topics that relate to
 the current happenings in Bochs (<a href="irc-20010619.html">Transcript</a>).  There is also a transcript of our last chat from May 30, 2001 <a href="irc-20010530.html">here</a>.
-
-<BR><BR><BR>
-<font face="arial, helvetica" color="#1e029a" size="4"><b>Progress on Bochs
-Networking!</b></font><BR>
-Peter Grehan is the author of the NE2000 (network adapter) and serial code in
-Bochs.  He is helping us out once again to improve networking support in Bochs.
-Bryce Denney and Peter met to talk about how to get Bochs talking on the network
-in different host operating systems.  
-( <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Networking&url=http://bochs.sourceforge.net/networking">Learn more</a> )
 
 <BR><BR><BR>
 <font face="arial, helvetica" color="#1e029a" size="4"><b>Help Wanted</b></font><BR>
@@ -93,8 +56,9 @@ To help with one of these tasks, please contact <a href="http://bochs.sourceforg
 <BR><BR>
 <font face="arial, helvetica" color="#1e029a" size="4"><b>Latest News</b></font><BR>
 <ul>
+  <li><b>December 10, 2001:</b> <a href="<!--#include virtual="includes/release.txt" -->">Bochs 1.3</a> is now available
   <li><b>November 17, 2001:</b> <a href="<!--#include virtual="includes/release.txt" -->">Bochs 1.3.pre1</a> is now available.
-  <li><b>June 24, 2001:</b> Thanks Psyon, Bochs in the CVS now has CD-ROM support under Win9x.
+  <li><b>June 24, 2001:</b> Thanks to Psyon, Bochs in the CVS now has CD-ROM support under Win9x.
   <li><b>June 16, 2001:</b> <a href="<!--#include virtual="includes/release.txt" -->">Bochs 1.2.1</a> is now available.
   <li><b>June 3, 2001:</b> <a href="<!--#include virtual="includes/release.txt" -->">Bochs 1.2</a> is now available in both source and binary form. Read all about this major new release over <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Press+Release+for+Bochs+1.2&url=http://bochs.sourceforge.net/bochs-pr-20010604.txt">here</a>.
   <li><b>May 23, 2001:</b> Activity Update - Less than a month after the transfer to Sourceforge, Bochs has reached the top of the <a

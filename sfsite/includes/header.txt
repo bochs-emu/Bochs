@@ -27,7 +27,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <BODY BGCOLOR="#FFFFFF" VLINK="#000000" ALINK="#000000" LINK="#000000" TOPMARGIN="0" LEFTMARGIN="0" MARGINWIDTH="0" MARGINHEIGHT="0">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr><td width="140" bgcolor="#aacbff">&nbsp;</td><td bgcolor="#6d95d7" width="400"><font face="arial, helvetica" size="2" color="#1e029a"><center><b>T H E&nbsp;&nbsp;&nbsp;C R O S S&nbsp;&nbsp;&nbsp;P L A T F O R M&nbsp;&nbsp;&nbsp;I A - 3 2&nbsp;&nbsp;&nbsp;E M U L A T O R</b></center></font></td><td width="100%"><table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td bgcolor="#4079d6" width="50%">&nbsp;</td><td bgcolor="#1e029a" width="50%">&nbsp;</td></tr></table></td></tr>
-<tr><td width="140" bgcolor="#6d95d7"><font face="arial, helvetica"><center><b>Current Release:</b><BR><a href="<!--#include virtual="release.txt" -->" class="sidebar"><i><u>Bochs 1.3.pre1</u></i></a></font></center></td><td width="400" height="130"><img src="http://bochs.sourceforge.net/images/lgban.gif" width="400" height="130" alt="bochs: think inside the bochs."></td><td>&nbsp;</td></tr>
+<tr><td width="140" bgcolor="#6d95d7"><font face="arial, helvetica"><center><b>Current Release:</b><BR><a href="<!--#include virtual="release.txt" -->" class="sidebar"><i><u>Bochs 1.3</u></i></a></font></center></td><td width="400" height="130"><img src="http://bochs.sourceforge.net/images/lgban.gif" width="400" height="130" alt="bochs: think inside the bochs."></td><td>&nbsp;</td></tr>
 <tr><td colspan="3" bgcolor="#4079d6" height="1">
 <img src="http://bochs.sourceforge.net/images/smblue.gif" width="1" height="1"></td></tr>
 <tr><td bgcolor="#4079d6" width="140" valign="top">
