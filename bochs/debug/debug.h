@@ -150,7 +150,7 @@ extern int num_read_watchpoints;
 extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 
 typedef enum {
-      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
+      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, UNUSED_STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
 } stop_reason_t;
 
 typedef enum {
@@ -405,6 +405,7 @@ void    bx_dbg_outp(Bit16u addr, Bit32u value, unsigned len);
 void    bx_dbg_raise_HLDA(void);
 Bit8u   bx_dbg_IAC(void);
 void    bx_dbg_set_INTR(Boolean b);
+void bx_dbg_disassemble_current (int which_cpu);
 
 int bx_dbg_symbolic_output(void); /* BW */
 #endif // #ifdef __cplusplus

@@ -1500,13 +1500,18 @@ bx_dbg_continue_command(void)
   bx_guard.interrupt_requested = 0;
 	int stop = 0;
 	int which = -1;
+	int max_instr_executed = 0;
 	while (!stop) {
-		int quantum = 5;   // arbitrary number of cycles to run in each
+		int quantum = 1;   // arbitrary number of cycles to run in each
 		for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
 			BX_CPU(cpu)->guard_found.guard_found = 0;
 			BX_CPU(cpu)->guard_found.icount = 0;
 			bx_guard.icount = quantum;
 			BX_CPU(cpu)->cpu_loop (-1);
+			/// check out BX_CPU(cpu)->guard_found.icount
+			//fprintf (stderr, "dbg_cont: after cpu_loop guard_found.icount=%d\n", BX_CPU(cpu)->guard_found.icount);
+			if (BX_CPU(cpu)->guard_found.icount > max_instr_executed)
+			  max_instr_executed = BX_CPU(cpu)->guard_found.icount;
 			// set stop flag if a guard found other than icount or halted
 			unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
 			stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
@@ -1525,7 +1530,13 @@ bx_dbg_continue_command(void)
 			// cpus set stop, too bad.
 		}
 		// increment time tick only after all processors have had their chance.
-		BX_TICKN(quantum);
+		// MAJOR PROBLEM: we should tick by the number of instructions
+		// that were ACTUALLY executed, not the number that we asked it
+		// to execute.  When tracing is on, only one instruction is
+		// executed, not quantum.  As a result, when you trace you get
+		// ticks speeding ahead at 5x normal speed.
+		BX_TICKN(max_instr_executed);
+		//BX_TICKN(quantum);
 	}
 #endif
 
@@ -1534,10 +1545,6 @@ bx_dbg_continue_command(void)
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
-
-  if (BX_CPU(which)->stop_reason == STOP_TRACE
-			|| BX_CPU(which)->stop_reason == STOP_CPU_HALTED)
-	goto one_more;
 
   if (watchpoint_continue && (BX_CPU(which)->stop_reason == STOP_READ_WATCH_POINT ||
 			      BX_CPU(which)->stop_reason == STOP_WRITE_WATCH_POINT))
@@ -1990,6 +1997,46 @@ bx_dbg_compare_sim_memory(void)
 #endif
 
 
+void bx_dbg_disassemble_current (int which_cpu)
+{
+  Bit32u phy;
+  Boolean valid;
+
+  if (which_cpu < 0) {
+    // iterate over all of them.
+    for (int i=0; i<BX_NUM_SIMULATORS; i++)
+      bx_dbg_disassemble_current (i);
+    return;
+  }
+
+  BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy, &valid);
+
+  if (valid) {
+    unsigned ilen;
+
+    BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
+    ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
+				 bx_disasm_ibuf, bx_disasm_tbuf);
+
+    if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
+      fprintf(stderr, "(%u) %04x:%08x (%s): ", which_cpu,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
+	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
+      }
+    else {
+      fprintf(stderr, "(%u) %04x:%04x: ", which_cpu,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
+      }
+    for (unsigned j=0; j<ilen; j++)
+      fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
+    fprintf(stderr, ": %s\n", bx_disasm_tbuf);
+    }
+  else {
+    fprintf(stderr, "(%u) ??? (physical address not available)\n", which_cpu);
+  }
+}
 
   void
 bx_dbg_print_guard_results(void)
@@ -2037,8 +2084,6 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 	}
   else if (BX_CPU(sim)->stop_reason == STOP_MAGIC_BREAK_POINT) {
 	fprintf(stderr, "(%u) Magic breakpoint\n", sim);
-  } else if (BX_CPU(sim)->stop_reason == STOP_TRACE) {
-	/* Nothing */
   } else if (BX_CPU(sim)->stop_reason == STOP_TIME_BREAK_POINT) {
 	fprintf(stderr, "(%u) Caught time breakpoint\n", sim);
   } else if (BX_CPU(sim)->stop_reason == STOP_MODE_BREAK_POINT) {
@@ -2054,40 +2099,14 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 	    sim, BX_CPU(sim)->stop_reason);
     }
 
-
 #if BX_DISASM
   if (bx_debugger.auto_disassemble) {
-    Bit32u phy;
-    Boolean valid;
-
-    BX_CPU(sim)->dbg_xlate_linear2phy(BX_CPU(sim)->guard_found.laddr, &phy, &valid);
-
-    if (valid) {
-      unsigned ilen;
-
-      BX_CPU(sim)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
-      ilen = bx_disassemble.disasm(BX_CPU(sim)->guard_found.is_32bit_code,
-                                   bx_disasm_ibuf, bx_disasm_tbuf);
-
-      if (BX_CPU(sim)->guard_found.is_32bit_code) {
-        fprintf(stderr, "(%u) %04x:%08x (%s): ", sim,
-                (unsigned) BX_CPU(sim)->guard_found.cs,
-                (unsigned) BX_CPU(sim)->guard_found.eip,
-		bx_dbg_symbolic_address((BX_CPU(sim)->cr3) >> 12, BX_CPU(sim)->guard_found.eip, BX_CPU(sim)->sregs[BX_SREG_CS].cache.u.segment.base));
-        }
-      else {
-        fprintf(stderr, "(%u) %04x:%04x: ", sim,
-                (unsigned) BX_CPU(sim)->guard_found.cs,
-                (unsigned) BX_CPU(sim)->guard_found.eip);
-        }
-      for (unsigned j=0; j<ilen; j++)
-        fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
-      fprintf(stderr, ": %s\n", bx_disasm_tbuf);
-      }
-    else {
-      fprintf(stderr, "(%u) ??? (physical address not available)\n", sim);
-      }
-    }
+    // if tracing is on for this cpu, we've already printed the disassembly
+    // for the instruction that's about to be executed.  So omit the 
+    // disassembly here.  (experiment)
+    if (! BX_CPU(sim)->trace)
+      bx_dbg_disassemble_current (sim);
+  }
 #endif  // #if BX_DISASM
   }
 }

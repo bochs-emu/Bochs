@@ -308,6 +308,14 @@ debugger_check:
 #endif
 
 #if BX_DEBUGGER
+    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that was just executed.  This used to 
+      // return with a certain stop reason, but as a result the tracing
+      // affected simulation, which is obviously bad when you're trying
+      // to debug a problem.
+      bx_dbg_disassemble_current (-1);
+    }
+
     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
     // note instr generating exceptions never reach this point.
 
@@ -344,14 +352,9 @@ debugger_check:
 	  }
     }
 #endif
-    if (BX_CPU_THIS_PTR trace) {
-	  BX_CPU_THIS_PTR stop_reason = STOP_TRACE;
-	  return;
-    }
-#endif
 
-#if BX_DEBUGGER
     {
+      // check for icount or control-C.  If found, set guard reg and return.
     Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
     if ( dbg_is_end_instr_bpoint(
            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -361,6 +364,7 @@ debugger_check:
       return;
       }
     }
+
 #endif  // #if BX_DEBUGGER
     goto main_cpu_loop;
     }
@@ -660,6 +664,7 @@ extern unsigned int dbg_show_mask;
 BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                     Bit32u is_32)
 {
+  //fprintf (stderr, "begin_instr_bp: checking cs:eip %04x:%08x\n", cs, eip);
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = eip;
   BX_CPU_THIS_PTR guard_found.laddr = laddr;
@@ -719,7 +724,14 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       Boolean valid;
       dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr,
                               &phy, &valid);
-      if ( (BX_CPU_THIS_PTR guard_found.icount!=0) && valid ) {
+      // why the condition "guard_found.icount!=0"?  That means that
+      // breakpoints only occur when you're using "continue" but never
+      // when you're using "step".  I'm going to try disabling taht
+      // condition and see what happens.  This caused it to stop at
+      // a breakpoint even while trace-on is on.
+      if ( valid 
+	    //&& (BX_CPU_THIS_PTR guard_found.icount!=0)
+	    ) {
         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
           if ( bx_guard.iaddr.phy[i].addr == phy ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
@@ -739,7 +751,15 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                   Bit32u is_32)
 {
+  //fprintf (stderr, "end_instr_bp: checking for icount or ^C\n");
   BX_CPU_THIS_PTR guard_found.icount++;
+
+  // convenient point to see if user typed Ctrl-C
+  if (bx_guard.interrupt_requested &&
+      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
+    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
+    return(1);
+    }
 
   // see if debugger requesting icount guard
   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
@@ -751,13 +771,6 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
       return(1);
       }
-    }
-
-  // convenient point to see if user typed Ctrl-C
-  if (bx_guard.interrupt_requested &&
-      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
-    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
-    return(1);
     }
 
 #if (BX_NUM_SIMULATORS >= 2)
