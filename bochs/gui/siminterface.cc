@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.9 2002-03-16 14:51:19 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.10 2002-03-17 02:56:08 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -31,7 +31,6 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   sim_interface_callback_t callback;
   void *callback_ptr;
 #define BX_NOTIFY_MAX_ARGS 10
-  int notify_return_val;
   int notify_int_args[BX_NOTIFY_MAX_ARGS];
   char *notify_string_args[BX_NOTIFY_MAX_ARGS];
 #define NOTIFY_TYPE_INT
@@ -69,15 +68,16 @@ public:
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
   virtual char *get_floppy_type_name (int type);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
-  virtual int notify_return (int retcode);
-  virtual int LOCAL_notify (int code);
+  virtual BxEvent* LOCAL_notify (BxEvent *event);
   virtual int LOCAL_log_msg (char *prefix, int level, char *msg);
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
-  virtual int vga_gui_button_pressed (int which);
+  virtual int vga_gui_button_pressed (bx_id which);
   virtual int notify_get_int_arg (int which);
   virtual char *notify_get_string_arg (int which);
   virtual int get_enabled () { return enabled; }
   virtual void set_enabled (int enabled) { this->enabled = enabled; }
+  // called at a regular interval, currently by the keyboard handler.
+  virtual void periodic ();
 };
 
 bx_param_c *
@@ -137,7 +137,6 @@ bx_real_sim_c::bx_real_sim_c ()
   callback = NULL;
   callback_ptr = NULL;
   
-  notify_return_val = -1;
   enabled = 1;
   int i;
   for (i=0; i<BX_NOTIFY_MAX_ARGS; i++) {
@@ -219,9 +218,12 @@ bx_real_sim_c::quit_sim (int code) {
   // tell bochs to shut down (includes vga screen)
   bx_atexit ();
   // tell the control panel to shut down
-  LOCAL_notify (NOTIFY_CODE_SHUTDOWN);
-  // for a while I tried to sleep() here, but that was bad because it
-  // suspends the whole process, including the gui thread.
+  BxEvent *event = new BxEvent ();
+  event->type = BX_ASYNC_EVT_SHUTDOWN_GUI;
+  LOCAL_notify (event);
+  // set something that will cause the cpu loop to exit.
+  // or use setjmp/longjmp, or something.
+  //FIXME!
 }
 
 int
@@ -302,25 +304,14 @@ bx_real_sim_c::set_notify_callback (sim_interface_callback_t func, void *arg)
   callback_ptr = arg;
 }
 
-int 
-bx_real_sim_c::notify_return (int retcode)
-{
-  notify_return_val = retcode;
-  return 0;
-}
-
-int
-bx_real_sim_c::LOCAL_notify (int code)
+BxEvent *
+bx_real_sim_c::LOCAL_notify (BxEvent *event)
 {
   if (callback == NULL) {
     BX_ERROR (("notify called, but no callback function is registered"));
-    return -1;
+    return NULL;
   } else {
-    notify_return_val = -999;
-    (*callback)(callback_ptr, code);
-    if (notify_return_val == -999)
-      BX_ERROR (("notify callback returned without setting the return value"));
-    return notify_return_val;
+    return (*callback)(callback_ptr, event);
   }
 }
 
@@ -328,16 +319,18 @@ bx_real_sim_c::LOCAL_notify (int code)
 int 
 bx_real_sim_c::LOCAL_log_msg (char *prefix, int level, char *msg)
 {
+  BxEvent *be = new BxEvent ();
+  be->type = BX_ASYNC_EVT_LOG_MSG;
+  be->u.logmsg.prefix = prefix;
+  be->u.logmsg.level = level;
+  be->u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
-  notify_string_args[0] = prefix;
-  notify_int_args[1] = level;
-  notify_string_args[2] = msg;
-  int val = LOCAL_notify (NOTIFY_CODE_LOGMSG);
+  BxEvent *response = LOCAL_notify (be);
   //fprintf (stderr, "notify returned %d\n", val);
-  return val;
+  return (response == NULL) ? -1 : 0;
 }
 
-// called by control panel (control.cc) to retrieve args
+// called by control panel (control.cc) to retrieve args.  FIXME: YUCK!
 int
 bx_real_sim_c::log_msg_2 (char *prefix, int *level, char *msg, int len)
 {
@@ -589,11 +582,18 @@ bx_list_c::set_parent (bx_param_c *parent)
   this->parent = parent;
 }
 
+// called by code in gui.cc when the user clicks on a headerbar button.
+// Create a synchronous ASK_PARAM event, send it to the GUI and wait for
+// the response.
 int 
-bx_real_sim_c::vga_gui_button_pressed (int which)
+bx_real_sim_c::vga_gui_button_pressed (bx_id param)
 {
-  notify_int_args[0] = which;
-  return LOCAL_notify (NOTIFY_CODE_VGA_GUI_BUTTON);
+  // create appropriate event
+  BxEvent *event = new BxEvent ();
+  event->type = BX_SYNC_EVT_ASK_PARAM;
+  event->u.param.id = param;
+  BxEvent *response = LOCAL_notify (event);
+  return response->retcode;
 }
 
 int 
@@ -606,4 +606,19 @@ char *
 bx_real_sim_c::notify_get_string_arg (int which)
 {
   return notify_string_args[which];
+}
+
+void
+bx_real_sim_c::periodic ()
+{
+  // give the GUI a chance to do periodic things on the bochs thread. in 
+  // particular, notice if the thread has been asked to die.
+  BxEvent *be = new BxEvent ();
+  be->type = BX_SYNC_EVT_TICK;
+  be = LOCAL_notify (be);
+  if (be->retcode < 0) {
+    BX_INFO (("Bochs thread has been asked to quit."));
+	BX_CPU_THIS_PTR async_event = 1;
+	BX_CPU_THIS_PTR kill_bochs_request = 1;
+  }
 }
