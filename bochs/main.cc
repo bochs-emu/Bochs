@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.164 2002-10-25 11:44:33 bdenney Exp $
+// $Id: main.cc,v 1.165 2002-10-25 12:36:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1630,7 +1630,9 @@ bx_begin_simulation (int argc, char *argv[])
   bx_dbg_main(argc, argv);
 #else
 #if BX_PLUGINS
+#ifdef __GNUC__
 #warning bx_load_plugins doesnt do much anymore and should maybe be removed
+#endif
   bx_load_plugins ();
 #endif
 

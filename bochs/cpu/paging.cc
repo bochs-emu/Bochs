@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.35 2002-10-25 11:44:35 bdenney Exp $
+// $Id: paging.cc,v 1.36 2002-10-25 12:36:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -341,8 +341,7 @@
 
 
 
-#ifndef _MSC_VER
-// MSC++ doesn't understand a #warning
+#ifdef __GNUC__
 #warning "Move priv_check to CPU fields, or init.cc"
 #endif
 
@@ -527,7 +526,9 @@ BX_CPU_C::INVLPG(bxInstruction_c* i)
 
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+#ifdef __GNUC__
 #warning PRT: check this is right. instruction is "0F 01 F8"  see AMD manual.
+#endif
       if ((i->rm() == 0) && (i->nnn() == 7)) {
         BX_CPU_THIS_PTR SWAPGS(i);
         return;
@@ -996,7 +997,9 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
 
 #if BX_SUPPORT_X86_64
+#ifdef __GNUC__
 #warning "Fix dbg_xlate_linear2phy for 64-bit and new features."
+#endif
 #endif
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.78 2002-10-25 11:44:37 bdenney Exp $
+// $Id: siminterface.cc,v 1.79 2002-10-25 12:36:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -693,7 +693,9 @@ bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
 int 
 bx_real_sim_c::begin_simulation (int argc, char *argv[])
 {
+#ifdef __GNUC__
 #warning does the config interface actually need to pass these args into bx_begin_simulation??  None of them is actually doing it.
+#endif
   return bx_begin_simulation (argc, argv);
 }
 

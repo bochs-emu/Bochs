@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.40 2002-10-25 11:44:35 bdenney Exp $
+// $Id: init.cc,v 1.41 2002-10-25 12:36:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,9 @@ BX_CPU_C::BX_CPU_C()
 #if BX_WITH_WX
 
 #if BX_SMP_PROCESSORS!=1
+#ifdef __GNUC__
 #warning cpu_param_handler only supports parameters for one processor.
+#endif
 // To fix this, I think I will need to change bx_param_num_c::set_handler
 // so that I pass in a void* data value.  The void* will be passed to each
 // handler.  In this case, I would pass a pointer to the BX_CPU_C object
@@ -166,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.40 2002-10-25 11:44:35 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.41 2002-10-25 12:36:43 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC

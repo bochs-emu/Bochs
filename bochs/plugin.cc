@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.3 2002-10-25 11:44:33 bdenney Exp $
+// $Id: plugin.cc,v 1.4 2002-10-25 12:36:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -408,7 +408,9 @@ plugin_startup(void)
 /* Plugin system: Device registration                                   */
 /************************************************************************/
 
+#ifdef __GNUC__
 #warning BBD: when all plugin devices are converted to the "bx_devmodel" type with virtual functions, I intend to chop this out.
+#endif
 // (and the nasty current_plugin_context hack can go too)
 
 void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,

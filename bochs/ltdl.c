@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ltdl.c,v 1.2 2002-10-24 21:04:34 bdenney Exp $
+// $Id: ltdl.c,v 1.3 2002-10-25 12:36:42 bdenney Exp $
 //
 // NOTE: The ltdl library comes from the Libtool package.  Bochs uses
 // ltdl and libtool to build and load plugins.  The libtool
@@ -101,7 +101,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #if HAVE_ASSERT_H
 #  include <assert.h>
 #else
-#  warning using my own assert
+#  ifdef __GNUC__
+#    warning using my own assert
+#  endif
 #  define assert(cond)   while (!(cond)) { fprintf (stderr, "Assert failed at %s:%d: '%s'\n", __FILE__, __LINE__, #cond); abort(); }
 #endif
 
@@ -1969,7 +1971,9 @@ tryall_dlopen_module (handle, prefix, dirname, dlname)
   int      error	= 0;
   char     *filename	= 0;
   size_t   filename_len	= 0;
+#ifdef __GNUC__
 #warning dirname could be null
+#endif
   size_t   dirname_len	= LT_STRLEN (dirname);
 
   if (dirname == NULL) {
@@ -2711,7 +2715,9 @@ try_dlopen (phandle, filename)
 	{
 	  LTDEBUG_PRINTF(("try_dlopen opening file '%s'\n", filename));
 	  file = fopen (filename, LT_READTEXT_MODE);
+#ifdef __GNUC__
 #warning dir is still NULL
+#endif
 	}
 
       /* If we didn't find the file by now, it really isn't there.  Set

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.68 2002-10-25 11:44:34 bdenney Exp $
+// $Id: cpu.cc,v 1.69 2002-10-25 12:36:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -847,7 +847,9 @@ BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
   void
 BX_CPU_C::revalidate_prefetch_q(void)
 {
+#ifdef __GNUC__
 #warning "::revalidate_prefetch_q() is ifdef'd out."
+#endif
   bx_address eipBiased;
 
   eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.85 2002-10-25 11:44:40 bdenney Exp $
+// $Id: harddrv.cc,v 1.86 2002-10-25 12:36:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,9 +45,10 @@
 // you care about.
 #define TEST_READ_BEYOND_END 0
 #define TEST_WRITE_BEYOND_END 0
-#if TEST_READ_BEYOND_END || TEST_WRITE_BEYOND_END
-#warning BEWARE: Dangerous options are enabled in harddrv.cc
-#warning If you are not trying to provoke hard drive errors you should disable them right now.
+#ifdef __GNUC__
+#  if TEST_READ_BEYOND_END || TEST_WRITE_BEYOND_END
+#    warning BEWARE: Dangerous options are enabled in harddrv.cc. If you are not trying to provoke hard drive errors you should disable them right now.
+#  endif
 #endif
 // end of dangerous options.
 
@@ -174,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.85 2002-10-25 11:44:40 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.86 2002-10-25 12:36:44 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {

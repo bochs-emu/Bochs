@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.25 2002-10-24 21:05:39 bdenney Exp $
+// $Id: fetchdecode64.cc,v 1.26 2002-10-25 12:36:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1474,7 +1474,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 60 */  { 0, &BX_CPU_C::BxError },
   /* 61 */  { 0, &BX_CPU_C::BxError },
   /* 62 */  { 0, &BX_CPU_C::BxError },
+#ifdef __GNUC__
 #warning PRT: op=63 This needs checking on real hardware.  Manual says 16 bit version leaves upper 48 bits unchanged
+#endif
   /* 63 */  { BxAnother, &BX_CPU_C::MOVSX_GwEw }, // 
   /* 64 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // FS:
   /* 65 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // GS:
@@ -1990,7 +1992,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 60 */  { 0, &BX_CPU_C::BxError },
   /* 61 */  { 0, &BX_CPU_C::BxError },
   /* 62 */  { 0, &BX_CPU_C::BxError },
+#ifdef __GNUC__
 #warning PRT: This needs checking on real hardware.  Manual says 32 bit version zero extends result
+#endif
   /* 63 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GdEd },
   /* 64 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // FS:
   /* 65 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // GS:

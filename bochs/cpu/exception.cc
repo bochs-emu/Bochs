@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.30 2002-10-25 11:44:34 bdenney Exp $
+// $Id: exception.cc,v 1.31 2002-10-25 12:36:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1147,7 +1147,9 @@ SYSCALL_LEGACY_MODE:
   if (BX_CPU_THIS_PTR msr.lma) {
 
     RCX = RIP;
+#ifdef __GNUC__
 #warning - PRT: SYSCALL --  do we reset RF/VM before saving to R11?
+#endif
     R11 = read_eflags();
 
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.71 2002-10-25 11:44:37 bdenney Exp $
+// $Id: wxmain.cc,v 1.72 2002-10-25 12:36:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -557,12 +557,16 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
     devices[bootDevices] = wxT("First floppy drive");
     dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
   }
+#ifdef __GNUC__
 #warning wxwindows interface will only allow booting from hard disk if it is on ATA0 master
+#endif
   if (ata0_mpres->get() && ata0_mtype->get() == BX_ATA_DEVICE_DISK) {
     devices[bootDevices] = wxT("First hard drive");
     dev_id[bootDevices++] = BX_BOOT_DISKC;
   }
+#ifdef __GNUC__
 #warning wxwindows interface will only allow booting from cdrom if it is on ATA0 slave
+#endif
   if (ata0_spres->get() && ata0_stype->get() == BX_ATA_DEVICE_CDROM) {
     devices[bootDevices] = wxT("CD-ROM drive");
     dev_id[bootDevices++] = BX_BOOT_CDROM;
@@ -983,7 +987,9 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   bool canConfigure = (change == Stop);
   menuConfiguration->Enable (ID_Config_New, canConfigure);
   menuConfiguration->Enable (ID_Config_Read, canConfigure);
+#ifdef __GNUC__
 #warning For now, leave ATA devices so that you configure them during runtime. Otherwise you cannot change the CD image at runtime.
+#endif
   //menuEdit->Enable (ID_Edit_ATA0, canConfigure);
   //menuEdit->Enable (ID_Edit_ATA1, canConfigure);
   //menuEdit->Enable (ID_Edit_ATA2, canConfigure);
