@@ -39,6 +39,8 @@ extern "C" {
 #include "gui/control.h"
 #include "gui/siminterface.h"
 
+FILE *wxlog = NULL;
+
 class MyApp: public wxApp
 {
 virtual bool OnInit();
@@ -51,7 +53,13 @@ class BochsThread: public wxThread
   // when Bochs sends a synchronous event to the GUI thread, the response
   // is stored here.
   MyFrame *frame;
-  BxEvent *bochs2gui_sync_response;
+
+  // support response to a synchronous event.
+  // FIXME: this would be cleaner and more reusable if I made a thread-safe
+  // mailbox class.
+  BxEvent *bochs2gui_mailbox;
+  wxCriticalSection bochs2gui_mailbox_lock;
+
 public:
   BochsThread (MyFrame *_frame) { frame = _frame; }
   virtual ExitCode Entry ();
@@ -60,8 +68,11 @@ public:
   // in the thisptr arg.
   static int SiminterfaceCallback (void *thisptr, int code);
   int SiminterfaceCallback2 (int code);
+  // methods to coordinate synchronous response mailbox
+  void ClearSyncResponse ();
+  void SendSyncResponse (BxEvent *);
+  BxEvent *GetSyncResponse ();
 private:
-  int HandleVgaGuiButton (int which);
 };
 
 class MyFrame: public wxFrame
@@ -75,6 +86,8 @@ void OnStartBochs(wxCommandEvent& event);
 void OnPauseBochs(wxCommandEvent& event);
 void OnResumeBochs(wxCommandEvent& event);
 void OnKillBochs(wxCommandEvent& event);
+void OnBochs2GuiSyncEvent(wxCommandEvent& event);
+int HandleAskParam (BxEvent *event);
 int StartBochsThread ();
 
 // called from the Bochs thread's OnExit() method.
@@ -83,6 +96,7 @@ void OnBochsThreadExit ();
 private:
 wxCriticalSection bochs_thread_lock;
 BochsThread *bochs_thread; // get the lock before accessing bochs_thread
+int HandleVgaGuiButton (bx_id param);
 
 DECLARE_EVENT_TABLE()
 };
@@ -94,7 +108,8 @@ ID_About,
 ID_StartBochs,
 ID_PauseBochs,
 ID_ResumeBochs,
-ID_KillBochs
+ID_KillBochs,
+ID_Bochs2Gui_Sync_Event,
 };
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
@@ -104,20 +119,29 @@ EVT_MENU(ID_StartBochs, MyFrame::OnStartBochs)
 EVT_MENU(ID_PauseBochs, MyFrame::OnPauseBochs)
 EVT_MENU(ID_ResumeBochs, MyFrame::OnResumeBochs)
 EVT_MENU(ID_KillBochs, MyFrame::OnKillBochs)
+EVT_MENU(ID_Bochs2Gui_Sync_Event, MyFrame::OnBochs2GuiSyncEvent)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(MyApp)
 
-//static MyFrame *theFrame = NULL;
+#if 1
+// stupid hack to make response available to siminterface
+BxEvent *bochs2gui_last_response;
+BxEvent *get_bochs2gui_last_response () {
+  return bochs2gui_last_response;
+}
+#endif
 
 bool MyApp::OnInit()
 {
-	siminterface_init ();
-MyFrame *frame = new MyFrame( "Bochs Control Panel", wxPoint(50,50),
-wxSize(450,340) );
-frame->Show( TRUE );
-SetTopWindow( frame );
-return TRUE;
+  wxlog = fopen ("wxlog.txt", "w");
+  wxASSERT_MSG (wxlog != NULL, "could not open wxlog.txt");
+  siminterface_init ();
+  MyFrame *frame = new MyFrame( "Bochs Control Panel", wxPoint(50,50),
+  wxSize(450,340) );
+  frame->Show( TRUE );
+  SetTopWindow( frame );
+  return TRUE;
 }
 
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const
@@ -165,12 +189,12 @@ void MyFrame::OnStartBochs(wxCommandEvent& WXUNUSED(event))
 	  "Already Running", wxOK | wxICON_ERROR);
 	return;
   }
-  printf ("Starting a Bochs simulation\n");
+  fprintf (wxlog, "Starting a Bochs simulation\n");
   SetStatusText ("Starting a Bochs simulation");
   bochs_thread = new BochsThread (this);
   bochs_thread->Create ();
   bochs_thread->Run ();                                                        
-  printf ("Bochs thread has started.\n");
+  fprintf (wxlog, "Bochs thread has started.\n");
   // set up callback for events from Bochs
   SIM->set_notify_callback (&BochsThread::SiminterfaceCallback, bochs_thread);
 }
@@ -210,6 +234,50 @@ MyFrame::OnBochsThreadExit () {
   bochs_thread = NULL; 
 }
 
+// This is called when the simulator needs to ask the user to choose
+// a value or setting.  For example, when the user indicates that he wants
+// to change the floppy disk image for drive A, an ask-param event is created
+// with the parameter id set to BXP_FLOPPYA_PATH.  The simulator blocks until
+// the gui has displayed a dialog and received a selection from the user.
+// In the current implemention, the GUI will look up the parameter's 
+// data structure using SIM->get_param() and then call the set method on the
+// parameter to change the param.  The return value only needs to return
+// success or failure (failure = cancelled, or not implemented).
+// Returns 1 if the user chose a value and the param was modified.
+// Returns 0 if the user cancelled.
+// Returns -1 if the gui doesn't know how to ask for that param.
+int 
+MyFrame::HandleAskParam (BxEvent *event)
+{
+  wxASSERT (event->type == BX_SYNC_EVT_ASK_PARAM);
+  switch (event->u.param.id) {
+  case BXP_FLOPPYA_PATH:
+  case BXP_FLOPPYB_PATH:
+	return HandleVgaGuiButton (event->u.param.id);
+  default:
+	fprintf (wxlog, "HandleAskParam: parameter %d, not implemented\n", event->u.param.id);
+  }
+  return -1;  // could not display
+}
+
+void 
+MyFrame::OnBochs2GuiSyncEvent (wxCommandEvent& event)
+{
+  fprintf (wxlog, "received a bochs event in the GUI thread\n");
+  BxEvent *be = (BxEvent *) event.GetEventObject ();
+  fprintf (wxlog, "event type = %d\n", (int) be->type);
+  switch (be->type) {
+  case BX_SYNC_EVT_ASK_PARAM:
+    be->u.param.success = HandleAskParam (be);
+    break;
+  default:
+    fprintf (wxlog, "OnBochs2GuiSyncEvent: event type %d ignored\n", (int)be->type);
+  }
+  // it is critical to send a response back eventually since the Bochs thread
+  // is blocking.  For now, just send it right back.
+  bochs_thread->SendSyncResponse(be);
+}
+
 /////////////// bochs thread
 
 void *
@@ -217,13 +285,13 @@ BochsThread::Entry (void)
 {     
   int argc=1;
   char *argv[] = {"bochs"};
-  printf ("in BochsThread, starting at bx_continue_after_control_panel\n");
+  fprintf (wxlog, "in BochsThread, starting at bx_continue_after_control_panel\n");
   // run all the rest of the Bochs simulator code.  This function will
   // never exit unless we invent some kind of signal that the GUI sends
   // that causes bochs to drop out of its cpu loop.  Presently there is
   // no such signal so it will never quit.
   bx_continue_after_control_panel (argc, argv);
-  printf ("in BochsThread, bx_continue_after_control_panel exited\n");
+  fprintf (wxlog, "in BochsThread, bx_continue_after_control_panel exited\n");
   return NULL;
 }
 
@@ -237,56 +305,41 @@ BochsThread::OnExit ()
   SIM->set_notify_callback (NULL, NULL);
 }
 
+// return 1 if the user selected a value.
+// return 0 if the question was displayed and the user cancelled.
+// return -1 if we don't know how to display the question.
 int
-BochsThread::HandleVgaGuiButton (int which)
+MyFrame::HandleVgaGuiButton (bx_id param)
 {
-  printf ("HandleVgaGuiButton: button %d was pressed\n", which);
-  switch (which)
+  fprintf (wxlog, "HandleVgaGuiButton: button %d was pressed\n", (int)param);
+  switch (param)
   {
-	case GUI_BUTTON_FLOPPYA:
+	case BXP_FLOPPYA_PATH:
+	case BXP_FLOPPYB_PATH:
 	{
-	  wxMutexGuiEnter ();
-	  frame->Raise();  // bring the control panel to front so dialog shows
-	  wxFileDialog dialog(frame, "Choose new floppy disk image file", "", "", "*.img", 0);
+	  Raise();  // bring the control panel to front so dialog shows
+	  wxFileDialog dialog(this, "Choose new floppy disk image file", "", "", "*.img", 0);
 	  int ret = dialog.ShowModal();
-	  wxMutexGuiLeave ();
 	  if (ret == wxID_OK)
 	  {
 	    char *newpath = (char *)dialog.GetPath().c_str ();
 	    if (newpath && strlen(newpath)>0) {
-	      // change floppy A path to this value.
-	      bx_param_string_c *Opath = SIM->get_param_string (BXP_FLOPPYA_PATH);
+	      // change floppy path to this value.
+	      bx_param_string_c *Opath = SIM->get_param_string (param);
 	      assert (Opath != NULL);
-	      printf ("Setting floppy A path to '%s'\n", newpath);
+	      fprintf (wxlog, "Setting floppy %c path to '%s'\n", 
+		    param == BXP_FLOPPYA_PATH ? 'A' : 'B',
+		    newpath);
 	      Opath->set (newpath);
 	      return 1;
 	    }
 	  }
 	  return 0;
 	}
-	case GUI_BUTTON_FLOPPYB:
-	{
-	  wxMutexGuiEnter ();
-	  frame->Raise();  // bring the control panel to front so dialog shows
-	  wxFileDialog dialog(frame, "Choose new floppy disk image file", "", "", "*.img", 0);
-	  int ret = dialog.ShowModal ();
-	  wxMutexGuiLeave ();
-	  if (ret == wxID_OK)
-	  {
-	    char *newpath = (char *)dialog.GetPath().c_str ();
-	    if (newpath && strlen(newpath)>0) {
-	      // change floppy A path to this value.
-	      bx_param_string_c *Opath = SIM->get_param_string (BXP_FLOPPYB_PATH);
-	      assert (Opath != NULL);
-	      printf ("Setting floppy B path to '%s'\n", newpath);
-	      Opath->set (newpath);
-	      return 1;
-	    }
-	  }
-	  return 0;
-	}
+	default:
+	  fprintf (wxlog, "HandleVgaGuiButton: button %d not recognized\n", param);
+	  return -1;
   }
-return 0;
 }
 
 // This function is declared static so that I can get a usable function
@@ -312,24 +365,53 @@ BochsThread::SiminterfaceCallback (void *thisptr, int code)
 int
 BochsThread::SiminterfaceCallback2 (int code)
 {
-  printf ("SiminterfaceCallback with code=%d\n", code);
+  fprintf (wxlog, "SiminterfaceCallback with code=%d\n", code);
   switch (code)
   {
   case NOTIFY_CODE_LOGMSG:
-    printf ("logmsg callback");
+    fprintf (wxlog, "logmsg callback");
     break;
   case NOTIFY_CODE_VGA_GUI_BUTTON:
     {
-      printf ("vga button pressed");
+      fprintf (wxlog, "vga button pressed\n");
 	  int which = SIM->notify_get_int_arg (0);
-	  return HandleVgaGuiButton (which);
+	  // this was the BochsThread implementation.
+	  //return HandleVgaGuiButton (which);
+	  // build an event that describes what is going on, and post it to
+	  // the GUI event queue.  The GUI event handler will process the event
+	  // and then call BochsThread::SyncEventRespond (event).  This will 
+	  // supply the response so that the Bochs thread can return.
+	  BxEvent *be = new BxEvent ();
+	  be->type = BX_SYNC_EVT_ASK_PARAM;
+	  be->u.param.id = which?  BXP_FLOPPYA_PATH : BXP_FLOPPYB_PATH;
+	  wxCommandEvent event (wxEVT_COMMAND_MENU_SELECTED, ID_Bochs2Gui_Sync_Event);
+	  event.SetEventObject ((wxObject *)be);
+	  ClearSyncResponse ();
+	  fprintf (wxlog, "Sending a Bochs ask_param event to the window\n");
+	  wxPostEvent (frame, event);
+	  fflush (wxlog);
+	  // now wait forever for the GUI to post a response.
+	  BxEvent *response = NULL;
+	  while (response == NULL) {
+	    response = GetSyncResponse ();
+		if (!response) {
+		  fprintf (wxlog, "no sync response yet, waiting\n");
+		  this->Sleep(500);
+        }
+	  }
+	  wxASSERT (response != NULL);
+	  // FIXME: stupid hack to make response available to siminterface.  Should
+	  // probably be the return value or something.
+	  bochs2gui_last_response = response;
+	  fflush (wxlog);
+	  return 0;
 	}
 	break;
   case NOTIFY_CODE_SHUTDOWN:
     {
 	  // assume bochs has already had its change to shut down.
 	  // this will just shut down the gui.
-	  printf ("control panel is exiting\n");
+	  fprintf (wxlog, "control panel is exiting\n");
 	  frame->Close (TRUE);
 	  wxExit ();
 	}
@@ -340,4 +422,34 @@ BochsThread::SiminterfaceCallback2 (int code)
 	}
   }
   return 0;
+}
+
+
+void 
+BochsThread::ClearSyncResponse ()
+{
+  wxCriticalSectionLocker lock(bochs2gui_mailbox_lock);
+  if (bochs2gui_mailbox != NULL) {
+    fprintf (wxlog, "WARNING: ClearSyncResponse is throwing away an event that was previously in the mailbox\n");
+  }
+  bochs2gui_mailbox = NULL;
+}
+
+void 
+BochsThread::SendSyncResponse (BxEvent *event)
+{
+  wxCriticalSectionLocker lock(bochs2gui_mailbox_lock);
+  if (bochs2gui_mailbox != NULL) {
+    fprintf (wxlog, "WARNING: SendSyncResponse is throwing away an event that was previously in the mailbox\n");
+  }
+  bochs2gui_mailbox = event;
+}
+
+BxEvent *
+BochsThread::GetSyncResponse ()
+{
+  wxCriticalSectionLocker lock(bochs2gui_mailbox_lock);
+  BxEvent *event = bochs2gui_mailbox;
+  bochs2gui_mailbox = NULL;
+  return event;
 }
