@@ -3,7 +3,7 @@
 
 void module_init ()
 {
-  printf ("module1 init\n");
+  printf ("module1 init for main version %s\n", version_string);
   register_module ("module1");
 }
 
