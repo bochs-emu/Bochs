@@ -1,0 +1,237 @@
+----------------------------------------------------------------------
+Patch name: patche-fetchdecode-cache
+Author: tld
+Date: May, 29th 2002
+
+Detailed description:
+
+I somehow managed to implement the fetchdecode caching system I wrote 
+about last night (and to which I didn't get any answer)
+I couldn't benchmark it as I wanted (mainly, I lack the tools) so I 
+don't really know what performance change it brought.
+
+It has issues with code morphing (and some other things I can't 
+recognize in the code), but if the cache is "small enough" it works.
+For those interested, I left the source code on
+http://tld.digitalcurse.com/bochs/cpu.cc which is meant to
+replace the 
+file cpu/cpu.cc in the CVS snapshot 20020527 which you can find at
+http://tld.digitalcurse.com/bochs/bochs-20020527.tar.bz2 if
+you don't 
+have CVS access.
+
+I'd like to hear comments on this.
+
+PS. Of course, my code does NOT follow bochs' code standard which is not 
+intended to be inserted into the release. This is just intended as a 
+prototype did in 2 hours (of which, 1.5 for understanding the 
+surrounding code...)
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on May, 29th 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -u -r1.28 cpu.cc
+--- cpu/cpu.cc	18 Apr 2002 00:22:19 -0000	1.28
++++ cpu/cpu.cc	29 May 2002 08:56:13 -0000
+@@ -37,6 +37,27 @@
+ 
+ //unsigned counter[2] = { 0, 0 };
+ 
++#define TLD_DECODE_CACHE 1
++
++#if TLD_DECODE_CACHE
++  #define TLDs_array_size_1 0x00ff
++  #define TLD_debug 0
++  #define TLD_stats 0x100000
++
++  struct TLDs_ARRAY {
++    unsigned long eip;
++    BxInstruction_t i;
++  } TLDs_array[TLDs_array_size_1+1];
++
++  unsigned long TLD_cs;
++  unsigned long TLD_SEL;
++  unsigned long TLD_EIP;
++
++  #if TLD_stats
++    int TLD_CACHE_HIT = 0;
++    int TLD_CACHE_ACC = TLD_stats;
++  #endif // TLD_stats
++#endif // TLD_DECODE_CACHE
+ 
+ 
+ #if BX_SIM_ID == 0   // only need to define once
+@@ -106,7 +127,7 @@
+ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
+ {
+   unsigned ret;
+-  BxInstruction_t i;
++  BxInstruction_t bxinstruction_dummy, *i = &bxinstruction_dummy;
+   unsigned maxisize;
+   Bit8u *fetch_ptr;
+   Boolean is_32;
+@@ -217,15 +238,65 @@
+   maxisize = 16;
+   if (BX_CPU_THIS_PTR bytesleft < 16)
+     maxisize = BX_CPU_THIS_PTR bytesleft;
+-  ret = FetchDecode(fetch_ptr, &i, maxisize, is_32);
++
++#if TLD_DECODE_CACHE
++  TLD_EIP = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + EIP;
++  TLD_SEL = TLD_EIP & TLDs_array_size_1;
++
++  i = &TLDs_array[TLD_SEL].i;
++/*
++  if (TLD_cs != BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base) {
++    for (TLD_cs = TLDs_array_size_1; (signed)TLD_cs >= 0; --TLD_cs) {
++      TLDs_array[TLD_cs].eip = 0xFFFFFFFF;
++    }
++    TLD_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base;
++  }
++*/
++  if (TLDs_array[TLD_SEL].eip == TLD_EIP) {
++    // HIT!
++    #if TLD_stats
++      TLD_CACHE_HIT++;
++    #endif    
++
++    #if TLD_debug
++      printf("%8.8x:%8.8x !\n", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base, EIP);
++    #endif
++    ret = 1;
++  } else {
++    // MISS :(
++    ret = FetchDecode(fetch_ptr, i, maxisize, is_32);
++
++    #if TLD_debug
++      printf("%8.8x:%8.8x\n", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base, EIP);
++    #endif
++
++    if (ret) {
++      TLDs_array[TLD_SEL].eip = TLD_EIP;
++    } else {
++      TLDs_array[TLD_SEL].eip = 0xFFFFFFFF;
++    }
++  }
++
++  #if TLD_stats
++    if (!--TLD_CACHE_ACC) {
++      TLD_CACHE_ACC = TLD_stats;
++      printf("%6.6x\n", TLD_CACHE_HIT);
++      TLD_CACHE_HIT = 0;
++    }
++  #endif
++
++
++#else
++  ret = FetchDecode(fetch_ptr, i, maxisize, is_32);
++#endif // TLD_DECODE_CACHE
+ 
+   if (ret) {
+-    if (i.ResolveModrm) {
++    if (i->ResolveModrm) {
+       // call method on BX_CPU_C object
+-      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
++      BX_CPU_CALL_METHOD(i->ResolveModrm, (i));
+       }
+-    BX_CPU_THIS_PTR fetch_ptr += i.ilen;
+-    BX_CPU_THIS_PTR bytesleft -= i.ilen;
++    BX_CPU_THIS_PTR fetch_ptr += i->ilen;
++    BX_CPU_THIS_PTR bytesleft -= i->ilen;
+ fetch_decode_OK:
+ 
+ #if BX_DEBUGGER
+@@ -239,34 +310,34 @@
+     }
+ #endif
+ 
+-    if (i.rep_used && (i.attr & BxRepeatable)) {
++    if (i->rep_used && (i->attr & BxRepeatable)) {
+ repeat_loop:
+-      if (i.attr & BxRepeatableZF) {
+-        if (i.as_32) {
++      if (i->attr & BxRepeatableZF) {
++        if (i->as_32) {
+           if (ECX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             ECX -= 1;
+             }
+-          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
+-          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
++          if ((i->rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
++          if ((i->rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+           if (ECX == 0) goto repeat_done;
+           goto repeat_not_done;
+           }
+         else {
+           if (CX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             CX -= 1;
+             }
+-          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
+-          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
++          if ((i->rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
++          if ((i->rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+           if (CX == 0) goto repeat_done;
+           goto repeat_not_done;
+           }
+         }
+       else { // normal repeat, no concern for ZF
+-        if (i.as_32) {
++        if (i->as_32) {
+           if (ECX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             ECX -= 1;
+             }
+           if (ECX == 0) goto repeat_done;
+@@ -274,7 +345,7 @@
+           }
+         else { // 16bit addrsize
+           if (CX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             CX -= 1;
+             }
+           if (CX == 0) goto repeat_done;
+@@ -302,12 +373,12 @@
+ 
+ 
+ repeat_done:
+-      BX_CPU_THIS_PTR eip += i.ilen;
++      BX_CPU_THIS_PTR eip += i->ilen;
+       }
+     else {
+       // non repeating instruction
+-      BX_CPU_THIS_PTR eip += i.ilen;
+-      BX_CPU_CALL_METHOD(i.execute, (&i));
++      BX_CPU_THIS_PTR eip += i->ilen;
++      BX_CPU_CALL_METHOD(i->execute, (i));
+       }
+ 
+     BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+@@ -410,13 +481,13 @@
+     for (; j<16; j++) {
+       FetchBuffer[j] = *temp_ptr++;
+       }
+-    ret = FetchDecode(FetchBuffer, &i, 16, is_32);
++    ret = FetchDecode(FetchBuffer, i, 16, is_32);
+     if (ret==0)
+       BX_PANIC(("fetchdecode: cross boundary: ret==0"));
+-    if (i.ResolveModrm) {
+-      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
++    if (i->ResolveModrm) {
++      BX_CPU_CALL_METHOD(i->ResolveModrm, (i));
+       }
+-    remain = i.ilen - remain;
++    remain = i->ilen - remain;
+ 
+     // note: eip has already been advanced to beginning of page
+     BX_CPU_THIS_PTR fetch_ptr = fetch_ptr + remain;
