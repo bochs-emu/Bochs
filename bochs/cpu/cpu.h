@@ -600,9 +600,9 @@ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 // To distinguish, check BX_IN_CPU_METHOD, which is defined to be 1 at
 // the top of every file in the cpu subdir.
 #ifdef BX_IN_CPU_METHOD
-#  define BX_CPU_THIS_PTR  this->     /* for cpu/*.cc */
+#  define BX_CPU_THIS_PTR  this->     /* for methods of BX_CPU only */
 #else
-#  define BX_CPU_THIS_PTR  BX_CPU[0]->    /* for all others */
+#  define BX_CPU_THIS_PTR  BX_CPU[0]->    /* outside of BX_CPU methods */
 #endif
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
