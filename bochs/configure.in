@@ -22,6 +22,7 @@ AC_CHECK_SIZEOF(unsigned int)
 AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
+AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
 
 
 AC_MSG_CHECKING(for cpu level)
