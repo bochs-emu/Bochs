@@ -20,6 +20,8 @@
 #ifndef __PLUGIN_H
 #define __PLUGIN_H
 
+extern logfunctions  *pluginlog;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,6 +39,7 @@ extern "C" {
 #define BX_PLUGIN_PIC      "PIC"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
+#define BX_REGISTER_DEVICE_DEVMODEL pluginRegisterDeviceDevmodel
 
 #if BX_PLUGINS
 
@@ -171,34 +174,20 @@ extern "C" {
 #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 
 
-#if BX_PLUGINS
-#define BX_EVENT_MOUSE_MOTION(dx, dy, state) \
-    ((*pluginMouseMotion)(dx, dy, state))
-#define BX_EVENT_GEN_SCANCODE(scancode) \
-    ((*pluginGenScancode)(scancode))
-#define BX_EVENT_PUT_SCANCODE(scancode, count) \
-    ((*pluginPutScancode)(scancode, count))
-#define BX_KBD_PASTE_BYTES(bytes, count) \
-    ((*pluginKbdPasteBytes)(bytes,count))
-#define BX_KBD_PASTE_DELAY_CHANGED() \
-    ((*pluginKbdPasteDelayChanged)())
 
-#else
+
+extern class bx_keyb_stub_c *pluginKeyboard;
 
 #define BX_EVENT_MOUSE_MOTION(dx, dy, state) \
-    (bx_devices.keyboard->mouse_motion(dx, dy, state))
+    (pluginKeyboard->mouse_motion(dx, dy, state))
 #define BX_EVENT_GEN_SCANCODE(scancode) \
-    (bx_devices.keyboard->gen_scancode(scancode))
+    (pluginKeyboard->gen_scancode(scancode))
 #define BX_EVENT_PUT_SCANCODE(scancode, count) \
-    (bx_devices.keyboard->put_scancode(scancode, count))
+    (pluginKeyboard->put_scancode(scancode, count))
 #define BX_KBD_PASTE_BYTES(bytes, count) \
-    (bx_devices.keyboard->paste_bytes(bytes, count))
+    (pluginKeyboard->paste_bytes(bytes,count))
 #define BX_KBD_PASTE_DELAY_CHANGED() \
-    (bx_devices.keyboard->paste_delay_changed ())
-
-#endif
-
-
+    (pluginKeyboard->paste_delay_changed())
 
 #include <dlfcn.h>
 
@@ -230,8 +219,12 @@ typedef struct _device_t
     void (*device_load_state)();
     void (*device_save_state)();
 
+    int use_devmodel_interface;  // BBD hack
+    class bx_devmodel_c *devmodel;  // BBD hack
+
     struct _device_t *next;
 } device_t;
+
 
 extern device_t *devices;
 
@@ -251,6 +244,7 @@ typedef void (*deviceSave_t)(void);
 void pluginRegisterDevice(deviceInitMem_t init_mem, deviceInitDev_t init_dev,
                           deviceReset_t reset, deviceLoad_t load, 
                           deviceSave_t save, char *name);
+void pluginRegisterDeviceDevmodel(bx_devmodel_c *dev, char *name);
 Boolean pluginDevicePresent(char *name);
 
 /* === IO port stuff === */
@@ -286,14 +280,6 @@ extern time_t (* pluginGetCMOSTimeval)(void);
 /* === A20 enable line stuff === */
 extern unsigned (*pluginGetA20E)(void);
 extern void     (*pluginSetA20E)(unsigned val);
-
-
-/* === Keyboard/Mouse input stuff === */
-extern void (* pluginMouseMotion)(int d_x, int d_y, unsigned button_state);
-extern void (* pluginGenScancode)(Bit32u scancode);
-extern void (* pluginPutScancode)(unsigned char *code, int count);
-extern void (* pluginKbdPasteBytes)(Bit8u *bytes, Bit32s length);
-extern void (* pluginKbdPasteDelayChanged)(void);
 
 
 /* === DMA stuff === */

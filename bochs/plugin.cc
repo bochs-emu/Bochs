@@ -29,11 +29,6 @@ Bit32u   (* pluginGetCMOSReg)(unsigned reg) = 0;
 void     (* pluginSetCMOSReg)(unsigned reg, Bit32u val) = 0;
 void     (* pluginCMOSChecksum)(void) = 0;
 time_t   (* pluginGetCMOSTimeval)(void) = 0;
-void     (* pluginMouseMotion)(int d_x, int d_y, unsigned button_state) = 0;
-void     (* pluginGenScancode)(Bit32u scancode) = 0;
-void     (* pluginPutScancode)(unsigned char *code, int count);
-void     (* pluginKbdPasteBytes)(Bit8u *bytes, Bit32s length);
-void     (* pluginKbdPasteDelayChanged)();
 
 unsigned (* pluginRegisterDMA8Channel)(
                 unsigned channel,
@@ -106,6 +101,18 @@ device_t *devices = NULL;      /* Head of the linked list of registered devices 
 
 logfunctions  *pluginlog;
 
+#if BX_PLUGINS
+// When compiling with plugins, plugin.cc will provide the pluginKeyboard
+// pointer.  At first it will point to the stub so that calls to the functions
+// will panic instead of segfaulting.  The pointer will be replaced with a real
+// bx_keyb_c object by plugin_init of the keyboard plugin.
+bx_keyb_stub_c pluginKeyboardStub;
+bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
+#else
+// When plugins are turned off, the device will provide the pluginKeyboard
+// pointer instead.  It will be initialized to point to a real bx_keyb_c
+// immediately, instead of ever pointing at an instance of a stub class.
+#endif
 
 #if BX_PLUGINS
 // When building with plugins, the bx_gui variable is created right
@@ -149,29 +156,6 @@ builtinGetCMOSTimeval(void)
 {
   pluginlog->panic("builtinbuiltinGetCMOSTimeval called, no CMOS plugin loaded?");
   return 0;
-}
-  static void
-builtinMouseMotion(int d_x, int d_y, unsigned button_state)
-{
-  pluginlog->panic("builtinMouseMotion called, not overloaded by keyboard plugin?");
-}
-
-  static void
-builtinGenScancode(Bit32u scancode)
-{
-  pluginlog->panic("builtinGenScancode called, not overloaded by keyboard plugin?");
-}
-
-void builtinPutScancode(unsigned char *code, int count) {
-  pluginlog->panic("builtinPutScancode called, not overloaded by keyboard plugin?");
-}
-
-void builtinKbdPasteBytes(Bit8u *bytes, Bit32s length) {
-  pluginlog->panic("builtinPutScancode called, not overloaded by keyboard plugin?");
-}
-
-void builtinKbdPasteDelayChanged() {
-  pluginlog->panic("builtinKbdPasteDelayChanged, not overloaded by keyboard plugin?");
 }
 
   static unsigned
@@ -634,12 +618,6 @@ plugin_startup(void)
   pluginSetCMOSReg   = builtinSetCMOSReg;
   pluginCMOSChecksum = builtinCMOSChecksum;
   pluginGetCMOSTimeval  = builtinGetCMOSTimeval;
-  pluginMouseMotion  = builtinMouseMotion;
-  pluginGenScancode  = builtinGenScancode;
-  pluginPutScancode = builtinPutScancode;
-  pluginKbdPasteBytes = builtinKbdPasteBytes;
-  pluginKbdPasteDelayChanged = builtinKbdPasteDelayChanged;
-
   pluginRegisterDMA8Channel = builtinRegisterDMA8Channel;
   pluginRegisterDMA16Channel = builtinRegisterDMA16Channel;
   pluginUnregisterDMAChannel = builtinUnregisterDMAChannel;
@@ -692,8 +670,8 @@ plugin_startup(void)
 /************************************************************************/
 
 void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
-		          deviceReset_t reset, deviceLoad_t load, 
-                          deviceSave_t save, char *name)
+			  deviceReset_t reset, deviceLoad_t load, 
+			  deviceSave_t save, char *name)
 {
     device_t *device;
 
@@ -704,6 +682,7 @@ void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
     }
 
     device->name = name;
+    device->use_devmodel_interface = 0;
     device->device_init_mem = init1;
     device->device_init_dev = init2;
     device->device_reset = reset;
@@ -725,6 +704,50 @@ void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
             temp = temp->next;
 
         temp->next = device;
+    }
+}
+
+void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
+{
+    device_t *device;
+
+    device = (device_t *)malloc (sizeof (device_t));
+    if (!device)
+    {
+        pluginlog->panic("can't allocate device_t");
+    }
+
+    device->name = name;
+    device->devmodel = devmodel;
+    device->use_devmodel_interface = 1;
+    device->device_init_mem = NULL;  // maybe should use 1 to detect any use?
+    device->device_init_dev = NULL;
+    device->device_reset = NULL;
+    device->device_load_state = NULL;
+    device->device_save_state = NULL;
+    device->next = NULL;
+
+    if (!devices)
+    {
+        /* Empty list, this become the first entry. */
+        devices = device;
+    }
+    else
+    {
+        /* Non-empty list.  Add to end. */
+        device_t *temp = devices;
+
+        while (temp->next)
+            temp = temp->next;
+
+        temp->next = device;
+    }
+    // BBD hack
+    if (devmodel) {
+      device->use_devmodel_interface = 1;
+      device->devmodel = devmodel;
+    } else {
+      device->use_devmodel_interface = 0;
     }
 }
 
@@ -843,19 +866,27 @@ void bx_init_plugins()
     // two loops
     for (device = devices; device; device = device->next)
     {
+      if (!device->use_devmodel_interface) {
         if (device->device_init_mem != NULL) {
             pluginlog->info("Initialisation of '%s' plugin device",device->name);
             device->device_init_mem(BX_MEM(0));
 	}
+      } else {
+	device->devmodel->init_mem (BX_MEM(0));
+      }
     }
 
     for (device = devices; device; device = device->next)
     {
+      if (!device->use_devmodel_interface) {
         if (device->device_init_dev != NULL) {
             pluginlog->info("Initialisation of '%s' plugin device",device->name);
             device->device_init_dev(NULL);
 	}
-    }
+      } else {
+	device->devmodel->init (NULL);
+      }
+    } 
 }
 
 /**************************************************************************/
@@ -867,10 +898,14 @@ void bx_reset_plugins(unsigned signal)
     device_t *device;
     for (device = devices; device; device = device->next)
     {
+      if (!device->use_devmodel_interface) {
         if (device->device_reset != NULL) {
             pluginlog->info("Reset of '%s' plugin device",device->name);
             device->device_reset(signal);
         }
+      } else {
+	device->devmodel->reset (signal);
+      }
     }
 }
 

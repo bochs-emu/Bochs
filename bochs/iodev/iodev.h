@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.6 2002-10-08 17:16:35 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.7 2002-10-08 21:00:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,6 +77,54 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 #  define BX_DEV_THIS this->
 #endif
 
+//////////////////////////////////////////////////////////////////////
+// bx_devmodel_c declaration
+//////////////////////////////////////////////////////////////////////
+
+// This class defines virtual methods that are common to all devices. 
+// Child classes do not need to implement all of them, because in this 
+// definition they are defined as empty, as opposed to being pure 
+// virtual (= 0).
+class bx_devmodel_c : public logfunctions {
+  public:
+  virtual void init_mem(BX_MEM_C *) {}
+  virtual void init(bx_devices_c *d) {}
+  virtual void reset(unsigned type) {}
+  virtual void device_load_state () {}
+  virtual void device_save_state () {}
+};
+
+//////////////////////////////////////////////////////////////////////
+// declare stubs for devices
+//////////////////////////////////////////////////////////////////////
+
+#define STUBFUNC(dev,method) \
+   pluginlog->panic("%s called in %s stub. you must not have loaded the %s plugin", #dev, #method, #dev )
+
+class bx_keyb_stub_c : public bx_devmodel_c {
+  public:
+  // stubs for bx_keyb_c methods
+  virtual void mouse_motion(int delta_x, int delta_y, unsigned button_state) {
+    STUBFUNC(keyboard, mouse_motion);
+  }
+  virtual void gen_scancode(Bit32u   scancode) {
+    STUBFUNC(keyboard, gen_scancode);
+  }
+  virtual void put_scancode( unsigned char *code, int count ) {
+    STUBFUNC(keyboard, put_scancode);
+  }
+  virtual void paste_bytes(Bit8u *data, Bit32s length) {
+    STUBFUNC(keyboard, paste_bytes);
+  }
+  virtual void paste_delay_changed () {
+    STUBFUNC(keyboard, paste_delay_changed);
+  }
+};
+
+extern bx_keyb_stub_c pluginKeyboardStub;
+
+
+
 
 
 class bx_devices_c : public logfunctions {
@@ -110,7 +158,7 @@ public:
   bx_pit_c         *pit;
   bx_ioapic_c      *ioapic;
 #if !BX_PLUGINS
-  bx_keyb_c        *keyboard;
+  //bx_keyb_c   *keyboard;
   bx_dma_c         *dma;
   bx_unmapped_c    *unmapped;
   bx_biosdev_c     *biosdev;

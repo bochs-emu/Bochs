@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.8 2002-10-08 17:16:34 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.9 2002-10-08 21:00:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ bx_devices_c::bx_devices_c(void)
   hard_drive = NULL;
   parallel = NULL;
   serial = NULL;
-  keyboard = NULL;
+  //keyboard = NULL;
   dma = NULL;
   pic = NULL;
 #endif
@@ -89,7 +89,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.8 2002-10-08 17:16:34 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.9 2002-10-08 21:00:21 bdenney Exp $"));
   mem = newmem;
 
   devices=this;
@@ -181,8 +181,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   serial->init(this);
 
   /*--- KEYBOARD ---*/
-  keyboard = &bx_keyboard;
-  keyboard->init(this);
+  pluginKeyboard->init(this);
 
   /*--- 8259A PIC ---*/
   pic = & bx_pic;
@@ -286,7 +285,7 @@ bx_devices_c::reset(unsigned type)
   hard_drive->reset(type);
   parallel->reset(type);
   serial->reset(type);
-  keyboard->reset(type);
+  pluginKeyboard->reset(type);
   pic->reset(type);
 #endif
 

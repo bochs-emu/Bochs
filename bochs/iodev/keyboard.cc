@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.5 2002-10-08 17:16:36 cbothamy Exp $
+// $Id: keyboard.cc,v 1.67.2.6 2002-10-08 21:00:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,22 +55,18 @@
 #include "keyboard.h"
 #endif
 
-#define LOG_THIS  bx_keyboard.
-
-
+#define LOG_THIS  pluginKeyboard->
 #define VERBOSE_KBD_DEBUG 0
 
-
-bx_keyb_c bx_keyboard;
-
-#if BX_USE_KEY_SMF
-#define this (&bx_keyboard)
-#endif
+bx_keyb_c theKeyboard;
 
 #if BX_PLUGINS
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
+  // Before this plugin was loaded, pluginKeyboard pointed to a stub.
+  // Now make it point to the real thing.
+  pluginKeyboard = &theKeyboard;
   return(0); // Success
 }
 
@@ -78,26 +74,35 @@ plugin_init(plugin_t *plugin, int argc, char *argv[])
 plugin_fini(void)
 {
 }
+#else
+// When plugins are turned off, we have to create a bx_keyb_c object.
+// Also provide the pluginKeyboard pointer which every other object
+// will use to reference this object.
+bx_keyb_stub_c *pluginKeyboard = &theKeyboard;
 
+// NOTE: It would be possible to put pluginKeyboard in plugin.cc all the time,
+// but when I did that I had a strange linking problem.  I tried to rely on the
+// bx_keyb_c constructor to register the object.  It should have worked because
+// there was a global variable of type bx_keyb_c declared in this file!  But
+// the linker (ld 2.9.5) saw that there were no references to this file from
+// the outside, and it decided not to link it in.  So the device was never
+// registered.  I solved it by putting pluginKeyboard into this file in the
+// !plugin case, so that there are external references that force the linker to
+// link it in.
 #endif
+
 
 bx_keyb_c::bx_keyb_c(void)
 {
+  fprintf (stderr, "bx_keyb_c constructor\n");
   // constructor
   // should zero out state info here???
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.5 2002-10-08 17:16:36 cbothamy Exp $"));
 #if BX_PLUGINS
-  pluginMouseMotion = bx_keyboard.mouse_motion;
-  pluginGenScancode = bx_keyboard.gen_scancode;
-  pluginPutScancode = bx_keyboard.put_scancode;
-  pluginKbdPasteBytes = bx_keyboard.paste_bytes;
-  pluginKbdPasteDelayChanged = bx_keyboard.paste_delay_changed;
-
   // Register plugin basic entry points
-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_KEYBOARD);
+  BX_REGISTER_DEVICE_DEVMODEL (this, BX_PLUGIN_KEYBOARD);
 #endif
 }
 
@@ -138,7 +143,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.5 2002-10-08 17:16:36 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.6 2002-10-08 21:00:24 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -1282,7 +1287,6 @@ bx_keyb_c::activate_timer(void)
 }
 
 
-
   void
 bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
 {
@@ -1648,3 +1652,4 @@ bx_keyb_c::LoadState( class state_file *fd )
   fd->read_check ("keyboard end");
   return(0);
 }
+
