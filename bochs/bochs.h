@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.59 2002-03-03 06:03:29 bdenney Exp $
+// $Id: bochs.h,v 1.60 2002-03-26 13:51:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -516,6 +516,9 @@ extern bx_devices_c   bx_devices;
 #define BX_RESET_SOFTWARE 10
 #define BX_RESET_HARDWARE 11
 
+// call periodic timers every N useconds
+#define TIMER_DELTA 100
+//#define TIMER_DELTA 10
 
 char *bx_find_bochsrc (void);
 int bx_parse_cmdline (int arg, int argc, char *argv[]);
@@ -623,6 +626,7 @@ typedef struct {
   bx_param_num_c    *Obootdrive;  //0=floppya, 0x80=diskc
   bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
+  bx_param_num_c    *Okeyboard_paste_delay;
   bx_param_enum_c   *Okeyboard_type;
   bx_param_num_c    *Ofloppy_command_delay;
   bx_param_num_c    *Oips;

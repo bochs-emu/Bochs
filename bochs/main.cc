@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.91 2002-03-17 20:57:54 vruppert Exp $
+// $Id: main.cc,v 1.92 2002-03-26 13:51:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -86,6 +86,7 @@ bx_options_t bx_options = {
   NULL,                                  // boot drive
   NULL,                               // vga update interval
   NULL,  // default keyboard serial path delay (usec)
+  NULL,  // default keyboard paste delay (usec)
   NULL,  // default keyboard type
   NULL,  // default floppy command delay (usec)
   NULL,    // ips
@@ -847,6 +848,11 @@ void bx_init_options ()
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
       1, BX_MAX_INT,
       20000);
+  bx_options.Okeyboard_paste_delay = new bx_param_num_c (BXP_KBD_PASTE_DELAY,
+      "keyboard_paste_delay",
+      "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
+      0, BX_MAX_INT,
+      100000);
   bx_options.Ofloppy_command_delay = new bx_param_num_c (BXP_FLOPPY_CMD_DELAY,
       "floppy_command_delay",
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
@@ -891,7 +897,8 @@ void bx_init_options ()
   bx_options.Okeyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
 
   bx_param_c *other_init_list[] = {
-    bx_options.Okeyboard_serial_delay,
+      bx_options.Okeyboard_serial_delay,
+      bx_options.Okeyboard_paste_delay,
       bx_options.Ofloppy_command_delay,
       bx_options.Oi440FXSupport,
       bx_options.cmos.OcmosImage,
@@ -1719,6 +1726,15 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_ERROR (("%s: keyboard_serial_delay not big enough!", context));
       }
     }
+  else if (!strcmp(params[0], "keyboard_paste_delay")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: keyboard_paste_delay directive: wrong # args.", context));
+      }
+    bx_options.Okeyboard_paste_delay->set (atol(params[1]));
+    if (bx_options.Okeyboard_paste_delay->get () < 1000) {
+      BX_ERROR (("%s: keyboard_paste_delay not big enough!", context));
+      }
+    }
   else if (!strcmp(params[0], "megs")) {
     if (num_params != 2) {
       BX_PANIC(("%s: megs directive: wrong # args.", context));
@@ -2252,6 +2268,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "a" : (bootdrive==BX_BOOT_DISKC) ? "c" : "cdrom");
   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
+  fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
   fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());

@@ -255,6 +255,16 @@ vga_update_interval: 300000
 keyboard_serial_delay: 250
 
 #=======================================================================
+# KEYBOARD_PASTE_DELAY:
+# Approximate time in microseconds between attemps to paste
+# characters to the keyboard controller. This leave time to the
+# guest os to deal with the flow of characters.
+# Examples:
+#   keyboard_paste_delay: 100000
+#=======================================================================
+keyboard_paste_delay: 100000
+
+#=======================================================================
 # FLOPPY_COMMAND_DELAY:
 # Time in microseconds to wait before completing some floppy commands
 # such as read/write/seek/etc, which normally have a delay associated.

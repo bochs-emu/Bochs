@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.20 2002-01-29 17:20:11 vruppert Exp $
+// $Id: devices.cc,v 1.21 2002-03-26 13:51:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,9 +36,6 @@
  */
 #define BASE_MEMORY_IN_K  640
 
-// call periodic timers every N useconds
-#define TIMER_DELTA 100
-//#define TIMER_DELTA 10
 
 bx_devices_c bx_devices;
 
@@ -105,7 +102,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.20 2002-01-29 17:20:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.21 2002-03-26 13:51:48 bdenney Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first

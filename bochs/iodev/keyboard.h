@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.12 2002-03-11 15:04:58 bdenney Exp $
+// $Id: keyboard.h,v 1.13 2002-03-26 13:51:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -192,6 +192,7 @@ private:
   Bit8u *pastebuf;   // ptr to bytes to be pasted, or NULL if none in progress
   Bit32u pastebuf_len; // length of pastebuf
   Bit32u pastebuf_ptr; // ptr to next byte to be added to hw buffer
+  Bit32u pastedelay;   // count before paste
 
   BX_KEY_SMF void     resetinternals(Boolean powerup);
   BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value);
