@@ -1,0 +1,7 @@
+test10-modvirtual
+
+Create an interface class in modules.h called DeviceInterface.  Each module
+creates a child class of DeviceInterface, and implements its methods.  This
+test loads the modules, calls the module's module_init() which instantiates a
+subclass of DeviceInterface and returns a pointer to it.  Then main can call
+operate on this object using the DeviceInterface class.

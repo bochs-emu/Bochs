@@ -1,0 +1,53 @@
+top_builddir = ..
+top_srcdir = @srcdir@/..
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+CXX=@CXX@
+CXXFLAGS=@CXXFLAGS@ @INCLTDL@
+LDFLAGS=@LDFLAGS@ @LT_LDFLAGS@
+LIBS=@LIBS@ 
+LTDL_STATIC_LIB=${top_builddir}/libltdl/.libs/libltdlc.al
+LIBTOOL=@LIBTOOL@
+RPATH=`pwd`/lib
+
+# select whether to use libtool or win32-specific target.
+# This should either be all_libtool or all_win32_dlltool.
+all: @PLUGIN_MAKEFILE_TARGET@
+
+########### libtool makefile for all platforms except win32 ###########
+all_libtool: uselib libmodule1.la libmodule2.la
+
+uselib: main.lo
+	$(LIBTOOL) $(CXX) -export-dynamic $(LDFLAGS) -o uselib main.lo $(LIBS) @LIBLTDL@
+
+lib%.la: %.lo
+	$(LIBTOOL) $(CXX) -module $(LDFLAGS) -o $@ $< -rpath ${RPATH}
+	mkdir -p lib bin
+	$(LIBTOOL) cp $@ ${RPATH}
+
+%.lo: %.cc
+	$(LIBTOOL) $(CXX) $(CXXFLAGS) -c $<
+#######################################################################
+
+############# makefile for building plugin DLLs for win32 #############
+all_win32_dlltool: uselib.exe module1.dll module2.dll
+
+uselib.exe: main.cc main.h
+	$(CXX) $(CXXFLAGS) -c -DDLL_EXPORT -o main.o ${srcdir}/main.cc
+	dlltool --output-def uselib.def main.o
+	dlltool --dllname uselib.exe --def uselib.def --output-lib uselib.a
+	dlltool --dllname uselib.exe --output-exp uselib.exp --def uselib.def
+	$(CXX) $(CXXFLAGS) -o uselib.exe uselib.exp main.o ${LIBS} ${LTDL_STATIC_LIB}
+	#rm uselib.exp uselib.def
+
+%.dll: %.o uselib.exe
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< uselib.a
+
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c $<
+#######################################################################
+
+include	${top_srcdir}/common-make-defs.txt
+
+clean: clean-common
