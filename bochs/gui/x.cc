@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.27 2001-12-16 17:17:16 vruppert Exp $
+// $Id: x.cc,v 1.28 2001-12-19 19:15:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -749,6 +749,9 @@ Bit32u keymap_de[][2] = {
   { XK_Mode_switch         , BX_KEY_ALT_R }, 
   { XK_Multi_key           , BX_KEY_ALT_R }, 
   { XK_Control_R           , BX_KEY_CTRL_R },
+  { XK_Super_L             , BX_KEY_WIN_L },
+  { XK_Super_R             , BX_KEY_WIN_R },
+  { XK_Menu                , BX_KEY_MENU },
 };
 
 extern Bit8u graphics_snapshot[32 * 1024];

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.17 2001-12-14 17:54:58 cbothamy Exp $
+// $Id: gui.h,v 1.18 2001-12-19 19:15:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -221,3 +221,7 @@ private:
 #define BX_KEY_KP_ENTER      99
 #define BX_KEY_KP_MULTIPLY  100
 #define BX_KEY_KP_DIVIDE    101
+
+#define BX_KEY_WIN_L         102
+#define BX_KEY_WIN_R         103
+#define BX_KEY_MENU          104

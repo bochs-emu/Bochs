@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.39 2001-12-12 10:38:39 cbothamy Exp $
+// $Id: keyboard.cc,v 1.40 2001-12-19 19:15:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.39 2001-12-12 10:38:39 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.40 2001-12-19 19:15:12 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -97,7 +97,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.39 2001-12-12 10:38:39 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.40 2001-12-19 19:15:12 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -711,6 +711,10 @@ bx_keyb_c::gen_scancode(Bit32u   key)
 			        else { extended = 1; scancode = 0x37; }
     case BX_KEY_SCRL_LOCK:        scancode = 0x46; break;
     case BX_KEY_PAUSE:         extended = 1; scancode = 0x45; break;
+
+    case BX_KEY_WIN_L:         extended = 1; scancode = 0x5B; break;
+    case BX_KEY_WIN_R:         extended = 1; scancode = 0x5C; break;
+    case BX_KEY_MENU:          extended = 1; scancode = 0x5D; break;
 
     default:
       BX_DEBUG(( "bx_keyb_c::gen_scancode : Unhandled %u",
