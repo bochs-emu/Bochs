@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.131 2004-01-18 00:18:44 vruppert Exp $
+// $Id: bochs.h,v 1.132 2004-01-19 21:45:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -156,7 +156,7 @@ int bx_begin_simulation (int argc, char *argv[]);
 #define BX_HRQ                      (bx_pc_system.HRQ)
 #define BX_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
   BX_MEM(0)->readPhysicalPage(BX_CPU(0), phy_addr, len, ptr)
-#define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
+#define BX_MEM_WRITE_PHYSICAL(phy_addr, len, ptr) \
   BX_MEM(0)->writePhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 
 #if BX_SMP_PROCESSORS==1
