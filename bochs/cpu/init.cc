@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.62 2004-12-11 20:51:13 sshwarts Exp $
+// $Id: init.cc,v 1.63 2004-12-14 20:41:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.62 2004-12-11 20:51:13 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.63 2004-12-14 20:41:55 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -782,7 +782,11 @@ void BX_CPU_C::reset(unsigned source)
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = APIC_BASE_ADDR;
   BX_CPU_THIS_PTR msr.apicbase <<= 12;
+#if BX_SUPPORT_APIC
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
+#else
+  BX_CPU_THIS_PTR msr.apicbase |= 0x100;
+#endif
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR msr.lme = BX_CPU_THIS_PTR msr.lma = 0;
 #endif
@@ -844,7 +848,7 @@ void BX_CPU_C::reset(unsigned source)
     async_event = 1;
   }
 #else
-    BX_CPU_THIS_PTR async_event=2;
+  BX_CPU_THIS_PTR async_event=2;
 #endif
   BX_CPU_THIS_PTR kill_bochs_request = 0;
 

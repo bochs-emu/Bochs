@@ -145,7 +145,10 @@ Bit32u get_std_cpuid_features()
 #if BX_CPU_LEVEL >= 6
       features |= (1<<15);  // Implement CMOV instructions.
 #if BX_SUPPORT_APIC
-      features |= (1<< 9);   // APIC on chip
+      // if MSR_APICBASE APIC Global Enable bit has been cleared,
+      // the CPUID feature flag for the APIC is set to 0.
+      if (BX_CPU_THIS_PTR msr.apicbase & 0x800)
+        features |= (1<< 9);  // APIC on chip
 #endif
 #if BX_SUPPORT_SSE >= 1
       features |= (1<<25);  // support SSE

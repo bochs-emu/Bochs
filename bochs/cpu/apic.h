@@ -50,7 +50,7 @@ protected:
 #define APIC_UNKNOWN_ID 0xff
 public:
   bx_generic_apic_c ();
-  virtual ~bx_generic_apic_c ();
+  virtual ~bx_generic_apic_c () { }
   virtual void init ();
   virtual void hwreset () { }
   Bit32u get_base (void) const { return base_addr; }
@@ -139,7 +139,7 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 public:
   bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *mycpu);
-  virtual ~bx_local_apic_c(void);
+  virtual ~bx_local_apic_c(void) { }
   BX_CPU_C *cpu;
   virtual void hwreset ();
   virtual void init ();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.87 2004-11-14 21:25:42 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.88 2004-12-14 20:41:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1521,7 +1521,7 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   if (v8086_mode()) {
-    BX_INFO(("RDMSR: Invalid whilst in virtual 8086 mode"));
+    BX_INFO(("RDMSR: Invalid in virtual 8086 mode"));
     goto do_exception;
     }
 
@@ -1652,7 +1652,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   if (v8086_mode()) {
-    BX_INFO(("WRMSR: Invalid whilst in virtual 8086 mode"));
+    BX_INFO(("WRMSR: Invalid in virtual 8086 mode"));
     goto do_exception;
     }
 
@@ -1705,11 +1705,18 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
        12:35  APIC Base Address
        36:63  Reserved
     */
-
+#if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
-      BX_CPU_THIS_PTR msr.apicbase = ((Bit64u) EDX << 32) + EAX;
-      BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", EDX, EAX));
+      if (BX_CPU_THIS_PTR msr.apicbase & 0x800)
+      {
+        BX_CPU_THIS_PTR msr.apicbase = ((Bit64u) EDX << 32) + EAX;
+        BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", EDX, EAX));
+      }
+      else {
+        BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
+      }
       return;
+#endif
 
 #if BX_SUPPORT_X86_64
                 case BX_MSR_EFER:
