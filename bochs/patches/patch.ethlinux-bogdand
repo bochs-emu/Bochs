@@ -24,7 +24,7 @@ Instructions:
   For now, you must manually add "eth_linux.o" to the list of 
     BX_HW_IODEV_OBJS.
 ----------------------------------------------------------------------
---- bochs-clean/configure	Mon Jun 25 11:54:19 2001
+--- bochs-clean/configure	Mon Jun 25 14:06:44 2001
 +++ bochs-ethlinux/configure	Mon Jun 25 12:22:31 2001
 @@ -3196,6 +3196,7 @@
    echo "$ac_t""no" 1>&6
@@ -376,7 +376,7 @@ Instructions:
  if eval "test \"`echo '$''{'ac_cv_path_TAR'+set}'`\" = set"; then
    echo $ac_n "(cached) $ac_c" 1>&6
  else
---- bochs-clean/configure.in	Mon Jun 25 11:54:19 2001
+--- bochs-clean/configure.in	Mon Jun 25 14:06:44 2001
 +++ bochs-ethlinux/configure.in	Mon Jun 25 12:22:27 2001
 @@ -311,15 +311,18 @@
      AC_DEFINE(BX_NE2K_SUPPORT, 1)
@@ -406,159 +406,367 @@ Instructions:
    # first see if compiler takes "-pthread" argument
    AC_MSG_CHECKING(for -pthread arg to compiler)
    CFLAGS_SAVE="$CFLAGS"
---- bochs-clean/iodev/eth.h	Mon Jun 25 11:54:20 2001
+--- bochs-clean/iodev/eth.h	Mon Jun 25 14:06:46 2001
 +++ bochs-ethlinux/iodev/eth.h	Mon Jun 25 12:32:08 2001
 @@ -75,6 +75,6 @@
  #if defined(__FreeBSD__) || defined(__OpenBSD__)
  #define ETH_FBSD  1
  #endif
--#ifdef __linux__
+-#if (0 && defined(linux))
 +#if defined(linux)
  #define ETH_LINUX 1
  #endif
---- bochs-clean/iodev/eth_linux.cc	Mon Jun 25 11:54:20 2001
+--- bochs-clean/iodev/eth_linux.cc	Mon Jun 25 14:14:17 2001
 +++ bochs-ethlinux/iodev/eth_linux.cc	Mon Jun 25 12:19:04 2001
-@@ -29,6 +29,8 @@
- 
- #include "bochs.h"
- 
+@@ -0,0 +1,272 @@
++//
++//  This library is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU Lesser General Public
++//  License as published by the Free Software Foundation; either
++//  version 2 of the License, or (at your option) any later version.
++//
++//  This library is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++//  Lesser General Public License for more details.
++//
++//  You should have received a copy of the GNU Lesser General Public
++//  License along with this library; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++
++// eth_linux.cc  - linux code for an ethernet pktmover
++
++// Bogdan Diaconescu (bogdand@rds.ro) coded all of this
++// NE2000/ether stuff.
++//
++// eth_linux.cc is a Linux implementation of the ethernet packetmover. It uses
++// Linux Socket Filtering which is very close to BPF. I used a thread to poll
++// the socket in an infinite loop. Anyway there are somme problems with the
++// approach I choosed to implement the guest<->host interface:
++// - the guestOS is not able to connect with the hostOS.
++// - the host ethernet interface is put in promiscuous mode.
++//  
++//  ne2k: ioaddr=0x280, irq=10, mac=00:a:b:c:1:2, ethmod=linux, ethdev=eth0
++
++#include "bochs.h"
++
 +#define LOG_THIS bx_ne2k.
 +
- extern "C" {
- #include <sys/ioctl.h>
- #include <sys/socket.h>
-@@ -122,19 +124,19 @@
- 	strcpy(device, netif);
- 	bpf_fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
- 	if (this->bpf_fd < 0) {
--    bx_printf ("ne2k: could not open socket: %s\n", strerror(errno));
-+    BX_ERROR (("ne2k: could not open socket: %s\n", strerror(errno)));
-     return;
--  } 
++extern "C" {
++#include <sys/ioctl.h>
++#include <sys/socket.h>
++#include <net/if.h>
++#include <linux/if_ether.h>
++#include <netinet/in.h>
++#include <arpa/inet.h>
++#include <netpacket/packet.h>
++#include <pcap/net/bpf.h>
++#include <errno.h>
++#include <pthread.h>
++};
++
++#define BX_BPF_INSNSIZ  8		// number of bpf insns
++
++static const struct bpf_insn macfilter[] = {
++  BPF_STMT(BPF_LD|BPF_W|BPF_ABS, 2),
++  BPF_JUMP(BPF_JMP|BPF_JEQ|BPF_K, 0xaaaaaaaa, 0, 2),
++  BPF_STMT(BPF_LD|BPF_H|BPF_ABS, 0),
++  BPF_JUMP(BPF_JMP|BPF_JEQ|BPF_K, 0x0000aaaa, 2, 0),
++  BPF_STMT(BPF_LD|BPF_B|BPF_ABS, 0),
++  BPF_JUMP(BPF_JMP|BPF_JSET|BPF_K, 0x01, 0, 1),
++  BPF_STMT(BPF_RET, 1514),
++  BPF_STMT(BPF_RET, 0),
++}; 
++
++#define ARPHRD_ETHER    1     /* Ethernet 10Mbps      */
++#define  ARPHRD_EETHER  2     /* Experimental Ethernet   */
++
++pthread_t pt;
++void* recv_th(void*);
++
++//
++//  define the class. This is private to this module
++//
++
++class bx_linux_pktmover_c : public eth_pktmover_c {
++public:
++  bx_linux_pktmover_c(const char *netif, const char *macaddr,
++		     eth_rx_handler_t rxh,
++		     void *rxarg);
++  void sendpkt(void *buf, unsigned io_len);
++	void rx_timer(void);
++private:	
++	char* linux_macaddr[6];
++	int bpf_fd;
++	struct bpf_insn filter[BX_BPF_INSNSIZ];
++	Bit8u* rxbuf;
++};
++
++
++bx_linux_pktmover_c* this_ptr;
++
++//
++//  Define the static class that registers the derived pktmover class,
++// and allocates one on request.
++//
++class bx_linux_locator_c : public eth_locator_c {
++public:
++  bx_linux_locator_c(void) : eth_locator_c("linux") {}
++protected:
++  eth_pktmover_c *allocate(const char *netif, const char *macaddr,
++			   eth_rx_handler_t rxh,
++			   void *rxarg) {
++    return (new bx_linux_pktmover_c(netif, macaddr, rxh, rxarg));
 +  }
- 
- 	/* get the interface index */
- 	memset(&ifr, 0, sizeof(ifr));
- 	strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
- 	if (ioctl(this->bpf_fd, SIOCGIFINDEX, &ifr) < 0 ) {
--		bx_printf("ne2k: SIOCGIFINDEX: %s\n", strerror(errno));
++} bx_linux_match;
++
++
++//
++// Define the methods for the bx_linux_pktmover derived class
++//
++
++// the constructor
++//
++// Open a socket and bind it to the interface
++//
++bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif, 
++				       const char *macaddr,
++				       eth_rx_handler_t rxh,
++				       void *rxarg)
++{
++	char device[sizeof "ethXX"];
++	struct ifreq ifr, saved_ifr;
++	struct sockaddr_ll sl;
++	int linktype;
++	int mtu;
++	struct bpf_program bp;
++	
++	memcpy(linux_macaddr, macaddr, 6);
++	strcpy(device, netif);
++	bpf_fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
++	if (this->bpf_fd < 0) {
++    BX_ERROR (("ne2k: could not open socket: %s\n", strerror(errno)));
++    return;
++  }
++
++	/* get the interface index */
++	memset(&ifr, 0, sizeof(ifr));
++	strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
++	if (ioctl(this->bpf_fd, SIOCGIFINDEX, &ifr) < 0 ) {
 +		BX_ERROR(("ne2k: SIOCGIFINDEX: %s\n", strerror(errno)));
- 		close(this->bpf_fd);
- 		return;
- 	}
--	bx_printf("ne2k: interface index is %i\n", ifr.ifr_ifindex);
++		close(this->bpf_fd);
++		return;
++	}
 +	BX_INFO(("ne2k: interface index is %i\n", ifr.ifr_ifindex));
- 
- 	/* bind the socket to the interface */
-   memset(&sl, 0, sizeof(sl));
-@@ -142,8 +144,8 @@
-   sl.sll_protocol = htonl(ETH_P_ALL);
-   sl.sll_ifindex = ifr.ifr_ifindex;
-   if (bind(this->bpf_fd, (struct sockaddr*)&sl, sizeof(sl))) {
--    bx_printf("error binding interface %s: %s\n", device, strerror(errno));
--		close(this->bpf_fd);
++
++	/* bind the socket to the interface */
++  memset(&sl, 0, sizeof(sl));
++  sl.sll_family = AF_PACKET;
++  sl.sll_protocol = htonl(ETH_P_ALL);
++  sl.sll_ifindex = ifr.ifr_ifindex;
++  if (bind(this->bpf_fd, (struct sockaddr*)&sl, sizeof(sl))) {
 +    BX_ERROR (("error binding interface %s: %s\n", device, strerror(errno));
 +		close(this->bpf_fd));
- 		return;
-   }
- 
-@@ -151,7 +153,7 @@
- 	memset(&ifr, 0, sizeof(ifr));
- 	strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
- 	if (ioctl(this->bpf_fd, SIOCGIFHWADDR, &ifr) < 0 ) {
--		bx_printf("ne2k: SIOCGIFHWADDR: %s\n", strerror(errno));
++		return;
++  }
++
++	/* get the media link type */
++	memset(&ifr, 0, sizeof(ifr));
++	strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
++	if (ioctl(this->bpf_fd, SIOCGIFHWADDR, &ifr) < 0 ) {
 +		BX_ERROR (("ne2k: SIOCGIFHWADDR: %s\n", strerror(errno)));
- 		close(this->bpf_fd);
- 		return;
- 	}
-@@ -161,7 +163,7 @@
-         linktype = DLT_EN10MB;
-         break;
-     default:
--      bx_printf("ne2k: found unknown media!\n");
++		close(this->bpf_fd);
++		return;
++	}
++  switch (ifr.ifr_hwaddr.sa_family) {
++    case ARPHRD_ETHER:
++    case ARPHRD_EETHER:
++        linktype = DLT_EN10MB;
++        break;
++    default:
 +      BX_ERROR (("ne2k: found unknown media!\n"));
-       return;
-   }
- 	
-@@ -169,12 +171,12 @@
- 	memset(&ifr, 0, sizeof(ifr));
- 	strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
- 	if (ioctl(this->bpf_fd, SIOCGIFMTU, &ifr) < 0 ) {
--		bx_printf("ne2k: SIOCGIFMTU: %s", strerror(errno));
++      return;
++  }
++	
++	/* Base the buffer size on the interface MTU */
++	memset(&ifr, 0, sizeof(ifr));
++	strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
++	if (ioctl(this->bpf_fd, SIOCGIFMTU, &ifr) < 0 ) {
 +		BX_ERROR(("ne2k: SIOCGIFMTU: %s", strerror(errno)));
- 		close(this->bpf_fd);
- 		return;
- 	}
-   mtu = ifr.ifr_mtu;
--  bx_printf("ne2k: MTU is %i\n", ifr.ifr_mtu);
++		close(this->bpf_fd);
++		return;
++	}
++  mtu = ifr.ifr_mtu;
 +  BX_INFO (("ne2k: MTU is %i\n", ifr.ifr_mtu));
- 	/* alloc the RX buffer */
- 	this->rxbuf = (Bit8u*)malloc(mtu + 64);
- 
-@@ -182,19 +184,19 @@
-   memset(&ifr, 0, sizeof(ifr));
- 	strcpy(ifr.ifr_name, device);
- 	if (ioctl(this->bpf_fd, SIOCGIFFLAGS, &ifr) < 0 ) {
--		bx_printf("ne2k: SIOCGIFFLAGS: %s", strerror(errno));
++	/* alloc the RX buffer */
++	this->rxbuf = (Bit8u*)malloc(mtu + 64);
++
++	/* put the interface in promiscuous mode */
++  memset(&ifr, 0, sizeof(ifr));
++	strcpy(ifr.ifr_name, device);
++	if (ioctl(this->bpf_fd, SIOCGIFFLAGS, &ifr) < 0 ) {
 +		BX_ERROR(("ne2k: SIOCGIFFLAGS: %s", strerror(errno)));
- 		close(this->bpf_fd);
-     return;
- 	}
- 	saved_ifr = ifr;
- 	ifr.ifr_flags |= IFF_PROMISC;
- 	if (ioctl(this->bpf_fd, SIOCSIFFLAGS, &ifr) < 0 ) {
--		bx_printf("ne2k: SIOCSIFFLAGS: %s", strerror(errno));
++		close(this->bpf_fd);
++    return;
++	}
++	saved_ifr = ifr;
++	ifr.ifr_flags |= IFF_PROMISC;
++	if (ioctl(this->bpf_fd, SIOCSIFFLAGS, &ifr) < 0 ) {
 +		BX_ERROR(("ne2k: SIOCSIFFLAGS: %s", strerror(errno)));
- 		close(this->bpf_fd);
- 		return;
- 	}
- 	ifr.ifr_flags &= ~IFF_PROMISC;
--	bx_printf("ne2k: interface %s in promisc mode now\n", device);
++		close(this->bpf_fd);
++		return;
++	}
++	ifr.ifr_flags &= ~IFF_PROMISC;
 +	BX_INFO (("ne2k: interface %s in promisc mode now\n", device));
- 
- 	/* now install the filter */
- 	memcpy(&this->filter, macfilter, sizeof(macfilter));
-@@ -208,11 +210,11 @@
-   bp.bf_insns = &this->filter[0];
-   int ret;
-   ret = setsockopt(this->bpf_fd, SOL_SOCKET, SO_ATTACH_FILTER, &bp, sizeof(bp));  if (ret < 0){
--    bx_printf("ne2k: setsockopt: %s\n", strerror(errno));
++
++	/* now install the filter */
++	memcpy(&this->filter, macfilter, sizeof(macfilter));
++  this->filter[1].k = (macaddr[2] & 0xff) << 24 |
++    (macaddr[3] & 0xff) << 16 |
++    (macaddr[4] & 0xff) << 8  |
++    (macaddr[5] & 0xff);
++  this->filter[3].k = (macaddr[0] & 0xff) << 8 |
++    (macaddr[1] & 0xff);
++  bp.bf_len   = 8;
++  bp.bf_insns = &this->filter[0];
++  int ret;
++  ret = setsockopt(this->bpf_fd, SOL_SOCKET, SO_ATTACH_FILTER, &bp, sizeof(bp));  if (ret < 0){
 +    BX_ERROR(("ne2k: setsockopt: %s\n", strerror(errno)));
- 		close(this->bpf_fd);
-     return;
-   }
--  bx_printf("ne2k: bpf filter registered\n");
++		close(this->bpf_fd);
++    return;
++  }
 +  BX_INFO (("ne2k: bpf filter registered\n"));
- 
- 	/* start the RX poll using a thread */
- 	pthread_create(&pt, NULL, recv_th, NULL);
-@@ -231,7 +233,7 @@
-   if (this->bpf_fd != -1)
-     status = write(this->bpf_fd, buf, io_len);
-   if (status < 0)
--    bx_printf("ne2k: error on write packet: %s\n", strerror(errno));
++
++	/* start the RX poll using a thread */
++	pthread_create(&pt, NULL, recv_th, NULL);
++	this_ptr = this;
++
++	this->rxh   = rxh;
++  this->rxarg = rxarg; 
++}
++
++// the output routine - called with pre-formatted ethernet frame.
++void
++bx_linux_pktmover_c::sendpkt(void *buf, unsigned io_len)
++{
++	int status = 0;
++ 
++  if (this->bpf_fd != -1)
++    status = write(this->bpf_fd, buf, io_len);
++  if (status < 0)
 +    BX_ERROR(("ne2k: error on write packet: %s\n", strerror(errno)));
- }
- 
- 
-@@ -242,7 +244,7 @@
-  
-   nbytes = read(this->bpf_fd, this->rxbuf, 2048);
-   if (nbytes < 0)
--    bx_printf("ne2k: error on receive packet: %s\n", strerror(errno));
++}
++
++
++void
++bx_linux_pktmover_c::rx_timer(void)
++{
++  int nbytes = 0;
++ 
++  nbytes = read(this->bpf_fd, this->rxbuf, 2048);
++  if (nbytes < 0)
 +    BX_ERROR(("ne2k: error on receive packet: %s\n", strerror(errno)));
- 
- #ifdef undef 
-   printf("packet rx (%d bytes):\n\t", nbytes);
---- bochs-clean/iodev/ne2k.cc	Mon Jun 25 11:54:20 2001
++
++#ifdef undef 
++  printf("packet rx (%d bytes):\n\t", nbytes);
++    for (int i = 0; i < nbytes; i++) {
++      printf("%02x ", rxbuf[i]);
++      if (i && (((i+1) % 16) == 0))
++    	printf("\n\t");
++    }
++    printf("\n");
++#endif
++ 
++  if (nbytes > 0) {
++  	(*rxh)(rxarg, rxbuf, nbytes);
++ }
++
++} 
++
++
++void* recv_th(void* args){
++	int i = 0;
++	do{
++		this_ptr->rx_timer();
++		i++;
++	}while(1);
++}
+--- bochs-clean/iodev/ne2k.cc	Mon Jun 25 14:06:48 2001
 +++ bochs-ethlinux/iodev/ne2k.cc	Mon Jun 25 12:24:21 2001
-@@ -1239,6 +1239,6 @@
+@@ -124,6 +124,7 @@
+   if (value & 0x01) {
+     BX_NE2K_THIS s.ISR.reset = 1;
+     BX_NE2K_THIS s.CR.stop   = 1;
++    BX_NE2K_THIS s.CR.start = 0;
+   } else {
+     BX_NE2K_THIS s.CR.stop = 0;
+   }
+@@ -134,9 +135,9 @@
+   // must be cleared
+   if ((value & 0x02) && !BX_NE2K_THIS s.CR.start) {
+     BX_NE2K_THIS s.ISR.reset = 0;
++  	BX_NE2K_THIS s.CR.start = ((value & 0x02) == 0x02);
+   }
  
- void
- bx_ne2k_c::raise_interrupt()
--{
--    pluginTriggerIRQ(BX_NE2K_THIS s.base_irq);
--} 
+-  BX_NE2K_THIS s.CR.start = ((value & 0x02) == 0x02);
+   BX_NE2K_THIS s.CR.pgsel = (value & 0xc0) >> 6;
+ 
+   // Check for start-tx
+@@ -185,7 +186,7 @@
+       BX_NE2K_THIS s.remote_bytes == 0) {
+     BX_NE2K_THIS s.ISR.rdma_done = 1;
+     if (BX_NE2K_THIS s.IMR.rdma_inte) {
+-      BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++    	raise_interrupt(); 
+     }
+   }
+ }
+@@ -267,7 +268,7 @@
+     // registers must have been initialised.
+     //
+     if (io_len != (1 + BX_NE2K_THIS s.DCR.wdsize))
+-      BX_PANIC(("dma read, wrong size %d", io_len));
++      BX_ERROR(("dma read, wrong size %d", io_len));
+ 
+     if (BX_NE2K_THIS s.remote_bytes == 0)
+       BX_PANIC(("ne2K: dma read, byte count 0"));
+@@ -880,7 +881,7 @@
+   // Generate an interrupt if not masked and not one in progress
+   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
+     BX_NE2K_THIS s.ISR.pkt_tx = 1;
+-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++    raise_interrupt();
+   }
+   BX_NE2K_THIS s.tx_timer_active = 0;
+ }
+@@ -1147,7 +1148,7 @@
+   BX_NE2K_THIS s.ISR.pkt_rx = 1;
+ 
+   if (BX_NE2K_THIS s.IMR.rx_inte) {
+-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++    raise_interrupt();
+   }
+ 
+ }
+@@ -1234,4 +1235,10 @@
+ 	BX_PANIC(("could not locate null module"));
+     }
+   }
++}
++
++void
++bx_ne2k_c::raise_interrupt()
 +{ 
 +    bx_devices.pic->trigger_irq (BX_NE2K_THIS s.base_irq);
-+}
+ }
+--- bochs-clean/iodev/ne2k.h	Mon Jun 25 14:06:48 2001
++++ bochs-ethlinux/iodev/ne2k.h	Mon Jun 25 11:49:15 2001
+@@ -202,6 +202,8 @@
+ 
+   eth_pktmover_c *ethdev;
+ 
++	BX_NE2K_SMF void raise_interrupt();
++
+   BX_NE2K_SMF void   reset_device(void);
+   BX_NE2K_SMF Bit32u read_cr(void);
+   BX_NE2K_SMF void   write_cr(Bit32u value);
