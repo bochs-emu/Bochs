@@ -91,6 +91,7 @@ OBJS = \
 	data_xfer16.o \
 	data_xfer32.o \
 	exception.o \
+	cpuid.o \
 	proc_ctrl.o \
 	lazy_flags.o \
 	stack_pro.o \
@@ -705,6 +706,20 @@ paging.o: paging.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../instrument/stubs/instrument.h
 proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../cpu/xmm.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
+  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pcivga.h ../iodev/vga.h \
+  ../iodev/ioapic.h ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h \
+  ../iodev/floppy.h ../iodev/harddrv.h ../iodev/cdrom.h \
+  ../iodev/vmware3.h ../iodev/keyboard.h ../iodev/parallel.h \
+  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
+  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
+  ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
+  ../instrument/stubs/instrument.h
+cpuid.o: cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../cpu/xmm.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \

@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.3 2003-06-12 13:33:16 cbothamy Exp $
+ * $Id: bxcommit.c,v 1.4 2003-09-26 15:32:41 sshwarts Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -33,7 +33,7 @@
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.3 2003-06-12 13:33:16 cbothamy Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.4 2003-09-26 15:32:41 sshwarts Exp $";
 char *divider = "========================================================================";
 
 void myexit (int code)
@@ -352,7 +352,7 @@ int main()
   if (ask_string ("\nWhat is the flat image name?\n", "c.img", filename) < 0)
     fatal (EOF_ERR);
 
-  snprintf(tmplogname,256,"%s%s", filename,REDOLOG_EXTENSION);
+  snprintf(tmplogname,256,"%s%s", filename, UNDOABLE_REDOLOG_EXTENSION);
 
   if (ask_string ("\nWhat is the redolog name?\n", tmplogname, redologname) < 0)
     fatal (EOF_ERR);
