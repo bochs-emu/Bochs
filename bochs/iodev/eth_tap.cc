@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.13 2003-04-26 13:31:23 cbothamy Exp $
+// $Id: eth_tap.cc,v 1.14 2003-04-26 14:48:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -112,8 +112,6 @@
 #define TAP_VIRTUAL_HW_ADDR             0xDEADBEEF
 #define BX_ETH_TAP_LOGGING 1
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
-
-int execute_script(char *name, char* arg1);
 
 //
 //  Define the class. This is private to this module
@@ -365,36 +363,6 @@ void bx_tap_pktmover_c::rx_timer ()
     nbytes = 60;
   }
   (*rxh)(rxarg, rxbuf, nbytes);
-}
-
-int execute_script( char* scriptname, char* arg1 )
-{
-  int pid,status;
-
-  if (!(pid=fork())) {
-    char filename[BX_PATHNAME_LEN];
-    if ( scriptname[0]=='/' ) {
-      strcpy (filename, scriptname);
-    }
-    else {
-      getcwd (filename, BX_PATHNAME_LEN);
-      strcat (filename, "/");
-      strcat (filename, scriptname);
-    }
-
-    // execute the script
-    BX_INFO(("Executing script '%s %s'",filename,arg1));
-    execle(filename, scriptname, arg1, NULL, NULL);
-
-    // if we get here there has been a problem
-    exit(-1);
-  }
-
-  wait (&status);
-  if (!WIFEXITED(status)) {
-    return -1;
-  }
-  return WEXITSTATUS(status);
 }
 
 #endif /* if BX_NE2K_SUPPORT */

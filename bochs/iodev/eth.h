@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.11 2002-09-02 16:56:24 bdenney Exp $
+// $Id: eth.h,v 1.12 2003-04-26 14:48:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 
+int execute_script(char *name, char* arg1);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations
