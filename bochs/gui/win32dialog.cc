@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.10.2.2 2004-02-03 04:54:27 danielg4 Exp $
+// $Id: win32dialog.cc,v 1.10.2.3 2004-02-06 12:21:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -222,6 +222,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param)
   ofn.hwndOwner = hwnd;
   ofn.lpstrFile   = filename;
   ofn.nMaxFile    = MAX_PATH;
+  ofn.lpstrInitialDir = bx_startup_flags.initial_dir;
   ofn.lpstrTitle = title;
   ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
   if (param->get_options()->get() & bx_param_filename_c::SAVE_FILE_DIALOG) {
@@ -242,7 +243,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param)
       ret = -1;
     } else {
       if (errcode == 0x3002) {
-        wsprintf(errtext, "CommDlgExtendedError: illegal filename");
+        wsprintf(errtext, "CommDlgExtendedError: invalid filename");
       } else {
         wsprintf(errtext, "CommDlgExtendedError returns 0x%04x", errcode);
       }

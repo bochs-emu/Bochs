@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.256 2004-01-05 22:18:01 cbothamy Exp $
+// $Id: main.cc,v 1.256.2.1 2004-02-06 12:21:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2157,6 +2157,13 @@ bx_init_main (int argc, char *argv[])
 
   if (load_rcfile) {
     /* parse configuration file and command line arguments */
+#ifdef WIN32
+    if (bochsrc_filename != NULL) {
+      lstrcpy(bx_startup_flags.initial_dir, bochsrc_filename);
+    } else {
+      bx_startup_flags.initial_dir[0] = 0;
+    }
+#endif
     if (bochsrc_filename == NULL) bochsrc_filename = bx_find_bochsrc ();
     if (bochsrc_filename)
       norcfile = bx_read_configuration (bochsrc_filename);
