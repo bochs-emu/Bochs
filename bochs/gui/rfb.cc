@@ -188,7 +188,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
 	if (bx_options.private_colormap) {
-		fprintf(stderr, "# WARNING: RFB: private_colormap option ignored.\n");
+		BX_ERROR(( "private_colormap option ignored." ));
 	}
 }
 
@@ -220,24 +220,24 @@ void ServerThreadInit(void *indata)
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #endif
 	if(!InitWinsock()) {
-		fprintf(stderr, "# ERROR: RFB: could not initialize winsock.\n");
+		BX_ERROR(( "could not initialize winsock."));
 		goto end_of_thread;
 	}
 
 	sServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(sServer == -1) { 
-		fprintf(stderr, "# ERROR: RFB: could not create socket.\n");
+		BX_ERROR(( "could not create socket." ));
 		goto end_of_thread;
 	}
 	sai.sin_addr.s_addr = INADDR_ANY;
 	sai.sin_family      = AF_INET;
 	sai.sin_port        = htons(rfbPort);
 	if(bind(sServer, (struct sockaddr *)&sai, sizeof(sai)) == -1) {
-		fprintf(stderr, "# ERROR: RFB: could not bind socket.\n");
+		BX_ERROR(( "could not bind socket."));
 		goto end_of_thread;
 	}
 	if(listen(sServer, SOMAXCONN) == -1) {
-		fprintf(stderr, "# ERROR: RFB: could not listen on socket.\n");
+		BX_ERROR(( "could not listen on socket."));
 		goto end_of_thread;
 	}
 	fprintf(stderr, "# RFB: listening for connections on port %i.\n", rfbPort);
