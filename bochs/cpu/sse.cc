@@ -815,30 +815,6 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareMMX();
-
-  BX_PANIC(("PINSRW_PqEdIb: SSE instruction still not implemented"));
-#else
-  BX_INFO(("PINSRW_PqEdIb: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareMMX();
-
-  BX_PANIC(("PEXTRW_PqEdIb: SSE instruction still not implemented"));
-#else
-  BX_INFO(("PEXTRW_PqEdIb: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
 void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1

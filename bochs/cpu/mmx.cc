@@ -723,6 +723,66 @@ void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
 #endif
 }
 
+/* 0F C4 */
+void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn());
+  Bit16u op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_16BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_word(i->seg(), RMAddr(i), &op2);
+  }
+
+  Bit8u count = i->Ib() & 0x3;
+
+  switch(count) {
+    case 0:
+      MMXUW0(op1) = op2;
+      break;
+    case 1:
+      MMXUW1(op1) = op2;
+      break;
+    case 2:
+      MMXUW2(op1) = op2;
+      break;
+    case 3:
+      MMXUW3(op1) = op2;
+      break;
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op1);
+#else
+  BX_INFO(("PINSRW_PqEdIb: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F C5 */
+void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
+  Bit8u count = i->Ib() & 0x3;
+  Bit32u result = (Bit32u) SelectMmxWord(op, count);
+
+  BX_WRITE_32BIT_REG(i->nnn(), result);
+#else
+  BX_INFO(("PEXTRW_PqEdIb: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
 /* 0F D1 */
 void BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
 {

@@ -1209,24 +1209,46 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F C4 */
 void BX_CPU_C::PINSRW_VdqEdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PINSRW_VdqEdIb: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  Bit16u op2;
+  Bit8u count = i->Ib() & 0x7;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_16BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_word(i->seg(), RMAddr(i), &op2);
+  }
+
+  op1.xmm16u(count) = op2;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PINSRW_VdqEdIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F C5 */
 void BX_CPU_C::PEXTRW_VdqEdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PEXTRW_VdqEdIb: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  Bit8u count = i->Ib() & 0x7;
+  Bit32u result = (Bit32u) op.xmm16u(count);
+
+  BX_WRITE_32BIT_REG(i->nnn(), result);
 #else
   BX_INFO(("PEXTRW_VdqEdIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
