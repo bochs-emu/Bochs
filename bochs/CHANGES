@@ -134,7 +134,7 @@ documentation
   - PIC
     - FIXME
   - PIT
-    - FIXME
+    - Added realtime PIT support (Greg)
   - Sound Blaster 16
     - it used to enable itself all the time; now only when you ask
     - FIXME
