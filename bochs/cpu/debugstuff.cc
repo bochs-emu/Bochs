@@ -286,7 +286,7 @@ BX_CPU_C::dbg_query_pending(void)
     ret |= BX_DBG_PENDING_DMA;
     }
 
-  if ( BX_INTR && BX_CPU_THIS_PTR eflags.if_ ) {
+  if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_ ) {
     ret |= BX_DBG_PENDING_IRQ;
     }
 
