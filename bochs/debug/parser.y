@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: parser.y,v 1.6 2001-11-28 18:35:21 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -107,6 +107,8 @@
 %token <sval> BX_TOKEN_MUL
 %token <sval> BX_TOKEN_DIV
 %token <sval> BX_TOKEN_V2L
+%token <sval> BX_TOKEN_TRACEREGON
+%token <sval> BX_TOKEN_TRACEREGOFF
 %type <uval> segment_register
 %type <uval> optional_numeric
 %type <uval_range> numeric_range optional_numeric_range
@@ -149,6 +151,8 @@ command:
     | print_string_command
     | cosim_commands
     | v2l_command
+    | trace_reg_on_command
+    | trace_reg_off_command
     | 
     | '\n'
       {
@@ -762,6 +766,22 @@ v2l_command:
         bx_dbg_v2l_command($2, $4);
         free($1);
         }
+    ;
+
+trace_reg_on_command:
+      BX_TOKEN_TRACEREGON '\n'
+        {
+	bx_dbg_trace_reg_on_command();
+	free($1);
+	}
+    ;
+
+trace_reg_off_command:
+      BX_TOKEN_TRACEREGOFF '\n'
+        {
+	bx_dbg_trace_reg_off_command();
+	free($1);
+	}
     ;
 
 %%
