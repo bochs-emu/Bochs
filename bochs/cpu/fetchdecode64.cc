@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.35 2002-12-20 07:11:29 ptrumpet Exp $
+// $Id: fetchdecode64.cc,v 1.36 2002-12-20 09:11:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -291,15 +291,17 @@ MOVAPS_VpsWps  (0f 28) = MOVAPD_VpdWpd  (66 0f 28) = MOVDQA_VdqWdq (66 0f 6f)
 MOVAPS_WpsVps  (0f 29) = MOVAPD_WpdVpd  (66 0f 29) = MOVDQA_WdqVdq (66 0f 7f)
 
 MOVNTPS_MdqVps (0f 2b) = MOVNTPD_MdqVpd (66 0f 2b)
+MOVNTPS_MdqVps (0f 2b) = MOVNTDQ_MdqVdq (66 0f e7)
+
 MOVLPS_VpsMq   (0f 12) = MOVLPD_VsdMq   (66 0f 12)
 MOVLPS_MqVps   (0f 13) = MOVLPD_MqVsd   (66 0f 13)
 MOVHPS_VpsMq   (0f 16) = MOVHPD_VpdMq   (66 0f 16)
 MOVHPS_MqVps   (0f 17) = MOVHPD_MqVpd   (66 0f 17)
 
-ANDPS_VpsWps   (0f 54) = ANDPD_VpdWpd   (66 0f 54) = PAND_VpdWpd   (66 0f db)
-ANDNPS_VpsWps  (0f 55) = ANDNPD_VpdWpd  (66 0f 55) = PANDN_VpdWpd  (66 0f df)
-ORPS_VpsWps    (0f 56) = ORPD_VpdWpd    (66 0f 56) = POR_VpdWpd    (66 0f eb)
-XORPS_VpsWps   (0f 57) = XORPD_VpdWpd   (66 0f 57) = PXOR_VpdWpd   (66 0f ef)
+ANDPS_VpsWps   (0f 54) = ANDPD_VpdWpd   (66 0f 54) = PAND_VdqWdq   (66 0f db)
+ANDNPS_VpsWps  (0f 55) = ANDNPD_VpdWpd  (66 0f 55) = PANDN_VdqWdq  (66 0f df)
+ORPS_VpsWps    (0f 56) = ORPD_VpdWpd    (66 0f 56) = POR_VdqWdq    (66 0f eb)
+XORPS_VpsWps   (0f 57) = XORPD_VpdWpd   (66 0f 57) = PXOR_VdqWdq   (66 0f ef)
 
 */
 
@@ -872,7 +874,7 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0fe6[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0fe7[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVNTQ_MqPq    },
-  /* 66 */  { 0, &BX_CPU_C::MOVNTDQ_MdqVdq },
+  /* 66 */  { 0, &BX_CPU_C::MOVNTPS_MdqVps },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };

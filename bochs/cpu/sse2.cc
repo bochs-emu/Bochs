@@ -2047,27 +2047,6 @@ void BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 #endif
 }
 
-/* 66 0F E7 */
-void BX_CPU_C::MOVNTDQ_MdqVdq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  if (i->modC0()) {
-    BX_INFO(("MOVNTDQ_MqPq: must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
-  BxPackedXmmRegister reg = BX_READ_XMM_REG(i->nnn());
-
-  writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &reg);
-  //BX_INFO(("MOVNTDQ_MdqVdq: SSE2 not supported in current configuration"));
-#else
-  BX_INFO(("MOVNTDQ_MdqVdq: SSE2 not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
 /* 66 0F E8 */
 void BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
 {
