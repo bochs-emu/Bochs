@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.217 2003-07-06 09:00:36 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.218 2003-07-06 11:46:31 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2139,11 +2139,9 @@ if test "$with_rfb" = yes; then
   # we need the socket function
   case $target in
     *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
-      AC_CHECK_LIB(wsock32, socket,
-        [
-          RFB_LIBS="$RFB_LIBS -lwsock32"
-          have_socket=yes
-        ])
+      # is this okay without a check ?
+      RFB_LIBS="$RFB_LIBS -lwsock32"
+      have_socket=yes
       ;;
     *)
       AC_CHECK_FUNCS(socket, have_socket=yes)
