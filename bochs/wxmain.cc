@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.15 2002-03-25 03:58:31 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.16 2002-03-25 04:01:09 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -183,6 +183,8 @@ static long wxTileX = 0;
 static long wxTileY = 0;
 static unsigned long wxCursorX = 0;
 static unsigned long wxCursorY = 0;
+static unsigned long wxMouseCaptured = 0;
+
 //hack alert
 static MyFrame *theFrame = NULL;
 static MyPanel *thePanel = NULL;
@@ -566,6 +568,16 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 void MyPanel::OnKeyDown(wxKeyEvent& event)
 {
   wxLogDebug ("key down %d", event.m_keyCode);
+	if(event.GetKeyCode() == WXK_F12) {
+		if(wxMouseCaptured) {
+			ReleaseMouse();
+			wxMouseCaptured = FALSE;
+		} else {
+			CaptureMouse();
+			wxMouseCaptured = TRUE;
+		}
+		return;
+	}
 	wxCriticalSectionLocker lock(event_thread_lock);
 	if(num_events < MAX_EVENTS) {
 		event_queue[num_events].type = BX_ASYNC_EVT_KEY_PRESS;
@@ -924,6 +936,10 @@ void press_key(Bit16u key, int press_release)
 		case WXK_NUMLOCK:	key_event = BX_KEY_NUM_LOCK;     break;
 		case WXK_SCROLL:	key_event = BX_KEY_SCRL_LOCK;    break;
 		case WXK_DECIMAL:	key_event = BX_KEY_PERIOD;       break;
+		case WXK_SUBTRACT:	key_event = BX_KEY_MINUS;        break; 
+		case WXK_ADD:		key_event = BX_KEY_EQUALS;       break;
+		case WXK_MULTIPLY:	key_event = BX_KEY_KP_MULTIPLY;  break;
+		case WXK_DIVIDE:	key_event = BX_KEY_KP_DIVIDE;    break;
 
 		case WXK_NUMPAD_ENTER:		key_event = BX_KEY_KP_ENTER;     break;
 		case WXK_NUMPAD_HOME:		key_event = BX_KEY_KP_HOME;      break;
@@ -946,8 +962,6 @@ void press_key(Bit16u key, int press_release)
 		case WXK_NUMPAD_DIVIDE:		key_event = BX_KEY_KP_DIVIDE;    break;
 
 		// Keys not handled by wxMSW
-		case 153: key_event = BX_KEY_MINUS;         break; // -_
-		case 151: key_event = BX_KEY_EQUALS;        break; // +=
 		case 192: key_event = BX_KEY_GRAVE;         break; // `~
 		case 219: key_event = BX_KEY_LEFT_BRACKET;  break; // [{
 		case 221: key_event = BX_KEY_RIGHT_BRACKET; break; // ]}
@@ -958,7 +972,7 @@ void press_key(Bit16u key, int press_release)
 		case 191: key_event = BX_KEY_SLASH;         break; // /?
 
 		default:
-			wxLogMessage("Unhandled key event: %x", key);
+			wxLogMessage("Unhandled key event: %i (0x%x)", key, key);
 			return;
 		}
 	}
