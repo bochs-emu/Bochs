@@ -1,5 +1,6 @@
 /* 
- * mkimg2.c
+ * misc/mkimg2.c
+ * $Id: mkimg2.c,v 1.2 2001-06-01 04:07:21 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -9,6 +10,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "config.h"
+
+static char *EOF_ERR = "ERROR: End of input";
+static char rcsid = "$Revision: 1.2 $, modified $Date: 2001-06-01 04:07:21 $";
 
 /* remove leading spaces, newline junk at end.
    return pointer to cleaned string, which is between s0 and the null */
@@ -39,9 +43,7 @@ int ask_int (char *prompt, int min, int max, int the_default, int *out)
     printf ("%s", prompt);
     if (!fgets (buffer, sizeof(buffer), stdin))
       return -1;
-    //printf ("Before cleaning we had: '%s'\n", buffer);
     clean = clean_string (buffer);
-    //printf ("After cleaning we had: '%s'\n", clean);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
@@ -69,9 +71,7 @@ int ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int 
     printf ("%s", prompt);
     if (!fgets (buffer, sizeof(buffer), stdin))
       return -1;
-    //printf ("Before cleaning we had: '%s'\n", buffer);
     clean = clean_string (buffer);
-    //printf ("After cleaning we had: '%s'\n", clean);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
@@ -93,6 +93,30 @@ int ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int 
   }
 }
 
+int ask_yn (char *prompt, int the_default, int *out)
+{
+  char buffer[16];
+  char *clean;
+  int i;
+  *out = -1;
+  while (1) {
+    printf ("%s", prompt);
+    if (!fgets (buffer, sizeof(buffer), stdin))
+      return -1;
+    clean = clean_string (buffer);
+    if (strlen(clean) < 1) {
+      // empty line, use the default
+      *out = the_default;
+      return 0;
+    }
+    switch (tolower(clean[0])) {
+      case 'y': *out=1; return 0;
+      case 'n': *out=0; return 0;
+    }
+    printf ("Please type either yes or no.\n");
+  }
+}
+
 int ask_string (char *prompt, char *the_default, char *out)
 {
   char buffer[1024];
@@ -102,9 +126,7 @@ int ask_string (char *prompt, char *the_default, char *out)
   printf ("%s", prompt);
   if (!fgets (buffer, sizeof(buffer), stdin))
     return -1;
-  //printf ("Before cleaning we had: '%s'\n", buffer);
   clean = clean_string (buffer);
-  //printf ("After cleaning we had: '%s'\n", clean);
   if (strlen(clean) < 1) {
     // empty line, use the default
     strcpy (out, the_default);
@@ -122,25 +144,40 @@ char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megaby
 char *fdsize_choices[] = { "0.72","1.2","1.44","2.88" };
 int fdsize_n_choices = 4;
 
-void panic (char *c)
+void fatal (char *c)
 {
-  printf ("Internal error: %s\n", c);
+  printf ("%s\n", c);
   exit (1);
 }
 
 int make_image (int sec, char *filename)
 {
-  FILE *fp = fopen (filename, "w");
+  FILE *fp;
   char buffer[1024];
   int i;
   unsigned int n;
+
+  // check if it exists before trashing someone's disk image
+  fp = fopen (filename, "r");
+  if (fp) {
+    int confirm;
+    sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. [no] ");
+    if (ask_yn (buffer, 0, &confirm) < 0)
+      fatal (EOF_ERR);
+    if (!confirm) 
+      fatal ("ERROR: Aborted");
+    fclose (fp);
+  }
+
+  // okay, now open it for writing
+  fp = fopen (filename, "w");
   if (fp == NULL) {
     // attempt to print an error
 #ifdef HAVE_PERROR
     sprintf (buffer, "while opening '%s' for writing", filename);
     perror (buffer);
 #endif
-    exit (1);
+    fatal ("ERROR: Could not write disk image");
   }
   // clear the buffer
   for (i=0; i<512; i++)
@@ -150,12 +187,14 @@ int make_image (int sec, char *filename)
   for (i=0; i<sec; i++) {
     n = (unsigned int) fwrite (buffer, 512, 1, fp);
     if (n != 1) {
-      printf ("ERROR: Write failed after %d sectors have been written\n", i);
+      printf ("\nWrite failed with %d sectors written\n", i);
       fclose (fp);
-      return -1;
+      fatal ("ERROR: The disk image is not complete!");
     }
-    if (i&16) printf (".");
-#error fixme
+    if ((i%2048) == 0) {
+      printf (".");
+      fflush (stdout);
+    }
   }
   printf ("done.\n");
   fclose (fp);
@@ -170,11 +209,11 @@ int main()
   char bochsrc_line[256];
   filename[0] = 0;
   if (ask_menu (fdhd_menu, fdhd_n_choices, fdhd_choices, 1, &hd) < 0)
-    exit (1);
+    fatal (EOF_ERR);
   if (hd) {
     int hdsize, cyl, heads=16, spt=63;
     if (ask_int ("\nEnter the hard disk size in megabytes, between 1 and 65535\n[10] ", 1, 65535, 10, &hdsize) < 0)
-      exit (1);
+      fatal (EOF_ERR);
     cyl = hdsize*1024*1024/16/63/512;
     sectors = cyl*heads*spt;
     printf ("\nI will create a hard disk image with\n");
@@ -184,21 +223,20 @@ int main()
     printf ("  total sectors=%d\n", sectors);
     printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
     if (ask_string ("\nWhat should I name the image?\n[c.img] ", "c.img", filename) < 0)
-      exit(1);
+      fatal (EOF_ERR);
     sprintf (bochsrc_line, "diskc: file=\"%s\", cyl=%d, heads=%d, spt=%d", filename, cyl, heads, spt);
   } else {
     int fdsize, cyl, heads, spt;
     char *name;
     if (ask_menu (fdsize_menu, fdsize_n_choices, fdsize_choices, 2, &fdsize) < 0)
-      exit (1);
+      fatal (EOF_ERR);
     switch (fdsize) {
     case 0: name="720k"; cyl=80; heads=2; spt=9; break;   /* 0.72 meg */
     case 1: name="1_2"; cyl=80; heads=2; spt=15; break;   /* 1.2 meg */
     case 2: name="1_44"; cyl=80; heads=2; spt=18; break;   /* 1.44 meg */
     case 3: name="2_88"; cyl=80; heads=2; spt=36; break;   /* 2.88 meg */
     default: 
-      printf ("ERROR: fdsize out of range");
-      exit (1);
+      fatal ("ERROR: fdsize out of range");
     }
     sectors = cyl*heads*spt;
     printf ("I will create a floppy image with\n");
@@ -208,13 +246,13 @@ int main()
     printf ("  total sectors=%d\n", sectors);
     printf ("  total bytes=%d\n", sectors*512);
     if (ask_string ("\nWhat should I name the image?\n[a.img] ", "a.img", filename) < 0)
-      exit(1);
+      fatal (EOF_ERR);
     sprintf (bochsrc_line, "floppya: %s=\"%s\", status=inserted", name, filename);
   }
   if (sectors < 1)
-    panic ("Illegal disk size!");
+    fatal ("ERROR: Illegal disk size!");
   if (strlen (filename) < 1)
-    panic ("Illegal filename");
+    fatal ("ERROR: Illegal filename");
   make_image (sectors, filename);
   printf ("\nI wrote %d bytes to %s.\n", sectors*512, filename);
   printf ("\nThe following line should appear in your bochsrc:\n");
