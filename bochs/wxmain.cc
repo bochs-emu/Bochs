@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.20 2002-03-25 20:09:34 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.21 2002-03-25 21:50:33 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -43,9 +43,6 @@ extern "C" {
 
 #include "gui/wx_toolbar.h"
 
-enum {
-	IDM_TOOLBAR_POWER = 200
-};
 //#include "gui/siminterface.h"
 
 class MyApp: public wxApp
@@ -93,6 +90,7 @@ public:
   void OnKeyDown(wxKeyEvent& event);
   void OnKeyUp(wxKeyEvent& event);
   void OnPaint(wxPaintEvent& event);
+  void MyRefresh ();
 private:
   DECLARE_EVENT_TABLE()
 };
@@ -160,6 +158,17 @@ enum
   ID_Log_PrefsDevice,
   ID_Help_About,
   ID_Sim2Gui_Event,
+  // ids for Bochs toolbar
+  ID_Toolbar_FloppyA,
+  ID_Toolbar_FloppyB,
+  ID_Toolbar_CdromD,
+  ID_Toolbar_Reset,
+  ID_Toolbar_Power,
+  ID_Toolbar_Copy,
+  ID_Toolbar_Paste,
+  ID_Toolbar_Snapshot,
+  ID_Toolbar_Config,
+  ID_Toolbar_Mouse_en
 };
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
@@ -169,7 +178,17 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
   EVT_MENU(ID_Sim2Gui_Event, MyFrame::OnSim2GuiEvent)
-  EVT_MENU(IDM_TOOLBAR_POWER, MyFrame::OnToolbarClick)
+  // toolbar events
+  EVT_TOOL(ID_Toolbar_FloppyA, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_FloppyB, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_CdromD, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_Reset, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_Power, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_Copy, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_Paste, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_Config, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_Mouse_en, MyFrame::OnToolbarClick)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(MyApp)
@@ -207,7 +226,7 @@ bool MyApp::OnInit()
 {
   wxLog::AddTraceMask (_T("mime"));
   siminterface_init ();
-  MyFrame *frame = new MyFrame( "Bochs Control Panel", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
+  MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
   theFrame = frame;  // hack alert
   frame->Show( TRUE );
   SetTopWindow( frame );
@@ -275,21 +294,21 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   wxToolBar *tb = GetToolBar();
   tb->SetToolBitmapSize(wxSize(16, 16));
 
-  wxBitmap toolBarBitmaps[4];
-  toolBarBitmaps[0] = wxBitmap(xpm_power);
-  toolBarBitmaps[1] = wxBitmap(xpm_reset);
-  toolBarBitmaps[2] = wxBitmap(xpm_floppya);
-  toolBarBitmaps[3] = wxBitmap(xpm_floppyb);
-
   int currentX = 5;
-  tb->AddTool(16780, toolBarBitmaps[0], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Turn power on/off");
-  currentX += 34;
-  tb->AddTool(16781, toolBarBitmaps[1], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Reset the system");
-  currentX += 34;
-  tb->AddTool(16782, toolBarBitmaps[2], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Enable/Disable Floppy A");
-  currentX += 34;
-  tb->AddTool(16783, toolBarBitmaps[3], wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, "Enable/Disable Floppy B");
-  currentX += 34;
+#define BX_ADD_TOOL(id, xpm_name, tooltip) \
+    do {tb->AddTool(id, wxBitmap(xpm_name), wxNullBitmap, FALSE, currentX, -1, (wxObject *)NULL, tooltip);  currentX += 34; } while (0)
+
+  BX_ADD_TOOL(ID_Toolbar_FloppyA, floppya_xpm, "Change Floppy A");
+  BX_ADD_TOOL(ID_Toolbar_FloppyB, floppyb_xpm, "Change Floppy B");
+  BX_ADD_TOOL(ID_Toolbar_CdromD, cdromd_xpm, "Change CDROM");
+  BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, "Reset the system");
+  BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, "Turn power on/off");
+
+  BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, "Copy to clipboard");
+  BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, "Paste from clipboard");
+  BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, "Save screen snapshot");
+  BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
+  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, "Mouse Enable/Disable");
 
   tb->Realize();
 
@@ -316,7 +335,9 @@ void MyFrame::OnQuit(wxCommandEvent& event)
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-  wxMessageBox( "wxWindows Control Panel for Bochs. (Very Experimental)", "Bochs Control Panel", wxOK | wxICON_INFORMATION );
+  wxString str;
+  str.Printf ("Bochs x86 Emulator version %s (wxWindows port)", VER_STRING);
+  wxMessageBox( str, "About Bochs", wxOK | wxICON_INFORMATION );
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
@@ -561,9 +582,43 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 	
 }
 
+void 
+MyPanel::MyRefresh ()
+{
+#if defined(__WXMSW__)
+	// For some reason, on windows the postevent trick does not
+	// cause a paint event.
+	Refresh(FALSE);
+#else
+	wxPaintEvent event;
+	wxPostEvent (this, event);
+#endif
+}
+
 void MyFrame::OnToolbarClick(wxCommandEvent& event)
 {
-
+  wxLogDebug ("clicked toolbar thingy");
+  bx_toolbar_buttons which = BX_TOOLBAR_UNDEFINED;
+  int id = event.GetId ();
+  switch (id) {
+    case ID_Toolbar_Power:which = BX_TOOLBAR_POWER; break;
+    case ID_Toolbar_Reset: which = BX_TOOLBAR_RESET; break;
+    case ID_Toolbar_FloppyA: which = BX_TOOLBAR_FLOPPYA; break;
+    case ID_Toolbar_FloppyB: which = BX_TOOLBAR_FLOPPYB; break;
+    case ID_Toolbar_CdromD: which = BX_TOOLBAR_CDROMD; break;
+    case ID_Toolbar_Copy: which = BX_TOOLBAR_COPY; break;
+    case ID_Toolbar_Paste: which = BX_TOOLBAR_PASTE; break;
+    case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
+    case ID_Toolbar_Config: which = BX_TOOLBAR_CONFIG; break;
+    case ID_Toolbar_Mouse_en: which = BX_TOOLBAR_MOUSE_EN; break;
+    default:
+      wxLogError ("unknown toolbar id %d", id);
+  }
+  if (num_events < MAX_EVENTS) {
+    event_queue[num_events].type = BX_ASYNC_EVT_TOOLBAR;
+    event_queue[num_events].u.toolbar.button = which;
+    num_events++;
+  }
 }
 
 void MyPanel::OnKeyDown(wxKeyEvent& event)
@@ -1157,15 +1212,31 @@ void bx_gui_c::handle_events(void)
   Bit32u bx_key = 0;
   for(unsigned int i = 0; i < num_events; i++) {
     switch(event_queue[i].type) {
-	  case BX_ASYNC_EVT_KEY:
-		bx_key = event_queue[i].u.key.bx_key;
-		IFDBG_KEY (
-		  wxLogDebug ("sending key %s event to bochs, bx_key=0x%08x",
-		    (bx_key&BX_KEY_RELEASED)? "up  " : "down", bx_key));
+      case BX_ASYNC_EVT_TOOLBAR:
+        switch (event_queue[i].u.toolbar.button) {
+          case BX_TOOLBAR_FLOPPYA: floppyA_handler (); break;
+          case BX_TOOLBAR_FLOPPYB: floppyB_handler (); break;
+          case BX_TOOLBAR_CDROMD: cdromD_handler (); break;
+          case BX_TOOLBAR_RESET: reset_handler (); break;
+          case BX_TOOLBAR_POWER: power_handler (); break;
+          case BX_TOOLBAR_COPY: copy_handler (); break;
+          case BX_TOOLBAR_PASTE: paste_handler (); break;
+          case BX_TOOLBAR_SNAPSHOT: snapshot_handler (); break;
+          case BX_TOOLBAR_CONFIG: config_handler (); break;
+          case BX_TOOLBAR_MOUSE_EN: toggle_mouse_enable (); break;
+          default:
+            wxLogDebug ("unknown toolbar id %d", event_queue[i].u.toolbar.button);
+        }
+        break;
+      case BX_ASYNC_EVT_KEY:
+        bx_key = event_queue[i].u.key.bx_key;
+        IFDBG_KEY (
+          wxLogDebug ("sending key %s event to bochs, bx_key=0x%08x",
+            (bx_key&BX_KEY_RELEASED)? "up  " : "down", bx_key));
         bx_devices.keyboard->gen_scancode(bx_key);
-		break;
-	  default:
-		wxLogError ("handle_events received unhandled event type %d in queue", (int)event_queue[i].type);
+        break;
+      default:
+        wxLogError ("handle_events received unhandled event type %d in queue", (int)event_queue[i].type);
     }
   }
   num_events = 0;
@@ -1245,14 +1316,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr);
 	}
 
-#if defined(__WXMSW__)
-	// For some reason, on windows the postevent trick does not
-	// cause a paint event.
-	thePanel->Refresh(FALSE);
-#else
-	wxPaintEvent event;
-	wxPostEvent (thePanel, event);
-#endif
+	thePanel->MyRefresh ();
 }
 
 
@@ -1292,7 +1356,8 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   IFDBG_VGA (wxLogDebug ("graphics_tile_update"));
-	UpdateScreen((char *)tile, x0, y0, wxTileX, wxTileY);
+  UpdateScreen((char *)tile, x0, y0, wxTileX, wxTileY);
+  //thePanel->MyRefresh ();
 }
 
 
@@ -1318,6 +1383,7 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y)
   //theFrame->SetSize(-1, -1, wxScreenX + 6, wxScreenY + 100, 0);
   //wxSize size = theFrame->GetToolBar()->GetToolSize();
   theFrame->SetClientSize(wxScreenX, wxScreenY); // + size.GetHeight());
+  //thePanel->MyRefresh ();
 }
 
 
