@@ -360,7 +360,7 @@
 #define BX_CONST64(x)  (x)
 #endif
 
-#if BX_WITH_WIN32
+#if defined(WIN32)
   typedef unsigned char      Bit8u;
   typedef   signed char      Bit8s;
   typedef unsigned short     Bit16u;
@@ -384,7 +384,7 @@
   typedef   signed int       Bit32s;
   typedef unsigned long long Bit64u;
   typedef   signed long long Bit64s;
-#else  // #if BX_WITH_WIN32
+#else
 
 // Unix like platforms
 
@@ -422,7 +422,7 @@
 #  error "can't find data type of 8 bytes"
 #endif
 
-#endif // BX_WITH_WIN32
+#endif
 
 #define BX_MAX_UINT 4294967295
 #define BX_MAX_INT 2147483647
@@ -455,7 +455,7 @@ typedef unsigned int Boolean;
 #  define bx_ptr_t void *
 #endif
 
-#if BX_WITH_WIN32
+#if defined(WIN32)
 #  define BX_LITTLE_ENDIAN
 #elif BX_WITH_MACOS
 #  define BX_BIG_ENDIAN
@@ -465,7 +465,7 @@ typedef unsigned int Boolean;
 #else
 #  define BX_LITTLE_ENDIAN
 #endif
-#endif // BX_WITH_WIN32
+#endif // defined(WIN32)
 
 // for now only term.cc requires a GUI sighandler.
 #define BX_GUI_SIGHANDLER (BX_WITH_TERM)
