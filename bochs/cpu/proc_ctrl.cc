@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.75 2003-09-26 15:32:41 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.76 2003-10-24 18:34:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1429,7 +1429,6 @@ BX_CPU_C::SetCR0(Bit32u val_32)
   void
 BX_CPU_C::SetCR4(Bit32u val_32)
 {
-
   // CR4 bit definitions from AMD Hammer manual:
   //   [63-11] Reserved, Must be Zero
   //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
@@ -1459,8 +1458,11 @@ BX_CPU_C::SetCR4(Bit32u val_32)
   allowMask |= (1<<5);
 #endif
 
-#if BX_SUPPORT_SSE
+#if BX_CPU_LEVEL >= 6
   allowMask |= (1<<9);   /* OSFXSR */
+#endif
+
+#if BX_SUPPORT_SSE
   allowMask |= (1<<10);  /* OSXMMECPT */
 #endif
 
@@ -1494,6 +1496,16 @@ BX_CPU_C::RSM(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   BX_PANIC(("RSM: System Management Mode not implemented yet"));
+#else
+  UndefinedOpcode(i);
+#endif
+}
+
+  void
+BX_CPU_C::RDPMC(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 5
+  BX_PANIC(("RDPMC: Performance Counters Support not implemented yet"));
 #else
   UndefinedOpcode(i);
 #endif

@@ -2,6 +2,34 @@ Changes in 2.1 (October 2, 2003):
 
 - Stanislav's changes...
   --------------------------------------------------------------------------
+- cpu
+  - added emulation of AMD 3DNow! instructions set.
+  - added emulation of SSE/SSE2 floating point instructions.
+  - added P4 CPU support to CPUID instruction.
+  - fixed implementation of FXSAVE/FXRSTOR instructions.
+  - bugfix: unallowed lock prefix cases must cause #UD exception.
+  - fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
+    in 32bit mode.
+  - fixed fetchdecode64 bug caused wrong decoding of opcodes containing
+    BxImmediate_IvIw or BxImmediate_IwIb in x86-64.
+  - hundreds of bugfixes in FPU emulation after checking of the emulation
+    with testfloat (Scott Duplichan).
+    - Fixed cases:
+        - floatx80_to_int32,   floatx80_to_float32
+        - floatx80_to_float64, floatx80_round_to_int
+        - floatx80_add,        floatx80_sub, 
+        - floatx80_mul,        floatx80_div
+  - FPU: 64-bit addressing support for x86-64 mode (Christophe Bothamy)
+  - fixed bug in int01 (opcode 0xF1) emulation (Vitaly Vorobyov)
+  - fixed bug in x86 debugger with dr0-dr3 registers (Vitaly Vorobyov)
+  - fixed bug with mov to/from dr register in v86mode
+    (now exception is generated (according to Intel documentation)
+    instead of panic) (Vitaly Vorobyov)
+  - fixed stack limit checking, now message is generated as BX_DEBUG,
+    rather then BX_PANIC, and exception code is executed (Vitaly Vorobyov)
+  - instrumentation code updated (Stanislav)
+
+More Details:
 
 [+] Added emulation of AMD 3DNow! instructions set.
 
@@ -38,23 +66,6 @@ Changes in 2.1 (October 2, 2003):
   Currently only 3 PNI opcodes still not implemented:
 
 	FISTTP m16int, FISTTP m32int, FISTTP m64int
-
-[+] Fixed: Unallowed lock prefix cases must cause #UD exception
-[+] Fixed FXSAVE/FXRSTOR instructions
-[+] Fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
-  in 32bit mode.
-[+] Fixed fetchdecode64 bug caused wrong decoding of opcodes containing
-    BxImmediate_IvIw or BxImmediate_IwIb in x86-64.
-
-[+] Hundreds of bugfixes in FPU emulation after checking of the emulation
-  with testfloat. Fixed cases:
-
-	floatx80_to_int32,   floatx80_to_float32
-	floatx80_to_float64, floatx80_round_to_int
-	floatx80_add,        floatx80_sub, 
-        floatx80_mul,        floatx80_div
-
-  Thanks to Scott Duplichan for fixing the bugs.
 
 Patches applied:
 

@@ -761,8 +761,12 @@ typedef
 #error "SSE cannot be compiled without FPU+MMX support"
 #endif
 
-#if (BX_SUPPORT_PNI && !BX_SUPPORT_SSE)
-#error "PNI cannot be compiled without SSE support"
+#if (BX_CPU_LEVEL<6 && BX_SUPPORT_SSE)
+#error SSE is only supported with CPU_LEVEL >= 6
+#endif
+
+#if (BX_SUPPORT_PNI && BX_SUPPORT_SSE <= 1)
+#error "PNI cannot be compiled without SSE/SSE2 support"
 #endif
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_SEP)

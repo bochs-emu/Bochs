@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.58 2003-08-29 21:20:52 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.59 2003-10-24 18:34:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,6 +63,9 @@
 // maybe move 16bit only i's like  MOV_EwSw, MOV_SwEw
 // to 32 bit modules.
 
+// UD2 opcode (according to Intel manuals):
+// Use the 0F0B opcode (UD2 instruction) or the 0FB9H opcode when deliberately 
+// trying to generate an invalid opcode exception (#UD).
 
 /* *********** */
 // LOCK PREFIX //
@@ -785,7 +788,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 30 */  { 0, &BX_CPU_C::WRMSR },
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
-  /* 0F 33 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
 #if BX_SUPPORT_SEP
   /* 0F 34 */  { 0, &BX_CPU_C::SYSENTER },
   /* 0F 35 */  { 0, &BX_CPU_C::SYSEXIT },
@@ -924,7 +927,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GwEb },
   /* 0F B7 */  { BxAnother, &BX_CPU_C::MOVZX_GwEw },
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
-  /* 0F B9 */  { 0, &BX_CPU_C::BxError },
+  /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfoG8EvIb },
   /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
   /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
@@ -1319,7 +1322,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 30 */  { 0, &BX_CPU_C::WRMSR },
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
-  /* 0F 33 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
 #if BX_SUPPORT_SEP
   /* 0F 34 */  { 0, &BX_CPU_C::SYSENTER },
   /* 0F 35 */  { 0, &BX_CPU_C::SYSEXIT },
@@ -1458,7 +1461,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GdEb },
   /* 0F B7 */  { BxAnother, &BX_CPU_C::MOVZX_GdEw },
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
-  /* 0F B9 */  { 0, &BX_CPU_C::BxError },
+  /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfoG8EvIb },
   /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
   /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },

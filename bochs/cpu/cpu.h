@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.145 2003-08-29 21:20:52 sshwarts Exp $
+// $Id: cpu.h,v 1.146 2003-10-24 18:34:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1177,9 +1177,7 @@ class BX_MEM_C;
 #include "cpu/i387.h"
 #endif
 
-#if BX_SUPPORT_SSE
 #include "cpu/xmm.h"
-#endif
 
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
@@ -2426,6 +2424,7 @@ union {
 
   BX_SMF void WRMSR(bxInstruction_c *);
   BX_SMF void RDTSC(bxInstruction_c *);
+  BX_SMF void RDPMC(bxInstruction_c *);
   BX_SMF void RDMSR(bxInstruction_c *);
   BX_SMF void SYSENTER(bxInstruction_c *);
   BX_SMF void SYSEXIT(bxInstruction_c *);
@@ -2612,10 +2611,19 @@ union {
   BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dword(unsigned seg, bx_address offset, Bit32u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_qword(unsigned seg, bx_address offset, Bit64u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_byte(unsigned seg, bx_address offset, Bit8u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_dword(unsigned seg, bx_address offset, Bit32u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_qword(unsigned seg, bx_address offset, Bit64u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
+
+#define readVirtualDQword(s, off, data) read_virtual_dqword(s, off, data)
+#define readVirtualDQwordAligned(s, off, data) read_virtual_dqword_aligned(s, off, data)
+#define writeVirtualDQword(s, off, data) write_virtual_dqword(s, off, data)
+#define writeVirtualDQwordAligned(s, off, data) write_virtual_dqword_aligned(s, off, data)
 
   BX_SMF void read_RMW_virtual_byte(unsigned seg, bx_address offset, Bit8u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_RMW_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
@@ -2630,13 +2638,6 @@ union {
 #define Write_RMW_virtual_word(val16)  write_RMW_virtual_word(val16)
 #define Write_RMW_virtual_dword(val32) write_RMW_virtual_dword(val32)
 #define Write_RMW_virtual_qword(val64) write_RMW_virtual_qword(val64)
-
-#if BX_SUPPORT_SSE
-  BX_SMF void readVirtualDQword(unsigned s, bx_address off, Bit8u *data);
-  BX_SMF void readVirtualDQwordAligned(unsigned s, bx_address off, Bit8u *data);
-  BX_SMF void writeVirtualDQword(unsigned s, bx_address off, Bit8u *data);
-  BX_SMF void writeVirtualDQwordAligned(unsigned s, bx_address off, Bit8u *data);
-#endif
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
                      unsigned rw, void *data) BX_CPP_AttrRegparmN(3);

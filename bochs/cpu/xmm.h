@@ -18,8 +18,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
 
-
-
 #ifndef BX_SSE_EXTENSIONS_H 
 #define BX_SSE_EXTENSIONS_H
 
@@ -35,12 +33,6 @@ typedef union bx_xmm_reg_t {
    Bit32u  _u32[4];
    Bit64u  _u64[2];
 } BxPackedXmmRegister;
-
-#ifdef BX_SUPPORT_X86_64
-#  define BX_XMM_REGISTERS 16
-#else
-#  define BX_XMM_REGISTERS 8
-#endif
 
 #ifdef BX_BIG_ENDIAN
 #define xmm64s(i)   _s64[1 - (i)]
@@ -60,6 +52,14 @@ typedef union bx_xmm_reg_t {
 #define xmm16u(i)   _u16[(i)]
 #define xmm32u(i)   _u32[(i)]
 #define xmm64u(i)   _u64[(i)]
+#endif
+
+#if BX_SUPPORT_SSE >= 1
+
+#ifdef BX_SUPPORT_X86_64
+#  define BX_XMM_REGISTERS 16
+#else
+#  define BX_XMM_REGISTERS 8
 #endif
 
 /* read XMM register */
@@ -235,5 +235,7 @@ BX_CPP_AttrRegparmN(1);
 */
 Bit16u SaturateDwordSToWordU(Bit32s value) 
 BX_CPP_AttrRegparmN(1);
+
+#endif // BX_SUPPORT_SSE
 
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.26 2003-10-04 20:48:13 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.27 2003-10-24 18:34:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
       }
     }
   else {
-    BX_INFO(("ARPL: not recognized in real or virtual-8086 mode"));
+    BX_DEBUG(("ARPL: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
     return;
     }

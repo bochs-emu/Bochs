@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.65 2003-10-19 08:24:12 vruppert Exp $
+// $Id: win32.cc,v 1.66 2003-10-24 18:34:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -621,8 +621,8 @@ void SetStatusText(int Num, const char *Text)
   SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
 }
 
-LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
-
+LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
   switch (iMsg) {
   case WM_CREATE:
     bx_options.Omouse_enabled->set (mouseCaptureMode);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.56 2003-08-29 21:20:52 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.57 2003-10-24 18:34:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,7 +63,7 @@
 // is 6b imul_gvevib sign extended?  don't think
 //   I'm sign extending it properly in old decode/execute
 
-//check all the groups.  Make sure to add duplicates rather
+// check all the groups.  Make sure to add duplicates rather
 // than error.
 
 // mark instructions as changing control transfer, then
@@ -80,6 +80,9 @@
 
 // use 0F as a prefix too?
 
+// UD2 opcode (according to Intel manuals):
+// Use the 0F0B opcode (UD2 instruction) or the 0FB9H opcode when deliberately 
+// trying to generate an invalid opcode exception (#UD).
 
 
 
@@ -881,7 +884,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 30 */  { 0, &BX_CPU_C::WRMSR },
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
-  /* 0F 33 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
   /* 0F 34 */  { 0, &BX_CPU_C::BxError },
   /* 0F 35 */  { 0, &BX_CPU_C::BxError },
   /* 0F 36 */  { 0, &BX_CPU_C::BxError },
@@ -1015,7 +1018,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GwEb },
   /* 0F B7 */  { BxAnother, &BX_CPU_C::MOVZX_GwEw },
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
-  /* 0F B9 */  { 0, &BX_CPU_C::BxError },
+  /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfo64G8EvIb },
   /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
   /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
@@ -1405,7 +1408,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 30 */  { 0, &BX_CPU_C::WRMSR },
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
-  /* 0F 33 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
   /* 0F 34 */  { 0, &BX_CPU_C::BxError },
   /* 0F 35 */  { 0, &BX_CPU_C::BxError },
   /* 0F 36 */  { 0, &BX_CPU_C::BxError },
@@ -1539,7 +1542,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GdEb },
   /* 0F B7 */  { BxAnother, &BX_CPU_C::MOVZX_GdEw },
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
-  /* 0F B9 */  { 0, &BX_CPU_C::BxError },
+  /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfo64G8EvIb },
   /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
   /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
@@ -1926,7 +1929,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 30 */  { 0, &BX_CPU_C::WRMSR },
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
-  /* 0F 33 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
   /* 0F 34 */  { 0, &BX_CPU_C::BxError },
   /* 0F 35 */  { 0, &BX_CPU_C::BxError },
   /* 0F 36 */  { 0, &BX_CPU_C::BxError },
@@ -2060,7 +2063,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GqEb },
   /* 0F B7 */  { BxAnother, &BX_CPU_C::MOVZX_GqEw },
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
-  /* 0F B9 */  { 0, &BX_CPU_C::BxError },
+  /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfo64G8EvIb },
   /* 0F BB */  { BxAnother, &BX_CPU_C::BTC_EvGv },
   /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },

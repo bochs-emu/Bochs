@@ -156,7 +156,7 @@ static Bit32u get_std_cpuid_features()
       //   [15:15] CMOV: Cond Mov/Cmp Instructions
       //   [22:16] Reserved
       //   [23:23] MMX Technology
-      //   [24]    FXSR: FSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+      //   [24]    FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
       //   [25]    SSE: SSE Extensions
       //   [26]    SSE2: SSE2 Extensions
       //   [28]    Reserved
@@ -180,11 +180,11 @@ static Bit32u get_std_cpuid_features()
 
 #if BX_CPU_LEVEL == 6
       features |= (1<<15);  // Implement CMOV instructions.
+      features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions.
 #if BX_SUPPORT_APIC
       features |= (1<< 9);   // APIC on chip
 #endif
 #if BX_SUPPORT_SSE >= 1
-      features |= (1<<24);  // support FSAVE/FXRSTOR
       features |= (1<<25);  // support SSE
 #endif
 #if BX_SUPPORT_SSE >= 2

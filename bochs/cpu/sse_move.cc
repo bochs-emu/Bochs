@@ -83,12 +83,12 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 /* 0F AE Grp15 000 */
 void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
-  BxPackedXmmRegister xmm;
+#if BX_CPU_LEVEL >= 6
   Bit16u twd = BX_CPU_THIS_PTR the_i387.twd, tag_byte = 0;
   Bit16u status_w = BX_CPU_THIS_PTR the_i387.swd;
   Bit16u tos = BX_CPU_THIS_PTR the_i387.tos;
   unsigned index;
+  BxPackedXmmRegister xmm;
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
@@ -136,8 +136,13 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
    */
   xmm.xmm64u(0) = 0;  /* still not implemented */
 
+#if BX_SUPPORT_SSE >= 1
   xmm.xmm32u(2) = BX_MXCSR_REGISTER;
   xmm.xmm32u(3) = MXCSR_MASK;
+#else
+  xmm.xmm32u(2) = 0;
+  xmm.xmm32u(3) = 0;
+#endif
 
   writeVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
 
@@ -148,16 +153,18 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
            RMAddr(i)+index*16+32, (Bit8u *) &(BX_FPU_REG(index)));
   }
 
+#if BX_SUPPORT_SSE >= 1
   /* store XMM register file */
   for(index=0; index < BX_XMM_REGISTERS; index++)
   {
     writeVirtualDQwordAligned(i->seg(), 
            RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
   }
+#endif
 
   /* do not touch reserved fields */
 #else
-  BX_INFO(("FXSAVE: required SSE, use --enable-sse option"));
+  BX_INFO(("FXSAVE: required P6 support, use --enable-cpu-level=6 option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -165,7 +172,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 /* 0F AE Grp15 001 */
 void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
+#if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister xmm;
   Bit32u tag_byte, tag_byte_mask, twd = 0;
   unsigned index;
@@ -184,6 +191,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   /* FPU DP restore still not implemented */
 
+#if BX_SUPPORT_SSE >= 1
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
   if(! (BX_CPU_THIS_PTR cr4.get_OSFXSR())) 
@@ -197,6 +205,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
     BX_MXCSR_REGISTER = new_mxcsr;
   }
+#endif
 
   /* load i387 register file */
   for(index=0; index < 8; index++)
@@ -272,6 +281,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR the_i387.twd = (twd >> 2);
 
+#if BX_SUPPORT_SSE >= 1
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
   if(! (BX_CPU_THIS_PTR cr4.get_OSFXSR())) 
@@ -283,9 +293,10 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
            RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
     }
   }
+#endif
 
 #else
-  BX_INFO(("FXRSTOR: required SSE, use --enable-sse option"));
+  BX_INFO(("FXRSTOR: required P6 support, use --enable-cpu-level=6 option"));
   UndefinedOpcode(i);
 #endif
 }
