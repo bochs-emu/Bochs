@@ -1,5 +1,6 @@
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
+//
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
 //    75002 Paris - France
@@ -65,7 +66,7 @@ class state_file state_stuff("state_file.out", "options");
 #endif
 
 
-FILE *bx_logfd = NULL; /* for logging bx_printf() messages */
+FILE *bx_logfd = stderr; /* for logging bx_printf() messages */
 
 
 
@@ -308,14 +309,7 @@ bx_panic(char *fmt, ...)
     va_start(ap, fmt);
     vfprintf(bx_logfd, fmt, ap);
     va_end(ap);
-   } else {
-     /* panic message is critical to knowing what went wrong. print to
-       stderr instead */
-     fprintf(stderr, "bochs: panic, ");
-     va_start(ap, fmt);
-     vfprintf(stderr, fmt, ap);
-     va_end(ap);
-   }
+    }
 
 #if !BX_PANIC_IS_FATAL
   return;
