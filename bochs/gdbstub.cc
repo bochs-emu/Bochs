@@ -311,7 +311,7 @@ static int access_linear(Bit32u laddress,
        return(valid);
      }
    
-   BX_CPU_THIS_PTR dbg_xlate_linear2phy((Bit32u)laddress, 
+   BX_CPU(0)->dbg_xlate_linear2phy((Bit32u)laddress, 
                                        (Bit32u*)&phys, 
                                        (Boolean*)&valid);
    if (!valid)
@@ -321,11 +321,11 @@ static int access_linear(Bit32u laddress,
    
    if (rw == BX_READ)
      {
-       valid = bx_mem.dbg_fetch_mem(phys, len, data);
+       valid = BX_MEM(0)->dbg_fetch_mem(phys, len, data);
      }
    else
      {
-       valid = bx_mem.dbg_set_mem(phys, len, data);
+       valid = BX_MEM(0)->dbg_set_mem(phys, len, data);
      }
    return(valid);
 }
@@ -357,11 +357,13 @@ static void debug_loop(void)
                       
                       BX_INFO (("continuing at %x", new_eip));
                       
-                      bx_cpu.invalidate_prefetch_q();
+		      for (int i=0; i<BX_SMP_PROCESSORS; i++) {
+                        BX_CPU(i)->invalidate_prefetch_q();
+		      }
                       
                       saved_eip = EIP;
                       
-                      BX_CPU_THIS_PTR dword.eip = new_eip;
+                      BX_CPU(0)->dword.eip = new_eip;
                    }
                  
                  stub_trace_flag = 0;
@@ -636,7 +638,11 @@ static void wait_for_connect(int portn)
      }
    
    memset (&sockaddr, '\000', sizeof sockaddr);
+#if 1
+   // if you don't have sin_len change that to #if 0.  This is the subject of
+   // bug [ 626840 ] no 'sin_len' in 'struct sockaddr_in'.
    sockaddr.sin_len = sizeof sockaddr;
+#endif
    sockaddr.sin_family = AF_INET;
    sockaddr.sin_port = htons(portn);
    sockaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.100 2002-10-06 14:16:13 kevinlawton Exp $
+// $Id: bochs.h,v 1.101 2002-10-22 12:50:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -452,6 +452,14 @@ extern logfunc_t *genlog;
 void bx_gdbstub_init(int argc, char* argv[]);
 int bx_gdbstub_check(unsigned int eip);
 #define GDBSTUB_STOP_NO_REASON   (0xac0)
+
+#if BX_SMP_PROCESSORS!=1
+#error GDB stub was written for single processor support.  If multiprocessor support is added, then we can remove this check.
+// The big problem is knowing which CPU gdb is referring to.  In other words,
+// what should we put for "n" in BX_CPU(n)->dbg_xlate_linear2phy() and
+// BX_CPU(n)->dword.eip, etc.
+#endif
+
 #endif
 
 #if BX_DISASM
