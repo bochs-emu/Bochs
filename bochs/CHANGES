@@ -37,10 +37,14 @@ Changes to next release:
     - multiple parallel port support added (2 ports now available)
   - vga
     - VBE 8 bit DAC support added
+  - floppy
+    - raw floppy access now works on Win9x host (Ben Lunt)
 
 - System BIOS
-    - turn floppy motor off 2 seconds after last read/write/recalibrate command
-      (Ben Lunt)
+  - turn floppy motor off 2 seconds after last read/write/recalibrate command
+    (Ben Lunt)
+  - int13_cdrom / 32 bit register update fixes for FreeBSD cdrom boot
+    (Fabrice Bellard)
 
 - display libraries
   - status bar with indicators for cdrom, floppy, harddisk and keyboard added
