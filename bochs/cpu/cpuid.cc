@@ -85,10 +85,11 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 		* Model-0000B
 		* Family-1111B
 		* Processor Type-00B (OEM)
+                * Stepping-0B
 */
     model    = 0;
-    family   = 0x0F;
-    stepping = 10;
+    family   = 0xf;
+    stepping = 0;
 
 #if BX_SUPPORT_X86_64
     model = 2;    	// Hammer returns what?
@@ -334,7 +335,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       break;
     case 0x80000003:
       RAX = 0x65636F72; // "roce"
-      RBX = 0x6C687441; // "ssor"
+      RBX = 0x726F7373; // "ssor"
       RCX = 0x00000000;
       RDX = 0x00000000;
       break;
