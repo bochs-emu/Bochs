@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.20 2004-08-17 17:34:47 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.21 2004-08-18 20:47:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,38 +57,26 @@ bx_bool BX_CPU_C::get_CFLazy(void)
                               BX_CPU_THIS_PTR oszapc.op1_64);
           break;
 #endif
+        // used only when CF = 1 when executing ADC insruction
         case BX_INSTR_ADC8:
-          cf =
-            (BX_CPU_THIS_PTR oszapc.result_8 <
-             BX_CPU_THIS_PTR oszapc.op1_8) ||
-            (BX_CPU_THIS_PTR oszapc.prev_CF &&
-             BX_CPU_THIS_PTR oszapc.result_8 ==
-             BX_CPU_THIS_PTR oszapc.op1_8);
+          cf = (BX_CPU_THIS_PTR oszapc.result_8 <=
+                              BX_CPU_THIS_PTR oszapc.op1_8);
           break;
+        // used only when CF = 1 when executing ADC insruction
         case BX_INSTR_ADC16:
-          cf =
-            (BX_CPU_THIS_PTR oszapc.result_16 <
-             BX_CPU_THIS_PTR oszapc.op1_16) ||
-            (BX_CPU_THIS_PTR oszapc.prev_CF &&
-             BX_CPU_THIS_PTR oszapc.result_16 ==
-             BX_CPU_THIS_PTR oszapc.op1_16);
+          cf = (BX_CPU_THIS_PTR oszapc.result_16 <=
+                              BX_CPU_THIS_PTR oszapc.op1_16);
           break;
+        // used only when CF = 1 when executing ADC insruction
         case BX_INSTR_ADC32:
-          cf =
-            (BX_CPU_THIS_PTR oszapc.result_32 <
-             BX_CPU_THIS_PTR oszapc.op1_32) ||
-            (BX_CPU_THIS_PTR oszapc.prev_CF &&
-             BX_CPU_THIS_PTR oszapc.result_32 ==
-             BX_CPU_THIS_PTR oszapc.op1_32);
+          cf = (BX_CPU_THIS_PTR oszapc.result_32 <=
+                              BX_CPU_THIS_PTR oszapc.op1_32);
           break;
 #if BX_SUPPORT_X86_64
+        // used only when CF = 1 when executing ADC insruction
         case BX_INSTR_ADC64:
-          cf =
-            (BX_CPU_THIS_PTR oszapc.result_64 <
-             BX_CPU_THIS_PTR oszapc.op1_64) ||
-            (BX_CPU_THIS_PTR oszapc.prev_CF &&
-             BX_CPU_THIS_PTR oszapc.result_64 ==
-             BX_CPU_THIS_PTR oszapc.op1_64);
+          cf = (BX_CPU_THIS_PTR oszapc.result_64 <=
+                              BX_CPU_THIS_PTR oszapc.op1_64);
           break;
 #endif
         case BX_INSTR_SUB8:
@@ -113,34 +101,30 @@ bx_bool BX_CPU_C::get_CFLazy(void)
                               BX_CPU_THIS_PTR oszapc.op2_64);
           break;
 #endif
+        // used only when CF = 1 when executing SBB instruction
         case BX_INSTR_SBB8:
           cf =
-            (BX_CPU_THIS_PTR oszapc.op1_8 <
-             BX_CPU_THIS_PTR oszapc.result_8) ||
-            ((BX_CPU_THIS_PTR oszapc.op2_8==0xff) &&
-             BX_CPU_THIS_PTR oszapc.prev_CF);
+            (BX_CPU_THIS_PTR oszapc.op1_8 < BX_CPU_THIS_PTR oszapc.result_8) ||
+            (BX_CPU_THIS_PTR oszapc.op2_8==0xff);
           break;
+        // used only when CF = 1 when executing SBB instruction
         case BX_INSTR_SBB16:
           cf = 
-            (BX_CPU_THIS_PTR oszapc.op1_16 <
-             BX_CPU_THIS_PTR oszapc.result_16) ||
-            ((BX_CPU_THIS_PTR oszapc.op2_16==0xffff) &&
-             BX_CPU_THIS_PTR oszapc.prev_CF);
+            (BX_CPU_THIS_PTR oszapc.op1_16 < BX_CPU_THIS_PTR oszapc.result_16) ||
+            (BX_CPU_THIS_PTR oszapc.op2_16==0xffff);
           break;
+        // used only when CF = 1 when executing SBB instruction
         case BX_INSTR_SBB32:
           cf = 
-            (BX_CPU_THIS_PTR oszapc.op1_32 <
-             BX_CPU_THIS_PTR oszapc.result_32) ||
-            ((BX_CPU_THIS_PTR oszapc.op2_32==0xffffffff) &&
-             BX_CPU_THIS_PTR oszapc.prev_CF);
+            (BX_CPU_THIS_PTR oszapc.op1_32 < BX_CPU_THIS_PTR oszapc.result_32) ||
+            (BX_CPU_THIS_PTR oszapc.op2_32==0xffffffff);
           break;
 #if BX_SUPPORT_X86_64
+        // used only when CF = 1 when executing SBB instruction
         case BX_INSTR_SBB64:
           cf = 
-            (BX_CPU_THIS_PTR oszapc.op1_64 <
-             BX_CPU_THIS_PTR oszapc.result_64) ||
-            ((BX_CPU_THIS_PTR oszapc.op2_64==BX_CONST64(0xffffffffffffffff)) &&
-             BX_CPU_THIS_PTR oszapc.prev_CF);
+            (BX_CPU_THIS_PTR oszapc.op1_64 < BX_CPU_THIS_PTR oszapc.result_64) ||
+            (BX_CPU_THIS_PTR oszapc.op2_64==BX_CONST64(0xffffffffffffffff));
           break;
 #endif
         case BX_INSTR_NEG8:
@@ -896,7 +880,7 @@ bx_bool BX_CPU_C::get_PFLazy(void)
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
-      BX_CPU_THIS_PTR eflags.val32 |= (!!pf)<<2;
+      BX_CPU_THIS_PTR eflags.val32 |= (pf)<<2; // pf is always 0 or 1 here
       return(pf);
 
     case BX_LF_INDEX_OSZAP:
@@ -925,7 +909,7 @@ bx_bool BX_CPU_C::get_PFLazy(void)
         }
       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
-      BX_CPU_THIS_PTR eflags.val32 |= (!!pf)<<2;
+      BX_CPU_THIS_PTR eflags.val32 |= (pf)<<2; // pf is always 0 or 1 here
       return(pf);
 
     default:

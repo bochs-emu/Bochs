@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.32 2004-08-17 17:34:47 sshwarts Exp $
+// $Id: arith8.cc,v 1.33 2004-08-18 20:47:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,11 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 
   void
@@ -53,7 +51,6 @@ BX_CPU_C::ADD_EbGb(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 }
 
-
   void
 BX_CPU_C::ADD_GbEb(bxInstruction_c *i)
 {
@@ -75,7 +72,6 @@ BX_CPU_C::ADD_GbEb(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 }
 
-
   void
 BX_CPU_C::ADD_ALIb(bxInstruction_c *i)
 {
@@ -88,7 +84,6 @@ BX_CPU_C::ADD_ALIb(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 }
-
 
   void
 BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
@@ -109,9 +104,11 @@ BX_CPU_C::ADC_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(sum);
     }
 
-  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADC8);
+  else
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 }
-
 
   void
 BX_CPU_C::ADC_GbEb(bxInstruction_c *i)
@@ -130,12 +127,13 @@ BX_CPU_C::ADC_GbEb(bxInstruction_c *i)
 
   sum = op1 + op2 + temp_CF;
 
-  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8,
-                           temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADC8);
+  else
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), sum);
 }
-
 
   void
 BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
@@ -148,9 +146,11 @@ BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   AL = sum;
 
-  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADC8);
+  else
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 }
-
 
   void
 BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
@@ -171,9 +171,11 @@ BX_CPU_C::SBB_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(diff_8);
     }
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SBB8);
+  else
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
 }
-
 
   void
 BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
@@ -194,9 +196,11 @@ BX_CPU_C::SBB_GbEb(bxInstruction_c *i)
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), diff_8);
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SBB8);
+  else
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
 }
-
 
   void
 BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
@@ -209,9 +213,11 @@ BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   AL = diff_8;
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SBB8);
+  else
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
 }
-
 
   void
 BX_CPU_C::SBB_EbIb(bxInstruction_c *i)
@@ -232,9 +238,11 @@ BX_CPU_C::SBB_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(diff_8);
     }
 
-  SET_FLAGS_OSZAPC_8_CF(op1_8, op2_8, diff_8, BX_INSTR_SBB8, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SBB8);
+  else
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
 }
-
 
   void
 BX_CPU_C::SUB_EbGb(bxInstruction_c *i)
@@ -254,9 +262,11 @@ BX_CPU_C::SUB_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(diff_8);
     }
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SBB8);
+  else
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
 }
-
 
   void
 BX_CPU_C::SUB_GbEb(bxInstruction_c *i)
@@ -441,9 +451,11 @@ BX_CPU_C::ADC_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(sum);
   }
 
-  SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADC8);
+  else
+    SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD8);
 }
-
 
   void
 BX_CPU_C::SUB_EbIb(bxInstruction_c *i)

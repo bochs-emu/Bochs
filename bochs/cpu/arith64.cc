@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.22 2004-08-17 17:34:47 sshwarts Exp $
+// $Id: arith64.cc,v 1.23 2004-08-18 20:47:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,6 @@ BX_CPU_C::ADD_RAXId(bxInstruction_c *i)
 
     op1_64 = RAX;
     op2_64 = (Bit32s) i->Id();
-
     sum_64 = op1_64 + op2_64;
 
     /* now write sum back to destination */
@@ -110,7 +109,7 @@ BX_CPU_C::ADD_RAXId(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, sum_64;
@@ -137,13 +136,16 @@ BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
       Write_RMW_virtual_qword(sum_64);
       }
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADC64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
 }
 
   void
 BX_CPU_C::ADC_GqEq(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, sum_64;
@@ -165,13 +167,16 @@ BX_CPU_C::ADC_GqEq(bxInstruction_c *i)
     /* now write sum back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), sum_64);
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADC64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
 }
 
   void
 BX_CPU_C::ADC_RAXId(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, sum_64;
@@ -183,13 +188,16 @@ BX_CPU_C::ADC_RAXId(bxInstruction_c *i)
     /* now write sum back to destination */
     RAX = sum_64;
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADC64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
 }
 
   void
 BX_CPU_C::SBB_EqGq(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, diff_64;
@@ -216,13 +224,16 @@ BX_CPU_C::SBB_EqGq(bxInstruction_c *i)
       Write_RMW_virtual_qword(diff_64);
       }
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, diff_64, BX_INSTR_SBB64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SBB64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
 }
 
   void
 BX_CPU_C::SBB_GqEq(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, diff_64;
@@ -244,13 +255,16 @@ BX_CPU_C::SBB_GqEq(bxInstruction_c *i)
     /* now write diff back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), diff_64);
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, diff_64, BX_INSTR_SBB64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SBB64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
 }
 
   void
 BX_CPU_C::SBB_RAXId(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, diff_64;
@@ -262,13 +276,16 @@ BX_CPU_C::SBB_RAXId(bxInstruction_c *i)
     /* now write diff back to destination */
     RAX = diff_64;
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, diff_64, BX_INSTR_SBB64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SBB64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
 }
 
   void
 BX_CPU_C::SBB_EqId(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, diff_64;
@@ -294,7 +311,10 @@ BX_CPU_C::SBB_EqId(bxInstruction_c *i)
       Write_RMW_virtual_qword(diff_64);
       }
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, diff_64, BX_INSTR_SBB64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SBB64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
 }
 
   void
@@ -370,7 +390,6 @@ BX_CPU_C::SUB_RAXId(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
 }
 
-
   void
 BX_CPU_C::CMP_EqGq(bxInstruction_c *i)
 {
@@ -433,8 +452,7 @@ BX_CPU_C::CMP_RAXId(bxInstruction_c *i)
   void
 BX_CPU_C::CDQE(bxInstruction_c *i)
 {
-  /* CWDE: no flags are affected */
-
+    /* CWDE: no flags are affected */
     RAX = (Bit32s) EAX;
 }
 
@@ -525,7 +543,7 @@ BX_CPU_C::ADD_EqId(bxInstruction_c *i)
   void
 BX_CPU_C::ADC_EqId(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
+    bx_bool temp_CF = getB_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, sum_64;
@@ -551,7 +569,10 @@ BX_CPU_C::ADC_EqId(bxInstruction_c *i)
       Write_RMW_virtual_qword(sum_64);
       }
 
-    SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64, temp_CF);
+    if (temp_CF)
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADC64);
+    else
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
 }
 
   void

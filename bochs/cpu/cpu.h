@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.172 2004-08-14 20:00:24 sshwarts Exp $
+// $Id: cpu.h,v 1.173 2004-08-18 20:47:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3209,27 +3209,6 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_RESULT_64(result, ins) \
     SET_FLAGS_OSZAPC_RESULT_SIZE(_64, result, ins)
-#endif
-
-#define SET_FLAGS_OSZAPC_CF_SIZE(size, lf_op1, lf_op2, lf_result, ins, last_CF) { \
-    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
-    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
-    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR oszapc.prev_CF = last_CF; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-}
-
-/* op1, op2, result and last CF */
-#define SET_FLAGS_OSZAPC_8_CF(op1, op2, result, ins, last_CF) \
-    SET_FLAGS_OSZAPC_CF_SIZE(_8, op1, op2, result, ins, last_CF)
-#define SET_FLAGS_OSZAPC_16_CF(op1, op2, result, ins, last_CF) \
-    SET_FLAGS_OSZAPC_CF_SIZE(_16, op1, op2, result, ins, last_CF)
-#define SET_FLAGS_OSZAPC_32_CF(op1, op2, result, ins, last_CF) \
-    SET_FLAGS_OSZAPC_CF_SIZE(_32, op1, op2, result, ins, last_CF)
-#if BX_SUPPORT_X86_64
-#define SET_FLAGS_OSZAPC_64_CF(op1, op2, result, ins, last_CF) \
-    SET_FLAGS_OSZAPC_CF_SIZE(_64, op1, op2, result, ins, last_CF)
 #endif
 
 // *******************

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.36 2004-08-17 17:34:35 sshwarts Exp $
+// $Id: arith16.cc,v 1.37 2004-08-18 20:47:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,9 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -58,7 +55,6 @@ BX_CPU_C::DEC_RX(bxInstruction_c *i)
   SET_FLAGS_OSZAP_RESULT_16(rx, BX_INSTR_DEC16);
 #endif
 }
-
 
   void
 BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
@@ -125,7 +121,6 @@ BX_CPU_C::ADD_GwEGw(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(nnn, sum_16);
 }
 
-
   void
 BX_CPU_C::ADD_AXIw(bxInstruction_c *i)
 {
@@ -144,7 +139,6 @@ BX_CPU_C::ADD_AXIw(bxInstruction_c *i)
 BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16, sum_16;
-
   bx_bool temp_CF = getB_CF();
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
@@ -160,7 +154,10 @@ BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(sum_16);
     }
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 }
 
 
@@ -183,9 +180,11 @@ BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 }
-
 
   void
 BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
@@ -200,17 +199,17 @@ BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
 
   AX = sum_16;
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 }
-
 
   void
 BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
 {
-  bx_bool temp_CF;
   Bit16u op2_16, op1_16, diff_16;
-
-  temp_CF = getB_CF();
+  bx_bool temp_CF = getB_CF();
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -225,9 +224,11 @@ BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(diff_16);
     }
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, diff_16, BX_INSTR_SBB16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
 }
-
 
   void
 BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
@@ -248,9 +249,11 @@ BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), diff_16);
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, diff_16, BX_INSTR_SBB16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
 }
-
 
   void
 BX_CPU_C::SBB_AXIw(bxInstruction_c *i)
@@ -260,12 +263,14 @@ BX_CPU_C::SBB_AXIw(bxInstruction_c *i)
 
   op1_16 = AX;
   op2_16 = i->Iw();
-
   diff_16 = op1_16 - (op2_16 + temp_CF);
 
   AX = diff_16;
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, diff_16, BX_INSTR_SBB16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
 }
 
   void
@@ -287,7 +292,10 @@ BX_CPU_C::SBB_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(diff_16);
     }
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, diff_16, BX_INSTR_SBB16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
 }
 
 
@@ -322,10 +330,9 @@ BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_Sub16)
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
 #endif
 }
-
 
   void
 BX_CPU_C::SUB_GwEw(bxInstruction_c *i)
@@ -374,7 +381,6 @@ BX_CPU_C::SUB_AXIw(bxInstruction_c *i)
   AX = diff_16;
 }
 
-
   void
 BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
 {
@@ -398,7 +404,6 @@ BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 #endif
 }
-
 
   void
 BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
@@ -424,7 +429,6 @@ BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
 #endif
 }
 
-
   void
 BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
 {
@@ -443,12 +447,10 @@ BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
 #endif
 }
 
-
   void
 BX_CPU_C::CBW(bxInstruction_c *i)
 {
   /* CBW: no flags are effected */
-
   AX = (Bit8s) AL;
 }
 
@@ -464,7 +466,6 @@ BX_CPU_C::CWD(bxInstruction_c *i)
     DX = 0x0000;
     }
 }
-
 
   void
 BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
@@ -501,10 +502,10 @@ BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 #else
-  BX_PANIC(("XADD_EvGv: not supported on < 80486"));
+  BX_INFO(("XADD_EwGw: not supported on < 80486"));
+  UndefinedOpcode(i);
 #endif
 }
-
 
   void
 BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
@@ -567,9 +568,11 @@ BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(sum_16);
     }
 
-  SET_FLAGS_OSZAPC_16_CF(op1_16, op2_16, sum_16, BX_INSTR_ADC16, temp_CF);
+  if (temp_CF)
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
+  else
+    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 }
-
 
   void
 BX_CPU_C::SUB_EwIw(bxInstruction_c *i)
@@ -668,7 +671,6 @@ BX_CPU_C::INC_Ew(bxInstruction_c *i)
   SET_FLAGS_OSZAP_RESULT_16(op1_16, BX_INSTR_INC16);
 }
 
-
   void
 BX_CPU_C::DEC_Ew(bxInstruction_c *i)
 {
@@ -701,7 +703,6 @@ BX_CPU_C::DEC_Ew(bxInstruction_c *i)
   SET_FLAGS_OSZAP_RESULT_16(op1_16, BX_INSTR_DEC16);
 #endif
 }
-
 
   void
 BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)

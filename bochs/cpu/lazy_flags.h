@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.13 2004-08-16 20:18:01 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.14 2004-08-18 20:47:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,11 +37,13 @@
 #define BX_INSTR_SUB32          7
 #define BX_INSTR_SUB64          8
 
+// used only when CF = 1 when executing ADC instruction
 #define BX_INSTR_ADC8           9
 #define BX_INSTR_ADC16          10
 #define BX_INSTR_ADC32          11
 #define BX_INSTR_ADC64          12
 
+// used only when CF = 1 when executing SBB instruction
 #define BX_INSTR_SBB8           13
 #define BX_INSTR_SBB16          14
 #define BX_INSTR_SBB32          15
@@ -117,7 +119,6 @@ typedef struct {
   Bit64u result_64;
 #endif
 
-  bx_bool prev_CF;
   unsigned instr;
 } bx_lf_flags_entry;
 
