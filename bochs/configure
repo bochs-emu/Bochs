@@ -2484,7 +2484,7 @@ else
       cat >> confdefs.h <<\EOF
 #define BX_NO_EMPTY_STRUCTS 1
 EOF
-,
+
       echo "$ac_t""no" 1>&6
     
 fi
@@ -2508,11 +2508,11 @@ else
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   
+      echo "$ac_t""no" 1>&6
       cat >> confdefs.h <<\EOF
 #define BX_NO_ATTRIBUTES 1
 EOF
-,
-      echo "$ac_t""no" 1>&6
+
     
 fi
 rm -f conftest*
@@ -2538,11 +2538,11 @@ EOF
 if { (eval echo configure:2539: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   
+     echo "$ac_t""yes" 1>&6
      cat >> confdefs.h <<\EOF
 #define HAVE_HASH_MAP 1
 EOF
 
-     echo "$ac_t""yes" 1>&6
    
 else
   echo "configure: failed program was:" >&5
