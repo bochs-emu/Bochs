@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.29 2002-01-29 17:20:11 vruppert Exp $
+// $Id: ne2k.cc,v 1.30 2002-03-08 08:33:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.29 2002-01-29 17:20:11 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.30 2002-03-08 08:33:37 bdenney Exp $"));
 	// nothing for now
 }
 
@@ -611,7 +611,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
       BX_PANIC(("TCR write, inhibit-CRC not supported"));
 
     // Auto-transmit disable very suspicious
-    if (value & 0x04)
+    if (value & 0x08)
       BX_PANIC(("TCR write, auto transmit disable not supported"));
 
     // Allow collision-offset to be set, although not used
@@ -1234,7 +1234,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.29 2002-01-29 17:20:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.30 2002-03-08 08:33:37 bdenney Exp $"));
   BX_NE2K_THIS devices = d;
 
 
