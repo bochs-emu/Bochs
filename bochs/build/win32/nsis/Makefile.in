@@ -12,8 +12,15 @@ MAKENSIS='c:/Program Files/NSIS/makensis'
 
 VERSION=@VERSION@
 TARGET=Bochs-${VERSION}.exe
+DLXDIR=bochs-${VERSION}/dlxlinux
 
-${TARGET}: bochs.nsi
+all: ${TARGET}
+
+fixups::
+	if test -f ${DLXDIR}/bochsrc.txt; then mv ${DLXDIR}/bochsrc.txt ${DLXDIR}/bochsrc.bxrc; fi
+	rm -f ${DLXDIR}/*.bat
+
+${TARGET}: fixups bochs.nsi
 	rm -rf ${TARGET}
 	${MAKENSIS} bochs.nsi
 	test -f ${TARGET}
