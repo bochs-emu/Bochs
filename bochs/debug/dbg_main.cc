@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.54 2002-09-06 16:43:20 bdenney Exp $
+// $Id: dbg_main.cc,v 1.55 2002-09-06 17:41:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1276,6 +1276,14 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
   }
   return "unknown context";
 }
+
+char*
+bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
+{
+  // just prints an error anyway
+  return bx_dbg_symbolic_address (0,0,0);
+}
+
 
 void
 bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
