@@ -1,5 +1,5 @@
 Readme for wxWindows Interface
-updated Thu Aug 29 10:43:37 EDT 2002
+updated Sat Dec 21 11:09:34 EST 2002
 
 Contributors to wxWindows port:
   Don Becker (Psyon)
@@ -12,33 +12,20 @@ wxWindows Configuration Interface
 The wxWindows port began in June 2001 around the time of Bochs 1.2.1.  Dave
 Poirier and Bryce Denney started adding a wxWindows configuration interface.
 We made some progress, but stopped after a while.  Then in March/April 2002
-Bryce and Psyon revived the wxWindows branch and turned it into a (mostly)
-usable interface.  Psyon did most of the work to get text and graphics 
-working, and Bryce worked on event passing between threads, and keyboard
-mapping.
+Bryce and Psyon revived the wxWindows branch and turned it into a usable
+interface.  Psyon did most of the work to get text and graphics working, and
+Bryce worked on event passing between threads, and keyboard mapping.
+Starting in August 2002, Bryce added lots of dialog boxes to allow you
+to set all the bochsrc parameters.  At the time of release 2.0, there
+are still some bugs but it is pretty stable and usable.
 
-The wxWindows window appears first.  This WILL BE where you can choose a preset
-configuration or create one from scratch, then edit the bochsrc options using
-the GUI.  Then, by clicking on Simulate:Start, you can start up the Bochs
-simulation.  The VGA display is implemented in wxWindows.
+Bochs should be build with wxWindows 2.3.3 or later.  It will probably
+not compile with 2.2.x without some work.  wxWindows 2.3.3 includes 
+a patch by Bryce Denney to allow us to get raw keycode data for several
+OSes.
 
-WARNING: Don't expect perfect code yet!
-
-Regarding wxWindows versions, we started out with 2.2.9 but then found
-a reason or two to switch to 2.3.2.  (I have forgotten exactly what
-they were.)  In addition, I made a keyboard patch to wxWindows itself,
-which they accepted for the next version, that allows us to get raw
-keycodes out of the library in addition to wxwindows translated keys.
-Bochs will work with or without it, but you'll find that the keyboard
-mapping is much better with the patch, which is called
-patches/patch.wx-raw-keycodes.
-
-So the ideal wxWindows version is 2.3.2+patch.wx-raw-keycodes.
-To apply the patch, go to the main wx____-2.3.2 directory and
-type "patch -p1 < THIS_PATCH_FILE".
-
-Bryce has been developing in linux, where a "configure --with-wx;make"
-should work fine.
+On any UNIX platform with wxWindows installed, configure with
+--with-wx to enable the wxWindows display library.
 
 To build in MS VC++:
 - edit .conf.win32-vcpp and add "--with-wx" to the configure line. 
@@ -50,41 +37,18 @@ To build in MS VC++:
   or use winzip or whatever else.
 - open up bochs.dsw, the workspace file
 - edit project settings so that VC++ can find the wxWindows include
-  files and libraries on your system.  I installed them in
-  d:/wx/wx232/include and d:/wx/wx232/lib.  Specifically, edit
+  files and libraries on your system.  Bryce installed them in
+  d:/wx/wx233/include and d:/wx/wx233/lib.  Specifically, edit
   - Project>Settings>C/C++>Category=Preprocessor: include directories.
   - Project>Settings>Link>Category=Input: additional library path.
 - build
 
-Note that the project is set up for wxWindows 2.3.2, and the only 
-configuration that I've used is called Win32 Debug.  To use on 
-other wxwindows versions, you will have to change some of the names
-of the libraries to include.  Use the samples that came with that
-version of wxwindows for reference.
-
-What works right now (September 2002):
-- cd to a directory with a bochsrc and disk images in it
-- start up bochs.  You get a small window with a File, Edit, Simulate,
-  Debug, Log, Help menus.  The empty black rectangle is where the
-  simulation will be displayed.
-- choose File:Read Configuration and select the bochsrc file you want
-  to read.
-- use the choices on the Edit menu to adjust settings.
-- choose "Start" on the Simulate menu.  Bochs starts running in the
-  You can pause it, resume it, or kill it on the Simulate menu.
-  Most toolbar buttons work.
-- You can pause, resume, and stop the simulation too.  If you start
-  a new simulation, it's possible that things may not work quite right.  
-  The initialization and re-initialization process needs work.
-- Debug:Show CPU displays all the CPU registers.  When Bochs is compiled
-  with debugging support, this screen has Continue, Stop, and Step 
-  buttons to let you control the simulation.  Debug:Show Keyboard shows 
-  some of the internal state of the Bochs keyboard in a dialog box.
-  Both dialog boxes are updated periodically during simulation.
+Note that the project is set up for wxWindows 2.3.3.  To use on other
+wxwindows versions, you will have to change some of the names of the libraries
+to include.  Use the samples that came with that version of wxwindows for
+reference.
 
 To do:
-- if you stop and start a second simulation, tons of parameters get 
-  redefined and it's a big mess.
 - now that ParamDialog works, I may rewrite some of the other dialogs 
   as subclasses of ParamDialog.  This would lead to more compact code,
   and fewer bugs.
