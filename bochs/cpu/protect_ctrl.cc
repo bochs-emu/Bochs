@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.20 2002-10-24 21:05:52 bdenney Exp $
+// $Id: protect_ctrl.cc,v 1.21 2002-10-25 17:23:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,7 +78,7 @@ BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
           }
         }
       else {
-        Write_RMW_virtual_word(op1_16);
+        write_RMW_virtual_word(op1_16);
         }
       set_ZF(1);
       }

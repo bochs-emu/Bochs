@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.107 2002-10-25 11:44:34 bdenney Exp $
+// $Id: cpu.h,v 1.108 2002-10-25 17:23:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2714,11 +2714,6 @@ union {
   BX_SMF void write_RMW_virtual_word(Bit16u val16);
   BX_SMF void write_RMW_virtual_dword(Bit32u val32);
   BX_SMF void write_RMW_virtual_qword(Bit64u val64);
-
-#define Write_RMW_virtual_byte(val8)   write_RMW_virtual_byte(val8)
-#define Write_RMW_virtual_word(val16)  write_RMW_virtual_word(val16)
-#define Write_RMW_virtual_dword(val32) write_RMW_virtual_dword(val32)
-#define Write_RMW_virtual_qword(val32) write_RMW_virtual_qword(val32)
 
 #if BX_SUPPORT_SSE
   BX_SMF void readVirtualDQword(unsigned s, bx_address off, Bit8u *data);
