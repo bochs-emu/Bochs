@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.188 2002-12-13 17:52:09 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.189 2002-12-13 20:37:37 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1522,10 +1522,12 @@ AC_ARG_ENABLE(docbook,
 
 if test $build_docbook = 1; then
   AC_MSG_RESULT(yes)
+  BUILD_DOCBOOK_VAR=build_docbook
   INSTALL_DOCBOOK_VAR=install_docbook
 else
   AC_MSG_RESULT(no)
 fi
+AC_SUBST(BUILD_DOCBOOK_VAR)
 AC_SUBST(INSTALL_DOCBOOK_VAR)
 AC_SUBST(DOCBOOK2HTML)
 
