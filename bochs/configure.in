@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.127 2002-09-24 21:35:04 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.128 2002-09-24 21:47:27 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -228,8 +228,8 @@ AC_ARG_ENABLE(realtime-pit,
     AC_DEFINE(BX_USE_REALTIME_PIT, 0)
    fi],
   [
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_REALTIME_PIT, 1)
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_USE_REALTIME_PIT, 0)
     ]
   )
 AC_SUBST(BX_USE_REALTIME_PIT)
