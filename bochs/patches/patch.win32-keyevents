@@ -2,7 +2,7 @@
 Patch name: patch.win32-keyevents
 Author: Volker Ruppert
 Date: Sun Feb 16 12:55:00 CET 2003
-Status: Proposed
+Status: applied to main code
 
 Detailed description:
   This patch fixes the key handling of the win32 gui. Now the function
