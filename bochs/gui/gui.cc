@@ -174,6 +174,7 @@ bx_gui_c::power_handler(void)
 bx_gui_c::snapshot_handler(void)
 {
   BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
+  bx_control_panel_entry ();
 }
 
   void

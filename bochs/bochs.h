@@ -34,6 +34,7 @@ extern "C" {
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #ifndef WIN32
 #  include <unistd.h>
 #else
@@ -256,7 +257,15 @@ public:
 	void setprefix(char *);
 	void settype(int);
 	void setio(class iofunctions *);
-	void setonoff(int loglev, int value) { onoff[loglev] = value; }
+	void setonoff(int loglev, int value) {
+	  assert (loglev >= 0 && loglev < MAX_LOGLEV);
+	  onoff[loglev] = value; 
+	}
+	char *getprefix () { return prefix; }
+	int getonoff(int level) {
+	  assert (level>=0 && level<MAX_LOGLEV);
+	  return onoff[level]; 
+        }
 } logfunc_t;
 
 class iofunctions {
@@ -265,63 +274,6 @@ class iofunctions {
 	class logfunctions *log;
 	void init(void);
 	void flush(void);
-	char *getlevel(int i) {
-		static char *loglevel[] = {
-			"DEBUG",
-			"INFO",
-			"ERROR",
-			"PANIC",
-		};
-		return loglevel[i];
-	}
-
-	char *getclass(int i) {
-		char *logclass[] = {
-		  "IO  ",
-		  "FD  ",
-		  "GEN ",
-		  "CMOS",
-		  "CD  ",
-		  "DMA ",
-		  "ETH ",
-		  "G2H ",
-		  "HD  ",
-		  "KBD ",
-		  "NE2K",
-		  "PAR ",
-		  "PCI ",
-		  "PIC ",
-		  "PIT ",
-		  "SB16",
-		  "SER ",
-		  "VGA ",
-		  "ST  ",
-		  "DEV ",
-		  "MEM ",
-		  "DIS ",
-		  "GUI ",
-		  "IOAP",
-		  "APIC",
-		  "CPU0",
-		  "CPU1",
-		  "CPU2",
-		  "CPU3",
-		  "CPU4",
-		  "CPU5",
-		  "CPU6",
-		  "CPU7",
-		  "CPU8",
-		  "CPU9",
-		  "CPUa",
-		  "CPUb",
-		  "CPUc",
-		  "CPUd",
-		  "CPUe",
-		  "CPUf",
-		};
-		return logclass[i];
-	}
-
 // Log Class defines
 #define    IOLOG           0
 #define    FDLOG           1
@@ -382,11 +334,75 @@ public:
 	logfunc_t *get_logfn (int index) { return logfn_list[index]; }
 	void add_logfn (logfunc_t *fn);
 	void set_log_action (int loglevel, int action);
+	char *getclass(int i) {
+		char *logclass[] = {
+		  "IO  ",
+		  "FD  ",
+		  "GEN ",
+		  "CMOS",
+		  "CD  ",
+		  "DMA ",
+		  "ETH ",
+		  "G2H ",
+		  "HD  ",
+		  "KBD ",
+		  "NE2K",
+		  "PAR ",
+		  "PCI ",
+		  "PIC ",
+		  "PIT ",
+		  "SB16",
+		  "SER ",
+		  "VGA ",
+		  "ST  ",
+		  "DEV ",
+		  "MEM ",
+		  "DIS ",
+		  "GUI ",
+		  "IOAP",
+		  "APIC",
+		  "CPU0",
+		  "CPU1",
+		  "CPU2",
+		  "CPU3",
+		  "CPU4",
+		  "CPU5",
+		  "CPU6",
+		  "CPU7",
+		  "CPU8",
+		  "CPU9",
+		  "CPUa",
+		  "CPUb",
+		  "CPUc",
+		  "CPUd",
+		  "CPUe",
+		  "CPUf",
+		};
+		return logclass[i];
+	}
+	char *getlevel(int i) {
+		static char *loglevel[] = {
+			"DEBUG",
+			"INFO",
+			"ERROR",
+			"PANIC",
+		};
+	        assert (i>=0 && i<4);
+		return loglevel[i];
+	}
+	char *getaction(int i) {
+	   static char *name[] = { "ignore", "report", "fatal" };
+	   assert (i>=0 && i<3);
+	   return name[i];
+	}
+
 protected:
 	int n_logfn;
 #define MAX_LOGFNS 64
 	logfunc_t *logfn_list[MAX_LOGFNS];
 	char *logfn;
+
+
 };
 
 typedef class iofunctions iofunc_t;
@@ -512,9 +528,9 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 #include "pc_system.h"
 
 #include "gui/gui.h"
+#include "gui/control.h"
 extern bx_gui_c   bx_gui;
 #include "iodev/iodev.h"
-
 
 
 

@@ -47,7 +47,7 @@ GUI_OBJS_MACOS = macintosh.o
 GUI_OBJS_NOGUI = nogui.o
 GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
-GUI_OBJS = gui.o @GUI_OBJS@
+GUI_OBJS = gui.o control.o @GUI_OBJS@
 
 BX_INCDIRS = -I.. -I../iodev -I../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
@@ -59,7 +59,7 @@ LOCAL_CXXFLAGS =
 BX_GUI_OBJS = $(GUI_OBJS)
 
 
-BX_INCLUDES = iodev.h
+BX_INCLUDES = iodev.h control.h
 
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
