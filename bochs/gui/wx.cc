@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.32 2002-09-26 19:34:44 bdenney Exp $
+// $Id: wx.cc,v 1.33 2002-10-03 13:12:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -843,6 +843,7 @@ UpdateScreen(char *newBits, int x, int y, int width, int height)
 				wxScreen[(y * wxScreenX * 3) + ((x+c) * 3) + 2] = wxBochsPalette[newBits[(i * width) + c]].blue;
 			}
 			y++;
+			if(y >= wxScreenY) break;
 		}
 	} else {
 	  IFDBG_VGA (wxLogDebug ("UpdateScreen with null wxScreen"));
