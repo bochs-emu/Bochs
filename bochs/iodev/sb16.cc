@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.36 2003-11-14 19:00:32 vruppert Exp $
+// $Id: sb16.cc,v 1.37 2003-11-15 14:56:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -216,6 +216,7 @@ void bx_sb16_c::init(void)
   DSP.midiuartmode = 0;
   DSP.resetport = 1;  // so that one call to dsp_reset is sufficient
   dsp_reset(0);       // (reset is 1 to 0 transition)
+  DSP.testreg = 0;
 
   BX_SB16_IRQ = -1; // will be initialized later by the mixer reset
 
@@ -458,6 +459,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	case 0x40:
 	case 0x38:
 	case 0xe0:
+	case 0xe4:
 	  bytesneeded = 1;
 	  break;
 	case 0x05:
@@ -473,7 +475,6 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	case 0x76:
 	case 0x77:
 	case 0x80:
-	case 0xe4:
 	  bytesneeded = 2;
 	  break;
 
@@ -882,9 +883,14 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	  DSP.dataout.put(0);    // need extra string end
 	  break;
 
-	  // used and expected by the CL diagnose.exe
+	  // write test register
 	case 0xe4: 
-	  DSP.dataout.put(0xaa);
+	  DSP.datain.get(&DSP.testreg);
+	  break;
+
+	  // read test register
+	case 0xe8: 
+	  DSP.dataout.put(DSP.testreg);
 	  break;
 
 	  // Trigger 8-bit IRQ
@@ -3199,7 +3205,8 @@ void bx_sb16_c::writelog(int loglevel, const char *str, ...)
 // append a line to the log file, if desired
   if ( (int) bx_options.sb16.Ologlevel->get () >= loglevel)
     {
-        fprintf(LOGFILE, "%011lld (%d) ", bx_pc_system.time_ticks(), loglevel);
+        fprintf(LOGFILE, "%011lld", bx_pc_system.time_ticks());
+        fprintf(LOGFILE, " (%d) ", loglevel);
 	va_list ap;
 	va_start(ap, str);
 	vfprintf(LOGFILE, str, ap);

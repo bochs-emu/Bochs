@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.14 2003-06-21 12:55:19 vruppert Exp $
+// $Id: sb16.h,v 1.15 2003-11-15 14:56:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -230,6 +230,7 @@ private:
     Bit8u speaker,prostereo;                   // properties of the sound input/output
     bx_bool irqpending;                        // Is an IRQ pending (not ack'd)
     bx_bool midiuartmode;                      // Is the DSP in MIDI UART mode
+    Bit8u testreg;
     struct bx_sb16_dsp_dma_struct {
       // Properties of the current DMA transfer:
       // mode= 0: no transfer, 1: single-cycle transfer, 2: auto-init DMA
