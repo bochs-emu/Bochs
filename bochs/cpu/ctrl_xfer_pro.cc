@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.33 2005-03-04 21:03:22 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.34 2005-03-12 16:40:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,6 @@
 #endif
 
 
-#if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 {
@@ -423,10 +422,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     }
   }
 }
-#endif /* if BX_CPU_LEVEL >= 2 */
 
-
-#if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 {
@@ -1002,10 +998,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
   BX_PANIC(("call_protected: shouldn't get here!"));
 }
-#endif /* 286+ */
 
-
-#if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 {
@@ -1027,7 +1020,6 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   /* + 2:     CS      | + 4:         CS */
   /* + 0:     IP      | + 0:        EIP */
 
-#if BX_CPU_LEVEL >= 3
   if ( i->os32L() ) {
     /* operand size=32: third word on stack must be within stack limits,
      *   else #SS(0); */
@@ -1039,9 +1031,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     stack_cs_offset = 4;
     stack_param_offset = 8;
   }
-  else
-#endif
-  {
+  else {
     /* operand size=16: second word on stack must be within stack limits,
      *   else #SS(0); */
     if ( !can_pop(4) ) {
@@ -1130,14 +1120,11 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       return;
     }
 
-#if BX_CPU_LEVEL >= 3
     if (i->os32L()) {
       access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         4, CPL==3, BX_READ, &return_EIP);
-      }
-    else
-#endif
-    {
+    }
+    else {
       access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         2, CPL==3, BX_READ, &return_IP);
       return_EIP = return_IP;
@@ -1340,41 +1327,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     validate_seg_regs();
   }
 }
-#endif
 
-#if BX_CPU_LEVEL >= 5
-  bx_bool BX_CPP_AttrRegparmN(1)
-BX_CPU_C::iret32_real(bxInstruction_c *i)
-{ Bit32u eip, ecs, efl;
-
-  if (ESP + 12 > 0xffff)
-  { 
-    BX_PANIC(("iretd: to 12 bytes of stack not within stack limits"));
-    exception(BX_SS_EXCEPTION, 0, 0);
-    return 0;
-  }
-  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + ESP, 
-                4, CPL == 3, BX_READ, &eip);
-  if (eip > 0xffff)
-  { 
-    BX_PANIC(("iretd: instruction pointer not within code segment limits"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-    return 0;
-  }
-  pop_32(&eip);
-  pop_32(&ecs);
-  pop_32(&efl);
-  ecs &= 0xffff;
-  efl = (efl & 0x257fd5) | ( read_eflags() & 0x1a0000);
-  
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u)ecs);
-  EIP = eip;
-  writeEFlags(efl, 0xffffffff);
-  return 1;
-}
-#endif
-
-#if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::iret_protected(bxInstruction_c *i)
 {
@@ -1988,9 +1941,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
   BX_PANIC(("IRET: shouldn't get here!"));
 }
-#endif
 
-#if BX_CPU_LEVEL >= 2
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
 {
   // check always, not only in protected mode
@@ -2028,4 +1979,3 @@ void BX_CPU_C::validate_seg_regs(void)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0;
   }
 }
-#endif

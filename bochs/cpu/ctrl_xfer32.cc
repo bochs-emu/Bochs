@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.38 2005-02-16 21:26:50 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.39 2005-03-12 16:40:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,7 +67,6 @@ void BX_CPU_C::RETnear32(bxInstruction_c *i)
 
 void BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
-BailBigRSP("RETfar32_Iw");
   Bit32u eip, ecs_raw;
   Bit16s imm16;
 
@@ -101,7 +100,6 @@ done:
 
 void BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
-BailBigRSP("RETfar32");
   Bit32u eip, ecs_raw;
 
   invalidate_prefetch_q();
@@ -149,7 +147,6 @@ BailBigRSP("CALL_Ad");
 
 void BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
 {
-BailBigRSP("CALL32_Ap");
   Bit16u cs_raw;
   Bit32u disp32;
 
@@ -206,7 +203,6 @@ void BX_CPU_C::CALL_Ed(bxInstruction_c *i)
 
 void BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
 {
-BailBigRSP("CALL32_Ep");
   Bit16u cs_raw;
   Bit32u op1_32;
 
@@ -286,7 +282,7 @@ void BX_CPU_C::JCC_Jd(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-    }
+  }
 #endif
 }
 
@@ -320,7 +316,6 @@ void BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
 
 void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 {
-BailBigRSP("JMP_Ap");
   Bit32u disp32;
   Bit16u cs_raw;
 
@@ -369,7 +364,6 @@ void BX_CPU_C::JMP_Ed(bxInstruction_c *i)
 
 void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 {
-BailBigRSP("JMP32_Ep");
   Bit16u cs_raw;
   Bit32u op1_32;
 
@@ -401,8 +395,6 @@ done:
 
 void BX_CPU_C::IRET32(bxInstruction_c *i)
 {
-BailBigRSP("IRET32");
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -421,8 +413,31 @@ BailBigRSP("IRET32");
     goto done;
   }
 
-  if (iret32_real(i))
-    goto done;
+  Bit32u eip, ecs, eflags;
+
+  if (! can_pop(12)) {
+    BX_PANIC(("IRETD: to 12 bytes of stack not within stack limits"));
+    exception(BX_SS_EXCEPTION, 0, 0);
+  }
+
+  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + ESP, 
+                4, CPL == 3, BX_READ, &eip);
+
+  // still need to be validated !
+  if (eip > 0xffff) { 
+    BX_PANIC(("IRETD: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  pop_32(&eip);
+  pop_32(&ecs);
+  pop_32(&eflags);
+  ecs &= 0xffff;
+  eflags = (eflags & 0x257fd5) | (read_eflags() & 0x1a0000);
+  
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u)ecs);
+  EIP = eip;
+  writeEFlags(eflags, 0xffffffff);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.27 2005-02-16 21:26:50 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.28 2005-03-12 16:40:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -83,7 +83,6 @@ void BX_CPU_C::RETnear16(bxInstruction_c *i)
 
 void BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 {
-BailBigRSP("RETfar16_Iw");
   Bit16s imm16;
   Bit16u ip, cs_raw;
 
@@ -189,7 +188,7 @@ void BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
   if (protected_mode()) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, disp16);
     goto done;
-    }
+  }
 #endif
 
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
@@ -212,10 +211,10 @@ void BX_CPU_C::CALL_Ew(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
-    }
+  }
   else {
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    }
+  }
 
 #if BX_CPU_LEVEL >= 2
   if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
@@ -245,7 +244,7 @@ void BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   if (i->modC0()) {
     BX_INFO(("CALL_Ep: op1 is a register"));
     exception(BX_UD_EXCEPTION, 0, 0);
-    }
+  }
 
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
@@ -253,7 +252,7 @@ void BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   if ( protected_mode() ) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_16);
     goto done;
-    }
+  }
 
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_16(IP);
@@ -301,7 +300,7 @@ void BX_CPU_C::JCC_Jw(bxInstruction_c *i)
     default:
       condition = 0; // For compiler...all targets should set condition.
       break;
-    }
+  }
 
   if (condition) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -312,7 +311,7 @@ void BX_CPU_C::JCC_Jw(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-    }
+  }
 #endif
 }
 
@@ -327,7 +326,7 @@ void BX_CPU_C::JZ_Jw(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-    }
+  }
 #endif
 }
 
@@ -342,7 +341,7 @@ void BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-    }
+  }
 #endif
 }
 
@@ -352,10 +351,10 @@ void BX_CPU_C::JMP_Ew(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
-    }
+  }
   else {
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    }
+  }
 
   Bit32u new_EIP = op1_16;
   branch_near32(new_EIP);
@@ -366,7 +365,6 @@ void BX_CPU_C::JMP_Ew(bxInstruction_c *i)
 
 void BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 {
-BailBigRSP("JMP16_Ep");
   Bit16u cs_raw;
   Bit16u op1_16;
 
@@ -376,7 +374,7 @@ BailBigRSP("JMP16_Ep");
     /* far indirect must specify a memory address */
     BX_INFO(("JMP_Ep(): op1 is a register"));
     exception(BX_UD_EXCEPTION, 0, 0);
-    }
+  }
 
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
@@ -385,7 +383,7 @@ BailBigRSP("JMP16_Ep");
   if ( protected_mode() ) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_16);
     goto done;
-    }
+  }
 #endif
 
   EIP = op1_16;
@@ -398,7 +396,6 @@ done:
 
 void BX_CPU_C::IRET16(bxInstruction_c *i)
 {
-BailBigRSP("IRET16");
   Bit16u ip, cs_raw, flags;
 
   invalidate_prefetch_q();
@@ -412,14 +409,19 @@ BailBigRSP("IRET16");
     // IOPL check in stack_return_from_v86()
     stack_return_from_v86(i);
     goto done;
-    }
+  }
 
 #if BX_CPU_LEVEL >= 2
   if (BX_CPU_THIS_PTR cr0.pe) {
     iret_protected(i);
     goto done;
-    }
+  }
 #endif
+
+  if (! can_pop(6)) {
+    BX_PANIC(("IRET: top 6 bytes of stack not within stack limits"));
+    exception(BX_SS_EXCEPTION, 0, 0);
+  }
 
   pop_16(&ip);
   pop_16(&cs_raw);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.202 2005-03-09 22:01:12 sshwarts Exp $
+// $Id: cpu.h,v 1.203 2005-03-12 16:40:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2662,9 +2662,6 @@ public: // for now...
   BX_SMF void call_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void return_protected(bxInstruction_c *, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#if BX_CPU_LEVEL >= 5
-  BX_SMF bx_bool iret32_real(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif
   BX_SMF void validate_seg_regs(void);
   BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
                                      Bit32u flags32);
