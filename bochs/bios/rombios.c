@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.95 2003-08-16 20:11:28 cbothamy Exp $
+// $Id: rombios.c,v 1.96 2003-08-17 21:48:15 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.95 $";
-static char bios_date_string[] = "$Date: 2003-08-16 20:11:28 $";
+static char bios_cvs_version_string[] = "$Revision: 1.96 $";
+static char bios_date_string[] = "$Date: 2003-08-17 21:48:15 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.95 2003-08-16 20:11:28 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.96 2003-08-17 21:48:15 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -9565,9 +9565,6 @@ ASM_END
  * found at ftp://ftp.simtel.net/pub/simtelnet/msdos/screen/fntcol16.zip
  * This font is public domain
  */ 
-// FIXME we should maybe remove the 128 lower 8x8 chars from the VGABIOS.
-// Then we have to rework the lgpl's VGABIOS to use this font.
-// We could check what the Elpin bios does.
 static Bit8u vgafont8[128*8]=
 {
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
