@@ -24,6 +24,7 @@
 // if including from C parser, need basic types etc
 #ifndef __cplusplus
 #include "config.h"
+#include "osdep.h"
 #endif
 
 #if BX_USE_LOADER
