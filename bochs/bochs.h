@@ -517,6 +517,7 @@ extern bx_debug_t bx_dbg;
 #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
 #define BX_FLOPPY_2_88   13 // 2.88M 3.5"
 #define BX_FLOPPY_720K   14 // 720K  3.5"
+#define BX_FLOPPY_LAST   14 // last one
 
 
 #define BX_READ    10
