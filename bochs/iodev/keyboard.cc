@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.36 2001-11-26 09:55:30 vruppert Exp $
+// $Id: keyboard.cc,v 1.37 2001-12-05 20:36:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.36 2001-11-26 09:55:30 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.37 2001-12-05 20:36:03 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -97,7 +97,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.36 2001-11-26 09:55:30 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.37 2001-12-05 20:36:03 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -965,7 +965,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 
     case 0xed: // LED Write
       BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 1;
-      kbd_enQ(0xFA); // send ACK %%%
+      kbd_enQ_imm(0xFA); // send ACK %%%
       return;
       break;
 
