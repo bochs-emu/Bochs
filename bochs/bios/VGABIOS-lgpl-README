@@ -82,6 +82,10 @@ For any information on bochs, visit the website http://bochs.sourceforge.net/
 
 History
 -------
+vgabios-0.4c : Nov 06 2003
+  - Christophe
+    . fix font problem on initial screen of NT4 Loader
+    
 vgabios-0.4b : Nov 04 2003
   - Volker 
     . fix offset of character tables
