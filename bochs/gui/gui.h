@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.3 2002-10-08 22:45:16 bdenney Exp $
+// $Id: gui.h,v 1.31.4.4 2002-10-09 00:22:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,19 +26,19 @@
 
 extern class bx_gui_c *bx_gui;
 
+
 // The bx_gui_c class provides data and behavior that is common to
 // all guis.  Each gui implementation will override the abstract methods.
 class bx_gui_c : public logfunctions {
 public:
   bx_gui_c (void);
-  // Define the following functions in the module for your
-  // particular GUI (x.cc, beos.cc, ...)
+  // Define the following functions in the module for your particular GUI
+  // (x.cc, beos.cc, ...)
   virtual void specific_init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
                           Bit16u cursor_state, unsigned rows) = 0;
-  virtual void graphics_update(Bit8u *snapshot) = 0;
   virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
   virtual void handle_events(void) = 0;
   virtual void flush(void) = 0;
@@ -53,7 +53,6 @@ public:
   virtual int set_clipboard_text(char *snapshot, Bit32u len) = 0;
   virtual void mouse_enabled_changed_specific (Boolean val) = 0;
   virtual void exit(void) = 0;
-
   // These are only needed for the term gui. For all other guis they will
   // have no effect.
   // returns 32-bit bitmask in which 1 means the GUI should handle that signal
@@ -112,6 +111,41 @@ protected:
   Boolean char_changed[256];
   };
 
+
+// Add this macro in the class declaration of each GUI, to define all the
+// required virtual methods.  Example:
+//   
+//    class bx_rfb_gui_c : public bx_gui_c {
+//    public:
+//      bx_rfb_gui_c (void) {}
+//      DECLARE_GUI_VIRTUAL_METHODS()
+//    };
+// Then, each method must be defined later in the file.
+#define DECLARE_GUI_VIRTUAL_METHODS()                                         \
+  virtual void specific_init(int argc, char **argv,                           \
+                 unsigned x_tilesize, unsigned y_tilesize,                    \
+		 unsigned header_bar_y);                                      \
+  virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
+                          unsigned long cursor_x, unsigned long cursor_y,     \
+                          Bit16u cursor_state, unsigned rows);                \
+  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
+  virtual void handle_events(void);                                           \
+  virtual void flush(void);                                                   \
+  virtual void clear_screen(void);                                            \
+  virtual Boolean palette_change(unsigned index,                              \
+      unsigned red, unsigned green, unsigned blue);                           \
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);  \
+  virtual unsigned create_bitmap(const unsigned char *bmap,                   \
+      unsigned xdim, unsigned ydim);                                          \
+  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \
+      void (*f)(void));                                                       \
+  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);            \
+  virtual void show_headerbar(void);                                          \
+  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);              \
+  virtual int set_clipboard_text(char *snapshot, Bit32u len);                 \
+  virtual void mouse_enabled_changed_specific (Boolean val);                  \
+  virtual void exit(void);                                                    \
+  /* end of DECLARE_GUI_VIRTUAL_METHODS */
 
 #define BX_MAX_PIXMAPS 16
 #define BX_MAX_HEADERBAR_ENTRIES 11
@@ -269,3 +303,36 @@ protected:
 // - BX_KEY_NBKEYS
 // - the scancodes table in the file iodev/scancodes.cc
 // - the bx_key_symbol table in the file gui/keymap.cc
+
+
+/////////////// GUI plugin support
+
+// Define macro to supply gui plugin code.  This macro is called once in GUI to
+// supply the plugin initialization methods.  Since it is nearly identical for
+// each gui module, the macro is easier to maintain than pasting the same code
+// in each one.
+//
+// Each gui should declare an object called "theGui" which is derived
+// from bx_gui_c, before calling this macro.  For example, the SDL port
+// says:
+//   bx_sdl_gui_c theGui;
+
+#if BX_PLUGINS
+
+#define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                           \
+  int plugin_init(plugin_t *plugin, int argc, char *argv[]) {         \
+    genlog->info("installing %s module as the Bochs GUI", gui_name);  \
+    bx_gui = &theGui;                                                 \
+    return(0); /* Success */                                          \
+  }                                                                   \
+  void plugin_fini(void) { }
+
+#else
+
+// When building with plugins, the bx_gui pointer is provided by plugins.cc.
+// But when building without plugins, the GUI code must supply bx_gui.
+
+#define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                           \
+   bx_gui_c *bx_gui = &theGui;
+
+#endif

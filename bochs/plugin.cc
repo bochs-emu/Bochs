@@ -103,7 +103,7 @@ logfunctions  *pluginlog;
 
 #if BX_PLUGINS
 // When compiling with plugins, plugin.cc will provide the pluginKeyboard
-// pointer.  At first it will point to the stub so that calls to the functions
+// pointer.  At first it will point to the stub so that calls to the methods
 // will panic instead of segfaulting.  The pointer will be replaced with a real
 // bx_keyb_c object by plugin_init of the keyboard plugin.
 bx_keyb_stub_c pluginKeyboardStub;
@@ -115,11 +115,10 @@ bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
 #endif
 
 #if BX_PLUGINS
-// When building with plugins, the bx_gui variable is created right
-// here in plugins.cc, initialized to NULL.  When a gui plugin is loaded,
-// it will create the appropriate type of gui object and set bx_gui
-// in plugin_init.
-bx_gui_c   *bx_gui = NULL;
+// When compiling with plugins, plugin.cc will provide the bx_gui
+// pointer.  At first it will point to NULL.  The pointer will be replaced with
+// a real gui object by plugin_init of the specific gui module.
+bx_gui_c *bx_gui = NULL;
 #else
 // When building without plugins, the bx_gui pointer will be created by
 // the GUI code that is linked into the binary, for example x.cc or sdl.cc.  
@@ -544,8 +543,7 @@ plugin_load (char *name, char *args)
     plugin = (plugin_t *)malloc (sizeof (plugin_t));
     if (!plugin)
     {
-        perror ("malloc");
-        exit (1);
+      BX_PANIC (("malloc plugin_t failed"));
     }
 
     plugin->name = name;
@@ -555,8 +553,9 @@ plugin_load (char *name, char *args)
     plugin->handle = dlopen (name, RTLD_LAZY);
     if (!plugin->handle)
     {
-        fputs (dlerror (), stderr);
-        exit (1);
+      BX_PANIC (("dlopen failed: %s", dlerror ()));
+      free (plugin);
+      return;
     }
 
     plugin->plugin_init =  
@@ -816,35 +815,33 @@ int bx_load_plugins (void)
 
 
   // quick and dirty gui plugin selection
+  static char *gui_names[] = {
+    "amigaos", "beos", "carbon", "macintosh", "nogui", 
+    "rfb", "sdl", "term", "win32", "wx", "x", 
+    NULL
+  };
   fprintf (stderr, 
       "--Quick and dirty gui selector--\n"
       "The library that you configured with should work fine.\n"
       "If you get undefined symbols when you choose term, relink with -lncurses.\n"
       "If you get undefined symbols when you choose sdl, relink with -lSDL -pthread.\n"
       "Good luck!\n\n");
-  fprintf (stderr, "Choose your gui.\n 1. X windows\n 2. SDL\n 3. Term\n 4. RFB/VNC\n 5. wxWindows\n--> ");
+  fprintf (stderr, "Choose your gui.\n");
+  int i;
+  for (i=0; gui_names[i] != NULL; i++)
+    fprintf (stderr, "%d. %s\n", i, gui_names[i]);
+  int imax = i;
   int which = -1;
-  while (scanf ("%d", &which) != 1 || !(which>=1 && which<=5)) {
+  do {
     fprintf (stderr, "--> ");
-  }
-  switch (which) {
-    case 1:
-      bx_load_plugin("x.so");
-      break;
-    case 2:
-      bx_load_plugin("sdl.so");
-      break;
-    case 3:
-      bx_load_plugin("term.so");
-      break;
-    case 4:
-      bx_load_plugin("rfb.so");
-      break;
-    case 5:
-      bx_load_plugin("wx.so");
-      break;
-    default:
-      BX_ASSERT(0);
+  } while (scanf ("%d", &which) != 1 || !(which>=0 && which<imax));
+  char soname[64];
+  sprintf (soname, "%s.so", gui_names[which]);
+  bx_load_plugin (soname);
+
+  if (bx_gui == NULL) {
+    BX_PANIC (("No gui has been loaded.  It is not safe to continue. Exiting."));
+    exit(1);
   }
 
   plugin_init_all();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.23.2.5 2002-10-08 22:49:16 bdenney Exp $
+// $Id: sdl.cc,v 1.23.2.6 2002-10-09 00:22:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,7 +35,17 @@
 #include "icon_bochs.h"
 #include "sdl.h"
 
+class bx_sdl_gui_c : public bx_gui_c {
+public:
+  bx_sdl_gui_c (void);
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
 bx_sdl_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE("SDL")
+
 #define LOG_THIS theGui.
 
 #define _SDL_DEBUG_ME_
@@ -1052,22 +1062,3 @@ void bx_sdl_gui_c::exit(void)
     n_sdl_bitmaps--;
   }
 }
-
-#if BX_PLUGINS
-  int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
-{
-  genlog->info("installing SDL gui as the bx_gui");
-  bx_gui = &theGui;
-  return(0); // Success
-}
-
-  void
-plugin_fini(void)
-{
-}
-#else
-// When plugins are turned off, provide the bx_gui pointer which every
-// other object will use to reference this object.
-bx_gui_c *bx_gui = &theGui;
-#endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.8.4.2 2002-10-07 19:59:08 bdenney Exp $
+// $Id: amigaos.cc,v 1.8.4.3 2002-10-09 00:22:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -29,7 +29,18 @@
 #include "icon_bochs.h"
 #include "amigagui.h"
 
-#define LOG_THIS bx_gui.
+class bx_amigaos_gui_c : public bx_gui_c {
+public:
+  bx_amigaos_gui_c (void) {}
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+bx_amigaos_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE("AmigaOS")
+
+#define LOG_THIS theGui.
 
 static void hide_pointer();
 static void show_pointer();
@@ -240,7 +251,7 @@ open_screen(void)
    }
 
     if (!window)
-         bx_gui_c::exit();
+         bx_amigaos_gui_c::exit();
 
     if ((emptypointer = (UWORD *)AllocVec (16, MEMF_CLEAR)) == NULL)
         BX_PANIC(("Amiga: Couldn't allocate memory"));
@@ -276,7 +287,7 @@ open_screen(void)
 }
 
   void
-bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   
@@ -320,7 +331,7 @@ bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tile
 
 
   void
-bx_gui_c::handle_events(void)
+bx_amigaos_gui_c::handle_events(void)
 {
     void (*func) (void);
     struct IntuiMessage *imsg = NULL;
@@ -363,12 +374,12 @@ bx_gui_c::handle_events(void)
 
 
   void
-bx_gui_c::flush(void)
+bx_amigaos_gui_c::flush(void)
 {
 }
 
   void
-bx_gui_c::clear_screen(void)
+bx_amigaos_gui_c::clear_screen(void)
 {
     if(d > 8 || !bx_options.Ofullscreen->get ())
     	SetAPen(window->RPort, black);
@@ -378,7 +389,7 @@ bx_gui_c::clear_screen(void)
 }
 
   void
-bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+bx_amigaos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       Bit16u cursor_state, unsigned nrows)
 {
@@ -432,20 +443,20 @@ unsigned int fgcolor, bgcolor;
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_amigaos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
 
 
   Boolean
-bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 
   Bit8u *ptr;
@@ -476,7 +487,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 
   void
-bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+bx_amigaos_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
  if (d == 8)
  {
@@ -488,7 +499,7 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
         if (fheight > 0) {
           if (fheight != 16) {
@@ -508,7 +519,7 @@ bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
  
 
   unsigned
-bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+bx_amigaos_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
     int i = 0;
     Bit8u *a;
@@ -544,7 +555,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 }
 
   unsigned
-bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+bx_amigaos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
 struct NewGadget ng;
 
@@ -582,7 +593,7 @@ return(bx_headerbar_entries - 1);
 
  
   void
-bx_gui_c::show_headerbar(void)
+bx_amigaos_gui_c::show_headerbar(void)
 {
     if(d > 8 || !bx_options.Ofullscreen->get ())
     	SetAPen(window->RPort, white);
@@ -596,14 +607,14 @@ bx_gui_c::show_headerbar(void)
 
 
   void
-bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+bx_amigaos_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
 	bx_header_gadget[hbar_id]->GadgetRender = &bx_header_image[bmap_id];
     RefreshGList(bx_glistptr, window, NULL, bx_headerbar_entries + 1);
 }
 
   void
-bx_gui_c::exit(void)
+bx_amigaos_gui_c::exit(void)
 {
 	if(window)
   	{
@@ -670,7 +681,7 @@ hide_pointer(void)
 }
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_amigaos_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
   BX_INFO (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35.2.3 2002-10-07 21:49:24 bdenney Exp $
+// $Id: wx.cc,v 1.35.2.4 2002-10-09 00:22:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -53,40 +53,20 @@
 
 
 //////////////////////////////////////////////////////////////
-// constants
+// plugin support
 //////////////////////////////////////////////////////////////
-#define LOG_THIS bx_gui->
-
-//////////////////////////////////////////////////////////////
-// declare the bx_wx_gui_c class (child of bx_gui_c)
-//////////////////////////////////////////////////////////////
-
 class bx_wx_gui_c : public bx_gui_c {
 public:
   bx_wx_gui_c (void) {}
-  // Define the following functions in the module for your
-  // particular GUI (x.cc, beos.cc, ...)
-  virtual void specific_init(int argc, char **argv,
-                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
-  virtual void text_update(Bit8u *old_text, Bit8u *new_text,
-                          unsigned long cursor_x, unsigned long cursor_y,
-                          Bit16u cursor_state, unsigned rows);
-  virtual void graphics_update(Bit8u *snapshot) {}
-  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
-  virtual void handle_events(void);
-  virtual void flush(void);
-  virtual void clear_screen(void);
-  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
-  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
-  virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
-  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
-  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
-  virtual void show_headerbar(void);
-  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
-  virtual int set_clipboard_text(char *snapshot, Bit32u len);
-  virtual void mouse_enabled_changed_specific (Boolean val);
-  virtual void exit(void);
+  DECLARE_GUI_VIRTUAL_METHODS()
 };
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+bx_wx_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE("wxWindows")
+
+#define LOG_THIS theGui.
 
 //////////////////////////////////////////////////////////////
 // data for wx gui
@@ -1200,25 +1180,3 @@ bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   wxMutexGuiLeave ();
   return ret;
 }
-
-#if BX_PLUGINS
-  int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
-{
-  genlog->info("installing wxWindows gui as the bx_gui");
-  bx_gui = new bx_wx_gui_c ();
-  return(0); // Success
-}
-
-  void
-plugin_fini(void)
-{
-}
-#else
-// This is the !BX_PLUGINS case.
-//
-// When building with plugins, the bx_gui pointer is provided by plugins.cc.
-// But when building without plugins, the GUI code must supply bx_gui, like
-// this:
-bx_gui_c *bx_gui = new bx_wx_gui_c ();
-#endif

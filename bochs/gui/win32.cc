@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.44.2.2 2002-10-07 19:59:11 bdenney Exp $
+// $Id: win32.cc,v 1.44.2.3 2002-10-09 00:22:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,7 +35,19 @@
 #include <commctrl.h>
 #include <process.h>
 
-#define LOG_THIS bx_gui.
+class bx_win32_gui_c : public bx_gui_c {
+public:
+  bx_win32_gui_c (void) {}
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+bx_win32_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE("Win32")
+
+#define LOG_THIS theGui.
+
 
 #ifdef __MINGW32__
 #if BX_SHOW_IPS
@@ -216,7 +228,7 @@ static void cursorWarped()
 void terminateEmul(int reason) {
 
   // We know that Critical Sections were inited when x_tilesize has been set
-  // See bx_gui_c::specific_init
+  // See bx_win32_gui_c::specific_init
   if (x_tilesize != 0) {
     DeleteCriticalSection (&stInfo.drawCS);
     DeleteCriticalSection (&stInfo.keyCS);
@@ -272,7 +284,7 @@ void terminateEmul(int reason) {
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-void bx_gui_c::specific_init(argc, char **argv, unsigned
+void bx_win32_gui_c::specific_init(argc, char **argv, unsigned
 			     tilewidth, unsigned tileheight,
 			     unsigned headerbar_y) {
   put("WGUI");
@@ -655,7 +667,7 @@ QueueEvent* deq_key_event(void) {
 // the gui code can poll for keyboard, mouse, and other
 // relevant events.
 
-void bx_gui_c::handle_events(void) {
+void bx_win32_gui_c::handle_events(void) {
   Bit32u key;
   unsigned char scancode;
 
@@ -718,7 +730,7 @@ void bx_gui_c::handle_events(void) {
 // Called periodically, requesting that the gui code flush all pending
 // screen update requests.
 
-void bx_gui_c::flush(void) {
+void bx_win32_gui_c::flush(void) {
   EnterCriticalSection( &stInfo.drawCS);
   if (updated_area_valid) {
     // slight bugfix
@@ -736,7 +748,7 @@ void bx_gui_c::flush(void) {
 // Called to request that the VGA region is cleared.  Don't
 // clear the area that defines the headerbar.
 
-void bx_gui_c::clear_screen(void) {
+void bx_win32_gui_c::clear_screen(void) {
   HGDIOBJ oldObj;
 
   if (!stInfo.UIinited) return;
@@ -772,7 +784,7 @@ void bx_gui_c::clear_screen(void) {
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
 
-void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			   unsigned long cursor_x, unsigned long cursor_y,
                            Bit16u cursor_state, unsigned nrows) {
   HDC hdc;
@@ -869,7 +881,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   if (OpenClipboard(stInfo.simWnd)) {
     HGLOBAL hg = GetClipboardData(CF_TEXT);
@@ -891,7 +903,7 @@ bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_win32_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   if (OpenClipboard(stInfo.simWnd)) {
     HANDLE hMem = GlobalAlloc(GMEM_ZEROINIT, len);
@@ -915,7 +927,7 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-Boolean bx_gui_c::palette_change(unsigned index, unsigned red,
+Boolean bx_win32_gui_c::palette_change(unsigned index, unsigned red,
                                  unsigned green, unsigned blue) {
   cmap_index[index].rgbRed = red;
   cmap_index[index].rgbBlue = blue;
@@ -939,7 +951,7 @@ Boolean bx_gui_c::palette_change(unsigned index, unsigned red,
 // note: origin of tile and of window based on (0,0) being in the upper
 //       left of the window.
 
-void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0) {
+void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0) {
   HDC hdc;
   HGDIOBJ oldObj;
 
@@ -970,7 +982,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0) {
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
-void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   if (fheight > 0) {
     if (fheight >= 14) {
@@ -1018,7 +1030,7 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 // xdim: x dimension of bitmap
 // ydim: y dimension of bitmap
 
-unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
+unsigned bx_win32_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
 				 unsigned ydim) {
   unsigned char *data;
   TBADDBITMAP tbab;
@@ -1063,7 +1075,7 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
 // f: a 'C' function pointer to callback when the mouse is clicked in
 //     the boundaries of this bitmap.
 
-unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
+unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 				    void (*f)(void)) {
   unsigned hb_index;
   TBBUTTON tbb[1];
@@ -1111,7 +1123,7 @@ unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 // Show (redraw) the current headerbar, which is composed of
 // currently installed bitmaps.
 
-void bx_gui_c::show_headerbar(void)
+void bx_win32_gui_c::show_headerbar(void)
 {
 }
 
@@ -1129,7 +1141,7 @@ void bx_gui_c::show_headerbar(void)
 // hbar_id: headerbar slot ID
 // bmap_id: bitmap ID
 
-void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_win32_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   if (bmap_id != bx_headerbar_entry[hbar_id].bmap_id) {
     bx_headerbar_entry[hbar_id].bmap_id = bmap_id;
@@ -1143,8 +1155,8 @@ void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 //
 // Called before bochs terminates, to allow for a graceful
 // exit from the native GUI mechanism.
-void bx_gui_c::exit(void) {
-  printf("# In bx_gui_c::exit(void)!\n");
+void bx_win32_gui_c::exit(void) {
+  printf("# In bx_win32_gui_c::exit(void)!\n");
 
   // kill thread first...
   PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
@@ -1284,7 +1296,7 @@ void alarm (int time)
 #endif
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_win32_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
 }
 
