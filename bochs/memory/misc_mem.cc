@@ -47,9 +47,9 @@ BX_MEM_C::get_memory_in_k(void)
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(void)
 {
-  BX_MEM.vector = NULL;
-  BX_MEM.len    = 0;
-  BX_MEM.megabytes = 0;
+  vector = NULL;
+  len    = 0;
+  megabytes = 0;
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
@@ -105,9 +105,9 @@ BX_MEM_C::init_memory(int memsize)
 
 #if BX_DEBUGGER
   // initialize dirty pages table
-  memset(BX_MEM.dbg_dirty_pages, 0, sizeof(BX_MEM.dbg_dirty_pages));
+  memset(dbg_dirty_pages, 0, sizeof(dbg_dirty_pages));
 
-  if (BX_MEM.megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
+  if (megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
     bx_printf("Error: memory larger than dirty page table can handle\n");
     bx_panic("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS\n");
     }
@@ -152,7 +152,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   while (size > 0) {
 #if BX_PCI_SUPPORT
     if (bx_options.i440FXSupport)
-      ret = read(fd, (bx_ptr_t) &bx_pci.s.i440fx.shadow[romaddress - 0xC0000 + offset],
+      ret = read(fd, (bx_ptr_t) &bx_devices.pci->s.i440fx.shadow[romaddress - 0xC0000 + offset],
                  size);
     else
       ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
@@ -186,9 +186,9 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   Boolean
 BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
-  if ( (addr + len) > BX_MEM.len ) {
+  if ( (addr + len) > this->len ) {
     bx_printf("dbg_fetch_mem out of range. %p > %p\n",
-      addr+len, BX_MEM.len);
+      addr+len, this->len);
     return(0); // error, beyond limits of memory
     }
   for (; len>0; len--) {
@@ -199,18 +199,18 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
     else {
 #endif
 #if BX_PCI_SUPPORT == 0
-      *buf = BX_MEM.vector[addr];
+      *buf = vector[addr];
 #else
       if ( bx_options.i440FXSupport &&
           ((addr >= 0x000C0000) && (addr <= 0x000FFFFF)) ) {
-        switch (bx_pci.rd_memType (addr)) {
+        switch (bx_devices.pci->rd_memType (addr)) {
           case 0x0:  // Fetch from ShadowRAM
-            *buf = BX_MEM.vector[addr];
+            *buf = vector[addr];
 //          bx_printf ("Fetching from ShadowRAM %08x, len %u !\n", (unsigned)addr, (unsigned)len);
             break;
 
           case 0x1:  // Fetch from ROM
-            *buf = bx_pci.s.i440fx.shadow[(addr - 0xC0000)];
+            *buf = bx_devices.pci->s.i440fx.shadow[(addr - 0xC0000)];
 //          bx_printf ("Fetching from ROM %08x, Data %02x \n", (unsigned)addr, *buf);
             break;
           default:
@@ -218,7 +218,7 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
           }
         }
       else
-        *buf = BX_MEM.vector[addr];
+        *buf = vector[addr];
 #endif  // #if BX_PCI_SUPPORT == 0
       }
     buf++;
@@ -232,7 +232,7 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
   Boolean
 BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
-  if ( (addr + len) > BX_MEM.len ) {
+  if ( (addr + len) > this->len ) {
     return(0); // error, beyond limits of memory
     }
   for (; len>0; len--) {
@@ -242,7 +242,7 @@ BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
       }
     else
 #endif
-      BX_MEM.vector[addr] = *buf;
+      vector[addr] = *buf;
     buf++;
     addr++;
     }
@@ -260,12 +260,12 @@ BX_MEM_C::dbg_crc32(unsigned long (*f)(unsigned char *buf, int len),
   if (addr1 > addr2)
     return(0);
 
-  if (addr2 >= BX_MEM.len) {
+  if (addr2 >= this->len) {
     return(0); // error, specified address past last phy mem addr
     }
   
   len = 1 + addr2 - addr1;
-  *crc = f(BX_MEM.vector + addr1, len);
+  *crc = f(vector + addr1, len);
 
   return(1);
 }
