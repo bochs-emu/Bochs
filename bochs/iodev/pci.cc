@@ -40,7 +40,7 @@ bx_pci_c bx_pci;
 
 bx_pci_c::bx_pci_c(void)
 {
-	setio(io);
+	setio(SAFE_GET_IOFUNC());
 	setprefix("[PCI ]", __FILE__, __LINE__);
 }
 

@@ -36,15 +36,12 @@ bx_vga_c bx_vga;
 #define this (&bx_vga)
 #endif
 
-
-
-
 bx_vga_c::bx_vga_c(void)
 {
   BX_VGA_THIS s.vga_mem_updated = 0;
   BX_VGA_THIS s.x_tilesize = X_TILESIZE;
   BX_VGA_THIS s.y_tilesize = Y_TILESIZE;
-  BX_VGA_THIS setio(io);
+  BX_VGA_THIS setio(SAFE_GET_IOFUNC());
   BX_VGA_THIS setprefix("[VGA ]", __FILE__, __LINE__);
 }
 
@@ -190,7 +187,7 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   bx_gui.init(1, &argv[0], BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
   }
 
-  BX_VGA_THIS info("interval=%lu\n", bx_options.vga_update_interval);
+  BX_INFO(("interval=%lu\n", bx_options.vga_update_interval));
   bx_pc_system.register_timer(this, timer_handler,
      bx_options.vga_update_interval, 1, 1);
 
@@ -316,8 +313,8 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #endif
 
   if (io_len > 1)
-    bx_panic("io read from address %08x, len=%u\n",
-             (unsigned) address, (unsigned) io_len);
+    BX_PANIC(("io read from address %08x, len=%u\n",
+             (unsigned) address, (unsigned) io_len));
 
 #ifdef __OS2__
   if ( bx_options.videomode == BX_VIDEO_DIRECT )
@@ -328,7 +325,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 
 #if !defined(VGA_TRACE_FEATURE)
   if (bx_dbg.video)
-    BX_VGA_THIS info("vga_io_read(%04x)!\n", (unsigned) address);
+    BX_INFO(("vga_io_read(%04x)!\n", (unsigned) address));
 #endif
 
   if ( (address >= 0x03b0) && (address <= 0x03bf) &&
@@ -404,14 +401,14 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 
     case 0x03c0: /* */
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) {
-        //BX_VGA_THIS info("vga_io_read: 3c0: flip_flop = 0\n");
+        //BX_INFO(("vga_io_read: 3c0: flip_flop = 0\n"));
         retval =
           (BX_VGA_THIS s.attribute_ctrl.video_enabled << 5) |
           BX_VGA_THIS s.attribute_ctrl.address;
         RETURN(retval);
         }
       else {
-        bx_panic("vga_io_read: 3c0: flip_flop = 0\n");
+        BX_PANIC(("vga_io_read: 3c0: flip_flop = 0\n"));
         return(0);
         }
       break;
@@ -449,14 +446,14 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
           RETURN(BX_VGA_THIS s.attribute_ctrl.color_select);
           break;
         default:
-          BX_VGA_THIS info("vga_io_read: 3c1: address %02xh?\n",
-            (unsigned) BX_VGA_THIS s.attribute_ctrl.address);
+          BX_INFO(("vga_io_read: 3c1: address %02xh?\n",
+            (unsigned) BX_VGA_THIS s.attribute_ctrl.address));
           RETURN(0);
         }
       break;
 
     case 0x03c2: /* Input Status 0 */
-      BX_VGA_THIS info("io read 3c2: input status #0: ignoring\n");
+      BX_INFO(("io read 3c2: input status #0: ignoring\n"));
       RETURN(0);
       break;
 
@@ -471,11 +468,11 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
     case 0x03c5: /* Sequencer Registers 00..04 */
       switch (BX_VGA_THIS s.sequencer.index) {
         case 0: /* sequencer: reset */
-BX_VGA_THIS info("*** io read 3c5 case 0: sequencer reset\n");
+BX_INFO(("*** io read 3c5 case 0: sequencer reset\n"));
           RETURN(BX_VGA_THIS s.sequencer.bit0 | (BX_VGA_THIS s.sequencer.bit1<<1));
           break;
         case 1: /* sequencer: clocking mode */
-BX_VGA_THIS info("*** io read 3c5 case 1: sequencer clocking mode\n");
+BX_INFO(("*** io read 3c5 case 1: sequencer clocking mode\n"));
           RETURN(BX_VGA_THIS s.sequencer.reg1);
           break;
         case 2: /* sequencer: map mask register */
@@ -493,8 +490,8 @@ BX_VGA_THIS info("*** io read 3c5 case 1: sequencer clocking mode\n");
           break;
 
         default:
-          BX_VGA_THIS info("io read 3c5: index %u unhandled\n",
-            (unsigned) BX_VGA_THIS s.sequencer.index);
+          BX_INFO(("io read 3c5: index %u unhandled\n",
+            (unsigned) BX_VGA_THIS s.sequencer.index));
           RETURN(0);
         }
       break;
@@ -515,7 +512,7 @@ BX_VGA_THIS info("*** io read 3c5 case 1: sequencer clocking mode\n");
           retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].blue;
           break;
         default:
-          bx_panic("io write 3c9: data cyle is bad value\n");
+          BX_PANIC(("io write 3c9: data cyle is bad value\n"));
           retval = 0; // keep compiler happy
         }
       BX_VGA_THIS s.pel.read_data_cycle++;
@@ -597,7 +594,7 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
             (unsigned) BX_VGA_THIS s.graphics_ctrl.index);
           RETURN(0);
         }
-      bx_panic("io read: 3cf: shouldn't get here\n");
+      BX_PANIC(("io read: 3cf: shouldn't get here\n"));
       break;
 
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
@@ -617,7 +614,7 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
     case 0x03cb: /* not sure but OpenBSD reads it a lot */
     case 0x03c8: /* */
     default:
-      bx_panic("*** io read from vga port %x\n", (unsigned) address);
+      BX_PANIC(("*** io read from vga port %x\n", (unsigned) address));
       RETURN(0); /* keep compiler happy */
     }
 
@@ -680,7 +677,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log)
 		    BX_VGA_THIS info("16-bit write to %04x = %04x\n", (unsigned)address, (unsigned)value);
 		    break;
 	      default:
-		    bx_panic("Weird VGA write size\n");
+		    BX_PANIC(("Weird VGA write size\n"));
 	}
 #endif
 
@@ -719,13 +716,13 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log)
   switch (address) {
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
       if (value > 0x18)
-        bx_panic("io write 3b4: value > 18h\n");
+        BX_PANIC(("io write 3b4: value > 18h\n"));
       BX_VGA_THIS s.CRTC.address = value;
       break;
 
     case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
       if (BX_VGA_THIS s.CRTC.address > 0x18)
-        bx_panic("io write 3b5: CRTC reg > 18h\n");
+        BX_PANIC(("io write 3b5: CRTC reg > 18h\n"));
       BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
 #if !defined(VGA_TRACE_FEATURE)
       if (bx_dbg.video)
@@ -995,7 +992,7 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
             }
           break;
         default:
-          bx_panic("io write 3c9: data cyle is bad value\n");
+          BX_PANIC(("io write 3c9: data cyle is bad value\n"));
         }
 
       BX_VGA_THIS s.pel.write_data_cycle++;
@@ -1129,8 +1126,8 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
 
     case 0x03c1: /* */
     default:
-      bx_panic("unsupported io write to port %x, val=%02x\n",
-        (unsigned) address, (unsigned) value);
+      BX_PANIC(("unsupported io write to port %x, val=%02x\n",
+        (unsigned) address, (unsigned) value));
     }
 }
 
@@ -1241,7 +1238,7 @@ bx_vga_c::update(void)
 
       case 1: // output the data in a CGA-compatible 320x200 4 color graphics
               // mode.  (modes 4 & 5)
-        bx_panic("update: shift_reg == 1\n");
+        BX_PANIC(("update: shift_reg == 1\n"));
         break; // case 1
 
       case 2: // output the data eight bits at a time from the 4 bit planeBX_VGA_THIS s.
@@ -1253,7 +1250,7 @@ bx_vga_c::update(void)
           // bx_vga_dump_status();
 
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
-            bx_panic("update: select_high_bank != 1\n");
+            BX_PANIC(("update: select_high_bank != 1\n"));
 
           bx_gui.dimension_update(iWidth, iHeight);
           for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
@@ -1309,8 +1306,8 @@ bx_vga_c::update(void)
         break; // case 2
 
       default:
-        bx_panic("update: shift_reg == %u\n", (unsigned)
-          BX_VGA_THIS s.graphics_ctrl.shift_reg );
+        BX_PANIC(("update: shift_reg == %u\n", (unsigned)
+          BX_VGA_THIS s.graphics_ctrl.shift_reg ));
       }
 
     BX_VGA_THIS s.vga_mem_updated = 0;
@@ -1359,7 +1356,7 @@ bx_vga_c::update(void)
         MSL = bx_vga.s.CRTC.reg[0x09] & 0x1f;
         rows = (VDE+1)/(MSL+1);
         if (rows > BX_MAX_TEXT_LINES)
-          bx_panic("text rows>50\n");
+          BX_PANIC(("text rows>50\n"));
         bx_gui.dimension_update(8*80, 16*rows); // ??? should use font size
         // pass old text snapshot & new VGA memory contents
         start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
@@ -1422,15 +1419,15 @@ bx_vga_c::mem_read(Bit32u addr)
       offset = addr - 0xB8000;
 
       if (BX_VGA_THIS s.graphics_ctrl.shift_reg != 2)
-        bx_panic("vga_mem_read: shift_reg = %u\n",
-                 (unsigned) BX_VGA_THIS s.graphics_ctrl.shift_reg);
+        BX_PANIC(("vga_mem_read: shift_reg = %u\n",
+                 (unsigned) BX_VGA_THIS s.graphics_ctrl.shift_reg));
       return(BX_VGA_THIS s.vga_memory[offset]);
       }
 
     if (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 1) {
       BX_VGA_THIS info("  location %08x\n", (unsigned) addr);
-      bx_panic("vga_mem_read: graphics: mapping = %u?\n",
-        (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
+      BX_PANIC(("vga_mem_read: graphics: mapping = %u?\n",
+        (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
       return(0);
       }
     if (addr > 0xAFFFF)
@@ -1487,8 +1484,8 @@ bx_vga_c::mem_read(Bit32u addr)
         break;
 
       default:
-        bx_panic("vga_mem_read: read mode %u ?\n",
-          (unsigned) BX_VGA_THIS s.graphics_ctrl.read_mode);
+        BX_PANIC(("vga_mem_read: read mode %u ?\n",
+          (unsigned) BX_VGA_THIS s.graphics_ctrl.read_mode));
         return(0);
       }
     return(0);
@@ -1535,8 +1532,8 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       offset = addr - 0xB8000;
       }
     else {
-      bx_panic("vga_mem_write: graphics: mapping = %u\n",
-               (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
+      BX_PANIC(("vga_mem_write: graphics: mapping = %u\n",
+               (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
       return;
       }
 
@@ -1601,8 +1598,8 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
                     (new_bit ^ (BX_VGA_THIS s.graphics_ctrl.latch[i] & and_mask));
                   break;
                 default:
-                  bx_panic("vga_mem_write: write mode 0: op = %u\n",
-                    (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op);
+                  BX_PANIC(("vga_mem_write: write mode 0: op = %u\n",
+                    (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op));
                 }
               }
             }
@@ -1625,8 +1622,8 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 
       case 2: /* write mode 2 */
         if (BX_VGA_THIS s.graphics_ctrl.raster_op)
-          bx_panic("vga_mem_write: write mode 2: op = %u\n",
-                   (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op);
+          BX_PANIC(("vga_mem_write: write mode 2: op = %u\n",
+                   (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op));
         bitmask = BX_VGA_THIS s.graphics_ctrl.bitmask;
         for (i=0; i<4; i++ ) {
           new_val[i] = 0;
@@ -1649,8 +1646,8 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
               case 2: /* OR */
               case 3: /* XOR */
               default:
-                bx_panic("vga_mem_write: raster_op = %u?\n",
-                  (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op);
+                BX_PANIC(("vga_mem_write: raster_op = %u?\n",
+                  (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op));
               }
             }
           else { /* bit-mask bit clear, pass data thru from latch */
@@ -1720,8 +1717,8 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
         break;
 
       default:
-        bx_panic("vga_mem_write: write mode %u ?\n",
-          (unsigned) BX_VGA_THIS s.graphics_ctrl.write_mode);
+        BX_PANIC(("vga_mem_write: write mode %u ?\n",
+          (unsigned) BX_VGA_THIS s.graphics_ctrl.write_mode));
       }
 
     if (BX_VGA_THIS s.sequencer.map_mask & 0x0f) {
