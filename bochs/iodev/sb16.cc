@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.42 2004-09-19 18:38:09 vruppert Exp $
+// $Id: sb16.cc,v 1.43 2005-02-04 19:50:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -229,7 +229,7 @@ void bx_sb16_c::init(void)
   MIXER.reg[0x00] = 0;  // reset register
   MIXER.reg[0x80] = 2;  // IRQ 5
   MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
-  MIXER.reg[0x82] = 0;  // no IRQ pending
+  MIXER.reg[0x82] = 2 << 5;  // no IRQ pending
   MIXER.reg[0xfd] = 16; // ???
   MIXER.reg[0xfe] = 6;  // ???
   set_irq_dma();        // set the IRQ and DMA
@@ -242,6 +242,11 @@ void bx_sb16_c::init(void)
   OPL.mode = fminit;
   OPL.timer_running = 0;
   opl_entermode(single);
+
+  // csp
+  memset(&BX_SB16_THIS csp_reg[0], 0, sizeof(BX_SB16_THIS csp_reg));
+  BX_SB16_THIS csp_reg[5] = 0x01;
+  BX_SB16_THIS csp_reg[9] = 0xf8;
 
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
@@ -429,7 +434,7 @@ Bit32u bx_sb16_c::dsp_dataread()
 void bx_sb16_c::dsp_datawrite(Bit32u value)
 {
   int bytesneeded;
-  Bit8u mode, value8;
+  Bit8u index, mode, value8;
   Bit16u length;
 
   writelog(WAVELOG(4), "DSP Data port write, value %x", value);
@@ -469,6 +474,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	case 0x38:
 	case 0xe0:
 	case 0xe4:
+	case 0xf9:
 	  bytesneeded = 1;
 	  break;
 	case 0x05:
@@ -550,13 +556,14 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	  break;
 
 	case 0x0e:
+	  DSP.datain.get(&index);
 	  DSP.datain.get(&value8);
-	  DSP.datain.get(&value8);
+	  BX_SB16_THIS csp_reg[index] = value;
 	  break;
 
 	case 0x0f:
-	  DSP.datain.get(&value8);
-	  DSP.dataout.put(0);	     // 0 means no ASP present?
+	  DSP.datain.get(&index);
+	  DSP.dataout.put(BX_SB16_THIS csp_reg[index]);
 	  break;
 
 	  // direct mode DAC
@@ -910,6 +917,24 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	  DEV_pic_raise_irq(BX_SB16_IRQ);
 	  break;
 
+	  // ??? - Win98 needs this
+        case 0xf9: 
+          DSP.datain.get(&value8);
+          switch (value8) {
+            case 0x0e:
+              DSP.dataout.put(0xff);
+              break;
+            case 0x0f:
+              DSP.dataout.put(0x07);
+              break;
+            case 0x37:
+              DSP.dataout.put(0x38);
+              break;
+            default:
+              DSP.dataout.put(0x00);
+          }
+          break;
+
 	  // unknown command
 	default: 
 	  writelog(WAVELOG(3), "unknown DSP command %x, ignored",
@@ -1047,7 +1072,7 @@ Bit32u bx_sb16_c::dsp_status()
     {
       MIXER.reg[0x82] &= (~0x01);
       writelog( WAVELOG(4), "8-bit DMA or SBMIDI IRQ acknowledged");
-      if (MIXER.reg[0x82] == 0) {
+      if ((MIXER.reg[0x82] & 0x07) == 0) {
         DSP.irqpending = 0;
         DEV_pic_lower_irq(BX_SB16_IRQ);
       }
@@ -1070,7 +1095,7 @@ Bit32u bx_sb16_c::dsp_irq16ack()
   if ( DSP.irqpending != 0 )
     {
       MIXER.reg[0x82] &= (~0x02);
-      if (MIXER.reg[0x82] == 0) {
+      if ((MIXER.reg[0x82] & 0x07) == 0) {
         DSP.irqpending = 0;
         DEV_pic_lower_irq(BX_SB16_IRQ);
       }
@@ -1685,7 +1710,7 @@ Bit32u bx_sb16_c::mpu_dataread()
       {
 	MPU.irqpending = 0;
 	MIXER.reg[0x82] &= (~4);
-	if (MIXER.reg[0x82] == 0)
+	if ((MIXER.reg[0x82] & 0x07) == 0)
 	  DEV_pic_lower_irq(BX_SB16_IRQMPU);
 	writelog(MIDILOG(4), "MPU IRQ acknowledged");
       }

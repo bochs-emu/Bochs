@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.19 2004-09-05 10:30:19 vruppert Exp $
+// $Id: sb16.h,v 1.20 2005-02-04 19:50:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -254,6 +254,9 @@ private:
     int timer_handle;   // handle for the DMA timer
     int outputinit;	// have the output functions been initialized
   } dsp;
+
+  // the ASP/CSP registers
+  Bit8u csp_reg[256];
 
   enum bx_sb16_fm_mode {single, adlib, dual, opl3, fminit};
 
