@@ -54,7 +54,6 @@ OBJS32 = \
 	flag_ctrl_pro.o \
 	segment_ctrl_pro.o \
 	stack_pro.o \
-	lazy_flags.o \
 	paging.o \
 	debugstuff.o \
 	arith32.o \
@@ -104,6 +103,7 @@ OBJSXX = \
 	data_xfer32.o \
 	exception.o \
 	proc_ctrl.o \
+	lazy_flags.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
