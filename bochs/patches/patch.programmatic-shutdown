@@ -1,0 +1,65 @@
+----------------------------------------------------------------------
+Patch name: patch.programatic-shutdown
+Author: cbothamy@free.fr
+Date: 29 July 2002
+
+Detailed description:
+  This patch enables the guest OS to stop bochs
+  by writing "Shutdown" to port 0x440.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 29 July 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: iodev/unmapped.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.cc,v
+retrieving revision 1.15
+diff -u -r1.15 unmapped.cc
+--- iodev/unmapped.cc	1 Apr 2002 21:53:23 -0000	1.15
++++ iodev/unmapped.cc	29 Jul 2002 12:12:46 -0000
+@@ -237,6 +237,25 @@
+ 	    // address, value));
+       break;
+     
++    case 0x8900: // Shutdown port, could be moved in a PM device
++                 // or a host <-> guest communication device 
++      switch (value) {
++        case 'S': if (BX_UM_THIS s.shutdown == 0) BX_UM_THIS s.shutdown = 1; break;
++        case 'h': if (BX_UM_THIS s.shutdown == 1) BX_UM_THIS s.shutdown = 2; break;
++        case 'u': if (BX_UM_THIS s.shutdown == 2) BX_UM_THIS s.shutdown = 3; break;
++        case 't': if (BX_UM_THIS s.shutdown == 3) BX_UM_THIS s.shutdown = 4; break;
++        case 'd': if (BX_UM_THIS s.shutdown == 4) BX_UM_THIS s.shutdown = 5; break;
++        case 'o': if (BX_UM_THIS s.shutdown == 5) BX_UM_THIS s.shutdown = 6; break;
++        case 'w': if (BX_UM_THIS s.shutdown == 6) BX_UM_THIS s.shutdown = 7; break;
++        case 'n': if (BX_UM_THIS s.shutdown == 7) BX_UM_THIS s.shutdown = 8; break;
++	default :  BX_UM_THIS s.shutdown = 0; break;
++        }
++      if (BX_UM_THIS s.shutdown == 8) {
++        BX_INFO(("Shutdown port: shutdown requested"));
++        BX_CPU(0)->kill_bochs_request = 2;
++        }
++      break;
++
+     case 0xfedc:
+       bx_dbg.debugger = (value > 0);
+ 		BX_DEBUG(( "DEBUGGER = %u", (unsigned) bx_dbg.debugger));
+Index: iodev/unmapped.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.h,v
+retrieving revision 1.7
+diff -u -r1.7 unmapped.h
+--- iodev/unmapped.h	1 Apr 2002 21:57:51 -0000	1.7
++++ iodev/unmapped.h	29 Jul 2002 12:12:46 -0000
+@@ -55,6 +55,7 @@
+   struct {
+     Bit8u port80;
+     Bit8u port8e;
++    Bit8u shutdown;
+     } s;  // state information
+ 
+   bx_devices_c *devices;
