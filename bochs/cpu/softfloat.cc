@@ -159,16 +159,16 @@ float_class_t float32_class(float32 a)
    flag  aSign = extractFloat32Sign(a);
 
    if(aExp == 0xFF) {
-       if (aSig == 0) {
+       if (aSig == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
-       }
+
        return float_NaN;
    }
 
    if(aExp == 0) {
-       if (aSig == 0) {
+       if (aSig == 0)
            return (aSign) ? float_negative_zero : float_positive_zero;
-       }
+
        return float_denormal;
    }
 
@@ -296,16 +296,16 @@ float_class_t float64_class(float64 a)
    flag  aSign = extractFloat64Sign(a);
 
    if(aExp == 0x7FF) {
-       if (aSig == 0) {
+       if (aSig == 0)
            return (aSign) ? float_negative_inf : float_positive_inf;
-       }
+
        return float_NaN;
    }
     
    if(aExp == 0) {
-       if (aSig == 0) {
+       if (aSig == 0) 
            return (aSign) ? float_negative_zero : float_positive_zero;
-       }
+
        return float_denormal;
    }
 
@@ -2523,6 +2523,33 @@ static void
     int shiftCount = countLeadingZeros64(aSig);
     *zSigPtr = aSig<<shiftCount;
     *zExpPtr = 1 - shiftCount;
+}
+
+/*----------------------------------------------------------------------------
+| Determine extended-precision floating-point number class
+*----------------------------------------------------------------------------*/
+
+float_class_t floatx80_class(float64 a)
+{
+   Bit32s aExp = extractFloatx80Exp(a);
+   Bit64u aSig = extractFloatx80Frac(a);
+   flag  aSign = extractFloatx80Sign(a);
+
+   if(aExp == 0x7fff) {
+       if (aSig == 0)
+           return (aSign) ? float_negative_inf : float_positive_inf;
+
+       return float_NaN;
+   }
+    
+   if(aExp == 0) {
+       if (aSig == 0)
+           return (aSign) ? float_negative_zero : float_positive_zero;
+
+       return float_denormal;
+   }
+
+   return float_normalized;
 }
 
 /*----------------------------------------------------------------------------

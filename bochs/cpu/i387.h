@@ -30,12 +30,12 @@
 //
 struct i387_t 
 {
-    Bit32u cwd;		 // control word
-    Bit32u swd;		 // status word
-    Bit32u twd;		 // tag word
+    Bit32u cwd; 	// control word
+    Bit32u swd; 	// status word
+    Bit32u twd;		// tag word
     Bit32u fip;
     Bit32u fcs;
-    Bit32u foo;
+    Bit32u foo; 	// last instruction opcode
     Bit32u fos;
 
     unsigned char tos;
