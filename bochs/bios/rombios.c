@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.83 2002-11-26 11:04:41 cbothamy Exp $
+// $Id: rombios.c,v 1.84 2002-12-09 13:23:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.83 $";
-static char bios_date_string[] = "$Date: 2002-11-26 11:04:41 $";
+static char bios_cvs_version_string[] = "$Revision: 1.84 $";
+static char bios_date_string[] = "$Date: 2002-12-09 13:23:05 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.83 2002-11-26 11:04:41 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.84 2002-12-09 13:23:05 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -9584,20 +9584,20 @@ mp_config_irqs:
   db 3,0,0,0,0,15,4,15
 #elif (BX_SMP_PROCESSORS==8)
 // define the Intel MP Configuration Structure for 8 processors at
-// APIC ID 0,1,2,3.  I/O APIC at ID=4.
+// APIC ID 0,1,2,3,4,5,6,7.  I/O APIC at ID=8.
 .align 16
 mp_config_table:
   db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
   dw (mp_config_end-mp_config_table)  ;; table length
   db 4 ;; spec rev
-  db 0x2e ;; checksum
+  db 0xc3 ;; checksum
   .ascii "BOCHSCPU"     ;; OEM id = "BOCHSCPU"
   db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
   db 0x20, 0x20, 0x20, 0x20 
   db 0x20, 0x20, 0x20, 0x20
   dw 0,0 ;; oem table ptr
   dw 0 ;; oem table size
-  dw 22 ;; entry count
+  dw 26 ;; entry count
   dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
   dw 0 ;; extended table length
   db 0 ;; extended table checksum
@@ -9680,7 +9680,7 @@ mp_config_isa_bus:
   db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
 mp_config_ioapic:
   db 2 ;; entry type=I/O APIC
-  db 0x11 ;; apic id=2. linux will set.
+  db 8 ;; apic id=8
   db 0x11 ;; I/O APIC version number
   db 1 ;; flags=1=enabled
   dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
@@ -9690,24 +9690,24 @@ mp_config_irqs:
   db 0,0 ;; flags po=0, el=0 (linux uses as default)
   db 0 ;; source bus ID is ISA
   db 0 ;; source bus IRQ
-  db 0x11 ;; destination I/O APIC ID, Linux can't address it but won't need to
+  db 8 ;; destination I/O APIC ID
   db 0 ;; destination I/O APIC interrrupt in
   ;; repeat pattern for interrupts 0-15
-  db 3,0,0,0,0,1,0x11,1
-  db 3,0,0,0,0,2,0x11,2
-  db 3,0,0,0,0,3,0x11,3
-  db 3,0,0,0,0,4,0x11,4
-  db 3,0,0,0,0,5,0x11,5
-  db 3,0,0,0,0,6,0x11,6
-  db 3,0,0,0,0,7,0x11,7
-  db 3,0,0,0,0,8,0x11,8
-  db 3,0,0,0,0,9,0x11,9
-  db 3,0,0,0,0,10,0x11,10
-  db 3,0,0,0,0,11,0x11,11
-  db 3,0,0,0,0,12,0x11,12
-  db 3,0,0,0,0,13,0x11,13
-  db 3,0,0,0,0,14,0x11,14
-  db 3,0,0,0,0,15,0x11,15
+  db 3,0,0,0,0,1,8,1
+  db 3,0,0,0,0,2,8,2
+  db 3,0,0,0,0,3,8,3
+  db 3,0,0,0,0,4,8,4
+  db 3,0,0,0,0,5,8,5
+  db 3,0,0,0,0,6,8,6
+  db 3,0,0,0,0,7,8,7
+  db 3,0,0,0,0,8,8,8
+  db 3,0,0,0,0,9,8,9
+  db 3,0,0,0,0,10,8,10
+  db 3,0,0,0,0,11,8,11
+  db 3,0,0,0,0,12,8,12
+  db 3,0,0,0,0,13,8,13
+  db 3,0,0,0,0,14,8,14
+  db 3,0,0,0,0,15,8,15
 #else
 #  error Sorry, rombios only has configurations for 1, 2, 4 or 8 processors.
 #endif  // if (BX_SMP_PROCESSORS==...)
