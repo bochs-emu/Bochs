@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.33 2001-10-06 00:01:12 bdenney Exp $
+// $Id: dbg_main.cc,v 1.34 2001-10-06 23:14:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -354,7 +354,7 @@ process_sim2:
 #endif
 
   // parse any remaining args in the usual way
-  bx_parse_cmdline (bochs_argc, bochs_argv);
+  bx_parse_cmdline (1, bochs_argc, bochs_argv);
 
   // initialize hardware
   bx_init_hardware();   // doesn't this duplicate things?
