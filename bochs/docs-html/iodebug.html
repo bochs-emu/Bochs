@@ -62,6 +62,10 @@ Selects register 1: Memory monitoring range end address (exclusive)
 <p>
 Enable address range memory monitoring as indicated by register 0 and 1 and clears both registers
 <p>
+<pre>0x8AE0</pre>
+<p>
+If the debugger is enabled (via --enable-debugger), sending 0x8AE0 to port 0x8A00 after the device has been enabled will return the bochs to the debugger prompt.
+<p>
 <pre>0x8AFF</pre>
 <p>
 Disable the I/O interface to the debugger and the memory monitoring functions.
