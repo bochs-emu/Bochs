@@ -9,6 +9,16 @@
 
 const char *version_string = "uselib-test6-1.0";
 
+#if 1
+// This lines forces main.cc to link in the functions associated with
+// the new operator.  If there is no "new" in the whole executable, the
+// Solaris linker decides not to link in __builtin_new, giving this error
+// when you try to load a module:
+//   fatal: relocation error: file .libs/libmodule1.so.0: 
+//            symbol __builtin_new: referenced symbol not found
+int *force_builtin_new = new int;
+#endif
+
 int register_module (const char *name)
 {
   printf ("register_module was called by module '%s'\n", name);
