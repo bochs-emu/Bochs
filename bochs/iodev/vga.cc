@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.83 2003-07-16 17:56:25 vruppert Exp $
+// $Id: vga.cc,v 1.84 2003-07-17 07:55:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1239,7 +1239,8 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
   if (needs_update) {
     BX_VGA_THIS s.vga_mem_updated = 1;
     // Mark all video as updated so the changes will go through
-    if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+    if ((BX_VGA_THIS s.graphics_ctrl.graphics_alpha) ||
+        (BX_VGA_THIS s.vbe_enabled)) {
       for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
         for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
           SET_TILE_UPDATED (xti, yti, 1);
@@ -1501,10 +1502,8 @@ bx_vga_c::update(void)
 
         if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // CGA 640x200x2
 
-          yti = 0;
-          for (yc=0; yc<iHeight; yc+=Y_TILESIZE) {
-            xti = 0;
-            for (xc=0; xc<iWidth; xc+=X_TILESIZE) {
+          for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
@@ -1528,9 +1527,7 @@ bx_vga_c::update(void)
                 SET_TILE_UPDATED (xti, yti, 0);
                 bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
               }
-              xti++;
             }
-            yti++;
           }
         } else { // output data in serial fashion with each display plane
                  // output on its associated serial output.  Standard EGA/VGA format
@@ -1538,10 +1535,8 @@ bx_vga_c::update(void)
           line_compare = BX_VGA_THIS s.line_compare;
           if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
 
-          yti = 0;
-          for (yc=0; yc<iHeight; yc+=Y_TILESIZE) {
-            xti = 0;
-            for (xc=0; xc<iWidth; xc+=X_TILESIZE) {
+          for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
@@ -1587,9 +1582,7 @@ bx_vga_c::update(void)
                 SET_TILE_UPDATED (xti, yti, 0);
                 bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
                 }
-              xti++;
               }
-            yti++;
             }
           }
         break; // case 0
@@ -1606,10 +1599,8 @@ bx_vga_c::update(void)
 	  old_iHeight = iHeight;
 	}
 
-        yti = 0;
-        for (yc=0; yc<iHeight; yc+=Y_TILESIZE) {
-          xti = 0;
-          for (xc=0; xc<iWidth; xc+=X_TILESIZE) {
+        for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+          for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
             if (GET_TILE_UPDATED (xti, yti)) {
               for (r=0; r<Y_TILESIZE; r++) {
                 y = yc + r;
@@ -1635,9 +1626,7 @@ bx_vga_c::update(void)
               SET_TILE_UPDATED (xti, yti, 0);
               bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
             }
-            xti++;
           }
-          yti++;
         }
         /* CGA 320x200x4 end */
 
@@ -1661,10 +1650,8 @@ bx_vga_c::update(void)
 	    old_iWidth = iWidth;
 	  }
 
-          yti = 0;
-          for (yc=0; yc<iHeight; yc+=Y_TILESIZE) {
-            xti = 0;
-            for (xc=0; xc<iWidth; xc+=X_TILESIZE) {
+          for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   pixely = yc + r;
@@ -1681,9 +1668,7 @@ bx_vga_c::update(void)
                 SET_TILE_UPDATED (xti, yti, 0);
                 bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
                 }
-              xti++;
               }
-            yti++;
             }
           }
 
@@ -1697,10 +1682,8 @@ bx_vga_c::update(void)
 	    old_iHeight = iHeight;
 	  }
 
-          yti = 0;
-          for (yc=0; yc<iHeight; yc+=Y_TILESIZE) {
-            xti = 0;
-            for (xc=0; xc<iWidth; xc+=X_TILESIZE) {
+          for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   pixely = yc + r;
@@ -1718,9 +1701,7 @@ bx_vga_c::update(void)
                 SET_TILE_UPDATED (xti, yti, 0);
                 bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
                 }
-              xti++;
 	      }
-            yti++;
 	    }
           }
         break; // case 2
@@ -2578,15 +2559,31 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   Bit32u offset;
   unsigned x_tileno, y_tileno;
 
-  if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  if (BX_VGA_THIS s.vbe_lfb_enabled)
   {
-    // LFB write
-    offset = addr - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+    if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    {
+      // LFB write
+      offset = addr - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+    }
+    else
+    {
+      // banked mode write while in LFB mode -> ignore
+      return;
+    }
   }
   else
   {
-    // banked mode write
-    offset = BX_VGA_THIS s.vbe_bank*65536 + (addr - 0xA0000);
+    if (addr < VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    {
+      // banked mode write
+      offset = (BX_VGA_THIS s.vbe_bank*65536) + (addr - 0xA0000);
+    }
+    else
+    {
+      // LFB write while in banked mode -> ignore
+      return;
+    }
   }
 
   // check for out of memory write
