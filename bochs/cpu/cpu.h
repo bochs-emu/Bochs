@@ -486,7 +486,35 @@ typedef struct {
   } bx_gen_reg_t;
 #endif
 
-#include "apic.h"
+#define APIC_MAX_ID 16
+extern BX_CPU_C *apic_index[APIC_MAX_ID];
+
+#define APIC_UNKNOWN_ID 0xff
+class bx_apic_c {
+public:
+  bx_apic_c(BX_CPU_C *mycpu);
+  ~bx_apic_c(void);
+  BX_CPU_C *cpu;
+  Bit32u get_base (void);
+  void set_base (Bit32u newbase);
+  void set_id (Bit8u newid);
+  Bit8u get_id () { return id; }
+  void write_handler (Bit32u addr, Bit32u *data, unsigned len);
+  void read_handler (Bit32u addr, Bit32u *data, unsigned len);
+  static BX_CPU_C *get_cpu (Bit8u id);
+private:
+  Bit32u apic_base_msr;
+  Bit8u id;
+  Bit32u icr_high, icr_low;
+  Bit32u err_status;
+#define APIC_VERSION_ID 0x00170011  // same as 82093 IOAPIC
+  };
+
+
+#if BX_USE_APIC_SMF
+extern bx_apic_c bx_apic;
+#endif
+
 
 
 
@@ -498,7 +526,7 @@ typedef struct {
 #ifdef BX_IN_CPU_METHOD
 #  define BX_CPU_THIS_PTR  this->     /* for cpu/*.cc */
 #else
-#  define BX_CPU_THIS_PTR  BX_CPU[0].    /* for all others */
+#  define BX_CPU_THIS_PTR  BX_CPU[0]->    /* for all others */
 #endif
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
@@ -517,6 +545,8 @@ class BX_MEM_C;
 class BX_CPU_C {
 
 public: // for now...
+
+  char name[64];
 
   // General register set
   // eax: accumulator
@@ -664,6 +694,7 @@ public: // for now...
   Boolean debug_vm;		/* BW contains current mode*/
   Bit8u show_eip;		/* BW record eip at special instr f.ex eip */
   Bit8u show_flag;		/* BW shows instr class executed */
+  bx_guard_found_t guard_found;
 #endif
 
   // for paging
@@ -690,7 +721,7 @@ public: // for now...
   BX_SMF Boolean get_CF(void);
 
   // constructors & destructors...
-  BX_CPU_C(void);
+  BX_CPU_C(BX_MEM_C *addrspace);
   ~BX_CPU_C(void);
 
   // prototypes for CPU instructions...
@@ -1386,7 +1417,7 @@ public: // for now...
 #endif
 
 
-extern BX_CPU_C       BX_CPU[BX_SMP_PROCESSORS];
+extern BX_CPU_C       *BX_CPU[BX_SMP_PROCESSORS];
 
 BX_SMF inline void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
 BX_SMF inline void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; };
