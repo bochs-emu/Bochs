@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.104 2003-08-04 16:03:09 akrisak Exp $
+// $Id: dbg_main.cc,v 1.105 2003-08-04 16:35:49 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -5137,6 +5137,14 @@ static char* bx_dbg_ivt_desc(int intnum)
     case 0x1d : ret = "SYSTEM DATA - VIDEO PARAMETER TABLES"; break;
     case 0x1e : ret = "SYSTEM DATA - DISKETTE PARAMETERS"   ; break;
     case 0x1f : ret = "SYSTEM DATA - 8x8 GRAPHICS FONT"     ; break;
+    case 0x70 : ret = "IRQ8 - CMOS REAL-TIME CLOCK"         ; break;
+    case 0x71 : ret = "IRQ9 - REDIRECTED TO INT 0A BY BIOS" ; break;
+    case 0x72 : ret = "IRQ10 - RESERVED"                    ; break;
+    case 0x73 : ret = "IRQ11 - RESERVED"                    ; break;
+    case 0x74 : ret = "IRQ12 - POINTING DEVICE"             ; break;
+    case 0x75 : ret = "IRQ13 - MATH COPROCESSOR EXCEPTION"  ; break;
+    case 0x76 : ret = "IRQ14 - HARD DISK CONTROLLER OPERATION COMPLETE"; break;
+    case 0x77 : ret = "IRQ15 - SECONDARY IDE CONTROLLER OPERATION COMPLETE"; break;
     default   : ret = ""                                    ; break;
   }
   return ret;
@@ -5156,7 +5164,7 @@ bx_dbg_info_ivt_command(bx_num_range r)
   if ((cpu.cr0 & 1) == 0)
   { if ((r.from == -1L) && (r.to == -1L))
     { r.from = 0;
-      r.to = 255;
+      r.to = 256;
       tail = 1;
     } 
     else if (r.to == r.from)
