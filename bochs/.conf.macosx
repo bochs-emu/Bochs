@@ -3,7 +3,7 @@
 # this sets up the compile for MacOS X
 
 set echo
-CFLAGS="-pipe -g"
+CFLAGS="-pipe -O2"
 CXXFLAGS="$CFLAGS"
 
 export CC
@@ -11,6 +11,9 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure
+./configure --enable-cdrom \
+	    --enable-vbe \
+	    --enable-dc2300-vlb-ide \
+	    --enable-all-optimizations
 
 unset echo
