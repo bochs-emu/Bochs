@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.8 2004-07-06 19:59:10 vruppert Exp $
+// $Id: pci2isa.h,v 1.9 2004-09-25 22:15:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,6 @@ public:
   ~bx_pci2isa_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
-  virtual void   pci_init_irq(Bit8u devfunc, unsigned line, unsigned irq);
   virtual void   pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level);
 
 private:

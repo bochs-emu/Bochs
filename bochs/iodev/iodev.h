@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.51 2004-09-05 10:30:19 vruppert Exp $
+// $Id: iodev.h,v 1.52 2004-09-25 22:15:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -290,9 +290,6 @@ class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c {
   public:
   virtual void pci_set_irq (Bit8u devfunc, unsigned line, bx_bool level) {
     STUBFUNC(pci2isa, pci_set_irq);
-  }
-  virtual void pci_init_irq (Bit8u devfunc, unsigned line, unsigned irq) {
-    STUBFUNC(pci2isa, pci_init_irq);
   }
 };
 

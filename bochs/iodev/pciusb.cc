@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.11 2004-09-16 18:34:10 vruppert Exp $
+// $Id: pciusb.cc,v 1.12 2004-09-25 22:15:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -117,8 +117,8 @@ bx_pciusb_c::reset(unsigned type)
   } reset_vals[] = {
     { 0x00, 0x86 }, { 0x01, 0x80 }, // 0x8086 = vendor
     { 0x02, 0x20 }, { 0x03, 0x70 }, // 0x7020 = device
-    { 0x04, 0x05 }, { 0x05, 0x00 },	// command_io
-    { 0x06, 0x80 }, { 0x07, 0x02 },	// status
+    { 0x04, 0x05 }, { 0x05, 0x00 }, // command_io
+    { 0x06, 0x80 }, { 0x07, 0x02 }, // status
     { 0x08, 0x01 },                 // revision number
     { 0x09, 0x00 },                 // interface
     { 0x0a, 0x03 },                 // class_sub  USB Host Controller
@@ -129,8 +129,8 @@ bx_pciusb_c::reset(unsigned type)
     { 0x20, ((bx_options.usb[0].Oioaddr->get() & 0xE0) | 0x01) },
     { 0x21, (bx_options.usb[0].Oioaddr->get() >> 8) },
     { 0x22, 0x00 }, { 0x23, 0x00 },
-    { 0x3c, bx_options.usb[0].Oirq->get() }, // IRQ
-    { 0x3d, BX_PCI_INTD },                  // INT
+    { 0x3c, 0x00 },                 // IRQ
+    { 0x3d, BX_PCI_INTD },          // INT
     { 0x6a, 0x01 },                 // USB clock
     { 0xc1, 0x20 }                  // PIRQ enable
 
@@ -143,7 +143,6 @@ bx_pciusb_c::reset(unsigned type)
                       &BX_USB_THIS hub[0].base_ioaddr,
                       &BX_USB_THIS hub[0].pci_conf[0x20],
                       32, &usb_iomask[0], "USB Hub #1");
-  DEV_pci_init_irq(0x0a, BX_PCI_INTD, bx_options.usb[0].Oirq->get());
 
   // reset locals
   BX_USB_THIS global_reset = 0;

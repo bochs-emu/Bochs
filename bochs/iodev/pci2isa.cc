@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.21 2004-09-12 18:04:18 vruppert Exp $
+// $Id: pci2isa.cc,v 1.22 2004-09-25 22:15:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -179,13 +179,6 @@ bx_pci2isa_c::pci_unregister_irq(unsigned pirq)
     }
     BX_P2I_THIS s.pci_conf[0x60 + pirq] = 0x80;
   }
-}
-
-  void
-bx_pci2isa_c::pci_init_irq(Bit8u devfunc, unsigned line, unsigned irq)
-{
-  Bit8u pirq = ((devfunc >> 3) + line - 2) & 0x03;
-  pci_register_irq(pirq, irq);
 }
 
   void

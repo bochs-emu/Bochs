@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.69 2004-09-18 12:35:13 vruppert Exp $
+// $Id: ne2k.cc,v 1.70 2004-09-25 22:15:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -130,8 +130,6 @@ bx_ne2k_c::reset(unsigned type)
     DEV_pci_set_base_io(this, read_handler, write_handler,
                         &BX_NE2K_THIS s.base_address, &BX_NE2K_THIS s.pci_conf[0x10],
                         32, &ne2k_iomask[0], "NE2000 PCI NIC");
-    BX_NE2K_THIS s.pci_conf[0x3c] = bx_options.ne2k.Oirq->get ();
-    DEV_pci_init_irq(BX_NE2K_THIS s.devfunc, BX_NE2K_THIS s.pci_conf[0x3d], bx_options.ne2k.Oirq->get ());
   }
 #endif
   set_irq_level(0);
@@ -1304,7 +1302,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.69 2004-09-18 12:35:13 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.70 2004-09-25 22:15:02 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
