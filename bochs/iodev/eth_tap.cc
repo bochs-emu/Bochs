@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.14 2003-04-26 14:48:45 cbothamy Exp $
+// $Id: eth_tap.cc,v 1.15 2003-04-28 12:58:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,7 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__)  // Should be fixed for other *BSD
 #include <net/if.h>
 #else
 #include <asm/types.h>
@@ -267,7 +267,7 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   Bit8u txbuf[BX_PACKET_BUFSIZ];
   txbuf[0] = 0;
   txbuf[1] = 0;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__)  // Should be fixed for other *BSD
   memcpy (txbuf, buf, io_len);
   unsigned int size = write (fd, txbuf, io_len);
   if (size != io_len) {
@@ -316,7 +316,7 @@ void bx_tap_pktmover_c::rx_timer ()
   nbytes = read (fd, buf, sizeof(buf));
 
   // hack: discard first two bytes
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__)  // Should be fixed for other *BSD
   rxbuf = buf;
 #else
   rxbuf = buf+2;
