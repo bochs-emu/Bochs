@@ -88,7 +88,9 @@ Changes to next release:
   - mouse
     - serial mouse support (Volker)
     - PS/2 and serial wheel mouse support (Ben Lunt)
-    - USB mouse support (Ben Lunt)
+  - usb
+    - USB mouse and keypad support (Ben Lunt)
+    - config option to specify devices connected to USB ports
   - vga
     - VBE 8 bit DAC support added
     - VBE memory now registered using DEV_register_memory_handlers()
@@ -142,6 +144,9 @@ Changes to next release:
   - --enable-show-ips option added, enable Instruction Per Second counter 
     in log file 
 
+- documentation
+  - a bunch of updates in user and documentation docs (Alexander Schuch)
+
 - SF patches applied
   [894595] MSR_APICBASE always returns APIC ADDRESS 0 by Kangmo Kim
   [907163] ctrl_xfer8 clean/speed up
@@ -177,10 +182,12 @@ Changes to next release:
  [1079240] Wheel Mouse by Ben Lunt
  [1087537] Fix for Win9x CD boot by lukewarm
  [1083218] Start of wheel for USB #2 by Ben Lunt
- [1098480] bochsrc: fixed floppya example by ci-dev 
- [1094407] configure.in: changed wxWindows to wxWidgets by ci-dev
+ [1098480] bochsrc: fixed floppya example by Alexander Schuch (ci-dev)
+ [1094407] configure.in: changed wxWindows to wxWidgets by Alexander Schuch
  [1092058] serial.cc debug output cleanup by Ben Lunt
  [1101165] APIC base address by Christian Neubert (flashburn)
+ [1093796] Fix for bug #1093786 (Nigel Horne)
+ [1082584] The start of Bus mice and USB mice by Ben Lunt
 
 
 - SF patches partially applied
