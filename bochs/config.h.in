@@ -698,12 +698,14 @@ typedef
 #define BX_SUPPORT_CLGD54XX 0
 
 // CLGD54XX PCI emulation
-#define BX_SUPPORT_CLGD54XX_PCI 1
+#define BX_SUPPORT_CLGD54XX_PCI 0
+
+#if (BX_SUPPORT_CLGD54XX_PCI && !BX_SUPPORT_PCI)
+#error To enable CL-GD54xx PCI support, you must also enable PCI
+#endif
 
 // Experimental VGA on PCI
-#if !(BX_SUPPORT_CLGD54XX && BX_SUPPORT_CLGD54XX_PCI)
-#define BX_SUPPORT_PCIVGA 1
-#endif
+#define BX_SUPPORT_PCIVGA 0
 
 // Experimental host PCI device mapping
 #define BX_SUPPORT_PCIDEV 0
