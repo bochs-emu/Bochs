@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.3 2002-03-09 01:23:21 bdenney Exp $
+// $Id: eth_tap.cc,v 1.4 2002-03-09 01:33:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,11 +50,33 @@
 //   # route add default gw 10.0.0.1
 // Now you should be able to ping from guest OS to your host machine, if
 // you give its IP number.  I'm still having trouble with pings from the
-// host machine to the guest, so something is still not right.  But it's
-// really close to working!
+// host machine to the guest, so something is still not right.  Symptoms: I
+// ping from the host to the guest's IP address 10.0.0.2.  With tcpdump I can
+// see the ping going to Bochs, and then the ping reply coming from Bochs.
+// But the ping program itself does not see the responses....well every
+// once in a while it does, like 1 in 60 pings.
 //
-// By setting up packet forwarding (with masquerading) on the host, you should
-// be able to get Bochs talking to anyone on the internet.
+// host$ ping 10.0.0.2
+// PING 10.0.0.2 (10.0.0.2) from 10.0.0.1 : 56(84) bytes of data.
+// 
+// Netstat output:
+// 20:29:59.018776 fe:fd:0:0:0:0 fe:fd:0:0:0:1 0800 98: 10.0.0.1 > 10.0.0.2: icmp: echo request
+//      4500 0054 2800 0000 4001 3ea7 0a00 0001
+//      0a00 0002 0800 09d3 a53e 0400 9765 893c
+//      3949 0000 0809 0a0b 0c0d 0e0f 1011 1213
+//      1415 1617 1819
+// 20:29:59.023017 fe:fd:0:0:0:1 fe:fd:0:0:0:0 0800 98: 10.0.0.2 > 10.0.0.1: icmp: echo reply
+//      4500 0054 004a 0000 4001 665d 0a00 0002
+//      0a00 0001 0000 11d3 a53e 0400 9765 893c
+//      3949 0000 0809 0a0b 0c0d 0e0f 1011 1213
+//      1415 1617 1819
+//
+// I suspect it may be related to the fact that ping 10.0.0.1 from the 
+// host also doesn't work.  Why wouldn't the host respond to its own IP 
+// address on the tap0 device?
+//
+// Theoretically, if you set up packet forwarding (with masquerading) on the
+// host, you should be able to get Bochs talking to anyone on the internet.
 // 
 
 #include "bochs.h"
