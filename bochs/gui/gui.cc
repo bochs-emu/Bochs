@@ -166,8 +166,12 @@ bx_gui_c::reset_handler(void)
   void
 bx_gui_c::power_handler(void)
 {
-  BX_PANIC(("POWER button turned off."));
-  // exit the simulator even if panic did not actually quit.
+  // the user pressed power button, so there's no doubt they want bochs
+  // to quit.  Change panics to fatal for the GUI and then do a panic.
+  LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
+  BX_PANIC (("POWER button turned off."));
+  // shouldn't reach this point, but if you do, QUIT!!!
+  fprintf (stderr, "Bochs is exiting because you pressed the power button.\n");
   ::exit (1);
 }
 
