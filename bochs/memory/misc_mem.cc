@@ -27,7 +27,7 @@
 
 
 #include "bochs.h"
-#define LOG_THIS BX_MEM[0]->
+#define LOG_THIS BX_MEM(0)->
 
 
 

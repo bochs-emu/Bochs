@@ -299,7 +299,7 @@ bx_devices_c::timer()
 #if BX_APIC_SUPPORT
   // update local APIC timers
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU[i]->local_apic.periodic (TIMER_DELTA);
+    BX_CPU(i)->local_apic.periodic (TIMER_DELTA);
   }
 #endif
 }

@@ -131,7 +131,7 @@ struct linux_setup_params
   static void
 bx_load_linux_setup_params( Bit32u initrd_start, Bit32u initrd_size )
 {
-  BX_MEM_C *mem = BX_MEM[0];
+  BX_MEM_C *mem = BX_MEM(0);
   struct linux_setup_params *params =
          (struct linux_setup_params *) &mem->vector[0x00090000];
 
@@ -275,7 +275,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   size = stat_buf.st_size;
   page_size = ((Bit32u)size + 0xfff) & ~0xfff;
 
-  BX_MEM_C *mem = BX_MEM[0];
+  BX_MEM_C *mem = BX_MEM(0);
   if ( (paddr + size) > mem->len ) {
     BX_INFO(( "load_kernel_image: address range > physical memsize!\n" ));
     exit(1);

@@ -57,8 +57,8 @@ const Boolean bx_parity_lookup[256] = {
 #endif
 
 
-BX_CPU_C    *BX_CPU[BX_SMP_PROCESSORS];
-BX_MEM_C    *BX_MEM[BX_ADDRESS_SPACES];
+BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
+BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 
 
 

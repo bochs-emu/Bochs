@@ -394,7 +394,7 @@ main(int argc, char *argv[])
   int quantum = 5;
   while (1) {
     // do some instructions in each processor
-    BX_CPU[processor]->cpu_loop(quantum);
+    BX_CPU(processor)->cpu_loop(quantum);
     processor = (processor+1) % BX_SMP_PROCESSORS;
     if (processor == 0) 
       BX_TICKN(quantum);
@@ -445,22 +445,22 @@ bx_bochs_init(int argc, char *argv[])
 #if BX_APIC_SUPPORT
   memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
 #endif
-  BX_MEM[0] = new BX_MEM_C ();
-  BX_MEM[0]->init_memory(bx_options.memory.megs * 1024*1024);
-  BX_MEM[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
-  BX_MEM[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
+  bx_mem_array[0] = new BX_MEM_C ();
+  bx_mem_array[0]->init_memory(bx_options.memory.megs * 1024*1024);
+  bx_mem_array[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  bx_mem_array[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU[i] = new BX_CPU_C (BX_MEM[0]);
+    BX_CPU(i) = new BX_CPU_C (bx_mem_array[0]);
 #if BX_APIC_SUPPORT
-    BX_CPU[i]->local_apic.set_id (i);
+    BX_CPU(i)->local_apic.set_id (i);
 #endif
-    BX_CPU[i]->reset(BX_RESET_HARDWARE);
+    BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }
 
   bx_init_debug();
 
 #if BX_DEBUGGER == 0
-  bx_devices.init(BX_MEM[0]);
+  bx_devices.init(BX_MEM(0));
   bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif
@@ -530,7 +530,7 @@ bx_atexit(void)
 
 #if BX_DEBUGGER == 0
   for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
-    if (BX_CPU[cpu]) BX_CPU[cpu]->atexit();
+    if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
 #endif
 
 #if BX_PCI_SUPPORT

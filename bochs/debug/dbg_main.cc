@@ -21,10 +21,10 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 // stupid define shortcuts to get register from the default CPU
-#define EBP (BX_CPU[dbg_cpu]->gen_reg[5].erx)
-#define EIP (BX_CPU[dbg_cpu]->eip)
-#define ESP (BX_CPU[dbg_cpu]->gen_reg[4].erx)
-#define SP  (BX_CPU[dbg_cpu]->gen_reg[4].word.rx)
+#define EBP (BX_CPU(dbg_cpu)->gen_reg[5].erx)
+#define EIP (BX_CPU(dbg_cpu)->eip)
+#define ESP (BX_CPU(dbg_cpu)->gen_reg[4].erx)
+#define SP  (BX_CPU(dbg_cpu)->gen_reg[4].word.rx)
 
 extern "C" {
 #include <signal.h>
@@ -360,27 +360,27 @@ process_sim2:
   // call init routines for each CPU+mem simulator
   // initialize for SMP. one memory, multiple processors.
   memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
-  BX_MEM[0] = new BX_MEM_C ();
-  BX_MEM[0]->init_memory(bx_options.memory.megs * 1024*1024);
-  BX_MEM[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
-  BX_MEM[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
+  BX_MEM(0) = new BX_MEM_C ();
+  BX_MEM(0)->init_memory(bx_options.memory.megs * 1024*1024);
+  BX_MEM(0)->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  BX_MEM(0)->load_ROM(bx_options.vgarom.path, 0xc0000);
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU[i] = new BX_CPU_C (BX_MEM[0]);
-    BX_CPU[i]->local_apic.set_id (i);
-    BX_CPU[i]->reset(BX_RESET_HARDWARE);
+    BX_CPU(i) = new BX_CPU_C (BX_MEM(0));
+    BX_CPU(i)->local_apic.set_id (i);
+    BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }
 #if BX_NUM_SIMULATORS > 1
 #error cosimulation not supported until SMP stuff settles
-  BX_MEM[1] = new BX_MEM_C ();
-  BX_CPU[1] = new BX_CPU_C (BX_MEM[1]);
-  BX_CPU[1]->reset(BX_RESET_HARDWARE);
-  BX_MEM[1]->init_memory(bx_options.memory.megs * 1024*1024);
-  BX_MEM[1]->load_ROM(bx_options.rom.path, bx_options.rom.address);
-  BX_MEM[1]->load_ROM(bx_options.vgarom.path, 0xc0000);
+  BX_MEM(1) = new BX_MEM_C ();
+  BX_CPU(1) = new BX_CPU_C (BX_MEM(1));
+  BX_CPU(1)->reset(BX_RESET_HARDWARE);
+  BX_MEM(1)->init_memory(bx_options.memory.megs * 1024*1024);
+  BX_MEM(1)->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  BX_MEM(1)->load_ROM(bx_options.vgarom.path, 0xc0000);
 #endif
 
   // (mch) Moved from main.cc
-  bx_devices.init(BX_MEM[0]);
+  bx_devices.init(BX_MEM(0));
   bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 
@@ -602,12 +602,12 @@ bx_dbg_exit(int code)
 {
   BX_DEBUG(( "dbg: before sim1_exit\n" ));
   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-    BX_CPU[cpu]->atexit();
+    BX_CPU(cpu)->atexit();
   }
 
 #if BX_NUM_SIMULATORS >= 2
   fprintf(stderr, "before sim2_exit\n");
-  BX_CPU[1]->atexit();
+  BX_CPU(1)->atexit();
 #endif
 
   bx_atexit();
@@ -630,15 +630,15 @@ bx_dbg_quit_command(void)
 void
 bx_dbg_trace_on_command(void)
 {
-  BX_CPU[dbg_cpu]->trace = 1;
-  fprintf (stderr, "Tracing enabled for %s\n", BX_CPU[dbg_cpu]->name);
+  BX_CPU(dbg_cpu)->trace = 1;
+  fprintf (stderr, "Tracing enabled for %s\n", BX_CPU(dbg_cpu)->name);
 }
 
 void
 bx_dbg_trace_off_command(void)
 {
-  BX_CPU[dbg_cpu]->trace = 0;
-  fprintf (stderr, "Tracing disabled for %s\n", BX_CPU[dbg_cpu]->name);
+  BX_CPU(dbg_cpu)->trace = 0;
+  fprintf (stderr, "Tracing disabled for %s\n", BX_CPU(dbg_cpu)->name);
 }
 
 void
@@ -721,7 +721,7 @@ bx_dbg_diff_memory(void)
 #else
 	int num_pages = bx_options.memory.megs * 1024 / 4;
 	for (int i = 0; i < num_pages; i++) {
-		BX_CPU[dbg_cpu]->dbg_dirty_pages[i] = 1;
+		BX_CPU(dbg_cpu)->dbg_dirty_pages[i] = 1;
 	}
 	if (bx_dbg_compare_sim_memory())
 		printf("[diff-memory] Diff detected\n");
@@ -776,13 +776,13 @@ bx_dbg_fast_forward(Bit32u num)
 
 	printf("Copying CPU...\n");
 	bx_dbg_cpu_t cpu;
-	if (!BX_CPU[0]->dbg_get_cpu(&cpu) || !BX_CPU[1]->dbg_set_cpu(&cpu))
+	if (!BX_CPU(0)->dbg_get_cpu(&cpu) || !BX_CPU(1)->dbg_set_cpu(&cpu))
 		printf("Error copying CPU data!\n");
 
 	printf("Copying memory...\n");
 	int num_pages = bx_options.memory.megs * 1024 / 4;
 	for (int i = 0; i < num_pages; i++) {
-		if (BX_CPU[0]->dbg_dirty_pages[i]) {
+		if (BX_CPU(0)->dbg_dirty_pages[i]) {
 			Bit32u page_start = i * 1024 * 4;
 			printf("Copying page %08x\n", page_start);
 			extern Bit8u* SIM1_GET_PHYS_PTR(Bit32u page_start);
@@ -821,13 +821,13 @@ bx_dbg_info_address(Bit32u seg_reg_num, Bit32u offset)
 	{
 		/* Find page table base address */
 		bx_dbg_cpu_t regs;
-		BX_CPU[sim]->dbg_get_cpu(&regs);
+		BX_CPU(sim)->dbg_get_cpu(&regs);
 		Bit32u base = regs.cr3 & ~0xfff;
 
 		Bit8u buf[4];
 		Bit32u directory_addr = base + (offset >> 22) * 4;
 		Bit32u directory;
-		if (BX_CPU[sim]->mem->dbg_fetch_mem(directory_addr, 4, buf)) {
+		if (BX_CPU(sim)->mem->dbg_fetch_mem(directory_addr, 4, buf)) {
 			directory = conv_4xBit8u_to_Bit32u(buf);
 			Bit32u table_addr = (directory & ~0xfff) + ((offset >> 12) & 0x3ff) * 4;
 			Bit32u table;
@@ -842,7 +842,7 @@ bx_dbg_info_address(Bit32u seg_reg_num, Bit32u offset)
 			       (directory & (1 << 6)) ? "Dirty" : "-");
 
 			if (directory & 1) {
-				if (BX_CPU[sim]->mem->dbg_fetch_mem(table_addr, 4, buf)) {
+				if (BX_CPU(sim)->mem->dbg_fetch_mem(table_addr, 4, buf)) {
 					table = conv_4xBit8u_to_Bit32u(buf);
 
 					printf(", PTE: %08x (", table);
@@ -930,10 +930,10 @@ bx_dbg_playback_command(char* path_quoted)
 void
 bx_dbg_modebp_command(char* dummy)
 {
-      BX_CPU[dbg_cpu]->debug_vm == BX_CPU[dbg_cpu]->eflags.vm;
-      BX_CPU[dbg_cpu]->mode_break = !BX_CPU[dbg_cpu]->mode_break;
+      BX_CPU(dbg_cpu)->debug_vm == BX_CPU(dbg_cpu)->eflags.vm;
+      BX_CPU(dbg_cpu)->mode_break = !BX_CPU(dbg_cpu)->mode_break;
       fprintf(stderr," mode switch break %s\n", 
-	      BX_CPU[dbg_cpu]->mode_break ? "enabled" : "disabled");
+	      BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
 }
 
 // where
@@ -942,11 +942,11 @@ bx_dbg_modebp_command(char* dummy)
 void
 bx_dbg_where_command()
 {
-      if (!BX_CPU[dbg_cpu]->protected_mode()) {
+      if (!BX_CPU(dbg_cpu)->protected_mode()) {
 	    fprintf(stderr, "'where' only supported in protected mode\n");
 	    return;
       }
-      if (BX_CPU[dbg_cpu]->sregs[BX_SREG_SS].cache.u.segment.base != 0) {
+      if (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.base != 0) {
 	    fprintf(stderr, "non-zero stack base\n");
 	    return;
       }
@@ -960,9 +960,9 @@ bx_dbg_where_command()
 	    Bit8u buf[4];
 
 	    // bp = [bp];
-	    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(bp, &paddr, &paddr_valid);
+	    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp, &paddr, &paddr_valid);
 	    if (paddr_valid) {
-		  if (BX_MEM[0]->dbg_fetch_mem(paddr, 4, buf)) {
+		  if (BX_MEM(0)->dbg_fetch_mem(paddr, 4, buf)) {
 			bp = conv_4xBit8u_to_Bit32u(buf);
 		  } else {
 			fprintf(stderr, "(%d) Physical memory read error (BP)\n", i);
@@ -974,9 +974,9 @@ bx_dbg_where_command()
 	    }
 
 	    // ip = [bp + 4];
-	    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(bp + 4, &paddr, &paddr_valid);
+	    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp + 4, &paddr, &paddr_valid);
 	    if (paddr_valid) {
-		  if (BX_MEM[0]->dbg_fetch_mem(paddr, 4, buf)) {
+		  if (BX_MEM(0)->dbg_fetch_mem(paddr, 4, buf)) {
 			ip = conv_4xBit8u_to_Bit32u(buf);
 		  } else {
 			fprintf(stderr, "(%d) Physical memory read error (IP)\n", i);
@@ -1000,9 +1000,9 @@ bx_dbg_print_string_command(Bit32u start_addr)
 	    Bit32u paddr;
 	    Bit32u paddr_valid;
 	    Bit8u buf[1];
-	    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(start_addr+i, &paddr, &paddr_valid);
+	    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(start_addr+i, &paddr, &paddr_valid);
 	    if (paddr_valid) {
-		  if (BX_MEM[0]->dbg_fetch_mem(paddr, 1, buf)) {
+		  if (BX_MEM(0)->dbg_fetch_mem(paddr, 1, buf)) {
 			if (buf[0] == 0)
 			      break;
 			if (isgraph(buf[0]) || buf[0] == 0x20)
@@ -1128,16 +1128,16 @@ void bx_dbg_show_command(char* arg)
 	    dbg_show_mask |= 0x1f;
 	    
       fprintf(stderr," show mask is 0x%x, cleared show_flag\n", dbg_show_mask);
-      BX_CPU[dbg_cpu]->show_flag = 0;
-      last_cr3 = BX_CPU[dbg_cpu]->cr3;
-      last_pe = BX_CPU[dbg_cpu]->cr0.pe;
-      last_vm = BX_CPU[dbg_cpu]->eflags.vm;
+      BX_CPU(dbg_cpu)->show_flag = 0;
+      last_cr3 = BX_CPU(dbg_cpu)->cr3;
+      last_pe = BX_CPU(dbg_cpu)->cr0.pe;
+      last_vm = BX_CPU(dbg_cpu)->eflags.vm;
 
       fprintf(stderr,"%10lld: address %04x:%08x %08x\n\n", 
 	      bx_pc_system.time_ticks(),
-	      BX_CPU[dbg_cpu]->guard_found.cs,
-	      BX_CPU[dbg_cpu]->guard_found.eip,
-	      BX_CPU[dbg_cpu]->guard_found.laddr);
+	      BX_CPU(dbg_cpu)->guard_found.cs,
+	      BX_CPU(dbg_cpu)->guard_found.eip,
+	      BX_CPU(dbg_cpu)->guard_found.laddr);
 
 }
 
@@ -1193,16 +1193,16 @@ void
 bx_dbg_print_stack_command(int nwords)
 {
 	// Get linear address for stack top
-	Bit32u sp = (BX_CPU[dbg_cpu]->sregs[BX_SREG_SS].cache.u.segment.d_b) ? ESP : SP;
-	Bit32u linear_sp = sp + BX_CPU[dbg_cpu]->sregs[BX_SREG_SS].cache.u.segment.base;
+	Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.d_b) ? ESP : SP;
+	Bit32u linear_sp = sp + BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.base;
 	Bit8u buf[8];
 
 	for (int i = 0; i < nwords; i++) {
 		Bit32u paddr;
 		Boolean paddr_valid;
-		BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(sp, &paddr, &paddr_valid);
+		BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(sp, &paddr, &paddr_valid);
 		if (paddr_valid) {
-			if (BX_MEM[0]->dbg_fetch_mem(paddr, 2, buf))
+			if (BX_MEM(0)->dbg_fetch_mem(paddr, 2, buf))
 				fprintf(stderr, "   %08x [%08x]  %04x\n", linear_sp, paddr, (int)buf[0] | ((int)buf[1] << 8));
 			else
 				fprintf(stderr, "   %08x [%08x]  <read error>\n", paddr, linear_sp);
@@ -1357,12 +1357,12 @@ bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
       
       context_t* cntx = (global)
 	    ? context_t::get_context(0)
-	    : context_t::get_context((BX_CPU[dbg_cpu]->cr3) >> 12);
+	    : context_t::get_context((BX_CPU(dbg_cpu)->cr3) >> 12);
 
       if (!cntx)
 	    cntx = (global)
 		  ? new context_t(0)
-		  : new context_t((BX_CPU[dbg_cpu]->cr3) >> 12);
+		  : new context_t((BX_CPU(dbg_cpu)->cr3) >> 12);
 
       FILE* fp = fopen(filename, "r");
       if (!fp) {
@@ -1406,14 +1406,14 @@ bx_dbg_watch(int read, Bit32u address)
 	    // print watch point info
 	    for (int i = 0; i < num_read_watchpoints; i++) {
 		  Bit8u buf[2];
-		  if (BX_MEM[0]->dbg_fetch_mem(read_watchpoint[i], 2, buf))
+		  if (BX_MEM(0)->dbg_fetch_mem(read_watchpoint[i], 2, buf))
 			fprintf(stderr, "read   %08x   (%04x)\n", read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
 		  else
 			fprintf(stderr, "read   %08x   (read error)\n", read_watchpoint[i]);
 	    }
 	    for (int i = 0; i < num_write_watchpoints; i++) {
 		  Bit8u buf[2];
-		  if (BX_MEM[0]->dbg_fetch_mem(write_watchpoint[i], 2, buf))
+		  if (BX_MEM(0)->dbg_fetch_mem(write_watchpoint[i], 2, buf))
 			fprintf(stderr, "write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
 		  else
 			fprintf(stderr, "write  %08x   (read error)\n", write_watchpoint[i]);
@@ -1480,17 +1480,17 @@ bx_dbg_continue_command(void)
 	while (!stop) {
 		int quantum = 5;   // arbitrary number of cycles to run in each
 		for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-			BX_CPU[cpu]->guard_found.guard_found = 0;
-			BX_CPU[cpu]->guard_found.icount = 0;
+			BX_CPU(cpu)->guard_found.guard_found = 0;
+			BX_CPU(cpu)->guard_found.icount = 0;
 			bx_guard.icount = quantum;
-			BX_CPU[cpu]->cpu_loop (-1);
+			BX_CPU(cpu)->cpu_loop (-1);
 			// set stop flag if a guard found other than icount or halted
-			unsigned long found = BX_CPU[cpu]->guard_found.guard_found;
-			stop_reason_t reason = (stop_reason_t) BX_CPU[cpu]->stop_reason;
+			unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
+			stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
 			if (found & BX_DBG_GUARD_ICOUNT) {
 				// I expected this guard, don't stop
 			} else if (found!=0) {
-				bx_printf ("found guard other than icount in %s..stopping\n", BX_CPU[cpu]->name);
+				bx_printf ("found guard other than icount in %s..stopping\n", BX_CPU(cpu)->name);
 				stop = 1;
 				which = cpu;
 			} else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
@@ -1512,12 +1512,12 @@ bx_dbg_continue_command(void)
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
 
-  if (BX_CPU[which]->stop_reason == STOP_TRACE
-			|| BX_CPU[which]->stop_reason == STOP_CPU_HALTED)
+  if (BX_CPU(which)->stop_reason == STOP_TRACE
+			|| BX_CPU(which)->stop_reason == STOP_CPU_HALTED)
 	goto one_more;
 
-  if (watchpoint_continue && (BX_CPU[which]->stop_reason == STOP_READ_WATCH_POINT ||
-			      BX_CPU[which]->stop_reason == STOP_WRITE_WATCH_POINT))
+  if (watchpoint_continue && (BX_CPU(which)->stop_reason == STOP_READ_WATCH_POINT ||
+			      BX_CPU(which)->stop_reason == STOP_WRITE_WATCH_POINT))
 	goto one_more;
 }
 
@@ -1540,12 +1540,12 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
   //bx_printf ("Stepping each CPU a total of %d cycles\n", count);
 	for (unsigned cycle=0; cycle < count; cycle++) {
 		for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-		  //bx_printf ("Stepping %s\n", BX_CPU[cpu]->name);
+		  //bx_printf ("Stepping %s\n", BX_CPU(cpu)->name);
 			bx_guard.icount = 1;
       bx_guard.interrupt_requested = 0;
-			BX_CPU[cpu]->guard_found.guard_found = 0;
-			BX_CPU[cpu]->guard_found.icount = 0;
-			BX_CPU[cpu]->cpu_loop(-1);
+			BX_CPU(cpu)->guard_found.guard_found = 0;
+			BX_CPU(cpu)->guard_found.icount = 0;
+			BX_CPU(cpu)->cpu_loop(-1);
 		}
 		BX_TICK1 ();
 	}
@@ -1608,7 +1608,7 @@ if (doit) fprintf(stderr, "requesting run of master for %u\n",
   // save A20 value before master run
   pre_A20  = bx_pc_system.get_enable_a20();
 
-  BX_MEM[master]->cpu_loop(-1);
+  BX_MEM(master)->cpu_loop(-1);
   post_A20  = bx_pc_system.get_enable_a20(); // A20 after master run
   master_icount = bx_guard_found[master].icount;
   slave_icount = 0;
@@ -1620,8 +1620,8 @@ if (doit) fprintf(stderr, "requesting run of master for %u\n",
   // master run, only if it needs to be changed.
   if (pre_A20 != post_A20) {
     bx_pc_system.set_enable_a20(pre_A20);
-    if (BX_MEM[slave]->set_A20)
-      BX_MEM[slave]->set_A20(pre_A20);
+    if (BX_MEM(slave)->set_A20)
+      BX_MEM(slave)->set_A20(pre_A20);
     }
 
 
@@ -1663,7 +1663,7 @@ if (doit) fprintf(stderr, "requesting run of slave for %u\n",
 	      bx_guard_found[slave].icount = curr_icount;
 	      bx_guard_found[slave].guard_found = BX_DBG_GUARD_ICOUNT;
       } else {
-	      BX_MEM[slave]->cpu_loop(-1);
+	      BX_MEM(slave)->cpu_loop(-1);
       }
       }
     slave_icount += bx_guard_found[slave].icount;
@@ -1688,15 +1688,15 @@ if (doit)
   fprintf(stderr, "slave: forcing interrupt %u\n",
     bx_debugger.async_journal.element[async_head].u.iac.val);
 
-          BX_MEM[slave]->dbg_force_interrupt(
+          BX_MEM(slave)->dbg_force_interrupt(
             bx_debugger.async_journal.element[async_head].u.iac.val);
 		}
           break;
         case BX_DBG_ASYNC_JOURNAL_A20:
           bx_pc_system.set_enable_a20(
             bx_debugger.async_journal.element[async_head].u.a20.val);
-          if (BX_MEM[slave]->set_A20)
-            BX_MEM[slave]->set_A20(
+          if (BX_MEM(slave)->set_A20)
+            BX_MEM(slave)->set_A20(
               bx_debugger.async_journal.element[async_head].u.a20.val);
           break;
         case BX_DBG_ASYNC_JOURNAL_NMI:
@@ -1754,7 +1754,7 @@ if (doit)
 bx_dbg_compare_sim_iaddr(void)
 {
   // returns 0 = same, 1 = different, 2 = false diff
-  if (BX_CPU[dbg_cpu]->guard_found.laddr != bx_guard_found[1].laddr) {
+  if (BX_CPU(dbg_cpu)->guard_found.laddr != bx_guard_found[1].laddr) {
 
 #ifdef FALSE_DIFF_DETECT
 	  extern int FALSE_DIFF_DETECT();
@@ -1773,7 +1773,7 @@ bx_dbg_compare_sim_iaddr(void)
       );
 
 //    fprintf(stderr, "Divergence: sim[0].laddr=%x, sim[1].laddr=%x\n",
-//      (unsigned) BX_CPU[dbg_cpu]->guard_found.laddr,
+//      (unsigned) BX_CPU(dbg_cpu)->guard_found.laddr,
 //      (unsigned) bx_guard_found[1].laddr);
     return(1); // different
     }
@@ -1789,8 +1789,8 @@ bx_dbg_compare_sim_cpu(void)
 	// segment registers
 	bx_dbg_cpu_t regs[2];
 
-	BX_MEM[0]->dbg_get_cpu(regs + 0);
-	BX_MEM[1]->dbg_get_cpu(regs + 1);
+	BX_MEM(0)->dbg_get_cpu(regs + 0);
+	BX_MEM(1)->dbg_get_cpu(regs + 1);
 
 	Boolean ret = 0;
 	Boolean warn = 0;
@@ -1902,8 +1902,8 @@ clear_dirty_bits (void)
 {
 	int num_pages = bx_options.memory.megs * 1024 / 4;
 	for (int i = 0; i < num_pages; i++) {
-		BX_MEM[0]->dbg_dirty_pages[i] = 0;
-		BX_MEM[1]->dbg_dirty_pages[i] = 0;
+		BX_MEM(0)->dbg_dirty_pages[i] = 0;
+		BX_MEM(1)->dbg_dirty_pages[i] = 0;
 	}
 }
 
@@ -1924,8 +1924,8 @@ bx_dbg_compare_sim_memory(void)
 	int num_pages = bx_options.memory.megs * 1024 / 4;
 
 	for (int i = 0; i < num_pages; i++) {
-		Boolean sim0_dirty = BX_MEM[0]->dbg_dirty_pages[i];
-		Boolean sim1_dirty = BX_MEM[1]->dbg_dirty_pages[i];
+		Boolean sim0_dirty = BX_MEM(0)->dbg_dirty_pages[i];
+		Boolean sim1_dirty = BX_MEM(1)->dbg_dirty_pages[i];
 		Bit32u page_start = i * 1024 * 4;
 
 		if ((sim0_dirty != sim1_dirty) || sim0_dirty || always_check_page[i]) {
@@ -1975,60 +1975,60 @@ bx_dbg_print_guard_results(void)
   unsigned sim;
 
 for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
-	unsigned long found = BX_CPU[sim]->guard_found.guard_found;
+	unsigned long found = BX_CPU(sim)->guard_found.guard_found;
   if (found & BX_DBG_GUARD_ICOUNT) {
     }
   else if (found & BX_DBG_GUARD_CTRL_C) {
     }
 #if BX_DBG_SUPPORT_VIR_BPOINT
   else if (found & BX_DBG_GUARD_IADDR_VIR) {
-    i = BX_CPU[sim]->guard_found.iaddr_index;
+    i = BX_CPU(sim)->guard_found.iaddr_index;
     fprintf(stderr, "(%u) Breakpoint %u, 0x%x (0x%x:0x%x)\n",
             sim,
             bx_guard.iaddr.vir[i].bpoint_id,
-            BX_CPU[sim]->guard_found.laddr,
-            BX_CPU[sim]->guard_found.cs,
-            BX_CPU[sim]->guard_found.eip);
+            BX_CPU(sim)->guard_found.laddr,
+            BX_CPU(sim)->guard_found.cs,
+            BX_CPU(sim)->guard_found.eip);
     }
 #endif
 #if BX_DBG_SUPPORT_LIN_BPOINT
   else if (found & BX_DBG_GUARD_IADDR_LIN) {
-    i = BX_CPU[sim]->guard_found.iaddr_index;
+    i = BX_CPU(sim)->guard_found.iaddr_index;
     fprintf(stderr, "(%u) Breakpoint %u, 0x%x in ?? ()\n",
             sim,
             bx_guard.iaddr.lin[i].bpoint_id,
-            BX_CPU[sim]->guard_found.laddr);
+            BX_CPU(sim)->guard_found.laddr);
     }
 #endif
 #if BX_DBG_SUPPORT_PHY_BPOINT
   else if (found & BX_DBG_GUARD_IADDR_PHY) {
-    i = BX_CPU[sim]->guard_found.iaddr_index;
+    i = BX_CPU(sim)->guard_found.iaddr_index;
     fprintf(stderr, "(%u) Breakpoint %u, 0x%x in ?? ()\n",
             sim,
             bx_guard.iaddr.phy[i].bpoint_id,
-            BX_CPU[sim]->guard_found.laddr);
+            BX_CPU(sim)->guard_found.laddr);
     }
 #endif
-	else if (BX_CPU[sim]->stop_reason == STOP_CPU_HALTED) {
+	else if (BX_CPU(sim)->stop_reason == STOP_CPU_HALTED) {
 		/* returned early because processor is in halt state */
 	}
-  else if (BX_CPU[sim]->stop_reason == STOP_MAGIC_BREAK_POINT) {
+  else if (BX_CPU(sim)->stop_reason == STOP_MAGIC_BREAK_POINT) {
 	fprintf(stderr, "(%u) Magic breakpoint\n", sim);
-  } else if (BX_CPU[sim]->stop_reason == STOP_TRACE) {
+  } else if (BX_CPU(sim)->stop_reason == STOP_TRACE) {
 	/* Nothing */
-  } else if (BX_CPU[sim]->stop_reason == STOP_TIME_BREAK_POINT) {
+  } else if (BX_CPU(sim)->stop_reason == STOP_TIME_BREAK_POINT) {
 	fprintf(stderr, "(%u) Caught time breakpoint\n", sim);
-  } else if (BX_CPU[sim]->stop_reason == STOP_MODE_BREAK_POINT) {
+  } else if (BX_CPU(sim)->stop_reason == STOP_MODE_BREAK_POINT) {
 	fprintf(stderr, "(%u) Caught vm mode switch breakpoint to %s mode\n",
-		sim, BX_CPU[sim]->eflags.vm ? "virtual 86" : "protected");
-  } else if (BX_CPU[sim]->stop_reason == STOP_READ_WATCH_POINT) {
+		sim, BX_CPU(sim)->eflags.vm ? "virtual 86" : "protected");
+  } else if (BX_CPU(sim)->stop_reason == STOP_READ_WATCH_POINT) {
 	fprintf(stderr, "(%u) Caught read watch point\n", sim);
-  } else if (BX_CPU[sim]->stop_reason == STOP_WRITE_WATCH_POINT) {
+  } else if (BX_CPU(sim)->stop_reason == STOP_WRITE_WATCH_POINT) {
 	fprintf(stderr, "(%u) Caught write watch point\n", sim);
   }
   else {
     fprintf(stderr, "Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n", 
-	    sim, BX_CPU[sim]->stop_reason);
+	    sim, BX_CPU(sim)->stop_reason);
     }
 
 
@@ -2037,25 +2037,25 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
     Bit32u phy;
     Boolean valid;
 
-    BX_CPU[sim]->dbg_xlate_linear2phy(BX_CPU[sim]->guard_found.laddr, &phy, &valid);
+    BX_CPU(sim)->dbg_xlate_linear2phy(BX_CPU(sim)->guard_found.laddr, &phy, &valid);
 
     if (valid) {
       unsigned ilen;
 
-      BX_CPU[sim]->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
-      ilen = bx_disassemble.disasm(BX_CPU[sim]->guard_found.is_32bit_code,
+      BX_CPU(sim)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
+      ilen = bx_disassemble.disasm(BX_CPU(sim)->guard_found.is_32bit_code,
                                    bx_disasm_ibuf, bx_disasm_tbuf);
 
-      if (BX_CPU[sim]->guard_found.is_32bit_code) {
+      if (BX_CPU(sim)->guard_found.is_32bit_code) {
         fprintf(stderr, "(%u) %04x:%08x (%s): ", sim,
-                (unsigned) BX_CPU[sim]->guard_found.cs,
-                (unsigned) BX_CPU[sim]->guard_found.eip,
-		bx_dbg_symbolic_address((BX_CPU[sim]->cr3) >> 12, BX_CPU[sim]->guard_found.eip, BX_CPU[sim]->sregs[BX_SREG_CS].cache.u.segment.base));
+                (unsigned) BX_CPU(sim)->guard_found.cs,
+                (unsigned) BX_CPU(sim)->guard_found.eip,
+		bx_dbg_symbolic_address((BX_CPU(sim)->cr3) >> 12, BX_CPU(sim)->guard_found.eip, BX_CPU(sim)->sregs[BX_SREG_CS].cache.u.segment.base));
         }
       else {
         fprintf(stderr, "(%u) %04x:%04x: ", sim,
-                (unsigned) BX_CPU[sim]->guard_found.cs,
-                (unsigned) BX_CPU[sim]->guard_found.eip);
+                (unsigned) BX_CPU(sim)->guard_found.cs,
+                (unsigned) BX_CPU(sim)->guard_found.eip);
         }
       for (unsigned j=0; j<ilen; j++)
         fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
@@ -2292,7 +2292,7 @@ bx_dbg_take_command(char *what, unsigned n)
     bx_dbg_batch_dma.this_many = n;
 
     for (i=0; i<n; i++) {
-      BX_CPU[0]->dbg_take_dma();
+      BX_CPU(0)->dbg_take_dma();
       }
 
     bx_dbg_batch_dma.this_many = 1;  // reset to normal
@@ -2301,7 +2301,7 @@ bx_dbg_take_command(char *what, unsigned n)
       fprintf(stderr, "done\n");
     }
   else if ( !strcmp(what, "irq") ) {
-    BX_CPU[0]->dbg_take_irq();
+    BX_CPU(0)->dbg_take_irq();
 
     if (bx_guard.report.irq)
       fprintf(stderr, "done\n");
@@ -2320,10 +2320,10 @@ bx_dbg_info_registers_command(void)
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     memset(&cpu, 0, sizeof(cpu));
-    BX_CPU[i]->dbg_get_cpu(&cpu);
+    BX_CPU(i)->dbg_get_cpu(&cpu);
 
 #if (BX_SMP_PROCESSORS > 1)
-    fprintf(stderr, "%s:\n", BX_CPU[i]->name, i);
+    fprintf(stderr, "%s:\n", BX_CPU(i)->name, i);
 #endif
     reg = cpu.eax;
     fprintf(stderr, "eax            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
@@ -2379,7 +2379,7 @@ bx_dbg_dump_cpu_command(void)
   bx_dbg_cpu_t cpu;
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++ ) {
-    BX_CPU[i]->dbg_get_cpu(&cpu);
+    BX_CPU(i)->dbg_get_cpu(&cpu);
 
 #if (BX_SMP_PROCESSORS >= 2)
     fprintf(stderr, "CPU#%u\n", i);
@@ -2623,7 +2623,7 @@ bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
       }
 
     if (is_linear) {
-      BX_CPU[simulator]->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
+      BX_CPU(simulator)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
       if (!paddr_valid) {
         fprintf(stderr, "error: examine memory: no tranlation for linear-to-phy mem available.\n");
         return;
@@ -2633,7 +2633,7 @@ bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
       paddr = addr;  // address is already physical address
       }
 
-    BX_MEM[simulator]->dbg_fetch_mem(paddr, data_size, databuf);
+    BX_MEM(simulator)->dbg_fetch_mem(paddr, data_size, databuf);
     //FIXME HanishKVC The char display for data to be properly integrated
     //      so that repeat_count, columns, etc. can be set or used properly.
     //      Also for data_size of 2 and 4 how to display the individual
@@ -2742,7 +2742,7 @@ bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val)
       return;
     }
 
-  is_OK = BX_MEM[0]->dbg_set_mem(addr, len, buf);
+  is_OK = BX_MEM(0)->dbg_set_mem(addr, len, buf);
   if (!is_OK) {
     fprintf(stderr, "Error: setpmem: could not set memory, out of physical bounds?\n");
     }
@@ -2755,52 +2755,52 @@ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   symbol++; // get past '$'
 
   if ( !strcmp(symbol, "eax") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_EAX, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EAX, val);
     }
   else if ( !strcmp(symbol, "ecx") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_ECX, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ECX, val);
     }
   else if ( !strcmp(symbol, "edx") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_EDX, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EDX, val);
     }
   else if ( !strcmp(symbol, "ebx") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_EBX, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EBX, val);
     }
   else if ( !strcmp(symbol, "esp") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_ESP, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ESP, val);
     }
   else if ( !strcmp(symbol, "ebp") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_EBP, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EBP, val);
     }
   else if ( !strcmp(symbol, "esi") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_ESI, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ESI, val);
     }
   else if ( !strcmp(symbol, "edi") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_EDI, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EDI, val);
     }
   else if ( !strcmp(symbol, "eip") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_EIP, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EIP, val);
     }
   else if ( !strcmp(symbol, "eflags") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_EFLAGS, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EFLAGS, val);
     }
   else if ( !strcmp(symbol, "cs") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_CS, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_CS, val);
     }
   else if ( !strcmp(symbol, "ss") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_SS, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_SS, val);
     }
   else if ( !strcmp(symbol, "ds") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_DS, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_DS, val);
     }
   else if ( !strcmp(symbol, "es") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_ES, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ES, val);
     }
   else if ( !strcmp(symbol, "fs") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_FS, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_FS, val);
     }
   else if ( !strcmp(symbol, "gs") ) {
-    is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_GS, val);
+    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_GS, val);
     }
   else if ( !strcmp(symbol, "cpu") ) {
       if ((val >= APIC_MAX_ID) || (apic_index[val] == NULL)) {
@@ -2853,7 +2853,7 @@ bx_dbg_query_command(char *what)
   unsigned pending;
 
   if ( !strcmp(what, "pending") ) {
-    pending = BX_CPU[0]->dbg_query_pending();
+    pending = BX_CPU(0)->dbg_query_pending();
 
     if ( pending & BX_DBG_PENDING_DMA )
       fprintf(stderr, "pending DMA\n");
@@ -3082,7 +3082,7 @@ bx_dbg_set_cpu_command(void)
   reti = sscanf(tmp_buf, "done");
   if (reti != 0) goto scanf_error;
 
-  retb = BX_CPU[0]->dbg_set_cpu(&cpu);
+  retb = BX_CPU(0)->dbg_set_cpu(&cpu);
   if (retb == 0)
     fprintf(stderr, "Error: dbg_set_cpu encountered error\n");
   else
@@ -3113,10 +3113,10 @@ bx_dbg_disassemble_command(bx_num_range range)
   }
 
   do {
-    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(range.from, &paddr, &paddr_valid);
+    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(range.from, &paddr, &paddr_valid);
 
     if (paddr_valid) {
-      BX_MEM[0]->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
+      BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
       ilen = bx_disassemble.disasm(bx_debugger.disassemble_size==32,
                                    bx_disasm_ibuf, bx_disasm_tbuf);
 
@@ -3251,7 +3251,7 @@ bx_dbg_v2l_command(unsigned seg_no, Bit32u offset)
     fprintf(stderr, "Error: seg_no out of bounds\n");
     return;
     }
-  BX_CPU[dbg_cpu]->dbg_get_sreg(&sreg, seg_no);
+  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, seg_no);
   if (!sreg.valid) {
     fprintf(stderr, "Error: segment valid bit cleared\n");
     return;
@@ -3271,16 +3271,16 @@ bx_dbg_instrument_command(char *comm)
 {
 #if BX_INSTRUMENTATION
   if ( !strcmp(comm, "start") ) {
-    BX_CPU[0]->instr_start();
+    BX_CPU(0)->instr_start();
     }
   else if ( !strcmp(comm, "stop") ) {
-    BX_CPU[0]->instr_stop();
+    BX_CPU(0)->instr_stop();
     }
   else if ( !strcmp(comm, "reset") ) {
-    BX_CPU[0]->instr_reset();
+    BX_CPU(0)->instr_reset();
     }
   else if ( !strcmp(comm, "print") ) {
-    BX_CPU[0]->instr_print();
+    BX_CPU(0)->instr_print();
     }
   else {
     fprintf(stderr, "Error: command instrument %s not implemented.\n", comm);
@@ -3310,7 +3310,7 @@ bx_dbg_loader_command(char *path_quoted)
 #if BX_USE_LOADER
   {
   bx_loader_misc_t loader_misc;
-  BX_CPU[0]->loader(path_quoted, &loader_misc);
+  BX_CPU(0)->loader(path_quoted, &loader_misc);
 #if 0
 fprintf(stderr, "dr0: 0x%08x\n", loader_misc.dr0);
 fprintf(stderr, "dr1: 0x%08x\n", loader_misc.dr1);
@@ -3353,14 +3353,14 @@ bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
     return;
     }
 
-  if (!BX_MEM[0]->dbg_crc32(crc32, addr1, addr2, &crc1)) {
+  if (!BX_MEM(0)->dbg_crc32(crc32, addr1, addr2, &crc1)) {
     fprintf(stderr, "sim0: could not CRC memory\n");
     return;
     }
 #if BX_NUM_SIMULATORS == 1
   fprintf(stderr, "0x%lx\n", crc1);
 #else
-  if (!BX_MEM[1]->dbg_crc32(crc32, addr1, addr2, &crc2)) {
+  if (!BX_MEM(1)->dbg_crc32(crc32, addr1, addr2, &crc2)) {
     fprintf(stderr, "sim1: could not CRC memory\n");
     return;
     }
@@ -3377,8 +3377,8 @@ bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
   void
 bx_dbg_info_dirty_command(void)
 {
-  unsigned char *page_tbl = BX_MEM[0]->dbg_dirty_pages;
-  unsigned page_tbl_size  = BX_MEM[0]->dbg_count_dirty_pages ();
+  unsigned char *page_tbl = BX_MEM(0)->dbg_dirty_pages;
+  unsigned page_tbl_size  = BX_MEM(0)->dbg_count_dirty_pages ();
 
   for (unsigned i=0; i<page_tbl_size; i++) {
     if (page_tbl[i]) {
@@ -3487,7 +3487,7 @@ void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8], int verbose)
 void
 bx_dbg_info_idt_command(bx_num_range range) {
   bx_dbg_cpu_t cpu;
-  BX_CPU[0]->dbg_get_cpu(&cpu);
+  BX_CPU(0)->dbg_get_cpu(&cpu);
   int n, print_table = 0;
   if (range.to == EMPTY_ARG) {
     // show all entries
@@ -3499,7 +3499,7 @@ bx_dbg_info_idt_command(bx_num_range range) {
     fprintf (stderr, "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
   for (n = range.from; n<=range.to; n++) {
     Bit32u paddr, paddr_valid;
-    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(cpu.idtr.base + 8*n, &paddr, &paddr_valid);
+    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.idtr.base + 8*n, &paddr, &paddr_valid);
     if (!paddr_valid) {
       fprintf (stderr, "error: IDTR+8*%d points to invalid linear address %p\n",
 	 n, cpu.idtr.base);
@@ -3507,7 +3507,7 @@ bx_dbg_info_idt_command(bx_num_range range) {
     }
     // read 8-byte entry from IDT
     unsigned char entry[8];
-    BX_MEM[0]->dbg_fetch_mem (paddr, 8, entry);
+    BX_MEM(0)->dbg_fetch_mem (paddr, 8, entry);
     fprintf (stderr, "IDT[0x%02x]=", n);
     bx_dbg_print_descriptor (stderr, entry, 0);
   }
@@ -3517,7 +3517,7 @@ bx_dbg_info_idt_command(bx_num_range range) {
 void
 bx_dbg_info_gdt_command(bx_num_range range) {
   bx_dbg_cpu_t cpu;
-  BX_CPU[0]->dbg_get_cpu(&cpu);
+  BX_CPU(0)->dbg_get_cpu(&cpu);
   int n, print_table = 0;
   if (range.to == EMPTY_ARG) {
     // show all entries
@@ -3529,7 +3529,7 @@ bx_dbg_info_gdt_command(bx_num_range range) {
     fprintf (stderr, "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
   for (n = range.from; n<=range.to; n++) {
     Bit32u paddr, paddr_valid;
-    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(cpu.gdtr.base + 8*n, &paddr, &paddr_valid);
+    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.gdtr.base + 8*n, &paddr, &paddr_valid);
     if (!paddr_valid) {
       fprintf (stderr, "error: GDTR+8*%d points to invalid linear address %p\n",
 	  n, cpu.gdtr.base);
@@ -3537,7 +3537,7 @@ bx_dbg_info_gdt_command(bx_num_range range) {
     }
     unsigned char entry[8];
     // read 8-byte entry from GDT
-    BX_MEM[0]->dbg_fetch_mem (paddr, 8, entry);
+    BX_MEM(0)->dbg_fetch_mem (paddr, 8, entry);
     fprintf (stderr, "GDT[0x%02x]=", n);
     bx_dbg_print_descriptor (stderr, entry, 0);
   }
@@ -3547,14 +3547,14 @@ bx_dbg_info_gdt_command(bx_num_range range) {
 void
 bx_dbg_info_ldt_command(bx_num_range n) {
   bx_dbg_cpu_t cpu;
-  BX_CPU[0]->dbg_get_cpu(&cpu);
+  BX_CPU(0)->dbg_get_cpu(&cpu);
   fprintf (stderr, "Local Descriptor Table output not implemented\n");
 }
 
 void
 bx_dbg_info_tss_command(bx_num_range n) {
   bx_dbg_cpu_t cpu;
-  BX_CPU[0]->dbg_get_cpu(&cpu);
+  BX_CPU(0)->dbg_get_cpu(&cpu);
   fprintf (stderr, "TSS output not implemented\n");
 }
 
@@ -3571,7 +3571,7 @@ make_num_range (Bit64s from, Bit64s to)
 bx_dbg_info_control_regs_command(void)
 {
   bx_dbg_cpu_t cpu;
-  BX_CPU[0]->dbg_get_cpu(&cpu);
+  BX_CPU(0)->dbg_get_cpu(&cpu);
   int cr0 = cpu.cr0;
   int cr2 = cpu.cr2;
   int cr3 = cpu.cr3;
@@ -3621,7 +3621,7 @@ if (doit) fprintf(stderr, "iac report: vector=%u\n", vector);
 
   if (bx_guard.report.irq) {
     fprintf(stderr, "event icount=%u IRQ irq=%u vec=%x\n",
-      (unsigned) BX_CPU[dbg_cpu]->guard_found.icount, irq, vector);
+      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount, irq, vector);
     }
 
 #if BX_NUM_SIMULATORS > 1
@@ -3665,7 +3665,7 @@ bx_dbg_a20_report(unsigned val)
 {
   if (bx_guard.report.a20) {
     fprintf(stderr, "event icount=%u A20 val=%u\n",
-      (unsigned) BX_CPU[dbg_cpu]->guard_found.icount, val);
+      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount, val);
     }
 }
 
@@ -3715,7 +3715,7 @@ bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
 {
   if (bx_guard.report.io) {
     fprintf(stderr, "event icount=%u IO addr=0x%x size=%u op=%s val=0x%x\n",
-      (unsigned) BX_CPU[dbg_cpu]->guard_found.icount,
+      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount,
       (unsigned) addr,
       size,
       (op==BX_READ) ? "read" : "write",
@@ -3730,7 +3730,7 @@ bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
 {
   if (bx_guard.report.ucmem) {
     fprintf(stderr, "event icount=%u UCmem addr=0x%x size=%u op=%s val=0x%x\n",
-      (unsigned) BX_CPU[dbg_cpu]->guard_found.icount,
+      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount,
       (unsigned) addr,
       size,
       (op==BX_READ) ? "read" : "write",
@@ -3765,7 +3765,7 @@ bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val)
   bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].len    = len;
   bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].what   = what;
   bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].val    = val;
-  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].icount = BX_CPU[dbg_cpu]->guard_found.icount;
+  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].icount = BX_CPU(dbg_cpu)->guard_found.icount;
 
   // if Q is full, post events (and flush)
   if (bx_dbg_batch_dma.Qsize >= bx_dbg_batch_dma.this_many)
@@ -4033,8 +4033,8 @@ bx_dbg_async_pin_ack(unsigned what, Boolean val)
       bx_guard.async_changes_pending.which &= ~BX_DBG_ASYNC_PENDING_A20;
       // notify pc_system of change
       bx_pc_system.set_enable_a20(val);
-      if (BX_CPU[bx_debugger.master]->set_A20)
-        BX_CPU[bx_debugger.master]->set_A20(val);
+      if (BX_CPU(bx_debugger.master)->set_A20)
+        BX_CPU(bx_debugger.master)->set_A20(val);
       bx_dbg_journal_a20_event(val);
       return;
       break;
@@ -4218,7 +4218,7 @@ bx_dbg_set_INTR(Boolean b)
     }
 
   bx_pc_system.INTR = b;
-  BX_CPU[bx_debugger.master]->set_INTR(b);
+  BX_CPU(bx_debugger.master)->set_INTR(b);
 }
 
 #endif  // #if (BX_NUM_SIMULATORS >= 2)
@@ -4232,69 +4232,69 @@ bx_dbg_symbolic_output(void)
 {
 
       /* modes & address spaces */
-      if(BX_CPU[dbg_cpu]->cr0.pe != last_pe) {
+      if(BX_CPU(dbg_cpu)->cr0.pe != last_pe) {
 	    fprintf(stderr,"%10lld: Switched %s protected mode\n", 
 		    bx_pc_system.time_ticks(),
 		    last_pe ? "from" : "to");
 	    last_pe = !last_pe;
       }
 
-      if(last_vm != BX_CPU[dbg_cpu]->eflags.vm) {
+      if(last_vm != BX_CPU(dbg_cpu)->eflags.vm) {
 	    fprintf(stderr,"%10lld: %s V86 mode\n", 
 		    bx_pc_system.time_ticks(), 
 		    last_vm ? "Exited" : "Entered");
 	    last_vm = !last_vm;
       }
 
-      if(last_cr3 != BX_CPU[dbg_cpu]->cr3)
+      if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
 	    fprintf(stderr,"\n%10lld: Address space switched since last trigger. CR3: 0x%08x\n", 
-		    bx_pc_system.time_ticks(), BX_CPU[dbg_cpu]->cr3);
+		    bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
 
       /* interrupts */
       if (dbg_show_mask & 0x40) {
-	    if(BX_CPU[dbg_cpu]->show_flag & 0x4) {
+	    if(BX_CPU(dbg_cpu)->show_flag & 0x4) {
 		  fprintf(stderr,"%10lld:  softint %04x:%08x %08x\n", 
 			  bx_pc_system.time_ticks(),
-			  BX_CPU[dbg_cpu]->guard_found.cs,
-			  BX_CPU[dbg_cpu]->guard_found.eip,
-			  BX_CPU[dbg_cpu]->guard_found.laddr);
+			  BX_CPU(dbg_cpu)->guard_found.cs,
+			  BX_CPU(dbg_cpu)->guard_found.eip,
+			  BX_CPU(dbg_cpu)->guard_found.laddr);
 	    }
-	    if((BX_CPU[dbg_cpu]->show_flag & 0x10) && !(BX_CPU[dbg_cpu]->show_flag & 0x4)) {
+	    if((BX_CPU(dbg_cpu)->show_flag & 0x10) && !(BX_CPU(dbg_cpu)->show_flag & 0x4)) {
 		  fprintf(stderr,"\n%10lld:  exception (not softint) %04x:%08x %08x\n", 
 			  bx_pc_system.time_ticks(),
-			  BX_CPU[dbg_cpu]->guard_found.cs,
-			  BX_CPU[dbg_cpu]->guard_found.eip,
-			  BX_CPU[dbg_cpu]->guard_found.laddr);
+			  BX_CPU(dbg_cpu)->guard_found.cs,
+			  BX_CPU(dbg_cpu)->guard_found.eip,
+			  BX_CPU(dbg_cpu)->guard_found.laddr);
 	    }
-	    if(BX_CPU[dbg_cpu]->show_flag & 0x8) {
+	    if(BX_CPU(dbg_cpu)->show_flag & 0x8) {
 		  fprintf(stderr,"%10lld:  iret %04x:%08x %08x (from %08x)\n\n", 
 			  bx_pc_system.time_ticks(),
-			  BX_CPU[dbg_cpu]->guard_found.cs,
-			  BX_CPU[dbg_cpu]->guard_found.eip,
-			  BX_CPU[dbg_cpu]->guard_found.laddr,
-			  BX_CPU[dbg_cpu]->show_eip);
+			  BX_CPU(dbg_cpu)->guard_found.cs,
+			  BX_CPU(dbg_cpu)->guard_found.eip,
+			  BX_CPU(dbg_cpu)->guard_found.laddr,
+			  BX_CPU(dbg_cpu)->show_eip);
 	    }
       }
 	
       /* calls */
-      if(BX_CPU[dbg_cpu]->show_flag & 0x1) {
+      if(BX_CPU(dbg_cpu)->show_flag & 0x1) {
 	    Bit32u phy = 0;
 	    Boolean valid;
 
 	    if (dbg_show_mask & 0x20) {
-		  BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(BX_CPU[dbg_cpu]->guard_found.laddr,
+		  BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr,
 				       &phy, &valid);
 
 		  fprintf(stderr,"%10lld:%*s call %04x:%08x 0x%08x (%08x) %s",
 			  bx_pc_system.time_ticks(),
 			  symbol_level+1," ",
-			  BX_CPU[dbg_cpu]->guard_found.cs,
-			  BX_CPU[dbg_cpu]->guard_found.eip,
-			  BX_CPU[dbg_cpu]->guard_found.laddr,
+			  BX_CPU(dbg_cpu)->guard_found.cs,
+			  BX_CPU(dbg_cpu)->guard_found.eip,
+			  BX_CPU(dbg_cpu)->guard_found.laddr,
 			  phy,
-			  bx_dbg_symbolic_address(BX_CPU[dbg_cpu]->cr3,
-						  BX_CPU[dbg_cpu]->guard_found.eip,
-						  BX_CPU[dbg_cpu]->guard_found.laddr - BX_CPU[dbg_cpu]->guard_found.eip) );
+			  bx_dbg_symbolic_address(BX_CPU(dbg_cpu)->cr3,
+						  BX_CPU(dbg_cpu)->guard_found.eip,
+						  BX_CPU(dbg_cpu)->guard_found.laddr - BX_CPU(dbg_cpu)->guard_found.eip) );
 		  if(!valid)
 			fprintf(stderr," phys not valid");
 		  fprintf(stderr,"\n");
@@ -4305,14 +4305,14 @@ bx_dbg_symbolic_output(void)
 		  symbol_level = 10;
       }
 
-      if (BX_CPU[dbg_cpu]->show_flag & 0x2) {
+      if (BX_CPU(dbg_cpu)->show_flag & 0x2) {
 	    symbol_level--;
 	    if(symbol_level < 0)
 		  symbol_level = 0;
       }
 
-      BX_CPU[dbg_cpu]->show_flag = 0;
-      last_cr3 = BX_CPU[dbg_cpu]->cr3;
+      BX_CPU(dbg_cpu)->show_flag = 0;
+      last_cr3 = BX_CPU(dbg_cpu)->cr3;
       return 0;
 }
 #endif
@@ -4346,7 +4346,7 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   // Get page dir entry
   pde_addr = (cpu->cr3 & 0xfffff000) |
              ((laddress & 0xffc00000) >> 20);
-  BX_MEM[0]->read_physical(cpu, pde_addr, 4, &pde);
+  BX_MEM(0)->read_physical(cpu, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
     // Page Directory Entry NOT present
     goto page_fault;
@@ -4355,7 +4355,7 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
-  BX_MEM[0]->read_physical(cpu, pte_addr, 4, &pte);
+  BX_MEM(0)->read_physical(cpu, pte_addr, 4, &pte);
   if ( !(pte & 0x01) ) {
     // Page Table Entry NOT present
     goto page_fault;
@@ -4382,18 +4382,18 @@ static void dbg_dump_table(Boolean all)
 
   Bit32u start_lina, start_phy;	// start of a valid translation interval
 
-  if (BX_CPU[dbg_cpu]->cr0.pg == 0) {
+  if (BX_CPU(dbg_cpu)->cr0.pg == 0) {
 	printf("paging off\n");
 	return;
   }
 
-  printf("cr3: %08x \n", BX_CPU[dbg_cpu]->cr3);
+  printf("cr3: %08x \n", BX_CPU(dbg_cpu)->cr3);
 
   lina = 0; 
   start_lina = 1;
   start_phy = 2;
   while(1) {
-	dbg_lin2phys(BX_CPU[dbg_cpu], lina, &phy, &valid, &tlb_phy, &tlb_valid);
+	dbg_lin2phys(BX_CPU(dbg_cpu), lina, &phy, &valid, &tlb_phy, &tlb_valid);
 	if(valid) {
 	      if( (lina - start_lina != phy - start_phy) || tlb_valid) {
 		    if(all && (start_lina != 1))

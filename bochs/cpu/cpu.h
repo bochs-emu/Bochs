@@ -603,7 +603,7 @@ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 #ifdef BX_IN_CPU_METHOD
 #  define BX_CPU_THIS_PTR  this->     /* for methods of BX_CPU only */
 #else
-#  define BX_CPU_THIS_PTR  BX_CPU[0]->    /* outside of BX_CPU methods */
+#  define BX_CPU_THIS_PTR  BX_CPU(0)->    /* outside of BX_CPU methods */
 #endif
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
@@ -1494,7 +1494,7 @@ public: // for now...
 #endif
 
 
-extern BX_CPU_C       *BX_CPU[BX_SMP_PROCESSORS];
+extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 
 #ifdef BX_IN_CPU_METHOD
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
