@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.14 2001-11-12 03:29:18 bdenney Exp $
+// $Id: pic.cc,v 1.15 2001-11-19 14:41:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -435,6 +435,19 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_PIC_THIS s.slave_pic.irr &= ~(1 << (value-0x60));
           service_slave_pic();
 	  break;
+
+        // IRQ lowest priority commands
+        case 0xC0: // 0 7 6 5 4 3 2 1
+        case 0xC1: // 1 0 7 6 5 4 3 2
+        case 0xC2: // 2 1 0 7 6 5 4 3
+        case 0xC3: // 3 2 1 0 7 6 5 4
+        case 0xC4: // 4 3 2 1 0 7 6 5
+        case 0xC5: // 5 4 3 2 1 0 7 6
+        case 0xC6: // 6 5 4 3 2 1 0 7
+        case 0xC7: // 7 6 5 4 3 2 1 0
+          // ignore for now
+          BX_INFO(("IRQ lowest command 0x%x", value));
+          break;
 
         default:
           BX_PANIC(("PIC: write to port A0h = %02x", value));
