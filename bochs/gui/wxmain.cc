@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.9 2002-08-27 18:11:13 bdenney Exp $
+// $Id: wxmain.cc,v 1.10 2002-08-28 03:20:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -51,7 +51,8 @@
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/siminterface.h"    // interface to the simulator
 #include "bxversion.h"           // get version string
-#include "wxmain.h"              // interface to the gui
+#include "wxmain.h"              // wxwindows shared stuff
+#include "wxdialog.h"            // custom dialog boxes
 
 // include XPM icons
 #include "bitmaps/cdromd.xpm"
@@ -531,10 +532,6 @@ MyFrame::HandleAskParam (BxEvent *event)
 void 
 MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
 {
-  static wxString choices[] = { "Continue", "Continue and Disable", "Die" };
-  int choice;
-  wxString string;
-
   wxLogDebug ("received a bochs event in the GUI thread");
   BxEvent *be = (BxEvent *) event.GetEventObject ();
   wxLogDebug ("event type = %d", (int) be->type);
@@ -548,31 +545,41 @@ MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
     // sync must return something; just return a copy of the event.
     sim_thread->SendSyncResponse(be);
     wxLogDebug ("after SendSyncResponse");
-	return;
-  case BX_ASYNC_EVT_SHUTDOWN_GUI:
-	wxLogDebug ("configuration interface is exiting");
-    Close (TRUE);
-	wxExit ();
-	return;
+    return;
   case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
+    {
     wxLogDebug ("log msg: level=%d, prefix='%s', msg='%s'",
-	  be->u.logmsg.level,
-	  be->u.logmsg.prefix,
-	  be->u.logmsg.msg);
+	be->u.logmsg.level,
+	be->u.logmsg.prefix,
+	be->u.logmsg.msg);
     if (be->type == BX_ASYNC_EVT_LOG_MSG) {
       // don't ask for user response
       return;
     }
-    string.Printf ("%s", be->u.logmsg.msg);
-    choice = ::wxGetSingleChoiceIndex (
-               string,
-               wxString (SIM->get_log_level_name (be->u.logmsg.level)), 3, choices);
-    if (choice<0) choice = 2; // treat cancel the same as "die"
-    be->retcode = choice;
-    wxLogDebug ("you chose %d", choice);
+    wxString levelName (SIM->get_log_level_name (be->u.logmsg.level));
+    LogMsgAskDialog dlg (this, -1, levelName);  // panic, error, etc.
+#if !BX_DEBUGGER
+    dlg.EnableButton (dlg.DEBUG, FALSE);
+#endif
+    dlg.SetContext (be->u.logmsg.prefix);
+    dlg.SetMessage (be->u.logmsg.msg);
+    int n = dlg.ShowModal ();
+    Boolean dontAsk = dlg.GetDontAsk ();
+    // turn the return value into the constant that logfunctions::ask is
+    // expecting.  0=continue, 1=continue but ignore future messages from this
+    // device, 2=die, 3=dump core, 4=debugger. FIXME: yuck. replace hardcoded
+    // constants in logfunctions::ask with enum or defined constant.
+    if (n==0) {
+      n = dontAsk? 1 : 0; 
+    } else {
+      n=n+1;
+    }
+    be->retcode = n;
+    wxLogDebug ("you chose %d", n);
     sim_thread->SendSyncResponse (be);
     return;
+    }
   default:
     wxLogDebug ("OnSim2CuiEvent: event type %d ignored", (int)be->type);
 	// assume it's a synchronous event and send back a response, to avoid

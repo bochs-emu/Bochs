@@ -53,7 +53,7 @@ GUI_OBJS_NOGUI = nogui.o
 GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
-GUI_OBJS_WX = wx.o wxmain.o
+GUI_OBJS_WX = wx.o wxmain.o wxdialog.o
 GUI_OBJS = keymap.o gui.o siminterface.o @GUI_OBJS@
 
 
