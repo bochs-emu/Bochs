@@ -1315,4 +1315,14 @@ What is &st(rm)?  it uses rm as an integer
 rm can be an integer offset of an array, or a pointer.  This is hideous.
 Try this: send it as a pointer instead, and if it's supposed to be an 
 integer cast it to an integer.
+
+add snprintf
+add strtoull
 ----- end of occs notes
+
+I worked really hard to get a correct strtoull compiled in, but it 
+doesn't really do the right thing.  Try
+  sb 123412341234L
+and then step into bx_dbg_timebp_command.  It thinks the diff is negative,
+when it certainly shouldn't be.  By the time you are in bx_dbg_timebp_command,
+the correctly-parsed 64-bit number is gone.
