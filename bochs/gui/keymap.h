@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.5 2002-04-01 22:43:01 cbothamy Exp $
+// $Id: keymap.h,v 1.6 2002-10-08 06:14:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,11 +36,12 @@
 // - convertStringToBXKey
 //   convert a null-terminate string to a BX_KEY code
 //
-// - getKeyXwin(Bit32u key)
-// - getKeyASCII(Bit8u ch)
+// - findHostKey(Bit32u key)
+// - findAsciiChar(Bit8u ch)
 //   Each of these methods returns a pointer to a BXKeyEntry structure
-//   corresponding to a key.  getKeyXwin() uses an X windows keysym to find the
-//   structure, and getKeyASCII() uses an ASCII code to find the structure.
+//   corresponding to a key.  findHostKey() finds an entry whose hostKey
+//   value matches the target value, and findAsciiChar() finds an entry
+//   whose ASCII code matches the search value.
 
 // In case of unknown symbol
 #define BX_KEYMAP_UNKNOWN   0xFFFFFFFF
@@ -50,7 +51,7 @@ typedef struct {
   Bit32u baseKey;   // base key
   Bit32u modKey;   // modifier key that must be held down
   Bit32s ascii;    // ascii equivalent, if any
-  Bit32u xwinKey;  // X windows value
+  Bit32u hostKey;  // value that the host's OS or library recognizes
   } BXKeyEntry;
 
 class bx_keymap_c : public logfunctions {
@@ -62,8 +63,8 @@ public:
   void   loadKeymap(Bit32u(*)(const char*),const char *filename);
   Boolean isKeymapLoaded ();
 
-  BXKeyEntry *getKeyXwin(Bit32u xwin_key);
-  BXKeyEntry *getKeyASCII(Bit8u ascii);
+  BXKeyEntry *findHostKey(Bit32u hostkeynum);
+  BXKeyEntry *findAsciiChar(Bit8u ascii);
 
 private:
   Bit32u convertStringToBXKey(const char *);

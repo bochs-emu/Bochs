@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $
+// $Id: keyboard.cc,v 1.68 2002-10-08 06:14:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.68 2002-10-08 06:14:53 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.68 2002-10-08 06:14:53 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -672,7 +672,7 @@ bx_keyb_c::service_paste_buf ()
     // there room in the buffer for a keypress and a key release.
     // send one keypress and a key release.
     Bit8u byte = BX_KEY_THIS pastebuf[BX_KEY_THIS pastebuf_ptr];
-    BXKeyEntry *entry = bx_keymap.getKeyASCII (byte);
+    BXKeyEntry *entry = bx_keymap.findAsciiChar (byte);
     if (!entry) {
       BX_ERROR (("paste character 0x%02x ignored", byte));
     } else {

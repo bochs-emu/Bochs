@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.24 2002-10-06 17:17:14 bdenney Exp $
+// $Id: sdl.cc,v 1.25 2002-10-08 06:14:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,7 @@ void we_are_here(void)
 
 static unsigned prev_cursor_x=0;
 static unsigned prev_cursor_y=0;
+static Bit32u convertStringToSDLKey (const char *string);
 
 #define MAX_SDL_BITMAPS 32
 struct bitmaps {
@@ -182,7 +183,6 @@ void switch_to_fullscreen(void)
   sdl_grab = 1;
 }
 
-
 void bx_gui_c::specific_init(
     bx_gui_c *th,
     int argc,
@@ -235,6 +235,11 @@ void bx_gui_c::specific_init(
 #endif
       "Bochs" );
   SDL_WarpMouse(half_res_x, half_res_y);
+
+  // load keymap for sdl
+  if(bx_options.keyboard.OuseMapping->get()) {
+    bx_keymap.loadKeymap(convertStringToSDLKey);
+  }
 }
 
 void bx_gui_c::text_update(
@@ -669,8 +674,20 @@ void bx_gui_c::handle_events(void)
 
 	// convert sym->bochs code
 	if( sdl_event.key.keysym.sym > SDLK_LAST ) break;
-	key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
-	BX_DEBUG (("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
+        if (!bx_options.keyboard.OuseMapping->get()) {
+	  key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
+	  BX_DEBUG (("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
+	} else {
+	  /* use mapping */
+	  BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
+	  if (!entry) {
+	    BX_ERROR(( "host key %d (0x%x) not mapped!", 
+		  (unsigned) sdl_event.key.keysym.sym,
+		  (unsigned) sdl_event.key.keysym.sym));
+	    break;
+	  }
+	  key_event = entry->baseKey;
+	}
 	if( key_event == BX_KEY_UNHANDLED ) break;
 	bx_devices.keyboard->gen_scancode( key_event );
 	break;
@@ -1070,5 +1087,36 @@ void bx_gui_c::exit(void)
     SDL_FreeSurface( sdl_bitmaps[n_sdl_bitmaps-1]->surface );
     n_sdl_bitmaps--;
   }
+}
+
+/// key mapping for SDL
+typedef struct keyTableEntry {
+  const char *name;
+  Bit32u value;
+};
+
+#define DEF_SDL_KEY(key) \
+  { #key, key },
+
+keyTableEntry keytable[] = {
+  // this include provides all the entries.
+#include "sdlkeys.h"
+  // one final entry to mark the end
+  { NULL, 0 }
+};
+
+// function to convert key names into SDLKey values.
+// This first try will be horribly inefficient, but it only has
+// to be done while loading a keymap.  Once the simulation starts,
+// this function won't be called.
+static Bit32u convertStringToSDLKey (const char *string)
+{
+  keyTableEntry *ptr;
+  for (ptr = &keytable[0]; ptr->name != NULL; ptr++) {
+    //BX_DEBUG (("comparing string '%s' to SDL key '%s'", string, ptr->name));
+    if (!strcmp (string, ptr->name))
+      return ptr->value;
+  }
+  return BX_KEYMAP_UNKNOWN;
 }
 

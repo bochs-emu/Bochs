@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49 2002-10-02 02:52:24 bdenney Exp $
+// $Id: x.cc,v 1.50 2002-10-08 06:14:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1000,7 +1000,7 @@ xkeypress(KeySym keysym, int press_release)
     }
   else {
    /* use mapping */
-   BXKeyEntry *entry = bx_keymap.getKeyXwin (keysym);
+   BXKeyEntry *entry = bx_keymap.findHostKey (keysym);
    if (!entry) {
      BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
      return;
@@ -1456,7 +1456,9 @@ static void enable_cursor ()
  */
 static Bit32u convertStringToXKeysym (const char *string)
 {
-    KeySym keysym=XStringToKeysym(string);
+    if (strncmp ("XK_", string, 3) != 0)
+      return BX_KEYMAP_UNKNOWN;
+    KeySym keysym=XStringToKeysym(string+3);
 
     // failure, return unknown
     if(keysym==NoSymbol) return BX_KEYMAP_UNKNOWN;
