@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.95 2002-12-06 19:34:29 bdenney Exp $
+// $Id: dbg_main.cc,v 1.96 2002-12-07 14:57:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -355,7 +355,8 @@ process_sim2:
     }
 
   // Open debugger log file if needed
-  if (strcmp(bx_options.log.Odebugger_filename->getptr(), "-") != 0) {
+  if ((strlen(bx_options.log.Odebugger_filename->getptr()) > 0) 
+   && (strcmp(bx_options.log.Odebugger_filename->getptr(), "-") != 0)) {
     debugger_log = fopen (bx_options.log.Odebugger_filename->getptr(), "w");
     if (!debugger_log) {
       BX_PANIC(("Can not open debugger log file '%s'",
