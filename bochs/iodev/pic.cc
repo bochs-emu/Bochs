@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.22 2002-02-11 08:50:28 vruppert Exp $
+// $Id: pic.cc,v 1.23 2002-03-06 21:52:16 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -527,7 +527,8 @@ bx_pic_c::lower_irq(unsigned irq_no)
 {
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
-  BX_PIC_THIS devices->ioapic->untrigger_irq (irq_no, -1);
+  if ((BX_PIC_THIS devices) && (BX_PIC_THIS devices->ioapic))
+    BX_PIC_THIS devices->ioapic->untrigger_irq (irq_no, -1);
 #endif
 
   if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
