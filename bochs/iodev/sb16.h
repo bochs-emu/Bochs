@@ -185,7 +185,7 @@ private:
 class BX_SOUND_OUTPUT_C_DEF;
 
 // The actual emulator class, emulating the sound blaster ports
-class bx_sb16_c {
+class bx_sb16_c : public logfunctions {
 public:
 
   bx_sb16_c(void);

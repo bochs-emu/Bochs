@@ -49,9 +49,8 @@ bx_sb16_c bx_sb16;
 bx_sb16_c::bx_sb16_c(void)
 {
   setprefix("[SB16]",__FILE__,__LINE__);
-  settype(SBLOG);
+  settype(SB16LOG);
   setio(SAFE_GET_IOFUNC());
-  // nothing for now
 }
 
 bx_sb16_c::~bx_sb16_c(void)
@@ -108,7 +107,7 @@ void bx_sb16_c::init(bx_devices_c *d)
       LOGFILE = fopen(bx_options.sb16.logfile,"w"); // logfile for errors etc.
       if (LOGFILE == NULL)
 	{
-	  BX_INFO(("#SB16: Error opening file %s. Logging disabled.", bx_options.sb16.logfile);
+	  BX_INFO(("#SB16: Error opening file %s. Logging disabled.", bx_options.sb16.logfile));
 	  bx_options.sb16.loglevel = 0;
 	}
     }
@@ -164,7 +163,7 @@ void bx_sb16_c::init(bx_devices_c *d)
 	    bx_options.sb16.midimode, bx_options.sb16.midifile,
 	    bx_options.sb16.wavemode, bx_options.sb16.wavefile,
 	    bx_options.sb16.loglevel, bx_options.sb16.logfile,
-	    bx_options.sb16.dmatimer);
+	    bx_options.sb16.dmatimer));
 
   // allocate the FIFO buffers - except for the MPUMIDICMD buffer
   // these sizes are generous, 16 or 8 would probably be sufficient
@@ -3231,7 +3230,7 @@ Boolean bx_sb16_buffer::puts(char *data, ...)
   va_end(ap);
 
   if ( (int) strlen(string) >= length)
-    BX_PANIC(("bx_sb16_buffer: puts() too long!\n");
+    BX_PANIC(("bx_sb16_buffer: puts() too long!\n"));
 
   while (string[index] != 0)
     {
