@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.23.2.4 2002-10-07 21:05:11 bdenney Exp $
+// $Id: sdl.cc,v 1.23.2.5 2002-10-08 22:49:16 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,35 +35,8 @@
 #include "icon_bochs.h"
 #include "sdl.h"
 
-#define LOG_THIS bx_gui->
-
-class bx_sdl_gui_c : public bx_gui_c {
-public:
-  bx_sdl_gui_c (void);
-  // Define the following functions in the module for your
-  // particular GUI (x.cc, beos.cc, ...)
-  virtual void specific_init(int argc, char **argv,
-                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
-  virtual void text_update(Bit8u *old_text, Bit8u *new_text,
-                          unsigned long cursor_x, unsigned long cursor_y,
-                          Bit16u cursor_state, unsigned rows);
-  virtual void graphics_update(Bit8u *snapshot) {}
-  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
-  virtual void handle_events(void);
-  virtual void flush(void);
-  virtual void clear_screen(void);
-  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
-  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
-  virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
-  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
-  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
-  virtual void show_headerbar(void);
-  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
-  virtual int set_clipboard_text(char *snapshot, Bit32u len);
-  virtual void mouse_enabled_changed_specific (Boolean val);
-  virtual void exit(void);
-};
-
+bx_sdl_gui_c theGui;
+#define LOG_THIS theGui.
 
 #define _SDL_DEBUG_ME_
 
@@ -1085,7 +1058,7 @@ void bx_sdl_gui_c::exit(void)
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
   genlog->info("installing SDL gui as the bx_gui");
-  bx_gui = new bx_sdl_gui_c ();
+  bx_gui = &theGui;
   return(0); // Success
 }
 
@@ -1094,10 +1067,7 @@ plugin_fini(void)
 {
 }
 #else
-// This is the !BX_PLUGINS case.
-//
-// When building with plugins, the bx_gui pointer is provided by plugins.cc.
-// But when building without plugins, the GUI code must supply bx_gui, like
-// this:
-bx_gui_c *bx_gui = new bx_sdl_gui_c ();
+// When plugins are turned off, provide the bx_gui pointer which every
+// other object will use to reference this object.
+bx_gui_c *bx_gui = &theGui;
 #endif

@@ -1036,3 +1036,30 @@ unsigned char sdl_palette[256][3] = {
   {   0,   0,   0 },  // 254
   { 112,  97, 108 }}; // 255
 */
+
+class bx_sdl_gui_c : public bx_gui_c {
+public:
+  bx_sdl_gui_c (void);
+  // Define the following functions in the module for your
+  // particular GUI (x.cc, beos.cc, ...)
+  virtual void specific_init(int argc, char **argv,
+                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
+  virtual void text_update(Bit8u *old_text, Bit8u *new_text,
+                          unsigned long cursor_x, unsigned long cursor_y,
+                          Bit16u cursor_state, unsigned rows);
+  virtual void graphics_update(Bit8u *snapshot) {}
+  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
+  virtual void handle_events(void);
+  virtual void flush(void);
+  virtual void clear_screen(void);
+  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
+  virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
+  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
+  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
+  virtual void show_headerbar(void);
+  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
+  virtual int set_clipboard_text(char *snapshot, Bit32u len);
+  virtual void mouse_enabled_changed_specific (Boolean val);
+  virtual void exit(void);
+};
