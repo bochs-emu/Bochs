@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.7 2002-12-10 22:40:16 cbothamy Exp $
+ |  $Id: fpu_emu.h,v 1.8 2002-12-11 12:54:19 cbothamy Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -139,26 +139,34 @@ struct address {
 //         E - exponent
 //         A - aligment
 
-struct fpu__reg {
 #ifdef EMU_BIG_ENDIAN
+
+struct fpu__reg {
   u16 aligment1, aligment2, aligment3;
   s16 exp;   /* Signed quantity used in internal arithmetic. */
   u32 sigh;
   u32 sigl;
-#else
-  u32 sigl;
-  u32 sigh;
-  s16 exp;   /* Signed quantity used in internal arithmetic. */
-  u16 aligment1, aligment2, aligment3;
-#endif
 } GCC_ATTRIBUTE((aligned(16), packed));
 
-#ifdef EMU_BIG_ENDIAN
 #define MAKE_REG(s,e,l,h) { 0,0,0, \
                            ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)) , h, l}
+
+#define signbyte(a) (((u_char *)(a))[6])
+
 #else
+
+struct fpu__reg {
+  u32 sigl;
+  u32 sigh;
+  s16 exp;   /* Signed quantity used in internal arithmetic. */
+  u16 aligment1, aligment2, aligment3;
+} GCC_ATTRIBUTE((aligned(16), packed));
+
 #define MAKE_REG(s,e,l,h) { l, h, \
                            ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)), 0,0,0 }
+
+#define signbyte(a) (((u_char *)(a))[9])
+
 #endif
 
 typedef void (*FUNC)(void);
@@ -194,11 +202,6 @@ extern u_char const data_sizes_16[32];
 /* push() does not affect the tags */
 #define push()	{ top--; }
 
-#ifdef EMU_BIG_ENDIAN
-#define signbyte(a) (((u_char *)(a))[8])
-#else
-#define signbyte(a) (((u_char *)(a))[9])
-#endif
 #define getsign(a) (signbyte(a) & 0x80)
 #define setsign(a,b) { if (b) signbyte(a) |= 0x80; else signbyte(a) &= 0x7f; }
 #define copysign(a,b) { if (getsign(a)) signbyte(b) |= 0x80; \
