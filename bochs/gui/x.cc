@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.23 2001-11-12 00:45:09 bdenney Exp $
+// $Id: x.cc,v 1.24 2001-12-08 13:42:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -545,11 +545,12 @@ bx_gui_c::mouse_enabled_changed_specific (Boolean val)
   void
 load_font(void)
 {
-
   /* Load font and get font information structure. */
-  if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
-    BX_PANIC(("Could not open vga font. See docs-html/install.html"));
+  if ((font_info = XLoadQueryFont(bx_x_display,"bochsvga")) == NULL) {
+    if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
+      BX_PANIC(("Could not open vga font. See docs-html/install.html"));
     }
+  }
 }
 
 
