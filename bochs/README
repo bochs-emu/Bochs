@@ -9,9 +9,9 @@ written in C++, that runs on most popular platforms.  It includes
 emulation of the Intel x86 CPU, common I/O devices, and a custom
 BIOS.  Currently, Bochs can be compiled to emulate a 386, 486,
 Pentium, Pentium Pro or AMD64 CPU, including optional MMX, SSE, 
-SSE2 and 3DNow instructions.  Bochs is capable of running most 
-Operating Systems inside the emulation including Linux, Windows 95, 
-DOS, and Windows NT 4.  
+SSE2 and 3DNow! instructions.  Bochs is capable of running most 
+Operating Systems inside the emulation including Linux, DOS,
+Windows 95/98 and Windows NT/2000.  
 Bochs was written by Kevin Lawton and is currently maintained by 
 the Bochs project at "http://bochs.sourceforge.net".
 
@@ -20,7 +20,7 @@ still in development.  The 'typical' use of bochs is to provide
 complete x86 PC emulation, including the x86 processor, hardware
 devices, and memory.  This allows you to run OS's and software within
 the emulator on your workstation, much like you have a machine
-inside of a machine.  Bochs will allow you to run Win '95
+inside of a machine.  Bochs will allow you to run Windows
 applications on a Solaris machine with X11, for example.
 
 Bochs is distributed under the GNU LGPL.  See COPYING for details.

@@ -157,7 +157,7 @@
 // 'megs:' directive in the '.bochsrc' file overrides this,
 // allowing per-run settings.
 
-#define BX_DEFAULT_MEM_MEGS 4
+#define BX_DEFAULT_MEM_MEGS 32
 
 
 // CPU level emulation.  Default level is set in

@@ -77,8 +77,9 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 
 #=======================================================================
 # MEGS
-# set this to the default number of Megabytes of memory you want
-# to emulate. The default is 32MB, most OS's won't need more than that. 
+# Set the number of Megabytes of physical memory you want to emulate. 
+# The default is 32MB, most OS's won't need more than that.
+# The maximum amount of memory supported is 2048Mb.
 #=======================================================================
 #megs: 256
 #megs: 128
