@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.8 2002-09-11 03:55:22 bdenney Exp $
+// $Id: flag_ctrl_pro.cc,v 1.9 2002-09-12 18:10:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,10 +53,8 @@ BX_CPU_C::write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF)
 #else
   // IOPL = 0
 #endif
-  if (change_IF) {
+  if (change_IF)
     changeMask |= (1<<9);
-    BX_CPU_THIS_PTR eflags.set_IF ((flags >> 9) & 0x01);
-    }
 
 
   BX_CPU_THIS_PTR eflags.val32 =
@@ -65,11 +63,11 @@ BX_CPU_C::write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF)
 
 #if 0
 // +++
-if (GetEFlagsTFLogical()==0 && (flags&0x0100))
+if (get_TF ()==0 && (flags&0x0100))
   BX_DEBUG(( "TF 0->1" ));
-else if (GetEFlagsTFLogical() && !(flags&0x0100))
+else if (get_TF () && !(flags&0x0100))
   BX_DEBUG(( "TF 1->0" ));
-else if (GetEFlagsTFLogical() && (flags&0x0100))
+else if (get_TF () && (flags&0x0100))
   BX_DEBUG(( "TF 1->1" ));
 #endif
 
@@ -110,11 +108,11 @@ BX_CPU_C::write_eflags(Bit32u eflags_raw, Boolean change_IOPL, Boolean change_IF
 
 #if 0
 // +++
-if (GetEFlagsTFLogical()==0 && (eflags_raw&0x0100))
+if (get_TF ()==0 && (eflags_raw&0x0100))
   BX_DEBUG(( "TF 0->1" ));
-else if (GetEFlagsTFLogical() && !(eflags_raw&0x0100))
+else if (get_TF () && !(eflags_raw&0x0100))
   BX_DEBUG(( "TF 1->0" ));
-else if (GetEFlagsTFLogical() && (eflags_raw&0x0100))
+else if (get_TF () && (eflags_raw&0x0100))
   BX_DEBUG(( "TF 1->1" ));
 #endif
 

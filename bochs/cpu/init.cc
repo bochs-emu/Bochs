@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.22 2002-09-12 06:29:13 bdenney Exp $
+// $Id: init.cc,v 1.23 2002-09-12 18:10:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,10 +66,10 @@ BX_CPU_C::BX_CPU_C()
       break;
 #define CASE_EFLAG_GET(flag) \
     case BXP_CPU_EFLAGS_##flag: \
-      return BX_CPU_THIS_PTR eflags.get_##flag ();
+      return BX_CPU_THIS_PTR get_##flag ();
 #define CASE_EFLAG_SET(flag, val) \
     case BXP_CPU_EFLAGS_##flag: \
-      BX_CPU_THIS_PTR eflags.set_##flag(val); \
+      BX_CPU_THIS_PTR set_##flag(val); \
       break;
 
 
@@ -156,7 +156,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.22 2002-09-12 06:29:13 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.23 2002-09-12 18:10:41 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -360,7 +360,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   list->add ( \
       param = new bx_param_bool_c ( \
 	BXP_CPU_EFLAGS_##name, \
-        #name, "", eflags.get_##name())); \
+        #name, "", get_##name())); \
   param->set_handler (cpu_param_handler);
 #define DEFPARAM_LAZY_EFLAG(name) \
   list->add ( \
@@ -436,13 +436,13 @@ BX_CPU_C::reset(unsigned source)
 
   // status and control flags register set
   BX_CPU_THIS_PTR eflags.val32 = 0x2; // Bit1 is always set
-  ClearEFlagsIF();
+  BX_CPU_THIS_PTR clear_IF ();
 #if BX_CPU_LEVEL >= 3
-  ClearEFlagsRF();
-  ClearEFlagsVM();
+  BX_CPU_THIS_PTR clear_RF ();
+  BX_CPU_THIS_PTR clear_VM ();
 #endif
 #if BX_CPU_LEVEL >= 4
-  ClearEFlagsAC();
+  BX_CPU_THIS_PTR clear_AC ();
 #endif
 
   BX_CPU_THIS_PTR inhibit_mask = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.9 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: string.cc,v 1.10 2002-09-12 18:10:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
 
     write_virtual_byte(BX_SEG_REG_ES, edi, &temp8);
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI, EDI */
       esi--;
       edi--;
@@ -145,7 +145,7 @@ BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
 
         if ( hostAddrSrc && hostAddrDst ) {
           // See how many bytes can fit in the rest of this page.
-          if (GetEFlagsDFLogical()) {
+          if (BX_CPU_THIS_PTR get_DF ()) {
             // Counting downward.
             bytesFitSrc = 1 + (paddrSrc & 0xfff);
             bytesFitDst = 1 + (paddrDst & 0xfff);
@@ -195,7 +195,7 @@ BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
             // Now make sure transfer will fit within the constraints of the
             // segment boundaries, 0..limit for non expand-down.  We know
             // byteCount >= 1 here.
-            if (GetEFlagsDFLogical()) {
+            if (BX_CPU_THIS_PTR get_DF ()) {
               // Counting downward.
               Bit32u minOffset = (byteCount-1);
               if ( si < minOffset )
@@ -255,7 +255,7 @@ doIncr16:
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement SI, DI */
       si -= incr;
       di -= incr;
@@ -353,7 +353,7 @@ BX_CPU_C::MOVSW_XvYv(BxInstruction_t *i)
 
         if ( hostAddrSrc && hostAddrDst ) {
           // See how many dwords can fit in the rest of this page.
-          if (GetEFlagsDFLogical()) {
+          if (BX_CPU_THIS_PTR get_DF ()) {
             // Counting downward.
             // Note: 1st dword must not cross page boundary.
             if ( ((paddrSrc & 0xfff) > 0xffc) ||
@@ -407,7 +407,7 @@ BX_CPU_C::MOVSW_XvYv(BxInstruction_t *i)
             // Now make sure transfer will fit within the constraints of the
             // segment boundaries, 0..limit for non expand-down.  We know
             // dwordCount >= 1 here.
-            if (GetEFlagsDFLogical()) {
+            if (BX_CPU_THIS_PTR get_DF ()) {
               // Counting downward.
               Bit32u minOffset = (dwordCount-1) << 2;
               if ( esi < minOffset )
@@ -470,7 +470,7 @@ doIncr32:
 #endif
 #endif
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         esi -= incr;
         edi -= incr;
@@ -488,7 +488,7 @@ doIncr32:
 
       write_virtual_word(BX_SEG_REG_ES, edi, &temp16);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         esi -= 2;
         edi -= 2;
@@ -520,7 +520,7 @@ doIncr32:
 
       write_virtual_dword(BX_SEG_REG_ES, di, &temp32);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         si -= 4;
         di -= 4;
@@ -594,7 +594,7 @@ doIncr32:
 
         if ( hostAddrSrc && hostAddrDst ) {
           // See how many words can fit in the rest of this page.
-          if (GetEFlagsDFLogical()) {
+          if (BX_CPU_THIS_PTR get_DF ()) {
             // Counting downward.
             // Note: 1st word must not cross page boundary.
             if ( ((paddrSrc & 0xfff) > 0xffe) ||
@@ -648,7 +648,7 @@ doIncr32:
             // Now make sure transfer will fit within the constraints of the
             // segment boundaries, 0..limit for non expand-down.  We know
             // wordCount >= 1 here.
-            if (GetEFlagsDFLogical()) {
+            if (BX_CPU_THIS_PTR get_DF ()) {
               // Counting downward.
               Bit32u minOffset = (wordCount-1) << 1;
               if ( si < minOffset )
@@ -711,7 +711,7 @@ doIncr16:
 #endif
 #endif
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement SI, DI */
         si -= incr;
         di -= incr;
@@ -757,7 +757,7 @@ BX_CPU_C::CMPSB_XbYb(BxInstruction_t *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMPS8);
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
       esi--;
       edi--;
@@ -787,7 +787,7 @@ BX_CPU_C::CMPSB_XbYb(BxInstruction_t *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMPS8);
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
       si--;
       di--;
@@ -834,7 +834,7 @@ BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_CMPS32);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         esi -= 4;
         edi -= 4;
@@ -856,7 +856,7 @@ BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMPS16);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         esi -= 2;
         edi -= 2;
@@ -892,7 +892,7 @@ BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_CMPS32);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         si -= 4;
         di -= 4;
@@ -916,7 +916,7 @@ BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMPS16);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         si -= 2;
         di -= 2;
@@ -955,7 +955,7 @@ BX_CPU_C::SCASB_ALXb(BxInstruction_t *i)
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
 
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
       edi--;
       }
@@ -982,7 +982,7 @@ BX_CPU_C::SCASB_ALXb(BxInstruction_t *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
       di--;
       }
@@ -1014,7 +1014,7 @@ BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SCAS32);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         edi -= 4;
         }
@@ -1033,7 +1033,7 @@ BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SCAS16);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         edi -= 2;
         }
@@ -1063,7 +1063,7 @@ BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SCAS32);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         di -= 4;
         }
@@ -1084,7 +1084,7 @@ BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
 
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SCAS16);
 
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         di -= 2;
         }
@@ -1160,7 +1160,7 @@ BX_CPU_C::STOSB_YbAL(BxInstruction_t *i)
 
         if ( hostAddrDst ) {
           // See how many bytes can fit in the rest of this page.
-          if (GetEFlagsDFLogical()) {
+          if (BX_CPU_THIS_PTR get_DF ()) {
             // Counting downward.
             bytesFitDst = 1 + (paddrDst & 0xfff);
             pointerDelta = (unsigned) -1;
@@ -1202,7 +1202,7 @@ BX_CPU_C::STOSB_YbAL(BxInstruction_t *i)
             // Now make sure transfer will fit within the constraints of the
             // segment boundaries, 0..limit for non expand-down.  We know
             // byteCount >= 1 here.
-            if (GetEFlagsDFLogical()) {
+            if (BX_CPU_THIS_PTR get_DF ()) {
               // Counting downward.
               Bit32u minOffset = (byteCount-1);
               if ( edi < minOffset )
@@ -1254,7 +1254,7 @@ doIncr16:
 #endif
 #endif
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement EDI */
       edi -= incr;
       }
@@ -1286,7 +1286,7 @@ BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
         eax = EAX;
         write_virtual_dword(BX_SEG_REG_ES, edi, &eax);
 
-        if (GetEFlagsDFLogical()) {
+        if (BX_CPU_THIS_PTR get_DF ()) {
           /* decrement EDI */
           edi -= 4;
           }
@@ -1301,7 +1301,7 @@ BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
         ax = AX;
         write_virtual_word(BX_SEG_REG_ES, edi, &ax);
 
-        if (GetEFlagsDFLogical()) {
+        if (BX_CPU_THIS_PTR get_DF ()) {
           /* decrement EDI */
           edi -= 2;
           }
@@ -1328,7 +1328,7 @@ BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
         eax = EAX;
         write_virtual_dword(BX_SEG_REG_ES, di, &eax);
 
-        if (GetEFlagsDFLogical()) {
+        if (BX_CPU_THIS_PTR get_DF ()) {
           /* decrement EDI */
           di -= 4;
           }
@@ -1345,7 +1345,7 @@ BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
         ax = AX;
         write_virtual_word(BX_SEG_REG_ES, di, &ax);
 
-        if (GetEFlagsDFLogical()) {
+        if (BX_CPU_THIS_PTR get_DF ()) {
           /* decrement EDI */
           di -= 2;
           }
@@ -1382,7 +1382,7 @@ BX_CPU_C::LODSB_ALXb(BxInstruction_t *i)
     read_virtual_byte(seg, esi, &al);
 
     AL = al;
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
       esi--;
       }
@@ -1403,7 +1403,7 @@ BX_CPU_C::LODSB_ALXb(BxInstruction_t *i)
     read_virtual_byte(seg, si, &al);
 
     AL = al;
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       /* decrement ESI */
       si--;
       }
@@ -1440,7 +1440,7 @@ BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
       read_virtual_dword(seg, esi, &eax);
 
       EAX = eax;
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         esi -= 4;
         }
@@ -1454,7 +1454,7 @@ BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
       read_virtual_word(seg, esi, &ax);
 
       AX = ax;
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         esi -= 2;
         }
@@ -1480,7 +1480,7 @@ BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
       read_virtual_dword(seg, si, &eax);
 
       EAX = eax;
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         si -= 4;
         }
@@ -1497,7 +1497,7 @@ BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
       read_virtual_word(seg, si, &ax);
 
       AX = ax;
-      if (GetEFlagsDFLogical()) {
+      if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         si -= 2;
         }

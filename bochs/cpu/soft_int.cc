@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: soft_int.cc,v 1.7 2002-09-12 18:10:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -130,7 +130,7 @@ BX_CPU_C::INT_Ib(BxInstruction_t *i)
 
   imm8 = i->Ib;
 
-  if (v8086_mode() && (IOPL<3)) {
+  if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3)) {
     //BX_INFO(("int_ib: v8086: IOPL<3"));
     exception(BX_GP_EXCEPTION, 0, 0);
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.41 2002-09-12 17:06:40 bdenney Exp $
+// $Id: cpu.h,v 1.42 2002-09-12 18:10:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -230,6 +230,45 @@
 
 class BX_CPU_C;
 
+#if BX_USE_CPU_SMF == 0
+// normal member functions.  This can ONLY be used within BX_CPU_C classes.
+// Anyone on the outside should use the BX_CPU macro (defined in bochs.h) 
+// instead.
+#  define BX_CPU_THIS_PTR  this->
+#  define BX_SMF
+#  define BX_CPU_C_PREFIX  BX_CPU_C::
+// with normal member functions, calling a member fn pointer looks like
+// object->*(fnptr)(arg, ...);
+// Since this is different from when SMF=1, encapsulate it in a macro.
+#  define BX_CPU_CALL_METHOD(func, args) \
+    do { \
+      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+      (this->*((BxExecutePtr_t) (func))) args \
+      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    } while (0)
+#else
+// static member functions.  With SMF, there is only one CPU by definition.
+#  define BX_CPU_THIS_PTR  BX_CPU(0)->
+#  define BX_SMF           static
+#  define BX_CPU_C_PREFIX
+#  define BX_CPU_CALL_METHOD(func, args)   \
+    do { \
+      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    ((BxExecutePtr_t) (func)) args; \
+      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    } while (0)
+#endif
+
+#if BX_SMP_PROCESSORS==1
+// single processor simulation, so there's one of everything
+extern BX_CPU_C       bx_cpu;
+#else
+// multiprocessor simulation, we need an array of cpus and memories
+extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
+#endif
+
+
+
 typedef struct {
   /* 31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16
    * ==|==|=====|==|==|==|==|==|==|==|==|==|==|==|==
@@ -242,78 +281,35 @@ typedef struct {
   Bit32u val32; // Raw 32-bit value in x86 bit position.  Used to store
                 //   some eflags which are not cached in separate fields.
 
-  // accessors for all eflags (except for lazy flags)
-  // The macro is used once for each flag bit.
-#define IMPLEMENT_EFLAGS_ACCESSORS(name,bitnum)                            \
-  BX_CPP_INLINE void    assert_##name () { val32 |= (1<<bitnum); }         \
-  BX_CPP_INLINE void    clear_##name ()  { val32 &= ~(1<<bitnum); }        \
-  BX_CPP_INLINE Boolean get_##name ()    { return 1 & (val32 >> bitnum); } \
-  BX_CPP_INLINE void    set_##name (Bit32u val) {                          \
-    val32 = (val32&(1<<bitnum)) | (val ? (1<<bitnum) : 0);                 \
-  }
-
-  IMPLEMENT_EFLAGS_ACCESSORS(DF, 10);
-  IMPLEMENT_EFLAGS_ACCESSORS(ID, 21)
-  IMPLEMENT_EFLAGS_ACCESSORS(VP, 20)
-  IMPLEMENT_EFLAGS_ACCESSORS(VF, 19)
-  IMPLEMENT_EFLAGS_ACCESSORS(AC, 18)
-  IMPLEMENT_EFLAGS_ACCESSORS(VM, 17)
-  IMPLEMENT_EFLAGS_ACCESSORS(RF, 16)
-  IMPLEMENT_EFLAGS_ACCESSORS(NT, 14)
-  IMPLEMENT_EFLAGS_ACCESSORS(IF,  9)
-  IMPLEMENT_EFLAGS_ACCESSORS(TF,  8)
-#undef IMPLEMENT_EFLAGS_ACCESSORS
-
-  BX_CPP_INLINE void    set_IOPL(Bit8u val) {
-    const Bit32u mask = (1<<12) | (1<<13);
-    val32 &= ~mask;
-    val32 |= ((3&val) << 12);
-  }
-  BX_CPP_INLINE Boolean get_IOPL() { return 3 & (val32 >> 12); }
   BX_CPP_INLINE Boolean get_bit1() { return 1; }
   BX_CPP_INLINE Boolean get_bit3() { return 0; }
   BX_CPP_INLINE Boolean get_bit5() { return 0; }
   BX_CPP_INLINE Boolean get_bit15() { return 0; }
   } bx_flags_reg_t;
 
-// EFlags.DF
-#define GetEFlagsDFLogical()    (BX_CPU_THIS_PTR eflags.get_DF ())
-#define ClearEFlagsDF()         (BX_CPU_THIS_PTR eflags.clear_DF ())
-#define SetEFlagsDF()           (BX_CPU_THIS_PTR eflags.assert_DF ())
+  // accessors for all eflags in bx_flags_reg_t
+  // The macro is used once for each flag bit.
+#define DECLARE_EFLAGS_ACCESSORS(name,bitnum)                                \
+  BX_CPP_INLINE void    assert_##name ();                                    \
+  BX_CPP_INLINE void    clear_##name ();                                     \
+  BX_CPP_INLINE Boolean get_##name ();                                       \
+  BX_CPP_INLINE void    set_##name (Bit8u val);
 
-
-// EFlags.TF
-#define GetEFlagsTFLogical()    (BX_CPU_THIS_PTR eflags.get_TF ())
-#define ClearEFlagsTF()         (BX_CPU_THIS_PTR eflags.clear_TF ())
-#define SetEFlagsTF()           (BX_CPU_THIS_PTR eflags.assert_TF ())
-
-// EFlags.IF
-#define GetEFlagsIFLogical()    (BX_CPU_THIS_PTR eflags.get_IF ())
-#define ClearEFlagsIF()         (BX_CPU_THIS_PTR eflags.clear_IF ())
-#define SetEFlagsIF()           (BX_CPU_THIS_PTR eflags.assert_IF ())
-
-// EFlags.RF
-#define GetEFlagsRFLogical()    (BX_CPU_THIS_PTR eflags.get_RF ())
-#define ClearEFlagsRF()         (BX_CPU_THIS_PTR eflags.clear_RF ())
-#define SetEFlagsRF()           (BX_CPU_THIS_PTR eflags.assert_RF ())
-
-// EFlags.VM
-#define GetEFlagsVMLogical()    (BX_CPU_THIS_PTR eflags.get_VM ())
-#define ClearEFlagsVM()         (BX_CPU_THIS_PTR eflags.clear_VM ())
-#define SetEFlagsVM()           (BX_CPU_THIS_PTR eflags.assert_VM ())
-
-// EFlags.NT
-#define GetEFlagsNTLogical()    (BX_CPU_THIS_PTR eflags.get_NT ())
-#define ClearEFlagsNT()         (BX_CPU_THIS_PTR eflags.clear_NT ())
-#define SetEFlagsNT()           (BX_CPU_THIS_PTR eflags.assert_NT ())
-
-// AC
-#define ClearEFlagsAC()         (BX_CPU_THIS_PTR eflags.clear_AC ())
-
-// IOPL
-#define IOPL                    (BX_CPU_THIS_PTR eflags.get_IOPL ())
-#define ClearEFlagsIOPL()       (BX_CPU_THIS_PTR eflags.set_IOPL (0))
-
+#define IMPLEMENT_EFLAGS_ACCESSORS(name,bitnum)                              \
+  BX_CPP_INLINE void BX_CPU_C::assert_##name () {                            \
+    BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                             \
+  }                                                                          \
+  BX_CPP_INLINE void BX_CPU_C::clear_##name () {                             \
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                            \
+  }                                                                          \
+  BX_CPP_INLINE Boolean BX_CPU_C::get_##name () {                            \
+    return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);                     \
+  }                                                                          \
+  BX_CPP_INLINE void BX_CPU_C::set_##name (Bit8u val) {                      \
+    BX_CPU_THIS_PTR eflags.val32 =                                           \
+      (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
+  }
+  // end of #define
 
 #if BX_CPU_LEVEL >= 2
 typedef struct {
@@ -716,35 +712,6 @@ public:
 extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 #endif // if BX_SUPPORT_APIC
 
-
-#if BX_USE_CPU_SMF == 0
-// normal member functions.  This can ONLY be used within BX_CPU_C classes.
-// Anyone on the outside should use the BX_CPU macro (defined in bochs.h) 
-// instead.
-#  define BX_CPU_THIS_PTR  this->
-#  define BX_SMF
-#  define BX_CPU_C_PREFIX  BX_CPU_C::
-// with normal member functions, calling a member fn pointer looks like
-// object->*(fnptr)(arg, ...);
-// Since this is different from when SMF=1, encapsulate it in a macro.
-#  define BX_CPU_CALL_METHOD(func, args) \
-    do { \
-      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-      (this->*((BxExecutePtr_t) (func))) args \
-      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-    } while (0)
-#else
-// static member functions.  With SMF, there is only one CPU by definition.
-#  define BX_CPU_THIS_PTR  BX_CPU(0)->
-#  define BX_SMF           static
-#  define BX_CPU_C_PREFIX
-#  define BX_CPU_CALL_METHOD(func, args)   \
-    do { \
-      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-    ((BxExecutePtr_t) (func)) args; \
-      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-    } while (0)
-#endif
 
 typedef void (*BxDTShim_t)(void);
 
@@ -1676,6 +1643,18 @@ public: // for now...
 
   BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }
 
+  DECLARE_EFLAGS_ACCESSORS(DF,  10);
+  DECLARE_EFLAGS_ACCESSORS(ID,  21)
+  DECLARE_EFLAGS_ACCESSORS(VP,  20)
+  DECLARE_EFLAGS_ACCESSORS(VF,  19)
+  DECLARE_EFLAGS_ACCESSORS(AC,  18)
+  DECLARE_EFLAGS_ACCESSORS(VM,  17)
+  DECLARE_EFLAGS_ACCESSORS(RF,  16)
+  DECLARE_EFLAGS_ACCESSORS(NT,  14)
+  DECLARE_EFLAGS_ACCESSORS(IOPL, 12)
+  DECLARE_EFLAGS_ACCESSORS(IF,   9)
+  DECLARE_EFLAGS_ACCESSORS(TF,   8)
+
   BX_SMF BX_CPP_INLINE void set_CF(Boolean val);
   BX_SMF BX_CPP_INLINE void set_AF(Boolean val);
   BX_SMF BX_CPP_INLINE void set_ZF(Boolean val);
@@ -1764,14 +1743,6 @@ BX_SMF BX_CPP_INLINE int BX_CPU_C_PREFIX which_cpu(void)
 #endif
 }
 
-#if BX_SMP_PROCESSORS==1
-// single processor simulation, so there's one of everything
-extern BX_CPU_C       bx_cpu;
-#else
-// multiprocessor simulation, we need an array of cpus and memories
-extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
-#endif
-
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; }
@@ -1841,12 +1812,12 @@ BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
 #  if BX_SUPPORT_V8086_MODE
   BX_CPP_INLINE Boolean
 BX_CPU_C::v8086_mode(void) {
-  return (BX_CPU_THIS_PTR eflags.get_VM ());
+  return (BX_CPU_THIS_PTR get_VM ());
   }
 
   BX_CPP_INLINE Boolean
 BX_CPU_C::protected_mode(void) {
-  return(BX_CPU_THIS_PTR cr0.pe && !BX_CPU_THIS_PTR eflags.get_VM ());
+  return(BX_CPU_THIS_PTR cr0.pe && !BX_CPU_THIS_PTR get_VM ());
   }
 #  else
   BX_CPP_INLINE Boolean
@@ -1998,6 +1969,29 @@ BX_CPU_C::set_PF_base(Bit8u val) {
     /* ??? could also mark other bits undefined here */ \
     }
 
+
+IMPLEMENT_EFLAGS_ACCESSORS(DF, 10);
+IMPLEMENT_EFLAGS_ACCESSORS(ID, 21)
+IMPLEMENT_EFLAGS_ACCESSORS(VP, 20)
+IMPLEMENT_EFLAGS_ACCESSORS(VF, 19)
+IMPLEMENT_EFLAGS_ACCESSORS(AC, 18)
+IMPLEMENT_EFLAGS_ACCESSORS(VM, 17)
+IMPLEMENT_EFLAGS_ACCESSORS(RF, 16)
+IMPLEMENT_EFLAGS_ACCESSORS(NT, 14)
+IMPLEMENT_EFLAGS_ACCESSORS(IF,  9)
+IMPLEMENT_EFLAGS_ACCESSORS(TF,  8)
+
+    BX_CPP_INLINE void
+BX_CPU_C::set_IOPL(Bit8u val) {
+    const Bit32u mask = (1<<12) | (1<<13);
+    BX_CPU_THIS_PTR eflags.val32 &= ~mask;
+    BX_CPU_THIS_PTR eflags.val32 |= ((3&val) << 12);
+  }
+
+  BX_CPP_INLINE Boolean 
+BX_CPU_C::get_IOPL() {
+    return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12); 
+  }
 
 
 

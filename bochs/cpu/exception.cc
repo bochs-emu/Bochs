@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.13 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: exception.cc,v 1.14 2002-09-12 18:10:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -434,11 +434,11 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
           // if INTERRUPT GATE set IF to 0
           if ( !(gate_descriptor.type & 1) ) // even is int-gate
-            ClearEFlagsIF();
-          ClearEFlagsTF();
-          ClearEFlagsVM();
-          ClearEFlagsRF();
-          ClearEFlagsNT();
+            BX_CPU_THIS_PTR clear_IF ();
+          BX_CPU_THIS_PTR clear_TF ();
+          BX_CPU_THIS_PTR clear_VM ();
+          BX_CPU_THIS_PTR clear_RF ();
+          BX_CPU_THIS_PTR clear_NT ();
           return;
           }
 
@@ -511,11 +511,11 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
           // if interrupt gate then set IF to 0
           if ( !(gate_descriptor.type & 1) ) // even is int-gate
-            ClearEFlagsIF();
-          ClearEFlagsTF();
-          ClearEFlagsNT();
-          ClearEFlagsVM();
-          ClearEFlagsRF();
+            BX_CPU_THIS_PTR clear_IF ();
+          BX_CPU_THIS_PTR clear_TF ();
+          BX_CPU_THIS_PTR clear_NT ();
+          BX_CPU_THIS_PTR clear_VM ();
+          BX_CPU_THIS_PTR clear_RF ();
           return;
           }
 
@@ -555,12 +555,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_selector);
 
     /* INT affects the following flags: I,T */
-    ClearEFlagsIF();
-    ClearEFlagsTF();
+    BX_CPU_THIS_PTR clear_IF ();
+    BX_CPU_THIS_PTR clear_TF ();
 #if BX_CPU_LEVEL >= 4
-    ClearEFlagsAC();
+    BX_CPU_THIS_PTR clear_AC ();
 #endif
-    ClearEFlagsRF();
+    BX_CPU_THIS_PTR clear_RF ();
     }
 }
 
@@ -637,7 +637,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
     case  0: // DIV by 0
       push_error = 0;
       exception_type = BX_ET_CONTRIBUTORY;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case  1: // debug exceptions
       push_error = 0;
@@ -658,17 +658,17 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
     case  5: // bounds check
       push_error = 0;
       exception_type = BX_ET_BENIGN;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case  6: // invalid opcode
       push_error = 0;
       exception_type = BX_ET_BENIGN;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case  7: // device not available
       push_error = 0;
       exception_type = BX_ET_BENIGN;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case  8: // double fault
       push_error = 1;
@@ -677,38 +677,38 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
     case  9: // coprocessor segment overrun (286,386 only)
       push_error = 0;
       exception_type = BX_ET_CONTRIBUTORY;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       BX_PANIC(("exception(9): unfinished"));
       break;
     case 10: // invalid TSS
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
       error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case 11: // segment not present
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
       error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case 12: // stack fault
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
       error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case 13: // general protection
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
       error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case 14: // page fault
       push_error = 1;
       exception_type = BX_ET_PAGE_FAULT;
       // ??? special format error returned
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
     case 15: // reserved
       BX_PANIC(("exception(15): reserved"));
@@ -718,14 +718,14 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
     case 16: // floating-point error
       push_error = 0;
       exception_type = BX_ET_BENIGN;
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
 #if BX_CPU_LEVEL >= 4
     case 17: // alignment check
       BX_PANIC(("exception(): alignment-check, vector 17 unimplemented"));
       push_error = 0;     // keep compiler happy for now
       exception_type = 0; // keep compiler happy for now
-      SetEFlagsRF();
+      BX_CPU_THIS_PTR assert_RF ();
       break;
 #endif
 #if BX_CPU_LEVEL >= 5

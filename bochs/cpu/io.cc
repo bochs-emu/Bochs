@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.10 2002-09-09 16:56:54 kevinlawton Exp $
+// $Id: io.cc,v 1.11 2002-09-12 18:10:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
 {
   Bit8u value8=0;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
     if ( !BX_CPU_THIS_PTR allow_io(DX, 1) ) {
       exception(BX_GP_EXCEPTION, 0, 0);
       }
@@ -59,7 +59,7 @@ BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
     /* no seg override possible */
     write_virtual_byte(BX_SEG_REG_ES, EDI, &value8);
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       EDI = EDI - 1;
       }
     else {
@@ -76,7 +76,7 @@ BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
     /* no seg override possible */
     write_virtual_byte(BX_SEG_REG_ES, DI, &value8);
 
-    if (GetEFlagsDFLogical()) {
+    if (BX_CPU_THIS_PTR get_DF ()) {
       DI = DI - 1;
       }
     else {
@@ -100,7 +100,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
   if (i->os_32) {
     Bit32u value32=0;
 
-    if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
+    if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
       if ( !BX_CPU_THIS_PTR allow_io(DX, 4) ) {
         exception(BX_GP_EXCEPTION, 0, 0);
         }
@@ -119,7 +119,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
   else {
     Bit16u value16=0;
 
-    if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
+    if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
       if ( !BX_CPU_THIS_PTR allow_io(DX, 2) ) {
         exception(BX_GP_EXCEPTION, 0, 0);
         }
@@ -168,7 +168,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
         // that the address is word aligned.
         if ( hostAddrDst && ! (paddrDst & 1) ) {
           // See how many words can fit in the rest of this page.
-          if (GetEFlagsDFLogical()) {
+          if (BX_CPU_THIS_PTR get_DF ()) {
             // Counting downward.
             // Note: 1st word must not cross page boundary.
             if ( (paddrDst & 0xfff) > 0xffe )
@@ -211,7 +211,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
             // Now make sure transfer will fit within the constraints of the
             // segment boundaries, 0..limit for non expand-down.  We know
             // wordCount >= 1 here.
-            if (GetEFlagsDFLogical()) {
+            if (BX_CPU_THIS_PTR get_DF ()) {
               // Counting downward.
               Bit32u minOffset = (wordCount-1) << 1;
               if ( edi < minOffset )
@@ -227,7 +227,7 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
             for (j=0; j<wordCount; ) {
               Bit16u temp16;
               bx_devices.bulkIOQuantumsTransferred = 0;
-              if ( GetEFlagsDFLogical()==0 ) { // Only do accel for DF=0
+              if ( BX_CPU_THIS_PTR get_DF ()==0 ) { // Only do accel for DF=0
                 bx_devices.bulkIOHostAddr = (Bit32u) hostAddrDst;
                 bx_devices.bulkIOQuantumsRequested = (wordCount - j);
                 }
@@ -290,13 +290,13 @@ doIncr:
 #endif
 
   if (i->as_32) {
-    if (GetEFlagsDFLogical())
+    if (BX_CPU_THIS_PTR get_DF ())
       EDI = EDI - incr;
     else
       EDI = EDI + incr;
     }
   else {
-    if (GetEFlagsDFLogical())
+    if (BX_CPU_THIS_PTR get_DF ())
       DI = DI - incr;
     else
       DI = DI + incr;
@@ -310,7 +310,7 @@ BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
   Bit8u value8;
   Bit32u esi;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
+  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
     if ( !BX_CPU_THIS_PTR allow_io(DX, 1) ) {
       exception(BX_GP_EXCEPTION, 0, 0);
       }
@@ -333,13 +333,13 @@ BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
   BX_OUTP(DX, value8, 1);
 
   if (i->as_32) {
-    if (GetEFlagsDFLogical())
+    if (BX_CPU_THIS_PTR get_DF ())
       ESI -= 1;
     else
       ESI += 1;
     }
   else {
-    if (GetEFlagsDFLogical())
+    if (BX_CPU_THIS_PTR get_DF ())
       SI -= 1;
     else
       SI += 1;
@@ -369,7 +369,7 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
   if (i->os_32) {
     Bit32u value32;
 
-    if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
+    if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
       if ( !BX_CPU_THIS_PTR allow_io(DX, 4) ) {
         exception(BX_GP_EXCEPTION, 0, 0);
         }
@@ -383,7 +383,7 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
   else {
     Bit16u value16;
 
-    if (BX_CPU_THIS_PTR cr0.pe && (GetEFlagsVMLogical() || (CPL>IOPL))) {
+    if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
       if ( !BX_CPU_THIS_PTR allow_io(DX, 2) ) {
         exception(BX_GP_EXCEPTION, 0, 0);
         }
@@ -432,7 +432,7 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
         // that the address is word aligned.
         if ( hostAddrSrc && ! (paddrSrc & 1) ) {
           // See how many words can fit in the rest of this page.
-          if (GetEFlagsDFLogical()) {
+          if (BX_CPU_THIS_PTR get_DF ()) {
             // Counting downward.
             // Note: 1st word must not cross page boundary.
             if ( (paddrSrc & 0xfff) > 0xffe )
@@ -475,7 +475,7 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
             // Now make sure transfer will fit within the constraints of the
             // segment boundaries, 0..limit for non expand-down.  We know
             // wordCount >= 1 here.
-            if (GetEFlagsDFLogical()) {
+            if (BX_CPU_THIS_PTR get_DF ()) {
               // Counting downward.
               Bit32u minOffset = (wordCount-1) << 1;
               if ( esi < minOffset )
@@ -491,7 +491,7 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
             for (j=0; j<wordCount; ) {
               Bit16u temp16;
               bx_devices.bulkIOQuantumsTransferred = 0;
-              if ( GetEFlagsDFLogical()==0 ) { // Only do accel for DF=0
+              if ( BX_CPU_THIS_PTR get_DF ()==0 ) { // Only do accel for DF=0
                 bx_devices.bulkIOHostAddr = (Bit32u) hostAddrSrc;
                 bx_devices.bulkIOQuantumsRequested = (wordCount - j);
                 }
@@ -549,13 +549,13 @@ doIncr:
 #endif
 
   if (i->as_32) {
-    if (GetEFlagsDFLogical())
+    if (BX_CPU_THIS_PTR get_DF ())
       ESI = ESI - incr;
     else
       ESI = ESI + incr;
     }
   else {
-    if (GetEFlagsDFLogical())
+    if (BX_CPU_THIS_PTR get_DF ())
       SI = SI - incr;
     else
       SI = SI + incr;

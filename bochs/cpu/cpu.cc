@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.40 2002-09-12 07:16:36 bdenney Exp $
+// $Id: cpu.cc,v 1.41 2002-09-12 18:10:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -146,8 +146,8 @@ main_cpu_loop:
 async_events_processed:
   // Now we can handle things which are synchronous to instruction
   // execution.
-  if (GetEFlagsRFLogical()) {
-    ClearEFlagsRF();
+  if (BX_CPU_THIS_PTR get_RF ()) {
+    BX_CPU_THIS_PTR clear_RF ();
     }
 #if BX_X86_DEBUGGER
   else {
@@ -481,7 +481,7 @@ handle_async_event:
 #else
     while (1) {
 #endif
-      if (BX_CPU_THIS_PTR INTR && GetEFlagsIFLogical()) {
+      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF ()) {
         break;
         }
       if (BX_CPU_THIS_PTR async_event == 0) {
@@ -495,7 +495,7 @@ handle_async_event:
     // must give the others a chance to simulate.  If an interrupt has 
     // arrived, then clear the HALT condition; otherwise just return from
     // the CPU loop with stop_reason STOP_CPU_HALTED.
-    if (BX_CPU_THIS_PTR INTR && GetEFlagsIFLogical()) {
+    if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF ()) {
       // interrupt ends the HALT condition
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
@@ -556,7 +556,7 @@ handle_async_event:
     // an opportunity to check interrupts on the next instruction
     // boundary.
     }
-  else if (BX_CPU_THIS_PTR INTR && GetEFlagsIFLogical() && BX_DBG_ASYNC_INTR) {
+  else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () && BX_DBG_ASYNC_INTR) {
     Bit8u vector;
 
     // NOTE: similar code in ::take_irq()
@@ -616,7 +616,7 @@ handle_async_event:
   // (handled by rest of the code)
 
 
-  if (GetEFlagsTFLogical()) {
+  if (BX_CPU_THIS_PTR get_TF ()) {
     // TF is set before execution of next instruction.  Schedule
     // a debug trap (#DB) after execution.  After completion of
     // next instruction, the code above will invoke the trap.
@@ -626,7 +626,7 @@ handle_async_event:
   if ( !(BX_CPU_THIS_PTR INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
-         GetEFlagsTFLogical()) )
+         BX_CPU_THIS_PTR get_TF ()) )
     BX_CPU_THIS_PTR async_event = 0;
   goto async_events_processed;
 }
@@ -750,9 +750,9 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   // Downside is that we show the instruction about to be executed
   // (not the one generating the mode switch).
   if (BX_CPU_THIS_PTR mode_break && 
-      (BX_CPU_THIS_PTR debug_vm != GetEFlagsVMLogical())) {
+      (BX_CPU_THIS_PTR debug_vm != BX_CPU_THIS_PTR get_VM ())) {
     BX_INFO(("Caught vm mode switch breakpoint"));
-    BX_CPU_THIS_PTR debug_vm = GetEFlagsVMLogical();
+    BX_CPU_THIS_PTR debug_vm = BX_CPU_THIS_PTR get_VM ();
     BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
     return 1;
   }
@@ -866,7 +866,7 @@ BX_CPU_C::dbg_take_irq(void)
 
   // NOTE: similar code in ::cpu_loop()
 
-  if ( BX_CPU_THIS_PTR INTR && GetEFlagsIFLogical() ) {
+  if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () ) {
     if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
       // normal return from setjmp setup
       vector = BX_IAC(); // may set INTR with next interrupt

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.11 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.12 2002-09-12 18:10:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1375,14 +1375,14 @@ BX_CPU_C::iret_protected(BxInstruction_t *i)
   Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
 
-  if ( GetEFlagsNTLogical() ) { /* NT = 1: RETURN FROM NESTED TASK */
+  if ( BX_CPU_THIS_PTR get_NT () ) { /* NT = 1: RETURN FROM NESTED TASK */
     /* what's the deal with NT & VM ? */
     Bit32u base32;
     Bit16u raw_link_selector;
     bx_selector_t   link_selector;
     bx_descriptor_t tss_descriptor;
 
-    if ( GetEFlagsVMLogical() )
+    if ( BX_CPU_THIS_PTR get_VM () )
       BX_PANIC(("IRET: vm set?"));
 
     // TASK_RETURN:
@@ -1588,7 +1588,7 @@ BX_CPU_C::iret_protected(BxInstruction_t *i)
         EIP = new_eip;
 
         /* load EFLAGS with 3rd doubleword from stack */
-        write_eflags(new_eflags, CPL==0, CPL<=IOPL, 0, 1);
+        write_eflags(new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL (), 0, 1);
         }
       else {
         /* return IP must be in code segment limit else #GP(0) */
@@ -1603,7 +1603,7 @@ BX_CPU_C::iret_protected(BxInstruction_t *i)
         EIP = new_ip;
 
         /* load flags with third word on stack */
-        write_flags(new_flags, CPL==0, CPL<=IOPL);
+        write_flags(new_flags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL ());
         }
 
       /* increment stack by 6/12 */
@@ -1723,9 +1723,9 @@ BX_CPU_C::iret_protected(BxInstruction_t *i)
       // perhaps I should always write_eflags(), thus zeroing
       // out the upper 16bits of eflags for CS.D_B==0 ???
       if (cs_descriptor.u.segment.d_b)
-        write_eflags(new_eflags, prev_cpl==0, prev_cpl<=IOPL, 0, 1);
+        write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL (), 0, 1);
       else
-        write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=IOPL);
+        write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL ());
 
       // load SS:eSP from stack
       // load the SS-cache with SS descriptor

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.8 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: flag_ctrl.cc,v 1.9 2002-09-12 18:10:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
-    if (CPL > IOPL) {
+    if (CPL > BX_CPU_THIS_PTR get_IOPL ()) {
       //BX_INFO(("CLI: CPL > IOPL")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
@@ -83,7 +83,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
     }
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode()) {
-    if (IOPL != 3) {
+    if (BX_CPU_THIS_PTR get_IOPL () != 3) {
       //BX_INFO(("CLI: IOPL != 3")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
@@ -92,7 +92,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 #endif
 #endif
 
-  ClearEFlagsIF();
+  BX_CPU_THIS_PTR clear_IF ();
 }
 
   void
@@ -100,7 +100,7 @@ BX_CPU_C::STI(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
-    if (CPL > IOPL) {
+    if (CPL > BX_CPU_THIS_PTR get_IOPL ()) {
       //BX_INFO(("STI: CPL > IOPL")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
@@ -108,7 +108,7 @@ BX_CPU_C::STI(BxInstruction_t *i)
     }
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode()) {
-    if (IOPL != 3) {
+    if (BX_CPU_THIS_PTR get_IOPL () != 3) {
       //BX_INFO(("STI: IOPL != 3")); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
@@ -117,8 +117,8 @@ BX_CPU_C::STI(BxInstruction_t *i)
 #endif
 #endif
 
-  if (!GetEFlagsIFLogical()) {
-    SetEFlagsIF();
+  if (!BX_CPU_THIS_PTR get_IF ()) {
+    BX_CPU_THIS_PTR assert_IF ();
     BX_CPU_THIS_PTR inhibit_mask |= BX_INHIBIT_INTERRUPTS;
     BX_CPU_THIS_PTR async_event = 1;
     }
@@ -127,13 +127,13 @@ BX_CPU_C::STI(BxInstruction_t *i)
   void
 BX_CPU_C::CLD(BxInstruction_t *i)
 {
-  ClearEFlagsDF();
+  BX_CPU_THIS_PTR clear_DF ();
 }
 
   void
 BX_CPU_C::STD(BxInstruction_t *i)
 {
-  SetEFlagsDF();
+  BX_CPU_THIS_PTR assert_DF ();
 }
 
   void
@@ -145,7 +145,7 @@ BX_CPU_C::CMC(BxInstruction_t *i)
   void
 BX_CPU_C::PUSHF_Fv(BxInstruction_t *i)
 {
-  if (v8086_mode() && (IOPL<3)) {
+  if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL ()<3)) {
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
@@ -168,32 +168,32 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
 
 #if BX_CPU_LEVEL >= 3
   if (v8086_mode()) {
-    if (IOPL < 3) {
+    if (BX_CPU_THIS_PTR get_IOPL () < 3) {
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
     if (i->os_32) {
-      Bit32u eflags;
+      Bit32u eflags_tmp;
 
-      pop_32(&eflags);
+      pop_32(&eflags_tmp);
 
-      eflags &= 0x00277fd7;
-      write_eflags(eflags, /* change IOPL? */ 0, /* change IF? */ 1, 0, 0);
+      eflags_tmp &= 0x00277fd7;
+      write_eflags(eflags_tmp, /* change IOPL? */ 0, /* change IF? */ 1, 0, 0);
       return;
       }
     }
 
   if (i->os_32) {
-    Bit32u eflags;
+    Bit32u eflags_tmp;
 
-    pop_32(&eflags);
+    pop_32(&eflags_tmp);
 
-    eflags &= 0x00277fd7;
+    eflags_tmp &= 0x00277fd7;
     if (!real_mode()) {
-      write_eflags(eflags, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=IOPL, 0, 0);
+      write_eflags(eflags_tmp, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL(), 0, 0);
       }
     else { /* real mode */
-      write_eflags(eflags, /* change IOPL? */ 1, /* change IF? */ 1, 0, 0);
+      write_eflags(eflags_tmp, /* change IOPL? */ 1, /* change IF? */ 1, 0, 0);
       }
     }
   else
@@ -204,7 +204,7 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
     pop_16(&flags);
 
     if (!real_mode()) {
-      write_flags(flags, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=IOPL);
+      write_flags(flags, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL ());
       }
     else { /* real mode */
       write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);
