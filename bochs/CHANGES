@@ -103,10 +103,10 @@ Detailed change log follows.
     installed.  On several modern machines, if you restart the font 
     server the user has to restart X windows. (Bryce)
   - update most .conf.* files with modern options such as 
-    --enable-all-optimizations.
+    --enable-all-optimizations. (Bryce)
   - The MacosX .conf script adds /sw/include and /sw/lib to the compile/link
     path list because it is a common place to put dlcompat.  Dlcompat is
-    required when building with plugins.
+    required when building with plugins. (Bryce)
   - rpms can now be built without root privileges (Bryce)
 
 
@@ -262,8 +262,8 @@ I'm listing them here to remind us about them:
   - fix PIC/APIC interrupt problem that caused Linux 2.4.19 to hang 
     during boot (Peter)
   - CMPXCHG8B patch (Michael Hohmuth)
-  - EFLAGS are stored differently, now reachable by accessor methods
-    (Kevin, Bryce)
+  - EFLAGS are now stored in the same form as the native EFLAGS on an x86,
+    so that we can use native machine instructions in some cases (Kevin)
   - instrumentation code updated (Stanislav)
 
 - FPU
@@ -751,10 +751,6 @@ feature [ 423361 ] need for support reboot
 feature [ 538579 ] SVGA Emulation
 feature [ 500368 ] Possibility to cut text output
 
-patch [ 645559 ] Set ownership in RPM package
-patch [ 643874 ] MacOSX: diskimage.pl fix
-patch [ 642397 ] Applescript:Fix to handle spaces in path
-patch [ 609616 ] remote GDB stub
 patch [ 626146 ] Patches for win32 nmake
 patch [ 623030 ] making bochs compile with DJGPP
 patch [ 632278 ] Carbon.cc Detabbing
