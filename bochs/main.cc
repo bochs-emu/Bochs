@@ -308,7 +308,14 @@ bx_panic(char *fmt, ...)
     va_start(ap, fmt);
     vfprintf(bx_logfd, fmt, ap);
     va_end(ap);
-    }
+   } else {
+     /* panic message is critical to knowing what went wrong. print to
+       stderr instead */
+     fprintf(stderr, "bochs: panic, ");
+     va_start(ap, fmt);
+     vfprintf(stderr, fmt, ap);
+     va_end(ap);
+   }
 
 #if !BX_PANIC_IS_FATAL
   return;
