@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.126 2002-08-28 20:01:34 vruppert Exp $
+// $Id: main.cc,v 1.127 2002-08-30 14:22:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1050,6 +1050,111 @@ void bx_init_options ()
 
 
 
+}
+
+void bx_reset_options ()
+{
+  // drives
+  bx_options.floppya.Opath->reset();
+  bx_options.floppya.Odevtype->reset();
+  bx_options.floppya.Otype->reset();
+  bx_options.floppya.Ostatus->reset();
+  bx_options.floppyb.Opath->reset();
+  bx_options.floppyb.Odevtype->reset();
+  bx_options.floppyb.Otype->reset();
+  bx_options.floppyb.Ostatus->reset();
+  bx_options.diskc.Opresent->reset();
+  bx_options.diskc.Opath->reset();
+  bx_options.diskc.Ocylinders->reset();
+  bx_options.diskc.Oheads->reset();
+  bx_options.diskc.Ospt->reset();
+  bx_options.diskd.Opresent->reset();
+  bx_options.diskd.Opath->reset();
+  bx_options.diskd.Ocylinders->reset();
+  bx_options.diskd.Oheads->reset();
+  bx_options.diskd.Ospt->reset();
+  bx_options.cdromd.Opresent->reset();
+  bx_options.cdromd.Opath->reset();
+  bx_options.cdromd.Ostatus->reset();
+  bx_options.OnewHardDriveSupport->reset();
+
+  // boot & memory
+  bx_options.Obootdrive->reset();
+  bx_options.OfloppySigCheck->reset();
+  bx_options.memory.Osize->reset();
+
+  // standard ports
+  bx_options.com[0].Oenabled->reset();
+  bx_options.com[0].Odev->reset();
+  bx_options.par[0].Oenabled->reset();
+  bx_options.par[0].Ooutfile->reset();
+
+  // rom images
+  bx_options.rom.Opath->reset();
+  bx_options.rom.Oaddress->reset();
+  bx_options.optrom[0].Opath->reset();
+  bx_options.optrom[0].Oaddress->reset();
+  bx_options.optrom[1].Opath->reset();
+  bx_options.optrom[1].Oaddress->reset();
+  bx_options.optrom[2].Opath->reset();
+  bx_options.optrom[2].Oaddress->reset();
+  bx_options.optrom[3].Opath->reset();
+  bx_options.optrom[3].Oaddress->reset();
+  bx_options.vgarom.Opath->reset();
+
+  // interface
+  bx_options.Ovga_update_interval->reset();
+  bx_options.Omouse_enabled->reset();
+  bx_options.Oips->reset();
+  bx_options.Oprivate_colormap->reset();
+#if BX_WITH_AMIGAOS
+  bx_options.Ofullscreen->reset();
+  bx_options.Oscreenmode->reset();
+#endif
+
+  // ne2k
+  bx_options.ne2k.Ovalid->reset();
+  bx_options.ne2k.Oioaddr->reset();
+  bx_options.ne2k.Oirq->reset();
+  bx_options.ne2k.Omacaddr->reset();
+  bx_options.ne2k.Oethmod->reset();
+  bx_options.ne2k.Oethdev->reset();
+  bx_options.ne2k.Oscript->reset();
+
+  // SB16
+  bx_options.sb16.Opresent->reset();
+  bx_options.sb16.Omidifile->reset();
+  bx_options.sb16.Owavefile->reset();
+  bx_options.sb16.Ologfile->reset();
+  bx_options.sb16.Omidimode->reset();
+  bx_options.sb16.Owavemode->reset();
+  bx_options.sb16.Ologlevel->reset();
+  bx_options.sb16.Odmatimer->reset();
+
+  // logfile
+  bx_options.log.Ofilename->reset();
+  bx_options.log.Oprefix->reset();
+
+  // loader
+  bx_options.load32bitOSImage.OwhichOS->reset();
+  bx_options.load32bitOSImage.Opath->reset();
+  bx_options.load32bitOSImage.Oiolog->reset();
+  bx_options.load32bitOSImage.Oinitrd->reset();
+
+  // keyboard
+  bx_options.Okeyboard_serial_delay->reset();
+  bx_options.Okeyboard_paste_delay->reset();
+  bx_options.keyboard.OuseMapping->reset();
+  bx_options.keyboard.Okeymap->reset();
+  bx_options.Okeyboard_type->reset();
+  bx_options.Ouser_shortcut->reset();
+
+  // other
+  bx_options.Ofloppy_command_delay->reset();
+  bx_options.Oi440FXSupport->reset();
+  bx_options.cmos.OcmosImage->reset();
+  bx_options.cmos.Opath->reset();
+  bx_options.cmos.Otime0->reset();
 }
 
 void bx_print_header ()
