@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.39 2002-08-28 16:45:18 bdenney Exp $
+// $Id: cdrom.cc,v 1.40 2002-09-13 14:21:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -210,7 +210,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.39 2002-08-28 16:45:18 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.40 2002-09-13 14:21:53 cbothamy Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -414,7 +414,8 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
 #else
   if (using_file) {
 #endif
-    if ((start_track != 1) && (start_track != 0xaa))
+    // From atapi specs : start track can be 0-63, AA
+    if ((start_track > 1) && (start_track != 0xaa)) 
       return false;
 
     buf[2] = 1;
