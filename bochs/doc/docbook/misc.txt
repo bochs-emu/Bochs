@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.26 2003-10-29 01:15:13 cbothamy Exp $
+$Id: misc.txt,v 1.27 2003-12-07 23:53:28 cbothamy Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -276,6 +276,7 @@ Thu Dec  5 14:23:20  2002
 Bryce Denney
 
 Make sure that README and configure.in have the correct version number.
+Check date, update/sumup info in CHANGES
 Run autoconf to regenerate configure and check them in.  Create a 
 CVS tag to mark which revision of each file was used in the release.
 
@@ -302,6 +303,8 @@ These instructions require cygwin and MSVC++.
 In Cygwin:
   sh .conf.win32-vcpp         # runs configure 
   make win32_snap             # unzip workspace, make a win32 source ZIP
+ 
+CB: can this zip file be the win32 src release ?
 
 Copy the source ZIP to a windows machine, if necessary.
 
@@ -309,7 +312,6 @@ Open up Visual C++ and load the workspace file Bochs.dsw.  Check
 the Build:Set Active Project Configuration is set the way you want it.
 For releases I use "Win32 Release".
 
-make install_win32 prefix=/tmp/bochs-2.0.pre3
 
 OPTIONAL: Build bochsdbg.exe.
 |  To create "bochsdbg.exe" with Bochs debugger support, manually change two
@@ -327,25 +329,20 @@ OPTIONAL: Build bochsdbg.exe.
 |	mv bochs-normal.exe bochs.exe
 +---
 
-Do make install_win32 into /tmp or someplace.
+NOTE: To get the docbook installed, you need to do  something like this
+make dl_docbook
+or copy up to date doc files
+and cd doc/docbook; touch */*
 
+Do make install_win32 into /tmp or someplace:
 make install_win32 prefix=/tmp/bochs-2.0.pre3
 This copies all the files into /tmp/bochs-2.0.pre3 and then creates a
 binary ZIP at /tmp/bochs-2.0.pre3.zip.  Rename that 
 bochs-2.0.pre3.win32-bin.zip
 
 
-NOTE: To get the docbook installed, you need to do  something like this
-make dl_docbook
-make install_win32 prefix=$PREFIX
-make install_docbook prefix=$PREFIX docdir=$PREFIX/docs
-make install_win32 prefix=$PREFIX
-
-This will get cleaned up some day.  I did install_win32 twice because the
-install_docbook target doesn't know to create $(prefix).  This can be fixed
-pretty easily, but not right now.
-
-Now make the NSIS installer package.
+Now make the NSIS installer package 
+(the current script is known to work with nsis 2.0b0)
 cd build/win32/nsis
 
 Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and 
@@ -375,13 +372,14 @@ cp -a clean-anon bochs-2.0.pre3
 cd bochs-2.0.pre3
 cvs upd -r REL_2_0_pre3_FINAL
 cd ..
-tar czvf bochs-2.0.pre3.tar.gz bochs-2.0.pre3
+tar czvf bochs-2.0.pre3.tar.gz --exclude CVS bochs-2.0.pre3
 
 The source TAR file bochs-2.0.pre3.tar.gz is ready to upload.
 
 The RPM will be building using the configuration in .conf.linux with
 a few parameters from build/redhat/make-rpm.  Make any last minute changes
 to .conf.linux.  Any changes will go into the source RPM.
+WARNING : do not build in /tmp/bochs-XXX...
 
 ./build/redhat/make-rpm | tee ../build.txt
 
