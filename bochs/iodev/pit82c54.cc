@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.18 2002-02-21 20:56:18 yakovlev Exp $
+// $Id: pit82c54.cc,v 1.19 2002-02-21 21:16:06 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -47,7 +47,7 @@ void pit_82C54::print_counter(counter_type & thisctr) {
 }
 
 void pit_82C54::print_cnum(Bit8u cnum) {
-  if((cnum>MAX_COUNTER) || (cnum<0)) {
+  if(cnum>MAX_COUNTER) {
     BX_ERROR(("Bad counter index to print_cnum"));
   } else {
     print_counter(counter[cnum]);
