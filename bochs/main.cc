@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.255 2003-12-29 20:58:25 vruppert Exp $
+// $Id: main.cc,v 1.256 2004-01-05 22:18:01 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -201,8 +201,8 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
         switch (val) {
           case BX_ATA_MODE_UNDOABLE:
           case BX_ATA_MODE_VOLATILE:
-          case BX_ATA_MODE_Z_UNDOABLE:
-          case BX_ATA_MODE_Z_VOLATILE:
+          //case BX_ATA_MODE_Z_UNDOABLE:
+          //case BX_ATA_MODE_Z_VOLATILE:
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_JOURNAL + device))->set_enabled (1);
             break;
           default:
@@ -413,8 +413,8 @@ bx_param_enable_handler (bx_param_c *param, int val)
             switch (SIM->get_param_enum ((bx_id)(BXP_ATA0_MASTER_MODE + device))->get()) {
               case BX_ATA_MODE_UNDOABLE:
               case BX_ATA_MODE_VOLATILE:
-              case BX_ATA_MODE_Z_UNDOABLE:
-              case BX_ATA_MODE_Z_VOLATILE:
+              //case BX_ATA_MODE_Z_UNDOABLE:
+              //case BX_ATA_MODE_Z_VOLATILE:
               return (1);
               break;
             }
@@ -765,7 +765,7 @@ void bx_init_options ()
       bx_options.atadevice[channel][slave].Otype->set_label (
           "Type of ATA device:");
       bx_options.atadevice[channel][slave].Omode->set_label (
-          "Policy of ATA device:");
+          "Type of disk image:");
       bx_options.atadevice[channel][slave].Opath->set_label (
           "Path or physical device name:");
       bx_options.atadevice[channel][slave].Ocylinders->set_label (
@@ -3088,12 +3088,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strcmp(params[i], "mode=volatile")) {
         bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_VOLATILE);
         }
-      else if (!strcmp(params[i], "mode=z-undoable")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_UNDOABLE);
-        }
-      else if (!strcmp(params[i], "mode=z-volatile")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_VOLATILE);
-        }
+//      else if (!strcmp(params[i], "mode=z-undoable")) {
+//        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_UNDOABLE);
+//        }
+//      else if (!strcmp(params[i], "mode=z-volatile")) {
+//        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_VOLATILE);
+//        }
       else if (!strncmp(params[i], "path=", 5)) {
         bx_options.atadevice[channel][slave].Opath->set (&params[i][5]);
         }
@@ -4054,12 +4054,12 @@ bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_o
         case BX_ATA_MODE_VOLATILE:
           fprintf (fp, ", mode=volatile");
           break;
-        case BX_ATA_MODE_Z_UNDOABLE:
-          fprintf (fp, ", mode=z-undoable");
-          break;
-        case BX_ATA_MODE_Z_VOLATILE:
-          fprintf (fp, ", mode=z-volatile");
-          break;
+//        case BX_ATA_MODE_Z_UNDOABLE:
+//          fprintf (fp, ", mode=z-undoable");
+//          break;
+//        case BX_ATA_MODE_Z_VOLATILE:
+//          fprintf (fp, ", mode=z-volatile");
+//          break;
         }
 
       switch(opt->Otranslation->get()) {

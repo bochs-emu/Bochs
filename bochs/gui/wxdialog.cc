@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.70 2003-11-28 15:07:29 danielg4 Exp $
+// $Id: wxdialog.cc,v 1.71 2004-01-05 22:18:01 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1445,6 +1445,22 @@ void ParamDialog::EnumChanged (ParamStruct *pstr)
 	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 1);
 	EnableParam (BXP_ATA0_MASTER_SPT+delta, 1);
 	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 0);
+	EnableParam (BXP_ATA0_MASTER_TRANSLATION+delta, 1);
+
+        bx_id mode_id = (bx_id) (BXP_ATA0_MASTER_MODE+delta);
+        ParamStruct *mode_param = (ParamStruct*) paramHash->Get(mode_id);
+        int mode = BX_ATA_MODE_FLAT;
+        if(mode_param) mode=mode_param->u.choice->GetSelection();
+        switch(mode) {
+          case BX_ATA_MODE_UNDOABLE:
+          case BX_ATA_MODE_VOLATILE:
+	    EnableParam (BXP_ATA0_MASTER_JOURNAL+delta, 1);
+            break;
+          default:
+	    EnableParam (BXP_ATA0_MASTER_JOURNAL+delta, 0);
+            break;
+        }
+
       } else {
 	// enable inserted
 	wxLogDebug ("enabling cdrom parameters");
@@ -1453,9 +1469,41 @@ void ParamDialog::EnumChanged (ParamStruct *pstr)
 	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 0);
 	EnableParam (BXP_ATA0_MASTER_SPT+delta, 0);
 	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 1);
+	EnableParam (BXP_ATA0_MASTER_JOURNAL+delta, 0);
+	EnableParam (BXP_ATA0_MASTER_TRANSLATION+delta, 0);
       }
     }
     break;
+    case BXP_ATA0_MASTER_MODE:
+    case BXP_ATA0_SLAVE_MODE:
+    case BXP_ATA1_MASTER_MODE:
+    case BXP_ATA1_SLAVE_MODE:
+    case BXP_ATA2_MASTER_MODE:
+    case BXP_ATA2_SLAVE_MODE:
+    case BXP_ATA3_MASTER_MODE:
+    case BXP_ATA3_SLAVE_MODE: {
+      int delta = id - BXP_ATA0_MASTER_MODE;
+      // find out if "present" checkbox is checked
+      bx_id present_id = (bx_id) (BXP_ATA0_MASTER_PRESENT+delta);
+      ParamStruct *present = (ParamStruct*) paramHash->Get (present_id);
+      wxASSERT (present && present->param->get_type () == BXT_PARAM_BOOL);
+      if (!present->u.checkbox->GetValue ())
+	break;  // device not enabled, leave it alone
+      if (!present->u.checkbox->IsEnabled ())
+	break;  // enable button for the device is not enabled
+      wxASSERT (pstr->param->get_type () == BXT_PARAM_ENUM);
+      int mode = pstr->u.choice->GetSelection ();
+      switch(mode) {
+        case BX_ATA_MODE_UNDOABLE:
+        case BX_ATA_MODE_VOLATILE:
+          EnableParam (BXP_ATA0_MASTER_JOURNAL+delta, 1);
+          break;
+        default:
+          EnableParam (BXP_ATA0_MASTER_JOURNAL+delta, 0);
+          break;
+        }
+      }
+      break;
     case BXP_LOAD32BITOS_WHICH: {
       int os = pstr->u.choice->GetSelection ();
       if (os != Load32bitOSNone) {

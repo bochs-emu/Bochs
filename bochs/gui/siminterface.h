@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.112 2003-09-05 22:07:54 vruppert Exp $
+// $Id: siminterface.h,v 1.113 2004-01-05 22:18:01 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1210,10 +1210,10 @@ enum {
 #define BX_ATA_MODE_UNDOABLE    6
 #define BX_ATA_MODE_GROWING     7
 #define BX_ATA_MODE_VOLATILE    8
-#define BX_ATA_MODE_Z_UNDOABLE  9
-#define BX_ATA_MODE_Z_VOLATILE  10
-#define BX_ATA_MODE_LAST        10
-// #define BX_ATA_MODE_SPLIT       6
+#define BX_ATA_MODE_LAST        8
+//#define BX_ATA_MODE_Z_UNDOABLE  9
+//#define BX_ATA_MODE_Z_VOLATILE  10
+//#define BX_ATA_MODE_SPLIT       6
 
 #define BX_CLOCK_SYNC_NONE     0
 #define BX_CLOCK_SYNC_REALTIME 1
