@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.61.4.2 2002-10-20 13:57:55 bdenney Exp $
+// $Id: wxmain.cc,v 1.61.4.3 2002-10-20 17:22:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -997,12 +997,6 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
 	  "Already Running", wxOK | wxICON_ERROR);
 	return;
   }
-  start_bochs_times++;
-  if (start_bochs_times>1) {
-	wxMessageBox (
-	"You have already started the simulator once this session. Due to memory leaks and bugs in init code, you may get unstable behavior.",
-	"2nd time warning", wxOK | wxICON_WARNING);
-  }
   // check that vga library is set to wx.  If not, give a warning and change it
   // to wx.  It is technically possible to use other vga libraries with the wx
   // config interface, but there are still some significant problems.
@@ -1011,14 +1005,20 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
   if (strcmp (gui_name, "wx") != 0) {
     wxMessageBox (
       "The VGA library setting was not set to wxWindows.  When you use the\n"
-      "wxWindows menus, you must also use wxWindows for the VGA screen.\n"
-      "I will change it to 'wx' now.",
+      "wxWindows configuration interface, you must also use the wxWindows\n"
+      "VGA screen.  I will change it to 'wx' now.",
       "VGA library error", wxOK | wxICON_WARNING);
     if (!gui_param->set_by_name ("wx")) {
       wxASSERT (0 && "Could not set VGA library setting to 'wx");
     }
   }
-
+  // give warning about restarting the simulation
+  start_bochs_times++;
+  if (start_bochs_times>1) {
+	wxMessageBox (
+	"You have already started the simulator once this session. Due to memory leaks and bugs in init code, you may get unstable behavior.",
+	"2nd time warning", wxOK | wxICON_WARNING);
+  }
   num_events = 0;  // clear the queue of events for bochs to handle
   sim_thread = new SimThread (this);
   sim_thread->Create ();

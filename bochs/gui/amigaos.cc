@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.8.4.4 2002-10-17 17:29:06 bdenney Exp $
+// $Id: amigaos.cc,v 1.8.4.5 2002-10-20 17:22:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -37,8 +37,8 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-bx_amigaos_gui_c theGui;
-IMPLEMENT_GUI_PLUGIN_CODE("AmigaOS")
+static bx_amigaos_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE(amigaos)
 
 #define LOG_THIS theGui.
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.14 2002-10-20 13:57:45 bdenney Exp $
+// $Id: main.cc,v 1.156.2.15 2002-10-20 17:22:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1533,32 +1533,82 @@ bx_init_main (int argc, char *argv[])
   return 0;
 }
 
+Boolean load_and_init_gui () {
+  if (bx_gui != NULL) {
+    // bx_gui has already been filled in.  This happens when you start
+    // the simulation for the second time.
+    // Also, if you load wxWindows as the configuration interface.  Its
+    // plugin_init will install wxWindows as the bx_gui.
+    return true;
+  }
+  BX_ASSERT (bx_gui == NULL);
+  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_VGA_LIBRARY);
+  char *gui_name = gui_param->get_choice (gui_param->get ());
+  if (!strcmp (gui_name, "wx")) {
+    // they must not have used wx as the configuration interface, or bx_gui
+    // would already be initialized.  Sorry, it doesn't work that way.
+    BX_ERROR (("wxWindows was not used as the configuration interface, so it cannot be used as the VGA library"));
+    // choose another, hopefully different!
+    gui_param->set (0);
+    gui_name = gui_param->get_choice (gui_param->get ());
+    if (!strcmp (gui_name, "wx")) {
+      BX_PANIC (("no alternative VGA libraries are available"));
+      return 1;
+    }
+    BX_ERROR (("changing VGA library to '%s' instead", gui_name));
+  }
+#if BX_WITH_AMIGAOS
+  if (!strcmp (gui_name, "amigaos")) 
+    BX_LOAD_PLUGIN (amigaos, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_BEOS
+  if (!strcmp (gui_name, "beos")) 
+    BX_LOAD_PLUGIN (beos, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_CARBON
+  if (!strcmp (gui_name, "carbon")) 
+    BX_LOAD_PLUGIN (carbon, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_MACOS
+  if (!strcmp (gui_name, "macintosh")) 
+    BX_LOAD_PLUGIN (macintosh, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_NOGUI
+  if (!strcmp (gui_name, "nogui")) 
+    BX_LOAD_PLUGIN (nogui, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_RFB
+  if (!strcmp (gui_name, "rfb")) 
+    BX_LOAD_PLUGIN (rfb, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_SDL
+  if (!strcmp (gui_name, "sdl")) 
+    BX_LOAD_PLUGIN (sdl, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_TERM
+  if (!strcmp (gui_name, "term")) 
+    BX_LOAD_PLUGIN (term, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_WIN32
+  if (!strcmp (gui_name, "win32")) 
+    BX_LOAD_PLUGIN (win32, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_X11
+  if (!strcmp (gui_name, "x")) 
+    BX_LOAD_PLUGIN (x, PLUGTYPE_OPTIONAL);
+#endif
+  BX_ASSERT (bx_gui != NULL);
+  return true;
+}
+
 int
 bx_begin_simulation (int argc, char *argv[])
 {
   // deal with gui selection
-  if (bx_gui == NULL) {
-    bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_VGA_LIBRARY);
-    char *gui_name = gui_param->get_choice (gui_param->get ());
-    if (!strcmp (gui_name, "wx")) {
-      BX_PANIC (("to use wxWindows, it must be used as the configuration interface and the VGA library"));
-      return 1;
-    }
-#if BX_PLUGINS
-    BX_INFO (("loading plugin for '%s' gui", gui_name));
-    if (bx_load_plugin (gui_name, PLUGTYPE_OPTIONAL) != 0) {
-      BX_PANIC (("gui plugin load failed"));
-      return 1;
-    }
-#endif
-    BX_ASSERT (bx_gui != NULL);
-  } else {
-    // bx_gui has already been installed.  This happens when you start
-    // the simulation for the second time.
-    // Also, if you load wxWindows as the configuration interface.  Its
-    // plugin_init also installs wxWindows as the bx_gui.
+  if (!load_and_init_gui ()) {
+    BX_PANIC (("no gui module was loaded"));
+    return 0;
   }
-
 #if BX_GDBSTUB
   // If using gdbstub, it will take control and call
   // bx_init_hardware() and cpu_loop()

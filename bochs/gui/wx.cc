@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35.2.6 2002-10-20 13:57:55 bdenney Exp $
+// $Id: wx.cc,v 1.35.2.7 2002-10-20 17:22:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -63,13 +63,7 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-bx_wx_gui_c theGui;
-
-#if BX_PLUGINS
-// nothing. plugin_init is defined in wxmain.cc now.
-#else
-   bx_gui_c *bx_gui = &theGui;
-#endif
+static bx_wx_gui_c theGui;
 
 void MyPanel::OnPluginInit () {
   bx_gui = &theGui;

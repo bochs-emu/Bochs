@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.6 2002-10-18 16:15:36 bdenney Exp $
+// $Id: gui.h,v 1.31.4.7 2002-10-20 17:22:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -316,25 +316,13 @@ protected:
 // Each gui should declare an object called "theGui" which is derived
 // from bx_gui_c, before calling this macro.  For example, the SDL port
 // says:
-//   bx_sdl_gui_c theGui;
-
-#if BX_PLUGINS
+//   static bx_sdl_gui_c theGui;
 
 #define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                           \
-  int plugin_init(plugin_t *plugin, plugintype_t type,                \
-                  int argc, char *argv[]) {                           \
-    genlog->info("installing %s module as the Bochs GUI", gui_name);  \
+  int lib##gui_name##_LTX_plugin_init(plugin_t *plugin,               \
+          plugintype_t type, int argc, char *argv[]) {                \
+    genlog->info("installing %s module as the Bochs GUI", #gui_name);  \
     bx_gui = &theGui;                                                 \
     return(0); /* Success */                                          \
   }                                                                   \
-  void plugin_fini(void) { }
-
-#else
-
-// When building with plugins, the bx_gui pointer is provided by plugins.cc.
-// But when building without plugins, the GUI code must supply bx_gui.
-
-#define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                           \
-   bx_gui_c *bx_gui = &theGui;
-
-#endif
+  void lib##gui_name##_LTX_plugin_fini(void) { }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49.2.8 2002-10-17 17:29:08 bdenney Exp $
+// $Id: x.cc,v 1.49.2.9 2002-10-20 17:22:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,8 +46,8 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-bx_x11_gui_c theGui;
-IMPLEMENT_GUI_PLUGIN_CODE("X11")
+static bx_x11_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE(x)
 
 #define LOG_THIS theGui.
 

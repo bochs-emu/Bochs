@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.16.4.2 2002-10-09 00:22:14 bdenney Exp $
+// $Id: nogui.cc,v 1.16.4.3 2002-10-20 17:22:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,8 +37,8 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-bx_nogui_gui_c theGui;
-IMPLEMENT_GUI_PLUGIN_CODE("NoGui")
+static bx_nogui_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 
 #define LOG_THIS theGui.
 

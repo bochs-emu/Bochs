@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.17.4.4 2002-10-17 17:29:06 bdenney Exp $
+// $Id: beos.cc,v 1.17.4.5 2002-10-20 17:22:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,8 +50,8 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-bx_beos_gui_c theGui;
-IMPLEMENT_GUI_PLUGIN_CODE("BeOS")
+static bx_beos_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE(beos)
 
 #define PAD_NEAREST(n, quantum) (( ((n) + ((quantum) - 1)) / (n) ) * (n))
 

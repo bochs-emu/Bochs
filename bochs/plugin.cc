@@ -97,18 +97,6 @@ device_t *devices = NULL;      /* Head of the linked list of registered devices 
 
 plugin_t *current_plugin_context = NULL;
 
-#if BX_PLUGINS
-// When compiling with plugins, plugin.cc will provide the bx_gui
-// pointer.  At first it will point to NULL.  The pointer will be replaced with
-// a real gui object by plugin_init of the specific gui module.
-bx_gui_c *bx_gui = NULL;
-#else
-// When building without plugins, the bx_gui pointer will be created by
-// the GUI code that is linked into the binary, for example x.cc or sdl.cc.  
-// Do not define bx_gui here or you will get multiple definitions.
-#endif
-
-
 /************************************************************************/
 /* Builtins declarations                                                */
 /************************************************************************/

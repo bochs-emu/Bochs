@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.11.2.4 2002-10-17 17:29:06 bdenney Exp $
+// $Id: carbon.cc,v 1.11.2.5 2002-10-20 17:22:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -173,8 +173,8 @@ public:
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
-bx_carbon_gui_c theGui;
-IMPLEMENT_GUI_PLUGIN_CODE("Carbon")
+static bx_carbon_gui_c theGui;
+IMPLEMENT_GUI_PLUGIN_CODE(carbon)
 
 #define LOG_THIS theGui.
 
