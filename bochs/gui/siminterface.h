@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.133 2004-12-30 14:50:37 vruppert Exp $
+// $Id: siminterface.h,v 1.134 2005-01-05 19:50:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -87,15 +87,15 @@
 // kind of parameter to ask the user to edit the value.
 //
 // I have been considering whether to use the same strategy for the
-// wxWindows interface, but I'm not sure if I like it.  One problem is
+// wxWidgets interface, but I'm not sure if I like it.  One problem is
 // that in order to declare member functions that are useful for
-// wxWindows, the wxWindows header files would have to be included
+// wxWidgets, the wxWidgets header files would have to be included
 // before the param object definitions.  That means that all the
-// wxwindows headers would have be included when compiling every
+// wxWidgets headers would have be included when compiling every
 // single bochs file.  One of the things I like about the separation
 // between the simulator and CI is that the two parts can be
 // compiled without any knowledge of the other.  Bochs doesn't include
-// <wx.h>, and the wxwindows CI (wxmain.cc) doesn't need to include <bochs.h>.
+// <wx.h>, and the wxWidgets CI (wxmain.cc) doesn't need to include <bochs.h>.
 // Aside from making compiles faster, this enforces the use of the siminterface
 // so it keeps the interface clean (important when we may have multiple UI
 // implementations for example).  This argues for keeping UI-specific
@@ -605,13 +605,13 @@ typedef enum {
 //
 // Examples:
 //
-// async event: In the wxWindows implementation, both the CI and the
-// VGAW operate in the wxWindows GUI thread.  When the user presses a
-// key, wxWindows sends a wxKeyEvent to the VGAW event handler code in
+// async event: In the wxWidgets implementation, both the CI and the
+// VGAW operate in the wxWidgets GUI thread.  When the user presses a
+// key, wxWidgets sends a wxKeyEvent to the VGAW event handler code in
 // wx.cc.  The VGAW handler then builds a BxEvent with
 // type=BX_ASYNC_EVT_KEY, and fills in the bx_key and raw_scancode
 // fields.  The asynchronous event is placed on the event_queue for
-// the simulator, then the VGAW handler returns.  (With wxWindows and
+// the simulator, then the VGAW handler returns.  (With wxWidgets and
 // many other graphical libaries, the event handler must return
 // quickly because the window will not be updated until it's done.)
 // Some time later, the simulator reaches the point where it checks
@@ -692,7 +692,7 @@ typedef struct {
 //
 // A mouse event can be sent from the VGA window to the Bochs
 // simulator.  It is asynchronous.  Currently unused because mouse
-// events aren't implemented in our wxWindows code yet.
+// events aren't implemented in our wxWidgets code yet.
 typedef struct {
   // type is BX_EVT_MOUSE
   Bit16s dx, dy;           // mouse motion delta
@@ -1529,7 +1529,7 @@ typedef struct BOCHSAPI {
   char initial_dir[MAX_PATH];
 #endif
 #ifdef __WXMSW__
-  // these are only used when compiling with wxWindows.  This gives us a
+  // these are only used when compiling with wxWidgets.  This gives us a
   // place to store the data that was passed to WinMain.
   HINSTANCE hInstance;
   HINSTANCE hPrevInstance;

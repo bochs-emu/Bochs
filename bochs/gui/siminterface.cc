@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.108 2004-10-16 15:44:00 vruppert Exp $
+// $Id: siminterface.cc,v 1.109 2005-01-05 19:50:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -327,7 +327,7 @@ bx_real_sim_c::quit_sim (int code) {
     BX_PANIC (("in bx_real_sim_c::quit_sim, longjmp should never return"));
   }
   if (SIM->is_wx_selected ()) {
-    // in wxWindows, the whole simulator is running in a separate thread.
+    // in wxWidgets, the whole simulator is running in a separate thread.
     // our only job is to end the thread as soon as possible, NOT to shut
     // down the whole application with an exit.
     BX_CPU(0)->async_event = 1;
@@ -586,7 +586,7 @@ bx_real_sim_c::periodic ()
 // the image could not be opened, or -3 if there are failures during
 // write, e.g. disk full.
 // 
-// wxWindows: This may be called from the gui thread.
+// wxWidgets: This may be called from the gui thread.
 int 
 bx_real_sim_c::create_disk_image (
     const char *filename,
@@ -641,7 +641,7 @@ bx_real_sim_c::create_disk_image (
 
 void bx_real_sim_c::refresh_ci () {
   if (SIM->is_wx_selected ()) {
-    // presently, only wxWindows interface uses these events
+    // presently, only wxWidgets interface uses these events
     // It's an async event, so allocate a pointer and send it.
     // The event will be freed by the recipient.
     BxEvent *event = new BxEvent ();
@@ -698,7 +698,7 @@ char *bx_real_sim_c::debug_get_next_command ()
 void bx_real_sim_c::debug_puts (const char *text)
 {
   if (SIM->is_wx_selected ()) {
-    // send message to the wxWindows debugger
+    // send message to the wxWidgets debugger
     BxEvent *event = new BxEvent ();
     event->type = BX_ASYNC_EVT_DBG_MSG;
     event->u.logmsg.msg = text;

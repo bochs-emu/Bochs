@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.283 2004-12-13 19:10:31 vruppert Exp $
+// $Id: main.cc,v 1.284 2005-01-05 19:50:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -362,9 +362,9 @@ void RedirectIOToConsole ()
 #endif  /* if defined(__WXMSW__) || (BX_WITH_SDL && defined(WIN32)) */
 
 #if defined(__WXMSW__)
-// only used for wxWindows/win32.
-// This works ok in Cygwin with a standard wxWindows compile.  In
-// VC++ wxWindows must be compiled with -DNOMAIN=1.
+// only used for wxWidgets/win32.
+// This works ok in Cygwin with a standard wxWidgets compile.  In
+// VC++ wxWidgets must be compiled with -DNOMAIN=1.
 int WINAPI WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
@@ -384,7 +384,7 @@ int WINAPI WinMain(
 
 #if !defined(__WXMSW__)
 // normal main function, presently in for all cases except for
-// wxWindows under win32.
+// wxWidgets under win32.
 int main (int argc, char *argv[])
 {
   bx_startup_flags.argc = argc;
@@ -631,8 +631,8 @@ bx_bool load_and_init_display_lib () {
   if (bx_gui != NULL) {
     // bx_gui has already been filled in.  This happens when you start
     // the simulation for the second time.
-    // Also, if you load wxWindows as the configuration interface.  Its
-    // plugin_init will install wxWindows as the bx_gui.
+    // Also, if you load wxWidgets as the configuration interface.  Its
+    // plugin_init will install wxWidgets as the bx_gui.
     return true;
   }
   BX_ASSERT (bx_gui == NULL);
@@ -646,7 +646,7 @@ bx_bool load_and_init_display_lib () {
   if (!strcmp (gui_name, "wx")) {
     // they must not have used wx as the configuration interface, or bx_gui
     // would already be initialized.  Sorry, it doesn't work that way.
-    BX_ERROR (("wxWindows was not used as the configuration interface, so it cannot be used as the display library"));
+    BX_ERROR (("wxWidgets was not used as the configuration interface, so it cannot be used as the display library"));
     // choose another, hopefully different!
     gui_param->set (0);
     gui_name = gui_param->get_choice (gui_param->get ());

@@ -1,10 +1,10 @@
 #####################################################################
-# $Id: aclocal.m4,v 1.4 2003-08-28 00:09:21 cbothamy Exp $
+# $Id: aclocal.m4,v 1.5 2005-01-05 19:50:53 vruppert Exp $
 #####################################################################
 
 dnl -------------------------------------------------------------------
 dnl This test for largefile support was written by Vadim Zeitlin for 
-dnl wxWindows.  He has given permission for Bochs to use it.
+dnl wxWidgets.  He has given permission for Bochs to use it.
 dnl -------------------------------------------------------------------
 
 dnl WX_SYS_LARGEFILE_TEST

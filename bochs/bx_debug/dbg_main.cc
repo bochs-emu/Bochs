@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.12 2004-11-15 10:43:39 akrisak Exp $
+// $Id: dbg_main.cc,v 1.13 2005-01-05 19:50:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -543,7 +543,7 @@ bx_get_command(void)
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
     }
   if (SIM->is_wx_selected() && bx_infile_stack_index == 0) {
-    // wait for wxWindows to send another debugger command
+    // wait for wxWidgets to send another debugger command
     charptr_ret = SIM->debug_get_next_command ();
     if (charptr_ret) {
       strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
