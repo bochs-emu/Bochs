@@ -14,7 +14,9 @@ CXXFLAGS="$CFLAGS"
 LDFLAGS="-L/sw/lib"
 
 export CFLAGS
+export CPPFLAGS
 export CXXFLAGS
+export LDFLAGS
 
 ./configure --enable-cdrom \
 	    --enable-vbe \
