@@ -1,4 +1,5 @@
 #include <stdio.h>
+#define MODULE1_DLL_IMPORT
 #include "module1.h"
 
 int main ()

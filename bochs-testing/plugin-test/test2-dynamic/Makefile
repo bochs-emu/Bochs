@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-Wall -g
+CXXFLAGS=-Wall -g -mno-cygwin
 LIBTOOL=libtool
 RPATH=`pwd`/lib
 
@@ -13,7 +13,7 @@ libmodule1.la: module1.lo
 	mkdir -p lib bin
 	$(LIBTOOL) cp libmodule1.la ${RPATH}
 
-%.lo: %.cc
+%.lo: %.cc %.h
 	$(LIBTOOL) $(CXX) -c $<
 
 clean:
