@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.38 2002-10-25 11:44:38 bdenney Exp $
+// $Id: devices.cc,v 1.39 2002-10-25 12:28:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.38 2002-10-25 11:44:38 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.39 2002-10-25 12:28:34 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -117,17 +117,19 @@ bx_devices_c::init(BX_MEM_C *newmem)
     irq_handler_name[i] = NULL;
     }
 
-#warning CB: UNMAPPED and BIOSDEV should maybe be optional
+  // BBD: At present, the only difference between "core" and "optional"
+  // plugins is that initialization and reset of optional plugins is handled
+  // by the plugin device list ().  Init and reset of core plugins is done
+  // "by hand" in this file.  Basically, we're using core plugins when we
+  // want to control the init order.
+  //
+  // CB: UNMAPPED and BIOSDEV should maybe be optional
   PLUG_load_plugin(unmapped, PLUGTYPE_CORE);
   PLUG_load_plugin(biosdev, PLUGTYPE_CORE);
-
-#warning these should only be loaded if they are enabled.
-#warning and they should only be optional if the init order is irrelevant
   PLUG_load_plugin(cmos, PLUGTYPE_CORE);
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(vga, PLUGTYPE_CORE);
-  /// optional plugins
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
   PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
