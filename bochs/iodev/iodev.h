@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.60 2005-02-08 18:32:15 vruppert Exp $
+// $Id: iodev.h,v 1.61 2005-04-02 11:30:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -465,7 +465,7 @@ public:
   // functions which stick these values in the bx_devices_c class, and
   // then call the normal functions rather than having gross globals
   // variables.
-  Bit32u   bulkIOHostAddr;
+  Bit8u*   bulkIOHostAddr;
   unsigned bulkIOQuantumsRequested;
   unsigned bulkIOQuantumsTransferred;
 
