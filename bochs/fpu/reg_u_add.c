@@ -32,7 +32,7 @@ int  FPU_u_add(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *answ,
 {
   const FPU_REG *rtmp;
   FPU_REG shifted;
-  u32 extent;
+  u32 extent = 0;
   int ediff = expa - expb, ed2, eflag, ovfl, carry;
 
   if ( ediff < 0 )
