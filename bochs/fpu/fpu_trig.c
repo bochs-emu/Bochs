@@ -75,7 +75,7 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 
   if ( ((flags & FCOS) && !(q & 1)) || (!(flags & FCOS) && (q & 1)) )
     {
-      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, (int)&CONST_PI2, FULL_PRECISION);
+      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, &CONST_PI2, FULL_PRECISION);
 
 #ifdef BETTER_THAN_486
       /* So far, the results are exact but based upon a 64 bit
@@ -135,7 +135,7 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 			     SIGN_POS,
 			     exponent(&CONST_PI2extra) + exponent(&tmp));
 	  setsign(&tmp, getsign(&CONST_PI2extra));
-	  st0_tag = FPU_sub(LOADED|(tmptag & 0x0f), (int)&tmp,
+	  st0_tag = FPU_sub(LOADED|(tmptag & 0x0f), &tmp,
 			    FULL_PRECISION);
 	  if ( (exponent(st0_ptr) == exponent(&CONST_PI2)) &&
 	      ((st0_ptr->sigh > CONST_PI2.sigh)
@@ -147,7 +147,7 @@ static int trig_arg(FPU_REG *st0_ptr, int flags)
 		 that the argument is actually in a different quadrant.
 		 The correction is always < pi/2, so it can't overflow
 		 into yet another quadrant. */
-	      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, (int)&CONST_PI2,
+	      st0_tag = FPU_sub(REV|LOADED|TAG_Valid, &CONST_PI2,
 				FULL_PRECISION);
 	      q++;
 	    }

@@ -135,7 +135,7 @@ int FPU_add(FPU_REG const *b, u_char tagb, int deststnr, u16 control_w)
 
 
 /* Subtract b from a.  (a-b) -> dest */
-int FPU_sub(int flags, int rm, u16 control_w)
+int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
 {
   FPU_REG const *a, *b;
   FPU_REG *dest;
@@ -148,16 +148,17 @@ int FPU_sub(int flags, int rm, u16 control_w)
   deststnr = 0;
   if ( flags & LOADED )
     {
-      b = (FPU_REG *)rm;
+      b = rm;
       tagb = flags & 0x0f;
     }
   else
     {
-      b = &st(rm);
-      tagb = FPU_gettagi(rm);
+      int rmint = (int)rm;
+      b = &st(rmint);
+      tagb = FPU_gettagi(rmint);
 
       if ( flags & DEST_RM )
-	deststnr = rm;
+	deststnr = rmint;
     }
 
   signa = getsign(a);

@@ -444,22 +444,22 @@ do_another_FPU_instruction:
 		  break;
 		case 4:         /* fsub */
 		  clear_C1();
-		  FPU_sub(LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  FPU_sub(LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		case 5:         /* fsubr */
 		  clear_C1();
-		  FPU_sub(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  FPU_sub(REV|LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		case 6:         /* fdiv */
 		  clear_C1();
-		  FPU_div(LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  FPU_div(LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		case 7:         /* fdivr */
 		  clear_C1();
 		  if ( st0_tag == TAG_Zero )
 		    partial_status = status1;  /* Undo any denorm tag,
 						  zero-divide has priority. */
-		  FPU_div(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+		  FPU_div(REV|LOADED|loaded_tag, &loaded_data, control_word);
 		  break;
 		}
 	    }
@@ -948,22 +948,22 @@ do_the_FPU_interrupt:
                   break;
                 case 4:         /* fsub */
                   clear_C1();
-                  FPU_sub(LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_sub(LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 case 5:         /* fsubr */
                   clear_C1();
-                  FPU_sub(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_sub(REV|LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 case 6:         /* fdiv */
                   clear_C1();
-                  FPU_div(LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_div(LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 case 7:         /* fdivr */
                   clear_C1();
                   if ( st0_tag == TAG_Zero )
                     partial_status = status1;  /* Undo any denorm tag,
                                                   zero-divide has priority. */
-                  FPU_div(REV|LOADED|loaded_tag, (int)&loaded_data, control_word);
+                  FPU_div(REV|LOADED|loaded_tag, &loaded_data, control_word);
                   break;
                 }
             }

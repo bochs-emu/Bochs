@@ -199,4 +199,6 @@ extern i387_t i387;
 
 #endif  /* USE_WITH_CPU_SIM */
 
+#define REGNO2PTR(n)		((FPU_REG*)((long)(n)))
+
 #endif

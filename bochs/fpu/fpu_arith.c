@@ -39,7 +39,7 @@ void fsub__()
 {
   /* fsub st,st(i) */
   clear_C1();
-  FPU_sub(0, FPU_rm, control_word);
+  FPU_sub(0, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -47,7 +47,7 @@ void fsubr_()
 {
   /* fsubr st,st(i) */
   clear_C1();
-  FPU_sub(REV, FPU_rm, control_word);
+  FPU_sub(REV, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -55,7 +55,7 @@ void fdiv__()
 {
   /* fdiv st,st(i) */
   clear_C1();
-  FPU_div(0, FPU_rm, control_word);
+  FPU_div(0, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -63,7 +63,7 @@ void fdivr_()
 {
   /* fdivr st,st(i) */
   clear_C1();
-  FPU_div(REV, FPU_rm, control_word);
+  FPU_div(REV, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -89,7 +89,7 @@ void fsubri()
 {
   /* fsubr st(i),st */
   clear_C1();
-  FPU_sub(DEST_RM, FPU_rm, control_word);
+  FPU_sub(DEST_RM, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -97,7 +97,7 @@ void fsub_i()
 {
   /* fsub st(i),st */
   clear_C1();
-  FPU_sub(REV|DEST_RM, FPU_rm, control_word);
+  FPU_sub(REV|DEST_RM, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -105,7 +105,7 @@ void fdivri()
 {
   /* fdivr st(i),st */
   clear_C1();
-  FPU_div(DEST_RM, FPU_rm, control_word);
+  FPU_div(DEST_RM, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -113,7 +113,7 @@ void fdiv_i()
 {
   /* fdiv st(i),st */
   clear_C1();
-  FPU_div(REV|DEST_RM, FPU_rm, control_word);
+  FPU_div(REV|DEST_RM, REGNO2PTR(FPU_rm), control_word);
 }
 
 
@@ -142,7 +142,7 @@ void fsubrp()
 {
   /* fsubrp st(i),st */
   clear_C1();
-  if ( FPU_sub(DEST_RM, FPU_rm, control_word) >= 0 )
+  if ( FPU_sub(DEST_RM, REGNO2PTR(FPU_rm), control_word) >= 0 )
     FPU_pop();
 }
 
@@ -151,7 +151,7 @@ void fsubp_()
 {
   /* fsubp st(i),st */
   clear_C1();
-  if ( FPU_sub(REV|DEST_RM, FPU_rm, control_word) >= 0 )
+  if ( FPU_sub(REV|DEST_RM, REGNO2PTR(FPU_rm), control_word) >= 0 )
     FPU_pop();
 }
 
@@ -160,7 +160,7 @@ void fdivrp()
 {
   /* fdivrp st(i),st */
   clear_C1();
-  if ( FPU_div(DEST_RM, FPU_rm, control_word) >= 0 )
+  if ( FPU_div(DEST_RM, REGNO2PTR(FPU_rm), control_word) >= 0 )
     FPU_pop();
 }
 
@@ -169,6 +169,6 @@ void fdivp_()
 {
   /* fdivp st(i),st */
   clear_C1();
-  if ( FPU_div(REV|DEST_RM, FPU_rm, control_word) >= 0 )
+  if ( FPU_div(REV|DEST_RM, REGNO2PTR(FPU_rm), control_word) >= 0 )
     FPU_pop();
 }
