@@ -19,7 +19,7 @@ and other OS's, all on your workstation.
 	tar xzvf $RPM_SOURCE_DIR/bochs.tar.gz
 %build
 	cd $RPM_BUILD_DIR/bochs
-	CONFIGURE_ARGS="--prefix $RPM_BUILD_ROOT/usr/local --mandir=$RPM_BUILD_ROOT/usr/man"
+	CONFIGURE_ARGS="--prefix $RPM_BUILD_ROOT/usr --mandir=$RPM_BUILD_ROOT/usr/man"
 	export CONFIGURE_ARGS
 	sh .conf.linux
 	make
