@@ -6,8 +6,8 @@ VPATH = @srcdir@
 CXX=@CXX@
 CXXFLAGS=@CXXFLAGS@ @INCLTDL@
 LDFLAGS=@LDFLAGS@ @LT_LDFLAGS@
-LIBS=@LIBS@ @LIBLTDL@
-
+LIBS=@LIBS@ 
+LTDL_STATIC_LIB=${top_builddir}/libltdl/.libs/libltdlc.al
 LIBTOOL=@LIBTOOL@
 RPATH=`pwd`/lib
 
@@ -19,7 +19,7 @@ all: @PLUGIN_MAKEFILE_TARGET@
 all_libtool: uselib libmodule1.la libmodule2.la
 
 uselib: main.lo
-	$(LIBTOOL) $(CXX) -export-dynamic $(LDFLAGS) -o uselib main.lo $(LIBS)
+	$(LIBTOOL) $(CXX) -export-dynamic $(LDFLAGS) -o uselib main.lo $(LIBS) @LIBLTDL@
 
 lib%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $(LDFLAGS) -o $@ $< -rpath ${RPATH}
@@ -38,7 +38,7 @@ uselib.exe: main.cc main.h
 	dlltool --output-def uselib.def main.o
 	dlltool --dllname uselib.exe --def uselib.def --output-lib uselib.a
 	dlltool --dllname uselib.exe --output-exp uselib.exp --def uselib.def
-	$(CXX) $(CXXFLAGS) -o uselib.exe uselib.exp main.o ${LIBS}
+	$(CXX) $(CXXFLAGS) -o uselib.exe uselib.exp main.o ${LIBS} ${LTDL_STATIC_LIB}
 	#rm uselib.exp uselib.def
 
 %.dll: %.o uselib.exe
