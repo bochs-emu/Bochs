@@ -24,7 +24,7 @@ export CXXFLAGS
 #./configure --with-win32-vcpp --enable-debugger --enable-disasm
 #./configure --with-win32-vcpp --enable-disasm
 
-./configure --with-win32-vcpp --enable-cdrom --enable-sb16=win
+./configure --with-win32-vcpp --enable-cdrom --enable-sb16=win --enable-cpp
 
 unset echo
 
