@@ -1,10 +1,10 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.5 2002-03-14 15:06:22 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.6 2002-03-14 21:44:08 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
- * access to bx_options and other simulator objecst and methods.
+ * access to bx_options and other simulator objects and methods.
  *
  */
 
@@ -13,6 +13,19 @@
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
 #define LOG_THIS siminterface_log->
+
+// bx_simulator_interface just defines the interface that the Bochs simulator
+// and the gui will use to talk to each other.  None of the methods of
+// bx_simulator_interface are implemented; they are all virtual.  The
+// bx_real_sim_c class is a child of bx_simulator_interface_c, and it
+// implements all the methods.  The idea is that a gui needs to know only
+// definition of bx_simulator_interface to talk to Bochs.  The gui should
+// not need to include bochs.h.  
+//
+// I made this separation to ensure that all guis use the siminterface to do
+// access bochs internals, instead of accessing things like
+// bx_keyboard.s.internal_buffer[4] (or whatever) directly. -Bryce
+// 
 
 class bx_real_sim_c : public bx_simulator_interface_c {
   sim_interface_callback_t callback;
@@ -46,7 +59,7 @@ public:
   virtual char *get_action_name (int action);
   virtual char *get_log_level_name (int level);
   virtual int get_max_log_level ();
-  virtual void quit_sim (int clean);
+  virtual void quit_sim (int code);
   virtual int get_default_rc (char *path, int len);
   virtual int read_rc (char *path);
   virtual int write_rc (char *path, int overwrite);
@@ -60,6 +73,9 @@ public:
   virtual int LOCAL_notify (int code);
   virtual int LOCAL_log_msg (char *prefix, int level, char *msg);
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
+  virtual int vga_gui_button_pressed (int which);
+  virtual int notify_get_int_arg (int which);
+  virtual char *notify_get_string_arg (int which);
   virtual int get_enabled () { return enabled; }
   virtual void set_enabled (int enabled) { this->enabled = enabled; }
 };
@@ -133,6 +149,9 @@ bx_real_sim_c::bx_real_sim_c ()
     param_registry[i] = NULL;
 }
 
+// called by constructor of bx_param_c, so that every parameter that is
+// initialized gets registered.  This builds a list of all parameters
+// which can be used to look them up by number (get_param).
 int
 bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
 {
@@ -192,10 +211,17 @@ bx_real_sim_c::get_max_log_level ()
 }
 
 void 
-bx_real_sim_c::quit_sim (int clean) {
-  if (!clean)
+bx_real_sim_c::quit_sim (int code) {
+  if (!code)
     BX_PANIC (("Quit simulation command"));
-  BX_EXIT (0);
+  // tell bochs to shut down (includes vga screen)
+  bx_atexit ();
+  // tell the control panel to shut down
+  LOCAL_notify (NOTIFY_CODE_SHUTDOWN);
+  while(1) {
+  printf ("Simulation is over but somehow I'm still running\n");
+  Sleep (5000);
+  }
 }
 
 int
@@ -273,6 +299,7 @@ void
 bx_real_sim_c::set_notify_callback (sim_interface_callback_t func, void *arg)
 {
   callback = func;
+  callback_ptr = arg;
 }
 
 int 
@@ -310,7 +337,7 @@ bx_real_sim_c::LOCAL_log_msg (char *prefix, int level, char *msg)
   return val;
 }
 
-// called by control.cc
+// called by control panel (control.cc) to retrieve args
 int
 bx_real_sim_c::log_msg_2 (char *prefix, int *level, char *msg, int len)
 {
@@ -560,4 +587,23 @@ void
 bx_list_c::set_parent (bx_param_c *parent)
 {
   this->parent = parent;
+}
+
+int 
+bx_real_sim_c::vga_gui_button_pressed (int which)
+{
+  notify_int_args[0] = which;
+  return LOCAL_notify (NOTIFY_CODE_VGA_GUI_BUTTON);
+}
+
+int 
+bx_real_sim_c::notify_get_int_arg (int which)
+{
+  return notify_int_args[which];
+}
+
+char *
+bx_real_sim_c::notify_get_string_arg (int which)
+{
+  return notify_string_args[which];
 }
