@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.215 2003-06-13 16:05:01 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.216 2003-07-05 05:31:40 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1185,31 +1185,6 @@ READLINE_LIB=""
 rl_without_curses_ok=no
 rl_with_curses_ok=no
 
-AC_MSG_CHECKING(if readline works without -lcurses)
-OLD_LIBS=$LIBS
-LIBS="$LIBS -lreadline"
-AC_TRY_RUN([
-  #include <stdio.h>
-  #include <readline/readline.h>
-  int main() { rl_initialize(); exit(0); }
-  ], 
-  [ AC_MSG_RESULT(yes)
-    rl_without_curses_ok=yes ],
-  [ AC_MSG_RESULT(no) ]
-)
-AC_MSG_CHECKING(if readline works with -lcurses)
-LIBS="$LIBS -lcurses"
-AC_TRY_RUN([
-  #include <stdio.h>
-  #include <readline/readline.h>
-  int main() { rl_initialize(); exit(0); }
-  ], 
-  [AC_MSG_RESULT(yes)
-   rl_with_curses_ok=yes ],
-  [ AC_MSG_RESULT(no) ]
-)
-LIBS=$OLD_LIBS
-
 AC_MSG_CHECKING(whether user wants readline)
 AC_ARG_ENABLE(readline,
   [  --enable-readline                 use readline library, if available],
@@ -1230,6 +1205,32 @@ use_readline=0
 AC_MSG_CHECKING(whether to use readline)
 if test "$want_readline" = yes; then
   if test "$bx_debugger" = 1; then
+
+    AC_MSG_CHECKING(if readline works without -lcurses)
+    OLD_LIBS=$LIBS
+    LIBS="$LIBS -lreadline"
+    AC_TRY_RUN([
+      #include <stdio.h>
+      #include <readline/readline.h>
+      int main() { rl_initialize(); exit(0); }
+      ], 
+      [ AC_MSG_RESULT(yes)
+        rl_without_curses_ok=yes ],
+      [ AC_MSG_RESULT(no) ]
+    )
+    AC_MSG_CHECKING(if readline works with -lcurses)
+    LIBS="$LIBS -lcurses"
+    AC_TRY_RUN([
+      #include <stdio.h>
+      #include <readline/readline.h>
+      int main() { rl_initialize(); exit(0); }
+      ], 
+      [AC_MSG_RESULT(yes)
+       rl_with_curses_ok=yes ],
+      [ AC_MSG_RESULT(no) ]
+    )
+    LIBS=$OLD_LIBS
+
     if test "$rl_without_curses_ok" = yes; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(HAVE_LIBREADLINE, 1)
