@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.38 2004-11-20 16:44:14 vruppert Exp $
+// $Id: rfb.cc,v 1.39 2004-11-22 13:14:54 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -70,7 +70,11 @@ IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#ifndef __QNXNTO__
 #include <sys/errno.h>
+#else
+#include <errno.h>
+#endif
 #include <pthread.h>
 
 typedef int SOCKET;

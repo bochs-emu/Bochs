@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.28 2004-10-24 20:04:51 vruppert Exp $
+// $Id: textconfig.cc,v 1.29 2004-11-22 13:14:54 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -16,12 +16,19 @@
 
 #if BX_USE_TEXTCONFIG
 
+#ifndef __QNXNTO__
 extern "C" {
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+
+#ifndef __QNXNTO__
 }
+#endif
+
 #include "osdep.h"
 #include "textconfig.h"
 #include "siminterface.h"
