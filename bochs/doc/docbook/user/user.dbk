@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.147 2004-05-27 08:58:24 cbothamy Exp $
+$Id: user.dbk,v 1.148 2004-08-24 12:23:35 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1373,7 +1373,7 @@ boots, and you get a login prompt.  Type "root" and ENTER to log in to
 DLX linux.
 <figure>
 <title>Screenshot of Bochs running DLX Linux</title>
-<graphic format="GIF" fileref="../images/dlxlinux-in-linux.gif">
+<graphic format="PNG" fileref="../images/dlxlinux-in-linux.png">
 </figure>
 </para>
 
@@ -4884,7 +4884,7 @@ DIRECTORIES!
 </para>
 <para>
 You can find it at 
-<ulink url="http://http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html">
+<ulink url="http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html">
 http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html</ulink>
 </para>
 </section>
@@ -9609,7 +9609,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.147 2004-05-27 08:58:24 cbothamy Exp $
+        $Id: user.dbk,v 1.148 2004-08-24 12:23:35 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

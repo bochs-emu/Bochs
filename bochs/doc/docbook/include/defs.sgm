@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/include/defs.sgm
-$Id: defs.sgm,v 1.6 2001-11-17 17:16:12 bdenney Exp $
+$Id: defs.sgm,v 1.7 2004-08-24 12:23:35 vruppert Exp $
 
 This file is included by all Bochs docbook files, so that the
 definitions can be used anywhere in the documentation.
@@ -16,8 +16,8 @@ Presently, each one just shows an under construction icon.  We might
 want some editing marks that don't show anything, or only show up in
 draft mode.
 -->
-<!ENTITY FIXME '<inlinegraphic format="GIF" fileref="../images/undercon.gif">'>
-<!ENTITY NEEDHELP '<inlinegraphic format="GIF" fileref="../images/undercon.gif">'>
+<!ENTITY FIXME '<inlinegraphic format="PNG" fileref="../images/undercon.png">'>
+<!ENTITY NEEDHELP '<inlinegraphic format="PNG" fileref="../images/undercon.png">'>
 
 <!ENTITY bochswebsite '<ulink url="http://bochs.sourceforge.net">Bochs web site</ulink>'>
 <!ENTITY bochs-sf-net '<ulink url="http://bochs.sourceforge.net">bochs.sourceforge.net</ulink>'>
