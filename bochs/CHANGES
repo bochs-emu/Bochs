@@ -34,6 +34,8 @@ Changes to next release:
     - partial raw serial support on win32 (transmit data)
   - parallel
     - multiple parallel port support added (2 ports now available)
+  - vga
+    - VBE 8 bit DAC support added
 
 - System BIOS
     - turn floppy motor off 2 seconds after last read/write/recalibrate command
@@ -56,6 +58,7 @@ Changes to next release:
 - configuration interface
   - win32: gui runtime dialogs replace textconfig runtime dialogs
   - set default IPS to 10000000 in .bochsrc sample
+  - SB16 options dmatimer and loglevel now available at runtime
 
 - configure script / compile
   - --enable-ignore-bad-msr (ignore bad MSR references) option is enabled 
