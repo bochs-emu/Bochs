@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.5 2004-09-05 10:30:18 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.6 2004-09-11 11:26:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -8,6 +8,7 @@
 // Virtual host acts as a DHCP server for guest.
 // There are no connections between the virtual host and real ethernets.
 //
+// Virtual host name: vnet
 // Virtual host IP: 192.168.10.1
 // Guest IP: 192.168.10.2
 // Guest netmask: 255.255.255.0
@@ -24,8 +25,6 @@
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 
 #define BX_ETH_VNET_LOGGING 1
-
-#define BX_PACKET_POLL  1000    // Poll for a frame every 1000 usecs
 
 /////////////////////////////////////////////////////////////////////////
 // handler to send/receive packets
@@ -171,6 +170,7 @@ private:
   static void rx_timer_handler(void *);
   void rx_timer(void);
   int rx_timer_index;
+  unsigned tx_time;
 
 #if BX_ETH_VNET_LOGGING
   FILE *pktlog_txt;
@@ -265,7 +265,7 @@ bx_vnet_pktmover_c::pktmover_init(
   register_layer4_handler(0x11,INET_PORT_BOOTP_SERVER,udpipv4_dhcp_handler);
 
   this->rx_timer_index = 
-    bx_pc_system.register_timer(this, this->rx_timer_handler, BX_PACKET_POLL,
+    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
 				0, 0, "eth_vnet");
 
 #if BX_ETH_VNET_LOGGING
@@ -306,6 +306,7 @@ bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
   fflush (pktlog_txt);
 #endif
 
+  this->tx_time = (64 + 96 + 4 * 8 + io_len * 8) / 10;
   if ((io_len >= 14) &&
       (!memcmp(&buf[6],&this->guest_macaddr[0],6)) &&
       (!memcmp(&buf[0],&this->host_macaddr[0],6) ||
@@ -369,7 +370,8 @@ bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len)
 
   packet_len = io_len;
   memcpy(&packet_buffer, &buf[0], io_len);
-  bx_pc_system.activate_timer(this->rx_timer_index, BX_PACKET_POLL, 0);
+  unsigned rx_time = (64 + 96 + 4 * 8 + io_len * 8) / 10;
+  bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -766,10 +768,13 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   const Bit8u *extdata;
   unsigned dhcpmsgtype = 0;
   bx_bool found_serverid = false;
+  bx_bool found_leasetime = false;
+  Bit32u leasetime = BX_MAX_BIT32U;
   const Bit8u *dhcpreqparams = NULL;
   unsigned dhcpreqparams_len = 0;
   Bit8u dhcpreqparam_default[8];
   bx_bool dhcpreqparam_default_validflag = false;
+  unsigned dhcpreqparams_default_len = 0;
   Bit8u *replyopts;
   Bit8u replybuf[576];
 
@@ -829,7 +834,14 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
       }
       found_serverid = true;
       break;
+    case BOOTPOPT_IP_ADDRESS_LEASE_TIME:
+      if (extlen != 4)
+        break;
+      leasetime = get_net4(&extdata[0]);
+      found_leasetime = true;
+      break;
     default:
+      BX_ERROR(("extcode %d not supported yet", extcode));
       break;
     }
   }
@@ -842,6 +854,10 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   memcpy(&replybuf[4],&data[4],4);
   memcpy(&replybuf[16],default_guest_ipv4addr,4);
   memcpy(&replybuf[28],&data[28],6);
+  replybuf[44] = 'v';
+  replybuf[45] = 'n';
+  replybuf[46] = 'e';
+  replybuf[47] = 't';
   replybuf[236] = 0x63;
   replybuf[237] = 0x82;
   replybuf[238] = 0x53;
@@ -878,14 +894,18 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
       *replyopts ++ = 1;
       *replyopts ++ = DHCPNAK;
       opts_len -= 3;
+      if (found_leasetime) {
+        dhcpreqparam_default[dhcpreqparams_default_len++] = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
+        dhcpreqparam_default_validflag = true;
+      }
       if (!found_serverid) {
-        dhcpreqparam_default[0] = BOOTPOPT_SERVER_IDENTIFIER;
+        dhcpreqparam_default[dhcpreqparams_default_len++] = BOOTPOPT_SERVER_IDENTIFIER;
         dhcpreqparam_default_validflag = true;
       }
     }
     break;
   default:
-    BX_INFO(("dhcp server: unknown message type %u",dhcpmsgtype));
+    BX_ERROR(("dhcp server: unsupported message type %u",dhcpmsgtype));
     return;
   }
 
@@ -902,6 +922,18 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
         *replyopts ++ = BOOTPOPT_SUBNETMASK;
         *replyopts ++ = 4;
         memcpy(replyopts,subnetmask_ipv4addr,4);
+        replyopts += 4;
+        break;
+      case BOOTPOPT_ROUTER_OPTION:
+        BX_INFO(("provide BOOTPOPT_ROUTER_OPTION"));
+        if (opts_len < 6) {
+          BX_ERROR(("option buffer is insufficient"));
+          return;
+        }
+        opts_len -= 6;
+        *replyopts ++ = BOOTPOPT_ROUTER_OPTION;
+        *replyopts ++ = 4;
+        memcpy(replyopts,host_ipv4addr,4);
         replyopts += 4;
         break;
 #if 0 // DNS is not implemented.
@@ -939,7 +971,11 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
         opts_len -= 6;
         *replyopts ++ = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
         *replyopts ++ = 4;
-        put_net4(replyopts, 900);
+        if (leasetime < 900) {
+          put_net4(replyopts, leasetime);
+        } else {
+          put_net4(replyopts, 900);
+        }
         replyopts += 4;
         break;
       case BOOTPOPT_SERVER_IDENTIFIER:
@@ -979,6 +1015,9 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
         replyopts += 4;
         break;
       default:
+        if (*(dhcpreqparams-1) != 0) {
+          BX_ERROR(("dhcp server: requested parameter %u not supported yet",*(dhcpreqparams-1)));
+        }
         break;
       }
     }
