@@ -1,0 +1,273 @@
+----------------------------------------------------------------------
+Patch name: patch.hd-err-codes
+Author: Bryce Denney
+Date: Sat Oct  6 01:24:49 EDT 2001
+RCS Id: $Id: patch.hd-err-codes,v 1.1 2001-10-06 09:13:42 bdenney Exp $
+
+Detailed description:
+See bug [ #463024 ] Sector bounds checked only at read
+
+Make hard disk code return error codes when data is not available instead of
+just panicing.  In particular, if the logical sector is out of bounds or the
+disk image cannot be read/written at the desired offset, we now abort the ATA
+command and return an error code.  Many of the old BX_PANIC messages are turned
+to BX_ERROR, so they will still appear in the log, but now the device model
+will try to communicate this fact to the OS instead of simply giving up.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: iodev/harddrv.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
+retrieving revision 1.6
+retrieving revision 1.7
+diff -u -r1.6 -r1.7
+--- iodev/harddrv.h	2001/10/03 13:10:38	1.6
++++ iodev/harddrv.h	2001/10/06 09:04:39	1.7
+@@ -1,5 +1,5 @@
+ /////////////////////////////////////////////////////////////////////////
+-// $Id: patch.hd-err-codes,v 1.1 2001-10-06 09:13:42 bdenney Exp $
++// $Id: patch.hd-err-codes,v 1.1 2001-10-06 09:13:42 bdenney Exp $
+ /////////////////////////////////////////////////////////////////////////
+ //
+ //  Copyright (C) 2001  MandrakeSoft S.A.
+@@ -274,7 +274,7 @@
+ 
+ private:
+ 
+-  BX_HD_SMF Bit32u calculate_logical_address();
++  BX_HD_SMF Boolean calculate_logical_address(Bit32u *sector);
+   BX_HD_SMF void increment_address();
+   BX_HD_SMF void identify_drive(unsigned drive);
+   BX_HD_SMF void identify_ATAPI_drive(unsigned drive);
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.38
+retrieving revision 1.39
+diff -u -r1.38 -r1.39
+--- iodev/harddrv.cc	2001/10/06 08:59:01	1.38
++++ iodev/harddrv.cc	2001/10/06 09:04:39	1.39
+@@ -1,5 +1,5 @@
+ /////////////////////////////////////////////////////////////////////////
+-// $Id: patch.hd-err-codes,v 1.1 2001-10-06 09:13:42 bdenney Exp $
++// $Id: patch.hd-err-codes,v 1.1 2001-10-06 09:13:42 bdenney Exp $
+ /////////////////////////////////////////////////////////////////////////
+ //
+ //  Copyright (C) 2001  MandrakeSoft S.A.
+@@ -33,6 +33,18 @@
+ #include "bochs.h"
+ #define LOG_THIS bx_hard_drive.
+ 
++// WARNING: dangerous options!
++// These options provoke certain kinds of errors for testing purposes when they
++// are set to a nonzero value.  DO NOT ENABLE THEM when using any disk image
++// you care about.
++#define TEST_READ_BEYOND_END 0
++#define TEST_WRITE_BEYOND_END 0
++#if TEST_READ_BEYOND_END || TEST_WRITE_BEYOND_END
++#warning BEWARE: Dangerous options are enabled in harddrv.cc
++#warning If you are not trying to provoke hard drive errors you should disable them right now.
++#endif
++// end of dangerous options.
++
+ 
+ #define INDEX_PULSE_CYCLE 10
+ 
+@@ -104,7 +116,7 @@
+ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
+ {
+   BX_HD_THIS devices = d;
+-	BX_DEBUG(("Init $Id: patch.hd-err-codes,v 1.1 2001-10-06 09:13:42 bdenney Exp $"));
++	BX_DEBUG(("Init $Id: patch.hd-err-codes,v 1.1 2001-10-06 09:13:42 bdenney Exp $"));
+ 
+   /* HARD DRIVE 0 */
+ 
+@@ -383,23 +395,33 @@
+               BX_SELECTED_CONTROLLER.status.drq = 0;
+               }
+             else { /* read next one into controller buffer */
+-              unsigned long logical_sector;
++              Bit32u logical_sector;
+               int ret;
+ 
+               BX_SELECTED_CONTROLLER.status.drq = 1;
+               BX_SELECTED_CONTROLLER.status.seek_complete = 1;
+ 
+-	      logical_sector = calculate_logical_address();
+-
++#if TEST_READ_BEYOND_END==1
++	      BX_SELECTED_CONTROLLER.cylinder_no += 100000;
++#endif
++	      if (!calculate_logical_address(&logical_sector)) {
++	        BX_ERROR(("multi-sector read reached invalid sector %u, aborting", logical_sector));
++		command_aborted (BX_SELECTED_CONTROLLER.current_command);
++	        goto return_value16;
++	      }
+ 	      ret = BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
+-
+-              if (ret < 0)
+-                BX_PANIC(("could lseek() hard drive image file"));
++              if (ret < 0) {
++                BX_ERROR(("could not lseek() hard drive image file"));
++		command_aborted (BX_SELECTED_CONTROLLER.current_command);
++	        goto return_value16;
++	      }
+ 	      ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
+               if (ret < 512) {
+-                BX_INFO(("logical sector was %u", (unsigned) logical_sector));
+-                BX_PANIC(("could not read() hard drive image file at byte %d", logical_sector*512));
+-                }
++                BX_ERROR(("logical sector was %u", (unsigned) logical_sector));
++                BX_ERROR(("could not read() hard drive image file at byte %d", logical_sector*512));
++		command_aborted (BX_SELECTED_CONTROLLER.current_command);
++	        goto return_value16;
++	      }
+ 
+               BX_SELECTED_CONTROLLER.buffer_index = 0;
+ 	      raise_interrupt();
+@@ -766,7 +788,7 @@
+ #else
+   UNUSED(this_ptr);
+ #endif  // !BX_USE_HD_SMF
+-  unsigned long logical_sector;
++  Bit32u logical_sector;
+   int ret;
+   Boolean prev_control_reset;
+ 
+@@ -815,18 +837,32 @@
+ 
+           /* if buffer completely writtten */
+           if (BX_SELECTED_CONTROLLER.buffer_index >= 512) {
+-            unsigned long logical_sector;
++            Bit32u logical_sector;
+             int ret;
+ 
+-	    logical_sector = calculate_logical_address();
+-
++#if TEST_WRITE_BEYOND_END==1
++	    BX_SELECTED_CONTROLLER.cylinder_no += 100000;
++#endif
++	    if (!calculate_logical_address(&logical_sector)) {
++	      BX_ERROR(("write reached invalid sector %u, aborting", logical_sector));
++	      command_aborted (BX_SELECTED_CONTROLLER.current_command);
++	      return;
++            }
++#if TEST_WRITE_BEYOND_END==2
++	    logical_sector += 100000;
++#endif
+ 	    ret = BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
+-            if (ret < 0)
+-              BX_PANIC(("could lseek() hard drive image file"));
+-
++            if (ret < 0) {
++              BX_ERROR(("could not lseek() hard drive image file at byte %u", logical_sector * 512));
++	      command_aborted (BX_SELECTED_CONTROLLER.current_command);
++	      return;
++	    }
+ 	    ret = BX_SELECTED_HD.hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
+-            if (ret < 512)
+-              BX_PANIC(("could not write() hard drive image file at byte %d", logical_sector*512));
++            if (ret < 512) {
++              BX_ERROR(("could not write() hard drive image file at byte %d", logical_sector*512));
++	      command_aborted (BX_SELECTED_CONTROLLER.current_command);
++	      return;
++	    }
+ 
+             BX_SELECTED_CONTROLLER.buffer_index = 0;
+ 
+@@ -1457,19 +1493,30 @@
+ 		break;
+ 	  }
+ 
+-	  logical_sector = calculate_logical_address();
+-
+-	  ret = BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
+-
++#if TEST_READ_BEYOND_END==2
++	  BX_SELECTED_CONTROLLER.cylinder_no += 100000;
++#endif
++	  if (!calculate_logical_address(&logical_sector)) {
++	    BX_ERROR(("initial read from sector %u out of bounds, aborting", logical_sector));
++	    command_aborted(value);
++	    break;
++	  }
++#if TEST_READ_BEYOND_END==3
++	  logical_sector += 100000;
++#endif
++	  ret=BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
+           if (ret < 0) {
+-            BX_PANIC(("could not lseek() hard drive image file"));
+-            }
+-
++            BX_ERROR (("could not lseek() hard drive image file, aborting"));
++	    command_aborted(value);
++	    break;
++	  }
+ 	  ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
+           if (ret < 512) {
+-            BX_INFO(("logical sector was %u", (unsigned) logical_sector));
+-            BX_PANIC(("could not read() hard drive image file at byte %d", logical_sector*512));
+-            }
++            BX_ERROR(("logical sector was %u", (unsigned) logical_sector));
++            BX_ERROR(("could not read() hard drive image file at byte %d", logical_sector*512));
++	    command_aborted(value);
++	    break;
++	  }
+ 
+           BX_SELECTED_CONTROLLER.error_register = 0;
+           BX_SELECTED_CONTROLLER.status.busy  = 0;
+@@ -1906,8 +1953,8 @@
+ }
+ 
+ 
+-  Bit32u
+-bx_hard_drive_c::calculate_logical_address()
++  Boolean
++bx_hard_drive_c::calculate_logical_address(Bit32u *sector)
+ {
+       Bit32u logical_sector;
+ 
+@@ -1925,9 +1972,11 @@
+ 
+       if (logical_sector >=
+ 	  (BX_SELECTED_HD.hard_drive->cylinders * BX_SELECTED_HD.hard_drive->heads * BX_SELECTED_HD.hard_drive->sectors)) {
+-            BX_PANIC(("read sectors: out of bounds"));
++            BX_ERROR (("calc_log_addr: out of bounds"));
++	    return false;
+       }
+-      return logical_sector;
++      *sector = logical_sector;
++      return true;
+ }
+ 
+   void
+@@ -1936,7 +1985,8 @@
+       BX_SELECTED_CONTROLLER.sector_count--;
+ 
+       if (BX_SELECTED_CONTROLLER.lba_mode) {
+-	    Bit32u current_address = calculate_logical_address();
++	    Bit32u current_address;
++	    calculate_logical_address(&current_address);
+ 	    current_address++;
+ 	    BX_SELECTED_CONTROLLER.head_no = (current_address >> 24) & 0xf;
+ 	    BX_SELECTED_CONTROLLER.cylinder_no = (current_address >> 8) & 0xffff;
+@@ -2676,8 +2726,10 @@
+   }
+   // now offset should be within the current image.
+   offset -= start_offset_table[index];
+-  if (offset < 0 || offset >= length_table[index])
++  if (offset < 0 || offset >= length_table[index]) {
+     BX_PANIC(("concat_image_t.lseek to byte %ld failed", (long)offset));
++    return -1;
++  }
+ 
+   seek_was_last_op = 1;
+   return ::lseek(fd, offset, whence);
