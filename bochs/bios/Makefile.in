@@ -54,17 +54,14 @@ LOCAL_CXXFLAGS =
 bios: BIOS-bochs-latest BIOS-bochs-2-processors BIOS-bochs-4-processors BIOS-bochs-8-processors 
 
 clean:
-	@RMCOMMAND@ *.o *.a _rombios_.c as86-sym.txt ld86-sym.txt 
-	@RMCOMMAND@ rombios*.txt rombios*.sym
+	@RMCOMMAND@ *.o *.a *.s rombios.bin _rombios_.c 
+	@RMCOMMAND@ as86-sym.txt ld86-sym.txt 
+	@RMCOMMAND@ rombios*.txt rombios*.sym usage
 
-dist-clean: clean bios-clean
+dist-clean: clean
 	@RMCOMMAND@ Makefile
-	@RMCOMMAND@ usage
 
 bios-clean:
-	@RMCOMMAND@ *.s
-	@RMCOMMAND@ rombios.bin
-	@RMCOMMAND@ _rombios_.c
 	@RMCOMMAND@ BIOS-bochs-*
 
 BIOS-bochs-latest: rombios.c
