@@ -344,7 +344,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, Bit32u offset, Bit8u *data)
     BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
     BX_INSTR_LIN_READ(laddr, laddr, 1);
     BX_INSTR_LIN_WRITE(laddr, laddr, 1);
-    mem->read_physical(laddr, 1, (void *) data);
+    mem->read_physical(this, laddr, 1, (void *) data);
     }
 }
 
@@ -371,7 +371,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, Bit32u offset, Bit16u *data)
     BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
     BX_INSTR_LIN_READ(laddr, laddr, 2);
     BX_INSTR_LIN_WRITE(laddr, laddr, 2);
-    mem->read_physical(laddr, 2, data);
+    mem->read_physical(this, laddr, 2, data);
     }
 }
 
@@ -397,7 +397,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, Bit32u offset, Bit32u *data)
     BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
     BX_INSTR_LIN_READ(laddr, laddr, 4);
     BX_INSTR_LIN_WRITE(laddr, laddr, 4);
-    mem->read_physical(laddr, 4, data);
+    mem->read_physical(this, laddr, 4, data);
     }
 }
 
@@ -409,12 +409,12 @@ BX_CPU_C::write_RMW_virtual_byte(Bit8u val8)
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR cr0.pg) {
     // BX_CPU_THIS_PTR address_xlation.pages must be 1
-    mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val8);
+    mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val8);
     }
   else
 #endif
     {
-    mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val8);
+    mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val8);
     }
 }
 
@@ -426,18 +426,18 @@ BX_CPU_C::write_RMW_virtual_word(Bit16u val16)
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR cr0.pg) {
     if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 2, &val16);
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 2, &val16);
       }
     else {
 #ifdef BX_LITTLE_ENDIAN
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 1,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 1,
                             &val16);
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress2, 1,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2, 1,
                             ((Bit8u *) &val16) + 1);
 #else
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 1,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 1,
                             ((Bit8u *) &val16) + 1);
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress2, 1,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2, 1,
                             &val16);
 #endif
       }
@@ -445,7 +445,7 @@ BX_CPU_C::write_RMW_virtual_word(Bit16u val16)
   else
 #endif
     {
-    mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 2, &val16);
+    mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 2, &val16);
     }
 }
 
@@ -457,21 +457,21 @@ BX_CPU_C::write_RMW_virtual_dword(Bit32u val32)
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR cr0.pg) {
     if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 4, &val32);
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 4, &val32);
       }
     else {
 #ifdef BX_LITTLE_ENDIAN
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1,
                             BX_CPU_THIS_PTR address_xlation.len1,
                             &val32);
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2,
                             BX_CPU_THIS_PTR address_xlation.len2,
                             ((Bit8u *) &val32) + BX_CPU_THIS_PTR address_xlation.len1);
 #else
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1,
                             BX_CPU_THIS_PTR address_xlation.len1,
                             ((Bit8u *) &val32) + (4 - BX_CPU_THIS_PTR address_xlation.len1));
-      mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+      mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2,
                             BX_CPU_THIS_PTR address_xlation.len2,
                             &val32);
 #endif
@@ -480,6 +480,6 @@ BX_CPU_C::write_RMW_virtual_dword(Bit32u val32)
   else
 #endif
     {
-    mem->write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, 4, &val32);
+    mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, 4, &val32);
     }
 }
