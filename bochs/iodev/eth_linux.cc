@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.4 2001-10-03 14:53:22 fries Exp $
+// $Id: eth_linux.cc,v 1.5 2001-10-06 17:30:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -146,7 +146,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
     if (errno == EACCES)
       BX_PANIC(("eth_linux: must be root or have CAP_NET_RAW capability to open socket"));
     else
-      BX_PANIC(("eth_linux: could not open socket"));
+      BX_PANIC(("eth_linux: could not open socket: %s", strerror(errno)));
     this->fd = -1;
     return;
   }
@@ -156,7 +156,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   memset(&ifr, 0, sizeof(ifr));
   strcpy(ifr.ifr_name, netif);
   if (ioctl(this->fd, SIOCGIFINDEX, &ifr) == -1) {
-    BX_PANIC(("eth_linux: could not get index for interface %s\n", netif));
+    BX_PANIC(("eth_linux: could not get index for interface '%s'\n", netif));
     close(fd);
     this->fd = -1;
     return;
@@ -170,7 +170,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   sll.sll_family = AF_PACKET;
   sll.sll_ifindex = this->ifindex;
   if (bind(fd, (struct sockaddr *)&sll, (socklen_t)sizeof(sll)) == -1) {
-    BX_PANIC(("eth_linux: could not bind to interface %s\n", netif));
+    BX_PANIC(("eth_linux: could not bind to interface '%s': %s\n", netif, strerror(errno)));
     close(fd);
     this->fd = -1;
     return;
