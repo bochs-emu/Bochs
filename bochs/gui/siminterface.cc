@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.55 2002-09-07 14:27:50 vruppert Exp $
+// $Id: siminterface.cc,v 1.56 2002-09-11 03:53:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -620,53 +620,115 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     char *description,
     Bit32s min,
     Bit32s max,
-    Bit32s *ptr_to_real_val)
+    Bit32s *ptr_to_real_val,
+    Bit8u highbit,
+    Bit8u lowbit)
 : bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
 {
-  val.pointer = ptr_to_real_val;
+  this->varsize = 16;
+  this->lowbit = lowbit;
+  this->mask = (1 << (highbit - lowbit)) - 1;
+  val.p32bit = ptr_to_real_val;
 }
 
 bx_shadow_num_c::bx_shadow_num_c (bx_id id,
     char *name,
     char *description,
-    Bit32s min, Bit32s max, Bit32u *ptr_to_real_val)
+    Bit32s min, Bit32s max, Bit32u *ptr_to_real_val,
+    Bit8u highbit,
+    Bit8u lowbit)
 : bx_param_num_c (id, name, description, min, max, *ptr_to_real_val)
 {
-  val.pointer = (Bit32s*) ptr_to_real_val;
+  this->varsize = 32;
+  this->lowbit = lowbit;
+  this->mask = (1 << (highbit - lowbit)) - 1;
+  val.p32bit = (Bit32s*) ptr_to_real_val;
 }
 
 bx_shadow_num_c::bx_shadow_num_c (bx_id id,
-      char *name,
-      Bit32u *ptr_to_real_val)
+    char *name,
+    Bit32u *ptr_to_real_val,
+    Bit8u highbit,
+    Bit8u lowbit)
 : bx_param_num_c (id, name, "", BX_MIN_INT, BX_MAX_INT, *ptr_to_real_val)
 {
-  val.pointer = (Bit32s*) ptr_to_real_val;
+  this->varsize = 32;
+  this->lowbit = lowbit;
+  this->mask = (1 << (highbit - lowbit)) - 1;
+  val.p32bit = (Bit32s*) ptr_to_real_val;
+}
+
+bx_shadow_num_c::bx_shadow_num_c (bx_id id,
+    char *name,
+    Bit16u *ptr_to_real_val,
+    Bit8u highbit,
+    Bit8u lowbit)
+: bx_param_num_c (id, name, "", BX_MIN_INT, BX_MAX_INT, *ptr_to_real_val)
+{
+  this->varsize = 16;
+  this->lowbit = lowbit;
+  this->mask = (1 << (highbit - lowbit)) - 1;
+  val.p16bit = (Bit16s*) ptr_to_real_val;
+}
+
+bx_shadow_num_c::bx_shadow_num_c (bx_id id,
+    char *name,
+    Bit16s *ptr_to_real_val,
+    Bit8u highbit,
+    Bit8u lowbit)
+: bx_param_num_c (id, name, "", BX_MIN_INT, BX_MAX_INT, *ptr_to_real_val)
+{
+  this->varsize = 16;
+  this->lowbit = lowbit;
+  this->mask = (1 << (highbit - lowbit)) - 1;
+  val.p16bit = ptr_to_real_val;
 }
 
 Bit32s
 bx_shadow_num_c::get () {
+  Bit32u current;
+  switch (varsize) {
+    case 8: current = *(val.p8bit);  break;
+    case 16: current = *(val.p16bit);  break;
+    case 32: current = *(val.p32bit);  break;
+  }
+  current = (current >> lowbit) & mask;
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
-    return (*handler)(this, 0, *(val.pointer));
+    return (*handler)(this, 0, current) & mask;
   } else {
     // just return the value
-    return *(val.pointer);
+    return current;
   }
 }
 
 void
 bx_shadow_num_c::set (Bit32s newval)
 {
+  Bit32u tmp;
+  if (newval < min || newval > max)
+    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), newval, min, max));
+  switch (varsize) {
+    case 8: 
+      tmp = (*(val.p8bit) >> lowbit) & mask;
+      tmp |= (newval & mask) << lowbit;
+      *(val.p8bit) = tmp;
+      break;
+    case 16:
+      tmp = (*(val.p16bit) >> lowbit) & mask;
+      tmp |= (newval & mask) << lowbit;
+      *(val.p16bit) = tmp;
+      break;
+    case 32:
+      tmp = (*(val.p32bit) >> lowbit) & mask;
+      tmp |= (newval & mask) << lowbit;
+      *(val.p32bit) = tmp;
+      break;
+  }
   if (handler) {
     // the handler can override the new value and/or perform some side effect
-    *(val.pointer) = newval;
-    (*handler)(this, 1, newval);
-  } else {
-    // just set the value.
-    *(val.pointer) = newval;
+    (*handler)(this, 1, tmp);
   }
-  if (*(val.pointer) < min || *(val.pointer) > max)
-    BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), *(val.pointer), min, max));
 }
 
 bx_param_bool_c::bx_param_bool_c (bx_id id,
@@ -693,33 +755,36 @@ void bx_param_bool_c::update_dependents ()
 
 bx_shadow_bool_c::bx_shadow_bool_c (bx_id id,
       char *name,
-      Boolean *ptr_to_real_val)
+      Boolean *ptr_to_real_val,
+      Bit8u bitnum)
   : bx_param_bool_c (id, name, "", (Bit32s) *ptr_to_real_val)
 {
   val.pbool = ptr_to_real_val;
+  this->bitnum = bitnum;
 }
 
 Bit32s
 bx_shadow_bool_c::get () {
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
-    return (*handler)(this, 0, (Bit32s) *(val.pbool));
+    Bit32s ret = (*handler)(this, 0, (Bit32s) *(val.pbool));
+    return (ret>>bitnum) & 1;
   } else {
     // just return the value
-    return (Bit32s) *(val.pbool);
+    return (*(val.pbool)) & 1;
   }
 }
 
 void
 bx_shadow_bool_c::set (Bit32s newval)
 {
+  // only change the bitnum bit
+  Bit32s tmp = (newval&1) << bitnum;
+  *(val.pbool) &= ~tmp;
+  *(val.pbool) |= tmp;
   if (handler) {
     // the handler can override the new value and/or perform some side effect
-    *(val.pbool) = (bool) newval;
-    (*handler)(this, 1, newval);
-  } else {
-    // just set the value.  This code does not check max/min.
-    *(val.pbool) = (bool) newval;
+    (*handler)(this, 1, newval&1);
   }
 }
 
@@ -914,7 +979,7 @@ void
 bx_list_c::add (bx_param_c *param)
 {
   if (this->size >= this->maxsize)
-    BX_PANIC (("bx_list_c::add parameter id=%u exceeds capacity of list", param->get_id ()));
+    BX_PANIC (("add param %u to bx_list_c id=%u: list capacity exceeded", param->get_id (), get_id ()));
   list[size] = param;
   size++;
 }

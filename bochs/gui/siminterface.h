@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.59 2002-09-06 16:43:23 bdenney Exp $
+// $Id: siminterface.h,v 1.60 2002-09-11 03:53:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -231,8 +231,56 @@ typedef enum {
   BXP_CPU_EBX,
   BXP_CPU_ECX,
   BXP_CPU_EDX,
-  BXP_CPU_CS,
+  BXP_CPU_EBP,
+  BXP_CPU_ESI,
+  BXP_CPU_EDI,
+  BXP_CPU_ESP,
   BXP_CPU_EIP,
+  BXP_CPU_SEG_CS,
+  BXP_CPU_SEG_DS,
+  BXP_CPU_SEG_SS,
+  BXP_CPU_SEG_ES,
+  BXP_CPU_SEG_FS,
+  BXP_CPU_SEG_GS,
+  BXP_CPU_SEG_LDTR,
+  BXP_CPU_SEG_TR,
+  BXP_CPU_GDTR_BASE,
+  BXP_CPU_GDTR_LIMIT,
+  BXP_CPU_IDTR_BASE,
+  BXP_CPU_IDTR_LIMIT,
+  BXP_CPU_EFLAGS_ID,
+  BXP_CPU_EFLAGS_VIP,
+  BXP_CPU_EFLAGS_VIF,
+  BXP_CPU_EFLAGS_AC,
+  BXP_CPU_EFLAGS_VM,
+  BXP_CPU_EFLAGS_RF,
+  BXP_CPU_EFLAGS_NT,
+  BXP_CPU_EFLAGS_IOPL,
+  BXP_CPU_EFLAGS_OF,
+  BXP_CPU_EFLAGS_DF,
+  BXP_CPU_EFLAGS_IF,
+  BXP_CPU_EFLAGS_TF,
+  BXP_CPU_EFLAGS_SF,
+  BXP_CPU_EFLAGS_ZF,
+  BXP_CPU_EFLAGS_AF,
+  BXP_CPU_EFLAGS_PF,
+  BXP_CPU_EFLAGS_CF,
+  BXP_CPU_DR0,
+  BXP_CPU_DR1,
+  BXP_CPU_DR2,
+  BXP_CPU_DR3,
+  BXP_CPU_DR6,
+  BXP_CPU_DR7,
+  BXP_CPU_TR3,
+  BXP_CPU_TR4,
+  BXP_CPU_TR5,
+  BXP_CPU_TR6,
+  BXP_CPU_TR7,
+  BXP_CPU_CR0,
+  BXP_CPU_CR1,
+  BXP_CPU_CR2,
+  BXP_CPU_CR3,
+  BXP_CPU_CR4,
   // a few parameters for the keyboard
   BXP_KBD_PARAMETERS,
   BXP_KBD_PARE,
@@ -610,7 +658,9 @@ protected:
   Bit32s min, max, initial_val;
   union _uval_ {
     Bit32s number;   // used by bx_param_num_c
-    Bit32s *pointer;  // used by bx_shadow_num_c
+    Bit32s *p32bit;  // used by bx_shadow_num_c
+    Bit16s *p16bit;  // used by bx_shadow_num_c
+    Bit8s *p8bit;   // used by bx_shadow_num_c
     Boolean *pbool;  // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
@@ -637,23 +687,42 @@ public:
 };
 
 // a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
-// store the actual value with its data. Instead, it uses val.pointer
+// store the actual value with its data. Instead, it uses val.p32bit
 // to keep a pointer to the actual data.  This is used to register
 // existing variables as parameters, without have to access it via
 // set/get methods.
 class bx_shadow_num_c : public bx_param_num_c {
+  Bit8u varsize;   // must be 32, 16, or 8
+  Bit8u lowbit;   // range of bits associated with this param
+  Bit32u mask;     // mask is ANDed with value before it is returned from get
 public:
   bx_shadow_num_c (bx_id id,
       char *name,
       char *description,
-      Bit32s min, Bit32s max, Bit32s *ptr_to_real_val);
+      Bit32s min, Bit32s max, Bit32s *ptr_to_real_val,
+      Bit8u highbit = 31,
+      Bit8u lowbit = 0);
   bx_shadow_num_c (bx_id id,
       char *name,
       char *description,
-      Bit32s min, Bit32s max, Bit32u *ptr_to_real_val);
+      Bit32s min, Bit32s max, Bit32u *ptr_to_real_val,
+      Bit8u highbit = 31,
+      Bit8u lowbit = 0);
   bx_shadow_num_c (bx_id id,
       char *name,
-      Bit32u *ptr_to_real_val);
+      Bit32u *ptr_to_real_val,
+      Bit8u highbit = 31,
+      Bit8u lowbit = 0);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      Bit16s *ptr_to_real_val,
+      Bit8u highbit = 15,
+      Bit8u lowbit = 0);
+  bx_shadow_num_c (bx_id id,
+      char *name,
+      Bit16u *ptr_to_real_val,
+      Bit8u highbit = 15,
+      Bit8u lowbit = 0);
   virtual Bit32s get ();
   virtual void set (Bit32s val);
 };
@@ -687,10 +756,14 @@ public:
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
 class bx_shadow_bool_c : public bx_param_bool_c {
+  // each bit of a bitfield can be a separate value.  bitnum tells which
+  // bit is used.  get/set will only modify that bit.
+  Bit8u bitnum;
 public:
   bx_shadow_bool_c (bx_id id,
       char *name,
-      Boolean *ptr_to_real_val);
+      Boolean *ptr_to_real_val,
+      Bit8u bitnum = 0);
   virtual Bit32s get ();
   virtual void set (Bit32s val);
 };
