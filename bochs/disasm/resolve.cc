@@ -159,6 +159,9 @@ void disassembler::print_datasize(unsigned mode)
     case T_MODE:
       dis_sprintf("tword ptr ");
       break;
+    case P_MODE:
+      // ???
+      break;
     case S_MODE:
       break;
     case X_MODE:

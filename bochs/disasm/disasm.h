@@ -293,9 +293,6 @@ public:
  void  Gv (unsigned);
  void  Gd (unsigned);
 
- void  Ea (unsigned);
- void  Ep (unsigned);
-
  // call
  void  Ap (unsigned);
 

@@ -117,13 +117,15 @@ struct BxDisasmOpcodeInfo_t
 #define Wps &disassembler::OP_W,  O_MODE
 #define Wpd &disassembler::OP_W,  O_MODE
 
+#define ES_BASE 0x80
+
  // string instructions
 #define Xb  &disassembler::OP_X,  B_MODE
 #define Yb  &disassembler::OP_Y,  B_MODE
 #define Xv  &disassembler::OP_X,  V_MODE
-#define Xve &disassembler::OP_X,  V_MODE|0x80
+#define Xve &disassembler::OP_X,  V_MODE|ES_BASE
 #define Yv  &disassembler::OP_Y,  V_MODE
-#define Yve &disassembler::OP_Y,  V_MODE|0x80
+#define Yve &disassembler::OP_Y,  V_MODE|ES_BASE
 
  // immediate
 #define I1 &disassembler::I1, 0
@@ -169,8 +171,6 @@ struct BxDisasmOpcodeInfo_t
 #define Ew  &disassembler::Ew, 0
 #define Ed  &disassembler::Ed, 0
 #define Ev  &disassembler::Ev, 0
-#define Ea  &disassembler::Ea, 0
-#define Ep  &disassembler::Ep, 0
 
 #endif
 
@@ -1143,9 +1143,9 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG5[8] = {
   /* 0 */  { "inc",         0, Ev, XX, XX },
   /* 1 */  { "dec",         0, Ev, XX, XX },
   /* 2 */  { "call",        0, Ev, XX, XX },
-  /* 3 */  { "callw",       0, Ep, XX, XX },
+  /* 3 */  { "callw",       0, Mp, XX, XX },
   /* 4 */  { "jmp",         0, Ev, XX, XX },
-  /* 5 */  { "jmpw",        0, Ep, XX, XX },
+  /* 5 */  { "jmpw",        0, Mp, XX, XX },
   /* 6 */  { "push",        0, Ev, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
   }; 
@@ -2188,12 +2188,12 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 25 */  { "and",       0, eAX,  Iv, XX },
   /* 26 */  { PREFIX_ES },      // ES:
   /* 27 */  { "daa",       0,  XX,  XX, XX },
-  /* 20 */  { "sub",       0,  Eb,  Gb, XX },
-  /* 21 */  { "sub",       0,  Ev,  Gv, XX },
-  /* 22 */  { "sub",       0,  Gb,  Eb, XX },
-  /* 23 */  { "sub",       0,  Gv,  Ev, XX },
-  /* 24 */  { "sub",       0,  AL,  Ib, XX },
-  /* 25 */  { "sub",       0, eAX,  Iv, XX },
+  /* 28 */  { "sub",       0,  Eb,  Gb, XX },
+  /* 29 */  { "sub",       0,  Ev,  Gv, XX },
+  /* 2A */  { "sub",       0,  Gb,  Eb, XX },
+  /* 2B */  { "sub",       0,  Gv,  Ev, XX },
+  /* 2C */  { "sub",       0,  AL,  Ib, XX },
+  /* 2D */  { "sub",       0, eAX,  Iv, XX },
   /* 2E */  { PREFIX_CS },      // CS:
   /* 2F */  { "das",       0,  XX,  XX, XX },
   /* 30 */  { "xor",       0,  Eb,  Gb, XX },
@@ -2204,12 +2204,12 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 35 */  { "xor",       0, eAX,  Iv, XX },
   /* 36 */  { PREFIX_SS },      // SS:
   /* 37 */  { "aaa",       0,  XX,  XX, XX },
-  /* 30 */  { "cmp",       0,  Eb,  Gb, XX },
-  /* 31 */  { "cmp",       0,  Ev,  Gv, XX },
-  /* 32 */  { "cmp",       0,  Gb,  Eb, XX },
-  /* 33 */  { "cmp",       0,  Gv,  Ev, XX },
-  /* 34 */  { "cmp",       0,  AL,  Ib, XX },
-  /* 35 */  { "cmp",       0, eAX,  Iv, XX },
+  /* 38 */  { "cmp",       0,  Eb,  Gb, XX },
+  /* 39 */  { "cmp",       0,  Ev,  Gv, XX },
+  /* 3A */  { "cmp",       0,  Gb,  Eb, XX },
+  /* 3B */  { "cmp",       0,  Gv,  Ev, XX },
+  /* 3C */  { "cmp",       0,  AL,  Ib, XX },
+  /* 3D */  { "cmp",       0, eAX,  Iv, XX },
   /* 3E */  { PREFIX_DS },      // DS:
   /* 3F */  { "aas",       0,  XX,  XX, XX },
   /* 40 */  { "inc",       0, eAX,  XX, XX },
@@ -2246,7 +2246,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 5F */  { "pop",       0, eDI,  XX, XX },
   /* 60 */  { "pushad",    0,  XX,  XX, XX },
   /* 61 */  { "popad",     0,  XX,  XX, XX },
-  /* 62 */  { "bound",     0,  Gv,  Ea, XX },
+  /* 62 */  { "bound",     0,  Gv,  Mx, XX },
   /* 63 */  { "arpl",      0,  Ew,  Rw, XX },
   /* 64 */  { PREFIX_FS },      // FS:
   /* 65 */  { PREFIX_GS },      // GS:
@@ -2257,7 +2257,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 6A */  { "push",      0, sIb,  XX, XX },   // sign extended immediate
   /* 6B */  { "imul",      0,  Gv,  Ev, Ib },   
   /* 6C */  { "insb",      0,  Yb,  DX, XX },
-  /* 6D */  { "ins",       0,  Yb,  DX, XX },
+  /* 6D */  { "ins",       0,  Yv,  DX, XX },
   /* 6E */  { "outsb",     0,  DX,  Xb, XX },
   /* 6F */  { "outs",      0,  DX,  Xv, XX },
   /* 70 */  { "jo",        0,  Jb,  XX, XX },
@@ -2300,10 +2300,10 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 95 */  { "xchg",      0, eBP, eAX, XX },
   /* 96 */  { "xchg",      0, eSI, eAX, XX },
   /* 97 */  { "xchg",      0, eDI, eAX, XX },
-  /* 98 */  { "cbw",       0,  XX,  XX, XX },
+  /* 98 */  { "cbw|cwde",  0,  XX,  XX, XX },
   /* 99 */  { "cwd|cdq",   0,  XX,  XX, XX },
   /* 9A */  { "call",      0,  Ap,  XX, XX },
-  /* 9B */  { "wait",      0,  XX,  XX, XX },
+  /* 9B */  { "fwait",     0,  XX,  XX, XX },
   /* 9C */  { "pushf",     0,  XX,  XX, XX },
   /* 9D */  { "popf",      0,  XX,  XX, XX },
   /* 9E */  { "sahf",      0,  XX,  XX, XX },

@@ -285,9 +285,6 @@ void disassembler::Ed (unsigned attr)
     (this->*resolve_modrm)(D_MODE);
 }
 
-void disassembler::Ep (unsigned attr) {dis_sprintf("*** Ep unfinished ***");}
-void disassembler::Ea (unsigned attr) {dis_sprintf("*** Ea unfinished ***");}
-
 void disassembler::Gb (unsigned attr) 
 {
   dis_sprintf("%s", general_8bit_reg_name[nnn]);

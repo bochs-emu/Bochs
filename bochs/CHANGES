@@ -51,6 +51,9 @@ Changes to next release:
 - Disassembler
   - fixed MOV opcode 0x88, had exchanged the operands (h.johansson)
   - fixed MOV opcode 0xA3, had wrong operand size (h.johansson)
+  - fixed BOUND opcode 0x62 (Stanislav)
+  - fixed CALLW opcode 0xFF /3 and JMPW opcode 0xFF /5 (Stanislav)
+  - fixed INS opcode 0x6D, had wrong operand size (Stanislav)
 
 - I/O devices
   - general
@@ -148,6 +151,7 @@ Changes to next release:
   [888426] bochsrc to make vnet useful by m_suzu
  [1021758] GNU/k*BSD host support by Robert Millan
   [969967] int 15/ah=87h clearing cr0 by Ben Lunt
+ [1048327] Russian Keymap 
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
