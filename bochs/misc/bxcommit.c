@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.6 2004-04-28 17:56:47 cbothamy Exp $
+ * $Id: bxcommit.c,v 1.7 2004-04-30 17:26:38 cbothamy Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -27,6 +27,23 @@
 
 #include <string.h>
 
+#if !BX_HAVE_SNPRINTF
+#include <stdarg.h>
+/* XXX use real snprintf */
+/* if they don't have snprintf, just use sprintf */
+int snprintf (char *s, size_t maxlen, const char *format, ...)
+{
+  va_list arg;
+  int done;
+
+  va_start (arg, format);
+  done = vsprintf (s, format, arg);
+  va_end (arg);
+
+  return done;
+}
+#endif  /* !BX_HAVE_SNPRINTF */
+
 #define uint8   Bit8u
 #define uint16  Bit16u
 #define uint32  Bit32u
@@ -35,7 +52,7 @@
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.6 2004-04-28 17:56:47 cbothamy Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.7 2004-04-30 17:26:38 cbothamy Exp $";
 char *divider = "========================================================================";
 
 void myexit (int code)

@@ -1,19 +1,20 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.19 2003-08-01 01:20:00 cbothamy Exp $
+ * $Id: bximage.c,v 1.20 2004-04-30 17:26:37 cbothamy Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
  */
 
+#ifdef WIN32
+#  include <windows.h>
+#  include <conio.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#ifdef WIN32
-#  include <conio.h>
-#endif
 #include "config.h"
 
 #include <string.h>
@@ -26,7 +27,7 @@
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.19 2003-08-01 01:20:00 cbothamy Exp $";
+char *rcsid = "$Id: bximage.c,v 1.20 2004-04-30 17:26:37 cbothamy Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -485,6 +486,18 @@ int main()
   printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
+#ifdef WIN32
+  if (OpenClipboard(NULL)) {
+    HGLOBAL hgClip;
+    
+    EmptyClipboard();
+    hgClip = GlobalAlloc(GMEM_DDESHARE, (strlen(bochsrc_line) + 1));
+    strcpy((char *)GlobalLock(hgClip), bochsrc_line);
+    GlobalUnlock(hgClip);
+    SetClipboardData(CF_TEXT, hgClip);
+    CloseClipboard();
+  }
+#endif
   myexit(0);
 
   // make picky compilers (c++, gcc) happy,
