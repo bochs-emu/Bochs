@@ -45,6 +45,10 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 #   floppya: 1_44=path, status=inserted            (1.44M 3.5" floppy)
 #   floppya: 1_2=path, status=ejected              (1.2M  5.25" floppy)
 #   floppya: 720k=path, status=inserted            (720K  3.5" floppy)
+# The path should be the name of a disk image file.  On unix, you can use
+# a raw device name such as /dev/fd0 on Linux.  On WinNT and Win2k, use
+# drive letters such as a: or b: as the path.  Raw floppy access is not
+# supported on Windows 95 and 98.
 #
 # The default is 1_44=/dev/fd0, at least I think that's what most people use.
 #=======================================================================
