@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.h,v 1.3 2004-04-05 12:09:25 cbothamy Exp $
+// $Id: rfb.h,v 1.4 2004-04-08 17:36:26 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -220,8 +220,91 @@ typedef union {
 #define rfbEncodingZlib        6
 #define rfbEncodingTight       7
 #define rfbEncodingZlibHex     8
-#define rfbEncodingTightOption 0xffffff00  // to 0xffffffff except 0xffffff11 and 0xffffff21
+#define rfbEncodingTightOption00 0xffffff00  // to 0xffffffff except 0xffffff11 and 0xffffff21
+#define rfbEncodingTightOption01 0xffffff01
+#define rfbEncodingTightOption02 0xffffff02  
+#define rfbEncodingTightOption03 0xffffff03  
+#define rfbEncodingTightOption04 0xffffff04  
+#define rfbEncodingTightOption05 0xffffff05  
+#define rfbEncodingTightOption06 0xffffff06  
+#define rfbEncodingTightOption07 0xffffff07  
+#define rfbEncodingTightOption08 0xffffff08  
+#define rfbEncodingTightOption09 0xffffff09  
+#define rfbEncodingTightOption0a 0xffffff0a  
+#define rfbEncodingTightOption0b 0xffffff0b  
+#define rfbEncodingTightOption0c 0xffffff0c  
+#define rfbEncodingTightOption0d 0xffffff0d  
+#define rfbEncodingTightOption0e 0xffffff0e  
+#define rfbEncodingTightOption0f 0xffffff0f  
+#define rfbEncodingTightOption10 0xffffff10  
+#define rfbEncodingTightOption12 0xffffff12  
+#define rfbEncodingTightOption13 0xffffff13  
+#define rfbEncodingTightOption14 0xffffff14  
+#define rfbEncodingTightOption15 0xffffff15  
+#define rfbEncodingTightOption16 0xffffff16  
+#define rfbEncodingTightOption17 0xffffff17  
+#define rfbEncodingTightOption18 0xffffff18  
+#define rfbEncodingTightOption19 0xffffff19  
+#define rfbEncodingTightOption1a 0xffffff1a  
+#define rfbEncodingTightOption1b 0xffffff1b  
+#define rfbEncodingTightOption1c 0xffffff1c  
+#define rfbEncodingTightOption1d 0xffffff1d  
+#define rfbEncodingTightOption1e 0xffffff1e  
+#define rfbEncodingTightOption1f 0xffffff1f  
+#define rfbEncodingTightOption20 0xffffff20  
 
+typedef struct {
+        U32 id;
+        char *name;
+} rfbEncodingType;
+
+rfbEncodingType rfbEncodings[] = {
+        {rfbEncodingRaw, "Raw"},
+        {rfbEncodingCopyRect, "CopyRect"},
+        {rfbEncodingRRE, "RRE"},
+        {rfbEncodingCoRRE, "CoRRE"},
+        {rfbEncodingHextile, "Hextile"},
+        {rfbEncodingZRLE, "ZRLE"},
+        {rfbEncodingCursor, "Cursor"},
+        {rfbEncodingDesktopSize, "DesktopSize"},
+        {rfbEncodingZlib, "Zlib"},
+        {rfbEncodingTight, "Tight"},
+        {rfbEncodingZlibHex, "ZlibHex"},
+        {rfbEncodingTightOption00, "TightOption00"},
+        {rfbEncodingTightOption01, "TightOption01"},
+        {rfbEncodingTightOption02, "TightOption02"},
+        {rfbEncodingTightOption03, "TightOption03"},
+        {rfbEncodingTightOption04, "TightOption04"},
+        {rfbEncodingTightOption05, "TightOption05"},
+        {rfbEncodingTightOption06, "TightOption06"},
+        {rfbEncodingTightOption07, "TightOption07"},
+        {rfbEncodingTightOption08, "TightOption08"},
+        {rfbEncodingTightOption09, "TightOption09"},
+        {rfbEncodingTightOption0a, "TightOption0a"},
+        {rfbEncodingTightOption0b, "TightOption0b"},
+        {rfbEncodingTightOption0c, "TightOption0c"},
+        {rfbEncodingTightOption0d, "TightOption0d"},
+        {rfbEncodingTightOption0e, "TightOption0e"},
+        {rfbEncodingTightOption0f, "TightOption0f"},
+        {rfbEncodingTightOption10, "TightOption10"},
+        {rfbEncodingTightOption12, "TightOption12"},
+        {rfbEncodingTightOption13, "TightOption13"},
+        {rfbEncodingTightOption14, "TightOption14"},
+        {rfbEncodingTightOption15, "TightOption15"},
+        {rfbEncodingTightOption16, "TightOption16"},
+        {rfbEncodingTightOption17, "TightOption17"},
+        {rfbEncodingTightOption18, "TightOption18"},
+        {rfbEncodingTightOption19, "TightOption19"},
+        {rfbEncodingTightOption1a, "TightOption1a"},
+        {rfbEncodingTightOption1b, "TightOption1b"},
+        {rfbEncodingTightOption1c, "TightOption1c"},
+        {rfbEncodingTightOption1d, "TightOption1d"},
+        {rfbEncodingTightOption1e, "TightOption1e"},
+        {rfbEncodingTightOption1f, "TightOption1f"},
+        {rfbEncodingTightOption20, "TightOption20"},
+};
+
+#define rfbEncodingsCount (sizeof(rfbEncodings) / sizeof(rfbEncodingType))
 
 // Server To Client Messages
 

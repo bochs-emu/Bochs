@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.31 2004-04-05 19:51:11 vruppert Exp $
+// $Id: rfb.cc,v 1.32 2004-04-08 17:36:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -20,6 +20,15 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+
+// RFB still to do :
+// - properly handle SetPixelFormat, including big/little-endian flag
+// - depth > 8bpp support
+// - on-board vga card font support instead of vgafont.h
+// - dimension update support
+// - optional compression support
+// - bottom leds support
+
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE 
@@ -137,6 +146,9 @@ static unsigned int font_height=16, font_width=8;
 
 static SOCKET sGlobal;
 
+static Bit32u clientEncodingsCount = 0;
+static Bit32u *clientEncodings = NULL;
+
 void ServerThreadInit(void *indata);
 void HandleRfbClient(SOCKET sClient);
 int  ReadExact(int sock, char *buf, int len);
@@ -153,14 +165,6 @@ void DrawColorPalette();
 static const rfbPixelFormat BGR233Format = {
     8, 8, 1, 1, 7, 7, 3, 0, 3, 6
 };
-
-#if BX_BIG_ENDIAN
-#define Swap16IfLE(s) (s)
-#define Swap32IfLE(l) (l)
-#else 
-#define Swap16IfLE(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
-#define Swap32IfLE(l) (((l) >> 24) | (((l) & 0x00ff0000) >> 8)  | (((l) & 0x0000ff00) << 8)  | ((l) << 24))
-#endif
 
 // VNCViewer code to be replaced
 #define PF_EQ(x,y) ((x.bitsPerPixel == y.bitsPerPixel) && (x.depth == y.depth) && (x.trueColourFlag == y.trueColourFlag) &&    ((x.bigEndianFlag == y.bigEndianFlag) || (x.bitsPerPixel == 8)) && (!x.trueColourFlag || ((x.redMax == y.redMax) &&    (x.greenMax == y.greenMax) && (x.blueMax == y.blueMax) && (x.redShift == y.redShift) && (x.greenShift == y.greenShift) && (x.blueShift == y.blueShift))))
@@ -223,6 +227,9 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   rfbUpdateRegion.height = 0;
   rfbUpdateRegion.updated = false;
 
+  clientEncodingsCount=0;
+  clientEncodings=NULL;
+
   keep_alive = true;
   client_connected = false;
   StartThread();
@@ -280,6 +287,7 @@ void ServerThreadInit(void *indata)
     struct sockaddr_in sai;
     unsigned int       sai_size;
     int port_ok = 0;
+    int one=1;
 
 #ifdef WIN32
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
@@ -294,6 +302,11 @@ void ServerThreadInit(void *indata)
         BX_PANIC(( "could not create socket." ));
         goto end_of_thread;
     }
+    if (setsockopt(sServer, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) == -1)  {
+        BX_PANIC(( "could not set socket option." ));
+        goto end_of_thread;
+    }
+
     for (rfbPort = BX_RFB_PORT_MIN; rfbPort <= BX_RFB_PORT_MAX; rfbPort++) {
       sai.sin_addr.s_addr = INADDR_ANY;
       sai.sin_family      = AF_INET;
@@ -366,7 +379,7 @@ void HandleRfbClient(SOCKET sClient)
     BX_INFO(("Client protocol version is '%s'", pv)); 
     // FIXME should check for version number
 
-    auth = Swap32IfLE(rfbSecurityNone);
+    auth = htonl(rfbSecurityNone);
 
     if(WriteExact(sClient, (char *)&auth, sizeof(auth)) < 0) {
         BX_ERROR(("could not send authorization method."));
@@ -378,14 +391,14 @@ void HandleRfbClient(SOCKET sClient)
         return;
     }
 
-    sim.framebufferWidth  = Swap16IfLE((short)rfbDimensionX);
-    sim.framebufferHeight = Swap16IfLE((short)rfbDimensionY);
+    sim.framebufferWidth  = htons((short)rfbDimensionX);
+    sim.framebufferHeight = htons((short)rfbDimensionY);
     sim.serverPixelFormat            = BGR233Format;
-    sim.serverPixelFormat.redMax     = Swap16IfLE(sim.serverPixelFormat.redMax);
-    sim.serverPixelFormat.greenMax   = Swap16IfLE(sim.serverPixelFormat.greenMax);
-    sim.serverPixelFormat.blueMax    = Swap16IfLE(sim.serverPixelFormat.blueMax);
+    sim.serverPixelFormat.redMax     = htons(sim.serverPixelFormat.redMax);
+    sim.serverPixelFormat.greenMax   = htons(sim.serverPixelFormat.greenMax);
+    sim.serverPixelFormat.blueMax    = htons(sim.serverPixelFormat.blueMax);
     sim.nameLength = strlen(rfbName);
-    sim.nameLength = Swap32IfLE(sim.nameLength);
+    sim.nameLength = htonl(sim.nameLength);
     if(WriteExact(sClient, (char *)&sim, rfbServerInitMessageSize) < 0) {
         BX_ERROR(("could send server initialization message."));
         return;
@@ -419,9 +432,9 @@ void HandleRfbClient(SOCKET sClient)
                 spf.pixelFormat.depth = spf.pixelFormat.depth;
                 spf.pixelFormat.trueColourFlag = (spf.pixelFormat.trueColourFlag ? 1 : 0);
                 spf.pixelFormat.bigEndianFlag = (spf.pixelFormat.bigEndianFlag ? 1 : 0);
-                spf.pixelFormat.redMax = Swap16IfLE(spf.pixelFormat.redMax);
-                spf.pixelFormat.greenMax = Swap16IfLE(spf.pixelFormat.greenMax);
-                spf.pixelFormat.blueMax = Swap16IfLE(spf.pixelFormat.blueMax);
+                spf.pixelFormat.redMax = ntohs(spf.pixelFormat.redMax);
+                spf.pixelFormat.greenMax = ntohs(spf.pixelFormat.greenMax);
+                spf.pixelFormat.blueMax = ntohs(spf.pixelFormat.blueMax);
                 spf.pixelFormat.redShift = spf.pixelFormat.redShift;
                 spf.pixelFormat.greenShift = spf.pixelFormat.greenShift;
                 spf.pixelFormat.blueShift = spf.pixelFormat.blueShift;
@@ -444,11 +457,22 @@ void HandleRfbClient(SOCKET sClient)
         case rfbSetEncodings:
             {
                 rfbSetEncodingsMessage se;
-                int                i;
-                U32                enc;
+                Bit32u                 i;
+                U32                    enc;
+
+                // free previously registered encodings
+                if (clientEncodings != NULL) { 
+                    delete [] clientEncodings;
+                    clientEncodingsCount = 0;
+                }
+
                 ReadExact(sClient, (char *)&se, sizeof(rfbSetEncodingsMessage));
-                se.numberOfEncodings = Swap16IfLE(se.numberOfEncodings);
-                for(i = 0; i < se.numberOfEncodings; i++) {
+
+                // Alloc new clientEncodings
+                clientEncodingsCount = ntohs(se.numberOfEncodings);
+                clientEncodings = new Bit32u[clientEncodingsCount];
+
+                for(i = 0; i < clientEncodingsCount; i++) {
                     if((n = ReadExact(sClient, (char *)&enc, sizeof(U32))) <= 0) {
                         if(n == 0) {
                             BX_ERROR(("client closed connection."));
@@ -457,7 +481,23 @@ void HandleRfbClient(SOCKET sClient)
                         }
                         return;
                     }
+                    clientEncodings[i]=ntohl(enc);
                 }
+
+                // print supported encodings
+                BX_INFO(("rfbSetEncodings : client supported encodings:"));
+                for(i = 0; i < clientEncodingsCount; i++) {
+                    Bit32u j;
+                    bx_bool found = 0;
+                    for (j=0; j < rfbEncodingsCount; j ++) {
+                        if (clientEncodings[i] == rfbEncodings[j].id) {
+                             BX_INFO(("%08x %s", rfbEncodings[j].id, rfbEncodings[j].name));
+                             found=1;
+                             break;
+                             }
+                        } 
+                    if (!found) BX_INFO(("%08x Unknown", clientEncodings[i]));
+                    }
                 break;
             }
         case rfbFramebufferUpdateRequest:
@@ -484,7 +524,7 @@ void HandleRfbClient(SOCKET sClient)
             {
                 rfbKeyEventMessage ke;
                 ReadExact(sClient, (char *)&ke, sizeof(rfbKeyEventMessage));
-                ke.key = Swap32IfLE(ke.key);
+                ke.key = ntohl(ke.key);
                 while(bKeyboardInUse);
                 bKeyboardInUse = true;
                 if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
@@ -503,8 +543,8 @@ void HandleRfbClient(SOCKET sClient)
                 bKeyboardInUse = true;
                 if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
                 rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
-                rfbKeyboardEvent[rfbKeyboardEvents].x    = Swap16IfLE(pe.xPosition);
-                rfbKeyboardEvent[rfbKeyboardEvents].y    = Swap16IfLE(pe.yPosition);
+                rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
+                rfbKeyboardEvent[rfbKeyboardEvents].y    = ntohs(pe.yPosition);
                 rfbKeyboardEvent[rfbKeyboardEvents].down = pe.buttonMask;
                 rfbKeyboardEvents++;
                 bKeyboardInUse = false;
@@ -871,6 +911,13 @@ void bx_rfb_gui_c::exit(void)
     for(i = 0; i < rfbBitmapCount; i++) {
         free(rfbBitmaps[i].bmap);
     }
+
+    // Clear supported encodings
+    if (clientEncodings != NULL) { 
+        delete [] clientEncodings;
+        clientEncodingsCount = 0;
+    }
+
     BX_DEBUG(("bx_rfb_gui_c::exit()"));
 }
 
@@ -1033,13 +1080,13 @@ void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, b
         rfbFramebufferUpdateMessage fum;
         rfbFramebufferUpdateRectHeader furh;
         fum.messageType = rfbFramebufferUpdate;
-        fum.numberOfRectangles = Swap16IfLE(1);
+        fum.numberOfRectangles = htons(1);
         WriteExact(sGlobal, (char *)&fum, rfbFramebufferUpdateMessageSize);
-        furh.r.xPosition = Swap16IfLE(x);
-        furh.r.yPosition = Swap16IfLE((y - i));
-        furh.r.width = Swap16IfLE((short)width);
-        furh.r.height = Swap16IfLE((short)height);
-        furh.r.encodingType = Swap32IfLE(rfbEncodingRaw);
+        furh.r.xPosition = htons(x);
+        furh.r.yPosition = htons((y - i));
+        furh.r.width = htons((short)width);
+        furh.r.height = htons((short)height);
+        furh.r.encodingType = htonl(rfbEncodingRaw);
         WriteExact(sGlobal, (char *)&furh, rfbFramebufferUpdateRectHeaderSize);
         WriteExact(sGlobal, (char *)newBits, width * height);
     }
@@ -1058,13 +1105,13 @@ void SendUpdate(int x, int y, int width, int height)
         rfbFramebufferUpdateRectHeader furh;
 
         fum.messageType = rfbFramebufferUpdate;
-        fum.numberOfRectangles = Swap16IfLE(1);
+        fum.numberOfRectangles = htons(1);
 
-        furh.r.xPosition = Swap16IfLE(x);
-        furh.r.yPosition = Swap16IfLE(y);
-        furh.r.width = Swap16IfLE((short)width);
-        furh.r.height = Swap16IfLE((short)height);
-        furh.r.encodingType = Swap32IfLE(rfbEncodingRaw);
+        furh.r.xPosition = htons(x);
+        furh.r.yPosition = htons(y);
+        furh.r.width = htons((short)width);
+        furh.r.height = htons((short)height);
+        furh.r.encodingType = htonl(rfbEncodingRaw);
 
         newBits = (char *)malloc(width * height);
         for(i = 0; i < height; i++) {
