@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.57 2003-10-24 18:34:15 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.58 2003-12-27 13:50:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -786,14 +786,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* D5 */  { 0, &BX_CPU_C::BxError },
   /* D6 */  { 0, &BX_CPU_C::BxError },
   /* D7 */  { 0, &BX_CPU_C::XLAT },
-  /* D8 */  { BxAnother, &BX_CPU_C::ESC0 },
-  /* D9 */  { BxAnother, &BX_CPU_C::ESC1 },
-  /* DA */  { BxAnother, &BX_CPU_C::ESC2 },
-  /* DB */  { BxAnother, &BX_CPU_C::ESC3 },
-  /* DC */  { BxAnother, &BX_CPU_C::ESC4 },
-  /* DD */  { BxAnother, &BX_CPU_C::ESC5 },
-  /* DE */  { BxAnother, &BX_CPU_C::ESC6 },
-  /* DF */  { BxAnother, &BX_CPU_C::ESC7 },
+  // by default we have here pointer to the group .. as if mod <> 11b
+  /* D8 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
+  /* D9 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
+  /* DA */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDA },
+  /* DB */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDB },
+  /* DC */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDC },
+  /* DD */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDD },
+  /* DE */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
+  /* DF */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
   /* E0 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPNE64_Jb },
   /* E1 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPE64_Jb },
   /* E2 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOP64_Jb },
@@ -1310,14 +1311,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* D5 */  { 0, &BX_CPU_C::BxError },
   /* D6 */  { 0, &BX_CPU_C::BxError },
   /* D7 */  { 0, &BX_CPU_C::XLAT },
-  /* D8 */  { BxAnother, &BX_CPU_C::ESC0 },
-  /* D9 */  { BxAnother, &BX_CPU_C::ESC1 },
-  /* DA */  { BxAnother, &BX_CPU_C::ESC2 },
-  /* DB */  { BxAnother, &BX_CPU_C::ESC3 },
-  /* DC */  { BxAnother, &BX_CPU_C::ESC4 },
-  /* DD */  { BxAnother, &BX_CPU_C::ESC5 },
-  /* DE */  { BxAnother, &BX_CPU_C::ESC6 },
-  /* DF */  { BxAnother, &BX_CPU_C::ESC7 },
+  // by default we have here pointer to the group .. as if mod <> 11b
+  /* D8 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
+  /* D9 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
+  /* DA */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDA },
+  /* DB */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDB },
+  /* DC */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDC },
+  /* DD */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDD },
+  /* DE */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
+  /* DF */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
   /* E0 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPNE64_Jb },
   /* E1 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPE64_Jb },
   /* E2 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOP64_Jb },
@@ -1831,14 +1833,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* D5 */  { 0, &BX_CPU_C::BxError },
   /* D6 */  { 0, &BX_CPU_C::BxError },
   /* D7 */  { 0, &BX_CPU_C::XLAT },
-  /* D8 */  { BxAnother, &BX_CPU_C::ESC0 },
-  /* D9 */  { BxAnother, &BX_CPU_C::ESC1 },
-  /* DA */  { BxAnother, &BX_CPU_C::ESC2 },
-  /* DB */  { BxAnother, &BX_CPU_C::ESC3 },
-  /* DC */  { BxAnother, &BX_CPU_C::ESC4 },
-  /* DD */  { BxAnother, &BX_CPU_C::ESC5 },
-  /* DE */  { BxAnother, &BX_CPU_C::ESC6 },
-  /* DF */  { BxAnother, &BX_CPU_C::ESC7 },
+  // by default we have here pointer to the group .. as if mod <> 11b
+  /* D8 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
+  /* D9 */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
+  /* DA */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDA },
+  /* DB */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDB },
+  /* DC */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDC },
+  /* DD */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDD },
+  /* DE */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
+  /* DF */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
   /* E0 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPNE64_Jb },
   /* E1 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPE64_Jb },
   /* E2 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOP64_Jb },
@@ -2583,6 +2586,15 @@ modrm_done:
               * we need to dereference to get to the execute pointer.
               */
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod==0xc0]);
+             break;
+         case BxFPGroup:
+             if (mod != 0xc0)  // mod == 11b
+                OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+             else
+             {
+                int index = (b1-0xD8)*64 + (0x3f & b2);
+                OpcodeInfoPtr = &(BxOpcodeInfo_FloatingPoint[index]);
+             }
              break;
          default:
              BX_PANIC(("fetchdecode: Unknown opcode group"));

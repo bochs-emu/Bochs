@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.149 2003-11-13 21:17:31 sshwarts Exp $
+// $Id: cpu.h,v 1.150 2003-12-27 13:50:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1601,7 +1601,6 @@ union {
   BX_SMF void CWD(bxInstruction_c *);
   BX_SMF void CALL32_Ap(bxInstruction_c *);
   BX_SMF void CALL16_Ap(bxInstruction_c *);
-  BX_SMF void FWAIT(bxInstruction_c *);
   BX_SMF void PUSHF_Fv(bxInstruction_c *);
   BX_SMF void POPF_Fv(bxInstruction_c *);
   BX_SMF void SAHF(bxInstruction_c *);
@@ -1849,20 +1848,173 @@ union {
   BX_SMF void SMSW_Ew(bxInstruction_c *);
   BX_SMF void LMSW_Ew(bxInstruction_c *);
 
-
   BX_SMF void BT_EvIb(bxInstruction_c *);
   BX_SMF void BTS_EvIb(bxInstruction_c *);
   BX_SMF void BTR_EvIb(bxInstruction_c *);
   BX_SMF void BTC_EvIb(bxInstruction_c *);
 
-  BX_SMF void ESC0(bxInstruction_c *);
-  BX_SMF void ESC1(bxInstruction_c *);
-  BX_SMF void ESC2(bxInstruction_c *);
-  BX_SMF void ESC3(bxInstruction_c *);
-  BX_SMF void ESC4(bxInstruction_c *);
-  BX_SMF void ESC5(bxInstruction_c *);
-  BX_SMF void ESC6(bxInstruction_c *);
-  BX_SMF void ESC7(bxInstruction_c *);
+  BX_SMF void FWAIT(bxInstruction_c *);
+
+#ifdef BX_SUPPORT_FPU
+  BX_SMF void FLD_STi(bxInstruction_c *);  
+  BX_SMF void FLD_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FLD_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FLD_EXTENDED_REAL(bxInstruction_c *);
+  BX_SMF void FILD_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FILD_DWORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FILD_QWORD_INTEGER(bxInstruction_c *);  
+  BX_SMF void FLDENV(bxInstruction_c *);
+  BX_SMF void FLDCW(bxInstruction_c *);
+  BX_SMF void FLD1(bxInstruction_c *); 
+  BX_SMF void FLDL2T(bxInstruction_c *);
+  BX_SMF void FLDL2E(bxInstruction_c *);
+  BX_SMF void FLDPI(bxInstruction_c *);
+  BX_SMF void FLDLG2(bxInstruction_c *);
+  BX_SMF void FLDLN2(bxInstruction_c *);
+  BX_SMF void FLDZ(bxInstruction_c *);                        
+  BX_SMF void FBLD_PACKED_BCD(bxInstruction_c *);
+
+  // store
+  BX_SMF void FST_STi(bxInstruction_c *);
+  BX_SMF void FSTP_STi(bxInstruction_c *);
+  BX_SMF void FST_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FSTP_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FST_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FSTP_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FSTP_EXTENDED_REAL(bxInstruction_c *);
+
+  BX_SMF void FIST_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FISTP_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FIST_DWORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FISTP_DWORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FISTP_QWORD_INTEGER(bxInstruction_c *);
+  
+  BX_SMF void FSTENV(bxInstruction_c *);
+  BX_SMF void FNSTCW(bxInstruction_c *);
+  BX_SMF void FNSTSW(bxInstruction_c *);
+  BX_SMF void FNSTSW_AX(bxInstruction_c *);
+  BX_SMF void FBSTP_PACKED_BCD(bxInstruction_c *);
+
+  BX_SMF void FISTTP16(bxInstruction_c *);
+  BX_SMF void FISTTP32(bxInstruction_c *);
+  BX_SMF void FISTTP64(bxInstruction_c *);
+
+  // save restore
+  BX_SMF void FRSTOR(bxInstruction_c *);
+  BX_SMF void FSAVE(bxInstruction_c *);
+
+  // add
+  BX_SMF void FADD_ST0_STj(bxInstruction_c *);
+  BX_SMF void FADD_STi_ST0(bxInstruction_c *);
+  BX_SMF void FADDP_STi_ST0(bxInstruction_c *);
+  BX_SMF void FADD_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FADD_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FIADD_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FIADD_DWORD_INTEGER(bxInstruction_c *);
+
+  // mul
+  BX_SMF void FMUL_ST0_STj(bxInstruction_c *);
+  BX_SMF void FMUL_STi_ST0(bxInstruction_c *);
+  BX_SMF void FMULP_STi_ST0(bxInstruction_c *);
+  BX_SMF void FMUL_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FMUL_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FIMUL_WORD_INTEGER (bxInstruction_c *);
+  BX_SMF void FIMUL_DWORD_INTEGER(bxInstruction_c *);
+
+  // sub
+  BX_SMF void FSUB_ST0_STj(bxInstruction_c *);
+  BX_SMF void FSUBR_ST0_STj(bxInstruction_c *);
+  BX_SMF void FSUB_STi_ST0(bxInstruction_c *);
+  BX_SMF void FSUBR_STi_ST0(bxInstruction_c *);
+  BX_SMF void FSUBP_STi_ST0(bxInstruction_c *);
+  BX_SMF void FSUBRP_STi_ST0(bxInstruction_c *);
+
+  BX_SMF void FSUB_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FSUBR_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FSUB_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FSUBR_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FISUB_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FISUBR_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FISUB_DWORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FISUBR_DWORD_INTEGER(bxInstruction_c *);
+
+  // div
+  BX_SMF void FDIV_ST0_STj(bxInstruction_c *);
+  BX_SMF void FDIVR_ST0_STj(bxInstruction_c *);
+  BX_SMF void FDIV_STi_ST0(bxInstruction_c *);
+  BX_SMF void FDIVR_STi_ST0(bxInstruction_c *);
+  BX_SMF void FDIVP_STi_ST0(bxInstruction_c *);
+  BX_SMF void FDIVRP_STi_ST0(bxInstruction_c *);
+
+  BX_SMF void FDIV_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FDIVR_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FDIV_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FDIVR_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FIDIV_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FIDIVR_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FIDIV_DWORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FIDIVR_DWORD_INTEGER(bxInstruction_c *);
+
+  // compare
+  BX_SMF void FCOM_STi(bxInstruction_c *);
+  BX_SMF void FCOMP_STi(bxInstruction_c *);
+  BX_SMF void FCOMI_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCOMIP_ST0_STj(bxInstruction_c *);
+  BX_SMF void FUCOMI_ST0_STj(bxInstruction_c *);
+  BX_SMF void FUCOMIP_ST0_STj(bxInstruction_c *);
+  BX_SMF void FUCOM_STi(bxInstruction_c *);
+  BX_SMF void FUCOMP_STi(bxInstruction_c *);
+
+  BX_SMF void FCOM_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FCOMP_SINGLE_REAL(bxInstruction_c *);
+  BX_SMF void FCOM_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FCOMP_DOUBLE_REAL(bxInstruction_c *);
+  BX_SMF void FICOM_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FICOMP_WORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FICOM_DWORD_INTEGER(bxInstruction_c *);
+  BX_SMF void FICOMP_DWORD_INTEGER(bxInstruction_c *);
+
+  BX_SMF void FCOMPP(bxInstruction_c *);  
+  BX_SMF void FUCOMPP(bxInstruction_c *);
+
+  // mov
+  BX_SMF void FCMOVB_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCMOVE_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCMOVBE_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCMOVU_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCMOVNB_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCMOVNE_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCMOVNBE_ST0_STj(bxInstruction_c *);
+  BX_SMF void FCMOVNU_ST0_STj(bxInstruction_c *);
+
+  // misc
+  BX_SMF void FXCH_STi(bxInstruction_c *);
+  BX_SMF void FNOP(bxInstruction_c *);
+  BX_SMF void FCHS(bxInstruction_c *);
+  BX_SMF void FABS(bxInstruction_c *);
+  BX_SMF void FTST(bxInstruction_c *);
+  BX_SMF void FXAM(bxInstruction_c *);
+
+  BX_SMF void F2XM1(bxInstruction_c *);
+  BX_SMF void FYL2X(bxInstruction_c *);
+  BX_SMF void FPTAN(bxInstruction_c *);
+  BX_SMF void FPATAN(bxInstruction_c *);
+  BX_SMF void FXTRACT(bxInstruction_c *);
+  BX_SMF void FPREM1(bxInstruction_c *);
+  BX_SMF void FDECSTP(bxInstruction_c *);
+  BX_SMF void FINCSTP(bxInstruction_c *);
+  BX_SMF void FPREM(bxInstruction_c *);
+  BX_SMF void FYL2XP1(bxInstruction_c *);
+  BX_SMF void FSQRT(bxInstruction_c *);
+  BX_SMF void FSINCOS(bxInstruction_c *);
+  BX_SMF void FRNDINT(bxInstruction_c *);
+  BX_SMF void FSCALE(bxInstruction_c *);
+  BX_SMF void FSIN(bxInstruction_c *);
+  BX_SMF void FCOS(bxInstruction_c *);
+  BX_SMF void FCLEX(bxInstruction_c *);
+  BX_SMF void FNINIT(bxInstruction_c *);
+  BX_SMF void FFREE_STi(bxInstruction_c *);
+#endif
 
   /* MMX */
   BX_SMF void PUNPCKLBW_PqQd(bxInstruction_c *i);
@@ -3123,6 +3275,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 #define BxGroupN            0x0010 // Group encoding: 001
 #define BxPrefixSSE         0x0020 // Group encoding: 010
 #define BxSplitMod11b       0x0030 // Group encoding: 011
+#define BxFPGroup           0x0040 // Group encoding: 100
 
 #define BxPrefix            0x0080 // bit  7
 #define BxAnother           0x0100 // bit  8
