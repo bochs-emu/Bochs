@@ -540,6 +540,8 @@ typedef
 // KPL: We need to enhance this for other compilers that know about
 // aligning variables/fields.
 #define BX_CPP_AlignN(n) __attribute__ ((aligned (n)))
+#else
+#define BX_CPP_AlignN(n) /* not supported */
 #endif
 
 #define BX_DEBUGGER 0
