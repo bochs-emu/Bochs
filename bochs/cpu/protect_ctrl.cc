@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.25 2003-10-04 20:22:24 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.26 2003-10-04 20:48:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -716,7 +716,6 @@ BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
     base_64  = BX_CPU_THIS_PTR gdtr.base;
 
     write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-
     write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
 
     }
@@ -730,7 +729,6 @@ BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
     /* 32bit processors always write 32bits of base */
 #endif
     write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-
     write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
     }
 
@@ -764,7 +762,6 @@ BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
     base_64  = BX_CPU_THIS_PTR idtr.base;
 
     write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-
     write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
 
     }
@@ -780,7 +777,6 @@ BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 #endif
 
     write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-
     write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
     }
 
@@ -794,22 +790,26 @@ BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
   BX_PANIC(("LGDT_Ms: not supported on 8086!"));
 #else
 
-  if (v8086_mode()) BX_PANIC(("protect_ctrl: v8086 mode unsupported"));
+  if (v8086_mode()) {
+    BX_INFO(("LGDT: not recognized in virtual-8086 mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
 
   invalidate_prefetch_q();
 
-  if (protected_mode() && (CPL!=0)) {
-    BX_PANIC(("LGDT: protected mode: CPL!=0"));
+  if (!real_mode() && CPL!=0) {
+    BX_INFO(("LGDT: CPL!=0 in protected mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
-    }
+  }
 
-  /* op1 is a register or memory reference */
+  /* operand might be a register or memory reference */
   if (i->modC0()) {
-    BX_PANIC(("LGDT generating exception 6"));
+    BX_INFO(("LGDT: must be memory reference"));
     UndefinedOpcode(i);
     return;
-    }
+  }
 
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -817,7 +817,6 @@ BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
     Bit64u base_64;
 
     read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-
     read_virtual_qword(i->seg(), RMAddr(i) + 2, &base_64);
 
     BX_CPU_THIS_PTR gdtr.limit = limit_16;
@@ -842,13 +841,10 @@ BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
     Bit8u base16_23;
 
     read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-
     read_virtual_word(i->seg(), RMAddr(i) + 2, &base0_15);
-
     read_virtual_byte(i->seg(), RMAddr(i) + 4, &base16_23);
 
     /* ignore high 8 bits */
-
     BX_CPU_THIS_PTR gdtr.limit = limit_16;
     BX_CPU_THIS_PTR gdtr.base = (base16_23 << 16) | base0_15;
     }
@@ -864,26 +860,26 @@ BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
   Bit16u limit_16;
   Bit32u base_32;
 
-
-  if (v8086_mode()) BX_PANIC(("protect_ctrl: v8086 mode unsupported"));
+  if (v8086_mode()) {
+    BX_INFO(("LIDT: not recognized in virtual-8086 mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
 
   invalidate_prefetch_q();
 
-  if (protected_mode()) {
-    if (CPL != 0) {
-      BX_PANIC(("LIDT(): CPL(%u) != 0", (unsigned) CPL));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      return;
-      }
-    }
+  if (!real_mode() && CPL!=0) {
+    BX_INFO(("LIDT: CPL!=0 in protected mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
 
-  /* op1 is a register or memory reference */
+  /* operand might be a register or memory reference */
   if (i->modC0()) {
-    /* undefined opcode exception */
-    BX_PANIC(("LIDT generating exception 6"));
+    BX_INFO(("LIDT: must be memory reference"));
     UndefinedOpcode(i);
     return;
-    }
+  }
 
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {

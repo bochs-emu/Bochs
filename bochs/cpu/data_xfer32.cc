@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.23 2003-05-08 17:56:48 cbothamy Exp $
+// $Id: data_xfer32.cc,v 1.24 2003-10-04 20:48:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ BX_CPU_C::MOV_GdEEd(bxInstruction_c *i)
 BX_CPU_C::LEA_GdM(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_PANIC(("LEA_GvM: op2 is a register"));
+    BX_INFO(("LEA_GvM: op2 is a register"));
     UndefinedOpcode(i);
     return;
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.17 2003-08-03 16:44:53 sshwarts Exp $
+// $Id: soft_int.cc,v 1.18 2003-10-04 20:48:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@ BX_CPU_C::BOUND_GvMa(bxInstruction_c *i)
 
   if (i->modC0()) {
     /* undefined opcode exception */
-    BX_PANIC(("bound: op2 must be mem ref"));
+    BX_PANIC(("bound: op2 must be memory reference"));
     UndefinedOpcode(i);
     }
 

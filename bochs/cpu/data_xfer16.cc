@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.23 2003-05-08 17:56:48 cbothamy Exp $
+// $Id: data_xfer16.cc,v 1.24 2003-10-04 20:48:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -155,14 +155,13 @@ BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_PANIC(("LEA_GvM: op2 is a register"));
+    BX_INFO(("LEA_GvM: op2 is a register"));
     UndefinedOpcode(i);
     return;
     }
 
     BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) RMAddr(i));
 }
-
 
   void
 BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
