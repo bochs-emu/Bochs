@@ -126,6 +126,7 @@ extern "C" {
 #define BX_HRQ                      (bx_pc_system.HRQ)
 #define BX_RAISE_HLDA()             bx_pc_system.raise_HLDA()
 #define BX_TICK1()                  bx_pc_system.tick1()
+#define BX_TICKN(n)                 bx_pc_system.tickn(n)
 #define BX_INTR                     bx_pc_system.INTR
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
 #define BX_CPU_C                    bx_cpu_c
