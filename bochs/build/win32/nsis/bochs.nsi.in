@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.1 2002-11-21 03:43:04 bdenney Exp $
+; $Id: bochs.nsi.in,v 1.2 2002-11-21 08:00:14 bdenney Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -25,6 +25,7 @@
 
 !define SRCDIR bochs-${VERSION}
 !define PGDIR "$SMPROGRAMS\Bochs ${VERSION}"
+!define DESKTOP_DLXLINK "$DESKTOP\Linux Demo in ${NAME}.lnk"
 
 ;--------------------------------
 
@@ -62,23 +63,14 @@ Section "Bochs Program (required)" SecCore
 
   SetOutPath "$INSTDIR"
 
-  File "${SRCDIR}\bochs.exe"
-  File "${SRCDIR}\bochsdbg.exe"
-  File "${SRCDIR}\bochsrc-sample.txt"
-  File "${SRCDIR}\bximage.exe"
-  File "${SRCDIR}\CHANGES.txt"
-  File "${SRCDIR}\COPYING.txt"
-  File "${SRCDIR}\DOC-win32.htm"
-  File "${SRCDIR}\niclist.exe"
-  File "${SRCDIR}\README.txt"
-  File "${SRCDIR}\sb16ctrl.exe"
-  File "${SRCDIR}\sb16ctrl.txt"
-  File "bochs.ico"
-  File "penguin.ico"
+  File "${SRCDIR}\*.exe"
+  File "${SRCDIR}\*.txt"
+  File "${SRCDIR}\*.htm"
+  File "*.ico"
 
   ; Install keymaps
   SetOutPath "$INSTDIR\keymaps"
-  File "${SRCDIR}\keymaps\*.*"
+  File "${SRCDIR}\keymaps\*"
 
 SectionEnd
 
@@ -87,32 +79,26 @@ Section "ROM Images (required)" SecROMs
 
   SetOutPath "$INSTDIR"
 
-  File "${SRCDIR}\BIOS-bochs-2-processors"
-  File "${SRCDIR}\BIOS-bochs-4-processors"
-  File "${SRCDIR}\BIOS-bochs-latest"
-
-  File "${SRCDIR}\VGABIOS-elpin-2.40"
-  File "${SRCDIR}\VGABIOS-elpin-LICENSE.txt"
-  File "${SRCDIR}\VGABIOS-lgpl-latest"
-  File "${SRCDIR}\VGABIOS-lgpl-README"
+  File "${SRCDIR}\BIOS-*"
+  File "${SRCDIR}\VGABIOS-*"
 SectionEnd
 
 Section "Documentation in HTML" SecDocs
   SectionIn 1 2 
   SetOutPath "$INSTDIR\docs-html"
-  File "${SRCDIR}\docs-html\*.*"
+  File "${SRCDIR}\docs-html\*"
 SectionEnd
 
 Section "DLX Linux Demo" SecDLX
   SectionIn 2
 
   SetOutPath "$INSTDIR\dlxlinux"
-  File "${SRCDIR}\dlxlinux\*.*"
+  File "${SRCDIR}\dlxlinux\*"
 
   ; Fix up the path to the Bochs executable
   FileOpen $1 "$INSTDIR\dlxlinux\run.bat" w
-  FileWrite $1 "cd $INSTDIR\dlxlinux$\r$\n"
-  FileWrite $1 "..\bochs -q$\r$\n"
+  FileWrite $1 'cd "$INSTDIR\dlxlinux"$\r$\n'
+  FileWrite $1 "..\bochs -q -f bochsrc.bxrc$\r$\n"
   FileClose $1
 SectionEnd
 
@@ -151,33 +137,39 @@ Section "Add Bochs to the Start Menu and Desktop" SecIcons
   CreateShortCut "${PGDIR}\Uninstall Bochs.lnk" \
                  "$INSTDIR\Uninstall.exe"
 
-; Create shortcut to DLX Linux if it was installed
-IfFileExists "$INSTDIR\dlxlinux\*.*" 0 no
-  CreateShortCut "${PGDIR}\DLX Linux.lnk" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\penguin.ico" "0"
+  ; Create shortcut to DLX Linux if it was installed
+  IfFileExists "$INSTDIR\dlxlinux\*" 0 no
+	CreateShortCut "${PGDIR}\DLX Linux.lnk" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\penguin.ico" "0"
 
   ; Add a link to the DLX demo to the desktop
-  CreateShortCut "$DESKTOP\${NAME} Linux Demo.lnk" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\bochs.ico" "0"
+  CreateShortCut "${DESKTOP_DLXLINK}" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\bochs.ico" "0"
 no:
 
 
 SectionEnd
 
-Section "Bochs Shell Extensions" SecExtention
-  SectionIn 1 2
+Section "Register .bxrc Extension" SecExtension
+  SectionIn 1 2 RO
   
-  ; back up old value of .bxr
-  ReadRegStr $1 HKCR ".bxr" ""
+  ; back up old value of .bxrc
+  ReadRegStr $1 HKCR ".bxrc" ""
 
   StrCmp $1 "" Label1
-    StrCmp $1 "BOCHSFile" Label1
-    WriteRegStr HKCR ".bxr" "backup_val" $1
+    StrCmp $1 "BochsConfigFile" Label1
+    WriteRegStr HKCR ".bxrc" "backup_val" $1
 
   Label1:
-  WriteRegStr HKCR ".bxr" "" "BOCHSFile"
-  WriteRegStr HKCR "BOCHSFile" "" "${NAME} Disk Image"
-  WriteRegStr HKCR "BOCHSFile\DefaultIcon" "" "$INSTDIR\bochs.ico,0"
-  ;WriteRegStr HKCR "BOCHSFile\shell" "" "open"
-  ;WriteRegStr HKCR "BOCHSFile\shell\open\command" "" '$INSTDIR\Bochs.exe -nocp "%1"'
+  WriteRegStr HKCR ".bxrc" "" "BochsConfigFile"
+  WriteRegStr HKCR "BochsConfigFile" "" "${NAME} Config File"
+  WriteRegStr HKCR "BochsConfigFile\DefaultIcon" "" "$INSTDIR\bochs.ico,0"
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Configure"
+  WriteRegStr HKCR "BochsConfigFile\shell\Configure\command" "" '"$INSTDIR\Bochs.exe" -f "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Edit"
+  WriteRegStr HKCR "BochsConfigFile\shell\Edit\command" "" 'C:\WINDOWS\NOTEPAD.EXE "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Debugger"
+  WriteRegStr HKCR "BochsConfigFile\shell\Debugger\command" "" '"$INSTDIR\Bochsdbg.exe" -f "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Run"
+  WriteRegStr HKCR "BochsConfigFile\shell\Run\command" "" '"$INSTDIR\Bochs.exe" -q -f "%1"'
 SectionEnd
 
 
@@ -273,7 +265,7 @@ Function .onMouseOverSection
     !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecDLX} "An image of DLX Linux with a batch file for quickly loading it."
     !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecDocs} "Documentation for configuring and running ${NAME}."
     !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecIcons} "Installs icons and program menu items for quickly running ${NAME}."
-    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecExtention} "Adds the ability to double-click and run the disk image directly in ${NAME}."
+    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecExtension} "Adds the ability to double-click a .bxrc file and start ${NAME} immediately."
 
  !insertmacro MUI_DESCRIPTION_END
 
@@ -306,19 +298,19 @@ FunctionEnd
 
 Section "Uninstall"
 
-  ReadRegStr $1 HKCR ".bxr" ""
+  ReadRegStr $1 HKCR ".bxrc" ""
 
-  StrCmp $1 "BOCHSFile" 0 NoOwn ; only do this if we own it
-    ReadRegStr $1 HKCR ".bxr" "backup_val"
+  StrCmp $1 "BochsConfigFile" 0 NoOwn ; only do this if we own it
+    ReadRegStr $1 HKCR ".bxrc" "backup_val"
     StrCmp $1 "" 0 RestoreBackup ; if backup == "" then delete the whole key
-      DeleteRegKey HKCR ".bxr"
+      DeleteRegKey HKCR ".bxrc"
     Goto NoOwn
     RestoreBackup:
-      WriteRegStr HKCR ".bxr" "" $1
-      DeleteRegValue HKCR ".bxr" "backup_val"
+      WriteRegStr HKCR ".bxrc" "" $1
+      DeleteRegValue HKCR ".bxrc" "backup_val"
   NoOwn:
 
-  DeleteRegKey HKCR "BOCHSFile"
+  DeleteRegKey HKCR "BochsConfigFile"
   DeleteRegKey HKLM "SOFTWARE\${NAME}"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
 
@@ -326,34 +318,17 @@ Section "Uninstall"
   Delete "${PGDIR}\*.url"
   RMDir "${PGDIR}"
 
-  Delete "$DESKTOP\${NAME} Linux Demo.lnk"
+  Delete "${DESKTOP_DLXLINK}"
 
-  Delete "$INSTDIR\bochs.exe"
-  Delete "$INSTDIR\Uninstall.exe"
-
-  Delete "$INSTDIR\BIOS-bochs-2-processors"
-  Delete "$INSTDIR\BIOS-bochs-4-processors"
-  Delete "$INSTDIR\BIOS-bochs-latest"
-  Delete "$INSTDIR\bochs.exe"
-  Delete "$INSTDIR\bochsdbg.exe"
-  Delete "$INSTDIR\bochsrc-sample.txt"
-  Delete "$INSTDIR\bximage.exe"
-  Delete "$INSTDIR\CHANGES.txt"
-  Delete "$INSTDIR\COPYING.txt"
-  Delete "$INSTDIR\DOC-win32.htm"
-  Delete "$INSTDIR\niclist.exe"
-  Delete "$INSTDIR\README.txt"
-  Delete "$INSTDIR\sb16ctrl.exe"
-  Delete "$INSTDIR\sb16ctrl.txt"
-  Delete "$INSTDIR\VGABIOS-elpin-2.40"
-  Delete "$INSTDIR\VGABIOS-elpin-LICENSE.txt"
-  Delete "$INSTDIR\VGABIOS-lgpl-0.3a"
-  Delete "$INSTDIR\VGABIOS-lgpl-README"
-  Delete "$INSTDIR\bochs.ico"
-  Delete "$INSTDIR\penguin.ico"
-  Delete "$INSTDIR\dlxlinux\*.*"
-  Delete "$INSTDIR\docs-html\*.*"
-  Delete "$INSTDIR\keymaps\*.*"
+  Delete "$INSTDIR\*.exe"
+  Delete "$INSTDIR\*.htm"
+  Delete "$INSTDIR\*.txt"
+  Delete "$INSTDIR\*.ico"
+  Delete "$INSTDIR\keymaps\*"
+  Delete "$INSTDIR\BIOS-*"
+  Delete "$INSTDIR\VGABIOS-*"
+  Delete "$INSTDIR\dlxlinux\*"
+  Delete "$INSTDIR\docs-html\*"
 
   RMDIR "$INSTDIR\keymaps"
   RMDIR "$INSTDIR\dlxlinux"
