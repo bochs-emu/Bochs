@@ -430,6 +430,7 @@ inc_one:
         bx_printf ("Copying byte %02x\n", (unsigned int) *p1);
         *p2++ = *p1++;
       }
+      return;
     }
 #endif
     for (i = 0; i < len; i++) {
