@@ -1,11 +1,6 @@
 #include <stdio.h>
 #include "main.h"
 
-extern "C" {
-  // prevent C++ name mangling
-  void module_init();
-};
-
 void module_init ()
 {
   printf ("module1 init\n");

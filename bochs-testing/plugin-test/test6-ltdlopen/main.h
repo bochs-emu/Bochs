@@ -19,3 +19,7 @@ typedef void (*modload_func)(void);
 MAINAPI(extern const char *) version_string;
 MAINAPI(extern int) register_module (const char *name);
 
+extern "C" {
+  // this prevents C++ name mangling
+  void module_init ();
+};
