@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.63 2002-09-24 21:52:32 cbothamy Exp $
+// $Id: rombios.c,v 1.64 2002-09-28 12:27:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -881,10 +881,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.63 $";
-static char bios_date_string[] = "$Date: 2002-09-24 21:52:32 $";
+static char bios_cvs_version_string[] = "$Revision: 1.64 $";
+static char bios_date_string[] = "$Date: 2002-09-28 12:27:15 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.63 2002-09-24 21:52:32 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.64 2002-09-28 12:27:15 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8091,6 +8091,23 @@ pci_real_select_reg:
   ret
 #endif
 
+detect_parport:
+  add  dx, #2
+  in   al, dx
+  and  al, #0xdf ; clear input mode
+  out  dx, al
+  sub  dx, #2
+  mov  al, #0xaa
+  out  dx, al
+  in   al, dx
+  cmp  al, #0xaa
+  jne  no_parport
+  mov  [bx+0x408], dx ; Parallel I/O address
+  mov  [bx+0x478], cx ; Parallel printer timeout
+  inc  bx
+no_parport:
+  ret
+
 ;; for 'C' strings and other data, insert them here with
 ;; a the following hack:
 ;; DATA_SEG_DEFS_HERE
@@ -8296,12 +8313,17 @@ keyboard_ok:
   SET_INT_VECTOR(0x0F, #0xF000, #dummy_iret_handler)
   xor ax, ax
   mov ds, ax
-  mov 0x408, #0x378 ; Parallel I/O address, port 1
-  mov 0x478, #0x14 ; Parallel printer 1 timeout
-  mov AX, 0x410   ; Equipment word bits 14..15 determing # parallel ports
-  and AX, #0x3fff
-  or  AX, #0x4000 ; one parallel port
-  mov 0x410, AX
+  xor bx, bx
+  mov cx, #0x14 ; timeout value
+  mov dx, #0x378 ; Parallel I/O address, port 1
+  call detect_parport
+  mov dx, #0x278 ; Parallel I/O address, port 2
+  call detect_parport
+  shl bx, #0x0e
+  mov ax, 0x410   ; Equipment word bits 14..15 determing # parallel ports
+  and ax, #0x3fff
+  or  ax, bx ; set number of parallel ports
+  mov 0x410, bx
 
   ;; Serial setup
   SET_INT_VECTOR(0x0C, #0xF000, #dummy_iret_handler)
