@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.29 2002-09-15 15:10:21 kevinlawton Exp $
+// $Id: init.cc,v 1.30 2002-09-18 04:32:16 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,26 +51,35 @@ BX_CPU_C::BX_CPU_C()
 
 #if BX_WITH_WX
 
+#if BX_SMP_PROCESSORS!=1
+#warning cpu_param_handler only supports parameters for one processor.
+// To fix this, I think I will need to change bx_param_num_c::set_handler
+// so that I pass in a void* data value.  The void* will be passed to each
+// handler.  In this case, I would pass a pointer to the BX_CPU_C object
+// in the void*, then in the handler I'd cast it back to BX_CPU_C and call
+// BX_CPU_C::cpu_param_handler() which then could be a member function. -BBD
+#endif
+
 #define CASE_SEG_REG_GET(x) \
   case BXP_CPU_SEG_##x: \
-    return BX_CPU_THIS_PTR sregs[BX_SEG_REG_##x].selector.value;
+    return BX_CPU(0)->sregs[BX_SEG_REG_##x].selector.value;
 #define CASE_SEG_REG_SET(reg, val) \
   case BXP_CPU_SEG_##reg: \
-    BX_CPU_THIS_PTR load_seg_reg (&BX_CPU_THIS_PTR sregs[BX_SEG_REG_##reg],val); \
+    BX_CPU(0)->load_seg_reg (&BX_CPU(0)->sregs[BX_SEG_REG_##reg],val); \
     break;
 #define CASE_LAZY_EFLAG_GET(flag) \
     case BXP_CPU_EFLAGS_##flag: \
-      return BX_CPU_THIS_PTR get_##flag ();
+      return BX_CPU(0)->get_##flag ();
 #define CASE_LAZY_EFLAG_SET(flag, val) \
     case BXP_CPU_EFLAGS_##flag: \
-      BX_CPU_THIS_PTR set_##flag(val); \
+      BX_CPU(0)->set_##flag(val); \
       break;
 #define CASE_EFLAG_GET(flag) \
     case BXP_CPU_EFLAGS_##flag: \
-      return BX_CPU_THIS_PTR get_##flag ();
+      return BX_CPU(0)->get_##flag ();
 #define CASE_EFLAG_SET(flag, val) \
     case BXP_CPU_EFLAGS_##flag: \
-      BX_CPU_THIS_PTR set_##flag(val); \
+      BX_CPU(0)->set_##flag(val); \
       break;
 
 
@@ -88,10 +97,10 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
       CASE_SEG_REG_SET (FS, val);
       CASE_SEG_REG_SET (GS, val);
       case BXP_CPU_SEG_LDTR:
-        BX_PANIC(("setting LDTR not implemented"));
+        BX_CPU(0)->panic("setting LDTR not implemented");
 	break;
       case BXP_CPU_SEG_TR:
-        BX_PANIC(("setting TR not implemented"));
+        BX_CPU(0)->panic ("setting TR not implemented");
 	break;
       CASE_LAZY_EFLAG_SET (OF, val);
       CASE_LAZY_EFLAG_SET (SF, val);
@@ -111,7 +120,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
       CASE_EFLAG_SET (IF,   val);
       CASE_EFLAG_SET (TF,   val);
       default:
-        BX_PANIC (("cpu_param_handler set id %d not handled", id));
+        BX_CPU(0)->panic ("cpu_param_handler set id %d not handled", id);
     }
   } else {
     switch (id) {
@@ -122,10 +131,10 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
       CASE_SEG_REG_GET (FS);
       CASE_SEG_REG_GET (GS);
       case BXP_CPU_SEG_LDTR:
-        return BX_CPU_THIS_PTR ldtr.selector.value;
+        return BX_CPU(0)->ldtr.selector.value;
         break;
       case BXP_CPU_SEG_TR:
-        return BX_CPU_THIS_PTR tr.selector.value;
+        return BX_CPU(0)->tr.selector.value;
         break;
       CASE_LAZY_EFLAG_GET (OF);
       CASE_LAZY_EFLAG_GET (SF);
@@ -145,7 +154,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
       CASE_EFLAG_GET (IF);
       CASE_EFLAG_GET (TF);
       default:
-        BX_PANIC (("cpu_param_handler get id %d ('%s') not handled", id, param->get_name ()));
+        BX_CPU(0)->panic ("cpu_param_handler get id %d ('%s') not handled", id, param->get_name ());
     }
   }
   return val;
@@ -157,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.29 2002-09-15 15:10:21 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.30 2002-09-18 04:32:16 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
