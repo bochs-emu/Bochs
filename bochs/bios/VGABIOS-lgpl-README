@@ -76,8 +76,78 @@ The source code is based on information taken from :
 Feedback
 --------
 Please report any bugs, comments, patches for this VGA Bios to cbothamy@free.fr
-
 You can find the latest release at : http://cbothamy.free.fr/projects/vgabios/
-
-For any information on plex86, visit the website http://www.plex86.org/
 For any information on bochs, visit the website http://bochs.sourceforge.net/
+
+
+History
+-------
+vgabios-0.4a : Aug 17 2003
+  - Volker
+    . LFB flagged VBE modes removed
+    . many bugfixes and optimizations
+    . write character function implemeted for graphic modes
+    . support for 15bpp, 16bpp, 24bpp and 32bpp VBE modes added
+    . SVGA modes 0x6A added
+    . VBE mode 0x102, 0x117, 0x118, 0x142 (Bochs specific)
+
+vgabios-0.3b : Nov 23 2002
+  - Christophe
+    . added lfb-mode numbers (patch from mathis)
+    . updated the Makefile
+    . removed display of copyrights. 
+    . changed the Copyright string to "LGPL VGABios developers"
+  - Volker 
+    . set the cursor shape depending on the current font height
+    . clear BL before calling int 0x10 function 0x1103 in vgabios_init_func
+    . added some text font functions
+  - Jeroen
+    . Forced to new DISPI (0xb0c1) interface (requires latest bochs vbe code)
+    . Added multibuffering support
+    . Added new DISPI interface for: virt width, height, x offset, y offset
+    . Added LFB modes (to be used with the vbe-lfb patch in bochs)
+      see VBE_HAVE_LFB in vbe.c (currently default enabled)
+    . updated TODO & docs for changes after bochs 1.4
+
+vgabios-0.3a : Mar 10 2002
+  - Christophe
+    . Fixed bug in function ah=13
+  - Jeroen
+    . updated vbebios implementation to new api
+    . added vbe_display_api documentation
+    . added 640x400x8, 640x480x8, 800x600x8, 1024x768 
+      (>640x480 needs a special bochs patch atm)
+    . added 320x200x8 vbe support (uses the standard 320x200x8 vga mode to
+      display, this allows for testing & having something on screen as well,
+      at least until bochs host side display is up & running)
+    . adding lfbprof (vbe) testprogram (+some small fixes to it)
+    . merging with vbebios 0.2
+
+vgabios-0.2b : Nov 19 2001
+  - Christophe
+    . Fixed bug in function ah=13
+
+vgabios-0.2a : Nov 09 2001
+  - Christophe
+    . Included bugfix from techt@pikeonline.net about grayscale summing
+    . Added the "IBM" string at org 0x1e as Bart Oldeman suggested
+    . Fixed DS and ES that where inverted in the int10 parameters list!
+    . The following have been implemented :
+	- function ax=1a00, ax=1a01, ah=1b
+	- function ax=1130                
+    . Added debug messages for unimplemented/unknown functions
+      Must be compiled with DEBUG defined. The output is trapped
+      by the unknown-ioport driver of plex/bochs (port 0xfff0 is used)
+
+vgabios-0.1a : May 8 2001
+  - Christophe
+    . First release. The work has been focused only on text mode.
+    . The following have been implemented :
+	- inits
+	- int 10 handler
+	- functions ah=00, ah=01, ah=02, ah=03, ah=05, ah=06, ah=07, ah=08
+	  ah=09, ah=0a, ah=0e, ah=0f, ax=1000, ax=1001, ax=1002, ax=1003
+	  ax=1007, ax=1008, ax=1009, ax=1010, ax=1012, ax=1013, ax=1015
+	  ax=1017, ax=1018, ax=1019, ax=101a, ax=101b, ah=12 bl=10,
+	  ah=12 bl=30, ah=12 bl=31, ah=12 bl=32, ah=12 bl=33, ah=12 bl=34
+	  ah=13
