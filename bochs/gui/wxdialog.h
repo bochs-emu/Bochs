@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.15 2002-09-01 19:38:07 bdenney Exp $
+// $Id: wxdialog.h,v 1.16 2002-09-01 21:24:14 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -361,22 +361,28 @@ private:
   wxTextCtrl *io, *mac, *phys, *script;
   wxSpinCtrl *irq;
   wxChoice *conn;
+  int n_conn_choices;
   void EnableChanged ();
 public:
   NetConfigDialog(wxWindow* parent, wxWindowID id);
   void OnEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void SetEnable (bool en) { enable->SetValue (en); EnableChanged (); }
+  bool GetEnable () { return enable->GetValue (); }
   void SetIO (int addr);
   int GetIO ();
   void SetIrq (int addr) { irq->SetValue (addr); }
   int GetIrq () { return irq->GetValue (); }
   void SetMac (unsigned char addr[6]);
-  void GetMac (unsigned char addr[6]);
-  void SetConn (int i) { conn->SetSelection (i); }
+  bool GetMac (unsigned char addr[6]);
+  void SetConn(const char *realname);
   int GetConn () { return conn->GetSelection (); }
-  void AddConn (wxString name);  // add to list of choices
+  void *GetConnData () { return conn->GetClientData (conn->GetSelection ()); }
+  void AddConn (wxString niceName, char *realName);
   void SetPhys (wxString s) { phys->SetValue (s); }
   wxString GetPhys () { return phys->GetValue (); }
+  void SetScript (wxString s) { script->SetValue (s); }
+  wxString GetScript () { return script->GetValue (); }
 DECLARE_EVENT_TABLE()
 };
 

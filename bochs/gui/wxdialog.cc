@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.15 2002-09-01 19:38:07 bdenney Exp $
+// $Id: wxdialog.cc,v 1.16 2002-09-01 21:24:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -821,6 +821,7 @@ NetConfigDialog::NetConfigDialog(
   : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
+  n_conn_choices = 0;
   SetTitle (NET_CONFIG_TITLE);
   // top level objects
   mainSizer = new wxBoxSizer (wxVERTICAL);
@@ -861,6 +862,7 @@ NetConfigDialog::NetConfigDialog(
 #undef add()
 
   irq->SetRange (0, 15);
+  conn->SetSizeHints (200, conn->GetSize ().GetHeight ());
   mac->SetSizeHints (200, mac->GetSize ().GetHeight ());
   script->SetSizeHints (200, script->GetSize ().GetHeight ());
 
@@ -899,7 +901,7 @@ void NetConfigDialog::EnableChanged ()
   script->Enable (en);
 }
 
-
+// allow (encourage) use of hex addresses started with "0x"
 int NetConfigDialog::GetIO () {
   char buf[1024];
   wxString string(io->GetValue ());
@@ -919,6 +921,50 @@ void NetConfigDialog::SetIO (int addr) {
   io->SetValue (text);
 }
 
+void NetConfigDialog::SetMac (unsigned char addr[6]) {
+  wxString text;
+  text.Printf ("%02x:%02x:%02x:%02x:%02x:%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+  mac->SetValue (text);
+}
+
+bool
+NetConfigDialog::GetMac (unsigned char addr[6]) {
+  char buf[32];
+  wxString string(mac->GetValue ());
+  string.Trim ();
+  strncpy (buf, string, sizeof(buf));
+  // expect NN:NN:NN:NN:NN:NN format
+  int part[6];
+  if (6 != sscanf (string, "%x:%x:%x:%x:%x:%x", &part[0], &part[1], &part[2],
+	&part[3], &part[4], &part[5])) 
+  {
+    wxMessageBox("MAC address must be in the form FF:FF:FF:FF:FF:FF.", "Bad MAC Address", wxOK | wxICON_ERROR );
+      return false;
+  }
+  for (int i=0; i<6; i++)
+    addr[i] = part[i];
+  return true;
+}
+
+void NetConfigDialog::AddConn (wxString niceName, char *realName) {
+  conn->Append (niceName); 
+  int index = n_conn_choices++;
+  conn->SetClientData (index, realName);
+}
+
+void NetConfigDialog::SetConn (const char *realname) {
+  // search through the choices and find the one whose clientData matches
+  // realname.
+  for (int i=0; i<n_conn_choices; i++) {
+    char *choiceRealName = (char *)conn->GetClientData (i);
+    if (!strcmp (choiceRealName, realname)) {
+      conn->SetSelection (i);
+      return;
+    }
+  }
+  wxLogError ("no choice match for '%s'", realname);
+}
+
 void NetConfigDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
@@ -928,8 +974,14 @@ void NetConfigDialog::OnEvent(wxCommandEvent& event)
       EnableChanged ();  // enable/disable fields that depend on this
       break;
     case wxOK:
-      // probably should validate before allowing ok
-      EndModal (wxOK);
+      {
+	// check for valid mac address by calling GetMac()
+	unsigned char tmp[6];
+	if (GetMac (tmp)) {
+	  // mac address was legal
+	  EndModal (wxOK);
+	}
+      }
       break;
     case wxID_CANCEL:
       EndModal (wxCANCEL);

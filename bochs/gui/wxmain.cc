@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.21 2002-09-01 19:38:07 bdenney Exp $
+// $Id: wxmain.cc,v 1.22 2002-09-01 21:24:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -371,8 +371,59 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   NetConfigDialog dlg (this, -1);
+  bx_param_bool_c *present = (bx_param_bool_c*)SIM->get_param (BXP_NE2K_VALID);
+  bx_param_num_c *io = (bx_param_num_c*)SIM->get_param (BXP_NE2K_IOADDR);
+  bx_param_num_c *irq = (bx_param_num_c*)SIM->get_param (BXP_NE2K_IRQ);
+  bx_param_string_c *mac = (bx_param_string_c*)
+    SIM->get_param (BXP_NE2K_MACADDR);
+  bx_param_string_c *module = (bx_param_string_c*)
+    SIM->get_param (BXP_NE2K_ETHMOD);
+  bx_param_string_c *device = (bx_param_string_c*)
+    SIM->get_param (BXP_NE2K_ETHDEV);
+  bx_param_string_c *script = (bx_param_string_c*)
+    SIM->get_param (BXP_NE2K_SCRIPT);
+  dlg.SetEnable (present->get ());
+  dlg.SetIO (io->get ());
+  dlg.SetIrq (irq->get ());
+  dlg.SetMac ((unsigned char *) mac->getptr ());
+  dlg.AddConn ("Null Packet Mover", "null");
+#if defined(ETH_LINUX)
+  dlg.AddConn ("Linux Socket Filter", "linux");
+#endif
+#if HAVE_ETHERTAP
+  dlg.AddConn ("Ethertap", "tap");
+#endif
+#if HAVE_TUNTAP
+  dlg.AddConn ("TUN/TAP", "tuntap");
+#endif
+#if defined(ETH_WIN32)
+  dlg.AddConn ("Win32 packet mover", "win32");
+#endif
+#if defined(ETH_FBSD)
+  dlg.AddConn ("Berkeley Packet Filter (FreeBSD, OpenBSD)", "fbsd");
+#endif
+#ifdef ETH_ARPBACK
+  dlg.AddConn ("ARPback packet mover", "arpback");
+#endif
+  dlg.SetConn (module->getptr ());
+  dlg.SetPhys (device->getptr ());
+  dlg.SetScript (script->getptr ());
   int n = dlg.ShowModal ();
   if (n==wxOK) {
+    present->set (dlg.GetEnable ());
+    io->set (dlg.GetIO ());
+    irq->set (dlg.GetIrq ());
+    unsigned char tmp[6];
+    dlg.GetMac (tmp);
+    mac->set ((char *)tmp);
+    module->set ((char *)dlg.GetConnData ());
+    char buf[1024];
+    wxString deviceString (dlg.GetPhys ());
+    strncpy (buf, deviceString.c_str (), sizeof(buf));
+    device->set (buf);
+    wxString scriptString (dlg.GetScript ());
+    strncpy (buf, scriptString.c_str (), sizeof(buf));
+    script->set (buf);
   }
 }
 
