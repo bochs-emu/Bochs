@@ -1,3 +1,5 @@
+Updated so that it applies cleanly in cvs as of March 25.  -Bryce
+
 Notes by Bryce:
 - normal configuration: one CPU and no APIC
   FIXME: does not compile!
@@ -27,10 +29,15 @@ Cheers,
 PS this is just the infrastructure, i haven't done all the registers, most 
 notably the MTRR stuff.
 
-diff -ur bochs-1.3/cpu/apic.cc /build/source/bochs-1.3/cpu/apic.cc
---- bochs-1.3/cpu/apic.cc	Wed Oct  3 15:10:37 2001
-+++ /build/source/bochs-1.3/cpu/apic.cc	Mon Mar 11 08:00:36 2002
-@@ -27,6 +27,14 @@
+
+Index: cpu/apic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/apic.cc,v
+retrieving revision 1.12
+diff -u -r1.12 apic.cc
+--- cpu/apic.cc	25 Mar 2002 01:58:34 -0000	1.12
++++ cpu/apic.cc	25 Mar 2002 09:32:58 -0000
+@@ -34,6 +34,14 @@
  {
  }
  
@@ -45,7 +52,7 @@ diff -ur bochs-1.3/cpu/apic.cc /build/source/bochs-1.3/cpu/apic.cc
  void bx_generic_apic_c::set_base (Bit32u newbase)
  {
    BX_INFO(("relocate APIC id=%d to %8x", id, newbase));
-@@ -247,7 +255,8 @@
+@@ -291,7 +299,8 @@
    BX_INFO(("local apic in %s initializing", 
        (cpu && cpu->name) ? cpu->name : "?"));
    // default address for a local APIC, can be moved
@@ -54,10 +61,14 @@ diff -ur bochs-1.3/cpu/apic.cc /build/source/bochs-1.3/cpu/apic.cc
 +  update_msr_apicbase(base_addr);
    err_status = 0;
    log_dest = 0;
-   dest_format = 0xff;
-diff -ur bochs-1.3/cpu/cpu.h /build/source/bochs-1.3/cpu/cpu.h
---- bochs-1.3/cpu/cpu.h	Wed Oct  3 21:53:48 2001
-+++ /build/source/bochs-1.3/cpu/cpu.h	Sun Mar 10 19:07:40 2002
+   dest_format = 0xf;
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.16
+diff -u -r1.16 cpu.h
+--- cpu/cpu.h	25 Mar 2002 01:58:34 -0000	1.16
++++ cpu/cpu.h	25 Mar 2002 09:33:01 -0000
 @@ -195,9 +195,43 @@
  #define BX_MF_EXCEPTION  16
  #define BX_AC_EXCEPTION  17
@@ -132,7 +143,7 @@ diff -ur bochs-1.3/cpu/cpu.h /build/source/bochs-1.3/cpu/cpu.h
  public:
    bx_generic_apic_c ();
    virtual ~bx_generic_apic_c ();
-@@ -577,7 +624,6 @@
+@@ -578,7 +625,6 @@
    Bit32u timer_initial, timer_current, timer_divconf;
    Boolean timer_active;  // internal state, not accessible from bus
    Bit32u timer_divide_counter, timer_divide_factor;
@@ -140,15 +151,15 @@ diff -ur bochs-1.3/cpu/cpu.h /build/source/bochs-1.3/cpu/cpu.h
    Bit32u icr_high, icr_low;
    Bit32u err_status;
  #define APIC_ERR_ILLEGAL_ADDR    0x80
-@@ -616,6 +662,7 @@
+@@ -618,6 +664,7 @@
    Bit8u get_apr ();
    void periodic (Bit32u usec_delta);
    void set_divide_configuration (Bit32u value);
 +  virtual void update_msr_apicbase(Bit32u newaddr);
+   virtual void set_arb_id (int newid);
    };
  
- #define APIC_MAX_ID 16
-@@ -753,6 +800,10 @@
+@@ -756,6 +803,10 @@
    Bit32u    cr4;
  #endif
  
@@ -159,7 +170,7 @@ diff -ur bochs-1.3/cpu/cpu.h /build/source/bochs-1.3/cpu/cpu.h
    // pointer to the address space that this processor uses.
    BX_MEM_C *mem;
  
-@@ -765,6 +816,8 @@
+@@ -768,6 +819,8 @@
    volatile Boolean async_event;
    volatile Boolean INTR;
  
@@ -168,9 +179,13 @@ diff -ur bochs-1.3/cpu/cpu.h /build/source/bochs-1.3/cpu/cpu.h
    // for accessing registers by index number
    Bit16u *_16bit_base_reg[8];
    Bit16u *_16bit_index_reg[8];
-diff -ur bochs-1.3/cpu/init.cc /build/source/bochs-1.3/cpu/init.cc
---- bochs-1.3/cpu/init.cc	Wed Oct  3 15:10:37 2001
-+++ /build/source/bochs-1.3/cpu/init.cc	Mon Mar 11 08:13:51 2002
+Index: cpu/init.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
+retrieving revision 1.14
+diff -u -r1.14 init.cc
+--- cpu/init.cc	3 Oct 2001 13:10:37 -0000	1.14
++++ cpu/init.cc	25 Mar 2002 09:33:02 -0000
 @@ -554,7 +554,11 @@
    BX_CPU_THIS_PTR cr4 = 0;
  #endif
@@ -198,9 +213,13 @@ diff -ur bochs-1.3/cpu/init.cc /build/source/bochs-1.3/cpu/init.cc
      BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
      debug_trap |= 0x80000000;
      async_event = 1;
-diff -ur bochs-1.3/cpu/proc_ctrl.cc /build/source/bochs-1.3/cpu/proc_ctrl.cc
---- bochs-1.3/cpu/proc_ctrl.cc	Sun Nov 18 18:32:40 2001
-+++ /build/source/bochs-1.3/cpu/proc_ctrl.cc	Mon Mar 11 08:07:35 2002
+Index: cpu/proc_ctrl.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
+retrieving revision 1.17
+diff -u -r1.17 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	18 Nov 2001 16:32:40 -0000	1.17
++++ cpu/proc_ctrl.cc	25 Mar 2002 09:33:03 -0000
 @@ -1147,23 +1147,143 @@
  BX_CPU_C::RDMSR(BxInstruction_t *i)
  {
@@ -353,10 +372,3 @@ diff -ur bochs-1.3/cpu/proc_ctrl.cc /build/source/bochs-1.3/cpu/proc_ctrl.cc
  }
  
  #if BX_X86_DEBUGGER
-
-
-
-_______________________________________________
-bochs-developers mailing list
-bochs-developers@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/bochs-developers
