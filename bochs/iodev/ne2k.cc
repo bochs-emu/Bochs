@@ -52,7 +52,7 @@ bx_ne2k_c::~bx_ne2k_c(void)
 void
 bx_ne2k_c::reset_device(void)
 {
-  BX_DEBUG (("reset_device"));
+  BX_DEBUG (("reset_device\n"));
   // Zero out registers and memory
   memset( & BX_NE2K_THIS s.CR,  0, sizeof(BX_NE2K_THIS s.CR) );
   memset( & BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
@@ -872,7 +872,7 @@ bx_ne2k_c::tx_timer_handler(void *this_ptr)
 void
 bx_ne2k_c::tx_timer(void)
 {
-  BX_DEBUG(("tx_timer"));
+  BX_DEBUG(("tx_timer\n"));
   BX_NE2K_THIS s.TSR.tx_ok = 1;
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
