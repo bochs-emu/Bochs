@@ -119,12 +119,28 @@ typedef union {
 #define MMXSQ(reg)  (reg.s64)
 #define MMXUQ(reg)  (reg.u64)
 
+// Endian  Host byte order         Guest (x86) byte order
+// ======================================================
+// Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
+// Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
+//
+// Legend: F - fraction/mmx
+//         E - exponent
+//         A - aligment
+
 typedef struct mmx_physical_reg_t
 {
+#ifdef BX_BIG_ENDIAN
+   Bit16u aligment1, aligment2, aligment3; 
+   Bit16u exp;      /* 4 bytes: FP register exponent, 
+                                   set to 0xffff by all MMX commands */
    BxPackedMmxRegister packed_mmx_register;
-   Bit16u exp;      /* 4 bytes: exponent of FP register, 
-                                    set to 0xffff by all MMX commands */
-   Bit32u aligment; /* 4 bytes: aligment */
+#else
+   BxPackedMmxRegister packed_mmx_register;
+   Bit16u exp;      /* 4 bytes: FP register exponent, 
+                                   set to 0xffff by all MMX commands */
+   Bit16u aligment1, aligment2, aligment3; 
+#endif
 } BxMmxRegister;
 
 /* to be compatible with fpu register file */

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.5 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: fpu_emu.h,v 1.6 2002-11-30 17:15:59 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -130,15 +130,26 @@ struct address {
 #endif
 } GCC_ATTRIBUTE((packed));
 
+// Endian  Host byte order         Guest (x86) byte order
+// ======================================================
+// Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
+// Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
+//
+// Legend: F - fraction/mmx
+//         E - exponent
+//         A - aligment
+
 struct fpu__reg {
 #ifdef EMU_BIG_ENDIAN
+  u16 aligment1, aligment2, aligment3;
+  s16 exp;   /* Signed quantity used in internal arithmetic. */
   u32 sigh;
   u32 sigl;
-  s16 exp;   /* Signed quantity used in internal arithmetic. */
 #else
   u32 sigl;
   u32 sigh;
   s16 exp;   /* Signed quantity used in internal arithmetic. */
+  u16 aligment1, aligment2, aligment3;
 #endif
 } GCC_ATTRIBUTE((aligned(16), packed));
 
