@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.192 2002-12-14 21:26:44 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.193 2002-12-21 14:31:24 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1943,6 +1943,9 @@ case "$target" in
     AC_DEFINE(HAVE_LIBREADLINE, 0)
     AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
     AC_DEFINE(BX_HAVE_DLFCN_H, 0)
+    ;;
+  *-beos*)
+    PRIMARY_TARGET=.bochs_beos_target
     ;;
 esac
 
