@@ -72,6 +72,7 @@ events from sim to gui:
 - [async] log message to be displayed (or not)
 - [async] ask user how to proceed (like panic: action=ask)
 - [async] param value changed
+- make my thread sleep for X microseconds  (call wxThread::sleep then return)
 
 
 implement the floppyA and floppyB change buttons using new event
@@ -89,6 +90,87 @@ wxMutexGuiEnter/Leave.  Still I'm going to change it so that the
 siminterface.cc code builds an event structure and the gui code
 fills in the blank in the structure, instead of the stupid 
 notify_get_int_arg stuff.
+
+
+Starting and Killing Threads
+
+When a detachable (default) thread finishes (returns from its Entry()
+function), wxwindows frees the memory associated with that thread.  
+Unless the thread is never going to end, it is potentially dangerous to have a
+pointer to it at all.  Even if you try to "check if it's alive" first, you may
+be dereferencing the pointer after it has already been deleted, leading to it
+claiming to be alive when it's not, or a segfault.  To solve this, the approach
+used in the wxwindows threads example is to have code in the thread's OnExit()
+method remove the thread's pointer from the list of usable threads.  In
+addition, any references or changes to the list of threads is controlled by a
+critical section to ensure that it stays correct.  This post finally 
+explained what I was seeing.
+
++-----------------------
+| From: Pieter van der Meulen (pgmvdm@yahoo.com)
+|  Subject: Re: Thread Sample program - bug 
+|  Newsgroups: comp.soft-sys.wxwindows
+|  Date: 2001-06-28 17:51:35 PST 
+| 
+| 
+| At 06:24 PM 6/28/2001, you wrote:
+| >Hi,
+| >I have wxWindows 2.2.7 (wxMSW) installed.
+| >
+| >I just found in the thread.cpp sample code this section:
+| >
+| ><code>
+| >void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event) )
+| >{
+| >     size_t count = wxGetApp().m_threads.Count();
+| >     for ( size_t i = 0; i < count; i++ )
+| >     {
+| >===>        wxGetApp().m_threads[0]->Delete();    <=====
+| >     }
+| >
+| >     Close(TRUE);
+| >}
+| ></code>
+| >The indecated line should probably rather have a
+| >m_threads[i]     rather than     m_threads[0] .
+| 
+| No, it should not, although it is not immediately obvious. When Delete() is 
+| called, the thread will eventually delete itself, but not before it calls 
+| MyThread::Exit(), which will remove itself from m_threads[] using 
+| wxArray::Remove(this). wxArray::Remove (RemoveAt) will compact the array to 
+| remove the element, it is now size-1. After this wxThread::Delete() returns.
+| 
+| 
+| >I have have a further question to this:
+| >Does this mean that a detached thread created with new
+| >HAS to be deleted  manually ?  Or is this only in case it might still
+| >be running?
+| 
+| Firstly, you must create every detached thread using new since it will 
+| delete itself, literally calling delete this.
+| Calling wxThread::Delete() is a correct way to terminate a thread, but 
+| manually deleting (using delete) a detached wxThread object is not. 
+| wxThread::Delete() will ask the thread to exit, the thread should check for 
+| this in wxThread::Entry() regularly using wxThread::TestDestroy() and exit 
+| when asked to do so.
+| 
+| >(In general I have a unsatisfied felling about when delete is
+| >neccessary and when not -- "I only know, it's not , if the class is
+| >derived from wxWindows")
+| 
+| For wxThreads: joinable threads must be deleted (when allocated on the 
+| heap), detached threads may never be deleted. For other classes, consult 
+| the documentation ;)
+| 
+| 
+| >Thanks for some feedback,
+| >Sebastian
+| 
+| Regards,
+| 
+| Pieter.
++-----------------------
+
 
 
 -------------------------------------------------------------
