@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.16 2002-09-01 21:24:14 bdenney Exp $
+// $Id: wxdialog.h,v 1.17 2002-09-02 17:03:11 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -16,19 +16,23 @@
 #define BTNLABEL_CANCEL "Cancel"
 #define BTNLABEL_OK "Ok"
 #define BTNLABEL_CREATE_IMG "Create Image"
+#define BTNLABEL_ADVANCED "Advanced"
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
 // simulation error message and asks if they want to continue or 
 // not.  It looks something like this:
-// -------------------------------------------------------------
-//  Context: Hard Drive
-//  Message: could not open hard drive image file '30M.sample'
 //
-//   [ ] Don't ask about future messages like this
+// +----- PANIC ---------------------------------------------------+
+// |                                                               |
+// | Context: Hard Drive                                           |
+// | Message: could not open hard drive image file '30M.sample'    |
+// |                                                               |
+// |      [ ] Don't ask about future messages like this            |
+// |                                                               |
+// |     [Continue]   [Die]  [Dump Core]  [Debugger]   [Help]      |
+// +---------------------------------------------------------------+
 //
-//   [Continue]   [Die]  [Dump Core]  [Debugger]   [Help]
-// -------------------------------------------------------------
 // To use this dialog:
 // After constructor, use SetContext, SetMessage, EnableButton to
 // determine what will be displayed.  Then call n = ShowModal().  The return
@@ -386,6 +390,126 @@ public:
 DECLARE_EVENT_TABLE()
 };
 
+////////////////////////////////////////////////////////////////////////////
+// ConfigMemoryDialog
+////////////////////////////////////////////////////////////////////////////
+//
+//  +--- Configure Memory ----------------------------------------------+
+//  |                                                                   |
+//  | +--- Standard Options ------------------------------------------+ |
+//  | |                                                               | |
+//  | |     Memory size (megabytes): [_____]                          | |
+//  | |              ROM BIOS image: [________________] [Browse]      | |
+//  | |            ROM BIOS address: [______]                         | |
+//  | |              VGA BIOS image: [________________] [Browse]      | |
+//  | |            VGA BIOS address: 0xc0000                          | |
+//  | |                                                               | |
+//  | +---------------------------------------------------------------+ |
+//  |                                                                   |
+//  | +--- Optional ROM images ---------------------------------------+ |
+//  | |                                                               | |
+//  | |   Optional ROM image #1: [________________] [Browse]          | |
+//  | |                 address: [______]                             | |
+//  | |                                                               | |
+//  | |   Optional ROM image #2: [________________] [Browse]          | |
+//  | |                 address: [______]                             | |
+//  | |                                                               | |
+//  | |   Optional ROM image #3: [________________] [Browse]          | |
+//  | |                 address: [______]                             | |
+//  | |                                                               | |
+//  | |   Optional ROM image #4: [________________] [Browse]          | |
+//  | |                 address: [______]                             | |
+//  | |                                                               | |
+//  | +---------------------------------------------------------------+ |
+//  |                                        [ Help ] [ Cancel ] [ Ok ] |
+//  +-------------------------------------------------------------------+
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigSoundDialog
+////////////////////////////////////////////////////////////////////////////
+// 
+// +--- Configure Sound -------------------------------------------+
+// |                                                               |
+// |  Bochs can emulate a Sound Blaster 16.  Would you like        |
+// |  to enable it?                                                |
+// |                                                               |
+// |           Enable [X]                                          |
+// |                                                               |
+// |   DMA timer: [_________]                                      |
+// |                                                               |
+// |   Midi mode  [ 1 ]  Output file [_________________] [Browse]  |
+// |   Wave mode  [ 1 ]  Output file [_________________] [Browse]  |
+// |   Log  mode  [ 1 ]  Output file [_________________] [Browse]  |
+// |                                                               |
+// |                                    [ Help ] [ Cancel ] [ Ok ] |
+// +---------------------------------------------------------------+
+
+////////////////////////////////////////////////////////////////////////////
+// LogOptionsDialog
+////////////////////////////////////////////////////////////////////////////
+// LogOptionsDialog allows the user to decide how Bochs will
+// behave for each type of log event.
+//
+// +---- Configure events -----------------------------------+
+// |                                                         |
+// | How should Bochs respond to each type of event?         |
+// |                                                         |
+// |            Debug events: [ignore]                       |
+// |             Info events: [ignore]                       |
+// |            Error events: [report]                       |
+// |            Panic events: [ask   ]                       |
+// |                                                         |
+// | For additional control over how each device responds    |
+// | to events, press the "Advanced" button.                 |
+// |                                                         |
+// |                [ Advanced ]  [ Help ] [ Cancel ] [ Ok ] |
+// +---------------------------------------------------------+
+// To use this dialog:
+// After constructor, call SetAction(eventtype, action) to set initial
+// value for each choice field.  The eventtype is 0 to LOG_OPTS_N_TYPES-1,
+// representing the types listed in LOG_OPTS_NAMES.  The choice field is 0 to
+// LOG_OPTS_N_CHOICES-1, representing the actions listed in LOG_OPTS_CHOICES.
+// Then call ShowModal(), which will return wxOK or wxCANCEL.  Afterward,
+// the GetAction(eventtype) method will tell what was selected in each
+// choice box.  
+class LogOptionsDialog: public wxDialog
+{
+private:
+#define LOG_OPTS_TITLE "Configure Log Events"
+#define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
+#define LOG_OPTS_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: " }
+#define LOG_OPTS_N_TYPES 4
+#define LOG_OPTS_CHOICES { "ignore", "report in log file", "ask user what to do", "end simulation", "no change" }
+#define LOG_OPTS_N_CHOICES_NORMAL 4
+#define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
+#define LOG_OPTS_NO_CHANGE 5   // index of "no change"
+// LOG_OPTS_CHOICES is the index of the longest string in LOG_OPTS_CHOICES
+// array, used to determine dialog geometry
+#define LOG_OPTS_LONGEST_CHOICE 2
+// normally all choices are available for all event types. The exclude 
+// expression allows some choices to be eliminated if they don't make any 
+// sense.  For example, it would be stupid to ignore a panic.
+#define LOG_OPTS_EXCLUDE(type,choice)  ( \
+   /* can't die or ask, on debug or info events */   \
+   (type <= 1 && (choice==2 || choice==3)) \
+   /* can't ignore panics or errors */ \
+   || (type >= 2 && choice==0) \
+   )
+#define LOG_OPTS_ADV "For additional control over how each device responds to events, press the \"Advanced\" button."
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *vertSizer, *buttonSizer;
+  wxFlexGridSizer *gridSizer;
+  wxChoice *action[LOG_OPTS_N_TYPES];
+public:
+  LogOptionsDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  int GetAction (int evtype);
+  void SetAction (int evtype, int action);
+DECLARE_EVENT_TABLE()
+};
+
 
 /**************************************************************************
 Everything else in here is a comment!
@@ -497,10 +621,10 @@ Or if you choose the CD-ROM, you get to edit the settings for it.
 |                                                     [Help] [Cancel] [Ok]  |
 +---------------------------------------------------------------------------+
 
-The CD-ROM media can still be configured.  In this context we can just show the
-Media section.  The same code can be written to serve both purposes.  This is
-the dialog that would appear when you click the CD-ROM button on the toolbar
-at runtime.
+The CD-ROM media can still be configured during the simulation.  In this
+context we can just show the Media section.  The same code can be written to
+serve both purposes.  This is the dialog that would appear when you click the
+CD-ROM button on the toolbar at runtime.
 
 +-- CD-ROM Media -----------------------------+
 |                                             |
@@ -591,39 +715,6 @@ let you go right to the configure screen for that disk drive.
 +---------------------------------------------------------------+
 
 ////////////////////////////////////////////////////////////////////////////
-// ConfigMemoryDialog
-////////////////////////////////////////////////////////////////////////////
-
-This edits options related to RAM and ROM, similar to the text menu
-1. Memory size in megabytes: 4
-2. Name of VGA BIOS image: 
-3. Name of ROM BIOS image: 
-4. ROM BIOS address: 0x00000
-5. Name of optional ROM image #1 : 
-6. optional ROM #1 address: 0x00000
-7. Name of optional ROM image #2 : 
-8. optional ROM #2 address: 0x00000
-9. Name of optional ROM image #3 : 
-10. optional ROM #3 address: 0x00000
-11. Name of optional ROM image #4 : 
-12. optional ROM #4 address: 0x00000
-
-////////////////////////////////////////////////////////////////////////////
-// ConfigSoundDialog
-////////////////////////////////////////////////////////////////////////////
-
-This edits options related to sound blaster emulation, similar to the
-text menu
-1. SB16 is present: yes
-2. Midi file: /dev/midi00
-3. Wave file: /dev/dsp
-4. Log file: sb16.log
-5. Midi mode: 1
-6. Wave mode: 1
-7. Log mode: 2
-8. DMA timer: 600000
-
-////////////////////////////////////////////////////////////////////////////
 // ConfigKeyboardDialog
 ////////////////////////////////////////////////////////////////////////////
 keyboard related settings
@@ -667,21 +758,86 @@ sort of a grid with parameter name, and value(editable) in different columns
 lets you choose which events you want to write to the log, which you
 want to ignore, etc.  You can do this at a high level, like
 
-Event type    Action
-panic          ask
-error          report
-info           ignore
-debug          ignore
++---- Configure events -----------------------------------+
+|                                                         |
+| How should Bochs respond to each type of event?         |
+|                                                         |
+|            Debug events: [ignore]                       |
+|             Info events: [ignore]                       |
+|            Error events: [report]                       |
+|            Panic events: [ask   ]                       |
+|                                                         |
+| For additional control over how each device responds    |
+| to events, press the "Advanced" button.                 |
+|                                                         |
+|                [ Advanced ]  [ Help ] [ Cancel ] [ Ok ] |
++---------------------------------------------------------+
+This sets up the default actions for all devices.  The advanced
+dialog lets you set different actions per device.  I have two
+attempts at the advanced dialog.  The first creates a large
+grid of wxChoice controls which choose between
+ignore/report/ask/die.  There will be enough rows in this
+table that a scrolling subwindow will be needed to fit
+all the devices.
 
-Or when you want more control:
++---- Advanced event configuration -----------------------+
+|                                                         |
+| This table determines how Bochs will respond to each    |
+| kind of event coming from a particular source.  For     |
+| example if you are having problems with the keyboard,   |
+| you could ask for debug and info events from the        |
+| keyboard to be reported.                                |
+|                                                         |
+|                      [Apply defaults for all devices]   |
++-------------------------------------------------------+-+
+|  Device    Debug     Info      Error      Panic       |^|
+|  --------  --------  -------   --------   ---------   |||
+|  Keyboard  [ignore]  [ignore]  [report]   [report]    |||
+|  VGA       [ignore]  [ignore]  [report]   [report]    |||
+|  NE2000    [ignore]  [ignore]  [report]   [report]    |||
+|  Sound     [ignore]  [ignore]  [report]   [report]    |v|
++---------------------------------------------------------+
+|                              [ Help ] [ Cancel ] [ Ok ] |
++-------------------------------------------------------+-+
 
-            panic        error        info          debug
-	    -----        ------       -----         ----- 
-keyboard     ask        report        report        report
-vga          ask        report        report        report
-network      ask        report        report        ignore
-cpu          ask        report        report        ignore
-sound        ask        report        report        ignore
+Try #2 for the advanced event configuration dialog.
+It shows the selection of the default actions again
+at the top, with some explanation.  Then at bottom, you 
+can select a device in the list box and edit the settings 
+for that device individually.  It would be possible to 
+allow selection of multiple devices and then edit several
+devices at once.
+
++---- Advanced event configuration ---------------------+-+
+|                                                         |
+|                    +--- Default Actions -------------+  |
+| First choose the   |                                 |  |
+| default actions    |  Debug events: [ignore]         |  |
+| that apply to all  |   Info events: [ignore]         |  |
+| event sources.     |  Error events: [report]         |  |
+|                    |  Panic events: [ask   ]         |  |
+|                    |                                 |  |
+|                    |          [Copy to All Devices]  |  |
+|                    +---------------------------------+  |
+|                                                         |
+| Then, if you want you can edit the actions for          |
+| individual devices.  For example if you are having      |
+| problems with the keyboard, you could ask for debug     |
+| and info events from the keyboard to be reported.       |
+|                                                         |
+| Select Device:                                          |
+| +-------------+-+  +--- Actions for VGA -------------+  |
+| | CPU         |^|  |                                 |  |
+| | Interrupts  |||  |  Debug events: [ignore]         |  |
+| |*VGA*********|||  |   Info events: [ignore]         |  |
+| | Keyboard    |||  |  Error events: [report]         |  |
+| | Mouse       |||  |  Panic events: [ask   ]         |  |
+| | Floppy Disk |v|  |                                 |  |
+| +-------------+-+  +---------------------------------+  |
+|                                                         |
+|                              [ Help ] [ Cancel ] [ Ok ] |
++---------------------------------------------------------+
+                                                           
 
 ////////////////////////////////////////////////////////////////////////////
 // CpuRegistersDialog

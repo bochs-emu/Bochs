@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.16 2002-09-01 21:24:14 bdenney Exp $
+// $Id: wxdialog.cc,v 1.17 2002-09-02 17:03:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -999,6 +999,169 @@ void NetConfigDialog::ShowHelp ()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
+
+//////////////////////////////////////////////////////////////////////
+// LogOptionsDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   vertSizer:
+//     prompt
+//     gridSizer 2 columns:
+//       "debug"
+//       action[0] = wxChoice
+//       "info"
+//       action[1] = wxChoice
+//       "error"
+//       action[2] = wxChoice
+//       "panic"
+//       action[3] = wxChoice
+//     buttonSizer:
+//       advanced
+//       help
+//       cancel
+//       ok
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(LogOptionsDialog, wxDialog)
+  EVT_BUTTON(-1, LogOptionsDialog::OnEvent)
+  EVT_CHECKBOX(-1, LogOptionsDialog::OnEvent)
+  EVT_TEXT(-1, LogOptionsDialog::OnEvent)
+END_EVENT_TABLE()
+
+
+LogOptionsDialog::LogOptionsDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  static char *names[] = LOG_OPTS_NAMES;
+  static char *choices[] = LOG_OPTS_CHOICES;
+  static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
+  SetTitle (LOG_OPTS_TITLE);
+  vertSizer = new wxBoxSizer (wxVERTICAL);
+  // top level objects
+  wxStaticText *text = new wxStaticText (this, -1, LOG_OPTS_PROMPT);
+  vertSizer->Add (text, 0, wxALL, 20);
+  gridSizer = new wxFlexGridSizer (2);
+  vertSizer->Add (gridSizer, 1, wxLEFT, 40);
+  text = new wxStaticText (this, -1, LOG_OPTS_ADV);
+  vertSizer->Add (text, 0, wxALL, 20);
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+
+  // figure out how wide the wxChoice boxes need to be for longest string
+  int choiceWidth;
+#if 1
+  // Calculate length of longest choice, to help decide how wide the 
+  // wxChoice controls should be.  Otherwise they are sized according to
+  // the initial choice string, which may not be the longest.
+  wxString longest (choices[LOG_OPTS_LONGEST_CHOICE]);
+  wxClientDC dc (this);
+  wxCoord w, h;
+  dc.GetTextExtent (longest, &w, &h);
+  wxLogDebug ("extent of '%s' is %d,%d", longest.c_str (), w, h);
+  choiceWidth = w * 3 / 2;   // 50% wider than longest string
+#else
+  choiceWidth = 150;  // hardcoded width, yuck.
+#endif
+  // gridSizer contents
+  gridSizer->AddGrowableCol (1);
+  for (int evtype=0; evtype<LOG_OPTS_N_TYPES; evtype++) {
+    gridSizer->Add (new wxStaticText (this, -1, names[evtype]), 0, wxALL, 5);
+    gridSizer->Add (action[evtype] = new wxChoice (this, -1), 1, wxALL|wxGROW, 5);
+    // fill in the choices in the wxChoice field
+    int lastChoice = 0;  // remember the index of the last choice
+    for (int choice=0; choice<LOG_OPTS_N_CHOICES_NORMAL; choice++) {
+      // the exclude expression allows some choices to not be available
+      // for some times.  For example, it would be stupid to ignore a panic.
+      if (!LOG_OPTS_EXCLUDE (evtype, choice)) {
+        action[evtype]->Append (choices[choice], &integers[choice]);
+	// the client data is an int* that points to the choice number.
+	// This is what will be returned by GetAction().
+	lastChoice++;
+      }
+    }
+    wxSize sizenow = action[evtype]->GetSize ();
+    action[evtype]->SetSizeHints (choiceWidth, sizenow.GetHeight ());
+    action[evtype]->SetSelection (lastChoice-1);
+  }
+
+  // buttonSizer contents
+  wxButton *btn;
+  btn = new wxButton (this, ID_Advanced, BTNLABEL_ADVANCED);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+}
+
+void LogOptionsDialog::Init()
+{
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(vertSizer);
+  vertSizer->Fit (this);
+  wxSize size = vertSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+void LogOptionsDialog::SetAction (int evtype, int a) {
+  // find the choice whose client data matches "a".
+  int i = 0;
+  int *ptr;
+  wxLogDebug ("SetAction type=%d a=%d", evtype, a);
+  while ((ptr = (int*) action[evtype]->GetClientData (i)) != NULL) {
+    if (a == *ptr) {  // found it!
+      action[evtype]->SetSelection (i);
+      return;
+    }
+    i++;
+  }
+  // this can happen if one of the choices that is excluded by
+  // LOG_OPTS_EXCLUDE() is used, for example.
+  wxLogDebug ("SetAction type=%d a=%d not found", evtype, a);
+}
+
+int LogOptionsDialog::GetAction (int evtype) {
+  int sel = action[evtype]->GetSelection (); 
+  int *ptrToChoice = (int*)action[evtype]->GetClientData (sel);
+  return *ptrToChoice;
+}
+
+void LogOptionsDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("you pressed button id=%d\n", id);
+  switch (id) {
+    case ID_Advanced:
+      wxMessageBox ("The advanced dialog is not implemented yet.");
+      break;
+    case wxOK:
+      EndModal (wxOK);
+      break;
+    case wxID_CANCEL:
+      EndModal (wxCANCEL);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void LogOptionsDialog::ShowHelp ()
+{
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+}
 
 /////////////////////////////////////////////////////////////////
 // utility

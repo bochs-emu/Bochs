@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.22 2002-09-01 21:24:14 bdenney Exp $
+// $Id: wxmain.cc,v 1.23 2002-09-02 17:03:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -149,6 +149,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
+  EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -424,6 +425,54 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
     wxString scriptString (dlg.GetScript ());
     strncpy (buf, scriptString.c_str (), sizeof(buf));
     script->set (buf);
+  }
+}
+
+void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
+{
+  // Ideally I would use the siminterface methods to fill in the fields
+  // of the LogOptionsDialog, but in fact several things are hardcoded.
+  // At least I can verify that the expected numbers are the same.
+  wxASSERT (SIM->get_max_log_level() == LOG_OPTS_N_TYPES);
+  LogOptionsDialog dlg (this, -1);
+
+  // The inital values of the dialog are complicated.  If the panic action
+  // for all modules is "ask", then clearly the inital value in the dialog
+  // for panic action should be "ask".  This informs the user what the 
+  // previous value was, and if they click Ok it won't do any harm.  But if
+  // some devices are set to "ask" and others are set to "report", then the
+  // initial value should be "no change".  With "no change", clicking on Ok
+  // will not destroy the settings for individual devices.  You would only
+  // start to see "no change" if you've been messing around in the advanced
+  // menu already.
+  for (int level=0; level<SIM->get_max_log_level(); level++) {
+    int mod = 0;
+    int first = SIM->get_log_action (mod, level);
+    bool consensus = true;
+    // now compare all others to first.  If all match, then use "first" as
+    // the initial value.
+    for (mod=1; mod<SIM->get_n_log_modules (); mod++) {
+      if (first != SIM->get_log_action (mod, level)) {
+	consensus = false;
+	break;
+      }
+    }
+    if (consensus)
+      dlg.SetAction (level, first);
+    else
+      dlg.SetAction (level, LOG_OPTS_NO_CHANGE);
+  }
+  int n = dlg.ShowModal ();   // show the dialog!
+  if (n == wxOK) {
+    for (int level=0; level < SIM->get_max_log_level (); level++) {
+      // ask the dialog what action the user chose for this type of event
+      int action = dlg.GetAction (level);
+      if (action != LOG_OPTS_NO_CHANGE) {
+	// apply that action to all modules (devices)
+	for (int i=0; i<SIM->get_n_log_modules (); i++)
+	  SIM->set_log_action (i, level, action);
+      }
+    }
   }
 }
 

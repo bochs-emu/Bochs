@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.14 2002-09-01 19:38:08 bdenney Exp $
+// $Id: wxmain.h,v 1.15 2002-09-02 17:03:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -81,6 +81,8 @@ enum
   ID_SPT,
   ID_Megs,
   ID_ComputeGeometry,
+  // dialog box: LogOptions
+  ID_Advanced
 };
 
 
@@ -132,6 +134,7 @@ public:
   void OnSim2CIEvent(wxCommandEvent& event);
   void OnEditBoot(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
+  void OnLogPrefs(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);
