@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.23 2003-07-31 19:51:42 vruppert Exp $
+// $Id: parallel.cc,v 1.24 2003-10-29 17:29:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -69,14 +69,14 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.23 2003-07-31 19:51:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.24 2003-10-29 17:29:26 vruppert Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
     /* PARALLEL PORT 1 */
 
     DEV_register_irq(7, "Parallel Port 1");
-    BX_INFO (("parallel port 1 at 0x378"));
+    BX_INFO (("parallel port 1 at 0x378 irq 7"));
     for (unsigned addr=0x0378; addr<=0x037A; addr++) {
       DEV_register_ioread_handler(this, read_handler, addr, "Parallel Port 1", 1);
       }
@@ -179,6 +179,10 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
         if (BX_PAR_THIS s.initmode == 1) {
           BX_PAR_THIS s.STATUS.busy  = 1;
           BX_PAR_THIS s.STATUS.slct  = 1;
+          BX_PAR_THIS s.STATUS.ack  = 0;
+          if (BX_PAR_THIS s.CONTROL.irq == 1) {
+            DEV_pic_raise_irq(7);
+          }
           BX_PAR_THIS s.initmode = 0;
         }
         BX_DEBUG(("read: status register returns 0x%02x", retval));
