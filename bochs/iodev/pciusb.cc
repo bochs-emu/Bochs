@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.19 2005-01-14 18:28:47 vruppert Exp $
+// $Id: pciusb.cc,v 1.20 2005-01-21 16:07:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -224,6 +224,7 @@ bx_pciusb_c::reset(unsigned type)
       memset(&BX_USB_THIS hub[i].device[j], 0, sizeof(USB_DEVICE));
 
   BX_USB_THIS keyboard_connected = 0;
+  BX_USB_THIS mouse_connected = 0;
 
   // include the device(s) initialize code
   #include "pciusb_devs.h"
@@ -244,8 +245,11 @@ bx_pciusb_c::init_device(Bit8u port, char *devname)
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
     connected = bx_options.Omouse_enabled->get();
-    if (bx_options.Omouse_type->get() != BX_MOUSE_TYPE_USB) {
-      BX_ERROR(("USB mouse present, but other mouse type configured"));
+    if (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_USB) {
+      BX_USB_THIS mouse_connected = connected;
+    } else if (connected) {
+      BX_ERROR(("USB mouse connect ignored, since other mouse type is configured"));
+      connected = 0;
     }
   } else if (!strcmp(devname, "keypad")) {
     type = USB_DEV_TYPE_KEYPAD;
@@ -1618,6 +1622,12 @@ bx_pciusb_c::usb_key_enq(Bit8u *scan_code)
 bx_pciusb_c::usb_keyboard_connected()
 {
   return BX_USB_THIS keyboard_connected;
+}
+
+  bx_bool
+bx_pciusb_c::usb_mouse_connected()
+{
+  return BX_USB_THIS mouse_connected;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

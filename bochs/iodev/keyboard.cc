@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.100 2005-01-14 18:28:46 vruppert Exp $
+// $Id: keyboard.cc,v 1.101 2005-01-21 16:07:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.100 2005-01-14 18:28:46 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.101 2005-01-21 16:07:36 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1570,8 +1570,8 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_s
 #endif
 
 #if BX_SUPPORT_PCIUSB
-  // if type == usb, redirect mouse data to the usb device
-  if (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_USB) {
+  // if an usb mouse is connected redirect mouse data to the usb device
+  if (DEV_usb_mouse_connected()) {
     DEV_usb_mouse_enq(delta_x, delta_y, delta_z, button_state);
     return;
   }

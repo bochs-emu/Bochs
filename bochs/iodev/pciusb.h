@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.8 2005-01-14 18:28:47 vruppert Exp $
+// $Id: pciusb.h,v 1.9 2005-01-21 16:07:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -357,6 +357,7 @@ public:
   virtual void  usb_mouse_enable(bx_bool enable);
   virtual bx_bool usb_key_enq(Bit8u *scan_code);
   virtual bx_bool usb_keyboard_connected();
+  virtual bx_bool usb_mouse_connected();
 
 private:
 
@@ -385,6 +386,7 @@ private:
 
   bx_bool  last_connect;
   bx_bool  keyboard_connected;
+  bx_bool  mouse_connected;
 
   static void  init_device(Bit8u port, char *devname);
   static void  usb_set_connect_status(int type, bx_bool connected);

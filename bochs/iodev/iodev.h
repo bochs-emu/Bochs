@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.58 2005-01-14 18:28:46 vruppert Exp $
+// $Id: iodev.h,v 1.59 2005-01-21 16:07:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -328,6 +328,9 @@ class BOCHSAPI bx_usb_stub_c : public bx_devmodel_c {
     return 0;
   }
   virtual bx_bool usb_keyboard_connected() {
+    return 0;
+  }
+  virtual bx_bool usb_mouse_connected() {
     return 0;
   }
 };
