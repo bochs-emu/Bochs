@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.18 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: io.cc,v 1.19 2002-09-24 04:43:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,6 +42,12 @@
 #define RAX EAX
 #endif
 
+
+#if BX_SUPPORT_X86_64
+#define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+#else
+#define IsLongMode() (0)
+#endif
 
 
   void
@@ -159,13 +165,19 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
+#if BX_SUPPORT_X86_64
+      if (i->as64L())
+        wordCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
+      else
+#endif
       if (i->as32L())
         wordCount = ECX;
       else
         wordCount = CX;
 
       if (wordCount) {
-        Bit32u laddrDst, paddrDst, wordsFitDst;
+        bx_address laddrDst;
+        Bit32u paddrDst, wordsFitDst;
         Bit8u *hostAddrDst;
         bx_segment_reg_t *dstSegPtr;
         int pointerDelta;
@@ -234,20 +246,22 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
             if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) {
               goto noAcceleration;
               }
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // wordCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (wordCount-1) << 1;
-              if ( edi < minOffset )
-                goto noAcceleration;
-              }
-            else {
-              // Counting upward.
-              Bit32u dstMaxOffset = (dstSegLimit - (wordCount<<1)) + 1;
-              if ( edi > dstMaxOffset )
-                goto noAcceleration;
+            if ( !IsLongMode() ) {
+              // Now make sure transfer will fit within the constraints of the
+              // segment boundaries, 0..limit for non expand-down.  We know
+              // wordCount >= 1 here.
+              if (BX_CPU_THIS_PTR get_DF ()) {
+                // Counting downward.
+                Bit32u minOffset = (wordCount-1) << 1;
+                if ( edi < minOffset )
+                  goto noAcceleration;
+                }
+              else {
+                // Counting upward.
+                Bit32u dstMaxOffset = (dstSegLimit - (wordCount<<1)) + 1;
+                if ( edi > dstMaxOffset )
+                  goto noAcceleration;
+                }
               }
 
             for (j=0; j<wordCount; ) {
@@ -279,6 +293,11 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
             BX_TICKN(j-1); // Main cpu loop also decrements one more.
+#if BX_SUPPORT_X86_64
+            if (i->as64L())
+              RCX -= (wordCount-1);
+            else
+#endif
             if (i->as32L())
               ECX -= (wordCount-1);
             else
@@ -392,7 +411,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
   // output word/doubleword string to port
 {
   unsigned seg;
-  Bit32u esi;
+  bx_address esi;
   unsigned int incr;
 
   if (!BX_NULL_SEG_REG(i->seg())) {
@@ -441,13 +460,19 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
+#if BX_SUPPORT_X86_64
+      if (i->as64L())
+        wordCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
+      else
+#endif
       if (i->as32L())
         wordCount = ECX;
       else
         wordCount = CX;
 
       if (wordCount) {
-        Bit32u laddrSrc, paddrSrc, wordsFitSrc;
+        bx_address laddrSrc;
+        Bit32u paddrSrc, wordsFitSrc;
         Bit8u *hostAddrSrc;
         bx_segment_reg_t *srcSegPtr;
         unsigned pointerDelta;
@@ -516,20 +541,22 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
             if ( !(srcSegPtr->cache.valid & SegAccessROK) ) {
               goto noAcceleration;
               }
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // wordCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (wordCount-1) << 1;
-              if ( esi < minOffset )
-                goto noAcceleration;
-              }
-            else {
-              // Counting upward.
-              Bit32u srcMaxOffset = (srcSegLimit - (wordCount<<1)) + 1;
-              if ( esi > srcMaxOffset )
-                goto noAcceleration;
+            if ( !IsLongMode() ) {
+              // Now make sure transfer will fit within the constraints of the
+              // segment boundaries, 0..limit for non expand-down.  We know
+              // wordCount >= 1 here.
+              if (BX_CPU_THIS_PTR get_DF ()) {
+                // Counting downward.
+                Bit32u minOffset = (wordCount-1) << 1;
+                if ( esi < minOffset )
+                  goto noAcceleration;
+                }
+              else {
+                // Counting upward.
+                Bit32u srcMaxOffset = (srcSegLimit - (wordCount<<1)) + 1;
+                if ( esi > srcMaxOffset )
+                  goto noAcceleration;
+                }
               }
 
             for (j=0; j<wordCount; ) {
@@ -561,6 +588,11 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
             BX_TICKN(j-1); // Main cpu loop also decrements one more.
+#if BX_SUPPORT_X86_64
+            if (i->as64L())
+              RCX -= (wordCount-1);
+            else
+#endif
             if (i->as32L())
               ECX -= (wordCount-1);
             else

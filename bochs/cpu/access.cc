@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.28 2002-09-22 21:47:57 kevinlawton Exp $
+// $Id: access.cc,v 1.29 2002-09-24 04:43:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,6 +36,13 @@
 #define this (BX_CPU(0))
 #endif
 
+#if BX_SUPPORT_X86_64
+#define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+#define LPFOf(laddr) ((laddr) & BX_CONST64(0xfffffffffffff000))
+#else
+#define IsLongMode() (0)
+#define LPFOf(laddr) ((laddr) & 0xfffff000)
+#endif
 
 
 
@@ -48,6 +55,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    seg->cache.valid |= SegAccessWOK;
     return;
     }
 #endif
@@ -140,6 +148,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    seg->cache.valid |= SegAccessROK;
     return;
     }
 #endif
@@ -276,7 +285,7 @@ BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset <= seg->cache.u.segment.limit_scaled) {
+    if ( IsLongMode() || (offset <= seg->cache.u.segment.limit_scaled) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -285,11 +294,12 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
-      lpf = laddr & 0xfffff000;
+      lpf = LPFOf(laddr);
       if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)))
         {
         Bit32u accessBits;
@@ -340,7 +350,7 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset < seg->cache.u.segment.limit_scaled) {
+    if ( IsLongMode() || (offset < seg->cache.u.segment.limit_scaled) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -349,12 +359,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
@@ -406,7 +417,7 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
+    if ( IsLongMode() || (offset < (seg->cache.u.segment.limit_scaled-2)) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -415,12 +426,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
@@ -464,6 +476,7 @@ accessOK:
   goto accessOK;
 }
 
+
   void
 BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 {
@@ -472,7 +485,7 @@ BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (offset <= seg->cache.u.segment.limit_scaled) {
+    if ( IsLongMode() || (offset <= seg->cache.u.segment.limit_scaled) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -481,11 +494,12 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
-      lpf = laddr & 0xfffff000;
+      lpf = LPFOf(laddr);
       if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
         // See if the TLB entry privilege level allows us read access
         // from this CPL.
@@ -523,7 +537,7 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (offset < seg->cache.u.segment.limit_scaled) {
+    if ( IsLongMode() || (offset < seg->cache.u.segment.limit_scaled) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -532,13 +546,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
-        Bit32u lpf, tlbIndex;
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
@@ -577,7 +591,7 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
+    if ( IsLongMode() || (offset < (seg->cache.u.segment.limit_scaled-2)) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -586,13 +600,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
-        Bit32u lpf, tlbIndex;
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
@@ -636,7 +650,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset <= seg->cache.u.segment.limit_scaled) {
+    if ( IsLongMode() || (offset <= seg->cache.u.segment.limit_scaled) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -645,11 +659,12 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       tlbIndex = BX_TLB_INDEX_OF(laddr);
-      lpf = laddr & 0xfffff000;
+      lpf = LPFOf(laddr);
       if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
            ) {
         Bit32u accessBits;
@@ -704,7 +719,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset < seg->cache.u.segment.limit_scaled) {
+    if ( IsLongMode() || (offset < seg->cache.u.segment.limit_scaled) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -713,12 +728,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
@@ -771,7 +787,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
+    if ( IsLongMode() || (offset < (seg->cache.u.segment.limit_scaled-2)) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -780,12 +796,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
@@ -922,7 +939,7 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
+    if ( IsLongMode() || (offset <= (seg->cache.u.segment.limit_scaled-7)) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -931,12 +948,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xff8) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
@@ -989,7 +1007,7 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
+    if ( IsLongMode() || (offset <= (seg->cache.u.segment.limit_scaled-7)) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -998,13 +1016,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xff8) { // Make sure access does not span 2 pages.
-        Bit32u lpf, tlbIndex;
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
@@ -1079,7 +1097,7 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
+    if ( IsLongMode() || (offset <= (seg->cache.u.segment.limit_scaled-7)) ) {
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
@@ -1088,12 +1106,13 @@ accessOK:
 
 #if BX_SupportGuest2HostTLB
       {
-      Bit32u lpf, tlbIndex, pageOffset;
+      bx_address lpf;
+      Bit32u tlbIndex, pageOffset;
 
       pageOffset = laddr & 0xfff;
       if (pageOffset <= 0xff8) { // Make sure access does not span 2 pages.
         tlbIndex = BX_TLB_INDEX_OF(laddr);
-        lpf = laddr & 0xfffff000;
+        lpf = LPFOf(laddr);
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;

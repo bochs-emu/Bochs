@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.15 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: string.cc,v 1.16 2002-09-24 04:43:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,6 +40,12 @@
 #define RAX EAX
 #endif
 
+
+#if BX_SUPPORT_X86_64
+#define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+#else
+#define IsLongMode() (0)
+#endif
 
 
 /* MOVSB ES:[EDI], DS:[ESI]   DS may be overridden
@@ -131,6 +137,11 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u byteCount;
 
+#if BX_SUPPORT_X86_64
+      if (i->as64L())
+        byteCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
+      else
+#endif
       if (i->as32L())
         byteCount = ECX;
       else
@@ -141,7 +152,8 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
         Bit8u  *hostAddrSrc, *hostAddrDst;
         unsigned pointerDelta;
         bx_segment_reg_t *srcSegPtr, *dstSegPtr;
-        Bit32u laddrDst, laddrSrc, paddrDst, paddrSrc;
+        bx_address laddrDst, laddrSrc;
+        Bit32u     paddrDst, paddrSrc;
 
         srcSegPtr = &BX_CPU_THIS_PTR sregs[seg];
         dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SREG_ES];
@@ -229,25 +241,27 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
                  !(dstSegPtr->cache.valid & SegAccessWOK) ) {
               goto noAcceleration16;
               }
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // byteCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (byteCount-1);
-              if ( si < minOffset )
-                goto noAcceleration16;
-              if ( di < minOffset )
-                goto noAcceleration16;
-              }
-            else {
-              // Counting upward.
-              Bit32u srcMaxOffset = (srcSegLimit - byteCount) + 1;
-              Bit32u dstMaxOffset = (dstSegLimit - byteCount) + 1;
-              if ( si > srcMaxOffset )
-                goto noAcceleration16;
-              if ( di > dstMaxOffset )
-                goto noAcceleration16;
+            if ( !IsLongMode() ) {
+              // Now make sure transfer will fit within the constraints of the
+              // segment boundaries, 0..limit for non expand-down.  We know
+              // byteCount >= 1 here.
+              if (BX_CPU_THIS_PTR get_DF ()) {
+                // Counting downward.
+                Bit32u minOffset = (byteCount-1);
+                if ( si < minOffset )
+                  goto noAcceleration16;
+                if ( di < minOffset )
+                  goto noAcceleration16;
+                }
+              else {
+                // Counting upward.
+                Bit32u srcMaxOffset = (srcSegLimit - byteCount) + 1;
+                Bit32u dstMaxOffset = (dstSegLimit - byteCount) + 1;
+                if ( si > srcMaxOffset )
+                  goto noAcceleration16;
+                if ( di > dstMaxOffset )
+                  goto noAcceleration16;
+                }
               }
 
             // Transfer data directly using host addresses.
@@ -265,6 +279,11 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
+#if BX_SUPPORT_X86_64
+            if (i->as64L())
+              RCX -= (byteCount-1);
+            else
+#endif
             if (i->as32L())
               ECX -= (byteCount-1);
             else
@@ -430,6 +449,11 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u dwordCount;
 
+#if BX_SUPPORT_X86_64
+      if (i->as64L())
+        dwordCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
+      else
+#endif
       if (i->as32L())
         dwordCount = ECX;
       else
@@ -440,7 +464,8 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
         Bit8u  *hostAddrSrc, *hostAddrDst;
         unsigned pointerDelta;
         bx_segment_reg_t *srcSegPtr, *dstSegPtr;
-        Bit32u laddrDst, laddrSrc, paddrDst, paddrSrc;
+        bx_address laddrDst, laddrSrc;
+        Bit32u     paddrDst, paddrSrc;
 
         srcSegPtr = &BX_CPU_THIS_PTR sregs[seg];
         dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SREG_ES];
@@ -532,25 +557,27 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
                  !(dstSegPtr->cache.valid & SegAccessWOK) ) {
               goto noAcceleration32;
               }
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // dwordCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (dwordCount-1) << 2;
-              if ( esi < minOffset )
-                goto noAcceleration32;
-              if ( edi < minOffset )
-                goto noAcceleration32;
-              }
-            else {
-              // Counting upward.
-              Bit32u srcMaxOffset = (srcSegLimit - (dwordCount<<2)) + 1;
-              Bit32u dstMaxOffset = (dstSegLimit - (dwordCount<<2)) + 1;
-              if ( esi > srcMaxOffset )
-                goto noAcceleration32;
-              if ( edi > dstMaxOffset )
-                goto noAcceleration32;
+            if ( !IsLongMode() ) {
+              // Now make sure transfer will fit within the constraints of the
+              // segment boundaries, 0..limit for non expand-down.  We know
+              // dwordCount >= 1 here.
+              if (BX_CPU_THIS_PTR get_DF ()) {
+                // Counting downward.
+                Bit32u minOffset = (dwordCount-1) << 2;
+                if ( esi < minOffset )
+                  goto noAcceleration32;
+                if ( edi < minOffset )
+                  goto noAcceleration32;
+                }
+              else {
+                // Counting upward.
+                Bit32u srcMaxOffset = (srcSegLimit - (dwordCount<<2)) + 1;
+                Bit32u dstMaxOffset = (dstSegLimit - (dwordCount<<2)) + 1;
+                if ( esi > srcMaxOffset )
+                  goto noAcceleration32;
+                if ( edi > dstMaxOffset )
+                  goto noAcceleration32;
+                }
               }
 
             // Transfer data directly using host addresses.
@@ -568,6 +595,11 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
+#if BX_SUPPORT_X86_64
+            if (i->as64L())
+              RCX -= (dwordCount-1);
+            else
+#endif
             if (i->as32L())
               ECX -= (dwordCount-1);
             else
@@ -675,6 +707,11 @@ doIncr32:
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
+#if BX_SUPPORT_X86_64
+      if (i->as64L())
+        wordCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
+      else
+#endif
       if (i->as32L())
         wordCount = ECX;
       else
@@ -685,7 +722,8 @@ doIncr32:
         Bit8u  *hostAddrSrc, *hostAddrDst;
         unsigned pointerDelta;
         bx_segment_reg_t *srcSegPtr, *dstSegPtr;
-        Bit32u laddrDst, laddrSrc, paddrDst, paddrSrc;
+        bx_address laddrDst, laddrSrc;
+        Bit32u     paddrDst, paddrSrc;
 
         srcSegPtr = &BX_CPU_THIS_PTR sregs[seg];
         dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SREG_ES];
@@ -777,25 +815,27 @@ doIncr32:
                  !(dstSegPtr->cache.valid & SegAccessWOK) ) {
               goto noAcceleration16;
               }
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // wordCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (wordCount-1) << 1;
-              if ( si < minOffset )
-                goto noAcceleration16;
-              if ( di < minOffset )
-                goto noAcceleration16;
-              }
-            else {
-              // Counting upward.
-              Bit32u srcMaxOffset = (srcSegLimit - (wordCount<<1)) + 1;
-              Bit32u dstMaxOffset = (dstSegLimit - (wordCount<<1)) + 1;
-              if ( si > srcMaxOffset )
-                goto noAcceleration16;
-              if ( di > dstMaxOffset )
-                goto noAcceleration16;
+            if ( !IsLongMode() ) {
+              // Now make sure transfer will fit within the constraints of the
+              // segment boundaries, 0..limit for non expand-down.  We know
+              // wordCount >= 1 here.
+              if (BX_CPU_THIS_PTR get_DF ()) {
+                // Counting downward.
+                Bit32u minOffset = (wordCount-1) << 1;
+                if ( si < minOffset )
+                  goto noAcceleration16;
+                if ( di < minOffset )
+                  goto noAcceleration16;
+                }
+              else {
+                // Counting upward.
+                Bit32u srcMaxOffset = (srcSegLimit - (wordCount<<1)) + 1;
+                Bit32u dstMaxOffset = (dstSegLimit - (wordCount<<1)) + 1;
+                if ( si > srcMaxOffset )
+                  goto noAcceleration16;
+                if ( di > dstMaxOffset )
+                  goto noAcceleration16;
+                }
               }
 
             // Transfer data directly using host addresses.
@@ -813,6 +853,11 @@ doIncr32:
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
+#if BX_SUPPORT_X86_64
+            if (i->as64L())
+              RCX -= (wordCount-1);
+            else
+#endif
             if (i->as32L())
               ECX -= (wordCount-1);
             else
@@ -1547,6 +1592,11 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
       Bit32u byteCount;
 
+#if BX_SUPPORT_X86_64
+      if (i->as64L())
+        byteCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
+      else
+#endif
       if (i->as32L())
         byteCount = ECX;
       else
@@ -1557,7 +1607,8 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
         Bit8u  *hostAddrDst;
         unsigned pointerDelta;
         bx_segment_reg_t *dstSegPtr;
-        Bit32u laddrDst, paddrDst;
+        bx_address laddrDst;
+        Bit32u     paddrDst;
 
         dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SREG_ES];
 
@@ -1622,20 +1673,22 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
             if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) {
               goto noAcceleration16;
               }
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // byteCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (byteCount-1);
-              if ( edi < minOffset )
-                goto noAcceleration16;
-              }
-            else {
-              // Counting upward.
-              Bit32u dstMaxOffset = (dstSegLimit - byteCount) + 1;
-              if ( edi > dstMaxOffset )
-                goto noAcceleration16;
+            if ( !IsLongMode() ) {
+              // Now make sure transfer will fit within the constraints of the
+              // segment boundaries, 0..limit for non expand-down.  We know
+              // byteCount >= 1 here.
+              if (BX_CPU_THIS_PTR get_DF ()) {
+                // Counting downward.
+                Bit32u minOffset = (byteCount-1);
+                if ( edi < minOffset )
+                  goto noAcceleration16;
+                }
+              else {
+                // Counting upward.
+                Bit32u dstMaxOffset = (dstSegLimit - byteCount) + 1;
+                if ( edi > dstMaxOffset )
+                  goto noAcceleration16;
+                }
               }
 
             // Transfer data directly using host addresses.
@@ -1652,6 +1705,11 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
+#if BX_SUPPORT_X86_64
+            if (i->as64L())
+              RCX -= (byteCount-1);
+            else
+#endif
             if (i->as32L())
               ECX -= (byteCount-1);
             else
