@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.36 2002-10-05 12:40:34 bdenney Exp $
+// $Id: wx.cc,v 1.37 2002-10-05 17:24:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -59,7 +59,23 @@
 //////////////////////////////////////////////////////////////
 // data for wx gui
 //////////////////////////////////////////////////////////////
+// The bits on the VGA screen are stored in two different forms.
+// wxPixels is an array (size=width*height) of colormap indices.  The
+// wxPixel tells which color number was drawn at that location on the
+// screen.  wxScreen is an array (size=width*height*3) of RGB values.
+// Each pixel is represented by three bytes, one for red, green, and
+// blue.  wxScreen exists for performance reasons only, since you
+// could always reconstruct wxScreen using wxPixels and
+// wxBochsPalette.  wxScreen is used because it is one step closer to
+// being in the wxBitmap form that is drawn on the screen.
+//
+// You may wonder why we have wxPixels then, if wxScreen is a copy of
+// all the RGB values that should be displayed.  The reason is that
+// the VGA palette can change at any time, and if it changes we must
+// be able reconstruct wxScreen using the new value of wxBochsPalette.
+// See palette_change for how this happens.
 static char *wxScreen = NULL;
+static char *wxPixels = NULL;
 wxCriticalSection wxScreen_lock;
 static long wxScreenX = 0;
 static long wxScreenY = 0;
@@ -734,6 +750,8 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
   IFDBG_VGA(wxLogDebug ("MyPanel::specific_init got lock. wxScreen=%p", wxScreen));
   wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+  wxPixels = (char *)malloc(wxScreenX * wxScreenY);
+  memset(wxPixels, 0, wxScreenX * wxScreenY);
 
   wxTileX = tilewidth;
   wxTileY = tileheight;
@@ -827,6 +845,7 @@ bx_gui_c::clear_screen(void)
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug ("MyPanel::clear_screen got lock. wxScreen=%p", wxScreen));
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+  memset(wxPixels, 0, wxScreenX * wxScreenY);
   thePanel->MyRefresh ();
 }
 
@@ -842,6 +861,7 @@ UpdateScreen(char *newBits, int x, int y, int width, int height)
         wxScreen[(y * wxScreenX * 3) + ((x+c) * 3)] = wxBochsPalette[newBits[(i * width) + c]].red;
         wxScreen[(y * wxScreenX * 3) + ((x+c) * 3) + 1] = wxBochsPalette[newBits[(i * width) + c]].green;
         wxScreen[(y * wxScreenX * 3) + ((x+c) * 3) + 2] = wxBochsPalette[newBits[(i * width) + c]].blue;
+	wxPixels[(y * wxScreenX) + (x+c)] = newBits[(i * width) + c];
       }
       y++;
       if(y >= wxScreenY) break;
@@ -960,6 +980,8 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
   wxBochsPalette[index].red = red;
   wxBochsPalette[index].green = green;
   wxBochsPalette[index].blue = blue;
+  // redraw entire screen using wxPixel array
+  UpdateScreen(wxPixels, 0, 0, wxScreenX, wxScreenY);
   thePanel->MyRefresh ();
   return(0);
 }
@@ -1011,6 +1033,8 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
   wxScreenY = y;
   wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
   wxASSERT (wxScreen != NULL);
+  wxPixels = (char *)realloc(wxPixels, wxScreenX * wxScreenY);
+  wxASSERT (wxPixels != NULL);
   wxScreen_lock.Leave ();
   IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update gave up lock. wxScreen=%p", wxScreen));
   // Note: give up wxScreen_lock before calling SetClientSize.  I did
