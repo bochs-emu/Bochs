@@ -1,7 +1,7 @@
 #!/bin/sh
 BOCHS=/usr/local/bin/bochs
 DLXINST=/usr/local/bochs/dlxlinux
-GUNZIP=gunzip
+GZIP=gzip
 if [ ! -z $1 ]; then
   DLXPATH=$1
 else
@@ -19,7 +19,8 @@ makedlxdir() {
     echo "ERROR: bochsrc.txt already exists in $DLXPATH. Remove it to replace"
   fi
   if [ ! -f $DLXPATH/hd10meg.img ]; then
-    cp -av $DLXINST/hd10meg.img $DLXPATH/.
+    echo Uncompressing $DLXINST/hd10meg.img.gz '->' $DLXPATH/hd10meg.img
+    $GZIP -dc $DLXINST/hd10meg.img.gz > $DLXPATH/hd10meg.img
   else
     echo "ERROR: hd10meg.img already exists in $DLXPATH. Remove it to replace"
   fi
@@ -40,13 +41,13 @@ if test ! -d $DLXINST; then
   exit 1
 fi
 echo ok
-echo -n "Checking for $GUNZIP..."
-$GUNZIP < /dev/null >& /dev/null 
+echo -n "Checking for $GZIP..."
+$GZIP < /dev/null >& /dev/null 
 if test $? = 0; then
   echo ok
 else
   echo not found
-  echo ERROR: without $GUNZIP in your PATH, I cannot continue.
+  echo ERROR: without $GZIP in your PATH, I cannot continue.
   exit 1
 fi
 echo -n "Checking for $HOME/.bochs directory..."
