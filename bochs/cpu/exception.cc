@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.51 2005-03-30 20:52:49 sshwarts Exp $
+// $Id: exception.cc,v 1.52 2005-03-30 21:43:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -206,11 +206,11 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       bx_descriptor_t ss_descriptor;
       bx_selector_t   ss_selector;
 
-      BX_ERROR(("long mode interrupt(): INTERRUPT TO INNER PRIVILEGE"));
+      BX_DEBUG(("long mode interrupt(): INTERRUPT TO INNER PRIVILEGE"));
 
       // check selector and descriptor for new stack in current TSS
       if (ist > 0) {
-        BX_ERROR(("long mode interrupt(): trap to IST, vector = %d\n",ist));
+        BX_DEBUG(("long mode interrupt(): trap to IST, vector = %d\n",ist));
         get_RSP_from_TSS(ist+3,&RSP_for_cpl_x);
       }
       else {
@@ -285,9 +285,16 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     // INTERRUPT TO SAME PRIVILEGE LEVEL:
     if (cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL)
     {
-      BX_ERROR(("long mode interrupt(): INTERRUPT TO SAME PRIVILEGE"));
+      BX_DEBUG(("long mode interrupt(): INTERRUPT TO SAME PRIVILEGE"));
 
       Bit64u old_RSP = RSP;
+
+      // check selector and descriptor for new stack in current TSS
+      if (ist > 0) {
+        BX_DEBUG(("long mode interrupt(): trap to IST, vector = %d\n",ist));
+        get_RSP_from_TSS(ist+3, &RSP);
+      }
+
       // align stack
       RSP = RSP & BX_CONST64(0xfffffffffffffff0);
 
