@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.19 2002-08-01 12:19:01 vruppert Exp $
+// $Id: pc_system.cc,v 1.20 2002-08-27 18:53:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,7 +50,11 @@ const Bit64u bx_pc_system_c::COUNTER_INTERVAL = 100000;
 bx_pc_system_c::bx_pc_system_c(void)
 {
   this->put("SYS");
+}
 
+  void
+bx_pc_system_c::init_ips(Bit32u ips)
+{
   num_timers = 0;
   // set ticks period and remaining to max Bit32u value
   num_cpu_ticks_in_period = num_cpu_ticks_left = (Bit32u) -1;
@@ -71,11 +75,7 @@ bx_pc_system_c::bx_pc_system_c(void)
 
   counter = 0;
   counter_timer_index = register_timer_ticks(this, bx_pc_system_c::counter_timer_handler, COUNTER_INTERVAL, 1, 1);
-}
 
-  void
-bx_pc_system_c::init_ips(Bit32u ips)
-{
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
   BX_DEBUG(("ips = %u", (unsigned) ips));
