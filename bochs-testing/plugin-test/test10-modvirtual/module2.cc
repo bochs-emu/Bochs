@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "main.h"
-#define _buildsym(sym) libmodule2_LTX_##sym
+#define _buildsym(sym) module2_LTX_##sym
 #include "modules.h"
 
 class GPS_Receiver : public DeviceInterface {

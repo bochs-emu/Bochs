@@ -36,7 +36,9 @@ int load_module (const char *fmt, const char *modname)
     printf ("lt_dlopen error: %s\n", lt_dlerror ());
     return -1;
   }
-  modload_func func = (modload_func) lt_dlsym (handle, "module_init");
+  char sym[1024];
+  sprintf (sym, "%s_LTX_%s", modname, "module_init");
+  modload_func func = (modload_func) lt_dlsym (handle, sym);
   printf ("module_init function is at VARIES{%p}\n", func);
   if (func != NULL) {
     printf ("Calling module_init\n");

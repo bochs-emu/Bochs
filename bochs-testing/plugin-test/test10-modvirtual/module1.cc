@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "main.h"
-#define _buildsym(sym) libmodule1_LTX_##sym
+#define _buildsym(sym) module1_LTX_##sym
 #include "modules.h"
 
 class CellPhone : public DeviceInterface {
