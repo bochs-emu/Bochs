@@ -454,14 +454,23 @@ main(int argc, char *argv[])
     bx_load32bitOSimagehack();
     }
 
-  int processor = 0;
-  int quantum = 5;
-  while (1) {
-    // do some instructions in each processor
-    BX_CPU(processor)->cpu_loop(quantum);
-    processor = (processor+1) % BX_SMP_PROCESSORS;
-    if (processor == 0) 
-      BX_TICKN(quantum);
+  if (BX_SMP_PROCESSORS == 1) {
+    // only one processor, run as fast as possible by not messing with
+    // quantums and loops.
+    BX_CPU(0)->cpu_loop(1);
+  } else {
+    // SMP simulation: do 5 instructions on each processor, then switch
+    // to another.  I'm sure that increasing quantum speeds up overall
+    // performance.
+    int processor = 0;
+    int quantum = 5;
+    while (1) {
+      // do some instructions in each processor
+      BX_CPU(processor)->cpu_loop(quantum);
+      processor = (processor+1) % BX_SMP_PROCESSORS;
+      if (processor == 0) 
+	BX_TICKN(quantum);
+    }
   }
 #endif
 
