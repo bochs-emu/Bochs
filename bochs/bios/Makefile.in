@@ -82,20 +82,20 @@ BIOS-bochs-2-processors: rombios.c
 	gcc -DBX_SMP_PROCESSORS=2 -E $< > _rombios_.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
-	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios2.txt
 	mv tmp.bin BIOS-bochs-2-processors
 
 BIOS-bochs-4-processors: rombios.c
 	gcc -DBX_SMP_PROCESSORS=4 -E $< > _rombios_.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
-	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios4.txt
 	mv tmp.bin BIOS-bochs-4-processors
 
 BIOS-bochs-8-processors: rombios.c
 	gcc -DBX_SMP_PROCESSORS=8 -E $< > _rombios_.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
-	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios8.txt
 	mv tmp.bin BIOS-bochs-8-processors
 
