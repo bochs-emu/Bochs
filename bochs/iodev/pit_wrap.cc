@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.27 2002-09-23 02:20:52 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.28 2002-09-23 03:49:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,8 +95,8 @@ bx_pit_c bx_pit;
 #define MIN_MULT_FLOOR (0.75)
 #define MAX_MULT (1.25)
 #define MAX_MULT_CEILING (1.5)
-#define MAX(a,b) ( ((a)>(b))?(a):(b) )
-#define MIN(a,b) ( ((a)>(b))?(b):(a) )
+#define BX_MAX(a,b) ( ((a)>(b))?(a):(b) )
+#define BX_MIN(a,b) ( ((a)>(b))?(b):(a) )
 
 //How many timer ticks per usecond.
 //1.193181MHz Clock
@@ -158,7 +158,7 @@ bx_pit_c::init( bx_devices_c *d )
   BX_DEBUG(("deactivated timer."));
   if(BX_PIT_THIS s.timer.get_next_event_time()) {
     bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
+				BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				0);
     BX_DEBUG(("activated timer."));
   }
@@ -224,7 +224,7 @@ bx_pit_c::handle_timer() {
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
       bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				  MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
+				  BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
     }
@@ -385,7 +385,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
       bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				  MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
+				  BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
     }
@@ -565,7 +565,7 @@ bx_pit_c::second_update_data(void) {
 
     BX_PIT_THIS s.total_sec += timediff;
 
-    BX_PIT_THIS s.max_ticks = MIN( (((BX_PIT_THIS s.total_sec)*(Bit64u)(TICKS_PER_SECOND))/USEC_PER_SECOND) + AHEAD_CEILING , BX_PIT_THIS s.total_ticks + (Bit64u)(TICKS_PER_SECOND*MAX_MULT) );
+    BX_PIT_THIS s.max_ticks = BX_MIN( (((BX_PIT_THIS s.total_sec)*(Bit64u)(TICKS_PER_SECOND))/USEC_PER_SECOND) + AHEAD_CEILING , BX_PIT_THIS s.total_ticks + (Bit64u)(TICKS_PER_SECOND*MAX_MULT) );
 
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("timediff: %lld, total_sec: %lld, total_ticks: %lld\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
@@ -610,7 +610,7 @@ bx_pit_c::second_update_data(void) {
 
     //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff));
     BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff);
-    BX_PIT_THIS s.usec_per_second = MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
+    BX_PIT_THIS s.usec_per_second = BX_MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
     BX_PIT_THIS s.last_sec_usec = bx_pc_system.time_usec();
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("Parms: ticks_per_second=%lld, usec_per_second=%lld\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
