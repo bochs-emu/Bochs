@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.19 2001-11-06 17:14:34 fries Exp $
+// $Id: eth_fbsd.cc,v 1.19.10.1 2002-09-12 03:38:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@
 
 #include "bochs.h"
 #ifdef ETH_FBSD
-#define LOG_THIS this->
+#define LOG_THIS bx_ne2k.
 
 extern "C" {
 #include <fcntl.h>

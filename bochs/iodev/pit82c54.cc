@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.19 2002-02-21 21:16:06 yakovlev Exp $
+// $Id: pit82c54.cc,v 1.19.6.1 2002-09-12 03:38:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -176,6 +176,9 @@ void pit_82C54::print_cnum(Bit8u cnum) {
 
   pit_82C54::pit_82C54 (void) {
     init();
+  }
+
+  void pit_82C54::reset (unsigned type) {
   }
 
 void pit_82C54::decrement_multiple(counter_type & thisctr, Bit32u cycles) {

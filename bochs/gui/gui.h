@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.26 2002-03-17 20:57:54 vruppert Exp $
+// $Id: gui.h,v 1.26.4.1 2002-09-12 03:38:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,13 +41,14 @@ public:
   static void flush(void);
   static void clear_screen(void);
   static Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
-  static void dimension_update(unsigned x, unsigned y);
+  static void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
   static unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
   static unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
   static void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
   static void show_headerbar(void);
   static int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
   static int set_clipboard_text(char *snapshot, Bit32u len);
+  static void set_text_charmap(Bit8u *fbuffer);
 
   // The following function(s) are defined already, and your
   // GUI code calls them
@@ -83,6 +84,7 @@ private:
   static void snapshot_handler(void);
   static void config_handler(void);
   static void toggle_mouse_enable(void);
+  static void userbutton_handler(void);
   static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
 
   Boolean floppyA_status;
@@ -98,11 +100,15 @@ private:
   unsigned snapshot_bmap_id, snapshot_hbar_id;
   unsigned config_bmap_id, config_hbar_id;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
+  unsigned user_bmap_id, user_hbar_id;
+
+  unsigned char vga_charmap[0x2000];
+  Boolean charmap_changed;
   };
 
 
 #define BX_MAX_PIXMAPS 16
-#define BX_MAX_HEADERBAR_ENTRIES 10
+#define BX_MAX_HEADERBAR_ENTRIES 11
 #define BX_HEADER_BAR_Y 32
 
 // align pixmaps towards left or right side of header bar

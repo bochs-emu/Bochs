@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-it.map,v 1.1 2002-05-17 20:25:36 cbothamy Exp $
+# $Id: x11-pc-it.map,v 1.1.2.1 2002-09-12 03:38:49 bdenney Exp $
 # Target: PC(x86) keyboard, IT keymap
 # Author: Emanuele Goldoni
 #

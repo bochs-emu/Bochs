@@ -31,8 +31,8 @@ Instructions:
 +# with this script or disk-images created with bximage with the following sizes:
 +# 10MB, 20MB, 50MB, 100MB, 200MB, 500MB, 1024MB, 2048MB.
 +#
-+# $Author: cbothamy $
-+# $Revision: 1.1 $
++# $Author: bdenney $
++# $Revision: 1.1.2.1 $
 +#
 +# License: GPL2 (see LICENSE)
 +# -----------------------------------------------------------------------------

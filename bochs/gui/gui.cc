@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.39 2002-03-17 20:57:54 vruppert Exp $
+// $Id: gui.cc,v 1.39.4.1 2002-09-12 03:38:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,12 +37,9 @@
 #include "gui/bitmaps/paste.h"
 #include "gui/bitmaps/configbutton.h"
 #include "gui/bitmaps/cdromd.h"
+#include "gui/bitmaps/userbutton.h"
 #if BX_WITH_MACOS
 #  include <Disks.h>
-#endif
-
-#if BX_WITH_X11
-#include <X11/Xlib.h>
 #endif
 
 bx_gui_c   bx_gui;
@@ -86,6 +83,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS copy_bmap_id = create_bitmap(bx_copy_bmap, BX_COPY_BMAP_X, BX_COPY_BMAP_Y);
   BX_GUI_THIS paste_bmap_id = create_bitmap(bx_paste_bmap, BX_PASTE_BMAP_X, BX_PASTE_BMAP_Y);
   BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_CONFIG_BMAP_X, BX_CONFIG_BMAP_Y);
+  BX_GUI_THIS user_bmap_id = create_bitmap(bx_user_bmap, BX_USER_BMAP_X, BX_USER_BMAP_Y);
 
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
@@ -149,6 +147,9 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   // Copy button
   BX_GUI_THIS copy_hbar_id = headerbar_bitmap(BX_GUI_THIS copy_bmap_id,
                           BX_GRAVITY_RIGHT, copy_handler);
+  // User button
+  BX_GUI_THIS user_hbar_id = headerbar_bitmap(BX_GUI_THIS user_bmap_id,
+                          BX_GRAVITY_RIGHT, userbutton_handler);
 
   show_headerbar();
 }
@@ -157,10 +158,10 @@ void
 bx_gui_c::update_drive_status_buttons (void) {
   BX_GUI_THIS floppyA_status = 
     bx_devices.floppy->get_media_status (0)
-    && bx_options.floppya.Oinitial_status->get ();
+    && bx_options.floppya.Ostatus->get ();
   BX_GUI_THIS floppyB_status = 
       bx_devices.floppy->get_media_status (1)
-      && bx_options.floppyb.Oinitial_status->get ();
+      && bx_options.floppyb.Ostatus->get ();
   BX_GUI_THIS cdromD_status =
     bx_devices.hard_drive->get_cd_media_status()
     && bx_options.cdromd.Opresent->get ();
@@ -196,24 +197,69 @@ bx_gui_c::update_drive_status_buttons (void) {
   void
 bx_gui_c::floppyA_handler(void)
 {
+#if BX_WITH_WX
+  // instead of just toggling the status, call wxWindows to bring up 
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
+  if (ret < 0) return;  // cancelled
+  // eject and then insert the disk.  If the new path is invalid,
+  // the status will return 0.
+  unsigned new_status = bx_devices.floppy->set_media_status(0, 0);
+  printf ("eject disk, new_status is %d\n", new_status);
+  new_status = bx_devices.floppy->set_media_status(0, 1);
+  printf ("insert disk, new_status is %d\n", new_status);
+  fflush (stdout);
+  BX_GUI_THIS floppyA_status = new_status;
+#else
   BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
   bx_devices.floppy->set_media_status(0, BX_GUI_THIS floppyA_status);
+#endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
 bx_gui_c::floppyB_handler(void)
 {
+#if BX_WITH_WX
+  // instead of just toggling the status, call wxWindows to bring up 
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
+  if (ret < 0) return;  // cancelled
+  // eject and then insert the disk.  If the new path is invalid,
+  // the status will return 0.
+  unsigned new_status = bx_devices.floppy->set_media_status(1, 0);
+  printf ("eject disk, new_status is %d\n", new_status);
+  new_status = bx_devices.floppy->set_media_status(1, 1);
+  printf ("insert disk, new_status is %d\n", new_status);
+  fflush (stdout);
+  BX_GUI_THIS floppyB_status = new_status;
+#else
   BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
   bx_devices.floppy->set_media_status(1, BX_GUI_THIS floppyB_status);
+#endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
 bx_gui_c::cdromD_handler(void)
 {
+#if BX_WITH_WX
+  // instead of just toggling the status, call wxWindows to bring up 
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->ask_param (BXP_CDROM_PATH);
+  if (ret < 0) return;  // cancelled
+  // eject and then insert the disk.  If the new path is invalid,
+  // the status will return 0.
+  unsigned status = bx_devices.hard_drive->set_cd_media_status(0);
+  printf ("eject disk, new_status is %d\n", status);
+  status = bx_devices.hard_drive->set_cd_media_status(1);
+  printf ("insert disk, new_status is %d\n", status);
+  fflush (stdout);
+  BX_GUI_THIS cdromD_status = status;
+#else
   BX_GUI_THIS cdromD_status =
     bx_devices.hard_drive->set_cd_media_status(!BX_GUI_THIS cdromD_status);
+#endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
@@ -235,7 +281,7 @@ bx_gui_c::power_handler(void)
   BX_PANIC (("POWER button turned off."));
   // shouldn't reach this point, but if you do, QUIT!!!
   fprintf (stderr, "Bochs is exiting because you pressed the power button.\n");
-  ::exit (1);
+  BX_EXIT (1);
 }
 
 Bit32s
@@ -294,24 +340,23 @@ bx_gui_c::snapshot_handler(void)
 {
   char *text_snapshot;
   Bit32u len;
-  char filename[BX_PATHNAME_LEN];
-  int flag;
   if (make_text_snapshot (&text_snapshot, &len) < 0) {
     BX_ERROR(( "snapshot button failed, mode not implemented"));
     return;
   }
-  // I wish I had a dialog box!!!
-  flag = 0; // 0 = no dialog present / 1 = OK / -1 = Cancel
-  if (!flag) { // use standard filename if dialog is not present
-    strcpy(filename, "snapshot.txt");
-    flag = 1;
-  }
-  if (flag == 1) {
-    FILE *fp = fopen(filename, "wb");
-    fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
-    fclose(fp);
-    BX_INFO (("copied text snapshot to %s", filename));
-  }
+  //FIXME
+  char filename[BX_PATHNAME_LEN];
+#if BX_WITH_WX
+  int ret = SIM->ask_filename (filename, sizeof(filename), 
+    "Save snapshot as...", "snapshot.txt", 
+	bx_param_string_c::BX_SAVE_FILE_DIALOG);
+  if (ret < 0) return;  // cancelled
+#else
+  strcpy (filename, "snapshot.txt");
+#endif
+  FILE *fp = fopen(filename, "w");
+  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+  fclose(fp);
   free(text_snapshot);
 }
 
@@ -338,8 +383,8 @@ bx_gui_c::paste_handler(void)
   void
 bx_gui_c::config_handler(void)
 {
-#if BX_USE_CONTROL_PANEL
-  bx_control_panel (BX_CPANEL_RUNTIME);
+#if BX_USE_CONFIG_INTERFACE && !BX_WITH_WX
+  bx_config_interface (BX_CI_RUNTIME);
 #else
   BX_ERROR(( "# CONFIG callback (unimplemented)." ));
 #endif
@@ -351,6 +396,59 @@ bx_gui_c::toggle_mouse_enable(void)
   int old = bx_options.Omouse_enabled->get ();
   BX_DEBUG (("toggle mouse_enabled, now %d", !old));
   bx_options.Omouse_enabled->set (!old);
+}
+
+  void
+bx_gui_c::userbutton_handler(void)
+{
+  unsigned shortcut[4];
+  char *user_shortcut;
+  int i, len;
+
+  len = 0;
+#if BX_WITH_WX
+  int ret = SIM->ask_param (BXP_USER_SHORTCUT);
+  user_shortcut = bx_options.Ouser_shortcut->getptr();
+  if ((ret > 0) && user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
+#else
+  user_shortcut = bx_options.Ouser_shortcut->getptr();
+  if (user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
+#endif
+    if (!strcmp(user_shortcut, "ctrlaltdel")) {
+      shortcut[0] = BX_KEY_CTRL_L;
+      shortcut[1] = BX_KEY_ALT_L;
+      shortcut[2] = BX_KEY_DELETE;
+      len = 3;
+      }
+    else if (!strcmp(user_shortcut, "ctrlaltesc")) {
+      shortcut[0] = BX_KEY_CTRL_L;
+      shortcut[1] = BX_KEY_ALT_L;
+      shortcut[2] = BX_KEY_ESC;
+      len = 3;
+      }
+    else if (!strcmp(user_shortcut, "ctrlaltf1")) {
+      shortcut[0] = BX_KEY_CTRL_L;
+      shortcut[1] = BX_KEY_ALT_L;
+      shortcut[2] = BX_KEY_F1;
+      len = 3;
+      }
+    else if (!strcmp(user_shortcut, "alttab")) {
+      shortcut[0] = BX_KEY_ALT_L;
+      shortcut[1] = BX_KEY_TAB;
+      len = 2;
+      }
+    else {
+      BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
+      }
+    i = 0;
+    while (i < len) {
+      bx_devices.keyboard->gen_scancode(shortcut[i++]);
+    }
+    i--;
+    while (i >= 0) {
+      bx_devices.keyboard->gen_scancode(shortcut[i--] | BX_KEY_RELEASED);
+    }
+  }
 }
 
   void
@@ -381,4 +479,11 @@ bx_gui_c::init_signal_handlers ()
       signal (sig, bx_signal_handler);
   }
 #endif
+}
+
+  void
+bx_gui_c::set_text_charmap(Bit8u *fbuffer)
+{
+  memcpy(& BX_GUI_THIS vga_charmap, fbuffer, 0x2000);
+  BX_GUI_THIS charmap_changed = 1;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: data_xfer16.cc,v 1.6.10.1 2002-09-12 03:38:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -324,7 +324,7 @@ BX_CPU_C::XCHG_EwGw(BxInstruction_t *i)
     else {
       /* pointer, segment address pair */
       read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
-      write_RMW_virtual_word(op2_16);
+      Write_RMW_virtual_word(op2_16);
       }
 
     BX_WRITE_16BIT_REG(i->nnn, op1_16);
@@ -377,6 +377,7 @@ BX_CPU_C::CMOV_GwEw(BxInstruction_t *i)
     BX_WRITE_16BIT_REG(i->nnn, op2_16);
     }
 #else
-  BX_PANIC(("cmov_gwew called"));
+  BX_INFO(("cmov_gwew called"));
+  UndefinedOpcode(i);
 #endif
 }

@@ -47,24 +47,14 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/bochs.
-	#$(MAKE) install_bin prefix=$(CURDIR)/debian/bochs/usr/local
-	#$(MAKE) install_man prefix=$(CURDIR)/debian/bochs/usr/local
-	#$(MAKE) install_dlx prefix=$(CURDIR)/debian/bochs/usr/local
 	$(MAKE) unpack_dlx   # with normal prefix so that dlxlinux
 	                     # bochsrc.txt file gets right pathnames
-	$(MAKE) install_bin install_man install_fonts install_dlx prefix=$(CURDIR)/debian/bochs/usr
+	$(MAKE) install install_dlx prefix=$(CURDIR)/debian/bochs/usr
 
 
 	# Put the font in the right place
 	mkdir -p $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc
-	gzip -c $(CURDIR)/debian/bochs/usr/bochs/latest/vga.pcf > $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc/vga.pcf.gz
-
-	# Dirty little Hack to put the binaries in the right place 
-	# This is becasue the makefile puts symlinks into /usr/bin which is bad ;)
-	rm -f $(CURDIR)/debian/bochs/usr/bin/bochs
-	rm -f $(CURDIR)/debian/bochs/usr/bin/bximage
-	mv $(CURDIR)/debian/bochs/usr/bochs/latest/bochs $(CURDIR)/debian/bochs/usr/bin/bochs
-	mv $(CURDIR)/debian/bochs/usr/bochs/latest/bximage $(CURDIR)/debian/bochs/usr/bin/bximage
+	gzip -c $(CURDIR)/debian/bochs/usr/share/bochs/vga.pcf > $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc/vga.pcf.gz
 
 
 # Build architecture-independent files here.

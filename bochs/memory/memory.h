@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: memory.h,v 1.6.10.1 2002-09-12 03:39:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,14 +37,19 @@
 #  define BX_MEM_THIS this->
 #endif
 
-
+// alignment of memory vector, must be a power of 2
+#define BX_MEM_VECTOR_ALIGN 4096
 
 class BX_MEM_C : public logfunctions {
 
 public:
-  Bit8u   *vector;
+  Bit8u   *actual_vector;
+  Bit8u   *vector;  // aligned correctly
   size_t  len;
   size_t  megabytes;  // (len in Megabytes)
+#if BX_PCI_SUPPORT
+  Bit8u   shadow[4*16*4096]; // 256k of memory
+#endif
 #if BX_DEBUGGER
   unsigned char dbg_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
   Bit32u dbg_count_dirty_pages () {
@@ -55,16 +60,23 @@ public:
   BX_MEM_C(void);
   BX_MEM_C(size_t memsize);
   ~BX_MEM_C(void);
+  BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment);
   BX_MEM_SMF void    init_memory(int memsize);
-  BX_MEM_SMF void    read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
-  BX_MEM_SMF void    write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
+  BX_MEM_SMF void    readPhysicalPage(BX_CPU_C *cpu, Bit32u addr,
+                                      unsigned len, void *data);
+  BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, Bit32u addr,
+                                       unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
+#if BX_PCI_SUPPORT
+  BX_MEM_SMF Bit8u*  pci_fetch_ptr(Bit32u addr);
+#endif
   BX_MEM_SMF Boolean dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF Boolean dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF Boolean dbg_crc32(
     unsigned long (*f)(unsigned char *buf, int len),
     Bit32u addr1, Bit32u addr2, Bit32u *crc);
+  BX_MEM_SMF Bit8u * getHostMemAddr(Bit32u a20Addr, unsigned op);
   };
 
 #if BX_PROVIDE_CPU_MEMORY==1

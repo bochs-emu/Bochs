@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios-new-ata.c,v 1.4 2002-09-05 08:18:30 cbothamy Exp $
+// $Id: rombios-new-ata.c,v 1.4.2.1 2002-09-12 03:38:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -876,10 +876,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.4 $";
-static char bios_date_string[] = "$Date: 2002-09-05 08:18:30 $";
+static char bios_cvs_version_string[] = "$Revision: 1.4.2.1 $";
+static char bios_date_string[] = "$Date: 2002-09-12 03:38:13 $";
 
-static char CVSID[] = "$Id: rombios-new-ata.c,v 1.4 2002-09-05 08:18:30 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios-new-ata.c,v 1.4.2.1 2002-09-12 03:38:13 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)

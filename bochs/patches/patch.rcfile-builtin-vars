@@ -2,7 +2,7 @@
 Patch name: patch.rcfile.builtin-vars
 Author: Tal Benavidor
 Date: 11-06-2002
-RCS Id: $Id: patch.rcfile-builtin-vars,v 1.1 2002-08-12 15:19:19 cbothamy Exp $
+RCS Id: $Id: patch.rcfile-builtin-vars,v 1.1.2.1 2002-09-12 03:39:04 bdenney Exp $
 Patch Version: 1
 
 Detailed description:

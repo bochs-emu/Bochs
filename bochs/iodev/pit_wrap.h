@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.8 2002-02-07 21:22:55 yakovlev Exp $
+// $Id: pit_wrap.h,v 1.8.6.1 2002-09-12 03:38:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,6 +50,7 @@ public:
   bx_pit_c( void );
   ~bx_pit_c( void );
   BX_PIT_SMF int init( bx_devices_c *);
+  BX_PIT_SMF void reset( unsigned type);
   BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
 
   BX_PIT_SMF int SaveState( class state_file *fd );
@@ -78,6 +79,7 @@ private:
     Bit64u total_sec;
     Bit64u last_time;
     Bit64u last_sec_usec;
+    Bit64u max_ticks;
 #else
     Bit64u total_usec;
 #endif

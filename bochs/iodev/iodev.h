@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.11 2001-12-18 13:12:45 vruppert Exp $
+// $Id: iodev.h,v 1.11.6.1 2002-09-12 03:38:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -38,6 +38,7 @@
 #define BX_NO_IRQ  -1
 
 
+class bx_biosdev_c;
 class bx_pit_c;
 class bx_keyb_c;
 class bx_dma_c;
@@ -78,25 +79,27 @@ class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
   ~bx_devices_c(void);
+  // Register I/O addresses and IRQ lines. Initialize any internal
+  // structures.  init() is called only once, even if the simulator
+  // reboots or is restarted.
   void init(BX_MEM_C *);
+  // Enter reset state in response to a reset condition.
+  // The types of reset conditions are defined in bochs.h:
+  // power-on, hardware, or software.
+  void reset(unsigned type);
   BX_MEM_C *mem;  // address space associated with these devices
-  void register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
-  void register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
-  void register_irq(unsigned irq, const char *name);
-  void unregister_irq(unsigned irq, const char *name);
+  Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
+  Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
+  Boolean register_irq(unsigned irq, const char *name);
+  Boolean unregister_irq(unsigned irq, const char *name);
   void iodev_init(void);
   Bit32u inp(Bit16u addr, unsigned io_len);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len);
 
-  void dma_write8(unsigned channel, Bit8u *data);
-  void dma_read8(unsigned channel, Bit8u *data);
-  void dma_write16(unsigned channel, Bit16u *data);
-  void dma_read16(unsigned channel, Bit16u *data);
-  void drq(unsigned channel, Boolean val);
-  void raise_hlda(void);
   static void timer_handler(void *);
   void timer(void);
 
+  bx_biosdev_c     *biosdev;
   bx_ioapic_c      *ioapic;
   bx_pci_c         *pci;
   bx_pit_c         *pit;
@@ -116,6 +119,17 @@ public:
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c	   *iodebug;
 #endif
+
+  // Some info to pass to devices which can handled bulk IO.  This allows
+  // the interface to remain the same for IO devices which can't handle
+  // bulk IO.  We should probably implement special INPBulk() and OUTBulk()
+  // functions which stick these values in the bx_devices_c class, and
+  // then call the normal functions rather than having gross globals
+  // variables.
+  Bit32u   bulkIOHostAddr;
+  unsigned bulkIOQuantumsRequested;
+  unsigned bulkIOQuantumsTransferred;
+
 
 private:
   Bit8u                 read_handler_id[0x10000];  // 64K
@@ -157,6 +171,7 @@ private:
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
 #endif
+#include "iodev/biosdev.h"
 #include "iodev/cmos.h"
 #include "iodev/dma.h"
 #include "iodev/floppy.h"

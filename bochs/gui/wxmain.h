@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.21 2002-09-06 16:43:24 bdenney Exp $
+// $Id: wxmain.h,v 1.21.2.1 2002-09-12 03:38:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  

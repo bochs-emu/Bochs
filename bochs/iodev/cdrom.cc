@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.30 2002-03-20 01:24:15 bdenney Exp $
+// $Id: cdrom.cc,v 1.30.4.1 2002-09-12 03:38:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,10 +43,17 @@ extern "C" {
 #ifdef __linux__
 extern "C" {
 #include <sys/ioctl.h>
-#include <linux/fs.h>
 #include <linux/cdrom.h>
 // I use the framesize in non OS specific code too
 #define BX_CD_FRAMESIZE CD_FRAMESIZE
+}
+#endif
+
+#ifdef __GNU__
+extern "C" {
+#include <sys/ioctl.h>
+#define BX_CD_FRAMESIZE 2048
+#define CD_FRAMESIZE 2048
 }
 #endif
 
@@ -65,7 +72,7 @@ extern "C" {
 #define BX_CD_FRAMESIZE 2048
 #endif
 
-#if (defined(__OpenBSD__) || defined(__FreeBSD__))
+#if (defined (__NetBSD__) || defined(__OpenBSD__) || defined(__FreeBSD__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
 // all the includes, because the i386 sys/disklabel.h contains code which 
 // c++ considers invalid.
@@ -152,7 +159,7 @@ int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
 	HANDLE hEventSRB;
 	SRB_ExecSCSICmd srb;
 	DWORD dwStatus;
-	char buf[8];
+	unsigned char buf[8];
 
 	hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
 	
@@ -203,7 +210,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.30 2002-03-20 01:24:15 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.30.4.1 2002-09-12 03:38:50 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -221,7 +228,6 @@ cdrom_interface::insert_cdrom(char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
   ssize_t ret;
-  struct stat stat_buf;
 
   // Load CD-ROM. Returns false if CD is not ready.
   if (dev != NULL) path = strdup(dev);
@@ -251,7 +257,7 @@ cdrom_interface::insert_cdrom(char *dev)
     {
       strcpy(drive,path);
       using_file = 1;
-      bUseASPI = FALSE;
+	  bUseASPI = FALSE;
       BX_INFO (("Opening image file as a cd"));
     }
 	if(bUseASPI) {
@@ -334,6 +340,7 @@ cdrom_interface::insert_cdrom(char *dev)
 	}
 #else
     // do fstat to determine if it's a file or a device, then set using_file.
+    struct stat stat_buf;
     ret = fstat (fd, &stat_buf);
     if (ret) {
       BX_PANIC (("fstat cdrom file returned error: %s", strerror (errno)));
@@ -402,9 +409,64 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
     BX_PANIC(("cdrom: read_toc: file not open."));
     }
 
+#ifdef WIN32
+  if (1) { // This is a hack and works okay if there's one rom track only
+#else
   if (using_file) {
-    BX_ERROR (("WARNING: read_toc on a file is not implemented, just returning length=1"));
-    *length = 1;
+#endif
+    if ((start_track != 1) && (start_track != 0xaa))
+      return false;
+
+    buf[2] = 1;
+    buf[3] = 1;
+
+    int len = 4;
+    if (start_track == 1) {
+      buf[len++] = 0; // Reserved
+      buf[len++] = 0x14; // ADR, control
+      buf[len++] = 1; // Track number
+      buf[len++] = 0; // Reserved
+
+      // Start address
+      if (msf) {
+        buf[len++] = 0; // reserved
+        buf[len++] = 0; // minute
+        buf[len++] = 2; // second
+        buf[len++] = 0; // frame
+      } else {
+        buf[len++] = 0;
+        buf[len++] = 0;
+        buf[len++] = 0;
+        buf[len++] = 0; // logical sector 0
+      }
+    }
+
+    // Lead out track
+    buf[len++] = 0; // Reserved
+    buf[len++] = 0x16; // ADR, control
+    buf[len++] = 0xaa; // Track number
+    buf[len++] = 0; // Reserved
+
+    uint32 blocks = capacity();
+
+    // Start address
+    if (msf) {
+      buf[len++] = 0; // reserved
+      buf[len++] = (uint8)(((blocks + 150) / 75) / 60); // minute
+      buf[len++] = (uint8)(((blocks + 150) / 75) % 60); // second
+      buf[len++] = (uint8)((blocks + 150) % 75); // frame;
+    } else {
+      buf[len++] = (blocks >> 24) & 0xff;
+      buf[len++] = (blocks >> 16) & 0xff;
+      buf[len++] = (blocks >> 8) & 0xff;
+      buf[len++] = (blocks >> 0) & 0xff;
+    }
+
+    buf[0] = ((len-2) >> 8) & 0xff;
+    buf[1] = (len-2) & 0xff;
+
+    *length = len;
+
     return true;
   }
   // all these implementations below are the platform-dependent code required
@@ -425,7 +487,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
   if (ioctl(fd, CDROMREADTOCHDR, &tochdr))
     BX_PANIC(("cdrom: read_toc: READTOCHDR failed."));
 
-  if (start_track > tochdr.cdth_trk1)
+  if ((start_track > tochdr.cdth_trk1) && (start_track != 0xaa))
     return false;
 
   buf[2] = tochdr.cdth_trk0;
@@ -495,7 +557,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
 
   return true;
   }
-#elif (defined(__OpenBSD__) || defined(__FreeBSD__))
+#elif (defined(__NetBSD__) || defined(__OpenBSD__) || defined(__FreeBSD__))
   {
   struct ioc_toc_header h;
   struct ioc_read_toc_entry t;
@@ -503,7 +565,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
   if (ioctl (fd, CDIOREADTOCHEADER, &h) < 0)
     BX_PANIC(("cdrom: read_toc: READTOCHDR failed."));
 
-  if (start_track > h.ending_track)
+  if ((start_track > h.ending_track) && (start_track != 0xaa))
     return false;
 
   buf[2] = h.starting_track;
@@ -588,7 +650,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
 cdrom_interface::capacity()
 {
   // Return CD-ROM capacity.  I believe you want to return
-  // the number of bytes of capacity the actual media has.
+  // the number of blocks of capacity the actual media has.
 
 #if !defined WIN32
   // win32 has its own way of doing this
@@ -622,7 +684,7 @@ cdrom_interface::capacity()
   
     return(buf.st_size);
   }
-#elif defined(__OpenBSD__)
+#elif (defined(__NetBSD__) || defined(__OpenBSD__))
   {
   // We just read the disklabel, imagine that...
   struct disklabel lp;
@@ -642,7 +704,8 @@ cdrom_interface::capacity()
   // non-ATAPI drives.  This is based on Keith Jones code below.
   // <splite@purdue.edu> 21 June 2001
 
-  int i, dtrk, dtrk_lba, num_sectors;
+  int i, dtrk_lba, num_sectors;
+  int dtrk = 0;
   struct cdrom_tochdr td;
   struct cdrom_tocentry te;
 
@@ -737,10 +800,10 @@ cdrom_interface::capacity()
 #elif defined WIN32
   {
 	  if(bUseASPI) {
-		  return GetCDCapacity(hid, tid, lun);
+		  return (GetCDCapacity(hid, tid, lun) / 2352);
 	  } else {
 	    unsigned long FileSize;
-		return (GetFileSize(hFile, &FileSize));
+		return (GetFileSize(hFile, &FileSize) / 2048);
 	  }
   }
 #else

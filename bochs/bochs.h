@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.61.4.2 2002-09-10 18:12:21 bdenney Exp $
+// $Id: bochs.h,v 1.61.4.3 2002-09-12 03:37:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -132,14 +132,31 @@ extern "C" {
 // #define BX_OUTP(addr, val, len)  bx_pc_system.outp(addr, val, len)
 #define BX_INP(addr, len)           bx_devices.inp(addr, len)
 #define BX_OUTP(addr, val, len)     bx_devices.outp(addr, val, len)
-#define BX_HRQ                      (bx_pc_system.HRQ)
-#define BX_RAISE_HLDA()             bx_pc_system.raise_HLDA()
 #define BX_TICK1()                  bx_pc_system.tick1()
 #define BX_TICKN(n)                 bx_pc_system.tickn(n)
 #define BX_INTR                     bx_pc_system.INTR
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
 #define BX_CPU_C                    bx_cpu_c
 #define BX_MEM_C                    bx_mem_c
+// macros for DMA handling
+#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  bx_dma.registerDMA8Channel(channel, dmaRead, dmaWrite, name)
+#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  bx_dma.registerDMA16Channel(channel, dmaRead, dmaWrite, name)
+#define BX_UNREGISTER_DMA_CHANNEL(channel) \
+  bx_dma.unregisterDMAChannel(channel)
+#define BX_DMA_SET_DRQ(channel, val) bx_dma.set_DRQ(channel, val)
+#define BX_DMA_GET_TC()             bx_dma.get_TC()
+#define BX_HRQ                      (bx_pc_system.HRQ)
+#define BX_RAISE_HLDA()             bx_dma.raise_HLDA()
+#define BX_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
+  BX_MEM(0)->readPhysicalPage(BX_CPU(0), phy_addr, len, ptr)
+#define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
+  BX_MEM(0)->writePhysicalPage(BX_CPU(0), phy_addr, len, ptr)
+// macro for PCI handling
+#define BX_REGISTER_PCI_HANDLERS(this_ptr, pci_read, pci_write, devfunc, name) \
+  bx_pci.register_pci_handlers(this_ptr, pci_read, pci_write, devfunc, name)
+
 #if BX_SMP_PROCESSORS==1
 #define BX_CPU(x)                   (&bx_cpu)
 #define BX_MEM(x)                   (&bx_mem)
@@ -222,25 +239,19 @@ extern Bit8u DTPageDirty[];
 
 #define MAGIC_LOGNUM 0x12345678
 
-// Log Level defines
-#define LOGLEV_DEBUG 0
-#define LOGLEV_INFO  1
-#define LOGLEV_ERROR 2
-#define LOGLEV_PANIC 3
-#define N_LOGLEV   4
+
+#define DEFAULT_LOG_ACTIONS(level) \
+  (level<=LOGLEV_INFO ? ACT_IGNORE \
+   : level==LOGLEV_ERROR ? ACT_REPORT \
+   : ACT_REPORT)
 
 typedef class logfunctions {
 	char *prefix;
 	int type;
-// values of onoff: 0=ignore, 1=report, 2=fatal
+// values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
 #define ACT_IGNORE 0
 #define ACT_REPORT 1
-#if BX_USE_CONTROL_PANEL
-#  define ACT_ASK    2
-#else
-   // if control panel disabled, then map all ACT_ASK into ACT_FATAL.
-#  define ACT_ASK    ACT_FATAL
-#endif
+#define ACT_ASK    2
 #define ACT_FATAL  3
 #define N_ACT      4
 	int onoff[N_LOGLEV];
@@ -255,7 +266,7 @@ public:
 	void panic(const char *fmt, ...);
 	void ldebug(const char *fmt, ...);
 	void fatal (const char *prefix, const char *fmt, va_list ap);
-	virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
+	void ask (int level, const char *prefix, const char *fmt, va_list ap);
 	void put(char *);
 	void settype(int);
 	void setio(class iofunctions *);
@@ -270,8 +281,11 @@ public:
         }
 } logfunc_t;
 
+#define BX_LOGPREFIX_SIZE 51
+
 class iofunctions {
-	int showtick,magic;
+	int magic;
+	char logprefix[BX_LOGPREFIX_SIZE];
 	FILE *logfd;
 	class logfunctions *log;
 	void init(void);
@@ -339,6 +353,7 @@ public:
 	void init_log(const char *fn);
 	void init_log(int fd);
 	void init_log(FILE *fs);
+	void set_log_prefix(const char *prefix);
 	int get_n_logfns () { return n_logfn; }
 	logfunc_t *get_logfn (int index) { return logfn_list[index]; }
 	void add_logfn (logfunc_t *fn);
@@ -467,7 +482,7 @@ typedef struct {
 
 #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 void bx_signal_handler (int signum);
-void bx_atexit(void);
+int bx_atexit(void);
 extern bx_debug_t bx_dbg;
 
 
@@ -477,12 +492,13 @@ extern bx_debug_t bx_dbg;
 #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
 #define BX_FLOPPY_2_88   13 // 2.88M 3.5"
 #define BX_FLOPPY_720K   14 // 720K  3.5"
-#define BX_FLOPPY_LAST   14 // last one
+#define BX_FLOPPY_360K   15 // 360K  5.25"
+#define BX_FLOPPY_LAST   15 // last one
 
 
-#define BX_READ    10
-#define BX_WRITE   11
-#define BX_RW      12
+#define BX_READ    0
+#define BX_WRITE   1
+#define BX_RW      2
 
 
 
@@ -513,12 +529,7 @@ extern bx_gui_c   bx_gui;
 extern bx_devices_c   bx_devices;
 #endif
 
-#define BX_EJECTED   10
-#define BX_INSERTED  11
-
-
-#define BX_RESET_SOFTWARE 10
-#define BX_RESET_HARDWARE 11
+void bx_init_before_config_interface ();
 
 // This value controls how often each I/O device's periodic() method
 // gets called.  The timer is set up in iodev/devices.cc.
@@ -529,6 +540,7 @@ char *bx_find_bochsrc (void);
 int bx_parse_cmdline (int arg, int argc, char *argv[]);
 int bx_read_configuration (char *rcfile);
 int bx_write_configuration (char *rcfile, int overwrite);
+void bx_reset_options (void);
 
 #define BX_PATHNAME_LEN 512
 
@@ -546,7 +558,7 @@ typedef struct {
   } bx_mem_options;
 
 typedef struct {
-  bx_param_bool_c *Oenable;
+  bx_param_bool_c *Oenabled;
   bx_param_string_c *Ooutfile;
 } bx_parport_options;
 
@@ -563,6 +575,7 @@ typedef struct {
   bx_param_string_c *Omacaddr;
   bx_param_string_c *Oethmod;
   bx_param_string_c *Oethdev;
+  bx_param_string_c *Oscript;
   } bx_ne2k_options;
 
 typedef struct {
@@ -583,6 +596,7 @@ typedef struct {
 
 typedef struct {
   bx_param_string_c *Ofilename;
+  bx_param_string_c *Oprefix;
   // one array item for each log level, indexed by LOGLEV_*.
   // values: ACT_IGNORE, ACT_REPORT, ACT_ASK, ACT_FATAL
   unsigned char actions[N_LOGLEV];  
@@ -604,31 +618,29 @@ typedef struct {
   bx_param_string_c *Okeymap;
   } bx_keyboard_options;
 
-#define BX_BOOT_FLOPPYA 0
-#define BX_BOOT_DISKC   1
-#define BX_BOOT_CDROM   2
-
 #define BX_KBD_XT_TYPE        0
 #define BX_KBD_AT_TYPE        1
 #define BX_KBD_MF_TYPE        2 
+
+#define BX_N_OPTROM_IMAGES 4
+#define BX_N_SERIAL_PORTS 1
+#define BX_N_PARALLEL_PORTS 1
 
 typedef struct {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
   bx_disk_options   diskc;
   bx_disk_options   diskd;
-  bx_serial_options com1;
-  bx_serial_options com2;
-  bx_serial_options com3;
-  bx_serial_options com4;
+  bx_serial_options com[BX_N_SERIAL_PORTS];
   bx_cdrom_options  cdromd; 
   bx_rom_options    rom;
   bx_vgarom_options vgarom;
+  bx_rom_options    optrom[BX_N_OPTROM_IMAGES]; // Optional rom images 
   bx_mem_options    memory;
-  bx_parport_options par1; // parallel port #1
-  bx_parport_options par2; // parallel port #2  (not implemented)
+  bx_parport_options par[BX_N_PARALLEL_PORTS]; // parallel ports
   bx_sb16_options   sb16;
-  bx_param_num_c    *Obootdrive;  //0=floppya, 0x80=diskc
+  bx_param_num_c    *Obootdrive;  
+  bx_param_bool_c   *OfloppySigCheck;
   bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
   bx_param_num_c    *Okeyboard_paste_delay;
@@ -648,6 +660,7 @@ typedef struct {
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;
   bx_keyboard_options keyboard;
+  bx_param_string_c *Ouser_shortcut;
   } bx_options_t;
 
 extern bx_options_t bx_options;
@@ -664,5 +677,76 @@ void bx_center_print (FILE *file, char *line, int maxwidth);
 int bx_init_hardware ();
 
 #include "instrument.h"
+
+
+// These are some convenience macros which abstract out accesses between
+// a variable in native byte ordering to/from guest (x86) memory, which is
+// always in little endian format.  You must deal with alignment (if your
+// system cares) and endian rearranging.  Don't assume anything.  You could
+// put some platform specific asm() statements here, to make use of native
+// instructions to help perform these operations more efficiently than C++.
+
+
+#ifdef __i386__
+
+#define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) \
+    *((Bit16u*)(hostPtr)) = (nativeVar16)
+#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) \
+    *((Bit32u*)(hostPtr)) = (nativeVar32)
+#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) \
+    *((Bit64u*)(hostPtr)) = (nativeVar64)
+#define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) \
+    (nativeVar16) = *((Bit16u*)(hostPtr))
+#define ReadHostDWordFromLittleEndian(hostPtr, nativeVar32) \
+    (nativeVar32) = *((Bit32u*)(hostPtr))
+#define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) \
+    (nativeVar64) = *((Bit64u*)(hostPtr))
+
+#else
+
+#define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) { \
+    ((Bit8u *)(hostPtr))[0] = (Bit8u)  (nativeVar16); \
+    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar16)>>8); \
+    }
+#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) { \
+    ((Bit8u *)(hostPtr))[0] = (Bit8u)  (nativeVar32); \
+    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar32)>>8); \
+    ((Bit8u *)(hostPtr))[2] = (Bit8u) ((nativeVar32)>>16); \
+    ((Bit8u *)(hostPtr))[3] = (Bit8u) ((nativeVar32)>>24); \
+    }
+#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) { \
+    ((Bit8u *)(hostPtr))[0] = (Bit8u)  (nativeVar64); \
+    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar64)>>8); \
+    ((Bit8u *)(hostPtr))[2] = (Bit8u) ((nativeVar64)>>16); \
+    ((Bit8u *)(hostPtr))[3] = (Bit8u) ((nativeVar64)>>24); \
+    ((Bit8u *)(hostPtr))[4] = (Bit8u) ((nativeVar64)>>32); \
+    ((Bit8u *)(hostPtr))[5] = (Bit8u) ((nativeVar64)>>40); \
+    ((Bit8u *)(hostPtr))[6] = (Bit8u) ((nativeVar64)>>48); \
+    ((Bit8u *)(hostPtr))[7] = (Bit8u) ((nativeVar64)>>56); \
+    }
+#define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) { \
+    (nativeVar16) =  ((Bit16u) ((Bit8u *)(hostPtr))[0]) | \
+                    (((Bit16u) ((Bit8u *)(hostPtr))[1])<<8) ; \
+    }
+#define ReadHostDWordFromLittleEndian(hostPtr, nativeVar32) { \
+    (nativeVar32) =  ((Bit32u) ((Bit8u *)(hostPtr))[0]) | \
+                    (((Bit32u) ((Bit8u *)(hostPtr))[1])<<8) | \
+                    (((Bit32u) ((Bit8u *)(hostPtr))[2])<<16) | \
+                    (((Bit32u) ((Bit8u *)(hostPtr))[3])<<24); \
+    }
+#define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) { \
+    (nativeVar64) =  ((Bit64u) ((Bit8u *)(hostPtr))[0]) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[1])<<8) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[2])<<16) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[3])<<24) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[4])<<32) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[5])<<40) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[6])<<48) | \
+                    (((Bit64u) ((Bit8u *)(hostPtr))[7])<<56); \
+    }
+
+#endif
+
+
 
 #endif  /* BX_BOCHS_H */

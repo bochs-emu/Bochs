@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.10 2001-12-26 14:56:15 vruppert Exp $
+// $Id: pc_system.h,v 1.10.6.1 2002-09-12 03:38:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -59,7 +59,6 @@ private:
     } timer[BX_MAX_TIMERS];
   unsigned   num_timers;
   Bit64u     num_cpu_ticks_in_period;
-  Bit64u     num_cpu_ticks_left;
   void       expire_ticks(void);
 
 #if !defined(PROVIDE_M_IPS)
@@ -67,12 +66,9 @@ private:
 #endif
 
 public:
+  Bit64u     num_cpu_ticks_left;
 
-  Boolean DRQ[8];  // DMA Request
-  Boolean DACK[8]; // DMA Acknowlege
-  Boolean TC;      // Terminal Count
   Boolean HRQ;     // Hold Request
-  Boolean HLDA;    // Hold Acknowlege
   //Boolean INTR;    // Interrupt
 
 
@@ -92,11 +88,7 @@ public:
     //
   Bit32u  a20_mask;
 
-  void set_DRQ(unsigned channel, Boolean val);
-  void set_DACK(unsigned channel, Boolean val);
-  void set_TC(Boolean val);   // set the Terminal Count line
   void set_HRQ(Boolean val);  // set the Hold ReQuest line
-  void raise_HLDA(void); // raise the HoLD Acknowlege line
   void set_INTR(Boolean value); // set the INTR line to value
 
   int IntEnabled( void );
@@ -159,11 +151,6 @@ public:
   int counter_timer_index;
   Bit64u time_usec();
   Bit64u time_ticks();
-
-  void dma_write8(Bit32u phy_addr, unsigned channel, Boolean verify);
-  void dma_read8(Bit32u phy_addr, unsigned channel);
-  void dma_write16(Bit32u phy_addr, unsigned channel, Boolean verify);
-  void dma_read16(Bit32u phy_addr, unsigned channel);
 
   Bit32u  inp(Bit16u addr, unsigned io_len);
   void    outp(Bit16u addr, Bit32u value, unsigned io_len);

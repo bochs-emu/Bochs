@@ -6,7 +6,7 @@
 # You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
 # out most of the BIOS hooks, and replace them with real BIOS
 # support.  Normally, you can use a precompiled BIOS in the bios/
-# directory, named BIOS-bochs-yymmdd.  Use the latest one in there.
+# directory, named BIOS-bochs-latest. 
 #=======================================================================
 #romimage: bios/BIOS-bochs-970717a
 romimage: file=bios/BIOS-bochs-latest, address=0xf0000
@@ -29,6 +29,22 @@ megs: 32
 #megs: 8
 
 #=======================================================================
+# OPTROMIMAGE[1-4]:
+# You may now load up to 4 optional ROM images. Be sure to use a 
+# read-only area, typically between C8000 and EFFFF. These optional
+# ROM images should not overwrite the rombios (located at
+# F0000-FFFFF) and the videobios (located at C0000-C7FFF).
+# Those ROM images will be initialized by the bios if they contain 
+# the right signature (0x55AA).
+# It can also be a convenient way to upload some arbitary code/data
+# in the simulation, that can be retrieved by the boot loader
+#=======================================================================
+#optromimage1: file=optionalrom.bin, address=0xd0000
+#optromimage2: file=optionalrom.bin, address=0xd1000
+#optromimage3: file=optionalrom.bin, address=0xd2000
+#optromimage4: file=optionalrom.bin, address=0xd3000
+
+#=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
@@ -46,6 +62,7 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 #   floppya: 1_44=path, status=inserted            (1.44M 3.5" floppy)
 #   floppya: 1_2=path, status=ejected              (1.2M  5.25" floppy)
 #   floppya: 720k=path, status=inserted            (720K  3.5" floppy)
+#   floppya: 360k=path, status=inserted            (360K  5.25" floppy)
 #
 # The path should be the name of a disk image file.  On unix, you can use
 # a raw device name such as /dev/fd0 on Linux.  On WinNT and Win2k, use
@@ -129,6 +146,17 @@ diskc: file="30M.sample", cyl=615, heads=6, spt=17
 boot: c
 
 #=======================================================================
+# FLOPPY_BOOTSIG_CHECK: disabled=[0|1]
+# Enables or disables the 0xaa55 signature check on boot floppies
+# Defaults to disabled=0
+# Examples:
+#   floppy_bootsig_check: disabled=0
+#   floppy_bootsig_check: disabled=1
+#=======================================================================
+#floppy_bootsig_check: disabled=1
+floppy_bootsig_check: disabled=0
+
+#=======================================================================
 # LOG:
 # Give the path of the log file you'd like Bochs debug and misc. verbage
 # to be written to.  If you really don't want it, make it /dev/null. :^(
@@ -139,6 +167,22 @@ boot: c
 #=======================================================================
 #log: /dev/null
 log: bochsout.txt
+
+#=======================================================================
+# LOGPREFIX:
+# This handles the format of the string prepended to each log line :
+# You may use those special tokens :
+#   %t : 11 decimal digits timer tick
+#   %i : 8 hexadecimal digits of cpu0 current eip
+#   %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
+#   %d : 5 characters string of the device, between brackets
+# 
+# Default : %t%e%d
+# Examples:
+#   logprefix: %t-%e-@%i-%d
+#   logprefix: %i%e%d
+#=======================================================================
+#logprefix: %t%e%d
 
 #=======================================================================
 # LOG CONTROLS
@@ -169,28 +213,32 @@ debug: action=ignore
 
 #=======================================================================
 # com1:
-# Specify the device to use as com1.  This can be a real serial line, or
-# a pty.  To use a pty (under X/Unix), create two windows (xterms,
-# usually).  One of them will run bochs, and the other will act as com1.
-# Find out the tty the com1 window using the `tty' command, and use that
-# as the `dev' parameter.  Then do `sleep 1000000' in the com1 window to
-# keep the shell from messing with things, and run bochs in the other
-# window.  Serial I/O to com1 (port 0x3f8) will all go to the other
+# This defines a serial (COM) port. You can specify a device to use as com1.
+# This can be a real serial line, or a pty.  To use a pty (under X/Unix),
+# create two windows (xterms, usually).  One of them will run bochs, and the
+# other will act as com1. Find out the tty the com1 window using the `tty'
+# command, and use that as the `dev' parameter.  Then do `sleep 1000000' in
+# the com1 window to keep the shell from messing with things, and run bochs in
+# the other window.  Serial I/O to com1 (port 0x3f8) will all go to the other
 # window.
 #=======================================================================
-#com1: dev=/dev/ttyp9
+#com1: enabled=1, dev=/dev/ttyp9
 
 
 #=======================================================================
 # PARPORT1:
-# This defines a parallel (printer) port.  When turned on, the emulated
-# printer port sends characters printed by the guest OS into an output file.
+# This defines a parallel (printer) port. When turned on and an output file is
+# defined the emulated printer port sends characters printed by the guest OS
+# into the output file. On some platforms a device filename can be used to
+# send the data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
+# win32 platforms).
 #
 # Examples:
-#   parport1: enable=1, file="parport.out"
-#   parport1: enable=0
+#   parport1: enabled=1, file="parport.out"
+#   parport1: enabled=1, file="/dev/lp0"
+#   parport1: enabled=0
 #=======================================================================
-parport1: enable=0
+parport1: enabled=1, file="parport.out"
 
 #=======================================================================
 # SB16:
@@ -349,7 +397,7 @@ screenmode: name="sample"
 # ne2k: NE2000 compatible ethernet adapter
 #
 # Examples:
-# ne2k: ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE
+# ne2k: ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
 #
 # ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
 # are IRQ conflicts.
@@ -365,11 +413,19 @@ screenmode: name="sample"
 # Windows machines, you must run niclist to get the name of the ethdev.
 # Niclist source code is in misc/niclist.c and it is included in Windows 
 # binary releases.
+#
+# script: The script value is optionnal, and is the name of a script that 
+# is executed after bochs initialize the network interface. You can use 
+# this script to configure this network interface, or enable masquerading.
+# This is mainly useful for the tun/tap devices that only exist during
+# Bochs execution. The network interface name is supplied to the script
+# as first parameter
 #=======================================================================
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
 # ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+# ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
 
 #=======================================================================
 # KEYBOARD_MAPPING:
@@ -393,6 +449,17 @@ keyboard_mapping: enabled=0, map=
 #   keyboard_type: mf
 #=======================================================================
 #keyboard_type: mf
+
+#=======================================================================
+# USER_SHORTCUT:
+# This defines the keyboard shortcut to be sent when you press the "user"
+# button in the headerbar. These shortcuts are currently recognized:
+# ctrlaltdel, ctrlaltesc, ctrlaltf1, alttab
+#
+# Example:
+#   user_shortcut: keys=ctrlaltdel
+#=======================================================================
+#user_shortcut: keys=ctrlaltdel
 
 #=======================================================================
 # other stuff

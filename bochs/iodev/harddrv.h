@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.9.6.1 2002-09-10 17:45:38 bdenney Exp $
+// $Id: harddrv.h,v 1.9.6.2 2002-09-12 03:38:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,6 +95,9 @@ class default_image_t : public device_image_t
 class concat_image_t : public device_image_t
 {
   public:
+      // Default constructor
+      concat_image_t();
+      
       // Open a image. Returns non-negative if successful.
       int open (const char* pathname);
 
@@ -205,7 +208,8 @@ typedef struct {
     Bit16u   byte_count;
   };
   Bit8u    buffer[2048];
-  unsigned buffer_index;
+  Bit32u   buffer_index;
+  Bit32u   drq_index;
   Bit8u    current_command;
   Bit8u    sectors_per_block;
   Bit8u    lba_mode;
@@ -293,6 +297,7 @@ public:
   ~bx_hard_drive_c(void);
   BX_HD_SMF void   close_harddrive(void);
   BX_HD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
+  BX_HD_SMF void   reset(unsigned type);
   BX_HD_SMF unsigned get_cd_media_status(void);
   BX_HD_SMF unsigned set_cd_media_status(unsigned status);
 

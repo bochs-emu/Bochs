@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.52.4.1 2002-09-10 17:45:26 bdenney Exp $
+// $Id: harddrv.cc,v 1.52.4.2 2002-09-12 03:38:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -136,7 +136,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.52.4.1 2002-09-10 17:45:26 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.52.4.2 2002-09-12 03:38:53 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -208,7 +208,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 #endif
 
 #ifdef LOWLEVEL_CDROM
-	if (bx_options.cdromd.Oinserted->get () == BX_INSERTED) {
+	if (bx_options.cdromd.Ostatus->get () == BX_INSERTED) {
 	      if (BX_HD_THIS s[1].cdrom.cd->insert_cdrom()) {
 		    BX_INFO(( "Media present in CD-ROM drive"));
 		    BX_HD_THIS s[1].cdrom.ready = 1;
@@ -216,7 +216,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 	      } else {		    
 		    BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
 		    BX_HD_THIS s[1].cdrom.ready = 0;
-		    bx_options.cdromd.Oinserted->set(BX_EJECTED);
+		    bx_options.cdromd.Ostatus->set(BX_EJECTED);
 	      }
 	} else {
 #endif
@@ -312,15 +312,22 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     if ( bx_options.Obootdrive->get () == BX_BOOT_FLOPPYA) {
       // system boot sequence A:
       cmos->s.reg[0x3d] = 0x01;
+      BX_INFO(("Boot device will be 'a'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) { 
       // system boot sequence C:
       cmos->s.reg[0x3d] = 0x02;
+      BX_INFO(("Boot device will be 'c'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_CDROM) { 
       // system boot sequence cdrom
       cmos->s.reg[0x3d] = 0x03;
+      BX_INFO(("Boot device will be 'cdrom'"));
       }
+      
+    // Set the signature check flag in cmos, inverted for compatibility
+    cmos->s.reg[0x38] = bx_options.OfloppySigCheck->get();
+    BX_INFO(("Floppy boot signature check is %sabled", bx_options.OfloppySigCheck->get() ? "dis" : "en"));
     }
 
   //switch (stat_buf.st_size) {
@@ -355,6 +362,11 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
 	BX_CONTROLLER(id).features            = 0;
   }
+}
+
+  void
+bx_hard_drive_c::reset(unsigned type)
+{
 }
 
 
@@ -394,15 +406,16 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
   Bit16u value16;
   Bit32u value32;
 
-  if (io_len==2 && address!=0x1f0) {
+  if (io_len>1 && address!=0x1f0) {
     BX_PANIC(("non-byte IO read to %04x", (unsigned) address));
     }
 
   switch (address) {
     case 0x1f0: // hard disk data (16bit)
       if (BX_SELECTED_CONTROLLER.status.drq == 0) {
-	    BX_PANIC(("IO read(1f0h) with drq == 0: last command was %02xh",
+	    BX_ERROR(("IO read(1f0h) with drq == 0: last command was %02xh",
 		     (unsigned) BX_SELECTED_CONTROLLER.current_command));
+            return(0);
       }
       BX_DEBUG(("IO read(1f0h): current command is %02xh",
             (unsigned) BX_SELECTED_CONTROLLER.current_command));
@@ -416,17 +429,41 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
             BX_PANIC(("IO read(1f0): buffer_index >= 512"));
 
-          value32 = 0L;
-          switch(io_len){
-            case 4:
-              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] << 24);
-              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] << 16);
-            case 2:
-              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] << 8);
-              value32 |=  BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index];
-            }
+#if BX_SupportRepeatSpeedups
+          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+            unsigned transferLen, quantumsMax;
 
-          BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            quantumsMax =
+              (512 - BX_SELECTED_CONTROLLER.buffer_index) / io_len;
+if ( quantumsMax == 0)
+  BX_PANIC(("IO read(1f0): not enough space for read"));
+            BX_HD_THIS devices->bulkIOQuantumsTransferred =
+                BX_HD_THIS devices->bulkIOQuantumsRequested;
+            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
+              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
+            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
+            memcpy((Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+              &BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index], 
+              transferLen);
+            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+            BX_SELECTED_CONTROLLER.buffer_index += transferLen;
+            value32 = 0; // Value returned not important;
+            }
+          else
+#endif
+            {
+            value32 = 0L;
+            switch(io_len){
+              case 4:
+                value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] << 24);
+                value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] << 16);
+              case 2:
+                value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] << 8);
+                value32 |=  BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index];
+              }
+
+            BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            }
 
           // if buffer completely read
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512) {
@@ -526,11 +563,12 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
 	    case 0xa0: {
 		  unsigned index = BX_SELECTED_CONTROLLER.buffer_index;
+		  unsigned increment = 0;
 
 		  // Load block if necessary
 		  if (index >= 2048) {
 			if (index > 2048)
-			      BX_PANIC(("index > 2048"));
+			      BX_PANIC(("index > 2048 : 0x%x",index));
 			switch (BX_SELECTED_HD.atapi.command) {
 			      case 0x28: // read (10)
 			      case 0xa8: // read (12)
@@ -547,9 +585,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 						BX_INFO(("READ block loaded (%d remaining) {CDROM}",
 							  BX_SELECTED_HD.cdrom.remaining_blocks));
 
-				    // one block transfered
-				    BX_SELECTED_HD.atapi.drq_bytes -= 2048;
-				    BX_SELECTED_HD.atapi.total_bytes_remaining -= 2048;
+				    // one block transfered, start at beginning
 				    index = 0;
 #else
 				    BX_PANIC(("Read with no LOWLEVEL_CDROM"));
@@ -561,21 +597,23 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 			}
 		  }
 
-		  value32 = BX_SELECTED_CONTROLLER.buffer[index];
-		  index++;
+		  value32 = BX_SELECTED_CONTROLLER.buffer[index+increment];
+		  increment++;
 		  if (io_len >= 2) {
-			value32 |= (BX_SELECTED_CONTROLLER.buffer[index] << 8);
-			index++;
+			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+increment] << 8);
+			increment++;
 		  }
 		  if (io_len == 4) {
-			value32 |= (BX_SELECTED_CONTROLLER.buffer[index] << 16);
-			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+1] << 24);
-			index += 2;
+			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+increment] << 16);
+			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+increment+1] << 24);
+			increment += 2;
 		  }
-		  BX_SELECTED_CONTROLLER.buffer_index = index;
+		  BX_SELECTED_CONTROLLER.buffer_index = index + increment;
+		  BX_SELECTED_CONTROLLER.drq_index += increment;
 
-		  if (BX_SELECTED_CONTROLLER.buffer_index >= (unsigned)BX_SELECTED_HD.atapi.drq_bytes) {
+		  if (BX_SELECTED_CONTROLLER.drq_index >= (unsigned)BX_SELECTED_HD.atapi.drq_bytes) {
 			BX_SELECTED_CONTROLLER.status.drq = 0;
+			BX_SELECTED_CONTROLLER.drq_index = 0;
 
 			BX_SELECTED_HD.atapi.total_bytes_remaining -= BX_SELECTED_HD.atapi.drq_bytes;
 
@@ -592,7 +630,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 			      if (BX_SELECTED_HD.atapi.total_bytes_remaining < BX_SELECTED_CONTROLLER.byte_count) {
 				    BX_SELECTED_CONTROLLER.byte_count = BX_SELECTED_HD.atapi.total_bytes_remaining;
 			      }
-			      BX_SELECTED_HD.atapi.drq_bytes += BX_SELECTED_CONTROLLER.byte_count;
+			      BX_SELECTED_HD.atapi.drq_bytes = BX_SELECTED_CONTROLLER.byte_count;
 
 			      raise_interrupt();
 			} else {
@@ -835,7 +873,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   int ret;
   Boolean prev_control_reset;
 
-  if (io_len==2 && address!=0x1f0) {
+  if (io_len>1 && address!=0x1f0) {
     BX_PANIC(("non-byte IO write to %04x", (unsigned) address));
     }
 
@@ -868,23 +906,47 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
   switch (address) {
     case 0x1f0:
       if (io_len == 1) {
-        BX_PANIC(("byte IO read from %04x", (unsigned) address));
+        BX_PANIC(("byte IO write to 0x1f0"));
         }
       switch (BX_SELECTED_CONTROLLER.current_command) {
         case 0x30: // WRITE SECTORS
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
             BX_PANIC(("IO write(1f0): buffer_index >= 512"));
 
-          switch(io_len){
-            case 4:
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] = (Bit8u)(value >> 24);
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] = (Bit8u)(value >> 16);
-            case 2:
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (Bit8u)(value >> 8);
-              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index]   = (Bit8u) value;
-            }
+#if BX_SupportRepeatSpeedups
+          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+            unsigned transferLen, quantumsMax;
 
-          BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            quantumsMax =
+              (512 - BX_SELECTED_CONTROLLER.buffer_index) / io_len;
+if ( quantumsMax == 0)
+  BX_PANIC(("IO write(1f0): not enough space for write"));
+            BX_HD_THIS devices->bulkIOQuantumsTransferred =
+                BX_HD_THIS devices->bulkIOQuantumsRequested;
+            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
+              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
+            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
+            memcpy(
+              &BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index], 
+              (Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+              transferLen);
+            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+            BX_SELECTED_CONTROLLER.buffer_index += transferLen;
+            }
+          else
+#endif
+            {
+            switch(io_len){
+              case 4:
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] = (Bit8u)(value >> 24);
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] = (Bit8u)(value >> 16);
+              case 2:
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (Bit8u)(value >> 8);
+                BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index]   = (Bit8u) value;
+              }
+
+            BX_SELECTED_CONTROLLER.buffer_index += io_len;
+            }
 
           /* if buffer completely writtten */
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512) {
@@ -1009,7 +1071,10 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 				    if (!LoEj && !Start) { // stop the disc
 					  BX_PANIC(("Stop disc not implemented"));
 				    } else if (!LoEj && Start) { // start the disc and read the TOC
-					  BX_PANIC(("Start disc not implemented"));
+					  // BX_PANIC(("Start disc not implemented"));
+					  BX_ERROR(("FIXME: ATAPI start disc not reading TOC"));
+					  atapi_cmd_nop();
+					  raise_interrupt();
 				    } else if (LoEj && !Start) { // Eject the disc
                                           atapi_cmd_nop();
                                           if (BX_HD_THIS s[1].cdrom.ready) {
@@ -1017,7 +1082,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
                                             BX_HD_THIS s[1].cdrom.cd->eject_cdrom();
 #endif
                                             BX_HD_THIS s[1].cdrom.ready = 0;
-                                            bx_options.cdromd.Oinserted->set(BX_EJECTED);
+                                            bx_options.cdromd.Ostatus->set(BX_EJECTED);
                                             bx_gui.update_drive_status_buttons();
                                           }
                                           raise_interrupt();
@@ -1103,8 +1168,12 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 						      case 0x0d: // CD-ROM
 						      case 0x0e: // CD-ROM audio control
 						      case 0x3f: // all
-							    BX_PANIC(("cdrom: MODE SENSE (curr), code=%x",
+							    BX_ERROR(("cdrom: MODE SENSE (curr), code=%x"
+								      " not implemented yet",
 								     PageCode));
+							    atapi_cmd_error(SENSE_ILLEGAL_REQUEST,
+									    ASC_INV_FIELD_IN_CMD_PACKET);
+							    raise_interrupt();
 							    break;
 
 						      default:
@@ -1126,8 +1195,12 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 						      case 0x0e: // CD-ROM audio control
 						      case 0x2a: // CD-ROM capabilities & mech. status
 						      case 0x3f: // all
-							    BX_PANIC(("cdrom: MODE SENSE (chg), code=%x",
+							    BX_ERROR(("cdrom: MODE SENSE (chg), code=%x",
+								      " not implemented yet",
 								     PageCode));
+							    atapi_cmd_error(SENSE_ILLEGAL_REQUEST,
+									    ASC_INV_FIELD_IN_CMD_PACKET);
+							    raise_interrupt();
 							    break;
 
 						      default:
@@ -1236,7 +1309,9 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
 			      case 0xbe: { // read cd
 				    if (BX_SELECTED_HD.cdrom.ready) {
-					  BX_PANIC(("Read CD with CD present not implemented"));
+					  BX_ERROR(("Read CD with CD present not implemented"));
+					  atapi_cmd_error(SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET);
+					  raise_interrupt();
 				    } else {
 					  atapi_cmd_error(SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT);
 					  raise_interrupt();
@@ -1384,7 +1459,10 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 					  int ret_len = 4; // header size
 
 					  if (sub_q) { // !sub_q == header only
-						BX_PANIC(("Read sub-channel with SubQ not implemented"));
+						BX_ERROR(("Read sub-channel with SubQ not implemented"));
+						atapi_cmd_error(SENSE_ILLEGAL_REQUEST,
+								ASC_INV_FIELD_IN_CMD_PACKET);
+					    raise_interrupt();
 					  }
 
 					  init_send_atapi_command(atapi_command, ret_len, alloc_length);
@@ -1412,6 +1490,11 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 			      case 0xba: // scan
 			      case 0xbb: // set cd speed
 			      case 0x4e: // stop play/scan
+			        BX_ERROR(("ATAPI command 0x%x not implemented yet",
+			                  atapi_command));
+			        atapi_cmd_error(SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET);
+			        raise_interrupt();
+			        break;
 			      default:
 				    BX_PANIC(("Unknown ATAPI command 0x%x (%d)",
 					     atapi_command, atapi_command));
@@ -1713,7 +1796,9 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	    case 0x82: //  Disable write cache.
 	    case 0xAA: // Enable and
 	    case 0x55: //  Disable look-ahead cache.
-	      BX_INFO(("SET FEATURES subcommand not supported by disk."));
+	    case 0x66: //  Disable reverting to power-on default
+	    case 0xCC: //  Enable reverting to power-on default
+	      BX_INFO(("SET FEATURES subcommand 0x%02x not supported by disk.", (unsigned) BX_SELECTED_CONTROLLER.features));
 	      command_aborted(value);
 	    break;
 
@@ -1802,6 +1887,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 		    BX_SELECTED_CONTROLLER.status.busy = 0;
 
 	      } else {
+		BX_DEBUG(("ATAPI Device Reset on non-cd device"));
 		command_aborted(0x08);
 	      }
 	      break;
@@ -1849,6 +1935,35 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
 	  break;
 
+	case 0x70:  // SEEK (cgs)
+	  if (BX_SELECTED_HD.device_type == IDE_DISK) {
+	    BX_DEBUG(("write cmd 0x70 (SEEK) executing"));
+            if (!calculate_logical_address(&logical_sector)) {
+	      BX_ERROR(("initial seek to sector %u out of bounds, aborting", logical_sector));
+              command_aborted(value);
+	      break;
+	    }
+            BX_SELECTED_CONTROLLER.error_register = 0;
+            BX_SELECTED_CONTROLLER.status.busy  = 0;
+            BX_SELECTED_CONTROLLER.status.drive_ready = 1;
+            BX_SELECTED_CONTROLLER.status.seek_complete = 1;
+            BX_SELECTED_CONTROLLER.status.drq   = 1;
+            BX_SELECTED_CONTROLLER.status.corrected_data = 0;
+            BX_SELECTED_CONTROLLER.status.err   = 0;
+            BX_SELECTED_CONTROLLER.buffer_index = 0;
+  	    BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS s[0]).controller.control.disable_irq));
+  	    BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS s[1]).controller.control.disable_irq));
+  	    BX_DEBUG(("SEEK completed.  error_register = %02x", BX_SELECTED_CONTROLLER.error_register));
+  	    raise_interrupt();
+  	    BX_DEBUG(("SEEK interrupt completed"));
+          } else {
+  	    BX_ERROR(("write cmd 0x70 (SEEK) not supported for non-disk"));
+  	    command_aborted(0x70); 
+  	  }
+          break;
+
+
+
 	// List all the write operations that are defined in the ATA/ATAPI spec
 	// that we don't support.  Commands that are listed here will cause a
 	// BX_ERROR, which is non-fatal, and the command will be aborted.
@@ -1878,7 +1993,6 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	case 0x42: BX_ERROR(("write cmd 0x42 (READ VERIFY SECTORS EXT) not supported"));command_aborted(0x42); break;
 	case 0x50: BX_ERROR(("write cmd 0x50 (FORMAT TRACK) not supported")); command_aborted(0x50); break;
 	case 0x51: BX_ERROR(("write cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(0x51); break;
-	case 0x70: BX_ERROR(("write cmd 0x70 (SEEK) not supported"));command_aborted(0x70); break;
 	case 0x87: BX_ERROR(("write cmd 0x87 (CFA TRANSLATE SECTOR) not supported"));command_aborted(0x87); break;
 	case 0x92: BX_ERROR(("write cmd 0x92 (DOWNLOAD MICROCODE) not supported"));command_aborted(0x92); break;
 	case 0x94: BX_ERROR(("write cmd 0x94 (STANDBY IMMEDIATE) not supported")); command_aborted(0x94); break;
@@ -1936,7 +2050,9 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  prev_control_reset = BX_SELECTED_CONTROLLER.control.reset;
 	  BX_HD_THIS s[0].controller.control.reset         = value & 0x04;
 	  BX_HD_THIS s[1].controller.control.reset         = value & 0x04;
-	  BX_SELECTED_CONTROLLER.control.disable_irq    = value & 0x02;
+	  // CGS: was: BX_SELECTED_CONTROLLER.control.disable_irq    = value & 0x02;
+	  BX_HD_THIS s[0].controller.control.disable_irq = value & 0x02;
+	  BX_HD_THIS s[1].controller.control.disable_irq = value & 0x02;
       //BX_DEBUG(( "adpater control reg: reset controller = %d",
       //  (unsigned) (BX_SELECTED_CONTROLLER.control.reset) ? 1 : 0 ));
       //BX_DEBUG(( "adpater control reg: disable_irq(14) = %d",
@@ -1990,6 +2106,8 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 		      }
 		}
 	  }
+	    BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS s[0]).controller.control.disable_irq));
+	    BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS s[1]).controller.control.disable_irq));
 	  break;
 #if 0
       // you'll need these to support second IDE controller, not needed yet.
@@ -2109,7 +2227,7 @@ bx_hard_drive_c::identify_ATAPI_drive(unsigned drive)
   BX_ASSERT((27+i) == 47);
 
   BX_SELECTED_HD.id_drive[47] = 0;
-  BX_SELECTED_HD.id_drive[48] = 0;
+  BX_SELECTED_HD.id_drive[48] = 1; // 32 bits access
 
   BX_SELECTED_HD.id_drive[49] = (1 << 9); // LBA supported
 
@@ -2395,7 +2513,7 @@ bx_hard_drive_c::identify_drive(unsigned drive)
   //       9: 1 = LBA supported
   //       8: 1 = DMA supported
   //     7-0: Vendor unique
-  BX_SELECTED_HD.id_drive[49] = 0;
+  BX_SELECTED_HD.id_drive[49] = 1<<9;
 
   // Word 50: Reserved
   BX_SELECTED_HD.id_drive[50] = 0;
@@ -2525,15 +2643,26 @@ bx_hard_drive_c::identify_drive(unsigned drive)
   void
 bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int alloc_length, bool lazy)
 {
-      if (BX_SELECTED_CONTROLLER.byte_count == 0)
-	    BX_PANIC(("ATAPI command with zero byte count"));
+      // BX_SELECTED_CONTROLLER.byte_count is a union of BX_SELECTED_CONTROLLER.cylinder_no;
+      // lazy is used to force a data read in the buffer at the next read.
+
+      if (BX_SELECTED_CONTROLLER.byte_count == 0xffff)
+        BX_SELECTED_CONTROLLER.byte_count = 0xfffe;
 
       if ((BX_SELECTED_CONTROLLER.byte_count & 1)
           && !(alloc_length <= BX_SELECTED_CONTROLLER.byte_count)) {
-        BX_PANIC(("Odd byte count to ATAPI command"));
+        BX_INFO(("Odd byte count (0x%04x) to ATAPI command 0x%02x, using 0x%04x", 
+		BX_SELECTED_CONTROLLER.byte_count, command, BX_SELECTED_CONTROLLER.byte_count - 1));
+        BX_SELECTED_CONTROLLER.byte_count -= 1;
       }
-      if (alloc_length <= 0)
-	    BX_PANIC(("Allocation length <= 0"));
+
+      if (BX_SELECTED_CONTROLLER.byte_count == 0)
+	    BX_PANIC(("ATAPI command with zero byte count"));
+
+      if (alloc_length < 0)
+	    BX_PANIC(("Allocation length < 0"));
+      if (alloc_length == 0)
+	    alloc_length = BX_SELECTED_CONTROLLER.byte_count;
 
       BX_SELECTED_CONTROLLER.interrupt_reason.i_o = 1;
       BX_SELECTED_CONTROLLER.interrupt_reason.c_d = 0;
@@ -2546,6 +2675,7 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int allo
 	    BX_SELECTED_CONTROLLER.buffer_index = 2048;
       else
 	    BX_SELECTED_CONTROLLER.buffer_index = 0;
+      BX_SELECTED_CONTROLLER.drq_index = 0;
 
       if (BX_SELECTED_CONTROLLER.byte_count > req_length)
 	    BX_SELECTED_CONTROLLER.byte_count = req_length;
@@ -2557,11 +2687,11 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int allo
       BX_SELECTED_HD.atapi.drq_bytes = BX_SELECTED_CONTROLLER.byte_count;
       BX_SELECTED_HD.atapi.total_bytes_remaining = (req_length < alloc_length) ? req_length : alloc_length;
 
-      if (lazy) {
-	    // bias drq_bytes and total_bytes_remaining
-	    BX_SELECTED_HD.atapi.drq_bytes += 2048;
-	    BX_SELECTED_HD.atapi.total_bytes_remaining += 2048;
-      }
+      // if (lazy) {
+	    // // bias drq_bytes and total_bytes_remaining
+	    // BX_SELECTED_HD.atapi.drq_bytes += 2048;
+	    // BX_SELECTED_HD.atapi.total_bytes_remaining += 2048;
+      // }
 }
 
 void
@@ -2620,6 +2750,8 @@ bx_hard_drive_c::ready_to_send_atapi()
 void
 bx_hard_drive_c::raise_interrupt()
 {
+	BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER.control.disable_irq));
+	if (!BX_SELECTED_CONTROLLER.control.disable_irq) { BX_DEBUG(("raising interrupt")); } else { BX_DEBUG(("Not raising interrupt")); }
       if (!BX_SELECTED_CONTROLLER.control.disable_irq) {
 	    Bit32u irq = 14;  // always 1st IDE controller
 	    // for second controller, you would want irq 15
@@ -2671,7 +2803,7 @@ bx_hard_drive_c::set_cd_media_status(unsigned status)
       BX_HD_THIS s[1].cdrom.cd->eject_cdrom();
 #endif
       BX_HD_THIS s[1].cdrom.ready = 0;
-      bx_options.cdromd.Oinserted->set(BX_EJECTED);
+      bx_options.cdromd.Ostatus->set(BX_EJECTED);
       }
     }
   else {
@@ -2681,7 +2813,7 @@ bx_hard_drive_c::set_cd_media_status(unsigned status)
       BX_INFO(( "Media present in CD-ROM drive"));
       BX_HD_THIS s[1].cdrom.ready = 1;
       BX_HD_THIS s[1].cdrom.capacity = BX_HD_THIS s[1].cdrom.cd->capacity();
-      bx_options.cdromd.Oinserted->set(BX_INSERTED);
+      bx_options.cdromd.Ostatus->set(BX_INSERTED);
       BX_SELECTED_HD.sense.sense_key = SENSE_UNIT_ATTENTION;
       BX_SELECTED_HD.sense.asc = 0;
       BX_SELECTED_HD.sense.ascq = 0;
@@ -2691,7 +2823,7 @@ bx_hard_drive_c::set_cd_media_status(unsigned status)
 #endif
       BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS s[1].cdrom.ready = 0;
-      bx_options.cdromd.Oinserted->set(BX_EJECTED);
+      bx_options.cdromd.Ostatus->set(BX_EJECTED);
 #ifdef LOWLEVEL_CDROM
       }
 #endif
@@ -2748,6 +2880,11 @@ ssize_t default_image_t::write (const void* buf, size_t count)
 
 #if BX_SPLIT_HD_SUPPORT
 /*** concat_image_t function definitions ***/
+
+concat_image_t::concat_image_t ()
+{
+  fd = -1;
+}
 
 void concat_image_t::increment_string (char *str)
 {

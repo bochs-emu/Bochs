@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.30 2002-03-28 01:12:26 bdenney Exp $
+// $Id: win32.cc,v 1.30.4.1 2002-09-12 03:38:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,6 +32,7 @@
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 #include <windows.h>
+#include <commctrl.h>
 #include <process.h>
 
 #define LOG_THIS bx_gui.
@@ -70,7 +71,7 @@ static unsigned mouse_button_state = 0;
 static int ms_xdelta=0, ms_ydelta=0;
 static int ms_lastx=0, ms_lasty=0;
 static int ms_savedx=0, ms_savedy=0;
-static BOOL mouseCaptureMode = FALSE;
+static BOOL mouseCaptureMode;
 static unsigned long workerThread = NULL;
 static DWORD workerThreadID = 0;
 
@@ -88,7 +89,8 @@ static Bit32u *VideoBits;
 HBITMAP cursorBmp;
 
 // Headerbar stuff
-unsigned bx_bitmap_entries = 0;
+HWND hwndTB;
+unsigned bx_bitmap_entries;
 struct {
   HBITMAP bmap;
   unsigned xdim;
@@ -96,20 +98,13 @@ struct {
 } bx_bitmaps[BX_MAX_PIXMAPS];
 
 static struct {
-  HBITMAP bitmap;
-  unsigned xdim;
-  unsigned ydim;
-  unsigned xorigin;
-  unsigned yorigin;
-  unsigned alignment;
+  unsigned bmap_id;
   void (*f)(void);
 } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
 
 static unsigned bx_headerbar_y = 0;
-static unsigned bx_headerbar_entries = 0;
-static unsigned bx_bitmap_left_xorigin = 0;   // pixels from left
-static unsigned bx_bitmap_right_xorigin = 0;  // pixels from right
-static BOOL headerbar_changed = FALSE;
+static unsigned bx_headerbar_entries;
+static unsigned bx_hb_separator;
 
 // Misc stuff
 static unsigned dimension_x, dimension_y;
@@ -135,12 +130,14 @@ typedef struct {
 
   int kill;  // reason for terminateEmul(int)
   BOOL UIinited;
-  HWND hwnd;
+  HWND mainWnd;
+  HWND simWnd;
 } sharedThreadInfo;
 
 sharedThreadInfo stInfo;
 
-LRESULT CALLBACK WndProc (HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK mainWndProc (HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK simWndProc (HWND, UINT, WPARAM, LPARAM);
 VOID UIThread(PVOID);
 void terminateEmul(int);
 void create_vga_font(void);
@@ -225,15 +222,20 @@ void terminateEmul(int reason) {
     DeleteCriticalSection (&stInfo.keyCS);
     DeleteCriticalSection (&stInfo.mouseCS);
   }
+  x_tilesize = 0;
 
   if (MemoryDC) DeleteDC (MemoryDC);
   if (MemoryBitmap) DeleteObject (MemoryBitmap);
 
   if ( bitmap_info) delete[] (char*)bitmap_info;
 
+  for (unsigned b=0; b<bx_bitmap_entries; b++)
+    if (bx_bitmaps[b].bmap) DeleteObject(bx_bitmaps[b].bmap);
   for (unsigned c=0; c<256; c++)
     if (vgafont[c]) DeleteObject(vgafont[c]);
-  DeleteObject(cursorBmp);
+  if (cursorBmp) DeleteObject(cursorBmp);
+
+  LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
 
   switch (reason) {
   case EXIT_GUI_SHUTDOWN:
@@ -286,18 +288,23 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
   x_tilesize = tilewidth;
   y_tilesize = tileheight;
 
+  bx_bitmap_entries = 0;
+  bx_headerbar_entries = 0;
+  bx_hb_separator = 0;
+  mouseCaptureMode = FALSE;
+
   stInfo.hInstance = GetModuleHandle(NULL);
 
-  bx_headerbar_y = headerbar_y;
+  UNUSED(headerbar_y);
   dimension_x = 640;
-  dimension_y = 800 + bx_headerbar_y;
+  dimension_y = 480;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
   stretch_factor = 1;
 
   for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
   create_vga_font();
-  cursorBmp = CreateBitmap(8,16,1,1,NULL);
+  cursorBmp = CreateBitmap(8,32,1,1,NULL);
   if (!cursorBmp) terminateEmul(EXIT_FONT_BITMAP_ERROR);
 
   bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+
@@ -354,53 +361,95 @@ VOID UIThread(PVOID pvoid) {
   MSG msg;
   HDC hdc;
   WNDCLASSEX wndclass;
-  RECT wndRect;
+  RECT wndRect, wndRect2;
 
   workerThreadID = GetCurrentThreadId();
 
   wndclass.cbSize = sizeof (wndclass);
   wndclass.style = CS_HREDRAW | CS_VREDRAW;
-  wndclass.lpfnWndProc = WndProc;
+  wndclass.lpfnWndProc = mainWndProc;
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = stInfo.hInstance;
   wndclass.hIcon = LoadIcon (NULL, IDI_APPLICATION);
   wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
-  wndclass.hbrBackground = (HBRUSH) GetStockObject (WHITE_BRUSH);
+  wndclass.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szAppName;
   wndclass.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
 
   RegisterClassEx (&wndclass);
 
-  stInfo.hwnd = CreateWindow (szAppName,
-			      szWindowName,
-			      WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-			      CW_USEDEFAULT,
-			      CW_USEDEFAULT,
-			      dimension_x + x_edge * 2,
-			      dimension_y + y_edge * 2 + y_caption,
-			      NULL,
-			      NULL,
-			      stInfo.hInstance,
-			      NULL);
+  wndclass.cbSize = sizeof (wndclass);
+  wndclass.style = CS_HREDRAW | CS_VREDRAW;
+  wndclass.lpfnWndProc = simWndProc;
+  wndclass.cbClsExtra = 0;
+  wndclass.cbWndExtra = 0;
+  wndclass.hInstance = stInfo.hInstance;
+  wndclass.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+  wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
+  wndclass.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
+  wndclass.lpszMenuName = NULL;
+  wndclass.lpszClassName = "SIMWINDOW";
+  wndclass.hIconSm = NULL;
 
-  if (stInfo.hwnd) {
-    ShowWindow (stInfo.hwnd, SW_SHOW);
-    SetWindowPos (stInfo.hwnd, NULL, 0, 0, stretched_x + x_edge * 2,
-                  480 + y_edge * 2 + y_caption, SWP_NOMOVE|SWP_NOZORDER);
-    UpdateWindow (stInfo.hwnd);
+  RegisterClassEx (&wndclass);
+
+  stInfo.mainWnd = CreateWindow (szAppName,
+                     szWindowName,
+                     WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                     CW_USEDEFAULT,
+                     CW_USEDEFAULT,
+                     dimension_x + x_edge * 2,
+                     dimension_y + y_edge * 2 + y_caption,
+                     NULL,
+                     NULL,
+                     stInfo.hInstance,
+                     NULL);
+
+  if (stInfo.mainWnd) {
+    ShowWindow (stInfo.mainWnd, SW_SHOW);
+
+    InitCommonControls();
+    hwndTB = CreateWindowEx(0, TOOLBARCLASSNAME, (LPSTR) NULL,
+               WS_CHILD | CCS_ADJUSTABLE, 0, 0, 0, 0, stInfo.mainWnd,
+               (HMENU) 100, stInfo.hInstance, NULL);
+    SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
+    SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
+    ShowWindow(hwndTB, SW_SHOW);
+    GetClientRect(stInfo.mainWnd, &wndRect);
+    GetClientRect(hwndTB, &wndRect2);
+    bx_headerbar_y = wndRect2.bottom - wndRect2.top;
+    SetWindowPos(stInfo.mainWnd, NULL, 0, 0, stretched_x + x_edge * 2,
+                  stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
+                  SWP_NOMOVE|SWP_NOZORDER);
+    UpdateWindow (stInfo.mainWnd);
+
+    stInfo.simWnd = CreateWindow("SIMWINDOW",
+                      "",
+                      WS_CHILD,
+                      0,
+                      bx_headerbar_y,
+                      wndRect.right - wndRect.left,
+                      wndRect.bottom - wndRect.top - bx_headerbar_y,
+                      stInfo.mainWnd,
+                      NULL,
+                      stInfo.hInstance,
+                      NULL);
+
+    ShowWindow(stInfo.simWnd, SW_SHOW);
+    UpdateWindow (stInfo.simWnd);
+    SetFocus(stInfo.simWnd);
 
     ShowCursor(!mouseCaptureMode);
-    GetWindowRect(stInfo.hwnd, &wndRect);
-    SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-      wndRect.top + stretched_y/2 + y_edge + y_caption);
+    GetWindowRect(stInfo.simWnd, &wndRect);
+    SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
     cursorWarped();
 
-    hdc = GetDC(stInfo.hwnd);
+    hdc = GetDC(stInfo.simWnd);
     MemoryBitmap = CreateCompatibleBitmap(hdc, BX_MAX_XRES, BX_MAX_YRES);
     MemoryDC = CreateCompatibleDC(hdc);
-    ReleaseDC(stInfo.hwnd, hdc);
+    ReleaseDC(stInfo.simWnd, hdc);
 
     if (MemoryBitmap && MemoryDC) {
       stInfo.UIinited = TRUE;
@@ -418,7 +467,43 @@ VOID UIThread(PVOID pvoid) {
 }
 
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+
+  switch (iMsg) {
+  case WM_CREATE:
+    bx_options.Omouse_enabled->set (mouseCaptureMode);
+    if (mouseCaptureMode)
+      SetWindowText(hwnd, "Bochs for Windows      [F12 to release mouse]");
+    else
+      SetWindowText(hwnd, "Bochs for Windows      [F12 enables mouse]");
+    return 0;
+
+  case WM_COMMAND:
+    if (LOWORD(wParam) >= 101) {
+      EnterCriticalSection(&stInfo.keyCS);
+      enq_key_event(LOWORD(wParam)-101, HEADERBAR_CLICKED);
+      LeaveCriticalSection(&stInfo.keyCS);
+    }
+    break;
+
+  case WM_SETFOCUS:
+    SetFocus(stInfo.simWnd);
+    return 0;
+
+  case WM_CLOSE:
+    SendMessage(stInfo.simWnd, WM_CLOSE, 0, 0);
+    break;
+
+  case WM_DESTROY:
+    PostQuitMessage (0);
+    return 0;
+
+  }
+  return DefWindowProc (hwnd, iMsg, wParam, lParam);
+}
+
+
+LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
   RECT wndRect;
@@ -428,11 +513,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
   case WM_CREATE:
     InitFont();
     SetTimer (hwnd, 1, 330, NULL);
-    bx_options.Omouse_enabled->set (mouseCaptureMode);
-    if (mouseCaptureMode)
-      SetWindowText(hwnd, "Bochs for Windows      [F12 to release mouse]");
-    else
-      SetWindowText(hwnd, "Bochs for Windows      [F12 enables mouse]");
     return 0;
 
   case WM_TIMER:
@@ -440,12 +520,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
     if ( mouseCaptureMode)
     {
       GetWindowRect(hwnd, &wndRect);
-      SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-                 wndRect.top + stretched_y/2 + y_edge + y_caption);
+      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
       cursorWarped();
     }
     bx_options.Omouse_enabled->set (mouseCaptureMode);
-    
+
     return 0;
 
   case WM_PAINT:
@@ -472,15 +551,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
 
   case WM_LBUTTONDOWN:
   case WM_LBUTTONDBLCLK:
-    if (HIWORD(lParam) < BX_HEADER_BAR_Y * stretch_factor) {
-      EnterCriticalSection(&stInfo.keyCS);
-      enq_key_event(LOWORD(lParam)/stretch_factor, HEADERBAR_CLICKED);
-      LeaveCriticalSection(&stInfo.keyCS);
-    }
-    processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 1);
-
-    return 0;
-
   case WM_LBUTTONUP:
     processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 1);
     return 0;
@@ -497,8 +567,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
     KillTimer (hwnd, 1);
     stInfo.UIinited = FALSE;
     DestroyFont();
-
-    PostQuitMessage (0);
     return 0;
 
   case WM_KEYDOWN:
@@ -509,13 +577,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
       ShowCursor(!mouseCaptureMode);
       ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
       GetWindowRect(hwnd, &wndRect);
-      SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-                   wndRect.top + stretched_y/2 + y_edge + y_caption);
+      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
       cursorWarped();
       if (mouseCaptureMode)
-	SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
+        SetWindowText(stInfo.mainWnd, "Bochs for Windows      [Press F12 to release mouse capture]");
       else
-	SetWindowText(hwnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
+        SetWindowText(stInfo.mainWnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
     } else {
       EnterCriticalSection(&stInfo.keyCS);
       enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_PRESSED);
@@ -541,7 +608,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 
-void enq_key_event(Bit32u key, Bit32u press_release) {	
+void enq_key_event(Bit32u key, Bit32u press_release) {
   if (((tail+1) % SCANCODE_BUFSIZE) == head) {
     BX_ERROR(( "enq_scancode: buffer full"));
     return;
@@ -625,7 +692,14 @@ void bx_gui_c::handle_events(void) {
       headerbar_click(LOWORD(key));
     }
     else {
-      if (((key & 0x0100) && ((key & 0x01ff) != 0x0145)) | ((key & 0x01ff) == 0x45)) {
+      // Swap the scancodes of "numlock" and "pause"
+      if ((key & 0xff)==0x45) key ^= 0x100;
+      if (key & 0x0100) {
+        // This makes the "AltGr" key on European keyboards work
+	if (key==0x138) {
+          scancode = 0x9d; // left control key released
+          bx_devices.keyboard->put_scancode(&scancode, 1);
+	}
         // Its an extended key
         scancode = 0xE0;
         bx_devices.keyboard->put_scancode(&scancode, 1);
@@ -652,7 +726,7 @@ void bx_gui_c::flush(void) {
     // slight bugfix
 	updated_area.right++;
 	updated_area.bottom++;
-	InvalidateRect( stInfo.hwnd, &updated_area, FALSE);
+	InvalidateRect( stInfo.simWnd, &updated_area, FALSE);
 	updated_area_valid = FALSE;
   }
   LeaveCriticalSection( &stInfo.drawCS);
@@ -672,11 +746,10 @@ void bx_gui_c::clear_screen(void) {
   EnterCriticalSection(&stInfo.drawCS);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
-  PatBlt(MemoryDC, 0, bx_headerbar_y, stretched_x, stretched_y -
-         bx_headerbar_y, BLACKNESS);
+  PatBlt(MemoryDC, 0, 0, stretched_x, stretched_y, BLACKNESS);
   SelectObject(MemoryDC, oldObj);
 
-  updateUpdated(0, bx_headerbar_y, dimension_x-1, dimension_y-1);
+  updateUpdated(0, 0, dimension_x-1, dimension_y-1);
 
   LeaveCriticalSection(&stInfo.drawCS);
 }
@@ -708,8 +781,18 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char cChar;
   unsigned i, x, y;
   Bit8u cs_start, cs_end;
-  unsigned nchars;
-  unsigned char data[32];
+  unsigned nchars, ncols;
+  unsigned char data[64];
+
+  if (bx_gui.charmap_changed) {
+    for (unsigned c = 0; c<256; c++) {
+      memset(data, 0, sizeof(data));
+      for (unsigned i=0; i<32; i++)
+        data[i*2] = bx_gui.vga_charmap[c*32+i];
+      SetBitmapBits(vgafont[c], 64, data);
+    }
+    bx_gui.charmap_changed = 0;
+  }
 
   cs_start = (cursor_state >> 8) & 0x3f;
   cs_end = cursor_state & 0x1f;
@@ -718,21 +801,23 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   EnterCriticalSection(&stInfo.drawCS);
 
-  hdc = GetDC(stInfo.hwnd);
+  hdc = GetDC(stInfo.simWnd);
+
+  ncols = dimension_x/8;
 
   // Number of characters on screen, variable number of rows
-  nchars = 80*nrows;
+  nchars = ncols*nrows;
 
-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars) {
-    cChar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
-    if (yChar >= 16) {
+  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars) {
+    cChar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
+    if (yChar >= 14) {
       DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
-	              prev_block_cursor_y*16 + bx_headerbar_y, SRCCOPY,
-				  new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
+	              prev_block_cursor_y*yChar, SRCCOPY,
+				  new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1]);
     } else {
       DrawChar(hdc, cChar, prev_block_cursor_x*8,
-               prev_block_cursor_y*yChar + bx_headerbar_y,
-               new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1], 1, 0);
+               prev_block_cursor_y*yChar,
+               new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1], 1, 0);
     }
   }
 
@@ -742,12 +827,12 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
       cChar = new_text[i];
 
-      x = (i/2) % 80;
-      y = (i/2) / 80;
-      if(yChar>=16) {
-        DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
+      x = (i/2) % ncols;
+      y = (i/2) / ncols;
+      if(yChar>=14) {
+        DrawBitmap(hdc, vgafont[cChar], x*8, y*yChar, SRCCOPY, new_text[i+1]);
       } else {
-        DrawChar(hdc, cChar, x*8, y*yChar + bx_headerbar_y, new_text[i+1], 1, 0);
+        DrawChar(hdc, cChar, x*8, y*yChar, new_text[i+1], 1, 0);
       }
     }
   }
@@ -756,26 +841,26 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if (((cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end)) {
-    cChar = new_text[(cursor_y*80 + cursor_x)*2];
-    if (yChar>=16)
+  if (((cursor_y*ncols + cursor_x) < nchars ) && (cs_start <= cs_end)) {
+    cChar = new_text[(cursor_y*ncols + cursor_x)*2];
+    if (yChar>=14)
     {
       memset(data, 0, sizeof(data));
-      for (unsigned i=0; i<16; i++) {
+      for (unsigned i=0; i<32; i++) {
         data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
         if ((i >= cs_start) && (i <= cs_end))
           data[i*2] = 255 - data[i*2];
       }
-      SetBitmapBits(cursorBmp, 32, data);
-      DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16 + bx_headerbar_y,
-	         SRCCOPY, new_text[((cursor_y*80 + cursor_x)*2)+1]);
+      SetBitmapBits(cursorBmp, 64, data);
+      DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*yChar,
+	         SRCCOPY, new_text[((cursor_y*ncols + cursor_x)*2)+1]);
     } else {
-      char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
-      DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar + bx_headerbar_y, cAttr, cs_start, cs_end);
+      char cAttr = new_text[((cursor_y*ncols + cursor_x)*2)+1];
+      DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar, cAttr, cs_start, cs_end);
     }
   }
 
-  ReleaseDC(stInfo.hwnd, hdc);
+  ReleaseDC(stInfo.simWnd, hdc);
 
   LeaveCriticalSection(&stInfo.drawCS);
 }
@@ -783,17 +868,19 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   int
 bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
-  if (OpenClipboard(stInfo.hwnd)) {
+  if (OpenClipboard(stInfo.simWnd)) {
     HGLOBAL hg = GetClipboardData(CF_TEXT);
     char *data = (char *)GlobalLock(hg);
     *nbytes = strlen(data);
-    *bytes = (Bit8u *)malloc (*nbytes+1);
+    *bytes = new Bit8u[1 + *nbytes];
     BX_INFO (("found %d bytes on the clipboard", *nbytes));
     memcpy (*bytes, data, *nbytes+1);
     BX_INFO (("first byte is 0x%02x", *bytes[0]));
     GlobalUnlock(hg);
     CloseClipboard();
     return 1;
+    // *bytes will be freed in bx_keyb_c::paste_bytes or
+    // bx_keyb_c::service_paste_buf, using delete [].
   } else {
     BX_ERROR (("paste: could not open clipboard"));
     return 0;
@@ -803,7 +890,7 @@ bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
   int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
-  if (OpenClipboard(stInfo.hwnd)) {
+  if (OpenClipboard(stInfo.simWnd)) {
     HANDLE hMem = GlobalAlloc(GMEM_ZEROINIT, len);
     EmptyClipboard();
     lstrcpy((char *)hMem, text_snapshot);
@@ -852,23 +939,20 @@ Boolean bx_gui_c::palette_change(unsigned index, unsigned red,
 void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0) {
   HDC hdc;
   HGDIOBJ oldObj;
-  unsigned true_y0;
-
-  true_y0 = y0 + bx_headerbar_y;
 
   EnterCriticalSection(&stInfo.drawCS);
-  hdc = GetDC(stInfo.hwnd);
+  hdc = GetDC(stInfo.simWnd);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
-  StretchDIBits( MemoryDC, x0, true_y0, x_tilesize, y_tilesize, 0, 0,
+  StretchDIBits( MemoryDC, x0, y0, x_tilesize, y_tilesize, 0, 0,
     x_tilesize, y_tilesize, tile, bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 
   SelectObject(MemoryDC, oldObj);
 
-  updateUpdated(x0, true_y0, x0 + x_tilesize - 1, true_y0 + y_tilesize - 1);
+  updateUpdated(x0, y0, x0 + x_tilesize - 1, y0 + y_tilesize - 1);
 
-  ReleaseDC(stInfo.hwnd, hdc);
+  ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
 }
 
@@ -883,11 +967,26 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0) {
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
-void bx_gui_c::dimension_update(unsigned x, unsigned y) {
-if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
+void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+{
+  if (fheight > 0) {
+    if (fheight >= 14) {
+      FontId = 2;
+      yChar = fheight;
+    } else if (fheight > 12) {
+      FontId = 1;
+      yChar = 14;
+    } else {
+      FontId = 0;
+      yChar = 12;
+    }
+    y = y * yChar / fheight;
+  }
+
+  if ( x==dimension_x && y==dimension_y)
     return;
   dimension_x = x;
-  dimension_y = y + bx_headerbar_y;
+  dimension_y = y;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
   stretch_factor = 1;
@@ -898,26 +997,10 @@ if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
     stretch_factor *= 2;
   }
 
-  FontId = 2;
-  yChar = 16;
-  if(y>600)
-  {
-    FontId = 0;
-    yChar = 12;
-    dimension_y = y * yChar / 16 + bx_headerbar_y;
-    stretched_y = dimension_y * stretch_factor;
-  } else if (y>480) {
-    FontId = 1;
-    yChar = 14;
-    dimension_y = y * yChar / 16 + bx_headerbar_y;
-    stretched_y = dimension_y * stretch_factor;
-  }
-
-  SetWindowPos(stInfo.hwnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
-              stretched_y+ y_edge * 2 + y_caption,
+  SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
+              stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
                SWP_NOMOVE | SWP_NOZORDER);
-  headerbar_changed = TRUE;
-  show_headerbar();
+  MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
 }
 
 
@@ -935,6 +1018,7 @@ if ( x==dimension_x && y+bx_headerbar_y==dimension_y)
 unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
 				 unsigned ydim) {
   unsigned char *data;
+  TBADDBITMAP tbab;
 
   if (bx_bitmap_entries >= BX_MAX_PIXMAPS)
     terminateEmul(EXIT_HEADER_BITMAP_ERROR);
@@ -945,13 +1029,17 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
 
   data = new unsigned char[ydim * xdim/8];
   for (unsigned i=0; i<ydim * xdim/8; i++)
-    data[i] = reverse_bitorder(bmap[i]);
+    data[i] = 255 - reverse_bitorder(bmap[i]);
   SetBitmapBits(bx_bitmaps[bx_bitmap_entries].bmap, ydim * xdim/8, data);
   delete [] data;
   data = NULL;
 
   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
+
+  tbab.hInst = NULL;
+  tbab.nID = (UINT)bx_bitmaps[bx_bitmap_entries].bmap;
+  SendMessage(hwndTB, TB_ADDBITMAP, 1, (LPARAM)&tbab);
 
   bx_bitmap_entries++;
   return(bx_bitmap_entries-1); // return index as handle
@@ -975,6 +1063,8 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
 unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 				    void (*f)(void)) {
   unsigned hb_index;
+  TBBUTTON tbb[1];
+  RECT R;
 
   if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
     terminateEmul(EXIT_HEADER_BITMAP_ERROR);
@@ -982,22 +1072,32 @@ unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   bx_headerbar_entries++;
   hb_index = bx_headerbar_entries - 1;
 
-  bx_headerbar_entry[hb_index].bitmap = bx_bitmaps[bmap_id].bmap;
-  bx_headerbar_entry[hb_index].xdim   = bx_bitmaps[bmap_id].xdim;
-  bx_headerbar_entry[hb_index].ydim   = bx_bitmaps[bmap_id].ydim;
-  bx_headerbar_entry[hb_index].alignment = alignment;
-  bx_headerbar_entry[hb_index].f = f;
+  memset(tbb,0,sizeof(tbb));
+  if (bx_hb_separator==0) {
+    tbb[0].iBitmap = 0;
+    tbb[0].idCommand = 0;
+    tbb[0].fsState = 0;
+    tbb[0].fsStyle = TBSTYLE_SEP;
+    SendMessage(hwndTB, TB_ADDBUTTONS, 1,(LPARAM)(LPTBBUTTON)&tbb);
+  }
+  tbb[0].iBitmap = bmap_id;
+  tbb[0].idCommand = hb_index + 101;
+  tbb[0].fsState = TBSTATE_ENABLED;
+  tbb[0].fsStyle = TBSTYLE_BUTTON;
   if (alignment == BX_GRAVITY_LEFT) {
-    bx_headerbar_entry[hb_index].xorigin = bx_bitmap_left_xorigin;
-    bx_headerbar_entry[hb_index].yorigin = 0;
-    bx_bitmap_left_xorigin += bx_bitmaps[bmap_id].xdim;
+    SendMessage(hwndTB, TB_INSERTBUTTON, bx_hb_separator,(LPARAM)(LPTBBUTTON)&tbb);
+    bx_hb_separator++;
   } else { // BX_GRAVITY_RIGHT
-    bx_bitmap_right_xorigin += bx_bitmaps[bmap_id].xdim;
-    bx_headerbar_entry[hb_index].xorigin = bx_bitmap_right_xorigin;
-    bx_headerbar_entry[hb_index].yorigin = 0;
+    SendMessage(hwndTB, TB_INSERTBUTTON, bx_hb_separator+1, (LPARAM)(LPTBBUTTON)&tbb);
+  }
+  if (hb_index==0) {
+    SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+    GetWindowRect(hwndTB, &R);
+    bx_headerbar_y = R.bottom - R.top + 1;
   }
 
-  headerbar_changed = TRUE;
+  bx_headerbar_entry[hb_index].bmap_id = bmap_id;
+  bx_headerbar_entry[hb_index].f = f;
 
   return(hb_index);
 }
@@ -1008,32 +1108,8 @@ unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 // Show (redraw) the current headerbar, which is composed of
 // currently installed bitmaps.
 
-void bx_gui_c::show_headerbar(void) {
-  unsigned xorigin;
-  HGDIOBJ oldObj;
-
-  if (!headerbar_changed || !stInfo.UIinited) return;
-	
-  EnterCriticalSection(&stInfo.drawCS);
-	
-  oldObj = SelectObject(MemoryDC, MemoryBitmap);
-  PatBlt (MemoryDC, 0, 0, dimension_x, bx_headerbar_y, BLACKNESS);
-	
-  for (unsigned i=0; i<bx_headerbar_entries; i++) {
-    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
-      xorigin = bx_headerbar_entry[i].xorigin;
-    else
-      xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
-    DrawBitmap(MemoryDC, bx_headerbar_entry[i].bitmap, xorigin, 0, SRCCOPY, 0x7);
-  }
-
-  SelectObject(MemoryDC, oldObj);
-
-  updateUpdated(0, 0, dimension_x-1, bx_headerbar_y-1);
-
-  LeaveCriticalSection(&stInfo.drawCS);
-
-  headerbar_changed = FALSE;
+void bx_gui_c::show_headerbar(void)
+{
 }
 
 
@@ -1050,10 +1126,13 @@ void bx_gui_c::show_headerbar(void) {
 // hbar_id: headerbar slot ID
 // bmap_id: bitmap ID
 
-void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id) {
-  headerbar_changed = TRUE;
-  bx_headerbar_entry[hbar_id].bitmap = bx_bitmaps[bmap_id].bmap;
-  show_headerbar();
+void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+{
+  if (bmap_id != bx_headerbar_entry[hbar_id].bmap_id) {
+    bx_headerbar_entry[hbar_id].bmap_id = bmap_id;
+    SendMessage(hwndTB, TB_CHANGEBITMAP, (WPARAM)hbar_id+101, (LPARAM)
+                MAKELPARAM(bmap_id, 0));
+  }
 }
 
 
@@ -1065,7 +1144,7 @@ void bx_gui_c::exit(void) {
   printf("# In bx_gui_c::exit(void)!\n");
 
   // kill thread first...
-  PostMessage(stInfo.hwnd, WM_CLOSE, 0, 0);
+  PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
 
   // Wait until it dies
   while ((stInfo.kill == 0) && (workerThreadID != 0)) Sleep(500);
@@ -1075,18 +1154,16 @@ void bx_gui_c::exit(void) {
 
 
 void create_vga_font(void) {
-  HDC hdc;
-  unsigned char data[32];
+  unsigned char data[64];
 
   // VGA font is 8wide x 16high
-  hdc = GetDC(stInfo.hwnd);
   for (unsigned c = 0; c<256; c++) {
-    vgafont[c] = CreateBitmap(8,16,1,1,NULL);
+    vgafont[c] = CreateBitmap(8,32,1,1,NULL);
     if (!vgafont[c]) terminateEmul(EXIT_FONT_BITMAP_ERROR);
-    memset(data, 0, 16);
+    memset(data, 0, sizeof(data));
     for (unsigned i=0; i<16; i++)
       data[i*2] = reverse_bitorder(bx_vgafont[c].data[i]);
-    SetBitmapBits(vgafont[c], 32, data);
+    SetBitmapBits(vgafont[c], 64, data);
   }
 }
 
@@ -1100,6 +1177,13 @@ unsigned char reverse_bitorder(unsigned char b) {
   }
 
   return(ret);
+}
+
+
+COLORREF GetColorRef(unsigned char attr)
+{
+  return RGB(cmap_index[attr].rgbRed, cmap_index[attr].rgbGreen,
+             cmap_index[attr].rgbBlue);
 }
 
 
@@ -1117,7 +1201,7 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
   GetObject (hBitmap, sizeof (BITMAP), (LPVOID) &bm);
 
   ptSize.x = bm.bmWidth;
-  ptSize.y = bm.bmHeight;
+  ptSize.y = yChar;
 
   DPtoLP (hdc, &ptSize, 1);
 
@@ -1132,33 +1216,14 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
 //	BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
 //		  ptOrg.y, dwRop);
 //Colors taken from Ralf Browns interrupt list.
-//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)	  
+//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)
 //The highest background bit usually means blinking characters. No idea
 //how to implement that so for now it's just implemented as color.
 //Note: it is also possible to program the VGA controller to have the
 //high bit for the foreground color enable blinking characters.
 
-	const COLORREF crPal[16] = {
-	RGB(0 ,0 ,0 ), //0 black 
-	RGB(0 ,0 ,0xA8 ), //1 dark blue 
-	RGB(0 ,0xA8 ,0 ), //2 dark green 
-	RGB(0 ,0xA8 ,0xA8 ), //3 dark cyan 
-	RGB(0xA8 ,0 ,0 ), //4 dark red 
-	RGB(0xA8 ,0 ,0xA8 ), //5 dark magenta 
-	RGB(0xA8 ,0x54 ,0 ), //6 brown 
-	RGB(0xA8 ,0xA8 ,0xA8 ), //7 light gray 
-	RGB(0x54 ,0x54 ,0x54 ), //8 dark gray 
-	RGB(0x54 ,0x54 ,0xFC ), //9 light blue 
-	RGB(0x54 ,0xFC ,0x54 ), //10 green 
-	RGB(0x54 ,0xFC ,0xFC ), //11 cyan 
-	RGB(0xFC ,0x54 ,0x54 ), //12 light red 
-	RGB(0xFC ,0x54 ,0xFC ), //13 magenta 
-	RGB(0xFC ,0xFC ,0x54 ), //14 yellow 
-	RGB(0xFC ,0xFC ,0xFC ) //15 white 
-	};
-
-	COLORREF crFore = SetTextColor(MemoryDC, crPal[(cColor>>4)&0xf]);
-	COLORREF crBack = SetBkColor(MemoryDC, crPal[cColor&0xf]);
+	COLORREF crFore = SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
+	COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
 	BitBlt (MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
 		  ptOrg.y, dwRop);
 	SetBkColor(MemoryDC, crBack);
@@ -1193,18 +1258,10 @@ void updateUpdated(int x1, int y1, int x2, int y2) {
 }
 
 
-void headerbar_click(int x) {
-  int xorigin;
-
-  for (unsigned i=0; i<bx_headerbar_entries; i++) {
-    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
-      xorigin = bx_headerbar_entry[i].xorigin;
-    else
-      xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
-    if ( (x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim))) ) {
-      bx_headerbar_entry[i].f();
-      return;
-    }
+void headerbar_click(int x)
+{
+  if (x < bx_headerbar_entries) {
+    bx_headerbar_entry[x].f();
   }
 }
 
@@ -1218,7 +1275,7 @@ VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)
 void alarm (int time)
 {
   UINT idTimer;
-  SetTimer(stInfo.hwnd,idTimer,time*1000,MyTimer);
+  SetTimer(stInfo.simWnd,idTimer,time*1000,MyTimer);
 }
 #endif
 #endif
@@ -1258,27 +1315,8 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
 //Note: it is also possible to program the VGA controller to have the
 //high bit for the foreground color enable blinking characters.
 
-  const COLORREF crPal[16] = {
-  RGB(0 ,0 ,0 ), //0 black
-  RGB(0 ,0 ,0x80 ), //1 dark blue
-  RGB(0 ,0x80 ,0 ), //2 dark green
-  RGB(0 ,0x80 ,0x80 ), //3 dark cyan
-  RGB(0x80 ,0 ,0 ), //4 dark red
-  RGB(0x80 ,0 ,0x80 ), //5 dark magenta
-  RGB(0x80 ,0x80 ,0 ), //6 brown
-  RGB(0xc0 ,0xc0 ,0xc0 ), //7 light gray
-  RGB(0x80 ,0x80 ,0x80 ), //8 dark gray
-  RGB(0x00 ,0x00 ,0xff ), //9 light blue
-  RGB(0x00 ,0xff ,0x00 ), //10 green
-  RGB(0x00 ,0xff ,0xff ), //11 cyan
-  RGB(0xff ,0x00 ,0x00 ), //12 light red
-  RGB(0xff ,0x00 ,0xff ), //13 magenta
-  RGB(0xff ,0xff ,0x00 ), //14 yellow
-  RGB(0xff ,0xff ,0xff ) //15 white
-  };
-
-  COLORREF crFore = SetTextColor(MemoryDC, crPal[cColor&0xf]);
-  COLORREF crBack = SetBkColor(MemoryDC, crPal[(cColor>>4)&0xf]);
+  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(cColor&0xf));
+  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
   str[0]=c;
   str[1]=0;
 
@@ -1288,8 +1326,8 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
   if (cs_start <= cs_end && cs_start < y)
   {
     RECT rc;
-    SetBkColor(MemoryDC, crPal[cColor&0xf]);
-    SetTextColor(MemoryDC, crPal[(cColor>>4)&0xf]);
+    SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
+    SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
     rc.left = xStart+0;
     rc.right = xStart+8;
     if (cs_end >= y)

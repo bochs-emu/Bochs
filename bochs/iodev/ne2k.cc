@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.32.4.1 2002-09-10 17:42:36 bdenney Exp $
+// $Id: ne2k.cc,v 1.32.4.2 2002-09-12 03:38:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.32.4.1 2002-09-10 17:42:36 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.32.4.2 2002-09-12 03:38:56 bdenney Exp $"));
 	// nothing for now
 }
 
@@ -52,12 +52,12 @@ bx_ne2k_c::~bx_ne2k_c(void)
 }
 
 //
-// reset_device - restore state to power-up, cancelling all i/o
+// reset - restore state to power-up, cancelling all i/o
 //
 void
-bx_ne2k_c::reset_device(void)
+bx_ne2k_c::reset(unsigned type)
 {
-  BX_DEBUG (("reset_device"));
+  BX_DEBUG (("reset"));
   // Zero out registers and memory
   memset( & BX_NE2K_THIS s.CR,  0, sizeof(BX_NE2K_THIS s.CR) );
   memset( & BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
@@ -287,7 +287,9 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // have been initialised.
     //
     if (io_len > BX_NE2K_THIS s.remote_bytes)
-      BX_PANIC(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
+      {BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
+       return 0;
+      }
 
     //BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS s.remote_bytes));
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
@@ -316,7 +318,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0xf:  // Reset register
-    reset_device();
+    reset(BX_RESET_SOFTWARE);
     break;
 
   default:
@@ -363,11 +365,11 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0xf:  // Reset register
-    reset_device();
+    reset(BX_RESET_SOFTWARE);
     break;
 
-  default:
-    BX_PANIC(("asic write invalid address %04x", (unsigned) offset));
+  default: // this is invalid, but happens under win95 device detection
+    BX_INFO(("asic write invalid address %04x, ignoring", (unsigned) offset));
     break ;
   }
 }
@@ -1243,13 +1245,13 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.32.4.1 2002-09-10 17:42:36 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.32.4.2 2002-09-12 03:38:56 bdenney Exp $"));
   BX_NE2K_THIS devices = d;
 
 
   if (bx_options.ne2k.Ovalid->get ()) {
     // Bring the register state into power-up state
-    reset_device();
+    reset(BX_RESET_HARDWARE);
 
     // Read in values from config file
     BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.39 2002-03-28 07:50:34 bdenney Exp $
+$Id: user.dbk,v 1.39.4.1 2002-09-12 03:38:31 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -430,6 +430,7 @@ currently work with.
       Kevin's Lawton's main development platform.  Bryce Denney maintains
       the Unix/X11 platform now.  Most features and fixes (not all) are
       tried first in Unix and then ported to the others.
+      </entry>
    </row>
 
    <row>
@@ -976,6 +977,18 @@ The tag tells which release you want, and it can be one of the following:
       </row>
     </thead>
     <tbody>
+      <row>
+	<entry>1.4.1 (bugfix1)</entry>
+	<entry>REL_1_4_1_FINAL</entry>
+      </row>
+      <row>
+	<entry>1.4</entry>
+	<entry>REL_1_4_FINAL</entry>
+      </row>
+      <row>
+	<entry>1.3</entry>
+	<entry>REL_1_3_FINAL</entry>
+      </row>
       <row>
 	<entry>1.2.1 (bugfix1)</entry>
 	<entry>REL_1_2_1_FINAL</entry>
@@ -1647,6 +1660,7 @@ are required.  To try it, type:
   configure --with-rfb
   make
 </screen>
+</para>
 </section>
 
 <section><title>Compiling with the SDL interface</title>
@@ -1783,6 +1797,7 @@ In Bochs 1.3 and before, the X11 gui was always the default.
     </entry>
   </row>
 </tbody>
+</tgroup>
 </table>
 
 <table><title>Configure Options to Select the GUI (optional)</title>
@@ -1814,11 +1829,13 @@ In Bochs 1.3 and before, the X11 gui was always the default.
       <entry>Use Win32 GUI, but compile with a Win32/gcc
       environment such as Cygwin.  For Cygwin, see .conf.win32-cygwin
       for the correct compile options.
+      </entry>
     </row>
     <row>
       <entry>--with-carbon</entry>
       <entry>Compile for MacOS X with the Carbon GUI.  See the
       .conf.macosx file for the correct MacOS X compile options.
+      </entry>
     </row>
     <row>
       <entry>--with-amigaos</entry>
@@ -1931,7 +1948,7 @@ turn it off.
       <entry>yes</entry>
       <entry>
       Enables text-mode configuration menus when you first start Bochs.  The
-      menus let you read in a bochsrc file, edit some options, and safe the new
+      menus let you read in a bochsrc file, edit some options, and save the new
       bochsrc before starting the simulation.  Also enables a runtime
       menu (controlled by a Config button on the Bochs display) which
       lets you change certain settings during simulation.  The control panel
@@ -2146,7 +2163,7 @@ turn it off.
     </row>
     <row>
       <entry>--enable-simid={0, 1}</entry>
-      <entry>0
+      <entry>0</entry>
       <entry>
       CPU simulator ID.  You likely don't need this option.  If you are using
       bochs to cosimulate, that is to run multiple simulators in parallel so
@@ -2274,7 +2291,7 @@ The section below lists all the supported bochsrc options.
 <para>
 Examples:
 <screen>
-  file=bios/BIOS-bochs-latest, address=0xf0000
+  romimage: file=bios/BIOS-bochs-latest, address=0xf0000
 </screen>
 You need to load a ROM BIOS into addresses 0xf0000-0xfffff.  The BIOS controls
 what the PC does when it first powers on.  Normally, you can use a precompiled
@@ -2481,14 +2498,18 @@ com1: dev=/dev/cua0
 
 <section><title>parport1</title>
 <para>
-This defines a parallel (printer) port.  When turned on, the emulated
-printer port sends characters printed by the guest OS into an output file.
+This defines a parallel (printer) port. When turned on and an output file is
+defined emulated printer port sends characters printed by the guest OS into
+the output file. On some platforms a device filename can be used to send the
+data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
+win32 platforms).
 </para>
 <para>
 Examples:
 <screen>
-parport1: enable=1, file="parport.out"
-parport1: enable=0
+parport1: enabled=1, file="parport.out"
+parport1: enabled=1, file="/dev/lp0"
+parport1: enabled=0
 </screen>
 </para>
 </section>
@@ -2673,7 +2694,8 @@ This option prevents Bochs from creating mouse "events"  unless  a  mouse  is
 enabled.  The hardware emulation  itself is not disabled  by this. You  can
 turn the mouse on  by  setting enabled to  1,  or  turn  it  off  by  setting
 enabled to 0. Unless  you  have  a  particular reason  for enabling  the  mouse
-by  default, it is recommended that you leave it off.
+by default, it is recommended that you leave it off. You can also toggle the
+mouse usage at runtime (middle mouse button on X11 and SDL, F12 on Win32).
 </para>
 </section>
 
@@ -2687,6 +2709,7 @@ Requests that the GUI create and use its  own non-shared colormap.  This
 colormap  will  be used when in the bochs window. If not enabled, a shared
 colormap  scheme  may be used.  Once again, enabled=1  turns on this feature
 and 0 turns it off.
+</para>
 </section>
 
 <section><title>ne2k</title>
@@ -2970,6 +2993,7 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 <row><entry>BX_KEY_POWER_WAKE</entry><entry> Powerkeys - wake </entry></row>
 
 </tbody>
+</tgroup>
 </table>
 </section>
 
@@ -3003,8 +3027,8 @@ SourceForge
 <chapter id="mailinglist">
 <title>Mailing Lists</title>
 <para>
-The Bochs community uses two mailing lists to communicate, called
-bochs-developers and bochs-announce.
+The Bochs community uses three mailing lists to communicate, called
+bochs-developers, bochs-cvs and bochs-announce.
 </para>
 
 <section id="bochs-developers"><title>bochs-developers mailing list</title>
@@ -3031,7 +3055,7 @@ Once you have subscribed, you can write to
 <email>bochs-developers@lists.sourceforge.net</email> to send a message to
 everyone on the list.  While it's possible to post without being a subscriber,
 it's not recommended.  If you aren't a subscriber, you might miss the response
-to your question.  
+to your question.
 </para>
 <para>
 <ulink url="http://marc.theaimsgroup.com/?l=bochs-dev">Archive of bochs-developers messages</ulink>
@@ -3043,7 +3067,7 @@ to your question.
 Bochs-announce is a moderated, low-traffic list which carries only periodic
 announcements of Bochs releases and important events.  If you have a very
 important and truly relevant Bochs announcement, you can try posting it to
-bochs-announce, but the moderator will have to approve it before it will 
+bochs-announce, but the moderator will have to approve it before it will
 go out.  On average, bochs-announce subscribers get one or two messages
 per month.  There are about 75 subscribers.  Anyone may join the list.
 </para>
@@ -3062,14 +3086,26 @@ on <command>Edit Options</command>.  Then type your password and click
 <para>
 There is no need to subscribe to both lists, because all bochs-announce
 messages are forwarded to the developers list.  If you subscribe to both, you
-will get 2 copies of every announcement. 
+will get 2 copies of every announcement.
 </para>
 
 <para>
-<ulink url="http://www.geocrawler.com/lists/3/SourceForge/12081/0/">Archive of bochs-announce messages</ulink>
+<ulink url="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Announce+Archive&amp;url=http://sourceforge.net/mailarchive/forum.phpqmrkforum_ideq1855">Archive of bochs-announce messages</ulink>
 </para>
 
 </section>  <!-- End of bochs-announce mailing list -->
+
+<section id="bochs-cvs"><title>bochs-cvs mailing list</title>
+<para>
+This is the cvs commit mailinglist (a unified diff email will be sent
+whenever someone does a checkin in the bochs cvs repository).
+</para>
+
+<para>
+<ulink url="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+CVS+Mailing+List+Archive&amp;url=http://sourceforge.net/mailarchive/forum.phpqmrkforum_ideq8301">Archive of bochs-cvs messages</ulink>
+</para>
+
+</section>  <!-- End of bochs-cvs mailing list -->
 
 <section><title>Mailing List Etiquette</title>
 
@@ -3478,6 +3514,7 @@ that Linux detects the NE2000 card.  Eventually it gets to a login prompt.
   NE*000 ethercard probe at 0x280: b0 c4 20 00 00 00
   eth0: NE2000 found at 0x280, using IRQ 9.
 </screen>
+</para>
 
 <para>
 At the login prompt, type "root" to log in as root. Then type the ifconfig and
@@ -3493,6 +3530,7 @@ network.
   dlx:~# route add default gw 192.168.0.1   # your gateway to the net
   dlx:~# _
 </screen>
+</para>
 
 <note>
 <para>
@@ -3586,7 +3624,7 @@ can even boot DOS inside Bochs and run <filename>sbide121.exe</filename> to
 extract it.  The driver is called SBIDE.SYS.  </para>
 </footnote> and OAKCDROM.SYS that comes with several versions of Windows.
 Copy the driver to your boot disk, and then set up the startup files as follows.
-<para>
+</para>
 <screen>
 config.sys:
   device=himem.sys
@@ -3607,6 +3645,10 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 </section>
           </section>
 	  <section><title>Windows *</title>
+             <para>
+             </para>
+          </section>
+	  <section><title>Minix</title>
              <para>
              </para>
           </section>

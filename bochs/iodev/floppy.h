@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.9 2002-02-06 18:51:48 vruppert Exp $
+// $Id: floppy.h,v 1.9.6.1 2002-09-12 03:38:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ public:
   bx_floppy_ctrl_c(void);
   ~bx_floppy_ctrl_c(void);
   BX_FD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
-  BX_FD_SMF void   reset(unsigned source);
+  BX_FD_SMF void   reset(unsigned type);
   BX_FD_SMF void   dma_write(Bit8u *data_byte);
   BX_FD_SMF void   dma_read(Bit8u *data_byte);
   BX_FD_SMF unsigned set_media_status(unsigned drive, unsigned status);
@@ -112,7 +112,8 @@ private:
     unsigned floppy_buffer_index;
     int      floppy_timer_index;
     Boolean  media_present[2];
-    Bit8u    DIR; // Digital Input Register:
+    Bit8u    device_type[4];
+    Bit8u    DIR[4]; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed
     } s;  // state information

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.17 2001-12-26 14:56:15 vruppert Exp $
+// $Id: pc_system.cc,v 1.17.6.1 2002-09-12 03:38:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -50,19 +50,17 @@ const Bit64u bx_pc_system_c::COUNTER_INTERVAL = 100000;
 bx_pc_system_c::bx_pc_system_c(void)
 {
   this->put("SYS");
+}
 
+  void
+bx_pc_system_c::init_ips(Bit32u ips)
+{
   num_timers = 0;
   // set ticks period and remaining to max Bit32u value
   num_cpu_ticks_in_period = num_cpu_ticks_left = (Bit32u) -1;
   m_ips = 0.0L;
 
-  for (unsigned int i=0; i < 8; i++) {
-    DRQ[i] = 0;
-    DACK[i] = 0;
-    }
-  TC = 0;
   HRQ = 0;
-  HLDA = 0;
 
   enable_a20 = 1;
   //set_INTR (0);
@@ -77,31 +75,10 @@ bx_pc_system_c::bx_pc_system_c(void)
 
   counter = 0;
   counter_timer_index = register_timer_ticks(this, bx_pc_system_c::counter_timer_handler, COUNTER_INTERVAL, 1, 1);
-}
 
-  void
-bx_pc_system_c::init_ips(Bit32u ips)
-{
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
   BX_DEBUG(("ips = %u", (unsigned) ips));
-}
-
-  void
-bx_pc_system_c::raise_HLDA(void)
-{
-  HLDA = 1;
-  bx_devices.raise_hlda();
-  HLDA = 0;
-}
-
-  void
-bx_pc_system_c::set_DRQ(unsigned channel, Boolean val)
-{
-  if (channel > 7)
-    BX_PANIC(("set_DRQ() channel > 7"));
-  DRQ[channel] = val;
-  bx_devices.drq(channel, val);
 }
 
   void
@@ -110,80 +87,6 @@ bx_pc_system_c::set_HRQ(Boolean val)
   HRQ = val;
   if (val)
     BX_CPU(0)->async_event = 1;
-  else
-    HLDA = 0; // ??? needed?
-}
-
-  void
-bx_pc_system_c::set_TC(Boolean val)
-{
-  TC = val;
-}
-
-  void
-bx_pc_system_c::set_DACK(unsigned channel, Boolean val)
-{
-  DACK[channel] = val;
-}
-
-
-  void
-bx_pc_system_c::dma_write8(Bit32u phy_addr, unsigned channel, Boolean verify)
-{
-  // DMA controlled xfer of byte from I/O to Memory
-
-  Bit8u data_byte;
-
-  bx_devices.dma_write8(channel, &data_byte);
-  if (!verify) {
-    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 1, &data_byte);
-
-    BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
-    }
-}
-
-
-  void
-bx_pc_system_c::dma_read8(Bit32u phy_addr, unsigned channel)
-{
-  // DMA controlled xfer of byte from Memory to I/O
-
-  Bit8u data_byte;
-
-  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 1, &data_byte);
-  bx_devices.dma_read8(channel, &data_byte);
-
-  BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
-}
-
-
-  void
-bx_pc_system_c::dma_write16(Bit32u phy_addr, unsigned channel, Boolean verify)
-{
-  // DMA controlled xfer of word from I/O to Memory
-
-  Bit16u data_word;
-
-  bx_devices.dma_write16(channel, &data_word);
-  if (!verify) {
-    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 2, &data_word);
-
-    BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
-    }
-}
-
-
-  void
-bx_pc_system_c::dma_read16(Bit32u phy_addr, unsigned channel)
-{
-  // DMA controlled xfer of word from Memory to I/O
-
-  Bit16u data_word;
-
-  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 2, &data_word);
-  bx_devices.dma_read16(channel, &data_word);
-
-  BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
 }
 
 
@@ -232,6 +135,8 @@ bx_pc_system_c::set_enable_a20(Bit8u value)
 #else
 
 #if BX_SUPPORT_A20
+  unsigned old_enable_a20 = enable_a20;
+
   if (value) {
     enable_a20 = 1;
 #if BX_CPU_LEVEL == 2
@@ -248,6 +153,14 @@ bx_pc_system_c::set_enable_a20(Bit8u value)
   BX_DBG_A20_REPORT(value);
 
   BX_DEBUG(("A20: set() = %u", (unsigned) enable_a20));
+
+  // If there has been a transition, we need to notify the CPUs so
+  // they can potentially invalidate certain cache info based on
+  // A20-line-applied physical addresses.
+  if (old_enable_a20 != enable_a20) {
+    for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+      BX_CPU(i)->pagingA20Changed();
+    }
 #else
   BX_DEBUG(("set_enable_a20: ignoring: SUPPORT_A20 = 0"));
 #endif  // #if BX_SUPPORT_A20
@@ -279,6 +192,7 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   BX_ERROR(( "# bx_pc_system_c::ResetSignal() called" ));
   for (int i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->reset(BX_RESET_SOFTWARE);
+  bx_devices.reset(BX_RESET_SOFTWARE);
   return(0);
 }
 

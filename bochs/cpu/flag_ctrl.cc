@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: flag_ctrl.cc,v 1.6.10.1 2002-09-12 03:38:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -92,7 +92,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 #endif
 #endif
 
-  BX_CPU_THIS_PTR eflags.if_ = 0;
+  ClearEFlagsIF();
 }
 
   void
@@ -117,8 +117,8 @@ BX_CPU_C::STI(BxInstruction_t *i)
 #endif
 #endif
 
-  if (!BX_CPU_THIS_PTR eflags.if_) {
-    BX_CPU_THIS_PTR eflags.if_ = 1;
+  if (!GetEFlagsIFLogical()) {
+    SetEFlagsIF();
     BX_CPU_THIS_PTR inhibit_mask |= BX_INHIBIT_INTERRUPTS;
     BX_CPU_THIS_PTR async_event = 1;
     }
@@ -127,13 +127,13 @@ BX_CPU_C::STI(BxInstruction_t *i)
   void
 BX_CPU_C::CLD(BxInstruction_t *i)
 {
-  BX_CPU_THIS_PTR eflags.df = 0;
+  ClearEFlagsDF();
 }
 
   void
 BX_CPU_C::STD(BxInstruction_t *i)
 {
-  BX_CPU_THIS_PTR eflags.df = 1;
+  SetEFlagsDF();
 }
 
   void
@@ -169,13 +169,16 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   if (v8086_mode()) {
     if (IOPL < 3) {
-      //BX_INFO(("popf_fv: IOPL < 3"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
     if (i->os_32) {
-      BX_PANIC(("POPFD(): not supported in virtual mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      Bit32u eflags;
+
+      pop_32(&eflags);
+
+      eflags &= 0x00277fd7;
+      write_eflags(eflags, /* change IOPL? */ 0, /* change IF? */ 1, 0, 0);
       return;
       }
     }

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.4 2002-03-24 09:11:04 bdenney Exp $
+// $Id: keymap.h,v 1.4.4.1 2002-09-12 03:38:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  Christophe Bothamy
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

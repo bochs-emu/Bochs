@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.43 2002-09-11 03:52:27 bdenney Exp $
+// $Id: wxmain.cc,v 1.43.2.1 2002-09-12 03:38:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -76,10 +76,10 @@ MyPanel *thePanel = NULL;
 bool isSimThread () {
   wxThread *current = wxThread::This ();
   if (current == (wxThread*) theFrame->GetSimThread ()) {
-    //wxLogDebug ("isSimThread? yes");
+    wxLogDebug ("isSimThread? yes");
     return true;
   }
-  //wxLogDebug ("isSimThread? no");
+  wxLogDebug ("isSimThread? no");
   return false;
 }
 
@@ -1337,29 +1337,23 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
   //encapsulate the bxevent in a wxwindows event
   wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Sim2CI_Event);
   wxevent.SetEventObject ((wxEvent *)event);
-  if (isSimThread ()) {
-    IFDBG_EVENT (wxLogDebug ("Sending an event to the window"));
-    wxPostEvent (frame, wxevent);
-    // if it is an asynchronous event, return immediately.  The event will be
-    // freed by the recipient in the GUI thread.
-    if (async) return NULL;
-    wxLogDebug ("SiminterfaceCallback2: synchronous event; waiting for response");
-    // now wait forever for the GUI to post a response.
-    BxEvent *response = NULL;
-    while (response == NULL) {
-	  response = GetSyncResponse ();
-	  if (!response) {
-	    wxLogDebug ("no sync response yet, waiting");
-	    this->Sleep(500);
-	  }
-    }
-    wxASSERT (response != NULL);
-    return response;
-  } else {
-    wxLogDebug ("sim2ci event sent from the GUI thread. calling handler directly");
-    theFrame->OnSim2CIEvent (wxevent);
-    return event;
+  IFDBG_EVENT (wxLogDebug ("Sending an event to the window"));
+  wxPostEvent (frame, wxevent);
+  // if it is an asynchronous event, return immediately.  The event will be
+  // freed by the recipient in the GUI thread.
+  if (async) return NULL;
+  wxLogDebug ("SiminterfaceCallback2: synchronous event; waiting for response");
+  // now wait forever for the GUI to post a response.
+  BxEvent *response = NULL;
+  while (response == NULL) {
+	response = GetSyncResponse ();
+	if (!response) {
+	  wxLogDebug ("no sync response yet, waiting");
+	  this->Sleep(500);
+	}
   }
+  wxASSERT (response != NULL);
+  return response;
 }
 
 void 

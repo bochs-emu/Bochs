@@ -17,28 +17,23 @@ found in the above snapshot:
 
 Also see beos-gui-fabo.capture-filter and the associated README.
 
+I updated this patch file to make it apply with the current CVS version. I have
+added the cursor size and cursor hide feature for BeOS. The copy/paste functions
+are still to do.
+The capture filter works now - we have only the binary in this directory, but
+not the source.
+-Volker
+
 Patch was created with:
-  cvs diff -u
+  diff -u
 Apply patch to what version:
-  cvs from December 7, 2001
+  gui/beos r1.16
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-Index: gui/beos.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/gui/beos.cc,v
-retrieving revision 1.12
-diff -u -r1.12 beos.cc
---- gui/beos.cc	2001/12/07 18:52:24	1.12
-+++ gui/beos.cc	2001/12/07 19:17:30
-@@ -1,5 +1,5 @@
- /////////////////////////////////////////////////////////////////////////
--// $Id: patch.beos-gui-fabo,v 1.1 2001/12/07 19:22:54 bdenney Exp $
-+// $Id: patch.beos-gui-fabo,v 1.1 2001/12/07 19:22:54 bdenney Exp $
- /////////////////////////////////////////////////////////////////////////
- //
- //  Copyright (C) 2001  MandrakeSoft S.A.
+--- gui/beos.cc	Sat Apr 20 09:19:35 2002
++++ gui/beos.cc	Tue Jul  9 20:19:33 2002
 @@ -28,6 +28,7 @@
  #include <app/Application.h>
  #include <interface/Window.h>
@@ -47,7 +42,7 @@ diff -u -r1.12 beos.cc
  #include <interface/Screen.h>
  #include <interface/Bitmap.h>
  #include <interface/GraphicsDefs.h>
-@@ -39,1161 +40,1245 @@
+@@ -39,1179 +40,1279 @@
  #include <string.h>
  
  #include "bochs.h"
@@ -150,17 +145,9 @@ diff -u -r1.12 beos.cc
 +typedef void (*handler_func)(void);
 +QUEUECLASS(CommandQueue, handler_func);
  
--
--
--class BochsApplication : public BApplication {
--
 +class BochsApplication: public BApplication
 +{
- public:
--  BochsApplication();
--  };
--
--class BochsWindow : public BWindow {
++public:
 +	BochsApplication(bx_gui_c *bxGui, int argc, char **argv,
 +		uint32 tileWidth, uint32 tileHeight, uint32 headerBarHeight, handler_func powerHandlerFunc);
 +	~BochsApplication();
@@ -172,18 +159,19 @@ diff -u -r1.12 beos.cc
 +	handler_func fPowerHandlerFunc;
 +};
  
+-
+-class BochsApplication : public BApplication {
+-
 +class BochsWindow: public BWindow
 +{
  public:
--  BochsWindow(BRect frame);
--  virtual  bool  QuitRequested();
--  virtual  void  FrameResized(float width, float height);
+-  BochsApplication();
 -  };
 +	BochsWindow(BRect frame);
 +	virtual  bool  QuitRequested();
 +};
  
--class BochsView : public BView {
+-class BochsWindow : public BWindow {
 +class BochsView: public BView {
 +public:
 +	BochsView(BRect frame, char *name, uint32 headerHeight, uint32 tileWidth, uint32 tileHeight);
@@ -202,10 +190,11 @@ diff -u -r1.12 beos.cc
 +	void HandleEvents();
 +	void ClearScreen();
 +	void TextUpdate(uint8 *oldText, uint8 *newText,
-+		uint32 cursorX, uint32 cursorY, uint32 rowCount);
++		uint32 cursorX, uint32 cursorY, uint32 rowCount,
++		uint32 cursorShape);
 +	void GraphicsTileUpdate(uint8 *tile, uint32 xPos, uint32 yPos);
 +	bool PaletteChange(uint32 index, uint32 red, uint32 green, uint32 blue);
-+	void DimensionUpdate(uint32 x, uint32 y);
++	void DimensionUpdate(uint32 x, uint32 y, uint32 fheight);
 +	void HandleEnableMouse(bool enable);
 +	uint32 CreateBitmap(const uchar *bitmap, uint32 width, uint32 height);
 +	uint32 HeaderbarBitmap(uint32 bitmapID, uint32 alignment, void (*f)(void));
@@ -214,13 +203,212 @@ diff -u -r1.12 beos.cc
 +	void GotCapturedInput(BMessage *msg);
 +	static void release_mouse();
 +	
- private:
--	BBitmap *backing_store;
--	BView *backing_view;
++private:
 +	void ShowCursor(bool show);
 +	uchar ReverseBitorder(uchar b);
 +	void CaptureInput();
 +	void ReleaseInput();
++	
++	BBitmap *fBackBitmap;
++	BView *fBackView;
++	uint32 fLastModifiers;
++	uint32 fLastMouseX, fLastMouseY;
++	uint32 fCursorX, fCursorY;
++	uint8 fCursorValue[2];
++	uint8 fCursorStart;
++	uint8 fCursorEnd;
++	bool fCursorHide;
++	bool fCursorVisible;
++	bool fInTextMode;
++	BScreen fScreen;
++	uint8 fColorMap[256]; // indices into system colormap
++	BBitmap *fVgafont[256];
++	BBitmap *fCursorBitmap;
++	uint32 fTileWidth;
++	uint32 fTileHeight;
++	bool fUseStandardInput;
++	bool fMouseEnabled;
++	BHandler *fCaptureTarget;
++	
++	KeyQueue fKeyQueue;
++	MouseQueue fMouseQueue;
++	CommandQueue fCommandQueue;
++	
++	struct
++	{
++		BBitmap *bmap;
++		unsigned xdim;
++		unsigned ydim;
++	} fBitmaps[BX_MAX_PIXMAPS];
++	uint32 fBitmapCount;
++	
++	struct
++	{
++		BBitmap *bitmap;
++		unsigned xdim;
++		unsigned ydim;
++		unsigned xorigin;
++		unsigned yorigin;
++		unsigned alignment;
++		void (*f)(void);
++	} fHeaderEntries[BX_MAX_HEADERBAR_ENTRIES];
++	uint32 fHeaderEntryCount;
++	
++	uint32 fHeaderHeight;
++	uint32 fHeaderLeft;  // pixels from left
++	uint32 fHeaderRight; // pixels from right
++};
+ 
++class ModifierFilter: public BMessageFilter
++{
+ public:
+-  BochsWindow(BRect frame);
+-  virtual  bool  QuitRequested();
+-  virtual  void  FrameResized(float width, float height);
+-  };
++	ModifierFilter(BHandler *target);
++	virtual filter_result Filter(BMessage *msg, BHandler **target);
++private:
++	BHandler *fTarget;
++};
+ 
+-class BochsView : public BView {
++class CaptureTarget: public BHandler
++{
++public:
++	CaptureTarget(BochsView *myTarget): fMyTarget(myTarget) { }
++	virtual void MessageReceived(BMessage *msg);
+ private:
+-	BBitmap *backing_store;
+-	BView *backing_view;
++	BochsView *fMyTarget;
++};
++
++// ========== GLOBAL DATA ==========
++
++static BochsApplication *bApp = NULL;
++static BochsView *bView = NULL;
++
++// ========== keytable ==========
++
++static const uint8 key_to_scancode[] = {
++	0,
++	BX_KEY_ESC,
++	BX_KEY_F1,
++	BX_KEY_F2,
++	BX_KEY_F3,
++	BX_KEY_F4,
++	BX_KEY_F5,
++	BX_KEY_F6,
++	BX_KEY_F7,
++	BX_KEY_F8,
++	BX_KEY_F9,
++	BX_KEY_F10,
++	BX_KEY_F11,
++	BX_KEY_F12,
++	BX_KEY_PRINT,
++	BX_KEY_SCRL_LOCK,
++	BX_KEY_PAUSE, /*0x10*/
++	BX_KEY_GRAVE,
++	BX_KEY_1,
++	BX_KEY_2,
++	BX_KEY_3,
++	BX_KEY_4,
++	BX_KEY_5, 
++	BX_KEY_6,
++	BX_KEY_7,
++	BX_KEY_8,
++	BX_KEY_9,
++	BX_KEY_0,
++	BX_KEY_MINUS,
++	BX_KEY_EQUALS,
++	BX_KEY_BACKSPACE,
++	BX_KEY_INSERT,
++	BX_KEY_HOME, /*0x20*/
++	BX_KEY_PAGE_UP,
++	BX_KEY_NUM_LOCK,
++	BX_KEY_KP_DIVIDE,
++	BX_KEY_KP_MULTIPLY,
++	BX_KEY_KP_SUBTRACT,
++	BX_KEY_TAB,
++	BX_KEY_Q,
++	BX_KEY_W,
++	BX_KEY_E,
++	BX_KEY_R,
++	BX_KEY_T,
++	BX_KEY_Y,
++	BX_KEY_U,
++	BX_KEY_I,
++	BX_KEY_O,
++	BX_KEY_P, /*0x30*/
++	BX_KEY_LEFT_BRACKET,
++	BX_KEY_RIGHT_BRACKET,
++	BX_KEY_BACKSLASH,
++	BX_KEY_DELETE,
++	BX_KEY_END,
++	BX_KEY_PAGE_DOWN,
++	BX_KEY_KP_HOME,
++	BX_KEY_KP_UP, 
++	BX_KEY_KP_PAGE_UP, 
++	BX_KEY_KP_ADD, 
++	BX_KEY_CAPS_LOCK, 
++	BX_KEY_A, 
++	BX_KEY_S, 
++	BX_KEY_D, 
++	BX_KEY_F, 
++	BX_KEY_G, /*0x40*/
++	BX_KEY_H, 
++	BX_KEY_J, 
++	BX_KEY_K, 
++	BX_KEY_L, 
++	BX_KEY_SEMICOLON, 
++	BX_KEY_SINGLE_QUOTE, 
++	BX_KEY_ENTER, 
++	BX_KEY_KP_LEFT, 
++	BX_KEY_KP_5, 
++	BX_KEY_KP_RIGHT, 
++	BX_KEY_SHIFT_L, 
++	BX_KEY_Z, 
++	BX_KEY_X, 
++	BX_KEY_C, 
++	BX_KEY_V, 
++	BX_KEY_B, /*0x50*/
++	BX_KEY_N, 
++	BX_KEY_M, 
++	BX_KEY_COMMA, 
++	BX_KEY_PERIOD, 
++	BX_KEY_SLASH, 
++	BX_KEY_SHIFT_R, 
++	BX_KEY_UP, 
++	BX_KEY_KP_END, 
++	BX_KEY_KP_DOWN, 
++	BX_KEY_KP_PAGE_DOWN, 
++	BX_KEY_KP_ENTER, 
++	BX_KEY_CTRL_L, 
++	BX_KEY_ALT_L, 
++	BX_KEY_SPACE, 
++	BX_KEY_ALT_R,
++	BX_KEY_CTRL_R, /*0x60*/
++	BX_KEY_LEFT, 
++	BX_KEY_DOWN, 
++	BX_KEY_RIGHT, 
++	BX_KEY_KP_INSERT, 
++	BX_KEY_KP_DELETE
++};
++
++// ========== class BochsApplication definitions ==========
++
++BochsApplication::BochsApplication(bx_gui_c *bxGui, int argc, char **argv,
++	uint32 tileWidth, uint32 tileHeight, uint32 header_bar_y, handler_func powerHandlerFunc):
++	BApplication(BOCHS_APP_SIG),
++	fPowerHandlerFunc(powerHandlerFunc)
++{
++	bxGui->put("BGUI");
++
++	if (bx_options.Oprivate_colormap->get ())
++	{
++		BX_INFO(( "BeOS: private_colormap option not handled yet."));
++	}
  	
 -public:
 -  BochsView(BRect frame, char *name);
@@ -343,59 +531,12 @@ diff -u -r1.12 beos.cc
 -static BBitmap *vgafont[256];
 -
 -static bx_gui_c *bx_gui_c_ptr;
-+	BBitmap *fBackBitmap;
-+	BView *fBackView;
-+	uint32 fLastModifiers;
-+	uint32 fLastMouseX, fLastMouseY;
-+	uint32 fCursorX, fCursorY;
-+	uint8 fCursorValue[2];
-+	bool fCursorVisible;
-+	bool fInTextMode;
-+	BScreen fScreen;
-+	uint8 fColorMap[256]; // indices into system colormap
-+	BBitmap *fVgafont[256];
-+	BBitmap *fCursorBitmap;
-+	uint32 fTileWidth;
-+	uint32 fTileHeight;
-+	bool fUseStandardInput;
-+	bool fMouseEnabled;
-+	BHandler *fCaptureTarget;
-+	
-+	KeyQueue fKeyQueue;
-+	MouseQueue fMouseQueue;
-+	CommandQueue fCommandQueue;
-+	
-+	struct
-+	{
-+		BBitmap *bmap;
-+		unsigned xdim;
-+		unsigned ydim;
-+	} fBitmaps[BX_MAX_PIXMAPS];
-+	uint32 fBitmapCount;
-+	
-+	struct
-+	{
-+		BBitmap *bitmap;
-+		unsigned xdim;
-+		unsigned ydim;
-+		unsigned xorigin;
-+		unsigned yorigin;
-+		unsigned alignment;
-+		void (*f)(void);
-+	} fHeaderEntries[BX_MAX_HEADERBAR_ENTRIES];
-+	uint32 fHeaderEntryCount;
-+	
-+	uint32 fHeaderHeight;
-+	uint32 fHeaderLeft;  // pixels from left
-+	uint32 fHeaderRight; // pixels from right
-+};
- 
+-
 -  void
 -bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv,
 -                        unsigned tilewidth, unsigned tileheight,
 -                        unsigned header_bar_y)
-+class ModifierFilter: public BMessageFilter
- {
+-{
 -  unsigned i;
 -#if BX_CPU_LEVEL < 2
 -  char *window_name = "Bochs 8086 emulator, http://world.std.com/~bochs";
@@ -474,31 +615,14 @@ diff -u -r1.12 beos.cc
 -
 -  create_vga_font();
 -}
-+public:
-+	ModifierFilter(BHandler *target);
-+	virtual filter_result Filter(BMessage *msg, BHandler **target);
-+private:
-+	BHandler *fTarget;
-+};
- 
-+class CaptureTarget: public BHandler
-+{
-+public:
-+	CaptureTarget(BochsView *myTarget): fMyTarget(myTarget) { }
-+	virtual void MessageReceived(BMessage *msg);
-+private:
-+	BochsView *fMyTarget;
-+};
- 
-+// ========== GLOBAL DATA ==========
- 
+-
+-
+-
 -  void
 -bx_gui_c::handle_events(void)
 -{
 -  Bit32u key;
-+static BochsApplication *bApp = NULL;
-+static BochsView *bView = NULL;
- 
+-
 -  while ( head != tail ) {
 -    key = deq_key_event();
 -    bx_devices.keyboard->gen_scancode(key);
@@ -509,135 +633,7 @@ diff -u -r1.12 beos.cc
 -      aView->LockLooper();
 -	  aView->GetMouse(&current, &buttons, false);    
 -	  aView->UnlockLooper();
-+// ========== keytable ==========
-+
-+static const uint8 key_to_scancode[] = {
-+	0,
-+	BX_KEY_ESC,
-+	BX_KEY_F1,
-+	BX_KEY_F2,
-+	BX_KEY_F3,
-+	BX_KEY_F4,
-+	BX_KEY_F5,
-+	BX_KEY_F6,
-+	BX_KEY_F7,
-+	BX_KEY_F8,
-+	BX_KEY_F9,
-+	BX_KEY_F10,
-+	BX_KEY_F11,
-+	BX_KEY_F12,
-+	BX_KEY_PRINT,
-+	BX_KEY_SCRL_LOCK,
-+	BX_KEY_PAUSE, /*0x10*/
-+	BX_KEY_GRAVE,
-+	BX_KEY_1,
-+	BX_KEY_2,
-+	BX_KEY_3,
-+	BX_KEY_4,
-+	BX_KEY_5, 
-+	BX_KEY_6,
-+	BX_KEY_7,
-+	BX_KEY_8,
-+	BX_KEY_9,
-+	BX_KEY_0,
-+	BX_KEY_MINUS,
-+	BX_KEY_EQUALS,
-+	BX_KEY_BACKSPACE,
-+	BX_KEY_INSERT,
-+	BX_KEY_HOME, /*0x20*/
-+	BX_KEY_PAGE_UP,
-+	BX_KEY_NUM_LOCK,
-+	BX_KEY_KP_DIVIDE,
-+	BX_KEY_KP_MULTIPLY,
-+	BX_KEY_KP_SUBTRACT,
-+	BX_KEY_TAB,
-+	BX_KEY_Q,
-+	BX_KEY_W,
-+	BX_KEY_E,
-+	BX_KEY_R,
-+	BX_KEY_T,
-+	BX_KEY_Y,
-+	BX_KEY_U,
-+	BX_KEY_I,
-+	BX_KEY_O,
-+	BX_KEY_P, /*0x30*/
-+	BX_KEY_LEFT_BRACKET,
-+	BX_KEY_RIGHT_BRACKET,
-+	BX_KEY_BACKSLASH,
-+	BX_KEY_DELETE,
-+	BX_KEY_END,
-+	BX_KEY_PAGE_DOWN,
-+	BX_KEY_KP_HOME,
-+	BX_KEY_KP_UP, 
-+	BX_KEY_KP_PAGE_UP, 
-+	BX_KEY_KP_ADD, 
-+	BX_KEY_CAPS_LOCK, 
-+	BX_KEY_A, 
-+	BX_KEY_S, 
-+	BX_KEY_D, 
-+	BX_KEY_F, 
-+	BX_KEY_G, /*0x40*/
-+	BX_KEY_H, 
-+	BX_KEY_J, 
-+	BX_KEY_K, 
-+	BX_KEY_L, 
-+	BX_KEY_SEMICOLON, 
-+	BX_KEY_SINGLE_QUOTE, 
-+	BX_KEY_ENTER, 
-+	BX_KEY_KP_LEFT, 
-+	BX_KEY_KP_5, 
-+	BX_KEY_KP_RIGHT, 
-+	BX_KEY_SHIFT_L, 
-+	BX_KEY_Z, 
-+	BX_KEY_X, 
-+	BX_KEY_C, 
-+	BX_KEY_V, 
-+	BX_KEY_B, /*0x50*/
-+	BX_KEY_N, 
-+	BX_KEY_M, 
-+	BX_KEY_COMMA, 
-+	BX_KEY_PERIOD, 
-+	BX_KEY_SLASH, 
-+	BX_KEY_SHIFT_R, 
-+	BX_KEY_UP, 
-+	BX_KEY_KP_END, 
-+	BX_KEY_KP_DOWN, 
-+	BX_KEY_KP_PAGE_DOWN, 
-+	BX_KEY_KP_ENTER, 
-+	BX_KEY_CTRL_L, 
-+	BX_KEY_ALT_L, 
-+	BX_KEY_SPACE, 
-+	BX_KEY_ALT_R,
-+	BX_KEY_CTRL_R, /*0x60*/
-+	BX_KEY_LEFT, 
-+	BX_KEY_DOWN, 
-+	BX_KEY_RIGHT, 
-+	BX_KEY_KP_INSERT, 
-+	BX_KEY_KP_DELETE
-+};
-+
-+// ========== class BochsApplication definitions ==========
-+
-+BochsApplication::BochsApplication(bx_gui_c *bxGui, int argc, char **argv,
-+	uint32 tileWidth, uint32 tileHeight, uint32 header_bar_y, handler_func powerHandlerFunc):
-+	BApplication(BOCHS_APP_SIG),
-+	fPowerHandlerFunc(powerHandlerFunc)
-+{
-+	bxGui->put("BGUI");
-+
-+	if (bx_options.Oprivate_colormap->get ())
-+	{
-+		BX_INFO(( "BeOS: private_colormap option not handled yet."));
-+	}
-+	
-+	// -------------------------------
-+	
-+	BRect rect(0, 0, INITIAL_SCREEN_WIDTH - 1, INITIAL_SCREEN_HEIGHT + header_bar_y);
-+	
-+	BochsWindow *window = new BochsWindow(rect.OffsetToCopy(5, 80));
-+	
-+	bView = new BochsView(rect, "BochsView", header_bar_y, tileWidth, tileHeight);
- 
+-
 -	  Bit8u newstate = 0; //please note: 2nd and 3rd button are mapped the same
 -	  if (buttons & B_PRIMARY_MOUSE_BUTTON)
 -	     newstate |= 0x01;
@@ -657,50 +653,44 @@ diff -u -r1.12 beos.cc
 -   }
 -//IRA=> End
 -}
-+	// add view to window
-+	window->AddChild(bView);
- 
+-
 -  void
 -bx_gui_c::flush(void)
 -{
 -  if (view_attached)
 -    aView->Flush();
-+	// make window visible
-+	window->Show();
- }
+-}
 -
- 
+-
 -  void
 -bx_gui_c::clear_screen(void)
-+BochsApplication::~BochsApplication()
- {
+-{
 -  aWindow->Lock();
 -  aView->FillRect(BRect(0, bx_headerbar_y, dimension_x-1, dimension_y-1), B_SOLID_LOW);
 -  aWindow->Unlock();
-+	bApp = NULL;
- }
- 
+-}
+-
 -
 -
 -  void
 -bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 -                      unsigned long cursor_x, unsigned long cursor_y,
--                      unsigned nrows)
-+int32 BochsApplication::runme(void *data)
- {
+-                      Bit16u cursor_state, unsigned nrows)
+-{
 -  unsigned i, x, y;
 -  BPoint point;
 -  unsigned char achar;
--  unsigned nchars;
+-  unsigned nchars, ncols;
 -
 -  aWindow->Lock();
 -
 -  // Number of characters on screen, variable number of rows
--  nchars = 80*nrows;
+-  ncols = dimension_x/8;
+-  nchars = ncols*nrows;
 -
 -  // first draw over character at original block cursor location
--  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars ) {
--    achar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
+-  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars ) {
+-    achar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
 -    point.Set(prev_block_cursor_x*8, prev_block_cursor_y*16 + bx_headerbar_y);
 -    aView->DrawBitmap(vgafont[achar], point );
 -    }
@@ -711,8 +701,8 @@ diff -u -r1.12 beos.cc
 -
 -      achar = new_text[i];
 -
--      x = (i/2) % 80;
--      y = (i/2) / 80;
+-      x = (i/2) % ncols;
+-      y = (i/2) / ncols;
 -
 -      point.Set(x*8, y*16 + bx_headerbar_y);
 -      aView->DrawBitmap(vgafont[achar], point );
@@ -723,15 +713,42 @@ diff -u -r1.12 beos.cc
 -  prev_block_cursor_y = cursor_y;
 -
 -  // now draw character at new block cursor location in reverse
--  if ( (cursor_y*80 + cursor_x) < nchars ) {
--    achar = new_text[(cursor_y*80 + cursor_x)*2];
+-  if ( (cursor_y*ncols + cursor_x) < nchars ) {
+-    achar = new_text[(cursor_y*ncols + cursor_x)*2];
 -    point.Set(cursor_x*8, cursor_y*16 + bx_headerbar_y);
 -    aView->set_inv_text_colors();
 -    aView->DrawBitmap(vgafont[achar], point );
 -    aView->set_text_colors();
 -    }
--
++	// -------------------------------
++	
++	BRect rect(0, 0, INITIAL_SCREEN_WIDTH - 1, INITIAL_SCREEN_HEIGHT + header_bar_y);
++	
++	BochsWindow *window = new BochsWindow(rect.OffsetToCopy(5, 80));
++	
++	bView = new BochsView(rect, "BochsView", header_bar_y, tileWidth, tileHeight);
+ 
 -  aWindow->Unlock();
++	// add view to window
++	window->AddChild(bView);
++
++	// make window visible
++	window->Show();
+ }
+ 
+-  int
+-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
++BochsApplication::~BochsApplication()
+ {
+-  return 0;
++	bApp = NULL;
+ }
+ 
+-  int
+-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
++int32 BochsApplication::runme(void *data)
+ {
+-  return 0;
 +	be_app->Lock();
 +	be_app->Run();
  }
@@ -776,22 +793,27 @@ diff -u -r1.12 beos.cc
 +	bView->Window()->Close();
 +	while (lockCount--) Lock();
  }
--
  
+-
 -  void
--bx_gui_c::dimension_update(unsigned x, unsigned y)
+-bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 +void BochsApplication::BxExit()
  {
+-  if (fheight > 0) {
+-    if (fheight != 16) {
+-      y = y * 16 / fheight;
+-    }
+-  }
 -  aWindow->Lock();
 -  aWindow->ResizeTo(x, y + bx_headerbar_y);
 -  aWindow->Unlock();
 +	if (Lock()) Quit();
  }
--
  
--//////////////////////////////////////////////////////
 +// ========== class BochsWindow definitions ==========
  
+-//////////////////////////////////////////////////////
+-
 -
 -  void
 -GUI_end()
@@ -848,6 +870,7 @@ diff -u -r1.12 beos.cc
 +	BView(rect, name, B_FOLLOW_ALL, B_WILL_DRAW | B_PULSE_NEEDED),
 +	fLastModifiers(0),
 +	fCursorX(0), fCursorY(0),
++	fCursorHide(false),
 +	fCursorVisible(false),
 +	fInTextMode(true), 
 +	fTileWidth(tileWidth),
@@ -911,8 +934,8 @@ diff -u -r1.12 beos.cc
 +	delete fCaptureTarget;
 +	bView = NULL;
  }
--
  
+-
 -  void
 -BochsWindow::FrameResized(float width, float height)
 +void BochsView::AttachedToWindow()
@@ -943,8 +966,8 @@ diff -u -r1.12 beos.cc
 +		be_app->Unlock();
 +	}
  }
--
  
+-
 -//------------------------------
 -
 -
@@ -1273,7 +1296,14 @@ diff -u -r1.12 beos.cc
 +	if (!fInTextMode) return;
 +	if (fBackView->LockLooper())
 +	{
-+		ShowCursor(!fCursorVisible);
++		if (fCursorHide)
++		{
++			if (fCursorVisible) ShowCursor(false);
++		}
++		else
++		{
++			ShowCursor(!fCursorVisible);
++		}
 +		fBackView->UnlockLooper();
 +	}
 +}
@@ -1325,14 +1355,19 @@ diff -u -r1.12 beos.cc
 +}
 +
 +void BochsView::TextUpdate(uint8 *oldText, uint8 *newText,
-+	uint32 cursorX, uint32 cursorY, uint32 rowCount)
++	uint32 cursorX, uint32 cursorY, uint32 rowCount,
++	uint32 cursorShape)
 +{
 +	if (LockLooper() && fBackBitmap->Lock())
 +	{
 +		fInTextMode = true;
 +		bool cursorWasShown = fCursorVisible;
++		BRect rect(Bounds().OffsetToSelf(0, 0));
++		uint32 colCount = (uint32)rect.IntegerWidth()/8;
++		fCursorStart = (uint8)((cursorShape >> 8) & 0x3f);
++		fCursorEnd = (uint8)(cursorShape & 0x1f);
 +		ShowCursor(false);
-+		for (uint32 i = 0; i < rowCount * 80 * 2; i += 2)
++		for (uint32 i = 0; i < rowCount * colCount * 2; i += 2)
 +		{
 +			if ( (oldText[i] != newText[i]) ||
 +				(oldText[i+1]!=newText[i+1]) )
@@ -1343,7 +1378,7 @@ diff -u -r1.12 beos.cc
 +				fBackView->SetLowColor(fScreen.ColorForIndex(fColorMap[acolor >> 4]));
 +				fBackView->SetHighColor(fScreen.ColorForIndex(fColorMap[acolor & 0x0F]));
 +				
-+				BPoint point(((i / 2) % 80) * 8, (i/2) / 80 * 16 + fHeaderHeight);
++				BPoint point(((i / 2) % colCount) * 8, (i/2) / colCount * 16 + fHeaderHeight);
 +				fBackView->DrawBitmapAsync(fVgafont[achar], point);
 +				Invalidate(fVgafont[achar]->Bounds().OffsetToSelf(point));
 +			}
@@ -1352,12 +1387,13 @@ diff -u -r1.12 beos.cc
 +		fCursorX = cursorX;
 +		fCursorY = cursorY;
 +		
-+		if ( (cursorY * 80 + cursorX) < rowCount * 80 )
++		if ( (cursorY * colCount + cursorX) < rowCount * colCount)
 +		{
-+			fCursorValue[0] = newText[(cursorY * 80 + cursorX) * 2];
-+			fCursorValue[1] = newText[(cursorY * 80 + cursorX) * 2 + 1];
++			fCursorValue[0] = newText[(cursorY * colCount + cursorX) * 2];
++			fCursorValue[1] = newText[(cursorY * colCount + cursorX) * 2 + 1];
++			fCursorHide = (fCursorStart > fCursorEnd);
 +		}
-+		ShowCursor(cursorWasShown);
++		if (!fCursorHide) ShowCursor(cursorWasShown);
 +		fBackBitmap->Unlock();
 +		UnlockLooper();
 +	}
@@ -1368,7 +1404,6 @@ diff -u -r1.12 beos.cc
 +	if (LockLooper())
 +	{
 +		fInTextMode = false;
-+		ShowCursor(false);
 +		uint8 *bits = (uint8*)fBackBitmap->Bits();
 +		int32 bytesPerRow = fBackBitmap->BytesPerRow();
 +		bits += (y0 + fHeaderHeight) * bytesPerRow + x0;
@@ -1400,10 +1435,17 @@ diff -u -r1.12 beos.cc
 +	return true;
 +}
 +
-+void BochsView::DimensionUpdate(uint32 x, uint32 y)
++void BochsView::DimensionUpdate(uint32 x, uint32 y, uint32 fheight)
 +{
 +	if (LockLooper())
 +	{
++		if (fheight > 0)
++		{
++			if (fheight != 16)
++			{
++				y = y * 16 / fheight;
++			}
++		}
 +		BRect rect(Bounds().OffsetToSelf(0, 0));
 +		if (x !=  (uint32)rect.IntegerWidth() || y + fHeaderHeight != (uint32)rect.IntegerHeight())
 +		{
@@ -1507,8 +1549,8 @@ diff -u -r1.12 beos.cc
 +			xorigin = fHeaderEntries[hbar_id].xorigin;
 +		else
 +			xorigin = Bounds().IntegerWidth() - fHeaderEntries[hbar_id].xorigin;
-+		fBackView->SetLowColor(0, 0, 0);
-+		fBackView->SetHighColor(0, 100, 0);
++		fBackView->SetLowColor(192, 192, 192);
++		fBackView->SetHighColor(0, 0, 0);
 +		fBackView->DrawBitmapAsync(fHeaderEntries[hbar_id].bitmap, BPoint(xorigin, 0));
 +		fBackBitmap->Unlock();
 +		Invalidate(fHeaderEntries[hbar_id].bitmap->Bounds().OffsetToSelf(xorigin, 0));
@@ -1533,8 +1575,8 @@ diff -u -r1.12 beos.cc
 +	if (LockLooper() && fBackBitmap->Lock())
 +	{
 +		uint32 xorigin;
-+		fBackView->SetLowColor(0, 0, 0);
-+		fBackView->SetHighColor(0, 100, 0);
++		fBackView->SetLowColor(192, 192, 192);
++		fBackView->SetHighColor(0, 0, 0);
 +		BRect rect(Bounds());
 +		rect.bottom = rect.top + fHeaderHeight - 1;
 +		fBackView->FillRect(rect, B_SOLID_LOW);
@@ -1567,8 +1609,8 @@ diff -u -r1.12 beos.cc
 +		BRect rect;
 +		if (show)
 +		{
-+			BPoint point(fCursorX * 8, fHeaderHeight + fCursorY * 16 + 14);
-+			rect.Set(point.x, point.y, point.x + 7, point.y + 1);
++			BPoint point(fCursorX * 8, fHeaderHeight + fCursorY * 16 + fCursorStart);
++			rect.Set(point.x, point.y, point.x + 7, point.y + (fCursorEnd - fCursorStart));
 +			fBackView->SetHighColor(fScreen.ColorForIndex(fColorMap[fCursorValue[1] & 0x0F]));
 +			fBackView->FillRect(rect, B_SOLID_HIGH);
 +			Invalidate(rect);
@@ -1980,29 +2022,22 @@ diff -u -r1.12 beos.cc
  {
 -  UNUSED(bytes);
 -  UNUSED(numBytes);
--}
- 
--void BochsView::Draw(BRect rect)
--{
--	DrawBitmapAsync(backing_store, rect, rect);
++
  }
  
--BochsView::~BochsView()
+-void BochsView::Draw(BRect rect)
 +filter_result ModifierFilter::Filter(BMessage *msg, BHandler **target)
  {
--	delete backing_store;
--	delete backing_view;
+-	DrawBitmapAsync(backing_store, rect, rect);
 +	*target = fTarget;
 +	return B_DISPATCH_MESSAGE;
  }
  
--void 
--BochsView::SetFont(const BFont *font, uint32 mask)
+-BochsView::~BochsView()
 +void CaptureTarget::MessageReceived(BMessage *msg)
  {
--	backing_store->Lock();
--	backing_view->SetFont(font,mask);
--	backing_store->Unlock();
+-	delete backing_store;
+-	delete backing_view;
 +	if (fMyTarget->LockLooper())
 +	{
 +		fMyTarget->GotCapturedInput(msg); 
@@ -2011,22 +2046,15 @@ diff -u -r1.12 beos.cc
  }
  
 -void 
--BochsView::SetHighColor(uchar r, uchar g, uchar b, uchar a)
--{
--	backing_store->Lock();
--	backing_view->SetHighColor(r,g,b,a);
--	backing_store->Unlock();
--}
+-BochsView::SetFont(const BFont *font, uint32 mask)
 +// ========== class bx_gui_c definitions ==========
- 
--void 
--BochsView::SetLowColor(uchar r, uchar g, uchar b, uchar a)
++
 +void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv,
 +	unsigned tilewidth, unsigned tileheight,
 +	unsigned header_bar_y)
  {
 -	backing_store->Lock();
--	backing_view->SetLowColor(r,g,b,a);
+-	backing_view->SetFont(font,mask);
 -	backing_store->Unlock();
 +	BX_DEBUG(("init"));
 +	bApp = new BochsApplication(th, argc, argv, tilewidth, tileheight, header_bar_y, power_handler);
@@ -2036,26 +2064,22 @@ diff -u -r1.12 beos.cc
  }
  
 -void 
--BochsView::DrawBitmap(const BBitmap *aBitmap, BPoint where)
+-BochsView::SetHighColor(uchar r, uchar g, uchar b, uchar a)
 +void bx_gui_c::handle_events(void)
  {
 -	backing_store->Lock();
--	backing_view->DrawBitmap(aBitmap,where);
+-	backing_view->SetHighColor(r,g,b,a);
 -	backing_store->Unlock();
--	BRect r = aBitmap->Bounds();
--	r.OffsetBy(where);
--	Invalidate(r);
 +	bView->HandleEvents();
  }
  
 -void 
--BochsView::FillRect(BRect r, pattern p)
+-BochsView::SetLowColor(uchar r, uchar g, uchar b, uchar a)
 +void bx_gui_c::flush(void)
  {
 -	backing_store->Lock();
--	backing_view->FillRect(r,p);
+-	backing_view->SetLowColor(r,g,b,a);
 -	backing_store->Unlock();
--	Invalidate(r);
 +	BX_DEBUG(("flush"));
 +	if (!bView)
 +	{
@@ -2065,11 +2089,39 @@ diff -u -r1.12 beos.cc
 +	bView->Flush();
  }
  
+-void 
+-BochsView::DrawBitmap(const BBitmap *aBitmap, BPoint where)
++void bx_gui_c::clear_screen(void)
+ {
+-	backing_store->Lock();
+-	backing_view->DrawBitmap(aBitmap,where);
+-	backing_store->Unlock();
+-	BRect r = aBitmap->Bounds();
+-	r.OffsetBy(where);
+-	Invalidate(r);
++	BX_DEBUG(("clear_screen"));
++	bView->ClearScreen();
+ }
+ 
+-void 
+-BochsView::FillRect(BRect r, pattern p)
++void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
++	unsigned long cursor_x, unsigned long cursor_y,
++	Bit16u cursor_state, unsigned nrows)
+ {
+-	backing_store->Lock();
+-	backing_view->FillRect(r,p);
+-	backing_store->Unlock();
+-	Invalidate(r);
++	BX_DEBUG(("text_update"));
++	bView->TextUpdate(old_text, new_text, cursor_x, cursor_y, nrows, cursor_state);
+ }
+ 
 -
 -
 -  void
 -enq_key_event(Bit32u key, Bit32u press_release)
-+void bx_gui_c::clear_screen(void)
++int bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
  {
 -  if ( ((tail+1) % SCANCODE_BUFSIZE) == head ) {
 -    fprintf(stderr, "# enq_key_event: buffer full\n");
@@ -2077,15 +2129,12 @@ diff -u -r1.12 beos.cc
 -    }
 -  keyevents[tail] = key | press_release;
 -  tail = (tail + 1) % SCANCODE_BUFSIZE;
-+	BX_DEBUG(("clear_screen"));
-+	bView->ClearScreen();
++  return 0;
  }
  
 -  Bit32u
 -deq_key_event(void)
-+void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
-+	unsigned long cursor_x, unsigned long cursor_y,
-+	unsigned nrows)
++int bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
  {
 -  Bit32u key;
 -
@@ -2096,12 +2145,12 @@ diff -u -r1.12 beos.cc
 -  key = keyevents[head];
 -  head = (head + 1) % SCANCODE_BUFSIZE;
 -  return(key);
-+	BX_DEBUG(("text_update"));
-+	bView->TextUpdate(old_text, new_text, cursor_x, cursor_y, nrows);
++  return 0;
  }
- 
+-
 -  unsigned char
 -reverse_bitorder(unsigned char b)
++ 
 +void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
  {
 -  unsigned char ret=0;
@@ -2152,7 +2201,7 @@ diff -u -r1.12 beos.cc
 -  unsigned
 -bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 -                           void (*f)(void))
-+void bx_gui_c::dimension_update(unsigned x, unsigned y)
++void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
  {
 -  unsigned hb_index;
 -
@@ -2179,7 +2228,7 @@ diff -u -r1.12 beos.cc
 -    }
 -  return(hb_index);
 +	//fprintf(stderr, "dimension_update %d x %d\n", x, y);
-+	bView->DimensionUpdate(x, y);
++	bView->DimensionUpdate(x, y, fheight);
  }
  
 -  void
@@ -2228,8 +2277,8 @@ diff -u -r1.12 beos.cc
 +	//fprintf(stderr, "mouse_enabled_changed to %s\n", val ? "enabled" : "disabled");
 +	bView->HandleEnableMouse(val);
  }
--
  
+-
 -  void
 -headerbar_click(int x, int y)
 +unsigned bx_gui_c::create_bitmap(const unsigned char *bmap,
@@ -2293,13 +2342,13 @@ diff -u -r1.12 beos.cc
 +	BX_DEBUG(("replace_bitmap"));
 +	bView->ReplaceBitmap(hbar_id, bmap_id);
  }
--
+ 
 -//IRA=> Start
 -// This is called whenever the mouse_enabled parameter changes.  It
 -// can change because of a gui event such as clicking on the mouse-enable
 -// bitmap or pressing the middle button, or from the control panel.
 -// In all those cases, setting the parameter value will get you here.
- 
+-
 -  void
 -bx_gui_c::mouse_enabled_changed_specific (Boolean val)
 +void bx_gui_c::show_headerbar(void)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.41 2002-03-20 04:09:26 bdenney Exp $
+// $Id: dbg_main.cc,v 1.41.4.1 2002-09-12 03:38:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -285,7 +285,7 @@ bx_dbg_main(int argc, char *argv[])
       BX_ERROR(( "%s: -rc option used, but no path specified.",
         argv[0] ));
       bx_dbg_usage();
-      exit(1);
+      BX_EXIT(1);
       }
     strncpy(bx_debug_rc_fname, argv[2], BX_MAX_PATH-1);
     i += 2; // skip past "-rc" and filename
@@ -357,9 +357,7 @@ process_sim2:
   bx_parse_cmdline (1, bochs_argc, bochs_argv);
 
   // initialize hardware
-  bx_init_hardware();   // doesn't this duplicate things?
-
-  SIM->set_init_done (1);
+  bx_init_hardware();
 
 #if BX_NUM_SIMULATORS >= 2
   bx_debugger.compare_at_sync.cpu    = 0;
@@ -368,31 +366,6 @@ process_sim2:
 
   // call init routines for each CPU+mem simulator
   // initialize for SMP. one memory, multiple processors.
-#if BX_SUPPORT_APIC
-  memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
-#endif
-
-#if BX_SMP_PROCESSORS==1
-  BX_MEM(0)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
-  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
-  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
-  BX_CPU(0)->init (BX_MEM(0));
-  BX_CPU(0)->reset(BX_RESET_HARDWARE);
-#else
-  // SMP initialization
-  bx_mem_array[0] = new BX_MEM_C ();
-  bx_mem_array[0]->init_memory(bx_options.memory.Osize->get () * 1024*1024);
-  bx_mem_array[0]->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
-  bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
-  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i) = new BX_CPU_C ();
-    BX_CPU(i)->init (BX_MEM(0));
-    // assign apic ID from the index of this loop
-    // if !BX_SUPPORT_APIC, this will not compile.
-    BX_CPU(i)->local_apic.set_id (i);
-    BX_CPU(i)->reset(BX_RESET_HARDWARE);
-  }
-#endif
 
 #if BX_NUM_SIMULATORS > 1
 #error cosimulation not supported until SMP stuff settles
@@ -407,11 +380,15 @@ process_sim2:
 
   // (mch) Moved from main.cc
   bx_devices.init(BX_MEM(0));
+  bx_devices.reset(BX_RESET_HARDWARE);
+  SIM->set_init_done (1);
+
   bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 
   // setup Ctrl-C handler
   signal(SIGINT, bx_debug_ctrlc_handler);
+  BX_INFO (("set SIGINT handler to bx_debug_ctrlc_handler"));
 
   // Print disassembly of the first instruction...  you wouldn't think it
   // would have to be so hard.  First initialize guard_found, since it is used
@@ -451,6 +428,7 @@ bx_dbg_user_input_loop(void)
   unsigned include_cmd_len = strlen(BX_INCLUDE_CMD);
 
   while ( 1 ) {
+    SIM->refresh_ci ();
     bx_get_command();
     if ( (*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0) ) {
       if (bx_infile_stack_index == 0)
@@ -634,6 +612,18 @@ bxerror(char *s)
 bx_debug_ctrlc_handler(int signum)
 {
   UNUSED(signum);
+#if BX_WITH_WX
+  // in a multithreaded environment, a signal such as SIGINT can be sent to all
+  // threads.  This function is only intended to handle signals in the
+  // simulator thread.  It will simply return if called from any other thread.
+  // Otherwise the BX_PANIC() below can be called in multiple threads at
+  // once, leading to multiple threads trying to display a dialog box,
+  // leading to GUI deadlock.
+  if (!isSimThread ()) {
+    BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
+    return;
+  }
+#endif
   BX_INFO(("Ctrl-C detected in signal handler."));
 
   signal(SIGINT, bx_debug_ctrlc_handler);
@@ -654,8 +644,7 @@ bx_dbg_exit(int code)
 #endif
 
   bx_atexit();
-
-  exit(code);
+  BX_EXIT(1);
 }
 
 
@@ -1288,6 +1277,14 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
   return "unknown context";
 }
 
+char*
+bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
+{
+  // just prints an error anyway
+  return bx_dbg_symbolic_address (0,0,0);
+}
+
+
 void
 bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
 {
@@ -1357,14 +1354,20 @@ context_t::get_symbol_entry(Bit32u ip)
 {
       symbol_entry_t probe;
       probe.start = ip;
+      // find the first symbol whose address is greater than ip.
+      if (syms->empty ()) return 0;
       set<symbol_entry_t*>::iterator iter = syms->upper_bound(&probe);
-      if (iter == syms->end())
-	    return 0;
-      else if (iter == syms->begin())
-	    return 0;
-      else {
-	    iter--;
-	    return *iter;
+      if (iter == syms->end()) {
+	// return the last symbol
+	return *iter;
+      } else if (iter == syms->begin()) {
+	// ip is before the first symbol.  Return no symbol.
+	return 0;
+      } else {
+	// return previous symbol, so that the reported address is
+	// prev_symbol+offset.
+	iter--;
+	return *iter;
       }
 }
 
@@ -1378,10 +1381,15 @@ char*
 bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
       static char buf[80];
+#if 0
+      // bbd: I don't see why we shouldn't allow symbol lookups on
+      // segments with a nonzero base.  I need to trace user 
+      // processes in Linux, which have a base of 0xc0000000.
       if (base != 0) {
-	    snprintf (buf, 80, "non-zero base");
-	    return buf;
+	snprintf (buf, 80, "non-zero base");
+	return buf;
       }
+#endif
       // Look up this context
       context_t* cntx = context_t::get_context(context);
       if (!cntx) {
@@ -1400,6 +1408,16 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
       }
       snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
       return buf;
+}
+
+char*
+bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
+{
+  // in 16-bit code, the segment selector and offset are combined into a
+  // 20-bit linear address = (segment selector<<4) + offset.
+  eip &= 0xffff;
+  cs &= 0xffff;
+  return bx_dbg_symbolic_address (0, eip+(cs<<4), 0);
 }
 
 void
@@ -2122,9 +2140,10 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
       }
     else {
-      fprintf(stderr, "%04x:%04x: ", 
+      fprintf(stderr, "%04x:%04x (%s): ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
-	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
+	      bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].selector.value));
       }
     for (unsigned j=0; j<ilen; j++)
       fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
@@ -2189,9 +2208,9 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 	fprintf(stderr, "(%u) Caught vm mode switch breakpoint to %s mode\n",
 		sim, BX_CPU(sim)->eflags.vm ? "virtual 86" : "protected");
   } else if (BX_CPU(sim)->stop_reason == STOP_READ_WATCH_POINT) {
-	fprintf(stderr, "(%u) Caught read watch point\n", sim);
+	fprintf(stderr, "(%u) Caught read watch point at %08X\n", sim, BX_CPU(sim)->watchpoint);
   } else if (BX_CPU(sim)->stop_reason == STOP_WRITE_WATCH_POINT) {
-	fprintf(stderr, "(%u) Caught write watch point\n", sim);
+	fprintf(stderr, "(%u) Caught write watch point at %08X\n", sim, BX_CPU(sim)->watchpoint);
   }
   else {
     fprintf(stderr, "Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n", 
@@ -3460,7 +3479,7 @@ bx_dbg_loader_command(char *path_quoted)
 #if BX_USE_LOADER
   {
   bx_loader_misc_t loader_misc;
-  BX_CPU(0)->loader(path_quoted, &loader_misc);
+  bx_dbg_callback[0].loader(path_quoted, &loader_misc);
 #if 0
 fprintf(stderr, "dr0: 0x%08x\n", loader_misc.dr0);
 fprintf(stderr, "dr1: 0x%08x\n", loader_misc.dr1);
@@ -4517,7 +4536,11 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
   // see if page is in the TLB first
-  if (cpu->TLB.entry[TLB_index].lpf == lpf) {
+#if BX_USE_QUICK_TLB_INVALIDATE
+  if (cpu->TLB.entry[TLB_index].lpf == (lpf | cpu->TLB.tlb_invalidate)) {
+#else
+  if (cpu->TLB.entry[TLB_index].lpf == (lpf)) {
+#endif
 	*tlb_phy        = cpu->TLB.entry[TLB_index].ppf | poffset;
 	*tlb_valid = 1;
   }
@@ -4525,7 +4548,7 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   // Get page dir entry
   pde_addr = (cpu->cr3 & 0xfffff000) |
              ((laddress & 0xffc00000) >> 20);
-  BX_MEM(0)->read_physical(cpu, pde_addr, 4, &pde);
+  BX_MEM(0)->readPhysicalPage(cpu, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
     // Page Directory Entry NOT present
     goto page_fault;
@@ -4534,7 +4557,7 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
-  BX_MEM(0)->read_physical(cpu, pte_addr, 4, &pte);
+  BX_MEM(0)->readPhysicalPage(cpu, pte_addr, 4, &pte);
   if ( !(pte & 0x01) ) {
     // Page Table Entry NOT present
     goto page_fault;

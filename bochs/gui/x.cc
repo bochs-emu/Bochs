@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.38 2002-03-19 23:38:08 bdenney Exp $
+// $Id: x.cc,v 1.38.4.1 2002-09-12 03:38:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,6 +59,7 @@ static Window win;
 static GC gc, gc_inv, gc_headerbar, gc_headerbar_inv;
 static XFontStruct *font_info;
 static unsigned font_width, font_height;
+static unsigned font_height_orig = 16;
 static Bit8u blank_line[80];
 static unsigned dimension_x=0, dimension_y=0;
 
@@ -570,7 +571,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
 // This is called whenever the mouse_enabled parameter changes.  It
 // can change because of a gui event such as clicking on the mouse-enable
-// bitmap or pressing the middle button, or from the control panel.
+// bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
   void
 bx_gui_c::mouse_enabled_changed_specific (Boolean val)
@@ -596,7 +597,9 @@ load_font(void)
   /* Load font and get font information structure. */
   if ((font_info = XLoadQueryFont(bx_x_display,"bochsvga")) == NULL) {
     if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
-      BX_PANIC(("Could not open vga font. See docs-html/install.html"));
+      if ((font_info = XLoadQueryFont(bx_x_display,"-*-vga-*")) == NULL) {
+	BX_PANIC(("Could not open vga font. See docs-html/install.html"));
+      }
     }
   }
 }
@@ -882,6 +885,9 @@ xkeypress(KeySym keysym, int press_release)
         key_event = BX_KEY_KP_LEFT; break;
 
       case XK_KP_5:
+#ifdef XK_KP_Begin
+      case XK_KP_Begin:
+#endif
         key_event = BX_KEY_KP_5; break;
 
       case XK_KP_6:
@@ -1005,31 +1011,30 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       Bit16u cursor_state, unsigned nrows)
 {
-  int font_height;
   unsigned i, x, y, curs;
   unsigned new_foreground, new_background;
   Bit8u string[1];
   Bit8u cs_start, cs_end;
   unsigned nchars;
 
-  cs_start = (cursor_state >> 8) & 0x3f;
-  cs_end = cursor_state & 0x1f;
+  UNUSED(nrows);
 
-  font_height = font_info->ascent + font_info->descent;
+  cs_start = ((cursor_state >> 8) & 0x3f) * font_height / font_height_orig;
+  cs_end = (cursor_state & 0x1f) * font_height / font_height_orig;
 
   // Number of characters on screen, variable number of rows
-  nchars = 80*nrows;
+  nchars = columns*rows;
 
   // first draw over character at original block cursor location
-  if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars ) {
-    curs = (prev_block_cursor_y*80 + prev_block_cursor_x)*2;
+  if ( (prev_block_cursor_y*columns + prev_block_cursor_x) < nchars ) {
+    curs = (prev_block_cursor_y*columns + prev_block_cursor_x)*2;
     string[0] = new_text[curs];
     if (string[0] == 0) string[0] = ' '; // convert null to space
     XSetForeground(bx_x_display, gc, col_vals[new_text[curs+1] & 0x0f]);
     XSetBackground(bx_x_display, gc, col_vals[(new_text[curs+1] & 0xf0) >> 4]);
     XDrawImageString(bx_x_display, win,
       gc,
-      prev_block_cursor_x * font_info->max_bounds.width,
+      prev_block_cursor_x * font_width,
       prev_block_cursor_y * font_height + font_info->max_bounds.ascent + bx_headerbar_y,
       (char *) string,
       1);
@@ -1050,12 +1055,12 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 //XSetForeground(bx_x_display, gc, white_pixel);
 //XSetBackground(bx_x_display, gc, black_pixel);
 
-      x = (i/2) % 80;
-      y = (i/2) / 80;
+      x = (i/2) % columns;
+      y = (i/2) / columns;
 
       XDrawImageString(bx_x_display, win,
         gc,
-        x * font_info->max_bounds.width,
+        x * font_width,
         y * font_height + font_info->max_bounds.ascent + bx_headerbar_y,
         (char *) string,
         1);
@@ -1069,13 +1074,13 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   XSetBackground(bx_x_display, gc, black_pixel);
 
   // now draw character at new block cursor location in reverse
-  if ( ( (cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
+  if ( ( (cursor_y*columns + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
     for (unsigned i = cs_start; i <= cs_end; i++)
       XDrawLine(bx_x_display, win,
 	gc_inv,
-	cursor_x * font_info->max_bounds.width,
+	cursor_x * font_width,
 	cursor_y * font_height + bx_headerbar_y + i,
-	(cursor_x + 1) * font_info->max_bounds.width - 1,
+	(cursor_x + 1) * font_width - 1,
 	cursor_y * font_height + bx_headerbar_y + i
       );
     }
@@ -1086,7 +1091,16 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   int
 bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
-  *bytes = (Bit8u *)XFetchBytes (bx_x_display, nbytes);
+  int len;
+  Bit8u *tmp = (Bit8u *)XFetchBytes (bx_x_display, &len);
+  // according to man XFetchBytes, tmp must be freed by XFree().  So allocate
+  // a new buffer with "new".  The keyboard code will free it with delete []
+  // when the paste is done.
+  Bit8u *buf = new Bit8u[len];
+  memcpy (buf, tmp, len);
+  *bytes = buf;
+  *nbytes = len;
+  XFree (tmp);
   return 1;
 }
 
@@ -1206,8 +1220,19 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y)
+bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
+  if (fheight > 0) {
+    font_height_orig = fheight;
+    rows = y / fheight;
+    columns = x / 8;
+    if (fheight != font_height) {
+      y = rows * font_height;
+    }
+    if (font_width != 8) {
+      x = columns * font_width;
+    }
+  }
   if ( (x != dimension_x) || (y != (dimension_y-bx_headerbar_y)) ) {
     XSizeHints hints;
     long supplied_return;
@@ -1229,15 +1254,23 @@ bx_gui_c::dimension_update(unsigned x, unsigned y)
 bx_gui_c::show_headerbar(void)
 {
   unsigned xorigin;
+  int xleft, xright;
 
   // clear header bar area to white
   XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,0, dimension_x, bx_headerbar_y);
 
+  xleft = 0;
+  xright = dimension_x;
   for (unsigned i=0; i<bx_headerbar_entries; i++) {
-    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
+    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT) {
       xorigin = bx_headerbar_entry[i].xorigin;
-    else
+      xleft += bx_headerbar_entry[i].xdim;
+      }
+    else {
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
+      xright = xorigin;
+      }
+    if (xright < xleft) break;
     XCopyPlane(bx_x_display, bx_headerbar_entry[i].bitmap, win, gc_headerbar,
       0,0, bx_headerbar_entry[i].xdim, bx_headerbar_entry[i].ydim,
               xorigin, 0, 1);
@@ -1332,6 +1365,7 @@ headerbar_click(int x, int y)
   void
 bx_gui_c::exit(void)
 {
+  XCloseDisplay (bx_x_display);
   BX_INFO(("Exit."));
 }
 

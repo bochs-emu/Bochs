@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.22 2002-03-26 13:59:35 bdenney Exp $
+// $Id: devices.cc,v 1.22.4.1 2002-09-12 03:38:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,12 +42,11 @@ bx_devices_c bx_devices;
 
 
 
-  // constructor for bx_devices_c
+// constructor for bx_devices_c
 bx_devices_c::bx_devices_c(void)
 {
   put("DEV");
   settype(DEVLOG);
-  unsigned i;
 
 #if BX_PCI_SUPPORT
   pci = NULL;
@@ -56,6 +55,7 @@ bx_devices_c::bx_devices_c(void)
   keyboard = NULL;
   dma = NULL;
   floppy = NULL;
+  biosdev = NULL;
   cmos = NULL;
   serial = NULL;
   parallel = NULL;
@@ -69,7 +69,25 @@ bx_devices_c::bx_devices_c(void)
 #if BX_IODEBUG_SUPPORT
   iodebug = NULL;
 #endif
+}
 
+
+bx_devices_c::~bx_devices_c(void)
+{
+  // nothing needed for now
+  BX_DEBUG(("Exit."));
+}
+
+
+  void
+bx_devices_c::init(BX_MEM_C *newmem)
+{
+  unsigned i;
+
+  BX_DEBUG(("Init $Id: devices.cc,v 1.22.4.1 2002-09-12 03:38:51 bdenney Exp $"));
+  mem = newmem;
+
+  /* no read / write handlers defined */
   num_read_handles = 0;
   num_write_handles = 0;
 
@@ -89,21 +107,7 @@ bx_devices_c::bx_devices_c(void)
     }
 
   timer_handle = BX_NULL_TIMER_HANDLE;
-}
 
-
-bx_devices_c::~bx_devices_c(void)
-{
-  // nothing needed for now
-  BX_DEBUG(("Exit."));
-}
-
-
-  void
-bx_devices_c::init(BX_MEM_C *newmem)
-{
-  BX_DEBUG(("Init $Id: devices.cc,v 1.22 2002-03-26 13:59:35 bdenney Exp $"));
-  mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
   unmapped = &bx_unmapped;
@@ -113,7 +117,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // PCI logic (i440FX)
   pci = & bx_pci;
   pci->init(this);
-  pci->reset();
 #endif
 
 #if BX_SUPPORT_APIC
@@ -123,11 +126,17 @@ bx_devices_c::init(BX_MEM_C *newmem)
   ioapic->set_id (BX_IOAPIC_DEFAULT_ID);
 #endif
 
+  // BIOS log 
+  biosdev = &bx_biosdev;
+  biosdev->init(this);
 
   // CMOS RAM & RTC
   cmos = &bx_cmos;
   cmos->init(this);
-  cmos->reset();
+
+  /*--- 8237 DMA ---*/
+  dma = &bx_dma;
+  dma->init(this);
 
   /*--- HARD DRIVE ---*/
   hard_drive = &bx_hard_drive;
@@ -136,7 +145,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   //--- FLOPPY ---
   floppy = &bx_floppy;
   floppy->init(this, cmos);
-  floppy->reset(BX_RESET_HARDWARE);
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
@@ -164,9 +172,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.init();
 #endif
-
-  dma = &bx_dma;
-  dma->init(this);
 
   keyboard = &bx_keyboard;
   keyboard->init(this, cmos);
@@ -222,6 +227,50 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   timer_handle = bx_pc_system.register_timer( this, timer_handler,
     (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1);
+
+  // Clear fields for bulk IO acceleration transfers.
+  bulkIOHostAddr = 0;
+  bulkIOQuantumsRequested = 0;
+  bulkIOQuantumsTransferred = 0;
+}
+
+
+  void
+bx_devices_c::reset(unsigned type)
+{
+#if BX_PCI_SUPPORT
+  pci->reset(type);
+#endif
+#if BX_SUPPORT_IOAPIC
+  ioapic->reset (type);
+#endif
+  biosdev->reset(type);
+  cmos->reset(type);
+  dma->reset(type);
+  hard_drive->reset(type);
+  floppy->reset(type);
+#if BX_SUPPORT_SB16
+  sb16->reset(type);
+#endif
+#if BX_SUPPORT_VGA
+  vga->reset(type);
+#else
+  // reset hga hardware?
+#endif
+  pic->reset(type);
+  pit->reset(type);
+#if BX_USE_SLOWDOWN_TIMER
+  bx_slowdown_timer.reset(type);
+#endif
+  keyboard->reset(type);
+#if BX_IODEBUG_SUPPORT
+  iodebug->reset(type);
+#endif
+  parallel->reset(type);
+  serial->reset(type);
+#if BX_NE2K_SUPPORT
+  ne2k->reset(type);
+#endif
 }
 
 
@@ -320,101 +369,48 @@ bx_devices_c::timer()
 }
 
 
-  void
-bx_devices_c::drq(unsigned channel, Boolean val)
-{
-  dma->DRQ(channel, val);
-}
-
-  void
-bx_devices_c::raise_hlda(void)
-{
-  dma->raise_HLDA( &bx_pc_system );
-}
-
-  void
-bx_devices_c::dma_read8(unsigned channel, Bit8u *data_byte)
-{
-  if (channel == 2) 
-    floppy->dma_read(data_byte);
-#if BX_SUPPORT_SB16
-  else if (channel == (unsigned) sb16->currentdma8)
-    sb16->dma_read8(data_byte);
-#endif
-}
-
-  void
-bx_devices_c::dma_write8(unsigned channel, Bit8u *data_byte)
-{
-  if (channel == 2)
-    floppy->dma_write(data_byte);
-#if BX_SUPPORT_SB16
-  else if (channel == (unsigned) sb16->currentdma8)
-    sb16->dma_write8(data_byte);
-#endif
-}
-
-  void
-bx_devices_c::dma_read16(unsigned channel, Bit16u *data_word)
-{
-#if BX_SUPPORT_SB16
-  if (channel == (unsigned) sb16->currentdma16)
-    sb16->dma_read16(data_word);
-#else
-  UNUSED(channel);
-  UNUSED(data_word);
-#endif
-}
-
-  void
-bx_devices_c::dma_write16(unsigned channel, Bit16u *data_word)
-{
-#if BX_SUPPORT_SB16
-  if (channel == (unsigned) sb16->currentdma16)
-    sb16->dma_write16(data_word);
-#else
-  UNUSED(channel);
-  UNUSED(data_word);
-#endif
-}
-
-  void
+  Boolean
 bx_devices_c::register_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s registered with IRQ=%d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
+    return false;
     }
   if (irq_handler_name[irq]) {
     BX_PANIC(("IRQ %u conflict, %s with %s", irq,
       irq_handler_name[irq], name));
+    return false;
     }
   irq_handler_name[irq] = name;
+  return true;
 }
 
-  void
+  Boolean
 bx_devices_c::unregister_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s tried to unregister IRQ %d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
+    return false;
     }
 
   if (!irq_handler_name[irq]) {
     BX_INFO(("IO device %s tried to unregister IRQ %d, not registered",
 	      name, irq));
-    return;
+    return false;
   }
 
   if (strcmp(irq_handler_name[irq], name)) {
     BX_INFO(("IRQ %u not registered to %s but to %s", irq,
       name, irq_handler_name[irq]));
-    return;
+    return false;
     }
   irq_handler_name[irq] = NULL;
+  return true;
 }
 
-  void
+  Boolean
 bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
                                         Bit32u addr, const char *name )
 {
@@ -446,16 +442,18 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
     if ( strcmp( io_read_handler[read_handler_id[addr]].handler_name, "Unmapped" ) ) {
       BX_INFO(("IO device address conflict(read) at IO address %Xh",
         (unsigned) addr));
-      BX_PANIC(("  conflicting devices: %s & %s",
+      BX_INFO(("  conflicting devices: %s & %s",
         io_read_handler[handle].handler_name, io_read_handler[read_handler_id[addr]].handler_name));
+      return false; // address not available, return false.
       }
     }
   read_handler_id[addr] = handle;
+  return true; // address mapped successfully
 }
 
 
 
-  void
+  Boolean
 bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
                                         Bit32u addr, const char *name )
 {
@@ -487,11 +485,13 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
     if ( strcmp( io_write_handler[write_handler_id[addr]].handler_name, "Unmapped" ) ) {
       BX_INFO(("IO device address conflict(write) at IO address %Xh",
         (unsigned) addr));
-      BX_PANIC(("  conflicting devices: %s & %s",
+      BX_INFO(("  conflicting devices: %s & %s",
         io_write_handler[handle].handler_name, io_write_handler[write_handler_id[addr]].handler_name));
+      return false; //unable to map iodevice.
       }
     }
   write_handler_id[addr] = handle;
+  return true; // done!
 }
 
 

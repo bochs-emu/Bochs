@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.9 2001-10-03 13:10:38 bdenney Exp $
+// $Id: eth.h,v 1.9.10.1 2002-09-12 03:38:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@ typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 // system, an NDIS driver in promisc mode on WinNT, or maybe
 // a simulated network that talks to another process.
 //
-class eth_pktmover_c : public logfunctions {
+class eth_pktmover_c {
 public:
   virtual void sendpkt(void *buf, unsigned io_len) = 0;
   virtual ~eth_pktmover_c (void) {}
@@ -73,18 +73,3 @@ private:
   const char *type;
 };
 
-
-// Define the known pktmover modules
-#define ETH_NULL  1
-#ifdef BX_USE_ETH_ARPBACK
-#  define ETH_ARPBACK 1
-#endif
-#if defined(__FreeBSD__) || defined(__OpenBSD__)
-#define ETH_FBSD  1
-#endif
-#if defined(linux)
-#define ETH_LINUX 1
-#endif
-#if defined(WIN32)
-#define ETH_WIN32 1
-#endif

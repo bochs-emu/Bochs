@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 THIS IS A PATCH FOR WXWINDOWS, NOT FOR BOCHS
 ----------------------------------------------------------------------
-Patch name: patch.wx-raw-keycodes  $Revision: 1.2 $
+Patch name: patch.wx-raw-keycodes  $Revision: 1.2.2.1 $
 Author: Bryce Denney <bryce@tlw.com>
 Date: Mon Apr  8 01:00:09 EDT 2002
 

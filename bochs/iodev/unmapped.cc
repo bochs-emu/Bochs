@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.14 2001-12-21 19:33:18 bdenney Exp $
+// $Id: unmapped.cc,v 1.14.6.1 2002-09-12 03:38:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,28 +35,18 @@ bx_unmapped_c bx_unmapped;
 #define this (&bx_unmapped)
 #endif
 
-logfunctions *bioslog;
-
 bx_unmapped_c::bx_unmapped_c(void)
 {
   put("UNMP");
   settype(UNMAPLOG);
-  bioslog = new logfunctions ();
-  bioslog->put("BIOS");
-  bioslog->settype (BIOSLOG);
   s.port80 = 0x00;
   s.port8e = 0x00;
-
-  s.bios_message_i = 0;
+  s.shutdown = 0;
 }
 
 bx_unmapped_c::~bx_unmapped_c(void)
 {
-    if ( bioslog != NULL )              /* DT 17.12.2001 21:32 */
-    {
-        delete bioslog;
-        bioslog = NULL;
-    }
+  // Nothing yet
 }
 
   void
@@ -72,6 +62,10 @@ bx_unmapped_c::init(bx_devices_c *d)
     }
 }
 
+  void
+bx_unmapped_c::reset(unsigned type)
+{
+}
 
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions
@@ -247,39 +241,29 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    // BX_DEBUG(("unsupported IO write to port %04x of %02x",
 	    // address, value));
       break;
-    case 0x0401:
-      if (BX_UM_THIS s.bios_message_i > 0) {
-	// if there are bits of message in the buffer, print them as the
-	// panic message.  Otherwise fall into the next case.
-	if (BX_UM_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE)
-	  BX_UM_THIS s.bios_message_i = BX_BIOS_MESSAGE_SIZE-1;
-        BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i] = 0;
-	BX_UM_THIS s.bios_message_i = 0;
-        bioslog->panic((BX_UM_THIS s.bios_message));
-	break;
-      }
-    case 0x0400:
-      bioslog->panic("BIOS panic at rombios.c, line %d", value);
+    
+    case 0x8900: // Shutdown port, could be moved in a PM device
+                 // or a host <-> guest communication device 
+      switch (value) {
+        case 'S': if (BX_UM_THIS s.shutdown == 0) BX_UM_THIS s.shutdown = 1; break;
+        case 'h': if (BX_UM_THIS s.shutdown == 1) BX_UM_THIS s.shutdown = 2; break;
+        case 'u': if (BX_UM_THIS s.shutdown == 2) BX_UM_THIS s.shutdown = 3; break;
+        case 't': if (BX_UM_THIS s.shutdown == 3) BX_UM_THIS s.shutdown = 4; break;
+        case 'd': if (BX_UM_THIS s.shutdown == 4) BX_UM_THIS s.shutdown = 5; break;
+        case 'o': if (BX_UM_THIS s.shutdown == 5) BX_UM_THIS s.shutdown = 6; break;
+        case 'w': if (BX_UM_THIS s.shutdown == 6) BX_UM_THIS s.shutdown = 7; break;
+        case 'n': if (BX_UM_THIS s.shutdown == 7) BX_UM_THIS s.shutdown = 8; break;
+	default :  BX_UM_THIS s.shutdown = 0; break;
+        }
+      if (BX_UM_THIS s.shutdown == 8) {
+        BX_INFO(("Shutdown port: shutdown requested"));
+        BX_CPU(0)->kill_bochs_request = 2;
+        }
       break;
+
     case 0xfedc:
       bx_dbg.debugger = (value > 0);
 		BX_DEBUG(( "DEBUGGER = %u", (unsigned) bx_dbg.debugger));
-      break;
-
-    case 0xfff0:
-      BX_UM_THIS s.bios_message[BX_UM_THIS s.bios_message_i] =
-        (Bit8u) value;
-      BX_UM_THIS s.bios_message_i ++;
-      if ( BX_UM_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
-        BX_UM_THIS s.bios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
-        BX_UM_THIS s.bios_message_i = 0;
-        bioslog->info("%s", BX_UM_THIS s.bios_message);
-        }
-      else if ((value & 0xff) == '\n') {
-        BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i - 1 ] = 0;
-        BX_UM_THIS s.bios_message_i = 0;
-        bioslog->info("%s", BX_UM_THIS s.bios_message);
-        }
       break;
 
     default:

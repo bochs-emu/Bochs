@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.53 2002-03-27 16:42:54 bdenney Exp $
+// $Id: keyboard.cc,v 1.53.4.1 2002-09-12 03:38:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.53 2002-03-27 16:42:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.53.4.1 2002-09-12 03:38:56 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.53 2002-03-27 16:42:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.53.4.1 2002-09-12 03:38:56 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -184,6 +184,48 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   // mouse port installed on system board
   cmos->s.reg[0x14] |= 0x04;
 
+#if BX_WITH_WX
+  // register shadow params (Experimental, not a complete list by far)
+  bx_list_c *list = new bx_list_c (BXP_KBD_PARAMETERS, "Keyboard State", "", 20);
+  list->add (new bx_shadow_bool_c (BXP_KBD_IRQ1_REQ, 
+	"Keyboard IRQ1 requested: ", 
+	&BX_KEY_THIS s.kbd_controller.irq1_requested));
+  list->add (new bx_shadow_bool_c (BXP_KBD_IRQ12_REQ,
+	"Keyboard IRQ12 requested: ", 
+	&BX_KEY_THIS s.kbd_controller.irq12_requested));
+  list->add (new bx_shadow_num_c (BXP_KBD_TIMER_PENDING,
+      "Keyboard timer pending: ", 
+      &BX_KEY_THIS s.kbd_controller.timer_pending));
+  list->add (new bx_shadow_bool_c (BXP_KBD_PARE,
+      "Keyboard PARE", 
+      &BX_KEY_THIS s.kbd_controller.pare));
+  list->add (new bx_shadow_bool_c (BXP_KBD_TIM,
+      "Keyboard TIM", 
+      &BX_KEY_THIS s.kbd_controller.tim));
+  list->add (new bx_shadow_bool_c (BXP_KBD_AUXB,
+      "Keyboard AUXB", 
+      &BX_KEY_THIS s.kbd_controller.auxb));
+  list->add (new bx_shadow_bool_c (BXP_KBD_KEYL,
+      "Keyboard KEYL", 
+      &BX_KEY_THIS s.kbd_controller.keyl));
+  list->add (new bx_shadow_bool_c (BXP_KBD_C_D,
+      "Keyboard C_D", 
+      &BX_KEY_THIS s.kbd_controller.c_d));
+  list->add (new bx_shadow_bool_c (BXP_KBD_SYSF,
+      "Keyboard SYSF", 
+      &BX_KEY_THIS s.kbd_controller.sysf));
+  list->add (new bx_shadow_bool_c (BXP_KBD_INPB,
+      "Keyboard INPB", 
+      &BX_KEY_THIS s.kbd_controller.inpb));
+  list->add (new bx_shadow_bool_c (BXP_KBD_OUTB,
+      "Keyboard OUTB", 
+      &BX_KEY_THIS s.kbd_controller.outb));
+#endif
+}
+
+  void
+bx_keyb_c::reset(unsigned type)
+{
 }
 
   void
@@ -413,6 +455,11 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             controller_enQ(value, 1);
             break;
 
+	  case 0xd2:
+	    // Queue in keyboard output buffer
+	    controller_enQ(value, 0);
+	    break;
+
           default:
             BX_PANIC(("=== unsupported write to port 60h(lastcomm=%02x): %02x",
               (unsigned) BX_KEY_THIS s.kbd_controller.last_comm, (unsigned) value));
@@ -559,8 +606,15 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
           break;
 
         case 0xd2: // write keyboard output buffer
+	  BX_DEBUG(("io write 0x64: write keyboard output buffer"));
+	  BX_KEY_THIS s.kbd_controller.expecting_port60h = 1;
+	  break;
         case 0xdd: // Disable A20 Address Line
+	  BX_SET_ENABLE_A20(0);
+	  break;
         case 0xdf: // Enable A20 Address Line
+	  BX_SET_ENABLE_A20(1);
+	  break;
         case 0xc1: // Continuous Input Port Poll, Low
         case 0xc2: // Continuous Input Port Poll, High
         case 0xe0: // Read Test Inputs
@@ -628,7 +682,7 @@ bx_keyb_c::service_paste_buf ()
     BX_KEY_THIS pastebuf_ptr++;
   }
   // reached end of pastebuf.  free the memory it was using.
-  free (BX_KEY_THIS pastebuf);
+  delete [] BX_KEY_THIS pastebuf;
   BX_KEY_THIS pastebuf = NULL;
 }
 
@@ -636,7 +690,7 @@ bx_keyb_c::service_paste_buf ()
 // inserted into the hardware queue as it become available.  Any previous
 // paste which is still in progress will be thrown out.  BYTES is a pointer
 // to a region of memory containing the chars to be pasted. When the paste
-// is complete, the keyboard code will call free(BYTES).
+// is complete, the keyboard code will call delete [] bytes;
 void
 bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
 {
@@ -644,7 +698,7 @@ bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
   if (BX_KEY_THIS pastebuf) {
     BX_ERROR (("previous paste was not completed!  %d chars lost", 
 	  BX_KEY_THIS pastebuf_len - BX_KEY_THIS pastebuf_ptr));
-    free(BX_KEY_THIS pastebuf);
+    delete [] BX_KEY_THIS pastebuf;
   }
   BX_KEY_THIS pastebuf = (Bit8u *) malloc (length);
   memcpy (BX_KEY_THIS pastebuf, bytes, length);
@@ -1079,7 +1133,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 bx_keyb_c::periodic( Bit32u   usec_delta )
 {
   static int multiple=0;
-  static int count_before_paste=0;
+  static unsigned count_before_paste=0;
   Bit8u   retval;
 
   UNUSED( usec_delta );
@@ -1087,6 +1141,8 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   if ( ++multiple==10)
   {
     multiple=0;
+	SIM->periodic ();
+	if (BX_CPU(0)->kill_bochs_request) return 0;
     bx_gui.handle_events();
   }
 
@@ -1481,7 +1537,7 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
     BX_DEBUG(("[mouse] Dx=%d Dy=%d", delta_x, delta_y));
 #endif  /* ifdef VERBOSE_KBD_DEBUG */
 
-  if( (delta_x==0) && (delta_y==0) && (BX_KEY_THIS s.mouse.button_status == button_state & 0x3) ) {
+  if( (delta_x==0) && (delta_y==0) && (BX_KEY_THIS s.mouse.button_status == (button_state & 0x3) ) ) {
     BX_DEBUG(("Ignoring useless mouse_motion call:\n"));
     BX_DEBUG(("This should be fixed in the gui code.\n"));
     return;

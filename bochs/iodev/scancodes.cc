@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.cc,v 1.3 2002-03-06 14:04:42 cbothamy Exp $
+// $Id: scancodes.cc,v 1.3.8.1 2002-09-12 03:38:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  Christophe Bothamy
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

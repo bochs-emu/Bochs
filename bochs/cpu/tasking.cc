@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.9 2001-11-11 04:57:05 bdenney Exp $
+// $Id: tasking.cc,v 1.9.10.1 2002-09-12 03:38:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,8 +33,6 @@
 
 
 
-
-#if BX_SUPPORT_TASKING
 
 #if BX_CPU_LEVEL >= 2
 
@@ -166,7 +164,8 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
 
   // The following checks are made before calling task_switch(), for
-  // JMP & CALL only.  These checks are NOT made for exceptions, interrupts, & IRET
+  // JMP & CALL only.  These checks are NOT made for exceptions,
+  // interrupts, & IRET.
   //
   //   1) TSS DPL must be >= CPL
   //   2) TSS DPL must be >= TSS selector RPL
@@ -221,15 +220,21 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // Check that old TSS, new TSS, and all segment descriptors
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.pg) {
-    //BX_RW, BX_READ, BX_WRITE
     // Old TSS
-    (void) dtranslate_linear(obase32, 0, /*rw*/ BX_WRITE);
-    (void) dtranslate_linear(obase32+old_TSS_max, 0, /*rw*/ BX_WRITE);
+    (void) dtranslate_linear(obase32, 0, BX_WRITE);
+    (void) dtranslate_linear(obase32+old_TSS_max, 0, BX_WRITE);
 
     // New TSS
-    (void) dtranslate_linear(nbase32, 0, /*rw*/ 0);
-    (void) dtranslate_linear(nbase32+new_TSS_max, 0, /*rw*/ 0);
+    (void) dtranslate_linear(nbase32, 0, BX_READ);
+    (void) dtranslate_linear(nbase32+new_TSS_max, 0, BX_READ);
 
+    // ??? Humm, we check the new TSS region with READ above,
+    // but sometimes we need to write the link field in that
+    // region.  We also sometimes update other fields, perhaps
+    // we need to WRITE check them here also, so that we keep
+    // the written state consistent (ie, we don't encounter a
+    // page fault in the middle).
+    //
     // ??? fix RW above
     // ??? touch old/new TSS descriptors here when necessary.
     }
@@ -278,7 +283,10 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     trap_word = 0; // keep compiler happy (not used)
     }
   else {
-    access_linear(nbase32 + 0x1c, 4, 0, BX_READ, &newCR3);
+    if (BX_CPU_THIS_PTR cr0.pg)
+      access_linear(nbase32 + 0x1c, 4, 0, BX_READ, &newCR3);
+    else
+      newCR3 = 0;   // keep compiler happy (not used)
     access_linear(nbase32 + 0x20, 4, 0, BX_READ, &newEIP);
     access_linear(nbase32 + 0x24, 4, 0, BX_READ, &newEFLAGS);
     access_linear(nbase32 + 0x28, 4, 0, BX_READ, &newEAX);
@@ -318,13 +326,12 @@ if (ss_descriptor.u.segment.d_b && (tss_descriptor->type<9)) {
   // effect on Busy bit of old task
   if ( (source==BX_TASK_FROM_JUMP) || (source==BX_TASK_FROM_IRET) ) {
     // Bit is cleared
-    access_linear(BX_CPU_THIS_PTR gdtr.base +
-                  BX_CPU_THIS_PTR tr.selector.index*8 + 4,
-                  4, 0, BX_READ, &temp32);
+    Bit32u laddr;
+    laddr = BX_CPU_THIS_PTR gdtr.base +
+            (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
+    access_linear(laddr, 4, 0, BX_READ, &temp32);
     temp32 &= ~0x00000200;
-    access_linear(BX_CPU_THIS_PTR gdtr.base +
-                  BX_CPU_THIS_PTR tr.selector.index*8 + 4,
-                  4, 0, BX_WRITE, &temp32);
+    access_linear(laddr, 4, 0, BX_WRITE, &temp32);
     }
 
 
@@ -434,11 +441,11 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
 
   if ( (source==BX_TASK_FROM_JUMP) || (source==BX_TASK_FROM_CALL_OR_INT) ) {
     // set the new task's busy bit
-    access_linear(BX_CPU_THIS_PTR gdtr.base + tss_selector->index*8 + 4,
-                  4, 0, BX_READ, &dword2);
+    Bit32u laddr;
+    laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
+    access_linear(laddr, 4, 0, BX_READ, &dword2);
     dword2 |= 0x00000200;
-    access_linear(BX_CPU_THIS_PTR gdtr.base + tss_selector->index*8 + 4,
-                  4, 0, BX_WRITE, &dword2);
+    access_linear(laddr, 4, 0, BX_WRITE, &dword2);
     }
 
 
@@ -472,9 +479,9 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
   //          descriptor parts of the segment registers.
   //
 
-  if (tss_descriptor->type >= 9) {
+  if ( (tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.pg) {
     CR3_change(newCR3); // Tell paging unit about new cr3 value
-    BX_DEBUG (("task_switch changing CR3 to 0x%08x\n", newCR3));
+    BX_DEBUG (("task_switch changing CR3 to 0x%08x", newCR3));
     BX_INSTR_TLB_CNTRL(BX_INSTR_TASKSWITCH, newCR3);
     }
 
@@ -958,29 +965,3 @@ BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     }
 }
 #endif
-
-
-
-#else  // BX_SUPPORT_TASKING
-
-
-// for non-support of hardware tasking
-
-#if BX_CPU_LEVEL >= 2
-  /* corresponds to SWITCH_TASKS algorithm in Intel documentation */
-  void
-BX_CPU_C::task_switch(bx_selector_t *selector,
-                 bx_descriptor_t *descriptor, unsigned source,
-                 Bit32u dword1, Bit32u dword2)
-{
-  UNUSED(selector);
-  UNUSED(descriptor);
-  UNUSED(source);
-  UNUSED(dword1);
-  UNUSED(dword2);
-
-  BX_INFO(("task_switch(): not complete"));
-}
-#endif
-
-#endif // BX_SUPPORT_TASKING

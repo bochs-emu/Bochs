@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.7 2002-03-20 02:41:19 bdenney Exp $
+// $Id: ioapic.cc,v 1.7.4.1 2002-09-12 03:38:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -52,6 +52,11 @@ bx_ioapic_c::init ()
     ioredtbl[i].set_odd_word  (0x00000000);
   }
   irr = 0;
+}
+
+void 
+bx_ioapic_c::reset (unsigned type) 
+{
 }
 
 void 
