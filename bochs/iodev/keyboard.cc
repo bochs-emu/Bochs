@@ -979,7 +979,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       break;
 
     case 0xf2:  // identify keyboard
-      bx_printf("KBD: indentify keyboard command received\n");
+      bx_printf("KBD: identify keyboard command received\n");
       kbd_enQ(0xFA); // AT sends ACK, MFII sends ACK+ABh+41h
       return;
       break;
@@ -1242,6 +1242,17 @@ bx_printf("  aux_clock_enabled = %u\n",
 	    bx_printf("[mouse] Mouse disabled (stream mode)\n");
       break;
 
+    case 0xf6: // Set Defaults
+      BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
+      BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
+      BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
+      BX_KEY_THIS s.mouse.enable          = 0;
+      BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_STREAM;
+      controller_enQ(0xFA, 1); // ACK
+      if (bx_dbg.mouse)
+	    bx_printf("[mouse] Set Defaults\n");
+      break;
+
     case 0xff: // Reset
       BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
       BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
@@ -1279,6 +1290,7 @@ bx_printf("  aux_clock_enabled = %u\n",
       //ECh Reset Wrap Mode
       //EEh Set Wrap Mode
       //F0h Set Remote Mode (polling mode, i.e. not stream mode.)
+      //FEh Resend
       bx_panic("MOUSE: kbd_ctrl_to_mouse(%02xh)\n", (unsigned) value);
     }
  }
