@@ -20,8 +20,6 @@ export LDFLAGS
 
 ./configure --enable-cdrom \
 	    --enable-vbe \
-	    --enable-all-optimizations \
-	    --with-carbon --with-sdl \
-	    --enable-plugins
+	    --enable-all-optimizations
 
 unset echo
