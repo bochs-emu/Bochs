@@ -1,0 +1,591 @@
+----------------------------------------------------------------------
+Patch name: patch.kpl-paging-cleanup
+Author: Kevin Lawton
+Date: Sat Aug 31 22:17:47 EDT 2002
+
+Detailed description:
+
+  I rehashed dtranslate_linear() and itranslate_linear(), to behave
+  like a real CPU.  There were several flaws and semantical differences
+  compared with how a real CPU behaves, which are fixed by this patch.
+
+  Additionally, a few things behave differently depending on the level
+  of CPU that is being emulated; notably from the P6 architecture on,
+  where the A/D bits is set is a little different.  A couple new #ifdefs
+  take care of that.
+
+  Bochs was generating a fault if the current access was not matching
+  the TLB entry.  Now, a table re-walk occurs to opt for updated info
+  in the memory image of the page tables, before an fault is invoked.
+  It is possible, the memory image contains access permissions which
+  are OK, and thus those are taken and re-cached rather than a
+  fault, when applicable.
+
+  Bochs was also storing the address of the PTE, in case the first
+  access seen was a read, and subsequently a write access necessitated
+  an update of the D bit.  Ack!!!  If the page tables were updated
+  after the 1st access, we were righting over some previous location!
+
+  Also, I made a new configure option '--enable-4meg-pages', and put
+  some conditional compilation code in bochs.  For now, I made
+  disabling 4Meg page support, the default.  I bracked the appropriate
+  code in CPUID, MOV_CdRd, and paging.cc.  We were defaulting to
+  enabling 4Meg pages, but it is poorly supported.  I'm going to
+  look into better support for it.
+
+  Many of these mods are a result of tests which I ran on machines,
+  and on bochs (before/after).  I recommed integrating these,
+  because current bochs paging behavior is broken.
+
+  Please rerun 'autoconf'.  I'm not big on diff'ing 'configure'.
+
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on August 31, 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.55
+diff -u -r1.55 config.h.in
+--- config.h.in	30 Aug 2002 06:47:21 -0000	1.55
++++ config.h.in	1 Sep 2002 02:12:43 -0000
+@@ -559,6 +559,7 @@
+ 
+ #define BX_SUPPORT_FPU 0
+ #define BX_SUPPORT_MMX 0
++#define BX_SUPPORT_4MEG_PAGES 0
+ 
+ #define BX_HAVE_GETENV 0
+ #define BX_HAVE_SELECT 0
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure.in,v
+retrieving revision 1.89
+diff -u -r1.89 configure.in
+--- configure.in	26 Aug 2002 19:06:59 -0000	1.89
++++ configure.in	1 Sep 2002 02:13:01 -0000
+@@ -545,6 +545,24 @@
+ AC_SUBST(PCI_OBJ)
+ 
+ 
++AC_MSG_CHECKING(for 4Meg pages support)
++AC_ARG_ENABLE(4meg-pages,
++  [  --enable-4meg-pages               support 4Megabyte pages extensions],
++  [if test "$enableval" = yes; then
++    AC_MSG_RESULT(yes)
++    AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
++   else
++    AC_MSG_RESULT(no)
++    AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
++   fi],
++  [
++    AC_MSG_RESULT(no)
++    AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
++    ]
++  )
++AC_SUBST(BX_SUPPORT_4MEG_PAGES)
++
++
+ AC_MSG_CHECKING(for port e9 hack)
+ AC_ARG_ENABLE(port-e9-hack,
+   [  --enable-port-e9-hack             writes to port e9 go to console],
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.22
+diff -u -r1.22 cpu.h
+--- cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
++++ cpu/cpu.h	1 Sep 2002 02:13:07 -0000
+@@ -519,7 +519,6 @@
+   typedef struct {
+     Bit32u lpf; // linear page frame
+     Bit32u ppf; // physical page frame
+-    Bit32u pte_addr; // Page Table Address for updating A & D bits
+     Bit32u combined_access;
+     } bx_TLB_entry;
+ #endif  // #if BX_USE_TLB
+Index: cpu/paging.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/paging.cc,v
+retrieving revision 1.9
+diff -u -r1.9 paging.cc
+--- cpu/paging.cc	19 Jun 2002 15:49:07 -0000	1.9
++++ cpu/paging.cc	1 Sep 2002 02:13:10 -0000
+@@ -46,7 +46,6 @@
+ 
+ 
+ 
+-
+ #if 0
+ // X86 Registers Which Affect Paging:
+ // ==================================
+@@ -465,9 +464,8 @@
+ {
+   Bit32u   lpf, ppf, poffset, TLB_index, error_code, paddress;
+   Bit32u   pde, pde_addr;
+-  Bit32u   pte, pte_addr;
+   unsigned priv_index;
+-  Boolean  is_rw;
++  Boolean  isWrite;
+   Bit32u   combined_access, new_combined_access;
+ 
+   lpf       = laddress & 0xfffff000; // linear page frame
+@@ -475,147 +473,173 @@
+   TLB_index = BX_TLB_INDEX_OF(lpf);
+ 
+ 
+-  is_rw = (rw>=BX_WRITE); // write or r-m-w
++  isWrite = (rw>=BX_WRITE); // write or r-m-w
+ 
+   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == lpf) {
+     paddress        = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
+     combined_access = BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access;
+-priv_check:
+     priv_index =
+ #if BX_CPU_LEVEL >= 4
+       (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
+ #endif
+       (pl<<3) |                      // bit 3
+       (combined_access & 0x06) |     // bit 2,1
+-      is_rw;                         // bit 0
++      isWrite;                       // bit 0
+ 
+     if (priv_check[priv_index]) {
+       // Operation has proper privilege.
+-      // See if A/D bits need updating.
+-      //BW !! a read access does not do any updates, patched load
+-      new_combined_access = combined_access | is_rw;
++      // If our TLB entry has _not_ been used with a write before, we need
++      // to update the PDE.A/PTE.{A,D} fields with a re-walk.
++      new_combined_access = combined_access | isWrite;
+       if (new_combined_access == combined_access) {
+         // A/D bits already up-to-date
+         return(paddress);
+         }
+ 
+-      // A/D bits need updating first
+-      BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access = new_combined_access;
+-      pte_addr = BX_CPU_THIS_PTR TLB.entry[TLB_index].pte_addr;
+-      BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte); // get old 4kPTE/4mPDE
+-      pte |= 0x20 | (is_rw << 6);
+-      BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte); // write updated 4kPTE/4mPDE
+-      return(paddress);
++      // If we have only seen reads for this TLB entry, but the
++      // permissions must be writeable, we must make sure the
++      // dirty bit (D) is set.  To do this we must rewalk the page
++      // tables to find the PTE and to give a chance to pick up updated info.
++      goto pageTableWalk;  // for clarity and in case of future mods
+       }
+ 
+-    // Protection violation
+-    error_code = 0xfffffff9; // RSVD=1, P=1
+-    goto page_fault_check;
++    // The current access does not have permission according to the info
++    // in our TLB cache entry.  Re-walk the page tables, in case there is
++    // updated information in the memory image, and let the long path code
++    // generate an exception if one is warranted.
++    goto pageTableWalk;  // for clarity and in case of future mods
+     }
+ 
++pageTableWalk:
++
+   // Get page dir entry
+   pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
+              ((laddress & 0xffc00000) >> 20);
+   BX_CPU_THIS_PTR mem->read_physical(this, pde_addr, 4, &pde);
+   if ( !(pde & 0x01) ) {
+     // Page Directory Entry NOT present
+-    error_code = 0xfffffff8; // RSVD=1, P=0
++    error_code = 0x00000000; // RSVD=0, P=0
+     goto page_fault_not_present;
+     }
+ 
+-  // check for 4Mbyte page
++#if BX_SUPPORT_4MEG_PAGES
++  // If 4M pages are enabled, and this is a 4Meg page
++  if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4 & 0x10)) {
++    // Note: when the PSE and PAE flags in CR4 are set,
++    // the processor generates a PF if the reserved bits are not
++    // set to 0.  (We don't handle PAE yet, just a note for
++    // the future).
+ 
+-  if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4 & 0x10)) {     // check for 4M page and make sure it's enabled
+-    combined_access = pde & 0x06;                         // combined access is just access from the pde
+-    ppf = (pde & 0xFFC00000) | (laddress & 0x003FF000);   // make up the physical frame number
+-    pte_addr = pde_addr;                                  // A/D bits in same place as a real pte
+-  }
+-
+-  // normal 4Kbyte page
+-  
+-  else {
+-
+-  // Get page table entry
+-  pte_addr = (pde & 0xfffff000) |
+-             ((laddress & 0x003ff000) >> 10);
+-  BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte);
++    // Combined access is just access from the pde (no pte involved).
++    combined_access = pde & 0x06;
+ 
++    priv_index =
++#if BX_CPU_LEVEL >= 4
++      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
++#endif
++      (pl<<3) |                      // bit 3
++      (combined_access & 0x06) |     // bit 2,1
++      isWrite;                       // bit 0
++
++    if (!priv_check[priv_index]) {
++      error_code = 0x00000001; // RSVD=0, P=1
++      goto page_fault_access;
++      }
++
++    // make up the physical frame number
++    ppf = (pde & 0xFFC00000) | (laddress & 0x003FF000);
++
++    // Update PDE if A/D bits if needed.
++    if ( ((pde & 0x20)==0) ||
++         (isWrite && ((pde&0x40)==0)) ) {
++      pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
++      BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
++      }
++    }
++
++  // Else normal 4Kbyte page...
++  else
++#endif
++    {
++    Bit32u   pte, pte_addr;
++
++#if (BX_CPU_LEVEL < 6)
+   // update PDE if A bit was not set before
+   if ( !(pde & 0x20) ) {
+     pde |= 0x20;
+     BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
+     }
++#endif
+ 
+-  if ( !(pte & 0x01) ) {
+-    // Page Table Entry NOT present
+-    error_code = 0xfffffff8; // RSVD=1, P=0
+-    goto page_fault_not_present;
+-    }
+-
+-  //BW added: update PTE if A bit was not set before
+-  if ( !(pte & 0x20) ) {
+-    pte |= 0x20;
+-    BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte);
+-    }
++    // Get page table entry
++    pte_addr = (pde & 0xfffff000) |
++               ((laddress & 0x003ff000) >> 10);
++    BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte);
++
++    if ( !(pte & 0x01) ) {
++      // Page Table Entry NOT present
++      error_code = 0x00000000; // RSVD=0, P=0
++      goto page_fault_not_present;
++      }
+ 
+-  // 386 and 486+ have different bahaviour for combining
+-  // privilege from PDE and PTE.
++    // 386 and 486+ have different bahaviour for combining
++    // privilege from PDE and PTE.
+ #if BX_CPU_LEVEL == 3
+-  combined_access  = (pde | pte) & 0x04; // U/S
+-  combined_access |= (pde & pte) & 0x02; // R/W
++    combined_access  = (pde | pte) & 0x04; // U/S
++    combined_access |= (pde & pte) & 0x02; // R/W
+ #else // 486+
+-  combined_access  = (pde & pte) & 0x06; // U/S and R/W
++    combined_access  = (pde & pte) & 0x06; // U/S and R/W
+ #endif
+ 
+-  ppf = pte & 0xfffff000;
+-  }
++    priv_index =
++#if BX_CPU_LEVEL >= 4
++      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
++#endif
++      (pl<<3) |                      // bit 3
++      (combined_access & 0x06) |     // bit 2,1
++      isWrite;                       // bit 0
+ 
+-  // Calculate physical memory address and fill in TLB cache entry
++    if (!priv_check[priv_index]) {
++      error_code = 0x00000001; // RSVD=0, P=1
++      goto page_fault_access;
++      }
+ 
++    ppf = pte & 0xfffff000;
++
++#if (BX_CPU_LEVEL >= 6)
++    // update PDE if A bit was not set before
++    if ( !(pde & 0x20) ) {
++      pde |= 0x20;
++      BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
++      }
++#endif
++
++    // Update PTE if A/D bits if needed.
++    if ( ((pte & 0x20)==0) ||
++         (isWrite && ((pte&0x40)==0)) ) {
++      pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
++      BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte);
++      }
++    }
++
++
++  // Calculate physical memory address and fill in TLB cache entry
+   paddress = ppf | poffset;
+ 
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
+-  BX_CPU_THIS_PTR TLB.entry[TLB_index].pte_addr = pte_addr;
+-  BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access = combined_access;
++  BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access =
++      combined_access | isWrite;
+ 
+-  goto priv_check;
++  return(paddress);
+ 
+ 
+-page_fault_check:
+-// (mch) Define RMW_WRITES for old behavior
+-#if !defined(RMW_WRITES)
+-  /* (mch) Ok, so we know it's a page fault. It the access is a
+-     read-modify-write access we check if the read faults, if it
+-     does then we (optionally) do not set the write bit */
+-  if (rw == BX_RW) {
+-          priv_index =
+-#if BX_CPU_LEVEL >= 4
+-                  (BX_CPU_THIS_PTR cr0.wp<<4) |               // bit 4
+-#endif
+-                  (pl<<3) |                   // bit 3
+-                  (combined_access & 0x06) |  // bit 2,1
+-                  0;                      // bit 0 (read)
+-          if (!priv_check[priv_index]) {
+-                  // Fault on read
+-                  is_rw = 0;
+-          }
+-  }
+-#endif /* RMW_WRITES */
+-  goto page_fault_proper;
+-
++page_fault_access:
+ page_fault_not_present:
+-#if !defined(RMW_WRITES)
+-  if (rw == BX_RW)
+-          is_rw = 0;
+-#endif /* RMW_WRITES */
+-  goto page_fault_proper;
+ 
+-  page_fault_proper:
+-  error_code |= (pl << 2) | (is_rw << 1);
++  error_code |= (pl << 2) | (isWrite << 1);
+   BX_CPU_THIS_PTR cr2 = laddress;
+-  // invalidate entry - we can get away without maintaining A bit in PTE
+-  // if we don't maintain TLB entries without it set.
++  // Invalidate TLB entry.
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
+   exception(BX_PF_EXCEPTION, error_code, 0);
+   return(0); // keep compiler happy
+@@ -630,7 +654,6 @@
+ {
+   Bit32u   lpf, ppf, poffset, TLB_index, error_code, paddress;
+   Bit32u   pde, pde_addr;
+-  Bit32u   pte, pte_addr;
+   unsigned priv_index;
+   Bit32u   combined_access;
+ 
+@@ -642,7 +665,6 @@
+   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == lpf) {
+     paddress        = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
+     combined_access = BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access;
+-priv_check:
+     priv_index =
+ #if BX_CPU_LEVEL >= 4
+       (BX_CPU_THIS_PTR cr0.wp<<4) |   // bit 4
+@@ -656,82 +678,134 @@
+       return(paddress);
+       }
+ 
+-    // Protection violation
+-    error_code = 0xfffffff9; // RSVD=1, P=1
+-    goto page_fault;
++    // The current access does not have permission according to the info
++    // in our TLB cache entry.  Re-walk the page tables, in case there is
++    // updated information in the memory image, and let the long path code
++    // generate an exception if one is warranted.
++    goto pageTableWalk;  // for clarity and in case of future mods
+     }
+ 
++pageTableWalk:
++
+   // Get page dir entry
+   pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
+              ((laddress & 0xffc00000) >> 20);
+   BX_CPU_THIS_PTR mem->read_physical(this, pde_addr, 4, &pde);
+   if ( !(pde & 0x01) ) {
+     // Page Directory Entry NOT present
+-    error_code = 0xfffffff8; // RSVD=1, P=0
+-    goto page_fault;
++    error_code = 0x00000000; // RSVD=0, P=0
++    goto page_fault_not_present;
+     }
+ 
+-  // check for 4Mbyte page
++#if BX_SUPPORT_4MEG_PAGES
++  // If 4M pages are enabled, and this is a 4Meg page
++  if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4 & 0x10)) {
++    // combined access is just access from the pde (no pte involved).
++    combined_access = pde & 0x06;
+ 
+-  if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4 & 0x10)) {     // check for 4M page and make sure it's enabled
+-    combined_access = pde & 0x06;                         // combined access is just access from the pde
+-    ppf = (pde & 0xFFC00000) | (laddress & 0x003FF000);   // make up the physical frame number
+-    pte_addr = pde_addr;                                  // A/D bits in same place as a real pte
+-  }
+-
+-  
+-  else {
+-  // normal 4Kbyte page
+-
+-  // Get page table entry
+-  pte_addr = (pde & 0xfffff000) |
+-             ((laddress & 0x003ff000) >> 10);
+-  BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte);
++    priv_index =
++#if BX_CPU_LEVEL >= 4
++      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
++#endif
++      (pl<<3) |                      // bit 3
++      (combined_access & 0x06);      // bit 2,1
++                                     // bit 0 always 0 (fetch==read)
+ 
++    if (!priv_check[priv_index]) {
++      error_code = 0x00000001; // RSVD=0, P=1
++      goto page_fault_access;
++      }
++
++    // make up the physical frame number
++    ppf = (pde & 0xFFC00000) | (laddress & 0x003FF000);
++
++    // Update PDE if A/D bits if needed.
++    if ( (pde & 0x20)==0 ) {
++      pde |= 0x20; // Update A and possibly D bits
++      BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
++      }
++    }
++
++  // Else normal 4Kbyte page...
++  else
++#endif
++    {
++    Bit32u   pte, pte_addr;
++
++#if (BX_CPU_LEVEL < 6)
+   // update PDE if A bit was not set before
+   if ( !(pde & 0x20) ) {
+     pde |= 0x20;
+     BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
+     }
++#endif
+ 
+-  if ( !(pte & 0x01) ) {
+-    // Page Table Entry NOT present
+-    error_code = 0xfffffff8; // RSVD=1, P=0
+-    goto page_fault;
+-    }
+-
+-  //BW added: update PTE if A bit was not set before
+-  if ( !(pte & 0x20) ) {
+-    pte |= 0x20;
+-    BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte);
+-    }
++    // Get page table entry
++    pte_addr = (pde & 0xfffff000) |
++               ((laddress & 0x003ff000) >> 10);
++    BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte);
++
++    if ( !(pte & 0x01) ) {
++      // Page Table Entry NOT present
++      error_code = 0x00000000; // RSVD=0, P=0
++      goto page_fault_not_present;
++      }
+ 
+-  // 386 and 486+ have different bahaviour for combining
+-  // privilege from PDE and PTE.
++    // 386 and 486+ have different bahaviour for combining
++    // privilege from PDE and PTE.
+ #if BX_CPU_LEVEL == 3
+-  combined_access  = (pde | pte) & 0x04; // U/S
+-  combined_access |= (pde & pte) & 0x02; // R/W
++    combined_access  = (pde | pte) & 0x04; // U/S
++    combined_access |= (pde & pte) & 0x02; // R/W
+ #else // 486+
+-  combined_access  = (pde & pte) & 0x06; // U/S and R/W
++    combined_access  = (pde & pte) & 0x06; // U/S and R/W
++#endif
++
++    priv_index =
++#if BX_CPU_LEVEL >= 4
++      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
++#endif
++      (pl<<3) |                      // bit 3
++      (combined_access & 0x06);      // bit 2,1
++                                     // bit 0 always 0 (fetch==read)
++
++    if (!priv_check[priv_index]) {
++      error_code = 0x00000001; // RSVD=0, P=1
++      goto page_fault_access;
++      }
++
++    ppf = pte & 0xfffff000;
++
++#if (BX_CPU_LEVEL >= 6)
++    // update PDE if A bit was not set before
++    if ( !(pde & 0x20) ) {
++      pde |= 0x20;
++      BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
++      }
+ #endif
+ 
+-  ppf = pte & 0xfffff000;
+-  }
++    // Update PTE if A/D bits if needed.
++    if ( (pte & 0x20)==0 ) {
++      pte |= 0x20; // Update A and possibly D bits
++      BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte);
++      }
++    }
+ 
++  // Calculate physical memory address and fill in TLB cache entry
+   paddress = ppf | poffset;
+ 
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
+-  BX_CPU_THIS_PTR TLB.entry[TLB_index].pte_addr = pte_addr;
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access = combined_access;
+-  goto priv_check;
+ 
++  return(paddress);
++
++
++page_fault_access:
++page_fault_not_present:
+ 
+-page_fault:
+   error_code |= (pl << 2);
+   BX_CPU_THIS_PTR cr2 = laddress;
+-  // invalidate entry - we can get away without maintaining A bit in PTE
+-  // if we don't maintain TLB entries without it set.
++  // Invalidate TLB entry.
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
+   exception(BX_PF_EXCEPTION, error_code, 0);
+   return(0); // keep compiler happy
