@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.11 2002-09-06 21:54:58 kevinlawton Exp $
+// $Id: protect_ctrl.cc,v 1.12 2002-09-13 21:08:54 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,7 +71,7 @@ BX_CPU_C::ARPL_EwGw(BxInstruction_t *i)
           op1_32 = BX_READ_32BIT_REG(i->rm);
           op1_32 = (op1_32 & 0xffff0000) | op1_16;
           op1_32 |= 0xff3f0000;
-          BX_WRITE_32BIT_REG(i->rm, op1_32);
+          BX_WRITE_32BIT_REGZ(i->rm, op1_32);
           }
         else {
           BX_WRITE_16BIT_REG(i->rm, op1_16);
@@ -161,7 +161,7 @@ BX_CPU_C::LAR_GvEw(BxInstruction_t *i)
     set_ZF(1);
     if (i->os_32) {
       /* masked by 00FxFF00, where x is undefined */
-      BX_WRITE_32BIT_REG(i->nnn, dword2 & 0x00ffff00);
+      BX_WRITE_32BIT_REGZ(i->nnn, dword2 & 0x00ffff00);
       }
     else {
       BX_WRITE_16BIT_REG(i->nnn, dword2 & 0xff00);
@@ -195,7 +195,7 @@ BX_CPU_C::LAR_GvEw(BxInstruction_t *i)
     set_ZF(1);
     if (i->os_32) {
       /* masked by 00FxFF00, where x is undefined ??? */
-      BX_WRITE_32BIT_REG(i->nnn, dword2 & 0x00ffff00);
+      BX_WRITE_32BIT_REGZ(i->nnn, dword2 & 0x00ffff00);
       }
     else {
       BX_WRITE_16BIT_REG(i->nnn, dword2 & 0xff00);
@@ -296,7 +296,7 @@ lsl_ok:
   set_ZF(1);
 
   if (i->os_32)
-    BX_WRITE_32BIT_REG(i->nnn, limit32)
+    BX_WRITE_32BIT_REGZ(i->nnn, limit32)
   else
     // chop off upper 16 bits
     BX_WRITE_16BIT_REG(i->nnn, (Bit16u) limit32)
@@ -735,16 +735,30 @@ BX_CPU_C::SGDT_Ms(BxInstruction_t *i)
     return;
     }
 
-  limit_16 = BX_CPU_THIS_PTR gdtr.limit;
-  base_32  = BX_CPU_THIS_PTR gdtr.base;
-#if BX_CPU_LEVEL == 2
-  base_32 |= 0xff000000; /* ??? */
-#else /* 386+ */
-  /* 32bit processors always write 32bits of base */
-#endif
-  write_virtual_word(i->seg, i->rm_addr, &limit_16);
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    Bit64u base_64;
 
-  write_virtual_dword(i->seg, i->rm_addr+2, &base_32);
+    limit_16 = BX_CPU_THIS_PTR gdtr.limit;
+    base_64  = BX_CPU_THIS_PTR gdtr.base;
+
+    write_virtual_word(i->seg, i->rm_addr, &limit_16);
+
+    write_virtual_qword(i->seg, i->rm_addr+2, &base_64);
+
+    }
+  else
+    {
+    limit_16 = BX_CPU_THIS_PTR gdtr.limit;
+    base_32  = BX_CPU_THIS_PTR gdtr.base;
+#if BX_CPU_LEVEL == 2
+    base_32 |= 0xff000000; /* ??? */
+#else /* 386+ */
+    /* 32bit processors always write 32bits of base */
+#endif
+    write_virtual_word(i->seg, i->rm_addr, &limit_16);
+
+    write_virtual_dword(i->seg, i->rm_addr+2, &base_32);
+    }
 
 #endif
 }
@@ -768,18 +782,32 @@ BX_CPU_C::SIDT_Ms(BxInstruction_t *i)
     return;
     }
 
-  limit_16 = BX_CPU_THIS_PTR idtr.limit;
-  base_32  = BX_CPU_THIS_PTR idtr.base;
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    Bit64u base_64;
+
+    limit_16 = BX_CPU_THIS_PTR idtr.limit;
+    base_64  = BX_CPU_THIS_PTR idtr.base;
+
+    write_virtual_word(i->seg, i->rm_addr, &limit_16);
+
+    write_virtual_qword(i->seg, i->rm_addr+2, &base_64);
+
+    }
+  else
+    {
+    limit_16 = BX_CPU_THIS_PTR idtr.limit;
+    base_32  = BX_CPU_THIS_PTR idtr.base;
 
 #if BX_CPU_LEVEL == 2
-  base_32 |= 0xff000000;
+    base_32 |= 0xff000000;
 #else /* 386+ */
-  /* ??? regardless of operand size, all 32bits of base are stored */
+    /* ??? regardless of operand size, all 32bits of base are stored */
 #endif
 
-  write_virtual_word(i->seg, i->rm_addr, &limit_16);
+    write_virtual_word(i->seg, i->rm_addr, &limit_16);
 
-  write_virtual_dword(i->seg, i->rm_addr+2, &base_32);
+    write_virtual_dword(i->seg, i->rm_addr+2, &base_32);
+    }
 
 #endif
 }
@@ -809,6 +837,18 @@ BX_CPU_C::LGDT_Ms(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    Bit16u limit_16;
+    Bit64u base_64;
+
+    read_virtual_word(i->seg, i->rm_addr, &limit_16);
+
+    read_virtual_qword(i->seg, i->rm_addr + 2, &base_64);
+
+    BX_CPU_THIS_PTR gdtr.limit = limit_16;
+    BX_CPU_THIS_PTR gdtr.base = base_64;
+    }
+  else
   if (i->os_32) {
     Bit16u limit_16;
     Bit32u base0_31;
@@ -870,18 +910,31 @@ BX_CPU_C::LIDT_Ms(BxInstruction_t *i)
     return;
     }
 
-  read_virtual_word(i->seg, i->rm_addr, &limit_16);
-
-  read_virtual_dword(i->seg, i->rm_addr + 2, &base_32);
-
-  BX_CPU_THIS_PTR idtr.limit = limit_16;
-
 #if BX_CPU_LEVEL >= 3
-  if (i->os_32)
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    Bit64u base_64;
+
+    read_virtual_word(i->seg, i->rm_addr, &limit_16);
+    read_virtual_qword(i->seg, i->rm_addr + 2, &base_64);
+
+    BX_CPU_THIS_PTR idtr.limit = limit_16;
+    BX_CPU_THIS_PTR idtr.base = base_64;
+    }
+  else if (i->os_32) {
+    read_virtual_word(i->seg, i->rm_addr, &limit_16);
+    read_virtual_dword(i->seg, i->rm_addr + 2, &base_32);
+
+    BX_CPU_THIS_PTR idtr.limit = limit_16;
     BX_CPU_THIS_PTR idtr.base = base_32;
+    }
   else
 #endif
-    BX_CPU_THIS_PTR idtr.base = base_32 & 0x00ffffff; /* ignore upper 8 bits */
+    {
+    read_virtual_word(i->seg, i->rm_addr, &limit_16);
+    read_virtual_dword(i->seg, i->rm_addr + 2, &base_32);
 
+    BX_CPU_THIS_PTR idtr.limit = limit_16;
+    BX_CPU_THIS_PTR idtr.base = base_32 & 0x00ffffff; /* ignore upper 8 bits */
+    }
 #endif
 }

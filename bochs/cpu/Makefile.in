@@ -77,7 +77,6 @@ OBJS32 = \
 	flag_ctrl.o \
 	io.o \
 	proc_ctrl.o \
-	protect_ctrl.o \
 	segment_ctrl.o \
 	string.o \
 	$(EXT_DEBUG_OBJS) \
@@ -103,6 +102,7 @@ OBJSXX = \
 	shift8.o \
 	arith8.o \
 	stack16.o \
+	protect_ctrl.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
