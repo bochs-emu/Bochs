@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.231 2003-11-27 01:36:55 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.232 2003-11-28 15:07:28 danielg4 Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2471,7 +2471,7 @@ AC_SUBST(INSTALL_PLUGINS_VAR)
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
 
-AC_OUTPUT(Makefile iodev/Makefile debug/Makefile bios/Makefile \
+AC_OUTPUT(Makefile iodev/Makefile bx_debug/Makefile bios/Makefile \
 	 cpu/Makefile memory/Makefile gui/Makefile \
 	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 fpu/Makefile doc/docbook/Makefile \

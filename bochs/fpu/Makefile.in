@@ -163,7 +163,7 @@ shr_Xsig.o: shr_Xsig.c fpu_emu.h fpu_system.h fpu_proto.h poly.h
 wm_shrx.o: wm_shrx.c fpu_emu.h fpu_system.h fpu_proto.h
 wm_sqrt.o: wm_sqrt.c exception.h fpu_emu.h fpu_system.h fpu_proto.h
 wmFPUemu_glue.o: wmFPUemu_glue.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
- ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+ ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
  ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/vga.h \

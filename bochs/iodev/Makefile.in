@@ -172,7 +172,7 @@ dist-clean: clean
 # and then again with an identical .lo rule.  The .lo rules are used when
 # building plugins.
 ###########################################
-biosdev.o: biosdev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+biosdev.o: biosdev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -186,7 +186,7 @@ biosdev.o: biosdev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-cdrom.o: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+cdrom.o: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -201,7 +201,7 @@ cdrom.o: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 cdrom_amigaos.o: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -215,7 +215,7 @@ cdrom_amigaos.o: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h scsi_commands.h
 cdrom_beos.o: cdrom_beos.@CPP_SUFFIX@ cdrom_beos.h
-cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -230,7 +230,7 @@ cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 crc32.o: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -243,7 +243,7 @@ crc32.o: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-devices.o: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+devices.o: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -257,7 +257,7 @@ devices.o: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-dma.o: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+dma.o: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -271,7 +271,7 @@ dma.o: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-eth.o: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+eth.o: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -286,7 +286,7 @@ eth.o: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_arpback.o: eth_arpback.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -300,7 +300,7 @@ eth_arpback.o: eth_arpback.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -314,7 +314,7 @@ eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_linux.o: eth_linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -328,7 +328,7 @@ eth_linux.o: eth_linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_null.o: eth_null.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -342,7 +342,7 @@ eth_null.o: eth_null.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_packetmaker.o: eth_packetmaker.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -355,7 +355,7 @@ eth_packetmaker.o: eth_packetmaker.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-eth_tap.o: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+eth_tap.o: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -370,7 +370,7 @@ eth_tap.o: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_tuntap.o: eth_tuntap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -384,7 +384,7 @@ eth_tuntap.o: eth_tuntap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_win32.o: eth_win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -398,7 +398,7 @@ eth_win32.o: eth_win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 extfpuirq.o: extfpuirq.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -411,7 +411,7 @@ extfpuirq.o: extfpuirq.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-floppy.o: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+floppy.o: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -426,7 +426,7 @@ floppy.o: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 gameport.o: gameport.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -440,7 +440,7 @@ gameport.o: gameport.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 guest2host.o: guest2host.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -453,7 +453,7 @@ guest2host.o: guest2host.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-harddrv.o: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+harddrv.o: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -467,7 +467,7 @@ harddrv.o: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-ioapic.o: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ioapic.o: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -481,7 +481,7 @@ ioapic.o: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-iodebug.o: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+iodebug.o: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -496,7 +496,7 @@ iodebug.o: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 keyboard.o: keyboard.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -509,7 +509,7 @@ keyboard.o: keyboard.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h scancodes.h
-ne2k.o: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ne2k.o: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -524,7 +524,7 @@ ne2k.o: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 parallel.o: parallel.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -537,7 +537,7 @@ parallel.o: parallel.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pci.o: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pci.o: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -551,7 +551,7 @@ pci.o: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pci2isa.o: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pci2isa.o: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -565,7 +565,7 @@ pci2isa.o: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pciusb.o: pciusb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pciusb.o: pciusb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -579,7 +579,7 @@ pciusb.o: pciusb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pcivga.o: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pcivga.o: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -593,7 +593,7 @@ pcivga.o: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pic.o: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pic.o: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -607,7 +607,7 @@ pic.o: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pit.o: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pit.o: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -622,7 +622,7 @@ pit.o: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 pit82c54.o: pit82c54.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -636,7 +636,7 @@ pit82c54.o: pit82c54.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h pit82c54.h
 pit_wrap.o: pit_wrap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -649,7 +649,7 @@ pit_wrap.o: pit_wrap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h pit_wrap.h
-sb16.o: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+sb16.o: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -664,7 +664,7 @@ sb16.o: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -677,7 +677,7 @@ scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h scancodes.h
-serial.o: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+serial.o: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -692,7 +692,7 @@ serial.o: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 serial_raw.o: serial_raw.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -706,7 +706,7 @@ serial_raw.o: serial_raw.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -720,7 +720,7 @@ slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h 
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 soundlnx.o: soundlnx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -734,7 +734,7 @@ soundlnx.o: soundlnx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 soundwin.o: soundwin.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -748,7 +748,7 @@ soundwin.o: soundwin.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 unmapped.o: unmapped.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -761,7 +761,7 @@ unmapped.o: unmapped.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-vga.o: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+vga.o: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -776,7 +776,7 @@ vga.o: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -789,7 +789,7 @@ virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-vmware3.o: vmware3.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+vmware3.o: vmware3.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -803,7 +803,7 @@ vmware3.o: vmware3.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-biosdev.lo: biosdev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+biosdev.lo: biosdev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -817,7 +817,7 @@ biosdev.lo: biosdev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debu
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-cdrom.lo: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+cdrom.lo: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -832,7 +832,7 @@ cdrom.lo: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h 
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 cdrom_amigaos.lo: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -846,7 +846,7 @@ cdrom_amigaos.lo: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h scsi_commands.h
 cdrom_beos.lo: cdrom_beos.@CPP_SUFFIX@ cdrom_beos.h
-cmos.lo: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+cmos.lo: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -861,7 +861,7 @@ cmos.lo: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 crc32.lo: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -874,7 +874,7 @@ crc32.lo: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-devices.lo: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+devices.lo: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -888,7 +888,7 @@ devices.lo: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debu
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-dma.lo: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+dma.lo: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -902,7 +902,7 @@ dma.lo: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-eth.lo: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+eth.lo: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -917,7 +917,7 @@ eth.lo: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_arpback.lo: eth_arpback.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -931,7 +931,7 @@ eth_arpback.lo: eth_arpback.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_fbsd.lo: eth_fbsd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -945,7 +945,7 @@ eth_fbsd.lo: eth_fbsd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_linux.lo: eth_linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -959,7 +959,7 @@ eth_linux.lo: eth_linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_null.lo: eth_null.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -973,7 +973,7 @@ eth_null.lo: eth_null.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_packetmaker.lo: eth_packetmaker.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -986,7 +986,7 @@ eth_packetmaker.lo: eth_packetmaker.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-eth_tap.lo: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+eth_tap.lo: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1001,7 +1001,7 @@ eth_tap.lo: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debu
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_tuntap.lo: eth_tuntap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1015,7 +1015,7 @@ eth_tuntap.lo: eth_tuntap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_win32.lo: eth_win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1029,7 +1029,7 @@ eth_win32.lo: eth_win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1042,7 +1042,7 @@ extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-floppy.lo: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+floppy.lo: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1057,7 +1057,7 @@ floppy.lo: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 gameport.lo: gameport.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1071,7 +1071,7 @@ gameport.lo: gameport.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 guest2host.lo: guest2host.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1084,7 +1084,7 @@ guest2host.lo: guest2host.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-harddrv.lo: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+harddrv.lo: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1098,7 +1098,7 @@ harddrv.lo: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debu
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-ioapic.lo: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ioapic.lo: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1112,7 +1112,7 @@ ioapic.lo: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-iodebug.lo: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+iodebug.lo: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1127,7 +1127,7 @@ iodebug.lo: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debu
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 keyboard.lo: keyboard.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1140,7 +1140,7 @@ keyboard.lo: keyboard.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h scancodes.h
-ne2k.lo: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ne2k.lo: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1155,7 +1155,7 @@ ne2k.lo: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 parallel.lo: parallel.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1168,7 +1168,7 @@ parallel.lo: parallel.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pci.lo: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pci.lo: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1182,7 +1182,7 @@ pci.lo: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pci2isa.lo: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pci2isa.lo: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1196,7 +1196,7 @@ pci2isa.lo: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debu
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pciusb.lo: pciusb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pciusb.lo: pciusb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1210,7 +1210,7 @@ pciusb.lo: pciusb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pcivga.lo: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pcivga.lo: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1224,7 +1224,7 @@ pcivga.lo: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pic.lo: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pic.lo: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1238,7 +1238,7 @@ pic.lo: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-pit.lo: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+pit.lo: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1253,7 +1253,7 @@ pit.lo: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 pit82c54.lo: pit82c54.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1267,7 +1267,7 @@ pit82c54.lo: pit82c54.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h pit82c54.h
 pit_wrap.lo: pit_wrap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1280,7 +1280,7 @@ pit_wrap.lo: pit_wrap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h pit_wrap.h
-sb16.lo: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+sb16.lo: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1295,7 +1295,7 @@ sb16.lo: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1308,7 +1308,7 @@ scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h scancodes.h
-serial.lo: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+serial.lo: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1323,7 +1323,7 @@ serial.lo: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 serial_raw.lo: serial_raw.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1337,7 +1337,7 @@ serial_raw.lo: serial_raw.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 slowdown_timer.lo: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1351,7 +1351,7 @@ slowdown_timer.lo: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 soundlnx.lo: soundlnx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1365,7 +1365,7 @@ soundlnx.lo: soundlnx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 soundwin.lo: soundwin.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1379,7 +1379,7 @@ soundwin.lo: soundwin.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 unmapped.lo: unmapped.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1392,7 +1392,7 @@ unmapped.lo: unmapped.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-vga.lo: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+vga.lo: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
@@ -1407,7 +1407,7 @@ vga.lo: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
@@ -1420,7 +1420,7 @@ virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-vmware3.lo: vmware3.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+vmware3.lo: vmware3.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \

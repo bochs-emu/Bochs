@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.131 2003-10-30 10:14:07 cbothamy Exp $
+$Id: user.dbk,v 1.132 2003-11-28 15:07:28 danielg4 Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -937,7 +937,7 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
   COPYING         configure*    install-x11-fonts*  patches/
   CVS/            configure.in  instrument/         pc_system.cc
   Makefile.in     cpu/          iodev/              pc_system.h
-  README          debug/        load32bitOShack.cc  state_file.cc
+  README          bx_debug/     load32bitOShack.cc  state_file.cc
   TESTFORM.txt    disasm/       logio.cc            state_file.h
   bios/           doc/          macintosh.txt       win32.txt
   bochs.h         docs-html/    main.cc
@@ -9406,7 +9406,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.131 2003-10-30 10:14:07 cbothamy Exp $
+        $Id: user.dbk,v 1.132 2003-11-28 15:07:28 danielg4 Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

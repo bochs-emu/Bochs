@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.69 2003-10-24 15:39:57 vruppert Exp $
+// $Id: wxdialog.cc,v 1.70 2003-11-28 15:07:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1835,12 +1835,12 @@ CpuRegistersDialog::CopyParamToGui ()
 // synchronous event called BX_SYNC_GET_DBG_COMMAND which is sent from
 // the simulation thread to wxWindows.  When the user chooses a debugger
 // action (step, continue, breakpoint, etc.) the simulation awakens and
-// interprets the event by calling a function in debug/dbg_main.cc.
+// interprets the event by calling a function in bx_debug/dbg_main.cc.
 //
 // The equivalent of a control-C is pressing the "Stop" button during
 // a long step or continue command.  This can be implemented by setting
 // bx_guard.interrupt_requested = 1, just like the SIGINT handler in
-// debug/dbg_main.cc does.
+// bx_debug/dbg_main.cc does.
 // 
 // input loop model is good.  Create a debugger input loop, possibly in
 // siminterface.

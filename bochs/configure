@@ -36123,7 +36123,7 @@ echo "${ECHO_T}no" >&6
 fi
 
 
-                                                                                                                                                                          ac_config_files="$ac_config_files Makefile iodev/Makefile debug/Makefile bios/Makefile cpu/Makefile memory/Makefile gui/Makefile disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile fpu/Makefile doc/docbook/Makefile build/linux/bochs-dlx bxversion.h build/macosx/Info.plist build/win32/nsis/Makefile build/win32/nsis/bochs.nsi"
+                                                                                                                                                                          ac_config_files="$ac_config_files Makefile iodev/Makefile bx_debug/Makefile bios/Makefile cpu/Makefile memory/Makefile gui/Makefile disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile fpu/Makefile doc/docbook/Makefile build/linux/bochs-dlx bxversion.h build/macosx/Info.plist build/win32/nsis/Makefile build/win32/nsis/bochs.nsi"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -36649,7 +36649,7 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "iodev/Makefile" ) CONFIG_FILES="$CONFIG_FILES iodev/Makefile" ;;
-  "debug/Makefile" ) CONFIG_FILES="$CONFIG_FILES debug/Makefile" ;;
+  "bx_debug/Makefile" ) CONFIG_FILES="$CONFIG_FILES bx_debug/Makefile" ;;
   "bios/Makefile" ) CONFIG_FILES="$CONFIG_FILES bios/Makefile" ;;
   "cpu/Makefile" ) CONFIG_FILES="$CONFIG_FILES cpu/Makefile" ;;
   "memory/Makefile" ) CONFIG_FILES="$CONFIG_FILES memory/Makefile" ;;

@@ -56,7 +56,7 @@ more than one simulator, command line options are delimited by
 </PRE>
 
 The first parameter is the address of a callback structure, whose type
-<I>bx_dbg_callback_t</I> is defined in debug/debug.h.  Most fields
+<I>bx_dbg_callback_t</I> is defined in bx_debug/debug.h.  Most fields
 are function pointers, though some are not.  Below, is a description
 of each field in the callback structure.
 
@@ -123,7 +123,7 @@ thus not available.
 <P><B>bx_bool (*set_reg)(unsigned reg, Bit32u val);</B>
 <P>Set a specific CPU register as determined by <I>reg</I> in the
 simulator to <I>val</I>.  The value of <I>reg</I> will be one of the
-defines, such as BX_DBG_REG_EAX defined in <I>debug/debug.h</I>.  The
+defines, such as BX_DBG_REG_EAX defined in <I>bx_debug/debug.h</I>.  The
 segment registers can only be set by this method in real mode.  This
 function should return a 1 if the operation is successful, and 0 if not.
 
@@ -134,11 +134,11 @@ as those passed into <I>set_reg()</I>
 
 <P><B>bx_bool (*set_cpu)(bx_dbg_cpu_t *cpu);</B>
 <P>Set all the registers in the CPU simulator to those in the structure
-<I>cpu</I>.  The <I>bx_dbg_cpu_t</I> structure is defined in debug/debug.h.
+<I>cpu</I>.  The <I>bx_dbg_cpu_t</I> structure is defined in bx_debug/debug.h.
 
 <P><B>bx_bool (*get_cpu)(bx_dbg_cpu_t *cpu);</B>
 <P>Get values for all the registers in the CPU simulator, and place them in
-the structure <I>cpu</I>.  The <I>bx_dbg_cpu_t</I> structure is defined in debug/debug.h.
+the structure <I>cpu</I>.  The <I>bx_dbg_cpu_t</I> structure is defined in bx_debug/debug.h.
 
 <P><B>unsigned       dirty_page_tbl_size;</B>
 <BR><B>unsigned char *dirty_page_tbl;</B>
