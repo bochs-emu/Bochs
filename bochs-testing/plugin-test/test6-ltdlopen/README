@@ -25,3 +25,24 @@ What I think I learned from test5:
 module1.lo: In function `module_init(void)':
 /home/bryce/bochs-testing/plugin-test/test6-execsymbols2/module1.cc:7: undefined reference to `import stub for register_module(char const *)'
 
+---------------------
+ltdl error
+Program received signal SIGSEGV, Segmentation fault.
+tryall_dlopen_module (handle=0x78f928, prefix=0x0, dirname=0x0, 
+dlname=0x100d2118 "cygmodule1-0.dll") at ltdl.c:1958
+1958      if (dirname[dirname_len -1] == '/')
+Current language:  auto; currently c
+(gdb) where
+#0  tryall_dlopen_module (handle=0x78f928, prefix=0x0, dirname=0x0, 
+    dlname=0x100d2118 "cygmodule1-0.dll") at ltdl.c:1958
+#1  0x1000249b in find_module (handle=0x78f928, dir=0x0, libdir=0x100d2190
+	"/home/bryce/bochs-testing/plugin-test/test6-ltdlopen/lib",
+	dlname=0x100d2118 "cygmodule1-0.dll", old_name=0x100d2130 "libmodule1.a",
+	installed=0) at ltdl.c:2024
+#2  0x100035f8 in try_dlopen (phandle=0x78f958, 
+    filename=0x78f98c "libmodule1.la") at ltdl.c:2798
+#3  0x100038a5 in lt_dlopen (filename=0x78f98c "libmodule1.la") at ltdl.c:2893
+#4  0x10001143 in load_module (fmt=0x100011fc "lib%s.la", 
+    name=0x100011f4 "module1") at main.cc:19
+#5  0x100012bb in main (argc=1, argv=0x100d0e60) at main.cc:46
+
