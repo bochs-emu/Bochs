@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.29 2002-12-04 21:09:36 vruppert Exp $
+// $Id: cmos.cc,v 1.30 2002-12-06 22:22:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.29 2002-12-04 21:09:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.30 2002-12-06 22:22:32 bdenney Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -332,7 +332,8 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
      case 0x07: // day of the month
      case 0x08: // month
      case 0x09: // year
-     case 0x32: // century
+     case 0x32: // century (IBM)
+     case 0x37: // century (IBM PS/2)
        //BX_INFO(("write reg 0x%02x: value = 0x%02x",
        //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
        BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
@@ -657,4 +658,8 @@ bx_cmos_c::update_clock()
   // update century
   century = (time_calendar->tm_year / 100) + 19;
   BX_CMOS_THIS s.reg[0x32] = ((century  / 10) << 4) | (century % 10);
+
+  // Raul Hudea pointed out that some bioses also use reg 0x37 for the century
+  // byte.  Tony Heller says this is critical in getting WinXP to run.
+  BX_CMOS_THIS s.reg[0x37] = BX_CMOS_THIS s.reg[0x32];
 }
