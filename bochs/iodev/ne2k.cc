@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.30 2002-03-08 08:33:37 bdenney Exp $
+// $Id: ne2k.cc,v 1.31 2002-03-09 00:28:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.30 2002-03-08 08:33:37 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.31 2002-03-09 00:28:07 bdenney Exp $"));
 	// nothing for now
 }
 
@@ -1153,6 +1153,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   }
 
   if ((io_len < 60) && !BX_NE2K_THIS s.RCR.runts_ok) {
+    BX_DEBUG(("rejected small packet, length %d", io_len));
     return;
   }
 
@@ -1234,7 +1235,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.30 2002-03-08 08:33:37 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.31 2002-03-09 00:28:07 bdenney Exp $"));
   BX_NE2K_THIS devices = d;
 
 
