@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.182 2002-11-15 22:56:37 bdenney Exp $
+// $Id: main.cc,v 1.183 2002-11-16 22:50:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1486,53 +1486,57 @@ int split_string_into_argv (
   for (p=buf; *p; p++) {
     if (*p!=' ') last_nonspace = p;
   }
-  *(last_nonspace+1) = 0;
+  if (last_nonspace != buf) *(last_nonspace+1) = 0;
   p = buf;
-  while (*p) {
+  bx_bool done = false;
+  while (!done) {
     //fprintf (stderr, "parsing '%c' with singlequote=%d, dblquote=%d\n", *p, in_single_quote, in_double_quote);
     switch (*p) {
-      case ' ':
-		if (in_double_quote || in_single_quote) 
-		  goto do_default;
-        *outp = 0;
-        //fprintf (stderr, "completed arg %d = '%s'\n", argc, argv[argc]);
-        argc++;
-		if (argc >= max_argv) {
-		  fprintf (stderr, "too many arguments. Increase MAX_ARGUMENTS\n");
-		  return -1;
-		}
-		argv[argc] = new char[MAX_ARGLEN];
-        outp = &argv[argc][0];
-		while (*p==' ') p++;
-        break;
-      case '"':
-		if (in_single_quote) goto do_default;
-	    in_double_quote = !in_double_quote;
-		p++;
-		break;
-      case '\'':
-		if (in_double_quote) goto do_default;
-	    in_single_quote = !in_single_quote;
-        p++;
-		break;
-	  do_default:
-      default:
-	    if (outp-&argv[argc][0] >= MAX_ARGLEN) {
-		  //fprintf (stderr, "command line arg %d exceeded max size %d\n", argc, MAX_ARGLEN);
-		  return -1;
-		}
-        *(outp++) = *(p++);
+    case '\0':
+      done = true;
+      // fall through into behavior for space
+    case ' ':
+      if (in_double_quote || in_single_quote) 
+        goto do_default;
+      *outp = 0;
+      //fprintf (stderr, "completed arg %d = '%s'\n", argc, argv[argc]);
+      argc++;
+      if (argc >= max_argv) {
+        fprintf (stderr, "too many arguments. Increase MAX_ARGUMENTS\n");
+        return -1;
+      }
+      argv[argc] = new char[MAX_ARGLEN];
+      outp = &argv[argc][0];
+      while (*p==' ') p++;
+      break;
+    case '"':
+      if (in_single_quote) goto do_default;
+      in_double_quote = !in_double_quote;
+      p++;
+      break;
+    case '\'':
+      if (in_double_quote) goto do_default;
+      in_single_quote = !in_single_quote;
+      p++;
+      break;
+    do_default:
+    default:
+      if (outp-&argv[argc][0] >= MAX_ARGLEN) {
+        //fprintf (stderr, "command line arg %d exceeded max size %d\n", argc, MAX_ARGLEN);
+        return -1;
+      }
+      *(outp++) = *(p++);
     }
   }
   if (in_single_quote) {
-	fprintf (stderr, "end of string with mismatched single quote (')\n");
-	return -1;
+    fprintf (stderr, "end of string with mismatched single quote (')\n");
+    return -1;
   }
   if (in_double_quote) {
-	fprintf (stderr, "end of string with mismatched double quote (\")\n");
-	return -1;
+    fprintf (stderr, "end of string with mismatched double quote (\")\n");
+    return -1;
   }
-  *argc_out = argc + 1;
+  *argc_out = argc;
   return 0;
 }
 
@@ -1572,7 +1576,7 @@ void RedirectIOToConsole ()
   setvbuf( stderr, NULL, _IONBF, 0 );
 }
 
-extern "C" int WinMain(
+int WINAPI WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
   LPSTR m_lpCmdLine, int nCmdShow)
@@ -1585,7 +1589,11 @@ extern "C" int WinMain(
   int max_argv = 20;
   bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
   split_string_into_argv (m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
-  return bxmain ();
+  int status = bxmain ();
+  fprintf (stderr, "\nBochs is exiting. Press ENTER when you're ready to close this window.\n");
+  char buf[16];
+  fgets (buf, sizeof(buf), stdin);
+  return status;
 }
 #endif
 
