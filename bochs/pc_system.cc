@@ -428,7 +428,7 @@ bx_pc_system_c::counter_timer_handler(void* this_ptr)
   void
 bx_pc_system_c::timebp_handler(void* this_ptr)
 {
-      BX_CPU_THIS_PTR break_point = BREAK_POINT_TIME;
+      BX_CPU(0)->break_point = BREAK_POINT_TIME;
       BX_DEBUG(( "Time breakpoint triggered\n" ));
 
       if (timebp_queue_size > 1) {

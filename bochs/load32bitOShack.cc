@@ -203,19 +203,19 @@ bx_load_linux_hack(void)
   BX_OUTP( 0xA1, 0xFB, 1 );
 
   // Disable interrupts and NMIs
-  BX_CPU_THIS_PTR eflags.if_ = 0;
+  BX_CPU(0)->eflags.if_ = 0;
   BX_OUTP( 0x70, 0x80, 1 );
 
   // Enter protected mode
-  BX_CPU_THIS_PTR cr0.pe = 1;
-  BX_CPU_THIS_PTR cr0.val32 |= 0x01;
+  BX_CPU(0)->cr0.pe = 1;
+  BX_CPU(0)->cr0.val32 |= 0x01;
 
   // Set up initial GDT
-  BX_CPU_THIS_PTR gdtr.limit = 0x400;
-  BX_CPU_THIS_PTR gdtr.base  = 0x00090400;
+  BX_CPU(0)->gdtr.limit = 0x400;
+  BX_CPU(0)->gdtr.base  = 0x00090400;
 
   // Jump to protected mode entry point
-  BX_CPU_THIS_PTR jump_protected( NULL, 0x10, 0x00100000 );
+  BX_CPU(0)->jump_protected( NULL, 0x10, 0x00100000 );
 }
 
   void
@@ -227,25 +227,25 @@ bx_load_null_kernel_hack(void)
   bx_load_kernel_image(bx_options.load32bitOSImage.path, 0x100000);
 
   // EIP deltas
-  BX_CPU_THIS_PTR prev_eip =
-  BX_CPU_THIS_PTR eip = 0x00100000;
+  BX_CPU(0)->prev_eip =
+  BX_CPU(0)->eip = 0x00100000;
 
   // CS deltas
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit = 0xFFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g   = 1; // page gran
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 1; // 32bit
+  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.base = 0x00000000;
+  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.limit = 0xFFFFF;
+  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;
+  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.g   = 1; // page gran
+  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 1; // 32bit
 
   // DS deltas
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit = 0xFFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = 0xFFFFFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.g   = 1; // page gran
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.d_b = 1; // 32bit
+  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.base = 0x00000000;
+  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.limit = 0xFFFFF;
+  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = 0xFFFFFFFF;
+  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.g   = 1; // page gran
+  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.d_b = 1; // 32bit
 
   // CR0 deltas
-  BX_CPU_THIS_PTR cr0.pe = 1; // protected mode
+  BX_CPU(0)->cr0.pe = 1; // protected mode
 }
 
   Bit32u

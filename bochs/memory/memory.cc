@@ -45,9 +45,10 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 
 #if BX_DEBUGGER
   // (mch) Check for physical write break points, TODO
+  // (bbd) Each breakpoint should have an associated CPU#, TODO
   for (int i = 0; i < num_write_watchpoints; i++)
         if (write_watchpoint[i] == a20addr) {
-              BX_CPU_THIS_PTR break_point = BREAK_POINT_WRITE;
+              BX_CPU(0)->break_point = BREAK_POINT_WRITE;
               break;
         }
 #endif
@@ -261,9 +262,10 @@ BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 
 #if BX_DEBUGGER
   // (mch) Check for physical read break points, TODO
+  // (bbd) Each breakpoint should have an associated CPU#, TODO
   for (int i = 0; i < num_read_watchpoints; i++)
         if (read_watchpoint[i] == a20addr) {
-              BX_CPU_THIS_PTR break_point = BREAK_POINT_READ;
+              BX_CPU(0)->break_point = BREAK_POINT_READ;
               break;
         }
 #endif

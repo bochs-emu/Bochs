@@ -596,19 +596,15 @@ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 
 
 #if BX_USE_SMF == 0
-// normal member functions. In methods of the class BX_CPU_C, you can use
-// the this pointer.  Outside the class, you need to use "BX_CPU." again.
+// normal member functions. In methods of the class BX_CPU_C, you must use
+// the "this" pointer.  Outside the class, you need to use "BX_CPU." again.
 // To distinguish, check BX_IN_CPU_METHOD, which is defined to be 1 at
 // the top of every file in the cpu subdir.
-#ifdef BX_IN_CPU_METHOD
-#  define BX_CPU_THIS_PTR  this->     /* for methods of BX_CPU only */
-#else
-#  define BX_CPU_THIS_PTR  BX_CPU(0)->    /* outside of BX_CPU methods */
-#endif
+#  define BX_CPU_THIS_PTR  this->
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
 #else
-#error BX_USE_SMF==1 will not work for a while
+#error BX_USE_SMF==1 has been temporarily broken by SMP changes
    // static member functions, use direct access
 #  define BX_CPU_THIS_PTR  BX_CPU.
 #  define BX_SMF           static
