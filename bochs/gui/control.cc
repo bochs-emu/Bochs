@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.55 2002-08-26 15:31:20 bdenney Exp $
+// $Id: control.cc,v 1.56 2002-08-27 16:27:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -223,17 +223,6 @@ ask_string (char *prompt, char *the_default, char *out)
 
 /******************************************************************/
 
-static char *ask_about_config_interface =
-"\n"
-"This version of Bochs has a prototype configuration interface.  Would\n"
-"you like to try it?\n"
-"\n"
-"If you choose yes, you can use a menu to choose configuration options.\n"
-"If you choose no, Bochs will read a bochsrc file and run as usual.\n"
-"Type yes or no: [yes] ";
-
-
-
 static char *startup_menu_prompt =
 "------------------------------\n"
 "Bochs Configuration: Main Menu\n"
@@ -252,7 +241,7 @@ static char *startup_menu_prompt =
 "press return three times to accept the default choices (shown in\n"
 "square brackets).\n"
 "\n"
-"You can also start bochs with the -nocp option to skip these menus.\n"
+"You can also start bochs with the -q option to skip these menus.\n"
 "\n"
 "1. Read options from...\n"
 "2. Edit options\n"
@@ -328,7 +317,7 @@ static char *runtime_menu_prompt =
 "Please choose one:  [12] ";
 
 char *menu_prompt_list[BX_CI_N_MENUS] = {
-  ask_about_config_interface,
+  NULL,
   startup_menu_prompt,
   startup_options_prompt,
   NULL,
