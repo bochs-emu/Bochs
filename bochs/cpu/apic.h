@@ -1,4 +1,4 @@
-//
+/////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -20,10 +20,12 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_CPU_APIC_H
 #  define BX_CPU_APIC_H 1
+
+#if BX_SUPPORT_APIC
 
 typedef enum {
   APIC_TYPE_NONE,
@@ -31,15 +33,21 @@ typedef enum {
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
 
-#define APIC_BASE_ADDR 0xfee00000 // default APIC address
+#define APIC_BASE_ADDR    0xfee00000  // default APIC address
 
-#if BX_SUPPORT_APIC
+#if BX_CPU_LEVEL > 5
+#  define APIC_VERSION_ID 0x00040011  // P6
+#else
+#  define APIC_VERSION_ID 0x00340011
+#endif
+
+#define IOAPIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC
+
 class BOCHSAPI bx_generic_apic_c : public logfunctions {
 protected:
   Bit32u base_addr;
   Bit8u id;
 #define APIC_UNKNOWN_ID 0xff
-#define APIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC
 public:
   bx_generic_apic_c ();
   virtual ~bx_generic_apic_c ();
@@ -65,10 +73,21 @@ public:
   virtual bx_bool match_logical_addr (Bit8u address);
   virtual bx_apic_type_t get_type ();
   virtual void set_arb_id (int newid);  // only implemented on local apics
+  int apic_bus_arbitrate(Bit32u apic_mask);
+  int apic_bus_arbitrate_lowpri(Bit32u apic_mask);
+  void arbitrate_and_trigger(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode);
+  void arbitrate_and_trigger_one(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode);
 };
 
-class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c {
-#define BX_LOCAL_APIC_MAX_INTS 256
+class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c 
+{
+#define BX_LOCAL_APIC_NUM	BX_SMP_PROCESSORS
+#define BX_APIC_FIRST_VECTOR	0x10
+#define BX_APIC_LAST_VECTOR	0xfe
+#define BX_LOCAL_APIC_MAX_INTS  256
+
+#define APIC_LEVEL_TRIGGERED	1
+#define APIC_EDGE_TRIGGERED	0
   // TMR=trigger mode register.  Cleared for edge-triggered interrupts
   // and set for level-triggered interrupts.  If set, local APIC must send
   // EOI message to all other APICs.  EOI's are not implemented.
@@ -79,8 +98,14 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c {
   Bit8u irr[BX_LOCAL_APIC_MAX_INTS];
   // ISR=in-service register.  When an IRR bit is cleared, the corresponding
   // bit in ISR is set.  The ISR bit is cleared when
-  Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
-  Bit32u arb_id, arb_priority, task_priority, log_dest, dest_format, spurious_vec;
+  Bit8u  isr[BX_LOCAL_APIC_MAX_INTS];
+  Bit32u arb_id;
+  Bit32u arb_priority;
+  Bit32u task_priority;
+  Bit32u proc_priority;
+  Bit32u log_dest;
+  Bit32u dest_format;
+  Bit32u spurious_vec;
   Bit32u lvt[6];
 #define APIC_LVT_TIMER   0
 #define APIC_LVT_THERMAL 1
@@ -88,6 +113,17 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c {
 #define APIC_LVT_LINT0   3
 #define APIC_LVT_LINT1   4
 #define APIC_LVT_ERROR   5
+
+/* APIC delivery modes */
+#define APIC_DM_FIXED	0
+#define APIC_DM_LOWPRI	1
+#define APIC_DM_SMI	2
+/* RESERVED		3 */
+#define APIC_DM_NMI	4
+#define APIC_DM_INIT	5
+#define APIC_DM_SIPI	6
+#define APIC_DM_EXTINT	7
+
   Bit32u timer_initial, timer_current, timer_divconf;
   bx_bool timer_active;  // internal state, not accessible from bus
   Bit32u timer_divide_counter, timer_divide_factor;
@@ -120,8 +156,8 @@ public:
   // on local APIC, trigger means raise the CPU's INTR line.  For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  virtual void trigger_irq (unsigned num, unsigned from);
-  virtual void untrigger_irq (unsigned num, unsigned from);
+  virtual void trigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
+  virtual void untrigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
   Bit8u acknowledge_int ();  // only the local CPU should call this
   int highest_priority_int (Bit8u *array);
   void service_local_apic ();
@@ -133,15 +169,22 @@ public:
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   Bit8u get_ppr ();
   Bit8u get_apr ();
+  Bit8u get_apr_lowpri();
+  bx_bool is_focus(Bit32u vector);
+  bx_bool bypass_irr_isr;
+  void adjust_arb_id(int winning_id);	// adjust the arbitration id after a bus arbitration
   static void periodic_smf(void *); // KPL
   void periodic(void); // KPL
   void set_divide_configuration (Bit32u value);
   virtual void update_msr_apicbase(Bit32u newaddr);
   virtual void set_arb_id (int newid);
-  };
+};
 
-#define APIC_MAX_ID 16
+#define APIC_MAX_ID 0xff
+#define APIC_ID_MASK 0xff
 extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
+extern bx_local_apic_c *local_apic_index[BX_LOCAL_APIC_NUM];
+
 #endif // if BX_SUPPORT_APIC
 
 #endif

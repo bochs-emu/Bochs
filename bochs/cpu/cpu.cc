@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.87 2004-09-13 20:48:10 sshwarts Exp $
+// $Id: cpu.cc,v 1.88 2004-09-15 21:48:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,6 +60,9 @@ const bx_bool bx_parity_lookup[256] = {
   };
 #endif
 
+#if BX_SUPPORT_APIC
+Bit32u BX_CPU_C::cpu_online_map = 0;
+#endif
 
 #if BX_SMP_PROCESSORS==1
 // single processor simulation, so there's one of everything
@@ -70,7 +73,6 @@ BOCHSAPI BX_MEM_C    bx_mem;
 BOCHSAPI BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
 BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 #endif
-
 
 
 // notes:
