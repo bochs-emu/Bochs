@@ -59,9 +59,6 @@ changes:
 TO DO BEFORE RELEASE 2.0:
 - convert remaining devices
 
-- #warnings should have #ifdef __GNUC__ or something around them so that
-  Psyon doesn't have to manually remove them.
-
 - maybe the implementation class for each plugin device should go into the .cc
   file instead of the header file.  If all their methods are called through
   the stub class virtual functions, and no external file has access to
