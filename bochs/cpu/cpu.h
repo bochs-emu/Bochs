@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.43 2002-09-12 18:52:14 bdenney Exp $
+// $Id: cpu.h,v 1.44 2002-09-12 20:00:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -309,6 +309,54 @@ typedef struct {
     BX_CPU_THIS_PTR eflags.val32 =                                           \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
   }
+  // end of #define
+
+#define DECLARE_8BIT_REGISTER_ACCESSORS(name)                                \
+  BX_SMF BX_CPP_INLINE Bit8u get_##name(void);                               \
+  BX_SMF BX_CPP_INLINE void  set_##name(Bit8u val);
+
+#define DECLARE_16BIT_REGISTER_ACCESSORS(name)                               \
+  BX_SMF BX_CPP_INLINE Bit16u get_##name(void);                              \
+  BX_SMF BX_CPP_INLINE void   set_##name(Bit16u val);
+
+#define DECLARE_32BIT_REGISTER_ACCESSORS(name)                               \
+  BX_SMF BX_CPP_INLINE Bit32u get_##name(void);                              \
+  BX_SMF BX_CPP_INLINE void   set_##name(Bit32u val);
+
+#define IMPLEMENT_8LBIT_REGISTER_ACCESSORS(name)                             \
+  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit8u val) {          \
+    BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name].word.byte.rl = val;          \
+  }                                                                          \
+  BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_##name(void) {              \
+    return (BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name].word.byte.rl);       \
+  }                                                                          
+  // end of #define
+
+#define IMPLEMENT_8HBIT_REGISTER_ACCESSORS(name)                             \
+  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit8u val) {          \
+    BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name-4].word.byte.rh = val;        \
+  }                                                                          \
+  BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_##name(void) {              \
+    return (BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name-4].word.byte.rh);     \
+  }                                                                          
+  // end of #define
+
+#define IMPLEMENT_16BIT_REGISTER_ACCESSORS(name)                             \
+  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit16u val) {         \
+    BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_##name].word.rx = val;              \
+  }                                                                          \
+  BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_##name(void) {             \
+    return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_##name].word.rx);           \
+  }                                                                          
+  // end of #define
+
+#define IMPLEMENT_32BIT_REGISTER_ACCESSORS(name)                             \
+  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit32u val) {         \
+    BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_##name].erx = val;                  \
+  }                                                                          \
+  BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_##name(void) {             \
+    return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_##name].erx);               \
+  }                                                                          
   // end of #define
 
 #if BX_CPU_LEVEL >= 2
@@ -1665,50 +1713,32 @@ public: // for now...
   BX_SMF BX_CPP_INLINE void set_PF(Boolean val);
   BX_SMF BX_CPP_INLINE void set_PF_base(Bit8u val);
 
-  BX_SMF BX_CPP_INLINE void set_AX(Bit16u ax);
-  BX_SMF BX_CPP_INLINE void set_BX(Bit16u bx);
-  BX_SMF BX_CPP_INLINE void set_CX(Bit16u cx);
-  BX_SMF BX_CPP_INLINE void set_DX(Bit16u dx);
-  BX_SMF BX_CPP_INLINE void set_SP(Bit16u sp);
-  BX_SMF BX_CPP_INLINE void set_BP(Bit16u bp);
-  BX_SMF BX_CPP_INLINE void set_SI(Bit16u si);
-  BX_SMF BX_CPP_INLINE void set_DI(Bit16u di);
+  DECLARE_8BIT_REGISTER_ACCESSORS(AL);
+  DECLARE_8BIT_REGISTER_ACCESSORS(AH);
+  DECLARE_8BIT_REGISTER_ACCESSORS(BL);
+  DECLARE_8BIT_REGISTER_ACCESSORS(BH);
+  DECLARE_8BIT_REGISTER_ACCESSORS(CL);
+  DECLARE_8BIT_REGISTER_ACCESSORS(CH);
+  DECLARE_8BIT_REGISTER_ACCESSORS(DL);
+  DECLARE_8BIT_REGISTER_ACCESSORS(DH);
 
-  BX_SMF BX_CPP_INLINE void set_AL(Bit8u  al);
-  BX_SMF BX_CPP_INLINE void set_AH(Bit8u  ah);
-  BX_SMF BX_CPP_INLINE void set_BL(Bit8u  bl);
-  BX_SMF BX_CPP_INLINE void set_BH(Bit8u  bh);
-  BX_SMF BX_CPP_INLINE void set_CL(Bit8u  cl);
-  BX_SMF BX_CPP_INLINE void set_CH(Bit8u  ch);
-  BX_SMF BX_CPP_INLINE void set_DL(Bit8u  dl);
-  BX_SMF BX_CPP_INLINE void set_DH(Bit8u  dh);
+  DECLARE_16BIT_REGISTER_ACCESSORS(AX);
+  DECLARE_16BIT_REGISTER_ACCESSORS(BX);
+  DECLARE_16BIT_REGISTER_ACCESSORS(CX);
+  DECLARE_16BIT_REGISTER_ACCESSORS(DX);
+  DECLARE_16BIT_REGISTER_ACCESSORS(SP);
+  DECLARE_16BIT_REGISTER_ACCESSORS(BP);
+  DECLARE_16BIT_REGISTER_ACCESSORS(SI);
+  DECLARE_16BIT_REGISTER_ACCESSORS(DI);
 
-  BX_SMF BX_CPP_INLINE Bit8u get_AL(void);
-  BX_SMF BX_CPP_INLINE Bit8u get_AH(void);
-  BX_SMF BX_CPP_INLINE Bit8u get_BL(void);
-  BX_SMF BX_CPP_INLINE Bit8u get_BH(void);
-  BX_SMF BX_CPP_INLINE Bit8u get_CL(void);
-  BX_SMF BX_CPP_INLINE Bit8u get_CH(void);
-  BX_SMF BX_CPP_INLINE Bit8u get_DL(void);
-  BX_SMF BX_CPP_INLINE Bit8u get_DH(void);
-
-  BX_SMF BX_CPP_INLINE Bit16u get_AX(void);
-  BX_SMF BX_CPP_INLINE Bit16u get_BX(void);
-  BX_SMF BX_CPP_INLINE Bit16u get_CX(void);
-  BX_SMF BX_CPP_INLINE Bit16u get_DX(void);
-  BX_SMF BX_CPP_INLINE Bit16u get_SP(void);
-  BX_SMF BX_CPP_INLINE Bit16u get_BP(void);
-  BX_SMF BX_CPP_INLINE Bit16u get_SI(void);
-  BX_SMF BX_CPP_INLINE Bit16u get_DI(void);
-
-  BX_SMF BX_CPP_INLINE Bit32u get_EAX(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_EBX(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_ECX(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_EDX(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_ESP(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_EBP(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_ESI(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_EDI(void);
+  DECLARE_32BIT_REGISTER_ACCESSORS(EAX);
+  DECLARE_32BIT_REGISTER_ACCESSORS(EBX);
+  DECLARE_32BIT_REGISTER_ACCESSORS(ECX);
+  DECLARE_32BIT_REGISTER_ACCESSORS(EDX);
+  DECLARE_32BIT_REGISTER_ACCESSORS(ESP);
+  DECLARE_32BIT_REGISTER_ACCESSORS(EBP);
+  DECLARE_32BIT_REGISTER_ACCESSORS(ESI);
+  DECLARE_32BIT_REGISTER_ACCESSORS(EDI);
 
   BX_SMF BX_CPP_INLINE Bit8u  get_CPL(void);
   BX_SMF BX_CPP_INLINE Bit32u get_EIP(void);
@@ -1745,57 +1775,40 @@ BX_SMF BX_CPP_INLINE int BX_CPU_C_PREFIX which_cpu(void)
 #endif
 }
 
-#if defined(NEED_CPU_REG_SHORTCUTS)
+IMPLEMENT_8LBIT_REGISTER_ACCESSORS(AL);
+IMPLEMENT_8HBIT_REGISTER_ACCESSORS(AH);
+IMPLEMENT_8LBIT_REGISTER_ACCESSORS(BL);
+IMPLEMENT_8HBIT_REGISTER_ACCESSORS(BH);
+IMPLEMENT_8LBIT_REGISTER_ACCESSORS(CL);
+IMPLEMENT_8HBIT_REGISTER_ACCESSORS(CH);
+IMPLEMENT_8LBIT_REGISTER_ACCESSORS(DL);
+IMPLEMENT_8HBIT_REGISTER_ACCESSORS(DH);
 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; }
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; }
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CX(Bit16u cx) { CX = cx; }
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DX(Bit16u dx) { DX = dx; }
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SP(Bit16u sp) { SP = sp; }
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BP(Bit16u bp) { BP = bp; }
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SI(Bit16u si) { SI = si; }
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DI(Bit16u di) { DI = di; } 
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(AX);
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(BX);
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(CX);
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(DX);
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(SP);
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(BP);
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(SI);
+IMPLEMENT_16BIT_REGISTER_ACCESSORS(DI);
 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AL(Bit8u  al) { AL = al; } 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AH(Bit8u  ah) { AH = ah; } 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BL(Bit8u  bl) { BL = bl; } 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BH(Bit8u  bh) { BH = bh; } 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CL(Bit8u  cl) { CL = cl; } 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CH(Bit8u  ch) { CH = ch; } 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DL(Bit8u  dl) { DL = dl; } 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DH(Bit8u  dh) { DH = dh; } 
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(EAX);
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(EBX);
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(ECX);
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(EDX);
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(ESP);
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(EBP);
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(ESI);
+IMPLEMENT_32BIT_REGISTER_ACCESSORS(EDI);
 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_AL(void) { return(AL); } 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_AH(void) { return(AH); } 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_BL(void) { return(BL); } 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_BH(void) { return(BH); } 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CL(void) { return(CL); } 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CH(void) { return(CH); } 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_DL(void) { return(DL); } 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_DH(void) { return(DH); } 
+BX_SMF BX_CPP_INLINE Bit8u  BX_CPU_C_PREFIX get_CPL(void) { 
+   return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); 
+} 
 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_AX(void) { return(AX); } 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BX(void) { return(BX); } 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_CX(void) { return(CX); } 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DX(void) { return(DX); } 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SP(void) { return(SP); } 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BP(void) { return(BP); } 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SI(void) { return(SI); } 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DI(void) { return(DI); } 
-
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EAX(void) { return(EAX); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBX(void) { return(EBX); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ECX(void) { return(ECX); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDX(void) { return(EDX); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESP(void) { return(ESP); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBP(void) { return(EBP); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESI(void) { return(ESI); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDI(void) { return(EDI); } 
-
-BX_SMF BX_CPP_INLINE Bit8u  BX_CPU_C_PREFIX get_CPL(void) { return(CPL); } 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EIP(void) { return(EIP); } 
-
-#endif /* defined(NEED_CPU_REG_SHORTCUTS) */
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EIP(void) { 
+   return (BX_CPU_THIS_PTR eip); 
+} 
 
 BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
    return (BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
