@@ -272,20 +272,11 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RDX = get_std_cpuid_features ();
       break;
 
-#if 0
-#if BX_CPU_LEVEL >= 6
-    case 2:
-      RAX = 0;  // cache and TLB information (still not implemented)
-      RBX = 0;  // cache and TLB information (still not implemented)
-      RCX = 0;  // cache and TLB information (still not implemented)
-      RDX = 0;  // cache and TLB information (still not implemented)
-#endif
-#endif
-
-    // Here should be extended information for Pentum 4 processor
-    // still not implemented ...
+#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_SSE >= 2
 
 #if BX_SUPPORT_X86_64
+    // Extended information for AMD Athlon processor
+
     // x86-64 functions
     case 0x80000000:
       // max function supported.
@@ -333,14 +324,75 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RCX = 0;
       break;
 
+    // Processor Brand String, use the value given 
+    // in AMD manuals.
+    case 0x80000002:
+      RAX = 0x20444D41; // "AMD "
+      RBX = 0x6C687441; // "Athl"
+      RCX = 0x74286E6F; // "on(t"
+      RDX = 0x7020296D; // "m) p"
+      break;
+    case 0x80000003:
+      RAX = 0x65636F72; // "roce"
+      RBX = 0x6C687441; // "ssor"
+      RCX = 0x00000000;
+      RDX = 0x00000000;
+      break;
+    case 0x80000004:
+      RAX = 0x00000000;
+      RBX = 0x00000000;
+      RCX = 0x00000000;
+      RDX = 0x00000000;
+      break;
+
     case 0x80000008:
       // virtual & phys address size in low 2 bytes.
-      RAX = 0x00003028;
+      RAX = 0x00003020; // 48-bit virtual address and 32 bit physical
       RBX = 0;
       RCX = 0;
       RDX = 0; // Reserved, undefined
       break;
-#endif  // #if BX_SUPPORT_X86_64
+#else
+    // Extended information for Intel P4 processor
+    case 0x80000000:
+      // max function supported.
+      RAX = 0x80000004;
+      RBX = 0x756e6547; // "Genu"
+      RDX = 0x49656e69; // "ineI"
+      RCX = 0x6c65746e; // "ntel"
+      break;
+
+    case 0x80000001:    // Reserved
+      RAX = 0;
+      RBX = 0;
+      RCX = 0;
+      RDX = 0;
+      break;
+
+    // Processor Brand String, use the value that is returned
+    // by the first processor in the Pentium 4 family 
+    // (according to Intel manual)
+    case 0x80000002:
+      RAX = 0x20202020;	// "    "
+      RBX = 0x20202020; // "    "
+      RCX = 0x20202020; // "    "
+      RCX = 0x6E492020; // "  In"
+      break;
+    case 0x80000003:
+      RAX = 0x286C6574;	// "tel("
+      RBX = 0x50202952; // "R) P"
+      RCX = 0x69746E65; // "enti"
+      RCX = 0x52286D75; // "um(R"
+      break;
+    case 0x80000004:
+      RAX = 0x20342029;	// ") 4 "
+      RBX = 0x20555043; // "CPU "
+      RCX = 0x20202020; // "    "
+      RCX = 0x00202020; // "    "
+      break;
+#endif
+
+#endif
 
     default:
       RAX = 0;
