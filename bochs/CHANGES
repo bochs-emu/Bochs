@@ -9,7 +9,7 @@ Changes in 2.0.2 (January 21, 2003):
 - fix .bochsrc parsing (Volker)
 - fix vga resize/redraw problems (Volker)
 - fix compilation issues on Irix and Tru64 (Christophe)
-- fix MMX/SSE bugs (Stanislav)
+- fix MMX/SSE bugs (Stanislav, Peter Tattam)
 
 -------------------------------------------------------------------------
 Changes in 2.0.1 (January 4, 2003):
