@@ -142,24 +142,10 @@ biosdev.o: biosdev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
-cdrom_amigaos.o: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
- ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
- ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
- ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
- ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
- ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
- ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
- ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
- ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h \
- scsi_commands.h
-cdrom_beos.o: cdrom_beos.@CPP_SUFFIX@ cdrom_beos.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 cdrom.o: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -168,10 +154,22 @@ cdrom.o: cdrom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
+cdrom_amigaos.o: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+ ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
+ ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
+ ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
+ ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
+ ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
+ ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
+ ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h scsi_commands.h
+cdrom_beos.o: cdrom_beos.@CPP_SUFFIX@ cdrom_beos.h
 cdrom_osx.o: cdrom_osx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -180,10 +178,10 @@ cdrom_osx.o: cdrom_osx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -192,9 +190,8 @@ cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 crc32.o: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -204,10 +201,10 @@ crc32.o: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 devices.o: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -216,10 +213,10 @@ devices.o: devices.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 dma.o: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -228,9 +225,19 @@ dma.o: dma.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
+eth.o: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
+ ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
+ ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
+ ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
+ ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 eth_arpback.o: eth_arpback.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -240,21 +247,9 @@ eth_arpback.o: eth_arpback.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
-eth.o: eth.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
- ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
- ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
- ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
- ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
- ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
- ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -264,10 +259,10 @@ eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 eth_linux.o: eth_linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -276,10 +271,10 @@ eth_linux.o: eth_linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 eth_null.o: eth_null.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -288,10 +283,10 @@ eth_null.o: eth_null.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 eth_packetmaker.o: eth_packetmaker.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../debug/debug.h ../bxversion.h ../gui/siminterface.h \
  ../state_file.h ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h \
@@ -301,9 +296,8 @@ eth_packetmaker.o: eth_packetmaker.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../iodev/floppy.h ../iodev/harddrv.h ../iodev/cdrom.h \
  ../iodev/keyboard.h ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h \
  ../iodev/pit_wrap.h ../iodev/pit82c54.h ../iodev/serial.h \
- ../iodev/sb16.h ../iodev/soundlnx.h ../iodev/soundwin.h \
  ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
- ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 eth_tap.o: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -313,10 +307,10 @@ eth_tap.o: eth_tap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 eth_tuntap.o: eth_tuntap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -325,10 +319,10 @@ eth_tuntap.o: eth_tuntap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 eth_win32.o: eth_win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -337,10 +331,10 @@ eth_win32.o: eth_win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 floppy.o: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -349,9 +343,8 @@ floppy.o: floppy.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 harddrv.o: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -361,10 +354,10 @@ harddrv.o: harddrv.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 ioapic.o: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -373,9 +366,8 @@ ioapic.o: ioapic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 iodebug.o: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -385,10 +377,10 @@ iodebug.o: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 keyboard.o: keyboard.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -397,11 +389,10 @@ keyboard.o: keyboard.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h \
- scancodes.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h scancodes.h
 ne2k.o: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -410,9 +401,8 @@ ne2k.o: ne2k.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 parallel.o: parallel.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -422,22 +412,10 @@ parallel.o: parallel.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
-pci2isa.o: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
- ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
- ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
- ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
- ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
- ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
- ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
- ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
- ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 pci.o: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -446,9 +424,20 @@ pci.o: pci.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
+pci2isa.o: pci2isa.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+ ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
+ ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
+ ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
+ ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
+ ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
+ ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
+ ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
+ ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 pic.o: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
@@ -458,9 +447,19 @@ pic.o: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
+pit.o: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
+ ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
+ ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
+ ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
+ ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 pit82c54.o: pit82c54.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -470,22 +469,10 @@ pit82c54.o: pit82c54.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h pit82c54.h
-pit.o: pit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
- ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
- ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
- ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
- ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
- ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
- ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
- ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h pit82c54.h
 pit_wrap.o: pit_wrap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -494,10 +481,10 @@ pit_wrap.o: pit_wrap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h pit_wrap.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h pit_wrap.h
 sb16.o: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -506,9 +493,8 @@ sb16.o: sb16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -518,11 +504,10 @@ scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h \
- scancodes.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h scancodes.h
 serial.o: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -531,9 +516,8 @@ serial.o: serial.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 serial_raw.o: serial_raw.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -543,10 +527,10 @@ serial_raw.o: serial_raw.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -555,10 +539,10 @@ slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h 
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 soundlnx.o: soundlnx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -567,10 +551,10 @@ soundlnx.o: soundlnx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 soundwin.o: soundwin.@CPP_SUFFIX@
 unmapped.o: unmapped.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
@@ -580,10 +564,10 @@ unmapped.o: unmapped.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
- ../iodev/pit82c54.h ../iodev/serial.h ../iodev/sb16.h \
- ../iodev/soundlnx.h ../iodev/soundwin.h ../iodev/unmapped.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
- ../iodev/slowdown_timer.h ../instrument/stubs/instrument.h
+ ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h
 vga.o: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -592,7 +576,6 @@ vga.o: vga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
- ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h \
- ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
