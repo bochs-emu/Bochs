@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.3 2002-11-09 14:12:10 cbothamy Exp $
+// $Id: textconfig.cc,v 1.4 2002-11-15 13:26:15 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -426,6 +426,7 @@ int bx_config_interface (int menu)
        if (ask_uint (startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 1:
+	   fprintf (stderr, "I reset all options back to their factory defaults.\n\n");
 	   SIM->reset_all_param ();
 	   break;
 	 case 2: 
