@@ -34,6 +34,7 @@
 static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
 static const Bit8u broadcast_mac[]={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+static const Bit8u ethtype_arp[]={0x08, 0x06, 0x00};
 
 #define MAX_FRAME_SIZE 2048
 
@@ -112,7 +113,8 @@ void
 bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   if(io_len<MAX_FRAME_SIZE) {
-    if((!memcmp(buf, external_mac, 6)) || (!memcmp(buf, broadcast_mac, 6)) ) {
+    if(( (!memcmp(buf, external_mac, 6)) || (!memcmp(buf, broadcast_mac, 6)) )
+       && (!memcmp(((Bit8u *)buf)+12, ethtype_arp, 2)) ) {
       Bit32u tempcrc;
       memcpy(arpbuf,buf,io_len); //move to temporary buffer
       memcpy(arpbuf, arpbuf+6, 6); //set destination to sender
@@ -123,7 +125,7 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
       arpbuf[21]=2; //make this a reply and not a request
       tempcrc=mycrc.get_CRC(arpbuf,io_len);
       memcpy(arpbuf+io_len, &tempcrc, 4);
-      buflen=io_len+4;
+      buflen=io_len/*+4*/;
       bufvalid=1;
     }
   }
