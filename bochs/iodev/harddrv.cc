@@ -95,7 +95,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.26 2001-08-13 15:58:35 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.27 2001-08-15 20:54:36 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1623,15 +1623,18 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
 	  break;
 	
-	// win2K uses 0xe7, but what is it???
-	// This can be used temporarily to avoid panics.
+	// flush cache.  We don't have a cache!
+	// This is showing up in win2000 and freebsd.
 	case 0xe7:
-	  BX_INFO(("IO write(1f7h): command 0xe7 : WHAT IS THIS?"));
+	  BX_INFO(("IO write(1f7h): flush cache ignored"));
           command_aborted(value);
           break;
 
         default:
           BX_PANIC(("IO write(1f7h): command 0x%02x", (unsigned) value));
+	  // if user foolishly decides to continue, abort the command
+	  // so that the software knows the drive didn't understand it.
+          command_aborted(value);
         }
       break;
 
