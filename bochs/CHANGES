@@ -36,7 +36,7 @@ Changes in 2.1 (July ??, 2003):
 
 [+] Add emulation of SSE3 (PNI) instructions
 
-  Currently we have only 3 PNI opcodes still not implemented:
+  Currently only 3 PNI opcodes still not implemented:
 
 	FISTTP m16int, FISTTP m32int, FISTTP m64int
 

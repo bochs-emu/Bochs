@@ -199,7 +199,7 @@ static Bit32u get_std_cpuid_features()
       features |= (1<<13);  // Support Global pages.
 #endif
 #if BX_SupportPAE
-      features |= (1<< 6);   // Support PAE.
+      features |= (1<< 6);  // Support PAE.
 #endif
 
 #if BX_SUPPORT_SEP
