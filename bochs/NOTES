@@ -1326,3 +1326,17 @@ doesn't really do the right thing.  Try
 and then step into bx_dbg_timebp_command.  It thinks the diff is negative,
 when it certainly shouldn't be.  By the time you are in bx_dbg_timebp_command,
 the correctly-parsed 64-bit number is gone.
+
+
+Need checks for:
+
+#define BX_USE_GCC_ATTRIBUTES 0
+#define BX_CONTEXT_SUPPORT 0
+empty structs, etc.
+
+inline function in FPU header files are included over and over in each .o,
+which leads to multiple symbol definitions.  One simple solution is to
+say "static inline" instead of "extern inline".  Then if the compiler
+does not do inline, at least it doesn't export the symbol and cause a 
+conflict.  The result is a copy of the inlined function in each .c
+file.  I'm sure there are better ways.
