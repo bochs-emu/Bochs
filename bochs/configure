@@ -2458,18 +2458,76 @@ else
 fi
 done
 
+for ac_func in strdup
+do
+echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
+echo "configure:2465: checking for $ac_func" >&5
+if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 2470 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char $ac_func();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+$ac_func();
+#endif
+
+; return 0; }
+EOF
+if { (eval echo configure:2493: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=no"
+fi
+rm -f conftest*
+fi
+
+if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_func=HAVE_`echo $ac_func | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_func 1
+EOF
+ cat >> confdefs.h <<\EOF
+#define BX_HAVE_STRDUP 1
+EOF
+
+else
+  echo "$ac_t""no" 1>&6
+fi
+done
+
 
 echo $ac_n "checking if compiler allows empty structs""... $ac_c" 1>&6
-echo "configure:2464: checking if compiler allows empty structs" >&5
+echo "configure:2522: checking if compiler allows empty structs" >&5
 cat > conftest.$ac_ext <<EOF
-#line 2466 "configure"
+#line 2524 "configure"
 #include "confdefs.h"
 
 int main() {
 typedef struct { } junk;
 ; return 0; }
 EOF
-if { (eval echo configure:2473: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2531: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -2487,16 +2545,16 @@ fi
 rm -f conftest*
 
 echo $ac_n "checking if compiler allows __attribute__""... $ac_c" 1>&6
-echo "configure:2491: checking if compiler allows __attribute__" >&5
+echo "configure:2549: checking if compiler allows __attribute__" >&5
 cat > conftest.$ac_ext <<EOF
-#line 2493 "configure"
+#line 2551 "configure"
 #include "confdefs.h"
 
 int main() {
 typedef struct { } __attribute__ ((packed)) junk;
 ; return 0; }
 EOF
-if { (eval echo configure:2500: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2558: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -2522,16 +2580,16 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
 
 echo $ac_n "checking for hash_map.h""... $ac_c" 1>&6
-echo "configure:2526: checking for hash_map.h" >&5
+echo "configure:2584: checking for hash_map.h" >&5
 cat > conftest.$ac_ext <<EOF
-#line 2528 "configure"
+#line 2586 "configure"
 #include "confdefs.h"
 #include <hash_map.h>
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:2535: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2593: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   
      echo "$ac_t""yes" 1>&6
@@ -2549,16 +2607,16 @@ fi
 rm -f conftest*
 
 echo $ac_n "checking if compiler allows blank labels""... $ac_c" 1>&6
-echo "configure:2553: checking if compiler allows blank labels" >&5
+echo "configure:2611: checking if compiler allows blank labels" >&5
 cat > conftest.$ac_ext <<EOF
-#line 2555 "configure"
+#line 2613 "configure"
 #include "confdefs.h"
 
 int main() {
  { label1: } 
 ; return 0; }
 EOF
-if { (eval echo configure:2562: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2620: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -2583,7 +2641,7 @@ cross_compiling=$ac_cv_prog_cc_cross
 
 
 echo $ac_n "checking for cpu level""... $ac_c" 1>&6
-echo "configure:2587: checking for cpu level" >&5
+echo "configure:2645: checking for cpu level" >&5
 # Check whether --enable-cpu-level or --disable-cpu-level was given.
 if test "${enable_cpu_level+set}" = set; then
   enableval="$enable_cpu_level"
@@ -2646,7 +2704,7 @@ fi
 
 
 echo $ac_n "checking for dynamic translation support""... $ac_c" 1>&6
-echo "configure:2650: checking for dynamic translation support" >&5
+echo "configure:2708: checking for dynamic translation support" >&5
 # Check whether --enable-dynamic or --disable-dynamic was given.
 if test "${enable_dynamic+set}" = set; then
   enableval="$enable_dynamic"
@@ -2719,7 +2777,7 @@ fi
 
 
 echo $ac_n "checking for NE2000 support""... $ac_c" 1>&6
-echo "configure:2723: checking for NE2000 support" >&5
+echo "configure:2781: checking for NE2000 support" >&5
 # Check whether --enable-ne2000 or --disable-ne2000 was given.
 if test "${enable_ne2000+set}" = set; then
   enableval="$enable_ne2000"
@@ -2754,7 +2812,7 @@ fi
 
 
 echo $ac_n "checking for i440FX PCI support""... $ac_c" 1>&6
-echo "configure:2758: checking for i440FX PCI support" >&5
+echo "configure:2816: checking for i440FX PCI support" >&5
 # Check whether --enable-pci or --disable-pci was given.
 if test "${enable_pci+set}" = set; then
   enableval="$enable_pci"
@@ -2789,7 +2847,7 @@ fi
 
 
 echo $ac_n "checking for port e9 hack""... $ac_c" 1>&6
-echo "configure:2793: checking for port e9 hack" >&5
+echo "configure:2851: checking for port e9 hack" >&5
 # Check whether --enable-port-e9-hack or --disable-port-e9-hack was given.
 if test "${enable_port_e9_hack+set}" = set; then
   enableval="$enable_port_e9_hack"
@@ -2820,7 +2878,7 @@ fi
 
 
 echo $ac_n "checking for use of .cpp as suffix""... $ac_c" 1>&6
-echo "configure:2824: checking for use of .cpp as suffix" >&5
+echo "configure:2882: checking for use of .cpp as suffix" >&5
 # Check whether --enable-cpp or --disable-cpp was given.
 if test "${enable_cpp+set}" = set; then
   enableval="$enable_cpp"
@@ -2862,7 +2920,7 @@ fi
 
 
 echo $ac_n "checking for Bochs internal debugger support""... $ac_c" 1>&6
-echo "configure:2866: checking for Bochs internal debugger support" >&5
+echo "configure:2924: checking for Bochs internal debugger support" >&5
 # Check whether --enable-debugger or --disable-debugger was given.
 if test "${enable_debugger+set}" = set; then
   enableval="$enable_debugger"
@@ -2900,7 +2958,7 @@ fi
 
 
 echo $ac_n "checking for disassembler support""... $ac_c" 1>&6
-echo "configure:2904: checking for disassembler support" >&5
+echo "configure:2962: checking for disassembler support" >&5
 # Check whether --enable-disasm or --disable-disasm was given.
 if test "${enable_disasm+set}" = set; then
   enableval="$enable_disasm"
@@ -2947,7 +3005,7 @@ fi
 
 
 echo $ac_n "checking for loader support""... $ac_c" 1>&6
-echo "configure:2951: checking for loader support" >&5
+echo "configure:3009: checking for loader support" >&5
 # Check whether --enable-loader or --disable-loader was given.
 if test "${enable_loader+set}" = set; then
   enableval="$enable_loader"
@@ -2985,7 +3043,7 @@ fi
 INSTRUMENT_DIR='instrument/stubs'
 
 echo $ac_n "checking for instrumentation support""... $ac_c" 1>&6
-echo "configure:2989: checking for instrumentation support" >&5
+echo "configure:3047: checking for instrumentation support" >&5
 # Check whether --enable-instrumentation or --disable-instrumentation was given.
 if test "${enable_instrumentation+set}" = set; then
   enableval="$enable_instrumentation"
@@ -3120,7 +3178,7 @@ fi
 
 
 echo $ac_n "checking for VGA emulation""... $ac_c" 1>&6
-echo "configure:3124: checking for VGA emulation" >&5
+echo "configure:3182: checking for VGA emulation" >&5
 # Check whether --enable-vga or --disable-vga was given.
 if test "${enable_vga+set}" = set; then
   enableval="$enable_vga"
@@ -3154,7 +3212,7 @@ fi
 
 
 echo $ac_n "checking for FPU emulation""... $ac_c" 1>&6
-echo "configure:3158: checking for FPU emulation" >&5
+echo "configure:3216: checking for FPU emulation" >&5
 FPU_VAR=''
 FPU_GLUE_OBJ=''
 # Check whether --enable-fpu or --disable-fpu was given.
@@ -3196,7 +3254,7 @@ fi
 
 
 echo $ac_n "checking for x86 debugger support""... $ac_c" 1>&6
-echo "configure:3200: checking for x86 debugger support" >&5
+echo "configure:3258: checking for x86 debugger support" >&5
 # Check whether --enable-x86-debugger or --disable-x86-debugger was given.
 if test "${enable_x86_debugger+set}" = set; then
   enableval="$enable_x86_debugger"
@@ -3232,7 +3290,7 @@ fi
 
 
 echo $ac_n "checking for CDROM support""... $ac_c" 1>&6
-echo "configure:3236: checking for CDROM support" >&5
+echo "configure:3294: checking for CDROM support" >&5
 # Check whether --enable-cdrom or --disable-cdrom was given.
 if test "${enable_cdrom+set}" = set; then
   enableval="$enable_cdrom"
@@ -3274,7 +3332,7 @@ fi
 
 
 echo $ac_n "checking for Sound Blaster 16 support""... $ac_c" 1>&6
-echo "configure:3278: checking for Sound Blaster 16 support" >&5
+echo "configure:3336: checking for Sound Blaster 16 support" >&5
 # Check whether --enable-sb16 or --disable-sb16 was given.
 if test "${enable_sb16+set}" = set; then
   enableval="$enable_sb16"
