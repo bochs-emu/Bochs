@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.81 2002-11-22 14:40:09 cbothamy Exp $
+// $Id: rombios.c,v 1.82 2002-11-25 21:30:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,6 +95,13 @@
 //   - the translation policy is defined in cmos regs 0x39 & 0x3a
 //
 // TODO :
+//   int09
+//     - I think the extended key check should really be done in
+//       int09, and int15/4f should be empty. I did not see any
+//       bug, but maybe some code hooking int15/4f could be 
+//       disoriented when receiving extented E0 scancode.
+//       I've got a patch for this to be applied after Bochs2.0
+//
 //   int74 
 //     - needs to be reworked.  Uses direct [bp] offsets. (?)
 //
@@ -926,10 +933,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.81 $";
-static char bios_date_string[] = "$Date: 2002-11-22 14:40:09 $";
+static char bios_cvs_version_string[] = "$Revision: 1.82 $";
+static char bios_date_string[] = "$Date: 2002-11-25 21:30:51 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.81 2002-11-22 14:40:09 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.82 2002-11-25 21:30:51 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8978,6 +8985,7 @@ int14_handler:
 .org 0xe82e
 int16_handler:
 
+  sti
   push  ds
   pushf
   pusha
