@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.56 2002-11-05 22:11:57 cbothamy Exp $
+$Id: user.dbk,v 1.57 2002-11-07 15:32:38 shap Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4229,7 +4229,9 @@ From here, you may use the following commands:
                               want the first instruction disassembled.
   set $disassemble_size = n   Tell debugger what segment size to use when
                               the "disassemble" command is used.  Use values
-                              of 16 or 32 for n.  Default is 32.
+                              of 0, 16 or 32 for n.  Value of 0 means
+			      "use segment size specified by current CS
+			      segment". Default is 0.
 
   set $auto_disassemble = n   Cause debugger to disassemble current instruction
                               every time execution stops if n=1.  Default is 0.

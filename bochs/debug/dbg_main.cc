@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.84 2002-10-28 07:03:02 bdenney Exp $
+// $Id: dbg_main.cc,v 1.85 2002-11-07 15:32:37 shap Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -263,7 +263,7 @@ bx_dbg_main(int argc, char *argv[])
   bx_debugger.fast_forward_mode = 0;
 #endif
   bx_debugger.auto_disassemble = 1;
-  bx_debugger.disassemble_size = 32;
+  bx_debugger.disassemble_size = 0;
   bx_debugger.default_display_format = 'x';
   bx_debugger.default_unit_size      = 'w';
   bx_debugger.default_addr = 0;
@@ -1320,7 +1320,7 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
     dbg_printf ( BX_HAVE_HASH_MAP_ERR);
     first = false;
   }
-  return "unknown context";
+  return "unk. ctxt";
 }
 
 char*
@@ -1442,7 +1442,7 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
     // Try global context
     cntx = context_t::get_context(0);
     if (!cntx) {
-      snprintf (buf, 80, "unknown context");
+      snprintf (buf, 80, "unk. ctxt");
       return buf;
     }
   }
@@ -2199,9 +2199,10 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
         bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
       }
+    dbg_printf ( "%-25s ; ", bx_disasm_tbuf);
     for (unsigned j=0; j<ilen; j++)
       dbg_printf ( "%02x", (unsigned) bx_disasm_ibuf[j]);
-    dbg_printf ( ": %s\n", bx_disasm_tbuf);
+    dbg_printf ( "\n");
 
     
     }
@@ -3070,7 +3071,7 @@ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     return;
     }
   else if ( !strcmp(symbol, "disassemble_size") ) {
-    if ( (val!=16) && (val!=32) ) {
+    if ( (val!=16) && (val!=32) && (val!=0) ) {
       dbg_printf ( "Error: disassemble_size must be 16 or 32.\n");
       return;
       }
@@ -3356,14 +3357,22 @@ bx_dbg_disassemble_command(bx_num_range range)
     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(range.from, &paddr, &paddr_valid);
 
     if (paddr_valid) {
+      unsigned dis_size = bx_debugger.disassemble_size;
+      if (dis_size == 0) {
+	dis_size = 16; 		// until otherwise proven
+	if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
+	  dis_size = 32;
+      }
       BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
-      ilen = bx_disassemble.disasm(bx_debugger.disassemble_size==32,
+      ilen = bx_disassemble.disasm(dis_size==32,
         range.from, bx_disasm_ibuf, bx_disasm_tbuf);
 
       dbg_printf ( "%08x: ", (unsigned) range.from);
+      dbg_printf ( "%-25s ; ", bx_disasm_tbuf);
+
       for (unsigned j=0; j<ilen; j++)
         dbg_printf ( "%02x", (unsigned) bx_disasm_ibuf[j]);
-      dbg_printf ( ": %s\n", bx_disasm_tbuf);
+      dbg_printf ( "\n");
       }
     else {
       dbg_printf ( "??? (physical address not available)\n");
