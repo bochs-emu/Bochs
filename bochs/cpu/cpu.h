@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.171 2004-08-14 19:34:02 sshwarts Exp $
+// $Id: cpu.h,v 1.172 2004-08-14 20:00:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3236,6 +3236,7 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 // OSZAP
 // *******************
 
+/* op1, op2, result */
 #define SET_FLAGS_OSZAP_SIZE(size, lf_op1, lf_op2, lf_result, ins) { \
     BX_CPU_THIS_PTR oszap.op1##size = lf_op1; \
     BX_CPU_THIS_PTR oszap.op2##size = lf_op2; \
@@ -3253,6 +3254,24 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAP_64(op1, op2, result, ins) \
     SET_FLAGS_OSZAP_SIZE(_64, op1, op2, result, ins)
+#endif
+
+/* result only */
+#define SET_FLAGS_OSZAP_RESULT_SIZE(size, lf_result, ins) { \
+    BX_CPU_THIS_PTR oszap.result##size = lf_result; \
+    BX_CPU_THIS_PTR oszap.instr = ins; \
+    BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
+}
+
+#define SET_FLAGS_OSZAP_RESULT_8(result, ins) \
+    SET_FLAGS_OSZAP_RESULT_SIZE(_8, result, ins)
+#define SET_FLAGS_OSZAP_RESULT_16(result, ins) \
+    SET_FLAGS_OSZAP_RESULT_SIZE(_16, result, ins)
+#define SET_FLAGS_OSZAP_RESULT_32(result, ins) \
+    SET_FLAGS_OSZAP_RESULT_SIZE(_32, result, ins)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAP_RESULT_64(result, ins) \
+    SET_FLAGS_OSZAP_RESULT_SIZE(_64, result, ins)
 #endif
 
 IMPLEMENT_EFLAGS_ACCESSORS()

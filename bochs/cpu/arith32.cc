@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.34 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: arith32.cc,v 1.35 2004-08-14 20:00:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
   setEFlagsOSZAP(flags32);
 #else
   Bit32u erx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
-  SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
+  SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_INC32);
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -64,7 +64,7 @@ BX_CPU_C::DEC_ERX(bxInstruction_c *i)
   setEFlagsOSZAP(flags32);
 #else
   Bit32u erx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx;
-  SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
+  SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_DEC32);
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -680,7 +680,7 @@ BX_CPU_C::INC_Ed(bxInstruction_c *i)
     Write_RMW_virtual_dword(op1_32);
     }
 
-  SET_FLAGS_OSZAP_32(0, 0, op1_32, BX_INSTR_INC32);
+  SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_INC32);
 }
 
 
@@ -700,7 +700,7 @@ BX_CPU_C::DEC_Ed(bxInstruction_c *i)
     Write_RMW_virtual_dword(op1_32);
     }
 
-  SET_FLAGS_OSZAP_32(0, 0, op1_32, BX_INSTR_DEC32);
+  SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_DEC32);
 }
 
 

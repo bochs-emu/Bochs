@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.14 2004-08-14 19:34:02 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.15 2004-08-14 20:00:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -250,7 +250,6 @@ bx_bool BX_CPU_C::get_CFLazy(void)
     }
 }
 
-
 bx_bool BX_CPU_C::get_AFLazy(void)
 {
   unsigned af;
@@ -401,7 +400,6 @@ bx_bool BX_CPU_C::get_AFLazy(void)
     }
 }
 
-
 bx_bool BX_CPU_C::get_ZFLazy(void)
 {
   unsigned zf;
@@ -517,7 +515,6 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
       return(0);
     }
 }
-
 
 bx_bool BX_CPU_C::get_SFLazy(void)
 {

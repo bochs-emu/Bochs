@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.17 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: arith64.cc,v 1.18 2004-08-14 20:00:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -658,7 +658,7 @@ BX_CPU_C::INC_Eq(bxInstruction_c *i)
       Write_RMW_virtual_qword(op1_64);
       }
 
-    SET_FLAGS_OSZAP_64(0, 0, op1_64, BX_INSTR_INC64);
+    SET_FLAGS_OSZAP_RESULT_64(op1_64, BX_INSTR_INC64);
 }
 
   void
@@ -685,7 +685,7 @@ BX_CPU_C::DEC_Eq(bxInstruction_c *i)
       Write_RMW_virtual_qword(op1_64);
       }
 
-    SET_FLAGS_OSZAP_64(0, 0, op1_64, BX_INSTR_DEC64);
+    SET_FLAGS_OSZAP_RESULT_64(op1_64, BX_INSTR_DEC64);
 }
 
   void

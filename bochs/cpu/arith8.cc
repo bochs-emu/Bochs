@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.27 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: arith8.cc,v 1.28 2004-08-14 20:00:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -405,7 +405,6 @@ BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
 #endif
 }
 
-
   void
 BX_CPU_C::ADD_EbIb(bxInstruction_c *i)
 {
@@ -439,12 +438,12 @@ BX_CPU_C::ADC_EbIb(bxInstruction_c *i)
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     sum = op1 + op2 + temp_CF;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     sum = op1 + op2 + temp_CF;
     Write_RMW_virtual_byte(sum);
-    }
+  }
 
   SET_FLAGS_OSZAPC_8_CF(op1, op2, sum, BX_INSTR_ADC8, temp_CF);
 }
@@ -461,12 +460,12 @@ BX_CPU_C::SUB_EbIb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     diff_8 = op1_8 - op2_8;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     diff_8 = op1_8 - op2_8;
     Write_RMW_virtual_byte(diff_8);
-    }
+  }
 
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB8);
 }
@@ -506,12 +505,12 @@ BX_CPU_C::NEG_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     diff_8 = 0 - op1_8;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     diff_8 = 0 - op1_8;
     Write_RMW_virtual_byte(diff_8);
-    }
+  }
 
   SET_FLAGS_OSZAPC_8(op1_8, 0, diff_8, BX_INSTR_NEG8);
 }
@@ -526,16 +525,15 @@ BX_CPU_C::INC_Eb(bxInstruction_c *i)
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     op1++;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     op1++;
     Write_RMW_virtual_byte(op1);
-    }
+  }
 
-  SET_FLAGS_OSZAP_8(0, 0, op1, BX_INSTR_INC8);
+  SET_FLAGS_OSZAP_RESULT_8(op1, BX_INSTR_INC8);
 }
-
 
   void
 BX_CPU_C::DEC_Eb(bxInstruction_c *i)
@@ -546,16 +544,15 @@ BX_CPU_C::DEC_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     op1_8--;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1_8);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     op1_8--;
     Write_RMW_virtual_byte(op1_8);
-    }
+  }
 
-  SET_FLAGS_OSZAP_8(0, 0, op1_8, BX_INSTR_DEC8);
+  SET_FLAGS_OSZAP_RESULT_8(op1_8, BX_INSTR_DEC8);
 }
-
 
   void
 BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
@@ -586,13 +583,13 @@ BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_byte(op2_8);
       }
-    }
+  }
   else {
     // ZF = 0
     set_ZF(0);
     // accumulator <-- dest
     AL = op1_8;
-    }
+  }
 
 #else
   BX_PANIC(("CMPXCHG_EbGb: not supported for cpulevel <= 3"));

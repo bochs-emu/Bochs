@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.31 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: arith16.cc,v 1.32 2004-08-14 20:00:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,9 +41,8 @@ BX_CPU_C::INC_RX(bxInstruction_c *i)
   asmInc16(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx, flags32);
   setEFlagsOSZAP(flags32);
 #else
-  Bit16u rx;
-  rx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
-  SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_INC16);
+  Bit16u rx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
+  SET_FLAGS_OSZAP_RESULT_16(rx, BX_INSTR_INC16);
 #endif
 }
 
@@ -55,9 +54,8 @@ BX_CPU_C::DEC_RX(bxInstruction_c *i)
   asmDec16(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx, flags32);
   setEFlagsOSZAP(flags32);
 #else
-  Bit16u rx;
-  rx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
-  SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_DEC16);
+  Bit16u rx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx;
+  SET_FLAGS_OSZAP_RESULT_16(rx, BX_INSTR_DEC16);
 #endif
 }
 
@@ -668,7 +666,7 @@ BX_CPU_C::INC_Ew(bxInstruction_c *i)
     Write_RMW_virtual_word(op1_16);
     }
 
-  SET_FLAGS_OSZAP_16(0, 0, op1_16, BX_INSTR_INC16);
+  SET_FLAGS_OSZAP_RESULT_16(op1_16, BX_INSTR_INC16);
 }
 
 
@@ -701,7 +699,7 @@ BX_CPU_C::DEC_Ew(bxInstruction_c *i)
   }
 
 #if !defined(BX_HostAsm_Dec16)
-  SET_FLAGS_OSZAP_16(0, 0, op1_16, BX_INSTR_DEC16);
+  SET_FLAGS_OSZAP_RESULT_16(op1_16, BX_INSTR_DEC16);
 #endif
 }
 
