@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.33 2002-03-08 17:04:03 bdenney Exp $
+$Id: user.dbk,v 1.34 2002-03-23 01:38:29 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -391,7 +391,7 @@ currently work with.
     <entry>CMOS functions</entry>
   </row>
   <row>
-    <entry>Dynamic Translation</entry>
+    <entry>Dynamic Translation/Virtualization</entry>
     <entry>No</entry>
     <entry>Because Bochs is designed to be portable, it does not attempt
     to do any dynamic code translation or virtualization.  See 
@@ -436,7 +436,7 @@ currently work with.
       <entry>Win32</entry>
       <entry>This port was done by David Ross and is now maintained
       by Don Becker.  You can compile with MS Visual C++ 5.0 or 6.0,
-      or cygwin<footnote>
+      or Cygwin<footnote>
 <para>Cygwin is a free Unix-like environment for Windows written by
 Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed it--<ulink url="http://www.cygwin.com">www.cygwin.com</ulink></para>
 </footnote>.
@@ -1188,21 +1188,23 @@ BIOSes, DLX linux, HTML docs and man pages, etc.
   <section><title>Standard Compile</title>
 <para>
 Bochs is written in C++, so you need a C++ compiler on your system.  Most
-platforms have been tested with GNU gcc/g++, but other compilers also work.
-By now, you should have unpacked your source TAR file or checked out Bochs from
-CVS.  If not, you can return to <link linkend="downloading">Downloading
-Bochs</link> for details.  The top level directory of the source code will be
-referred to as &bochsdir;.  (&bochsdir; contains the files
-<filename>bochs.h</filename> and <filename>main.cc</filename> and
-subdirectories <filename>cpu</filename> and <filename>bios</filename>.) 
+platforms have been tested with GNU gcc/g++, but other compilers are known
+to work too.  By now, you should have unpacked your source TAR file or checked
+out Bochs from CVS.  If not, you can return to <link
+linkend="downloading">Downloading Bochs</link> for details.  The top level
+directory of the source code will be referred to as &bochsdir;.  (&bochsdir;
+contains the files <filename>bochs.h</filename> and
+<filename>main.cc</filename> and subdirectories <filename>cpu</filename> and
+<filename>bios</filename>.) 
 </para>
 
 <para>
 The standard compile process has three basic steps:
 <command>configure</command>, <command>make</command>, and <command>make
 install</command>.  Each step is described in a separate section below.  The
-standard compile process is used on all Unix machines, MacOS X, BeOS, and Win32
-with Cygwin.  There are separate instructions for <link linkend="compiling-win32">compiling for Win32 with Microsoft VC++</link>.
+standard compile process is used on all Unix machines, MacOS X, BeOS, and 
+Cygwin (win32).  There are separate instructions for <link
+linkend="compiling-win32">compiling for Win32 with Microsoft VC++</link>.
 </para>
 
 <section id="configure"><title>Configure</title>
@@ -1214,18 +1216,19 @@ your system.  If you run <command>configure</command> with no arguments after
 it, defaults will be used for all settings.  To change the settings, you can
 run <command>configure</command> with options that override the 
 defaults.  You can get a list of valid configure options by typing
-<command>configure --help</command>.  All configure options are documented in a
-<link linkend="config-opts">later section</link>.  One useful configure
-option is --prefix=<replaceable>directory</replaceable>, which sets
-the directory in which Bochs will be installed.
+<command>configure --help</command>.  One useful configure option is
+--prefix=<replaceable>directory</replaceable>, which sets the directory in
+which Bochs will be installed.  All the possible configure options are
+documented in a <link linkend="config-opts">later section</link>.  
+
 
 </para>
 
 <para>
-Among other things, the configure script tries to guess your compiler and
-a set of compile options that work.  If you want to control this,
-set these environment variables before running configure:
-<varname>CC</varname>, <varname>CXX</varname>, <varname>CFLAGS</varname>,
+Among other things, the configure script tries to detect your platform
+and which compile options to use.  If you want to control this, set these
+environment variables before running configure: <varname>CC</varname>,
+<varname>CXX</varname>, <varname>CFLAGS</varname>,
 <varname>CXXFLAGS</varname>.  Here is an example that sets the environment
 variables, using bash/ksh<footnote>
 <para>
@@ -1245,27 +1248,25 @@ syntax:
 </para>
 
 <para>
-Once the <command>configure</command> script knows what options are selected,
+Once the configure script knows what options are selected,
 it creates a Makefile in every source code directory, and creates 
 <filename>$BOCHS/config.h</filename> with all the option values written
-as preprocessor #defines.  The sources are ready to compile.
+as preprocessor #defines.  Now the sources are ready to compile.
 </para>
 
 <section><title>Configure Shortcut Scripts</title>
 <para>
-In the Bochs source directory, there is a series of scripts called
+In the Bochs source directory, you will see a series of scripts called
 <filename>.conf.<replaceable>platform</replaceable></filename>.
-These scripts run <command>configure</command> script for you, with a set of
-options that appropriate for that platform.  On some platforms, configure
-cannot guess all the right options, so it is necessary to use the shortcut
-scripts instead of a plain configure command.  If a
-<filename>.conf.<replaceable>platform</replaceable></filename> file exists for
-your platform, you should probably use it.
+These scripts run the <command>configure</command> script for you, with a set of
+options that are appropriate for that platform.  It is not necessary to
+use the shortcut scripts; they are simply there to show you an example that
+the developers have used.
 
 <tip>
 <para>
 If a shortcut script is "almost right" for you, just edit it and then run it!
-If you use a shortcut script, you don't need to run configure manually.  
+If you run a shortcut script, you don't need to run configure manually.  
 </para>
 </tip>
 
@@ -1434,8 +1435,8 @@ other required files into a public place so that all users can use it.
 <para>
 The standard compile uses the configure script, but the Windows platform
 cannot run the configure script natively.
-The currently solution to this problem is that the Bochs
-configure script can be run on a different platform that does support
+The current solution to this problem is that the Bochs
+configure script must be run on a different platform that does support
 shell scripts, with options that cause it to configure for a Win32 
 platform instead of the native one.  Many people have access to a UNIX
 machine that could run the configure script, or you can use Cygwin to
@@ -1443,7 +1444,7 @@ run the configure script
 <footnote>
 <para>
 Because Bochs depends so much on the configure script, if you are doing
-much win32 Bochs development, you should consider downloading cygwin
+much win32 Bochs development, you should consider downloading Cygwin
 so that you can run the configure step natively.
 </para>
 </footnote>.
@@ -1472,20 +1473,31 @@ file.
 </para>
 
 <para>
+The following options are known to work in VC++, so they are enabled in the 
+configure shortcut file:
+<screen>
+  --enable-cdrom 
+  --enable-sb16=win 
+  --enable-ne2000
+  --enable-vbe
+</screen>
+</para>
+
+<para>
 When you have the Win32 sources transferred to a Windows machine with VC++,
 find the workspace file called <filename>bochs.dsw</filename> and load it in
 VC++.  Choose <command>Project:Set Active Project</command> and be sure that
 "bochs" is selected.  Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the
 auxilliary programs <filename>bximage.exe</filename> and
-<filename>niclist.exe</filename>.  The workspace compile method is new
-in version 1.3, so it has not had very long to be tested and tuned.  Using
-workspaces is easy and intuitive, but there is one caveat.  The workspaces
-are not currently integrated with configure.  Some configure options such
-as --enable-debugger need additional source files to be compiled, and
-for now you must add them to the VC++ workspace by hand.  If you add configure
-options and start having compile problems, try the nmake method (below)
-instead.  These problems should be fixed in future versions.
+<filename>niclist.exe</filename>.  Using workspaces is easy and intuitive, but
+there is one caveat.  The workspaces come directly out of a ZIP file in
+<filename>build/win32/workspace.zip</filename>, and they are not integrated
+with configure.  Some configure options such as --enable-debugger need
+additional source files to be compiled, and for now you must add them to the
+VC++ workspace by hand.  If you add configure options and have compile
+problems, try the nmake method (below) instead.  These problems may be fixed
+in future versions.  
 </para>
 
 <tip>
@@ -1495,7 +1507,7 @@ configure line in <filename>.conf.win32-vcpp</filename> before running it.
 Then when you have loaded the workspace file, you must add the debug and disasm
 libraries to the project dependency list.  Choose
 <command>Project:Dependencies</command> and make sure that debug and disasm are
-checked.
+checked.  Then build as usual.
 </para> </tip>
 
 <para>
@@ -1514,93 +1526,121 @@ future, a <command>make install</command> that runs in Cygwin may be provided.
 </section>  <!-- end of Compiling:win32 -->
 
 <section id="compile-cygwin"><title>Compiling on Win32 with Cygwin</title>
-<para>
 <para>Cygwin is a free Unix-like environment for Windows written by
 Steve Chamberlain and now maintained by RedHat, Inc.  You can download
 it from <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.  Because
 Cygwin supports the configure script and uses GNU gcc/g++, you can use the
-standard compile process.  A few compiler options are needed, so it is
-best to use the configure shortcut script called
-<filename>.conf.win32-cygwin</filename>.  Edit the shortcut script if you
-want to modify the configure options.  Then, to compile in Cygwin, just type:
+standard compile process.  The configure script should automatically detect
+Cygwin and add "-mno-cygwin -DWIN32" to the compiler options.  You should
+get a working Bochs if you just type:
+<screen>
+  configure
+  make
+</screen>
+
+Optionally, you can use the configure shortcut script for Cygwin,
+<filename>.conf.win32-cygwin</filename>, instead of running configure
+directly.  If this script is close to what you need, just edit the script and
+then run it.  To use the configure shortcut script and compile in Cygwin, the
+commands are
 <screen>
   sh .conf.win32-cygwin
   make
 </screen>
-These options are known to work in cygwin, so they are enabled in the configure shortcut file:
+These options are known to work in Cygwin, so they are enabled in the configure
+shortcut file:
 <screen>
   --enable-cdrom 
   --enable-sb16=win 
+  --enable-ne2000
+  --enable-vbe
 </screen>
 </para>
 </section>  <!-- end of cygwin -->
 
 <section><title>Compiling on MacOS 9 with CodeWarrior</title>
 <para>
-Possibly hasn't been tried since 1999.  In theory, you run 
-<filename>sh .conf.macos</filename> on a unix box to build the 
+It is possible that this hasn't been tried since 1999.  In theory, you run
+<filename>sh .conf.macos</filename> on a Unix box to build the 
 makefiles and headers, copy the whole thing over to a Mac, and then
 use CodeWarrior to compile.  Since it hasn't been tested in so long,
 it is quite likely that some work is needed to bring the Mac port up 
 to date.
+</para>
+
+<para>
+If you are interested and have the required MacOS development tools, please
+let use know.  Someone requests a MacOS port almost once a month, but none of
+the developers know how to help them.
 </para>
 </section>
 
 <section><title>Compiling on MacOS X</title>
 <para>
 The port to MacOS X with Carbon API by Emmanuel Mailliard is quite new, and the
-configure and makefile support was added by Bryce Denney.  You need to install
-the compiler and libraries from the development tools CD.  It should configure
-and compile ok if you use the <filename>.conf.macosx</filename> configure
-shortcut script.  MacOS X has a special format for an application bundle, which
-looks like a directory that contains the required resource files and binaries.
-The Makefile currently creates this application bundle "by hand" using mkdir
-and copy, which is surely the wrong way to do it.  Bryce doesn't know the
-official way to create an application from a Makefile, so this hack will remain
-until a real Mac developer helps to clean it up.
+configure and makefile support was added by Bryce Denney.  You will need
+the compiler and libraries from the development tools CD.  Bochs should
+configure and compile with the Carbon GUI if you simply type:
 <screen>
+  configure
+  make
+</screen>
+Optionally, you can use the configure shortcut script for MacOS X,
+<filename>.conf.macosx</filename>, instead of running configure directly.
+If this script is close to what you need, just edit the script and then
+run it.  To use the configure shortcut script and compile, the commands
+are
+<screen> 
   sh .conf.macosx
   make
 </screen>
+
+MacOS X has a special format for an application bundle, which looks like a
+directory that contains the required resource files and binaries.  The Makefile
+currently creates this application bundle "by hand" using mkdir and copy, which
+is surely the wrong way to do it.  Bryce doesn't know the official way to
+create an application from a Makefile, so this hack will remain until a real
+Mac developer helps to clean it up.
 </para>
 
-<note>
 <para>
-If you have X windows installed, you should also be able to build Bochs
-with X windows GUI.  To try it, just run <command>configure</command>
-instead of the <filename>.conf.macosx</filename> shortcut script.
+On MacOS X the default GUI is the Carbon interface, but you can also try other
+Bochs GUIs.  Use --enable-x11 for X windows, --enable-rfb for VNC/RFB, or
+--enable-sdl for SDL.
 </para>
-</note>
-
 </section>
 
 <section><title>Compiling on BeOS</title>
 <para>
 Kevin Lawton ported Bochs to BeOS.  Bernd Korz has taken over the port,
-and is working on raw cdrom and raw floppy support.  It should compile if you
-configure with --with-beos or use the <filename>.conf.beos-x86-R4</filename>
-script.
+and is working on raw cdrom and raw floppy support.  As of Bochs 1.4, it should
+compile if you just type "configure && make", because configure will
+detect the BeOS platform and assume you want the BeOS GUI.  Optionally,
+you can use the configure shortcut script for BeOS,
+<filename>.conf.beos-x86-R4</filename>.
 </para>
 </section> <!-- end BeOS -->
 
 <section><title>Compiling on Amiga/MorphOS</title>
 <para>
 Nicholai Benalal created this port to MorphOS running on Amiga.  It should
-compile with <screen>
-  ./configure --with-amigaos; make
+compile with 
+<screen>
+  configure && make
 </screen>
-Bryce also made an (untested) <filename>.conf.amigaos</filename> script that
-enables FPU and CDROM.
+If the platform is not detected properly, you might need to use
+--enable-amigaos as a configure option.  Optionally, you can use
+the configure shortcut script, <filename>.conf.amigaos</filename>.
 </para>
 </section> <!-- end Amiga/MorphOS -->
 
 <section><title>Building an RPM on Linux</title>
 <para>
 RPM stands for "RedHat Package Manager."  An RPM is a compressed file
-containing files to be installed on your system.  The Bochs makefile
-has a special make target that can be used to build an RPM of Bochs.
-Start with a clean source directory.  Edit .conf.linux first if you want to
-adjust the configure options.  Then, type:
+containing files to be installed on your system.  Bochs 
+has a special shell script called <filename>make-rpm</filename> that helps
+to build an RPM of Bochs.  Start with a clean source directory.  Edit
+.conf.linux first if you want to adjust the configure options.  Then, type:
 
 <screen>
   su root
@@ -1621,32 +1661,87 @@ linkend="linuxrpm">here</link>.
 
 <section id="config-opts"><title>Configure Options</title>
 <para>
-This section describes the configure options for Bochs.  Perhaps the
-most important option is <option>--help</option>, since it gives you a list of
-all the other options.  The options in the first table choose which GUI library
-to use.  The default is <option>--with-x11</option> so if you don't include
-<option>--with-*</option> it will try to compile for X windows.
+This section describes the configure options for Bochs.  Perhaps the most
+important option is <option>--help</option>, since it gives you a list of all
+the other options.  The configure script will detect your platform and choose
+the default GUI for your platform.  If the default choice is not what you want,
+use a <option>--with-*</option> option to override the default.  The options in
+the first table tell which GUI library is the default for each platform.
 </para>
+<note>
+<para>
+The concept of platform detection and default GUIs was added in Bochs 1.4.
+In Bochs 1.3 and before, the X11 gui was always the default.
+</para>
+</note>
 
-<table><title>Configure Options to select the GUI</title>
+
+<table><title>Defaults by Platform</title>
+<tgroup cols=3 align=left colsep=1 rowsep=1>
+<thead>
+  <row>
+    <entry>Platform</entry>
+    <entry>Default GUI</entry>
+    <entry>Extra compile flags</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>win32 or Cygwin</entry>
+    <entry>--with-win32</entry>
+    <entry>If using nmake method, compile using cl /nologo /G6 /MT /W3 /GX /DNDEBUG /DWIN32 /D_WINDOWS /O2.  If using Visual C++ workspace, see the workspace file for compile settings.  See <link linkend="compiling-win32">Compiling on Win32 with Microsoft VC++</link> for instructions.
+    </entry>
+  </row>
+  <row>
+    <entry>MacOS X or Darwin</entry>
+    <entry>--with-carbon</entry>
+    <entry>-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh
+    </entry>
+  </row>
+  <row>
+    <entry>MacOS 9 or before</entry>
+    <entry>--with-macos</entry>
+    <entry>none
+    </entry>
+  </row>
+  <row>
+    <entry>BeOS</entry>
+    <entry>--with-beos</entry>
+    <entry>none
+    </entry>
+  </row>
+  <row>
+    <entry>AmigaOS</entry>
+    <entry>--with-amigaos</entry>
+    <entry>none
+    </entry>
+  </row>
+  <row>
+    <entry>any other platform</entry>
+    <entry>--with-x11</entry>
+    <entry>none
+    </entry>
+  </row>
+</tbody>
+</table>
+
+<table><title>Configure Options to Select the GUI (optional)</title>
 <tgroup cols=3>
   <thead>
     <row>
       <entry>Option</entry>
-      <entry>Default</entry>
       <entry>Comments</entry>
    </row>
   </thead>
   <tbody>
     <row>
       <entry>--with-x11</entry>
-      <entry>yes</entry>
-      <entry>Use X windows user interface.  This is the default, so you
-       never actually need to type it.</entry>
+      <entry>Use X windows user interface.  On many operating systems,
+      Bochs will use X windows by default.
+       </entry>
     </row>
     <row>
       <entry>--with-win32-vcpp</entry>
-      <entry>no</entry>
       <entry>Use Win32 GUI/Visual C++ environment.  This is for running
 	  configure on a platform which supports running configure, so
 	  that you may then transfer the configured code over to
@@ -1656,27 +1751,23 @@ to use.  The default is <option>--with-x11</option> so if you don't include
     </row>
     <row>
       <entry>--with-win32</entry>
-      <entry>no</entry>
       <entry>Use Win32 GUI, but compile with a Win32/gcc
-      environment such as cygwin.  For cygwin, see .conf.win32-cygwin
+      environment such as Cygwin.  For Cygwin, see .conf.win32-cygwin
       for the correct compile options.
     </row>
     <row>
       <entry>--with-carbon</entry>
-      <entry>no</entry>
       <entry>Compile for MacOS X with the Carbon GUI.  See the
       .conf.macosx file for the correct MacOS X compile options.
     </row>
     <row>
       <entry>--with-amigaos</entry>
-      <entry>no</entry>
       <entry>Compile for Amiga MorphOS.  This code is written by Nicholai
       Benalal.</entry>
     </row>
 
     <row>
       <entry>--with-rfb</entry>
-      <entry>no</entry>
       <entry>Use RFB protocol to talk to AT&amp;T's <ulink
       url="http://www.uk.research.att.com/vnc/">VNC Viewer</ulink>.  The RFB
       code was written by Don Becker <email>x-odus@iname.com</email>,
@@ -1686,21 +1777,29 @@ to use.  The default is <option>--with-x11</option> so if you don't include
       </entry>
       </row>
     <row>
+      <entry>--with-sdl</entry>
+      <entry>This option enables Dave Poirier's SDL gui interface.  To
+      compile with SDL, you must first install the SDL library
+      from <ulink url="http://libsdl.org/">libsdl.org</ulink>.  You
+      can either get the source code and compile it yourself, or install
+      the development libraries for your platform (already compiled).
+      SDL is available for many platforms including Win32, Linux, IRIX,
+      MacOS, MacOS X, and BeOS.
+      </entry>
+      </row>
+    <row>
       <entry>--with-beos</entry>
-      <entry>no</entry>
       <entry>Use BeOS GUI.  The configure script will run natively
        on BeOS; use this option when doing so.</entry>
     </row>
     <row>
       <entry>--with-term</entry>
-      <entry>no</entry>
       <entry>Use text-only gui with curses library.  Almost certainly
       won't work right with the debugger or the control panel.
       </entry>
     </row>
     <row>
       <entry>--with-macos</entry>
-      <entry>no</entry>
       <entry>Use Macintosh/CodeWarrior environment.  This is for running
         configure on a platform which supports running configure, so that
 	you may then transfer the configured code over to the
@@ -1709,7 +1808,6 @@ to use.  The default is <option>--with-x11</option> so if you don't include
     </row>
     <row>
       <entry>--with-nogui</entry>
-      <entry>no</entry>
       <entry>No native GUI; just use blank stubs.  This is if you don't
 	  care about having video output, but are just running tests. 
       </entry>
@@ -1821,10 +1919,10 @@ turn it off.
       <entry>Enable NE2000 network card support.  This requires a
       low-level component to be written for each OS.  The NE2000
       option is only supported on FreeBSD, OpenBSD, Linux, and Windows 
-      NT/2K<footnote> <para>Windows support was very recently added by
-      Don Becker, and will not work on Windows 95/98.</para> </footnote>.  When
-      enabled and configured, the NE2000 device model can talk to any computer
-      on the network EXCEPT FOR the local host.
+      95/98/NT/2K.  When enabled and configured, the NE2000 device model can
+      talk to any computer on the network EXCEPT FOR the local host.
+      Exception: Under most circumstances, Bochs can talk to the local host
+      on Windows, and in the ethertap interface for Linux.
       </entry>
     </row>
     <row>
@@ -1832,6 +1930,14 @@ turn it off.
       <entry>yes</entry>
       <entry>Use VGA emulation.  VGA is the only supported option and
 	  since it's the default, you don't need to include this option.</entry>
+    </row>
+    <row>
+      <entry>--enable-vbe</entry>
+      <entry>yes</entry>
+      <entry>Use VGA BIOS Extensions (VBE) by Jeroen Janssen.  To take
+      advantage of the VBE, you must tell Bochs to use the LGPL VGA BIOS
+      version 0.3a or higher in the vgaromimage line of your bochsrc file.
+      </entry>
     </row>
     <row>
       <entry>--enable-fpu</entry>
@@ -1882,7 +1988,8 @@ turn it off.
       <entry>
       Use .cpp as C++ suffix.  Renames all the .cc files to .cpp for use with
       compilers which want that, like MS C++ compilers.  Don't use this option
-      unless you know you need it.
+      unless you know you need it.  The configure shortcut script for
+      Win32 uses this option.
       </entry>
     </row>
   </tbody>
@@ -1902,7 +2009,7 @@ turn it off.
   <tbody>
     <row>
       <entry>--enable-iodebug</entry>
-      <entry>no</entry>
+      <entry>yes if debugger is on</entry>
       <entry>
       Dave Poirier has written an experimental interface to the debugger
       using I/O ports, so that software running in the guest OS can access
@@ -1944,7 +2051,7 @@ turn it off.
       to spend extra time simulating the different CPUs (even if they're mostly
       idle) and the communication between them.  Use it to try out an SMP OS if
       you don't have an SMP machine, or to debug SMP OS drivers.  Click
-      here &FIXME; for more details on SMP in Bochs.
+      <link linkend="SMP">here</link> for more details on SMP in Bochs.
       </entry>
     </row>
     <row>
@@ -2852,7 +2959,7 @@ files with the bochs disk images.  This is what I found out:
 </para>
 </section>  <!-- end of Linux: Mounting a disk image using the loop device -->
 
-<section><title>Simulating a Multiprocessor Machine</title>
+<section id="SMP"><title>Simulating a Symmetric Multiprocessor (SMP) Machine</title>
 <para>
 Bochs can now simulate an SMP machine when you use "--enable-processors=N" 
 in the configure command.  SMP support was added by Bryce Denney, who
