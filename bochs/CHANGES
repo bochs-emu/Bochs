@@ -177,6 +177,7 @@ Patches applied:
   #735990  Limited patches for VC++                 (???)
   #742670  fix library dependencies in GUI plugins  (Robert Millan)
   #742782  LFB bugfix                               (Jan L. Hauffa)
+  #748414  load32bitOShack bug                      (kyriazis at nvidia.com)
 
 - SF patches partially applied
   #707931  Support EGA/VGA write mode 2 and others  (???)
@@ -196,6 +197,8 @@ Patches applied:
 - these S.F. bugs were fixed 
 // CB : I ran the request on SF, these bugs have definitely been closed 
 // since 2.0.2). There might have been others, during 2.0 to 2.0.2 times
+   #629242  reset during Doom -> BIOS panic
+   #695434  minix floppies won't boot.
    #764473  Freesco Linux crashes on boot
    #656026  error when trying to run some stuff
    #614202  HD: non-byte IO read to 01f4
