@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.15 2002-11-21 08:16:53 bdenney Exp $
+$Id: misc.txt,v 1.16 2002-11-25 13:30:09 bdenney Exp $
 
 Testing testing....
 
@@ -55,3 +55,216 @@ see man mount, losetup, and fdisk for more info
 
 
 BOCHS Rocks!!!
+
+
+
+-------------macintosh.txt-----------------
+BBD Mon Nov 25 08:23:28 EST 2002
+This file has been in our main directory for years and years, and has not
+been updated since nobody has tried to compile for MacOS pre-10 in a long
+time.  I didn't want to leave it sitting there since it is so incredibly
+obsolete.  I think it would be good to put it into the documentation
+with proper warnings about the fact that it hasn't been updated in 4 years
+and may need significant hacking to make it work again.
+------------------
+
+Changes by Bryce Denney 4/5/2001:
+I moved the contents of macutils.h into osdep.h, and macutils.c 
+into osdep.cc.  There are functions missing on other platforms too, 
+so I wanted to bring them all into the same place.
+
+The original macintosh.txt follows.
+
+STATUS OF THE MAC PORT:
+-----------------------
+
+23 Dec 1998
+
+Contents:
+
+	Status
+	How to Set up MacBochs
+	Problems
+	Other Issues
+	New Files
+	Changed Files
+
+
+Status
+------
+
+This is an experimental Macintosh port of Bochs. The Mac port compiles fine
+under CodeWarrior Pro R1 (CW12) and is capable of booting Win95 in command-
+line mode and running DOS programs. A CodeWarrior project ("Bochs.proj") is
+included (you may need to edit the type and creator information with ResEdit
+in order for CodeWarrior to recognise it as a project file).
+
+NOTE: MacBochs is very much a "work in progress", and much of the code is
+incomplete. This preliminary version is being made available mainly to
+interested developers who may want to contribute to the development of
+MacBochs by contributing some code or testing it on their own Macs.
+
+If anyone can test with some "clean" Windows installer disks, it would be
+useful. I've been testing MacBochs with my SoftWindows HD image and disk
+images derived from it, and I'm not sure if the various SoftWindows-specific
+drivers are interfering.
+
+23 Dec 98 - updated MacBochs to bochs-981222. The new version seems
+noticeably faster. Finished implementing the Bochs headerbar. Added support
+for ejecting floppy disks from within Bochs (click the Drive A: icon on the
+headerbar or press Cmd-E).
+
+17 Dec 98 - added real floppy disk support. Also optimized the graphics
+screen drawing a bit more. Keyboard support still broken and in need of a
+major overhaul. Does anyone have experience with KCHR resources and
+KeyTranslate()?
+
+
+How to Set up MacBochs
+----------------------
+
+This is a very brief, step-by-step guide on setting up MacBochs. More
+detailed documentation will be available later.
+
+- Step 1. Compile the version of Bochs you want to use (PPC, 68k or FAT) or
+obtain a pre-compiled binary. There is a CodeWarrior project included with
+the source distribution.
+
+- Step 2. Create a hard disk image.
+Bochs ALWAYS needs a hard disk image available to it, otherwise it won't
+boot. To create a hard disk image on the Mac, you need to use a recent
+version of DiskCopy.
+
+First, create an untitled, empty folder anywhere on your Mac hard disk. Then,
+launch DiskCopy and choose to create a folder image of that folder.
+
+DO NOT ENTER THE DISK SIZE IN MEGABYTES. In the file "install.html" in the
+"docs-html" folder you will find a table of disk sizes and geometries. Make a
+note of the number of total SECTORS required for your desired hard disk size,
+as well as the cylinders, heads and sectors per track (spt).
+
+In DiskCopy, you need to choose "Custom..." from the menu of image sizes, and
+choose to enter the size in "blocks" (on the Mac, a block is pretty much the
+same as a sector). Then enter the number of total sectors you need.
+
+Make sure the image is "Read/Write", not "Read Only", and make sure you have
+entered the correct cyl=, heads= and spt= settings in your bochsrc file. Your
+image file should now be accessible to Bochs.
+
+You'll eventually need to use a utility like "fdisk" to make the image
+readable.
+
+- Step 3. Obtain a bootable PC floppy or floppy image.
+You'll need to install an operating system in order to do anything useful
+with Bochs. If you have installer floppies for a PC operating system (eg.
+Windows or MS-DOS) you can use those. Otherwise you can download disk images
+for FreeDOS or one of the many variants of Linux.
+
+MacBochs now supports real PC floppy disks. To use the Mac floppy drive
+instead of a disk image, use the special filename "[fd:]" in the appropriate
+line of your bochsrc.
+
+- Step 4. Set up your bochsrc file.
+You set up your Bochs preferences by editing the "bochsrc" file. You'll need
+to set up your bochsrc to work with your floppy and hard disk images, as well
+as telling Bochs how many megs of PC RAM you want.
+
+Problems
+--------
+
+There are some so far unresolved problems in the "macintosh.cc" GUI file:
+
+- Keyboard support is VERY rudimentary; ie. it only supports alphanumerics
+and a couple of special keys like Enter. The keyboard-related code is full of
+holes and I'm going to completely rehash it.
+
+- Mouse support hasn't been tested, but probably isn't fully working either.
+
+
+Other Issues
+------------
+
+- The Mac port uses a ready-made config file (configmac.h), like the Win32
+port used to. Macs are pretty homogeneous, so the settings should be
+appropriate for most machines.
+
+- The Mac port has an extra source file: "macutils.c" (with header file
+"macutils.h"), which is used for Mac floppy drive support, among other
+things.
+
+- Like the Win32 port, the Mac port expects the "bochsrc" file to be in the
+same directory as the Bochs application.
+
+- Be sure to use Mac pathname conventions when editing the bochsrc file (ie
+':' instead of '/' or '\').
+
+
+New files
+---------
+
+The following are new, Mac-specific files:
+
+gui/macintosh.cc
+configmac.h
+macutils.h
+macutils.c
+Bochs.proj
+
+
+Changed Files
+-------------
+
+The following files from the main bochs distribution have been modified to
+compile properly on the Mac:
+
+bochs.h
+main.cc
+memory/memory.cc
+memory/misc_mem.cc
+iodev/floppy.cc
+iodev/harddrv.cc
+
+The changes are just conditional compilations which won't affect other
+platforms (search for "#ifdef macintosh" and "#ifndef macintosh" if you want
+to see what the changes are). These changes will need to be integrated into
+the main distribution if the MacOS port is going to go ahead seriously.
+
+-- David Batterham <drbatter@socs.uts.edu.au> or <drbatter@yahoo.com>
+
+--------------------win32.txt----------------------
+BBD Mon Nov 25 08:27:24 EST 2002
+The win32 build instructions are out of date too.  The --with-win32-vcpp
+has been deprecated since at least March 2002.  More current instructions
+are already in the docs, so this info may not be of much use.
+
+Building Bochs for Win32
+------------------------
+
+This has only been tested with MS Visual C++ 6.0.
+
+The normal build process on a unix system is to run configure to build all the
+makefiles and config.h, and then run make to compile Bochs.  Configure takes a
+large number of command line arguments, for example to disable floating point
+or to enable sound blaster emulation.  Configure works beautifully on unix
+systems to help make the code portable, however it cannot run on Windows.
+(Maybe, if you have cygwin.)  Therefore, you need to either 1) run configure
+on a unix box and copy the makefiles and config.h, or 2) download the
+makefiles which are distributed in a separate ZIP file.
+
+If you want to run configure yourself, consider using the shell script
+".conf.win32-vcpp" since it has been tested.  Look at it to make sure
+the options make sense for you.  You can always run configure by hand too,
+just be sure to include the option --with-win32-vcpp so that it creates
+makefiles for win32.  Copy config.h, Makefile, and the Makefiles in all
+subdirectories over to your windows box into the same directory as the Bochs
+source.
+
+If you download the makefiles in a ZIP, just extract them into the
+same directory as the Bochs source.  The config.h and top level Makefile
+should end up in the same directory as Bochs.h.
+
+Once the makefiles are installed, building Bochs is easy.  Start up an MSDOS
+window, run the .BAT file that sets up the environment variables
+(C:\vc98\bin\vcvars32.bat on my system), and then run NMAKE in the Bochs
+source directory.  You will get lots of compile warnings, but hopefully no
+fatal errors!  At the end, you should see Bochs.exe in the source directory.
